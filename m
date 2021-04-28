@@ -1,41 +1,97 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 2/2] ipc: use kmalloc for msg_queue and shmid_kernel
-Date: Wed, 28 Apr 2021 08:33:38 +0200
-Message-ID: <YIkBwgrDXF2x0Dt+@dhcp22.suse.cz>
-References: <e67f2a95-4b01-9db2-fe47-0b2210f0b138@virtuozzo.com>
- <b0845b85-f4fe-601d-3328-d707d7db27f5@virtuozzo.com>
- <YIaVKi+0VMrz5LGD@dhcp22.suse.cz>
- <70805e05-5e56-2ab9-2654-3d48e9fe5a0a@virtuozzo.com>
+From: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
+ APIs
+Date: Wed, 28 Apr 2021 06:34:11 +0000
+Message-ID: <MWHPR11MB188625137D5B7423822396C88C409@MWHPR11MB1886.namprd11.prod.outlook.com>
+References: <20210421162307.GM1370958@nvidia.com>
+ <20210421105451.56d3670a@redhat.com> <20210421175203.GN1370958@nvidia.com>
+ <20210421133312.15307c44@redhat.com> <20210421230301.GP1370958@nvidia.com>
+ <MWHPR11MB1886188698A6E20338196F788C469@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210422121020.GT1370958@nvidia.com>
+ <MWHPR11MB1886E688D2128C98A1F240B18C459@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210423114944.GF1370958@nvidia.com>
+ <MWHPR11MB18861FE6982D73AFBF173E048C439@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210426123817.GQ1370958@nvidia.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1619591619; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=0ZhVc13i/loE89OYYNbTCn+LJbpHgfesQUl3vFUzU4w=;
-        b=hcsbUVWZOVa/VD7u1r+GmF/lDktHCL3s1g+57QapM1T1z/kS/fIVhq2dmbzUoQQ1SkD5P8
-        jq0XFt5nGtr5WpT2823UcVhheb//TC4a0GNGLkTr+bmBbrLPca+VmxIZWE+D68CsXk/Ul8
-        PtTpuvnPR6+vo9WXfNBwN9/fguwpXfs=
-Content-Disposition: inline
-In-Reply-To: <70805e05-5e56-2ab9-2654-3d48e9fe5a0a-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
+ s=selector2-intel-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=yBmlOgYKpt6mzInnOFV3Ug24vTSV2ufG0p04k/d6R0c=;
+ b=ykVe4FoRA1totKvu5Nq+veVaLmjeiPSFb8cEj1VI1FYkEE94yQ2I6+euNipuMbvg54cPBOtjmDvcK+kLd6+kPt1lu8GQKxIMbvN6b2wJGv+0N2FW2mjjABmhEBDEnLGoWtW34KzbDSbdNF8Z3hABfUdRJA6LzHFD+NJiRG/mZBg=
+In-Reply-To: <20210426123817.GQ1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dmitry Safonov <0x7f454c46-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Wed 28-04-21 08:15:10, Vasily Averin wrote:
-> On 4/26/21 1:25 PM, Michal Hocko wrote:
-> > Using kvmalloc for sub page size objects is suboptimal because kmalloc
-> > can easily fallback into vmalloc under memory pressure and smaller
-> > objects would fragment memory. Therefore replace kvmalloc by a simple
-> > kmalloc.
-> 
-> I think you're wrong here:
-> kvmalloc can failback to vmalloc for size > PAGE_SIZE only
-
-You are right. My bad. My memory failed on me. Sorry about the
-confusion.
--- 
-Michal Hocko
-SUSE Labs
+PiBGcm9tOiBKYXNvbiBHdW50aG9ycGUgPGpnZ0BudmlkaWEuY29tPg0KPiBTZW50OiBNb25kYXks
+IEFwcmlsIDI2LCAyMDIxIDg6MzggUE0NCj4gDQpbLi4uXQ0KPiA+IFdhbnQgdG8gaGVhciB5b3Vy
+IG9waW5pb24gZm9yIG9uZSBvcGVuIGhlcmUuIFRoZXJlIGlzIG5vIGRvdWJ0IHRoYXQNCj4gPiBh
+biBpb2FzaWQgcmVwcmVzZW50cyBhIEhXIHBhZ2UgdGFibGUgd2hlbiB0aGUgdGFibGUgaXMgY29u
+c3RydWN0ZWQgYnkNCj4gPiB1c2Vyc3BhY2UgYW5kIHRoZW4gbGlua2VkIHRvIHRoZSBJT01NVSB0
+aHJvdWdoIHRoZSBiaW5kL3VuYmluZA0KPiA+IEFQSS4gQnV0IEknbSBub3QgdmVyeSBzdXJlIGFi
+b3V0IHdoZXRoZXIgYW4gaW9hc2lkIHNob3VsZCByZXByZXNlbnQNCj4gPiB0aGUgZXhhY3QgcGd0
+YWJsZSBvciB0aGUgbWFwcGluZyBtZXRhZGF0YSB3aGVuIHRoZSB1bmRlcmx5aW5nDQo+ID4gcGd0
+YWJsZSBpcyBpbmRpcmVjdGx5IGNvbnN0cnVjdGVkIHRocm91Z2ggbWFwL3VubWFwIEFQSS4gVkZJ
+TyBkb2VzDQo+ID4gdGhlIGxhdHRlciB3YXksIHdoaWNoIGlzIHdoeSBpdCBhbGxvd3MgbXVsdGlw
+bGUgaW5jb21wYXRpYmxlIGRvbWFpbnMNCj4gPiBpbiBhIHNpbmdsZSBjb250YWluZXIgd2hpY2gg
+YWxsIHNoYXJlIHRoZSBzYW1lIG1hcHBpbmcgbWV0YWRhdGEuDQo+IA0KPiBJIHRoaW5rIFZGSU8n
+cyBtYXAvdW5tYXAgaXMgd2F5IHRvbyBjb21wbGV4IGFuZCB3ZSBrbm93IGl0IGhhcyBiYWQNCj4g
+cGVyZm9ybWFuY2UgcHJvYmxlbXMuDQoNCkNhbiB5b3Ugb3IgQWxleCBlbGFib3JhdGUgd2hlcmUg
+dGhlIGNvbXBsZXhpdHkgYW5kIHBlcmZvcm1hbmNlIHByb2JsZW0NCmxvY2F0ZSBpbiBWRklPIG1h
+cC91bWFwPyBXZSdkIGxpa2UgdG8gdW5kZXJzdGFuZCBtb3JlIGRldGFpbCBhbmQgc2VlIGhvdyAN
+CnRvIGF2b2lkIGl0IGluIHRoZSBuZXcgaW50ZXJmYWNlLg0KDQo+IA0KPiBJZiAvZGV2L2lvYXNp
+ZCBpcyBzaW5nbGUgSFcgcGFnZSB0YWJsZSBvbmx5IHRoZW4gSSB3b3VsZCBmb2N1cyBvbiB0aGF0
+DQo+IGltcGxlbWVudGF0aW9uIGFuZCBsZWF2ZSBpdCB0byB1c2Vyc3BhY2UgdG8gc3BhbiBkaWZm
+ZXJlbnQNCj4gL2Rldi9pb2FzaWRzIGlmIG5lZWRlZC4NCj4gDQo+ID4gT0ssIG5vdyBJIHNlZSB3
+aGVyZSB0aGUgZGlzY29ubmVjdGlvbiBjb21lcyBmcm9tLiBJbiBteSBjb250ZXh0IGlvYXNpZA0K
+PiA+IGlzIHRoZSBpZGVudGlmaWVyIHRoYXQgaXMgYWN0dWFsbHkgdXNlZCBpbiB0aGUgd2lyZSwg
+YnV0IHNlZW1zIHlvdSB0cmVhdCBpdCBhcw0KPiA+IGEgc3ctZGVmaW5lZCBuYW1lc3BhY2UgcHVy
+ZWx5IGZvciByZXByZXNlbnRpbmcgcGFnZSB0YWJsZXMuIFdlIHNob3VsZA0KPiA+IGNsZWFyIHRo
+aXMgY29uY2VwdCBmaXJzdCBiZWZvcmUgZnVydGhlciBkaXNjdXNzaW5nIG90aGVyIGRldGFpbHMu
+IPCfmIoNCj4gDQo+IFRoZXJlIGlzIG5vIGdlbmVyYWwgSFcgcmVxdWlyZW1lbnQgdGhhdCBldmVy
+eSBJTyBwYWdlIHRhYmxlIGJlDQo+IHJlZmVycmVkIHRvIGJ5IHRoZSBzYW1lIFBBU0lEIGFuZCB0
+aGlzIEFQSSB3b3VsZCBoYXZlIHRvIHN1cHBvcnQNCg0KWWVzLCBidXQgd2hhdCBpcyB0aGUgdmFs
+dWUgb2YgYWxsb3dpbmcgbXVsdGlwbGUgUEFTSURzIHJlZmVycmluZyB0byB0aGUNCnRoZSBzYW1l
+IEkvTyBwYWdlIHRhYmxlIChleGNlcHQgdGhlIG5lc3RpbmcgcGd0YWJsZSBjYXNlKT8gRG9lc24n
+dCBpdCANCmxlYWQgdG8gcG9vciBpb3RsYiBlZmZpY2llbmN5IGlzc3VlIHNpbWlsYXIgdG8gbXVs
+dGlwbGUgaW9tbXUgZG9tYWlucyANCnJlZmVycmluZyB0byB0aGUgc2FtZSBwYWdlIHRhYmxlPw0K
+DQo+IG5vbi1QQVNJRCBJTyBwYWdlIHRhYmxlcyBhcyB3ZWxsLiBTbyBJJ2Qga2VlcCB0aGUgdHdv
+IHRoaW5ncw0KPiBzZXBhcmF0ZWQgaW4gdGhlIHVBUEkgLSBldmVuIHRob3VnaCB0aGUga2VybmVs
+IHRvZGF5IGhhcyBhIGdsb2JhbA0KPiBQQVNJRCBwb29sLg0KDQpmb3Igbm9uLVBBU0lEIHVzYWdl
+cyB0aGUgYWxsb2NhdGVkIFBBU0lEIHdpbGwgYmUgd2FzdGVkIGlmIHdlIGRvbid0DQpzZXBhcmF0
+ZSBpb2FzaWQgZnJvbSBwYXNpZC4gQnV0IGl0IG1heSBiZSB3b3J0aHdoaWxlIGdpdmVuIDFtIGF2
+YWlsYWJsZSANCnBhc2lkcyBhbmQgdGhlIHNpbXBsaWZpY2F0aW9uIGluIHRoZSB1QVBJIHdoaWNo
+IG9ubHkgbmVlZHMgdG8gY2FyZSBhYm91dCANCm9uZSBpZCBzcGFjZSB0aGVuLg0KDQo+IA0KPiA+
+IFRoZW4gZm9sbG93aW5nIHlvdXIgcHJvcG9zYWwsIGRvZXMgaXQgbWVhbiB0aGF0IHdlIG5lZWQg
+YW5vdGhlcg0KPiA+IGludGVyZmFjZSBmb3IgYWxsb2NhdGluZyBQQVNJRD8gYW5kIHNpbmNlIGlv
+YXNpZCBtZWFucyBkaWZmZXJlbnQNCj4gPiB0aGluZyBpbiB1QVBJIGFuZCBpbi1rZXJuZWwgQVBJ
+LCBwb3NzaWJseSBhIG5ldyBuYW1lIGlzIHJlcXVpcmVkIHRvDQo+ID4gYXZvaWQgY29uZnVzaW9u
+Pw0KPiANCj4gSSB3b3VsZCBzdWdnZXN0IGhhdmUgdHdvIHdheXMgdG8gY29udHJvbCB0aGUgUEFT
+SUQNCj4gDQo+ICAxKSBPdmVyIC9kZXYvaW9hc2lkIGFsbG9jYXRlIGEgUEFTSUQgZm9yIGFuIElP
+QVNJRC4gQWxsIGZ1dHVyZSBQQVNJRA0KPiAgICAgYmFzZWQgdXNhZ2VzIG9mIHRoZSBJT0FTSUQg
+d2lsbCB1c2UgdGhhdCBnbG9iYWwgUEFTSUQNCj4gDQo+ICAyKSBPdmVyIHRoZSBkZXZpY2UgRkQs
+IHdoZW4gdGhlIElPQVNJRCBpcyBib3VuZCByZXR1cm4gdGhlIFBBU0lEIHRoYXQNCj4gICAgIHdh
+cyBzZWxlY3RlZC4gSWYgdGhlIElPQVNJRCBkb2VzIG5vdCBoYXZlIGEgZ2xvYmFsIFBBU0lEIHRo
+ZW4gdGhlDQo+ICAgICBrZXJuZWwgaXMgZnJlZSB0byBtYWtlIHNvbWV0aGluZyB1cC4gSW4gdGhp
+cyBtb2RlIGEgc2luZ2xlIElPQVNJRA0KPiAgICAgY2FuIGhhdmUgbXVsdGlwbGUgUEFTSURzLg0K
+PiANCj4gU2ltcGxlIHRoaW5ncyBsaWtlIERQREsgY2FuIHVzZSAjMiBhbmQgcG90ZW50aWFsbHkg
+aGF2ZSBiZXR0ZXIgUEFTSUQNCj4gbGltaXRzLiBoeXBlcnZpc29ycyB3aWxsIG1vc3QgbGlrZWx5
+IGhhdmUgdG8gdXNlICMxLCBidXQgaXQgZGVwZW5kcyBvbg0KPiBob3cgdGhlaXIgdklPTU1VIGlu
+dGVyZmFjZSB3b3Jrcy4NCg0KQ2FuIHlvdSBlbGFib3JhdGUgd2h5IERQREsgd2FudHMgdG8gdXNl
+ICMyIGkuZS4gbm90IHVzaW5nIGEgZ2xvYmFsDQpQQVNJRD8NCg0KPiANCj4gSSB0aGluayB0aGUg
+bmFtZSBJT0FTSUQgaXMgZmluZSBmb3IgdGhlIHVBUEksIHRoZSBrZXJuZWwgdmVyc2lvbiBjYW4N
+Cj4gYmUgY2FsbGVkIGlvYXNpZF9pZCBvciBzb21ldGhpbmcuDQoNCmlvYXNpZCBpcyBhbHJlYWR5
+IGFuIGlkIGFuZCB0aGVuIGlvYXNpZF9pZCBqdXN0IGFkZHMgY29uZnVzaW9uLiBBbm90aGVyDQpw
+b2ludCBpcyB0aGF0IGlvYXNpZCBpcyBjdXJyZW50bHkgdXNlZCB0byByZXByZXNlbnQgYm90aCBQ
+Q0kgUEFTSUQgYW5kDQpBUk0gc3Vic3RyZWFtIElEIGluIHRoZSBrZXJuZWwuIEl0IGltcGxpZXMg
+dGhhdCBpZiB3ZSB3YW50IHRvIHNlcGFyYXRlDQppb2FzaWQgYW5kIHBhc2lkIGluIHRoZSB1QVBJ
+IHRoZSAncGFzaWQnIGFsc28gbmVlZHMgdG8gYmUgcmVwbGFjZWQgd2l0aA0KYW5vdGhlciBnZW5l
+cmFsIHRlcm0gdXNhYmxlIGZvciBzdWJzdHJlYW0gSUQuIEFyZSB3ZSBtYWtpbmcgdGhlDQp0ZXJt
+cyB0b28gY29uZnVzaW5nIGhlcmU/IA0KDQo+IA0KPiAoYWxzbyBsb29raW5nIGF0IGlvYXNpZC5j
+LCB3aHkgZG8gd2UgbmVlZCBzdWNoIGEgdGhpbiBhbmQgb2RkIHdyYXBwZXINCj4gYXJvdW5kIHhh
+cnJheT8pDQo+IA0KDQpJJ2xsIGxlYXZlIGl0IHRvIEplYW4gYW5kIEphY29iLg0KDQpUaGFua3MN
+CktldmluDQo=
