@@ -1,65 +1,103 @@
-From: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: RE: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
- APIs
-Date: Wed, 28 Apr 2021 06:58:19 +0000
-Message-ID: <MWHPR11MB1886F0818D30329172C420758C409@MWHPR11MB1886.namprd11.prod.outlook.com>
-References: <20210421175203.GN1370958@nvidia.com>
- <20210421133312.15307c44@redhat.com> <20210421230301.GP1370958@nvidia.com>
- <20210422111337.6ac3624d@redhat.com> <20210422175715.GA1370958@nvidia.com>
- <20210422133747.23322269@redhat.com> <20210422200024.GC1370958@nvidia.com>
- <20210422163808.2d173225@redhat.com> <20210422233950.GD1370958@nvidia.com>
- <YIecXkaEGNgICePO@yekko.fritz.box> <20210427171212.GD1370958@nvidia.com>
+From: Abel Wu <wuyun.abel@bytedance.com>
+Subject: Re: [PATCH 2/3] cgroup/cpuset: introduce cpuset.mems.migration
+Date: Wed, 28 Apr 2021 15:24:42 +0800
+Message-ID: <67632345-9c30-9e87-f9b2-ba4e18b5ae91@bytedance.com>
+References: <20210426065946.40491-1-wuyun.abel@bytedance.com>
+ <20210426065946.40491-3-wuyun.abel@bytedance.com>
+ <YIgjE6CgU4nDsJiR@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
- s=selector2-intel-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=LCkC3H9KVnRyH2B2gFhztpBmeG7E9L+T37fDrS9qaLM=;
- b=CHbkdlKSlIvvUruXzMRuL+HLnxBRrZRcsLsh/LTKcSWWk9U8cp/sK9aN/z7jkcWrJpKh7g53/105s56pbnoTfTjBvqM8CU5NPeaQEyr3Dvg8df5vrtlNA6ZeJj0kdyaqbj7lsKLye9GW0YoK0Cm/PKD5Zf9yUZSdr0hr9NgJFQY=
-In-Reply-To: <20210427171212.GD1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ocOiwhnINfr+vKnvSHIfg9Nbg66LG1Qzz5IHcV/tGpI=;
+        b=eVN+NK23/ESRrBYM2lxx0JJdpsKDZ22tgKcqU4ZQ5DFwQMOPQ935OCwLL4eRBcpt6b
+         HxY//w+DZIIaMWpUPH0oGLw+/OhMrGPu2xNL9RubfJ+do06n4Pr9hmubQyF6wksegxHI
+         SzBNqNn/9rVxc0B+YiHhTFWCvQRyGNvaPm3/R6+1Lx6QOsEQzQyUP9Ix1O5XFrv8+59a
+         DV+QdW1aWQ/po8Y377Yl3+PbWy8EY3IQEC6z7wh5BB55uwIDQW/lbzaZGc3kjFBRLTJE
+         SZoq9XsQy7+XmDFdzb/xmHW04Iu8A410Ai1Fq4A4ST8qN2msmz6C+2phGOV76KgvnIaR
+         nBZQ==
+In-Reply-To: <YIgjE6CgU4nDsJiR@slm.duckdns.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>
-Cc: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: akpm@linux-foundation.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> Sent: Wednesday, April 28, 2021 1:12 AM
->=20
-[...]=20
-> > As Alex says, if this line fails because of the group restrictions,
-> > that's not great because it's not very obvious what's gone wrong.
->=20
-> Okay, that is fair, but let's solve that problem directly. For
-> instance netlink has been going in the direction of adding a "extack"
-> from the kernel which is a descriptive error string. If the failing
-> ioctl returned the string:
->=20
->   "cannot join this device to the IOASID because device XXX in the
->    same group #10 is in use"
->=20
-> Would you agree it is now obvious what has gone wrong? In fact would
-> you agree this is a lot better user experience than what applications
-> do today even though they have the group FD?
->=20
+Hello Tejun, thanks for your review,
 
-Currently all the discussions are around implicit vs. explicit uAPI semanti=
-cs
-on the group restriction. However if we look beyond group the implicit=20
-semantics might be inevitable when dealing with incompatible iommu
-domains. An existing example of iommu incompatibility is IOMMU_
-CACHE. In the future there could be other incompatibilities such as=20
-whether nested translation is supported. In the end the userspace has=20
-to do some due diligence on understanding iommu topology and attributes=20
-to decide how many VFIO containers or ioasid fds should be created. It=20
-does push some burden to userspace but it's difficult to define a group-
-like kernel object to enforce such restriction for iommu compatibility.=20
-Then the best that the kernel can do is to return an informational error=20
-message in case an incompatible device is attached to the existing domain.=
-=20
-If this is the perceived way to move forward anyway, I feel that removing=20
-explicit group FD from uAPI doesn't make userspace worse...
+On 4/27/21 10:43 PM, Tejun Heo wrote:
+> Hello,
+>=20
+> On Mon, Apr 26, 2021 at 02:59:45PM +0800, Abel Wu wrote:
+>> When a NUMA node is assigned to numa-service, the workload
+>> on that node needs to be moved away fast and complete. The
+>> main aspects we cared about on the eviction are as follows:
+>>
+>> a) it should complete soon enough so that numa-services
+>>     won=E2=80=99t wait too long to hurt user experience
+>> b) the workloads to be evicted could have massive usage on
+>>     memory, and migrating such amount of memory may lead to
+>>     a sudden severe performance drop lasting tens of seconds
+>>     that some certain workloads may not afford
+>> c) the impact of the eviction should be limited within the
+>>     source and destination nodes
+>> d) cgroup interface is preferred
+>>
+>> So we come to a thought that:
+>>
+>> 1) fire up numa-services without waiting for memory migration
+>> 2) memory migration can be done asynchronously by using spare
+>>     memory bandwidth
+>>
+>> AutoNUMA seems to be a solution, but its scope is global which
+>> violates c&d. And cpuset.memory_migrate performs in a synchronous
+>=20
+> I don't think d) in itself is a valid requirement. How does it violate c)?
+Yes, d) is more like a preference, since we operate in cgroup level.
+Process/thread level interfaces are also acceptable.
+AutoNUMA violates c) in its global effect that not only the source
+and destination nodes, the processes running on other nodes would
+also suffer from unwanted overhead due to numa faults.
+And besides the global effect, one-shot mode migration is expected
+in this scenario, like cpuset.memory_migrate, rather than autonuma's
+periodic behavior.
+>=20
+>> fashion which breaks a&b. So a mixture of them, the new cgroup2
+>> interface cpuset.mems.migration, is introduced.
+>>
+>> The new cpuset.mems.migration supports three modes:
+>>
+>>   - "none" mode, meaning migration disabled
+>>   - "sync" mode, which is exactly the same as the cgroup v1
+>>     interface cpuset.memory_migrate
+>>   - "lazy" mode, when walking through all the pages, unlike
+>>     cpuset.memory_migrate, it only sets pages to protnone,
+>>     and numa faults triggered by later touch will handle the
+>>     movement.
+>=20
+> cpuset is already involved in NUMA allocation but it always felt like
+> something bolted on - it's weird to have cpu to NUMA node settings at glo=
+bal
+> level and then to have possibly conflicting direct NUMA configuration via
+> cpuset. My preference would be putting as much configuration as possible =
+on
+> the mm / autonuma side and let cpuset's node confinements further restrict
+> their operations rather than cpuset having its own set of policy
+> configurations.
+Such conflicting configuration exists in our system in order to
+reduce TCO, and yet we haven't found a proper way to get rid of
+it. Say a numa-service occupies the whole memory of a node but
+still leave some cpus free. The free cpus may be assigned to some
+services, the ones that are not memory latency sensitive and are
+forbidden to use local memory. Thoughts?
 
-Thanks
-Kevin
+Thanks,
+	Abel
+>=20
+> Johannes, what are your thoughts?
+>=20
+> Thanks.
+>=20
