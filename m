@@ -1,58 +1,118 @@
-From: "Tian, Kevin" <kevin.tian@intel.com>
-Subject: RE: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
- APIs
-Date: Wed, 28 Apr 2021 07:47:56 +0000
-Message-ID: <MWHPR11MB1886C9199AA3F00FF72ACB508C409@MWHPR11MB1886.namprd11.prod.outlook.com>
-References: <20210421175203.GN1370958@nvidia.com>
- <20210421133312.15307c44@redhat.com> <20210421230301.GP1370958@nvidia.com>
- <20210422111337.6ac3624d@redhat.com> <20210422175715.GA1370958@nvidia.com>
- <20210422133747.23322269@redhat.com> <20210422200024.GC1370958@nvidia.com>
- <20210422163808.2d173225@redhat.com> <20210422233950.GD1370958@nvidia.com>
- <YIecXkaEGNgICePO@yekko.fritz.box> <20210427171212.GD1370958@nvidia.com>
+From: Odin Ugedal <odin-lVFEcm3hDZTQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/1] sched/fair: Fix unfairness caused by missing load decay
+Date: Wed, 28 Apr 2021 15:10:22 +0200
+Message-ID: <CAFpoUr1KOvLSUoUac8MMTD+TREDWmDpeku950U=_p-oBDE4Avw@mail.gmail.com>
+References: <20210425080902.11854-1-odin@uged.al> <20210425080902.11854-2-odin@uged.al>
+ <20210427142611.GA22056@vingu-book>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
- s=selector2-intel-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NPz8Og2u6aLtUq4xQukjUxKU/TryxrPNsjv9pdxRKds=;
- b=jJCG5zvl8P6o5Wzp0UCOaCfnNhAMmHfj2hZoAEa3YDQ7s1oLAHv0dcE2x3wlYUbOnb2TjiobQsTWffLGkd3fw3ENASw7MBLW+n/OkQ4SEK8SfST5NJW2jSLQW6oL+UZcKXcOVol840XjEqfb81zElQzAQWOGLoZAMkmCK4ZqKe8=
-In-Reply-To: <20210427171212.GD1370958@nvidia.com>
-Content-Language: en-US
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ugedal.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=yCqiPinRq7KbHRxw2+1CXLudhDzt8HuMBSPIFpRiJPQ=;
+        b=op0etC5f3iUvcNGm81crqMGzOmX3gWMXzJ1+rzIG/28W0YXHGVhDZikIUWNtLjtHcV
+         N5bDI277rR4vU5GWFEoGG5TddC76vb5yoAhS5AjLe50YPBa0VSTIQCNkGP7lP70EA5Hv
+         pum91yU819opegmcarW/Xkhb4kPpl34BF/gLEQUBRP5IrfDqM9nVUFrqoTYhr1qo3fZA
+         Rtcw/hUDlSIljTYbcOcRo4awy0mbjxf1q+vVlTg0XEyAzEHgw7n8bmNv03Ll42cMok3m
+         3CfnuCqpwzKRuyhuSLqHXPqQ3rg4wTERINUrqlNHeaT3RTloj79T+iEBFkNO+IHU/OAq
+         vGtA==
+In-Reply-To: <20210427142611.GA22056@vingu-book>
 List-ID: <cgroups.vger.kernel.org>
-To: Jason Gunthorpe <jgg@nvidia.com>, David Gibson <david@gibson.dropbear.id.au>
-Cc: Alex Williamson <alex.williamson@redhat.com>, "Liu, Yi L" <yi.l.liu@intel.com>, Jacob Pan <jacob.jun.pan@linux.intel.com>, Auger Eric <eric.auger@redhat.com>, Jean-Philippe Brucker <jean-philippe@linaro.org>, LKML <linux-kernel@vger.kernel.org>, Joerg Roedel <joro@8bytes.org>, Lu Baolu <baolu.lu@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jean-Philippe Brucker <jean-philippe@linaro.com>, Jonathan Corbet <corbet@lwn.net>, "Raj, Ashok" <ashok.raj@intel.com>, "Wu, Hao" <hao.wu@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-> From: Jason Gunthorpe <jgg@nvidia.com>
-> Sent: Wednesday, April 28, 2021 1:12 AM
->=20
-[...]
-> One option is VFIO can keep its group FD but nothing else will have
-> anthing like it. However I don't much like the idea that VFIO will
-> have a special and unique programming model to do that same things
-> other subsystem will do. That will make it harder for userspace to
-> implement.
+Hi,
 
-Hi, Jason,
+> Would be good to mention that the problem happens only if the new cfs_rq has
+> been removed from the leaf_cfs_rq_list because its PELT metrics were already
+> null. In such case __update_blocked_fair() never updates the blocked load of
+> the new cfs_rq and never propagate the removed load in the hierarchy.
 
-I have a question here. Based on discussions so far, it's clearly that the
-new ioasid uAPI will differ from existing VFIO uAPI a lot, e.g. ioasid-
-centric operations, no group fd, no incompatible domains, etc. Then=20
-I wonder how we plan to support legacy VFIO applications in this=20
-transition phase. Earlier you ever mentioned the desire of directly
-replacing /dev/vfio/vfio with /dev/ioasid and having ioasid to present
-both VFIO and new uAPI. Doesn't it imply that we have to copy the=20
-VFIO container/group semantics into /dev/ioasid although it's a special=20
-programming model only for VFIO?
+Well, it does technically occur when PELT metrics were null and therefore
+removed from this leaf_cfs_rq_list, that is correct. We do however not add
+newly created cfs_rq's to leaf_cfs_rq_list, so that is also a reason for it
+to occur. Most users of cgroups are probably creating a new cgroup and then
+attaching a process to it, so I think that will be the _biggest_ issue.
 
-Alternatively we could keep all the container/group legacy within VFIO
-and having /dev/ioasid support only the new uAPI semantics. In this case
-VFIO will include a shim iommu backend to connect its legacy uAPI into=20
-drivers/ioasid backend functions for backward compatibility. Then VFIO
-will also support a new model which only uses its device uAPI to bind
-to new ioasid fd w/o using any legacy container/group/iommu uAPI.
-Does this sound a plan?=20
+> The fix tag should be :
+> Fixes: 039ae8bcf7a5 ("sched/fair: Fix O(nr_cgroups) in the load balancing path")
+>
+> This patch re-introduced the del of idle cfs_rq from leaf_cfs_rq_list in order to
+> skip useless update of blocked load.
+
+Thanks for pointing me at that patch! A quick look makes me think that that
+commit caused the issue to occur _more often_, but was not the one that
+introduced it. I should probably investigate a bit more tho., since I didn't
+dig that deep in it. It is not a clean revert for that patch on v5.12,
+but I did apply the diff below to test. It is essentially what the patch
+039ae8bcf7a5 does, as far as I see. There might however been more commits
+beteen those, so I might take a look further behind to see.
+
+Doing this does make the problem less severe, resulting in ~90/10 load on the
+example that without the diff results in ~99/1. So with this diff/reverting
+039ae8bcf7a5, there is still an issue.
+
+Should I keep two "Fixes", or should I just take one of them?
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 794c2cb945f8..5fac4fbf6f84 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -7941,8 +7941,8 @@ static bool __update_blocked_fair(struct rq *rq,
+bool *done)
+                 * There can be a lot of idle CPU cgroups.  Don't let fully
+                 * decayed cfs_rqs linger on the list.
+                 */
+-               if (cfs_rq_is_decayed(cfs_rq))
+-                       list_del_leaf_cfs_rq(cfs_rq);
++               // if (cfs_rq_is_decayed(cfs_rq))
++               //      list_del_leaf_cfs_rq(cfs_rq);
+
+                /* Don't need periodic decay once load/util_avg are null */
+                if (cfs_rq_has_blocked(cfs_rq))
+
+> propagate_entity_cfs_rq() already goes across the tg tree to
+> propagate the attach/detach.
+>
+> would be better to call list_add_leaf_cfs_rq(cfs_rq)  inside this function
+> instead of looping twice the tg tree. Something like:
+>
+> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+> index 33b1ee31ae0f..18441ce7316c 100644
+> --- a/kernel/sched/fair.c
+> +++ b/kernel/sched/fair.c
+> @@ -11026,10 +11026,10 @@ static void propagate_entity_cfs_rq(struct sched_entity *se)
+>         for_each_sched_entity(se) {
+>                 cfs_rq = cfs_rq_of(se);
+>
+> -               if (cfs_rq_throttled(cfs_rq))
+> -                       break;
+> +               if (!cfs_rq_throttled(cfs_rq))
+> +                       update_load_avg(cfs_rq, se, UPDATE_TG);
+>
+> -               update_load_avg(cfs_rq, se, UPDATE_TG);
+> +               list_add_leaf_cfs_rq(cfs_rq);
+>         }
+>  }
+>  #else
+
+
+Thanks for that feedback!
+
+I did think about that, but was not sure what would be the best one.
+If it is "safe" to always run list_add_leaf_cfs_rq there (since it is used in
+more places than just on cgroup change and move to fair class), I do agree
+that that is a better solution. Will test that, and post a new patch
+if it works as expected.
+
+Also, the current code will exit from the loop in case a cfs_rq is throttled,
+while your suggestion will keep looping. For list_add_leaf_cfs_rq that is fine
+(and required), but should we keep running update_load_avg? I do think it is ok,
+and the likelihood of a cfs_rq being throttled is not that high after all, so
+I guess it doesn't really matter.
 
 Thanks
-Kevin
+Odin
