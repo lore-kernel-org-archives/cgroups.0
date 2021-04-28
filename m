@@ -1,72 +1,65 @@
 From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH v4 15/16] memcg: enable accounting for tty-related objects
-Date: Wed, 28 Apr 2021 09:54:16 +0300
-Message-ID: <e1446e9c-3878-f545-b33e-389d55bf1396@virtuozzo.com>
+Subject: [PATCH v4 16/16] memcg: enable accounting for ldt_struct objects
+Date: Wed, 28 Apr 2021 09:54:23 +0300
+Message-ID: <3d9eba94-95c0-0ac4-7290-d43537119a56@virtuozzo.com>
 References: <8664122a-99d3-7199-869a-781b21b7e712@virtuozzo.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
-        :From; bh=/VbrVWS6Ch2vyCB1qTjVFgXYG2RagNwD5SNiTLhlnlM=; b=J2AY0i1XxvmJyAsWfhJ
-        NgvuNjRjx5ACKAbzA5efimghrdGyYa+mjqK16X7aiP25ECkC8RwH0xW0CFqhjY2ili1kRJ4qT7HjK
-        FVnAH9hhnJNVt1hW9svTA/SnP/tQ9o7HKGYoR+xtbn8twdxqhWd5nF+UOZPlaLa+6s6O24s8w48=
+        :From; bh=QOm/SWMV/Asmk/Sj3wEkt1IsJkdhz+j421ZJ6yW2Ajw=; b=IDB1h2lSlKkrU6uw510
+        4z3y+hegvYX4IXTZIgYSc7a2hI7ZAzKbYY3EFCcsui6tcG9h4zYiqF7/cQ4Pfk0hAXYgPqB9v+CBd
+        WjKricgDQd7BvRJWG38f+R51j4jsYoj2el9wIgqnrwzmRwk+DonoKMQnf4DDtnxE9FL1584w88U=
 In-Reply-To: <8664122a-99d3-7199-869a-781b21b7e712-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Jiri Slaby <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-At each login the user forces the kernel to create a new terminal and
-allocate up to ~1Kb memory for the tty-related structures.
+Each task can request own LDT and force the kernel to allocate up to
+64Kb memory per-mm.
 
-By default it's allowed to create up to 4096 ptys with 1024 reserve for
-initial mount namespace only and the settings are controlled by host admin.
+There are legitimate workloads with hundreds of processes and there
+can be hundreds of workloads running on large machines.
+The unaccounted memory can cause isolation issues between the workloads
+particularly on highly utilized machines.
 
-Though this default is not enough for hosters with thousands
-of containers per node. Host admin can be forced to increase it
-up to NR_UNIX98_PTY_MAX = 1<<20.
-
-By default container is restricted by pty mount_opt.max = 1024,
-but admin inside container can change it via remount. As a result,
-one container can consume almost all allowed ptys
-and allocate up to 1Gb of unaccounted memory.
-
-It is not enough per-se to trigger OOM on host, however anyway, it allows
-to significantly exceed the assigned memcg limit and leads to troubles
-on the over-committed node.
-
-It makes sense to account for them to restrict the host's memory
+It makes sense to account for this objects to restrict the host's memory
 consumption from inside the memcg-limited container.
 
 Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Acked-by: Borislav Petkov <bp-l3A5Bk7waGM@public.gmane.org>
 ---
- drivers/tty/tty_io.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ arch/x86/kernel/ldt.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/tty/tty_io.c b/drivers/tty/tty_io.c
-index 391bada..e613b8e 100644
---- a/drivers/tty/tty_io.c
-+++ b/drivers/tty/tty_io.c
-@@ -1502,7 +1502,7 @@ void tty_save_termios(struct tty_struct *tty)
- 	/* Stash the termios data */
- 	tp = tty->driver->termios[idx];
- 	if (tp == NULL) {
--		tp = kmalloc(sizeof(*tp), GFP_KERNEL);
-+		tp = kmalloc(sizeof(*tp), GFP_KERNEL_ACCOUNT);
- 		if (tp == NULL)
- 			return;
- 		tty->driver->termios[idx] = tp;
-@@ -3127,7 +3127,7 @@ struct tty_struct *alloc_tty_struct(struct tty_driver *driver, int idx)
- {
- 	struct tty_struct *tty;
- 
--	tty = kzalloc(sizeof(*tty), GFP_KERNEL);
-+	tty = kzalloc(sizeof(*tty), GFP_KERNEL_ACCOUNT);
- 	if (!tty)
+diff --git a/arch/x86/kernel/ldt.c b/arch/x86/kernel/ldt.c
+index aa15132..525876e 100644
+--- a/arch/x86/kernel/ldt.c
++++ b/arch/x86/kernel/ldt.c
+@@ -154,7 +154,7 @@ static struct ldt_struct *alloc_ldt_struct(unsigned int num_entries)
+ 	if (num_entries > LDT_ENTRIES)
  		return NULL;
  
+-	new_ldt = kmalloc(sizeof(struct ldt_struct), GFP_KERNEL);
++	new_ldt = kmalloc(sizeof(struct ldt_struct), GFP_KERNEL_ACCOUNT);
+ 	if (!new_ldt)
+ 		return NULL;
+ 
+@@ -168,9 +168,9 @@ static struct ldt_struct *alloc_ldt_struct(unsigned int num_entries)
+ 	 * than PAGE_SIZE.
+ 	 */
+ 	if (alloc_size > PAGE_SIZE)
+-		new_ldt->entries = vzalloc(alloc_size);
++		new_ldt->entries = __vmalloc(alloc_size, GFP_KERNEL_ACCOUNT | __GFP_ZERO);
+ 	else
+-		new_ldt->entries = (void *)get_zeroed_page(GFP_KERNEL);
++		new_ldt->entries = (void *)get_zeroed_page(GFP_KERNEL_ACCOUNT);
+ 
+ 	if (!new_ldt->entries) {
+ 		kfree(new_ldt);
 -- 
 1.8.3.1
 
