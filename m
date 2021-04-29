@@ -1,142 +1,76 @@
-From: Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
- APIs
-Date: Thu, 29 Apr 2021 15:26:55 +0200
-Message-ID: <6e36797c-799e-074d-f66f-5686a4b37f38@redhat.com>
-References: <20210415230732.GG1370958@nvidia.com>
- <20210416061258.325e762e@jacob-builder> <20210416094547.1774e1a3@redhat.com>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Thu, 29 Apr 2021 17:04:31 -0300
+Message-ID: <20210429200431.GA1370958@nvidia.com>
+References: <20210416094547.1774e1a3@redhat.com>
  <BN6PR11MB406854F56D18E1187A2C98ACC3479@BN6PR11MB4068.namprd11.prod.outlook.com>
- <20210421162307.GM1370958@nvidia.com> <20210421105451.56d3670a@redhat.com>
- <20210421175203.GN1370958@nvidia.com> <20210421133312.15307c44@redhat.com>
+ <20210421162307.GM1370958@nvidia.com>
+ <20210421105451.56d3670a@redhat.com>
+ <20210421175203.GN1370958@nvidia.com>
+ <20210421133312.15307c44@redhat.com>
  <20210421230301.GP1370958@nvidia.com>
  <MWHPR11MB1886188698A6E20338196F788C469@MWHPR11MB1886.namprd11.prod.outlook.com>
  <20210422121020.GT1370958@nvidia.com>
+ <6e36797c-799e-074d-f66f-5686a4b37f38@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619702831;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=V1S2l6ltOAUMOqA4QGNdJwZj23ip0m20+cgBzNWZI1I=;
-        b=g5ZFN6ZANqZGBSXiJmLtZtKqkpvYqsPuJrxtBhugKLZIUfjqrdIvBdb72/nK/IPFbJ+N3U
-        x6rhyvj7nRsxjYnWQS16XP7Fu4woTNrWglwDRGotw+JTsUB1yZJ5zAN9LpG4QwDg2xzFgv
-        9PC8ODV6FbTBwwicEcuyZmY9NsSkwJc=
-In-Reply-To: <20210422121020.GT1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=TkpaYP+cv8dFl3WE35NrNGEXUKYkXY9KrkKcooFcmuw=;
+ b=nj8960sLdZFZGF/WBWTEOSKbbmdMUc4/CSoTPhJkq38wCvool8bZj2Wq5M7E27g3fJdJBtqbXsM/i0yaU8C8ES/4fT9YbLRY5HNQNxg3UOx4F2SahPAffnvhIxc2WsdqQeCs1WvIs43vPcSAv6qLeR/gf6sjqrGZofsc029wHqNczkMIsYKKZDgo2wf/T/tMzLuXSPLF1Tjl2KKB6MLeUEQf1W8cUbdv/sePqiYpqfFPB6UjKkWWUklVIHuljcoFino/sc4W7cDPWhdCp6sM8LhL8lQW28tOYvJc96b2cgbSFxTl9Whj1+nMrZ/dKsBunJP3HnT3pwzXlkYTIuYSmg==
+Content-Disposition: inline
+In-Reply-To: <6e36797c-799e-074d-f66f-5686a4b37f38-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Hi,
+On Thu, Apr 29, 2021 at 03:26:55PM +0200, Auger Eric wrote:
+> From the pseudo code,
+> 
+>   gpa_ioasid_id = ioctl(ioasid_fd, CREATE_IOASID, ..)
+>   ioctl(ioasid_fd, SET_IOASID_PAGE_TABLES, ..)
+> 
+> I fail to understand whether the SET_IOASID_PAGE_TABLES would apply to
+> the whole IOASIDs within /dev/ioasid or to a specific one.
 
-On 4/22/21 2:10 PM, Jason Gunthorpe wrote:
-> On Thu, Apr 22, 2021 at 08:34:32AM +0000, Tian, Kevin wrote:
-> 
->> The shim layer could be considered as a new iommu backend in VFIO,
->> which connects VFIO iommu ops to the internal helpers in
->> drivers/ioasid.
-> 
-> It may be the best we can do because of SPAPR, but the ideal outcome
-> should be to remove the entire pluggable IOMMU stuff from vfio
-> entirely and have it only use /dev/ioasid
-> 
-> We should never add another pluggable IOMMU type to vfio - everything
-> should be done through drives/iommu now that it is much more capable.
-> 
->> Another tricky thing is that a container may be linked to multiple iommu
->> domains in VFIO, as devices in the container may locate behind different
->> IOMMUs with inconsistent capability (commit 1ef3e2bc). 
-> 
-> Frankly this sounds over complicated. I would think /dev/ioasid should
-> select the IOMMU when the first device is joined, and all future joins
-> must be compatible with the original IOMMU - ie there is only one set
-> of IOMMU capabilities in a /dev/ioasid.
-> 
-> This means qemue might have multiple /dev/ioasid's if the system has
-> multiple incompatible IOMMUs (is this actually a thing?) The platform
-> should design its IOMMU domains to minimize the number of
-> /dev/ioasid's required.
-> 
-> Is there a reason we need to share IOASID'd between completely
-> divergance IOMMU implementations? I don't expect the HW should be able
-> to physically share page tables??
-> 
-> That decision point alone might be the thing that just says we can't
-> ever have /dev/vfio/vfio == /dev/ioasid
-> 
->> Just to confirm. Above flow is for current map/unmap flavor as what
->> VFIO/vDPA do today. Later when nested translation is supported,
->> there is no need to detach gpa_ioasid_fd. Instead, a new cmd will
->> be introduced to nest rid_ioasid_fd on top of gpa_ioasid_fd:
-> 
-> Sure.. The tricky bit will be to define both of the common nested
-> operating modes.
->
+Sorry, nearly every IOCTL would be scoped to a specific IOASID as one
+of the arguments.
 
-From the pseudo code,
+> Also in subsequent emails when you talk about IOASID, is it the
+> ioasid_id, just to double check the terminology.
 
-  gpa_ioasid_id = ioctl(ioasid_fd, CREATE_IOASID, ..)
-  ioctl(ioasid_fd, SET_IOASID_PAGE_TABLES, ..)
+I am refering to IOASID as 'handle of the page table object inside the
+/dev/ioasid fd'. If that is equal to some HW value or not I think
+remains as decision point.
 
-I fail to understand whether the SET_IOASID_PAGE_TABLES would apply to
-the whole IOASIDs within /dev/ioasid or to a specific one.
+Basically the fd has an xarray of 'struct [something] *' and the
+IOASID is index to that FD's private xarray. This is necessary to
+create proper security as even if we have global PASID numbers or
+something they still need to be isolated to only the FD that has
+been authorized access.
 
-Also in subsequent emails when you talk about IOASID, is it the
-ioasid_id, just to double check the terminology.
+> >   nested_ioasid = ioctl(ioasid_fd, CREATE_NESTED_IOASID,  gpa_ioasid_id);
+> >   ioctl(ioasid_fd, SET_NESTED_IOASID_PAGE_TABLES, nested_ioasid, ..)
+> is the nested_ioasid the allocated PASID id or is it a complete
+> different object id.
 
+It is the IOASID handle above.
 
->   nested_ioasid = ioctl(ioasid_fd, CREATE_NESTED_IOASID,  gpa_ioasid_id);
->   ioctl(ioasid_fd, SET_NESTED_IOASID_PAGE_TABLES, nested_ioasid, ..)
-is the nested_ioasid the allocated PASID id or is it a complete
-different object id.
-> 
->    // IOMMU will match on the device RID, no PASID:
->   ioctl(vfio_device, ATTACH_IOASID, nested_ioasid);
-> 
->    // IOMMU will match on the device RID and PASID:
->   ioctl(vfio_device, ATTACH_IOASID_PASID, pasid, nested_ioasid);
-here I see you pass a different pasid, so I guess they are different, in
-which case you would need to have an allocator function for this pasid,
-right?
-
-Thanks
-
-Eric
-> 
-> Notice that ATTACH (or bind, whatever) is always done on the
-> vfio_device FD. ATTACH tells the IOMMU HW to link the PCI BDF&PASID to
-> a specific page table defined by an IOASID.
-> 
-> I expect we have many flavours of IOASID tables, eg we have normal,
-> and 'nested with table controlled by hypervisor'. ARM has 'nested with
-> table controlled by guest' right? So like this?
-> 
->   nested_ioasid = ioctl(ioasid_fd, CREATE_DELGATED_IOASID,
->                    gpa_ioasid_id, <some kind of viommu_id>)
->   // PASID now goes to <viommu_id>
->   ioctl(vfio_device, ATTACH_IOASID_PASID, pasid, nested_ioasid);
-
-> 
-> Where <viommu_id> is some internal to the guest handle of the viommu
-> page table scoped within gpa_ioasid_id? Like maybe it is GPA of the
-> base of the page table?
-> 
-> The guest can't select its own PASIDs without telling the hypervisor,
+> >
+> >    // IOMMU will match on the device RID, no PASID:
+> >   ioctl(vfio_device, ATTACH_IOASID, nested_ioasid);
+> > 
+> >    // IOMMU will match on the device RID and PASID:
+> >   ioctl(vfio_device, ATTACH_IOASID_PASID, pasid, nested_ioasid);
+> here I see you pass a different pasid, so I guess they are different, in
+> which case you would need to have an allocator function for this pasid,
 > right?
-> 
->> I also feel hiding group from uAPI is a good thing and is interested in
->> the rationale behind for explicitly managing group in vfio (which is
->> essentially the same boundary as provided by iommu group), e.g. for 
->> better user experience when group security is broken? 
-> 
-> Indeed, I can see how things might have just evolved into this, but if
-> it has a purpose it seems pretty hidden.
-> we need it or not seems pretty hidden.
-> 
-> Jason
-> 
 
+Yes, the underlying HW ID (PASID or substream id or whatver) is
+something slightly different
+
+Jason
