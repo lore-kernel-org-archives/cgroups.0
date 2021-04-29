@@ -1,21 +1,21 @@
 From: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 2/5] docs/cgroup: add entry for cgroup.kill
-Date: Thu, 29 Apr 2021 14:01:10 +0200
-Message-ID: <20210429120113.2238065-2-brauner@kernel.org>
+Subject: [PATCH 3/5] tests/cgroup: use cgroup.kill in cg_killall()
+Date: Thu, 29 Apr 2021 14:01:11 +0200
+Message-ID: <20210429120113.2238065-3-brauner@kernel.org>
 References: <20210429120113.2238065-1-brauner@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1619697706;
-        bh=oPVrQiSH4gJIxWe/7Tc1T6o/zmAuBj23mR9CFaPe9Ec=;
+        s=k20201202; t=1619697708;
+        bh=5qld4YO5g4c9lOG9SwrBFf2p2zt+KhTuIbqd0h3aft0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=F/Rdo/fHTGnVIBbJz0jV8Xe2zbhkNwR9FsQ2+YHjQ+7djeQd0OSGTeYDr0Hyt12Tg
-         Ol/URpqxTpjc39VJS6FwwaFoSLdWhwunRvF4iuiKFG4b1SoM0PLaLED4dYy8bog06d
-         aNWyc41AuDorgahEE1kNWQUzQfSZ8yKoNUg1sBGDMXNs/IzJYZxv7dlq4kVbFhgbAO
-         dF+y6vCHMJKfux3+X3lPM3P8EecWB2HJM0SkFdLO2WKQWcOL/MkKG3sV4YW3ocAfll
-         IzgpgrWk1D5KOdYFcF1pU663y+6nOFAIo/96qKA5WZ/fy/ostj31PLMvgNqmZutgt9
-         nByaTNrt+aOCg==
+        b=aXFDhV5fgITuYrlpH8KhcGC1nqJVV1hGIgJeKqyV8vK6/egmgfYmcKud+VC0XtESJ
+         abxErzL4B2CmueBckjTo7dBmjFgydPYJg21bXileReGdEUusXc0BEGx7ygbyMxotef
+         5mP3ytJnMZjfvXL/3Sy2Eo3eQ2JL9/l91441oboG5fAyBfeXVhJxAZ3hp5gBtk1kPL
+         gNayyHq2r7+IwkdN1meD8Mf2xgh9wZ58vRZnwiynWykJMyWqbJ3hC382qHOpIkB7Z9
+         8zRkivzyOiCdBBl4o0DORuSDBamA6fD/OMVc4Zp/Vme51FkWYyZXsczEtG3mr5uonP
+         dfmWJprABZosQ==
 In-Reply-To: <20210429120113.2238065-1-brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -24,43 +24,30 @@ Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <l
 
 From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-Give a brief overview of the cgroup.kill functionality.
+If cgroup.kill file is supported make use of it.
 
 Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Signed-off-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 ---
- Documentation/admin-guide/cgroup-v2.rst | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ tools/testing/selftests/cgroup/cgroup_util.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 64c62b979f2f..c9f656a84590 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -949,6 +949,23 @@ All cgroup core files are prefixed with "cgroup."
- 	it's possible to delete a frozen (and empty) cgroup, as well as
- 	create new sub-cgroups.
+diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
+index 027014662fb2..3e27cd9bda75 100644
+--- a/tools/testing/selftests/cgroup/cgroup_util.c
++++ b/tools/testing/selftests/cgroup/cgroup_util.c
+@@ -252,6 +252,10 @@ int cg_killall(const char *cgroup)
+ 	char buf[PAGE_SIZE];
+ 	char *ptr = buf;
  
-+  cgroup.kill
-+	A write-only single value file which exists in non-root cgroups.
-+	The only allowed value is "1".
++	/* If cgroup.kill exists use it. */
++        if (!cg_write(cgroup, "cgroup.kill", "1"))
++		return 0;
 +
-+	Writing "1" to the file causes the cgroup and all descendant cgroups to
-+	be killed. This means that all processes located in the affected cgroup
-+	tree will be killed via SIGKILL.
-+
-+	Killing a cgroup tree will deal with concurrent forks appropriately and
-+	is protected against migrations. If callers require strict guarantees
-+	they can issue the cgroup.kill request after a freezing the cgroup via
-+	cgroup.freeze.
-+
-+	In a threaded cgroup, writing this file fails with EOPNOTSUPP as
-+	killing cgroups is a process directed operation, i.e. it affects
-+	the whole thread-group.
-+
- Controllers
- ===========
+ 	if (cg_read(cgroup, "cgroup.procs", buf, sizeof(buf)))
+ 		return -1;
  
 -- 
 2.27.0
