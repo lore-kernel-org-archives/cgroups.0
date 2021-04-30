@@ -1,76 +1,271 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Thu, 29 Apr 2021 17:04:31 -0300
-Message-ID: <20210429200431.GA1370958@nvidia.com>
-References: <20210416094547.1774e1a3@redhat.com>
- <BN6PR11MB406854F56D18E1187A2C98ACC3479@BN6PR11MB4068.namprd11.prod.outlook.com>
- <20210421162307.GM1370958@nvidia.com>
- <20210421105451.56d3670a@redhat.com>
- <20210421175203.GN1370958@nvidia.com>
- <20210421133312.15307c44@redhat.com>
- <20210421230301.GP1370958@nvidia.com>
- <MWHPR11MB1886188698A6E20338196F788C469@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210422121020.GT1370958@nvidia.com>
- <6e36797c-799e-074d-f66f-5686a4b37f38@redhat.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH 1/5] cgroup: introduce cgroup.kill
+Date: Thu, 29 Apr 2021 20:20:11 -0700
+Message-ID: <YIt3a5R5tYgIpoVQ@carbon.dhcp.thefacebook.com>
+References: <20210429120113.2238065-1-brauner@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TkpaYP+cv8dFl3WE35NrNGEXUKYkXY9KrkKcooFcmuw=;
- b=nj8960sLdZFZGF/WBWTEOSKbbmdMUc4/CSoTPhJkq38wCvool8bZj2Wq5M7E27g3fJdJBtqbXsM/i0yaU8C8ES/4fT9YbLRY5HNQNxg3UOx4F2SahPAffnvhIxc2WsdqQeCs1WvIs43vPcSAv6qLeR/gf6sjqrGZofsc029wHqNczkMIsYKKZDgo2wf/T/tMzLuXSPLF1Tjl2KKB6MLeUEQf1W8cUbdv/sePqiYpqfFPB6UjKkWWUklVIHuljcoFino/sc4W7cDPWhdCp6sM8LhL8lQW28tOYvJc96b2cgbSFxTl9Whj1+nMrZ/dKsBunJP3HnT3pwzXlkYTIuYSmg==
-Content-Disposition: inline
-In-Reply-To: <6e36797c-799e-074d-f66f-5686a4b37f38-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=kM0Qsq0Ge1QNBRcCm9o93boNdtjb9MhHZimLYSv5ELk=;
+ b=IG4Y9d5UKvb77GRwR/vF9TXcJ9bmrjGTBtcZ2Bl6BSEvPqQwEvNZJXm8Ob1sO5ToAiXD
+ G8ek2aTKW1IdlQYvRYHMkJVO+/RH+k/9/fSseTW/zmaNvOSNx/Mbu9toaBcKB0sRg//q
+ Nb6zG9BCwzg4JEq/eKkudJ91VZ7E/24l7vI= 
+Content-Disposition: inline
+In-Reply-To: <20210429120113.2238065-1-brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-On Thu, Apr 29, 2021 at 03:26:55PM +0200, Auger Eric wrote:
-> From the pseudo code,
+On Thu, Apr 29, 2021 at 02:01:09PM +0200, Christian Brauner wrote:
+> From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 > 
->   gpa_ioasid_id = ioctl(ioasid_fd, CREATE_IOASID, ..)
->   ioctl(ioasid_fd, SET_IOASID_PAGE_TABLES, ..)
+> Introduce the cgroup.kill file. It does what it says on the tin and
+> allows a caller to kill a cgroup by writing "1" into cgroup.kill.
+> The file is available in non-root cgroups.
 > 
-> I fail to understand whether the SET_IOASID_PAGE_TABLES would apply to
-> the whole IOASIDs within /dev/ioasid or to a specific one.
+> Killing cgroups is a process directed operation, i.e. the whole
+> thread-group is affected. Consequently trying to write to cgroup.kill in
+> threaded cgroups will be rejected and EOPNOTSUPP returned. This behavior
+> aligns with cgroup.procs where reads in threaded-cgroups are rejected
+> with EOPNOTSUPP.
+> 
+> The cgroup.kill file is write-only since killing a cgroup is an event
+> not which makes it different from e.g. freezer where a cgroup
+> transitions between the two states.
+> 
+> As with all new cgroup features cgroup.kill is recursive by default.
+> 
+> Killing a cgroup is protected against concurrent migrations through the
+> cgroup mutex. To protect against forkbombs and to mitigate the effect of
+> racing forks a new CGRP_KILL css set lock protected flag is introduced
+> that is set prior to killing a cgroup and unset after the cgroup has
+> been killed. We can then check in cgroup_post_fork() where we hold the
+> css set lock already whether the cgroup is currently being killed. If so
+> we send the child a SIGKILL signal immediately taking it down as soon as
+> it returns to userspace. To make the killing of the child semantically
+> clean it is killed after all cgroup attachment operations have been
+> finalized.
+> 
+> There are various use-cases of this interface:
+> - Containers usually have a conservative layout where each container
+>   usually has a delegated cgroup. For such layouts there is a 1:1
+>   mapping between container and cgroup. If the container in addition
+>   uses a separate pid namespace then killing a container usually becomes
+>   a simple kill -9 <container-init-pid> from an ancestor pid namespace.
+>   However, there are quite a few scenarios where that isn't true. For
+>   example, there are containers that share the cgroup with other
+>   processes on purpose that are supposed to be bound to the lifetime of
+>   the container but are not in the same pidns of the container.
+>   Containers that are in a delegated cgroup but share the pid namespace
+>   with the host or other containers.
+> - Service managers such as systemd use cgroups to group and organize
+>   processes belonging to a service. They usually rely on a recursive
+>   algorithm now to kill a service. With cgroup.kill this becomes a
+>   simple write to cgroup.kill.
+> - Userspace OOM implementations can make good use of this feature to
+>   efficiently take down whole cgroups quickly.
+> - The kill program can gain a new
+>   kill --cgroup /sys/fs/cgroup/delegated
+>   flag to take down cgroups.
+> 
+> A few observations about the semantics:
+> - If parent and child are in the same cgroup and CLONE_INTO_CGROUP is
+>   not specified we are not taking cgroup mutex meaning the cgroup can be
+>   killed while a process in that cgroup is forking.
+>   If the kill request happens right before cgroup_can_fork() and before
+>   the parent grabs its siglock the parent is guaranteed to see the
+>   pending SIGKILL. In addition we perform another check in
+>   cgroup_post_fork() whether the cgroup is being killed and is so take
+>   down the child (see above). This is robust enough and protects gainst
+>   forkbombs. If userspace really really wants to have stricter
+>   protection the simple solution would be to grab the write side of the
+>   cgroup threadgroup rwsem which will force all ongoing forks to
+>   complete before killing starts. We concluded that this is not
+>   necessary as the semantics for concurrent forking should simply align
+>   with freezer where a similar check as cgroup_post_fork() is performed.
+> 
+>   For all other cases CLONE_INTO_CGROUP is required. In this case we
+>   will grab the cgroup mutex so the cgroup can't be killed while we
+>   fork. Once we're done with the fork and have dropped cgroup mutex we
+>   are visible and will be found by any subsequent kill request.
+> 
+> - We obviously don't kill kthreads. This means a cgroup that has a
+>   kthread will not become empty after killing and consequently no
+>   unpopulated event will be generated. The assumption is that kthreads
+>   should be in the root cgroup only anyway so this is not an issue.
+> - We skip killing tasks that already have pending fatal signals.
+> - Freezer doesn't care about tasks in different pid namespaces, i.e. if
+>   you have two tasks in different pid namespaces the cgroup would still
+>   be frozen. The cgroup.kill mechanism consequently behaves the same
+>   way, i.e. we kill all processes and ignore in which pid namespace they
+>   exist.
+> - If the caller is located in a cgroup that is killed the caller will
+>   obviously be killed as well.
+> 
+> Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Signed-off-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-Sorry, nearly every IOCTL would be scoped to a specific IOASID as one
-of the arguments.
+Hello Christian!
 
-> Also in subsequent emails when you talk about IOASID, is it the
-> ioasid_id, just to double check the terminology.
+This version looks very good to me, thanks for working on it!
+One small not below.
 
-I am refering to IOASID as 'handle of the page table object inside the
-/dev/ioasid fd'. If that is equal to some HW value or not I think
-remains as decision point.
+> ---
+>  include/linux/cgroup-defs.h |  3 ++
+>  kernel/cgroup/cgroup.c      | 90 +++++++++++++++++++++++++++++++++++++
+>  2 files changed, 93 insertions(+)
+> 
+> diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+> index 559ee05f86b2..43fef771009a 100644
+> --- a/include/linux/cgroup-defs.h
+> +++ b/include/linux/cgroup-defs.h
+> @@ -71,6 +71,9 @@ enum {
+>  
+>  	/* Cgroup is frozen. */
+>  	CGRP_FROZEN,
+> +
+> +	/* Control group has to be killed. */
+> +	CGRP_KILL,
+>  };
+>  
+>  /* cgroup_root->flags */
+> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> index 9153b20e5cc6..000f58b6ea35 100644
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -3654,6 +3654,80 @@ static ssize_t cgroup_freeze_write(struct kernfs_open_file *of,
+>  	return nbytes;
+>  }
+>  
+> +static void __cgroup_kill(struct cgroup *cgrp)
+> +{
+> +	struct css_task_iter it;
+> +	struct task_struct *task;
+> +
+> +	lockdep_assert_held(&cgroup_mutex);
+> +
+> +	spin_lock_irq(&css_set_lock);
+> +	set_bit(CGRP_KILL, &cgrp->flags);
+> +	spin_unlock_irq(&css_set_lock);
+> +
+> +	css_task_iter_start(&cgrp->self, CSS_TASK_ITER_PROCS | CSS_TASK_ITER_THREADED, &it);
+> +	while ((task = css_task_iter_next(&it))) {
+> +		/* Ignore kernel threads here. */
+> +		if (task->flags & PF_KTHREAD)
+> +			continue;
+> +
+> +		/* Skip tasks that are already dying. */
+> +		if (__fatal_signal_pending(task))
+> +			continue;
+> +
+> +		send_sig(SIGKILL, task, 0);
+> +	}
+> +	css_task_iter_end(&it);
+> +
+> +	spin_lock_irq(&css_set_lock);
+> +	clear_bit(CGRP_KILL, &cgrp->flags);
+> +	spin_unlock_irq(&css_set_lock);
+> +}
+> +
+> +static void cgroup_kill(struct cgroup *cgrp)
+> +{
+> +	struct cgroup_subsys_state *css;
+> +	struct cgroup *dsct;
+> +
+> +	lockdep_assert_held(&cgroup_mutex);
+> +
+> +	cgroup_for_each_live_descendant_pre(dsct, css, cgrp)
+> +		__cgroup_kill(dsct);
+> +}
+> +
+> +static ssize_t cgroup_kill_write(struct kernfs_open_file *of, char *buf,
+> +				 size_t nbytes, loff_t off)
+> +{
+> +	ssize_t ret = 0;
+> +	int kill;
+> +	struct cgroup *cgrp;
+> +
+> +	ret = kstrtoint(strstrip(buf), 0, &kill);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (kill != 1)
+> +		return -ERANGE;
+> +
+> +	cgrp = cgroup_kn_lock_live(of->kn, false);
+> +	if (!cgrp)
+> +		return -ENOENT;
+> +
+> +	/*
+> +	 * Killing is a process directed operation, i.e. the whole thread-group
+> +	 * is taken down so act like we do for cgroup.procs and only make this
+> +	 * writable in non-threaded cgroups.
+> +	 */
+> +	if (cgroup_is_threaded(cgrp))
+> +		ret = -EOPNOTSUPP;
+> +	else
+> +		cgroup_kill(cgrp);
+> +
+> +	cgroup_kn_unlock(of->kn);
+> +
+> +	return ret ?: nbytes;
+> +}
+> +
+>  static int cgroup_file_open(struct kernfs_open_file *of)
+>  {
+>  	struct cftype *cft = of_cft(of);
+> @@ -4846,6 +4920,11 @@ static struct cftype cgroup_base_files[] = {
+>  		.seq_show = cgroup_freeze_show,
+>  		.write = cgroup_freeze_write,
+>  	},
+> +	{
+> +		.name = "cgroup.kill",
+> +		.flags = CFTYPE_NOT_ON_ROOT,
+> +		.write = cgroup_kill_write,
+> +	},
+>  	{
+>  		.name = "cpu.stat",
+>  		.seq_show = cpu_stat_show,
+> @@ -6077,6 +6156,7 @@ void cgroup_post_fork(struct task_struct *child,
+>  		      struct kernel_clone_args *kargs)
+>  	__releases(&cgroup_threadgroup_rwsem) __releases(&cgroup_mutex)
+>  {
+> +	bool kill = false;
+>  	struct cgroup_subsys *ss;
+>  	struct css_set *cset;
+>  	int i;
+> @@ -6088,6 +6168,12 @@ void cgroup_post_fork(struct task_struct *child,
+>  
+>  	/* init tasks are special, only link regular threads */
+>  	if (likely(child->pid)) {
+> +		struct cgroup *cgrp;
+> +
+> +		/* Check whether the target cgroup is being killed. */
+> +		cgrp = kargs->cgrp ?: cset->dfl_cgrp;
+> +		kill = test_bit(CGRP_KILL, &cgrp->flags);
+> +
+>  		WARN_ON_ONCE(!list_empty(&child->cg_list));
+>  		cset->nr_tasks++;
+>  		css_set_move_task(child, NULL, cset, false);
+> @@ -6135,6 +6221,10 @@ void cgroup_post_fork(struct task_struct *child,
+>  		put_css_set(rcset);
+>  	}
+>  
+> +	/* Take down child immediately. */
+> +	if (kill)
+> +		send_sig(SIGKILL, child, 0);
+> +
 
-Basically the fd has an xarray of 'struct [something] *' and the
-IOASID is index to that FD's private xarray. This is necessary to
-create proper security as even if we have global PASID numbers or
-something they still need to be isolated to only the FD that has
-been authorized access.
+This part can be hot, so I'd integrate it better with the freezer check:
+instead of getting child task's cgroup's flags and checking individual
+bits twice we can do it once.
 
-> >   nested_ioasid = ioctl(ioasid_fd, CREATE_NESTED_IOASID,  gpa_ioasid_id);
-> >   ioctl(ioasid_fd, SET_NESTED_IOASID_PAGE_TABLES, nested_ioasid, ..)
-> is the nested_ioasid the allocated PASID id or is it a complete
-> different object id.
+Other than that the patch looks good to me.
 
-It is the IOASID handle above.
-
-> >
-> >    // IOMMU will match on the device RID, no PASID:
-> >   ioctl(vfio_device, ATTACH_IOASID, nested_ioasid);
-> > 
-> >    // IOMMU will match on the device RID and PASID:
-> >   ioctl(vfio_device, ATTACH_IOASID_PASID, pasid, nested_ioasid);
-> here I see you pass a different pasid, so I guess they are different, in
-> which case you would need to have an allocator function for this pasid,
-> right?
-
-Yes, the underlying HW ID (PASID or substream id or whatver) is
-something slightly different
-
-Jason
+Thanks!
