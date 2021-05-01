@@ -1,71 +1,275 @@
-From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/5] docs/cgroup: add entry for cgroup.kill
-Date: Sat, 1 May 2021 13:56:12 +0200
-Message-ID: <20210501115612.nfm3f3ag6fbmfmzl@wittgenstein>
-References: <20210429120113.2238065-1-brauner@kernel.org>
- <20210429120113.2238065-2-brauner@kernel.org>
- <YIt32/aQJfkw53ic@carbon.dhcp.thefacebook.com>
- <20210430065036.uinuugxw6dhdqytc@wittgenstein>
- <YIzBc5IgiaIFykc5@carbon.dhcp.thefacebook.com>
+From: Odin Ugedal <odin@uged.al>
+Subject: [PATCH v2 0/1] sched/fair: Fix unfairness caused by missing load decay
+Date: Sat,  1 May 2021 16:19:49 +0200
+Message-ID: <20210501141950.23622-1-odin@uged.al>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <YIzBc5IgiaIFykc5-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=uged.al; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=0vbeA+iBCLiNiP2wrTp6xojcacyeQy/jqI+Mj96mgGk=;
+        b=y/K0hf4sv3h8fLlnlRiBx0ByouhIDRAk3BT7hYrPSHWEbme/eIDvtqAN5+bnJLY2Tc
+         elUqcci7p79wKEAb8ftWqOLSmEPNULmlkT/S5OM5Tkg8m3CAB6pleUPnwZ7qE/bAH4BT
+         jPftK9pmabJiPvwjrxe/U5bJ7NB3+AX9kNivNmAPxINTp7BeXq4U20rz004YXs6uDJEP
+         tXAdoJq5+psCY2x4rT9HcKBuxXe7MLJeYeCQI3CpB/ATmf1ydRa620iJ2i2bD7LvWwn8
+         xDQ1h6xXDDvswJnbU5K+rDqLULHNpMUfwkjwLnao4jlxEMr1Q+MLP45HUCeoKrJG4LEV
+         i3JQ==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Odin Ugedal <odin@uged.al>
 
-On Fri, Apr 30, 2021 at 07:48:19PM -0700, Roman Gushchin wrote:
-> On Fri, Apr 30, 2021 at 08:50:36AM +0200, Christian Brauner wrote:
-> > On Thu, Apr 29, 2021 at 08:22:03PM -0700, Roman Gushchin wrote:
-> > > On Thu, Apr 29, 2021 at 02:01:10PM +0200, Christian Brauner wrote:
-> > > > From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-> > > > 
-> > > > Give a brief overview of the cgroup.kill functionality.
-> > > > 
-> > > > Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-> > > > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> > > > Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> > > > Signed-off-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-> > > > ---
-> > > >  Documentation/admin-guide/cgroup-v2.rst | 17 +++++++++++++++++
-> > > >  1 file changed, 17 insertions(+)
-> > > > 
-> > > > diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> > > > index 64c62b979f2f..c9f656a84590 100644
-> > > > --- a/Documentation/admin-guide/cgroup-v2.rst
-> > > > +++ b/Documentation/admin-guide/cgroup-v2.rst
-> > > > @@ -949,6 +949,23 @@ All cgroup core files are prefixed with "cgroup."
-> > > >  	it's possible to delete a frozen (and empty) cgroup, as well as
-> > > >  	create new sub-cgroups.
-> > > >  
-> > > > +  cgroup.kill
-> > > > +	A write-only single value file which exists in non-root cgroups.
-> > > > +	The only allowed value is "1".
-> > > > +
-> > > > +	Writing "1" to the file causes the cgroup and all descendant cgroups to
-> > > > +	be killed. This means that all processes located in the affected cgroup
-> > > > +	tree will be killed via SIGKILL.
-> > > > +
-> > > > +	Killing a cgroup tree will deal with concurrent forks appropriately and
-> > > > +	is protected against migrations. If callers require strict guarantees
-> > > > +	they can issue the cgroup.kill request after a freezing the cgroup via
-> > > > +	cgroup.freeze.
-> > > 
-> > > Hm, is it necessarily? What additional guarantees adds using the freezer?
-> > 
-> > Every new process that get's added is frozen. So even if the a process
-> > ends up escaping the cgroup.kill request somehow it will be frozen in
-> > the cgroup and can't itself fork again right away. So you could do:
-> 
-> Right, but how it can escape? I think one of the main reasons of introducing
-> a dedicated cgroup.kill interface is to avoid a necessity to use freezer
-> as a synchronization mechanism.
-> 
-> I'd just drop the sentence about the freezer here.
+TL;DR: Read the patch msg first; hopefully it makes sense. Feel free
+to cc more relevant people, and (as I am pretty new to this), feedback
+is highly appreciated!
 
-Thanks, will do.
+I thought it was smart to split the discussion of the patch and the issuse, so
+here is some (wall of text, sorry) discussion around it:
 
-Christian
+This patch fixes an extremely strange edge case, discovered more or less by
+accident (while testing container runtimes for my thesis),
+where the fairness of the cfs scheduler get skewed quite
+extensively. This often leads to two cgroups who are supposed to get
+share cpu time 50/50, instead getting something like 90/10 or
+even 99/1 (!!) in some rare cases (see below for example). I find this
+edge case quite interesting, especially since I am able to so easily
+reproduce it on all machines and all (4.8+) kernels.
+
+The issue can be easily reproduced on all kernels 4.8+, and afaik. most
+"container runtimes" are affected. I do believe that I have wondered about
+this issue earlier, but not actually understood what was causing it. There
+is really (afaik.) no way to find the issue from userspace without using
+a tracing tool like bpftrace. I am _sure_ this affects real production
+environments _everywhere_, at least those running the normal container/using
+cgroup tools together with cpu pinning; but verifying that the
+fairness is skewed is quite hard, or more or less impossible in such cases,
+especially when running multiple workloads simultaneously. I did inspect some
+of my production servers, and found a set of this on multiple cgroups.
+
+It _is_ possible to read '/proc/sched_debug', but since that list only prints
+the cfs_rq's from "leaf_cfs_rq_list", the cfs_rq's we are _really_ looking for,
+are missing; making it look like the problem isn't becuase of cfs. One can however
+use the information in infer that there is an issue (look at the bottom).
+
+Also, another solution may be to don't add the load before the task is actually
+enqueued, avoiding this issue all together. But is that better (I assume that will
+be more in the "hot path", and require quite a bit more code?
+
+There may definetly be a better solution to this that I still haven't found, and that
+other more experienced kernel devs see right away. :)
+
+
+Also feel free to suggest additions/wording of the patch
+message and title, and/or the comment in the code to make it more clear.
+
+This issue was introduced in 4.8, so all stable (4.9+) releases should probably
+get this (the final solution at least), or?
+
+Below is various ways/scripts to reproduce - sorry this is so long (and
+sorry for bash in general), but thought people might be interested in them:
+
+note: due to the nature of the issue, the "lost" load is different each time, so
+the values change each time, and sometimes/often end up at ~50/50; but my testing
+shows that it keep happening almost every time:
+
+
+Example on cgruoup v1. Often results in 60/40 load:
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root       18026 63.0  0.0   3676   100 pts/7    R+   13:09   0:06 stress --cpu 1
+root       18036 36.6  0.0   3676   100 pts/7    R+   13:09   0:04 stress --cpu 1
+--- bash start
+CGROUP_CPU=/sys/fs/cgroup/cpu/slice
+CGROUP_CPUSET=/sys/fs/cgroup/cpuset/slice
+CPU=0
+
+function run_sandbox {
+  local CG_CPUSET="$1"
+  local CG_CPU="$2"
+  local CMD="$3"
+
+  local PIPE="$(mktemp -u)"
+  mkfifo "$PIPE"
+  sh -c "read < $PIPE ; exec $CMD" &
+  local TASK="$!"
+  sleep .1
+  mkdir -p "$CG_CPUSET"
+  mkdir -p "$CG_CPU"
+  tee "$CG_CPU"/cgroup.procs <<< "$TASK"
+
+  tee "$CG_CPUSET"/cgroup.procs <<< "$TASK"
+
+  tee "$PIPE" <<< sandox_done
+  rm "$PIPE"
+}
+
+mkdir -p "$CGROUP_CPU"
+mkdir -p "$CGROUP_CPUSET"
+tee "$CGROUP_CPUSET"/cpuset.cpus <<< "0" 
+tee "$CGROUP_CPUSET"/cpuset.mems <<< "0" 
+
+run_sandbox "$CGROUP_CPUSET" "$CGROUP_CPU/cg-1" "stress --cpu 1"
+run_sandbox "$CGROUP_CPUSET" "$CGROUP_CPU/cg-2" "stress --cpu 1"
+
+read # click enter to cleanup
+killall stress
+sleep .2
+rmdir /sys/fs/cgroup/cpuset/slice/
+rmdir /sys/fs/cgroup/cpu/slice/{cg-1,cg-2,}
+--- bash end
+
+Example on cgroup v2 with sub cgroup (same as described in commit message),
+where both should get 50/50, but instead getting 99% and 1% (!!).
+
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root       18568  1.1  0.0   3684   100 pts/12   R+   13:36   0:00 stress --cpu 1
+root       18580 99.3  0.0   3684   100 pts/12   R+   13:36   0:09 stress --cpu 1
+--- bash start (in case of systemd - make sure some slice/scope is delegated(?)/use cpusets)
+CGROUP_CPU=/sys/fs/cgroup/cpu/slice
+CGROUP_CPUSET=/sys/fs/cgroup/cpuset/slice
+CPU=0
+
+function run_sandbox {
+  local CG_CPUSET="$1"
+  local CG_CPU="$2"
+  local CMD="$3"
+
+  local PIPE="$(mktemp -u)"
+  mkfifo "$PIPE"
+  sh -c "read < $PIPE ; exec $CMD" &
+  local TASK="$!"
+  sleep .01
+  mkdir -p "$CG_CPUSET"
+  mkdir -p "$CG_CPU"
+  tee "$CG_CPU"/cgroup.procs <<< "$TASK"
+
+  tee "$CG_CPUSET"/cgroup.procs <<< "$TASK"
+
+  tee "$PIPE" <<< sandox_done
+  rm "$PIPE"
+}
+
+mkdir -p "$CGROUP_CPU"
+mkdir -p "$CGROUP_CPUSET"
+tee "$CGROUP_CPUSET"/cpuset.cpus <<< "0" 
+tee "$CGROUP_CPUSET"/cpuset.mems <<< "0" 
+
+run_sandbox "$CGROUP_CPUSET" "$CGROUP_CPU/cg-1" "stress --cpu 1"
+run_sandbox "$CGROUP_CPUSET" "$CGROUP_CPU/cg-2" "stress --cpu 1"
+
+read # click enter to cleanup
+killall stress
+sleep .2
+rmdir /sys/fs/cgroup/cpuset/slice/
+rmdir /sys/fs/cgroup/cpu/slice/{cg-1,cg-2,}
+--- bash end
+
+
+
+For those who only want to run docker stuff:
+(on cgroup v1, you must use systemd driver)
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root        9291 60.1  0.0   7320    96 pts/0    R+   13:18   0:07 /usr/bin/stress --verbose --cpu 1
+root        9388 45.5  0.0   7320    96 pts/0    R+   13:18   0:04 /usr/bin/stress --verbose --cpu 1
+--- bash start
+docker run --cpuset-cpus=0 --rm -it an-image-with-stress
+docker run --cpuset-cpus=0 --rm -it an-image-with-stress
+--- bash end
+
+
+Example for cgroup v1 where CPU is pinned to 1, and then changed to 0. Often results
+in 99/1 load balance.
+--- bash start
+CGROUP_CPU=/sys/fs/cgroup/cpu/slice
+CGROUP_CPUSET=/sys/fs/cgroup/cpuset/slice
+CGROUP_CPUSET_ME=/sys/fs/cgroup/cpuset/me
+CPU=0
+CPU_ME=1
+
+function run_sandbox {
+  local CG_CPUSET="$1"
+  local CG_CPU="$2"
+  local INNER_SHARES="$3"
+  local CMD="$4"
+
+  local PIPE="$(mktemp -u)"
+  mkfifo "$PIPE"
+  sh -c "read < $PIPE ; exec $CMD" &
+  local TASK="$!"
+  sleep .1
+  mkdir -p "$CG_CPUSET"
+  mkdir -p "$CG_CPU"/sub
+  tee "$CG_CPU"/sub/cgroup.procs <<< "$TASK"
+  tee "$CG_CPU"/sub/cpu.shares <<< "$INNER_SHARES"
+
+  tee "$CG_CPUSET"/cgroup.procs <<< "$TASK"
+
+  tee "$PIPE" <<< sandox_done
+  rm "$PIPE"
+}
+
+mkdir -p "$CGROUP_CPU"
+mkdir -p "$CGROUP_CPUSET"
+mkdir -p "$CGROUP_CPUSET_ME"
+
+tee "$CGROUP_CPUSET"/cpuset.cpus <<< "$CPU"
+tee "$CGROUP_CPUSET"/cpuset.mems <<< "$CPU"
+
+tee "$CGROUP_CPUSET_ME"/cpuset.cpus <<< "$CPU_ME"
+echo $$ | tee "$CGROUP_CPUSET_ME"/cgroup.procs
+
+run_sandbox "$CGROUP_CPUSET" "$CGROUP_CPU/cg-1" 50000 "stress --cpu 1"
+run_sandbox "$CGROUP_CPUSET" "$CGROUP_CPU/cg-2" 2     "stress --cpu 1"
+
+read # click enter to cleanup and stop all stress procs
+killall stress
+sleep .2
+rmdir /sys/fs/cgroup/cpuset/slice/
+rmdir /sys/fs/cgroup/cpu/slice/{cg-{1,2}{/sub,},}
+--- bash end
+
+To verify what is happening, one can take a close look at sched_debug:
+
+$ cat /proc/sched_debug | grep ":/slice" -A 28 | egrep "(tg_load_avg|slice)"
+cfs_rq[0]:/slice/cg-2/sub
+  .tg_load_avg_contrib           : 1026
+  .tg_load_avg                   : 1757
+cfs_rq[0]:/slice/cg-1/sub
+  .tg_load_avg_contrib           : 1027
+  .tg_load_avg                   : 1473
+cfs_rq[0]:/slice/cg-1
+  .tg_load_avg_contrib           : 5
+  .tg_load_avg                   : 398
+cfs_rq[0]:/slice/cg-2
+  .tg_load_avg_contrib           : 60603
+  .tg_load_avg                   : 61264
+cfs_rq[0]:/slice
+  .tg_load_avg_contrib           : 1024
+  .tg_load_avg                   : 1864
+
+
+We can clearly see that for all cfs_rqs, .tg_load_avg_contrib!=.tg_load_avg.
+Since removed.on_list==0 on the other cfs_rq's, the load on those will never
+be "cleaned" up unless a new task starts on that cpu, but due to the cpuset, that would not
+be the case. slice/cg-1 and slice/cg-2 also have load attached to cpu 3 that isn't removed (but
+the patch will properly decay the load on them as well). 
+
+With this patch, all of these examples just end up sharing cpu time in a fair 50/50 way, as expected.
+
+Thanks to Vincent and Dietmar for feedback!
+
+Changes since v1:
+- Moved code to avoid looping se hierarchy twice.
+- Replaced the bpftrace code with a simpler example using sched_debug in cover letter
+- Updated cover letter
+
+Odin Ugedal (1):
+  sched/fair: Fix unfairness caused by missing load decay
+
+ kernel/sched/fair.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+-- 
+2.31.1
+
