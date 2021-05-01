@@ -1,135 +1,83 @@
-From: Odin Ugedal <odin@uged.al>
-Subject: [PATCH v2 1/1] sched/fair: Fix unfairness caused by missing load decay
-Date: Sat,  1 May 2021 16:19:50 +0200
-Message-ID: <20210501141950.23622-2-odin@uged.al>
-References: <20210501141950.23622-1-odin@uged.al>
+From: Odin Ugedal <odin-lVFEcm3hDZTQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/1] sched/fair: Fix unfairness caused by missing load decay
+Date: Sat, 1 May 2021 16:33:49 +0200
+Message-ID: <CAFpoUr1D5URSODXKaOOHaBbmkNiNNbsCL1WCcEAWrdhJ8gXs8w@mail.gmail.com>
+References: <20210425080902.11854-1-odin@uged.al> <20210425080902.11854-2-odin@uged.al>
+ <20210427142611.GA22056@vingu-book> <CAFpoUr1KOvLSUoUac8MMTD+TREDWmDpeku950U=_p-oBDE4Avw@mail.gmail.com>
+ <CAKfTPtCtt9V69AvkJTuMDRPJXGPboFsnSmwLM5RExnU2h5stSw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=uged.al; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=8uPHeuGdEheiXGiJoHLYGMoo98FylflZj6piR4L3lk8=;
-        b=rQ7RohVXnRLvo0DxISMGS3hUDUhGbjxWFMmy8VHQf4B4r9DzYTt0E5hHUSnlpY756m
-         H6xNHZSeWaK98dMFi+sOLcPSAk5rL/oJlbpKZB+hwlrPB75hGrRYwMeBBBsRlI2TnApY
-         toRH/Y9cOxBDJPOqIWhkEBvj41b5adOZV/JqsXHjxT11/6hFeGf9RlQCbvSPb/2NzAzj
-         7hNlQKJmvmgds2/GFCQY8DBgHdL0VpLPnAziHCQEwU9wZYkGjBwSWfUdodtTePYA5ovz
-         l5pLYKKyfSY64ghOPIyFmebLKAw4A+HebS3uq87vbLrdb2y+ho733BwKBBSa+z16/yVH
-         8rSw==
-In-Reply-To: <20210501141950.23622-1-odin@uged.al>
+        d=ugedal.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=35m+0g71EHp5JplTjNeuJu6NM0nqBbYx65WIaAvO81I=;
+        b=Td0Qom2EuAirsDIjUOJ5NTSXMc6m+HoFdvNW0EXDUhwC96V38cn6E5O/bRpDdyBQnm
+         uiWzjyJZoMTN5y1XpAumatFyMlf7QmF72mHuNAmk/HIh5ZmlSpeje2HpMJGXRvjt4OML
+         3bCPXB3bH4JnS70m0uLbFi6wI2vjBPOvcWx7de8Yc93nEhFkZ5IlskiqazIkNCPEwtOt
+         5PLVCbJhez74FqLCbWYhISCvuSpEtTFSJ0VznD7pRztIrVh/AVHnh1X7sqfPsRsO1IVG
+         w8Q/muGzvFG1YpIFxJZbB4ekUm+LTxM4o4z+glwtB+o5YhYtxqbane1csM1IRJ2tB7Sf
+         lwTg==
+In-Reply-To: <CAKfTPtCtt9V69AvkJTuMDRPJXGPboFsnSmwLM5RExnU2h5stSw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Odin Ugedal <odin@uged.al>
+Content-Transfer-Encoding: 7bit
+To: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-This fixes an issue where old load on a cfs_rq is not properly decayed,
-resulting in strange behavior where fairness can decrease drastically.
-Real workloads with equally weighted control groups have ended up
-getting a respective 99% and 1%(!!) of cpu time.
+ons. 28. apr. 2021 kl. 17:36 skrev Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>:
+> You can keep both fixes tags
 
-When an idle task is attached to a cfs_rq by attaching a pid to a cgroup,
-the old load of the task is attached to the new cfs_rq and sched_entity by
-attach_entity_cfs_rq. If the task is then moved to another cpu (and
-therefore cfs_rq) before being enqueued/woken up, the load will be moved
-to cfs_rq->removed from the sched_entity. Such a move will happen when
-enforcing a cpuset on the task (eg. via a cgroup) that force it to move.
+ACK
 
-The load will however not be removed from the task_group itself, making
-it look like there is a constant load on that cfs_rq. This causes the
-vruntime of tasks on other sibling cfs_rq's to increase faster than they
-are supposed to; causing severe fairness issues. If no other task is
-started on the given cfs_rq, and due to the cpuset it would not happen,
-this load would never be properly unloaded. With this patch the load
-will be properly removed inside update_blocked_averages. This also
-applies to tasks moved to the fair scheduling class and moved to another
-cpu, and this path will also fix that. For fork, the entity is queued
-right away, so this problem does not affect that.
+> If the cfs_rq is already in the list list_add_leaf_cfs_rq() will exit
+> early but if it's not, we don't have to make sure that the whole
+> branch in the list
 
-This applies to cases where the new process is the first in the cfs_rq,
-issue introduced 3d30544f0212 ("sched/fair: Apply more PELT fixes"), and
-when there has previously been load on the cgroup but the cgroup was
-removed from the leaflist due to having null PELT load, indroduced
-in 039ae8bcf7a5 ("sched/fair: Fix O(nr_cgroups) in the load balancing
-path").
+Yeah, thats right. Calling list_add_leaf_cfs_rq once "too much" doesnt
+hurt after all.
 
-For a simple cgroup hierarchy (as seen below) with two equally weighted
-groups, that in theory should get 50/50 of cpu time each, it often leads
-to a load of 60/40 or 70/30.
+> In fact, we can break as soon as list_add_leaf_cfs_rq() and
+> cfs_rq_throttled() return true
 
-parent/
-  cg-1/
-    cpu.weight: 100
-    cpuset.cpus: 1
-  cg-2/
-    cpu.weight: 100
-    cpuset.cpus: 1
+ACK, that makes sense.
 
-If the hierarchy is deeper (as seen below), while keeping cg-1 and cg-2
-equally weighted, they should still get a 50/50 balance of cpu time.
-This however sometimes results in a balance of 10/90 or 1/99(!!) between
-the task groups.
+> When a cfs_rq is throttled, it is not accounted in its parent anymore
+> so we don't have to update and propagate the load down.
 
-$ ps u -C stress
-USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-root       18568  1.1  0.0   3684   100 pts/12   R+   13:36   0:00 stress --cpu 1
-root       18580 99.3  0.0   3684   100 pts/12   R+   13:36   0:09 stress --cpu 1
+Okay. Still need to wrap my head around this a bit more I guess. I
+have looked a bit around, and there
+is actually a similar issue as "this one" for the case when a
+throttled cgroup is "moved" via cpuset. It is however waaay
+harder to reproduce, but it is doable, and it _will_ happen in real
+life systems if the timing is "correct". I will dig deeper
+and finish the patch for that case some time next week (hopefully). I
+think that however deserve a separate patchset,
+so I will come back with that later.
 
-parent/
-  cg-1/
-    cpu.weight: 100
-    sub-group/
-      cpu.weight: 1
-      cpuset.cpus: 1
-  cg-2/
-    cpu.weight: 100
-    sub-group/
-      cpu.weight: 10000
-      cpuset.cpus: 1
+> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+> index 33b1ee31ae0f..18441ce7316c 100644
+> --- a/kernel/sched/fair.c
+> +++ b/kernel/sched/fair.c
+> @@ -11026,10 +11026,10 @@ static void propagate_entity_cfs_rq(struct sched_entity *se)
+>         for_each_sched_entity(se) {
+>                 cfs_rq = cfs_rq_of(se);
+>
+> -               if (cfs_rq_throttled(cfs_rq))
+> -                       break;
+> +               if (!cfs_rq_throttled(cfs_rq))
+> +                       update_load_avg(cfs_rq, se, UPDATE_TG);
+>
+> -               update_load_avg(cfs_rq, se, UPDATE_TG);
+> +               list_add_leaf_cfs_rq(cfs_rq);
+>         }
+> }
 
-This can be reproduced by attaching an idle process to a cgroup and
-moving it to a given cpuset before it wakes up. The issue is evident in
-many (if not most) container runtimes, and has been reproduced
-with both crun and runc (and therefore docker and all its "derivatives"),
-and with both cgroup v1 and v2.
+Sent a v2 with something like this now; that exit if
+(list_add_leaf_cfs_rq(cfs_rq) && throttled). Since this loop start at
+the parent of
+the cfs_rq of the supplied se, I added a list_add_leaf_cfs_rq to the
+top in order to insert the leaf cfs_rq as well.
 
-Fixes: 3d30544f0212 ("sched/fair: Apply more PELT fixes")
-Fixes: 039ae8bcf7a5 ("sched/fair: Fix O(nr_cgroups) in the load balancing path")
-Signed-off-by: Odin Ugedal <odin@uged.al>
----
- kernel/sched/fair.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 794c2cb945f8..9e189727a457 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -10844,16 +10844,22 @@ static void propagate_entity_cfs_rq(struct sched_entity *se)
- {
- 	struct cfs_rq *cfs_rq;
- 
-+	list_add_leaf_cfs_rq(cfs_rq_of(se));
-+
- 	/* Start to propagate at parent */
- 	se = se->parent;
- 
- 	for_each_sched_entity(se) {
- 		cfs_rq = cfs_rq_of(se);
- 
--		if (cfs_rq_throttled(cfs_rq))
--			break;
-+		if (!cfs_rq_throttled(cfs_rq)){
-+			update_load_avg(cfs_rq, se, UPDATE_TG);
-+			list_add_leaf_cfs_rq(cfs_rq);
-+			continue;
-+		}
- 
--		update_load_avg(cfs_rq, se, UPDATE_TG);
-+		if (list_add_leaf_cfs_rq(cfs_rq))
-+			break;
- 	}
- }
- #else
--- 
-2.31.1
-
+Thanks
+Odin
