@@ -1,104 +1,81 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/2] mm: memcg/slab: Prevent recursive kfree() loop
-Date: Sun,  2 May 2021 14:07:54 -0400
-Message-ID: <20210502180755.445-1-longman@redhat.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH 2/2] mm: memcg/slab: Don't create unfreeable slab
+Date: Sun,  2 May 2021 14:07:55 -0400
+Message-ID: <20210502180755.445-2-longman@redhat.com>
+References: <20210502180755.445-1-longman@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1619978919;
+        s=mimecast20190719; t=1619978921;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=vyxShKxSh89EB6np4IlWbUt6LchDd4K6ZPvcD0TSg7Y=;
-        b=aN1yKFAyFP15wzc5LL6+7ZcpiU2HkMUn8+O2PcWt6dtGLQkwq6Vc6e3O4QwoF/jcI4AIvP
-        m9CQuT54Hup1d/tcKbKH5bSFlyWkdJUEnkoRsCpeLpscGsfmbLnxfSs01tPCcLTPIe7wAg
-        nxLjUs8ZGr1vIw8pHFeeEERljNEwtV8=
+         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
+        bh=kEFyh88t8RjL4Ya/tUcmCMYYCtAJ4jkovquK5V2cmso=;
+        b=ZerIt5R+MVsZ06BNy13VlnPNW9HpjJqVswSmBbFdlqJcNDucTrfNSgOl8bHCTszi8HIvnr
+        APYdJDDDwyazFyXMeivVIHqYAHG9WZgG71PSVFLVTpwEFxnRfq/iMlYmlsrbjkr2TYchuh
+        sm7jkr2RU/KoqaKvIxc0/27tNnm644c=
+In-Reply-To: <20210502180755.445-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Vlastimil Babka <vbabka@suse.cz>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Waiman Long <longman@redhat.com>
 
-Since the merging of the new slab memory controller in v5.9, the
-page structure stores a pointer to obj_cgroup pointer array for
-slab pages. When the slab has no used objects, it can be freed in
-free_slab() which will call kfree() to free the obj_cgroup pointer array
-in memcg_alloc_page_obj_cgroups(). If it happens that the obj_cgroup
-array is the last used object in its slab, that slab may then be freed
-which may caused kfree() to be called again.
+The obj_cgroup array (memcg_data) embedded in the page structure is
+allocated at the first instance an accounted memory allocation happens.
+With the right size object, it is possible that the allocated obj_cgroup
+array comes from the same slab that requires memory accounting. If this
+happens, the slab will never become empty again as there is at least one
+object left (the obj_cgroup array) in the slab.
 
-With the right workload, the slab cache may be set up in a way that
-allows the recursive kfree() calling loop to nest deep enough to
-cause a kernel stack overflow and panic the system. In fact, we have
-a reproducer that can cause kernel stack overflow on a s390 system
-involving kmalloc-rcl-256 and kmalloc-rcl-128 slabs with the following
-kfree() loop recursively called 74 times:
+With instructmentation code added to detect this situation, I got 76
+hits on the kmalloc-192 slab when booting up a test kernel on a VM.
+So this can really happen.
 
-  [  285.520739]  [<000000000ec432fc>] kfree+0x4bc/0x560
-  [  285.520740]  [<000000000ec43466>] __free_slab+0xc6/0x228
-  [  285.520741]  [<000000000ec41fc2>] __slab_free+0x3c2/0x3e0
-  [  285.520742]  [<000000000ec432fc>] kfree+0x4bc/0x560
-					:
+To avoid the creation of these unfreeable slabs, a check is added to
+memcg_alloc_page_obj_cgroups() to detect that and double the size
+of the array in case it happens to make sure that it comes from a
+different kmemcache.
 
-One way to prevent this from happening is to defer the freeing of the
-obj_cgroup array to a later time like using kfree_rcu() even though we
-don't really need rcu protection in this case.
-
-The size of rcu_head is just two pointers. The allocated obj_cgroup
-array should not be less than that. To be safe, however, additional
-code is added to make sure that this is really the case.
+This change, however, does not completely eliminate the presence
+of unfreeable slabs which can still happen if a circular obj_cgroup
+array dependency is formed.
 
 Fixes: 286e04b8ed7a ("mm: memcg/slab: allocate obj_cgroups for non-root slab pages")
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- mm/memcontrol.c |  9 ++++++++-
- mm/slab.h       | 11 ++++++++++-
- 2 files changed, 18 insertions(+), 2 deletions(-)
+ mm/memcontrol.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c100265dc393..b0695d3aa530 100644
+index b0695d3aa530..44852ac048c3 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2866,10 +2866,17 @@ static struct mem_cgroup *get_mem_cgroup_from_objcg(struct obj_cgroup *objcg)
- int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
- 				 gfp_t gfp, bool new_page)
- {
--	unsigned int objects = objs_per_slab_page(s, page);
-+	unsigned int objects;
- 	unsigned long memcg_data;
- 	void *vec;
- 
-+	/*
-+	 * Since kfree_rcu() is used for freeing, we have to make
-+	 * sure that the allocated buffer is big enough for rcu_head.
-+	 */
-+	objects = max(objs_per_slab_page(s, page),
-+		      (int)(sizeof(struct rcu_head)/sizeof(void *)));
-+
+@@ -2876,12 +2876,24 @@ int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
+ 	 */
+ 	objects = max(objs_per_slab_page(s, page),
+ 		      (int)(sizeof(struct rcu_head)/sizeof(void *)));
+-
++retry:
  	vec = kcalloc_node(objects, sizeof(struct obj_cgroup *), gfp,
  			   page_to_nid(page));
  	if (!vec)
-diff --git a/mm/slab.h b/mm/slab.h
-index 18c1927cd196..6244a00d30ce 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -242,8 +242,17 @@ int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
+ 		return -ENOMEM;
  
- static inline void memcg_free_page_obj_cgroups(struct page *page)
- {
--	kfree(page_objcgs(page));
-+	struct {
-+		struct rcu_head rcu;
-+	} *objcgs = (void *)page_objcgs(page);
-+
 +	/*
-+	 * We don't actually need to use rcu to protect objcg pointers.
-+	 * kfree_rcu() is used here just to defer the actual freeing to avoid
-+	 * a recursive kfree() loop which may lead to kernel stack overflow.
++	 * The allocated vector should not come from the same slab.
++	 * Otherwise, this slab will never become empty. Double the size
++	 * in this case to make sure that the vector comes from a different
++	 * kmemcache.
 +	 */
- 	page->memcg_data = 0;
-+	kfree_rcu(objcgs, rcu);
- }
- 
- static inline size_t obj_full_size(struct kmem_cache *s)
++	if (unlikely(virt_to_head_page(vec) == page)) {
++		kfree(vec);
++		objects *= 2;
++		goto retry;
++	}
++
+ 	memcg_data = (unsigned long) vec | MEMCG_DATA_OBJCGS;
+ 	if (new_page) {
+ 		/*
 -- 
 2.18.1
 
