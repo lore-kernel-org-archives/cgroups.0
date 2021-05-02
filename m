@@ -1,57 +1,104 @@
-From: Odin Ugedal <odin@ugedal.com>
-Subject: Re: [PATCH 1/1] sched/fair: Fix unfairness caused by missing load decay
-Date: Sat, 1 May 2021 16:41:03 +0200
-Message-ID: <CAFpoUr3vMQq8QYajXZsQ6zWQOncO5Q8-2gFWOJLFm-APUznuZA@mail.gmail.com>
-References: <20210425080902.11854-1-odin@uged.al> <20210425080902.11854-2-odin@uged.al>
- <20210427142611.GA22056@vingu-book> <CAFpoUr1KOvLSUoUac8MMTD+TREDWmDpeku950U=_p-oBDE4Avw@mail.gmail.com>
- <CAKfTPtCtt9V69AvkJTuMDRPJXGPboFsnSmwLM5RExnU2h5stSw@mail.gmail.com> <4ba77def-c7e9-326e-7b5c-cd491b063888@arm.com>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ugedal.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=+9JnfpgxvBiyhUpVXmBLUzz03NBbrZEjK+KMYKJ2t20=;
-        b=RnQunxucB260CYXVbm79inYUHgZ5kmjIdmnW3OLRGx5Q+i4uqZCiTmKRoKd0R0TXLV
-         P6L8xkfjAcIlpz2bAmkNzp+L9/JpLVObdX27DZEcg1F9p+BCVj364+5+rces1tNfa5U/
-         I8UPM+Ya3vSjP4F5N3Dqg4/XCVuoUSHmiQVqb8hXDcrR/amfimYOkdx3EefnQaOnVIxg
-         tLbrEAHfJZ5LvRMFZJWULKFp+nASHLjP64VqxjGylJvIXlAdfGkU3WXhYQfXAfP8u3IQ
-         Sezbjwgv+EJe6NEYmcNoE7zGIV6U/G2Hhz2dZ6geBBw85xFAQY5QdrVb4DWUSRrjsMrp
-         0t5g==
-In-Reply-To: <4ba77def-c7e9-326e-7b5c-cd491b063888@arm.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/2] mm: memcg/slab: Prevent recursive kfree() loop
+Date: Sun,  2 May 2021 14:07:54 -0400
+Message-ID: <20210502180755.445-1-longman@redhat.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1619978919;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=vyxShKxSh89EB6np4IlWbUt6LchDd4K6ZPvcD0TSg7Y=;
+        b=aN1yKFAyFP15wzc5LL6+7ZcpiU2HkMUn8+O2PcWt6dtGLQkwq6Vc6e3O4QwoF/jcI4AIvP
+        m9CQuT54Hup1d/tcKbKH5bSFlyWkdJUEnkoRsCpeLpscGsfmbLnxfSs01tPCcLTPIe7wAg
+        nxLjUs8ZGr1vIw8pHFeeEERljNEwtV8=
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dietmar Eggemann <dietmar.eggemann@arm.com>
-Cc: Vincent Guittot <vincent.guittot@linaro.org>, Odin Ugedal <odin@uged.al>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hi,
+Since the merging of the new slab memory controller in v5.9, the
+page structure stores a pointer to obj_cgroup pointer array for
+slab pages. When the slab has no used objects, it can be freed in
+free_slab() which will call kfree() to free the obj_cgroup pointer array
+in memcg_alloc_page_obj_cgroups(). If it happens that the obj_cgroup
+array is the last used object in its slab, that slab may then be freed
+which may caused kfree() to be called again.
 
-> I think what I see on my Juno running the unfairness_missing_load_decay.sh script is
-> in sync which what you discussed here:
+With the right workload, the slab cache may be set up in a way that
+allows the recursive kfree() calling loop to nest deep enough to
+cause a kernel stack overflow and panic the system. In fact, we have
+a reproducer that can cause kernel stack overflow on a s390 system
+involving kmalloc-rcl-256 and kmalloc-rcl-128 slabs with the following
+kfree() loop recursively called 74 times:
 
-Thanks for taking a look!
+  [  285.520739]  [<000000000ec432fc>] kfree+0x4bc/0x560
+  [  285.520740]  [<000000000ec43466>] __free_slab+0xc6/0x228
+  [  285.520741]  [<000000000ec41fc2>] __slab_free+0x3c2/0x3e0
+  [  285.520742]  [<000000000ec432fc>] kfree+0x4bc/0x560
+					:
 
-> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-> index 794c2cb945f8..7214e6e89820 100644
-> --- a/kernel/sched/fair.c
-> +++ b/kernel/sched/fair.c
-> @@ -10854,6 +10854,8 @@ static void propagate_entity_cfs_rq(struct sched_entity *se)
->                         break;
->
->                 update_load_avg(cfs_rq, se, UPDATE_TG);
-> +               if (!cfs_rq_is_decayed(cfs_rq))
-> +                       list_add_leaf_cfs_rq(cfs_rq);
->         }
-> }
+One way to prevent this from happening is to defer the freeing of the
+obj_cgroup array to a later time like using kfree_rcu() even though we
+don't really need rcu protection in this case.
 
-This might however lead to "loss" at /slice/cg-2/sub and
-slice/cg-1/sub in this particular case tho, since
-propagate_entity_cfs_rq skips one cfs_rq
-by taking the parent of the provided se. The loss in that case would
-however not be equally big, but will still often contribute to some
-unfairness.
+The size of rcu_head is just two pointers. The allocated obj_cgroup
+array should not be less than that. To be safe, however, additional
+code is added to make sure that this is really the case.
 
+Fixes: 286e04b8ed7a ("mm: memcg/slab: allocate obj_cgroups for non-root slab pages")
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c |  9 ++++++++-
+ mm/slab.h       | 11 ++++++++++-
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
-Thanks
-Odin
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c100265dc393..b0695d3aa530 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2866,10 +2866,17 @@ static struct mem_cgroup *get_mem_cgroup_from_objcg(struct obj_cgroup *objcg)
+ int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
+ 				 gfp_t gfp, bool new_page)
+ {
+-	unsigned int objects = objs_per_slab_page(s, page);
++	unsigned int objects;
+ 	unsigned long memcg_data;
+ 	void *vec;
+ 
++	/*
++	 * Since kfree_rcu() is used for freeing, we have to make
++	 * sure that the allocated buffer is big enough for rcu_head.
++	 */
++	objects = max(objs_per_slab_page(s, page),
++		      (int)(sizeof(struct rcu_head)/sizeof(void *)));
++
+ 	vec = kcalloc_node(objects, sizeof(struct obj_cgroup *), gfp,
+ 			   page_to_nid(page));
+ 	if (!vec)
+diff --git a/mm/slab.h b/mm/slab.h
+index 18c1927cd196..6244a00d30ce 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -242,8 +242,17 @@ int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
+ 
+ static inline void memcg_free_page_obj_cgroups(struct page *page)
+ {
+-	kfree(page_objcgs(page));
++	struct {
++		struct rcu_head rcu;
++	} *objcgs = (void *)page_objcgs(page);
++
++	/*
++	 * We don't actually need to use rcu to protect objcg pointers.
++	 * kfree_rcu() is used here just to defer the actual freeing to avoid
++	 * a recursive kfree() loop which may lead to kernel stack overflow.
++	 */
+ 	page->memcg_data = 0;
++	kfree_rcu(objcgs, rcu);
+ }
+ 
+ static inline size_t obj_full_size(struct kmem_cache *s)
+-- 
+2.18.1
+
