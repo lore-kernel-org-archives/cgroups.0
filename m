@@ -1,69 +1,51 @@
-From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 2/2] mm: memcg/slab: Don't create unfreeable slab
-Date: Mon, 3 May 2021 17:32:24 +0200
-Message-ID: <d767ff72-711d-976c-d897-9cea0375c827@suse.cz>
-References: <20210502180755.445-1-longman@redhat.com>
- <20210502180755.445-2-longman@redhat.com>
- <699e5ac8-9044-d664-f73f-778fe72fd09b@suse.cz>
- <4c90cf79-9c61-8964-a6fd-2da087893339@redhat.com>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Mon, 3 May 2021 13:05:30 -0300
+Message-ID: <20210503160530.GL1370958@nvidia.com>
+References: <20210421105451.56d3670a@redhat.com>
+ <20210421175203.GN1370958@nvidia.com>
+ <20210421133312.15307c44@redhat.com>
+ <20210421230301.GP1370958@nvidia.com>
+ <20210422111337.6ac3624d@redhat.com>
+ <YIeYJZOdgMN/orl0@yekko.fritz.box>
+ <20210427172432.GE1370958@nvidia.com>
+ <YIi5G4Wg/hpFqNdX@yekko.fritz.box>
+ <20210429002149.GZ1370958@nvidia.com>
+ <YIol9p3z8BTWFRh8@yekko>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4c90cf79-9c61-8964-a6fd-2da087893339-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=5L2XLVuc7VtR24tCqFEn2YxELbEwg75eNiDbvo22F0M=;
+ b=Wi7jP3Ea0sNIfYfuQeaSDrlS34K4gqZS5x4Pg+QEIud3Z02mZAWx5HZgjpuYWrkT7eJ3LdvBnAV5QuU0IQKDneOoiC4TYCpPHb2JT1YNbZBvHbeYBnbe0OxpWwEb8gNmFNrwenOz7vNtSiGqx6J4/mSyD21SINIpiTSKb3r3/sQmE/0BxURvtgEpHb/NEVmfRDJTdL+rP12eB+buOokStKYziHuBQ5Oi9fERdUTBZ76LbucCDPLn2wb/1dBL0K76QR5l5+ERx0INnJddj5Rj9oKPceVv3udORU0mQ2/zHvdxU35y1uFGS/bRXtvZoLWyMDzNYDLcGP0S4BlvpJH+Uw==
+Content-Disposition: inline
+In-Reply-To: <YIol9p3z8BTWFRh8@yekko>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>
+Cc: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On 5/3/21 4:20 PM, Waiman Long wrote:
-> On 5/3/21 8:22 AM, Vlastimil Babka wrote:
->> On 5/2/21 8:07 PM, Waiman Long wrote:
->>> The obj_cgroup array (memcg_data) embedded in the page structure is
->>> allocated at the first instance an accounted memory allocation happens.
->>> With the right size object, it is possible that the allocated obj_cgroup
->>> array comes from the same slab that requires memory accounting. If this
->>> happens, the slab will never become empty again as there is at least one
->>> object left (the obj_cgroup array) in the slab.
->>>
->>> With instructmentation code added to detect this situation, I got 76
->>> hits on the kmalloc-192 slab when booting up a test kernel on a VM.
->>> So this can really happen.
->>>
->>> To avoid the creation of these unfreeable slabs, a check is added to
->>> memcg_alloc_page_obj_cgroups() to detect that and double the size
->>> of the array in case it happens to make sure that it comes from a
->>> different kmemcache.
->>>
->>> This change, however, does not completely eliminate the presence
->>> of unfreeable slabs which can still happen if a circular obj_cgroup
->>> array dependency is formed.
->> Hm this looks like only a half fix then.
->> I'm afraid the proper fix is for kmemcg to create own set of caches for the
->> arrays. It would also solve the recursive kfree() issue.
+On Thu, Apr 29, 2021 at 01:20:22PM +1000, David Gibson wrote:
+> > There is a certain appeal to having some
+> > 'PPC_TCE_CREATE_SPECIAL_IOASID' entry point that has a wack of extra
+> > information like windows that can be optionally called by the viommu
+> > driver and it remains well defined and described.
 > 
-> Right, this is a possible solution. However, the objcg pointers array should
-> need that much memory. Creating its own set of kmemcaches may seem like an
-> overkill.
+> Windows really aren't ppc specific.  They're absolutely there on x86
+> and everything else as well - it's just that people are used to having
+> a window at 0..<something largish> that you can often get away with
+> treating it sloppily.
 
-Well if we go that way, there might be additional benefits:
+My point is this detailed control seems to go on to more than just
+windows. As you say the vIOMMU is emulating specific HW that needs to
+have kernel interfaces to match it exactly.
 
-depending of gfp flags, kmalloc() would allocate from:
+I'm remarking that trying to unify every HW IOMMU implementation that
+ever has/will exist into a generic API complete enough to allow the
+vIOMMU to be created is likely to result in an API too complicated to
+understand..
 
-kmalloc-* caches that never have kmemcg objects, thus can be used for the objcg
-pointer arrays
-kmalloc-cg-* caches that have only kmemcg unreclaimable objects
-kmalloc-rcl-* and dma-kmalloc-* can stay with on-demand
-memcg_alloc_page_obj_cgroups()
-
-This way we fully solve the issues that this patchset solves. In addition we get
-better separation between kmemcg and !kmemcg thus save memory - no allocation of
-the array as soon as a single object appears in slab. For "kmalloc-8" we now
-have 8 bytes for the useful data and 8 bytes for the obj_cgroup  pointer.
-
-Vlastimil
-
-> Cheers,
-> Longman
-> 
-
+Jason
