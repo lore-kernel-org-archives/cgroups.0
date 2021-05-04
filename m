@@ -1,109 +1,142 @@
-From: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Tue, 4 May 2021 13:54:55 +1000
-Message-ID: <YJDFj+sAv41JRIo4@yekko>
-References: <20210421175203.GN1370958@nvidia.com>
- <20210421133312.15307c44@redhat.com>
- <20210421230301.GP1370958@nvidia.com>
- <20210422111337.6ac3624d@redhat.com>
- <YIeYJZOdgMN/orl0@yekko.fritz.box>
- <20210427172432.GE1370958@nvidia.com>
- <YIi5G4Wg/hpFqNdX@yekko.fritz.box>
- <20210429002149.GZ1370958@nvidia.com>
- <YIol9p3z8BTWFRh8@yekko>
- <20210503160530.GL1370958@nvidia.com>
+From: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 1/1] sched/fair: Fix unfairness caused by missing load decay
+Date: Tue, 4 May 2021 09:14:12 +0200
+Message-ID: <CAKfTPtDmYcr82o4V=Hovc3+Ht4bqhj_NNiSG2Zm+CfdpcAX9iA@mail.gmail.com>
+References: <20210501141950.23622-1-odin@uged.al> <20210501141950.23622-2-odin@uged.al>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="XJz7RUBFhCVAE36r"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=gibson.dropbear.id.au; s=201602; t=1620101897;
-        bh=GF4kY9gVsGuwV9dXBjYISsLPpgjK/7dHag6l9MAWxKg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FFVVpB9WNCZN/OHDK7EFnFAqgxNmT0o6j8dz6VB4dGaDgHpoypxvLCGbts5YHK+rc
-         /0GWhCoUlX/gdFz9pMVsCPN56Kbv7o9hKTFl972XyyuWKzbIa3TPAw6YsykdDcjnop
-         Pv6BeZTFIqQGE9whKr7bxNbIOfV+YYaDGYHwm4S8=
-Content-Disposition: inline
-In-Reply-To: <20210503160530.GL1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=p3fJtS3ag0x38yekpEIajbjelrhY1TxoOI6xRz6q4h0=;
+        b=X22FSap+30zbdRml4+tYesbBLG/84suRP4UdeSfYPFUkRa3ZYSTSQOqWGhvyXvRmSC
+         VLzaPEjZHf8mG38W584jjFxx+/YHPKfcyNNvuLUuGjz6+1m+033WaKL5el5uRILdI+rK
+         03R3c4XDIL330t+iSyz+dbwtEiw+KlLDbMyqJ4XcIhZFokhzlUaaaIrLmrqkPg6T3Zw3
+         bZooEXZ/0jw2glT+mU1Sk+AxL8o3YaGO1L5HaQaoN8dhPAsMxs5v54riRDhwLgjosaLT
+         1R7MX8jeh+D3N332K7Cmx0872bH5Uqgnvrp4SnMaRw9l88M2CphFgdXg8+qZqIOBYlLq
+         WlKg==
+In-Reply-To: <20210501141950.23622-2-odin-RObV4cXtwVA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
+On Sat, 1 May 2021 at 16:22, Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org> wrote:
+>
+> This fixes an issue where old load on a cfs_rq is not properly decayed,
+> resulting in strange behavior where fairness can decrease drastically.
+> Real workloads with equally weighted control groups have ended up
+> getting a respective 99% and 1%(!!) of cpu time.
+>
+> When an idle task is attached to a cfs_rq by attaching a pid to a cgroup,
+> the old load of the task is attached to the new cfs_rq and sched_entity by
+> attach_entity_cfs_rq. If the task is then moved to another cpu (and
+> therefore cfs_rq) before being enqueued/woken up, the load will be moved
+> to cfs_rq->removed from the sched_entity. Such a move will happen when
+> enforcing a cpuset on the task (eg. via a cgroup) that force it to move.
+>
+> The load will however not be removed from the task_group itself, making
+> it look like there is a constant load on that cfs_rq. This causes the
+> vruntime of tasks on other sibling cfs_rq's to increase faster than they
+> are supposed to; causing severe fairness issues. If no other task is
+> started on the given cfs_rq, and due to the cpuset it would not happen,
+> this load would never be properly unloaded. With this patch the load
+> will be properly removed inside update_blocked_averages. This also
+> applies to tasks moved to the fair scheduling class and moved to another
+> cpu, and this path will also fix that. For fork, the entity is queued
+> right away, so this problem does not affect that.
+>
+> This applies to cases where the new process is the first in the cfs_rq,
+> issue introduced 3d30544f0212 ("sched/fair: Apply more PELT fixes"), and
+> when there has previously been load on the cgroup but the cgroup was
+> removed from the leaflist due to having null PELT load, indroduced
+> in 039ae8bcf7a5 ("sched/fair: Fix O(nr_cgroups) in the load balancing
+> path").
+>
+> For a simple cgroup hierarchy (as seen below) with two equally weighted
+> groups, that in theory should get 50/50 of cpu time each, it often leads
+> to a load of 60/40 or 70/30.
+>
+> parent/
+>   cg-1/
+>     cpu.weight: 100
+>     cpuset.cpus: 1
+>   cg-2/
+>     cpu.weight: 100
+>     cpuset.cpus: 1
+>
+> If the hierarchy is deeper (as seen below), while keeping cg-1 and cg-2
+> equally weighted, they should still get a 50/50 balance of cpu time.
+> This however sometimes results in a balance of 10/90 or 1/99(!!) between
+> the task groups.
+>
+> $ ps u -C stress
+> USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+> root       18568  1.1  0.0   3684   100 pts/12   R+   13:36   0:00 stress --cpu 1
+> root       18580 99.3  0.0   3684   100 pts/12   R+   13:36   0:09 stress --cpu 1
+>
+> parent/
+>   cg-1/
+>     cpu.weight: 100
+>     sub-group/
+>       cpu.weight: 1
+>       cpuset.cpus: 1
+>   cg-2/
+>     cpu.weight: 100
+>     sub-group/
+>       cpu.weight: 10000
+>       cpuset.cpus: 1
+>
+> This can be reproduced by attaching an idle process to a cgroup and
+> moving it to a given cpuset before it wakes up. The issue is evident in
+> many (if not most) container runtimes, and has been reproduced
+> with both crun and runc (and therefore docker and all its "derivatives"),
+> and with both cgroup v1 and v2.
+>
+> Fixes: 3d30544f0212 ("sched/fair: Apply more PELT fixes")
+> Fixes: 039ae8bcf7a5 ("sched/fair: Fix O(nr_cgroups) in the load balancing path")
+> Signed-off-by: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
 
---XJz7RUBFhCVAE36r
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Reviewed-by: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
-On Mon, May 03, 2021 at 01:05:30PM -0300, Jason Gunthorpe wrote:
-> On Thu, Apr 29, 2021 at 01:20:22PM +1000, David Gibson wrote:
-> > > There is a certain appeal to having some
-> > > 'PPC_TCE_CREATE_SPECIAL_IOASID' entry point that has a wack of extra
-> > > information like windows that can be optionally called by the viommu
-> > > driver and it remains well defined and described.
-> >=20
-> > Windows really aren't ppc specific.  They're absolutely there on x86
-> > and everything else as well - it's just that people are used to having
-> > a window at 0..<something largish> that you can often get away with
-> > treating it sloppily.
->=20
-> My point is this detailed control seems to go on to more than just
-> windows. As you say the vIOMMU is emulating specific HW that needs to
-> have kernel interfaces to match it exactly.
+Thanks
 
-It's really not that bad.  The case of emulating the PAPR vIOMMU on
-something else is relatively easy, because all updates to the IO page
-tables go through hypercalls.  So, as long as the backend IOMMU can
-map all the IOVAs that the guest IOMMU can, then qemu's implementation
-of those hypercalls just needs to put an equivalent mapping in the
-backend, which it can do with a generic VFIO_DMA_MAP.
-
-vIOMMUs with page tables in guest memory are harder, but only really
-in the usual ways that a vIOMMU of that type is harder (needs cache
-mode or whatever).  At whatever point you need to shadow from the
-guest IO page tables to the host backend, you can again do that with
-generic maps, as long as the backend supports the necessary IOVAs, and
-has an IO page size that's equal to or a submultiple of the vIOMMU
-page size.
-
-> I'm remarking that trying to unify every HW IOMMU implementation that
-> ever has/will exist into a generic API complete enough to allow the
-> vIOMMU to be created is likely to result in an API too complicated to
-> understand..
-
-Maybe not every one, but I think we can get a pretty wide range with a
-reasonable interface.  Explicitly handling IOVA windows does most of
-it.  And we kind of need to handle that anyway to expose what ranges
-the IOMMU is capable of translating anyway.  I think making handling
-valid IOVA windows explicit makes things simpler than having
-per-backend-family interfaces to expose the limits of their
-translation ranges, which is what's likely to happen without it.
-
---=20
-David Gibson			| I'll have my music baroque, and my code
-david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
-				| _way_ _around_!
-http://www.ozlabs.org/~dgibson
-
---XJz7RUBFhCVAE36r
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEdfRlhq5hpmzETofcbDjKyiDZs5IFAmCQxY0ACgkQbDjKyiDZ
-s5Ja1Q//brgY0BJodmvSW7+qUlkQBKlmerMDnujEgNgBr6cbpA9hN6ywQDlkXit7
-xrznyLqBx16060E9F6DQqk1aaAj2+iePxmT97vs7MUHmvuXHgTlmU6T6DDC84ICk
-cCIfpXsB5R+pDv0JD/j91cPQBZF1Afnf0KhRLpzjcNKgBoFWi23pAYx3E32nPVtb
-1UeflnMCMdr/rHfQR9/GoJ5FP/QYvqppU7351C0yFKbI5k0Pg7RvO41pejcNKE2W
-q4wmfrzPA9/7G+JtQr03lGXLVy4+xN0UPsRtxkhQtaX+YNKBVL3qb+oO4XeCf7zw
-Zw5vw6Ai8reTK948BEe+S+WJZHHAYBw54ztv7P35XFjR3/avEEPWgSIrba6fAeRZ
-0E+RWhYL4c09hGpbJk6FiwTan+2a7EgB90ZuanWFtJ8HCFOFSDI3IRoLVU7k7JLC
-IQD7LGmsqWzhMf3FtAK++FiVeWu+NpMPGGBx3XXfSl7kWXzf9CUJRFHLv+wPK0vc
-Fln92Fj3HBM3D7keiZ85teYT6G5SacTcmtJTHTfsqqmVlTdVCconk7/y0wQhMDt5
-TAfzd8YH0dq6toDJqOZzqZKwGmgaYe9HviiRWa5+C6Y3QJ0dBBN6cUKKZhTKeicd
-ifZUPO7PC9KjomC7UWcx6g/pN7eNPSZR2YR+Lb0hATzgCVDkcUg=
-=OhAa
------END PGP SIGNATURE-----
-
---XJz7RUBFhCVAE36r--
+> ---
+>  kernel/sched/fair.c | 12 +++++++++---
+>  1 file changed, 9 insertions(+), 3 deletions(-)
+>
+> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+> index 794c2cb945f8..9e189727a457 100644
+> --- a/kernel/sched/fair.c
+> +++ b/kernel/sched/fair.c
+> @@ -10844,16 +10844,22 @@ static void propagate_entity_cfs_rq(struct sched_entity *se)
+>  {
+>         struct cfs_rq *cfs_rq;
+>
+> +       list_add_leaf_cfs_rq(cfs_rq_of(se));
+> +
+>         /* Start to propagate at parent */
+>         se = se->parent;
+>
+>         for_each_sched_entity(se) {
+>                 cfs_rq = cfs_rq_of(se);
+>
+> -               if (cfs_rq_throttled(cfs_rq))
+> -                       break;
+> +               if (!cfs_rq_throttled(cfs_rq)){
+> +                       update_load_avg(cfs_rq, se, UPDATE_TG);
+> +                       list_add_leaf_cfs_rq(cfs_rq);
+> +                       continue;
+> +               }
+>
+> -               update_load_avg(cfs_rq, se, UPDATE_TG);
+> +               if (list_add_leaf_cfs_rq(cfs_rq))
+> +                       break;
+>         }
+>  }
+>  #else
+> --
+> 2.31.1
+>
