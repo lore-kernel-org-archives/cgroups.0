@@ -1,58 +1,135 @@
-From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Tue, 4 May 2021 08:41:48 -0700
-Message-ID: <20210504084148.4f61d0b5@jacob-builder>
-References: <20210421162307.GM1370958@nvidia.com>
-        <20210421105451.56d3670a@redhat.com>
-        <20210421175203.GN1370958@nvidia.com>
-        <20210421133312.15307c44@redhat.com>
-        <20210421230301.GP1370958@nvidia.com>
-        <MWHPR11MB1886188698A6E20338196F788C469@MWHPR11MB1886.namprd11.prod.outlook.com>
-        <20210422121020.GT1370958@nvidia.com>
-        <MWHPR11MB1886E688D2128C98A1F240B18C459@MWHPR11MB1886.namprd11.prod.outlook.com>
-        <20210423114944.GF1370958@nvidia.com>
-        <MWHPR11MB18861FE6982D73AFBF173E048C439@MWHPR11MB1886.namprd11.prod.outlook.com>
-        <20210426123817.GQ1370958@nvidia.com>
-        <MWHPR11MB188625137D5B7423822396C88C409@MWHPR11MB1886.namprd11.prod.outlook.com>
+From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v2 2/2] mm: memcg/slab: Create a new set of kmalloc-cg-<n>
+ caches
+Date: Tue, 4 May 2021 18:01:49 +0200
+Message-ID: <3c952b24-94e4-3c54-b668-cac778ff5a77@suse.cz>
+References: <20210504132350.4693-1-longman@redhat.com>
+ <20210504132350.4693-3-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <MWHPR11MB188625137D5B7423822396C88C409-4Pk8um7sDhPjKiA5vsxACZPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
+In-Reply-To: <20210504132350.4693-3-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, jacob.jun.pan@l
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Hi Kevin,
-
-On Wed, 28 Apr 2021 06:34:11 +0000, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-wrote:
-
-> > 
-> > (also looking at ioasid.c, why do we need such a thin and odd wrapper
-> > around xarray?)
-> >   
+On 5/4/21 3:23 PM, Waiman Long wrote:
+> There are currently two problems in the way the objcg pointer array
+> (memcg_data) in the page structure is being allocated and freed.
 > 
-> I'll leave it to Jean and Jacob.
-I am not sure whether you are referring to the current ioasid.c or the
-changes proposed in this patchset. I added a per VM/ioasid_set
-(also per /dev/ioasid fd) xarray to store guest-host PASID mapping.
+> On its allocation, it is possible that the allocated objcg pointer
+> array comes from the same slab that requires memory accounting. If this
+> happens, the slab will never become empty again as there is at least
+> one object left (the obj_cgroup array) in the slab.
+> 
+> When it is freed, the objcg pointer array object may be the last one
+> in its slab and hence causes kfree() to be called again. With the
+> right workload, the slab cache may be set up in a way that allows the
+> recursive kfree() calling loop to nest deep enough to cause a kernel
+> stack overflow and panic the system.
+> 
+> One way to solve this problem is to split the kmalloc-<n> caches
+> (KMALLOC_NORMAL) into two separate sets - a new set of kmalloc-<n>
+> (KMALLOC_NORMAL) caches for non-accounted objects only and a new set of
+> kmalloc-cg-<n> (KMALLOC_CGROUP) caches for accounted objects only. All
+> the other caches can allow a mix of accounted and non-accounted objects.
+> 
+> With this change, all the objcg pointer array objects will come from
+> KMALLOC_NORMAL caches which won't have their objcg pointer arrays. So
+> both the recursive kfree() problem and non-freeable slab problem
+> are gone.
+> 
+> The new KMALLOC_CGROUP is added between KMALLOC_NORMAL and
+> KMALLOC_RECLAIM so that the first for loop in create_kmalloc_caches()
+> will include the newly added caches without change.
 
-The current code has a xarray for the allocators.
+Great, thanks I hope there would be also benefits to objcg arrays not
+created for all the normal caches anymore (possibly poorly used due to
+mix of accounted and non-accounted objects in the same cache) and perhaps
+it's possible for you to quantify the reduction of those?
 
-struct ioasid_allocator_data {
-	struct ioasid_allocator_ops *ops;
-	struct list_head list;
-	struct list_head slist;
-#define IOASID_ALLOCATOR_CUSTOM BIT(0) /* Needs framework to track results */
-	unsigned long flags;
-	struct xarray xa;
-	struct rcu_head rcu;
-};
+> Suggested-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Could you elaborate?
+...
 
-Thanks,
+> @@ -321,6 +328,14 @@ kmalloc_caches[NR_KMALLOC_TYPES][KMALLOC_SHIFT_HIGH + 1];
+>  
+>  static __always_inline enum kmalloc_cache_type kmalloc_type(gfp_t flags)
+>  {
+> +#ifdef CONFIG_MEMCG_KMEM
+> +	/*
+> +	 * KMALLOC_CGROUP for non-reclaimable and non-DMA object with
+> +	 * accounting enabled.
+> +	 */
+> +	if ((flags & (__GFP_DMA | __GFP_RECLAIMABLE | __GFP_ACCOUNT)) == __GFP_ACCOUNT)
+> +		return KMALLOC_CGROUP;
+> +#endif
 
-Jacob
+This function was designed so that KMALLOC_NORMAL would be the first tested and
+returned possibility, as it's expected to be the most common. What about the
+following on top?
+
+----8<----
+diff --git a/include/linux/slab.h b/include/linux/slab.h
+index fca03c22ea7c..418c5df0305b 100644
+--- a/include/linux/slab.h
++++ b/include/linux/slab.h
+@@ -328,30 +328,40 @@ kmalloc_caches[NR_KMALLOC_TYPES][KMALLOC_SHIFT_HIGH + 1];
+ 
+ static __always_inline enum kmalloc_cache_type kmalloc_type(gfp_t flags)
+ {
+-#ifdef CONFIG_MEMCG_KMEM
+ 	/*
+-	 * KMALLOC_CGROUP for non-reclaimable and non-DMA object with
+-	 * accounting enabled.
++	 * The most common case is KMALLOC_NORMAL, so test for it
++	 * with a single branch for all flags that might affect it
+ 	 */
+-	if ((flags & (__GFP_DMA | __GFP_RECLAIMABLE | __GFP_ACCOUNT)) == __GFP_ACCOUNT)
+-		return KMALLOC_CGROUP;
++	if (likely((flags & (__GFP_RECLAIMABLE
++#ifdef CONFIG_MEMCG_KMEM
++			     | __GFP_ACCOUNT
+ #endif
+ #ifdef CONFIG_ZONE_DMA
+-	/*
+-	 * The most common case is KMALLOC_NORMAL, so test for it
+-	 * with a single branch for both flags.
+-	 */
+-	if (likely((flags & (__GFP_DMA | __GFP_RECLAIMABLE)) == 0))
++			     | __GFP_DMA
++#endif
++			    )) == 0))
+ 		return KMALLOC_NORMAL;
+ 
++#ifdef CONFIG_MEMCG_KMEM
+ 	/*
+-	 * At least one of the flags has to be set. If both are, __GFP_DMA
+-	 * is more important.
++	 * KMALLOC_CGROUP for non-reclaimable and non-DMA object with
++	 * accounting enabled.
+ 	 */
+-	return flags & __GFP_DMA ? KMALLOC_DMA : KMALLOC_RECLAIM;
+-#else
+-	return flags & __GFP_RECLAIMABLE ? KMALLOC_RECLAIM : KMALLOC_NORMAL;
++	if ((flags & (__GFP_ACCOUNT | __GFP_RECLAIMABLE
++#ifdef CONFIG_ZONE_DMA
++		      | __GFP_DMA
++#endif
++		     )) == __GFP_ACCOUNT)
++		return KMALLOC_CGROUP;
+ #endif
++
++#ifdef CONFIG_ZONE_DMA
++	if (flags & __GFP_DMA)
++		return KMALLOC_DMA;
++#endif
++
++	/* if we got here, it has to be __GFP_RECLAIMABLE */
++	return KMALLOC_RECLAIM;
+ }
+ 
+ /*
