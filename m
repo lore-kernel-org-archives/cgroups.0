@@ -1,130 +1,89 @@
 From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 1/5] cgroup: introduce cgroup.kill
-Date: Tue, 4 May 2021 11:29:21 -0700
-Message-ID: <CALvZod4jsb6bFzTOS4ZRAJGAzBru0oWanAhezToprjACfGm+ew@mail.gmail.com>
-References: <20210503143922.3093755-1-brauner@kernel.org>
+Subject: Re: [PATCH v2 1/2] mm: memcg/slab: Properly set up gfp flags for
+ objcg pointer array
+Date: Tue, 4 May 2021 12:37:18 -0700
+Message-ID: <CALvZod438=YKZtV0qckoaMkdL1seu5PiLnvPPQyRzA0S60-TpQ@mail.gmail.com>
+References: <20210504132350.4693-1-longman@redhat.com> <20210504132350.4693-2-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=JXXBzPVYriNU3AZ8+T/Ep3xDDMXplh3X9mxTUQBN+dA=;
-        b=hUIk+ejn4mtB5LxTTxxmX1ZYUMPfRW5P8+zTJMe6n5i7h98wmNOBt3kaTME94977CJ
-         68D0w2yrHs/GckpeSze/93uWthbAOqoG77DneKmNQznDB9tNH/eAf+q48A+C1hGuv3XS
-         Rm+2A59azRpg2dSEuZk8CxcVx96ggecVZOt+K81EQjGcYjjc4ovtg3pfBUWPStMPYHgS
-         byiQHzCg7fyjt/Zb+iswScBHIKYAMPvulGqgFsOESr4b80b0OLp9Zkgld+gC78KlaCyp
-         2W6mVjuaY8+77uVUp/t9IZXfQB01ZTjMYKGJ2qCPBNhQphXjt6sPcZrLuq96VlK4xleN
-         QSMA==
-In-Reply-To: <20210503143922.3093755-1-brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        bh=btYsPAMNSGmXffsSk7+VR60HmUlYSHIt+oz7jjLh4E8=;
+        b=qm3h49sUOH2s6tvF7KNhGDE1XdJRjRppqoGSbXNvcIvjPgsmygPRL+Huz/bo6LwJJk
+         /0FRs5hMe3DuFnhdCHSW6+PF81z+rW7Yt1/7pBaFsY8xruoFVGCDcCF3ric6+eGNMf26
+         QJi7EdjlGvaBNdL89o5778YfWQd2Lkstsx85AT0wSngk1QGxewfEqdZBOCTYlqRsu9jH
+         X9EGZsayyWCKd39XPQumXqjjs0V/gicwgCK+mb4TGO6nhk+gLJK9zX6SjCWoDh5tJOWU
+         viTvPxRimjGbUel53oqUg7BoKFeJM8s4RDOXTvYSemwmre0bTiaM5Gf4FCkfmH0nKTmb
+         m5Dg==
+In-Reply-To: <20210504132350.4693-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-+Michal Hocko
+On Tue, May 4, 2021 at 6:24 AM Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> Since the merging of the new slab memory controller in v5.9, the page
+> structure may store a pointer to obj_cgroup pointer array for slab pages.
+> Currently, only the __GFP_ACCOUNT bit is masked off. However, the array
+> is not readily reclaimable and doesn't need to come from the DMA buffer.
+> So those GFP bits should be masked off as well.
+>
+> Do the flag bit clearing at memcg_alloc_page_obj_cgroups() to make sure
+> that it is consistently applied no matter where it is called.
+>
+> Fixes: 286e04b8ed7a ("mm: memcg/slab: allocate obj_cgroups for non-root slab pages")
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>  mm/memcontrol.c | 8 ++++++++
+>  mm/slab.h       | 1 -
+>  2 files changed, 8 insertions(+), 1 deletion(-)
+>
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index c100265dc393..5e3b4f23b830 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2863,6 +2863,13 @@ static struct mem_cgroup *get_mem_cgroup_from_objcg(struct obj_cgroup *objcg)
+>  }
+>
+>  #ifdef CONFIG_MEMCG_KMEM
+> +/*
+> + * The allocated objcg pointers array is not accounted directly.
+> + * Moreover, it should not come from DMA buffer and is not readily
+> + * reclaimable. So those GFP bits should be masked off.
+> + */
+> +#define OBJCGS_CLEAR_MASK      (__GFP_DMA | __GFP_RECLAIMABLE | __GFP_ACCOUNT)
 
-On Mon, May 3, 2021 at 7:40 AM Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-> From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
->
-> Introduce the cgroup.kill file. It does what it says on the tin and
-> allows a caller to kill a cgroup by writing "1" into cgroup.kill.
-> The file is available in non-root cgroups.
->
-> Killing cgroups is a process directed operation, i.e. the whole
-> thread-group is affected. Consequently trying to write to cgroup.kill in
-> threaded cgroups will be rejected and EOPNOTSUPP returned. This behavior
-> aligns with cgroup.procs where reads in threaded-cgroups are rejected
-> with EOPNOTSUPP.
->
-> The cgroup.kill file is write-only since killing a cgroup is an event
-> not which makes it different from e.g. freezer where a cgroup
-> transitions between the two states.
->
-> As with all new cgroup features cgroup.kill is recursive by default.
->
-> Killing a cgroup is protected against concurrent migrations through the
-> cgroup mutex. To protect against forkbombs and to mitigate the effect of
-> racing forks a new CGRP_KILL css set lock protected flag is introduced
-> that is set prior to killing a cgroup and unset after the cgroup has
-> been killed. We can then check in cgroup_post_fork() where we hold the
-> css set lock already whether the cgroup is currently being killed. If so
-> we send the child a SIGKILL signal immediately taking it down as soon as
-> it returns to userspace. To make the killing of the child semantically
-> clean it is killed after all cgroup attachment operations have been
-> finalized.
->
-> There are various use-cases of this interface:
-> - Containers usually have a conservative layout where each container
->   usually has a delegated cgroup. For such layouts there is a 1:1
->   mapping between container and cgroup. If the container in addition
->   uses a separate pid namespace then killing a container usually becomes
->   a simple kill -9 <container-init-pid> from an ancestor pid namespace.
->   However, there are quite a few scenarios where that isn't true. For
->   example, there are containers that share the cgroup with other
->   processes on purpose that are supposed to be bound to the lifetime of
->   the container but are not in the same pidns of the container.
->   Containers that are in a delegated cgroup but share the pid namespace
->   with the host or other containers.
-> - Service managers such as systemd use cgroups to group and organize
->   processes belonging to a service. They usually rely on a recursive
->   algorithm now to kill a service. With cgroup.kill this becomes a
->   simple write to cgroup.kill.
-> - Userspace OOM implementations can make good use of this feature to
->   efficiently take down whole cgroups quickly.
+What about __GFP_DMA32? Does it matter? It seems like DMA32 requests
+go to normal caches.
 
-Just to further add the motivation for userspace oom-killers. Instead
-of traversing the tree, opening cgroup.procs and manually killing the
-processes under memory pressure, the userspace oom-killer can just
-keep the list of cgroup.kill files open and just write '1' when it
-decides to trigger the oom-kill.
-
-Michal, what do you think of putting the processes killed through this
-interface into the oom_reaper_list as well? Will there be any
-concerns?
-
-> - The kill program can gain a new
->   kill --cgroup /sys/fs/cgroup/delegated
->   flag to take down cgroups.
+> +
+>  int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
+>                                  gfp_t gfp, bool new_page)
+>  {
+> @@ -2870,6 +2877,7 @@ int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
+>         unsigned long memcg_data;
+>         void *vec;
 >
-> A few observations about the semantics:
-> - If parent and child are in the same cgroup and CLONE_INTO_CGROUP is
->   not specified we are not taking cgroup mutex meaning the cgroup can be
->   killed while a process in that cgroup is forking.
->   If the kill request happens right before cgroup_can_fork() and before
->   the parent grabs its siglock the parent is guaranteed to see the
->   pending SIGKILL. In addition we perform another check in
->   cgroup_post_fork() whether the cgroup is being killed and is so take
->   down the child (see above). This is robust enough and protects gainst
->   forkbombs. If userspace really really wants to have stricter
->   protection the simple solution would be to grab the write side of the
->   cgroup threadgroup rwsem which will force all ongoing forks to
->   complete before killing starts. We concluded that this is not
->   necessary as the semantics for concurrent forking should simply align
->   with freezer where a similar check as cgroup_post_fork() is performed.
+> +       gfp &= ~OBJCGS_CLEAR_MASK;
+>         vec = kcalloc_node(objects, sizeof(struct obj_cgroup *), gfp,
+>                            page_to_nid(page));
+>         if (!vec)
+> diff --git a/mm/slab.h b/mm/slab.h
+> index 18c1927cd196..b3294712a686 100644
+> --- a/mm/slab.h
+> +++ b/mm/slab.h
+> @@ -309,7 +309,6 @@ static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
+>         if (!memcg_kmem_enabled() || !objcg)
+>                 return;
 >
->   For all other cases CLONE_INTO_CGROUP is required. In this case we
->   will grab the cgroup mutex so the cgroup can't be killed while we
->   fork. Once we're done with the fork and have dropped cgroup mutex we
->   are visible and will be found by any subsequent kill request.
-> - We obviously don't kill kthreads. This means a cgroup that has a
->   kthread will not become empty after killing and consequently no
->   unpopulated event will be generated. The assumption is that kthreads
->   should be in the root cgroup only anyway so this is not an issue.
-> - We skip killing tasks that already have pending fatal signals.
-> - Freezer doesn't care about tasks in different pid namespaces, i.e. if
->   you have two tasks in different pid namespaces the cgroup would still
->   be frozen. The cgroup.kill mechanism consequently behaves the same
->   way, i.e. we kill all processes and ignore in which pid namespace they
->   exist.
-> - If the caller is located in a cgroup that is killed the caller will
->   obviously be killed as well.
+> -       flags &= ~__GFP_ACCOUNT;
+>         for (i = 0; i < size; i++) {
+>                 if (likely(p[i])) {
+>                         page = virt_to_head_page(p[i]);
+> --
+> 2.18.1
 >
-> Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Signed-off-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-[...]
