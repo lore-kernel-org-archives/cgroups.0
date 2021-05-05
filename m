@@ -1,87 +1,94 @@
-From: Abel Wu <wuyun.abel@bytedance.com>
-Subject: Re: [Phishing Risk] [External] Re: [PATCH 2/3] cgroup/cpuset:
- introduce cpuset.mems.migration
-Date: Wed, 5 May 2021 13:06:09 +0800
-Message-ID: <55582805-5103-96c0-d8e8-e6d0b01beff3@bytedance.com>
-References: <20210426065946.40491-1-wuyun.abel@bytedance.com>
- <20210426065946.40491-3-wuyun.abel@bytedance.com>
- <YIgjE6CgU4nDsJiR@slm.duckdns.org>
+From: Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
+ APIs
+Date: Wed, 5 May 2021 11:10:29 +0200
+Message-ID: <17ab53a6-c2d7-c085-6469-ae487b138526@redhat.com>
+References: <20210416094547.1774e1a3@redhat.com>
+ <BN6PR11MB406854F56D18E1187A2C98ACC3479@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <20210421162307.GM1370958@nvidia.com> <20210421105451.56d3670a@redhat.com>
+ <20210421175203.GN1370958@nvidia.com> <20210421133312.15307c44@redhat.com>
+ <20210421230301.GP1370958@nvidia.com>
+ <MWHPR11MB1886188698A6E20338196F788C469@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210422121020.GT1370958@nvidia.com>
+ <6e36797c-799e-074d-f66f-5686a4b37f38@redhat.com>
+ <20210429200431.GA1370958@nvidia.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=7gpK7P2CpPVVCbVLUyVVTrI01QfMpCG4qxYH2m0q/WY=;
-        b=hRMfiR1c8aF8nkaibSuLvPsQ8VyCx/qSncGkzxu18vorhQYjFwpROhAEbXYMCNfquk
-         R79aCKblQiB16JvI81QOiFG7hoE+vwWFzuhbV1jcmU/QB6LmQwc8IoHRHHgrHKr1AooE
-         osQlLpZYwvRJRTQEWQKzZE0vUJAkPSCwibEEASukSg4xW9ERGzKZ40/yoQH+95owSb6v
-         iLEPDrI5blgVJviaQyBNxrHi4u/g5MffBYnIDhQOKoi0ygD8CMEeF9UCIMm87nzMRxHJ
-         P8UUlfcrr05jevKCiccoYy4X4FyQ6RYZzLzqVTr8I8qEmKxi4cqZReJU1TEVcBJWusH4
-         /VZg==
-In-Reply-To: <YIgjE6CgU4nDsJiR@slm.duckdns.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1620205853;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=d0SQnCbBnNBGtZsOp6MO/Q/qxE8V3SBQW2J1qFEwtZU=;
+        b=Wz1E4tSjMAcxNtyhjov/1s1KqQiWsWqQamzLmhHwPygkrFTtXrb52zMkpeanlCjYh6EZY1
+        MSUFCc9aasUJbVyb9YUiJ5348tELeVZVW00pyA91+WW+iGEc1VpfGV6FVDFKWn9uIZMwD7
+        T5HXHuZLzQtBrjw5cPV56QwWR59ISCo=
+In-Reply-To: <20210429200431.GA1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"; format="flowed"
-To: Tejun Heo <tj@kernel.org>, hannes@cmpxchg.org
-Cc: akpm@linux-foundation.org, lizefan.x@bytedance.com, corbet@lwn.net, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-ping :)
+Hi Jason,
 
-On 4/27/21 10:43 PM, Tejun Heo wrote:
-> Hello,
->=20
-> On Mon, Apr 26, 2021 at 02:59:45PM +0800, Abel Wu wrote:
->> When a NUMA node is assigned to numa-service, the workload
->> on that node needs to be moved away fast and complete. The
->> main aspects we cared about on the eviction are as follows:
+On 4/29/21 10:04 PM, Jason Gunthorpe wrote:
+> On Thu, Apr 29, 2021 at 03:26:55PM +0200, Auger Eric wrote:
+>> From the pseudo code,
 >>
->> a) it should complete soon enough so that numa-services
->>     won=E2=80=99t wait too long to hurt user experience
->> b) the workloads to be evicted could have massive usage on
->>     memory, and migrating such amount of memory may lead to
->>     a sudden severe performance drop lasting tens of seconds
->>     that some certain workloads may not afford
->> c) the impact of the eviction should be limited within the
->>     source and destination nodes
->> d) cgroup interface is preferred
+>>   gpa_ioasid_id = ioctl(ioasid_fd, CREATE_IOASID, ..)
+>>   ioctl(ioasid_fd, SET_IOASID_PAGE_TABLES, ..)
 >>
->> So we come to a thought that:
->>
->> 1) fire up numa-services without waiting for memory migration
->> 2) memory migration can be done asynchronously by using spare
->>     memory bandwidth
->>
->> AutoNUMA seems to be a solution, but its scope is global which
->> violates c&d. And cpuset.memory_migrate performs in a synchronous
->=20
-> I don't think d) in itself is a valid requirement. How does it violate c)?
->=20
->> fashion which breaks a&b. So a mixture of them, the new cgroup2
->> interface cpuset.mems.migration, is introduced.
->>
->> The new cpuset.mems.migration supports three modes:
->>
->>   - "none" mode, meaning migration disabled
->>   - "sync" mode, which is exactly the same as the cgroup v1
->>     interface cpuset.memory_migrate
->>   - "lazy" mode, when walking through all the pages, unlike
->>     cpuset.memory_migrate, it only sets pages to protnone,
->>     and numa faults triggered by later touch will handle the
->>     movement.
->=20
-> cpuset is already involved in NUMA allocation but it always felt like
-> something bolted on - it's weird to have cpu to NUMA node settings at glo=
-bal
-> level and then to have possibly conflicting direct NUMA configuration via
-> cpuset. My preference would be putting as much configuration as possible =
-on
-> the mm / autonuma side and let cpuset's node confinements further restrict
-> their operations rather than cpuset having its own set of policy
-> configurations.
->=20
-> Johannes, what are your thoughts?
->=20
-> Thanks.
->=20
+>> I fail to understand whether the SET_IOASID_PAGE_TABLES would apply to
+>> the whole IOASIDs within /dev/ioasid or to a specific one.
+> 
+> Sorry, nearly every IOCTL would be scoped to a specific IOASID as one
+> of the arguments.
+
+OK thank you for the clarification.
+> 
+>> Also in subsequent emails when you talk about IOASID, is it the
+>> ioasid_id, just to double check the terminology.
+> 
+> I am refering to IOASID as 'handle of the page table object inside the
+> /dev/ioasid fd'. If that is equal to some HW value or not I think
+> remains as decision point.
+OK
+> 
+> Basically the fd has an xarray of 'struct [something] *' and the
+> IOASID is index to that FD's private xarray. This is necessary to
+> create proper security as even if we have global PASID numbers or
+> something they still need to be isolated to only the FD that has
+> been authorized access.
+> 
+>>>   nested_ioasid = ioctl(ioasid_fd, CREATE_NESTED_IOASID,  gpa_ioasid_id);
+>>>   ioctl(ioasid_fd, SET_NESTED_IOASID_PAGE_TABLES, nested_ioasid, ..)
+>> is the nested_ioasid the allocated PASID id or is it a complete
+>> different object id.
+> 
+> It is the IOASID handle above.
+ok as per the following emails and below comment IOASID and PASID are
+different.The first would be a logic ID wgile the second the HW ID.
+
+Thanks
+
+Eric
+> 
+>>>
+>>>    // IOMMU will match on the device RID, no PASID:
+>>>   ioctl(vfio_device, ATTACH_IOASID, nested_ioasid);
+>>>
+>>>    // IOMMU will match on the device RID and PASID:
+>>>   ioctl(vfio_device, ATTACH_IOASID_PASID, pasid, nested_ioasid);
+>> here I see you pass a different pasid, so I guess they are different, in
+>> which case you would need to have an allocator function for this pasid,
+>> right?
+> 
+> Yes, the underlying HW ID (PASID or substream id or whatver) is
+> something slightly different
+> 
+> Jason
+> 
+
