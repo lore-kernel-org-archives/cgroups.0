@@ -1,80 +1,88 @@
 From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH v3 2/2] mm: memcg/slab: Create a new set of kmalloc-cg-<n>
  caches
-Date: Wed, 5 May 2021 14:54:00 -0400
-Message-ID: <5d1683d2-1023-1d1c-91e7-b68549debe1d@redhat.com>
+Date: Wed, 5 May 2021 14:56:55 -0400
+Message-ID: <1b235531-e165-954a-74b1-d3477c2a4b87@redhat.com>
 References: <20210505154613.17214-1-longman@redhat.com>
  <20210505154613.17214-3-longman@redhat.com>
  <YJLWN6bNBYyKRPEN@carbon.DHCP.thefacebook.com>
- <f14a263b-10ea-ef2b-eefa-066591a4b637@redhat.com>
+ <235f45b4-2d99-f32d-ac2b-18b59fea5a25@suse.cz>
+ <4e4b6903-2444-f4ed-f589-26d5beae3120@redhat.com>
+ <YJLmGcGYLZwqehIX@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620240844;
+        s=mimecast20190719; t=1620241019;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=xzcUJiTSMQjqP53U/sK3VcFgjGCdL+Yqx50eNS1EYWE=;
-        b=DoI2R8UovkmriXKAHZApMNuFjaaQLCsVAY5Do/ue4nasJdIYhDig01oKYmQUk9Ztm3l+Fr
-        VV1HVOQW1Z0oW97CaMSGNtDAL9sr73vgA7TUi5fqCS4OL2KCMKqlEl8d0uMbZ3OrC7OWMY
-        zhZKxU8IrwyzpoJ8Jh++c58pACYrTNY=
-In-Reply-To: <f14a263b-10ea-ef2b-eefa-066591a4b637-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=RLt9keyCtnOhXLfxqmhiGEZ6r/sGiYdHdPIuhsn7KMg=;
+        b=WEM9JBH5t8363HzEBQJImNrG8zCagRSxEdiQRTWQ0/EOLYnYtSbnZ0OjWEWbHSZNy3eCtJ
+        4To1GpRu0LzEPeJYKYDnLldcfelpSv1BqhbrffKjKdsnmp1xNZprbAkjSkAcMH1sSAbGNa
+        /oNRtYQkwUztIvdiO7CAHuyFt7ndt50=
+In-Reply-To: <YJLmGcGYLZwqehIX-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On 5/5/21 2:11 PM, Waiman Long wrote:
-> On 5/5/21 1:30 PM, Roman Gushchin wrote:
->
+On 5/5/21 2:38 PM, Roman Gushchin wrote:
+> On Wed, May 05, 2021 at 02:31:28PM -0400, Waiman Long wrote:
+>> On 5/5/21 2:02 PM, Vlastimil Babka wrote:
+>>> On 5/5/21 7:30 PM, Roman Gushchin wrote:
+>>>> On Wed, May 05, 2021 at 11:46:13AM -0400, Waiman Long wrote:
+>>>>> With this change, all the objcg pointer array objects will come from
+>>>>> KMALLOC_NORMAL caches which won't have their objcg pointer arrays. So
+>>>>> both the recursive kfree() problem and non-freeable slab problem are
+>>>>> gone. Since both the KMALLOC_NORMAL and KMALLOC_CGROUP caches no longer
+>>>>> have mixed accounted and unaccounted objects, this will slightly reduce
+>>>>> the number of objcg pointer arrays that need to be allocated and save
+>>>>> a bit of memory.
+>>>> Unfortunately the positive effect of this change will be likely
+>>>> reversed by a lower utilization due to a larger number of caches.
+>>>>
+>>>> Btw, I wonder if we also need a change in the slab caches merging procedure?
+>>>> KMALLOC_NORMAL caches should not be merged with caches which can potentially
+>>>> include accounted objects.
+>>> Good point. But looks like kmalloc* caches are extempt from all merging in
+>>> create_boot_cache() via
+>>>
+>>> 	s->refcount = -1;       /* Exempt from merging for now */
+>>>
+>>> It wouldn't hurt though to create the kmalloc-cg-* caches with SLAB_ACCOUNT flag
+>>> to prevent accidental merging in case the above is ever removed. It would also
+>>> better reflect reality, and ensure that the array is allocated immediately with
+>>> the page, AFAICS.
+>>>
+>> I am not sure if this is really true.
 >>
->> Btw, I wonder if we also need a change in the slab caches merging 
->> procedure?
->> KMALLOC_NORMAL caches should not be merged with caches which can 
->> potentially
->> include accounted objects.
+>> struct kmem_cache *__init create_kmalloc_cache(const char *name,
+>>                  unsigned int size, slab_flags_t flags,
+>>                  unsigned int useroffset, unsigned int usersize)
+>> {
+>>          struct kmem_cache *s = kmem_cache_zalloc(kmem_cache, GFP_NOWAIT);
+>>
+>>          if (!s)
+>>                  panic("Out of memory when creating slab %s\n", name);
+>>
+>>          create_boot_cache(s, name, size, flags, useroffset, usersize);
+>>          kasan_cache_create_kmalloc(s);
+>>          list_add(&s->list, &slab_caches);
+>>          s->refcount = 1;
+>>          return s;
+>> }
+>>
+>> Even though refcount is set to -1 initially, it is set back to 1 afterward.
+>> So merging can still happen AFAICS.
+> Right, thanks, I already noticed it. Then yeah, we should make sure we're not
+> merging KMALLOC_NORMAL caches with any others.
 >
-> Thank for catching this omission.
->
-> I will take a look and modify the merging procedure in a new patch. 
-> Accounting is usually specified at kmem_cache_create() time. Though, I 
-> did find one instance of setting ACCOUNT flag in kmem_cache_alloc(), I 
-> will ignore this case and merge accounted, but unreclaimable caches to 
-> KMALLOC_CGROUP. 
-
-In mm/slab_common.c:
-
-#define SLAB_MERGE_SAME (SLAB_RECLAIM_ACCOUNT | SLAB_CACHE_DMA | \
-                          SLAB_CACHE_DMA32 | SLAB_ACCOUNT)
-
-struct kmem_cache *find_mergeable(unsigned int size, unsigned int align,
-   :
-                 if ((flags & SLAB_MERGE_SAME) != (s->flags & 
-SLAB_MERGE_SAME))
-                         continue;
-
-By making sure kmalloc-cg-* has SLAB_ACCOUNT bit set, a kmemcache 
-created with with SLAB_ACCOUNT may merge with kmalloc-cg-* whereas one 
-without SLAB_ACCOUNT may merge with kmalloc-* for now. So the current 
-code should work fine for most cases. Though, if the ACCOUNT flag is set 
-at kmem_cache_alloc() and the cache happens to be merged into kmalloc-*, 
-we will have the rare case that an objcg pointer array may have to be 
-added to a kmalloc-* cache. However, this is not a common practice, and 
-the three cases (not one, sorry) that I found so far is in
-
-arch/x86/kvm/x86.c:     ctxt = kmem_cache_zalloc(x86_emulator_cache, 
-GFP_KERNEL_ACCOUNT);
-fs/hostfs/hostfs_kern.c:        hi = 
-kmem_cache_alloc(hostfs_inode_cache, GFP_KERNEL_ACCOUNT);
-virt/kvm/kvm_main.c:    vcpu = kmem_cache_zalloc(kvm_vcpu_cache, 
-GFP_KERNEL_ACCOUNT);
-
-We will have to advise against doing that.
+That should be easy. We just set the refcount to -1 for the 
+KMALLOC_NORMAL caches right after its creation then.
 
 Cheers,
 Longman
-
 
