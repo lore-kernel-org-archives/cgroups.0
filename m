@@ -1,43 +1,101 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v3 1/2] mm: memcg/slab: Properly set up gfp flags for
- objcg pointer array
-Date: Wed, 5 May 2021 09:46:39 -0700
-Message-ID: <YJLL74J1reAL0VP0@carbon.DHCP.thefacebook.com>
-References: <20210505154613.17214-1-longman@redhat.com>
- <20210505154613.17214-2-longman@redhat.com>
+From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Wed, 5 May 2021 10:22:59 -0700
+Message-ID: <20210505102259.044cafdf@jacob-builder>
+References: <MWHPR11MB1886188698A6E20338196F788C469@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210422121020.GT1370958@nvidia.com>
+ <MWHPR11MB1886E688D2128C98A1F240B18C459@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210423114944.GF1370958@nvidia.com>
+ <MWHPR11MB18861FE6982D73AFBF173E048C439@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210426123817.GQ1370958@nvidia.com>
+ <MWHPR11MB188625137D5B7423822396C88C409@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210504084148.4f61d0b5@jacob-builder>
+ <20210504180050.GB1370958@nvidia.com>
+ <20210504151154.02908c63@jacob-builder>
+ <20210504231530.GE1370958@nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=BEpaIDP5RFuqf5+6IRNmCEX0RBS4oU0O6eTJreg0IOE=;
- b=FNs/wzerMcTEirrKb6mebm7CTV83Lumxtefo3xfoSmTwtXZHhXX5oXqVyKol1miHs0Sl
- aMnMJPgXOuKGex1Pm4C+XPpSH3G6juEKXOLpQug2shgWUStFP704c673TGDKs6R5BIEE
- 4ZMXa3NItOGJcGSwkoyegBSr1C5CuruH70A= 
-Content-Disposition: inline
-In-Reply-To: <20210505154613.17214-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20210504231530.GE1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
+ Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Raj,
+ Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, 
+ Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Wed, May 05, 2021 at 11:46:12AM -0400, Waiman Long wrote:
-> Since the merging of the new slab memory controller in v5.9, the page
-> structure may store a pointer to obj_cgroup pointer array for slab pages.
-> Currently, only the __GFP_ACCOUNT bit is masked off. However, the array
-> is not readily reclaimable and doesn't need to come from the DMA buffer.
-> So those GFP bits should be masked off as well.
+Hi Jason,
+
+On Tue, 4 May 2021 20:15:30 -0300, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
+
+> On Tue, May 04, 2021 at 03:11:54PM -0700, Jacob Pan wrote:
 > 
-> Do the flag bit clearing at memcg_alloc_page_obj_cgroups() to make sure
-> that it is consistently applied no matter where it is called.
+> > > It is a weird way to use xarray to have a structure which
+> > > itself is just a wrapper around another RCU protected structure.
+> > > 
+> > > Make the caller supply the ioasid_data memory, embedded in its own
+> > > element, get rid of the void * and rely on XA_ZERO_ENTRY to hold
+> > > allocated but not active entries.
+> > >   
+> > Let me try to paraphrase to make sure I understand. Currently
+> > struct ioasid_data is private to the iasid core, its memory is
+> > allocated by the ioasid core.
+> > 
+> > You are suggesting the following:
+> > 1. make struct ioasid_data public
+> > 2. caller allocates memory for ioasid_data, initialize it then pass it
+> > to ioasid_alloc to store in the xarray
+> > 3. caller will be responsible for setting private data inside
+> > ioasid_data and do call_rcu after update if needed.  
 > 
-> Fixes: 286e04b8ed7a ("mm: memcg/slab: allocate obj_cgroups for non-root slab pages")
-> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
->  mm/memcontrol.c | 8 ++++++++
->  mm/slab.h       | 1 -
->  2 files changed, 8 insertions(+), 1 deletion(-)
+> Basically, but you probably won't need a "private data" once the
+> caller has this struct as it can just embed it in whatever larger
+> struct makes sense for it and use container_of/etc
+> 
+that makes sense. thanks!
 
-Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> I didn't look too closely at the whole thing though. Honestly I'm a
+> bit puzzled why we need a pluggable global allocator framework.. The
+> whole framework went to some trouble to isolate everything into iommu
+> drivers then that whole design is disturbed by this global thing.
+> 
+Global and pluggable are for slightly separate reasons.
+- We need global PASID on VT-d in that we need to support shared
+workqueues (SWQ). E.g. One SWQ can be wrapped into two mdevs then assigned
+to two VMs. Each VM uses its private guest PASID to submit work but
+each guest PASID must be translated to a global (system-wide) host PASID to
+avoid conflict. Also, since PASID table storage is per PF, if two mdevs of
+the same PF are assigned to different VMs, the PASIDs must be unique.
 
-Thanks!
+- The pluggable allocator is to support the option where the guest PASIDs
+are allocated by the hypervisor. Let it be the same as the host PASID or
+some arbitrary number cooked up by the hypervisor but backed by a host HW
+PASID. VT-d spec has this virtual command interface that requires the guest
+to use it instead of allocating from the guest ioasid xarray. This is the
+reason why it has to go down to iommu vendor driver. I guess that is what
+you meant by "went to some trouble to isolate everything into iommu"?
+
+For ARM, since the guest owns the per device PASID table. There is no need
+to allocate PASIDs from the host nor the hypervisor. Without SWQ, there is
+no need for global PASID/SSID either. So PASID being global for ARM is for
+simplicity in case of host PASID/SSID.
+
+
+
+> Jason
+
+
+Thanks,
+
+Jacob
