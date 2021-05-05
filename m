@@ -1,63 +1,105 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v3 2/2] mm: memcg/slab: Create a new set of
- kmalloc-cg-<n> caches
-Date: Wed, 5 May 2021 15:19:39 -0700
-Message-ID: <YJMZ+542NVnbWgat@carbon.dhcp.thefacebook.com>
-References: <20210505154613.17214-1-longman@redhat.com>
- <20210505154613.17214-3-longman@redhat.com>
- <YJLWN6bNBYyKRPEN@carbon.DHCP.thefacebook.com>
- <235f45b4-2d99-f32d-ac2b-18b59fea5a25@suse.cz>
- <YJLk1tmDeGed58yr@carbon.dhcp.thefacebook.com>
- <f73cc1c6-2950-c56d-6a57-8cebb23db65b@suse.cz>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Wed, 5 May 2021 19:21:20 -0300
+Message-ID: <20210505222120.GM1370958@nvidia.com>
+References: <MWHPR11MB18861FE6982D73AFBF173E048C439@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210426123817.GQ1370958@nvidia.com>
+ <MWHPR11MB188625137D5B7423822396C88C409@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210504084148.4f61d0b5@jacob-builder>
+ <20210504180050.GB1370958@nvidia.com>
+ <20210504151154.02908c63@jacob-builder>
+ <20210504231530.GE1370958@nvidia.com>
+ <20210505102259.044cafdf@jacob-builder>
+ <20210505180023.GJ1370958@nvidia.com>
+ <20210505130446.3ee2fccd@jacob-builder>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=ByFq6507AVEX59jck3ULXtpF9kLypXjISpI/R9rYpbE=;
- b=C0V6RorqIcPEfZYTdvU7i04Dv2sUutkoz3BohZ6GR3cguQeWFO5sL+fnyQuewDL1TrDQ
- nPrWFkgdydVbu1EGKm3FATk3r4dEgBUtPoTaIuRXx7c0X2xq+bPyJuij/ICPePRb42IK
- x8BpK1pNcqtVmbVNmndoyGgPVgPrQsfQjUQ= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=l2Dr2AfpdUpdq9csMR9KxAzmzXD1M2n3+AilvtRKQzI=;
+ b=msOlANKY0aCIEPYZdRVrnlIHSheRbMI2icZ13dCoTtKgHqlLzUI3lTyCUnJnhFY0/X+W6pBhFhNPHwy/vdhsO4vM/4deb8FmHInBn3r4FC3m8c+wgN5CeXZZM481YP4X8j56ucc09zpmGCGS8uwawnHJx5juUZTDfGDOiMO//2XVg8aX1p40wHUrKeFTeao27i4+Vc7DzSbq+r0OEnYw99Q1pXHI4jKCLVLIiSDOK+KbDjlKZn3nOkxDAbkYBVSMQFdebWuNRzF0ljpB299dV05B9DCt04w+sCair+x5Ysat1JWolniG/E3t4CzOoDRXMPDrl/XrjIQdAJu5S/C4vA==
 Content-Disposition: inline
-In-Reply-To: <f73cc1c6-2950-c56d-6a57-8cebb23db65b-AlSwsSmVLrQ@public.gmane.org>
+In-Reply-To: <20210505130446.3ee2fccd@jacob-builder>
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Wed, May 05, 2021 at 11:29:54PM +0200, Vlastimil Babka wrote:
-> On 5/5/21 8:32 PM, Roman Gushchin wrote:
-> > On Wed, May 05, 2021 at 08:02:06PM +0200, Vlastimil Babka wrote:
-> >> On 5/5/21 7:30 PM, Roman Gushchin wrote:
-> >> > On Wed, May 05, 2021 at 11:46:13AM -0400, Waiman Long wrote:
-> >> >> 
-> >> >> With this change, all the objcg pointer array objects will come from
-> >> >> KMALLOC_NORMAL caches which won't have their objcg pointer arrays. So
-> >> >> both the recursive kfree() problem and non-freeable slab problem are
-> >> >> gone. Since both the KMALLOC_NORMAL and KMALLOC_CGROUP caches no longer
-> >> >> have mixed accounted and unaccounted objects, this will slightly reduce
-> >> >> the number of objcg pointer arrays that need to be allocated and save
-> >> >> a bit of memory.
-> >> > 
-> >> > Unfortunately the positive effect of this change will be likely
-> >> > reversed by a lower utilization due to a larger number of caches.
-> >> > 
-> >> > Btw, I wonder if we also need a change in the slab caches merging procedure?
-> >> > KMALLOC_NORMAL caches should not be merged with caches which can potentially
-> >> > include accounted objects.
-> >> 
-> >> Good point. But looks like kmalloc* caches are extempt from all merging in
-> >> create_boot_cache() via
-> >> 
-> >> 	s->refcount = -1;       /* Exempt from merging for now */
+On Wed, May 05, 2021 at 01:04:46PM -0700, Jacob Pan wrote:
+> Hi Jason,
+> 
+> On Wed, 5 May 2021 15:00:23 -0300, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
+> 
+> > On Wed, May 05, 2021 at 10:22:59AM -0700, Jacob Pan wrote:
 > > 
-> > Wait, s->refcount is adjusted to 1 in create_kmalloc_cache() after calling
-> > into create_boot_cache?
+> > > Global and pluggable are for slightly separate reasons.
+> > > - We need global PASID on VT-d in that we need to support shared
+> > > workqueues (SWQ). E.g. One SWQ can be wrapped into two mdevs then
+> > > assigned to two VMs. Each VM uses its private guest PASID to submit
+> > > work but each guest PASID must be translated to a global (system-wide)
+> > > host PASID to avoid conflict. Also, since PASID table storage is per
+> > > PF, if two mdevs of the same PF are assigned to different VMs, the
+> > > PASIDs must be unique.  
+> > 
+> > From a protocol perspective each RID has a unique PASID table, and
+> > RIDs can have overlapping PASIDs.
+> > 
+> True, per RID or per PF as I was referring to.
 > 
-> Hmm I missed that
-> 
-> Now I wonder why all kmalloc caches on my system have 0 aliases :)
-> cat /sys/kernel/slab/kmalloc-*/aliases
+> > Since your SWQ is connected to a single RID the requirement that
+> > PASIDs are unique to the RID ensures they are sufficiently unique.
+> > 
+> True, but one process can submit work to multiple mdevs from different
+> RIDs/PFs. One process uses one PASID and PASID translation table is per VM.
+> The same PASID is used for all the PASID tables of each RID.
 
-Yeah, I noticed it too, it's a good question. And I remember a case from
-the past when it wasn't true (kmalloc-32 was shared with something else).
+If the model is "assign this PASID to this RID" then yes, there is a
+big problem keeping everything straight that can only be solved with a
+global table.
+
+But if the model is "give me a PASID for this RID" then it isn't such
+a problem.
+
+Basically trying to enforce a uniform PASID for an IOASID across all
+RIDs attached to it is not such a nice choice.
+
+> > That is fine, but all this stuff should be inside the Intel vIOMMU
+> > driver not made into a global resource of the entire iommu subsystem.
+> > 
+> Intel vIOMMU has to use a generic uAPI to allocate PASID so the generic
+> code need to have this option. I guess you are saying we should also have a
+> per RID allocation option in addition to global?
+
+There always has to be a RID involvement for the PASID, for security,
+this issue really boils down to where the PASID lives.
+
+If you need the PASID attached to the IOASID then it has to be global
+because the IOASID can be attached to any RID and must keep the same
+PASID.
+
+If the PASID is learned when the IOASID is attached to a RID then the
+PASID is more flexible and isn't attached to the IOASID.
+
+Honestly I'm a little leary to bake into a UAPI a specific HW choice
+that Intel made here.
+
+I would advise making the "attach a global PASID to this IOASID"
+operation explicit and opt into for case that actually need it.
+
+Which implies the API to the iommu driver should be more like:
+
+  'assign an IOASID to this RID and return the PASID'
+  'reserve a PASID from every RID'
+  'assign an IOASID to this RID and use this specific PASID'
+
+In all cases the scope of those operations are completely local to a
+certain IOMMU driver - 'reserver a PASID from every RID' is really
+every RID that driver can operate on.
+
+So it is hard to see why the allocator should be a global resource and
+not something that is part of the iommu driver exclusively.
+
+Jason
