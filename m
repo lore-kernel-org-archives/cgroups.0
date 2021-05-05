@@ -1,22 +1,22 @@
 From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 3/5] tests/cgroup: use cgroup.kill in cg_killall()
-Date: Wed, 5 May 2021 09:42:08 -0700
-Message-ID: <CALvZod6nTDc4Jx4UG3HKaugA1F_2N-rG+xqACAKVkKJjqxWOXg@mail.gmail.com>
-References: <20210503143922.3093755-1-brauner@kernel.org> <20210503143922.3093755-3-brauner@kernel.org>
+Subject: Re: [PATCH v2 4/5] tests/cgroup: move cg_wait_for(), cg_prepare_for_wait()
+Date: Wed, 5 May 2021 09:43:17 -0700
+Message-ID: <CALvZod51giGe2_MsHHp=7czY0rKdXBRMi-Ug-oc5avgFwhFaVQ@mail.gmail.com>
+References: <20210503143922.3093755-1-brauner@kernel.org> <20210503143922.3093755-4-brauner@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=CZSxOum7tgcfufyRQ0ud4aq7JR1hA71f4tT5tJF5bAk=;
-        b=Y2ETgANl3oMRKwl6lTT7wNph2JFAn/CkXrVJyf9nplhyQV+ERSGAfGrbICtcc3Pk79
-         p2lfZZY816/lXdrvktWAGAerrc2sqMixaIzcCbHqZlhG2vnfMHN3hxvQaQxYdrwN1Koh
-         Bw3HP2t+fmXF+uwtKQBJbzcf7Ptu6pFNTKjXuglYMC6Z/Eay9e/08lohNc8Z2CqoMzJw
-         zcfBlcg828zoW052cHxSeu4wfWtk+WqxjJJ3d723hYhGLmSiQR0+rk207FC34o3W512D
-         ToH8DVmgr3e/xYORr361TMepy4sigreWXlGhxRR58UffKENoodP/rjeBmd7L4spy/DC3
-         Mr/g==
-In-Reply-To: <20210503143922.3093755-3-brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        bh=9uYZs26n/wyQy1YB8Ay0KGcQh6u0u3FYwEcGuskdOQ8=;
+        b=vuuG/mWR6GfoQ9g+2kdjgPJ71W6uK0U4PA6MFirzClqWduHDBDZ0DcmKif+sj7YM5z
+         r4lBFW5HF9yY7cI7fqo7GTg9eSfkPfvdWAQKOu3qwoXtRxmJBMXkAqaWmZ6jM2iWeOaF
+         UBUn4Xs/LTmsVAttnxgcsqc/7YRmcioCRFI44pInVVdpYYAYeS+BGlSHNWEWbfhO3URH
+         FXmRWSnutnQgkHbjOTwbc9a08CpB8HJxJOP3ntRMH8d4r8MJyBeBb6g9VOwxdF6N0BAW
+         8pqDgZx3Xt0QqpiUyC8VIOn82dJTB4xsNEkTKGIFEEkuPiZloQP0G/Pt3QbfVN1TbcIU
+         pDXw==
+In-Reply-To: <20210503143922.3093755-4-brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -27,7 +27,7 @@ On Mon, May 3, 2021 at 7:40 AM Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A
 >
 > From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 >
-> If cgroup.kill file is supported make use of it.
+> as they will be used by the tests for cgroup killing.
 >
 > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -35,34 +35,3 @@ On Mon, May 3, 2021 at 7:40 AM Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A
 > Signed-off-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
 Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-
-> ---
-> /* v2 */
-> - Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>:
->   - Fix whitespace.
-> ---
->  tools/testing/selftests/cgroup/cgroup_util.c | 4 ++++
->  1 file changed, 4 insertions(+)
->
-> diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
-> index 027014662fb2..f60f7d764690 100644
-> --- a/tools/testing/selftests/cgroup/cgroup_util.c
-> +++ b/tools/testing/selftests/cgroup/cgroup_util.c
-> @@ -252,6 +252,10 @@ int cg_killall(const char *cgroup)
->         char buf[PAGE_SIZE];
->         char *ptr = buf;
->
-> +       /* If cgroup.kill exists use it. */
-> +       if (!cg_write(cgroup, "cgroup.kill", "1"))
-> +               return 0;
-
-Now cg_killall will kill all the processes in the tree rooted at
-cgroup which I think is fine.
-
-> +
->         if (cg_read(cgroup, "cgroup.procs", buf, sizeof(buf)))
->                 return -1;
->
-> --
-> 2.27.0
->
