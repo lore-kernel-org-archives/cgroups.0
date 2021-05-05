@@ -1,65 +1,34 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v4 2/3] mm: memcg/slab: Create a new set of
- kmalloc-cg-<n> caches
-Date: Wed, 5 May 2021 13:37:27 -0700
-Message-ID: <YJMCB/g8YctqQmlE@carbon.dhcp.thefacebook.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH v4 3/3] mm: memcg/slab: Disable cache merging for
+ KMALLOC_NORMAL caches
+Date: Wed, 5 May 2021 13:38:44 -0700
+Message-ID: <YJMCVPIJyCFfcmiD@carbon.dhcp.thefacebook.com>
 References: <20210505200610.13943-1-longman@redhat.com>
- <20210505200610.13943-3-longman@redhat.com>
+ <20210505200610.13943-4-longman@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=v4HyhTw3kOjEOWG+Aw2IiVPkSLyT0I9UxIaA9q26JTM=;
- b=hVnQM25+DkFLSperfoPzBm5IbfUWxgY+j3QmY32cQskiyHWNQYF+eH/4WGCUPylCD4dI
- zV5wN1XFAW6/rxB8RHhX5JpI4EVltyCXWFiCPQvO9LpOu9Xexg0vqQPEnjg7mmZhe6P0
- FXthoXqRsGTj4YD8ovkllEJxywBPRmlPvJM= 
+ mime-version; s=facebook; bh=RU75SMRO/mtB3tc7C0hCxRd/5hwa1TI5J2uZlWitDXY=;
+ b=ZDeaAQ5cJcwjqg/TaH3c73IEx2g2Qnl2MKGjH6RECPbLT0QelamdgPbeNwk0CYQnFkXU
+ eymDwbcGwQQwMrtq4V4rx//m6pHjGSpDxOHAF7Z0X2A2aknB8TzMxm4bOUZrLWQ/Dip4
+ 6qOiQMorutArGrp0/SZrL3D78o8IjeUqMIk= 
 Content-Disposition: inline
-In-Reply-To: <20210505200610.13943-3-longman@redhat.com>
+In-Reply-To: <20210505200610.13943-4-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Vlastimil Babka <vbabka@suse.cz>, Shakeel Butt <shakeelb@google.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Wed, May 05, 2021 at 04:06:09PM -0400, Waiman Long wrote:
-> There are currently two problems in the way the objcg pointer array
-> (memcg_data) in the page structure is being allocated and freed.
+On Wed, May 05, 2021 at 04:06:10PM -0400, Waiman Long wrote:
+> The KMALLOC_NORMAL (kmalloc-<n>) caches are for unaccounted objects only
+> when CONFIG_MEMCG_KMEM is enabled. To make sure that this condition
+> remains true, we will have to prevent KMALOC_NORMAL caches to merge
+> with other kmem caches. This is now done by setting its refcount to -1
+> right after its creation.
 > 
-> On its allocation, it is possible that the allocated objcg pointer
-> array comes from the same slab that requires memory accounting. If this
-> happens, the slab will never become empty again as there is at least
-> one object left (the obj_cgroup array) in the slab.
-> 
-> When it is freed, the objcg pointer array object may be the last one
-> in its slab and hence causes kfree() to be called again. With the
-> right workload, the slab cache may be set up in a way that allows the
-> recursive kfree() calling loop to nest deep enough to cause a kernel
-> stack overflow and panic the system.
-> 
-> One way to solve this problem is to split the kmalloc-<n> caches
-> (KMALLOC_NORMAL) into two separate sets - a new set of kmalloc-<n>
-> (KMALLOC_NORMAL) caches for unaccounted objects only and a new set of
-> kmalloc-cg-<n> (KMALLOC_CGROUP) caches for accounted objects only. All
-> the other caches can still allow a mix of accounted and unaccounted
-> objects.
-> 
-> With this change, all the objcg pointer array objects will come from
-> KMALLOC_NORMAL caches which won't have their objcg pointer arrays. So
-> both the recursive kfree() problem and non-freeable slab problem are
-> gone.
-> 
-> Since both the KMALLOC_NORMAL and KMALLOC_CGROUP caches no longer have
-> mixed accounted and unaccounted objects, this will slightly reduce the
-> number of objcg pointer arrays that need to be allocated and save a bit
-> of memory. On the other hand, creating a new set of kmalloc caches does
-> have the effect of reducing cache utilization. So it is properly a wash.
-> 
-> The new KMALLOC_CGROUP is added between KMALLOC_NORMAL and
-> KMALLOC_RECLAIM so that the first for loop in create_kmalloc_caches()
-> will include the newly added caches without change.
-> 
-> Suggested-by: Vlastimil Babka <vbabka@suse.cz>
-> Signed-off-by: Waiman Long <longman@redhat.com>
-> Reviewed-by: Shakeel Butt <shakeelb@google.com>
+> Suggested-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Acked-by: Roman Gushchin <guro@fb.com>
+Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
