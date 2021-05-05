@@ -1,151 +1,135 @@
-From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 2/2] mm: memcg/slab: Create a new set of kmalloc-cg-<n>
- caches
-Date: Tue, 4 May 2021 21:55:59 -0400
-Message-ID: <26ef8e5d-3a72-324f-4ef9-ead8c6251e70@redhat.com>
-References: <20210504132350.4693-1-longman@redhat.com>
- <20210504132350.4693-3-longman@redhat.com>
- <3c952b24-94e4-3c54-b668-cac778ff5a77@suse.cz>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC] memory reserve for userspace oom-killer
+Date: Tue, 4 May 2021 19:45:19 -0700
+Message-ID: <CALvZod4pqkY84Od67=aEnpWL7V3bXnH4pduBQAh89Byp=snD+Q@mail.gmail.com>
+References: <CALvZod7vtDxJZtNhn81V=oE-EPOf=4KZB2Bv6Giz+u3bFFyOLg@mail.gmail.com>
+ <YH54pyRWSi1zLMw4@dhcp22.suse.cz> <CALvZod4kjdgMU=8T_bx6zFufA1cGtt2p1Jg8jOgi=+g=bs-Evw@mail.gmail.com>
+ <YH/RPydqhwXdyG80@dhcp22.suse.cz> <CALvZod4kRWDQuZZQ5F+z6WMcUWLwgYd-Kb0mY8UAEK4MbSOZaA@mail.gmail.com>
+ <YIA2rB0wgqKzfUfi@dhcp22.suse.cz> <CALvZod4_L7GSHnivQTSdDzo=fb4i3z=katjzVCHfLz9WWGK8uQ@mail.gmail.com>
+ <CAJuCfpEXyG9x1nUsg+6yVWTP+-A4OwuCg9XHLAciu39=JNY7DQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620179764;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=XcTx3FgEa0ZtpV+h7gNoIIwMYnfs3k07HI6rrP4pOSc=;
-        b=COprRlNYztG4D6fmRj4XbVBo1xqIMaa1V9HNtVvh+2S3W+3Se1SaTqz2MNpDHWpsW/PURo
-        fjurJRG2+45Db0PlsrJjkas7LBdyteR3a2Ovpd0OSiTd/2+eMwTQeLaOwl7A1mhilHaNo6
-        eAzGUlHmFgxBGRz5L6MaEZ7qgkNNUOg=
-In-Reply-To: <3c952b24-94e4-3c54-b668-cac778ff5a77-AlSwsSmVLrQ@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=dpyffmzF28xsaxMRD2G97jPnI0ZZ1SR5Rjf3NGEtBIA=;
+        b=WeyYZGSlF4U/HwB/qVfj/2M1q/SsBc/SKWwZXb07+k3IHswE46B/RH47b+4Tq/22n6
+         cJqgiZYKFSa5CPgEvKu1v6InVgLl9uy97j0IGcSYidqkwZt6CFst4uMGSHPwu20HAKYq
+         Srmc6a9Mbxc5pqZ3svXSYaZ5RtOwasDrY7ezpwc4tBuj53FCQ7EXSZovm0/gpUO9iwwZ
+         su3SMw/cUk3m4xk7brfxW7WSf+TvhBnlJfhA51FDVlT9bJtegtxVRO1lbNIEX7//gEUN
+         FRgRk4VDGYIxofh5nMP1MByGTUdj7rDMqT1gLLmVQXIUNvw57IUDi13+DvQbRNS+CFpc
+         hdyQ==
+In-Reply-To: <CAJuCfpEXyG9x1nUsg+6yVWTP+-A4OwuCg9XHLAciu39=JNY7DQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dragos Sbirlea <dragoss-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Priya Duraisamy <padmapriyad-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 5/4/21 12:01 PM, Vlastimil Babka wrote:
-> On 5/4/21 3:23 PM, Waiman Long wrote:
->> There are currently two problems in the way the objcg pointer array
->> (memcg_data) in the page structure is being allocated and freed.
->>
->> On its allocation, it is possible that the allocated objcg pointer
->> array comes from the same slab that requires memory accounting. If this
->> happens, the slab will never become empty again as there is at least
->> one object left (the obj_cgroup array) in the slab.
->>
->> When it is freed, the objcg pointer array object may be the last one
->> in its slab and hence causes kfree() to be called again. With the
->> right workload, the slab cache may be set up in a way that allows the
->> recursive kfree() calling loop to nest deep enough to cause a kernel
->> stack overflow and panic the system.
->>
->> One way to solve this problem is to split the kmalloc-<n> caches
->> (KMALLOC_NORMAL) into two separate sets - a new set of kmalloc-<n>
->> (KMALLOC_NORMAL) caches for non-accounted objects only and a new set of
->> kmalloc-cg-<n> (KMALLOC_CGROUP) caches for accounted objects only. All
->> the other caches can allow a mix of accounted and non-accounted objects.
->>
->> With this change, all the objcg pointer array objects will come from
->> KMALLOC_NORMAL caches which won't have their objcg pointer arrays. So
->> both the recursive kfree() problem and non-freeable slab problem
->> are gone.
->>
->> The new KMALLOC_CGROUP is added between KMALLOC_NORMAL and
->> KMALLOC_RECLAIM so that the first for loop in create_kmalloc_caches()
->> will include the newly added caches without change.
-> Great, thanks I hope there would be also benefits to objcg arrays not
-> created for all the normal caches anymore (possibly poorly used due to
-> mix of accounted and non-accounted objects in the same cache) and perhaps
-> it's possible for you to quantify the reduction of those?
-Right, I will update the commit log to mention that as well. Thanks!
->> Suggested-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
->> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ...
+On Tue, May 4, 2021 at 6:26 PM Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 >
->> @@ -321,6 +328,14 @@ kmalloc_caches[NR_KMALLOC_TYPES][KMALLOC_SHIFT_HIGH + 1];
->>   
->>   static __always_inline enum kmalloc_cache_type kmalloc_type(gfp_t flags)
->>   {
->> +#ifdef CONFIG_MEMCG_KMEM
->> +	/*
->> +	 * KMALLOC_CGROUP for non-reclaimable and non-DMA object with
->> +	 * accounting enabled.
->> +	 */
->> +	if ((flags & (__GFP_DMA | __GFP_RECLAIMABLE | __GFP_ACCOUNT)) == __GFP_ACCOUNT)
->> +		return KMALLOC_CGROUP;
->> +#endif
-> This function was designed so that KMALLOC_NORMAL would be the first tested and
-> returned possibility, as it's expected to be the most common. What about the
-> following on top?
+> On Tue, May 4, 2021 at 5:37 PM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> >
+> > On Wed, Apr 21, 2021 at 7:29 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> > >
+> > [...]
+> > > > > What if the pool is depleted?
+> > > >
+> > > > This would mean that either the estimate of mempool size is bad or
+> > > > oom-killer is buggy and leaking memory.
+> > > >
+> > > > I am open to any design directions for mempool or some other way where
+> > > > we can provide a notion of memory guarantee to oom-killer.
+> > >
+> > > OK, thanks for clarification. There will certainly be hard problems to
+> > > sort out[1] but the overall idea makes sense to me and it sounds like a
+> > > much better approach than a OOM specific solution.
+> > >
+> > >
+> > > [1] - how the pool is going to be replenished without hitting all
+> > > potential reclaim problems (thus dependencies on other all tasks
+> > > directly/indirectly) yet to not rely on any background workers to do
+> > > that on the task behalf without a proper accounting etc...
+> > > --
+> >
+> > I am currently contemplating between two paths here:
+> >
+> > First, the mempool, exposed through either prctl or a new syscall.
+> > Users would need to trace their userspace oom-killer (or whatever
+> > their use case is) to find an appropriate mempool size they would need
+> > and periodically refill the mempools if allowed by the state of the
+> > machine. The challenge here is to find a good value for the mempool
+> > size and coordinating the refilling of mempools.
+> >
+> > Second is a mix of Roman and Peter's suggestions but much more
+> > simplified. A very simple watchdog with a kill-list of processes and
+> > if userspace didn't pet the watchdog within a specified time, it will
+> > kill all the processes in the kill-list. The challenge here is to
+> > maintain/update the kill-list.
 >
-> ----8<----
-> diff --git a/include/linux/slab.h b/include/linux/slab.h
-> index fca03c22ea7c..418c5df0305b 100644
-> --- a/include/linux/slab.h
-> +++ b/include/linux/slab.h
-> @@ -328,30 +328,40 @@ kmalloc_caches[NR_KMALLOC_TYPES][KMALLOC_SHIFT_HIGH + 1];
->   
->   static __always_inline enum kmalloc_cache_type kmalloc_type(gfp_t flags)
->   {
-> -#ifdef CONFIG_MEMCG_KMEM
->   	/*
-> -	 * KMALLOC_CGROUP for non-reclaimable and non-DMA object with
-> -	 * accounting enabled.
-> +	 * The most common case is KMALLOC_NORMAL, so test for it
-> +	 * with a single branch for all flags that might affect it
->   	 */
-> -	if ((flags & (__GFP_DMA | __GFP_RECLAIMABLE | __GFP_ACCOUNT)) == __GFP_ACCOUNT)
-> -		return KMALLOC_CGROUP;
-> +	if (likely((flags & (__GFP_RECLAIMABLE
-> +#ifdef CONFIG_MEMCG_KMEM
-> +			     | __GFP_ACCOUNT
->   #endif
->   #ifdef CONFIG_ZONE_DMA
-> -	/*
-> -	 * The most common case is KMALLOC_NORMAL, so test for it
-> -	 * with a single branch for both flags.
-> -	 */
-> -	if (likely((flags & (__GFP_DMA | __GFP_RECLAIMABLE)) == 0))
-> +			     | __GFP_DMA
-> +#endif
-> +			    )) == 0))
->   		return KMALLOC_NORMAL;
->   
-> +#ifdef CONFIG_MEMCG_KMEM
->   	/*
-> -	 * At least one of the flags has to be set. If both are, __GFP_DMA
-> -	 * is more important.
-> +	 * KMALLOC_CGROUP for non-reclaimable and non-DMA object with
-> +	 * accounting enabled.
->   	 */
-> -	return flags & __GFP_DMA ? KMALLOC_DMA : KMALLOC_RECLAIM;
-> -#else
-> -	return flags & __GFP_RECLAIMABLE ? KMALLOC_RECLAIM : KMALLOC_NORMAL;
-> +	if ((flags & (__GFP_ACCOUNT | __GFP_RECLAIMABLE
-> +#ifdef CONFIG_ZONE_DMApropose this to the customer as proposing this will create a lot of confusion
-> +		      | __GFP_DMA
-> +#endif
-> +		     )) == __GFP_ACCOUNT)
-> +		return KMALLOC_CGROUP;
->   #endif
-> +
-> +#ifdef CONFIG_ZONE_DMA
-> +	if (flags & __GFP_DMA)
-> +		return KMALLOC_DMA;
-> +#endif
-> +
-> +	/* if we got here, it has to be __GFP_RECLAIMABLE */
-> +	return KMALLOC_RECLAIM;
->   }
->   
->   /*
->
-OK, I will make KMALLOC_NORMAL the first in the test. However the 
-proposed change is a bit hard to read, so I will probably change it a bit.
+> IIUC this solution is designed to identify cases when oomd/lmkd got
+> stuck while allocating memory due to memory shortages and therefore
+> can't feed the watchdog. In such a case the kernel goes ahead and
+> kills some processes to free up memory and unblock the blocked
+> process. Effectively this would limit the time such a process gets
+> stuck by the duration of the watchdog timeout. If my understanding of
+> this proposal is correct,
 
-Thanks,
-Longman
+Your understanding is indeed correct.
 
+> then I see the following downsides:
+> 1. oomd/lmkd are still not prevented from being stuck, it just limits
+> the duration of this blocked state. Delaying kills when memory
+> pressure is high even for short duration is very undesirable.
+
+Yes I agree.
+
+> I think
+> having mempool reserves could address this issue better if it can
+> always guarantee memory availability (not sure if it's possible in
+> practice).
+
+I think "mempool ... always guarantee memory availability" is
+something I should quantify with some experiments.
+
+> 2. What would be performance overhead of this watchdog? To limit the
+> duration of a process being blocked to a small enough value we would
+> have to have quite a small timeout, which means oomd/lmkd would have
+> to wake up quite often to feed the watchdog. Frequent wakeups on a
+> battery-powered system is not a good idea.
+
+This is indeed the downside i.e. the tradeoff between acceptable stall
+vs frequent wakeups.
+
+> 3. What if oomd/lmkd gets stuck for some memory-unrelated reason and
+> can't feed the watchdog? In such a scenario the kernel would assume
+> that it is stuck due to memory shortages and would go on a killing
+> spree.
+
+This is correct but IMHO killing spree is not worse than oomd/lmkd
+getting stuck for some other reason.
+
+> If there is a sure way to identify when a process gets stuck
+> due to memory shortages then this could work better.
+
+Hmm are you saying looking at the stack traces of the userspace
+oom-killer or some metrics related to oom-killer? It will complicate
+the code.
+
+> 4. Additional complexity of keeping the list of potential victims in
+> the kernel. Maybe we can simply reuse oom_score to choose the best
+> victims?
+
+Your point of additional complexity is correct. Regarding oom_score I
+think you meant oom_score_adj, I would avoid putting more
+policies/complexity in the kernel but I got your point that the
+simplest watchdog might not be helpful at all.
+
+> Thanks,
+> Suren.
+>
+> >
+> > I would prefer the direction which oomd and lmkd are open to adopt.
+> >
+> > Any suggestions?
