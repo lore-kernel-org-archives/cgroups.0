@@ -1,53 +1,75 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v3 2/2] mm: memcg/slab: Create a new set of
- kmalloc-cg-<n> caches
-Date: Wed, 5 May 2021 11:32:54 -0700
-Message-ID: <YJLk1tmDeGed58yr@carbon.dhcp.thefacebook.com>
-References: <20210505154613.17214-1-longman@redhat.com>
- <20210505154613.17214-3-longman@redhat.com>
- <YJLWN6bNBYyKRPEN@carbon.DHCP.thefacebook.com>
- <235f45b4-2d99-f32d-ac2b-18b59fea5a25@suse.cz>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 5/5] tests/cgroup: test cgroup.kill
+Date: Wed, 5 May 2021 11:34:41 -0700
+Message-ID: <CALvZod58WX-YpX_eSJzDyYknZiV5GzOe1wnKL8Pk4qMkq+oBQQ@mail.gmail.com>
+References: <20210503143922.3093755-1-brauner@kernel.org> <20210503143922.3093755-5-brauner@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=c9/kI84saANNmtSvVMDkjOfEMUQKQ6R+xzsfRWOt7mw=;
- b=ibj5NT1WAXdStd2dxB9xC8k9GXecsw5i4kF0lGRSYeSG1I2QJ07caRYjmQuzADhEQqhS
- VX1tP3fhz647O6c4Rti7b5WgSWj6iIVXmCI5XPdad6e4b6ZL15sa+EKc4SUx8+/YDFaX
- O4lIYxbld0XmoaD7QFdx/HXZleWG/CGlHck= 
-Content-Disposition: inline
-In-Reply-To: <235f45b4-2d99-f32d-ac2b-18b59fea5a25-AlSwsSmVLrQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=K5BbP+PQbZDrsW3Z0I2K54qvJu7T8OT3Rig60hvbO1U=;
+        b=vsqKdvcVbJzePaO2Rdkii7+aVDG4GsKFVmMNGiJb3HJ/5dEyks73H4moEQib1EV6+A
+         iHzoGwnjHsbOh0Fx60YpVgWrLdjLsXZozOLaCv2o9F+RvKD5gM3ENd+K7zwidkabXiQO
+         ZcLZVb1qh9Q3myp39yWjYo34ivvZWA1CXzpBqsomjfPx0nAFVzPOLLTmomuP7FGIZu0y
+         N+Uv01Eanyf2MW5nTNqzBKWf4wJKELwo/6qUM12Ffienqd/MdEtWZ6+/zXHCsHLOCVIv
+         cqwGpNFnkJq588E3Wo9tvTByYl3d+DETyi/C3tG3NvDk8sXW0i0OrMA9Z+uPM14dhoL7
+         ltPw==
+In-Reply-To: <20210503143922.3093755-5-brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-On Wed, May 05, 2021 at 08:02:06PM +0200, Vlastimil Babka wrote:
-> On 5/5/21 7:30 PM, Roman Gushchin wrote:
-> > On Wed, May 05, 2021 at 11:46:13AM -0400, Waiman Long wrote:
-> >> 
-> >> With this change, all the objcg pointer array objects will come from
-> >> KMALLOC_NORMAL caches which won't have their objcg pointer arrays. So
-> >> both the recursive kfree() problem and non-freeable slab problem are
-> >> gone. Since both the KMALLOC_NORMAL and KMALLOC_CGROUP caches no longer
-> >> have mixed accounted and unaccounted objects, this will slightly reduce
-> >> the number of objcg pointer arrays that need to be allocated and save
-> >> a bit of memory.
-> > 
-> > Unfortunately the positive effect of this change will be likely
-> > reversed by a lower utilization due to a larger number of caches.
-> > 
-> > Btw, I wonder if we also need a change in the slab caches merging procedure?
-> > KMALLOC_NORMAL caches should not be merged with caches which can potentially
-> > include accounted objects.
-> 
-> Good point. But looks like kmalloc* caches are extempt from all merging in
-> create_boot_cache() via
-> 
-> 	s->refcount = -1;       /* Exempt from merging for now */
+On Mon, May 3, 2021 at 7:40 AM Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+[...]
+> +
+> +static int test_cgkill_simple(const char *root)
+> +{
+> +       pid_t pids[100];
+> +       int ret = KSFT_FAIL;
+> +       char *cgroup = NULL;
+> +       int i;
+> +
+> +       cgroup = cg_name(root, "cg_test_simple");
+> +       if (!cgroup)
+> +               goto cleanup;
+> +
+> +       if (cg_create(cgroup))
+> +               goto cleanup;
+> +
+> +       for (i = 0; i < 100; i++)
+> +               pids[i] = cg_run_nowait(cgroup, child_fn, NULL);
+> +
+> +       if (cg_wait_for_proc_count(cgroup, 100))
+> +               goto cleanup;
+> +
+> +        if (cg_write(cgroup, "cgroup.kill", "1"))
+> +               goto cleanup;
 
-Wait, s->refcount is adjusted to 1 in create_kmalloc_cache() after calling
-into create_boot_cache?
+I don't think the above write to cgroup.kill is correct.
 
-It means they are not exempt actually.
+> +
+> +       if (cg_read_strcmp(cgroup, "cgroup.events", "populated 1\n"))
+> +               goto cleanup;
+> +
+> +       if (cg_kill_wait(cgroup))
+> +               goto cleanup;
+> +
+> +       if (cg_read_strcmp(cgroup, "cgroup.events", "populated 0\n"))
+> +               goto cleanup;
+> +
+> +       ret = KSFT_PASS;
+> +
+> +cleanup:
+> +       for (i = 0; i < 100; i++)
+> +               wait_for_pid(pids[i]);
+> +
+> +       if (cgroup)
+> +               cg_destroy(cgroup);
+> +       free(cgroup);
+> +       return ret;
+> +}
