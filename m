@@ -1,94 +1,100 @@
-From: Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
- APIs
-Date: Wed, 5 May 2021 11:10:29 +0200
-Message-ID: <17ab53a6-c2d7-c085-6469-ae487b138526@redhat.com>
-References: <20210416094547.1774e1a3@redhat.com>
- <BN6PR11MB406854F56D18E1187A2C98ACC3479@BN6PR11MB4068.namprd11.prod.outlook.com>
- <20210421162307.GM1370958@nvidia.com> <20210421105451.56d3670a@redhat.com>
- <20210421175203.GN1370958@nvidia.com> <20210421133312.15307c44@redhat.com>
- <20210421230301.GP1370958@nvidia.com>
- <MWHPR11MB1886188698A6E20338196F788C469@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210422121020.GT1370958@nvidia.com>
- <6e36797c-799e-074d-f66f-5686a4b37f38@redhat.com>
- <20210429200431.GA1370958@nvidia.com>
+From: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
+Subject: Re: [PATCH 1/1] sched/fair: Fix unfairness caused by missing load
+ decay
+Date: Wed, 5 May 2021 11:43:00 +0200
+Message-ID: <4b0d6562-db41-b4fc-ae51-694946c9255d@arm.com>
+References: <20210425080902.11854-1-odin@uged.al>
+ <20210425080902.11854-2-odin@uged.al> <20210427142611.GA22056@vingu-book>
+ <CAFpoUr1KOvLSUoUac8MMTD+TREDWmDpeku950U=_p-oBDE4Avw@mail.gmail.com>
+ <CAKfTPtCtt9V69AvkJTuMDRPJXGPboFsnSmwLM5RExnU2h5stSw@mail.gmail.com>
+ <4ba77def-c7e9-326e-7b5c-cd491b063888@arm.com>
+ <CAFpoUr3vMQq8QYajXZsQ6zWQOncO5Q8-2gFWOJLFm-APUznuZA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620205853;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=d0SQnCbBnNBGtZsOp6MO/Q/qxE8V3SBQW2J1qFEwtZU=;
-        b=Wz1E4tSjMAcxNtyhjov/1s1KqQiWsWqQamzLmhHwPygkrFTtXrb52zMkpeanlCjYh6EZY1
-        MSUFCc9aasUJbVyb9YUiJ5348tELeVZVW00pyA91+WW+iGEc1VpfGV6FVDFKWn9uIZMwD7
-        T5HXHuZLzQtBrjw5cPV56QwWR59ISCo=
-In-Reply-To: <20210429200431.GA1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CAFpoUr3vMQq8QYajXZsQ6zWQOncO5Q8-2gFWOJLFm-APUznuZA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Odin Ugedal <odin-lVFEcm3hDZTQT0dZR+AlfA@public.gmane.org>
+Cc: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi Jason,
-
-On 4/29/21 10:04 PM, Jason Gunthorpe wrote:
-> On Thu, Apr 29, 2021 at 03:26:55PM +0200, Auger Eric wrote:
->> From the pseudo code,
+On 01/05/2021 16:41, Odin Ugedal wrote:
+> Hi,
+> 
+>> I think what I see on my Juno running the unfairness_missing_load_decay.sh script is
+>> in sync which what you discussed here:
+> 
+> Thanks for taking a look!
+> 
+>> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+>> index 794c2cb945f8..7214e6e89820 100644
+>> --- a/kernel/sched/fair.c
+>> +++ b/kernel/sched/fair.c
+>> @@ -10854,6 +10854,8 @@ static void propagate_entity_cfs_rq(struct sched_entity *se)
+>>                         break;
 >>
->>   gpa_ioasid_id = ioctl(ioasid_fd, CREATE_IOASID, ..)
->>   ioctl(ioasid_fd, SET_IOASID_PAGE_TABLES, ..)
->>
->> I fail to understand whether the SET_IOASID_PAGE_TABLES would apply to
->> the whole IOASIDs within /dev/ioasid or to a specific one.
+>>                 update_load_avg(cfs_rq, se, UPDATE_TG);
+>> +               if (!cfs_rq_is_decayed(cfs_rq))
+>> +                       list_add_leaf_cfs_rq(cfs_rq);
+>>         }
+>> }
 > 
-> Sorry, nearly every IOCTL would be scoped to a specific IOASID as one
-> of the arguments.
+> This might however lead to "loss" at /slice/cg-2/sub and
+> slice/cg-1/sub in this particular case tho, since
+> propagate_entity_cfs_rq skips one cfs_rq
+> by taking the parent of the provided se. The loss in that case would
+> however not be equally big, but will still often contribute to some
+> unfairness.
 
-OK thank you for the clarification.
-> 
->> Also in subsequent emails when you talk about IOASID, is it the
->> ioasid_id, just to double check the terminology.
-> 
-> I am refering to IOASID as 'handle of the page table object inside the
-> /dev/ioasid fd'. If that is equal to some HW value or not I think
-> remains as decision point.
-OK
-> 
-> Basically the fd has an xarray of 'struct [something] *' and the
-> IOASID is index to that FD's private xarray. This is necessary to
-> create proper security as even if we have global PASID numbers or
-> something they still need to be isolated to only the FD that has
-> been authorized access.
-> 
->>>   nested_ioasid = ioctl(ioasid_fd, CREATE_NESTED_IOASID,  gpa_ioasid_id);
->>>   ioctl(ioasid_fd, SET_NESTED_IOASID_PAGE_TABLES, nested_ioasid, ..)
->> is the nested_ioasid the allocated PASID id or is it a complete
->> different object id.
-> 
-> It is the IOASID handle above.
-ok as per the following emails and below comment IOASID and PASID are
-different.The first would be a logic ID wgile the second the HW ID.
+Yeah, that's true.
 
-Thanks
+By moving stopped `stress` tasks into
 
-Eric
-> 
->>>
->>>    // IOMMU will match on the device RID, no PASID:
->>>   ioctl(vfio_device, ATTACH_IOASID, nested_ioasid);
->>>
->>>    // IOMMU will match on the device RID and PASID:
->>>   ioctl(vfio_device, ATTACH_IOASID_PASID, pasid, nested_ioasid);
->> here I see you pass a different pasid, so I guess they are different, in
->> which case you would need to have an allocator function for this pasid,
->> right?
-> 
-> Yes, the underlying HW ID (PASID or substream id or whatver) is
-> something slightly different
-> 
-> Jason
-> 
+ /sys/fs/cgroup/cpu/slice/cg-{1,2}/sub
 
+and then into
+
+ /sys/fs/cgroup/cpuset/A
+
+which has a cpuset.cpus {0-1,4-5} not containing the cpus the `stress`
+tasks attached {2,3} to and then restart the `stress` tasks again I get:
+
+cfs_rq[1]:/slice/cg-1/sub
+  .load_avg                      : 1024
+  .removed.load_avg              : 0
+  .tg_load_avg_contrib           : 1024  <---
+  .tg_load_avg                   : 2047  <---
+  .se->avg.load_avg              : 511
+cfs_rq[1]:/slice/cg-1
+  .load_avg                      : 512
+  .removed.load_avg              : 0
+  .tg_load_avg_contrib           : 512  <---
+  .tg_load_avg                   : 1022 <---
+  .se->avg.load_avg              : 512
+cfs_rq[1]:/slice
+  .load_avg                      : 513
+  .removed.load_avg              : 0
+  .tg_load_avg_contrib           : 513
+  .tg_load_avg                   : 1024
+  .se->avg.load_avg              : 512
+cfs_rq[5]:/slice/cg-1/sub
+  .load_avg                      : 1024
+  .removed.load_avg              : 0
+  .tg_load_avg_contrib           : 1023 <---
+  .tg_load_avg                   : 2047 <---
+  .se->avg.load_avg              : 511
+cfs_rq[5]:/slice/cg-1
+  .load_avg                      : 512
+  .removed.load_avg              : 0
+  .tg_load_avg_contrib           : 510  <---
+  .tg_load_avg                   : 1022 <---
+  .se->avg.load_avg              : 511
+cfs_rq[5]:/slice
+  .load_avg                      : 512
+  .removed.load_avg              : 0
+  .tg_load_avg_contrib           : 511
+  .tg_load_avg                   : 1024
+  .se->avg.load_avg              : 510
+
+I saw that your v2 patch takes care of that.
