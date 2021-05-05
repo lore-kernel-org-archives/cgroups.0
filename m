@@ -1,159 +1,346 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v3 2/2] mm: memcg/slab: Create a new set of
- kmalloc-cg-<n> caches
-Date: Wed, 5 May 2021 11:22:34 -0700
-Message-ID: <YJLiaixn6Zi82cKh@carbon.dhcp.thefacebook.com>
-References: <20210505154613.17214-1-longman@redhat.com>
- <20210505154613.17214-3-longman@redhat.com>
- <YJLWN6bNBYyKRPEN@carbon.DHCP.thefacebook.com>
- <f14a263b-10ea-ef2b-eefa-066591a4b637@redhat.com>
+From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
+Subject: Re: [PATCH v2 1/5] cgroup: introduce cgroup.kill
+Date: Wed, 05 May 2021 13:31:09 -0500
+Message-ID: <m1v97x6niq.fsf@fess.ebiederm.org>
+References: <20210503143922.3093755-1-brauner@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=x0KVY3LSR7YAj1OJ/vMTfakBFG5tqAwbgxoSe8TIswE=;
- b=fNCL/cda76FY2jqchuarI2YpcQXQtruRBgDmHa5k+V9YsVdO4RJ8C4egYw/2Y4+XlIT6
- aRVy6P0sk+QwF6cca7mqEuC00giU1LX430sBKgQ4JfAZ1/v7bKvDYfeYfriIFy47M0/J
- vXNtA/7aKX/+ikZn5NEM37AoSfgvsC+3iNs= 
-Content-Disposition: inline
-In-Reply-To: <f14a263b-10ea-ef2b-eefa-066591a4b637-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20210503143922.3093755-1-brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> (Christian
+        Brauner's message of "Mon, 3 May 2021 16:39:19 +0200")
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-On Wed, May 05, 2021 at 02:11:52PM -0400, Waiman Long wrote:
-> On 5/5/21 1:30 PM, Roman Gushchin wrote:
-> > On Wed, May 05, 2021 at 11:46:13AM -0400, Waiman Long wrote:
-> > > There are currently two problems in the way the objcg pointer array
-> > > (memcg_data) in the page structure is being allocated and freed.
-> > > 
-> > > On its allocation, it is possible that the allocated objcg pointer
-> > > array comes from the same slab that requires memory accounting. If this
-> > > happens, the slab will never become empty again as there is at least
-> > > one object left (the obj_cgroup array) in the slab.
-> > > 
-> > > When it is freed, the objcg pointer array object may be the last one
-> > > in its slab and hence causes kfree() to be called again. With the
-> > > right workload, the slab cache may be set up in a way that allows the
-> > > recursive kfree() calling loop to nest deep enough to cause a kernel
-> > > stack overflow and panic the system.
-> > > 
-> > > One way to solve this problem is to split the kmalloc-<n> caches
-> > > (KMALLOC_NORMAL) into two separate sets - a new set of kmalloc-<n>
-> > > (KMALLOC_NORMAL) caches for non-accounted objects only and a new set of
-> > > kmalloc-cg-<n> (KMALLOC_CGROUP) caches for accounted objects only. All
-> > > the other caches can still allow a mix of accounted and non-accounted
-> > > objects.
-> > I agree that it's likely the best approach here. Thanks for discovering
-> > and fixing the problem!
-> > 
-> > > With this change, all the objcg pointer array objects will come from
-> > > KMALLOC_NORMAL caches which won't have their objcg pointer arrays. So
-> > > both the recursive kfree() problem and non-freeable slab problem are
-> > > gone. Since both the KMALLOC_NORMAL and KMALLOC_CGROUP caches no longer
-> > > have mixed accounted and unaccounted objects, this will slightly reduce
-> > > the number of objcg pointer arrays that need to be allocated and save
-> > > a bit of memory.
-> > Unfortunately the positive effect of this change will be likely
-> > reversed by a lower utilization due to a larger number of caches.
-> 
-> That is also true, will mention that.
 
-Thanks!
+Please see below this patch uses the wrong function to send SIGKILL.
 
-> 
-> > 
-> > Btw, I wonder if we also need a change in the slab caches merging procedure?
-> > KMALLOC_NORMAL caches should not be merged with caches which can potentially
-> > include accounted objects.
-> 
-> Thank for catching this omission.
-> 
-> I will take a look and modify the merging procedure in a new patch.
-> Accounting is usually specified at kmem_cache_create() time. Though, I did
-> find one instance of setting ACCOUNT flag in kmem_cache_alloc(), I will
-> ignore this case and merge accounted, but unreclaimable caches to
-> KMALLOC_CGROUP.
+Eric
 
-Vlastimil pointed out that it's not an actual problem, because kmalloc
-caches are exempt from the merging. Please, add a comment about it into
-the commit log/code. We might wanna relax this rule for kmalloc-cg-*, but
-we can do it later.
 
-> 
-> > 
-> > > The new KMALLOC_CGROUP is added between KMALLOC_NORMAL and
-> > > KMALLOC_RECLAIM so that the first for loop in create_kmalloc_caches()
-> > > will include the newly added caches without change.
-> > > 
-> > > Suggested-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-> > > Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> > > ---
-> > >   include/linux/slab.h | 42 ++++++++++++++++++++++++++++++++++--------
-> > >   mm/slab_common.c     | 23 +++++++++++++++--------
-> > >   2 files changed, 49 insertions(+), 16 deletions(-)
-> > > 
-> > > diff --git a/include/linux/slab.h b/include/linux/slab.h
-> > > index 0c97d788762c..f2d9ebc34f5c 100644
-> > > --- a/include/linux/slab.h
-> > > +++ b/include/linux/slab.h
-> > > @@ -305,9 +305,16 @@ static inline void __check_heap_object(const void *ptr, unsigned long n,
-> > >   /*
-> > >    * Whenever changing this, take care of that kmalloc_type() and
-> > >    * create_kmalloc_caches() still work as intended.
-> > > + *
-> > > + * KMALLOC_NORMAL is for non-accounted objects only whereas KMALLOC_CGROUP
-> > > + * is for accounted objects only. All the other kmem caches can have both
-> > > + * accounted and non-accounted objects.
-> > >    */
-> > >   enum kmalloc_cache_type {
-> > >   	KMALLOC_NORMAL = 0,
-> > > +#ifdef CONFIG_MEMCG_KMEM
-> > > +	KMALLOC_CGROUP,
-> > > +#endif
-> > >   	KMALLOC_RECLAIM,
-> > >   #ifdef CONFIG_ZONE_DMA
-> > >   	KMALLOC_DMA,
-> > > @@ -315,28 +322,47 @@ enum kmalloc_cache_type {
-> > >   	NR_KMALLOC_TYPES
-> > >   };
-> > > +#ifndef CONFIG_MEMCG_KMEM
-> > > +#define KMALLOC_CGROUP	KMALLOC_NORMAL
-> > > +#endif
-> > > +#ifndef CONFIG_ZONE_DMA
-> > > +#define KMALLOC_DMA	KMALLOC_NORMAL
-> > > +#endif
-> > > +
-> > >   #ifndef CONFIG_SLOB
-> > >   extern struct kmem_cache *
-> > >   kmalloc_caches[NR_KMALLOC_TYPES][KMALLOC_SHIFT_HIGH + 1];
-> > > +/*
-> > > + * Define gfp bits that should not be set for KMALLOC_NORMAL.
-> > > + */
-> > > +#define KMALLOC_NOT_NORMAL_BITS					\
-> > > +	(__GFP_RECLAIMABLE |					\
-> > > +	(IS_ENABLED(CONFIG_ZONE_DMA)   ? __GFP_DMA : 0) |	\
-> > > +	(IS_ENABLED(CONFIG_MEMCG_KMEM) ? __GFP_ACCOUNT : 0))
-> > > +
-> > >   static __always_inline enum kmalloc_cache_type kmalloc_type(gfp_t flags)
-> > >   {
-> > > -#ifdef CONFIG_ZONE_DMA
-> > >   	/*
-> > >   	 * The most common case is KMALLOC_NORMAL, so test for it
-> > >   	 * with a single branch for both flags.
-> > >   	 */
-> > > -	if (likely((flags & (__GFP_DMA | __GFP_RECLAIMABLE)) == 0))
-> > > +	if (likely((flags & KMALLOC_NOT_NORMAL_BITS) == 0))
-> > >   		return KMALLOC_NORMAL;
-> > Likely KMALLOC_CGROUP is also very popular, so maybe we want to change the
-> > optimization here a bit.
-> 
-> I doubt this optimization is really noticeable and whether KMALLOC_CGROUP is
-> really popular will depend on the workloads. I am not planning to spend
-> additional time to micro-optimize this part of the code.
+Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
 
-Ok.
+> From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+>
+> Introduce the cgroup.kill file. It does what it says on the tin and
+> allows a caller to kill a cgroup by writing "1" into cgroup.kill.
+> The file is available in non-root cgroups.
+>
+> Killing cgroups is a process directed operation, i.e. the whole
+> thread-group is affected. Consequently trying to write to cgroup.kill in
+> threaded cgroups will be rejected and EOPNOTSUPP returned. This behavior
+> aligns with cgroup.procs where reads in threaded-cgroups are rejected
+> with EOPNOTSUPP.
+>
+> The cgroup.kill file is write-only since killing a cgroup is an event
+> not which makes it different from e.g. freezer where a cgroup
+> transitions between the two states.
+>
+> As with all new cgroup features cgroup.kill is recursive by default.
+>
+> Killing a cgroup is protected against concurrent migrations through the
+> cgroup mutex. To protect against forkbombs and to mitigate the effect of
+> racing forks a new CGRP_KILL css set lock protected flag is introduced
+> that is set prior to killing a cgroup and unset after the cgroup has
+> been killed. We can then check in cgroup_post_fork() where we hold the
+> css set lock already whether the cgroup is currently being killed. If so
+> we send the child a SIGKILL signal immediately taking it down as soon as
+> it returns to userspace. To make the killing of the child semantically
+> clean it is killed after all cgroup attachment operations have been
+> finalized.
+>
+> There are various use-cases of this interface:
+> - Containers usually have a conservative layout where each container
+>   usually has a delegated cgroup. For such layouts there is a 1:1
+>   mapping between container and cgroup. If the container in addition
+>   uses a separate pid namespace then killing a container usually becomes
+>   a simple kill -9 <container-init-pid> from an ancestor pid namespace.
+>   However, there are quite a few scenarios where that isn't true. For
+>   example, there are containers that share the cgroup with other
+>   processes on purpose that are supposed to be bound to the lifetime of
+>   the container but are not in the same pidns of the container.
+>   Containers that are in a delegated cgroup but share the pid namespace
+>   with the host or other containers.
+> - Service managers such as systemd use cgroups to group and organize
+>   processes belonging to a service. They usually rely on a recursive
+>   algorithm now to kill a service. With cgroup.kill this becomes a
+>   simple write to cgroup.kill.
+> - Userspace OOM implementations can make good use of this feature to
+>   efficiently take down whole cgroups quickly.
+> - The kill program can gain a new
+>   kill --cgroup /sys/fs/cgroup/delegated
+>   flag to take down cgroups.
+>
+> A few observations about the semantics:
+> - If parent and child are in the same cgroup and CLONE_INTO_CGROUP is
+>   not specified we are not taking cgroup mutex meaning the cgroup can be
+>   killed while a process in that cgroup is forking.
+>   If the kill request happens right before cgroup_can_fork() and before
+>   the parent grabs its siglock the parent is guaranteed to see the
+>   pending SIGKILL. In addition we perform another check in
+>   cgroup_post_fork() whether the cgroup is being killed and is so take
+>   down the child (see above). This is robust enough and protects gainst
+>   forkbombs. If userspace really really wants to have stricter
+>   protection the simple solution would be to grab the write side of the
+>   cgroup threadgroup rwsem which will force all ongoing forks to
+>   complete before killing starts. We concluded that this is not
+>   necessary as the semantics for concurrent forking should simply align
+>   with freezer where a similar check as cgroup_post_fork() is performed.
+>
+>   For all other cases CLONE_INTO_CGROUP is required. In this case we
+>   will grab the cgroup mutex so the cgroup can't be killed while we
+>   fork. Once we're done with the fork and have dropped cgroup mutex we
+>   are visible and will be found by any subsequent kill request.
+> - We obviously don't kill kthreads. This means a cgroup that has a
+>   kthread will not become empty after killing and consequently no
+>   unpopulated event will be generated. The assumption is that kthreads
+>   should be in the root cgroup only anyway so this is not an issue.
+> - We skip killing tasks that already have pending fatal signals.
+> - Freezer doesn't care about tasks in different pid namespaces, i.e. if
+>   you have two tasks in different pid namespaces the cgroup would still
+>   be frozen. The cgroup.kill mechanism consequently behaves the same
+>   way, i.e. we kill all processes and ignore in which pid namespace they
+>   exist.
+> - If the caller is located in a cgroup that is killed the caller will
+>   obviously be killed as well.
+>
+> Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Signed-off-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+> ---
+>
+> The series can be pulled from
+>
+> git-OoYKEaZ2EDaWaY/ihj7yzEB+6BGkLq7r@public.gmane.org:pub/scm/linux/kernel/git/brauner/linux tags/cgroup.kill.v5.14
+>
+> /* v2 */
+> - Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>:
+>   - Retrieve cgrp->flags only once and check CGRP_* bits on it.
+> ---
+>  include/linux/cgroup-defs.h |   3 +
+>  kernel/cgroup/cgroup.c      | 127 ++++++++++++++++++++++++++++++++----
+>  2 files changed, 116 insertions(+), 14 deletions(-)
+>
+> diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+> index 559ee05f86b2..43fef771009a 100644
+> --- a/include/linux/cgroup-defs.h
+> +++ b/include/linux/cgroup-defs.h
+> @@ -71,6 +71,9 @@ enum {
+>  
+>  	/* Cgroup is frozen. */
+>  	CGRP_FROZEN,
+> +
+> +	/* Control group has to be killed. */
+> +	CGRP_KILL,
+>  };
+>  
+>  /* cgroup_root->flags */
+> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> index 9153b20e5cc6..aee84b99534a 100644
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -3654,6 +3654,80 @@ static ssize_t cgroup_freeze_write(struct kernfs_open_file *of,
+>  	return nbytes;
+>  }
+>  
+> +static void __cgroup_kill(struct cgroup *cgrp)
+> +{
+> +	struct css_task_iter it;
+> +	struct task_struct *task;
+> +
+> +	lockdep_assert_held(&cgroup_mutex);
+> +
+> +	spin_lock_irq(&css_set_lock);
+> +	set_bit(CGRP_KILL, &cgrp->flags);
+> +	spin_unlock_irq(&css_set_lock);
+> +
+> +	css_task_iter_start(&cgrp->self, CSS_TASK_ITER_PROCS | CSS_TASK_ITER_THREADED, &it);
+> +	while ((task = css_task_iter_next(&it))) {
+> +		/* Ignore kernel threads here. */
+> +		if (task->flags & PF_KTHREAD)
+> +			continue;
+> +
+> +		/* Skip tasks that are already dying. */
+> +		if (__fatal_signal_pending(task))
+> +			continue;
+> +
+> +		send_sig(SIGKILL, task, 0);
+                ^^^^^^^^
+Using send_sig here is wrong.  The function send_sig
+is the interface to send a signal to a single task/thread.
 
-Thanks!
+The signal SIGKILL can not be sent to a single task/thread.
+So it is never makes sense to use send_sig with SIGKILL.
+
+As this all happens in the context of the process writing
+to the file this can either be:
+
+	group_send_sig_info(SIGKILL, SEND_SIG_NOINFO, task, PIDTYPE_TGID);
+
+Which will check that the caller actually has permissions to kill the
+specified task.  Or:
+
+	do_send_sig_info(SIGKILL, SEND_SIG_NOINFO, task, PIDTYPE_TGID);
+
+
+
+
+> +	}
+> +	css_task_iter_end(&it);
+> +
+> +	spin_lock_irq(&css_set_lock);
+> +	clear_bit(CGRP_KILL, &cgrp->flags);
+> +	spin_unlock_irq(&css_set_lock);
+> +}
+> +
+> +static void cgroup_kill(struct cgroup *cgrp)
+> +{
+> +	struct cgroup_subsys_state *css;
+> +	struct cgroup *dsct;
+> +
+> +	lockdep_assert_held(&cgroup_mutex);
+> +
+> +	cgroup_for_each_live_descendant_pre(dsct, css, cgrp)
+> +		__cgroup_kill(dsct);
+> +}
+> +
+> +static ssize_t cgroup_kill_write(struct kernfs_open_file *of, char *buf,
+> +				 size_t nbytes, loff_t off)
+> +{
+> +	ssize_t ret = 0;
+> +	int kill;
+> +	struct cgroup *cgrp;
+> +
+> +	ret = kstrtoint(strstrip(buf), 0, &kill);
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (kill != 1)
+> +		return -ERANGE;
+> +
+> +	cgrp = cgroup_kn_lock_live(of->kn, false);
+> +	if (!cgrp)
+> +		return -ENOENT;
+> +
+> +	/*
+> +	 * Killing is a process directed operation, i.e. the whole thread-group
+> +	 * is taken down so act like we do for cgroup.procs and only make this
+> +	 * writable in non-threaded cgroups.
+> +	 */
+> +	if (cgroup_is_threaded(cgrp))
+> +		ret = -EOPNOTSUPP;
+> +	else
+> +		cgroup_kill(cgrp);
+> +
+> +	cgroup_kn_unlock(of->kn);
+> +
+> +	return ret ?: nbytes;
+> +}
+> +
+>  static int cgroup_file_open(struct kernfs_open_file *of)
+>  {
+>  	struct cftype *cft = of_cft(of);
+> @@ -4846,6 +4920,11 @@ static struct cftype cgroup_base_files[] = {
+>  		.seq_show = cgroup_freeze_show,
+>  		.write = cgroup_freeze_write,
+>  	},
+> +	{
+> +		.name = "cgroup.kill",
+> +		.flags = CFTYPE_NOT_ON_ROOT,
+> +		.write = cgroup_kill_write,
+> +	},
+>  	{
+>  		.name = "cpu.stat",
+>  		.seq_show = cpu_stat_show,
+> @@ -6077,6 +6156,8 @@ void cgroup_post_fork(struct task_struct *child,
+>  		      struct kernel_clone_args *kargs)
+>  	__releases(&cgroup_threadgroup_rwsem) __releases(&cgroup_mutex)
+>  {
+> +	unsigned long cgrp_flags = 0;
+> +	bool kill = false;
+>  	struct cgroup_subsys *ss;
+>  	struct css_set *cset;
+>  	int i;
+> @@ -6088,6 +6169,11 @@ void cgroup_post_fork(struct task_struct *child,
+>  
+>  	/* init tasks are special, only link regular threads */
+>  	if (likely(child->pid)) {
+> +		if (kargs->cgrp)
+> +			cgrp_flags = kargs->cgrp->flags;
+> +		else
+> +			cgrp_flags = cset->dfl_cgrp->flags;
+> +
+>  		WARN_ON_ONCE(!list_empty(&child->cg_list));
+>  		cset->nr_tasks++;
+>  		css_set_move_task(child, NULL, cset, false);
+> @@ -6096,23 +6182,32 @@ void cgroup_post_fork(struct task_struct *child,
+>  		cset = NULL;
+>  	}
+>  
+> -	/*
+> -	 * If the cgroup has to be frozen, the new task has too.  Let's set
+> -	 * the JOBCTL_TRAP_FREEZE jobctl bit to get the task into the
+> -	 * frozen state.
+> -	 */
+> -	if (unlikely(cgroup_task_freeze(child))) {
+> -		spin_lock(&child->sighand->siglock);
+> -		WARN_ON_ONCE(child->frozen);
+> -		child->jobctl |= JOBCTL_TRAP_FREEZE;
+> -		spin_unlock(&child->sighand->siglock);
+> +	if (!(child->flags & PF_KTHREAD)) {
+> +		if (test_bit(CGRP_FREEZE, &cgrp_flags)) {
+> +			/*
+> +			 * If the cgroup has to be frozen, the new task has
+> +			 * too. Let's set the JOBCTL_TRAP_FREEZE jobctl bit to
+> +			 * get the task into the frozen state.
+> +			 */
+> +			spin_lock(&child->sighand->siglock);
+> +			WARN_ON_ONCE(child->frozen);
+> +			child->jobctl |= JOBCTL_TRAP_FREEZE;
+> +			spin_unlock(&child->sighand->siglock);
+> +
+> +			/*
+> +			 * Calling cgroup_update_frozen() isn't required here,
+> +			 * because it will be called anyway a bit later from
+> +			 * do_freezer_trap(). So we avoid cgroup's transient
+> +			 * switch from the frozen state and back.
+> +			 */
+> +		}
+>  
+>  		/*
+> -		 * Calling cgroup_update_frozen() isn't required here,
+> -		 * because it will be called anyway a bit later from
+> -		 * do_freezer_trap(). So we avoid cgroup's transient switch
+> -		 * from the frozen state and back.
+> +		 * If the cgroup is to be killed notice it now and take the
+> +		 * child down right after we finished preparing it for
+> +		 * userspace.
+>  		 */
+> +		kill = test_bit(CGRP_KILL, &cgrp_flags);
+>  	}
+>  
+>  	spin_unlock_irq(&css_set_lock);
+> @@ -6135,6 +6230,10 @@ void cgroup_post_fork(struct task_struct *child,
+>  		put_css_set(rcset);
+>  	}
+>  
+> +	/* Cgroup has to be killed so take down child immediately. */
+> +	if (kill)
+> +		send_sig(SIGKILL, child, 0);
+                ^^^^^^^^
+Using send_sig is wrong here for the same reasons as above.
+
+Is a change to cgroup_post_fork necessary?  Fork already
+has protections against a signal being delivered effectively
+during fork.  Which may be enough in this case.
+
+
+> +
+>  	cgroup_css_set_put_fork(kargs);
+>  }
+>  
+>
+> base-commit: 9f4ad9e425a1d3b6a34617b8ea226d56a119a717
