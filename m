@@ -1,38 +1,65 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v4 1/3] mm: memcg/slab: Properly set up gfp flags for
- objcg pointer array
-Date: Wed, 5 May 2021 13:35:41 -0700
-Message-ID: <YJMBnQ8zQJuLTf7B@carbon.dhcp.thefacebook.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v4 2/3] mm: memcg/slab: Create a new set of
+ kmalloc-cg-<n> caches
+Date: Wed, 5 May 2021 13:37:27 -0700
+Message-ID: <YJMCB/g8YctqQmlE@carbon.dhcp.thefacebook.com>
 References: <20210505200610.13943-1-longman@redhat.com>
- <20210505200610.13943-2-longman@redhat.com>
+ <20210505200610.13943-3-longman@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=rlBMzLAoeanStvaeF3EEMgiRqtAOUI5utrwiwUipzP4=;
- b=h2oU2g4uAIdpD2AP35298CvXRSN8kasRd+thAFap74MfG+kxGJEYOqHUYYpF3HN+p/K4
- Fl/b2RfkEdNRay3nX/5aoDttiQDlcQvdU246oQbrr6mx0Dzb7QuzeiLqlaaf8kqoJoAR
- s2qpx58Zq2oKhDi72LcWMqI1XonZLM2bFTU= 
+ mime-version; s=facebook; bh=v4HyhTw3kOjEOWG+Aw2IiVPkSLyT0I9UxIaA9q26JTM=;
+ b=hVnQM25+DkFLSperfoPzBm5IbfUWxgY+j3QmY32cQskiyHWNQYF+eH/4WGCUPylCD4dI
+ zV5wN1XFAW6/rxB8RHhX5JpI4EVltyCXWFiCPQvO9LpOu9Xexg0vqQPEnjg7mmZhe6P0
+ FXthoXqRsGTj4YD8ovkllEJxywBPRmlPvJM= 
 Content-Disposition: inline
-In-Reply-To: <20210505200610.13943-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20210505200610.13943-3-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Waiman Long <longman@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Vlastimil Babka <vbabka@suse.cz>, Shakeel Butt <shakeelb@google.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, May 05, 2021 at 04:06:08PM -0400, Waiman Long wrote:
-> Since the merging of the new slab memory controller in v5.9, the page
-> structure may store a pointer to obj_cgroup pointer array for slab pages.
-> Currently, only the __GFP_ACCOUNT bit is masked off. However, the array
-> is not readily reclaimable and doesn't need to come from the DMA buffer.
-> So those GFP bits should be masked off as well.
+On Wed, May 05, 2021 at 04:06:09PM -0400, Waiman Long wrote:
+> There are currently two problems in the way the objcg pointer array
+> (memcg_data) in the page structure is being allocated and freed.
 > 
-> Do the flag bit clearing at memcg_alloc_page_obj_cgroups() to make sure
-> that it is consistently applied no matter where it is called.
+> On its allocation, it is possible that the allocated objcg pointer
+> array comes from the same slab that requires memory accounting. If this
+> happens, the slab will never become empty again as there is at least
+> one object left (the obj_cgroup array) in the slab.
 > 
-> Fixes: 286e04b8ed7a ("mm: memcg/slab: allocate obj_cgroups for non-root slab pages")
-> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> When it is freed, the objcg pointer array object may be the last one
+> in its slab and hence causes kfree() to be called again. With the
+> right workload, the slab cache may be set up in a way that allows the
+> recursive kfree() calling loop to nest deep enough to cause a kernel
+> stack overflow and panic the system.
+> 
+> One way to solve this problem is to split the kmalloc-<n> caches
+> (KMALLOC_NORMAL) into two separate sets - a new set of kmalloc-<n>
+> (KMALLOC_NORMAL) caches for unaccounted objects only and a new set of
+> kmalloc-cg-<n> (KMALLOC_CGROUP) caches for accounted objects only. All
+> the other caches can still allow a mix of accounted and unaccounted
+> objects.
+> 
+> With this change, all the objcg pointer array objects will come from
+> KMALLOC_NORMAL caches which won't have their objcg pointer arrays. So
+> both the recursive kfree() problem and non-freeable slab problem are
+> gone.
+> 
+> Since both the KMALLOC_NORMAL and KMALLOC_CGROUP caches no longer have
+> mixed accounted and unaccounted objects, this will slightly reduce the
+> number of objcg pointer arrays that need to be allocated and save a bit
+> of memory. On the other hand, creating a new set of kmalloc caches does
+> have the effect of reducing cache utilization. So it is properly a wash.
+> 
+> The new KMALLOC_CGROUP is added between KMALLOC_NORMAL and
+> KMALLOC_RECLAIM so that the first for loop in create_kmalloc_caches()
+> will include the newly added caches without change.
+> 
+> Suggested-by: Vlastimil Babka <vbabka@suse.cz>
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> Reviewed-by: Shakeel Butt <shakeelb@google.com>
 
-Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Acked-by: Roman Gushchin <guro@fb.com>
