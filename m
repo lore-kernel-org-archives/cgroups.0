@@ -1,75 +1,94 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 5/5] tests/cgroup: test cgroup.kill
-Date: Wed, 5 May 2021 11:34:41 -0700
-Message-ID: <CALvZod58WX-YpX_eSJzDyYknZiV5GzOe1wnKL8Pk4qMkq+oBQQ@mail.gmail.com>
-References: <20210503143922.3093755-1-brauner@kernel.org> <20210503143922.3093755-5-brauner@kernel.org>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH v3 2/2] mm: memcg/slab: Create a new set of
+ kmalloc-cg-<n> caches
+Date: Wed, 5 May 2021 11:38:17 -0700
+Message-ID: <YJLmGcGYLZwqehIX@carbon.dhcp.thefacebook.com>
+References: <20210505154613.17214-1-longman@redhat.com>
+ <20210505154613.17214-3-longman@redhat.com>
+ <YJLWN6bNBYyKRPEN@carbon.DHCP.thefacebook.com>
+ <235f45b4-2d99-f32d-ac2b-18b59fea5a25@suse.cz>
+ <4e4b6903-2444-f4ed-f589-26d5beae3120@redhat.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=K5BbP+PQbZDrsW3Z0I2K54qvJu7T8OT3Rig60hvbO1U=;
-        b=vsqKdvcVbJzePaO2Rdkii7+aVDG4GsKFVmMNGiJb3HJ/5dEyks73H4moEQib1EV6+A
-         iHzoGwnjHsbOh0Fx60YpVgWrLdjLsXZozOLaCv2o9F+RvKD5gM3ENd+K7zwidkabXiQO
-         ZcLZVb1qh9Q3myp39yWjYo34ivvZWA1CXzpBqsomjfPx0nAFVzPOLLTmomuP7FGIZu0y
-         N+Uv01Eanyf2MW5nTNqzBKWf4wJKELwo/6qUM12Ffienqd/MdEtWZ6+/zXHCsHLOCVIv
-         cqwGpNFnkJq588E3Wo9tvTByYl3d+DETyi/C3tG3NvDk8sXW0i0OrMA9Z+uPM14dhoL7
-         ltPw==
-In-Reply-To: <20210503143922.3093755-5-brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type :
+ content-transfer-encoding : in-reply-to : mime-version; s=facebook;
+ bh=RAVf5S2ap8edtOM0cctuOMXgO8QEiKmMqbwR9owORi4=;
+ b=m9TzShrDWKfcklKq/Y0yhNazXkHPBbEyfb8W343lCC6ulTPFhPvPJghEBubDI5QHxd4W
+ 4e8IAojpL3XgCKJ74ilzv8vpOc+xwFSm8dgyOVNCGhuyPq+jtiJmeRHnoyk1AVRQethJ
+ a7wy1sG+wSQtK5JaGGVHLth5TNE4EGM/Aeo= 
+Content-Disposition: inline
+In-Reply-To: <4e4b6903-2444-f4ed-f589-26d5beae3120-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+To: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Mon, May 3, 2021 at 7:40 AM Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-[...]
-> +
-> +static int test_cgkill_simple(const char *root)
-> +{
-> +       pid_t pids[100];
-> +       int ret = KSFT_FAIL;
-> +       char *cgroup = NULL;
-> +       int i;
-> +
-> +       cgroup = cg_name(root, "cg_test_simple");
-> +       if (!cgroup)
-> +               goto cleanup;
-> +
-> +       if (cg_create(cgroup))
-> +               goto cleanup;
-> +
-> +       for (i = 0; i < 100; i++)
-> +               pids[i] = cg_run_nowait(cgroup, child_fn, NULL);
-> +
-> +       if (cg_wait_for_proc_count(cgroup, 100))
-> +               goto cleanup;
-> +
-> +        if (cg_write(cgroup, "cgroup.kill", "1"))
-> +               goto cleanup;
+On Wed, May 05, 2021 at 02:31:28PM -0400, Waiman Long wrote:
+> On 5/5/21 2:02 PM, Vlastimil Babka wrote:
+> > On 5/5/21 7:30 PM, Roman Gushchin wrote:
+> > > On Wed, May 05, 2021 at 11:46:13AM -0400, Waiman Long wrote:
+> > > > With this change, all the objcg pointer array objects will come from
+> > > > KMALLOC_NORMAL caches which won't have their objcg pointer arrays. =
+So
+> > > > both the recursive kfree() problem and non-freeable slab problem are
+> > > > gone. Since both the KMALLOC_NORMAL and KMALLOC_CGROUP caches no lo=
+nger
+> > > > have mixed accounted and unaccounted objects, this will slightly re=
+duce
+> > > > the number of objcg pointer arrays that need to be allocated and sa=
+ve
+> > > > a bit of memory.
+> > > Unfortunately the positive effect of this change will be likely
+> > > reversed by a lower utilization due to a larger number of caches.
+> > >=20
+> > > Btw, I wonder if we also need a change in the slab caches merging pro=
+cedure?
+> > > KMALLOC_NORMAL caches should not be merged with caches which can pote=
+ntially
+> > > include accounted objects.
+> > Good point. But looks like kmalloc* caches are extempt from all merging=
+ in
+> > create_boot_cache() via
+> >=20
+> > 	s->refcount =3D -1;       /* Exempt from merging for now */
+> >=20
+> > It wouldn't hurt though to create the kmalloc-cg-* caches with SLAB_ACC=
+OUNT flag
+> > to prevent accidental merging in case the above is ever removed. It wou=
+ld also
+> > better reflect reality, and ensure that the array is allocated immediat=
+ely with
+> > the page, AFAICS.
+> >=20
+> I am not sure if this is really true.
+>=20
+> struct kmem_cache *__init create_kmalloc_cache(const char *name,
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 unsigned int size, slab_fla=
+gs_t flags,
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 unsigned int useroffset, un=
+signed int usersize)
+> {
+> =A0=A0=A0=A0=A0=A0=A0 struct kmem_cache *s =3D kmem_cache_zalloc(kmem_cac=
+he, GFP_NOWAIT);
+>=20
+> =A0=A0=A0=A0=A0=A0=A0 if (!s)
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 panic("Out of memory when c=
+reating slab %s\n", name);
+>=20
+> =A0=A0=A0=A0=A0=A0=A0 create_boot_cache(s, name, size, flags, useroffset,=
+ usersize);
+> =A0=A0=A0=A0=A0=A0=A0 kasan_cache_create_kmalloc(s);
+> =A0=A0=A0=A0=A0=A0=A0 list_add(&s->list, &slab_caches);
+> =A0=A0=A0=A0=A0=A0=A0 s->refcount =3D 1;
+> =A0=A0=A0=A0=A0=A0=A0 return s;
+> }
+>=20
+> Even though refcount is set to -1 initially, it is set back to 1 afterwar=
+d.
+> So merging can still happen AFAICS.
 
-I don't think the above write to cgroup.kill is correct.
-
-> +
-> +       if (cg_read_strcmp(cgroup, "cgroup.events", "populated 1\n"))
-> +               goto cleanup;
-> +
-> +       if (cg_kill_wait(cgroup))
-> +               goto cleanup;
-> +
-> +       if (cg_read_strcmp(cgroup, "cgroup.events", "populated 0\n"))
-> +               goto cleanup;
-> +
-> +       ret = KSFT_PASS;
-> +
-> +cleanup:
-> +       for (i = 0; i < 100; i++)
-> +               wait_for_pid(pids[i]);
-> +
-> +       if (cgroup)
-> +               cg_destroy(cgroup);
-> +       free(cgroup);
-> +       return ret;
-> +}
+Right, thanks, I already noticed it. Then yeah, we should make sure we're n=
+ot
+merging KMALLOC_NORMAL caches with any others.
