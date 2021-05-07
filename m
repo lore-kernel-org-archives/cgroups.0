@@ -1,70 +1,44 @@
-From: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
-Subject: Re: [RFC] Add BPF_PROG_TYPE_CGROUP_IOCTL
-Date: Fri, 7 May 2021 10:59:38 +0200
-Message-ID: <YJUBer3wWKSAeXe7@phenom.ffwll.local>
-References: <CAOWid-czZphRz6Y-H3OcObKCH=bLLC3=bOZaSB-6YBE56+Qzrg@mail.gmail.com>
- <20201103210418.q7hddyl7rvdplike@ast-mbp.dhcp.thefacebook.com>
- <CAOWid-djQ_NRfCbOTnZQ-A8Pr7jMP7KuZEJDSsvzWkdw7qc=yA@mail.gmail.com>
- <20201103232805.6uq4zg3gdvw2iiki@ast-mbp.dhcp.thefacebook.com>
- <YBgU9Vu0BGV8kCxD@phenom.ffwll.local>
- <CAOWid-eXMqcNpjFxbcuUDU7Y-CCYJRNT_9mzqFYm1jeCPdADGQ@mail.gmail.com>
- <YBqEbHyIjUjgk+es@phenom.ffwll.local>
- <CAOWid-c4Nk717xUah19B=z=2DtztbtU=_4=fQdfhqpfNJYN2gw@mail.gmail.com>
- <CAKMK7uFEhyJChERFQ_DYFU4UCA2Ox4wTkds3+GeyURH5xNMTCA@mail.gmail.com>
- <CAOWid-fL0=OM2XiOH+NFgn_e2L4Yx8sXA-+HicUb9bzhP0t8Bw@mail.gmail.com>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Fri, 7 May 2021 08:56:43 -0300
+Message-ID: <20210507115643.GU1370958@nvidia.com>
+References: <20210421230301.GP1370958@nvidia.com>
+ <MWHPR11MB1886188698A6E20338196F788C469@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210422121020.GT1370958@nvidia.com>
+ <MWHPR11MB1886E688D2128C98A1F240B18C459@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210423114944.GF1370958@nvidia.com>
+ <MWHPR11MB18861FE6982D73AFBF173E048C439@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210426123817.GQ1370958@nvidia.com>
+ <MWHPR11MB188625137D5B7423822396C88C409@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210428090625.5a05dae8@redhat.com>
+ <MWHPR11MB1886E0A7897758AA7BE509058C579@MWHPR11MB1886.namprd11.prod.outlook.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ffwll.ch; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=/nh1bbQT5CiK8IqERbTeRh4gKwm6+O6Vg+VARq82rio=;
-        b=ddP9vw2/xz6l5rgNknMnioGUpBwslhkhK/Vqn+Kl45rxtCUI1B37VPu4ncHEAzfh5G
-         lraIDVUeYC1DCwyViD6+lq/nLpHJ7NVA4UnG4dIh03OPLcXFQHOCKIsy6MTCyG7IvMTN
-         ggSkExoADblSOWRHwZ8hPSr4yuGq19xGJhDe8=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=x91ShF55DsdK1AQkgu8r0q9DqTW3y3LHvdTS6vEtdHk=;
+ b=gZxIii//zTVu02wO53I0Iyk12vZGYGqf8Yk97sXqdbzMG4AstQvk0w5eOPMBsNhJzN7l+kviggOuOceMpRLlKn+DjWHj8HxbeOwcFH9KUPCwaw9fJo64LggyEgJDVWXe1oB9ECoCLaACeyzLhPwXAhQDKS0oYUJvDHFGGDhB00obnYUUxND8cfnTlSpPauegbwIIjJWnviYfIPpCsekKJVj0Mi8fCBou6HRQJZFBivOciSKTClpVlkeRY8YnxISZjktG0V29hH4alLJKRy3dhX5mEKx0Nm3ddHof4rY7kt+Ut77Cb1l7HMXwpJTLBvjN4Zegmn5u8GLf/1M7xB9b6A==
 Content-Disposition: inline
-In-Reply-To: <CAOWid-fL0=OM2XiOH+NFgn_e2L4Yx8sXA-+HicUb9bzhP0t8Bw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <MWHPR11MB1886E0A7897758AA7BE509058C579-4Pk8um7sDhPjKiA5vsxACZPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dave Airlie <airlied-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Andrii Nakryiko <andriin-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-Fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, DRI Development <dri-devel@l>
+To: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Thu, May 06, 2021 at 10:06:32PM -0400, Kenny Ho wrote:
-> Sorry for the late reply (I have been working on other stuff.)
-> 
-> On Fri, Feb 5, 2021 at 8:49 AM Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org> wrote:
-> >
-> > So I agree that on one side CU mask can be used for low-level quality
-> > of service guarantees (like the CLOS cache stuff on intel cpus as an
-> > example), and that's going to be rather hw specific no matter what.
-> >
-> > But my understanding of AMD's plans here is that CU mask is the only
-> > thing you'll have to partition gpu usage in a multi-tenant environment
-> > - whether that's cloud or also whether that's containing apps to make
-> > sure the compositor can still draw the desktop (except for fullscreen
-> > ofc) doesn't really matter I think.
-> This is not correct.  Even in the original cgroup proposal, it
-> supports both mask and count as a way to define unit(s) of sub-device.
-> For AMD, we already have SRIOV that supports GPU partitioning in a
-> time-sliced-of-a-whole-GPU fashion.
+On Fri, May 07, 2021 at 07:36:49AM +0000, Tian, Kevin wrote:
 
-Hm I missed that. I feel like time-sliced-of-a-whole gpu is the easier gpu
-cgroups controler to get started, since it's much closer to other cgroups
-that control bandwidth of some kind. Whether it's i/o bandwidth or compute
-bandwidht is kinda a wash.
+> for /dev/ioasid there is still an open whether an process is allowed to
+> open /dev/ioasid once or multiple times. If there is only one ioasid_fd
+> per process, the accounting can be made accurately. otherwise the
+> same problem still exists as each ioasid_fd is akin to the container, then
+> we need find a better solution.
 
-CU mask feels a lot more like an isolation/guaranteed forward progress
-kind of thing, and I suspect that's always going to be a lot more gpu hw
-specific than anything we can reasonably put into a general cgroups
-controller.
+You can't really do tricks like 'FD once per process' in linux.
 
-Also for the time slice cgroups thing, can you pls give me pointers to
-these old patches that had it, and how it's done? I very obviously missed
-that part.
+The locked page accounting problem is much bigger than vfio and I
+don't really know of any solution..
 
-Thanks, Daniel
--- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-http://blog.ffwll.ch
+Jason
