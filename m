@@ -1,153 +1,119 @@
-From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 2/3] mm: memcg/slab: Create a new set of kmalloc-cg-<n>
- caches
-Date: Fri, 7 May 2021 14:45:48 -0400
-Message-ID: <d1fb7f38-1a4e-5819-6ccb-691346c7b2a1@redhat.com>
-References: <20210505200610.13943-1-longman@redhat.com>
- <20210505200610.13943-3-longman@redhat.com>
- <3344a04c-0cff-b997-f357-2ffc8e3de242@suse.cz>
+From: "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Fri, 7 May 2021 12:23:25 -0700
+Message-ID: <20210507192325.GB73499@otc-nc-03>
+References: <20210504231530.GE1370958@nvidia.com>
+ <20210505102259.044cafdf@jacob-builder>
+ <20210505180023.GJ1370958@nvidia.com>
+ <20210505130446.3ee2fccd@jacob-builder>
+ <YJOZhPGheTSlHtQc@myrica>
+ <20210506122730.GQ1370958@nvidia.com>
+ <20210506163240.GA9058@otc-nc-03>
+ <20210507172051.GW1370958@nvidia.com>
+ <20210507181458.GA73499@otc-nc-03>
+ <20210507182050.GX1370958@nvidia.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620413155;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=aPyyKeBrRkA4WE3QwL0dVJXd+S/rMEeW0hm96iAtu2c=;
-        b=gFun/DhjEmkdhc/B1Dg2kgagl0hbv3uEO4xI/MDTNvH3fAyWbYr4+HoIGVujfQt8HUtn6m
-        SX4ZEmSOatPQLjEcd+mVQctHs4wYn0Py9n1PbveM+FAAw+CH4CAN3c1za0WfaQVp4E5VFE
-        9Q5Mt1oFXoGGq4FF/T2ZRjmoElmssik=
-In-Reply-To: <3344a04c-0cff-b997-f357-2ffc8e3de242-AlSwsSmVLrQ@public.gmane.org>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20210507182050.GX1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ashok Raj <ashok.raj@intel.>
 
-On 5/6/21 12:00 PM, Vlastimil Babka wrote:
-> On 5/5/21 10:06 PM, Waiman Long wrote:
->> There are currently two problems in the way the objcg pointer array
->> (memcg_data) in the page structure is being allocated and freed.
->>
->> On its allocation, it is possible that the allocated objcg pointer
->> array comes from the same slab that requires memory accounting. If this
->> happens, the slab will never become empty again as there is at least
->> one object left (the obj_cgroup array) in the slab.
->>
->> When it is freed, the objcg pointer array object may be the last one
->> in its slab and hence causes kfree() to be called again. With the
->> right workload, the slab cache may be set up in a way that allows the
->> recursive kfree() calling loop to nest deep enough to cause a kernel
->> stack overflow and panic the system.
->>
->> One way to solve this problem is to split the kmalloc-<n> caches
->> (KMALLOC_NORMAL) into two separate sets - a new set of kmalloc-<n>
->> (KMALLOC_NORMAL) caches for unaccounted objects only and a new set of
->> kmalloc-cg-<n> (KMALLOC_CGROUP) caches for accounted objects only. All
->> the other caches can still allow a mix of accounted and unaccounted
->> objects.
->>
->> With this change, all the objcg pointer array objects will come from
->> KMALLOC_NORMAL caches which won't have their objcg pointer arrays. So
->> both the recursive kfree() problem and non-freeable slab problem are
->> gone.
->>
->> Since both the KMALLOC_NORMAL and KMALLOC_CGROUP caches no longer have
->> mixed accounted and unaccounted objects, this will slightly reduce the
->> number of objcg pointer arrays that need to be allocated and save a bit
->> of memory. On the other hand, creating a new set of kmalloc caches does
->> have the effect of reducing cache utilization. So it is properly a wash.
->>
->> The new KMALLOC_CGROUP is added between KMALLOC_NORMAL and
->> KMALLOC_RECLAIM so that the first for loop in create_kmalloc_caches()
->> will include the newly added caches without change.
->>
->> Suggested-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
->> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Reviewed-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
->
-> I still believe the cgroup.memory=nokmem parameter should be respected,
-> otherwise the caches are not only created, but also used. I offer this followup
-> for squashing into your patch if you and Andrew agree:
->
-> ----8<----
->  From c87378d437d9a59b8757033485431b4721c74173 Mon Sep 17 00:00:00 2001
-> From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-> Date: Thu, 6 May 2021 17:53:21 +0200
-> Subject: [PATCH] mm: memcg/slab: don't create kmalloc-cg caches with
->   cgroup.memory=nokmem
->
-> The caches should not be created when kmemcg is disabled on boot, otherwise
-> they are also filled by kmalloc(__GFP_ACCOUNT) allocations. When booted with
-> cgroup.memory=nokmem, link the kmalloc_caches[KMALLOC_CGROUP] entries to
-> KMALLOC_NORMAL entries instead.
->
-> Signed-off-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-> ---
->   mm/internal.h    | 5 +++++
->   mm/memcontrol.c  | 2 +-
->   mm/slab_common.c | 9 +++++++--
->   3 files changed, 13 insertions(+), 3 deletions(-)
->
-> diff --git a/mm/internal.h b/mm/internal.h
-> index ef5f336f59bd..b2d60b3403c7 100644
-> --- a/mm/internal.h
-> +++ b/mm/internal.h
-> @@ -135,6 +135,11 @@ extern void putback_lru_page(struct page *page);
->    */
->   extern pmd_t *mm_find_pmd(struct mm_struct *mm, unsigned long address);
->   
-> +/*
-> + * in mm/memcontrol.c:
-> + */
-> +extern bool cgroup_memory_nokmem;
-> +
->   /*
->    * in mm/page_alloc.c
->    */
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 5e3b4f23b830..b9ec01f2b4f6 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -83,7 +83,7 @@ DEFINE_PER_CPU(struct mem_cgroup *, int_active_memcg);
->   static bool cgroup_memory_nosocket;
->   
->   /* Kernel memory accounting disabled? */
-> -static bool cgroup_memory_nokmem;
-> +bool cgroup_memory_nokmem;
->   
->   /* Whether the swap controller is active */
->   #ifdef CONFIG_MEMCG_SWAP
-> diff --git a/mm/slab_common.c b/mm/slab_common.c
-> index bbaf41a7c77e..363f90215401 100644
-> --- a/mm/slab_common.c
-> +++ b/mm/slab_common.c
-> @@ -832,10 +832,15 @@ void __init setup_kmalloc_cache_index_table(void)
->   static void __init
->   new_kmalloc_cache(int idx, enum kmalloc_cache_type type, slab_flags_t flags)
->   {
-> -	if (type == KMALLOC_RECLAIM)
-> +	if (type == KMALLOC_RECLAIM) {
->   		flags |= SLAB_RECLAIM_ACCOUNT;
-> -	else if (IS_ENABLED(CONFIG_MEMCG_KMEM) && (type == KMALLOC_CGROUP))
-> +	} else if (IS_ENABLED(CONFIG_MEMCG_KMEM) && (type == KMALLOC_CGROUP)) {
-> +		if (cgroup_memory_nokmem) {
-> +			kmalloc_caches[type][idx] = kmalloc_caches[KMALLOC_NORMAL][idx];
-> +			return;
-> +		}
->   		flags |= SLAB_ACCOUNT;
-> +	}
->   
->   	kmalloc_caches[type][idx] = create_kmalloc_cache(
->   					kmalloc_info[idx].name[type],
+Hi Jason
 
-Thanks, the patch looks good to me.
+- Removed lizefan's email due to bounces... 
 
-Acked-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+On Fri, May 07, 2021 at 03:20:50PM -0300, Jason Gunthorpe wrote:
+> On Fri, May 07, 2021 at 11:14:58AM -0700, Raj, Ashok wrote:
+> > On Fri, May 07, 2021 at 02:20:51PM -0300, Jason Gunthorpe wrote:
+> > > On Thu, May 06, 2021 at 09:32:40AM -0700, Raj, Ashok wrote:
+> > > 
+> > > > For platforms that support ENQCMD, it is required to mandate PASIDs are
+> > > > global across the entire system. Maybe its better to call them gPASID for
+> > > > guest and hPASID for host. Short reason being gPASID->hPASID is a guest
+> > > > wide mapping for ENQCMD and not a per-RID based mapping. (We covered that
+> > > > in earlier responses)
+> > > 
+> > > I don't think it is actually ENQCMD that forces this, ENQCMD can use a
+> > > per-RID PASID in the translation table as well.
+> > 
+> > When using ENQCMD the PASID that needs to be sent on the wire is picked
+> > from an MSR setup by kernel. This is context switched along with the
+> > process. So each process has only 1 PASID that can go out when using
+> > ENQCMD. ENQCMD takes one mmio address specific to the acclerator and a
+> > source for the descriptor.
+> 
+> Oh. I forgot this also globally locked the PASID to a single
+> MSR. Sigh. That makes the whole mechanism useless for anything except
+> whole process SVA.
+
+Is there another kind of SVA? Our mapping from that each process requires a
+single mm, and PASID for SVM was a direct map from that. 
+
+> 
+> It also make it a general kernel problem and not just related to the
+> vIOMMU scenario.
+> 
+> > > I think at the uAPI level the callpaths that require allocating a
+> > > PASID from a group of RIDs should be explicit in their intention and
+> > > not implicitly rely on a certain allocator behavior.
+> > 
+> > The difficult part I see is, when one application establishes a path
+> > to one acclerator, we have no knowledge if its going to connect to a
+> > second, third or such. I don't see how this can work reasonably
+> > well. What if PASIDx is allocated for one, but the second RID its
+> > trying to attach already has this PASID allocated?
+> 
+> You mean like some kind of vIOMMU hot plug?
+
+Not vIOMMU hot plug. but an application opens accel1, does a bind to
+allocate a PASID. What i meant was kernel has no information if this needs
+to be a per-RID PASID, or a global PASID. Keeping this global solves the
+other problems or more complex mechanisms to say "Reserve this PASID on all
+accelerators" which seems pretty complicated to implement.
+
+Now are we loosing anything by keeping the PASIDs global? 
+
+As we discussed there is no security issue since the PASID table that hosts 
+these PASIDs for SVM are still per-RID.  For e.g.
+
+app establishes connection to accl1, allocates PASID-X
+   RID for accel1 now has PASID-X and the process mm plummed 
+later app also connects with accl2, now the PASID-X is plummed in for RID
+of accel2.
+
+
+> 
+> > > If you want to get a PASID that can be used with every RID on in your
+> > > /dev/ioasid then ask for that exactly.
+> > 
+> > Correct, but how does guest through vIOMMU driver communicate that intent so uAPI
+> > plumbing can do this? I mean architecturally via IOMMU interfaces? 
+> 
+> I would have to ask for a PASID that has the property it needs. You
+> are saying the property is even bigger than "usable on a group of
+> RIDs" but is actually "global for every RID and IOMMU in the system so
+> it can go into a MSR". Gross, but fine, ask for that explicitly when
+> allocating the PASID.
+
+If one process has a single mm, is that also gross? :-) So a single process
+having a PASID is just an identifier for IOMMU. It just seems like what a
+mm is for a process == PASID for SVM-IOMMU support.
+
+The unanswered question is how do we plumb from vIOMMU without a custom
+allocator to get a system wide PASID? 
+
+The way it works today is if we have a custom allocator registered, that's
+the mechanics to get PASIDs allocated. for Intel vIOMMU it happens to be a
+global unique allocation. If a particular vIOMMU doesn't require, it does
+not have vIOMMU interface, and those naturally get a guest local PASID name
+space. (Im not sure if that's how the allocator works today, but I guess its
+extensible to accomplish a RID local PASID if that's exactly what is
+required)
 
 Cheers,
-Longman
-
+Ashok
