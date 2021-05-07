@@ -1,86 +1,70 @@
-From: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: RE: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
- APIs
-Date: Fri, 7 May 2021 08:09:00 +0000
-Message-ID: <MWHPR11MB18868EB21E0D8085D65ED7988C579@MWHPR11MB1886.namprd11.prod.outlook.com>
-References: <20210421230301.GP1370958@nvidia.com>
- <20210422111337.6ac3624d@redhat.com> <20210422175715.GA1370958@nvidia.com>
- <20210422133747.23322269@redhat.com> <20210422200024.GC1370958@nvidia.com>
- <20210422163808.2d173225@redhat.com> <20210422233950.GD1370958@nvidia.com>
- <YIecXkaEGNgICePO@yekko.fritz.box> <20210427171212.GD1370958@nvidia.com>
- <MWHPR11MB1886F0818D30329172C420758C409@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210504171246.GZ1370958@nvidia.com>
+From: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
+Subject: Re: [RFC] Add BPF_PROG_TYPE_CGROUP_IOCTL
+Date: Fri, 7 May 2021 10:59:38 +0200
+Message-ID: <YJUBer3wWKSAeXe7@phenom.ffwll.local>
+References: <CAOWid-czZphRz6Y-H3OcObKCH=bLLC3=bOZaSB-6YBE56+Qzrg@mail.gmail.com>
+ <20201103210418.q7hddyl7rvdplike@ast-mbp.dhcp.thefacebook.com>
+ <CAOWid-djQ_NRfCbOTnZQ-A8Pr7jMP7KuZEJDSsvzWkdw7qc=yA@mail.gmail.com>
+ <20201103232805.6uq4zg3gdvw2iiki@ast-mbp.dhcp.thefacebook.com>
+ <YBgU9Vu0BGV8kCxD@phenom.ffwll.local>
+ <CAOWid-eXMqcNpjFxbcuUDU7Y-CCYJRNT_9mzqFYm1jeCPdADGQ@mail.gmail.com>
+ <YBqEbHyIjUjgk+es@phenom.ffwll.local>
+ <CAOWid-c4Nk717xUah19B=z=2DtztbtU=_4=fQdfhqpfNJYN2gw@mail.gmail.com>
+ <CAKMK7uFEhyJChERFQ_DYFU4UCA2Ox4wTkds3+GeyURH5xNMTCA@mail.gmail.com>
+ <CAOWid-fL0=OM2XiOH+NFgn_e2L4Yx8sXA-+HicUb9bzhP0t8Bw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
- s=selector2-intel-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SKlAyCWuOOlsywhJS5J8wOLBZVb4WXOd8E5/iTO+3p4=;
- b=WJqzF6PNdll3Gza4Bk+UCeyOVAPCqjDQs2lQvq0r14ncY1xk5bNhiNKBfzZraXg4rZggx5zGCu/sjwLH/4J2IRETQJB8BRpgl0nQS9e3F0SBjtsUsRLVu8jLIpt24hJObUdb9yaMRzrQFL3SWzitDIota/42ZARSqrhcMypd22I=
-In-Reply-To: <20210504171246.GZ1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ffwll.ch; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=/nh1bbQT5CiK8IqERbTeRh4gKwm6+O6Vg+VARq82rio=;
+        b=ddP9vw2/xz6l5rgNknMnioGUpBwslhkhK/Vqn+Kl45rxtCUI1B37VPu4ncHEAzfh5G
+         lraIDVUeYC1DCwyViD6+lq/nLpHJ7NVA4UnG4dIh03OPLcXFQHOCKIsy6MTCyG7IvMTN
+         ggSkExoADblSOWRHwZ8hPSr4yuGq19xGJhDe8=
+Content-Disposition: inline
+In-Reply-To: <CAOWid-fL0=OM2XiOH+NFgn_e2L4Yx8sXA-+HicUb9bzhP0t8Bw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dave Airlie <airlied-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Andrii Nakryiko <andriin-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-Fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, DRI Development <dri-devel@l>
 
-> From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> Sent: Wednesday, May 5, 2021 1:13 AM
->=20
-> On Wed, Apr 28, 2021 at 06:58:19AM +0000, Tian, Kevin wrote:
-> > > From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> > > Sent: Wednesday, April 28, 2021 1:12 AM
-> > >
-> > [...]
-> > > > As Alex says, if this line fails because of the group restrictions,
-> > > > that's not great because it's not very obvious what's gone wrong.
-> > >
-> > > Okay, that is fair, but let's solve that problem directly. For
-> > > instance netlink has been going in the direction of adding a "extack"
-> > > from the kernel which is a descriptive error string. If the failing
-> > > ioctl returned the string:
-> > >
-> > >   "cannot join this device to the IOASID because device XXX in the
-> > >    same group #10 is in use"
-> > >
-> > > Would you agree it is now obvious what has gone wrong? In fact would
-> > > you agree this is a lot better user experience than what applications
-> > > do today even though they have the group FD?
-> > >
+On Thu, May 06, 2021 at 10:06:32PM -0400, Kenny Ho wrote:
+> Sorry for the late reply (I have been working on other stuff.)
+> 
+> On Fri, Feb 5, 2021 at 8:49 AM Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org> wrote:
 > >
-> > Currently all the discussions are around implicit vs. explicit uAPI sem=
-antics
-> > on the group restriction. However if we look beyond group the implicit
-> > semantics might be inevitable when dealing with incompatible iommu
-> > domains. An existing example of iommu incompatibility is IOMMU_
-> > CACHE.
->=20
-> I still think we need to get rid of these incompatibilities
-> somehow. Having multiple HW incompatible IOASID in the same platform
-> is just bad all around.
->=20
-> When modeling in userspace IOMMU_CACHE sounds like it is a property of
-> each individual IOASID, not an attribute that requires a new domain.
+> > So I agree that on one side CU mask can be used for low-level quality
+> > of service guarantees (like the CLOS cache stuff on intel cpus as an
+> > example), and that's going to be rather hw specific no matter what.
+> >
+> > But my understanding of AMD's plans here is that CU mask is the only
+> > thing you'll have to partition gpu usage in a multi-tenant environment
+> > - whether that's cloud or also whether that's containing apps to make
+> > sure the compositor can still draw the desktop (except for fullscreen
+> > ofc) doesn't really matter I think.
+> This is not correct.  Even in the original cgroup proposal, it
+> supports both mask and count as a way to define unit(s) of sub-device.
+> For AMD, we already have SRIOV that supports GPU partitioning in a
+> time-sliced-of-a-whole-GPU fashion.
 
-sure. the iommu domain is an kernel-internal concept. The userspace=20
-should focus everything on IOASID.
+Hm I missed that. I feel like time-sliced-of-a-whole gpu is the easier gpu
+cgroups controler to get started, since it's much closer to other cgroups
+that control bandwidth of some kind. Whether it's i/o bandwidth or compute
+bandwidht is kinda a wash.
 
->=20
-> People that want to create cache bypass IOASID's should just ask for
-> that that directly.
->=20
+CU mask feels a lot more like an isolation/guaranteed forward progress
+kind of thing, and I suspect that's always going to be a lot more gpu hw
+specific than anything we can reasonably put into a general cgroups
+controller.
 
-Yes, in earlier discussion we agreed on a scheme that ioasid module
-will return an error to userspace indicating incompatibility detected
-when binding a device to ioasid then the userspace should create=20
-a new IOASID for this device. This has to be done 'explicitly'.=20
+Also for the time slice cgroups thing, can you pls give me pointers to
+these old patches that had it, and how it's done? I very obviously missed
+that part.
 
-When I used it as the example for 'implicit semantics" is that the kernel=20
-won't create another group-like object to contain devices with compatible=20
-attributes and 'explicitly' manage it in uAPI like group_fd. If we anyway
-rely on the userspace to have more intelligence on those hardware
-restrictions, it's little sense to only explicitly handle group_fd in uAPI.
-
-Thanks
-Kevin
+Thanks, Daniel
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
