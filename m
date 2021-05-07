@@ -1,90 +1,64 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Fri, 7 May 2021 16:28:10 -0300
-Message-ID: <20210507192810.GY1370958@nvidia.com>
-References: <20210505102259.044cafdf@jacob-builder>
- <20210505180023.GJ1370958@nvidia.com>
- <20210505130446.3ee2fccd@jacob-builder>
- <YJOZhPGheTSlHtQc@myrica>
- <20210506122730.GQ1370958@nvidia.com>
- <20210506163240.GA9058@otc-nc-03>
- <20210507172051.GW1370958@nvidia.com>
- <20210507181458.GA73499@otc-nc-03>
- <20210507182050.GX1370958@nvidia.com>
- <20210507192325.GB73499@otc-nc-03>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC] Add BPF_PROG_TYPE_CGROUP_IOCTL
+Date: Fri, 7 May 2021 15:33:27 -0400
+Message-ID: <YJWWByISHSPqF+aN@slm.duckdns.org>
+References: <CAKMK7uFEhyJChERFQ_DYFU4UCA2Ox4wTkds3+GeyURH5xNMTCA@mail.gmail.com>
+ <CAOWid-fL0=OM2XiOH+NFgn_e2L4Yx8sXA-+HicUb9bzhP0t8Bw@mail.gmail.com>
+ <YJUBer3wWKSAeXe7@phenom.ffwll.local>
+ <CAOWid-dmRsZUjF3cJ8+mx5FM9ksNQ_P9xY3jqxFiFMvN29SaLw@mail.gmail.com>
+ <YJVnO+TCRW83S6w4@phenom.ffwll.local>
+ <CADnq5_Pvtj1vb0bak_gUkv9J3+vfsMZxVKTKYeUvwQCajAWoVQ@mail.gmail.com>
+ <YJVqL4c6SJc8wdkK@phenom.ffwll.local>
+ <CADnq5_PHjiHy=Su_1VKr5ycdnXN-OuSXw0X_TeNqSj+TJs2MGA@mail.gmail.com>
+ <CADnq5_OjaPw5iF_82bjNPt6v-7OcRmXmXECcN+Gdg1NcucJiHA@mail.gmail.com>
+ <YJVwtS9XJlogZRqv@phenom.ffwll.local>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=eVjCnUgZG7bFLmsZKWvgm7S8rn2sXFPZXQoCVymeG00=;
- b=k2WAm4fe+IZN4bIbGEwyc82oRA3VuBby5YbZt83mpkRqSLjbRJuuLQCFdS6gF4H+BYQUhe68IqBLMGEfnznNMFkU0Idl3r3Rt7mileBbn1CFiVaFj2EmG6wlsuMSl7bSziqAhXmxSjsFQCIOSzjEYshEzzR9/USkB77YXW6MM66amQyGle5banOJtK3Ey6DdxNFzVGwBtv3zyganR+FchxTZsbDm3X81+BURJyx3CblbR8JfVbq8NpmsmyMEPK95ChRHQfVd2xWFesai0am+v7Nni763h4rCyHkjkPe3WBZH7j7YiIQpYol7R/WuZBW2+XqdvnmVWihZl7hGEmZwJQ==
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=DQeWsUe4sdL5lwcQgjwlYsUvqoVq4rgrGbWAxTRdzK0=;
+        b=nGfiv21ZL8q5oVm8kipMoDb98KQPA4A9rngwmvXuqZnlY2cy9b/IbHGzKHuZ9/55Wg
+         5rUH8L/Fu3n0B4hrJZ4B93X2HYBnLD/Lgrm+C58moHKKCT11Xw3AzGWg6CLYIhGjw2Lb
+         sxBYCIrVWBFMASbtLYqc786mHo8oNlZnIRDVF7rJuoTPbfyqlnOLZqZwAyqypSouggs0
+         yp2jIiV6O9MndUS/Sv9UxT6tVTL3ZezUAQZha9GS2GhAs+s2h+T3kfrqksj93rZHFqQj
+         XaLXEGcaw6eFzEOZzgOS8jX+XQ3V8bvJnHAMEhXK/akANXg9UkdyK8Suaox+MyCAwzH0
+         cAKQ==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20210507192325.GB73499@otc-nc-03>
+In-Reply-To: <YJVwtS9XJlogZRqv@phenom.ffwll.local>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Daniel Vetter <daniel@ffwll.ch>
+Cc: Alex Deucher <alexdeucher@gmail.com>, Kenny Ho <y2kenny@gmail.com>, Song Liu <songliubraving@fb.com>, Andrii Nakryiko <andriin@fb.com>, DRI Development <dri-devel@lists.freedesktop.org>, Daniel Borkmann <daniel@iogearbox.net>, Kenny Ho <Kenny.Ho@amd.com>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, Brian Welty <brian.welty@intel.com>, John Fastabend <john.fastabend@gmail.com>, Alexei Starovoitov <ast@kernel.org>, amd-gfx list <amd-gfx@lists.freedesktop.org>, Martin KaFai Lau <kafai@fb.com>, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Network Development <netdev@vger.kernel.org>, KP Singh <kpsingh@chromium.org>, Yonghong Song <yhs@fb.com>, bpf <bpf@vger.kernel.org>, Dave Airlie <airlied@gmail.com>
 
-On Fri, May 07, 2021 at 12:23:25PM -0700, Raj, Ashok wrote:
-> Hi Jason
-> 
-> - Removed lizefan's email due to bounces... 
-> 
-> On Fri, May 07, 2021 at 03:20:50PM -0300, Jason Gunthorpe wrote:
-> > On Fri, May 07, 2021 at 11:14:58AM -0700, Raj, Ashok wrote:
-> > > On Fri, May 07, 2021 at 02:20:51PM -0300, Jason Gunthorpe wrote:
-> > > > On Thu, May 06, 2021 at 09:32:40AM -0700, Raj, Ashok wrote:
-> > > > 
-> > > > > For platforms that support ENQCMD, it is required to mandate PASIDs are
-> > > > > global across the entire system. Maybe its better to call them gPASID for
-> > > > > guest and hPASID for host. Short reason being gPASID->hPASID is a guest
-> > > > > wide mapping for ENQCMD and not a per-RID based mapping. (We covered that
-> > > > > in earlier responses)
-> > > > 
-> > > > I don't think it is actually ENQCMD that forces this, ENQCMD can use a
-> > > > per-RID PASID in the translation table as well.
-> > > 
-> > > When using ENQCMD the PASID that needs to be sent on the wire is picked
-> > > from an MSR setup by kernel. This is context switched along with the
-> > > process. So each process has only 1 PASID that can go out when using
-> > > ENQCMD. ENQCMD takes one mmio address specific to the acclerator and a
-> > > source for the descriptor.
-> > 
-> > Oh. I forgot this also globally locked the PASID to a single
-> > MSR. Sigh. That makes the whole mechanism useless for anything except
-> > whole process SVA.
-> 
-> Is there another kind of SVA? Our mapping from that each process requires a
-> single mm, and PASID for SVM was a direct map from that. 
+Hello,
 
-There are lots of potential applications for something like ENQCMD
-that are not whole process SVA. Linking it to a single PASID basically
-nukes any other use of it unfortunately.
+On Fri, May 07, 2021 at 06:54:13PM +0200, Daniel Vetter wrote:
+> All I meant is that for the container/cgroups world starting out with
+> time-sharing feels like the best fit, least because your SRIOV designers
+> also seem to think that's the best first cut for cloud-y computing.
+> Whether it's virtualized or containerized is a distinction that's getting
+> ever more blurry, with virtualization become a lot more dynamic and
+> container runtimes als possibly using hw virtualization underneath.
 
-> > I would have to ask for a PASID that has the property it needs. You
-> > are saying the property is even bigger than "usable on a group of
-> > RIDs" but is actually "global for every RID and IOMMU in the system so
-> > it can go into a MSR". Gross, but fine, ask for that explicitly when
-> > allocating the PASID.
-> 
-> If one process has a single mm, is that also gross? :-) So a single process
-> having a PASID is just an identifier for IOMMU. It just seems like what a
-> mm is for a process == PASID for SVM-IOMMU support.
-> 
-> The unanswered question is how do we plumb from vIOMMU without a custom
-> allocator to get a system wide PASID? 
+FWIW, I'm completely on the same boat. There are two fundamental issues with
+hardware-mask based control - control granularity and work conservation.
+Combined, they make it a significantly more difficult interface to use which
+requires hardware-specific tuning rather than simply being able to say "I
+wanna prioritize this job twice over that one".
 
-PASID allocation is part of the iommu driver, it really shouldn't be
-global.
+My knoweldge of gpus is really limited but my understanding is also that the
+gpu cores and threads aren't as homogeneous as the CPU counterparts across
+the vendors, product generations and possibly even within a single chip,
+which makes the problem even worse.
 
-When the architecture code goes to allocate a single PASID for the
-mm_struct it should flag that allocation request with a 'must work for
-all RIDs flag' and the iommu driver should take care of it. That might
-mean the iommu driver consults a global static xarray, or maybe it
-does a hypercall, but it should be done through that API, not a side
-care global singleton.
+Given that GPUs are time-shareable to begin with, the most universal
+solution seems pretty clear.
 
-Jason
+Thanks.
+
+-- 
+tejun
