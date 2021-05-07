@@ -1,56 +1,70 @@
-From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Fri, 7 May 2021 15:15:11 -0700
-Message-ID: <20210507151511.612d1424@jacob-builder>
-References: <20210505102259.044cafdf@jacob-builder>
-        <20210505180023.GJ1370958@nvidia.com>
-        <20210505130446.3ee2fccd@jacob-builder>
-        <YJOZhPGheTSlHtQc@myrica>
-        <20210506122730.GQ1370958@nvidia.com>
-        <20210506163240.GA9058@otc-nc-03>
-        <20210507172051.GW1370958@nvidia.com>
-        <20210507181458.GA73499@otc-nc-03>
-        <20210507182050.GX1370958@nvidia.com>
-        <20210507192325.GB73499@otc-nc-03>
-        <20210507192810.GY1370958@nvidia.com>
+From: Alex Deucher <alexdeucher@gmail.com>
+Subject: Re: [RFC] Add BPF_PROG_TYPE_CGROUP_IOCTL
+Date: Fri, 7 May 2021 18:30:56 -0400
+Message-ID: <CADnq5_PudV4ufQW=DqrDow_vvMQDCJVxjqZeXeTvM=6Xp+a_RQ@mail.gmail.com>
+References: <YJUBer3wWKSAeXe7@phenom.ffwll.local> <CAOWid-dmRsZUjF3cJ8+mx5FM9ksNQ_P9xY3jqxFiFMvN29SaLw@mail.gmail.com>
+ <YJVnO+TCRW83S6w4@phenom.ffwll.local> <CADnq5_Pvtj1vb0bak_gUkv9J3+vfsMZxVKTKYeUvwQCajAWoVQ@mail.gmail.com>
+ <YJVqL4c6SJc8wdkK@phenom.ffwll.local> <CADnq5_PHjiHy=Su_1VKr5ycdnXN-OuSXw0X_TeNqSj+TJs2MGA@mail.gmail.com>
+ <CADnq5_OjaPw5iF_82bjNPt6v-7OcRmXmXECcN+Gdg1NcucJiHA@mail.gmail.com>
+ <YJVwtS9XJlogZRqv@phenom.ffwll.local> <YJWWByISHSPqF+aN@slm.duckdns.org>
+ <CADnq5_Mwd-xHZQ4pt34=FPk2Gq3ij1FNHWsEz1LdS7_Dyo00iQ@mail.gmail.com> <YJWqIVnX9giaKMTG@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20210507192810.GY1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=I0YWXNTKMAQEd6z039aM9XkewcEru+auENvSRDSVALM=;
+        b=ZLVjAoadVZr1dEm4/yvhnrf8/J/nef7G15JbUbGrTvaphSPPg1NYoxyWbrvVrYSS1h
+         zIa96XTY8P0hpQ+yNemDEgMJuSG/c4WCmiNe6Nc+iCnLydkMAsdGrWvIm/17ma5Z4yM/
+         YzsvyYwW+WiotmISk+eiR/i8Cd7aUBrZpHgxnpBYVJ84BXnaaMaWQ2eKqxevUizYrrdW
+         YbtS/h3evHXgpLsmcR18uUbQaKsFRYpehUV3Ng/5C9YykCWFXuYzVQL41A0Sr+comc9P
+         aI9Yzg1U+9hzWSAs+VHaET9OhHIE/EcNaIBsMQFPLcf6+DcdHyLoOGNPJ3nmswEFT8wv
+         svyQ==
+In-Reply-To: <YJWqIVnX9giaKMTG@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Daniel Vetter <daniel@ffwll.ch>, Kenny Ho <y2kenny@gmail.com>, Song Liu <songliubraving@fb.com>, Andrii Nakryiko <andriin@fb.com>, DRI Development <dri-devel@lists.freedesktop.org>, Daniel Borkmann <daniel@iogearbox.net>, Kenny Ho <Kenny.Ho@amd.com>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, Brian Welty <brian.welty@intel.com>, John Fastabend <john.fastabend@gmail.com>, Alexei Starovoitov <ast@kernel.org>, amd-gfx list <amd-gfx@lists.freedesktop.org>, Martin KaFai Lau <kafai@fb.com>, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Network Development <netdev@vger.kernel.org>, KP Singh <kpsingh@chromium.org>, Yonghong Song <yhs@fb.com>, bpf <bpf@vger.kernel.org>, Dave Airlie <airlied@gmail.com>
 
-Hi Jason,
+On Fri, May 7, 2021 at 4:59 PM Tejun Heo <tj@kernel.org> wrote:
+>
+> Hello,
+>
+> On Fri, May 07, 2021 at 03:55:39PM -0400, Alex Deucher wrote:
+> > The problem is temporal partitioning on GPUs is much harder to enforce
+> > unless you have a special case like SR-IOV.  Spatial partitioning, on
+> > AMD GPUs at least, is widely available and easily enforced.  What is
+> > the point of implementing temporal style cgroups if no one can enforce
+> > it effectively?
+>
+> So, if generic fine-grained partitioning can't be implemented, the right
+> thing to do is stopping pushing for full-blown cgroup interface for it. The
+> hardware simply isn't capable of being managed in a way which allows generic
+> fine-grained hierarchical scheduling and there's no point in bloating the
+> interface with half baked hardware dependent features.
+>
+> This isn't to say that there's no way to support them, but what have been
+> being proposed is way too generic and ambitious in terms of interface while
+> being poorly developed on the internal abstraction and mechanism front. If
+> the hardware can't do generic, either implement the barest minimum interface
+> (e.g. be a part of misc controller) or go driver-specific - the feature is
+> hardware specific anyway. I've repeated this multiple times in these
+> discussions now but it'd be really helpful to try to minimize the interace
+> while concentrating more on internal abstractions and actual control
+> mechanisms.
 
-On Fri, 7 May 2021 16:28:10 -0300, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
+Maybe we are speaking past each other.  I'm not following.  We got
+here because a device specific cgroup didn't make sense.  With my
+Linux user hat on, that makes sense.  I don't want to write code to a
+bunch of device specific interfaces if I can avoid it.  But as for
+temporal vs spatial partitioning of the GPU, the argument seems to be
+a sort of hand-wavy one that both spatial and temporal partitioning
+make sense on CPUs, but only temporal partitioning makes sense on
+GPUs.  I'm trying to understand that assertion.  There are some GPUs
+that can more easily be temporally partitioned and some that can be
+more easily spatially partitioned.  It doesn't seem any different than
+CPUs.
 
-> > The unanswered question is how do we plumb from vIOMMU without a custom
-> > allocator to get a system wide PASID?   
-> 
-> PASID allocation is part of the iommu driver, it really shouldn't be
-> global.
-> 
-In the current code, the pluggable custom allocator *is* part of the iommu
-vendor driver. If it decides the allocation is global then it should be
-suitable for the platform since there will never be a VT-d IOMMU on another
-vendor's platform.
-
-It is true that the default allocator is global which suites the current
-needs. I am just wondering if we are solving a problem does not exist yet.
-
-> When the architecture code goes to allocate a single PASID for the
-> mm_struct it should flag that allocation request with a 'must work for
-> all RIDs flag' and the iommu driver should take care of it. That might
-> mean the iommu driver consults a global static xarray, or maybe it
-> does a hypercall, but it should be done through that API, not a side
-> care global singleton.
-Why do we need to flag the allocation every time if on a platform *every*
-PASID can potentially be global? At the time of allocation, we don't know
-if the PASID will be used for a shared (ENQCMD) or a dedicated workqueue.
-
-Thanks,
-
-Jacob
+Alex
