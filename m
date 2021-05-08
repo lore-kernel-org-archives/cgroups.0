@@ -1,89 +1,52 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC] Add BPF_PROG_TYPE_CGROUP_IOCTL
-Date: Fri, 7 May 2021 19:45:33 -0400
-Message-ID: <YJXRHXIykyEBdnTF@slm.duckdns.org>
-References: <YJVnO+TCRW83S6w4@phenom.ffwll.local>
- <CADnq5_Pvtj1vb0bak_gUkv9J3+vfsMZxVKTKYeUvwQCajAWoVQ@mail.gmail.com>
- <YJVqL4c6SJc8wdkK@phenom.ffwll.local>
- <CADnq5_PHjiHy=Su_1VKr5ycdnXN-OuSXw0X_TeNqSj+TJs2MGA@mail.gmail.com>
- <CADnq5_OjaPw5iF_82bjNPt6v-7OcRmXmXECcN+Gdg1NcucJiHA@mail.gmail.com>
- <YJVwtS9XJlogZRqv@phenom.ffwll.local>
- <YJWWByISHSPqF+aN@slm.duckdns.org>
- <CADnq5_Mwd-xHZQ4pt34=FPk2Gq3ij1FNHWsEz1LdS7_Dyo00iQ@mail.gmail.com>
- <YJWqIVnX9giaKMTG@slm.duckdns.org>
- <CADnq5_PudV4ufQW=DqrDow_vvMQDCJVxjqZeXeTvM=6Xp+a_RQ@mail.gmail.com>
+From: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
+ APIs
+Date: Sat, 8 May 2021 05:46:09 +0000
+Message-ID: <MWHPR11MB18861BF1CEA9AEA0B8CB2B0C8C569@MWHPR11MB1886.namprd11.prod.outlook.com>
+References: <20210421175203.GN1370958@nvidia.com>
+ <20210421133312.15307c44@redhat.com> <20210421230301.GP1370958@nvidia.com>
+ <MWHPR11MB1886188698A6E20338196F788C469@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210422121020.GT1370958@nvidia.com>
+ <MWHPR11MB1886E688D2128C98A1F240B18C459@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210423114944.GF1370958@nvidia.com>
+ <MWHPR11MB18861FE6982D73AFBF173E048C439@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210426123817.GQ1370958@nvidia.com>
+ <MWHPR11MB188625137D5B7423822396C88C409@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210428204606.GX1370958@nvidia.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
+ s=selector2-intel-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=QifxiqKM68aD+Y4zhQAHqfPHngOrU7xs8nSqzNmvdjk=;
+ b=zMlZqR5yg1Z2aN2Va6OSrmGUVJggjdgzdD8HCMMSwO7CFO0XHtqq109N5y2rgOc0/XIzvnbe4Mr+PRqCxVXwab6AHnuIdIhjbEMNAaUshDkKjBEaL3J1U+ZZU5tpOyRQk6pL8uqVbxVURgGRbdalQbQWCNqOBRUSyyM5DCEniwU=
+In-Reply-To: <20210428204606.GX1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025;
- h=sender:date:from:to:cc:subject:message-id:references:mime-version
- :content-disposition:in-reply-to;
- bh=rk5ZF5O3eDY1kMqyU3TfWHx2sPsSACItLLAgyKze1w4=;
- b=WRCthpiWBtHfvBKo/T251l8U1FYDhxXo7foPARg3JjejHTmSQOooowsVGhiLNOMcQq
- SEsxajIMgeAvkewvQIU3xgrOHNPR0Z9w1zSYWr8ZUs70zgkyMRMXPTpFsGKP4SdyAs1h
- gYDTlKwwBVwPfauLYsM/53bjt3mahmc4GsVenCC96iwSpELZA/54Bf6QYhKIYwdbb5z2
- AHAhzCo2p1w9E/No1NNALqOx7P42N3Pl5AwOysmoxj/mh3p8uYsuFodkyDeZIk0AsCsU
- MYajtRBmN8d9BC+YYXawJbrQNPVvtBq3Yp3ek+8RBg3AlU9ogvuprYYPRsriM88vgmM3
- SzVw==
-Content-Disposition: inline
-In-Reply-To: <CADnq5_PudV4ufQW=DqrDow_vvMQDCJVxjqZeXeTvM=6Xp+a_RQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Alex Deucher <alexdeucher-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, DRI Development <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Dave Airlie <airlied-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Andrii Nakryiko <andriin-b10kYP2dOMg@public.gmane.org>, Linux-Fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, KP Singh <kpsingh-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Hello,
-
-On Fri, May 07, 2021 at 06:30:56PM -0400, Alex Deucher wrote:
-> Maybe we are speaking past each other.  I'm not following.  We got
-> here because a device specific cgroup didn't make sense.  With my
-> Linux user hat on, that makes sense.  I don't want to write code to a
-> bunch of device specific interfaces if I can avoid it.  But as for
-> temporal vs spatial partitioning of the GPU, the argument seems to be
-> a sort of hand-wavy one that both spatial and temporal partitioning
-> make sense on CPUs, but only temporal partitioning makes sense on
-> GPUs.  I'm trying to understand that assertion.  There are some GPUs
-
-Spatial partitioning as implemented in cpuset isn't a desirable model. It's
-there partly because it has historically been there. It doesn't really
-require dynamic hierarchical distribution of anything and is more of a way
-to batch-update per-task configuration, which is how it's actually
-implemented. It's broken too in that it interferes with per-task affinity
-settings. So, not exactly a good example to follow. In addition, this sort
-of partitioning requires more hardware knowledge and GPUs are worse than
-CPUs in that hardwares differ more.
-
-Features like this are trivial to implement from userland side by making
-per-process settings inheritable and restricting who can update the
-settings.
-
-> that can more easily be temporally partitioned and some that can be
-> more easily spatially partitioned.  It doesn't seem any different than
-> CPUs.
-
-Right, it doesn't really matter how the resource is distributed. What
-matters is how granular and generic the distribution can be. If gpus can
-implement work-conserving proportional distribution, that's something which
-is widely useful and inherently requires dynamic scheduling from kernel
-side. If it's about setting per-vendor affinities, this is way too much
-cgroup interface for a feature which can be easily implemented outside
-cgroup. Just do per-process (or whatever handles gpus use) and confine their
-configurations from cgroup side however way.
-
-While the specific theme changes a bit, we're basically having the same
-discussion with the same conclusion over the past however many months.
-Hopefully, the point is clear by now.
-
-Thanks.
-
--- 
-tejun
+PiBGcm9tOiBKYXNvbiBHdW50aG9ycGUgPGpnZ0BudmlkaWEuY29tPg0KPiBTZW50OiBUaHVyc2Rh
+eSwgQXByaWwgMjksIDIwMjEgNDo0NiBBTQ0KPiANCj4gPiA+IEkgdGhpbmsgdGhlIG5hbWUgSU9B
+U0lEIGlzIGZpbmUgZm9yIHRoZSB1QVBJLCB0aGUga2VybmVsIHZlcnNpb24gY2FuDQo+ID4gPiBi
+ZSBjYWxsZWQgaW9hc2lkX2lkIG9yIHNvbWV0aGluZy4NCj4gPg0KPiA+IGlvYXNpZCBpcyBhbHJl
+YWR5IGFuIGlkIGFuZCB0aGVuIGlvYXNpZF9pZCBqdXN0IGFkZHMgY29uZnVzaW9uLiBBbm90aGVy
+DQo+ID4gcG9pbnQgaXMgdGhhdCBpb2FzaWQgaXMgY3VycmVudGx5IHVzZWQgdG8gcmVwcmVzZW50
+IGJvdGggUENJIFBBU0lEIGFuZA0KPiA+IEFSTSBzdWJzdHJlYW0gSUQgaW4gdGhlIGtlcm5lbC4g
+SXQgaW1wbGllcyB0aGF0IGlmIHdlIHdhbnQgdG8gc2VwYXJhdGUNCj4gPiBpb2FzaWQgYW5kIHBh
+c2lkIGluIHRoZSB1QVBJIHRoZSAncGFzaWQnIGFsc28gbmVlZHMgdG8gYmUgcmVwbGFjZWQgd2l0
+aA0KPiA+IGFub3RoZXIgZ2VuZXJhbCB0ZXJtIHVzYWJsZSBmb3Igc3Vic3RyZWFtIElELiBBcmUg
+d2UgbWFraW5nIHRoZQ0KPiA+IHRlcm1zIHRvbyBjb25mdXNpbmcgaGVyZT8NCj4gDQo+IFRoaXMg
+aXMgd2h5IEkgYWxzbyBhbSBub3Qgc28gc3VyZSBhYm91dCBleHBvc2luZyB0aGUgUEFTSUQgaW4g
+dGhlIEFQSQ0KPiBiZWNhdXNlIGl0IGlzIHVsdGltYXRlbHkgYSBIVyBzcGVjaWZpYyBpdGVtLg0K
+PiANCj4gQXMgSSBzYWlkIHRvIERhdmlkLCBvbmUgYXZlbnVlIGlzIHRvIGhhdmUgc29tZSBnZW5l
+cmljIHVBUEkgdGhhdCBpcw0KPiB2ZXJ5IGdlbmVyYWwgYW5kIGtlZXAgYWxsIHRoaXMgZGVlcGx5
+IGRldGFpbGVkIHN0dWZmLCB0aGF0IHJlYWxseSBvbmx5DQo+IG1hdHRlcnMgZm9yIHFlbXUsIGFz
+IHBhcnQgb2YgYSBtb3JlIEhXIHNwZWNpZmljIHZJT01NVSBkcml2ZXINCj4gaW50ZXJmYWNlLg0K
+PiANCg0KT0ssIHNvIHRoZSBnZW5lcmFsIHVBUEkgd2lsbCBub3QgZXhwb3NlIGh3X2lkIGFuZCBq
+dXN0IHByb3ZpZGUgZXZlcnl0aGluZw0KZ2VuZXJpYyBmb3IgbWFuYWdpbmcgSS9PIHBhZ2UgdGFi
+bGUgKG1hcC91bm1hcCwgbmVzdGluZywgZXRjLikgdGhyb3VnaCANCklPQVNJRCBhbmQgdGhlbiBz
+cGVjaWZpYyB1QVBJIGlzIHByb3ZpZGVkIHRvIGhhbmRsZSBwbGF0Zm9ybSBzcGVjaWZpYw0KcmVx
+dWlyZW1lbnRzIChod19pZCwgaW92YSB3aW5kb3dzLCBldGMuKQ0KDQpUaGFua3MNCktldmluDQo=
