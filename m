@@ -1,127 +1,114 @@
-From: Liu Yi L <yi.l.liu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Sat, 8 May 2021 15:06:17 +0800
-Message-ID: <20210508150617.1e357fcf@yiliu-dev>
-References: <MWHPR11MB18861FE6982D73AFBF173E048C439@MWHPR11MB1886.namprd11.prod.outlook.com>
+From: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
+ APIs
+Date: Sat, 8 May 2021 07:31:18 +0000
+Message-ID: <MWHPR11MB18862452FD4172DCA70C89B88C569@MWHPR11MB1886.namprd11.prod.outlook.com>
+References: <20210421162307.GM1370958@nvidia.com>
+        <20210421105451.56d3670a@redhat.com>    <20210421175203.GN1370958@nvidia.com>
+        <20210421133312.15307c44@redhat.com>    <20210421230301.GP1370958@nvidia.com>
+        <MWHPR11MB1886188698A6E20338196F788C469@MWHPR11MB1886.namprd11.prod.outlook.com>
+        <20210422121020.GT1370958@nvidia.com>
+        <MWHPR11MB1886E688D2128C98A1F240B18C459@MWHPR11MB1886.namprd11.prod.outlook.com>
+        <20210423114944.GF1370958@nvidia.com>
+        <MWHPR11MB18861FE6982D73AFBF173E048C439@MWHPR11MB1886.namprd11.prod.outlook.com>
         <20210426123817.GQ1370958@nvidia.com>
         <MWHPR11MB188625137D5B7423822396C88C409@MWHPR11MB1886.namprd11.prod.outlook.com>
-        <20210504084148.4f61d0b5@jacob-builder>
-        <20210504180050.GB1370958@nvidia.com>
-        <20210504151154.02908c63@jacob-builder>
-        <20210504231530.GE1370958@nvidia.com>
-        <20210505102259.044cafdf@jacob-builder>
-        <20210505180023.GJ1370958@nvidia.com>
-        <20210505130446.3ee2fccd@jacob-builder>
-        <20210505222120.GM1370958@nvidia.com>
+        <20210428090625.5a05dae8@redhat.com>
+        <MWHPR11MB1886E0A7897758AA7BE509058C579@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210507110614.7b8e6998@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20210505222120.GM1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
+ s=selector2-intel-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ftc+eb/EoO9EFb6GQNuUVZYAdBI/Nu/+QxkOv588uhM=;
+ b=PlwpRFtAmyxTur7RKanrUNMNllsDB7BBi3u01Jc3XXFUvRATkPBVcRFbLi44rfLN1K8T2uUUSDpbLoEn86FIs39feydr99s+cz14hJLsSLkwz0YlnBUIxlev7dXk0BqpAV+BqZymkeygebRc/Z4gK84FElSRPWp9Q/hPIxBuWFQ=
+In-Reply-To: <20210507110614.7b8e6998-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
+List-ID: <cgroups.vger.kernel.org>
+To: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Hi Jason,
+> From: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Sent: Saturday, May 8, 2021 1:06 AM
+>=20
+> > > Those are the main ones I can think of.  It is nice to have a simple
+> > > map/unmap interface, I'd hope that a new /dev/ioasid interface wouldn=
+'t
+> > > raise the barrier to entry too high, but the user needs to have the
+> > > ability to have more control of their mappings and locked page
+> > > accounting should probably be offloaded somewhere.  Thanks,
+> > >
+> >
+> > Based on your feedbacks I feel it's probably reasonable to start with
+> > a type1v2 semantics for the new interface. Locked accounting could
+> > also start with the same VFIO restriction and then improve it
+> > incrementally, if a cleaner way is intrusive (if not affecting uAPI).
+> > But I didn't get the suggestion on "more control of their mappings".
+> > Can you elaborate?
+>=20
+> Things like I note above, userspace cannot currently specify mapping
+> granularity nor has any visibility to the granularity they get from the
+> IOMMU.  What actually happens in the IOMMU is pretty opaque to the user
+> currently.  Thanks,
+>=20
 
-On Wed, 5 May 2021 19:21:20 -0300, Jason Gunthorpe wrote:
+It's much clearer. Based on all the discussions so far I'm thinking about
+a staging approach when building the new interface, basically following
+the model that Jason pointed out - generic stuff first, then platform=20
+specific extension:
 
-> On Wed, May 05, 2021 at 01:04:46PM -0700, Jacob Pan wrote:
-> > Hi Jason,
-> > 
-> > On Wed, 5 May 2021 15:00:23 -0300, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
-> >   
-> > > On Wed, May 05, 2021 at 10:22:59AM -0700, Jacob Pan wrote:
-> > >   
-> > > > Global and pluggable are for slightly separate reasons.
-> > > > - We need global PASID on VT-d in that we need to support shared
-> > > > workqueues (SWQ). E.g. One SWQ can be wrapped into two mdevs then
-> > > > assigned to two VMs. Each VM uses its private guest PASID to submit
-> > > > work but each guest PASID must be translated to a global (system-wide)
-> > > > host PASID to avoid conflict. Also, since PASID table storage is per
-> > > > PF, if two mdevs of the same PF are assigned to different VMs, the
-> > > > PASIDs must be unique.    
-> > > 
-> > > From a protocol perspective each RID has a unique PASID table, and
-> > > RIDs can have overlapping PASIDs.
-> > >   
-> > True, per RID or per PF as I was referring to.
-> >   
-> > > Since your SWQ is connected to a single RID the requirement that
-> > > PASIDs are unique to the RID ensures they are sufficiently unique.
-> > >   
-> > True, but one process can submit work to multiple mdevs from different
-> > RIDs/PFs. One process uses one PASID and PASID translation table is per VM.
-> > The same PASID is used for all the PASID tables of each RID.  
-> 
-> If the model is "assign this PASID to this RID" then yes, there is a
-> big problem keeping everything straight that can only be solved with a
-> global table.
-> 
-> But if the model is "give me a PASID for this RID" then it isn't such
-> a problem.
+Phase 1: /dev/ioasid with core ingredients and vfio type1v2 semantics
+    - ioasid is the software handle representing an I/O page table
+    - uAPI accepts a type1v2 map/unmap semantics per ioasid
+    - helpers for VFIO/VDPA to bind ioasid_fd and attach ioasids
+    - multiple ioasids are allowed without nesting (vIOMMU, or devices
+w/ incompatible iommu attributes)
+    - an ioasid disallows any operation before it's attached to a device
+    - an ioasid inherits iommu attributes from the 1st device attached
+to it
+    - userspace is expected to manage hardware restrictions and the
+kernel only returns error when restrictions are broken
+        * map/unmap on an ioasid will fail before every device in a group=20
+is attached to it
+        * ioasid attach will fail if the new device has incompatibile iommu
+attribute as that of this ioasid
+    - thus no group semantics in uAPI
+    - no change to vfio container/group/type1 logic, for running existing
+vfio applications
+        * imply some duplication between vfio type1 and ioasid for some tim=
+e
+    - new uAPI in vfio to allow explicit opening of a device and then bindi=
+ng
+it to the ioasid_fd
+        * possibly require each device exposed in /dev/vfio/
+    - support both pdev and mdev
 
-Let me double confirm if I'm understanding you correctly. So your suggestion
-is to have a per-RID PASID namespace, which can be maintainer by IOMMU driver.
-right? Take native SVM usage as an example, everytime a process is bound with
-a device, a PASID within this RID will be allocated. Am I correct so far?
+Phase 2: ioasid nesting
+    - Allow bind/unbind_pgtable semantics per ioasid
+    - Allow ioasid nesting=20
+        * HW ioasid nesting if supported by platform
+        * otherwise fall back to SW ioasid nesting (in-kernel shadowing)
+    - iotlb invalidation per ioasid
+    - I/O page fault handling per ioasid
+    - hw_id is not exposed in uAPI. Vendor IOMMU driver decides
+when/how hw_id is allocated and programmed properly
 
-If yes, then there is a case in which IOTLB efficiency is really low. Let's ay
-there is a process bound with multiple devices(RIDs) and has different PASIDs
-allocated for each RID. In such case, the PASID values are different for each
-RID. As most vendor will do, PASID will be used to tag IOTLB entries. So in such
-case, here will be multiple IOTLB entries for a single VA->PA mapping. And the
-number of such duplicate IOTLB entries increases linearly per the number of the
-device number. Seems not good from performance perspective.
+Phase3: optimizations and vendor extensions (order undefined, up to
+the specific feature owner):
+    - (Intel) ENQCMD support with hw_id exposure in uAPI
+    - (ARM/AMD) RID-based pasid table assignment
+    - (PPC) window-based iova management
+    - Optimizations:
+        * replace vfio type1 with a shim driver to use ioasid backend
+        * mapping granularity
+        * HW dirty page tracking
+        * ...
 
-> 
-> Basically trying to enforce a uniform PASID for an IOASID across all
-> RIDs attached to it is not such a nice choice.
-> 
-> > > That is fine, but all this stuff should be inside the Intel vIOMMU
-> > > driver not made into a global resource of the entire iommu subsystem.
-> > >   
-> > Intel vIOMMU has to use a generic uAPI to allocate PASID so the generic
-> > code need to have this option. I guess you are saying we should also have a
-> > per RID allocation option in addition to global?  
-> 
-> There always has to be a RID involvement for the PASID, for security,
-> this issue really boils down to where the PASID lives.
-> 
-> If you need the PASID attached to the IOASID then it has to be global
-> because the IOASID can be attached to any RID and must keep the same
-> PASID.
-> 
-> If the PASID is learned when the IOASID is attached to a RID then the
-> PASID is more flexible and isn't attached to the IOASID.
-> 
-> Honestly I'm a little leary to bake into a UAPI a specific HW choice
-> that Intel made here.
-> 
-> I would advise making the "attach a global PASID to this IOASID"
-> operation explicit and opt into for case that actually need it.
-> 
-> Which implies the API to the iommu driver should be more like:
-> 
->   'assign an IOASID to this RID and return the PASID'
->   'reserve a PASID from every RID'
->   'assign an IOASID to this RID and use this specific PASID'
-> 
-> In all cases the scope of those operations are completely local to a
-> certain IOMMU driver - 'reserver a PASID from every RID' is really
-> every RID that driver can operate on.
+Does above sounds a sensible plan? If yes we'll start working on=20
+phase1 then...
 
-Also, this reservation will be failed if the PASID happens to be occupied
-by previous usage. As the PASID translation table is per-VM, ENQCMD in VM
-will be a problem under such PASID management model.
-
-> 
-> So it is hard to see why the allocator should be a global resource and
-> not something that is part of the iommu driver exclusively.
-> 
-> Jason
-
--- 
-Regards,
-Yi Liu
+Thanks
+Kevin
