@@ -1,56 +1,88 @@
 From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v3 1/5] cgroup: introduce cgroup.kill
-Date: Mon, 10 May 2021 09:43:03 -0700
-Message-ID: <YJlilxwEoZS01+RE@carbon.DHCP.thefacebook.com>
-References: <20210508121542.1269256-1-brauner@kernel.org>
- <874kfaha3t.fsf@meer.lwn.net>
+Subject: [PATCH] cgroup: inline cgroup_task_freeze()
+Date: Mon, 10 May 2021 11:45:56 -0700
+Message-ID: <20210510184556.946798-1-guro@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=rrhlUjnD6bW9ponz5bLx07YD8kJYtj+nkd59IW5qQh0=;
- b=eyOkPaWU8zIt3GEf1JBDYLZRNakId2LVFo1YjobMDEkr4PeD5TKDW+gXjPpOuPPRigCR
- TRMM/dEoZulAslHh2QkHKZs5ESd34hRUcIyNiQJr9u0WFraFPbtwUPxYY89dt4RheSdC
- rppMBZDRD/e7A86tR7mvq6pJ9tR7VNHphp0= 
-Content-Disposition: inline
-In-Reply-To: <874kfaha3t.fsf-K7Oyngvb+qHk1uMJSBkQmQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-transfer-encoding :
+ content-type; s=facebook; bh=rWFLuxjlkCJpY+dUzioJAmlhNduAcTJxyvXk5dzyWIo=;
+ b=ouzbLFe/3wo/rDw79rBNsSn8TgezE+cVrTlolHE5MX8NxiOlk7budplM3sBW5sdsFgQa
+ xD+IQfa/4hFJd5E9Lbpyd2qKOg7QlhNFqbtDduufaw3Jae6qPK9QTp+Z/80a6NsCj2ZV
+ PFs+OZ23qLio35ekaQxLn6bprQRS+6wOvXw= 
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
-Cc: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-On Mon, May 10, 2021 at 09:39:02AM -0600, Jonathan Corbet wrote:
-> Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
-> 
-> > Introduce the cgroup.kill file. It does what it says on the tin and
-> > allows a caller to kill a cgroup by writing "1" into cgroup.kill.
-> > The file is available in non-root cgroups.
-> 
-> So I feel like I'm missing something fundamental here...perhaps somebody
-> can supply a suitable cluebat.  It seems inevitable to me that, sooner
-> or later, somebody will surely wish that this mechanism could send a
-> signal other than SIGKILL, but this interface won't allow that.  Even if
-> you won't want to implement an arbitrary signal now, it seems like
-> defining the interface to require writing "9" rather than "1" would
-> avoid closing that option off in the future.
-> 
-> I assume there's some reason why you don't want to do that, but I'm to
-> slow to figure out what it is...?
+After the introduction of the cgroup.kill there is only one call site
+of cgroup_task_freeze() left: cgroup_exit(). cgroup_task_freeze() is
+currently taking rcu_read_lock() to read task's cgroup flags, but
+because it's always called with css_set_lock locked, the rcu protection
+is excessive.
 
-I think the consensus was that most signals are a process/thread-level thing
-and are rarely sent to more than one process, so sending them to all processes
-in a cgroup is never required. So far nobody came with any real-life use case
-behind SIGKILL. SIGSTOP/SIGCONT could be that case, but the cgroup v2 freezer
-is doing virtually the same and eliminates this need.
+Simplify the code by inlining cgroup_task_freeze().
 
-Even SIGTERM which is often used before SIGKILL as a grateful termination
-attempt has to be sent to a proper process in the cgroup (e.g. container-level
-init or the main process in the workload).
+Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+---
+ include/linux/cgroup.h | 18 ------------------
+ kernel/cgroup/cgroup.c |  3 ++-
+ 2 files changed, 2 insertions(+), 19 deletions(-)
 
-If a new case will arise, it will be possible to introduce a new interface
-file, but it looks very unlikely that there will be many such cases to justify
-a more generic interface. On the other side keeping it boolean makes it more
-consistent with the rest of the cgroup v2 api.
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 4f2f79de083e..a72764287cb5 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -906,20 +906,6 @@ void cgroup_freeze(struct cgroup *cgrp, bool freeze)=
+;
+ void cgroup_freezer_migrate_task(struct task_struct *task, struct cgroup=
+ *src,
+ 				 struct cgroup *dst);
+=20
+-static inline bool cgroup_task_freeze(struct task_struct *task)
+-{
+-	bool ret;
+-
+-	if (task->flags & PF_KTHREAD)
+-		return false;
+-
+-	rcu_read_lock();
+-	ret =3D test_bit(CGRP_FREEZE, &task_dfl_cgroup(task)->flags);
+-	rcu_read_unlock();
+-
+-	return ret;
+-}
+-
+ static inline bool cgroup_task_frozen(struct task_struct *task)
+ {
+ 	return task->frozen;
+@@ -929,10 +915,6 @@ static inline bool cgroup_task_frozen(struct task_st=
+ruct *task)
+=20
+ static inline void cgroup_enter_frozen(void) { }
+ static inline void cgroup_leave_frozen(bool always_leave) { }
+-static inline bool cgroup_task_freeze(struct task_struct *task)
+-{
+-	return false;
+-}
+ static inline bool cgroup_task_frozen(struct task_struct *task)
+ {
+ 	return false;
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index e640fc78d731..29be28e903ab 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -6267,7 +6267,8 @@ void cgroup_exit(struct task_struct *tsk)
+ 	cset->nr_tasks--;
+=20
+ 	WARN_ON_ONCE(cgroup_task_frozen(tsk));
+-	if (unlikely(cgroup_task_freeze(tsk)))
++	if (unlikely(!(task->flags & PF_KTHREAD) &&
++		     test_bit(CGRP_FREEZE, &task_dfl_cgroup(task)->flags)))
+ 		cgroup_update_frozen(task_dfl_cgroup(tsk));
+=20
+ 	spin_unlock_irq(&css_set_lock);
+--=20
+2.30.2
 
-Thanks!
