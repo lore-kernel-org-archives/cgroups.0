@@ -1,78 +1,56 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Mon, 10 May 2021 13:39:56 -0300
-Message-ID: <20210510163956.GD1002214@nvidia.com>
-References: <20210505180023.GJ1370958@nvidia.com>
- <20210505130446.3ee2fccd@jacob-builder> <YJOZhPGheTSlHtQc@myrica>
- <20210506122730.GQ1370958@nvidia.com>
- <20210506163240.GA9058@otc-nc-03>
- <MWHPR11MB188698FBEE62AF1313E0F7AC8C569@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210510123729.GA1002214@nvidia.com>
- <20210510152502.GA90095@otc-nc-03>
- <20210510153111.GB1002214@nvidia.com>
- <20210510162212.GB90095@otc-nc-03>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH v3 1/5] cgroup: introduce cgroup.kill
+Date: Mon, 10 May 2021 09:43:03 -0700
+Message-ID: <YJlilxwEoZS01+RE@carbon.DHCP.thefacebook.com>
+References: <20210508121542.1269256-1-brauner@kernel.org>
+ <874kfaha3t.fsf@meer.lwn.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aamh5W010c99pQ7W0CL0uGNQYPJkJSYQhWeISNlUlrs=;
- b=XxNzY7/9N5ELx34GFE8E+TpvXWkGDVvKYRwIkv/H0wEl32DxSZR2zPN+Hh3dv2w4sKal5p02VsUSTievXnIKp5bqfTU6EYQ/e3Zh4flVk8+syjdsiOyXUt/+s5OcJSj9rqQSWmhDO0LZuXsf7UA8SrwZTLCRyK/rVwBMK4d+Xht/kH7c0oxoJJZPpBpt+FA3oA/o118Kc2v9kkCLT23lPf3ZKAn+1wkE8DSs48mX/iOPewS6oLggHjMoOyCb9wWWSyqDtdH/BxwB3PJgg8+iknzazbZZusvSZau8YFxAqCY2djkYGo+2ceBzdVTvS35Q6enxL4BH9udSXgEOop4OtQ==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=rrhlUjnD6bW9ponz5bLx07YD8kJYtj+nkd59IW5qQh0=;
+ b=eyOkPaWU8zIt3GEf1JBDYLZRNakId2LVFo1YjobMDEkr4PeD5TKDW+gXjPpOuPPRigCR
+ TRMM/dEoZulAslHh2QkHKZs5ESd34hRUcIyNiQJr9u0WFraFPbtwUPxYY89dt4RheSdC
+ rppMBZDRD/e7A86tR7mvq6pJ9tR7VNHphp0= 
 Content-Disposition: inline
-In-Reply-To: <20210510162212.GB90095@otc-nc-03>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
- Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu,
- Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+In-Reply-To: <874kfaha3t.fsf-K7Oyngvb+qHk1uMJSBkQmQ@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
+Cc: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
 
-On Mon, May 10, 2021 at 09:22:12AM -0700, Raj, Ashok wrote:
-
-> Those vIOMMU's will have a capability that it supports PASID allocation
-> interface. When you allocate you can say what type of PASID you need
-> (shared vs local) and Qemu will obtain either within the local range, or in
-> the shared range.
-
-Isn't this what I've been saying? This all has to be explicit, and it
-is all local to the iommu driver. At worst we'd have some single
-global API 'get me a global PASID' which co-ordinates with all the
-iommu drivers to actually implement it.
-
-> > > When we have both SRIOV and shared WQ exposed to the same guest, we 
-> > > do have an issue. The simplest way that I thought was to have a guest 
-> > > and host PASID separation.  Where the guest has its own PASID  space 
-> > > and host has its own carved out.  Guest can do what ever it wants within 
-> > > that allocated space without fear of any collition with any other device. 
-> > 
-> > And how do you reliably migrate if the target kernel has a PASID
-> > already allocated in that range?
+On Mon, May 10, 2021 at 09:39:02AM -0600, Jonathan Corbet wrote:
+> Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
 > 
-> For any shared range, remember there is a mapping table. And since those
-> ranges are always reserved in the new host it isn't a problem.
+> > Introduce the cgroup.kill file. It does what it says on the tin and
+> > allows a caller to kill a cgroup by writing "1" into cgroup.kill.
+> > The file is available in non-root cgroups.
+> 
+> So I feel like I'm missing something fundamental here...perhaps somebody
+> can supply a suitable cluebat.  It seems inevitable to me that, sooner
+> or later, somebody will surely wish that this mechanism could send a
+> signal other than SIGKILL, but this interface won't allow that.  Even if
+> you won't want to implement an arbitrary signal now, it seems like
+> defining the interface to require writing "9" rather than "1" would
+> avoid closing that option off in the future.
+> 
+> I assume there's some reason why you don't want to do that, but I'm to
+> slow to figure out what it is...?
 
-It is a smaller problem - all the ranges still need to match between
-hosts and so forth. It is tractable but this all needs to be API'd
-properly and nothing can be implicit, including the global/local range
-split.
+I think the consensus was that most signals are a process/thread-level thing
+and are rarely sent to more than one process, so sending them to all processes
+in a cgroup is never required. So far nobody came with any real-life use case
+behind SIGKILL. SIGSTOP/SIGCONT could be that case, but the cgroup v2 freezer
+is doing virtually the same and eliminates this need.
 
-Basically all this needs to come through in your /dev/ioasid API RFC
-proposal that I hope is being worked on.
+Even SIGTERM which is often used before SIGKILL as a grateful termination
+attempt has to be sent to a proper process in the cgroup (e.g. container-level
+init or the main process in the workload).
 
-I still think it is smarter to push a group of RID's into a global
-allocation group and accept there are potential downsides with that
-than to try to force a global allocation group on every RID and then
-try to fix the mess that makes for non-ENQCMD devices.
+If a new case will arise, it will be possible to introduce a new interface
+file, but it looks very unlikely that there will be many such cases to justify
+a more generic interface. On the other side keeping it boolean makes it more
+consistent with the rest of the cgroup v2 api.
 
-Jason
+Thanks!
