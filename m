@@ -1,199 +1,109 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v5 2/3] mm: memcg/slab: Create a new set of kmalloc-cg-<n> caches
-Date: Wed, 12 May 2021 10:51:07 -0400
-Message-ID: <20210512145107.6208-1-longman@redhat.com>
+From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v5 2/3] mm: memcg/slab: Create a new set of kmalloc-cg-<n>
+ caches
+Date: Wed, 12 May 2021 10:54:19 -0400
+Message-ID: <0919aaab-cc08-f86d-1f9a-8ddfeed7bb31@redhat.com>
 References: <20210505200610.13943-1-longman@redhat.com>
+ <20210512145107.6208-1-longman@redhat.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620831104;
+        s=mimecast20190719; t=1620831266;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=G8AWSw11u17dQBdvULhp73HhnBRcOeZB2YF9KJWMyVQ=;
-        b=JtzNh9I3IGv9Ob/J0qv1Sdelok14CAPPBpmz+EI2HiJcbseEWa1pePV1ai95ugEGjlJhnm
-        HqcKcu2mohO7ZfVtBvLXWV5HFFC0XRhWRMKbLbU9Zhear5Sb2lY+woHAM3FXIvnQfike5j
-        Ior+G32+PQ8Y1K7co+WvNLImQJn8VP4=
-In-Reply-To: <20210505200610.13943-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=SWpKC9JIophhOJfSAOpwo9ri4mX92NQqXeS4GIIdLL0=;
+        b=gXhD6TJnCys8o1nXL2b3ZiAt1U4OuiXDL5LqIGy6C1yGTw0LU0qRNwzNtd/WDzySSARGDc
+        jsgk/JeoM2SIVgc4+VpVTowsWR53rlTEGMiA0kZHrMq2JVw3i5mCDHgxfjNxYJ3wPac7aH
+        RgrCYmDLjVb+11Th6g8VwCJZmKQqfoo=
+In-Reply-To: <20210512145107.6208-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"; format="flowed"
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-There are currently two problems in the way the objcg pointer array
-(memcg_data) in the page structure is being allocated and freed.
+On 5/12/21 10:51 AM, Waiman Long wrote:
+> There are currently two problems in the way the objcg pointer array
+> (memcg_data) in the page structure is being allocated and freed.
+>
+> On its allocation, it is possible that the allocated objcg pointer
+> array comes from the same slab that requires memory accounting. If this
+> happens, the slab will never become empty again as there is at least
+> one object left (the obj_cgroup array) in the slab.
+>
+> When it is freed, the objcg pointer array object may be the last one
+> in its slab and hence causes kfree() to be called again. With the
+> right workload, the slab cache may be set up in a way that allows the
+> recursive kfree() calling loop to nest deep enough to cause a kernel
+> stack overflow and panic the system.
+>
+> One way to solve this problem is to split the kmalloc-<n> caches
+> (KMALLOC_NORMAL) into two separate sets - a new set of kmalloc-<n>
+> (KMALLOC_NORMAL) caches for unaccounted objects only and a new set of
+> kmalloc-cg-<n> (KMALLOC_CGROUP) caches for accounted objects only. All
+> the other caches can still allow a mix of accounted and unaccounted
+> objects.
+>
+> With this change, all the objcg pointer array objects will come from
+> KMALLOC_NORMAL caches which won't have their objcg pointer arrays. So
+> both the recursive kfree() problem and non-freeable slab problem are
+> gone.
+>
+> Since both the KMALLOC_NORMAL and KMALLOC_CGROUP caches no longer have
+> mixed accounted and unaccounted objects, this will slightly reduce the
+> number of objcg pointer arrays that need to be allocated and save a bit
+> of memory. On the other hand, creating a new set of kmalloc caches does
+> have the effect of reducing cache utilization. So it is properly a wash.
+>
+> The new KMALLOC_CGROUP is added between KMALLOC_NORMAL and
+> KMALLOC_RECLAIM so that the first for loop in create_kmalloc_caches()
+> will include the newly added caches without change.
+>
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Suggested-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+> Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> ---
+>   include/linux/slab.h | 42 +++++++++++++++++++++++++++++++++---------
+>   mm/slab_common.c     | 25 +++++++++++++++++--------
+>   2 files changed, 50 insertions(+), 17 deletions(-)
 
-On its allocation, it is possible that the allocated objcg pointer
-array comes from the same slab that requires memory accounting. If this
-happens, the slab will never become empty again as there is at least
-one object left (the obj_cgroup array) in the slab.
-
-When it is freed, the objcg pointer array object may be the last one
-in its slab and hence causes kfree() to be called again. With the
-right workload, the slab cache may be set up in a way that allows the
-recursive kfree() calling loop to nest deep enough to cause a kernel
-stack overflow and panic the system.
-
-One way to solve this problem is to split the kmalloc-<n> caches
-(KMALLOC_NORMAL) into two separate sets - a new set of kmalloc-<n>
-(KMALLOC_NORMAL) caches for unaccounted objects only and a new set of
-kmalloc-cg-<n> (KMALLOC_CGROUP) caches for accounted objects only. All
-the other caches can still allow a mix of accounted and unaccounted
-objects.
-
-With this change, all the objcg pointer array objects will come from
-KMALLOC_NORMAL caches which won't have their objcg pointer arrays. So
-both the recursive kfree() problem and non-freeable slab problem are
-gone.
-
-Since both the KMALLOC_NORMAL and KMALLOC_CGROUP caches no longer have
-mixed accounted and unaccounted objects, this will slightly reduce the
-number of objcg pointer arrays that need to be allocated and save a bit
-of memory. On the other hand, creating a new set of kmalloc caches does
-have the effect of reducing cache utilization. So it is properly a wash.
-
-The new KMALLOC_CGROUP is added between KMALLOC_NORMAL and
-KMALLOC_RECLAIM so that the first for loop in create_kmalloc_caches()
-will include the newly added caches without change.
-
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Suggested-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
----
- include/linux/slab.h | 42 +++++++++++++++++++++++++++++++++---------
- mm/slab_common.c     | 25 +++++++++++++++++--------
- 2 files changed, 50 insertions(+), 17 deletions(-)
+The following are the diff's from previous version. It turns out that 
+the previous patch doesn't work if CONFIG_ZONE_DMA isn't defined.
 
 diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 0c97d788762c..aa7f6c222a60 100644
+index a51cad5f561c..aa7f6c222a60 100644
 --- a/include/linux/slab.h
 +++ b/include/linux/slab.h
-@@ -305,9 +305,21 @@ static inline void __check_heap_object(const void *ptr, unsigned long n,
- /*
-  * Whenever changing this, take care of that kmalloc_type() and
-  * create_kmalloc_caches() still work as intended.
-+ *
-+ * KMALLOC_NORMAL can contain only unaccounted objects whereas KMALLOC_CGROUP
-+ * is for accounted but unreclaimable and non-dma objects. All the other
-+ * kmem caches can have both accounted and unaccounted objects.
-  */
- enum kmalloc_cache_type {
- 	KMALLOC_NORMAL = 0,
+@@ -312,16 +312,17 @@ static inline void __check_heap_object(const void 
+*ptr, un
+signed long n,
+   */
+  enum kmalloc_cache_type {
+      KMALLOC_NORMAL = 0,
+-#ifdef CONFIG_MEMCG_KMEM
+-    KMALLOC_CGROUP,
+-#else
 +#ifndef CONFIG_ZONE_DMA
-+	KMALLOC_DMA = KMALLOC_NORMAL,
++    KMALLOC_DMA = KMALLOC_NORMAL,
 +#endif
 +#ifndef CONFIG_MEMCG_KMEM
-+	KMALLOC_CGROUP = KMALLOC_NORMAL,
+      KMALLOC_CGROUP = KMALLOC_NORMAL,
 +#else
-+	KMALLOC_CGROUP,
-+#endif
- 	KMALLOC_RECLAIM,
- #ifdef CONFIG_ZONE_DMA
- 	KMALLOC_DMA,
-@@ -319,24 +331,36 @@ enum kmalloc_cache_type {
- extern struct kmem_cache *
- kmalloc_caches[NR_KMALLOC_TYPES][KMALLOC_SHIFT_HIGH + 1];
- 
-+/*
-+ * Define gfp bits that should not be set for KMALLOC_NORMAL.
-+ */
-+#define KMALLOC_NOT_NORMAL_BITS					\
-+	(__GFP_RECLAIMABLE |					\
-+	(IS_ENABLED(CONFIG_ZONE_DMA)   ? __GFP_DMA : 0) |	\
-+	(IS_ENABLED(CONFIG_MEMCG_KMEM) ? __GFP_ACCOUNT : 0))
-+
- static __always_inline enum kmalloc_cache_type kmalloc_type(gfp_t flags)
- {
--#ifdef CONFIG_ZONE_DMA
- 	/*
- 	 * The most common case is KMALLOC_NORMAL, so test for it
--	 * with a single branch for both flags.
-+	 * with a single branch for all the relevant flags.
- 	 */
--	if (likely((flags & (__GFP_DMA | __GFP_RECLAIMABLE)) == 0))
-+	if (likely((flags & KMALLOC_NOT_NORMAL_BITS) == 0))
- 		return KMALLOC_NORMAL;
- 
- 	/*
--	 * At least one of the flags has to be set. If both are, __GFP_DMA
--	 * is more important.
-+	 * At least one of the flags has to be set. Their priorities in
-+	 * decreasing order are:
-+	 *  1) __GFP_DMA
-+	 *  2) __GFP_RECLAIMABLE
-+	 *  3) __GFP_ACCOUNT
- 	 */
--	return flags & __GFP_DMA ? KMALLOC_DMA : KMALLOC_RECLAIM;
++    KMALLOC_CGROUP,
+  #endif
+      KMALLOC_RECLAIM,
+  #ifdef CONFIG_ZONE_DMA
+      KMALLOC_DMA,
 -#else
--	return flags & __GFP_RECLAIMABLE ? KMALLOC_RECLAIM : KMALLOC_NORMAL;
--#endif
-+	if (IS_ENABLED(CONFIG_ZONE_DMA) && (flags & __GFP_DMA))
-+		return KMALLOC_DMA;
-+	if (!IS_ENABLED(CONFIG_MEMCG_KMEM) || (flags & __GFP_RECLAIMABLE))
-+		return KMALLOC_RECLAIM;
-+	else
-+		return KMALLOC_CGROUP;
- }
- 
- /*
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index f8833d3e5d47..bbaf41a7c77e 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -727,21 +727,25 @@ struct kmem_cache *kmalloc_slab(size_t size, gfp_t flags)
- }
- 
- #ifdef CONFIG_ZONE_DMA
--#define INIT_KMALLOC_INFO(__size, __short_size)			\
--{								\
--	.name[KMALLOC_NORMAL]  = "kmalloc-" #__short_size,	\
--	.name[KMALLOC_RECLAIM] = "kmalloc-rcl-" #__short_size,	\
--	.name[KMALLOC_DMA]     = "dma-kmalloc-" #__short_size,	\
--	.size = __size,						\
--}
-+#define KMALLOC_DMA_NAME(sz)	.name[KMALLOC_DMA] = "dma-kmalloc-" #sz,
-+#else
-+#define KMALLOC_DMA_NAME(sz)
-+#endif
-+
-+#ifdef CONFIG_MEMCG_KMEM
-+#define KMALLOC_CGROUP_NAME(sz)	.name[KMALLOC_CGROUP] = "kmalloc-cg-" #sz,
- #else
-+#define KMALLOC_CGROUP_NAME(sz)
-+#endif
-+
- #define INIT_KMALLOC_INFO(__size, __short_size)			\
- {								\
- 	.name[KMALLOC_NORMAL]  = "kmalloc-" #__short_size,	\
- 	.name[KMALLOC_RECLAIM] = "kmalloc-rcl-" #__short_size,	\
-+	KMALLOC_CGROUP_NAME(__short_size)			\
-+	KMALLOC_DMA_NAME(__short_size)				\
- 	.size = __size,						\
- }
--#endif
- 
- /*
-  * kmalloc_info[] is to make slub_debug=,kmalloc-xx option work at boot time.
-@@ -830,6 +834,8 @@ new_kmalloc_cache(int idx, enum kmalloc_cache_type type, slab_flags_t flags)
- {
- 	if (type == KMALLOC_RECLAIM)
- 		flags |= SLAB_RECLAIM_ACCOUNT;
-+	else if (IS_ENABLED(CONFIG_MEMCG_KMEM) && (type == KMALLOC_CGROUP))
-+		flags |= SLAB_ACCOUNT;
- 
- 	kmalloc_caches[type][idx] = create_kmalloc_cache(
- 					kmalloc_info[idx].name[type],
-@@ -847,6 +853,9 @@ void __init create_kmalloc_caches(slab_flags_t flags)
- 	int i;
- 	enum kmalloc_cache_type type;
- 
-+	/*
-+	 * Including KMALLOC_CGROUP if CONFIG_MEMCG_KMEM defined
-+	 */
- 	for (type = KMALLOC_NORMAL; type <= KMALLOC_RECLAIM; type++) {
- 		for (i = KMALLOC_SHIFT_LOW; i <= KMALLOC_SHIFT_HIGH; i++) {
- 			if (!kmalloc_caches[type][i])
--- 
-2.18.1
+-    KMALLOC_DMA = KMALLOC_NORMAL,
+  #endif
+      NR_KMALLOC_TYPES
+  };
+
+Cheers,
+Longman
 
