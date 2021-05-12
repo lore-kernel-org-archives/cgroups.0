@@ -1,73 +1,199 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH block-5.13] blk-iocost: fix weight updates of inner active
- iocgs
-Date: Tue, 11 May 2021 20:50:58 -0600
-Message-ID: <204404df-1ef8-d31b-8d4b-21f77810b774@kernel.dk>
-References: <YJsxnLZV1MnBcqjj@slm.duckdns.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v5 2/3] mm: memcg/slab: Create a new set of kmalloc-cg-<n> caches
+Date: Wed, 12 May 2021 10:51:07 -0400
+Message-ID: <20210512145107.6208-1-longman@redhat.com>
+References: <20210505200610.13943-1-longman@redhat.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=wH9LtqZdrV82uryQNvQG57KCdHT182AjVpniYypTn5s=;
-        b=ekZ2yF344cjQ1w+P7pdP5YE3qyPqszU1gfMoVhIghgGvBlVDotZUUdZKBm8p4LzN4K
-         DQlYqB1DgsZqKX63DfWUjYaLmQQJOpKX8nTveCQaT23trBzrWevAXubvtKACRfXjPssx
-         nPXp7rHUuGWKOBP86wHyAX7aMvHeyOu40NzEyQ2J5ctHygJK7Q/iXox3481w8aGd+fgi
-         z4gw9VRikxgwoorJ2KscX857v09yyo/MUK+CC55zXB411rsMRtWI7Vs/xsK39UJRDB65
-         kUGzyTt1Wp1mzE9S49sKC8irtXNB7PB5s/pDnvU7GevOkmx3bilmWkWsQa65/FcC0/qp
-         yxQQ==
-In-Reply-To: <YJsxnLZV1MnBcqjj-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1620831104;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
+        bh=G8AWSw11u17dQBdvULhp73HhnBRcOeZB2YF9KJWMyVQ=;
+        b=JtzNh9I3IGv9Ob/J0qv1Sdelok14CAPPBpmz+EI2HiJcbseEWa1pePV1ai95ugEGjlJhnm
+        HqcKcu2mohO7ZfVtBvLXWV5HFFC0XRhWRMKbLbU9Zhear5Sb2lY+woHAM3FXIvnQfike5j
+        Ior+G32+PQ8Y1K7co+WvNLImQJn8VP4=
+In-Reply-To: <20210505200610.13943-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Dan Schatzberg <dschatzberg-b10kYP2dOMg@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 5/11/21 7:38 PM, Tejun Heo wrote:
-> When the weight of an active iocg is updated, weight_updated() is called
-> which in turn calls __propagate_weights() to update the active and inuse
-> weights so that the effective hierarchical weights are update accordingly.
-> 
-> The current implementation is incorrect for inner active nodes. For an
-> active leaf iocg, inuse can be any value between 1 and active and the
-> difference represents how much the iocg is donating. When weight is updated,
-> as long as inuse is clamped between 1 and the new weight, we're alright and
-> this is what __propagate_weights() currently implements.
-> 
-> However, that's not how an active inner node's inuse is set. An inner node's
-> inuse is solely determined by the ratio between the sums of inuse's and
-> active's of its children - ie. they're results of propagating the leaves'
-> active and inuse weights upwards. __propagate_weights() incorrectly applies
-> the same clamping as for a leaf when an active inner node's weight is
-> updated. Consider a hierarchy which looks like the following with saturating
-> workloads in AA and BB.
-> 
->      R
->    /   \
->   A     B
->   |     |
->  AA     BB
-> 
-> 1. For both A and B, active=100, inuse=100, hwa=0.5, hwi=0.5.
-> 
-> 2. echo 200 > A/io.weight
-> 
-> 3. __propagate_weights() update A's active to 200 and leave inuse at 100 as
->    it's already between 1 and the new active, making A:active=200,
->    A:inuse=100. As R's active_sum is updated along with A's active,
->    A:hwa=2/3, B:hwa=1/3. However, because the inuses didn't change, the
->    hwi's remain unchanged at 0.5.
-> 
-> 4. The weight of A is now twice that of B but AA and BB still have the same
->    hwi of 0.5 and thus are doing the same amount of IOs.
-> 
-> Fix it by making __propgate_weights() always calculate the inuse of an
-> active inner iocg based on the ratio of child_inuse_sum to child_active_sum.
+There are currently two problems in the way the objcg pointer array
+(memcg_data) in the page structure is being allocated and freed.
 
-Applied, thanks.
+On its allocation, it is possible that the allocated objcg pointer
+array comes from the same slab that requires memory accounting. If this
+happens, the slab will never become empty again as there is at least
+one object left (the obj_cgroup array) in the slab.
 
+When it is freed, the objcg pointer array object may be the last one
+in its slab and hence causes kfree() to be called again. With the
+right workload, the slab cache may be set up in a way that allows the
+recursive kfree() calling loop to nest deep enough to cause a kernel
+stack overflow and panic the system.
+
+One way to solve this problem is to split the kmalloc-<n> caches
+(KMALLOC_NORMAL) into two separate sets - a new set of kmalloc-<n>
+(KMALLOC_NORMAL) caches for unaccounted objects only and a new set of
+kmalloc-cg-<n> (KMALLOC_CGROUP) caches for accounted objects only. All
+the other caches can still allow a mix of accounted and unaccounted
+objects.
+
+With this change, all the objcg pointer array objects will come from
+KMALLOC_NORMAL caches which won't have their objcg pointer arrays. So
+both the recursive kfree() problem and non-freeable slab problem are
+gone.
+
+Since both the KMALLOC_NORMAL and KMALLOC_CGROUP caches no longer have
+mixed accounted and unaccounted objects, this will slightly reduce the
+number of objcg pointer arrays that need to be allocated and save a bit
+of memory. On the other hand, creating a new set of kmalloc caches does
+have the effect of reducing cache utilization. So it is properly a wash.
+
+The new KMALLOC_CGROUP is added between KMALLOC_NORMAL and
+KMALLOC_RECLAIM so that the first for loop in create_kmalloc_caches()
+will include the newly added caches without change.
+
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Suggested-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+---
+ include/linux/slab.h | 42 +++++++++++++++++++++++++++++++++---------
+ mm/slab_common.c     | 25 +++++++++++++++++--------
+ 2 files changed, 50 insertions(+), 17 deletions(-)
+
+diff --git a/include/linux/slab.h b/include/linux/slab.h
+index 0c97d788762c..aa7f6c222a60 100644
+--- a/include/linux/slab.h
++++ b/include/linux/slab.h
+@@ -305,9 +305,21 @@ static inline void __check_heap_object(const void *ptr, unsigned long n,
+ /*
+  * Whenever changing this, take care of that kmalloc_type() and
+  * create_kmalloc_caches() still work as intended.
++ *
++ * KMALLOC_NORMAL can contain only unaccounted objects whereas KMALLOC_CGROUP
++ * is for accounted but unreclaimable and non-dma objects. All the other
++ * kmem caches can have both accounted and unaccounted objects.
+  */
+ enum kmalloc_cache_type {
+ 	KMALLOC_NORMAL = 0,
++#ifndef CONFIG_ZONE_DMA
++	KMALLOC_DMA = KMALLOC_NORMAL,
++#endif
++#ifndef CONFIG_MEMCG_KMEM
++	KMALLOC_CGROUP = KMALLOC_NORMAL,
++#else
++	KMALLOC_CGROUP,
++#endif
+ 	KMALLOC_RECLAIM,
+ #ifdef CONFIG_ZONE_DMA
+ 	KMALLOC_DMA,
+@@ -319,24 +331,36 @@ enum kmalloc_cache_type {
+ extern struct kmem_cache *
+ kmalloc_caches[NR_KMALLOC_TYPES][KMALLOC_SHIFT_HIGH + 1];
+ 
++/*
++ * Define gfp bits that should not be set for KMALLOC_NORMAL.
++ */
++#define KMALLOC_NOT_NORMAL_BITS					\
++	(__GFP_RECLAIMABLE |					\
++	(IS_ENABLED(CONFIG_ZONE_DMA)   ? __GFP_DMA : 0) |	\
++	(IS_ENABLED(CONFIG_MEMCG_KMEM) ? __GFP_ACCOUNT : 0))
++
+ static __always_inline enum kmalloc_cache_type kmalloc_type(gfp_t flags)
+ {
+-#ifdef CONFIG_ZONE_DMA
+ 	/*
+ 	 * The most common case is KMALLOC_NORMAL, so test for it
+-	 * with a single branch for both flags.
++	 * with a single branch for all the relevant flags.
+ 	 */
+-	if (likely((flags & (__GFP_DMA | __GFP_RECLAIMABLE)) == 0))
++	if (likely((flags & KMALLOC_NOT_NORMAL_BITS) == 0))
+ 		return KMALLOC_NORMAL;
+ 
+ 	/*
+-	 * At least one of the flags has to be set. If both are, __GFP_DMA
+-	 * is more important.
++	 * At least one of the flags has to be set. Their priorities in
++	 * decreasing order are:
++	 *  1) __GFP_DMA
++	 *  2) __GFP_RECLAIMABLE
++	 *  3) __GFP_ACCOUNT
+ 	 */
+-	return flags & __GFP_DMA ? KMALLOC_DMA : KMALLOC_RECLAIM;
+-#else
+-	return flags & __GFP_RECLAIMABLE ? KMALLOC_RECLAIM : KMALLOC_NORMAL;
+-#endif
++	if (IS_ENABLED(CONFIG_ZONE_DMA) && (flags & __GFP_DMA))
++		return KMALLOC_DMA;
++	if (!IS_ENABLED(CONFIG_MEMCG_KMEM) || (flags & __GFP_RECLAIMABLE))
++		return KMALLOC_RECLAIM;
++	else
++		return KMALLOC_CGROUP;
+ }
+ 
+ /*
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index f8833d3e5d47..bbaf41a7c77e 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -727,21 +727,25 @@ struct kmem_cache *kmalloc_slab(size_t size, gfp_t flags)
+ }
+ 
+ #ifdef CONFIG_ZONE_DMA
+-#define INIT_KMALLOC_INFO(__size, __short_size)			\
+-{								\
+-	.name[KMALLOC_NORMAL]  = "kmalloc-" #__short_size,	\
+-	.name[KMALLOC_RECLAIM] = "kmalloc-rcl-" #__short_size,	\
+-	.name[KMALLOC_DMA]     = "dma-kmalloc-" #__short_size,	\
+-	.size = __size,						\
+-}
++#define KMALLOC_DMA_NAME(sz)	.name[KMALLOC_DMA] = "dma-kmalloc-" #sz,
++#else
++#define KMALLOC_DMA_NAME(sz)
++#endif
++
++#ifdef CONFIG_MEMCG_KMEM
++#define KMALLOC_CGROUP_NAME(sz)	.name[KMALLOC_CGROUP] = "kmalloc-cg-" #sz,
+ #else
++#define KMALLOC_CGROUP_NAME(sz)
++#endif
++
+ #define INIT_KMALLOC_INFO(__size, __short_size)			\
+ {								\
+ 	.name[KMALLOC_NORMAL]  = "kmalloc-" #__short_size,	\
+ 	.name[KMALLOC_RECLAIM] = "kmalloc-rcl-" #__short_size,	\
++	KMALLOC_CGROUP_NAME(__short_size)			\
++	KMALLOC_DMA_NAME(__short_size)				\
+ 	.size = __size,						\
+ }
+-#endif
+ 
+ /*
+  * kmalloc_info[] is to make slub_debug=,kmalloc-xx option work at boot time.
+@@ -830,6 +834,8 @@ new_kmalloc_cache(int idx, enum kmalloc_cache_type type, slab_flags_t flags)
+ {
+ 	if (type == KMALLOC_RECLAIM)
+ 		flags |= SLAB_RECLAIM_ACCOUNT;
++	else if (IS_ENABLED(CONFIG_MEMCG_KMEM) && (type == KMALLOC_CGROUP))
++		flags |= SLAB_ACCOUNT;
+ 
+ 	kmalloc_caches[type][idx] = create_kmalloc_cache(
+ 					kmalloc_info[idx].name[type],
+@@ -847,6 +853,9 @@ void __init create_kmalloc_caches(slab_flags_t flags)
+ 	int i;
+ 	enum kmalloc_cache_type type;
+ 
++	/*
++	 * Including KMALLOC_CGROUP if CONFIG_MEMCG_KMEM defined
++	 */
+ 	for (type = KMALLOC_NORMAL; type <= KMALLOC_RECLAIM; type++) {
+ 		for (i = KMALLOC_SHIFT_LOW; i <= KMALLOC_SHIFT_HIGH; i++) {
+ 			if (!kmalloc_caches[type][i])
 -- 
-Jens Axboe
+2.18.1
 
