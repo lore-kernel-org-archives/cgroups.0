@@ -1,85 +1,66 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: [PATCH] cgroup: disable controllers at parse time
-Date: Wed, 12 May 2021 13:19:46 -0700
-Message-ID: <20210512201946.2949351-1-shakeelb@google.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH v5 2/3] mm: memcg/slab: Create a new set of
+ kmalloc-cg-<n> caches
+Date: Wed, 12 May 2021 17:32:12 -0700
+Message-ID: <20210512173212.738f592c36bf0e4c205f628e@linux-foundation.org>
+References: <20210505200610.13943-1-longman@redhat.com>
+        <20210512145107.6208-1-longman@redhat.com>
+        <0919aaab-cc08-f86d-1f9a-8ddfeed7bb31@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc
-         :content-transfer-encoding;
-        bh=YXR7018ir3yC5tcsqwArvEvMEw9OfhcwUNlN5MdOICU=;
-        b=qOWX+kRIMBQ4mZ/HLAhtp9wtaMHP5alBj0yPlO6T3CwoNy5+yXHc5+lK3jUvjUIMh4
-         scx7qYpwH7fn/Co419Rrw+6ku5QpMn8wo3UNlyU8TEuYLawfwF18y1DiiuImUsYbxsLv
-         LPA6EbjkZjr8zxRwy4oYlC+xugm0nGJrCHl73zgZwy8DgPcoBkh7M4oINhOnNXmLUYrW
-         wZH4ZX80NB0kU/47Pq/MkaoXxSGioC5CD8RKCA+CBb71BHR8hQXMfVcj9JTEz9cL6sX7
-         RIfHXat1yI2+q4QA/ysP/u64GkwyUP8I5QE/j0PdS2w8+MmdJ1lJC2/HhIa71OzHvOVR
-         oOuw==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1620865933;
+        bh=NqerZcueDe5Vdup5YWaIr/cMiCRyTzm7WBaBKhWYa7o=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=L00Jcm0ErlbgR36ajW4jCZFAKDnlSvY9k0wYlsDluPw9zlduW/bOD6JVblaQcOt+q
+         z46YCVZw8lws+725jTiNN7kC0DWof2X8vMlEDhc1T5+yyuhwo3cRh+uQaGIs4NQBX6
+         VKcQn7lVOU3pR8dh+zEbvvU3oM6VTG9J4VaohlS4=
+In-Reply-To: <0919aaab-cc08-f86d-1f9a-8ddfeed7bb31-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, shy828301@gmail.com, junichi.nomura@nec.com
-Cc: Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-This patch effectively reverts the commit a3e72739b7a7 ("cgroup: fix
-too early usage of static_branch_disable()"). The commit 6041186a3258
-("init: initialize jump labels before command line option parsing") has
-moved the jump_label_init() before parse_args() which has made the
-commit a3e72739b7a7 unnecessary. On the other hand there are
-consequences of disabling the controllers later as there are subsystems
-doing the controller checks for different decisions. One such incident
-is reported [1] regarding the memory controller and its impact on memory
-reclaim code.
+On Wed, 12 May 2021 10:54:19 -0400 Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
 
-[1] https://lore.kernel.org/linux-mm/921e53f3-4b13-aab8-4a9e-e83ff15371e4@n=
-ec.com
+> >   include/linux/slab.h | 42 +++++++++++++++++++++++++++++++++---------
+> >   mm/slab_common.c     | 25 +++++++++++++++++--------
+> >   2 files changed, 50 insertions(+), 17 deletions(-)
+>=20
+> The following are the diff's from previous version. It turns out that=20
+> the previous patch doesn't work if CONFIG_ZONE_DMA isn't defined.
+>=20
+> diff --git a/include/linux/slab.h b/include/linux/slab.h
+> index a51cad5f561c..aa7f6c222a60 100644
+> --- a/include/linux/slab.h
+> +++ b/include/linux/slab.h
+> @@ -312,16 +312,17 @@ static inline void __check_heap_object(const void=20
+> *ptr, un
+> signed long n,
+>  =A0 */
+>  =A0enum kmalloc_cache_type {
+>  =A0=A0=A0=A0 KMALLOC_NORMAL =3D 0,
+> -#ifdef CONFIG_MEMCG_KMEM
+> -=A0=A0=A0 KMALLOC_CGROUP,
+> -#else
+> +#ifndef CONFIG_ZONE_DMA
+> +=A0=A0=A0 KMALLOC_DMA =3D KMALLOC_NORMAL,
+> +#endif
+> +#ifndef CONFIG_MEMCG_KMEM
+>  =A0=A0=A0=A0 KMALLOC_CGROUP =3D KMALLOC_NORMAL,
+> +#else
+> +=A0=A0=A0 KMALLOC_CGROUP,
+>  =A0#endif
+>  =A0=A0=A0=A0 KMALLOC_RECLAIM,
+>  =A0#ifdef CONFIG_ZONE_DMA
+>  =A0=A0=A0=A0 KMALLOC_DMA,
+> -#else
+> -=A0=A0=A0 KMALLOC_DMA =3D KMALLOC_NORMAL,
+>  =A0#endif
+>  =A0=A0=A0=A0 NR_KMALLOC_TYPES
+>  =A0};
 
-Signed-off-by: Shakeel Butt <shakeelb@google.com>
-Reported-by: NOMURA JUNICHI(=E9=87=8E=E6=9D=91=E3=80=80=E6=B7=B3=E4=B8=80) =
-<junichi.nomura@nec.com>
----
- kernel/cgroup/cgroup.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index e049edd66776..e7a9a2998245 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -5634,8 +5634,6 @@ int __init cgroup_init_early(void)
- 	return 0;
- }
-=20
--static u16 cgroup_disable_mask __initdata;
--
- /**
-  * cgroup_init - cgroup initialization
-  *
-@@ -5694,12 +5692,8 @@ int __init cgroup_init(void)
- 		 * disabled flag and cftype registration needs kmalloc,
- 		 * both of which aren't available during early_init.
- 		 */
--		if (cgroup_disable_mask & (1 << ssid)) {
--			static_branch_disable(cgroup_subsys_enabled_key[ssid]);
--			printk(KERN_INFO "Disabling %s control group subsystem\n",
--			       ss->name);
-+		if (!cgroup_ssid_enabled(ssid))
- 			continue;
--		}
-=20
- 		if (cgroup1_ssid_disabled(ssid))
- 			printk(KERN_INFO "Disabling %s control group subsystem in v1 mounts\n",
-@@ -6214,7 +6208,10 @@ static int __init cgroup_disable(char *str)
- 			if (strcmp(token, ss->name) &&
- 			    strcmp(token, ss->legacy_name))
- 				continue;
--			cgroup_disable_mask |=3D 1 << i;
-+
-+			static_branch_disable(cgroup_subsys_enabled_key[i]);
-+			pr_info("Disabling %s control group subsystem\n",
-+				ss->name);
- 		}
- 	}
- 	return 1;
---=20
-2.31.1.607.g51e8a6a459-goog
+I assume this fixes
+https://lkml.kernel.org/r/20210512152806.2492ca42-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org?
 
