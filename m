@@ -1,75 +1,251 @@
-From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v5 2/3] mm: memcg/slab: Create a new set of kmalloc-cg-<n>
- caches
-Date: Thu, 13 May 2021 12:22:21 -0400
-Message-ID: <5b853795-6583-8527-93d2-68ff0b9b5457@redhat.com>
-References: <20210505200610.13943-1-longman@redhat.com>
- <20210512145107.6208-1-longman@redhat.com>
- <0919aaab-cc08-f86d-1f9a-8ddfeed7bb31@redhat.com>
- <20210512173212.738f592c36bf0e4c205f628e@linux-foundation.org>
+From: Suren Baghdasaryan <surenb@google.com>
+Subject: [PATCH 1/1] cgroup: make per-cgroup pressure stall tracking configurable
+Date: Thu, 13 May 2021 10:53:49 -0700
+Message-ID: <20210513175349.959661-1-surenb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1620922947;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=EIx7hWghyOcKHsxnhk7V96UW46vI1Sqd/jZUYBrxrFs=;
-        b=Wt2+8A75VoKCIPASPxc80SoVSw8cZytTHtULbzlwCLOWMVEKJMRYVDaBXvB3+oDt7SsUbd
-        AlTIFC1bbBNTc+GA9c9CUqClSnCo7XAbOEG5LekO2Wj+04gUb3oBZOvukzVBU+dwYVImKc
-        elZTXr6oj2u5G4ZM0EImK3sK9isO2W0=
-In-Reply-To: <20210512173212.738f592c36bf0e4c205f628e-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Content-Language: en-US
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=4h31K2eiyFYJECD6jlXNAVHQd0JiCpNhIBmP2KCnD4c=;
+        b=ofKtuEEcDD4yCmeEIuSCquHKovbV1slPISxwCQTyw4iykw/j2ncspJ0htUgP4AWxYm
+         rSlAVzTDcK+inbYAWvLiarcwGutQB6dA5ySpZo+TT4zzJ0CuGmfcZfvem1/Rlhzt5xjs
+         PD7X0d7fA30y+r8JmzzpGw6DXAFut/Bq2H184JYsu8js4vbXNOXQCqxa6W8R2B2I005W
+         pdn6PN+RmkQNuZldg5kDR/QKAfGUpwHDkehDFK4Hw5ljWMF5uDt8Ou2FjZrHC0Q6nyzv
+         ceIRFzEONJGOKB43ddrTtEQJf9Dg3oovy+TYa0zqrl5ob1hruZa2BSqWZJrSGeixShBq
+         rqmQ==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: tj@kernel.org
+Cc: hannes@cmpxchg.org, lizefan.x@bytedance.com, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, minchan@kernel.org, corbet@lwn.net, bristot@redhat.com, paulmck@kernel.org, rdunlap@infradead.org, akpm@linux-foundation.org, tglx@linutronix.de, macro@orcam.me.uk, viresh.kumar@linaro.org, mike.kravetz@oracle.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, surenb@google.com, kernel-team@android.com
 
-On 5/12/21 8:32 PM, Andrew Morton wrote:
-> On Wed, 12 May 2021 10:54:19 -0400 Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
->
->>>    include/linux/slab.h | 42 +++++++++++++++++++++++++++++++++---------
->>>    mm/slab_common.c     | 25 +++++++++++++++++--------
->>>    2 files changed, 50 insertions(+), 17 deletions(-)
->> The following are the diff's from previous version. It turns out that
->> the previous patch doesn't work if CONFIG_ZONE_DMA isn't defined.
->>
->> diff --git a/include/linux/slab.h b/include/linux/slab.h
->> index a51cad5f561c..aa7f6c222a60 100644
->> --- a/include/linux/slab.h
->> +++ b/include/linux/slab.h
->> @@ -312,16 +312,17 @@ static inline void __check_heap_object(const void
->> *ptr, un
->> signed long n,
->>     */
->>    enum kmalloc_cache_type {
->>        KMALLOC_NORMAL = 0,
->> -#ifdef CONFIG_MEMCG_KMEM
->> -    KMALLOC_CGROUP,
->> -#else
->> +#ifndef CONFIG_ZONE_DMA
->> +    KMALLOC_DMA = KMALLOC_NORMAL,
->> +#endif
->> +#ifndef CONFIG_MEMCG_KMEM
->>        KMALLOC_CGROUP = KMALLOC_NORMAL,
->> +#else
->> +    KMALLOC_CGROUP,
->>    #endif
->>        KMALLOC_RECLAIM,
->>    #ifdef CONFIG_ZONE_DMA
->>        KMALLOC_DMA,
->> -#else
->> -    KMALLOC_DMA = KMALLOC_NORMAL,
->>    #endif
->>        NR_KMALLOC_TYPES
->>    };
-> I assume this fixes
-> https://lkml.kernel.org/r/20210512152806.2492ca42-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org?
->
-Yes.
+PSI accounts stalls for each cgroup separately and aggregates it at each
+level of the hierarchy. This causes additional overhead with psi_avgs_work
+being called for each cgroup in the hierarchy. psi_avgs_work has been
+highly optimized, however on systems with large number of cgroups the
+overhead becomes noticeable.
+Systems which use PSI only at the system level could avoid this overhead
+if PSI can be configured to skip per-cgroup stall accounting.
+Add "cgroup_disable=pressure" kernel command-line option to allow
+requesting system-wide only pressure stall accounting. When set, it
+keeps system-wide accounting under /proc/pressure/ but skips accounting
+for individual cgroups and does not expose PSI nodes in cgroup hierarchy.
 
-Cheers,
-Longman
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+---
+ .../admin-guide/kernel-parameters.txt         |  9 +++-
+ include/linux/cgroup-defs.h                   |  1 +
+ include/linux/cgroup.h                        |  7 +++
+ kernel/cgroup/cgroup.c                        | 46 +++++++++++++++++++
+ kernel/sched/psi.c                            |  8 +++-
+ 5 files changed, 67 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index cb89dbdedc46..653c62142f07 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -497,16 +497,21 @@
+ 	ccw_timeout_log	[S390]
+ 			See Documentation/s390/common_io.rst for details.
+ 
+-	cgroup_disable=	[KNL] Disable a particular controller
+-			Format: {name of the controller(s) to disable}
++	cgroup_disable=	[KNL] Disable a particular controller or optional feature
++			Format: {name of the controller(s) or feature(s) to disable}
+ 			The effects of cgroup_disable=foo are:
+ 			- foo isn't auto-mounted if you mount all cgroups in
+ 			  a single hierarchy
+ 			- foo isn't visible as an individually mountable
+ 			  subsystem
++			- if foo is an optional feature then the feature is
++			  disabled and corresponding cgroup files are not
++			  created
+ 			{Currently only "memory" controller deal with this and
+ 			cut the overhead, others just disable the usage. So
+ 			only cgroup_disable=memory is actually worthy}
++			Specifying "pressure" disables per-cgroup pressure
++			stall information accounting feature
+ 
+ 	cgroup_no_v1=	[KNL] Disable cgroup controllers and named hierarchies in v1
+ 			Format: { { controller | "all" | "named" }
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 559ee05f86b2..671f55cac0f0 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -110,6 +110,7 @@ enum {
+ 	CFTYPE_NO_PREFIX	= (1 << 3),	/* (DON'T USE FOR NEW FILES) no subsys prefix */
+ 	CFTYPE_WORLD_WRITABLE	= (1 << 4),	/* (DON'T USE FOR NEW FILES) S_IWUGO */
+ 	CFTYPE_DEBUG		= (1 << 5),	/* create when cgroup_debug */
++	CFTYPE_PRESSURE		= (1 << 6),	/* only if pressure feature is enabled */
+ 
+ 	/* internal flags, do not use outside cgroup core proper */
+ 	__CFTYPE_ONLY_ON_DFL	= (1 << 16),	/* only on default hierarchy */
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 4f2f79de083e..b929f589968b 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -676,6 +676,8 @@ static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
+ 	return &cgrp->psi;
+ }
+ 
++bool cgroup_psi_enabled(void);
++
+ static inline void cgroup_init_kthreadd(void)
+ {
+ 	/*
+@@ -735,6 +737,11 @@ static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
+ 	return NULL;
+ }
+ 
++static inline bool cgroup_psi_enabled(void)
++{
++	return false;
++}
++
+ static inline bool task_under_cgroup_hierarchy(struct task_struct *task,
+ 					       struct cgroup *ancestor)
+ {
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index e049edd66776..c4b16c82e199 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -209,6 +209,22 @@ struct cgroup_namespace init_cgroup_ns = {
+ static struct file_system_type cgroup2_fs_type;
+ static struct cftype cgroup_base_files[];
+ 
++/* cgroup optional features */
++enum cgroup_opt_features {
++#ifdef CONFIG_PSI
++	OPT_FEATURE_PRESSURE,
++#endif
++	OPT_FEATURE_COUNT
++};
++
++static const char *cgroup_opt_feature_names[OPT_FEATURE_COUNT] = {
++#ifdef CONFIG_PSI
++	"pressure",
++#endif
++};
++
++static u16 cgroup_feature_disable_mask __read_mostly;
++
+ static int cgroup_apply_control(struct cgroup *cgrp);
+ static void cgroup_finalize_control(struct cgroup *cgrp, int ret);
+ static void css_task_iter_skip(struct css_task_iter *it,
+@@ -3631,6 +3647,18 @@ static void cgroup_pressure_release(struct kernfs_open_file *of)
+ {
+ 	psi_trigger_replace(&of->priv, NULL);
+ }
++
++bool cgroup_psi_enabled(void)
++{
++	return (cgroup_feature_disable_mask & (1 << OPT_FEATURE_PRESSURE)) == 0;
++}
++
++#else /* CONFIG_PSI */
++bool cgroup_psi_enabled(void)
++{
++	return false;
++}
++
+ #endif /* CONFIG_PSI */
+ 
+ static int cgroup_freeze_show(struct seq_file *seq, void *v)
+@@ -3881,6 +3909,8 @@ static int cgroup_addrm_files(struct cgroup_subsys_state *css,
+ restart:
+ 	for (cft = cfts; cft != cft_end && cft->name[0] != '\0'; cft++) {
+ 		/* does cft->flags tell us to skip this file on @cgrp? */
++		if ((cft->flags & CFTYPE_PRESSURE) && !cgroup_psi_enabled())
++			continue;
+ 		if ((cft->flags & __CFTYPE_ONLY_ON_DFL) && !cgroup_on_dfl(cgrp))
+ 			continue;
+ 		if ((cft->flags & __CFTYPE_NOT_ON_DFL) && cgroup_on_dfl(cgrp))
+@@ -3958,6 +3988,9 @@ static int cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ 
+ 		WARN_ON(cft->ss || cft->kf_ops);
+ 
++		if ((cft->flags & CFTYPE_PRESSURE) && !cgroup_psi_enabled())
++			continue;
++
+ 		if (cft->seq_start)
+ 			kf_ops = &cgroup_kf_ops;
+ 		else
+@@ -4866,6 +4899,7 @@ static struct cftype cgroup_base_files[] = {
+ #ifdef CONFIG_PSI
+ 	{
+ 		.name = "io.pressure",
++		.flags = CFTYPE_PRESSURE,
+ 		.seq_show = cgroup_io_pressure_show,
+ 		.write = cgroup_io_pressure_write,
+ 		.poll = cgroup_pressure_poll,
+@@ -4873,6 +4907,7 @@ static struct cftype cgroup_base_files[] = {
+ 	},
+ 	{
+ 		.name = "memory.pressure",
++		.flags = CFTYPE_PRESSURE,
+ 		.seq_show = cgroup_memory_pressure_show,
+ 		.write = cgroup_memory_pressure_write,
+ 		.poll = cgroup_pressure_poll,
+@@ -4880,6 +4915,7 @@ static struct cftype cgroup_base_files[] = {
+ 	},
+ 	{
+ 		.name = "cpu.pressure",
++		.flags = CFTYPE_PRESSURE,
+ 		.seq_show = cgroup_cpu_pressure_show,
+ 		.write = cgroup_cpu_pressure_write,
+ 		.poll = cgroup_pressure_poll,
+@@ -6216,6 +6252,13 @@ static int __init cgroup_disable(char *str)
+ 				continue;
+ 			cgroup_disable_mask |= 1 << i;
+ 		}
++
++		for (i = 0; i < OPT_FEATURE_COUNT; i++) {
++			if (strcmp(token, cgroup_opt_feature_names[i]))
++				continue;
++			cgroup_feature_disable_mask |= 1 << i;
++			break;
++		}
+ 	}
+ 	return 1;
+ }
+@@ -6514,6 +6557,9 @@ static ssize_t show_delegatable_files(struct cftype *files, char *buf,
+ 		if (!(cft->flags & CFTYPE_NS_DELEGATABLE))
+ 			continue;
+ 
++		if ((cft->flags & CFTYPE_PRESSURE) && !cgroup_psi_enabled())
++			continue;
++
+ 		if (prefix)
+ 			ret += snprintf(buf + ret, size - ret, "%s.", prefix);
+ 
+diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+index cc25a3cff41f..c73efd7d4fba 100644
+--- a/kernel/sched/psi.c
++++ b/kernel/sched/psi.c
+@@ -747,9 +747,12 @@ static struct psi_group *iterate_groups(struct task_struct *task, void **iter)
+ #ifdef CONFIG_CGROUPS
+ 	struct cgroup *cgroup = NULL;
+ 
+-	if (!*iter)
++	if (!*iter) {
++		/* Skip to psi_system if per-cgroup accounting is disabled */
++		if (!cgroup_psi_enabled())
++			goto update_sys;
+ 		cgroup = task->cgroups->dfl_cgrp;
+-	else if (*iter == &psi_system)
++	} else if (*iter == &psi_system)
+ 		return NULL;
+ 	else
+ 		cgroup = cgroup_parent(*iter);
+@@ -758,6 +761,7 @@ static struct psi_group *iterate_groups(struct task_struct *task, void **iter)
+ 		*iter = cgroup;
+ 		return cgroup_psi(cgroup);
+ 	}
++update_sys:
+ #else
+ 	if (*iter)
+ 		return NULL;
+-- 
+2.31.1.607.g51e8a6a459-goog
 
