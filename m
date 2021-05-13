@@ -1,128 +1,61 @@
 From: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>
 Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
  allocation APIs
-Date: Thu, 13 May 2021 15:48:19 +1000
-Message-ID: <YJy9o8uEZs42/qDM@yekko>
-References: <20210422133747.23322269@redhat.com>
- <20210422200024.GC1370958@nvidia.com>
- <20210422163808.2d173225@redhat.com>
- <20210422233950.GD1370958@nvidia.com>
- <YIecXkaEGNgICePO@yekko.fritz.box>
- <20210427171212.GD1370958@nvidia.com>
- <YIizNdbA0+LYwQbI@yekko.fritz.box>
- <20210428145622.GU1370958@nvidia.com>
- <YIoiJRY3FM7xH2bH@yekko>
- <20210503161518.GM1370958@nvidia.com>
+Date: Thu, 13 May 2021 16:07:07 +1000
+Message-ID: <YJzCC18cQDdKMR6p@yekko>
+References: <YIeYJZOdgMN/orl0@yekko.fritz.box>
+ <20210427172432.GE1370958@nvidia.com>
+ <YIi5G4Wg/hpFqNdX@yekko.fritz.box>
+ <20210429002149.GZ1370958@nvidia.com>
+ <YIol9p3z8BTWFRh8@yekko>
+ <20210503160530.GL1370958@nvidia.com>
+ <YJDFj+sAv41JRIo4@yekko>
+ <20210504181537.GC1370958@nvidia.com>
+ <7e5c2276-ca1c-a8af-c15f-72a7c83c8bfa@ozlabs.ru>
+ <20210505163902.GG1370958@nvidia.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="ArI7kS42Lc+0E4RS"
+        protocol="application/pgp-signature"; boundary="/Mf++rjztzZShRAS"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
         d=gibson.dropbear.id.au; s=201602; t=1620886032;
-        bh=Mzje6I+4XJ3y6Iby/DAYOwVFavVRAAtc7j9XmkVCAVU=;
+        bh=EDbwQxFNCJJrrEgHzT5gGi+1oWXpdmyJr1eJ+NUQ4bM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fP8u4nZiemlt/gTVvVqI6DnRAk7mDCvbaRIlDJrKeD5SvLwwmy+GW6TfJFQ2/gSHB
-         EqigWrZpgStjiMYr1jY37zqkpZhEn9oghhaM+wAfRTSiOW9d+b6/s2r17OOjmh2koT
-         YjPtcV1K73vL8uyeJRjiE+vbeFX1lv+Y/RkyWHWk=
+        b=kWqsHMbOiAyxwLod+Rqt4KhSwB2oo0bV5TchI5WxvF3IL2lqztrJrQv615kgKUDnS
+         rvOjRZCfVWenSYZrOWPrRga+vGFG2OWEIfQgUnlH6IFYpycIGoxJyhVRhtXU4RZ9Gc
+         02pKAkrH9LTvDiy9LdpyASoaGfwW0N2RNDDTSEfE=
 Content-Disposition: inline
-In-Reply-To: <20210503161518.GM1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20210505163902.GG1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Alexey Kardashevskiy <aik-sLpHqDYs0B2HXe+LvDLADg@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj@in>
 
 
---ArI7kS42Lc+0E4RS
+--/Mf++rjztzZShRAS
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, May 03, 2021 at 01:15:18PM -0300, Jason Gunthorpe wrote:
-> On Thu, Apr 29, 2021 at 01:04:05PM +1000, David Gibson wrote:
-> > Again, I don't know enough about VDPA to make sense of that.  Are we
-> > essentially talking non-PCI virtual devices here?  In which case you
-> > could define the VDPA "bus" to always have one-device groups.
+On Wed, May 05, 2021 at 01:39:02PM -0300, Jason Gunthorpe wrote:
+> On Wed, May 05, 2021 at 02:28:53PM +1000, Alexey Kardashevskiy wrote:
 >=20
-> It is much worse than that.
+> > This is a good feature in general when let's say there is a linux suppo=
+rted
+> > device which has a proprietary device firmware update tool which only e=
+xists
+> > as an x86 binary and your hardware is not x86 - running qemu + vfio in =
+full
+> > emulation would provide a way to run the tool to update a physical devi=
+ce.
 >=20
-> What these non-PCI devices need is for the kernel driver to be part of
-> the IOMMU group of the underlying PCI device but tell VFIO land that
-> "groups don't matter"
+> That specific use case doesn't really need a vIOMMU though, does it?
 
-I don't really see a semantic distinction between "always one-device
-groups" and "groups don't matter".  Really the only way you can afford
-to not care about groups is if they're singletons.
-
-> Today mdev tries to fake this by using singleton iommu groups, but it
-> is really horrible and direcly hacks up the VFIO IOMMU code to
-> understand these special cases. Intel was proposing more special
-> hacking in the VFIO IOMMU code to extend this to PASID.
-
-At this stage I don't really understand why that would end up so
-horrible.
-
-> When we get to a /dev/ioasid this is all nonsense. The kernel device
-> driver is going to have to tell drivers/iommu exactly what kind of
-> ioasid it can accept, be it a PASID inside a kernel owned group, a SW
-> emulated 'mdev' ioasid, or whatever.
->=20
-> In these cases the "group" idea has become a fiction that just creates
-> a pain.
-
-I don't see how the group is a fiction in this instance.  You can
-still have devices that can't be isolated, therefore you can have
-non-singleton groups.
-
-> "Just reorganize VDPA to do something insane with the driver
-> core so we can create a dummy group to satisfy an unnecessary uAPI
-> restriction" is not a very compelling argument.
->=20
-> So if the nonsensical groups goes away for PASID/mdev, where does it
-> leave the uAPI in other cases?
->=20
-> > I don't think simplified-but-wrong is a good goal.  The thing about
-> > groups is that if they're there, you can't just "not care" about them,
-> > they affect you whether you like it or not.
->=20
-> You really can. If one thing claims the group then all the other group
-> devices become locked out.
-
-Aside: I'm primarily using "group" to mean the underlying hardware
-unit, not the vfio construct on top of it, I'm not sure that's been
-clear throughout.
-
-So.. your model assumes that every device has a safe quiescent state
-where it won't do any harm until poked, whether its group is
-currently kernel owned, or owned by a userspace that doesn't know
-anything about it.
-
-At minimum this does mean that in order to use one device in the group
-you must have permission to use *all* the devices in the group -
-otherwise you may be able to operate a device you don't have
-permission to by DMAing to its registers from a device you do have
-permission to.
-
-Whatever scripts are managing ownership of devices also need to know
-about groups, because they need to put all the devices into that
-quiescent state before the group can change ownership.
-
-> The main point to understand is that groups are NOT an application
-> restriction! It is a whole system restriction that the operator needs
-> to understand and deal with. This is why things like dpdk don't care
-> about the group at all - there is nothing they can do with the
-> information.
->=20
-> If the operator says to run dpdk on a specific device then the
-> operator is the one that has to deal with all the other devices in the
-> group getting locked out.
-
-Ok, I think I see your point there.
-
-> At best the application can make it more obvious that the operator is
-> doing something dangerous, but the current kernel API doesn't seem to
-> really support that either.
->=20
-> Jason
->=20
+Possibly not, but the mechanics needed to do vIOMMU on different host
+IOMMU aren't really different from what you need for a no-vIOMMU
+guest.  With a vIOMMU you need to map guest IOVA space into the host
+IOVA space.  With no no-vIOMMU you need to map guest physical
+addresses into the host IOVA space.  In either case the GPA/gIOVA to
+userspace and userspace to HPA mappings are basically arbitrary.
 
 --=20
 David Gibson			| I'll have my music baroque, and my code
@@ -130,24 +63,24 @@ david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
 				| _way_ _around_!
 http://www.ozlabs.org/~dgibson
 
---ArI7kS42Lc+0E4RS
+--/Mf++rjztzZShRAS
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEdfRlhq5hpmzETofcbDjKyiDZs5IFAmCcvaAACgkQbDjKyiDZ
-s5L5IRAAg97CW+pGNxknG14IgrfUjPSBK7pDccMXtD7eVUa3BEynUYKrHHTYj7q/
-EzRpFRjsIwkC8NT7lBlsCrZIL/sS1LD+zveqDYNaBIs46681UKlg5enXxZoEcTGi
-WRUmWMgXhOnhrVQMB/G1TZLanViDvzHpBau0ALyX0buvg1bpkvToX7AiKvqNzv07
-IKaeG23DeXI9o2M0Jh6v5UFDLA90LktEqtxsvfbqQPYY+JJWtdV3WBcYOKsHe3j4
-ZFfIqOlBOsGA27BWZQucmyxtFjQfNbCB9QQO28MAcOs+A1fIwtRi4ZVNuBEQos38
-3cN5riTTE4+p63WU4kEWiP3nTX3irEKQD3W5aMy1Yk8STxgBwuL5FerquBssnV4i
-h362Q9JPTadeDOX1sVmDFM2Ms/WLh1fG2zGvRtOwsTwCYhWoDAziz8BYLWoHFCYY
-y3DctIOZxQaK5NZjiABNbxW9y14zFWzq9aqAfyb06Cz/rDgkSBMAclfD4/DOF7ic
-s0gPcVm/xFk7d4KvOD8u3tf9Q4Uk2s3jcJmXmblPF88nAjSknZj3o4/H7o1feD9x
-ym2WSkkHYfC2Yq+FFCNyeXNDUQVH7PUA5DfcAaV8jygtdNo/edcZNI2pKwuRxVyU
-KL0RtZY77wWQF88q+iSxIjeVgRbBxSslOVSXH40O0aJsO8+cNAQ=
-=S7A7
+iQIzBAEBCAAdFiEEdfRlhq5hpmzETofcbDjKyiDZs5IFAmCcwgsACgkQbDjKyiDZ
+s5JqLg/+Px9hBLz/IZ8N6Bl1BLwug0BbIEk1xxrBhtyubIdEbf6AuAkqa0HnxcSm
+EgS1KJ0eOe3yLUKaLskepCJDojbuqFYnLf1VTv3Uu0zp5AP8ggKQgfokxUVJdhpR
+aWMVjwOFAoUatYTP2umFN2ZfUsSxe/FsTkdTiAVApqn4AdTSlbGBvK+C4D7WPzZy
+5rjVhgLfaQWJDGrTnhqCr4PJoz0z1FpOhzYXtpHR+u+d9BgDe2yj1gEFzICDk+UV
+67QOqTNxWi1gSQ6uVa+xmB+xY0RZ7+x+fwObNBHrGWuFKJzwbf6aCQIprqEY5mro
+9KAR0kP3LkywUN+rZjWQun9pXQdu/JWjZPtmdbm4rw+kIJEDdMk9TrOohOpjxUot
+7vSoLVklFyMbnL84I3i7CELRxpkvtXaBd5VdGkEObg5nCcY8Fci8yLmhjOLXviGU
+iNmRCaiZikT+JKvnwiG7qIILT3DCA92Y+AiQYayPkmujhlmzxpFkyAM1Igh7EIfe
+a4O/U8qm61xxoTZhe+cbM11cIfiux8FwcxUrq54D1DCZstQ60IP/FaA4CQGSiBwm
+55RNfJf+KFN9HG9hxH8BZYEGRtCYMuDfTjFdM0DaYHI8Rjv3X9MO4vuSI1tkoiQd
+kW7n1QyP2QKMzSHCJlE56aSa9T6HTtUetOuO3vAxirN9Z5/042I=
+=S/vm
 -----END PGP SIGNATURE-----
 
---ArI7kS42Lc+0E4RS--
+--/Mf++rjztzZShRAS--
