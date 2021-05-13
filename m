@@ -1,54 +1,63 @@
-From: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: RE: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
- APIs
-Date: Thu, 13 May 2021 06:52:43 +0000
-Message-ID: <MWHPR11MB18866CDB2F82A2E9285994998C519@MWHPR11MB1886.namprd11.prod.outlook.com>
-References: <20210421230301.GP1370958@nvidia.com>
- <20210422111337.6ac3624d@redhat.com> <YIeYJZOdgMN/orl0@yekko.fritz.box>
- <20210427172432.GE1370958@nvidia.com> <YIi5G4Wg/hpFqNdX@yekko.fritz.box>
- <20210429002149.GZ1370958@nvidia.com> <YIol9p3z8BTWFRh8@yekko>
- <20210503160530.GL1370958@nvidia.com> <YJDFj+sAv41JRIo4@yekko>
- <20210504181537.GC1370958@nvidia.com> <YJzAsBNF1irJxRGg@yekko>
+From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v5 2/3] mm: memcg/slab: Create a new set of kmalloc-cg-<n>
+ caches
+Date: Thu, 13 May 2021 10:40:08 +0200
+Message-ID: <40fd10f4-b011-605a-9c0b-6d7ce17837f9@suse.cz>
+References: <20210505200610.13943-1-longman@redhat.com>
+ <20210512145107.6208-1-longman@redhat.com>
+ <0919aaab-cc08-f86d-1f9a-8ddfeed7bb31@redhat.com>
+ <20210512173212.738f592c36bf0e4c205f628e@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
- s=selector2-intel-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dOxG10YlcjhdLDqR+LeNIuApwba0FwwP6LcqPjTuLGk=;
- b=MVgQ2DzC1AOPcKQ5zPaFn7LetXGCcpepufHDO0+utMNN0i9biBIb1a12iN5P8HXCCzdW7BMIY61cX641dQSsTInDRLLiiGFgk5fvdEUJo73HphYq65nRkylkSNYly6/MOQKE8ODmrCBU4qb7uIpnuP6rlEMOaYrlPthUBrpoPKs=
-In-Reply-To: <YJzAsBNF1irJxRGg@yekko>
+In-Reply-To: <20210512173212.738f592c36bf0e4c205f628e-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-To: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-> From: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>
-> Sent: Thursday, May 13, 2021 2:01 PM
-> >
-> > But this definitely all becomes HW specific.
-> >
-> > For instance I want to have an ARM vIOMMU driver it needs to do some
-> >
-> >  ret =3D ioctl(ioasid_fd, CREATE_NESTED_IOASID, [page table format is
-> ARMvXXX])
-> >  if (ret =3D=3D -EOPNOTSUPP)
-> >      ret =3D ioctl(ioasid_fd, CREATE_NORMAL_IOASID, ..)
-> >      // and do completely different and more expensive emulation
-> >
-> > I can get a little bit of generality, but at the end of the day the
-> > IOMMU must create a specific HW layout of the nested page table, if it
-> > can't, it can't.
->=20
-> Erm.. I don't really know how your IOASID interface works here.  I'm
-> thinking about the VFIO interface where maps and unmaps are via
-> explicit ioctl()s, which provides an obvious point to do translation
-> between page table formats.
->=20
+On 5/13/21 2:32 AM, Andrew Morton wrote:
+> On Wed, 12 May 2021 10:54:19 -0400 Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> 
+>> >   include/linux/slab.h | 42 +++++++++++++++++++++++++++++++++---------
+>> >   mm/slab_common.c     | 25 +++++++++++++++++--------
+>> >   2 files changed, 50 insertions(+), 17 deletions(-)
+>> 
+>> The following are the diff's from previous version. It turns out that 
+>> the previous patch doesn't work if CONFIG_ZONE_DMA isn't defined.
+>> 
+>> diff --git a/include/linux/slab.h b/include/linux/slab.h
+>> index a51cad5f561c..aa7f6c222a60 100644
+>> --- a/include/linux/slab.h
+>> +++ b/include/linux/slab.h
+>> @@ -312,16 +312,17 @@ static inline void __check_heap_object(const void 
+>> *ptr, un
+>> signed long n,
+>>    */
+>>   enum kmalloc_cache_type {
+>>       KMALLOC_NORMAL = 0,
+>> -#ifdef CONFIG_MEMCG_KMEM
+>> -    KMALLOC_CGROUP,
+>> -#else
+>> +#ifndef CONFIG_ZONE_DMA
+>> +    KMALLOC_DMA = KMALLOC_NORMAL,
+>> +#endif
+>> +#ifndef CONFIG_MEMCG_KMEM
+>>       KMALLOC_CGROUP = KMALLOC_NORMAL,
+>> +#else
+>> +    KMALLOC_CGROUP,
+>>   #endif
+>>       KMALLOC_RECLAIM,
+>>   #ifdef CONFIG_ZONE_DMA
+>>       KMALLOC_DMA,
+>> -#else
+>> -    KMALLOC_DMA = KMALLOC_NORMAL,
+>>   #endif
+>>       NR_KMALLOC_TYPES
+>>   };
+> 
+> I assume this fixes
+> https://lkml.kernel.org/r/20210512152806.2492ca42-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org?
 
-We are working on a draft uAPI proposal based on the discussions in this
-thread. expect to send it out next week.=20
-
-Thanks
-Kevin
+Yeah it should.
