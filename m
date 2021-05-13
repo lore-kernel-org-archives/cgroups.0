@@ -1,251 +1,262 @@
-From: Suren Baghdasaryan <surenb@google.com>
-Subject: [PATCH 1/1] cgroup: make per-cgroup pressure stall tracking configurable
-Date: Thu, 13 May 2021 10:53:49 -0700
-Message-ID: <20210513175349.959661-1-surenb@google.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH v4] cgroup, blkcg: prevent dirty inodes to pin dying
+ memory cgroups
+Date: Thu, 13 May 2021 11:12:16 -0700
+Message-ID: <YJ1sALo2KaP813Dy@carbon.DHCP.thefacebook.com>
+References: <20210513004258.1610273-1-guro@fb.com>
+ <20210513101239.GE2734@quack2.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=4h31K2eiyFYJECD6jlXNAVHQd0JiCpNhIBmP2KCnD4c=;
-        b=ofKtuEEcDD4yCmeEIuSCquHKovbV1slPISxwCQTyw4iykw/j2ncspJ0htUgP4AWxYm
-         rSlAVzTDcK+inbYAWvLiarcwGutQB6dA5ySpZo+TT4zzJ0CuGmfcZfvem1/Rlhzt5xjs
-         PD7X0d7fA30y+r8JmzzpGw6DXAFut/Bq2H184JYsu8js4vbXNOXQCqxa6W8R2B2I005W
-         pdn6PN+RmkQNuZldg5kDR/QKAfGUpwHDkehDFK4Hw5ljWMF5uDt8Ou2FjZrHC0Q6nyzv
-         ceIRFzEONJGOKB43ddrTtEQJf9Dg3oovy+TYa0zqrl5ob1hruZa2BSqWZJrSGeixShBq
-         rqmQ==
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=+kkgakILbWTJbTE/kHSm7xES1n0DeUFJYq+koPqRhYA=;
+ b=IT8QEuFdx1ZZoJRPdQIBkrNAeTB1paXbzERM2Im+sbzaUlSX1ghozNLmpX+iwdTtrm9F
+ F+nfXjVuDlJGWZgUbBAt4rarxKBnlrpgV3K3znrAk9E36Hl/qpCOnrihjUVk9xY/UyVn
+ jqJwKx6bQl7WQc3bChxb6s5gz/1/5NExPx0= 
+Content-Disposition: inline
+In-Reply-To: <20210513101239.GE2734-4I4JzKEfoa/jFM9bn6wA6Q@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org
-Cc: hannes@cmpxchg.org, lizefan.x@bytedance.com, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, minchan@kernel.org, corbet@lwn.net, bristot@redhat.com, paulmck@kernel.org, rdunlap@infradead.org, akpm@linux-foundation.org, tglx@linutronix.de, macro@orcam.me.uk, viresh.kumar@linaro.org, mike.kravetz@oracle.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, surenb@google.com, kernel-team@android.com
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-PSI accounts stalls for each cgroup separately and aggregates it at each
-level of the hierarchy. This causes additional overhead with psi_avgs_work
-being called for each cgroup in the hierarchy. psi_avgs_work has been
-highly optimized, however on systems with large number of cgroups the
-overhead becomes noticeable.
-Systems which use PSI only at the system level could avoid this overhead
-if PSI can be configured to skip per-cgroup stall accounting.
-Add "cgroup_disable=pressure" kernel command-line option to allow
-requesting system-wide only pressure stall accounting. When set, it
-keeps system-wide accounting under /proc/pressure/ but skips accounting
-for individual cgroups and does not expose PSI nodes in cgroup hierarchy.
+On Thu, May 13, 2021 at 12:12:39PM +0200, Jan Kara wrote:
+> On Wed 12-05-21 17:42:58, Roman Gushchin wrote:
+> > When an inode is getting dirty for the first time it's associated
+> > with a wb structure (see __inode_attach_wb()). It can later be
+> > switched to another wb (if e.g. some other cgroup is writing a lot of
+> > data to the same inode), but otherwise stays attached to the original
+> > wb until being reclaimed.
+> > 
+> > The problem is that the wb structure holds a reference to the original
+> > memory and blkcg cgroups. So if an inode has been dirty once and later
+> > is actively used in read-only mode, it has a good chance to pin down
+> > the original memory and blkcg cgroups. This is often the case with
+> > services bringing data for other services, e.g. updating some rpm
+> > packages.
+> > 
+> > In the real life it becomes a problem due to a large size of the memcg
+> > structure, which can easily be 1000x larger than an inode. Also a
+> > really large number of dying cgroups can raise different scalability
+> > issues, e.g. making the memory reclaim costly and less effective.
+> > 
+> > To solve the problem inodes should be eventually detached from the
+> > corresponding writeback structure. It's inefficient to do it after
+> > every writeback completion. Instead it can be done whenever the
+> > original memory cgroup is offlined and writeback structure is getting
+> > killed. Scanning over a (potentially long) list of inodes and detach
+> > them from the writeback structure can take quite some time. To avoid
+> > scanning all inodes, attached inodes are kept on a new list (b_attached).
+> > To make it less noticeable to a user, the scanning is performed from a
+> > work context.
+> > 
+> > Big thanks to Jan Kara and Dennis Zhou for their ideas and
+> > contribution to the previous iterations of this patch.
+> > 
+> > Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> 
+> Thanks for the patch! On a general note maybe it would be better to split
+> this patch into two - the first one which introduces b_attached list and
+> its handling and the second one which uses it to detach inodes from
+> bdi_writeback structures. Some more comments below.
 
-Signed-off-by: Suren Baghdasaryan <surenb@google.com>
----
- .../admin-guide/kernel-parameters.txt         |  9 +++-
- include/linux/cgroup-defs.h                   |  1 +
- include/linux/cgroup.h                        |  7 +++
- kernel/cgroup/cgroup.c                        | 46 +++++++++++++++++++
- kernel/sched/psi.c                            |  8 +++-
- 5 files changed, 67 insertions(+), 4 deletions(-)
+Good idea, will do in the next version. And thank you for taking a look!
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index cb89dbdedc46..653c62142f07 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -497,16 +497,21 @@
- 	ccw_timeout_log	[S390]
- 			See Documentation/s390/common_io.rst for details.
- 
--	cgroup_disable=	[KNL] Disable a particular controller
--			Format: {name of the controller(s) to disable}
-+	cgroup_disable=	[KNL] Disable a particular controller or optional feature
-+			Format: {name of the controller(s) or feature(s) to disable}
- 			The effects of cgroup_disable=foo are:
- 			- foo isn't auto-mounted if you mount all cgroups in
- 			  a single hierarchy
- 			- foo isn't visible as an individually mountable
- 			  subsystem
-+			- if foo is an optional feature then the feature is
-+			  disabled and corresponding cgroup files are not
-+			  created
- 			{Currently only "memory" controller deal with this and
- 			cut the overhead, others just disable the usage. So
- 			only cgroup_disable=memory is actually worthy}
-+			Specifying "pressure" disables per-cgroup pressure
-+			stall information accounting feature
- 
- 	cgroup_no_v1=	[KNL] Disable cgroup controllers and named hierarchies in v1
- 			Format: { { controller | "all" | "named" }
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 559ee05f86b2..671f55cac0f0 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -110,6 +110,7 @@ enum {
- 	CFTYPE_NO_PREFIX	= (1 << 3),	/* (DON'T USE FOR NEW FILES) no subsys prefix */
- 	CFTYPE_WORLD_WRITABLE	= (1 << 4),	/* (DON'T USE FOR NEW FILES) S_IWUGO */
- 	CFTYPE_DEBUG		= (1 << 5),	/* create when cgroup_debug */
-+	CFTYPE_PRESSURE		= (1 << 6),	/* only if pressure feature is enabled */
- 
- 	/* internal flags, do not use outside cgroup core proper */
- 	__CFTYPE_ONLY_ON_DFL	= (1 << 16),	/* only on default hierarchy */
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 4f2f79de083e..b929f589968b 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -676,6 +676,8 @@ static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
- 	return &cgrp->psi;
- }
- 
-+bool cgroup_psi_enabled(void);
-+
- static inline void cgroup_init_kthreadd(void)
- {
- 	/*
-@@ -735,6 +737,11 @@ static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
- 	return NULL;
- }
- 
-+static inline bool cgroup_psi_enabled(void)
-+{
-+	return false;
-+}
-+
- static inline bool task_under_cgroup_hierarchy(struct task_struct *task,
- 					       struct cgroup *ancestor)
- {
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index e049edd66776..c4b16c82e199 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -209,6 +209,22 @@ struct cgroup_namespace init_cgroup_ns = {
- static struct file_system_type cgroup2_fs_type;
- static struct cftype cgroup_base_files[];
- 
-+/* cgroup optional features */
-+enum cgroup_opt_features {
-+#ifdef CONFIG_PSI
-+	OPT_FEATURE_PRESSURE,
-+#endif
-+	OPT_FEATURE_COUNT
-+};
-+
-+static const char *cgroup_opt_feature_names[OPT_FEATURE_COUNT] = {
-+#ifdef CONFIG_PSI
-+	"pressure",
-+#endif
-+};
-+
-+static u16 cgroup_feature_disable_mask __read_mostly;
-+
- static int cgroup_apply_control(struct cgroup *cgrp);
- static void cgroup_finalize_control(struct cgroup *cgrp, int ret);
- static void css_task_iter_skip(struct css_task_iter *it,
-@@ -3631,6 +3647,18 @@ static void cgroup_pressure_release(struct kernfs_open_file *of)
- {
- 	psi_trigger_replace(&of->priv, NULL);
- }
-+
-+bool cgroup_psi_enabled(void)
-+{
-+	return (cgroup_feature_disable_mask & (1 << OPT_FEATURE_PRESSURE)) == 0;
-+}
-+
-+#else /* CONFIG_PSI */
-+bool cgroup_psi_enabled(void)
-+{
-+	return false;
-+}
-+
- #endif /* CONFIG_PSI */
- 
- static int cgroup_freeze_show(struct seq_file *seq, void *v)
-@@ -3881,6 +3909,8 @@ static int cgroup_addrm_files(struct cgroup_subsys_state *css,
- restart:
- 	for (cft = cfts; cft != cft_end && cft->name[0] != '\0'; cft++) {
- 		/* does cft->flags tell us to skip this file on @cgrp? */
-+		if ((cft->flags & CFTYPE_PRESSURE) && !cgroup_psi_enabled())
-+			continue;
- 		if ((cft->flags & __CFTYPE_ONLY_ON_DFL) && !cgroup_on_dfl(cgrp))
- 			continue;
- 		if ((cft->flags & __CFTYPE_NOT_ON_DFL) && cgroup_on_dfl(cgrp))
-@@ -3958,6 +3988,9 @@ static int cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
- 
- 		WARN_ON(cft->ss || cft->kf_ops);
- 
-+		if ((cft->flags & CFTYPE_PRESSURE) && !cgroup_psi_enabled())
-+			continue;
-+
- 		if (cft->seq_start)
- 			kf_ops = &cgroup_kf_ops;
- 		else
-@@ -4866,6 +4899,7 @@ static struct cftype cgroup_base_files[] = {
- #ifdef CONFIG_PSI
- 	{
- 		.name = "io.pressure",
-+		.flags = CFTYPE_PRESSURE,
- 		.seq_show = cgroup_io_pressure_show,
- 		.write = cgroup_io_pressure_write,
- 		.poll = cgroup_pressure_poll,
-@@ -4873,6 +4907,7 @@ static struct cftype cgroup_base_files[] = {
- 	},
- 	{
- 		.name = "memory.pressure",
-+		.flags = CFTYPE_PRESSURE,
- 		.seq_show = cgroup_memory_pressure_show,
- 		.write = cgroup_memory_pressure_write,
- 		.poll = cgroup_pressure_poll,
-@@ -4880,6 +4915,7 @@ static struct cftype cgroup_base_files[] = {
- 	},
- 	{
- 		.name = "cpu.pressure",
-+		.flags = CFTYPE_PRESSURE,
- 		.seq_show = cgroup_cpu_pressure_show,
- 		.write = cgroup_cpu_pressure_write,
- 		.poll = cgroup_pressure_poll,
-@@ -6216,6 +6252,13 @@ static int __init cgroup_disable(char *str)
- 				continue;
- 			cgroup_disable_mask |= 1 << i;
- 		}
-+
-+		for (i = 0; i < OPT_FEATURE_COUNT; i++) {
-+			if (strcmp(token, cgroup_opt_feature_names[i]))
-+				continue;
-+			cgroup_feature_disable_mask |= 1 << i;
-+			break;
-+		}
- 	}
- 	return 1;
- }
-@@ -6514,6 +6557,9 @@ static ssize_t show_delegatable_files(struct cftype *files, char *buf,
- 		if (!(cft->flags & CFTYPE_NS_DELEGATABLE))
- 			continue;
- 
-+		if ((cft->flags & CFTYPE_PRESSURE) && !cgroup_psi_enabled())
-+			continue;
-+
- 		if (prefix)
- 			ret += snprintf(buf + ret, size - ret, "%s.", prefix);
- 
-diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
-index cc25a3cff41f..c73efd7d4fba 100644
---- a/kernel/sched/psi.c
-+++ b/kernel/sched/psi.c
-@@ -747,9 +747,12 @@ static struct psi_group *iterate_groups(struct task_struct *task, void **iter)
- #ifdef CONFIG_CGROUPS
- 	struct cgroup *cgroup = NULL;
- 
--	if (!*iter)
-+	if (!*iter) {
-+		/* Skip to psi_system if per-cgroup accounting is disabled */
-+		if (!cgroup_psi_enabled())
-+			goto update_sys;
- 		cgroup = task->cgroups->dfl_cgrp;
--	else if (*iter == &psi_system)
-+	} else if (*iter == &psi_system)
- 		return NULL;
- 	else
- 		cgroup = cgroup_parent(*iter);
-@@ -758,6 +761,7 @@ static struct psi_group *iterate_groups(struct task_struct *task, void **iter)
- 		*iter = cgroup;
- 		return cgroup_psi(cgroup);
- 	}
-+update_sys:
- #else
- 	if (*iter)
- 		return NULL;
--- 
-2.31.1.607.g51e8a6a459-goog
+> 
+> > diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> > index e91980f49388..3deba686d3d4 100644
+> > --- a/fs/fs-writeback.c
+> > +++ b/fs/fs-writeback.c
+> > @@ -123,12 +123,17 @@ static bool inode_io_list_move_locked(struct inode *inode,
+> >  
+> >  	list_move(&inode->i_io_list, head);
+> >  
+> > -	/* dirty_time doesn't count as dirty_io until expiration */
+> > -	if (head != &wb->b_dirty_time)
+> > -		return wb_io_lists_populated(wb);
+> > +	if (head == &wb->b_dirty_time || head == &wb->b_attached) {
+> > +		/*
+> > +		 * dirty_time doesn't count as dirty_io until expiration,
+> > +		 * attached list keeps a list of clean inodes, which are
+> > +		 * attached to wb.
+> > +		 */
+> > +		wb_io_lists_depopulated(wb);
+> > +		return false;
+> > +	}
+> >  
+> > -	wb_io_lists_depopulated(wb);
+> > -	return false;
+> > +	return wb_io_lists_populated(wb);
+> >  }
+> >  
+> >  /**
+> > @@ -545,6 +550,37 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
+> >  	kfree(isw);
+> >  }
+> 
+> I suppose the list_empty(&inode->i_io_list) case in
+> inode_switch_wbs_work_fn() is impossible with your changes now? Can you
+> perhaps add a WARN_ON_ONCE there for this? Also I don't think we want to
+> move clean inodes to dirty list so perhaps we need to be more careful about
+> the selection of target writeback list in that function?
 
+Good point, will add in the next version and double check the clean inode case.
+
+> 
+> > +/**
+> > + * cleanup_offline_wb - detach attached clean inodes
+> > + * @wb: target wb
+> > + *
+> > + * Clear the ->i_wb pointer of the attached inodes and drop
+> > + * the corresponding wb reference. Skip inodes which are dirty,
+> > + * freeing, switching or in the active writeback process.
+> > + *
+> > + */
+> > +void cleanup_offline_wb(struct bdi_writeback *wb)
+> > +{
+> > +	struct inode *inode, *tmp;
+> > +
+> > +	spin_lock(&wb->list_lock);
+> > +	list_for_each_entry_safe(inode, tmp, &wb->b_attached, i_io_list) {
+> > +		if (!spin_trylock(&inode->i_lock))
+> > +			continue;
+> > +		xa_lock_irq(&inode->i_mapping->i_pages);
+> > +		if (!(inode->i_state &
+> > +		      (I_FREEING | I_CLEAR | I_SYNC | I_DIRTY | I_WB_SWITCH))) {
+> 
+> Use I_DIRTY_ALL here instead of I_DIRTY? We don't want to touch
+> I_DIRTY_TIME inodes either I'd say... Also I think you don't want to touch
+> I_WILL_FREE inodes either.
+
+You're right, will fix it.
+
+> 
+> > +			WARN_ON_ONCE(inode->i_wb != wb);
+> > +			inode->i_wb = NULL;
+> > +			wb_put(wb);
+> > +			list_del_init(&inode->i_io_list);
+> 
+> So I was thinking about this and I'm still a bit nervous that setting i_wb
+> to NULL is going to cause subtle crashes somewhere. Granted you are very
+> careful when not to touch the inode but still, even stuff like
+> inode_to_bdi() is not safe to call with inode->i_wb is NULL. So I'm afraid
+> that some place in the writeback code will be looking at i_wb without
+> having any of those bits set and boom. E.g. inode_to_wb() call in
+> test_clear_page_writeback() - what protects that one?
+
+I assume that if the page is dirty/under the writeback, the inode must be dirty
+too, so we can't zero inode->i_wb.
+
+> 
+> I forgot what possibilities did we already discuss in the past but cannot
+> we just switch inode->i_wb to inode_to_bdi(inode)->wb (i.e., root cgroup
+> writeback structure)? That would be certainly safer...
+
+I am/was nervous too. I had several BUG_ON()'s in all such places and ran
+the test kernel for about a day on my dev desktop (even updated to Fedora
+34 lol), and haven't seen any panics. And certainly I can give it a
+comprehensive test in a more production environment.
+
+Re switching to the root wb: it's certainly a possibility too, however
+zeroing has an advantage: the next potential writeback will be accounted
+to the right cgroup without a need in an additional switch.
+I'd try to go with zeroing if it's possible, and keep the switching to the
+root wb as plab B.
+
+> 
+> > +		}
+> > +		xa_unlock_irq(&inode->i_mapping->i_pages);
+> > +		spin_unlock(&inode->i_lock);
+> > +	}
+> > +	spin_unlock(&wb->list_lock);
+> > +}
+> > +
+> ...
+> > @@ -386,6 +395,10 @@ static void cgwb_release_workfn(struct work_struct *work)
+> >  	mutex_lock(&wb->bdi->cgwb_release_mutex);
+> >  	wb_shutdown(wb);
+> >  
+> > +	spin_lock_irq(&cgwb_lock);
+> > +	list_del(&wb->offline_node);
+> > +	spin_unlock_irq(&cgwb_lock);
+> > +
+> >  	css_put(wb->memcg_css);
+> >  	css_put(wb->blkcg_css);
+> >  	mutex_unlock(&wb->bdi->cgwb_release_mutex);
+> > @@ -413,6 +426,7 @@ static void cgwb_kill(struct bdi_writeback *wb)
+> >  	WARN_ON(!radix_tree_delete(&wb->bdi->cgwb_tree, wb->memcg_css->id));
+> >  	list_del(&wb->memcg_node);
+> >  	list_del(&wb->blkcg_node);
+> > +	list_add(&wb->offline_node, &offline_cgwbs);
+> >  	percpu_ref_kill(&wb->refcnt);
+> >  }
+> 
+> I think you need to be a bit more careful with the wb->offline_node.
+> cgwb_create() can end up destroying half-created bdi_writeback structure on
+> error and then you'd see cgwb_release_workfn() called without cgwb_kill()
+> called and you'd likely crash or corrupt memory.
+
+Good point, will check it.
+
+> 
+> >  
+> > @@ -633,6 +647,48 @@ static void cgwb_bdi_unregister(struct backing_dev_info *bdi)
+> >  	mutex_unlock(&bdi->cgwb_release_mutex);
+> >  }
+> >  
+> > +/**
+> > + * cleanup_offline_cgwbs - try to release dying cgwbs
+> > + *
+> > + * Try to release dying cgwbs by switching attached inodes to the wb
+> > + * belonging to the root memory cgroup. Processed wbs are placed at the
+> > + * end of the list to guarantee the forward progress.
+> > + *
+> > + * Should be called with the acquired cgwb_lock lock, which might
+> > + * be released and re-acquired in the process.
+> > + */
+> > +static void cleanup_offline_cgwbs_workfn(struct work_struct *work)
+> > +{
+> > +	struct bdi_writeback *wb;
+> > +	LIST_HEAD(processed);
+> > +
+> > +	spin_lock_irq(&cgwb_lock);
+> > +
+> > +	while (!list_empty(&offline_cgwbs)) {
+> > +		wb = list_first_entry(&offline_cgwbs, struct bdi_writeback,
+> > +				      offline_node);
+> > +
+> > +		list_move(&wb->offline_node, &processed);
+> > +
+> > +		if (wb_has_dirty_io(wb))
+> > +			continue;
+> > +
+> > +		if (!percpu_ref_tryget(&wb->refcnt))
+> > +			continue;
+> > +
+> > +		spin_unlock_irq(&cgwb_lock);
+> > +		cleanup_offline_wb(wb);
+> > +		spin_lock_irq(&cgwb_lock);
+> > +
+> > +		wb_put(wb);
+> > +	}
+> > +
+> > +	if (!list_empty(&processed))
+> > +		list_splice_tail(&processed, &offline_cgwbs);
+> > +
+> > +	spin_unlock_irq(&cgwb_lock);
+> 
+> Shouldn't we reschedule this work with some delay if offline_cgwbs is
+> non-empty? Otherwise we can end up with non-empty &offline_cgwbs and no
+> cleaning scheduled...
+
+I'm not sure. In general it's not a big problem to have few outstanding
+wb structures, we just need to make sure we don't pile them.
+I'm scheduling the cleanup from the memcg offlining path, so if new cgroups
+are regularly created and destroyed, some pressure will be applied.
+
+To reschedule based on time we need to come up with some heuristic how to
+calculate the required delay and I don't have any specific ideas. If you do,
+I'm totally fine to incorporate them.
+
+Thanks!
