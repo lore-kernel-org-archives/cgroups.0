@@ -1,145 +1,78 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v4] cgroup, blkcg: prevent dirty inodes to pin dying
- memory cgroups
-Date: Fri, 14 May 2021 06:31:39 -0700
-Message-ID: <YJ57u0v5K9MXQxoP@carbon.DHCP.thefacebook.com>
-References: <20210513004258.1610273-1-guro@fb.com>
- <20210513101239.GE2734@quack2.suse.cz>
- <YJ1sALo2KaP813Dy@carbon.DHCP.thefacebook.com>
- <20210514112320.GB27655@quack2.suse.cz>
+From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/1] cgroup: make per-cgroup pressure stall tracking configurable
+Date: Fri, 14 May 2021 08:54:47 -0700
+Message-ID: <CAJuCfpHy+MknCepfjx9XYUA1j42Auauv7MFQbt+zOU-tA4gasA@mail.gmail.com>
+References: <20210513175349.959661-1-surenb@google.com> <YJ5iAvqAmIhzJRot@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=rGbn2MMPU+fF/C7cWp8fw5UPU5KEHS12UZbiGqS9N2E=;
- b=MNterIN4JWn6qWZ9LkARnALIZUqWctv4I+MUTk3xRF0kTEw0QhlLFRel1keUxZYZkr+e
- HjFUA0QbhJM7BLT40ldCE+sAF/CEEnPpenbSNJ2+6ABfGULrE0LkyOdXJU0ChlSqgdP6
- uCG2+cJ+LSM9ac2hxIQpA9+hRBXrSjafccc= 
-Content-Disposition: inline
-In-Reply-To: <20210514112320.GB27655-4I4JzKEfoa/jFM9bn6wA6Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=y052LogTUvmTYDDB+WfKoZ5F+9wGSH/Xp6XYfMNjiT0=;
+        b=rmOj1JlGNHpx+uPiVKXp2GXMWFkLj/A2WtlyaZyD5pZFxwhlsqd9zu0CmNdx2nQKz3
+         hyKBSMJEwq4rkRa1IKAxZNhcGDAR+T6fks73i5T1b7VEfpOp/gDb2G/+5nFgGIONK+KE
+         5WTx5ufZ/30+cWeOlNLTJcwxWCkVh7nMAyWjrV77SCuEV9Vv+/qhYpaSzCD2TSPjXpbE
+         pthBuekUFWiKhmAdMmrAYeNIhk//NcnHznalrkjl4A1UoLj5Q/zs2/74f2tVtHRtlnn6
+         LkS6QSRN4TUGoxGxletRTqpWwfMbv6aWju2Cxk02zuImCHGjcle6K1d3PDeirZ5+JyYO
+         DsaA==
+In-Reply-To: <YJ5iAvqAmIhzJRot-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Benjamin Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, mgorman-l3A5Bk7waGM@public.gmane.org, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "Paul E . McKenney" <paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, macro-fOkVWZO6G+f10XsdtD+oqA@public.gmane.org, Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, May 14, 2021 at 01:23:20PM +0200, Jan Kara wrote:
-> On Thu 13-05-21 11:12:16, Roman Gushchin wrote:
-> > On Thu, May 13, 2021 at 12:12:39PM +0200, Jan Kara wrote:
-> > > On Wed 12-05-21 17:42:58, Roman Gushchin wrote:
-> > > > +			WARN_ON_ONCE(inode->i_wb != wb);
-> > > > +			inode->i_wb = NULL;
-> > > > +			wb_put(wb);
-> > > > +			list_del_init(&inode->i_io_list);
-> > > 
-> > > So I was thinking about this and I'm still a bit nervous that setting i_wb
-> > > to NULL is going to cause subtle crashes somewhere. Granted you are very
-> > > careful when not to touch the inode but still, even stuff like
-> > > inode_to_bdi() is not safe to call with inode->i_wb is NULL. So I'm afraid
-> > > that some place in the writeback code will be looking at i_wb without
-> > > having any of those bits set and boom. E.g. inode_to_wb() call in
-> > > test_clear_page_writeback() - what protects that one?
-> > 
-> > I assume that if the page is dirty/under the writeback, the inode must be
-> > dirty too, so we can't zero inode->i_wb.
-> 
-> If page is under writeback, the inode can be already clean. You could check
->   !mapping_tagged(mapping, PAGECACHE_TAG_WRITEBACK)
-> but see how fragile it is... For every place using inode_to_wb() you have
-> to come up with a test excluding it...
-> 
-> > > I forgot what possibilities did we already discuss in the past but cannot
-> > > we just switch inode->i_wb to inode_to_bdi(inode)->wb (i.e., root cgroup
-> > > writeback structure)? That would be certainly safer...
-> > 
-> > I am/was nervous too. I had several BUG_ON()'s in all such places and ran
-> > the test kernel for about a day on my dev desktop (even updated to Fedora
-> > 34 lol), and haven't seen any panics. And certainly I can give it a
-> > comprehensive test in a more production environment.
-> 
-> I appreciate the testing but it is also about how likely this is to break
-> sometime in future because someone unaware of this corner-case will add new
-> inode_to_wb() call not excluded by one of your conditions.
+On Fri, May 14, 2021 at 4:42 AM Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+>
+> On Thu, May 13, 2021 at 10:53:49AM -0700, Suren Baghdasaryan wrote:
+>
+> > +bool cgroup_psi_enabled(void)
+> > +{
+> > +     return (cgroup_feature_disable_mask & (1 << OPT_FEATURE_PRESSURE)) == 0;
+> > +}
+>
+> > diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+> > index cc25a3cff41f..c73efd7d4fba 100644
+> > --- a/kernel/sched/psi.c
+> > +++ b/kernel/sched/psi.c
+> > @@ -747,9 +747,12 @@ static struct psi_group *iterate_groups(struct task_struct *task, void **iter)
+> >  #ifdef CONFIG_CGROUPS
+> >       struct cgroup *cgroup = NULL;
+> >
+> > -     if (!*iter)
+> > +     if (!*iter) {
+> > +             /* Skip to psi_system if per-cgroup accounting is disabled */
+> > +             if (!cgroup_psi_enabled())
+> > +                     goto update_sys;
+> >               cgroup = task->cgroups->dfl_cgrp;
+> > -     else if (*iter == &psi_system)
+> > +     } else if (*iter == &psi_system)
+> >               return NULL;
+> >       else
+> >               cgroup = cgroup_parent(*iter);
+> > @@ -758,6 +761,7 @@ static struct psi_group *iterate_groups(struct task_struct *task, void **iter)
+> >               *iter = cgroup;
+> >               return cgroup_psi(cgroup);
+> >       }
+> > +update_sys:
+> >  #else
+> >       if (*iter)
+> >               return NULL;
+>
+> I'm confused; shouldn't that do the same as that #else branch?
 
-Ok, you convinced me, will change in the next version.
+Correct, for this function CONFIG_CGROUPS=n and
+cgroup_disable=pressure are treated the same. True, from the code it's
+not very obvious. Do you have some refactoring in mind that would make
+it more explicit?
 
-> 
-> > Re switching to the root wb: it's certainly a possibility too, however
-> > zeroing has an advantage: the next potential writeback will be accounted
-> > to the right cgroup without a need in an additional switch.
-> > I'd try to go with zeroing if it's possible, and keep the switching to the
-> > root wb as plab B.
-> 
-> Yes, there will be the cost of an additional switch. But inodes attached to
-> dying cgroups shouldn't be the fast path anyway so does it matter?
-> 
-> > > > @@ -633,6 +647,48 @@ static void cgwb_bdi_unregister(struct backing_dev_info *bdi)
-> > > >  	mutex_unlock(&bdi->cgwb_release_mutex);
-> > > >  }
-> > > >  
-> > > > +/**
-> > > > + * cleanup_offline_cgwbs - try to release dying cgwbs
-> > > > + *
-> > > > + * Try to release dying cgwbs by switching attached inodes to the wb
-> > > > + * belonging to the root memory cgroup. Processed wbs are placed at the
-> > > > + * end of the list to guarantee the forward progress.
-> > > > + *
-> > > > + * Should be called with the acquired cgwb_lock lock, which might
-> > > > + * be released and re-acquired in the process.
-> > > > + */
-> > > > +static void cleanup_offline_cgwbs_workfn(struct work_struct *work)
-> > > > +{
-> > > > +	struct bdi_writeback *wb;
-> > > > +	LIST_HEAD(processed);
-> > > > +
-> > > > +	spin_lock_irq(&cgwb_lock);
-> > > > +
-> > > > +	while (!list_empty(&offline_cgwbs)) {
-> > > > +		wb = list_first_entry(&offline_cgwbs, struct bdi_writeback,
-> > > > +				      offline_node);
-> > > > +
-> > > > +		list_move(&wb->offline_node, &processed);
-> > > > +
-> > > > +		if (wb_has_dirty_io(wb))
-> > > > +			continue;
-> > > > +
-> > > > +		if (!percpu_ref_tryget(&wb->refcnt))
-> > > > +			continue;
-> > > > +
-> > > > +		spin_unlock_irq(&cgwb_lock);
-> > > > +		cleanup_offline_wb(wb);
-> > > > +		spin_lock_irq(&cgwb_lock);
-> > > > +
-> > > > +		wb_put(wb);
-> > > > +	}
-> > > > +
-> > > > +	if (!list_empty(&processed))
-> > > > +		list_splice_tail(&processed, &offline_cgwbs);
-> > > > +
-> > > > +	spin_unlock_irq(&cgwb_lock);
-> > > 
-> > > Shouldn't we reschedule this work with some delay if offline_cgwbs is
-> > > non-empty? Otherwise we can end up with non-empty &offline_cgwbs and no
-> > > cleaning scheduled...
-> > 
-> > I'm not sure. In general it's not a big problem to have few outstanding
-> > wb structures, we just need to make sure we don't pile them.
-> > I'm scheduling the cleanup from the memcg offlining path, so if new cgroups
-> > are regularly created and destroyed, some pressure will be applied.
-> > 
-> > To reschedule based on time we need to come up with some heuristic how to
-> > calculate the required delay and I don't have any specific ideas. If you do,
-> > I'm totally fine to incorporate them.
-> 
-> Well, I'd pick e.g. dirty_expire_interval (30s by default) as a time after
-> which we try again. Because after that time writeback has likely already
-> happened. But I don't insist here. If you think leaving inodes attached to
-> dead cgroups for potentially long time in some cases isn't a problem, then
-> we can leave this as is. If we find it's a problem in the future, we can
-> always add the time-based retry.
+>Also, can you pretty please make cgroup_psi_enabled() a static_key ?
 
-Yes, I agree, we can add it later.
+Certainly, will post an update on Monday.
+Thanks for the feedback, Peter!
 
-Thank you!
-
-Roman
+>
+> --
+> To unsubscribe from this group and stop receiving emails from it, send an email to kernel-team+unsubscribe-z5hGa2qSFaTowKkBSvOlow@public.gmane.org
+>
