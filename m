@@ -1,262 +1,133 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
 Subject: Re: [PATCH v4] cgroup, blkcg: prevent dirty inodes to pin dying
  memory cgroups
-Date: Thu, 13 May 2021 11:12:16 -0700
-Message-ID: <YJ1sALo2KaP813Dy@carbon.DHCP.thefacebook.com>
+Date: Fri, 14 May 2021 13:23:20 +0200
+Message-ID: <20210514112320.GB27655@quack2.suse.cz>
 References: <20210513004258.1610273-1-guro@fb.com>
  <20210513101239.GE2734@quack2.suse.cz>
+ <YJ1sALo2KaP813Dy@carbon.DHCP.thefacebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=+kkgakILbWTJbTE/kHSm7xES1n0DeUFJYq+koPqRhYA=;
- b=IT8QEuFdx1ZZoJRPdQIBkrNAeTB1paXbzERM2Im+sbzaUlSX1ghozNLmpX+iwdTtrm9F
- F+nfXjVuDlJGWZgUbBAt4rarxKBnlrpgV3K3znrAk9E36Hl/qpCOnrihjUVk9xY/UyVn
- jqJwKx6bQl7WQc3bChxb6s5gz/1/5NExPx0= 
 Content-Disposition: inline
-In-Reply-To: <20210513101239.GE2734-4I4JzKEfoa/jFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <YJ1sALo2KaP813Dy-lLJQVQxiE4uLfgCeKHXN1g2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, May 13, 2021 at 12:12:39PM +0200, Jan Kara wrote:
-> On Wed 12-05-21 17:42:58, Roman Gushchin wrote:
-> > When an inode is getting dirty for the first time it's associated
-> > with a wb structure (see __inode_attach_wb()). It can later be
-> > switched to another wb (if e.g. some other cgroup is writing a lot of
-> > data to the same inode), but otherwise stays attached to the original
-> > wb until being reclaimed.
+On Thu 13-05-21 11:12:16, Roman Gushchin wrote:
+> On Thu, May 13, 2021 at 12:12:39PM +0200, Jan Kara wrote:
+> > On Wed 12-05-21 17:42:58, Roman Gushchin wrote:
+> > > +			WARN_ON_ONCE(inode->i_wb != wb);
+> > > +			inode->i_wb = NULL;
+> > > +			wb_put(wb);
+> > > +			list_del_init(&inode->i_io_list);
 > > 
-> > The problem is that the wb structure holds a reference to the original
-> > memory and blkcg cgroups. So if an inode has been dirty once and later
-> > is actively used in read-only mode, it has a good chance to pin down
-> > the original memory and blkcg cgroups. This is often the case with
-> > services bringing data for other services, e.g. updating some rpm
-> > packages.
+> > So I was thinking about this and I'm still a bit nervous that setting i_wb
+> > to NULL is going to cause subtle crashes somewhere. Granted you are very
+> > careful when not to touch the inode but still, even stuff like
+> > inode_to_bdi() is not safe to call with inode->i_wb is NULL. So I'm afraid
+> > that some place in the writeback code will be looking at i_wb without
+> > having any of those bits set and boom. E.g. inode_to_wb() call in
+> > test_clear_page_writeback() - what protects that one?
+> 
+> I assume that if the page is dirty/under the writeback, the inode must be
+> dirty too, so we can't zero inode->i_wb.
+
+If page is under writeback, the inode can be already clean. You could check
+  !mapping_tagged(mapping, PAGECACHE_TAG_WRITEBACK)
+but see how fragile it is... For every place using inode_to_wb() you have
+to come up with a test excluding it...
+
+> > I forgot what possibilities did we already discuss in the past but cannot
+> > we just switch inode->i_wb to inode_to_bdi(inode)->wb (i.e., root cgroup
+> > writeback structure)? That would be certainly safer...
+> 
+> I am/was nervous too. I had several BUG_ON()'s in all such places and ran
+> the test kernel for about a day on my dev desktop (even updated to Fedora
+> 34 lol), and haven't seen any panics. And certainly I can give it a
+> comprehensive test in a more production environment.
+
+I appreciate the testing but it is also about how likely this is to break
+sometime in future because someone unaware of this corner-case will add new
+inode_to_wb() call not excluded by one of your conditions.
+
+> Re switching to the root wb: it's certainly a possibility too, however
+> zeroing has an advantage: the next potential writeback will be accounted
+> to the right cgroup without a need in an additional switch.
+> I'd try to go with zeroing if it's possible, and keep the switching to the
+> root wb as plab B.
+
+Yes, there will be the cost of an additional switch. But inodes attached to
+dying cgroups shouldn't be the fast path anyway so does it matter?
+
+> > > @@ -633,6 +647,48 @@ static void cgwb_bdi_unregister(struct backing_dev_info *bdi)
+> > >  	mutex_unlock(&bdi->cgwb_release_mutex);
+> > >  }
+> > >  
+> > > +/**
+> > > + * cleanup_offline_cgwbs - try to release dying cgwbs
+> > > + *
+> > > + * Try to release dying cgwbs by switching attached inodes to the wb
+> > > + * belonging to the root memory cgroup. Processed wbs are placed at the
+> > > + * end of the list to guarantee the forward progress.
+> > > + *
+> > > + * Should be called with the acquired cgwb_lock lock, which might
+> > > + * be released and re-acquired in the process.
+> > > + */
+> > > +static void cleanup_offline_cgwbs_workfn(struct work_struct *work)
+> > > +{
+> > > +	struct bdi_writeback *wb;
+> > > +	LIST_HEAD(processed);
+> > > +
+> > > +	spin_lock_irq(&cgwb_lock);
+> > > +
+> > > +	while (!list_empty(&offline_cgwbs)) {
+> > > +		wb = list_first_entry(&offline_cgwbs, struct bdi_writeback,
+> > > +				      offline_node);
+> > > +
+> > > +		list_move(&wb->offline_node, &processed);
+> > > +
+> > > +		if (wb_has_dirty_io(wb))
+> > > +			continue;
+> > > +
+> > > +		if (!percpu_ref_tryget(&wb->refcnt))
+> > > +			continue;
+> > > +
+> > > +		spin_unlock_irq(&cgwb_lock);
+> > > +		cleanup_offline_wb(wb);
+> > > +		spin_lock_irq(&cgwb_lock);
+> > > +
+> > > +		wb_put(wb);
+> > > +	}
+> > > +
+> > > +	if (!list_empty(&processed))
+> > > +		list_splice_tail(&processed, &offline_cgwbs);
+> > > +
+> > > +	spin_unlock_irq(&cgwb_lock);
 > > 
-> > In the real life it becomes a problem due to a large size of the memcg
-> > structure, which can easily be 1000x larger than an inode. Also a
-> > really large number of dying cgroups can raise different scalability
-> > issues, e.g. making the memory reclaim costly and less effective.
-> > 
-> > To solve the problem inodes should be eventually detached from the
-> > corresponding writeback structure. It's inefficient to do it after
-> > every writeback completion. Instead it can be done whenever the
-> > original memory cgroup is offlined and writeback structure is getting
-> > killed. Scanning over a (potentially long) list of inodes and detach
-> > them from the writeback structure can take quite some time. To avoid
-> > scanning all inodes, attached inodes are kept on a new list (b_attached).
-> > To make it less noticeable to a user, the scanning is performed from a
-> > work context.
-> > 
-> > Big thanks to Jan Kara and Dennis Zhou for their ideas and
-> > contribution to the previous iterations of this patch.
-> > 
-> > Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> > Shouldn't we reschedule this work with some delay if offline_cgwbs is
+> > non-empty? Otherwise we can end up with non-empty &offline_cgwbs and no
+> > cleaning scheduled...
 > 
-> Thanks for the patch! On a general note maybe it would be better to split
-> this patch into two - the first one which introduces b_attached list and
-> its handling and the second one which uses it to detach inodes from
-> bdi_writeback structures. Some more comments below.
-
-Good idea, will do in the next version. And thank you for taking a look!
-
+> I'm not sure. In general it's not a big problem to have few outstanding
+> wb structures, we just need to make sure we don't pile them.
+> I'm scheduling the cleanup from the memcg offlining path, so if new cgroups
+> are regularly created and destroyed, some pressure will be applied.
 > 
-> > diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> > index e91980f49388..3deba686d3d4 100644
-> > --- a/fs/fs-writeback.c
-> > +++ b/fs/fs-writeback.c
-> > @@ -123,12 +123,17 @@ static bool inode_io_list_move_locked(struct inode *inode,
-> >  
-> >  	list_move(&inode->i_io_list, head);
-> >  
-> > -	/* dirty_time doesn't count as dirty_io until expiration */
-> > -	if (head != &wb->b_dirty_time)
-> > -		return wb_io_lists_populated(wb);
-> > +	if (head == &wb->b_dirty_time || head == &wb->b_attached) {
-> > +		/*
-> > +		 * dirty_time doesn't count as dirty_io until expiration,
-> > +		 * attached list keeps a list of clean inodes, which are
-> > +		 * attached to wb.
-> > +		 */
-> > +		wb_io_lists_depopulated(wb);
-> > +		return false;
-> > +	}
-> >  
-> > -	wb_io_lists_depopulated(wb);
-> > -	return false;
-> > +	return wb_io_lists_populated(wb);
-> >  }
-> >  
-> >  /**
-> > @@ -545,6 +550,37 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
-> >  	kfree(isw);
-> >  }
-> 
-> I suppose the list_empty(&inode->i_io_list) case in
-> inode_switch_wbs_work_fn() is impossible with your changes now? Can you
-> perhaps add a WARN_ON_ONCE there for this? Also I don't think we want to
-> move clean inodes to dirty list so perhaps we need to be more careful about
-> the selection of target writeback list in that function?
+> To reschedule based on time we need to come up with some heuristic how to
+> calculate the required delay and I don't have any specific ideas. If you do,
+> I'm totally fine to incorporate them.
 
-Good point, will add in the next version and double check the clean inode case.
+Well, I'd pick e.g. dirty_expire_interval (30s by default) as a time after
+which we try again. Because after that time writeback has likely already
+happened. But I don't insist here. If you think leaving inodes attached to
+dead cgroups for potentially long time in some cases isn't a problem, then
+we can leave this as is. If we find it's a problem in the future, we can
+always add the time-based retry.
 
-> 
-> > +/**
-> > + * cleanup_offline_wb - detach attached clean inodes
-> > + * @wb: target wb
-> > + *
-> > + * Clear the ->i_wb pointer of the attached inodes and drop
-> > + * the corresponding wb reference. Skip inodes which are dirty,
-> > + * freeing, switching or in the active writeback process.
-> > + *
-> > + */
-> > +void cleanup_offline_wb(struct bdi_writeback *wb)
-> > +{
-> > +	struct inode *inode, *tmp;
-> > +
-> > +	spin_lock(&wb->list_lock);
-> > +	list_for_each_entry_safe(inode, tmp, &wb->b_attached, i_io_list) {
-> > +		if (!spin_trylock(&inode->i_lock))
-> > +			continue;
-> > +		xa_lock_irq(&inode->i_mapping->i_pages);
-> > +		if (!(inode->i_state &
-> > +		      (I_FREEING | I_CLEAR | I_SYNC | I_DIRTY | I_WB_SWITCH))) {
-> 
-> Use I_DIRTY_ALL here instead of I_DIRTY? We don't want to touch
-> I_DIRTY_TIME inodes either I'd say... Also I think you don't want to touch
-> I_WILL_FREE inodes either.
-
-You're right, will fix it.
-
-> 
-> > +			WARN_ON_ONCE(inode->i_wb != wb);
-> > +			inode->i_wb = NULL;
-> > +			wb_put(wb);
-> > +			list_del_init(&inode->i_io_list);
-> 
-> So I was thinking about this and I'm still a bit nervous that setting i_wb
-> to NULL is going to cause subtle crashes somewhere. Granted you are very
-> careful when not to touch the inode but still, even stuff like
-> inode_to_bdi() is not safe to call with inode->i_wb is NULL. So I'm afraid
-> that some place in the writeback code will be looking at i_wb without
-> having any of those bits set and boom. E.g. inode_to_wb() call in
-> test_clear_page_writeback() - what protects that one?
-
-I assume that if the page is dirty/under the writeback, the inode must be dirty
-too, so we can't zero inode->i_wb.
-
-> 
-> I forgot what possibilities did we already discuss in the past but cannot
-> we just switch inode->i_wb to inode_to_bdi(inode)->wb (i.e., root cgroup
-> writeback structure)? That would be certainly safer...
-
-I am/was nervous too. I had several BUG_ON()'s in all such places and ran
-the test kernel for about a day on my dev desktop (even updated to Fedora
-34 lol), and haven't seen any panics. And certainly I can give it a
-comprehensive test in a more production environment.
-
-Re switching to the root wb: it's certainly a possibility too, however
-zeroing has an advantage: the next potential writeback will be accounted
-to the right cgroup without a need in an additional switch.
-I'd try to go with zeroing if it's possible, and keep the switching to the
-root wb as plab B.
-
-> 
-> > +		}
-> > +		xa_unlock_irq(&inode->i_mapping->i_pages);
-> > +		spin_unlock(&inode->i_lock);
-> > +	}
-> > +	spin_unlock(&wb->list_lock);
-> > +}
-> > +
-> ...
-> > @@ -386,6 +395,10 @@ static void cgwb_release_workfn(struct work_struct *work)
-> >  	mutex_lock(&wb->bdi->cgwb_release_mutex);
-> >  	wb_shutdown(wb);
-> >  
-> > +	spin_lock_irq(&cgwb_lock);
-> > +	list_del(&wb->offline_node);
-> > +	spin_unlock_irq(&cgwb_lock);
-> > +
-> >  	css_put(wb->memcg_css);
-> >  	css_put(wb->blkcg_css);
-> >  	mutex_unlock(&wb->bdi->cgwb_release_mutex);
-> > @@ -413,6 +426,7 @@ static void cgwb_kill(struct bdi_writeback *wb)
-> >  	WARN_ON(!radix_tree_delete(&wb->bdi->cgwb_tree, wb->memcg_css->id));
-> >  	list_del(&wb->memcg_node);
-> >  	list_del(&wb->blkcg_node);
-> > +	list_add(&wb->offline_node, &offline_cgwbs);
-> >  	percpu_ref_kill(&wb->refcnt);
-> >  }
-> 
-> I think you need to be a bit more careful with the wb->offline_node.
-> cgwb_create() can end up destroying half-created bdi_writeback structure on
-> error and then you'd see cgwb_release_workfn() called without cgwb_kill()
-> called and you'd likely crash or corrupt memory.
-
-Good point, will check it.
-
-> 
-> >  
-> > @@ -633,6 +647,48 @@ static void cgwb_bdi_unregister(struct backing_dev_info *bdi)
-> >  	mutex_unlock(&bdi->cgwb_release_mutex);
-> >  }
-> >  
-> > +/**
-> > + * cleanup_offline_cgwbs - try to release dying cgwbs
-> > + *
-> > + * Try to release dying cgwbs by switching attached inodes to the wb
-> > + * belonging to the root memory cgroup. Processed wbs are placed at the
-> > + * end of the list to guarantee the forward progress.
-> > + *
-> > + * Should be called with the acquired cgwb_lock lock, which might
-> > + * be released and re-acquired in the process.
-> > + */
-> > +static void cleanup_offline_cgwbs_workfn(struct work_struct *work)
-> > +{
-> > +	struct bdi_writeback *wb;
-> > +	LIST_HEAD(processed);
-> > +
-> > +	spin_lock_irq(&cgwb_lock);
-> > +
-> > +	while (!list_empty(&offline_cgwbs)) {
-> > +		wb = list_first_entry(&offline_cgwbs, struct bdi_writeback,
-> > +				      offline_node);
-> > +
-> > +		list_move(&wb->offline_node, &processed);
-> > +
-> > +		if (wb_has_dirty_io(wb))
-> > +			continue;
-> > +
-> > +		if (!percpu_ref_tryget(&wb->refcnt))
-> > +			continue;
-> > +
-> > +		spin_unlock_irq(&cgwb_lock);
-> > +		cleanup_offline_wb(wb);
-> > +		spin_lock_irq(&cgwb_lock);
-> > +
-> > +		wb_put(wb);
-> > +	}
-> > +
-> > +	if (!list_empty(&processed))
-> > +		list_splice_tail(&processed, &offline_cgwbs);
-> > +
-> > +	spin_unlock_irq(&cgwb_lock);
-> 
-> Shouldn't we reschedule this work with some delay if offline_cgwbs is
-> non-empty? Otherwise we can end up with non-empty &offline_cgwbs and no
-> cleaning scheduled...
-
-I'm not sure. In general it's not a big problem to have few outstanding
-wb structures, we just need to make sure we don't pile them.
-I'm scheduling the cleanup from the memcg offlining path, so if new cgroups
-are regularly created and destroyed, some pressure will be applied.
-
-To reschedule based on time we need to come up with some heuristic how to
-calculate the required delay and I don't have any specific ideas. If you do,
-I'm totally fine to incorporate them.
-
-Thanks!
+								Honza
+-- 
+Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+SUSE Labs, CR
