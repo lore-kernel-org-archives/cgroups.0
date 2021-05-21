@@ -1,8 +1,8 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-5.13-fixes] BUILD SUCCESS
- 45e1ba40837ac2f6f4d4716bddb8d44bd7e4a251
-Date: Fri, 21 May 2021 13:36:01 +0800
-Message-ID: <60a746c1.u8rafKLMsa4zKHK7%lkp@intel.com>
+Subject: [cgroup:for-next] BUILD SUCCESS
+ b0565a089634e364bfe83e0ea06e3b1094f1b55c
+Date: Fri, 21 May 2021 13:36:04 +0800
+Message-ID: <60a746c4.fwH9Qr+2n6IHEOOV%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,8 +11,8 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.13-fixes
-branch HEAD: 45e1ba40837ac2f6f4d4716bddb8d44bd7e4a251  cgroup: disable controllers at parse time
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: b0565a089634e364bfe83e0ea06e3b1094f1b55c  Merge branch 'for-5.13-fixes' into for-next
 
 elapsed time: 722m
 
