@@ -1,302 +1,114 @@
-From: Suren Baghdasaryan <surenb@google.com>
-Subject: Re: [PATCH v3 1/1] cgroup: make per-cgroup pressure stall tracking configurable
-Date: Mon, 24 May 2021 13:00:50 -0700
-Message-ID: <CAJuCfpE-HM7Sv+J15bSMqHnmSOKsP_2CKXWWJVjmbz8-g=NMLw@mail.gmail.com>
-References: <20210524195339.1233449-1-surenb@google.com>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Mon, 24 May 2021 20:37:44 -0300
+Message-ID: <20210524233744.GT1002214@nvidia.com>
+References: <20210422233950.GD1370958@nvidia.com>
+ <YIecXkaEGNgICePO@yekko.fritz.box>
+ <20210427171212.GD1370958@nvidia.com>
+ <YIizNdbA0+LYwQbI@yekko.fritz.box>
+ <20210428145622.GU1370958@nvidia.com>
+ <YIoiJRY3FM7xH2bH@yekko>
+ <20210503161518.GM1370958@nvidia.com>
+ <YJy9o8uEZs42/qDM@yekko>
+ <20210513135938.GG1002214@nvidia.com>
+ <YKtbWo7PwIlXjFIV@yekko>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=rZ+5vap6TpdQ9AA+8AlOuVeJiXMIdG8FblxtPftSe80=;
-        b=lUCYnRiJdlJz81oEEmS6qigwfCuldHB+KmDZCEx7gueXmrIhOUSb0yV2UoHH0ajGC1
-         5cmVZMrop8VdUzorbhofgjMPQZ3s+BCicgNt0A65BMi9f4hMgbb/8bjN6qh43kkY0xDU
-         aEohVcgMAuLxXVVAbseRBoDFIx7n4Hm82pk9KyDnoB0S6v6eNWYDtZbPAtwIqIJBWoIO
-         vaxgASnC3wfqPjrDw8p+nfG4XcvOUB6v0oGY8I/AX+DrlV69rmSM9yY4zII2upcGQ9rP
-         Py3cjhGUI0xJo0abcVyoUwMxWbduVErlEswKcnzqEnZqaWCHVLWGy0KS7CkW313rTE8F
-         TZyQ==
-In-Reply-To: <20210524195339.1233449-1-surenb@google.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=FR6laYgpF9b95HZa9CNu+FrgxJqikDB0LQ7EyvD1SXA=;
+ b=WioYrFyq6TDd0rJSB/lufkSLX4cBRO7UpPGYeEKYR41MY3irwINBc4DkMKQddsir47D0w756SKEJmSgTrTnmRVMf1HYNuT4SUz5aYLAKcR8zD/5/aP+/rBJWqP83YrpSqe/ncz48QcZH2Nbhb3yYHElXj5g3jU+R3JeIY2DQ4V7TAE3KB6aJZEuxSTVm7NcY22N2Kf0ae/4yk3jWAy/Jbo4671QI6sbtdHKNs+HceCilxErwvgyV6Ynlhay0dRNnvWXKjtc+Br8TTN+fKs3pXvQz0gqXwEqz+z8c2/GuRvDZKd+7FBBkH2RwqFUHeeO2ECqQXhMzPsiN4FXU/F7whQ==
+Content-Disposition: inline
+In-Reply-To: <YKtbWo7PwIlXjFIV@yekko>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Shakeel Butt <shakeelb@google.com>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Benjamin Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Minchan Kim <minchan@kernel.org>, Jonathan Corbet <corbet@lwn.net>, Daniel Bristot de Oliveira <bristot@redhat.com>, "Paul E . McKenney" <paulmck@kernel.org>, Randy Dunlap <rdunlap@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, macro@orcam.me.uk, Viresh Kumar <viresh.kumar@linaro.org>, M
+To: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>
+Cc: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Mon, May 24, 2021 at 12:53 PM Suren Baghdasaryan <surenb@google.com> wrote:
->
-> PSI accounts stalls for each cgroup separately and aggregates it at each
-> level of the hierarchy. This causes additional overhead with psi_avgs_work
-> being called for each cgroup in the hierarchy. psi_avgs_work has been
-> highly optimized, however on systems with large number of cgroups the
-> overhead becomes noticeable.
-> Systems which use PSI only at the system level could avoid this overhead
-> if PSI can be configured to skip per-cgroup stall accounting.
-> Add "cgroup_disable=pressure" kernel command-line option to allow
-> requesting system-wide only pressure stall accounting. When set, it
-> keeps system-wide accounting under /proc/pressure/ but skips accounting
-> for individual cgroups and does not expose PSI nodes in cgroup hierarchy.
+On Mon, May 24, 2021 at 05:52:58PM +1000, David Gibson wrote:
 
-Tejun and other cgroup experts, could you please take a look at the
-cgroup-related parts of this patch and provide your feedback? Would
-greatly appreciate your opinion on this.
-Thanks!
+> > > I don't really see a semantic distinction between "always one-device
+> > > groups" and "groups don't matter".  Really the only way you can afford
+> > > to not care about groups is if they're singletons.
+> > 
+> > The kernel driver under the mdev may not be in an "always one-device"
+> > group.
+> 
+> I don't really understand what you mean by that.
 
->
-> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-> ---
-> changes in v3:
-> - Replaced psi_cgroups_disabled with psi_cgroups_enabled key, per PeterZ
-> - Rebased to ToT after cgroup tree merge
-> - Added "Disabling ... control group feature" message in cgroup_disable()
->   similar to the new message generated when a cgroup gets disabled
->
->  .../admin-guide/kernel-parameters.txt         |  9 +++-
->  include/linux/cgroup-defs.h                   |  1 +
->  include/linux/cgroup.h                        |  7 +++
->  kernel/cgroup/cgroup.c                        | 48 +++++++++++++++++++
->  kernel/sched/psi.c                            | 30 +++++++-----
->  5 files changed, 80 insertions(+), 15 deletions(-)
->
-> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-> index cb89dbdedc46..653c62142f07 100644
-> --- a/Documentation/admin-guide/kernel-parameters.txt
-> +++ b/Documentation/admin-guide/kernel-parameters.txt
-> @@ -497,16 +497,21 @@
->         ccw_timeout_log [S390]
->                         See Documentation/s390/common_io.rst for details.
->
-> -       cgroup_disable= [KNL] Disable a particular controller
-> -                       Format: {name of the controller(s) to disable}
-> +       cgroup_disable= [KNL] Disable a particular controller or optional feature
-> +                       Format: {name of the controller(s) or feature(s) to disable}
->                         The effects of cgroup_disable=foo are:
->                         - foo isn't auto-mounted if you mount all cgroups in
->                           a single hierarchy
->                         - foo isn't visible as an individually mountable
->                           subsystem
-> +                       - if foo is an optional feature then the feature is
-> +                         disabled and corresponding cgroup files are not
-> +                         created
->                         {Currently only "memory" controller deal with this and
->                         cut the overhead, others just disable the usage. So
->                         only cgroup_disable=memory is actually worthy}
-> +                       Specifying "pressure" disables per-cgroup pressure
-> +                       stall information accounting feature
->
->         cgroup_no_v1=   [KNL] Disable cgroup controllers and named hierarchies in v1
->                         Format: { { controller | "all" | "named" }
-> diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-> index fb8f6d2cd104..5a9d898daecb 100644
-> --- a/include/linux/cgroup-defs.h
-> +++ b/include/linux/cgroup-defs.h
-> @@ -110,6 +110,7 @@ enum {
->         CFTYPE_NO_PREFIX        = (1 << 3),     /* (DON'T USE FOR NEW FILES) no subsys prefix */
->         CFTYPE_WORLD_WRITABLE   = (1 << 4),     /* (DON'T USE FOR NEW FILES) S_IWUGO */
->         CFTYPE_DEBUG            = (1 << 5),     /* create when cgroup_debug */
-> +       CFTYPE_PRESSURE         = (1 << 6),     /* only if pressure feature is enabled */
->
->         /* internal flags, do not use outside cgroup core proper */
->         __CFTYPE_ONLY_ON_DFL    = (1 << 16),    /* only on default hierarchy */
-> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index 6bc9c76680b2..5492fcb7f9ca 100644
-> --- a/include/linux/cgroup.h
-> +++ b/include/linux/cgroup.h
-> @@ -676,6 +676,8 @@ static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
->         return &cgrp->psi;
->  }
->
-> +bool cgroup_psi_enabled(void);
-> +
->  static inline void cgroup_init_kthreadd(void)
->  {
->         /*
-> @@ -735,6 +737,11 @@ static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
->         return NULL;
->  }
->
-> +static inline bool cgroup_psi_enabled(void)
-> +{
-> +       return false;
-> +}
-> +
->  static inline bool task_under_cgroup_hierarchy(struct task_struct *task,
->                                                struct cgroup *ancestor)
->  {
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index 21ecc6ee6a6d..3a15a8407b46 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -209,6 +209,22 @@ struct cgroup_namespace init_cgroup_ns = {
->  static struct file_system_type cgroup2_fs_type;
->  static struct cftype cgroup_base_files[];
->
-> +/* cgroup optional features */
-> +enum cgroup_opt_features {
-> +#ifdef CONFIG_PSI
-> +       OPT_FEATURE_PRESSURE,
-> +#endif
-> +       OPT_FEATURE_COUNT
-> +};
-> +
-> +static const char *cgroup_opt_feature_names[OPT_FEATURE_COUNT] = {
-> +#ifdef CONFIG_PSI
-> +       "pressure",
-> +#endif
-> +};
-> +
-> +static u16 cgroup_feature_disable_mask __read_mostly;
-> +
->  static int cgroup_apply_control(struct cgroup *cgrp);
->  static void cgroup_finalize_control(struct cgroup *cgrp, int ret);
->  static void css_task_iter_skip(struct css_task_iter *it,
-> @@ -3631,6 +3647,18 @@ static void cgroup_pressure_release(struct kernfs_open_file *of)
->  {
->         psi_trigger_replace(&of->priv, NULL);
->  }
-> +
-> +bool cgroup_psi_enabled(void)
-> +{
-> +       return (cgroup_feature_disable_mask & (1 << OPT_FEATURE_PRESSURE)) == 0;
-> +}
-> +
-> +#else /* CONFIG_PSI */
-> +bool cgroup_psi_enabled(void)
-> +{
-> +       return false;
-> +}
-> +
->  #endif /* CONFIG_PSI */
->
->  static int cgroup_freeze_show(struct seq_file *seq, void *v)
-> @@ -3881,6 +3909,8 @@ static int cgroup_addrm_files(struct cgroup_subsys_state *css,
->  restart:
->         for (cft = cfts; cft != cft_end && cft->name[0] != '\0'; cft++) {
->                 /* does cft->flags tell us to skip this file on @cgrp? */
-> +               if ((cft->flags & CFTYPE_PRESSURE) && !cgroup_psi_enabled())
-> +                       continue;
->                 if ((cft->flags & __CFTYPE_ONLY_ON_DFL) && !cgroup_on_dfl(cgrp))
->                         continue;
->                 if ((cft->flags & __CFTYPE_NOT_ON_DFL) && cgroup_on_dfl(cgrp))
-> @@ -3958,6 +3988,9 @@ static int cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
->
->                 WARN_ON(cft->ss || cft->kf_ops);
->
-> +               if ((cft->flags & CFTYPE_PRESSURE) && !cgroup_psi_enabled())
-> +                       continue;
-> +
->                 if (cft->seq_start)
->                         kf_ops = &cgroup_kf_ops;
->                 else
-> @@ -4866,6 +4899,7 @@ static struct cftype cgroup_base_files[] = {
->  #ifdef CONFIG_PSI
->         {
->                 .name = "io.pressure",
-> +               .flags = CFTYPE_PRESSURE,
->                 .seq_show = cgroup_io_pressure_show,
->                 .write = cgroup_io_pressure_write,
->                 .poll = cgroup_pressure_poll,
-> @@ -4873,6 +4907,7 @@ static struct cftype cgroup_base_files[] = {
->         },
->         {
->                 .name = "memory.pressure",
-> +               .flags = CFTYPE_PRESSURE,
->                 .seq_show = cgroup_memory_pressure_show,
->                 .write = cgroup_memory_pressure_write,
->                 .poll = cgroup_pressure_poll,
-> @@ -4880,6 +4915,7 @@ static struct cftype cgroup_base_files[] = {
->         },
->         {
->                 .name = "cpu.pressure",
-> +               .flags = CFTYPE_PRESSURE,
->                 .seq_show = cgroup_cpu_pressure_show,
->                 .write = cgroup_cpu_pressure_write,
->                 .poll = cgroup_pressure_poll,
-> @@ -6213,6 +6249,15 @@ static int __init cgroup_disable(char *str)
->                         pr_info("Disabling %s control group subsystem\n",
->                                 ss->name);
->                 }
-> +
-> +               for (i = 0; i < OPT_FEATURE_COUNT; i++) {
-> +                       if (strcmp(token, cgroup_opt_feature_names[i]))
-> +                               continue;
-> +                       cgroup_feature_disable_mask |= 1 << i;
-> +                       pr_info("Disabling %s control group feature\n",
-> +                               cgroup_opt_feature_names[i]);
-> +                       break;
-> +               }
->         }
->         return 1;
->  }
-> @@ -6511,6 +6556,9 @@ static ssize_t show_delegatable_files(struct cftype *files, char *buf,
->                 if (!(cft->flags & CFTYPE_NS_DELEGATABLE))
->                         continue;
->
-> +               if ((cft->flags & CFTYPE_PRESSURE) && !cgroup_psi_enabled())
-> +                       continue;
-> +
->                 if (prefix)
->                         ret += snprintf(buf + ret, size - ret, "%s.", prefix);
->
-> diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
-> index cc25a3cff41f..b773cae4c24b 100644
-> --- a/kernel/sched/psi.c
-> +++ b/kernel/sched/psi.c
-> @@ -148,6 +148,7 @@
->  static int psi_bug __read_mostly;
->
->  DEFINE_STATIC_KEY_FALSE(psi_disabled);
-> +DEFINE_STATIC_KEY_TRUE(psi_cgroups_enabled);
->
->  #ifdef CONFIG_PSI_DEFAULT_DISABLED
->  static bool psi_enable;
-> @@ -211,6 +212,9 @@ void __init psi_init(void)
->                 return;
->         }
->
-> +       if (!cgroup_psi_enabled())
-> +               static_branch_disable(&psi_cgroups_enabled);
-> +
->         psi_period = jiffies_to_nsecs(PSI_FREQ);
->         group_init(&psi_system);
->  }
-> @@ -744,23 +748,23 @@ static void psi_group_change(struct psi_group *group, int cpu,
->
->  static struct psi_group *iterate_groups(struct task_struct *task, void **iter)
->  {
-> +       if (*iter == &psi_system)
-> +               return NULL;
-> +
->  #ifdef CONFIG_CGROUPS
-> -       struct cgroup *cgroup = NULL;
-> +       if (static_branch_likely(&psi_cgroups_enabled)) {
-> +               struct cgroup *cgroup = NULL;
->
-> -       if (!*iter)
-> -               cgroup = task->cgroups->dfl_cgrp;
-> -       else if (*iter == &psi_system)
-> -               return NULL;
-> -       else
-> -               cgroup = cgroup_parent(*iter);
-> +               if (!*iter)
-> +                       cgroup = task->cgroups->dfl_cgrp;
-> +               else
-> +                       cgroup = cgroup_parent(*iter);
->
-> -       if (cgroup && cgroup_parent(cgroup)) {
-> -               *iter = cgroup;
-> -               return cgroup_psi(cgroup);
-> +               if (cgroup && cgroup_parent(cgroup)) {
-> +                       *iter = cgroup;
-> +                       return cgroup_psi(cgroup);
-> +               }
->         }
-> -#else
-> -       if (*iter)
-> -               return NULL;
->  #endif
->         *iter = &psi_system;
->         return &psi_system;
-> --
-> 2.31.1.818.g46aad6cb9e-goog
->
+I mean the group of the mdev's actual DMA device may have multiple
+things in it.
+ 
+> > It is a kernel driver so the only thing we know and care about is that
+> > all devices in the HW group are bound to kernel drivers.
+> > 
+> > The vfio device that spawns from this kernel driver is really a
+> > "groups don't matter" vfio device because at the IOMMU layer it should
+> > be riding on the physical group of the kernel driver.  At the VFIO
+> > layer we no longer care about the group abstraction because the system
+> > guarentees isolation in some other way.
+> 
+> Uh.. I don't really know how mdevs are isolated from each other.  I
+> thought it was because the physical device providing the mdevs
+> effectively had an internal IOMMU (or at least DMA permissioning) to
+> isolate the mdevs, even though the physical device may not be fully
+> isolated.
+> 
+> In that case the virtual mdev is effectively in a singleton group,
+> which is different from the group of its parent device.
+
+That is one way to view it, but it means creating a whole group
+infrastructure and abusing the IOMMU stack just to create this
+nonsense fiction. We also abuse the VFIO container stuff to hackily
+create several different types pf IOMMU uAPIs for the mdev - all of
+which are unrelated to drivers/iommu.
+
+Basically, there is no drivers/iommu thing involved, thus is no really
+iommu group, for mdev it is all a big hacky lie.
+
+> If the physical device had a bug which meant the mdevs *weren't*
+> properly isolated from each other, then those mdevs would share a
+> group, and you *would* care about it.  Depending on how the isolation
+> failed the mdevs might or might not also share a group with the parent
+> physical device.
+
+That isn't a real scenario.. mdevs that can't be isolated just
+wouldn't be useful to exist
+
+> > This is today's model, yes. When you run dpdk on a multi-group device
+> > vfio already ensures that all the device groups remained parked and
+> > inaccessible.
+> 
+> I'm not really following what you're saying there.
+> 
+> If you have a multi-device group, and dpdk is using one device in it,
+> VFIO *does not* (and cannot) ensure that other devices in the group
+> are parked and inaccessible.  
+
+I mean in the sense that no other user space can open those devices
+and no kernel driver can later be attached to them.
+
+> It ensures that they're parked at the moment the group moves from
+> kernel to userspace ownership, but it can't prevent dpdk from
+> accessing and unparking those devices via peer to peer DMA.
+
+Right, and adding all this group stuff did nothing to alert the poor
+admin that is running DPDK to this risk.
+
+> > If the administator configures the system with different security
+> > labels for different VFIO devices then yes removing groups makes this
+> > more tricky as all devices in the group should have the same label.
+> 
+> That seems a bigger problem than "more tricky".  How would you propose
+> addressing this with your device-first model?
+
+You put the same security labels you'd put on the group to the devices
+that consitute the group. It is only more tricky in the sense that the
+script that would have to do this will need to do more than ID the
+group to label but also ID the device members of the group and label
+their char nodes.
+
+Jason
