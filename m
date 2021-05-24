@@ -1,100 +1,175 @@
-From: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Mon, 24 May 2021 17:56:05 +1000
-Message-ID: <YKtcFdW9U2+iW4cM@yekko>
-References: <YIi5G4Wg/hpFqNdX@yekko.fritz.box>
- <20210429002149.GZ1370958@nvidia.com>
- <YIol9p3z8BTWFRh8@yekko>
- <20210503160530.GL1370958@nvidia.com>
- <YJDFj+sAv41JRIo4@yekko>
- <20210504181537.GC1370958@nvidia.com>
- <7e5c2276-ca1c-a8af-c15f-72a7c83c8bfa@ozlabs.ru>
- <20210505163902.GG1370958@nvidia.com>
- <YJzCC18cQDdKMR6p@yekko>
- <20210513135030.GF1002214@nvidia.com>
+From: Zhen Lei <thunder.leizhen-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/1] cgroup: fix spelling mistakes
+Date: Mon, 24 May 2021 16:29:43 +0800
+Message-ID: <20210524082943.8730-1-thunder.leizhen@huawei.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="qdaYK/TYh/pdg5Us"
+Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=gibson.dropbear.id.au; s=201602; t=1621842970;
-        bh=C/hH2K1GEBPadXoSrKk7V2ObPasOjkp3z+Am5C3tgTM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SlkI23zR6q71HmYnJJ3f9KWdOEkVnA6VgflwcXorCZ+xSlbOn80eH8qqkj1bGiDwr
-         KC9B7UJXnzhSsKRs2ic63ipbacchSoGdi4E458+5M7iaEJIuB0k7HuIOJAPxbDK6pB
-         dK2O+tSql9Eour4tx4hSxxkcAjj0iCOHwEc2IDJA=
-Content-Disposition: inline
-In-Reply-To: <20210513135030.GF1002214-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: Alexey Kardashevskiy <aik-sLpHqDYs0B2HXe+LvDLADg@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj@in>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Zhen Lei <thunder.leizhen-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+
+Fix some spelling mistakes in comments:
+hierarhcy ==> hierarchy
+automtically ==> automatically
+overriden ==> overridden
+In absense of .. or ==> In absence of .. and
+assocaited ==> associated
+taget ==> target
+initate ==> initiate
+succeded ==> succeeded
+curremt ==> current
+udpated ==> updated
+
+Signed-off-by: Zhen Lei <thunder.leizhen-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ include/linux/cgroup-defs.h | 6 +++---
+ include/linux/cgroup.h      | 2 +-
+ kernel/cgroup/cgroup-v1.c   | 2 +-
+ kernel/cgroup/cgroup.c      | 8 ++++----
+ kernel/cgroup/cpuset.c      | 2 +-
+ kernel/cgroup/rdma.c        | 2 +-
+ kernel/cgroup/rstat.c       | 2 +-
+ 7 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 559ee05f86b2..fb8f6d2cd104 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -232,7 +232,7 @@ struct css_set {
+ 	struct list_head task_iters;
+ 
+ 	/*
+-	 * On the default hierarhcy, ->subsys[ssid] may point to a css
++	 * On the default hierarchy, ->subsys[ssid] may point to a css
+ 	 * attached to an ancestor instead of the cgroup this css_set is
+ 	 * associated with.  The following node is anchored at
+ 	 * ->subsys[ssid]->cgroup->e_csets[ssid] and provides a way to
+@@ -668,7 +668,7 @@ struct cgroup_subsys {
+ 	 */
+ 	bool threaded:1;
+ 
+-	/* the following two fields are initialized automtically during boot */
++	/* the following two fields are initialized automatically during boot */
+ 	int id;
+ 	const char *name;
+ 
+@@ -757,7 +757,7 @@ static inline void cgroup_threadgroup_change_end(struct task_struct *tsk) {}
+  * sock_cgroup_data overloads (prioidx, classid) and the cgroup pointer.
+  * On boot, sock_cgroup_data records the cgroup that the sock was created
+  * in so that cgroup2 matches can be made; however, once either net_prio or
+- * net_cls starts being used, the area is overriden to carry prioidx and/or
++ * net_cls starts being used, the area is overridden to carry prioidx and/or
+  * classid.  The two modes are distinguished by whether the lowest bit is
+  * set.  Clear bit indicates cgroup pointer while set bit prioidx and
+  * classid.
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 4f2f79de083e..6bc9c76680b2 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -32,7 +32,7 @@ struct kernel_clone_args;
+ #ifdef CONFIG_CGROUPS
+ 
+ /*
+- * All weight knobs on the default hierarhcy should use the following min,
++ * All weight knobs on the default hierarchy should use the following min,
+  * default and max values.  The default value is the logarithmic center of
+  * MIN and MAX and allows 100x to be expressed in both directions.
+  */
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 391aa570369b..8190b6bfc978 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -1001,7 +1001,7 @@ static int check_cgroupfs_options(struct fs_context *fc)
+ 	ctx->subsys_mask &= enabled;
+ 
+ 	/*
+-	 * In absense of 'none', 'name=' or subsystem name options,
++	 * In absence of 'none', 'name=' and subsystem name options,
+ 	 * let's default to 'all'.
+ 	 */
+ 	if (!ctx->subsys_mask && !ctx->none && !ctx->name)
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index e049edd66776..d18dc75d3bf5 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -468,7 +468,7 @@ static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
+  * @cgrp: the cgroup of interest
+  * @ss: the subsystem of interest
+  *
+- * Find and get @cgrp's css assocaited with @ss.  If the css doesn't exist
++ * Find and get @cgrp's css associated with @ss.  If the css doesn't exist
+  * or is offline, %NULL is returned.
+  */
+ static struct cgroup_subsys_state *cgroup_tryget_css(struct cgroup *cgrp,
+@@ -1633,7 +1633,7 @@ static void cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
+ 
+ /**
+  * css_clear_dir - remove subsys files in a cgroup directory
+- * @css: taget css
++ * @css: target css
+  */
+ static void css_clear_dir(struct cgroup_subsys_state *css)
+ {
+@@ -5350,7 +5350,7 @@ int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name, umode_t mode)
+ /*
+  * This is called when the refcnt of a css is confirmed to be killed.
+  * css_tryget_online() is now guaranteed to fail.  Tell the subsystem to
+- * initate destruction and put the css ref from kill_css().
++ * initiate destruction and put the css ref from kill_css().
+  */
+ static void css_killed_work_fn(struct work_struct *work)
+ {
+@@ -6058,7 +6058,7 @@ int cgroup_can_fork(struct task_struct *child, struct kernel_clone_args *kargs)
+  * @kargs: the arguments passed to create the child process
+  *
+  * This calls the cancel_fork() callbacks if a fork failed *after*
+- * cgroup_can_fork() succeded and cleans up references we took to
++ * cgroup_can_fork() succeeded and cleans up references we took to
+  * prepare a new css_set for the child process in cgroup_can_fork().
+  */
+ void cgroup_cancel_fork(struct task_struct *child,
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index a945504c0ae7..adb5190c4429 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3376,7 +3376,7 @@ nodemask_t cpuset_mems_allowed(struct task_struct *tsk)
+ }
+ 
+ /**
+- * cpuset_nodemask_valid_mems_allowed - check nodemask vs. curremt mems_allowed
++ * cpuset_nodemask_valid_mems_allowed - check nodemask vs. current mems_allowed
+  * @nodemask: the nodemask to be checked
+  *
+  * Are any of the nodes in the nodemask allowed in current->mems_allowed?
+diff --git a/kernel/cgroup/rdma.c b/kernel/cgroup/rdma.c
+index ae042c347c64..3135406608c7 100644
+--- a/kernel/cgroup/rdma.c
++++ b/kernel/cgroup/rdma.c
+@@ -244,7 +244,7 @@ EXPORT_SYMBOL(rdmacg_uncharge);
+  * This function follows charging resource in hierarchical way.
+  * It will fail if the charge would cause the new value to exceed the
+  * hierarchical limit.
+- * Returns 0 if the charge succeded, otherwise -EAGAIN, -ENOMEM or -EINVAL.
++ * Returns 0 if the charge succeeded, otherwise -EAGAIN, -ENOMEM or -EINVAL.
+  * Returns pointer to rdmacg for this resource when charging is successful.
+  *
+  * Charger needs to account resources on two criteria.
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index 3a3fd2993a65..cee265cb535c 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -75,7 +75,7 @@ void cgroup_rstat_updated(struct cgroup *cgrp, int cpu)
+  * @root: root of the tree to traversal
+  * @cpu: target cpu
+  *
+- * Walks the udpated rstat_cpu tree on @cpu from @root.  %NULL @pos starts
++ * Walks the updated rstat_cpu tree on @cpu from @root.  %NULL @pos starts
+  * the traversal and %NULL return indicates the end.  During traversal,
+  * each returned cgroup is unlinked from the tree.  Must be called with the
+  * matching cgroup_rstat_cpu_lock held.
+-- 
+2.25.1
 
 
---qdaYK/TYh/pdg5Us
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, May 13, 2021 at 10:50:30AM -0300, Jason Gunthorpe wrote:
-> On Thu, May 13, 2021 at 04:07:07PM +1000, David Gibson wrote:
-> > On Wed, May 05, 2021 at 01:39:02PM -0300, Jason Gunthorpe wrote:
-> > > On Wed, May 05, 2021 at 02:28:53PM +1000, Alexey Kardashevskiy wrote:
-> > >=20
-> > > > This is a good feature in general when let's say there is a linux s=
-upported
-> > > > device which has a proprietary device firmware update tool which on=
-ly exists
-> > > > as an x86 binary and your hardware is not x86 - running qemu + vfio=
- in full
-> > > > emulation would provide a way to run the tool to update a physical =
-device.
-> > >=20
-> > > That specific use case doesn't really need a vIOMMU though, does it?
-> >=20
-> > Possibly not, but the mechanics needed to do vIOMMU on different host
-> > IOMMU aren't really different from what you need for a no-vIOMMU
-> > guest. =20
->=20
-> For very simple vIOMMUs this might be true, but this new features of nest=
-ing
-> PASID, migration, etc, etc all make the vIOMMU complicated and
-> emuluating it completely alot harder.
-
-Well, sure, emulating a complex vIOMMU is complex. But "very simple
-vIOMMUs" covers the vast majority of currently deployed hardware, and
-several are already emulated by qemu.
-
-> Stuffing a vfio-pci into a guest and creating a physical map using a
-> single IOASID is comparably trivial.
-
-Note that for PAPR (POWER guest) systems this is not an option: the
-PAPR platform *always* has a vIOMMU.
-
---=20
-David Gibson			| I'll have my music baroque, and my code
-david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
-				| _way_ _around_!
-http://www.ozlabs.org/~dgibson
-
---qdaYK/TYh/pdg5Us
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEdfRlhq5hpmzETofcbDjKyiDZs5IFAmCrXBUACgkQbDjKyiDZ
-s5IBMw/6AomCVLmh/8hoxD3OLa7DsF2qksrpcbo5JXuotCrUKLd+NER23oRbTekN
-8HQ/YKfUWhmFlGh9NeBcjjUjkm/ru1HFa3vbGfQIrVWxabmQX9vQSjKDc/qvQlKB
-ApOyT0PNJuHFy8rZNB7vrpd9zP9xhV1gKLk5nxmmPHeITxA2ZLrZSlfMkRhIG5vP
-3xpnCB8KoycgXBsYbLCi50o11TxhVlYWoujMA/I69mLgfqFoxTy3+zz99RtEEnY9
-Nqf3jnnpL+5tCu8gBZD2actRlu0jrnXU6nyYleOy89Sr2ZjrOM73cfrkrJjhuTa6
-hdQVhb8XgS1HQPiELvT2WCVVQkfAG1ss0HcPi2Wt+JvVnxeQ4kNixS8ZNwh/X9/Q
-lMVqY0OsG8Gz38XftHA3oj20IyAKeVYfXkQJLougTadA3/ydrOELNB169PPHtggT
-qtgvOFogrmYKJyaGQaQvWIWmHd63OYqVxycbu2fimxeuM4kMxgU5ERWo6caXHLz+
-bZfdkrRUW1vCGoMfjqpjG4OgDhnLwz4PUfy7tKdh6Ek4TGe0OUHYxcMcJI28AIii
-jnapbsmXzLYgsyHou+UYRwtLPrIOjOpRh3eDRzfRDtI1HQBWG1RBKkJdqUf1r5FW
-r45iEZaQ+AdySJsDkfCc7+SDhLx4AO8z6RuoKgukxPR6E5D8Z9c=
-=GQEt
------END PGP SIGNATURE-----
-
---qdaYK/TYh/pdg5Us--
