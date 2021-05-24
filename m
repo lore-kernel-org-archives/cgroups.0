@@ -1,65 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] cgroup fixes for v5.13-rc3
-Date: Mon, 24 May 2021 13:43:35 -0400
-Message-ID: <YKvlx7PZs6EplU1D@slm.duckdns.org>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=zhwu1FpE2bEhuHjrue2EKzTEGamwY+6jfsv2dbB3NtU=;
-        b=Qq8H9LT+STnb034ptJPGiLU1qZiDizsNroHu0Q4/azITwgPsDeywMkF3Fs4d258r9m
-         sPdmfsrXp4/lo5So6kExMrd+2oTlTbAbok5ESbCabR6bueqbDfO67dVqABNBX4/egmSg
-         IGzjMqM0S+sdarQH8iPlFOcWnPCw4sEV6ON+mn0ncvueRz31Ib2xQetWauH1/ks3oaQn
-         R4mBmm41kibxqyMqQ6OUeesGUzYckoA/5R5vaZPSVk2mp95uiSC/SsgYG3sqkG/0ftNn
-         Z6d67EsRB2Et2dwQ3sxlwlZ6VgcROVB+AnQ4hi6JlxtBBbK/983MSE8lMcY5pfL42amB
-         zqtA==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
+From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Subject: Re: [GIT PULL] cgroup fixes for v5.13-rc3
+Date: Mon, 24 May 2021 17:54:14 +0000
+Message-ID: <162187885432.20633.884131319559198358.pr-tracker-bot@kernel.org>
+References: <YKvlx7PZs6EplU1D@slm.duckdns.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1621878854;
+        bh=LILkxj8USR+Zx8wc8LGa6rOtLihl/NC+O1pusxGj/WY=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=PVdX9xPQOfi8qbzP2z0mkbbl8P8f6RuY49oYEpX3WCBF+kyt0VpDUvmIxvFS3jah1
+         6npF7vNVXlRH4OXPFdLherSbl3t5jSj2FaSUnLXtBeII+jc3rodqhZDC0GrRMzAIfR
+         g2b74fw6WjMw5py4CbOT2A/i+eIBZZMeBy/WVWnMBVbkEdknGPr5Ha+cRyKVaaTbyx
+         Sp0H8Kd7Jqv5PD4FKRUrO6PmBWGbUgFLUBXdM4ZlPTWAAYAHLAOKFMcIR6BWhsOyc5
+         ErU2cVG5+SoFSdnJisVuEWY5e8FEDDgCvNa0gKQmUC196F8vwhgd/wlSSE45baausJ
+         Zfxjt3oU4wD6Q==
+In-Reply-To: <YKvlx7PZs6EplU1D-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Linus.
+The pull request you sent on Mon, 24 May 2021 13:43:35 -0400:
 
-* "cgroup_disable=" boot param was being applied too late confusing some
-  subsystems. Fix it by moving application to __setup() time.
+> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.13-fixes
 
-* Comment spelling fixes. Included here to lower the chance of trivial
-  future merge conflicts.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/1434a3127887a7e708be5f4edd5e36d64d8622f8
 
-Thanks.
-
-The following changes since commit c3d0e3fd41b7f0f5d5d5b6022ab7e813f04ea727:
-
-  Merge tag 'fs.idmapped.mount_setattr.v5.13-rc3' of gitolite.kernel.org:pub/scm/linux/kernel/git/brauner/linux (2021-05-19 06:12:31 -1000)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.13-fixes
-
-for you to fetch changes up to 08b2b6fdf6b26032f025084ce2893924a0cdb4a2:
-
-  cgroup: fix spelling mistakes (2021-05-24 12:45:26 -0400)
-
-----------------------------------------------------------------
-Shakeel Butt (1):
-      cgroup: disable controllers at parse time
-
-Zhen Lei (1):
-      cgroup: fix spelling mistakes
-
- include/linux/cgroup-defs.h |  6 +++---
- include/linux/cgroup.h      |  2 +-
- kernel/cgroup/cgroup-v1.c   |  2 +-
- kernel/cgroup/cgroup.c      | 21 +++++++++------------
- kernel/cgroup/cpuset.c      |  2 +-
- kernel/cgroup/rdma.c        |  2 +-
- kernel/cgroup/rstat.c       |  2 +-
- 7 files changed, 17 insertions(+), 20 deletions(-)
+Thank you!
 
 -- 
-tejun
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
