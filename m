@@ -1,8 +1,8 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-5.13-fixes] BUILD SUCCESS
- 08b2b6fdf6b26032f025084ce2893924a0cdb4a2
-Date: Tue, 25 May 2021 13:23:39 +0800
-Message-ID: <60ac89db.DYGPKXWOyGIP+POr%lkp@intel.com>
+Subject: [cgroup:for-next] BUILD SUCCESS
+ 6962681ee8c6efdc6288568f35245803c165f713
+Date: Tue, 25 May 2021 13:23:43 +0800
+Message-ID: <60ac89df.2G4gM+AsEyJ2DkJU%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,8 +11,8 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.13-fixes
-branch HEAD: 08b2b6fdf6b26032f025084ce2893924a0cdb4a2  cgroup: fix spelling mistakes
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 6962681ee8c6efdc6288568f35245803c165f713  Merge branch 'for-5.13-fixes' into for-next
 
 elapsed time: 726m
 
@@ -89,10 +89,10 @@ mips                        bcm47xx_defconfig
 sh                           se7705_defconfig
 arm                        vexpress_defconfig
 mips                  cavium_octeon_defconfig
+sparc                               defconfig
 csky                             alldefconfig
 h8300                    h8300h-sim_defconfig
 sh                        edosk7705_defconfig
-sparc                               defconfig
 sh                         ap325rxa_defconfig
 powerpc                 mpc8313_rdb_defconfig
 mips                         db1xxx_defconfig
