@@ -1,114 +1,235 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Mon, 24 May 2021 20:37:44 -0300
-Message-ID: <20210524233744.GT1002214@nvidia.com>
-References: <20210422233950.GD1370958@nvidia.com>
- <YIecXkaEGNgICePO@yekko.fritz.box>
- <20210427171212.GD1370958@nvidia.com>
- <YIizNdbA0+LYwQbI@yekko.fritz.box>
- <20210428145622.GU1370958@nvidia.com>
- <YIoiJRY3FM7xH2bH@yekko>
- <20210503161518.GM1370958@nvidia.com>
- <YJy9o8uEZs42/qDM@yekko>
- <20210513135938.GG1002214@nvidia.com>
- <YKtbWo7PwIlXjFIV@yekko>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:for-5.13-fixes] BUILD SUCCESS
+ 08b2b6fdf6b26032f025084ce2893924a0cdb4a2
+Date: Tue, 25 May 2021 13:23:39 +0800
+Message-ID: <60ac89db.DYGPKXWOyGIP+POr%lkp@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FR6laYgpF9b95HZa9CNu+FrgxJqikDB0LQ7EyvD1SXA=;
- b=WioYrFyq6TDd0rJSB/lufkSLX4cBRO7UpPGYeEKYR41MY3irwINBc4DkMKQddsir47D0w756SKEJmSgTrTnmRVMf1HYNuT4SUz5aYLAKcR8zD/5/aP+/rBJWqP83YrpSqe/ncz48QcZH2Nbhb3yYHElXj5g3jU+R3JeIY2DQ4V7TAE3KB6aJZEuxSTVm7NcY22N2Kf0ae/4yk3jWAy/Jbo4671QI6sbtdHKNs+HceCilxErwvgyV6Ynlhay0dRNnvWXKjtc+Br8TTN+fKs3pXvQz0gqXwEqz+z8c2/GuRvDZKd+7FBBkH2RwqFUHeeO2ECqQXhMzPsiN4FXU/F7whQ==
-Content-Disposition: inline
-In-Reply-To: <YKtbWo7PwIlXjFIV@yekko>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>
-Cc: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, May 24, 2021 at 05:52:58PM +1000, David Gibson wrote:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.13-fixes
+branch HEAD: 08b2b6fdf6b26032f025084ce2893924a0cdb4a2  cgroup: fix spelling mistakes
 
-> > > I don't really see a semantic distinction between "always one-device
-> > > groups" and "groups don't matter".  Really the only way you can afford
-> > > to not care about groups is if they're singletons.
-> > 
-> > The kernel driver under the mdev may not be in an "always one-device"
-> > group.
-> 
-> I don't really understand what you mean by that.
+elapsed time: 726m
 
-I mean the group of the mdev's actual DMA device may have multiple
-things in it.
- 
-> > It is a kernel driver so the only thing we know and care about is that
-> > all devices in the HW group are bound to kernel drivers.
-> > 
-> > The vfio device that spawns from this kernel driver is really a
-> > "groups don't matter" vfio device because at the IOMMU layer it should
-> > be riding on the physical group of the kernel driver.  At the VFIO
-> > layer we no longer care about the group abstraction because the system
-> > guarentees isolation in some other way.
-> 
-> Uh.. I don't really know how mdevs are isolated from each other.  I
-> thought it was because the physical device providing the mdevs
-> effectively had an internal IOMMU (or at least DMA permissioning) to
-> isolate the mdevs, even though the physical device may not be fully
-> isolated.
-> 
-> In that case the virtual mdev is effectively in a singleton group,
-> which is different from the group of its parent device.
+configs tested: 204
+configs skipped: 3
 
-That is one way to view it, but it means creating a whole group
-infrastructure and abusing the IOMMU stack just to create this
-nonsense fiction. We also abuse the VFIO container stuff to hackily
-create several different types pf IOMMU uAPIs for the mdev - all of
-which are unrelated to drivers/iommu.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Basically, there is no drivers/iommu thing involved, thus is no really
-iommu group, for mdev it is all a big hacky lie.
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arm                         shannon_defconfig
+powerpc                      ppc64e_defconfig
+arm                         assabet_defconfig
+powerpc                       eiger_defconfig
+microblaze                      mmu_defconfig
+powerpc                     skiroot_defconfig
+h8300                       h8s-sim_defconfig
+mips                     loongson2k_defconfig
+m68k                       m5249evb_defconfig
+arc                    vdk_hs38_smp_defconfig
+arm                          collie_defconfig
+arm                         at91_dt_defconfig
+arm                            lart_defconfig
+sh                         apsh4a3a_defconfig
+arm                           spitz_defconfig
+powerpc                      makalu_defconfig
+arm                            zeus_defconfig
+arm                       mainstone_defconfig
+arm                            mps2_defconfig
+alpha                            allyesconfig
+powerpc                      tqm8xx_defconfig
+sh                                  defconfig
+arm                          gemini_defconfig
+powerpc                 linkstation_defconfig
+mips                         tb0226_defconfig
+powerpc                          allmodconfig
+m68k                        mvme16x_defconfig
+x86_64                           alldefconfig
+arm                  colibri_pxa270_defconfig
+mips                         cobalt_defconfig
+riscv                    nommu_virt_defconfig
+openrisc                  or1klitex_defconfig
+xtensa                    xip_kc705_defconfig
+m68k                          amiga_defconfig
+powerpc                       holly_defconfig
+mips                        nlm_xlr_defconfig
+sh                          lboxre2_defconfig
+mips                        omega2p_defconfig
+mips                          malta_defconfig
+mips                          rb532_defconfig
+riscv             nommu_k210_sdcard_defconfig
+openrisc                 simple_smp_defconfig
+sh                          rsk7201_defconfig
+powerpc                  mpc866_ads_defconfig
+powerpc                     sequoia_defconfig
+powerpc                 mpc85xx_cds_defconfig
+powerpc                 mpc837x_rdb_defconfig
+sh                               j2_defconfig
+powerpc                      katmai_defconfig
+arm                       spear13xx_defconfig
+arm                        spear3xx_defconfig
+powerpc                         ps3_defconfig
+powerpc                     tqm8555_defconfig
+mips                       bmips_be_defconfig
+parisc                              defconfig
+mips                         bigsur_defconfig
+arm                        mvebu_v7_defconfig
+mips                        bcm47xx_defconfig
+sh                           se7705_defconfig
+arm                        vexpress_defconfig
+mips                  cavium_octeon_defconfig
+csky                             alldefconfig
+h8300                    h8300h-sim_defconfig
+sh                        edosk7705_defconfig
+sparc                               defconfig
+sh                         ap325rxa_defconfig
+powerpc                 mpc8313_rdb_defconfig
+mips                         db1xxx_defconfig
+sh                        edosk7760_defconfig
+sparc64                             defconfig
+sh                           se7750_defconfig
+s390                          debug_defconfig
+mips                      malta_kvm_defconfig
+powerpc                      cm5200_defconfig
+powerpc                 canyonlands_defconfig
+m68k                           sun3_defconfig
+um                                allnoconfig
+nios2                         10m50_defconfig
+powerpc               mpc834x_itxgp_defconfig
+sh                            shmin_defconfig
+mips                            gpr_defconfig
+arm                             mxs_defconfig
+sh                          sdk7786_defconfig
+arm                     eseries_pxa_defconfig
+m68k                         apollo_defconfig
+mips                      pic32mzda_defconfig
+powerpc                  mpc885_ads_defconfig
+m68k                             alldefconfig
+powerpc                    adder875_defconfig
+sh                        sh7763rdp_defconfig
+sh                   rts7751r2dplus_defconfig
+arm                            qcom_defconfig
+mips                        qi_lb60_defconfig
+xtensa                       common_defconfig
+mips                        workpad_defconfig
+arm                           sama5_defconfig
+arm                           h5000_defconfig
+arc                              alldefconfig
+xtensa                         virt_defconfig
+alpha                            alldefconfig
+arc                 nsimosci_hs_smp_defconfig
+arm                          badge4_defconfig
+powerpc                        warp_defconfig
+arm                        multi_v5_defconfig
+arm                          simpad_defconfig
+x86_64                            allnoconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a005-20210524
+x86_64               randconfig-a001-20210524
+x86_64               randconfig-a006-20210524
+x86_64               randconfig-a003-20210524
+x86_64               randconfig-a004-20210524
+x86_64               randconfig-a002-20210524
+i386                 randconfig-a001-20210524
+i386                 randconfig-a002-20210524
+i386                 randconfig-a005-20210524
+i386                 randconfig-a006-20210524
+i386                 randconfig-a004-20210524
+i386                 randconfig-a003-20210524
+i386                 randconfig-a001-20210525
+i386                 randconfig-a002-20210525
+i386                 randconfig-a005-20210525
+i386                 randconfig-a006-20210525
+i386                 randconfig-a003-20210525
+i386                 randconfig-a004-20210525
+x86_64               randconfig-a013-20210525
+x86_64               randconfig-a012-20210525
+x86_64               randconfig-a014-20210525
+x86_64               randconfig-a016-20210525
+x86_64               randconfig-a015-20210525
+x86_64               randconfig-a011-20210525
+i386                 randconfig-a011-20210524
+i386                 randconfig-a016-20210524
+i386                 randconfig-a015-20210524
+i386                 randconfig-a012-20210524
+i386                 randconfig-a014-20210524
+i386                 randconfig-a013-20210524
+i386                 randconfig-a011-20210525
+i386                 randconfig-a016-20210525
+i386                 randconfig-a015-20210525
+i386                 randconfig-a012-20210525
+i386                 randconfig-a014-20210525
+i386                 randconfig-a013-20210525
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+um                               allmodconfig
+um                               allyesconfig
+um                                  defconfig
+x86_64                           allyesconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+x86_64                                  kexec
 
-> If the physical device had a bug which meant the mdevs *weren't*
-> properly isolated from each other, then those mdevs would share a
-> group, and you *would* care about it.  Depending on how the isolation
-> failed the mdevs might or might not also share a group with the parent
-> physical device.
+clang tested configs:
+x86_64               randconfig-b001-20210524
+x86_64               randconfig-b001-20210525
+x86_64               randconfig-a005-20210525
+x86_64               randconfig-a006-20210525
+x86_64               randconfig-a001-20210525
+x86_64               randconfig-a003-20210525
+x86_64               randconfig-a004-20210525
+x86_64               randconfig-a002-20210525
+x86_64               randconfig-a013-20210524
+x86_64               randconfig-a012-20210524
+x86_64               randconfig-a014-20210524
+x86_64               randconfig-a016-20210524
+x86_64               randconfig-a015-20210524
+x86_64               randconfig-a011-20210524
 
-That isn't a real scenario.. mdevs that can't be isolated just
-wouldn't be useful to exist
-
-> > This is today's model, yes. When you run dpdk on a multi-group device
-> > vfio already ensures that all the device groups remained parked and
-> > inaccessible.
-> 
-> I'm not really following what you're saying there.
-> 
-> If you have a multi-device group, and dpdk is using one device in it,
-> VFIO *does not* (and cannot) ensure that other devices in the group
-> are parked and inaccessible.  
-
-I mean in the sense that no other user space can open those devices
-and no kernel driver can later be attached to them.
-
-> It ensures that they're parked at the moment the group moves from
-> kernel to userspace ownership, but it can't prevent dpdk from
-> accessing and unparking those devices via peer to peer DMA.
-
-Right, and adding all this group stuff did nothing to alert the poor
-admin that is running DPDK to this risk.
-
-> > If the administator configures the system with different security
-> > labels for different VFIO devices then yes removing groups makes this
-> > more tricky as all devices in the group should have the same label.
-> 
-> That seems a bigger problem than "more tricky".  How would you propose
-> addressing this with your device-first model?
-
-You put the same security labels you'd put on the group to the devices
-that consitute the group. It is only more tricky in the sense that the
-script that would have to do this will need to do more than ID the
-group to label but also ID the device members of the group and label
-their char nodes.
-
-Jason
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
