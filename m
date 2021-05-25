@@ -1,64 +1,43 @@
-From: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
-Subject: Re: [PATCH 1/3] sched/fair: Add tg_load_contrib cfs_rq decay checking
-Date: Tue, 25 May 2021 12:33:35 +0200
-Message-ID: <CAFpoUr0f50hKUtWvpTy221xT+pUocY7LXCMCo3cPJupjgMtotg@mail.gmail.com>
-References: <20210518125202.78658-1-odin@uged.al> <20210518125202.78658-2-odin@uged.al>
- <CAKfTPtCCZhjOCZR6DMSxb9qffG2KceWONP_MzoY6TpYBmWp+hg@mail.gmail.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v3 1/1] cgroup: make per-cgroup pressure stall tracking
+ configurable
+Date: Tue, 25 May 2021 09:00:30 -0400
+Message-ID: <YKz07nx3E8UEo1xa@cmpxchg.org>
+References: <20210524195339.1233449-1-surenb@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=uged.al; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=UD1f1G9Ex4FwbzHzbUArz7WZFjqV4ALpCGYlosc7pFs=;
-        b=rkN2FqQcIKdfrkPyeXVV+a3SZSWeeezHAFurF3wfm7k7x4cdKt9YJPMOwuxYJkYVnW
-         0p/uzXKTTQ8BicHVNLs//N5duQlo3qK5C/6gMDSNen9WXVFn6UZ1Og2D2WHiDeQ6ZnGO
-         pHyJnrV6PB0Eep3Z+tgRiR6wAKeVpJPNprZ8ZBHEvFC5s4o/M4Zdu5ysFXUIS2H8VIqf
-         lS6jE/CKBPrqTseC0B9ICNfTJL9ejNkWFFox2jJRzuJDPPToeQWVRC70eZtE/zWw1Vtc
-         carGqY2HC448jpHA4LhJjVKYKLWZF7dQlxTH9XNS+1WG5rnCJuLpx3es6o5KcAFz3ZjN
-         8C6g==
-In-Reply-To: <CAKfTPtCCZhjOCZR6DMSxb9qffG2KceWONP_MzoY6TpYBmWp+hg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Y28saWW4RbQx7WFyioP30Xg1gnMSgGnjvex8TrgoAmQ=;
+        b=SmfdiXxkr36Ea/32dUzc9goah/P/GDAmfDbfC23QxapWU+TYijU+tfipqVELo7UnNb
+         kCjW74Q30JDB5fgFGsHqgJCEmxBDKG9IApVbKABuX/KOwPBR0S9vlJjymq+MrMGk51h3
+         6ydpK/iuWp9N2XdHcbwhGAfcdpizobjsabPIpm0tzrNvmu9Bxekatij9qaP2uru6JWkm
+         9Q/bdYcBQsR1yN1XYUK+IHclcbpDWwfEhDxrstMqMj+GfnNWOoDjxxvTrZpSn3pYUBV+
+         tBirFOf/cNxOyaXXED4cDuzfXDrAdEmlM6leYVvOPcAJrsNxmqDTUvm5putYq5K3bzNj
+         AP8g==
+Content-Disposition: inline
+In-Reply-To: <20210524195339.1233449-1-surenb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: tj@kernel.org, lizefan.x@bytedance.com, mingo@redhat.com, peterz@infradead.org, shakeelb@google.com, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, minchan@kernel.org, corbet@lwn.net, bristot@redhat.com, paulmck@kernel.org, rdunlap@infradead.org, akpm@linux-foundation.org, tglx@linutronix.de, macro@orcam.me.uk, viresh.kumar@linaro.org, mike.kravetz@oracle.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@android.com
 
-Hi,
+On Mon, May 24, 2021 at 12:53:39PM -0700, Suren Baghdasaryan wrote:
+> PSI accounts stalls for each cgroup separately and aggregates it at each
+> level of the hierarchy. This causes additional overhead with psi_avgs_work
+> being called for each cgroup in the hierarchy. psi_avgs_work has been
+> highly optimized, however on systems with large number of cgroups the
+> overhead becomes noticeable.
+> Systems which use PSI only at the system level could avoid this overhead
+> if PSI can be configured to skip per-cgroup stall accounting.
+> Add "cgroup_disable=pressure" kernel command-line option to allow
+> requesting system-wide only pressure stall accounting. When set, it
+> keeps system-wide accounting under /proc/pressure/ but skips accounting
+> for individual cgroups and does not expose PSI nodes in cgroup hierarchy.
+> 
+> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
 
-tir. 25. mai 2021 kl. 11:58 skrev Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>:
-> Could you give more details about how cfs_rq->avg.load_avg = 4 but
-> cfs_rq->avg.load_sum = 0 ?
->
-> cfs_rq->avg.load_sum is decayed and can become null when crossing
-> period which implies an update of cfs_rq->avg.load_avg.  This means
-> that your case is generated by something outside the pelt formula ...
-> like maybe the propagation of load in the tree. If this is the case,
-> we should find the error and fix it
-
-Ahh, yeah, that could probably be described better.
-
-It is (as far as I have found out) because the pelt divider is changed,
-and the output from "get_pelt_divider(&cfs_rq->avg)" is changed, resulting
-in a different value being removed than added.
-
-Inside pelt itself, this cannot happen. When pelt changes the load_sum, it
-recalculates the load_avg based on load_sum, and not the delta, afaik.
-
-And as you say, the "issue" therefore (as I see it) outside of PELT. Due to
-how the pelt divider is changed, I assume it is hard to pinpoint where the issue
-is. I can try to find a clear path where where we can see what is added
-and what is removed from both cfs_rq->avg.load_sum and cfs_rq->avg.load_avg,
-to better be able to pinpoint what is happening.
-
-Previously I thought this was a result of precision loss due to division and
-multiplication during load add/remove inside fair.c, but I am not sure that
-is the issue, or is it?
-
-If my above line of thought makes sense, do you still view this as an error
-outside PELT, or do you see another possible/better solution?
-
-Will investigate further.
-
-Thanks
-Odin
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
