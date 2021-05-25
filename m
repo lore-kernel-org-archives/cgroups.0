@@ -1,8 +1,8 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-next] BUILD SUCCESS
- 6962681ee8c6efdc6288568f35245803c165f713
-Date: Tue, 25 May 2021 13:23:43 +0800
-Message-ID: <60ac89df.2G4gM+AsEyJ2DkJU%lkp@intel.com>
+Subject: [cgroup:for-5.14] BUILD SUCCESS
+ c2a11971549b16a24cce81250d84b63d53499fd0
+Date: Tue, 25 May 2021 14:26:15 +0800
+Message-ID: <60ac9887.dOMPkJ8fRInmxCgK%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,12 +11,12 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 6962681ee8c6efdc6288568f35245803c165f713  Merge branch 'for-5.13-fixes' into for-next
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.14
+branch HEAD: c2a11971549b16a24cce81250d84b63d53499fd0  Merge branch 'for-5.13-fixes' into for-5.14
 
-elapsed time: 726m
+elapsed time: 722m
 
-configs tested: 204
+configs tested: 197
 configs skipped: 3
 
 The following configs have been built successfully.
@@ -28,12 +28,6 @@ arm64                            allyesconfig
 arm64                               defconfig
 arm                              allyesconfig
 arm                              allmodconfig
-arm                         shannon_defconfig
-powerpc                      ppc64e_defconfig
-arm                         assabet_defconfig
-powerpc                       eiger_defconfig
-microblaze                      mmu_defconfig
-powerpc                     skiroot_defconfig
 h8300                       h8s-sim_defconfig
 mips                     loongson2k_defconfig
 m68k                       m5249evb_defconfig
@@ -73,6 +67,7 @@ openrisc                 simple_smp_defconfig
 sh                          rsk7201_defconfig
 powerpc                  mpc866_ads_defconfig
 powerpc                     sequoia_defconfig
+powerpc                     skiroot_defconfig
 powerpc                 mpc85xx_cds_defconfig
 powerpc                 mpc837x_rdb_defconfig
 sh                               j2_defconfig
@@ -82,22 +77,17 @@ arm                        spear3xx_defconfig
 powerpc                         ps3_defconfig
 powerpc                     tqm8555_defconfig
 mips                       bmips_be_defconfig
-parisc                              defconfig
 mips                         bigsur_defconfig
 arm                        mvebu_v7_defconfig
 mips                        bcm47xx_defconfig
 sh                           se7705_defconfig
 arm                        vexpress_defconfig
+arm                         assabet_defconfig
 mips                  cavium_octeon_defconfig
 sparc                               defconfig
 csky                             alldefconfig
 h8300                    h8300h-sim_defconfig
 sh                        edosk7705_defconfig
-sh                         ap325rxa_defconfig
-powerpc                 mpc8313_rdb_defconfig
-mips                         db1xxx_defconfig
-sh                        edosk7760_defconfig
-sparc64                             defconfig
 sh                           se7750_defconfig
 s390                          debug_defconfig
 mips                      malta_kvm_defconfig
@@ -119,13 +109,15 @@ m68k                             alldefconfig
 powerpc                    adder875_defconfig
 sh                        sh7763rdp_defconfig
 sh                   rts7751r2dplus_defconfig
-arm                            qcom_defconfig
-mips                        qi_lb60_defconfig
-xtensa                       common_defconfig
 mips                        workpad_defconfig
 arm                           sama5_defconfig
 arm                           h5000_defconfig
 arc                              alldefconfig
+xtensa                generic_kc705_defconfig
+m68k                       m5208evb_defconfig
+powerpc64                           defconfig
+arm                            xcep_defconfig
+arm                         lpc32xx_defconfig
 xtensa                         virt_defconfig
 alpha                            alldefconfig
 arc                 nsimosci_hs_smp_defconfig
@@ -151,6 +143,7 @@ xtensa                           allyesconfig
 h8300                            allyesconfig
 arc                                 defconfig
 sh                               allmodconfig
+parisc                              defconfig
 s390                             allyesconfig
 s390                             allmodconfig
 parisc                           allyesconfig
