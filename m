@@ -1,121 +1,59 @@
-From: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Tue, 25 May 2021 16:52:52 -0600
-Message-ID: <20210525165252.6959d9da.alex.williamson@redhat.com>
-References: <20210422233950.GD1370958@nvidia.com>
-        <YIecXkaEGNgICePO@yekko.fritz.box>
-        <20210427171212.GD1370958@nvidia.com>
-        <YIizNdbA0+LYwQbI@yekko.fritz.box>
-        <20210428145622.GU1370958@nvidia.com>
-        <YIoiJRY3FM7xH2bH@yekko>
-        <20210503161518.GM1370958@nvidia.com>
-        <YJy9o8uEZs42/qDM@yekko>
-        <20210513135938.GG1002214@nvidia.com>
-        <YKtbWo7PwIlXjFIV@yekko>
-        <20210524233744.GT1002214@nvidia.com>
-        <ce2fcf21-1803-047b-03f0-7a4108dea7af@nvidia.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Yang Li <yang.lee-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH] cgroup: Fix kernel-doc
+Date: Wed, 26 May 2021 10:49:09 +0800
+Message-ID: <1621997349-118999-1-git-send-email-yang.lee@linux.alibaba.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1621983178;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=SBoHc3TMtFMMXyl4OvwN2G9ZYTn+3x2tRvNpJ1JHSJM=;
-        b=UlJW6Sb9QNkeNpXYKehd0mbsylm2Zak31zHX6VaU22y2n0cVITp5rn9sJ7wfwrDEoyyH1O
-        dovAHmdGpkVESjME514gFxIAieT8Afm9A9SgjuPXbrhK9CNK0Bc4RbWRdhxjCeFZ6bBwCD
-        jQmIbHdreLowKSNNfp1qVzkSs5TGqIo=
-In-Reply-To: <ce2fcf21-1803-047b-03f0-7a4108dea7af-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Kirti Wankhede <kwankhede-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yang Li <yang.lee-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 
-On Wed, 26 May 2021 00:56:30 +0530
-Kirti Wankhede <kwankhede-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
+Fix function name in cgroup.c and rstat.c kernel-doc comment
+to remove these warnings found by clang_w1.
 
-> On 5/25/2021 5:07 AM, Jason Gunthorpe wrote:
-> > On Mon, May 24, 2021 at 05:52:58PM +1000, David Gibson wrote:
-> >   
-> >>>> I don't really see a semantic distinction between "always one-device
-> >>>> groups" and "groups don't matter".  Really the only way you can afford
-> >>>> to not care about groups is if they're singletons.  
-> >>>
-> >>> The kernel driver under the mdev may not be in an "always one-device"
-> >>> group.  
-> >>
-> >> I don't really understand what you mean by that.  
-> > 
-> > I mean the group of the mdev's actual DMA device may have multiple
-> > things in it.
-> >     
-> >>> It is a kernel driver so the only thing we know and care about is that
-> >>> all devices in the HW group are bound to kernel drivers.
-> >>>
-> >>> The vfio device that spawns from this kernel driver is really a
-> >>> "groups don't matter" vfio device because at the IOMMU layer it should
-> >>> be riding on the physical group of the kernel driver.  At the VFIO
-> >>> layer we no longer care about the group abstraction because the system
-> >>> guarentees isolation in some other way.  
-> >>
-> >> Uh.. I don't really know how mdevs are isolated from each other.  I
-> >> thought it was because the physical device providing the mdevs
-> >> effectively had an internal IOMMU (or at least DMA permissioning) to
-> >> isolate the mdevs, even though the physical device may not be fully
-> >> isolated.
-> >>
-> >> In that case the virtual mdev is effectively in a singleton group,
-> >> which is different from the group of its parent device.  
-> >   
-> 
-> That's correct.
-> 
-> > That is one way to view it, but it means creating a whole group
-> > infrastructure and abusing the IOMMU stack just to create this
-> > nonsense fiction.  
-> 
-> I really didn't get how this abuse the IOMMU stack.
-> mdev can be used in 3 different ways:
-> 1. non-iommu backed mdev devices where mdev vendor driver takes care to
-> DMA map (iommu_map) and isolation is through device hardware internal
-> MMU. Here vfio_iommu_type1 module provides a way to validate and pin
-> pages required by mdev device for DMA mapping. Then IOMMU mapping is
-> done by mdev vendor driver which is owner driver of physical device.
-> 
-> 2. iommu backed mdev devices for SRIOV where mdev device is created per
-> VF (mdev device == VF device) then that mdev device has same iommu
-> protection scope as VF associated to it. Here mdev device is virtual
-> device which uses features of mdev and represents underlying VF device,
-> same as vfio-pci but with additional mdev features.
+kernel/cgroup/cgroup.c:2401: warning: expecting prototype for
+cgroup_taskset_migrate(). Prototype was for cgroup_migrate_execute()
+instead.
+kernel/cgroup/rstat.c:233: warning: expecting prototype for
+cgroup_rstat_flush_begin(). Prototype was for cgroup_rstat_flush_hold()
+instead.
 
-What features would those be?  There are no mdev specific parts of the
-vfio uAPI.
+Reported-by: Abaci Robot <abaci-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Fixes: 'commit e595cd706982 ("cgroup: track migration context in cgroup_mgctx")'
+Signed-off-by: Yang Li <yang.lee-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 2 +-
+ kernel/cgroup/rstat.c  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-The mdev device is a virtual device, by why it it virtual in this case?
-Aren't we effectively assigning the VF itself (mdev device == VF device)
-with a bunch of extra support code to fill in the gaps of the VF
-implementing the complete device model in hardware?
-
-We're effectively creating this virtual device, creating a fake IOMMU
-group, and trying to create this association of this virtual device to
-the real VF in order to shoehorn it into the mdev model.  What do we
-get from that model other than lifecycle management (ie. type selection)
-and re-use of a bunch of code from the driver supporting the 1) model
-above?
-
-This specific model seems better served by a device specific peer
-driver to vfio-pci (ie. a "vfio-pci variant").  You effectively already
-have the code for this driver, it's just in the format of an mdev
-driver rather than a vfio "bus driver".  The work Jason references
-relative to Max aims to make these kinds of drivers easier to implement
-through re-use of vfio-pci code.
-
-There are certainly other solutions we could come up with for selecting
-a specific device type for a vfio-pci variant driver to implement other
-than pretending this model actually belongs in mdev, right?  Thanks,
-
-Alex
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 21ecc6e..fc344f4 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -2389,7 +2389,7 @@ struct task_struct *cgroup_taskset_next(struct cgroup_taskset *tset,
+ }
+ 
+ /**
+- * cgroup_taskset_migrate - migrate a taskset
++ * cgroup_migrate_execute - migrate a taskset
+  * @mgctx: migration context
+  *
+  * Migrate tasks in @mgctx as setup by migration preparation functions.
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index cee265c..7f0e589 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -220,7 +220,7 @@ void cgroup_rstat_flush_irqsafe(struct cgroup *cgrp)
+ }
+ 
+ /**
+- * cgroup_rstat_flush_begin - flush stats in @cgrp's subtree and hold
++ * cgroup_rstat_flush_hold - flush stats in @cgrp's subtree and hold
+  * @cgrp: target cgroup
+  *
+  * Flush stats in @cgrp's subtree and prevent further flushes.  Must be
+-- 
+1.8.3.1
 
