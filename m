@@ -1,7 +1,7 @@
 From: yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Subject: [RFC 6/7] mm: record the numbers of memory allocation throttle
-Date: Thu, 27 May 2021 00:18:03 +0800
-Message-ID: <46a38b81ebd7b43b6603249aea1d2361634b6c27.1622043596.git.yuleixzhang@tencent.com>
+Subject: [RFC 7/7] mm: introduce mst low and min watermark
+Date: Thu, 27 May 2021 00:18:04 +0800
+Message-ID: <8bcece04ee8ac9a065ad7603fc07a097c69a1278.1622043596.git.yuleixzhang@tencent.com>
 References: <cover.1622043596.git.yuleixzhang@tencent.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,13 +10,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=zQ040QfcPG4lHUi4S0IEUYk2U7PBxtj8LmdZLbyNSis=;
-        b=DTr76h8fO+Od5pZx0kuxRvXY9JknFBdGEDQqcSpfO88BQBthVVuifFlteZt2EpcI3s
-         vNmfenAlhMAEmAADaBDQp3v6L4SqONcJnxl19ESUK5+D/wQ3FilO3hpJtccIICkPlPfU
-         gWHvYCAeSrIMHcS78AbQfawpcUEIeg10EEpDJ0SDYhl0O5h1HXDdKpoPvmyAOZF1tqqR
-         Lw5UlNG0YUqNvgodO2nyl1JCTiIvxk6VzVZUy1+0qKVz1aEThq/PUMwpWacqY0y678WF
-         dVoIJ0tjKlSLZkdFNNEx0iXTAp4ohaPscDuPjKI5Rk4mFXnCwACKPA7cKjI8dpeR9rf2
-         O1Fw==
+        bh=pl6dvHU30PgX6inAcxI6IEegFN0mmkGWsJaYSmJnWfo=;
+        b=H1iSHg/ma1Xsf1EM6/6EaiMPq6PgnGV3dfuWqsO/+rxQm+dS7MOO88auKUH80uZjma
+         x0EDL0h0MjNBsI9h4evzDOmlTCpQbB2H+wOdUWCekdgmqM3TAP9pins9czC5lqXkh9TM
+         SNglB/DSaOsTplFXR9SBXOrfY09JkU10llOSYtUcruCe7EdpHkRPSD3BrKO2VIAL/oaq
+         P6DZshctJHsEbi5PH/LpozNSV2lwAkMBnkxONPa4rgYKb7NcP4LHVzEQRvIjCuT5thux
+         bHCruQgQtP+6a+5UGRdp4qsR5j1wRZ1+UOrfYu3HG2d4G3xRF51UtzX+xAh3GzvmpCP5
+         OKaA==
 In-Reply-To: <cover.1622043596.git.yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -25,106 +25,92 @@ Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, benbjiang-1Nz4purKYjRBDgjK7
 
 From: Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Record the number of times we trigger the memory allocation
-throttle.
+Memory allocation speed throttle aims to avoid direct reclaim caused
+by memory usage burst, which mostly happens under memory pressure.
+As unconditional throttling could introduce unnecessary overhead, we add
+two watermarks to control the throttling.
+
+When mst low wmark reached, we start to throttle memory speed if it is
+overspeed. And if mst min wmark reached, we do throttling directly everytime
+charging without checking the memory allocation speed.
 
 Signed-off-by: Jiang Biao <benbjiang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Signed-off-by: Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 ---
- include/linux/memcontrol.h |  1 +
- mm/memcontrol.c            | 34 +++++++++++++++++++++++++++++-----
- 2 files changed, 30 insertions(+), 5 deletions(-)
+ include/linux/memcontrol.h |  6 ++++++
+ mm/memcontrol.c            | 31 ++++++++++++++++++++++++++++++-
+ 2 files changed, 36 insertions(+), 1 deletion(-)
 
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index b20820f7fdbf..59e6cb78a07a 100644
+index 59e6cb78a07a..011d1426a924 100644
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -239,6 +239,7 @@ struct mem_spd_ctl {
- 	unsigned long prev_chg;
- 	int has_lmt;
+@@ -241,6 +241,12 @@ struct mem_spd_ctl {
  	atomic_t updating;
-+	atomic_long_t nr_throttled;
+ 	atomic_long_t nr_throttled;
  };
++
++enum mst_wmark_stat {
++	WMARK_OK = 0,
++	WMARK_REACH_LOW,
++	WMARK_REACH_MIN,
++};
  #endif
  
+ /*
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a1e33a9e6594..ca39974403a3 100644
+index ca39974403a3..b1111dc8e585 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1401,11 +1401,19 @@ static void mem_cgroup_mst_msc_reset(struct mem_cgroup *memcg)
- 		return;
- 
- 	msc = &memcg->msc;
--	msc->has_lmt = 0;
--	msc->mem_spd_lmt = 0;
--	msc->slice_lmt = 0;
--	msc->prev_chg = 0;
--	msc->prev_thl_jifs = 0;
-+	while (msc->prev_thl_jifs ||
-+	    msc->prev_chg ||
-+	    msc->slice_lmt ||
-+	    msc->mem_spd_lmt ||
-+	    msc->has_lmt ||
-+	    atomic_long_read(&msc->nr_throttled)) {
-+		atomic_long_set(&msc->nr_throttled, 0);
-+		msc->has_lmt = 0;
-+		msc->mem_spd_lmt = 0;
-+		msc->slice_lmt = 0;
-+		msc->prev_chg = 0;
-+		msc->prev_thl_jifs = 0;
-+	}
+@@ -1546,18 +1546,47 @@ static int mem_cgroup_mst_overspd_tree(struct mem_cgroup *memcg)
+ 	return ret;
  }
  
- static void mem_cgroup_mst_has_lmt_init(struct mem_cgroup *memcg)
-@@ -1552,6 +1560,8 @@ static void mem_cgroup_mst_spd_throttle(struct mem_cgroup *memcg)
- 	if (!ret)
- 		return;
- 
-+	atomic_long_inc(&msc->nr_throttled);
-+
- 	/*
- 	 * Throttle the allocation for amount of jiffies according to
- 	 * the fraction between the actual memory usage and allowed
-@@ -1586,11 +1596,22 @@ static void mem_cgroup_mst_show_mem_spd_max(struct mem_cgroup *memcg,
- 	seq_printf(m, "mst_mem_spd_max %lu\n",
- 		   mem_cgroup_mst_get_mem_spd_max(memcg));
- }
-+
-+static void mem_cgroup_mst_show_nr_throttled(struct mem_cgroup *memcg,
-+					     struct seq_file *m)
++static enum mst_wmark_stat mem_cgroup_mst_wmark_ok(struct mem_cgroup *memcg)
 +{
-+	seq_printf(m, "mst_nr_throttled %lu\n",
-+		   atomic_long_read(&memcg->msc.nr_throttled));
++	int nid;
++
++	for_each_online_node(nid) {
++		unsigned long free, low, min;
++		struct zone *zone;
++
++		zone = &NODE_DATA(nid)->node_zones[ZONE_NORMAL];
++		free = zone_page_state(zone, NR_FREE_PAGES);
++		low = low_wmark_pages(zone);
++		min = min_wmark_pages(zone);
++		min += (low - min) >> 2;
++
++		if (free <= min)
++			return WMARK_REACH_MIN;
++
++		if (free <= low)
++			return WMARK_REACH_LOW;
++
++	}
++	return WMARK_OK;
 +}
- #else /* CONFIG_MEM_SPEED_THROTTLE */
++
  static void mem_cgroup_mst_spd_throttle(struct mem_cgroup *memcg)
  {
- }
+ 	struct mem_spd_ctl *msc = &memcg->msc;
+ 	long timeout;
+ 	int ret = 0;
++	enum mst_wmark_stat stat;
  
-+static void mem_cgroup_mst_spd_throttle(struct mem_cgroup *memcg)
-+{
-+}
+ 	if (!memcg->msc.has_lmt || in_interrupt() || in_atomic() ||
+ 		irqs_disabled() || oops_in_progress)
+ 		return;
+ 
++	stat = mem_cgroup_mst_wmark_ok(memcg);
++	if (stat == WMARK_OK)
++		return;
 +
- static void mem_cgroup_mst_has_lmt_init(struct mem_cgroup *memcg)
- {
- }
-@@ -1678,6 +1699,8 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
- #ifdef CONFIG_MEM_SPEED_THROTTLE
- 	seq_buf_printf(&s, "mst_mem_spd_max %lu\n",
- 		mem_cgroup_mst_get_mem_spd_max(memcg));
-+	seq_buf_printf(&s, "mst_nr_throttled %lu\n",
-+		atomic_long_read(&memcg->msc.nr_throttled));
- #endif
+ 	ret = mem_cgroup_mst_overspd_tree(memcg);
+-	if (!ret)
++	if (stat == WMARK_REACH_LOW && !ret)
+ 		return;
  
- 	/* The above should easily fit into one page */
-@@ -4131,6 +4154,7 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- #endif
- 
- 	mem_cgroup_mst_show_mem_spd_max(memcg, m);
-+	mem_cgroup_mst_show_nr_throttled(memcg, m);
- 
- 	return 0;
- }
+ 	atomic_long_inc(&msc->nr_throttled);
 -- 
 2.28.0
 
