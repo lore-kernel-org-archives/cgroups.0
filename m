@@ -1,50 +1,87 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Wed, 26 May 2021 16:13:22 -0300
-Message-ID: <20210526191322.GQ1002214@nvidia.com>
-References: <YIoiJRY3FM7xH2bH@yekko>
- <20210503161518.GM1370958@nvidia.com>
- <YJy9o8uEZs42/qDM@yekko>
- <20210513135938.GG1002214@nvidia.com>
- <YKtbWo7PwIlXjFIV@yekko>
- <20210524233744.GT1002214@nvidia.com>
- <ce2fcf21-1803-047b-03f0-7a4108dea7af@nvidia.com>
- <20210525165252.6959d9da.alex.williamson@redhat.com>
- <6f9dad1a-4e15-1703-d6f4-1b51b7fde15a@nvidia.com>
- <20210526125905.61e00a18.alex.williamson@redhat.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH-next] mm/memcontrol.c: Fix potential uninitialized variable warning
+Date: Wed, 26 May 2021 15:36:02 -0400
+Message-ID: <20210526193602.8742-1-longman@redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SWuO9e9xT6uCDc51InbjAXoSqaQdVWoQ3GqsT4SVE+I=;
- b=mC8Vk/BZMuGQ9+dcKC5CDBQPUR3rAIEcSdoIlDqhxH3QcefGTHvP2JwdDyk1Vr0LR/8yhPCaj8c1EyH8mD8k9YsowGQRXQhYSUd4RrDoTtpIIB3LT4/sXNUJpOc5T0nDtDA/wIPZ2suXtpzJ27edmulW7B24RLIBI/gQZsVJnmo+C11BnFZiGZIQo5ILYspY7j4/whNet1uRlWvwojzy2iSgUaD4OdRg283oeiaKz5o1ZOE5VaV1ct6cspZq/nAhgS1oKM/Ut4kerzrQsdSIo75+IdV0so16xphObhkQdJxo3W2FtEUHi9ips9nnYNO8xGoFQEGSceDUTkZYwDNItQ==
-Content-Disposition: inline
-In-Reply-To: <20210526125905.61e00a18.alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1622057791;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=lvXIzW1vboiHDAOnYTe4b5RTNGtYwyUKmFA6LenTEYg=;
+        b=XzjstuFw0W+1Gegcc64NyEjxfe+peoxq/ghdk3LAg+7TUEfxd+o41+1rmPTuXfOvKg6o8P
+        QoKzzeWlXlzAkX//WI5gRdklqKeeMksmu4N/hgO+zTlLpgV7LLuoEWjwf4d6eCL9cjDrRH
+        poIhyAJ//1ZjpwkC/DUdHtEBO87asu8=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Kirti Wankhede <kwankhede-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Wed, May 26, 2021 at 12:59:05PM -0600, Alex Williamson wrote:
+If the -Wno-maybe-uninitialized gcc option is not specified, compilation
+of memcontrol.c may generate the following warnings:
 
-> A driver provided sysfs attribute would obviously fill the short
-> term gap, long term maybe this would be standardized via netlink.  It
-> seems a bit analogous to setting the MAC address for a VF on an SR-IOV
-> NIC or VF namespace configuration for an SR-IOV NVMe device.  Thanks,
+mm/memcontrol.c: In function ‘refill_obj_stock’:
+./arch/x86/include/asm/irqflags.h:127:17: warning: ‘flags’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+  return !(flags & X86_EFLAGS_IF);
+          ~~~~~~~^~~~~~~~~~~~~~~~
+mm/memcontrol.c:3216:16: note: ‘flags’ was declared here
+  unsigned long flags;
+                ^~~~~
+In file included from mm/memcontrol.c:29:
+mm/memcontrol.c: In function ‘uncharge_page’:
+./include/linux/memcontrol.h:797:2: warning: ‘objcg’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+  percpu_ref_put(&objcg->refcnt);
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We have been doing a lot of work in netlink/devlink to program the VF
-settings before starting the VF driver
+Fix that by properly initializing *pflags in get_obj_stock() and
+introducing a use_objcg bool variable in uncharge_page() to avoid
+potentially accessing the struct page data twice.
 
-I've long thought it would be good to standardize a VF lifecycle in
-Linux eg VFs start their life in some 'unconfigured' state and drivers
-don't bind, then userspace can use the PF to perform configuration,
-finally the driver can start on a configured VF
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-We are already doing this model for the mlx5 'sub function' interfaces
-which have alot of analogs to both VFs and Intel's SIOV ADIs. It seems
-to be working.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index cb864f87b01d..b9a6db6a7d4f 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2108,6 +2108,7 @@ static inline struct obj_stock *get_obj_stock(unsigned long *pflags)
+ 	struct memcg_stock_pcp *stock;
+ 
+ 	if (likely(in_task())) {
++		*pflags = 0UL;
+ 		preempt_disable();
+ 		stock = this_cpu_ptr(&memcg_stock);
+ 		return &stock->task_obj;
+@@ -6840,6 +6841,7 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
+ 	unsigned long nr_pages;
+ 	struct mem_cgroup *memcg;
+ 	struct obj_cgroup *objcg;
++	bool use_objcg = PageMemcgKmem(page);
+ 
+ 	VM_BUG_ON_PAGE(PageLRU(page), page);
+ 
+@@ -6848,7 +6850,7 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
+ 	 * page memcg or objcg at this point, we have fully
+ 	 * exclusive access to the page.
+ 	 */
+-	if (PageMemcgKmem(page)) {
++	if (use_objcg) {
+ 		objcg = __page_objcg(page);
+ 		/*
+ 		 * This get matches the put at the end of the function and
+@@ -6876,7 +6878,7 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
+ 
+ 	nr_pages = compound_nr(page);
+ 
+-	if (PageMemcgKmem(page)) {
++	if (use_objcg) {
+ 		ug->nr_memory += nr_pages;
+ 		ug->nr_kmem += nr_pages;
+ 
+-- 
+2.18.1
 
-Jason
