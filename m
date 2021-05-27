@@ -1,7 +1,7 @@
-From: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
+From: Vincent Guittot <vincent.guittot@linaro.org>
 Subject: Re: [PATCH 1/3] sched/fair: Add tg_load_contrib cfs_rq decay checking
-Date: Thu, 27 May 2021 14:39:59 +0200
-Message-ID: <CAFpoUr0mTQym4cmN98Er=4byRo9wqYcuOsbMLDJEnjvD-2ZbMg@mail.gmail.com>
+Date: Thu, 27 May 2021 14:49:27 +0200
+Message-ID: <CAKfTPtC50AkBcm-AQf63XQOFE3w5ZbRS7Sh=yDDSG1hM1wBhvg@mail.gmail.com>
 References: <20210518125202.78658-1-odin@uged.al> <20210518125202.78658-2-odin@uged.al>
  <CAKfTPtCCZhjOCZR6DMSxb9qffG2KceWONP_MzoY6TpYBmWp+hg@mail.gmail.com>
  <CAFpoUr0f50hKUtWvpTy221xT+pUocY7LXCMCo3cPJupjgMtotg@mail.gmail.com>
@@ -12,33 +12,40 @@ References: <20210518125202.78658-1-odin@uged.al> <20210518125202.78658-2-odin@u
  <CAFpoUr0SOqyGifT5Lpf=t+A+REWdWezR-AY2fM_u1-CCs8KFYQ@mail.gmail.com>
  <CAKfTPtArj_XkgPXRJKZxN0MM2+v=3+RjAVVkmbpB1gBLCuzJvA@mail.gmail.com> <CAFpoUr2NM9RHE=jdbi5aNj2LeVr4iKJ3thMPUNhp_SnCe7tnfg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=uged.al; s=google;
+        d=linaro.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=eNiQoWn/9OHCszXvyBqQo+oFAxQxF89SUvYeB9IA70I=;
-        b=jyNj5GwSxQNwfAKTy3gtmVCcmwrkUBb3JuWQPt37kUBY8+vtkcmYgiu6qbIlKFTffk
-         E/9Irp8l8MnV9c+4Eoe/NM1V233e6y5vOr2tVdKvQHoU4HsM69G1quOBvLYRII2JV/Ki
-         RSI6U3EtNmFREjJ82VIQ/njctZuuFWI9M9cq/fSU0e9Y2nCC6ZCUPnzBr4p2TMxlxLnE
-         DG+c+1zleTR+YOJpCDBCMA5rll/J9LOTxmGXfZ7cf2SJ3WH4rlbTGibikytVWLcnXUBa
-         K6MNzLl6hzbefsereyfuX4gBRygBS7Z48hBSUooL1cHMkUxZkgKQ5Fpbz86P8QLRt0bO
-         akFg==
-In-Reply-To: <CAFpoUr2NM9RHE=jdbi5aNj2LeVr4iKJ3thMPUNhp_SnCe7tnfg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        bh=IPDKpeQP85lIS4gYU8UwCGKlha6ptbLg1ETtgq9iJMw=;
+        b=Ouf7cM44WCMGrm8fB7veWn15pNkwVEiXKb0QxbC/6bj4dPtrlIsZS6zoutiY35TfzI
+         097B1D3YFkZQHZXtjwhlPzC7cnD/hcK6Gx76hJSk5ndux2q8TKdfmr/2rKgU+JCq5NAa
+         +GaUfLpKW3nyxIqagUzfXa/jw4H5busK3vFCzgxEl0I0auWr0J5HUinZofrnBMWE5y4W
+         hGRAAXGOtKWEIlygch53DVVQy9oVM9rxXKCQ7MXY0oJcmGjMEITpWB15GeMYmjKMkgxR
+         4zx3LshbFTI5tj2f4NtzO2jfN7lCeQF83EC0Os2tkkbgr9N0opi955P1EZIa0/u6tKVu
+         QUww==
+In-Reply-To: <CAFpoUr2NM9RHE=jdbi5aNj2LeVr4iKJ3thMPUNhp_SnCe7tnfg@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
-Cc: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Odin Ugedal <odin@uged.al>
+Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-> For 1st problem, the way we were updating load_avg and load_sum, we
-> were losing the sync between both value
+On Thu, 27 May 2021 at 14:38, Odin Ugedal <odin@uged.al> wrote:
+>
+> Hi again,
+>
+> Saw your patchset now, and that is essentially the same as I did. I
+> guess you want to keep that patchset instead of me updating this
+> series then?
 
-Yeah, that would be a natural way to fix that.
+yes
 
-> In fact, the update was already there but not always called (see the
-> patchset i just sent)
+>
+> Also, could you take a look at patch 2 and 3 in this series? Should I
 
-Yeah, that was my exact point.
+Yes, I'm going to have a look at patch 2 and 3
 
-Odin
+> resend those in a new series, or?
+>
+> Odin
