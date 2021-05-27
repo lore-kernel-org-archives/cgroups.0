@@ -1,46 +1,61 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 1/2] sched/fair: keep load_avg and load_sum synced
-Date: Thu, 27 May 2021 15:37:13 +0200
-Message-ID: <YK+giS1pPECFZ+oU@hirez.programming.kicks-ass.net>
+From: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 0/2] schd/fair: fix stalled cfs_rq->tg_load_avg_contrib
+Date: Thu, 27 May 2021 16:19:08 +0200
+Message-ID: <CAKfTPtAK2fkzhzKA8iFT8cEcCG6Q=8WfLskPYADvTrQ=nF7kDA@mail.gmail.com>
 References: <20210527122916.27683-1-vincent.guittot@linaro.org>
- <20210527122916.27683-2-vincent.guittot@linaro.org>
- <YK+ZGlfPxK3JCySS@hirez.programming.kicks-ass.net>
- <CAKfTPtAE6DJTwxZ996BJoUJF++fFHdFk-C2bpUQ8aG0NQusApA@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=3bZ/LkqfBhJhawvK2heoarmGy4iJoc0yGvgh3vim5Nw=; b=FXZPg1F1fbulTYZ8znR1bssXMq
-        dpYlRBnqpR0h7cS53Eg4LcmPAxiBL0BOOdoZR/Hiz5bBrsw29gzEadYLNwOSCoQPG8YcANlxcrASc
-        OFmr82sMAAgEpMhlknstrfPqaci2qAi5oUPrA1wihuDgPJ0G2R2qWVwM954Rp6XhPgDQG4mLWqCZI
-        sXKtxYdumvMRJcrDKkwKdI/kmbsx74dh9A61k2k1jILx4aTbhC8cBcqNgkAcB9M8bZhqlS6rBsL4q
-        ZsQHBgz22fMF0GzFwpiHnPniApiedCiKYQFR7kAeM8PBYnO3NMEaHyC4wv0YeRm4d3S8IVSLoGHp3
-        13FhhmAA==;
-Content-Disposition: inline
-In-Reply-To: <CAKfTPtAE6DJTwxZ996BJoUJF++fFHdFk-C2bpUQ8aG0NQusApA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
+        bh=LatqtaP/aGx6woxQl/xZuLro5ci8AMLtHb6rQktXh24=;
+        b=M7YJUkv0b9ZqkYCDwgcBFIcG5MN4CKndmPnWQdY2RJQHhZFVfdRUJHVRnhKAumFP7L
+         xB0gbKrxCsAVajM8z2yvoA1bc7kvVBybZX48Htc446q/1kNtqtm5hoaVse9MYQh660Wv
+         E56HXbe9YBGsOWvDV03VnedvUY8Mat1bdqAGkqtC0LuSynuSgH8hjijzLj+Xy6bhjsK/
+         5u/9h3epeiMaAH7QNiIm4MIhBuom/9p5Fw+VhVhcAg3mg0GxMNmAPhNCio3HOiAC+6U5
+         oM94F79Pvp3i6mfXvE8WGMbW0XSv7cApEYZHQ4BeedsDydhMkYNurUGs9FfJ6NnDhxvv
+         QHOQ==
+In-Reply-To: <20210527122916.27683-1-vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, May 27, 2021 at 03:18:35PM +0200, Vincent Guittot wrote:
-> > -       delta_sum = load_sum - (s64)se_weight(se) * se->avg.load_sum;
-> > -       delta_avg = load_avg - se->avg.load_avg;
-> > -
-> >         se->avg.load_sum = runnable_sum;
-> >         se->avg.load_avg = load_avg;
-> > -       add_positive(&cfs_rq->avg.load_avg, delta_avg);
-> > -       add_positive(&cfs_rq->avg.load_sum, delta_sum);
-> > +
-> > +       add_positive(&cfs_rq->avg.load_avg, (long)(load_avg - se->avg.load_avg));
-> 
-> you have to keep:
-> delta_avg = load_avg - se->avg.load_avg
-> or move se->avg.load_avg = load_avg after
-> add_positive(&cfs_rq->avg.load_avg, ..);
-> because otherwise (load_avg - se->avg.load_avg) == 0
+Hi Odin,
 
-Duh. /me goes fix.
+On Thu, 27 May 2021 at 14:29, Vincent Guittot
+<vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org> wrote:
+>
+> Odin reported some fairness problem between cgroup because of stalled
+> value in cfs_rq->tg_load_avg_contrib:
+>
+> https://lkml.org/lkml/2021/5/18/566
+>
+>
+> 2 problems generated this situation:
+> -1st: After propagating load in the hierarchy, load_sum can be null
+>  whereas load_avg isn't so the cfs_rq is removed whereas it still
+>  contribute to th tg's load
+> -2nd: cfs_rq->tg_load_avg_contrib was not always updated after
+>  significant changes like becoming null because cfs_rq had already
+>  been updated when propagating a child load.
+>
+
+This series fixes the problem triggered by your 1st script on my test
+machine. But could you confirm that this patchset also fixes the
+problem on yours
+
+Regards,
+Vincent
+
+>
+> Vincent Guittot (2):
+>   sched/fair: keep load_avg and load_sum synced
+>   sched/fair: make sure to update tg contrib for blocked load
+>
+>  kernel/sched/fair.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> --
+> 2.17.1
+>
