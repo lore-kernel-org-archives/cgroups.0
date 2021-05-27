@@ -1,41 +1,42 @@
-From: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
-Subject: Re: [PATCH 0/2] schd/fair: fix stalled cfs_rq->tg_load_avg_contrib
-Date: Thu, 27 May 2021 16:24:24 +0200
-Message-ID: <CAFpoUr0FrSV5VO40q7pbnqiiqCYbgS_YUp1Kktfn6YgOgh8whw@mail.gmail.com>
-References: <20210527122916.27683-1-vincent.guittot@linaro.org> <CAKfTPtAK2fkzhzKA8iFT8cEcCG6Q=8WfLskPYADvTrQ=nF7kDA@mail.gmail.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH v5 2/2] writeback, cgroup: release dying cgwbs by
+ switching attached inodes
+Date: Thu, 27 May 2021 09:29:56 -0700
+Message-ID: <YK/JBDxsZQwC0q8J@carbon.DHCP.thefacebook.com>
+References: <20210526222557.3118114-1-guro@fb.com>
+ <20210527032459.2306-1-hdanton@sina.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=uged.al; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=D5ioh6/kmyR43pZvyyWx3jgh3NQ4aOfCzd/5djtqWu8=;
-        b=uk1Clutn08ap0T0eYiCfBLwIre/sRgapht3WRTSb/OUz86VJK5yz1vBTHMxu/U6zTM
-         YqtL/akei9DOsGUBMzxBwyWrksY5LQriwy+lYebt/K15XJVyvstz+BQ4izwCBbA6v85u
-         o4N5jnOcO+4jk7cB4+k84aVnCN6+qkks38BBc6HPuA4f+UriPgZNqQ6oGHQjjiZ//4MT
-         ypgXJjp0y+y2zzRQ1awvIiR+TVc3zxChipuUFY5u4wShlpQGC3K14lDxFs6rxWxxPufK
-         h3L2wVOWANe9dPni62OaXYZV95+oNGkyNDclB4aLoBToQnycLzpEg9WfiXSx3Tlz4MtX
-         jHjQ==
-In-Reply-To: <CAKfTPtAK2fkzhzKA8iFT8cEcCG6Q=8WfLskPYADvTrQ=nF7kDA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=R8ZMG4jJXCPWRao7W7bJfPCzcxw625gj7FlXrxTH8W8=;
+ b=g6DnJH9ojrQ/UkBEGAIhVxs609mzImCV3Y808GFAcYdRkFMeGUdEPEK/a28BiQkBG2ek
+ AKAa1Uk0bLQquY2j/NvsnrhblreLR7BhJO4JaQ3cRcGK8XRuN/bftdHEu4BxdjthQoSU
+ E8VC7zVo9mfAPNoX1j1ZL6m2CAbExzrbd2M= 
+Content-Disposition: inline
+In-Reply-To: <20210527032459.2306-1-hdanton-k+cT0dCbe1g@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Hillf Danton <hdanton-k+cT0dCbe1g@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
+On Thu, May 27, 2021 at 11:24:59AM +0800, Hillf Danton wrote:
+> On Wed, 26 May 2021 15:25:57 -0700 Roman Gushchin wrote:
+> >+
+> >+	if (!list_empty(&offline_cgwbs))
+> >+		schedule_work(&cleanup_offline_cgwbs_work);
+> >+
+> 
+> Good work overall.
 
-Yes, this does the trick!
+Thanks!
 
-I have tested this locally and it works as expected, as discussed in
-the previous thread (more info there). Together with the patch "[PATCH
-2/3] sched/fair: Correctly insert cfs_rq's to list on unthrottle", I
-am unable to reproduce the issue locally; so this is good to go.
+> 
+> Nit, given cond_resched_lock() in cleanup_offline_wb(), what you need instead
+> is
+> 	queue_work(system_unbound_wq, &cleanup_offline_cgwbs_work);
 
-Feel free to add this to both patches when the warnings on the first
-patch are fixed;
+Neat, will do in the next version.
 
-Reviewed-by: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
-
-Thanks
-Odin
+Thanks!
