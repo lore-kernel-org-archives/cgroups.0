@@ -1,53 +1,179 @@
-From: Odin Ugedal <odin@uged.al>
-Subject: Re: [PATCH 1/3] sched/fair: Add tg_load_contrib cfs_rq decay checking
-Date: Thu, 27 May 2021 11:45:58 +0200
-Message-ID: <CAFpoUr0SOqyGifT5Lpf=t+A+REWdWezR-AY2fM_u1-CCs8KFYQ@mail.gmail.com>
-References: <20210518125202.78658-1-odin@uged.al> <20210518125202.78658-2-odin@uged.al>
- <CAKfTPtCCZhjOCZR6DMSxb9qffG2KceWONP_MzoY6TpYBmWp+hg@mail.gmail.com>
- <CAFpoUr0f50hKUtWvpTy221xT+pUocY7LXCMCo3cPJupjgMtotg@mail.gmail.com>
- <CAKfTPtCaZOSEzRXVN9fTR2vTxGiANEARo6iDNMFiQV5=qAA4Tw@mail.gmail.com>
- <CAKfTPtAFn3=anfTCxKTDXF0wpttpEiAhksLvcEPdSiYZTj38_A@mail.gmail.com>
- <CAFpoUr1zGNf9vTbWjwsfY9E8YBjyE5xJ0SwzLebPiS7b=xz_Zw@mail.gmail.com> <CAKfTPtDRdFQqphysOL+0g=befwtJky0zixyme_V5eDz71hC5pQ@mail.gmail.com>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v5 1/2] writeback, cgroup: keep list of inodes attached
+ to bdi_writeback
+Date: Thu, 27 May 2021 12:35:17 +0200
+Message-ID: <20210527103517.GA24486@quack2.suse.cz>
+References: <20210526222557.3118114-1-guro@fb.com>
+ <20210526222557.3118114-2-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=uged.al; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=CGSqh763sJ9tRWKESBK9C6KkYC01mkebqHWMvcOi984=;
-        b=PZqwC6CnqXIdNEBEYc5be4bb5TccuGjFHDTVOl6jEnmBTLckP6WY85jbCuEoM7Hn89
-         uyKnQniI/yGgivD73pop7f7tmhTCzq2sEclTRfSApZZihg+b4jBZvtgGXXjFkwFVx7TA
-         0eNicuik9UNu5kptl4bnyD2lz1SXH4eV01tQxhn0cKNXT0IAxDGbChUbVPipuhb3SnkK
-         JQG6FCCHir0bSm0RBZCX1wYCBd2gH02QUaYNrSC1Iu3YPJzcPwD9B/qIknRrdSoiVL61
-         ag3Pa47muV/fq2zJ2RLaG1Vg2FYVkWdvcTnEXfvdKIc62AwNLBG39/9uoRDG0RgiUGyl
-         JZaA==
-In-Reply-To: <CAKfTPtDRdFQqphysOL+0g=befwtJky0zixyme_V5eDz71hC5pQ@mail.gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1622111718; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=hKeWyMslRymydNZYkpyt3KIJnWWdPC8N5vsKLAeXxkk=;
+        b=MrOVRApbXSfo3sXyu/0I4+/xFzkBPqDuDMHEqn4RsvKGQLzvHR0Ji664xDCzrkldu85/PR
+        SIAMXq7ewXoXHbGtLQzRH/5glKs3uEgb4Y7e8Ny6N5wmOVY67juJa2P4m0jz4wn4R2hFG1
+        eylXN5PREwmXm37BNlzAdVmTFCyLwaA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1622111718;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=hKeWyMslRymydNZYkpyt3KIJnWWdPC8N5vsKLAeXxkk=;
+        b=5IsU0rzvPUrM8nmqDbmT11uJJLru3+b1xDtsPVTkTSeqx5Ui9HWCk7SoytjfsiCZzb+jwO
+        JOqpkM2qJSN0kKCg==
+Content-Disposition: inline
+In-Reply-To: <20210526222557.3118114-2-guro-b10kYP2dOMg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vincent Guittot <vincent.guittot@linaro.org>
-Cc: Odin Ugedal <odin@uged.al>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
+On Wed 26-05-21 15:25:56, Roman Gushchin wrote:
+> Currently there is no way to iterate over inodes attached to a
+> specific cgwb structure. It limits the ability to efficiently
+> reclaim the writeback structure itself and associated memory and
+> block cgroup structures without scanning all inodes belonging to a sb,
+> which can be prohibitively expensive.
+> 
+> While dirty/in-active-writeback an inode belongs to one of the
+> bdi_writeback's io lists: b_dirty, b_io, b_more_io and b_dirty_time.
+> Once cleaned up, it's removed from all io lists. So the
+> inode->i_io_list can be reused to maintain the list of inodes,
+> attached to a bdi_writeback structure.
+> 
+> This patch introduces a new wb->b_attached list, which contains all
+> inodes which were dirty at least once and are attached to the given
+> cgwb. Inodes attached to the root bdi_writeback structures are never
+> placed on such list. The following patch will use this list to try to
+> release cgwbs structures more efficiently.
+> 
+> Suggested-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+> Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-> I finally got it this morning with your script and I confirm that the
-> problem of load_sum == 0 but load_avg != 0 comes from
-> update_tg_cfs_load(). Then, it seems that we don't call
-> update_tg_load_avg for this cfs_rq in __update_blocked_fair() because
-> of a recent update while propagating child's load changes. At the end
-> we remove the cfs_rq from the list without updating its contribution.
->
-> I'm going to prepare a patch to fix this
+Looks good. Just some minor nits below:
 
-Yeah, that is another way to look at it. Have not verified, but
-wouldn't update_tg_load_avg() in this case
-just remove the diff (load_avg - tg_load_avg_contrib)? Wouldn't we
-still see some tg_load_avg_contrib
-after the cfs_rq is removed from the list then? Eg. in my example
-above, the cfs_rq will be removed from
-the list while tg_load_avg_contrib=2, or am I missing something? That
-was my thought when I looked
-at it last week at least..
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index e91980f49388..631ef6366293 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -135,18 +135,23 @@ static bool inode_io_list_move_locked(struct inode *inode,
+>   * inode_io_list_del_locked - remove an inode from its bdi_writeback IO list
+>   * @inode: inode to be removed
+>   * @wb: bdi_writeback @inode is being removed from
+> + * @final: inode is going to be freed and can't reappear on any IO list
+>   *
+>   * Remove @inode which may be on one of @wb->b_{dirty|io|more_io} lists and
+>   * clear %WB_has_dirty_io if all are empty afterwards.
+>   */
+>  static void inode_io_list_del_locked(struct inode *inode,
+> -				     struct bdi_writeback *wb)
+> +				     struct bdi_writeback *wb,
+> +				     bool final)
+>  {
+>  	assert_spin_locked(&wb->list_lock);
+>  	assert_spin_locked(&inode->i_lock);
+>  
+>  	inode->i_state &= ~I_SYNC_QUEUED;
+> -	list_del_init(&inode->i_io_list);
+> +	if (final)
+> +		list_del_init(&inode->i_io_list);
+> +	else
+> +		inode_cgwb_move_to_attached(inode, wb);
+>  	wb_io_lists_depopulated(wb);
+>  }
 
-Thanks
-Odin
+With these changes the naming is actually somewhat confusing and the bool
+argument makes it even worse. Looking into the code I'd just fold
+inode_io_list_del_locked() into inode_io_list_del() and make it really
+delete inode from all IO lists. There are currently three other
+inode_io_list_del_locked() users:
+
+requeue_inode(), writeback_single_inode() - these should just call
+inode_cgwb_move_to_attached() unconditionally
+(inode_cgwb_move_to_attached() just needs to clear I_SYNC_QUEUED and call
+wb_io_lists_depopulated() in addition to what it currently does).
+
+inode_switch_wbs_work_fn() - I don't think it needs
+inode_io_list_del_locked() at all. See below...
+
+> @@ -278,6 +283,25 @@ void __inode_attach_wb(struct inode *inode, struct page *page)
+>  }
+>  EXPORT_SYMBOL_GPL(__inode_attach_wb);
+>  
+> +/**
+> + * inode_cgwb_move_to_attached - put the inode onto wb->b_attached list
+> + * @inode: inode of interest with i_lock held
+> + * @wb: target bdi_writeback
+> + *
+> + * Remove the inode from wb's io lists and if necessarily put onto b_attached
+> + * list.  Only inodes attached to cgwb's are kept on this list.
+> + */
+> +void inode_cgwb_move_to_attached(struct inode *inode, struct bdi_writeback *wb)
+> +{
+> +	assert_spin_locked(&wb->list_lock);
+> +	assert_spin_locked(&inode->i_lock);
+> +
+> +	if (wb != &wb->bdi->wb)
+> +		list_move(&inode->i_io_list, &wb->b_attached);
+> +	else
+> +		list_del_init(&inode->i_io_list);
+> +}
+
+I think this can be static and you can drop the declarations from header
+files below. At least I wasn't able to find where this would be used
+outside of fs/writeback.c.
+
+>  /**
+>   * locked_inode_to_wb_and_lock_list - determine a locked inode's wb and lock it
+>   * @inode: inode of interest with i_lock held
+> @@ -419,21 +443,29 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
+>  	wb_get(new_wb);
+>  
+>  	/*
+> -	 * Transfer to @new_wb's IO list if necessary.  The specific list
+> -	 * @inode was on is ignored and the inode is put on ->b_dirty which
+> -	 * is always correct including from ->b_dirty_time.  The transfer
+> -	 * preserves @inode->dirtied_when ordering.
+> +	 * Transfer to @new_wb's IO list if necessary.  If the @inode is dirty,
+> +	 * the specific list @inode was on is ignored and the @inode is put on
+> +	 * ->b_dirty which is always correct including from ->b_dirty_time.
+> +	 * The transfer preserves @inode->dirtied_when ordering.  If the @inode
+> +	 * was clean, it means it was on the b_attached list, so move it onto
+> +	 * the b_attached list of @new_wb.
+>  	 */
+>  	if (!list_empty(&inode->i_io_list)) {
+> -		struct inode *pos;
+> -
+> -		inode_io_list_del_locked(inode, old_wb);
+> +		inode_io_list_del_locked(inode, old_wb, true);
+
+Do we need inode_io_list_del_locked() here at all? Below we are careful
+enough to always use list_move() which does the deletion for us anyway.
+
+>  		inode->i_wb = new_wb;
+> -		list_for_each_entry(pos, &new_wb->b_dirty, i_io_list)
+> -			if (time_after_eq(inode->dirtied_when,
+> -					  pos->dirtied_when))
+> -				break;
+> -		inode_io_list_move_locked(inode, new_wb, pos->i_io_list.prev);
+> +
+> +		if (inode->i_state & I_DIRTY_ALL) {
+> +			struct inode *pos;
+> +
+> +			list_for_each_entry(pos, &new_wb->b_dirty, i_io_list)
+> +				if (time_after_eq(inode->dirtied_when,
+> +						  pos->dirtied_when))
+> +					break;
+> +			inode_io_list_move_locked(inode, new_wb,
+> +						  pos->i_io_list.prev);
+> +		} else {
+> +			inode_cgwb_move_to_attached(inode, new_wb);
+> +		}
+
+								Honza
+-- 
+Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+SUSE Labs, CR
