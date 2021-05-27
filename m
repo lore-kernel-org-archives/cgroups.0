@@ -1,78 +1,65 @@
 From: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 2/2] sched/fair: make sure to update tg contrib for blocked load
-Date: Thu, 27 May 2021 14:29:16 +0200
-Message-ID: <20210527122916.27683-3-vincent.guittot@linaro.org>
-References: <20210527122916.27683-1-vincent.guittot@linaro.org>
+Subject: Re: [PATCH 1/3] sched/fair: Add tg_load_contrib cfs_rq decay checking
+Date: Thu, 27 May 2021 14:37:16 +0200
+Message-ID: <CAKfTPtA5NxDpG194zAF9CjchJ5hm-7fOBOPGJZG4+z4-+32qGw@mail.gmail.com>
+References: <20210518125202.78658-1-odin@uged.al> <20210518125202.78658-2-odin@uged.al>
+ <CAKfTPtCCZhjOCZR6DMSxb9qffG2KceWONP_MzoY6TpYBmWp+hg@mail.gmail.com>
+ <CAFpoUr0f50hKUtWvpTy221xT+pUocY7LXCMCo3cPJupjgMtotg@mail.gmail.com>
+ <CAKfTPtCaZOSEzRXVN9fTR2vTxGiANEARo6iDNMFiQV5=qAA4Tw@mail.gmail.com>
+ <CAKfTPtAFn3=anfTCxKTDXF0wpttpEiAhksLvcEPdSiYZTj38_A@mail.gmail.com>
+ <CAFpoUr1zGNf9vTbWjwsfY9E8YBjyE5xJ0SwzLebPiS7b=xz_Zw@mail.gmail.com>
+ <CAKfTPtDRdFQqphysOL+0g=befwtJky0zixyme_V5eDz71hC5pQ@mail.gmail.com>
+ <CAFpoUr0SOqyGifT5Lpf=t+A+REWdWezR-AY2fM_u1-CCs8KFYQ@mail.gmail.com>
+ <CAKfTPtArj_XkgPXRJKZxN0MM2+v=3+RjAVVkmbpB1gBLCuzJvA@mail.gmail.com> <CAFpoUr0PTYs+CSiWt3WOXnxq=wN3uEyC=h+_3kDc9wLoqaRC_Q@mail.gmail.com>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=m34kWJFts+JlvhgMEqzYFI86nqtKcI/eABSZJKWdva0=;
-        b=kuYbHjMyYaX7A1hL/W1Dafd7/P3r7j1djEoge4gerT9ds8ebtZpggipN//3meNIYDP
-         H3iQ+WtGvA4nH8D5I1Ru1+OODIKfUQJ8iIGorDWT+9LxeGMuHcBcWwKvsfVjQF4R9ZJx
-         iWosXULEC6chunZkDSG3YOacsMp1SzVqRbFk7zMQyQxcuu1tRoVYXmr3I/mb8wSNETJz
-         qnyItuDi/nn2FdxCKLY6pPtOkj+Z0pK5RPzIc7uGXs7mT2ztDJ4l04DcXFKVJNYiXvWm
-         KBKQsmHNoWu1ED+J6aPE2EHGvS+TeN/9SHszVg51Anjv8IwJrvbn0U96EVNBH1RXoS/K
-         uefw==
-In-Reply-To: <20210527122916.27683-1-vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=EJtMUFIym4MCDsWc5krrIjsPhEBu67mDqVvWhXVdI7Q=;
+        b=BaSCvx5P5J1/saPMpI2Hpv6tsMqa5H6pRd0iDGSEctw6X2Hvkt6JrbGoa3kwwTs7eX
+         +fCKFH2JTP39JFuhDKAPYXJWiKZRu3YG5LKH0aoZ8krUMsp8iPhCwsrq1ulhUaNMqdaC
+         isgXd2dPzQxJAhQGHyBqnGkgPTxqG3cslM6ByeSqP1hCrwdSSHo5242HJKTBr9QZfzWE
+         n51fBmRVwURVenXx4Qmix59IlOSV14CWACBj4KesIk7qqxjv9EwzBRrzqCRSbu5PhtgD
+         ocqgLwfsR9YlgMH5G9cbiyrkEyEKzU2cycb06RhI/BlXg7oMCjI3N49stuGLMzG+1ODU
+         cVgw==
+In-Reply-To: <CAFpoUr0PTYs+CSiWt3WOXnxq=wN3uEyC=h+_3kDc9wLoqaRC_Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, odin-RObV4cXtwVA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+To: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-During the update of fair blocked load (__update_blocked_fair()), we update
-the contribution of the cfs in tg->load_avg if cfs_rq's pelt has decayed.
-Nevertheless, the pelt values of a cfs_rq could have been recently updated
-while propagating the change of a child. In uchthis case, cfs_rq's pelt will
-not decayed because it has already been updated and we don't update
-tg->load_avg.
+On Thu, 27 May 2021 at 13:04, Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org> wrote:
+>
+> > 1st : ensure that cfs_rq->load_sum is not null if cfs_rq-> load_isn't too
+> > 2nd : call update_tg_load_avg() during child update so we will be sure
+> > to update tg_load_avg_contrib before removing the cfs from the list
+>
+> Ahh, yeah, with "1st" that would work. Yeah, that was my initial
+> implementation of the change, but I thought that it was better to keep
+> the logic away from the "hot path". We can verify this in
+> update_tg_cfs_load(), and then force update_tg_load_avg() inside
 
-__update_blocked_fair
-  ...
-  for_each_leaf_cfs_rq_safe: child cfs_rq
-    update cfs_rq_load_avg() for child cfs_rq
-    ...
-    update_load_avg(cfs_rq_of(se), se, 0)
-      ...
-      update cfs_rq_load_avg() for parent cfs_rq
-		-propagation of child's load makes parent cfs_rq->load_sum
-		 becoming null
-        -UPDATE_TG is not set so it doesn't update parent
-		 cfs_rq->tg_load_avg_contrib
-  ..
-  for_each_leaf_cfs_rq_safe: parent cfs_rq
-    update cfs_rq_load_avg() for parent cfs_rq
-      - nothing to do because parent cfs_rq has already been updated
-		recently so cfs_rq->tg_load_avg_contrib is not updated
-    ...
-    parent cfs_rq is decayed
-      list_del_leaf_cfs_rq parent cfs_rq
-	  - but it still contibutes to tg->load_avg
+For 1st problem, the way we were updating load_avg and load_sum, we
+were losing the sync between both value
 
-we must set UPDATE_TG flags when propagting pending load to the parent
+> __update_blocked_fair() when avg.load_avg is 0. (Given that this is
+> the only place where we can end up in this situation. I can update
+> this patch to do that instead.
 
-Fixes: 039ae8bcf7a5 ("sched/fair: Fix O(nr_cgroups) in the load balancing path")
-Reported-by: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
-Signed-off-by: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
----
- kernel/sched/fair.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+In fact, the update was already there but not always called (see the
+patchset i just sent)
 
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 2859545d95fb..dcb3b1a6813c 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -8048,7 +8048,7 @@ static bool __update_blocked_fair(struct rq *rq, bool *done)
- 		/* Propagate pending load changes to the parent, if any: */
- 		se = cfs_rq->tg->se[cpu];
- 		if (se && !skip_blocked_update(se))
--			update_load_avg(cfs_rq_of(se), se, 0);
-+			update_load_avg(cfs_rq_of(se), se, UPDATE_TG);
- 
- 		/*
- 		 * There can be a lot of idle CPU cgroups.  Don't let fully
--- 
-2.17.1
 
+>
+> Another solution is to update avg.load_avg
+> inside__update_blocked_fair() when load_sum is 0, and then propagate
+> that with update_tg_load_avg(). This removes the logic from the hot
+> path all together.
+>
+> Not sure what the preferred way is. I have not found any other places
+> where this situation _should_ occur, but who knows..
+>
+> Odin
