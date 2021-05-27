@@ -1,75 +1,92 @@
 From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
  allocation APIs
-Date: Thu, 27 May 2021 15:48:47 -0300
-Message-ID: <20210527184847.GI1002214@nvidia.com>
-References: <20210428145622.GU1370958@nvidia.com>
+Date: Thu, 27 May 2021 16:06:20 -0300
+Message-ID: <20210527190620.GJ1002214@nvidia.com>
+References: <20210427171212.GD1370958@nvidia.com>
+ <YIizNdbA0+LYwQbI@yekko.fritz.box>
+ <20210428145622.GU1370958@nvidia.com>
  <YIoiJRY3FM7xH2bH@yekko>
  <20210503161518.GM1370958@nvidia.com>
  <YJy9o8uEZs42/qDM@yekko>
  <20210513135938.GG1002214@nvidia.com>
  <YKtbWo7PwIlXjFIV@yekko>
  <20210524233744.GT1002214@nvidia.com>
- <ce2fcf21-1803-047b-03f0-7a4108dea7af@nvidia.com>
- <20210525195257.GG1002214@nvidia.com>
- <YK8m9jNuvEzlXWlu@yekko>
+ <YK8l1mZ0NVggAVUO@yekko>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=H6//VIa2BaCGORurVByXULwENHNPJ5o8kKLVhL9oep4=;
- b=G6k51McGj8dCrzwErU9L0DAuzhCGK5S7HJdexv2Kn5+STdw5i0ahy7GgCjO1X8iHt3M/IItxXvAIQ358C0I4vT2VRu5LU8EGDMPjLmRuD1h6X0PTYVvmMuzHFnEoUt7IDeWT2XAr8MkI+iffBqInjIvUSpDCReC75fCtRM6jzxUsePhSLBfq/SPcnqGvbiRSCyBNAz7577YCbp8FgIZohSI9b7MTlu23MBXSTwUrG8nkC40PPXrfnXBAaHckufyeulLZ1JgottQIy6my++06S0tl/Tsym9zzlNrF2OHZv2BKaDnUpmVKbnytHxAhWOjO7CwZa9j+SrGnjb5aANMZuA==
+ bh=sJQhFM0W1vXArj+sph79LQ7r+iuVf+Uxh/Ul1UCgAgM=;
+ b=m7cT7Ltrc1bmBb+0dwbdDDJOE9nd1gqCKngpLyl2Cl7IWj8T8jKchd2RMhEJ9dy11IO71aQ2qeTLY6475T+ps5uWdyIIQqHw+drNp0Ot/gdiR/Bh2uuAK02MUlmQr0NhlORglaNdcFklPZa3W9ESJTY2U2X/Vtx/wVlXgFPwXkESaPwY5Xm7ef6Hb/UHVO1rHrRpoeODa1fRTm9xVAxIoly7d27H//G5SvqbbUMt+/no0SO38/Da6+tQjgPbnFa88twcDJxucuXtv2/ezsjrpjbnvXLDZ0NNPUYkczO+qnXGX8tsC8B8mvf+GvNxD7uFXhQTtIZKxDqnoy2QGUYiCA==
 Content-Disposition: inline
-In-Reply-To: <YK8m9jNuvEzlXWlu@yekko>
+In-Reply-To: <YK8l1mZ0NVggAVUO@yekko>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>
-Cc: Kirti Wankhede <kwankhede-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj@i>
+Cc: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Thu, May 27, 2021 at 02:58:30PM +1000, David Gibson wrote:
-> On Tue, May 25, 2021 at 04:52:57PM -0300, Jason Gunthorpe wrote:
-> > On Wed, May 26, 2021 at 12:56:30AM +0530, Kirti Wankhede wrote:
+On Thu, May 27, 2021 at 02:53:42PM +1000, David Gibson wrote:
+
+> > > If the physical device had a bug which meant the mdevs *weren't*
+> > > properly isolated from each other, then those mdevs would share a
+> > > group, and you *would* care about it.  Depending on how the isolation
+> > > failed the mdevs might or might not also share a group with the parent
+> > > physical device.
 > > 
-> > > 2. iommu backed mdev devices for SRIOV where mdev device is created per
-> > > VF (mdev device == VF device) then that mdev device has same iommu
-> > > protection scope as VF associated to it. 
+> > That isn't a real scenario.. mdevs that can't be isolated just
+> > wouldn't be useful to exist
+> 
+> Really?  So what do you do when you discover some mdevs you thought
+> were isolated actually aren't due to a hardware bug?  Drop support
+> from the driver entirely?  In which case what do you say to the people
+> who understandably complain "but... we had all the mdevs in one guest
+> anyway, we don't care if they're not isolated"?
+
+I've never said to eliminate groups entirely. 
+
+What I'm saying is that all the cases we have for mdev today do not
+require groups, but are forced to create a fake group anyhow just to
+satisfy the odd VFIO requirement to have a group FD.
+
+If some future mdev needs groups then sure, add the appropriate group
+stuff.
+
+But that doesn't effect the decision to have a VFIO group FD, or not.
+
+> > > It ensures that they're parked at the moment the group moves from
+> > > kernel to userspace ownership, but it can't prevent dpdk from
+> > > accessing and unparking those devices via peer to peer DMA.
 > > 
-> > This doesn't require, and certainly shouldn't create, a fake group.
+> > Right, and adding all this group stuff did nothing to alert the poor
+> > admin that is running DPDK to this risk.
 > 
-> It's only fake if you start with a narrow view of what a group is. 
+> Didn't it?  Seems to me the admin that in order to give the group to
+> DPDK, the admin had to find and unbind all the things in it... so is
+> therefore aware that they're giving everything in it to DPDK.
 
-A group is connected to drivers/iommu. A group object without *any*
-relation to drivers/iommu is just a complete fiction, IMHO.
+Again, I've never said the *group* should be removed. I'm only
+concerned about the *group FD*
 
-> > Only the VF's real IOMMU group should be used to model an iommu domain
-> > linked to a VF. Injecting fake groups that are proxies for real groups
-> > only opens the possibility of security problems like David is
-> > concerned with.
+When the admin found and unbound they didn't use the *group FD* in any
+way.
+
+> > You put the same security labels you'd put on the group to the devices
+> > that consitute the group. It is only more tricky in the sense that the
+> > script that would have to do this will need to do more than ID the
+> > group to label but also ID the device members of the group and label
+> > their char nodes.
 > 
-> It's not a proxy for a real group, it's a group of its own.  If you
-> discover that (due to a hardware bug, for example) the mdev is *not*
+> Well, I guess, if you take the view that root is allowed to break the
+> kernel.  I tend to prefer that although root can obviously break the
+> kernel if they intend do, we should make it hard to do by accident -
+> which in this case would mean the kernel *enforcing* that the devices
+> in the group have the same security labels, which I can't really see
+> how to do without an exposed group.
 
-What Kirti is talking about here is the case where a mdev is wrapped
-around a VF and the DMA isolation stems directly from the SRIOV VF's
-inherent DMA isolation, not anything the mdev wrapper did.
-
-The group providing the isolation is the VF's group.
-
-The group mdev implicitly creates is just a fake proxy that comes
-along with mdev API. It doesn't do anything and it doesn't mean
-anything.
-
-> properly isolated from its parent PCI device, then both the mdev
-> virtual device *and* the physical PCI device are in the same group.
-> Groups including devices of different types and on different buses
-> were considered from the start, and are precedented, if rare.
-
-This is far too theoretical for me. A security broken mdev is
-functionally useless.
-
-We don't need to support it, and we don't need complicated software to
-model it.
+How is this "break the kernel"? It has nothing to do with the
+kernel. Security labels are a user space concern.
 
 Jason
