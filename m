@@ -1,93 +1,89 @@
 From: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/2] sched/fair: keep load_avg and load_sum synced
-Date: Thu, 27 May 2021 15:18:35 +0200
-Message-ID: <CAKfTPtAE6DJTwxZ996BJoUJF++fFHdFk-C2bpUQ8aG0NQusApA@mail.gmail.com>
-References: <20210527122916.27683-1-vincent.guittot@linaro.org>
- <20210527122916.27683-2-vincent.guittot@linaro.org> <YK+ZGlfPxK3JCySS@hirez.programming.kicks-ass.net>
+Subject: Re: [PATCH 3/3] sched/fair: Fix ascii art by relpacing tabs
+Date: Thu, 27 May 2021 15:27:01 +0200
+Message-ID: <CAKfTPtAi9XTyLGrCqU9A-SMoPVqd45N1Tcytqj1E6SMjb4ffxA@mail.gmail.com>
+References: <20210518125202.78658-1-odin@uged.al> <20210518125202.78658-4-odin@uged.al>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=Jfylii+y+Ojxu7E7KT+8vH0OFzsUpSqBPwQ/qgziQBk=;
-        b=W3fRkD3lLeYB/4+AHVLLqJf7qv0yMm9bwfQ+wjR+/HZVP4sihm1Ai/PRMvuH//POO/
-         3eEKuOhr2VmDl6z2lCWdqJ5S/mXYn/reSSul4695W8nwMpqeb9UVE5sr/VXiZ7PR+rmk
-         2N/liwj7qqiWtfKyE608rYU527j3V0yQjbiaCIlvH7JbO7ZTgORZghg3HHd9JIbLutux
-         1hBgoiG4wCKvY9r2iuYFvE4LJOzBHSZZM4eXK2vUhmxXhn9tFGS/HnKh3YyN/AwYiKjp
-         kNf/iL+jUEWu7lCGgAAIx12TY8GQMYTavD06/kB5ULiZmHKxJ3HJ7F/168syCUtuuQkj
-         NnqA==
-In-Reply-To: <YK+ZGlfPxK3JCySS-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+        bh=bTuXJyS12cv4LuTitjmTblp9RTdGyOUhTUwwFkRbaxo=;
+        b=AJ+au7Zh1JItYixxt8CVmhgXABNB1TBRD96nwd7v6HIk1hbvij2qP1pFVm9dQW94jL
+         Ad4wt4EC6yIDuNF2XfRni4y26vgHLi65VqXMa4kw441X2uCb4/6NedBIi3R6UE6Dr0YQ
+         i+DlbxK8dr8MslOOX4NfU1BnxVFRhhBcsgOFWiEyfygr8sK/0z+mfC5EfF0XpIUfbawa
+         Y0CpFg3fi7lYBHz33pW2EHxumsJmH0cpyQXLZzzKmHR6cTE+Z0LBDAaT7eiEurMfzb9v
+         lyzhV+WJ7fs0QfPh61Ug1KgIY4TYCAC++mEeYY8riXoNo20IO1NSnkT32rBzwsgu1QJO
+         Y/eA==
+In-Reply-To: <20210518125202.78658-4-odin-RObV4cXtwVA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, 27 May 2021 at 15:06, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+On Tue, 18 May 2021 at 14:55, Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org> wrote:
 >
-> On Thu, May 27, 2021 at 02:29:15PM +0200, Vincent Guittot wrote:
->
-> > --- a/kernel/sched/fair.c
-> > +++ b/kernel/sched/fair.c
-> > @@ -3509,7 +3509,8 @@ update_tg_cfs_load(struct cfs_rq *cfs_rq, struct sched_entity *se, struct cfs_rq
-> >       se->avg.load_sum = runnable_sum;
-> >       se->avg.load_avg = load_avg;
-> >       add_positive(&cfs_rq->avg.load_avg, delta_avg);
-> > -     add_positive(&cfs_rq->avg.load_sum, delta_sum);
-> > +     cfs_rq->avg.load_sum = cfs_rq->avg.load_avg * divider;
->
-> If I'm not mistaken, this makes delta_sum unused, so we can remove it
-> entirely, see below.
+> When using something other than 8 spaces per tab, this ascii art
+> makes not sense, and the reader might end up wondering what this
+> advanced equation "is".
 
-yes, you're right
+Documentation/process/coding-style.rst says to use 8 characters for
+tab so we should not really consider other tab value
+
+That being said the numerators and other parts of the equation use
+spaces whereas denominators use tabs. so using space everywhere looks
+good for me
+
+Acked-by: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
 >
-> > +
->
-> This extra blank space, we really need that? :-)
->
-> >  }
->
+> Signed-off-by: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
 > ---
+>  kernel/sched/fair.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
 > diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-> index 161b92aa1c79..2b99e687fe7a 100644
+> index e7423d658389..c872e38ec32b 100644
 > --- a/kernel/sched/fair.c
 > +++ b/kernel/sched/fair.c
-> @@ -3453,10 +3453,9 @@ update_tg_cfs_runnable(struct cfs_rq *cfs_rq, struct sched_entity *se, struct cf
->  static inline void
->  update_tg_cfs_load(struct cfs_rq *cfs_rq, struct sched_entity *se, struct cfs_rq *gcfs_rq)
->  {
-> -       long delta_avg, running_sum, runnable_sum = gcfs_rq->prop_runnable_sum;
-> +       long running_sum, runnable_sum = gcfs_rq->prop_runnable_sum;
->         unsigned long load_avg;
->         u64 load_sum = 0;
-> -       s64 delta_sum;
->         u32 divider;
+> @@ -3142,7 +3142,7 @@ void reweight_task(struct task_struct *p, int prio)
+>   *
+>   *                     tg->weight * grq->load.weight
+>   *   ge->load.weight = -----------------------------               (1)
+> - *                       \Sum grq->load.weight
+> + *                       \Sum grq->load.weight
+>   *
+>   * Now, because computing that sum is prohibitively expensive to compute (been
+>   * there, done that) we approximate it with this average stuff. The average
+> @@ -3156,7 +3156,7 @@ void reweight_task(struct task_struct *p, int prio)
+>   *
+>   *                     tg->weight * grq->avg.load_avg
+>   *   ge->load.weight = ------------------------------              (3)
+> - *                             tg->load_avg
+> + *                             tg->load_avg
+>   *
+>   * Where: tg->load_avg ~= \Sum grq->avg.load_avg
+>   *
+> @@ -3172,7 +3172,7 @@ void reweight_task(struct task_struct *p, int prio)
+>   *
+>   *                     tg->weight * grq->load.weight
+>   *   ge->load.weight = ----------------------------- = tg->weight   (4)
+> - *                         grp->load.weight
+> + *                         grp->load.weight
+>   *
+>   * That is, the sum collapses because all other CPUs are idle; the UP scenario.
+>   *
+> @@ -3191,7 +3191,7 @@ void reweight_task(struct task_struct *p, int prio)
+>   *
+>   *                     tg->weight * grq->load.weight
+>   *   ge->load.weight = -----------------------------              (6)
+> - *                             tg_load_avg'
+> + *                             tg_load_avg'
+>   *
+>   * Where:
+>   *
+> --
+> 2.31.1
 >
->         if (!runnable_sum)
-> @@ -3503,13 +3502,11 @@ update_tg_cfs_load(struct cfs_rq *cfs_rq, struct sched_entity *se, struct cfs_rq
->         load_sum = (s64)se_weight(se) * runnable_sum;
->         load_avg = div_s64(load_sum, divider);
->
-> -       delta_sum = load_sum - (s64)se_weight(se) * se->avg.load_sum;
-> -       delta_avg = load_avg - se->avg.load_avg;
-> -
->         se->avg.load_sum = runnable_sum;
->         se->avg.load_avg = load_avg;
-> -       add_positive(&cfs_rq->avg.load_avg, delta_avg);
-> -       add_positive(&cfs_rq->avg.load_sum, delta_sum);
-> +
-> +       add_positive(&cfs_rq->avg.load_avg, (long)(load_avg - se->avg.load_avg));
-
-you have to keep:
-delta_avg = load_avg - se->avg.load_avg
-or move se->avg.load_avg = load_avg after
-add_positive(&cfs_rq->avg.load_avg, ..);
-because otherwise (load_avg - se->avg.load_avg) == 0
-
-
-> +       cfs_rq->avg.load_sum = cfs_rq->avg.load_avg * divider;
->  }
->
->  static inline void add_tg_cfs_propagate(struct cfs_rq *cfs_rq, long runnable_sum)
