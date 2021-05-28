@@ -1,59 +1,166 @@
 From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 Subject: Re: [PATCH v5 2/2] writeback, cgroup: release dying cgwbs by
  switching attached inodes
-Date: Fri, 28 May 2021 09:22:45 -0700
-Message-ID: <YLEY1RX3FhR9eWrv@carbon.DHCP.thefacebook.com>
+Date: Fri, 28 May 2021 09:25:58 -0700
+Message-ID: <YLEZlpUMc03uYM7V@carbon.DHCP.thefacebook.com>
 References: <20210526222557.3118114-1-guro@fb.com>
  <20210526222557.3118114-3-guro@fb.com>
- <YLBcPCHJOYH4YGl6@T590>
+ <20210527112403.GC24486@quack2.suse.cz>
+ <YK/bi1OU7bNgPBab@carbon.DHCP.thefacebook.com>
+ <20210528130543.GB28653@quack2.suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=YgXMFdH8CoZiTcSy9Dt4dq5N4bl/MNaWtdxCkfr4ojk=;
- b=orlYUHuV54UHcos61P8lmieM7T3n/uET9Wvs0BEm43dr7/qmbkr1CfFd+BZMCL8c++QG
- JJ0zgJ/Rqx9R8qdSr5WF3MGVeX/dfeHJ6nQdx3MH3RPVKstjHyRS7QiVWc8Foy9ubF6A
- 06LbT7HuOqAlaZ676JJNJzXSMGbO1SAXME8= 
+ mime-version; s=facebook; bh=xIeA5yz6KfOxenLYSWbuwhRKLR3xoWUpQeF2uv7plk4=;
+ b=PIbv+/nFVbvRClTztpUBFE1TO17ol0cfQA4vnKNwRLDm8sfVKvTJtqsFNopGM7pMaZd0
+ D5AQSApARMUxUWGLJ7HezqoI3X+OwkAv6MnzF/F6z3T++Ng+9LkorWeqrPbbLWikbcH8
+ OB4OSJccfYaTN7YlpPlIr/ka+R0Nxn1Cn1I= 
 Content-Disposition: inline
-In-Reply-To: <YLBcPCHJOYH4YGl6@T590>
+In-Reply-To: <20210528130543.GB28653-4I4JzKEfoa/jFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, May 28, 2021 at 10:58:04AM +0800, Ming Lei wrote:
-> On Wed, May 26, 2021 at 03:25:57PM -0700, Roman Gushchin wrote:
-> > Asynchronously try to release dying cgwbs by switching clean attached
-> > inodes to the bdi's wb. It helps to get rid of per-cgroup writeback
-> > structures themselves and of pinned memory and block cgroups, which
-> > are way larger structures (mostly due to large per-cpu statistics
-> > data). It helps to prevent memory waste and different scalability
-> > problems caused by large piles of dying cgroups.
+On Fri, May 28, 2021 at 03:05:43PM +0200, Jan Kara wrote:
+> On Thu 27-05-21 10:48:59, Roman Gushchin wrote:
+> > On Thu, May 27, 2021 at 01:24:03PM +0200, Jan Kara wrote:
+> > > On Wed 26-05-21 15:25:57, Roman Gushchin wrote:
+> > > > Asynchronously try to release dying cgwbs by switching clean attached
+> > > > inodes to the bdi's wb. It helps to get rid of per-cgroup writeback
+> > > > structures themselves and of pinned memory and block cgroups, which
+> > > > are way larger structures (mostly due to large per-cpu statistics
+> > > > data). It helps to prevent memory waste and different scalability
+> > > > problems caused by large piles of dying cgroups.
+> > > > 
+> > > > A cgwb cleanup operation can fail due to different reasons (e.g. the
+> > > > cgwb has in-glight/pending io, an attached inode is locked or isn't
+> > > > clean, etc). In this case the next scheduled cleanup will make a new
+> > > > attempt. An attempt is made each time a new cgwb is offlined (in other
+> > > > words a memcg and/or a blkcg is deleted by a user). In the future an
+> > > > additional attempt scheduled by a timer can be implemented.
+> > > > 
+> > > > Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> > > > ---
+> > > >  fs/fs-writeback.c                | 35 ++++++++++++++++++
+> > > >  include/linux/backing-dev-defs.h |  1 +
+> > > >  include/linux/writeback.h        |  1 +
+> > > >  mm/backing-dev.c                 | 61 ++++++++++++++++++++++++++++++--
+> > > >  4 files changed, 96 insertions(+), 2 deletions(-)
+> > > > 
+> > > > diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> > > > index 631ef6366293..8fbcd50844f0 100644
+> > > > --- a/fs/fs-writeback.c
+> > > > +++ b/fs/fs-writeback.c
+> > > > @@ -577,6 +577,41 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
+> > > >  	kfree(isw);
+> > > >  }
+> > > >  
+> > > > +/**
+> > > > + * cleanup_offline_wb - detach associated clean inodes
+> > > > + * @wb: target wb
+> > > > + *
+> > > > + * Switch the inode->i_wb pointer of the attached inodes to the bdi's wb and
+> > > > + * drop the corresponding per-cgroup wb's reference. Skip inodes which are
+> > > > + * dirty, freeing, in the active writeback process or are in any way busy.
+> > > 
+> > > I think the comment doesn't match the function anymore.
+> > > 
+> > > > + */
+> > > > +void cleanup_offline_wb(struct bdi_writeback *wb)
+> > > > +{
+> > > > +	struct inode *inode, *tmp;
+> > > > +
+> > > > +	spin_lock(&wb->list_lock);
+> > > > +restart:
+> > > > +	list_for_each_entry_safe(inode, tmp, &wb->b_attached, i_io_list) {
+> > > > +		if (!spin_trylock(&inode->i_lock))
+> > > > +			continue;
+> > > > +		xa_lock_irq(&inode->i_mapping->i_pages);
+> > > > +		if ((inode->i_state & I_REFERENCED) != I_REFERENCED) {
+> > > 
+> > > Why the I_REFERENCED check here? That's just inode aging bit and I have
+> > > hard time seeing how it would relate to whether inode should switch wbs...
 > > 
-> > A cgwb cleanup operation can fail due to different reasons (e.g. the
-> > cgwb has in-glight/pending io, an attached inode is locked or isn't
-> > clean, etc). In this case the next scheduled cleanup will make a new
-> > attempt. An attempt is made each time a new cgwb is offlined (in other
-> > words a memcg and/or a blkcg is deleted by a user). In the future an
-> > additional attempt scheduled by a timer can be implemented.
+> > What I tried to say (and failed :) ) was that I_REFERENCED is the only accepted
+> > flag here. So there must be
+> > 	if ((inode->i_state | I_REFERENCED) != I_REFERENCED)
 > > 
-> > Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-> > ---
-> >  fs/fs-writeback.c                | 35 ++++++++++++++++++
-> >  include/linux/backing-dev-defs.h |  1 +
-> >  include/linux/writeback.h        |  1 +
-> >  mm/backing-dev.c                 | 61 ++++++++++++++++++++++++++++++--
-> >  4 files changed, 96 insertions(+), 2 deletions(-)
-> > 
+> > Does this look good or I am wrong and there are other flags acceptable here?
 > 
-> Hello Roman,
+> Ah, I see. That makes more sense. I guess you could also exclude I_DONTCACHE
+> and I_OVL_INUSE but that's not that important.
 > 
-> The following kernel panic is triggered by this patch:
+> > > > +			struct bdi_writeback *bdi_wb = &inode_to_bdi(inode)->wb;
+> > > > +
+> > > > +			WARN_ON_ONCE(inode->i_wb != wb);
+> > > > +
+> > > > +			inode->i_wb = bdi_wb;
+> > > > +			list_del_init(&inode->i_io_list);
+> > > > +			wb_put(wb);
+> > > 
+> > > I was kind of hoping you'll use some variant of inode_switch_wbs() here.
+> > 
+> > My reasoning was that by definition inode_switch_wbs() handles dirty inodes,
+> > while in the cleanup case we can deal only with clean inodes and clean wb's.
+> > Hopefully this can make the whole procedure simpler/cheaper. Also, the number
+> > of simultaneous switches is limited and I don't think cleanups should share
+> > this limit.
+> > However I agree that it would be nice to share at least some code.
+> 
+> I agree limits on parallel switches should not apply. Otherwise I agree
+> some bits of inode_switch_wbs_work_fn() should not be strictly necessary
+> but they should be pretty cheap anyway.
+> 
+> > > That way we have single function handling all the subtleties of switching
+> > > inode->i_wb of an active inode. Maybe it isn't strictly needed here because
+> > > you detach only from b_attached list and move to bdi_wb so things are
+> > > indeed simpler here. But you definitely miss transferring WB_WRITEBACK stat
+> > > and I'd also like to have a comment here explaining why this cannot race
+> > > with other writeback handling or wb switching in a harmful way.
+> > 
+> > If we'll check under wb->list_lock that wb has no inodes on any writeback
+> > lists (excluding b_attached), doesn't it mean that WB_WRITEBACK must be
+> > 0?
+> 
+> No, pages under writeback are not reflected in inode->i_state in any way.
+> You would need to check mapping_tagged(inode->i_mapping,
+> PAGECACHE_TAG_WRITEBACK) to find that out. But if you'd use
+> inode_switch_wbs_work_fn() you wouldn't even have to be that careful when
+> switching inodes as it can handle alive inodes just fine...
 
-Hello Ming!
+I see...
 
-Thank you for the report and for trying my patches!
-I think I know what it is and will fix in the next version.
+> 
+> > Re racing: my logic here was that we're taking all possible locks before doing
+> > anything and then we check that the inode is entirely clean, so this must be
+> > safe:
+> > 	spin_lock(&wb->list_lock);
+> > 	spin_trylock(&inode->i_lock);
+> > 	xa_lock_irq(&inode->i_mapping->i_pages);
+> > 	...
+> > 
+> > But now I see that the unlocked inode's wb access mechanism
+> > (unlocked_inode_to_wb_begin()/end()) probably requires additional care.
+> 
+> Yeah, exactly corner case like this were not quite clear to me whether you
+> have them correct or not.
+> 
+> > Repeating the mechanism with scheduling the switching of each inode separately
+> > after an rcu grace period looks too slow. Maybe we can mark all inodes at once
+> > and then switch them all at once, all in two steps. I need to think more.
+> > Do you have any ideas/suggestions here?
+> 
+> Nothing really bright. As you say I'd do this in batches - i.e., tag all
+> inodes for switching with I_WB_SWITCH, then synchronize_rcu(), then call
+> inode_switch_wbs_work_fn() for each inode (or probably some helper function
+> that has guts of inode_switch_wbs_work_fn() as we probably don't want to
+> acquire wb->list_lock's and wb_switch_rwsem repeatedly unnecessarily).
+
+Ok, sounds good to me. I'm a bit worried about the possible CPU overhead,
+but hopefully we can switch inodes slow enough so that the impact on the
+system will be acceptable.
 
 Thanks!
