@@ -1,79 +1,149 @@
-From: syzbot <syzbot+363f98e1c445bd838351-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
-Subject: [syzbot] general protection fault in cgroup_rstat_flush_locked
-Date: Mon, 31 May 2021 17:37:18 -0700
-Message-ID: <0000000000005bad6f05c3a98b9c@google.com>
+From: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Tue, 1 Jun 2021 14:03:33 +1000
+Message-ID: <YLWxlZC4AXJPOngB@yekko>
+References: <YIoiJRY3FM7xH2bH@yekko>
+ <20210503161518.GM1370958@nvidia.com>
+ <YJy9o8uEZs42/qDM@yekko>
+ <20210513135938.GG1002214@nvidia.com>
+ <YKtbWo7PwIlXjFIV@yekko>
+ <20210524233744.GT1002214@nvidia.com>
+ <ce2fcf21-1803-047b-03f0-7a4108dea7af@nvidia.com>
+ <20210525195257.GG1002214@nvidia.com>
+ <YK8m9jNuvEzlXWlu@yekko>
+ <20210527184847.GI1002214@nvidia.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="vhkj2zFFbKMf0kbf"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=gibson.dropbear.id.au; s=201602; t=1622529371;
+        bh=Ak8v6J4KZgBCm2gkleU0vO46h8Ck6IdgA6FN2O7Jaio=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ZGuoGWAXjF+uLY5kl0PEgFkT0CF0LUWT0pU8sXnoXW00QpIg9n4YSk3ANreX9JBOJ
+         gOU9X71o5Z8FUdMaSuAj+rLmHaCXbVOAzpBiU0cO1TAq5jv5B+3HyCudYO9YbJhI5z
+         yDi4FmOsknyKB/UQFB2n724sq4XVAH2B4zNAdF9Q=
+Content-Disposition: inline
+In-Reply-To: <20210527184847.GI1002214-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-
-Hello,
-
-syzbot found the following issue on:
-
-HEAD commit:    d0c0fe10 bpf: Avoid using ARRAY_SIZE on an uninitialized p..
-git tree:       bpf
-console output: https://syzkaller.appspot.com/x/log.txt?x=13817145d00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=5b86a12e0d1933b5
-dashboard link: https://syzkaller.appspot.com/bug?extid=363f98e1c445bd838351
-
-Unfortunately, I don't have any reproducer for this issue yet.
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+363f98e1c445bd838351-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
-
-general protection fault, probably for non-canonical address 0xdffffc0000000077: 0000 [#1] PREEMPT SMP KASAN
-KASAN: null-ptr-deref in range [0x00000000000003b8-0x00000000000003bf]
-CPU: 1 PID: 26368 Comm: kworker/1:4 Not tainted 5.12.0-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Workqueue: cgroup_destroy css_release_work_fn
-RIP: 0010:cgroup_rstat_cpu kernel/cgroup/rstat.c:13 [inline]
-RIP: 0010:cgroup_rstat_cpu_pop_updated kernel/cgroup/rstat.c:106 [inline]
-RIP: 0010:cgroup_rstat_flush_locked+0x182/0xcc0 kernel/cgroup/rstat.c:161
-Code: 85 f6 49 89 f4 48 89 44 24 10 75 0a e9 94 06 00 00 4c 8b 64 24 08 e8 cd f5 05 00 4d 8d bc 24 78 03 00 00 4c 89 f8 48 c1 e8 03 <42> 80 3c 28 00 0f 85 6b 08 00 00 49 8b 9c 24 78 03 00 00 48 83 3c
-RSP: 0018:ffffc900027a7c20 EFLAGS: 00010007
-RAX: 0000000000000077 RBX: ffffe8ffffc82510 RCX: 0000000000000000
-RDX: ffff88802723d4c0 RSI: ffffffff816ed0a3 RDI: ffffe8ffffc82540
-RBP: ffff888037f5c000 R08: 0000000000000001 R09: 0000000000000003
-R10: fffff520004f4f76 R11: 0000000000000000 R12: 0000000000000046
-R13: dffffc0000000000 R14: ffff8880b9c00000 R15: 00000000000003be
-FS:  0000000000000000(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000001b33a2a000 CR3: 000000005e401000 CR4: 00000000001506e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- cgroup_rstat_flush+0x3a/0x50 kernel/cgroup/rstat.c:203
- css_release_work_fn+0x440/0x920 kernel/cgroup/cgroup.c:4991
- process_one_work+0x98d/0x1600 kernel/workqueue.c:2275
- worker_thread+0x64c/0x1120 kernel/workqueue.c:2421
- kthread+0x3b1/0x4a0 kernel/kthread.c:313
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
-Modules linked in:
----[ end trace c2ed221e705dd64b ]---
-RIP: 0010:cgroup_rstat_cpu kernel/cgroup/rstat.c:13 [inline]
-RIP: 0010:cgroup_rstat_cpu_pop_updated kernel/cgroup/rstat.c:106 [inline]
-RIP: 0010:cgroup_rstat_flush_locked+0x182/0xcc0 kernel/cgroup/rstat.c:161
-Code: 85 f6 49 89 f4 48 89 44 24 10 75 0a e9 94 06 00 00 4c 8b 64 24 08 e8 cd f5 05 00 4d 8d bc 24 78 03 00 00 4c 89 f8 48 c1 e8 03 <42> 80 3c 28 00 0f 85 6b 08 00 00 49 8b 9c 24 78 03 00 00 48 83 3c
-RSP: 0018:ffffc900027a7c20 EFLAGS: 00010007
-RAX: 0000000000000077 RBX: ffffe8ffffc82510 RCX: 0000000000000000
-RDX: ffff88802723d4c0 RSI: ffffffff816ed0a3 RDI: ffffe8ffffc82540
-RBP: ffff888037f5c000 R08: 0000000000000001 R09: 0000000000000003
-R10: fffff520004f4f76 R11: 0000000000000000 R12: 0000000000000046
-R13: dffffc0000000000 R14: ffff8880b9c00000 R15: 00000000000003be
-FS:  0000000000000000(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000001b33a2a000 CR3: 000000005e401000 CR4: 00000000001506e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Kirti Wankhede <kwankhede-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj@i>
 
 
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+--vhkj2zFFbKMf0kbf
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+On Thu, May 27, 2021 at 03:48:47PM -0300, Jason Gunthorpe wrote:
+> On Thu, May 27, 2021 at 02:58:30PM +1000, David Gibson wrote:
+> > On Tue, May 25, 2021 at 04:52:57PM -0300, Jason Gunthorpe wrote:
+> > > On Wed, May 26, 2021 at 12:56:30AM +0530, Kirti Wankhede wrote:
+> > >=20
+> > > > 2. iommu backed mdev devices for SRIOV where mdev device is created=
+ per
+> > > > VF (mdev device =3D=3D VF device) then that mdev device has same io=
+mmu
+> > > > protection scope as VF associated to it.=20
+> > >=20
+> > > This doesn't require, and certainly shouldn't create, a fake group.
+> >=20
+> > It's only fake if you start with a narrow view of what a group is.=20
+>=20
+> A group is connected to drivers/iommu. A group object without *any*
+> relation to drivers/iommu is just a complete fiction, IMHO.
+
+That might be where we differ.  As I've said, my group I'm primarily
+meaning the fundamental hardware unit of isolation.  *Usually* that's
+determined by the capabilities of an IOMMU, but in some cases it might
+not be.  In either case, the boundaries still matter.
+
+> > > Only the VF's real IOMMU group should be used to model an iommu domain
+> > > linked to a VF. Injecting fake groups that are proxies for real groups
+> > > only opens the possibility of security problems like David is
+> > > concerned with.
+> >=20
+> > It's not a proxy for a real group, it's a group of its own.  If you
+> > discover that (due to a hardware bug, for example) the mdev is *not*
+>=20
+> What Kirti is talking about here is the case where a mdev is wrapped
+> around a VF and the DMA isolation stems directly from the SRIOV VF's
+> inherent DMA isolation, not anything the mdev wrapper did.
+>=20
+> The group providing the isolation is the VF's group.
+
+Yes, in that case the mdev absolutely should be in the VF's group -
+having its own group is not just messy but incorrect.
+
+> The group mdev implicitly creates is just a fake proxy that comes
+> along with mdev API. It doesn't do anything and it doesn't mean
+> anything.
+
+But.. the case of multiple mdevs managed by a single PCI device with
+an internal IOMMU also exists, and then the mdev groups are *not*
+proxies but true groups independent of the parent device.  Which means
+that the group structure of mdevs can vary, which is an argument *for*
+keeping it, not against.
+
+> > properly isolated from its parent PCI device, then both the mdev
+> > virtual device *and* the physical PCI device are in the same group.
+> > Groups including devices of different types and on different buses
+> > were considered from the start, and are precedented, if rare.
+>=20
+> This is far too theoretical for me. A security broken mdev is
+> functionally useless.
+
+Is it, though?  Again, I'm talking about the case of multiple mdevs
+with a single parent device (because that's the only case I was aware
+of until recently).  Isolation comes from a device-internal
+IOMMU... that turns out to be broken.  But if your security domain
+happens to include all the mdevs on the device anyway, then you don't
+care.
+
+Are you really going to say people can't use their fancy hardware in
+this mode because it has a security flaw that's not relevant to their
+usecase?
+
+
+And then.. there's Kirti's case.  In that case the mdev should belong
+to its parent PCI device's group since that's what's providing
+isolation.  But in that case the parent device can be in a
+multi-device group for any of the usual reasons (PCIe-to-PCI bridge,
+PCIe switch with broken ACS, multifunction device with crosstalk).
+Which means the mdev also shares a group with those other device.  So
+again, the group structure matters and is not a fiction.
+
+> We don't need to support it, and we don't need complicated software to
+> model it.
+>=20
+> Jason
+>=20
+
+--=20
+David Gibson			| I'll have my music baroque, and my code
+david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
+				| _way_ _around_!
+http://www.ozlabs.org/~dgibson
+
+--vhkj2zFFbKMf0kbf
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEdfRlhq5hpmzETofcbDjKyiDZs5IFAmC1sZMACgkQbDjKyiDZ
+s5Jg0A//dfV0uuvM5wq5Lqe/8NygQkdHhnPLy98IVfmW8vahS2FUIZu+ys2WYxJz
+nHkUuUMBA2iO9qx2qbT8gz75Ps7Np2dq1u6IJKoPguwT+ynzj5K1S1qWHN5ZjZtM
+znpsoMq8OH+U0NZ7qrPRdD9FmoE+iwOGc0OhrG0eiaXZGRojgC2dVSRKC7filiZZ
+Q53HYq9FteBRgkJSTof80+TVmQhhmT5XMySErJaiSMktHrehNZjgqulPUSjMRR2h
+xKiGXCe9sXYrLvpfkvb5YBx6VHrtdQt9BKw53z5ctBoD1PbB/Dcxlpeu9m0KJm91
+uEai0euc9G65QVqpGWoWW9yvsoE+YD6+Lk0KhveEN9yk/OknaiPHqIyLRR1j9G4i
+HyjjC3V9VxGXrHgZY4taNvvb+CtOAWYeTfjR5QDYBTbZu7hUCeVPjAGlJEkCxufl
+GOQfzJmMFyDrYVuvNzeYs3GHD3mncdg3NxWrLH03xVwaNHzIaNO6SKDAfjRVqBQH
+ExP9kjVozUEPjspmHwQXJA6s/jRMK5v7Pl7Q4I5oHFXl9HK+1IKnMe1Wbj7LARul
+5aL1tcFnyXA/5crtTcCMUxgWsHtKN+rN0EQ5O/rioAJWejkIGip2JSr+hN8bl+fS
+nVamgXI2cpk3CESdmpROG+BeeLXPEvH/G36pj/C/x1K0MQhrx84=
+=Bli1
+-----END PGP SIGNATURE-----
+
+--vhkj2zFFbKMf0kbf--
