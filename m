@@ -1,46 +1,79 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC 0/7] Introduce memory allocation speed throttle in memcg
-Date: Mon, 31 May 2021 11:20:46 -0700
-Message-ID: <CALvZod4FUEXuqs8mKiN-WdmF2eCi29=aRG-cOaUQEDCbHdXQRA@mail.gmail.com>
-References: <cover.1622043596.git.yuleixzhang@tencent.com> <CALvZod4SoCS6ym8ELTxWd6UwzUp8m_UUdw7oApAhW2WRq0BXqw@mail.gmail.com>
- <CACZOiM3VhYyzCTx4FbW=FF8WB=X46xaV53abqOVL+eHQOs8Reg@mail.gmail.com>
+From: syzbot <syzbot+363f98e1c445bd838351-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
+Subject: [syzbot] general protection fault in cgroup_rstat_flush_locked
+Date: Mon, 31 May 2021 17:37:18 -0700
+Message-ID: <0000000000005bad6f05c3a98b9c@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=LfVhFBreFM3+hibS+ZUYxXnl8ONhxdP+w+9OFOxmAhE=;
-        b=YBmR9AxxYxpwcV2YLzagXsntolLPZCaQTDTHWwWzremKSRujeGHnr7cEFxCHJDPpC8
-         uaLyP5C8RRhr4s4wXlYMDiPX0c8RklFoJxwVY2bnKnNBvShdMuoNijcv/8zIs79d5SXC
-         zdvUVhGtoCsnnLEyKLRSV18nJCg4OCgmpAJhGMhhMAvk0Gx5HCxFRpRoKZd1JPVFkY4B
-         F2LjxX5mJqXCi72QGNSMJEayaBTXYrT/wmY5tLoc3DV26DQXybMi3YJZH00vfuCt6bo0
-         6UvsBGhqYIYVdHjwjPqABXJ7CAvie8+hqdWyqFE+u0Eu2NfkhRwAUMfTtrN4qV+1fR/n
-         awhg==
-In-Reply-To: <CACZOiM3VhYyzCTx4FbW=FF8WB=X46xaV53abqOVL+eHQOs8Reg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: yulei zhang <yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, benbjiang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, Wanpeng Li <kernellwp-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On Mon, May 31, 2021 at 5:11 AM yulei zhang <yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-[...]
-> > Can you please explain why memory.high is not good enough for your
-> > use-case? You can orchestrate the memory.high limits in such a way
-> > that those certain cgroups hit their memory.high limit before causing
-> > the global reclaim. You might need to dynamically adjust the limits
-> > based on other workloads or unaccounted memory.
-> >
->
-> Yep, dynamically adjust the memory.high limits can ease the memory pressure
-> and postpone the global reclaim, but it can easily trigger the oom in
-> the cgroups,
+Hello,
 
-Can you please elaborate a bit more on this? The memory.high has a
-strong throttling mechanism, so if you are observing memory.high being
-ineffective then we need to fix that. Also can you please explain a
-bit more on the specific of the workload which is able to escape
-memory.high throttling e.g. the normal number of processes/threads in
-the workload?
+syzbot found the following issue on:
+
+HEAD commit:    d0c0fe10 bpf: Avoid using ARRAY_SIZE on an uninitialized p..
+git tree:       bpf
+console output: https://syzkaller.appspot.com/x/log.txt?x=13817145d00000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=5b86a12e0d1933b5
+dashboard link: https://syzkaller.appspot.com/bug?extid=363f98e1c445bd838351
+
+Unfortunately, I don't have any reproducer for this issue yet.
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+363f98e1c445bd838351-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
+
+general protection fault, probably for non-canonical address 0xdffffc0000000077: 0000 [#1] PREEMPT SMP KASAN
+KASAN: null-ptr-deref in range [0x00000000000003b8-0x00000000000003bf]
+CPU: 1 PID: 26368 Comm: kworker/1:4 Not tainted 5.12.0-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+Workqueue: cgroup_destroy css_release_work_fn
+RIP: 0010:cgroup_rstat_cpu kernel/cgroup/rstat.c:13 [inline]
+RIP: 0010:cgroup_rstat_cpu_pop_updated kernel/cgroup/rstat.c:106 [inline]
+RIP: 0010:cgroup_rstat_flush_locked+0x182/0xcc0 kernel/cgroup/rstat.c:161
+Code: 85 f6 49 89 f4 48 89 44 24 10 75 0a e9 94 06 00 00 4c 8b 64 24 08 e8 cd f5 05 00 4d 8d bc 24 78 03 00 00 4c 89 f8 48 c1 e8 03 <42> 80 3c 28 00 0f 85 6b 08 00 00 49 8b 9c 24 78 03 00 00 48 83 3c
+RSP: 0018:ffffc900027a7c20 EFLAGS: 00010007
+RAX: 0000000000000077 RBX: ffffe8ffffc82510 RCX: 0000000000000000
+RDX: ffff88802723d4c0 RSI: ffffffff816ed0a3 RDI: ffffe8ffffc82540
+RBP: ffff888037f5c000 R08: 0000000000000001 R09: 0000000000000003
+R10: fffff520004f4f76 R11: 0000000000000000 R12: 0000000000000046
+R13: dffffc0000000000 R14: ffff8880b9c00000 R15: 00000000000003be
+FS:  0000000000000000(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000001b33a2a000 CR3: 000000005e401000 CR4: 00000000001506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ cgroup_rstat_flush+0x3a/0x50 kernel/cgroup/rstat.c:203
+ css_release_work_fn+0x440/0x920 kernel/cgroup/cgroup.c:4991
+ process_one_work+0x98d/0x1600 kernel/workqueue.c:2275
+ worker_thread+0x64c/0x1120 kernel/workqueue.c:2421
+ kthread+0x3b1/0x4a0 kernel/kthread.c:313
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
+Modules linked in:
+---[ end trace c2ed221e705dd64b ]---
+RIP: 0010:cgroup_rstat_cpu kernel/cgroup/rstat.c:13 [inline]
+RIP: 0010:cgroup_rstat_cpu_pop_updated kernel/cgroup/rstat.c:106 [inline]
+RIP: 0010:cgroup_rstat_flush_locked+0x182/0xcc0 kernel/cgroup/rstat.c:161
+Code: 85 f6 49 89 f4 48 89 44 24 10 75 0a e9 94 06 00 00 4c 8b 64 24 08 e8 cd f5 05 00 4d 8d bc 24 78 03 00 00 4c 89 f8 48 c1 e8 03 <42> 80 3c 28 00 0f 85 6b 08 00 00 49 8b 9c 24 78 03 00 00 48 83 3c
+RSP: 0018:ffffc900027a7c20 EFLAGS: 00010007
+RAX: 0000000000000077 RBX: ffffe8ffffc82510 RCX: 0000000000000000
+RDX: ffff88802723d4c0 RSI: ffffffff816ed0a3 RDI: ffffe8ffffc82540
+RBP: ffff888037f5c000 R08: 0000000000000001 R09: 0000000000000003
+R10: fffff520004f4f76 R11: 0000000000000000 R12: 0000000000000046
+R13: dffffc0000000000 R14: ffff8880b9c00000 R15: 00000000000003be
+FS:  0000000000000000(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000001b33a2a000 CR3: 000000005e401000 CR4: 00000000001506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
