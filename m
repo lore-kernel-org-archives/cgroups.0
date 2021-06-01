@@ -1,99 +1,126 @@
 From: David Gibson <david@gibson.dropbear.id.au>
 Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
  allocation APIs
-Date: Tue, 1 Jun 2021 13:45:29 +1000
-Message-ID: <YLWtWRzO/DukUC1a@yekko>
-References: <20210503161518.GM1370958@nvidia.com>
+Date: Tue, 1 Jun 2021 14:27:25 +1000
+Message-ID: <YLW3LVWf4amurq4o@yekko>
+References: <YIizNdbA0+LYwQbI@yekko.fritz.box>
+ <20210428145622.GU1370958@nvidia.com>
+ <YIoiJRY3FM7xH2bH@yekko>
+ <20210503161518.GM1370958@nvidia.com>
  <YJy9o8uEZs42/qDM@yekko>
  <20210513135938.GG1002214@nvidia.com>
  <YKtbWo7PwIlXjFIV@yekko>
  <20210524233744.GT1002214@nvidia.com>
- <ce2fcf21-1803-047b-03f0-7a4108dea7af@nvidia.com>
- <20210525195257.GG1002214@nvidia.com>
- <6b13399d-cf03-1e71-3624-c39d4d05e958@nvidia.com>
- <YK8nXKAJdfT5UVEu@yekko>
- <2476b70c-9320-a49c-efa5-fb7027e1b572@nvidia.com>
+ <YK8l1mZ0NVggAVUO@yekko>
+ <20210527190620.GJ1002214@nvidia.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="RMasjA1xbGOcqeUG"
+        protocol="application/pgp-signature"; boundary="Xbmv8PanLUJwMAHh"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
         d=gibson.dropbear.id.au; s=201602; t=1622529370;
-        bh=RcI3Lx6JqEXLQdQCTtj7ox+tPHAP/LFuk9JoMwCrYnc=;
+        bh=8FKPbUwTdF9kXq/7rKGoMVmaAc+sr0iom6gOoa22bhA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=g8TTpBDIOhwOzpuTzNz/rgTIH6GOtOp2ImFhD29VybP0A3+MY/DGJ7LOTsp0UzL0t
-         NDTCwcOkwNx796SFiWI5riuLggf6GllJosGLDxvACByxmyNyqKG3MLt4g8mln6Ei+E
-         fiHf3GYNn3wFrctEbMA/+GDV1CZNMv7S++8AnP9I=
+        b=EnRHDYuc/K0jQcbuSJnSUPnKeSQBw8M6wzAi5eQtsV77jv3C1wdmIoZh7Qm4KD6RF
+         RBvSlO3AdQj1A76MnpCaatuTrjlcVf4cFf0qAnt+deB2TM49TCmzk4Rt2o9LmUpbDZ
+         /zke07cwG5qud9ON9OOle53NgWVmA3MlnyIm9v/s=
 Content-Disposition: inline
-In-Reply-To: <2476b70c-9320-a49c-efa5-fb7027e1b572@nvidia.com>
+In-Reply-To: <20210527190620.GJ1002214@nvidia.com>
 List-ID: <cgroups.vger.kernel.org>
-To: Kirti Wankhede <kwankhede@nvidia.com>
-Cc: Jason Gunthorpe <jgg@nvidia.com>, Alex Williamson <alex.williamson@redhat.com>, "Liu, Yi L" <yi.l.liu@intel.com>, Jacob Pan <jacob.jun.pan@linux.intel.com>, Auger Eric <eric.auger@redhat.com>, Jean-Philippe Brucker <jean-philippe@linaro.org>, "Tian, Kevin" <kevin.tian@intel.com>, LKML <linux-kernel@vger.kernel.org>, Joerg Roedel <joro@8bytes.org>, Lu Baolu <baolu.lu@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jean-Philippe Brucker <jean-philippe@linaro.com>, Jonathan Corbet <corbet@lwn.net>, "Raj, Ashok" <ashok.raj@intel.>
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>, "Liu, Yi L" <yi.l.liu@intel.com>, Jacob Pan <jacob.jun.pan@linux.intel.com>, Auger Eric <eric.auger@redhat.com>, Jean-Philippe Brucker <jean-philippe@linaro.org>, "Tian, Kevin" <kevin.tian@intel.com>, LKML <linux-kernel@vger.kernel.org>, Joerg Roedel <joro@8bytes.org>, Lu Baolu <baolu.lu@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jean-Philippe Brucker <jean-philippe@linaro.com>, Jonathan Corbet <corbet@lwn.net>, "Raj, Ashok" <ashok.raj@intel.com>, "Wu, Hao" <hao.wu@intel.com>
 
 
---RMasjA1xbGOcqeUG
+--Xbmv8PanLUJwMAHh
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, May 27, 2021 at 11:55:00PM +0530, Kirti Wankhede wrote:
+On Thu, May 27, 2021 at 04:06:20PM -0300, Jason Gunthorpe wrote:
+> On Thu, May 27, 2021 at 02:53:42PM +1000, David Gibson wrote:
 >=20
->=20
-> On 5/27/2021 10:30 AM, David Gibson wrote:
-> > On Wed, May 26, 2021 at 02:48:03AM +0530, Kirti Wankhede wrote:
+> > > > If the physical device had a bug which meant the mdevs *weren't*
+> > > > properly isolated from each other, then those mdevs would share a
+> > > > group, and you *would* care about it.  Depending on how the isolati=
+on
+> > > > failed the mdevs might or might not also share a group with the par=
+ent
+> > > > physical device.
 > > >=20
-> > >=20
-> > > On 5/26/2021 1:22 AM, Jason Gunthorpe wrote:
-> > > > On Wed, May 26, 2021 at 12:56:30AM +0530, Kirti Wankhede wrote:
-> > > >=20
-> > > > > 2. iommu backed mdev devices for SRIOV where mdev device is creat=
-ed per
-> > > > > VF (mdev device =3D=3D VF device) then that mdev device has same =
-iommu
-> > > > > protection scope as VF associated to it.
-> > > >=20
-> > > > This doesn't require, and certainly shouldn't create, a fake group.
-> > > >=20
-> > > > Only the VF's real IOMMU group should be used to model an iommu dom=
-ain
-> > > > linked to a VF. Injecting fake groups that are proxies for real gro=
-ups
-> > > > only opens the possibility of security problems like David is
-> > > > concerned with.
-> > > >=20
-> > >=20
-> > > I think this security issue should be addressed by letting mdev device
-> > > inherit its parent's iommu_group, i.e. VF's iommu_group here.
+> > > That isn't a real scenario.. mdevs that can't be isolated just
+> > > wouldn't be useful to exist
 > >=20
-> > No, that doesn't work.  AIUI part of the whole point of mdevs is to
-> > allow chunks of a single PCI function to be handed out to different
-> > places, because they're isolated from each other not by the system
-> > IOMMU, but by a combination of MMU hardware in the hardware (e.g. in a
-> > GPU card) and software in the mdev driver.
+> > Really?  So what do you do when you discover some mdevs you thought
+> > were isolated actually aren't due to a hardware bug?  Drop support
+> > from the driver entirely?  In which case what do you say to the people
+> > who understandably complain "but... we had all the mdevs in one guest
+> > anyway, we don't care if they're not isolated"?
 >=20
-> That's correct for non-iommu backed mdev devices.
+> I've never said to eliminate groups entirely.=20
 >=20
-> > If mdevs inherited the
-> > group of their parent device they wouldn't count as isolated from each
-> > other, which they should.
+> What I'm saying is that all the cases we have for mdev today do not
+> require groups, but are forced to create a fake group anyhow just to
+> satisfy the odd VFIO requirement to have a group FD.
+>=20
+> If some future mdev needs groups then sure, add the appropriate group
+> stuff.
+>=20
+> But that doesn't effect the decision to have a VFIO group FD, or not.
+>=20
+> > > > It ensures that they're parked at the moment the group moves from
+> > > > kernel to userspace ownership, but it can't prevent dpdk from
+> > > > accessing and unparking those devices via peer to peer DMA.
+> > >=20
+> > > Right, and adding all this group stuff did nothing to alert the poor
+> > > admin that is running DPDK to this risk.
 > >=20
+> > Didn't it?  Seems to me the admin that in order to give the group to
+> > DPDK, the admin had to find and unbind all the things in it... so is
+> > therefore aware that they're giving everything in it to DPDK.
 >=20
-> For iommu backed mdev devices for SRIOV, where there can be single mdev
-> device for its parent, here parent device is VF, there can't be multiple
-> mdev devices associated with that VF. In this case mdev can inherit the
-> group of parent device.
+> Again, I've never said the *group* should be removed. I'm only
+> concerned about the *group FD*
 
-Ah, yes, if there's just one mdev for the PCI function, and the
-function doesn't have an internal memory protection unit then this
-makes sense.
+Ok, that wasn't really clear to me.
 
-Which means we *do* have at least two meaningfully different group
-configurations for mdev:
-  * mdev is in a singleton group independent of the parent PCI device
-  * mdev shares a group with its parent PCI device
+I still wouldn't say the group for mdevs is a fiction though.. rather
+that the group device used for (no internal IOMMU case) mdevs is just
+plain wrong.
 
-Which means even in the case of mdevs, the group structure is *not* a
-meaningless fiction.
+> When the admin found and unbound they didn't use the *group FD* in any
+> way.
+
+No, they are likely to have changed permissions on the group device
+node as part of the process, though.
+
+> > > You put the same security labels you'd put on the group to the devices
+> > > that consitute the group. It is only more tricky in the sense that the
+> > > script that would have to do this will need to do more than ID the
+> > > group to label but also ID the device members of the group and label
+> > > their char nodes.
+> >=20
+> > Well, I guess, if you take the view that root is allowed to break the
+> > kernel.  I tend to prefer that although root can obviously break the
+> > kernel if they intend do, we should make it hard to do by accident -
+> > which in this case would mean the kernel *enforcing* that the devices
+> > in the group have the same security labels, which I can't really see
+> > how to do without an exposed group.
+>=20
+> How is this "break the kernel"? It has nothing to do with the
+> kernel. Security labels are a user space concern.
+
+*thinks*... yeah, ok, that was much too strong an assertion.  What I
+was thinking of is the fact that this means that guarantees you'd
+normally expect the kernel to enforce can be obviated by bad
+configuration: chown-ing a device to root doesn't actually protect it
+if there's another device in the same group exposed to other users.
+
+But I guess you could say the same about, say, an unauthenticated nbd
+export of a root-owned block device, so I guess that's not something
+the kernel can reasonably enforce.
+
+
+Ok.. you might be finally convincing me, somewhat.
 
 --=20
 David Gibson			| I'll have my music baroque, and my code
@@ -101,24 +128,24 @@ david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
 				| _way_ _around_!
 http://www.ozlabs.org/~dgibson
 
---RMasjA1xbGOcqeUG
+--Xbmv8PanLUJwMAHh
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEdfRlhq5hpmzETofcbDjKyiDZs5IFAmC1rVYACgkQbDjKyiDZ
-s5LMVxAAsYLjKEMctzEWQ3xVpx/4Hfkf2mPGV/JzCIgHCBaT6eaYbHpLCAGtpuLQ
-Vd7VkM2Ytcl+x9AKw2ssd0VHn9t8VaS1bSshJRCUoaIAN2Nu/HhwQ7IArsS4ro25
-FvsIoALYpr9dwp7u9c2fVAOB8hWPyRH4li3k/xLY1H6c/OSMNhMUyAvOX9iaFQk4
-Fw0/nLH/y17Vf9w1WEqS/X0ePMI0TK8W5UtUjXMOK//3M7jyFsodKLNblNDVnPHg
-BUUFrkmWgLw7pXHYaDnvW411cSRkQ1bzUyMC9Jad6FwdWY/Y9fmuvu/oTvD9fjUS
-vjlxcrIzo/e/AJn9WStMp4FB2PA0iAlonSghB0y1Zxar4eGLjPqC9rEKQ8o1Z2O0
-oKrSZ4JRRGW1c3NBxg9NWIdg1nsn/TdKo3XysOf8a7HexVf0fbz9FWwy4OJ3M0uv
-g5LpDFlb6CFA7ZSs+Crro+PvfWMxp6CR86S9gnN+emo3zw5dDejWgitJeRW2Jsox
-CJMc3+1fVmhUAlgzCvnf5W9vlshod9Nhs32NxQCNxHGEuWUFDQu/mnw2CqGxhWjf
-/KFmvOCm/S0Qo3h1eaadoiRqEhX7uEqW1cuCfxBp4wg3I85nAJEtct1CYUCzsV0q
-ytCWdEh6AQg7aJB0KMrC5TWXGp4vrCn+Dm9tFqXnMMZnVmQ5QZY=
-=vGLv
+iQIzBAEBCAAdFiEEdfRlhq5hpmzETofcbDjKyiDZs5IFAmC1tysACgkQbDjKyiDZ
+s5KRpg/+Lo/Si85pyON9vgnETlHuXUrPpw9adKpomBRfTV4i64cdow1u5AP9m3+/
+qkNtTt/hFKbvGUtedWclFX1WPrO4nwELMY0iVXBHDN7vuH94ZbJllORtord8pzzL
+Yo8kHxmIlWBsyfYzEh0jCeICbfakLs+bymK+jurvB6yO2MeL1cx71TIRrqdZkcvg
+Aytpv7vLgL+OEzTTn8LRRQUM8UGI9vQroYufKmy4xACkOY9xuDnqGDNDrVJBmPte
+HnovCg+vfeiNC7XY4Zbk6nDHtzXxI1KrCCrPqPASE3m+rwR3VRUBfaEX8OavJ0A/
+p7eYUttJoeYCBNQqheZSJF3VEqaMxL8HgS2FKdWCNtM0qd4y463Z/3/emqH27iCs
+faHe62/iohgr0BXew/eN4Cg6YuEVO2yj4RqVbFSLsytlNYdavpCnUOSC0HPvFv/5
+oIQVm3VHkOTco/dBp//XKR4KWBdE8ebykMKAoNltwBv56toPMFE1Fm22Kof3vsAN
+WeiEt3cVmQvNcv1VVlDkCSY5ORTviK6Xn8et4sWHETkurO09yMkXERoedBL51ThQ
+0RAZytphO/6j9EE60WmhyQ24lj92Gt4Ow3OY34BosHz+8nkJKnOdqRPc4wsxKDBy
+de+/tCGyRVRXUircNfz5Z5jzLMEvb3Y42B3qotZxzvEVVCnS2/8=
+=RPSa
 -----END PGP SIGNATURE-----
 
---RMasjA1xbGOcqeUG--
+--Xbmv8PanLUJwMAHh--
