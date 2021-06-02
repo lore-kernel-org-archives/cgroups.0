@@ -1,113 +1,65 @@
-From: syzbot <syzbot+15a9609cfd4687eb7269@syzkaller.appspotmail.com>
-Subject: [syzbot] general protection fault in lock_page_memcg
-Date: Wed, 02 Jun 2021 09:37:27 -0700
-Message-ID: <000000000000f23c9e05c3cb1250@google.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 2/6] sched: Introduce task_is_running()
+Date: Wed, 2 Jun 2021 18:46:16 +0200
+Message-ID: <YLe12Ba4CrvhMhFI@hirez.programming.kicks-ass.net>
+References: <20210602131225.336600299@infradead.org>
+ <20210602133040.334970485@infradead.org>
+ <20210602145921.GB31179@willie-the-truck>
 Mime-Version: 1.0
-Return-path: <netfilter-devel-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=7tohifuv5JYW3E7Hk1sVQuIjPI/C8MKSY3MQl5vvB4s=; b=kdu4BwlchYINw3C+EcBocsHDUy
+        a91P+WO2n/ztNAZpC4i1gw7tqOKUFzwWu58suQdLAjM2YXFikv/5/oaqPmf99JVYKCNj2WJKpDQ0i
+        S0c8GI0OlAIisTgxakan8G10HFtH5HuNw7Hqdqi3RHiYYq3zdmBzXy5lsDnRzF3TJVEtdO68TnpgS
+        8K25eJH4v8dAAo7rswaiwcEE8nXrQyqHEIrzfWlp7ORDwYUd2bEDZxmNSuwBFuW4xEFDNeWs3Yg6U
+        o+Kb0+cIMahvxPwVt/nlQwL5AtLXT/J6J+qePZba4xfUkA84xt+DhB39swRCy3609n/Mv+E85Mgmt
+        FcuTDgEw==;
+Content-Disposition: inline
+In-Reply-To: <20210602145921.GB31179@willie-the-truck>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, cgroups@vger.kernel.org, coreteam@netfilter.org, davem@davemloft.net, dsahern@kernel.org, fw@strlen.de, hannes@cmpxchg.org, kadlec@netfilter.org, kuba@kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, mhocko@kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, pablo@netfilter.org, syzkaller-bugs@googlegroups.com, vdavydov.dev@gmail.com, yoshfuji@linux-ipv6.org
+To: Will Deacon <will@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, Borislav Petkov <bp@alien8.de>, x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Jens Axboe <axboe@kernel.dk>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Tejun Heo <t>
 
-Hello,
+On Wed, Jun 02, 2021 at 03:59:21PM +0100, Will Deacon wrote:
+> On Wed, Jun 02, 2021 at 03:12:27PM +0200, Peter Zijlstra wrote:
+> > Replace a bunch of 'p->state == TASK_RUNNING' with a new helper:
+> > task_is_running(p).
+> > 
+> > Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+> > ---
+> >  arch/x86/kernel/process.c |    4 ++--
+> >  block/blk-mq.c            |    2 +-
+> >  include/linux/sched.h     |    2 ++
+> >  kernel/locking/lockdep.c  |    2 +-
+> >  kernel/rcu/tree_plugin.h  |    2 +-
+> >  kernel/sched/core.c       |    6 +++---
+> >  kernel/sched/stats.h      |    2 +-
+> >  kernel/signal.c           |    2 +-
+> >  kernel/softirq.c          |    3 +--
+> >  mm/compaction.c           |    2 +-
+> >  10 files changed, 14 insertions(+), 13 deletions(-)
+> > 
+> > --- a/arch/x86/kernel/process.c
+> > +++ b/arch/x86/kernel/process.c
+> > @@ -931,7 +931,7 @@ unsigned long get_wchan(struct task_stru
+> >  	unsigned long start, bottom, top, sp, fp, ip, ret = 0;
+> >  	int count = 0;
+> >  
+> > -	if (p == current || p->state == TASK_RUNNING)
+> > +	if (p == current || task_is_running(p))
+> 
+> Looks like this one in get_wchan() has been cargo-culted across most of
+> arch/ so they'll need fixing up before you rename the struct member.
 
-syzbot found the following issue on:
+Yeah, this was x86_64 allmodconfig driven, I've already got a bunch of
+robot mail telling me other archs need help, I'll fix it iup.
 
-HEAD commit:    a1f92694 Add linux-next specific files for 20210518
-git tree:       linux-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=112d5fcfd00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=d612e75ffd53a6d3
-dashboard link: https://syzkaller.appspot.com/bug?extid=15a9609cfd4687eb7269
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=143ecb5fd00000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=11c7326bd00000
+> There's also a weird one in tools/bpf/runqslower/runqslower.bpf.c (!)
 
-The issue was bisected to:
-
-commit f9006acc8dfe59e25aa75729728ac57a8d84fc32
-Author: Florian Westphal <fw@strlen.de>
-Date:   Wed Apr 21 07:51:08 2021 +0000
-
-    netfilter: arp_tables: pass table pointer via nf_hook_ops
-
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=16d4af03d00000
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=15d4af03d00000
-console output: https://syzkaller.appspot.com/x/log.txt?x=11d4af03d00000
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+15a9609cfd4687eb7269@syzkaller.appspotmail.com
-Fixes: f9006acc8dfe ("netfilter: arp_tables: pass table pointer via nf_hook_ops")
-
-general protection fault, probably for non-canonical address 0xdffffd1002ed3a01: 0000 [#1] PREEMPT SMP KASAN
-KASAN: probably user-memory-access in range [0x000008801769d008-0x000008801769d00f]
-CPU: 1 PID: 8455 Comm: syz-executor974 Not tainted 5.13.0-rc2-next-20210518-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-RIP: 0010:_compound_head include/linux/page-flags.h:182 [inline]
-RIP: 0010:lock_page_memcg+0x29/0x7d0 mm/memcontrol.c:1984
-Code: 00 48 b8 00 00 00 00 00 fc ff df 55 48 89 e5 41 57 49 89 ff 41 56 41 55 41 54 4c 8d 67 08 4c 89 e2 53 48 c1 ea 03 48 83 ec 20 <80> 3c 02 00 0f 85 10 06 00 00 49 8b 47 08 48 8d 50 ff a8 01 4c 0f
-RSP: 0018:ffffc9000194f8b8 EFLAGS: 00010286
-RAX: dffffc0000000000 RBX: 00001e801769d000 RCX: 0000000000000000
-RDX: 0000011002ed3a01 RSI: ffffffff81aee7cd RDI: 000008801769d000
-RBP: ffffc9000194f900 R08: 0000000000000000 R09: ffff88801cf9b82f
-R10: ffffffff81be0aa6 R11: 000000000000003f R12: 000008801769d008
-R13: 0000000000000001 R14: 000008801769d000 R15: 000008801769d000
-FS:  0000000000000000(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000480de8 CR3: 00000000127fa000 CR4: 00000000001506e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- page_remove_rmap+0x25/0x1480 mm/rmap.c:1348
- zap_huge_pmd+0x9c4/0xfb0 mm/huge_memory.c:1689
- zap_pmd_range mm/memory.c:1362 [inline]
- zap_pud_range mm/memory.c:1404 [inline]
- zap_p4d_range mm/memory.c:1425 [inline]
- unmap_page_range+0x1aac/0x2660 mm/memory.c:1446
- unmap_single_vma+0x198/0x300 mm/memory.c:1491
- unmap_vmas+0x16d/0x2f0 mm/memory.c:1523
- exit_mmap+0x1d0/0x620 mm/mmap.c:3201
- __mmput+0x122/0x470 kernel/fork.c:1096
- mmput+0x58/0x60 kernel/fork.c:1117
- exit_mm kernel/exit.c:502 [inline]
- do_exit+0xb0a/0x2a70 kernel/exit.c:813
- do_group_exit+0x125/0x310 kernel/exit.c:923
- __do_sys_exit_group kernel/exit.c:934 [inline]
- __se_sys_exit_group kernel/exit.c:932 [inline]
- __x64_sys_exit_group+0x3a/0x50 kernel/exit.c:932
- do_syscall_64+0x31/0xb0 arch/x86/entry/common.c:47
- entry_SYSCALL_64_after_hwframe+0x44/0xae
-RIP: 0033:0x43da89
-Code: Unable to access opcode bytes at RIP 0x43da5f.
-RSP: 002b:00007ffc45bf0b08 EFLAGS: 00000246 ORIG_RAX: 00000000000000e7
-RAX: ffffffffffffffda RBX: 00000000004ae230 RCX: 000000000043da89
-RDX: 000000000000003c RSI: 00000000000000e7 RDI: 0000000000000000
-RBP: 0000000000000000 R08: ffffffffffffffc0 R09: 0000000000000000
-R10: 0000000000000003 R11: 0000000000000246 R12: 00000000004ae230
-R13: 0000000000000001 R14: 0000000000000000 R15: 0000000000000001
-Modules linked in:
----[ end trace 048141dd003294dd ]---
-RIP: 0010:_compound_head include/linux/page-flags.h:182 [inline]
-RIP: 0010:lock_page_memcg+0x29/0x7d0 mm/memcontrol.c:1984
-Code: 00 48 b8 00 00 00 00 00 fc ff df 55 48 89 e5 41 57 49 89 ff 41 56 41 55 41 54 4c 8d 67 08 4c 89 e2 53 48 c1 ea 03 48 83 ec 20 <80> 3c 02 00 0f 85 10 06 00 00 49 8b 47 08 48 8d 50 ff a8 01 4c 0f
-RSP: 0018:ffffc9000194f8b8 EFLAGS: 00010286
-RAX: dffffc0000000000 RBX: 00001e801769d000 RCX: 0000000000000000
-RDX: 0000011002ed3a01 RSI: ffffffff81aee7cd RDI: 000008801769d000
-RBP: ffffc9000194f900 R08: 0000000000000000 R09: ffff88801cf9b82f
-R10: ffffffff81be0aa6 R11: 000000000000003f R12: 000008801769d008
-R13: 0000000000000001 R14: 000008801769d000 R15: 000008801769d000
-FS:  0000000000000000(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000480de8 CR3: 00000000127fa000 CR4: 00000000001506e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
-syzbot can test patches for this issue, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+I'm tempted to let the bpf people sort their own gunk. This is not an
+ABI. I so don't care breaking every script out there.
