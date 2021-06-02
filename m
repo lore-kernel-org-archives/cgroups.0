@@ -1,68 +1,57 @@
-From: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 6/6] sched: Change task_struct::state
-Date: Wed, 2 Jun 2021 16:10:11 +0100
-Message-ID: <20210602151010.GE31179@willie-the-truck>
-References: <20210602131225.336600299@infradead.org>
- <20210602133040.587042016@infradead.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC 0/7] Introduce memory allocation speed throttle in memcg
+Date: Wed, 2 Jun 2021 08:39:02 -0700
+Message-ID: <CALvZod7w1tzxvYCP54KHEo=k=qUd02UTkr+1+b5rTdn-tJt45w@mail.gmail.com>
+References: <cover.1622043596.git.yuleixzhang@tencent.com> <CALvZod4SoCS6ym8ELTxWd6UwzUp8m_UUdw7oApAhW2WRq0BXqw@mail.gmail.com>
+ <CACZOiM3VhYyzCTx4FbW=FF8WB=X46xaV53abqOVL+eHQOs8Reg@mail.gmail.com>
+ <YLZIBpJFkKNBCg2X@chrisdown.name> <CACZOiM21STLrZgcnEwm8w2t82Qj3Ohy-BGbD5u62gTn=z4X3Lw@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622646628;
-        bh=MmmB5edNPbRN/+c+2On4lV0BgwteW7Cw405ip5Z8YuI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=eoW8oxXoywj95HF19beDzh3Wa+WhWkiyj9FjvvSEw7ScJ8OuGQbEy6+2TGjP0xVYN
-         XSSJAJXvhI5MOj1+GRdHIbg46k9rJSpJMlo/HDJefXpEwJPCDFcYn8COIR/VQO5DZl
-         47yzM30C6QaWLqEpy6LeVNCLBHEk+aKjfkrC6CQ5ViDR3bMQ0fCKMIt+zFjJNZMY+v
-         SNl2CwOo9QKvwQF6AUEFLQH9ccSyIziiULTl3YApDUWutkiYOLv0+Q04TM9wwWdkfx
-         bdsysjlbcoFBsmj9C1l84fr+oHwMhBsnHonyI6jC2MFd17CoX0BlIS16/UkYyFRS6U
-         MochfZ+/mAepQ==
-Content-Disposition: inline
-In-Reply-To: <20210602133040.587042016-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=674c29vRdYAk6FicWWelzpFqgoTb+93XHQAYD/1H3Rk=;
+        b=bMiDXVuqX3MZ1ebHXMXAnz4i1FuII1AA/TtaUU/88MAika1cxyLKtGEw4MIsREXO+X
+         CmZ71Pfe+P+ouAxW5F5HeR1iDagoaN3GJttsjpbjfSz1LSg+IuI4e5UNdn4UjORrl6K+
+         XaPqXvgdw8TLFvyMzqZtVFtQS5SFrFKGudfhr+uc9hUomLbUqgFFrFiu3w55ZZk1jP39
+         hr35swpMuqa9ALpJR7bmDsxEZlhrUqP02UN7iDrYy5z5MKkj0qrIrk3lCYyl/p4apSad
+         EUvuVDgHsnEQqx5zQ1pjEdTpkGHpon7Q8wHvorS7CxXoxpEp+I2oZctN6bdA2OPFk2si
+         DWRQ==
+In-Reply-To: <CACZOiM21STLrZgcnEwm8w2t82Qj3Ohy-BGbD5u62gTn=z4X3Lw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Tejun Heo <t>
+To: yulei zhang <yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, benbjiang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, Wanpeng Li <kernellwp-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-On Wed, Jun 02, 2021 at 03:12:31PM +0200, Peter Zijlstra wrote:
-> Change the type and name of task_struct::state. Drop the volatile and
-> shrink it to an 'unsigned int'. Rename it in order to find all uses
-> such that we can use READ_ONCE/WRITE_ONCE as appropriate.
-> 
-> Signed-off-by: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> ---
->  block/blk-mq.c                 |    2 -
->  drivers/md/dm.c                |    6 ++--
->  fs/binfmt_elf.c                |    8 +++---
->  fs/userfaultfd.c               |    4 +--
->  include/linux/sched.h          |   31 +++++++++++------------
->  include/linux/sched/debug.h    |    2 -
->  include/linux/sched/signal.h   |    2 -
->  init/init_task.c               |    2 -
->  kernel/cgroup/cgroup-v1.c      |    2 -
->  kernel/debug/kdb/kdb_support.c |   18 +++++++------
->  kernel/fork.c                  |    4 +--
->  kernel/hung_task.c             |    2 -
->  kernel/kthread.c               |    4 +--
->  kernel/locking/mutex.c         |    6 ++--
->  kernel/locking/rtmutex.c       |    4 +--
->  kernel/locking/rwsem.c         |    2 -
->  kernel/ptrace.c                |   12 ++++-----
->  kernel/rcu/rcutorture.c        |    4 +--
->  kernel/rcu/tree_stall.h        |   12 ++++-----
->  kernel/sched/core.c            |   53 +++++++++++++++++++++--------------------
->  kernel/sched/deadline.c        |   10 +++----
->  kernel/sched/fair.c            |   11 +++++---
->  lib/syscall.c                  |    4 +--
->  net/core/dev.c                 |    2 -
->  24 files changed, 108 insertions(+), 99 deletions(-)
+On Wed, Jun 2, 2021 at 2:11 AM yulei zhang <yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>
+> On Tue, Jun 1, 2021 at 10:45 PM Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org> wrote:
+> >
+> > yulei zhang writes:
+> > >Yep, dynamically adjust the memory.high limits can ease the memory pressure
+> > >and postpone the global reclaim, but it can easily trigger the oom in
+> > >the cgroups,
+> >
+> > To go further on Shakeel's point, which I agree with, memory.high should
+> > _never_ result in memcg OOM. Even if the limit is breached dramatically, we
+> > don't OOM the cgroup. If you have a demonstration of memory.high resulting in
+> > cgroup-level OOM kills in recent kernels, then that needs to be provided. :-)
+>
+> You are right, I mistook it for max. Shakeel means the throttling
+> during context switch
+> which uses memory.high as threshold to calculate the sleep time.
+> Currently it only applies
+> to cgroupv2.  In this patchset we explore another idea to throttle the
+> memory usage, which
+> rely on setting an average allocation speed in memcg. We hope to
+> suppress the memory
+> usage in low priority cgroups when it reaches the system watermark and
+> still keep the activities
+> alive.
 
-I think this makes the code a _lot_ easier to understand, so:
-
-Acked-by: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-on the assumption that you'll fix get_wchan() for !x86 as well.
-
-Cheers,
-
-Will
+I think you need to make the case: why should we add one more form of
+throttling? Basically why memory.high is not good for your use-case
+and the proposed solution works better. Though IMO it would be a hard
+sell.
