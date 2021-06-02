@@ -1,60 +1,59 @@
-From: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/6] sched: Unbreak wakeups
-Date: Wed, 2 Jun 2021 15:47:55 +0100
-Message-ID: <20210602144755.GA31179@willie-the-truck>
+From: Will Deacon <will@kernel.org>
+Subject: Re: [PATCH 2/6] sched: Introduce task_is_running()
+Date: Wed, 2 Jun 2021 15:59:21 +0100
+Message-ID: <20210602145921.GB31179@willie-the-truck>
 References: <20210602131225.336600299@infradead.org>
- <20210602133040.271625424@infradead.org>
+ <20210602133040.334970485@infradead.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622645288;
-        bh=ytbkft451AVHu/sv9O+1yHxWE5QaUUcYpHinzQWGilY=;
+        s=k20201202; t=1622645976;
+        bh=lULBTNw8ShimVVrtBYDbb5vhV5dQ9U6lx3o98b0hW5w=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oFaPf/EGcp1bqCNSfbPd9OF2xa7o2Ntfin1h55YHUCHihLqUhuRWFALcsjyJqVvu3
-         Y91bwUZOIsEFC/tL7PsAT3NW2pmuCMMri5f6mMQdOP0nuAVKe9SwYQcmWW9WbZ/XpA
-         PoIpRGydGKIhIKVtHhzVu6FV2kTgGYhx9VOZ08mm/nHsF72YOGlYy3Wo5rD1Ycl6VO
-         iEfCLUY4hdvzrtVG3Pt7BekNhlDuUClohcALpyQQ1KVISUxk8dSk+DozQEt+xxMpvZ
-         6oRLbg4A4VBWbNLsQ8t27gcIkpn2wcsBwsMswN4j9Vrag6G0GPb4whAagnddnPqQmz
-         nNoYUZ6ZDqJdQ==
+        b=OQiBvXalcmFDhP4VUJkLfFfjUL+AdCowcIIHtwCBDEqTOBmz1OdBU6rrODvuN+9rD
+         mOLZKyuSS6i9EOd55gn+hVr2qB4URf3FK/46utTh8Mh1nd3yfAS9gC2T8qY5RT3IQY
+         b4rlXGea5BqIi+sm9FltOrrnryu0LA5VhApDTgyH63PLiPiZ2y0qibL1ECCDe/bn4n
+         SELGuhZLGN0WPbHVxREPrkTVpEWesEuUbZ+F7OzJ3FIIUPCtX92osJVk5KljY297eg
+         yycYme0OjJHY2hdQ/MWGMhjJv0YWgp66DxbyRygrcbb6F9I+DfNX1xA1IgwfjJU0xb
+         xfBJRIrGQb7lw==
 Content-Disposition: inline
-In-Reply-To: <20210602133040.271625424-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+In-Reply-To: <20210602133040.334970485@infradead.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Tejun Heo <t>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, Borislav Petkov <bp@alien8.de>, x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Jens Axboe <axboe@kernel.dk>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Tejun Heo <t>
 
-On Wed, Jun 02, 2021 at 03:12:26PM +0200, Peter Zijlstra wrote:
-> Remove broken task->state references and let wake_up_process() DTRT.
+On Wed, Jun 02, 2021 at 03:12:27PM +0200, Peter Zijlstra wrote:
+> Replace a bunch of 'p->state == TASK_RUNNING' with a new helper:
+> task_is_running(p).
 > 
-> The anti-pattern in these patches breaks the ordering of ->state vs
-> COND as described in the comment near set_current_state() and can lead
-> to missed wakeups:
-> 
-> 	(OoO load, observes RUNNING)<-.
-> 	for (;;) {                    |
-> 	  t->state = UNINTERRUPTIBLE; |
-> 	  smp_mb();          ,-----> ,' (OoO load, observed !COND)
->                              |       |
-> 	                     |       |	COND = 1;
-> 			     |	     `- if (t->state != RUNNING)
->                              |		  wake_up_process(t); // not done
-> 	  if (COND) ---------'
-> 	    break;
-> 	  schedule(); // forever waiting
-> 	}
-> 	t->state = TASK_RUNNING;
-> 
-> Signed-off-by: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+> Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 > ---
->  drivers/net/ethernet/qualcomm/qca_spi.c |    6 ++----
->  drivers/usb/gadget/udc/max3420_udc.c    |   15 +++++----------
->  drivers/usb/host/max3421-hcd.c          |    3 +--
->  kernel/softirq.c                        |    2 +-
->  4 files changed, 9 insertions(+), 17 deletions(-)
+>  arch/x86/kernel/process.c |    4 ++--
+>  block/blk-mq.c            |    2 +-
+>  include/linux/sched.h     |    2 ++
+>  kernel/locking/lockdep.c  |    2 +-
+>  kernel/rcu/tree_plugin.h  |    2 +-
+>  kernel/sched/core.c       |    6 +++---
+>  kernel/sched/stats.h      |    2 +-
+>  kernel/signal.c           |    2 +-
+>  kernel/softirq.c          |    3 +--
+>  mm/compaction.c           |    2 +-
+>  10 files changed, 14 insertions(+), 13 deletions(-)
+> 
+> --- a/arch/x86/kernel/process.c
+> +++ b/arch/x86/kernel/process.c
+> @@ -931,7 +931,7 @@ unsigned long get_wchan(struct task_stru
+>  	unsigned long start, bottom, top, sp, fp, ip, ret = 0;
+>  	int count = 0;
+>  
+> -	if (p == current || p->state == TASK_RUNNING)
+> +	if (p == current || task_is_running(p))
 
-Acked-by: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Looks like this one in get_wchan() has been cargo-culted across most of
+arch/ so they'll need fixing up before you rename the struct member.
 
-I couldn't spot any others.
+There's also a weird one in tools/bpf/runqslower/runqslower.bpf.c (!)
 
 Will
