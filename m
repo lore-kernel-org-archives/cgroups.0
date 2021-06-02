@@ -1,49 +1,42 @@
-From: yulei zhang <yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC 0/7] Introduce memory allocation speed throttle in memcg
-Date: Wed, 2 Jun 2021 17:11:32 +0800
-Message-ID: <CACZOiM21STLrZgcnEwm8w2t82Qj3Ohy-BGbD5u62gTn=z4X3Lw@mail.gmail.com>
-References: <cover.1622043596.git.yuleixzhang@tencent.com> <CALvZod4SoCS6ym8ELTxWd6UwzUp8m_UUdw7oApAhW2WRq0BXqw@mail.gmail.com>
- <CACZOiM3VhYyzCTx4FbW=FF8WB=X46xaV53abqOVL+eHQOs8Reg@mail.gmail.com> <YLZIBpJFkKNBCg2X@chrisdown.name>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: [PATCH 5/6] sched,timer: Use __set_current_state()
+Date: Wed, 02 Jun 2021 15:12:30 +0200
+Message-ID: <20210602133040.524487671@infradead.org>
+References: <20210602131225.336600299@infradead.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=jiAxINQdIi7+HKRfHkFG9l2vkzASih/fGHAjPl9o30o=;
-        b=Lfml9qG8E5om9EGGt1K9NrtEPh3JmhHemfh/T9ecn4hRxiACaf+qtqZDkwaOb9trMG
-         ixX+y+wRuf9EwKeYGeMFgWmTx4j4EFKRvSYA0T9z4yZrOudlee98LFKNYwrCY3zjbdkC
-         yQQQEGXE9yiZwWEN3sZma/nlj+w6IZ+I+qQMga77fgthsNu9DMlV21wJIUt5FhABt4JQ
-         8HcqQe7gyou6nJbv/rShsG5Mf/3ioXoGQkS3DDgwQ54l46DBN0WZbM8JMiodb55t0ppq
-         I9dFPFDNvA7BTLTCQVG/Q3qItNTBfcihwoRp5Zum/8gMvXIPSUYGLALNE+vB3aSk88YP
-         KodA==
-In-Reply-To: <YLZIBpJFkKNBCg2X-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=desiato.20200630; h=Content-Type:MIME-Version:References:
+        Subject:Cc:To:From:Date:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
+        Content-ID:Content-Description:In-Reply-To;
+        bh=ZM/OZzCTna+H0NVHgaZG9RysfqZrZbVctmrXuvKDhRg=; b=Y4KjVcAVs++u5aWG8t3gz7Zmdm
+        2GCCs43oozUZx+EtBSVivOvona+vh800bFDlXP3+vZhGLq9LHKpyLPPoBAn1rRYCCcALnq2iBn3qi
+        MaERsXXM6+x7+/J8899O1kiYvL9TAxD6Zljthg0HfcVxNIohePy8ytwNYVprNkPCZjTMttAfDdM5g
+        5KwiCrJMDzwRbGhdMjmXxhzxS1ITsVDM6G31nZqJOA7KWsEk8nkmFZWwCwuPLepKXuKwII1/UGGIB
+        +DR2n/OyDqazhheBKOtqI7M+p0fenDjIhPGAkcT4D/YDi1MNXCIEjbsoIuoh4Bzi5lhHvKvOR/Ja3
+        YhspdwAA==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, benbjiang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, Wanpeng Li <kernellwp-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>
+Cc: Borislav Petkov <bp@alien8.de>, x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Jens Axboe <axboe@kernel.dk>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jason Wessel <jason.wessel@windriver.com>, Daniel Thompson <daniel.thompson@linaro.org>, Douglas Anderson <dianders@chromium.org>, Arnaldo Carvalho de Melo <acme@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alexander Shishkin <alexander.shishkin@linux.intel.com>
 
-On Tue, Jun 1, 2021 at 10:45 PM Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org> wrote:
->
-> yulei zhang writes:
-> >Yep, dynamically adjust the memory.high limits can ease the memory pressure
-> >and postpone the global reclaim, but it can easily trigger the oom in
-> >the cgroups,
->
-> To go further on Shakeel's point, which I agree with, memory.high should
-> _never_ result in memcg OOM. Even if the limit is breached dramatically, we
-> don't OOM the cgroup. If you have a demonstration of memory.high resulting in
-> cgroup-level OOM kills in recent kernels, then that needs to be provided. :-)
 
-You are right, I mistook it for max. Shakeel means the throttling
-during context switch
-which uses memory.high as threshold to calculate the sleep time.
-Currently it only applies
-to cgroupv2.  In this patchset we explore another idea to throttle the
-memory usage, which
-rely on setting an average allocation speed in memcg. We hope to
-suppress the memory
-usage in low priority cgroups when it reaches the system watermark and
-still keep the activities
-alive.
+Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+---
+ kernel/time/timer.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/kernel/time/timer.c
++++ b/kernel/time/timer.c
+@@ -1879,7 +1879,7 @@ signed long __sched schedule_timeout(sig
+ 			printk(KERN_ERR "schedule_timeout: wrong timeout "
+ 				"value %lx\n", timeout);
+ 			dump_stack();
+-			current->state = TASK_RUNNING;
++			__set_current_state(TASK_RUNNING);
+ 			goto out;
+ 		}
+ 	}
+
+
