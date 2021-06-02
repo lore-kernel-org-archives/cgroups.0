@@ -1,180 +1,68 @@
 From: Peter Zijlstra <peterz@infradead.org>
-Subject: [PATCH 2/6] sched: Introduce task_is_running()
-Date: Wed, 02 Jun 2021 15:12:27 +0200
-Message-ID: <20210602133040.334970485@infradead.org>
+Subject: [PATCH 3/6] sched,perf,kvm: Fix preemption condition
+Date: Wed, 02 Jun 2021 15:12:28 +0200
+Message-ID: <20210602133040.398289363@infradead.org>
 References: <20210602131225.336600299@infradead.org>
 Mime-Version: 1.0
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=desiato.20200630; h=Content-Type:MIME-Version:References:
+        d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:References:
         Subject:Cc:To:From:Date:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
         Content-ID:Content-Description:In-Reply-To;
-        bh=StHUrZVTyidITaso9MHtdeY9nPrW5Ogz3wqQtaiZ0ws=; b=P6N4rxYRYVyJKXyPv/qWD9zHEM
-        ae7/GsDR0G4z0W3zvLFylIHdZxOruBRKoQnWY8N7W1rLQbprQYlZS9dUYXxQLhu4AjsLFXcwYBtlb
-        eD49gln0vrb9EAWt9nv02V8yo6iI8t6lfBp4ez+3qPHUG9tGWQq/Ui8PnSuXrhM6rnBI0cO7Swj1I
-        3oXGm9LyYJOi4Ch+3FlALr0ysdqMd8mylXs107QW8UAnjvRfZ51B4Hs3PtzRgkCxUTtPW/2AMfCG/
-        ndwfk+vKAcWWm7HgBB7G3jkOSIw+UMNaGluyVVk4MLNMCyWDacIRZvLv7nz2KpnM+noLcBRHUzGbP
-        FF2fzzTQ==;
+        bh=MWif++fv4mdk5pz9anYuixYupfO2/j1D7alWDQJKz5g=; b=PZEfx4wzuQSJBf0ChNzA/G63R0
+        ZKT9gZ2ZXo46GZP12y+35WNUglFSn/+AsIoDlhUVJ4OA1knBv8GxnoX6r35r9TYFOwQXJL+GT6zqj
+        SOiJTsA8fxnoYg1WbLdmvcLGA1dLmZTTlA6NUI5k9SypIOpnw/3KanuE9xZiqf24DN1LYkv3thoZZ
+        TOLfdLugvC21E0bMM0KcU8XTsq29FNKGa/HQqwPNyCBSH1GG57AC43Gy2r+1Q1k7EJ2B2GUumvy3R
+        Vq7/OmNCDOXlizjZ/Z/XESgbXt+WYhqjvxT/7AszT4TsZ+S498S8ahrTlfsB4TSLuHAElzGfYYYdx
+        v7lZNMZw==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>
 Cc: Borislav Petkov <bp@alien8.de>, x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Jens Axboe <axboe@kernel.dk>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jason Wessel <jason.wessel@windriver.com>, Daniel Thompson <daniel.thompson@linaro.org>, Douglas Anderson <dianders@chromium.org>, Arnaldo Carvalho de Melo <acme@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alexander Shishkin <alexander.shishkin@linux.intel.com>
 
-Replace a bunch of 'p->state == TASK_RUNNING' with a new helper:
-task_is_running(p).
+When ran from the sched-out path (preempt_notifier or perf_event),
+p->state is irrelevant to determine preemption. You can get preempted
+with !task_is_running() just fine.
+
+The right indicator for preemption is if the task is still on the
+runqueue in the sched-out path.
 
 Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
- arch/x86/kernel/process.c |    4 ++--
- block/blk-mq.c            |    2 +-
- include/linux/sched.h     |    2 ++
- kernel/locking/lockdep.c  |    2 +-
- kernel/rcu/tree_plugin.h  |    2 +-
- kernel/sched/core.c       |    6 +++---
- kernel/sched/stats.h      |    2 +-
- kernel/signal.c           |    2 +-
- kernel/softirq.c          |    3 +--
- mm/compaction.c           |    2 +-
- 10 files changed, 14 insertions(+), 13 deletions(-)
+ kernel/events/core.c |    7 +++----
+ virt/kvm/kvm_main.c  |    2 +-
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
---- a/arch/x86/kernel/process.c
-+++ b/arch/x86/kernel/process.c
-@@ -931,7 +931,7 @@ unsigned long get_wchan(struct task_stru
- 	unsigned long start, bottom, top, sp, fp, ip, ret = 0;
- 	int count = 0;
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -8568,13 +8568,12 @@ static void perf_event_switch(struct tas
+ 		},
+ 	};
  
--	if (p == current || p->state == TASK_RUNNING)
-+	if (p == current || task_is_running(p))
- 		return 0;
+-	if (!sched_in && task->state == TASK_RUNNING)
++	if (!sched_in && current->on_rq) {
+ 		switch_event.event_id.header.misc |=
+ 				PERF_RECORD_MISC_SWITCH_OUT_PREEMPT;
++	}
  
- 	if (!try_get_task_stack(p))
-@@ -975,7 +975,7 @@ unsigned long get_wchan(struct task_stru
- 			goto out;
- 		}
- 		fp = READ_ONCE_NOCHECK(*(unsigned long *)fp);
--	} while (count++ < 16 && p->state != TASK_RUNNING);
-+	} while (count++ < 16 && !task_is_running(p));
- 
- out:
- 	put_task_stack(p);
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -3926,7 +3926,7 @@ int blk_poll(struct request_queue *q, bl
- 		if (signal_pending_state(state, current))
- 			__set_current_state(TASK_RUNNING);
- 
--		if (current->state == TASK_RUNNING)
-+		if (task_is_running(current))
- 			return 1;
- 		if (ret < 0 || !spin)
- 			break;
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -113,6 +113,8 @@ struct task_group;
- 					 __TASK_TRACED | EXIT_DEAD | EXIT_ZOMBIE | \
- 					 TASK_PARKED)
- 
-+#define task_is_running(task)		(READ_ONCE((task)->state) == TASK_RUNNING)
-+
- #define task_is_traced(task)		((task->state & __TASK_TRACED) != 0)
- 
- #define task_is_stopped(task)		((task->state & __TASK_STOPPED) != 0)
---- a/kernel/locking/lockdep.c
-+++ b/kernel/locking/lockdep.c
-@@ -760,7 +760,7 @@ static void lockdep_print_held_locks(str
- 	 * It's not reliable to print a task's held locks if it's not sleeping
- 	 * and it's not the current task.
- 	 */
--	if (p->state == TASK_RUNNING && p != current)
-+	if (p != current && task_is_running(p))
- 		return;
- 	for (i = 0; i < depth; i++) {
- 		printk(" #%d: ", i);
---- a/kernel/rcu/tree_plugin.h
-+++ b/kernel/rcu/tree_plugin.h
-@@ -2768,7 +2768,7 @@ EXPORT_SYMBOL_GPL(rcu_bind_current_to_no
- #ifdef CONFIG_SMP
- static char *show_rcu_should_be_on_cpu(struct task_struct *tsp)
- {
--	return tsp && tsp->state == TASK_RUNNING && !tsp->on_cpu ? "!" : "";
-+	return tsp && task_is_running(tsp) && !tsp->on_cpu ? "!" : "";
- }
- #else // #ifdef CONFIG_SMP
- static char *show_rcu_should_be_on_cpu(struct task_struct *tsp)
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -5989,7 +5989,7 @@ static inline void sched_submit_work(str
- {
- 	unsigned int task_flags;
- 
--	if (!tsk->state)
-+	if (task_is_running(tsk))
- 		return;
- 
- 	task_flags = tsk->flags;
-@@ -7964,7 +7964,7 @@ int __sched yield_to(struct task_struct
- 	if (curr->sched_class != p->sched_class)
- 		goto out_unlock;
- 
--	if (task_running(p_rq, p) || p->state)
-+	if (task_running(p_rq, p) || !task_is_running(p))
- 		goto out_unlock;
- 
- 	yielded = curr->sched_class->yield_to_task(rq, p);
-@@ -8167,7 +8167,7 @@ void sched_show_task(struct task_struct
- 
- 	pr_info("task:%-15.15s state:%c", p->comm, task_state_to_char(p));
- 
--	if (p->state == TASK_RUNNING)
-+	if (task_is_running(p))
- 		pr_cont("  running task    ");
- #ifdef CONFIG_DEBUG_STACK_USAGE
- 	free = stack_not_used(p);
---- a/kernel/sched/stats.h
-+++ b/kernel/sched/stats.h
-@@ -217,7 +217,7 @@ static inline void sched_info_depart(str
- 
- 	rq_sched_info_depart(rq, delta);
- 
--	if (t->state == TASK_RUNNING)
-+	if (task_is_running(t))
- 		sched_info_enqueue(rq, t);
- }
- 
---- a/kernel/signal.c
-+++ b/kernel/signal.c
-@@ -4719,7 +4719,7 @@ void kdb_send_sig(struct task_struct *t,
- 	}
- 	new_t = kdb_prev_t != t;
- 	kdb_prev_t = t;
--	if (t->state != TASK_RUNNING && new_t) {
-+	if (!task_is_running(t) && new_t) {
- 		spin_unlock(&t->sighand->siglock);
- 		kdb_printf("Process is not RUNNING, sending a signal from "
- 			   "kdb risks deadlock\n"
---- a/kernel/softirq.c
-+++ b/kernel/softirq.c
-@@ -92,8 +92,7 @@ static bool ksoftirqd_running(unsigned l
- 
- 	if (pending & SOFTIRQ_NOW_MASK)
- 		return false;
--	return tsk && (tsk->state == TASK_RUNNING) &&
--		!__kthread_should_park(tsk);
-+	return tsk && task_is_running(tsk) && !__kthread_should_park(tsk);
- }
- 
- #ifdef CONFIG_TRACE_IRQFLAGS
---- a/mm/compaction.c
-+++ b/mm/compaction.c
-@@ -1955,7 +1955,7 @@ static inline bool is_via_compact_memory
- 
- static bool kswapd_is_running(pg_data_t *pgdat)
- {
--	return pgdat->kswapd && (pgdat->kswapd->state == TASK_RUNNING);
-+	return pgdat->kswapd && task_is_running(pgdat->kswapd);
+-	perf_iterate_sb(perf_event_switch_output,
+-		       &switch_event,
+-		       NULL);
++	perf_iterate_sb(perf_event_switch_output, &switch_event, NULL);
  }
  
  /*
+--- a/virt/kvm/kvm_main.c
++++ b/virt/kvm/kvm_main.c
+@@ -4869,7 +4869,7 @@ static void kvm_sched_out(struct preempt
+ {
+ 	struct kvm_vcpu *vcpu = preempt_notifier_to_vcpu(pn);
+ 
+-	if (current->state == TASK_RUNNING) {
++	if (current->on_rq) {
+ 		WRITE_ONCE(vcpu->preempted, true);
+ 		WRITE_ONCE(vcpu->ready, true);
+ 	}
 
 
