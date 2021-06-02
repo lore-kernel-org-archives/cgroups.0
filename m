@@ -1,44 +1,45 @@
-From: Will Deacon <will@kernel.org>
-Subject: Re: [PATCH 4/6] sched: Add get_current_state()
-Date: Wed, 2 Jun 2021 16:02:11 +0100
-Message-ID: <20210602150211.GC31179@willie-the-truck>
+From: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 5/6] sched,timer: Use __set_current_state()
+Date: Wed, 2 Jun 2021 16:06:09 +0100
+Message-ID: <20210602150609.GD31179@willie-the-truck>
 References: <20210602131225.336600299@infradead.org>
- <20210602133040.461908001@infradead.org>
+ <20210602133040.524487671@infradead.org>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622646144;
-        bh=iqy0WVYDEpl3OEqiwYR2vHlixZDZNAuGOuMgnWDXeR8=;
+        s=k20201202; t=1622646382;
+        bh=BP0oFnLplpQzbCvalvHpB7NqrdywR5DFEAfyxB1g9Jw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=O+pqG+GrEcw9WVS8/OW/fQfSxSijYrBV2XZxysaVScijAUnd0cVcWSF4nom6VYF7/
-         Xyj4yQuXkrrTuHJnUpufQZyClixRruRrV6dddsrZRqOQc+UgpG4vsSCBUy91HBwhfj
-         S4qt9rHniezYWqyJmpYVr3rEugD00r4pGxG9asyrSW0y4cnvEcyeHwtxVwtOD0WKZZ
-         CxVeWNbOBJkHO0H7W+0s6rOxAZoTcR6qnwXcmM/nQ5icf4zBj8IsluJAeqSZ9roUcx
-         S4+extTRu1FhJzpL0fTK8fMnTglu0lQMSa9EV3Tq/LcFiaa96LORrcAJlT/uJ7FgCX
-         ZTIEp+h3YHIzg==
+        b=jt/JfwEGGlSy3hTqeZO3M/TRZGRYdN+uS6BuUDgGWYc5+7OM1jehc/I9GyTKk2giU
+         x8Fz6MywEP2GyftaSPZuTT4frUE4LJJFTbKNlFpWaV8FNSJBHs39bu4E9I4SLfLcqO
+         HMHRVnWqIqa56gxBT11Ofr79h6KJWIenXTFIjgotpx1WoRwxUuESzepF3f2J82onWW
+         6KmGn6d5Bc6iSjd3ikJm06ctf56Aqa5WONxHcW0SvlYtFWsSxXD7djl+hbn3SCVIAR
+         qZZg4puE8ocBtV+bfRn446ajL6ZLJwoZfD6XNzRQcxu8UqCMnHwciVTCXlxPOmPFq8
+         KdRM+B30YEPFA==
 Content-Disposition: inline
-In-Reply-To: <20210602133040.461908001@infradead.org>
+In-Reply-To: <20210602133040.524487671-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, Borislav Petkov <bp@alien8.de>, x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Jens Axboe <axboe@kernel.dk>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Tejun Heo <t>
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Tejun Heo <t>
 
-On Wed, Jun 02, 2021 at 03:12:29PM +0200, Peter Zijlstra wrote:
-> Remove yet another few p->state accesses.
+On Wed, Jun 02, 2021 at 03:12:30PM +0200, Peter Zijlstra wrote:
 > 
-> Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+> Signed-off-by: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 > ---
->  block/blk-mq.c        |    2 +-
->  include/linux/sched.h |    2 ++
->  kernel/freezer.c      |    2 +-
->  kernel/sched/core.c   |    6 +++---
->  4 files changed, 7 insertions(+), 5 deletions(-)
+>  kernel/time/timer.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> --- a/kernel/time/timer.c
+> +++ b/kernel/time/timer.c
+> @@ -1879,7 +1879,7 @@ signed long __sched schedule_timeout(sig
+>  			printk(KERN_ERR "schedule_timeout: wrong timeout "
+>  				"value %lx\n", timeout);
+>  			dump_stack();
+> -			current->state = TASK_RUNNING;
+> +			__set_current_state(TASK_RUNNING);
 
-I think you can include kernel/kcsan/report.c here too.
-
-With that:
-
-Acked-by: Will Deacon <will@kernel.org>
+Acked-by: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 Will
