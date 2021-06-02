@@ -1,57 +1,113 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC 0/7] Introduce memory allocation speed throttle in memcg
-Date: Wed, 2 Jun 2021 08:39:02 -0700
-Message-ID: <CALvZod7w1tzxvYCP54KHEo=k=qUd02UTkr+1+b5rTdn-tJt45w@mail.gmail.com>
-References: <cover.1622043596.git.yuleixzhang@tencent.com> <CALvZod4SoCS6ym8ELTxWd6UwzUp8m_UUdw7oApAhW2WRq0BXqw@mail.gmail.com>
- <CACZOiM3VhYyzCTx4FbW=FF8WB=X46xaV53abqOVL+eHQOs8Reg@mail.gmail.com>
- <YLZIBpJFkKNBCg2X@chrisdown.name> <CACZOiM21STLrZgcnEwm8w2t82Qj3Ohy-BGbD5u62gTn=z4X3Lw@mail.gmail.com>
+From: syzbot <syzbot+15a9609cfd4687eb7269@syzkaller.appspotmail.com>
+Subject: [syzbot] general protection fault in lock_page_memcg
+Date: Wed, 02 Jun 2021 09:37:27 -0700
+Message-ID: <000000000000f23c9e05c3cb1250@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=674c29vRdYAk6FicWWelzpFqgoTb+93XHQAYD/1H3Rk=;
-        b=bMiDXVuqX3MZ1ebHXMXAnz4i1FuII1AA/TtaUU/88MAika1cxyLKtGEw4MIsREXO+X
-         CmZ71Pfe+P+ouAxW5F5HeR1iDagoaN3GJttsjpbjfSz1LSg+IuI4e5UNdn4UjORrl6K+
-         XaPqXvgdw8TLFvyMzqZtVFtQS5SFrFKGudfhr+uc9hUomLbUqgFFrFiu3w55ZZk1jP39
-         hr35swpMuqa9ALpJR7bmDsxEZlhrUqP02UN7iDrYy5z5MKkj0qrIrk3lCYyl/p4apSad
-         EUvuVDgHsnEQqx5zQ1pjEdTpkGHpon7Q8wHvorS7CxXoxpEp+I2oZctN6bdA2OPFk2si
-         DWRQ==
-In-Reply-To: <CACZOiM21STLrZgcnEwm8w2t82Qj3Ohy-BGbD5u62gTn=z4X3Lw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Return-path: <netfilter-devel-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: yulei zhang <yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, benbjiang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, Wanpeng Li <kernellwp-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+To: akpm@linux-foundation.org, cgroups@vger.kernel.org, coreteam@netfilter.org, davem@davemloft.net, dsahern@kernel.org, fw@strlen.de, hannes@cmpxchg.org, kadlec@netfilter.org, kuba@kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, mhocko@kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, pablo@netfilter.org, syzkaller-bugs@googlegroups.com, vdavydov.dev@gmail.com, yoshfuji@linux-ipv6.org
 
-On Wed, Jun 2, 2021 at 2:11 AM yulei zhang <yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-> On Tue, Jun 1, 2021 at 10:45 PM Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org> wrote:
-> >
-> > yulei zhang writes:
-> > >Yep, dynamically adjust the memory.high limits can ease the memory pressure
-> > >and postpone the global reclaim, but it can easily trigger the oom in
-> > >the cgroups,
-> >
-> > To go further on Shakeel's point, which I agree with, memory.high should
-> > _never_ result in memcg OOM. Even if the limit is breached dramatically, we
-> > don't OOM the cgroup. If you have a demonstration of memory.high resulting in
-> > cgroup-level OOM kills in recent kernels, then that needs to be provided. :-)
->
-> You are right, I mistook it for max. Shakeel means the throttling
-> during context switch
-> which uses memory.high as threshold to calculate the sleep time.
-> Currently it only applies
-> to cgroupv2.  In this patchset we explore another idea to throttle the
-> memory usage, which
-> rely on setting an average allocation speed in memcg. We hope to
-> suppress the memory
-> usage in low priority cgroups when it reaches the system watermark and
-> still keep the activities
-> alive.
+Hello,
 
-I think you need to make the case: why should we add one more form of
-throttling? Basically why memory.high is not good for your use-case
-and the proposed solution works better. Though IMO it would be a hard
-sell.
+syzbot found the following issue on:
+
+HEAD commit:    a1f92694 Add linux-next specific files for 20210518
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=112d5fcfd00000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=d612e75ffd53a6d3
+dashboard link: https://syzkaller.appspot.com/bug?extid=15a9609cfd4687eb7269
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=143ecb5fd00000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=11c7326bd00000
+
+The issue was bisected to:
+
+commit f9006acc8dfe59e25aa75729728ac57a8d84fc32
+Author: Florian Westphal <fw@strlen.de>
+Date:   Wed Apr 21 07:51:08 2021 +0000
+
+    netfilter: arp_tables: pass table pointer via nf_hook_ops
+
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=16d4af03d00000
+final oops:     https://syzkaller.appspot.com/x/report.txt?x=15d4af03d00000
+console output: https://syzkaller.appspot.com/x/log.txt?x=11d4af03d00000
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+15a9609cfd4687eb7269@syzkaller.appspotmail.com
+Fixes: f9006acc8dfe ("netfilter: arp_tables: pass table pointer via nf_hook_ops")
+
+general protection fault, probably for non-canonical address 0xdffffd1002ed3a01: 0000 [#1] PREEMPT SMP KASAN
+KASAN: probably user-memory-access in range [0x000008801769d008-0x000008801769d00f]
+CPU: 1 PID: 8455 Comm: syz-executor974 Not tainted 5.13.0-rc2-next-20210518-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+RIP: 0010:_compound_head include/linux/page-flags.h:182 [inline]
+RIP: 0010:lock_page_memcg+0x29/0x7d0 mm/memcontrol.c:1984
+Code: 00 48 b8 00 00 00 00 00 fc ff df 55 48 89 e5 41 57 49 89 ff 41 56 41 55 41 54 4c 8d 67 08 4c 89 e2 53 48 c1 ea 03 48 83 ec 20 <80> 3c 02 00 0f 85 10 06 00 00 49 8b 47 08 48 8d 50 ff a8 01 4c 0f
+RSP: 0018:ffffc9000194f8b8 EFLAGS: 00010286
+RAX: dffffc0000000000 RBX: 00001e801769d000 RCX: 0000000000000000
+RDX: 0000011002ed3a01 RSI: ffffffff81aee7cd RDI: 000008801769d000
+RBP: ffffc9000194f900 R08: 0000000000000000 R09: ffff88801cf9b82f
+R10: ffffffff81be0aa6 R11: 000000000000003f R12: 000008801769d008
+R13: 0000000000000001 R14: 000008801769d000 R15: 000008801769d000
+FS:  0000000000000000(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000480de8 CR3: 00000000127fa000 CR4: 00000000001506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ page_remove_rmap+0x25/0x1480 mm/rmap.c:1348
+ zap_huge_pmd+0x9c4/0xfb0 mm/huge_memory.c:1689
+ zap_pmd_range mm/memory.c:1362 [inline]
+ zap_pud_range mm/memory.c:1404 [inline]
+ zap_p4d_range mm/memory.c:1425 [inline]
+ unmap_page_range+0x1aac/0x2660 mm/memory.c:1446
+ unmap_single_vma+0x198/0x300 mm/memory.c:1491
+ unmap_vmas+0x16d/0x2f0 mm/memory.c:1523
+ exit_mmap+0x1d0/0x620 mm/mmap.c:3201
+ __mmput+0x122/0x470 kernel/fork.c:1096
+ mmput+0x58/0x60 kernel/fork.c:1117
+ exit_mm kernel/exit.c:502 [inline]
+ do_exit+0xb0a/0x2a70 kernel/exit.c:813
+ do_group_exit+0x125/0x310 kernel/exit.c:923
+ __do_sys_exit_group kernel/exit.c:934 [inline]
+ __se_sys_exit_group kernel/exit.c:932 [inline]
+ __x64_sys_exit_group+0x3a/0x50 kernel/exit.c:932
+ do_syscall_64+0x31/0xb0 arch/x86/entry/common.c:47
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x43da89
+Code: Unable to access opcode bytes at RIP 0x43da5f.
+RSP: 002b:00007ffc45bf0b08 EFLAGS: 00000246 ORIG_RAX: 00000000000000e7
+RAX: ffffffffffffffda RBX: 00000000004ae230 RCX: 000000000043da89
+RDX: 000000000000003c RSI: 00000000000000e7 RDI: 0000000000000000
+RBP: 0000000000000000 R08: ffffffffffffffc0 R09: 0000000000000000
+R10: 0000000000000003 R11: 0000000000000246 R12: 00000000004ae230
+R13: 0000000000000001 R14: 0000000000000000 R15: 0000000000000001
+Modules linked in:
+---[ end trace 048141dd003294dd ]---
+RIP: 0010:_compound_head include/linux/page-flags.h:182 [inline]
+RIP: 0010:lock_page_memcg+0x29/0x7d0 mm/memcontrol.c:1984
+Code: 00 48 b8 00 00 00 00 00 fc ff df 55 48 89 e5 41 57 49 89 ff 41 56 41 55 41 54 4c 8d 67 08 4c 89 e2 53 48 c1 ea 03 48 83 ec 20 <80> 3c 02 00 0f 85 10 06 00 00 49 8b 47 08 48 8d 50 ff a8 01 4c 0f
+RSP: 0018:ffffc9000194f8b8 EFLAGS: 00010286
+RAX: dffffc0000000000 RBX: 00001e801769d000 RCX: 0000000000000000
+RDX: 0000011002ed3a01 RSI: ffffffff81aee7cd RDI: 000008801769d000
+RBP: ffffc9000194f900 R08: 0000000000000000 R09: ffff88801cf9b82f
+R10: ffffffff81be0aa6 R11: 000000000000003f R12: 000008801769d008
+R13: 0000000000000001 R14: 000008801769d000 R15: 000008801769d000
+FS:  0000000000000000(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000480de8 CR3: 00000000127fa000 CR4: 00000000001506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+syzbot can test patches for this issue, for details see:
+https://goo.gl/tpsmEJ#testing-patches
