@@ -1,128 +1,85 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 3/5] cgroup/cpuset: Allow non-top parent partition root to distribute out all CPUs
-Date: Thu,  3 Jun 2021 17:24:14 -0400
-Message-ID: <20210603212416.25934-4-longman@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH 4/5] cgroup/cpuset: Update description of cpuset.cpus.partition in cgroup-v2.rst
+Date: Thu,  3 Jun 2021 17:24:15 -0400
+Message-ID: <20210603212416.25934-5-longman@redhat.com>
 References: <20210603212416.25934-1-longman@redhat.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1622755501;
+        s=mimecast20190719; t=1622755502;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=WUGY8sYtZzxYZSnhBIxuLuhJwQQu5J4ornFBXmTKadM=;
-        b=Af/VFunv8bLg8P3LHrJXykFOPRhvACz2cpXYpnCb8Bbdb6UjXXYXR/EmhCnu13K9+vnX10
-        AH683zInpi9ED/TNvgFB2inovknZvTrSNi9xMRQw0EbGqgZvYdImrLxfGQ/4z7WBltsnNW
-        HE6yFS30M5QFKPcuqZHGbOrjGTDmHyI=
-In-Reply-To: <20210603212416.25934-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=thMjmtJh5+hm9zST5bagiDDjjocf7BWJz4f5zZJsM5c=;
+        b=FnQW/IzJUBw19JykRcwOLz9rAiwlRRurGEvWMrrlpw3EfKJkBMVRjC3Fw1SJk1lO4Qk2Hq
+        l+aNZIaVnvJi2ptn1Alg4XnZ5LCYgaMby7OzdN+eSKfxLO+R/zOcB5ginBgwVVNYsa4JZ7
+        +fL/F4Y8/ilFI2YAYQ5WgO6Uiws+kY8=
+In-Reply-To: <20210603212416.25934-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Waiman Long <longman@redhat.com>
 
-Currently, a parent partition root cannot distribute all its CPUs to
-child partition roots with no CPUs left. However in some use cases,
-a management application may want to create a parent partition root as
-a management unit with no task associated with it and has all its CPUs
-distributed to various child partition roots dynamically according to
-their needs. Leaving a cpu in the parent partition root in such a case is
-now a waste.
+Update Documentation/admin-guide/cgroup-v2.rst on the new "root-nolb"
+cpuset partition type as well as the ability to create non-top cpuset
+partition with no cpu allocated to it.
 
-To accommodate such use cases, a parent partition root can now have
-all its CPUs distributed to its child partition roots as long as:
- 1) it is not the top cpuset; and
- 2) there is no task directly associated with the parent.
-
-Once an empty parent partition root is formed, no new task can be moved
-into it.
-
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 44 +++++++++++++++++++++++++++++-------------
- 1 file changed, 31 insertions(+), 13 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 78dd6c91dcd6..ef19eb317fef 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1117,7 +1117,7 @@ enum subparts_cmd {
-  * cpus_allowed can be granted or an error code will be returned.
-  *
-  * For partcmd_disable, the cpuset is being transofrmed from a partition
-- * root back to a non-partition root. any CPUs in cpus_allowed that are in
-+ * root back to a non-partition root. Any CPUs in cpus_allowed that are in
-  * parent's subparts_cpus will be taken away from that cpumask and put back
-  * into parent's effective_cpus. 0 should always be returned.
-  *
-@@ -1172,21 +1172,31 @@ static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
- 	if ((cmd != partcmd_update) && css_has_online_children(&cpuset->css))
- 		return -EBUSY;
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index b1e81aa8598a..36a923cabeb0 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2010,8 +2010,9 @@ Cpuset Interface Files
+ 	It accepts only the following input values when written to.
  
--	/*
--	 * Enabling partition root is not allowed if not all the CPUs
--	 * can be granted from parent's effective_cpus or at least one
--	 * CPU will be left after that.
--	 */
--	if ((cmd == partcmd_enable) &&
--	   (!cpumask_subset(cpuset->cpus_allowed, parent->effective_cpus) ||
--	     cpumask_equal(cpuset->cpus_allowed, parent->effective_cpus)))
--		return -EINVAL;
--
- 	/*
- 	 * A cpumask update cannot make parent's effective_cpus become empty.
- 	 */
- 	adding = deleting = false;
- 	if (cmd == partcmd_enable) {
-+		bool parent_is_top_cpuset = !parent_cs(parent);
-+		bool no_cpu_in_parent = cpumask_equal(cpuset->cpus_allowed,
-+						      parent->effective_cpus);
-+		/*
-+		 * Enabling partition root is not allowed if not all the CPUs
-+		 * can be granted from parent's effective_cpus. If the parent
-+		 * is the top cpuset, at least one CPU must be left after that.
-+		 */
-+		if (!cpumask_subset(cpuset->cpus_allowed, parent->effective_cpus) ||
-+		    (parent_is_top_cpuset && no_cpu_in_parent))
-+			return -EINVAL;
-+
-+		/*
-+		 * A non-top parent can be left with no CPU as long as there
-+		 * is no task directly associated with the parent. For such
-+		 * a parent, no new task can be moved into it.
-+		 */
-+		if (no_cpu_in_parent && parent->css.cgroup->nr_populated_csets)
-+			return -EINVAL;
-+
- 		cpumask_copy(tmp->addmask, cpuset->cpus_allowed);
- 		adding = true;
- 	} else if (cmd == partcmd_disable) {
-@@ -1208,9 +1218,10 @@ static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
- 		adding = cpumask_andnot(tmp->addmask, tmp->addmask,
- 					parent->subparts_cpus);
- 		/*
--		 * Return error if the new effective_cpus could become empty.
-+		 * Return error if the new effective_cpus could become empty
-+		 * and there are tasks in the parent.
- 		 */
--		if (adding &&
-+		if (adding && parent->css.cgroup->nr_populated_csets &&
- 		    cpumask_equal(parent->effective_cpus, tmp->addmask)) {
- 			if (!deleting)
- 				return -EINVAL;
-@@ -2181,6 +2192,13 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
- 	    (cpumask_empty(cs->cpus_allowed) || nodes_empty(cs->mems_allowed)))
- 		goto out_unlock;
+ 	  ========	================================
+-	  "root"	a partition root
+-	  "member"	a non-root member of a partition
++	  "member"	Non-root member of a partition
++	  "root"	Partition root
++	  "root-nolb"	Partition root with no load balancing
+ 	  ========	================================
  
-+	/*
-+	 * On default hierarchy, task cannot be moved to a cpuset with empty
-+	 * effective cpus.
-+	 */
-+	if (is_in_v2_mode() && cpumask_empty(cs->effective_cpus))
-+		goto out_unlock;
+ 	When set to be a partition root, the current cgroup is the
+@@ -2020,6 +2021,10 @@ Cpuset Interface Files
+ 	partition roots themselves and their descendants.  The root
+ 	cgroup is always a partition root.
+ 
++        With "root-nolb", the CPUs in that partition root will be in an
++        isolated state with no load balancing by the scheduler.  Tasks in
++        such a partition must be explicitly bind to each individual CPU.
 +
- 	cgroup_taskset_for_each(task, css, tset) {
- 		ret = task_can_attach(task, cs->cpus_allowed);
- 		if (ret)
+ 	There are constraints on where a partition root can be set.
+ 	It can only be set in a cgroup if all the following conditions
+ 	are true.
+@@ -2038,9 +2043,12 @@ Cpuset Interface Files
+ 	file cannot be reverted back to "member" if there are any child
+ 	cgroups with cpuset enabled.
+ 
+-	A parent partition cannot distribute all its CPUs to its
+-	child partitions.  There must be at least one cpu left in the
+-	parent partition.
++	A parent partition may distribute all its CPUs to its child
++	partitions as long as it is not the root cgroup and there is no
++	task directly associated with that parent partition.  Otherwise,
++	there must be at least one cpu left in the parent partition.
++	A new task cannot be moved to a partition root with no effective
++	cpu.
+ 
+ 	Once becoming a partition root, changes to "cpuset.cpus" is
+ 	generally allowed as long as the first condition above is true,
+@@ -2056,6 +2064,7 @@ Cpuset Interface Files
+ 	  ==============	==============================
+ 	  "member"		Non-root member of a partition
+ 	  "root"		Partition root
++	  "root-nolb"		Partition root with no load balancing
+ 	  "root invalid"	Invalid partition root
+ 	  ==============	==============================
+ 
 -- 
 2.18.1
 
