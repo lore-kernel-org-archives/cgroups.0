@@ -1,37 +1,110 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 5/6] sched,timer: Use __set_current_state()
-Date: Thu, 3 Jun 2021 08:39:05 +0200
-Message-ID: <YLh5CaqPHBhBhfVu__8177.99907397188$1622702510$gmane$org@hirez.programming.kicks-ass.net>
-References: <20210602131225.336600299@infradead.org>
- <20210602133040.524487671@infradead.org>
- <20210602195458.uj3rsci4suz4mufj@offworld>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v6 1/5] writeback, cgroup: switch to rcu_work API in
+ inode_switch_wbs()
+Date: Thu, 3 Jun 2021 10:46:39 +0200
+Message-ID: <20210603084639.GD23647@quack2.suse.cz>
+References: <20210603005517.1403689-1-guro@fb.com>
+ <20210603005517.1403689-2-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:To:From:Date:Sender:Reply-To:Cc:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=kX55QmPWFxDII3Sge2GJJeSnbWWFYdnRducRMGOGHKQ=; b=hARedGyAr0sDE+BtvdYhtLLhqT
-        xBRJL5OHbgF/0VaAM6QvlBJXr83HT5NVS7V8DRpuXyYFELaqdsUVDKE7xdQXCUsOoQxD+ZryBn0Lj
-        TQUUpF9nIf+OhCYb2DCINiYA10TI8AImzzNG9gBDI61JDK4y9IyT9HC7swn3WceMAMX+pproGTr+z
-        euH2oJmi+z8yDYk4o986bBSmMqnp2oduWzGnBnR6zXjKvIqpkjAsnYAK7TaquLehFRzRkMRw2LFzB
-        sQkU84q2RHe9CpB6m2+QJnfPaODcV/HKj6IpiHproIA95ZpBeuavpXhNkqQKbgxpRXe24aJvU2Taj
-        vd1R75YA==;
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1622710000; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZGYew5SGmdoU7MaUMjCQJu6CUQQRyZgDm/ugr7FJkik=;
+        b=UPdBAscVGcKfIB7r1rdiArP5E4b1W4s6cD6RmUVdMU5EgYQRCbmCPX7Qkx+g1xCdv/3Rdi
+        DHnBiT88YrNR5y8rcINSabGbteTumqIaq9E3RRuJ6ahND8FbdUOgIS/PT2NnG8ZwaJDVrx
+        Y57qWHI1PWHfiAByh8IrKX8SDb9DVv4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1622710000;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZGYew5SGmdoU7MaUMjCQJu6CUQQRyZgDm/ugr7FJkik=;
+        b=8rGAUYu9J4Ro+7/kzBAGvQIRAbyD6+G0cvtEO8GNulsXy0sRHYzt0/SPREI5C17fltgMAS
+        ktPOPIOwHMbo7CCg==
 Content-Disposition: inline
-In-Reply-To: <20210602195458.uj3rsci4suz4mufj@offworld>
+In-Reply-To: <20210603005517.1403689-2-guro@fb.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Tejun Heo <t>
+To: Roman Gushchin <guro@fb.com>
+Cc: Jan Kara <jack@suse.cz>, Tejun Heo <tj@kernel.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Alexander Viro <viro@zeniv.linux.org.uk>, Dennis Zhou <dennis@kernel.org>, Dave Chinner <dchinner@redhat.com>, cgroups@vger.kernel.org
 
-On Wed, Jun 02, 2021 at 12:54:58PM -0700, Davidlohr Bueso wrote:
-> On Wed, 02 Jun 2021, Peter Zijlstra wrote:
+On Wed 02-06-21 17:55:13, Roman Gushchin wrote:
+> Inode's wb switching requires two steps divided by an RCU grace
+> period. It's currently implemented as an RCU callback
+> inode_switch_wbs_rcu_fn(), which schedules inode_switch_wbs_work_fn()
+> as a work.
 > 
-> -ENOCHANGELONG
+> Switching to the rcu_work API allows to do the same in a cleaner and
+> slightly shorter form.
+> 
+> Signed-off-by: Roman Gushchin <guro@fb.com>
 
-I completely failed to come up with something useful, still do. Subject
-says it all.
+Looks good to me. You can add:
 
-> But yeah, I thought we had gotten rid of all these.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-I too was surprised to find it :-)
+								Honza
+
+> ---
+>  fs/fs-writeback.c | 18 ++++--------------
+>  1 file changed, 4 insertions(+), 14 deletions(-)
+> 
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index e91980f49388..1f51857e41d1 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -335,8 +335,7 @@ struct inode_switch_wbs_context {
+>  	struct inode		*inode;
+>  	struct bdi_writeback	*new_wb;
+>  
+> -	struct rcu_head		rcu_head;
+> -	struct work_struct	work;
+> +	struct rcu_work		work;
+>  };
+>  
+>  static void bdi_down_write_wb_switch_rwsem(struct backing_dev_info *bdi)
+> @@ -352,7 +351,7 @@ static void bdi_up_write_wb_switch_rwsem(struct backing_dev_info *bdi)
+>  static void inode_switch_wbs_work_fn(struct work_struct *work)
+>  {
+>  	struct inode_switch_wbs_context *isw =
+> -		container_of(work, struct inode_switch_wbs_context, work);
+> +		container_of(to_rcu_work(work), struct inode_switch_wbs_context, work);
+>  	struct inode *inode = isw->inode;
+>  	struct backing_dev_info *bdi = inode_to_bdi(inode);
+>  	struct address_space *mapping = inode->i_mapping;
+> @@ -469,16 +468,6 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
+>  	atomic_dec(&isw_nr_in_flight);
+>  }
+>  
+> -static void inode_switch_wbs_rcu_fn(struct rcu_head *rcu_head)
+> -{
+> -	struct inode_switch_wbs_context *isw = container_of(rcu_head,
+> -				struct inode_switch_wbs_context, rcu_head);
+> -
+> -	/* needs to grab bh-unsafe locks, bounce to work item */
+> -	INIT_WORK(&isw->work, inode_switch_wbs_work_fn);
+> -	queue_work(isw_wq, &isw->work);
+> -}
+> -
+>  /**
+>   * inode_switch_wbs - change the wb association of an inode
+>   * @inode: target inode
+> @@ -534,7 +523,8 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
+>  	 * lock so that stat transfer can synchronize against them.
+>  	 * Let's continue after I_WB_SWITCH is guaranteed to be visible.
+>  	 */
+> -	call_rcu(&isw->rcu_head, inode_switch_wbs_rcu_fn);
+> +	INIT_RCU_WORK(&isw->work, inode_switch_wbs_work_fn);
+> +	queue_rcu_work(isw_wq, &isw->work);
+>  
+>  	atomic_inc(&isw_nr_in_flight);
+>  	return;
+> -- 
+> 2.31.1
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
