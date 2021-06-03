@@ -1,87 +1,57 @@
-From: Vincent Guittot <vincent.guittot@linaro.org>
+From: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
 Subject: Re: [PATCH v2] sched/fair: Correctly insert cfs_rq's to list on unthrottle
-Date: Thu, 3 Jun 2021 14:51:50 +0200
-Message-ID: <CAKfTPtAK3gEqChUmoUXo7KLqPAFo=shH4Yi=QLjrwpuu6Ow6-Q@mail.gmail.com>
-References: <20210603113847.163512-1-odin@uged.al>
+Date: Thu, 3 Jun 2021 15:12:35 +0200
+Message-ID: <CAFpoUr2HBexs5784nU7hyDSs0eNiEut=-4wWcnpMtSVtFeaLLA@mail.gmail.com>
+References: <20210603113847.163512-1-odin@uged.al> <CAKfTPtAK3gEqChUmoUXo7KLqPAFo=shH4Yi=QLjrwpuu6Ow6-Q@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
+        d=uged.al; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=KXSPFYUv+frq5B31P2+9676MnBddW3+j4BZ+XqvE/IU=;
-        b=mkYMalVHjpfomaWeFWDWX9glGkJHhsdYkZIp8eFDb0kxyUonE980Dq+4l3iVMucOKv
-         /EIKyQCKHFCEZXAQDj6hIR8Ot8arkMF1kblq7fAHcIzO+4g4wLM3PDocDRqhRHl1i4o4
-         Laj2syzgyAjKpRqxjAPRCDZ8NpA6G/G8D5H8ie7sgttBLI1fdVjZuX87mGAX+BQXBavf
-         lBCM2WVLrwLAC+pRRcQuAZ/tS0nAbzaUyaL7fKysEiKgSpXmeNuRqZniBgHzeaG7nSE1
-         tkyZocErWj3cgE18KuwIy6uNfE6LUmri061DG2AeTM1pS6luFQPo6Fwb84sGOLr6ctSW
-         nlUw==
-In-Reply-To: <20210603113847.163512-1-odin@uged.al>
+        bh=CBnvtPJLdU3kbekuheh4qc6OMIUkdKF2nOgchdFq6rc=;
+        b=YydysQuJcuB2zxLOLbU7aPah7Lb9RIs2OcRo39zEyZjr57DV83DYJnlesShXVJ/QiQ
+         OE6cEKWBwFj9wQk7+c5zcnkWBG54Kkxqbl0M6gEgwbP9dS/rvWFPp4cub55w8/YvXPJ4
+         ZFERiNBM+Cd4rd+RFXXpgR98D4/TL67NEbVKyJ7BLxl8fkqjOVGC9YvpCzEnyREsUAnS
+         bf0nyIKcT8C8/5soIFtGyBGiTRiG2Xgvl7Y2a20N9wXoTizrqKcrnvflGNSAUbTT4s/8
+         dL3l5XRaR6DQt5pW+i0CaDjUpMTGsww5MQnDP1M6A+xnZIp6AK3AxMIRKWCDgTRszgzh
+         7H0Q==
+In-Reply-To: <CAKfTPtAK3gEqChUmoUXo7KLqPAFo=shH4Yi=QLjrwpuu6Ow6-Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Odin Ugedal <odin@uged.al>
-Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, 3 Jun 2021 at 13:41, Odin Ugedal <odin@uged.al> wrote:
->
-> This fixes an issue where fairness is decreased since cfs_rq's can
-> end up not being decayed properly. For two sibling control groups with
-> the same priority, this can often lead to a load ratio of 99/1 (!!).
->
-> This happen because when a cfs_rq is throttled, all the descendant cfs_rq's
-> will be removed from the leaf list. When they initial cfs_rq is
-> unthrottled, it will currently only re add descendant cfs_rq's if they
-> have one or more entities enqueued. This is not a perfect heuristic.
->
-> Insted, we insert all cfs_rq's that contain one or more enqueued
-> entities, or contributes to the load of the task group.
->
-> Can often lead to sutiations like this for equally weighted control
-> groups:
->
-> $ ps u -C stress
-> USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-> root       10009 88.8  0.0   3676   100 pts/1    R+   11:04   0:13 stress --cpu 1
-> root       10023  3.0  0.0   3676   104 pts/1    R+   11:04   0:00 stress --cpu 1
->
-> Fixes: 31bc6aeaab1d ("sched/fair: Optimize update_blocked_averages()")
-> Signed-off-by: Odin Ugedal <odin@uged.al>
-> ---
->
-> Original thread: https://lore.kernel.org/lkml/20210518125202.78658-3-odin@uged.al/
-> Changes since v1:
->  - Replaced cfs_rq field with using tg_load_avg_contrib
->  - Went from 3 to 1 pathces; one is merged and one is replaced
->    by a new patchset.
->
->  kernel/sched/fair.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
->
-> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-> index 794c2cb945f8..0f1b39ca5ca8 100644
-> --- a/kernel/sched/fair.c
-> +++ b/kernel/sched/fair.c
-> @@ -4719,8 +4719,11 @@ static int tg_unthrottle_up(struct task_group *tg, void *data)
->                 cfs_rq->throttled_clock_task_time += rq_clock_task(rq) -
->                                              cfs_rq->throttled_clock_task;
->
-> -               /* Add cfs_rq with already running entity in the list */
-> -               if (cfs_rq->nr_running >= 1)
-> +               /*
-> +                * Add cfs_rq with tg load avg contribution or one or more
-> +                * already running entities to the list
-> +                */
-> +               if (cfs_rq->tg_load_avg_contrib || cfs_rq->nr_running)
+Hi,
 
-Out of curiosity, why did you decide to use
-cfs_rq->tg_load_avg_contrib instead of !cfs_rq_is_decayed(cfs_rq)
-which is used to delete the cfs_rq from the list when updating blocked
-load ?
+> Out of curiosity, why did you decide to use
+> cfs_rq->tg_load_avg_contrib instead of !cfs_rq_is_decayed(cfs_rq)
+> which is used to delete the cfs_rq from the list when updating blocked
+> load ?
 
->                         list_add_leaf_cfs_rq(cfs_rq);
->         }
->
-> --
-> 2.31.1
->
+Well, the main reason was that it is currently (without the other in
+flight patches) not safe to just use "cfs_rq_is_decayed" directly,
+since that could result in
+a situation where tg_load_avg_contrib!=0 while
+cfs_rq_is_decayed()==true. I guess we can use cfs_rq_is_decayed() if
+you prefer that,
+and all the other PELT patches are merged. (This was initially why I
+thought a new field was a simpler and more elegant solution to make
+sure we book-keep correctly,
+but when the PELT stuff is fixed properly, that should be no real
+issue as long it works as we expect).
+
+I was also thinking about the cfs_rq->nr_running part; is there a
+chance of a situation where a cfs_rq->nr_running==1 and it has no
+load, resulting in it being decayed and
+removed from the list in "__update_blocked_fair"? I have not looked
+properly at it, but just wondering if that is actually possible..
+
+
+Also, out of curiosity, are there some implications of a situation
+where tg_load_avg_contrib=0 while *_load!=0, or would that not cause
+fairness issues?
+
+Thanks
+Odin
