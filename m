@@ -1,101 +1,37 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: [PATCH v6 4/5] writeback, cgroup: support switching multiple inodes at once
-Date: Wed, 2 Jun 2021 17:55:16 -0700
-Message-ID: <20210603005517.1403689-5-guro@fb.com>
-References: <20210603005517.1403689-1-guro@fb.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH 5/6] sched,timer: Use __set_current_state()
+Date: Thu, 3 Jun 2021 08:39:05 +0200
+Message-ID: <YLh5CaqPHBhBhfVu__8177.99907397188$1622702510$gmane$org@hirez.programming.kicks-ass.net>
+References: <20210602131225.336600299@infradead.org>
+ <20210602133040.524487671@infradead.org>
+ <20210602195458.uj3rsci4suz4mufj@offworld>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=facebook;
- bh=L8m8gyrfdV8KT/gd5pz1QPnzKy0K3EfCtK1Ky3VDACI=;
- b=WNQRQrAbIQrsfmeHxmDfx7FDsTJeloDZEsYBu+QxbpPrd0Mr62WIabW2KO1yT7Qg9ypm
- cJLsmzefYlz/WVXTqJv0Mch0enoqKI3M3/PZZuBPDlE3XICLbGVBXcvuSE3oZt+civ7k
- 2HASo8smIXmtX8ZlxZwOfRtvuVaGdHnzBso= 
-In-Reply-To: <20210603005517.1403689-1-guro@fb.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:To:From:Date:Sender:Reply-To:Cc:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=kX55QmPWFxDII3Sge2GJJeSnbWWFYdnRducRMGOGHKQ=; b=hARedGyAr0sDE+BtvdYhtLLhqT
+        xBRJL5OHbgF/0VaAM6QvlBJXr83HT5NVS7V8DRpuXyYFELaqdsUVDKE7xdQXCUsOoQxD+ZryBn0Lj
+        TQUUpF9nIf+OhCYb2DCINiYA10TI8AImzzNG9gBDI61JDK4y9IyT9HC7swn3WceMAMX+pproGTr+z
+        euH2oJmi+z8yDYk4o986bBSmMqnp2oduWzGnBnR6zXjKvIqpkjAsnYAK7TaquLehFRzRkMRw2LFzB
+        sQkU84q2RHe9CpB6m2+QJnfPaODcV/HKj6IpiHproIA95ZpBeuavpXhNkqQKbgxpRXe24aJvU2Taj
+        vd1R75YA==;
+Content-Disposition: inline
+In-Reply-To: <20210602195458.uj3rsci4suz4mufj@offworld>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jan Kara <jack@suse.cz>, Tejun Heo <tj@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Alexander Viro <viro@zeniv.linux.org.uk>, Dennis Zhou <dennis@kernel.org>, Dave Chinner <dchinner@redhat.com>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
+Content-Transfer-Encoding: 7bit
+To: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Tejun Heo <t>
 
-Currently only a single inode can be switched to another writeback
-structure at once. That means to switch an inode a separate
-inode_switch_wbs_context structure must be allocated, and a separate
-rcu callback and work must be scheduled.
+On Wed, Jun 02, 2021 at 12:54:58PM -0700, Davidlohr Bueso wrote:
+> On Wed, 02 Jun 2021, Peter Zijlstra wrote:
+> 
+> -ENOCHANGELONG
 
-It's fine for the existing ad-hoc switching, which is not happening
-that often, but sub-optimal for massive switching required in order to
-release a writeback structure. To prepare for it, let's add a support
-for switching multiple inodes at once.
+I completely failed to come up with something useful, still do. Subject
+says it all.
 
-Instead of containing a single inode pointer, inode_switch_wbs_context
-will contain a NULL-terminated array of inode
-pointers. inode_do_switch_wbs() will be called for each inode.
+> But yeah, I thought we had gotten rid of all these.
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
----
- fs/fs-writeback.c | 18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
-
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 212494d89cc2..49d7b23a7cfe 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -335,10 +335,10 @@ static struct bdi_writeback *inode_to_wb_and_lock_l=
-ist(struct inode *inode)
- }
-=20
- struct inode_switch_wbs_context {
--	struct inode		*inode;
--	struct bdi_writeback	*new_wb;
--
- 	struct rcu_work		work;
-+
-+	struct bdi_writeback	*new_wb;
-+	struct inode		*inodes[];
- };
-=20
- static void bdi_down_write_wb_switch_rwsem(struct backing_dev_info *bdi)
-@@ -473,10 +473,14 @@ static void inode_switch_wbs_work_fn(struct work_st=
-ruct *work)
- {
- 	struct inode_switch_wbs_context *isw =3D
- 		container_of(to_rcu_work(work), struct inode_switch_wbs_context, work)=
-;
-+	struct inode **inodep;
-+
-+	for (inodep =3D &isw->inodes[0]; *inodep; inodep++) {
-+		inode_do_switch_wbs(*inodep, isw->new_wb);
-+		iput(*inodep);
-+	}
-=20
--	inode_do_switch_wbs(isw->inode, isw->new_wb);
- 	wb_put(isw->new_wb);
--	iput(isw->inode);
- 	kfree(isw);
- 	atomic_dec(&isw_nr_in_flight);
- }
-@@ -503,7 +507,7 @@ static void inode_switch_wbs(struct inode *inode, int=
- new_wb_id)
- 	if (atomic_read(&isw_nr_in_flight) > WB_FRN_MAX_IN_FLIGHT)
- 		return;
-=20
--	isw =3D kzalloc(sizeof(*isw), GFP_ATOMIC);
-+	isw =3D kzalloc(sizeof(*isw) + 2 * sizeof(struct inode *), GFP_ATOMIC);
- 	if (!isw)
- 		return;
-=20
-@@ -528,7 +532,7 @@ static void inode_switch_wbs(struct inode *inode, int=
- new_wb_id)
- 	__iget(inode);
- 	spin_unlock(&inode->i_lock);
-=20
--	isw->inode =3D inode;
-+	isw->inodes[0] =3D inode;
-=20
- 	/*
- 	 * In addition to synchronizing among switchers, I_WB_SWITCH tells
---=20
-2.31.1
-
+I too was surprised to find it :-)
