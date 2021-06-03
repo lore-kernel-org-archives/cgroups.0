@@ -1,28 +1,28 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 5.10 20/39] cgroup: disable controllers at parse time
-Date: Thu,  3 Jun 2021 13:08:10 -0400
-Message-ID: <20210603170829.3168708-20-sashal@kernel.org>
-References: <20210603170829.3168708-1-sashal@kernel.org>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 14/31] cgroup: disable controllers at parse time
+Date: Thu,  3 Jun 2021 13:09:02 -0400
+Message-ID: <20210603170919.3169112-14-sashal@kernel.org>
+References: <20210603170919.3169112-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622740134;
-        bh=oP5uqppbhMT+aMCdFfU/PluXUbOZINnOeEafkkCOHEQ=;
+        s=k20201202; t=1622740177;
+        bh=qpzCxJU6gGdp8PmXCeRvdS+WsY4pcy0YsDZTgRqQe5E=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lCpkdBJR17ILU0CbaOoVaxKuSfAQ5luBGxwVihg3FK9HLJiAXDUBzZ0ixuuQOLDIk
-         uCzQuT1RvGJloaIS2kAbV4stAU9/bI2HvGDEQg6+XMV5cfOjSnZzMuDr3UuD0yAJOO
-         ngpdWkzGD+BrYH4TDPV/3U3bUt3nIYaBCxXSNZpSzQEdbHaykp5bkaa8cXKo9dVElq
-         ltJyay8UvIrs5uyO/wZCh9A9wBNejn/YVLq4Dm/Igt7o/Eq2iMmWt8C6rMZYvGNjPB
-         lBRhjp7eIcb94Jsh97ABcOMSnwkm7RkBRMbrgP7uzA4yjNnU/YD2lThsUpIhjyxHNv
-         dfleeGnmUIzGA==
-In-Reply-To: <20210603170829.3168708-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        b=rik/ZsmIIMp7b0UNWsmPpVb2Z+YqJGRlcb+p4TbkqETS0zzGpipR+o6DHeiMS4njG
+         s0s47Y5cPO0XzqEDfrLyZRicSFJIF/yOlMB0+ihmWoCC36h3fugpqOm1gsNoE/MoO+
+         wTc2zgR3TtZcj8C+GzzTZ8Ts8Lj1CnZikjnWG4BGeDUKpMDYT4+q4awRhRDJzMtkft
+         OJ8Remx1afQ2xqbp/KzBwSYbPiJfsJMraGcTW0N0Im5CrYkX34aMGrJ9WFFYeKEpGa
+         aAHySyoZ+F0BcyrNv/IYliUpfRDzBYF/KX2a4msUq3n+2VO2hvOrJH9ZBjobtTq5he
+         6ppAQBsTv3Gzw==
+In-Reply-To: <20210603170919.3169112-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, NOMURA JUNICHI <junichi.nomura-YMj9X0ASwKA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Shakeel Butt <shakeelb@google.com>, NOMURA JUNICHI <junichi.nomura@nec.com>, Tejun Heo <tj@kernel.org>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org
 
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: Shakeel Butt <shakeelb@google.com>
 
 [ Upstream commit 45e1ba40837ac2f6f4d4716bddb8d44bd7e4a251 ]
 
@@ -36,22 +36,22 @@ doing the controller checks for different decisions. One such incident
 is reported [1] regarding the memory controller and its impact on memory
 reclaim code.
 
-[1] https://lore.kernel.org/linux-mm/921e53f3-4b13-aab8-4a9e-e83ff15371e4-YMj9X0ASwKA@public.gmane.org
+[1] https://lore.kernel.org/linux-mm/921e53f3-4b13-aab8-4a9e-e83ff15371e4@nec.com
 
-Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Reported-by: NOMURA JUNICHI(野村　淳一) <junichi.nomura-YMj9X0ASwKA@public.gmane.org>
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Tested-by: Jun'ichi Nomura <junichi.nomura-YMj9X0ASwKA@public.gmane.org>
-Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
+Reported-by: NOMURA JUNICHI(野村　淳一) <junichi.nomura@nec.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Tested-by: Jun'ichi Nomura <junichi.nomura@nec.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
  kernel/cgroup/cgroup.c | 13 +++++--------
  1 file changed, 5 insertions(+), 8 deletions(-)
 
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 5d1fdf7c3ec6..c8b811e039cc 100644
+index 37db8eba149a..ede370ec245d 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -5665,8 +5665,6 @@ int __init cgroup_init_early(void)
+@@ -5721,8 +5721,6 @@ int __init cgroup_init_early(void)
  	return 0;
  }
  
@@ -60,7 +60,7 @@ index 5d1fdf7c3ec6..c8b811e039cc 100644
  /**
   * cgroup_init - cgroup initialization
   *
-@@ -5725,12 +5723,8 @@ int __init cgroup_init(void)
+@@ -5781,12 +5779,8 @@ int __init cgroup_init(void)
  		 * disabled flag and cftype registration needs kmalloc,
  		 * both of which aren't available during early_init.
  		 */
@@ -74,7 +74,7 @@ index 5d1fdf7c3ec6..c8b811e039cc 100644
  
  		if (cgroup1_ssid_disabled(ssid))
  			printk(KERN_INFO "Disabling %s control group subsystem in v1 mounts\n",
-@@ -6245,7 +6239,10 @@ static int __init cgroup_disable(char *str)
+@@ -6173,7 +6167,10 @@ static int __init cgroup_disable(char *str)
  			if (strcmp(token, ss->name) &&
  			    strcmp(token, ss->legacy_name))
  				continue;
