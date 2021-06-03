@@ -1,50 +1,77 @@
-From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Subject: Re: [RFC 0/7] Introduce memory allocation speed throttle in memcg
-Date: Thu, 3 Jun 2021 12:38:57 +0100
-Message-ID: <YLi/UeS71mk12VZ3@chrisdown.name>
-References: <cover.1622043596.git.yuleixzhang@tencent.com>
- <CALvZod4SoCS6ym8ELTxWd6UwzUp8m_UUdw7oApAhW2WRq0BXqw@mail.gmail.com>
- <CACZOiM3VhYyzCTx4FbW=FF8WB=X46xaV53abqOVL+eHQOs8Reg@mail.gmail.com>
- <YLZIBpJFkKNBCg2X@chrisdown.name>
- <CACZOiM21STLrZgcnEwm8w2t82Qj3Ohy-BGbD5u62gTn=z4X3Lw@mail.gmail.com>
- <CALvZod7w1tzxvYCP54KHEo=k=qUd02UTkr+1+b5rTdn-tJt45w@mail.gmail.com>
- <CACZOiM3g6GhJgXurMPeE3A7zO8eUhoUPyUvyT3p2Kw98WkX8+g@mail.gmail.com>
+From: Odin Ugedal <odin@uged.al>
+Subject: [PATCH v2] sched/fair: Correctly insert cfs_rq's to list on unthrottle
+Date: Thu,  3 Jun 2021 13:38:47 +0200
+Message-ID: <20210603113847.163512-1-odin@uged.al>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=wiKfBxTb65s9ryPk0mFCpTofRIT4fNKHgWxxNUTFSrY=;
-        b=LEUQzE+TXNrsF7VkTKq1fOZ1V0WA+d+HQMLVNnkA/g+4Qw712FXlgXSf8/gadK8Bro
-         Kz2E5md4HlTtFR6XSPmsArHCMFvNKKbUz8s6bvVZ8h3VmtAvpACaB0RAtlLg2BQA0irt
-         RAl3xa49jeclb3y6buUFOf1iCnIe8lU5lINRo=
-Content-Disposition: inline
-In-Reply-To: <CACZOiM3g6GhJgXurMPeE3A7zO8eUhoUPyUvyT3p2Kw98WkX8+g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=uged.al; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=zoxuOrzcIzq8RN+/4nBQ/3k2NzacgB/FA90ZDc0iE2g=;
+        b=B0B/U0Te+oqbPP7glz7wROMs2i1Yf6OIFxaf66AT+lvKHMBwMbKBNs+49GdQYtgSL2
+         lmmuxPD4p/aXsOBVDMiuLF4JIeLWsLQFWUiYrxQCyY0/T/BL49JNN0hyHhqsYvY6g9I5
+         yKv9tF7FsCeDqKvgCgzBATkoTHw9N97uuXLP6s9IoKXB7iGTtOPqTXJ2ZTZWHgw/NnIK
+         5aSZvw9GsU3XDkKfdMIsDn7LlawJXxwFCDpNst9WieGgF/qv9zUj49JIRbcebbNVrJIQ
+         GMuNIJlee2UlF/jP9qzRgQGDoVYwqeh/VZJ0IKwEDqHhecSvKvQIdEUaoTIKUWVgB9pU
+         34ng==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-Content-Transfer-Encoding: 7bit
-To: yulei zhang <yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, benbjiang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, Wanpeng Li <kernellwp-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Odin Ugedal <odin@uged.al>
 
-yulei zhang writes:
->Thanks. IMHO, there are differences between these two throttlings.
->memory.high is a per-memcg throttle which targets to limit the memory
->usage of the tasks in the cgroup. For the memory allocation speed throttle(MST),
->the purpose is to avoid the memory burst in cgroup which would trigger
->the global reclaim and affects the timing sensitive workloads in other cgroup.
->For example, we have two pods with memory overcommit enabled, one includes
->online tasks and the other has offline tasks, if we restrict the memory usage of
->the offline pod with memory.high, it will lose the benefit of memory overcommit
->when the other workloads are idle. On the other hand, if we don't
->limit the memory
->usage, it will easily break the system watermark when there suddenly has massive
->memory operations. If enable MST in this case, we will be able to
->avoid the direct
->reclaim and leverage the overcommit.
+This fixes an issue where fairness is decreased since cfs_rq's can
+end up not being decayed properly. For two sibling control groups with
+the same priority, this can often lead to a load ratio of 99/1 (!!).
 
-Having a speed throttle is a very primitive knob: it's hard to know what the 
-correct values are for a user. That's one of the reasons why we've moved away 
-from that kind of tunable for blkio.
+This happen because when a cfs_rq is throttled, all the descendant cfs_rq's
+will be removed from the leaf list. When they initial cfs_rq is
+unthrottled, it will currently only re add descendant cfs_rq's if they
+have one or more entities enqueued. This is not a perfect heuristic.
 
-Ultimately, if you want work-conserving behaviour, why not use memory.low?
+Insted, we insert all cfs_rq's that contain one or more enqueued
+entities, or contributes to the load of the task group.
+
+Can often lead to sutiations like this for equally weighted control
+groups:
+
+$ ps u -C stress
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root       10009 88.8  0.0   3676   100 pts/1    R+   11:04   0:13 stress --cpu 1
+root       10023  3.0  0.0   3676   104 pts/1    R+   11:04   0:00 stress --cpu 1
+
+Fixes: 31bc6aeaab1d ("sched/fair: Optimize update_blocked_averages()")
+Signed-off-by: Odin Ugedal <odin@uged.al>
+---
+
+Original thread: https://lore.kernel.org/lkml/20210518125202.78658-3-odin@uged.al/
+Changes since v1:
+ - Replaced cfs_rq field with using tg_load_avg_contrib
+ - Went from 3 to 1 pathces; one is merged and one is replaced
+   by a new patchset.
+
+ kernel/sched/fair.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 794c2cb945f8..0f1b39ca5ca8 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -4719,8 +4719,11 @@ static int tg_unthrottle_up(struct task_group *tg, void *data)
+ 		cfs_rq->throttled_clock_task_time += rq_clock_task(rq) -
+ 					     cfs_rq->throttled_clock_task;
+ 
+-		/* Add cfs_rq with already running entity in the list */
+-		if (cfs_rq->nr_running >= 1)
++		/*
++		 * Add cfs_rq with tg load avg contribution or one or more
++		 * already running entities to the list
++		 */
++		if (cfs_rq->tg_load_avg_contrib || cfs_rq->nr_running)
+ 			list_add_leaf_cfs_rq(cfs_rq);
+ 	}
+ 
+-- 
+2.31.1
+
