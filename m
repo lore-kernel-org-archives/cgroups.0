@@ -1,22 +1,22 @@
 From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 5.12 22/43] cgroup: disable controllers at parse time
-Date: Thu,  3 Jun 2021 13:07:12 -0400
-Message-ID: <20210603170734.3168284-22-sashal@kernel.org>
-References: <20210603170734.3168284-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 20/39] cgroup: disable controllers at parse time
+Date: Thu,  3 Jun 2021 13:08:10 -0400
+Message-ID: <20210603170829.3168708-20-sashal@kernel.org>
+References: <20210603170829.3168708-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622740082;
-        bh=gK/PIRaPplH2AOarruFJFMSYjmI7TyAu/ZGffVNZ/Hg=;
+        s=k20201202; t=1622740134;
+        bh=oP5uqppbhMT+aMCdFfU/PluXUbOZINnOeEafkkCOHEQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nca+oe/32a5jCNb0Wp5FU913YPNKWEdMqt8gATMhemYoqF4vUo3ymLXyzoNz/jRQW
-         LkUkxEwdghUv9r7CNne419Ac4rHZCpuJHU11h0+kIU/co7tfUSvPPYqxeCCba/5XZ8
-         k9ThfIT+OepRhtXDFlf0J/8Vw48vtrYi7PeJ9/hCecPhJrZADInkykRhv+0MPGlxyZ
-         ZvCKRCqK73qAvUrKpEpsQCWPu42DQ5xYUFMczYQwnzs6TIPpcLhih42PeLw+GLLcTU
-         ifFllCyrk8kOXX7vQ5LBKTd+qYXZrxPR8xADKkUd9I7pC3qNzqVIn7sbvb/5NiiVap
-         sO4irEXoD4Crw==
-In-Reply-To: <20210603170734.3168284-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        b=lCpkdBJR17ILU0CbaOoVaxKuSfAQ5luBGxwVihg3FK9HLJiAXDUBzZ0ixuuQOLDIk
+         uCzQuT1RvGJloaIS2kAbV4stAU9/bI2HvGDEQg6+XMV5cfOjSnZzMuDr3UuD0yAJOO
+         ngpdWkzGD+BrYH4TDPV/3U3bUt3nIYaBCxXSNZpSzQEdbHaykp5bkaa8cXKo9dVElq
+         ltJyay8UvIrs5uyO/wZCh9A9wBNejn/YVLq4Dm/Igt7o/Eq2iMmWt8C6rMZYvGNjPB
+         lBRhjp7eIcb94Jsh97ABcOMSnwkm7RkBRMbrgP7uzA4yjNnU/YD2lThsUpIhjyxHNv
+         dfleeGnmUIzGA==
+In-Reply-To: <20210603170829.3168708-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -48,10 +48,10 @@ Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
  1 file changed, 5 insertions(+), 8 deletions(-)
 
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 9153b20e5cc6..2529d1f88330 100644
+index 5d1fdf7c3ec6..c8b811e039cc 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -5626,8 +5626,6 @@ int __init cgroup_init_early(void)
+@@ -5665,8 +5665,6 @@ int __init cgroup_init_early(void)
  	return 0;
  }
  
@@ -60,7 +60,7 @@ index 9153b20e5cc6..2529d1f88330 100644
  /**
   * cgroup_init - cgroup initialization
   *
-@@ -5686,12 +5684,8 @@ int __init cgroup_init(void)
+@@ -5725,12 +5723,8 @@ int __init cgroup_init(void)
  		 * disabled flag and cftype registration needs kmalloc,
  		 * both of which aren't available during early_init.
  		 */
@@ -74,7 +74,7 @@ index 9153b20e5cc6..2529d1f88330 100644
  
  		if (cgroup1_ssid_disabled(ssid))
  			printk(KERN_INFO "Disabling %s control group subsystem in v1 mounts\n",
-@@ -6206,7 +6200,10 @@ static int __init cgroup_disable(char *str)
+@@ -6245,7 +6239,10 @@ static int __init cgroup_disable(char *str)
  			if (strcmp(token, ss->name) &&
  			    strcmp(token, ss->legacy_name))
  				continue;
