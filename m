@@ -1,246 +1,179 @@
 From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: [PATCH v7 3/6] writeback, cgroup: keep list of inodes attached to bdi_writeback
-Date: Thu, 3 Jun 2021 18:31:56 -0700
-Message-ID: <20210604013159.3126180-4-guro@fb.com>
-References: <20210604013159.3126180-1-guro@fb.com>
+Subject: Re: [PATCH v6 5/5] writeback, cgroup: release dying cgwbs by
+ switching attached inodes
+Date: Thu, 3 Jun 2021 18:36:11 -0700
+Message-ID: <YLmDi27fSD4bRbQM@carbon.lan>
+References: <20210603005517.1403689-1-guro@fb.com>
+ <20210603005517.1403689-6-guro@fb.com>
+ <20210603100233.GG23647@quack2.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding : content-type; s=facebook;
- bh=yw8tPRI5f2WHNVMhOlh5WWf5rCKsYqKcdrO46luGXMc=;
- b=ApFABEfkKnQ6UwojsP8eBJdn6oXBSYLZ5T5JKxibjz90s999RTD5myv4s4+fmOLbvVZh
- ozaHhu6S+nTQ4jJYjxsrDDBxvediCC4Xju7WDMxOTFSjhT77S7BGe3S3zCca/f+woM0c
- xjlnImELKD9766PmI8mbtr82duEbREZxRSo= 
-In-Reply-To: <20210604013159.3126180-1-guro-b10kYP2dOMg@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=S1L0ue23Urr+6rn6rGgKO/9RSY4H5BcOTxUoz+3/F4A=;
+ b=d3NNls/gIASXFqKhk+fx2Jmx3T+vse5sUCGPPWV2731JjogLiqVxIQMlLz4YXTCqbU/H
+ nizg36QInYQrsO5s0PlhYwIIBHojoft6kv1b2sWuFnrL4X/s+gZiC43c8QH1ETEebXAy
+ jbQjxEixOO8D97ACDMwnbqfFXoW2Saa2az4= 
+Content-Disposition: inline
+In-Reply-To: <20210603100233.GG23647-4I4JzKEfoa/jFM9bn6wA6Q@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Currently there is no way to iterate over inodes attached to a
-specific cgwb structure. It limits the ability to efficiently
-reclaim the writeback structure itself and associated memory and
-block cgroup structures without scanning all inodes belonging to a sb,
-which can be prohibitively expensive.
+On Thu, Jun 03, 2021 at 12:02:33PM +0200, Jan Kara wrote:
+> On Wed 02-06-21 17:55:17, Roman Gushchin wrote:
+> > Asynchronously try to release dying cgwbs by switching attached inodes
+> > to the bdi's wb. It helps to get rid of per-cgroup writeback
+> > structures themselves and of pinned memory and block cgroups, which
+> > are significantly larger structures (mostly due to large per-cpu
+> > statistics data). This prevents memory waste and helps to avoid
+> > different scalability problems caused by large piles of dying cgroups.
+> > 
+> > Reuse the existing mechanism of inode switching used for foreign inode
+> > detection. To speed things up batch up to 115 inode switching in a
+> > single operation (the maximum number is selected so that the resulting
+> > struct inode_switch_wbs_context can fit into 1024 bytes). Because
+> > every switching consists of two steps divided by an RCU grace period,
+> > it would be too slow without batching. Please note that the whole
+> > batch counts as a single operation (when increasing/decreasing
+> > isw_nr_in_flight). This allows to keep umounting working (flush the
+> > switching queue), however prevents cleanups from consuming the whole
+> > switching quota and effectively blocking the frn switching.
+> > 
+> > A cgwb cleanup operation can fail due to different reasons (e.g. not
+> > enough memory, the cgwb has an in-flight/pending io, an attached inode
+> > in a wrong state, etc). In this case the next scheduled cleanup will
+> > make a new attempt. An attempt is made each time a new cgwb is offlined
+> > (in other words a memcg and/or a blkcg is deleted by a user). In the
+> > future an additional attempt scheduled by a timer can be implemented.
+> > 
+> > Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> 
+> I think we are getting close :). Some comments are below.
 
-While dirty/in-active-writeback an inode belongs to one of the
-bdi_writeback's io lists: b_dirty, b_io, b_more_io and b_dirty_time.
-Once cleaned up, it's removed from all io lists. So the
-inode->i_io_list can be reused to maintain the list of inodes,
-attached to a bdi_writeback structure.
+Great! Thank for reviewing the code!
 
-This patch introduces a new wb->b_attached list, which contains all
-inodes which were dirty at least once and are attached to the given
-cgwb. Inodes attached to the root bdi_writeback structures are never
-placed on such list. The following patch will use this list to try to
-release cgwbs structures more efficiently.
+> 
+> > ---
+> >  fs/fs-writeback.c                | 68 ++++++++++++++++++++++++++++++++
+> >  include/linux/backing-dev-defs.h |  1 +
+> >  include/linux/writeback.h        |  1 +
+> >  mm/backing-dev.c                 | 58 ++++++++++++++++++++++++++-
+> >  4 files changed, 126 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> > index 49d7b23a7cfe..e8517ad677eb 100644
+> > --- a/fs/fs-writeback.c
+> > +++ b/fs/fs-writeback.c
+> > @@ -225,6 +225,8 @@ void wb_wait_for_completion(struct wb_completion *done)
+> >  					/* one round can affect upto 5 slots */
+> >  #define WB_FRN_MAX_IN_FLIGHT	1024	/* don't queue too many concurrently */
+> >  
+> > +#define WB_MAX_INODES_PER_ISW	116	/* maximum inodes per isw */
+> > +
+> 
+> Why this number? Please add an explanation here...
 
-Suggested-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
----
- fs/fs-writeback.c                | 93 ++++++++++++++++++++------------
- include/linux/backing-dev-defs.h |  1 +
- mm/backing-dev.c                 |  2 +
- 3 files changed, 62 insertions(+), 34 deletions(-)
+Added.
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 9f378a670db4..f0dfcd08073e 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -131,25 +131,6 @@ static bool inode_io_list_move_locked(struct inode *=
-inode,
- 	return false;
- }
-=20
--/**
-- * inode_io_list_del_locked - remove an inode from its bdi_writeback IO =
-list
-- * @inode: inode to be removed
-- * @wb: bdi_writeback @inode is being removed from
-- *
-- * Remove @inode which may be on one of @wb->b_{dirty|io|more_io} lists =
-and
-- * clear %WB_has_dirty_io if all are empty afterwards.
-- */
--static void inode_io_list_del_locked(struct inode *inode,
--				     struct bdi_writeback *wb)
--{
--	assert_spin_locked(&wb->list_lock);
--	assert_spin_locked(&inode->i_lock);
--
--	inode->i_state &=3D ~I_SYNC_QUEUED;
--	list_del_init(&inode->i_io_list);
--	wb_io_lists_depopulated(wb);
--}
--
- static void wb_wakeup(struct bdi_writeback *wb)
- {
- 	spin_lock_bh(&wb->work_lock);
-@@ -278,6 +259,28 @@ void __inode_attach_wb(struct inode *inode, struct p=
-age *page)
- }
- EXPORT_SYMBOL_GPL(__inode_attach_wb);
-=20
-+/**
-+ * inode_cgwb_move_to_attached - put the inode onto wb->b_attached list
-+ * @inode: inode of interest with i_lock held
-+ * @wb: target bdi_writeback
-+ *
-+ * Remove the inode from wb's io lists and if necessarily put onto b_att=
-ached
-+ * list.  Only inodes attached to cgwb's are kept on this list.
-+ */
-+static void inode_cgwb_move_to_attached(struct inode *inode,
-+					struct bdi_writeback *wb)
-+{
-+	assert_spin_locked(&wb->list_lock);
-+	assert_spin_locked(&inode->i_lock);
-+
-+	inode->i_state &=3D ~I_SYNC_QUEUED;
-+	if (wb !=3D &wb->bdi->wb)
-+		list_move(&inode->i_io_list, &wb->b_attached);
-+	else
-+		list_del_init(&inode->i_io_list);
-+	wb_io_lists_depopulated(wb);
-+}
-+
- /**
-  * locked_inode_to_wb_and_lock_list - determine a locked inode's wb and =
-lock it
-  * @inode: inode of interest with i_lock held
-@@ -418,21 +421,28 @@ static void inode_switch_wbs_work_fn(struct work_st=
-ruct *work)
- 	wb_get(new_wb);
-=20
- 	/*
--	 * Transfer to @new_wb's IO list if necessary.  The specific list
--	 * @inode was on is ignored and the inode is put on ->b_dirty which
--	 * is always correct including from ->b_dirty_time.  The transfer
--	 * preserves @inode->dirtied_when ordering.
-+	 * Transfer to @new_wb's IO list if necessary.  If the @inode is dirty,
-+	 * the specific list @inode was on is ignored and the @inode is put on
-+	 * ->b_dirty which is always correct including from ->b_dirty_time.
-+	 * The transfer preserves @inode->dirtied_when ordering.  If the @inode
-+	 * was clean, it means it was on the b_attached list, so move it onto
-+	 * the b_attached list of @new_wb.
- 	 */
- 	if (!list_empty(&inode->i_io_list)) {
--		struct inode *pos;
--
--		inode_io_list_del_locked(inode, old_wb);
- 		inode->i_wb =3D new_wb;
--		list_for_each_entry(pos, &new_wb->b_dirty, i_io_list)
--			if (time_after_eq(inode->dirtied_when,
--					  pos->dirtied_when))
--				break;
--		inode_io_list_move_locked(inode, new_wb, pos->i_io_list.prev);
-+
-+		if (inode->i_state & I_DIRTY_ALL) {
-+			struct inode *pos;
-+
-+			list_for_each_entry(pos, &new_wb->b_dirty, i_io_list)
-+				if (time_after_eq(inode->dirtied_when,
-+						  pos->dirtied_when))
-+					break;
-+			inode_io_list_move_locked(inode, new_wb,
-+						  pos->i_io_list.prev);
-+		} else {
-+			inode_cgwb_move_to_attached(inode, new_wb);
-+		}
- 	} else {
- 		inode->i_wb =3D new_wb;
- 	}
-@@ -1014,6 +1024,17 @@ fs_initcall(cgroup_writeback_init);
- static void bdi_down_write_wb_switch_rwsem(struct backing_dev_info *bdi)=
- { }
- static void bdi_up_write_wb_switch_rwsem(struct backing_dev_info *bdi) {=
- }
-=20
-+static void inode_cgwb_move_to_attached(struct inode *inode,
-+					struct bdi_writeback *wb)
-+{
-+	assert_spin_locked(&wb->list_lock);
-+	assert_spin_locked(&inode->i_lock);
-+
-+	inode->i_state &=3D ~I_SYNC_QUEUED;
-+	list_del_init(&inode->i_io_list);
-+	wb_io_lists_depopulated(wb);
-+}
-+
- static struct bdi_writeback *
- locked_inode_to_wb_and_lock_list(struct inode *inode)
- 	__releases(&inode->i_lock)
-@@ -1114,7 +1135,11 @@ void inode_io_list_del(struct inode *inode)
-=20
- 	wb =3D inode_to_wb_and_lock_list(inode);
- 	spin_lock(&inode->i_lock);
--	inode_io_list_del_locked(inode, wb);
-+
-+	inode->i_state &=3D ~I_SYNC_QUEUED;
-+	list_del_init(&inode->i_io_list);
-+	wb_io_lists_depopulated(wb);
-+
- 	spin_unlock(&inode->i_lock);
- 	spin_unlock(&wb->list_lock);
- }
-@@ -1427,7 +1452,7 @@ static void requeue_inode(struct inode *inode, stru=
-ct bdi_writeback *wb,
- 		inode->i_state &=3D ~I_SYNC_QUEUED;
- 	} else {
- 		/* The inode is clean. Remove from writeback lists. */
--		inode_io_list_del_locked(inode, wb);
-+		inode_cgwb_move_to_attached(inode, wb);
- 	}
- }
-=20
-@@ -1579,7 +1604,7 @@ static int writeback_single_inode(struct inode *ino=
-de,
- 	 * responsible for the writeback lists.
- 	 */
- 	if (!(inode->i_state & I_DIRTY_ALL))
--		inode_io_list_del_locked(inode, wb);
-+		inode_cgwb_move_to_attached(inode, wb);
- 	spin_unlock(&wb->list_lock);
- 	inode_sync_complete(inode);
- out:
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev=
--defs.h
-index fff9367a6348..e5dc238ebe4f 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -154,6 +154,7 @@ struct bdi_writeback {
- 	struct cgroup_subsys_state *blkcg_css; /* and blkcg */
- 	struct list_head memcg_node;	/* anchored at memcg->cgwb_list */
- 	struct list_head blkcg_node;	/* anchored at blkcg->cgwb_list */
-+	struct list_head b_attached;	/* attached inodes, protected by list_lock=
- */
-=20
- 	union {
- 		struct work_struct release_work;
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index 576220acd686..54c5dc4b8c24 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -396,6 +396,7 @@ static void cgwb_release_workfn(struct work_struct *w=
-ork)
- 	fprop_local_destroy_percpu(&wb->memcg_completions);
- 	percpu_ref_exit(&wb->refcnt);
- 	wb_exit(wb);
-+	WARN_ON_ONCE(!list_empty(&wb->b_attached));
- 	kfree_rcu(wb, rcu);
- }
-=20
-@@ -472,6 +473,7 @@ static int cgwb_create(struct backing_dev_info *bdi,
-=20
- 	wb->memcg_css =3D memcg_css;
- 	wb->blkcg_css =3D blkcg_css;
-+	INIT_LIST_HEAD(&wb->b_attached);
- 	INIT_WORK(&wb->release_work, cgwb_release_workfn);
- 	set_bit(WB_registered, &wb->state);
-=20
---=20
-2.31.1
+> 
+> >  static atomic_t isw_nr_in_flight = ATOMIC_INIT(0);
+> >  static struct workqueue_struct *isw_wq;
+> >  
+> > @@ -552,6 +554,72 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
+> >  	kfree(isw);
+> >  }
+> >  
+> > +/**
+> > + * cleanup_offline_cgwb - detach associated inodes
+> > + * @wb: target wb
+> > + *
+> > + * Switch all inodes attached to @wb to the bdi's root wb in order to eventually
+> > + * release the dying @wb.  Returns %true if not all inodes were switched and
+> > + * the function has to be restarted.
+> > + */
+> > +bool cleanup_offline_cgwb(struct bdi_writeback *wb)
+> > +{
+> > +	struct inode_switch_wbs_context *isw;
+> > +	struct inode *inode;
+> > +	int nr;
+> > +	bool restart = false;
+> > +
+> > +	isw = kzalloc(sizeof(*isw) + WB_MAX_INODES_PER_ISW *
+> > +		      sizeof(struct inode *), GFP_KERNEL);
+> > +	if (!isw)
+> > +		return restart;
+> > +
+> > +	/* no need to call wb_get() here: bdi's root wb is not refcounted */
+> > +	isw->new_wb = &wb->bdi->wb;
+> > +
+> > +	nr = 0;
+> > +	spin_lock(&wb->list_lock);
+> > +	list_for_each_entry(inode, &wb->b_attached, i_io_list) {
+> > +		spin_lock(&inode->i_lock);
+> > +		if (!(inode->i_sb->s_flags & SB_ACTIVE) ||
+> > +		    inode->i_state & (I_WB_SWITCH | I_FREEING) ||
+> > +		    inode_to_wb(inode) == isw->new_wb) {
+> > +			spin_unlock(&inode->i_lock);
+> > +			continue;
+> > +		}
+> > +		inode->i_state |= I_WB_SWITCH;
+> > +		__iget(inode);
+> > +		spin_unlock(&inode->i_lock);
+> 
+> This hunk is identical with the one in inode_switch_wbs(). Maybe create a
+> helper for it like inode_prepare_wb_switch() or something like that. Also
+> we need to check for I_WILL_FREE flag as well as I_FREEING (see the code in
+> iput_final()) - that's actually a bug in inode_switch_wbs() as well so
+> probably a separate fix for that should come earlier in the series.
 
+Good point, added in v7.
+
+> 
+> > +
+> > +		isw->inodes[nr++] = inode;
+> 
+> At first it seemed a bit silly to allocate an array of inode pointers when
+> we have them in the list. But after some thought I agree that dealing with
+> other switching being triggered from other sources in parallel would be
+> really difficult so your decision makes sense. Just maybe add an
+> explanation in a comment somewhere about this design decision.
+
+Added in v7.
+
+> 
+> > +
+> > +		if (nr >= WB_MAX_INODES_PER_ISW - 1) {
+> > +			restart = true;
+> > +			break;
+> > +		}
+> > +	}
+> > +	spin_unlock(&wb->list_lock);
+> 
+> ...
+> 
+> > +static void cleanup_offline_cgwbs_workfn(struct work_struct *work)
+> > +{
+> > +	struct bdi_writeback *wb;
+> > +	LIST_HEAD(processed);
+> > +
+> > +	spin_lock_irq(&cgwb_lock);
+> > +
+> > +	while (!list_empty(&offline_cgwbs)) {
+> > +		wb = list_first_entry(&offline_cgwbs, struct bdi_writeback,
+> > +				      offline_node);
+> > +		list_move(&wb->offline_node, &processed);
+> > +
+> > +		if (wb_has_dirty_io(wb))
+> > +			continue;
+> 
+> Maybe explain in a comment why skipping wbs with dirty inodes is fine?
+> Because honestly, I'm not sure... I guess the rationale is that inodes
+> should get cleaned eventually and if they are getting redirtied, they will
+> be switched to another wb anyway?
+
+The main rationale here is that the deletion of a memory/blkcg cgroup by a user
+shouldn't affect the io distribution. In other words, the remaining io shouldn't
+be performed faster than it could be finished had the cgroup remain existing.
