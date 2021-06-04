@@ -1,179 +1,330 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v6 5/5] writeback, cgroup: release dying cgwbs by
- switching attached inodes
-Date: Thu, 3 Jun 2021 18:36:11 -0700
-Message-ID: <YLmDi27fSD4bRbQM@carbon.lan>
-References: <20210603005517.1403689-1-guro@fb.com>
- <20210603005517.1403689-6-guro@fb.com>
- <20210603100233.GG23647@quack2.suse.cz>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH 1/2] memcg: switch lruvec stats to rstat
+Date: Thu,  3 Jun 2021 18:56:39 -0700
+Message-ID: <20210604015640.2586269-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=S1L0ue23Urr+6rn6rGgKO/9RSY4H5BcOTxUoz+3/F4A=;
- b=d3NNls/gIASXFqKhk+fx2Jmx3T+vse5sUCGPPWV2731JjogLiqVxIQMlLz4YXTCqbU/H
- nizg36QInYQrsO5s0PlhYwIIBHojoft6kv1b2sWuFnrL4X/s+gZiC43c8QH1ETEebXAy
- jbQjxEixOO8D97ACDMwnbqfFXoW2Saa2az4= 
-Content-Disposition: inline
-In-Reply-To: <20210603100233.GG23647-4I4JzKEfoa/jFM9bn6wA6Q@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=bv2HXAmGAwf1OCVRda73ecPrrSIpyQRMd6cgUbsrMv0=;
+        b=eFloSTVUQU9IkUU1DSNboTys4VUnQayFEX47/s3Gd1NDNoewr73Ghhjd88xCDQjiC+
+         gPpsMGcRGrou7m/vgdY1MfO4evGSmw3olKrXEHTk3VNKnRWl7TSHV5Rabkd+dCP8YMTv
+         tyVd8NSX7jyVd4u+djCYOI3b3RVWe5YY6mnxCrpwmw3X+liuwb5CqtZTl2u3fvYpY+iV
+         lXw2umisbk4ZxK4QNPOm8aekEaXQdY597VziUYvsKW2W1/QazgYxLWMM+YuMRsa3fjSl
+         M5oVkOo0R9pperVTplkLvY+K/h9OMaHttfvG+oW1XiW+J2IIVbZ0Xrclq2HymEgOl7y8
+         7J0g==
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <songmuchun@bytedance.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Roman Gushchin <guro@fb.com>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Huang Ying <ying.huang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
 
-On Thu, Jun 03, 2021 at 12:02:33PM +0200, Jan Kara wrote:
-> On Wed 02-06-21 17:55:17, Roman Gushchin wrote:
-> > Asynchronously try to release dying cgwbs by switching attached inodes
-> > to the bdi's wb. It helps to get rid of per-cgroup writeback
-> > structures themselves and of pinned memory and block cgroups, which
-> > are significantly larger structures (mostly due to large per-cpu
-> > statistics data). This prevents memory waste and helps to avoid
-> > different scalability problems caused by large piles of dying cgroups.
-> > 
-> > Reuse the existing mechanism of inode switching used for foreign inode
-> > detection. To speed things up batch up to 115 inode switching in a
-> > single operation (the maximum number is selected so that the resulting
-> > struct inode_switch_wbs_context can fit into 1024 bytes). Because
-> > every switching consists of two steps divided by an RCU grace period,
-> > it would be too slow without batching. Please note that the whole
-> > batch counts as a single operation (when increasing/decreasing
-> > isw_nr_in_flight). This allows to keep umounting working (flush the
-> > switching queue), however prevents cleanups from consuming the whole
-> > switching quota and effectively blocking the frn switching.
-> > 
-> > A cgwb cleanup operation can fail due to different reasons (e.g. not
-> > enough memory, the cgwb has an in-flight/pending io, an attached inode
-> > in a wrong state, etc). In this case the next scheduled cleanup will
-> > make a new attempt. An attempt is made each time a new cgwb is offlined
-> > (in other words a memcg and/or a blkcg is deleted by a user). In the
-> > future an additional attempt scheduled by a timer can be implemented.
-> > 
-> > Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-> 
-> I think we are getting close :). Some comments are below.
+The commit 2d146aa3aa84 ("mm: memcontrol: switch to rstat") but skipped
+the conversion of the lruvec stats as such stats are read in the
+performance critical code paths and flushing stats may have impacted the
+performances of the applications. This patch converts the lruvec stats
+to rstat and later patch adds the periodic flushing of the stats and
+thus remove the need to synchronously flushing the stats in the
+performance critical code paths.
 
-Great! Thank for reviewing the code!
+The rstat conversion comes with the price i.e. memory cost. Effectively
+this patch reverts the savings done by the commit f3344adf38bd ("mm:
+memcontrol: optimize per-lruvec stats counter memory usage"). However
+this cost is justified due to negative impact of the inaccurate lruvec
+stats on many heuristics. One such case is reported in [1].
 
-> 
-> > ---
-> >  fs/fs-writeback.c                | 68 ++++++++++++++++++++++++++++++++
-> >  include/linux/backing-dev-defs.h |  1 +
-> >  include/linux/writeback.h        |  1 +
-> >  mm/backing-dev.c                 | 58 ++++++++++++++++++++++++++-
-> >  4 files changed, 126 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> > index 49d7b23a7cfe..e8517ad677eb 100644
-> > --- a/fs/fs-writeback.c
-> > +++ b/fs/fs-writeback.c
-> > @@ -225,6 +225,8 @@ void wb_wait_for_completion(struct wb_completion *done)
-> >  					/* one round can affect upto 5 slots */
-> >  #define WB_FRN_MAX_IN_FLIGHT	1024	/* don't queue too many concurrently */
-> >  
-> > +#define WB_MAX_INODES_PER_ISW	116	/* maximum inodes per isw */
-> > +
-> 
-> Why this number? Please add an explanation here...
+The memory reclaim code is filled with plethora of heuristics and many
+of those heuristics reads the lruvec stats. So, inaccurate stats can
+make such heuristics ineffective. [1] reports the impact of inaccurate
+lruvec stats on the "cache trim mode" heuristic. Inaccurate lruvec stats
+can impact the deactivation and aging anon heuristics as well.
 
-Added.
+[1] https://lore.kernel.org/linux-mm/20210311004449.1170308-1-ying.huang@intel.com/
 
-> 
-> >  static atomic_t isw_nr_in_flight = ATOMIC_INIT(0);
-> >  static struct workqueue_struct *isw_wq;
-> >  
-> > @@ -552,6 +554,72 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
-> >  	kfree(isw);
-> >  }
-> >  
-> > +/**
-> > + * cleanup_offline_cgwb - detach associated inodes
-> > + * @wb: target wb
-> > + *
-> > + * Switch all inodes attached to @wb to the bdi's root wb in order to eventually
-> > + * release the dying @wb.  Returns %true if not all inodes were switched and
-> > + * the function has to be restarted.
-> > + */
-> > +bool cleanup_offline_cgwb(struct bdi_writeback *wb)
-> > +{
-> > +	struct inode_switch_wbs_context *isw;
-> > +	struct inode *inode;
-> > +	int nr;
-> > +	bool restart = false;
-> > +
-> > +	isw = kzalloc(sizeof(*isw) + WB_MAX_INODES_PER_ISW *
-> > +		      sizeof(struct inode *), GFP_KERNEL);
-> > +	if (!isw)
-> > +		return restart;
-> > +
-> > +	/* no need to call wb_get() here: bdi's root wb is not refcounted */
-> > +	isw->new_wb = &wb->bdi->wb;
-> > +
-> > +	nr = 0;
-> > +	spin_lock(&wb->list_lock);
-> > +	list_for_each_entry(inode, &wb->b_attached, i_io_list) {
-> > +		spin_lock(&inode->i_lock);
-> > +		if (!(inode->i_sb->s_flags & SB_ACTIVE) ||
-> > +		    inode->i_state & (I_WB_SWITCH | I_FREEING) ||
-> > +		    inode_to_wb(inode) == isw->new_wb) {
-> > +			spin_unlock(&inode->i_lock);
-> > +			continue;
-> > +		}
-> > +		inode->i_state |= I_WB_SWITCH;
-> > +		__iget(inode);
-> > +		spin_unlock(&inode->i_lock);
-> 
-> This hunk is identical with the one in inode_switch_wbs(). Maybe create a
-> helper for it like inode_prepare_wb_switch() or something like that. Also
-> we need to check for I_WILL_FREE flag as well as I_FREEING (see the code in
-> iput_final()) - that's actually a bug in inode_switch_wbs() as well so
-> probably a separate fix for that should come earlier in the series.
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
+---
+ include/linux/memcontrol.h |  42 +++++++------
+ mm/memcontrol.c            | 118 +++++++++++++------------------------
+ 2 files changed, 60 insertions(+), 100 deletions(-)
 
-Good point, added in v7.
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 3cc18c2176e7..81d65d32ec2a 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -105,14 +105,6 @@ struct mem_cgroup_reclaim_iter {
+ 	unsigned int generation;
+ };
+ 
+-struct lruvec_stat {
+-	long count[NR_VM_NODE_STAT_ITEMS];
+-};
+-
+-struct batched_lruvec_stat {
+-	s32 count[NR_VM_NODE_STAT_ITEMS];
+-};
+-
+ /*
+  * Bitmap and deferred work of shrinker::id corresponding to memcg-aware
+  * shrinkers, which have elements charged to this memcg.
+@@ -123,24 +115,30 @@ struct shrinker_info {
+ 	unsigned long *map;
+ };
+ 
++struct lruvec_stats_percpu {
++	/* Local (CPU and cgroup) state */
++	long state[NR_VM_NODE_STAT_ITEMS];
++
++	/* Delta calculation for lockless upward propagation */
++	long state_prev[NR_VM_NODE_STAT_ITEMS];
++};
++
++struct lruvec_stats {
++	/* Aggregated (CPU and subtree) state */
++	long state[NR_VM_NODE_STAT_ITEMS];
++
++	/* Pending child counts during tree propagation */
++	long state_pending[NR_VM_NODE_STAT_ITEMS];
++};
++
+ /*
+  * per-node information in memory controller.
+  */
+ struct mem_cgroup_per_node {
+ 	struct lruvec		lruvec;
+ 
+-	/*
+-	 * Legacy local VM stats. This should be struct lruvec_stat and
+-	 * cannot be optimized to struct batched_lruvec_stat. Because
+-	 * the threshold of the lruvec_stat_cpu can be as big as
+-	 * MEMCG_CHARGE_BATCH * PAGE_SIZE. It can fit into s32. But this
+-	 * filed has no upper limit.
+-	 */
+-	struct lruvec_stat __percpu *lruvec_stat_local;
+-
+-	/* Subtree VM stats (batched updates) */
+-	struct batched_lruvec_stat __percpu *lruvec_stat_cpu;
+-	atomic_long_t		lruvec_stat[NR_VM_NODE_STAT_ITEMS];
++	struct lruvec_stats_percpu __percpu	*lruvec_stats_percpu;
++	struct lruvec_stats			lruvec_stats;
+ 
+ 	unsigned long		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
+ 
+@@ -965,7 +963,7 @@ static inline unsigned long lruvec_page_state(struct lruvec *lruvec,
+ 		return node_page_state(lruvec_pgdat(lruvec), idx);
+ 
+ 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+-	x = atomic_long_read(&pn->lruvec_stat[idx]);
++	x = READ_ONCE(pn->lruvec_stats.state[idx]);
+ #ifdef CONFIG_SMP
+ 	if (x < 0)
+ 		x = 0;
+@@ -985,7 +983,7 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
+ 
+ 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+ 	for_each_possible_cpu(cpu)
+-		x += per_cpu(pn->lruvec_stat_local->count[idx], cpu);
++		x += per_cpu(pn->lruvec_stats_percpu->state[idx], cpu);
+ #ifdef CONFIG_SMP
+ 	if (x < 0)
+ 		x = 0;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b9a6db6a7d4f..d48f727bec05 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -665,46 +665,20 @@ static unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
+ 	return x;
+ }
+ 
+-static struct mem_cgroup_per_node *
+-parent_nodeinfo(struct mem_cgroup_per_node *pn, int nid)
+-{
+-	struct mem_cgroup *parent;
+-
+-	parent = parent_mem_cgroup(pn->memcg);
+-	if (!parent)
+-		return NULL;
+-	return parent->nodeinfo[nid];
+-}
+-
+ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+ 			      int val)
+ {
+ 	struct mem_cgroup_per_node *pn;
+ 	struct mem_cgroup *memcg;
+-	long x, threshold = MEMCG_CHARGE_BATCH;
+ 
+ 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+ 	memcg = pn->memcg;
+ 
+-	/* Update memcg */
+-	__mod_memcg_state(memcg, idx, val);
+-
+ 	/* Update lruvec */
+-	__this_cpu_add(pn->lruvec_stat_local->count[idx], val);
++	__this_cpu_add(pn->lruvec_stats_percpu->state[idx], val);
+ 
+-	if (vmstat_item_in_bytes(idx))
+-		threshold <<= PAGE_SHIFT;
+-
+-	x = val + __this_cpu_read(pn->lruvec_stat_cpu->count[idx]);
+-	if (unlikely(abs(x) > threshold)) {
+-		pg_data_t *pgdat = lruvec_pgdat(lruvec);
+-		struct mem_cgroup_per_node *pi;
+-
+-		for (pi = pn; pi; pi = parent_nodeinfo(pi, pgdat->node_id))
+-			atomic_long_add(x, &pi->lruvec_stat[idx]);
+-		x = 0;
+-	}
+-	__this_cpu_write(pn->lruvec_stat_cpu->count[idx], x);
++	/* Update memcg */
++	__mod_memcg_state(memcg, idx, val);
+ }
+ 
+ /**
+@@ -2271,40 +2245,13 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
+ 	mutex_unlock(&percpu_charge_mutex);
+ }
+ 
+-static void memcg_flush_lruvec_page_state(struct mem_cgroup *memcg, int cpu)
+-{
+-	int nid;
+-
+-	for_each_node(nid) {
+-		struct mem_cgroup_per_node *pn = memcg->nodeinfo[nid];
+-		unsigned long stat[NR_VM_NODE_STAT_ITEMS];
+-		struct batched_lruvec_stat *lstatc;
+-		int i;
+-
+-		lstatc = per_cpu_ptr(pn->lruvec_stat_cpu, cpu);
+-		for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++) {
+-			stat[i] = lstatc->count[i];
+-			lstatc->count[i] = 0;
+-		}
+-
+-		do {
+-			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
+-				atomic_long_add(stat[i], &pn->lruvec_stat[i]);
+-		} while ((pn = parent_nodeinfo(pn, nid)));
+-	}
+-}
+-
+ static int memcg_hotplug_cpu_dead(unsigned int cpu)
+ {
+ 	struct memcg_stock_pcp *stock;
+-	struct mem_cgroup *memcg;
+ 
+ 	stock = &per_cpu(memcg_stock, cpu);
+ 	drain_stock(stock);
+ 
+-	for_each_mem_cgroup(memcg)
+-		memcg_flush_lruvec_page_state(memcg, cpu);
+-
+ 	return 0;
+ }
+ 
+@@ -5108,17 +5055,9 @@ static int alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
+ 	if (!pn)
+ 		return 1;
+ 
+-	pn->lruvec_stat_local = alloc_percpu_gfp(struct lruvec_stat,
+-						 GFP_KERNEL_ACCOUNT);
+-	if (!pn->lruvec_stat_local) {
+-		kfree(pn);
+-		return 1;
+-	}
+-
+-	pn->lruvec_stat_cpu = alloc_percpu_gfp(struct batched_lruvec_stat,
+-					       GFP_KERNEL_ACCOUNT);
+-	if (!pn->lruvec_stat_cpu) {
+-		free_percpu(pn->lruvec_stat_local);
++	pn->lruvec_stats_percpu = alloc_percpu_gfp(struct lruvec_stats_percpu,
++						   GFP_KERNEL_ACCOUNT);
++	if (!pn->lruvec_stats_percpu) {
+ 		kfree(pn);
+ 		return 1;
+ 	}
+@@ -5139,8 +5078,7 @@ static void free_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
+ 	if (!pn)
+ 		return;
+ 
+-	free_percpu(pn->lruvec_stat_cpu);
+-	free_percpu(pn->lruvec_stat_local);
++	free_percpu(pn->lruvec_stats_percpu);
+ 	kfree(pn);
+ }
+ 
+@@ -5156,15 +5094,7 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
+ 
+ static void mem_cgroup_free(struct mem_cgroup *memcg)
+ {
+-	int cpu;
+-
+ 	memcg_wb_domain_exit(memcg);
+-	/*
+-	 * Flush percpu lruvec stats to guarantee the value
+-	 * correctness on parent's and all ancestor levels.
+-	 */
+-	for_each_online_cpu(cpu)
+-		memcg_flush_lruvec_page_state(memcg, cpu);
+ 	__mem_cgroup_free(memcg);
+ }
+ 
+@@ -5397,7 +5327,7 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
+ 	struct mem_cgroup *parent = parent_mem_cgroup(memcg);
+ 	struct memcg_vmstats_percpu *statc;
+ 	long delta, v;
+-	int i;
++	int i, nid;
+ 
+ 	statc = per_cpu_ptr(memcg->vmstats_percpu, cpu);
+ 
+@@ -5445,6 +5375,36 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
+ 		if (parent)
+ 			parent->vmstats.events_pending[i] += delta;
+ 	}
++
++	for_each_node_state(nid, N_MEMORY) {
++		struct mem_cgroup_per_node *pn = memcg->nodeinfo[nid];
++		struct mem_cgroup_per_node *ppn = NULL;
++		struct lruvec_stats_percpu *lstatc;
++
++		if (parent)
++			ppn = parent->nodeinfo[nid];
++
++		lstatc = per_cpu_ptr(pn->lruvec_stats_percpu, cpu);
++
++		for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++) {
++			delta = pn->lruvec_stats.state_pending[i];
++			if (delta)
++				pn->lruvec_stats.state_pending[i] = 0;
++
++			v = READ_ONCE(lstatc->state[i]);
++			if (v != lstatc->state_prev[i]) {
++				delta += v - lstatc->state_prev[i];
++				lstatc->state_prev[i] = v;
++			}
++
++			if (!delta)
++				continue;
++
++			pn->lruvec_stats.state[i] += delta;
++			if (ppn)
++				ppn->lruvec_stats.state_pending[i] += delta;
++		}
++	}
+ }
+ 
+ #ifdef CONFIG_MMU
+@@ -6378,6 +6338,8 @@ static int memory_numa_stat_show(struct seq_file *m, void *v)
+ 	int i;
+ 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+ 
++	cgroup_rstat_flush(memcg->css.cgroup);
++
+ 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
+ 		int nid;
+ 
+-- 
+2.32.0.rc1.229.g3e70b5a671-goog
 
-> 
-> > +
-> > +		isw->inodes[nr++] = inode;
-> 
-> At first it seemed a bit silly to allocate an array of inode pointers when
-> we have them in the list. But after some thought I agree that dealing with
-> other switching being triggered from other sources in parallel would be
-> really difficult so your decision makes sense. Just maybe add an
-> explanation in a comment somewhere about this design decision.
-
-Added in v7.
-
-> 
-> > +
-> > +		if (nr >= WB_MAX_INODES_PER_ISW - 1) {
-> > +			restart = true;
-> > +			break;
-> > +		}
-> > +	}
-> > +	spin_unlock(&wb->list_lock);
-> 
-> ...
-> 
-> > +static void cleanup_offline_cgwbs_workfn(struct work_struct *work)
-> > +{
-> > +	struct bdi_writeback *wb;
-> > +	LIST_HEAD(processed);
-> > +
-> > +	spin_lock_irq(&cgwb_lock);
-> > +
-> > +	while (!list_empty(&offline_cgwbs)) {
-> > +		wb = list_first_entry(&offline_cgwbs, struct bdi_writeback,
-> > +				      offline_node);
-> > +		list_move(&wb->offline_node, &processed);
-> > +
-> > +		if (wb_has_dirty_io(wb))
-> > +			continue;
-> 
-> Maybe explain in a comment why skipping wbs with dirty inodes is fine?
-> Because honestly, I'm not sure... I guess the rationale is that inodes
-> should get cleaned eventually and if they are getting redirtied, they will
-> be switched to another wb anyway?
-
-The main rationale here is that the deletion of a memory/blkcg cgroup by a user
-shouldn't affect the io distribution. In other words, the remaining io shouldn't
-be performed faster than it could be finished had the cgroup remain existing.
