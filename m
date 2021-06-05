@@ -1,8 +1,8 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-next] BUILD SUCCESS
- a29a7b5223a8c15fc24c68b1f0ddc69d9cf0ef6c
-Date: Sat, 05 Jun 2021 12:24:51 +0800
-Message-ID: <60bafc93.ivRiCt+3App3hrdO%lkp@intel.com>
+Subject: [cgroup:for-5.14] BUILD SUCCESS
+ 2ca11b0e043be6f5c2b188897e9a32275eaab046
+Date: Sat, 05 Jun 2021 12:25:10 +0800
+Message-ID: <60bafca6.9WhNsl1wTjII1Owl%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,12 +11,12 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: a29a7b5223a8c15fc24c68b1f0ddc69d9cf0ef6c  Merge branch 'for-5.14' into for-next
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.14
+branch HEAD: 2ca11b0e043be6f5c2b188897e9a32275eaab046  cgroup: Fix kernel-doc
 
-elapsed time: 732m
+elapsed time: 733m
 
-configs tested: 201
+configs tested: 185
 configs skipped: 2
 
 The following configs have been built successfully.
@@ -58,11 +58,6 @@ mips                  maltasmvp_eva_defconfig
 m68k                         apollo_defconfig
 m68k                        mvme16x_defconfig
 mips                      maltaaprp_defconfig
-arm                             pxa_defconfig
-arm                         s3c6400_defconfig
-arm                     am200epdkit_defconfig
-arc                              alldefconfig
-ia64                      gensparse_defconfig
 riscv                    nommu_virt_defconfig
 arm                           tegra_defconfig
 sh                           sh2007_defconfig
@@ -87,9 +82,6 @@ arc                        nsim_700_defconfig
 mips                        bcm47xx_defconfig
 mips                            gpr_defconfig
 mips                           ci20_defconfig
-arm                         hackkit_defconfig
-ia64                                defconfig
-powerpc                     taishan_defconfig
 mips                     cu1830-neo_defconfig
 sh                          urquell_defconfig
 sh                           se7724_defconfig
@@ -108,18 +100,13 @@ sh                         ap325rxa_defconfig
 sh                            titan_defconfig
 powerpc                     stx_gp3_defconfig
 sh                          rsk7201_defconfig
-nios2                               defconfig
 powerpc                    klondike_defconfig
 arm                       imx_v6_v7_defconfig
-sh                               allmodconfig
 powerpc                     sbc8548_defconfig
 arm                   milbeaut_m10v_defconfig
+nios2                               defconfig
+sh                               allmodconfig
 powerpc                      tqm8xx_defconfig
-xtensa                         virt_defconfig
-sh                          sdk7780_defconfig
-arm                            lart_defconfig
-arm                          pxa910_defconfig
-arc                        nsimosci_defconfig
 mips                           ip28_defconfig
 powerpc                       holly_defconfig
 xtensa                              defconfig
@@ -130,11 +117,6 @@ m68k                            q40_defconfig
 powerpc                     ppa8548_defconfig
 powerpc                     kilauea_defconfig
 mips                           ip22_defconfig
-riscv                    nommu_k210_defconfig
-alpha                            alldefconfig
-arm                         mv78xx0_defconfig
-xtensa                          iss_defconfig
-mips                       lemote2f_defconfig
 nios2                         3c120_defconfig
 sparc                       sparc32_defconfig
 sh                        sh7785lcr_defconfig
@@ -142,6 +124,7 @@ arm                        multi_v7_defconfig
 m68k                                defconfig
 x86_64                            allnoconfig
 ia64                             allmodconfig
+ia64                                defconfig
 ia64                             allyesconfig
 m68k                             allmodconfig
 m68k                             allyesconfig
@@ -203,6 +186,7 @@ i386                 randconfig-a011-20210603
 i386                 randconfig-a016-20210603
 i386                 randconfig-a014-20210603
 i386                 randconfig-a012-20210603
+riscv                    nommu_k210_defconfig
 riscv                            allyesconfig
 riscv                             allnoconfig
 riscv                               defconfig
