@@ -1,102 +1,88 @@
-From: Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v7 0/6] cgroup, blkcg: prevent dirty inodes to pin dying
- memory cgroups
-Date: Sat, 5 Jun 2021 21:37:37 +0000
-Message-ID: <YLvuofB0xMuz/wz9@google.com>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v7 1/6] writeback, cgroup: do not switch inodes with
+ I_WILL_FREE flag
+Date: Mon, 7 Jun 2021 10:48:31 +0200
+Message-ID: <20210607084831.GA30275@quack2.suse.cz>
 References: <20210604013159.3126180-1-guro@fb.com>
+ <20210604013159.3126180-2-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1623055712; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=2naVyNld0ZhkvsKE1x+NGtELQ4K5HYayJF8p+hq+SbA=;
+        b=tlwLnyGH7VawMI7TcGGozb5AZI4f7IC46ovtT2AQ/LyWGYibtVAvNF61Pouzn6rmQe9dnK
+        XB60/c9yqXN5aYWMOfzBtQqDArsCUjRLtBa9BYxnUdt+gGzSHAfHj4zcmH3Tls8GUWaGSZ
+        NKxENUvyEJ91B0t2QNZlD3DoWNZyw+I=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1623055712;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=2naVyNld0ZhkvsKE1x+NGtELQ4K5HYayJF8p+hq+SbA=;
+        b=VO25FqWanA88lV8Aezh36mNO3tBqzGfACUq9loSFJ3S7BQUk14Om3e22ixlhnFVZDCMHfi
+        2L0GG4lBbKUVk4DQ==
 Content-Disposition: inline
-In-Reply-To: <20210604013159.3126180-1-guro-b10kYP2dOMg@public.gmane.org>
+In-Reply-To: <20210604013159.3126180-2-guro-b10kYP2dOMg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On Thu 03-06-21 18:31:54, Roman Gushchin wrote:
+> If an inode's state has I_WILL_FREE flag set, the inode will be
+> freed soon, so there is no point in trying to switch the inode
+> to a different cgwb.
+> 
+> I_WILL_FREE was ignored since the introduction of the inode switching,
+> so it looks like it doesn't lead to any noticeable issues for a user.
+> This is why the patch is not intended for a stable backport.
+> 
+> Suggested-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+> Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-On Thu, Jun 03, 2021 at 06:31:53PM -0700, Roman Gushchin wrote:
-> When an inode is getting dirty for the first time it's associated
-> with a wb structure (see __inode_attach_wb()). It can later be
-> switched to another wb (if e.g. some other cgroup is writing a lot of
-> data to the same inode), but otherwise stays attached to the original
-> wb until being reclaimed.
+Looks good. Feel free to add:
+
+Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+
+								Honza
+
+> ---
+>  fs/fs-writeback.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
-> The problem is that the wb structure holds a reference to the original
-> memory and blkcg cgroups. So if an inode has been dirty once and later
-> is actively used in read-only mode, it has a good chance to pin down
-> the original memory and blkcg cgroups forewer. This is often the case with
-> services bringing data for other services, e.g. updating some rpm
-> packages.
-> 
-> In the real life it becomes a problem due to a large size of the memcg
-> structure, which can easily be 1000x larger than an inode. Also a
-> really large number of dying cgroups can raise different scalability
-> issues, e.g. making the memory reclaim costly and less effective.
-> 
-> To solve the problem inodes should be eventually detached from the
-> corresponding writeback structure. It's inefficient to do it after
-> every writeback completion. Instead it can be done whenever the
-> original memory cgroup is offlined and writeback structure is getting
-> killed. Scanning over a (potentially long) list of inodes and detach
-> them from the writeback structure can take quite some time. To avoid
-> scanning all inodes, attached inodes are kept on a new list (b_attached).
-> To make it less noticeable to a user, the scanning and switching is performed
-> from a work context.
-> 
-> Big thanks to Jan Kara, Dennis Zhou and Hillf Danton for their ideas and
-> contribution to this patchset.
-> 
-> v7:
->   - shared locking for multiple inode switching
->   - introduced inode_prepare_wbs_switch() helper
->   - extended the pre-switch inode check for I_WILL_FREE
->   - added comments here and there
-> 
-> v6:
->   - extended and reused wbs switching functionality to switch inodes
->     on cgwb cleanup
->   - fixed offline_list handling
->   - switched to the unbound_wq
->   - other minor fixes
-> 
-> v5:
->   - switch inodes to bdi->wb instead of zeroing inode->i_wb
->   - split the single patch into two
->   - only cgwbs maintain lists of attached inodes
->   - added cond_resched()
->   - fixed !CONFIG_CGROUP_WRITEBACK handling
->   - extended list of prohibited inodes flag
->   - other small fixes
-> 
-> 
-> Roman Gushchin (6):
->   writeback, cgroup: do not switch inodes with I_WILL_FREE flag
->   writeback, cgroup: switch to rcu_work API in inode_switch_wbs()
->   writeback, cgroup: keep list of inodes attached to bdi_writeback
->   writeback, cgroup: split out the functional part of
->     inode_switch_wbs_work_fn()
->   writeback, cgroup: support switching multiple inodes at once
->   writeback, cgroup: release dying cgwbs by switching attached inodes
-> 
->  fs/fs-writeback.c                | 302 +++++++++++++++++++++----------
->  include/linux/backing-dev-defs.h |  20 +-
->  include/linux/writeback.h        |   1 +
->  mm/backing-dev.c                 |  69 ++++++-
->  4 files changed, 293 insertions(+), 99 deletions(-)
-> 
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index e91980f49388..bd99890599e0 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -389,10 +389,10 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
+>  	xa_lock_irq(&mapping->i_pages);
+>  
+>  	/*
+> -	 * Once I_FREEING is visible under i_lock, the eviction path owns
+> -	 * the inode and we shouldn't modify ->i_io_list.
+> +	 * Once I_FREEING or I_WILL_FREE are visible under i_lock, the eviction
+> +	 * path owns the inode and we shouldn't modify ->i_io_list.
+>  	 */
+> -	if (unlikely(inode->i_state & I_FREEING))
+> +	if (unlikely(inode->i_state & (I_FREEING | I_WILL_FREE)))
+>  		goto skip_switch;
+>  
+>  	trace_inode_switch_wbs(inode, old_wb, new_wb);
+> @@ -517,7 +517,7 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
+>  	/* while holding I_WB_SWITCH, no one else can update the association */
+>  	spin_lock(&inode->i_lock);
+>  	if (!(inode->i_sb->s_flags & SB_ACTIVE) ||
+> -	    inode->i_state & (I_WB_SWITCH | I_FREEING) ||
+> +	    inode->i_state & (I_WB_SWITCH | I_FREEING | I_WILL_FREE) ||
+>  	    inode_to_wb(inode) == isw->new_wb) {
+>  		spin_unlock(&inode->i_lock);
+>  		goto out_free;
 > -- 
 > 2.31.1
 > 
-
-I too am a bit late to the party. Feel free to add mine as well to the
-series.
-
-Acked-by: Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-I left my one comment on the last patch regarding a possible future
-extension.
-
-Thanks,
-Dennis
+-- 
+Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+SUSE Labs, CR
