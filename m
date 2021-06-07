@@ -1,80 +1,54 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 6/6] sched: Change task_struct::state
-Date: Mon, 7 Jun 2021 13:10:49 +0200
-Message-ID: <YL3+ucpG/LOcO35G@hirez.programming.kicks-ass.net>
-References: <20210602131225.336600299@infradead.org>
- <20210602133040.587042016@infradead.org>
- <20210607104500.sopvslejuoxwzhrs@maple.lan>
+From: Philipp Hahn <pmhahn+lkml@pmhahn.de>
+Subject: Prevent inode/dentry trashing?
+Date: Mon, 7 Jun 2021 14:39:35 +0200
+Message-ID: <ce330972-78e6-4347-9735-72ee7bb21ef5@pmhahn.de>
 Mime-Version: 1.0
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=NLj4NYDQW6SbenCIcbS9QrwkO4aohp/HPEuCGPuaREs=; b=cPnEKquwt970ZOfmptV8ZPqMgA
-        nDKIN3sS9ih9nuu8IzgPQnkE+3vwyvAnDc2ZrMU9wmERzTb3IGMYGi4WE6+4lUgqF2JtL/lM/I5kJ
-        eiHF9IMB2d+Y9lTFFFVOwPJJI9S76oa/nkFLOGjGCPqHZTpDXHEuTaeqYbLfHC8bQodhRsFoh+Qy8
-        dTHV3vTaUZfqdQXrfYxuM6d63mJeyrNKoQ2Zm8n4XPuwlvYtbjKQlZwLanaf8FCczQxwMbK2aY9KZ
-        5ZBbcHBMtWS/MR3PhHmCJk3dhHVW0UT+bEq4donFnJVNzTVZUBUUF9jUBREUKuzW6aCVhr/V5xCxL
-        LVjMXPEw==;
-Content-Disposition: inline
-In-Reply-To: <20210607104500.sopvslejuoxwzhrs-DWWWtol72k3/PtFMR13I2A@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=pmhahn.de; s=202002;
+        t=1623069575; bh=BBOoFi9HzmEh7B1OpgYxyXy8hseIid57bVC7FAkBMWE=;
+        h=To:From:Subject:Date:From;
+        b=IldtndQH66LqgCtd1zYeQWCI5owbGkaqz8YMfWxhDaLSL9HvYI8OxYSPuII/RAia5
+         YkTmp++EEFouXzNPMMlADn7E86uh3DgLlSl0rad9YToXrUPd0FbK2FrDlUwyfiJokr
+         5lq+i/KM2mEZR9X9JGPISmN6UJvWOs99fJpZwS+Vym0Z+BdHtcRjFJQ5YGnNTplBL/
+         R6KAbi+hpFei/a9uoV5GCYC7CfaKRoQ6zahgN+RvoZHEbMB6lkWk/TfSIfHL3XsVHl
+         0O4xZBMRRZ3lw2xy/0Jp/GXYFb/idwZdV908N1b6kxpikUS/ZOQLRfukW1NrLnyk8y
+         m7o9ODcFlrwyg==
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Daniel Thompson <daniel.thompson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Alasdair Kergon <agk-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Felipe Balbi <balbi-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Tejun Heo <t>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
 
-On Mon, Jun 07, 2021 at 11:45:00AM +0100, Daniel Thompson wrote:
-> On Wed, Jun 02, 2021 at 03:12:31PM +0200, Peter Zijlstra wrote:
-> > Change the type and name of task_struct::state. Drop the volatile and
-> > shrink it to an 'unsigned int'. Rename it in order to find all uses
-> > such that we can use READ_ONCE/WRITE_ONCE as appropriate.
-> > 
-> > Signed-off-by: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> > ---
-> >  ...
-> >  kernel/debug/kdb/kdb_support.c |   18 +++++++------
-> >  ...
-> > --- a/kernel/debug/kdb/kdb_support.c
-> > +++ b/kernel/debug/kdb/kdb_support.c
-> > @@ -609,23 +609,25 @@ unsigned long kdb_task_state_string(cons
-> >   */
-> >  char kdb_task_state_char (const struct task_struct *p)
-> >  {
-> > -	int cpu;
-> > -	char state;
-> > +	unsigned int p_state;
-> >  	unsigned long tmp;
-> > +	char state;
-> > +	int cpu;
-> >  
-> >  	if (!p ||
-> >  	    copy_from_kernel_nofault(&tmp, (char *)p, sizeof(unsigned long)))
-> >  		return 'E';
-> >  
-> >  	cpu = kdb_process_cpu(p);
-> > -	state = (p->state == 0) ? 'R' :
-> > -		(p->state < 0) ? 'U' :
-> > -		(p->state & TASK_UNINTERRUPTIBLE) ? 'D' :
-> > -		(p->state & TASK_STOPPED) ? 'T' :
-> > -		(p->state & TASK_TRACED) ? 'C' :
-> > +	p_state = READ_ONCE(p->__state);
-> > +	state = (p_state == 0) ? 'R' :
-> > +		(p_state < 0) ? 'U' :
-> 
-> Looks like the U here stands for Unreachable since this patch makes it
-> more obvious that this clause is (and previously was) exactly that!
-> 
-> Dropping the U state would be good since I guess this will show up as a
-> "new" warning in some tools. However it was a preexisting problem so with
-> or without this cleaned up:
-> Acked-by: Daniel Thompson <daniel.thompson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Hello,
 
-Thanks!
+Similar to 
+<https://unix.stackexchange.com/questions/202586/limit-the-inode-cache-used-by-a-command> 
+I would like to prevent certain programs from trashing the inode/dentry 
+cache, which is a shared resource for all processes:
 
-Note that there's a second instance of this exact code in
-arch/powerpc/xmon/xmon.c, with the same 'U' issue.
+- For example the nightly <man:updatedb(8)> used <man:find(1) > to 
+recursively walk the complete file system. As long as `d_name` and the 
+`d_type` information from <man:readdir(3)> is enough this only pollutes 
+the dentry cache.
 
-I'll repost this soon, as it seems I've fixed all robot failout (fingers
-crossed).
+- Similar our backup software, but this also needs to <man:stat(2)> each 
+path to get the `mtime`, which additionally pollutes the inode cache.
+
+Both examples only walk the tree once (per day). In my case the caches 
+do not fit into memory completely, so the second process does not even 
+benefit from the first process filling the cache as that data is already 
+replaced again.
+
+The trashed caches affect all other processes running in parallel or the 
+first processes started each morning.
+
+Is it possible to prevent inode/dentry trashing for example by limiting 
+the cache per process(-group)?
+Something like MADV_DONTNEED from <man:madvise(2)> for IO would be nice.
+
+An external knob to limit the cache usage per process(-group) would be 
+nice, but even a hint for an API for such kind of programs to prevent 
+trashing would help me.
+
+Thank you in advance.
+Philipp
