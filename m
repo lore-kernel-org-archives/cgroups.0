@@ -1,7 +1,7 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [PATCH v8 7/8] writeback, cgroup: support switching multiple inodes at once
-Date: Mon, 7 Jun 2021 18:31:22 -0700
-Message-ID: <20210608013123.1088882-8-guro@fb.com>
+Subject: [PATCH v8 4/8] writeback, cgroup: switch to rcu_work API in inode_switch_wbs()
+Date: Mon, 7 Jun 2021 18:31:19 -0700
+Message-ID: <20210608013123.1088882-5-guro@fb.com>
 References: <20210608013123.1088882-1-guro@fb.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
@@ -9,259 +9,86 @@ Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding : content-type; s=facebook;
- bh=pg1QV3ocMZbuKiWG4COfdyEtT3blqu7USTtbXm68v5k=;
- b=bjOZ6wtWM733iDIodtOrCMcOt1haybvjYN/hwZV3/BZBC1t/8pd+U9Jmcvufgdpq+x2C
- QPrqKZnhSe3HoXU+nf2ziE8roPwFjsAdYAalA9ROBx0DNuThP20AvEeENsAR1Tb+iTDy
- V4ZdAglEhjiPA1y+aIyqIE5kmsCPQ1ZXvOg= 
+ bh=VOS/cMlJuOP4R8dV3BlKjWy3sUpbjMUwJr4NHNPxER8=;
+ b=UoOInWK62It3F5fZMJ6KYCjtLeW0WB0HC8bX83PE451a4VGo+dcN8KfOEr5xP0d7BaaN
+ AKpYqquQkL+DZtfKVfCqRCL73NkIa3TPJoaHSNQKRBNT+sI36+8twRbmZVX7NaVX9ZiP
+ Ri0kQqbmMo1LdF7OKkyMG09q9jK3zJ/FRCo= 
 In-Reply-To: <20210608013123.1088882-1-guro@fb.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Jan Kara <jack@suse.cz>, Tejun Heo <tj@kernel.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Alexander Viro <viro@zeniv.linux.org.uk>, Dennis Zhou <dennis@kernel.org>, Dave Chinner <dchinner@redhat.com>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-Currently only a single inode can be switched to another writeback
-structure at once. That means to switch an inode a separate
-inode_switch_wbs_context structure must be allocated, and a separate
-rcu callback and work must be scheduled.
+Inode's wb switching requires two steps divided by an RCU grace
+period. It's currently implemented as an RCU callback
+inode_switch_wbs_rcu_fn(), which schedules inode_switch_wbs_work_fn()
+as a work.
 
-It's fine for the existing ad-hoc switching, which is not happening
-that often, but sub-optimal for massive switching required in order to
-release a writeback structure. To prepare for it, let's add a support
-for switching multiple inodes at once.
-
-Instead of containing a single inode pointer, inode_switch_wbs_context
-will contain a NULL-terminated array of inode pointers.
-inode_do_switch_wbs() will be called for each inode.
-
-To optimize the locking bdi->wb_switch_rwsem, old_wb's and new_wb's
-list_locks will be acquired and released only once altogether for all
-inodes. wb_wakeup() will be also be called only once. Instead of
-calling wb_put(old_wb) after each successful switch, wb_put_many()
-is introduced and used.
+Switching to the rcu_work API allows to do the same in a cleaner and
+slightly shorter form.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
-Acked-by: Tejun Heo <tj@kernel.org>
 Reviewed-by: Jan Kara <jack@suse.cz>
+Acked-by: Tejun Heo <tj@kernel.org>
 Acked-by: Dennis Zhou <dennis@kernel.org>
 ---
- fs/fs-writeback.c                | 106 +++++++++++++++++++------------
- include/linux/backing-dev-defs.h |  18 +++++-
- 2 files changed, 80 insertions(+), 44 deletions(-)
+ fs/fs-writeback.c | 18 ++++--------------
+ 1 file changed, 4 insertions(+), 14 deletions(-)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 5520a6b5cc4d..737ac27adb77 100644
+index e2cc860a001b..96974e13a203 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -335,10 +335,18 @@ static struct bdi_writeback *inode_to_wb_and_lock_l=
-ist(struct inode *inode)
- }
+@@ -335,8 +335,7 @@ struct inode_switch_wbs_context {
+ 	struct inode		*inode;
+ 	struct bdi_writeback	*new_wb;
 =20
- struct inode_switch_wbs_context {
--	struct inode		*inode;
--	struct bdi_writeback	*new_wb;
--
- 	struct rcu_work		work;
-+
-+	/*
-+	 * Multiple inodes can be switched at once.  The switching procedure
-+	 * consists of two parts, separated by a RCU grace period.  To make
-+	 * sure that the second part is executed for each inode gone through
-+	 * the first part, all inode pointers are placed into a NULL-terminated
-+	 * array embedded into struct inode_switch_wbs_context.  Otherwise
-+	 * an inode could be left in a non-consistent state.
-+	 */
-+	struct bdi_writeback	*new_wb;
-+	struct inode		*inodes[];
+-	struct rcu_head		rcu_head;
+-	struct work_struct	work;
++	struct rcu_work		work;
  };
 =20
  static void bdi_down_write_wb_switch_rwsem(struct backing_dev_info *bdi)
-@@ -351,39 +359,15 @@ static void bdi_up_write_wb_switch_rwsem(struct bac=
-king_dev_info *bdi)
- 	up_write(&bdi->wb_switch_rwsem);
- }
-=20
--static void inode_do_switch_wbs(struct inode *inode,
-+static bool inode_do_switch_wbs(struct inode *inode,
-+				struct bdi_writeback *old_wb,
- 				struct bdi_writeback *new_wb)
- {
--	struct backing_dev_info *bdi =3D inode_to_bdi(inode);
- 	struct address_space *mapping =3D inode->i_mapping;
--	struct bdi_writeback *old_wb =3D inode->i_wb;
- 	XA_STATE(xas, &mapping->i_pages, 0);
- 	struct page *page;
- 	bool switched =3D false;
-=20
--	/*
--	 * If @inode switches cgwb membership while sync_inodes_sb() is
--	 * being issued, sync_inodes_sb() might miss it.  Synchronize.
--	 */
--	down_read(&bdi->wb_switch_rwsem);
--
--	/*
--	 * By the time control reaches here, RCU grace period has passed
--	 * since I_WB_SWITCH assertion and all wb stat update transactions
--	 * between unlocked_inode_to_wb_begin/end() are guaranteed to be
--	 * synchronizing against the i_pages lock.
--	 *
--	 * Grabbing old_wb->list_lock, inode->i_lock and the i_pages lock
--	 * gives us exclusion against all wb related operations on @inode
--	 * including IO list manipulations and stat updates.
--	 */
--	if (old_wb < new_wb) {
--		spin_lock(&old_wb->list_lock);
--		spin_lock_nested(&new_wb->list_lock, SINGLE_DEPTH_NESTING);
--	} else {
--		spin_lock(&new_wb->list_lock);
--		spin_lock_nested(&old_wb->list_lock, SINGLE_DEPTH_NESTING);
--	}
- 	spin_lock(&inode->i_lock);
- 	xa_lock_irq(&mapping->i_pages);
-=20
-@@ -458,25 +442,63 @@ static void inode_do_switch_wbs(struct inode *inode=
-,
-=20
- 	xa_unlock_irq(&mapping->i_pages);
- 	spin_unlock(&inode->i_lock);
--	spin_unlock(&new_wb->list_lock);
--	spin_unlock(&old_wb->list_lock);
--
--	up_read(&bdi->wb_switch_rwsem);
-=20
--	if (switched) {
--		wb_wakeup(new_wb);
--		wb_put(old_wb);
--	}
-+	return switched;
- }
-=20
+@@ -352,7 +351,7 @@ static void bdi_up_write_wb_switch_rwsem(struct backi=
+ng_dev_info *bdi)
  static void inode_switch_wbs_work_fn(struct work_struct *work)
  {
  	struct inode_switch_wbs_context *isw =3D
- 		container_of(to_rcu_work(work), struct inode_switch_wbs_context, work)=
+-		container_of(work, struct inode_switch_wbs_context, work);
++		container_of(to_rcu_work(work), struct inode_switch_wbs_context, work)=
 ;
-+	struct backing_dev_info *bdi =3D inode_to_bdi(isw->inodes[0]);
-+	struct bdi_writeback *old_wb =3D isw->inodes[0]->i_wb;
-+	struct bdi_writeback *new_wb =3D isw->new_wb;
-+	unsigned long nr_switched =3D 0;
-+	struct inode **inodep;
-+
-+	/*
-+	 * If @inode switches cgwb membership while sync_inodes_sb() is
-+	 * being issued, sync_inodes_sb() might miss it.  Synchronize.
-+	 */
-+	down_read(&bdi->wb_switch_rwsem);
-+
-+	/*
-+	 * By the time control reaches here, RCU grace period has passed
-+	 * since I_WB_SWITCH assertion and all wb stat update transactions
-+	 * between unlocked_inode_to_wb_begin/end() are guaranteed to be
-+	 * synchronizing against the i_pages lock.
-+	 *
-+	 * Grabbing old_wb->list_lock, inode->i_lock and the i_pages lock
-+	 * gives us exclusion against all wb related operations on @inode
-+	 * including IO list manipulations and stat updates.
-+	 */
-+	if (old_wb < new_wb) {
-+		spin_lock(&old_wb->list_lock);
-+		spin_lock_nested(&new_wb->list_lock, SINGLE_DEPTH_NESTING);
-+	} else {
-+		spin_lock(&new_wb->list_lock);
-+		spin_lock_nested(&old_wb->list_lock, SINGLE_DEPTH_NESTING);
-+	}
-+
-+	for (inodep =3D isw->inodes; *inodep; inodep++) {
-+		WARN_ON_ONCE((*inodep)->i_wb !=3D old_wb);
-+		if (inode_do_switch_wbs(*inodep, old_wb, new_wb))
-+			nr_switched++;
-+	}
-+
-+	spin_unlock(&new_wb->list_lock);
-+	spin_unlock(&old_wb->list_lock);
-+
-+	up_read(&bdi->wb_switch_rwsem);
-+
-+	if (nr_switched) {
-+		wb_wakeup(new_wb);
-+		wb_put_many(old_wb, nr_switched);
-+	}
-=20
--	inode_do_switch_wbs(isw->inode, isw->new_wb);
--	wb_put(isw->new_wb);
--	iput(isw->inode);
-+	for (inodep =3D isw->inodes; *inodep; inodep++)
-+		iput(*inodep);
-+	wb_put(new_wb);
- 	kfree(isw);
+ 	struct inode *inode =3D isw->inode;
+ 	struct backing_dev_info *bdi =3D inode_to_bdi(inode);
+ 	struct address_space *mapping =3D inode->i_mapping;
+@@ -469,16 +468,6 @@ static void inode_switch_wbs_work_fn(struct work_str=
+uct *work)
  	atomic_dec(&isw_nr_in_flight);
  }
-@@ -503,7 +525,7 @@ static void inode_switch_wbs(struct inode *inode, int=
- new_wb_id)
- 	if (atomic_read(&isw_nr_in_flight) > WB_FRN_MAX_IN_FLIGHT)
- 		return;
 =20
--	isw =3D kzalloc(sizeof(*isw), GFP_ATOMIC);
-+	isw =3D kzalloc(sizeof(*isw) + 2 * sizeof(struct inode *), GFP_ATOMIC);
- 	if (!isw)
- 		return;
-=20
-@@ -530,7 +552,7 @@ static void inode_switch_wbs(struct inode *inode, int=
- new_wb_id)
- 	__iget(inode);
- 	spin_unlock(&inode->i_lock);
-=20
--	isw->inode =3D inode;
-+	isw->inodes[0] =3D inode;
-=20
- 	/*
- 	 * In addition to synchronizing among switchers, I_WB_SWITCH tells
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev=
--defs.h
-index e5dc238ebe4f..63f52ad2ce7a 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -240,8 +240,9 @@ static inline void wb_get(struct bdi_writeback *wb)
+-static void inode_switch_wbs_rcu_fn(struct rcu_head *rcu_head)
+-{
+-	struct inode_switch_wbs_context *isw =3D container_of(rcu_head,
+-				struct inode_switch_wbs_context, rcu_head);
+-
+-	/* needs to grab bh-unsafe locks, bounce to work item */
+-	INIT_WORK(&isw->work, inode_switch_wbs_work_fn);
+-	queue_work(isw_wq, &isw->work);
+-}
+-
  /**
-  * wb_put - decrement a wb's refcount
-  * @wb: bdi_writeback to put
-+ * @nr: number of references to put
-  */
--static inline void wb_put(struct bdi_writeback *wb)
-+static inline void wb_put_many(struct bdi_writeback *wb, unsigned long n=
-r)
- {
- 	if (WARN_ON_ONCE(!wb->bdi)) {
- 		/*
-@@ -252,7 +253,16 @@ static inline void wb_put(struct bdi_writeback *wb)
- 	}
+  * inode_switch_wbs - change the wb association of an inode
+  * @inode: target inode
+@@ -536,7 +525,8 @@ static void inode_switch_wbs(struct inode *inode, int=
+ new_wb_id)
+ 	 * lock so that stat transfer can synchronize against them.
+ 	 * Let's continue after I_WB_SWITCH is guaranteed to be visible.
+ 	 */
+-	call_rcu(&isw->rcu_head, inode_switch_wbs_rcu_fn);
++	INIT_RCU_WORK(&isw->work, inode_switch_wbs_work_fn);
++	queue_rcu_work(isw_wq, &isw->work);
+ 	return;
 =20
- 	if (wb !=3D &wb->bdi->wb)
--		percpu_ref_put(&wb->refcnt);
-+		percpu_ref_put_many(&wb->refcnt, nr);
-+}
-+
-+/**
-+ * wb_put - decrement a wb's refcount
-+ * @wb: bdi_writeback to put
-+ */
-+static inline void wb_put(struct bdi_writeback *wb)
-+{
-+	wb_put_many(wb, 1);
- }
-=20
- /**
-@@ -281,6 +291,10 @@ static inline void wb_put(struct bdi_writeback *wb)
- {
- }
-=20
-+static inline void wb_put_many(struct bdi_writeback *wb, unsigned long n=
-r)
-+{
-+}
-+
- static inline bool wb_dying(struct bdi_writeback *wb)
- {
- 	return false;
+ out_free:
 --=20
 2.31.1
 
