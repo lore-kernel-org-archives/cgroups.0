@@ -1,86 +1,94 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH v4] sched/fair: Correctly insert cfs_rq's to list on
- unthrottle
-Date: Tue, 8 Jun 2021 18:39:42 +0200
-Message-ID: <YL+dTtsCtZjMeZWn@blackbook>
-References: <20210604102314.697749-1-odin@uged.al>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Tue, 8 Jun 2021 15:34:09 -0300
+Message-ID: <20210608183409.GL1002214@nvidia.com>
+References: <20210513135938.GG1002214@nvidia.com> <YKtbWo7PwIlXjFIV@yekko>
+ <20210524233744.GT1002214@nvidia.com>
+ <ce2fcf21-1803-047b-03f0-7a4108dea7af@nvidia.com>
+ <20210525195257.GG1002214@nvidia.com> <YK8m9jNuvEzlXWlu@yekko>
+ <20210527184847.GI1002214@nvidia.com> <YLWxlZC4AXJPOngB@yekko>
+ <20210601125712.GA4157739@nvidia.com> <YL69b0UuDm72QbDO@yekko>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="bjCpVaBEdcHpnVsT"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1623170384; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=2YkYqz+ZtymbOhQ5LKg4OZB2IErjraWsnNuYIpmXMpw=;
-        b=U3kPBWzMvHzcsRUkRNyGFPLYEbf9J+yR7Chy7YTtDt1Ai5jy+UVmpK0Kt2pQ6mIMMLOi2w
-        xceE13H0dnINmYtKvu3REgUm050s8k21StvXeKmIrIiG6PaoEDzvW365NdYbmzdhHwxDG1
-        y6Mnee6w26nNnjZ3wkZLth9j9x7thVM=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1623170384; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=2YkYqz+ZtymbOhQ5LKg4OZB2IErjraWsnNuYIpmXMpw=;
-        b=U3kPBWzMvHzcsRUkRNyGFPLYEbf9J+yR7Chy7YTtDt1Ai5jy+UVmpK0Kt2pQ6mIMMLOi2w
-        xceE13H0dnINmYtKvu3REgUm050s8k21StvXeKmIrIiG6PaoEDzvW365NdYbmzdhHwxDG1
-        y6Mnee6w26nNnjZ3wkZLth9j9x7thVM=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=q3usotIniC0C7CyC1ncqRPWaIZKf+w7Z7CRDIonHkg8=;
+ b=Uj163r9/fXqFUVG7mH0af1V82npGHw87QLaudYqp5LVp2KHOkUn823pV16BfvbNO9chauG06/DN6M80lJZzaDNeSSJsa82NtlEVfJNliRLiTtOB23+MAY6Eun++Twt6fGfrISxJ3YOALl9qm4g4SIivqbCbaOLkGa1dxHsOjteAKx8AG/md6h6q6y50hTevCUioIYLATHrBZyLPkxTm+ec7ihzWrgc3Mgd/m1FekFG0jMNKOkgi/+4tmnUl1o+bpAda6/40v4r+Cki9WaXzmPGZZbaZDr8V2XTfkcy4BGtBL+D6ROTSHiDWwpJ/XfuCasBRzKf6hiyrm838v8qecsA==
 Content-Disposition: inline
-In-Reply-To: <20210604102314.697749-1-odin@uged.al>
-List-ID: <cgroups.vger.kernel.org>
-To: Odin Ugedal <odin@uged.al>
-Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Giovanni Gherdovich <ggherdovich@suse.cz>
+In-Reply-To: <YL69b0UuDm72QbDO@yekko>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>
+Cc: Kirti Wankhede <kwankhede-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Jiang,
+ Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>
 
+On Tue, Jun 08, 2021 at 10:44:31AM +1000, David Gibson wrote:
 
---bjCpVaBEdcHpnVsT
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> When you say "not using a drivers/iommu IOMMU interface" do you
+> basically mean the device doesn't do DMA? 
 
-Hello.
+No, I mean the device doesn't use iommu_map() to manage the DMA
+mappings.
 
-On Fri, Jun 04, 2021 at 12:23:14PM +0200, Odin Ugedal <odin@uged.al> wrote:
+vfio_iommu_type1 has a special code path that mdev triggers that
+doesn't allocate an IOMMU domain and doesn't call iommu_map() or
+anything related to that.
 
-> @@ -4719,8 +4738,8 @@ static int tg_unthrottle_up(struct task_group *tg, =
-void *data)
->  		cfs_rq->throttled_clock_task_time +=3D rq_clock_task(rq) -
->  					     cfs_rq->throttled_clock_task;
-> =20
-> -		/* Add cfs_rq with already running entity in the list */
-> -		if (cfs_rq->nr_running >=3D 1)
-> +		/* Add cfs_rq with load or one or more already running entities to the=
- list */
-> +		if (!cfs_rq_is_decayed(cfs_rq) || cfs_rq->nr_running)
->  			list_add_leaf_cfs_rq(cfs_rq);
->  	}
+Instead a mdev driver calls vfio_pin_pages() which "reads" a fake page
+table and returns back the CPU pages for the mdev to DMA map however
+it likes.
 
-Can there be a decayed cfs_rq with positive nr_running?
-I.e. can the condition be simplified to just the decayed check?
+> Now, we could represent those different sorts of isolation separately,
+> but at the time our thinking was that we should group together devices
+> that can't be safely isolated for *any* reason, since the practical
+> upshot is the same: you can't safely split those devices between
+> different owners.
 
-(I'm looking at account_entity_enqueue() but I don't know if an entity's
-weight can be zero in some singular cases.)
+It is fine, but the direction is going the other way, devices have
+perfect ioslation and rely on special interactions with the iommu to
+get it.
+ 
+> > What I don't like is forcing certain things depending on how the
+> > vfio_device was created - for instance forcing a IOMMU group as part
+> > and forcing an ugly "SW IOMMU" mode in the container only as part of
+> > mdev_device.
+> 
+> I don't really see how this is depending on how the device is
+> created.
 
-Thanks,
-Michal
+static int vfio_iommu_type1_attach_group(void *iommu_data,
+					 struct iommu_group
+					 *iommu_group)
+{
+	if (vfio_bus_is_mdev(bus)) {
 
---bjCpVaBEdcHpnVsT
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+What the iommu code does depends on how the device was created. This
+is really ugly.
 
------BEGIN PGP SIGNATURE-----
+This is happening becaus the three objects in the model:
+driver/group/domain are not being linked together in a way that
+reflects the modern world.
 
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmC/nUgACgkQia1+riC5
-qSj6Zw/9GyYrkFQquKqXjlrp3PwkSq9ciNFqX2R3JUduT4zfQDhXHZSv7tJrn3mD
-jFv22NWGZZj1m72YBIFBu5+vYqATnsErIB4XPoDfpHFjlwcazPFcFcObhdaUHLPC
-ic4KMGpVnUF08qBwjVcDlLvUcGbj/GElzjt0PSVSGXRByNAF7JV1PE6n3kH5VApC
-5MOhWRELjS2I3dRuzQI9/oPJ+T3e6SDX+s9Op7SKKTbN2joIbSnRFxwbgNTgVtf/
-4uhmTM7oVLN4DptYIJnIIX5P8CpsqcrgICXyH5bAAs6UTHfdeSCwH8ns5IL8IWgC
-7qCjxEo7TMZL2tOhYxqi9NqAxP8ogqOV425LMEVkg67cii4RAaOBPwdDDKFa70Ep
-M9IelfmsXerwWrfJzbZlHedfIQm30ZJYi57KtshWB+OtxNMkqKi9XHoDsx1FQ2YG
-W4S1hhZn2vbZcmQv13TpMkIyjEeIVXbFxEElfRj9yO7440rYp0wBZBPmS9wS1WEG
-nQjmpZTsvtrAEMWXVAPNU7LG7rqEWHsI0KTkou5o4mmVVYt83lTzDxLVW3pgh2Tm
-IF0ulw6OesHvaDmUW4GO239112ZTtnpl0e+JXWpZq3Aw1ub0fojSBVZffCjGD14C
-O4Mo0z+I/eQe14D9Zmgxll4ltTeZJvg1EJWWEC3TiZnWJFJQ/Mc=
-=CXYl
------END PGP SIGNATURE-----
+The group has no idea what the driver wants but is in charge of
+creating the domain on behalf of the device.
 
---bjCpVaBEdcHpnVsT--
+And so people have been created complicated hackery to pass
+information from the driver to the group, through the device, so that
+the group can create the right domain.
+
+I want to see the driver simply create the right domain directly. It
+is much simpler and scales to more domain complexity.
+
+Jason
