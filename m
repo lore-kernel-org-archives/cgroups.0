@@ -1,45 +1,86 @@
-From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3 1/1] cgroup: make per-cgroup pressure stall tracking configurable
-Date: Tue, 8 Jun 2021 09:25:08 -0700
-Message-ID: <CAJuCfpE2U3LAZP_42b7XV7rfQTdJWbTVw43TDcxGM95oW03upQ@mail.gmail.com>
-References: <20210524195339.1233449-1-surenb@google.com> <YKz07nx3E8UEo1xa@cmpxchg.org>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH v4] sched/fair: Correctly insert cfs_rq's to list on
+ unthrottle
+Date: Tue, 8 Jun 2021 18:39:42 +0200
+Message-ID: <YL+dTtsCtZjMeZWn@blackbook>
+References: <20210604102314.697749-1-odin@uged.al>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=O9BYezu8gyZabw4yWCqgrj5D/dzmRPqg3cqOBnuX70I=;
-        b=JFQV+NEkpW/iFhrOOSAEJdSvL4Y5t7uoDY1dd51Y2Duhk5IpfAeqhuOyRWPFleGd3j
-         IYdDjObTU/mSwgFZLLbQl5DFxzATFnERzNKUj5O4DVbW7GoQzRu3HVFLrA6eE932UFqa
-         TUBINtgBShb/FCjRoTrYIdj2+wQRXbb2T1VZ52hbLSQRcCbHE42KncKpaSAw32jsGP5E
-         aOHoGGn9J8Esk/WJ6zRNYgghsabPfwjmjUR7H7m9bfTjOaWn1kBnCbrIJrYVMBeHab7V
-         9z39z1pHc3ZsyC7nRCPnIz4iOwdfrAki0j7U0Jb8FcXcaGkp0//wtiz90eUBg7r+88WM
-         BlZQ==
-In-Reply-To: <YKz07nx3E8UEo1xa-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="bjCpVaBEdcHpnVsT"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1623170384; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=2YkYqz+ZtymbOhQ5LKg4OZB2IErjraWsnNuYIpmXMpw=;
+        b=U3kPBWzMvHzcsRUkRNyGFPLYEbf9J+yR7Chy7YTtDt1Ai5jy+UVmpK0Kt2pQ6mIMMLOi2w
+        xceE13H0dnINmYtKvu3REgUm050s8k21StvXeKmIrIiG6PaoEDzvW365NdYbmzdhHwxDG1
+        y6Mnee6w26nNnjZ3wkZLth9j9x7thVM=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1623170384; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=2YkYqz+ZtymbOhQ5LKg4OZB2IErjraWsnNuYIpmXMpw=;
+        b=U3kPBWzMvHzcsRUkRNyGFPLYEbf9J+yR7Chy7YTtDt1Ai5jy+UVmpK0Kt2pQ6mIMMLOi2w
+        xceE13H0dnINmYtKvu3REgUm050s8k21StvXeKmIrIiG6PaoEDzvW365NdYbmzdhHwxDG1
+        y6Mnee6w26nNnjZ3wkZLth9j9x7thVM=
+Content-Disposition: inline
+In-Reply-To: <20210604102314.697749-1-odin@uged.al>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Benjamin Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Paul E . McKenney" <paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, macro-fOkVWZO6G+f10XsdtD+oqA@public.gmane.org, Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Mike Kravetz <mike.k>
+To: Odin Ugedal <odin@uged.al>
+Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Giovanni Gherdovich <ggherdovich@suse.cz>
 
-On Tue, May 25, 2021 at 6:00 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> On Mon, May 24, 2021 at 12:53:39PM -0700, Suren Baghdasaryan wrote:
-> > PSI accounts stalls for each cgroup separately and aggregates it at each
-> > level of the hierarchy. This causes additional overhead with psi_avgs_work
-> > being called for each cgroup in the hierarchy. psi_avgs_work has been
-> > highly optimized, however on systems with large number of cgroups the
-> > overhead becomes noticeable.
-> > Systems which use PSI only at the system level could avoid this overhead
-> > if PSI can be configured to skip per-cgroup stall accounting.
-> > Add "cgroup_disable=pressure" kernel command-line option to allow
-> > requesting system-wide only pressure stall accounting. When set, it
-> > keeps system-wide accounting under /proc/pressure/ but skips accounting
-> > for individual cgroups and does not expose PSI nodes in cgroup hierarchy.
-> >
-> > Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->
-> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Gentle ping for cgroup folks to please take a look at the cgroup interface part.
+--bjCpVaBEdcHpnVsT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hello.
+
+On Fri, Jun 04, 2021 at 12:23:14PM +0200, Odin Ugedal <odin@uged.al> wrote:
+
+> @@ -4719,8 +4738,8 @@ static int tg_unthrottle_up(struct task_group *tg, =
+void *data)
+>  		cfs_rq->throttled_clock_task_time +=3D rq_clock_task(rq) -
+>  					     cfs_rq->throttled_clock_task;
+> =20
+> -		/* Add cfs_rq with already running entity in the list */
+> -		if (cfs_rq->nr_running >=3D 1)
+> +		/* Add cfs_rq with load or one or more already running entities to the=
+ list */
+> +		if (!cfs_rq_is_decayed(cfs_rq) || cfs_rq->nr_running)
+>  			list_add_leaf_cfs_rq(cfs_rq);
+>  	}
+
+Can there be a decayed cfs_rq with positive nr_running?
+I.e. can the condition be simplified to just the decayed check?
+
+(I'm looking at account_entity_enqueue() but I don't know if an entity's
+weight can be zero in some singular cases.)
+
+Thanks,
+Michal
+
+--bjCpVaBEdcHpnVsT
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmC/nUgACgkQia1+riC5
+qSj6Zw/9GyYrkFQquKqXjlrp3PwkSq9ciNFqX2R3JUduT4zfQDhXHZSv7tJrn3mD
+jFv22NWGZZj1m72YBIFBu5+vYqATnsErIB4XPoDfpHFjlwcazPFcFcObhdaUHLPC
+ic4KMGpVnUF08qBwjVcDlLvUcGbj/GElzjt0PSVSGXRByNAF7JV1PE6n3kH5VApC
+5MOhWRELjS2I3dRuzQI9/oPJ+T3e6SDX+s9Op7SKKTbN2joIbSnRFxwbgNTgVtf/
+4uhmTM7oVLN4DptYIJnIIX5P8CpsqcrgICXyH5bAAs6UTHfdeSCwH8ns5IL8IWgC
+7qCjxEo7TMZL2tOhYxqi9NqAxP8ogqOV425LMEVkg67cii4RAaOBPwdDDKFa70Ep
+M9IelfmsXerwWrfJzbZlHedfIQm30ZJYi57KtshWB+OtxNMkqKi9XHoDsx1FQ2YG
+W4S1hhZn2vbZcmQv13TpMkIyjEeIVXbFxEElfRj9yO7440rYp0wBZBPmS9wS1WEG
+nQjmpZTsvtrAEMWXVAPNU7LG7rqEWHsI0KTkou5o4mmVVYt83lTzDxLVW3pgh2Tm
+IF0ulw6OesHvaDmUW4GO239112ZTtnpl0e+JXWpZq3Aw1ub0fojSBVZffCjGD14C
+O4Mo0z+I/eQe14D9Zmgxll4ltTeZJvg1EJWWEC3TiZnWJFJQ/Mc=
+=CXYl
+-----END PGP SIGNATURE-----
+
+--bjCpVaBEdcHpnVsT--
