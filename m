@@ -1,94 +1,61 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Tue, 8 Jun 2021 15:34:09 -0300
-Message-ID: <20210608183409.GL1002214@nvidia.com>
-References: <20210513135938.GG1002214@nvidia.com> <YKtbWo7PwIlXjFIV@yekko>
- <20210524233744.GT1002214@nvidia.com>
- <ce2fcf21-1803-047b-03f0-7a4108dea7af@nvidia.com>
- <20210525195257.GG1002214@nvidia.com> <YK8m9jNuvEzlXWlu@yekko>
- <20210527184847.GI1002214@nvidia.com> <YLWxlZC4AXJPOngB@yekko>
- <20210601125712.GA4157739@nvidia.com> <YL69b0UuDm72QbDO@yekko>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v3 1/1] cgroup: make per-cgroup pressure stall tracking
+ configurable
+Date: Tue, 8 Jun 2021 14:51:32 -0400
+Message-ID: <YL+8NG8xBJmA6lOq@cmpxchg.org>
+References: <20210524195339.1233449-1-surenb@google.com>
+ <YKz07nx3E8UEo1xa@cmpxchg.org>
+ <CAJuCfpE2U3LAZP_42b7XV7rfQTdJWbTVw43TDcxGM95oW03upQ@mail.gmail.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=BHtJ01+O9MGfngUx/tkkUwGswFNUD5Vr6xavfI/bB+w=;
+        b=v3P4A1Ia9fsZuLq0N6xEVC9DWIR7E5XQuvfED1xa+4ijHr+R0m5duY4PKJQvebPG15
+         hRsCLgqHerQAPTwhfmwD7jTNb/ulH6gF+KGJ+w76AqRERi19GdhmSOj+dZ+2zYIxX57C
+         uw4tKBJkwaiv6f2xuCQt+8NnVu5ChESNI3Z4Upi4KY8a6frhl+UguSbowW9snrC9grp6
+         lqG8bEjshk27OswFtIzW06u2agWPAgiLdpeKcMkkXteZHMGasVnfRVvEUt5AH4H23uMd
+         LFi9PFcCnOjOrPCZOr5VVTCXC7q9GaoKD79JiY+vGKpDQIqEBAZDqHWTraY1bruDCPsV
+         Uycw==
+Content-Disposition: inline
+In-Reply-To: <CAJuCfpE2U3LAZP_42b7XV7rfQTdJWbTVw43TDcxGM95oW03upQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=q3usotIniC0C7CyC1ncqRPWaIZKf+w7Z7CRDIonHkg8=;
- b=Uj163r9/fXqFUVG7mH0af1V82npGHw87QLaudYqp5LVp2KHOkUn823pV16BfvbNO9chauG06/DN6M80lJZzaDNeSSJsa82NtlEVfJNliRLiTtOB23+MAY6Eun++Twt6fGfrISxJ3YOALl9qm4g4SIivqbCbaOLkGa1dxHsOjteAKx8AG/md6h6q6y50hTevCUioIYLATHrBZyLPkxTm+ec7ihzWrgc3Mgd/m1FekFG0jMNKOkgi/+4tmnUl1o+bpAda6/40v4r+Cki9WaXzmPGZZbaZDr8V2XTfkcy4BGtBL+D6ROTSHiDWwpJ/XfuCasBRzKf6hiyrm838v8qecsA==
-Content-Disposition: inline
-In-Reply-To: <YL69b0UuDm72QbDO@yekko>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>
-Cc: Kirti Wankhede <kwankhede-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Jiang,
- Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>
+To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Benjamin Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Paul E . McKenney" <paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, macro-fOkVWZO6G+f10XsdtD+oqA@public.gmane.org, Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Mike Kravetz <mike.k>
 
-On Tue, Jun 08, 2021 at 10:44:31AM +1000, David Gibson wrote:
-
-> When you say "not using a drivers/iommu IOMMU interface" do you
-> basically mean the device doesn't do DMA? 
-
-No, I mean the device doesn't use iommu_map() to manage the DMA
-mappings.
-
-vfio_iommu_type1 has a special code path that mdev triggers that
-doesn't allocate an IOMMU domain and doesn't call iommu_map() or
-anything related to that.
-
-Instead a mdev driver calls vfio_pin_pages() which "reads" a fake page
-table and returns back the CPU pages for the mdev to DMA map however
-it likes.
-
-> Now, we could represent those different sorts of isolation separately,
-> but at the time our thinking was that we should group together devices
-> that can't be safely isolated for *any* reason, since the practical
-> upshot is the same: you can't safely split those devices between
-> different owners.
-
-It is fine, but the direction is going the other way, devices have
-perfect ioslation and rely on special interactions with the iommu to
-get it.
- 
-> > What I don't like is forcing certain things depending on how the
-> > vfio_device was created - for instance forcing a IOMMU group as part
-> > and forcing an ugly "SW IOMMU" mode in the container only as part of
-> > mdev_device.
+On Tue, Jun 08, 2021 at 09:25:08AM -0700, Suren Baghdasaryan wrote:
+> On Tue, May 25, 2021 at 6:00 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+> >
+> > On Mon, May 24, 2021 at 12:53:39PM -0700, Suren Baghdasaryan wrote:
+> > > PSI accounts stalls for each cgroup separately and aggregates it at each
+> > > level of the hierarchy. This causes additional overhead with psi_avgs_work
+> > > being called for each cgroup in the hierarchy. psi_avgs_work has been
+> > > highly optimized, however on systems with large number of cgroups the
+> > > overhead becomes noticeable.
+> > > Systems which use PSI only at the system level could avoid this overhead
+> > > if PSI can be configured to skip per-cgroup stall accounting.
+> > > Add "cgroup_disable=pressure" kernel command-line option to allow
+> > > requesting system-wide only pressure stall accounting. When set, it
+> > > keeps system-wide accounting under /proc/pressure/ but skips accounting
+> > > for individual cgroups and does not expose PSI nodes in cgroup hierarchy.
+> > >
+> > > Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> >
+> > Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 > 
-> I don't really see how this is depending on how the device is
-> created.
+> Gentle ping for cgroup folks to please take a look at the cgroup interface part.
 
-static int vfio_iommu_type1_attach_group(void *iommu_data,
-					 struct iommu_group
-					 *iommu_group)
-{
-	if (vfio_bus_is_mdev(bus)) {
+Tejun, this is more in cgroups territory than it is psi/scheduler, and
+should go through the cgroup tree.
 
-What the iommu code does depends on how the device was created. This
-is really ugly.
+Both the psi and the cgroup side look good to me, and we have Peter's
+ack from the scheduler too.
 
-This is happening becaus the three objects in the model:
-driver/group/domain are not being linked together in a way that
-reflects the modern world.
+Do you have concerns about the cgroup side? If not, would you mind
+picking this up for 5.14?
 
-The group has no idea what the driver wants but is in charge of
-creating the domain on behalf of the device.
-
-And so people have been created complicated hackery to pass
-information from the driver to the group, through the device, so that
-the group can create the right domain.
-
-I want to see the driver simply create the right domain directly. It
-is much simpler and scales to more domain complexity.
-
-Jason
+Thanks
