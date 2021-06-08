@@ -1,93 +1,84 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v8 3/8] writeback, cgroup: increment isw_nr_in_flight
- before grabbing an inode
-Date: Tue, 8 Jun 2021 10:45:44 +0200
-Message-ID: <20210608084544.GB5562@quack2.suse.cz>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v8 8/8] writeback, cgroup: release dying cgwbs by
+ switching attached inodes
+Date: Tue, 8 Jun 2021 10:54:58 +0200
+Message-ID: <20210608085458.GC5562@quack2.suse.cz>
 References: <20210608013123.1088882-1-guro@fb.com>
- <20210608013123.1088882-4-guro@fb.com>
+ <20210608013123.1088882-9-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1623141944; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1623142498; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=ID1bWZyEeEYFe3Gi87astaP82RqRwCiiT0XcxH56fxI=;
-        b=0WEOmP8SOwAOt39qT/z5az300cOjhJG0AqGFTMiuIAirfHD5c93CfZWdp6d1AiD9h7RkB5
-        WDaL+vvLmyz5/sT8uxWQ25HH83bb6sRpu+Y17OY5TMtZRSXhig35z4euQJ58FFLmJaSTEW
-        IGbx1g8bKVAjtqFhJpdSwnExi/vzMPQ=
+        bh=s57GF5EVrU8EkU6hVgTxTv92JSfKxB+kZ8XzRaWUnBM=;
+        b=dMUn34jq76iZfpe+e/UvfR64NqfiyE3bGkAnY7c5GBBn26baRgLDP3PSf/g+WNPP6nOAh3
+        wxNlk4Q/cxIYWdmJZh48684o9Ycgg0G8kmQFLnQFdkIYRoOluOboCH4yj01stu5xe6fkZw
+        n3WP11Zr8PmwFcRZ/QM2wsIbAoeJNFY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1623141944;
+        s=susede2_ed25519; t=1623142498;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=ID1bWZyEeEYFe3Gi87astaP82RqRwCiiT0XcxH56fxI=;
-        b=YgVgGDWs3dTKUfzCXl3Cx0JSeLvr+YL/LLV7pJzTCIJxVVpx81ornHaz8zkGxRklYfGFaZ
-        8SWpo1fOSKjeWeBQ==
+        bh=s57GF5EVrU8EkU6hVgTxTv92JSfKxB+kZ8XzRaWUnBM=;
+        b=QB67RQ6oO8NzzFxSr5nVeyP4+sAxevwN2dFw2I9h2gNFohGorTS0PXXTrCglCxi/x2Cy7D
+        qc3kQ5g6XNatMDAQ==
 Content-Disposition: inline
-In-Reply-To: <20210608013123.1088882-4-guro-b10kYP2dOMg@public.gmane.org>
+In-Reply-To: <20210608013123.1088882-9-guro@fb.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+To: Roman Gushchin <guro@fb.com>
+Cc: Jan Kara <jack@suse.cz>, Tejun Heo <tj@kernel.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Alexander Viro <viro@zeniv.linux.org.uk>, Dennis Zhou <dennis@kernel.org>, Dave Chinner <dchinner@redhat.com>, cgroups@vger.kernel.org
 
-On Mon 07-06-21 18:31:18, Roman Gushchin wrote:
-> isw_nr_in_flight is used do determine whether the inode switch queue
-> should be flushed from the umount path. Currently it's increased
-> after grabbing an inode and even scheduling the switch work. It means
-> the umount path can be walked past cleanup_offline_cgwb() with active
-> inode references, which can result in a "Busy inodes after unmount."
-> message and use-after-free issues (with inode->i_sb which gets freed).
+On Mon 07-06-21 18:31:23, Roman Gushchin wrote:
+> Asynchronously try to release dying cgwbs by switching attached inodes
+> to the nearest living ancestor wb. It helps to get rid of per-cgroup
+> writeback structures themselves and of pinned memory and block cgroups,
+> which are significantly larger structures (mostly due to large per-cpu
+> statistics data). This prevents memory waste and helps to avoid
+> different scalability problems caused by large piles of dying cgroups.
 > 
-> Fix it by incrementing isw_nr_in_flight before doing anything with
-> the inode and decrementing in the case when switching wasn't scheduled.
+> Reuse the existing mechanism of inode switching used for foreign inode
+> detection. To speed things up batch up to 115 inode switching in a
+> single operation (the maximum number is selected so that the resulting
+> struct inode_switch_wbs_context can fit into 1024 bytes). Because
+> every switching consists of two steps divided by an RCU grace period,
+> it would be too slow without batching. Please note that the whole
+> batch counts as a single operation (when increasing/decreasing
+> isw_nr_in_flight). This allows to keep umounting working (flush the
+> switching queue), however prevents cleanups from consuming the whole
+> switching quota and effectively blocking the frn switching.
 > 
-> The problem hasn't yet been seen in the real life and was discovered
-> by Jan Kara by looking into the code.
+> A cgwb cleanup operation can fail due to different reasons (e.g. not
+> enough memory, the cgwb has an in-flight/pending io, an attached inode
+> in a wrong state, etc). In this case the next scheduled cleanup will
+> make a new attempt. An attempt is made each time a new cgwb is offlined
+> (in other words a memcg and/or a blkcg is deleted by a user). In the
+> future an additional attempt scheduled by a timer can be implemented.
 > 
-> Suggested-by: Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-> Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> Signed-off-by: Roman Gushchin <guro@fb.com>
+> Acked-by: Tejun Heo <tj@kernel.org>
+> Acked-by: Dennis Zhou <dennis@kernel.org>
 
-Looks good. Feel free to add:
+The patch looks good. Feel free to add:
 
-Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+Just one codingstyle nit below.
+
+> +		if (!wb_tryget(wb))
+> +			continue;
+> +
+> +		spin_unlock_irq(&cgwb_lock);
+> +		while ((cleanup_offline_cgwb(wb)))
+			^^ too many parentheses here...
+
+
+> +			cond_resched();
+> +		spin_lock_irq(&cgwb_lock);
 
 								Honza
-
-
-> ---
->  fs/fs-writeback.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> index 3564efcc4b78..e2cc860a001b 100644
-> --- a/fs/fs-writeback.c
-> +++ b/fs/fs-writeback.c
-> @@ -505,6 +505,8 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
->  	if (!isw)
->  		return;
->  
-> +	atomic_inc(&isw_nr_in_flight);
-> +
->  	/* find and pin the new wb */
->  	rcu_read_lock();
->  	memcg_css = css_from_id(new_wb_id, &memory_cgrp_subsys);
-> @@ -535,11 +537,10 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
->  	 * Let's continue after I_WB_SWITCH is guaranteed to be visible.
->  	 */
->  	call_rcu(&isw->rcu_head, inode_switch_wbs_rcu_fn);
-> -
-> -	atomic_inc(&isw_nr_in_flight);
->  	return;
->  
->  out_free:
-> +	atomic_dec(&isw_nr_in_flight);
->  	if (isw->new_wb)
->  		wb_put(isw->new_wb);
->  	kfree(isw);
-> -- 
-> 2.31.1
-> 
 -- 
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+Jan Kara <jack@suse.com>
 SUSE Labs, CR
