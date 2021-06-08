@@ -1,49 +1,162 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 1/1] cgroup: make per-cgroup pressure stall tracking
- configurable
-Date: Tue, 8 Jun 2021 15:01:05 -0400
-Message-ID: <YL++cWuetMvfx9Tf@slm.duckdns.org>
-References: <20210524195339.1233449-1-surenb@google.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH v8 8/8] writeback, cgroup: release dying cgwbs by
+ switching attached inodes
+Date: Tue, 8 Jun 2021 15:37:19 -0700
+Message-ID: <YL/xH+DBAYWM6eXK@carbon.dhcp.thefacebook.com>
+References: <20210608013123.1088882-1-guro@fb.com>
+ <20210608013123.1088882-9-guro@fb.com>
+ <YL+WC5beBH/N0ddz@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=tyj1ti03dIMK1ozRhjYuzmAR0/ZNP3Nds6icyKCHFlQ=;
-        b=aquonKpFpgW+meXELKk7PeP2BVEA64UDJBDwLTmHutu10dBUUYxGnxY/IIjgPhz1tZ
-         YvU/9lSBFDD5nca8ydmknI4+DI0UMUvW5frN06/dfKwmSQYvoUBddPuKk+wCm2Fut1aS
-         s/BhxnBO6tXrWGLaNJzeglvRX7Yf4f+cIkry6stGacZIGLeqgQUXTjKsK9tXFlnK0fh4
-         dT4pcL2b5cHyY3b9OZtOlT2P12Uk2v3gfGx0NqxpvOMc4osp/8IdJLF8ukCPfbJQN1ph
-         w9rpiWsMk6qxYup0HnG0vl4Y5b1frD11laPoGhDn7EIXl4m67RBRitzQURMiI2Bvkh29
-         E0iA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20210524195339.1233449-1-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=Dv5K3FCh4Nz9BS19ove+HX0OGpQWhODHlhR95WzQE0E=;
+ b=BYEhbg5sqmxZDloEBAgGOU9FG9Vs0oQwpf7+gz221WAPskOG/rn7xID7IUc39MZDAMuD
+ o1gtNf6iHuZEYoJjLSCiNw2LlP+QDh4gZGiDkzr7X881ZpGSc+nS226jZf3Pqt6zB+ol
+ +Dn4skC1XiJBDdIvJsELIg0th5v0NdmDZU0= 
+Content-Disposition: inline
+In-Reply-To: <YL+WC5beBH/N0ddz-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, macro-fOkVWZO6G+f10XsdtD+oqA@public.gmane.org, viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
+To: Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, May 24, 2021 at 12:53:39PM -0700, Suren Baghdasaryan wrote:
-> PSI accounts stalls for each cgroup separately and aggregates it at each
-> level of the hierarchy. This causes additional overhead with psi_avgs_work
-> being called for each cgroup in the hierarchy. psi_avgs_work has been
-> highly optimized, however on systems with large number of cgroups the
-> overhead becomes noticeable.
-> Systems which use PSI only at the system level could avoid this overhead
-> if PSI can be configured to skip per-cgroup stall accounting.
-> Add "cgroup_disable=pressure" kernel command-line option to allow
-> requesting system-wide only pressure stall accounting. When set, it
-> keeps system-wide accounting under /proc/pressure/ but skips accounting
-> for individual cgroups and does not expose PSI nodes in cgroup hierarchy.
+On Tue, Jun 08, 2021 at 04:08:43PM +0000, Dennis Zhou wrote:
+> Hello,
 > 
-> Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> On Mon, Jun 07, 2021 at 06:31:23PM -0700, Roman Gushchin wrote:
+> > Asynchronously try to release dying cgwbs by switching attached inodes
+> > to the nearest living ancestor wb. It helps to get rid of per-cgroup
+> > writeback structures themselves and of pinned memory and block cgroups,
+> > which are significantly larger structures (mostly due to large per-cpu
+> > statistics data). This prevents memory waste and helps to avoid
+> > different scalability problems caused by large piles of dying cgroups.
+> > 
+> > Reuse the existing mechanism of inode switching used for foreign inode
+> > detection. To speed things up batch up to 115 inode switching in a
+> > single operation (the maximum number is selected so that the resulting
+> > struct inode_switch_wbs_context can fit into 1024 bytes). Because
+> > every switching consists of two steps divided by an RCU grace period,
+> > it would be too slow without batching. Please note that the whole
+> > batch counts as a single operation (when increasing/decreasing
+> > isw_nr_in_flight). This allows to keep umounting working (flush the
+> > switching queue), however prevents cleanups from consuming the whole
+> > switching quota and effectively blocking the frn switching.
+> > 
+> > A cgwb cleanup operation can fail due to different reasons (e.g. not
+> > enough memory, the cgwb has an in-flight/pending io, an attached inode
+> > in a wrong state, etc). In this case the next scheduled cleanup will
+> > make a new attempt. An attempt is made each time a new cgwb is offlined
+> > (in other words a memcg and/or a blkcg is deleted by a user). In the
+> > future an additional attempt scheduled by a timer can be implemented.
+> > 
+> > Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> > Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > Acked-by: Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > ---
+> >  fs/fs-writeback.c                | 102 ++++++++++++++++++++++++++++---
+> >  include/linux/backing-dev-defs.h |   1 +
+> >  include/linux/writeback.h        |   1 +
+> >  mm/backing-dev.c                 |  67 +++++++++++++++++++-
+> >  4 files changed, 159 insertions(+), 12 deletions(-)
+> > 
+> > diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> > index 737ac27adb77..96eb6e6cdbc2 100644
+> > --- a/fs/fs-writeback.c
+> > +++ b/fs/fs-writeback.c
+> > @@ -225,6 +225,12 @@ void wb_wait_for_completion(struct wb_completion *done)
+> >  					/* one round can affect upto 5 slots */
+> >  #define WB_FRN_MAX_IN_FLIGHT	1024	/* don't queue too many concurrently */
+> >  
+> > +/*
+> > + * Maximum inodes per isw.  A specific value has been chosen to make
+> > + * struct inode_switch_wbs_context fit into 1024 bytes kmalloc.
+> > + */
+> > +#define WB_MAX_INODES_PER_ISW	115
+> > +
+> >  static atomic_t isw_nr_in_flight = ATOMIC_INIT(0);
+> >  static struct workqueue_struct *isw_wq;
+> >  
+> > @@ -503,6 +509,24 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
+> >  	atomic_dec(&isw_nr_in_flight);
+> >  }
+> >  
+> > +static bool inode_prepare_wbs_switch(struct inode *inode,
+> > +				     struct bdi_writeback *new_wb)
+> > +{
+> > +	/* while holding I_WB_SWITCH, no one else can update the association */
+> > +	spin_lock(&inode->i_lock);
+> > +	if (!(inode->i_sb->s_flags & SB_ACTIVE) ||
+> > +	    inode->i_state & (I_WB_SWITCH | I_FREEING | I_WILL_FREE) ||
+> > +	    inode_to_wb(inode) == new_wb) {
+> > +		spin_unlock(&inode->i_lock);
+> > +		return false;
+> > +	}
+> > +	inode->i_state |= I_WB_SWITCH;
+> > +	__iget(inode);
+> > +	spin_unlock(&inode->i_lock);
+> > +
+> > +	return true;
+> > +}
+> > +
+> >  /**
+> >   * inode_switch_wbs - change the wb association of an inode
+> >   * @inode: target inode
+> > @@ -540,17 +564,8 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
+> >  	if (!isw->new_wb)
+> >  		goto out_free;
+> >  
+> > -	/* while holding I_WB_SWITCH, no one else can update the association */
+> > -	spin_lock(&inode->i_lock);
+> > -	if (!(inode->i_sb->s_flags & SB_ACTIVE) ||
+> > -	    inode->i_state & (I_WB_SWITCH | I_FREEING | I_WILL_FREE) ||
+> > -	    inode_to_wb(inode) == isw->new_wb) {
+> > -		spin_unlock(&inode->i_lock);
+> > +	if (!inode_prepare_wbs_switch(inode, isw->new_wb))
+> >  		goto out_free;
+> > -	}
+> > -	inode->i_state |= I_WB_SWITCH;
+> > -	__iget(inode);
+> > -	spin_unlock(&inode->i_lock);
+> >  
+> >  	isw->inodes[0] = inode;
+> >  
+> > @@ -571,6 +586,73 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
+> >  	kfree(isw);
+> >  }
+> >  
+> > +/**
+> > + * cleanup_offline_cgwb - detach associated inodes
+> > + * @wb: target wb
+> > + *
+> > + * Switch all inodes attached to @wb to a nearest living ancestor's wb in order
+> > + * to eventually release the dying @wb.  Returns %true if not all inodes were
+> > + * switched and the function has to be restarted.
+> > + */
+> > +bool cleanup_offline_cgwb(struct bdi_writeback *wb)
+> > +{
+> > +	struct cgroup_subsys_state *memcg_css;
+> > +	struct inode_switch_wbs_context *isw;
+> > +	struct inode *inode;
+> > +	int nr;
+> > +	bool restart = false;
+> > +
+> > +	isw = kzalloc(sizeof(*isw) + WB_MAX_INODES_PER_ISW *
+> > +		      sizeof(struct inode *), GFP_KERNEL);
+> > +	if (!isw)
+> > +		return restart;
+> > +
+> > +	atomic_inc(&isw_nr_in_flight);
+> > +
+> > +	for (memcg_css = wb->memcg_css->parent; memcg_css;
+> > +	     memcg_css = memcg_css->parent) {
+> > +		isw->new_wb = wb_get_lookup(wb->bdi, memcg_css);
+> 
+> Should this be wb_get_create()? I suspect intermediate cgroups wouldn't
+> have cgwb's due to the no internal process constraint. cgwb's aren't
+> like blkcgs where they pin the parent and maintain the tree hierarchy.
 
-Applied to cgroup/for-5.14.
+Yes, it's a good point. I'll change to wb_get_create() and send v9 soon.
 
-Thanks.
-
--- 
-tejun
+Thank you!
