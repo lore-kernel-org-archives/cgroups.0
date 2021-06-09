@@ -1,80 +1,206 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH v9 8/8] writeback, cgroup: release dying cgwbs by
- switching attached inodes
-Date: Tue, 8 Jun 2021 22:34:34 -0700
-Message-ID: <20210608223434.25efb827a66f10ad36f7fe0b@linux-foundation.org>
-References: <20210608230225.2078447-1-guro@fb.com>
-        <20210608230225.2078447-9-guro@fb.com>
-        <20210608171237.be2f4223de89458841c10fd4@linux-foundation.org>
-        <YMAKBgVgOhYHhB3N@carbon.dhcp.thefacebook.com>
-        <YMANNhixU0QUqZIJ@google.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:for-5.14] BUILD SUCCESS
+ 3958e2d0c34e18c41b60dc01832bd670a59ef70f
+Date: Wed, 09 Jun 2021 15:07:19 +0800
+Message-ID: <60c068a7.KB5fWGQn+5N2gw4O%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1623216875;
-        bh=ojxH3o3H0Mqq+n9f5YLeEz8IbAGLfvn8g3b7SARtU/E=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=gHu+JJrnCVvAMVDMFa6ztvhdY0H/mRd/fOS7SkAR7PaSe19nmbVVMCI/kVltOA4FI
-         rwZ6ZagtboTpOv9Y5pEdZKnNpYMK3upW276FGhQTfVkZ1u/yYV1dQt0rt1VZ43fpch
-         Rc3s7CYewdGHmDnPWBmRrIEm6BPzZqA3ywhiLNL8=
-In-Reply-To: <YMANNhixU0QUqZIJ-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, 9 Jun 2021 00:37:10 +0000 Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.14
+branch HEAD: 3958e2d0c34e18c41b60dc01832bd670a59ef70f  cgroup: make per-cgroup pressure stall tracking configurable
 
-> On Tue, Jun 08, 2021 at 05:23:34PM -0700, Roman Gushchin wrote:
-> > On Tue, Jun 08, 2021 at 05:12:37PM -0700, Andrew Morton wrote:
-> > > On Tue, 8 Jun 2021 16:02:25 -0700 Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
-> > > 
-> > > > Asynchronously try to release dying cgwbs by switching attached inodes
-> > > > to the nearest living ancestor wb. It helps to get rid of per-cgroup
-> > > > writeback structures themselves and of pinned memory and block cgroups,
-> > > > which are significantly larger structures (mostly due to large per-cpu
-> > > > statistics data). This prevents memory waste and helps to avoid
-> > > > different scalability problems caused by large piles of dying cgroups.
-> > > > 
-> > > > Reuse the existing mechanism of inode switching used for foreign inode
-> > > > detection. To speed things up batch up to 115 inode switching in a
-> > > > single operation (the maximum number is selected so that the resulting
-> > > > struct inode_switch_wbs_context can fit into 1024 bytes). Because
-> > > > every switching consists of two steps divided by an RCU grace period,
-> > > > it would be too slow without batching. Please note that the whole
-> > > > batch counts as a single operation (when increasing/decreasing
-> > > > isw_nr_in_flight). This allows to keep umounting working (flush the
-> > > > switching queue), however prevents cleanups from consuming the whole
-> > > > switching quota and effectively blocking the frn switching.
-> > > > 
-> > > > A cgwb cleanup operation can fail due to different reasons (e.g. not
-> > > > enough memory, the cgwb has an in-flight/pending io, an attached inode
-> > > > in a wrong state, etc). In this case the next scheduled cleanup will
-> > > > make a new attempt. An attempt is made each time a new cgwb is offlined
-> > > > (in other words a memcg and/or a blkcg is deleted by a user). In the
-> > > > future an additional attempt scheduled by a timer can be implemented.
-> > > > 
-> > > > ...
-> > > >
-> > > > +/*
-> > > > + * Maximum inodes per isw.  A specific value has been chosen to make
-> > > > + * struct inode_switch_wbs_context fit into 1024 bytes kmalloc.
-> > > > + */
-> > > > +#define WB_MAX_INODES_PER_ISW	115
-> > > 
-> > > Can't we do 1024/sizeof(struct inode_switch_wbs_context)?
-> > 
-> > It must be something like
-> > DIV_ROUND_DOWN_ULL(1024 - sizeof(struct inode_switch_wbs_context), sizeof(struct inode *)) + 1
-> 
-> Sorry to keep popping in for 1 offs but maybe this instead? I think the
-> above would result in > 1024 kzalloc() call.
-> 
-> DIV_ROUND_DOWN_ULL(max(1024 - sizeof(struct inode_switch_wbs_context), sizeof(struct inode *)),
->                    sizeof(struct inode *))
-> 
-> might need max_t not sure.
+elapsed time: 725m
 
-Unclear to me why plain old division won't work, but whatever.  Please
-figure it out?  "115" is too sad to live!
+configs tested: 175
+configs skipped: 2
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+mips                         rt305x_defconfig
+nios2                            allyesconfig
+mips                      malta_kvm_defconfig
+powerpc                     asp8347_defconfig
+arm                           spitz_defconfig
+sparc                       sparc32_defconfig
+h8300                       h8s-sim_defconfig
+arm                   milbeaut_m10v_defconfig
+xtensa                           alldefconfig
+mips                          ath79_defconfig
+sh                  sh7785lcr_32bit_defconfig
+sh                           se7722_defconfig
+sh                           se7724_defconfig
+sh                          sdk7786_defconfig
+arc                          axs103_defconfig
+arm                    vt8500_v6_v7_defconfig
+mips                     loongson2k_defconfig
+powerpc                     taishan_defconfig
+xtensa                          iss_defconfig
+powerpc                     pseries_defconfig
+parisc                generic-32bit_defconfig
+h8300                    h8300h-sim_defconfig
+mips                      loongson3_defconfig
+ia64                      gensparse_defconfig
+m68k                            q40_defconfig
+openrisc                            defconfig
+mips                     cu1000-neo_defconfig
+arc                        nsim_700_defconfig
+arm                       versatile_defconfig
+sh                         microdev_defconfig
+sh                             espt_defconfig
+powerpc                 mpc837x_rdb_defconfig
+h8300                            allyesconfig
+mips                      fuloong2e_defconfig
+xtensa                  audio_kc705_defconfig
+arm                         lpc32xx_defconfig
+sh                           se7343_defconfig
+mips                         tb0226_defconfig
+arm                      integrator_defconfig
+arm                         cm_x300_defconfig
+arm                         bcm2835_defconfig
+mips                            ar7_defconfig
+arm64                            alldefconfig
+arm                           tegra_defconfig
+sh                           se7206_defconfig
+sh                 kfr2r09-romimage_defconfig
+powerpc                 linkstation_defconfig
+xtensa                  nommu_kc705_defconfig
+i386                             allyesconfig
+ia64                        generic_defconfig
+powerpc                        warp_defconfig
+powerpc                   currituck_defconfig
+mips                  cavium_octeon_defconfig
+sh                          sdk7780_defconfig
+arm                             mxs_defconfig
+mips                             allmodconfig
+mips                       rbtx49xx_defconfig
+arc                         haps_hs_defconfig
+powerpc                         wii_defconfig
+arm                         s3c2410_defconfig
+mips                       lemote2f_defconfig
+arm                       aspeed_g4_defconfig
+mips                           ip27_defconfig
+powerpc                      ppc6xx_defconfig
+arm                         s5pv210_defconfig
+nios2                         3c120_defconfig
+powerpc                    mvme5100_defconfig
+csky                                defconfig
+arm                        cerfcube_defconfig
+mips                      maltaaprp_defconfig
+powerpc                    gamecube_defconfig
+um                           x86_64_defconfig
+arc                 nsimosci_hs_smp_defconfig
+arm                         mv78xx0_defconfig
+sh                           se7619_defconfig
+xtensa                         virt_defconfig
+powerpc                 mpc832x_rdb_defconfig
+arm                       imx_v6_v7_defconfig
+um                             i386_defconfig
+arm                       netwinder_defconfig
+powerpc                     tqm5200_defconfig
+sh                   secureedge5410_defconfig
+powerpc                      bamboo_defconfig
+powerpc                  mpc866_ads_defconfig
+mips                        workpad_defconfig
+nds32                             allnoconfig
+powerpc                     mpc83xx_defconfig
+arm                      jornada720_defconfig
+arc                           tb10x_defconfig
+microblaze                          defconfig
+powerpc                     kilauea_defconfig
+sh                        edosk7760_defconfig
+s390                             allyesconfig
+sh                   sh7770_generic_defconfig
+arm                     am200epdkit_defconfig
+powerpc                      pmac32_defconfig
+mips                      bmips_stb_defconfig
+um                               alldefconfig
+arm                          pxa168_defconfig
+h8300                               defconfig
+x86_64                            allnoconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                               defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a004-20210608
+x86_64               randconfig-a002-20210608
+x86_64               randconfig-a003-20210608
+x86_64               randconfig-a006-20210608
+x86_64               randconfig-a005-20210608
+x86_64               randconfig-a001-20210608
+i386                 randconfig-a003-20210608
+i386                 randconfig-a006-20210608
+i386                 randconfig-a004-20210608
+i386                 randconfig-a001-20210608
+i386                 randconfig-a005-20210608
+i386                 randconfig-a002-20210608
+i386                 randconfig-a015-20210608
+i386                 randconfig-a013-20210608
+i386                 randconfig-a016-20210608
+i386                 randconfig-a011-20210608
+i386                 randconfig-a012-20210608
+i386                 randconfig-a014-20210608
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+um                            kunit_defconfig
+x86_64                           allyesconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-a002-20210607
+x86_64               randconfig-a004-20210607
+x86_64               randconfig-a003-20210607
+x86_64               randconfig-a006-20210607
+x86_64               randconfig-a005-20210607
+x86_64               randconfig-a001-20210607
+x86_64               randconfig-a015-20210608
+x86_64               randconfig-a012-20210608
+x86_64               randconfig-a014-20210608
+x86_64               randconfig-a011-20210608
+x86_64               randconfig-a016-20210608
+x86_64               randconfig-a013-20210608
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
