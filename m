@@ -1,8 +1,8 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-5.14] BUILD SUCCESS
- 3958e2d0c34e18c41b60dc01832bd670a59ef70f
-Date: Wed, 09 Jun 2021 15:07:19 +0800
-Message-ID: <60c068a7.KB5fWGQn+5N2gw4O%lkp@intel.com>
+Subject: [cgroup:for-next] BUILD SUCCESS
+ d42132d940a719371f837fa87b8bfbcea57abbd0
+Date: Wed, 09 Jun 2021 15:07:16 +0800
+Message-ID: <60c068a4.U4J3oNGSx7R4mae5%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,12 +11,12 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.14
-branch HEAD: 3958e2d0c34e18c41b60dc01832bd670a59ef70f  cgroup: make per-cgroup pressure stall tracking configurable
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: d42132d940a719371f837fa87b8bfbcea57abbd0  Merge branch 'for-5.14' into for-next
 
 elapsed time: 725m
 
-configs tested: 175
+configs tested: 181
 configs skipped: 2
 
 The following configs have been built successfully.
@@ -61,6 +61,12 @@ sh                         microdev_defconfig
 sh                             espt_defconfig
 powerpc                 mpc837x_rdb_defconfig
 h8300                            allyesconfig
+powerpc                      ep88xc_defconfig
+m68k                          atari_defconfig
+powerpc                      cm5200_defconfig
+arc                    vdk_hs38_smp_defconfig
+powerpc                       eiger_defconfig
+powerpc                     tqm8560_defconfig
 mips                      fuloong2e_defconfig
 xtensa                  audio_kc705_defconfig
 arm                         lpc32xx_defconfig
