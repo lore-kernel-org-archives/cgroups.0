@@ -1,8 +1,8 @@
 From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Subject: Re: [PATCH 2/5] cgroup/cpuset: Add new cpus.partition type with no
  load balancing
-Date: Thu, 10 Jun 2021 20:50:52 +0200
-Message-ID: <YMJfDHr1+xxm6SBi@hirez.programming.kicks-ass.net>
+Date: Thu, 10 Jun 2021 21:00:09 +0200
+Message-ID: <YMJhObisfWJ1PzgR@hirez.programming.kicks-ass.net>
 References: <20210603212416.25934-1-longman@redhat.com>
  <20210603212416.25934-3-longman@redhat.com>
 Mime-Version: 1.0
@@ -11,12 +11,12 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=q5QvTqrG2xVL3YDck5+IL8BU+tiEEtCfhbIy/ABm4q4=; b=CU4PzQCpc4kXcm5s/Gn6dBy1bI
-        V+bvyjbmJQGo1ViZ8M3QSJME2yJXvw18DkMN+PtxeOXj+8+8NryifDEg/1SbgFUDgIIQONtiohFJm
-        VczSDtj8wDlrpDsvkX807Py7w3g9QrQJ6Let0xe8y/sGb9k5vj/gtk/+8jRhPjsVvDg9UrJTeHjJo
-        k6w3VKJzl57npRQq7X3vWd935MbBTgXVSAqvWxZeF0o6G+QDvkIu0EutYlEZTsUeV3fau/0QiRj25
-        zngxTnlIHcTVkM1c25vJcE00sNpDB8t73WJyUxKztTGqU1f/pmgEjjcDqbzb2PadC/+R4VgNC0kkZ
-        dSSrqCaw==;
+        bh=xTRjHtkMVfiEz4i7gVCu050JHA1BAAViAhxBjNTqnr0=; b=v0ermCJCsvrKcJozDIgJaQ9mAs
+        QK/N1tf1IVJBqXRoU2Zjqfd+0nWnmqmjfB7N0ptRxKQd/2eFgSKzsRLMxX9DTKtCZydrecLkoxpLW
+        5T7E7oDDx3F/yKl//Z2wdkyNvkSZXpc8J+xNo/jsDiDMyp49ayMBMqljhsnuO6Qdg+S9faxM3hg1x
+        01xaJ91axH5I7Hi6Kylz6tgA2IxY/nZKF67bPkr6jN6Tvx9t718+/WOotzmIkTl9/zxWQf5MeKyXk
+        RZCP/M4Xkx4p+UsrO0GCP+fqlm+fQN9Nhe5RlpXZCgaJQeW2k3WEICEjPExfpHYhZ9IFs0fDN7dwk
+        uwoPK1uQ==;
 Content-Disposition: inline
 In-Reply-To: <20210603212416.25934-3-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
@@ -40,11 +40,7 @@ On Thu, Jun 03, 2021 at 05:24:13PM -0400, Waiman Long wrote:
 > this isolated set. For workloads that are more dynamic in nature, that
 > means users have to provision enough CPUs for the worst case situation
 > resulting in excess idle CPUs.
-> 
-> To address this issue for cpuset v2, a new cpuset.cpus.partition type
-> "root-nolb" is added which allows the creation of a cpuset partition with
-> no load balancing. This will allow system administrators to dynamically
-> adjust the size of the no load balancing partition to the current need
-> of the workload without rebooting the system.
 
-I'm confused, why do you need this? Just create a parition for each cpu.
+Also, can we change isolcpus to create a default cgroup hierarchy
+instead of being the fugly hack that it is? I really hate isolcpus with
+a passion, it needs to die.
