@@ -1,104 +1,116 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v9 8/8] writeback, cgroup: release dying cgwbs by
- switching attached inodes
-Date: Wed, 9 Jun 2021 12:53:44 -0700
-Message-ID: <YMEcSBcq/VXMiPPO@carbon.dhcp.thefacebook.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH v9 3/8] writeback, cgroup: increment isw_nr_in_flight
+ before grabbing an inode
+Date: Wed, 9 Jun 2021 17:21:14 -0700
+Message-ID: <YMFa+guFw7OFjf3X@carbon.dhcp.thefacebook.com>
 References: <20210608230225.2078447-1-guro@fb.com>
- <20210608230225.2078447-9-guro@fb.com>
- <20210608171237.be2f4223de89458841c10fd4@linux-foundation.org>
- <YMAKBgVgOhYHhB3N@carbon.dhcp.thefacebook.com>
- <YMANNhixU0QUqZIJ@google.com>
- <20210608223434.25efb827a66f10ad36f7fe0b@linux-foundation.org>
+ <20210608230225.2078447-4-guro@fb.com>
+ <YMA2XEnJrHyVLWrD@T590>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=FQeSwqBYlXX2OUV6btAidyxpfyqTQcv817nZY36nqhg=;
- b=gSW2qH32u0MX2MrW1l/n4k7ywmmO7fG3RjuGz5kbDTDMxla6xDiIryrP9i1Y3gquJ2O6
- ZNdHQ1nQQ3DGh7o3KvTCumtgFdTcu+TkTFfKzWCpnYJXNeD9t4F3NrMRFY+w7bVN3jp+
- 3wqf3/0PgAxGgrLtofNlQLOipkBIcx/IMg8= 
+ mime-version; s=facebook; bh=TpK1cdobo9o7wKCHVN2XbKA1lu3rGsD869bUAtYau8w=;
+ b=k/2l+fZ5vvfGbMqv4qfFYUW2YzWyA5kDEJDH8d5ZOzxro+78YefJKW3k48uLoh4ESc6u
+ nMkL2lrZQVgw7s69ZMUtLaDkRFb3sIYaPMFXt7MzKDhMc9KR6Z/Zngz7bpWKnEtsA//X
+ lhVEvIEi+HlajwQ0J8Jhk42I0jscqpsoKi0= 
 Content-Disposition: inline
-In-Reply-To: <20210608223434.25efb827a66f10ad36f7fe0b@linux-foundation.org>
+In-Reply-To: <YMA2XEnJrHyVLWrD@T590>
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Dave Chinner <dchinner@redhat.com>, cgroups@vger.kernel.org
+To: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
 
-On Tue, Jun 08, 2021 at 10:34:34PM -0700, Andrew Morton wrote:
-> On Wed, 9 Jun 2021 00:37:10 +0000 Dennis Zhou <dennis@kernel.org> wrote:
+On Wed, Jun 09, 2021 at 11:32:44AM +0800, Ming Lei wrote:
+> On Tue, Jun 08, 2021 at 04:02:20PM -0700, Roman Gushchin wrote:
+> > isw_nr_in_flight is used do determine whether the inode switch queue
+> > should be flushed from the umount path. Currently it's increased
+> > after grabbing an inode and even scheduling the switch work. It means
+> > the umount path can be walked past cleanup_offline_cgwb() with active
+> > inode references, which can result in a "Busy inodes after unmount."
+> > message and use-after-free issues (with inode->i_sb which gets freed).
+> > 
+> > Fix it by incrementing isw_nr_in_flight before doing anything with
+> > the inode and decrementing in the case when switching wasn't scheduled.
+> > 
+> > The problem hasn't yet been seen in the real life and was discovered
+> > by Jan Kara by looking into the code.
+> > 
+> > Suggested-by: Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+> > Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> > Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+> > ---
+> >  fs/fs-writeback.c | 5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> > index b6fc13a4962d..4413e005c28c 100644
+> > --- a/fs/fs-writeback.c
+> > +++ b/fs/fs-writeback.c
+> > @@ -505,6 +505,8 @@ static void inode_switch_wbs(struct inode *inode, int new_wb_id)
+> >  	if (!isw)
+> >  		return;
+> >  
+> > +	atomic_inc(&isw_nr_in_flight);
 > 
-> > On Tue, Jun 08, 2021 at 05:23:34PM -0700, Roman Gushchin wrote:
-> > > On Tue, Jun 08, 2021 at 05:12:37PM -0700, Andrew Morton wrote:
-> > > > On Tue, 8 Jun 2021 16:02:25 -0700 Roman Gushchin <guro@fb.com> wrote:
-> > > > 
-> > > > > Asynchronously try to release dying cgwbs by switching attached inodes
-> > > > > to the nearest living ancestor wb. It helps to get rid of per-cgroup
-> > > > > writeback structures themselves and of pinned memory and block cgroups,
-> > > > > which are significantly larger structures (mostly due to large per-cpu
-> > > > > statistics data). This prevents memory waste and helps to avoid
-> > > > > different scalability problems caused by large piles of dying cgroups.
-> > > > > 
-> > > > > Reuse the existing mechanism of inode switching used for foreign inode
-> > > > > detection. To speed things up batch up to 115 inode switching in a
-> > > > > single operation (the maximum number is selected so that the resulting
-> > > > > struct inode_switch_wbs_context can fit into 1024 bytes). Because
-> > > > > every switching consists of two steps divided by an RCU grace period,
-> > > > > it would be too slow without batching. Please note that the whole
-> > > > > batch counts as a single operation (when increasing/decreasing
-> > > > > isw_nr_in_flight). This allows to keep umounting working (flush the
-> > > > > switching queue), however prevents cleanups from consuming the whole
-> > > > > switching quota and effectively blocking the frn switching.
-> > > > > 
-> > > > > A cgwb cleanup operation can fail due to different reasons (e.g. not
-> > > > > enough memory, the cgwb has an in-flight/pending io, an attached inode
-> > > > > in a wrong state, etc). In this case the next scheduled cleanup will
-> > > > > make a new attempt. An attempt is made each time a new cgwb is offlined
-> > > > > (in other words a memcg and/or a blkcg is deleted by a user). In the
-> > > > > future an additional attempt scheduled by a timer can be implemented.
-> > > > > 
-> > > > > ...
-> > > > >
-> > > > > +/*
-> > > > > + * Maximum inodes per isw.  A specific value has been chosen to make
-> > > > > + * struct inode_switch_wbs_context fit into 1024 bytes kmalloc.
-> > > > > + */
-> > > > > +#define WB_MAX_INODES_PER_ISW	115
-> > > > 
-> > > > Can't we do 1024/sizeof(struct inode_switch_wbs_context)?
-> > > 
-> > > It must be something like
-> > > DIV_ROUND_DOWN_ULL(1024 - sizeof(struct inode_switch_wbs_context), sizeof(struct inode *)) + 1
-> > 
-> > Sorry to keep popping in for 1 offs but maybe this instead? I think the
-> > above would result in > 1024 kzalloc() call.
-> > 
-> > DIV_ROUND_DOWN_ULL(max(1024 - sizeof(struct inode_switch_wbs_context), sizeof(struct inode *)),
-> >                    sizeof(struct inode *))
-> > 
-> > might need max_t not sure.
+> smp_mb() may be required for ordering the WRITE in 'atomic_inc(&isw_nr_in_flight)'
+> and the following READ on 'inode->i_sb->s_flags & SB_ACTIVE'. Otherwise,
+> cgroup_writeback_umount() may observe zero of 'isw_nr_in_flight' because of
+> re-order of the two OPs, then miss the flush_workqueue().
 > 
-> Unclear to me why plain old division won't work, but whatever.  Please
-> figure it out?  "115" is too sad to live!
+> Also this barrier should serve as pair of the one added in cgroup_writeback_umount(),
+> so maybe this patch should be merged with 2/8.
 
-You're totally right, plain division is fine here!
-Please, squash the following chunk into the last commit in the series.
+Hi Ming!
 
-Thank you!
+Good point, I agree. How about a patch below?
+
+Thanks!
 
 --
 
+From 282861286074c47907759d80c01419f0d0630dae Mon Sep 17 00:00:00 2001
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Date: Wed, 9 Jun 2021 14:14:26 -0700
+Subject: [PATCH] cgroup, writeback: add smp_mb() to inode_prepare_wbs_switch()
+
+Add a memory barrier between incrementing isw_nr_in_flight
+and checking the sb's SB_ACTIVE flag and grabbing an inode in
+inode_prepare_wbs_switch(). It's required to prevent grabbing
+an inode before incrementing isw_nr_in_flight, otherwise
+0 can be obtained as isw_nr_in_flight in cgroup_writeback_umount()
+and isw_wq will not be flushed, potentially leading to a memory
+corruption.
+
+Added smp_mb() will work in pair with smp_mb() in
+cgroup_writeback_umount().
+
+Suggested-by: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+---
+ fs/fs-writeback.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 49b33300b1b8..545fce68e919 100644
+index 545fce68e919..6332b86ca4ed 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -229,7 +229,8 @@ void wb_wait_for_completion(struct wb_completion *done)
-  * Maximum inodes per isw.  A specific value has been chosen to make
-  * struct inode_switch_wbs_context fit into 1024 bytes kmalloc.
-  */
--#define WB_MAX_INODES_PER_ISW  115
-+#define WB_MAX_INODES_PER_ISW  ((1024UL - sizeof(struct inode_switch_wbs_context)) \
-+                                / sizeof(struct inode *))
- 
- static atomic_t isw_nr_in_flight = ATOMIC_INIT(0);
- static struct workqueue_struct *isw_wq;
+@@ -513,6 +513,14 @@ static void inode_switch_wbs_work_fn(struct work_struct *work)
+ static bool inode_prepare_wbs_switch(struct inode *inode,
+ 				     struct bdi_writeback *new_wb)
+ {
++	/*
++	 * Paired with smp_mb() in cgroup_writeback_umount().
++	 * isw_nr_in_flight must be increased before checking SB_ACTIVE and
++	 * grabbing an inode, otherwise isw_nr_in_flight can be observed as 0
++	 * in cgroup_writeback_umount() and the isw_wq will be not flushed.
++	 */
++	smp_mb();
++
+ 	/* while holding I_WB_SWITCH, no one else can update the association */
+ 	spin_lock(&inode->i_lock);
+ 	if (!(inode->i_sb->s_flags & SB_ACTIVE) ||
+-- 
+2.31.1
+
