@@ -1,63 +1,72 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup1: don't allow '\n' in renaming
-Date: Thu, 10 Jun 2021 10:03:25 -0400
-Message-ID: <YMIbrRdktYmolPXZ@slm.duckdns.org>
-References: <1623223039-35764-1-git-send-email-wwfq@yandex-team.ru>
+From: Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 0/5] cgroup/cpuset: Enable cpuset partition with no load
+ balancing
+Date: Thu, 10 Jun 2021 10:19:47 -0400
+Message-ID: <YMIfg0Aa2HZQPEy+@lorien.usersys.redhat.com>
+References: <20210603212416.25934-1-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=uSsccOa0ekLtQf+hjaaxgyVTpWcAkGjfjGCSWyqjUOg=;
-        b=p+uFJn94QQUXOOtDh05HomeTNaioo2qs4MgUtE/BgEbOOymvokye9OWZZ6USc/gkix
-         C3LmNlDP8EsLhpowFNdRa8lgOcWkWd0+2liquUXTo8FkQIMSeufT+JYW3IdTKbSFhTG4
-         qP0cRqnA/g0BAFxkJuCQJaK5lM3JKvckL9qA0xPQJbHM5Qm+W8eb/UzE46XudJarXxAU
-         TTsdaYbZpwwRZXJeukfOpFSdHaXQh0M1Ce56IrC3ysLqdUPzSPuK1ntKs6STEyTE1n/L
-         0iPAmFIQ3YbicX4g8ZpkyMVgoWR7tNbU1WGZHL1ESGQSIo9ugwp8KfTFHwwawRO6u1zw
-         R07Q==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1623334810;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=vPeoXcqrS3MIzkBmzsxPXiPd+AVSGxxS032+qPVyFQc=;
+        b=T6qdBr3FPLk20HMihxZe2RAAurUjN3YdouD4OHt5s7i1lfUAxBlGQivFhGG47hnZMX4Zer
+        OFCWpWLy8SJDw4kkbAgyvdGLS103JyusaOpgfxVYMEO/knyRLfn/UgtHcybC81Sk+1Ijw6
+        WW4cl0Ki/moQI7j6GLTXqsqFrY+e94U=
 Content-Disposition: inline
-In-Reply-To: <1623223039-35764-1-git-send-email-wwfq-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+In-Reply-To: <20210603212416.25934-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alexander Kuznetsov <wwfq-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, zeil-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, dmtrmonakhov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Jun 09, 2021 at 10:17:19AM +0300, Alexander Kuznetsov wrote:
-> cgroup_mkdir() have restriction on newline usage in names:
-> $ mkdir $'/sys/fs/cgroup/cpu/test\ntest2'
-> mkdir: cannot create directory
-> '/sys/fs/cgroup/cpu/test\ntest2': Invalid argument
+Hi Waiman,
+
+On Thu, Jun 03, 2021 at 05:24:11PM -0400 Waiman Long wrote:
+> This patchset makes the following two major changes to the cpuset v2 code:
 > 
-> But in cgroup1_rename() such check is missed.
-> This allows us to make /proc/<pid>/cgroup unparsable:
-> $ mkdir /sys/fs/cgroup/cpu/test
-> $ mv /sys/fs/cgroup/cpu/test $'/sys/fs/cgroup/cpu/test\ntest2'
-> $ echo $$ > $'/sys/fs/cgroup/cpu/test\ntest2'
-> $ cat /proc/self/cgroup
-> 11:pids:/
-> 10:freezer:/
-> 9:hugetlb:/
-> 8:cpuset:/
-> 7:blkio:/user.slice
-> 6:memory:/user.slice
-> 5:net_cls,net_prio:/
-> 4:perf_event:/
-> 3:devices:/user.slice
-> 2:cpu,cpuacct:/test
-> test2
-> 1:name=systemd:/
-> 0::/
+>  Patch 2: Add a new partition state "root-nolb" to create a partition
+>  root with load balancing disabled. This is for handling intermitten
+>  workloads that have a strict low latency requirement.
 > 
-> Signed-off-by: Alexander Kuznetsov <wwfq-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
-> Reported-by: Andrey Krasichkov <buglloc-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
-> Acked-by: Dmitry Yakunin <zeil-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+>  Patch 3: Allow partition roots that are not the top cpuset to distribute
+>  all its cpus to child partitions as long as there is no task associated
+>  with that partition root. This allows more flexibility for middleware
+>  to manage multiple partitions.
 
-Applied to cgroup/for-5.13-fixes
+Thanks!  This looks like it will be a usable replacement for the functionality
+lost when SD_LOAD_BALANCE went away.
 
-Thanks.
+
+Cheers,
+Phil
+
+> 
+> Patch 4 updates the cgroup-v2.rst file accordingly. Patch 5 adds a test
+> to test the new cpuset partition code.
+> 
+> Waiman Long (5):
+>   cgroup/cpuset: Don't call validate_change() for some flag changes
+>   cgroup/cpuset: Add new cpus.partition type with no load balancing
+>   cgroup/cpuset: Allow non-top parent partition root to distribute out
+>     all CPUs
+>   cgroup/cpuset: Update description of cpuset.cpus.partition in
+>     cgroup-v2.rst
+>   kselftest/cgroup: Add cpuset v2 partition root state test
+> 
+>  Documentation/admin-guide/cgroup-v2.rst       |  19 ++-
+>  kernel/cgroup/cpuset.c                        | 124 +++++++++++----
+>  tools/testing/selftests/cgroup/Makefile       |   2 +-
+>  .../selftests/cgroup/test_cpuset_prs.sh       | 141 ++++++++++++++++++
+>  4 files changed, 247 insertions(+), 39 deletions(-)
+>  create mode 100755 tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> 
+> -- 
+> 2.18.1
+> 
 
 -- 
-tejun
+
