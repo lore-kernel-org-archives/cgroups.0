@@ -1,62 +1,91 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 2/5] cgroup/cpuset: Add new cpus.partition type with no
- load balancing
-Date: Thu, 10 Jun 2021 21:39:35 +0200
-Message-ID: <YMJqd1JJcFTThH8j@hirez.programming.kicks-ass.net>
-References: <20210603212416.25934-1-longman@redhat.com>
- <20210603212416.25934-3-longman@redhat.com>
- <YMJfDHr1+xxm6SBi@hirez.programming.kicks-ass.net>
- <820aff72-fce2-ac2f-88e6-787249e04308@redhat.com>
+From: Kir Kolyshkin <kolyshkin@gmail.com>
+Subject: [PATCH 1/3] docs: block/bfq: describe per-device weight
+Date: Thu, 10 Jun 2021 20:07:35 -0700
+Message-ID: <20210611030737.1984343-2-kolyshkin@gmail.com>
+References: <20210611030737.1984343-1-kolyshkin@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=dFVbMgHSVXeqKN6P1dJ+5aGTI7wSx+DxBg16yiPD+NU=; b=jLWPqrtTHgNShn8IpLGkd6FVZ3
-        izj6LMj2aFyZzsEkle6f5RA+iQCJVb9B2PjXWPNQtwI7lOQfDhA07umz1wQEi89AcaF/T3JA5MdQP
-        U3PE/a9COCNVIXjSrn6TYJgtyiBpWeJVmsgb0/O83RY1Lwybg5rDDktCwQI0h4MwYYS2N18/wc3Lf
-        i7qeN9Mfj4Ux1UzKetZKr2BUtH1JMEiJqcWxv0/E1OhXjMVlpZXEphZ/8r9LGCLa6xboy6Jq0ABya
-        eG/+sh4cdiXw55XeyETHRsXU/l6jlFvf2G6lBGetSMirYQJI1sTMe1W6EWeguc9qbkJNm8jNA0+iN
-        OOYGIErQ==;
-Content-Disposition: inline
-In-Reply-To: <820aff72-fce2-ac2f-88e6-787249e04308@redhat.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=2Rtw5MlcGm2N9I0P0R9oyIB7YsHFMJaGufsNXGeoAHQ=;
+        b=sJ3o48UPXoftKS+gkeUdGnYNPt5HHaOCFwTZ4UBfqsWcDpCcvWV250sfJgZo3SFoKk
+         kp/SpMgvMBuBMGHrOr+iMFpqBuitoTirL5XEKj/JPHrPW+OakTSKIuCLJ/uZbHOLlnyu
+         Yu5zpe1koP5k1+fpRZphhdbNPIuHtJW6+b4YWX482ooxVkujwwGmMI/kJG2qRDWuyn3f
+         OLl8WdwjSiQP1JbNFSOOeYX2AkiNJc9rWHilLTKxSZHMgKIGUUtezvEMa+JP3fHiUgHa
+         Awz6U+0jU3voCd2nTVWYMT1L77taT85qlpDUF94+CiCzE9BYnpMzs+vQ+NvpqMIVNCIh
+         acow==
+In-Reply-To: <20210611030737.1984343-1-kolyshkin@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <llong@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Juri Lelli <juri.lelli@redhat.com>
+To: linux-doc@vger.kernel.org
+Cc: Jonathan Corbet <corbet@lwn.net>, tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org, cgroups@vger.kernel.org, Kir Kolyshkin <kolyshkin@gmail.com>
 
-On Thu, Jun 10, 2021 at 03:16:29PM -0400, Waiman Long wrote:
-> On 6/10/21 2:50 PM, Peter Zijlstra wrote:
-> > On Thu, Jun 03, 2021 at 05:24:13PM -0400, Waiman Long wrote:
-> > > Cpuset v1 uses the sched_load_balance control file to determine if load
-> > > balancing should be enabled.  Cpuset v2 gets rid of sched_load_balance
-> > > as its use may require disabling load balancing at cgroup root.
-> > > 
-> > > For workloads that require very low latency like DPDK, the latency
-> > > jitters caused by periodic load balancing may exceed the desired
-> > > latency limit.
-> > > 
-> > > When cpuset v2 is in use, the only way to avoid this latency cost is to
-> > > use the "isolcpus=" kernel boot option to isolate a set of CPUs. After
-> > > the kernel boot, however, there is no way to add or remove CPUs from
-> > > this isolated set. For workloads that are more dynamic in nature, that
-> > > means users have to provision enough CPUs for the worst case situation
-> > > resulting in excess idle CPUs.
-> > > 
-> > > To address this issue for cpuset v2, a new cpuset.cpus.partition type
-> > > "root-nolb" is added which allows the creation of a cpuset partition with
-> > > no load balancing. This will allow system administrators to dynamically
-> > > adjust the size of the no load balancing partition to the current need
-> > > of the workload without rebooting the system.
-> > I'm confused, why do you need this? Just create a parition for each cpu.
-> > 
-> From a management point of view, it is more cumbersome to do one cpu per
-> partition. I have suggested this idea of 1 cpu per partition to the
-> container developers, but they don't seem to like it.
+The functionality of setting per-device weight for BFQ was added
+in v5.4 (commit 795fe54c2a828099), but the documentation was never
+updated.
 
-Oh, because it then creates a cgroup tree per CPU and you get to move
-tasks between cgroups?
+While at it, improve formatting a bit.
 
-OK I suppose.
+Signed-off-by: Kir Kolyshkin <kolyshkin@gmail.com>
+---
+ Documentation/block/bfq-iosched.rst | 38 ++++++++++++++++++++---------
+ 1 file changed, 27 insertions(+), 11 deletions(-)
+
+diff --git a/Documentation/block/bfq-iosched.rst b/Documentation/block/bfq-iosched.rst
+index 66c5a4e54130..7200152c461e 100644
+--- a/Documentation/block/bfq-iosched.rst
++++ b/Documentation/block/bfq-iosched.rst
+@@ -553,20 +553,36 @@ throughput sustainable with bfq, because updating the blkio.bfq.*
+ stats is rather costly, especially for some of the stats enabled by
+ CONFIG_BFQ_CGROUP_DEBUG.
+ 
+-Parameters to set
+------------------
++Parameters
++----------
+ 
+-For each group, there is only the following parameter to set.
++For each group, the following parameters cat be set:
+ 
+-weight (namely blkio.bfq.weight or io.bfq-weight): the weight of the
+-group inside its parent. Available values: 1..1000 (default 100). The
+-linear mapping between ioprio and weights, described at the beginning
+-of the tunable section, is still valid, but all weights higher than
+-IOPRIO_BE_NR*10 are mapped to ioprio 0.
++  weight
++        This specifies the default weight for the cgroup inside its parent.
++        Available values: 1..1000 (default: 100).
+ 
+-Recall that, if low-latency is set, then BFQ automatically raises the
+-weight of the queues associated with interactive and soft real-time
+-applications. Unset this tunable if you need/want to control weights.
++        For cgroup v1, it is set by writing the value to `blkio.bfq.weight`.
++
++        For cgroup v2, it is set by writing the value to `io.bfq.weight`.
++        (with an optional prefix of `default` and a space).
++
++        The linear mapping between ioprio and weights, described at the beginning
++        of the tunable section, is still valid, but all weights higher than
++        IOPRIO_BE_NR*10 are mapped to ioprio 0.
++
++        Recall that, if low-latency is set, then BFQ automatically raises the
++        weight of the queues associated with interactive and soft real-time
++        applications. Unset this tunable if you need/want to control weights.
++
++  weight_device
++        This specifies a per-device weight for the cgroup. The syntax is
++        `minor:major weight`. A weight of `0` may be used to reset to the default
++        weight.
++
++        For cgroup v1, it is set by writing the value to `blkio.bfq.weight_device`.
++
++        For cgroup v2, the file name is `io.bfq.weight`.
+ 
+ 
+ [1]
+-- 
+2.31.1
+
