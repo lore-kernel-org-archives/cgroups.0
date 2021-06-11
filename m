@@ -1,328 +1,218 @@
-From: Kir Kolyshkin <kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 2/3] docs/cgroup-v1/blkio: stop abusing itemized list
-Date: Thu, 10 Jun 2021 20:07:36 -0700
-Message-ID: <20210611030737.1984343-3-kolyshkin@gmail.com>
-References: <20210611030737.1984343-1-kolyshkin@gmail.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:for-next] BUILD SUCCESS
+ cfeaa699186e2d5dfaca67184d734e44c13f51ee
+Date: Fri, 11 Jun 2021 11:42:17 +0800
+Message-ID: <60c2db99.jKTFOHMCvErQyLY5%lkp@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=0Xft++ApoOxYR42OLNycBh2ce7Wqi3wmGJY1H8bTUZw=;
-        b=R1zkzJ0z/xn0McME8rMfq55ag87uDM2iBtfYf/q+Qq6lQ3XVn3xK7ZfHz4KVfrt5Rt
-         MHVomFydHk6D6a9ynkx65C34pC8Na4MEh/nXEfCsyh/+QMlEinAERmS1zg5+CAhyp1F8
-         364FL6kxSSoBt6rX7KzN1fmVA5b1E0zxewnIHwnuYUX6HCbu3kz9hr7hq7bKsji4cM1E
-         pxYHLbnoyY/XV1xs3B0bi77FR2eho8X20pyXTqR+w5U5pOFzX3FukIBZ1ZdXqORqjQAy
-         wWn8/alzzugM54979MyrCX3DCcz75JPpd23WZNVJviv3mvzFnC6QEmAkYRE0RrDRFHrv
-         SPUw==
-In-Reply-To: <20210611030737.1984343-1-kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kir Kolyshkin <kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Fix many formatting issues by stop (ab)using itemized lists for
-everything (mostly replaced by definition lists).
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: cfeaa699186e2d5dfaca67184d734e44c13f51ee  Merge branch 'for-5.13-fixes' into for-next
 
-Signed-off-by: Kir Kolyshkin <kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+elapsed time: 727m
+
+configs tested: 187
+configs skipped: 3
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arm                         shannon_defconfig
+sh                          rsk7269_defconfig
+arm                       imx_v6_v7_defconfig
+arm                        mini2440_defconfig
+arm                        keystone_defconfig
+sh                          sdk7780_defconfig
+arc                    vdk_hs38_smp_defconfig
+arm                         vf610m4_defconfig
+powerpc                          allmodconfig
+m68k                           sun3_defconfig
+mips                        nlm_xlp_defconfig
+arm                  colibri_pxa300_defconfig
+arm                         bcm2835_defconfig
+arm                      tct_hammer_defconfig
+csky                             alldefconfig
+sparc                       sparc32_defconfig
+sh                              ul2_defconfig
+nds32                            alldefconfig
+powerpc                 mpc8313_rdb_defconfig
+arm                       aspeed_g5_defconfig
+arm                         s5pv210_defconfig
+mips                         tb0226_defconfig
+sh                          rsk7264_defconfig
+arm                           viper_defconfig
+powerpc                 mpc836x_mds_defconfig
+arm                        clps711x_defconfig
+sparc                            alldefconfig
+sh                   sh7770_generic_defconfig
+arm                          pxa910_defconfig
+sh                          lboxre2_defconfig
+arm                       mainstone_defconfig
+arm                           sama5_defconfig
+powerpc                 mpc832x_mds_defconfig
+mips                          rb532_defconfig
+xtensa                          iss_defconfig
+mips                           jazz_defconfig
+arm                          ep93xx_defconfig
+microblaze                      mmu_defconfig
+sh                  sh7785lcr_32bit_defconfig
+arm                        shmobile_defconfig
+arc                         haps_hs_defconfig
+ia64                        generic_defconfig
+powerpc                         wii_defconfig
+mips                        vocore2_defconfig
+arm                     davinci_all_defconfig
+powerpc                 mpc8560_ads_defconfig
+mips                           ip32_defconfig
+powerpc                     tqm8560_defconfig
+sh                          polaris_defconfig
+m68k                          sun3x_defconfig
+arm                      footbridge_defconfig
+arm                   milbeaut_m10v_defconfig
+ia64                             allmodconfig
+arc                                 defconfig
+xtensa                    xip_kc705_defconfig
+sparc                       sparc64_defconfig
+mips                         mpc30x_defconfig
+h8300                            alldefconfig
+sh                           se7721_defconfig
+sh                      rts7751r2d1_defconfig
+arm                         axm55xx_defconfig
+powerpc                      pasemi_defconfig
+powerpc                      makalu_defconfig
+h8300                     edosk2674_defconfig
+arm                         at91_dt_defconfig
+sh                               alldefconfig
+powerpc                 mpc8272_ads_defconfig
+h8300                               defconfig
+sh                           se7619_defconfig
+sh                         ap325rxa_defconfig
+powerpc                     asp8347_defconfig
+arm                        oxnas_v6_defconfig
+powerpc                    ge_imp3a_defconfig
+sh                          urquell_defconfig
+arm                          gemini_defconfig
+parisc                           alldefconfig
+mips                            gpr_defconfig
+nios2                               defconfig
+sh                           se7712_defconfig
+mips                      pistachio_defconfig
+arm                       spear13xx_defconfig
+sh                           se7780_defconfig
+powerpc                         ps3_defconfig
+arm                            mmp2_defconfig
+powerpc                     sequoia_defconfig
+arm                        mvebu_v7_defconfig
+alpha                               defconfig
+mips                         db1xxx_defconfig
+sh                               j2_defconfig
+powerpc                      pmac32_defconfig
+mips                         rt305x_defconfig
+powerpc                      tqm8xx_defconfig
+nios2                         3c120_defconfig
+powerpc                 mpc832x_rdb_defconfig
+sh                          r7780mp_defconfig
+powerpc                      walnut_defconfig
+arc                        nsimosci_defconfig
+powerpc                 linkstation_defconfig
+powerpc                    mvme5100_defconfig
+powerpc                   lite5200b_defconfig
+arm                      pxa255-idp_defconfig
+powerpc                      ppc44x_defconfig
+x86_64                            allnoconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                           allnoconfig
+i386                 randconfig-a002-20210610
+i386                 randconfig-a006-20210610
+i386                 randconfig-a004-20210610
+i386                 randconfig-a001-20210610
+i386                 randconfig-a005-20210610
+i386                 randconfig-a003-20210610
+x86_64               randconfig-a015-20210610
+x86_64               randconfig-a011-20210610
+x86_64               randconfig-a012-20210610
+x86_64               randconfig-a014-20210610
+x86_64               randconfig-a016-20210610
+x86_64               randconfig-a013-20210610
+i386                 randconfig-a015-20210610
+i386                 randconfig-a013-20210610
+i386                 randconfig-a016-20210610
+i386                 randconfig-a014-20210610
+i386                 randconfig-a012-20210610
+i386                 randconfig-a011-20210610
+i386                 randconfig-a015-20210608
+i386                 randconfig-a013-20210608
+i386                 randconfig-a016-20210608
+i386                 randconfig-a011-20210608
+i386                 randconfig-a012-20210608
+i386                 randconfig-a014-20210608
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+um                            kunit_defconfig
+x86_64                           allyesconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-a002-20210610
+x86_64               randconfig-a001-20210610
+x86_64               randconfig-a004-20210610
+x86_64               randconfig-a003-20210610
+x86_64               randconfig-a006-20210610
+x86_64               randconfig-a005-20210610
+x86_64               randconfig-a002-20210607
+x86_64               randconfig-a004-20210607
+x86_64               randconfig-a003-20210607
+x86_64               randconfig-a006-20210607
+x86_64               randconfig-a005-20210607
+x86_64               randconfig-a001-20210607
+
 ---
- .../cgroup-v1/blkio-controller.rst            | 130 +++++++++---------
- 1 file changed, 67 insertions(+), 63 deletions(-)
-
-diff --git a/Documentation/admin-guide/cgroup-v1/blkio-controller.rst b/Documentation/admin-guide/cgroup-v1/blkio-controller.rst
-index 36d43ae7dc13..8101dcba381d 100644
---- a/Documentation/admin-guide/cgroup-v1/blkio-controller.rst
-+++ b/Documentation/admin-guide/cgroup-v1/blkio-controller.rst
-@@ -17,36 +17,37 @@ level logical devices like device mapper.
- 
- HOWTO
- =====
-+
- Throttling/Upper Limit policy
- -----------------------------
--- Enable Block IO controller::
-+Enable Block IO controller::
- 
- 	CONFIG_BLK_CGROUP=y
- 
--- Enable throttling in block layer::
-+Enable throttling in block layer::
- 
- 	CONFIG_BLK_DEV_THROTTLING=y
- 
--- Mount blkio controller (see cgroups.txt, Why are cgroups needed?)::
-+Mount blkio controller (see cgroups.txt, Why are cgroups needed?)::
- 
-         mount -t cgroup -o blkio none /sys/fs/cgroup/blkio
- 
--- Specify a bandwidth rate on particular device for root group. The format
--  for policy is "<major>:<minor>  <bytes_per_second>"::
-+Specify a bandwidth rate on particular device for root group. The format
-+for policy is "<major>:<minor>  <bytes_per_second>"::
- 
-         echo "8:16  1048576" > /sys/fs/cgroup/blkio/blkio.throttle.read_bps_device
- 
--  Above will put a limit of 1MB/second on reads happening for root group
--  on device having major/minor number 8:16.
-+This will put a limit of 1MB/second on reads happening for root group
-+on device having major/minor number 8:16.
- 
--- Run dd to read a file and see if rate is throttled to 1MB/s or not::
-+Run dd to read a file and see if rate is throttled to 1MB/s or not::
- 
-         # dd iflag=direct if=/mnt/common/zerofile of=/dev/null bs=4K count=1024
-         1024+0 records in
-         1024+0 records out
-         4194304 bytes (4.2 MB) copied, 4.0001 s, 1.0 MB/s
- 
-- Limits for writes can be put using blkio.throttle.write_bps_device file.
-+Limits for writes can be put using blkio.throttle.write_bps_device file.
- 
- Hierarchical Cgroups
- ====================
-@@ -79,28 +80,31 @@ following::
- 
- Various user visible config options
- ===================================
--CONFIG_BLK_CGROUP
--	- Block IO controller.
- 
--CONFIG_BFQ_CGROUP_DEBUG
--	- Debug help. Right now some additional stats file show up in cgroup
-+  CONFIG_BLK_CGROUP
-+	  Block IO controller.
-+
-+  CONFIG_BFQ_CGROUP_DEBUG
-+	  Debug help. Right now some additional stats file show up in cgroup
- 	  if this option is enabled.
- 
--CONFIG_BLK_DEV_THROTTLING
--	- Enable block device throttling support in block layer.
-+  CONFIG_BLK_DEV_THROTTLING
-+	  Enable block device throttling support in block layer.
- 
- Details of cgroup files
- =======================
-+
- Proportional weight policy files
- --------------------------------
--- blkio.weight
--	- Specifies per cgroup weight. This is default weight of the group
-+
-+  blkio.weight
-+	  Specifies per cgroup weight. This is default weight of the group
- 	  on all the devices until and unless overridden by per device rule.
- 	  (See blkio.weight_device).
- 	  Currently allowed range of weights is from 10 to 1000.
- 
--- blkio.weight_device
--	- One can specify per cgroup per device rules using this interface.
-+  blkio.weight_device
-+	  One can specify per cgroup per device rules using this interface.
- 	  These rules override the default value of group weight as specified
- 	  by blkio.weight.
- 
-@@ -130,34 +134,34 @@ Proportional weight policy files
- 	    dev     weight
- 	    8:16    300
- 
--- blkio.time
--	- disk time allocated to cgroup per device in milliseconds. First
-+  blkio.time
-+	  Disk time allocated to cgroup per device in milliseconds. First
- 	  two fields specify the major and minor number of the device and
- 	  third field specifies the disk time allocated to group in
- 	  milliseconds.
- 
--- blkio.sectors
--	- number of sectors transferred to/from disk by the group. First
-+  blkio.sectors
-+	  Number of sectors transferred to/from disk by the group. First
- 	  two fields specify the major and minor number of the device and
- 	  third field specifies the number of sectors transferred by the
- 	  group to/from the device.
- 
--- blkio.io_service_bytes
--	- Number of bytes transferred to/from the disk by the group. These
-+  blkio.io_service_bytes
-+	  Number of bytes transferred to/from the disk by the group. These
- 	  are further divided by the type of operation - read or write, sync
- 	  or async. First two fields specify the major and minor number of the
- 	  device, third field specifies the operation type and the fourth field
- 	  specifies the number of bytes.
- 
--- blkio.io_serviced
--	- Number of IOs (bio) issued to the disk by the group. These
-+  blkio.io_serviced
-+	  Number of IOs (bio) issued to the disk by the group. These
- 	  are further divided by the type of operation - read or write, sync
- 	  or async. First two fields specify the major and minor number of the
- 	  device, third field specifies the operation type and the fourth field
- 	  specifies the number of IOs.
- 
--- blkio.io_service_time
--	- Total amount of time between request dispatch and request completion
-+  blkio.io_service_time
-+	  Total amount of time between request dispatch and request completion
- 	  for the IOs done by this cgroup. This is in nanoseconds to make it
- 	  meaningful for flash devices too. For devices with queue depth of 1,
- 	  this time represents the actual service time. When queue_depth > 1,
-@@ -170,8 +174,8 @@ Proportional weight policy files
- 	  specifies the operation type and the fourth field specifies the
- 	  io_service_time in ns.
- 
--- blkio.io_wait_time
--	- Total amount of time the IOs for this cgroup spent waiting in the
-+  blkio.io_wait_time
-+	  Total amount of time the IOs for this cgroup spent waiting in the
- 	  scheduler queues for service. This can be greater than the total time
- 	  elapsed since it is cumulative io_wait_time for all IOs. It is not a
- 	  measure of total time the cgroup spent waiting but rather a measure of
-@@ -185,24 +189,24 @@ Proportional weight policy files
- 	  minor number of the device, third field specifies the operation type
- 	  and the fourth field specifies the io_wait_time in ns.
- 
--- blkio.io_merged
--	- Total number of bios/requests merged into requests belonging to this
-+  blkio.io_merged
-+	  Total number of bios/requests merged into requests belonging to this
- 	  cgroup. This is further divided by the type of operation - read or
- 	  write, sync or async.
- 
--- blkio.io_queued
--	- Total number of requests queued up at any given instant for this
-+  blkio.io_queued
-+	  Total number of requests queued up at any given instant for this
- 	  cgroup. This is further divided by the type of operation - read or
- 	  write, sync or async.
- 
--- blkio.avg_queue_size
--	- Debugging aid only enabled if CONFIG_BFQ_CGROUP_DEBUG=y.
-+  blkio.avg_queue_size
-+	  Debugging aid only enabled if CONFIG_BFQ_CGROUP_DEBUG=y.
- 	  The average queue size for this cgroup over the entire time of this
- 	  cgroup's existence. Queue size samples are taken each time one of the
- 	  queues of this cgroup gets a timeslice.
- 
--- blkio.group_wait_time
--	- Debugging aid only enabled if CONFIG_BFQ_CGROUP_DEBUG=y.
-+  blkio.group_wait_time
-+	  Debugging aid only enabled if CONFIG_BFQ_CGROUP_DEBUG=y.
- 	  This is the amount of time the cgroup had to wait since it became busy
- 	  (i.e., went from 0 to 1 request queued) to get a timeslice for one of
- 	  its queues. This is different from the io_wait_time which is the
-@@ -212,8 +216,8 @@ Proportional weight policy files
- 	  will only report the group_wait_time accumulated till the last time it
- 	  got a timeslice and will not include the current delta.
- 
--- blkio.empty_time
--	- Debugging aid only enabled if CONFIG_BFQ_CGROUP_DEBUG=y.
-+  blkio.empty_time
-+	  Debugging aid only enabled if CONFIG_BFQ_CGROUP_DEBUG=y.
- 	  This is the amount of time a cgroup spends without any pending
- 	  requests when not being served, i.e., it does not include any time
- 	  spent idling for one of the queues of the cgroup. This is in
-@@ -221,8 +225,8 @@ Proportional weight policy files
- 	  the stat will only report the empty_time accumulated till the last
- 	  time it had a pending request and will not include the current delta.
- 
--- blkio.idle_time
--	- Debugging aid only enabled if CONFIG_BFQ_CGROUP_DEBUG=y.
-+  blkio.idle_time
-+	  Debugging aid only enabled if CONFIG_BFQ_CGROUP_DEBUG=y.
- 	  This is the amount of time spent by the IO scheduler idling for a
- 	  given cgroup in anticipation of a better request than the existing ones
- 	  from other queues/cgroups. This is in nanoseconds. If this is read
-@@ -230,60 +234,60 @@ Proportional weight policy files
- 	  idle_time accumulated till the last idle period and will not include
- 	  the current delta.
- 
--- blkio.dequeue
--	- Debugging aid only enabled if CONFIG_BFQ_CGROUP_DEBUG=y. This
-+  blkio.dequeue
-+	  Debugging aid only enabled if CONFIG_BFQ_CGROUP_DEBUG=y. This
- 	  gives the statistics about how many a times a group was dequeued
- 	  from service tree of the device. First two fields specify the major
- 	  and minor number of the device and third field specifies the number
- 	  of times a group was dequeued from a particular device.
- 
--- blkio.*_recursive
--	- Recursive version of various stats. These files show the
-+  blkio.*_recursive
-+	  Recursive version of various stats. These files show the
-           same information as their non-recursive counterparts but
-           include stats from all the descendant cgroups.
- 
- Throttling/Upper limit policy files
- -----------------------------------
--- blkio.throttle.read_bps_device
--	- Specifies upper limit on READ rate from the device. IO rate is
-+  blkio.throttle.read_bps_device
-+	  Specifies upper limit on READ rate from the device. IO rate is
- 	  specified in bytes per second. Rules are per device. Following is
- 	  the format::
- 
- 	    echo "<major>:<minor>  <rate_bytes_per_second>" > /cgrp/blkio.throttle.read_bps_device
- 
--- blkio.throttle.write_bps_device
--	- Specifies upper limit on WRITE rate to the device. IO rate is
-+  blkio.throttle.write_bps_device
-+	  Specifies upper limit on WRITE rate to the device. IO rate is
- 	  specified in bytes per second. Rules are per device. Following is
- 	  the format::
- 
- 	    echo "<major>:<minor>  <rate_bytes_per_second>" > /cgrp/blkio.throttle.write_bps_device
- 
--- blkio.throttle.read_iops_device
--	- Specifies upper limit on READ rate from the device. IO rate is
-+  blkio.throttle.read_iops_device
-+	  Specifies upper limit on READ rate from the device. IO rate is
- 	  specified in IO per second. Rules are per device. Following is
- 	  the format::
- 
- 	   echo "<major>:<minor>  <rate_io_per_second>" > /cgrp/blkio.throttle.read_iops_device
- 
--- blkio.throttle.write_iops_device
--	- Specifies upper limit on WRITE rate to the device. IO rate is
-+  blkio.throttle.write_iops_device
-+	  Specifies upper limit on WRITE rate to the device. IO rate is
- 	  specified in io per second. Rules are per device. Following is
- 	  the format::
- 
- 	    echo "<major>:<minor>  <rate_io_per_second>" > /cgrp/blkio.throttle.write_iops_device
- 
--Note: If both BW and IOPS rules are specified for a device, then IO is
--      subjected to both the constraints.
-+          Note: If both BW and IOPS rules are specified for a device, then IO is
-+          subjected to both the constraints.
- 
--- blkio.throttle.io_serviced
--	- Number of IOs (bio) issued to the disk by the group. These
-+  blkio.throttle.io_serviced
-+	  Number of IOs (bio) issued to the disk by the group. These
- 	  are further divided by the type of operation - read or write, sync
- 	  or async. First two fields specify the major and minor number of the
- 	  device, third field specifies the operation type and the fourth field
- 	  specifies the number of IOs.
- 
--- blkio.throttle.io_service_bytes
--	- Number of bytes transferred to/from the disk by the group. These
-+  blkio.throttle.io_service_bytes
-+	  Number of bytes transferred to/from the disk by the group. These
- 	  are further divided by the type of operation - read or write, sync
- 	  or async. First two fields specify the major and minor number of the
- 	  device, third field specifies the operation type and the fourth field
-@@ -291,6 +295,6 @@ Note: If both BW and IOPS rules are specified for a device, then IO is
- 
- Common files among various policies
- -----------------------------------
--- blkio.reset_stats
--	- Writing an int to this file will result in resetting all the stats
-+  blkio.reset_stats
-+	  Writing an int to this file will result in resetting all the stats
- 	  for that cgroup.
--- 
-2.31.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
