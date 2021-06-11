@@ -1,8 +1,8 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-next] BUILD SUCCESS
- cfeaa699186e2d5dfaca67184d734e44c13f51ee
-Date: Fri, 11 Jun 2021 11:42:17 +0800
-Message-ID: <60c2db99.jKTFOHMCvErQyLY5%lkp@intel.com>
+Subject: [cgroup:for-5.13-fixes] BUILD SUCCESS
+ b7e24eb1caa5f8da20d405d262dba67943aedc42
+Date: Fri, 11 Jun 2021 11:42:14 +0800
+Message-ID: <60c2db96.+hgqghdSolu141WT%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,12 +11,12 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: cfeaa699186e2d5dfaca67184d734e44c13f51ee  Merge branch 'for-5.13-fixes' into for-next
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.13-fixes
+branch HEAD: b7e24eb1caa5f8da20d405d262dba67943aedc42  cgroup1: don't allow '\n' in renaming
 
 elapsed time: 727m
 
-configs tested: 187
+configs tested: 189
 configs skipped: 3
 
 The following configs have been built successfully.
@@ -45,11 +45,6 @@ arm                      tct_hammer_defconfig
 csky                             alldefconfig
 sparc                       sparc32_defconfig
 sh                              ul2_defconfig
-nds32                            alldefconfig
-powerpc                 mpc8313_rdb_defconfig
-arm                       aspeed_g5_defconfig
-arm                         s5pv210_defconfig
-mips                         tb0226_defconfig
 sh                          rsk7264_defconfig
 arm                           viper_defconfig
 powerpc                 mpc836x_mds_defconfig
@@ -74,14 +69,13 @@ powerpc                         wii_defconfig
 mips                        vocore2_defconfig
 arm                     davinci_all_defconfig
 powerpc                 mpc8560_ads_defconfig
+arm                      pxa255-idp_defconfig
 mips                           ip32_defconfig
 powerpc                     tqm8560_defconfig
 sh                          polaris_defconfig
 m68k                          sun3x_defconfig
 arm                      footbridge_defconfig
 arm                   milbeaut_m10v_defconfig
-ia64                             allmodconfig
-arc                                 defconfig
 xtensa                    xip_kc705_defconfig
 sparc                       sparc64_defconfig
 mips                         mpc30x_defconfig
@@ -118,9 +112,16 @@ alpha                               defconfig
 mips                         db1xxx_defconfig
 sh                               j2_defconfig
 powerpc                      pmac32_defconfig
+arc                           tb10x_defconfig
+arm                          lpd270_defconfig
 mips                         rt305x_defconfig
 powerpc                      tqm8xx_defconfig
 nios2                         3c120_defconfig
+mips                     loongson2k_defconfig
+powerpc64                           defconfig
+m68k                        mvme16x_defconfig
+mips                       bmips_be_defconfig
+arm                            mps2_defconfig
 powerpc                 mpc832x_rdb_defconfig
 sh                          r7780mp_defconfig
 powerpc                      walnut_defconfig
@@ -128,9 +129,9 @@ arc                        nsimosci_defconfig
 powerpc                 linkstation_defconfig
 powerpc                    mvme5100_defconfig
 powerpc                   lite5200b_defconfig
-arm                      pxa255-idp_defconfig
 powerpc                      ppc44x_defconfig
 x86_64                            allnoconfig
+ia64                             allmodconfig
 ia64                                defconfig
 ia64                             allyesconfig
 m68k                             allmodconfig
@@ -144,6 +145,7 @@ csky                                defconfig
 alpha                            allyesconfig
 xtensa                           allyesconfig
 h8300                            allyesconfig
+arc                                 defconfig
 sh                               allmodconfig
 parisc                              defconfig
 s390                             allyesconfig
@@ -158,6 +160,12 @@ mips                             allyesconfig
 mips                             allmodconfig
 powerpc                          allyesconfig
 powerpc                           allnoconfig
+i386                 randconfig-a003-20210609
+i386                 randconfig-a006-20210609
+i386                 randconfig-a004-20210609
+i386                 randconfig-a001-20210609
+i386                 randconfig-a002-20210609
+i386                 randconfig-a005-20210609
 i386                 randconfig-a002-20210610
 i386                 randconfig-a006-20210610
 i386                 randconfig-a004-20210610
@@ -176,12 +184,6 @@ i386                 randconfig-a016-20210610
 i386                 randconfig-a014-20210610
 i386                 randconfig-a012-20210610
 i386                 randconfig-a011-20210610
-i386                 randconfig-a015-20210608
-i386                 randconfig-a013-20210608
-i386                 randconfig-a016-20210608
-i386                 randconfig-a011-20210608
-i386                 randconfig-a012-20210608
-i386                 randconfig-a014-20210608
 riscv                    nommu_k210_defconfig
 riscv                            allyesconfig
 riscv                    nommu_virt_defconfig
