@@ -1,220 +1,128 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-5.13-fixes] BUILD SUCCESS
- b7e24eb1caa5f8da20d405d262dba67943aedc42
-Date: Fri, 11 Jun 2021 11:42:14 +0800
-Message-ID: <60c2db96.+hgqghdSolu141WT%lkp@intel.com>
+From: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
+Subject: [PATCH v5] sched/fair: Correctly insert cfs_rq's to list on unthrottle
+Date: Sat, 12 Jun 2021 13:28:15 +0200
+Message-ID: <20210612112815.61678-1-odin@uged.al>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=uged.al; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=826uE2Kw+fTQSJLI8zdA2YaMxd3hohLsaAzT8wyrsVQ=;
+        b=eFusKu4DwR6m/lIazbGM17SldgdtK6zkE+iGNrh8Z9u2xqPxNAEU6/Y1nN9AUOBtsh
+         bGkiI6Ok+z1277Ojo0r4NIf6hfL38DBt5wrBc4ddPFi5nSyfyMXzTXOqIWrp+nbqMwah
+         asI0gfB3cJ3bFO/VUuVYwnG+GeNVHNTufGhCsMDmo6XAyPxY+woMnrz5H4KPmZyf2efS
+         Fcdo6aR0ZLSYQyySdDbfREyhFxALi4pyzvrauN5fCR9N3JT4p8aLsqyPn6fQq9byYnFL
+         V31rpeGRfkawTOtcwpeOG9Tu+/z/dinfh19f6lSHZ+low25TAp6PE8oH0sVt0Qexir6n
+         Huiw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.13-fixes
-branch HEAD: b7e24eb1caa5f8da20d405d262dba67943aedc42  cgroup1: don't allow '\n' in renaming
+This fixes an issue where fairness is decreased since cfs_rq's can
+end up not being decayed properly. For two sibling control groups with
+the same priority, this can often lead to a load ratio of 99/1 (!!).
 
-elapsed time: 727m
+This happen because when a cfs_rq is throttled, all the descendant cfs_rq's
+will be removed from the leaf list. When they initial cfs_rq is
+unthrottled, it will currently only re add descendant cfs_rq's if they
+have one or more entities enqueued. This is not a perfect heuristic.
 
-configs tested: 189
-configs skipped: 3
+Instead, we insert all cfs_rq's that contain one or more enqueued
+entities, or it its load is not completely decayed.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Can often lead to situations like this for equally weighted control
+groups:
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-arm                         shannon_defconfig
-sh                          rsk7269_defconfig
-arm                       imx_v6_v7_defconfig
-arm                        mini2440_defconfig
-arm                        keystone_defconfig
-sh                          sdk7780_defconfig
-arc                    vdk_hs38_smp_defconfig
-arm                         vf610m4_defconfig
-powerpc                          allmodconfig
-m68k                           sun3_defconfig
-mips                        nlm_xlp_defconfig
-arm                  colibri_pxa300_defconfig
-arm                         bcm2835_defconfig
-arm                      tct_hammer_defconfig
-csky                             alldefconfig
-sparc                       sparc32_defconfig
-sh                              ul2_defconfig
-sh                          rsk7264_defconfig
-arm                           viper_defconfig
-powerpc                 mpc836x_mds_defconfig
-arm                        clps711x_defconfig
-sparc                            alldefconfig
-sh                   sh7770_generic_defconfig
-arm                          pxa910_defconfig
-sh                          lboxre2_defconfig
-arm                       mainstone_defconfig
-arm                           sama5_defconfig
-powerpc                 mpc832x_mds_defconfig
-mips                          rb532_defconfig
-xtensa                          iss_defconfig
-mips                           jazz_defconfig
-arm                          ep93xx_defconfig
-microblaze                      mmu_defconfig
-sh                  sh7785lcr_32bit_defconfig
-arm                        shmobile_defconfig
-arc                         haps_hs_defconfig
-ia64                        generic_defconfig
-powerpc                         wii_defconfig
-mips                        vocore2_defconfig
-arm                     davinci_all_defconfig
-powerpc                 mpc8560_ads_defconfig
-arm                      pxa255-idp_defconfig
-mips                           ip32_defconfig
-powerpc                     tqm8560_defconfig
-sh                          polaris_defconfig
-m68k                          sun3x_defconfig
-arm                      footbridge_defconfig
-arm                   milbeaut_m10v_defconfig
-xtensa                    xip_kc705_defconfig
-sparc                       sparc64_defconfig
-mips                         mpc30x_defconfig
-h8300                            alldefconfig
-sh                           se7721_defconfig
-sh                      rts7751r2d1_defconfig
-arm                         axm55xx_defconfig
-powerpc                      pasemi_defconfig
-powerpc                      makalu_defconfig
-h8300                     edosk2674_defconfig
-arm                         at91_dt_defconfig
-sh                               alldefconfig
-powerpc                 mpc8272_ads_defconfig
-h8300                               defconfig
-sh                           se7619_defconfig
-sh                         ap325rxa_defconfig
-powerpc                     asp8347_defconfig
-arm                        oxnas_v6_defconfig
-powerpc                    ge_imp3a_defconfig
-sh                          urquell_defconfig
-arm                          gemini_defconfig
-parisc                           alldefconfig
-mips                            gpr_defconfig
-nios2                               defconfig
-sh                           se7712_defconfig
-mips                      pistachio_defconfig
-arm                       spear13xx_defconfig
-sh                           se7780_defconfig
-powerpc                         ps3_defconfig
-arm                            mmp2_defconfig
-powerpc                     sequoia_defconfig
-arm                        mvebu_v7_defconfig
-alpha                               defconfig
-mips                         db1xxx_defconfig
-sh                               j2_defconfig
-powerpc                      pmac32_defconfig
-arc                           tb10x_defconfig
-arm                          lpd270_defconfig
-mips                         rt305x_defconfig
-powerpc                      tqm8xx_defconfig
-nios2                         3c120_defconfig
-mips                     loongson2k_defconfig
-powerpc64                           defconfig
-m68k                        mvme16x_defconfig
-mips                       bmips_be_defconfig
-arm                            mps2_defconfig
-powerpc                 mpc832x_rdb_defconfig
-sh                          r7780mp_defconfig
-powerpc                      walnut_defconfig
-arc                        nsimosci_defconfig
-powerpc                 linkstation_defconfig
-powerpc                    mvme5100_defconfig
-powerpc                   lite5200b_defconfig
-powerpc                      ppc44x_defconfig
-x86_64                            allnoconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                           allnoconfig
-i386                 randconfig-a003-20210609
-i386                 randconfig-a006-20210609
-i386                 randconfig-a004-20210609
-i386                 randconfig-a001-20210609
-i386                 randconfig-a002-20210609
-i386                 randconfig-a005-20210609
-i386                 randconfig-a002-20210610
-i386                 randconfig-a006-20210610
-i386                 randconfig-a004-20210610
-i386                 randconfig-a001-20210610
-i386                 randconfig-a005-20210610
-i386                 randconfig-a003-20210610
-x86_64               randconfig-a015-20210610
-x86_64               randconfig-a011-20210610
-x86_64               randconfig-a012-20210610
-x86_64               randconfig-a014-20210610
-x86_64               randconfig-a016-20210610
-x86_64               randconfig-a013-20210610
-i386                 randconfig-a015-20210610
-i386                 randconfig-a013-20210610
-i386                 randconfig-a016-20210610
-i386                 randconfig-a014-20210610
-i386                 randconfig-a012-20210610
-i386                 randconfig-a011-20210610
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-um                           x86_64_defconfig
-um                             i386_defconfig
-um                            kunit_defconfig
-x86_64                           allyesconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
+$ ps u -C stress
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root       10009 88.8  0.0   3676   100 pts/1    R+   11:04   0:13 stress --cpu 1
+root       10023  3.0  0.0   3676   104 pts/1    R+   11:04   0:00 stress --cpu 1
 
-clang tested configs:
-x86_64               randconfig-a002-20210610
-x86_64               randconfig-a001-20210610
-x86_64               randconfig-a004-20210610
-x86_64               randconfig-a003-20210610
-x86_64               randconfig-a006-20210610
-x86_64               randconfig-a005-20210610
-x86_64               randconfig-a002-20210607
-x86_64               randconfig-a004-20210607
-x86_64               randconfig-a003-20210607
-x86_64               randconfig-a006-20210607
-x86_64               randconfig-a005-20210607
-x86_64               randconfig-a001-20210607
-
+Fixes: 31bc6aeaab1d ("sched/fair: Optimize update_blocked_averages()")
+Signed-off-by: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Changes since v1:
+ - Replaced cfs_rq field with using tg_load_avg_contrib
+ - Went from 3 to 1 patches; one is merged and one is replaced
+   by a new patchset.
+Changes since v2:
+ - Use !cfs_rq_is_decayed() instead of tg_load_avg_contrib
+ - Moved cfs_rq_is_decayed to above its new use
+Changes since v3:
+ - (hopefully) Fix config for !CONFIG_SMP
+Changes since v4:
+ - Move cfs_rq_is_decayed again
+
+ kernel/sched/fair.c | 39 ++++++++++++++++++++-------------------
+ 1 file changed, 20 insertions(+), 19 deletions(-)
+
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 794c2cb945f8..c48d1d409b20 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -3283,6 +3283,24 @@ static inline void cfs_rq_util_change(struct cfs_rq *cfs_rq, int flags)
+ 
+ #ifdef CONFIG_SMP
+ #ifdef CONFIG_FAIR_GROUP_SCHED
++
++static inline bool cfs_rq_is_decayed(struct cfs_rq *cfs_rq)
++{
++	if (cfs_rq->load.weight)
++		return false;
++
++	if (cfs_rq->avg.load_sum)
++		return false;
++
++	if (cfs_rq->avg.util_sum)
++		return false;
++
++	if (cfs_rq->avg.runnable_sum)
++		return false;
++
++	return true;
++}
++
+ /**
+  * update_tg_load_avg - update the tg's load avg
+  * @cfs_rq: the cfs_rq whose avg changed
+@@ -4719,8 +4737,8 @@ static int tg_unthrottle_up(struct task_group *tg, void *data)
+ 		cfs_rq->throttled_clock_task_time += rq_clock_task(rq) -
+ 					     cfs_rq->throttled_clock_task;
+ 
+-		/* Add cfs_rq with already running entity in the list */
+-		if (cfs_rq->nr_running >= 1)
++		/* Add cfs_rq with load or one or more already running entities to the list */
++		if (!cfs_rq_is_decayed(cfs_rq) || cfs_rq->nr_running)
+ 			list_add_leaf_cfs_rq(cfs_rq);
+ 	}
+ 
+@@ -7895,23 +7913,6 @@ static bool __update_blocked_others(struct rq *rq, bool *done)
+ 
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+ 
+-static inline bool cfs_rq_is_decayed(struct cfs_rq *cfs_rq)
+-{
+-	if (cfs_rq->load.weight)
+-		return false;
+-
+-	if (cfs_rq->avg.load_sum)
+-		return false;
+-
+-	if (cfs_rq->avg.util_sum)
+-		return false;
+-
+-	if (cfs_rq->avg.runnable_sum)
+-		return false;
+-
+-	return true;
+-}
+-
+ static bool __update_blocked_fair(struct rq *rq, bool *done)
+ {
+ 	struct cfs_rq *cfs_rq, *pos;
+-- 
+2.31.1
+
