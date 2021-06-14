@@ -1,57 +1,91 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/4] cgroup/cpuset: Allow cpuset to bound displayed cpu
- info
-Date: Mon, 14 Jun 2021 16:43:28 -0400
-Message-ID: <YMe/cGV4JPbzFRk0@slm.duckdns.org>
-References: <20210614152306.25668-1-longman@redhat.com>
+From: Kir Kolyshkin <kolyshkin@gmail.com>
+Subject: [PATCH v2] docs: block/bfq: describe per-device weight
+Date: Mon, 14 Jun 2021 14:01:38 -0700
+Message-ID: <20210614210137.204155-1-kolyshkin@gmail.com>
+References: <8735tlbbml.fsf@meer.lwn.net>
 Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=212ymYp7XEu+lKWxduC+83kiaUY3pqkgv+9qi3641iU=;
-        b=ixpntEdyk4n4XpQDDgnK92G2u3+1O1Oz3Fhqal4MiqoQVAoZmarGQIzc1x7iSob77H
-         vNzXG5bd7M3JsZPRBHsXNtIVpqpYxAYq+61TxPuyQ2oIhCrqzlXqISfPCgYra4nCNfqe
-         3ZOn/WS3+/CArQyHi0AV2aVcy9uk70efLQEPWgAhEPlRauDD66xs/Y6hQMIJHKL/WPub
-         zDUT31VW3Eg+meHPP+2TiyzfeRmRBuu7np35feeIqu4XIlmy8etcfa3bgsE6fdmv2EjM
-         i/k4a2r3HqU8po5AySg1+/Ss7DP0P4H6lFmsNslpuivserxT92ZaxeqvB0U+0s1x8iJv
-         qtBw==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <20210614152306.25668-1-longman@redhat.com>
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=2Rtw5MlcGm2N9I0P0R9oyIB7YsHFMJaGufsNXGeoAHQ=;
+        b=RayZuXENOAZnm24AQT0DNbpM6rBhKla7akSUfMcirF4R7gibXGuEBq42JYYqFNRp0W
+         2/FqT+A1bG+PM4Z8A7M8Tm+NfzZtarGac17BqpelaVOAGYA0jhEb0wJzgEXDrcQyTpaH
+         H89WH1mXOvrH/t0OSv/LwChGa1eYFM94Ni8qWSPDwHYvvLhEJJqvC4kKV/IrClTnjOf8
+         Kua/6RtnEeTxG52d+yL+jiyjsOURY1HmkpxhSZJDeArstjPrYDF9p6icm764G+ixFBSt
+         31IyOSnzFZJuRbHRPsaYoFI0qQbrVtZM3iZiNoz39qS7Tjd8V4j438kku+Jw5iZ2MKmr
+         wmZw==
+In-Reply-To: <8735tlbbml.fsf@meer.lwn.net>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, "H. Peter Anvin <hpa@zytor.com>, Greg Kroah-Hartman
-        <gregkh@linuxfoundation.org>, Rafael J. Wysocki " <rafael@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Iurii Zaikin <yzaikin@google.com>, x86@kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org
+Cc: tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org, cgroups@vger.kernel.org, Kir Kolyshkin <kolyshkin@gmail.com>
 
-Hello,
+The functionality of setting per-device weight for BFQ was added
+in v5.4 (commit 795fe54c2a828099), but the documentation was never
+updated.
 
-On Mon, Jun 14, 2021 at 11:23:02AM -0400, Waiman Long wrote:
-> The current container management system is able to create the illusion
-> that applications running within a container have limited resources and
-> devices available for their use. However, one thing that is hard to hide
-> is the number of CPUs available in the system. In fact, the container
-> developers are asking for the kernel to provide such capability.
-> 
-> There are two places where cpu information are available for the
-> applications to see - /proc/cpuinfo and /sys/devices/system/cpu sysfs
-> directory.
-> 
-> This patchset introduces a new sysctl parameter cpuset_bound_cpuinfo
-> which, when set, will limit the amount of information disclosed by
-> /proc/cpuinfo and /sys/devices/system/cpu.
+While at it, improve formatting a bit.
 
-The goal of cgroup has never been masquerading system information so that
-applications can pretend that they own the whole system and the proposed
-solution requires application changes anyway. The information being provided
-is useful but please do so within the usual cgroup interface - e.g.
-cpuset.stat. The applications (or libraries) that want to determine its
-confined CPU availability can locate the file through /proc/self/cgroup.
+Signed-off-by: Kir Kolyshkin <kolyshkin@gmail.com>
+---
+ Documentation/block/bfq-iosched.rst | 38 ++++++++++++++++++++---------
+ 1 file changed, 27 insertions(+), 11 deletions(-)
 
-Thanks.
-
+diff --git a/Documentation/block/bfq-iosched.rst b/Documentation/block/bfq-iosched.rst
+index 66c5a4e54130..7200152c461e 100644
+--- a/Documentation/block/bfq-iosched.rst
++++ b/Documentation/block/bfq-iosched.rst
+@@ -553,20 +553,36 @@ throughput sustainable with bfq, because updating the blkio.bfq.*
+ stats is rather costly, especially for some of the stats enabled by
+ CONFIG_BFQ_CGROUP_DEBUG.
+ 
+-Parameters to set
+------------------
++Parameters
++----------
+ 
+-For each group, there is only the following parameter to set.
++For each group, the following parameters cat be set:
+ 
+-weight (namely blkio.bfq.weight or io.bfq-weight): the weight of the
+-group inside its parent. Available values: 1..1000 (default 100). The
+-linear mapping between ioprio and weights, described at the beginning
+-of the tunable section, is still valid, but all weights higher than
+-IOPRIO_BE_NR*10 are mapped to ioprio 0.
++  weight
++        This specifies the default weight for the cgroup inside its parent.
++        Available values: 1..1000 (default: 100).
+ 
+-Recall that, if low-latency is set, then BFQ automatically raises the
+-weight of the queues associated with interactive and soft real-time
+-applications. Unset this tunable if you need/want to control weights.
++        For cgroup v1, it is set by writing the value to `blkio.bfq.weight`.
++
++        For cgroup v2, it is set by writing the value to `io.bfq.weight`.
++        (with an optional prefix of `default` and a space).
++
++        The linear mapping between ioprio and weights, described at the beginning
++        of the tunable section, is still valid, but all weights higher than
++        IOPRIO_BE_NR*10 are mapped to ioprio 0.
++
++        Recall that, if low-latency is set, then BFQ automatically raises the
++        weight of the queues associated with interactive and soft real-time
++        applications. Unset this tunable if you need/want to control weights.
++
++  weight_device
++        This specifies a per-device weight for the cgroup. The syntax is
++        `minor:major weight`. A weight of `0` may be used to reset to the default
++        weight.
++
++        For cgroup v1, it is set by writing the value to `blkio.bfq.weight_device`.
++
++        For cgroup v2, the file name is `io.bfq.weight`.
+ 
+ 
+ [1]
 -- 
-tejun
+2.31.1
+
