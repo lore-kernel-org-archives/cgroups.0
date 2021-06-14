@@ -1,60 +1,91 @@
-From: Ronny Meeus <ronny.meeus-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Short process stall after assigning it to a cgroup
-Date: Mon, 14 Jun 2021 17:29:35 +0200
-Message-ID: <CAMJ=MEegYBi_G=_nk1jaJh-dtJj59EFs6ehCwP5qSBqEKseQ-Q@mail.gmail.com>
+From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCH 4/4] driver core: Allow showing cpu as offline if not
+ valid in cpuset context
+Date: Mon, 14 Jun 2021 17:52:28 +0200
+Message-ID: <YMd7PEU0KPulsgMz@kroah.com>
+References: <20210614152306.25668-1-longman@redhat.com>
+ <20210614152306.25668-5-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=bNme+EzHVzrIQEXwYwbnMcehdQ/ZaTsor5me0kGBI+A=;
-        b=NFSC8hXLt1UmmA/yEyGFseJidXegBmq+NZ1BAg51wCEhbt0II8ZiQJ7Hzdz9go8FTH
-         NpLqfJX2qL3XCZLJzAq6VacSqe/Y03/2x8Ah+7Lp7n7wZmUgWyA7r/dMcyGq2SeO+67R
-         2WN62J/Bdx/CNxOvPDRuuQ2fdUQDuRm3YH1lGQP+Or4Gg+0lKYpALATDdu6vW/O1PflW
-         tRpOkmvwkJR9TicaaFYpjXLr3ivh8HapLJToWvTarG+yjI2c2blLNy8+jOs4DeWna9jn
-         l91YIPY7iBP7PC1FZO/XHSOZcCnA/Xl49xGiEGtZDDrmVwC0lTmgfw3HCKvg7vq5gl35
-         Qk7w==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1623685950;
+        bh=trCbMGPAbt9/hzrWlV6LYuE+SaIgEDWh+DuiywOoDhw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=1BXHD7aM5xf8LRFVUUHxCZ+Yl93ZkZLcH9KouwmBEbG/fCvejrJXDiOYN0Js5XS8k
+         8TSvta5Pm1Po7SmLwZ4YqKncEIcqI9CPnPZFqhyjRpq9PRPWzHmdwLp460+PGcldi9
+         pwUibem6vahztLNFxVphy+pMq5W1O681ZGxp+Bbg=
+Content-Disposition: inline
+In-Reply-To: <20210614152306.25668-5-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, "H. Peter Anvin <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Greg Kroah-Hartman
+        <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Rafael J. Wysocki " <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Iurii Zaikin <yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello
+On Mon, Jun 14, 2021 at 11:23:06AM -0400, Waiman Long wrote:
+> Make /sys/devices/system/cpu/cpu<n>/online file to show a cpu as
+> offline if it is not a valid cpu in a proper cpuset context when the
+> cpuset_bound_cpuinfo sysctl parameter is turned on.
 
-I want to use cgroups to control my heavy cpuload consuming applications.
-All apps are running in the realtime domain and I'm using kernel 4.9
-and cgroup v1.
+This says _what_ you are doing, but I do not understand _why_ you want
+to do this.
 
-I created a small application that monitors the CPU load (by reading
-the /proc filesystem) and when it enters a full load condition, I
-dynamically start to put the high consuming processes into a cgroup
-(which were created during system start-up). Each process will have
-it's own cgroup created under the root-cgroup.
+What is going to use this information?  And now you are showing more
+files than you previously did, so what userspace tool is now going to
+break?
 
-The budget I assign to the process is equal to the budget it has
-consumed in the previous measurement interval (for example 5s). As
-long as the load continues to be high, I start to gradually reduce the
-budget of the cgroup until the system is idle enough.
 
-This works reasonably well, but in some cases I see that a very high
-load consuming application is stopped completely at the moment it is
-put in a cgroup, although the budget allocated to it is correctly
-calculated based on the load it consumed in my previous interval.
 
-An example:
-- cpu.rt_period_us = 1000000
-- cpu.rt_runtime_us = 400000
-I would assume that an application put in a cgroup with this
-configuration can consume 40% of the CPU and it actually does. But
-sometimes, immediately after the process assignment, it stops for a
-short period (something like 1 or 2s) and then starts to consume 40%
-again.
+> 
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>  drivers/base/core.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> index 54ba506e5a89..176b927fade2 100644
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
+> @@ -29,6 +29,7 @@
+>  #include <linux/sched/mm.h>
+>  #include <linux/sysfs.h>
+>  #include <linux/dma-map-ops.h> /* for dma_default_coherent */
+> +#include <linux/cpuset.h>
+>  
+>  #include "base.h"
+>  #include "power/power.h"
+> @@ -2378,11 +2379,24 @@ static ssize_t uevent_store(struct device *dev, struct device_attribute *attr,
+>  }
+>  static DEVICE_ATTR_RW(uevent);
+>  
+> +static bool is_device_cpu(struct device *dev)
+> +{
+> +	return dev->bus && dev->bus->dev_name
+> +			&& !strcmp(dev->bus->dev_name, "cpu");
+> +}
 
-Is that expected behavior?
+No, this is not ok, there is a reason we did not put RTTI in struct
+devices, so don't try to fake one here please.
 
-It looks like the "budget" it has consumed in the root-cgroup is taken
-into account when it is moved to its own group and this results in the
-stall.
+> +
+>  static ssize_t online_show(struct device *dev, struct device_attribute *attr,
+>  			   char *buf)
+>  {
+>  	bool val;
+>  
+> +	/*
+> +	 * Show a cpu as offline if the cpu number is not valid in a
+> +	 * proper cpuset bounding cpuinfo context.
+> +	 */
+> +	if (is_device_cpu(dev) && !cpuset_current_cpu_valid(dev->id))
+> +		return sysfs_emit(buf, "0\n");
 
-Best regards,
-Ronny
+Why are you changing the driver core for a single random, tiny set of
+devices?  The device code for those devices can handle this just fine,
+do NOT modify the driver core for each individual driver type, that way
+lies madness.
+
+This change is not ok, sorry.
+
+greg k-h
