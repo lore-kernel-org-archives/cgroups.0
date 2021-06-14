@@ -1,52 +1,44 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 4/4] driver core: Allow showing cpu as offline if not
- valid in cpuset context
-Date: Mon, 14 Jun 2021 19:00:53 +0200
-Message-ID: <YMeLRfBNX00SAUqs@kroah.com>
-References: <20210614152306.25668-1-longman@redhat.com>
- <20210614152306.25668-5-longman@redhat.com>
- <YMd7PEU0KPulsgMz@kroah.com>
- <ad33a662-7ebe-fb92-4459-5dd85a013501@redhat.com>
+From: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3] cpu/hotplug: wait for cpuset_hotplug_work to finish on
+ cpu onlining
+Date: Mon, 14 Jun 2021 19:14:48 +0100
+Message-ID: <CAFBcO+9wLjDW6n-ZSean_UQHSJ44Tpw9XBz-3UMoVCeUridj4Q@mail.gmail.com>
+References: <20210317003616.2817418-1-aklimov@redhat.com> <87tuowcnv3.ffs@nanos.tec.linutronix.de>
+ <CALW4P+L9_tYgfOPv0riWWnv54HPhKPDJ4EK4yYaWsz0MdDGqfw@mail.gmail.com> <CAFBcO+8NBZxNdXtVuTXt9_m9gWTq7kxrcDcdFntvVjR_0rM13A@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1623690056;
-        bh=7iMl6YWN5AAOYzZBpWX/eEVFpy+IzMJ9khgpokIOPyw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HpBtaTRL2kH+P7hq4lH5uSTVhat+kchmH3KHZkk8D09fXytlYCzjwbp6qo0EqqfeS
-         P74Orzf4PorJCN+DwYaNasW9xG2oBIF1FPYyfNQCAB1mUNngHKqx8mCXS+aps/KMFz
-         6oklC/0YoJwkpZDQTFB6FbKp1EWHG0wwR3YN+xNc=
-Content-Disposition: inline
-In-Reply-To: <ad33a662-7ebe-fb92-4459-5dd85a013501@redhat.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1623694503;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=XoLLCXJLmHm9xP9JVi6L/4crsU3Bp6fWjhRZ5/p958Y=;
+        b=NvqhF2j4hVetN7H5/8FCaawGOlj264250DN3QfNc+OvVrbxElRLNEHRlrJfNqMSQFavTf6
+        MTHX4AuTr3gi4M1faiiiOF2wywk0YutUie6zccuQgf8kRtT8tg7ambG3zP8GILBmjViWjK
+        mwRS7PcT95/Kxh4JEaZU8F1XB+tTS80=
+In-Reply-To: <CAFBcO+8NBZxNdXtVuTXt9_m9gWTq7kxrcDcdFntvVjR_0rM13A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <llong@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, "H. Peter Anvin" <hpa@zytor.com>, "Rafael J. Wysocki" <rafael@kernel.org>, Luis Chamberlain <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Iurii Zaikin <yzaikin@google.com>, x86@kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yury Norov <yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Joshua Baker <jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Alexey Klimov <klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Mon, Jun 14, 2021 at 12:32:01PM -0400, Waiman Long wrote:
-> On 6/14/21 11:52 AM, Greg KH wrote:
-> > On Mon, Jun 14, 2021 at 11:23:06AM -0400, Waiman Long wrote:
-> > > Make /sys/devices/system/cpu/cpu<n>/online file to show a cpu as
-> > > offline if it is not a valid cpu in a proper cpuset context when the
-> > > cpuset_bound_cpuinfo sysctl parameter is turned on.
-> > This says _what_ you are doing, but I do not understand _why_ you want
-> > to do this.
-> > 
-> > What is going to use this information?  And now you are showing more
-> > files than you previously did, so what userspace tool is now going to
-> > break?
-> 
-> One reason that is provided by the customer asking for this functionality is
-> because some applications use the number of cpu cores for licensing purpose.
-> Even though the applications are running in a container with a smaller set
-> of cpus, they may still charge as if all the cpus are available. They ended
-> up using a bind mount to mount over the cpuX/online file.
+Thomas,
+Just gentle ping.
 
-Great, then stick with the bind mount for foolish things like that.
+On Thu, Apr 15, 2021 at 2:30 AM Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> On Sun, Apr 4, 2021 at 3:32 AM Alexey Klimov <klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> >
+> > On Sat, Mar 27, 2021 at 9:01 PM Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org> wrote:
 
-There's no technical reason for doing this then, just marketing?
+[...]
 
-thanks,
+> Are you going to submit the patch? Or I can do it on your behalf if you like.
 
-greg k-h
+Are you going to send out this to lkml as a separate patch or do you
+want me to do this on your behalf?
+
+Best regards,
+Alexey
+
