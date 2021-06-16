@@ -1,89 +1,56 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 2/2] memcg: periodically flush the memcg stats
-Date: Tue, 15 Jun 2021 14:52:37 -0700
-Message-ID: <CALvZod6Hpema0uMcnMGPS+_2iZuxc8JqkjHRVBeEGp-vdcpPYA@mail.gmail.com>
-References: <20210615174435.4174364-1-shakeelb@google.com> <20210615174435.4174364-2-shakeelb@google.com>
- <YMj/s26uF+cQOB2D@cmpxchg.org>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v1] proc: Implement /proc/self/meminfo
+Date: Tue, 15 Jun 2021 18:09:49 -0700
+Message-ID: <CALvZod7po_fK9JpcUNVrN6PyyP9k=hdcyRfZmHjSVE5r_8Laqw@mail.gmail.com>
+References: <ac070cd90c0d45b7a554366f235262fa5c566435.1622716926.git.legion@kernel.org>
+ <20210615113222.edzkaqfvrris4nth@wittgenstein> <20210615124715.nzd5we5tl7xc2n2p@example.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=0XQnzVjTuP7aBILPyoyVQYQXqE/KQql4/BGG/kkVsjE=;
-        b=gGfsNADVzHheLJtshFSvaD/DGD7MMjGpXn9cuW+cqCUX2Xd2zmn5p3v+yDXFjhYjtK
-         PDLnOr1KKcT1OLCV6DmMntBGhrfUy0fxFML9PTdLQwix8Sd1hhPKRkJq6T0G7E4Ih+NA
-         bygB5L8TqSiTWvrpf2PeCWl4nP29lwEvs0p8hAUMjE225soFkN2+WNABhSNuB+euV8Q/
-         HSj4o5EqiwXTsqhpK8SRG3q2fz0JovM5ppq9RUlGel+tygTg+OEql0sia8kFjIp7n0lC
-         rSEFJnNMUDNnbVoVZyuQrRWa9O1SgCOtrk9ljun/mmLILGGgE16kacXSjSAUEPM4K2jZ
-         iBoQ==
-In-Reply-To: <YMj/s26uF+cQOB2D-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        bh=WkZWfoezrzK3YqSvjNFpximYFS+zPFkT6j8u2nQEHxw=;
+        b=dnZC354fu9ggFFPybBFkrAKpJ+prc+VjiMY0E47wXoZTl70lO0k7nYMjJU+ZV3XOnM
+         cSojlxv0PEOIvvodP7EyyNVyBIDb6VpotqSOH8P7zgKeN99TPu2eM8jtTC5q9GkVMOOm
+         b8n1LUck5mzKRNIURbRp1PAEmcfLJJ6Oofoato99TY3lGZHKhH5BKFQ7LpvdQaSiY3ks
+         8XqJgWXCw95vBde+156oMa/0O8Vezdj3dFRqsmV65VcAY4q1g4/XaEXHKGuGGv4cDCk7
+         k59WzkDTvJnW4oE/NZKDqIjt26ezzGMMFYRpxTy8HV6zFdzzlgpdJBhwNO3hKG5oBQ2q
+         Zfxg==
+In-Reply-To: <20210615124715.nzd5we5tl7xc2n2p@example.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Alexey Gladkov <legion@kernel.org>
+Cc: Christian Brauner <christian.brauner@ubuntu.com>, LKML <linux-kernel@vger.kernel.org>, Linux Containers <containers@lists.linux.dev>, Linux Containers <containers@lists.linux-foundation.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, "Eric W . Biederman" <ebiederm@xmission.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Chris Down <chris@chrisdown.name>, Cgroups <cgroups@vger.kernel.org>
 
-On Tue, Jun 15, 2021 at 12:29 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+On Tue, Jun 15, 2021 at 5:47 AM Alexey Gladkov <legion@kernel.org> wrote:
 >
-> Hey Shakeel,
+[...]
 >
-> On Tue, Jun 15, 2021 at 10:44:35AM -0700, Shakeel Butt wrote:
-> > At the moment memcg stats are read in four contexts:
-> >
-> > 1. memcg stat user interfaces
-> > 2. dirty throttling
-> > 3. page fault
-> > 4. memory reclaim
-> >
-> > Currently the kernel flushes the stats for first two cases. Flushing the
-> > stats for remaining two casese may have performance impact. Always
-> > flushing the memcg stats on the page fault code path may negatively
-> > impacts the performance of the applications. In addition flushing in the
-> > memory reclaim code path, though treated as slowpath, can become the
-> > source of contention for the global lock taken for stat flushing because
-> > when system or memcg is under memory pressure, many tasks may enter the
-> > reclaim path.
-> >
-> > Instead of synchronously flushing the stats, this patch adds support of
-> > asynchronous periodic flushing of the memcg stats. For now the flushing
-> > period is hardcoded to 2*HZ but that can be changed later through maybe
-> > sysctl if need arise.
+> I made the second version of the patch [1], but then I had a conversation
+> with Eric W. Biederman offlist. He convinced me that it is a bad idea to
+> change all the values in meminfo to accommodate cgroups. But we agreed
+> that MemAvailable in /proc/meminfo should respect cgroups limits. This
+> field was created to hide implementation details when calculating
+> available memory. You can see that it is quite widely used [2].
+> So I want to try to move in that direction.
 >
-> I'm concerned that quite a lot can happen in terms of reclaim and page
-> faults in 2 seconds. It's conceivable that the error of a fixed 2s
-> flush can actually exceed the error of a fixed percpu batch size.
+> [1] https://git.kernel.org/pub/scm/linux/kernel/git/legion/linux.git/log/?h=patchset/meminfo/v2.0
+> [2] https://codesearch.debian.net/search?q=MemAvailable%3A
 >
 
-Yes, that is possible.
+Please see following two links on the previous discussion on having
+per-memcg MemAvailable stat.
 
-> The way the global vmstat implementation manages error is doing both:
-> ratelimiting and timelimiting. It uses percpu batching to limit the
-> error when it gets busy, and periodic flushing to limit the length of
-> time consumers of those stats could be stuck trying to reach a state
-> that the batching would otherwise prevent from being reflected.
->
-> Maybe we can use a combination of ratelimiting and timelimiting too?
->
-> We shouldn't flush on every fault, but what about a percpu ratelimit
-> that would at least bound the error to NR_CPU instead of nr_cgroups?
->
+[1] https://lore.kernel.org/linux-mm/alpine.DEB.2.22.394.2006281445210.855265@chino.kir.corp.google.com/
+[2] https://lore.kernel.org/linux-mm/alpine.DEB.2.23.453.2007142018150.2667860@chino.kir.corp.google.com/
 
-Couple questions here:
+MemAvailable itself is an imprecise metric and involving memcg makes
+this metric even more weird. The difference of semantics of swap
+accounting of v1 and v2 is one source of this weirdness (I have not
+checked your patch if it is handling this weirdness). The lazyfree and
+deferred split pages are another source.
 
-First, to convert the error bound to NR_CPU from nr_cgroups, I think
-we have to move from (delta > threshold) comparison to
-(num_update_events > threshold). Previously an increment event
-followed by decrement would keep the delta to 0 (or same) but after
-this change num_update_events would be 2. Is that ok?
-
-Second, do we want to synchronously flush the stats when we cross the
-threshold on update or asynchronously by queuing the flush with zero
-delay?
-
-> For thundering herds during reclaim: as long as they all tried to
-> flush from the root, only one of them would actually need to do the
-> work, and we could use trylock. If the lock is already taken, you can
-> move on knowing that somebody is already doing the shared flush work.
-
-Yes, this makes sense.
+So, I am not sure if complicating an already imprecise metric will
+make it more useful.
