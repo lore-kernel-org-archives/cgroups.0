@@ -1,26 +1,26 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/5] cgroup/cpuset: Don't call validate_change() for some
- flag changes
-Date: Wed, 16 Jun 2021 16:39:32 -0400
-Message-ID: <YMphhLAzmRRyD+cm@slm.duckdns.org>
+Subject: Re: [PATCH 2/5] cgroup/cpuset: Add new cpus.partition type with no
+ load balancing
+Date: Wed, 16 Jun 2021 16:47:40 -0400
+Message-ID: <YMpjbCWpSDIz4bHt@slm.duckdns.org>
 References: <20210603212416.25934-1-longman@redhat.com>
- <20210603212416.25934-2-longman@redhat.com>
+ <20210603212416.25934-3-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=w2FBfLaBcwWiXuuQkiw+TKxNhLLyk0+UoFjg+2c9KWs=;
-        b=BqBhOjMwogf4k3blz8IAL4WznI6LikA5MM6wtvdt54OjlMTQ/hGLAM476ovh8+O353
-         rcDqAUKKfNsblRHU2SVTlhQwfloN8u0hu+w0LiTH+Tia01Gkw4fSBkLWyNLyJfM+n4oL
-         fXL0blwAjsHNAx6D/kmfSebvzy5pTvr1zwUiheCDJmbSiGGiavFdxKJDZQb2GMcmyVEc
-         h8SWGqakfPRb8QUBkKTK0rTCq6vaXPkrjWvudCqX3OWKPJI6qJuX/Rxo093xzbXye5yS
-         RKxsZlzvsABLEIvIVTqJl2q95sY12+mQpCfVtM2pTFJww7wQiU6JQYLFu8KjPFsnsSjE
-         L2bA==
+        bh=hsHB5m77MIVRrUwCHcRGhZDai+vzsMMYW8wAwWykDx0=;
+        b=CeHzZu1qNvVzLHiwRr09PcbJ2FXOFkn3h4H4zk5Lr4sOgvjZTBM1CbbnsmSyjAgpcd
+         HIYQNcZdYumMOPW7O5/hMqw6lqFgw57+yAL7bm2+CXXEQszbcZSdOQ2qhHB4wC0f7iv9
+         Zh2hOG3W6RF8Lw8MCCoQQfi/VYZOMbhTwpMDxVp/hhqaILJnn96p/AULQOeyibkUQfwg
+         QyS5MfUD/H6vyfOFJHvQRWNxfZEdq5nT4XPhsQ7PGmQALBer36I0gtBtaCyg8pnfv4Z6
+         O4J7sl4DtmofagCfny86mI1bvuutN1bmqWA7/KXBzvWNBnQu4DCrYIV8w74+iVBWe5QZ
+         fdrw==
 Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20210603212416.25934-2-longman@redhat.com>
+In-Reply-To: <20210603212416.25934-3-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -29,18 +29,50 @@ Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jo
 
 Hello,
 
-On Thu, Jun 03, 2021 at 05:24:12PM -0400, Waiman Long wrote:
-> The update_flag() is called with one flag bit change and without change
-> in the various cpumasks in the cpuset. Moreover, not all changes in the
-> flag bits are validated in validate_change().  In particular, the load
-> balance flag and the two spread flags are not checked there. So there
-> is no point in calling validate_change() if those flag bits change.
+Generally looks fine to me.
 
-The fact that it's escaping validation conditionally from caller side is
-bothersome given that the idea is to have self-contained verifier to ensure
-correctness. I'd prefer to make the validation more complete and optimized
-(ie. detect or keep track of what changed) if really necessary rather than
-escaping partially because certain conditions aren't checked.
+On Thu, Jun 03, 2021 at 05:24:13PM -0400, Waiman Long wrote:
+> @@ -1984,12 +1987,31 @@ static int update_prstate(struct cpuset *cs, int val)
+>  			goto out;
+>  
+>  		err = update_parent_subparts_cpumask(cs, partcmd_enable,
+> -						     NULL, &tmp);
+> +						     NULL, &tmpmask);
+> +
+>  		if (err) {
+>  			update_flag(CS_CPU_EXCLUSIVE, cs, 0);
+>  			goto out;
+> +		} else if (new_prs == PRS_ENABLED_NOLB) {
+> +			/*
+> +			 * Disable the load balance flag should not return an
+
+                                 ^ing
+
+and "else if" after "if (err) goto out" block is weird. The two conditions
+don't need to be tied together.
+
+> @@ -2518,6 +2547,9 @@ static int sched_partition_show(struct seq_file *seq, void *v)
+>  	case PRS_ENABLED:
+>  		seq_puts(seq, "root\n");
+>  		break;
+> +	case PRS_ENABLED_NOLB:
+> +		seq_puts(seq, "root-nolb\n");
+> +		break;
+>  	case PRS_DISABLED:
+>  		seq_puts(seq, "member\n");
+>  		break;
+> @@ -2544,6 +2576,8 @@ static ssize_t sched_partition_write(struct kernfs_open_file *of, char *buf,
+>  		val = PRS_ENABLED;
+>  	else if (!strcmp(buf, "member"))
+>  		val = PRS_DISABLED;
+> +	else if (!strcmp(buf, "root-nolb"))
+> +		val = PRS_ENABLED_NOLB;
+>  	else
+>  		return -EINVAL;
+
+I wonder whether there's a better name than "root-nolb" because nolb isn't
+the most readable and we are using space as the delimiter for other names.
+Would something like "isolated" work?
 
 Thanks.
 
