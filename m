@@ -1,51 +1,42 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup1: fix leaked context root causing sporadic NULL
- deref in LTP
-Date: Wed, 16 Jun 2021 11:23:34 -0400
-Message-ID: <YMoXdljfOFjoVO93@slm.duckdns.org>
-References: <20210616125157.438837-1-paul.gortmaker@windriver.com>
+Subject: Re: [PATCH 0/3] add/update/fix BFQ docs
+Date: Wed, 16 Jun 2021 11:46:25 -0400
+Message-ID: <YMoc0Tu/DyeKouc1@slm.duckdns.org>
+References: <20210611030737.1984343-1-kolyshkin@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=4RkdmNkrf3BBo78m/TAwjqmLT/OENZZH2eOGrb77vX4=;
-        b=bzw1YVXlqLHxxl0qzwq/c6+VuhQjm1Q7apIuxtL9KODROgrBOp8xFfHPc7sdYh58zK
-         Qlx3fMYO2vZG2Sqt7uot9as7F2HRHaQhoL5sLOWTiYZb/ghMCKTEg1rqfXiZg44IeC/F
-         vzDKzrZnhMmo6h2PyiMMna8wFpVapRgjYKymXkGnijnQ74KqiFUZLrNFRvmzAQK40Wvc
-         StrYm4C8OG7gM6fi2qit+uz6odcqhOPiJN8rKAL92+PumUvpkXcIS3w13gT4L6y2oCsW
-         eX5cbx/HLm4kTGoXWUvQ46S+xa/OBpHAxIo57bMx6Kmrpuga5JrIoSd36nPP+VouLgIg
-         muXg==
+         :content-disposition:in-reply-to;
+        bh=gAbGl9PUVrieIDOPPvfXysXyAMbFr8wfY+I6z1ScrTg=;
+        b=kpgilGno7nEPvy3nM51vemWrL+pBaMW+FVRrClekQ10IdxjRw5D5h7Ty8l31rn6shF
+         zdw6ht9g6WxiTgflBF/HQq73fl4sfi+TlLVcddDBpf3aiGZoQqwfYDi621CIMsA9+6LI
+         9wjnTBUwbxOSohWmUHZXRqODWpx4kxTh8RUTnvJjwX6djPGvGiwR7iIoYO7F/GJdf6Iy
+         Zyb0D/pitJClgTkW+PoNaIWgv0M2/1UIYK4w1CaHUtgMjBAbXBo2dFcB3hROppBNo8u4
+         64F2SaDorlwRVlJljIrWAnWns76BTeysENNvocOZdFAssrNRtXtkgJePuVoqFWifdYdS
+         dEJw==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20210616125157.438837-1-paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+In-Reply-To: <20210611030737.1984343-1-kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Purdie <richard.purdie-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Kir Kolyshkin <kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On Thu, Jun 10, 2021 at 08:07:34PM -0700, Kir Kolyshkin wrote:
+> Improve BFQ docs: fix formatting, adding a missing piece.
+> 
+> Fix cgroup v1 blkio docs which are not updated for CFQ -> BFQ.
+> 
+> Patches are on top of the latest docs-next (commit acda97acb2e98c97895).
 
-On Wed, Jun 16, 2021 at 08:51:57AM -0400, Paul Gortmaker wrote:
-> A fix would be to not leave the stale reference in fc->root as follows:
->=20
->    --------------
->   =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0dput(fc->root);
->   +               fc->root =3D NULL;
->   =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0deactivate_locked_super=
-(sb);
->    --------------
->=20
-> ...but then we are just open-coding a duplicate of fc_drop_locked() so we
-> simply use that instead.
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-As this is unlikely to be a real-world problem both in probability and
-circumstances, I'm applying this to cgroup/for-5.14 instead of
-cgroup/for-5.13-fixes.
+Prolly best to go through the block tree.
 
 Thanks.
 
---=20
+-- 
 tejun
