@@ -1,62 +1,57 @@
-From: Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/1] cgroup-v1: Grant CAP_SYS_NICE holders permission to
- move tasks between cgroups
-Date: Thu, 17 Jun 2021 13:01:54 +0100
-Message-ID: <YMs5ssb50B208Aad@dell>
-References: <20210617090941.340135-1-lee.jones@linaro.org>
- <YMs08Ij8PZ/gemLL@slm.duckdns.org>
+From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 3/5] cgroup/cpuset: Allow non-top parent partition root to
+ distribute out all CPUs
+Date: Thu, 17 Jun 2021 16:45:35 -0400
+Message-ID: <7f0a0f23-3fcd-a1a3-341a-2dbbde1f25ec@redhat.com>
+References: <20210603212416.25934-1-longman@redhat.com>
+ <20210603212416.25934-4-longman@redhat.com>
+ <YMplzNzg7mMCU4JJ@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=PZ6ISBSnRrzVuSGvUd0b/8GChX0lbxx7dZ00sY7kWSQ=;
-        b=ClmgFWz8+2HypoYvC+r5XNcMSnn1uiYnYp9+/m/RvaoK11RlmLCbs34RQTbCbb6cbu
-         2eQf+wKIYAocO/nXeeV61afl8dulo+jZrID6MlWbalOUB/oTE2h8iG5eveHIGujPTPnV
-         UtX8AHiXIb60iJU58NIuKJ4AO8EKGXwWL1+nETQGyRH8W9j0M6BYHxOUXiMGXyowzkTB
-         d3b5FzexoMOIxC1W0zO5Q7jzFPxPvd+M8KwrFeCNr4JRxojO8hfd+gzUJ50cqvy53OLK
-         hvP0OMPF0pgl5d7kNwZWWufubnFSrBBGqLzs7Hazj6PBc3uXj1F19829cgHCp+GZLipT
-         eZXw==
-Content-Disposition: inline
-In-Reply-To: <YMs08Ij8PZ/gemLL-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1623962738;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=vpTnIUemqOshEpd//f5xMntFtlQkGOaInP6j17WpXWI=;
+        b=iTflhj/coDAw8So9pBsifMvIWEP4HGtkRlNesWPk36aeADUcubbNOKRbiv6yjd2rpDgf8j
+        Scf7FcxGWql1ds1GoqgKR4LsU8OFoCW0GTJ5DhHJ1nAMFqN2q5V5S4l4zFC9FV2zNov9F2
+        bZJ97k2LjCfyv8vpJFXjsa/gEsLQ75o=
+In-Reply-To: <YMplzNzg7mMCU4JJ-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hi Tejun,
+On 6/16/21 4:57 PM, Tejun Heo wrote:
+> Hello,
+>
+> On Thu, Jun 03, 2021 at 05:24:14PM -0400, Waiman Long wrote:
+>> @@ -2181,6 +2192,13 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+>>   	    (cpumask_empty(cs->cpus_allowed) || nodes_empty(cs->mems_allowed)))
+>>   		goto out_unlock;
+>>   
+>> +	/*
+>> +	 * On default hierarchy, task cannot be moved to a cpuset with empty
+>> +	 * effective cpus.
+>> +	 */
+>> +	if (is_in_v2_mode() && cpumask_empty(cs->effective_cpus))
+>> +		goto out_unlock;
+>> +
+> This is inconsistent with how other events which leave a root partition
+> empty is handled. Woudln't it be more consistent to switch the parent to
+> PRS_ERROR and behave accordingly but allow it to have valid child roots?
 
-Thanks for your reply.
+ From my point of view, PRS_ERROR is used when cpus are gone because of 
+cpu hotplug (offline). It can be a temporary condition that will be 
+corrected later on. I don't want to use PRS_ERROR for the particular 
+case that the users have explicitly distributed out all the cpus to 
+child partitions. I will clarify it in the next version and double check 
+to make sure that this rule is consistently apply.
 
-On Thu, 17 Jun 2021, Tejun Heo wrote:
-> On Thu, Jun 17, 2021 at 10:09:41AM +0100, Lee Jones wrote:
-> > It should be possible for processes with CAP_SYS_NICE capabilities
-> > (privileges) to move lower priority tasks within the same namespace to
-> > different cgroups.
-> 
-> I'm not sure that "should" is justified that easily given that cgroup can
-> affect things like device access permissions and basic system organization.
+Thanks,
+Longman
 
-The latter part of that sentence does provide some additional caveats.
-
-> > One extremely common example of this is Android's 'system_server',
-> > which moves processes around to different cgroups/cpusets, but should
-> > not require any other root privileges.
-> 
-> Why is this being brought up now after all the years?
-
-This has been discussed before?
-
-I didn't find any evidence of that on the lists.
-
-> Isn't android moving onto cgroup2 anyway?
-
-That I would have to check.
-
--- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
