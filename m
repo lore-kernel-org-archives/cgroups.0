@@ -1,51 +1,84 @@
-From: Waiman Long <llong@redhat.com>
-Subject: Re: [PATCH 1/5] cgroup/cpuset: Don't call validate_change() for some
- flag changes
-Date: Wed, 16 Jun 2021 22:53:44 -0400
-Message-ID: <4e4da272-ae34-4ff8-18bc-253e9c14a14c@redhat.com>
+From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/5] cgroup/cpuset: Add new cpus.partition type with no
+ load balancing
+Date: Wed, 16 Jun 2021 22:57:18 -0400
+Message-ID: <557d7fdb-5dae-11e1-4f82-ae9f4334c06a@redhat.com>
 References: <20210603212416.25934-1-longman@redhat.com>
- <20210603212416.25934-2-longman@redhat.com>
- <YMphhLAzmRRyD+cm@slm.duckdns.org>
+ <20210603212416.25934-3-longman@redhat.com>
+ <YMpjbCWpSDIz4bHt@slm.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1623898432;
+        s=mimecast20190719; t=1623898645;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=yS1nM3ylxqu4LGWweeetnOJWhjHjFKRHgCRdFTmCJkE=;
-        b=LWnI/2P1mWWpHcVVXlmMG6CZx5uMMQsX4C7mMkT7wbJrHDB5hLUxtEozVwEVi9cLiV31kb
-        6triXbuKTG8jop3lH//iMvtvckh2Ofsml0ktiol6e/BzgJXsl67qQahFaftYWLZgWqIzJQ
-        BQlIj6drWeh0dGWeQ4FD6erz9nc3JR4=
-In-Reply-To: <YMphhLAzmRRyD+cm@slm.duckdns.org>
+        bh=DAFQKb5VrgrYV0k/wY/7SUmNCOTFhI8VI1aGDC5iIO8=;
+        b=AP8T6SHQDGeFomIdbb08DwtDjya1XrU912FCSbcvr+nxCOcnfhNSjWIk+2ADqaVyljqOzs
+        DL50lDaRJLdZDgrdZAN4WVX+s/v9Ll9ax8hQJFcrVMrzyNlJgYzKKLPrRoNeM/l8nDVyxn
+        CyubUrjBOi9sicPhXVplhOuJ80PlV7A=
+In-Reply-To: <YMpjbCWpSDIz4bHt-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 6/16/21 4:39 PM, Tejun Heo wrote:
+On 6/16/21 4:47 PM, Tejun Heo wrote:
 > Hello,
 >
-> On Thu, Jun 03, 2021 at 05:24:12PM -0400, Waiman Long wrote:
->> The update_flag() is called with one flag bit change and without change
->> in the various cpumasks in the cpuset. Moreover, not all changes in the
->> flag bits are validated in validate_change().  In particular, the load
->> balance flag and the two spread flags are not checked there. So there
->> is no point in calling validate_change() if those flag bits change.
-> The fact that it's escaping validation conditionally from caller side is
-> bothersome given that the idea is to have self-contained verifier to ensure
-> correctness. I'd prefer to make the validation more complete and optimized
-> (ie. detect or keep track of what changed) if really necessary rather than
-> escaping partially because certain conditions aren't checked.
+> Generally looks fine to me.
+>
+> On Thu, Jun 03, 2021 at 05:24:13PM -0400, Waiman Long wrote:
+>> @@ -1984,12 +1987,31 @@ static int update_prstate(struct cpuset *cs, int val)
+>>   			goto out;
+>>   
+>>   		err = update_parent_subparts_cpumask(cs, partcmd_enable,
+>> -						     NULL, &tmp);
+>> +						     NULL, &tmpmask);
+>> +
+>>   		if (err) {
+>>   			update_flag(CS_CPU_EXCLUSIVE, cs, 0);
+>>   			goto out;
+>> +		} else if (new_prs == PRS_ENABLED_NOLB) {
+>> +			/*
+>> +			 * Disable the load balance flag should not return an
+>                                   ^ing
+>
+> and "else if" after "if (err) goto out" block is weird. The two conditions
+> don't need to be tied together.
 
-Thanks for the comments.
+Yes, the else part is redundant in this case. Will remove it.
 
-You are right. I will leave out this patch. Anyway, the rests of the 
-patchset don't have a strict dependency on it.
 
-Cheers,
+>
+>> @@ -2518,6 +2547,9 @@ static int sched_partition_show(struct seq_file *seq, void *v)
+>>   	case PRS_ENABLED:
+>>   		seq_puts(seq, "root\n");
+>>   		break;
+>> +	case PRS_ENABLED_NOLB:
+>> +		seq_puts(seq, "root-nolb\n");
+>> +		break;
+>>   	case PRS_DISABLED:
+>>   		seq_puts(seq, "member\n");
+>>   		break;
+>> @@ -2544,6 +2576,8 @@ static ssize_t sched_partition_write(struct kernfs_open_file *of, char *buf,
+>>   		val = PRS_ENABLED;
+>>   	else if (!strcmp(buf, "member"))
+>>   		val = PRS_DISABLED;
+>> +	else if (!strcmp(buf, "root-nolb"))
+>> +		val = PRS_ENABLED_NOLB;
+>>   	else
+>>   		return -EINVAL;
+> I wonder whether there's a better name than "root-nolb" because nolb isn't
+> the most readable and we are using space as the delimiter for other names.
+> Would something like "isolated" work?
+
+Right. "isolated" is a better name and it corresponds better with the 
+isolcpus kernel command line option. Will change the name.
+
+Thanks,
 Longman
 
