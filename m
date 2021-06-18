@@ -1,68 +1,53 @@
-From: Ronny Meeus <ronny.meeus-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Short process stall after assigning it to a cgroup
-Date: Fri, 18 Jun 2021 07:32:56 +0200
-Message-ID: <CAMJ=MEfjxBXWxR6PPbeoQGKc6aXQCoDjyfiOinKamR3u2xwS7w@mail.gmail.com>
-References: <CAMJ=MEegYBi_G=_nk1jaJh-dtJj59EFs6ehCwP5qSBqEKseQ-Q@mail.gmail.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v1] proc: Implement /proc/self/meminfo
+Date: Fri, 18 Jun 2021 19:03:59 +0200
+Message-ID: <YMzR/0QyP9BR7DtN@dhcp22.suse.cz>
+References: <ac070cd90c0d45b7a554366f235262fa5c566435.1622716926.git.legion@kernel.org>
+ <20210615113222.edzkaqfvrris4nth@wittgenstein>
+ <20210615124715.nzd5we5tl7xc2n2p@example.org>
+ <CALvZod7po_fK9JpcUNVrN6PyyP9k=hdcyRfZmHjSVE5r_8Laqw@mail.gmail.com>
+ <87zgvpg4wt.fsf@disp2133>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
-        bh=uWO1hK3ZXvOVh7b8YIGuK4UjnlgoPUKf+n3eG1ZZy9I=;
-        b=tTF2w6u94nDeH6OQs79EePuzBVO4u511wVqE9LUkHs2Xz2SMGJSGAkzsQkLitLTsm6
-         T9T1jDDKCu22/q8q14stHvaFAeuM3IS2Ona4qENUX94BvmxcRzjqNr7fY+8sqXfzkxsw
-         i/TQya1wwe4B+SGkbXaP65nA4zZLkFontPXuaa+D7AzDb9s21x5kjNtuVy9mUHIoexa5
-         +JjDIMFNWHPQgr2VJFIRC5JeQ9e9mQst5o/JuFC57wmFVpDl/oZUAPo5cCa5jMg8qm4A
-         zIAcNHHcYWZYpNYmfGS3RVEP1CsnsKyPrz7N9ZhbAjccQla4ecfp6Kpg2EbHU1Fhp1BH
-         eARA==
-In-Reply-To: <CAMJ=MEegYBi_G=_nk1jaJh-dtJj59EFs6ehCwP5qSBqEKseQ-Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1624035840; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=LHiaEznjsNUF4rAZuGixsJoeW9b4ApvWTouIw4rKRH4=;
+        b=tgHGhNEKrHZIfPRywKhTgPlChh7xLffPyPR5uJQIyb2HBLC33ASKcSFidv7iUXQuxGLrdO
+        QdOiHPnVfrHBtcaU5QDujIs7RYUaN384TX7ibRbgCaNtSFWkCsF/3uDa9b3b5Fcwl+Y/mS
+        XOpL0ncJouDsLGkucN3EQci1LHh56bs=
+Content-Disposition: inline
+In-Reply-To: <87zgvpg4wt.fsf@disp2133>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexey Gladkov <legion-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Containers <containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org>, Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Op ma 14 jun. 2021 om 17:29 schreef Ronny Meeus <ronny.meeus-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>:
->
-> Hello
->
-> I want to use cgroups to control my heavy cpuload consuming applications.
-> All apps are running in the realtime domain and I'm using kernel 4.9
-> and cgroup v1.
->
-> I created a small application that monitors the CPU load (by reading
-> the /proc filesystem) and when it enters a full load condition, I
-> dynamically start to put the high consuming processes into a cgroup
-> (which were created during system start-up). Each process will have
-> it's own cgroup created under the root-cgroup.
->
-> The budget I assign to the process is equal to the budget it has
-> consumed in the previous measurement interval (for example 5s). As
-> long as the load continues to be high, I start to gradually reduce the
-> budget of the cgroup until the system is idle enough.
->
-> This works reasonably well, but in some cases I see that a very high
-> load consuming application is stopped completely at the moment it is
-> put in a cgroup, although the budget allocated to it is correctly
-> calculated based on the load it consumed in my previous interval.
->
-> An example:
-> - cpu.rt_period_us = 1000000
-> - cpu.rt_runtime_us = 400000
-> I would assume that an application put in a cgroup with this
-> configuration can consume 40% of the CPU and it actually does. But
-> sometimes, immediately after the process assignment, it stops for a
-> short period (something like 1 or 2s) and then starts to consume 40%
-> again.
->
-> Is that expected behavior?
->
-> It looks like the "budget" it has consumed in the root-cgroup is taken
-> into account when it is moved to its own group and this results in the
-> stall.
->
-> Best regards,
-> Ronny
+On Wed 16-06-21 11:17:38, Eric W. Biederman wrote:
+[...]
+> MemAvailable seems to have a good definition.  Roughly the amount of
+> memory that can be allocated without triggering swapping.  Updated
+> to include not trigger memory cgroup based swapping and I sounds good.
 
-Note that this is a dual-core CPU and the process that is doing the cgroup
-updates is running in a single thread. So that other core will most
-probably running the application that is moved into the child cgroup.
+yes this definition is at least understandable but how do you want to
+define it in the memcg scope? There are two different source of memory
+pressure when dealing with memcgs. Internal one when a limit is hit and
+and external when the source of the reclaim comes from higher the
+hierarchy (including the global memory pressure). The former one would
+be quite easy to mimic with the global semantic but the later will get
+much more complex very quickly - a) you would need a snapshot of the
+whole cgroup tree and evaluate it against the global memory state b) you
+would have to consider memory reclaim protection c) the external memory
+pressure is distributed proportionaly to the size most of the time which
+is yet another complication. And more other challenges that have been
+already discussed.
+
+That being said, this might be possible to implement but I am not really
+sure this is viable and I strongly suspect that it will get unreliable
+in many situations in context of "how much you can allocate without
+swapping".
+-- 
+Michal Hocko
+SUSE Labs
