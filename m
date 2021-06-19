@@ -1,148 +1,57 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH v1] proc: Implement /proc/self/meminfo
-Date: Fri, 18 Jun 2021 16:38:48 -0700
-Message-ID: <CALvZod70DNiWF-jTUHp6pOVtVX9pzdvYXaQ1At3GHtdKD=iTwQ@mail.gmail.com>
-References: <ac070cd90c0d45b7a554366f235262fa5c566435.1622716926.git.legion@kernel.org>
- <20210615113222.edzkaqfvrris4nth@wittgenstein> <20210615124715.nzd5we5tl7xc2n2p@example.org>
- <CALvZod7po_fK9JpcUNVrN6PyyP9k=hdcyRfZmHjSVE5r_8Laqw@mail.gmail.com> <87zgvpg4wt.fsf@disp2133>
+From: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Subject: Re: [PATCH v3] cpu/hotplug: wait for cpuset_hotplug_work to finish on cpu onlining
+Date: Sat, 19 Jun 2021 22:18:39 +0200
+Message-ID: <87zgvlhalc.ffs@nanos.tec.linutronix.de>
+References: <20210317003616.2817418-1-aklimov@redhat.com> <87tuowcnv3.ffs@nanos.tec.linutronix.de> <CALW4P+L9_tYgfOPv0riWWnv54HPhKPDJ4EK4yYaWsz0MdDGqfw@mail.gmail.com> <CAFBcO+8NBZxNdXtVuTXt9_m9gWTq7kxrcDcdFntvVjR_0rM13A@mail.gmail.com> <CAFBcO+9wLjDW6n-ZSean_UQHSJ44Tpw9XBz-3UMoVCeUridj4Q@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Tc6KnzldMt7lAUMkOKZvz0InbTpN/HVH+jn+WvW53/E=;
-        b=eL7fdXlfwBHtKxmU60+CMtMA5r/XRaknloeToSvovaCy6C1p3D+StnRGc6RHxSKOyB
-         cbYWJzeNoxiX28R42+0V7Is0XqgT4rJZybOUPajsM5WmZT59S1flesvHNzV55nydgD8i
-         zrq3N45K8cnGIdEvTrRRZAan57g2JQv+zqU+8zH2iOuH2PmKzAgWc/kX/kfhYxIwNKJa
-         5obKI77TLDUM8aw3RbCG8up/2Cdi9EiN+j9Jybf71xqaOyGGi1fq1EdaKDn1VvdWEwre
-         jmbSxEbYJwvYUzhjyRt2W8BKdvi7sHpAfYEOsBn1K0jgoqJXweGTYOdJIR0oFJ1ZJyH9
-         /Erw==
-In-Reply-To: <87zgvpg4wt.fsf@disp2133>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1624133919;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZGxCAU5/Gg8G2QXDWd/7foFOuvLUzMk0dmwKNfusq2U=;
+        b=FHmONuVOMr4+7/40TNNSG/hiyaLtRMfUkmIbkXSCD/DmuFl04ct6WCfWE+39chTJdbVo1K
+        lUkQjjBuuKAg6b3uWhjaay0x1XBeysHVjJvvYDnPA3CbOnwoaUXbS4dHcEX48bVwbs9A3d
+        c5ZICg5YoTojMIaLEza7vvJcfaRqO2QnCHxq/oE+NoZEJ7f8pIncF4YsfasW4My6HvrtyB
+        1TDAwwmoNiLm/PseNG964ShmAm7yLLmdOfa3d05H7gNgaqBdm911btMTVAIisw+eqxASYf
+        XZu4AQNSI2sTJOUfz242Z5WKZ+393Zc+Qj0gREGjZugpB/ngoSw+C6a4Z9KJfg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1624133919;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZGxCAU5/Gg8G2QXDWd/7foFOuvLUzMk0dmwKNfusq2U=;
+        b=6b7bpcDeTlfRnxblWGna3hiV6agE0oq0oY3LeyiryUSDr6tNRpuxRD1lIR9Ci0vNIP7Mef
+        VHs4dCzzxHGlwdAg==
+In-Reply-To: <CAFBcO+9wLjDW6n-ZSean_UQHSJ44Tpw9XBz-3UMoVCeUridj4Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Alexey Gladkov <legion@kernel.org>, Christian Brauner <christian.brauner@ubuntu.com>, LKML <linux-kernel@vger.kernel.org>, Linux Containers <containers@lists.linux.dev>, Linux Containers <containers@lists.linux-foundation.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Chris Down <chris@chrisdown.name>, Cgroups <cgroups@vger.kernel.org>
+To: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yury Norov <yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Joshua Baker <jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Alexey Klimov <klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Wed, Jun 16, 2021 at 9:17 AM Eric W. Biederman <ebiederm@xmission.com> wrote:
->
-> Shakeel Butt <shakeelb@google.com> writes:
->
-> > On Tue, Jun 15, 2021 at 5:47 AM Alexey Gladkov <legion@kernel.org> wrote:
-> >>
-> > [...]
-> >>
-> >> I made the second version of the patch [1], but then I had a conversation
-> >> with Eric W. Biederman offlist. He convinced me that it is a bad idea to
-> >> change all the values in meminfo to accommodate cgroups. But we agreed
-> >> that MemAvailable in /proc/meminfo should respect cgroups limits. This
-> >> field was created to hide implementation details when calculating
-> >> available memory. You can see that it is quite widely used [2].
-> >> So I want to try to move in that direction.
-> >>
-> >> [1] https://git.kernel.org/pub/scm/linux/kernel/git/legion/linux.git/log/?h=patchset/meminfo/v2.0
-> >> [2] https://codesearch.debian.net/search?q=MemAvailable%3A
-> >>
-> >
-> > Please see following two links on the previous discussion on having
-> > per-memcg MemAvailable stat.
-> >
-> > [1] https://lore.kernel.org/linux-mm/alpine.DEB.2.22.394.2006281445210.855265@chino.kir.corp.google.com/
-> > [2] https://lore.kernel.org/linux-mm/alpine.DEB.2.23.453.2007142018150.2667860@chino.kir.corp.google.com/
-> >
-> > MemAvailable itself is an imprecise metric and involving memcg makes
-> > this metric even more weird. The difference of semantics of swap
-> > accounting of v1 and v2 is one source of this weirdness (I have not
-> > checked your patch if it is handling this weirdness). The lazyfree and
-> > deferred split pages are another source.
-> >
-> > So, I am not sure if complicating an already imprecise metric will
-> > make it more useful.
->
-> Making a good guess at how much memory can be allocated without
-> triggering swapping or otherwise stressing the system is something that
-> requires understanding our mm internals.
->
-> To be able to continue changing the mm or even mm policy without
-> introducing regressions in userspace we need to export values that
-> userspace can use.
+Alexey,
 
-The issue is the dependence of such exported values on mm internals.
-MM internal code and policy changes will change this value and there
-is a potential of userspace regression.
-
+On Mon, Jun 14 2021 at 19:14, Alexey Klimov wrote:
+> On Thu, Apr 15, 2021 at 2:30 AM Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>>
+>> On Sun, Apr 4, 2021 at 3:32 AM Alexey Klimov <klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>> >
+>> > On Sat, Mar 27, 2021 at 9:01 PM Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org> wrote:
 >
-> At a first approximation that seems to look like MemAvailable.
+> [...]
 >
-> MemAvailable seems to have a good definition.  Roughly the amount of
-> memory that can be allocated without triggering swapping.
-
-Nowadays, I don't think MemAvailable giving "amount of memory that can
-be allocated without triggering swapping" is even roughly accurate.
-Actually IMO "without triggering swap" is not something an application
-should concern itself with where refaults from some swap types
-(zswap/swap-on-zram) are much faster than refaults from disk.
-
-> Updated
-> to include not trigger memory cgroup based swapping and I sounds good.
+>> Are you going to submit the patch? Or I can do it on your behalf if you like.
 >
-> I don't know if it will work in practice but I think it is worth
-> exploring.
+> Are you going to send out this to lkml as a separate patch or do you
+> want me to do this on your behalf?
 
-I agree.
+sorry I forgot about this completely. No need to resend. It's on LKML
+already. I pick it up from this thread.
 
->
-> I do know that hiding the implementation details and providing userspace
-> with information it can directly use seems like the programming model
-> that needs to be explored.  Most programs should not care if they are in
-> a memory cgroup, etc.  Programs, load management systems, and even
-> balloon drivers have a legitimately interest in how much additional load
-> can be placed on a systems memory.
->
+Thanks,
 
-How much additional load can be placed on a system *until what*. I
-think we should focus more on the "until" part to make the problem
-more tractable.
+      tglx
 
->
-> A version of this that I remember working fairly well is free space
-> on compressed filesystems.  As I recall compressed filesystems report
-> the amount of uncompressed space that is available (an underestimate).
-> This results in the amount of space consumed going up faster than the
-> free space goes down.
->
-> We can't do exactly the same thing with our memory usability estimate,
-> but having our estimate be a reliable underestimate might be enough
-> to avoid problems with reporting too much memory as available to
-> userspace.
->
-> I know that MemAvailable already does that /2 so maybe it is already
-> aiming at being an underestimate.  Perhaps we need some additional
-> accounting to help create a useful metric for userspace as well.
->
 
-The real challenge here is that we are not 100% sure if a page is
-reclaimable until we try to reclaim it. For example we might have file
-lrus filled with lazyfree pages which might have been accessed.
-MemAvailable will show half the size of file lrus but once we try to
-reclaim them, we have to move them back to anon lru and drastic drop
-in MemAvailable.
-
->
-> I don't know the final answer.  I do know that not designing an
-> interface that userspace can use to deal with it's legitimate concerns
-> is sticking our collective heads in the sand and wishing the problem
-> will go away.
-
-I am a bit skeptical that a single interface would be enough but first
-we should formalize what exactly the application wants with some
-concrete use-cases. More specifically, are the applications interested
-in avoiding swapping or OOM or stall?
-
-Second, is the reactive approach acceptable? Instead of an upfront
-number representing the room for growth, how about just grow and
-backoff when some event (oom or stall) which we want to avoid is about
-to happen? This is achievable today for oom and stall with PSI and
-memory.high and it avoids the hard problem of reliably estimating the
-reclaimable memory.
