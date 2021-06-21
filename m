@@ -1,103 +1,134 @@
-From: "Enrico Weigelt, metux IT consult" <lkml@metux.net>
-Subject: Re: [PATCH v1] proc: Implement /proc/self/meminfo
-Date: Mon, 21 Jun 2021 20:20:28 +0200
-Message-ID: <d1eb12ec-8e6a-11c1-ea0a-b36dcf354d16@metux.net>
-References: <ac070cd90c0d45b7a554366f235262fa5c566435.1622716926.git.legion@kernel.org>
- <20210615113222.edzkaqfvrris4nth@wittgenstein>
- <20210615124715.nzd5we5tl7xc2n2p@example.org>
- <CALvZod7po_fK9JpcUNVrN6PyyP9k=hdcyRfZmHjSVE5r_8Laqw@mail.gmail.com>
- <87zgvpg4wt.fsf@disp2133>
- <CALvZod70DNiWF-jTUHp6pOVtVX9pzdvYXaQ1At3GHtdKD=iTwQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <CALvZod70DNiWF-jTUHp6pOVtVX9pzdvYXaQ1At3GHtdKD=iTwQ@mail.gmail.com>
-Content-Language: tl
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 1/6] cgroup/cpuset: Miscellaneous code cleanup
+Date: Mon, 21 Jun 2021 14:49:19 -0400
+Message-ID: <20210621184924.27493-2-longman@redhat.com>
+References: <20210621184924.27493-1-longman@redhat.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1624301390;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
+        bh=a3Hgg1XgaMSsbVd330JUCd8UUvif2vzvATq1jEUWKfo=;
+        b=fIq9l3GLxpxrw3rJlmt1Kf/Rx/AImgci5ORFqHv0DlhSuXQF2J1a5W3DRVv4G+DnMIbuhs
+        P6M6yNan0l2M2REpOHSOF4qG6HIN+M36DFT9WYQktMxbaeg8h3SWvvL1qO85PGXdLeeW+H
+        GaMGiv/kj2K6RKyyXNSTK3HcopURwDM=
+In-Reply-To: <20210621184924.27493-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Shakeel Butt <shakeelb@google.com>, "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Alexey Gladkov <legion@kernel.org>, Christian Brauner <christian.brauner@ubuntu.com>, LKML <linux-kernel@vger.kernel.org>, Linux Containers <containers@lists.linux.dev>, Linux Containers <containers@lists.linux-foundation.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Chris Down <chris@chrisdown.name>, Cgroups <cgroups@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 19.06.21 01:38, Shakeel Butt wrote:
+Use more descriptive variable names for update_prstate(), remove
+unnecessary code and fix some typos. There is no functional change.
 
-> Nowadays, I don't think MemAvailable giving "amount of memory that can
-> be allocated without triggering swapping" is even roughly accurate.
-> Actually IMO "without triggering swap" is not something an application
-> should concern itself with where refaults from some swap types
-> (zswap/swap-on-zram) are much faster than refaults from disk.
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cpuset.c | 30 ++++++++++++++----------------
+ 1 file changed, 14 insertions(+), 16 deletions(-)
 
-If we're talking about things like database workloads, there IMHO isn't
-anything really better than doing measurements with the actual loads
-and tuning incrementally.
-
-But: what is the actual optimization goal, why an application might
-want to know where swapping begins ? Computing performance ? Caching +
-IO Latency or throughput ? Network traffic (e.g. w/ iscsi) ? Power
-consumption ?
-
->> I do know that hiding the implementation details and providing userspace
->> with information it can directly use seems like the programming model
->> that needs to be explored.  Most programs should not care if they are in
->> a memory cgroup, etc.  Programs, load management systems, and even
->> balloon drivers have a legitimately interest in how much additional load
->> can be placed on a systems memory.
-
-What kind of load exactly ? CPU ? disk IO ? network ?
-
-> How much additional load can be placed on a system *until what*. I
-> think we should focus more on the "until" part to make the problem
-> more tractable.
-
-ACK. The interesting question is what to do in that case.
-
-An obvious move by an database system could be eg. filling only so much
-caches as there's spare physical RAM, in order to avoid useless swapping
-(since we'd potentiall produce more IO load when a cache is written
-out to swap, instead of just discarding it)
-
-But, this also depends ...
-
-#1: the application doesn't know the actual performance of the swap
-device, eg. the already mentioned zswap+friends, or some fast nvmem
-for swap vs disk for storage.
-
-#2: caches might also be implemented indirectly by mmap()ing the storage
-file/device and so using the kernel's cache here. in that case, the
-kernel would automatically discard the pages w/o going to swap. of
-course that only works if the cache is nothing but copying pages from
-storage into ram.
-
-A completely different scenario would be load management on a cluster
-like k8s. Here we usually care of cluster performance (dont care about
-individual nodes so muck), but wanna prevent individual nodes from being
-overloaded. Since we usually don't know much about the indivdual
-workload, we probably don't have much other chance than contigous
-monitoring and acting when a node is getting too busy - or trying to
-balance when new workloads are started, on current system load (and
-other metrics). In that case, I don't see where this new proc file
-should be of much help.
-
-> Second, is the reactive approach acceptable? Instead of an upfront
-> number representing the room for growth, how about just grow and
-> backoff when some event (oom or stall) which we want to avoid is about
-> to happen? This is achievable today for oom and stall with PSI and
-> memory.high and it avoids the hard problem of reliably estimating the
-> reclaimable memory.
-
-I tend to believe that for certain use cases it would be helpful if an
-application gets notified if some of its pages are soon getting swapped
-out due memory pressure. Then it could decide on its own which whether
-it should drop certain caches in order to prevent swapping.
-
-
---mtx
-
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index adb5190c4429..d4164e07c61b 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1114,7 +1114,7 @@ enum subparts_cmd {
+  * cpus_allowed can be granted or an error code will be returned.
+  *
+  * For partcmd_disable, the cpuset is being transofrmed from a partition
+- * root back to a non-partition root. any CPUs in cpus_allowed that are in
++ * root back to a non-partition root. Any CPUs in cpus_allowed that are in
+  * parent's subparts_cpus will be taken away from that cpumask and put back
+  * into parent's effective_cpus. 0 should always be returned.
+  *
+@@ -1225,7 +1225,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
+ 		/*
+ 		 * partcmd_update w/o newmask:
+ 		 *
+-		 * addmask = cpus_allowed & parent->effectiveb_cpus
++		 * addmask = cpus_allowed & parent->effective_cpus
+ 		 *
+ 		 * Note that parent's subparts_cpus may have been
+ 		 * pre-shrunk in case there is a change in the cpu list.
+@@ -1937,30 +1937,28 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ 
+ /*
+  * update_prstate - update partititon_root_state
+- * cs:	the cpuset to update
+- * val: 0 - disabled, 1 - enabled
++ * cs: the cpuset to update
++ * new_prs: new partition root state
+  *
+  * Call with cpuset_mutex held.
+  */
+-static int update_prstate(struct cpuset *cs, int val)
++static int update_prstate(struct cpuset *cs, int new_prs)
+ {
+ 	int err;
+ 	struct cpuset *parent = parent_cs(cs);
+-	struct tmpmasks tmp;
++	struct tmpmasks tmpmask;
+ 
+-	if ((val != 0) && (val != 1))
+-		return -EINVAL;
+-	if (val == cs->partition_root_state)
++	if (new_prs == cs->partition_root_state)
+ 		return 0;
+ 
+ 	/*
+ 	 * Cannot force a partial or invalid partition root to a full
+ 	 * partition root.
+ 	 */
+-	if (val && cs->partition_root_state)
++	if (new_prs && (cs->partition_root_state < 0))
+ 		return -EINVAL;
+ 
+-	if (alloc_cpumasks(NULL, &tmp))
++	if (alloc_cpumasks(NULL, &tmpmask))
+ 		return -ENOMEM;
+ 
+ 	err = -EINVAL;
+@@ -1978,7 +1976,7 @@ static int update_prstate(struct cpuset *cs, int val)
+ 			goto out;
+ 
+ 		err = update_parent_subparts_cpumask(cs, partcmd_enable,
+-						     NULL, &tmp);
++						     NULL, &tmpmask);
+ 		if (err) {
+ 			update_flag(CS_CPU_EXCLUSIVE, cs, 0);
+ 			goto out;
+@@ -1997,7 +1995,7 @@ static int update_prstate(struct cpuset *cs, int val)
+ 		}
+ 
+ 		err = update_parent_subparts_cpumask(cs, partcmd_disable,
+-						     NULL, &tmp);
++						     NULL, &tmpmask);
+ 		if (err)
+ 			goto out;
+ 
+@@ -2015,11 +2013,11 @@ static int update_prstate(struct cpuset *cs, int val)
+ 		update_tasks_cpumask(parent);
+ 
+ 	if (parent->child_ecpus_count)
+-		update_sibling_cpumasks(parent, cs, &tmp);
++		update_sibling_cpumasks(parent, cs, &tmpmask);
+ 
+ 	rebuild_sched_domains_locked();
+ out:
+-	free_cpumasks(NULL, &tmp);
++	free_cpumasks(NULL, &tmpmask);
+ 	return err;
+ }
+ 
+@@ -3060,7 +3058,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+ 		goto retry;
+ 	}
+ 
+-	parent =  parent_cs(cs);
++	parent = parent_cs(cs);
+ 	compute_effective_cpumask(&new_cpus, cs, parent);
+ 	nodes_and(new_mems, cs->mems_allowed, parent->effective_mems);
+ 
 -- 
----
-Hinweis: unverschlüsselte E-Mails können leicht abgehört und manipuliert
-werden ! Für eine vertrauliche Kommunikation senden Sie bitte ihren
-GPG/PGP-Schlüssel zu.
----
-Enrico Weigelt, metux IT consult
-Free software and Linux embedded engineering
-info@metux.net -- +49-151-27565287
+2.18.1
+
