@@ -1,47 +1,92 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 2/2] memcg: periodically flush the memcg stats
-Date: Thu, 24 Jun 2021 08:00:31 -0700
-Message-ID: <CALvZod4zaJZ1VjSQNvV7oUDZ58VYWvEUBa5WsGU4SYWnT70vbw@mail.gmail.com>
-References: <20210615174435.4174364-1-shakeelb@google.com> <20210615174435.4174364-2-shakeelb@google.com>
- <YNSQNu4ZW7mEX6LW@blackbook>
+From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 3/6] cgroup/cpuset: Add a new isolated cpus.partition
+ type
+Date: Thu, 24 Jun 2021 11:23:45 -0400
+Message-ID: <58c87587-417b-1498-185f-1db6bb612c82@redhat.com>
+References: <20210621184924.27493-1-longman@redhat.com>
+ <20210621184924.27493-4-longman@redhat.com> <YNR/3fydXvAi3OsN@blackbook>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=VEtW/m2G4JMnkRazKy7NH/xx9Lmp9+147gFKq1PM9Yg=;
-        b=WAWI8So/qhhVeppsIvdijPvUzdKdS80W6KrQW/YiWqHSSLQfZqqWsi1EBJnzuaRtvQ
-         uwilI74b1Rj2CMfhicSt0oPI4F1Xekqj4XfrQLsepNL76BJ8xBCOBMSkY3Y1x6Gqw2sj
-         7lvnVcUcP93CrANK0OjxaCB9Zt34DH2PHf5vKOMNRYu5V5fvB00/TP3EnPOIhIxca6Zl
-         P+N/bo1Uu48b6MI43s1/NQYwIej3Cl/5IKT4nCsxBXfmhsKkx3WsExXRF4YkWlBeBjCu
-         K43gwfpaWSvIznaF14eSVUglFjETBkIwB6IrOSXTcfm8yUGeHyxDJ3fgOm99lLecLaBD
-         MiWw==
-In-Reply-To: <YNSQNu4ZW7mEX6LW@blackbook>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1624548229;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=V6782uv/lR78IFZdWPlWYnzNvjYHBRQ4Y4k+rewPDws=;
+        b=cCJrE5diLfQTcZvUvuxVxrqaiOl4tKRDuZ7QNo3pMQzvXzERM3riKOa5h3B0Fhn0umEzmI
+        1an5aPee9f+xm+C3k7DTEClH2veWkXtcyQIrL9zZdxp7zymd/gt8s8EXbTGnIX3zhFrRyP
+        Ndnf0lQttVe4cck7T5M3MYbKwIGbFQg=
+In-Reply-To: <YNR/3fydXvAi3OsN@blackbook>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Thu, Jun 24, 2021 at 7:01 AM Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org> wrote=
-:
+On 6/24/21 8:51 AM, Michal Koutn=FD wrote:
+> Hello.
 >
-> Hello Shakeel.
+> On Mon, Jun 21, 2021 at 02:49:21PM -0400, Waiman Long <longman-H+wXaHxf7a=
+LQT0dZR+AlfA@public.gmane.org> wrote:
+>>      cgroup/cpuset: Add a new isolated cpus.partition type
+>>
+>>      Cpuset v1 uses the sched_load_balance control file to determine if =
+load
+>>      balancing should be enabled.  Cpuset v2 gets rid of sched_load_bala=
+nce
+>>      as its use may require disabling load balancing at cgroup root.
+>>
+>>      For workloads that require very low latency like DPDK, the latency
+>>      jitters caused by periodic load balancing may exceed the desired
+>>      latency limit.
+>>
+>>      When cpuset v2 is in use, the only way to avoid this latency cost i=
+s to
+>>      use the "isolcpus=3D" kernel boot option to isolate a set of CPUs. =
+After
+>>      the kernel boot, however, there is no way to add or remove CPUs from
+>>      this isolated set. For workloads that are more dynamic in nature, t=
+hat
+>>      means users have to provision enough CPUs for the worst case situat=
+ion
+>>      resulting in excess idle CPUs.
+>>
+>>      To address this issue for cpuset v2, a new cpuset.cpus.partition ty=
+pe
+>>      "isolated" is added which allows the creation of a cpuset partition
+>>      without load balancing. This will allow system administrators to
+>>      dynamically adjust the size of isolated partition to the current ne=
+ed
+>>      of the workload without rebooting the system.
+> I like this work.
+> Would it be worth generalizing the API to be on par with what isolcpus=3D
+> can configure? (I.e. not only load balancing but the other dimensions of
+> isolation (like the flags nohz and managed_irq now).)
+Good point, the isolated partition is equivalent to isolcpus=3Ddomain. I=20
+will need to evaluate the nohz and managed_irq options to see if they=20
+can be done dynamically without adding a lot of overhead. If so, we can=20
+extend the functionality to cover that in future patches. Right now,=20
+this is for the domain functionality only. If we can cover the nohz and=20
+managed_irq options, we can deprecate isolcpus and advocate the use of=20
+cgroup instead.
 >
-> On Tue, Jun 15, 2021 at 10:44:35AM -0700, Shakeel Butt <shakeelb@google.c=
-om> wrote:
-> > At the moment memcg stats are read in four contexts:
-> >
-> > 1. memcg stat user interfaces
-> > 2. dirty throttling
-> > 3. page fault
-> > 4. memory reclaim
+> I don't know if all such behaviors could be implemented dynamically
+> (likely not easy) but the API could initially implement just what you do
+> here with the "isolated" partition type.
 >
-> Sorry for being dense or ignorant -- what do you refer to with the point
-> no. 3 (memcg stats reader during page fault)?
+> The variant I'm thinking of would keep just the "root" and "member"
+> partitions type and the "root" type could be additionally configured via
+> cpuset.cpus.partition.flags (for example).
 >
+> WDYT?
 
-Yes, specifically workingset_refault() which reads lruvec stats
-directly through lruvec_page_state and indirectly through
-lru_note_cost_page.
+What I am thinking is that "isolated" means "isolated:domain" or one can=20
+do "isolated:nohz,domain,manged_irq" just like the current isolcpus boot=20
+option. I don't think we really need to add an extra flags control file.
+
+Cheers,
+Longman
+
+
