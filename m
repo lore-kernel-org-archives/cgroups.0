@@ -1,92 +1,55 @@
-From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 3/6] cgroup/cpuset: Add a new isolated cpus.partition
- type
-Date: Thu, 24 Jun 2021 11:23:45 -0400
-Message-ID: <58c87587-417b-1498-185f-1db6bb612c82@redhat.com>
-References: <20210621184924.27493-1-longman@redhat.com>
- <20210621184924.27493-4-longman@redhat.com> <YNR/3fydXvAi3OsN@blackbook>
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v2 12/46] mm/memcg: Use the node id in
+ mem_cgroup_update_tree()
+Date: Thu, 24 Jun 2021 17:19:53 +0100
+Message-ID: <YNSwqfX1EwJccIeu@casper.infradead.org>
+References: <20210622121551.3398730-1-willy@infradead.org>
+ <20210622121551.3398730-13-willy@infradead.org>
+ <YNLs+CXPpULk8Y/3@infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1624548229;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=V6782uv/lR78IFZdWPlWYnzNvjYHBRQ4Y4k+rewPDws=;
-        b=cCJrE5diLfQTcZvUvuxVxrqaiOl4tKRDuZ7QNo3pMQzvXzERM3riKOa5h3B0Fhn0umEzmI
-        1an5aPee9f+xm+C3k7DTEClH2veWkXtcyQIrL9zZdxp7zymd/gt8s8EXbTGnIX3zhFrRyP
-        Ndnf0lQttVe4cck7T5M3MYbKwIGbFQg=
-In-Reply-To: <YNR/3fydXvAi3OsN@blackbook>
-Content-Language: en-US
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Uh3vgdb1Js3vfZajWdBPiGBpNjG65EW1C8MzQFof+dE=; b=Van2fFqSnECFap8RB8ZgiYbX+Q
+        uuctjHg08u+iXh8IQ1nUK2WuqzaFljlIcQx+CpzzsGJ+/avEips/5xj2yJBLnzHggVDyaBK7UClw9
+        etcwNowymIVh3YfkGgvi9rwDeai2s5jF3eeSIywYkQBqEMaL6sdX+D+jqHzpfuqlBaamkVO3FR9c9
+        8vePVfTaFmVCz8fIBm6pQuAZjVilH3aMoQikqk8LHC4IlEpG4Vxxgbm2fjvDWskCj8ileSG/y0A5p
+        UJ8dqfqpuNDy4Fzcn2IW5kfan49rAbR0OkmG6edAjIZuowt2I6nSKmu86Ld86d6qYKqeJ+5Cq4wsX
+        U5pwjumw==;
+Content-Disposition: inline
+In-Reply-To: <YNLs+CXPpULk8Y/3@infradead.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Christoph Hellwig <hch@infradead.org>
+Cc: akpm@linux-foundation.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org
 
-On 6/24/21 8:51 AM, Michal Koutn=FD wrote:
-> Hello.
->
-> On Mon, Jun 21, 2021 at 02:49:21PM -0400, Waiman Long <longman-H+wXaHxf7a=
-LQT0dZR+AlfA@public.gmane.org> wrote:
->>      cgroup/cpuset: Add a new isolated cpus.partition type
->>
->>      Cpuset v1 uses the sched_load_balance control file to determine if =
-load
->>      balancing should be enabled.  Cpuset v2 gets rid of sched_load_bala=
-nce
->>      as its use may require disabling load balancing at cgroup root.
->>
->>      For workloads that require very low latency like DPDK, the latency
->>      jitters caused by periodic load balancing may exceed the desired
->>      latency limit.
->>
->>      When cpuset v2 is in use, the only way to avoid this latency cost i=
-s to
->>      use the "isolcpus=3D" kernel boot option to isolate a set of CPUs. =
-After
->>      the kernel boot, however, there is no way to add or remove CPUs from
->>      this isolated set. For workloads that are more dynamic in nature, t=
-hat
->>      means users have to provision enough CPUs for the worst case situat=
-ion
->>      resulting in excess idle CPUs.
->>
->>      To address this issue for cpuset v2, a new cpuset.cpus.partition ty=
-pe
->>      "isolated" is added which allows the creation of a cpuset partition
->>      without load balancing. This will allow system administrators to
->>      dynamically adjust the size of isolated partition to the current ne=
-ed
->>      of the workload without rebooting the system.
-> I like this work.
-> Would it be worth generalizing the API to be on par with what isolcpus=3D
-> can configure? (I.e. not only load balancing but the other dimensions of
-> isolation (like the flags nohz and managed_irq now).)
-Good point, the isolated partition is equivalent to isolcpus=3Ddomain. I=20
-will need to evaluate the nohz and managed_irq options to see if they=20
-can be done dynamically without adding a lot of overhead. If so, we can=20
-extend the functionality to cover that in future patches. Right now,=20
-this is for the domain functionality only. If we can cover the nohz and=20
-managed_irq options, we can deprecate isolcpus and advocate the use of=20
-cgroup instead.
->
-> I don't know if all such behaviors could be implemented dynamically
-> (likely not easy) but the API could initially implement just what you do
-> here with the "isolated" partition type.
->
-> The variant I'm thinking of would keep just the "root" and "member"
-> partitions type and the "root" type could be additionally configured via
-> cpuset.cpus.partition.flags (for example).
->
-> WDYT?
+On Wed, Jun 23, 2021 at 10:12:40AM +0200, Christoph Hellwig wrote:
+> On Tue, Jun 22, 2021 at 01:15:17PM +0100, Matthew Wilcox (Oracle) wrote:
+> >  static struct mem_cgroup_per_node *
+> > -mem_cgroup_page_nodeinfo(struct mem_cgroup *memcg, struct page *page)
+> > +mem_cgroup_nodeinfo(struct mem_cgroup *memcg, int nid)
+> >  {
+> > -	int nid = page_to_nid(page);
+> > -
+> >  	return memcg->nodeinfo[nid];
+> >  }
+> 
+> I'd just kill this function entirely and open code it into the only
+> caller
 
-What I am thinking is that "isolated" means "isolated:domain" or one can=20
-do "isolated:nohz,domain,manged_irq" just like the current isolcpus boot=20
-option. I don't think we really need to add an extra flags control file.
+Done.
 
-Cheers,
-Longman
+> > -	mctz = soft_limit_tree_from_page(page);
+> > +	mctz = soft_limit_tree_node(nid);
+> 
+> And while were at it, soft_limit_tree_node seems like a completely
+> pointless helper that does nothing but obsfucating the code.  While
+> you touch this area it might be worth to spin another patch to just
+> remove it as well.
 
-
+I'm scared that if I touch this file too much, people will start to
+think I know something about memcgs.  Happy to add it on; cc'ing
+maintainers.
