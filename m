@@ -1,86 +1,108 @@
 From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: Short process stall after assigning it to a cgroup
-Date: Wed, 23 Jun 2021 19:28:11 +0200
-Message-ID: <YNNvK0koEdkuD/z3@blackbook>
-References: <CAMJ=MEegYBi_G=_nk1jaJh-dtJj59EFs6ehCwP5qSBqEKseQ-Q@mail.gmail.com>
+Subject: Re: [PATCH v2 3/6] cgroup/cpuset: Add a new isolated cpus.partition
+ type
+Date: Thu, 24 Jun 2021 14:51:41 +0200
+Message-ID: <YNR/3fydXvAi3OsN@blackbook>
+References: <20210621184924.27493-1-longman@redhat.com>
+ <20210621184924.27493-4-longman@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="iwo5q46b7oRDEl/S"
+        protocol="application/pgp-signature"; boundary="7y/hTF6KceCxU12n"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1624469293; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1624539102; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=mYyynKwtehNPTyX1THKKb3El0qFbl9kjsXWw3DO0Cyg=;
-        b=ggCdPixjzjfnvYzh8cFPC3mmpsko8L8djdCRmIRn9tB3zoo2F84MzrI5ApxBCpghL1j+6S
-        GY/vZwY1q/UQdJ/4TZBwmoQjJWUExfeYywJ2/1RCJuRhkuZF1MtENMZaPHh22hDeQZxqgk
-        qwvo9Azn0auThexBB0JVarf8/IMRf6g=
+        bh=OStIT+/k9HjAMVEft/RiVSrSrqRUKVMppJc/bLZhAsc=;
+        b=h1TVxq0gwwlLbYqvb8tWbr/SwshfATjxvexZQDFL2biMzuzXxMfRnglO5nSJ12QdFh3lZZ
+        FArNIcJjJMRUX5Blw8IDk3onyywNZfB2DYPVTIBceONow2v4WnuszUCeCPzCtPz99jrNKs
+        yidy5cAz7L/uV6PBm7+zmb9Z1OtOTTM=
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1624469293; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1624539102; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=mYyynKwtehNPTyX1THKKb3El0qFbl9kjsXWw3DO0Cyg=;
-        b=ggCdPixjzjfnvYzh8cFPC3mmpsko8L8djdCRmIRn9tB3zoo2F84MzrI5ApxBCpghL1j+6S
-        GY/vZwY1q/UQdJ/4TZBwmoQjJWUExfeYywJ2/1RCJuRhkuZF1MtENMZaPHh22hDeQZxqgk
-        qwvo9Azn0auThexBB0JVarf8/IMRf6g=
+        bh=OStIT+/k9HjAMVEft/RiVSrSrqRUKVMppJc/bLZhAsc=;
+        b=h1TVxq0gwwlLbYqvb8tWbr/SwshfATjxvexZQDFL2biMzuzXxMfRnglO5nSJ12QdFh3lZZ
+        FArNIcJjJMRUX5Blw8IDk3onyywNZfB2DYPVTIBceONow2v4WnuszUCeCPzCtPz99jrNKs
+        yidy5cAz7L/uV6PBm7+zmb9Z1OtOTTM=
 Content-Disposition: inline
-In-Reply-To: <CAMJ=MEegYBi_G=_nk1jaJh-dtJj59EFs6ehCwP5qSBqEKseQ-Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20210621184924.27493-4-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Ronny Meeus <ronny.meeus-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
 
---iwo5q46b7oRDEl/S
+--7y/hTF6KceCxU12n
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Hello Ronny.
+Hello.
 
-On Mon, Jun 14, 2021 at 05:29:35PM +0200, Ronny Meeus <ronny.meeus-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> All apps are running in the realtime domain and I'm using kernel 4.9
-> and cgroup v1. [...]  when it enters a full load condition [...]
-> I start to gradually reduce the budget of the cgroup until the system
-> is idle enough.
+On Mon, Jun 21, 2021 at 02:49:21PM -0400, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> =
+wrote:
+>     cgroup/cpuset: Add a new isolated cpus.partition type
+>=20
+>     Cpuset v1 uses the sched_load_balance control file to determine if lo=
+ad
+>     balancing should be enabled.  Cpuset v2 gets rid of sched_load_balance
+>     as its use may require disabling load balancing at cgroup root.
+>=20
+>     For workloads that require very low latency like DPDK, the latency
+>     jitters caused by periodic load balancing may exceed the desired
+>     latency limit.
+>=20
+>     When cpuset v2 is in use, the only way to avoid this latency cost is =
+to
+>     use the "isolcpus=3D" kernel boot option to isolate a set of CPUs. Af=
+ter
+>     the kernel boot, however, there is no way to add or remove CPUs from
+>     this isolated set. For workloads that are more dynamic in nature, that
+>     means users have to provision enough CPUs for the worst case situation
+>     resulting in excess idle CPUs.
+>=20
+>     To address this issue for cpuset v2, a new cpuset.cpus.partition type
+>     "isolated" is added which allows the creation of a cpuset partition
+>     without load balancing. This will allow system administrators to
+>     dynamically adjust the size of isolated partition to the current need
+>     of the workload without rebooting the system.
 
-Has your application some RT requirements or is there other reason why
-you use group RT allocations? (When your app seems to require all CPU
-time, you decide to curb it. And it still fullfills RT requirements?)
+I like this work.
+Would it be worth generalizing the API to be on par with what isolcpus=3D
+can configure? (I.e. not only load balancing but the other dimensions of
+isolation (like the flags nohz and managed_irq now).)
 
+I don't know if all such behaviors could be implemented dynamically
+(likely not easy) but the API could initially implement just what you do
+here with the "isolated" partition type.
 
-> But sometimes, immediately after the process assignment, it stops for
-> a short period (something like 1 or 2s) and then starts to consume 40%
-> again.
+The variant I'm thinking of would keep just the "root" and "member"
+partitions type and the "root" type could be additionally configured via
+cpuset.cpus.partition.flags (for example).
 
-What if you reduce cpu.rt_period_us (and cpu.rt_runtime_us
-proportionally)? (Are the pauses shorter?) Is there any useful info in
-/proc/$PID/stack during these periods?
+WDYT?
 
-> Is that expected behavior?
-
-Someone with RT group schedulling knowledge may tell :-)
-
-HTH,
 Michal
 
---iwo5q46b7oRDEl/S
+--7y/hTF6KceCxU12n
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmDTbycACgkQia1+riC5
-qSjuGw/+PwgyMCdN3B3T/DIUA8jgqdahhAhOr6gvKki2T+6nna3+hEHUgxek2IJr
-hLcLKL6EDyHQDTPi5CuqD/yDmpMePCbZiKbx6TczCk1wlbVAeUrJo5MZmVqqoZX/
-+CISMLNWXZ1zdvGB7FXa3yOn10Q99EAwBo8IycXpg8YNMExlboaDpUZNtfjiaQnE
-+XcXTi1titifBLtV5SPo3EkOkUSivGyQo6vcvWQcEsBO3CHpHK3bJCzxCHlV4hzM
-LsaYBTs8dmp8Om8BkybbuR61YsghFiZyFULRIDAUfbd3Jt7cLJvdgPdXQL4rJEEy
-7mbq2x46n/r8v3m3DR6KLpO+a+OGChxFZFxSGuN0jqA0/ae2sXwetX94mVsml/Zd
-NOFYv22Hm+yhM5UEQUWBlq6AuvKmgVeuqVBY6JGaKXFq540k8WoERDHQ0vWpyhUv
-68WTrcVEE5IWSzZ/SM6sOA8EPf7e5PzvRe9ddCNIKmpOYP7fyIzyVe7v1Fi+QHUf
-jxaARY1/Dyx84lm4eqLJ6j+038iMDAvP7gX3HG9uOnAJAF7dTGyW4HY3nPm00iyZ
-FYbx1ZEIFMWKKOXDbxUVopZM5JPdFzF30zq1GXPR0N54IimDNkQEQ1pJjsRAYJn2
-LWTq7ed2zVnW/Eb1xM06+kH5d2LgfxzRGxe/XX9d4lL7FKkqEzE=
-=oi2J
+iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmDUf9gACgkQia1+riC5
+qSgrew/9Hq4FG5rOCmGFt93pb5UT4E9slWA9EWdsCCpq97TsB9YXl8KsEYana9aP
+4ZCRW2ySHqn0LpjKlgbYruhXX9IICNAOr6KHHKW8RgKTPnBHsXpwuhQhDJdDLQ54
+U1DGX+WfTTuTFM8dO2VJcdSHl3c/7xxr1L5rp9Z3Soetzp219w6p/SE3WDZYW1Q1
+ur+Yq/Fjl6x8YU/7U1c18sHP1H7xTw9yC94NxZ/gwhyJzxxR8LDWTvTr9ZJcN2qP
+ywzJbuhH6dcZrAJUYbR990SryS1mDDD8nZx5iZJC005oR4m5Ce7kahU/lmv5Oe0n
+TCgPjA0idwjXED3pCeARRVdl6nuFmi+hXO9SV9HpLwoDVTWF2F2g6wb49g2tkIwK
+0BNtpYv2F0Mg0hmY3wCJH5IDBMkJemNgCUj+SRlwngJgYRbNcUvLmCloapbFLsC+
+3JziiJqkeOhlAIfpMYHsEXV0OHDkYLuHsf5cZ/We2qFoY955niGZti9EE+rMfh0V
+DNMwk7vmSSCffEFOzwP0cwGiyF6AC83JgX3eEpPAfArt+4CReEYi6r0gmdD8VYUG
+8ezyxEa9/zVgARjzB5U7/7r2OSquhmEg/uKhRs/XqeFP53MyAaJnPWIEXehyIsXL
+SgRvceYyw+U0Pvm/oYplJF8VLNIadWNzMOK9yqQCnNx6y9ogShU=
+=SVZh
 -----END PGP SIGNATURE-----
 
---iwo5q46b7oRDEl/S--
+--7y/hTF6KceCxU12n--
