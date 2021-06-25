@@ -1,69 +1,87 @@
-From: Ronny Meeus <ronny.meeus-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Short process stall after assigning it to a cgroup
-Date: Fri, 25 Jun 2021 13:34:53 +0200
-Message-ID: <CAMJ=MEfCpY-ZRq_mXUOU6=w9vvgNpF3DWGBWbGz6GzoY6bYtSQ@mail.gmail.com>
-References: <CAMJ=MEegYBi_G=_nk1jaJh-dtJj59EFs6ehCwP5qSBqEKseQ-Q@mail.gmail.com>
- <YNNvK0koEdkuD/z3@blackbook> <CAMJ=MEfMSX06-mcKuv54T7_VCCrv8uZsN-e-QiHe8-sx-sXVoA@mail.gmail.com>
- <YNWZW/WhdP50F4xy@blackbook>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH 2/3] mm: Charge active memcg when no mm is set
+Date: Fri, 25 Jun 2021 16:47:37 +0200
+Message-ID: <YNXsid0Wg5X9/hAC@blackbook>
+References: <20210610173944.1203706-1-schatzberg.dan@gmail.com>
+ <20210610173944.1203706-3-schatzberg.dan@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=CvU9SJEajbsXtfHda6+kKDOJRbuR3DlWfO4uCMK/qPI=;
-        b=Ds0LgUziVbhxE9Pg2UM2H+gxbvMESW5DSHxWrgkyl/gSNhV/VEHUikNS5JtUac4mzQ
-         kSHeXy3mNAxUOARUomSr8brTzYoZDZ3XRZOaUAkZO6d/VprbI2cHoF0CVZfC8uWeau6r
-         nAEsfkx0r42HUCcxMgrr/vEnoCE5prmU3UeA7HXMFfVmbjnCssqP/o4BS5pfMzf+bhsB
-         CyhKA6nkZKF5TWSu3CwWw/wIgMKYmcuMslUtNYYMGL0t7MoUR+io7A43ExDXIpf/lZOi
-         w63O3sUgnX3r3FNmSJRFqr+4pAjfqvTYZT/3PxfmqxASTtRe4IeH647HdEDcT9yN7A63
-         3Mwg==
-In-Reply-To: <YNWZW/WhdP50F4xy@blackbook>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="U5WOJVgZJrEeE8ml"
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1624632459; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3p/On6fxHbGfSoHEo45QdpoOPSq8wVMdaUq/e8JoVzM=;
+        b=V6ru4Mh7I4N9RUtnfdD/F1oqSMcxR0NwfguTHDRgm7jLX1iGu9ywsAgYmLHMaX0ue7CM2h
+        HsotDztIV9C6/zeL6JPC5htFaQThnNqOThsBU4wSJg3zshzFPFLkBEHa7OD92x+a+LVuqs
+        7uvRx1Tho+a9wZ/F9qQQKbqhSaCDv6c=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1624632459; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3p/On6fxHbGfSoHEo45QdpoOPSq8wVMdaUq/e8JoVzM=;
+        b=V6ru4Mh7I4N9RUtnfdD/F1oqSMcxR0NwfguTHDRgm7jLX1iGu9ywsAgYmLHMaX0ue7CM2h
+        HsotDztIV9C6/zeL6JPC5htFaQThnNqOThsBU4wSJg3zshzFPFLkBEHa7OD92x+a+LVuqs
+        7uvRx1Tho+a9wZ/F9qQQKbqhSaCDv6c=
+Content-Disposition: inline
+In-Reply-To: <20210610173944.1203706-3-schatzberg.dan@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Dan Schatzberg <schatzberg.dan@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:MEMORY MANAGEMENT" <linux-mm@kvack.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Chris Down <chris@chrisdown.name>, Jens Axboe <axboe@kernel.dk>, Shakeel Butt <shakeelb@google.com>
 
-Op vr 25 jun. 2021 om 10:52 schreef Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org>:
->
-> On Fri, Jun 25, 2021 at 09:32:59AM +0200, Ronny Meeus <ronny.meeus@gmail.=
-com> wrote:
-> > The application does not have strict RT requirements.
->
-> Can you even use the normal non-RT scheduling policy? ...
 
-No since we want certain functions (like packet processing) to have a
-higher priority than for example management activities.
+--U5WOJVgZJrEeE8ml
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->
-> > We were working with fixed croups initially but this has the big
-> > disadvantage that the unused budget configured in one group cannot be
-> > used by another group and as such the processing power is basically
-> > lost.
->
-> ...then your problem may be solvable with mere weights to adjust prioriti=
-es
-> of competitors. (Or if you need to stick with RT policies you can assign
-> different priorities on task basis, I wouldn't use RT groups for that.)
->
-> > About the stack: it is difficult to know from the SW when the issue
-> > happens so dumping the stack is not easy I think but it is a good
-> > idea.
-> > I will certainly think about it.
->
-> You may sample it periodically or start prior a migration to get more
-> insights what's causing the delay.
->
+On Thu, Jun 10, 2021 at 10:39:43AM -0700, Dan Schatzberg <schatzberg.dan@gm=
+ail.com> wrote:
+> @@ -926,8 +937,17 @@ struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_=
+struct *mm)
+>  	 * counting is disabled on the root level in the
+>  	 * cgroup core. See CSS_NO_REF.
+>  	 */
+> -	if (unlikely(!mm))
+> -		return root_mem_cgroup;
+> +	if (unlikely(!mm)) {
+> +		memcg =3D active_memcg();
+> +		if (unlikely(memcg)) {
+> +			/* remote memcg must hold a ref */
+> +			css_get(&memcg->css);
+> +			return memcg;
+> +		}
+> +		mm =3D current->mm;
+> +		if (unlikely(!mm))
+> +			return root_mem_cgroup;
+> +	}
 
-I observed that when I create the cgroups dynamically (at the moment I
-need them) and immediately assign the threads to it, the symptom seems
-to be gone.
-I'm going to observe the system some more to confirm that the problem
-is really solved in this way.
+With the change in __add_to_page_cache_locked() all page cache charges
+will supply null mm, so the first !mm unlikely hint may not be warranted
+anymore. Just an interesting point, generally, I'm adding
 
-Thanks Michal for the time you spent on this.
+Reviewed-by: Michal Koutn=FD <mkoutny@suse.com>
 
-> Regards,
-> Michal
->
+--U5WOJVgZJrEeE8ml
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmDV7IUACgkQia1+riC5
+qSirkA/7BTqxM98NGuM6kg3YoDN9bafGVLtaEZ2J3nRIXBJpWkyGxDpmaRsEAq8B
+SDejdzmPaIsNlgn3+POS5ozNnhqVXh0/oZ/09Cs68TCGNQk/pZaZeyBitqhP+1MW
+MoNiFqifltGHeyfr6EupwmYp1qsvQHCeiIwrEZ1TJjxG9WZd0xPcVv3dtdFZ2euW
+3p303SgVvQ3TytBvDQ5ORpTmFKQO/td1khxtFv7XcTXyMoaTu9EbBVFCxIb16oCk
+xaGLmQuCMyv6m2uZONDq/WhMKHUQOVEooBz4pZg/sR2T3swSYVj6q+x/NbbNk/MP
+nXZ8TN8IgedfvKKyBPwn4JxOU2zxgoaa07fHvhYdHBHY+PhB0rLuQ/XLoJm8RozE
+3DpSSSi0x5I+2jXajeJ9vfjjKj+B1sq66tST5N9ZJ1NfCr7JAtTgwv3F7sR90cIJ
+W9d+ZqvtVuAsbU0aQA0Tqexvu+IlERRij4dXzrk5ewOz8CDxcdoyPXnANVLniSAc
+rXir95NJNIksHOpXyCyF9qOY5nqdIJeYpG9bZYqWojnVhkDJfj0K7O4HZ79EtxLY
+U/I5+MvvhY6unE8O9Jc6F+/ctC0IY26boMzT14nSepJOcqtBLmX0v5VTRNgwK4PT
+ZiDOTsKgnEn6o/A0O203BEcvuzl2t2WMFam+1lkHLS5ZtZMNOuY=
+=EYsZ
+-----END PGP SIGNATURE-----
+
+--U5WOJVgZJrEeE8ml--
