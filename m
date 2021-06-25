@@ -1,89 +1,69 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+From: Ronny Meeus <ronny.meeus-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: Short process stall after assigning it to a cgroup
-Date: Fri, 25 Jun 2021 10:52:43 +0200
-Message-ID: <YNWZW/WhdP50F4xy@blackbook>
+Date: Fri, 25 Jun 2021 13:34:53 +0200
+Message-ID: <CAMJ=MEfCpY-ZRq_mXUOU6=w9vvgNpF3DWGBWbGz6GzoY6bYtSQ@mail.gmail.com>
 References: <CAMJ=MEegYBi_G=_nk1jaJh-dtJj59EFs6ehCwP5qSBqEKseQ-Q@mail.gmail.com>
- <YNNvK0koEdkuD/z3@blackbook>
- <CAMJ=MEfMSX06-mcKuv54T7_VCCrv8uZsN-e-QiHe8-sx-sXVoA@mail.gmail.com>
+ <YNNvK0koEdkuD/z3@blackbook> <CAMJ=MEfMSX06-mcKuv54T7_VCCrv8uZsN-e-QiHe8-sx-sXVoA@mail.gmail.com>
+ <YNWZW/WhdP50F4xy@blackbook>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="XKHtlNgGHYTuc56p"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1624611164; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=GZMmoA41VC0zJ2L7yVVFYP5vkEgxoLw5HFmrgFw5BSc=;
-        b=uebnGotChiEZ7PcTW2XnEcODhZSeP0O4eZS/q61OQgYD8biMzVBvyR97w+c9fnniDvXYPp
-        7UHxF6fpQbWgA5t60Zp6wf3uEwaAJA7Rj97zf3qWiQoAy963S99nVE7aoCl+y5EMno45X5
-        7Gbl2YelSm0ZKSUBoBqmnn5Kt3FfEqE=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1624611164; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=GZMmoA41VC0zJ2L7yVVFYP5vkEgxoLw5HFmrgFw5BSc=;
-        b=uebnGotChiEZ7PcTW2XnEcODhZSeP0O4eZS/q61OQgYD8biMzVBvyR97w+c9fnniDvXYPp
-        7UHxF6fpQbWgA5t60Zp6wf3uEwaAJA7Rj97zf3qWiQoAy963S99nVE7aoCl+y5EMno45X5
-        7Gbl2YelSm0ZKSUBoBqmnn5Kt3FfEqE=
-Content-Disposition: inline
-In-Reply-To: <CAMJ=MEfMSX06-mcKuv54T7_VCCrv8uZsN-e-QiHe8-sx-sXVoA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=CvU9SJEajbsXtfHda6+kKDOJRbuR3DlWfO4uCMK/qPI=;
+        b=Ds0LgUziVbhxE9Pg2UM2H+gxbvMESW5DSHxWrgkyl/gSNhV/VEHUikNS5JtUac4mzQ
+         kSHeXy3mNAxUOARUomSr8brTzYoZDZ3XRZOaUAkZO6d/VprbI2cHoF0CVZfC8uWeau6r
+         nAEsfkx0r42HUCcxMgrr/vEnoCE5prmU3UeA7HXMFfVmbjnCssqP/o4BS5pfMzf+bhsB
+         CyhKA6nkZKF5TWSu3CwWw/wIgMKYmcuMslUtNYYMGL0t7MoUR+io7A43ExDXIpf/lZOi
+         w63O3sUgnX3r3FNmSJRFqr+4pAjfqvTYZT/3PxfmqxASTtRe4IeH647HdEDcT9yN7A63
+         3Mwg==
+In-Reply-To: <YNWZW/WhdP50F4xy@blackbook>
 List-ID: <cgroups.vger.kernel.org>
-To: Ronny Meeus <ronny.meeus-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="macroman"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+Op vr 25 jun. 2021 om 10:52 schreef Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org>:
+>
+> On Fri, Jun 25, 2021 at 09:32:59AM +0200, Ronny Meeus <ronny.meeus@gmail.=
+com> wrote:
+> > The application does not have strict RT requirements.
+>
+> Can you even use the normal non-RT scheduling policy? ...
 
---XKHtlNgGHYTuc56p
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+No since we want certain functions (like packet processing) to have a
+higher priority than for example management activities.
 
-On Fri, Jun 25, 2021 at 09:32:59AM +0200, Ronny Meeus <ronny.meeus-Re5JQEeQqe8@public.gmane.org=
-m> wrote:
-> The application does not have strict RT requirements.
-
-Can you even use the normal non-RT scheduling policy? ...
-
-> We were working with fixed croups initially but this has the big
-> disadvantage that the unused budget configured in one group cannot be
-> used by another group and as such the processing power is basically
-> lost.
-
-=2E..then your problem may be solvable with mere weights to adjust prioriti=
+>
+> > We were working with fixed croups initially but this has the big
+> > disadvantage that the unused budget configured in one group cannot be
+> > used by another group and as such the processing power is basically
+> > lost.
+>
+> ...then your problem may be solvable with mere weights to adjust prioriti=
 es
-of competitors. (Or if you need to stick with RT policies you can assign
-different priorities on task basis, I wouldn't use RT groups for that.)
+> of competitors. (Or if you need to stick with RT policies you can assign
+> different priorities on task basis, I wouldn't use RT groups for that.)
+>
+> > About the stack: it is difficult to know from the SW when the issue
+> > happens so dumping the stack is not easy I think but it is a good
+> > idea.
+> > I will certainly think about it.
+>
+> You may sample it periodically or start prior a migration to get more
+> insights what's causing the delay.
+>
 
-> About the stack: it is difficult to know from the SW when the issue
-> happens so dumping the stack is not easy I think but it is a good
-> idea.
-> I will certainly think about it.
+I observed that when I create the cgroups dynamically (at the moment I
+need them) and immediately assign the threads to it, the symptom seems
+to be gone.
+I'm going to observe the system some more to confirm that the problem
+is really solved in this way.
 
-You may sample it periodically or start prior a migration to get more
-insights what's causing the delay.=20
+Thanks Michal for the time you spent on this.
 
-Regards,
-Michal
-
-
---XKHtlNgGHYTuc56p
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmDVmVcACgkQia1+riC5
-qSj4NQ/9GVs17yCzEg2MYsOf/nr3/Ye5kDUy3JQ7tEeF05wLhEaeXikKa04y5Uxi
-jUrDkmqSoZX/KbDJqv5u+1JLy5m76h8POHjc0fSG6bEhfZuttGWEZ0cQoEAqyJ74
-69u3wTYcfuUeaE3uUSGwvGbWbvUMGTmYKykjrCp7oimZCQI9yaZ7XidDFVDysPCA
-iEDX27yyC1RnheZsspMGkW429HgikPGg6nHsEtTTuywWxQvKfxY4c7r1LGRuk4ow
-k2tZ9R20xgUCdLED/OCVB1DbVZ4Jv5X1wEgp0Ftz4QnYtsEd6TjXsG343CROBV4X
-i9eSuUO+z8hWeB5noeIQSzavb8cH9yU+9+J9vWP6mjxBVb2wen9QQrQS2YWW658f
-Y9NJ7acqSzNuGsW9oqW4fMTCXLzit9D87kZ7RXmldn1KgiBFuTGhdvY7lxgV/Eb6
-YH5fyL/aqzvWGxPvLLjmUXkh92pyE2eREFdKefixG0B83flM5QyyJ6SvrR0nlQ2Z
-08WLjrCRAcyIvCpnMO1jhJEFesVlClmwSRAQsRXOdmu0xw18y4tTSIgidN4maY3d
-W6Kw+lin5+GBtDw4mXcaPiV7TUy15LAgekP4LVAG0+Mh3fC7pncdHFfDMkbE4fIw
-L0K2LgKqYxXQ0bIe6bBYr9WZ32Jt1a6IQDytTflGuB8wjZbT1nk=
-=GaAf
------END PGP SIGNATURE-----
-
---XKHtlNgGHYTuc56p--
+> Regards,
+> Michal
+>
