@@ -1,80 +1,46 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: Prevent inode/dentry trashing?
-Date: Fri, 25 Jun 2021 17:55:22 +0200
-Message-ID: <YNX8anv2yCnkVPXy@blackbook>
-References: <ce330972-78e6-4347-9735-72ee7bb21ef5@pmhahn.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 2/6] cgroup/cpuset: Clarify the use of invalid
+ partition root
+Date: Sat, 26 Jun 2021 06:53:45 -0400
+Message-ID: <YNcHOe3o//pIiByh@mtj.duckdns.org>
+References: <20210621184924.27493-1-longman@redhat.com>
+ <20210621184924.27493-3-longman@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="GRfnHW8roRpdCmLl"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1624636524; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1HmjupcRz3JaQfNq8HfL9gsd0zczzHm8Vkl0SLmvU3I=;
-        b=Cfo47BpXwTuQyIkermF36Mz6Go/NxmItV2XTmAuUvXXYB2AQwW4PPZ53ShpoAhVlOH+pJO
-        PEQFOPS4ryan0JBVlJl8uw02JGPeJmiXZefue/JSb2Tc2/nuqrY+39WqrmInIsgdcDmrw6
-        ittbSCEihOI1rEfSTJWdZMFeDCQgbiU=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1624636524; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1HmjupcRz3JaQfNq8HfL9gsd0zczzHm8Vkl0SLmvU3I=;
-        b=Cfo47BpXwTuQyIkermF36Mz6Go/NxmItV2XTmAuUvXXYB2AQwW4PPZ53ShpoAhVlOH+pJO
-        PEQFOPS4ryan0JBVlJl8uw02JGPeJmiXZefue/JSb2Tc2/nuqrY+39WqrmInIsgdcDmrw6
-        ittbSCEihOI1rEfSTJWdZMFeDCQgbiU=
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=5IakmMrURhycOrgMfR07LYIjzM4DIOC86+dJLV+QXtE=;
+        b=tJM12ZzFZGep9dgrfo5utS8xjiFj8xNgXdKhGD3A9SmaJVv55z2dbAFR71Tbmn6Sea
+         IygyNuEsD+k0js/M1w4rmHPEwGAIilhGD+DNFHa8L+iIXBZipBJ9EHHHqNYTIXeg4Fex
+         1EG9vUpbZN5Quo1q3/NZTu9X6LlyML8XgkDM1Ubf3CVPwWLHNe1HfkCnMVt449oWv9zB
+         ei8oGQnjwQ3R4FpWQKR9KiXEY+NSGqxidKhNSsGscePbTanOWZrgBfdBgs9Ls2RuMv7Z
+         qg7pkDppgBYjycxMvMR5DhVz7Fk/CB+AT5rvnP0oGp3kI/M7eHMhvJS8OX7yYZPQDhsr
+         CAZg==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <ce330972-78e6-4347-9735-72ee7bb21ef5-isSyJ6YaLy+zQB+pC5nmwQ@public.gmane.org>
+In-Reply-To: <20210621184924.27493-3-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-To: Philipp Hahn <pmhahn+lkml-isSyJ6YaLy+zQB+pC5nmwQ@public.gmane.org>
-Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>
 
+Hello, Waiman.
 
---GRfnHW8roRpdCmLl
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Mon, Jun 21, 2021 at 02:49:20PM -0400, Waiman Long wrote:
+>  1) A partition root can't be changed to member if it has child partition
+>     roots.
+>  2) Removing CPUs from cpuset.cpus that causes it to become invalid is
+>     not allowed.
 
-Hello Phillip.
+I'm not a fan of this approach. No matter what we have to be able to handle
+CPU removals which are user-iniated operations anyway, so I don't see why
+we're adding a different way of handling a different set of operations. Just
+handle them the same?
 
-On Mon, Jun 07, 2021 at 02:39:35PM +0200, Philipp Hahn <pmhahn+lkml@pmhahn.=
-de> wrote:
-> The trashed caches affect all other processes running in parallel or the
-> first processes started each morning.
->=20
-> Is it possible to prevent inode/dentry trashing for example by limiting t=
-he
-> cache per process(-group)?
+Thanks.
 
-Yes. Unless you have disabled it with CONFIG_MEMCG_KMEM or
-cgroup.memory=3Dnokmem, dentries and inodes are charged to respective
-cgroups. And you can limit overall memory of a cgroup, see
-memory.{max,high} attributes. (You suggest this inode/dentry consumption
-is dominant enough to affect other jobs, so the limit would keep it
-constrained as you intend).
-
-HTH,
-Michal
-
---GRfnHW8roRpdCmLl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmDV/GQACgkQia1+riC5
-qShfZA//ZacjmyfT7nNWjlUA6bEyGPVXkjxHZedOUfWqCr2SGXbwd57ND+ROHSwA
-EbSVYP3TaN7+BJBPrL3y8NjnKFaRJsLosiRiKsA6VWS9pibmgVKzSiW5H5aS03/S
-nl6GDIp0mt8sg2DDjn/raS+AopLt/iD7awWIT8LAugfs2h4AueUZ/kC01Cmzja7F
-5F5C2vG1T8pKinSMow3OCtZVMmMl18U+JEFiNWKqrQkMlAHu6GlwUTIEtEc6X4hS
-h/GKJ/xplD/avp1rjJSr+FUFZG4+jPTnQu0LqUdwR80VEO9gdiSvavJCARCjbKvb
-54qPhiPtovHk9UfZJe8fcN807cdYNrWNHY0n6/Z2M/28oq6gF81Ra7Ig4/3I2DfU
-qT6+vXrvjF7ZEO9y8okJiGfdpYInlsJbNIQvkjaL156Uz70HLosGFsg5NAnYY0Mc
-9HJXhnIQCRke4O/JccAAftxdmDoPVDmJvl7QMMD7D2AoGVEALv8XTzdxpequUK/q
-PFW4qoelNaEx2NNs01Wzr76fphdav5zWn1+ctdGRbKCyAAv2ZMTLwNut4p1K58gg
-CZpYLN6S8fioX45P4uRaO6VTbWf+o5W+URJM06n/o94ha+cRlIU7uonqb3gx0eU2
-ucM216qE2TT/NdqAqfE3sWAKaM1BhA8HNNpMsiZgwGEbOIUFdRE=
-=I/eJ
------END PGP SIGNATURE-----
-
---GRfnHW8roRpdCmLl--
+-- 
+tejun
