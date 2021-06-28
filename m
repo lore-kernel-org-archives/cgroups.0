@@ -1,49 +1,70 @@
-From: "Enrico Weigelt, metux IT consult" <lkml-EcKl7qYKIbxeoWH0uzbU5w@public.gmane.org>
-Subject: Re: Prevent inode/dentry trashing?
-Date: Mon, 28 Jun 2021 11:40:39 +0200
-Message-ID: <88451906-e537-0ac3-b8f2-16bfc4d77ea6@metux.net>
-References: <ce330972-78e6-4347-9735-72ee7bb21ef5@pmhahn.de>
- <YNX8anv2yCnkVPXy@blackbook>
+From: Waiman Long <llong@redhat.com>
+Subject: Re: [PATCH v2 2/6] cgroup/cpuset: Clarify the use of invalid
+ partition root
+Date: Mon, 28 Jun 2021 09:06:50 -0400
+Message-ID: <6ea1ac38-73e1-3f78-a5d2-a4c23bcd8dd1@redhat.com>
+References: <20210621184924.27493-1-longman@redhat.com>
+ <20210621184924.27493-3-longman@redhat.com>
+ <YNcHOe3o//pIiByh@mtj.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <YNX8anv2yCnkVPXy@blackbook>
-Content-Language: tl
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1624885616;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3Wsog/UA6NQRm36wrbUHXM3ftcSt/9+OFEW6vcsabAY=;
+        b=RiR40TU4jrtl9rNUACuQNyx3biuO0jOUfjOJYa6ZdFJNcIR0kwK6zXRf2i3JB2TrDYifVN
+        0FV9Ko9m9P8GhPRbog+ijE+UScWmqlp/0xhj/bYB6w8PgRoJMkNhtEGDh0NoqEpJHxOz9G
+        7oYHPVAH1UquSbN7FuPBdlf2OObnwZ4=
+In-Reply-To: <YNcHOe3o//pIiByh@mtj.duckdns.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Philipp Hahn <pmhahn+lkml-isSyJ6YaLy+zQB+pC5nmwQ@public.gmane.org>
-Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>
 
-On 25.06.21 17:55, Michal Koutn=FD wrote:
->> Is it possible to prevent inode/dentry trashing for example by limiting =
-the
->> cache per process(-group)?
->=20
-> Yes. Unless you have disabled it with CONFIG_MEMCG_KMEM or
-> cgroup.memory=3Dnokmem, dentries and inodes are charged to respective
-> cgroups. And you can limit overall memory of a cgroup, see
-> memory.{max,high} attributes. (You suggest this inode/dentry consumption
-> is dominant enough to affect other jobs, so the limit would keep it
-> constrained as you intend).
+On 6/26/21 6:53 AM, Tejun Heo wrote:
+> Hello, Waiman.
+>
+> On Mon, Jun 21, 2021 at 02:49:20PM -0400, Waiman Long wrote:
+>>   1) A partition root can't be changed to member if it has child partiti=
+on
+>>      roots.
+>>   2) Removing CPUs from cpuset.cpus that causes it to become invalid is
+>>      not allowed.
+> I'm not a fan of this approach. No matter what we have to be able to hand=
+le
+> CPU removals which are user-iniated operations anyway, so I don't see why
+> we're adding a different way of handling a different set of operations. J=
+ust
+> handle them the same?
 
-Could you please tell a bit more how this really works ?
-(maybe some pointers to the code)
+The main reason for doing this is because normal cpuset control file=20
+actions are under the direct control of the cpuset code. So it is up to=20
+us to decide whether to grant it or deny it. Hotplug, on the other hand,=20
+is not under the control of cpuset code. It can't deny a hotplug=20
+operation. This is the main reason why the partition root error state=20
+was added in the first place.
 
-I'm curios what happens if those cache objects are used by different
-cgroups - are they accounted to multiple times (once per cgroup) ?
-What happens when one cgroup using some cache object reaching its limit,
-wile another one does not ?
+Normally, users can set cpuset.cpus to whatever value they want even=20
+though they are not actually granted. However, turning on partition root=20
+is under more strict control. You can't turn on partition root if the=20
+CPUs requested cannot actually be granted. The problem with setting the=20
+state to just partition error is that users may not be aware that the=20
+partition creation operation fails.=C2=A0 We can't assume all users will do=
+=20
+the proper error checking. I would rather let them know the operation=20
+fails rather than relying on them doing the proper check afterward.
 
+Yes, I agree that it is a different philosophy than the original cpuset=20
+code, but I thought one reason of doing cgroup v2 is to simplify the=20
+interface and make it a bit more erorr-proof. Since partition root=20
+creation is a relatively rare operation, we can afford to make it more=20
+strict than the other operations.
 
---mtx
+Cheers,
+Longman
 
---=20
----
-Hinweis: unverschl=FCsselte E-Mails k=F6nnen leicht abgeh=F6rt und manipuli=
-ert
-werden ! F=FCr eine vertrauliche Kommunikation senden Sie bitte ihren
-GPG/PGP-Schl=FCssel zu.
----
-Enrico Weigelt, metux IT consult
-Free software and Linux embedded engineering
-info-EcKl7qYKIbxeoWH0uzbU5w@public.gmane.org -- +49-151-27565287
