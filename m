@@ -1,33 +1,68 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v3 04/18] mm/memcg: Remove soft_limit_tree_node()
-Date: Wed, 30 Jun 2021 10:19:28 -0400
-Message-ID: <YNx9cLxvtSzOLVaa@cmpxchg.org>
-References: <20210630040034.1155892-1-willy@infradead.org>
- <20210630040034.1155892-5-willy@infradead.org>
+From: Dan Schatzberg <schatzberg.dan@gmail.com>
+Subject: Re: [PATCH 3/3] loop: Charge i/o to mem and blk cg
+Date: Wed, 30 Jun 2021 10:49:58 -0400
+Message-ID: <YNyEltLABd17spxy@dschatzberg-fedora-PC0Y6AEN>
+References: <20210610173944.1203706-1-schatzberg.dan@gmail.com>
+ <20210610173944.1203706-4-schatzberg.dan@gmail.com>
+ <YNXvr81YFzbaTxCb@blackbook>
+ <YNnZ7hIRIk9dJDry@dschatzberg-fedora-PC0Y6AEN>
+ <YNr1TYfBwR/tEpEJ@blackbook>
+ <YNsoNeQNMmdplmtp@dschatzberg-fedora-PC0Y6AEN>
+ <YNw8kRpT6R2emuhI@blackbook>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=j73ye2WfDEOMrwygrtYKVavEV7MVpq0JpTssNG054oM=;
-        b=TmYzzLVMVTiuZjmxW/NiL2ZvKpXBRPYJcaRo+gszw0wIOZEv/DRCpgUu/oveFuve7S
-         G1Qqm0VaS61KoUtXiHD36mktGAHBs9/huGR69H2CWL1Sq1/NHjZQ00163ZhFxuGQeKBV
-         QutXoKt5uzRuz0fU2ExIYwV8uJ3Cfh4VM7qwOKHnKtvGr8ZTockdHbIYtXrAFJorsYjd
-         bL0EVeyijJG0tXfzhNhDzx72EMZXpb+FxYUDEG1RnVUEb5WLIOY/oEXdAPwARnM6bJQo
-         plcyRl5t02gHnefVOSavYpjGZlDQ+biPKHOQMnui9AJS14ZATuU+Ik7tb69RGlyi3Ygw
-         uprQ==
+        bh=7non7Ht3wU/Vgs0c/H0HW+wlwkdFp/0NZ1g7sAhRaEc=;
+        b=gGD9BAtpYOeepZdTbE3KHgAiQMcPPfpnG9JJlnbUMfEhlC8BfSFmt8miSEvOuIEZiB
+         3rzRcjaUvadqxpFG1/UCWQxX3S4rZ592U9H9rz8afxfdqc1r2Rde8c8BEn9i7xgMhNDv
+         JPyYE28nZZUx9+NLzRiuD3VmblJGAy13TwSeiDfi41Y1wHRqNK+gLcQjTZxfG2M1YsUZ
+         0c2kCQtqWyTPbUPzKbLyuJMbmCzox2eNsaFegX5bjW/wN/jIK4/VDB9Z58im/s+xDGmz
+         cCYbg8XIqnEdiJwNjEYwVOBbY9TWqJad9qQ5AqQ/TxIfy00Mt1Ykar5zkLmd3VYYunt6
+         2M3g==
 Content-Disposition: inline
-In-Reply-To: <20210630040034.1155892-5-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+In-Reply-To: <YNw8kRpT6R2emuhI@blackbook>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:MEMORY MANAGEMENT" <linux-mm@kvack.org>, Johannes Weiner <hannes@cmpxchg.org>, Jens Axboe <axboe@kernel.dk>
 
-On Wed, Jun 30, 2021 at 05:00:20AM +0100, Matthew Wilcox (Oracle) wrote:
-> Opencode this one-line function in its three callers.
+> This is how I understand it:
 > 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+> --- a/drivers/block/loop.c
+> +++ b/drivers/block/loop.c
+> @@ -996,6 +996,7 @@ static void loop_queue_work(struct loop_device *lo, struct loop_cmd *cmd)
+>         rb_insert_color(&worker->rb_node, &lo->worker_tree);
+>  queue_work:
+>         if (worker) {
+> +               WARN_ON_ONCE(worker->blkcg_css != cmd->blkcg_css);
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Yes, this is correct. Though the check here seems a bit obvious to me
+- it must be correct because we assign worker above:
+
+if (cur_worker->blkcg_css == cmd->blkcg_css) {
+        worker = cur_worker;
+        break;
+
+or when we construct the worker:
+
+worker->blkcg_css = cmd->blkcg_css;
+
+I think this WARN_ON_ONCE check might be more interesting in
+loop_process_work which invokes loop_handle_cmd and actually uses
+cmd->blkcg_css. In any event, your understanding is correct here.
+
+>                 /*
+>                  * We need to remove from the idle list here while
+>                  * holding the lock so that the idle timer doesn't
+> @@ -2106,6 +2107,8 @@ static blk_status_t loop_queue_rq(struct blk_mq_hw_ctx *hctx,
+>         cmd->memcg_css = NULL;
+>  #ifdef CONFIG_BLK_CGROUP
+>         if (rq->bio && rq->bio->bi_blkg) {
+> +               /* reference to blkcg_css will be held by loop_worker (outlives
+> +                * cmd) or it is the eternal root css */
+
+Yes, this is correct. Feel free to add my Acked-by to such a patch
