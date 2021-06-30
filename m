@@ -1,67 +1,89 @@
-From: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 3/3] loop: Charge i/o to mem and blk cg
-Date: Tue, 29 Jun 2021 10:03:33 -0400
-Message-ID: <YNsoNeQNMmdplmtp@dschatzberg-fedora-PC0Y6AEN>
-References: <20210610173944.1203706-1-schatzberg.dan@gmail.com>
- <20210610173944.1203706-4-schatzberg.dan@gmail.com>
- <YNXvr81YFzbaTxCb@blackbook>
- <YNnZ7hIRIk9dJDry@dschatzberg-fedora-PC0Y6AEN>
- <YNr1TYfBwR/tEpEJ@blackbook>
+From: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: [PATCH v3 00/18] Folio conversion of memcg
+Date: Wed, 30 Jun 2021 05:00:16 +0100
+Message-ID: <20210630040034.1155892-1-willy@infradead.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=epo3zKiTfhS1s7uCWxNYZiOm+vo3zbXKhTVM1Kqzmbg=;
-        b=BvAsn6V+lEebL9543XNZN8ZgjQb+osEKHPTuXHALEL19Dqb6/zJ1xRDLLweEL6wFZe
-         nCCZ9qgxxMvqfBg0PIRP27jmbc8ViBnRr2O1g5R9fD2B8DKZbSkVH6hdzgMoPIUWzHeV
-         u9B76ZOBRd9zRYeaOAP24ARezCGz/5LgXUOcEzlvE1OffxKOhgMBdA+uNkK66LNl3be2
-         4qSEXMtzyF67GlNoC0wg7jZ+nuozmqOqplCuU3fIEYFxurWmsax7mrIOp7Vt3dLHEqxZ
-         NEM5Qmqlf4GdsA+ghm9u58I4sopLY1RF+S0SNXXwMWYDVwaevKsyyuATbPEouicRln0n
-         JZow==
-Content-Disposition: inline
-In-Reply-To: <YNr1TYfBwR/tEpEJ@blackbook>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=H55xh5V+oHUYRXdg7je8cyh7ajXB8JcmTsj7ZvoBfcc=; b=VkugjUnYwnT8jLypOv8A1Ln+V/
+        J//Nq0lYkLXx52J2+WEN6cSvPIY1sY/q1Qjq7Y+y/eQ9RWv0FovaBQmOjaE1kwNGJyc+E6BpfGext
+        55e9UWOYQctGBZTK7kPeUl1NUnrWs5vtsCt/LjVxIJhZTyt8kSN5iAFAenePRULX8nY7eAIsFXVn/
+        VUASdirBJ8n0NHCXucK6x+g6QMF8/A2AfJ4bNCF5qzrwLVfKzATQ+d2pljaxZfRYNeF4ulNef8vxL
+        GLLkYB0smy0U8EIrZWDXAiGnwpwHExeDEpBkonDL1X72PHNIe3pKJEQKeu4LTaEFvDOn05YkqtGlT
+        oJ7sXmAw==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "open list:BLOCK LAYER" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:MEMORY MANAGEMENT" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-> Non-inlining in the loop module doesn't seem like a big trouble. OTOH,
-> other callers may be more sensitive and would need to rely on inlining.
+After Michel's comments on "Folio-enabling the page cache", I thought it
+best to split out the memcg patches from the rest of the page cache folio
+patches and redo them to focus on correctness (ie always passing a folio).
 
-Yes, this is my concern as well.
+This is fundamentally for review rather than application.  I've rebased
+on Linus' current tree, which includes the recent patchbomb from akpm.
+That upstream version won't boot on any system I have available, and I'm
+not comfortable asking for patches to be applied unless I can actually
+try them.  That said, these patches were fine on top of 5.13.
 
-> I can't currently think of a nice way to have both the exported and the
-> exlicitly inlined variant at once. It seems it's either API or perf
-> craft in the end but both are uncertain, so I guess the current approach
-> is fine in the end.
-> 
-> > Yes it is intentional. All requests (not just aio) go through the loop
-> > worker which grabs the blkcg reference in loop_queue_work() on
-> > construction. So I believe grabbing a reference per request is
-> > unnecessary.
-> 
-> Isn't there a window without the reference between loop_queue_rq and
-> loop_queue_work?
+There are still a few functions which take pages, but they rely on other
+conversions happening first, which in turn rely on this set of patches,
+so I think this is a good place to stop, with the understanding that
+there will be more patches later.
 
-Hmm, perhaps I'm not understanding how the reference counting works,
-but my understanding is that we enter loop_queue_rq with presumably
-some code earlier holding a reference to the blkcg, we only need to
-acquire a reference sometime before returning from loop_queue_rq. The
-"window" between loop_queue_rq and loop_queue_work is all
-straight-line code so there's no possibility for the earlier code to
-get control back and drop the reference.
+Some of the commit logs may be garbled ... I haven't fully taken into
+account all of Muchun's recent rework.  All of this work is visible in
+context in a git tree here:
+https://git.infradead.org/users/willy/pagecache.git/shortlog/refs/heads/folio
 
-> I don't know, you seem to know better, so I'd suggest
-> dropping a comment line into the code explaining this.
+Matthew Wilcox (Oracle) (18):
+  mm: Add folio_nid()
+  mm/memcg: Remove 'page' parameter to mem_cgroup_charge_statistics()
+  mm/memcg: Use the node id in mem_cgroup_update_tree()
+  mm/memcg: Remove soft_limit_tree_node()
+  mm/memcg: Convert memcg_check_events to take a node ID
+  mm/memcg: Add folio_memcg() and related functions
+  mm/memcg: Convert commit_charge() to take a folio
+  mm/memcg: Convert mem_cgroup_charge() to take a folio
+  mm/memcg: Convert uncharge_page() to uncharge_folio()
+  mm/memcg: Convert mem_cgroup_uncharge() to take a folio
+  mm/memcg: Convert mem_cgroup_migrate() to take folios
+  mm/memcg: Convert mem_cgroup_track_foreign_dirty_slowpath() to folio
+  mm/memcg: Add folio_memcg_lock() and folio_memcg_unlock()
+  mm/memcg: Convert mem_cgroup_move_account() to use a folio
+  mm/memcg: Add mem_cgroup_folio_lruvec()
+  mm/memcg: Add folio_lruvec_lock() and similar functions
+  mm/memcg: Add folio_lruvec_relock_irq() and
+    folio_lruvec_relock_irqsave()
+  mm/workingset: Convert workingset_activation to take a folio
 
-I wouldn't be so sure that I know any better here :D - I'm fairly
-inexperienced in this domain.
+ include/linux/memcontrol.h       | 249 +++++++++++++++----------
+ include/linux/mm.h               |   5 +
+ include/linux/swap.h             |   2 +-
+ include/trace/events/writeback.h |   8 +-
+ kernel/events/uprobes.c          |   3 +-
+ mm/compaction.c                  |   2 +-
+ mm/filemap.c                     |   8 +-
+ mm/huge_memory.c                 |   2 +-
+ mm/khugepaged.c                  |   8 +-
+ mm/ksm.c                         |   3 +-
+ mm/memcontrol.c                  | 311 +++++++++++++++----------------
+ mm/memory-failure.c              |   2 +-
+ mm/memory.c                      |   9 +-
+ mm/memremap.c                    |   2 +-
+ mm/migrate.c                     |   6 +-
+ mm/page_alloc.c                  |   2 +-
+ mm/shmem.c                       |   7 +-
+ mm/swap.c                        |   4 +-
+ mm/userfaultfd.c                 |   2 +-
+ mm/vmscan.c                      |   2 +-
+ mm/workingset.c                  |  10 +-
+ 21 files changed, 355 insertions(+), 292 deletions(-)
 
-Where would you suggest putting such a comment? The change in question
-removed a particular case where we explicitly grab a reference to the
-blkcg because now we do it uniformly in one place. Would you like a
-comment explaining why we acquire a reference for all loop workers or
-one explaining specifically why we don't need to acquire one for aio?
+-- 
+2.30.2
+
