@@ -1,51 +1,86 @@
-From: Richard Purdie <richard.purdie@linuxfoundation.org>
-Subject: Re: [PATCH] cgroup1: fix leaked context root causing sporadic NULL
- deref in LTP
-Date: Thu, 01 Jul 2021 13:43:19 +0100
-Message-ID: <8f20f2edd60fbff426b086599ae943ff09195b9c.camel@linuxfoundation.org>
-References: <20210616125157.438837-1-paul.gortmaker@windriver.com>
-         <YMoXdljfOFjoVO93@slm.duckdns.org> <20210630161036.GA43693@sirena.org.uk>
-         <696dc58209707ce364616430673998d0124a9a31.camel@linuxfoundation.org>
-         <20210701121133.GA4641@sirena.org.uk>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup changes for v5.14-rc1
+Date: Thu, 1 Jul 2021 10:55:40 -1000
+Message-ID: <YN4rzCdUR+/2LgaP@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linuxfoundation.org; s=google;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=mo6oA/XnbDUGfk8NTnLtsX2Oxt2DjcL5ZEyjcIbXJxE=;
-        b=ZoT209PloXnbOEhL1QU7auZZ8wiKaoDhkCY5o/ymMMMc54wtJgZRSBBst/6uWhboWC
-         HJUkHBzw6bANDxSgtGj3yL1oQE4Q6Lxw9ITAw68rg6FgsGIcy5ANlDp5PbqojKIES3/e
-         ZlmYBBAluT51L1CqtjRWPvBnwPN/vR35iWVlA=
-In-Reply-To: <20210701121133.GA4641@sirena.org.uk>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=TQW637DJWCb83mxa1TulL3O+huq6X3gVUkozf2I06Ng=;
+        b=gfZSgzXRqgwx54Zblgxw7Xi9NZcW0FpG16mhu1b5ogzLFdIrYmuD6V8X8ax2hz6YdP
+         3s1+mx46q6P3hMQGw1rNAw9t3775zD+SZXrYP9krYeVzI2FIDHeCmWlQFaBKzvYE3EUD
+         4MxbJRqvVZLYPx2r9+02tsEj09Ys1OQS97u04r9IRwLHm4+FEtBZ/MRiM3EY5lXTlpLe
+         /lAIW6fPLkg33RvZdWC5jQyIN5T2zglMEHGdZ5467wV21ekrLDm5ZT+Q6l/7HDJD59WU
+         x+UrMAZildRvNBQx3VeD0z3K+FNKXKekGMd3JOk4XsgVkJBmvCRXt8yBruhzdKDhlJT4
+         KZyg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Mark Brown <broonie@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, Paul Gortmaker <paul.gortmaker@windriver.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, stable@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, 2021-07-01 at 13:11 +0100, Mark Brown wrote:
-> On Wed, Jun 30, 2021 at 11:31:06PM +0100, Richard Purdie wrote:
-> 
-> > Out of interest are you also seeing the proc01 test hang on a non-blocking
-> > read of /proc/kmsg periodically?
-> 
-> > https://bugzilla.yoctoproject.org/show_bug.cgi?id=14460
-> 
-> > I've not figured out a way to reproduce it at will yet and it seems strace
-> 
-> I've been talking to Ross, he mentioned it but no, rings no bells.
-> 
-> > was enough to unblock it. It seems arm specific.
-> 
-> If it's 32 bit I'm not really doing anything that looks at it.
+Hello, Linus.
 
-Its aarch64 in qemu running on aarch64 hardware with KVM.
+* cgroup.kill is added which implements atomic killing of the whole subtree.
+  Down the line, this should be able to replace the multiple userland
+  implementations of "keep killing till empty".
 
-If you do happen to see anything let us know!
+* PSI can now be turned off at boot time to avoid overhead for
+  configurations which don't care about PSI.
 
-Cheers,
+Thank you.
 
-Richard
+The following changes since commit 08b2b6fdf6b26032f025084ce2893924a0cdb4a2:
 
+  cgroup: fix spelling mistakes (2021-05-24 12:45:26 -0400)
 
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.14
+
+for you to fetch changes up to 3958e2d0c34e18c41b60dc01832bd670a59ef70f:
+
+  cgroup: make per-cgroup pressure stall tracking configurable (2021-06-08 14:59:02 -0400)
+
+----------------------------------------------------------------
+Christian Brauner (5):
+      cgroup: introduce cgroup.kill
+      docs/cgroup: add entry for cgroup.kill
+      tests/cgroup: use cgroup.kill in cg_killall()
+      tests/cgroup: move cg_wait_for(), cg_prepare_for_wait()
+      tests/cgroup: test cgroup.kill
+
+Roman Gushchin (1):
+      cgroup: inline cgroup_task_freeze()
+
+Suren Baghdasaryan (1):
+      cgroup: make per-cgroup pressure stall tracking configurable
+
+Tejun Heo (1):
+      Merge branch 'for-5.13-fixes' into for-5.14
+
+Yang Li (1):
+      cgroup: Fix kernel-doc
+
+ Documentation/admin-guide/cgroup-v2.rst         |  15 ++
+ Documentation/admin-guide/kernel-parameters.txt |   9 +-
+ include/linux/cgroup-defs.h                     |   4 +
+ include/linux/cgroup.h                          |  25 +-
+ kernel/cgroup/cgroup.c                          | 180 ++++++++++++--
+ kernel/cgroup/rstat.c                           |   2 +-
+ kernel/sched/psi.c                              |  30 +--
+ tools/testing/selftests/cgroup/.gitignore       |   3 +-
+ tools/testing/selftests/cgroup/Makefile         |   2 +
+ tools/testing/selftests/cgroup/cgroup_util.c    |  51 ++++
+ tools/testing/selftests/cgroup/cgroup_util.h    |   2 +
+ tools/testing/selftests/cgroup/test_freezer.c   |  57 -----
+ tools/testing/selftests/cgroup/test_kill.c      | 297 ++++++++++++++++++++++++
+ 13 files changed, 569 insertions(+), 108 deletions(-)
+ create mode 100644 tools/testing/selftests/cgroup/test_kill.c
+
+-- 
+tejun
