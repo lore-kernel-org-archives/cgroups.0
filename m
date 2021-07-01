@@ -1,65 +1,51 @@
-From: Mark Brown <broonie@kernel.org>
+From: Richard Purdie <richard.purdie@linuxfoundation.org>
 Subject: Re: [PATCH] cgroup1: fix leaked context root causing sporadic NULL
  deref in LTP
-Date: Thu, 1 Jul 2021 13:11:33 +0100
-Message-ID: <20210701121133.GA4641@sirena.org.uk>
+Date: Thu, 01 Jul 2021 13:43:19 +0100
+Message-ID: <8f20f2edd60fbff426b086599ae943ff09195b9c.camel@linuxfoundation.org>
 References: <20210616125157.438837-1-paul.gortmaker@windriver.com>
- <YMoXdljfOFjoVO93@slm.duckdns.org>
- <20210630161036.GA43693@sirena.org.uk>
- <696dc58209707ce364616430673998d0124a9a31.camel@linuxfoundation.org>
+         <YMoXdljfOFjoVO93@slm.duckdns.org> <20210630161036.GA43693@sirena.org.uk>
+         <696dc58209707ce364616430673998d0124a9a31.camel@linuxfoundation.org>
+         <20210701121133.GA4641@sirena.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="FL5UXtIhxfXey3p5"
+Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625141522;
-        bh=TT5ATJx6/SGmcZ2onpZJhXly2bwzw4Mlao44OlsAkcw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=X6ITX7x1DYq7u9skUcCsAXk3eYjBdE/n3aYvabBb9yGroo1OOK3laVLG6iEkcQOEZ
-         1gX9jQqStMnE0JdKtFWtTjvYsDGPvpf6y3BhxX+f1j5qlcWWO+6r05StyYejnLbxoM
-         opX/2D54G7wzk1Htc+PDmkkFZuBRsaL6qC9xI6984+rZzShRwVYhCBSbSTU4sVMJ7R
-         kWF2JMPzomyvyLkCTrc8JOf3beh5LCdRO0T3+vEZfR3Mp0i9v+iagq5N+qCTx7Ma2N
-         3B+UHeaduFzw4a2xaBONWMSZV2uD5+/BxPJ0OLEy315cIu4IaDcTxOStA3r5DOF9ep
-         AOxRVONgQmdcQ==
-Content-Disposition: inline
-In-Reply-To: <696dc58209707ce364616430673998d0124a9a31.camel@linuxfoundation.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linuxfoundation.org; s=google;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=mo6oA/XnbDUGfk8NTnLtsX2Oxt2DjcL5ZEyjcIbXJxE=;
+        b=ZoT209PloXnbOEhL1QU7auZZ8wiKaoDhkCY5o/ymMMMc54wtJgZRSBBst/6uWhboWC
+         HJUkHBzw6bANDxSgtGj3yL1oQE4Q6Lxw9ITAw68rg6FgsGIcy5ANlDp5PbqojKIES3/e
+         ZlmYBBAluT51L1CqtjRWPvBnwPN/vR35iWVlA=
+In-Reply-To: <20210701121133.GA4641@sirena.org.uk>
 List-ID: <cgroups.vger.kernel.org>
-To: Richard Purdie <richard.purdie@linuxfoundation.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Mark Brown <broonie@kernel.org>
 Cc: Tejun Heo <tj@kernel.org>, Paul Gortmaker <paul.gortmaker@windriver.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, stable@vger.kernel.org
 
+On Thu, 2021-07-01 at 13:11 +0100, Mark Brown wrote:
+> On Wed, Jun 30, 2021 at 11:31:06PM +0100, Richard Purdie wrote:
+> 
+> > Out of interest are you also seeing the proc01 test hang on a non-blocking
+> > read of /proc/kmsg periodically?
+> 
+> > https://bugzilla.yoctoproject.org/show_bug.cgi?id=14460
+> 
+> > I've not figured out a way to reproduce it at will yet and it seems strace
+> 
+> I've been talking to Ross, he mentioned it but no, rings no bells.
+> 
+> > was enough to unblock it. It seems arm specific.
+> 
+> If it's 32 bit I'm not really doing anything that looks at it.
 
---FL5UXtIhxfXey3p5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Its aarch64 in qemu running on aarch64 hardware with KVM.
 
-On Wed, Jun 30, 2021 at 11:31:06PM +0100, Richard Purdie wrote:
+If you do happen to see anything let us know!
 
-> Out of interest are you also seeing the proc01 test hang on a non-blocking
-> read of /proc/kmsg periodically?
+Cheers,
 
-> https://bugzilla.yoctoproject.org/show_bug.cgi?id=14460
+Richard
 
-> I've not figured out a way to reproduce it at will yet and it seems strace
 
-I've been talking to Ross, he mentioned it but no, rings no bells.
-
-> was enough to unblock it. It seems arm specific.
-
-If it's 32 bit I'm not really doing anything that looks at it.
-
---FL5UXtIhxfXey3p5
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmDdsPQACgkQJNaLcl1U
-h9CWJwf/YF+XAA1qBYxWYCc8ZI/W6jctkkgrPHFx22WMAE341gHUGHvmC7twHrgI
-DcCGdXI1CL2IQ0YJos9z2ydV66ZTtH2qP1K2Ugt2GzZyL0zL+P5hgndYquVXNOFQ
-p736kNqsvsB3tOrsIDzLeVheqJmQwH4E60rBgU40C5oRkNYmO1aA9KLDhOxa5NAX
-KfZ3to8t+mR1KCh/LipJaBgmmLli9c0s+reuz9bfnJnAqW7VHSQvGopo5afkmWYO
-RO32LIAwI81JTGOyG+gWjSExxS8sMWYEuSMkCWiXwtrKKjm5XD91W4465CmfOtgb
-UeHMvCVvCwaU5A+cq9VTN6vsMx7Qhg==
-=UGEt
------END PGP SIGNATURE-----
-
---FL5UXtIhxfXey3p5--
