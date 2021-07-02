@@ -1,148 +1,60 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH] blk-cgroup: prevent rcu_sched detected stalls warnings while iterating blkgs
-Date: Fri, 2 Jul 2021 12:04:44 +0800
-Message-ID: <20210702040444.1917834-1-yukuai3@huawei.com>
+From: Krzysztof Kozlowski <krzysztof.kozlowski-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: Process memory accounting (cgroups) accuracy
+Date: Fri, 2 Jul 2021 09:50:11 +0200
+Message-ID: <69ffd3a0-2cb7-8baa-17d0-ae45a52595af@canonical.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-We run a test that create millions of cgroups and blkgs, and then trigger
-blkg_destroy_all(). blkg_destroy_all() will hold spin lock for a long
-time in such situation. Thus release the lock when a batch of blkgs are
-destroyed.
+Hi,
 
-blkcg_activate_policy() and blkcg_deactivate_policy() might have the
-same problem, fix them the same way.
+Since some time I am trying to fix Linux Test Project tests around
+memory cgroups:
+https://lists.linux.it/pipermail/ltp/2021-June/023259.html
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- block/blk-cgroup.c | 56 +++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 50 insertions(+), 6 deletions(-)
+The trouble I have, for example with memcg_max_usage_in_bytes_test.sh is
+that on recent kernels (v4.15+) on x86_64, the memory group reports max
+usage as higher than process' anonymous mapping.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 7b06a5fa3cac..1d26b58d7c25 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -56,6 +56,8 @@ static LIST_HEAD(all_blkcgs);		/* protected by blkcg_pol_mutex */
- bool blkcg_debug_stats = false;
- static struct workqueue_struct *blkcg_punt_bio_wq;
- 
-+#define BLKG_BATCH_OP_NUM 64
-+
- static bool blkcg_policy_enabled(struct request_queue *q,
- 				 const struct blkcg_policy *pol)
- {
-@@ -422,7 +424,9 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- static void blkg_destroy_all(struct request_queue *q)
- {
- 	struct blkcg_gq *blkg, *n;
-+	int count = BLKG_BATCH_OP_NUM;
- 
-+restart:
- 	spin_lock_irq(&q->queue_lock);
- 	list_for_each_entry_safe(blkg, n, &q->blkg_list, q_node) {
- 		struct blkcg *blkcg = blkg->blkcg;
-@@ -430,6 +434,17 @@ static void blkg_destroy_all(struct request_queue *q)
- 		spin_lock(&blkcg->lock);
- 		blkg_destroy(blkg);
- 		spin_unlock(&blkcg->lock);
-+
-+		/*
-+		 * in order to avoid holding the spin lock for too long, release
-+		 * it when a batch of blkgs are destroyed.
-+		 */
-+		if (!(--count)) {
-+			count = BLKG_BATCH_OP_NUM;
-+			spin_unlock_irq(&q->queue_lock);
-+			cond_resched();
-+			goto restart;
-+		}
- 	}
- 
- 	q->root_blkg = NULL;
-@@ -1291,6 +1306,7 @@ int blkcg_activate_policy(struct request_queue *q,
- {
- 	struct blkg_policy_data *pd_prealloc = NULL;
- 	struct blkcg_gq *blkg, *pinned_blkg = NULL;
-+	int count;
- 	int ret;
- 
- 	if (blkcg_policy_enabled(q, pol))
-@@ -1299,6 +1315,7 @@ int blkcg_activate_policy(struct request_queue *q,
- 	if (queue_is_mq(q))
- 		blk_mq_freeze_queue(q);
- retry:
-+	count = BLKG_BATCH_OP_NUM;
- 	spin_lock_irq(&q->queue_lock);
- 
- 	/* blkg_list is pushed at the head, reverse walk to allocate parents first */
-@@ -1342,6 +1359,16 @@ int blkcg_activate_policy(struct request_queue *q,
- 		blkg->pd[pol->plid] = pd;
- 		pd->blkg = blkg;
- 		pd->plid = pol->plid;
-+
-+		/*
-+		 * in order to avoid holding the spin lock for too long, release
-+		 * it when a batch of blkgs are activated.
-+		 */
-+		if (!(--count)) {
-+			spin_unlock_irq(&q->queue_lock);
-+			cond_resched();
-+			goto retry;
-+		}
- 	}
- 
- 	/* all allocated, init in the same order */
-@@ -1389,6 +1416,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
- 			     const struct blkcg_policy *pol)
- {
- 	struct blkcg_gq *blkg;
-+	int count;
- 
- 	if (!blkcg_policy_enabled(q, pol))
- 		return;
-@@ -1397,15 +1425,31 @@ void blkcg_deactivate_policy(struct request_queue *q,
- 		blk_mq_freeze_queue(q);
- 
- 	spin_lock_irq(&q->queue_lock);
--
- 	__clear_bit(pol->plid, q->blkcg_pols);
-+retry:
-+	count = BLKG_BATCH_OP_NUM;
- 
- 	list_for_each_entry(blkg, &q->blkg_list, q_node) {
--		if (blkg->pd[pol->plid]) {
--			if (pol->pd_offline_fn)
--				pol->pd_offline_fn(blkg->pd[pol->plid]);
--			pol->pd_free_fn(blkg->pd[pol->plid]);
--			blkg->pd[pol->plid] = NULL;
-+		if (!blkg->pd[pol->plid])
-+			continue;
-+
-+		if (pol->pd_offline_fn) {
-+			pol->pd_offline_fn(blkg->pd[pol->plid]);
-+			count--;
-+		}
-+
-+		pol->pd_free_fn(blkg->pd[pol->plid]);
-+		blkg->pd[pol->plid] = NULL;
-+
-+		/*
-+		 * in order to avoid holding the spin lock for too long, release
-+		 * it when a batch of blkgs are deactivated.
-+		 */
-+		if (!count) {
-+			spin_unlock_irq(&q->queue_lock);
-+			cond_resched();
-+			spin_lock_irq(&q->queue_lock);
-+			goto retry;
- 		}
- 	}
- 
--- 
-2.31.1
+The test works like this:
+1. Fork a process, signal it to mmap 4 MB (PROT_WRITE | PROT_READ,
+AP_PRIVATE | MAP_ANONYMOUS) and touch the memory.
+2. Add the process to control group.
+3. Signal it to munmap the region and immediately mmap again the same 4
+MB (with touching the memory).
+4. Check the counters and reset them.
+5. munmap
+6. Check the counters
 
+Mentioned memcg_max_usage_in_bytes_test.sh checks the counters of
+memory.memsw.max_usage_in_bytes which are:
+a. early kernels: 4 MB (so only the mmap)
+b. v4.15, v5.4 kernel: 4 MB + 32 pages
+c. v5.11 kernel: 4 MB + 32 pages + 2 pages
+
+I tweaked the mmap() size to smaller values and then the accounting is
+even different. For example mmap of 1 up to 32 pages the
+memory.memsw.max_usage_in_bytes is always 131072.
+
+After final munmap (point 5 above), the test expects the
+memcg_max_usage_in_bytes to be =0, however it is usually 8 or 132 kB.
+Which kind of points that process is charged for something not related
+to that memory map directly.
+
+The questions: How accurate are now the cgroup counters?
+I understood they should charge only pages allocated by the process, so
+why mmap(4 kB) causes max_usage_in_bytes=132 kB?
+Why mmap(4 MB) causes max_usage_in_bytes=4 MB + 34 pages?
+What is being accounted there (stack guards?)?
+
+Or maybe the entire LTP test checking so carefully memcg limits is useless?
+
+The v5.4 kernel config is here:
+https://kernel.ubuntu.com/~kernel-ppa/config/focal/linux-azure/5.4.0-1039.41/amd64-config.flavour.azure
+
+Best regards,
+Krzysztof
