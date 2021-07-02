@@ -1,71 +1,57 @@
-From: =?utf-8?B?6IuP6L6JKFJvYmVydCBTdSk=?= <suhui-OtvJRZzVyoU@public.gmane.org>
-Subject: =?utf-8?B?5Zue5aSNOiBbUEFUQ0hdIGNncm91cC9waWQ6IGZpeCB0aGUgcGlkX2NncnAg?=
- =?utf-8?Q?attach_bug_in_cgroup_v2?=
-Date: Fri, 2 Jul 2021 09:22:54 +0000
-Message-ID: <KL1PR02MB4788DAF33A1D396F51609C22C61F9@KL1PR02MB4788.apcprd02.prod.outlook.com>
-References: <20210702091844.737784-1-suhui@zeku.com>
+From: Krzysztof Kozlowski <krzysztof.kozlowski-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Subject: Re: Process memory accounting (cgroups) accuracy
+Date: Fri, 2 Jul 2021 12:40:28 +0200
+Message-ID: <85b8a4f9-b9e9-a6ca-5d0c-c1ecb8c11ef3@canonical.com>
+References: <69ffd3a0-2cb7-8baa-17d0-ae45a52595af@canonical.com>
+ <YN7XgzB4bE2K9int@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=zeku.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wodV1s0I/maPBygvJW5DQaUaiXras6T40vRKZerzfMQ=;
- b=kzEjmM+DL/zHV6Md6NQ1vhVS34SMnt2aKyItL/FWgv3Ua9X+XgNRTsastQpCHK7T540DAbjBZlTbQyBXuKr8awcI7rzGWy2jVNMmuQuTEY6beIerUf5lTKRQ/t4bP7H1wxzK098Stf+gqPRqwQSkC3fFD0NKfeeeQcebnWmdIffGsj97sFc5SVrF+GUvnhc1C9AmtPCPkvqYI4XawypCIYSEFNzCSkU0nTlQpFmzZPEg06vPUxJmsj24pEt0+FnOpXW42FTPUfqEmC70jXdKCb9IBM7i1PZsSEbbahnoDtXGhs2grBa3sGFqQrKpi69Wg7UTe1Bh/uRyRCenVK5UEA==
-In-Reply-To: <20210702091844.737784-1-suhui-OtvJRZzVyoU@public.gmane.org>
-Content-Language: zh-CN
+In-Reply-To: <YN7XgzB4bE2K9int-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-To: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-U29ycnksIHBsZWFzZSBpZ25vcmUgdGhpcyBjaGFuZ2UuLi4NCg0KLS0tLS3pgq7ku7bljp/ku7Yt
-LS0tLQ0K5Y+R5Lu25Lq6OiDoi4/ovokoUm9iZXJ0IFN1KSA8c3VodWlAemVrdS5jb20+IA0K5Y+R
-6YCB5pe26Ze0OiAyMDIx5bm0N+aciDLml6UgMTc6MTkNCuaUtuS7tuS6ujogdGpAa2VybmVsLm9y
-ZzsgbGl6ZWZhbi54QGJ5dGVkYW5jZS5jb207IGhhbm5lc0BjbXB4Y2hnLm9yZzsgY2dyb3Vwc0B2
-Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCuaKhOmAgTog6IuP
-6L6JKFJvYmVydCBTdSkgPHN1aHVpQHpla3UuY29tPg0K5Li76aKYOiBbUEFUQ0hdIGNncm91cC9w
-aWQ6IGZpeCB0aGUgcGlkX2NncnAgYXR0YWNoIGJ1ZyBpbiBjZ3JvdXAgdjINCg0KcGlkc19jYW5f
-YXR0YWNoKCkgc2hvdWxkIG1ha2Ugc3VyZSB0aGUgcGlkcy0+Y291bnRlciBub3QgYmlnZ2VyIHRo
-YW4gcGlkcy0+bGltaXQsIHNvIHdlIHNob3VsZCB1c2UgcGlkc190cnlfY2hhcmdlKCkgaGVyZS4N
-Cg0Kd2l0aG91dCB0aGUgY2hhbmdlOg0Kcm9vdEB0ZXN0Oi9zeXMvZnMvY2dyb3VwL3Rlc3QjIGNh
-dCBwaWRzLm1heA0KMw0Kcm9vdEB0ZXN0Oi9zeXMvZnMvY2dyb3VwL3Rlc3QjIHNsZWVwIDEwMDAg
-JiBbMV0gMzM3OSByb290QHRlc3Q6L3N5cy9mcy9jZ3JvdXAvdGVzdCMgc2xlZXAgMTAwMCAmIFsy
-XSAzMzgwIHJvb3RAdGVzdDovc3lzL2ZzL2Nncm91cC90ZXN0IyBzbGVlcCAxMDAwICYgWzNdIDMz
-ODEgcm9vdEB0ZXN0Oi9zeXMvZnMvY2dyb3VwL3Rlc3QjIHNsZWVwIDEwMDAgJiBbNF0gMzM4MiBy
-b290QHRlc3Q6L3N5cy9mcy9jZ3JvdXAvdGVzdCMgZWNobyAzMzc5ID4gY2dyb3VwLnByb2NzIHJv
-b3RAdGVzdDovc3lzL2ZzL2Nncm91cC90ZXN0IyBlY2hvIDMzODAgPiBjZ3JvdXAucHJvY3Mgcm9v
-dEB0ZXN0Oi9zeXMvZnMvY2dyb3VwL3Rlc3QjIGVjaG8gMzM4MSA+IGNncm91cC5wcm9jcyByb290
-QHRlc3Q6L3N5cy9mcy9jZ3JvdXAvdGVzdCMgZWNobyAzMzgyID4gY2dyb3VwLnByb2NzIHJvb3RA
-dGVzdDovc3lzL2ZzL2Nncm91cC90ZXN0IyBjYXQgcGlkcy5tYXgNCjMNCnJvb3RAdGVzdDovc3lz
-L2ZzL2Nncm91cC90ZXN0IyBjYXQgcGlkcy5jdXJyZW50DQo0DQpyb290QHRlc3Q6L3N5cy9mcy9j
-Z3JvdXAvdGVzdCMgY2F0IGNncm91cC5wcm9jcw0KMzM3OQ0KMzM4MA0KMzM4MQ0KMzM4Mg0Kcm9v
-dEB0ZXN0Oi9zeXMvZnMvY2dyb3VwL3Rlc3QjDQoNCndpdGggdGhpcyBjaGFuZ2U6DQpyb290QHRl
-c3Q6L3N5cy9mcy9jZ3JvdXAvdGVzdCMgY2F0IHBpZHMuY3VycmVudA0KMw0Kcm9vdEB0ZXN0Oi9z
-eXMvZnMvY2dyb3VwL3Rlc3QjIGNhdCBwaWRzLm1heA0KMw0Kcm9vdEB0ZXN0Oi9zeXMvZnMvY2dy
-b3VwL3Rlc3QjIGNhdCBjZ3JvdXAucHJvY3MNCjI2MTQNCjM2ODMNCjM2ODQNCnJvb3RAdGVzdDov
-c3lzL2ZzL2Nncm91cC90ZXN0IyBzbGVlcCAxMDAwMCAmIFs1XSAzNzMzIHJvb3RAdGVzdDovc3lz
-L2ZzL2Nncm91cC90ZXN0IyBlY2hvIDM3MzMgPiBjZ3JvdXAucHJvY3MNCmJhc2g6IGVjaG86IHdy
-aXRlIGVycm9yOiBSZXNvdXJjZSB0ZW1wb3JhcmlseSB1bmF2YWlsYWJsZSByb290QHRlc3Q6L3N5
-cy9mcy9jZ3JvdXAvdGVzdCMgY2F0IGNncm91cC5wcm9jcw0KMjYxNA0KMzY4Mw0KMzY4NA0Kcm9v
-dEB0ZXN0Oi9zeXMvZnMvY2dyb3VwL3Rlc3QjIGNhdCBwaWRzLmN1cnJlbnQNCjMNCnJvb3RAdGVz
-dDovc3lzL2ZzL2Nncm91cC90ZXN0IyBkbWVzZyB8dGFpbCAtbiAxIFsgIDg2My42MTIxNjJdIGNn
-cm91cDogYXR0YWNoIHJlamVjdGVkIGJ5IHBpZHMgY29udHJvbGxlciBpbiAvdGVzdA0KDQpTaWdu
-ZWQtb2ZmLWJ5OiBIdWkgU3UgPHN1aHVpQHpla3UuY29tPg0KLS0tDQoga2VybmVsL2Nncm91cC9w
-aWRzLmMgfCAxMSArKysrKysrKystLQ0KIDEgZmlsZSBjaGFuZ2VkLCA5IGluc2VydGlvbnMoKyks
-IDIgZGVsZXRpb25zKC0pDQoNCmRpZmYgLS1naXQgYS9rZXJuZWwvY2dyb3VwL3BpZHMuYyBiL2tl
-cm5lbC9jZ3JvdXAvcGlkcy5jIGluZGV4IDUxMWFmODdmNjg1ZS4uNWUyNDk5MGYyOGRlIDEwMDY0
-NA0KLS0tIGEva2VybmVsL2Nncm91cC9waWRzLmMNCisrKyBiL2tlcm5lbC9jZ3JvdXAvcGlkcy5j
-DQpAQCAtMTcyLDYgKzE3Miw3IEBAIHN0YXRpYyBpbnQgcGlkc19jYW5fYXR0YWNoKHN0cnVjdCBj
-Z3JvdXBfdGFza3NldCAqdHNldCkgIHsNCiAJc3RydWN0IHRhc2tfc3RydWN0ICp0YXNrOw0KIAlz
-dHJ1Y3QgY2dyb3VwX3N1YnN5c19zdGF0ZSAqZHN0X2NzczsNCisJaW50IHJldCA9IDA7DQogDQog
-CWNncm91cF90YXNrc2V0X2Zvcl9lYWNoKHRhc2ssIGRzdF9jc3MsIHRzZXQpIHsNCiAJCXN0cnVj
-dCBwaWRzX2Nncm91cCAqcGlkcyA9IGNzc19waWRzKGRzdF9jc3MpOyBAQCAtMTg2LDExICsxODcs
-MTcgQEAgc3RhdGljIGludCBwaWRzX2Nhbl9hdHRhY2goc3RydWN0IGNncm91cF90YXNrc2V0ICp0
-c2V0KQ0KIAkJb2xkX2NzcyA9IHRhc2tfY3NzKHRhc2ssIHBpZHNfY2dycF9pZCk7DQogCQlvbGRf
-cGlkcyA9IGNzc19waWRzKG9sZF9jc3MpOw0KIA0KLQkJcGlkc19jaGFyZ2UocGlkcywgMSk7DQor
-CQlyZXQgPSBwaWRzX3RyeV9jaGFyZ2UocGlkcywgMSk7DQorCQlpZiAocmV0KSB7DQorCQkJcHJf
-aW5mbygiY2dyb3VwOiBhdHRhY2ggcmVqZWN0ZWQgYnkgcGlkcyBjb250cm9sbGVyIGluICIpOw0K
-KwkJCXByX2NvbnRfY2dyb3VwX3BhdGgoZHN0X2Nzcy0+Y2dyb3VwKTsNCisJCQlwcl9jb250KCJc
-biIpOw0KKwkJCWJyZWFrOw0KKwkJfQ0KIAkJcGlkc191bmNoYXJnZShvbGRfcGlkcywgMSk7DQog
-CX0NCiANCi0JcmV0dXJuIDA7DQorCXJldHVybiByZXQ7DQogfQ0KIA0KIHN0YXRpYyB2b2lkIHBp
-ZHNfY2FuY2VsX2F0dGFjaChzdHJ1Y3QgY2dyb3VwX3Rhc2tzZXQgKnRzZXQpDQotLQ0KMi4yNS4x
-DQoNCg==
+On 02/07/2021 11:08, Michal Hocko wrote:
+> On Fri 02-07-21 09:50:11, Krzysztof Kozlowski wrote:
+> [...]
+>> The questions: How accurate are now the cgroup counters?
+> 
+> The precision depends on the number of CPUs the workload is running on
+> as we do a per-cpu charge caching to optimize the accounting. This is
+> MEMCG_CHARGE_BATCH (32) pages currently. You can learn more by checking
+> try_charge function (mm/memcontrol.c).
+
+This explains the 32 pages, thanks!
+
+> 
+>> I understood they should charge only pages allocated by the process, so
+>> why mmap(4 kB) causes max_usage_in_bytes=132 kB?
+> 
+> Please note that kernel allocations (marked by __GFP_ACCOUNT) are
+> accounted as well so this is not only about mmaped memory.
+> 
+>> Why mmap(4 MB) causes max_usage_in_bytes=4 MB + 34 pages?
+> 
+> The specific number will depend on the executing - e.g. use up all but 3
+> pages from CPU0 batch and have 31 pages on another cpu.
+> 
+>> What is being accounted there (stack guards?)?
+>>
+>> Or maybe the entire LTP test checking so carefully memcg limits is useless?
+> 
+> Well, I haven't really checked details of those tests and their
+> objective but aiming for an absolute precision is not really something
+> that is very useful IMHO. We are very likely to do optimizations like
+> the one mentioned above as the runtime tends to be much more important
+> than to-the-page precision.
+> 
+> Hope this clarifies this a bit.
+
+Yes, thanks!
+
+
+Best regards,
+Krzysztof
