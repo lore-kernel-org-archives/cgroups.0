@@ -1,36 +1,148 @@
-From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Subject: Re: [GIT PULL] cgroup changes for v5.14-rc1
-Date: Fri, 02 Jul 2021 00:46:32 +0000
-Message-ID: <162518679204.2278.1195383988351883655.pr-tracker-bot@kernel.org>
-References: <YN4rzCdUR+/2LgaP@mtj.duckdns.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625186792;
-        bh=9BP/JTFH+8Nl/vasNq3220FOic+vTHzzsyfkbY/4oIA=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=H03wKnGmW8Tu2LszP20DdrhvLejpO+nYLhYCagRrUK6TpuaiYDfD1Hs8mb9EbZSqZ
-         DRyoXvXD6FoIHl/r19JH4mehhnP/xOHR0SYJArQCHHJZxeKO+AGM4xTBb2GngX/tP/
-         4338XNAod8Ely8HhnGDS9A4vEj+EY5SKWqLFlVWmS9vRwRtTEIzWjPoiw5DbmYr56c
-         MlxkYcqxgSLQEMxwFBo/OFITzM7qYWIWGjWqoYWKxC1IUHnDZsiD582uP0pCwqilnS
-         x/ROCws7g8Mhd+hoF/1qJ0IdZYqSTggqxMwrcnVadu2XAGPtwaq51LgOtXNKLXVWXp
-         nwubbxOO81RXA==
-In-Reply-To: <YN4rzCdUR+/2LgaP-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+From: Yu Kuai <yukuai3@huawei.com>
+Subject: [PATCH] blk-cgroup: prevent rcu_sched detected stalls warnings while iterating blkgs
+Date: Fri, 2 Jul 2021 12:04:44 +0800
+Message-ID: <20210702040444.1917834-1-yukuai3@huawei.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-block-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj@kernel.org, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
 
-The pull request you sent on Thu, 1 Jul 2021 10:55:40 -1000:
+We run a test that create millions of cgroups and blkgs, and then trigger
+blkg_destroy_all(). blkg_destroy_all() will hold spin lock for a long
+time in such situation. Thus release the lock when a batch of blkgs are
+destroyed.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.14
+blkcg_activate_policy() and blkcg_deactivate_policy() might have the
+same problem, fix them the same way.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/3dbdb38e286903ec220aaf1fb29a8d94297da246
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ block/blk-cgroup.c | 56 +++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 50 insertions(+), 6 deletions(-)
 
-Thank you!
-
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 7b06a5fa3cac..1d26b58d7c25 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -56,6 +56,8 @@ static LIST_HEAD(all_blkcgs);		/* protected by blkcg_pol_mutex */
+ bool blkcg_debug_stats = false;
+ static struct workqueue_struct *blkcg_punt_bio_wq;
+ 
++#define BLKG_BATCH_OP_NUM 64
++
+ static bool blkcg_policy_enabled(struct request_queue *q,
+ 				 const struct blkcg_policy *pol)
+ {
+@@ -422,7 +424,9 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+ static void blkg_destroy_all(struct request_queue *q)
+ {
+ 	struct blkcg_gq *blkg, *n;
++	int count = BLKG_BATCH_OP_NUM;
+ 
++restart:
+ 	spin_lock_irq(&q->queue_lock);
+ 	list_for_each_entry_safe(blkg, n, &q->blkg_list, q_node) {
+ 		struct blkcg *blkcg = blkg->blkcg;
+@@ -430,6 +434,17 @@ static void blkg_destroy_all(struct request_queue *q)
+ 		spin_lock(&blkcg->lock);
+ 		blkg_destroy(blkg);
+ 		spin_unlock(&blkcg->lock);
++
++		/*
++		 * in order to avoid holding the spin lock for too long, release
++		 * it when a batch of blkgs are destroyed.
++		 */
++		if (!(--count)) {
++			count = BLKG_BATCH_OP_NUM;
++			spin_unlock_irq(&q->queue_lock);
++			cond_resched();
++			goto restart;
++		}
+ 	}
+ 
+ 	q->root_blkg = NULL;
+@@ -1291,6 +1306,7 @@ int blkcg_activate_policy(struct request_queue *q,
+ {
+ 	struct blkg_policy_data *pd_prealloc = NULL;
+ 	struct blkcg_gq *blkg, *pinned_blkg = NULL;
++	int count;
+ 	int ret;
+ 
+ 	if (blkcg_policy_enabled(q, pol))
+@@ -1299,6 +1315,7 @@ int blkcg_activate_policy(struct request_queue *q,
+ 	if (queue_is_mq(q))
+ 		blk_mq_freeze_queue(q);
+ retry:
++	count = BLKG_BATCH_OP_NUM;
+ 	spin_lock_irq(&q->queue_lock);
+ 
+ 	/* blkg_list is pushed at the head, reverse walk to allocate parents first */
+@@ -1342,6 +1359,16 @@ int blkcg_activate_policy(struct request_queue *q,
+ 		blkg->pd[pol->plid] = pd;
+ 		pd->blkg = blkg;
+ 		pd->plid = pol->plid;
++
++		/*
++		 * in order to avoid holding the spin lock for too long, release
++		 * it when a batch of blkgs are activated.
++		 */
++		if (!(--count)) {
++			spin_unlock_irq(&q->queue_lock);
++			cond_resched();
++			goto retry;
++		}
+ 	}
+ 
+ 	/* all allocated, init in the same order */
+@@ -1389,6 +1416,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
+ 			     const struct blkcg_policy *pol)
+ {
+ 	struct blkcg_gq *blkg;
++	int count;
+ 
+ 	if (!blkcg_policy_enabled(q, pol))
+ 		return;
+@@ -1397,15 +1425,31 @@ void blkcg_deactivate_policy(struct request_queue *q,
+ 		blk_mq_freeze_queue(q);
+ 
+ 	spin_lock_irq(&q->queue_lock);
+-
+ 	__clear_bit(pol->plid, q->blkcg_pols);
++retry:
++	count = BLKG_BATCH_OP_NUM;
+ 
+ 	list_for_each_entry(blkg, &q->blkg_list, q_node) {
+-		if (blkg->pd[pol->plid]) {
+-			if (pol->pd_offline_fn)
+-				pol->pd_offline_fn(blkg->pd[pol->plid]);
+-			pol->pd_free_fn(blkg->pd[pol->plid]);
+-			blkg->pd[pol->plid] = NULL;
++		if (!blkg->pd[pol->plid])
++			continue;
++
++		if (pol->pd_offline_fn) {
++			pol->pd_offline_fn(blkg->pd[pol->plid]);
++			count--;
++		}
++
++		pol->pd_free_fn(blkg->pd[pol->plid]);
++		blkg->pd[pol->plid] = NULL;
++
++		/*
++		 * in order to avoid holding the spin lock for too long, release
++		 * it when a batch of blkgs are deactivated.
++		 */
++		if (!count) {
++			spin_unlock_irq(&q->queue_lock);
++			cond_resched();
++			spin_lock_irq(&q->queue_lock);
++			goto retry;
+ 		}
+ 	}
+ 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.31.1
+
