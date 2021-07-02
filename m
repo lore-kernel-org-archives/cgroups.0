@@ -1,60 +1,35 @@
-From: Krzysztof Kozlowski <krzysztof.kozlowski-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: Process memory accounting (cgroups) accuracy
-Date: Fri, 2 Jul 2021 09:50:11 +0200
-Message-ID: <69ffd3a0-2cb7-8baa-17d0-ae45a52595af@canonical.com>
+From: Hao Lee <haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [Question] Do we need remote charging for cpu and cpuacct subsys?
+Date: Fri, 02 Jul 2021 08:26:27 -0000
+Message-ID: <60decdb6.1c69fb81.6130e.7642@mx.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:from:to:cc:subject:mime-version:date
+         :content-transfer-encoding;
+        bh=dX6i2Y1Ly1681d2mbj0j/9kxKdKTvA3NyPTEzjPTIAo=;
+        b=O0MCkaYt1focsaJcVAnZ1S3briveTgqC3Ppgjih1yaYijWRG7f96cLefa3xqTEXomV
+         L4dvYp//TA70BCp2Y3yTdZEUpbA0RcpZayLdNh/QtlwhM2qs/gL+IAN8/dqfZH1VTgnk
+         7CCVSwasXmTbRUGlu+Kap89MRd5Gy4dF7cX0NSXi14ofkkD7KtRIMohmR1zUkUD4iSmJ
+         HT6OVSzRb61vhdKRpbQ4ftZEdX7zg7/FJl36V7/CQME95EO0rmAaaAYZsh6Qm+o2i0MG
+         wZY8xzG6jSN8YhuaG1XCLriRGNqQx9yr/ciYt31BR9wJaIsJHCWl41Hn/7tP/HPRD6Aa
+         mI+Q==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-Hi,
+SGksCgptZW1jZyBjdXJyZW50bHkgaGFzIGEgcmVtb3RlIGNoYXJnaW5nIG1lY2hhbmlzbSB0aGF0
+IGNhbiBjaGFyZ2UgdXNhZ2UgdG8gb3RoZXIKbWVtY2cgaW5zdGVhZCBvZiB0aGUgb25lIHRoZSB0
+YXNrIGJlbG9uZ3MgdG8uCgpJbiBvdXIgZW52aXJvbm1lbnQsIHdlIG5lZWQgdG8gYWNjb3VudCB0
+aGUgY3B1IHVzYWdlIGNvbnN1bWVkIGJ5IHNvbWUga3dvcmtlcnMKdG8gYSBzcGVjaWZpYyBjZ3Jv
+dXAuIFRodXMsIHdlIHdhbnQgdG8gaW50cm9kdWNlIGEgcmVtb3RlLWNoYXJnaW5nIG1lY2hhbmlz
+bSB0bwpjcHUgYW5kIGNwdWFjY3Qgc3Vic3lzIGluIG91ciBrZXJuZWwuCgpJIHdhbnQgdG8ga25v
+dyBpZiB0aGUgY29tbXVuaXR5IGhhcyBhIHBsYW4gdG8gZG8gdGhpcz8KV2hhdCB3aWxsIHRoZSBj
+b21tdW5pdHkgYXBwcm9hY2ggbG9vayBsaWtlPwoKSSB0aGluayB3ZSBuZWVkIHRvIG1vdmUgdGhl
+IGFjdGl2ZV9tZW1jZyB0byBhIHNlcGFyYXRlZCBhY3RpdmVfY2dyb3VwIHN0cnVjdCwKYW5kIHRo
+ZSBsYXR0ZXIgd2lsbCBjb250YWluIGFjdGl2ZV9tZW1jZywgYWN0aXZlX3RnLCBhbmQgYWN0aXZl
+X2NwdWFjY3QuCgoKUmVnYXJkcywKSGFvIExlZQo=
 
-Since some time I am trying to fix Linux Test Project tests around
-memory cgroups:
-https://lists.linux.it/pipermail/ltp/2021-June/023259.html
-
-The trouble I have, for example with memcg_max_usage_in_bytes_test.sh is
-that on recent kernels (v4.15+) on x86_64, the memory group reports max
-usage as higher than process' anonymous mapping.
-
-The test works like this:
-1. Fork a process, signal it to mmap 4 MB (PROT_WRITE | PROT_READ,
-AP_PRIVATE | MAP_ANONYMOUS) and touch the memory.
-2. Add the process to control group.
-3. Signal it to munmap the region and immediately mmap again the same 4
-MB (with touching the memory).
-4. Check the counters and reset them.
-5. munmap
-6. Check the counters
-
-Mentioned memcg_max_usage_in_bytes_test.sh checks the counters of
-memory.memsw.max_usage_in_bytes which are:
-a. early kernels: 4 MB (so only the mmap)
-b. v4.15, v5.4 kernel: 4 MB + 32 pages
-c. v5.11 kernel: 4 MB + 32 pages + 2 pages
-
-I tweaked the mmap() size to smaller values and then the accounting is
-even different. For example mmap of 1 up to 32 pages the
-memory.memsw.max_usage_in_bytes is always 131072.
-
-After final munmap (point 5 above), the test expects the
-memcg_max_usage_in_bytes to be =0, however it is usually 8 or 132 kB.
-Which kind of points that process is charged for something not related
-to that memory map directly.
-
-The questions: How accurate are now the cgroup counters?
-I understood they should charge only pages allocated by the process, so
-why mmap(4 kB) causes max_usage_in_bytes=132 kB?
-Why mmap(4 MB) causes max_usage_in_bytes=4 MB + 34 pages?
-What is being accounted there (stack guards?)?
-
-Or maybe the entire LTP test checking so carefully memcg limits is useless?
-
-The v5.4 kernel config is here:
-https://kernel.ubuntu.com/~kernel-ppa/config/focal/linux-azure/5.4.0-1039.41/amd64-config.flavour.azure
-
-Best regards,
-Krzysztof
