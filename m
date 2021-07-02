@@ -1,55 +1,36 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Subject: Re: [GIT PULL] cgroup changes for v5.14-rc1
-Date: Thu, 1 Jul 2021 14:32:02 -1000
-Message-ID: <YN5egtsVvp3xIqCl@mtj.duckdns.org>
+Date: Fri, 02 Jul 2021 00:46:32 +0000
+Message-ID: <162518679204.2278.1195383988351883655.pr-tracker-bot@kernel.org>
 References: <YN4rzCdUR+/2LgaP@mtj.duckdns.org>
- <CAHk-=wgcyjLGcoRho5iw7b3Yx+R05rXwyJmP_LhOqsHgjiZugQ@mail.gmail.com>
-Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=S7GtzayBonC8NXc3VVE0on7/iur23UaGBI7PatPPRKM=;
-        b=H/u4c/hymNgAID7Wp67NBhcBAjGZwLzZ7zRqFx+h8z2wsf38WglwFA0aWj8YA4tf7X
-         6hqu5BrC0s+b/4hFo4R7JjVJD/HUBl3u+qa4pJej4Gv+7N9OWafAjHyFxvz3JSmchGDe
-         ggfzuBlxzNCGTTntNZcxSLVJWmhr67FXIfBRTe9eZUro1ppaML51amNUeDKX9nm032/w
-         SjQJYQIhJ7oN1bMgepUhuQp5H9CiqP0fs7brc0wCE2xbgcIcCnj6QQhOnB109dEyRkkR
-         FOybLuD9UbnD1NhEzoNPfNoLCrTymMu5VSIVHukjPMdaUwFbMFyKraJCvO7CbMDG6V+Y
-         hPbQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAHk-=wgcyjLGcoRho5iw7b3Yx+R05rXwyJmP_LhOqsHgjiZugQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1625186792;
+        bh=9BP/JTFH+8Nl/vasNq3220FOic+vTHzzsyfkbY/4oIA=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=H03wKnGmW8Tu2LszP20DdrhvLejpO+nYLhYCagRrUK6TpuaiYDfD1Hs8mb9EbZSqZ
+         DRyoXvXD6FoIHl/r19JH4mehhnP/xOHR0SYJArQCHHJZxeKO+AGM4xTBb2GngX/tP/
+         4338XNAod8Ely8HhnGDS9A4vEj+EY5SKWqLFlVWmS9vRwRtTEIzWjPoiw5DbmYr56c
+         MlxkYcqxgSLQEMxwFBo/OFITzM7qYWIWGjWqoYWKxC1IUHnDZsiD582uP0pCwqilnS
+         x/ROCws7g8Mhd+hoF/1qJ0IdZYqSTggqxMwrcnVadu2XAGPtwaq51LgOtXNKLXVWXp
+         nwubbxOO81RXA==
+In-Reply-To: <YN4rzCdUR+/2LgaP-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+The pull request you sent on Thu, 1 Jul 2021 10:55:40 -1000:
 
-On Thu, Jul 01, 2021 at 05:25:59PM -0700, Linus Torvalds wrote:
-> On Thu, Jul 1, 2021 at 1:55 PM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> >
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.14
-> 
-> I've pulled it, but let me vent about this history a bit.
-> 
-> Look at commit c2a11971549b ("Merge branch 'for-5.13-fixes' into for-5.14").
-> 
-> Now tell me how that commit explains why it exists.
-> 
-> Merge commits need commit messages too.
-> 
-> In particular, they need commit messages that *explain* why they exist
-> in the first place, not just a one-liner that says what it does (and
-> does so badly at that).
+> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.14
 
-for-5.13-fixes had comment updates across the file and I pulled them into
-for-5.14 to avoid trivial context conflicts down the line. Yeah, I should
-have commented on the rationale. Will add explanations from now on.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/3dbdb38e286903ec220aaf1fb29a8d94297da246
 
-Thanks.
+Thank you!
 
 -- 
-tejun
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
