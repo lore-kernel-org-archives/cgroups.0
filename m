@@ -1,57 +1,75 @@
-From: Krzysztof Kozlowski <krzysztof.kozlowski-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: Re: Process memory accounting (cgroups) accuracy
-Date: Fri, 2 Jul 2021 12:40:28 +0200
-Message-ID: <85b8a4f9-b9e9-a6ca-5d0c-c1ecb8c11ef3@canonical.com>
-References: <69ffd3a0-2cb7-8baa-17d0-ae45a52595af@canonical.com>
- <YN7XgzB4bE2K9int@dhcp22.suse.cz>
+From: Daniel Jordan <daniel.m.jordan@oracle.com>
+Subject: Re: [Question] Do we need remote charging for cpu and cpuacct subsys?
+Date: Fri, 2 Jul 2021 16:07:42 -0400
+Message-ID: <20210702200742.wuhdg4dhpolher3t@oracle.com>
+References: <60decdb6.1c69fb81.6130e.7642@mx.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <YN7XgzB4bE2K9int-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Content-Language: en-US
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=corp-2020-01-29;
+ bh=b/pD1Och07MWekr/1nICfYdC3YRnv75biPh0Wx7DQM0=;
+ b=S1t8f9bMYRp0Jm3k5JQUf5w2Mj9Q2Mxbf9t1zOR0nbQEi5JKmsJTFnJP/7TPjNDDVeAl
+ vIhDNK1FP5shfgMMkXWoZ7KTeABSmdsZA3bxpjX3e0fw658ES8iuoB5l+nFEgxmYqe4t
+ qOs0in/sS15e6yFWMNChmgfTHDfIgC+I+YToJg/8D34XOLEmvWMSOIavu0VVMNUkWHkb
+ DYcNzjMYXilPWrTSH0WRlr4Q0OqLEj1WFDJ89m+uH6DKvfe0MpmOn8WweNqzTaDZJIeM
+ Ih1rF15VGtqJfcnW/d6bjax6ZfXhp4PTMRXCfBOuIzh7u98DeaB98u2dtUkKYRovxcNR cA== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=b/pD1Och07MWekr/1nICfYdC3YRnv75biPh0Wx7DQM0=;
+ b=NIm5r+rhwnKVopcxKZXPToI33mLI7Dx2yuQtyHAli0NrofbhufQSDl+BsV63vhkhV2tCEfKzpe50nZ6MYHwQDwRqAQAwixwBjLWqBmgC0tmtdGQsIa1ivdiQm+jAnhpyvZYVeBCDOZ4IIIbv7+pmRl1BukJPUtMnHiLkUuI380I=
+Content-Disposition: inline
+In-Reply-To: <60decdb6.1c69fb81.6130e.7642@mx.google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Hao Lee <haolee.swjtu@gmail.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org
 
-On 02/07/2021 11:08, Michal Hocko wrote:
-> On Fri 02-07-21 09:50:11, Krzysztof Kozlowski wrote:
-> [...]
->> The questions: How accurate are now the cgroup counters?
-> 
-> The precision depends on the number of CPUs the workload is running on
-> as we do a per-cpu charge caching to optimize the accounting. This is
-> MEMCG_CHARGE_BATCH (32) pages currently. You can learn more by checking
-> try_charge function (mm/memcontrol.c).
+Hello,
 
-This explains the 32 pages, thanks!
+On Fri, Jul 02, 2021 at 08:26:27AM -0000, Hao Lee wrote:
+> memcg currently has a remote charging mechanism that can charge usage to other
+> memcg instead of the one the task belongs to.
+> 
+> In our environment, we need to account the cpu usage consumed by some kworkers
+> to a specific cgroup. Thus, we want to introduce a remote-charging mechanism to
+> cpu and cpuacct subsys in our kernel.
 
-> 
->> I understood they should charge only pages allocated by the process, so
->> why mmap(4 kB) causes max_usage_in_bytes=132 kB?
-> 
-> Please note that kernel allocations (marked by __GFP_ACCOUNT) are
-> accounted as well so this is not only about mmaped memory.
-> 
->> Why mmap(4 MB) causes max_usage_in_bytes=4 MB + 34 pages?
-> 
-> The specific number will depend on the executing - e.g. use up all but 3
-> pages from CPU0 batch and have 31 pages on another cpu.
-> 
->> What is being accounted there (stack guards?)?
->>
->> Or maybe the entire LTP test checking so carefully memcg limits is useless?
-> 
-> Well, I haven't really checked details of those tests and their
-> objective but aiming for an absolute precision is not really something
-> that is very useful IMHO. We are very likely to do optimizations like
-> the one mentioned above as the runtime tends to be much more important
-> than to-the-page precision.
-> 
-> Hope this clarifies this a bit.
+I also want to see this upstream, and am actually working on it right
+now, have been for some time.
 
-Yes, thanks!
+So far, this is needed to properly account multithreaded padata jobs,
+memory reclaim, and net rx.  Android folks have raised this issue in the
+past too, though I'm not aware of the specific kthreads that are giving
+them problems.
 
+So naturally, I'm curious about your use case and how it may be
+different from these others.  What kworkers would you like to account?
 
-Best regards,
-Krzysztof
+> I want to know if the community has a plan to do this?
+> What will the community approach look like?
+
+There has been discussion about this here,
+
+   https://lore.kernel.org/lkml/20200219214112.4kt573kyzbvmbvn3@ca-dmjordan1.us.oracle.com/
+
+more recently here,
+
+   https://lore.kernel.org/lkml/YGxjwKbec68sCcqo@slm.duckdns.org/
+
+and we may talk about it at LPC:
+
+   https://www.linuxplumbersconf.org/event/11/page/104-accepted-microconferences#cont-perform
+
+> I think we need to move the active_memcg to a separated active_cgroup struct,
+> and the latter will contain active_memcg, active_tg, and active_cpuacct.
+
+I'm not seeing how that could work for cases that don't know the cgroup
+when the remote charging period begins.  The only one I'm aware of
+that's like that is net rx, where the work to process packets has to
+start before their ultimate destination, and therefore cgroup, is known.
+
+thanks,
+Daniel
