@@ -1,54 +1,52 @@
-From: Hao Lee <haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [Question] Do we need remote charging for cpu and cpuacct subsys?
-Date: Sun, 4 Jul 2021 00:20:19 +0800
-Message-ID: <CA+PpKPkau-b0df5i4kpJ_RTXW1Fje4Ms0T2hGJCOE31u+BU7zg@mail.gmail.com>
-References: <60decdb6.1c69fb81.6130e.7642@mx.google.com> <YN+Sne76dhKBzV/R@mtj.duckdns.org>
+From: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 1/2] memcg: switch lruvec stats to rstat
+Date: Mon, 05 Jul 2021 13:30:21 +0800
+Message-ID: <877di549aq.fsf@yhuang6-desk2.ccr.corp.intel.com>
+References: <20210615174435.4174364-1-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=1fwH/bw6YM2VK2ZtZ+qfS4I4lbDV6J5Z7VDXRCzZF+8=;
-        b=kjom6xz7C8co4aNRq3MLNCpCMu8G68k59CdktcehnAQmR/Hcb85++xJt7nxZC60RZO
-         RS5hUu8jzwKfthYPb1XR7t2+H/49WiYqU0UxIIP50cdZzl/D2ISQmNO22d+u0RSqPHzP
-         HP+J8431QOFBmlNCNy/XkPMg3hqVqSRi51ZJbpdEm6gCjkMsXSBnyolRceavcIqh73ZS
-         vU/DCTjfSEmvztJ4DEEuq9zARLU6MpQ4d/QEQEic2LJ5/xbJgd5njXMAJRvkKKsie48W
-         tH28MCMX0cFMm9NDlDU05S2Yy84KBuU79Y++ZSJ6/JW3QCaX86mhStPVg4gARRTOrT1V
-         piGg==
-In-Reply-To: <YN+Sne76dhKBzV/R@mtj.duckdns.org>
+In-Reply-To: <20210615174435.4174364-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> (Shakeel Butt's
+        message of "Tue, 15 Jun 2021 10:44:34 -0700")
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, =?utf-8?Q?Michal_Kou?= =?utf-8?Q?tn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat, Jul 3, 2021 at 6:26 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-> Hello,
->
-> On Fri, Jul 02, 2021 at 08:26:27AM -0000, Hao Lee wrote:
-> > memcg currently has a remote charging mechanism that can charge usage to other
-> > memcg instead of the one the task belongs to.
-> >
-> > In our environment, we need to account the cpu usage consumed by some kworkers
-> > to a specific cgroup. Thus, we want to introduce a remote-charging mechanism to
-> > cpu and cpuacct subsys in our kernel.
-> >
-> > I want to know if the community has a plan to do this?
-> > What will the community approach look like?
->
-> Yeah, we need sth like this to account for cpu cycles spent in commont path
-> but caused by specific cgroups - e.g. memory reclaim, net packet rx and so
-> on. There were some mentions of needing somthing like that but haven't been
-> any patchsets or concrete efforts that I know of.
+Hi, Shakeel,
 
-Thanks for this reply. I am interested in this area because this feature
-would be very useful in our containerized environment. I will track related
-discussions and want to do some work related to remote charging.
+Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> writes:
 
+> The commit 2d146aa3aa84 ("mm: memcontrol: switch to rstat") but skipped
+> the conversion of the lruvec stats as such stats are read in the
+> performance critical code paths and flushing stats may have impacted the
+> performances of the applications. This patch converts the lruvec stats
+> to rstat and later patch adds the periodic flushing of the stats and
+> thus remove the need to synchronously flushing the stats in the
+> performance critical code paths.
 >
-> Thanks.
+> The rstat conversion comes with the price i.e. memory cost. Effectively
+> this patch reverts the savings done by the commit f3344adf38bd ("mm:
+> memcontrol: optimize per-lruvec stats counter memory usage"). However
+> this cost is justified due to negative impact of the inaccurate lruvec
+> stats on many heuristics. One such case is reported in [1].
 >
-> --
-> tejun
+> The memory reclaim code is filled with plethora of heuristics and many
+> of those heuristics reads the lruvec stats. So, inaccurate stats can
+> make such heuristics ineffective. [1] reports the impact of inaccurate
+> lruvec stats on the "cache trim mode" heuristic. Inaccurate lruvec stats
+> can impact the deactivation and aging anon heuristics as well.
+>
+> [1] https://lore.kernel.org/linux-mm/20210311004449.1170308-1-ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+
+Sorry for late reply.  I have just verified that this patchset can
+resolve the problem as in the above link for me.  Thanks!
+
+Best Regards,
+Huang, Ying
+
+> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+> Changes since v1:
+> - no changes
+>
