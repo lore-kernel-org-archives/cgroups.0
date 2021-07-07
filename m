@@ -1,74 +1,42 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH V2] blk-cgroup: prevent rcu_sched detected stalls warnings while iterating blkgs
-Date: Wed, 7 Jul 2021 09:56:49 +0800
-Message-ID: <20210707015649.1929797-1-yukuai3@huawei.com>
+From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH v3 10/18] mm/memcg: Convert mem_cgroup_uncharge() to take
+ a folio
+Date: Wed, 7 Jul 2021 13:09:05 +0100
+Message-ID: <YOWZYWWQvGSVeCs9@casper.infradead.org>
+References: <20210630040034.1155892-1-willy@infradead.org>
+ <20210630040034.1155892-11-willy@infradead.org>
+ <YN1sHPnWUysOZiJm@infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=RXoWcuIuDvfEGN36dlaWaQFgjdyKKyiHEIwv1084Sds=; b=dOeQ1dmEFArkaUwQG0GlkB/Y9C
+        bDVBYDR1vEAJslZf/p4DKECDxKXSGnbscuT9ClyULCkJ2Rof48rCeXy1uSNem1vVUJvcv7E2nLenF
+        mHcqmGHR9eKBEr/xTP+AP5UwpJXg+F0gQXCP16t2mL8kzKlXvhqCjfTv7FhxqxE5tD5fX0mwXQST2
+        5tlVl62OZunHsjopsZIKCqD16RmPYahjVUp0Q0WYsvD8HYq0t2FZl75ji3mfzl7o/54P0B/7+vHot
+        KAGJcsUvbdap0kQ/RYVZqMTAXE5x5CobSi6YidZGE77tj2o094yBmFmr4HgbFhqltTD4tQspCmKQH
+        ZYk/LzLw==;
+Content-Disposition: inline
+In-Reply-To: <YN1sHPnWUysOZiJm-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+Content-Transfer-Encoding: 7bit
+To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-We run a test that create millions of cgroups and blkgs, and then trigger
-blkg_destroy_all(). blkg_destroy_all() will hold spin lock for a long
-time in such situation. Thus release the lock when a batch of blkgs are
-destroyed.
+On Thu, Jul 01, 2021 at 08:17:48AM +0100, Christoph Hellwig wrote:
+> On Wed, Jun 30, 2021 at 05:00:26AM +0100, Matthew Wilcox (Oracle) wrote:
+> > -void mem_cgroup_uncharge(struct page *page);
+> > +void mem_cgroup_uncharge(struct folio *);
+> 
+> why do you drop the parameter name?
 
-blkcg_activate_policy() and blkcg_deactivate_policy() might have the
-same problem, however, as they are basically only called from module
-init/exit paths, let's leave them alone for now.
+I usually do where it's 'struct foo *foo' or 'foo_t foo'.  If the best
+you can do is say "it's a page", well, yes, I knew that from the type.
+But since you've complained, I've added the pointless 'folio' to it.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
-changes in V2:
- - as suggested by Tejun, rename 'BLKG_DESTROY_BATCH_SIZE' and modify
- blkg_destroy_all() only.
-
- block/blk-cgroup.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 7b06a5fa3cac..575d7a2e7203 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -56,6 +56,8 @@ static LIST_HEAD(all_blkcgs);		/* protected by blkcg_pol_mutex */
- bool blkcg_debug_stats = false;
- static struct workqueue_struct *blkcg_punt_bio_wq;
- 
-+#define BLKG_DESTROY_BATCH_SIZE  64
-+
- static bool blkcg_policy_enabled(struct request_queue *q,
- 				 const struct blkcg_policy *pol)
- {
-@@ -422,7 +424,9 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- static void blkg_destroy_all(struct request_queue *q)
- {
- 	struct blkcg_gq *blkg, *n;
-+	int count = BLKG_DESTROY_BATCH_SIZE;
- 
-+restart:
- 	spin_lock_irq(&q->queue_lock);
- 	list_for_each_entry_safe(blkg, n, &q->blkg_list, q_node) {
- 		struct blkcg *blkcg = blkg->blkcg;
-@@ -430,6 +434,17 @@ static void blkg_destroy_all(struct request_queue *q)
- 		spin_lock(&blkcg->lock);
- 		blkg_destroy(blkg);
- 		spin_unlock(&blkcg->lock);
-+
-+		/*
-+		 * in order to avoid holding the spin lock for too long, release
-+		 * it when a batch of blkgs are destroyed.
-+		 */
-+		if (!(--count)) {
-+			count = BLKG_DESTROY_BATCH_SIZE;
-+			spin_unlock_irq(&q->queue_lock);
-+			cond_resched();
-+			goto restart;
-+		}
- 	}
- 
- 	q->root_blkg = NULL;
--- 
-2.31.1
-
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
