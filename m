@@ -1,42 +1,34 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH V2] blk-cgroup: prevent rcu_sched detected stalls warnings
- while iterating blkgs
-Date: Wed, 7 Jul 2021 09:38:54 -0600
-Message-ID: <dc715155-f936-16ef-bcc4-3063988402ba@kernel.dk>
-References: <20210707015649.1929797-1-yukuai3@huawei.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v3 13/18] mm/memcg: Add folio_memcg_lock() and
+ folio_memcg_unlock()
+Date: Wed, 7 Jul 2021 13:08:51 -0400
+Message-ID: <YOXfozcU8M/x2RQ4@cmpxchg.org>
+References: <20210630040034.1155892-1-willy@infradead.org>
+ <20210630040034.1155892-14-willy@infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=H/u+AYAwK9mJcG4oUWcnUGsuenx4nlYeOD13u9gKYw4=;
-        b=hBe29YUOrYgfT6USN8t15IXPOdsaxaWTgbrLieT0ub7LIuxZQLgx28SKSKI2NneYaX
-         3TfqswY3vdTXnPYj/gn7E2GPnw3fzQoZ4/2cKo2U8yYmk5UOaMGBZQV4FkLxJmLZXtVU
-         WvhFUSJeZJD0jCIgSkOooNBIcaNQ9PF6I4tHzvnb41Q+vpQ2njGA69DOrhrmQUVwdRRi
-         Sh9D/0WnPlX9q+V7H0eoW9RNCAufgJnb+iMaMGxTsP5RGsfxe2RomDZSsmI9qPJ6eHFr
-         413hVjj1elDDIYi4tiXFVKvlOELXOGD7sQNBIzlhRADjBFfQJmRxGkGU8TIJv3VJCVld
-         rESw==
-In-Reply-To: <20210707015649.1929797-1-yukuai3@huawei.com>
-Content-Language: en-US
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=zKFzxaicRuEWN6JDVuwxf/5fHNRnvOJNXCo8RqlfnUo=;
+        b=K07Xb99QcriEOisR00l22wLQPQEOIpOXNJAf9NhgVco/oZ9jwUnQ0BR4m/V9l2aVu3
+         7Ue85P+ZxUFOf7SP+RuJxDYfEyBUPkLCBoJ2Tbjlh0beKAnJ/INjxQ6Fkx+jJqhYaVGT
+         RjMT0XF4LKj/9H7bu0nqsgCsRncfO3IsCb6RKkdDyvHJKow5YHLgaVkGWPoyOig8rF7q
+         u37fNGzarIMgfy9mJlnW7SqjOVYt3o9RJ+FxXglVlM5PGmawY/NT4yBDQxiPBNUMYhNM
+         7eUk/7LFiyrGoo6WBmJpGhK+MbzOdBSwOgaZRXJY+665Xnpq9Ws4ZIiUBCaYBAKXhqZ0
+         Bv+Q==
+Content-Disposition: inline
+In-Reply-To: <20210630040034.1155892-14-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Yu Kuai <yukuai3@huawei.com>, tj@kernel.org
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Transfer-Encoding: 7bit
+To: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On 7/6/21 7:56 PM, Yu Kuai wrote:
-> We run a test that create millions of cgroups and blkgs, and then trigger
-> blkg_destroy_all(). blkg_destroy_all() will hold spin lock for a long
-> time in such situation. Thus release the lock when a batch of blkgs are
-> destroyed.
-> 
-> blkcg_activate_policy() and blkcg_deactivate_policy() might have the
-> same problem, however, as they are basically only called from module
-> init/exit paths, let's leave them alone for now.
+On Wed, Jun 30, 2021 at 05:00:29AM +0100, Matthew Wilcox (Oracle) wrote:
+> -static void __unlock_page_memcg(struct mem_cgroup *memcg)
+> +static void __memcg_unlock(struct mem_cgroup *memcg)
 
-Applied, thanks.
-
--- 
-Jens Axboe
-
+This is too generic a name. There are several locks in the memcg, and
+this one only locks the page->memcg bindings in the group.
