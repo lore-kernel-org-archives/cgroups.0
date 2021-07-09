@@ -1,66 +1,91 @@
-From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 0/3] mm, memcg: Optimizations to minimize overhead when memcgs
- are disabled
-Date: Thu,  8 Jul 2021 17:05:06 -0700
-Message-ID: <20210709000509.2618345-1-surenb@google.com>
+From: Suren Baghdasaryan <surenb@google.com>
+Subject: [PATCH 1/3] mm, memcg: add mem_cgroup_disabled checks in vmpressure
+ and swap-related functions
+Date: Thu,  8 Jul 2021 17:05:07 -0700
+Message-ID: <20210709000509.2618345-2-surenb@google.com>
+References: <20210709000509.2618345-1-surenb@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=HcLnGXZfaeqCi0d4EsoaKKelu1NS9rMOMY3OT5HTNvs=;
-        b=c+KFF36BFzAWbZ1ZqezCaWKkP9YnbQF8Z1exFWSQlGnsvkb6rwZgB5lPB6tZRCFSL/
-         2e79NSQQsiyezU4RQCDxHfPlWsi6YTf1z98QAYFY+FNDZcHcFLisxhJYYm4MuhClcr0L
-         iTSQFrSE/fJlNePefffT+DV0/KtGATS+VIhreboD6UhWQOtO+fHKucBKP4tNtAzuF6xN
-         hRNEZI2oOI1CO5qUjzjj1hpxFivEdX9lLsZCgXvkSRwcRNX/xdPl8MChwTtLcO46X1eS
-         6fmZYbxdNiwjfzfpzpNsDnt2sAPjYdsxhv2xWGbbsMAsuE8RvJqEwhZ3g/XB/JdF/JD6
-         u4hA==
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=ljZtH/3TfSN/L2o7cH/WG4F/EQa0MpAf0ZWdg5C/FNc=;
+        b=tjuzLHVF6l4VVoKLeCICczn6YDJN3WpgP2EKbpGIwoImA0pbzF/WW9fGwmIFgZjIbF
+         ioFEOo80oORCzs77cXbZqQuT/dC8ElHWoBKrlQCrAisasje6lH4lQlJCXjncXzU4DqQh
+         2AU0p4gnRO7+7Eu9EL6ZXgZ44X/qWm/IzNyC32JDqh9i3SbKbBPTlFBUvit5atKoadxd
+         7JZ65EULEJRyeFkovh0oGnZfcOfKGVQVu88YAAMnPVktwy7KV4m/qX2aRgOidCH095n7
+         SdgX49cVT5lkj5ZtQr0JzkyElR8g/YiUM4L5WTjEHJL6M0JzllWjTEVN5V0u5340zWZ7
+         bT4g==
+In-Reply-To: <20210709000509.2618345-1-surenb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+To: tj@kernel.org
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, shakeelb@google.com, guro@fb.com, songmuchun@bytedance.com, shy828301@gmail.com, alexs@kernel.org, alexander.h.duyck@linux.intel.com, richard.weiyang@gmail.com, vbabka@suse.cz, axboe@kernel.dk, iamjoonsoo.kim@lge.com, david@redhat.com, willy@infradead.org, apopple@nvidia.com, minchan@kernel.org, linmiaohe@huawei.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@android.com, surenb@google.com
 
-Disabling memcgs on Android from kernel command-line because important due to
-new requirements for all vendors to share the same kernel config and because
-some vendors use memcgs while others don't. The ones who don't, have to disable
-memcgs via "cgroup_disable=memory" kernel command-line option and we would like
-to minimize the cost of disabling memcgs this way vs disabling CONFIG_MEMCG.
-This patchset is focused on minimizing performance costs of this option.
-When running pft test with memcgs disabled via CONFIG_MEMCG=n vs
-"cgroup_disable=memory" command-line option, we measured ~6% drop in the
-average pagefault/sec rate with stddev of ~2%. The results were obtained by
-running pft test 1500 times and averaging the results on an 8-core ARM64
-Android device with system services stopped, performance governor and enabling
-only Big or Little cores in one test to minimize the noise.
-Using perf, a number of relatively high-cost areas were identified where extra
-operations can be minimized. The patchset consists of a number of optimisations
-gradually reducing this regression. Patches are applied incrementally while
-testing and recording the impact for each one:
+Add mem_cgroup_disabled check in vmpressure, mem_cgroup_uncharge_swap and
+cgroup_throttle_swaprate functions. This minimizes the memcg overhead in
+the pagefault and exit_mmap paths when memcgs are disabled using
+cgroup_disable=memory command-line option.
+This change results in ~2.1% overhead reduction when running PFT test
+comparing {CONFIG_MEMCG=n, CONFIG_MEMCG_SWAP=n} against {CONFIG_MEMCG=y,
+CONFIG_MEMCG_SWAP=y, cgroup_disable=memory} configuration on an 8-core
+ARM64 Android device.
 
-6.01% with vanilla cgroup_disable vs CONFIG_MEMCG=n
-3.87% after patch #1 adding mem_cgroup_disabled checks vs CONFIG_MEMCG=n
-3.49% after patch #2 inlining mem_cgroup_{charge/uncharge} vs CONFIG_MEMCG=n
-2.48% After patch #3 inlining swap-related functions vs CONFIG_MEMCG=n
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+---
+ mm/memcontrol.c | 3 +++
+ mm/swapfile.c   | 3 +++
+ mm/vmpressure.c | 7 ++++++-
+ 3 files changed, 12 insertions(+), 1 deletion(-)
 
-I kept them separate because they vary in their "impact vs readability cost"
-and I'm not sure which ones pass the acceptable threashold.
-
-Suren Baghdasaryan (3):
-  mm, memcg: add mem_cgroup_disabled checks in vmpressure and
-    swap-related functions
-  mm, memcg: inline mem_cgroup_{charge/uncharge} to improve disabled
-    memcg config
-  mm, memcg: inline swap-related functions to improve disabled memcg
-    config
-
- include/linux/memcontrol.h | 54 ++++++++++++++++++++++++++++++++++----
- include/linux/swap.h       | 26 +++++++++++++++---
- mm/memcontrol.c            | 52 +++++-------------------------------
- mm/swapfile.c              |  2 +-
- mm/vmpressure.c            |  7 ++++-
- 5 files changed, 86 insertions(+), 55 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ae1f5d0cb581..a228cd51c4bd 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -7305,6 +7305,9 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages)
+ 	struct mem_cgroup *memcg;
+ 	unsigned short id;
+ 
++	if (mem_cgroup_disabled())
++		return;
++
+ 	id = swap_cgroup_record(entry, 0, nr_pages);
+ 	rcu_read_lock();
+ 	memcg = mem_cgroup_from_id(id);
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 1e07d1c776f2..707fa0481bb4 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -3778,6 +3778,9 @@ void cgroup_throttle_swaprate(struct page *page, gfp_t gfp_mask)
+ 	struct swap_info_struct *si, *next;
+ 	int nid = page_to_nid(page);
+ 
++	if (mem_cgroup_disabled())
++		return;
++
+ 	if (!(gfp_mask & __GFP_IO))
+ 		return;
+ 
+diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+index d69019fc3789..9b172561fded 100644
+--- a/mm/vmpressure.c
++++ b/mm/vmpressure.c
+@@ -240,7 +240,12 @@ static void vmpressure_work_fn(struct work_struct *work)
+ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg, bool tree,
+ 		unsigned long scanned, unsigned long reclaimed)
+ {
+-	struct vmpressure *vmpr = memcg_to_vmpressure(memcg);
++	struct vmpressure *vmpr;
++
++	if (mem_cgroup_disabled())
++		return;
++
++	vmpr = memcg_to_vmpressure(memcg);
+ 
+ 	/*
+ 	 * Here we only want to account pressure that userland is able to
 -- 
 2.32.0.93.g670b81a890-goog
 
