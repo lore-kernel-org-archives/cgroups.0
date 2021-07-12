@@ -1,42 +1,83 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2 1/1] mm, memcg: inline mem_cgroup_{charge/uncharge} to
- improve disabled memcg config
-Date: Mon, 12 Jul 2021 14:31:27 -0400
-Message-ID: <YOyKfySwuBfgtEvW@cmpxchg.org>
-References: <20210709171554.3494654-1-surenb@google.com>
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Subject: [PATCH v13b 00/18] Convert memcg to folios
+Date: Mon, 12 Jul 2021 20:45:33 +0100
+Message-ID: <20210712194551.91920-1-willy@infradead.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=91QVBsn60C5sxxxstdN+oyAoFM1Vz8Xrhf5wNCClAZ0=;
-        b=a019hXVML1QTTEfMxq4xOcak1XJogepYRETIyj3+hyPTloWky9q429jsqUoXR7NVUp
-         x0sleTMvkwrpFBp5Iq492/WoP65dbpZlQV0HMy3pWuYArruuTgwsz2kNgmgvcfB0Uf8A
-         zDuf0ZV/XAINwDV7rOhVLr2StoZ41vBZMq4y+WzvgRTKLKILuFcPWYjse+WchS9SplIV
-         aQi/Q0AzrsPNr6udTmAyz7xaxLOL4RHnMtQohfkumhs2UOheE+1WjeKcsex9RZix8MRU
-         IVEcs/d+bN2CTr2OCyJfFWTq0bnSxNX0smTokjuWD78ZfZS/wzfyHrDGXqBkR8ux7Lx7
-         4MOg==
-Content-Disposition: inline
-In-Reply-To: <20210709171554.3494654-1-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=wwdrck5Fily6lPwjQUBToAYdwTywQY0VRUiJqbTmhYI=; b=gckufHXDZ6EM5AbS966R3VxzGf
+        vM6swRTH6vXT/P6DDAnP+jQ9Vizm50brt37dGCL8uZmFMQZOcEruLPBQKMHy61RdM6vSmd5k1JeZG
+        wNP8Ck1uvqhv/RnZpxIyRT74j7KDg5iL/TZv1b7mSMzg4IKZAbSlmtkKBNuSxYK8XTPnQgEDRbeMV
+        k3OFl9LUGMeduzR1SJD8Hxti71jYu8XFO89x+4Q5wt9SbWsyA/Q5LSxzW7Qqb97uOw6ApD/NjcBCu
+        o4YRsmIpTWKI3h8HLUHhkhEEi3LFMaKv3fpTUdP1AAPTdpE1N/i3Y96Z6ZM0Eu5AGNgmwXTYHK+/a
+        TF598fqw==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
+To: akpm@linux-foundation.org
+Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Fri, Jul 09, 2021 at 10:15:54AM -0700, Suren Baghdasaryan wrote:
-> Inline mem_cgroup_{charge/uncharge} and mem_cgroup_uncharge_list functions
-> functions to perform mem_cgroup_disabled static key check inline before
-> calling the main body of the function. This minimizes the memcg overhead
-> in the pagefault and exit_mmap paths when memcgs are disabled using
-> cgroup_disable=memory command-line option.
-> This change results in ~0.4% overhead reduction when running PFT test
-> comparing {CONFIG_MEMCG=n} against {CONFIG_MEMCG=y, cgroup_disable=memory}
-> configurationon on an 8-core ARM64 Android device.
-> 
-> Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+This is the part of the v13 patch series which deals with converting
+(most of) the memcg interfaces to work with folios instead of pages.
+A few interfaces are not changed due to having exclusively or many
+users which are not going to be converted to folios soon.  Eventually,
+all memcg interfaces should be converted to folios as all accounting of
+memory is done on and with the head page.
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+A few of these patches ran into trouble with the build bots, and those
+problems have been corrected.  I imagine that posting this as a patch
+series independently of v13a will cause the build bots to report errors
+as I don't know how to tell them that this series depends on that series.
 
-Thanks!
+Matthew Wilcox (Oracle) (18):
+  mm: Add folio_nid()
+  mm/memcg: Remove 'page' parameter to mem_cgroup_charge_statistics()
+  mm/memcg: Use the node id in mem_cgroup_update_tree()
+  mm/memcg: Remove soft_limit_tree_node()
+  mm/memcg: Convert memcg_check_events to take a node ID
+  mm/memcg: Add folio_memcg() and related functions
+  mm/memcg: Convert commit_charge() to take a folio
+  mm/memcg: Convert mem_cgroup_charge() to take a folio
+  mm/memcg: Convert uncharge_page() to uncharge_folio()
+  mm/memcg: Convert mem_cgroup_uncharge() to take a folio
+  mm/memcg: Convert mem_cgroup_migrate() to take folios
+  mm/memcg: Convert mem_cgroup_track_foreign_dirty_slowpath() to folio
+  mm/memcg: Add folio_memcg_lock() and folio_memcg_unlock()
+  mm/memcg: Convert mem_cgroup_move_account() to use a folio
+  mm/memcg: Add folio_lruvec()
+  mm/memcg: Add folio_lruvec_lock() and similar functions
+  mm/memcg: Add folio_lruvec_relock_irq() and
+    folio_lruvec_relock_irqsave()
+  mm/workingset: Convert workingset_activation to take a folio
+
+ include/linux/memcontrol.h       | 223 ++++++++++++---------
+ include/linux/mm.h               |   5 +
+ include/linux/swap.h             |   2 +-
+ include/trace/events/writeback.h |   8 +-
+ kernel/events/uprobes.c          |   3 +-
+ mm/compaction.c                  |   4 +-
+ mm/filemap.c                     |   8 +-
+ mm/huge_memory.c                 |   7 +-
+ mm/khugepaged.c                  |   8 +-
+ mm/ksm.c                         |   3 +-
+ mm/memcontrol.c                  | 323 +++++++++++++++----------------
+ mm/memory-failure.c              |   2 +-
+ mm/memory.c                      |   9 +-
+ mm/memremap.c                    |   2 +-
+ mm/migrate.c                     |   6 +-
+ mm/mlock.c                       |   3 +-
+ mm/page_alloc.c                  |   2 +-
+ mm/rmap.c                        |   2 +-
+ mm/shmem.c                       |   7 +-
+ mm/swap.c                        |  26 ++-
+ mm/userfaultfd.c                 |   2 +-
+ mm/vmscan.c                      |   8 +-
+ mm/workingset.c                  |  10 +-
+ 23 files changed, 358 insertions(+), 315 deletions(-)
+
+-- 
+2.30.2
+
