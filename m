@@ -1,83 +1,51 @@
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Subject: [PATCH v13b 00/18] Convert memcg to folios
-Date: Mon, 12 Jul 2021 20:45:33 +0100
-Message-ID: <20210712194551.91920-1-willy@infradead.org>
+Subject: [PATCH v13 01/18] mm: Add folio_nid()
+Date: Mon, 12 Jul 2021 20:45:34 +0100
+Message-ID: <20210712194551.91920-2-willy@infradead.org>
+References: <20210712194551.91920-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=wwdrck5Fily6lPwjQUBToAYdwTywQY0VRUiJqbTmhYI=; b=gckufHXDZ6EM5AbS966R3VxzGf
-        vM6swRTH6vXT/P6DDAnP+jQ9Vizm50brt37dGCL8uZmFMQZOcEruLPBQKMHy61RdM6vSmd5k1JeZG
-        wNP8Ck1uvqhv/RnZpxIyRT74j7KDg5iL/TZv1b7mSMzg4IKZAbSlmtkKBNuSxYK8XTPnQgEDRbeMV
-        k3OFl9LUGMeduzR1SJD8Hxti71jYu8XFO89x+4Q5wt9SbWsyA/Q5LSxzW7Qqb97uOw6ApD/NjcBCu
-        o4YRsmIpTWKI3h8HLUHhkhEEi3LFMaKv3fpTUdP1AAPTdpE1N/i3Y96Z6ZM0Eu5AGNgmwXTYHK+/a
-        TF598fqw==;
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=Ls0PDTK4GmPt7o8GB9HWSuuERwLuQPqR3wzi6YV9cbE=; b=msR3r+CxymI9f1TqwdX859M2f8
+        efT+6ox25yrnjVp3xSbuo1jNeYNQt9Mm91BMyQyib0fBd5lcHveUyoKoMqSea2uKsdOVNBejxvFxH
+        RRjJW9oV+v1DKdrPlaJh/OoClBowrGno3ocy9gVJKmlTAYyEq8PPAaEOXOHBcZkEp/A+4lqsJKPha
+        3R57wRTj0xzTnVbTRL0F+SPllevLR0VUmztl6eBJraPpxfo5kCHaKsjPHPKBdiZFqXUZb8qUUBb48
+        MRWVNUgJ8Ifnc8DX+mX+cSOQX0jhrALm7IT9BQeR5MeE2DTWnVbrYZxx1mtI1HZyv0sOs1JTQzXOP
+        RCUnMJUg==;
+In-Reply-To: <20210712194551.91920-1-willy@infradead.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: akpm@linux-foundation.org
-Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-This is the part of the v13 patch series which deals with converting
-(most of) the memcg interfaces to work with folios instead of pages.
-A few interfaces are not changed due to having exclusively or many
-users which are not going to be converted to folios soon.  Eventually,
-all memcg interfaces should be converted to folios as all accounting of
-memory is done on and with the head page.
+This is the folio equivalent of page_to_nid().
 
-A few of these patches ran into trouble with the build bots, and those
-problems have been corrected.  I imagine that posting this as a patch
-series independently of v13a will cause the build bots to report errors
-as I don't know how to tell them that this series depends on that series.
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ include/linux/mm.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Matthew Wilcox (Oracle) (18):
-  mm: Add folio_nid()
-  mm/memcg: Remove 'page' parameter to mem_cgroup_charge_statistics()
-  mm/memcg: Use the node id in mem_cgroup_update_tree()
-  mm/memcg: Remove soft_limit_tree_node()
-  mm/memcg: Convert memcg_check_events to take a node ID
-  mm/memcg: Add folio_memcg() and related functions
-  mm/memcg: Convert commit_charge() to take a folio
-  mm/memcg: Convert mem_cgroup_charge() to take a folio
-  mm/memcg: Convert uncharge_page() to uncharge_folio()
-  mm/memcg: Convert mem_cgroup_uncharge() to take a folio
-  mm/memcg: Convert mem_cgroup_migrate() to take folios
-  mm/memcg: Convert mem_cgroup_track_foreign_dirty_slowpath() to folio
-  mm/memcg: Add folio_memcg_lock() and folio_memcg_unlock()
-  mm/memcg: Convert mem_cgroup_move_account() to use a folio
-  mm/memcg: Add folio_lruvec()
-  mm/memcg: Add folio_lruvec_lock() and similar functions
-  mm/memcg: Add folio_lruvec_relock_irq() and
-    folio_lruvec_relock_irqsave()
-  mm/workingset: Convert workingset_activation to take a folio
-
- include/linux/memcontrol.h       | 223 ++++++++++++---------
- include/linux/mm.h               |   5 +
- include/linux/swap.h             |   2 +-
- include/trace/events/writeback.h |   8 +-
- kernel/events/uprobes.c          |   3 +-
- mm/compaction.c                  |   4 +-
- mm/filemap.c                     |   8 +-
- mm/huge_memory.c                 |   7 +-
- mm/khugepaged.c                  |   8 +-
- mm/ksm.c                         |   3 +-
- mm/memcontrol.c                  | 323 +++++++++++++++----------------
- mm/memory-failure.c              |   2 +-
- mm/memory.c                      |   9 +-
- mm/memremap.c                    |   2 +-
- mm/migrate.c                     |   6 +-
- mm/mlock.c                       |   3 +-
- mm/page_alloc.c                  |   2 +-
- mm/rmap.c                        |   2 +-
- mm/shmem.c                       |   7 +-
- mm/swap.c                        |  26 ++-
- mm/userfaultfd.c                 |   2 +-
- mm/vmscan.c                      |   8 +-
- mm/workingset.c                  |  10 +-
- 23 files changed, 358 insertions(+), 315 deletions(-)
-
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index a856c078e040..80f27eb151ba 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1427,6 +1427,11 @@ static inline int page_to_nid(const struct page *page)
+ }
+ #endif
+ 
++static inline int folio_nid(const struct folio *folio)
++{
++	return page_to_nid(&folio->page);
++}
++
+ #ifdef CONFIG_NUMA_BALANCING
+ static inline int cpu_pid_to_cpupid(int cpu, int pid)
+ {
 -- 
 2.30.2
 
