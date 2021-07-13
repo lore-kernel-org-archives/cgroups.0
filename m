@@ -1,94 +1,191 @@
 From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 1/3] mm, memcg: add mem_cgroup_disabled checks in
- vmpressure and swap-related functions
-Date: Mon, 12 Jul 2021 18:09:32 -0700
-Message-ID: <20210713010934.299876-1-surenb@google.com>
+Subject: [PATCH v4 2/3] mm, memcg: inline mem_cgroup_{charge/uncharge} to
+ improve disabled memcg config
+Date: Mon, 12 Jul 2021 18:09:33 -0700
+Message-ID: <20210713010934.299876-2-surenb@google.com>
+References: <20210713010934.299876-1-surenb@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=cfXnc9Zc9o3ptZPRnTFsvWMpDY8BWRepBXZRyd5PlI0=;
-        b=LimyZz27wI/KGrLZPTZiNvhL9etIS58Jg/XdTXPk3yRn/TVtwaCz9ycSaaCZCAn+9P
-         ecOlZ7hM5JZhxPntRzEJg/VyzOmlbwUKPLC9aO06yllP5E3C2Th0ozf6YGWocP+khU4y
-         LfWv6uNsrBNqs6aYot1LAuVc0W5dt6mTzRO4uE2ktOlDX0PiSgtHa9LJAQFGgP3dTNfj
-         769TSyYWXBZHgWDaT40b5MWC0W+Tj6VF6X7bNFW11r/DDnsXrY0zowiYhRiwWpl05jZY
-         36wKV9FlWI6cDJl+6BPOr5h0YTfYX6IYecWZAMFPOami47wLYBmcdcxetkUa3kEx9fwI
-         qekg==
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=VHC+YzAQlppaneCSXMJd1zGWtOqB6UoQTAIsnf0LqyQ=;
+        b=B96QMnD0FPaSmeEsppXsVd3HAhgPo4nyv4JECcEg7l+oShKYLwOpMGC/sUCjQbXWRl
+         oks73mO0TPAgR6iq9peBltmQkRiVWIWrTRmZYSzElLXllQyDKnqgOTbk6y67vuRC0rI8
+         c9UsXgvDYat3KZvFpDZWBv0Vasmht7AvEHzy93lcn3z+HRpPEzKHh2f4NlLZ3vUsa47O
+         lfqTyCrtAbui11u0enmycqLCQjhOmYFHe6rOdHA43YSu92ycgFJEpDOVtBNblhWvuugU
+         NjYhM61KfqFe0oBF1KW0OtoiQw3QlTw6VW9jGQmM8vuClVFM8B84JK+d3jsuhXIYmbrn
+         WLpQ==
+In-Reply-To: <20210713010934.299876-1-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-Add mem_cgroup_disabled check in vmpressure, mem_cgroup_uncharge_swap and
-cgroup_throttle_swaprate functions. This minimizes the memcg overhead in
-the pagefault and exit_mmap paths when memcgs are disabled using
+Inline mem_cgroup_{charge/uncharge} and mem_cgroup_uncharge_list functions
+functions to perform mem_cgroup_disabled static key check inline before
+calling the main body of the function. This minimizes the memcg overhead
+in the pagefault and exit_mmap paths when memcgs are disabled using
 cgroup_disable=memory command-line option.
-This change results in ~2.1% overhead reduction when running PFT test [1]
-comparing {CONFIG_MEMCG=n, CONFIG_MEMCG_SWAP=n} against {CONFIG_MEMCG=y,
-CONFIG_MEMCG_SWAP=y, cgroup_disable=memory} configuration on an 8-core
-ARM64 Android device.
+This change results in ~0.4% overhead reduction when running PFT test [1]
+comparing {CONFIG_MEMCG=n} against {CONFIG_MEMCG=y, cgroup_disable=memory}
+configuration on an 8-core ARM64 Android device.
 
 [1] https://lkml.org/lkml/2006/8/29/294 also used in mmtests suite
 
 Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Reviewed-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- mm/memcontrol.c | 3 +++
- mm/swapfile.c   | 3 +++
- mm/vmpressure.c | 7 ++++++-
- 3 files changed, 12 insertions(+), 1 deletion(-)
+ include/linux/memcontrol.h | 28 +++++++++++++++++++++++++---
+ mm/memcontrol.c            | 33 ++++++++++++---------------------
+ 2 files changed, 37 insertions(+), 24 deletions(-)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index bfe5c486f4ad..39fa88051a42 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -693,13 +693,35 @@ static inline bool mem_cgroup_below_min(struct mem_cgroup *memcg)
+ 		page_counter_read(&memcg->memory);
+ }
+ 
+-int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask);
++int __mem_cgroup_charge(struct page *page, struct mm_struct *mm,
++			gfp_t gfp_mask);
++static inline int mem_cgroup_charge(struct page *page, struct mm_struct *mm,
++				    gfp_t gfp_mask)
++{
++	if (mem_cgroup_disabled())
++		return 0;
++	return __mem_cgroup_charge(page, mm, gfp_mask);
++}
++
+ int mem_cgroup_swapin_charge_page(struct page *page, struct mm_struct *mm,
+ 				  gfp_t gfp, swp_entry_t entry);
+ void mem_cgroup_swapin_uncharge_swap(swp_entry_t entry);
+ 
+-void mem_cgroup_uncharge(struct page *page);
+-void mem_cgroup_uncharge_list(struct list_head *page_list);
++void __mem_cgroup_uncharge(struct page *page);
++static inline void mem_cgroup_uncharge(struct page *page)
++{
++	if (mem_cgroup_disabled())
++		return;
++	__mem_cgroup_uncharge(page);
++}
++
++void __mem_cgroup_uncharge_list(struct list_head *page_list);
++static inline void mem_cgroup_uncharge_list(struct list_head *page_list)
++{
++	if (mem_cgroup_disabled())
++		return;
++	__mem_cgroup_uncharge_list(page_list);
++}
+ 
+ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage);
+ 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ae1f5d0cb581..a228cd51c4bd 100644
+index a228cd51c4bd..6adf50acdbe2 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -7305,6 +7305,9 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages)
- 	struct mem_cgroup *memcg;
- 	unsigned short id;
+@@ -6701,8 +6701,7 @@ void mem_cgroup_calculate_protection(struct mem_cgroup *root,
+ 			atomic_long_read(&parent->memory.children_low_usage)));
+ }
  
-+	if (mem_cgroup_disabled())
-+		return;
-+
- 	id = swap_cgroup_record(entry, 0, nr_pages);
- 	rcu_read_lock();
- 	memcg = mem_cgroup_from_id(id);
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index 1e07d1c776f2..707fa0481bb4 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -3778,6 +3778,9 @@ void cgroup_throttle_swaprate(struct page *page, gfp_t gfp_mask)
- 	struct swap_info_struct *si, *next;
- 	int nid = page_to_nid(page);
- 
-+	if (mem_cgroup_disabled())
-+		return;
-+
- 	if (!(gfp_mask & __GFP_IO))
- 		return;
- 
-diff --git a/mm/vmpressure.c b/mm/vmpressure.c
-index d69019fc3789..9b172561fded 100644
---- a/mm/vmpressure.c
-+++ b/mm/vmpressure.c
-@@ -240,7 +240,12 @@ static void vmpressure_work_fn(struct work_struct *work)
- void vmpressure(gfp_t gfp, struct mem_cgroup *memcg, bool tree,
- 		unsigned long scanned, unsigned long reclaimed)
+-static int __mem_cgroup_charge(struct page *page, struct mem_cgroup *memcg,
+-			       gfp_t gfp)
++static int charge_memcg(struct page *page, struct mem_cgroup *memcg, gfp_t gfp)
  {
--	struct vmpressure *vmpr = memcg_to_vmpressure(memcg);
-+	struct vmpressure *vmpr;
-+
-+	if (mem_cgroup_disabled())
-+		return;
-+
-+	vmpr = memcg_to_vmpressure(memcg);
+ 	unsigned int nr_pages = thp_nr_pages(page);
+ 	int ret;
+@@ -6723,7 +6722,7 @@ static int __mem_cgroup_charge(struct page *page, struct mem_cgroup *memcg,
+ }
  
- 	/*
- 	 * Here we only want to account pressure that userland is able to
+ /**
+- * mem_cgroup_charge - charge a newly allocated page to a cgroup
++ * __mem_cgroup_charge - charge a newly allocated page to a cgroup
+  * @page: page to charge
+  * @mm: mm context of the victim
+  * @gfp_mask: reclaim mode
+@@ -6736,16 +6735,14 @@ static int __mem_cgroup_charge(struct page *page, struct mem_cgroup *memcg,
+  *
+  * Returns 0 on success. Otherwise, an error code is returned.
+  */
+-int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
++int __mem_cgroup_charge(struct page *page, struct mm_struct *mm,
++			gfp_t gfp_mask)
+ {
+ 	struct mem_cgroup *memcg;
+ 	int ret;
+ 
+-	if (mem_cgroup_disabled())
+-		return 0;
+-
+ 	memcg = get_mem_cgroup_from_mm(mm);
+-	ret = __mem_cgroup_charge(page, memcg, gfp_mask);
++	ret = charge_memcg(page, memcg, gfp_mask);
+ 	css_put(&memcg->css);
+ 
+ 	return ret;
+@@ -6780,7 +6777,7 @@ int mem_cgroup_swapin_charge_page(struct page *page, struct mm_struct *mm,
+ 		memcg = get_mem_cgroup_from_mm(mm);
+ 	rcu_read_unlock();
+ 
+-	ret = __mem_cgroup_charge(page, memcg, gfp);
++	ret = charge_memcg(page, memcg, gfp);
+ 
+ 	css_put(&memcg->css);
+ 	return ret;
+@@ -6916,18 +6913,15 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
+ }
+ 
+ /**
+- * mem_cgroup_uncharge - uncharge a page
++ * __mem_cgroup_uncharge - uncharge a page
+  * @page: page to uncharge
+  *
+- * Uncharge a page previously charged with mem_cgroup_charge().
++ * Uncharge a page previously charged with __mem_cgroup_charge().
+  */
+-void mem_cgroup_uncharge(struct page *page)
++void __mem_cgroup_uncharge(struct page *page)
+ {
+ 	struct uncharge_gather ug;
+ 
+-	if (mem_cgroup_disabled())
+-		return;
+-
+ 	/* Don't touch page->lru of any random page, pre-check: */
+ 	if (!page_memcg(page))
+ 		return;
+@@ -6938,20 +6932,17 @@ void mem_cgroup_uncharge(struct page *page)
+ }
+ 
+ /**
+- * mem_cgroup_uncharge_list - uncharge a list of page
++ * __mem_cgroup_uncharge_list - uncharge a list of page
+  * @page_list: list of pages to uncharge
+  *
+  * Uncharge a list of pages previously charged with
+- * mem_cgroup_charge().
++ * __mem_cgroup_charge().
+  */
+-void mem_cgroup_uncharge_list(struct list_head *page_list)
++void __mem_cgroup_uncharge_list(struct list_head *page_list)
+ {
+ 	struct uncharge_gather ug;
+ 	struct page *page;
+ 
+-	if (mem_cgroup_disabled())
+-		return;
+-
+ 	uncharge_gather_clear(&ug);
+ 	list_for_each_entry(page, page_list, lru)
+ 		uncharge_page(page, &ug);
 -- 
 2.32.0.93.g670b81a890-goog
 
