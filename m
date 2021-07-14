@@ -1,185 +1,67 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 2/2] memcg: infrastructure to flush memcg stats
-Date: Tue, 13 Jul 2021 18:39:48 -0700
-Message-ID: <20210714013948.270662-2-shakeelb@google.com>
-References: <20210714013948.270662-1-shakeelb@google.com>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH v2 1/1] memcg: enable accounting for pids in nested pid
+ namespaces
+Date: Wed, 14 Jul 2021 09:31:34 +0300
+Message-ID: <21db0c2c-45ea-fded-9633-7b76ab2b1083@virtuozzo.com>
+References: <7b777e22-5b0d-7444-343d-92cbfae5f8b4@virtuozzo.com>
+ <8b6de616-fd1a-02c6-cbdb-976ecdcfa604@virtuozzo.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=jLscKY8MsULms0fvtcTak+GIEHQetCwpE1fAuvW3yyY=;
-        b=PaLGOBkWv7L7oDiKIQHgLWDy9I2orfI9UkJ8egtWmvzjTcESIBurojiEXUoKI0LR17
-         rLqOXqPd7J6PUH656jeqHI5WROAb7PVyCxY7k/uLWIC4XouzyX8Te+eZTnneAqWaM+Gd
-         6NyOaTR/UpFHr1ty9GcWTQsNJL+bylqan9AjcDVcr/8HayY7zj5m+YqUM9JmxzLGzxb+
-         RJA/tENjEafeav126UVIj3mzIDDhMvGx5NGQbyWIw2xUDy5JoC1oJEEcwJjJrz/z2Dun
-         qeQKDkzzYbGcM1KMrUTodrlNOMW/xU/u3W4oP/hqqi01pQaRM9yw0C70ibzgSd9j4TMe
-         92YQ==
-In-Reply-To: <20210714013948.270662-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
+        Subject; bh=CmW4WEPrBYc9JkO1ZpHwc4AZ/QqQIR1GbHwoX4kgVJY=; b=o6m5sOcYtTchWFIWd
+        TJWZ1yyazhKhz8n6I4Mzq8WRrP5nncMBYc4zFUWIYbiTxTH7Ggl7xiv/7LteuVnDqRbTsUdZd+E0o
+        dgPq+uUl7Y4KhHVL6YmNtWaNe/uNpa865AZKZ+sqKfeq73BLmfg/ZQHSUyLCLQU8wEFCuWjR5H5HI
+        =;
+In-Reply-To: <8b6de616-fd1a-02c6-cbdb-976ecdcfa604-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hillf Danton <hdanton-k+cT0dCbe1g@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="macroman"
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-At the moment memcg stats are read in four contexts:
-
-1. memcg stat user interfaces
-2. dirty throttling
-3. page fault
-4. memory reclaim
-
-Currently the kernel flushes the stats for first two cases. Flushing the
-stats for remaining two casese may have performance impact. Always
-flushing the memcg stats on the page fault code path may negatively
-impacts the performance of the applications. In addition flushing in the
-memory reclaim code path, though treated as slowpath, can become the
-source of contention for the global lock taken for stat flushing because
-when system or memcg is under memory pressure, many tasks may enter the
-reclaim path.
-
-This patch uses following mechanisms to solve these challenges:
-
-1. Periodically flush the stats from root memcg every 2 seconds. This
-will time limit the out of sync stats.
-
-2. Asynchronously flush the stats after fixed number of stat updates.
-In the worst case the stat can be out of sync by O(nr_cpus * BATCH) for
-2 seconds.
-
-3. For avoiding thundering herd to flush the stats particularly from the
-memory reclaim context, introduce memcg local spinlock and let only one
-flusher active at a time. This could have been done through
-cgroup_rstat_lock lock but that lock is used by other subsystem and for
-userspace reading memcg stats. So, it is better to keep flushers
-introduced by this patch decoupled from cgroup_rstat_lock.
-
-Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
-Changes since v3:
-- Add back the sigoff
-
-Changes since v2:
-- Changed the subject of the patch
-- Added mechanism to bound errors to nr_cpus instead of nr_cgroups
-- memcg local lock to let one active flusher
-
-Changes since v1:
-- use system_unbound_wq for flushing the memcg stats
-
- include/linux/memcontrol.h |  6 ++++++
- mm/memcontrol.c            | 34 ++++++++++++++++++++++++++++++++++
- mm/vmscan.c                |  6 ++++++
- 3 files changed, 46 insertions(+)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 0bfa0409af22..fa095a94ae56 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -991,6 +991,8 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 	return x;
- }
- 
-+void mem_cgroup_flush_stats(void);
-+
- void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
- 			      int val);
- void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val);
-@@ -1400,6 +1402,10 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 	return node_page_state(lruvec_pgdat(lruvec), idx);
- }
- 
-+static inline void mem_cgroup_flush_stats(void)
-+{
-+}
-+
- static inline void __mod_memcg_lruvec_state(struct lruvec *lruvec,
- 					    enum node_stat_item idx, int val)
- {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 848d711bf576..39a00991fc80 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -103,6 +103,14 @@ static bool do_memsw_account(void)
- 	return !cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_noswap;
- }
- 
-+/* memcg and lruvec stats flushing */
-+static void flush_memcg_stats_dwork(struct work_struct *w);
-+static DECLARE_DEFERRABLE_WORK(stats_flush_dwork, flush_memcg_stats_dwork);
-+static void flush_memcg_stats_work(struct work_struct *w);
-+static DECLARE_WORK(stats_flush_work, flush_memcg_stats_work);
-+static DEFINE_PER_CPU(unsigned int, stats_flush_threshold);
-+static DEFINE_SPINLOCK(stats_flush_lock);
-+
- #define THRESHOLDS_EVENTS_TARGET 128
- #define SOFTLIMIT_EVENTS_TARGET 1024
- 
-@@ -685,6 +693,8 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
- 
- 	/* Update lruvec */
- 	__this_cpu_add(pn->lruvec_stats_percpu->state[idx], val);
-+	if (!(__this_cpu_inc_return(stats_flush_threshold) % MEMCG_CHARGE_BATCH))
-+		queue_work(system_unbound_wq, &stats_flush_work);
- }
- 
- /**
-@@ -5248,6 +5258,10 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	/* Online state pins memcg ID, memcg ID pins CSS */
- 	refcount_set(&memcg->id.ref, 1);
- 	css_get(css);
-+
-+	if (unlikely(mem_cgroup_is_root(memcg)))
-+		queue_delayed_work(system_unbound_wq, &stats_flush_dwork,
-+				   2UL*HZ);
- 	return 0;
- }
- 
-@@ -5339,6 +5353,26 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
- 	memcg_wb_domain_size_changed(memcg);
- }
- 
-+void mem_cgroup_flush_stats(void)
-+{
-+	if (!spin_trylock(&stats_flush_lock))
-+		return;
-+
-+	cgroup_rstat_flush(root_mem_cgroup->css.cgroup);
-+	spin_unlock(&stats_flush_lock);
-+}
-+
-+static void flush_memcg_stats_dwork(struct work_struct *w)
-+{
-+	mem_cgroup_flush_stats();
-+	queue_delayed_work(system_unbound_wq, &stats_flush_dwork, 2UL*HZ);
-+}
-+
-+static void flush_memcg_stats_work(struct work_struct *w)
-+{
-+	mem_cgroup_flush_stats();
-+}
-+
- static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index a7602f71ec04..1cc05ab8ca15 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -2893,6 +2893,12 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
- 	target_lruvec = mem_cgroup_lruvec(sc->target_mem_cgroup, pgdat);
- 
- again:
-+	/*
-+	 * Flush the memory cgroup stats, so that we read accurate per-memcg
-+	 * lruvec stats for heuristics.
-+	 */
-+	mem_cgroup_flush_stats();
-+
- 	memset(&sc->nr, 0, sizeof(sc->nr));
- 
- 	nr_reclaimed = sc->nr_reclaimed;
--- 
-2.32.0.93.g670b81a890-goog
-
+RGVhciBBbmRyZXcsCmNvdWxkIHlvdSBwbGVhc2UgcGljayB1cCB0aGlzIHBhdGNoIGFuZCBhZGQK
+IFJldmlld2VkLWJ5OiBTaGFrZWVsIEJ1dHQgPHNoYWtlZWxiLWhwSXFzRDRBS2xmUVQwZFpSK0Fs
+ZkFAcHVibGljLmdtYW5lLm9yZz4KClRoYW5rIHlvdSwKCVZhc2lseSBBdmVyaW4KCk9uIDQvMjQv
+MjEgMjo1NCBQTSwgVmFzaWx5IEF2ZXJpbiB3cm90ZToKPiBDb21taXQgNWQwOTcwNTZjOWEwICgi
+a21lbWNnOiBhY2NvdW50IGNlcnRhaW4ga21lbSBhbGxvY2F0aW9ucyB0byBtZW1jZyIpCj4gZW5h
+YmxlZCBtZW1jZyBhY2NvdW50aW5nIGZvciBwaWRzIGFsbG9jYXRlZCBmcm9tIGluaXRfcGlkX25z
+LnBpZF9jYWNoZXAsCj4gYnV0IGZvcmdvdCB0byBhZGp1c3QgdGhlIHNldHRpbmcgZm9yIG5lc3Rl
+ZCBwaWQgbmFtZXNwYWNlcy4KPiBBcyBhIHJlc3VsdCwgcGlkIG1lbW9yeSBpcyBub3QgYWNjb3Vu
+dGVkIGV4YWN0bHkgd2hlcmUgaXQgaXMgcmVhbGx5IG5lZWRlZCwKPiBpbnNpZGUgbWVtY2ctbGlt
+aXRlZCBjb250YWluZXJzIHdpdGggdGhlaXIgb3duIHBpZCBuYW1lc3BhY2VzLgo+IAo+IFBpZCB3
+YXMgb25lIHRoZSBmaXJzdCBrZXJuZWwgb2JqZWN0cyBlbmFibGVkIGZvciBtZW1jZyBhY2NvdW50
+aW5nLgo+IGluaXRfcGlkX25zLnBpZF9jYWNoZXAgbWFya2VkIGJ5IFNMQUJfQUNDT1VOVCBhbmQg
+d2UgY2FuIGV4cGVjdCB0aGF0Cj4gYW55IG5ldyBwaWRzIGluIHRoZSBzeXN0ZW0gYXJlIG1lbWNn
+LWFjY291bnRlZC4KPiAKPiBUaG91Z2ggcmVjZW50bHkgSSd2ZSBub3RpY2VkIHRoYXQgaXQgaXMg
+d3JvbmcuIG5lc3RlZCBwaWQgbmFtZXNwYWNlcyBjcmVhdGVzIAo+IG93biBzbGFiIGNhY2hlcyBm
+b3IgcGlkIG9iamVjdHMsIG5lc3RlZCBwaWRzIGhhdmUgaW5jcmVhc2VkIHNpemUgYmVjYXVzZSBj
+b250YWluIAo+IGlkIGJvdGggZm9yIGFsbCBwYXJlbnQgYW5kIGZvciBvd24gcGlkIG5hbWVzcGFj
+ZXMuIFRoZSBwcm9ibGVtIGlzIHRoYXQgdGhlc2Ugc2xhYgo+IGNhY2hlcyBhcmUgX05PVF8gbWFy
+a2VkIGJ5IFNMQUJfQUNDT1VOVCwgYXMgYSByZXN1bHQgYW55IHBpZHMgYWxsb2NhdGVkIGluIAo+
+IG5lc3RlZCBwaWQgbmFtZXNwYWNlcyBhcmUgbm90IG1lbWNnLWFjY291bnRlZC4KPiAKPiBQaWQg
+c3RydWN0IGluIG5lc3RlZCBwaWQgbmFtZXNwYWNlIGNvbnN1bWVzIHVwIHRvIDUwMCBieXRlcyBt
+ZW1vcnksIAo+IDEwMDAwMCBzdWNoIG9iamVjdHMgZ2l2ZXMgdXMgdXAgdG8gfjUwTWIgdW5hY2Nv
+dW50ZWQgbWVtb3J5LAo+IHRoaXMgYWxsb3cgY29udGFpbmVyIHRvIGV4Y2VlZCBhc3NpZ25lZCBt
+ZW1jZyBsaW1pdHMuCj4gCj4gRml4ZXM6IDVkMDk3MDU2YzlhMCAoImttZW1jZzogYWNjb3VudCBj
+ZXJ0YWluIGttZW0gYWxsb2NhdGlvbnMgdG8gbWVtY2ciKQo+IENjOiBzdGFibGUtdTc5dXdYTDI5
+VFk3Nloyck01bUhYQUBwdWJsaWMuZ21hbmUub3JnCj4gU2lnbmVkLW9mZi1ieTogVmFzaWx5IEF2
+ZXJpbiA8dnZzLTVIZHdHdW41bGYrZ1NweHNKRDFDNHdAcHVibGljLmdtYW5lLm9yZz4KPiBSZXZp
+ZXdlZC1ieTogTWljaGFsIEtvdXRuw70gPG1rb3V0bnktSUJpOVJHL2I2N2tAcHVibGljLmdtYW5l
+Lm9yZz4KPiBBY2tlZC1ieTogQ2hyaXN0aWFuIEJyYXVuZXIgPGNocmlzdGlhbi5icmF1bmVyLUdl
+V0lIL25NWnpMUVQwZFpSK0FsZkFAcHVibGljLmdtYW5lLm9yZz4KPiBBY2tlZC1ieTogUm9tYW4g
+R3VzaGNoaW4gPGd1cm8tYjEwa1lQMmRPTWdAcHVibGljLmdtYW5lLm9yZz4KPiAtLS0KPiAga2Vy
+bmVsL3BpZF9uYW1lc3BhY2UuYyB8IDMgKystCj4gIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlv
+bnMoKyksIDEgZGVsZXRpb24oLSkKPiAKPiBkaWZmIC0tZ2l0IGEva2VybmVsL3BpZF9uYW1lc3Bh
+Y2UuYyBiL2tlcm5lbC9waWRfbmFtZXNwYWNlLmMKPiBpbmRleCA2Y2Q2NzE1Li5hNDZhMzcyIDEw
+MDY0NAo+IC0tLSBhL2tlcm5lbC9waWRfbmFtZXNwYWNlLmMKPiArKysgYi9rZXJuZWwvcGlkX25h
+bWVzcGFjZS5jCj4gQEAgLTUxLDcgKzUxLDggQEAgc3RhdGljIHN0cnVjdCBrbWVtX2NhY2hlICpj
+cmVhdGVfcGlkX2NhY2hlcCh1bnNpZ25lZCBpbnQgbGV2ZWwpCj4gIAltdXRleF9sb2NrKCZwaWRf
+Y2FjaGVzX211dGV4KTsKPiAgCS8qIE5hbWUgY29sbGlzaW9uIGZvcmNlcyB0byBkbyBhbGxvY2F0
+aW9uIHVuZGVyIG11dGV4LiAqLwo+ICAJaWYgKCEqcGtjKQo+IC0JCSpwa2MgPSBrbWVtX2NhY2hl
+X2NyZWF0ZShuYW1lLCBsZW4sIDAsIFNMQUJfSFdDQUNIRV9BTElHTiwgMCk7Cj4gKwkJKnBrYyA9
+IGttZW1fY2FjaGVfY3JlYXRlKG5hbWUsIGxlbiwgMCwKPiArCQkJCQkgU0xBQl9IV0NBQ0hFX0FM
+SUdOIHwgU0xBQl9BQ0NPVU5ULCAwKTsKPiAgCW11dGV4X3VubG9jaygmcGlkX2NhY2hlc19tdXRl
+eCk7Cj4gIAkvKiBjdXJyZW50IGNhbiBmYWlsLCBidXQgc29tZW9uZSBlbHNlIGNhbiBzdWNjZWVk
+LiAqLwo+ICAJcmV0dXJuIFJFQURfT05DRSgqcGtjKTsKPiAKCg==
