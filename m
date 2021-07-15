@@ -1,120 +1,76 @@
 From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] memcg: charge semaphores and sem_undo objects
-Date: Thu, 15 Jul 2021 10:05:42 -0700
-Message-ID: <CALvZod4-Vh4O4-PN661jqicSg95GPf87nv10xAYr1yG6oZQk8A@mail.gmail.com>
-References: <1626333284-1404-1-git-send-email-nglaive@gmail.com>
+Subject: Re: [PATCH v4 00/16] memcg accounting from OpenVZ
+Date: Thu, 15 Jul 2021 10:11:09 -0700
+Message-ID: <CALvZod5Kxrj3T99CEd8=OaoW8CwKtHOVhno58_nNOqjR2y=x6Q@mail.gmail.com>
+References: <8664122a-99d3-7199-869a-781b21b7e712@virtuozzo.com> <919bd022-075e-98a7-cefb-89b5dee80ae8@virtuozzo.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=oseTPKEuU4SU0H2DJsSeCJ4qHMH8gCDE013mBDWTIw4=;
-        b=u7l8zfwriNOzshaE6JUVJlf6jSIxSa+Cs6G3xzg5HCpwmauKGG3SW/2UU3Q3LF2Z9z
-         mbJASEhoUQ6QA0bhenrLEG51r1NvbAgNYsguojeiplU+3RQVDylPTuFWJdVA3GUbzqTX
-         y3AteLNsHxyqws6XPkca1Dsn8qfkcv4Sjt4iayg8oE1blv5nmM8yRnCauU0oQF6aGhWR
-         IL89h/0Xr/mS1RFz1BMQvJJUNwG5yV16uhlxG3qRINL7pu3ZPD1SjhAeJ3pPSlMj4mGs
-         y0JmOBEonbiTggUw6zkRm2R6fPYI3XMPHlDNW1W6LF2oYPNtJbdH1ppoS+YZ/cjws8LJ
-         qwyQ==
-In-Reply-To: <1626333284-1404-1-git-send-email-nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=7bC7OSAi9agetXXpK35QVSGmKS8AgVugfnrXcpn3Dns=;
+        b=oV8bWJnOMcqDiyr0EEcrUCFtr4BMdFOqgv31ZoDSoO3gbciYC2/GnL9d3E8g3kFyoR
+         TuNYJwrY8HJTIT3oVRzFGI5hPlaBY8cEGhLJ1LnpN1rLT8iqJJY6F3Tr/mTCG+p4ja70
+         6dPMHVY6v+3XAdY7+6CHPbWFEA0+hsuvyLSQLImPXVhoV5i2sZ9Ey1Fl6QmGQgHWmLBR
+         wYE0wzjsd9Lxip18YoD2mr/S/TGsszZWQ8QBWI8oz24cP1EBHhPmaV4eT09MB2QUrCrN
+         Q+elf9KtHyTyifjirK5MT978iFGeTPvl9KPDAa94CLE52eDIMo4mw7ouMF7B5b+qelwv
+         UJqA==
+In-Reply-To: <919bd022-075e-98a7-cefb-89b5dee80ae8-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, shenwenbo-Y5EWUtBUdg4nDS1+zs4M5A@public.gmane.org
+To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrei Vagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, David Ahern <dsahern-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Dmitry Safonov <0x7f454c46-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Hideaki YOSHIFUJI <yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Ingo
 
-+Vasily Averin
+On Tue, Apr 27, 2021 at 11:51 PM Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
+>
+> OpenVZ uses memory accounting 20+ years since v2.2.x linux kernels.
+> Initially we used our own accounting subsystem, then partially committed
+> it to upstream, and a few years ago switched to cgroups v1.
+> Now we're rebasing again, revising our old patches and trying to push
+> them upstream.
+>
+> We try to protect the host system from any misuse of kernel memory
+> allocation triggered by untrusted users inside the containers.
+>
+> Patch-set is addressed mostly to cgroups maintainers and cgroups@ mailing
+> list, though I would be very grateful for any comments from maintainersi
+> of affected subsystems or other people added in cc:
+>
+> Compared to the upstream, we additionally account the following kernel objects:
+> - network devices and its Tx/Rx queues
+> - ipv4/v6 addresses and routing-related objects
+> - inet_bind_bucket cache objects
+> - VLAN group arrays
+> - ipv6/sit: ip_tunnel_prl
+> - scm_fp_list objects used by SCM_RIGHTS messages of Unix sockets
+> - nsproxy and namespace objects itself
+> - IPC objects: semaphores, message queues and share memory segments
+> - mounts
+> - pollfd and select bits arrays
+> - signals and posix timers
+> - file lock
+> - fasync_struct used by the file lease code and driver's fasync queues
+> - tty objects
+> - per-mm LDT
+>
+> We have an incorrect/incomplete/obsoleted accounting for few other kernel
+> objects: sk_filter, af_packets, netlink and xt_counters for iptables.
+> They require rework and probably will be dropped at all.
+>
+> Also we're going to add an accounting for nft, however it is not ready yet.
+>
+> We have not tested performance on upstream, however, our performance team
+> compares our current RHEL7-based production kernel and reports that
+> they are at least not worse as the according original RHEL7 kernel.
+>
 
-On Thu, Jul 15, 2021 at 12:15 AM Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-> This patch adds accounting flags to semaphores and sem_undo allocation
-> sites so that kernel could correctly charge these objects.
->
-> A malicious user could take up more than 63GB unaccounted memory under
-> default sysctl settings by exploiting the unaccounted objects. She could
-> allocate up to 32,000 unaccounted semaphore sets with up to 32,000
-> unaccounted semaphore objects in each set. She could further allocate one
-> sem_undo unaccounted object for each semaphore set.
->
-> The following code shows a PoC that takes ~63GB unaccounted memory, while
-> it is charged for only less than 1MB memory usage. We evaluate the PoC on
-> QEMU x86_64 v5.2.90 + Linux kernel v5.10.19 + Debian buster.
->
-> /*------------------------- POC code ----------------------------*/
-> #define _GNU_SOURCE
-> #include <sys/types.h>
-> #include <sys/ipc.h>
-> #include <sys/sem.h>
-> #include <sys/stat.h>
-> #include <time.h>
-> #include <stdint.h>
-> #include <stdlib.h>
-> #include <unistd.h>
-> #include <stdio.h>
-> #include <sched.h>
->
-> #define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \
->                         } while (0)
->
-> int main(int argc, char *argv[]) {
->   int err, semid;
->   struct sembuf sops;
->   for (int i = 0; i < 31200; ++i) {
->     semid = semget(IPC_PRIVATE, 31200, IPC_CREAT);
->     if (semid == -1) {
->       errExit("semget");
->     }
->     sops.sem_num = 0;
->     sops.sem_op = 1;
->     sops.sem_flg = SEM_UNDO;
->     err = semop(semid, &sops, 1);
->     if (err == -1) {
->       errExit("semop");
->     }
->   }
->   while(1);
->   return 0;
-> }
-> /*-------------------------- end --------------------------------*/
->
-> Thanks!
->
-> Yutian Yang,
-> Zhejiang University
->
-> Signed-off-by: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Hi Vasily,
 
-Thanks for the patch Yutian. I remember patch from Vasily regarding
-memcg charging of similar objects.
+What's the status of this series? I see a couple patches did get
+acked/reviewed. Can you please re-send the series with updated ack
+tags?
 
-Vasily, what's the status of your patch?
-
-> ---
->  ipc/sem.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/ipc/sem.c b/ipc/sem.c
-> index f6c30a85d..6860de0b1 100644
-> --- a/ipc/sem.c
-> +++ b/ipc/sem.c
-> @@ -511,7 +511,7 @@ static struct sem_array *sem_alloc(size_t nsems)
->         if (nsems > (INT_MAX - sizeof(*sma)) / sizeof(sma->sems[0]))
->                 return NULL;
->
-> -       sma = kvzalloc(struct_size(sma, sems, nsems), GFP_KERNEL);
-> +       sma = kvzalloc(struct_size(sma, sems, nsems), GFP_KERNEL_ACCOUNT);
->         if (unlikely(!sma))
->                 return NULL;
->
-> @@ -1935,7 +1935,7 @@ static struct sem_undo *find_alloc_undo(struct ipc_namespace *ns, int semid)
->         rcu_read_unlock();
->
->         /* step 2: allocate new undo structure */
-> -       new = kzalloc(sizeof(struct sem_undo) + sizeof(short)*nsems, GFP_KERNEL);
-> +       new = kzalloc(sizeof(struct sem_undo) + sizeof(short)*nsems, GFP_KERNEL_ACCOUNT);
->         if (!new) {
->                 ipc_rcu_putref(&sma->sem_perm, sem_rcu_free);
->                 return ERR_PTR(-ENOMEM);
-> --
-> 2.25.1
->
+thanks,
+Shakeel
