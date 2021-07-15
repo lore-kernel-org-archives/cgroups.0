@@ -1,43 +1,61 @@
-From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH] memcg: charge semaphores and sem_undo objects
-Date: Thu, 15 Jul 2021 18:49:04 +0100
-Message-ID: <YPB1EPaunr5587h5@casper.infradead.org>
-References: <1626333284-1404-1-git-send-email-nglaive@gmail.com>
+Date: Thu, 15 Jul 2021 11:22:05 -0700
+Message-ID: <CALvZod7sGcOASaFi6st40DSsXh1a0mv7HQ7Vc1pXxnsDgmDPkg@mail.gmail.com>
+References: <1626333284-1404-1-git-send-email-nglaive@gmail.com> <YPB1EPaunr5587h5@casper.infradead.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=INGSnpl1UpF6CdwmxMLPgOIu/v7mSG58jf2OlaWN2WI=; b=I3elTLEKAqHwyiShzj/pAC4cdj
-        loGG8gASgYQuRt8tigUzu7jKCXIIchfjOEQKJ4zotfEnlnm02Nm4Q4gMMVPhFM6fqwOWDaLxEDVri
-        pIXgQ7ogB8LVZ2ivfcStsBpCktqX8DthN8Rd9SUTdszdJJ9j22PwQX2k9jWTdkIhsLt4sJUODpIus
-        2Cj4shRfDtqsNCfRjET45e9wvbkRvq2p4IJfLB0pelAedzrQoF4OUHiYlnmS3iVB5RCemKQwbm6HN
-        HCdGV7Z343mVYcaWLc0ZfkBezLidn5096fEal0EuIS5v7XxHP/vahh0f86qSzBbpKO9oYHwexdYuZ
-        fm4d4pNw==;
-Content-Disposition: inline
-In-Reply-To: <1626333284-1404-1-git-send-email-nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=F1H/bWMbBZ+Edpc8fYBwimkAh3hVifPS5VIkP0ejhXM=;
+        b=kKak+JOk+MJfDv2F7RXrt3mwVvzMfe5u5QF+FTa8kVNr/0kDzmQ8K59PTs+ihYjGud
+         GDgPuLMACsaJ8lKeAOD9jHahyL0gpPaGg8FZFtKsZCcvrTJDM7y9IYAeXg8uXz4RqzAg
+         fWVCp0S3F6cF6U9aiOg8XjrZfCj2Kgp66z97hyfV2lVckGC/v/lWSMbeAcjOvlKwJWJj
+         g0SkA7O5ZXZKpK/+SO8D5K+O3xaY76PDvKDvz4fbbvs/KEJm7d8/e8ynAKsn8hnxhEap
+         aClCZ7jLFilMZI3GCplmR/1UTxs7hptszBd3Y293WXpajuNS89Wt1AYCm6JLt/scl3HX
+         8IOA==
+In-Reply-To: <YPB1EPaunr5587h5-FZi0V3Vbi30CUdFEqe4BF2D2FQJk+8+b@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, shenwenbo-Y5EWUtBUdg4nDS1+zs4M5A@public.gmane.org
+To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, shenwenbo-Y5EWUtBUdg4nDS1+zs4M5A@public.gmane.org
 
-On Thu, Jul 15, 2021 at 03:14:44AM -0400, Yutian Yang wrote:
-> This patch adds accounting flags to semaphores and sem_undo allocation
-> sites so that kernel could correctly charge these objects. 
-> 
-> A malicious user could take up more than 63GB unaccounted memory under 
-> default sysctl settings by exploiting the unaccounted objects. She could 
-> allocate up to 32,000 unaccounted semaphore sets with up to 32,000 
-> unaccounted semaphore objects in each set. She could further allocate one 
-> sem_undo unaccounted object for each semaphore set.
+On Thu, Jul 15, 2021 at 10:50 AM Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+>
+> On Thu, Jul 15, 2021 at 03:14:44AM -0400, Yutian Yang wrote:
+> > This patch adds accounting flags to semaphores and sem_undo allocation
+> > sites so that kernel could correctly charge these objects.
+> >
+> > A malicious user could take up more than 63GB unaccounted memory under
+> > default sysctl settings by exploiting the unaccounted objects. She could
+> > allocate up to 32,000 unaccounted semaphore sets with up to 32,000
+> > unaccounted semaphore objects in each set. She could further allocate one
+> > sem_undo unaccounted object for each semaphore set.
+>
+> Do we really have to account every object that's allocated on behalf of
+> userspace?  ie how seriously do we take this kind of thing?  Are memcgs
+> supposed to be a hard limit, or are they just a rough accounting thing?
 
-Do we really have to account every object that's allocated on behalf of
-userspace?  ie how seriously do we take this kind of thing?  Are memcgs
-supposed to be a hard limit, or are they just a rough accounting thing?
+The memcgs are used for providing isolation between different
+workloads running on the system and not just rough accounting
+estimation. So, if there is an unbound allocation which can be
+triggered by userspace than it should be accounted.
 
-There could be a very large stream of patches turning GFP_KERNEL into
-GFP_KERNEL_ACCOUNT.  For example, file locks (fs/locks.c) are only
-allocated with GFP_KERNEL and you can allocate one lock per byte of a
-file.  I'm sure there are hundreds more places where we do similar things.
+>
+> There could be a very large stream of patches turning GFP_KERNEL into
+> GFP_KERNEL_ACCOUNT.  For example, file locks (fs/locks.c) are only
+> allocated with GFP_KERNEL and you can allocate one lock per byte of a
+> file.  I'm sure there are hundreds more places where we do similar things.
+
+We used to do opt-out kmem memcg accounting but switched to opt-in
+with a9bb7e620efdf ("memcg: only account kmem allocations marked as
+__GFP_ACCOUNT") with the reason that number of allocations which
+should not be charged are larger than the allocations which should be
+charged.
+
+Personally I would prefer we go back to the opt-out accounting
+specially after we have switched to reparenting the kmem charges and
+shared kmem caches.
