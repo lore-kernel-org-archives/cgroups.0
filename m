@@ -1,97 +1,42 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] blk-throtl: optimize IOPS throttle for large IO scenarios
-Date: Fri, 16 Jul 2021 06:09:07 -1000
-Message-ID: <YPGvIzZUI+QxP1js@mtj.duckdns.org>
-References: <1626416569-30907-1-git-send-email-brookxu.cn@gmail.com>
+Subject: Re: [PATCH] cgroup: remove cgroup_mount from comments
+Date: Fri, 16 Jul 2021 06:18:01 -1000
+Message-ID: <YPGxObHzJFMeQZOn@mtj.duckdns.org>
+References: <20210716091853.1049-1-zhaoxiaoqiang11@jd.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=DZ7+7XgWM6hQZ0UFtx/++E9LOP3fUxSddmlsFwD/FAU=;
-        b=LcFKQKWZBfnq7ztPttKD1EbLu0EBOsYfhH+Xea8T15YwjWbDADhRGBr18+d6n61OVu
-         z7n5JLWPOGWy5CNStdZkiMoKjYfnMG2YTd2JNbg2iWu4a2ZBc2YIsiIuGy6jdls+3s9W
-         302dsxPjS2wQQXj29r8Jgv95+YcOpGD0QfErsc8+ssZlMky0D3o0sKhgWdYQB4xi9T04
-         wJZs7qxVFBwT2kRkPtKJFfEMKyf7wnmeQbdmaDUEAY5bOUJ0qAvGf9vvFfxzT61EVjQ4
-         6g/XIQGoDJ9V/v3YONni7BR71ImbpC4eEBzddwe3PxiP215sH627dkBSOAP/6V8ER7zz
-         5xHg==
+        bh=amX7qutlZhujxzkVI8h2MRjygSTlMU+z05sQsjTc09A=;
+        b=Z6cx7oOfjGT/bqo9cOCBh4nVHwF7jXwmbr8Jj/+TlHpueGN904486L2JjfhzoKxAmV
+         2n3W94KJi32sEwFcVXXBEY+GnSY7zya1JImCg6egRRFj2R6Ato5OqzTlbCLVwA4GEBWi
+         BJbf06wb6v85bbHBefrWfcacWDjSbg1s6z85k/+kyODmbPTpzpJI9A/uWnEj48+P8XXQ
+         9lKRcDvJtM1nKWfaX9PU4fWgz2yk9TZ5zCeXANTiPC/JR/02SA80S9HJqG4owN1JG1rV
+         4CV4pglY8wKpmatjqvrnuhBNotSYH9VLrWkfRrh0nX8/UMM3MAUmuETNkG4Wh8mlPvbC
+         EF5g==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1626416569-30907-1-git-send-email-brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <20210716091853.1049-1-zhaoxiaoqiang11-zFXdYKnZPWw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: zhaoxiaoqiang007-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, trivial-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, zhaoxiaoqiang11 <zhaoxiaoqiang11-zFXdYKnZPWw@public.gmane.org>
 
-Hello,
+On Fri, Jul 16, 2021 at 05:18:53PM +0800, zhaoxiaoqiang007-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org wrote:
+> From: zhaoxiaoqiang11 <zhaoxiaoqiang11-zFXdYKnZPWw@public.gmane.org>
+> 
+> Git rid of the inappropriate comment
+> 
+> Since cgroup is fully switched to fs_context, function cgroup_mount
+> is removed and it's confused to mention in comments of cgroup_kill_sb.
+> Just wipe it out.
+> 
+> Signed-off-by: zhaoxiaoqiang11 <zhaoxiaoqiang11-zFXdYKnZPWw@public.gmane.org>
 
-On Fri, Jul 16, 2021 at 02:22:49PM +0800, brookxu wrote:
-> diff --git a/block/blk-merge.c b/block/blk-merge.c
-> index a11b3b5..86ff943 100644
-> --- a/block/blk-merge.c
-> +++ b/block/blk-merge.c
-> @@ -348,6 +348,8 @@ void __blk_queue_split(struct bio **bio, unsigned int *nr_segs)
->  		trace_block_split(split, (*bio)->bi_iter.bi_sector);
->  		submit_bio_noacct(*bio);
->  		*bio = split;
-> +
-> +		blk_throtl_recharge_bio(*bio);
-
-I don't think we're holding the queue lock here.
-
->  	}
->  }
->  
-> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-> index b1b22d8..1967438 100644
-> --- a/block/blk-throttle.c
-> +++ b/block/blk-throttle.c
-> @@ -2176,6 +2176,40 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
->  }
->  #endif
->  
-> +void blk_throtl_recharge_bio(struct bio *bio)
-> +{
-> +	bool rw = bio_data_dir(bio);
-> +	struct blkcg_gq *blkg = bio->bi_blkg;
-> +	struct throtl_grp *tg = blkg_to_tg(blkg);
-> +	u32 iops_limit = tg_iops_limit(tg, rw);
-> +
-> +	if (iops_limit == UINT_MAX)
-> +		return;
-> +
-> +	/*
-> +	 * If previous slice expired, start a new one otherwise renew/extend
-> +	 * existing slice to make sure it is at least throtl_slice interval
-> +	 * long since now. New slice is started only for empty throttle group.
-> +	 * If there is queued bio, that means there should be an active
-> +	 * slice and it should be extended instead.
-> +	 */
-> +	if (throtl_slice_used(tg, rw) && !(tg->service_queue.nr_queued[rw]))
-> +		throtl_start_new_slice(tg, rw);
-> +	else {
-> +		if (time_before(tg->slice_end[rw],
-> +		    jiffies + tg->td->throtl_slice))
-> +			throtl_extend_slice(tg, rw,
-> +				jiffies + tg->td->throtl_slice);
-> +	}
-> +
-> +	/* Recharge the bio to the group, as some BIOs will be further split
-> +	 * after passing through the throttle, causing the actual IOPS to
-> +	 * be greater than the expected value.
-> +	 */
-> +	tg->last_io_disp[rw]++;
-> +	tg->io_disp[rw]++;
-> +}
-
-But blk-throtl expects queue lock to be held.
-
-How about doing something simpler? Just estimate how many bios a given bio
-is gonna be and charge it outright? The calculation will be duplicated
-between the split path but that seems like the path of least resistance
-here.
+Applied to cgroup/for-5.15 w/ some description tweaks.
 
 Thanks.
 
