@@ -1,61 +1,38 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Subject: Re: [PATCH] memcg: charge semaphores and sem_undo objects
-Date: Thu, 15 Jul 2021 11:22:05 -0700
-Message-ID: <CALvZod7sGcOASaFi6st40DSsXh1a0mv7HQ7Vc1pXxnsDgmDPkg@mail.gmail.com>
-References: <1626333284-1404-1-git-send-email-nglaive@gmail.com> <YPB1EPaunr5587h5@casper.infradead.org>
+Date: Fri, 16 Jul 2021 06:57:19 +0300
+Message-ID: <44325e3a-f4e9-c19a-4a00-672d1d61120d@virtuozzo.com>
+References: <1626333284-1404-1-git-send-email-nglaive@gmail.com>
+ <CALvZod4-Vh4O4-PN661jqicSg95GPf87nv10xAYr1yG6oZQk8A@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=F1H/bWMbBZ+Edpc8fYBwimkAh3hVifPS5VIkP0ejhXM=;
-        b=kKak+JOk+MJfDv2F7RXrt3mwVvzMfe5u5QF+FTa8kVNr/0kDzmQ8K59PTs+ihYjGud
-         GDgPuLMACsaJ8lKeAOD9jHahyL0gpPaGg8FZFtKsZCcvrTJDM7y9IYAeXg8uXz4RqzAg
-         fWVCp0S3F6cF6U9aiOg8XjrZfCj2Kgp66z97hyfV2lVckGC/v/lWSMbeAcjOvlKwJWJj
-         g0SkA7O5ZXZKpK/+SO8D5K+O3xaY76PDvKDvz4fbbvs/KEJm7d8/e8ynAKsn8hnxhEap
-         aClCZ7jLFilMZI3GCplmR/1UTxs7hptszBd3Y293WXpajuNS89Wt1AYCm6JLt/scl3HX
-         8IOA==
-In-Reply-To: <YPB1EPaunr5587h5-FZi0V3Vbi30CUdFEqe4BF2D2FQJk+8+b@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
+        Subject; bh=bgQrMW8axuqa/T8OOKL/8pzBoixeuP3GcTBvX+k2SpY=; b=ABeW19tYTEkgGjO1b
+        3IjN+IBg+c61j/saK+k9QaFFs2jRbXXrudHF8U++xtdk2StgGhWTLooje6M3F88/32vXqHYW69kk9
+        n7YlZZoTDtX7B7xEH7ILb7BiQcbl0qx7xV8fAQSQLhfKlVVZ2njJ+GqbBw1/00kUxxYTAiw2rUqGM
+        =;
+In-Reply-To: <CALvZod4-Vh4O4-PN661jqicSg95GPf87nv10xAYr1yG6oZQk8A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, shenwenbo-Y5EWUtBUdg4nDS1+zs4M5A@public.gmane.org
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, shenwenbo-Y5EWUtBUdg4nDS1+zs4M5A@public.gmane.org
 
-On Thu, Jul 15, 2021 at 10:50 AM Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
->
-> On Thu, Jul 15, 2021 at 03:14:44AM -0400, Yutian Yang wrote:
-> > This patch adds accounting flags to semaphores and sem_undo allocation
-> > sites so that kernel could correctly charge these objects.
-> >
-> > A malicious user could take up more than 63GB unaccounted memory under
-> > default sysctl settings by exploiting the unaccounted objects. She could
-> > allocate up to 32,000 unaccounted semaphore sets with up to 32,000
-> > unaccounted semaphore objects in each set. She could further allocate one
-> > sem_undo unaccounted object for each semaphore set.
->
-> Do we really have to account every object that's allocated on behalf of
-> userspace?  ie how seriously do we take this kind of thing?  Are memcgs
-> supposed to be a hard limit, or are they just a rough accounting thing?
+On 7/15/21 8:05 PM, Shakeel Butt wrote:
+> On Thu, Jul 15, 2021 at 12:15 AM Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>> Signed-off-by: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> 
+> Thanks for the patch Yutian. I remember patch from Vasily regarding
+> memcg charging of similar objects.
 
-The memcgs are used for providing isolation between different
-workloads running on the system and not just rough accounting
-estimation. So, if there is an unbound allocation which can be
-triggered by userspace than it should be accounted.
+Yes, it is part of my "memcg: enable accounting of ipc resources" patch.
+We account few other IPC objects too. 
 
->
-> There could be a very large stream of patches turning GFP_KERNEL into
-> GFP_KERNEL_ACCOUNT.  For example, file locks (fs/locks.c) are only
-> allocated with GFP_KERNEL and you can allocate one lock per byte of a
-> file.  I'm sure there are hundreds more places where we do similar things.
+> Vasily, what's the status of your patch?
 
-We used to do opt-out kmem memcg accounting but switched to opt-in
-with a9bb7e620efdf ("memcg: only account kmem allocations marked as
-__GFP_ACCOUNT") with the reason that number of allocations which
-should not be charged are larger than the allocations which should be
-charged.
+It is still not merged, unfortunately, I will try to push it again.
 
-Personally I would prefer we go back to the opt-out accounting
-specially after we have switched to reparenting the kmem charges and
-shared kmem caches.
+Thank you,
+	Vasily Averin
