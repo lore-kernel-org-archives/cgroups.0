@@ -1,55 +1,111 @@
-From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 2/6] cgroup/cpuset: Clarify the use of invalid
- partition root
-Date: Fri, 16 Jul 2021 17:28:58 -0400
-Message-ID: <4a804edc-17ec-d8fa-d8c1-273252ba0ee4@redhat.com>
-References: <20210621184924.27493-1-longman@redhat.com>
- <20210621184924.27493-3-longman@redhat.com>
- <YNcHOe3o//pIiByh@mtj.duckdns.org>
- <6ea1ac38-73e1-3f78-a5d2-a4c23bcd8dd1@redhat.com>
- <YONGk3iw/zrNzwLK@mtj.duckdns.org>
- <c6ae2d9b-ad6e-9bbd-b25c-f52b0ff6fb9b@redhat.com>
- <1bb119a1-d94a-6707-beac-e3ae5c03fae5@redhat.com>
- <8c44b659-3fe4-b14f-fac1-cbd5b23010c3@redhat.com>
- <YPHwG61qGDa3h6Wg@mtj.duckdns.org>
- <e8c538a8-bf5c-b04c-1b21-ac22cd158dd1@redhat.com>
- <YPH3sF56gK71CxXY@mtj.duckdns.org>
+From: brookxu <brookxu.cn@gmail.com>
+Subject: Re: [PATCH] blk-throtl: optimize IOPS throttle for large IO scenarios
+Date: Sat, 17 Jul 2021 07:07:25 +0800
+Message-ID: <9d8b584a-738b-a0a8-ea8c-e617c2f79408@gmail.com>
+References: <1626416569-30907-1-git-send-email-brookxu.cn@gmail.com>
+ <YPGvIzZUI+QxP1js@mtj.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1626470941;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=YABHDSw9b5sWUS8tb4/mSbwzJgD3Ug0F6zV+ryBO8W8=;
-        b=L6e5tkVhaRSc5L4Z++0GnAfZ9RkQMD1kWHT4uI2smNMQh0paOnoeztbcvxl/7PRaKnVnVK
-        EJHhxoHtg2T7oalrLidI+Ys7hx/qRfFLDrjQgIBfqSPG+WjIv7Ve5gWuL51O7PBkrBX5KR
-        CxRHTlNXJaS+LcXlXOKpuZQb0rRU2l8=
-In-Reply-To: <YPH3sF56gK71CxXY-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=P6K+M5gqphiIlNgiFVLzyTugz5hPofZVAtQFiBp7d9s=;
+        b=ullVU331i6gIy4bDcdWB3Z/mYU0uuO8Zz4+zTPF4DwwlLYBpWuoLo8phBHSXV0zQ7I
+         SnHGjhyqsblUks+TDqDyRg4ZJkN2L9qsQLpMeWKT7t2h8zLaPWdo1UYACdUf3Xt6tIwd
+         xB4cZZL3MNrmfbw7bGVtnvkjs5Vu7ZmfUO4pZ8XbSiiJeBdR3nAAJ+Su2ue+vfNRElSD
+         5PG0YGgodlVwx9uT7QnwAZcpoSzxV7h1nEUvVATn3P0i1EsFusZbwh3n3m8MC2cgND5M
+         fw4uP+kNHZBoBmDmHLFdtj6j4Wj3usLgezpO6JfVgH0i+0WPB26yOjAL/vNUUtDFWces
+         mi6Q==
+In-Reply-To: <YPGvIzZUI+QxP1js@mtj.duckdns.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>
+Cc: axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 7/16/21 5:18 PM, Tejun Heo wrote:
+
+
+Tejun Heo wrote on 2021/7/17 0:09:
 > Hello,
->
-> On Fri, Jul 16, 2021 at 05:12:17PM -0400, Waiman Long wrote:
->> Are you suggesting that we add a cpuset.cpus.events file that allows
->> processes to be notified if an event (e.g. hotplug) that changes a partition
->> root to invalid partition happens or when explicit change to a partition
->> root fails? Will that be enough to satisfy your requirement?
-> Yeah, something like that or make the current state file generate events on
-> state transitions.
+> 
+> On Fri, Jul 16, 2021 at 02:22:49PM +0800, brookxu wrote:
+>> diff --git a/block/blk-merge.c b/block/blk-merge.c
+>> index a11b3b5..86ff943 100644
+>> --- a/block/blk-merge.c
+>> +++ b/block/blk-merge.c
+>> @@ -348,6 +348,8 @@ void __blk_queue_split(struct bio **bio, unsigned int *nr_segs)
+>>  		trace_block_split(split, (*bio)->bi_iter.bi_sector);
+>>  		submit_bio_noacct(*bio);
+>>  		*bio = split;
+>> +
+>> +		blk_throtl_recharge_bio(*bio);
+> 
+> I don't think we're holding the queue lock here.
 
+sorry, some kind of synchronization mechanism is really needed here. But the use of queue_lock
+here may be unsafe, since it is difficult for us to control the lock on the split path.
 
-Sure. I will change the patch to make cpuset.cpus.partition generates 
-event when its state change. Thanks for the suggestion. It definitely 
-makes it better.
+>>  	}
+>>  }
+>>  
+>> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+>> index b1b22d8..1967438 100644
+>> --- a/block/blk-throttle.c
+>> +++ b/block/blk-throttle.c
+>> @@ -2176,6 +2176,40 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
+>>  }
+>>  #endif
+>>  
+>> +void blk_throtl_recharge_bio(struct bio *bio)
+>> +{
+>> +	bool rw = bio_data_dir(bio);
+>> +	struct blkcg_gq *blkg = bio->bi_blkg;
+>> +	struct throtl_grp *tg = blkg_to_tg(blkg);
+>> +	u32 iops_limit = tg_iops_limit(tg, rw);
+>> +
+>> +	if (iops_limit == UINT_MAX)
+>> +		return;
+>> +
+>> +	/*
+>> +	 * If previous slice expired, start a new one otherwise renew/extend
+>> +	 * existing slice to make sure it is at least throtl_slice interval
+>> +	 * long since now. New slice is started only for empty throttle group.
+>> +	 * If there is queued bio, that means there should be an active
+>> +	 * slice and it should be extended instead.
+>> +	 */
+>> +	if (throtl_slice_used(tg, rw) && !(tg->service_queue.nr_queued[rw]))
+>> +		throtl_start_new_slice(tg, rw);
+>> +	else {
+>> +		if (time_before(tg->slice_end[rw],
+>> +		    jiffies + tg->td->throtl_slice))
+>> +			throtl_extend_slice(tg, rw,
+>> +				jiffies + tg->td->throtl_slice);
+>> +	}
+>> +
+>> +	/* Recharge the bio to the group, as some BIOs will be further split
+>> +	 * after passing through the throttle, causing the actual IOPS to
+>> +	 * be greater than the expected value.
+>> +	 */
+>> +	tg->last_io_disp[rw]++;
+>> +	tg->io_disp[rw]++;
+>> +}
+> 
+> But blk-throtl expects queue lock to be held.
+> 
+> How about doing something simpler? Just estimate how many bios a given bio
+> is gonna be and charge it outright? The calculation will be duplicated
+> between the split path but that seems like the path of least resistance
+> here.
 
-Cheers,
-Longman
+I have tried this method, the code redundancy is indeed a bit high, it may not be
+very convenient for code maintenance. In addition to this problem, since we add
+a large value at a time, the fluctuation of IOPS will be relatively large. Since
+blk_throtl_recharge_bio() does not need to participate in the maintenance of the
+state machine, we only need to protect some fields of tg, so can we add a new
+spin_lock to tg instead of queue_lock to solve the synchronization problem ? Just
+a idea, Thanks.
 
+> Thanks.
+> 
