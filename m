@@ -1,92 +1,228 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 00/16] memcg accounting from OpenVZ
-Date: Fri, 16 Jul 2021 05:55:42 -0700
-Message-ID: <CALvZod66KF-8xKB1dyY2twizDE=svE8iXT_nqvsrfWg1a92f4A@mail.gmail.com>
-References: <8664122a-99d3-7199-869a-781b21b7e712@virtuozzo.com>
- <919bd022-075e-98a7-cefb-89b5dee80ae8@virtuozzo.com> <CALvZod5Kxrj3T99CEd8=OaoW8CwKtHOVhno58_nNOqjR2y=x6Q@mail.gmail.com>
- <3a60b936-b618-6cef-532a-97bbdb957fb1@virtuozzo.com>
+From: Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [PATCH v4 2/2] memcg: infrastructure to flush memcg stats
+Date: Fri, 16 Jul 2021 17:03:53 +0200
+Message-ID: <78005c4c-9233-7bc8-d50e-e3fe11f30b5d@samsung.com>
+References: <20210714013948.270662-1-shakeelb@google.com>
+        <20210714013948.270662-2-shakeelb@google.com>
+        <CGME20210716150353eucas1p2c9ad1d1021ee584de587e5ec10b8467b@eucas1p2.samsung.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=7YVe12K3kAf74Lw6w7FM9BISBfQ+xdkVlpPe2xtnZxw=;
-        b=S1/f9dxk1+qzNpT4FBDWITbM6Bgtq5eX45j8wxtciNfUAcIAlC1LzMee1hh0QkZ0HY
-         lg+mFnaoj2vPn6A8SZR+yhktxiJ770BndjMgvWPgp2bjQDPDLKG7wc5ZgxKBf6/OoOB8
-         MwrpPg4hSlzZp0AdZGujKVaYhlCIkkA23YJabdnHyafUisZIxmQhpcTlK7s4GqSN7vDu
-         v0ZIav43+PieP8CTwmsV1uh8ZK+Tw6wObkgvCEoxiR2Ko17xbGGEdqkwAh8OfvS/+QMM
-         QS/BlBO10sHKcfRLUWuvikVte6UouWZydyHvyLNMH4rjhNwyFsM/fw9GUf8aR2RX7lqs
-         MIkg==
-In-Reply-To: <3a60b936-b618-6cef-532a-97bbdb957fb1-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20210716150354euoutp029477b6a28d89040bb9cf916c1a6007a1~STbBHkmB12052520525euoutp02a
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1626447834;
+        bh=LOCs/2mBF1xQdHZWGjG7nJ493Pn7vzTndVuGZjYhqEE=;
+        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
+        b=mc5j3zWYYjis0C49ZdMoEo8FM51UtDZ3HBop1C2LaiZ2xbrpO1ZpFgdOOxvtKZFDJ
+         p6pPbz5DZ98fiVoxIOjwGfxbwUS3nZ2JYfCvAqNhYerYjKVr7TqUClauL9J38WIHQK
+         byV+/10nyolNh9Wg765pB7uAb+p0idP4Vpj10RAA=
+In-Reply-To: <20210714013948.270662-2-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrei Vagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, David Ahern <dsahern-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Dmitry Safonov <0x7f454c46-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Hideaki YOSHIFUJI <yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org>, H. Peter Anvin
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hillf Danton <hdanton-k+cT0dCbe1g@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Jul 15, 2021 at 9:11 PM Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
->
-> On 7/15/21 8:11 PM, Shakeel Butt wrote:
-> > On Tue, Apr 27, 2021 at 11:51 PM Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
-> >>
-> >> OpenVZ uses memory accounting 20+ years since v2.2.x linux kernels.
-> >> Initially we used our own accounting subsystem, then partially committed
-> >> it to upstream, and a few years ago switched to cgroups v1.
-> >> Now we're rebasing again, revising our old patches and trying to push
-> >> them upstream.
-> >>
-> >> We try to protect the host system from any misuse of kernel memory
-> >> allocation triggered by untrusted users inside the containers.
-> >>
-> >> Patch-set is addressed mostly to cgroups maintainers and cgroups@ mailing
-> >> list, though I would be very grateful for any comments from maintainersi
-> >> of affected subsystems or other people added in cc:
-> >>
-> >> Compared to the upstream, we additionally account the following kernel objects:
-> >> - network devices and its Tx/Rx queues
-> >> - ipv4/v6 addresses and routing-related objects
-> >> - inet_bind_bucket cache objects
-> >> - VLAN group arrays
-> >> - ipv6/sit: ip_tunnel_prl
-> >> - scm_fp_list objects used by SCM_RIGHTS messages of Unix sockets
-> >> - nsproxy and namespace objects itself
-> >> - IPC objects: semaphores, message queues and share memory segments
-> >> - mounts
-> >> - pollfd and select bits arrays
-> >> - signals and posix timers
-> >> - file lock
-> >> - fasync_struct used by the file lease code and driver's fasync queues
-> >> - tty objects
-> >> - per-mm LDT
-> >>
-> >> We have an incorrect/incomplete/obsoleted accounting for few other kernel
-> >> objects: sk_filter, af_packets, netlink and xt_counters for iptables.
-> >> They require rework and probably will be dropped at all.
-> >>
-> >> Also we're going to add an accounting for nft, however it is not ready yet.
-> >>
-> >> We have not tested performance on upstream, however, our performance team
-> >> compares our current RHEL7-based production kernel and reports that
-> >> they are at least not worse as the according original RHEL7 kernel.
-> >
-> > Hi Vasily,
-> >
-> > What's the status of this series? I see a couple patches did get
-> > acked/reviewed. Can you please re-send the series with updated ack
-> > tags?
->
-> Technically my patches does not have any NAKs. Practically they are still them merged.
-> I've expected Michal will push it, but he advised me to push subsystem maintainers.
-> I've asked Tejun to pick up the whole patch set and I'm waiting for his feedback right now.
->
-> I can resend patch set once again, with collected approval and with rebase to v5.14-rc1.
-> However I do not understand how it helps to push them if patches should be processed through
-> subsystem maintainers. As far as I understand I'll need to split this patch set into
-> per-subsystem pieces and sent them to corresponded maintainers.
->
+Hi,
 
-Usually these kinds of patches (adding memcg accounting) go through mm
-tree but if there are no dependencies between the patches and a
-consensus that each subsystem maintainer picks the corresponding patch
-then that is fine too.
+On 14.07.2021 03:39, Shakeel Butt wrote:
+> At the moment memcg stats are read in four contexts:
+>
+> 1. memcg stat user interfaces
+> 2. dirty throttling
+> 3. page fault
+> 4. memory reclaim
+>
+> Currently the kernel flushes the stats for first two cases. Flushing the
+> stats for remaining two casese may have performance impact. Always
+> flushing the memcg stats on the page fault code path may negatively
+> impacts the performance of the applications. In addition flushing in the
+> memory reclaim code path, though treated as slowpath, can become the
+> source of contention for the global lock taken for stat flushing because
+> when system or memcg is under memory pressure, many tasks may enter the
+> reclaim path.
+>
+> This patch uses following mechanisms to solve these challenges:
+>
+> 1. Periodically flush the stats from root memcg every 2 seconds. This
+> will time limit the out of sync stats.
+>
+> 2. Asynchronously flush the stats after fixed number of stat updates.
+> In the worst case the stat can be out of sync by O(nr_cpus * BATCH) for
+> 2 seconds.
+>
+> 3. For avoiding thundering herd to flush the stats particularly from the
+> memory reclaim context, introduce memcg local spinlock and let only one
+> flusher active at a time. This could have been done through
+> cgroup_rstat_lock lock but that lock is used by other subsystem and for
+> userspace reading memcg stats. So, it is better to keep flushers
+> introduced by this patch decoupled from cgroup_rstat_lock.
+>
+> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+
+This patch landed in today's linux-next (next-20210716) as commit 
+42265e014ac7 ("memcg: infrastructure to flush memcg stats"). On my test 
+system's I found that it triggers a kernel BUG on all ARM64 boards:
+
+  BUG: sleeping function called from invalid context at 
+kernel/cgroup/rstat.c:200
+  in_atomic(): 1, irqs_disabled(): 0, non_block: 0, pid: 7, name: 
+kworker/u8:0
+  3 locks held by kworker/u8:0/7:
+   #0: ffff00004000c938 ((wq_completion)events_unbound){+.+.}-{0:0}, at: 
+process_one_work+0x200/0x718
+   #1: ffff80001334bdd0 ((stats_flush_dwork).work){+.+.}-{0:0}, at: 
+process_one_work+0x200/0x718
+   #2: ffff8000124f6d40 (stats_flush_lock){+.+.}-{2:2}, at: 
+mem_cgroup_flush_stats+0x20/0x48
+  CPU: 2 PID: 7 Comm: kworker/u8:0 Tainted: G        W 5.14.0-rc1+ #3713
+  Hardware name: Raspberry Pi 4 Model B (DT)
+  Workqueue: events_unbound flush_memcg_stats_dwork
+  Call trace:
+   dump_backtrace+0x0/0x1d0
+   show_stack+0x14/0x20
+   dump_stack_lvl+0x88/0xb0
+   dump_stack+0x14/0x2c
+   ___might_sleep+0x1dc/0x200
+   __might_sleep+0x4c/0x88
+   cgroup_rstat_flush+0x2c/0x58
+   mem_cgroup_flush_stats+0x34/0x48
+   flush_memcg_stats_dwork+0xc/0x38
+   process_one_work+0x2a8/0x718
+   worker_thread+0x48/0x460
+   kthread+0x12c/0x160
+   ret_from_fork+0x10/0x18
+
+This can be also reproduced with QEmu. Please let me know if I can help 
+fixing this issue.
+
+> ---
+> Changes since v3:
+> - Add back the sigoff
+>
+> Changes since v2:
+> - Changed the subject of the patch
+> - Added mechanism to bound errors to nr_cpus instead of nr_cgroups
+> - memcg local lock to let one active flusher
+>
+> Changes since v1:
+> - use system_unbound_wq for flushing the memcg stats
+>
+>   include/linux/memcontrol.h |  6 ++++++
+>   mm/memcontrol.c            | 34 ++++++++++++++++++++++++++++++++++
+>   mm/vmscan.c                |  6 ++++++
+>   3 files changed, 46 insertions(+)
+>
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 0bfa0409af22..fa095a94ae56 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -991,6 +991,8 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
+>   	return x;
+>   }
+>   
+> +void mem_cgroup_flush_stats(void);
+> +
+>   void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+>   			      int val);
+>   void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val);
+> @@ -1400,6 +1402,10 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
+>   	return node_page_state(lruvec_pgdat(lruvec), idx);
+>   }
+>   
+> +static inline void mem_cgroup_flush_stats(void)
+> +{
+> +}
+> +
+>   static inline void __mod_memcg_lruvec_state(struct lruvec *lruvec,
+>   					    enum node_stat_item idx, int val)
+>   {
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 848d711bf576..39a00991fc80 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -103,6 +103,14 @@ static bool do_memsw_account(void)
+>   	return !cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_noswap;
+>   }
+>   
+> +/* memcg and lruvec stats flushing */
+> +static void flush_memcg_stats_dwork(struct work_struct *w);
+> +static DECLARE_DEFERRABLE_WORK(stats_flush_dwork, flush_memcg_stats_dwork);
+> +static void flush_memcg_stats_work(struct work_struct *w);
+> +static DECLARE_WORK(stats_flush_work, flush_memcg_stats_work);
+> +static DEFINE_PER_CPU(unsigned int, stats_flush_threshold);
+> +static DEFINE_SPINLOCK(stats_flush_lock);
+> +
+>   #define THRESHOLDS_EVENTS_TARGET 128
+>   #define SOFTLIMIT_EVENTS_TARGET 1024
+>   
+> @@ -685,6 +693,8 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+>   
+>   	/* Update lruvec */
+>   	__this_cpu_add(pn->lruvec_stats_percpu->state[idx], val);
+> +	if (!(__this_cpu_inc_return(stats_flush_threshold) % MEMCG_CHARGE_BATCH))
+> +		queue_work(system_unbound_wq, &stats_flush_work);
+>   }
+>   
+>   /**
+> @@ -5248,6 +5258,10 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
+>   	/* Online state pins memcg ID, memcg ID pins CSS */
+>   	refcount_set(&memcg->id.ref, 1);
+>   	css_get(css);
+> +
+> +	if (unlikely(mem_cgroup_is_root(memcg)))
+> +		queue_delayed_work(system_unbound_wq, &stats_flush_dwork,
+> +				   2UL*HZ);
+>   	return 0;
+>   }
+>   
+> @@ -5339,6 +5353,26 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
+>   	memcg_wb_domain_size_changed(memcg);
+>   }
+>   
+> +void mem_cgroup_flush_stats(void)
+> +{
+> +	if (!spin_trylock(&stats_flush_lock))
+> +		return;
+> +
+> +	cgroup_rstat_flush(root_mem_cgroup->css.cgroup);
+> +	spin_unlock(&stats_flush_lock);
+> +}
+> +
+> +static void flush_memcg_stats_dwork(struct work_struct *w)
+> +{
+> +	mem_cgroup_flush_stats();
+> +	queue_delayed_work(system_unbound_wq, &stats_flush_dwork, 2UL*HZ);
+> +}
+> +
+> +static void flush_memcg_stats_work(struct work_struct *w)
+> +{
+> +	mem_cgroup_flush_stats();
+> +}
+> +
+>   static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
+>   {
+>   	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index a7602f71ec04..1cc05ab8ca15 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -2893,6 +2893,12 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+>   	target_lruvec = mem_cgroup_lruvec(sc->target_mem_cgroup, pgdat);
+>   
+>   again:
+> +	/*
+> +	 * Flush the memory cgroup stats, so that we read accurate per-memcg
+> +	 * lruvec stats for heuristics.
+> +	 */
+> +	mem_cgroup_flush_stats();
+> +
+>   	memset(&sc->nr, 0, sizeof(sc->nr));
+>   
+>   	nr_reclaimed = sc->nr_reclaimed;
+
+Best regards
+-- 
+Marek Szyprowski, PhD
+Samsung R&D Institute Poland
+
