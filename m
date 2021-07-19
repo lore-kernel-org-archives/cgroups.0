@@ -1,7 +1,7 @@
 From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH v5 06/16] memcg: enable accounting for scm_fp_list objects
-Date: Mon, 19 Jul 2021 13:44:56 +0300
-Message-ID: <4fe78621-16a8-ebd9-d7f5-f13c52eb36ff@virtuozzo.com>
+Subject: [PATCH v5 07/16] memcg: enable accounting for mnt_cache entries
+Date: Mon, 19 Jul 2021 13:45:02 +0300
+Message-ID: <bab8c5e2-ca94-cc20-8546-f8447c2efc56@virtuozzo.com>
 References: <CALvZod66KF-8xKB1dyY2twizDE=svE8iXT_nqvsrfWg1a92f4A@mail.gmail.com>
  <cover.1626688654.git.vvs@virtuozzo.com>
 Mime-Version: 1.0
@@ -9,50 +9,52 @@ Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
-        :From; bh=UZrH4BVKP7hsH0Ef9AbThzsAu5M7Nu3PE7kKwMt/YWY=; b=XHVkIpI92bVaY20EHc5
-        GtWFwWzv6wl4oufrCaN5OCs1l6PwTbHZydRscCdAV8vZ9BpzdZnbzPstQYpTOMnvEtgB+zqcMpbO7
-        mopc2HiC1RqmEa2odgR7qj8iBG0JI03+3LIvcSyIkwfDCJlZuB5Xl+2BZMDK4aNvZOzfYPf4gOA=;
+        :From; bh=bgm9OS9KolAL5uXELhf+0mY9tqnepOoZ0HrSZvp8ULM=; b=IVYb5+iamN4LtvIIMeH
+        seWa1JUxgBc/Rs8FIXnefsNUIOeNvUKeTrOP5Pdf7XoqYRkOwNSTKCuq3vmyQKpbDvQGhvPMx/EVt
+        dX04lJXDuZopmyZxoBgo/BeBSp3VO7eDoxkUZnMoS1SFJmNNgyIrO2Th5X9irdzLULuwY+3DKk4=;
 In-Reply-To: <cover.1626688654.git.vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-unix sockets allows to send file descriptors via SCM_RIGHTS type messages.
-Each such send call forces kernel to allocate up to 2Kb memory for
-struct scm_fp_list.
+The kernel allocates ~400 bytes of 'strcut mount' for any new mount.
+Creating a new mount namespace clones most of the parent mounts,
+and this can be repeated many times. Additionally, each mount allocates
+up to PATH_MAX=4096 bytes for mnt->mnt_devname.
 
-It makes sense to account for them to restrict the host's memory
-consumption from inside the memcg-limited container.
+It makes sense to account for these allocations to restrict the host's
+memory consumption from inside the memcg-limited container.
 
 Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 ---
- net/core/scm.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/namespace.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/net/core/scm.c b/net/core/scm.c
-index ae3085d..5c356f0 100644
---- a/net/core/scm.c
-+++ b/net/core/scm.c
-@@ -79,7 +79,7 @@ static int scm_fp_copy(struct cmsghdr *cmsg, struct scm_fp_list **fplp)
+diff --git a/fs/namespace.c b/fs/namespace.c
+index ab4174a..c6a74e5 100644
+--- a/fs/namespace.c
++++ b/fs/namespace.c
+@@ -203,7 +203,8 @@ static struct mount *alloc_vfsmnt(const char *name)
+ 			goto out_free_cache;
  
- 	if (!fpl)
- 	{
--		fpl = kmalloc(sizeof(struct scm_fp_list), GFP_KERNEL);
-+		fpl = kmalloc(sizeof(struct scm_fp_list), GFP_KERNEL_ACCOUNT);
- 		if (!fpl)
- 			return -ENOMEM;
- 		*fplp = fpl;
-@@ -355,7 +355,7 @@ struct scm_fp_list *scm_fp_dup(struct scm_fp_list *fpl)
- 		return NULL;
+ 		if (name) {
+-			mnt->mnt_devname = kstrdup_const(name, GFP_KERNEL);
++			mnt->mnt_devname = kstrdup_const(name,
++							 GFP_KERNEL_ACCOUNT);
+ 			if (!mnt->mnt_devname)
+ 				goto out_free_id;
+ 		}
+@@ -4222,7 +4223,7 @@ void __init mnt_init(void)
+ 	int err;
  
- 	new_fpl = kmemdup(fpl, offsetof(struct scm_fp_list, fp[fpl->count]),
--			  GFP_KERNEL);
-+			  GFP_KERNEL_ACCOUNT);
- 	if (new_fpl) {
- 		for (i = 0; i < fpl->count; i++)
- 			get_file(fpl->fp[i]);
+ 	mnt_cache = kmem_cache_create("mnt_cache", sizeof(struct mount),
+-			0, SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
++			0, SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_ACCOUNT, NULL);
+ 
+ 	mount_hashtable = alloc_large_system_hash("Mount-cache",
+ 				sizeof(struct hlist_head),
 -- 
 1.8.3.1
 
