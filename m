@@ -1,17 +1,17 @@
 From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3 2/9] cgroup/cpuset: Fix a partition bug with hotplug
-Date: Tue, 20 Jul 2021 10:18:27 -0400
-Message-ID: <20210720141834.10624-3-longman@redhat.com>
+Subject: [PATCH v3 4/9] cgroup/cpuset: Enable event notification when partition become invalid
+Date: Tue, 20 Jul 2021 10:18:29 -0400
+Message-ID: <20210720141834.10624-5-longman@redhat.com>
 References: <20210720141834.10624-1-longman@redhat.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1626790788;
+        s=mimecast20190719; t=1626790800;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=TB0+2ckjUrwSxwX0c/mMZfMQH7v5b2QE7Wq//06xzH0=;
-        b=hnNE4IqLyj5YUemS6cRWxVarFdS7W+7EPZHLti+27j1/edgkIpj9tR2Gjy0kGEURaDv86b
-        9Uh4+rG6yOyrtdEwsRxotLKhJWyo4MGBZZu7zq9rOZKQ4cNJr78rELMZzI4fKc9RRpm0I9
-        QWG37MDZqMge9E8abZcnJ8GPgW8IF9o=
+        bh=OSD1ueZb/8AiWAEOmohDX/0RCpwXdDXZ8clzlRhUsiQ=;
+        b=T0PGjMWRuXFrCymcgCyUTfi3g8lRH2Lm4gyA6ArZd/ReiI3Yibe/GvZC5V42BjXsJYR/Kw
+        v+QhSXTdlw4MkENjOM82TJawhsIykBCkBdmjwwKZiKjXJZZpSgoJNEUBmhxP72d8BXIiPG
+        oKEL6eMaPA5NCdI0rmslkfl/9B4EahI=
 In-Reply-To: <20210720141834.10624-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -20,37 +20,168 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-In cpuset_hotplug_workfn(), the detection of whether the cpu list
-has been changed is done by comparing the effective cpus of the top
-cpuset with the cpu_active_mask. However, in the rare case that just
-all the CPUs in the subparts_cpus are offlined, the detection fails
-and the partition states are not updated correctly. Fix it by forcing
-the cpus_updated flag to true in this particular case.
+A valid cpuset partition can become invalid if all its CPUs are offlined
+or somehow removed. This can happen through external events without
+"cpuset.cpus.partition" being touched at all.
 
-Fixes: 4b842da276a8 ("cpuset: Make CPU hotplug work with partition")
+Users that rely on the property of a partition being present do not
+currently have a simple way to get such an event notified other than
+constant periodic polling which is both inefficient and cumbersome.
+
+To make life easier for those users, event notification is now enabled
+for "cpuset.cpus.partition" when it goes into or out of an invalid
+partition state.
+
+Suggested-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup/cpuset.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ kernel/cgroup/cpuset.c | 49 ++++++++++++++++++++++++++++++++----------
+ 1 file changed, 38 insertions(+), 11 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index f5fef5516d99..b00982e6f6d8 100644
+index 04a6951abe2a..2e34fc5b76f0 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -3166,6 +3166,13 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
- 	cpus_updated = !cpumask_equal(top_cpuset.effective_cpus, &new_cpus);
- 	mems_updated = !nodes_equal(top_cpuset.effective_mems, new_mems);
- 
-+	/*
-+	 * In the rare case that hotplug removes just all the cpus in
-+	 * subparts_cpus, we assumed that cpus are updated.
-+	 */
-+	if (!cpus_updated && top_cpuset.nr_subparts_cpus)
-+		cpus_updated = true;
+@@ -160,6 +160,9 @@ struct cpuset {
+ 	 */
+ 	int use_parent_ecpus;
+ 	int child_ecpus_count;
 +
- 	/* synchronize cpus_allowed to cpu_active_mask */
- 	if (cpus_updated) {
++	/* Handle for cpuset.cpus.partition */
++	struct cgroup_file partition_file;
+ };
+ 
+ /*
+@@ -263,6 +266,19 @@ static inline int is_partition_root(const struct cpuset *cs)
+ 	return cs->partition_root_state > 0;
+ }
+ 
++/*
++ * Send notification event of partition_root_state change when going into
++ * or out of PRS_ERROR which may be due to an external event like hotplug.
++ */
++static inline void notify_partition_change(struct cpuset *cs,
++					   int old_prs, int new_prs)
++{
++	if ((old_prs == new_prs) ||
++	   ((old_prs != PRS_ERROR) && (new_prs != PRS_ERROR)))
++		return;
++	cgroup_file_notify(&cs->partition_file);
++}
++
+ static struct cpuset top_cpuset = {
+ 	.flags = ((1 << CS_ONLINE) | (1 << CS_CPU_EXCLUSIVE) |
+ 		  (1 << CS_MEM_EXCLUSIVE)),
+@@ -1148,7 +1164,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
+ 	struct cpuset *parent = parent_cs(cpuset);
+ 	int adding;	/* Moving cpus from effective_cpus to subparts_cpus */
+ 	int deleting;	/* Moving cpus from subparts_cpus to effective_cpus */
+-	int new_prs;
++	int old_prs, new_prs;
+ 	bool part_error = false;	/* Partition error? */
+ 
+ 	percpu_rwsem_assert_held(&cpuset_rwsem);
+@@ -1184,7 +1200,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
+ 	 * A cpumask update cannot make parent's effective_cpus become empty.
+ 	 */
+ 	adding = deleting = false;
+-	new_prs = cpuset->partition_root_state;
++	old_prs = new_prs = cpuset->partition_root_state;
+ 	if (cmd == partcmd_enable) {
+ 		cpumask_copy(tmp->addmask, cpuset->cpus_allowed);
+ 		adding = true;
+@@ -1274,7 +1290,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
+ 				       parent->subparts_cpus);
+ 	}
+ 
+-	if (!adding && !deleting && (new_prs == cpuset->partition_root_state))
++	if (!adding && !deleting && (new_prs == old_prs))
+ 		return 0;
+ 
+ 	/*
+@@ -1302,9 +1318,11 @@ static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
+ 
+ 	parent->nr_subparts_cpus = cpumask_weight(parent->subparts_cpus);
+ 
+-	if (cpuset->partition_root_state != new_prs)
++	if (old_prs != new_prs)
+ 		cpuset->partition_root_state = new_prs;
++
+ 	spin_unlock_irq(&callback_lock);
++	notify_partition_change(cpuset, old_prs, new_prs);
+ 
+ 	return cmd == partcmd_update;
+ }
+@@ -1326,7 +1344,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp)
+ 	struct cpuset *cp;
+ 	struct cgroup_subsys_state *pos_css;
+ 	bool need_rebuild_sched_domains = false;
+-	int new_prs;
++	int old_prs, new_prs;
+ 
+ 	rcu_read_lock();
+ 	cpuset_for_each_descendant_pre(cp, pos_css, cs) {
+@@ -1366,8 +1384,8 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp)
+ 		 * update_tasks_cpumask() again for tasks in the parent
+ 		 * cpuset if the parent's subparts_cpus changes.
+ 		 */
+-		new_prs = cp->partition_root_state;
+-		if ((cp != cs) && new_prs) {
++		old_prs = new_prs = cp->partition_root_state;
++		if ((cp != cs) && old_prs) {
+ 			switch (parent->partition_root_state) {
+ 			case PRS_DISABLED:
+ 				/*
+@@ -1438,10 +1456,11 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp)
+ 			}
+ 		}
+ 
+-		if (new_prs != cp->partition_root_state)
++		if (new_prs != old_prs)
+ 			cp->partition_root_state = new_prs;
+ 
+ 		spin_unlock_irq(&callback_lock);
++		notify_partition_change(cp, old_prs, new_prs);
+ 
+ 		WARN_ON(!is_in_v2_mode() &&
+ 			!cpumask_equal(cp->cpus_allowed, cp->effective_cpus));
+@@ -2023,6 +2042,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
  		spin_lock_irq(&callback_lock);
+ 		cs->partition_root_state = new_prs;
+ 		spin_unlock_irq(&callback_lock);
++		notify_partition_change(cs, old_prs, new_prs);
+ 	}
+ 
+ 	free_cpumasks(NULL, &tmpmask);
+@@ -2708,6 +2728,7 @@ static struct cftype dfl_files[] = {
+ 		.write = sched_partition_write,
+ 		.private = FILE_PARTITION_ROOT,
+ 		.flags = CFTYPE_NOT_ON_ROOT,
++		.file_offset = offsetof(struct cpuset, partition_file),
+ 	},
+ 
+ 	{
+@@ -3103,11 +3124,17 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+ 		 */
+ 		if ((parent->partition_root_state == PRS_ERROR) ||
+ 		     cpumask_empty(&new_cpus)) {
++			int old_prs;
++
+ 			update_parent_subparts_cpumask(cs, partcmd_disable,
+ 						       NULL, tmp);
+-			spin_lock_irq(&callback_lock);
+-			cs->partition_root_state = PRS_ERROR;
+-			spin_unlock_irq(&callback_lock);
++			old_prs = cs->partition_root_state;
++			if (old_prs != PRS_ERROR) {
++				spin_lock_irq(&callback_lock);
++				cs->partition_root_state = PRS_ERROR;
++				spin_unlock_irq(&callback_lock);
++				notify_partition_change(cs, old_prs, PRS_ERROR);
++			}
+ 		}
+ 		cpuset_force_rebuild();
+ 	}
 -- 
 2.18.1
 
