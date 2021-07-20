@@ -1,87 +1,64 @@
-From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [PATCH v5 13/16] memcg: enable accounting for signals
-Date: Tue, 20 Jul 2021 11:35:19 +0300
-Message-ID: <56816a9d-c2e5-127d-4d90-5d7d17782c8a@virtuozzo.com>
-References: <CALvZod66KF-8xKB1dyY2twizDE=svE8iXT_nqvsrfWg1a92f4A@mail.gmail.com>
- <cover.1626688654.git.vvs@virtuozzo.com>
- <b19f065e-f3c9-2b20-2798-b60f0fc6b05f@virtuozzo.com>
- <87k0lmryyp.fsf@disp2133>
+From: syzbot <syzbot+0e2d06632863e7ddb1c7-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
+Subject: [syzbot] linux-next boot error: BUG: sleeping function called from
+ invalid context in cgroup_rstat_flush
+Date: Tue, 20 Jul 2021 03:51:22 -0700
+Message-ID: <000000000000a9e38905c78bd588@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
-        Subject; bh=GCfwuXuzQlyWhoFqI2bAb5C2O3u0V1H4t9sAk8gyaiU=; b=o2x2uM9kxU9Ii8mcM
-        ngv33zeb7qweb0P3mK2R8eAhFqaxQt6ZcEaksmqdwoZYzXdctpdlMovEX+oZSjSFpM8uxJ6gLHMkO
-        Mu0Ncl43GqGbeSSpHpKFig1cIERZbIr86yVht+RnKUlNXocFFbYkh9yY1cEeu5YE7PC2U+Mx7Foi8
-        =;
-In-Reply-To: <87k0lmryyp.fsf@disp2133>
-Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On 7/19/21 8:32 PM, Eric W. Biederman wrote:
-> Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> writes:
-> 
->> When a user send a signal to any another processes it forces the kernel
->> to allocate memory for 'struct sigqueue' objects. The number of signals
->> is limited by RLIMIT_SIGPENDING resource limit, but even the default
->> settings allow each user to consume up to several megabytes of memory.
->> Moreover, an untrusted admin inside container can increase the limit or
->> create new fake users and force them to sent signals.
-> 
-> Not any more.  Currently the number of sigqueue objects is limited
-> by the rlimit of the creator of the user namespace of the container.
-> 
->> It makes sense to account for these allocations to restrict the host's
->> memory consumption from inside the memcg-limited container.
-> 
-> Does it?  Why?  The given justification appears to have bit-rotted
-> since -rc1.
+Hello,
 
-Could you please explain what was changed in rc1?
-From my POV accounting is required to help OOM-killer to select proper target.
+syzbot found the following issue on:
 
-> I know a lot of these things only really need a limit just to catch a
-> program that starts malfunctioning.  If that is indeed the case
-> reasonable per-resource limits are probably better than some great big
-> group limit that can be exhausted with any single resource in the group.
-> 
-> Is there a reason I am not aware of that where it makes sense to group
-> all of the resources together and only count the number of bytes
-> consumed?
+HEAD commit:    6e235535ce82 Add linux-next specific files for 20210716
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=17f3d7e2300000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=b07a961928126747
+dashboard link: https://syzkaller.appspot.com/bug?extid=0e2d06632863e7ddb1c7
 
-Any new limits:
-a) should be set properly depending on huge number of incoming parameters.
-b) should properly notify about hits
-c) should be updated properly after b) 
-d) do a)-c) automatically if possible
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+0e2d06632863e7ddb1c7-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
 
-In past OpenVz had own accounting subsystem, user beancounters (UBC).
-It accounted and limited 20+ resources  per-container: numfiles, file locks,
-signals, netfilter rules, socket buffers and so on.
-I assume you want to do something similar, so let me share our experience. 
+BUG: sleeping function called from invalid context at kernel/cgroup/rstat.c:200
+in_atomic(): 1, irqs_disabled(): 0, non_block: 0, pid: 39, name: kworker/u4:3
+3 locks held by kworker/u4:3/39:
+ #0: ffff888010869138 ((wq_completion)events_unbound){+.+.}-{0:0}, at: arch_atomic64_set arch/x86/include/asm/atomic64_64.h:34 [inline]
+ #0: ffff888010869138 ((wq_completion)events_unbound){+.+.}-{0:0}, at: atomic64_set include/asm-generic/atomic-instrumented.h:620 [inline]
+ #0: ffff888010869138 ((wq_completion)events_unbound){+.+.}-{0:0}, at: atomic_long_set include/asm-generic/atomic-long.h:41 [inline]
+ #0: ffff888010869138 ((wq_completion)events_unbound){+.+.}-{0:0}, at: set_work_data kernel/workqueue.c:617 [inline]
+ #0: ffff888010869138 ((wq_completion)events_unbound){+.+.}-{0:0}, at: set_work_pool_and_clear_pending kernel/workqueue.c:644 [inline]
+ #0: ffff888010869138 ((wq_completion)events_unbound){+.+.}-{0:0}, at: process_one_work+0x871/0x1630 kernel/workqueue.c:2247
+ #1: ffffc90000e2fdb0 (stats_flush_work){+.+.}-{0:0}, at: process_one_work+0x8a5/0x1630 kernel/workqueue.c:2251
+ #2: ffffffff8bad45d8 (stats_flush_lock){+.+.}-{2:2}, at: spin_trylock include/linux/spinlock.h:369 [inline]
+ #2: ffffffff8bad45d8 (stats_flush_lock){+.+.}-{2:2}, at: mem_cgroup_flush_stats mm/memcontrol.c:5358 [inline]
+ #2: ffffffff8bad45d8 (stats_flush_lock){+.+.}-{2:2}, at: flush_memcg_stats_work+0xd/0x50 mm/memcontrol.c:5373
+Preemption disabled at:
+[<0000000000000000>] 0x0
+CPU: 0 PID: 39 Comm: kworker/u4:3 Not tainted 5.14.0-rc1-next-20210716-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+Workqueue: events_unbound flush_memcg_stats_work
+Call Trace:
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0xcd/0x134 lib/dump_stack.c:105
+ ___might_sleep.cold+0x1f3/0x239 kernel/sched/core.c:9182
+ cgroup_rstat_flush+0x1c/0x50 kernel/cgroup/rstat.c:200
+ mem_cgroup_flush_stats mm/memcontrol.c:5361 [inline]
+ mem_cgroup_flush_stats mm/memcontrol.c:5356 [inline]
+ flush_memcg_stats_work+0x39/0x50 mm/memcontrol.c:5373
+ process_one_work+0x98d/0x1630 kernel/workqueue.c:2276
+ worker_thread+0x658/0x11f0 kernel/workqueue.c:2422
+ kthread+0x3e5/0x4d0 kernel/kthread.c:319
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:295
 
-We had a lot of problems with UBC:
-- it's quite hard to set up the limit. 
-  Why it's good to consume N entities of some resource but it's bad to consume N+1 ones? 
-  per-process? per-user? per-thread? per-task? per-namespace? if nested? per-container? per-host?
-  To answer the questions host admin should have additional knowledge and skills.
 
-- Ok, we have set all limits. Some application hits it and fails.
-  It's quite hard to understand that application hits the limit, and failed due to this reason.
-  From users point of view, if some application does not work (stable enough)
-  inside container => containers are guilty.
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
 
-- It's quite hard to understand that failed application just want to increase limit X up to N entities.
-
-As result both host admins and container users was unhappy.
-So after years of such fights we decided just to limit accounted memory instead.
-
-Anyway, OOM-killer must know who consumed memory to select proper target.
-
-Thank you,
-	vasily Averin
- 
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
