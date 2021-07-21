@@ -1,44 +1,46 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] memcg: charge io_uring related objects
-Date: Tue, 20 Jul 2021 12:39:31 -0700
-Message-ID: <CALvZod5RGZwta+Dpeak9McQd=n_QShzooALCsYrMLbz3ihSiBQ@mail.gmail.com>
-References: <1626675625-9883-1-git-send-email-nglaive@gmail.com>
+From: Vincent Donnefort <vincent.donnefort@arm.com>
+Subject: Re: [RFC PATCH 5/6] sched/isolation: Make HK_FLAG_DOMAIN mutable
+Date: Wed, 21 Jul 2021 15:28:45 +0100
+Message-ID: <20210721142726.GA206211@e120877-lin.cambridge.arm.com>
+References: <20210714135420.69624-1-frederic@kernel.org>
+ <20210714135420.69624-6-frederic@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=L+MjaH1R1E0F0RWN0i5cSWeDaZRVcDk5Z+roBLBaQww=;
-        b=SZzRTqY+pX1aPq5w/WdqDiLB176GplKJ66paQIBWPcVU2KYjcig77AvWa8ubb9Jt8p
-         7x/G+AWlv+nLASckmvWWav9PPCbmOqfdl1tOlLC6Q6igjzYwMhYYbsKhVCtbneYxGIVK
-         HNrMuYnL6TNDY6EkyhfX17PrbaPZpVYf/YkF93m66+0SJgEZJx5GrPBuJN6CsVV0Q0oL
-         pYGUZ181yxFFld48EYPQi+Yx4ypEMf3hgUjhjd9AnIKI6jylx0pjPBVpDES/dXF9JxAR
-         OR/SwlcnoT/YOiRLp/zEcZ8gzMy+FBSnB9YbHgJ0g2Ol/G7V4z/QVJngwpcq1lI4tqlO
-         oaGA==
-In-Reply-To: <1626675625-9883-1-git-send-email-nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20210714135420.69624-6-frederic@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, shenwenbo-Y5EWUtBUdg4nDS1+zs4M5A@public.gmane.org
+To: Frederic Weisbecker <frederic@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Alex Belits <abelits@marvell.com>, Nitesh Lal <nilal@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Nicolas Saenz <nsaenzju@redhat.com>, Christoph Lameter <cl@gentwo.de>, Marcelo Tosatti <mtosatti@redhat.com>, Zefan Li <lizefan.x@bytedance.com>, cgroups@vger.kernel.org
 
-On Sun, Jul 18, 2021 at 11:20 PM Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-> This patch is a more complete version than the previous one, adding
-> accounting flags to nearly all syscall-triggerable kernel object
-> allocations. The patch does not account for temporary objects, i.e.,
-> objects that are freed soon after allocation, to avoid meaningless
-> performance penalty.
->
-> Thanks!
->
-> Yutian Yang,
-> Zhejiang University
->
->
-> Signed-off-by: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Hi Frederic,
 
-Can you please bring back the commit message of the previous version
-(which has the program to trigger the unaccounted allocations) and can
-add the details on this one to that?
+[...]
+
+>  
+> +// Only support HK_FLAG_DOMAIN for now
+> +// TODO: propagate the changes through all interested subsystems:
+> +// workqueues, net, pci; ...
+> +void housekeeping_cpumask_set(struct cpumask *mask, enum hk_flags flags)
+> +{
+> +	/* Only HK_FLAG_DOMAIN change supported for now */
+> +	if (WARN_ON_ONCE(flags != HK_FLAG_DOMAIN))
+> +		return;
+>  
+> +	if (!static_key_enabled(&housekeeping_overridden.key)) {
+> +		if (cpumask_equal(mask, cpu_possible_mask))
+> +			return;
+> +		if (WARN_ON_ONCE(!alloc_cpumask_var(&hk_domain_mask, GFP_KERNEL)))
+> +			return;
+> +		cpumask_copy(hk_domain_mask, mask);
+> +		static_branch_enable(&housekeeping_overridden);
+
+I get a warning here. static_branch_enable() is trying to take cpus_read_lock().
+But the same lock is already taken by cpuset_write_u64().
+
+Also, shouldn't it set HK_FLAG_DOMAIN in housekeeping_flags to enable
+housekeeping if the kernel started without isolcpus="" ?
+
+-- 
+Vincent
