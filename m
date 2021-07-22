@@ -1,162 +1,143 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-5.14-fixes] BUILD SUCCESS
- 1e7107c5ef44431bc1ebbd4c353f1d7c22e5f2ec
-Date: Thu, 22 Jul 2021 12:53:34 +0800
-Message-ID: <60f8f9ce.01G8Z73qSPaVf01V%lkp@intel.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [RFC PATCH 1/3] misc_cgroup: add support for nofile limit
+Date: Thu, 22 Jul 2021 17:38:38 +0800
+Message-ID: <4775e8d187920399403b296f8bb11bd687688671.1626946231.git.brookxu@tencent.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=f1tJJWsNPHtyLHNkjYc8ShNPedoFW/MJWzFqp9S/91w=;
+        b=B7f+or+TDrkCSwBhquaRkJnVlXzRiPzhjVZKT6H4pC9Uji8jM1Wv9kqqB9wyhEVsM1
+         35O+q0km0e+c2lSlCF97LN9J+ataibov+Ghn58k5OQ2rG89hlkPhiuHqWau7uEGMUjNz
+         SWWK9RKKPp1bQqX2GE/YoA8TTriF+Crd/UVJbPWPdnKRYTox32OHYUP1FvVUlReWSNzk
+         hwPCAjQgdUh1sUHCqad0dU4VVwqmMng0+K3MeDAd2nrdFc3J3K21YpoF8AktZODlpvqs
+         5HhfBRz3K8hxxUEfkCKEUCT6HWHprqmtKprsLViWfb3Pph9RK/3DGryXEpsG3YdS4lCH
+         XsEg==
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.14-fixes
-branch HEAD: 1e7107c5ef44431bc1ebbd4c353f1d7c22e5f2ec  cgroup1: fix leaked context root causing sporadic NULL deref in LTP
+From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-elapsed time: 730m
+Since the global open files are limited, in order to avoid the
+abnormal behavior of some containers from generating too many
+files, causing other containers to be unavailable, we need to
+limit the open files of some containers.
 
-configs tested: 131
-configs skipped: 3
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-mips                      fuloong2e_defconfig
-powerpc                       ebony_defconfig
-arm                            mmp2_defconfig
-powerpc                  storcenter_defconfig
-mips                   sb1250_swarm_defconfig
-nios2                               defconfig
-csky                             alldefconfig
-arm                             ezx_defconfig
-sh                             shx3_defconfig
-sh                          rsk7201_defconfig
-arm                     davinci_all_defconfig
-mips                           gcw0_defconfig
-powerpc                 linkstation_defconfig
-sh                   sh7770_generic_defconfig
-powerpc                      bamboo_defconfig
-arm                      integrator_defconfig
-arm                        multi_v7_defconfig
-powerpc                      pasemi_defconfig
-m68k                        mvme16x_defconfig
-sh                          r7785rp_defconfig
-sparc64                             defconfig
-arc                     nsimosci_hs_defconfig
-mips                         tb0287_defconfig
-mips                           jazz_defconfig
-sh                            titan_defconfig
-arc                        nsim_700_defconfig
-mips                        vocore2_defconfig
-riscv                          rv32_defconfig
-m68k                        m5407c3_defconfig
-arm                        realview_defconfig
-arm                            dove_defconfig
-arm                  colibri_pxa270_defconfig
-openrisc                 simple_smp_defconfig
-mips                           ip28_defconfig
-arm64                            alldefconfig
-mips                     cu1000-neo_defconfig
-riscv                    nommu_virt_defconfig
-mips                 decstation_r4k_defconfig
-xtensa                  nommu_kc705_defconfig
-powerpc                  mpc866_ads_defconfig
-arm                            pleb_defconfig
-arm                           omap1_defconfig
-xtensa                       common_defconfig
-h8300                               defconfig
-x86_64                            allnoconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a003-20210720
-x86_64               randconfig-a006-20210720
-x86_64               randconfig-a001-20210720
-x86_64               randconfig-a005-20210720
-x86_64               randconfig-a004-20210720
-x86_64               randconfig-a002-20210720
-i386                 randconfig-a005-20210719
-i386                 randconfig-a004-20210719
-i386                 randconfig-a006-20210719
-i386                 randconfig-a001-20210719
-i386                 randconfig-a003-20210719
-i386                 randconfig-a002-20210719
-i386                 randconfig-a005-20210720
-i386                 randconfig-a003-20210720
-i386                 randconfig-a004-20210720
-i386                 randconfig-a002-20210720
-i386                 randconfig-a001-20210720
-i386                 randconfig-a006-20210720
-x86_64               randconfig-a011-20210721
-x86_64               randconfig-a016-20210721
-x86_64               randconfig-a013-20210721
-x86_64               randconfig-a014-20210721
-x86_64               randconfig-a012-20210721
-x86_64               randconfig-a015-20210721
-i386                 randconfig-a016-20210720
-i386                 randconfig-a013-20210720
-i386                 randconfig-a012-20210720
-i386                 randconfig-a014-20210720
-i386                 randconfig-a011-20210720
-i386                 randconfig-a015-20210720
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                           allyesconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
-
-clang tested configs:
-x86_64               randconfig-b001-20210720
-x86_64               randconfig-a011-20210720
-x86_64               randconfig-a016-20210720
-x86_64               randconfig-a013-20210720
-x86_64               randconfig-a014-20210720
-x86_64               randconfig-a012-20210720
-x86_64               randconfig-a015-20210720
-
+Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+ fs/file_table.c             | 25 +++++++++++++++++++++++--
+ include/linux/fs.h          |  4 +++-
+ include/linux/misc_cgroup.h |  1 +
+ kernel/cgroup/misc.c        |  1 +
+ 4 files changed, 28 insertions(+), 3 deletions(-)
+
+diff --git a/fs/file_table.c b/fs/file_table.c
+index 45437f8e1003..a7848a4cac19 100644
+--- a/fs/file_table.c
++++ b/fs/file_table.c
+@@ -29,6 +29,7 @@
+ #include <linux/swap.h>
+ 
+ #include <linux/atomic.h>
++#include <linux/misc_cgroup.h>
+ 
+ #include "internal.h"
+ 
+@@ -53,8 +54,14 @@ static void file_free_rcu(struct rcu_head *head)
+ static inline void file_free(struct file *f)
+ {
+ 	security_file_free(f);
+-	if (!(f->f_mode & FMODE_NOACCOUNT))
++	if (!(f->f_mode & FMODE_NOACCOUNT)) {
++		struct misc_cg *misc_cg = css_misc(f->f_css);
++
++		misc_cg_uncharge(MISC_CG_RES_NOFILE, misc_cg, 1);
++		put_misc_cg(misc_cg);
++
+ 		percpu_counter_dec(&nr_files);
++	}
+ 	call_rcu(&f->f_u.fu_rcuhead, file_free_rcu);
+ }
+ 
+@@ -148,8 +155,20 @@ struct file *alloc_empty_file(int flags, const struct cred *cred)
+ 	}
+ 
+ 	f = __alloc_file(flags, cred);
+-	if (!IS_ERR(f))
++	if (!IS_ERR(f)) {
++		struct misc_cg *misc_cg = get_current_misc_cg();
++		int ret;
++
++		ret = misc_cg_try_charge(MISC_CG_RES_NOFILE, misc_cg, 1);
++		if (ret < 0) {
++			put_misc_cg(misc_cg);
++			file_free(f);
++			goto out;
++		}
++
+ 		percpu_counter_inc(&nr_files);
++		f->f_css = &misc_cg->css;
++	}
+ 
+ 	return f;
+ 
+@@ -159,6 +178,7 @@ struct file *alloc_empty_file(int flags, const struct cred *cred)
+ 		pr_info("VFS: file-max limit %lu reached\n", get_max_files());
+ 		old_max = get_nr_files();
+ 	}
++ out:
+ 	return ERR_PTR(-ENFILE);
+ }
+ 
+@@ -397,4 +417,5 @@ void __init files_maxfiles_init(void)
+ 	n = ((nr_pages - memreserve) * (PAGE_SIZE / 1024)) / 10;
+ 
+ 	files_stat.max_files = max_t(unsigned long, n, NR_FILE);
++	misc_cg_set_capacity(MISC_CG_RES_NOFILE, files_stat.max_files);
+ }
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index fad6663cd1b0..9ef3dd579ed6 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -947,7 +947,9 @@ struct file {
+ #endif
+ 	/* needed for tty driver, and maybe others */
+ 	void			*private_data;
+-
++#ifdef CONFIG_CGROUP_MISC
++	struct cgroup_subsys_state *f_css;
++#endif
+ #ifdef CONFIG_EPOLL
+ 	/* Used by fs/eventpoll.c to link all the hooks to this file */
+ 	struct hlist_head	*f_ep;
+diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
+index da2367e2ac1e..8450a5e66de0 100644
+--- a/include/linux/misc_cgroup.h
++++ b/include/linux/misc_cgroup.h
+@@ -18,6 +18,7 @@ enum misc_res_type {
+ 	/* AMD SEV-ES ASIDs resource */
+ 	MISC_CG_RES_SEV_ES,
+ #endif
++	MISC_CG_RES_NOFILE,
+ 	MISC_CG_RES_TYPES
+ };
+ 
+diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
+index ec02d963cad1..5d51b8eeece6 100644
+--- a/kernel/cgroup/misc.c
++++ b/kernel/cgroup/misc.c
+@@ -24,6 +24,7 @@ static const char *const misc_res_name[] = {
+ 	/* AMD SEV-ES ASIDs resource */
+ 	"sev_es",
+ #endif
++	"nofile"
+ };
+ 
+ /* Root misc cgroup */
+-- 
+2.30.0
+
