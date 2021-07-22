@@ -1,115 +1,177 @@
-From: brookxu <brookxu.cn@gmail.com>
-Subject: [RFC PATCH v2 2/3] misc_cgroup: add failcnt counter
-Date: Thu, 22 Jul 2021 23:20:18 +0800
-Message-ID: <5aed58ba0147169ab26b1403fe135df4f77b8492.1626966339.git.brookxu@tencent.com>
-References: <3fd94563b4949ffbfe10e7d18ac1df3852b103a6.1626966339.git.brookxu@tencent.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH] writeback: memcg: simplify cgroup_writeback_by_id
+Date: Thu, 22 Jul 2021 11:26:27 -0700
+Message-ID: <20210722182627.2267368-1-shakeelb@google.com>
+Mime-Version: 1.0
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :in-reply-to:references;
-        bh=nKxDmYGABfohxuLPargQrpGLtl0A5Dtlbr1nooTegnQ=;
-        b=h6zrYKfCi1QSIzifwVkE7CUsQr1UndXBaiqyHaBpdyxXY0wJ1YhxH3BMVzvT6CZmtp
-         8bkLzFD/Gi5zkPzY2wdY0b0WxpLSLnFDccOf3hqiE1hk9PmDJgT/xjg3oBdUkTIbrFpW
-         Ri3+1WQ7beOC6hsFBHAf1xh4f5xIjDyXJocNC58mZ3gk634oHfq0Oyc+r3gB0137Ifhs
-         U/q1ao8boXFw7SgU89Sx2YSBj//JenOdNZ+W5qa4yeJ5lKobUmfSyUvVzTZMyQooitW7
-         j5EvBh/9CtDymXx4S+49VPJA1qhUqOe4CucENeWME11G6WHv19KuoY33RLnNwts1ALfy
-         vIcg==
-In-Reply-To: <3fd94563b4949ffbfe10e7d18ac1df3852b103a6.1626966339.git.brookxu@tencent.com>
-In-Reply-To: <3fd94563b4949ffbfe10e7d18ac1df3852b103a6.1626966339.git.brookxu@tencent.com>
-References: <3fd94563b4949ffbfe10e7d18ac1df3852b103a6.1626966339.git.brookxu@tencent.com>
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=zdafpjZOpX7w6ukm7UkyAJ9U3xYdHtSO79XymBUPu/o=;
+        b=sdJPsNKSHYFbC/G+xIVl3Qk4+Rvo57mP9IEXixCOWBzjsFotznwfryTn0zYl4yGHpT
+         5FbXMLAs09OWq4xdRxZEWNwM37C7Yfl0z+VPM7fkn95Nvhi0H/e7MguHjswI8IY9Mp7G
+         S6uyExEloYAuxSMXUTRs7RX59i0LVbF7Y35beGZ/Cq6/wSnj/Bp2XIkL3GESUE28Aunf
+         KymWbsI5an9Me7Ud4ap2MSa3GHzDYoWngDnUwCY+tiKKQooheZHW4YdNkkQqGdw3zMrw
+         0j77ZArAzNLojl5RKH3amMWjXtdz+m2PmxAghXCgrthIgKOW1jpZ2r9FucoCbdjaNPhi
+         DxiA==
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: viro@zeniv.linux.org.uk, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Jan Kara <jack@suse.cz>
+Cc: Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
 
-From: Chunguang Xu <brookxu@tencent.com>
+Currently cgroup_writeback_by_id calls mem_cgroup_wb_stats() to get
+dirty pages for a memcg. However mem_cgroup_wb_stats() does a lot more
+than just get the number of dirty pages. Just directly get the number of
+dirty pages instead of calling mem_cgroup_wb_stats(). Also
+cgroup_writeback_by_id() is only called for best-effort dirty flushing,
+so remove the unused 'nr' parameter and no need to explicitly flush
+memcg stats.
 
-Instead of printing logs, we should probably track failures through
-a failcnt counter, similar to mem_cgroup.
-
-Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
 ---
- include/linux/misc_cgroup.h |  1 +
- kernel/cgroup/misc.c        | 30 ++++++++++++++++++++++++++++++
- 2 files changed, 31 insertions(+)
+ fs/fs-writeback.c          | 20 +++++++++-----------
+ include/linux/memcontrol.h | 15 +++++++++++++++
+ include/linux/writeback.h  |  2 +-
+ mm/memcontrol.c            | 13 +------------
+ 4 files changed, 26 insertions(+), 24 deletions(-)
 
-diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
-index 8450a5e66de0..dd1a786f39b8 100644
---- a/include/linux/misc_cgroup.h
-+++ b/include/linux/misc_cgroup.h
-@@ -37,6 +37,7 @@ struct misc_cg;
- struct misc_res {
- 	unsigned long max;
- 	atomic_long_t usage;
-+	atomic_long_t failcnt;
- 	bool failed;
- };
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 867984e778c3..35894a2dba75 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -1039,20 +1039,20 @@ static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
+  * cgroup_writeback_by_id - initiate cgroup writeback from bdi and memcg IDs
+  * @bdi_id: target bdi id
+  * @memcg_id: target memcg css id
+- * @nr: number of pages to write, 0 for best-effort dirty flushing
+  * @reason: reason why some writeback work initiated
+  * @done: target wb_completion
+  *
+  * Initiate flush of the bdi_writeback identified by @bdi_id and @memcg_id
+  * with the specified parameters.
+  */
+-int cgroup_writeback_by_id(u64 bdi_id, int memcg_id, unsigned long nr,
++int cgroup_writeback_by_id(u64 bdi_id, int memcg_id,
+ 			   enum wb_reason reason, struct wb_completion *done)
+ {
+ 	struct backing_dev_info *bdi;
+ 	struct cgroup_subsys_state *memcg_css;
+ 	struct bdi_writeback *wb;
+ 	struct wb_writeback_work *work;
++	unsigned long dirty;
+ 	int ret;
  
-diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
-index 5d51b8eeece6..7c568b619f82 100644
---- a/kernel/cgroup/misc.c
-+++ b/kernel/cgroup/misc.c
-@@ -165,6 +165,7 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
- 				pr_cont("\n");
- 				res->failed = true;
- 			}
-+			atomic_long_inc(&res->failcnt);
- 			ret = -EBUSY;
- 			goto err_charge;
- 		}
-@@ -312,6 +313,29 @@ static int misc_cg_current_show(struct seq_file *sf, void *v)
- 	return 0;
+ 	/* lookup bdi and memcg */
+@@ -1081,24 +1081,22 @@ int cgroup_writeback_by_id(u64 bdi_id, int memcg_id, unsigned long nr,
+ 	}
+ 
+ 	/*
+-	 * If @nr is zero, the caller is attempting to write out most of
++	 * The caller is attempting to write out most of
+ 	 * the currently dirty pages.  Let's take the current dirty page
+ 	 * count and inflate it by 25% which should be large enough to
+ 	 * flush out most dirty pages while avoiding getting livelocked by
+ 	 * concurrent dirtiers.
++	 *
++	 * BTW the memcg stats are flushed periodically and this is best-effort
++	 * estimation, so some potential error is ok.
+ 	 */
+-	if (!nr) {
+-		unsigned long filepages, headroom, dirty, writeback;
+-
+-		mem_cgroup_wb_stats(wb, &filepages, &headroom, &dirty,
+-				      &writeback);
+-		nr = dirty * 10 / 8;
+-	}
++	dirty = memcg_page_state(mem_cgroup_from_css(memcg_css), NR_FILE_DIRTY);
++	dirty = dirty * 10 / 8;
+ 
+ 	/* issue the writeback work */
+ 	work = kzalloc(sizeof(*work), GFP_NOWAIT | __GFP_NOWARN);
+ 	if (work) {
+-		work->nr_pages = nr;
++		work->nr_pages = dirty;
+ 		work->sync_mode = WB_SYNC_NONE;
+ 		work->range_cyclic = 1;
+ 		work->reason = reason;
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index b4c6b613e162..7028d8e4a3d7 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -989,6 +989,16 @@ static inline void mod_memcg_state(struct mem_cgroup *memcg,
+ 	local_irq_restore(flags);
  }
  
-+/**
-+ * misc_cg_failcnt_show() - Show the fail count of the misc cgroup.
-+ * @sf: Interface file
-+ * @v: Arguments passed
-+ *
-+ * Context: Any context.
-+ * Return: 0 to denote successful print.
-+ */
-+static int misc_cg_failcnt_show(struct seq_file *sf, void *v)
++static inline unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
 +{
-+	int i;
-+	unsigned long failcnt;
-+	struct misc_cg *cg = css_misc(seq_css(sf));
++	long x = READ_ONCE(memcg->vmstats.state[idx]);
++#ifdef CONFIG_SMP
++	if (x < 0)
++		x = 0;
++#endif
++	return x;
++}
 +
-+	for (i = 0; i < MISC_CG_RES_TYPES; i++) {
-+		failcnt = atomic_long_read(&cg->res[i].failcnt);
-+		if (READ_ONCE(misc_res_capacity[i]) || failcnt)
-+			seq_printf(sf, "%s %lu\n", misc_res_name[i], failcnt);
-+	}
-+
+ static inline unsigned long lruvec_page_state(struct lruvec *lruvec,
+ 					      enum node_stat_item idx)
+ {
+@@ -1444,6 +1454,11 @@ static inline void mod_memcg_state(struct mem_cgroup *memcg,
+ {
+ }
+ 
++static inline unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
++{
 +	return 0;
 +}
 +
- /**
-  * misc_cg_capacity_show() - Show the total capacity of misc res on the host.
-  * @sf: Interface file
-@@ -349,6 +373,11 @@ static struct cftype misc_cg_files[] = {
- 		.seq_show = misc_cg_current_show,
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 	},
-+	{
-+		.name = "failcnt",
-+		.seq_show = misc_cg_failcnt_show,
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+	},
- 	{
- 		.name = "capacity",
- 		.seq_show = misc_cg_capacity_show,
-@@ -383,6 +412,7 @@ misc_cg_alloc(struct cgroup_subsys_state *parent_css)
- 	for (i = 0; i < MISC_CG_RES_TYPES; i++) {
- 		WRITE_ONCE(cg->res[i].max, MAX_NUM);
- 		atomic_long_set(&cg->res[i].usage, 0);
-+		atomic_long_set(&cg->res[i].failcnt, 0);
- 	}
+ static inline unsigned long lruvec_page_state(struct lruvec *lruvec,
+ 					      enum node_stat_item idx)
+ {
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index 1f34ddf284dc..109e0dcd1d21 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -218,7 +218,7 @@ void wbc_attach_and_unlock_inode(struct writeback_control *wbc,
+ void wbc_detach_inode(struct writeback_control *wbc);
+ void wbc_account_cgroup_owner(struct writeback_control *wbc, struct page *page,
+ 			      size_t bytes);
+-int cgroup_writeback_by_id(u64 bdi_id, int memcg_id, unsigned long nr_pages,
++int cgroup_writeback_by_id(u64 bdi_id, int memcg_id,
+ 			   enum wb_reason reason, struct wb_completion *done);
+ void cgroup_writeback_umount(void);
+ bool cleanup_offline_cgwb(struct bdi_writeback *wb);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 35bb5f8f9ea8..6580c2381a3e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -631,17 +631,6 @@ void __mod_memcg_state(struct mem_cgroup *memcg, int idx, int val)
+ 	cgroup_rstat_updated(memcg->css.cgroup, smp_processor_id());
+ }
  
- 	return &cg->css;
+-/* idx can be of type enum memcg_stat_item or node_stat_item. */
+-static unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
+-{
+-	long x = READ_ONCE(memcg->vmstats.state[idx]);
+-#ifdef CONFIG_SMP
+-	if (x < 0)
+-		x = 0;
+-#endif
+-	return x;
+-}
+-
+ /* idx can be of type enum memcg_stat_item or node_stat_item. */
+ static unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
+ {
+@@ -4609,7 +4598,7 @@ void mem_cgroup_flush_foreign(struct bdi_writeback *wb)
+ 		    atomic_read(&frn->done.cnt) == 1) {
+ 			frn->at = 0;
+ 			trace_flush_foreign(wb, frn->bdi_id, frn->memcg_id);
+-			cgroup_writeback_by_id(frn->bdi_id, frn->memcg_id, 0,
++			cgroup_writeback_by_id(frn->bdi_id, frn->memcg_id,
+ 					       WB_REASON_FOREIGN_FLUSH,
+ 					       &frn->done);
+ 		}
 -- 
-2.30.0
+2.32.0.432.gabb21c7263-goog
 
