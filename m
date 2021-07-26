@@ -1,7 +1,8 @@
 From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH v6 12/16] memcg: enable accounting of ipc resources
-Date: Mon, 26 Jul 2021 22:01:19 +0300
-Message-ID: <f486ea26-0baa-c1d5-2f75-a23bd1ca1274@virtuozzo.com>
+Subject: [PATCH v6 11/16] memcg: enable accounting for new namesapces and
+ struct nsproxy
+Date: Mon, 26 Jul 2021 22:01:13 +0300
+Message-ID: <86c99f5a-d717-9d4e-91db-e68ccc93cade@virtuozzo.com>
 References: <9bf9d9bd-03b1-2adb-17b4-5d59a86a9394@virtuozzo.com>
  <cover.1627321321.git.vvs@virtuozzo.com>
 Mime-Version: 1.0
@@ -9,99 +10,133 @@ Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
-        :From; bh=Ccnjp3FPBm3dwMYx93pYsjJGsGokrnefzYE+aVs2CiQ=; b=Vq1L9YM4JDzl1lIxp9s
-        5JWpkJUeE1caHCsV1AboRg34E9mPN7kK0/xDrU33UMV+kgSYAOdnvuoF0TAcZhqRUlja901L4sSke
-        DrtK50SoaiZzxLRpOwTkTm9WmAvYRVCXAK5RYxFCi7a4C/4fLddqeDI4meNr/dnELdzXVzqt3hE=;
+        :From; bh=IdZZBnXteeK3KMpGoXY1tOjrzOhdE8xwlZ9XdsuGcJo=; b=uV9ni2qRrikpEWDJBBm
+        86tzyfl0TAYActMenPUz9fpl+F578I0jdSX0adMeNKy4OEilzN+Wg47Cgae2lk0KdT9BOuBbwHf6i
+        bKfBpsdozKEtW32iAOeEUo/TevGheJXvv9k02Ce2kvWqERy3bx9G5js/doaEONq4jUHXNOzBqe4=;
 In-Reply-To: <cover.1627321321.git.vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dmitry Safonov <0x7f454c46-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Kirill Tkhai <ktkhai-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Andrei Vagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-When user creates IPC objects it forces kernel to allocate memory for
-these long-living objects.
-
-It makes sense to account them to restrict the host's memory consumption
-from inside the memcg-limited container.
-
-This patch enables accounting for IPC shared memory segments, messages
-semaphores and semaphore's undo lists.
+Container admin can create new namespaces and force kernel to allocate
+up to several pages of memory for the namespaces and its associated
+structures.
+Net and uts namespaces have enabled accounting for such allocations.
+It makes sense to account for rest ones to restrict the host's memory
+consumption from inside the memcg-limited container.
 
 Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Acked-by: Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
+Acked-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 ---
- ipc/msg.c | 2 +-
- ipc/sem.c | 9 +++++----
- ipc/shm.c | 2 +-
- 3 files changed, 7 insertions(+), 6 deletions(-)
+ fs/namespace.c            | 2 +-
+ ipc/namespace.c           | 2 +-
+ kernel/cgroup/namespace.c | 2 +-
+ kernel/nsproxy.c          | 2 +-
+ kernel/pid_namespace.c    | 2 +-
+ kernel/time/namespace.c   | 4 ++--
+ kernel/user_namespace.c   | 2 +-
+ 7 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/ipc/msg.c b/ipc/msg.c
-index 6810276..a0d0577 100644
---- a/ipc/msg.c
-+++ b/ipc/msg.c
-@@ -147,7 +147,7 @@ static int newque(struct ipc_namespace *ns, struct ipc_params *params)
- 	key_t key = params->key;
- 	int msgflg = params->flg;
+diff --git a/fs/namespace.c b/fs/namespace.c
+index c6a74e5..e443ee6 100644
+--- a/fs/namespace.c
++++ b/fs/namespace.c
+@@ -3289,7 +3289,7 @@ static struct mnt_namespace *alloc_mnt_ns(struct user_namespace *user_ns, bool a
+ 	if (!ucounts)
+ 		return ERR_PTR(-ENOSPC);
  
--	msq = kmalloc(sizeof(*msq), GFP_KERNEL);
-+	msq = kmalloc(sizeof(*msq), GFP_KERNEL_ACCOUNT);
- 	if (unlikely(!msq))
- 		return -ENOMEM;
- 
-diff --git a/ipc/sem.c b/ipc/sem.c
-index 971e75d..1a8b9f0 100644
---- a/ipc/sem.c
-+++ b/ipc/sem.c
-@@ -514,7 +514,7 @@ static struct sem_array *sem_alloc(size_t nsems)
- 	if (nsems > (INT_MAX - sizeof(*sma)) / sizeof(sma->sems[0]))
- 		return NULL;
- 
--	sma = kvzalloc(struct_size(sma, sems, nsems), GFP_KERNEL);
-+	sma = kvzalloc(struct_size(sma, sems, nsems), GFP_KERNEL_ACCOUNT);
- 	if (unlikely(!sma))
- 		return NULL;
- 
-@@ -1855,7 +1855,7 @@ static inline int get_undo_list(struct sem_undo_list **undo_listp)
- 
- 	undo_list = current->sysvsem.undo_list;
- 	if (!undo_list) {
--		undo_list = kzalloc(sizeof(*undo_list), GFP_KERNEL);
-+		undo_list = kzalloc(sizeof(*undo_list), GFP_KERNEL_ACCOUNT);
- 		if (undo_list == NULL)
- 			return -ENOMEM;
- 		spin_lock_init(&undo_list->lock);
-@@ -1941,7 +1941,7 @@ static struct sem_undo *find_alloc_undo(struct ipc_namespace *ns, int semid)
- 
- 	/* step 2: allocate new undo structure */
- 	new = kvzalloc(sizeof(struct sem_undo) + sizeof(short)*nsems,
--		       GFP_KERNEL);
-+		       GFP_KERNEL_ACCOUNT);
- 	if (!new) {
- 		ipc_rcu_putref(&sma->sem_perm, sem_rcu_free);
+-	new_ns = kzalloc(sizeof(struct mnt_namespace), GFP_KERNEL);
++	new_ns = kzalloc(sizeof(struct mnt_namespace), GFP_KERNEL_ACCOUNT);
+ 	if (!new_ns) {
+ 		dec_mnt_namespaces(ucounts);
  		return ERR_PTR(-ENOMEM);
-@@ -2005,7 +2005,8 @@ static long do_semtimedop(int semid, struct sembuf __user *tsops,
- 	if (nsops > ns->sc_semopm)
- 		return -E2BIG;
- 	if (nsops > SEMOPM_FAST) {
--		sops = kvmalloc_array(nsops, sizeof(*sops), GFP_KERNEL);
-+		sops = kvmalloc_array(nsops, sizeof(*sops),
-+				      GFP_KERNEL_ACCOUNT);
- 		if (sops == NULL)
- 			return -ENOMEM;
- 	}
-diff --git a/ipc/shm.c b/ipc/shm.c
-index 748933e..ab749be 100644
---- a/ipc/shm.c
-+++ b/ipc/shm.c
-@@ -619,7 +619,7 @@ static int newseg(struct ipc_namespace *ns, struct ipc_params *params)
- 			ns->shm_tot + numpages > ns->shm_ctlall)
- 		return -ENOSPC;
+diff --git a/ipc/namespace.c b/ipc/namespace.c
+index 7bd0766..ae83f0f 100644
+--- a/ipc/namespace.c
++++ b/ipc/namespace.c
+@@ -42,7 +42,7 @@ static struct ipc_namespace *create_ipc_ns(struct user_namespace *user_ns,
+ 		goto fail;
  
--	shp = kmalloc(sizeof(*shp), GFP_KERNEL);
-+	shp = kmalloc(sizeof(*shp), GFP_KERNEL_ACCOUNT);
- 	if (unlikely(!shp))
- 		return -ENOMEM;
+ 	err = -ENOMEM;
+-	ns = kzalloc(sizeof(struct ipc_namespace), GFP_KERNEL);
++	ns = kzalloc(sizeof(struct ipc_namespace), GFP_KERNEL_ACCOUNT);
+ 	if (ns == NULL)
+ 		goto fail_dec;
  
+diff --git a/kernel/cgroup/namespace.c b/kernel/cgroup/namespace.c
+index f5e8828..0d5c298 100644
+--- a/kernel/cgroup/namespace.c
++++ b/kernel/cgroup/namespace.c
+@@ -24,7 +24,7 @@ static struct cgroup_namespace *alloc_cgroup_ns(void)
+ 	struct cgroup_namespace *new_ns;
+ 	int ret;
+ 
+-	new_ns = kzalloc(sizeof(struct cgroup_namespace), GFP_KERNEL);
++	new_ns = kzalloc(sizeof(struct cgroup_namespace), GFP_KERNEL_ACCOUNT);
+ 	if (!new_ns)
+ 		return ERR_PTR(-ENOMEM);
+ 	ret = ns_alloc_inum(&new_ns->ns);
+diff --git a/kernel/nsproxy.c b/kernel/nsproxy.c
+index abc01fc..eec72ca 100644
+--- a/kernel/nsproxy.c
++++ b/kernel/nsproxy.c
+@@ -568,6 +568,6 @@ static void commit_nsset(struct nsset *nsset)
+ 
+ int __init nsproxy_cache_init(void)
+ {
+-	nsproxy_cachep = KMEM_CACHE(nsproxy, SLAB_PANIC);
++	nsproxy_cachep = KMEM_CACHE(nsproxy, SLAB_PANIC|SLAB_ACCOUNT);
+ 	return 0;
+ }
+diff --git a/kernel/pid_namespace.c b/kernel/pid_namespace.c
+index ca43239..6cd6715 100644
+--- a/kernel/pid_namespace.c
++++ b/kernel/pid_namespace.c
+@@ -449,7 +449,7 @@ static struct user_namespace *pidns_owner(struct ns_common *ns)
+ 
+ static __init int pid_namespaces_init(void)
+ {
+-	pid_ns_cachep = KMEM_CACHE(pid_namespace, SLAB_PANIC);
++	pid_ns_cachep = KMEM_CACHE(pid_namespace, SLAB_PANIC | SLAB_ACCOUNT);
+ 
+ #ifdef CONFIG_CHECKPOINT_RESTORE
+ 	register_sysctl_paths(kern_path, pid_ns_ctl_table);
+diff --git a/kernel/time/namespace.c b/kernel/time/namespace.c
+index 12eab0d..aec8328 100644
+--- a/kernel/time/namespace.c
++++ b/kernel/time/namespace.c
+@@ -88,13 +88,13 @@ static struct time_namespace *clone_time_ns(struct user_namespace *user_ns,
+ 		goto fail;
+ 
+ 	err = -ENOMEM;
+-	ns = kmalloc(sizeof(*ns), GFP_KERNEL);
++	ns = kmalloc(sizeof(*ns), GFP_KERNEL_ACCOUNT);
+ 	if (!ns)
+ 		goto fail_dec;
+ 
+ 	refcount_set(&ns->ns.count, 1);
+ 
+-	ns->vvar_page = alloc_page(GFP_KERNEL | __GFP_ZERO);
++	ns->vvar_page = alloc_page(GFP_KERNEL_ACCOUNT | __GFP_ZERO);
+ 	if (!ns->vvar_page)
+ 		goto fail_free;
+ 
+diff --git a/kernel/user_namespace.c b/kernel/user_namespace.c
+index ef82d40..6b2e3ca 100644
+--- a/kernel/user_namespace.c
++++ b/kernel/user_namespace.c
+@@ -1385,7 +1385,7 @@ static struct user_namespace *userns_owner(struct ns_common *ns)
+ 
+ static __init int user_namespaces_init(void)
+ {
+-	user_ns_cachep = KMEM_CACHE(user_namespace, SLAB_PANIC);
++	user_ns_cachep = KMEM_CACHE(user_namespace, SLAB_PANIC | SLAB_ACCOUNT);
+ 	return 0;
+ }
+ subsys_initcall(user_namespaces_init);
 -- 
 1.8.3.1
 
