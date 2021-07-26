@@ -1,44 +1,43 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 2/9] cgroup/cpuset: Fix a partition bug with hotplug
-Date: Mon, 26 Jul 2021 12:59:54 -1000
-Message-ID: <YP8+ajTnvrha+0O6@mtj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 3/9] cgroup/cpuset: Fix violation of cpuset locking
+ rule
+Date: Mon, 26 Jul 2021 13:10:16 -1000
+Message-ID: <YP9A2Im5r30s58g1@slm.duckdns.org>
 References: <20210720141834.10624-1-longman@redhat.com>
- <20210720141834.10624-3-longman@redhat.com>
+ <20210720141834.10624-4-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=IgP1YWplDp3/09cvQQ0d2eAW1JPxMRhx9Jd4cef5V3E=;
-        b=eQAl1RXPI6I/QPb5dmHK3sSJfrW/33/Xd+Kq+ZHhRC+jWg/KgNZOApZ/JQhK/b4tcM
-         f1qBS4uW84HHhnxyahQnwsnOk6TeV1HVmF0yO6oZ898KgpEahR5N+sdrg+X1+VfFCl0K
-         qwC+oGx/hc4Ck8IVbvOMLHUMwUeIXgYaFT+Oj+zLZblC7w0Y6qY1rgcMgZq4uzSLRKTW
-         +awoE5DdCCWXlu137dLx92EfC9UDM3iU0vEUXbRGBxKjwCmO1pt/lsISLS2SSKvf5sYx
-         0I3neM8nIcFOXM3f1BOqwuSINJnC+K0ue18tjWWsOWYzDdX7vRJXkfsSFZ4ZrwcVQgCb
-         1iwQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=lGwxyaND0AFp6xjSOU+CS8ALMUm6RpLJV/rJQAwgaMY=;
+        b=FI4linOnbFeTgynUKUdl3/vUVKX3cRbtNpKAnixhYKJ47quOI03wHetguN2dJW9MN9
+         2RNaBEc+FSEEv7qPVV3tL+r9OpkNZydEbR3oxv/QFVRDpbvAbZQPnIo5fKdZXbgpAdUJ
+         jCsYwZKodRp6pEDf74/79+8VeQsw/Wguz1O0u/oIVopDTLYKhhBZkS8bR4BKklZ/lfkN
+         2xz3FyahK53ItsEWRnDlEiasq96F4I2mdQE0JPDW3BDoW6+CnxDuj3qOyZ63prmF7pPG
+         1peP2KLMKD6Zk1GhKeKwe5eOg+WmVBSNuUZqfLL0sQ11OX33McU/Tajd8kut5ZQqId/o
+         2qlA==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20210720141834.10624-3-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20210720141834.10624-4-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+To: Waiman Long <longman@redhat.com>
+Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
 
-On Tue, Jul 20, 2021 at 10:18:27AM -0400, Waiman Long wrote:
-> In cpuset_hotplug_workfn(), the detection of whether the cpu list
-> has been changed is done by comparing the effective cpus of the top
-> cpuset with the cpu_active_mask. However, in the rare case that just
-> all the CPUs in the subparts_cpus are offlined, the detection fails
-> and the partition states are not updated correctly. Fix it by forcing
-> the cpus_updated flag to true in this particular case.
+On Tue, Jul 20, 2021 at 10:18:28AM -0400, Waiman Long wrote:
+> The cpuset fields that manage partition root state do not strictly
+> follow the cpuset locking rule that update to cpuset has to be done
+> with both the callback_lock and cpuset_mutex held. This is now fixed
+> by making sure that the locking rule is upheld.
 > 
-> Fixes: 4b842da276a8 ("cpuset: Make CPU hotplug work with partition")
-> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Fixes: 3881b86128d0 ("cpuset: Add an error state to cpuset.sched.partition")
+> Fixes: 4b842da276a8 ("cpuset: Make CPU hotplug work with partition)
+> Signed-off-by: Waiman Long <longman@redhat.com>
 
-Applied to cgroup/for-5.15 w/ a minor update to the comment (I dropped
-"just" before "all". It read weird to me.)
+Applied to cgroup/for-5.15.
 
 Thanks.
 
