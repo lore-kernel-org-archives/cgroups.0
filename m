@@ -1,8 +1,7 @@
 From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH v6 05/16] memcg: ipv6/sit: account and don't WARN on
- ip_tunnel_prl structs allocation
-Date: Mon, 26 Jul 2021 22:00:31 +0300
-Message-ID: <52f7bed9-a0a1-24ff-2305-ef3224fa4c67@virtuozzo.com>
+Subject: [PATCH v6 04/16] memcg: enable accounting for VLAN group array
+Date: Mon, 26 Jul 2021 22:00:24 +0300
+Message-ID: <787536ed-6257-ac73-0ccc-c487f776671b@virtuozzo.com>
 References: <9bf9d9bd-03b1-2adb-17b4-5d59a86a9394@virtuozzo.com>
  <cover.1627321321.git.vvs@virtuozzo.com>
 Mime-Version: 1.0
@@ -10,52 +9,39 @@ Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
-        :From; bh=AZePevufwLfIw+HZXFzYrAu9HJFcrBqN7a5eGmS+F6o=; b=OCYnI1D+kIDAM3W3PkD
-        UygoUhUyuAeVsJ+M3NO3XVRFyjGx+ilOH9LQeObbypVFBER+S7/iCrRqQXjbn1ITehS0p5L+cZhhn
-        qp58uUnx8BMfOzhw6DfHe2XmQbjVbv09PzygHK/S93ZiJMv1TjcB0dus+NukMXTAr8X8iUjea48=;
+        :From; bh=w+0FNs53pgnmzx96zi7TBJAdHiw/aP1PrzGmhZUmSkE=; b=kMRAY6JBbUXgmAw9dOW
+        EYTUeFdnFpc6mIFKMIiT1BHbhnGqcvbMvhv4GcELknYw+UTxIxAo69Ha9jPl3hEosozXHCSDRTvXS
+        Xg1U2IMvsUJ4aZoLEr3f7GlZG8Q0jwdJvb4qMKByFG4H0BZ7TvRZWIRvaP58qknKqpeg+IaEMuQ=;
 In-Reply-To: <cover.1627321321.git.vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hideaki YOSHIFUJI <yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org>, David Ahern <dsahern-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Author: Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+vlan array consume up to 8 pages of memory per net device.
 
-The size of the ip_tunnel_prl structs allocation is controllable from
-user-space, thus it's better to avoid spam in dmesg if allocation failed.
-Also add __GFP_ACCOUNT as this is a good candidate for per-memcg
-accounting. Allocation is temporary and limited by 4GB.
+It makes sense to account for them to restrict the host's memory
+consumption from inside the memcg-limited container.
 
-Signed-off-by: Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 ---
- net/ipv6/sit.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ net/8021q/vlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/ipv6/sit.c b/net/ipv6/sit.c
-index df5bea8..33adc12 100644
---- a/net/ipv6/sit.c
-+++ b/net/ipv6/sit.c
-@@ -321,7 +321,7 @@ static int ipip6_tunnel_get_prl(struct net_device *dev, struct ifreq *ifr)
- 	 * we try harder to allocate.
- 	 */
- 	kp = (cmax <= 1 || capable(CAP_NET_ADMIN)) ?
--		kcalloc(cmax, sizeof(*kp), GFP_KERNEL | __GFP_NOWARN) :
-+		kcalloc(cmax, sizeof(*kp), GFP_KERNEL_ACCOUNT | __GFP_NOWARN) :
- 		NULL;
+diff --git a/net/8021q/vlan.c b/net/8021q/vlan.c
+index 4cdf841..55275ef 100644
+--- a/net/8021q/vlan.c
++++ b/net/8021q/vlan.c
+@@ -67,7 +67,7 @@ static int vlan_group_prealloc_vid(struct vlan_group *vg,
+ 		return 0;
  
- 	rcu_read_lock();
-@@ -334,7 +334,8 @@ static int ipip6_tunnel_get_prl(struct net_device *dev, struct ifreq *ifr)
- 		 * For root users, retry allocating enough memory for
- 		 * the answer.
- 		 */
--		kp = kcalloc(ca, sizeof(*kp), GFP_ATOMIC);
-+		kp = kcalloc(ca, sizeof(*kp), GFP_ATOMIC | __GFP_ACCOUNT |
-+					      __GFP_NOWARN);
- 		if (!kp) {
- 			ret = -ENOMEM;
- 			goto out;
+ 	size = sizeof(struct net_device *) * VLAN_GROUP_ARRAY_PART_LEN;
+-	array = kzalloc(size, GFP_KERNEL);
++	array = kzalloc(size, GFP_KERNEL_ACCOUNT);
+ 	if (array == NULL)
+ 		return -ENOBUFS;
+ 
 -- 
 1.8.3.1
 
