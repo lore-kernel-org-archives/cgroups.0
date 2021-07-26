@@ -1,41 +1,70 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] memcg: replace in_interrupt() by !in_task() in active_memcg()
-Date: Mon, 26 Jul 2021 09:57:15 -0700
-Message-ID: <CALvZod5Vj-_S2gRYpGgwhiCysXuA8z1WEV2ttP0t3Tdy2MU7KQ@mail.gmail.com>
-References: <CALvZod5-XtaeawPtEgnp9xwouy0KfuDbpykB6Z3b+8YJyCrLVA@mail.gmail.com>
- <ed4448b0-4970-616f-7368-ef9dd3cb628d@virtuozzo.com>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: [PATCH v6 01/16] memcg: enable accounting for net_device and Tx/Rx
+ queues
+Date: Mon, 26 Jul 2021 21:59:59 +0300
+Message-ID: <d6a9a9f6-0221-01ab-991b-baeeca2bae3d@virtuozzo.com>
+References: <9bf9d9bd-03b1-2adb-17b4-5d59a86a9394@virtuozzo.com>
+ <cover.1627321321.git.vvs@virtuozzo.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=4CjU2RsYvZ9x+m1FosmYIR8QGbXd8bRq67CFAxCYneo=;
-        b=KE/UnX3ML3Xw/5e0wwlWbS/xgPSyv+N4V3ynbBhw+BEqgokKCdDHOAQhI2EC4em4FI
-         cF66Zk05KBdsDmPSV049y02ENoBdBIMLG4JuUL2hXcmObOgnJ+De8vRbYqHytF8iNP4t
-         sc/n9LmbTDHqiyzZI4oM96x5N3DbQsNV71w1NIcbajXRmFKqfDUx/qyexNcykqgooXDb
-         VWGTrDPpa96AfCN0BPcHQo1ZHj7ILA7C8IZgGhGDMDPa/PAjuJIAAzwEwgYZDhJmYbQf
-         QrZsjEpOLvAXRhLTggf9OOBrPFb+jgt+OJKMdnoh81XeQppUTCOTYevElzQAK8t3lWnx
-         MeXg==
-In-Reply-To: <ed4448b0-4970-616f-7368-ef9dd3cb628d-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
+        :From; bh=8P40NsonrJJoThIMYsgSj+KWYiu8Ty9alqCjBkD7j5A=; b=t/Wbc2X6e4hgS6K/esz
+        rDRgLQP+44k4Ks3i8TtCrVRYU0P5ktfE/Yc9vT6+0wqF0ZgziueAylfctEJXEJvxTYDVK6qwyZWGr
+        OMPEvv8HrnQmso/PYifm+LD7dFR5AaihJ3yStFxz04OgrrZhdYz3eTA1welGVASrj7qsH60MVsE=;
+In-Reply-To: <cover.1627321321.git.vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Jul 26, 2021 at 9:53 AM Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
->
-> set_active_memcg() uses in_interrupt() check to select proper storage for
-> cgroup: pointer on task struct or per-cpu pointer.
->
-> It isn't fully correct: obsoleted in_interrupt() includes tasks with disabled BH.
-> It's better to use '!in_task()' instead.
->
-> Link: https://lkml.org/lkml/2021/7/26/487
-> Fixes: 37d5985c003d ("mm: kmem: prepare remote memcg charging infra for interrupt contexts")
-> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Container netadmin can create a lot of fake net devices,
+then create a new net namespace and repeat it again and again.
+Net device can request the creation of up to 4096 tx and rx queues,
+and force kernel to allocate up to several tens of megabytes memory
+per net device.
 
-Thanks.
+It makes sense to account for them to restrict the host's memory
+consumption from inside the memcg-limited container.
 
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+---
+ net/core/dev.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/net/core/dev.c b/net/core/dev.c
+index c253c2a..e9aa1e4 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -10100,7 +10100,7 @@ static int netif_alloc_rx_queues(struct net_device *dev)
+ 
+ 	BUG_ON(count < 1);
+ 
+-	rx = kvzalloc(sz, GFP_KERNEL | __GFP_RETRY_MAYFAIL);
++	rx = kvzalloc(sz, GFP_KERNEL_ACCOUNT | __GFP_RETRY_MAYFAIL);
+ 	if (!rx)
+ 		return -ENOMEM;
+ 
+@@ -10167,7 +10167,7 @@ static int netif_alloc_netdev_queues(struct net_device *dev)
+ 	if (count < 1 || count > 0xffff)
+ 		return -EINVAL;
+ 
+-	tx = kvzalloc(sz, GFP_KERNEL | __GFP_RETRY_MAYFAIL);
++	tx = kvzalloc(sz, GFP_KERNEL_ACCOUNT | __GFP_RETRY_MAYFAIL);
+ 	if (!tx)
+ 		return -ENOMEM;
+ 
+@@ -10807,7 +10807,7 @@ struct net_device *alloc_netdev_mqs(int sizeof_priv, const char *name,
+ 	/* ensure 32-byte alignment of whole construct */
+ 	alloc_size += NETDEV_ALIGN - 1;
+ 
+-	p = kvzalloc(alloc_size, GFP_KERNEL | __GFP_RETRY_MAYFAIL);
++	p = kvzalloc(alloc_size, GFP_KERNEL_ACCOUNT | __GFP_RETRY_MAYFAIL);
+ 	if (!p)
+ 		return NULL;
+ 
+-- 
+1.8.3.1
+
