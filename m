@@ -1,100 +1,50 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH] mm: memcontrol: fix blocking rstat function called from
- atomic cgroup1 thresholding code
-Date: Mon, 26 Jul 2021 22:32:13 +0200
-Message-ID: <YP8bzZJjbpEvi4lM@dhcp22.suse.cz>
-References: <20210726150019.251820-1-hannes@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC PATCH v2 1/3] misc_cgroup: add support for nofile limit
+Date: Mon, 26 Jul 2021 11:27:25 -1000
+Message-ID: <YP8ovYqISzKC43mt@mtj.duckdns.org>
+References: <3fd94563b4949ffbfe10e7d18ac1df3852b103a6.1626966339.git.brookxu@tencent.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1627331533; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=h1InytiqltbBeRvMKPBphtrY6Ob9lOFDHLgd355e0lw=;
-        b=Y+mHHknOk99m7yJUgdSM5w83k9ExylQF2+4ZNqL1wg3DESl5c2D3s+qV5VQAzOWb8Md9mS
-        5RJYWYlrNfSKhXKmU7ZS4nvOqkc1/I3hd8+qup/HI3EtM9M7IYrzDcZ9Ku39xsETH9wyi5
-        U7y6K9kU6Wu9CYIAOUQQROR33Rvg7SY=
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=JSRAHigjjv7jacJe2YWp7PNC+/ka4N08e26oEa0Aa9k=;
+        b=vO1nimpqJXQrBZ4leSkrJbZ3YGN9W/wrYuISF3NMXbsvyu5WBRTVBPLgzSDPtziFHY
+         65H0a01M7/XYZIgfxU4uK5mASWykWuPkZIBEVwxcNMsv33oYcbdpH3X/UEtBtxUBhHJ7
+         KCiab6cMLIKyWwQv0u2adMUb3CABoGTf+7ucPvDa/5XAuRNrmBYhU9+Mu8oLct4KPSz5
+         RyprRMzzHcB3avW1LFbxYoOEZPohajO1dR+/6UyfW4blYyGEKH41gU0Mcnuuv9TrlVDr
+         yBkxT/UlBlptW8ZUfLXkjm5GpEWbBRfR3OCKYfmlOZHD7KBhURnkzjlm1hGSlBALOSK2
+         mMxA==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20210726150019.251820-1-hannes@cmpxchg.org>
+In-Reply-To: <3fd94563b4949ffbfe10e7d18ac1df3852b103a6.1626966339.git.brookxu@tencent.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dan Carpenter <dan.carpenter@oracle.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: brookxu <brookxu.cn@gmail.com>
+Cc: viro@zeniv.linux.org.uk, lizefan.x@bytedance.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Mon 26-07-21 11:00:19, Johannes Weiner wrote:
-> Dan Carpenter reports:
+On Thu, Jul 22, 2021 at 11:20:17PM +0800, brookxu wrote:
+> From: Chunguang Xu <brookxu@tencent.com>
 > 
->     The patch 2d146aa3aa84: "mm: memcontrol: switch to rstat" from Apr
->     29, 2021, leads to the following static checker warning:
+> Since the global open files are limited, in order to avoid the
+> abnormal behavior of some containers from generating too many
+> files, causing other containers to be unavailable, we need to
+> limit the open files of some containers.
 > 
-> 	    kernel/cgroup/rstat.c:200 cgroup_rstat_flush()
-> 	    warn: sleeping in atomic context
+> v2: fix compile error while CONFIG_CGROUP_MISC not set.
 > 
->     mm/memcontrol.c
->       3572  static unsigned long mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
->       3573  {
->       3574          unsigned long val;
->       3575
->       3576          if (mem_cgroup_is_root(memcg)) {
->       3577                  cgroup_rstat_flush(memcg->css.cgroup);
-> 			    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> 
->     This is from static analysis and potentially a false positive.  The
->     problem is that mem_cgroup_usage() is called from __mem_cgroup_threshold()
->     which holds an rcu_read_lock().  And the cgroup_rstat_flush() function
->     can sleep.
-> 
->       3578                  val = memcg_page_state(memcg, NR_FILE_PAGES) +
->       3579                          memcg_page_state(memcg, NR_ANON_MAPPED);
->       3580                  if (swap)
->       3581                          val += memcg_page_state(memcg, MEMCG_SWAP);
->       3582          } else {
->       3583                  if (!swap)
->       3584                          val = page_counter_read(&memcg->memory);
->       3585                  else
->       3586                          val = page_counter_read(&memcg->memsw);
->       3587          }
->       3588          return val;
->       3589  }
-> 
-> __mem_cgroup_threshold() indeed holds the rcu lock. In addition, the
-> thresholding code is invoked during stat changes, and those contexts
-> have irqs disabled as well. If the lock breaking occurs inside the
-> flush function, it will result in a sleep from an atomic context.
-> 
-> Use the irsafe flushing variant in mem_cgroup_usage() to fix this.
-> 
-> Fixes: 2d146aa3aa84 ("mm: memcontrol: switch to rstat")
-> Cc: <stable@vger.kernel.org>
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+> Reported-by: kernel test robot <lkp@intel.com>
 
-Acked-by: Michal Hocko <mhocko@suse.com>
+This is different from pid in that there's no actual limit on how many open
+files there can be in the system other than the total amount of available
+memory. I don't see why this would need a separate limit outside of memory
+control. A couple machines I looked at all have file-max at LONG_MAX by
+default too.
 
-Thanks!
-
-> ---
->  mm/memcontrol.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index ae1f5d0cb581..eb8e87c4833f 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3574,7 +3574,8 @@ static unsigned long mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
->  	unsigned long val;
->  
->  	if (mem_cgroup_is_root(memcg)) {
-> -		cgroup_rstat_flush(memcg->css.cgroup);
-> +		/* mem_cgroup_threshold() calls here from irqsafe context */
-> +		cgroup_rstat_flush_irqsafe(memcg->css.cgroup);
->  		val = memcg_page_state(memcg, NR_FILE_PAGES) +
->  			memcg_page_state(memcg, NR_ANON_MAPPED);
->  		if (swap)
-> -- 
-> 2.32.0
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
