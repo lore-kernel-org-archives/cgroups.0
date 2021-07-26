@@ -1,141 +1,176 @@
-From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH v6 00/16] memcg accounting from
-Date: Mon, 26 Jul 2021 21:59:50 +0300
-Message-ID: <fdb0666c-7b8e-2062-64f4-5bef64fad950@virtuozzo.com>
+From: Vasily Averin <vvs@virtuozzo.com>
+Subject: [PATCH v6 02/16] memcg: enable accounting for IP address and
+ routing-related objects
+Date: Mon, 26 Jul 2021 22:00:06 +0300
+Message-ID: <3f1754de-0abd-d480-8d23-c03469ca072e@virtuozzo.com>
 References: <9bf9d9bd-03b1-2adb-17b4-5d59a86a9394@virtuozzo.com>
+ <cover.1627321321.git.vvs@virtuozzo.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
-        :From; bh=5XFSElUrOZDeTuKGIjSnCaBMhYwoHcz5EFl80elmmrw=; b=lXHNrmmdIC8BXBnDSdy
-        +8P4RvrciekPa4qGJt8F7JVRzrigpjxGQAGA8UZQj4on3626C5bFyarmd2WLfG2ssAkz3K94hFTvT
-        +qNoVDJF/0G++tQIVsbhXo3ou7sfKGQ9hmwCu3NmSnslv11Dbj4Dbzlfnow/MQJZAgA/YonkuuA=;
-In-Reply-To: <9bf9d9bd-03b1-2adb-17b4-5d59a86a9394-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+        :From; bh=Mmyov/gGbqGKw7raDVRA7gmUoQ0+HKnkbSQKhbmo2a0=; b=BcoP0TsVgn7sQK+GAfX
+        l06/xEY10rF6nb4u8PIkU99hqVQaktpHXV9skZOCSEDXyuCwtGXJq49jQ9ptZop4TJu30fr8Gb2rv
+        ytornZ/BC8yPb8NkcmDfZcHwOZHJPOxI3pST7mFJv/3uI9qKRZz4e5ZNEgT2hkJ7ENAu8hj2XjA=;
+In-Reply-To: <cover.1627321321.git.vvs@virtuozzo.com>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrei Vagin <avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, David Ahern <dsahern-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Dmitry Safonov <0x7f454c46-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, Greg Kroah-Hartman <gregkh@linuxfoundation>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: cgroups@vger.kernel.org, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, David Ahern <dsahern@kernel.org>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org
 
-OpenVZ uses memory accounting 20+ years since v2.2.x linux kernels. 
-Initially we used our own accounting subsystem, then partially committed
-it to upstream, and a few years ago switched to cgroups v1.
-Now we're rebasing again, revising our old patches and trying to push
-them upstream.
+An netadmin inside container can use 'ip a a' and 'ip r a'
+to assign a large number of ipv4/ipv6 addresses and routing entries
+and force kernel to allocate megabytes of unaccounted memory
+for long-lived per-netdevice related kernel objects:
+'struct in_ifaddr', 'struct inet6_ifaddr', 'struct fib6_node',
+'struct rt6_info', 'struct fib_rules' and ip_fib caches.
 
-We try to protect the host system from any misuse of kernel memory 
-allocation triggered by untrusted users inside the containers.
+These objects can be manually removed, though usually they lives
+in memory till destroy of its net namespace.
 
-Patch-set is addressed mostly to cgroups maintainers and cgroups@ mailing
-list, though I would be very grateful for any comments from maintainersi
-of affected subsystems or other people added in cc:
+It makes sense to account for them to restrict the host's memory
+consumption from inside the memcg-limited container.
 
-Compared to the upstream, we additionally account the following kernel objects:
-- network devices and its Tx/Rx queues
-- ipv4/v6 addresses and routing-related objects
-- inet_bind_bucket cache objects
-- VLAN group arrays
-- ipv6/sit: ip_tunnel_prl
-- scm_fp_list objects used by SCM_RIGHTS messages of Unix sockets 
-- nsproxy and namespace objects itself
-- IPC objects: semaphores, message queues and share memory segments
-- mounts
-- pollfd and select bits arrays
-- signals and posix timers
-- file lock
-- fasync_struct used by the file lease code and driver's fasync queues 
-- tty objects
-- per-mm LDT
+One of such objects is the 'struct fib6_node' mostly allocated in
+net/ipv6/route.c::__ip6_ins_rt() inside the lock_bh()/unlock_bh() section:
 
-We have an incorrect/incomplete/obsoleted accounting for few other kernel
-objects: sk_filter, af_packets, netlink and xt_counters for iptables.
-They require rework and probably will be dropped at all.
+ write_lock_bh(&table->tb6_lock);
+ err = fib6_add(&table->tb6_root, rt, info, mxc);
+ write_unlock_bh(&table->tb6_lock);
 
-Also we're going to add an accounting for nft, however it is not ready yet.
+In this case it is not enough to simply add SLAB_ACCOUNT to corresponding
+kmem cache. The proper memory cgroup still cannot be found due to the
+incorrect 'in_interrupt()' check used in memcg_kmem_bypass().
 
-We have not tested performance on upstream, however, our performance team
-compares our current RHEL7-based production kernel and reports that
-they are at least not worse as the according original RHEL7 kernel.
+Obsoleted in_interrupt() does not describe real execution context properly.
+From include/linux/preempt.h:
 
-v6:
-- improved description of "memcg: enable accounting for signals"
-  according to Eric Biderman's wishes
-- added Reviewed-by tag from Shakeel Butt on the same patch
+ The following macros are deprecated and should not be used in new code:
+ in_interrupt()	- We're in NMI,IRQ,SoftIRQ context or have BH disabled
 
-v5:
-- rebased to v5.14-rc1
-- updated ack tags
+To verify the current execution context new macro should be used instead:
+ in_task()	- We're in task context
 
-v4:
-- improved description for tty patch
-- minor cleanup in LDT patch
-- rebased to v5.12
-- resent to lkml@
+Signed-off-by: Vasily Averin <vvs@virtuozzo.com>
+---
+ mm/memcontrol.c      | 2 +-
+ net/core/fib_rules.c | 4 ++--
+ net/ipv4/devinet.c   | 2 +-
+ net/ipv4/fib_trie.c  | 4 ++--
+ net/ipv6/addrconf.c  | 2 +-
+ net/ipv6/ip6_fib.c   | 4 ++--
+ net/ipv6/route.c     | 2 +-
+ 7 files changed, 10 insertions(+), 10 deletions(-)
 
-v3:
-- added new patches for other kind of accounted objects
-- combined patches for ip address/routing-related objects
-- improved description
-- re-ordered and rebased for linux 5.12-rc8
-
-v2:
-- squashed old patch 1 "accounting for allocations called with disabled BH"
-   with old patch 2 "accounting for fib6_nodes cache" used such kind of memory allocation 
-- improved patch description
-- subsystem maintainers added to cc:
-
-Vasily Averin (16):
-  memcg: enable accounting for net_device and Tx/Rx queues
-  memcg: enable accounting for IP address and routing-related objects
-  memcg: enable accounting for inet_bin_bucket cache
-  memcg: enable accounting for VLAN group array
-  memcg: ipv6/sit: account and don't WARN on ip_tunnel_prl structs
-    allocation
-  memcg: enable accounting for scm_fp_list objects
-  memcg: enable accounting for mnt_cache entries
-  memcg: enable accounting for pollfd and select bits arrays
-  memcg: enable accounting for file lock caches
-  memcg: enable accounting for fasync_cache
-  memcg: enable accounting for new namesapces and struct nsproxy
-  memcg: enable accounting of ipc resources
-  memcg: enable accounting for signals
-  memcg: enable accounting for posix_timers_cache slab
-  memcg: enable accounting for tty-related objects
-  memcg: enable accounting for ldt_struct objects
-
- arch/x86/kernel/ldt.c      | 6 +++---
- drivers/tty/tty_io.c       | 4 ++--
- fs/fcntl.c                 | 3 ++-
- fs/locks.c                 | 6 ++++--
- fs/namespace.c             | 7 ++++---
- fs/select.c                | 4 ++--
- ipc/msg.c                  | 2 +-
- ipc/namespace.c            | 2 +-
- ipc/sem.c                  | 9 +++++----
- ipc/shm.c                  | 2 +-
- kernel/cgroup/namespace.c  | 2 +-
- kernel/nsproxy.c           | 2 +-
- kernel/pid_namespace.c     | 2 +-
- kernel/signal.c            | 2 +-
- kernel/time/namespace.c    | 4 ++--
- kernel/time/posix-timers.c | 4 ++--
- kernel/user_namespace.c    | 2 +-
- mm/memcontrol.c            | 2 +-
- net/8021q/vlan.c           | 2 +-
- net/core/dev.c             | 6 +++---
- net/core/fib_rules.c       | 4 ++--
- net/core/scm.c             | 4 ++--
- net/dccp/proto.c           | 2 +-
- net/ipv4/devinet.c         | 2 +-
- net/ipv4/fib_trie.c        | 4 ++--
- net/ipv4/tcp.c             | 4 +++-
- net/ipv6/addrconf.c        | 2 +-
- net/ipv6/ip6_fib.c         | 4 ++--
- net/ipv6/route.c           | 2 +-
- net/ipv6/sit.c             | 5 +++--
- 30 files changed, 57 insertions(+), 49 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ae1f5d0..1bbf239 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -968,7 +968,7 @@ static __always_inline bool memcg_kmem_bypass(void)
+ 		return false;
+ 
+ 	/* Memcg to charge can't be determined. */
+-	if (in_interrupt() || !current->mm || (current->flags & PF_KTHREAD))
++	if (!in_task() || !current->mm || (current->flags & PF_KTHREAD))
+ 		return true;
+ 
+ 	return false;
+diff --git a/net/core/fib_rules.c b/net/core/fib_rules.c
+index a9f9379..79df7cd 100644
+--- a/net/core/fib_rules.c
++++ b/net/core/fib_rules.c
+@@ -57,7 +57,7 @@ int fib_default_rule_add(struct fib_rules_ops *ops,
+ {
+ 	struct fib_rule *r;
+ 
+-	r = kzalloc(ops->rule_size, GFP_KERNEL);
++	r = kzalloc(ops->rule_size, GFP_KERNEL_ACCOUNT);
+ 	if (r == NULL)
+ 		return -ENOMEM;
+ 
+@@ -541,7 +541,7 @@ static int fib_nl2rule(struct sk_buff *skb, struct nlmsghdr *nlh,
+ 			goto errout;
+ 	}
+ 
+-	nlrule = kzalloc(ops->rule_size, GFP_KERNEL);
++	nlrule = kzalloc(ops->rule_size, GFP_KERNEL_ACCOUNT);
+ 	if (!nlrule) {
+ 		err = -ENOMEM;
+ 		goto errout;
+diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
+index 73721a4..d38124b 100644
+--- a/net/ipv4/devinet.c
++++ b/net/ipv4/devinet.c
+@@ -215,7 +215,7 @@ static void devinet_sysctl_unregister(struct in_device *idev)
+ 
+ static struct in_ifaddr *inet_alloc_ifa(void)
+ {
+-	return kzalloc(sizeof(struct in_ifaddr), GFP_KERNEL);
++	return kzalloc(sizeof(struct in_ifaddr), GFP_KERNEL_ACCOUNT);
+ }
+ 
+ static void inet_rcu_free_ifa(struct rcu_head *head)
+diff --git a/net/ipv4/fib_trie.c b/net/ipv4/fib_trie.c
+index 25cf387..8060524 100644
+--- a/net/ipv4/fib_trie.c
++++ b/net/ipv4/fib_trie.c
+@@ -2380,11 +2380,11 @@ void __init fib_trie_init(void)
+ {
+ 	fn_alias_kmem = kmem_cache_create("ip_fib_alias",
+ 					  sizeof(struct fib_alias),
+-					  0, SLAB_PANIC, NULL);
++					  0, SLAB_PANIC | SLAB_ACCOUNT, NULL);
+ 
+ 	trie_leaf_kmem = kmem_cache_create("ip_fib_trie",
+ 					   LEAF_SIZE,
+-					   0, SLAB_PANIC, NULL);
++					   0, SLAB_PANIC | SLAB_ACCOUNT, NULL);
+ }
+ 
+ struct fib_table *fib_trie_table(u32 id, struct fib_table *alias)
+diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
+index 3bf685f..8eaeade 100644
+--- a/net/ipv6/addrconf.c
++++ b/net/ipv6/addrconf.c
+@@ -1080,7 +1080,7 @@ static int ipv6_add_addr_hash(struct net_device *dev, struct inet6_ifaddr *ifa)
+ 			goto out;
+ 	}
+ 
+-	ifa = kzalloc(sizeof(*ifa), gfp_flags);
++	ifa = kzalloc(sizeof(*ifa), gfp_flags | __GFP_ACCOUNT);
+ 	if (!ifa) {
+ 		err = -ENOBUFS;
+ 		goto out;
+diff --git a/net/ipv6/ip6_fib.c b/net/ipv6/ip6_fib.c
+index 2d650dc..a8f118e 100644
+--- a/net/ipv6/ip6_fib.c
++++ b/net/ipv6/ip6_fib.c
+@@ -2449,8 +2449,8 @@ int __init fib6_init(void)
+ 	int ret = -ENOMEM;
+ 
+ 	fib6_node_kmem = kmem_cache_create("fib6_nodes",
+-					   sizeof(struct fib6_node),
+-					   0, SLAB_HWCACHE_ALIGN,
++					   sizeof(struct fib6_node), 0,
++					   SLAB_HWCACHE_ALIGN | SLAB_ACCOUNT,
+ 					   NULL);
+ 	if (!fib6_node_kmem)
+ 		goto out;
+diff --git a/net/ipv6/route.c b/net/ipv6/route.c
+index 7b756a7..5f7286a 100644
+--- a/net/ipv6/route.c
++++ b/net/ipv6/route.c
+@@ -6638,7 +6638,7 @@ int __init ip6_route_init(void)
+ 	ret = -ENOMEM;
+ 	ip6_dst_ops_template.kmem_cachep =
+ 		kmem_cache_create("ip6_dst_cache", sizeof(struct rt6_info), 0,
+-				  SLAB_HWCACHE_ALIGN, NULL);
++				  SLAB_HWCACHE_ALIGN | SLAB_ACCOUNT, NULL);
+ 	if (!ip6_dst_ops_template.kmem_cachep)
+ 		goto out;
+ 
 -- 
 1.8.3.1
 
