@@ -1,7 +1,7 @@
 From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH v6 15/16] memcg: enable accounting for tty-related objects
-Date: Mon, 26 Jul 2021 22:01:47 +0300
-Message-ID: <15860ed1-2c2a-b667-da07-6e54029167eb@virtuozzo.com>
+Subject: [PATCH v6 12/16] memcg: enable accounting of ipc resources
+Date: Mon, 26 Jul 2021 22:01:19 +0300
+Message-ID: <f486ea26-0baa-c1d5-2f75-a23bd1ca1274@virtuozzo.com>
 References: <9bf9d9bd-03b1-2adb-17b4-5d59a86a9394@virtuozzo.com>
  <cover.1627321321.git.vvs@virtuozzo.com>
 Mime-Version: 1.0
@@ -9,65 +9,98 @@ Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
-        :From; bh=fzoFoDaPrywkHjs/msWPtHPRzT9tQ7zWHa/Zk4Ahhwk=; b=E0d60kxWZKRomOGRI9M
-        rsXEypCV6Lr4pFI9fwHEqT0+83v80Jz8pq/6+qEPa/zhQw/7uWVfvjWUZREuT2aVCO7hiNWGg2ywN
-        35XrW9Yk1+Do+X/qd1KOcBj5mODHVwvqUwqlG/FkXcPWtY9ZmF9FZsljgKQNEQXQ5/cF4Tm0zjk=;
+        :From; bh=Ccnjp3FPBm3dwMYx93pYsjJGsGokrnefzYE+aVs2CiQ=; b=Vq1L9YM4JDzl1lIxp9s
+        5JWpkJUeE1caHCsV1AboRg34E9mPN7kK0/xDrU33UMV+kgSYAOdnvuoF0TAcZhqRUlja901L4sSke
+        DrtK50SoaiZzxLRpOwTkTm9WmAvYRVCXAK5RYxFCi7a4C/4fLddqeDI4meNr/dnELdzXVzqt3hE=;
 In-Reply-To: <cover.1627321321.git.vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Jiri Slaby <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dmitry Safonov <0x7f454c46-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-At each login the user forces the kernel to create a new terminal and
-allocate up to ~1Kb memory for the tty-related structures.
+When user creates IPC objects it forces kernel to allocate memory for
+these long-living objects.
 
-By default it's allowed to create up to 4096 ptys with 1024 reserve for
-initial mount namespace only and the settings are controlled by host admin.
+It makes sense to account them to restrict the host's memory consumption
+from inside the memcg-limited container.
 
-Though this default is not enough for hosters with thousands
-of containers per node. Host admin can be forced to increase it
-up to NR_UNIX98_PTY_MAX = 1<<20.
-
-By default container is restricted by pty mount_opt.max = 1024,
-but admin inside container can change it via remount. As a result,
-one container can consume almost all allowed ptys
-and allocate up to 1Gb of unaccounted memory.
-
-It is not enough per-se to trigger OOM on host, however anyway, it allows
-to significantly exceed the assigned memcg limit and leads to troubles
-on the over-committed node.
-
-It makes sense to account for them to restrict the host's memory
-consumption from inside the memcg-limited container.
+This patch enables accounting for IPC shared memory segments, messages
+semaphores and semaphore's undo lists.
 
 Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Acked-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
 ---
- drivers/tty/tty_io.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ ipc/msg.c | 2 +-
+ ipc/sem.c | 9 +++++----
+ ipc/shm.c | 2 +-
+ 3 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/tty/tty_io.c b/drivers/tty/tty_io.c
-index 26debec..e787f6f 100644
---- a/drivers/tty/tty_io.c
-+++ b/drivers/tty/tty_io.c
-@@ -1493,7 +1493,7 @@ void tty_save_termios(struct tty_struct *tty)
- 	/* Stash the termios data */
- 	tp = tty->driver->termios[idx];
- 	if (tp == NULL) {
--		tp = kmalloc(sizeof(*tp), GFP_KERNEL);
-+		tp = kmalloc(sizeof(*tp), GFP_KERNEL_ACCOUNT);
- 		if (tp == NULL)
- 			return;
- 		tty->driver->termios[idx] = tp;
-@@ -3119,7 +3119,7 @@ struct tty_struct *alloc_tty_struct(struct tty_driver *driver, int idx)
- {
- 	struct tty_struct *tty;
+diff --git a/ipc/msg.c b/ipc/msg.c
+index 6810276..a0d0577 100644
+--- a/ipc/msg.c
++++ b/ipc/msg.c
+@@ -147,7 +147,7 @@ static int newque(struct ipc_namespace *ns, struct ipc_params *params)
+ 	key_t key = params->key;
+ 	int msgflg = params->flg;
  
--	tty = kzalloc(sizeof(*tty), GFP_KERNEL);
-+	tty = kzalloc(sizeof(*tty), GFP_KERNEL_ACCOUNT);
- 	if (!tty)
+-	msq = kmalloc(sizeof(*msq), GFP_KERNEL);
++	msq = kmalloc(sizeof(*msq), GFP_KERNEL_ACCOUNT);
+ 	if (unlikely(!msq))
+ 		return -ENOMEM;
+ 
+diff --git a/ipc/sem.c b/ipc/sem.c
+index 971e75d..1a8b9f0 100644
+--- a/ipc/sem.c
++++ b/ipc/sem.c
+@@ -514,7 +514,7 @@ static struct sem_array *sem_alloc(size_t nsems)
+ 	if (nsems > (INT_MAX - sizeof(*sma)) / sizeof(sma->sems[0]))
  		return NULL;
+ 
+-	sma = kvzalloc(struct_size(sma, sems, nsems), GFP_KERNEL);
++	sma = kvzalloc(struct_size(sma, sems, nsems), GFP_KERNEL_ACCOUNT);
+ 	if (unlikely(!sma))
+ 		return NULL;
+ 
+@@ -1855,7 +1855,7 @@ static inline int get_undo_list(struct sem_undo_list **undo_listp)
+ 
+ 	undo_list = current->sysvsem.undo_list;
+ 	if (!undo_list) {
+-		undo_list = kzalloc(sizeof(*undo_list), GFP_KERNEL);
++		undo_list = kzalloc(sizeof(*undo_list), GFP_KERNEL_ACCOUNT);
+ 		if (undo_list == NULL)
+ 			return -ENOMEM;
+ 		spin_lock_init(&undo_list->lock);
+@@ -1941,7 +1941,7 @@ static struct sem_undo *find_alloc_undo(struct ipc_namespace *ns, int semid)
+ 
+ 	/* step 2: allocate new undo structure */
+ 	new = kvzalloc(sizeof(struct sem_undo) + sizeof(short)*nsems,
+-		       GFP_KERNEL);
++		       GFP_KERNEL_ACCOUNT);
+ 	if (!new) {
+ 		ipc_rcu_putref(&sma->sem_perm, sem_rcu_free);
+ 		return ERR_PTR(-ENOMEM);
+@@ -2005,7 +2005,8 @@ static long do_semtimedop(int semid, struct sembuf __user *tsops,
+ 	if (nsops > ns->sc_semopm)
+ 		return -E2BIG;
+ 	if (nsops > SEMOPM_FAST) {
+-		sops = kvmalloc_array(nsops, sizeof(*sops), GFP_KERNEL);
++		sops = kvmalloc_array(nsops, sizeof(*sops),
++				      GFP_KERNEL_ACCOUNT);
+ 		if (sops == NULL)
+ 			return -ENOMEM;
+ 	}
+diff --git a/ipc/shm.c b/ipc/shm.c
+index 748933e..ab749be 100644
+--- a/ipc/shm.c
++++ b/ipc/shm.c
+@@ -619,7 +619,7 @@ static int newseg(struct ipc_namespace *ns, struct ipc_params *params)
+ 			ns->shm_tot + numpages > ns->shm_ctlall)
+ 		return -ENOSPC;
+ 
+-	shp = kmalloc(sizeof(*shp), GFP_KERNEL);
++	shp = kmalloc(sizeof(*shp), GFP_KERNEL_ACCOUNT);
+ 	if (unlikely(!shp))
+ 		return -ENOMEM;
  
 -- 
 1.8.3.1
