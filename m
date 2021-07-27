@@ -1,42 +1,43 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v7 08/10] memcg: enable accounting for posix_timers_cache slab
-Date: Tue, 27 Jul 2021 15:33:35 -0700
-Message-ID: <CALvZod6avZ=1qHug1ziLwYPNf1c0366Fb9pvYXBx9gh1HBcr6A@mail.gmail.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v7 10/10] memcg: enable accounting for ldt_struct objects
+Date: Tue, 27 Jul 2021 15:36:54 -0700
+Message-ID: <CALvZod4OjK75uh2nHA8QOfefUSXD7ZSxm3qaQY+aA9zDuKmNnw@mail.gmail.com>
 References: <6f21a0e0-bd36-b6be-1ffa-0dc86c06c470@virtuozzo.com>
- <cover.1627362057.git.vvs@virtuozzo.com> <57795560-025c-267c-6b1a-dea852d95530@virtuozzo.com>
+ <cover.1627362057.git.vvs@virtuozzo.com> <38010594-50fe-c06d-7cb0-d1f77ca422f3@virtuozzo.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=DhOk56syJ49REgl7tdN9zLvJ0rtCnMIghUB5ztLzd68=;
-        b=X9HEBVjB56EM/zdnzOtQqZAcd0A9JsH/VivVb3IjMVcf2q1P2MKr9pSgpwXQw0ADgk
-         0faL6G3ID3xJJdC1ecfdb5/kqZjJdV9V+Qg4Zg37NfIlS4FHVZ1EuUazf4JyT4dmfhJc
-         2NtqH75DUU5rRtXBMt4o2ymJQ3zf1x3QCR45bc3EBBx0eNSZM1xf+ProTdk3JMSfWTjb
-         zY69yaw9jmkHrJ70V/jLSd30wwsUeHl006UfdJ4lP7JLhgd+T3EcqgoeBjl+STNS4vyz
-         ugREqEDyNA1GyqnZwjCZaI39uiE0CFbaxtDv+bw0BYDqAsBf4wJDTyb1zh6dmKY+6u9+
-         2bGA==
-In-Reply-To: <57795560-025c-267c-6b1a-dea852d95530-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+        bh=Q9riWywpJIN08LA7hQqUxqDxz6rPo4nB08ihydLn/AQ=;
+        b=gsi7ICxX3ii2PVLmoIZtbBP0sGaJTU2D5/yA3Ue2ciJeEvL1IJrMuRT/R4K+SEAU83
+         dflfu+Kv3TLZT5zypULzNgkU0BxQVsaYvBuZCiiacoY7mOBwZWlhz86OhP+QozXBliwD
+         PM88Om9Hc4nuKpfSc1WXAx3wU1tvWkkF7e8POK0mPB6S/TYEKZt/qsCWV7KLuWjm+MmN
+         jTnKKr0ZoV54o/SxlyKF0bRskE2KKw4AKUYMzGjmbhz/ZFBBBRoe7LyRCAhqF7+ZcHmg
+         DJnoniScr++Z7XjGjrgJIxV2pshZQsHb8o57jYwclc/FgRIiKZA45kPQr3r8ajnRDcdx
+         ytUw==
+In-Reply-To: <38010594-50fe-c06d-7cb0-d1f77ca422f3@virtuozzo.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Vasily Averin <vvs@virtuozzo.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, "H. Peter Anvin" <hpa@zytor.com>, LKML <linux-kernel@vger.kernel.org>
 
-On Mon, Jul 26, 2021 at 10:34 PM Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
+On Mon, Jul 26, 2021 at 10:34 PM Vasily Averin <vvs@virtuozzo.com> wrote:
 >
-> A program may create multiple interval timers using timer_create().
-> For each timer the kernel preallocates a "queued real-time signal",
-> Consequently, the number of timers is limited by the RLIMIT_SIGPENDING
-> resource limit. The allocated object is quite small, ~250 bytes,
-> but even the default signal limits allow to consume up to 100 megabytes
-> per user.
+> Each task can request own LDT and force the kernel to allocate up to
+> 64Kb memory per-mm.
 >
-> It makes sense to account for them to limit the host's memory consumption
-> from inside the memcg-limited container.
+> There are legitimate workloads with hundreds of processes and there
+> can be hundreds of workloads running on large machines.
+> The unaccounted memory can cause isolation issues between the workloads
+> particularly on highly utilized machines.
 >
-> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-> Reviewed-by: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+> It makes sense to account for this objects to restrict the host's memory
+> consumption from inside the memcg-limited container.
+>
+> Signed-off-by: Vasily Averin <vvs@virtuozzo.com>
+> Acked-by: Borislav Petkov <bp@suse.de>
 
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
