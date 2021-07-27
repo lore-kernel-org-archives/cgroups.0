@@ -1,48 +1,64 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 0/9] cgroup/cpuset: Add new cpuset partition type &
- empty effecitve cpus
-Date: Mon, 26 Jul 2021 13:17:24 -1000
-Message-ID: <YP9ChFvrGrDMGzbe@slm.duckdns.org>
-References: <20210720141834.10624-1-longman@redhat.com>
+From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] blk-throtl: optimize IOPS throttle for large IO scenarios
+Date: Tue, 27 Jul 2021 11:06:18 +0800
+Message-ID: <34a6f4b5-9055-e519-5693-068f8dcb169c@gmail.com>
+References: <1626416569-30907-1-git-send-email-brookxu.cn@gmail.com>
+ <YPGvIzZUI+QxP1js@mtj.duckdns.org>
+ <957ab14d-c4bc-32f0-3f7d-af98832ab955@gmail.com>
+ <YP8tPwkJNMAcjDqk@mtj.duckdns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=lYRTOLatMvzufkXYQLuONyMUV7E9MEoEnSQSV7vItG4=;
-        b=ukt/FXGXZhngCDB8sCyEf8mY2XOXpjHXXQIWNQOJlP53/6jrTbcUh985qo1v5ojigo
-         3X014eLreM03cB0ysU3KMUG+Mujsn1Y5DgdC7zaLa6Mj+96YbVkESdw0dznKrXX8aAAB
-         JzxRFhIYGNXGW6Elo8T/XVcPTKI3RNb06IWRonV6/phiMiu426AlLqdMwIzErsjRxgBT
-         9PDSoWdAI7XhvD9sjaSWVcSOOYyzSXgo15dZL+J9vA9qYQHRantJ/QVMil6id/u/lYsj
-         2OvKahQUOiSKhFobibcUh7jJDSQjT0M3N/b+QpSGjOb7LYEAKBT3j04vt8UMOwXl5flu
-         qX2A==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20210720141834.10624-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ChIcbIgLJX/+eQRpKvWif40abxApwvOjyIFA0z+RMsM=;
+        b=MU3drwGpgkx0vfwBNTNFP3MytUOGuJQ3j50dvYOId0AswZfumYMStyl+z6WjZn8xss
+         wI9eMWl1JEQ+vqomHrTtUT/LVF3rDed6w82f5LQfMDYZSoekPsqtQzVGOYDovAlJE/TC
+         VmCmyIum9y/x/IVwYRAdiqmJLu3EsPtXbTxre38qt9Ba5523aYlhBBqBbuqnNS9dl9WU
+         0qAJP+FHqHlfzwOWW5nLyuWaDTso5jq165pKxv+ahBbkeq34+qjQdiCu8UtMRhU80vmt
+         IsXYvdC6U0ZF0PIu/yOZitNgkmXGyW1foxBDYZ2E01JWlM+Hf4G/MzKs0AKlOj/msRsB
+         gpEA==
+In-Reply-To: <YP8tPwkJNMAcjDqk-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
 
-On Tue, Jul 20, 2021 at 10:18:25AM -0400, Waiman Long wrote:
-> v3:
->  - Add two new patches (patches 2 & 3) to fix bugs found during the
->    testing process.
->  - Add a new patch to enable inotify event notification when partition
->    become invalid.
->  - Add a test to test event notification when partition become invalid.
 
-I applied parts of the series. I think there was a bit of miscommunication.
-I meant that we should use the invalid state as the only way to indicate
-errors as long as the error state is something which can be reached through
-hot unplug or other uncontrollable changes, and require users to monitor the
-state transitions for confirmation and error handling.
+Tejun Heo wrote on 2021/7/27 5:46:
+> Hello,
+> 
+> On Tue, Jul 20, 2021 at 12:35:54AM +0800, brookxu wrote:
+>> In order to avoid code duplication and IOPS stability problems caused by estimating
+>> the equivalent number of IOs, and to avoid potential deadlock problems caused by
+>> synchronization through queue_lock. I tried to count the number of splited IOs in
+>> the current window through two atomic counters. Add the value of the atomic variable
+>> when calculating io_disp[rw], which can also avoid the problem of inaccurate IOPS in
+>> large IO scenarios. How do you think of this approach? Thanks for your time.
+> 
+> I guess it's okay but am still not a big fan of adding another hook. This is
+> primarily because blk-throtl is sitting too early in the stack - e.g. rq_qos
+> is doing the same thing but sits after the split path - and it's a bit nasty
+> to add an additional hook for it.
+> 
+> Do you think it can be an option to relocate the blk-throtl hooks to the
+> same spots as rq-qos or, even better, make it use rq-qos?
 
-Thanks.
+Make blk-throttle use rq-qos may be more elegant. But I found that there may be at least
+one problem that is difficult to solve. blk-throttle supports separate throttle for read
+and write IOs, which means that we cannot suspend tasks during throttle, but rq-qos
+throttle IOs by suspending tasks.
 
--- 
-tejun
+We may be able to relocate the blk-throttle hooks to the rq-qos hooks. Since we may not
+be able to replace the throttle hook, in this case, if we register a rq-qos to the system,
+part of the blk-throttle hooks is in rq-qos and part hooks not, which feels a bit confusing.
+In addition, we may need to implement more hooks, such as IO merge hook.
+
+Thanks for you time.
+
+> Thanks.
+> 
