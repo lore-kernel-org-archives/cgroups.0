@@ -1,8 +1,8 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-5.15] BUILD SUCCESS
- 15d428e6fe77fffc3f4fff923336036f5496ef17
-Date: Tue, 27 Jul 2021 19:12:57 +0800
-Message-ID: <60ffea39.IfZo+3PtdgNz7qOv%lkp@intel.com>
+Subject: [cgroup:test-merge-for-5.14-fixes] BUILD SUCCESS
+ 4cdbdc40f6399de911db4fd3b8e699f5ece560b7
+Date: Tue, 27 Jul 2021 19:13:00 +0800
+Message-ID: <60ffea3c.I4Iu5zyqhqEfRmvy%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,12 +11,12 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.15
-branch HEAD: 15d428e6fe77fffc3f4fff923336036f5496ef17  cgroup/cpuset: Fix a partition bug with hotplug
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git test-merge-for-5.14-fixes
+branch HEAD: 4cdbdc40f6399de911db4fd3b8e699f5ece560b7  Merge branch 'for-5.14-fixes' into test-merge-for-5.14-fixes
 
 elapsed time: 721m
 
-configs tested: 152
+configs tested: 153
 configs skipped: 3
 
 The following configs have been built successfully.
@@ -28,6 +28,7 @@ arm64                            allyesconfig
 arm64                               defconfig
 arm                              allyesconfig
 arm                              allmodconfig
+i386                 randconfig-c001-20210726
 i386                 randconfig-c001-20210727
 arm                            zeus_defconfig
 arm                             mxs_defconfig
@@ -60,9 +61,9 @@ sh                   rts7751r2dplus_defconfig
 powerpc                 mpc8313_rdb_defconfig
 powerpc                          g5_defconfig
 mips                           rs90_defconfig
+riscv                    nommu_virt_defconfig
 m68k                        mvme147_defconfig
 sh                     magicpanelr2_defconfig
-riscv                    nommu_virt_defconfig
 powerpc                 linkstation_defconfig
 sh                          r7785rp_defconfig
 ia64                          tiger_defconfig
