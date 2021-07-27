@@ -1,69 +1,71 @@
-From: Waiman Long <llong@redhat.com>
-Subject: Re: [PATCH v3 0/9] cgroup/cpuset: Add new cpuset partition type &
- empty effecitve cpus
-Date: Tue, 27 Jul 2021 17:14:27 -0400
-Message-ID: <b2f49b2e-d5a4-1504-bd0c-0bd82943d855@redhat.com>
-References: <20210720141834.10624-1-longman@redhat.com>
- <YP9ChFvrGrDMGzbe@slm.duckdns.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v7 02/10] memcg: enable accounting for pollfd and select
+ bits arrays
+Date: Tue, 27 Jul 2021 14:39:23 -0700
+Message-ID: <CALvZod7e8pNhCU-o8-dFwn5v4aVoUrxxjGamfbaqK83d3UL1Mw@mail.gmail.com>
+References: <6f21a0e0-bd36-b6be-1ffa-0dc86c06c470@virtuozzo.com>
+ <cover.1627362057.git.vvs@virtuozzo.com> <56e31cb5-6e1e-bdba-d7ca-be64b9842363@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1627420471;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=HTTYyPAE0g/if8d0gvKRc9AYw/duV58RDsVIEQdGHsg=;
-        b=MmkBaBOuV1AUKpXcAGXaLo/TeoW4gQqCDymf0l637stY7WqPGA86SYbuh+wtcQ7hpYt7MT
-        hUTp6iLOSanU7p/9clCUsJ64XRMc4aaHAO4uHlGU6ffxKiELIorxd9ypOLe7sYtp8sfOpx
-        n04zqWTT+p13i3Tbjb2ksU5G5lD4PYQ=
-In-Reply-To: <YP9ChFvrGrDMGzbe@slm.duckdns.org>
-Content-Language: en-US
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=586qQ0VfqS2t1FgawENmqvW9B/cgMqgnCEiHKLyzI/E=;
+        b=u1/MVJO4zcfaei7PD7eWb+709nz15VrWARci7ePDMDFolJNUERP2wsbjom+4NbVKF7
+         ssCxzxA0a2UMxu67QqmKkzf8Ut6ydxeIlIqw2blw57FpMzpCZ3PC+AX7TZdUAx0tipyl
+         G8luFgvQvburMncuoSBNoiciSrzOHj4b5hjw5HfttQCJX69lVCqpmjGkRnGShNJwduXw
+         Zh8TM0wbJKBTwe0RiYKQ6DlcLgR+hq+p9L+JSK8/8r1bCXiy6mY+G/ZI55irmnQDLRxC
+         ZeISUoXD1z4L5Wyc48m90u3UbQaFELITPkCenCYevX5lJ/OgtMDHFVm6vd5w9iw29W+4
+         Bw0g==
+In-Reply-To: <56e31cb5-6e1e-bdba-d7ca-be64b9842363-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 7/26/21 7:17 PM, Tejun Heo wrote:
-> Hello,
+On Mon, Jul 26, 2021 at 10:33 PM Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
 >
-> On Tue, Jul 20, 2021 at 10:18:25AM -0400, Waiman Long wrote:
->> v3:
->>   - Add two new patches (patches 2 & 3) to fix bugs found during the
->>     testing process.
->>   - Add a new patch to enable inotify event notification when partition
->>     become invalid.
->>   - Add a test to test event notification when partition become invalid.
-> I applied parts of the series. I think there was a bit of miscommunication.
-> I meant that we should use the invalid state as the only way to indicate
-> errors as long as the error state is something which can be reached through
-> hot unplug or other uncontrollable changes, and require users to monitor the
-> state transitions for confirmation and error handling.
+> User can call select/poll system calls with a large number of assigned
+> file descriptors and force kernel to allocate up to several pages of memory
+> till end of these sleeping system calls. We have here long-living
+> unaccounted per-task allocations.
+>
+> It makes sense to account for these allocations to restrict the host's
+> memory consumption from inside the memcg-limited container.
+>
+> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+> ---
+>  fs/select.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/fs/select.c b/fs/select.c
+> index 945896d..e83e563 100644
+> --- a/fs/select.c
+> +++ b/fs/select.c
+> @@ -655,7 +655,7 @@ int core_sys_select(int n, fd_set __user *inp, fd_set __user *outp,
+>                         goto out_nofds;
+>
+>                 alloc_size = 6 * size;
+> -               bits = kvmalloc(alloc_size, GFP_KERNEL);
+> +               bits = kvmalloc(alloc_size, GFP_KERNEL_ACCOUNT);
 
-Yes, that is the point of adding the event notification patch.
+What about the similar allocation in compat_core_sys_select()? Also
+what about the allocation in poll_get_entry()?
 
-In the current code, direct write to cpuset.cpus.partition are strictly 
-controlled and invalid transitions are rejected. However, changes to 
-cpuset.cpus that do not break the cpu exclusivity rule or cpu hot plug 
-may cause a partition to changed to invalid. What is currently done in 
-this patchset is to add extra guards to reject those cpuset.cpus change 
-that cause the partition to become invalid since changes that break cpu 
-exclusivity rule will be rejected anyway. I can leave out those extra 
-guards and allow those invalid cpuset.cpus change to go forward and 
-change the partition to invalid instead if this is what you want.
-
-However, if we have a complicated partition setup with multiple child 
-partitions. Invalid cpuset.cpus change in a parent partition will cause 
-all the child partitions to become invalid too. That is the scenario 
-that I don't want to happen inadvertently. Alternatively, we can 
-restrict those invalid changes if a child partition exist and let it 
-pass through and make it invalid if it is a standalone partition.
-
-Please let me know which approach do you want me to take.
-
-Cheers,
-Longman
-
-
-
+>                 if (!bits)
+>                         goto out_nofds;
+>         }
+> @@ -1000,7 +1000,7 @@ static int do_sys_poll(struct pollfd __user *ufds, unsigned int nfds,
+>
+>                 len = min(todo, POLLFD_PER_PAGE);
+>                 walk = walk->next = kmalloc(struct_size(walk, entries, len),
+> -                                           GFP_KERNEL);
+> +                                           GFP_KERNEL_ACCOUNT);
+>                 if (!walk) {
+>                         err = -ENOMEM;
+>                         goto out_fds;
+> --
+> 1.8.3.1
+>
