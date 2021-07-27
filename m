@@ -1,7 +1,7 @@
 From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH v7 09/10] memcg: enable accounting for tty-related objects
-Date: Tue, 27 Jul 2021 08:34:14 +0300
-Message-ID: <b8baa04f-e789-0321-b39d-07c5696ff755@virtuozzo.com>
+Subject: [PATCH v7 08/10] memcg: enable accounting for posix_timers_cache slab
+Date: Tue, 27 Jul 2021 08:34:07 +0300
+Message-ID: <57795560-025c-267c-6b1a-dea852d95530@virtuozzo.com>
 References: <6f21a0e0-bd36-b6be-1ffa-0dc86c06c470@virtuozzo.com>
  <cover.1627362057.git.vvs@virtuozzo.com>
 Mime-Version: 1.0
@@ -9,66 +9,47 @@ Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
-        :From; bh=fzoFoDaPrywkHjs/msWPtHPRzT9tQ7zWHa/Zk4Ahhwk=; b=nKtcynS6hfZJpSCIigQ
-        ARbmJkMFzuqHPG+MoSXEwrH/q54YaaHRU5okecX15OW365YE563YcX+XYj6zE16YspHAUyW5wZk/8
-        rPtY8T8RaHr2b3+i+ac5prJPyvW0vKdcuxa7cfgG9rCcovFIMtp7o+ev+T9+RPTtyeEWPi7ET/M=;
+        :From; bh=bJzD/4dookOedoazAyDMd9sbQFHTEV2nMBxfajFsEmQ=; b=F8u/2HH6GVK7BiAMTh4
+        UI0q9Oib8B+Uz/X45qHzhevS+2/memaWtcUC0mj35gZZKWLjzPoRuB3a35oHfiXAwDBEbJm5xB7n1
+        cATa8GkK6DM+OCyDP17uLbgBNrb0e14qMtnEFih4ZIEPspyMuu+a9O2ZCp/FVbk2VRKJJiSF3iE=;
 In-Reply-To: <cover.1627362057.git.vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Jiri Slaby <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-At each login the user forces the kernel to create a new terminal and
-allocate up to ~1Kb memory for the tty-related structures.
+A program may create multiple interval timers using timer_create().
+For each timer the kernel preallocates a "queued real-time signal",
+Consequently, the number of timers is limited by the RLIMIT_SIGPENDING
+resource limit. The allocated object is quite small, ~250 bytes,
+but even the default signal limits allow to consume up to 100 megabytes
+per user.
 
-By default it's allowed to create up to 4096 ptys with 1024 reserve for
-initial mount namespace only and the settings are controlled by host admin.
-
-Though this default is not enough for hosters with thousands
-of containers per node. Host admin can be forced to increase it
-up to NR_UNIX98_PTY_MAX = 1<<20.
-
-By default container is restricted by pty mount_opt.max = 1024,
-but admin inside container can change it via remount. As a result,
-one container can consume almost all allowed ptys
-and allocate up to 1Gb of unaccounted memory.
-
-It is not enough per-se to trigger OOM on host, however anyway, it allows
-to significantly exceed the assigned memcg limit and leads to troubles
-on the over-committed node.
-
-It makes sense to account for them to restrict the host's memory
-consumption from inside the memcg-limited container.
+It makes sense to account for them to limit the host's memory consumption
+from inside the memcg-limited container.
 
 Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Acked-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Reviewed-by: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 ---
- drivers/tty/tty_io.c | 4 ++--
+ kernel/time/posix-timers.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/tty/tty_io.c b/drivers/tty/tty_io.c
-index 26debec..e787f6f 100644
---- a/drivers/tty/tty_io.c
-+++ b/drivers/tty/tty_io.c
-@@ -1493,7 +1493,7 @@ void tty_save_termios(struct tty_struct *tty)
- 	/* Stash the termios data */
- 	tp = tty->driver->termios[idx];
- 	if (tp == NULL) {
--		tp = kmalloc(sizeof(*tp), GFP_KERNEL);
-+		tp = kmalloc(sizeof(*tp), GFP_KERNEL_ACCOUNT);
- 		if (tp == NULL)
- 			return;
- 		tty->driver->termios[idx] = tp;
-@@ -3119,7 +3119,7 @@ struct tty_struct *alloc_tty_struct(struct tty_driver *driver, int idx)
+diff --git a/kernel/time/posix-timers.c b/kernel/time/posix-timers.c
+index dd5697d..7363f81 100644
+--- a/kernel/time/posix-timers.c
++++ b/kernel/time/posix-timers.c
+@@ -273,8 +273,8 @@ static int posix_get_hrtimer_res(clockid_t which_clock, struct timespec64 *tp)
+ static __init int init_posix_timers(void)
  {
- 	struct tty_struct *tty;
- 
--	tty = kzalloc(sizeof(*tty), GFP_KERNEL);
-+	tty = kzalloc(sizeof(*tty), GFP_KERNEL_ACCOUNT);
- 	if (!tty)
- 		return NULL;
- 
+ 	posix_timers_cache = kmem_cache_create("posix_timers_cache",
+-					sizeof (struct k_itimer), 0, SLAB_PANIC,
+-					NULL);
++					sizeof(struct k_itimer), 0,
++					SLAB_PANIC | SLAB_ACCOUNT, NULL);
+ 	return 0;
+ }
+ __initcall(init_posix_timers);
 -- 
 1.8.3.1
 
