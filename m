@@ -1,58 +1,33 @@
-From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH v2 1/3] misc_cgroup: add support for nofile limit
-Date: Tue, 27 Jul 2021 11:18:00 +0800
-Message-ID: <b2ff6f80-8ec6-e260-ec42-2113e8ce0a18@gmail.com>
-References: <3fd94563b4949ffbfe10e7d18ac1df3852b103a6.1626966339.git.brookxu@tencent.com>
- <YP8ovYqISzKC43mt@mtj.duckdns.org>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH v6 00/16] memcg accounting from OpenVZ
+Date: Tue, 27 Jul 2021 07:44:49 +0300
+Message-ID: <6f21a0e0-bd36-b6be-1ffa-0dc86c06c470@virtuozzo.com>
+References: <9bf9d9bd-03b1-2adb-17b4-5d59a86a9394@virtuozzo.com>
+ <fdb0666c-7b8e-2062-64f4-5bef64fad950@virtuozzo.com>
+ <20210726.225931.53899469422140706.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=BkpKJMj8n2tdrlAotNsD2n9oh289k/hxpaSEx0/2fUg=;
-        b=gClIL7RqcSfXHukQYD9GBLkJ5ekF74p/wtUCDp6gVra+KFApFR/73C09AhdgVrIwrT
-         D0/JYWqPoCVnbHlIyWzWbCfUa130s1dDr1A7IfJEhCpoRRFhUhlE9v9z9HKXgcMlMOQX
-         4kjHirEqaVL9lk+vlRNvQpF8q8RExMDX4aPwfy0Y/GyoX5CvFVffxMKq3OoFwk6ODcwm
-         /T28KX7ISkGoqJ31UyWZXYmTOdUMTJVztqa2yLVlxI/JFI7kLejlrdRcMhgLi3cBK1gv
-         0i08p53OxpYSC6uZt9ycuqOG1UrZEWsZYUcB1Saf5BOLGH9wOKawTK2tIkg64YCE28AD
-         PlCg==
-In-Reply-To: <YP8ovYqISzKC43mt-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
+        Subject; bh=/+c65/gT4Io1ufXamU1e2psgnYkOi5vjG8kGJF++OHo=; b=Ui+jyG8CSoRsIhhdk
+        CgYVGe+dD8MtMbyE9CEOdC4C2Toq4wq6hHORYH5UyU1pz03B+ZK3/1TFXc3+X96ZASFPJ/fWQFcdu
+        mFeW/8GMwrtOgRkkMWE3BsNlLXvF5m+1Ntd1aA6IZ9l+D+Kb4qH/GtNobsZES4dxVFFlLZm8/HzNk
+        =;
+In-Reply-To: <20210726.225931.53899469422140706.davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, avagin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, dsahern-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, 0x7f454c46-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org, jlayton-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ktkhai-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org, oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-
-Thanks for your time.
-
-Tejun Heo wrote on 2021/7/27 5:27:
-> On Thu, Jul 22, 2021 at 11:20:17PM +0800, brookxu wrote:
->> From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
->>
->> Since the global open files are limited, in order to avoid the
->> abnormal behavior of some containers from generating too many
->> files, causing other containers to be unavailable, we need to
->> limit the open files of some containers.
->>
->> v2: fix compile error while CONFIG_CGROUP_MISC not set.
->>
->> Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
->> Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+On 7/27/21 12:59 AM, David Miller wrote:
 > 
-> This is different from pid in that there's no actual limit on how many open
-> files there can be in the system other than the total amount of available
-> memory. I don't see why this would need a separate limit outside of memory
-> control. A couple machines I looked at all have file-max at LONG_MAX by
-> default too.
+> This series does not apply cleanly to net-next, please respin.
 
-According to files_maxfiles_init(), we only allow about 10% of free memory to
-create filps, and each filp occupies about 1K of cache. In this way, on a 16G
-memory machine, the maximum usable filp is about 1,604,644. In general
-scenarios, this may not be a big problem, but if the task is abnormal, it will
-very likely become a bottleneck and affect other modules. 
+Dear David,
+I found that you have already approved net-related patches of this series and included them into net-next.
+So I'll respin v7 without these patches.
 
-> Thanks.
-> 
+Thank you,
+	Vasily Averin
