@@ -1,62 +1,73 @@
-From: Waiman Long <llong@redhat.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 Subject: Re: [PATCH v3 6/9] cgroup/cpuset: Add a new isolated cpus.partition
  type
-Date: Wed, 28 Jul 2021 12:27:58 -0400
-Message-ID: <f1afbd9e-d16b-c972-c3c0-022a05cec2a6@redhat.com>
+Date: Wed, 28 Jul 2021 19:25:21 +0200
+Message-ID: <20210728172521.GE7584@blackbody.suse.cz>
 References: <20210720141834.10624-1-longman@redhat.com>
  <20210720141834.10624-7-longman@redhat.com>
  <20210728160900.GA8905@blackbody.suse.cz>
+ <f1afbd9e-d16b-c972-c3c0-022a05cec2a6@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1627489681;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="k4f25fnPtRuIRUb3"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1627493122; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=oVx/5yrmyZbbRVeN3LD+d66Q2FozCvKMMwaCU5JpwKA=;
-        b=C8TkkbLtJNQFJzm7vuOth01N1hoMg0o0Hs8+2dm7BpdaI8dOJqXNDhrEA3SBMadh7Jwh/W
-        lPwIwRsPDZSA32snFj1Bcb9EEFYnZKf0h78flfT2UnWWzerOSoKlOUmmgKM5TXw/JDZkc8
-        RwAXJ7aDIw2Oj6fYt/TdD2tgTxNPJqE=
-In-Reply-To: <20210728160900.GA8905@blackbody.suse.cz>
-Content-Language: en-US
+        bh=4z+d2ZwNRoqxW73+AMa5bSmFlzTgfCxptCbaDT+hb/U=;
+        b=W2eTPAugUxJczVRyP2sMAeHaks8tARW0o11sV3lPJ0De6/bEmVKvCzl4+lxdv61v3KWrj5
+        qmfjL6DjgtwwBYcvLbmzBaJ16HGAXTAH21b7yrUV2xli1avXSggtcKoSyfogCik+fm8eMY
+        qyYSjIVo+fZcp95VHyImHRtliCGiGuM=
+Content-Disposition: inline
+In-Reply-To: <f1afbd9e-d16b-c972-c3c0-022a05cec2a6-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
+To: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 7/28/21 12:09 PM, Michal Koutn=FD wrote:
-> Hello Waiman.
->
-> On Tue, Jul 20, 2021 at 10:18:31AM -0400, Waiman Long <longman@redhat.com=
-> wrote:
->> @@ -2026,6 +2036,22 @@ static int update_prstate(struct cpuset *cs, int =
-new_prs)
->> [...]
->> +	} else if (old_prs && new_prs) {
-> If an isolated root partition becomes invalid (new_prs =3D=3D PRS_ERROR).=
-..
->
->> +		/*
->> +		 * A change in load balance state only, no change in cpumasks.
->> +		 */
->> +		update_flag(CS_SCHED_LOAD_BALANCE, cs, (new_prs !=3D PRS_ISOLATED));
-> ...this seems to erase information about CS_SCHED_LOAD_BALANCE zeroness.
->
-> IOW, if there's an isolated partition that becomes invalid and later
-> valid again (a cpu is (re)added), it will be a normal root partition
-> without the requested isolation, which is IMO undesired.
->
-> I may have overlooked something in broader context but it seems to me
-> the invalidity should be saved independently of the root/isolated type.
 
-PRS_ERROR cannot be passed to update_prstate(). For this patchset,=20
-PRS_ERROR can only be set by changes in hotplug. The current design will=20
-maintain the set flag (CS_SCHED_LOAD_BALANCE) and use it to decide to=20
-switch back to PRS_ENABLED or PRS_ISOLATED when the cpus are available=20
-again.
+--k4f25fnPtRuIRUb3
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Cheers,
-Longman
+On Wed, Jul 28, 2021 at 12:27:58PM -0400, Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wr=
+ote:
+> PRS_ERROR cannot be passed to update_prstate(). For this patchset, PRS_ER=
+ROR
+> can only be set by changes in hotplug. The current design will maintain t=
+he
+> set flag (CS_SCHED_LOAD_BALANCE) and use it to decide to switch back to
+> PRS_ENABLED or PRS_ISOLATED when the cpus are available again.
 
+I see it now, thanks. (I still find a bit weird that the "isolated"
+partition will be shown as "root invalid" when it's lacking cpus
+(instead of "isolated invalid" and returning to "isolated") but I can
+understand the approach of having just one "root invalid" for all.)
+
+This patch can have
+Reviewed-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
+
+
+--k4f25fnPtRuIRUb3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmEBkvoACgkQia1+riC5
+qSjxqg/8DOuQ6BV0vUCrSyyP0k+Wyx7QwrY7UHosDiAVrUYlzfd0NEhckQf7fDr4
+faf5/E/Y0t99oRaBYnPqtaqUjtiUUB4e7L/uTxrfGaeOT2SyAHjq5QHtFcdSOHgz
+OfinfqEGFuMQLo2vbWtuKaPs6avaPT6443FT/WpG29FHkB7wRPuBAS0f3USLQ/F4
+/GqawCdjKCZ4pP59LQpb5jSELNtQKaxe6MpZJ0tcj9JpFgnR6XZcwmxe0FP2hHtY
+JzcnXUfMW3CU4yynukd5rEwrCiVS1T5w9XLh0d/MrvbamMEfwBMY8hoVH3md32X4
+oTVdlW1IrKkm+VXoW/71WTzKTlkXof/MxMe52QigiOj25g+W/R2CTAoaCKVY5Ou3
+RgQNljmvKmN7kh14Zc469PLC8R8t+FYVdMM4xmK+HjbFOBAaymWx6eUHejfQNba0
+sgulNpYQjzeR+OBqqt7NI+KLu9s1yag6ZY+N2bUtOWxsdMjuU4vY0yWuHw+SnrTF
+itkJg/NIkUmFccnq1ToOAxHyC5vA6ux8rUDBPnJduXr1czXZKi8zoy31h4uq6CAF
+iWqDZdmi9dOB9A3rbjOm8BP0vHrs7s3tSLc0c4tu6VncM0mosp6dDGC8RCam3YCG
+mnFetTKvSLbNBN/6k3f6nKLX6AGzNHs45EiSi7ut17NMVk5/5EU=
+=i07x
+-----END PGP SIGNATURE-----
+
+--k4f25fnPtRuIRUb3--
