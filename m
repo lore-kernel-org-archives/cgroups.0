@@ -1,62 +1,34 @@
-From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] blk-throtl: optimize IOPS throttle for large IO scenarios
-Date: Wed, 28 Jul 2021 10:33:20 +0800
-Message-ID: <fab343e8-5929-fb30-90e3-b5b6bd34702a@gmail.com>
-References: <1626416569-30907-1-git-send-email-brookxu.cn@gmail.com>
- <YPGvIzZUI+QxP1js@mtj.duckdns.org>
- <957ab14d-c4bc-32f0-3f7d-af98832ab955@gmail.com>
- <YP8tPwkJNMAcjDqk@mtj.duckdns.org>
- <34a6f4b5-9055-e519-5693-068f8dcb169c@gmail.com>
- <YQAydzEhZfPUpzWI@mtj.duckdns.org>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH] memcg: cleanup racy sum avoidance code
+Date: Tue, 27 Jul 2021 19:36:01 -0700
+Message-ID: <YQDCkeFxSnh2GR7I@carbon.dhcp.thefacebook.com>
+References: <20210728012243.3369123-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=D45lrolxqJIjPPb8I/48vYfzy0j0FugUdvX8Qruvv54=;
-        b=pQfJFQ+eTwlrNYDdbzs2U9jeZ0E/c0YUPgCYHaq+gBlpkgqxicfU9PnwGI0BrE3/lT
-         tt2V1uJZiKWoQ5kUXBGAXbePZTKTjE2YexRN9Gnmkix3BF4KxE0qYyjh69qdQS6o7EQL
-         6Ax5YEkduRwRULXud/4EmTwFUKwWcNR/GIADiNZrQely2ESBEN3UVhZKwnFKd1dji3dF
-         rDbXmtNZs3qHjiJ9GuBK7FAoljylKQlQVdzjarnbpEyV09wdSSVF+tiU9f+xKKz+IaLF
-         S9MODWQ4I2U2Q1M7emhDGag6v8H0L8j6jGp5S2APB42m9ppQ5Sw6JhXkmb1Tdaq0tVb1
-         YeLw==
-In-Reply-To: <YQAydzEhZfPUpzWI-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=kHzxSIG1kXwazlMs5QTdLmJpjwkb8TVxu0YndxzDXf4=;
+ b=C3sZLL54CAef15Jvxk9En260/fUmh2Pp/EB84NlrAP6N1ADBccrD/ExTe4Noc9aCZwew
+ pH5H0UHM0f4qJTMscasLzVQ2K99DnozOe6BwMwrpsoKpXTqjIs5eXEPYY4/PfLVVW9wE
+ 9jyTMQsoS17X8HPsGU5TLhx3MfpuQi12kQw= 
+Content-Disposition: inline
+In-Reply-To: <20210728012243.3369123-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Thanks for your time.
+On Tue, Jul 27, 2021 at 06:22:43PM -0700, Shakeel Butt wrote:
+> We used to have per-cpu memcg and lruvec stats and the readers have to
+> traverse and sum the stats from each cpu. This summing was racy and may
+> expose transient negative values. So, an explicit check was added to
+> avoid such scenarios. Now these stats are moved to rstat infrastructure
+> and are no more per-cpu, so we can remove the fixup for transient
+> negative values.
+> 
+> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Tejun Heo wrote on 2021/7/28 12:21 上午:
-> Hello,
-> 
-> On Tue, Jul 27, 2021 at 11:06:18AM +0800, brookxu wrote:
->> Make blk-throttle use rq-qos may be more elegant. But I found that there may be at least
->> one problem that is difficult to solve. blk-throttle supports separate throttle for read
->> and write IOs, which means that we cannot suspend tasks during throttle, but rq-qos
->> throttle IOs by suspending tasks.
-> 
-> Ah, right, I forgot about that.
-> 
->> We may be able to relocate the blk-throttle hooks to the rq-qos hooks. Since we may not
->> be able to replace the throttle hook, in this case, if we register a rq-qos to the system,
->> part of the blk-throttle hooks is in rq-qos and part hooks not, which feels a bit confusing.
->> In addition, we may need to implement more hooks, such as IO merge hook.
-> 
-> Would it be possible to just move the blk-throtl throttling hook right next
-> to the rq-qos hook so that it gets throttled after splitting?
+Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-If we do this, I think we will encounter some problems, as follows:
-1. blk-throttle is now at the top of the IO stack. Changing the position of the throttle hook
-   will make this mechanism invalid for some devices.
-2. We may also need to add a new hook to handle back-merge, otherwise I think the isolation
-   effect will be worse in the sequential IO scene.
-3. Since bio has entered the IO stack, if it is suspended and resubmitted by blk-throttle,
-   then there is an IO stack reentry problem, which I think may cause many small problems.
-
-> Thanks.
-> 
+Thanks!
