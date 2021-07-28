@@ -1,51 +1,84 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] blk-throtl: optimize IOPS throttle for large IO scenarios
-Date: Tue, 27 Jul 2021 21:48:06 -1000
-Message-ID: <YQELtmeLjlDHCk2i@mtj.duckdns.org>
-References: <1626416569-30907-1-git-send-email-brookxu.cn@gmail.com>
- <YPGvIzZUI+QxP1js@mtj.duckdns.org>
- <957ab14d-c4bc-32f0-3f7d-af98832ab955@gmail.com>
- <YP8tPwkJNMAcjDqk@mtj.duckdns.org>
- <34a6f4b5-9055-e519-5693-068f8dcb169c@gmail.com>
- <YQAydzEhZfPUpzWI@mtj.duckdns.org>
- <fab343e8-5929-fb30-90e3-b5b6bd34702a@gmail.com>
+From: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] memcg: cleanup racy sum avoidance code
+Date: Wed, 28 Jul 2021 10:21:18 +0200
+Message-ID: <8c35e469-b355-63b0-6cd4-ca39c39ddb79@redhat.com>
+References: <20210728012243.3369123-1-shakeelb@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=nSOViMYPYa18THue5NB1xRZRfJm692a7CdBC4/LyTC4=;
-        b=KNM2TQ0qBbPb4XvWNcysK8INoORw2FRUtbc8UbVGuaP8PeRKXOA40SbsDF9oCehOVL
-         AnCZvTFY+1SPWB6JTBKcQKVHe3UPQGU3v1GUFjON3h/+SJzOISApHH7sj4rhrF7i2OA/
-         MoxIDhyejas59nJVOYyl3xM1pLZ6ytfPEfoAhwvPgna4fkebhtY+gUYU+jJCtA+Ctm3k
-         Ji/a68Vrx6gto6KOy8+ipXUFVimMCo4eWMWAltb/IoZ4C2U32jFknB1VnzXzmkX2ohHe
-         CJffsTry3FwO+oIN4xrkKxl/JfuJtPbRpXoMTAJLEmaV29xTQ0CpI2LIj2vNyc5xy9+V
-         XZgQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <fab343e8-5929-fb30-90e3-b5b6bd34702a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1627460482;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=6gWJqZpysylhm0r71/CN5q60nzTxNxEk/7whHXN4TyA=;
+        b=fiF/vVqd9oN9e8dKNjUyYg0xm31UqV7R5Oqq9jjFaG7gd1TWS3PesPtjH8OueLizybbAk1
+        VklP1xeyESVL10k13r9S5dx/Xo6Bk/DIa+Eh2T4JpCn36EWukF4X4xJdq/0ppKCcGi5Dns
+        hpCvByTiWRFA1ki7zCT2xYF9p1MBy00=
+In-Reply-To: <20210728012243.3369123-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On 28.07.21 03:22, Shakeel Butt wrote:
+> We used to have per-cpu memcg and lruvec stats and the readers have to
+> traverse and sum the stats from each cpu. This summing was racy and may
+> expose transient negative values. So, an explicit check was added to
+> avoid such scenarios. Now these stats are moved to rstat infrastructure
+> and are no more per-cpu, so we can remove the fixup for transient
+> negative values.
+> 
+> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>   include/linux/memcontrol.h | 15 ++-------------
+>   1 file changed, 2 insertions(+), 13 deletions(-)
+> 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 7028d8e4a3d7..5f2a39a43d47 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -991,30 +991,19 @@ static inline void mod_memcg_state(struct mem_cgroup *memcg,
+>   
+>   static inline unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
+>   {
+> -	long x = READ_ONCE(memcg->vmstats.state[idx]);
+> -#ifdef CONFIG_SMP
+> -	if (x < 0)
+> -		x = 0;
+> -#endif
+> -	return x;
+> +	return READ_ONCE(memcg->vmstats.state[idx]);
+>   }
+>   
+>   static inline unsigned long lruvec_page_state(struct lruvec *lruvec,
+>   					      enum node_stat_item idx)
+>   {
+>   	struct mem_cgroup_per_node *pn;
+> -	long x;
+>   
+>   	if (mem_cgroup_disabled())
+>   		return node_page_state(lruvec_pgdat(lruvec), idx);
+>   
+>   	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+> -	x = READ_ONCE(pn->lruvec_stats.state[idx]);
+> -#ifdef CONFIG_SMP
+> -	if (x < 0)
+> -		x = 0;
+> -#endif
+> -	return x;
+> +	return READ_ONCE(pn->lruvec_stats.state[idx]);
+>   }
+>   
+>   static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
+> 
 
-On Wed, Jul 28, 2021 at 10:33:20AM +0800, brookxu wrote:
-> If we do this, I think we will encounter some problems, as follows:
-> 1. blk-throttle is now at the top of the IO stack. Changing the position of the throttle hook
->    will make this mechanism invalid for some devices.
-> 2. We may also need to add a new hook to handle back-merge, otherwise I think the isolation
->    effect will be worse in the sequential IO scene.
-> 3. Since bio has entered the IO stack, if it is suspended and resubmitted by blk-throttle,
->    then there is an IO stack reentry problem, which I think may cause many small problems.
-
-Yeah, you're right. I don't think it's worth rocking the boat with
-blk-throtl at this point. An extra callback it is then.
-
-Thanks.
+Reviewed-by: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
 -- 
-tejun
+Thanks,
+
+David / dhildenb
+
