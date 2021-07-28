@@ -1,105 +1,74 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH block/for-5.14-fixes] blk-iocost: fix operation ordering in
- iocg_wake_fn()
-Date: Tue, 27 Jul 2021 14:38:09 -1000
-Message-ID: <YQCm8flaer2Ek0c+@slm.duckdns.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] memcg: cleanup racy sum avoidance code
+Date: Tue, 27 Jul 2021 18:22:43 -0700
+Message-ID: <20210728012243.3369123-1-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=b72Mqy89B2Ts98E37aqCi1/9GXkKJ3If2NuRSfThl+o=;
-        b=RxkjKWb6vyuBj8jWOTjy79JqnSnwpNXwKIU1Il9ltbcinklyLudxGTiBHX1qO3LvhE
-         euT7itrHJfxo4ciPDcJDRzAxrrPonqCyfjmFuAqTMkvwIUdQwe1sAbTXRF07PdKWqL9e
-         84MpOioni1oX/HXPLnOg7JVWLjP9L23W2yYd6Z9dV/iIuttKbOGY1iekWpKRalagZd9W
-         fbI8EZJU90Y5DJBy3rufvh33gSVRgACIr4mU0MXP5Yp0FB+Bmj3dyQ6fFsnPmsHLfN2P
-         LmjJy+/Ly99xsk1YEIAWnT8BgPT5W7ZNuiNyRyUn9bX/Vae3NeVM3EBwj2w4LHt6X8t1
-         UKwg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=KmGPLe7yWyGg+5xBmJJBJmFQBI3nGe2qI3u2htSZRc8=;
+        b=nuhUlmTMHBefTVNrgYI+UtWHFhAeUZ55sBhNa0QX9fumm4mflb1V6DbSoHCRW6t06r
+         onMeMgc+EcsYHFi0X4PcAOFTt1Ca4GWOMdzhbbiOrGVTrb0+gtM9N1DnIZxhXv8HlftC
+         DJSqiUVC7neopxxFodop5YR1Gled3AwZiXE7gKa9y/fs3sAr5ZECb/Puda3R9v+/bkI+
+         nb00mP95Ua0jnx3xuMqkU9/WGjDryEYGUuk5L5v/oC3oUWmi5Da3evvFfquWnPH15h+y
+         PKiZUtUG5Qb4p9eZ7PCfY2pcvyOh2brxBgAENIFwi2xJrsLT1ESfcW03z9V4K8U/cP8u
+         YJPw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Rik van Riel <riel-ebMLmSuQjDVBDgjK7y7TUQ@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-From aae4e1b4e26c3c671fc19aed2fb2ee19f7438707 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Tue, 27 Jul 2021 14:21:30 -1000
+We used to have per-cpu memcg and lruvec stats and the readers have to
+traverse and sum the stats from each cpu. This summing was racy and may
+expose transient negative values. So, an explicit check was added to
+avoid such scenarios. Now these stats are moved to rstat infrastructure
+and are no more per-cpu, so we can remove the fixup for transient
+negative values.
 
-iocg_wake_fn() open-codes wait_queue_entry removal and wakeup because it
-wants the wq_entry to be always removed whether it ended up waking the task
-or not. finish_wait() tests whether wq_entry needs removal without grabbing
-the wait_queue lock and expects the waker to use list_del_init_careful()
-after all waking operations are complete, which iocg_wake_fn() didn't do.
-The operation order was wrong and the regular list_del_init() was used.
-
-The result is that if a watier wakes up racing the waker, it can free pop
-the wq_entry off stack before the waker is still looking at it, which can
-lead to a backtrace like the following.
-
-  [7312084.588951] general protection fault, probably for non-canonical address 0x586bf4005b2b88: 0000 [#1] SMP
-  ...
-  [7312084.647079] RIP: 0010:queued_spin_lock_slowpath+0x171/0x1b0
-  ...
-  [7312084.858314] Call Trace:
-  [7312084.863548]  _raw_spin_lock_irqsave+0x22/0x30
-  [7312084.872605]  try_to_wake_up+0x4c/0x4f0
-  [7312084.880444]  iocg_wake_fn+0x71/0x80
-  [7312084.887763]  __wake_up_common+0x71/0x140
-  [7312084.895951]  iocg_kick_waitq+0xe8/0x2b0
-  [7312084.903964]  ioc_rqos_throttle+0x275/0x650
-  [7312084.922423]  __rq_qos_throttle+0x20/0x30
-  [7312084.930608]  blk_mq_make_request+0x120/0x650
-  [7312084.939490]  generic_make_request+0xca/0x310
-  [7312084.957600]  submit_bio+0x173/0x200
-  [7312084.981806]  swap_readpage+0x15c/0x240
-  [7312084.989646]  read_swap_cache_async+0x58/0x60
-  [7312084.998527]  swap_cluster_readahead+0x201/0x320
-  [7312085.023432]  swapin_readahead+0x2df/0x450
-  [7312085.040672]  do_swap_page+0x52f/0x820
-  [7312085.058259]  handle_mm_fault+0xa16/0x1420
-  [7312085.066620]  do_page_fault+0x2c6/0x5c0
-  [7312085.074459]  page_fault+0x2f/0x40
-
-Fix it by switching to list_del_init_careful() and putting it at the end.
-
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Reported-by: Rik van Riel <riel-ebMLmSuQjDVBDgjK7y7TUQ@public.gmane.org>
-Fixes: 7caa47151ab2 ("blkcg: implement blk-iocost")
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # v5.4+
+Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-iocost.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ include/linux/memcontrol.h | 15 ++-------------
+ 1 file changed, 2 insertions(+), 13 deletions(-)
 
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index c2d6bc88d3f15..5fac3757e6e05 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -1440,16 +1440,17 @@ static int iocg_wake_fn(struct wait_queue_entry *wq_entry, unsigned mode,
- 		return -1;
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 7028d8e4a3d7..5f2a39a43d47 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -991,30 +991,19 @@ static inline void mod_memcg_state(struct mem_cgroup *memcg,
  
- 	iocg_commit_bio(ctx->iocg, wait->bio, wait->abs_cost, cost);
-+	wait->committed = true;
- 
- 	/*
- 	 * autoremove_wake_function() removes the wait entry only when it
--	 * actually changed the task state.  We want the wait always
--	 * removed.  Remove explicitly and use default_wake_function().
-+	 * actually changed the task state. We want the wait always removed.
-+	 * Remove explicitly and use default_wake_function(). Note that the
-+	 * order of operations is important as finish_wait() tests whether
-+	 * @wq_entry is removed without grabbing the lock.
- 	 */
--	list_del_init(&wq_entry->entry);
--	wait->committed = true;
--
- 	default_wake_function(wq_entry, mode, flags, key);
-+	list_del_init_careful(&wq_entry->entry);
- 	return 0;
+ static inline unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
+ {
+-	long x = READ_ONCE(memcg->vmstats.state[idx]);
+-#ifdef CONFIG_SMP
+-	if (x < 0)
+-		x = 0;
+-#endif
+-	return x;
++	return READ_ONCE(memcg->vmstats.state[idx]);
  }
  
+ static inline unsigned long lruvec_page_state(struct lruvec *lruvec,
+ 					      enum node_stat_item idx)
+ {
+ 	struct mem_cgroup_per_node *pn;
+-	long x;
+ 
+ 	if (mem_cgroup_disabled())
+ 		return node_page_state(lruvec_pgdat(lruvec), idx);
+ 
+ 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+-	x = READ_ONCE(pn->lruvec_stats.state[idx]);
+-#ifdef CONFIG_SMP
+-	if (x < 0)
+-		x = 0;
+-#endif
+-	return x;
++	return READ_ONCE(pn->lruvec_stats.state[idx]);
+ }
+ 
+ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
 -- 
-2.32.0
+2.32.0.432.gabb21c7263-goog
 
