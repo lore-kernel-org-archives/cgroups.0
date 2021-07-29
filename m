@@ -1,23 +1,22 @@
 From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 5/5] mm, memcg: always call __mod_node_page_state() with
- preempt disabled
-Date: Thu, 29 Jul 2021 07:39:08 -0700
-Message-ID: <CALvZod6n1EwcyLTi=Eb8t=NVVPLRh9=Ng=VJ93pQyCRkOcLo9Q@mail.gmail.com>
-References: <20210729125755.16871-1-linmiaohe@huawei.com> <20210729125755.16871-6-linmiaohe@huawei.com>
+Subject: Re: [PATCH 3/5] mm, memcg: save some atomic ops when flush is already true
+Date: Thu, 29 Jul 2021 07:40:34 -0700
+Message-ID: <CALvZod4MpcxzZ59hTX72g7F26Kmb=hfBCGNUGq41MgRfTvuEsQ@mail.gmail.com>
+References: <20210729125755.16871-1-linmiaohe@huawei.com> <20210729125755.16871-4-linmiaohe@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=pQ+TosWiDAdG8+90eQclOC0l7J20f+GG4ER7QwTBKX8=;
-        b=R23L4N03E0Cp8DvPNPKl1idmWh2CJdaYEmaLa1zbfrqP6vbUf+kVIxIr+waUl74KJ7
-         Mphdxreoppmm+jRPzPzsh1BxrZm8LVudhznf1T4QIzuK2yPi+akMMez82h2jumMlbVBf
-         S4s7yiBKeS5xYqWyj6/0VB0Gc5h/lkfbSVQ8/wSDflor4uoM7saLwFNOPaGtfgypCOj/
-         +WIjAxfYsT6tTBO/q53IY7HCwDcgVv78qaKosze2J5wD59XRmrOEtTa4h7EmF5Pf5cK0
-         nkmiVrgBr2zJPDiZ0MD0JZ5mxei1/97cIXhT5vYsbRVqwrZO7WrhQf5r9ywwwTopzLvU
-         jR6g==
-In-Reply-To: <20210729125755.16871-6-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        bh=g5bAj8ty5oGdKwNlb8K8CLCbwch75jyi8lukuavge1w=;
+        b=Pt/myiUcp/HcWkRJqwMsshxtVCmbTMQkOHiiYTWtRrlpIQtfIwP/TshXg/Sv8sShX9
+         o2MFa/ULWHD9UC3jmOcqn1lmGxaT4wKLBTj9EmJNBAHOi7Q8KcOqOF0BKQN7ZPWxNCSJ
+         XetW0whmTlm+G5aufSYRe0G9VUSjiNZ+WQeflOuu8nWflrnK9K1ff6Rd2RAu58nxE+Y6
+         7qbJdt29eO3qn86prpYrCpSIiyM4hC29igxet+IGxGq7kaFkObrd4BxwXuAznFdcDM9l
+         95jP6Xt6Saju2kAdhuCdAVe/F79H2aNR8AMySTMNEDU2FRE0HLzx6Q07o0jseAYwQdQb
+         9Rcw==
+In-Reply-To: <20210729125755.16871-4-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -26,33 +25,9 @@ Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hoc
 
 On Thu, Jul 29, 2021 at 5:58 AM Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
 >
-> We should always ensure __mod_node_page_state() is called with preempt
-> disabled or percpu ops may manipulate the wrong cpu when preempt happened.
+> Add 'else' to save some atomic ops in obj_stock_flush_required() when
+> flush is already true. No functional change intended here.
 >
-> Fixes: b4e0b68fbd9d ("mm: memcontrol: use obj_cgroup APIs to charge kmem pages")
 > Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->  mm/memcontrol.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 70a32174e7c4..616d1a72ece3 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -697,8 +697,8 @@ void __mod_lruvec_page_state(struct page *page, enum node_stat_item idx,
->         memcg = page_memcg(head);
->         /* Untracked pages have no memcg, no lruvec. Update only the node */
->         if (!memcg) {
-> -               rcu_read_unlock();
->                 __mod_node_page_state(pgdat, idx, val);
-> +               rcu_read_unlock();
 
-This rcu is for page_memcg. The preemption and interrupts are disabled
-across __mod_lruvec_page_state().
-
->                 return;
->         }
->
-> --
-> 2.23.0
->
+Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
