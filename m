@@ -1,33 +1,70 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/5] mm, memcg: save some atomic ops when flush is already true
-Date: Thu, 29 Jul 2021 07:40:34 -0700
-Message-ID: <CALvZod4MpcxzZ59hTX72g7F26Kmb=hfBCGNUGq41MgRfTvuEsQ@mail.gmail.com>
-References: <20210729125755.16871-1-linmiaohe@huawei.com> <20210729125755.16871-4-linmiaohe@huawei.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2] blk-throtl: optimize IOPS throttle for large IO
+ scenarios
+Date: Thu, 29 Jul 2021 07:11:34 -1000
+Message-ID: <YQLhRrkZrmKTzfbP@mtj.duckdns.org>
+References: <40915233274d31bb0659ff9f3be8900a5a0e81ba.1627462548.git.brookxu@tencent.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=g5bAj8ty5oGdKwNlb8K8CLCbwch75jyi8lukuavge1w=;
-        b=Pt/myiUcp/HcWkRJqwMsshxtVCmbTMQkOHiiYTWtRrlpIQtfIwP/TshXg/Sv8sShX9
-         o2MFa/ULWHD9UC3jmOcqn1lmGxaT4wKLBTj9EmJNBAHOi7Q8KcOqOF0BKQN7ZPWxNCSJ
-         XetW0whmTlm+G5aufSYRe0G9VUSjiNZ+WQeflOuu8nWflrnK9K1ff6Rd2RAu58nxE+Y6
-         7qbJdt29eO3qn86prpYrCpSIiyM4hC29igxet+IGxGq7kaFkObrd4BxwXuAznFdcDM9l
-         95jP6Xt6Saju2kAdhuCdAVe/F79H2aNR8AMySTMNEDU2FRE0HLzx6Q07o0jseAYwQdQb
-         9Rcw==
-In-Reply-To: <20210729125755.16871-4-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=vwili5Ap3pl5QTQqz8bc1S7CjPVAgBWQMamZ9XQVdO4=;
+        b=iT/gDga4Q09cV3tRMXD5HCdMqu54krFqAdGOn3IVbHrIUuIJKufh/9zsc2S76ZQQXR
+         HFcSP8MMW8c2pLGKGrkHNFGTjmT6XcvFk7Ydam8QwwSxmGc2uUAUOBc7vgV94yksLCbm
+         5g6jBi3tmExqgi5PtPz1If7SVyGOKnDFb7ShBegl1TRFWjUyJiz187mcVe9FGcEthtWE
+         fio7y7AZ+6HJ4Xge03I++TWhDsyCynxfLIvLFd2Mw3Vyq2nR7/NdjdsOFtol/k9QcFP6
+         WVWF8GQjsJtJB5gVq+KytIjw5niqWi7/Eh8F6QlDnTawp+qhc9z1hd6TqBvGzKCtUAAr
+         1cVw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <40915233274d31bb0659ff9f3be8900a5a0e81ba.1627462548.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Jul 29, 2021 at 5:58 AM Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->
-> Add 'else' to save some atomic ops in obj_stock_flush_required() when
-> flush is already true. No functional change intended here.
->
-> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Hello,
 
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+On Wed, Jul 28, 2021 at 05:01:41PM +0800, brookxu wrote:
+> diff --git a/block/blk-merge.c b/block/blk-merge.c
+> index a11b3b5..86ff943 100644
+> --- a/block/blk-merge.c
+> +++ b/block/blk-merge.c
+> @@ -348,6 +348,8 @@ void __blk_queue_split(struct bio **bio, unsigned int *nr_segs)
+>  		trace_block_split(split, (*bio)->bi_iter.bi_sector);
+>  		submit_bio_noacct(*bio);
+>  		*bio = split;
+> +
+> +		blk_throtl_recharge_bio(*bio);
+
+Can you rename this blk_throtl_charge_bio_split()?
+
+> @@ -524,6 +537,11 @@ static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp,
+>  	tg->idletime_threshold = DFL_IDLE_THRESHOLD;
+>  	tg->idletime_threshold_conf = DFL_IDLE_THRESHOLD;
+>  
+> +	atomic_set(&tg->io_split_cnt[0], 0);
+> +	atomic_set(&tg->io_split_cnt[1], 0);
+> +	atomic_set(&tg->last_io_split_cnt[0], 0);
+> +	atomic_set(&tg->last_io_split_cnt[1], 0);
+
+We likely don't need these. pd's zeroed on allocation.
+
+> @@ -877,10 +900,19 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
+>  	else
+>  		tg->bytes_disp[rw] = 0;
+>  
+> -	if (tg->io_disp[rw] >= io_trim)
+> +	if (tg_io_disp(tg, rw) >= io_trim) {
+
+Instead of checking this in multiple places, would it be simpler to transfer
+the atomic counters to the existing counters whenever we enter blk-throtl
+and leave the rest of the code as-is?
+
+Thanks.
+
+-- 
+tejun
