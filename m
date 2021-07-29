@@ -1,7 +1,7 @@
 From: Miaohe Lin <linmiaohe@huawei.com>
-Subject: [PATCH 1/5] mm, memcg: remove unused functions
-Date: Thu, 29 Jul 2021 20:57:51 +0800
-Message-ID: <20210729125755.16871-2-linmiaohe@huawei.com>
+Subject: [PATCH 3/5] mm, memcg: save some atomic ops when flush is already true
+Date: Thu, 29 Jul 2021 20:57:53 +0800
+Message-ID: <20210729125755.16871-4-linmiaohe@huawei.com>
 References: <20210729125755.16871-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
@@ -12,46 +12,26 @@ Content-Type: text/plain; charset="us-ascii"
 To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org
 Cc: shakeelb@google.com, guro@fb.com, willy@infradead.org, alexs@kernel.org, richard.weiyang@gmail.com, songmuchun@bytedance.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linmiaohe@huawei.com
 
-Since commit 2d146aa3aa84 ("mm: memcontrol: switch to rstat"), last user
-of memcg_stat_item_in_bytes() is gone. And since commit fa40d1ee9f15 ("mm:
-vmscan: memcontrol: remove mem_cgroup_select_victim_node()"), only the
-declaration of mem_cgroup_select_victim_node() is remained here. Remove
-them.
+Add 'else' to save some atomic ops in obj_stock_flush_required() when
+flush is already true. No functional change intended here.
 
 Signed-off-by: Miaohe Lin <linmiaohe@huawei.com>
 ---
- include/linux/memcontrol.h | 12 ------------
- 1 file changed, 12 deletions(-)
+ mm/memcontrol.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 7028d8e4a3d7..04437504444f 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -606,13 +606,6 @@ static inline bool PageMemcgKmem(struct page *page)
- 	return folio_memcg_kmem(page_folio(page));
- }
- 
--static __always_inline bool memcg_stat_item_in_bytes(int idx)
--{
--	if (idx == MEMCG_PERCPU_B)
--		return true;
--	return vmstat_item_in_bytes(idx);
--}
--
- static inline bool mem_cgroup_is_root(struct mem_cgroup *memcg)
- {
- 	return (memcg == root_mem_cgroup);
-@@ -916,11 +909,6 @@ static inline bool mem_cgroup_online(struct mem_cgroup *memcg)
- 	return !!(memcg->css.flags & CSS_ONLINE);
- }
- 
--/*
-- * For memory reclaim.
-- */
--int mem_cgroup_select_victim_node(struct mem_cgroup *memcg);
--
- void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
- 		int zid, int nr_pages);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index a03e24e57cd9..5b4592d1e0f2 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2231,7 +2231,7 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
+ 		if (memcg && stock->nr_pages &&
+ 		    mem_cgroup_is_descendant(memcg, root_memcg))
+ 			flush = true;
+-		if (obj_stock_flush_required(stock, root_memcg))
++		else if (obj_stock_flush_required(stock, root_memcg))
+ 			flush = true;
+ 		rcu_read_unlock();
  
 -- 
 2.23.0
