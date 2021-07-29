@@ -1,45 +1,58 @@
-From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/5] mm, memcg: narrow the scope of percpu_charge_mutex
-Date: Thu, 29 Jul 2021 20:57:52 +0800
-Message-ID: <20210729125755.16871-3-linmiaohe@huawei.com>
+From: Miaohe Lin <linmiaohe@huawei.com>
+Subject: [PATCH 1/5] mm, memcg: remove unused functions
+Date: Thu, 29 Jul 2021 20:57:51 +0800
+Message-ID: <20210729125755.16871-2-linmiaohe@huawei.com>
 References: <20210729125755.16871-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20210729125755.16871-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20210729125755.16871-1-linmiaohe@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org
+Cc: shakeelb@google.com, guro@fb.com, willy@infradead.org, alexs@kernel.org, richard.weiyang@gmail.com, songmuchun@bytedance.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linmiaohe@huawei.com
 
-Since percpu_charge_mutex is only used inside drain_all_stock(), we can
-narrow the scope of percpu_charge_mutex by moving it here.
+Since commit 2d146aa3aa84 ("mm: memcontrol: switch to rstat"), last user
+of memcg_stat_item_in_bytes() is gone. And since commit fa40d1ee9f15 ("mm:
+vmscan: memcontrol: remove mem_cgroup_select_victim_node()"), only the
+declaration of mem_cgroup_select_victim_node() is remained here. Remove
+them.
 
-Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Miaohe Lin <linmiaohe@huawei.com>
 ---
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/memcontrol.h | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6580c2381a3e..a03e24e57cd9 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2050,7 +2050,6 @@ struct memcg_stock_pcp {
- #define FLUSHING_CACHED_CHARGE	0
- };
- static DEFINE_PER_CPU(struct memcg_stock_pcp, memcg_stock);
--static DEFINE_MUTEX(percpu_charge_mutex);
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 7028d8e4a3d7..04437504444f 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -606,13 +606,6 @@ static inline bool PageMemcgKmem(struct page *page)
+ 	return folio_memcg_kmem(page_folio(page));
+ }
  
- #ifdef CONFIG_MEMCG_KMEM
- static void drain_obj_stock(struct obj_stock *stock);
-@@ -2209,6 +2208,7 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
-  */
- static void drain_all_stock(struct mem_cgroup *root_memcg)
+-static __always_inline bool memcg_stat_item_in_bytes(int idx)
+-{
+-	if (idx == MEMCG_PERCPU_B)
+-		return true;
+-	return vmstat_item_in_bytes(idx);
+-}
+-
+ static inline bool mem_cgroup_is_root(struct mem_cgroup *memcg)
  {
-+	static DEFINE_MUTEX(percpu_charge_mutex);
- 	int cpu, curcpu;
+ 	return (memcg == root_mem_cgroup);
+@@ -916,11 +909,6 @@ static inline bool mem_cgroup_online(struct mem_cgroup *memcg)
+ 	return !!(memcg->css.flags & CSS_ONLINE);
+ }
  
- 	/* If someone's already draining, avoid adding running more workers. */
+-/*
+- * For memory reclaim.
+- */
+-int mem_cgroup_select_victim_node(struct mem_cgroup *memcg);
+-
+ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
+ 		int zid, int nr_pages);
+ 
 -- 
 2.23.0
 
