@@ -1,48 +1,51 @@
-From: Hu Haowen <src.res@email.cn>
+From: Jonathan Corbet <corbet@lwn.net>
 Subject: Re: [PATCH] cgroup: Fix typo in comments and documents
-Date: Sat, 31 Jul 2021 00:07:05 +0800
-Message-ID: <a46dfadc-6615-cc5d-84ac-4e31def00bf3@email.cn>
+Date: Fri, 30 Jul 2021 13:16:46 -0600
+Message-ID: <87im0ra9y9.fsf@meer.lwn.net>
 References: <20210730051605.2626-1-caihuoqing@baidu.com>
- <0516372e-0120-ff52-bf9a-cf1cda9a633f@email.cn>
- <CALvZod6sUh0XQGVb4wEfzGNDcrLabgmjEdu+wh0g1c=cvvci4Q@mail.gmail.com>
- <437db356f1b44a19837dc7f24f9adfcb@baidu.com>
+ <87lf5nc0su.fsf@meer.lwn.net> <YQQUwX+/1N9utKEN@casper.infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=email.cn;
-        s=dkim; h=To:From:Date; bh=O4d9n4ICcjZvP1yV8qsRv3XRzfx7tCTKYQ2aa
-        0KXtu8=; b=Kz4eDKI7BEwhgD2daN1cegtO+OEbsoT205wytpeIjj9CSchmTT0e+
-        bHH8q0RfPEfWtbgEI+JXjNxWSXRZe4msCTeTDejCzJrJSadgrf+d6NRIbsiMXcFi
-        pS7VpR48hWwHGbJps9cq7hklUjHUSedirXK5lp/jmQmKwS2IY6aQuo=
-In-Reply-To: <437db356f1b44a19837dc7f24f9adfcb@baidu.com>
-Content-Language: en-US
+DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 00A512A0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
+        t=1627672607; bh=YZc6mmNZCtOeBrjLGQq95v8TtG0AvIQbj6k4rdcz9zg=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=qmn7LCq42csnsffDQi5ZEs3vj9qdZow+WW/D2/zM9ft36MrKc+uu3WSDWCOp1pk65
+         uTR+PpaYMkp76pYJrDsBkBRRfnalc6hLzagHP4EByWUqIEGarFVmx0i8me+2+g9pBj
+         VI9eEAVIL6q5f69dVukJDgUA8ccztyhjzI6xVrvYy8yGThpgnV0KyKSYIaNEtFGUSv
+         R9csgOPitVaOAKMOhEkxUsDI3bq/ZaFinWeegdVjPf77MmmSX/q1MM+VT1DYnZyyQH
+         9HGZm/yJsx7WP5dG3dJCYpNIT2AjoRCdLeEiKPFiIA6ILZWYByVUBaH5iObjbdmsha
+         hdwc5xwHL1pgA==
+In-Reply-To: <YQQUwX+/1N9utKEN@casper.infradead.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: "Cai,Huoqing" <caihuoqing@baidu.com>, Shakeel Butt <shakeelb@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Cgroups <cgroups@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Cai Huoqing <caihuoqing@baidu.com>, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
+Matthew Wilcox <willy@infradead.org> writes:
 
-在 2021/7/30 下午10:54, Cai,Huoqing 写道:
-> Forget it - -
+> On Fri, Jul 30, 2021 at 08:51:29AM -0600, Jonathan Corbet wrote:
+>> Cai Huoqing <caihuoqing@baidu.com> writes:
+>> 
+>> > Fix typo: iff  ==> if
+>> >
+>> > Signed-off-by: Cai Huoqing <caihuoqing@baidu.com>
+>> 
+>> This is becoming an FAQ ...  "iff" in mathematical English means "if and
+>> only if"; its usage in these documents is correct.
 >
-> -----Original Message-----
-> From: Shakeel Butt <shakeelb@google.com> 
-> Sent: 2021年7月30日 22:53
-> To: Hu Haowen <src.res@email.cn>
-> Cc: Cai,Huoqing <caihuoqing@baidu.com>; Tejun Heo <tj@kernel.org>; Zefan Li <lizefan.x@bytedance.com>; Johannes Weiner <hannes@cmpxchg.org>; Jonathan Corbet <corbet@lwn.net>; Cgroups <cgroups@vger.kernel.org>; linux-doc@vger.kernel.org; LKML <linux-kernel@vger.kernel.org>
-> Subject: Re: [PATCH] cgroup: Fix typo in comments and documents
->
-> On Fri, Jul 30, 2021 at 6:44 AM Hu Haowen <src.res@email.cn> wrote:
->>
->> 在 2021/7/30 下午1:16, Cai Huoqing 写道:
->>> Fix typo: iff  ==> if
-> This is not a typo. 'iff' means 'if and only if'. For details see https://en.wikipedia.org/wiki/If_and_only_if.
+> ... and yet it's clearly not understood.  Similarly to the [start..end)
+> convention (also the [start..end[ convention).  Should we deprecate
+> use of it in kernel documentation, and if so, what should we replace it
+> with?
 
+I'm never quite sure what to do with these things...we want to be
+inclusive, but we don't want to hobble the language we use beyond a
+certain point.  We could ask people to spell out "if and only if", I
+suppose, but that sounds like the kind of thing that leads to unpleasant
+messages in my inbox.
 
-Sorry, my mistake.
+Thanks,
 
-
-Thx,
-
-Hu Haowen
-
+jon
