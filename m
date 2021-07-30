@@ -1,22 +1,22 @@
 From: Hu Haowen <src.res@email.cn>
 Subject: Re: [PATCH] cgroup: Fix typo in comments and documents
-Date: Fri, 30 Jul 2021 21:43:39 +0800
-Message-ID: <6de09d3e-6e54-60b9-fa23-9ff0e1f68a28@email.cn>
+Date: Fri, 30 Jul 2021 21:44:17 +0800
+Message-ID: <0516372e-0120-ff52-bf9a-cf1cda9a633f@email.cn>
 References: <20210730051605.2626-1-caihuoqing@baidu.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=email.cn;
         s=dkim; h=To:From:Date; bh=U6j4xCRQTNphDoWVkEQmuY0zFpuU+auTGrnhA
-        Ph8wKQ=; b=mgeRrYjSL4QxpqYe+xgUThO/P2GIlC7Axzqi5zbif3I6MN/A4yIKS
-        SSM557/l7kM+6ttYO2U+wbXogaLZ/ALmnR0RCu7QwhZz6fi2PtQPbBeRXu7i/PbX
-        x4LnrlybMIN+0+8qVHXfOqgyodOl9TYgwqPsGN3Sxf7dx4Kgkao2Os=
+        Ph8wKQ=; b=dtZT1Gmy+Ib7qRWeBixQDKdLla0H32l6JEY0+iqJQEHptPw360i+f
+        /dXr5YX1sKbqCWRMS80fTOOnZJY7kjuOLoffNhV6YthSfvQblA5a4ZLJbE7MlerN
+        dgIx3DskzpZ2jk2R8wKomy/iaSf4qmxBczkekdYSagdVNotY2vrYw8=
 In-Reply-To: <20210730051605.2626-1-caihuoqing@baidu.com>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
 To: Cai Huoqing <caihuoqing@baidu.com>, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, corbet@lwn.net
-Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
 =D4=DA 2021/7/30 =CF=C2=CE=E71:16, Cai Huoqing =D0=B4=B5=C0:
