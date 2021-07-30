@@ -1,34 +1,31 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH] cgroup: Fix typo in comments and documents
-Date: Fri, 30 Jul 2021 07:53:07 -0700
-Message-ID: <CALvZod6sUh0XQGVb4wEfzGNDcrLabgmjEdu+wh0g1c=cvvci4Q@mail.gmail.com>
-References: <20210730051605.2626-1-caihuoqing@baidu.com> <0516372e-0120-ff52-bf9a-cf1cda9a633f@email.cn>
+From: "Cai,Huoqing" <caihuoqing@baidu.com>
+Subject: RE: [PATCH] cgroup: Fix typo in comments and documents
+Date: Fri, 30 Jul 2021 14:54:49 +0000
+Message-ID: <437db356f1b44a19837dc7f24f9adfcb@baidu.com>
+References: <20210730051605.2626-1-caihuoqing@baidu.com>
+ <0516372e-0120-ff52-bf9a-cf1cda9a633f@email.cn>
+ <CALvZod6sUh0XQGVb4wEfzGNDcrLabgmjEdu+wh0g1c=cvvci4Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=WwILEX7NR1VzEi/uBdrHjZ2rhekLFtKl+IjEJ6PsRbo=;
-        b=eSRscB5LQZ42d/wJxzzYPB1M2Ev+d8TH1pk1kq7FZs6bBPalAKZ3cFxeJSuSpu3dN0
-         Em59MuepSMmpBso4Ynu1+27CaFcZ/iVxU8JvxIa1juSCTwjR6YMwx9wll3fjX5aCGryx
-         45DqbbN+Vkr/RNTQXWcM1pYi75BmOfzzVzQXBH9/jduPm+5mKvBVTvWDtNNS2TWuLZA7
-         SjJ+vWgQYQe8cUdVUakQ72OAzF+V4E0mXkB/PO+kFm4hQvjmJr/4XUmQZIE0UtBv6/no
-         Cz6pNjN2L+umPZr0BsmaHwqvuBPvKfnA6X6V143fY0lGA+TJgx0m3RbMz7Vh66AHtjOK
-         lPuQ==
-In-Reply-To: <0516372e-0120-ff52-bf9a-cf1cda9a633f@email.cn>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Hu Haowen <src.res@email.cn>
-Cc: Cai Huoqing <caihuoqing@baidu.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <CALvZod6sUh0XQGVb4wEfzGNDcrLabgmjEdu+wh0g1c=cvvci4Q@mail.gmail.com>
+Content-Language: en-US
+List-ID: <cgroups.vger.kernel.org>
+To: Shakeel Butt <shakeelb@google.com>, Hu Haowen <src.res@email.cn>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Cgroups <cgroups@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Fri, Jul 30, 2021 at 6:44 AM Hu Haowen <src.res@email.cn> wrote:
->
->
-> =E5=9C=A8 2021/7/30 =E4=B8=8B=E5=8D=881:16, Cai Huoqing =E5=86=99=E9=81=
-=93:
-> > Fix typo: iff  =3D=3D> if
-
-This is not a typo. 'iff' means 'if and only if'. For details see
-https://en.wikipedia.org/wiki/If_and_only_if.
+Rm9yZ2V0IGl0IC0gLQ0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogU2hha2Vl
+bCBCdXR0IDxzaGFrZWVsYkBnb29nbGUuY29tPiANClNlbnQ6IDIwMjHlubQ35pyIMzDml6UgMjI6
+NTMNClRvOiBIdSBIYW93ZW4gPHNyYy5yZXNAZW1haWwuY24+DQpDYzogQ2FpLEh1b3FpbmcgPGNh
+aWh1b3FpbmdAYmFpZHUuY29tPjsgVGVqdW4gSGVvIDx0akBrZXJuZWwub3JnPjsgWmVmYW4gTGkg
+PGxpemVmYW4ueEBieXRlZGFuY2UuY29tPjsgSm9oYW5uZXMgV2VpbmVyIDxoYW5uZXNAY21weGNo
+Zy5vcmc+OyBKb25hdGhhbiBDb3JiZXQgPGNvcmJldEBsd24ubmV0PjsgQ2dyb3VwcyA8Y2dyb3Vw
+c0B2Z2VyLmtlcm5lbC5vcmc+OyBsaW51eC1kb2NAdmdlci5rZXJuZWwub3JnOyBMS01MIDxsaW51
+eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPg0KU3ViamVjdDogUmU6IFtQQVRDSF0gY2dyb3VwOiBG
+aXggdHlwbyBpbiBjb21tZW50cyBhbmQgZG9jdW1lbnRzDQoNCk9uIEZyaSwgSnVsIDMwLCAyMDIx
+IGF0IDY6NDQgQU0gSHUgSGFvd2VuIDxzcmMucmVzQGVtYWlsLmNuPiB3cm90ZToNCj4NCj4NCj4g
+5ZyoIDIwMjEvNy8zMCDkuIvljYgxOjE2LCBDYWkgSHVvcWluZyDlhpnpgZM6DQo+ID4gRml4IHR5
+cG86IGlmZiAgPT0+IGlmDQoNClRoaXMgaXMgbm90IGEgdHlwby4gJ2lmZicgbWVhbnMgJ2lmIGFu
+ZCBvbmx5IGlmJy4gRm9yIGRldGFpbHMgc2VlIGh0dHBzOi8vZW4ud2lraXBlZGlhLm9yZy93aWtp
+L0lmX2FuZF9vbmx5X2lmLg0K
