@@ -1,38 +1,56 @@
-From: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH] mm: memcontrol: Set the correct memcg swappiness restriction
-Date: Fri, 30 Jul 2021 14:26:35 +0800
-Message-ID: <d77469b90c45c49953ccbc51e54a1d465bc18f70.1627626255.git.baolin.wang@linux.alibaba.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Miaohe Lin <linmiaohe@huawei.com>
+Subject: Re: [PATCH 4/5] mm, memcg: avoid possible NULL pointer dereferencing
+ in mem_cgroup_init()
+Date: Fri, 30 Jul 2021 14:29:57 +0800
+Message-ID: <2a9353e0-9ece-d8d5-1387-202b01b0fdad@huawei.com>
+References: <20210729125755.16871-1-linmiaohe@huawei.com>
+ <20210729125755.16871-5-linmiaohe@huawei.com> <YQNuK+jN7pZLJTvT@carbon.lan>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <YQNuK+jN7pZLJTvT@carbon.lan>
+Content-Language: en-US
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Roman Gushchin <guro@fb.com>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, shakeelb@google.com, willy@infradead.org, alexs@kernel.org, richard.weiyang@gmail.com, songmuchun@bytedance.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-Since commit c843966c556d ("mm: allow swappiness that prefers reclaiming
-anon over the file workingset") has expended the swappiness value to
-make swap to be preferred in some systems. We should also change the
-memcg swappiness restriction to allow memcg swap-preferred.
+On 2021/7/30 11:12, Roman Gushchin wrote:
+> On Thu, Jul 29, 2021 at 08:57:54PM +0800, Miaohe Lin wrote:
+>> rtpn might be NULL in very rare case. We have better to check it before
+>> dereferencing it. Since memcg can live with NULL rb_tree_per_node in
+>> soft_limit_tree, warn this case and continue.
+>>
+>> Signed-off-by: Miaohe Lin <linmiaohe@huawei.com>
+>> ---
+>>  mm/memcontrol.c | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index 5b4592d1e0f2..70a32174e7c4 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -7109,6 +7109,8 @@ static int __init mem_cgroup_init(void)
+>>  		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL,
+>>  				    node_online(node) ? node : NUMA_NO_NODE);
+>>  
+>> +		if (WARN_ON_ONCE(!rtpn))
+>> +			continue;
+> 
+> I also really doubt that it makes any sense to continue in this case.
+> If this allocations fails (at the very beginning of the system's life, it's an __init function),
+> something is terribly wrong and panic'ing on a NULL-pointer dereference sounds like
+> a perfect choice.
+> 
+> Is this a real world problem? Do I miss something?
 
-Signed-off-by: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
----
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+No, this is a theoretical bug, a very race case but not impossible IMO.
+Since we can't live with NULL rb_tree_per_node in soft_limit_tree, I thinks
+simply continue or break here without panic is also acceptable. Or is it
+more proper to choose panic here?
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6580c23..988fc94 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4046,7 +4046,7 @@ static int mem_cgroup_swappiness_write(struct cgroup_subsys_state *css,
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 
--	if (val > 100)
-+	if (val > 200)
- 		return -EINVAL;
- 
- 	if (!mem_cgroup_is_root(memcg))
--- 
-1.8.3.1
+Thanks.
+
+> .
+> 
 
