@@ -1,78 +1,77 @@
-From: brookxu <brookxu.cn@gmail.com>
-Subject: Re: [PATCH v2] blk-throtl: optimize IOPS throttle for large IO
- scenarios
-Date: Fri, 30 Jul 2021 10:09:34 +0800
-Message-ID: <1ce9bcbb-8eea-f51f-f80a-22caf5f2e0d8@gmail.com>
-References: <40915233274d31bb0659ff9f3be8900a5a0e81ba.1627462548.git.brookxu@tencent.com>
- <YQLhRrkZrmKTzfbP@mtj.duckdns.org>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [External] Re: [PATCH 5/5] mm, memcg: always call
+ __mod_node_page_state() with preempt disabled
+Date: Fri, 30 Jul 2021 10:33:59 +0800
+Message-ID: <CAMZfGtUMBZeo-P48MECO=xM9-apeLMAZZGE3VNsg_u5P523BEg@mail.gmail.com>
+References: <20210729125755.16871-1-linmiaohe@huawei.com> <20210729125755.16871-6-linmiaohe@huawei.com>
+ <CALvZod6n1EwcyLTi=Eb8t=NVVPLRh9=Ng=VJ93pQyCRkOcLo9Q@mail.gmail.com> <29c4bb2a-ceaf-6c8b-c222-38b30460780f@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=mQTBEXw5fXJfZ/TwuYgDsyZEqK+e8q8zwd2JV8rkUI4=;
-        b=OfGWAGjzAWRnxyGCUY9JGgohLkj7/XotbZNbRMRePBmKhyRjovGp4Mil5rMe9Bfe8w
-         28R6ip0kNr8cokWRSu+7t/PM0bcWy+SVysaVQg3HVxKhC064UJfUNHT+7HiPOY8OLYaV
-         VQC9I7qXtGfo7eJoro5z1WriftwnGTe0NWAgEp5PTDldjw+L2KmlJYT5NBUP6EpGQ5Te
-         26vFNtMlVFW7hQO/E65B5quQa9NuFlPS2YLbSjPWpuZ+ssAfOcDfRATVFkoV7H2/CelC
-         vHj4AYfKOmdQWJcskAr8/ted2PMQXBvqb27RSFk06zZ2Me8zb44z55P0wTzyD8eSlwZ4
-         61dw==
-In-Reply-To: <YQLhRrkZrmKTzfbP@mtj.duckdns.org>
-Content-Language: en-US
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=OrnW4TDngOfmT4k1Ifughwagt8BmS1Mfblfsw7s1vyw=;
+        b=sCBp+WebYpI5Z9F5/Q3Yqxn7z/iABDei+1bGAY6Eb+qvxZnqBq3AoNCMtY7SjlRdCw
+         V0gox9Fyqip/WZUwEbnACYCEwQP9fPDxfzFbSVadNYyenjP4DvwlYI6sfO+0wo9PQO++
+         DeEOjlwQGzxR7u2teqGXnaffsL1lNMExo9NQlJR00TUC0qx/6sYJopIwQuuBZa+k8aEq
+         f6zX0jjLeZGNF0zhY86tGIVqrkY+g6RKKUOvyPh7eP2Cx+MRJIYvdv8pAkt4cG1OLDE+
+         nfBed/rDolcbxTZZsQ1QjFY5GQAtGOCGH6OhFu7v/3eWULQji7xUH18UC5PQig+rY30B
+         mG4g==
+In-Reply-To: <29c4bb2a-ceaf-6c8b-c222-38b30460780f-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Alex Shi <alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Thanks for you time.
+On Fri, Jul 30, 2021 at 9:52 AM Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+>
+> On 2021/7/29 22:39, Shakeel Butt wrote:
+> > On Thu, Jul 29, 2021 at 5:58 AM Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+> >>
+> >> We should always ensure __mod_node_page_state() is called with preempt
+> >> disabled or percpu ops may manipulate the wrong cpu when preempt happened.
+> >>
+> >> Fixes: b4e0b68fbd9d ("mm: memcontrol: use obj_cgroup APIs to charge kmem pages")
+> >> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> >> ---
+> >>  mm/memcontrol.c | 2 +-
+> >>  1 file changed, 1 insertion(+), 1 deletion(-)
+> >>
+> >> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> >> index 70a32174e7c4..616d1a72ece3 100644
+> >> --- a/mm/memcontrol.c
+> >> +++ b/mm/memcontrol.c
+> >> @@ -697,8 +697,8 @@ void __mod_lruvec_page_state(struct page *page, enum node_stat_item idx,
+> >>         memcg = page_memcg(head);
+> >>         /* Untracked pages have no memcg, no lruvec. Update only the node */
+> >>         if (!memcg) {
+> >> -               rcu_read_unlock();
+> >>                 __mod_node_page_state(pgdat, idx, val);
+> >> +               rcu_read_unlock();
+> >
+> > This rcu is for page_memcg. The preemption and interrupts are disabled
+> > across __mod_lruvec_page_state().
+> >
+>
+> I thought it's used to protect __mod_node_page_state(). Looks somewhat confusing for me.
+> Many thanks for pointing this out!
 
-Tejun Heo wrote on 2021/7/30 1:11 上午:
-> Hello,
-> 
-> On Wed, Jul 28, 2021 at 05:01:41PM +0800, brookxu wrote:
->> diff --git a/block/blk-merge.c b/block/blk-merge.c
->> index a11b3b5..86ff943 100644
->> --- a/block/blk-merge.c
->> +++ b/block/blk-merge.c
->> @@ -348,6 +348,8 @@ void __blk_queue_split(struct bio **bio, unsigned int *nr_segs)
->>  		trace_block_split(split, (*bio)->bi_iter.bi_sector);
->>  		submit_bio_noacct(*bio);
->>  		*bio = split;
->> +
->> +		blk_throtl_recharge_bio(*bio);
-> 
-> Can you rename this blk_throtl_charge_bio_split()?
+Hi Miaohe,
 
-Ok, i will do it in next version.
+git show b4e0b68fbd9d can help you find out why we add
+the rcu read lock around it.
 
->> @@ -524,6 +537,11 @@ static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp,
->>  	tg->idletime_threshold = DFL_IDLE_THRESHOLD;
->>  	tg->idletime_threshold_conf = DFL_IDLE_THRESHOLD;
->>  
->> +	atomic_set(&tg->io_split_cnt[0], 0);
->> +	atomic_set(&tg->io_split_cnt[1], 0);
->> +	atomic_set(&tg->last_io_split_cnt[0], 0);
->> +	atomic_set(&tg->last_io_split_cnt[1], 0);
-> 
-> We likely don't need these. pd's zeroed on allocation.
+Thanks.
 
-Right, i will remove these init code.
-
->> @@ -877,10 +900,19 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
->>  	else
->>  		tg->bytes_disp[rw] = 0;
->>  
->> -	if (tg->io_disp[rw] >= io_trim)
->> +	if (tg_io_disp(tg, rw) >= io_trim) {
-> 
-> Instead of checking this in multiple places, would it be simpler to transfer
-> the atomic counters to the existing counters whenever we enter blk-throtl
-> and leave the rest of the code as-is?
-
-If we do this, we need to do similar processing on the bio submission path and the bio
-resubmission path in pending_timer. It seems that the code is more complicated?
-
-> Thanks.
-> 
+>
+> >>                 return;
+> >>         }
+> >>
+> >> --
+> >> 2.23.0
+> >>
+> > .
+> >
+>
