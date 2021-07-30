@@ -1,50 +1,136 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH 4/5] mm, memcg: avoid possible NULL pointer dereferencing
- in mem_cgroup_init()
-Date: Thu, 29 Jul 2021 20:12:43 -0700
-Message-ID: <YQNuK+jN7pZLJTvT@carbon.lan>
-References: <20210729125755.16871-1-linmiaohe@huawei.com>
- <20210729125755.16871-5-linmiaohe@huawei.com>
+From: Cai Huoqing <caihuoqing@baidu.com>
+Subject: [PATCH] cgroup: Fix typo in comments and documents
+Date: Fri, 30 Jul 2021 13:16:05 +0800
+Message-ID: <20210730051605.2626-1-caihuoqing@baidu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=PEzx+2a/ZKj2U2ou/gU8CKrbFFrilUTmU4EkkU5zLPE=;
- b=Uy6JsIcYbpWdCVOIejUoJq6UEkXqzElWNgHMXV4Z3ksgOrNqtLPpbVn8YPMw+VPjgSBK
- dmjkjP7SuFaaNzCKz8SV9MCCWACeFI7kJsiK4WtYg42jK48qoBN7PesvwYO3Bhl/JELk
- kJRiFZSFqCIXBCR9WP20e4oAIx7YG0CasB0= 
-Content-Disposition: inline
-In-Reply-To: <20210729125755.16871-5-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, corbet@lwn.net
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Cai Huoqing <caihuoqing@baidu.com>
 
-On Thu, Jul 29, 2021 at 08:57:54PM +0800, Miaohe Lin wrote:
-> rtpn might be NULL in very rare case. We have better to check it before
-> dereferencing it. Since memcg can live with NULL rb_tree_per_node in
-> soft_limit_tree, warn this case and continue.
-> 
-> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->  mm/memcontrol.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 5b4592d1e0f2..70a32174e7c4 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -7109,6 +7109,8 @@ static int __init mem_cgroup_init(void)
->  		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL,
->  				    node_online(node) ? node : NUMA_NO_NODE);
->  
-> +		if (WARN_ON_ONCE(!rtpn))
-> +			continue;
+Fix typo: iff  ==> if
 
-I also really doubt that it makes any sense to continue in this case.
-If this allocations fails (at the very beginning of the system's life, it's an __init function),
-something is terribly wrong and panic'ing on a NULL-pointer dereference sounds like
-a perfect choice.
+Signed-off-by: Cai Huoqing <caihuoqing@baidu.com>
+---
+ Documentation/admin-guide/cgroup-v1/cgroups.rst           | 2 +-
+ Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst | 4 ++--
+ kernel/cgroup/cgroup-v1.c                                 | 4 ++--
+ kernel/cgroup/cgroup.c                                    | 6 +++---
+ kernel/cgroup/cpuset.c                                    | 4 ++--
+ 5 files changed, 10 insertions(+), 10 deletions(-)
 
-Is this a real world problem? Do I miss something?
+diff --git a/Documentation/admin-guide/cgroup-v1/cgroups.rst b/Documentation/admin-guide/cgroup-v1/cgroups.rst
+index b0688011ed06..fa747466e304 100644
+--- a/Documentation/admin-guide/cgroup-v1/cgroups.rst
++++ b/Documentation/admin-guide/cgroup-v1/cgroups.rst
+@@ -573,7 +573,7 @@ cgroup_for_each_descendant_pre() for details.
+ ``void css_offline(struct cgroup *cgrp);``
+ (cgroup_mutex held by caller)
+ 
+-This is the counterpart of css_online() and called iff css_online()
++This is the counterpart of css_online() and called if css_online()
+ has succeeded on @cgrp. This signifies the beginning of the end of
+ @cgrp. @cgrp is being removed and the subsystem should start dropping
+ all references it's holding on @cgrp. When all references are dropped,
+diff --git a/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst b/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst
+index 582d3427de3f..a908c5226bde 100644
+--- a/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst
++++ b/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst
+@@ -56,7 +56,7 @@ expected.
+ The cgroup freezer is hierarchical. Freezing a cgroup freezes all
+ tasks belonging to the cgroup and all its descendant cgroups. Each
+ cgroup has its own state (self-state) and the state inherited from the
+-parent (parent-state). Iff both states are THAWED, the cgroup is
++parent (parent-state). If both states are THAWED, the cgroup is
+ THAWED.
+ 
+ The following cgroupfs files are created by cgroup freezer.
+@@ -87,7 +87,7 @@ The following cgroupfs files are created by cgroup freezer.
+ * freezer.self_freezing: Read only.
+ 
+   Shows the self-state. 0 if the self-state is THAWED; otherwise, 1.
+-  This value is 1 iff the last write to freezer.state was "FROZEN".
++  This value is 1 if the last write to freezer.state was "FROZEN".
+ 
+ * freezer.parent_freezing: Read only.
+ 
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index de2c432dee20..71d2b46d1968 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -120,7 +120,7 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
+ 		goto out_err;
+ 
+ 	/*
+-	 * Migrate tasks one-by-one until @from is empty.  This fails iff
++	 * Migrate tasks one-by-one until @from is empty.  This fails if
+ 	 * ->can_attach() fails.
+ 	 */
+ 	do {
+@@ -215,7 +215,7 @@ static void cgroup_pidlist_destroy_work_fn(struct work_struct *work)
+ 	mutex_lock(&l->owner->pidlist_mutex);
+ 
+ 	/*
+-	 * Destroy iff we didn't get queued again.  The state won't change
++	 * Destroy if we didn't get queued again.  The state won't change
+ 	 * as destroy_dwork can only be queued while locked.
+ 	 */
+ 	if (!delayed_work_pending(dwork)) {
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 3a0161c21b6b..b831554372a2 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -793,7 +793,7 @@ static bool css_set_populated(struct css_set *cset)
+  * One of the css_sets associated with @cgrp is either getting its first
+  * task or losing the last.  Update @cgrp->nr_populated_* accordingly.  The
+  * count is propagated towards root so that a given cgroup's
+- * nr_populated_children is zero iff none of its descendants contain any
++ * nr_populated_children is zero if none of its descendants contain any
+  * tasks.
+  *
+  * @cgrp's interface file "cgroup.populated" is zero if both
+@@ -2410,7 +2410,7 @@ struct task_struct *cgroup_taskset_next(struct cgroup_taskset *tset,
+  * @mgctx: migration context
+  *
+  * Migrate tasks in @mgctx as setup by migration preparation functions.
+- * This function fails iff one of the ->can_attach callbacks fails and
++ * This function fails if one of the ->can_attach callbacks fails and
+  * guarantees that either all or none of the tasks in @mgctx are migrated.
+  * @mgctx is consumed regardless of success.
+  */
+@@ -4264,7 +4264,7 @@ struct cgroup_subsys_state *css_next_child(struct cgroup_subsys_state *pos,
+ 	 * increasing unique serial number and always appended to the
+ 	 * sibling list, the next one can be found by walking the parent's
+ 	 * children until the first css with higher serial number than
+-	 * @pos's.  While this path can be slower, it happens iff iteration
++	 * @pos's.  While this path can be slower, it happens if iteration
+ 	 * races against release and the race window is very small.
+ 	 */
+ 	if (!pos) {
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index adb5190c4429..f09fc0347550 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -782,7 +782,7 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 		if (cp == &top_cpuset)
+ 			continue;
+ 		/*
+-		 * Continue traversing beyond @cp iff @cp has some CPUs and
++		 * Continue traversing beyond @cp if @cp has some CPUs and
+ 		 * isn't load balancing.  The former is obvious.  The
+ 		 * latter: All child cpusets contain a subset of the
+ 		 * parent's cpus, so just skip them, and then we call
+@@ -1801,7 +1801,7 @@ static int update_nodemask(struct cpuset *cs, struct cpuset *trialcs,
+ 	}
+ 
+ 	/*
+-	 * An empty mems_allowed is ok iff there are no tasks in the cpuset.
++	 * An empty mems_allowed is ok if there are no tasks in the cpuset.
+ 	 * Since nodelist_parse() fails on an empty mask, we special case
+ 	 * that parsing.  The validate_change() call ensures that cpusets
+ 	 * with tasks have memory.
+-- 
+2.25.1
+
