@@ -1,102 +1,45 @@
-From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/5] mm, memcg: narrow the scope of percpu_charge_mutex
-Date: Sat, 31 Jul 2021 10:29:52 +0800
-Message-ID: <4a3c23c4-054c-2896-29c5-8cf9a4deee98@huawei.com>
-References: <20210729125755.16871-1-linmiaohe@huawei.com>
- <20210729125755.16871-3-linmiaohe@huawei.com> <YQNsxVPsRSBZcfGG@carbon.lan>
- <YQOhGs3k9rHx3mmT@dhcp22.suse.cz>
+From: Hu Haowen <src.res@email.cn>
+Subject: Re: [PATCH] cgroup: Fix typo in comments and documents
+Date: Sun, 1 Aug 2021 11:39:07 +0800
+Message-ID: <4f44c9b2-15ae-1ed9-0c0a-f0cef648c416@email.cn>
+References: <20210730051605.2626-1-caihuoqing@baidu.com>
+ <87lf5nc0su.fsf@meer.lwn.net> <YQQUwX+/1N9utKEN@casper.infradead.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <YQOhGs3k9rHx3mmT-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=email.cn;
+        s=dkim; h=To:From:Date; bh=HPiF0gjTXrWW3nXeBh9k7on9SjUI9wWXMvbjR
+        vl/P0s=; b=HvX+utebY+tIz7tKyXgj3yYl7sEtTDCcHjUifi7grxwiQ82gm2oC8
+        GbC5V5ewEsdND8UzhtTE3OPJQnCKAQgQAxiGzjwouegOOVEoXZ4SrfrNxqBTUGeV
+        DGG5zpVhqjyzZ22BA1uAunVMc2EWDnUVjBiOXEYMjz4wCzYLm0Uc+I=
+In-Reply-To: <YQQUwX+/1N9utKEN@casper.infradead.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Matthew Wilcox <willy@infradead.org>, Jonathan Corbet <corbet@lwn.net>
+Cc: Cai Huoqing <caihuoqing@baidu.com>, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
-On 2021/7/30 14:50, Michal Hocko wrote:
-> On Thu 29-07-21 20:06:45, Roman Gushchin wrote:
->> On Thu, Jul 29, 2021 at 08:57:52PM +0800, Miaohe Lin wrote:
->>> Since percpu_charge_mutex is only used inside drain_all_stock(), we can
->>> narrow the scope of percpu_charge_mutex by moving it here.
->>>
->>> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gman=
-e.org>
->>> ---
->>>  mm/memcontrol.c | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->>> index 6580c2381a3e..a03e24e57cd9 100644
->>> --- a/mm/memcontrol.c
->>> +++ b/mm/memcontrol.c
->>> @@ -2050,7 +2050,6 @@ struct memcg_stock_pcp {
->>>  #define FLUSHING_CACHED_CHARGE	0
->>>  };
->>>  static DEFINE_PER_CPU(struct memcg_stock_pcp, memcg_stock);
->>> -static DEFINE_MUTEX(percpu_charge_mutex);
->>> =20
->>>  #ifdef CONFIG_MEMCG_KMEM
->>>  static void drain_obj_stock(struct obj_stock *stock);
->>> @@ -2209,6 +2208,7 @@ static void refill_stock(struct mem_cgroup *memcg=
-, unsigned int nr_pages)
->>>   */
->>>  static void drain_all_stock(struct mem_cgroup *root_memcg)
->>>  {
->>> +	static DEFINE_MUTEX(percpu_charge_mutex);
->>>  	int cpu, curcpu;
+
+=D4=DA 2021/7/30 =CF=C2=CE=E711:03, Matthew Wilcox =D0=B4=B5=C0:
+> On Fri, Jul 30, 2021 at 08:51:29AM -0600, Jonathan Corbet wrote:
+>> Cai Huoqing <caihuoqing@baidu.com> writes:
 >>
->> It's considered a good practice to protect data instead of code paths. A=
-fter
->> the proposed change it becomes obvious that the opposite is done here: t=
-he mutex
->> is used to prevent a simultaneous execution of the code of the drain_all=
-_stock()
->> function.
->=20
-> The purpose of the lock was indeed to orchestrate callers more than any
-> data structure consistency.
-> =20
->> Actually we don't need a mutex here: nobody ever sleeps on it. So I'd re=
-place
->> it with a simple atomic variable or even a single bitfield. Then the cha=
-nge will
->> be better justified, IMO.
->=20
-> Yes, mutex can be replaced by an atomic in a follow up patch.
->=20
+>>> Fix typo: iff  =3D=3D> if
+>>>
+>>> Signed-off-by: Cai Huoqing <caihuoqing@baidu.com>
+>> This is becoming an FAQ ...  "iff" in mathematical English means "if and
+>> only if"; its usage in these documents is correct.
+> ... and yet it's clearly not understood.  Similarly to the [start..end)
+> convention (also the [start..end[ convention).  Should we deprecate
+> use of it in kernel documentation, and if so, what should we replace it
+> with?
 
-Thanks for both of you. It's a really good suggestion. What do you mean is =
-something like below=EF=BC=9F
+What about establishing a documentation section which gives clear
+definitions to each words whose meaning isn't easy to understand for
+common people, such as this situation? In this case readers are able to
+get rid of their questions on their own, instead of asking maintainers
+for any explanation.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 616d1a72ece3..508a96e80980 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2208,11 +2208,11 @@ static void refill_stock(struct mem_cgroup *memcg, =
-unsigned int nr_pages)
-  */
- static void drain_all_stock(struct mem_cgroup *root_memcg)
- {
--       static DEFINE_MUTEX(percpu_charge_mutex);
-        int cpu, curcpu;
-+       static atomic_t drain_all_stocks =3D ATOMIC_INIT(-1);
+Regards,
+Hu Haowen
 
-        /* If someone's already draining, avoid adding running more workers=
-. */
--       if (!mutex_trylock(&percpu_charge_mutex))
-+       if (!atomic_inc_not_zero(&drain_all_stocks))
-                return;
-        /*
-         * Notify other cpus that system-wide "drain" is running
-@@ -2244,7 +2244,7 @@ static void drain_all_stock(struct mem_cgroup *root_m=
-emcg)
-                }
-        }
-        put_cpu();
--       mutex_unlock(&percpu_charge_mutex);
-+       atomic_dec(&drain_all_stocks);
- }
-
- static int memcg_hotplug_cpu_dead(unsigned int cpu)
