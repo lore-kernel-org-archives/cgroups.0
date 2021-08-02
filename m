@@ -1,169 +1,82 @@
-From: brookxu <brookxu.cn@gmail.com>
-Subject: [PATCH v3] blk-throtl: optimize IOPS throttle for large IO scenarios
-Date: Mon,  2 Aug 2021 11:51:56 +0800
-Message-ID: <65869aaad05475797d63b4c3fed4f529febe3c26.1627876014.git.brookxu@tencent.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=ewn+EI6qbIfdhlpZR/OWbSCkPz5dXjXMmqvAd/fj+PE=;
-        b=t2D+HKyskSkmLy6VTqcNWp227BboiDJjuNRpS0ZpN2BusRewXoqdEWsN+Hi04GMNxJ
-         V9XHiqFbsuuIv/We6qruyQTaDwEb1WQ0sDJ9D1NAes5r4Xerms6oyLHV1V1UG9i0/40m
-         26nQY8Lvh1kWlFEoOWBmij9Y7DJtuxgzZP18jsGAae7XRM1blbW33YBDLzIXyNMK3vBv
-         FukpQl9Rxal3KL3bE3HaCHauGndcfGv6RUQ+dTy5HhYWibI8FgFIt/FYLI7wYy8a3/Xe
-         VjbENDgTEWYd1GPsxetZ8pfaZvVXt5qDJ2C/WVxxl+ckpVGy9Ue8vuDnA5OsPduv0fgd
-         KF5w==
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] mm/memcg: Fix incorrect flushing of lruvec data in
+ obj_stock
+Date: Mon, 2 Aug 2021 08:28:13 +0200
+Message-ID: <YQeQfX3t8k+U3MIL@dhcp22.suse.cz>
+References: <20210802022827.10192-1-longman@redhat.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1627885694; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=6O4ovfEUNzace1WQB0NeGLBJmSbRWBaTfA/jz5eGKhU=;
+        b=iekKpJ/FslvYsDvvZ82fpdm2vUtlLGMkBtK78wzaekb+Qk7ht7qwOi8jim1KAZlT5MBqOw
+        /D4TEqIau7O5ebh+Rxwe4sF7sa2tsnufabuAG+xPb3GZ28ayU+B4ptzFRqQfydNDQqp4BV
+        e5bwJxE3QHXGF43kpWrhdtZDLtlByAo=
+Content-Disposition: inline
+In-Reply-To: <20210802022827.10192-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk, tj@kernel.org
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing Zhengjun <zhengjun.xing-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Matthew
 
-From: Chunguang Xu <brookxu@tencent.com>
+On Sun 01-08-21 22:28:27, Waiman Long wrote:
+> When mod_objcg_state() is called with a pgdat that is different from
+> that in the obj_stock, the old lruvec data cached in obj_stock are
+> flushed out. Unfortunately, they were flushed to the new pgdat and
+> hence the wrong node, not the one cached in obj_stock.
 
-After patch 54efd50 (block: make generic_make_request handle
-arbitrarily sized bios), the IO through io-throttle may be larger,
-and these IOs may be further split into more small IOs. However,
-IOPS throttle does not seem to be aware of this change, which
-makes the calculation of IOPS of large IOs incomplete, resulting
-in disk-side IOPS that does not meet expectations. Maybe we should
-fix this problem.
+It would be great to explicitly mention user observable problems here. I
+do assume this will make slab stats skewed but the effect wouldn't be
+very big, right?
 
-We can reproduce it by set max_sectors_kb of disk to 128, set
-blkio.write_iops_throttle to 100, run a dd instance inside blkio
-and use iostat to watch IOPS:
+> Fix that by flushing the data to the cached pgdat instead.
+> 
+> Fixes: 68ac5b3c8db2 ("mm/memcg: cache vmstat data in percpu memcg_stock_pcp")
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-dd if=/dev/zero of=/dev/sdb bs=1M count=1000 oflag=direct
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-As a result, without this change the average IOPS is 1995, with
-this change the IOPS is 98.
+> ---
+>  mm/memcontrol.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index ae1f5d0cb581..881ec4ddddcd 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3106,17 +3106,19 @@ void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
+>  		stock->cached_pgdat = pgdat;
+>  	} else if (stock->cached_pgdat != pgdat) {
+>  		/* Flush the existing cached vmstat data */
+> +		struct pglist_data *oldpg = stock->cached_pgdat;
+> +
+> +		stock->cached_pgdat = pgdat;
+>  		if (stock->nr_slab_reclaimable_b) {
+> -			mod_objcg_mlstate(objcg, pgdat, NR_SLAB_RECLAIMABLE_B,
+> +			mod_objcg_mlstate(objcg, oldpg, NR_SLAB_RECLAIMABLE_B,
+>  					  stock->nr_slab_reclaimable_b);
+>  			stock->nr_slab_reclaimable_b = 0;
+>  		}
+>  		if (stock->nr_slab_unreclaimable_b) {
+> -			mod_objcg_mlstate(objcg, pgdat, NR_SLAB_UNRECLAIMABLE_B,
+> +			mod_objcg_mlstate(objcg, oldpg, NR_SLAB_UNRECLAIMABLE_B,
+>  					  stock->nr_slab_unreclaimable_b);
+>  			stock->nr_slab_unreclaimable_b = 0;
+>  		}
+> -		stock->cached_pgdat = pgdat;
 
-v3: Optimize the use of atomic variables.
-v2: Use atomic variables to solve synchronization problems.
+Minor nit. Is there any reason to move the cached_pgdat? TBH I found the
+original way better from the readability POV.
 
-Signed-off-by: Chunguang Xu <brookxu@tencent.com>
----
- block/blk-merge.c    |  2 ++
- block/blk-throttle.c | 32 ++++++++++++++++++++++++++++++++
- block/blk.h          |  2 ++
- 3 files changed, 36 insertions(+)
+>  	}
+>  
+>  	bytes = (idx == NR_SLAB_RECLAIMABLE_B) ? &stock->nr_slab_reclaimable_b
+> -- 
+> 2.18.1
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index a11b3b53717e..22eeaad190d7 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -348,6 +348,8 @@ void __blk_queue_split(struct bio **bio, unsigned int *nr_segs)
- 		trace_block_split(split, (*bio)->bi_iter.bi_sector);
- 		submit_bio_noacct(*bio);
- 		*bio = split;
-+
-+		blk_throtl_charge_bio_split(*bio);
- 	}
- }
- 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index b1b22d863bdf..55c49015e533 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -178,6 +178,9 @@ struct throtl_grp {
- 	unsigned int bad_bio_cnt; /* bios exceeding latency threshold */
- 	unsigned long bio_cnt_reset_time;
- 
-+	atomic_t io_split_cnt[2];
-+	atomic_t last_io_split_cnt[2];
-+
- 	struct blkg_rwstat stat_bytes;
- 	struct blkg_rwstat stat_ios;
- };
-@@ -777,6 +780,8 @@ static inline void throtl_start_new_slice_with_credit(struct throtl_grp *tg,
- 	tg->bytes_disp[rw] = 0;
- 	tg->io_disp[rw] = 0;
- 
-+	atomic_set(&tg->io_split_cnt[rw], 0);
-+
- 	/*
- 	 * Previous slice has expired. We must have trimmed it after last
- 	 * bio dispatch. That means since start of last slice, we never used
-@@ -799,6 +804,9 @@ static inline void throtl_start_new_slice(struct throtl_grp *tg, bool rw)
- 	tg->io_disp[rw] = 0;
- 	tg->slice_start[rw] = jiffies;
- 	tg->slice_end[rw] = jiffies + tg->td->throtl_slice;
-+
-+	atomic_set(&tg->io_split_cnt[rw], 0);
-+
- 	throtl_log(&tg->service_queue,
- 		   "[%c] new slice start=%lu end=%lu jiffies=%lu",
- 		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
-@@ -1031,6 +1039,9 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
- 				jiffies + tg->td->throtl_slice);
- 	}
- 
-+	if (iops_limit != UINT_MAX)
-+		tg->io_disp[rw] += atomic_xchg(&tg->io_split_cnt[rw], 0);
-+
- 	if (tg_with_in_bps_limit(tg, bio, bps_limit, &bps_wait) &&
- 	    tg_with_in_iops_limit(tg, bio, iops_limit, &iops_wait)) {
- 		if (wait)
-@@ -2052,12 +2063,14 @@ static void throtl_downgrade_check(struct throtl_grp *tg)
- 	}
- 
- 	if (tg->iops[READ][LIMIT_LOW]) {
-+		tg->last_io_disp[READ] += atomic_xchg(&tg->last_io_split_cnt[READ], 0);
- 		iops = tg->last_io_disp[READ] * HZ / elapsed_time;
- 		if (iops >= tg->iops[READ][LIMIT_LOW])
- 			tg->last_low_overflow_time[READ] = now;
- 	}
- 
- 	if (tg->iops[WRITE][LIMIT_LOW]) {
-+		tg->last_io_disp[WRITE] += atomic_xchg(&tg->last_io_split_cnt[WRITE], 0);
- 		iops = tg->last_io_disp[WRITE] * HZ / elapsed_time;
- 		if (iops >= tg->iops[WRITE][LIMIT_LOW])
- 			tg->last_low_overflow_time[WRITE] = now;
-@@ -2176,6 +2189,25 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
- }
- #endif
- 
-+void blk_throtl_charge_bio_split(struct bio *bio)
-+{
-+	struct blkcg_gq *blkg = bio->bi_blkg;
-+	struct throtl_grp *parent = blkg_to_tg(blkg);
-+	struct throtl_service_queue *parent_sq;
-+	bool rw = bio_data_dir(bio);
-+
-+	do {
-+		if (!parent->has_rules[rw])
-+			break;
-+
-+		atomic_inc(&parent->io_split_cnt[rw]);
-+		atomic_inc(&parent->last_io_split_cnt[rw]);
-+
-+		parent_sq = parent->service_queue.parent_sq;
-+		parent = sq_to_tg(parent_sq);
-+	} while (parent);
-+}
-+
- bool blk_throtl_bio(struct bio *bio)
- {
- 	struct request_queue *q = bio->bi_bdev->bd_disk->queue;
-diff --git a/block/blk.h b/block/blk.h
-index 4b885c0f6708..fb9ec838e4b9 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -293,11 +293,13 @@ int create_task_io_context(struct task_struct *task, gfp_t gfp_mask, int node);
- extern int blk_throtl_init(struct request_queue *q);
- extern void blk_throtl_exit(struct request_queue *q);
- extern void blk_throtl_register_queue(struct request_queue *q);
-+extern void blk_throtl_charge_bio_split(struct bio *bio);
- bool blk_throtl_bio(struct bio *bio);
- #else /* CONFIG_BLK_DEV_THROTTLING */
- static inline int blk_throtl_init(struct request_queue *q) { return 0; }
- static inline void blk_throtl_exit(struct request_queue *q) { }
- static inline void blk_throtl_register_queue(struct request_queue *q) { }
-+static inline void blk_throtl_charge_bio_split(struct bio *bio) { }
- static inline bool blk_throtl_bio(struct bio *bio) { return false; }
- #endif /* CONFIG_BLK_DEV_THROTTLING */
- #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
 -- 
-2.30.0
-
+Michal Hocko
+SUSE Labs
