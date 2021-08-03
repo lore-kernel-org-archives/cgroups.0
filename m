@@ -1,58 +1,94 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: Re: [PATCH 00/38] Replace deprecated CPU-hotplug
-Date: Tue, 3 Aug 2021 18:10:33 +0200
-Message-ID: <20210803161033.vp3o34meyw3ek43z@linutronix.de>
-References: <20210803141621.780504-1-bigeasy@linutronix.de>
- <83dc5dfd-1ed0-f428-826f-fb819911fc89@redhat.com>
-Mime-Version: 1.0
-Return-path: <linux-acpi-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1628007036;
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] mm/memcg: Disable task obj_stock for PREEMPT_RT
+Date: Tue,  3 Aug 2021 13:55:19 -0400
+Message-ID: <20210803175519.22298-1-longman@redhat.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1628013344;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZhCR89X1oG7iNKpxBHqwK160maOrSQVKgeomxdN0wRc=;
-        b=LwdXqV6TEL+jelWYIVu/L1AwkukJUhfDeR6fxf6HaCffMyf5pGalG64DdzD6SrFbnK74/x
-        PVNjb7a8JiALCQD3CJBVmxfKVnGPRCXtU70BUFy11admR5LtOLT9dQeI/ENtXdJ/CkhTdc
-        pZNvsYTpT+QPzjRhgzvNT0CjgoFJhxwmycapteSubpDkPSBjZ+FP8bxnvUSWW30Gz0Y7dW
-        1ffy1Rr5tDaLDwQ1cWTtCeME4yw92tE3YUaDago5Lw9pEtw1H1L8au8do+a32W2/sN3gs0
-        btcFKclunpFVufnMA6+fMpSDPoeRfMtyi+RFwzALyjj/jtaWzgKiRMXG8gO4tg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1628007036;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZhCR89X1oG7iNKpxBHqwK160maOrSQVKgeomxdN0wRc=;
-        b=CjGblo5JavDHAEsakSWenCqJ60bnDYFeC+TGn7n/YdarB5rRq+iJbcWjrVSzA5F0n0kDM4
-        Vc1wmHGVCRR8DGCA==
-Content-Disposition: inline
-In-Reply-To: <83dc5dfd-1ed0-f428-826f-fb819911fc89@redhat.com>
+         to:to:cc:cc; bh=TSdLbIa17Dn1sbXRatCyAZJSnstw1gwhMZIeM9izR74=;
+        b=dObDnN88v7VkS6/uej3PMzBmEVht9Q6ox3jxUmfi6Tcdl+aU657qW7slqEfH4QXMfx6jQR
+        PlcpOgRKFiPiTLCaoR/n7dtpaIRT/igG5POoSLFJtYAMs1eXOd7Fb87gSKLUZ7onBzMTnz
+        EHHfJgXML+qIItjEw+3Q4O5PZMHDsnw=
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: linux-kernel@vger.kernel.org, tglx@linutronix.de, Peter Zijlstra <peterz@infradead.org>, Alexander Shishkin <alexander.shishkin@linux.intel.com>, Amit Kucheria <amitk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Andy Lutomirski <luto@kernel.org>, Arnaldo Carvalho de Melo <acme@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Ben Segall <bsegall@google.com>, Borislav Petkov <bp@alien8.de>, cgroups@vger.kernel.org, Christian Borntraeger <borntraeger@de.ibm.com>, coresight@lists.linaro.org, Daniel Bristot de Oliveira <bristot@redhat.com>, Daniel Jordan <daniel.m.jordan@oracle.com>, Daniel Lezcano <daniel.lezcano@linaro.org>, Dave Hansen <dave.hansen@linux.intel.com>, Davidlohr Bueso <dave@stgolabs>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Luis Goncalves <lgoncalv-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 2021-08-03 17:30:40 [+0200], Hans de Goede wrote:
-> Hi Sebastien,
-Hi Hans,
+For PREEMPT_RT kernel, preempt_disable() and local_irq_save()
+are typically converted to local_lock() and local_lock_irqsave()
+respectively. These two variants of local_lock() are essentially
+the same. Thus, there is no performance advantage in choosing one
+over the other.
 
-> On 8/3/21 4:15 PM, Sebastian Andrzej Siewior wrote:
-> > This is a tree wide replacement of the deprecated CPU hotplug functions
-> > which are only wrappers around the actual functions.
-> > 
-> > Each patch is independent and can be picked up by the relevant maintainer.
-> 
-> Ok; and I take it that then also is the plan for merging these ?
-> 
-> FWIW I'm fine with the drivers/platform/x86 patch going upstream
-> through some other tree if its easier to keep the set together ...
+As there is no point in maintaining two different sets of obj_stock,
+it is simpler and more efficient to just disable task_obj and use
+only irq_obj for PREEMPT_RT. However, task_obj will still be there
+in the memcg_stock_pcp structure even though it is not used in this
+configuration.
 
-There is no need to keep that set together since each patch is
-independent. Please merge it through your tree.
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
-> Regards,
-> 
-> Hans
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 87c883227f90..4f80770cb97b 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2120,12 +2120,22 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+  * which is cheap in non-preempt kernel. The interrupt context object stock
+  * can only be accessed after disabling interrupt. User context code can
+  * access interrupt object stock, but not vice versa.
++ *
++ * For PREEMPT_RT kernel, preempt_disable() and local_irq_save() may have
++ * to be changed to variants of local_lock(). This eliminates the
++ * performance advantage of using preempt_disable(). Fall back to always
++ * use local_irq_save() and use only irq_obj for simplicity.
+  */
++static inline bool use_task_obj_stock(void)
++{
++	return !IS_ENABLED(CONFIG_PREEMPT_RT) && likely(in_task());
++}
++
+ static inline struct obj_stock *get_obj_stock(unsigned long *pflags)
+ {
+ 	struct memcg_stock_pcp *stock;
+ 
+-	if (likely(in_task())) {
++	if (use_task_obj_stock()) {
+ 		*pflags = 0UL;
+ 		preempt_disable();
+ 		stock = this_cpu_ptr(&memcg_stock);
+@@ -2139,7 +2149,7 @@ static inline struct obj_stock *get_obj_stock(unsigned long *pflags)
+ 
+ static inline void put_obj_stock(unsigned long flags)
+ {
+-	if (likely(in_task()))
++	if (use_task_obj_stock())
+ 		preempt_enable();
+ 	else
+ 		local_irq_restore(flags);
+@@ -2212,7 +2222,7 @@ static void drain_local_stock(struct work_struct *dummy)
+ 
+ 	stock = this_cpu_ptr(&memcg_stock);
+ 	drain_obj_stock(&stock->irq_obj);
+-	if (in_task())
++	if (use_task_obj_stock())
+ 		drain_obj_stock(&stock->task_obj);
+ 	drain_stock(stock);
+ 	clear_bit(FLUSHING_CACHED_CHARGE, &stock->flags);
+@@ -3217,7 +3227,7 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+ {
+ 	struct mem_cgroup *memcg;
+ 
+-	if (in_task() && stock->task_obj.cached_objcg) {
++	if (use_task_obj_stock() && stock->task_obj.cached_objcg) {
+ 		memcg = obj_cgroup_memcg(stock->task_obj.cached_objcg);
+ 		if (memcg && mem_cgroup_is_descendant(memcg, root_memcg))
+ 			return true;
+-- 
+2.18.1
 
-Sebastian
