@@ -1,163 +1,152 @@
-From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH 2/5] mm, memcg: narrow the scope of percpu_charge_mutex
-Date: Tue, 3 Aug 2021 18:50:28 +0800
-Message-ID: <702c05c6-fd8b-e1de-21e7-4be5b206958a@huawei.com>
+Date: Tue, 3 Aug 2021 10:15:36 -0400
+Message-ID: <YQlPiLY0ieRb704V@cmpxchg.org>
 References: <20210729125755.16871-1-linmiaohe@huawei.com>
- <20210729125755.16871-3-linmiaohe@huawei.com> <YQNsxVPsRSBZcfGG@carbon.lan>
+ <20210729125755.16871-3-linmiaohe@huawei.com>
+ <YQNsxVPsRSBZcfGG@carbon.lan>
  <YQOhGs3k9rHx3mmT@dhcp22.suse.cz>
- <4a3c23c4-054c-2896-29c5-8cf9a4deee98@huawei.com>
- <YQi6lOT6j2DtOGlT@carbon.dhcp.thefacebook.com>
- <95629d91-6ae8-b445-e7fc-b51c888cad59@huawei.com>
- <CAMZfGtUChsJO1UrgmP6M274UwiHap0_yzCBL+mDq1OosP7JNsA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAMZfGtUChsJO1UrgmP6M274UwiHap0_yzCBL+mDq1OosP7JNsA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=CGoeGrlFI9+sWcEgQCmH+4Ac0VkTcA2bJ22N5ENTdDg=;
+        b=YmkBhg7ZSy7zgRJs7+RhL2ezlEmxraLZ3H2cJIYpUtE5/DhGGXsw2HieBlgdMN6bq1
+         h/bjAxt/o7MfkLY3uZFogmdlJU+K6JOaAxZTrufTGGuve3u8FdGoSL+SO88OdUNTiugX
+         vr69LKfFslTGNh1JT+km+Nk6dxeOdrjCifl0RIxQAuCCfjxOCIlwM/1oLnAEl9/CSaxj
+         E2ladtVMDDGUY5n04jsimXPRC/LuYM5yA2dNEQ8xfZfDmZcZYupXzyU1BmvVGFCHf1Ys
+         N+/rXzScbRO8X31ZPN4Ho4fJWw9OIZylMuVBiYpyouhTKZ93m1To3Hh5Cm4GqaEHOh6Y
+         lc7w==
+Content-Disposition: inline
+In-Reply-To: <YQOhGs3k9rHx3mmT-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Alex Shi <alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2021/8/3 17:33, Muchun Song wrote:
-> On Tue, Aug 3, 2021 at 2:29 PM Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+Al=
-fA@public.gmane.org> wrote:
->>
->> On 2021/8/3 11:40, Roman Gushchin wrote:
->>> On Sat, Jul 31, 2021 at 10:29:52AM +0800, Miaohe Lin wrote:
->>>> On 2021/7/30 14:50, Michal Hocko wrote:
->>>>> On Thu 29-07-21 20:06:45, Roman Gushchin wrote:
->>>>>> On Thu, Jul 29, 2021 at 08:57:52PM +0800, Miaohe Lin wrote:
->>>>>>> Since percpu_charge_mutex is only used inside drain_all_stock(), we=
- can
->>>>>>> narrow the scope of percpu_charge_mutex by moving it here.
->>>>>>>
->>>>>>> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.=
-gmane.org>
->>>>>>> ---
->>>>>>>  mm/memcontrol.c | 2 +-
->>>>>>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>>>>>
->>>>>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->>>>>>> index 6580c2381a3e..a03e24e57cd9 100644
->>>>>>> --- a/mm/memcontrol.c
->>>>>>> +++ b/mm/memcontrol.c
->>>>>>> @@ -2050,7 +2050,6 @@ struct memcg_stock_pcp {
->>>>>>>  #define FLUSHING_CACHED_CHARGE   0
->>>>>>>  };
->>>>>>>  static DEFINE_PER_CPU(struct memcg_stock_pcp, memcg_stock);
->>>>>>> -static DEFINE_MUTEX(percpu_charge_mutex);
->>>>>>>
->>>>>>>  #ifdef CONFIG_MEMCG_KMEM
->>>>>>>  static void drain_obj_stock(struct obj_stock *stock);
->>>>>>> @@ -2209,6 +2208,7 @@ static void refill_stock(struct mem_cgroup *m=
-emcg, unsigned int nr_pages)
->>>>>>>   */
->>>>>>>  static void drain_all_stock(struct mem_cgroup *root_memcg)
->>>>>>>  {
->>>>>>> + static DEFINE_MUTEX(percpu_charge_mutex);
->>>>>>>   int cpu, curcpu;
->>>>>>
->>>>>> It's considered a good practice to protect data instead of code path=
-s. After
->>>>>> the proposed change it becomes obvious that the opposite is done her=
-e: the mutex
->>>>>> is used to prevent a simultaneous execution of the code of the drain=
-_all_stock()
->>>>>> function.
->>>>>
->>>>> The purpose of the lock was indeed to orchestrate callers more than a=
-ny
->>>>> data structure consistency.
->>>>>
->>>>>> Actually we don't need a mutex here: nobody ever sleeps on it. So I'=
-d replace
->>>>>> it with a simple atomic variable or even a single bitfield. Then the=
- change will
->>>>>> be better justified, IMO.
->>>>>
->>>>> Yes, mutex can be replaced by an atomic in a follow up patch.
->>>>>
->>>>
->>>> Thanks for both of you. It's a really good suggestion. What do you mea=
-n is something like below=EF=BC=9F
->>>>
->>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->>>> index 616d1a72ece3..508a96e80980 100644
->>>> --- a/mm/memcontrol.c
->>>> +++ b/mm/memcontrol.c
->>>> @@ -2208,11 +2208,11 @@ static void refill_stock(struct mem_cgroup *me=
-mcg, unsigned int nr_pages)
->>>>   */
->>>>  static void drain_all_stock(struct mem_cgroup *root_memcg)
->>>>  {
->>>> -       static DEFINE_MUTEX(percpu_charge_mutex);
->>>>         int cpu, curcpu;
->>>> +       static atomic_t drain_all_stocks =3D ATOMIC_INIT(-1);
->>>>
->>>>         /* If someone's already draining, avoid adding running more wo=
-rkers. */
->>>> -       if (!mutex_trylock(&percpu_charge_mutex))
->>>> +       if (!atomic_inc_not_zero(&drain_all_stocks))
->>>>                 return;
->>>
->>> It should work, but why not a simple atomic_cmpxchg(&drain_all_stocks, =
-0, 1) and
->>> initialize it to 0? Maybe it's just my preference, but IMO (0, 1) is ea=
-sier
->>> to understand than (-1, 0) here. Not a strong opinion though, up to you.
->>>
->>
->> I think this would improve the readability. What you mean is something l=
-ike below ?
->>
->> Many thanks.
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 616d1a72ece3..6210b1124929 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -2208,11 +2208,11 @@ static void refill_stock(struct mem_cgroup *memc=
-g, unsigned int nr_pages)
->>   */
->>  static void drain_all_stock(struct mem_cgroup *root_memcg)
->>  {
->> -       static DEFINE_MUTEX(percpu_charge_mutex);
->>         int cpu, curcpu;
->> +       static atomic_t drainer =3D ATOMIC_INIT(0);
->>
->>         /* If someone's already draining, avoid adding running more work=
-ers. */
->> -       if (!mutex_trylock(&percpu_charge_mutex))
->> +       if (atomic_cmpxchg(&drainer, 0, 1) !=3D 0)
->=20
-> I'd like to use atomic_cmpxchg_acquire() here.
->=20
->>                 return;
->>         /*
->>          * Notify other cpus that system-wide "drain" is running
->> @@ -2244,7 +2244,7 @@ static void drain_all_stock(struct mem_cgroup *roo=
-t_memcg)
->>                 }
->>         }
->>         put_cpu();
->> -       mutex_unlock(&percpu_charge_mutex);
->> +       atomic_set(&drainer, 0);
->=20
-> So use atomic_set_release() here to cooperate with
-> atomic_cmpxchg_acquire().
+On Fri, Jul 30, 2021 at 08:50:02AM +0200, Michal Hocko wrote:
+> On Thu 29-07-21 20:06:45, Roman Gushchin wrote:
+> > On Thu, Jul 29, 2021 at 08:57:52PM +0800, Miaohe Lin wrote:
+> > > Since percpu_charge_mutex is only used inside drain_all_stock(), we can
+> > > narrow the scope of percpu_charge_mutex by moving it here.
+> > > 
+> > > Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> > > ---
+> > >  mm/memcontrol.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > index 6580c2381a3e..a03e24e57cd9 100644
+> > > --- a/mm/memcontrol.c
+> > > +++ b/mm/memcontrol.c
+> > > @@ -2050,7 +2050,6 @@ struct memcg_stock_pcp {
+> > >  #define FLUSHING_CACHED_CHARGE	0
+> > >  };
+> > >  static DEFINE_PER_CPU(struct memcg_stock_pcp, memcg_stock);
+> > > -static DEFINE_MUTEX(percpu_charge_mutex);
+> > >  
+> > >  #ifdef CONFIG_MEMCG_KMEM
+> > >  static void drain_obj_stock(struct obj_stock *stock);
+> > > @@ -2209,6 +2208,7 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+> > >   */
+> > >  static void drain_all_stock(struct mem_cgroup *root_memcg)
+> > >  {
+> > > +	static DEFINE_MUTEX(percpu_charge_mutex);
+> > >  	int cpu, curcpu;
+> > 
+> > It's considered a good practice to protect data instead of code paths. After
+> > the proposed change it becomes obvious that the opposite is done here: the mutex
+> > is used to prevent a simultaneous execution of the code of the drain_all_stock()
+> > function.
+> 
+> The purpose of the lock was indeed to orchestrate callers more than any
+> data structure consistency.
 
-I think this will work well. Many thanks!
+It doesn't seem like we need the lock at all.
 
->=20
-> Thanks.
->=20
->>  }
->>
->>> Thanks!
->>> .
->>>
->>
-> .
->=20
+The comment says it's so we don't spawn more workers when flushing is
+already underway. But a work cannot be queued more than once - if it
+were just about that, we'd needlessly duplicate the
+test_and_set_bit(WORK_STRUCT_PENDING_BIT) in queue_work_on().
 
+git history shows we tried to remove it once:
+
+commit 8521fc50d433507a7cdc96bec280f9e5888a54cc
+Author: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Date:   Tue Jul 26 16:08:29 2011 -0700
+
+    memcg: get rid of percpu_charge_mutex lock
+
+but it turned out that the lock did in fact protect a data structure:
+the stock itself. Specifically stock->cached:
+
+commit 9f50fad65b87a8776ae989ca059ad6c17925dfc3
+Author: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Date:   Tue Aug 9 11:56:26 2011 +0200
+
+    Revert "memcg: get rid of percpu_charge_mutex lock"
+
+    This reverts commit 8521fc50d433507a7cdc96bec280f9e5888a54cc.
+
+    The patch incorrectly assumes that using atomic FLUSHING_CACHED_CHARGE
+    bit operations is sufficient but that is not true.  Johannes Weiner has
+    reported a crash during parallel memory cgroup removal:
+
+      BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
+      IP: [<ffffffff81083b70>] css_is_ancestor+0x20/0x70
+      Oops: 0000 [#1] PREEMPT SMP
+      Pid: 19677, comm: rmdir Tainted: G        W   3.0.0-mm1-00188-gf38d32b #35 ECS MCP61M-M3/MCP61M-M3
+      RIP: 0010:[<ffffffff81083b70>]  css_is_ancestor+0x20/0x70
+      RSP: 0018:ffff880077b09c88  EFLAGS: 00010202
+      Process rmdir (pid: 19677, threadinfo ffff880077b08000, task ffff8800781bb310)
+      Call Trace:
+       [<ffffffff810feba3>] mem_cgroup_same_or_subtree+0x33/0x40
+       [<ffffffff810feccf>] drain_all_stock+0x11f/0x170
+       [<ffffffff81103211>] mem_cgroup_force_empty+0x231/0x6d0
+       [<ffffffff811036c4>] mem_cgroup_pre_destroy+0x14/0x20
+       [<ffffffff81080559>] cgroup_rmdir+0xb9/0x500
+       [<ffffffff81114d26>] vfs_rmdir+0x86/0xe0
+       [<ffffffff81114e7b>] do_rmdir+0xfb/0x110
+       [<ffffffff81114ea6>] sys_rmdir+0x16/0x20
+       [<ffffffff8154d76b>] system_call_fastpath+0x16/0x1b
+
+    We are crashing because we try to dereference cached memcg when we are
+    checking whether we should wait for draining on the cache.  The cache is
+    already cleaned up, though.
+
+    There is also a theoretical chance that the cached memcg gets freed
+    between we test for the FLUSHING_CACHED_CHARGE and dereference it in
+    mem_cgroup_same_or_subtree:
+
+            CPU0                    CPU1                         CPU2
+      mem=stock->cached
+      stock->cached=NULL
+                                  clear_bit
+                                                            test_and_set_bit
+      test_bit()                    ...
+      <preempted>             mem_cgroup_destroy
+      use after free
+
+    The percpu_charge_mutex protected from this race because sync draining
+    is exclusive.
+
+    It is safer to revert now and come up with a more parallel
+    implementation later.
+
+I didn't remember this one at all!
+
+However, when you look at the codebase from back then, there was no
+rcu-protection for memcg lifetime, and drain_stock() didn't double
+check stock->cached inside the work. Hence the crash during a race.
+
+The drain code is different now: drain_local_stock() disables IRQs
+which holds up rcu, and then calls drain_stock() and drain_obj_stock()
+which both check stock->cached one more time before the deref.
+
+With workqueue managing concurrency, and rcu ensuring memcg lifetime
+during the drain, this lock indeed seems unnecessary now.
+
+Unless I'm missing something, it should just be removed instead.
