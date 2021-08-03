@@ -1,144 +1,202 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 00/38] Replace deprecated CPU-hotplug
-Date: Tue,  3 Aug 2021 16:15:43 +0200
-Message-ID: <20210803141621.780504-1-bigeasy@linutronix.de>
+From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Subject: [PATCH 24/38] cgroup: Replace deprecated CPU-hotplug functions.
+Date: Tue,  3 Aug 2021 16:16:07 +0200
+Message-ID: <20210803141621.780504-25-bigeasy@linutronix.de>
+References: <20210803141621.780504-1-bigeasy@linutronix.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1628000193;
+        s=2020; t=1628000232;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=Qkfc7lxCqn4p3B20wjfjiLsyLpuZIa2kIlbDitBY8sw=;
-        b=fStBYY9cDOofnMkMc6JUcZVYcNWx/eg2N05Pb/o7ef6JJTcTG48t+GioJgBl+eXKMJGEgi
-        TVCeDR+EwHJjgdulnpLwVy12sseYnaixefw5o14vk+2PAOm/LUlJHLssIOZ+nJyuRxaM3r
-        fCCG5ZeBAdz/Q3kIzOJQstWW7ST+mFehWQwEJk+hKZizcoepZD/zOgz+f7GO7oZ2MtK2DY
-        wm7slubFVtLqvtY6o7cEl9ZIw3mvJ35go7HuaiPxyi+ESejsT+e0qaP6D0Fis4EUqsKcRu
-        JGNGT0BYA9PAUGHVfsb3cVOtZwFCr59O6V6ObVy+T4OF395mknhLgwpLJFiGUg==
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Mp7gi69XNNgEmtaHo/BkgdaOmbU6gfKgVITw3Sb4bDo=;
+        b=pZuEAiATXelgJB7kY7qWD2cbi4f8LLoQhrpHKJfrIKv5+3a8xbrg2ZLf0++/FzO5s7ofti
+        7xKbu318U9CR0xRUdB8yaB/72Ln39xSKN3rjpvVYLh7fVLlY9LD5qS0ggNZlAqHE0cbeZs
+        biNbyeIgyISIr74cDb07sjxQ7N4xqe0TIygG9FkfLwk52YDdKG4gjmm7fJsunFNw4c/k/x
+        Kq6xDnvP7aPTxYYc4ao95OOKOeX11UYy5uh2AkHCUcyd2Z9h/xHhuEAGDMl9zxeyELCHjR
+        TAT3GqG5sU26q8uHYBKzz6r7nCODPoXg+z1rGtiy1HQmxuYBAkmfizFx8pDEIQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1628000193;
+        s=2020e; t=1628000232;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=Qkfc7lxCqn4p3B20wjfjiLsyLpuZIa2kIlbDitBY8sw=;
-        b=pGmFmcj1u+vX59p9gWCClfCslb9a1WxY2Pwa8q+HwkfzdAY6X/r9JgYaxIXaCJOpPNDW2W
-        rceMZSe2cSwuwVDA==
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Mp7gi69XNNgEmtaHo/BkgdaOmbU6gfKgVITw3Sb4bDo=;
+        b=kKKvn84SpRZSnRr1Sy/iC/LQy1hcruUhzHKsLiGRfWQZjbw47NUHCs5uHOSeJdk69+w56v
+        QTP/s6X/q8RG7oDg==
+In-Reply-To: <20210803141621.780504-1-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org
-Cc: tglx@linutronix.de, Peter Zijlstra <peterz@infradead.org>, Alexander Shishkin <alexander.shishkin@linux.intel.com>, Amit Kucheria <amitk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Andy Lutomirski <luto@kernel.org>, Arnaldo Carvalho de Melo <acme@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Ben Segall <bsegall@google.com>, Borislav Petkov <bp@alien8.de>, cgroups@vger.kernel.org, Christian Borntraeger <borntraeger@de.ibm.com>, coresight@lists.linaro.org, Daniel Bristot de Oliveira <bristot@redhat.com>, Daniel Jordan <daniel.m.jordan@oracle.com>, Daniel Lezcano <daniel.lezcano@linaro.org>, Dave Hansen <dave.hansen@linux.intel.com>, Davidlohr Bueso <dave@stgolabs.net>, "David S. Miller" <dave>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This is a tree wide replacement of the deprecated CPU hotplug functions
-which are only wrappers around the actual functions.
+The functions get_online_cpus() and put_online_cpus() have been
+deprecated during the CPU hotplug rework. They map directly to
+cpus_read_lock() and cpus_read_unlock().
 
-Each patch is independent and can be picked up by the relevant maintainer.
+Replace deprecated CPU-hotplug functions with the official version.
+The behavior remains unchanged.
 
-Cc: Alexander Shishkin <alexander.shishkin@linux.intel.com>
-Cc: Amit Kucheria <amitk@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andy Lutomirski <luto@kernel.org>
-Cc: Arnaldo Carvalho de Melo <acme@kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Ben Segall <bsegall@google.com>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: cgroups@vger.kernel.org
-Cc: Christian Borntraeger <borntraeger@de.ibm.com>
-Cc: coresight@lists.linaro.org
-Cc: Daniel Bristot de Oliveira <bristot@redhat.com>
-Cc: Daniel Jordan <daniel.m.jordan@oracle.com>
-Cc: Daniel Lezcano <daniel.lezcano@linaro.org>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: Davidlohr Bueso <dave@stgolabs.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Dietmar Eggemann <dietmar.eggemann@arm.com>
-Cc: Gonglei <arei.gonglei@huawei.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Guenter Roeck <linux@roeck-us.net>
-Cc: Hans de Goede <hdegoede@redhat.com>
-Cc: Heiko Carstens <hca@linux.ibm.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Jason Wang <jasowang@redhat.com>
-Cc: Jean Delvare <jdelvare@suse.com>
-Cc: Jiri Kosina <jikos@kernel.org>
-Cc: Jiri Olsa <jolsa@redhat.com>
-Cc: Joe Lawrence <joe.lawrence@redhat.com>
-Cc: Joel Fernandes <joel@joelfernandes.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: John Stultz <john.stultz@linaro.org>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: Josh Poimboeuf <jpoimboe@redhat.com>
-Cc: Josh Triplett <josh@joshtriplett.org>
-Cc: Julian Wiedmann <jwi@linux.ibm.com>
-Cc: Juri Lelli <juri.lelli@redhat.com>
-Cc: Karol Herbst <karolherbst@gmail.com>
-Cc: Karsten Graul <kgraul@linux.ibm.com>
-Cc: kvm-ppc@vger.kernel.org
-Cc: Lai Jiangshan <jiangshanlai@gmail.com>
-Cc: Len Brown <lenb@kernel.org>
-Cc: Len Brown <len.brown@intel.com>
-Cc: Leo Yan <leo.yan@linaro.org>
-Cc: linux-acpi@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-crypto@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Cc: linux-edac@vger.kernel.org
-Cc: linux-hwmon@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-mips@vger.kernel.org
-Cc: linux-mm@kvack.org
-Cc: linux-pm@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-raid@vger.kernel.org
-Cc: linux-s390@vger.kernel.org
-Cc: live-patching@vger.kernel.org
-Cc: Mark Gross <mgross@linux.intel.com>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: Mathieu Poirier <mathieu.poirier@linaro.org>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Mike Leach <mike.leach@linaro.org>
-Cc: Mike Travis <mike.travis@hpe.com>
-Cc: Miroslav Benes <mbenes@suse.cz>
-Cc: Namhyung Kim <namhyung@kernel.org>
-Cc: netdev@vger.kernel.org
-Cc: nouveau@lists.freedesktop.org
-Cc: "Paul E. McKenney" <paulmck@kernel.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Pavel Machek <pavel@ucw.cz>
-Cc: Pekka Paalanen <ppaalanen@gmail.com>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Petr Mladek <pmladek@suse.com>
-Cc: platform-driver-x86@vger.kernel.org
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: rcu@vger.kernel.org
-Cc: Robin Holt <robinmholt@gmail.com>
-Cc: Song Liu <song@kernel.org>
-Cc: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
-Cc: Steffen Klassert <steffen.klassert@secunet.com>
-Cc: Stephen Boyd <sboyd@kernel.org>
-Cc: Steven Rostedt <rostedt@goodmis.org>
-Cc: Steve Wahl <steve.wahl@hpe.com>
-Cc: Stuart Hayes <stuart.w.hayes@gmail.com>
-Cc: Suzuki K Poulose <suzuki.poulose@arm.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Vasily Gorbik <gor@linux.ibm.com>
-Cc: Vincent Guittot <vincent.guittot@linaro.org>
-Cc: Viresh Kumar <viresh.kumar@linaro.org>
-Cc: virtualization@lists.linux-foundation.org
-Cc: x86@kernel.org
-Cc: Zefan Li <lizefan.x@bytedance.com>
-Cc: Zhang Rui <rui.zhang@intel.com>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+---
+ kernel/cgroup/cpuset.c | 30 +++++++++++++++---------------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
 
-Sebastian
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index adb5190c44296..bd2b998249e8b 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -979,7 +979,7 @@ partition_and_rebuild_sched_domains(int ndoms_new, cpum=
+ask_var_t doms_new[],
+  * 'cpus' is removed, then call this routine to rebuild the
+  * scheduler's dynamic sched domains.
+  *
+- * Call with cpuset_mutex held.  Takes get_online_cpus().
++ * Call with cpuset_mutex held.  Takes cpus_read_lock().
+  */
+ static void rebuild_sched_domains_locked(void)
+ {
+@@ -1040,11 +1040,11 @@ static void rebuild_sched_domains_locked(void)
+=20
+ void rebuild_sched_domains(void)
+ {
+-	get_online_cpus();
++	cpus_read_lock();
+ 	percpu_down_write(&cpuset_rwsem);
+ 	rebuild_sched_domains_locked();
+ 	percpu_up_write(&cpuset_rwsem);
+-	put_online_cpus();
++	cpus_read_unlock();
+ }
+=20
+ /**
+@@ -2282,7 +2282,7 @@ static int cpuset_write_u64(struct cgroup_subsys_stat=
+e *css, struct cftype *cft,
+ 	cpuset_filetype_t type =3D cft->private;
+ 	int retval =3D 0;
+=20
+-	get_online_cpus();
++	cpus_read_lock();
+ 	percpu_down_write(&cpuset_rwsem);
+ 	if (!is_cpuset_online(cs)) {
+ 		retval =3D -ENODEV;
+@@ -2320,7 +2320,7 @@ static int cpuset_write_u64(struct cgroup_subsys_stat=
+e *css, struct cftype *cft,
+ 	}
+ out_unlock:
+ 	percpu_up_write(&cpuset_rwsem);
+-	put_online_cpus();
++	cpus_read_unlock();
+ 	return retval;
+ }
+=20
+@@ -2331,7 +2331,7 @@ static int cpuset_write_s64(struct cgroup_subsys_stat=
+e *css, struct cftype *cft,
+ 	cpuset_filetype_t type =3D cft->private;
+ 	int retval =3D -ENODEV;
+=20
+-	get_online_cpus();
++	cpus_read_lock();
+ 	percpu_down_write(&cpuset_rwsem);
+ 	if (!is_cpuset_online(cs))
+ 		goto out_unlock;
+@@ -2346,7 +2346,7 @@ static int cpuset_write_s64(struct cgroup_subsys_stat=
+e *css, struct cftype *cft,
+ 	}
+ out_unlock:
+ 	percpu_up_write(&cpuset_rwsem);
+-	put_online_cpus();
++	cpus_read_unlock();
+ 	return retval;
+ }
+=20
+@@ -2385,7 +2385,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_ope=
+n_file *of,
+ 	kernfs_break_active_protection(of->kn);
+ 	flush_work(&cpuset_hotplug_work);
+=20
+-	get_online_cpus();
++	cpus_read_lock();
+ 	percpu_down_write(&cpuset_rwsem);
+ 	if (!is_cpuset_online(cs))
+ 		goto out_unlock;
+@@ -2411,7 +2411,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_ope=
+n_file *of,
+ 	free_cpuset(trialcs);
+ out_unlock:
+ 	percpu_up_write(&cpuset_rwsem);
+-	put_online_cpus();
++	cpus_read_unlock();
+ 	kernfs_unbreak_active_protection(of->kn);
+ 	css_put(&cs->css);
+ 	flush_workqueue(cpuset_migrate_mm_wq);
+@@ -2542,7 +2542,7 @@ static ssize_t sched_partition_write(struct kernfs_op=
+en_file *of, char *buf,
+ 		return -EINVAL;
+=20
+ 	css_get(&cs->css);
+-	get_online_cpus();
++	cpus_read_lock();
+ 	percpu_down_write(&cpuset_rwsem);
+ 	if (!is_cpuset_online(cs))
+ 		goto out_unlock;
+@@ -2550,7 +2550,7 @@ static ssize_t sched_partition_write(struct kernfs_op=
+en_file *of, char *buf,
+ 	retval =3D update_prstate(cs, val);
+ out_unlock:
+ 	percpu_up_write(&cpuset_rwsem);
+-	put_online_cpus();
++	cpus_read_unlock();
+ 	css_put(&cs->css);
+ 	return retval ?: nbytes;
+ }
+@@ -2756,7 +2756,7 @@ static int cpuset_css_online(struct cgroup_subsys_sta=
+te *css)
+ 	if (!parent)
+ 		return 0;
+=20
+-	get_online_cpus();
++	cpus_read_lock();
+ 	percpu_down_write(&cpuset_rwsem);
+=20
+ 	set_bit(CS_ONLINE, &cs->flags);
+@@ -2809,7 +2809,7 @@ static int cpuset_css_online(struct cgroup_subsys_sta=
+te *css)
+ 	spin_unlock_irq(&callback_lock);
+ out_unlock:
+ 	percpu_up_write(&cpuset_rwsem);
+-	put_online_cpus();
++	cpus_read_unlock();
+ 	return 0;
+ }
+=20
+@@ -2828,7 +2828,7 @@ static void cpuset_css_offline(struct cgroup_subsys_s=
+tate *css)
+ {
+ 	struct cpuset *cs =3D css_cs(css);
+=20
+-	get_online_cpus();
++	cpus_read_lock();
+ 	percpu_down_write(&cpuset_rwsem);
+=20
+ 	if (is_partition_root(cs))
+@@ -2849,7 +2849,7 @@ static void cpuset_css_offline(struct cgroup_subsys_s=
+tate *css)
+ 	clear_bit(CS_ONLINE, &cs->flags);
+=20
+ 	percpu_up_write(&cpuset_rwsem);
+-	put_online_cpus();
++	cpus_read_unlock();
+ }
+=20
+ static void cpuset_css_free(struct cgroup_subsys_state *css)
+--=20
+2.32.0
 
