@@ -1,40 +1,58 @@
-From: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: Set the correct memcg swappiness
- restriction
-Date: Tue, 3 Aug 2021 23:45:20 +0800
-Message-ID: <02826fde-43a8-e20d-37f5-55416ba0c773@linux.alibaba.com>
-References: <d77469b90c45c49953ccbc51e54a1d465bc18f70.1627626255.git.baolin.wang@linux.alibaba.com>
- <YQOekWWgtZUfim4M@dhcp22.suse.cz>
- <6e6570d2-44a2-1da1-6c2a-38766786c40c@suse.cz>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: Re: [PATCH 00/38] Replace deprecated CPU-hotplug
+Date: Tue, 3 Aug 2021 18:10:33 +0200
+Message-ID: <20210803161033.vp3o34meyw3ek43z@linutronix.de>
+References: <20210803141621.780504-1-bigeasy@linutronix.de>
+ <83dc5dfd-1ed0-f428-826f-fb819911fc89@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <6e6570d2-44a2-1da1-6c2a-38766786c40c-AlSwsSmVLrQ@public.gmane.org>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1628007036;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZhCR89X1oG7iNKpxBHqwK160maOrSQVKgeomxdN0wRc=;
+        b=LwdXqV6TEL+jelWYIVu/L1AwkukJUhfDeR6fxf6HaCffMyf5pGalG64DdzD6SrFbnK74/x
+        PVNjb7a8JiALCQD3CJBVmxfKVnGPRCXtU70BUFy11admR5LtOLT9dQeI/ENtXdJ/CkhTdc
+        pZNvsYTpT+QPzjRhgzvNT0CjgoFJhxwmycapteSubpDkPSBjZ+FP8bxnvUSWW30Gz0Y7dW
+        1ffy1Rr5tDaLDwQ1cWTtCeME4yw92tE3YUaDago5Lw9pEtw1H1L8au8do+a32W2/sN3gs0
+        btcFKclunpFVufnMA6+fMpSDPoeRfMtyi+RFwzALyjj/jtaWzgKiRMXG8gO4tg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1628007036;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZhCR89X1oG7iNKpxBHqwK160maOrSQVKgeomxdN0wRc=;
+        b=CjGblo5JavDHAEsakSWenCqJ60bnDYFeC+TGn7n/YdarB5rRq+iJbcWjrVSzA5F0n0kDM4
+        Vc1wmHGVCRR8DGCA==
+Content-Disposition: inline
+In-Reply-To: <83dc5dfd-1ed0-f428-826f-fb819911fc89@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: linux-kernel@vger.kernel.org, tglx@linutronix.de, Peter Zijlstra <peterz@infradead.org>, Alexander Shishkin <alexander.shishkin@linux.intel.com>, Amit Kucheria <amitk@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Andy Lutomirski <luto@kernel.org>, Arnaldo Carvalho de Melo <acme@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Ben Segall <bsegall@google.com>, Borislav Petkov <bp@alien8.de>, cgroups@vger.kernel.org, Christian Borntraeger <borntraeger@de.ibm.com>, coresight@lists.linaro.org, Daniel Bristot de Oliveira <bristot@redhat.com>, Daniel Jordan <daniel.m.jordan@oracle.com>, Daniel Lezcano <daniel.lezcano@linaro.org>, Dave Hansen <dave.hansen@linux.intel.com>, Davidlohr Bueso <dave@stgolabs>
 
+On 2021-08-03 17:30:40 [+0200], Hans de Goede wrote:
+> Hi Sebastien,
+Hi Hans,
 
-
-On 2021/8/3 23:20, Vlastimil Babka wrote:
-> On 7/30/21 8:39 AM, Michal Hocko wrote:
->> On Fri 30-07-21 14:26:35, Baolin Wang wrote:
->>> Since commit c843966c556d ("mm: allow swappiness that prefers reclaiming
->>> anon over the file workingset") has expended the swappiness value to
->>> make swap to be preferred in some systems. We should also change the
->>> memcg swappiness restriction to allow memcg swap-preferred.
->>>
->>> Signed-off-by: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
->>
->> Yes, this looks like an omission. It doesn't really make sense to have
->> two different constrains on the value.
->>
->> Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+> On 8/3/21 4:15 PM, Sebastian Andrzej Siewior wrote:
+> > This is a tree wide replacement of the deprecated CPU hotplug functions
+> > which are only wrappers around the actual functions.
+> > 
+> > Each patch is independent and can be picked up by the relevant maintainer.
 > 
-> So, also Fixes: c843966c556d ("mm: allow swappiness that prefers reclaiming anon
-> over the file workingset")
-> ?
+> Ok; and I take it that then also is the plan for merging these ?
+> 
+> FWIW I'm fine with the drivers/platform/x86 patch going upstream
+> through some other tree if its easier to keep the set together ...
 
-Sure. Andrew, do I need resend it with adding fixes tag, or you can help 
-to add it? Thanks.
+There is no need to keep that set together since each patch is
+independent. Please merge it through your tree.
+
+> Regards,
+> 
+> Hans
+
+Sebastian
