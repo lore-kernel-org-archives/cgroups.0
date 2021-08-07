@@ -1,40 +1,37 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH] blk-iolatency: error out if blk_get_queue() failed in
- iolatency_set_limit()
-Date: Thu, 5 Aug 2021 11:18:29 -0600
-Message-ID: <cb9833b1-be92-1b52-86cb-a45a85b18c00@kernel.dk>
-References: <20210805124645.543797-1-yukuai3@huawei.com>
+From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 0/3] Cleanups and fixup for memcontrol
+Date: Sat, 7 Aug 2021 16:28:32 +0800
+Message-ID: <20210807082835.61281-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=TKSj5MEKQ1gY7W+Z56fm3tBU4l2c5F1+7f+LZW3AUsU=;
-        b=zivu60W0yaKjYq5/hhB/huyMwFYdeelDeUjyL0qp3DD+0K7L/go4Z3nDl0GQRtFyKe
-         qSffhuvA506oDOgV0MKV0n41Jw8Syhq6XEecfm1IbdfBP0KzK4IWHtg0AOT2wi6ty7ks
-         r/YKE9peMteV//iWCIyEXvjfEQc/jOT15hwK2NWoIOlacGShn9+xkUWzJcmivGd1OYlr
-         vYEvYjtgN2iVuP1QbzVGlHV1k3NspAppkSSujeiJLeTZdbu5hyyvSOEbrYz5Vt9wFZGH
-         O5nIWgLxYXJ/D3yrdoWibTH4/G1yj58wW+ieQ47QA7drwpspMScYTkZhZpJttXBNfmgS
-         d3dw==
-In-Reply-To: <20210805124645.543797-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, bo.liu-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+Cc: willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On 8/5/21 6:46 AM, Yu Kuai wrote:
-> If queue is dying while iolatency_set_limit() is in progress,
-> blk_get_queue() won't increment the refcount of the queue. However,
-> blk_put_queue() will still decrement the refcount later, which will
-> cause the refcout to be unbalanced.
-> 
-> Thus error out in such case to fix the problem.
+Hi all,
+This series contains cleanups to remove unused functions, save some
+atomic ops and get rid of unneeded lock. More details can be found
+in the respective changelogs. Thanks!
 
-Applied, thanks.
+Miaohe Lin (3):
+  mm, memcg: remove unused functions
+  mm, memcg: save some atomic ops when flush is already true
+  mm, memcg: get rid of percpu_charge_mutex lock
+
+v1-->v2:
+  drop mm, memcg: avoid possible NULL pointer dereferencing in
+mem_cgroup_init()
+  drop mm, memcg: always call __mod_node_page_state() with preempt
+disabled
+  collect Reviewed-by and Acked-by tag
+  get rid of percpu_charge_mutex instead of narrowing the scope
+
+ include/linux/memcontrol.h | 12 ------------
+ mm/memcontrol.c            |  7 +------
+ 2 files changed, 1 insertion(+), 18 deletions(-)
 
 -- 
-Jens Axboe
+2.23.0
 
