@@ -1,70 +1,139 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/5] mm: hide laptop_mode_wb_timer entirely behind the BDI API
-Date: Mon,  9 Aug 2021 16:17:40 +0200
-Message-ID: <20210809141744.1203023-2-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 2/5] block: pass a gendisk to blk_queue_update_readahead
+Date: Mon,  9 Aug 2021 16:17:41 +0200
+Message-ID: <20210809141744.1203023-3-hch@lst.de>
 References: <20210809141744.1203023-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-ID:Content-Description;
-        bh=e/hMr9qV3lYuoExuGo8ptlwF2KxcgT3KNTD6PJZ/mnk=; b=LcdQbBNS9XkSbbdubrlmjEs4kt
-        CQA+10SkoQ7oBciWNnRLhJKjR2feUZZ0CeHZcXUMzruTD7b5cDQv1Ajslx71MlIyKJbD4aDaa4jrE
-        YZv3l2Fl7HGLmsqfGco8THzc95rGm2rTmm4zaC5k8eDYO09SEvoEJvgotDJkOo1nnsAFWrR7QlCYc
-        zYF6hEiLKAFewD94R5+LW+DveXN3PvJ2FSj1jdR7HSr8uGXKMG/i9WLobPB9u6vPE+Uuo5kNylZsH
-        me0B83H4YX+3rVw88+Y1eZaCBOs8bXo7tE1XNtbF1djEP0bZLdsI78X6kknlp2097KVGefG0bHNtm
-        Y4LIN3bA==;
-In-Reply-To: <20210809141744.1203023-1-hch@lst.de>
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=yfgwEJJ/lEErTg9R2tH9Q4AY/CVVCsAathAAGp4mxNU=; b=YZpwWiQwwkBzHLrz5Kh1OgLTCm
+        xB08vBJzxYt3zTrEvfuSPuffpHPWcX3ryMnQv/Qh5mAmvqiE2EnlfZWToP3fGf7uQolZil/o8m9VD
+        dlI9VwWf/nJubgK1QQZ2d9vSb5lfGK9NTbyJBsc7odgvA0D3KTsPbeCIx998RP7SIipGS54gbt88p
+        NnGdVk/YxfCvopDOt8QY8cpWJQlJz6bpXMbVn27AhKW2dlzSGDHqAK8+eaKLCvLkP4KbCHBHNUGQq
+        kIAVdsMRhpolhx9nh4WIYI27PdgTjPYIxfpismT6T0ko1+8SIvgZmq1Uyv1YdeUMhJeQQpJgU0kA5
+        yfeF1MZw==;
+In-Reply-To: <20210809141744.1203023-1-hch-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="us-ascii"
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-RG9uJ3QgbGVhayB0aGUgZGV0YdGWbHMgb2YgdGhlIHRpbWVyIGludG8gdGhlIGJsb2NrIGxheWVy
-LCBpbnN0ZWFkCmluaXRpYWxpemUgdGhlIHRpbWVyIGluIGJkaV9hbGxvYyBhbmQgZGVsZXRlIGl0
-IGluIGJkaV91bnJlZ2lzdGVyLgpOb3RlIHRoYXQgdGhpcyBtZWFucyB0aGUgdGltZXIgaXMgaW5p
-dGlhbGl6ZWQgKGJ1dCBub3QgYXJtZWQpIGZvcgpub24tYmxvY2sgcXVldWVzIGFzIHdlbGwgbm93
-LgoKU2lnbmVkLW9mZi1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Ci0tLQogYmxv
-Y2svYmxrLWNvcmUuYyAgICB8IDUgLS0tLS0KIG1tL2JhY2tpbmctZGV2LmMgICAgfCAzICsrKwog
-bW0vcGFnZS13cml0ZWJhY2suYyB8IDIgLS0KIDMgZmlsZXMgY2hhbmdlZCwgMyBpbnNlcnRpb25z
-KCspLCA3IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2Jsb2NrL2Jsay1jb3JlLmMgYi9ibG9j
-ay9ibGstY29yZS5jCmluZGV4IDA0NDc3Njk3ZWU0Yi4uNTg5N2JjMzc0NjdkIDEwMDY0NAotLS0g
-YS9ibG9jay9ibGstY29yZS5jCisrKyBiL2Jsb2NrL2Jsay1jb3JlLmMKQEAgLTM5NCwxMCArMzk0
-LDcgQEAgdm9pZCBibGtfY2xlYW51cF9xdWV1ZShzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSkKIAkv
-KiBmb3Igc3luY2hyb25vdXMgYmlvLWJhc2VkIGRyaXZlciBmaW5pc2ggaW4tZmxpZ2h0IGludGVn
-cml0eSBpL28gKi8KIAlibGtfZmx1c2hfaW50ZWdyaXR5KCk7CiAKLQkvKiBAcSB3b24ndCBwcm9j
-ZXNzIGFueSBtb3JlIHJlcXVlc3QsIGZsdXNoIGFzeW5jIGFjdGlvbnMgKi8KLQlkZWxfdGltZXJf
-c3luYygmcS0+YmFja2luZ19kZXZfaW5mby0+bGFwdG9wX21vZGVfd2JfdGltZXIpOwogCWJsa19z
-eW5jX3F1ZXVlKHEpOwotCiAJaWYgKHF1ZXVlX2lzX21xKHEpKQogCQlibGtfbXFfZXhpdF9xdWV1
-ZShxKTsKIApAQCAtNTQ2LDggKzU0Myw2IEBAIHN0cnVjdCByZXF1ZXN0X3F1ZXVlICpibGtfYWxs
-b2NfcXVldWUoaW50IG5vZGVfaWQpCiAKIAlhdG9taWNfc2V0KCZxLT5ucl9hY3RpdmVfcmVxdWVz
-dHNfc2hhcmVkX3NiaXRtYXAsIDApOwogCi0JdGltZXJfc2V0dXAoJnEtPmJhY2tpbmdfZGV2X2lu
-Zm8tPmxhcHRvcF9tb2RlX3diX3RpbWVyLAotCQkgICAgbGFwdG9wX21vZGVfdGltZXJfZm4sIDAp
-OwogCXRpbWVyX3NldHVwKCZxLT50aW1lb3V0LCBibGtfcnFfdGltZWRfb3V0X3RpbWVyLCAwKTsK
-IAlJTklUX1dPUksoJnEtPnRpbWVvdXRfd29yaywgYmxrX3RpbWVvdXRfd29yayk7CiAJSU5JVF9M
-SVNUX0hFQUQoJnEtPmljcV9saXN0KTsKZGlmZiAtLWdpdCBhL21tL2JhY2tpbmctZGV2LmMgYi9t
-bS9iYWNraW5nLWRldi5jCmluZGV4IGY1NTYxZWE3ZDkwYS4uY2QwNmRjYTIzMmMzIDEwMDY0NAot
-LS0gYS9tbS9iYWNraW5nLWRldi5jCisrKyBiL21tL2JhY2tpbmctZGV2LmMKQEAgLTgwNyw2ICs4
-MDcsNyBAQCBzdHJ1Y3QgYmFja2luZ19kZXZfaW5mbyAqYmRpX2FsbG9jKGludCBub2RlX2lkKQog
-CWJkaS0+Y2FwYWJpbGl0aWVzID0gQkRJX0NBUF9XUklURUJBQ0sgfCBCRElfQ0FQX1dSSVRFQkFD
-S19BQ0NUOwogCWJkaS0+cmFfcGFnZXMgPSBWTV9SRUFEQUhFQURfUEFHRVM7CiAJYmRpLT5pb19w
-YWdlcyA9IFZNX1JFQURBSEVBRF9QQUdFUzsKKwl0aW1lcl9zZXR1cCgmYmRpLT5sYXB0b3BfbW9k
-ZV93Yl90aW1lciwgbGFwdG9wX21vZGVfdGltZXJfZm4sIDApOwogCXJldHVybiBiZGk7CiB9CiBF
-WFBPUlRfU1lNQk9MKGJkaV9hbGxvYyk7CkBAIC05MjgsNiArOTI5LDggQEAgc3RhdGljIHZvaWQg
-YmRpX3JlbW92ZV9mcm9tX2xpc3Qoc3RydWN0IGJhY2tpbmdfZGV2X2luZm8gKmJkaSkKIAogdm9p
-ZCBiZGlfdW5yZWdpc3RlcihzdHJ1Y3QgYmFja2luZ19kZXZfaW5mbyAqYmRpKQogeworCWRlbF90
-aW1lcl9zeW5jKCZiZGktPmxhcHRvcF9tb2RlX3diX3RpbWVyKTsKKwogCS8qIG1ha2Ugc3VyZSBu
-b2JvZHkgZmluZHMgdXMgb24gdGhlIGJkaV9saXN0IGFueW1vcmUgKi8KIAliZGlfcmVtb3ZlX2Zy
-b21fbGlzdChiZGkpOwogCXdiX3NodXRkb3duKCZiZGktPndiKTsKZGlmZiAtLWdpdCBhL21tL3Bh
-Z2Utd3JpdGViYWNrLmMgYi9tbS9wYWdlLXdyaXRlYmFjay5jCmluZGV4IDlmNjM1NDhmMjQ3Yy4u
-YzEyZjY3Y2JmYTE5IDEwMDY0NAotLS0gYS9tbS9wYWdlLXdyaXRlYmFjay5jCisrKyBiL21tL3Bh
-Z2Utd3JpdGViYWNrLmMKQEAgLTIwMTAsNyArMjAxMCw2IEBAIGludCBkaXJ0eV93cml0ZWJhY2tf
-Y2VudGlzZWNzX2hhbmRsZXIoc3RydWN0IGN0bF90YWJsZSAqdGFibGUsIGludCB3cml0ZSwKIAly
-ZXR1cm4gcmV0OwogfQogCi0jaWZkZWYgQ09ORklHX0JMT0NLCiB2b2lkIGxhcHRvcF9tb2RlX3Rp
-bWVyX2ZuKHN0cnVjdCB0aW1lcl9saXN0ICp0KQogewogCXN0cnVjdCBiYWNraW5nX2Rldl9pbmZv
-ICpiYWNraW5nX2Rldl9pbmZvID0KQEAgLTIwNDUsNyArMjA0NCw2IEBAIHZvaWQgbGFwdG9wX3N5
-bmNfY29tcGxldGlvbih2b2lkKQogCiAJcmN1X3JlYWRfdW5sb2NrKCk7CiB9Ci0jZW5kaWYKIAog
-LyoKICAqIElmIHJhdGVsaW1pdF9wYWdlcyBpcyB0b28gaGlnaCB0aGVuIHdlIGNhbiBnZXQgaW50
-byBkaXJ0eS1kYXRhIG92ZXJsb2FkCi0tIAoyLjMwLjIKCg==
+.. and rename the function to disk_update_readahead.  This is in
+preparation for moving the BDI from the request_queue to the gendisk.
+
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+---
+ block/blk-settings.c         | 8 +++++---
+ block/blk-sysfs.c            | 2 +-
+ drivers/block/drbd/drbd_nl.c | 2 +-
+ drivers/md/dm-table.c        | 2 +-
+ drivers/nvme/host/core.c     | 2 +-
+ include/linux/blkdev.h       | 2 +-
+ 6 files changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index 109012719aa0..44aaef9bf736 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -380,8 +380,10 @@ void blk_queue_alignment_offset(struct request_queue *q, unsigned int offset)
+ }
+ EXPORT_SYMBOL(blk_queue_alignment_offset);
+ 
+-void blk_queue_update_readahead(struct request_queue *q)
++void disk_update_readahead(struct gendisk *disk)
+ {
++	struct request_queue *q = disk->queue;
++
+ 	/*
+ 	 * For read-ahead of large files to be effective, we need to read ahead
+ 	 * at least twice the optimal I/O size.
+@@ -391,7 +393,7 @@ void blk_queue_update_readahead(struct request_queue *q)
+ 	q->backing_dev_info->io_pages =
+ 		queue_max_sectors(q) >> (PAGE_SHIFT - 9);
+ }
+-EXPORT_SYMBOL_GPL(blk_queue_update_readahead);
++EXPORT_SYMBOL_GPL(disk_update_readahead);
+ 
+ /**
+  * blk_limits_io_min - set minimum request size for a device
+@@ -665,7 +667,7 @@ void disk_stack_limits(struct gendisk *disk, struct block_device *bdev,
+ 		pr_notice("%s: Warning: Device %pg is misaligned\n",
+ 			disk->disk_name, bdev);
+ 
+-	blk_queue_update_readahead(disk->queue);
++	disk_update_readahead(disk);
+ }
+ EXPORT_SYMBOL(disk_stack_limits);
+ 
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 370d83c18057..3af2ab7d5086 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -866,7 +866,7 @@ int blk_register_queue(struct gendisk *disk)
+ 		  "%s is registering an already registered queue\n",
+ 		  kobject_name(&dev->kobj));
+ 
+-	blk_queue_update_readahead(q);
++	disk_update_readahead(disk);
+ 
+ 	ret = blk_trace_init_sysfs(dev);
+ 	if (ret)
+diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
+index e7d0e637e632..44ccf8b4f4b2 100644
+--- a/drivers/block/drbd/drbd_nl.c
++++ b/drivers/block/drbd/drbd_nl.c
+@@ -1364,7 +1364,7 @@ static void drbd_setup_queue_param(struct drbd_device *device, struct drbd_backi
+ 
+ 	if (b) {
+ 		blk_stack_limits(&q->limits, &b->limits, 0);
+-		blk_queue_update_readahead(q);
++		disk_update_readahead(device->vdisk);
+ 	}
+ 	fixup_discard_if_not_supported(q);
+ 	fixup_write_zeroes(device, q);
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index 0543cdf89e92..b03eabc1ed7c 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -2076,7 +2076,7 @@ int dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
+ 	}
+ 
+ 	dm_update_keyslot_manager(q, t);
+-	blk_queue_update_readahead(q);
++	disk_update_readahead(t->md->disk);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index dfd9dec0c1f6..f6c0a59c4b53 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -1890,7 +1890,7 @@ static int nvme_update_ns_info(struct nvme_ns *ns, struct nvme_id_ns *id)
+ 		nvme_update_disk_info(ns->head->disk, ns, id);
+ 		blk_stack_limits(&ns->head->disk->queue->limits,
+ 				 &ns->queue->limits, 0);
+-		blk_queue_update_readahead(ns->head->disk->queue);
++		disk_update_readahead(ns->head->disk);
+ 		blk_mq_unfreeze_queue(ns->head->disk->queue);
+ 	}
+ 	return 0;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index b5c033cf5f26..ac3642c88a4d 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1139,7 +1139,7 @@ void blk_queue_zone_write_granularity(struct request_queue *q,
+ 				      unsigned int size);
+ extern void blk_queue_alignment_offset(struct request_queue *q,
+ 				       unsigned int alignment);
+-void blk_queue_update_readahead(struct request_queue *q);
++void disk_update_readahead(struct gendisk *disk);
+ extern void blk_limits_io_min(struct queue_limits *limits, unsigned int min);
+ extern void blk_queue_io_min(struct request_queue *q, unsigned int min);
+ extern void blk_limits_io_opt(struct queue_limits *limits, unsigned int opt);
+-- 
+2.30.2
+
