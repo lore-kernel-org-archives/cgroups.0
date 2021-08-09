@@ -1,57 +1,60 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3] blk-throtl: optimize IOPS throttle for large IO
- scenarios
-Date: Mon, 9 Aug 2021 12:39:20 -1000
-Message-ID: <YRGumHUfK5sJc4A/@mtj.duckdns.org>
-References: <65869aaad05475797d63b4c3fed4f529febe3c26.1627876014.git.brookxu@tencent.com>
+Subject: Re: [PATCH v3 0/9] cgroup/cpuset: Add new cpuset partition type &
+ empty effecitve cpus
+Date: Mon, 9 Aug 2021 12:46:55 -1000
+Message-ID: <YRGwXw3KW8eFhEa8@mtj.duckdns.org>
+References: <20210720141834.10624-1-longman@redhat.com>
+ <YP9ChFvrGrDMGzbe@slm.duckdns.org>
+ <b2f49b2e-d5a4-1504-bd0c-0bd82943d855@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=+JExG4XECleL3z2Pr60SpUDE5nO3vODyjR9bd8Nc6kY=;
-        b=EPq7r4vY5ue8A5iT753KqHjWSDHd03tLblaNLm/9jVWiWmyDqcrRYISFIKWpeS7f6M
-         lK7en01wJBobFejcm4bXg/dPl+gkHFzVEZX4yMgHkQBDccJm5P4E3DOaQh9ehgCmKM9/
-         GRBPR03vn7t/BavtMLfomKuotxZUt5ucD3RNYD/xLQzg19QQK6KjXRi+ShwIZQYf1FGF
-         fJfQp0pFU4N+oKCiSMLLlxse2TrSItSRxiPuxcAd3gza7L1KhGGjfDS/bX/wO18Uu2ve
-         T8CFLd9ALTvMOqkXjbraKedriHdXEqN4tDMnPidTiJad0NDo0nTN9IxcCaAY+db9y4nd
-         Ezvw==
+        bh=XNgzSBl2ViZgrzMacCsKUZKoLxV/azVHoL6Wpcoyx1o=;
+        b=aEhH+GbMzUwYKoNDDFkuXlWKEVtNn+ncfDq/pdkGJJN4UnbE3CmPYayiSuTemIyIyr
+         lZHcTi35GE2BjPN9IB00dF6+Ir6KSDgrQCmP3pcBi4w34uvF+JWOSVOnitMB59NUcNHn
+         IolBa8d9/W36apIoy0H1KpO34GW9m7kGbkT4hpaH4/SwFT52bQk8bc/vpD4DYViw/8RM
+         wR3xDD4TI4UESH3BPx9xBe1a5yt+1l/7X14ojMklyUd91+GtS+/TEBViIswe/IDwYXai
+         tpMJsJJw8HlHXlt10zIKo2l+e889s0F8JMxguiNcQdSJYXN2M05+5urFXjP33WKrLDMc
+         bH/A==
 Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <65869aaad05475797d63b4c3fed4f529febe3c26.1627876014.git.brookxu@tencent.com>
+In-Reply-To: <b2f49b2e-d5a4-1504-bd0c-0bd82943d855@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: brookxu <brookxu.cn@gmail.com>
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Waiman Long <llong@redhat.com>
+Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
 
-On Mon, Aug 02, 2021 at 11:51:56AM +0800, brookxu wrote:
-> From: Chunguang Xu <brookxu@tencent.com>
-> 
-> After patch 54efd50 (block: make generic_make_request handle
-> arbitrarily sized bios), the IO through io-throttle may be larger,
-> and these IOs may be further split into more small IOs. However,
-> IOPS throttle does not seem to be aware of this change, which
-> makes the calculation of IOPS of large IOs incomplete, resulting
-> in disk-side IOPS that does not meet expectations. Maybe we should
-> fix this problem.
-> 
-> We can reproduce it by set max_sectors_kb of disk to 128, set
-> blkio.write_iops_throttle to 100, run a dd instance inside blkio
-> and use iostat to watch IOPS:
-> 
-> dd if=/dev/zero of=/dev/sdb bs=1M count=1000 oflag=direct
-> 
-> As a result, without this change the average IOPS is 1995, with
-> this change the IOPS is 98.
-> 
-> v3: Optimize the use of atomic variables.
-> v2: Use atomic variables to solve synchronization problems.
-> 
-> Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+Hello, Waiman. Sorry about the delay. Was off for a while.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+On Tue, Jul 27, 2021 at 05:14:27PM -0400, Waiman Long wrote:
+> However, if we have a complicated partition setup with multiple child
+> partitions. Invalid cpuset.cpus change in a parent partition will cause all
+> the child partitions to become invalid too. That is the scenario that I
+> don't want to happen inadvertently. Alternatively, we can restrict those
+
+I don't think there's anything fundamentally wrong with it given the
+requirement that userland has to monitor invalid state transitions.
+The same mass transition can happen through cpu hotplug operations,
+right?
+
+> invalid changes if a child partition exist and let it pass through and make
+> it invalid if it is a standalone partition.
+> 
+> Please let me know which approach do you want me to take.
+
+I think it'd be best if we can stick to some principles rather than
+trying to adjust it for specific scenarios. e.g.:
+
+* If a given state can be reached through cpu hot [un]plug, any
+  configuration attempt which reaches the same state should be allowed
+  with the same end result as cpu hot [un]plug.
+
+* If a given state can't ever be reached in whichever way, the
+  configuration attempting to reach such state should be rejected.
 
 Thanks.
 
