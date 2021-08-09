@@ -1,129 +1,158 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 1/5] mm: hide laptop_mode_wb_timer entirely behind the
- BDI API
-Date: Mon, 9 Aug 2021 17:10:48 +0200
-Message-ID: <20210809151048.GE30319@quack2.suse.cz>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 2/5] block: pass a gendisk to blk_queue_update_readahead
+Date: Mon, 9 Aug 2021 17:17:32 +0200
+Message-ID: <20210809151732.GF30319@quack2.suse.cz>
 References: <20210809141744.1203023-1-hch@lst.de>
- <20210809141744.1203023-2-hch@lst.de>
+ <20210809141744.1203023-3-hch@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1628521851; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1628522252; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=atlo+NKpDCTCwZ+7e0Seb6ZvJdkbk7+6VcZA+tEAelY=;
-        b=c/zsLCNQKeumCIxTiEcdWgfEDGcQHDy91K994MFxGQ4076JkmRJZlYy8Pma2zcJoGNt73A
-        +vjbUfTuU6Pl5Thm5zvxkFVY2fYtIKGsrDmAxnbqDLT+cZtc9qgNh+lM8L7NcNNS2ZJL1w
-        ZzOCvYkKEeCQ2KLICXZWRuoH7mr94b0=
+        bh=7zL5iFOCNlqpnOgojUr8MEx35+sJRZ9IY3kqNUTz69w=;
+        b=kw6i16i0g37hIjasF/QFKC3nj8G4OWm1HFOmAIhTsp7EZd8DrvVvlZOy4pmVV4AulCs0Mt
+        C3tHpa3x0X66+DFrn1Fzm9rP0Bbs61uRuwtkFQCXRwIFnTYUJ81aQfqHeF2ExDf9sFbDKi
+        BWoJa2WNGL5MlW8Dt9JdV+/8IbW8GGQ=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1628521851;
+        s=susede2_ed25519; t=1628522252;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=atlo+NKpDCTCwZ+7e0Seb6ZvJdkbk7+6VcZA+tEAelY=;
-        b=Dwdl7Ioju78ovvw3zBk5O60RylkYJghFcimUW6fMrUywG8vev4HpLDT8neW8a5v/GqlI9a
-        xSkpv15AFa2NQwBA==
+        bh=7zL5iFOCNlqpnOgojUr8MEx35+sJRZ9IY3kqNUTz69w=;
+        b=YfrR8LOFEkRRgYmUiGBh97iwJZJeZqfYXF1sBmdDibxeuFR3Suk4zhAEY4FYbIU46mR12+
+        xaH9eaKX6DoIYPBA==
 Content-Disposition: inline
-In-Reply-To: <20210809141744.1203023-2-hch-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <20210809141744.1203023-3-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-On Mon 09-08-21 16:17:40, Christoph Hellwig wrote:
-> Don't leak the deta=D1=96ls of the timer into the block layer, instead
-> initialize the timer in bdi_alloc and delete it in bdi_unregister.
-> Note that this means the timer is initialized (but not armed) for
-> non-block queues as well now.
->=20
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+On Mon 09-08-21 16:17:41, Christoph Hellwig wrote:
+> .. and rename the function to disk_update_readahead.  This is in
+> preparation for moving the BDI from the request_queue to the gendisk.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Looks good. Feel free to add:
 
-Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Reviewed-by: Jan Kara <jack@suse.cz>
 
 								Honza
 
 > ---
->  block/blk-core.c    | 5 -----
->  mm/backing-dev.c    | 3 +++
->  mm/page-writeback.c | 2 --
->  3 files changed, 3 insertions(+), 7 deletions(-)
->=20
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 04477697ee4b..5897bc37467d 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -394,10 +394,7 @@ void blk_cleanup_queue(struct request_queue *q)
->  	/* for synchronous bio-based driver finish in-flight integrity i/o */
->  	blk_flush_integrity();
-> =20
-> -	/* @q won't process any more request, flush async actions */
-> -	del_timer_sync(&q->backing_dev_info->laptop_mode_wb_timer);
->  	blk_sync_queue(q);
-> -
->  	if (queue_is_mq(q))
->  		blk_mq_exit_queue(q);
-> =20
-> @@ -546,8 +543,6 @@ struct request_queue *blk_alloc_queue(int node_id)
-> =20
->  	atomic_set(&q->nr_active_requests_shared_sbitmap, 0);
-> =20
-> -	timer_setup(&q->backing_dev_info->laptop_mode_wb_timer,
-> -		    laptop_mode_timer_fn, 0);
->  	timer_setup(&q->timeout, blk_rq_timed_out_timer, 0);
->  	INIT_WORK(&q->timeout_work, blk_timeout_work);
->  	INIT_LIST_HEAD(&q->icq_list);
-> diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-> index f5561ea7d90a..cd06dca232c3 100644
-> --- a/mm/backing-dev.c
-> +++ b/mm/backing-dev.c
-> @@ -807,6 +807,7 @@ struct backing_dev_info *bdi_alloc(int node_id)
->  	bdi->capabilities =3D BDI_CAP_WRITEBACK | BDI_CAP_WRITEBACK_ACCT;
->  	bdi->ra_pages =3D VM_READAHEAD_PAGES;
->  	bdi->io_pages =3D VM_READAHEAD_PAGES;
-> +	timer_setup(&bdi->laptop_mode_wb_timer, laptop_mode_timer_fn, 0);
->  	return bdi;
+>  block/blk-settings.c         | 8 +++++---
+>  block/blk-sysfs.c            | 2 +-
+>  drivers/block/drbd/drbd_nl.c | 2 +-
+>  drivers/md/dm-table.c        | 2 +-
+>  drivers/nvme/host/core.c     | 2 +-
+>  include/linux/blkdev.h       | 2 +-
+>  6 files changed, 10 insertions(+), 8 deletions(-)
+> 
+> diff --git a/block/blk-settings.c b/block/blk-settings.c
+> index 109012719aa0..44aaef9bf736 100644
+> --- a/block/blk-settings.c
+> +++ b/block/blk-settings.c
+> @@ -380,8 +380,10 @@ void blk_queue_alignment_offset(struct request_queue *q, unsigned int offset)
 >  }
->  EXPORT_SYMBOL(bdi_alloc);
-> @@ -928,6 +929,8 @@ static void bdi_remove_from_list(struct backing_dev_i=
-nfo *bdi)
-> =20
->  void bdi_unregister(struct backing_dev_info *bdi)
+>  EXPORT_SYMBOL(blk_queue_alignment_offset);
+>  
+> -void blk_queue_update_readahead(struct request_queue *q)
+> +void disk_update_readahead(struct gendisk *disk)
 >  {
-> +	del_timer_sync(&bdi->laptop_mode_wb_timer);
+> +	struct request_queue *q = disk->queue;
 > +
->  	/* make sure nobody finds us on the bdi_list anymore */
->  	bdi_remove_from_list(bdi);
->  	wb_shutdown(&bdi->wb);
-> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-> index 9f63548f247c..c12f67cbfa19 100644
-> --- a/mm/page-writeback.c
-> +++ b/mm/page-writeback.c
-> @@ -2010,7 +2010,6 @@ int dirty_writeback_centisecs_handler(struct ctl_ta=
-ble *table, int write,
->  	return ret;
+>  	/*
+>  	 * For read-ahead of large files to be effective, we need to read ahead
+>  	 * at least twice the optimal I/O size.
+> @@ -391,7 +393,7 @@ void blk_queue_update_readahead(struct request_queue *q)
+>  	q->backing_dev_info->io_pages =
+>  		queue_max_sectors(q) >> (PAGE_SHIFT - 9);
 >  }
-> =20
-> -#ifdef CONFIG_BLOCK
->  void laptop_mode_timer_fn(struct timer_list *t)
->  {
->  	struct backing_dev_info *backing_dev_info =3D
-> @@ -2045,7 +2044,6 @@ void laptop_sync_completion(void)
-> =20
->  	rcu_read_unlock();
+> -EXPORT_SYMBOL_GPL(blk_queue_update_readahead);
+> +EXPORT_SYMBOL_GPL(disk_update_readahead);
+>  
+>  /**
+>   * blk_limits_io_min - set minimum request size for a device
+> @@ -665,7 +667,7 @@ void disk_stack_limits(struct gendisk *disk, struct block_device *bdev,
+>  		pr_notice("%s: Warning: Device %pg is misaligned\n",
+>  			disk->disk_name, bdev);
+>  
+> -	blk_queue_update_readahead(disk->queue);
+> +	disk_update_readahead(disk);
 >  }
-> -#endif
-> =20
->  /*
->   * If ratelimit_pages is too high then we can get into dirty-data overlo=
-ad
-> --=20
+>  EXPORT_SYMBOL(disk_stack_limits);
+>  
+> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+> index 370d83c18057..3af2ab7d5086 100644
+> --- a/block/blk-sysfs.c
+> +++ b/block/blk-sysfs.c
+> @@ -866,7 +866,7 @@ int blk_register_queue(struct gendisk *disk)
+>  		  "%s is registering an already registered queue\n",
+>  		  kobject_name(&dev->kobj));
+>  
+> -	blk_queue_update_readahead(q);
+> +	disk_update_readahead(disk);
+>  
+>  	ret = blk_trace_init_sysfs(dev);
+>  	if (ret)
+> diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
+> index e7d0e637e632..44ccf8b4f4b2 100644
+> --- a/drivers/block/drbd/drbd_nl.c
+> +++ b/drivers/block/drbd/drbd_nl.c
+> @@ -1364,7 +1364,7 @@ static void drbd_setup_queue_param(struct drbd_device *device, struct drbd_backi
+>  
+>  	if (b) {
+>  		blk_stack_limits(&q->limits, &b->limits, 0);
+> -		blk_queue_update_readahead(q);
+> +		disk_update_readahead(device->vdisk);
+>  	}
+>  	fixup_discard_if_not_supported(q);
+>  	fixup_write_zeroes(device, q);
+> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+> index 0543cdf89e92..b03eabc1ed7c 100644
+> --- a/drivers/md/dm-table.c
+> +++ b/drivers/md/dm-table.c
+> @@ -2076,7 +2076,7 @@ int dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
+>  	}
+>  
+>  	dm_update_keyslot_manager(q, t);
+> -	blk_queue_update_readahead(q);
+> +	disk_update_readahead(t->md->disk);
+>  
+>  	return 0;
+>  }
+> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+> index dfd9dec0c1f6..f6c0a59c4b53 100644
+> --- a/drivers/nvme/host/core.c
+> +++ b/drivers/nvme/host/core.c
+> @@ -1890,7 +1890,7 @@ static int nvme_update_ns_info(struct nvme_ns *ns, struct nvme_id_ns *id)
+>  		nvme_update_disk_info(ns->head->disk, ns, id);
+>  		blk_stack_limits(&ns->head->disk->queue->limits,
+>  				 &ns->queue->limits, 0);
+> -		blk_queue_update_readahead(ns->head->disk->queue);
+> +		disk_update_readahead(ns->head->disk);
+>  		blk_mq_unfreeze_queue(ns->head->disk->queue);
+>  	}
+>  	return 0;
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index b5c033cf5f26..ac3642c88a4d 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -1139,7 +1139,7 @@ void blk_queue_zone_write_granularity(struct request_queue *q,
+>  				      unsigned int size);
+>  extern void blk_queue_alignment_offset(struct request_queue *q,
+>  				       unsigned int alignment);
+> -void blk_queue_update_readahead(struct request_queue *q);
+> +void disk_update_readahead(struct gendisk *disk);
+>  extern void blk_limits_io_min(struct queue_limits *limits, unsigned int min);
+>  extern void blk_queue_io_min(struct request_queue *q, unsigned int min);
+>  extern void blk_limits_io_opt(struct queue_limits *limits, unsigned int opt);
+> -- 
 > 2.30.2
->=20
---=20
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+> 
+-- 
+Jan Kara <jack@suse.com>
 SUSE Labs, CR
