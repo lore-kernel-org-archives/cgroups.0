@@ -1,187 +1,44 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 5/5] block: remove the bd_bdi in struct block_device
-Date: Mon,  9 Aug 2021 16:17:44 +0200
-Message-ID: <20210809141744.1203023-6-hch@lst.de>
+From: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Subject: Re: [PATCH 1/5] mm: hide laptop_mode_wb_timer entirely behind the BDI
+ API
+Date: Mon, 9 Aug 2021 14:33:50 +0000
+Message-ID: <PH0PR04MB74167976DB6951561F74DCF89BF69@PH0PR04MB7416.namprd04.prod.outlook.com>
 References: <20210809141744.1203023-1-hch@lst.de>
+ <20210809141744.1203023-2-hch@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=fXjNcv6g4LXpl9OMYkaZ1/31OMLTWrjb+tumAO/Mylw=; b=EMpRx4HDRE3aq5JIirkHqECR7M
-        PmCT8BB29vmf/mLA9Hdi+4kXbQ+mrcOC7384rd9njXwsfMQnPVE6GhIJDmSykwt3bc47VuGArTDbN
-        DRPazT34U2qlCnzlDIuRgZkih4Yr8qYkaP8zodKrWkiia0mumtwGfs5VVpTuJVdmaEH6gfrnBOLNQ
-        p/KpmJRwDYup3/gZ62c+tBo3Uj+Nqj4Ac/3RQjWYUHfrZijJeL9orUOm4lXguTtSQ7wfYLFib41G5
-        7TyUQ7ocHznUwqptL65qJaA/9C8qgyJs1qBe2AArz7OBb/PN8GZ7yRuO3PmjU2bzo81ThRlDOfA6R
-        R0zTJArA==;
-In-Reply-To: <20210809141744.1203023-1-hch-jcswGhMUV9g@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1628519653; x=1660055653;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=vACKBTJ1W3dbxi9/auoShIet6UycyPrHxIN1n7HzEck=;
+  b=A2Qg2ATaAFTB64hSFcgyq0tPt8mptiFtprLiAcike+D+5LDX18ctnYWr
+   wqkCPegX3oGuwqW7PKgqd73AOfM8UBms6pT4ygtol+ZGXYX6oWMAEJTTv
+   S1YLA2g2Grm4wFu1IeyBGWWpb7r3BCwTksQyTjo4pd/G8BU0RQD3QOFYU
+   mp6s7NLslJFFTPFHWJ2QsHo7y8ib6wESFIUaL74FpCeizW08qTjAQ7nFG
+   580wstoBXWcu34X19O6YoSwA6S3yrSIeTNvOlZKP8j/Hjvlv3/rnCd1oN
+   HzFQ8F1Y9yj9vAuXdqVFlIzPodPAOlYg0qpXUiU1iJZbZBDJzkS6lzo7n
+   A==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=vACKBTJ1W3dbxi9/auoShIet6UycyPrHxIN1n7HzEck=;
+ b=F2jeqY6qFSbnSWLlvmpdOWHb0sisNxAbzI2HIegxBe+R3lTKN6pCQXaOFa9Uxdiwq/CvGdefk4l1pbqILZfdjcg07RVbQZ/mdKe55OZyMWzDGD5TdWOGhR8zZ4X6KFi8sgzMo7UbiNveo48ZM6gOcq7SwPS61zsE7bklk2o5tqc=
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
 
-Just retrieve the bdi from the disk.
-
-Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
----
- block/ioctl.c               |  7 ++++---
- fs/block_dev.c              | 13 +------------
- fs/nilfs2/super.c           |  2 +-
- fs/super.c                  |  2 +-
- fs/xfs/xfs_buf.c            |  2 +-
- include/linux/backing-dev.h |  2 +-
- include/linux/blk_types.h   |  1 -
- 7 files changed, 9 insertions(+), 20 deletions(-)
-
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 0c3a4a53fa11..fff161eaab42 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -506,7 +506,7 @@ static int blkdev_common_ioctl(struct block_device *bdev, fmode_t mode,
- 	case BLKFRASET:
- 		if(!capable(CAP_SYS_ADMIN))
- 			return -EACCES;
--		bdev->bd_bdi->ra_pages = (arg * 512) / PAGE_SIZE;
-+		bdev->bd_disk->bdi->ra_pages = (arg * 512) / PAGE_SIZE;
- 		return 0;
- 	case BLKRRPART:
- 		return blkdev_reread_part(bdev, mode);
-@@ -556,7 +556,8 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	case BLKFRAGET:
- 		if (!argp)
- 			return -EINVAL;
--		return put_long(argp, (bdev->bd_bdi->ra_pages*PAGE_SIZE) / 512);
-+		return put_long(argp,
-+			(bdev->bd_disk->bdi->ra_pages * PAGE_SIZE) / 512);
- 	case BLKGETSIZE:
- 		size = i_size_read(bdev->bd_inode);
- 		if ((size >> 9) > ~0UL)
-@@ -628,7 +629,7 @@ long compat_blkdev_ioctl(struct file *file, unsigned cmd, unsigned long arg)
- 		if (!argp)
- 			return -EINVAL;
- 		return compat_put_long(argp,
--			       (bdev->bd_bdi->ra_pages * PAGE_SIZE) / 512);
-+			(bdev->bd_disk->bdi->ra_pages * PAGE_SIZE) / 512);
- 	case BLKGETSIZE:
- 		size = i_size_read(bdev->bd_inode);
- 		if ((size >> 9) > ~0UL)
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index de8c3d9cbdb1..65fc0efca26b 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -801,7 +801,6 @@ static struct inode *bdev_alloc_inode(struct super_block *sb)
- 	if (!ei)
- 		return NULL;
- 	memset(&ei->bdev, 0, sizeof(ei->bdev));
--	ei->bdev.bd_bdi = &noop_backing_dev_info;
- 	return &ei->vfs_inode;
- }
- 
-@@ -826,16 +825,11 @@ static void init_once(void *data)
- 
- static void bdev_evict_inode(struct inode *inode)
- {
--	struct block_device *bdev = &BDEV_I(inode)->bdev;
- 	truncate_inode_pages_final(&inode->i_data);
- 	invalidate_inode_buffers(inode); /* is it needed here? */
- 	clear_inode(inode);
- 	/* Detach inode from wb early as bdi_put() may free bdi->wb */
- 	inode_detach_wb(inode);
--	if (bdev->bd_bdi != &noop_backing_dev_info) {
--		bdi_put(bdev->bd_bdi);
--		bdev->bd_bdi = &noop_backing_dev_info;
--	}
- }
- 
- static const struct super_operations bdev_sops = {
-@@ -1229,11 +1223,8 @@ static int blkdev_get_whole(struct block_device *bdev, fmode_t mode)
- 		}
- 	}
- 
--	if (!bdev->bd_openers) {
-+	if (!bdev->bd_openers)
- 		set_init_blocksize(bdev);
--		if (bdev->bd_bdi == &noop_backing_dev_info)
--			bdev->bd_bdi = bdi_get(disk->bdi);
--	}
- 	if (test_bit(GD_NEED_PART_SCAN, &disk->state))
- 		bdev_disk_changed(disk, false);
- 	bdev->bd_openers++;
-@@ -1266,8 +1257,6 @@ static int blkdev_get_part(struct block_device *part, fmode_t mode)
- 
- 	disk->open_partitions++;
- 	set_init_blocksize(part);
--	if (part->bd_bdi == &noop_backing_dev_info)
--		part->bd_bdi = bdi_get(disk->bdi);
- done:
- 	part->bd_openers++;
- 	return 0;
-diff --git a/fs/nilfs2/super.c b/fs/nilfs2/super.c
-index 4abd928b0bc8..f6b2d280aab5 100644
---- a/fs/nilfs2/super.c
-+++ b/fs/nilfs2/super.c
-@@ -1053,7 +1053,7 @@ nilfs_fill_super(struct super_block *sb, void *data, int silent)
- 	sb->s_time_gran = 1;
- 	sb->s_max_links = NILFS_LINK_MAX;
- 
--	sb->s_bdi = bdi_get(sb->s_bdev->bd_bdi);
-+	sb->s_bdi = bdi_get(sb->s_bdev->bd_disk->bdi);
- 
- 	err = load_nilfs(nilfs, sb);
- 	if (err)
-diff --git a/fs/super.c b/fs/super.c
-index 91b7f156735b..bcef3a6f4c4b 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -1203,7 +1203,7 @@ static int set_bdev_super(struct super_block *s, void *data)
- {
- 	s->s_bdev = data;
- 	s->s_dev = s->s_bdev->bd_dev;
--	s->s_bdi = bdi_get(s->s_bdev->bd_bdi);
-+	s->s_bdi = bdi_get(s->s_bdev->bd_disk->bdi);
- 
- 	if (blk_queue_stable_writes(s->s_bdev->bd_disk->queue))
- 		s->s_iflags |= SB_I_STABLE_WRITES;
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 8ff42b3585e0..3ab73567a0f5 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -844,7 +844,7 @@ xfs_buf_readahead_map(
- {
- 	struct xfs_buf		*bp;
- 
--	if (bdi_read_congested(target->bt_bdev->bd_bdi))
-+	if (bdi_read_congested(target->bt_bdev->bd_disk->bdi))
- 		return;
- 
- 	xfs_buf_read_map(target, map, nmaps,
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 44df4fcef65c..29530859d9ff 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -143,7 +143,7 @@ static inline struct backing_dev_info *inode_to_bdi(struct inode *inode)
- 	sb = inode->i_sb;
- #ifdef CONFIG_BLOCK
- 	if (sb_is_blkdev_sb(sb))
--		return I_BDEV(inode)->bd_bdi;
-+		return I_BDEV(inode)->bd_disk->bdi;
- #endif
- 	return sb->s_bdi;
- }
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 290f9061b29a..a6c015cedaf7 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -41,7 +41,6 @@ struct block_device {
- 	u8			bd_partno;
- 	spinlock_t		bd_size_lock; /* for bd_inode->i_size updates */
- 	struct gendisk *	bd_disk;
--	struct backing_dev_info *bd_bdi;
- 
- 	/* The counter of freeze processes */
- 	int			bd_fsfreeze_count;
--- 
-2.30.2
-
+On 09/08/2021 16:19, Christoph Hellwig wrote:=0A=
+> Don't leak the deta=A6ls of the timer into the block layer, instead=0A=
+> initialize the timer in bdi_alloc and delete it in bdi_unregister.=0A=
+> Note that this means the timer is initialized (but not armed) for=0A=
+> non-block queues as well now.=0A=
+=0A=
+And laptop_mode_timer_fn() is always present now.=0A=
+=0A=
+Other than that,=0A=
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
