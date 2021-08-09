@@ -1,55 +1,70 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: move the bdi from the request_queue to the gendisk
-Date: Mon,  9 Aug 2021 16:17:39 +0200
-Message-ID: <20210809141744.1203023-1-hch@lst.de>
+Subject: [PATCH 1/5] mm: hide laptop_mode_wb_timer entirely behind the BDI API
+Date: Mon,  9 Aug 2021 16:17:40 +0200
+Message-ID: <20210809141744.1203023-2-hch@lst.de>
+References: <20210809141744.1203023-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=/1LqcjPeqkvTqmLoClgHGpxYg7gRK9WdMqO+RkPb7dU=; b=qaeVxxYlsqLnEMTE4rjzYnt+Lh
-        muxR3ztLnp5WIHrYANGGeM+/zKKxKZNON67rQvXB/kC0sl/VEP0LTlmTmiIzaZgec9GOB0C0NYJja
-        zng9cjNKj7KMCPjFRAEVEJtExmgE+sNgpYoVsTWqPi9Ky0fcuU4v7pH281Fn7AcWOdhiuQ5vel2Y9
-        qeH5hEE5B2AfGaOADshEolNYxvTgAap5nZiTRFDlOex7G1rdg0aBr74tt7tePqI0UBh6u8A7KSEQb
-        pusAFK4G+UhjKmEuWliS5x38l1Hb+Ivz5RYqFh8Ui3VWK+BsumJlZ+dumL3hOBxImK0nrFxeSuUxY
-        2wyC1qHA==;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-ID:Content-Description;
+        bh=e/hMr9qV3lYuoExuGo8ptlwF2KxcgT3KNTD6PJZ/mnk=; b=LcdQbBNS9XkSbbdubrlmjEs4kt
+        CQA+10SkoQ7oBciWNnRLhJKjR2feUZZ0CeHZcXUMzruTD7b5cDQv1Ajslx71MlIyKJbD4aDaa4jrE
+        YZv3l2Fl7HGLmsqfGco8THzc95rGm2rTmm4zaC5k8eDYO09SEvoEJvgotDJkOo1nnsAFWrR7QlCYc
+        zYF6hEiLKAFewD94R5+LW+DveXN3PvJ2FSj1jdR7HSr8uGXKMG/i9WLobPB9u6vPE+Uuo5kNylZsH
+        me0B83H4YX+3rVw88+Y1eZaCBOs8bXo7tE1XNtbF1djEP0bZLdsI78X6kknlp2097KVGefG0bHNtm
+        Y4LIN3bA==;
+In-Reply-To: <20210809141744.1203023-1-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="macroman"
 To: Jens Axboe <axboe@kernel.dk>
 Cc: Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
 
-Hi Jens,
-
-this series moves the pointer to the bdi from the request_queue
-to the bdi, better matching the life time rules of the different
-objects.
-
-Diffstat:
- block/bfq-iosched.c           |    4 ++--
- block/blk-cgroup.c            |    7 +++----
- block/blk-core.c              |   18 +++---------------
- block/blk-mq.c                |    2 +-
- block/blk-settings.c          |   22 ++++++++++++++--------
- block/blk-sysfs.c             |   28 +++++++++++++---------------
- block/blk-wbt.c               |   10 +++++-----
- block/genhd.c                 |   23 ++++++++++++++---------
- block/ioctl.c                 |    7 ++++---
- drivers/block/drbd/drbd_nl.c  |    2 +-
- drivers/block/drbd/drbd_req.c |    5 ++---
- drivers/block/pktcdvd.c       |    8 +++-----
- drivers/md/dm-table.c         |    2 +-
- drivers/nvme/host/core.c      |    2 +-
- fs/block_dev.c                |   13 +------------
- fs/fat/fatent.c               |    1 +
- fs/nilfs2/super.c             |    2 +-
- fs/super.c                    |    2 +-
- fs/xfs/xfs_buf.c              |    2 +-
- include/linux/backing-dev.h   |    2 +-
- include/linux/blk_types.h     |    1 -
- include/linux/blkdev.h        |    6 ++----
- include/linux/genhd.h         |    1 +
- mm/backing-dev.c              |    3 +++
- mm/page-writeback.c           |    2 --
- 25 files changed, 79 insertions(+), 96 deletions(-)
+RG9uJ3QgbGVhayB0aGUgZGV0YdGWbHMgb2YgdGhlIHRpbWVyIGludG8gdGhlIGJsb2NrIGxheWVy
+LCBpbnN0ZWFkCmluaXRpYWxpemUgdGhlIHRpbWVyIGluIGJkaV9hbGxvYyBhbmQgZGVsZXRlIGl0
+IGluIGJkaV91bnJlZ2lzdGVyLgpOb3RlIHRoYXQgdGhpcyBtZWFucyB0aGUgdGltZXIgaXMgaW5p
+dGlhbGl6ZWQgKGJ1dCBub3QgYXJtZWQpIGZvcgpub24tYmxvY2sgcXVldWVzIGFzIHdlbGwgbm93
+LgoKU2lnbmVkLW9mZi1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Ci0tLQogYmxv
+Y2svYmxrLWNvcmUuYyAgICB8IDUgLS0tLS0KIG1tL2JhY2tpbmctZGV2LmMgICAgfCAzICsrKwog
+bW0vcGFnZS13cml0ZWJhY2suYyB8IDIgLS0KIDMgZmlsZXMgY2hhbmdlZCwgMyBpbnNlcnRpb25z
+KCspLCA3IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2Jsb2NrL2Jsay1jb3JlLmMgYi9ibG9j
+ay9ibGstY29yZS5jCmluZGV4IDA0NDc3Njk3ZWU0Yi4uNTg5N2JjMzc0NjdkIDEwMDY0NAotLS0g
+YS9ibG9jay9ibGstY29yZS5jCisrKyBiL2Jsb2NrL2Jsay1jb3JlLmMKQEAgLTM5NCwxMCArMzk0
+LDcgQEAgdm9pZCBibGtfY2xlYW51cF9xdWV1ZShzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSkKIAkv
+KiBmb3Igc3luY2hyb25vdXMgYmlvLWJhc2VkIGRyaXZlciBmaW5pc2ggaW4tZmxpZ2h0IGludGVn
+cml0eSBpL28gKi8KIAlibGtfZmx1c2hfaW50ZWdyaXR5KCk7CiAKLQkvKiBAcSB3b24ndCBwcm9j
+ZXNzIGFueSBtb3JlIHJlcXVlc3QsIGZsdXNoIGFzeW5jIGFjdGlvbnMgKi8KLQlkZWxfdGltZXJf
+c3luYygmcS0+YmFja2luZ19kZXZfaW5mby0+bGFwdG9wX21vZGVfd2JfdGltZXIpOwogCWJsa19z
+eW5jX3F1ZXVlKHEpOwotCiAJaWYgKHF1ZXVlX2lzX21xKHEpKQogCQlibGtfbXFfZXhpdF9xdWV1
+ZShxKTsKIApAQCAtNTQ2LDggKzU0Myw2IEBAIHN0cnVjdCByZXF1ZXN0X3F1ZXVlICpibGtfYWxs
+b2NfcXVldWUoaW50IG5vZGVfaWQpCiAKIAlhdG9taWNfc2V0KCZxLT5ucl9hY3RpdmVfcmVxdWVz
+dHNfc2hhcmVkX3NiaXRtYXAsIDApOwogCi0JdGltZXJfc2V0dXAoJnEtPmJhY2tpbmdfZGV2X2lu
+Zm8tPmxhcHRvcF9tb2RlX3diX3RpbWVyLAotCQkgICAgbGFwdG9wX21vZGVfdGltZXJfZm4sIDAp
+OwogCXRpbWVyX3NldHVwKCZxLT50aW1lb3V0LCBibGtfcnFfdGltZWRfb3V0X3RpbWVyLCAwKTsK
+IAlJTklUX1dPUksoJnEtPnRpbWVvdXRfd29yaywgYmxrX3RpbWVvdXRfd29yayk7CiAJSU5JVF9M
+SVNUX0hFQUQoJnEtPmljcV9saXN0KTsKZGlmZiAtLWdpdCBhL21tL2JhY2tpbmctZGV2LmMgYi9t
+bS9iYWNraW5nLWRldi5jCmluZGV4IGY1NTYxZWE3ZDkwYS4uY2QwNmRjYTIzMmMzIDEwMDY0NAot
+LS0gYS9tbS9iYWNraW5nLWRldi5jCisrKyBiL21tL2JhY2tpbmctZGV2LmMKQEAgLTgwNyw2ICs4
+MDcsNyBAQCBzdHJ1Y3QgYmFja2luZ19kZXZfaW5mbyAqYmRpX2FsbG9jKGludCBub2RlX2lkKQog
+CWJkaS0+Y2FwYWJpbGl0aWVzID0gQkRJX0NBUF9XUklURUJBQ0sgfCBCRElfQ0FQX1dSSVRFQkFD
+S19BQ0NUOwogCWJkaS0+cmFfcGFnZXMgPSBWTV9SRUFEQUhFQURfUEFHRVM7CiAJYmRpLT5pb19w
+YWdlcyA9IFZNX1JFQURBSEVBRF9QQUdFUzsKKwl0aW1lcl9zZXR1cCgmYmRpLT5sYXB0b3BfbW9k
+ZV93Yl90aW1lciwgbGFwdG9wX21vZGVfdGltZXJfZm4sIDApOwogCXJldHVybiBiZGk7CiB9CiBF
+WFBPUlRfU1lNQk9MKGJkaV9hbGxvYyk7CkBAIC05MjgsNiArOTI5LDggQEAgc3RhdGljIHZvaWQg
+YmRpX3JlbW92ZV9mcm9tX2xpc3Qoc3RydWN0IGJhY2tpbmdfZGV2X2luZm8gKmJkaSkKIAogdm9p
+ZCBiZGlfdW5yZWdpc3RlcihzdHJ1Y3QgYmFja2luZ19kZXZfaW5mbyAqYmRpKQogeworCWRlbF90
+aW1lcl9zeW5jKCZiZGktPmxhcHRvcF9tb2RlX3diX3RpbWVyKTsKKwogCS8qIG1ha2Ugc3VyZSBu
+b2JvZHkgZmluZHMgdXMgb24gdGhlIGJkaV9saXN0IGFueW1vcmUgKi8KIAliZGlfcmVtb3ZlX2Zy
+b21fbGlzdChiZGkpOwogCXdiX3NodXRkb3duKCZiZGktPndiKTsKZGlmZiAtLWdpdCBhL21tL3Bh
+Z2Utd3JpdGViYWNrLmMgYi9tbS9wYWdlLXdyaXRlYmFjay5jCmluZGV4IDlmNjM1NDhmMjQ3Yy4u
+YzEyZjY3Y2JmYTE5IDEwMDY0NAotLS0gYS9tbS9wYWdlLXdyaXRlYmFjay5jCisrKyBiL21tL3Bh
+Z2Utd3JpdGViYWNrLmMKQEAgLTIwMTAsNyArMjAxMCw2IEBAIGludCBkaXJ0eV93cml0ZWJhY2tf
+Y2VudGlzZWNzX2hhbmRsZXIoc3RydWN0IGN0bF90YWJsZSAqdGFibGUsIGludCB3cml0ZSwKIAly
+ZXR1cm4gcmV0OwogfQogCi0jaWZkZWYgQ09ORklHX0JMT0NLCiB2b2lkIGxhcHRvcF9tb2RlX3Rp
+bWVyX2ZuKHN0cnVjdCB0aW1lcl9saXN0ICp0KQogewogCXN0cnVjdCBiYWNraW5nX2Rldl9pbmZv
+ICpiYWNraW5nX2Rldl9pbmZvID0KQEAgLTIwNDUsNyArMjA0NCw2IEBAIHZvaWQgbGFwdG9wX3N5
+bmNfY29tcGxldGlvbih2b2lkKQogCiAJcmN1X3JlYWRfdW5sb2NrKCk7CiB9Ci0jZW5kaWYKIAog
+LyoKICAqIElmIHJhdGVsaW1pdF9wYWdlcyBpcyB0b28gaGlnaCB0aGVuIHdlIGNhbiBnZXQgaW50
+byBkaXJ0eS1kYXRhIG92ZXJsb2FkCi0tIAoyLjMwLjIKCg==
