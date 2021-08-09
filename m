@@ -1,38 +1,48 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: move the bdi from the request_queue to the gendisk
-Date: Mon, 9 Aug 2021 15:42:32 -0600
-Message-ID: <1daf9ad7-1c6b-0e57-9645-7902feda712d@kernel.dk>
-References: <20210809141744.1203023-1-hch@lst.de>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 24/38] cgroup: Replace deprecated CPU-hotplug functions.
+Date: Mon, 9 Aug 2021 12:37:54 -1000
+Message-ID: <YRGuQpOaoikOGcyl@mtj.duckdns.org>
+References: <20210803141621.780504-1-bigeasy@linutronix.de>
+ <20210803141621.780504-25-bigeasy@linutronix.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=UbXAYdRHxKxxmC4KDWgyIc/4KEvYd5We70piQjbukJY=;
-        b=WDUwHi84SGgUmjlZRgTAExBiEjnslPFUC2C2Dxwpq+qOoCOsVmUIxZX1z4hveShRZo
-         DMRunpgURSW+VhFTInR12GfcpmPzwdCoOiP5ife3C6BhSHmCeP1EXeU6UVMZkbDhKCpj
-         9otQQepxMn/+Ym4k/IANk6pd2WFjBgV+VL9Bto++lNPGAecSNO+WMUEKDU6sNEQOAX9l
-         robaz3duHYqZ87F7j60GHqhFkpwveXll4TkaeJIiFp9iMDk5M2tTJTxoRdQtdS/MocKM
-         DmGKWVZ9yxCvkW/75nvbPG1desNJyXre0ksMciWif2PnpJaIXwD5Cm0Q8xtrBDaYdOOw
-         8+Rg==
-In-Reply-To: <20210809141744.1203023-1-hch-jcswGhMUV9g@public.gmane.org>
-Content-Language: en-US
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=3y0PR9hqaxZCbgji9aEKkljrODgvwX/4vrec8nondds=;
+        b=hV/65XscHrUVTSXlPXqgMC6M187FxVGO48d2RrLSEcEd1ZVh9XRuET4/wAi9Ht8NvK
+         vy3lAN2dWaHEvnIv53DwRAN5+8aFe5LTGgby7GCF2RVjWmzesyFRQgQ+VBWctei6hpUp
+         Zdw8b4GCtfJSUDaJDgoczIVrW+gYQnkNOhs7eb6CrzUEcID/MuPhxLZregZkEjQTHNSP
+         ZSih/+6fleuLQBQ+BJNq3v40NN4c7e+6eS6QNUBYzicNufv5Kq5XLnq5T7bz3VLO3bW9
+         2unQEtTeLqQ/yx9D9a1d9VPUVwwMIg2t0oV5SgrSPzuO6khuzu53BzLKl3E+z9danjj/
+         1FIg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20210803141621.780504-25-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 8/9/21 8:17 AM, Christoph Hellwig wrote:
-> Hi Jens,
+On Tue, Aug 03, 2021 at 04:16:07PM +0200, Sebastian Andrzej Siewior wrote:
+> The functions get_online_cpus() and put_online_cpus() have been
+> deprecated during the CPU hotplug rework. They map directly to
+> cpus_read_lock() and cpus_read_unlock().
 > 
-> this series moves the pointer to the bdi from the request_queue
-> to the bdi, better matching the life time rules of the different
-> objects.
+> Replace deprecated CPU-hotplug functions with the official version.
+> The behavior remains unchanged.
+> 
+> Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
-Applied for 5.15, thanks.
+Applied to cgroup/for-5.15.
+
+Thanks.
 
 -- 
-Jens Axboe
-
+tejun
