@@ -1,162 +1,209 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-5.15] BUILD SUCCESS
- c5c63b9a6a2e53757b598485b8adbafa56d6d9ee
-Date: Tue, 10 Aug 2021 19:21:28 +0800
-Message-ID: <61126138.9EmkhBUatFMZVwQ4%lkp@intel.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/2] blk-cgroup: refactor blkcg_print_stat
+Date: Tue, 10 Aug 2021 17:26:22 +0200
+Message-ID: <20210810152623.1796144-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=x+IC4nJXNjYXSgrpS0H9Iw4lxiCXLC6AqMo7bC8Od6w=; b=K59U+v+vekpIID2gPUGSsTvnRW
+        mMo79IJr6MybkVLcxZPl7NRcbWgF6E2Bmzsz69gpnjCjg4wagQh0jm4sdswjW5T6wegR7BB5zmedE
+        eTrw19OOMnqLvQthf82Y0UlSekWHwwCcGnPsw57qmvPC4L6BXJm+QLetupGlzIE12t+qm8fnp4hSk
+        VdTDJuhcCTvMxON+0AsUIkL/7vIV3NDIpdao7h3HBTUP+exg92VP5GrQvXT5uKiV0EjhPPXGnXcrh
+        LLYQfj8+z55yIEr3UM8S8/0GIC09DpiXAL6/ljvOxKFKz9To/E35kIVbBIoViRClitnsM9e0TeGli
+        US2MbI8w==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: axboe@kernel.dk
+Cc: tj@kernel.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.15
-branch HEAD: c5c63b9a6a2e53757b598485b8adbafa56d6d9ee  cgroup: Replace deprecated CPU-hotplug functions.
+Factor out a helper to deal with a single blkcg_gq to make the code a
+little bit easier to follow.
 
-elapsed time: 723m
-
-configs tested: 131
-configs skipped: 3
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                 randconfig-c001-20210810
-arc                            hsdk_defconfig
-arm                        realview_defconfig
-arm                           spitz_defconfig
-powerpc                   currituck_defconfig
-arm                           viper_defconfig
-powerpc                 mpc834x_mds_defconfig
-sh                          rsk7264_defconfig
-sh                        sh7785lcr_defconfig
-ia64                        generic_defconfig
-xtensa                  nommu_kc705_defconfig
-sh                          landisk_defconfig
-openrisc                         alldefconfig
-arm                           stm32_defconfig
-powerpc                      ppc64e_defconfig
-powerpc                     tqm8540_defconfig
-riscv                          rv32_defconfig
-powerpc                      tqm8xx_defconfig
-arm                       omap2plus_defconfig
-powerpc                      mgcoge_defconfig
-mips                         cobalt_defconfig
-powerpc                 mpc85xx_cds_defconfig
-arm                         s3c6400_defconfig
-sh                             sh03_defconfig
-riscv                    nommu_virt_defconfig
-i386                                defconfig
-powerpc                     tqm5200_defconfig
-sh                            titan_defconfig
-powerpc                     taishan_defconfig
-arm                            hisi_defconfig
-x86_64                            allnoconfig
-arm                          pxa910_defconfig
-powerpc                 mpc8540_ads_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a004-20210810
-x86_64               randconfig-a006-20210810
-x86_64               randconfig-a003-20210810
-x86_64               randconfig-a005-20210810
-x86_64               randconfig-a002-20210810
-x86_64               randconfig-a001-20210810
-i386                 randconfig-a004-20210809
-i386                 randconfig-a006-20210809
-i386                 randconfig-a002-20210809
-i386                 randconfig-a001-20210809
-i386                 randconfig-a003-20210809
-i386                 randconfig-a004-20210808
-i386                 randconfig-a005-20210808
-i386                 randconfig-a006-20210808
-i386                 randconfig-a002-20210808
-i386                 randconfig-a001-20210808
-i386                 randconfig-a003-20210808
-i386                 randconfig-a005-20210809
-x86_64               randconfig-a016-20210808
-x86_64               randconfig-a012-20210808
-x86_64               randconfig-a013-20210808
-x86_64               randconfig-a011-20210808
-x86_64               randconfig-a014-20210808
-x86_64               randconfig-a015-20210808
-i386                 randconfig-a012-20210809
-i386                 randconfig-a015-20210809
-i386                 randconfig-a011-20210809
-i386                 randconfig-a013-20210809
-i386                 randconfig-a014-20210809
-i386                 randconfig-a016-20210809
-x86_64               randconfig-a003-20210809
-x86_64               randconfig-a002-20210809
-x86_64               randconfig-a004-20210809
-x86_64               randconfig-a006-20210809
-x86_64               randconfig-a001-20210809
-x86_64               randconfig-a005-20210809
-riscv                    nommu_k210_defconfig
-riscv                             allnoconfig
-riscv                            allyesconfig
-riscv                               defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                           allyesconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-
-clang tested configs:
-x86_64               randconfig-c001-20210810
-x86_64               randconfig-c001-20210809
-x86_64               randconfig-a016-20210809
-x86_64               randconfig-a012-20210809
-x86_64               randconfig-a013-20210809
-x86_64               randconfig-a011-20210809
-x86_64               randconfig-a014-20210809
-x86_64               randconfig-a015-20210809
-x86_64               randconfig-a013-20210810
-x86_64               randconfig-a011-20210810
-x86_64               randconfig-a012-20210810
-x86_64               randconfig-a016-20210810
-x86_64               randconfig-a014-20210810
-x86_64               randconfig-a015-20210810
-
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+ block/blk-cgroup.c | 148 ++++++++++++++++++++++-----------------------
+ 1 file changed, 74 insertions(+), 74 deletions(-)
+
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index db034e35ae20..52aa0540ccaf 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -870,97 +870,97 @@ static void blkcg_fill_root_iostats(void)
+ 	}
+ }
+ 
+-static int blkcg_print_stat(struct seq_file *sf, void *v)
++static void blkcg_print_one_stat(struct blkcg_gq *blkg, struct seq_file *s)
+ {
+-	struct blkcg *blkcg = css_to_blkcg(seq_css(sf));
+-	struct blkcg_gq *blkg;
+-
+-	if (!seq_css(sf)->parent)
+-		blkcg_fill_root_iostats();
+-	else
+-		cgroup_rstat_flush(blkcg->css.cgroup);
+-
+-	rcu_read_lock();
++	struct blkg_iostat_set *bis = &blkg->iostat;
++	u64 rbytes, wbytes, rios, wios, dbytes, dios;
++	bool has_stats = false;
++	const char *dname;
++	unsigned seq;
++	char *buf;
++	size_t size = seq_get_buf(s, &buf), off = 0;
++	int i;
+ 
+-	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
+-		struct blkg_iostat_set *bis = &blkg->iostat;
+-		const char *dname;
+-		char *buf;
+-		u64 rbytes, wbytes, rios, wios, dbytes, dios;
+-		size_t size = seq_get_buf(sf, &buf), off = 0;
+-		int i;
+-		bool has_stats = false;
+-		unsigned seq;
++	if (!blkg->online)
++		return;
+ 
+-		spin_lock_irq(&blkg->q->queue_lock);
++	dname = blkg_dev_name(blkg);
++	if (!dname)
++		return;
+ 
+-		if (!blkg->online)
+-			goto skip;
++	/*
++	 * Hooray string manipulation, count is the size written NOT
++	 * INCLUDING THE \0, so size is now count+1 less than what we
++	 * had before, but we want to start writing the next bit from
++	 * the \0 so we only add count to buf.
++	 */
++	off += scnprintf(buf+off, size-off, "%s ", dname);
+ 
+-		dname = blkg_dev_name(blkg);
+-		if (!dname)
+-			goto skip;
++	do {
++		seq = u64_stats_fetch_begin(&bis->sync);
++
++		rbytes = bis->cur.bytes[BLKG_IOSTAT_READ];
++		wbytes = bis->cur.bytes[BLKG_IOSTAT_WRITE];
++		dbytes = bis->cur.bytes[BLKG_IOSTAT_DISCARD];
++		rios = bis->cur.ios[BLKG_IOSTAT_READ];
++		wios = bis->cur.ios[BLKG_IOSTAT_WRITE];
++		dios = bis->cur.ios[BLKG_IOSTAT_DISCARD];
++	} while (u64_stats_fetch_retry(&bis->sync, seq));
++
++	if (rbytes || wbytes || rios || wios) {
++		has_stats = true;
++		off += scnprintf(buf+off, size-off,
++			"rbytes=%llu wbytes=%llu rios=%llu wios=%llu dbytes=%llu dios=%llu",
++			rbytes, wbytes, rios, wios,
++			dbytes, dios);
++	}
+ 
+-		/*
+-		 * Hooray string manipulation, count is the size written NOT
+-		 * INCLUDING THE \0, so size is now count+1 less than what we
+-		 * had before, but we want to start writing the next bit from
+-		 * the \0 so we only add count to buf.
+-		 */
+-		off += scnprintf(buf+off, size-off, "%s ", dname);
++	if (blkcg_debug_stats && atomic_read(&blkg->use_delay)) {
++		has_stats = true;
++		off += scnprintf(buf+off, size-off, " use_delay=%d delay_nsec=%llu",
++			atomic_read(&blkg->use_delay),
++			atomic64_read(&blkg->delay_nsec));
++	}
+ 
+-		do {
+-			seq = u64_stats_fetch_begin(&bis->sync);
++	for (i = 0; i < BLKCG_MAX_POLS; i++) {
++		struct blkcg_policy *pol = blkcg_policy[i];
++		size_t written;
+ 
+-			rbytes = bis->cur.bytes[BLKG_IOSTAT_READ];
+-			wbytes = bis->cur.bytes[BLKG_IOSTAT_WRITE];
+-			dbytes = bis->cur.bytes[BLKG_IOSTAT_DISCARD];
+-			rios = bis->cur.ios[BLKG_IOSTAT_READ];
+-			wios = bis->cur.ios[BLKG_IOSTAT_WRITE];
+-			dios = bis->cur.ios[BLKG_IOSTAT_DISCARD];
+-		} while (u64_stats_fetch_retry(&bis->sync, seq));
++		if (!blkg->pd[i] || !pol->pd_stat_fn)
++			continue;
+ 
+-		if (rbytes || wbytes || rios || wios) {
++		written = pol->pd_stat_fn(blkg->pd[i], buf+off, size-off);
++		if (written)
+ 			has_stats = true;
+-			off += scnprintf(buf+off, size-off,
+-					 "rbytes=%llu wbytes=%llu rios=%llu wios=%llu dbytes=%llu dios=%llu",
+-					 rbytes, wbytes, rios, wios,
+-					 dbytes, dios);
+-		}
++		off += written;
++	}
+ 
+-		if (blkcg_debug_stats && atomic_read(&blkg->use_delay)) {
+-			has_stats = true;
+-			off += scnprintf(buf+off, size-off,
+-					 " use_delay=%d delay_nsec=%llu",
+-					 atomic_read(&blkg->use_delay),
+-					(unsigned long long)atomic64_read(&blkg->delay_nsec));
++	if (has_stats) {
++		if (off < size - 1) {
++			off += scnprintf(buf+off, size-off, "\n");
++			seq_commit(s, off);
++		} else {
++			seq_commit(s, -1);
+ 		}
++	}
++}
+ 
+-		for (i = 0; i < BLKCG_MAX_POLS; i++) {
+-			struct blkcg_policy *pol = blkcg_policy[i];
+-			size_t written;
+-
+-			if (!blkg->pd[i] || !pol->pd_stat_fn)
+-				continue;
++static int blkcg_print_stat(struct seq_file *sf, void *v)
++{
++	struct blkcg *blkcg = css_to_blkcg(seq_css(sf));
++	struct blkcg_gq *blkg;
+ 
+-			written = pol->pd_stat_fn(blkg->pd[i], buf+off, size-off);
+-			if (written)
+-				has_stats = true;
+-			off += written;
+-		}
++	if (!seq_css(sf)->parent)
++		blkcg_fill_root_iostats();
++	else
++		cgroup_rstat_flush(blkcg->css.cgroup);
+ 
+-		if (has_stats) {
+-			if (off < size - 1) {
+-				off += scnprintf(buf+off, size-off, "\n");
+-				seq_commit(sf, off);
+-			} else {
+-				seq_commit(sf, -1);
+-			}
+-		}
+-	skip:
++	rcu_read_lock();
++	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
++		spin_lock_irq(&blkg->q->queue_lock);
++		blkcg_print_one_stat(blkg, sf);
+ 		spin_unlock_irq(&blkg->q->queue_lock);
+ 	}
+-
+ 	rcu_read_unlock();
+ 	return 0;
+ }
+-- 
+2.30.2
+
