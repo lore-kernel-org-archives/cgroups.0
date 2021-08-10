@@ -1,36 +1,62 @@
-From: pr-tracker-bot@kernel.org
-Subject: Re: [GIT PULL] cgroup fixes for v5.14-rc6
-Date: Mon, 09 Aug 2021 23:50:05 +0000
-Message-ID: <162855300565.3012.18118515429703452059.pr-tracker-bot@kernel.org>
-References: <YRGz4nmDZNhsKSr1@mtj.duckdns.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628553005;
-        bh=EHOL9A1aBI5KIa5FdaEjjBEzOjXUoNnELHudAH9K6dI=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=irL+MMhIn8yEpZMmkx4jBN1B7HCT5QPC6Q5Nf6L38zNLrvTXfk5ZpbJ2fqt1zY2MY
-         UebCS/Oz5+/JicCecJgJfM9CHWp2EF+PJQ65xUPa7XC0q/9bV1t0gz5mYVJxKXtERc
-         6L7xDJtaIX0nYQB+a5VYRnt5KZuoyU7Iw6sGcWNIibzf48Ac9GtBfbGVwvSoUbH9iW
-         3saCKsQTOA6gR8nlvm+5EzWQNAqB5ckuwOdl6cb6/ImxNH2HZa/mgeprY02HiNp9tE
-         HPvCRZKpXjsJDCHFoGXf5FepFN4LdhBqS9TJ/x03LjMwYyad98RDZQMnFm7jKxai2I
-         JIUSWDsJqd4JA==
-In-Reply-To: <YRGz4nmDZNhsKSr1@mtj.duckdns.org>
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3 0/9] cgroup/cpuset: Add new cpuset partition type &
+ empty effecitve cpus
+Date: Mon, 9 Aug 2021 21:12:18 -0400
+Message-ID: <1df2d0be-f2b7-3e57-e656-2bcdf2a3c821@redhat.com>
+References: <20210720141834.10624-1-longman@redhat.com>
+ <YP9ChFvrGrDMGzbe@slm.duckdns.org>
+ <b2f49b2e-d5a4-1504-bd0c-0bd82943d855@redhat.com>
+ <YRGwXw3KW8eFhEa8@mtj.duckdns.org>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1628557941;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=b7XJ3sqkjfHFuPFTck2dP2wBhFySTzytxDlqqd+iwHA=;
+        b=h1OFKbIIeaeupfqAQWeURjAt5qoHseogEQGFEhh3RL8PrXaUpF13xi1G48mDcsW5MF+s9S
+        weJqAxJvvoTMDTJc2MBycqwaj8kX1U70jFR+KS4uVLJjDHo8SoQBzlG22updBhcbR/SMvK
+        XRS0KBIrlRYwIKkdJuRjzwXBa9DXq0k=
+In-Reply-To: <YRGwXw3KW8eFhEa8-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Content-Language: en-US
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 
-The pull request you sent on Mon, 9 Aug 2021 13:01:54 -1000:
+On 8/9/21 6:46 PM, Tejun Heo wrote:
+> Hello, Waiman. Sorry about the delay. Was off for a while.
+>
+> On Tue, Jul 27, 2021 at 05:14:27PM -0400, Waiman Long wrote:
+>> However, if we have a complicated partition setup with multiple child
+>> partitions. Invalid cpuset.cpus change in a parent partition will cause all
+>> the child partitions to become invalid too. That is the scenario that I
+>> don't want to happen inadvertently. Alternatively, we can restrict those
+> I don't think there's anything fundamentally wrong with it given the
+> requirement that userland has to monitor invalid state transitions.
+> The same mass transition can happen through cpu hotplug operations,
+> right?
+>
+>> invalid changes if a child partition exist and let it pass through and make
+>> it invalid if it is a standalone partition.
+>>
+>> Please let me know which approach do you want me to take.
+> I think it'd be best if we can stick to some principles rather than
+> trying to adjust it for specific scenarios. e.g.:
+>
+> * If a given state can be reached through cpu hot [un]plug, any
+>    configuration attempt which reaches the same state should be allowed
+>    with the same end result as cpu hot [un]plug.
+>
+> * If a given state can't ever be reached in whichever way, the
+>    configuration attempting to reach such state should be rejected.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.14-fixes
+OK, I got it. I will make the necessary changes and submit a new patch 
+series.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/9a73fa375d58fee5262dd16473c8e7522bdf44de
+Thanks,
+Longman
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
