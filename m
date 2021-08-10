@@ -1,33 +1,159 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 4/5] block: move the bdi from the request_queue to the
- gendisk
-Date: Tue, 10 Aug 2021 18:44:07 +0200
-Message-ID: <20210810164407.GA20662@lst.de>
-References: <20210809141744.1203023-1-hch@lst.de> <20210809141744.1203023-5-hch@lst.de> <20210809154728.GH30319@quack2.suse.cz>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:for-next] BUILD SUCCESS
+ 047298a083a05f7b50c3acd22184db4455a1449f
+Date: Wed, 11 Aug 2021 02:13:06 +0800
+Message-ID: <6112c1b2.3XaoL3k+rAv2Z+1b%lkp@intel.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20210809154728.GH30319@quack2.suse.cz>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jan Kara <jack@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, linux-block@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Aug 09, 2021 at 05:47:28PM +0200, Jan Kara wrote:
-> > diff --git a/block/blk-mq.c b/block/blk-mq.c
-> > index 2c4ac51e54eb..d2725f94491d 100644
-> > --- a/block/blk-mq.c
-> > +++ b/block/blk-mq.c
-> > @@ -525,7 +525,7 @@ void blk_mq_free_request(struct request *rq)
-> >  		__blk_mq_dec_active_requests(hctx);
-> >  
-> >  	if (unlikely(laptop_mode && !blk_rq_is_passthrough(rq)))
-> > -		laptop_io_completion(q->backing_dev_info);
-> > +		laptop_io_completion(queue_to_disk(q)->bdi);
-> > 
-> 
-> E.g. cannot this get called for a queue that is without a disk?
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 047298a083a05f7b50c3acd22184db4455a1449f  Merge branch 'for-5.15' into for-next
 
-As Jens already explained we need the gendisk for non-passthrough
-commands.  Same for the wbt case.
+elapsed time: 1135m
+
+configs tested: 128
+configs skipped: 3
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arc                            hsdk_defconfig
+arm                        realview_defconfig
+arm                           spitz_defconfig
+powerpc                   currituck_defconfig
+arm                           viper_defconfig
+powerpc                 mpc834x_mds_defconfig
+sh                          rsk7264_defconfig
+sh                        sh7785lcr_defconfig
+ia64                        generic_defconfig
+xtensa                  nommu_kc705_defconfig
+sh                          landisk_defconfig
+openrisc                         alldefconfig
+arm                           stm32_defconfig
+powerpc                      ppc64e_defconfig
+powerpc                     tqm8540_defconfig
+riscv                          rv32_defconfig
+powerpc                      tqm8xx_defconfig
+arm                       omap2plus_defconfig
+powerpc                      mgcoge_defconfig
+mips                         cobalt_defconfig
+powerpc                 mpc85xx_cds_defconfig
+powerpc                     tqm5200_defconfig
+sh                            titan_defconfig
+powerpc                     taishan_defconfig
+arm                            hisi_defconfig
+x86_64                            allnoconfig
+arm                          pxa910_defconfig
+powerpc                 mpc8540_ads_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nds32                             allnoconfig
+arc                              allyesconfig
+nios2                               defconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a004-20210810
+x86_64               randconfig-a006-20210810
+x86_64               randconfig-a003-20210810
+x86_64               randconfig-a005-20210810
+x86_64               randconfig-a002-20210810
+x86_64               randconfig-a001-20210810
+i386                 randconfig-a004-20210809
+i386                 randconfig-a005-20210809
+i386                 randconfig-a006-20210809
+i386                 randconfig-a002-20210809
+i386                 randconfig-a001-20210809
+i386                 randconfig-a003-20210809
+i386                 randconfig-a004-20210808
+i386                 randconfig-a005-20210808
+i386                 randconfig-a006-20210808
+i386                 randconfig-a002-20210808
+i386                 randconfig-a001-20210808
+i386                 randconfig-a003-20210808
+x86_64               randconfig-a016-20210808
+x86_64               randconfig-a012-20210808
+x86_64               randconfig-a013-20210808
+x86_64               randconfig-a011-20210808
+x86_64               randconfig-a014-20210808
+x86_64               randconfig-a015-20210808
+i386                 randconfig-a012-20210809
+i386                 randconfig-a015-20210809
+i386                 randconfig-a011-20210809
+i386                 randconfig-a013-20210809
+i386                 randconfig-a014-20210809
+i386                 randconfig-a016-20210809
+x86_64               randconfig-a003-20210809
+x86_64               randconfig-a002-20210809
+x86_64               randconfig-a004-20210809
+x86_64               randconfig-a006-20210809
+x86_64               randconfig-a001-20210809
+x86_64               randconfig-a005-20210809
+riscv                    nommu_k210_defconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                            allyesconfig
+riscv                               defconfig
+riscv                            allmodconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                           allyesconfig
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-c001-20210810
+x86_64               randconfig-c001-20210809
+x86_64               randconfig-a016-20210809
+x86_64               randconfig-a012-20210809
+x86_64               randconfig-a013-20210809
+x86_64               randconfig-a011-20210809
+x86_64               randconfig-a014-20210809
+x86_64               randconfig-a015-20210809
+x86_64               randconfig-a013-20210810
+x86_64               randconfig-a011-20210810
+x86_64               randconfig-a012-20210810
+x86_64               randconfig-a016-20210810
+x86_64               randconfig-a014-20210810
+x86_64               randconfig-a015-20210810
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
