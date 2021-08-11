@@ -1,76 +1,48 @@
-From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: [PATCH] cgroup: cgroup-v1: clean up kernel-doc notation
-Date: Tue, 10 Aug 2021 17:03:49 -0700
-Message-ID: <20210811000349.32645-1-rdunlap@infradead.org>
+From: Qian Cai <quic_qiancai-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
+Subject: Re: move the bdi from the request_queue to the gendisk
+Date: Tue, 10 Aug 2021 22:28:12 -0400
+Message-ID: <4e108ea6-b1dd-510e-afc4-757eae697dab@quicinc.com>
+References: <20210809141744.1203023-1-hch@lst.de>
+ <e5e19d15-7efd-31f4-941a-a5eb2f94b898@quicinc.com>
+ <20210810200256.GA30809@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=oEMWLoJ15XGTU1uDxOZTCeL7G0nFB55u5+5nltWOW/w=; b=mow1pUdqDHxWhPTLIo9hCoo34w
-        SAo9lQlbuzaQI5wjDic//GPlEVhLzWGU8B4EEG0FiwKpS+p+uha7f4sqhOv4yx9ocWp1Lf7SVSwwp
-        hlv3Ijmyap8sBxBmDMHSGwD63dy+Rk7sY5Bv9HqWr6jjno4AxFlDKZWoYxCLfF9mphlOHp56H23az
-        //tRCYlw9XLhGeCYNLAEs3qL3GSQqO8zqQixzAsRgbu1z5AcTDzb11PpEEFgKVwAdpUB+g/35Ayvj
-        CV/QW18zmB7KrBpnq3zl4y/1jhT1S1OaGvr33ceh5JryBCowDnEdbNRt+fVAJW3SRyFVa+uNmyMxL
-        97Bfe2Wg==;
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1628648895; x=1660184895;
+  h=subject:to:cc:references:from:message-id:date:
+   mime-version:in-reply-to:content-transfer-encoding;
+  bh=mqrHT7lSpTYubUb4Uun7g5pFgQ69qr5SKKRD11vsmq0=;
+  b=cdpMn0NbdlMX8mp1KU9fWzZ5lmzHKsv6m0vp7L4C5DvWtjqynyG0V/sG
+   6qauRtKuziRD9TssNytxIXmZQWl+1hmYK5brB12d7T0bU/78u/RauZHLY
+   wkBq5PPqpdwzgoycHsnVLpLHYBozSu7WN3saxAeRSPDqe6fkuP/+Uns3Q
+   Q=;
+In-Reply-To: <20210810200256.GA30809-jcswGhMUV9g@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Fix kernel-doc warnings found in cgroup-v1.c:
 
-kernel/cgroup/cgroup-v1.c:55: warning: No description found for return value of 'cgroup_attach_task_all'
-kernel/cgroup/cgroup-v1.c:94: warning: expecting prototype for cgroup_trasnsfer_tasks(). Prototype was for cgroup_transfer_tasks() instead
-cgroup-v1.c:96: warning: No description found for return value of 'cgroup_transfer_tasks'
-kernel/cgroup/cgroup-v1.c:687: warning: No description found for return value of 'cgroupstats_build'
 
-Signed-off-by: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
----
- kernel/cgroup/cgroup-v1.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+On 8/10/2021 4:02 PM, Christoph Hellwig wrote:
+> On Tue, Aug 10, 2021 at 03:36:39PM -0400, Qian Cai wrote:
+>>
+>>
+>> On 8/9/2021 10:17 AM, Christoph Hellwig wrote:
+>>> Hi Jens,
+>>>
+>>> this series moves the pointer to the bdi from the request_queue
+>>> to the bdi, better matching the life time rules of the different
+>>> objects.
+>>
+>> Reverting this series fixed an use-after-free in bdev_evict_inode().
+> 
+> Please try the patch below as a band-aid.  Although the proper fix is
+> that non-default bdi_writeback structures grab a reference to the bdi,
+> as this was a landmine that might have already caused spurious issues
+> before.
 
---- linux-next-20210809.orig/kernel/cgroup/cgroup-v1.c
-+++ linux-next-20210809/kernel/cgroup/cgroup-v1.c
-@@ -50,6 +50,8 @@ bool cgroup1_ssid_disabled(int ssid)
-  * cgroup_attach_task_all - attach task 'tsk' to all cgroups of task 'from'
-  * @from: attach to all cgroups of a given task
-  * @tsk: the task to be attached
-+ *
-+ * Return: %0 on success or a negative errno code on failure
-  */
- int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
- {
-@@ -80,7 +82,7 @@ int cgroup_attach_task_all(struct task_s
- EXPORT_SYMBOL_GPL(cgroup_attach_task_all);
- 
- /**
-- * cgroup_trasnsfer_tasks - move tasks from one cgroup to another
-+ * cgroup_transfer_tasks - move tasks from one cgroup to another
-  * @to: cgroup to which the tasks will be moved
-  * @from: cgroup in which the tasks currently reside
-  *
-@@ -89,6 +91,8 @@ EXPORT_SYMBOL_GPL(cgroup_attach_task_all
-  * is guaranteed to be either visible in the source cgroup after the
-  * parent's migration is complete or put into the target cgroup.  No task
-  * can slip out of migration through forking.
-+ *
-+ * Return: %0 on success or a negative errno code on failure
-  */
- int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
- {
-@@ -682,6 +686,8 @@ int proc_cgroupstats_show(struct seq_fil
-  *
-  * Build and fill cgroupstats so that taskstats can export it to user
-  * space.
-+ *
-+ * Return: %0 on success or a negative errno code on failure
-  */
- int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry)
- {
+This works fine with a quick test.
