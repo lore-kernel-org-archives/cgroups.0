@@ -1,54 +1,44 @@
-From: Waiman Long <llong@redhat.com>
-Subject: Re: [PATCH v4 4/6] cgroup/cpuset: Allow non-top parent partition root
- to distribute out all CPUs
-Date: Wed, 11 Aug 2021 14:18:17 -0400
-Message-ID: <abfa6f2f-aa13-f18e-5a16-f568082d07bc@redhat.com>
+From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v4 5/6] cgroup/cpuset: Update description of
+ cpuset.cpus.partition in cgroup-v2.rst
+Date: Wed, 11 Aug 2021 14:19:04 -0400
+Message-ID: <26180e1d-1fa9-f175-66f8-297cf0685a11@redhat.com>
 References: <20210811030607.13824-1-longman@redhat.com>
- <20210811030607.13824-5-longman@redhat.com>
- <YRQTTf+bJZ8f3O3+@slm.duckdns.org>
+ <20210811030607.13824-6-longman@redhat.com>
+ <YRQTy7eo5jOlHTc6@slm.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1628705901;
+        s=mimecast20190719; t=1628705949;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=4sdWMe6I8w2i60A4RZfVZLGm7Z1MFMDLriAO19Jv51I=;
-        b=OWFDuSJEd6axoR49rdB1w7XTGmrTX1NxmOYalBKZzsEwukaD0xwLLmLPynGodZrpSDiPwU
-        kid381Zk2qxgo4/pZO+atYXEEQh3V/c4qYZULqPOQL6mGENBSoB12BMvpO0n9oHKZEGg3d
-        MbewhWHGQ1FgdUGSuBz1ZGNCV+fLXJ4=
-In-Reply-To: <YRQTTf+bJZ8f3O3+@slm.duckdns.org>
+        bh=ANzdLIOaIJbxnr8pVh5jQkoQ6kMweZt9tE4el1kTVKE=;
+        b=hg9Ft9g1H9MW9ZFx7rwb9ujgQhABKOpaut+nljDABZBRwl0vhNnv2u3dGXEnzjOLqK03vQ
+        E44YUOERFOMhsH230dqgUIbP/YtDXHXRYrl3w3X5uO7o5Se+xpkLLLZoH1tfsuTMc3vyKS
+        gNMKyZvssvMhZ6J+53BuV9+wwxKiRLk=
+In-Reply-To: <YRQTy7eo5jOlHTc6-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 
-On 8/11/21 2:13 PM, Tejun Heo wrote:
-> On Tue, Aug 10, 2021 at 11:06:05PM -0400, Waiman Long wrote:
->> Currently, a parent partition root cannot distribute all its CPUs to
->> child partition roots with no CPUs left. However in some use cases,
->> a management application may want to create a parent partition root as
->> a management unit with no task associated with it and has all its CPUs
->> distributed to various child partition roots dynamically according to
->> their needs. Leaving a cpu in the parent partition root in such a case is
->> now a waste.
->>
->> To accommodate such use cases, a parent partition root can now have
->> all its CPUs distributed to its child partition roots as long as:
->>   1) it is not the top cpuset; and
->>   2) there is no task directly associated with the parent.
->>
->> Once an empty parent partition root is formed, no new task can be moved
->> into it.
-> The above are already enforced by cgroup2 core, right? No intermediate
-> cgroup with controllers enabled can have processes. From controllers' POV,
-> only leaves can have processes.
+On 8/11/21 2:15 PM, Tejun Heo wrote:
+> Hello,
 >
-I don't think that is true. A task can reside anywhere in the cgroup 
-hierarchy. I have encountered no problem moving tasks around.
+> On Tue, Aug 10, 2021 at 11:06:06PM -0400, Waiman Long wrote:
+>> +	Poll and inotify events are triggered whenever the state
+>> +	of "cpuset.cpus.partition" changes.  That includes changes
+>> +	caused by write to "cpuset.cpus.partition" and cpu hotplug.
+>> +	This will allow a user space agent to monitor changes caused
+>> +	by hotplug events.
+> It might be useful to emphasize that this is the primary mechanism to
+> signify errors and thus should always be monitored.
+
+Sure, will do that in the next version.
 
 Cheers,
 Longman
