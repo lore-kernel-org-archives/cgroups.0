@@ -1,103 +1,76 @@
-From: Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [PATCH 1/5] mm: hide laptop_mode_wb_timer entirely behind the
- BDI API
-Date: Tue, 10 Aug 2021 14:56:22 -0700
-Message-ID: <20210810215622.GA874076@roeck-us.net>
-References: <20210809141744.1203023-1-hch@lst.de>
- <20210809141744.1203023-2-hch@lst.de>
+From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: [PATCH] cgroup: cgroup-v1: clean up kernel-doc notation
+Date: Tue, 10 Aug 2021 17:03:49 -0700
+Message-ID: <20210811000349.32645-1-rdunlap@infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=JhQsCvjsX4aQ7AO0EcBhog4UmHjKzja8YKewWn/brBE=;
-        b=NW6MnPyrxBCjdUNnbAdmDsnldUDzEXZD36UQwc7aL97R33BDGIc/OHc9ppOitiH2lE
-         0jYNPSNPthFpMB5rIgY+POar807qjsE8bwv7pAFb82Ia4c0eakrMfq0ioZth6y5tKnJy
-         2UzPnKG2J95PKPW+dC6i8cXlP5EWxfcc8UDn4Vdhh4dF50iyqL7Q6HIVEQZ91mtwI8dK
-         qZkcKgmA1qvebHnr9ZAWPW0pLDjaygLbXIm+jrPc7EJZENzxE/FrF69cg/uhoeivFIIu
-         kifuuPta/ThocQD8ZiJyb2UxrmtwUtyLRXTzLs7x0InuuhV8u5AHFtZM6+8HZrcGAXxn
-         vO2A==
-Sender: Guenter Roeck <groeck7@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <20210809141744.1203023-2-hch@lst.de>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=oEMWLoJ15XGTU1uDxOZTCeL7G0nFB55u5+5nltWOW/w=; b=mow1pUdqDHxWhPTLIo9hCoo34w
+        SAo9lQlbuzaQI5wjDic//GPlEVhLzWGU8B4EEG0FiwKpS+p+uha7f4sqhOv4yx9ocWp1Lf7SVSwwp
+        hlv3Ijmyap8sBxBmDMHSGwD63dy+Rk7sY5Bv9HqWr6jjno4AxFlDKZWoYxCLfF9mphlOHp56H23az
+        //tRCYlw9XLhGeCYNLAEs3qL3GSQqO8zqQixzAsRgbu1z5AcTDzb11PpEEFgKVwAdpUB+g/35Ayvj
+        CV/QW18zmB7KrBpnq3zl4y/1jhT1S1OaGvr33ceh5JryBCowDnEdbNRt+fVAJW3SRyFVa+uNmyMxL
+        97Bfe2Wg==;
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, linux-block@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="us-ascii"
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Aug 09, 2021 at 04:17:40PM +0200, Christoph Hellwig wrote:
-> Don't leak the deta=D1=96ls of the timer into the block layer, instead
-> initialize the timer in bdi_alloc and delete it in bdi_unregister.
-> Note that this means the timer is initialized (but not armed) for
-> non-block queues as well now.
->=20
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+Fix kernel-doc warnings found in cgroup-v1.c:
 
-Just in case this hasn't been reported yet.
-This patch results in a widespread build failure. Example:
+kernel/cgroup/cgroup-v1.c:55: warning: No description found for return value of 'cgroup_attach_task_all'
+kernel/cgroup/cgroup-v1.c:94: warning: expecting prototype for cgroup_trasnsfer_tasks(). Prototype was for cgroup_transfer_tasks() instead
+cgroup-v1.c:96: warning: No description found for return value of 'cgroup_transfer_tasks'
+kernel/cgroup/cgroup-v1.c:687: warning: No description found for return value of 'cgroupstats_build'
 
-Building x86_64:tinyconfig ... failed
---------------
-Error log:
-mm/page-writeback.c:2044:6: error: redefinition of 'laptop_sync_completion'
- 2044 | void laptop_sync_completion(void)
-      |      ^~~~~~~~~~~~~~~~~~~~~~
-In file included from include/linux/memcontrol.h:22,
-                 from include/linux/swap.h:9,
-                 from mm/page-writeback.c:20:
-include/linux/writeback.h:345:20: note: previous definition of 'laptop_sync=
-_completion' with type 'void(void)'
-  345 | static inline void laptop_sync_completion(void) { }
-      |                    ^~~~~~~~~~~~~~~~~~~~~~
-make[2]: *** [scripts/Makefile.build:272: mm/page-writeback.o] Error 1
-
-Guenter
-
+Signed-off-by: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
-bisect log:
+ kernel/cgroup/cgroup-v1.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-# bad: [92d00774360dfd4151f15ab9905c643347b9f242] Add linux-next specific f=
-iles for 20210810
-# good: [36a21d51725af2ce0700c6ebcb6b9594aac658a6] Linux 5.14-rc5
-git bisect start 'HEAD' 'v5.14-rc5'
-# good: [01dda625c9b7cfd3bf5ac05f73da8c512792f94c] Merge remote-tracking br=
-anch 'crypto/master'
-git bisect good 01dda625c9b7cfd3bf5ac05f73da8c512792f94c
-# bad: [75cadd49361c6650764d35bcbb6c9cb9f0a9d9a3] Merge remote-tracking bra=
-nch 'irqchip/irq/irqchip-next'
-git bisect bad 75cadd49361c6650764d35bcbb6c9cb9f0a9d9a3
-# good: [511b0c991c9d49fd6d8188f799b10aa0465cecf3] Merge remote-tracking br=
-anch 'drm-intel/for-linux-next'
-git bisect good 511b0c991c9d49fd6d8188f799b10aa0465cecf3
-# good: [f3b48aa06fb8b4384b90e41220da8be5a4013a6d] Merge remote-tracking br=
-anch 'input/next'
-git bisect good f3b48aa06fb8b4384b90e41220da8be5a4013a6d
-# bad: [87470038c43f9577a300a29ba6c2c95d28039464] Merge remote-tracking bra=
-nch 'regulator/for-next'
-git bisect bad 87470038c43f9577a300a29ba6c2c95d28039464
-# bad: [e1796683109e4ba27c73f099486555a36820b175] Merge remote-tracking bra=
-nch 'device-mapper/for-next'
-git bisect bad e1796683109e4ba27c73f099486555a36820b175
-# bad: [a11d7fc2d05fb509cd9e33d4093507d6eda3ad53] block: remove the bd_bdi =
-in struct block_device
-git bisect bad a11d7fc2d05fb509cd9e33d4093507d6eda3ad53
-# good: [a291bb43e5c9fdedc4be3dfd496e64e7c5a78b1f] block: use the %pg forma=
-t specifier in show_partition
-git bisect good a291bb43e5c9fdedc4be3dfd496e64e7c5a78b1f
-# good: [2112f5c1330a671fa852051d85cb9eadc05d7eb7] loop: Select I/O schedul=
-er 'none' from inside add_disk()
-git bisect good 2112f5c1330a671fa852051d85cb9eadc05d7eb7
-# good: [ba30585936b0b88f0fb2b19be279b346a6cc87eb] dm: move setting md->typ=
-e into dm_setup_md_queue
-git bisect good ba30585936b0b88f0fb2b19be279b346a6cc87eb
-# bad: [5ed964f8e54eb3191b8b7b45aeb52672a0c995dc] mm: hide laptop_mode_wb_t=
-imer entirely behind the BDI API
-git bisect bad 5ed964f8e54eb3191b8b7b45aeb52672a0c995dc
-# good: [d1254a8749711e0d7441036a74ce592341f89697] block: remove support fo=
-r delayed queue registrations
-git bisect good d1254a8749711e0d7441036a74ce592341f89697
-# first bad commit: [5ed964f8e54eb3191b8b7b45aeb52672a0c995dc] mm: hide lap=
-top_mode_wb_timer entirely behind the BDI API
+--- linux-next-20210809.orig/kernel/cgroup/cgroup-v1.c
++++ linux-next-20210809/kernel/cgroup/cgroup-v1.c
+@@ -50,6 +50,8 @@ bool cgroup1_ssid_disabled(int ssid)
+  * cgroup_attach_task_all - attach task 'tsk' to all cgroups of task 'from'
+  * @from: attach to all cgroups of a given task
+  * @tsk: the task to be attached
++ *
++ * Return: %0 on success or a negative errno code on failure
+  */
+ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+ {
+@@ -80,7 +82,7 @@ int cgroup_attach_task_all(struct task_s
+ EXPORT_SYMBOL_GPL(cgroup_attach_task_all);
+ 
+ /**
+- * cgroup_trasnsfer_tasks - move tasks from one cgroup to another
++ * cgroup_transfer_tasks - move tasks from one cgroup to another
+  * @to: cgroup to which the tasks will be moved
+  * @from: cgroup in which the tasks currently reside
+  *
+@@ -89,6 +91,8 @@ EXPORT_SYMBOL_GPL(cgroup_attach_task_all
+  * is guaranteed to be either visible in the source cgroup after the
+  * parent's migration is complete or put into the target cgroup.  No task
+  * can slip out of migration through forking.
++ *
++ * Return: %0 on success or a negative errno code on failure
+  */
+ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
+ {
+@@ -682,6 +686,8 @@ int proc_cgroupstats_show(struct seq_fil
+  *
+  * Build and fill cgroupstats so that taskstats can export it to user
+  * space.
++ *
++ * Return: %0 on success or a negative errno code on failure
+  */
+ int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry)
+ {
