@@ -1,38 +1,45 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] blk-cgroup: stop using seq_get_buf
-Date: Wed, 11 Aug 2021 07:56:54 -1000
-Message-ID: <YRQPZosdoT1vo2Kz@slm.duckdns.org>
-References: <20210810152623.1796144-1-hch@lst.de>
- <20210810152623.1796144-2-hch@lst.de>
+Subject: Re: [PATCH] cgroup: cgroup-v1: clean up kernel-doc notation
+Date: Wed, 11 Aug 2021 07:58:02 -1000
+Message-ID: <YRQPqk8YrsSLB1tk@slm.duckdns.org>
+References: <20210811000349.32645-1-rdunlap@infradead.org>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=cwgWzWHzZMmumV5gjVMxV+Qi76br3EdobHy6Ey8p6Oc=;
-        b=Jeti1NcsjNeJ8sVoIL8mh7m++DlwgRbKC99cR4nnyCCnGPgDZLr/KvcqfiyObb5HOu
-         eWltR2gmBq5S9Gk9GFt0amAZJRljTQm4Hv99hFbu4m7nEU1ve8c9WhTcs/Nrt9hW4tcY
-         wNq5fjTzDet658woLOZ4exZWaa9kLGaUcOVG9tJrTTweJ7OvFjUKkQyfsutp5ZeKJHGK
-         XViFgpEt424rTRYOYiUVq3rAtI9o6mk4t62xiM/GUJLUcICgarEi2xutTomBgRvcWxyq
-         WMSNJa4+Nj0vk4AOhTUKGMgEl8OqETTOvZ7wcCL9YCDkICefJDefT38pevcUKUzV1FFX
-         2H+Q==
+        bh=rk1BWpuiJ39JmRSvLcCw9Ka+QLQwce0JveS233i7okU=;
+        b=hXnfg+THbnp0MKwZoNSddpaouYeIdGFdgzY/kWmV1W0dFINKA6zmdPGuCd61wUNmsW
+         3cVCn2qhEFihFcbfDwynXSVL7bP//tFXHdBEBve6IlBr4wuvMMaoM7pjo0m0ct+U+5wG
+         eBvOe/8osuVPBGFwBQP8SBu6GUCRZn5k+mU6JjrQH4pjmYt0F9lZuejHR3ZJuw76ZoNw
+         JzMI8IelJtmcqVDpay4LUvfNH6Iw1Ejsq8zqRnFzmmkbYhOdHdjLsgL+5lEqjcjHewZh
+         pUnNqfVA7PBFh/pE7amqpUtEGSblnSQL0buFL/irH8vtxiKXPsHGbcIEBrOncOeVt87Q
+         hW0g==
 Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20210810152623.1796144-2-hch@lst.de>
+In-Reply-To: <20210811000349.32645-1-rdunlap@infradead.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch@lst.de>
-Cc: axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-kernel@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
-On Tue, Aug 10, 2021 at 05:26:23PM +0200, Christoph Hellwig wrote:
-> seq_get_buf is a crutch that undoes all the memory safety of the
-> seq_file interface.  Use the normal seq_printf interfaces instead.
+On Tue, Aug 10, 2021 at 05:03:49PM -0700, Randy Dunlap wrote:
+> Fix kernel-doc warnings found in cgroup-v1.c:
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> kernel/cgroup/cgroup-v1.c:55: warning: No description found for return value of 'cgroup_attach_task_all'
+> kernel/cgroup/cgroup-v1.c:94: warning: expecting prototype for cgroup_trasnsfer_tasks(). Prototype was for cgroup_transfer_tasks() instead
+> cgroup-v1.c:96: warning: No description found for return value of 'cgroup_transfer_tasks'
+> kernel/cgroup/cgroup-v1.c:687: warning: No description found for return value of 'cgroupstats_build'
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Zefan Li <lizefan.x@bytedance.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: cgroups@vger.kernel.org
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Applied to cgroup/for-5.15.
 
 Thanks.
 
