@@ -1,81 +1,58 @@
-From: Waiman Long <llong@redhat.com>
-Subject: Re: [PATCH] cgroup/cpuset: Enable memory migration for cpuset v2
-Date: Wed, 11 Aug 2021 15:06:58 -0400
-Message-ID: <b85cfcb5-9037-b92e-6513-871944995090@redhat.com>
-References: <20210811163035.1977-1-longman@redhat.com>
- <YRQbdTgprUJyuis7@cmpxchg.org>
+From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v4 2/6] cgroup/cpuset: Properly handle partition root tree
+Date: Wed, 11 Aug 2021 15:27:20 -0400
+Message-ID: <b7897818-8fe6-8dd8-3ff6-6b15401162ba@redhat.com>
+References: <20210811030607.13824-1-longman@redhat.com>
+ <20210811030607.13824-3-longman@redhat.com>
+ <YRQSKZB8rQUsfF2K@slm.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1628708821;
+        s=mimecast20190719; t=1628710044;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=5QE/fAtzET4+bnEA1B+px7kFDrqIsaQmncafMGX56pg=;
-        b=acGaNmFyQOUPi9V004SBa6Y7J0E2zAMjHPX2EUY3ISuppRIeUnNBPNbqi90J8qiXCY1zk+
-        pVJmCyCefZR6P8GddJoEMfXWNbKMoDs+S+DJl2w7bQCfrJKUlXggzSAUb830md29DbRJmt
-        1eaBs1vmHeJvRIwB9hoEON6JUg81pW4=
-In-Reply-To: <YRQbdTgprUJyuis7@cmpxchg.org>
+        bh=tiwffSXoiH4DxwCpTg6qh9csw8fx7R1FkfmT6DZocnc=;
+        b=CyRliTBNRNsLfXCLTY0EZhKVS21jvL2Auc5Su/LojcjPOGhDuJb8oK8MspIiOaWKGufPHS
+        f395vfpoq1a7DDL7mzKS0xQrRYROn1GXoOvuv8C2jebsJhIIWSxWZKJfFr5hu6hFsGZ//i
+        Utgy7nBiX1XbbKhTFeErpfi+s4xw7ZI=
+In-Reply-To: <YRQSKZB8rQUsfF2K-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 
-On 8/11/21 2:48 PM, Johannes Weiner wrote:
-> On Wed, Aug 11, 2021 at 12:30:35PM -0400, Waiman Long wrote:
->> When a user changes cpuset.cpus, each task in a v2 cpuset will be moved
->> to one of the new cpus if it is not there already. For memory, however,
->> they won't be migrated to the new nodes when cpuset.mems changes. This is
->> an inconsistency in behavior.
->>
->> In cpuset v1, there is a memory_migrate control file to enable such
->> behavior by setting the CS_MEMORY_MIGRATE flag. Make it the default
->> for cpuset v2 so that we have a consistent set of behavior for both
->> cpus and memory.
->>
->> There is certainly a cost to make memory migration the default, but it
->> is a one time cost that shouldn't really matter as long as cpuset.mems
->> isn't changed frequenty.  Update the cgroup-v2.rst file to document the
->> new behavior and recommend against changing cpuset.mems frequently.
->>
->> Since there won't be any concurrent access to the newly allocated cpuset
->> structure in cpuset_css_alloc(), we can use the cheaper non-atomic
->> __set_bit() instead of the more expensive atomic set_bit().
->>
->> Signed-off-by: Waiman Long <longman@redhat.com>
->> ---
->>   Documentation/admin-guide/cgroup-v2.rst | 6 ++++++
->>   kernel/cgroup/cpuset.c                  | 6 +++++-
->>   2 files changed, 11 insertions(+), 1 deletion(-)
->>
->> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
->> index 5c7377b5bd3e..47c832ad1322 100644
->> --- a/Documentation/admin-guide/cgroup-v2.rst
->> +++ b/Documentation/admin-guide/cgroup-v2.rst
->> @@ -2056,6 +2056,12 @@ Cpuset Interface Files
->>   	The value of "cpuset.mems" stays constant until the next update
->>   	and won't be affected by any memory nodes hotplug events.
->>   
->> +	Setting a non-empty value to "cpuset.mems" causes memory of
->> +	tasks within the cgroup to be migrated to the designated nodes if
->> +	they are currently using memory outside of the designated nodes.
->> +	There is a cost for this migration.  So "cpuset.mems" shouldn't
->> +	be changed frequently.
-> The migration skips over pages that are (temporarily) off the LRU for
-> reclaim, compaction etc. so it can leave random pages behind.
+On 8/11/21 2:08 PM, Tejun Heo wrote:
+> Hello,
 >
-> In practice it's probably fine, but it probably makes sense to say
-> it's advisable to set this config once before the workload launches
-> for best results, and not rely too much on changing things around
-> post-hoc, due to cost you pointed out but also due to reliability.
+> On Tue, Aug 10, 2021 at 11:06:03PM -0400, Waiman Long wrote:
+>> For a partition root tree with parent and child partition roots, this
+>> patch will now prohibit changing parent partition root back to member
+>> as changes to "cpuset.cpus.partition" should not cause those child
+>> partition roots to become invalid.
+> So, the general rule is that a descendant should never be able to affect or
+> restrict what an ancestor can do in terms of configuration. This is because
+> descendant cgroups can be delegated and a system manager sitting at a higher
+> level in the hierarchy may not have much control over what happens under
+> delegated subtrees.
 >
-> Otherwise no objection from me.
->
-Thanks for the suggestion. Will update the patch to include additional 
-wording about that.
+> Given that we're promoting the error state as the first class citizen in the
+> interface anyway, wouldn't it be better to keep this in line too?
+
+Disabling partition at the parent level does invalidate all the child 
+partitions under it. So it must be done with care when we disable a 
+partition.
+
+How about we give some indication that a child partition exist when 
+reading cpuset.cpus.partition and recommend double-checking it before 
+disabling a partition? For example, we keep track of the number of cpus 
+delegated to child partitions. Perhaps we can list that information on read.
+
+With that information available, I have no objection to allow disabling 
+a parent partition with child partitions under it.
 
 Cheers,
 Longman
