@@ -1,28 +1,29 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH v2] cgroup/cpuset: Enable memory migration for cpuset v2
-Date: Thu, 12 Aug 2021 09:08:49 -0400
-Message-ID: <YRUdYQzxj8rswNyz@cmpxchg.org>
+Date: Thu, 12 Aug 2021 11:41:15 -1000
+Message-ID: <YRWVe5j8G2LLvTt4@slm.duckdns.org>
 References: <20210811195707.30851-1-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=Xs8EmBt7Wwwk0rDo3WH++ioTrTW94g/xJg4dS2VTU70=;
-        b=B5u5MqvyKhZf+vJdh29wKQ5uSD8KVQ0z4A9dz5siLPjFNEs9Fu1QKsbl48q8OWNNvx
-         X4ln3uTu9KiU3bN7egPX0wn4rWzwnfWkD4P/g0gFBxGIu9O1Sf6TYSlH8mdfIAz8mErj
-         6/PWaHr3fn5iEEtxLtwNcIJeYC4V2tN09GGiDZBWut3fVYh8EYt2ccqvTrlQ5K+ifegP
-         zuYsHO0Nxi7bVcC2bq4BgAnOB6jAhAvKK9q6TdUr1otRZFE0dUqedOfPUNXl6r1YTguv
-         vzFlBzPdQoSt6hcHDg2ohSM7NHejJkya7sFheFmnpVXUhaFzy2qGyo66NHt9MGVM9GaM
-         Q/yA==
+        bh=TAC7usbSxJAj4Uf52V6UWSOyNZ0nwEBnpPn4ZOBy98U=;
+        b=N19jAu7ypTXt6WK7cfJ0LMDOqywRj+Jwavt99QhQohJWtN4D3MU5t9zGcqaItP0Gt6
+         Z8wkY6LhQhZ61HOWBUtfY8d6PLtkaMY7xGmmmvr8Q9vgQXi2lDBhCXzPedrMqMgy44OX
+         BkCZfXCvjlGo8duK1PJTdKuhu5tQcgvVwNQBFvscXnfMVEdjPgs8BfJ7v3ApWfkBzeYZ
+         Qur5/Wv9akKhyJn+x3QOE1D2tDZdUkTO9cnK+qC4Wx6QdnHDzbAkoCgDQD5PIYXDJ8V/
+         NoZnEZ2VEhJWtk8/WwgZ6qImb4PDaCBvAiornHAvrL+UcURc6q3EwSf2JVxrxaN9q47j
+         FyYQ==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
 In-Reply-To: <20210811195707.30851-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
 
 On Wed, Aug 11, 2021 at 03:57:07PM -0400, Waiman Long wrote:
 > When a user changes cpuset.cpus, each task in a v2 cpuset will be moved
@@ -46,6 +47,9 @@ On Wed, Aug 11, 2021 at 03:57:07PM -0400, Waiman Long wrote:
 > 
 > Signed-off-by: Waiman Long <longman@redhat.com>
 
-LGTM.
+Applied to cgroup/for-5.15.
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Thanks.
+
+-- 
+tejun
