@@ -1,70 +1,64 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v4 4/6] cgroup/cpuset: Allow non-top parent partition
- root to distribute out all CPUs
-Date: Thu, 12 Aug 2021 11:51:27 -1000
-Message-ID: <YRWX3z6Nl41GsXR8@slm.duckdns.org>
+Subject: Re: [PATCH v4 2/6] cgroup/cpuset: Properly handle partition root tree
+Date: Thu, 12 Aug 2021 12:18:40 -1000
+Message-ID: <YRWeQH6gY5PqIanD@slm.duckdns.org>
 References: <20210811030607.13824-1-longman@redhat.com>
- <20210811030607.13824-5-longman@redhat.com>
- <YRQTTf+bJZ8f3O3+@slm.duckdns.org>
- <abfa6f2f-aa13-f18e-5a16-f568082d07bc@redhat.com>
- <YRQVFkNX5DcKixzy@slm.duckdns.org>
- <ef02d96b-325c-87f6-a6a3-d840feefef24@redhat.com>
+ <20210811030607.13824-3-longman@redhat.com>
+ <YRQSKZB8rQUsfF2K@slm.duckdns.org>
+ <b7897818-8fe6-8dd8-3ff6-6b15401162ba@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=jH45JI3TRK33maJqrgZXXznOLgIkQBFryW79S8eId3M=;
-        b=Y9WHxm/HccEPeJfkiPBSqOtIQdiDsYdt/RUttWpOGC4h8GALHwr5TYVrcHS/FwHdAW
-         brH64YsniZ1m2CNdrbrRALQs4yxFN228FlIYSp3S0S81J4b6QJOTWS/mu0gD20utmJ4x
-         mB0yPjJdiz3mudogXhcCUvzXk7KEW3/afkG4GAVpFUIkWVh+DvpPNLLJu2S0RFYmI34h
-         2l3Qd9IzJRZjgCQqH93U+FiFNpHfZT5x9yWgcHrcG+V3oXyZa/BN7M+FKmnG3winetMh
-         U2i52F02EYfs7f0/kK4ctk7+orUAr3RLJDZxf9bOxVyu9FtRjPORwymlSEnsMzmX7cmf
-         Rq2Q==
+        bh=8zFCvlCdjE9f7sPEj6Bash+YWPaS4lcq1GCfTDwodeA=;
+        b=R4yXwtdcvocwR/bdi8p+iX4Ffhyp8BtxcPTMUe3KaMmMcL1xZcLE1vuGp3F+9TdP8s
+         dcdiW38YxfL7HE1FEOsByI0q89D59M470EtczPWxls4gAKkZCVpWm8S3vtG+tqrudv5v
+         iHMG81t3Qc0Sf6N8VvoQqo5NhBfUb2x7FUlnJf5rwedYdXxYmNIEuOzvCV1rwq3AEtvl
+         nWr8FlzZzZHYpft+FuA/4H7fvr3ch3zOHKlg6zcM9pAw4l+fz+850kwswV+B/kfb17Uf
+         FrCh5S5NxORAqyS3QZTWFqQLNdxbEZJQBLHr3ILpsZfUO/WxiNpSd0slQY8bifjFOZLP
+         XVdQ==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <ef02d96b-325c-87f6-a6a3-d840feefef24-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <b7897818-8fe6-8dd8-3ff6-6b15401162ba-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 
-On Wed, Aug 11, 2021 at 02:46:24PM -0400, Waiman Long wrote:
-> On 8/11/21 2:21 PM, Tejun Heo wrote:
-> > On Wed, Aug 11, 2021 at 02:18:17PM -0400, Waiman Long wrote:
-> > > I don't think that is true. A task can reside anywhere in the cgroup
-> > > hierarchy. I have encountered no problem moving tasks around.
-> > Oh, that shouldn't be happening with controllers enabled. Can you please
-> > share a repro?
+Hello,
+
+On Wed, Aug 11, 2021 at 03:27:20PM -0400, Waiman Long wrote:
+> Disabling partition at the parent level does invalidate all the child
+> partitions under it. So it must be done with care when we disable a
+> partition.
 > 
-> I have done further testing. Enabling controllers won't prohibit moving a
-> task into a parent cgroup as long as the child cgroups have no tasks. Once
+> How about we give some indication that a child partition exist when reading
+> cpuset.cpus.partition and recommend double-checking it before disabling a
+> partition? For example, we keep track of the number of cpus delegated to
+> child partitions. Perhaps we can list that information on read.
+> 
+> With that information available, I have no objection to allow disabling a
+> parent partition with child partitions under it.
 
-Should be "as long as there's no child cgroups".
+This is a general problem which has always existed regardless of whether the
+errors are synchronous or not. There are many different reasons that a write
+to a cpuset interface file could fail and it has never been easy to tell why
+a given operation was rejected. Making error notifications asynchronous
+doesn't really change anything fundamental although it does make the
+situation a bit more opaque.
 
-  root@test /s/f/cgroup# mkdir test
-  root@test /s/f/cgroup# mkdir -p test/A
-  root@test /s/f/cgroup# echo +io > test/cgroup.subtree_control 
-  root@test /s/f/cgroup# echo $fish_pid > test/cgroup.procs
-  write: Device or resource busy
+I'm all for improving visibility. Now that we can consolidate most error
+states into a unified failure state, this might actually be easier to do.
+IOW, we now just have to explain why a given cgroup is in an invalid state
+rather than additionally having to explain why a given write has been
+rejected, which is pretty awkward to do as those failures are transient and
+local to the writer.
 
-> the child cgroup has task, moving another task to the parent is not allowed
-> (-EBUSY). Similarly if a parent cgroup has tasks, you can't put new tasks
-> into the child cgroup. I don't realize that we have such constraints as I
-
-You can't enable controller from a populated cgroup:
-
-  root@test /s/f/cgroup# mkdir test
-  root@test /s/f/cgroup# echo +io > test/cgroup.subtree_control 
-  root@test /s/f/cgroup# echo $fish_pid > test/cgroup.procs
-
-> usually do my testing with a cgroup hierarchy with no tasks initially.
-> Anyway, a new lesson learned.
-
-The invariant is that from each controller's POV, all cgroups with processes
-in them are leaves. This is all pretty well documented in cgroup-v2.rst.
+So, if you wanna tackle this, let's do it right and provide something
+comprehensive rather than explaining just one failure.
 
 Thanks.
 
