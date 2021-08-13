@@ -1,8 +1,8 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-5.15] BUILD SUCCESS
- ee9707e8593dfb9a375cf4793c3fd03d4142b463
-Date: Fri, 13 Aug 2021 18:09:33 +0800
-Message-ID: <611644dd.YmoleifXPOtyJdrN%lkp@intel.com>
+Subject: [cgroup:for-next] BUILD SUCCESS
+ c5b6c8a56ef3fda7ab7d6d573f445ba9028cb696
+Date: Fri, 13 Aug 2021 18:09:55 +0800
+Message-ID: <611644f3.xryJYuC8QVYJnOgN%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,8 +11,8 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.15
-branch HEAD: ee9707e8593dfb9a375cf4793c3fd03d4142b463  cgroup/cpuset: Enable memory migration for cpuset v2
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: c5b6c8a56ef3fda7ab7d6d573f445ba9028cb696  Merge branch 'for-5.15' into for-next
 
 elapsed time: 727m
 
