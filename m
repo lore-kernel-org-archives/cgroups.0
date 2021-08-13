@@ -1,76 +1,136 @@
-From: Waiman Long <llong@redhat.com>
-Subject: Re: [PATCH v4 2/6] cgroup/cpuset: Properly handle partition root tree
-Date: Thu, 12 Aug 2021 18:56:00 -0400
-Message-ID: <55f61b66-5159-7e13-6e41-33df042612b0@redhat.com>
-References: <20210811030607.13824-1-longman@redhat.com>
- <20210811030607.13824-3-longman@redhat.com>
- <YRQSKZB8rQUsfF2K@slm.duckdns.org>
- <b7897818-8fe6-8dd8-3ff6-6b15401162ba@redhat.com>
- <YRWeQH6gY5PqIanD@slm.duckdns.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1628808965;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=pU1jcFqEFviufW4xVur65db047ti+YmuGAqH7xi6AYA=;
-        b=F227wH2m+WktspAsKmf9g5iISMBbhkgJk/S9wl769RyyzK3XLbYoL+9+2TlJz2LkPOxHgj
-        Ac5CMoVLjRDuT7UB912h4ss4hPEXrDp00nuwYlVhyqUf6Y19fKoYv4+SPyyWw//gwFOl8n
-        +9sR3lH2AV0ccURNa2pwU8gTpWbneFI=
-In-Reply-To: <YRWeQH6gY5PqIanD@slm.duckdns.org>
-Content-Language: en-US
+From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] misc_cgroup: use a counter to count the number of failures
+Date: Fri, 13 Aug 2021 13:26:11 +0800
+Message-ID: <1628832371-16382-1-git-send-email-brookxu.cn@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=ifU4YaTP5glt6FA8YFBttr5ZK1KwGCdKH8AhfhzRPlY=;
+        b=Yn9awT7NRJ0161QHid3jaXK6q4gbEX6V//YQ/PkbW8Ua7/JagfD/kOtV31f7tiJsT+
+         4N/PNCwMchIlP+oFMTVYBTJrY52Ay75KnmizoW7k+IO7GWMK9tgdAFo8Sr73bFXIncA5
+         Rwf5sTzNGLB6m0V/63Vs4GIexfWMjqMyLZ6+8h9jhRcCdGjFRutvVyyQqahd+dBDofla
+         ghEPhaya+Oi/KLsPAlwqHyZ7jt1svIi3Zw4jFj9MGZtxpcrV+g96L4isPY952XBRMEAi
+         IKo8Lzqw0i+VWbG1+Xim1/U4nVadwEg1/vprQJTdpoANFoG70cPSU5zgmJUhMLZVKJ4D
+         gfGA==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-9"; format="flowed"
-To: Tejun Heo <tj@kernel.org>, Waiman Long <llong@redhat.com>
-Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 8/12/21 6:18 PM, Tejun Heo wrote:
-> Hello,
->
-> On Wed, Aug 11, 2021 at 03:27:20PM -0400, Waiman Long wrote:
->> Disabling partition at the parent level does invalidate all the child
->> partitions under it. So it must be done with care when we disable a
->> partition.
->>
->> How about we give some indication that a child partition exist when read=
-ing
->> cpuset.cpus.partition and recommend double-checking it before disabling a
->> partition? For example, we keep track of the number of cpus delegated to
->> child partitions. Perhaps we can list that information on read.
->>
->> With that information available, I have no objection to allow disabling a
->> parent partition with child partitions under it.
-> This is a general problem which has always existed regardless of whether =
-the
-> errors are synchronous or not. There are many different reasons that a wr=
-ite
-> to a cpuset interface file could fail and it has never been easy to tell =
-why
-> a given operation was rejected. Making error notifications asynchronous
-> doesn't really change anything fundamental although it does make the
-> situation a bit more opaque.
->
-> I'm all for improving visibility. Now that we can consolidate most error
-> states into a unified failure state, this might actually be easier to do.
-> IOW, we now just have to explain why a given cgroup is in an invalid state
-> rather than additionally having to explain why a given write has been
-> rejected, which is pretty awkward to do as those failures are transient a=
-nd
-> local to the writer.
->
-> So, if you wanna tackle this, let's do it right and provide something
-> comprehensive rather than explaining just one failure.
+From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-That sounds reasonable. My current idea is to add invalid partition=20
-reason string to cpuset. So when users read cpuset.cpus.partition of an=20
-invalid partition, it will read something like "root invalid=C2=A0 (<reason=
->)".
+For a container, we only print an error log when the resource
+charge fails. There may be some problems here:
 
-What do you think?
+1. If a large number of containers are created and deleted,
+   there will be a lot of error logs.
+2. According to an error log, we cannot better understand
+   the actual pressure of resources.
 
-Cheers,
-Longman
+Therefore, perhaps we should use a failcnt counter to count
+the number of failures, so that we can easily understand the
+actual pressure of resources and avoid too many error log..
+
+This is a partial patch of the previous serial, which may
+be useful, so I resend it.
+
+Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+---
+ include/linux/misc_cgroup.h |  4 ++--
+ kernel/cgroup/misc.c        | 37 ++++++++++++++++++++++++++++++-------
+ 2 files changed, 32 insertions(+), 9 deletions(-)
+
+diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
+index 8450a5e..32f6fc0 100644
+--- a/include/linux/misc_cgroup.h
++++ b/include/linux/misc_cgroup.h
+@@ -32,12 +32,12 @@ enum misc_res_type {
+  * struct misc_res: Per cgroup per misc type resource
+  * @max: Maximum limit on the resource.
+  * @usage: Current usage of the resource.
+- * @failed: True if charged failed for the resource in a cgroup.
++ * @failcnt: Failure count of the resource
+  */
+ struct misc_res {
+ 	unsigned long max;
+ 	atomic_long_t usage;
+-	bool failed;
++	atomic_long_t failcnt;
+ };
+ 
+ /**
+diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
+index 5d51b8e..1057901 100644
+--- a/kernel/cgroup/misc.c
++++ b/kernel/cgroup/misc.c
+@@ -158,13 +158,7 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
+ 		new_usage = atomic_long_add_return(amount, &res->usage);
+ 		if (new_usage > READ_ONCE(res->max) ||
+ 		    new_usage > READ_ONCE(misc_res_capacity[type])) {
+-			if (!res->failed) {
+-				pr_info("cgroup: charge rejected by the misc controller for %s resource in ",
+-					misc_res_name[type]);
+-				pr_cont_cgroup_path(i->css.cgroup);
+-				pr_cont("\n");
+-				res->failed = true;
+-			}
++			atomic_long_inc(&res->failcnt);
+ 			ret = -EBUSY;
+ 			goto err_charge;
+ 		}
+@@ -313,6 +307,29 @@ static int misc_cg_current_show(struct seq_file *sf, void *v)
+ }
+ 
+ /**
++ * misc_cg_failcnt_show() - Show the fail count of the misc cgroup.
++ * @sf: Interface file
++ * @v: Arguments passed
++ *
++ * Context: Any context.
++ * Return: 0 to denote successful print.
++ */
++static int misc_cg_failcnt_show(struct seq_file *sf, void *v)
++{
++	int i;
++	unsigned long failcnt;
++	struct misc_cg *cg = css_misc(seq_css(sf));
++
++	for (i = 0; i < MISC_CG_RES_TYPES; i++) {
++		failcnt = atomic_long_read(&cg->res[i].failcnt);
++		if (READ_ONCE(misc_res_capacity[i]) || failcnt)
++			seq_printf(sf, "%s %lu\n", misc_res_name[i], failcnt);
++	}
++
++	return 0;
++}
++
++/**
+  * misc_cg_capacity_show() - Show the total capacity of misc res on the host.
+  * @sf: Interface file
+  * @v: Arguments passed
+@@ -350,6 +367,11 @@ static int misc_cg_capacity_show(struct seq_file *sf, void *v)
+ 		.flags = CFTYPE_NOT_ON_ROOT,
+ 	},
+ 	{
++		.name = "failcnt",
++		.seq_show = misc_cg_failcnt_show,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++	{
+ 		.name = "capacity",
+ 		.seq_show = misc_cg_capacity_show,
+ 		.flags = CFTYPE_ONLY_ON_ROOT,
+@@ -383,6 +405,7 @@ static int misc_cg_capacity_show(struct seq_file *sf, void *v)
+ 	for (i = 0; i < MISC_CG_RES_TYPES; i++) {
+ 		WRITE_ONCE(cg->res[i].max, MAX_NUM);
+ 		atomic_long_set(&cg->res[i].usage, 0);
++		atomic_long_set(&cg->res[i].failcnt, 0);
+ 	}
+ 
+ 	return &cg->css;
+-- 
+1.8.3.1
 
