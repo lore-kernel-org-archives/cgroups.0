@@ -1,45 +1,59 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v4 2/6] cgroup/cpuset: Properly handle partition root tree
-Date: Fri, 13 Aug 2021 06:07:11 -1000
-Message-ID: <YRaYr0sf9L1GY7i5@mtj.duckdns.org>
-References: <20210811030607.13824-1-longman@redhat.com>
- <20210811030607.13824-3-longman@redhat.com>
- <YRQSKZB8rQUsfF2K@slm.duckdns.org>
- <b7897818-8fe6-8dd8-3ff6-6b15401162ba@redhat.com>
- <YRWeQH6gY5PqIanD@slm.duckdns.org>
- <55f61b66-5159-7e13-6e41-33df042612b0@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] misc_cgroup: use a counter to count the number of
+ failures
+Date: Fri, 13 Aug 2021 06:16:45 -1000
+Message-ID: <YRaa7R6niNQMpqZm@mtj.duckdns.org>
+References: <1628832371-16382-1-git-send-email-brookxu.cn@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=2HZmfNWRvGEoCRS06cZMTLlzgFfVxMJbsV7IaJqnVhg=;
-        b=InkfaLY0ZCFXGoifgEOs48VdU5Jc2nx9zdixJj7MXoz71NPOd9R/5Djc+ydBfpFtC4
-         U7i7R7lQHGegengPSWbI6FBgclDyJ+QYg9Y3rQAL5n4XXy6FmCv4P2ja1DedF1M1k566
-         3sQ7P/9K4G8wvzRsUlBkW+9SrhtPKBNAMQIUziuOLTeiSRAaIgzdb+NO+xIj9Dhc1DlX
-         +GT31B2T0I3oFoJ4SlosCJtzNHRwgl6oRkFCvuePaOQ06nPvp5u1k73RPa/4MkwkiXja
-         NzXKhkthXwFpZyoJSqkiBLKSmxL/qsBDP4SY9Uou84ybT+2MWIlJibdv8EG0Y4da47oA
-         xN3A==
-Sender: Tejun Heo <htejun@gmail.com>
+         :content-disposition:in-reply-to;
+        bh=JeOfnYXXUD0uawQ0bVzU2z5A2fd7nhB1MsbBkE12QoU=;
+        b=V7sQT4KCgtnVpRX90o4X/FqgPaiKH4o6jvDypjFYfwZyXYnhyjnUb9+Vr2WelHEk5j
+         vKp0QRk2LjsafSp8wmQnVcd8Jr+SLzWSIpm6D3zG7wHIY/2QhFG+hcMKN9Oo7cMohrQ3
+         4VDmKxdS+hvcvZaD4CqmrMUkFnc0G1D2uv1dimHQxWaZhfckfKU6bgwFI0vppyBb2Rov
+         EM9/BZvvM9mQdaGuHaGQiWojIjIQOhUAkPHecWSjpnLOvOOJYgGizkAkDKs4lPCSzcIl
+         w3KLTLRQiWy2NcYDeRgvVG5JOstQQEuwPwpXB2oPZ59inEn7N1OKKfx6ibt+J1XyLfH8
+         gJmw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <55f61b66-5159-7e13-6e41-33df042612b0@redhat.com>
+In-Reply-To: <1628832371-16382-1-git-send-email-brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Waiman Long <llong@redhat.com>
-Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Aug 12, 2021 at 06:56:00PM -0400, Waiman Long wrote:
-> That sounds reasonable. My current idea is to add invalid partition reason
-> string to cpuset. So when users read cpuset.cpus.partition of an invalid
-> partition, it will read something like "root invalid=A0 (<reason>)".
->=20
-> What do you think?
+Hello,
 
-Sounds good to me.
+On Fri, Aug 13, 2021 at 01:26:11PM +0800, brookxu wrote:
+> From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+> 
+> For a container, we only print an error log when the resource
+> charge fails. There may be some problems here:
+> 
+> 1. If a large number of containers are created and deleted,
+>    there will be a lot of error logs.
+> 2. According to an error log, we cannot better understand
+>    the actual pressure of resources.
+> 
+> Therefore, perhaps we should use a failcnt counter to count
+> the number of failures, so that we can easily understand the
+> actual pressure of resources and avoid too many error log..
+> 
+> This is a partial patch of the previous serial, which may
+> be useful, so I resend it.
+
+I think this approach is fine but can you please
+
+* Cc the original author of the misc cgroup who added the warning
+  messages.
+
+* Rename failcnt to nr_fails?
 
 Thanks.
 
---=20
+-- 
 tejun
