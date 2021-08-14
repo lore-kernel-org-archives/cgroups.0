@@ -1,51 +1,56 @@
-From: yong w <yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v1] mm: Add configuration to control whether vmpressure
- notifier is enabled
-Date: Sat, 14 Aug 2021 16:00:59 +0800
-Message-ID: <CAOH5QeDgyDfN2knD+HnfyvOQNbM_9Hz_i98BXF5LqNB33rd+Tw@mail.gmail.com>
-References: <1628855870-5070-1-git-send-email-wang.yong12@zte.com.cn> <YRZnMYCN1ArhM3wE@chrisdown.name>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V4 0/7] loop: cleanup charging io to mem/blkcg
+Date: Sat, 14 Aug 2021 17:12:46 +0800
+Message-ID: <YReJDkp8kswVdvBj@T590>
+References: <20210806080302.298297-1-ming.lei@redhat.com>
+ <20210809064159.GA19070@lst.de>
+ <YRHx/qaKgEqWdXOP@T590>
+ <20210812090037.GE2867@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=M8zJWAK5zC502WBtr9TH/CUwQWjnvyStpDdJfvN9iH0=;
-        b=nPEBvsm7bss9sW336uGhK2zgsPOoD4EhEfZqf8Z/GnAuZNvLXdGSvRYOfAdT0xbi+k
-         MJL0JMED69nRCQZwCX2pLkomk7h0kKRwvDLM16ZeGiZrVwv+v0NbKYq9ewPu1SBx/FSk
-         MMUf83twUNvZAL2GCzKiuo5v2Guxz+Xvr3swmLghVitINcXMKbKE8cbB3C3pitekzJlt
-         iJMrxMT/2BeNod7KDbQt8Whd0QkAwS743hY1dIDppZhM/KfyrEC0uGEJqR94nKoRdxxX
-         tYwrTq/IMmvRytbitlHcSyjHCXwP0xsnTnNZ2GeG6nV1rTNZwewsAJmAzkixM2KQj/ek
-         IvoQ==
-In-Reply-To: <YRZnMYCN1ArhM3wE-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1628932385;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=AgM9wQjlbA+g1qn4Zgr5hjXwUSBX0Df22ncvONuM9No=;
+        b=a7RZ+QL86dAfNveU91m7HL8yrbpuqQyAMpl5KqFcYTonlzUK9b9knUAvmQbRr+h9obM3n6
+        5fmb5PvQJZodDZ1CBj/5gRtRrbaBkkbFdnrLbX7jbeMl+jl3P2XJvR6DRla73FEt3Gos/K
+        3e4QdQJNDE7QCcD1KKDnXUbpksWz3WI=
+Content-Disposition: inline
+In-Reply-To: <20210812090037.GE2867@lst.de>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, guro-b10kYP2dOMg@public.gmane.org, alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, sh_def-9Onoh4P/yGk@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org, wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, Dan Schatzberg <schatzberg.dan@gmail.com>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org> =E4=BA=8E2021=E5=B9=B48=E6=9C=8813=E6=97=
-=A5=E5=91=A8=E4=BA=94 =E4=B8=8B=E5=8D=888:36=E5=86=99=E9=81=93=EF=BC=9A
->
-> yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org writes:
-> >From: wangyong <wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
-> >Inspired by PSI features, vmpressure inotifier function should also be
-> >configured to decide whether it is used, because it is an independent
-> >feature which notifies the user of memory pressure.
-> >
-> >Since the vmpressure interface is used in kernel common code, for
-> >users who do not use the vmpressure function, there will be
-> >additional overhead.
->
-> Could you please demonstrate this additional overhead with profiles or
-> demonstrations of other real world effects? Thanks.
+Hi Christoph,
 
-Thanks for your reply. In terms of code, it will reduce the operation
-of some code.
+On Thu, Aug 12, 2021 at 11:00:37AM +0200, Christoph Hellwig wrote:
+> On Tue, Aug 10, 2021 at 11:26:54AM +0800, Ming Lei wrote:
+> > Can you share us what your expectations are in the re-write? Such as:
+> > 
+> > 1) no impact on normal non-cgroup path
+> > 2) ...
+> > 3) ...
+> 
+> Get the call cgroup mess out of this driver entirely?
+ 
+Firstly the patch 2/7 in this series cleans up cgroup references by
+killing unnecessary #ifdef and moving cgroup references into common
+helpers, and the cgroup uses have been cleaned a lot.
 
-To  demonstrate this additional overhead, It is planned to use lmbench and
-Christoph Lamenter=E2=80=99s pagefault tool  (https://lkml.org/lkml/2006/8/=
-29/294)
-for comparative testing.
+Secondly the issue is that we need to wire proper cgroups(blkcg & memcg) for
+loop's IO because loop uses wq or kthread for handling IO, and IMO it isn't
+possible to moving cgroup references out of loop entirely if we want to
+support this cgroup's function for loop driver.
 
-Thanks.
+Finally the current cgroup reference is actually very simple: retrieve
+blkcg from bio_blkcg(bio) and memcg from the the blkcg. Then applies
+the two in the single function of loop_workfn() only.
+
+
+Thanks,
+Ming
+
