@@ -1,236 +1,198 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v6 4/6] cgroup/cpuset: Allow non-top parent partition to distribute out all CPUs
-Date: Sat, 14 Aug 2021 16:57:41 -0400
-Message-ID: <20210814205743.3039-5-longman@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH v6 3/6] cgroup/cpuset: Add a new isolated cpus.partition type
+Date: Sat, 14 Aug 2021 16:57:40 -0400
+Message-ID: <20210814205743.3039-4-longman@redhat.com>
 References: <20210814205743.3039-1-longman@redhat.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
         s=mimecast20190719; t=1628974697;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=lpu5auuJaje8CJMsJfHNRxZ5/pmu8HTHLFzgxecJ2Mw=;
-        b=E+QmmUItThe6LImS+6a0pACHGVjcLCxB7qqrL9y6c/JXy+ZKxzrlwL2Pvwv+QHRkEXxWuP
-        P/uguOeoflhJ0TbUVJ9hZx/S+HeMWLRj7OKxlyM9m+Wv8yDqc9lVOf+He45ZTtuRa2D9K+
-        3vicsEPW2iHmc6e0yDHaFYGGoh0ZcKA=
-In-Reply-To: <20210814205743.3039-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=4wpVwQjPE680ppp6sZIFNnwTrkaGVRsdcag3mdw5W1E=;
+        b=OJ9ME2D/7vNGdapakYgUdeNSUVURBAYuoiPXW7oDOza3jmMUpTeFkydSIpfZeaV9ZnYZZU
+        dQHJDsuiAT2RUGVhvVtOsE0NTEudh9RG3xBR2QtrsH4/MxXLgsVTjlweophWZ63nIhI39i
+        v4ZCA9X4ZWAusEq5FSFSIEbsHdE31aI=
+In-Reply-To: <20210814205743.3039-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Waiman Long <longman@redhat.com>
 
-Currently, a parent partition cannot distribute all its CPUs to child
-partitions with no CPUs left. However in some use cases, a management
-application may want to create a parent partition as a management unit
-with no task associated with it and has all its CPUs distributed to
-various child partitions dynamically according to their needs. Leaving
-a cpu in the parent partition in such a case is now a waste.
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=TBD
 
-To accommodate such use cases, a parent partition can now have all its
-CPUs distributed to its child partitions with 0 effective cpu left as
-long as it is not the top cpuset and it has no task at the time the
-child partition is being created. A terminal partition with no child
-partition underlying it, however, cannot have 0 effective cpu which
-will make the partition invalid.
+commit 994fb794cb252edd124a46ca0994e37a4726a100
+Author: Waiman Long <longman@redhat.com>
+Date:   Sat, 19 Jun 2021 13:28:19 -0400
 
-Once an empty parent partition is formed, no new task can be moved
-into it.
+    cgroup/cpuset: Add a new isolated cpus.partition type
 
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+    Cpuset v1 uses the sched_load_balance control file to determine if load
+    balancing should be enabled.  Cpuset v2 gets rid of sched_load_balance
+    as its use may require disabling load balancing at cgroup root.
+
+    For workloads that require very low latency like DPDK, the latency
+    jitters caused by periodic load balancing may exceed the desired
+    latency limit.
+
+    When cpuset v2 is in use, the only way to avoid this latency cost is to
+    use the "isolcpus=" kernel boot option to isolate a set of CPUs. After
+    the kernel boot, however, there is no way to add or remove CPUs from
+    this isolated set. For workloads that are more dynamic in nature, that
+    means users have to provision enough CPUs for the worst case situation
+    resulting in excess idle CPUs.
+
+    To address this issue for cpuset v2, a new cpuset.cpus.partition type
+    "isolated" is added which allows the creation of a cpuset partition
+    without load balancing. This will allow system administrators to
+    dynamically adjust the size of isolated partition to the current need
+    of the workload without rebooting the system.
+
+    Signed-off-by: Waiman Long <longman@redhat.com>
+
+Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 96 ++++++++++++++++++++++++++++++------------
- 1 file changed, 69 insertions(+), 27 deletions(-)
+ kernel/cgroup/cpuset.c | 48 +++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 43 insertions(+), 5 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 0d4a2ed6fb24..02115e5c818a 100644
+index 7548e07a9874..0d4a2ed6fb24 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -305,6 +305,21 @@ static inline void notify_partition_change(struct cpuset *cs,
- 		WRITE_ONCE(cs->prs_err, PERR_NONE);
- }
+@@ -193,6 +193,8 @@ struct cpuset {
+  *
+  *   1 - partition root
+  *
++ *   2 - partition root without load balancing (isolated)
++ *
+  *  -1 - invalid partition root
+  *       None of the cpus in cpus_allowed can be put into the parent's
+  *       subparts_cpus. In this case, the cpuset is not a real partition
+@@ -202,6 +204,7 @@ struct cpuset {
+  */
+ #define PRS_DISABLED		0
+ #define PRS_ENABLED		1
++#define PRS_ISOLATED		2
+ #define PRS_ERROR		-1
  
-+static inline int cpuset_has_tasks(const struct cpuset *cs)
-+{
-+	return cs->css.cgroup->nr_populated_csets;
-+}
-+
-+/*
-+ * A empty partition (one with no effective cpu) is valid if it has no
-+ * associated task and all its cpus have been distributed out to child
-+ * partitions.
-+ */
-+static inline bool valid_empty_partition(const struct cpuset *cs)
-+{
-+	return !cpuset_has_tasks(cs) && cs->nr_subparts_cpus;
-+}
-+
- static struct cpuset top_cpuset = {
- 	.flags = ((1 << CS_ONLINE) | (1 << CS_CPU_EXCLUSIVE) |
- 		  (1 << CS_MEM_EXCLUSIVE)),
-@@ -1211,22 +1226,32 @@ static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
- 	if ((cmd == partcmd_enable) && css_has_online_children(&cpuset->css))
- 		return -EBUSY;
+ /*
+@@ -1298,17 +1301,22 @@ static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
  
--	/*
--	 * Enabling partition root is not allowed if not all the CPUs
--	 * can be granted from parent's effective_cpus or at least one
--	 * CPU will be left after that.
--	 */
--	if ((cmd == partcmd_enable) &&
--	   (!cpumask_subset(cpuset->cpus_allowed, parent->effective_cpus) ||
--	     cpumask_equal(cpuset->cpus_allowed, parent->effective_cpus)))
--		return -EINVAL;
--
- 	/*
- 	 * A cpumask update cannot make parent's effective_cpus become empty.
- 	 */
- 	adding = deleting = false;
- 	old_prs = new_prs = cpuset->partition_root_state;
- 	if (cmd == partcmd_enable) {
-+		bool parent_is_top_cpuset = !parent_cs(parent);
-+		bool no_cpu_in_parent = cpumask_equal(cpuset->cpus_allowed,
-+						      parent->effective_cpus);
-+		/*
-+		 * Enabling partition root is not allowed if not all the CPUs
-+		 * can be granted from parent's effective_cpus. If the parent
-+		 * is the top cpuset, at least one CPU must be left after that.
-+		 */
-+		if (!cpumask_subset(cpuset->cpus_allowed, parent->effective_cpus) ||
-+		    (parent_is_top_cpuset && no_cpu_in_parent))
-+			return -EINVAL;
-+
-+		/*
-+		 * A non-top parent can be left with no CPU as long as there
-+		 * is no task directly associated with the parent. For such
-+		 * a parent, no new task can be moved into it.
-+		 */
-+		if (no_cpu_in_parent && cpuset_has_tasks(parent))
-+			return -EINVAL;
-+
- 		cpumask_copy(tmp->addmask, cpuset->cpus_allowed);
- 		adding = true;
- 	} else if (cmd == partcmd_disable) {
-@@ -1257,9 +1282,9 @@ static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
- 					parent->subparts_cpus);
+ 	if (cmd == partcmd_update) {
  		/*
- 		 * Make partition invalid if parent's effective_cpus could
--		 * become empty.
-+		 * become empty and there are tasks in the parent.
+-		 * Check for possible transition between PRS_ENABLED
+-		 * and PRS_ERROR.
++		 * Check for possible transition between PRS_ERROR and
++		 * PRS_ENABLED/PRS_ISOLATED.
  		 */
--		if (adding &&
-+		if (adding && cpuset_has_tasks(parent) &&
- 		    cpumask_equal(parent->effective_cpus, tmp->addmask)) {
- 			if (!deleting)
- 				part_error = true;
-@@ -1294,7 +1319,9 @@ static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
- 				     parent->effective_cpus);
- 		part_error = (is_partition_root(cpuset) &&
- 			      !parent->nr_subparts_cpus) ||
--			     cpumask_equal(tmp->addmask, parent->effective_cpus);
-+			     (cpumask_equal(tmp->addmask, parent->effective_cpus) &&
-+			      cpuset_has_tasks(parent));
-+
- 		if (is_partition_root(cpuset) && part_error)
- 			WRITE_ONCE(cpuset->prs_err, PERR_NOCPUS);
- 	}
-@@ -1397,9 +1424,15 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp)
- 
- 		/*
- 		 * If it becomes empty, inherit the effective mask of the
--		 * parent, which is guaranteed to have some CPUs.
-+		 * parent, which is guaranteed to have some CPUs unless
-+		 * it is a partition root that has explicitly distributed
-+		 * out all its CPUs.
- 		 */
- 		if (is_in_v2_mode() && cpumask_empty(tmp->new_cpus)) {
-+			if (is_partition_root(cp) &&
-+			    cpumask_equal(cp->cpus_allowed, cp->subparts_cpus))
-+				goto update_parent_subparts;
-+
- 			cpumask_copy(tmp->new_cpus, parent->effective_cpus);
- 			if (!cp->use_parent_ecpus) {
- 				cp->use_parent_ecpus = true;
-@@ -1421,6 +1454,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp)
- 			continue;
+ 		switch (cpuset->partition_root_state) {
+ 		case PRS_ENABLED:
++		case PRS_ISOLATED:
+ 			if (part_error)
+ 				new_prs = PRS_ERROR;
+ 			break;
+ 		case PRS_ERROR:
+-			if (!part_error)
++			if (part_error)
++				break;
++			if (is_sched_load_balance(cpuset))
+ 				new_prs = PRS_ENABLED;
++			else
++				new_prs = PRS_ISOLATED;
+ 			break;
  		}
+ 	}
+@@ -1443,6 +1451,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp)
+ 				break;
  
-+update_parent_subparts:
- 		/*
- 		 * update_parent_subparts_cpumask() should have been called
- 		 * for cs already in update_cpumask(). We should also call
-@@ -1497,12 +1531,9 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp)
+ 			case PRS_ENABLED:
++			case PRS_ISOLATED:
+ 				if (update_parent_subparts_cpumask(cp, partcmd_update, NULL, tmp))
+ 					update_tasks_cpumask(parent);
+ 				/*
+@@ -1468,7 +1477,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp)
+ 
+ 		spin_lock_irq(&callback_lock);
+ 
+-		if (cp->nr_subparts_cpus && (new_prs != PRS_ENABLED)) {
++		if (cp->nr_subparts_cpus && (new_prs <= 0)) {
+ 			/*
+ 			 * Put all active subparts_cpus back to effective_cpus.
  			 */
- 			cpumask_andnot(cp->effective_cpus, cp->effective_cpus,
- 				       cp->subparts_cpus);
--			WARN_ON_ONCE(cpumask_empty(cp->effective_cpus));
+@@ -2007,6 +2016,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 	int err, old_prs = cs->partition_root_state;
+ 	struct cpuset *parent = parent_cs(cs);
+ 	struct tmpmasks tmpmask;
++	bool sched_domain_rebuilt = false;
+ 
+ 	if (old_prs == new_prs)
+ 		return 0;
+@@ -2041,6 +2051,22 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 			update_flag(CS_CPU_EXCLUSIVE, cs, 0);
+ 			goto out;
  		}
- 
--		if (new_prs != old_prs)
--			cp->partition_root_state = new_prs;
--
-+		cp->partition_root_state = new_prs;
- 		spin_unlock_irq(&callback_lock);
- 		notify_partition_change(cp, old_prs, new_prs);
- 
-@@ -2244,6 +2275,13 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
- 	    (cpumask_empty(cs->cpus_allowed) || nodes_empty(cs->mems_allowed)))
- 		goto out_unlock;
- 
-+	/*
-+	 * On default hierarchy, task cannot be moved to a cpuset with empty
-+	 * effective cpus.
-+	 */
-+	if (is_in_v2_mode() && cpumask_empty(cs->effective_cpus))
-+		goto out_unlock;
 +
- 	cgroup_taskset_for_each(task, css, tset) {
- 		ret = task_can_attach(task, cs->cpus_allowed);
- 		if (ret)
-@@ -3120,7 +3158,8 @@ hotplug_update_tasks(struct cpuset *cs,
- 		     struct cpumask *new_cpus, nodemask_t *new_mems,
- 		     bool cpus_updated, bool mems_updated)
- {
--	if (cpumask_empty(new_cpus))
-+	/* A partition root is allowed to have empty effective cpus */
-+	if (cpumask_empty(new_cpus) && !is_partition_root(cs))
- 		cpumask_copy(new_cpus, parent_cs(cs)->effective_cpus);
- 	if (nodes_empty(*new_mems))
- 		*new_mems = parent_cs(cs)->effective_mems;
-@@ -3189,22 +3228,25 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
++		if (new_prs == PRS_ISOLATED) {
++			/*
++			 * Disable the load balance flag should not return an
++			 * error unless the system is running out of memory.
++			 */
++			update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
++			sched_domain_rebuilt = true;
++		}
++	} else if (old_prs && new_prs) {
++		/*
++		 * A change in load balance state only, no change in cpumasks.
++		 */
++		update_flag(CS_SCHED_LOAD_BALANCE, cs, (new_prs != PRS_ISOLATED));
++		err = 0;
++		goto out;	/* Sched domain is rebuilt in update_flag() */
+ 	} else {
+ 		/*
+ 		 * Switch back to member is always allowed even if it
+@@ -2063,6 +2089,12 @@ static int update_prstate(struct cpuset *cs, int new_prs)
  
- 	/*
- 	 * In the unlikely event that a partition root has empty
--	 * effective_cpus, we will have to force any child partitions,
--	 * if present, to become invalid by setting nr_subparts_cpus to 0
--	 * without causing itself to become invalid.
-+	 * effective_cpus with tasks, we will have to force any child
-+	 * partitions, if present, to become invalid by setting
-+	 * nr_subparts_cpus to 0 without causing itself to become invalid.
- 	 */
--	if (is_partition_root(cs) && cs->nr_subparts_cpus &&
--	    cpumask_empty(&new_cpus)) {
-+	if (is_partition_root(cs) && cpumask_empty(&new_cpus) &&
-+	    !valid_empty_partition(cs)) {
- 		cs->nr_subparts_cpus = 0;
- 		cpumask_clear(cs->subparts_cpus);
- 		compute_effective_cpumask(&new_cpus, cs, parent);
+ 		/* Turning off CS_CPU_EXCLUSIVE will not return error */
+ 		update_flag(CS_CPU_EXCLUSIVE, cs, 0);
++
++		if (!is_sched_load_balance(cs)) {
++			/* Make sure load balance is on */
++			update_flag(CS_SCHED_LOAD_BALANCE, cs, 1);
++			sched_domain_rebuilt = true;
++		}
  	}
  
  	/*
--	 * If empty effective_cpus or zero nr_subparts_cpus or its parent
--	 * becomes erroneous, we have to transition it to the erroneous state.
-+	 * Force the partition to become invalid if either one of
-+	 * the following conditions hold:
-+	 * 1) empty effective cpus but not valid empty partition.
-+	 * 2) parent is invalid or doesn't grant any cpus to child partitions.
- 	 */
--	if (is_partition_root(cs) && (cpumask_empty(&new_cpus) ||
-+	if (is_partition_root(cs) &&
-+	   ((cpumask_empty(&new_cpus) && !valid_empty_partition(cs)) ||
- 	    (parent->partition_root_state == PRS_ERROR) ||
- 	    !parent->nr_subparts_cpus)) {
- 		int old_prs;
+@@ -2075,7 +2107,8 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 	if (parent->child_ecpus_count)
+ 		update_sibling_cpumasks(parent, cs, &tmpmask);
+ 
+-	rebuild_sched_domains_locked();
++	if (!sched_domain_rebuilt)
++		rebuild_sched_domains_locked();
+ out:
+ 	if (!err) {
+ 		spin_lock_irq(&callback_lock);
+@@ -2578,6 +2611,9 @@ static int sched_partition_show(struct seq_file *seq, void *v)
+ 	case PRS_ENABLED:
+ 		seq_puts(seq, "root\n");
+ 		break;
++	case PRS_ISOLATED:
++		seq_puts(seq, "isolated\n");
++		break;
+ 	case PRS_DISABLED:
+ 		seq_puts(seq, "member\n");
+ 		break;
+@@ -2608,6 +2644,8 @@ static ssize_t sched_partition_write(struct kernfs_open_file *of, char *buf,
+ 		val = PRS_ENABLED;
+ 	else if (!strcmp(buf, "member"))
+ 		val = PRS_DISABLED;
++	else if (!strcmp(buf, "isolated"))
++		val = PRS_ISOLATED;
+ 	else
+ 		return -EINVAL;
+ 
 -- 
 2.18.1
 
