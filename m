@@ -1,47 +1,70 @@
-From: patchwork-bot+netdevbpf-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Subject: Re: [PATCH net-next] net-memcg: pass in gfp_t mask to
- mem_cgroup_charge_skmem()
-Date: Wed, 18 Aug 2021 10:50:05 +0000
-Message-ID: <162928380597.20153.6653369000646773823.git-patchwork-notify@kernel.org>
-References: <20210817194003.2102381-1-weiwan@google.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: fix occasional OOMs due to proportional
+ memory.low reclaim
+Date: Wed, 18 Aug 2021 10:15:24 -0400
+Message-ID: <YR0V/KhKSYZs+ksn@cmpxchg.org>
+References: <20210817180506.220056-1-hannes@cmpxchg.org>
+ <YRwRzjOexeXbkirV@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629283806;
-        bh=jAGprjy7lnIT0fLgWXQfA/u/yXFzXLk5oPCebenv9tg=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=TZTafczHFHDgQBAVOYKR9utr+27ZLtqF/lzrbPJCa6tfenxHt66ofUHPn91X6a4LH
-         P6ydMgt0dChrrqGbgvbBORwSh7p+0L1beXQVY5ZqBlMyyfFQftYq5QISKmNeDsoDtT
-         AJEfVa8++IGU8hFJnuh/jF46E270F6d04RQ/PZs4nfAw/RvCCniVOgL04Q/YkdzWYc
-         OZNGL2GcdQTwv1E7EeQNixVWBN13BnoUHHpJYygv+rkRYJKBYiCoqVzIRf+BhpwDeC
-         DVbhQgtlas9QBzSwqK8jDErOiS6QtYyJJGt8hQdvnGrfgm/V+ZyJWaN5Da5lgo7MJG
-         sZbBtqrWrXDGQ==
-In-Reply-To: <20210817194003.2102381-1-weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=rg02+w1DlkJobhoJY9bM97YQwIjcX3dhjCH/vsEFgP0=;
+        b=IJM3/57oMfrwBGTxX1IHTSufxeq6P3Ds6XRZvE9DZaQYu6SrVcwDRerEYF25qu7X1B
+         P60N9RrgrRNag8tqLyPwd2wzaLi9O55qN9diwm9sZAtemcAodh0vkx7GORHTW9R5W2LY
+         rV/W0SNTLdFLW8cLcW0Qu/6ySAJpxaO6I9bAxGJSjR5kQXqiY7nMpO/wVGbIlV0HDfjw
+         dYuz+g7ZxYVhUxmQisLCpNH+9kMNrqw8fYLGpqtTiUzPzHScZLMpGUR7odgvREoOGyvq
+         uG3PAzekn0lUz/hG2/KBgIhbNa18vFUOGqnNMOmaodYK+aTh4+ylfiWpcrP7Zlm5Pd0x
+         G6kA==
+Content-Disposition: inline
+In-Reply-To: <YRwRzjOexeXbkirV-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Wei Wang <weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Leon Yang <lnyng-b10kYP2dOMg@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hello:
-
-This patch was applied to netdev/net-next.git (refs/heads/master):
-
-On Tue, 17 Aug 2021 12:40:03 -0700 you wrote:
-> Add gfp_t mask as an input parameter to mem_cgroup_charge_skmem(),
-> to give more control to the networking stack and enable it to change
-> memcg charging behavior. In the future, the networking stack may decide
-> to avoid oom-kills when fallbacks are more appropriate.
+On Tue, Aug 17, 2021 at 12:45:18PM -0700, Roman Gushchin wrote:
+> On Tue, Aug 17, 2021 at 02:05:06PM -0400, Johannes Weiner wrote:
+> > We've noticed occasional OOM killing when memory.low settings are in
+> > effect for cgroups. This is unexpected and undesirable as memory.low
+> > is supposed to express non-OOMing memory priorities between cgroups.
+> > 
+> > The reason for this is proportional memory.low reclaim. When cgroups
+> > are below their memory.low threshold, reclaim passes them over in the
+> > first round, and then retries if it couldn't find pages anywhere else.
+> > But when cgroups are slighly above their memory.low setting, page scan
+> > force is scaled down and diminished in proportion to the overage, to
+> > the point where it can cause reclaim to fail as well - only in that
+> > case we currently don't retry, and instead trigger OOM.
+> > 
+> > To fix this, hook proportional reclaim into the same retry logic we
+> > have in place for when cgroups are skipped entirely. This way if
+> > reclaim fails and some cgroups were scanned with dimished pressure,
+> > we'll try another full-force cycle before giving up and OOMing.
+> > 
+> > Reported-by: Leon Yang <lnyng-b10kYP2dOMg@public.gmane.org>
+> > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 > 
-> One behavior change in mem_cgroup_charge_skmem() by this patch is to
-> avoid force charging by default and let the caller decide when and if
-> force charging is needed through the presence or absence of
-> __GFP_NOFAIL.
-> 
-> [...]
+> Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-Here is the summary with links:
-  - [net-next] net-memcg: pass in gfp_t mask to mem_cgroup_charge_skmem()
-    https://git.kernel.org/netdev/net-next/c/4b1327be9fe5
+Thank you.
 
-You are awesome, thank you!
+> I guess it's a stable material, so maybe adding:
+> Fixes: 9783aa9917f8 ("mm, memcg: proportional memory.{low,min} reclaim")
+
+Yes, that Fixes makes sense. Plus:
+
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 5.4+
+
+I initially didn't tag it because the issue is over two years old and
+we've had no other reports of this. But thinking about it, it's
+probably more a lack of users rather than severity. At FB we only
+noticed with a recent rollout of memory_recursiveprot
+(8a931f801340c2be10552c7b5622d5f4852f3a36) because we didn't have
+working memory.low configurations before that. But now that we do
+notice, it's a problem worth fixing. So yes, stable makes sense.
+
+Thanks.
