@@ -1,66 +1,172 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
 Subject: Re: [PATCH] mm: memcontrol: fix occasional OOMs due to proportional
  memory.low reclaim
-Date: Wed, 18 Aug 2021 10:16:59 -0400
-Message-ID: <YR0WW2VvgtUHK1HL@cmpxchg.org>
+Date: Wed, 18 Aug 2021 21:18:10 +0100
+Message-ID: <YR1rAoFNegl6CrPz@chrisdown.name>
 References: <20210817180506.220056-1-hannes@cmpxchg.org>
- <CALvZod7097PHnXoOUZzPpmkASKpL3rV+2UJ+zp-NCdkpVoFTWg@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        d=chrisdown.name; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=QuwtlkiDGdVrCHQjEs+V1pH13gkXul/lhVEkHhu3sPg=;
-        b=HGixUth5XmHhaExQjj0gkfLh0CcKhfT9fLJ8YT+dCDfj28MGFMjoiPk12fFJ75GriO
-         T3vJh7OduH2ggAbsAw4pR2TMzK5OkotvAbwW5kg/WMKj9tVKuwutWoUoQqQ0mair1Ivn
-         IXnMaAE+5G6/0DOyN2E24YF4TEN52GyJyeAHja0iPBTGhHdmzv72e37rv5SRqMwiX0jB
-         0zAct3Jr3JADH5pG3y5yrxAkueO/MsBtxxTBZXMS87vYomrc7Gl69AVEtEHAd0dNxdAq
-         BG3Rnqfq+rO/ArKUpIPfdWadeGYwTOuXPzo9l1ubVv0Dcpykxz3Wfu/DmKo5bFuvq0W4
-         6vpg==
+         :content-disposition:in-reply-to:user-agent;
+        bh=nHfCCbHIXfL8S0LAJ+5b/okpSRYN0l8zL9APPGHUHjM=;
+        b=JNxUjQJfF8Rfgw0pIVdmau+KQ+tvGbR5jwxsNL+C4ZDxsjgE+iui13LWXrzEM2oi4e
+         JExJW4m3jOmYpeYqh5Jm5a8nfWjtKnJpIJqhmxMEVzERO+5UnEh+APgQwU6jjDW2aU50
+         dWaLO+Kt1o238ME+il7oVvZb/cGa/r219D06M=
 Content-Disposition: inline
-In-Reply-To: <CALvZod7097PHnXoOUZzPpmkASKpL3rV+2UJ+zp-NCdkpVoFTWg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20210817180506.220056-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Leon Yang <lnyng-b10kYP2dOMg@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Leon Yang <lnyng-b10kYP2dOMg@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue, Aug 17, 2021 at 12:10:16PM -0700, Shakeel Butt wrote:
-> On Tue, Aug 17, 2021 at 11:03 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> >
-> > We've noticed occasional OOM killing when memory.low settings are in
-> > effect for cgroups. This is unexpected and undesirable as memory.low
-> > is supposed to express non-OOMing memory priorities between cgroups.
-> >
-> > The reason for this is proportional memory.low reclaim. When cgroups
-> > are below their memory.low threshold, reclaim passes them over in the
-> > first round, and then retries if it couldn't find pages anywhere else.
-> > But when cgroups are slighly above their memory.low setting, page scan
-> 
-> *slightly
-> 
-> > force is scaled down and diminished in proportion to the overage, to
-> > the point where it can cause reclaim to fail as well - only in that
-> > case we currently don't retry, and instead trigger OOM.
-> >
-> > To fix this, hook proportional reclaim into the same retry logic we
-> > have in place for when cgroups are skipped entirely. This way if
-> > reclaim fails and some cgroups were scanned with dimished pressure,
-> 
-> *diminished
+Johannes Weiner writes:
+>We've noticed occasional OOM killing when memory.low settings are in
+>effect for cgroups. This is unexpected and undesirable as memory.low
+>is supposed to express non-OOMing memory priorities between cgroups.
+>
+>The reason for this is proportional memory.low reclaim. When cgroups
+>are below their memory.low threshold, reclaim passes them over in the
+>first round, and then retries if it couldn't find pages anywhere else.
+>But when cgroups are slighly above their memory.low setting, page scan
+>force is scaled down and diminished in proportion to the overage, to
+>the point where it can cause reclaim to fail as well - only in that
+>case we currently don't retry, and instead trigger OOM.
+>
+>To fix this, hook proportional reclaim into the same retry logic we
+>have in place for when cgroups are skipped entirely. This way if
+>reclaim fails and some cgroups were scanned with dimished pressure,
+>we'll try another full-force cycle before giving up and OOMing.
+>
+>Reported-by: Leon Yang <lnyng-b10kYP2dOMg@public.gmane.org>
+>Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Oops. Andrew, would you mind folding these into the checkpatch fixlet?
+Thanks for tracking this down! Agreed that this looks like a good stable 
+candidate.
 
-> > we'll try another full-force cycle before giving up and OOMing.
-> >
-> > Reported-by: Leon Yang <lnyng-b10kYP2dOMg@public.gmane.org>
-> > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> 
-> Should this be considered for stable?
+Acked-by: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
 
-Yes, I think so after all. Please see my reply to Roman.
-
-> Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-
-Thanks Shakeel!
+>---
+> include/linux/memcontrol.h | 29 +++++++++++++++--------------
+> mm/vmscan.c                | 27 +++++++++++++++++++--------
+> 2 files changed, 34 insertions(+), 22 deletions(-)
+>
+>diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+>index bfe5c486f4ad..24797929d8a1 100644
+>--- a/include/linux/memcontrol.h
+>+++ b/include/linux/memcontrol.h
+>@@ -612,12 +612,15 @@ static inline bool mem_cgroup_disabled(void)
+> 	return !cgroup_subsys_enabled(memory_cgrp_subsys);
+> }
+>
+>-static inline unsigned long mem_cgroup_protection(struct mem_cgroup *root,
+>-						  struct mem_cgroup *memcg,
+>-						  bool in_low_reclaim)
+>+static inline void mem_cgroup_protection(struct mem_cgroup *root,
+>+					 struct mem_cgroup *memcg,
+>+					 unsigned long *min,
+>+					 unsigned long *low)
+> {
+>+	*min = *low = 0;
+>+
+> 	if (mem_cgroup_disabled())
+>-		return 0;
+>+		return;
+>
+> 	/*
+> 	 * There is no reclaim protection applied to a targeted reclaim.
+>@@ -653,13 +656,10 @@ static inline unsigned long mem_cgroup_protection(struct mem_cgroup *root,
+> 	 *
+> 	 */
+> 	if (root == memcg)
+>-		return 0;
+>-
+>-	if (in_low_reclaim)
+>-		return READ_ONCE(memcg->memory.emin);
+>+		return;
+>
+>-	return max(READ_ONCE(memcg->memory.emin),
+>-		   READ_ONCE(memcg->memory.elow));
+>+	*min = READ_ONCE(memcg->memory.emin);
+>+	*low = READ_ONCE(memcg->memory.elow);
+> }
+>
+> void mem_cgroup_calculate_protection(struct mem_cgroup *root,
+>@@ -1147,11 +1147,12 @@ static inline void memcg_memory_event_mm(struct mm_struct *mm,
+> {
+> }
+>
+>-static inline unsigned long mem_cgroup_protection(struct mem_cgroup *root,
+>-						  struct mem_cgroup *memcg,
+>-						  bool in_low_reclaim)
+>+static inline void mem_cgroup_protection(struct mem_cgroup *root,
+>+					 struct mem_cgroup *memcg,
+>+					 unsigned long *min,
+>+					 unsigned long *low)
+> {
+>-	return 0;
+>+	*min = *low = 0;
+> }
+>
+> static inline void mem_cgroup_calculate_protection(struct mem_cgroup *root,
+>diff --git a/mm/vmscan.c b/mm/vmscan.c
+>index 4620df62f0ff..701106e1829c 100644
+>--- a/mm/vmscan.c
+>+++ b/mm/vmscan.c
+>@@ -100,9 +100,12 @@ struct scan_control {
+> 	unsigned int may_swap:1;
+>
+> 	/*
+>-	 * Cgroups are not reclaimed below their configured memory.low,
+>-	 * unless we threaten to OOM. If any cgroups are skipped due to
+>-	 * memory.low and nothing was reclaimed, go back for memory.low.
+>+	 * Cgroup memory below memory.low is protected as long as we
+>+	 * don't threaten to OOM. If any cgroup is reclaimed at
+>+	 * reduced force or passed over entirely due to its memory.low
+>+	 * setting (memcg_low_skipped), and nothing is reclaimed as a
+>+	 * result, then go back back for one more cycle that reclaims
+>+	 * the protected memory (memcg_low_reclaim) to avert OOM.
+> 	 */
+> 	unsigned int memcg_low_reclaim:1;
+> 	unsigned int memcg_low_skipped:1;
+>@@ -2537,15 +2540,14 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+> 	for_each_evictable_lru(lru) {
+> 		int file = is_file_lru(lru);
+> 		unsigned long lruvec_size;
+>+		unsigned long low, min;
+> 		unsigned long scan;
+>-		unsigned long protection;
+>
+> 		lruvec_size = lruvec_lru_size(lruvec, lru, sc->reclaim_idx);
+>-		protection = mem_cgroup_protection(sc->target_mem_cgroup,
+>-						   memcg,
+>-						   sc->memcg_low_reclaim);
+>+		mem_cgroup_protection(sc->target_mem_cgroup, memcg,
+>+				      &min, &low);
+>
+>-		if (protection) {
+>+		if (min || low) {
+> 			/*
+> 			 * Scale a cgroup's reclaim pressure by proportioning
+> 			 * its current usage to its memory.low or memory.min
+>@@ -2576,6 +2578,15 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+> 			 * hard protection.
+> 			 */
+> 			unsigned long cgroup_size = mem_cgroup_size(memcg);
+>+			unsigned long protection;
+>+
+>+			/* memory.low scaling, make sure we retry before OOM */
+>+			if (!sc->memcg_low_reclaim && low > min) {
+>+				protection = low;
+>+				sc->memcg_low_skipped = 1;
+>+			} else {
+>+				protection = min;
+>+			}
+>
+> 			/* Avoid TOCTOU with earlier protection check */
+> 			cgroup_size = max(cgroup_size, protection);
+>-- 
+>2.32.0
+>
