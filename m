@@ -1,109 +1,84 @@
-From: Andrey Ryabinin <arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
-Subject: Re: [PATCH 3/4] sched/cpuacct: fix user/system in shown
- cpuacct.usage*
-Date: Fri, 20 Aug 2021 12:37:47 +0300
-Message-ID: <e56570e5-5165-71e1-f4cc-b8ea2063aec8@yandex-team.com>
+From: Andrey Ryabinin <arbn@yandex-team.com>
+Subject: Re: [PATCH 1/4] cputime,cpuacct: Include guest time in user time in
+ cpuacct.stat
+Date: Fri, 20 Aug 2021 12:37:28 +0300
+Message-ID: <dee3d594-65bb-ffa2-f009-7900a4cf3f89@yandex-team.com>
 References: <20210217120004.7984-1-arbn@yandex-team.com>
- <20210217120004.7984-3-arbn@yandex-team.com> <87r1kdl8se.fsf@oracle.com>
+ <87wnu5l9e6.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.com; s=default;
-        t=1629452260; bh=sLLsRL1I8judTG8/a2QYuzjSJMQb61/3K6LopvtlOeY=;
+        t=1629452239; bh=8C0XPCFK1m41WAoGmXo4jkHrx/HebMDhC1R+WddLGDw=;
         h=In-Reply-To:References:Date:Message-ID:To:Subject:From:Cc;
-        b=2w+ZCtMdyCPjSweZe4Y/etikVP+u7iPFn643sumPqJQ2JlVATqzTHSdzVjCjtMBWN
-         mV3b0xfKRhxqqWqcAxRSfHgU9/DCCiXINZjTho77St886lFwFg/QodJCvU7X6A+Iru
-         cRyT2zIFqBCEWJ+up/+OeLdzQSPX7YiPgNPaOfnk=
-In-Reply-To: <87r1kdl8se.fsf-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+        b=MY+DCvNp3wVLhqDJWngDFhowGQ7U9CB8IPRgLwesNuxJMSf0IR+vHk2KGbmSy9lA/
+         SD3rf8kjh2BTmXUPXv0ZKuYNn6+N3671nB3MSyMOBz8T0H8Cl8WblhHOuHrLsxktCl
+         B6xep+hTFm4jL4LuU4mOUXNWOkRyzN/JlJxhzbow=
+In-Reply-To: <87wnu5l9e6.fsf@oracle.com>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>, Bharata B Rao <bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Daniel Jordan <daniel.m.jordan@oracle.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>
+Cc: Boris Burkov <boris@bur.io>, Bharata B Rao <bharata@linux.vnet.ibm.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 
 
+Sorry for abandoning this, got distracted by lots of other stuff.
 
-On 3/18/21 1:22 AM, Daniel Jordan wrote:
-> Andrey Ryabinin <arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org> writes:
+
+On 3/18/21 1:09 AM, Daniel Jordan wrote:
+> Andrey Ryabinin <arbn@yandex-team.com> writes:
 > 
->> cpuacct has 2 different ways of accounting and showing user
->> and system times.
->>
->> The first one uses cpuacct_account_field() to account times
->> and cpuacct.stat file to expose them. And this one seems to work ok.
->>
->> The second one is uses cpuacct_charge() function for accounting and
->> set of cpuacct.usage* files to show times. Despite some attempts to
->> fix it in the past it still doesn't work. E.g. while running KVM
->> guest the cpuacct_charge() accounts most of the guest time as
->> system time. This doesn't match with user&system times shown in
->> cpuacct.stat or proc/<pid>/stat.
+>> cpuacct.stat in no-root cgroups shows user time without guest time
+>> included int it. This doesn't match with user time shown in root
+>> cpuacct.stat and /proc/<pid>/stat.
 > 
-> I couldn't reproduce this running a cpu bound load in a kvm guest on a
-> nohz_full cpu on 5.11.  The time is almost entirely in cpuacct.usage and
-> _user, while _sys stays low.
+> Yeah, that's inconsistent.
 > 
-> Could you say more about how you're seeing this?  Don't really doubt
-> there's a problem, just wondering what you're doing.
+>> Make account_guest_time() to add user time to cgroup's cpustat to
+>> fix this.
 > 
-
-
-Yeah, I it's almost unnoticable if you run some load in guest like qemu.
-
-But more simple case with busy loop in KVM_RUN triggers this:
-
-# git clone https://github.com/aryabinin/kvmsample
-# make
-# mkdir /sys/fs/cgroup/cpuacct/test
-# echo $$ > /sys/fs/cgroup/cpuacct/test/tasks
-# ./kvmsample &
-# for i in {1..5}; do cat /sys/fs/cgroup/cpuacct/test/cpuacct.usage_sys; sleep 1; done
-1976535645
-2979839428
-3979832704
-4983603153
-5983604157
-
->> diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
->> index 941c28cf9738..7eff79faab0d 100644
->> --- a/kernel/sched/cpuacct.c
->> +++ b/kernel/sched/cpuacct.c
->> @@ -29,7 +29,7 @@ struct cpuacct_usage {
->>  struct cpuacct {
->>  	struct cgroup_subsys_state	css;
->>  	/* cpuusage holds pointer to a u64-type object on every CPU */
->> -	struct cpuacct_usage __percpu	*cpuusage;
+> Yep.
 > 
-> Definition of struct cpuacct_usage can go away now.
-> 
-
-Done.
-
->> @@ -99,7 +99,8 @@ static void cpuacct_css_free(struct cgroup_subsys_state *css)
->>  static u64 cpuacct_cpuusage_read(struct cpuacct *ca, int cpu,
->>  				 enum cpuacct_stat_index index)
->>  {
->> -	struct cpuacct_usage *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
->> +	u64 *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
->> +	u64 *cpustat = per_cpu_ptr(ca->cpustat, cpu)->cpustat;
->>  	u64 data;
-> 
-> There's a BUG_ON below this that could probably be WARN_ON_ONCE while
-> you're here
+> cgroup2's cpu.stat is broken the same way for child cgroups, and this
+> happily fixes it.  Probably deserves a mention in the changelog.
 > 
 
 Sure.
 
->> @@ -278,8 +274,8 @@ static int cpuacct_stats_show(struct seq_file *sf, void *v)
->>  	for_each_possible_cpu(cpu) {
->>  		u64 *cpustat = per_cpu_ptr(ca->cpustat, cpu)->cpustat;
->>  
->> -		val[CPUACCT_STAT_USER]   += cpustat[CPUTIME_USER];
->> -		val[CPUACCT_STAT_USER]   += cpustat[CPUTIME_NICE];
->> +		val[CPUACCT_STAT_USER] += cpustat[CPUTIME_USER];
->> +		val[CPUACCT_STAT_USER] += cpustat[CPUTIME_NICE];
+> The problem with cgroup2 was, if the workload was mostly guest time,
+> cpu.stat's user and system together reflected it, but it was split
+> unevenly across the two.  I think guest time wasn't actually included in
+> either bucket, it was just that the little user and system time there
+> was got scaled up in cgroup_base_stat_cputime_show -> cputime_adjust to
+> match sum_exec_runtime, which did have it.
 > 
-> unnecessary whitespace change?
+> The stats look ok now for both cgroup1 and 2.  Just slightly unsure
+> whether we want to change the way both interfaces expose the accounting
+> in case something out there depends on it.  Seems like we should, but
+> it'd be good to hear more opinions.
+> 
+>> @@ -148,11 +146,11 @@ void account_guest_time(struct task_struct *p, u64 cputime)
+>>  
+>>  	/* Add guest time to cpustat. */
+>>  	if (task_nice(p) > 0) {
+>> -		cpustat[CPUTIME_NICE] += cputime;
+>> -		cpustat[CPUTIME_GUEST_NICE] += cputime;
+>> +		task_group_account_field(p, CPUTIME_NICE, cputime);
+>> +		task_group_account_field(p, CPUTIME_GUEST_NICE, cputime);
+>>  	} else {
+>> -		cpustat[CPUTIME_USER] += cputime;
+>> -		cpustat[CPUTIME_GUEST] += cputime;
+>> +		task_group_account_field(p, CPUTIME_USER, cputime);
+>> +		task_group_account_field(p, CPUTIME_GUEST, cputime);
+>>  	}
+> 
+> Makes sense for _USER and _NICE, but it doesn't seem cgroup1 or 2
+> actually use _GUEST and _GUEST_NICE.
+> 
+> Could go either way.  Consistency is nice, but I probably wouldn't
+> change the GUEST ones so people aren't confused about why they're
+> accounted.  It's also extra cycles for nothing, even though most of the
+> data is probably in the cache.
 > 
 
-yup
+Agreed, will live the _GUEST* as is.
