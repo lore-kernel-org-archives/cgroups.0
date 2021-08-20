@@ -1,84 +1,55 @@
 From: Andrey Ryabinin <arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
-Subject: [PATCH v2 5/5] sched/cpuacct: Make user/system times in cpuacct.stat more precise
-Date: Fri, 20 Aug 2021 12:40:05 +0300
-Message-ID: <20210820094005.20596-5-arbn@yandex-team.com>
+Subject: [PATCH v2 3/5] cgroup: Fix 'usage_usec' time in root's cpu.stat
+Date: Fri, 20 Aug 2021 12:40:03 +0300
+Message-ID: <20210820094005.20596-3-arbn@yandex-team.com>
 References: <20210217120004.7984-1-arbn@yandex-team.com>
  <20210820094005.20596-1-arbn@yandex-team.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.com; s=default;
-        t=1629452410; bh=w/ylIByVCiNZnqp+URhSORGTXCKyEFc1XQAMjDap0mg=;
+        t=1629452407; bh=Si8KE1JJWs1mAy9P/ti0+l+WDdAkm3UF36Akx8W4YOM=;
         h=In-Reply-To:Message-Id:References:Date:Subject:To:From:Cc;
-        b=iAXX6YfQPNI4U9rhJXMExqrwRSfgztq7Do/DuJoaq4h83qTZzmwfiOvbxJh2rnHXk
-         4emh2YXrJObhsFMosqAgPhv8DXW7OT/UPR9U9MsIx6ZwTC3ExGY44aCWJttUDYH84r
-         JRiq1qxUVmjiDelnT1jgc35M54vXY1sSrQ/0yEOs=
+        b=QXbuP8kz8GHvwopKbXXt1NV6c1q55sqAepWaAnDLtj8CX/jQEK3BpptH1re2TfJjx
+         iNXzsUpoQuPfry0/uyEzMSN5+A75rs4yXa6i87Lj6xyjK5QHDPd7KQV8G8ZIQAtzZe
+         ZxyoYdcFSUA7y4AHw5KZUiWJ2fE5DuYiwccG5DqQ=
 In-Reply-To: <20210820094005.20596-1-arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, boris-UrQYPotlwNs@public.gmane.org, Andrey Ryabinin <arb-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
+Cc: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, boris-UrQYPotlwNs@public.gmane.org, Andrey Ryabinin <arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Andrey Ryabinin <arb-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
+Global CPUTIME_USER counter already includes CPUTIME_GUEST
+Also CPUTIME_NICE already includes CPUTIME_GUEST_NICE.
 
-cpuacct.stat shows user time based on raw random precision tick
-based counters. Use cputime_addjust() to scale these values against the
-total runtime accounted by the scheduler, like we already do
-for user/system times in /proc/<pid>/stat.
+Remove additions of CPUTIME_GUEST[_NICE] to total ->sum_exec_runtime
+to not account them twice.
 
-Signed-off-by: Andrey Ryabinin <arb-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
+Fixes: 936f2a70f207 ("cgroup: add cpu.stat file to root cgroup")
+Signed-off-by: Andrey Ryabinin <arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Reviewed-by: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Tested-by: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 ---
  Changes since v1:
-    - fix cputime.sum_exec_runtime calculation
+  - Add review/tested tags in changelog
 ---
- kernel/sched/cpuacct.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
+ kernel/cgroup/rstat.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
-index 9de7dd51beb0..3d06c5e4220d 100644
---- a/kernel/sched/cpuacct.c
-+++ b/kernel/sched/cpuacct.c
-@@ -261,25 +261,30 @@ static int cpuacct_all_seq_show(struct seq_file *m, void *V)
- static int cpuacct_stats_show(struct seq_file *sf, void *v)
- {
- 	struct cpuacct *ca = css_ca(seq_css(sf));
--	s64 val[CPUACCT_STAT_NSTATS];
-+	struct task_cputime cputime;
-+	u64 val[CPUACCT_STAT_NSTATS];
- 	int cpu;
- 	int stat;
- 
--	memset(val, 0, sizeof(val));
-+	memset(&cputime, 0, sizeof(cputime));
- 	for_each_possible_cpu(cpu) {
- 		u64 *cpustat = per_cpu_ptr(ca->cpustat, cpu)->cpustat;
- 
--		val[CPUACCT_STAT_USER]   += cpustat[CPUTIME_USER];
--		val[CPUACCT_STAT_USER]   += cpustat[CPUTIME_NICE];
--		val[CPUACCT_STAT_SYSTEM] += cpustat[CPUTIME_SYSTEM];
--		val[CPUACCT_STAT_SYSTEM] += cpustat[CPUTIME_IRQ];
--		val[CPUACCT_STAT_SYSTEM] += cpustat[CPUTIME_SOFTIRQ];
-+		cputime.utime += cpustat[CPUTIME_USER];
-+		cputime.utime += cpustat[CPUTIME_NICE];
-+		cputime.stime += cpustat[CPUTIME_SYSTEM];
-+		cputime.stime += cpustat[CPUTIME_IRQ];
-+		cputime.stime += cpustat[CPUTIME_SOFTIRQ];
-+
-+		cputime.sum_exec_runtime += *per_cpu_ptr(ca->cpuusage, cpu);
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index b264ab5652ba..1486768f2318 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -433,8 +433,6 @@ static void root_cgroup_cputime(struct task_cputime *cputime)
+ 		cputime->sum_exec_runtime += user;
+ 		cputime->sum_exec_runtime += sys;
+ 		cputime->sum_exec_runtime += cpustat[CPUTIME_STEAL];
+-		cputime->sum_exec_runtime += cpustat[CPUTIME_GUEST];
+-		cputime->sum_exec_runtime += cpustat[CPUTIME_GUEST_NICE];
  	}
+ }
  
-+	cputime_adjust(&cputime, &seq_css(sf)->cgroup->prev_cputime,
-+		&val[CPUACCT_STAT_USER], &val[CPUACCT_STAT_SYSTEM]);
-+
- 	for (stat = 0; stat < CPUACCT_STAT_NSTATS; stat++) {
--		seq_printf(sf, "%s %lld\n",
--			   cpuacct_stat_desc[stat],
--			   (long long)nsec_to_clock_t(val[stat]));
-+		seq_printf(sf, "%s %llu\n", cpuacct_stat_desc[stat],
-+			nsec_to_clock_t(val[stat]));
- 	}
- 
- 	return 0;
 -- 
 2.31.1
 
