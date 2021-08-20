@@ -1,76 +1,37 @@
-From: Michal Hocko <mhocko@suse.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH v2] mm: Add configuration to control whether vmpressure
  notifier is enabled
-Date: Fri, 20 Aug 2021 13:26:43 +0200
-Message-ID: <YR+Rc9HC6OqlEq4I@dhcp22.suse.cz>
+Date: Fri, 20 Aug 2021 04:42:07 -0700
+Message-ID: <CALvZod5usW9OEsJSbeGYBnSGVDNLLKqMoGAx-JQrX6s62r-XiA@mail.gmail.com>
 References: <1629417219-74853-1-git-send-email-wang.yong12@zte.com.cn>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1629458806; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=DjkvT2NEndnW8rVNpc3XomY8rLqZ81An0wqzo8QeK40=;
-        b=vXeKWUgjEdvh/lzioOhY2eg1/DJt11NZzQwemLxBb1KWhRBfFMi6b7QTuZ1JdbPS1eepSt
-        1nQrFTETcDceXccTyi4TY0XNMakY7IZtrUwJJQteJvjs2CtVzVOdRGLDG1RK9kh9PKHJIY
-        rjQHUKHLxdKpIC0jRmQ7N8EZAtLzABo=
-Content-Disposition: inline
-In-Reply-To: <1629417219-74853-1-git-send-email-wang.yong12@zte.com.cn>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=BwSYnZ0fXeyF3ucmVYtCymM5MkqPY89pcO9lgHDkScc=;
+        b=RQV3qkbRPB4wYn5rj55IDWMO5Wywf4L6wyjACr5IMbV/zKC36Ab6BeVA76WHo2bs4j
+         nyrb7DMkVIXnh0n7r4Pk+OInxYOfLVae9K0ZAQMO+QgJXveyqceQ8lzHCCXFR/9ArfE4
+         ZBWCImoPry5Ydl+fvYVRdPdNvVPDC6LXtVpU4uIGo0VjrDaZsYylBJLnI5aSZO3IWar0
+         N+IXPS8HSukU8TtqsNWym+9YmCdj9Ed6Luk46mBRNxBJWMaInC8usKVRyomOt5I8HpnZ
+         kdez1wm7WCrnD4B9891D85TmVqzs6WU7Ex+eeEozWvPTowdFcxszIdbxiplestG2EdjQ
+         zDXA==
+In-Reply-To: <1629417219-74853-1-git-send-email-wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: yongw.pur@gmail.com
-Cc: tj@kernel.org, corbet@lwn.net, akpm@linux-foundation.org, vdavydov.dev@gmail.com, tglx@linutronix.de, peterz@infradead.org, shakeelb@google.com, guro@fb.com, alexs@kernel.org, richard.weiyang@gmail.com, sh_def@163.com, sfr@canb.auug.org.au, wang.yong12@zte.com.cn, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, yang.yang29@zte.com.cn, wangyong <wang.yong@zte.com.cn>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, "Peter Zijlstra (Intel)" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, wangyong <wang.yong-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 
-On Thu 19-08-21 16:53:39, yongw.pur@gmail.com wrote:
-> From: wangyong <wang.yong@zte.com.cn>
->=20
+On Thu, Aug 19, 2021 at 4:54 PM <yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>
+> From: wangyong <wang.yong-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+>
 > Inspired by PSI features, vmpressure inotifier function should
 > also be configured to decide whether it is used, because it is an
 > independent feature which notifies the user of memory pressure.
+>
 
-Yes, it is an independent feature indeed but what is the actual reason
-to put a more configuration space here. Config options are not free both
-from the user experience POV as well as the code maintenance. Why do we
-need to disable this feature. Who can benefit from such a setup?
-
-> So we add configuration to control whether vmpressure notifier is
-> enabled, and provide a boot parameter to use vmpressure notifier
-> flexibly.
-
-Flexibility is nice but not free as mentioned above.
-
-> Use Christoph Lamenter=E2=80=99s pagefault tool
-> (https://lkml.org/lkml/2006/8/29/294) for comparative testing.
-> Test with 5.14.0-rc5-next-20210813 on x86_64 4G Ram
-> To ensure that the vmpressure function is executed, we enable zram
-> and let the program occupy memory so that some memory is swapped out
->=20
-> unpatched:
-> Gb	Rep	Thr	CLine	User(s)	System(s) Wall(s) flt/cpu/s	fault/wsec
-> 2	1	1	1	0.1	0.97	1.13	485490.062	463533.34
-> 2	1	1	1	0.11	0.96	1.12	483086.072	465309.495
-> 2	1	1	1	0.1	0.95	1.11	496687.098	469887.643
-> 2	1	1	1	0.09	0.97	1.11	489711.434	468402.102
-> 2	1	1	1	0.13	0.94	1.12	484159.415	466080.941
-> average				0.106	0.958	1.118	487826.8162	466642.7042
->=20
-> patched and CONFIG_MEMCG_VMPRESSURE is not set:
-> Gb	Rep	Thr	CLine	User(s)	System(s) Wall(s) flt/cpu/s	fault/wsec
-> 2	1	1	1	0.1	0.96	1.1	490942.682	473125.98
-> 2	1	1	1	0.08	0.99	1.13	484987.521	463161.975
-> 2	1	1	1	0.09	0.96	1.09	498824.98	476696.066
-> 2	1	1	1	0.1	0.97	1.12	484127.673	465951.238
-> 2	1	1	1	0.1	0.97	1.11	487032		468964.662
-> average				0.094	0.97	1.11	489182.9712	469579.9842
->=20
-> According to flt/cpu/s, performance improved by 0.2% which is not obvious.
-
-I haven't checked how are those numbers calculated but from a very brief
-look it seems like the variation between different runs is higher than
-0.2%. Have you checked the average against standard deviation to get a
-better idea whether the difference is really outside of the noise?
---=20
-Michal Hocko
-SUSE Labs
+It is also used by the networking stack to check memory pressure. See
+mem_cgroup_under_socket_pressure().
