@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 1/2] mm: unexport folio_memcg_{,un}lock
-Date: Fri, 20 Aug 2021 11:58:14 +0200
-Message-ID: <20210820095815.445392-2-hch@lst.de>
+Subject: [PATCH 2/2] mm: unexport {,un}lock_page_memcg
+Date: Fri, 20 Aug 2021 11:58:15 +0200
+Message-ID: <20210820095815.445392-3-hch@lst.de>
 References: <20210820095815.445392-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,12 +10,12 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=OeK3I+1l0xomijoHvRqsdYXTySAGsZIzhVjcZsSq7U0=; b=Zr3DitrUpEOFcENF3OtghGRMLi
-        kSUsgxxHghHOEjCYGgRPXlA0lGc838SHvugAnpoCt9BGKLn8a9GKOb3w5SEniekSW4MniHzDudrMq
-        FOM0PxBd4/+2W7NQdVAEQb38Z5mJThI9xEIn/j6EdEKjhfh3G+/Vga5+wjgTWtn0qdbVOUJx+TVE/
-        9c0JEFuHSbGtKTzjmYvP2YD2j3Emx3fJA849JqG1QmIQIzDxKAcoNWFcNYt17VJrIOODWOBe9vfDb
-        7M61rDO+x9gTFoWQhuRgIse2pGdxFHyW9VNIkOBCHZWXDZDW7/FTeSKhAJQrTjRkWNwYqt7ew8BP4
-        Bqpg/Mbw==;
+        bh=nzUrzTYf+SxA9DhkR1ixsQBSLVoS1UsUtkY4TuBivPg=; b=JoPBlcJiFqV74veGWFe1sBI6Ng
+        sSqpzCCSwBgVyHB08j9McLOlR3cKFBhyMcM5xzEaYClvs4XfWxXAuSHiC9pg7sCuqkRwfYygAa5gd
+        qy3YJIAzot89NYNSk2ntP5jTiUBj05ROneWiPfxBo6F3HTFopgpp+RWecy19gWmSuafxTkyxR9CRh
+        X+sYrZArif2/DzhEAuXF4thtO+TjEybpgk7bks4HCQuY9KPg4zHXxwbG96bBpDUDCdX97Sb9OsYHF
+        iz3omvxWYed9N8aa6GScN9rCBQXVl7aWy9JbdSH0rob2x6BHLJ6atPqy2+vd5l9hz03G3V9AUFw3n
+        FTiz/57w==;
 In-Reply-To: <20210820095815.445392-1-hch-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -30,25 +30,25 @@ Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
  1 file changed, 2 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 45a160894a035..4cb4349065931 100644
+index 4cb4349065931..6a74a180e3eae 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2014,7 +2014,6 @@ void folio_memcg_lock(struct folio *folio)
- 	memcg->move_lock_task = current;
- 	memcg->move_lock_flags = flags;
+@@ -2019,7 +2019,6 @@ void lock_page_memcg(struct page *page)
+ {
+ 	folio_memcg_lock(page_folio(page));
  }
--EXPORT_SYMBOL(folio_memcg_lock);
+-EXPORT_SYMBOL(lock_page_memcg);
  
- void lock_page_memcg(struct page *page)
+ static void __folio_memcg_unlock(struct mem_cgroup *memcg)
  {
-@@ -2048,7 +2047,6 @@ void folio_memcg_unlock(struct folio *folio)
+@@ -2052,7 +2051,6 @@ void unlock_page_memcg(struct page *page)
  {
- 	__folio_memcg_unlock(folio_memcg(folio));
+ 	folio_memcg_unlock(page_folio(page));
  }
--EXPORT_SYMBOL(folio_memcg_unlock);
+-EXPORT_SYMBOL(unlock_page_memcg);
  
- void unlock_page_memcg(struct page *page)
- {
+ struct obj_stock {
+ #ifdef CONFIG_MEMCG_KMEM
 -- 
 2.30.2
 
