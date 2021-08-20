@@ -1,37 +1,38 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] mm: Add configuration to control whether vmpressure
- notifier is enabled
-Date: Fri, 20 Aug 2021 04:42:07 -0700
-Message-ID: <CALvZod5usW9OEsJSbeGYBnSGVDNLLKqMoGAx-JQrX6s62r-XiA@mail.gmail.com>
-References: <1629417219-74853-1-git-send-email-wang.yong12@zte.com.cn>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 2/2] mm: unexport {,un}lock_page_memcg
+Date: Fri, 20 Aug 2021 09:58:53 -0400
+Message-ID: <YR+1HfvIJ2K53flA@cmpxchg.org>
+References: <20210820095815.445392-1-hch@lst.de>
+ <20210820095815.445392-3-hch@lst.de>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=BwSYnZ0fXeyF3ucmVYtCymM5MkqPY89pcO9lgHDkScc=;
-        b=RQV3qkbRPB4wYn5rj55IDWMO5Wywf4L6wyjACr5IMbV/zKC36Ab6BeVA76WHo2bs4j
-         nyrb7DMkVIXnh0n7r4Pk+OInxYOfLVae9K0ZAQMO+QgJXveyqceQ8lzHCCXFR/9ArfE4
-         ZBWCImoPry5Ydl+fvYVRdPdNvVPDC6LXtVpU4uIGo0VjrDaZsYylBJLnI5aSZO3IWar0
-         N+IXPS8HSukU8TtqsNWym+9YmCdj9Ed6Luk46mBRNxBJWMaInC8usKVRyomOt5I8HpnZ
-         kdez1wm7WCrnD4B9891D85TmVqzs6WU7Ex+eeEozWvPTowdFcxszIdbxiplestG2EdjQ
-         zDXA==
-In-Reply-To: <1629417219-74853-1-git-send-email-wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=dJyHipZjn+A3UTVcbj+8xVGYmbEmgDxWJmSdu5/Aei8=;
+        b=wF7LYu5sQHUWhmZ/2pO0l/fpD45tai9NK9qM04KFze6DgiXS007/iNB+WGyWl4z36/
+         LMalj5UXM0fbkrl8h7O3lSxrfJEo0dBa8TfofFc/92h6FZmo9cIZfrMP5s79keMgNwOr
+         PMtBmaGTd1cEVwAppYt6aRHyUkPWowwwYLUaG115yo7yYR/s4wjQjsxt+BBg3d6p3p1h
+         BweB0duvM9cpyW+Q4OKP20YM0pH9/OM1mi5xmIz0LkpgnfBure8zXdMdjs2/Q9KBbZDd
+         pz1Rn5tVIfdVkgMkbpsIb7T6bsU8E49qhEkT1QIn1xjIl++xtm1CO59w6FN1JJUdYZn6
+         a98Q==
+Content-Disposition: inline
+In-Reply-To: <20210820095815.445392-3-hch-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, "Peter Zijlstra (Intel)" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, alexs-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, wangyong <wang.yong-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Thu, Aug 19, 2021 at 4:54 PM <yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-> From: wangyong <wang.yong-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
->
-> Inspired by PSI features, vmpressure inotifier function should
-> also be configured to decide whether it is used, because it is an
-> independent feature which notifies the user of memory pressure.
->
+On Fri, Aug 20, 2021 at 11:58:15AM +0200, Christoph Hellwig wrote:
+> These are only used in built-in core mm code.
+> 
+> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 
-It is also used by the networking stack to check memory pressure. See
-mem_cgroup_under_socket_pressure().
+Good catch.
+
+It was initially exported for xfs dirtying, and is no longer needed
+after that switched to iomap (and now __set_page_dirty_nobuffers).
+
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
