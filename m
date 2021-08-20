@@ -1,55 +1,54 @@
-From: Andrey Ryabinin <arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
-Subject: [PATCH v2 3/5] cgroup: Fix 'usage_usec' time in root's cpu.stat
-Date: Fri, 20 Aug 2021 12:40:03 +0300
-Message-ID: <20210820094005.20596-3-arbn@yandex-team.com>
-References: <20210217120004.7984-1-arbn@yandex-team.com>
- <20210820094005.20596-1-arbn@yandex-team.com>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 1/2] mm: unexport folio_memcg_{,un}lock
+Date: Fri, 20 Aug 2021 11:58:14 +0200
+Message-ID: <20210820095815.445392-2-hch@lst.de>
+References: <20210820095815.445392-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.com; s=default;
-        t=1629452407; bh=Si8KE1JJWs1mAy9P/ti0+l+WDdAkm3UF36Akx8W4YOM=;
-        h=In-Reply-To:Message-Id:References:Date:Subject:To:From:Cc;
-        b=QXbuP8kz8GHvwopKbXXt1NV6c1q55sqAepWaAnDLtj8CX/jQEK3BpptH1re2TfJjx
-         iNXzsUpoQuPfry0/uyEzMSN5+A75rs4yXa6i87Lj6xyjK5QHDPd7KQV8G8ZIQAtzZe
-         ZxyoYdcFSUA7y4AHw5KZUiWJ2fE5DuYiwccG5DqQ=
-In-Reply-To: <20210820094005.20596-1-arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=OeK3I+1l0xomijoHvRqsdYXTySAGsZIzhVjcZsSq7U0=; b=Zr3DitrUpEOFcENF3OtghGRMLi
+        kSUsgxxHghHOEjCYGgRPXlA0lGc838SHvugAnpoCt9BGKLn8a9GKOb3w5SEniekSW4MniHzDudrMq
+        FOM0PxBd4/+2W7NQdVAEQb38Z5mJThI9xEIn/j6EdEKjhfh3G+/Vga5+wjgTWtn0qdbVOUJx+TVE/
+        9c0JEFuHSbGtKTzjmYvP2YD2j3Emx3fJA849JqG1QmIQIzDxKAcoNWFcNYt17VJrIOODWOBe9vfDb
+        7M61rDO+x9gTFoWQhuRgIse2pGdxFHyW9VNIkOBCHZWXDZDW7/FTeSKhAJQrTjRkWNwYqt7ew8BP4
+        Bqpg/Mbw==;
+In-Reply-To: <20210820095815.445392-1-hch-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, boris-UrQYPotlwNs@public.gmane.org, Andrey Ryabinin <arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Global CPUTIME_USER counter already includes CPUTIME_GUEST
-Also CPUTIME_NICE already includes CPUTIME_GUEST_NICE.
+These are only used in built-in core mm code.
 
-Remove additions of CPUTIME_GUEST[_NICE] to total ->sum_exec_runtime
-to not account them twice.
-
-Fixes: 936f2a70f207 ("cgroup: add cpu.stat file to root cgroup")
-Signed-off-by: Andrey Ryabinin <arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
-Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Reviewed-by: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Tested-by: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- Changes since v1:
-  - Add review/tested tags in changelog
----
- kernel/cgroup/rstat.c | 2 --
+ mm/memcontrol.c | 2 --
  1 file changed, 2 deletions(-)
 
-diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-index b264ab5652ba..1486768f2318 100644
---- a/kernel/cgroup/rstat.c
-+++ b/kernel/cgroup/rstat.c
-@@ -433,8 +433,6 @@ static void root_cgroup_cputime(struct task_cputime *cputime)
- 		cputime->sum_exec_runtime += user;
- 		cputime->sum_exec_runtime += sys;
- 		cputime->sum_exec_runtime += cpustat[CPUTIME_STEAL];
--		cputime->sum_exec_runtime += cpustat[CPUTIME_GUEST];
--		cputime->sum_exec_runtime += cpustat[CPUTIME_GUEST_NICE];
- 	}
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 45a160894a035..4cb4349065931 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2014,7 +2014,6 @@ void folio_memcg_lock(struct folio *folio)
+ 	memcg->move_lock_task = current;
+ 	memcg->move_lock_flags = flags;
  }
+-EXPORT_SYMBOL(folio_memcg_lock);
  
+ void lock_page_memcg(struct page *page)
+ {
+@@ -2048,7 +2047,6 @@ void folio_memcg_unlock(struct folio *folio)
+ {
+ 	__folio_memcg_unlock(folio_memcg(folio));
+ }
+-EXPORT_SYMBOL(folio_memcg_unlock);
+ 
+ void unlock_page_memcg(struct page *page)
+ {
 -- 
-2.31.1
+2.30.2
 
