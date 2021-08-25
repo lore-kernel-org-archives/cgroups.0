@@ -1,47 +1,83 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v6 5/6] cgroup/cpuset: Update description of
- cpuset.cpus.partition in cgroup-v2.rst
-Date: Wed, 25 Aug 2021 09:24:25 -1000
-Message-ID: <YSaY6SbKMD2b3Oec@slm.duckdns.org>
-References: <20210814205743.3039-1-longman@redhat.com>
- <20210814205743.3039-6-longman@redhat.com>
- <YRqbj5+ZdS+7k0Fn@slm.duckdns.org>
- <95b72d36-32a9-8356-05b7-2829e4cc29ad@redhat.com>
- <YSVCv0WjTzwPUWUN@slm.duckdns.org>
- <af7ad628-62f4-848b-7eaa-1c9eb62355b6@redhat.com>
-Mime-Version: 1.0
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH v7 0/6] cgroup/cpuset: Add new cpuset partition type & empty effecitve cpus
+Date: Wed, 25 Aug 2021 17:37:44 -0400
+Message-ID: <20210825213750.6933-1-longman@redhat.com>
 Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:84;0;0cto;
-        bh=PGxtjBFxPgG3Jd9Zpl37bDstSoJ0Gj+kNpbO5xi0BEw=;
-        b=SqsbO1EwGVFKKZI4L7H6CKN1OWwR+R4V6j6RZ/XwrfaNg7tatBfXGORpM/dsXhuRWX
-         1gGcpWO7f4fzfSW3sYTHcJzW74XYyF/lnRct3FlyvJdYRLeERW2cbhTE0121qCKQhbkO
-         j7cUUVCjDL+r+QJMGc2QBnOeQwaVJ1fwStUtZWPCRkJLYsxEG1Dp8np9JLU5bnFM7d7n
-         JMkhwIhU48DZ9uOPs5cIaW6cr8mIltTcfJ+woL5GfhljTDGhcYWcRo2CWIeqOs5u4FKh
-         9LH75bTT9EP48nvcrzlGn1TH5wICzP5ov/p/cyLPTf8oZ1yMh/9k78X3Zi1L4UjoNDm7
-         T0+g==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <af7ad628-62f4-848b-7eaa-1c9eb62355b6@redhat.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1629927606;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=CxAroS7sIZX9mrxN+Q1ftZvesv/+pNbSAsaThJf3nu8=;
+        b=RqptNbPRt4/5DqEIOE1SrN2/hlb7uZmGweGKMXUESbeHiOqRCkbpAsLhOy5nk+JXAwu6Vo
+        gLObVaercItQ9ptxeE+PyxNks8FE7IQPc0mr0J+i1nuwYn4ScJOR/NJe7nF12AO5a9g8Ih
+        qHnJE8/HQgEzlwjJ9mUa2EqOQOxl5BA=
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: 
-Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Waiman Long <longman@redhat.com>
 
-Hello,
+v7:
+ - Simplify the documentation patch (patch 5) as suggested by Tejun.
+ - Fix a typo in patch 2 and improper commit log in patch 3.
 
-On Wed, Aug 25, 2021 at 03:21:59PM -0400, Waiman Long wrote:
-> I agree that the current description is probably more complicated than it
-> should be. I will try to fix that.
+v6:
+ - Remove duplicated tmpmask from update_prstate() which should fix the
+   frame size too large problem reported by kernel test robot.
 
-To avoid repeating back-and-forth with all the code changes, would it help
-if you first describe the intended behaviors whether that's in the form of
-doc patch or just informal description?
+v5:
+ - Rebased to the latest for-5.15 branch of cgroup git tree and drop the
+   1st v4 patch as it has been merged.
+ - Update patch 1 to always allow changing partition root back to member
+   even if it invalidates child partitions undeneath it.
+ - Adjust the empty effective cpu partition patch to not allow 0 effective
+   cpu for terminal partition which will make it invalid).
+ - Add a new patch to enable reading of cpuset.cpus.partition to display
+   the reason that causes invalid partition.
+ - Adjust the documentation and testing patch accordingly.
 
-Thank you.
+This patchset makes four enhancements to the cpuset v2 code.
+
+ Patch 1: Properly handle partition root tree and make partition
+ invalid in case changes to cpuset.cpus violate any of the partition
+ root constraints.
+
+ Patch 2: Enable the "cpuset.cpus.partition" file to show the reason
+ that causes invalid partition like "root invalid (No cpu available
+ due to hotplug)".
+
+ Patch 3: Add a new partition state "isolated" to create a partition
+ root without load balancing. This is for handling intermitten workloads
+ that have a strict low latency requirement.
+
+ Patch 4: Allow partition roots that are not the top cpuset to distribute
+ all its cpus to child partitions as long as there is no task associated
+ with that partition root. This allows more flexibility for middleware
+ to manage multiple partitions.
+
+Patch 5 updates the cgroup-v2.rst file accordingly. Patch 6 adds a new
+cpuset test to test the new cpuset partition code.
+
+
+Waiman Long (6):
+  cgroup/cpuset: Properly transition to invalid partition
+  cgroup/cpuset: Show invalid partition reason string
+  cgroup/cpuset: Add a new isolated cpus.partition type
+  cgroup/cpuset: Allow non-top parent partition to distribute out all
+    CPUs
+  cgroup/cpuset: Update description of cpuset.cpus.partition in
+    cgroup-v2.rst
+  kselftest/cgroup: Add cpuset v2 partition root state test
+
+ Documentation/admin-guide/cgroup-v2.rst       | 112 +--
+ kernel/cgroup/cpuset.c                        | 337 ++++++---
+ tools/testing/selftests/cgroup/Makefile       |   5 +-
+ .../selftests/cgroup/test_cpuset_prs.sh       | 663 ++++++++++++++++++
+ tools/testing/selftests/cgroup/wait_inotify.c |  86 +++
+ 5 files changed, 1050 insertions(+), 153 deletions(-)
+ create mode 100755 tools/testing/selftests/cgroup/test_cpuset_prs.sh
+ create mode 100644 tools/testing/selftests/cgroup/wait_inotify.c
 
 -- 
-tejun
+2.18.1
+
