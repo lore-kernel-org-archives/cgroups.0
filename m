@@ -1,109 +1,72 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: BFQ cgroup weights range
-Date: Thu, 26 Aug 2021 15:12:12 +0200
-Message-ID: <20210826131212.GE4520@blackbody.suse.cz>
+Date: Thu, 26 Aug 2021 07:25:24 -1000
+Message-ID: <YSfOhM9+uJ5/FzY2@mtj.duckdns.org>
 References: <20210824105626.GA11367@blackbody.suse.cz>
  <EC36D67F-D7CC-4059-8D3B-E0E64DFC3ADB@linaro.org>
+ <20210826131212.GE4520@blackbody.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1629983534; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=yDDVzWBIyA6YbwDsNboXLU1D63o94APUAg+7fxjXrqw=;
-        b=VAOrEfSZ5nMlMZoT/Qz9t7idhIUjt4cLZY8SfRvhsPnZTAhFV9+EP0/MZ+H8rmA7OftVbg
-        6vfwMGGbezOhvVj5sjYrW60KgbsxYRIcqDysh5haTXPn7fHQOretWUo0EIChjlBuNU3aNY
-        CNi5tkMwK/fhXl51m7AXITTZRL3Vits=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=wg3NGSKG8aeY7CfUKjajWr4BQ6jE7IKLYam6kXWpQR4=;
+        b=FatKQJFGvF/uj4c0Nq7U98B9Wxi4EGgW/sF5kqboMN0PeaRo4s0JRHucj7JtTUJziS
+         CEyuGxH/MDGiBkM8ahWO1ogWn/STms5ZQtaBM1ux/7Knf2VDDuICgA+frGaQgoyTdlAl
+         MMuZuPWQw5Hu81El1wEZCOGc66b3/dRY5veu07iWn+9DHz7i42pEGCu5m66ZJHkgzoE2
+         vsOpCTUTrDCNQlUnCXishzRWxHnU9G89l0IDTrEnadjFvl6GcrkvHnGdeUuaqPDzN3LY
+         owiA4Hhm5e/61zLicZIProXx/hS7Tg55CE+iNcSBbnK/wH2Fol6jBvvGmPHoxUu+gyd4
+         fGoA==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <EC36D67F-D7CC-4059-8D3B-E0E64DFC3ADB@linaro.org>
+In-Reply-To: <20210826131212.GE4520@blackbody.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
-To: Paolo Valente <paolo.valente@linaro.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, Jan Kara <jack@suse.cz>, cgroups@vger.kernel.org
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Cc: Paolo Valente <paolo.valente@linaro.org>, Jens Axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, Jan Kara <jack@suse.cz>, cgroups@vger.kernel.org
 
-On Tue, Aug 24, 2021 at 02:51:47PM +0200, Paolo Valente <paolo.valente@lina=
-ro.org> wrote:
-> BFQ inherited these constants when we forked it from CFQ.  I'm ok with
-> increasing max weight to 10000.  I only wonder whether this would
-> break some configuration, as the currently maximum weight would not be
-> the maximum weight any longer.
+On Thu, Aug 26, 2021 at 03:12:12PM +0200, Michal Koutn=FD wrote:
+> On Tue, Aug 24, 2021 at 02:51:47PM +0200, Paolo Valente <paolo.valente@li=
+naro.org> wrote:
+> > BFQ inherited these constants when we forked it from CFQ.  I'm ok with
+> > increasing max weight to 10000.  I only wonder whether this would
+> > break some configuration, as the currently maximum weight would not be
+> > the maximum weight any longer.
+>=20
+> Thanks for the reply. Let me form the idea as a patch (and commit
+> message) and discuss based on that if needed (+ccrosspost into cgroups
+> ML).
+>=20
+> -- >8 --
+> From: Michal Koutn=FD <mkoutny@suse.com>
+> Subject: [PATCH] block, bfq: Accept symmetric weight adjustments
+>=20
+> The allowed range for BFQ weights is currently 1..1000 with 100 being
+> the default. There is no apparent reason to not accept weight
+> adjustments of same ratio on both sides of the default. This change
+> makes the attribute domain consistent with other cgroup (v2) knobs with
+> the weight semantics.
+>=20
+> This extension of the range does not restrict existing configurations
+> (quite the opposite). This may affect setups where weights >1000 were
+> attempted to be set but failed with the default 100. Such cgroups would
+> attain their intended weight now. This is a changed behavior but it
+> rectifies the situation (similar intention to the commit 69d7fde5909b
+> ("blkcg: use CGROUP_WEIGHT_* scale for io.weight on the unified
+> hierarchy") for CFQ formerly (and v2 only)).
+>=20
+> Additionally, the changed range does not imply all IO workloads can be
+> really controlled to achieve the widest possible ratio 1:10^4.
+>=20
+> Signed-off-by: Michal Koutn=FD <mkoutny@suse.com>
 
-Thanks for the reply. Let me form the idea as a patch (and commit
-message) and discuss based on that if needed (+ccrosspost into cgroups
-ML).
+Looks fine to me.
 
--- >8 --
-From: Michal Koutn=FD <mkoutny@suse.com>
-Subject: [PATCH] block, bfq: Accept symmetric weight adjustments
+Acked-by: Tejun Heo <tj@kernel.org>
 
-The allowed range for BFQ weights is currently 1..1000 with 100 being
-the default. There is no apparent reason to not accept weight
-adjustments of same ratio on both sides of the default. This change
-makes the attribute domain consistent with other cgroup (v2) knobs with
-the weight semantics.
+Thanks.
 
-This extension of the range does not restrict existing configurations
-(quite the opposite). This may affect setups where weights >1000 were
-attempted to be set but failed with the default 100. Such cgroups would
-attain their intended weight now. This is a changed behavior but it
-rectifies the situation (similar intention to the commit 69d7fde5909b
-("blkcg: use CGROUP_WEIGHT_* scale for io.weight on the unified
-hierarchy") for CFQ formerly (and v2 only)).
-
-Additionally, the changed range does not imply all IO workloads can be
-really controlled to achieve the widest possible ratio 1:10^4.
-
-Signed-off-by: Michal Koutn=FD <mkoutny@suse.com>
----
- Documentation/admin-guide/cgroup-v1/blkio-controller.rst | 2 +-
- Documentation/block/bfq-iosched.rst                      | 2 +-
- block/bfq-iosched.h                                      | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/Documentation/admin-guide/cgroup-v1/blkio-controller.rst b/Doc=
-umentation/admin-guide/cgroup-v1/blkio-controller.rst
-index 16253eda192e..48559541c9d8 100644
---- a/Documentation/admin-guide/cgroup-v1/blkio-controller.rst
-+++ b/Documentation/admin-guide/cgroup-v1/blkio-controller.rst
-@@ -102,7 +102,7 @@ Proportional weight policy files
- 	  on all the devices until and unless overridden by per device rule
- 	  (see `blkio.bfq.weight_device` below).
-=20
--	  Currently allowed range of weights is from 1 to 1000. For more details,
-+	  Currently allowed range of weights is from 1 to 10000. For more details,
-           see Documentation/block/bfq-iosched.rst.
-=20
-   blkio.bfq.weight_device
-diff --git a/Documentation/block/bfq-iosched.rst b/Documentation/block/bfq-=
-iosched.rst
-index df3a8a47f58c..88b5251734ce 100644
---- a/Documentation/block/bfq-iosched.rst
-+++ b/Documentation/block/bfq-iosched.rst
-@@ -560,7 +560,7 @@ For each group, the following parameters can be set:
-=20
-   weight
-         This specifies the default weight for the cgroup inside its parent.
--        Available values: 1..1000 (default: 100).
-+        Available values: 1..10000 (default: 100).
-=20
-         For cgroup v1, it is set by writing the value to `blkio.bfq.weight=
-`.
-=20
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 99c2a3cb081e..786b7f926dd2 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -16,7 +16,7 @@
- #define BFQ_CL_IDLE_TIMEOUT	(HZ/5)
-=20
- #define BFQ_MIN_WEIGHT			1
--#define BFQ_MAX_WEIGHT			1000
-+#define BFQ_MAX_WEIGHT			10000
- #define BFQ_WEIGHT_CONVERSION_COEFF	10
-=20
- #define BFQ_DEFAULT_QUEUE_IOPRIO	4
 --=20
-2.32.0
-
+tejun
