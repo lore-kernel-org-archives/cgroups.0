@@ -1,72 +1,72 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: BFQ cgroup weights range
-Date: Thu, 26 Aug 2021 07:25:24 -1000
-Message-ID: <YSfOhM9+uJ5/FzY2@mtj.duckdns.org>
-References: <20210824105626.GA11367@blackbody.suse.cz>
- <EC36D67F-D7CC-4059-8D3B-E0E64DFC3ADB@linaro.org>
- <20210826131212.GE4520@blackbody.suse.cz>
+Subject: Re: [PATCH v7 5/6] cgroup/cpuset: Update description of
+ cpuset.cpus.partition in cgroup-v2.rst
+Date: Thu, 26 Aug 2021 07:35:14 -1000
+Message-ID: <YSfQ0mYWs2zUyqGY@mtj.duckdns.org>
+References: <20210825213750.6933-1-longman@redhat.com>
+ <20210825213750.6933-6-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=wg3NGSKG8aeY7CfUKjajWr4BQ6jE7IKLYam6kXWpQR4=;
-        b=FatKQJFGvF/uj4c0Nq7U98B9Wxi4EGgW/sF5kqboMN0PeaRo4s0JRHucj7JtTUJziS
-         CEyuGxH/MDGiBkM8ahWO1ogWn/STms5ZQtaBM1ux/7Knf2VDDuICgA+frGaQgoyTdlAl
-         MMuZuPWQw5Hu81El1wEZCOGc66b3/dRY5veu07iWn+9DHz7i42pEGCu5m66ZJHkgzoE2
-         vsOpCTUTrDCNQlUnCXishzRWxHnU9G89l0IDTrEnadjFvl6GcrkvHnGdeUuaqPDzN3LY
-         owiA4Hhm5e/61zLicZIProXx/hS7Tg55CE+iNcSBbnK/wH2Fol6jBvvGmPHoxUu+gyd4
-         fGoA==
+         :content-disposition:in-reply-to;
+        bh=EZSEycsP4qShPCh1rVVDGzpSXPPGPKKt4tNdiEEa5Yo=;
+        b=c94jOw6mYlRttgV/ELojAGblRHKn2cClqABKr0Rvj2jkxVok/L/2iBafzHm+g/ccHc
+         W9R0GGnvBRh0fDrFaOgkTIcPtoaluXGUrLvFqa8Yh+KxKHeCQeSlkFA89mn3jvrRkRP1
+         fGr97QjrUTLFCaEO12/dK154B2bAXnCGhCh8L32Kd7ZONxYdm1ispu+eBkW5si1Gs1uX
+         hvMTI3drWfbpfGiYw9LRuL3xXT1FJVCW65JZm9q6oVQP9kSYO8mSg4NZXnHatM/tb+Z6
+         /CKBO6g+WRERs1NDPKp4ymYaIWkU1hUNJVAVYLZWGW7xll6zIUiQSTuOLzVvzDsMFke0
+         d9qw==
 Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20210826131212.GE4520@blackbody.suse.cz>
+In-Reply-To: <20210825213750.6933-6-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: Paolo Valente <paolo.valente@linaro.org>, Jens Axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, Jan Kara <jack@suse.cz>, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
 
-On Thu, Aug 26, 2021 at 03:12:12PM +0200, Michal Koutn=FD wrote:
-> On Tue, Aug 24, 2021 at 02:51:47PM +0200, Paolo Valente <paolo.valente@li=
-naro.org> wrote:
-> > BFQ inherited these constants when we forked it from CFQ.  I'm ok with
-> > increasing max weight to 10000.  I only wonder whether this would
-> > break some configuration, as the currently maximum weight would not be
-> > the maximum weight any longer.
->=20
-> Thanks for the reply. Let me form the idea as a patch (and commit
-> message) and discuss based on that if needed (+ccrosspost into cgroups
-> ML).
->=20
-> -- >8 --
-> From: Michal Koutn=FD <mkoutny@suse.com>
-> Subject: [PATCH] block, bfq: Accept symmetric weight adjustments
->=20
-> The allowed range for BFQ weights is currently 1..1000 with 100 being
-> the default. There is no apparent reason to not accept weight
-> adjustments of same ratio on both sides of the default. This change
-> makes the attribute domain consistent with other cgroup (v2) knobs with
-> the weight semantics.
->=20
-> This extension of the range does not restrict existing configurations
-> (quite the opposite). This may affect setups where weights >1000 were
-> attempted to be set but failed with the default 100. Such cgroups would
-> attain their intended weight now. This is a changed behavior but it
-> rectifies the situation (similar intention to the commit 69d7fde5909b
-> ("blkcg: use CGROUP_WEIGHT_* scale for io.weight on the unified
-> hierarchy") for CFQ formerly (and v2 only)).
->=20
-> Additionally, the changed range does not imply all IO workloads can be
-> really controlled to achieve the widest possible ratio 1:10^4.
->=20
-> Signed-off-by: Michal Koutn=FD <mkoutny@suse.com>
+Hello, Waiman.
 
-Looks fine to me.
+Let's stop iterating on the patchset until we reach a consensus.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+On Wed, Aug 25, 2021 at 05:37:49PM -0400, Waiman Long wrote:
+>  	1) The "cpuset.cpus" is not empty and the list of CPUs are
+>  	   exclusive, i.e. they are not shared by any of its siblings.
 
-Thanks.
+Part of it can be reached by cpus going offline.
 
---=20
+>  	2) The parent cgroup is a partition root.
+
+This condition can happen if a parent stop being a partition.
+
+> -	3) The "cpuset.cpus" is also a proper subset of the parent's
+> +	3) The "cpuset.cpus" is a subset of the parent's
+>  	   "cpuset.cpus.effective".
+
+This can happen if cpus go offline.
+
+>  	4) There is no child cgroups with cpuset enabled.  This is for
+>  	   eliminating corner cases that have to be handled if such a
+>  	   condition is allowed.
+
+This may make sense as a short cut for us but doesn't really stem from
+interface or behavior requirements.
+
+Of the four conditions listed, two are bogus (the states can be
+reached through a different path and the configuration success or
+failure can be timing dependent if configuration racaes against cpu
+hotplug operations) and one maybe makes sense half-way and one is more
+of a shortcut.
+
+Can't we just replace these with transitions to invalid state with
+proper explanation? That'd get rid of the error handling duplications
+from both the kernel and user side, make automated configurations
+which may race against hot plug operations reliable, and consistently
+provide users with why something failed.
+
+Thank you.
+
+-- 
 tejun
