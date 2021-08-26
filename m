@@ -1,8 +1,8 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-5.15] BUILD SUCCESS
- 9f72daf7edfa8f7e86ce8940d52266b5e931dcb0
-Date: Thu, 26 Aug 2021 13:06:25 +0800
-Message-ID: <61272151.le20PzJD/+scJcQD%lkp@intel.com>
+Subject: [cgroup:for-next] BUILD SUCCESS
+ a057486e0fc1cb169d6888f28292300126329766
+Date: Thu, 26 Aug 2021 13:22:36 +0800
+Message-ID: <6127251c.zSNuiEMbhNDhGztI%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,12 +11,12 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.15
-branch HEAD: 9f72daf7edfa8f7e86ce8940d52266b5e931dcb0  cgroup/cpuset: Avoid memory migration when nodemasks match
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: a057486e0fc1cb169d6888f28292300126329766  Merge branch 'for-5.15' into for-next
 
-elapsed time: 720m
+elapsed time: 736m
 
-configs tested: 153
+configs tested: 143
 configs skipped: 3
 
 The following configs have been built successfully.
@@ -39,11 +39,6 @@ arm                       aspeed_g4_defconfig
 mips                      bmips_stb_defconfig
 arm                            xcep_defconfig
 arm                            mps2_defconfig
-powerpc                     ep8248e_defconfig
-powerpc                      katmai_defconfig
-xtensa                  audio_kc705_defconfig
-powerpc                    gamecube_defconfig
-mips                      maltasmvp_defconfig
 powerpc                   microwatt_defconfig
 arm                         assabet_defconfig
 sh                           se7343_defconfig
@@ -65,12 +60,11 @@ powerpc                 mpc8540_ads_defconfig
 arm                             mxs_defconfig
 arm                            pleb_defconfig
 sh                            shmin_defconfig
-sh                               j2_defconfig
-powerpc                      arches_defconfig
-arc                            hsdk_defconfig
-mips                         tb0226_defconfig
-arm                        neponset_defconfig
+xtensa                    xip_kc705_defconfig
+sparc                            alldefconfig
+mips                    maltaup_xpa_defconfig
 powerpc                 mpc837x_mds_defconfig
+arm                        multi_v7_defconfig
 powerpc                     ksi8560_defconfig
 riscv                          rv32_defconfig
 sh                            titan_defconfig
@@ -84,10 +78,6 @@ sparc                       sparc32_defconfig
 mips                        vocore2_defconfig
 arm                        oxnas_v6_defconfig
 powerpc                 mpc8315_rdb_defconfig
-arm                            zeus_defconfig
-sh                 kfr2r09-romimage_defconfig
-powerpc                     tqm8555_defconfig
-arm                         lpc32xx_defconfig
 arm                             pxa_defconfig
 powerpc                     tqm8540_defconfig
 microblaze                      mmu_defconfig
