@@ -1,88 +1,133 @@
-From: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: BFQ cgroup weights range
-Date: Fri, 27 Aug 2021 10:33:01 +0200
-Message-ID: <72DB38C2-196C-4F55-B1A1-B8EA55667057@linaro.org>
-References: <20210824105626.GA11367@blackbody.suse.cz>
- <EC36D67F-D7CC-4059-8D3B-E0E64DFC3ADB@linaro.org>
- <20210826131212.GE4520@blackbody.suse.cz> <YSfOhM9+uJ5/FzY2@mtj.duckdns.org>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=VtoCWVqLTV/heRDzLkHFfB6NsN56tLaUOwMyBzk6DsQ=;
-        b=p/XqSfnZUooWAr8lgDeoBRdn3K1+CVOMlLcHv640+uENvSRHmZHL/Jgt4NXBeRRIQU
-         9S6RPb4u0xmPpipOcWiNh7NacH3f3BaGFhl8BBDRVL2cylmQ205R5dzp4/iEci705arm
-         eeXKeDNPCjU/T0lcP0GWvReSEMchHGSqNrjwY3Q5vpumbt1rClmdOUI4ZSdtFPX2aZm1
-         mQdRkS3hP+lKNWwYmOJTM7wLs/I1e1Q3EgJVBWBxRqOIIDDkkKGQsaE5YYf8lSOs9i4a
-         LOSebZMZ+Yylt+8h7WM1IMps85gmmCfO5RAcc2gh3nnfpdPWCNuAGvkDAIBujwTDFrq/
-         38Ww==
-In-Reply-To: <YSfOhM9+uJ5/FzY2-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+From: Hao Xu <haoxu@linux.alibaba.com>
+Subject: [PATCH for-5.15 v2] io_uring: consider cgroup setting when binding sqpoll cpu
+Date: Fri, 27 Aug 2021 22:13:15 +0800
+Message-ID: <20210827141315.235974-1-haoxu@linux.alibaba.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Return-path: <io-uring-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: =?utf-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Pavel Begunkov <asml.silence@gmail.com>
+Cc: io-uring@vger.kernel.org, cgroups@vger.kernel.org, Joseph Qi <joseph.qi@linux.alibaba.com>
 
+Since sqthread is userspace like thread now, it should respect cgroup
+setting, thus we should consider current allowed cpuset when doing
+cpu binding for sqthread.
 
+Signed-off-by: Hao Xu <haoxu@linux.alibaba.com>
+---
 
-> Il giorno 26 ago 2021, alle ore 19:25, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> ha =
-scritto:
->=20
-> On Thu, Aug 26, 2021 at 03:12:12PM +0200, Michal Koutn=C3=BD wrote:
->> On Tue, Aug 24, 2021 at 02:51:47PM +0200, Paolo Valente =
-<paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org> wrote:
->>> BFQ inherited these constants when we forked it from CFQ.  I'm ok =
-with
->>> increasing max weight to 10000.  I only wonder whether this would
->>> break some configuration, as the currently maximum weight would not =
-be
->>> the maximum weight any longer.
->>=20
->> Thanks for the reply. Let me form the idea as a patch (and commit
->> message) and discuss based on that if needed (+ccrosspost into =
-cgroups
->> ML).
->>=20
->> -- >8 --
->> From: Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org>
->> Subject: [PATCH] block, bfq: Accept symmetric weight adjustments
->>=20
->> The allowed range for BFQ weights is currently 1..1000 with 100 being
->> the default. There is no apparent reason to not accept weight
->> adjustments of same ratio on both sides of the default. This change
->> makes the attribute domain consistent with other cgroup (v2) knobs =
-with
->> the weight semantics.
->>=20
->> This extension of the range does not restrict existing configurations
->> (quite the opposite). This may affect setups where weights >1000 were
->> attempted to be set but failed with the default 100. Such cgroups =
-would
->> attain their intended weight now. This is a changed behavior but it
->> rectifies the situation (similar intention to the commit 69d7fde5909b
->> ("blkcg: use CGROUP_WEIGHT_* scale for io.weight on the unified
->> hierarchy") for CFQ formerly (and v2 only)).
->>=20
->> Additionally, the changed range does not imply all IO workloads can =
-be
->> really controlled to achieve the widest possible ratio 1:10^4.
->>=20
->> Signed-off-by: Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org>
->=20
-> Looks fine to me.
->=20
-> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->=20
+v1-->v2
+ - add a helper in cpuset.c so that we can directly leverage task_cs()
+ - remove v1 code which we don't need now
 
-Acked-by: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+ fs/io_uring.c          | 21 ++++++++++++++++-----
+ include/linux/cpuset.h |  7 +++++++
+ kernel/cgroup/cpuset.c | 11 +++++++++++
+ 3 files changed, 34 insertions(+), 5 deletions(-)
 
-Thanks for this improvement,
-Paolo
-
-> Thanks.
->=20
-> --=20
-> tejun
+diff --git a/fs/io_uring.c b/fs/io_uring.c
+index be3c3aea6398..a0f54c545158 100644
+--- a/fs/io_uring.c
++++ b/fs/io_uring.c
+@@ -79,6 +79,7 @@
+ #include <linux/pagemap.h>
+ #include <linux/io_uring.h>
+ #include <linux/tracehook.h>
++#include <linux/cpuset.h>
+ 
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/io_uring.h>
+@@ -7000,6 +7001,16 @@ static bool io_sqd_handle_event(struct io_sq_data *sqd)
+ 	return did_sig || test_bit(IO_SQ_THREAD_SHOULD_STOP, &sqd->state);
+ }
+ 
++static int io_sq_bind_cpu(int cpu)
++{
++	if (!test_cpu_in_current_cpuset(cpu))
++		pr_warn("sqthread %d: bound cpu not allowed\n", current->pid);
++	else
++		set_cpus_allowed_ptr(current, cpumask_of(cpu));
++
++	return 0;
++}
++
+ static int io_sq_thread(void *data)
+ {
+ 	struct io_sq_data *sqd = data;
+@@ -7010,11 +7021,9 @@ static int io_sq_thread(void *data)
+ 
+ 	snprintf(buf, sizeof(buf), "iou-sqp-%d", sqd->task_pid);
+ 	set_task_comm(current, buf);
+-
+ 	if (sqd->sq_cpu != -1)
+-		set_cpus_allowed_ptr(current, cpumask_of(sqd->sq_cpu));
+-	else
+-		set_cpus_allowed_ptr(current, cpu_online_mask);
++		io_sq_bind_cpu(sqd->sq_cpu);
++
+ 	current->flags |= PF_NO_SETAFFINITY;
+ 
+ 	mutex_lock(&sqd->lock);
+@@ -8208,8 +8217,10 @@ static int io_sq_offload_create(struct io_ring_ctx *ctx,
+ 			int cpu = p->sq_thread_cpu;
+ 
+ 			ret = -EINVAL;
+-			if (cpu >= nr_cpu_ids || !cpu_online(cpu))
++			if (cpu >= nr_cpu_ids || !cpu_online(cpu) ||
++			    !test_cpu_in_current_cpuset(cpu))
+ 				goto err_sqpoll;
++
+ 			sqd->sq_cpu = cpu;
+ 		} else {
+ 			sqd->sq_cpu = -1;
+diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+index 04c20de66afc..fad77c91bc1f 100644
+--- a/include/linux/cpuset.h
++++ b/include/linux/cpuset.h
+@@ -116,6 +116,8 @@ static inline int cpuset_do_slab_mem_spread(void)
+ 
+ extern bool current_cpuset_is_being_rebound(void);
+ 
++extern bool test_cpu_in_current_cpuset(int cpu);
++
+ extern void rebuild_sched_domains(void);
+ 
+ extern void cpuset_print_current_mems_allowed(void);
+@@ -257,6 +259,11 @@ static inline bool current_cpuset_is_being_rebound(void)
+ 	return false;
+ }
+ 
++static inline bool test_cpu_in_current_cpuset(int cpu)
++{
++	return false;
++}
++
+ static inline void rebuild_sched_domains(void)
+ {
+ 	partition_sched_domains(1, NULL, NULL);
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index adb5190c4429..a63c27e9430e 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1849,6 +1849,17 @@ bool current_cpuset_is_being_rebound(void)
+ 	return ret;
+ }
+ 
++bool test_cpu_in_current_cpuset(int cpu)
++{
++	bool ret;
++
++	rcu_read_lock();
++	ret = cpumask_test_cpu(cpu, task_cs(current)->effective_cpus);
++	rcu_read_unlock();
++
++	return ret;
++}
++
+ static int update_relax_domain_level(struct cpuset *cs, s64 val)
+ {
+ #ifdef CONFIG_SMP
+-- 
+2.24.4
 
