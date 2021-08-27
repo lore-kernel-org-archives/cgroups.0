@@ -1,74 +1,73 @@
-From: Guillaume Morin <guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org>
-Subject: Re: [BUG] potential hugetlb css refcounting issues
-Date: Sat, 28 Aug 2021 00:58:43 +0200
-Message-ID: <20210827225841.GA30891@bender.morinfr.org>
-References: <8a4f2fbc-76e8-b67b-f110-30beff2228f5@oracle-com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v7 5/6] cgroup/cpuset: Update description of
+ cpuset.cpus.partition in cgroup-v2.rst
+Date: Fri, 27 Aug 2021 13:35:39 -1000
+Message-ID: <YSl2yxEvnDrPxzUV@slm.duckdns.org>
+References: <20210825213750.6933-1-longman@redhat.com>
+ <20210825213750.6933-6-longman@redhat.com>
+ <YSfQ0mYWs2zUyqGY@mtj.duckdns.org>
+ <32e27fcc-32f1-b26c-ae91-9e03f7e433af@redhat.com>
+ <YShjb2WwvuB4s4gX@slm.duckdns.org>
+ <d22ea3be-2429-5923-a80c-5af3b384def9@redhat.com>
+ <YSlY0H/qeXQIGOfk@slm.duckdns.org>
+ <392c3724-f583-c7fc-cfa1-a3f1665114c9@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=morinfr.org
-        ; s=20170427; h=In-Reply-To:Content-Type:MIME-Version:Message-ID:Subject:To:
-        From:Date:Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:References:List-Id:List-Help:List-Unsubscribe:
-        List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=7DJVtMpzm9oxuyqntlCJVVhZoeJfYs38uQ3cZd0skFs=; b=4rlRF3Hd5lDAg9L8xjFB/XxBl8
-        k1Mmg1v5cHtDuzaaYMcznDw4/DDEOGB3yNMe9scXQmd32494EbEXscjyb0dajfSnWIwpeR11/pufy
-        aZpJf7iVXLCTGi4Q6qkXqQnASllosSdNLgXpKv3HZp+xp/Xnnt0RlkQItUEgiR7FlH4U=;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=prQGEZISCROhNVrZYgfW+RC/t0atKeeXslehrhwqbKM=;
+        b=JVKQMqIk5zflT5U8YILqRhxIh0RbHGgU2gJ/VgQiRBTi+AYzDW0B+/RartoyZkUvtv
+         0aIPVgKqWSag9KjmoSmL9tIWHn1wBjacgIraxFnfDb5qGOZIUWO89s/DReEueEyUwyCU
+         xBvOq80P4g1ck6ZkFkbUuJXgJhQXW8bc4jx0W3R6bkzBf/GFgpdxXOI9qR3i3aZM7gd5
+         k1QK34eoX7chwVUadq/Zz9w7KcoJP7gm1tTl686YBb5Wf7RXf5lNfYrYfB7UEh+SWZtl
+         YKdr/zTz3TNPmZM45KKMPXB5YYh4yXEr6TJ8VDPPtbo+4L2n3eYoWYI/mfPVR3fadHXs
+         3a4Q==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <8a4f2fbc-76e8-b67b-f110-30beff2228f5@oracle-com>
+In-Reply-To: <392c3724-f583-c7fc-cfa1-a3f1665114c9-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 
-Hello Mike,
+Hello,
 
-I really appreciate the quick reply
+On Fri, Aug 27, 2021 at 06:50:10PM -0400, Waiman Long wrote:
+> The cpu exclusivity rule is due to the setting of CPU_EXCLUSIVE bit. This is
+> a pre-existing condition unless you want to change how the
+> cpuset.cpu_exclusive works.
+>
+> So the new rules will be:
+> 
+> 1) The "cpuset.cpus" is not empty and the list of CPUs are exclusive.
 
-Mike Kravets wrote: 
-> There have been other hugetlb cgroup fixes since 5.10.  I do not believe
-> they are related to the underflow issue you have seen.  Just FYI.
+Empty cpu list can be considered an exclusive one.
 
-Yes, I am aware. Actually I did my best to look at all recent changes
-not backported to 5.10 and couldn't find anything related. I tried to
-cherry-pick a couple of fixes in case but the bug did not go away.
+> 2) The parent cgroup is a partition root (can be an invalid one).
 
-> However, when a vma is split both resulting vmas would be 'owners' of
-> private mapping reserves without incrementing the refcount which would
-> lead to the underflow you describe.
+Does this mean a partition parent can't stop being a partition if one or
+more of its children become partitions? If so, it violates the rule that a
+descendant shouldn't be able to restrict what its ancestors can do.
 
-Indeed and I do know that programs running on my reproducer machines do
-split vmas.
+> 3) The "cpuset.cpus" is a subset of the parent's cpuset.cpus.allowed.
 
->> 2. After 08cf9faf75580, __free_huge_page() decrements the css
->> refcount for _each_ page unconditionally by calling
->> hugetlb_cgroup_uncharge_page_rsvd().  But a per-page reference count
->> is only taken *per page* outside the reserve case in
->> alloc_huge_page() (i.e hugetlb_cgroup_charge_cgroup_rsvd() is called
->> only if deferred_reserve is true).  In the reserve case, there is
->> only one css reference linked to the resv map (taken in
->> hugetlb_reserve_pages()).  This also leads to an underflow of the
->> counter.  A similar scheme to HPageRestoreReserve can be used to
->> track which pages were allocated in the deferred_reserve case and
->> call hugetlb_cgroup_uncharge_page_rsvd() only for these during
->> freeing.
+Why not just go by effective? This would mean that a parent can't withdraw
+CPUs from its allowed set once descendants are configured. Restrictions like
+this are fine when the entire hierarchy is configured by a single entity but
+become awkward when configurations are multi-tiered, automated and dynamic.
 
-> I am not sure about the above analysis.  It is true that
-> hugetlb_cgroup_uncharge_page_rsvd is called unconditionally in
-> free_huge_page.  However, IIUC hugetlb_cgroup_uncharge_page_rsvd will
-> only decrement the css refcount if there is a non-NULL hugetlb_cgroup
-> pointer in the page.  And, the pointer in the page would only be set
-> in the 'deferred_reserve' path of alloc_huge_page.  Unless I am
-> missing something, they seem to balance.
+> 4) No child cgroup with cpuset enabled.
 
-Now that you explain, I am pretty sure that you're right and I was
-wrong.
+idk, maybe? I'm having a hard time seeing the point in adding these
+restrictions when the state transitions are asynchronous anyway. Would it
+help if we try to separate what's absoluately and technically necessary and
+what seems reasonable or high bar and try to justify why each of the latter
+should be added?
 
-I'll confirm that I can't reproduce without my change for 2.
-
-Thank you,
-
-Guillaume.
+Thanks.
 
 -- 
-Guillaume Morin <guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org>
+tejun
