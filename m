@@ -1,110 +1,124 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH for-5.15 v2] io_uring: consider cgroup setting when
- binding sqpoll cpu
-Date: Fri, 27 Aug 2021 08:18:48 -0600
-Message-ID: <0988b0dc-232f-80cd-c984-2364c0dee69f@kernel.dk>
-References: <20210827141315.235974-1-haoxu@linux.alibaba.com>
+From: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Subject: [PATCH v2] cgroup: Avoid compiler warnings with no subsystems
+Date: Fri, 27 Aug 2021 08:04:24 -0700
+Message-ID: <20210827150424.2729274-1-keescook@chromium.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <io-uring-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=uZsEs/8kjOigJb/9CIkKujcCvyTVtquxdPpsZWziM2Y=;
-        b=nDreCI/xOmeEf6Q9hlgH9sBVSs7+vcBblHdWls/D5MIdQYK11J66jrdchuffKwpj8C
-         1o3lk6jlwlTOK56KNKiiiyOjFoKruwTSoajZTB3fuo9zVy3pPU6vWUOALr3jpwMlUK8f
-         260rhgUH086HtMkMBvnlnRTPFhhs4JZlqGZDSXjmdqcoBgh0IsA6Yjrpxcxsm+716fuz
-         5R+Maws6hyrjzYhIQomTkgmne+0ovh8TRXZhp8+XBN0W+abiP6wKq20Gy0NKuCFAOdce
-         BIJC94PeCehqW8tMPlzD7Xxe2lRDWlZoc7cKR2d/cICtbQ/FYlr4DEfmMhn+2CkRaO1s
-         7eqA==
-In-Reply-To: <20210827141315.235974-1-haoxu@linux.alibaba.com>
-Content-Language: en-US
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=KAECcBr13A7/Y2OTRwW1tphAS3RtXLfsmJpN2+1wV/g=;
+        b=eOcsJSkR3Tcwg/sysGWZjHB3j7i5r7/PV9NeUpJgrJbmyULq0nH9YQOHu6OfxzbHKe
+         +pqjyGtX5lbERmDoDn0TFryW9eiklpbv+vwxUDsCmYqm2vAmc+UOnTUPjndIWDtzZGE6
+         1I4m3oFj3B4WBm9sPNSoqOuPlO6sKlxv2tj0U=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3945; h=from:subject; bh=GFK3BETQmfQB9ONseeh+QxRF9yf/a6MqKtjDJoZzqeA=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhKP74SaubLPqskWOEDTayM2+b9dEi4jnuGNQvHGBR dbuO1zCJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYSj++AAKCRCJcvTf3G3AJs/ZD/ 4nZI7nyxeKoS/vLqeVHPIvoLfK1l5E/MD6+mX9oxiTv2+rWvwB+LEqyQsAeWZhefkPXXtHMlSKlfZf wfngNKG3xBkDUzhHgrPH6rw0jXrzoxLQ+RziHvHD05OqAzdfEn9rqkpTRMDklEEuWtApzTu7d+e6Dk +MXPDo7l+RrVk3CHNyjvM5sz5dHE4Yx8J9WISnfgMxfKymmCsm9hW/ekMILXJhLObzsCBxtpLrhJA6 X7ghcNxXlrFlvwnteEiSYkz+8Lo5+rKXwL8DagDfwkxuCGzDQ0G86atUitohjKT70bvqKK3XlpUl+A R3/njlqqexcL9f1UoODTtGPU0rnYsj2GXoOH/iRX1wJD95tG9hOa/h7/FDkVUC8E7RhboN/0EyX57/ oswoRaZlkjUWKfHZQXYzFCl6vYIdPX8bCzqqvVXNMkwojxLHqCJ521sBuGKKMmfo86PbNOQAq6OcSW fWhNjsjZ/pgqnROVQGFyXA/Yu+9P7F34MJlrpzItf55SYOtML
+ 5fiObXzJPoG7AU6woH0md7QjAJW1i lfXc9OGmU3RqAyGV6XEo7tjbUGZ4uxhAqtQVnBdTva2n88emli1eqk6j111Hb1uEhqkL 
+X-Developer-Key: i=keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Hao Xu <haoxu@linux.alibaba.com>, Zefan Li <lizefan.x@bytedance.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Pavel Begunkov <asml.silence@gmail.com>
-Cc: io-uring@vger.kernel.org, cgroups@vger.kernel.org, Joseph Qi <joseph.qi@linux.alibaba.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-hardening-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 8/27/21 8:13 AM, Hao Xu wrote:
-> Since sqthread is userspace like thread now, it should respect cgroup
-> setting, thus we should consider current allowed cpuset when doing
-> cpu binding for sqthread.
+As done before in commit cb4a31675270 ("cgroup: use bitmask to filter
+for_each_subsys"), avoid compiler warnings for the pathological case of
+having no subsystems (i.e. CGROUP_SUBSYS_COUNT == 0). This condition is
+hit for the arm multi_v7_defconfig config under -Wzero-length-bounds:
 
-In general, this looks way better than v1. Just a few minor comments
-below.
+In file included from ./arch/arm/include/generated/asm/rwonce.h:1,
+                 from include/linux/compiler.h:264,
+                 from include/uapi/linux/swab.h:6,
+                 from include/linux/swab.h:5,
+                 from arch/arm/include/asm/opcodes.h:86,
+                 from arch/arm/include/asm/bug.h:7,
+                 from include/linux/bug.h:5,
+                 from include/linux/thread_info.h:13,
+                 from include/asm-generic/current.h:5,
+                 from ./arch/arm/include/generated/asm/current.h:1,
+                 from include/linux/sched.h:12,
+                 from include/linux/cgroup.h:12,
+                 from kernel/cgroup/cgroup-internal.h:5,
+                 from kernel/cgroup/cgroup.c:31:
+kernel/cgroup/cgroup.c: In function 'of_css':
+kernel/cgroup/cgroup.c:651:42: warning: array subscript '<unknown>' is outside the bounds of an
+interior zero-length array 'struct cgroup_subsys_state *[0]' [-Wzero-length-bounds]
+  651 |   return rcu_dereference_raw(cgrp->subsys[cft->ss->id]);
 
-> @@ -7000,6 +7001,16 @@ static bool io_sqd_handle_event(struct io_sq_data *sqd)
->  	return did_sig || test_bit(IO_SQ_THREAD_SHOULD_STOP, &sqd->state);
->  }
->  
-> +static int io_sq_bind_cpu(int cpu)
-> +{
-> +	if (!test_cpu_in_current_cpuset(cpu))
-> +		pr_warn("sqthread %d: bound cpu not allowed\n", current->pid);
-> +	else
-> +		set_cpus_allowed_ptr(current, cpumask_of(cpu));
-> +
-> +	return 0;
-> +}
+Reported-by: Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+---
+v2: avoid "converting the enum constant to a boolean" warnings
+    https://lore.kernel.org/lkml/202108271524.oOIHtG9S-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+v1: https://lore.kernel.org/lkml/20210827034741.2214318-1-keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org/
+---
+ kernel/cgroup/cgroup.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-This should not be triggerable, unless the set changes between creation
-and the thread being created. Hence maybe the warn is fine. I'd probably
-prefer terminating the thread at that point, which would result in an
--EOWNERDEAD return when someone attempts to wake the thread.
-
-Which is probably OK, as we really should not hit this path.
-
-> diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-> index 04c20de66afc..fad77c91bc1f 100644
-> --- a/include/linux/cpuset.h
-> +++ b/include/linux/cpuset.h
-> @@ -116,6 +116,8 @@ static inline int cpuset_do_slab_mem_spread(void)
->  
->  extern bool current_cpuset_is_being_rebound(void);
->  
-> +extern bool test_cpu_in_current_cpuset(int cpu);
-> +
->  extern void rebuild_sched_domains(void);
->  
->  extern void cpuset_print_current_mems_allowed(void);
-> @@ -257,6 +259,11 @@ static inline bool current_cpuset_is_being_rebound(void)
->  	return false;
->  }
->  
-> +static inline bool test_cpu_in_current_cpuset(int cpu)
-> +{
-> +	return false;
-> +}
-> +
->  static inline void rebuild_sched_domains(void)
->  {
->  	partition_sched_domains(1, NULL, NULL);
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index adb5190c4429..a63c27e9430e 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -1849,6 +1849,17 @@ bool current_cpuset_is_being_rebound(void)
->  	return ret;
->  }
->  
-> +bool test_cpu_in_current_cpuset(int cpu)
-> +{
-> +	bool ret;
-> +
-> +	rcu_read_lock();
-> +	ret = cpumask_test_cpu(cpu, task_cs(current)->effective_cpus);
-> +	rcu_read_unlock();
-> +
-> +	return ret;
-> +}
-> +
->  static int update_relax_domain_level(struct cpuset *cs, s64 val)
->  {
->  #ifdef CONFIG_SMP
-
-In terms of review and so forth, I'd split this into a prep patch. Then
-patch 2 just becomes the io_uring consumer of it.
-
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index d0725c1a8db5..76693a86e8b7 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -472,7 +472,7 @@ static u16 cgroup_ss_mask(struct cgroup *cgrp)
+ static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
+ 					      struct cgroup_subsys *ss)
+ {
+-	if (ss)
++	if (CGROUP_SUBSYS_COUNT > 0 && ss)
+ 		return rcu_dereference_check(cgrp->subsys[ss->id],
+ 					lockdep_is_held(&cgroup_mutex));
+ 	else
+@@ -550,6 +550,9 @@ struct cgroup_subsys_state *cgroup_e_css(struct cgroup *cgrp,
+ {
+ 	struct cgroup_subsys_state *css;
+ 
++	if (!CGROUP_SUBSYS_COUNT)
++		return NULL;
++
+ 	do {
+ 		css = cgroup_css(cgrp, ss);
+ 
+@@ -577,6 +580,9 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgrp,
+ {
+ 	struct cgroup_subsys_state *css;
+ 
++	if (!CGROUP_SUBSYS_COUNT)
++		return NULL;
++
+ 	rcu_read_lock();
+ 
+ 	do {
+@@ -647,7 +653,7 @@ struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
+ 	 * the matching css from the cgroup's subsys table is guaranteed to
+ 	 * be and stay valid until the enclosing operation is complete.
+ 	 */
+-	if (cft->ss)
++	if (CGROUP_SUBSYS_COUNT > 0 && cft->ss)
+ 		return rcu_dereference_raw(cgrp->subsys[cft->ss->id]);
+ 	else
+ 		return &cgrp->self;
+@@ -2372,7 +2378,7 @@ struct task_struct *cgroup_taskset_next(struct cgroup_taskset *tset,
+ 	struct css_set *cset = tset->cur_cset;
+ 	struct task_struct *task = tset->cur_task;
+ 
+-	while (&cset->mg_node != tset->csets) {
++	while (CGROUP_SUBSYS_COUNT > 0 && &cset->mg_node != tset->csets) {
+ 		if (!task)
+ 			task = list_first_entry(&cset->mg_tasks,
+ 						struct task_struct, cg_list);
+@@ -4643,7 +4649,7 @@ void css_task_iter_start(struct cgroup_subsys_state *css, unsigned int flags,
+ 	it->ss = css->ss;
+ 	it->flags = flags;
+ 
+-	if (it->ss)
++	if (CGROUP_SUBSYS_COUNT > 0 && it->ss)
+ 		it->cset_pos = &css->cgroup->e_csets[css->ss->id];
+ 	else
+ 		it->cset_pos = &css->cgroup->cset_links;
 -- 
-Jens Axboe
+2.30.2
 
