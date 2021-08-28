@@ -1,57 +1,63 @@
-From: Hao Xu <haoxu@linux.alibaba.com>
-Subject: Re: [PATCH for-5.15 v2] io_uring: consider cgroup setting when
- binding sqpoll cpu
-Date: Sat, 28 Aug 2021 15:29:31 +0800
-Message-ID: <0ceebbaa-a5ce-1e85-4be2-95331bca34ef@linux.alibaba.com>
-References: <20210827141315.235974-1-haoxu@linux.alibaba.com>
- <YSkgKN/LviOvmeVH@slm.duckdns.org>
+From: Guillaume Morin <guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org>
+Subject: Re: [BUG] potential hugetlb css refcounting issues
+Date: Sat, 28 Aug 2021 21:37:17 +0200
+Message-ID: <20210828193716.GA21491@bender.morinfr.org>
+References: <8a4f2fbc-76e8-b67b-f110-30beff2228f5@oracle-com>
+ <20210827225841.GA30891@bender.morinfr.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <io-uring-owner@vger.kernel.org>
-In-Reply-To: <YSkgKN/LviOvmeVH@slm.duckdns.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=morinfr.org
+        ; s=20170427; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
+        Subject:To:From:Date:Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=Eg7jIAyWdnvSe9BizhWpgYxEQwOfxC+45v1t71BBM2Q=; b=FIrTWsfqFMjx6IsmX3sH67wt/S
+        vrvMIZYejksNVNuxGibFxvlSZWDrxZBNEwb87X5iSIWPcWYF7oI7JA58Glx/pwiIlu3d56yrnAgJt
+        tfnGq0tRMzjjO1IbbrI6v+kZ3KXaWAjHbPne5Aee8A2zi6JNwgJDXliGbP7DvDPJdGS8=;
+Content-Disposition: inline
+In-Reply-To: <20210827225841.GA30891-iHhE99jIcVYJQ5r9O9UB6R2eb7JE58TQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Pavel Begunkov <asml.silence@gmail.com>, io-uring@vger.kernel.org, cgroups@vger.kernel.org, Joseph Qi <joseph.qi@linux.alibaba.com>, Waiman Long <longman@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-在 2021/8/28 上午1:26, Tejun Heo 写道:
-> Hello,
+On 28 Aug  0:58, Guillaume Morin wrote:
+> > I am not sure about the above analysis.  It is true that
+> > hugetlb_cgroup_uncharge_page_rsvd is called unconditionally in
+> > free_huge_page.  However, IIUC hugetlb_cgroup_uncharge_page_rsvd will
+> > only decrement the css refcount if there is a non-NULL hugetlb_cgroup
+> > pointer in the page.  And, the pointer in the page would only be set
+> > in the 'deferred_reserve' path of alloc_huge_page.  Unless I am
+> > missing something, they seem to balance.
 > 
-> On Fri, Aug 27, 2021 at 10:13:15PM +0800, Hao Xu wrote:
->> +static int io_sq_bind_cpu(int cpu)
->> +{
->> +	if (!test_cpu_in_current_cpuset(cpu))
->> +		pr_warn("sqthread %d: bound cpu not allowed\n", current->pid);
->> +	else
->> +		set_cpus_allowed_ptr(current, cpumask_of(cpu));
->> +
->> +	return 0;
->> +}
-> ...
->> @@ -8208,8 +8217,10 @@ static int io_sq_offload_create(struct io_ring_ctx *ctx,
->>   			int cpu = p->sq_thread_cpu;
->>   
->>   			ret = -EINVAL;
->> -			if (cpu >= nr_cpu_ids || !cpu_online(cpu))
->> +			if (cpu >= nr_cpu_ids || !cpu_online(cpu) ||
->> +			    !test_cpu_in_current_cpuset(cpu))
->>   				goto err_sqpoll;
+> Now that you explain, I am pretty sure that you're right and I was
+> wrong.
 > 
-> Given that sq_thread is user-like thread and belongs to the right cgroup,
-> I'm not quite sure what the above achieves - the affinities can break
-A user of io_uring can pass a cpu id to the kernel to indicate which cpu
-the sq_thread should be bound to.
-> anytime, so one-time check doesn't really solve the problem. All it seems to
-Yes, this a problem.
-> add is warning messages. What's the expected behavior when an io thread
-> can't run on the target cpu anymore?
-A user binds sqthread to some cpu due to some reason which we may not
-know, so if the target cpu isn't available anymore, I think cpuset of
-sqthread should be as same as the task group's it sits, since we don't
-know which cpu we should re-bind it to. And this is the current
-behavior. I think Jens knows this question better than I do, Jens?
+> I'll confirm that I can't reproduce without my change for 2.
 
-> 
-> Thanks.
-> 
+Confirmed. With the patch for the first issue, the issue is indeed
+fixed. I must have messed up something during my testing...
 
+Anyway, this is the change for 1:
+
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 8ea35ba6699f..00ad4af0399b 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -4033,8 +4033,11 @@ static void hugetlb_vm_op_open(struct vm_area_struct *vma)
+ 	 * after this open call completes.  It is therefore safe to take a
+ 	 * new reference here without additional locking.
+ 	 */
+-	if (resv && is_vma_resv_set(vma, HPAGE_RESV_OWNER))
++	if (resv && is_vma_resv_set(vma, HPAGE_RESV_OWNER)) {
++		if (resv->css)
++			css_get(resv->css);
+ 		kref_get(&resv->refs);
++	}
+ }
+ 
+ static void hugetlb_vm_op_close(struct vm_area_struct *vma)
+
+-- 
+Guillaume Morin <guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org>
