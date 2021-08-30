@@ -1,63 +1,64 @@
-From: Guillaume Morin <guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org>
-Subject: Re: [BUG] potential hugetlb css refcounting issues
-Date: Sat, 28 Aug 2021 21:37:17 +0200
-Message-ID: <20210828193716.GA21491@bender.morinfr.org>
-References: <8a4f2fbc-76e8-b67b-f110-30beff2228f5@oracle-com>
- <20210827225841.GA30891@bender.morinfr.org>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH v2] mm: Add configuration to control whether vmpressure
+ notifier is enabled
+Date: Mon, 30 Aug 2021 15:49:19 +0200
+Message-ID: <YSzh31BasoxUQXAu@dhcp22.suse.cz>
+References: <1629417219-74853-1-git-send-email-wang.yong12@zte.com.cn>
+ <YR+Rc9HC6OqlEq4I@dhcp22.suse.cz>
+ <CAOH5QeCfwF0hX3XpoThEtwnddtOFEU9Jtp0Hoj+Q37D4Q6HC0Q@mail.gmail.com>
+ <YR/NRJEhPKRQ1r22@dhcp22.suse.cz>
+ <CAOH5QeDUUqrMnuws6cnBDU_oub4cK6KsHeX39p7Eikr4Bcjcnw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=morinfr.org
-        ; s=20170427; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
-        Subject:To:From:Date:Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=Eg7jIAyWdnvSe9BizhWpgYxEQwOfxC+45v1t71BBM2Q=; b=FIrTWsfqFMjx6IsmX3sH67wt/S
-        vrvMIZYejksNVNuxGibFxvlSZWDrxZBNEwb87X5iSIWPcWYF7oI7JA58Glx/pwiIlu3d56yrnAgJt
-        tfnGq0tRMzjjO1IbbrI6v+kZ3KXaWAjHbPne5Aee8A2zi6JNwgJDXliGbP7DvDPJdGS8=;
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1630331360; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=cc2jyFkI4Y/eTP0fuxxH8ESHEZFe6V2z4lrRtmnXM6Q=;
+        b=f9o3YxtNcrKp+PK+ZWm2qAcsw5SLHc0jhEZNVj2f5bET7VWTGz50zzq8TpyCC/RXE458Tf
+        lSeFAgCdD9JtLnXb3jnosfjBDxBo6eXU50D46GUyB+DEzAz3eANVJR3QcOCnV1V7yPUKAJ
+        xoHh8NZSrT3v+aSLPdXND61QpTGNN4g=
 Content-Disposition: inline
-In-Reply-To: <20210827225841.GA30891-iHhE99jIcVYJQ5r9O9UB6R2eb7JE58TQ@public.gmane.org>
+In-Reply-To: <CAOH5QeDUUqrMnuws6cnBDU_oub4cK6KsHeX39p7Eikr4Bcjcnw@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: yong w <yongw.pur@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Jonathan Corbet <corbet@lwn.net>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, alexs@kernel.org, Wei Yang <richard.weiyang@gmail.com>, Hui Su <sh_def@163.com>, Stephen Rothwell <sfr@canb.auug.org.au>, wang.yong12@zte.com.cn, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, yang.yang29@zte.com.cn
 
-On 28 Aug  0:58, Guillaume Morin wrote:
-> > I am not sure about the above analysis.  It is true that
-> > hugetlb_cgroup_uncharge_page_rsvd is called unconditionally in
-> > free_huge_page.  However, IIUC hugetlb_cgroup_uncharge_page_rsvd will
-> > only decrement the css refcount if there is a non-NULL hugetlb_cgroup
-> > pointer in the page.  And, the pointer in the page would only be set
-> > in the 'deferred_reserve' path of alloc_huge_page.  Unless I am
-> > missing something, they seem to balance.
+On Sun 22-08-21 17:46:08, yong w wrote:
+> > All those reasons should be a part of the changelog.
+> >....
+> > I am not sure these are sufficient justifications but that is something
+> > to discuss. And hence it should be a part of the changelog.
+> >
+> OK, These reasons will be added to the patch notesin later versions.
 > 
-> Now that you explain, I am pretty sure that you're right and I was
-> wrong.
-> 
-> I'll confirm that I can't reproduce without my change for 2.
+> > > 3. In the case where the user does not need vmpressure,  vmpressure
+> > > calculation is additional overhead.
+> >
+> > You should quantify that and argue why that overhead cannot be further
+> > reduced without config/boot time knobs.
+> >
+> The test results of the previously used PFT tool may not be obvious.
+> Is there a better way to quantify it?
 
-Confirmed. With the patch for the first issue, the issue is indeed
-fixed. I must have messed up something during my testing...
+This is a question for you to answer I am afraid. You want to add a
+configuration option and (as explained) that is not free of cost from
+the maintenance POV. There must a very good reason to do that.
 
-Anyway, this is the change for 1:
+> > > In some special scenes with tight memory, vmpressure will be executed
+> > > frequently.we use "likely" and "inline"
+> > > to improve the performance of the kernel, why not reduce some
+> > > unnecessary calculations?
+> >
+> > I am all for improving the code. Is it possible to do it by other means?
+> > E.g. reduce a potential overhead when there no events registered?
+> Yes, the method you mentioned may be feasible, but it does not conflict
+> with this patch.
 
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index 8ea35ba6699f..00ad4af0399b 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -4033,8 +4033,11 @@ static void hugetlb_vm_op_open(struct vm_area_struct *vma)
- 	 * after this open call completes.  It is therefore safe to take a
- 	 * new reference here without additional locking.
- 	 */
--	if (resv && is_vma_resv_set(vma, HPAGE_RESV_OWNER))
-+	if (resv && is_vma_resv_set(vma, HPAGE_RESV_OWNER)) {
-+		if (resv->css)
-+			css_get(resv->css);
- 		kref_get(&resv->refs);
-+	}
- }
- 
- static void hugetlb_vm_op_close(struct vm_area_struct *vma)
-
+It is not in conflict but runtime overhead reduction without more burden
+on the configurability is usually a preferred approach.
 -- 
-Guillaume Morin <guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org>
+Michal Hocko
+SUSE Labs
