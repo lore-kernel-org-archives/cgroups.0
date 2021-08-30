@@ -1,65 +1,129 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3] cgroup: Avoid compiler warnings with no subsystems
-Date: Mon, 30 Aug 2021 08:10:34 -1000
-Message-ID: <YS0fGvwqLWKpcejZ@mtj.duckdns.org>
-References: <20210828000255.3213497-1-keescook@chromium.org>
+From: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] hugetlb: fix hugetlb cgroup refcounting during vma split
+Date: Mon, 30 Aug 2021 14:50:15 -0700
+Message-ID: <20210830215015.155224-1-mike.kravetz@oracle.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=Hrex4PC1LQg4AsLp0HQLoNArCjOpXv4T0B/GwwtKFss=;
+ b=lvTy0Te0FthIL+4YyXGjHWXux5r6f63kaT6ni8FoneYegU6UaiLq/zPQ1H1EZ+2GD+HC
+ pIcR3XsxIMeIHMpl7/CmU0fN63UM4k2GAsTuRAMI4FCq9gYqwAVt+k0Vxd9IbLVTVc0e
+ 9JI205iUmce/99pi0qQpuVl/qr5JUFT7fmpntrPwSja/BAJBqLrDPlu7IVu+1nkLSZXd
+ AdW6J9UbQCzBHA/mLiPCpwFCxiJvQGJzvBFx3cAXiXh3bsY1WgyxwHHz2TWkIcgA1Uq1
+ Ey0ZkFuB7ud6We2xKc/MtUrjJwRZNDXMiWGVcgYSoMg/Qr7YKDzpJ6PgzQjq9yrYsFSO Jg== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=Hrex4PC1LQg4AsLp0HQLoNArCjOpXv4T0B/GwwtKFss=;
+ b=K8AAu9k1Y20A4/aqoeOizy3MqQhMdbLcmnC9f5Ijaj8nS1lfdp+lnp0CDmvA2qYAhasj
+ Zba6i8dXZ+wSbKuNN92OIhS4hKEU8X2tE5IxplZsbbVjBhCQ2bvA3zITVaCxS36Cq6ad
+ WThBFVCFBa2UI9Wybist577cwTt76Qz/3SZU4Ar4qGjOJQ48W/NbIjvozS/88O3wa6hT
+ irosfQd5S9pga4zed3gDaYiiFFj9gy4izmIRveMaH3sHhoNcWkURK9PBAEZMtCM6aCbO
+ gniCN5HZeTOA2RWhEgWpZ4CPmOpiU4N6TZ7BWj4fl1DgLl76rk2/yb6u42YCAyIbXN/4 Ew== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=hD0xppJLT6aEBN2umsxRQUAtIA9VVamYDNavPG9ZrFA=;
-        b=nUGFYmCE9vU9tp3VIixtY28HUGWuJn0CQpFrlaTEOAG5ks+zzZg7SYZJ7uVTIEYh5+
-         4nwFaQDapsEvEUbOOxE1L7PC+rlnZ0lvvjt2qL/4R+L5rcV1GC+aBRDkCLipRuN5pKbQ
-         a//RaTkbMnyB/xZJiFJUbubqXtIBczqDj8PFZY6ncK0LISWmPHX9QrJ62gOBuTZaMZOM
-         jy+MFzlTkYm3+OIERk1+WlY2Q1yZyk6qT1s7z+Eq6qXeFk5BMssrLaiszlG/yqNM7lad
-         5YwMiZKgSh+rPPv8N0Wn3G5qNGleu5StVthZpta/ubqWJCw4jsZIZEhzlpTZbnAYZoZe
-         4zwg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20210828000255.3213497-1-keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Hrex4PC1LQg4AsLp0HQLoNArCjOpXv4T0B/GwwtKFss=;
+ b=E413ixAyLbDgi6IJveDIU+TGcBkZ+BCCSXVFfUXRcayLr4lnC3RFg9Gps+23Iio/kWTDxFossLILuu7G851HWHAHkhgIDh9tsSnN92bfardAfuyvFX2DkyOT6dc0QCrcTpYae0zopA6MfK/NRNJEoqoSPxxA6hg3aZVjNI092dw=
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-hardening-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sandipan Das <sandipan-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Guillaume Morin <guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Aug 27, 2021 at 05:02:55PM -0700, Kees Cook wrote:
-> As done before in commit cb4a31675270 ("cgroup: use bitmask to filter
-> for_each_subsys"), avoid compiler warnings for the pathological case of
-> having no subsystems (i.e. CGROUP_SUBSYS_COUNT == 0). This condition is
-> hit for the arm multi_v7_defconfig config under -Wzero-length-bounds:
-> 
-> In file included from ./arch/arm/include/generated/asm/rwonce.h:1,
->                  from include/linux/compiler.h:264,
->                  from include/uapi/linux/swab.h:6,
->                  from include/linux/swab.h:5,
->                  from arch/arm/include/asm/opcodes.h:86,
->                  from arch/arm/include/asm/bug.h:7,
->                  from include/linux/bug.h:5,
->                  from include/linux/thread_info.h:13,
->                  from include/asm-generic/current.h:5,
->                  from ./arch/arm/include/generated/asm/current.h:1,
->                  from include/linux/sched.h:12,
->                  from include/linux/cgroup.h:12,
->                  from kernel/cgroup/cgroup-internal.h:5,
->                  from kernel/cgroup/cgroup.c:31:
-> kernel/cgroup/cgroup.c: In function 'of_css':
-> kernel/cgroup/cgroup.c:651:42: warning: array subscript '<unknown>' is outside the bounds of an
-> interior zero-length array 'struct cgroup_subsys_state *[0]' [-Wzero-length-bounds]
->   651 |   return rcu_dereference_raw(cgrp->subsys[cft->ss->id]);
-> 
-> Reported-by: Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Signed-off-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Guillaume Morin reported hitting the following WARNING followed
+by GPF or NULL pointer deference either in cgroups_destroy or in
+the kill_css path.:
 
-Applied to cgroup/for-5.15.
+percpu ref (css_release) <= 0 (-1) after switching to atomic
+WARNING: CPU: 23 PID: 130 at lib/percpu-refcount.c:196 percpu_ref_switch_to_atomic_rcu+0x127/0x130
+CPU: 23 PID: 130 Comm: ksoftirqd/23 Kdump: loaded Tainted: G           O      5.10.60 #1
+RIP: 0010:percpu_ref_switch_to_atomic_rcu+0x127/0x130
+Call Trace:
+ rcu_core+0x30f/0x530
+ rcu_core_si+0xe/0x10
+ __do_softirq+0x103/0x2a2
+ ? sort_range+0x30/0x30
+ run_ksoftirqd+0x2b/0x40
+ smpboot_thread_fn+0x11a/0x170
+ kthread+0x10a/0x140
+ ? kthread_create_worker_on_cpu+0x70/0x70
+ ret_from_fork+0x22/0x30
 
-Thanks.
+Upon further examination, it was discovered that the css structure
+was associated with hugetlb reservations.
 
+For private hugetlb mappings the vma points to a reserve map that
+contains a pointer to the css.  At mmap time, reservations are set up
+and a reference to the css is taken.  This reference is dropped in the
+vma close operation; hugetlb_vm_op_close.  However, if a vma is split
+no additional reference to the css is taken yet hugetlb_vm_op_close will
+be called twice for the split vma resulting in an underflow.
+
+Fix by taking another reference in hugetlb_vm_op_open.  Note that the
+reference is only taken for the owner of the reserve map.  In the more
+common fork case, the pointer to the reserve map is cleared for
+non-owning vmas.
+
+Fixes: e9fe92ae0cd2 ("hugetlb_cgroup: add reservation accounting for
+private mappings")
+Reported-by: Guillaume Morin <guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org>
+Suggested-by: Guillaume Morin <guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org>
+Signed-off-by: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+---
+ include/linux/hugetlb_cgroup.h | 12 ++++++++++++
+ mm/hugetlb.c                   |  4 +++-
+ 2 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
+index 0b8d1fdda3a1..c137396129db 100644
+--- a/include/linux/hugetlb_cgroup.h
++++ b/include/linux/hugetlb_cgroup.h
+@@ -121,6 +121,13 @@ static inline void hugetlb_cgroup_put_rsvd_cgroup(struct hugetlb_cgroup *h_cg)
+ 	css_put(&h_cg->css);
+ }
+ 
++static inline void resv_map_dup_hugetlb_cgroup_uncharge_info(
++						struct resv_map *resv_map)
++{
++	if (resv_map->css)
++		css_get(resv_map->css);
++}
++
+ extern int hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
+ 					struct hugetlb_cgroup **ptr);
+ extern int hugetlb_cgroup_charge_cgroup_rsvd(int idx, unsigned long nr_pages,
+@@ -199,6 +206,11 @@ static inline void hugetlb_cgroup_put_rsvd_cgroup(struct hugetlb_cgroup *h_cg)
+ {
+ }
+ 
++static inline void resv_map_dup_hugetlb_cgroup_uncharge_info(
++						struct resv_map *resv_map)
++{
++}
++
+ static inline int hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
+ 					       struct hugetlb_cgroup **ptr)
+ {
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 8ea35ba6699f..6c583ef079e3 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -4033,8 +4033,10 @@ static void hugetlb_vm_op_open(struct vm_area_struct *vma)
+ 	 * after this open call completes.  It is therefore safe to take a
+ 	 * new reference here without additional locking.
+ 	 */
+-	if (resv && is_vma_resv_set(vma, HPAGE_RESV_OWNER))
++	if (resv && is_vma_resv_set(vma, HPAGE_RESV_OWNER)) {
++		resv_map_dup_hugetlb_cgroup_uncharge_info(resv);
+ 		kref_get(&resv->refs);
++	}
+ }
+ 
+ static void hugetlb_vm_op_close(struct vm_area_struct *vma)
 -- 
-tejun
+2.31.1
+
