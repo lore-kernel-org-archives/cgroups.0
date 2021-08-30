@@ -1,64 +1,83 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH v2] mm: Add configuration to control whether vmpressure
- notifier is enabled
-Date: Mon, 30 Aug 2021 15:49:19 +0200
-Message-ID: <YSzh31BasoxUQXAu@dhcp22.suse.cz>
-References: <1629417219-74853-1-git-send-email-wang.yong12@zte.com.cn>
- <YR+Rc9HC6OqlEq4I@dhcp22.suse.cz>
- <CAOH5QeCfwF0hX3XpoThEtwnddtOFEU9Jtp0Hoj+Q37D4Q6HC0Q@mail.gmail.com>
- <YR/NRJEhPKRQ1r22@dhcp22.suse.cz>
- <CAOH5QeDUUqrMnuws6cnBDU_oub4cK6KsHeX39p7Eikr4Bcjcnw@mail.gmail.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] memcg: make memcg->event_list_lock irqsafe
+Date: Mon, 30 Aug 2021 10:29:53 -0700
+Message-ID: <20210830172953.207257-1-shakeelb@google.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1630331360; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=cc2jyFkI4Y/eTP0fuxxH8ESHEZFe6V2z4lrRtmnXM6Q=;
-        b=f9o3YxtNcrKp+PK+ZWm2qAcsw5SLHc0jhEZNVj2f5bET7VWTGz50zzq8TpyCC/RXE458Tf
-        lSeFAgCdD9JtLnXb3jnosfjBDxBo6eXU50D46GUyB+DEzAz3eANVJR3QcOCnV1V7yPUKAJ
-        xoHh8NZSrT3v+aSLPdXND61QpTGNN4g=
-Content-Disposition: inline
-In-Reply-To: <CAOH5QeDUUqrMnuws6cnBDU_oub4cK6KsHeX39p7Eikr4Bcjcnw@mail.gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=LVV3UHlk75yje1xXSFFRWyfRbrh8OImERx560ZLqV78=;
+        b=IvtVU2ecU6KZCoDqCW093hiZ2lhwtQIofFW8UZrOYtk+4S6cXBZM8LYiHxTLo4DA62
+         Mcsr5juVYUrOy8rNyG1yZ7voTbgtLZowhpm4tnGY655pEJvnJp7fyMZTqiMH1sQS94hr
+         9UX3sA2Bb364oAvBYogFtLGQ1YCTDOAgIbFSxHqXCrfUwhq49GCKEQbLyH/0HeZAZCCH
+         T5ilQHDzPuxCXeyzVeQjK6gBJHf4UkTwnOl2zR/K51CKwqjq2xQmcZYfaxYnOM37SYRS
+         8CIAN6O9Bq5BWHogtAPODwYydCw1lsWmC5+GKMkgJl7k0H6KCXzSLTMvK8Mejsyaoirg
+         ajVA==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: yong w <yongw.pur@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Jonathan Corbet <corbet@lwn.net>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, alexs@kernel.org, Wei Yang <richard.weiyang@gmail.com>, Hui Su <sh_def@163.com>, Stephen Rothwell <sfr@canb.auug.org.au>, wang.yong12@zte.com.cn, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, yang.yang29@zte.com.cn
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Sun 22-08-21 17:46:08, yong w wrote:
-> > All those reasons should be a part of the changelog.
-> >....
-> > I am not sure these are sufficient justifications but that is something
-> > to discuss. And hence it should be a part of the changelog.
-> >
-> OK, These reasons will be added to the patch notesin later versions.
-> 
-> > > 3. In the case where the user does not need vmpressure,  vmpressure
-> > > calculation is additional overhead.
-> >
-> > You should quantify that and argue why that overhead cannot be further
-> > reduced without config/boot time knobs.
-> >
-> The test results of the previously used PFT tool may not be obvious.
-> Is there a better way to quantify it?
+The memcg->event_list_lock is usually taken in the normal context but
+when the userspace closes the corresponding eventfd, eventfd_release
+through memcg_event_wake takes memcg->event_list_lock with interrupts
+disabled. This is not an issue on its own but it creates a nested
+dependency from eventfd_ctx->wqh.lock to memcg->event_list_lock.
 
-This is a question for you to answer I am afraid. You want to add a
-configuration option and (as explained) that is not free of cost from
-the maintenance POV. There must a very good reason to do that.
+Independently, for unrelated eventfd, eventfd_signal() can be called in
+the irq context, thus making eventfd_ctx->wqh.lock an irq lock. For
+example, FPGA DFL driver, VHOST VPDA driver and couple of VFIO drivers.
+This will force memcg->event_list_lock to be an irqsafe lock as well.
 
-> > > In some special scenes with tight memory, vmpressure will be executed
-> > > frequently.we use "likely" and "inline"
-> > > to improve the performance of the kernel, why not reduce some
-> > > unnecessary calculations?
-> >
-> > I am all for improving the code. Is it possible to do it by other means?
-> > E.g. reduce a potential overhead when there no events registered?
-> Yes, the method you mentioned may be feasible, but it does not conflict
-> with this patch.
+One way to break the nested dependency between eventfd_ctx->wqh.lock and
+memcg->event_list_lock is to add an indirection. However the simplest
+solution would be to make memcg->event_list_lock irqsafe. This is cgroup
+v1 feature, is in maintenance and may get deprecated in near future. So,
+no need to add more code.
 
-It is not in conflict but runtime overhead reduction without more burden
-on the configurability is usually a preferred approach.
+BTW this has been discussed previously [1] but there weren't irq users
+of eventfd_signal() at the time.
+
+[1] https://www.spinics.net/lists/cgroups/msg06248.html
+
+Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 999e626f4111..a73689caee5d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4851,9 +4851,9 @@ static ssize_t memcg_write_event_control(struct kernfs_open_file *of,
+ 
+ 	vfs_poll(efile.file, &event->pt);
+ 
+-	spin_lock(&memcg->event_list_lock);
++	spin_lock_irq(&memcg->event_list_lock);
+ 	list_add(&event->list, &memcg->event_list);
+-	spin_unlock(&memcg->event_list_lock);
++	spin_unlock_irq(&memcg->event_list_lock);
+ 
+ 	fdput(cfile);
+ 	fdput(efile);
+@@ -5280,12 +5280,12 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+ 	 * Notify userspace about cgroup removing only after rmdir of cgroup
+ 	 * directory to avoid race between userspace and kernelspace.
+ 	 */
+-	spin_lock(&memcg->event_list_lock);
++	spin_lock_irq(&memcg->event_list_lock);
+ 	list_for_each_entry_safe(event, tmp, &memcg->event_list, list) {
+ 		list_del_init(&event->list);
+ 		schedule_work(&event->remove);
+ 	}
+-	spin_unlock(&memcg->event_list_lock);
++	spin_unlock_irq(&memcg->event_list_lock);
+ 
+ 	page_counter_set_min(&memcg->memory, 0);
+ 	page_counter_set_low(&memcg->memory, 0);
 -- 
-Michal Hocko
-SUSE Labs
+2.33.0.259.gc128427fd7-goog
+
