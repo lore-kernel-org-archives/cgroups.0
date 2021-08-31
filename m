@@ -1,129 +1,151 @@
-From: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] hugetlb: fix hugetlb cgroup refcounting during vma split
-Date: Mon, 30 Aug 2021 14:50:15 -0700
-Message-ID: <20210830215015.155224-1-mike.kravetz@oracle.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:for-next] BUILD SUCCESS
+ 96aff80dde1b7ccd1f335eff4f5cd9bae37e74c2
+Date: Tue, 31 Aug 2021 14:00:13 +0800
+Message-ID: <612dc56d.CT7izs7cc1yrAbGJ%lkp@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : content-transfer-encoding : content-type :
- mime-version; s=corp-2021-07-09;
- bh=Hrex4PC1LQg4AsLp0HQLoNArCjOpXv4T0B/GwwtKFss=;
- b=lvTy0Te0FthIL+4YyXGjHWXux5r6f63kaT6ni8FoneYegU6UaiLq/zPQ1H1EZ+2GD+HC
- pIcR3XsxIMeIHMpl7/CmU0fN63UM4k2GAsTuRAMI4FCq9gYqwAVt+k0Vxd9IbLVTVc0e
- 9JI205iUmce/99pi0qQpuVl/qr5JUFT7fmpntrPwSja/BAJBqLrDPlu7IVu+1nkLSZXd
- AdW6J9UbQCzBHA/mLiPCpwFCxiJvQGJzvBFx3cAXiXh3bsY1WgyxwHHz2TWkIcgA1Uq1
- Ey0ZkFuB7ud6We2xKc/MtUrjJwRZNDXMiWGVcgYSoMg/Qr7YKDzpJ6PgzQjq9yrYsFSO Jg== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : content-transfer-encoding : content-type :
- mime-version; s=corp-2020-01-29;
- bh=Hrex4PC1LQg4AsLp0HQLoNArCjOpXv4T0B/GwwtKFss=;
- b=K8AAu9k1Y20A4/aqoeOizy3MqQhMdbLcmnC9f5Ijaj8nS1lfdp+lnp0CDmvA2qYAhasj
- Zba6i8dXZ+wSbKuNN92OIhS4hKEU8X2tE5IxplZsbbVjBhCQ2bvA3zITVaCxS36Cq6ad
- WThBFVCFBa2UI9Wybist577cwTt76Qz/3SZU4Ar4qGjOJQ48W/NbIjvozS/88O3wa6hT
- irosfQd5S9pga4zed3gDaYiiFFj9gy4izmIRveMaH3sHhoNcWkURK9PBAEZMtCM6aCbO
- gniCN5HZeTOA2RWhEgWpZ4CPmOpiU4N6TZ7BWj4fl1DgLl76rk2/yb6u42YCAyIbXN/4 Ew== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Hrex4PC1LQg4AsLp0HQLoNArCjOpXv4T0B/GwwtKFss=;
- b=E413ixAyLbDgi6IJveDIU+TGcBkZ+BCCSXVFfUXRcayLr4lnC3RFg9Gps+23Iio/kWTDxFossLILuu7G851HWHAHkhgIDh9tsSnN92bfardAfuyvFX2DkyOT6dc0QCrcTpYae0zopA6MfK/NRNJEoqoSPxxA6hg3aZVjNI092dw=
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sandipan Das <sandipan-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Guillaume Morin <guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Guillaume Morin reported hitting the following WARNING followed
-by GPF or NULL pointer deference either in cgroups_destroy or in
-the kill_css path.:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 96aff80dde1b7ccd1f335eff4f5cd9bae37e74c2  Merge branch 'for-5.15' into for-next
 
-percpu ref (css_release) <= 0 (-1) after switching to atomic
-WARNING: CPU: 23 PID: 130 at lib/percpu-refcount.c:196 percpu_ref_switch_to_atomic_rcu+0x127/0x130
-CPU: 23 PID: 130 Comm: ksoftirqd/23 Kdump: loaded Tainted: G           O      5.10.60 #1
-RIP: 0010:percpu_ref_switch_to_atomic_rcu+0x127/0x130
-Call Trace:
- rcu_core+0x30f/0x530
- rcu_core_si+0xe/0x10
- __do_softirq+0x103/0x2a2
- ? sort_range+0x30/0x30
- run_ksoftirqd+0x2b/0x40
- smpboot_thread_fn+0x11a/0x170
- kthread+0x10a/0x140
- ? kthread_create_worker_on_cpu+0x70/0x70
- ret_from_fork+0x22/0x30
+elapsed time: 724m
 
-Upon further examination, it was discovered that the css structure
-was associated with hugetlb reservations.
+configs tested: 120
+configs skipped: 4
 
-For private hugetlb mappings the vma points to a reserve map that
-contains a pointer to the css.  At mmap time, reservations are set up
-and a reference to the css is taken.  This reference is dropped in the
-vma close operation; hugetlb_vm_op_close.  However, if a vma is split
-no additional reference to the css is taken yet hugetlb_vm_op_close will
-be called twice for the split vma resulting in an underflow.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Fix by taking another reference in hugetlb_vm_op_open.  Note that the
-reference is only taken for the owner of the reserve map.  In the more
-common fork case, the pointer to the reserve map is cleared for
-non-owning vmas.
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arm                          gemini_defconfig
+powerpc64                           defconfig
+powerpc                      arches_defconfig
+arm                         vf610m4_defconfig
+mips                           ci20_defconfig
+powerpc                 mpc836x_mds_defconfig
+s390                       zfcpdump_defconfig
+mips                         mpc30x_defconfig
+mips                          ath79_defconfig
+openrisc                 simple_smp_defconfig
+mips                        vocore2_defconfig
+mips                           ip22_defconfig
+sh                      rts7751r2d1_defconfig
+powerpc                     pq2fads_defconfig
+arm                         s3c6400_defconfig
+sh                        apsh4ad0a_defconfig
+powerpc                     mpc5200_defconfig
+sparc64                             defconfig
+arm                        magician_defconfig
+mips                        nlm_xlr_defconfig
+arm                         bcm2835_defconfig
+arm                       netwinder_defconfig
+powerpc                     tqm8555_defconfig
+powerpc                      tqm8xx_defconfig
+arm                          exynos_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a014-20210830
+x86_64               randconfig-a015-20210830
+x86_64               randconfig-a013-20210830
+x86_64               randconfig-a016-20210830
+x86_64               randconfig-a012-20210830
+x86_64               randconfig-a011-20210830
+i386                 randconfig-a016-20210830
+i386                 randconfig-a011-20210830
+i386                 randconfig-a015-20210830
+i386                 randconfig-a014-20210830
+i386                 randconfig-a012-20210830
+i386                 randconfig-a013-20210830
+s390                 randconfig-r044-20210830
+arc                  randconfig-r043-20210830
+riscv                randconfig-r042-20210830
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                    rhel-8.3-kselftests
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                           allyesconfig
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
 
-Fixes: e9fe92ae0cd2 ("hugetlb_cgroup: add reservation accounting for
-private mappings")
-Reported-by: Guillaume Morin <guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org>
-Suggested-by: Guillaume Morin <guillaume-/FyPzM6KSZdAfugRpC6u6w@public.gmane.org>
-Signed-off-by: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+clang tested configs:
+i386                 randconfig-c001-20210830
+s390                 randconfig-c005-20210830
+riscv                randconfig-c006-20210830
+powerpc              randconfig-c003-20210830
+mips                 randconfig-c004-20210830
+arm                  randconfig-c002-20210830
+x86_64               randconfig-c007-20210830
+x86_64               randconfig-a005-20210830
+x86_64               randconfig-a001-20210830
+x86_64               randconfig-a003-20210830
+x86_64               randconfig-a002-20210830
+x86_64               randconfig-a004-20210830
+x86_64               randconfig-a006-20210830
+i386                 randconfig-a005-20210830
+i386                 randconfig-a002-20210830
+i386                 randconfig-a003-20210830
+i386                 randconfig-a006-20210830
+i386                 randconfig-a004-20210830
+i386                 randconfig-a001-20210830
+i386                 randconfig-a016-20210831
+i386                 randconfig-a011-20210831
+i386                 randconfig-a015-20210831
+i386                 randconfig-a014-20210831
+i386                 randconfig-a012-20210831
+i386                 randconfig-a013-20210831
+s390                 randconfig-r044-20210831
+hexagon              randconfig-r041-20210831
+hexagon              randconfig-r045-20210831
+riscv                randconfig-r042-20210831
+
 ---
- include/linux/hugetlb_cgroup.h | 12 ++++++++++++
- mm/hugetlb.c                   |  4 +++-
- 2 files changed, 15 insertions(+), 1 deletion(-)
-
-diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
-index 0b8d1fdda3a1..c137396129db 100644
---- a/include/linux/hugetlb_cgroup.h
-+++ b/include/linux/hugetlb_cgroup.h
-@@ -121,6 +121,13 @@ static inline void hugetlb_cgroup_put_rsvd_cgroup(struct hugetlb_cgroup *h_cg)
- 	css_put(&h_cg->css);
- }
- 
-+static inline void resv_map_dup_hugetlb_cgroup_uncharge_info(
-+						struct resv_map *resv_map)
-+{
-+	if (resv_map->css)
-+		css_get(resv_map->css);
-+}
-+
- extern int hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
- 					struct hugetlb_cgroup **ptr);
- extern int hugetlb_cgroup_charge_cgroup_rsvd(int idx, unsigned long nr_pages,
-@@ -199,6 +206,11 @@ static inline void hugetlb_cgroup_put_rsvd_cgroup(struct hugetlb_cgroup *h_cg)
- {
- }
- 
-+static inline void resv_map_dup_hugetlb_cgroup_uncharge_info(
-+						struct resv_map *resv_map)
-+{
-+}
-+
- static inline int hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
- 					       struct hugetlb_cgroup **ptr)
- {
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index 8ea35ba6699f..6c583ef079e3 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -4033,8 +4033,10 @@ static void hugetlb_vm_op_open(struct vm_area_struct *vma)
- 	 * after this open call completes.  It is therefore safe to take a
- 	 * new reference here without additional locking.
- 	 */
--	if (resv && is_vma_resv_set(vma, HPAGE_RESV_OWNER))
-+	if (resv && is_vma_resv_set(vma, HPAGE_RESV_OWNER)) {
-+		resv_map_dup_hugetlb_cgroup_uncharge_info(resv);
- 		kref_get(&resv->refs);
-+	}
- }
- 
- static void hugetlb_vm_op_close(struct vm_area_struct *vma)
--- 
-2.31.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
