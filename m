@@ -1,73 +1,81 @@
-From: Guillaume Morin <guillaume@morinfr.org>
-Subject: Re: [PATCH] hugetlb: fix hugetlb cgroup refcounting during vma split
-Date: Tue, 31 Aug 2021 16:01:48 +0200
-Message-ID: <20210831140147.GA18648@bender.morinfr.org>
-References: <20210830215015.155224-1-mike.kravetz@oracle.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] cgroup changes for v5.15-rc1
+Date: Tue, 31 Aug 2021 06:42:31 -1000
+Message-ID: <YS5b98kN6updRd3u@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=morinfr.org
-        ; s=20170427; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
-        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
-        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=55Oic2tBQdEhKwkImI+q3MlSVJdEokDkBiFlL5mk7CE=; b=I7NOqWvE/o4ycQDxccwJ6VSIRI
-        wuYlIWSu6fnwBGdndzr70GYLMn5cCo+Lh+/3fsK7B6cgU3buqMNhvK750jiCKE/OvRAya52uzzygb
-        G8M31NDV7UKc/a4FzRDqCr4rI3HTgnGxZeVqypWRpxODpj0NYHk0Bt3NIRqTk7Y1A6d0=;
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=rwAwM/f7xCIyGLgjKw6m0UR3ux/e/UzH0gwF7myxEvs=;
+        b=RtiK3a37eisNqkkGWXt1I8MV2kdXnD1XVPVaVV6mupWtT3nOV6gHiuOQEAyEv/GOQN
+         p42bXin7ZQM16TLp8lqEsd5zj4Di4GIeqRW7kL+/Q1G4tUFtxEw1knySBj+AmjeW9TaD
+         GUSoTNudWD645aJPMJlSXRp2wFaLJckFB3c/S2N/05himiolQyj3NbrXRzi7Np+pA9rY
+         S6KqzkWz1qu0m0FyBpQj61Hp+wMJAzJFDC4ziRPiNj4nh4TBW3j/d7vD/zPyp8wUcyLj
+         Uw3sSHQCmxdq4nEqzoJDQpVVI2DBu1zXV39PZk/MrVwM2+djG/qk0/d2i00+81jeKiRq
+         avew==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20210830215015.155224-1-mike.kravetz@oracle.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mike Kravetz <mike.kravetz@oracle.com>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Mina Almasry <almasrymina@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Sandipan Das <sandipan@linux.ibm.com>, Shakeel Butt <shakeelb@google.com>, Shuah Khan <shuah@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Guillaume Morin <guillaume@morinfr.org>, stable@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On 30 Aug 14:50, Mike Kravetz wrote:
-> Guillaume Morin reported hitting the following WARNING followed
-> by GPF or NULL pointer deference either in cgroups_destroy or in
-> the kill_css path.:
-> 
-> percpu ref (css_release) <= 0 (-1) after switching to atomic
-> WARNING: CPU: 23 PID: 130 at lib/percpu-refcount.c:196 percpu_ref_switch_to_atomic_rcu+0x127/0x130
-> CPU: 23 PID: 130 Comm: ksoftirqd/23 Kdump: loaded Tainted: G           O      5.10.60 #1
-> RIP: 0010:percpu_ref_switch_to_atomic_rcu+0x127/0x130
-> Call Trace:
->  rcu_core+0x30f/0x530
->  rcu_core_si+0xe/0x10
->  __do_softirq+0x103/0x2a2
->  ? sort_range+0x30/0x30
->  run_ksoftirqd+0x2b/0x40
->  smpboot_thread_fn+0x11a/0x170
->  kthread+0x10a/0x140
->  ? kthread_create_worker_on_cpu+0x70/0x70
->  ret_from_fork+0x22/0x30
-> 
-> Upon further examination, it was discovered that the css structure
-> was associated with hugetlb reservations.
-> 
-> For private hugetlb mappings the vma points to a reserve map that
-> contains a pointer to the css.  At mmap time, reservations are set up
-> and a reference to the css is taken.  This reference is dropped in the
-> vma close operation; hugetlb_vm_op_close.  However, if a vma is split
-> no additional reference to the css is taken yet hugetlb_vm_op_close will
-> be called twice for the split vma resulting in an underflow.
-> 
-> Fix by taking another reference in hugetlb_vm_op_open.  Note that the
-> reference is only taken for the owner of the reserve map.  In the more
-> common fork case, the pointer to the reserve map is cleared for
-> non-owning vmas.
-> 
-> Fixes: e9fe92ae0cd2 ("hugetlb_cgroup: add reservation accounting for
-> private mappings")
-> Reported-by: Guillaume Morin <guillaume@morinfr.org>
-> Suggested-by: Guillaume Morin <guillaume@morinfr.org>
-> Signed-off-by: Mike Kravetz <mike.kravetz@oracle.com>
-> Cc: <stable@vger.kernel.org>
+Hello, Linus.
 
-I verified that the patch does fix the underflow. I appreciate the help!
+Two cpuset behavior changes:
 
-Feel free to add:
-Tested-by: Guillaume Morin <guillaume@morinfr.org>
+* cpuset on cgroup2 is changed to enable memory migration based on nodemask
+  by default.
+
+* A notification is generated when cpuset partition state changes.
+
+All other patches are minor fixes and clenaups.
+
+Thanks.
+
+The following changes since commit d936eb23874433caa3e3d841cfa16f5434b85dcf:
+
+  Revert "Makefile: Enable -Wimplicit-fallthrough for Clang" (2021-07-15 18:05:31 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.15
+
+for you to fetch changes up to d20d30ebb199354729c64c86945ed25c66ff4991:
+
+  cgroup: Avoid compiler warnings with no subsystems (2021-08-30 07:36:43 -1000)
+
+----------------------------------------------------------------
+Kees Cook (1):
+      cgroup: Avoid compiler warnings with no subsystems
+
+Nicolas Saenz Julienne (1):
+      cgroup/cpuset: Avoid memory migration when nodemasks match
+
+Randy Dunlap (1):
+      cgroup: cgroup-v1: clean up kernel-doc notation
+
+Sebastian Andrzej Siewior (1):
+      cgroup: Replace deprecated CPU-hotplug functions.
+
+Waiman Long (5):
+      cgroup/cpuset: Miscellaneous code cleanup
+      cgroup/cpuset: Fix a partition bug with hotplug
+      cgroup/cpuset: Fix violation of cpuset locking rule
+      cgroup/cpuset: Enable event notification when partition state changes
+      cgroup/cpuset: Enable memory migration for cpuset v2
+
+zhaoxiaoqiang11 (1):
+      cgroup: remove cgroup_mount from comments
+
+ Documentation/admin-guide/cgroup-v2.rst |  11 +++
+ kernel/cgroup/cgroup-v1.c               |   8 +-
+ kernel/cgroup/cgroup.c                  |  27 ++++--
+ kernel/cgroup/cpuset.c                  | 162 +++++++++++++++++++++-----------
+ 4 files changed, 144 insertions(+), 64 deletions(-)
 
 -- 
-Guillaume Morin <guillaume@morinfr.org>
+tejun
