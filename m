@@ -1,140 +1,73 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-5.15] BUILD SUCCESS
- d20d30ebb199354729c64c86945ed25c66ff4991
-Date: Tue, 31 Aug 2021 16:56:34 +0800
-Message-ID: <612deec2.4FRsp3DwegClx0Sn%lkp@intel.com>
+From: Guillaume Morin <guillaume@morinfr.org>
+Subject: Re: [PATCH] hugetlb: fix hugetlb cgroup refcounting during vma split
+Date: Tue, 31 Aug 2021 16:01:48 +0200
+Message-ID: <20210831140147.GA18648@bender.morinfr.org>
+References: <20210830215015.155224-1-mike.kravetz@oracle.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=morinfr.org
+        ; s=20170427; h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:
+        Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=55Oic2tBQdEhKwkImI+q3MlSVJdEokDkBiFlL5mk7CE=; b=I7NOqWvE/o4ycQDxccwJ6VSIRI
+        wuYlIWSu6fnwBGdndzr70GYLMn5cCo+Lh+/3fsK7B6cgU3buqMNhvK750jiCKE/OvRAya52uzzygb
+        G8M31NDV7UKc/a4FzRDqCr4rI3HTgnGxZeVqypWRpxODpj0NYHk0Bt3NIRqTk7Y1A6d0=;
+Content-Disposition: inline
+In-Reply-To: <20210830215015.155224-1-mike.kravetz@oracle.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Mike Kravetz <mike.kravetz@oracle.com>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Mina Almasry <almasrymina@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Sandipan Das <sandipan@linux.ibm.com>, Shakeel Butt <shakeelb@google.com>, Shuah Khan <shuah@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Guillaume Morin <guillaume@morinfr.org>, stable@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.15
-branch HEAD: d20d30ebb199354729c64c86945ed25c66ff4991  cgroup: Avoid compiler warnings with no subsystems
+On 30 Aug 14:50, Mike Kravetz wrote:
+> Guillaume Morin reported hitting the following WARNING followed
+> by GPF or NULL pointer deference either in cgroups_destroy or in
+> the kill_css path.:
+> 
+> percpu ref (css_release) <= 0 (-1) after switching to atomic
+> WARNING: CPU: 23 PID: 130 at lib/percpu-refcount.c:196 percpu_ref_switch_to_atomic_rcu+0x127/0x130
+> CPU: 23 PID: 130 Comm: ksoftirqd/23 Kdump: loaded Tainted: G           O      5.10.60 #1
+> RIP: 0010:percpu_ref_switch_to_atomic_rcu+0x127/0x130
+> Call Trace:
+>  rcu_core+0x30f/0x530
+>  rcu_core_si+0xe/0x10
+>  __do_softirq+0x103/0x2a2
+>  ? sort_range+0x30/0x30
+>  run_ksoftirqd+0x2b/0x40
+>  smpboot_thread_fn+0x11a/0x170
+>  kthread+0x10a/0x140
+>  ? kthread_create_worker_on_cpu+0x70/0x70
+>  ret_from_fork+0x22/0x30
+> 
+> Upon further examination, it was discovered that the css structure
+> was associated with hugetlb reservations.
+> 
+> For private hugetlb mappings the vma points to a reserve map that
+> contains a pointer to the css.  At mmap time, reservations are set up
+> and a reference to the css is taken.  This reference is dropped in the
+> vma close operation; hugetlb_vm_op_close.  However, if a vma is split
+> no additional reference to the css is taken yet hugetlb_vm_op_close will
+> be called twice for the split vma resulting in an underflow.
+> 
+> Fix by taking another reference in hugetlb_vm_op_open.  Note that the
+> reference is only taken for the owner of the reserve map.  In the more
+> common fork case, the pointer to the reserve map is cleared for
+> non-owning vmas.
+> 
+> Fixes: e9fe92ae0cd2 ("hugetlb_cgroup: add reservation accounting for
+> private mappings")
+> Reported-by: Guillaume Morin <guillaume@morinfr.org>
+> Suggested-by: Guillaume Morin <guillaume@morinfr.org>
+> Signed-off-by: Mike Kravetz <mike.kravetz@oracle.com>
+> Cc: <stable@vger.kernel.org>
 
-elapsed time: 900m
+I verified that the patch does fix the underflow. I appreciate the help!
 
-configs tested: 108
-configs skipped: 3
+Feel free to add:
+Tested-by: Guillaume Morin <guillaume@morinfr.org>
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                 randconfig-c001-20210831
-arm                     eseries_pxa_defconfig
-powerpc                     pq2fads_defconfig
-m68k                        m5407c3_defconfig
-mips                    maltaup_xpa_defconfig
-xtensa                       common_defconfig
-h8300                               defconfig
-openrisc                         alldefconfig
-powerpc                      walnut_defconfig
-arm                             rpc_defconfig
-xtensa                  audio_kc705_defconfig
-m68k                        mvme147_defconfig
-um                                  defconfig
-powerpc                     tqm8541_defconfig
-mips                           ip27_defconfig
-powerpc               mpc834x_itxgp_defconfig
-arm                            xcep_defconfig
-sparc                       sparc32_defconfig
-sh                           se7751_defconfig
-m68k                          amiga_defconfig
-sh                          sdk7786_defconfig
-arm                        neponset_defconfig
-x86_64                            allnoconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a005-20210831
-x86_64               randconfig-a001-20210831
-x86_64               randconfig-a003-20210831
-x86_64               randconfig-a002-20210831
-x86_64               randconfig-a004-20210831
-x86_64               randconfig-a006-20210831
-i386                 randconfig-a005-20210831
-i386                 randconfig-a002-20210831
-i386                 randconfig-a003-20210831
-i386                 randconfig-a006-20210831
-i386                 randconfig-a004-20210831
-i386                 randconfig-a001-20210831
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                           allyesconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                                  kexec
-
-clang tested configs:
-i386                 randconfig-c001-20210831
-s390                 randconfig-c005-20210831
-riscv                randconfig-c006-20210831
-powerpc              randconfig-c003-20210831
-mips                 randconfig-c004-20210831
-arm                  randconfig-c002-20210831
-x86_64               randconfig-c007-20210831
-x86_64               randconfig-a014-20210831
-x86_64               randconfig-a015-20210831
-x86_64               randconfig-a013-20210831
-x86_64               randconfig-a016-20210831
-x86_64               randconfig-a012-20210831
-x86_64               randconfig-a011-20210831
-i386                 randconfig-a016-20210831
-i386                 randconfig-a011-20210831
-i386                 randconfig-a015-20210831
-i386                 randconfig-a014-20210831
-i386                 randconfig-a012-20210831
-i386                 randconfig-a013-20210831
-s390                 randconfig-r044-20210831
-hexagon              randconfig-r041-20210831
-hexagon              randconfig-r045-20210831
-riscv                randconfig-r042-20210831
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+-- 
+Guillaume Morin <guillaume@morinfr.org>
