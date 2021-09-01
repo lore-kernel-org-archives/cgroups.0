@@ -1,79 +1,39 @@
 From: Hao Xu <haoxu-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH 2/2] io_uring: consider cgroup setting when binding sqpoll cpu
-Date: Wed,  1 Sep 2021 18:18:33 +0800
-Message-ID: <20210901101833.69535-3-haoxu@linux.alibaba.com>
-References: <20210901101833.69535-1-haoxu@linux.alibaba.com>
+Subject: [PATCH v3 0/2] refactor sqthread cpu binding logic
+Date: Wed,  1 Sep 2021 18:18:31 +0800
+Message-ID: <20210901101833.69535-1-haoxu@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20210901101833.69535-1-haoxu-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Pavel Begunkov <asml.silence-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Cc: io-uring-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joseph Qi <joseph.qi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 
-Since sqthread is userspace like thread now, it should respect cgroup
-setting, thus we should consider current allowed cpuset when doing
-cpu binding for sqthread.
+This patchset is to enhance sqthread cpu binding logic, we didn't
+consider cgroup setting before. In container environment, theoretically
+sqthread is in its container's task group, it shouldn't occupy cpu out
+of its container. Otherwise it may cause some problems, for example:
+resource balancer may controll cpu resource allocation by a container's
+current cpu usage, here sqthread should be counted in.
 
-Signed-off-by: Hao Xu <haoxu-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
----
- fs/io_uring.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+v1-->v2
+ - add helper to do cpu in current-cpuset test
 
-diff --git a/fs/io_uring.c b/fs/io_uring.c
-index 7cc458e0b636..414dfedf79a7 100644
---- a/fs/io_uring.c
-+++ b/fs/io_uring.c
-@@ -79,6 +79,7 @@
- #include <linux/pagemap.h>
- #include <linux/io_uring.h>
- #include <linux/tracehook.h>
-+#include <linux/cpuset.h>
- 
- #define CREATE_TRACE_POINTS
- #include <trace/events/io_uring.h>
-@@ -7102,6 +7103,14 @@ static bool io_sqd_handle_event(struct io_sq_data *sqd)
- 	return did_sig || test_bit(IO_SQ_THREAD_SHOULD_STOP, &sqd->state);
- }
- 
-+static inline int io_sq_bind_cpu(int cpu)
-+{
-+	if (test_cpu_in_current_cpuset(cpu))
-+		set_cpus_allowed_ptr(current, cpumask_of(cpu));
-+
-+	return 0;
-+}
-+
- static int io_sq_thread(void *data)
- {
- 	struct io_sq_data *sqd = data;
-@@ -7112,11 +7121,9 @@ static int io_sq_thread(void *data)
- 
- 	snprintf(buf, sizeof(buf), "iou-sqp-%d", sqd->task_pid);
- 	set_task_comm(current, buf);
--
- 	if (sqd->sq_cpu != -1)
--		set_cpus_allowed_ptr(current, cpumask_of(sqd->sq_cpu));
--	else
--		set_cpus_allowed_ptr(current, cpu_online_mask);
-+		io_sq_bind_cpu(sqd->sq_cpu);
-+
- 	current->flags |= PF_NO_SETAFFINITY;
- 
- 	mutex_lock(&sqd->lock);
-@@ -8310,8 +8317,10 @@ static int io_sq_offload_create(struct io_ring_ctx *ctx,
- 			int cpu = p->sq_thread_cpu;
- 
- 			ret = -EINVAL;
--			if (cpu >= nr_cpu_ids || !cpu_online(cpu))
-+			if (cpu >= nr_cpu_ids || !cpu_online(cpu) ||
-+			    !test_cpu_in_current_cpuset(cpu))
- 				goto err_sqpoll;
-+
- 			sqd->sq_cpu = cpu;
- 		} else {
- 			sqd->sq_cpu = -1;
+v2-->v3
+ - split it to 2 patches, first as prep one, second as comsumer
+ - remove warnning, since cpuset may change anytime, we cannot catch
+   all cases, so make the behaviour consistent.
+
+Hao Xu (2):
+  cpuset: add a helper to check if cpu in cpuset of current task
+  io_uring: consider cgroup setting when binding sqpoll cpu
+
+ fs/io_uring.c          | 19 ++++++++++++++-----
+ include/linux/cpuset.h |  7 +++++++
+ kernel/cgroup/cpuset.c | 11 +++++++++++
+ 3 files changed, 32 insertions(+), 5 deletions(-)
+
 -- 
 2.24.4
 
