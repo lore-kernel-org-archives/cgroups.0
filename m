@@ -1,174 +1,43 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 5.10 18/39] blk-throtl: optimize IOPS throttle for large IO scenarios
-Date: Sun,  5 Sep 2021 21:21:32 -0400
-Message-ID: <20210906012153.929962-18-sashal@kernel.org>
-References: <20210906012153.929962-1-sashal@kernel.org>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH v2] mm: Add configuration to control whether vmpressure
+ notifier is enabled
+Date: Mon, 6 Sep 2021 08:37:04 +0200
+Message-ID: <YTW3EMKU7fLl62bC@dhcp22.suse.cz>
+References: <1629417219-74853-1-git-send-email-wang.yong12@zte.com.cn>
+ <YR+Rc9HC6OqlEq4I@dhcp22.suse.cz>
+ <CAOH5QeCfwF0hX3XpoThEtwnddtOFEU9Jtp0Hoj+Q37D4Q6HC0Q@mail.gmail.com>
+ <YR/NRJEhPKRQ1r22@dhcp22.suse.cz>
+ <CAOH5QeDUUqrMnuws6cnBDU_oub4cK6KsHeX39p7Eikr4Bcjcnw@mail.gmail.com>
+ <YSzh31BasoxUQXAu@dhcp22.suse.cz>
+ <CAOH5QeBrxpddmTL40ryajjCJZ4WHJsaubYKBvaeikikn1JmJ9Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630891335;
-        bh=G4Xs0378pV3JQ26bxd3847WEUgweyiHUNcrvm3obI/o=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Vj7n2rlcjnNcBpnYSQUNuViIzyMJ0D2hsSd1i+TWMvInibPnDRgzKg4aqbmHmdC85
-         Pf+6IyOw4awIVWrY0CU/DMYhf6SWriZTz+l81EdzC4vtkBAOB1Nh+sdQiA7RwrAWfb
-         kvWLEica29NFke0fIDCJ01LmdWHCBP92bnOR3EtGWe6hgUv+Zugl9pLQaqtt4srazT
-         eu5F0GCUGi1B1M+77Hy223xzC4X6PH0pyT904kvvqaf2PpNDEYe5IVucT1l6GmRFLP
-         WNvcGStmji6q12DICSIy2suu7Gsnx430HRsSAI6t0HthI6z8EDNzxrVaBHhcjb6TlO
-         Vm0ersrCYgPYA==
-In-Reply-To: <20210906012153.929962-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1630910225; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=C18ucwuH+xJ590fcQPWTQo1wKpR5pILZsUHhaeFFJM8=;
+        b=NQJNxXbGll03ANbTcVcmNA5GRE1HmZ8q8Gkbt8sMek82fcvVlXMxFNq8skistKpgpjAyFl
+        ptCsa57t0u4Izkcuk8A6SGw5VPSP6VR/Cdm6uuxiUnB8PZPvFHFElwZASWjuaWujvQGPD0
+        XbzzL0owuRWs7ezDAcoUrEO7IcyHWK8=
+Content-Disposition: inline
+In-Reply-To: <CAOH5QeBrxpddmTL40ryajjCJZ4WHJsaubYKBvaeikikn1JmJ9Q@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: yong w <yongw.pur@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Jonathan Corbet <corbet@lwn.net>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, alexs@kernel.org, Wei Yang <richard.weiyang@gmail.com>, Hui Su <sh_def@163.com>, Stephen Rothwell <sfr@canb.auug.org.au>, wang.yong12@zte.com.cn, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, yang.yang29@zte.com.cn
 
-From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+On Sat 04-09-21 18:41:00, yong w wrote:
+[..]
+> > It is not in conflict but runtime overhead reduction without more burden
+> > on the configurability is usually a preferred approach.
+> I agree with you.I had an idea that we use global variables to identify whether
+> there is event registration,however, global variables need to be
+> protected with locks.
 
-[ Upstream commit 4f1e9630afe6332de7286820fedd019f19eac057 ]
-
-After patch 54efd50 (block: make generic_make_request handle
-arbitrarily sized bios), the IO through io-throttle may be larger,
-and these IOs may be further split into more small IOs. However,
-IOPS throttle does not seem to be aware of this change, which
-makes the calculation of IOPS of large IOs incomplete, resulting
-in disk-side IOPS that does not meet expectations. Maybe we should
-fix this problem.
-
-We can reproduce it by set max_sectors_kb of disk to 128, set
-blkio.write_iops_throttle to 100, run a dd instance inside blkio
-and use iostat to watch IOPS:
-
-dd if=/dev/zero of=/dev/sdb bs=1M count=1000 oflag=direct
-
-As a result, without this change the average IOPS is 1995, with
-this change the IOPS is 98.
-
-Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Link: https://lore.kernel.org/r/65869aaad05475797d63b4c3fed4f529febe3c26.1627876014.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org
-Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- block/blk-merge.c    |  2 ++
- block/blk-throttle.c | 32 ++++++++++++++++++++++++++++++++
- block/blk.h          |  2 ++
- 3 files changed, 36 insertions(+)
-
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 349cd7d3af81..110db636d230 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -341,6 +341,8 @@ void __blk_queue_split(struct bio **bio, unsigned int *nr_segs)
- 		trace_block_split(q, split, (*bio)->bi_iter.bi_sector);
- 		submit_bio_noacct(*bio);
- 		*bio = split;
-+
-+		blk_throtl_charge_bio_split(*bio);
- 	}
- }
- 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index b771c4299982..63e9d00a0832 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -178,6 +178,9 @@ struct throtl_grp {
- 	unsigned int bad_bio_cnt; /* bios exceeding latency threshold */
- 	unsigned long bio_cnt_reset_time;
- 
-+	atomic_t io_split_cnt[2];
-+	atomic_t last_io_split_cnt[2];
-+
- 	struct blkg_rwstat stat_bytes;
- 	struct blkg_rwstat stat_ios;
- };
-@@ -771,6 +774,8 @@ static inline void throtl_start_new_slice_with_credit(struct throtl_grp *tg,
- 	tg->bytes_disp[rw] = 0;
- 	tg->io_disp[rw] = 0;
- 
-+	atomic_set(&tg->io_split_cnt[rw], 0);
-+
- 	/*
- 	 * Previous slice has expired. We must have trimmed it after last
- 	 * bio dispatch. That means since start of last slice, we never used
-@@ -793,6 +798,9 @@ static inline void throtl_start_new_slice(struct throtl_grp *tg, bool rw)
- 	tg->io_disp[rw] = 0;
- 	tg->slice_start[rw] = jiffies;
- 	tg->slice_end[rw] = jiffies + tg->td->throtl_slice;
-+
-+	atomic_set(&tg->io_split_cnt[rw], 0);
-+
- 	throtl_log(&tg->service_queue,
- 		   "[%c] new slice start=%lu end=%lu jiffies=%lu",
- 		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
-@@ -1025,6 +1033,9 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
- 				jiffies + tg->td->throtl_slice);
- 	}
- 
-+	if (iops_limit != UINT_MAX)
-+		tg->io_disp[rw] += atomic_xchg(&tg->io_split_cnt[rw], 0);
-+
- 	if (tg_with_in_bps_limit(tg, bio, bps_limit, &bps_wait) &&
- 	    tg_with_in_iops_limit(tg, bio, iops_limit, &iops_wait)) {
- 		if (wait)
-@@ -2046,12 +2057,14 @@ static void throtl_downgrade_check(struct throtl_grp *tg)
- 	}
- 
- 	if (tg->iops[READ][LIMIT_LOW]) {
-+		tg->last_io_disp[READ] += atomic_xchg(&tg->last_io_split_cnt[READ], 0);
- 		iops = tg->last_io_disp[READ] * HZ / elapsed_time;
- 		if (iops >= tg->iops[READ][LIMIT_LOW])
- 			tg->last_low_overflow_time[READ] = now;
- 	}
- 
- 	if (tg->iops[WRITE][LIMIT_LOW]) {
-+		tg->last_io_disp[WRITE] += atomic_xchg(&tg->last_io_split_cnt[WRITE], 0);
- 		iops = tg->last_io_disp[WRITE] * HZ / elapsed_time;
- 		if (iops >= tg->iops[WRITE][LIMIT_LOW])
- 			tg->last_low_overflow_time[WRITE] = now;
-@@ -2170,6 +2183,25 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
- }
- #endif
- 
-+void blk_throtl_charge_bio_split(struct bio *bio)
-+{
-+	struct blkcg_gq *blkg = bio->bi_blkg;
-+	struct throtl_grp *parent = blkg_to_tg(blkg);
-+	struct throtl_service_queue *parent_sq;
-+	bool rw = bio_data_dir(bio);
-+
-+	do {
-+		if (!parent->has_rules[rw])
-+			break;
-+
-+		atomic_inc(&parent->io_split_cnt[rw]);
-+		atomic_inc(&parent->last_io_split_cnt[rw]);
-+
-+		parent_sq = parent->service_queue.parent_sq;
-+		parent = sq_to_tg(parent_sq);
-+	} while (parent);
-+}
-+
- bool blk_throtl_bio(struct bio *bio)
- {
- 	struct request_queue *q = bio->bi_disk->queue;
-diff --git a/block/blk.h b/block/blk.h
-index dfab98465db9..a15f0b65dee4 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -303,11 +303,13 @@ int create_task_io_context(struct task_struct *task, gfp_t gfp_mask, int node);
- extern int blk_throtl_init(struct request_queue *q);
- extern void blk_throtl_exit(struct request_queue *q);
- extern void blk_throtl_register_queue(struct request_queue *q);
-+extern void blk_throtl_charge_bio_split(struct bio *bio);
- bool blk_throtl_bio(struct bio *bio);
- #else /* CONFIG_BLK_DEV_THROTTLING */
- static inline int blk_throtl_init(struct request_queue *q) { return 0; }
- static inline void blk_throtl_exit(struct request_queue *q) { }
- static inline void blk_throtl_register_queue(struct request_queue *q) { }
-+static inline void blk_throtl_charge_bio_split(struct bio *bio) { }
- static inline bool blk_throtl_bio(struct bio *bio) { return false; }
- #endif /* CONFIG_BLK_DEV_THROTTLING */
- #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+Have a look at static keys which are usual tool to provide effectivelly
+zero overhead disabled branch.
 -- 
-2.30.2
-
+Michal Hocko
+SUSE Labs
