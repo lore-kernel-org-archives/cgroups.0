@@ -1,28 +1,28 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.14 19/47] blk-throtl: optimize IOPS throttle for large IO scenarios
-Date: Sun,  5 Sep 2021 21:19:23 -0400
-Message-ID: <20210906011951.928679-19-sashal@kernel.org>
-References: <20210906011951.928679-1-sashal@kernel.org>
+From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH AUTOSEL 5.13 19/46] blk-throtl: optimize IOPS throttle for large IO scenarios
+Date: Sun,  5 Sep 2021 21:20:24 -0400
+Message-ID: <20210906012052.929174-19-sashal@kernel.org>
+References: <20210906012052.929174-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630891215;
-        bh=65vUzIHosokjdaiU2mI3mWtnnhk7OoCsr8Qsm8mX+t4=;
+        s=k20201202; t=1630891276;
+        bh=5a2B2wEQdX4iBESIH14jy80cKIeGSwVc0TLqChQrICo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WtOdBUubrSoZ7RPQlwWyZ+nbq6ACpGDLsakZ9GT1PwqDfjbKZ1MIw9jyGEz/Dst9e
-         TVH8mrP51w+Fwko+Mm1aUOaP4xZZfVdRlRVcAneUTQMUwPERKf0pi7AXL3s0l2XKM0
-         C7Q5/8QQ9LrTEbOMHN7ocb6ba/+thZ4w9aeoMEOYmtPY43PhXexMQKczxtfd6ybGF5
-         +EhM3lEMBpt3Q7WL/QUE0bBx7xy3yS7bljz4rzFQZs//6osm0qVj6g3i5zFohG2D6E
-         gK3OzbNYT4ex+T9OgGn0TYceB8Z6MkISdiM8MDRs/0attl6JvVpOYvBecZtqjebmoB
-         ZZ7wg14073fjw==
-In-Reply-To: <20210906011951.928679-1-sashal@kernel.org>
+        b=hzL1TmIlViNSVuC2ZZVXthuVwRUpne2m8T7MY0H7vpBuMpgLWrM3M432KEBEjjCln
+         acdDoMwsOd5Wje490IbzgO68N3/8BNaD+vpY2qbVFGHfNnXapJcCBBhoWVuImOwKdm
+         ug1ywoKpu2EYyfCcFkI3SN9vQkIYasbKNvyvMOqCVIo2PnE6dfyk3umMzvZEhef6V6
+         YHP+/563oe3GZGSmyzOk9C/09tRechAnxhIF2WJFX74UGNgjPmLZ83KRpn8GMr+svr
+         36z8I39yOgKParjoJDfbVAmnea5+u2ZWIUHS1nh1vVlgO9Qjcc0tiza6ZdWnXirkso
+         AM0fCNKnUKH4w==
+In-Reply-To: <20210906012052.929174-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Chunguang Xu <brookxu@tencent.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-block@vger.kernel.org, cgroups@vger.kernel.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Chunguang Xu <brookxu@tencent.com>
+From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
 [ Upstream commit 4f1e9630afe6332de7286820fedd019f19eac057 ]
 
@@ -43,11 +43,11 @@ dd if=/dev/zero of=/dev/sdb bs=1M count=1000 oflag=direct
 As a result, without this change the average IOPS is 1995, with
 this change the IOPS is 98.
 
-Signed-off-by: Chunguang Xu <brookxu@tencent.com>
-Acked-by: Tejun Heo <tj@kernel.org>
-Link: https://lore.kernel.org/r/65869aaad05475797d63b4c3fed4f529febe3c26.1627876014.git.brookxu@tencent.com
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Link: https://lore.kernel.org/r/65869aaad05475797d63b4c3fed4f529febe3c26.1627876014.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org
+Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
  block/blk-merge.c    |  2 ++
  block/blk-throttle.c | 32 ++++++++++++++++++++++++++++++++
@@ -55,7 +55,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  3 files changed, 36 insertions(+)
 
 diff --git a/block/blk-merge.c b/block/blk-merge.c
-index a11b3b53717e..22eeaad190d7 100644
+index bcdff1879c34..410ea45027c9 100644
 --- a/block/blk-merge.c
 +++ b/block/blk-merge.c
 @@ -348,6 +348,8 @@ void __blk_queue_split(struct bio **bio, unsigned int *nr_segs)
@@ -152,10 +152,10 @@ index b1b22d863bdf..55c49015e533 100644
  {
  	struct request_queue *q = bio->bi_bdev->bd_disk->queue;
 diff --git a/block/blk.h b/block/blk.h
-index cb01429c162c..f10cc9b2c27f 100644
+index 8b3591aee0a5..6cff1af51c57 100644
 --- a/block/blk.h
 +++ b/block/blk.h
-@@ -289,11 +289,13 @@ int create_task_io_context(struct task_struct *task, gfp_t gfp_mask, int node);
+@@ -294,11 +294,13 @@ int create_task_io_context(struct task_struct *task, gfp_t gfp_mask, int node);
  extern int blk_throtl_init(struct request_queue *q);
  extern void blk_throtl_exit(struct request_queue *q);
  extern void blk_throtl_register_queue(struct request_queue *q);
