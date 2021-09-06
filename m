@@ -1,80 +1,174 @@
-From: yong w <yongw.pur@gmail.com>
-Subject: Re: [PATCH v2] mm: Add configuration to control whether vmpressure
- notifier is enabled
-Date: Sat, 4 Sep 2021 18:41:00 +0800
-Message-ID: <CAOH5QeBrxpddmTL40ryajjCJZ4WHJsaubYKBvaeikikn1JmJ9Q@mail.gmail.com>
-References: <1629417219-74853-1-git-send-email-wang.yong12@zte.com.cn>
- <YR+Rc9HC6OqlEq4I@dhcp22.suse.cz> <CAOH5QeCfwF0hX3XpoThEtwnddtOFEU9Jtp0Hoj+Q37D4Q6HC0Q@mail.gmail.com>
- <YR/NRJEhPKRQ1r22@dhcp22.suse.cz> <CAOH5QeDUUqrMnuws6cnBDU_oub4cK6KsHeX39p7Eikr4Bcjcnw@mail.gmail.com>
- <YSzh31BasoxUQXAu@dhcp22.suse.cz>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.14 19/47] blk-throtl: optimize IOPS throttle for large IO scenarios
+Date: Sun,  5 Sep 2021 21:19:23 -0400
+Message-ID: <20210906011951.928679-19-sashal@kernel.org>
+References: <20210906011951.928679-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=7+4MmuaT7rzL8mD6S0mX3jwc0NJwjLstDiX92Mhzqd4=;
-        b=PmmreLIE6KPwSpV+eJRLKMgW3Z30UIoOJXn2XWGN5zOeZCiFFCbe72Se9ehgrpy4QD
-         NSUwp6ElCXnxyH3HMiP/c7mvFVBX0VxpM+vAZ6tzeeNkIYoa9IZZ/6Oa9bkdQcsx16zA
-         c3mq2QFsv+7/sMkbzVjO4BjRpMFFTTbjpdXp2iHK5z628+Mtl8+rVvWvWcoEE/qcJLz7
-         3k424wbk3KYmigidxMfjdlkW1VCzH1CQmEiX3kY44zePy+dMwzYrLWU2Lcly/QHNUfvN
-         OayFV6GeBgs9vriO3vIkYddgKANYIoBqD9OawdPifLI/DOQHSp7UbVhE81giyoFbYeJg
-         0NEg==
-In-Reply-To: <YSzh31BasoxUQXAu@dhcp22.suse.cz>
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1630891215;
+        bh=65vUzIHosokjdaiU2mI3mWtnnhk7OoCsr8Qsm8mX+t4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=WtOdBUubrSoZ7RPQlwWyZ+nbq6ACpGDLsakZ9GT1PwqDfjbKZ1MIw9jyGEz/Dst9e
+         TVH8mrP51w+Fwko+Mm1aUOaP4xZZfVdRlRVcAneUTQMUwPERKf0pi7AXL3s0l2XKM0
+         C7Q5/8QQ9LrTEbOMHN7ocb6ba/+thZ4w9aeoMEOYmtPY43PhXexMQKczxtfd6ybGF5
+         +EhM3lEMBpt3Q7WL/QUE0bBx7xy3yS7bljz4rzFQZs//6osm0qVj6g3i5zFohG2D6E
+         gK3OzbNYT4ex+T9OgGn0TYceB8Z6MkISdiM8MDRs/0attl6JvVpOYvBecZtqjebmoB
+         ZZ7wg14073fjw==
+In-Reply-To: <20210906011951.928679-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Michal Hocko <mhocko@suse.com>
-Cc: Tejun Heo <tj@kernel.org>, Jonathan Corbet <corbet@lwn.net>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, alexs@kernel.org, Wei Yang <richard.weiyang@gmail.com>, Hui Su <sh_def@163.com>, Stephen Rothwell <sfr@canb.auug.org.au>, wang.yong12@zte.com.cn, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, yang.yang29@zte.com.cn
+Content-Type: text/plain; charset="us-ascii"
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Chunguang Xu <brookxu@tencent.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-Michal Hocko <mhocko@suse.com> =E4=BA=8E2021=E5=B9=B48=E6=9C=8830=E6=97=A5=
-=E5=91=A8=E4=B8=80 =E4=B8=8B=E5=8D=889:49=E5=86=99=E9=81=93=EF=BC=9A
->
-> On Sun 22-08-21 17:46:08, yong w wrote:
-> > > All those reasons should be a part of the changelog.
-> > >....
-> > > I am not sure these are sufficient justifications but that is somethi=
-ng
-> > > to discuss. And hence it should be a part of the changelog.
-> > >
-> > OK, These reasons will be added to the patch notesin later versions.
-> >
-> > > > 3. In the case where the user does not need vmpressure,  vmpressure
-> > > > calculation is additional overhead.
-> > >
-> > > You should quantify that and argue why that overhead cannot be furthe=
-r
-> > > reduced without config/boot time knobs.
-> > >
-> > The test results of the previously used PFT tool may not be obvious.
-> > Is there a better way to quantify it?
->
-> This is a question for you to answer I am afraid. You want to add a
-> configuration option and (as explained) that is not free of cost from
-> the maintenance POV. There must a very good reason to do that.
-Sorry for the late reply.The previous email mentions some reasons.
-and several tools were used to test, but the data did not meet the expectat=
-ions.
-I'll try other test methods later.
+From: Chunguang Xu <brookxu@tencent.com>
 
-> > > > In some special scenes with tight memory, vmpressure will be execut=
-ed
-> > > > frequently.we use "likely" and "inline"
-> > > > to improve the performance of the kernel, why not reduce some
-> > > > unnecessary calculations?
-> > >
-> > > I am all for improving the code. Is it possible to do it by other mea=
-ns?
-> > > E.g. reduce a potential overhead when there no events registered?
-> > Yes, the method you mentioned may be feasible, but it does not conflict
-> > with this patch.
->
-> It is not in conflict but runtime overhead reduction without more burden
-> on the configurability is usually a preferred approach.
-I agree with you.I had an idea that we use global variables to identify whe=
-ther
-there is event registration,however, global variables need to be
-protected with locks.
-I feel that there is little room for optimization in the code.
+[ Upstream commit 4f1e9630afe6332de7286820fedd019f19eac057 ]
 
-Thanks.
+After patch 54efd50 (block: make generic_make_request handle
+arbitrarily sized bios), the IO through io-throttle may be larger,
+and these IOs may be further split into more small IOs. However,
+IOPS throttle does not seem to be aware of this change, which
+makes the calculation of IOPS of large IOs incomplete, resulting
+in disk-side IOPS that does not meet expectations. Maybe we should
+fix this problem.
+
+We can reproduce it by set max_sectors_kb of disk to 128, set
+blkio.write_iops_throttle to 100, run a dd instance inside blkio
+and use iostat to watch IOPS:
+
+dd if=/dev/zero of=/dev/sdb bs=1M count=1000 oflag=direct
+
+As a result, without this change the average IOPS is 1995, with
+this change the IOPS is 98.
+
+Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+Link: https://lore.kernel.org/r/65869aaad05475797d63b4c3fed4f529febe3c26.1627876014.git.brookxu@tencent.com
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ block/blk-merge.c    |  2 ++
+ block/blk-throttle.c | 32 ++++++++++++++++++++++++++++++++
+ block/blk.h          |  2 ++
+ 3 files changed, 36 insertions(+)
+
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index a11b3b53717e..22eeaad190d7 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -348,6 +348,8 @@ void __blk_queue_split(struct bio **bio, unsigned int *nr_segs)
+ 		trace_block_split(split, (*bio)->bi_iter.bi_sector);
+ 		submit_bio_noacct(*bio);
+ 		*bio = split;
++
++		blk_throtl_charge_bio_split(*bio);
+ 	}
+ }
+ 
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index b1b22d863bdf..55c49015e533 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -178,6 +178,9 @@ struct throtl_grp {
+ 	unsigned int bad_bio_cnt; /* bios exceeding latency threshold */
+ 	unsigned long bio_cnt_reset_time;
+ 
++	atomic_t io_split_cnt[2];
++	atomic_t last_io_split_cnt[2];
++
+ 	struct blkg_rwstat stat_bytes;
+ 	struct blkg_rwstat stat_ios;
+ };
+@@ -777,6 +780,8 @@ static inline void throtl_start_new_slice_with_credit(struct throtl_grp *tg,
+ 	tg->bytes_disp[rw] = 0;
+ 	tg->io_disp[rw] = 0;
+ 
++	atomic_set(&tg->io_split_cnt[rw], 0);
++
+ 	/*
+ 	 * Previous slice has expired. We must have trimmed it after last
+ 	 * bio dispatch. That means since start of last slice, we never used
+@@ -799,6 +804,9 @@ static inline void throtl_start_new_slice(struct throtl_grp *tg, bool rw)
+ 	tg->io_disp[rw] = 0;
+ 	tg->slice_start[rw] = jiffies;
+ 	tg->slice_end[rw] = jiffies + tg->td->throtl_slice;
++
++	atomic_set(&tg->io_split_cnt[rw], 0);
++
+ 	throtl_log(&tg->service_queue,
+ 		   "[%c] new slice start=%lu end=%lu jiffies=%lu",
+ 		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
+@@ -1031,6 +1039,9 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
+ 				jiffies + tg->td->throtl_slice);
+ 	}
+ 
++	if (iops_limit != UINT_MAX)
++		tg->io_disp[rw] += atomic_xchg(&tg->io_split_cnt[rw], 0);
++
+ 	if (tg_with_in_bps_limit(tg, bio, bps_limit, &bps_wait) &&
+ 	    tg_with_in_iops_limit(tg, bio, iops_limit, &iops_wait)) {
+ 		if (wait)
+@@ -2052,12 +2063,14 @@ static void throtl_downgrade_check(struct throtl_grp *tg)
+ 	}
+ 
+ 	if (tg->iops[READ][LIMIT_LOW]) {
++		tg->last_io_disp[READ] += atomic_xchg(&tg->last_io_split_cnt[READ], 0);
+ 		iops = tg->last_io_disp[READ] * HZ / elapsed_time;
+ 		if (iops >= tg->iops[READ][LIMIT_LOW])
+ 			tg->last_low_overflow_time[READ] = now;
+ 	}
+ 
+ 	if (tg->iops[WRITE][LIMIT_LOW]) {
++		tg->last_io_disp[WRITE] += atomic_xchg(&tg->last_io_split_cnt[WRITE], 0);
+ 		iops = tg->last_io_disp[WRITE] * HZ / elapsed_time;
+ 		if (iops >= tg->iops[WRITE][LIMIT_LOW])
+ 			tg->last_low_overflow_time[WRITE] = now;
+@@ -2176,6 +2189,25 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
+ }
+ #endif
+ 
++void blk_throtl_charge_bio_split(struct bio *bio)
++{
++	struct blkcg_gq *blkg = bio->bi_blkg;
++	struct throtl_grp *parent = blkg_to_tg(blkg);
++	struct throtl_service_queue *parent_sq;
++	bool rw = bio_data_dir(bio);
++
++	do {
++		if (!parent->has_rules[rw])
++			break;
++
++		atomic_inc(&parent->io_split_cnt[rw]);
++		atomic_inc(&parent->last_io_split_cnt[rw]);
++
++		parent_sq = parent->service_queue.parent_sq;
++		parent = sq_to_tg(parent_sq);
++	} while (parent);
++}
++
+ bool blk_throtl_bio(struct bio *bio)
+ {
+ 	struct request_queue *q = bio->bi_bdev->bd_disk->queue;
+diff --git a/block/blk.h b/block/blk.h
+index cb01429c162c..f10cc9b2c27f 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -289,11 +289,13 @@ int create_task_io_context(struct task_struct *task, gfp_t gfp_mask, int node);
+ extern int blk_throtl_init(struct request_queue *q);
+ extern void blk_throtl_exit(struct request_queue *q);
+ extern void blk_throtl_register_queue(struct request_queue *q);
++extern void blk_throtl_charge_bio_split(struct bio *bio);
+ bool blk_throtl_bio(struct bio *bio);
+ #else /* CONFIG_BLK_DEV_THROTTLING */
+ static inline int blk_throtl_init(struct request_queue *q) { return 0; }
+ static inline void blk_throtl_exit(struct request_queue *q) { }
+ static inline void blk_throtl_register_queue(struct request_queue *q) { }
++static inline void blk_throtl_charge_bio_split(struct bio *bio) { }
+ static inline bool blk_throtl_bio(struct bio *bio) { return false; }
+ #endif /* CONFIG_BLK_DEV_THROTTLING */
+ #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+-- 
+2.30.2
+
