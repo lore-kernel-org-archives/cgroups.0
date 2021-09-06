@@ -1,22 +1,22 @@
 From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 5.13 19/46] blk-throtl: optimize IOPS throttle for large IO scenarios
-Date: Sun,  5 Sep 2021 21:20:24 -0400
-Message-ID: <20210906012052.929174-19-sashal@kernel.org>
-References: <20210906012052.929174-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 18/39] blk-throtl: optimize IOPS throttle for large IO scenarios
+Date: Sun,  5 Sep 2021 21:21:32 -0400
+Message-ID: <20210906012153.929962-18-sashal@kernel.org>
+References: <20210906012153.929962-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630891276;
-        bh=5a2B2wEQdX4iBESIH14jy80cKIeGSwVc0TLqChQrICo=;
+        s=k20201202; t=1630891335;
+        bh=G4Xs0378pV3JQ26bxd3847WEUgweyiHUNcrvm3obI/o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hzL1TmIlViNSVuC2ZZVXthuVwRUpne2m8T7MY0H7vpBuMpgLWrM3M432KEBEjjCln
-         acdDoMwsOd5Wje490IbzgO68N3/8BNaD+vpY2qbVFGHfNnXapJcCBBhoWVuImOwKdm
-         ug1ywoKpu2EYyfCcFkI3SN9vQkIYasbKNvyvMOqCVIo2PnE6dfyk3umMzvZEhef6V6
-         YHP+/563oe3GZGSmyzOk9C/09tRechAnxhIF2WJFX74UGNgjPmLZ83KRpn8GMr+svr
-         36z8I39yOgKParjoJDfbVAmnea5+u2ZWIUHS1nh1vVlgO9Qjcc0tiza6ZdWnXirkso
-         AM0fCNKnUKH4w==
-In-Reply-To: <20210906012052.929174-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        b=Vj7n2rlcjnNcBpnYSQUNuViIzyMJ0D2hsSd1i+TWMvInibPnDRgzKg4aqbmHmdC85
+         Pf+6IyOw4awIVWrY0CU/DMYhf6SWriZTz+l81EdzC4vtkBAOB1Nh+sdQiA7RwrAWfb
+         kvWLEica29NFke0fIDCJ01LmdWHCBP92bnOR3EtGWe6hgUv+Zugl9pLQaqtt4srazT
+         eu5F0GCUGi1B1M+77Hy223xzC4X6PH0pyT904kvvqaf2PpNDEYe5IVucT1l6GmRFLP
+         WNvcGStmji6q12DICSIy2suu7Gsnx430HRsSAI6t0HthI6z8EDNzxrVaBHhcjb6TlO
+         Vm0ersrCYgPYA==
+In-Reply-To: <20210906012153.929962-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -55,11 +55,11 @@ Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
  3 files changed, 36 insertions(+)
 
 diff --git a/block/blk-merge.c b/block/blk-merge.c
-index bcdff1879c34..410ea45027c9 100644
+index 349cd7d3af81..110db636d230 100644
 --- a/block/blk-merge.c
 +++ b/block/blk-merge.c
-@@ -348,6 +348,8 @@ void __blk_queue_split(struct bio **bio, unsigned int *nr_segs)
- 		trace_block_split(split, (*bio)->bi_iter.bi_sector);
+@@ -341,6 +341,8 @@ void __blk_queue_split(struct bio **bio, unsigned int *nr_segs)
+ 		trace_block_split(q, split, (*bio)->bi_iter.bi_sector);
  		submit_bio_noacct(*bio);
  		*bio = split;
 +
@@ -68,7 +68,7 @@ index bcdff1879c34..410ea45027c9 100644
  }
  
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index b1b22d863bdf..55c49015e533 100644
+index b771c4299982..63e9d00a0832 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
 @@ -178,6 +178,9 @@ struct throtl_grp {
@@ -81,7 +81,7 @@ index b1b22d863bdf..55c49015e533 100644
  	struct blkg_rwstat stat_bytes;
  	struct blkg_rwstat stat_ios;
  };
-@@ -777,6 +780,8 @@ static inline void throtl_start_new_slice_with_credit(struct throtl_grp *tg,
+@@ -771,6 +774,8 @@ static inline void throtl_start_new_slice_with_credit(struct throtl_grp *tg,
  	tg->bytes_disp[rw] = 0;
  	tg->io_disp[rw] = 0;
  
@@ -90,7 +90,7 @@ index b1b22d863bdf..55c49015e533 100644
  	/*
  	 * Previous slice has expired. We must have trimmed it after last
  	 * bio dispatch. That means since start of last slice, we never used
-@@ -799,6 +804,9 @@ static inline void throtl_start_new_slice(struct throtl_grp *tg, bool rw)
+@@ -793,6 +798,9 @@ static inline void throtl_start_new_slice(struct throtl_grp *tg, bool rw)
  	tg->io_disp[rw] = 0;
  	tg->slice_start[rw] = jiffies;
  	tg->slice_end[rw] = jiffies + tg->td->throtl_slice;
@@ -100,7 +100,7 @@ index b1b22d863bdf..55c49015e533 100644
  	throtl_log(&tg->service_queue,
  		   "[%c] new slice start=%lu end=%lu jiffies=%lu",
  		   rw == READ ? 'R' : 'W', tg->slice_start[rw],
-@@ -1031,6 +1039,9 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
+@@ -1025,6 +1033,9 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
  				jiffies + tg->td->throtl_slice);
  	}
  
@@ -110,7 +110,7 @@ index b1b22d863bdf..55c49015e533 100644
  	if (tg_with_in_bps_limit(tg, bio, bps_limit, &bps_wait) &&
  	    tg_with_in_iops_limit(tg, bio, iops_limit, &iops_wait)) {
  		if (wait)
-@@ -2052,12 +2063,14 @@ static void throtl_downgrade_check(struct throtl_grp *tg)
+@@ -2046,12 +2057,14 @@ static void throtl_downgrade_check(struct throtl_grp *tg)
  	}
  
  	if (tg->iops[READ][LIMIT_LOW]) {
@@ -125,7 +125,7 @@ index b1b22d863bdf..55c49015e533 100644
  		iops = tg->last_io_disp[WRITE] * HZ / elapsed_time;
  		if (iops >= tg->iops[WRITE][LIMIT_LOW])
  			tg->last_low_overflow_time[WRITE] = now;
-@@ -2176,6 +2189,25 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
+@@ -2170,6 +2183,25 @@ static inline void throtl_update_latency_buckets(struct throtl_data *td)
  }
  #endif
  
@@ -150,12 +150,12 @@ index b1b22d863bdf..55c49015e533 100644
 +
  bool blk_throtl_bio(struct bio *bio)
  {
- 	struct request_queue *q = bio->bi_bdev->bd_disk->queue;
+ 	struct request_queue *q = bio->bi_disk->queue;
 diff --git a/block/blk.h b/block/blk.h
-index 8b3591aee0a5..6cff1af51c57 100644
+index dfab98465db9..a15f0b65dee4 100644
 --- a/block/blk.h
 +++ b/block/blk.h
-@@ -294,11 +294,13 @@ int create_task_io_context(struct task_struct *task, gfp_t gfp_mask, int node);
+@@ -303,11 +303,13 @@ int create_task_io_context(struct task_struct *task, gfp_t gfp_mask, int node);
  extern int blk_throtl_init(struct request_queue *q);
  extern void blk_throtl_exit(struct request_queue *q);
  extern void blk_throtl_register_queue(struct request_queue *q);
