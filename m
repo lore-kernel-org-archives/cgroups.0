@@ -1,43 +1,41 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH v2] mm: Add configuration to control whether vmpressure
- notifier is enabled
-Date: Mon, 6 Sep 2021 08:37:04 +0200
-Message-ID: <YTW3EMKU7fLl62bC@dhcp22.suse.cz>
-References: <1629417219-74853-1-git-send-email-wang.yong12@zte.com.cn>
- <YR+Rc9HC6OqlEq4I@dhcp22.suse.cz>
- <CAOH5QeCfwF0hX3XpoThEtwnddtOFEU9Jtp0Hoj+Q37D4Q6HC0Q@mail.gmail.com>
- <YR/NRJEhPKRQ1r22@dhcp22.suse.cz>
- <CAOH5QeDUUqrMnuws6cnBDU_oub4cK6KsHeX39p7Eikr4Bcjcnw@mail.gmail.com>
- <YSzh31BasoxUQXAu@dhcp22.suse.cz>
- <CAOH5QeBrxpddmTL40ryajjCJZ4WHJsaubYKBvaeikikn1JmJ9Q@mail.gmail.com>
+From: Li Jinlin <lijinlin3@huawei.com>
+Subject: [PATCH] blk-throttle: fix UAF by deleteing timer in blk_throtl_exit()
+Date: Tue, 7 Sep 2021 20:12:42 +0800
+Message-ID: <20210907121242.2885564-1-lijinlin3@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1630910225; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=C18ucwuH+xJ590fcQPWTQo1wKpR5pILZsUHhaeFFJM8=;
-        b=NQJNxXbGll03ANbTcVcmNA5GRE1HmZ8q8Gkbt8sMek82fcvVlXMxFNq8skistKpgpjAyFl
-        ptCsa57t0u4Izkcuk8A6SGw5VPSP6VR/Cdm6uuxiUnB8PZPvFHFElwZASWjuaWujvQGPD0
-        XbzzL0owuRWs7ezDAcoUrEO7IcyHWK8=
-Content-Disposition: inline
-In-Reply-To: <CAOH5QeBrxpddmTL40ryajjCJZ4WHJsaubYKBvaeikikn1JmJ9Q@mail.gmail.com>
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-block-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: yong w <yongw.pur@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Jonathan Corbet <corbet@lwn.net>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, alexs@kernel.org, Wei Yang <richard.weiyang@gmail.com>, Hui Su <sh_def@163.com>, Stephen Rothwell <sfr@canb.auug.org.au>, wang.yong12@zte.com.cn, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, yang.yang29@zte.com.cn
+To: tj@kernel.org, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linfeilong@huawei.com, louhongxiang@huawei.com
 
-On Sat 04-09-21 18:41:00, yong w wrote:
-[..]
-> > It is not in conflict but runtime overhead reduction without more burden
-> > on the configurability is usually a preferred approach.
-> I agree with you.I had an idea that we use global variables to identify whether
-> there is event registration,however, global variables need to be
-> protected with locks.
+From: Li Jinlin <lijinlin3@huawei.com>
 
-Have a look at static keys which are usual tool to provide effectivelly
-zero overhead disabled branch.
+The pending timer has been set up in blk_throtl_init(). However, the
+timer is not deleted in blk_throtl_exit(). This means that the timer
+handler may still be running after freeing the timer, which would
+result in a use-after-free.
+
+Fix by calling del_timer_sync() to delete the timer in blk_throtl_exit().
+
+Signed-off-by: Li Jinlin <lijinlin3@huawei.com>
+---
+ block/blk-throttle.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 55c49015e533..dbe49e181a88 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -2458,6 +2458,7 @@ int blk_throtl_init(struct request_queue *q)
+ void blk_throtl_exit(struct request_queue *q)
+ {
+ 	BUG_ON(!q->td);
++	del_timer_sync(&q->td->service_queue.pending_timer);
+ 	throtl_shutdown_wq(q);
+ 	blkcg_deactivate_policy(q, &blkcg_policy_throtl);
+ 	free_percpu(q->td->latency_buckets[READ]);
 -- 
-Michal Hocko
-SUSE Labs
+2.27.0
+
