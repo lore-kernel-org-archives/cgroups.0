@@ -1,20 +1,20 @@
 From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH 2/3] misc_cgroup: introduce misc.failcnt for V1
-Date: Wed,  8 Sep 2021 13:24:35 +0800
-Message-ID: <c4e091c8c0208554b97f751ae80a093f55f19883.1631077837.git.brookxu@tencent.com>
+Subject: [RFC PATCH 3/3] misc_cgroup: remove error log to avoid log flood
+Date: Wed,  8 Sep 2021 13:24:36 +0800
+Message-ID: <86e89df640f2b4a65dd77bdbab8152fa8e8f5bf1.1631077837.git.brookxu@tencent.com>
 References: <988f340462a1a3c62b7dc2c64ceb89a4c0a00552.1631077837.git.brookxu@tencent.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=chwGnJXtYzYfFAb2xocoJoG9ap7jKymOQv0bE0NKq/4=;
-        b=UT+9Jq5isRNyTNrE6lq+yYmAhDNeRDmV3DjYgMAyjHhcD3OiHLVBbkNi5UcgN2KDv/
-         H11zy3fg5q1Ci9yYB8MwLodUHv+K8CJdSI6trnshnNKTThp8Eo4X5y0S3DvRPtn/vjBd
-         bpjnmRCmy/caQFiuIYhWSwKuVfuD2shR5nvKWPy8/DDx3HjdUUa7wk5SXrtvfJsDJUcY
-         fumLL5lVzx6JAWfbh+sjGLBkQk8wzTEutStNBSBXDohk4rfwShhyaiTtM8+NYlV4kSHb
-         4S/oSyRSV/+5P9oOkkp2wE0sEGktS4Bc1RfM9GT/KRZ9jSXUuWcoTrv7gwxkV/80xTSO
-         q+Dg==
+        bh=FQ5T0HqJNT9t39aOsQECaxpdxcnOU7H2Z1up+JT0ahA=;
+        b=KSjeu4V7QQUimg8NL+XI827Mhtjv4Do5UNgas+FfP5NOXy4uByNlBeEkc6Q9IKqYwu
+         ib9n6iQEA17insu7R6QsJ1F9gho8Q7vQf1jqBt1rnLS/kGv5HYDPpttcHLE7ZsEd3r3+
+         QO789ukWZ/vxtrPy6/+w3ajKVx/LeDxahaKJHoH8qyVIBbJo8XMGTMZk/uWGTLyRTK/a
+         uKk4dy64QSEkHtB55nMjI1gJH2dmAHHKjoC9GVneHicx5rnZVrJcW88kFs6aSUWAkqeR
+         kRTnheqwrE+HpTMp2Py3QJWDqkXcz7X7pN8mAfPJzslHTckh/VRIkq/K//aQpOa+g14o
+         RxBw==
 In-Reply-To: <988f340462a1a3c62b7dc2c64ceb89a4c0a00552.1631077837.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 In-Reply-To: <988f340462a1a3c62b7dc2c64ceb89a4c0a00552.1631077837.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 References: <988f340462a1a3c62b7dc2c64ceb89a4c0a00552.1631077837.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
@@ -27,114 +27,48 @@ Cc: vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.
 
 From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-introduce misc.failcnt for cgroup v1 to make it easier for us to
-understand the pressure of resources.
+In scenarios where containers are frequently created and deleted,
+a large number of error logs maybe generated. This log provides
+less information, we can get more detailed failure records through
+misc.events, misc.events.local and misc.failcnt. From this, perhaps
+we can remove it.
 
 Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 ---
- include/linux/misc_cgroup.h |  3 +++
- kernel/cgroup/misc.c        | 54 +++++++++++++++++++++++++++++++++++--
- 2 files changed, 55 insertions(+), 2 deletions(-)
+ include/linux/misc_cgroup.h | 1 -
+ kernel/cgroup/misc.c        | 7 -------
+ 2 files changed, 8 deletions(-)
 
 diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
-index d29f1743fae9..4d630cd3e4bd 100644
+index 4d630cd3e4bd..838e26149263 100644
 --- a/include/linux/misc_cgroup.h
 +++ b/include/linux/misc_cgroup.h
-@@ -55,6 +55,9 @@ struct misc_cg {
- 	atomic_long_t events_local[MISC_CG_RES_TYPES];
- 	struct cgroup_file events_local_file;
- 
-+	/* misc.failcnt for v1 only */
-+	atomic_long_t nr_failed[MISC_CG_RES_TYPES];
-+
- 	struct misc_res res[MISC_CG_RES_TYPES];
+@@ -36,7 +36,6 @@ struct misc_cg;
+ struct misc_res {
+ 	unsigned long max;
+ 	atomic_long_t usage;
+-	bool failed;
  };
  
+ /**
 diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
-index 2a3d14be21e5..d8f99fd58981 100644
+index d8f99fd58981..b9c7e488413f 100644
 --- a/kernel/cgroup/misc.c
 +++ b/kernel/cgroup/misc.c
-@@ -179,7 +179,8 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
- 			atomic_long_inc(&k->events[type]);
- 			cgroup_file_notify(&k->events_file);
+@@ -157,13 +157,6 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
+ 		new_usage = atomic_long_add_return(amount, &res->usage);
+ 		if (new_usage > READ_ONCE(res->max) ||
+ 		    new_usage > READ_ONCE(misc_res_capacity[type])) {
+-			if (!res->failed) {
+-				pr_info("cgroup: charge rejected by the misc controller for %s resource in ",
+-					misc_res_name[type]);
+-				pr_cont_cgroup_path(i->css.cgroup);
+-				pr_cont("\n");
+-				res->failed = true;
+-			}
+ 			ret = -EBUSY;
+ 			goto err_charge;
  		}
--	}
-+	} else
-+		atomic_long_inc(&i->nr_failed[type]);
- 
- 	for (j = cg; j != i; j = parent_misc(j))
- 		misc_cg_cancel_charge(type, j, amount);
-@@ -371,6 +372,29 @@ static int misc_events_local_show(struct seq_file *sf, void *v)
- 	return 0;
- }
- 
-+/**
-+ * misc_cg_failcnt_show() - Show the fail count of the misc cgroup.
-+ * @sf: Interface file
-+ * @v: Arguments passed
-+ *
-+ * Context: Any context.
-+ * Return: 0 to denote successful print.
-+ */
-+static int misc_cg_failcnt_show(struct seq_file *sf, void *v)
-+{
-+	int i;
-+	unsigned long failcnt;
-+	struct misc_cg *cg = css_misc(seq_css(sf));
-+
-+	for (i = 0; i < MISC_CG_RES_TYPES; i++) {
-+		failcnt = atomic_long_read(&cg->nr_failed[i]);
-+		if (READ_ONCE(misc_res_capacity[i]) || failcnt)
-+			seq_printf(sf, "%s %lu\n", misc_res_name[i], failcnt);
-+	}
-+
-+	return 0;
-+}
-+
- /* Misc cgroup interface files */
- static struct cftype misc_cg_files[] = {
- 	{
-@@ -404,6 +428,32 @@ static struct cftype misc_cg_files[] = {
- 	{}
- };
- 
-+/* Misc cgroup interface files for v1*/
-+static struct cftype misc_cg_legacy_files[] = {
-+	{
-+		.name = "max",
-+		.write = misc_cg_max_write,
-+		.seq_show = misc_cg_max_show,
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+	},
-+	{
-+		.name = "current",
-+		.seq_show = misc_cg_current_show,
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+	},
-+	{
-+		.name = "capacity",
-+		.seq_show = misc_cg_capacity_show,
-+		.flags = CFTYPE_ONLY_ON_ROOT,
-+	},
-+	{
-+		.name = "failcnt",
-+		.seq_show = misc_cg_failcnt_show,
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+	},
-+	{}
-+};
-+
- /**
-  * misc_cg_alloc() - Allocate misc cgroup.
-  * @parent_css: Parent cgroup.
-@@ -450,6 +500,6 @@ static void misc_cg_free(struct cgroup_subsys_state *css)
- struct cgroup_subsys misc_cgrp_subsys = {
- 	.css_alloc = misc_cg_alloc,
- 	.css_free = misc_cg_free,
--	.legacy_cftypes = misc_cg_files,
-+	.legacy_cftypes = misc_cg_legacy_files,
- 	.dfl_cftypes = misc_cg_files,
- };
 -- 
 2.30.0
 
