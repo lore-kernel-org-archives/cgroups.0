@@ -1,65 +1,139 @@
-From: Hao Xu <haoxu-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH 2/2] io_uring: consider cgroup setting when binding sqpoll
- cpu
-Date: Wed, 8 Sep 2021 03:28:48 +0800
-Message-ID: <f7ae868d-0997-8e94-53a3-a5d6513f7447@linux.alibaba.com>
-References: <20210901124322.164238-1-haoxu@linux.alibaba.com>
- <20210901124322.164238-3-haoxu@linux.alibaba.com>
- <YS+tPq1eiQLx4P3M@slm.duckdns.org>
- <c49d9b26-1c74-316a-c933-e6964695a286@linux.alibaba.com>
- <YTeZUnshr+mgf5GS@slm.duckdns.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <YTeZUnshr+mgf5GS-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+From: brookxu <brookxu.cn@gmail.com>
+Subject: [RFC PATCH 1/3] misc_cgroup: introduce misc.events and misc_events.local
+Date: Wed,  8 Sep 2021 13:24:34 +0800
+Message-ID: <988f340462a1a3c62b7dc2c64ceb89a4c0a00552.1631077837.git.brookxu@tencent.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=4QwjGo86SexE23jmdGh0fNWJgw/M3xzYU7zrtMYZd5A=;
+        b=X15788MJeqt3PwNwegkTci1L+iIKbHbqqgf4ZqPCyulBivyW91J43YAzU6kUQZxJot
+         2wddoz15H6m653ZYtJtcctX4mMbcR/cW+77QkYEauPkNbpPGAEow0F7gIDoMRvsnPecr
+         AJEuWyL1bGpySI+I+x2JPSJUuxNWA/QrJoH0TVzG5KVBgzZMzIguhB0n/2eAsHDZPKrG
+         S4/2WUjdwwMLDk7F+iK88UttbGbD8n17dxiGeU6Aj1N02YHgSRu3IZYtrdr/chPj44JC
+         YpI00lVRElm3RQi/WCpgeWQPw8A+ve1HVmY3haVQ1NbqjSvsRBeTeQpmbVdmm1mAT5gZ
+         1Zuw==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Pavel Begunkov <asml.silence-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, io-uring-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joseph Qi <joseph.qi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org
+Cc: vipinsh@google.com, mkoutny@suse.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-在 2021/9/8 上午12:54, Tejun Heo 写道:
-> Hello,
-> 
-> On Fri, Sep 03, 2021 at 11:04:07PM +0800, Hao Xu wrote:
->>> Would it make sense to just test whether set_cpus_allowed_ptr() succeeded
->>> afterwards?
->> Do you mean: if (sqd->sq_cpu != -1 && !set_cpus_allowed_ptr(current,
->> cpumask_of(sqd->sq_cpu)))
->>
->> I'm not familiar with set_cpus_allowed_ptr(), you mean it contains the
->> similar logic of test_cpu_in_current_cpuset?
-> 
-> It's kinda muddy unfortunately. I think it rejects if the target cpu is
-> offline but accept and ignores if the cpu is excluded by cpuset.
-> 
->> This is a bit beyond of my knowledge, so you mean if the cpu back
->> online, the task will automatically schedule to this cpu? if it's true,
->> I think the code logic here is fine.
->>
->>> offline and online. If the operation takes place while the cpu happens to be
->>> offline, the operation fails.
->> It's ok that it fails, we leave the option of retry to users themselves.
-> 
-> I think the first thing to do is defining the desired behavior, hopefully in
-> a consistent manner, rather than letting it be defined by implementation.
-> e.g. If the desired behavior is the per-cpu helper failing, then it should
-> probably exit when the target cpu isn't available for whatever reason. If
-> the desired behavior is best effort when cpu goes away (ie. ignore
-Hmm, I see. First I think we should move the set_cpus_allowed_ptr() to
-sqthread creation place not when it is running(not sure why it is
-currently at the beginning of sqthred itself), then we can have
-consistent behaviour.(if we do the check at sqthread's running time,
-then no matter we kill it or still allow it to run when cpu_online
-check fails, it's hard to let users know the result of their cpu binding
-since users don't know the exact time when sqthread waken up and begin
-to run, so that they can check their cpu binding result).
-Second, I think users' cpu binding is a kind of 'advice', not 'command'.
-So no matter cpu_online check succeeds or fails, we still let sqthread
-run, meanwhile return the cpu binding result to the userspace.
-Anyway, I'd like to know Jens' thoughts on this.
-> affinity), the creation likely shouldn't fail when the target cpu is
-> unavailable but can become available in the future.
-> 
-> Thanks.
-> 
+From: Chunguang Xu <brookxu@tencent.com>
+
+Introduce misc.events and misc.events.local to make it easier for
+us to understand the pressure of resources. The main idea comes
+from mem_cgroup.
+
+Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+---
+ include/linux/misc_cgroup.h |  9 +++++++
+ kernel/cgroup/misc.c        | 50 ++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 58 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
+index da2367e2ac1e..d29f1743fae9 100644
+--- a/include/linux/misc_cgroup.h
++++ b/include/linux/misc_cgroup.h
+@@ -46,6 +46,15 @@ struct misc_res {
+  */
+ struct misc_cg {
+ 	struct cgroup_subsys_state css;
++
++	/* misc.events */
++	atomic_long_t events[MISC_CG_RES_TYPES];
++	struct cgroup_file events_file;
++
++	/* misc.events.local */
++	atomic_long_t events_local[MISC_CG_RES_TYPES];
++	struct cgroup_file events_local_file;
++
+ 	struct misc_res res[MISC_CG_RES_TYPES];
+ };
+ 
+diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
+index ec02d963cad1..2a3d14be21e5 100644
+--- a/kernel/cgroup/misc.c
++++ b/kernel/cgroup/misc.c
+@@ -140,7 +140,7 @@ static void misc_cg_cancel_charge(enum misc_res_type type, struct misc_cg *cg,
+ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
+ 		       unsigned long amount)
+ {
+-	struct misc_cg *i, *j;
++	struct misc_cg *i, *j, *k;
+ 	int ret;
+ 	struct misc_res *res;
+ 	int new_usage;
+@@ -171,6 +171,16 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
+ 	return 0;
+ 
+ err_charge:
++	if (cgroup_subsys_on_dfl(misc_cgrp_subsys)) {
++		atomic_long_inc(&i->events_local[type]);
++		cgroup_file_notify(&i->events_local_file);
++
++		for (k = i; k; k = parent_misc(k)) {
++			atomic_long_inc(&k->events[type]);
++			cgroup_file_notify(&k->events_file);
++		}
++	}
++
+ 	for (j = cg; j != i; j = parent_misc(j))
+ 		misc_cg_cancel_charge(type, j, amount);
+ 	misc_cg_cancel_charge(type, i, amount);
+@@ -335,6 +345,32 @@ static int misc_cg_capacity_show(struct seq_file *sf, void *v)
+ 	return 0;
+ }
+ 
++static int misc_events_show(struct seq_file *sf, void *v)
++{
++	struct misc_cg *cg = css_misc(seq_css(sf));
++	unsigned long count, i;
++
++	for (i = 0; i < MISC_CG_RES_TYPES; i++) {
++		count = atomic_long_read(&cg->events[i]);
++		if (READ_ONCE(misc_res_capacity[i]) || count)
++			seq_printf(sf, "%s %lu\n", misc_res_name[i], count);
++	}
++	return 0;
++}
++
++static int misc_events_local_show(struct seq_file *sf, void *v)
++{
++	struct misc_cg *cg = css_misc(seq_css(sf));
++	unsigned long count, i;
++
++	for (i = 0; i < MISC_CG_RES_TYPES; i++) {
++		count = atomic_long_read(&cg->events_local[i]);
++		if (READ_ONCE(misc_res_capacity[i]) || count)
++			seq_printf(sf, "%s %lu\n", misc_res_name[i], count);
++	}
++	return 0;
++}
++
+ /* Misc cgroup interface files */
+ static struct cftype misc_cg_files[] = {
+ 	{
+@@ -353,6 +389,18 @@ static struct cftype misc_cg_files[] = {
+ 		.seq_show = misc_cg_capacity_show,
+ 		.flags = CFTYPE_ONLY_ON_ROOT,
+ 	},
++	{
++		.name = "events",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.file_offset = offsetof(struct misc_cg, events_file),
++		.seq_show = misc_events_show,
++	},
++	{
++		.name = "events.local",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.file_offset = offsetof(struct misc_cg, events_local_file),
++		.seq_show = misc_events_local_show,
++	},
+ 	{}
+ };
+ 
+-- 
+2.30.0
 
