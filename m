@@ -1,65 +1,41 @@
-From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Subject: Re: [RFC PATCH 2/2] support cgroup pool in v1
-Date: Wed, 8 Sep 2021 14:35:56 +0200
-Message-ID: <YTiuLES5qd086qRu@kroah.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [RFC PATCH 0/2] support cgroup pool in v1
+Date: Wed, 8 Sep 2021 14:37:23 +0200
+Message-ID: <YTiugxO0cDge47x6@kroah.com>
 References: <cover.1631102579.git.escape@linux.alibaba.com>
- <03e2b37678c9b2aef4f5dee303b3fb87a565d56b.1631102579.git.escape@linux.alibaba.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1631104558;
-        bh=IeEnqVOQ4/mgD07WFn13/gOR/som678mwOUAhNFnUrw=;
+        s=korg; t=1631104646;
+        bh=nMezGjgjwzg9bIdKI/lKo1CwMtPF/hzsmq+sSzvk1iM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=xpJKSosNTteuQ/VVdeadIgG4tjl+qcTdHD4iyKneWU+L1j4w3oaSUDd1o2Fz98GB3
-         PPw9uyyWv5GZp0vWFP1YTYyVNxjQrYEkgJhV5dlCubxCpwKnA/9fujGQ57M0kZgV4o
-         STO7zQXsQfWUcgLRELcTHek7B+140EXCnajiPEMM=
+        b=RB7SYU+aQABbNPtw/eKMtzShODOIWXCRyxgwmRtzQu1yJ3v4YBMq86oggOT7NO72X
+         ieyEByBTieCISCNeqDdxmmYVNKXkdo46Hgwznf3J6v1cAu7dUyNEbOF+/Gwf8a4Y3E
+         FC9qRh1cgCSNQVV++u8F7zHv3VQcFUlZXJttaIPY=
 Content-Disposition: inline
-In-Reply-To: <03e2b37678c9b2aef4f5dee303b3fb87a565d56b.1631102579.git.escape-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+In-Reply-To: <cover.1631102579.git.escape@linux.alibaba.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yi Tao <escape-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shanpeic-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org
+To: Yi Tao <escape@linux.alibaba.com>
+Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, mcgrof@kernel.org, keescook@chromium.org, yzaikin@google.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, shanpeic@linux.alibaba.com
 
-On Wed, Sep 08, 2021 at 08:15:13PM +0800, Yi Tao wrote:
-> Add pool_size interface and delay_time interface. When the user writes
-> pool_size, a cgroup pool will be created, and then when the user needs
-> to create a cgroup, it will take the fast path protected by spinlock to
-> obtain it from the resource pool. Performance is improved by the
-> following aspects:
-> 	1.reduce the critical area for creating cgroups
-> 	2.reduce the scheduling time of sleep
-> 	3.avoid competition with other cgroup behaviors which protected
-> 	  by cgroup_mutex
-> 
-> The essence of obtaining resources from the pool is kernfs rename. With
-> the help of the previous pinned kernfs node function, when the pool is
-> enabled, these cgroups will be in the pinned state, and the protection
-> of the kernfs data structure will be protected by the specified
-> spinlock, thus getting rid of the cgroup_mutex and kernfs_rwsem.
-> 
-> In order to avoid random operations by users, the kernfs nodes of the
-> cgroups in the pool will be placed under a hidden kernfs tree, and users
-> can not directly touch them. When a user creates a cgroup, it will take
-> the fast path, select a node from the hidden tree, and move it to the
-> correct position.
-> 
-> As users continue to obtain resources from the pool, the number of
-> cgroups in the pool will gradually decrease. When the number is less
-> than a certain value, it will be supplemented. In order to avoid
-> competition with the currently created cgroup, you can delay this by
-> setting delay_time process
-> 
-> Suggested-by: Shanpei Chen <shanpeic-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> Signed-off-by: Yi Tao <escape-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> ---
->  include/linux/cgroup-defs.h |  16 +++++
->  include/linux/cgroup.h      |   2 +
->  kernel/cgroup/cgroup-v1.c   | 139 ++++++++++++++++++++++++++++++++++++++++++++
+On Wed, Sep 08, 2021 at 08:15:11PM +0800, Yi Tao wrote:
+> In a scenario where containers are started with high concurrency, in
+> order to control the use of system resources by the container, it is
+> necessary to create a corresponding cgroup for each container and
+> attach the process. The kernel uses the cgroup_mutex global lock to
+> protect the consistency of the data, which results in a higher
+> long-tail delay for cgroup-related operations during concurrent startup.
+> For example, long-tail delay of creating cgroup under each subsystems
+> is 900ms when starting 400 containers, which becomes bottleneck of
+> performance. The delay is mainly composed of two parts, namely the
+> time of the critical section protected by cgroup_mutex and the
+> scheduling time of sleep. The scheduling time will increase with
+> the increase of the cpu overhead.
 
-I thought cgroup v1 was "obsolete" and not getting new features added to
-it.  What is wrong with just using cgroups 2 instead if you have a
-problem with the v1 interface?
+Perhaps you shouldn't be creating that many containers all at once?
+What normal workload requires this?
 
 thanks,
 
