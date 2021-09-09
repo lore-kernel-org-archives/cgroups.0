@@ -1,16 +1,16 @@
-From: Li Jinlin <lijinlin3@huawei.com>
+From: Li Jinlin <lijinlin3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: [PATCH] fix UAF in bfq_io_set_weight_legacy()
-Date: Thu, 9 Sep 2021 21:26:46 +0800
-Message-ID: <20210909132646.1921280-1-lijinlin3@huawei.com>
+Date: Thu, 9 Sep 2021 21:37:37 +0800
+Message-ID: <20210909133737.1930835-1-lijinlin3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: paolo.valente@linaro.org, ^C@kernel.org, axboe@kernel.dk, fchecconi@gmail.com, avanzini.arianna@gmail.com
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linfeilong@huawei.com, louhongxiang@huawei.com
+To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linfeilong-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, louhongxiang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-From: Li Jinlin <lijinlin3@huawei.com>
+From: Li Jinlin <lijinlin3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
 KASAN reports a use-after-free report when doing fuzz test:
 
@@ -135,7 +135,7 @@ walking ->blkg_list and getting/using bfqg, RCU walk ->blkg_list and
 hold the blkg's queue lock while getting/using bfqg.
 
 Fixes: e21b7a0b9887 ("block, bfq: add full hierarchical scheduling and cgroups support")
-Signed-off-by: Li Jinlin <lijinlin3@huawei.com>
+Signed-off-by: Li Jinlin <lijinlin3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
  block/bfq-cgroup.c | 12 ++++++++----
  1 file changed, 8 insertions(+), 4 deletions(-)
