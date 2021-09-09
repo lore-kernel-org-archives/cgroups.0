@@ -1,65 +1,46 @@
 From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [RFC PATCH 3/3] misc_cgroup: remove error log to avoid log flood
-Date: Thu, 9 Sep 2021 16:37:20 +0200
-Message-ID: <20210909143720.GA14709@blackbody.suse.cz>
-References: <988f340462a1a3c62b7dc2c64ceb89a4c0a00552.1631077837.git.brookxu@tencent.com>
- <86e89df640f2b4a65dd77bdbab8152fa8e8f5bf1.1631077837.git.brookxu@tencent.com>
+Subject: Re: [PATCH v2] misc_cgroup: use a counter to count the number of
+ failures
+Date: Thu, 9 Sep 2021 17:01:46 +0200
+Message-ID: <20210909150146.GA18171@blackbody.suse.cz>
+References: <a09f381462b1ce9c506a22713b998e21b459f7e9.1628899295.git.brookxu@tencent.com>
+ <20210824164423.GA11859@blackbody.suse.cz>
+ <YSVDwc/1sEmXdOK9@slm.duckdns.org>
+ <4ed67493-e595-e002-69f9-1f53662ba189@gmail.com>
+ <20210826112954.GD4520@blackbody.suse.cz>
+ <49057879-92a9-958a-ac30-057ceabd1b7f@gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1631198241; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1631199707; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=y+IrKyLL/zCoxdFm0CBl46HK6iMLrxJ4/diWExUQinM=;
-        b=bzekiy+7VzwGb33GpGxCKJ9ZVvVk7sTX5tGgg3I34wbOEq9faVv4OvGXwPkWEcmuh/VqRo
-        01D3BhcaZPTBfTThaRVOkwtb3X74CIKhoS2R8ESgGG/YLwW1yt0w90mRSh8jTjG/ZQ6Zat
-        DkQt5n5PgGRIy5gcmVwCtzWqS/k+7xA=
+        bh=7YDXHPzZgNhxK+JqlG9HXkSUyEV8IJc2b4TuXsz5yH0=;
+        b=kRRhZmQ3mqVSek9+0O4cHQ+rYzMVNOxaruVMvb1v75PP9GurRgzsXJuC+mknsmdvE8YkvW
+        Zb3LnQ3XGdB56U8spoEpjD4a2QLYTxaQiq0o27yIjFzfZdz3biJUxxSO3DHXksyCYs62PA
+        HwqjlBP1xSO36QTsp9qKWvwqz6leJmo=
 Content-Disposition: inline
-In-Reply-To: <86e89df640f2b4a65dd77bdbab8152fa8e8f5bf1.1631077837.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+In-Reply-To: <49057879-92a9-958a-ac30-057ceabd1b7f-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Sep 08, 2021 at 01:24:36PM +0800, brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> This log provides less information, we can get more detailed failure
-> records through
-> misc.events, misc.events.local and misc.failcnt.
-> From this, perhaps we can remove it.
+Hi.
 
-I hope: a) it's not used widely, b) no-one relies on parsing the
-message so this is an acceptable change.
+On Wed, Sep 08, 2021 at 01:29:18PM +0800, brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> I have sentout misc_cgroup events and events.local related patches.
+> I want to make corresponding changes to pids cgroup by the way. Do
+> you think it is ok?
 
-> @@ -157,13 +157,6 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
->  		new_usage = atomic_long_add_return(amount, &res->usage);
->  		if (new_usage > READ_ONCE(res->max) ||
->  		    new_usage > READ_ONCE(misc_res_capacity[type])) {
-> -			if (!res->failed) {
-> -				pr_info("cgroup: charge rejected by the misc controller for %s resource in ",
-> -					misc_res_name[type]);
-> -				pr_cont_cgroup_path(i->css.cgroup);
-> -				pr_cont("\n");
-> -				res->failed = true;
-> -			}
+The pids controller is longer out there, so some changes should be more
+careful (e.g. I wouldn't drop the log message).
 
-`i` is the misc_cg whose limit was hit. In a sense, I think the current
-implementation of the log message (before your patch) is not as useful
-as it could be. The logged message here should not refer to `i` but `cg`
-(i.e. the cgroup where the actual chargee resides). It's basically the
-idea from [1].
+Also, you can base it on [1] (there should be just missing the
+.local/hierarchical event files separation).
 
-So there could be two type of events (not referring to the v1-specific
-failcnt):
-- max - number of times the cgroup's misc.max was hit,
-- fail - number of times operation failed (rejected) in the cgroup.
-
-The former would tell you which limit is probably set too low, the
-latter would capture which cgroup workload is affected. (The difference
-would become apparent with >1 level deep hierarchies.)
-
-Regards,
+HTH,
 Michal
 
-[1] https://lore.kernel.org/lkml/20191202191100.GF16681-LpCCV3molIbIZ9tKgghJQw2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org/
-
+[1] https://lore.kernel.org/lkml/20200205134426.10570-1-mkoutny-IBi9RG/b67k@public.gmane.org/
