@@ -1,42 +1,65 @@
-From: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: Vipin Sharma <vipinsh@google.com>
 Subject: Re: [RFC PATCH 1/3] misc_cgroup: introduce misc.events and misc_events.local
-Date: Thu, 9 Sep 2021 09:56:17 -0700
-Message-ID: <CAHVum0cGkzLg_5fZNFNTG=RRqGYW-8YG2V3gst1TevjtQ4YdBA@mail.gmail.com>
+Date: Thu, 9 Sep 2021 10:08:39 -0700
+Message-ID: <CAHVum0eGN=v1kLqHQg7HBESp8Kg4aGZFNd4XTpxfeyToXPmPVg@mail.gmail.com>
 References: <988f340462a1a3c62b7dc2c64ceb89a4c0a00552.1631077837.git.brookxu@tencent.com>
+ <20210909143702.GA13761@blackbody.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ZVjhQf4Wc5qDwKc6Wxkb4xPFLHy4YamVgNh/i3e/aqg=;
-        b=sV1HzMzIqQ847QSIIUoHp201jmkdi8+7JMKKQdM8EinRPUqW6MxoJPuy/M2sRh2YX8
-         xGwcv5MvtoepmTeQz63R00ZU3mkodxx8Vtuf7cefIh7JiddrNc0Yd+HLcMnE0u5OAfR/
-         fweeDgDPOYX5WlQZwmnM8z7OYcNcHK5+OUWA6PU/YOo3Ef1EPu2B782teb163N0EMh5v
-         mjd6zGLdXtWdZIVYySo5svms0Bzb+9s5hNCnj2sj2n75/Y3AjSmdyyKIMNTBPT1kXSVH
-         /V0DIbMAyvMrgOFxygJGca5bv4qaGEU//VC0F8i/MejvgsFhmMA+lFU74x5dSN7tsYCr
-         da0Q==
-In-Reply-To: <988f340462a1a3c62b7dc2c64ceb89a4c0a00552.1631077837.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+         :cc:content-transfer-encoding;
+        bh=4R55HGCX5kPiIdGourKYRqDLwJwF8WpWPhWp89wjZ2A=;
+        b=WFfYj9RQ/+CHwxP1EKydAwy0xyGRTKUWvF0EFylgCw0ummpVqqR+qlnHE+s3nGMV6H
+         wNaPrKSGu0kuhKvxKWfgzSkrzk0UxkNFJozak3jVIUxe2Y+3X/V8L7sXP97u9eLsXyLr
+         RnbvRWT28a4GkgJpXu/dG/sxpesgDHNLad6n4bn62ObFCt2BXe6Ivcx+AEBCTzI73F3f
+         r4kknqIged7tVjFk6Q1n70H111zzqGzXRwWg55hm6vsEgYhXV8qsi04oNyVtONp8Wljt
+         ee2XR2txI//CcTYgL+xIqkSHWzf2bT/xRXsQ89LxaL6nRIg9rI871PPoK25LrT6GnC3U
+         lRpA==
+In-Reply-To: <20210909143702.GA13761@blackbody.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: brookxu <brookxu.cn@gmail.com>, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Tue, Sep 7, 2021 at 10:24 PM brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+On Thu, Sep 9, 2021 at 7:37 AM Michal Koutn=C3=BD <mkoutny@suse.com> wrote:
 >
-> From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+> Hello Chunguang.
 >
-> Introduce misc.events and misc.events.local to make it easier for
-> us to understand the pressure of resources. The main idea comes
-> from mem_cgroup.
+> The new version looks like a good step generally.
 >
-> Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-> ---
->  include/linux/misc_cgroup.h |  9 +++++++
->  kernel/cgroup/misc.c        | 50 ++++++++++++++++++++++++++++++++++++-
->  2 files changed, 58 insertions(+), 1 deletion(-)
+> My main remark is that I wouldn't make a distinct v1 and v2 interface,
+> it's a new controller so I think the v2 could be exposed in both cases
+> (or in other words, don't create new v1-specific features).
 
-Thanks for the changes. Please also update the documentation at
-Documentation/admin-guide/cgroup-v2.rst for the new changes in the
-misc cgroup.
+I agree with Michal. We can have the same interface for v1 otherwise
+there will not be any form of feedback in v1 for failures.
+
+>
+> On Wed, Sep 08, 2021 at 01:24:34PM +0800, brookxu <brookxu.cn@gmail.com> =
+wrote:
+> > +static int misc_events_show(struct seq_file *sf, void *v)
+> > +{
+> > +     struct misc_cg *cg =3D css_misc(seq_css(sf));
+> > +     unsigned long count, i;
+> > +
+> > +     for (i =3D 0; i < MISC_CG_RES_TYPES; i++) {
+> > +             count =3D atomic_long_read(&cg->events[i]);
+> > +             if (READ_ONCE(misc_res_capacity[i]) || count)
+> > +                     seq_printf(sf, "%s %lu\n", misc_res_name[i], coun=
+t);
+>
+> More future-proof key would be
+>                         seq_printf(sf, "%s.max %lu\n", misc_res_name[i], =
+count);
+> or
+>                         seq_printf(sf, "max.%s %lu\n", misc_res_name[i], =
+count);
+>
+> (Which one is a judgement call but I'd include the "name" of event type t=
+oo.)
+>
+I am inclined more towards "%s.max", it looks nice to see the resource
+name before its corresponding events.
