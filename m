@@ -1,49 +1,54 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH 0/2] support cgroup pool in v1
-Date: Wed, 8 Sep 2021 06:35:11 -1000
-Message-ID: <YTjmP0EGEWGYhroM@slm.duckdns.org>
-References: <cover.1631102579.git.escape@linux.alibaba.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v4 0/2] refactor sqthread cpu binding logic
+Date: Thu, 9 Sep 2021 14:34:05 +0200
+Message-ID: <20210909123405.GA7872@blackbody.suse.cz>
+References: <20210901124322.164238-1-haoxu@linux.alibaba.com>
+ <20210902164808.GA10014@blackbody.suse.cz>
+ <efd3c387-9c7c-c0d8-1306-f722da2a9ba1@kernel.dk>
 Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=OcymaPtn2yQq8RdWF6BFH20bMyFtxjOxZMFIB1OMhb4=;
-        b=cEO/E0Ry4JDv4NAoZWlVwP4k205lyAd9w0Jc/1E0rCsSXw3qxpjooAnEo5b0LiZ/xh
-         1cmfhhXIkymzyYy74CxqfFRkcGkxEeqgtwbcmUmMOkNEgfNyZNECXRyYhdC3TWU3C1wr
-         RYo72dsDHQjeUlpJ7ZxqIgnRC0i4WwnJja8UvQ7EAgxQKkXrN4eymCpiHcJPG6g0QGA8
-         1fdL5abIwfzLj6FxUwYFP5fiwW7rZUSkCJFGZOaOTXRaWkmRkbrJ+7uEWs7JEQ0dy4ji
-         /jGHumraXj/+ujT5+g4BougNm+Fbf7wvpHnEOR+SoWoel7IC/QoSVu1xTlgMd7VHAL2l
-         7/XA==
-Sender: Tejun Heo <htejun@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1631190848; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=otlEKKTKaxtvvMLg6ergurTGZ0izRkiNu8lIiQOoJG8=;
+        b=pafa6rOLfy8b6s0LOtgRFEyJrgMHk2KL8oMKsBNZqMIZBfwqiSjy0lZ7HvQn9lCFIa0Def
+        3I/YVOWFpRHNDb+lcKi49HsIXhj7fESeGM/4jkVBGp0o6almfudRW5jGBLok/fvcJn3Fx1
+        m+3/6IVrYh3limVU1shkb/0FMRtdzdA=
 Content-Disposition: inline
-In-Reply-To: <cover.1631102579.git.escape@linux.alibaba.com>
+In-Reply-To: <efd3c387-9c7c-c0d8-1306-f722da2a9ba1-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yi Tao <escape@linux.alibaba.com>
-Cc: gregkh@linuxfoundation.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, mcgrof@kernel.org, keescook@chromium.org, yzaikin@google.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, shanpeic@linux.alibaba.com
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Hao Xu <haoxu-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Pavel Begunkov <asml.silence-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, io-uring-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joseph Qi <joseph.qi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 
-Hello,
+Thanks for the answer and the context explanations.
 
-On Wed, Sep 08, 2021 at 08:15:11PM +0800, Yi Tao wrote:
-> In order to solve this long-tail delay problem, we designed a cgroup
-> pool. The cgroup pool will create a certain number of cgroups in advance.
-> When a user creates a cgroup through the mkdir system call, a clean cgroup
-> can be quickly obtained from the pool. Cgroup pool draws on the idea of
-> cgroup rename. By creating pool and rename in advance, it reduces the
-> critical area of cgroup creation, and uses a spinlock different from
-> cgroup_mutex, which reduces scheduling overhead on the one hand, and eases
-> competition with attaching processes on the other hand.
+On Thu, Sep 02, 2021 at 12:00:33PM -0600, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org> wrote:
+> We already have this API to set the affinity based on when these were
+> regular kernel threads, so it needs to work with that too. As such they
+> are marked PF_NO_SETAFFINITY.
 
-I'm not sure this is the right way to go about it. There are more
-conventional ways to improve scalability - making locking more granular and
-hunting down specific operations which take long time. I don't think cgroup
-management operations need the level of scalability which requires front
-caching.
+I see the current implementation "allows" at most one binding (by the
+passed sq_cpu arg) to a CPU and then "locks" it by setting
+PF_NO_SETAFFINITY subsequently (after set_cpus_allowed_ptr).
+And actually doesn't check whether it succeeded or not (Hao suggests in
+another subthread sq_cpu is a mere hint).
 
-Thanks.
+Nevertheless, you likely don't want to "trespass" the boundary of a
+cpuset and I think that it'll end up with a loop checking against
+hotplug races. That is already implemented in __sched_affinity, it'd be
+IMO good to have it in one place only.
 
--- 
-tejun
+> > [1] Not only spending their life in kernel but providing some
+> > delocalized kernel service.
+> 
+> That's what they do...
+
+(I assume that answer to "life in kernel" and the IO threads serve only
+the originating cpuset (container) i.e. are (co)localized to it (not
+delocalized as some kernel workers).)
+
+Cheers,
+Michal
