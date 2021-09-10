@@ -1,72 +1,66 @@
-From: Daniel Jordan <daniel.m.jordan@oracle.com>
-Subject: Re: [PATCH v2 4/5] sched/cpuacct: fix user/system in shown
- cpuacct.usage*
-Date: Fri, 10 Sep 2021 15:03:26 -0400
-Message-ID: <20210910190326.nwv7kktt42nucoit@oracle.com>
-References: <20210217120004.7984-1-arbn@yandex-team.com>
- <20210820094005.20596-1-arbn@yandex-team.com>
- <20210820094005.20596-4-arbn@yandex-team.com>
+From: Benjamin Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] sched/core: Fix wrong burst unit in cgroup2 cpu.max write
+Date: Fri, 10 Sep 2021 13:43:39 -0700
+Message-ID: <xm267dfonouc.fsf@google.com>
+References: <20210910162509.622222-1-kailun.qin@intel.com>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : content-type : in-reply-to :
- mime-version; s=corp-2021-07-09;
- bh=DNkfUGSbpjIuVqk5Z5ogMBzidSNn4HDkXcWuWjMkuPY=;
- b=GKMfc2YWGGuQuDLPnozvRVPsrVq+tPttAsxLptDLOmNpqNVPYFB9fbHqYV8o0FchU1VJ
- zk7ZfW9EMNHvYQBXdstrsGLW0kwwat2JyA3cKhf/b5Kht1MD0S1VsVjtRJ2PSdB7zkk4
- NTZPK/K0KLOOeVFQgQsVyVDJxKNvzUQpgxvzsV9vRbDWewrpgZMQDYw6UJNp7dGTWNLA
- gj+/x0J9qtV5DmpDPONOT78iNloB5VHt3MA6yrzAasSVhGtnOK8fKAMmmnzYZ8elscwJ
- V7QHM9ISpqu+FXw64y5z1LZf+pho1GLSDAg/91ZOOpJ8ybserI0rArNhFNy646rySlsY rA== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : content-type : in-reply-to :
- mime-version; s=corp-2020-01-29;
- bh=DNkfUGSbpjIuVqk5Z5ogMBzidSNn4HDkXcWuWjMkuPY=;
- b=tuCILJlVLTdDZMWHAdlxwZMY+8UQxqEwAe+o7kj2CJabHtjVW+5mTxcMG/Bk+9KGSWGz
- YMfqzma63AjJSZvJRRjZDmsDkX0YCWsmwLSWBrubp6JB9cccudbWj4a1tLra3y/Gh8XC
- Z2YMBXEhIkR+l5rNOV912chiX6143Jg3silEcjr+I0MSCR7WYQxvFjkRIj1aaMvkbq9J
- Jo7zrB5Akr3EvXyfwYAIAWL6XiHllBEheis45zCN7VeP/8EMIoD8weim1psqzoi1bS3A
- evyuXUezedKFu1AaoOKT2eanQZ8/8CEe31xqYTYUXN/ySpszXdIT8tjsDD69+oubGJmw Xw== 
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DNkfUGSbpjIuVqk5Z5ogMBzidSNn4HDkXcWuWjMkuPY=;
- b=LybJcw7cvr8ltYeqzu+y4m7VFX/qpLyeugDjiPHwxNtEHpqAhxlzkXCB1A8yFJGuz2faIIQSX2sWh/+RBgGnaDTLwFZiw5/l1lMf4RX1QM7CRrSXRQ48KNgJNwHIf2jOI7/YDafmUuLCoOO6DiL0kfI3CqGcs+jQUuTl6Ybb2Zs=
-Content-Disposition: inline
-In-Reply-To: <20210820094005.20596-4-arbn@yandex-team.com>
+        d=google.com; s=20210112;
+        h=from:to:cc:subject:references:date:in-reply-to:message-id
+         :user-agent:mime-version;
+        bh=lKqAYpYNlQ9hkuyrKjXk6bTpMchdOnzhQvx8SF/LD7o=;
+        b=DlpN4wySBad/y9SQPx+P71ThJSo7FqyruNXODlhEZ1s3VW+7183RRa/2RPQdKA+x3C
+         xHLFetRomChjnZ3c9CXts4FhRjtnNUDGvp7l9/XhuzSR31sm0fhUne3+cv1xX3y+Q4RT
+         vnIiVPDc31WJZb8SkH5yokzl7SaZ1uqJS9NKc3tenwZeDy3QiLXYxoaP4efDPlRISMC+
+         CYlX2+VJMkBkFXQBbBCTN9lLugiwuTAGkFQCLmpjlnMnC59LKz04aqsuDFkGQEPCI3L5
+         9pIEOFG7qghiV+TfkNgunDkPDacmtSqxhqnLpI/X8vvrmedAWnxwvoBdNXFXB/Q9BWpF
+         y48w==
+In-Reply-To: <20210910162509.622222-1-kailun.qin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> (Kailun Qin's
+        message of "Fri, 10 Sep 2021 12:25:09 -0400")
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrey Ryabinin <arbn@yandex-team.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, bharata@linux.vnet.ibm.com, boris@bur.io, stable@vger.kernel.org
+To: Kailun Qin <kailun.qin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, changhuaixin-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
 
-On Fri, Aug 20, 2021 at 12:40:04PM +0300, Andrey Ryabinin wrote:
-> cpuacct has 2 different ways of accounting and showing user
-> and system times.
-> 
-> The first one uses cpuacct_account_field() to account times
-> and cpuacct.stat file to expose them. And this one seems to work ok.
-> 
-> The second one is uses cpuacct_charge() function for accounting and
-> set of cpuacct.usage* files to show times. Despite some attempts to
-> fix it in the past it still doesn't work. Sometimes while running KVM
-> guest the cpuacct_charge() accounts most of the guest time as
-> system time. This doesn't match with user&system times shown in
-> cpuacct.stat or proc/<pid>/stat.
-> 
-> Demonstration:
->  # git clone https://github.com/aryabinin/kvmsample
->  # make
->  # mkdir /sys/fs/cgroup/cpuacct/test
->  # echo $$ > /sys/fs/cgroup/cpuacct/test/tasks
->  # ./kvmsample &
->  # for i in {1..5}; do cat /sys/fs/cgroup/cpuacct/test/cpuacct.usage_sys; sleep 1; done
->  1976535645
->  2979839428
->  3979832704
->  4983603153
->  5983604157
+Kailun Qin <kailun.qin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> writes:
 
-Thanks for expanding on this, and fixing broken cpuacct_charge.
+> In cpu_max_write(), as the eventual tg_set_cfs_bandwidth() operates on
+> the burst in nsec which is input from tg_get_cfs_burst() in usec, it
+> should be converted into nsec accordingly.
+>
+> If not, this may cause a write into cgroup2 cpu.max to unexpectedly
+> change an already set cpu.max.burst.
+>
+> This patch addresses the above issue.
+>
+> Signed-off-by: Kailun Qin <kailun.qin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-For the series,
-Reviewed-by: Daniel Jordan <daniel.m.jordan@oracle.com>
+Oh, huh, cpu_period_quota_parse is confusing and changes the units in
+period. (It might make more sense to make all that interaction clearer
+somehow, but this is probably fine)
+
+It's probably also better to just use tg->cfs_bandwidth.burst directly
+rather than do an unnecessary div+multiply.
+
+For whichever version:
+
+Reviewed-by: Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+
+> ---
+>  kernel/sched/core.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+> index c4462c454ab9..fc9fcc56149f 100644
+> --- a/kernel/sched/core.c
+> +++ b/kernel/sched/core.c
+> @@ -10711,7 +10711,7 @@ static ssize_t cpu_max_write(struct kernfs_open_file *of,
+>  {
+>  	struct task_group *tg = css_tg(of_css(of));
+>  	u64 period = tg_get_cfs_period(tg);
+> -	u64 burst = tg_get_cfs_burst(tg);
+> +	u64 burst = (u64)tg_get_cfs_burst(tg) * NSEC_PER_USEC;
+>  	u64 quota;
+>  	int ret;
