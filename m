@@ -1,73 +1,62 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH memcg] memcg: prohibit unconditional exceeding the limit
- of dying tasks
-Date: Fri, 10 Sep 2021 16:55:26 +0200
-Message-ID: <YTtx3toUOMLXk4GZ@dhcp22.suse.cz>
-References: <5b06a490-55bc-a6a0-6c85-690254f86fad@virtuozzo.com>
- <099aa0db-045a-e5b8-6df7-b7c3fc4d3caa@i-love.sakura.ne.jp>
- <4a407474-ff7a-9e4f-d314-ab85f0eeaadf@virtuozzo.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [RFC PATCH 3/3] misc_cgroup: remove error log to avoid log flood
+Date: Fri, 10 Sep 2021 17:36:09 +0200
+Message-ID: <20210910153609.GC24156@blackbody.suse.cz>
+References: <988f340462a1a3c62b7dc2c64ceb89a4c0a00552.1631077837.git.brookxu@tencent.com>
+ <86e89df640f2b4a65dd77bdbab8152fa8e8f5bf1.1631077837.git.brookxu@tencent.com>
+ <20210909143720.GA14709@blackbody.suse.cz>
+ <CAHVum0ffLr+MsF0O+yEWKcdpR0J0TQx6GdDxeZFZY7utZT8=KA@mail.gmail.com>
+ <YTpY0G3+IJYmGbdd@blackbook>
+ <478e986c-bc69-62b8-936e-5b075f9270b4@gmail.com>
+ <20210910092310.GA18084@blackbody.suse.cz>
+ <1679f995-5a6f-11b8-7870-54318db07d0d@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1631285730; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1631288171; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=+I/RKyAZdBWnkeMlKqYdgK786I94mbT861DCEwjnivU=;
-        b=iGS3pLMze+lTPJhBlasZr9bVa4g7NW57UckT4cRZ55LS2Hw2TJduxe9gy2IZBOyMjE7ESl
-        bh8JVvw24sutkXOH1Kx1aKew708anymj55P6qFBjGvEUhN1QfOOgTRuljZdEHgTXd7l6F1
-        hzv3VW98ejTQsu6YOPPwP2cvjzEsJo4=
+        bh=ZBZRN9N1d5pyu4AdCx2wOykUXfyS79SPRhnX7ttZWoI=;
+        b=iyD4aQR13XtpyGuJ53I7aLFdhysvYSWSxVBZgnn7ZhwG3yVUitIv/qbfIUccgDvq7+i/13
+        M8/VtCPWPMg6CAslB/UzZsWpp8LGEPSL8AmuhZWP0ytWUTXcyj5NMnybRWgCLZyiyIX+y8
+        dHBUCVW0U6qmGCL5JxUEjKUpH+qJPvM=
 Content-Disposition: inline
-In-Reply-To: <4a407474-ff7a-9e4f-d314-ab85f0eeaadf@virtuozzo.com>
+In-Reply-To: <1679f995-5a6f-11b8-7870-54318db07d0d-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs@virtuozzo.com>
-Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset="utf-8"
+To: "brookxu.cn" <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 10-09-21 16:20:58, Vasily Averin wrote:
-> On 9/10/21 4:04 PM, Tetsuo Handa wrote:
-> > On 2021/09/10 21:39, Vasily Averin wrote:
-> >> The kernel currently allows dying tasks to exceed the memcg limits.
-> >> The allocation is expected to be the last one and the occupied memory
-> >> will be freed soon.
-> >> This is not always true because it can be part of the huge vmalloc
-> >> allocation. Allowed once, they will repeat over and over again.
-> >> Moreover lifetime of the allocated object can differ from
-> >> In addition the lifetime of the dying task.
-> > 
-> > Can't we add fatal_signal_pending(current) test to vmalloc() loop?
+On Fri, Sep 10, 2021 at 10:29:21PM +0800, "brookxu.cn" <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> Through events and events.local, we can determine which node has
+> insufficient resources. For example, when the ‘events’ is large, we traverse
+> down and use events.local to determine which node has insufficient
+> resources.
 
-We can and we should.
+IIUC, this works in situations when the limits are set in decreasing
+fashion (from root down) till very (controller) leaves. That's a valid
+config and you're right that following 'max' events gets you to the
+misbehaving/underprovisioned cgroup.
 
-> 1) this has been done in the past but has been reverted later.
+> 'fail' counter does not seem to provide more effective
+> information in this regard. When 'fail' is big, it seems that we still need
+> to use events and events.local to determine the node of insufficient
+> resources.
+> I am not very sure what details can we learn through 'fail' counter.
 
-The reason for that should be addressed IIRC.
+If there's a limit on certain level with otherwise unconstrained cgroup
+structure below (a valid config too), the 'fail' counter would help
+determining what the affected cgroup is. Does that make sense to you?
 
-> 2) any vmalloc changes will affect non-memcg allocations too.
->  If we're doing memcg-related checks it's better to do it in one place.
+The log messages as implemented currently, aren't as useful as proposed
+'fail' counter (they would need report 'cg' path, not 'i').
 
-I think those two things are just orthogonal. Bailing out from vmalloc
-early sounds reasonable to me on its own. Allocating a large thing that
-is likely to go away with the allocating context is just a waste of
-resources and potential reason to disruptions to others.
+I see justification for 'fail' events as a replacement for the dropped
+log messages. Although it's not a complete replacement due to longer
+persistence of the log, illustrated e.g. with the short-lived containers
+whose cgroups/fail counts are gone).
 
-> 3) it is not vmalloc-only issue. Huge number of  kmalloc page allocations 
-> from N concurrent threads will lead to the same problem. 
 
-Agreed. I do not think it is viable to sprinkle fatal_signal_pending or
-similar checks all over the code. This should better be limited to
-allocators and the charging function.
-
-Our assumption that is described in the code simply doesn't hold and it
-is close to impossible to check all charging paths to bail out properly
-so I think we should just remove that optimistic attitude and do not
-force charges unless that is absolutely necessary (e.g. __GFP_NOFAIL) or
-impractical (e.g. atomic allocations) and bound.
-
-I didn't get to review the patch yet. This is a tricky area with many
-unobvious corner cases. I will try find some time next week.
-
-Thanks!
--- 
-Michal Hocko
-SUSE Labs
+Michal
