@@ -1,45 +1,96 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [RFC PATCH 1/3] misc_cgroup: introduce misc.events and
- misc_events.local
-Date: Fri, 10 Sep 2021 12:33:06 +0200
-Message-ID: <20210910103306.GA24156@blackbody.suse.cz>
-References: <988f340462a1a3c62b7dc2c64ceb89a4c0a00552.1631077837.git.brookxu@tencent.com>
- <20210909143702.GA13761@blackbody.suse.cz>
- <CAHVum0eGN=v1kLqHQg7HBESp8Kg4aGZFNd4XTpxfeyToXPmPVg@mail.gmail.com>
- <8259b666-f3a4-6788-880c-38d679414bcb@gmail.com>
+From: Vasily Averin <vvs@virtuozzo.com>
+Subject: [PATCH memcg] memcg: prohibit unconditional exceeding the limit of
+ dying tasks
+Date: Fri, 10 Sep 2021 15:39:28 +0300
+Message-ID: <5b06a490-55bc-a6a0-6c85-690254f86fad@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1631269987; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=VuD6HYOFCTA+t/pZ+ukbmTtyDG3QvPABmFJv2yqsIU4=;
-        b=mMe6RbfGZXixrP2ucNxm8af8RpQwXsefvWROdXE9QrJXQ1N8d+PdYmk7IX7odV5t47MMYm
-        qROWOWAEmimRcB8UkU/UoV/PuBnm8MJFn7T2ZUMfimW7SgwWWuxfHy8Af42BcLwXWTmbH3
-        t9PPGInQY8hUuPUIxeudI2/7po/voNQ=
-Content-Disposition: inline
-In-Reply-To: <8259b666-f3a4-6788-880c-38d679414bcb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
+        :From; bh=uX26lHcEDEEEDF7IL0qVhsYLGM0hoO2eLUbDvhlRdtw=; b=h43ebg4SmVjbGOYRO+L
+        BoV3O7RDbVzBij44DK/UBOq2B5Qe1i3YEmSZOZEX5mdSkqGDsIpSnGXB47D8BZ3LeITSlIUNjYOwg
+        yURpuDjMmDFXE8CGx0Lau0ZXHjf9L8LPvclhzutmdAC5lkTKuE6PfjCHUepjuhUQdw9t+y+iT0Q=;
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Fri, Sep 10, 2021 at 01:20:37PM +0800, brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wr=
-ote:
-> Yeah, this is more reasonable. But there is still one question, whether we
-> need to be consistent with other cgroup subsystems, events and events.loc=
-al
-> under v1 should not support hierarchy=EF=BC=9F
+The kernel currently allows dying tasks to exceed the memcg limits.
+The allocation is expected to be the last one and the occupied memory
+will be freed soon.
+This is not always true because it can be part of the huge vmalloc
+allocation. Allowed once, they will repeat over and over again.
+Moreover lifetime of the allocated object can differ from
+In addition the lifetime of the dying task.
+Multiple such allocations running concurrently can not only overuse
+the memcg limit, but can lead to a global out of memory and,
+in the worst case, cause the host to panic.
 
-My take is that it's acceptable to present the v2-like files in v1 too
-for the sake of simplicity since:
-- this is not used yet,
-- the v1 is less conventional and
-- the presence of events.local would cater even to cases with tasks in
-  inner nodes.
+Signed-off-by: Vasily Averin <vvs@virtuozzo.com>
+---
+ mm/memcontrol.c | 23 +++++------------------
+ 1 file changed, 5 insertions(+), 18 deletions(-)
 
-It'd be good to have Tejun's insight on this too.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 389b5766e74f..67195fcfbddf 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1834,6 +1834,9 @@ static enum oom_status mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int
+ 		return OOM_ASYNC;
+ 	}
+ 
++	if (should_force_charge())
++		return OOM_SKIPPED;
++
+ 	mem_cgroup_mark_under_oom(memcg);
+ 
+ 	locked = mem_cgroup_oom_trylock(memcg);
+@@ -2622,15 +2625,6 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (gfp_mask & __GFP_ATOMIC)
+ 		goto force;
+ 
+-	/*
+-	 * Unlike in global OOM situations, memcg is not in a physical
+-	 * memory shortage.  Allow dying and OOM-killed tasks to
+-	 * bypass the last charges so that they can exit quickly and
+-	 * free their memory.
+-	 */
+-	if (unlikely(should_force_charge()))
+-		goto force;
+-
+ 	/*
+ 	 * Prevent unbounded recursion when reclaim operations need to
+ 	 * allocate memory. This might exceed the limits temporarily,
+@@ -2688,9 +2682,6 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (gfp_mask & __GFP_RETRY_MAYFAIL)
+ 		goto nomem;
+ 
+-	if (fatal_signal_pending(current))
+-		goto force;
+-
+ 	/*
+ 	 * keep retrying as long as the memcg oom killer is able to make
+ 	 * a forward progress or bypass the charge if the oom killer
+@@ -2698,15 +2689,11 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	 */
+ 	oom_status = mem_cgroup_oom(mem_over_limit, gfp_mask,
+ 		       get_order(nr_pages * PAGE_SIZE));
+-	switch (oom_status) {
+-	case OOM_SUCCESS:
++	if (oom_status == OOM_SUCCESS) {
+ 		nr_retries = MAX_RECLAIM_RETRIES;
+ 		goto retry;
+-	case OOM_FAILED:
++	} else if (oom_status == OOM_FAILED)
+ 		goto force;
+-	default:
+-		goto nomem;
+-	}
+ nomem:
+ 	if (!(gfp_mask & __GFP_NOFAIL))
+ 		return -ENOMEM;
+-- 
+2.31.1
 
-Michal
