@@ -1,70 +1,42 @@
-From: "taoyi.ty" <escape@linux.alibaba.com>
-Subject: Re: [RFC PATCH 1/2] add pinned flags for kernfs node
-Date: Fri, 10 Sep 2021 10:14:28 +0800
-Message-ID: <3d871bd0-dab5-c9ca-61b9-6aa137fa9fdf@linux.alibaba.com>
+From: "taoyi.ty" <escape-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [RFC PATCH 2/2] support cgroup pool in v1
+Date: Fri, 10 Sep 2021 10:15:02 +0800
+Message-ID: <a91912e2-606a-0868-7a0c-38dec5012b02@linux.alibaba.com>
 References: <cover.1631102579.git.escape@linux.alibaba.com>
- <e753e449240bfc43fcb7aa26dca196e2f51e0836.1631102579.git.escape@linux.alibaba.com>
- <YTiuBaiVZhe3db9O@kroah.com>
+ <03e2b37678c9b2aef4f5dee303b3fb87a565d56b.1631102579.git.escape@linux.alibaba.com>
+ <YTiuLES5qd086qRu@kroah.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <YTiuBaiVZhe3db9O@kroah.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <YTiuLES5qd086qRu-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, mcgrof@kernel.org, keescook@chromium.org, yzaikin@google.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, shanpeic@linux.alibaba.com
+To: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shanpeic-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org
 
 
 On 2021/9/8 下午8:35, Greg KH wrote:
-> Why are kernfs changes needed for this?  kernfs creation is not
-> necessarily supposed to be "fast", what benchmark needs this type of
-> change to require the addition of this complexity?
+> I thought cgroup v1 was "obsolete" and not getting new features added to
+> it.  What is wrong with just using cgroups 2 instead if you have a
+> problem with the v1 interface?
+>
+>    
 
-The implementation of the cgroup pool should have nothing
-
-to do with kernfs, but during the development process,
-
-I found that when there is a background cpu load, it takes
-
-a very significant time for a process to get the mutex from
-
-being awakened to starting execution.
-
-To create 400 cgroups concurrently, if there is no background
-
-cpu load, it takes about 80ms, but if the cpu usage rate is
-
-40%, it takes about 700ms. If you reduce
-
-sched_wakeup_granularity_ns, the time consumption will also
-
-be reduced. If you change mutex to spinlock, the situation
-
-will be very much improved.
-
-So to solve this problem, mutex should not be used. The
-
-cgroup pool relies on kernfs_rename which uses
-
-kernfs_mutex, so I need to bypass kernfs_mutex and
-
-add a pinned flag for this.
-
-Because the lock mechanism of kernfs_rename has been
-
-changed, in order to maintain data consistency, the creation
-
-and deletion of kernfs have also been changed accordingly
-
-I admit that this is really not a very elegant design, but I don’t
-
-know how to make it better, so I throw out the problem and
-
-try to seek help from the community.
+There are two reasons for developing based on cgroup v1:
 
 
-thanks,
+1. In the Internet scenario, a large number of services
+
+are still using cgroup v1, cgroup v2 has not yet been
+
+popularized.
 
 
-Yi Tao
+2. The mechanism of cgroup pool refers to cgroup1_rename,
+
+but for some reasons, a similar rename mechanism is not
+
+implemented on cgroup v2, and I don't know the thoughts
+
+behind this.
 
