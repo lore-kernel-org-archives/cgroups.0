@@ -1,49 +1,72 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC PATCH 3/3] misc_cgroup: remove error log to avoid log flood
-Date: Fri, 10 Sep 2021 07:37:44 -1000
-Message-ID: <YTuX6Cpv1kg+DHmJ@slm.duckdns.org>
-References: <CAHVum0ffLr+MsF0O+yEWKcdpR0J0TQx6GdDxeZFZY7utZT8=KA@mail.gmail.com>
- <YTpY0G3+IJYmGbdd@blackbook>
- <478e986c-bc69-62b8-936e-5b075f9270b4@gmail.com>
- <20210910092310.GA18084@blackbody.suse.cz>
- <1679f995-5a6f-11b8-7870-54318db07d0d@gmail.com>
- <20210910153609.GC24156@blackbody.suse.cz>
- <YTuH9fULTx+pLuuH@slm.duckdns.org>
- <CAHVum0ezWW=4x2YgXHhEUFQOkFGBpP+R1Uc-KedHr+r0LGibwA@mail.gmail.com>
- <YTuTr5Hw4hPIWepd@slm.duckdns.org>
- <CAHVum0e+68df7b_e0RoCGgA1h_SLdTt9t2MZ0VgA9afPW9iEvg@mail.gmail.com>
+From: Daniel Jordan <daniel.m.jordan@oracle.com>
+Subject: Re: [PATCH v2 4/5] sched/cpuacct: fix user/system in shown
+ cpuacct.usage*
+Date: Fri, 10 Sep 2021 15:03:26 -0400
+Message-ID: <20210910190326.nwv7kktt42nucoit@oracle.com>
+References: <20210217120004.7984-1-arbn@yandex-team.com>
+ <20210820094005.20596-1-arbn@yandex-team.com>
+ <20210820094005.20596-4-arbn@yandex-team.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=corp-2021-07-09;
+ bh=DNkfUGSbpjIuVqk5Z5ogMBzidSNn4HDkXcWuWjMkuPY=;
+ b=GKMfc2YWGGuQuDLPnozvRVPsrVq+tPttAsxLptDLOmNpqNVPYFB9fbHqYV8o0FchU1VJ
+ zk7ZfW9EMNHvYQBXdstrsGLW0kwwat2JyA3cKhf/b5Kht1MD0S1VsVjtRJ2PSdB7zkk4
+ NTZPK/K0KLOOeVFQgQsVyVDJxKNvzUQpgxvzsV9vRbDWewrpgZMQDYw6UJNp7dGTWNLA
+ gj+/x0J9qtV5DmpDPONOT78iNloB5VHt3MA6yrzAasSVhGtnOK8fKAMmmnzYZ8elscwJ
+ V7QHM9ISpqu+FXw64y5z1LZf+pho1GLSDAg/91ZOOpJ8ybserI0rArNhFNy646rySlsY rA== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=corp-2020-01-29;
+ bh=DNkfUGSbpjIuVqk5Z5ogMBzidSNn4HDkXcWuWjMkuPY=;
+ b=tuCILJlVLTdDZMWHAdlxwZMY+8UQxqEwAe+o7kj2CJabHtjVW+5mTxcMG/Bk+9KGSWGz
+ YMfqzma63AjJSZvJRRjZDmsDkX0YCWsmwLSWBrubp6JB9cccudbWj4a1tLra3y/Gh8XC
+ Z2YMBXEhIkR+l5rNOV912chiX6143Jg3silEcjr+I0MSCR7WYQxvFjkRIj1aaMvkbq9J
+ Jo7zrB5Akr3EvXyfwYAIAWL6XiHllBEheis45zCN7VeP/8EMIoD8weim1psqzoi1bS3A
+ evyuXUezedKFu1AaoOKT2eanQZ8/8CEe31xqYTYUXN/ySpszXdIT8tjsDD69+oubGJmw Xw== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=jL2YbilCduyWVuLH2nyWGfZ9AabnwMlBBSRytcjIHVA=;
-        b=GgBEAjpyJudHJW1qXwmNtoQyZEkoV+deBT9s3t6hEcqTihdSKoJEvrP13wsSDQ40hA
-         ZSn9iYRFxbjcu5jnWG7iujvujUDDXs82ys+0QLYnpH+D6ghZYdSu8ylk8Y1Y/WpKTavC
-         c35/jfw/5cwmI20noQzrqxpRY0lENcALsrDY/AzTB13OSLbkpo4sABmnANkk6ZmJ9IbK
-         9duYffwM7wGLWyZVdbP+krzQNNtgcKbnU+lq2GUdwb4iN8lhAQVjg2psAPXZ3Rnzab5U
-         OB2j8Q2RUw1tqPt7uR4orpTvMBtmwroHwH4E4SniulU6kgOgJoZO8zc1moR3Vy52Sqn3
-         4dLg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DNkfUGSbpjIuVqk5Z5ogMBzidSNn4HDkXcWuWjMkuPY=;
+ b=LybJcw7cvr8ltYeqzu+y4m7VFX/qpLyeugDjiPHwxNtEHpqAhxlzkXCB1A8yFJGuz2faIIQSX2sWh/+RBgGnaDTLwFZiw5/l1lMf4RX1QM7CRrSXRQ48KNgJNwHIf2jOI7/YDafmUuLCoOO6DiL0kfI3CqGcs+jQUuTl6Ybb2Zs=
 Content-Disposition: inline
-In-Reply-To: <CAHVum0e+68df7b_e0RoCGgA1h_SLdTt9t2MZ0VgA9afPW9iEvg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20210820094005.20596-4-arbn@yandex-team.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, "brookxu.cn" <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrey Ryabinin <arbn@yandex-team.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, bharata@linux.vnet.ibm.com, boris@bur.io, stable@vger.kernel.org
 
-Hello,
+On Fri, Aug 20, 2021 at 12:40:04PM +0300, Andrey Ryabinin wrote:
+> cpuacct has 2 different ways of accounting and showing user
+> and system times.
+> 
+> The first one uses cpuacct_account_field() to account times
+> and cpuacct.stat file to expose them. And this one seems to work ok.
+> 
+> The second one is uses cpuacct_charge() function for accounting and
+> set of cpuacct.usage* files to show times. Despite some attempts to
+> fix it in the past it still doesn't work. Sometimes while running KVM
+> guest the cpuacct_charge() accounts most of the guest time as
+> system time. This doesn't match with user&system times shown in
+> cpuacct.stat or proc/<pid>/stat.
+> 
+> Demonstration:
+>  # git clone https://github.com/aryabinin/kvmsample
+>  # make
+>  # mkdir /sys/fs/cgroup/cpuacct/test
+>  # echo $$ > /sys/fs/cgroup/cpuacct/test/tasks
+>  # ./kvmsample &
+>  # for i in {1..5}; do cat /sys/fs/cgroup/cpuacct/test/cpuacct.usage_sys; sleep 1; done
+>  1976535645
+>  2979839428
+>  3979832704
+>  4983603153
+>  5983604157
 
-On Fri, Sep 10, 2021 at 10:31:02AM -0700, Vipin Sharma wrote:
-> I don't have a strong aversion to hierarchical events only as well if
-> that is more suited for the cgroup v2 style.
+Thanks for expanding on this, and fixing broken cpuacct_charge.
 
-It's not a hard requirement but I'd prefer hierarchical over local unless
-there are strong reasons against doing so.
-
-Thanks.
-
--- 
-tejun
+For the series,
+Reviewed-by: Daniel Jordan <daniel.m.jordan@oracle.com>
