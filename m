@@ -1,33 +1,66 @@
 From: "taoyi.ty" <escape@linux.alibaba.com>
-Subject: Re: [RFC PATCH 0/2] support cgroup pool in v1
-Date: Fri, 10 Sep 2021 10:12:32 +0800
-Message-ID: <7b8d68c6-9a1c-dc19-e430-e044e4c4f210@linux.alibaba.com>
+Subject: Re: [RFC PATCH 1/2] add pinned flags for kernfs node
+Date: Fri, 10 Sep 2021 10:14:28 +0800
+Message-ID: <3d871bd0-dab5-c9ca-61b9-6aa137fa9fdf@linux.alibaba.com>
 References: <cover.1631102579.git.escape@linux.alibaba.com>
- <YTjmP0EGEWGYhroM@slm.duckdns.org>
+ <e753e449240bfc43fcb7aa26dca196e2f51e0836.1631102579.git.escape@linux.alibaba.com>
+ <YTiuBaiVZhe3db9O@kroah.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <YTjmP0EGEWGYhroM@slm.duckdns.org>
+In-Reply-To: <YTiuBaiVZhe3db9O@kroah.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: gregkh@linuxfoundation.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, mcgrof@kernel.org, keescook@chromium.org, yzaikin@google.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, shanpeic@linux.alibaba.com
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, mcgrof@kernel.org, keescook@chromium.org, yzaikin@google.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, shanpeic@linux.alibaba.com
 
-I am glad to receive your reply.
 
-cgroup pool is a relatively simple solution that I think can
+On 2021/9/8 下午8:35, Greg KH wrote:
+> Why are kernfs changes needed for this?  kernfs creation is not
+> necessarily supposed to be "fast", what benchmark needs this type of
+> change to require the addition of this complexity?
 
-solve the problem.
+The implementation of the cgroup pool should have nothing
 
-I have tried making locking more granular, but in the end found
+to do with kernfs, but during the development process,
 
-it too diffcult. cgroup_mutex protects almost all operation related
+I found that when there is a background cpu load, it takes
 
-to cgroup. If not use cgroup_mutex, I have no idea how to design
+a very significant time for a process to get the mutex from
 
-lock mechanism to take both concurrent performance and
+being awakened to starting execution.
 
-existing interfaces into account. Do you have any good advice?
+To create 400 cgroups concurrently, if there is no background
+
+cpu load, it takes about 80ms, but if the cpu usage rate is
+
+40%, it takes about 700ms. If you reduce
+
+sched_wakeup_granularity_ns, the time consumption will also
+
+be reduced. If you change mutex to spinlock, the situation
+
+will be very much improved.
+
+So to solve this problem, mutex should not be used. The
+
+cgroup pool relies on kernfs_rename which uses
+
+kernfs_mutex, so I need to bypass kernfs_mutex and
+
+add a pinned flag for this.
+
+Because the lock mechanism of kernfs_rename has been
+
+changed, in order to maintain data consistency, the creation
+
+and deletion of kernfs have also been changed accordingly
+
+I admit that this is really not a very elegant design, but I don’t
+
+know how to make it better, so I throw out the problem and
+
+try to seek help from the community.
 
 
 thanks,
@@ -35,24 +68,3 @@ thanks,
 
 Yi Tao
 
-
-On 2021/9/9 上午12:35, Tejun Heo wrote:
-> Hello,
->
-> On Wed, Sep 08, 2021 at 08:15:11PM +0800, Yi Tao wrote:
->> In order to solve this long-tail delay problem, we designed a cgroup
->> pool. The cgroup pool will create a certain number of cgroups in advance.
->> When a user creates a cgroup through the mkdir system call, a clean cgroup
->> can be quickly obtained from the pool. Cgroup pool draws on the idea of
->> cgroup rename. By creating pool and rename in advance, it reduces the
->> critical area of cgroup creation, and uses a spinlock different from
->> cgroup_mutex, which reduces scheduling overhead on the one hand, and eases
->> competition with attaching processes on the other hand.
-> I'm not sure this is the right way to go about it. There are more
-> conventional ways to improve scalability - making locking more granular and
-> hunting down specific operations which take long time. I don't think cgroup
-> management operations need the level of scalability which requires front
-> caching.
->
-> Thanks.
->
