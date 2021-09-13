@@ -1,77 +1,70 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Subject: Re: [PATCH memcg] memcg: prohibit unconditional exceeding the limit
  of dying tasks
-Date: Mon, 13 Sep 2021 12:10:25 +0200
-Message-ID: <YT8jkaA+bUB4aP2p@dhcp22.suse.cz>
+Date: Mon, 13 Sep 2021 13:35:00 +0300
+Message-ID: <7af26106-388c-6f99-e018-669a8f0cf9b5@virtuozzo.com>
 References: <5b06a490-55bc-a6a0-6c85-690254f86fad@virtuozzo.com>
- <8b98d44a-aeb2-5f5f-2545-ac2bd0c7049b@virtuozzo.com>
- <YT8OTozT3FN9P2k7@dhcp22.suse.cz>
- <b4b1e66e-e6e6-84e9-46a1-060ed412dd56@virtuozzo.com>
+ <YT8RjxShvfEVe4YU@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1631527827; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=AiRkX0WmNs9gJZTMmdh3igwoaOgGldencFjuU/XzQXk=;
-        b=M61ke4OyiDAoRXUd/MfdBGLxA4SX0zHRwS1SjPCxfp063hQwZJ7OSV6psRSojdguit9QyG
-        iHP4GtWWQ++oWv9UpWiB9r2qPGdaulPhnclxsoTsM5mu6uSwe/7KD/SQKy4eyi8aZO04SP
-        yEC2qXYXa3JX5nS6ebbH9gUVva5zRAc=
-Content-Disposition: inline
-In-Reply-To: <b4b1e66e-e6e6-84e9-46a1-060ed412dd56-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
+        Subject; bh=JtnXdiyIXGAC109gjCty025cKhFakGINc+ixRMlNDpA=; b=A+qYkWFCnoHTc649z
+        HHLFN2PQHVW+RQhZp5w5+2cbHQTq1eQVtFctCPop4AQ2O6l1lZR3yYepfmSnBPbrqITSivRv2+pqX
+        tbp2/oezk8tLXe94ZguInAw4zdietPjN+h/L0pJm7V4tb4VC1shs+tdbXGXbVf3TZkucEPZVrYfDI
+        =;
+In-Reply-To: <YT8RjxShvfEVe4YU-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon 13-09-21 12:37:56, Vasily Averin wrote:
-> On 9/13/21 11:39 AM, Michal Hocko wrote:
-> > On Mon 13-09-21 10:51:37, Vasily Averin wrote:
-> >> On 9/10/21 3:39 PM, Vasily Averin wrote:
-> >>> The kernel currently allows dying tasks to exceed the memcg limits.
-> >>> The allocation is expected to be the last one and the occupied memory
-> >>> will be freed soon.
-> >>> This is not always true because it can be part of the huge vmalloc
-> >>> allocation. Allowed once, they will repeat over and over again.
-> >>
-> >>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> >>> index 389b5766e74f..67195fcfbddf 100644
-> >>> --- a/mm/memcontrol.c
-> >>> +++ b/mm/memcontrol.c
-> >>> @@ -2622,15 +2625,6 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
-> >>>  	if (gfp_mask & __GFP_ATOMIC)
-> >>>  		goto force;
-> >>>  
-> >>> -	/*
-> >>> -	 * Unlike in global OOM situations, memcg is not in a physical
-> >>> -	 * memory shortage.  Allow dying and OOM-killed tasks to
-> >>> -	 * bypass the last charges so that they can exit quickly and
-> >>> -	 * free their memory.
-> >>> -	 */
-> >>> -	if (unlikely(should_force_charge()))
-> >>> -		goto force;
-> >>> -
-> >>
-> >> Should we keep current behaviour for (current->flags & PF_EXITING) case perhaps?
-> > 
-> > Why?
+On 9/13/21 11:53 AM, Michal Hocko wrote:
+> On Fri 10-09-21 15:39:28, Vasily Averin wrote:
+>> The kernel currently allows dying tasks to exceed the memcg limits.
+>> The allocation is expected to be the last one and the occupied memory
+>> will be freed soon.
+>> This is not always true because it can be part of the huge vmalloc
+>> allocation. Allowed once, they will repeat over and over again.
+>> Moreover lifetime of the allocated object can differ from
+>> In addition the lifetime of the dying task.
+>> Multiple such allocations running concurrently can not only overuse
+>> the memcg limit, but can lead to a global out of memory and,
+>> in the worst case, cause the host to panic.
+>>
+>> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+>> ---
+>>  mm/memcontrol.c | 23 +++++------------------
+>>  1 file changed, 5 insertions(+), 18 deletions(-)
+>>
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index 389b5766e74f..67195fcfbddf 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -1834,6 +1834,9 @@ static enum oom_status mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int
+>>  		return OOM_ASYNC;
+>>  	}
+>>  
+>> +	if (should_force_charge())
+>> +		return OOM_SKIPPED;
 > 
-> On this stage task really dies and mostly releases taken resources.
-> It can allocate though, and this allocation can reach memcg limit due to the activity
-> of parallel memcg threads.
-> 
-> Noting bad should happen if we reject this allocation,
-> because the same thing can happen in non-memcg case too.
-> However I doubt misuse is possible here and we have possibility to allow graceful shutdown here.
-> 
-> In other words: we are not obliged to allow such allocations, but we CAN do it because
-> we hope that it is safe and cannot be misused.
+> mem_cgroup_out_of_memory already check for the bypass, now you are
+> duplicating that check with a different answer to the caller. This is
+> really messy. One of the two has to go away.
 
-This is a lot of hoping that has turned out to be a bad strategy in the
-existing code.  So let's stop hoping and if we are shown that an
-exit path really benefits from a special treatment then we can add it
-with a good reasoning rathat than "we hope it's gonna be ok".
--- 
-Michal Hocko
-SUSE Labs
+In this case mem_cgroup_out_of_memory() takes locks and mutexes but doing nothing
+useful and its success causes try_charge_memcg() to repeat the loop unnecessarily.
+
+I cannot change mem_cgroup_out_of_memory internals, because it is used in other places too.The check inside mem_cgroup_out_of_memory is required because situation can be changed after
+check added into mem_cgroup_oom().
+
+Though I got your argument, and will think how to improve the patch.
+Anyway we'll need to do something with name of should_force_charge() function
+that will NOT lead to forced charge.
+
+Thank you,
+	Vasily Averin
+
+Thank you,
