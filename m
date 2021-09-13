@@ -1,78 +1,82 @@
-From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 0/2] support cgroup pool in v1
-Date: Mon, 13 Sep 2021 16:20:59 +0200
-Message-ID: <20210913142059.qbypd4vfq6wdzqfw@wittgenstein>
-References: <cover.1631102579.git.escape@linux.alibaba.com>
- <YTiugxO0cDge47x6@kroah.com>
- <a0c67d71-8045-d8b6-40c2-39f2603ec7c1@linux.alibaba.com>
- <YTuMl+cC6FyA/Hsv@slm.duckdns.org>
-Mime-Version: 1.0
+From: yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Subject: [PATCH v1] vmpressure: wake up work only when there is registration event
+Date: Mon, 13 Sep 2021 08:54:01 -0700
+Message-ID: <1631548441-2784-1-git-send-email-wang.yong12@zte.com.cn>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <YTuMl+cC6FyA/Hsv-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:subject:date:message-id;
+        bh=y/l6pZsY0+2abPXmYytXZzrEUxa84oSBx60olTgQf5E=;
+        b=mySNaluwtOtRo928O2znR/NiPO5G6dqZfvoJdPmgWCMzUgffI575v5P84+CHHB0Vfl
+         DdzelrBd3luKHRw23f4nlwsau96M4VKeCeePlQ381ozCkE2Q93w+7C8hHj9CjM3PJcpR
+         tWXVkRQzMnbron3nqCIfSDXucVPzZbtf3/TzXvE5dKu4fJ0IpmRfYgXO5HS7iTeEY3Xj
+         Pm2AYeBFlsxuceo0EjeJBuTL8OOsgePonPmKHpvzZhro/p9GixF6BZBcXiK8Mzs7Dwtg
+         lob1qjaliO8X4iXY3XGpzpTvPx9X70z8BJeQCYPBZv2/Tt+HCnwbBdQUVDTQz050SALw
+         1Bzg==
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "taoyi.ty" <escape-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shanpeic-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org
 
-On Fri, Sep 10, 2021 at 06:49:27AM -1000, Tejun Heo wrote:
-> Hello,
-> 
-> On Fri, Sep 10, 2021 at 10:11:53AM +0800, taoyi.ty wrote:
-> > The scenario is the function computing of the public
-> > cloud. Each instance of function computing will be
-> > allocated about 0.1 core cpu and 100M memory. On
-> > a high-end server, for example, 104 cores and 384G,
-> > it is normal to create hundreds of containers at the
-> > same time if burst of requests comes.
-> 
-> This type of use case isn't something cgroup is good at, at least not
-> currently. The problem is that trying to scale management operations like
-> creating and destroying cgroups has implications on how each controller is
-> implemented - we want the hot paths which get used while cgroups are running
-> actively to be as efficient and scalable as possible even if that requires a
-> lot of extra preparation and lazy cleanup operations. We don't really want
-> to push for cgroup creation / destruction efficiency at the cost of hot path
-> overhead.
-> 
-> This has implications for use cases like you describe. Even if the kernel
-> pre-prepare cgroups to low latency for cgroup creation, it means that the
-> system would be doing a *lot* of managerial extra work creating and
-> destroying cgroups constantly for not much actual work.
-> 
-> Usually, the right solution for this sort of situations is pooling cgroups
-> from the userspace which usually has a lot better insight into which cgroups
-> can be recycled and can also adjust the cgroup hierarchy to better fit the
-> use case (e.g. some rapid-cycling cgroups can benefit from higher-level
-> resource configurations).
+From: wangyong <wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 
-I had the same reaction and I wanted to do something like this before,
-i.e. maintain a pool of pre-allocated cgroups in userspace. But there
-were some problems.
+Use the global variable num_events to record the number of vmpressure
+events registered by the system, and wake up work only when there is
+registration event.
+Usually, the vmpressure event is not registered in the system, this patch
+can avoid waking up work and doing nothing.
 
-Afaict, there is currently now way to prevent the deletion of empty
-cgroups, especially newly created ones. So for example, if I have a
-cgroup manager that prunes the cgroup tree whenever they detect empty
-cgroups they can delete cgroups that were pre-allocated. This is
-something we have run into before.
+Refer to Michal Hocko's suggestion:
+https://lore.kernel.org/linux-mm/YR%2FNRJEhPKRQ1r22-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org/
 
-A related problem is a crashed or killed container manager 
-(segfault, sigkill, etc.). It might not have had the chance to cleanup
-cgroups it allocated for the container. If the container manager is
-restarted it can't reuse the existing cgroup it found because it has no
-way of guaranteeing whether in between the time it crashed and got
-restarted another program has just created a cgroup with the same name.
-We usually solve this by just creating another cgroup with an index
-appended until we we find an unallocated one setting an arbitrary cut
-off point until we require manual intervention by the user (e.g. 1000).
+Tested-by: Zeal Robot <zealci-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+Signed-off-by: wangyong <wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+---
+ mm/vmpressure.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-Right now iirc, one can rmdir() an empty cgroup while someone still
-holds a file descriptor open for it. This can lead to situation where a
-cgroup got created but before moving into the cgroup (via clone3() or
-write()) someone else has deleted it. What would already be helpful is
-if one had a way to prevent the deletion of cgroups when someone still
-has an open reference to it. This would allow a pool of cgroups to be
-created that can't simply be deleted.
+diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+index 76518e4..dfac76b 100644
+--- a/mm/vmpressure.c
++++ b/mm/vmpressure.c
+@@ -67,6 +67,11 @@ static const unsigned int vmpressure_level_critical = 95;
+  */
+ static const unsigned int vmpressure_level_critical_prio = ilog2(100 / 10);
+ 
++/*
++ * Count the number of vmpressure events registered in the system.
++ */
++static atomic_t num_events = ATOMIC_INIT(0);
++
+ static struct vmpressure *work_to_vmpressure(struct work_struct *work)
+ {
+ 	return container_of(work, struct vmpressure, work);
+@@ -277,7 +282,7 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg, bool tree,
+ 		vmpr->tree_reclaimed += reclaimed;
+ 		spin_unlock(&vmpr->sr_lock);
+ 
+-		if (scanned < vmpressure_win)
++		if (scanned < vmpressure_win || atomic_read(&num_events) == 0)
+ 			return;
+ 		schedule_work(&vmpr->work);
+ 	} else {
+@@ -407,6 +412,7 @@ int vmpressure_register_event(struct mem_cgroup *memcg,
+ 	mutex_lock(&vmpr->events_lock);
+ 	list_add(&ev->node, &vmpr->events);
+ 	mutex_unlock(&vmpr->events_lock);
++	atomic_add(1, &num_events);
+ 	ret = 0;
+ out:
+ 	kfree(spec_orig);
+@@ -435,6 +441,7 @@ void vmpressure_unregister_event(struct mem_cgroup *memcg,
+ 		if (ev->efd != eventfd)
+ 			continue;
+ 		list_del(&ev->node);
++		atomic_sub(1, &num_events);
+ 		kfree(ev);
+ 		break;
+ 	}
+-- 
+2.7.4
 
-Christian
