@@ -1,40 +1,56 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] docs/cgroup: remove some duplicate words
-Date: Mon, 13 Sep 2021 07:56:48 -1000
-Message-ID: <YT+Q4Gr7Ky1Tt9w8@slm.duckdns.org>
-References: <1631509754-21485-1-git-send-email-brookxu.cn@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/2] cgroup: Fix incorrect warning from
+ cgroup_apply_control_disable()
+Date: Mon, 13 Sep 2021 08:05:55 -1000
+Message-ID: <YT+TA6ItnF9xM3cR@slm.duckdns.org>
+References: <20210910024256.7615-1-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=gSVJ2eIM6ASF+/M1pUdi7A7u/9wBqdKyPf+MuRt4P3o=;
-        b=Q5ZThgVUFT2XJy9ZZ3JHUMd3INTVtkMLE2tXoNIME6xo30Bw5fDiF0A0WqMV2fdkZV
-         BtZ7myHUs0imcosnzwMnUq/q2JJsNmF9burZEPbMTfpuPHjMkKRT7raxg56pxr+QuzDJ
-         USkCq2o5S5nOGPi9GYHJBfHMi8uF2+J3rdZnTj/NocsKytqfpuldL87dU+fVK6k03sLF
-         xYvhVXyZSA6fGGvfpydGgNsWRGAsakrFG1rhVIlKfXrmx8ejdb9Xq8LUDB6DMh9r9hSQ
-         LHjD9wDUCrLi+U8jQR1RRVW4AYr12LLlcnuHkKNbaQg9DT2rLf5lCE90J5GlOFVmVsYv
-         m+jw==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=lTZVobgM/3IcweDVBRrPU9HP9E4rGk6Uc/SK3CeJgbs=;
+        b=hz+MNqFoGnCqooN4pC0ZNqbr8/ZDMZ29FkRELhIRuC5hKGL9L9J9cPYqbJJJ9EeVlD
+         uieVwHvuZtCzWv2i9+5nUuSYWc6YHpCTvW/uCVKVWanM3bGO9clHLlZDJTRQdh+vStXT
+         JebR147UMte2xKNSG766+KWPqjmormL7wvrfV4Oo6q7tYf9OBdp3Q9Sgyp+cXVXKPhd2
+         LZbVzW+nhGFJ8DywljsBashi5kxWlbVV3SrTxrThfU+pfx9HknFRDPUv/2nBqsbfr0kF
+         mIB2JcID3JCKEdZYv1v67prapGM5itGUbWpzNfCUP+Gqx5xyBuRbv2pPH1Nx8ieaI2kr
+         VBnQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1631509754-21485-1-git-send-email-brookxu.cn@gmail.com>
+In-Reply-To: <20210910024256.7615-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: brookxu <brookxu.cn@gmail.com>
-Cc: lizefan.x@bytedance.com, hannes@cmpxchg.org, corbet@lwn.net, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Sep 13, 2021 at 01:09:14PM +0800, brookxu wrote:
-> From: Chunguang Xu <brookxu@tencent.com>
-> 
-> When I tried to add some new entries to cgroup-v2.rst, I found that
-> the description of memory.events had some repetitive words, so I
-> tried to delete them.
-> 
-> Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+Hello,
 
-Applied to cgroup/for-5.15-fixes.
+On Thu, Sep 09, 2021 at 10:42:55PM -0400, Waiman Long wrote:
+> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> index 881ce1470beb..e31bca9fcd46 100644
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -3140,7 +3140,16 @@ static void cgroup_apply_control_disable(struct cgroup *cgrp)
+>  			if (!css)
+>  				continue;
+>  
+> -			WARN_ON_ONCE(percpu_ref_is_dying(&css->refcnt));
+> +			/*
+> +			 * A kill_css() might have been called previously, but
+> +			 * the css may still linger for a while before being
+> +			 * removed. Skip it in this case.
+> +			 */
+> +			if (percpu_ref_is_dying(&css->refcnt)) {
+> +				WARN_ON_ONCE(css->parent &&
+> +					cgroup_ss_mask(dsct) & (1 << ss->id));
+> +				continue;
+> +			}
+
+This warning did help me catch some gnarly bugs. Any chance we can keep it
+for normal cases and elide it just for remounting?
 
 Thanks.
 
