@@ -1,61 +1,63 @@
-From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/2] cgroup: Fix incorrect warning from
- cgroup_apply_control_disable()
-Date: Mon, 13 Sep 2021 14:46:05 -0400
-Message-ID: <e1190877-f5b7-b052-cd80-a7e558c379a4@redhat.com>
-References: <20210910024256.7615-1-longman@redhat.com>
- <YT+TA6ItnF9xM3cR@slm.duckdns.org>
- <125c4202-68d1-1a4e-03d6-2b18f0794ba4@redhat.com>
- <dbb1a221-b3d2-5086-e47b-8a2c764d60ad@redhat.com>
- <YT+cPPyDPimHibSC@slm.duckdns.org>
+From: syzbot <syzbot+01321b15cc98e6bf96d6-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
+Subject: [syzbot] memory leak in blk_iolatency_init
+Date: Mon, 13 Sep 2021 16:28:24 -0700
+Message-ID: <0000000000004ee28405cbe8d287@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1631558768;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=j/URbjttbgh/qE1agh24JiENV0g90v5EslC9AJDtoVI=;
-        b=RKysiDFKcvko/M+htPF8E9xQxbmZnGO7lD2F0vnmLwFQVTjoeOgCYUOdYnuPioeT32XlJc
-        S0ovkqa2kONyR6tyqS3J4v0a65fov7F9Nrlt/BCY9cNbvE4Mu8fAG3bpt9FxlUyWaFT2e9
-        IEe5hL4lLESTwvl/kRV2imXfGt/s2w4=
-In-Reply-To: <YT+cPPyDPimHibSC-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
-Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On 9/13/21 2:45 PM, Tejun Heo wrote:
-> On Mon, Sep 13, 2021 at 02:43:44PM -0400, Waiman Long wrote:
->>> The problem with percpu_ref_is_dying() is the fact that it becomes true
->>> after percpu_ref_exit() is called in css_free_rwork_fn() which has an
->>> RCU delay. If you want to catch the fact that kill_css() has been
->>> called, we can check the CSS_DYING flag which is set in kill_css() by
->>> commit 33c35aa481786 ("cgroup: Prevent kill_css() from being called more
->>> than once"). Will that be an acceptable alternative?
->> Something like
->>
->> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
->> index 881ce1470beb..851e54800ad8 100644
->> --- a/kernel/cgroup/cgroup.c
->> +++ b/kernel/cgroup/cgroup.c
->> @@ -3140,6 +3140,9 @@ static void cgroup_apply_control_disable(struct cgroup
->> *cg
->>                          if (!css)
->>                                  continue;
->>
->> +                       if (css->flags & CSS_DYING)
->> +                               continue;
->> +
-> So, I don't think this would be correct. It is assumed that there are no
-> dying csses when control reaches this point. The right fix is making sure
-> that remount path clears up dying csses before calling into this path.
+Hello,
 
-Thanks for the suggestion. I will look into that.
+syzbot found the following issue on:
 
-Cheers,
-Longman
+HEAD commit:    a3fa7a101dcf Merge branches 'akpm' and 'akpm-hotfixes' (pa..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=12b4a5b3300000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=9ee3a4c022ccbbca
+dashboard link: https://syzkaller.appspot.com/bug?extid=01321b15cc98e6bf96d6
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.1
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=148c170b300000
 
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+01321b15cc98e6bf96d6-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
+
+2021/09/09 22:14:31 executed programs: 444
+BUG: memory leak
+unreferenced object 0xffff888129acdb80 (size 96):
+  comm "syz-executor.1", pid 12661, jiffies 4294962682 (age 15.220s)
+  hex dump (first 32 bytes):
+    20 47 c9 85 ff ff ff ff 20 d4 8e 29 81 88 ff ff   G...... ..)....
+    01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff82264ec8>] kmalloc include/linux/slab.h:591 [inline]
+    [<ffffffff82264ec8>] kzalloc include/linux/slab.h:721 [inline]
+    [<ffffffff82264ec8>] blk_iolatency_init+0x28/0x190 block/blk-iolatency.c:724
+    [<ffffffff8225b8c4>] blkcg_init_queue+0xb4/0x1c0 block/blk-cgroup.c:1185
+    [<ffffffff822253da>] blk_alloc_queue+0x22a/0x2e0 block/blk-core.c:566
+    [<ffffffff8223b175>] blk_mq_init_queue_data block/blk-mq.c:3100 [inline]
+    [<ffffffff8223b175>] __blk_mq_alloc_disk+0x25/0xd0 block/blk-mq.c:3124
+    [<ffffffff826a9303>] loop_add+0x1c3/0x360 drivers/block/loop.c:2344
+    [<ffffffff826a966e>] loop_control_get_free drivers/block/loop.c:2501 [inline]
+    [<ffffffff826a966e>] loop_control_ioctl+0x17e/0x2e0 drivers/block/loop.c:2516
+    [<ffffffff81597eec>] vfs_ioctl fs/ioctl.c:51 [inline]
+    [<ffffffff81597eec>] __do_sys_ioctl fs/ioctl.c:874 [inline]
+    [<ffffffff81597eec>] __se_sys_ioctl fs/ioctl.c:860 [inline]
+    [<ffffffff81597eec>] __x64_sys_ioctl+0xfc/0x140 fs/ioctl.c:860
+    [<ffffffff843fa745>] do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+    [<ffffffff843fa745>] do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
+    [<ffffffff84600068>] entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+syzbot can test patches for this issue, for details see:
+https://goo.gl/tpsmEJ#testing-patches
