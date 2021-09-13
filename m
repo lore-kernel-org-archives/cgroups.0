@@ -1,73 +1,69 @@
-From: brookxu <brookxu.cn@gmail.com>
-Subject: [PATCH v2 2/3] misc_cgroup: remove error log to avoid log flood
-Date: Mon, 13 Sep 2021 13:01:00 +0800
-Message-ID: <b335a5d8241f837313cd20647647bf436385dd8d.1631504710.git.brookxu@tencent.com>
+From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH v2 3/3] docs/cgroup: add entry for misc.events and misc.events.local
+Date: Mon, 13 Sep 2021 13:01:01 +0800
+Message-ID: <8dd0636659c55fe9db16f8d19af745c185cc4fdb.1631504710.git.brookxu@tencent.com>
 References: <50b83893065acaef2a9bc3f91c03812dc872f316.1631504710.git.brookxu@tencent.com>
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=sq2sVElL6LfrWUTgPoXcRO8q9sfpNwqgOJwmbj5VuD0=;
-        b=W7gTxo1dbLBUb/zQ15G4oMV9hmfVEKB31vCWW8cUhxKnCCWD1E3k0PI/13ceSkzIkW
-         hVytVb/b6W/kjpmc7X2LBh3vbmbQYuYsaZ54nNjLo8tfZ3eWSuTjyCqPhqmcN4v21Iva
-         WsNTufzNiHNLY/l83N+Ply8xxG0ef7FnT58Y6wYTo3mxeGD6Aenz+vZVm89UHfKleEO2
-         qmCv1FgUtIqXXPZJ8wajaeGVUyFFKdUygmHZsTLoWBQgCfDc/+iUzQwtcdK64EjdowsB
-         Z5WxIgnvuSVqL9kJ31SNg4dRA8VlnA8ApGczoIoFNxoakayNSUEgpgcigv5DayoGxY/Y
-         Ab9g==
-In-Reply-To: <50b83893065acaef2a9bc3f91c03812dc872f316.1631504710.git.brookxu@tencent.com>
-In-Reply-To: <50b83893065acaef2a9bc3f91c03812dc872f316.1631504710.git.brookxu@tencent.com>
-References: <50b83893065acaef2a9bc3f91c03812dc872f316.1631504710.git.brookxu@tencent.com>
+        bh=No9Cu1y2zqzL5EFePgwVsxeseV9YVFbZD57If/1JFIs=;
+        b=QPhkIP4EuaDwd0g0Cpi2Seb9O+M/uDEpUGfJLKmy39jucLuWEfQDYmlS6DG7m6hkYm
+         QoECCAR3Kz8hTTgbNuquGD8HoegtSz1wuf0f4aml11Tpo4TF611EyFcfPsriGFFvP2aS
+         ViYSNGgC/ZSwQLA7rPf1tibRH9yDPn21ZKVbBVEvbKKlTBIHnaepEJxNYNJmXCNy90pj
+         zgnlJWcGE/Mt0aQzyaiFoMuYybsgBosa7cLKFjGnW67YUIHlRNhnXduV0Xs7pVXK1GNE
+         OHsfLKp6ywHxtz91bqbXeGPlQNyLiTdidtr1d8vRyrBOcaOBrGjtcfcpLXlNE8i0vr8Z
+         Wd4A==
+In-Reply-To: <50b83893065acaef2a9bc3f91c03812dc872f316.1631504710.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+In-Reply-To: <50b83893065acaef2a9bc3f91c03812dc872f316.1631504710.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+References: <50b83893065acaef2a9bc3f91c03812dc872f316.1631504710.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org
-Cc: vipinsh@google.com, mkoutny@suse.com, corbet@lwn.net, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Chunguang Xu <brookxu@tencent.com>
+From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-In scenarios where containers are frequently created and deleted,
-a large number of error logs maybe generated. This log provides
-less information, we can get more detailed info from misc.events,
-misc.events.local. From this, perhaps we can remove it.
+Added descriptions of misc.events and misc.events.local.
 
-Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 ---
- include/linux/misc_cgroup.h | 1 -
- kernel/cgroup/misc.c        | 7 -------
- 2 files changed, 8 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
-index 602fc11..89dcb62 100644
---- a/include/linux/misc_cgroup.h
-+++ b/include/linux/misc_cgroup.h
-@@ -43,7 +43,6 @@ struct misc_res {
- 	atomic_long_t usage;
- 	atomic_long_t events[MISC_CG_EVENT_TYPES];
- 	atomic_long_t events_local[MISC_CG_EVENT_TYPES];
--	bool failed;
- };
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index babbe04..90a36ae 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2310,6 +2310,25 @@ Miscellaneous controller provides 3 interface files. If two misc resources (res_
+         Limits can be set higher than the capacity value in the misc.capacity
+         file.
  
- /**
-diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
-index 5f06b2a..980ebaa 100644
---- a/kernel/cgroup/misc.c
-+++ b/kernel/cgroup/misc.c
-@@ -161,13 +161,6 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
- 		new_usage = atomic_long_add_return(amount, &res->usage);
- 		if (new_usage > READ_ONCE(res->max) ||
- 		    new_usage > READ_ONCE(misc_res_capacity[type])) {
--			if (!res->failed) {
--				pr_info("cgroup: charge rejected by the misc controller for %s resource in ",
--					misc_res_name[type]);
--				pr_cont_cgroup_path(i->css.cgroup);
--				pr_cont("\n");
--				res->failed = true;
--			}
- 			ret = -EBUSY;
- 			goto err_charge;
- 		}
++  misc.events
++	A read-only flat-keyed file which exists on non-root cgroups.
++	The following entries are defined.  Unless specified otherwise,
++	a value change in this file generates a file modified event.
++
++	Note that all fields in this file are hierarchical and the
++	file modified event can be generated due to an event down the
++	hierarchy. For the local events at the cgroup level see
++	misc.events.local.
++
++	  max
++		The number of times the cgroup's resource usage was
++		about to go over the max boundary.
++
++  misc.events.local
++	Similar to misc.events but the fields in the file are local
++	to the cgroup i.e. not hierarchical. The file modified event
++	generated on this file reflects only the local events.
++
+ Migration and Ownership
+ ~~~~~~~~~~~~~~~~~~~~~~~
+ 
 -- 
 1.8.3.1
 
