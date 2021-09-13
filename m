@@ -1,51 +1,78 @@
-From: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2] mm/page_alloc: detect allocation forbidden by cpuset
- and bail out early
-Date: Mon, 13 Sep 2021 20:12:33 +0800
-Message-ID: <20210913121233.GD56674@shbuild999.sh.intel.com>
-References: <1631518709-42881-1-git-send-email-feng.tang@intel.com>
- <YT8WygPhuORJC6Pn@dhcp22.suse.cz>
- <20210913113423.GC56674@shbuild999.sh.intel.com>
- <YT8576cL4tSqmUKI@dhcp22.suse.cz>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH 0/2] support cgroup pool in v1
+Date: Mon, 13 Sep 2021 16:20:59 +0200
+Message-ID: <20210913142059.qbypd4vfq6wdzqfw@wittgenstein>
+References: <cover.1631102579.git.escape@linux.alibaba.com>
+ <YTiugxO0cDge47x6@kroah.com>
+ <a0c67d71-8045-d8b6-40c2-39f2603ec7c1@linux.alibaba.com>
+ <YTuMl+cC6FyA/Hsv@slm.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <YT8576cL4tSqmUKI-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <YTuMl+cC6FyA/Hsv-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "taoyi.ty" <escape-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shanpeic-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org
 
-On Mon, Sep 13, 2021 at 01:45:51PM +0200, Michal Hocko wrote:
-> On Mon 13-09-21 19:34:23, Feng Tang wrote:
-> > On Mon, Sep 13, 2021 at 11:15:54AM +0200, Michal Hocko wrote:
-> [...] 
-> > > > +/* Whether the 'nodes' are all movable nodes */
-> > > > +static inline bool movable_only_nodes(nodemask_t *nodes)
-> > > > +{
-> > > > +	struct zonelist *zonelist;
-> > > > +	struct zoneref *z;
-> > > > +
-> > > > +	zonelist = &(first_online_pgdat())->node_zonelists[ZONELIST_FALLBACK];
-> > > 
-> > > This will work but it just begs a question why you haven't chosen a node
-> > > from the given nodemask. So I believe it would be easier to read if you
-> > > did
-> > > 	zonelist = NODE_DATA(first_node(nodes))->node_zonelists[ZONELIST_FALLBACK]
-> > 
-> > This was also my first try to get the 'zonelist', but from the
-> > update_nodemask(), the nodemask could be NULL.
+On Fri, Sep 10, 2021 at 06:49:27AM -1000, Tejun Heo wrote:
+> Hello,
 > 
-> I guess you meant to say s@NULL@empty@
-> While this complicates things a bit it is nothing really hard to work
-> around. You simply check for nodes_empty() and return false because such
-> a nodemask cannot by definition be movable only.
+> On Fri, Sep 10, 2021 at 10:11:53AM +0800, taoyi.ty wrote:
+> > The scenario is the function computing of the public
+> > cloud. Each instance of function computing will be
+> > allocated about 0.1 core cpu and 100M memory. On
+> > a high-end server, for example, 104 cores and 384G,
+> > it is normal to create hundreds of containers at the
+> > same time if burst of requests comes.
+> 
+> This type of use case isn't something cgroup is good at, at least not
+> currently. The problem is that trying to scale management operations like
+> creating and destroying cgroups has implications on how each controller is
+> implemented - we want the hot paths which get used while cgroups are running
+> actively to be as efficient and scalable as possible even if that requires a
+> lot of extra preparation and lazy cleanup operations. We don't really want
+> to push for cgroup creation / destruction efficiency at the cost of hot path
+> overhead.
+> 
+> This has implications for use cases like you describe. Even if the kernel
+> pre-prepare cgroups to low latency for cgroup creation, it means that the
+> system would be doing a *lot* of managerial extra work creating and
+> destroying cgroups constantly for not much actual work.
+> 
+> Usually, the right solution for this sort of situations is pooling cgroups
+> from the userspace which usually has a lot better insight into which cgroups
+> can be recycled and can also adjust the cgroup hierarchy to better fit the
+> use case (e.g. some rapid-cycling cgroups can benefit from higher-level
+> resource configurations).
 
-Yes, a nodes_empty() check can solve it, thanks,
+I had the same reaction and I wanted to do something like this before,
+i.e. maintain a pool of pre-allocated cgroups in userspace. But there
+were some problems.
 
-- Feng
+Afaict, there is currently now way to prevent the deletion of empty
+cgroups, especially newly created ones. So for example, if I have a
+cgroup manager that prunes the cgroup tree whenever they detect empty
+cgroups they can delete cgroups that were pre-allocated. This is
+something we have run into before.
 
-> -- 
-> Michal Hocko
-> SUSE Labs
+A related problem is a crashed or killed container manager 
+(segfault, sigkill, etc.). It might not have had the chance to cleanup
+cgroups it allocated for the container. If the container manager is
+restarted it can't reuse the existing cgroup it found because it has no
+way of guaranteeing whether in between the time it crashed and got
+restarted another program has just created a cgroup with the same name.
+We usually solve this by just creating another cgroup with an index
+appended until we we find an unallocated one setting an arbitrary cut
+off point until we require manual intervention by the user (e.g. 1000).
+
+Right now iirc, one can rmdir() an empty cgroup while someone still
+holds a file descriptor open for it. This can lead to situation where a
+cgroup got created but before moving into the cgroup (via clone3() or
+write()) someone else has deleted it. What would already be helpful is
+if one had a way to prevent the deletion of cgroups when someone still
+has an open reference to it. This would allow a pool of cgroups to be
+created that can't simply be deleted.
+
+Christian
