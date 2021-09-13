@@ -1,61 +1,70 @@
-From: Vipin Sharma <vipinsh@google.com>
-Subject: Re: [PATCH v2 1/3] misc_cgroup: introduce misc.events and misc_events.local
-Date: Mon, 13 Sep 2021 09:51:44 -0700
-Message-ID: <CAHVum0dmTULvzD6dhr4Jzow-M1ATi-ubDkO5wQR=RQmWtt_78w@mail.gmail.com>
-References: <50b83893065acaef2a9bc3f91c03812dc872f316.1631504710.git.brookxu@tencent.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] block, bfq: fix UAF in bfq_io_set_weight_legacy()
+Date: Mon, 13 Sep 2021 07:50:32 -1000
+Message-ID: <YT+PaFSxfcJAgTs7@slm.duckdns.org>
+References: <20210910034642.2838054-1-lijinlin3@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=h7Yl//dy5tlfXJpNjGw/RwytM2u2c4Gl1NK7VqTyQik=;
-        b=KNPJ8GcEHSQYCyweuG+VxPhO+NQJEAV5rGoLEtdlZyPcGARXJQ4RTZmYrXPQfJq0v+
-         JanZlPaQbOkPRxSWiNI7mgttz1ig7R1UWK98/qdxhmYcIdlNdL9m9uVRXNb+ON8CCUur
-         Vi9ROjD9c/UG3PSZEYPWnZvIs+mpSkp1gAPlYOOV1lg1vbFVacUc2xpLTvh/AmsP+JgO
-         4CrYqxGaCg/pOU8W4zn7fgOltRuocCUBGyxISE3mCIfbIKI1U3Q4O+bntohv6KwRgW+T
-         qOJmtLwKuZdVpRejUHOK+0Qj6SFpB03AyU99MOkQ/8LtIFscGQ+9aG4sMtPZh+ra5Rex
-         hqhw==
-In-Reply-To: <50b83893065acaef2a9bc3f91c03812dc872f316.1631504710.git.brookxu@tencent.com>
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=GXuhVb2mAgwRJ4d5JAgKMNDM1IDwp61QdPvAadqK8Do=;
+        b=YxPJcxJPOqB7IuMrPYi3hee6d8psUNevLnc8b5zSKyMPh/QH6j6uM1pwEEHFl2bH0c
+         4Nt+YQwlZBISDoy0cC8Qaa8FgTFtqbs1ajc9BgSCwutdtly6qzs4NuYa6VufizF78Jx+
+         J7cBmNXde423BBLs6dYRM9oA6vtq8eWLkfj7AiFjxZuQYjU2eDEG5YEm2RlmSUdu1edt
+         o+NzGdJcVK28vrqlyvtQtFVrTYD8c9XaNK9UZj59Ky+ms6qH9J3taiiJUBXhtGVn5lh6
+         qeSszGBEFIqWgxJah0ZN2BrQ9bNwSnWCgwLq4Dk/eup0bNu8nTAGHPS8QPLtIA28LkA8
+         1OIQ==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20210910034642.2838054-1-lijinlin3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: brookxu <brookxu.cn@gmail.com>
-Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, mkoutny@suse.com, corbet@lwn.net, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
+To: Li Jinlin <lijinlin3@huawei.com>
+Cc: paolo.valente@linaro.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linfeilong@huawei.com, louhongxiang@huawei.com
 
-On Sun, Sep 12, 2021 at 10:01 PM brookxu <brookxu.cn@gmail.com> wrote:
->
-> From: Chunguang Xu <brookxu@tencent.com>
->
-> Introduce misc.events and misc.events.local to make it easier for
+Hello,
 
-I thought Tejun only gave go ahead for misc.events and not for
-misc.events.local.
+On Fri, Sep 10, 2021 at 11:46:42AM +0800, Li Jinlin wrote:
+> Freeing bfqg is protected by queue lock in blkcg_deactivate_policy(), 
+> but getting/using bfqg is protected by blkcg lock in
+> bfq_io_set_weight_legacy(). If bfq_io_set_weight_legacy() get bfqg
+> before freeing bfqg and use bfqg in the after, the use-after-free
+> will occur.
+> 
+> CPU0                             CPU1
+> blkcg_deactivate_policy
+>   spin_lock_irq(&q->queue_lock)
+>                                  bfq_io_set_weight_legacy  
+>                                    spin_lock_irq(&blkcg->lock)
+>                                    blkg_to_bfqg(blkg)
+>                                      pd_to_bfqg(blkg->pd[pol->plid])
+>                                      ^^^^^^blkg->pd[pol->plid] != NULL
+>                                            bfqg != NULL
+>   pol->pd_free_fn(blkg->pd[pol->plid])
+>     pd_to_bfqg(blkg->pd[pol->plid])
+>     bfqg_put(bfqg)
+>       kfree(bfqg)
+>   blkg->pd[pol->plid] = NULL
+>   spin_unlock_irq(q->queue_lock);
+>                                    bfq_group_set_weight(bfqg, val, 0)
+>                                      bfqg->entity.new_weight
+>                                      ^^^^^^trigger uaf here 
+>                                    spin_unlock_irq(&blkcg->lock);
+> 
+> To fix this use-after-free, instead of holding blkcg->lock while
+> walking ->blkg_list and getting/using bfqg, RCU walk ->blkg_list and
+> hold the blkg's queue lock while getting/using bfqg.
 
-> us to understand the pressure of resources. The main idea comes
-> from mem_cgroup. Currently only the 'max' event is implemented,
-> which indicates the times the resource exceeds the limit.
->
+I think this is a bug in blkcg_deactivate_policy() than the other way
+around. blkgs are protected by both q and blkcg locks and holding either
+should stabilize them. The blkcg lock nests inside q lock, so I think
+blkcg_deactivate_policy() just needs to grab the matching blkcg lock before
+trying to destroy blkgs.
 
-For future emails, please provide the links to previous discussions
-like [1], [2],...
+Thanks.
 
-> @@ -36,6 +41,8 @@ enum misc_res_type {
->  struct misc_res {
->         unsigned long max;
->         atomic_long_t usage;
-> +       atomic_long_t events[MISC_CG_EVENT_TYPES];
-
-Since there is only one event type for now, my recommendation is to
-not use the array and just use a single atomic_long_t.
-
->
-> +static const char *const misc_event_name[] = {
-> +       "max"
-> +};
-> +
-
-We will not need it if you remove the array in struct misc_res.
-
-Thanks
-Vipin
+-- 
+tejun
