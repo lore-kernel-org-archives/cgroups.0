@@ -1,127 +1,60 @@
-From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Subject: Re: [PATCH v2] vmpressure: wake up work only when there is
- registration event
-Date: Tue, 14 Sep 2021 17:49:06 +0100
-Message-ID: <YUDSgr+iwVz7iFBN@chrisdown.name>
-References: <1631635551-8583-1-git-send-email-wang.yong12@zte.com.cn>
+From: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 1/3] misc_cgroup: introduce misc.events and misc_events.local
+Date: Tue, 14 Sep 2021 13:10:28 -0700
+Message-ID: <CAHVum0dd5dw1rkcf0U7OjW2GX4VTZi4RCcbTph99qDftd=2taA@mail.gmail.com>
+References: <50b83893065acaef2a9bc3f91c03812dc872f316.1631504710.git.brookxu@tencent.com>
+ <CAHVum0dmTULvzD6dhr4Jzow-M1ATi-ubDkO5wQR=RQmWtt_78w@mail.gmail.com> <b62597e9-72c4-563e-fdc7-3315569502f0@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=8cZjnBfKQ98RvNo+t8dXEqCfexHSNrNgQFLczr/dzUw=;
-        b=ZIQJC39PqdNfy6y886PfF/Xyv2QsZ3DqnoJ0S5ozQT5AMmPORdXwJF0cgGxR1S51r3
-         gipsEbV0W+CTKwig18Aid5zMp4RYSRvdqQYmr6PPuQTB/g14jrFlsq00X+H7aoLp4CvG
-         NSESuAgGbCn+bU1oZspQ0hEyU8eCwIaHXmNCE=
-Content-Disposition: inline
-In-Reply-To: <1631635551-8583-1-git-send-email-wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=WNWKwD/mZ8dmcHnPyLauepOSjhSOQ4h/50JmWkiv3s0=;
+        b=EcGBNwXJXCtEjbiAqZ5SCobVNFat6cwVYl7UZrpcqRZjt6YQEX6uXqQn+h8Hur7RBP
+         6Lf5fTjpJCmj8IvaaOplqMgXBBuH+tHM8BEY2eJbEt2CZkmxcK439Q5LYO665Vl+hepx
+         U9uY2EfFCOyAcN720RTBPvT3JSy7zWXr5WL7kA4HRZZKTZaGILl/Fuo6ZgtZz8wkakTE
+         bKU8KjiEsTo2dhRmKNviX8IQnNZk8d6Rla/TZwPNDuABbhWsQCKglo8WsadZhoars8AK
+         wy5nMe2NRGbjEAOl5/WMffpVQdI12t6deZP3nc/5+R5qrjM6c9cJZ73AeuPhuI6PD293
+         OWAw==
+In-Reply-To: <b62597e9-72c4-563e-fdc7-3315569502f0-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-Content-Transfer-Encoding: 7bit
-To: yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org writes:
->From: wangyong <wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+On Mon, Sep 13, 2021 at 7:24 PM brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
 >
->Use the global variable num_events to record the number of vmpressure
->events registered by the system, and wake up work only when there is
->registration event.
->Usually, the vmpressure event is not registered in the system, this patch
->can avoid waking up work and doing nothing.
+> Thanks for your time.
 >
->Test with 5.14.0-rc5-next-20210813 on x86_64 4G ram.
->Consume cgroup memory until it is about to be reclaimed, then execute
->"perf stat -I 2000 malloc.out" command to trigger memory reclamation
->and get performance results.
->The context-switches is reduced by about 20 times.
+> Vipin Sharma wrote on 2021/9/14 12:51 =E4=B8=8A=E5=8D=88:
+> > On Sun, Sep 12, 2021 at 10:01 PM brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> >>
+> >> From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+> >>
+> >> Introduce misc.events and misc.events.local to make it easier for
+> >
+> > I thought Tejun only gave go ahead for misc.events and not for
+> > misc.events.local.
+> >
 >
->unpatched:
->Average of 10 test results
->582.4674048	task-clock(msec)
->19910.8		context-switches
->0		cpu-migrations
->1292.9		page-faults
->414784733.1	cycles
-><not supported>	stalled-cycles-frontend
-><not supported>	stalled-cycles-backend
->580070698.4	instructions
->125572244.7	branches
->2073541.2	branch-misses
->
->patched
->Average of 10 test results
->973.6174796	task-clock(msec)
->988.6		context-switches
->0		cpu-migrations
->1785.2		page-faults
->772883602.4	cycles
-><not supported>	stalled-cycles-frontend
-><not supported>	stalled-cycles-backend
->1360280911	instructions
->290519434.9	branches
->3378378.2	branch-misses
->
->Tested-by: Zeal Robot <zealci-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+> Maybe I missed something. I think events.local is somewhat useful. For
+> example, the events of node A is large. If we need to determine whether
+> it is caused by the max of node A, if there is no events.local, then we
+> need to traverse the events of the child nodes and compare them with
+> node A. This is a bit complicated. If there is events.local, we can do
+> it very easily. Should we keep the events.local interface=EF=BC=9F
 
-That's not how Tested-by works. Tested-by is for human testers who have 
-actively understand and have validated the effects of the code, not CI: please 
-remove the tag.
+Tejun mentioned in his previous email that he prefers the hierarchical
+one. https://lore.kernel.org/lkml/YTuX6Cpv1kg+DHmJ-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org/
 
->Signed-off-by: wangyong <wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
->---
->
->Changes since v1:
->-Use static_key type data as global variable
->-Make event registration judgment earlier
->
-> mm/vmpressure.c | 10 ++++++++++
-> 1 file changed, 10 insertions(+)
->
->diff --git a/mm/vmpressure.c b/mm/vmpressure.c
->index 76518e4..6f4e984 100644
->--- a/mm/vmpressure.c
->+++ b/mm/vmpressure.c
->@@ -67,6 +67,11 @@ static const unsigned int vmpressure_level_critical = 95;
->  */
-> static const unsigned int vmpressure_level_critical_prio = ilog2(100 / 10);
->
->+/*
->+ * Count the number of vmpressure events registered in the system.
->+ */
->+DEFINE_STATIC_KEY_FALSE(num_events);
->+
-> static struct vmpressure *work_to_vmpressure(struct work_struct *work)
-> {
-> 	return container_of(work, struct vmpressure, work);
->@@ -272,6 +277,9 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg, bool tree,
-> 		return;
->
-> 	if (tree) {
->+		if (!static_branch_unlikely(&num_events))
->+			return;
->+
-> 		spin_lock(&vmpr->sr_lock);
-> 		scanned = vmpr->tree_scanned += scanned;
-> 		vmpr->tree_reclaimed += reclaimed;
->@@ -407,6 +415,7 @@ int vmpressure_register_event(struct mem_cgroup *memcg,
-> 	mutex_lock(&vmpr->events_lock);
-> 	list_add(&ev->node, &vmpr->events);
-> 	mutex_unlock(&vmpr->events_lock);
->+	static_branch_inc(&num_events);
-> 	ret = 0;
-> out:
-> 	kfree(spec_orig);
->@@ -435,6 +444,7 @@ void vmpressure_unregister_event(struct mem_cgroup *memcg,
-> 		if (ev->efd != eventfd)
-> 			continue;
-> 		list_del(&ev->node);
->+		static_branch_dec(&num_events);
-> 		kfree(ev);
-> 		break;
-> 	}
->-- 
->2.7.4
->
->
+I agree with you that it's easier to identify the constraint cgroup
+with the local file. However, there is one downside also, which is if
+a cgroup gets deleted then that local information is lost, we will
+need a hierarchical reporting to observe the resource constraint. I
+will be fine with both files but if I have to choose one I am now more
+inclined towards hierarchical (events).
+
+Thanks
+Vipin
