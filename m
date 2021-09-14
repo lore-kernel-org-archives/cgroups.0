@@ -1,78 +1,124 @@
-From: brookxu <brookxu.cn@gmail.com>
-Subject: Re: [PATCH v2 1/3] misc_cgroup: introduce misc.events and
- misc_events.local
-Date: Tue, 14 Sep 2021 10:23:13 +0800
-Message-ID: <b62597e9-72c4-563e-fdc7-3315569502f0@gmail.com>
-References: <50b83893065acaef2a9bc3f91c03812dc872f316.1631504710.git.brookxu@tencent.com>
- <CAHVum0dmTULvzD6dhr4Jzow-M1ATi-ubDkO5wQR=RQmWtt_78w@mail.gmail.com>
+From: "Xu, Yanfei" <yanfei.xu-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+Subject: Re: [syzbot] memory leak in blk_iolatency_init
+Date: Tue, 14 Sep 2021 11:13:32 +0800
+Message-ID: <5feaeb5d-a0c7-ac9a-7511-19c993a5a78e@windriver.com>
+References: <0000000000004ee28405cbe8d287@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=6bHeWjV3HGfhLob3U0wkIQ8wiGJnN6iWzgMWgki4WRA=;
-        b=KDkT9e32/Y9iJjHHqek7M4egxwe+SRvGz5YRzUEkoBI+GO2NmGzFfAIzOi1trat/2d
-         iC6xrRNW6XHGrwX5yKWRp4xAO575uxyYMHEyAKHtl37YY/360gEy3hx/UvRKMqJU14th
-         4Nd1+yHQkAxwbvrkLPmPn2TJviUwPvGGpSMipipQB6C3j1Gbs4iPSeodJf+WEqzCoTqY
-         v8+OfagxpSQPqhkwIh1pfZr4u+jC7zZXyL4r3mAvH81vHNIbKHMJs9RGsIkomamQCaQq
-         cZghOvUn9cFgiLkWwNpcMIN6TDKV1FMq21JNGH5uf9tFd0e/t0C2NfOAs+vGO2+tM6yn
-         jEHQ==
-In-Reply-To: <CAHVum0dmTULvzD6dhr4Jzow-M1ATi-ubDkO5wQR=RQmWtt_78w@mail.gmail.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com; h=subject : to :
+ references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=PPS06212021;
+ bh=U0iyVEQEwqLW8iHKurcltX6RA9m7vH+xk+bWf6qhOf0=;
+ b=PIRF0+iuE4u0VI64Z1U/xDP+CI8AOHnU9ZC6YP7X9mvDJZPoE1lUjGxf8mbWeUGSGaER
+ MQrcgBtEzvLkDoBdVstP+sTAqgcBggwbZBchgE6P3TUvWFsczgML30w80XZ/XK3gKg3R
+ p5VVtDrsB5QJNYwuFSMH8njSU3yTqlPFJKKOqYAmlGwHd89SD8YpIMp980oECg9/pgZn
+ iqlNNK5SNRYQ0AJ4F6Kzo3ve9MkY86CIiwcU6IG6ee/inOFUnshS03DmH3/UpZK10rZm
+ MJ2C5YUi4SB3T6o308UGzKHvWWw99RCzfk0zx8RiQeFsK9iiolYXuRZnXZ7CFUOGImm3 Lg== 
+In-Reply-To: <0000000000004ee28405cbe8d287-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Vipin Sharma <vipinsh@google.com>, Tejun Heo <tj@kernel.org>
-Cc: lizefan.x@bytedance.com, hannes@cmpxchg.org, mkoutny@suse.com, corbet@lwn.net, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: syzbot <syzbot+01321b15cc98e6bf96d6-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-Thanks for your time.
 
-Vipin Sharma wrote on 2021/9/14 12:51 上午:
-> On Sun, Sep 12, 2021 at 10:01 PM brookxu <brookxu.cn@gmail.com> wrote:
->>
->> From: Chunguang Xu <brookxu@tencent.com>
->>
->> Introduce misc.events and misc.events.local to make it easier for
+
+On 9/14/21 7:28 AM, syzbot wrote:
+> [Please note: This e-mail is from an EXTERNAL e-mail address]
 > 
-> I thought Tejun only gave go ahead for misc.events and not for
-> misc.events.local.
+> Hello,
+> 
+> syzbot found the following issue on:
+> 
+> HEAD commit:    a3fa7a101dcf Merge branches 'akpm' and 'akpm-hotfixes' (pa..
+> git tree:       upstream
+> console output: https://syzkaller.appspot.com/x/log.txt?x=12b4a5b3300000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=9ee3a4c022ccbbca
+> dashboard link: https://syzkaller.appspot.com/bug?extid=01321b15cc98e6bf96d6
+> compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.1
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=148c170b300000
+> 
+> IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> Reported-by: syzbot+01321b15cc98e6bf96d6-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
+> 
+> 2021/09/09 22:14:31 executed programs: 444
+> BUG: memory leak
+> unreferenced object 0xffff888129acdb80 (size 96):
+>    comm "syz-executor.1", pid 12661, jiffies 4294962682 (age 15.220s)
+>    hex dump (first 32 bytes):
+>      20 47 c9 85 ff ff ff ff 20 d4 8e 29 81 88 ff ff   G...... ..)....
+>      01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>    backtrace:
+>      [<ffffffff82264ec8>] kmalloc include/linux/slab.h:591 [inline]
+>      [<ffffffff82264ec8>] kzalloc include/linux/slab.h:721 [inline]
+>      [<ffffffff82264ec8>] blk_iolatency_init+0x28/0x190 block/blk-iolatency.c:724
+>      [<ffffffff8225b8c4>] blkcg_init_queue+0xb4/0x1c0 block/blk-cgroup.c:1185
+>      [<ffffffff822253da>] blk_alloc_queue+0x22a/0x2e0 block/blk-core.c:566
+>      [<ffffffff8223b175>] blk_mq_init_queue_data block/blk-mq.c:3100 [inline]
+>      [<ffffffff8223b175>] __blk_mq_alloc_disk+0x25/0xd0 block/blk-mq.c:3124
+>      [<ffffffff826a9303>] loop_add+0x1c3/0x360 drivers/block/loop.c:2344
+>      [<ffffffff826a966e>] loop_control_get_free drivers/block/loop.c:2501 [inline]
+>      [<ffffffff826a966e>] loop_control_ioctl+0x17e/0x2e0 drivers/block/loop.c:2516
+>      [<ffffffff81597eec>] vfs_ioctl fs/ioctl.c:51 [inline]
+>      [<ffffffff81597eec>] __do_sys_ioctl fs/ioctl.c:874 [inline]
+>      [<ffffffff81597eec>] __se_sys_ioctl fs/ioctl.c:860 [inline]
+>      [<ffffffff81597eec>] __x64_sys_ioctl+0xfc/0x140 fs/ioctl.c:860
+>      [<ffffffff843fa745>] do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+>      [<ffffffff843fa745>] do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
+>      [<ffffffff84600068>] entry_SYSCALL_64_after_hwframe+0x44/0xae
+> 
 > 
 
-Maybe I missed something. I think events.local is somewhat useful. For
-example, the events of node A is large. If we need to determine whether
-it is caused by the max of node A, if there is no events.local, then we
-need to traverse the events of the child nodes and compare them with
-node A. This is a bit complicated. If there is events.local, we can do
-it very easily. Should we keep the events.local interface？
+Hi Jens,
 
->> us to understand the pressure of resources. The main idea comes
->> from mem_cgroup. Currently only the 'max' event is implemented,
->> which indicates the times the resource exceeds the limit.
->>
-> 
-> For future emails, please provide the links to previous discussions
-> like [1], [2],...
-> 
->> @@ -36,6 +41,8 @@ enum misc_res_type {
->>  struct misc_res {
->>         unsigned long max;
->>         atomic_long_t usage;
->> +       atomic_long_t events[MISC_CG_EVENT_TYPES];
-> 
-> Since there is only one event type for now, my recommendation is to
-> not use the array and just use a single atomic_long_t.
-> 
->>
->> +static const char *const misc_event_name[] = {
->> +       "max"
->> +};
->> +
-> 
-> We will not need it if you remove the array in struct misc_res.
+How about this fix?
 
-All right, thanks.
+    Once blk_throtl_init() queue init failed, blkcg_iolatency_exit() will
+     not be invoked for cleanup. That leads a memory leak. Swap the
+     blk_throtl_init() and blk_iolatency_init() calls can solve this.
 
-> Thanks
-> Vipin
+     Reported-by: syzbot+01321b15cc98e6bf96d6-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
+     Fixes: 19688d7f9592 (block/blk-cgroup: Swap the blk_throtl_init() 
+and blk_iolatency_init() calls)
+     Signed-off-by: Yanfei Xu <yanfei.xu-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 3c88a79a319b..1ded4181a6de 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -1182,10 +1182,6 @@ int blkcg_init_queue(struct request_queue *q)
+         if (preloaded)
+                 radix_tree_preload_end();
+
+-       ret = blk_iolatency_init(q);
+-       if (ret)
+-               goto err_destroy_all;
+-
+         ret = blk_ioprio_init(q);
+         if (ret)
+                 goto err_destroy_all;
+@@ -1194,6 +1190,12 @@ int blkcg_init_queue(struct request_queue *q)
+         if (ret)
+                 goto err_destroy_all;
+
++       ret = blk_iolatency_init(q);
++       if (ret) {
++               blk_throtl_exit(q);
++               goto err_destroy_all;
++       }
++
+         return 0;
+
+
+
+> 
+> ---
+> This report is generated by a bot. It may contain errors.
+> See https://goo.gl/tpsmEJ for more information about syzbot.
+> syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+> 
+> syzbot will keep track of this issue. See:
+> https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+> syzbot can test patches for this issue, for details see:
+> https://goo.gl/tpsmEJ#testing-patches
 > 
