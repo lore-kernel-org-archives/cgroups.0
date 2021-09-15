@@ -1,73 +1,97 @@
 From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v3] mm/page_alloc: detect allocation forbidden by cpuset
- and bail out early
-Date: Wed, 15 Sep 2021 13:30:27 +0200
-Message-ID: <YUHZU4OHaJy3WtRk@dhcp22.suse.cz>
-References: <1631590828-25565-1-git-send-email-feng.tang@intel.com>
- <3bd87d8a-d09e-ac7-1d1d-25ad1b9d5ed9@google.com>
- <20210915053247.GG56674@shbuild999.sh.intel.com>
+Subject: Re: [PATCH v2] vmpressure: wake up work only when there is
+ registration event
+Date: Wed, 15 Sep 2021 14:42:03 +0200
+Message-ID: <YUHqG0P6Ahs8FvN+@dhcp22.suse.cz>
+References: <1631635551-8583-1-git-send-email-wang.yong12@zte.com.cn>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1631705431; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1631709724; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=UOkCjvFoaNxGNbGFWeeVQVHJtZCjHhgLPxx+uerfl10=;
-        b=HNke4/c6CnQ8nnlErjOvekgpXVSQXjWl4Ol2+/tLgrRlknDlrVnGAlJb48fXnI99PKyxch
-        OYd1ItE4KjwfkP1Zku3mE76kBPFNJ8txDsFMjiMkJFJOsTZYn4j5Fetseg8i3S8mO1/f1k
-        /jZcCmJ85qh1RlBqZrqrlIGfiLDUXFU=
+        bh=c8ppzFWYneNjhYnOY61IFfVXjIUkdpqvAGrP3jiPXNY=;
+        b=BU4gFvgZPXkgGkeAZA8Isz6d5VIGuDlC1iEhdFHcFYBMvbzqGNNT/soHXwDsAwBQuBvjDf
+        PaM78JTRR+b08B3QWTBdEVKo1cMHvWjhAZyhditBPCQ3KPHBFhxjSR300DGu5hNG6wKqn8
+        zpVkPRYhrZ3HPkNYakZy/QOugYICdsw=
 Content-Disposition: inline
-In-Reply-To: <20210915053247.GG56674-H4oSubS0T0ZnxsEdoo2cZdh3ngVCH38I@public.gmane.org>
+In-Reply-To: <1631635551-8583-1-git-send-email-wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org
 
-On Wed 15-09-21 13:32:47, Feng Tang wrote:
-> On Tue, Sep 14, 2021 at 05:30:03PM -0700, David Rientjes wrote:
+On Tue 14-09-21 09:05:51, yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org wrote:
+> From: wangyong <wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+> 
+> Use the global variable num_events to record the number of vmpressure
+> events registered by the system, and wake up work only when there is
+> registration event.
+> Usually, the vmpressure event is not registered in the system, this patch
+> can avoid waking up work and doing nothing.
+
+I have asked in the previous version and this changelog doesn't that
+explain again. Why don't you simply bail out early in vmpressure()
+entry?
+
+> Test with 5.14.0-rc5-next-20210813 on x86_64 4G ram.
+> Consume cgroup memory until it is about to be reclaimed, then execute
+> "perf stat -I 2000 malloc.out" command to trigger memory reclamation
+> and get performance results.
+> The context-switches is reduced by about 20 times.
+
+Is this test somewhere available so that it can be reproduced by
+others. Also while the number of context switches can be an interesting
+it is not really clear from this evaluation whether that actually
+matters or not. E.g. what does an increase of task-clock and twice as
+many instructions recorded tell us?
+
+> unpatched:
+> Average of 10 test results
+> 582.4674048	task-clock(msec)
+> 19910.8		context-switches
+> 0		cpu-migrations
+> 1292.9		page-faults
+> 414784733.1	cycles
+
+> <not supported>	stalled-cycles-frontend
+> <not supported>	stalled-cycles-backend
+
+Why is this a part of the data?
+
+> 580070698.4	instructions
+> 125572244.7	branches
+> 2073541.2	branch-misses
+> 
+> patched
+> Average of 10 test results
+> 973.6174796	task-clock(msec)
+> 988.6		context-switches
+> 0		cpu-migrations
+> 1785.2		page-faults
+> 772883602.4	cycles
+> <not supported>	stalled-cycles-frontend
+> <not supported>	stalled-cycles-backend
+> 1360280911	instructions
+> 290519434.9	branches
+> 3378378.2	branch-misses
+> 
+> Tested-by: Zeal Robot <zealci-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+> Signed-off-by: wangyong <wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+> ---
+> 
 [...]
-> > I'm wondering about a single node nodemask, for example, where all 
-> > ZONE_NORMAL memory is hot-removed.
-
-While this is theoretically possible it is highly unlikely to happen.
-Non movable memory just takes one kernel allocation to prevent any
-hotremove operation to finish. I have to say I was not aware of the
-hotplug callback. It all seems rather suspicious. I will have a look.
-
-Anyway something worth having covered "just in case". Thanks for
-pointing it out.
- 
-> Thanks for the reminding! Yes, memory hot remove can change the
-> cpuset's effective nodemask, we may need to add similar check inside
-> cpuset_hotplug_update_tasks() which is called by cpuset_hotplug_workfn(), 
-> something like below?
-> 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 7fa633e..d5f6776 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -3186,6 +3186,14 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
->  	cpus_updated = !cpumask_equal(&new_cpus, cs->effective_cpus);
->  	mems_updated = !nodes_equal(new_mems, cs->effective_mems);
+> @@ -272,6 +277,9 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg, bool tree,
+>  		return;
 >  
-> +	if (mems_updated && !cpusets_insane_config() &&
-> +		movable_only_nodes(new_mems)) {
-> +		static_branch_enable(&cpusets_insane_config_key);
-> +		pr_info("Unsupported (movable nodes only) cpuset configuration detected (nmask=%*pbl) after memory hotplug."
-> +			"Cpuset allocations might fail even with a lot of memory available.\n",
-> +			nodemask_pr_args(new_mems);
-> +	}
+>  	if (tree) {
+> +		if (!static_branch_unlikely(&num_events))
+> +			return;
 
-Please create a helper rather than two copies of the same. Thanks!
-> +
->  	if (is_in_v2_mode())
->  		hotplug_update_tasks(cs, &new_cpus, &new_mems,
->  				     cpus_updated, mems_updated);
-> 
-> Thanks,
-> Feng
-
+We usually hide the change behind a static inline helper (e.g.
+vmpressure_disabled()). I would also put it to the beginning of
+vmpressure or put an explanation why it makes sense only in this branch.
 -- 
 Michal Hocko
 SUSE Labs
