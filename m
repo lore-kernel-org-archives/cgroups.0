@@ -1,89 +1,73 @@
-From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH] blk-throttle: enable io throttle for root in cgroup
- v2
-Date: Wed, 15 Sep 2021 16:20:54 +0800
-Message-ID: <6ea924a3-6a19-ef9d-1741-26c8aaf6429e@huawei.com>
-References: <20210909140815.2600858-1-yukuai3@huawei.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v3] mm/page_alloc: detect allocation forbidden by cpuset
+ and bail out early
+Date: Wed, 15 Sep 2021 13:30:27 +0200
+Message-ID: <YUHZU4OHaJy3WtRk@dhcp22.suse.cz>
+References: <1631590828-25565-1-git-send-email-feng.tang@intel.com>
+ <3bd87d8a-d09e-ac7-1d1d-25ad1b9d5ed9@google.com>
+ <20210915053247.GG56674@shbuild999.sh.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20210909140815.2600858-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1631705431; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=UOkCjvFoaNxGNbGFWeeVQVHJtZCjHhgLPxx+uerfl10=;
+        b=HNke4/c6CnQ8nnlErjOvekgpXVSQXjWl4Ol2+/tLgrRlknDlrVnGAlJb48fXnI99PKyxch
+        OYd1ItE4KjwfkP1Zku3mE76kBPFNJ8txDsFMjiMkJFJOsTZYn4j5Fetseg8i3S8mO1/f1k
+        /jZcCmJ85qh1RlBqZrqrlIGfiLDUXFU=
+Content-Disposition: inline
+In-Reply-To: <20210915053247.GG56674-H4oSubS0T0ZnxsEdoo2cZdh3ngVCH38I@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2021/09/09 22:08, Yu Kuai wrote:
-> We want to limit the overall iops/bps of the device in cgroup v2,
-> however "io.max" or "io.min" do not exist in root cgroup currently,
-> which makes it impossible.
-> 
-> This patch enables io throttle for root cgroup:
->   - enable "io.max" and "io.min" in root
->   - don't skip root group in tg_iops_limit() and tg_bps_limit()
->   - don't skip root group in tg_conf_updated()
-> 
-> I'm not sure why this feature is disabled in the first place, is
-> there any problem or design constraint?
-> 
-Ping...
+On Wed 15-09-21 13:32:47, Feng Tang wrote:
+> On Tue, Sep 14, 2021 at 05:30:03PM -0700, David Rientjes wrote:
+[...]
+> > I'm wondering about a single node nodemask, for example, where all 
+> > ZONE_NORMAL memory is hot-removed.
 
-BTW, sorry about the misspell of "io.low".
-> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->   block/blk-throttle.c | 13 ++-----------
->   1 file changed, 2 insertions(+), 11 deletions(-)
+While this is theoretically possible it is highly unlikely to happen.
+Non movable memory just takes one kernel allocation to prevent any
+hotremove operation to finish. I have to say I was not aware of the
+hotplug callback. It all seems rather suspicious. I will have a look.
+
+Anyway something worth having covered "just in case". Thanks for
+pointing it out.
+ 
+> Thanks for the reminding! Yes, memory hot remove can change the
+> cpuset's effective nodemask, we may need to add similar check inside
+> cpuset_hotplug_update_tasks() which is called by cpuset_hotplug_workfn(), 
+> something like below?
 > 
-> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-> index 55c49015e533..fffe072de538 100644
-> --- a/block/blk-throttle.c
-> +++ b/block/blk-throttle.c
-> @@ -302,9 +302,6 @@ static uint64_t tg_bps_limit(struct throtl_grp *tg, int rw)
->   	struct throtl_data *td;
->   	uint64_t ret;
->   
-> -	if (cgroup_subsys_on_dfl(io_cgrp_subsys) && !blkg->parent)
-> -		return U64_MAX;
-> -
->   	td = tg->td;
->   	ret = tg->bps[rw][td->limit_index];
->   	if (ret == 0 && td->limit_index == LIMIT_LOW) {
-> @@ -332,9 +329,6 @@ static unsigned int tg_iops_limit(struct throtl_grp *tg, int rw)
->   	struct throtl_data *td;
->   	unsigned int ret;
->   
-> -	if (cgroup_subsys_on_dfl(io_cgrp_subsys) && !blkg->parent)
-> -		return UINT_MAX;
-> -
->   	td = tg->td;
->   	ret = tg->iops[rw][td->limit_index];
->   	if (ret == 0 && tg->td->limit_index == LIMIT_LOW) {
-> @@ -1430,9 +1424,8 @@ static void tg_conf_updated(struct throtl_grp *tg, bool global)
->   		struct throtl_grp *parent_tg;
->   
->   		tg_update_has_rules(this_tg);
-> -		/* ignore root/second level */
-> -		if (!cgroup_subsys_on_dfl(io_cgrp_subsys) || !blkg->parent ||
-> -		    !blkg->parent->parent)
-> +		/* ignore root level */
-> +		if (!cgroup_subsys_on_dfl(io_cgrp_subsys) || !blkg->parent)
->   			continue;
->   		parent_tg = blkg_to_tg(blkg->parent);
->   		/*
-> @@ -1771,7 +1764,6 @@ static struct cftype throtl_files[] = {
->   #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
->   	{
->   		.name = "low",
-> -		.flags = CFTYPE_NOT_ON_ROOT,
->   		.seq_show = tg_print_limit,
->   		.write = tg_set_limit,
->   		.private = LIMIT_LOW,
-> @@ -1779,7 +1771,6 @@ static struct cftype throtl_files[] = {
->   #endif
->   	{
->   		.name = "max",
-> -		.flags = CFTYPE_NOT_ON_ROOT,
->   		.seq_show = tg_print_limit,
->   		.write = tg_set_limit,
->   		.private = LIMIT_MAX,
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 7fa633e..d5f6776 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -3186,6 +3186,14 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+>  	cpus_updated = !cpumask_equal(&new_cpus, cs->effective_cpus);
+>  	mems_updated = !nodes_equal(new_mems, cs->effective_mems);
+>  
+> +	if (mems_updated && !cpusets_insane_config() &&
+> +		movable_only_nodes(new_mems)) {
+> +		static_branch_enable(&cpusets_insane_config_key);
+> +		pr_info("Unsupported (movable nodes only) cpuset configuration detected (nmask=%*pbl) after memory hotplug."
+> +			"Cpuset allocations might fail even with a lot of memory available.\n",
+> +			nodemask_pr_args(new_mems);
+> +	}
+
+Please create a helper rather than two copies of the same. Thanks!
+> +
+>  	if (is_in_v2_mode())
+>  		hotplug_update_tasks(cs, &new_cpus, &new_mems,
+>  				     cpus_updated, mems_updated);
 > 
+> Thanks,
+> Feng
+
+-- 
+Michal Hocko
+SUSE Labs
