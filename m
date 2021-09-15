@@ -1,88 +1,89 @@
-From: Yanfei Xu <yanfei.xu-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
-Subject: [PATCH] blkcg: fix memory leak in blk_iolatency_init
-Date: Wed, 15 Sep 2021 15:24:26 +0800
-Message-ID: <20210915072426.4022924-1-yanfei.xu@windriver.com>
+From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH] blk-throttle: enable io throttle for root in cgroup
+ v2
+Date: Wed, 15 Sep 2021 16:20:54 +0800
+Message-ID: <6ea924a3-6a19-ef9d-1741-26c8aaf6429e@huawei.com>
+References: <20210909140815.2600858-1-yukuai3@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com; h=from : to : cc :
- subject : date : message-id : content-transfer-encoding : content-type :
- mime-version; s=PPS06212021;
- bh=9aNtL+I//91GWdN0xvnAGwpNeIQvwixdOdyIGWfVgZ4=;
- b=QmiP17vs7wLjCV6/JiCEmT/5VMMQl+VUasCQDdxodan1eVbAt4q3GWrXrJq9qr7EvvmB
- 9cx/6YEiZc//g/CdSR/zKnY8AjftK+faoAVzS0blkIZz8umV9W6T2qKroalmUQaNpmoz
- eQnoElHyYQf6l0T9+a/wzoNZIkC6q3oyWthQpqNs8vgcM6sQU3uprarxjXmCZKAKeGyK
- thFTFBcFUqLfUhDtNLx4QAlZ1uTHcsQWbTnj8Fp2XIM/02ea5P5kFxQa1FksyrvKd0l2
- QEK6qycQayoMyty5deAfAHTivU3igU9JWPp6Pg8OM/DLS7BmUCzDiNrQokE93CeKtLfh UQ== 
+In-Reply-To: <20210909140815.2600858-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-BUG: memory leak
-unreferenced object 0xffff888129acdb80 (size 96):
-  comm "syz-executor.1", pid 12661, jiffies 4294962682 (age 15.220s)
-  hex dump (first 32 bytes):
-    20 47 c9 85 ff ff ff ff 20 d4 8e 29 81 88 ff ff   G...... ..)....
-    01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  backtrace:
-    [<ffffffff82264ec8>] kmalloc include/linux/slab.h:591 [inline]
-    [<ffffffff82264ec8>] kzalloc include/linux/slab.h:721 [inline]
-    [<ffffffff82264ec8>] blk_iolatency_init+0x28/0x190 block/blk-iolatency.c:724
-    [<ffffffff8225b8c4>] blkcg_init_queue+0xb4/0x1c0 block/blk-cgroup.c:1185
-    [<ffffffff822253da>] blk_alloc_queue+0x22a/0x2e0 block/blk-core.c:566
-    [<ffffffff8223b175>] blk_mq_init_queue_data block/blk-mq.c:3100 [inline]
-    [<ffffffff8223b175>] __blk_mq_alloc_disk+0x25/0xd0 block/blk-mq.c:3124
-    [<ffffffff826a9303>] loop_add+0x1c3/0x360 drivers/block/loop.c:2344
-    [<ffffffff826a966e>] loop_control_get_free drivers/block/loop.c:2501 [inline]
-    [<ffffffff826a966e>] loop_control_ioctl+0x17e/0x2e0 drivers/block/loop.c:2516
-    [<ffffffff81597eec>] vfs_ioctl fs/ioctl.c:51 [inline]
-    [<ffffffff81597eec>] __do_sys_ioctl fs/ioctl.c:874 [inline]
-    [<ffffffff81597eec>] __se_sys_ioctl fs/ioctl.c:860 [inline]
-    [<ffffffff81597eec>] __x64_sys_ioctl+0xfc/0x140 fs/ioctl.c:860
-    [<ffffffff843fa745>] do_syscall_x64 arch/x86/entry/common.c:50 [inline]
-    [<ffffffff843fa745>] do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
-    [<ffffffff84600068>] entry_SYSCALL_64_after_hwframe+0x44/0xae
+On 2021/09/09 22:08, Yu Kuai wrote:
+> We want to limit the overall iops/bps of the device in cgroup v2,
+> however "io.max" or "io.min" do not exist in root cgroup currently,
+> which makes it impossible.
+> 
+> This patch enables io throttle for root cgroup:
+>   - enable "io.max" and "io.min" in root
+>   - don't skip root group in tg_iops_limit() and tg_bps_limit()
+>   - don't skip root group in tg_conf_updated()
+> 
+> I'm not sure why this feature is disabled in the first place, is
+> there any problem or design constraint?
+> 
+Ping...
 
-Once blk_throtl_init() queue init failed, blkcg_iolatency_exit() will
-not be invoked for cleanup. That leads a memory leak. Swap the
-blk_throtl_init() and blk_iolatency_init() calls can solve this.
-
-Reported-by: syzbot+01321b15cc98e6bf96d6-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
-Fixes: 19688d7f9592 (block/blk-cgroup: Swap the blk_throtl_init() and blk_iolatency_init() calls)
-Signed-off-by: Yanfei Xu <yanfei.xu-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
----
- block/blk-cgroup.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 3c88a79a319b..1ded4181a6de 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1182,10 +1182,6 @@ int blkcg_init_queue(struct request_queue *q)
- 	if (preloaded)
- 		radix_tree_preload_end();
- 
--	ret = blk_iolatency_init(q);
--	if (ret)
--		goto err_destroy_all;
--
- 	ret = blk_ioprio_init(q);
- 	if (ret)
- 		goto err_destroy_all;
-@@ -1194,6 +1190,12 @@ int blkcg_init_queue(struct request_queue *q)
- 	if (ret)
- 		goto err_destroy_all;
- 
-+	ret = blk_iolatency_init(q);
-+	if (ret) {
-+		blk_throtl_exit(q);
-+		goto err_destroy_all;
-+	}
-+
- 	return 0;
- 
- err_destroy_all:
--- 
-2.27.0
-
+BTW, sorry about the misspell of "io.low".
+> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> ---
+>   block/blk-throttle.c | 13 ++-----------
+>   1 file changed, 2 insertions(+), 11 deletions(-)
+> 
+> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+> index 55c49015e533..fffe072de538 100644
+> --- a/block/blk-throttle.c
+> +++ b/block/blk-throttle.c
+> @@ -302,9 +302,6 @@ static uint64_t tg_bps_limit(struct throtl_grp *tg, int rw)
+>   	struct throtl_data *td;
+>   	uint64_t ret;
+>   
+> -	if (cgroup_subsys_on_dfl(io_cgrp_subsys) && !blkg->parent)
+> -		return U64_MAX;
+> -
+>   	td = tg->td;
+>   	ret = tg->bps[rw][td->limit_index];
+>   	if (ret == 0 && td->limit_index == LIMIT_LOW) {
+> @@ -332,9 +329,6 @@ static unsigned int tg_iops_limit(struct throtl_grp *tg, int rw)
+>   	struct throtl_data *td;
+>   	unsigned int ret;
+>   
+> -	if (cgroup_subsys_on_dfl(io_cgrp_subsys) && !blkg->parent)
+> -		return UINT_MAX;
+> -
+>   	td = tg->td;
+>   	ret = tg->iops[rw][td->limit_index];
+>   	if (ret == 0 && tg->td->limit_index == LIMIT_LOW) {
+> @@ -1430,9 +1424,8 @@ static void tg_conf_updated(struct throtl_grp *tg, bool global)
+>   		struct throtl_grp *parent_tg;
+>   
+>   		tg_update_has_rules(this_tg);
+> -		/* ignore root/second level */
+> -		if (!cgroup_subsys_on_dfl(io_cgrp_subsys) || !blkg->parent ||
+> -		    !blkg->parent->parent)
+> +		/* ignore root level */
+> +		if (!cgroup_subsys_on_dfl(io_cgrp_subsys) || !blkg->parent)
+>   			continue;
+>   		parent_tg = blkg_to_tg(blkg->parent);
+>   		/*
+> @@ -1771,7 +1764,6 @@ static struct cftype throtl_files[] = {
+>   #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+>   	{
+>   		.name = "low",
+> -		.flags = CFTYPE_NOT_ON_ROOT,
+>   		.seq_show = tg_print_limit,
+>   		.write = tg_set_limit,
+>   		.private = LIMIT_LOW,
+> @@ -1779,7 +1771,6 @@ static struct cftype throtl_files[] = {
+>   #endif
+>   	{
+>   		.name = "max",
+> -		.flags = CFTYPE_NOT_ON_ROOT,
+>   		.seq_show = tg_print_limit,
+>   		.write = tg_set_limit,
+>   		.private = LIMIT_MAX,
+> 
