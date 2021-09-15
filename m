@@ -1,155 +1,88 @@
-From: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v3] mm/page_alloc: detect allocation forbidden by cpuset
- and bail out early
-Date: Wed, 15 Sep 2021 13:32:47 +0800
-Message-ID: <20210915053247.GG56674@shbuild999.sh.intel.com>
-References: <1631590828-25565-1-git-send-email-feng.tang@intel.com>
- <3bd87d8a-d09e-ac7-1d1d-25ad1b9d5ed9@google.com>
+From: Yanfei Xu <yanfei.xu-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+Subject: [PATCH] blkcg: fix memory leak in blk_iolatency_init
+Date: Wed, 15 Sep 2021 15:24:26 +0800
+Message-ID: <20210915072426.4022924-1-yanfei.xu@windriver.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <3bd87d8a-d09e-ac7-1d1d-25ad1b9d5ed9-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com; h=from : to : cc :
+ subject : date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=PPS06212021;
+ bh=9aNtL+I//91GWdN0xvnAGwpNeIQvwixdOdyIGWfVgZ4=;
+ b=QmiP17vs7wLjCV6/JiCEmT/5VMMQl+VUasCQDdxodan1eVbAt4q3GWrXrJq9qr7EvvmB
+ 9cx/6YEiZc//g/CdSR/zKnY8AjftK+faoAVzS0blkIZz8umV9W6T2qKroalmUQaNpmoz
+ eQnoElHyYQf6l0T9+a/wzoNZIkC6q3oyWthQpqNs8vgcM6sQU3uprarxjXmCZKAKeGyK
+ thFTFBcFUqLfUhDtNLx4QAlZ1uTHcsQWbTnj8Fp2XIM/02ea5P5kFxQa1FksyrvKd0l2
+ QEK6qycQayoMyty5deAfAHTivU3igU9JWPp6Pg8OM/DLS7BmUCzDiNrQokE93CeKtLfh UQ== 
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Sep 14, 2021 at 05:30:03PM -0700, David Rientjes wrote:
-> On Tue, 14 Sep 2021, Feng Tang wrote:
-> 
-> > diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-> > index d2b9c41..d58e047 100644
-> > --- a/include/linux/cpuset.h
-> > +++ b/include/linux/cpuset.h
-> > @@ -34,6 +34,8 @@
-> >   */
-> >  extern struct static_key_false cpusets_pre_enable_key;
-> >  extern struct static_key_false cpusets_enabled_key;
-> > +extern struct static_key_false cpusets_insane_config_key;
-> > +
-> >  static inline bool cpusets_enabled(void)
-> >  {
-> >  	return static_branch_unlikely(&cpusets_enabled_key);
-> > @@ -51,6 +53,19 @@ static inline void cpuset_dec(void)
-> >  	static_branch_dec_cpuslocked(&cpusets_pre_enable_key);
-> >  }
-> >  
-> > +/*
-> > + * This will get enabled whenever a cpuset configuration is considered
-> > + * unsupportable in general. E.g. movable only node which cannot satisfy
-> > + * any non movable allocations (see update_nodemask). Page allocator
-> > + * needs to make additional checks for those configurations and this
-> > + * check is meant to guard those checks without any overhead for sane
-> > + * configurations.
-> > + */
-> > +static inline bool cpusets_insane_config(void)
-> > +{
-> > +	return static_branch_unlikely(&cpusets_insane_config_key);
-> > +}
-> > +
-> >  extern int cpuset_init(void);
-> >  extern void cpuset_init_smp(void);
-> >  extern void cpuset_force_rebuild(void);
-> > @@ -167,6 +182,8 @@ static inline void set_mems_allowed(nodemask_t nodemask)
-> >  
-> >  static inline bool cpusets_enabled(void) { return false; }
-> >  
-> > +static inline bool cpusets_insane_config(void) { return false; }
-> > +
-> >  static inline int cpuset_init(void) { return 0; }
-> >  static inline void cpuset_init_smp(void) {}
-> >  
-> > diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-> > index 6a1d79d..a455333 100644
-> > --- a/include/linux/mmzone.h
-> > +++ b/include/linux/mmzone.h
-> > @@ -1220,6 +1220,22 @@ static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
-> >  #define for_each_zone_zonelist(zone, z, zlist, highidx) \
-> >  	for_each_zone_zonelist_nodemask(zone, z, zlist, highidx, NULL)
-> >  
-> > +/* Whether the 'nodes' are all movable nodes */
-> > +static inline bool movable_only_nodes(nodemask_t *nodes)
-> > +{
-> > +	struct zonelist *zonelist;
-> > +	struct zoneref *z;
-> > +
-> > +	if (nodes_empty(*nodes))
-> > +		return false;
-> > +
-> > +	zonelist =
-> > +	    &NODE_DATA(first_node(*nodes))->node_zonelists[ZONELIST_FALLBACK];
-> > +	z = first_zones_zonelist(zonelist, ZONE_NORMAL,	nodes);
-> > +	return (!z->zone) ? true : false;
-> > +}
-> > +
-> > +
-> >  #ifdef CONFIG_SPARSEMEM
-> >  #include <asm/sparsemem.h>
-> >  #endif
-> > diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> > index df1ccf4..7fa633e 100644
-> > --- a/kernel/cgroup/cpuset.c
-> > +++ b/kernel/cgroup/cpuset.c
-> > @@ -69,6 +69,13 @@
-> >  DEFINE_STATIC_KEY_FALSE(cpusets_pre_enable_key);
-> >  DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
-> >  
-> > +/*
-> > + * There could be abnormal cpuset configurations for cpu or memory
-> > + * node binding, add this key to provide a quick low-cost judgement
-> > + * of the situation.
-> > + */
-> > +DEFINE_STATIC_KEY_FALSE(cpusets_insane_config_key);
-> > +
-> >  /* See "Frequency meter" comments, below. */
-> >  
-> >  struct fmeter {
-> > @@ -1868,6 +1875,14 @@ static int update_nodemask(struct cpuset *cs, struct cpuset *trialcs,
-> >  	if (retval < 0)
-> >  		goto done;
-> >  
-> > +	if (!cpusets_insane_config() &&
-> > +		movable_only_nodes(&trialcs->mems_allowed)) {
-> > +		static_branch_enable(&cpusets_insane_config_key);
-> > +		pr_info("Unsupported (movable nodes only) cpuset configuration detected (nmask=%*pbl)! "
-> > +			"Cpuset allocations might fail even with a lot of memory available.\n",
-> > +			nodemask_pr_args(&trialcs->mems_allowed));
-> > +	}
-> > +
-> >  	spin_lock_irq(&callback_lock);
-> >  	cs->mems_allowed = trialcs->mems_allowed;
-> >  	spin_unlock_irq(&callback_lock);
-> 
-> Is this the only time that the state of the nodemask may change?
-> 
-> I'm wondering about a single node nodemask, for example, where all 
-> ZONE_NORMAL memory is hot-removed.
+BUG: memory leak
+unreferenced object 0xffff888129acdb80 (size 96):
+  comm "syz-executor.1", pid 12661, jiffies 4294962682 (age 15.220s)
+  hex dump (first 32 bytes):
+    20 47 c9 85 ff ff ff ff 20 d4 8e 29 81 88 ff ff   G...... ..)....
+    01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff82264ec8>] kmalloc include/linux/slab.h:591 [inline]
+    [<ffffffff82264ec8>] kzalloc include/linux/slab.h:721 [inline]
+    [<ffffffff82264ec8>] blk_iolatency_init+0x28/0x190 block/blk-iolatency.c:724
+    [<ffffffff8225b8c4>] blkcg_init_queue+0xb4/0x1c0 block/blk-cgroup.c:1185
+    [<ffffffff822253da>] blk_alloc_queue+0x22a/0x2e0 block/blk-core.c:566
+    [<ffffffff8223b175>] blk_mq_init_queue_data block/blk-mq.c:3100 [inline]
+    [<ffffffff8223b175>] __blk_mq_alloc_disk+0x25/0xd0 block/blk-mq.c:3124
+    [<ffffffff826a9303>] loop_add+0x1c3/0x360 drivers/block/loop.c:2344
+    [<ffffffff826a966e>] loop_control_get_free drivers/block/loop.c:2501 [inline]
+    [<ffffffff826a966e>] loop_control_ioctl+0x17e/0x2e0 drivers/block/loop.c:2516
+    [<ffffffff81597eec>] vfs_ioctl fs/ioctl.c:51 [inline]
+    [<ffffffff81597eec>] __do_sys_ioctl fs/ioctl.c:874 [inline]
+    [<ffffffff81597eec>] __se_sys_ioctl fs/ioctl.c:860 [inline]
+    [<ffffffff81597eec>] __x64_sys_ioctl+0xfc/0x140 fs/ioctl.c:860
+    [<ffffffff843fa745>] do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+    [<ffffffff843fa745>] do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
+    [<ffffffff84600068>] entry_SYSCALL_64_after_hwframe+0x44/0xae
 
-Thanks for the reminding! Yes, memory hot remove can change the
-cpuset's effective nodemask, we may need to add similar check inside
-cpuset_hotplug_update_tasks() which is called by cpuset_hotplug_workfn(), 
-something like below?
+Once blk_throtl_init() queue init failed, blkcg_iolatency_exit() will
+not be invoked for cleanup. That leads a memory leak. Swap the
+blk_throtl_init() and blk_iolatency_init() calls can solve this.
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 7fa633e..d5f6776 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -3186,6 +3186,14 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
- 	cpus_updated = !cpumask_equal(&new_cpus, cs->effective_cpus);
- 	mems_updated = !nodes_equal(new_mems, cs->effective_mems);
+Reported-by: syzbot+01321b15cc98e6bf96d6-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
+Fixes: 19688d7f9592 (block/blk-cgroup: Swap the blk_throtl_init() and blk_iolatency_init() calls)
+Signed-off-by: Yanfei Xu <yanfei.xu-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+---
+ block/blk-cgroup.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 3c88a79a319b..1ded4181a6de 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -1182,10 +1182,6 @@ int blkcg_init_queue(struct request_queue *q)
+ 	if (preloaded)
+ 		radix_tree_preload_end();
  
-+	if (mems_updated && !cpusets_insane_config() &&
-+		movable_only_nodes(new_mems)) {
-+		static_branch_enable(&cpusets_insane_config_key);
-+		pr_info("Unsupported (movable nodes only) cpuset configuration detected (nmask=%*pbl) after memory hotplug."
-+			"Cpuset allocations might fail even with a lot of memory available.\n",
-+			nodemask_pr_args(new_mems);
+-	ret = blk_iolatency_init(q);
+-	if (ret)
+-		goto err_destroy_all;
+-
+ 	ret = blk_ioprio_init(q);
+ 	if (ret)
+ 		goto err_destroy_all;
+@@ -1194,6 +1190,12 @@ int blkcg_init_queue(struct request_queue *q)
+ 	if (ret)
+ 		goto err_destroy_all;
+ 
++	ret = blk_iolatency_init(q);
++	if (ret) {
++		blk_throtl_exit(q);
++		goto err_destroy_all;
 +	}
 +
- 	if (is_in_v2_mode())
- 		hotplug_update_tasks(cs, &new_cpus, &new_mems,
- 				     cpus_updated, mems_updated);
+ 	return 0;
+ 
+ err_destroy_all:
+-- 
+2.27.0
 
-Thanks,
-Feng
