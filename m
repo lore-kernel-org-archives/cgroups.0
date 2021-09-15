@@ -1,114 +1,73 @@
-From: brookxu <brookxu.cn@gmail.com>
-Subject: [PATCH v3 1/3] misc_cgroup: introduce misc.events to count failures
-Date: Wed, 15 Sep 2021 10:18:49 +0800
-Message-ID: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu@tencent.com>
-Return-path: <linux-doc-owner@vger.kernel.org>
+From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH v3 2/3] misc_cgroup: remove error log to avoid log flood
+Date: Wed, 15 Sep 2021 10:18:50 +0800
+Message-ID: <a960cd793f649bd944127fe5e5e3f4d8bb9040a4.1631671936.git.brookxu@tencent.com>
+References: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu@tencent.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id;
-        bh=KS/QwJbXlDtbJY8wk7S0QPKRodL4Gi6TNWnyfZqcUsc=;
-        b=BDdRgNFnivHELsufZi5Y67KCRQ+turQ+ETLrOuZr31w/hlYiAT0q7e/AYlOXrHxoE3
-         rsrb/r8rHzlc2qZhkWDmUGa+t2EAUUy+hcPMKjpR+k5mf84m69tZ+j89dDvJaQatO2Cy
-         Jfs+RmDMtjwh+0iDgy+Xs51uz2DBusZJiUBg3Y2qU+spy1NpSXFgKKE5M6dC5ohyHq7m
-         SxLdVt9KllK85H50K8ocVCS307En1WqpeGuVt8JHHvsLa8jb4eOsiYzvuNVxR9sYYavV
-         yTAPll9Vr87kqtOou1/cUYNzBAvTW9ZeuMvOhs8nqSS+0QmV+/5HZxSz5gqcPkVSJ3rM
-         IROg==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :in-reply-to:references;
+        bh=juTuMGYLDFSf15GDeZ/llKXGqDNMFhVIYFa8WUCbryw=;
+        b=g1kBf6mxbwuBgKY0zeaBNmkhNUjyetF7qAcShuR/M1bj9IUcJPGG4ff9kVL7mtu4sZ
+         /Y1D7tyCxPQlxFiiGRw7QxHtTCHvs2/jSJTL859u9OpZBnkRR7V+bJpVx71eYsuDKq3m
+         NbUgbiD6ZVJFmEXZDUcfY8jMgMxjkgeWzpw8OQkr12gEP/uDoim14zIhrERhtfoCUO8H
+         zpPJSy5wsw+u/k7G2yTS9Vb44IxYG8E/BC1yZASDariDtjGsc/1ZR388oNaN9DHNP3lw
+         CO3iDZr3mQ1nM2F9/PGHKTV4xC6Rqg3FZjKY+oIjv0flrGfqn5RhOgLPlfgKkffP8qXT
+         D0hw==
+In-Reply-To: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+In-Reply-To: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+References: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org
-Cc: vipinsh@google.com, mkoutny@suse.com, corbet@lwn.net, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Chunguang Xu <brookxu@tencent.com>
+From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Introduce misc.events to make it easier for us to understand
-the pressure of resources. Currently only the 'max' event is
-implemented, which indicates the times the resource is about
-to exceeds the max limit.
+In scenarios where containers are frequently created and deleted,
+a large number of error logs maybe generated. This log provides
+less information, we can get more detailed info from misc.events.
+From this, perhaps we can remove it.
 
-Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 ---
-
-v3: remove misc.events.local.
-v2: remove cgroup v1 files.
-
- include/linux/misc_cgroup.h |  5 +++++
- kernel/cgroup/misc.c        | 24 ++++++++++++++++++++++++
- 2 files changed, 29 insertions(+)
+ include/linux/misc_cgroup.h | 1 -
+ kernel/cgroup/misc.c        | 7 -------
+ 2 files changed, 8 deletions(-)
 
 diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
-index da2367e..091f2d2 100644
+index 091f2d2..c238207 100644
 --- a/include/linux/misc_cgroup.h
 +++ b/include/linux/misc_cgroup.h
-@@ -36,6 +36,7 @@ enum misc_res_type {
- struct misc_res {
+@@ -37,7 +37,6 @@ struct misc_res {
  	unsigned long max;
  	atomic_long_t usage;
-+	atomic_long_t events;
- 	bool failed;
+ 	atomic_long_t events;
+-	bool failed;
  };
  
-@@ -46,6 +47,10 @@ struct misc_res {
-  */
- struct misc_cg {
- 	struct cgroup_subsys_state css;
-+
-+	/* misc.events */
-+	struct cgroup_file events_file;
-+
- 	struct misc_res res[MISC_CG_RES_TYPES];
- };
- 
+ /**
 diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
-index ec02d96..4b2b492 100644
+index 4b2b492..fe3e8a0 100644
 --- a/kernel/cgroup/misc.c
 +++ b/kernel/cgroup/misc.c
-@@ -171,6 +171,11 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
- 	return 0;
- 
- err_charge:
-+	for (j = i; j; j = parent_misc(j)) {
-+		atomic_long_inc(&j->res[type].events);
-+		cgroup_file_notify(&j->events_file);
-+	}
-+
- 	for (j = cg; j != i; j = parent_misc(j))
- 		misc_cg_cancel_charge(type, j, amount);
- 	misc_cg_cancel_charge(type, i, amount);
-@@ -335,6 +340,19 @@ static int misc_cg_capacity_show(struct seq_file *sf, void *v)
- 	return 0;
- }
- 
-+static int misc_events_show(struct seq_file *sf, void *v)
-+{
-+	struct misc_cg *cg = css_misc(seq_css(sf));
-+	unsigned long events, i;
-+
-+	for (i = 0; i < MISC_CG_RES_TYPES; i++) {
-+		events = atomic_long_read(&cg->res[i].events);
-+		if (READ_ONCE(misc_res_capacity[i]) || events)
-+			seq_printf(sf, "%s.max %lu\n", misc_res_name[i], events);
-+	}
-+	return 0;
-+}
-+
- /* Misc cgroup interface files */
- static struct cftype misc_cg_files[] = {
- 	{
-@@ -353,6 +371,12 @@ static int misc_cg_capacity_show(struct seq_file *sf, void *v)
- 		.seq_show = misc_cg_capacity_show,
- 		.flags = CFTYPE_ONLY_ON_ROOT,
- 	},
-+	{
-+		.name = "events",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.file_offset = offsetof(struct misc_cg, events_file),
-+		.seq_show = misc_events_show,
-+	},
- 	{}
- };
- 
+@@ -157,13 +157,6 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
+ 		new_usage = atomic_long_add_return(amount, &res->usage);
+ 		if (new_usage > READ_ONCE(res->max) ||
+ 		    new_usage > READ_ONCE(misc_res_capacity[type])) {
+-			if (!res->failed) {
+-				pr_info("cgroup: charge rejected by the misc controller for %s resource in ",
+-					misc_res_name[type]);
+-				pr_cont_cgroup_path(i->css.cgroup);
+-				pr_cont("\n");
+-				res->failed = true;
+-			}
+ 			ret = -EBUSY;
+ 			goto err_charge;
+ 		}
 -- 
 1.8.3.1
 
