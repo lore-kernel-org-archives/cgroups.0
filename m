@@ -1,121 +1,67 @@
-From: Vipin Sharma <vipinsh@google.com>
-Subject: Re: [PATCH v3 1/3] misc_cgroup: introduce misc.events to count failures
-Date: Wed, 15 Sep 2021 10:04:18 -0700
-Message-ID: <CAHVum0d657HeoSyXS9RGW8YHkwJFmvLQ6ebwYy_wVnR0gM8uPQ@mail.gmail.com>
-References: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu@tencent.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] blkcg: fix memory leak in blk_iolatency_init
+Date: Wed, 15 Sep 2021 07:43:18 -1000
+Message-ID: <YUIwtsaJeisezVBI@slm.duckdns.org>
+References: <20210915072426.4022924-1-yanfei.xu@windriver.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=QiL7YfwCSR7LokE5J56usk6i2TFHnfpVhu2pbczR/rY=;
-        b=YjgBRMW6BxNZ9RQ3OrB64PcgAbpzCvURuVzS2ChPGQ9FOfcjAuiJ7nOYupy9eB316J
-         1NZt9Ps0lkvdwH0tDss0B+Lg5rtk1l4NTDZwUiJsDF4T3zxmRk1zqgBcgsBqAFfdu7/5
-         6l9Ztk6P9WF+a8hA1jgJj9VOxjhHhOx9y4kPo54MY7fqix74AHRoTUQ1EDWkE0j4G377
-         2uJ8qxBYEA1cW8jAd8iVorR13sx3cItzUFzoj07UXEzzHRNn6hyAlkBex7PDCLU8gQSA
-         vhVIZn+mQpAee7wuK8C4+KrKqs7KOrVZN55UAlWSX2/Z/zzfWt1i78uNilaLmN6eLC4B
-         yUrw==
-In-Reply-To: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu@tencent.com>
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=txWtxQmy07MGdoAs+OedOZn1lzXrGQuZ/mk3Eu7b5aE=;
+        b=XT7A2WHPULRNXUNb/JMXgeVo8IlX8TrZbm5PZPkwTjgr81LV9uQEXKdQ0n/osyUULc
+         cC7Ha3t/6YDIOi5ukEtv0Jr/c7kwuq3nv8RoPyC0WjPjap7MdLzjDe16ChgeYXpFbtMg
+         NfiLpio76Zn/sJvUETMKKk4LlWuAWz9aQNbA1xG9FY0vAafQXisAXSNUp55oVyAY2eYp
+         krWT3nWHJ7ADp5KNQTtZmMBK6F6+nQa7loQIIySYfo7lthI47DxMGGsRMFbCIlPr6McN
+         XIvOxf7L1zjQLcdbZxLI2sRYYAhkbf61nonH0Ax5CgAAqok+l5EeaCV0GlZpum+TAvLv
+         9QBg==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20210915072426.4022924-1-yanfei.xu@windriver.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: brookxu <brookxu.cn@gmail.com>
-Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, mkoutny@suse.com, corbet@lwn.net, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
+To: Yanfei Xu <yanfei.xu@windriver.com>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Tue, Sep 14, 2021 at 7:18 PM brookxu <brookxu.cn@gmail.com> wrote:
->
-> From: Chunguang Xu <brookxu@tencent.com>
->
-> Introduce misc.events to make it easier for us to understand
-> the pressure of resources. Currently only the 'max' event is
-> implemented, which indicates the times the resource is about
-> to exceeds the max limit.
->
-> Signed-off-by: Chunguang Xu <brookxu@tencent.com>
-> ---
->
-> v3: remove misc.events.local.
-> v2: remove cgroup v1 files.
->
->  include/linux/misc_cgroup.h |  5 +++++
->  kernel/cgroup/misc.c        | 24 ++++++++++++++++++++++++
->  2 files changed, 29 insertions(+)
->
-> diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
-> index da2367e..091f2d2 100644
-> --- a/include/linux/misc_cgroup.h
-> +++ b/include/linux/misc_cgroup.h
-> @@ -36,6 +36,7 @@ enum misc_res_type {
->  struct misc_res {
->         unsigned long max;
->         atomic_long_t usage;
-> +       atomic_long_t events;
->         bool failed;
->  };
->
-> @@ -46,6 +47,10 @@ struct misc_res {
->   */
->  struct misc_cg {
->         struct cgroup_subsys_state css;
-> +
-> +       /* misc.events */
-> +       struct cgroup_file events_file;
-> +
->         struct misc_res res[MISC_CG_RES_TYPES];
->  };
->
-> diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
-> index ec02d96..4b2b492 100644
-> --- a/kernel/cgroup/misc.c
-> +++ b/kernel/cgroup/misc.c
-> @@ -171,6 +171,11 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
->         return 0;
->
->  err_charge:
-> +       for (j = i; j; j = parent_misc(j)) {
-> +               atomic_long_inc(&j->res[type].events);
-> +               cgroup_file_notify(&j->events_file);
-> +       }
-> +
->         for (j = cg; j != i; j = parent_misc(j))
->                 misc_cg_cancel_charge(type, j, amount);
->         misc_cg_cancel_charge(type, i, amount);
-> @@ -335,6 +340,19 @@ static int misc_cg_capacity_show(struct seq_file *sf, void *v)
->         return 0;
->  }
->
-> +static int misc_events_show(struct seq_file *sf, void *v)
-> +{
-> +       struct misc_cg *cg = css_misc(seq_css(sf));
-> +       unsigned long events, i;
-> +
-> +       for (i = 0; i < MISC_CG_RES_TYPES; i++) {
-> +               events = atomic_long_read(&cg->res[i].events);
-> +               if (READ_ONCE(misc_res_capacity[i]) || events)
-> +                       seq_printf(sf, "%s.max %lu\n", misc_res_name[i], events);
-> +       }
-> +       return 0;
-> +}
-> +
->  /* Misc cgroup interface files */
->  static struct cftype misc_cg_files[] = {
->         {
-> @@ -353,6 +371,12 @@ static int misc_cg_capacity_show(struct seq_file *sf, void *v)
->                 .seq_show = misc_cg_capacity_show,
->                 .flags = CFTYPE_ONLY_ON_ROOT,
->         },
-> +       {
-> +               .name = "events",
-> +               .flags = CFTYPE_NOT_ON_ROOT,
-> +               .file_offset = offsetof(struct misc_cg, events_file),
-> +               .seq_show = misc_events_show,
-> +       },
->         {}
->  };
->
-> --
-> 1.8.3.1
->
+On Wed, Sep 15, 2021 at 03:24:26PM +0800, Yanfei Xu wrote:
+> BUG: memory leak
+> unreferenced object 0xffff888129acdb80 (size 96):
+>   comm "syz-executor.1", pid 12661, jiffies 4294962682 (age 15.220s)
+>   hex dump (first 32 bytes):
+>     20 47 c9 85 ff ff ff ff 20 d4 8e 29 81 88 ff ff   G...... ..)....
+>     01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>   backtrace:
+>     [<ffffffff82264ec8>] kmalloc include/linux/slab.h:591 [inline]
+>     [<ffffffff82264ec8>] kzalloc include/linux/slab.h:721 [inline]
+>     [<ffffffff82264ec8>] blk_iolatency_init+0x28/0x190 block/blk-iolatency.c:724
+>     [<ffffffff8225b8c4>] blkcg_init_queue+0xb4/0x1c0 block/blk-cgroup.c:1185
+>     [<ffffffff822253da>] blk_alloc_queue+0x22a/0x2e0 block/blk-core.c:566
+>     [<ffffffff8223b175>] blk_mq_init_queue_data block/blk-mq.c:3100 [inline]
+>     [<ffffffff8223b175>] __blk_mq_alloc_disk+0x25/0xd0 block/blk-mq.c:3124
+>     [<ffffffff826a9303>] loop_add+0x1c3/0x360 drivers/block/loop.c:2344
+>     [<ffffffff826a966e>] loop_control_get_free drivers/block/loop.c:2501 [inline]
+>     [<ffffffff826a966e>] loop_control_ioctl+0x17e/0x2e0 drivers/block/loop.c:2516
+>     [<ffffffff81597eec>] vfs_ioctl fs/ioctl.c:51 [inline]
+>     [<ffffffff81597eec>] __do_sys_ioctl fs/ioctl.c:874 [inline]
+>     [<ffffffff81597eec>] __se_sys_ioctl fs/ioctl.c:860 [inline]
+>     [<ffffffff81597eec>] __x64_sys_ioctl+0xfc/0x140 fs/ioctl.c:860
+>     [<ffffffff843fa745>] do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+>     [<ffffffff843fa745>] do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
+>     [<ffffffff84600068>] entry_SYSCALL_64_after_hwframe+0x44/0xae
+> 
+> Once blk_throtl_init() queue init failed, blkcg_iolatency_exit() will
+> not be invoked for cleanup. That leads a memory leak. Swap the
+> blk_throtl_init() and blk_iolatency_init() calls can solve this.
+> 
+> Reported-by: syzbot+01321b15cc98e6bf96d6@syzkaller.appspotmail.com
+> Fixes: 19688d7f9592 (block/blk-cgroup: Swap the blk_throtl_init() and blk_iolatency_init() calls)
+> Signed-off-by: Yanfei Xu <yanfei.xu@windriver.com>
 
-Reviewed-by: Vipin Sharma <vipinsh@google.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+
+Thanks.
+
+-- 
+tejun
