@@ -1,73 +1,60 @@
-From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v3 2/3] misc_cgroup: remove error log to avoid log flood
-Date: Wed, 15 Sep 2021 10:18:50 +0800
-Message-ID: <a960cd793f649bd944127fe5e5e3f4d8bb9040a4.1631671936.git.brookxu@tencent.com>
+From: brookxu <brookxu.cn@gmail.com>
+Subject: [PATCH v3 3/3] docs/cgroup: add entry for misc.events
+Date: Wed, 15 Sep 2021 10:18:51 +0800
+Message-ID: <7cb32b92b77188f50b46bb47eb728bcacf18c17f.1631671936.git.brookxu@tencent.com>
 References: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu@tencent.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=juTuMGYLDFSf15GDeZ/llKXGqDNMFhVIYFa8WUCbryw=;
-        b=g1kBf6mxbwuBgKY0zeaBNmkhNUjyetF7qAcShuR/M1bj9IUcJPGG4ff9kVL7mtu4sZ
-         /Y1D7tyCxPQlxFiiGRw7QxHtTCHvs2/jSJTL859u9OpZBnkRR7V+bJpVx71eYsuDKq3m
-         NbUgbiD6ZVJFmEXZDUcfY8jMgMxjkgeWzpw8OQkr12gEP/uDoim14zIhrERhtfoCUO8H
-         zpPJSy5wsw+u/k7G2yTS9Vb44IxYG8E/BC1yZASDariDtjGsc/1ZR388oNaN9DHNP3lw
-         CO3iDZr3mQ1nM2F9/PGHKTV4xC6Rqg3FZjKY+oIjv0flrGfqn5RhOgLPlfgKkffP8qXT
-         D0hw==
-In-Reply-To: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-In-Reply-To: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-References: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+        bh=mjJOq2l9/1TGAZpwrREsl45rYpK7gUexDrTF0O7TVOE=;
+        b=FrgumB802lOc8B4BExnulAfH/g8d9tm7wO15QrXk0LDXtE47qb9MIVHVN174MQleXg
+         tWy2fhx311YpXG5MN4WCSd1YFTCxkR3xcqX2GLGx+0kbULFYrkj2C7KLBGlDaB+SmLJV
+         G71mBdKxZRU8psK/fl2/GL09fSFygV+APEhVrRpv3AnYiYf0g4ajh+lN3wIvfyIVvBkL
+         DmSVqKOVw5LYQYY5O7b5hb4FroGN2uK/k1T9j1WvXaEJj2QpxHz+lM7hiT9Xgi5znScP
+         mdY4VMueqOX1aNTYavIOHfg8gEkaAEha2x7UT29Zu9rhp17GTo9Nnx7yUsqy1uEUxWo5
+         03pg==
+In-Reply-To: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu@tencent.com>
+In-Reply-To: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu@tencent.com>
+References: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu@tencent.com>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org
+Cc: vipinsh@google.com, mkoutny@suse.com, corbet@lwn.net, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
-From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+From: Chunguang Xu <brookxu@tencent.com>
 
-In scenarios where containers are frequently created and deleted,
-a large number of error logs maybe generated. This log provides
-less information, we can get more detailed info from misc.events.
-From this, perhaps we can remove it.
+Added descriptions of misc.events.
 
-Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Chunguang Xu <brookxu@tencent.com>
 ---
- include/linux/misc_cgroup.h | 1 -
- kernel/cgroup/misc.c        | 7 -------
- 2 files changed, 8 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
-index 091f2d2..c238207 100644
---- a/include/linux/misc_cgroup.h
-+++ b/include/linux/misc_cgroup.h
-@@ -37,7 +37,6 @@ struct misc_res {
- 	unsigned long max;
- 	atomic_long_t usage;
- 	atomic_long_t events;
--	bool failed;
- };
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index babbe04..e7acc55 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2310,6 +2310,16 @@ Miscellaneous controller provides 3 interface files. If two misc resources (res_
+         Limits can be set higher than the capacity value in the misc.capacity
+         file.
  
- /**
-diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
-index 4b2b492..fe3e8a0 100644
---- a/kernel/cgroup/misc.c
-+++ b/kernel/cgroup/misc.c
-@@ -157,13 +157,6 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
- 		new_usage = atomic_long_add_return(amount, &res->usage);
- 		if (new_usage > READ_ONCE(res->max) ||
- 		    new_usage > READ_ONCE(misc_res_capacity[type])) {
--			if (!res->failed) {
--				pr_info("cgroup: charge rejected by the misc controller for %s resource in ",
--					misc_res_name[type]);
--				pr_cont_cgroup_path(i->css.cgroup);
--				pr_cont("\n");
--				res->failed = true;
--			}
- 			ret = -EBUSY;
- 			goto err_charge;
- 		}
++  misc.events
++	A read-only flat-keyed file which exists on non-root cgroups. The
++	following entries are defined. Unless specified otherwise, a value
++	change in this file generates a file modified event. All fields in
++	this file are hierarchical.
++
++	  max
++		The number of times the cgroup's resource usage was
++		about to go over the max boundary.
++
+ Migration and Ownership
+ ~~~~~~~~~~~~~~~~~~~~~~~
+ 
 -- 
 1.8.3.1
 
