@@ -1,110 +1,116 @@
-From: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v3] mm/page_alloc: detect allocation forbidden by cpuset
- and bail out early
-Date: Thu, 16 Sep 2021 16:11:12 +0800
-Message-ID: <20210916081112.GA41645@shbuild999.sh.intel.com>
-References: <1631590828-25565-1-git-send-email-feng.tang@intel.com>
- <3bd87d8a-d09e-ac7-1d1d-25ad1b9d5ed9@google.com>
- <20210915053247.GG56674@shbuild999.sh.intel.com>
- <YUHZU4OHaJy3WtRk@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH memcg v2] memcg: prohibit unconditional exceeding the
+ limit of dying tasks
+Date: Thu, 16 Sep 2021 14:55:13 +0200
+Message-ID: <YUM+saaJEce0TJyF@dhcp22.suse.cz>
+References: <bab6c1d2-38d8-9098-206f-54894f9871b6@virtuozzo.com>
+ <817a6ce2-4da9-72ac-c5b9-edd398d28a15@virtuozzo.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1631796916; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=dYKdelj+oFdcGiCk7kkpLhRtmRMrCPTuav2tsbzxk2I=;
+        b=KuXbdw1R6U5OZ1VB91ytgygjZKYdim02RcG/E9ysdYmbDYVdtm+BLQR6EOm1JijaW6bqp5
+        VYWG/HMeLaba6LEIsa070rq5hAPvKHP7Ur4D/Ch7UWYJkgQsuR6QLpz70or3nCcbPMVt5w
+        2qrZQ8GndjNeBADjF4PfcwPem4d2STk=
 Content-Disposition: inline
-In-Reply-To: <YUHZU4OHaJy3WtRk-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <817a6ce2-4da9-72ac-c5b9-edd398d28a15-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Wed, Sep 15, 2021 at 01:30:27PM +0200, Michal Hocko wrote:
-> On Wed 15-09-21 13:32:47, Feng Tang wrote:
-> > On Tue, Sep 14, 2021 at 05:30:03PM -0700, David Rientjes wrote:
-> [...]
-> > > I'm wondering about a single node nodemask, for example, where all 
-> > > ZONE_NORMAL memory is hot-removed.
+On Tue 14-09-21 13:10:04, Vasily Averin wrote:
+> The kernel currently allows dying tasks to exceed the memcg limits.
+> The allocation is expected to be the last one and the occupied memory
+> will be freed soon.
+>
+> This is not always true because it can be part of the huge vmalloc
+> allocation. Allowed once, they will repeat over and over again.
+> Moreover lifetime of the allocated object can differ from the lifetime
+> of the dying task.
+> Multiple such allocations running concurrently can not only overuse
+> the memcg limit, but can lead to a global out of memory and,
+> in the worst case, cause the host to panic.
 > 
-> While this is theoretically possible it is highly unlikely to happen.
-> Non movable memory just takes one kernel allocation to prevent any
-> hotremove operation to finish. I have to say I was not aware of the
-> hotplug callback. It all seems rather suspicious. I will have a look.
+> This patch removes checks forced exceed of the memcg limit for dying
+> tasks. Also it breaks endless loop for tasks bypassed by the oom killer.
+> In addition, it renames should_force_charge() helper to task_is_dying()
+> because now its use do not lead to the forced charge.
+
+I would rephrase the changelog as follows to give a broader picture.
+"
+Memory cgroup charging allows killed or exiting tasks to exceed the hard
+limit. It is assumed that the amount of the memory charged by those
+tasks is bound and most of the memory will get released while the task
+is exiting. This is resembling a heuristic for the global OOM situation
+when tasks get access to memory reserves. There is no global memory
+shortage at the memcg level so the memcg heuristic is more relieved.
+
+The above assumption is overly optimistic though. E.g. vmalloc can scale
+to really large requests and the heuristic would allow that. We used to
+have an early break in the vmalloc allocator for killed tasks but this
+has been reverted by b8c8a338f75e (Revert "vmalloc: back off when the
+current task is killed"). There are likely other similar code paths
+which do not check for fatal signals in an allocation&charge loop.
+Also there are some kernel objects charged to a memcg which are not
+bound to a process life time. 
+
+It has been observed that it is not really hard to trigger these
+bypasses and cause global OOM situation.
+
+One potential way to address these runaways would be to limit the amount
+of excess (similar to the global OOM with limited oom reserves). This is
+certainly possible but it is not really clear how much of an excess is
+desirable and still protects from global OOMs as that would have to
+consider the overall memcg configuration.
+
+This patch is addressing the problem by removing the heuristic
+altogether. Bypass is only allowed for requests which either cannot fail
+or where the failure is not desirable while excess should be still
+limited (e.g. atomic requests). Implementation wise a killed or dying
+task fails to charge if it has passed the OOM killer stage. That should
+give all forms of reclaim chance to restore the limit before the
+failure (ENOMEM) and tell the caller to back off.
+"
+feel free to use parts or whole of it.
+ 
+> Suggested-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+> ---
+>  mm/memcontrol.c | 27 ++++++++-------------------
+>  1 file changed, 8 insertions(+), 19 deletions(-)
 > 
-> Anyway something worth having covered "just in case". Thanks for
-> pointing it out.
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 389b5766e74f..707f6640edda 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -234,7 +234,7 @@ enum res_type {
+>  	     iter != NULL;				\
+>  	     iter = mem_cgroup_iter(NULL, iter, NULL))
 >  
-> > Thanks for the reminding! Yes, memory hot remove can change the
-> > cpuset's effective nodemask, we may need to add similar check inside
-> > cpuset_hotplug_update_tasks() which is called by cpuset_hotplug_workfn(), 
-> > something like below?
-> > 
-> > diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> > index 7fa633e..d5f6776 100644
-> > --- a/kernel/cgroup/cpuset.c
-> > +++ b/kernel/cgroup/cpuset.c
-> > @@ -3186,6 +3186,14 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
-> >  	cpus_updated = !cpumask_equal(&new_cpus, cs->effective_cpus);
-> >  	mems_updated = !nodes_equal(new_mems, cs->effective_mems);
-> >  
-> > +	if (mems_updated && !cpusets_insane_config() &&
-> > +		movable_only_nodes(new_mems)) {
-> > +		static_branch_enable(&cpusets_insane_config_key);
-> > +		pr_info("Unsupported (movable nodes only) cpuset configuration detected (nmask=%*pbl) after memory hotplug."
-> > +			"Cpuset allocations might fail even with a lot of memory available.\n",
-> > +			nodemask_pr_args(new_mems);
-> > +	}
-> 
-> Please create a helper rather than two copies of the same. Thanks!
+> -static inline bool should_force_charge(void)
+> +static inline bool task_is_dying(void)
+>  {
+>  	return tsk_is_oom_victim(current) || fatal_signal_pending(current) ||
+>  		(current->flags & PF_EXITING);
+> @@ -1607,7 +1607,7 @@ static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	 * A few threads which were not waiting at mutex_lock_killable() can
+>  	 * fail to bail out. Therefore, check again after holding oom_lock.
+>  	 */
+> -	ret = should_force_charge() || out_of_memory(&oc);
+> +	ret = task_is_dying() || out_of_memory(&oc);
 
-Sure. Some draft add-on patch below.
-
-Thanks,
-Feng
-
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 7fa633e..3bb9f4ea 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -391,6 +391,18 @@ static inline bool is_in_v2_mode(void)
- 	      (cpuset_cgrp_subsys.root->flags & CGRP_ROOT_CPUSET_V2_MODE);
- }
- 
-+static inline void check_insane_mems_config(nodemask_t *nodes)
-+{
-+	if (!cpusets_insane_config() &&
-+		movable_only_nodes(nodes)) {
-+		static_branch_enable(&cpusets_insane_config_key);
-+		pr_info("Unsupported (movable nodes only) cpuset configuration detected (nmask=%*pbl)! "
-+			"Cpuset allocations might fail even with a lot of memory available.\n",
-+			nodemask_pr_args(nodes));
-+	}
-+}
-+
- /*
-  * Return in pmask the portion of a task's cpusets's cpus_allowed that
-  * are online and are capable of running the task.  If none are found,
-@@ -1875,13 +1887,7 @@ static int update_nodemask(struct cpuset *cs, struct cpuset *trialcs,
- 	if (retval < 0)
- 		goto done;
- 
--	if (!cpusets_insane_config() &&
--		movable_only_nodes(&trialcs->mems_allowed)) {
--		static_branch_enable(&cpusets_insane_config_key);
--		pr_info("Unsupported (movable nodes only) cpuset configuration detected (nmask=%*pbl)! "
--			"Cpuset allocations might fail even with a lot of memory available.\n",
--			nodemask_pr_args(&trialcs->mems_allowed));
--	}
-+	check_insane_mems_config(&trialcs->mems_allowed);
- 
- 	spin_lock_irq(&callback_lock);
- 	cs->mems_allowed = trialcs->mems_allowed;
-@@ -3186,6 +3192,9 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
- 	cpus_updated = !cpumask_equal(&new_cpus, cs->effective_cpus);
- 	mems_updated = !nodes_equal(new_mems, cs->effective_mems);
- 
-+	if (mems_updated)
-+		check_insane_mems_config(&new_mems);
-+
- 	if (is_in_v2_mode())
- 		hotplug_update_tasks(cs, &new_cpus, &new_mems,
- 				     cpus_updated, mems_updated);
-
+task_is_dying check will prevent the oom killer for dying tasks. There
+is an additional bail out at out_of_memory layer. These checks are now
+leading to a completely different behavior. Currently we simply use
+"unlimited" reserves and therefore we do not have to kill any task. Now
+the charge fails without using all reclaim measures. So I believe we
+should drop those checks for memcg oom paths. I have to think about this
+some more because I might be missing some other side effects.
+-- 
+Michal Hocko
+SUSE Labs
