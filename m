@@ -1,116 +1,82 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH memcg v2] memcg: prohibit unconditional exceeding the
- limit of dying tasks
-Date: Thu, 16 Sep 2021 14:55:13 +0200
-Message-ID: <YUM+saaJEce0TJyF@dhcp22.suse.cz>
-References: <bab6c1d2-38d8-9098-206f-54894f9871b6@virtuozzo.com>
- <817a6ce2-4da9-72ac-c5b9-edd398d28a15@virtuozzo.com>
+From: Hao Sun <sunhao.th-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: KCSAN: data-race in cgroup_rstat_flush_locked / cgroup_rstat_updated
+Date: Thu, 16 Sep 2021 21:53:55 +0800
+Message-ID: <CACkBjsbPVdkub=e-E-p1WBOLxS515ith-53SFdmFHWV_QMo40w@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1631796916; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=dYKdelj+oFdcGiCk7kkpLhRtmRMrCPTuav2tsbzxk2I=;
-        b=KuXbdw1R6U5OZ1VB91ytgygjZKYdim02RcG/E9ysdYmbDYVdtm+BLQR6EOm1JijaW6bqp5
-        VYWG/HMeLaba6LEIsa070rq5hAPvKHP7Ur4D/Ch7UWYJkgQsuR6QLpz70or3nCcbPMVt5w
-        2qrZQ8GndjNeBADjF4PfcwPem4d2STk=
-Content-Disposition: inline
-In-Reply-To: <817a6ce2-4da9-72ac-c5b9-edd398d28a15-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=rykHFh6yFE4CaM814tm8TY2UWUMlofffOYtoxuMYRSo=;
+        b=O1dUMib0ofHE7WN6YIT5myCn0PW1FFOUSWt9/aXuJYikEjQwlS84Rs8++m498iU71I
+         CVhBwagbZapM5vM9TTwNDIYVY/jRI8wtib5XSkTrOtjUxSKdBH54n+0ib6yOHFIzshZ/
+         f1a5zXy1IZQBFenwnyKnHVCuc2nXlKChOBTVoubeltWFKPpFLB59wzukZEZQeVLLR+Gu
+         fWajzwMXF+0akOFaWaGoNF2qvj6UTGXXt0vW+f0Xk20oRA64JnijsZkhtetxR9AaQMv+
+         zriJAUuC3OrP8l/ZV3cZNAsumC1W2zJ8SXimO1amnQho5X3ZG/hGSSbEFQMnsnzIMOON
+         Eiug==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On Tue 14-09-21 13:10:04, Vasily Averin wrote:
-> The kernel currently allows dying tasks to exceed the memcg limits.
-> The allocation is expected to be the last one and the occupied memory
-> will be freed soon.
->
-> This is not always true because it can be part of the huge vmalloc
-> allocation. Allowed once, they will repeat over and over again.
-> Moreover lifetime of the allocated object can differ from the lifetime
-> of the dying task.
-> Multiple such allocations running concurrently can not only overuse
-> the memcg limit, but can lead to a global out of memory and,
-> in the worst case, cause the host to panic.
-> 
-> This patch removes checks forced exceed of the memcg limit for dying
-> tasks. Also it breaks endless loop for tasks bypassed by the oom killer.
-> In addition, it renames should_force_charge() helper to task_is_dying()
-> because now its use do not lead to the forced charge.
+Hi
 
-I would rephrase the changelog as follows to give a broader picture.
-"
-Memory cgroup charging allows killed or exiting tasks to exceed the hard
-limit. It is assumed that the amount of the memory charged by those
-tasks is bound and most of the memory will get released while the task
-is exiting. This is resembling a heuristic for the global OOM situation
-when tasks get access to memory reserves. There is no global memory
-shortage at the memcg level so the memcg heuristic is more relieved.
+KCSAN reported the following data race during the kernel booting when
+using Healer to fuzz the latest Linux kernel.
 
-The above assumption is overly optimistic though. E.g. vmalloc can scale
-to really large requests and the heuristic would allow that. We used to
-have an early break in the vmalloc allocator for killed tasks but this
-has been reverted by b8c8a338f75e (Revert "vmalloc: back off when the
-current task is killed"). There are likely other similar code paths
-which do not check for fatal signals in an allocation&charge loop.
-Also there are some kernel objects charged to a memcg which are not
-bound to a process life time. 
+HEAD commit: ff1ffd71d5f0 Merge tag 'hyperv-fixes-signed-20210915'
+git tree: upstream
+console output: https://paste.ubuntu.com/p/s4kFHrHCNh/
+kernel config: https://paste.ubuntu.com/p/FjTsrWnBVM/
 
-It has been observed that it is not really hard to trigger these
-bypasses and cause global OOM situation.
+If you fix this issue, please add the following tag to the commit:
+Reported-by: Hao Sun <sunhao.th-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-One potential way to address these runaways would be to limit the amount
-of excess (similar to the global OOM with limited oom reserves). This is
-certainly possible but it is not really clear how much of an excess is
-desirable and still protects from global OOMs as that would have to
-consider the overall memcg configuration.
+==================================================================
+BUG: KCSAN: data-race in cgroup_rstat_flush_locked / cgroup_rstat_updated
 
-This patch is addressing the problem by removing the heuristic
-altogether. Bypass is only allowed for requests which either cannot fail
-or where the failure is not desirable while excess should be still
-limited (e.g. atomic requests). Implementation wise a killed or dying
-task fails to charge if it has passed the OOM killer stage. That should
-give all forms of reclaim chance to restore the limit before the
-failure (ENOMEM) and tell the caller to back off.
-"
-feel free to use parts or whole of it.
- 
-> Suggested-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-> ---
->  mm/memcontrol.c | 27 ++++++++-------------------
->  1 file changed, 8 insertions(+), 19 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 389b5766e74f..707f6640edda 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -234,7 +234,7 @@ enum res_type {
->  	     iter != NULL;				\
->  	     iter = mem_cgroup_iter(NULL, iter, NULL))
->  
-> -static inline bool should_force_charge(void)
-> +static inline bool task_is_dying(void)
->  {
->  	return tsk_is_oom_victim(current) || fatal_signal_pending(current) ||
->  		(current->flags & PF_EXITING);
-> @@ -1607,7 +1607,7 @@ static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  	 * A few threads which were not waiting at mutex_lock_killable() can
->  	 * fail to bail out. Therefore, check again after holding oom_lock.
->  	 */
-> -	ret = should_force_charge() || out_of_memory(&oc);
-> +	ret = task_is_dying() || out_of_memory(&oc);
+write to 0xffffe8ffffc194d0 of 8 bytes by task 8 on cpu 1:
+ cgroup_rstat_cpu_pop_updated kernel/cgroup/rstat.c:139 [inline]
+ cgroup_rstat_flush_locked+0x282/0x760 kernel/cgroup/rstat.c:161
+ cgroup_rstat_flush_irqsafe+0x24/0x40 kernel/cgroup/rstat.c:218
+ mem_cgroup_flush_stats mm/memcontrol.c:5354 [inline]
+ flush_memcg_stats_work+0x34/0x60 mm/memcontrol.c:5366
+ process_one_work+0x402/0x910 kernel/workqueue.c:2297
+ worker_thread+0x638/0xac0 kernel/workqueue.c:2444
+ kthread+0x243/0x280 kernel/kthread.c:319
+ ret_from_fork+0x1f/0x30
 
-task_is_dying check will prevent the oom killer for dying tasks. There
-is an additional bail out at out_of_memory layer. These checks are now
-leading to a completely different behavior. Currently we simply use
-"unlimited" reserves and therefore we do not have to kill any task. Now
-the charge fails without using all reclaim measures. So I believe we
-should drop those checks for memcg oom paths. I have to think about this
-some more because I might be missing some other side effects.
--- 
-Michal Hocko
-SUSE Labs
+read to 0xffffe8ffffc194d0 of 8 bytes by task 1245 on cpu 0:
+ cgroup_rstat_updated+0x53/0x1b0 kernel/cgroup/rstat.c:38
+ __count_memcg_events+0x43/0x50 mm/memcontrol.c:788
+ __activate_page+0x50b/0x5f0 mm/swap.c:309
+ pagevec_lru_move_fn+0x1c4/0x2d0 mm/swap.c:197
+ activate_page mm/swap.c:338 [inline]
+ mark_page_accessed+0x47d/0x550 mm/swap.c:422
+ zap_pte_range+0x5cc/0xdb0 mm/memory.c:1359
+ zap_pmd_range mm/memory.c:1481 [inline]
+ zap_pud_range mm/memory.c:1510 [inline]
+ zap_p4d_range mm/memory.c:1531 [inline]
+ unmap_page_range+0x2dc/0x3d0 mm/memory.c:1552
+ unmap_single_vma+0x157/0x210 mm/memory.c:1597
+ unmap_vmas+0xd0/0x180 mm/memory.c:1629
+ exit_mmap+0x235/0x470 mm/mmap.c:3171
+ __mmput+0x27/0x1d0 kernel/fork.c:1115
+ mmput+0x3d/0x50 kernel/fork.c:1136
+ exit_mm+0x2dc/0x3d0 kernel/exit.c:501
+ do_exit+0x3e0/0x14f0 kernel/exit.c:812
+ do_group_exit+0xa4/0x1a0 kernel/exit.c:922
+ __do_sys_exit_group+0xb/0x10 kernel/exit.c:933
+ __se_sys_exit_group+0x5/0x10 kernel/exit.c:931
+ __x64_sys_exit_group+0x16/0x20 kernel/exit.c:931
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x44/0xa0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+
+value changed: 0xffff888101bc2010 -> 0x0000000000000000
+
+Reported by Kernel Concurrency Sanitizer on:
+CPU: 0 PID: 1245 Comm: syz-executor Not tainted 5.15.0-rc1+ #8
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+1.13.0-1ubuntu1.1 04/01/2014
