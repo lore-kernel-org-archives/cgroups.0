@@ -1,82 +1,38 @@
-From: Hao Sun <sunhao.th-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: KCSAN: data-race in cgroup_rstat_flush_locked / cgroup_rstat_updated
-Date: Thu, 16 Sep 2021 21:53:55 +0800
-Message-ID: <CACkBjsbPVdkub=e-E-p1WBOLxS515ith-53SFdmFHWV_QMo40w@mail.gmail.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH v3 3/3] docs/cgroup: add entry for misc.events
+Date: Thu, 16 Sep 2021 19:47:35 +0200
+Message-ID: <20210916174735.GA12271@blackbody.suse.cz>
+References: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631671936.git.brookxu@tencent.com>
+ <7cb32b92b77188f50b46bb47eb728bcacf18c17f.1631671936.git.brookxu@tencent.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=rykHFh6yFE4CaM814tm8TY2UWUMlofffOYtoxuMYRSo=;
-        b=O1dUMib0ofHE7WN6YIT5myCn0PW1FFOUSWt9/aXuJYikEjQwlS84Rs8++m498iU71I
-         CVhBwagbZapM5vM9TTwNDIYVY/jRI8wtib5XSkTrOtjUxSKdBH54n+0ib6yOHFIzshZ/
-         f1a5zXy1IZQBFenwnyKnHVCuc2nXlKChOBTVoubeltWFKPpFLB59wzukZEZQeVLLR+Gu
-         fWajzwMXF+0akOFaWaGoNF2qvj6UTGXXt0vW+f0Xk20oRA64JnijsZkhtetxR9AaQMv+
-         zriJAUuC3OrP8l/ZV3cZNAsumC1W2zJ8SXimO1amnQho5X3ZG/hGSSbEFQMnsnzIMOON
-         Eiug==
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1631814456; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=92sbNZ4wtt7HJbLDVek/qCHTZYn/db8qMt1chWEKSus=;
+        b=QxXUahxQZ+eYlKdrdkwUUz1H1yNVburuoAS/zqp9XPPRLN8gqTzaSP8TKq+nMOUsv1RPtE
+        CJgaLN5eFXNtCcIu37SJ0qE2IbJMb5GHevpOLPbv9JbhgHPte9kJjt7El4FT0VEvPH76HM
+        DPuNlKRa8XTHg9F4I6QYYbHFDgj+iFo=
+Content-Disposition: inline
+In-Reply-To: <7cb32b92b77188f50b46bb47eb728bcacf18c17f.1631671936.git.brookxu@tencent.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: brookxu <brookxu.cn@gmail.com>
+Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, vipinsh@google.com, corbet@lwn.net, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
-Hi
+On Wed, Sep 15, 2021 at 10:18:51AM +0800, brookxu <brookxu.cn@gmail.com> wr=
+ote:
+> From: Chunguang Xu <brookxu@tencent.com>
+>=20
+> Added descriptions of misc.events.
+>=20
+> Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
 
-KCSAN reported the following data race during the kernel booting when
-using Healer to fuzz the latest Linux kernel.
+Reviewed-by: Michal Koutn=FD <mkoutny@suse.com>
 
-HEAD commit: ff1ffd71d5f0 Merge tag 'hyperv-fixes-signed-20210915'
-git tree: upstream
-console output: https://paste.ubuntu.com/p/s4kFHrHCNh/
-kernel config: https://paste.ubuntu.com/p/FjTsrWnBVM/
-
-If you fix this issue, please add the following tag to the commit:
-Reported-by: Hao Sun <sunhao.th-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-
-==================================================================
-BUG: KCSAN: data-race in cgroup_rstat_flush_locked / cgroup_rstat_updated
-
-write to 0xffffe8ffffc194d0 of 8 bytes by task 8 on cpu 1:
- cgroup_rstat_cpu_pop_updated kernel/cgroup/rstat.c:139 [inline]
- cgroup_rstat_flush_locked+0x282/0x760 kernel/cgroup/rstat.c:161
- cgroup_rstat_flush_irqsafe+0x24/0x40 kernel/cgroup/rstat.c:218
- mem_cgroup_flush_stats mm/memcontrol.c:5354 [inline]
- flush_memcg_stats_work+0x34/0x60 mm/memcontrol.c:5366
- process_one_work+0x402/0x910 kernel/workqueue.c:2297
- worker_thread+0x638/0xac0 kernel/workqueue.c:2444
- kthread+0x243/0x280 kernel/kthread.c:319
- ret_from_fork+0x1f/0x30
-
-read to 0xffffe8ffffc194d0 of 8 bytes by task 1245 on cpu 0:
- cgroup_rstat_updated+0x53/0x1b0 kernel/cgroup/rstat.c:38
- __count_memcg_events+0x43/0x50 mm/memcontrol.c:788
- __activate_page+0x50b/0x5f0 mm/swap.c:309
- pagevec_lru_move_fn+0x1c4/0x2d0 mm/swap.c:197
- activate_page mm/swap.c:338 [inline]
- mark_page_accessed+0x47d/0x550 mm/swap.c:422
- zap_pte_range+0x5cc/0xdb0 mm/memory.c:1359
- zap_pmd_range mm/memory.c:1481 [inline]
- zap_pud_range mm/memory.c:1510 [inline]
- zap_p4d_range mm/memory.c:1531 [inline]
- unmap_page_range+0x2dc/0x3d0 mm/memory.c:1552
- unmap_single_vma+0x157/0x210 mm/memory.c:1597
- unmap_vmas+0xd0/0x180 mm/memory.c:1629
- exit_mmap+0x235/0x470 mm/mmap.c:3171
- __mmput+0x27/0x1d0 kernel/fork.c:1115
- mmput+0x3d/0x50 kernel/fork.c:1136
- exit_mm+0x2dc/0x3d0 kernel/exit.c:501
- do_exit+0x3e0/0x14f0 kernel/exit.c:812
- do_group_exit+0xa4/0x1a0 kernel/exit.c:922
- __do_sys_exit_group+0xb/0x10 kernel/exit.c:933
- __se_sys_exit_group+0x5/0x10 kernel/exit.c:931
- __x64_sys_exit_group+0x16/0x20 kernel/exit.c:931
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x44/0xa0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x44/0xae
-
-value changed: 0xffff888101bc2010 -> 0x0000000000000000
-
-Reported by Kernel Concurrency Sanitizer on:
-CPU: 0 PID: 1245 Comm: syz-executor Not tainted 5.15.0-rc1+ #8
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-1.13.0-1ubuntu1.1 04/01/2014
