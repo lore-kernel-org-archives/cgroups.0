@@ -1,86 +1,110 @@
-From: Jinmeng Zhou <jjjinmeng.zhou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: A missing check bug in cgroup1_reconfigure()
-Date: Thu, 16 Sep 2021 15:33:49 +0800
-Message-ID: <CAA-qYXjxht4+GhTjNb0xmr4dLQYDVpDbO1R_FDcWtnsrQC=VNQ@mail.gmail.com>
+From: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v3] mm/page_alloc: detect allocation forbidden by cpuset
+ and bail out early
+Date: Thu, 16 Sep 2021 16:11:12 +0800
+Message-ID: <20210916081112.GA41645@shbuild999.sh.intel.com>
+References: <1631590828-25565-1-git-send-email-feng.tang@intel.com>
+ <3bd87d8a-d09e-ac7-1d1d-25ad1b9d5ed9@google.com>
+ <20210915053247.GG56674@shbuild999.sh.intel.com>
+ <YUHZU4OHaJy3WtRk@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:from:date:message-id:subject:to:cc
-         :content-transfer-encoding;
-        bh=Bb9J2o84T3V9+Tf1rBXjmsTxCOrWhxebCsVPY9V9H3Q=;
-        b=o7Hc/0r4/rqQZyDLh4oEdpb5eQFXFhD0EjPpk5hn/2A+g/usJSxSnLmJafVUoT38Zj
-         8053Lv2OJY+wJyx+T0HEQgk3aFYMyzIw1m+wWScYol/9TSMGOTP/A1VCHz0yCXVOp9Io
-         LzwSUt3Eqyfb9klM81ai+mwwcLv89gsJTUm30A8VQZpgs3tdG2nyb5yB+tOqxPfV5Yz4
-         0TySfqplMUy9HvWeFvDi1pe+KyceI3mU/9146Shy6A8qUTYXeVgz6bn6Zu6L/aTARQwd
-         4YJtIfql+wrNd11IzdnxdSk7yBqGnmPAMWP5VTHc7nrZ7PeI/dsinYip+3qzTTuBTK74
-         hPaw==
+Content-Disposition: inline
+In-Reply-To: <YUHZU4OHaJy3WtRk-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: shenwenbosmile-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Dear maintainers,
-hi, our team has found a missing check bug on Linux kernel v5.10.7
-using static analysis.
-There is a checking path where cgroup1_get_tree() calls cgroup1_root_to_use=
-()
-to mount cgroup_root after checking capability.
-However, another no-checking path exists, cgroup1_reconfigure() calls
-trace_cgroup_remount()
-to remount without checking capability.
-We think there is a missing check bug before mounting cgroup_root in
-cgroup1_reconfigure().
+On Wed, Sep 15, 2021 at 01:30:27PM +0200, Michal Hocko wrote:
+> On Wed 15-09-21 13:32:47, Feng Tang wrote:
+> > On Tue, Sep 14, 2021 at 05:30:03PM -0700, David Rientjes wrote:
+> [...]
+> > > I'm wondering about a single node nodemask, for example, where all 
+> > > ZONE_NORMAL memory is hot-removed.
+> 
+> While this is theoretically possible it is highly unlikely to happen.
+> Non movable memory just takes one kernel allocation to prevent any
+> hotremove operation to finish. I have to say I was not aware of the
+> hotplug callback. It all seems rather suspicious. I will have a look.
+> 
+> Anyway something worth having covered "just in case". Thanks for
+> pointing it out.
+>  
+> > Thanks for the reminding! Yes, memory hot remove can change the
+> > cpuset's effective nodemask, we may need to add similar check inside
+> > cpuset_hotplug_update_tasks() which is called by cpuset_hotplug_workfn(), 
+> > something like below?
+> > 
+> > diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> > index 7fa633e..d5f6776 100644
+> > --- a/kernel/cgroup/cpuset.c
+> > +++ b/kernel/cgroup/cpuset.c
+> > @@ -3186,6 +3186,14 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+> >  	cpus_updated = !cpumask_equal(&new_cpus, cs->effective_cpus);
+> >  	mems_updated = !nodes_equal(new_mems, cs->effective_mems);
+> >  
+> > +	if (mems_updated && !cpusets_insane_config() &&
+> > +		movable_only_nodes(new_mems)) {
+> > +		static_branch_enable(&cpusets_insane_config_key);
+> > +		pr_info("Unsupported (movable nodes only) cpuset configuration detected (nmask=%*pbl) after memory hotplug."
+> > +			"Cpuset allocations might fail even with a lot of memory available.\n",
+> > +			nodemask_pr_args(new_mems);
+> > +	}
+> 
+> Please create a helper rather than two copies of the same. Thanks!
 
-Specifically, cgroup1_get_tree() uses ns_capable(ctx->ns->user_ns,
-CAP_SYS_ADMIN) to check
-the permission before calling the critical function
-cgroup1_root_to_use() to mount.
+Sure. Some draft add-on patch below.
 
-1. // check ns_capable() ////////////////////////////
-2. int cgroup1_get_tree(struct fs_context *fc)
-3. {
-4.  struct cgroup_fs_context *ctx =3D cgroup_fc2context(fc);
-5.  int ret;
-6.  /* Check if the caller has permission to mount. */
-7.  if (!ns_capable(ctx->ns->user_ns, CAP_SYS_ADMIN))
-8.    return -EPERM;
-9.  cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
-10. ret =3D cgroup1_root_to_use(fc);
-11. ...
-12. }
+Thanks,
+Feng
 
-trace_cgroup_remount() is called to remount cgroup_root in
-cgroup1_reconfigure().
-However, it lacks the check.
-1. int cgroup1_reconfigure(struct fs_context *fc)
-2. {
-3.  struct cgroup_fs_context *ctx =3D cgroup_fc2context(fc);
-4.  struct kernfs_root *kf_root =3D kernfs_root_from_sb(fc->root->d_sb);
-5.  struct cgroup_root *root =3D cgroup_root_from_kf(kf_root);
-6.  int ret =3D 0;
-7.  u16 added_mask, removed_mask;
-8.  ...
-9.  trace_cgroup_remount(root);
-10. ...
-11. }
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 7fa633e..3bb9f4ea 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -391,6 +391,18 @@ static inline bool is_in_v2_mode(void)
+ 	      (cpuset_cgrp_subsys.root->flags & CGRP_ROOT_CPUSET_V2_MODE);
+ }
+ 
++static inline void check_insane_mems_config(nodemask_t *nodes)
++{
++	if (!cpusets_insane_config() &&
++		movable_only_nodes(nodes)) {
++		static_branch_enable(&cpusets_insane_config_key);
++		pr_info("Unsupported (movable nodes only) cpuset configuration detected (nmask=%*pbl)! "
++			"Cpuset allocations might fail even with a lot of memory available.\n",
++			nodemask_pr_args(nodes));
++	}
++}
++
+ /*
+  * Return in pmask the portion of a task's cpusets's cpus_allowed that
+  * are online and are capable of running the task.  If none are found,
+@@ -1875,13 +1887,7 @@ static int update_nodemask(struct cpuset *cs, struct cpuset *trialcs,
+ 	if (retval < 0)
+ 		goto done;
+ 
+-	if (!cpusets_insane_config() &&
+-		movable_only_nodes(&trialcs->mems_allowed)) {
+-		static_branch_enable(&cpusets_insane_config_key);
+-		pr_info("Unsupported (movable nodes only) cpuset configuration detected (nmask=%*pbl)! "
+-			"Cpuset allocations might fail even with a lot of memory available.\n",
+-			nodemask_pr_args(&trialcs->mems_allowed));
+-	}
++	check_insane_mems_config(&trialcs->mems_allowed);
+ 
+ 	spin_lock_irq(&callback_lock);
+ 	cs->mems_allowed = trialcs->mems_allowed;
+@@ -3186,6 +3192,9 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+ 	cpus_updated = !cpumask_equal(&new_cpus, cs->effective_cpus);
+ 	mems_updated = !nodes_equal(new_mems, cs->effective_mems);
+ 
++	if (mems_updated)
++		check_insane_mems_config(&new_mems);
++
+ 	if (is_in_v2_mode())
+ 		hotplug_update_tasks(cs, &new_cpus, &new_mems,
+ 				     cpus_updated, mems_updated);
 
-We find cgroup1_reconfigure() is only used in a variable initialization.
-Function cgroup1_get_tree() is also used in this initialization.
-Both functions are indirectly called which is hard to trace.
-We reasonably consider that the two functions can be equally reached
-by the user,
-therefore, there is a missing check bug.
-1. static const struct fs_context_operations cgroup1_fs_context_ops =3D {
-2. =E2=80=A6
-3.  .get_tree =3D cgroup1_get_tree,
-4.  .reconfigure =3D cgroup1_reconfigure,
-5. };
-
-
-Thanks!
-
-
-Best regards,
-Jinmeng Zhou
