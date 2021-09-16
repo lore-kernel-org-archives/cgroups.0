@@ -1,61 +1,86 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] blkcg: fix memory leak in blk_iolatency_init
-Date: Wed, 15 Sep 2021 11:58:09 -0600
-Message-ID: <db4a41c9-9ba6-ea8e-8ebe-cf292d796308@kernel.dk>
-References: <20210915072426.4022924-1-yanfei.xu@windriver.com>
+From: Jinmeng Zhou <jjjinmeng.zhou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: A missing check bug in cgroup1_reconfigure()
+Date: Thu, 16 Sep 2021 15:33:49 +0800
+Message-ID: <CAA-qYXjxht4+GhTjNb0xmr4dLQYDVpDbO1R_FDcWtnsrQC=VNQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=VOwjbYzeXD/cfrrWWmcbH4Jm4bi4xHQwCqaQ6FZ72ds=;
-        b=ksUgv0z/jK1fFxqRkilF0js7nEYkh82ulyizoIIjjlMADlDRxN98LP8vqWZXqOfpUK
-         rebMq7gdURQp/KGTbbtu3cj1dg/jPWmMq3LH+IXBQWeI5sbTSNCSMQbadXmNQ4IevXJZ
-         4qiXITXxiQDdecLKSYyRoEuQFeBZZCYHTltDeLZ2LhPhcjmWNmHuWBYrO7wuoOAJjk8C
-         WI6+DvREQZoXFARaGGcO+aGjvN5QK4bpqHsKiNX9mNgjfkz3+PHsTBLPP6wmDJjvvqxx
-         DyTURT5ZDZJyRXsp8VsxQylRyTN+12LCG83wNy3h9wOX08uKegm2RfsPDzkV5vXYOe8B
-         vS0w==
-In-Reply-To: <20210915072426.4022924-1-yanfei.xu@windriver.com>
-Content-Language: en-US
+        d=gmail.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to:cc
+         :content-transfer-encoding;
+        bh=Bb9J2o84T3V9+Tf1rBXjmsTxCOrWhxebCsVPY9V9H3Q=;
+        b=o7Hc/0r4/rqQZyDLh4oEdpb5eQFXFhD0EjPpk5hn/2A+g/usJSxSnLmJafVUoT38Zj
+         8053Lv2OJY+wJyx+T0HEQgk3aFYMyzIw1m+wWScYol/9TSMGOTP/A1VCHz0yCXVOp9Io
+         LzwSUt3Eqyfb9klM81ai+mwwcLv89gsJTUm30A8VQZpgs3tdG2nyb5yB+tOqxPfV5Yz4
+         0TySfqplMUy9HvWeFvDi1pe+KyceI3mU/9146Shy6A8qUTYXeVgz6bn6Zu6L/aTARQwd
+         4YJtIfql+wrNd11IzdnxdSk7yBqGnmPAMWP5VTHc7nrZ7PeI/dsinYip+3qzTTuBTK74
+         hPaw==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Yanfei Xu <yanfei.xu@windriver.com>, tj@kernel.org
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: shenwenbosmile-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 9/15/21 1:24 AM, Yanfei Xu wrote:
-> BUG: memory leak
-> unreferenced object 0xffff888129acdb80 (size 96):
->   comm "syz-executor.1", pid 12661, jiffies 4294962682 (age 15.220s)
->   hex dump (first 32 bytes):
->     20 47 c9 85 ff ff ff ff 20 d4 8e 29 81 88 ff ff   G...... ..)....
->     01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->   backtrace:
->     [<ffffffff82264ec8>] kmalloc include/linux/slab.h:591 [inline]
->     [<ffffffff82264ec8>] kzalloc include/linux/slab.h:721 [inline]
->     [<ffffffff82264ec8>] blk_iolatency_init+0x28/0x190 block/blk-iolatency.c:724
->     [<ffffffff8225b8c4>] blkcg_init_queue+0xb4/0x1c0 block/blk-cgroup.c:1185
->     [<ffffffff822253da>] blk_alloc_queue+0x22a/0x2e0 block/blk-core.c:566
->     [<ffffffff8223b175>] blk_mq_init_queue_data block/blk-mq.c:3100 [inline]
->     [<ffffffff8223b175>] __blk_mq_alloc_disk+0x25/0xd0 block/blk-mq.c:3124
->     [<ffffffff826a9303>] loop_add+0x1c3/0x360 drivers/block/loop.c:2344
->     [<ffffffff826a966e>] loop_control_get_free drivers/block/loop.c:2501 [inline]
->     [<ffffffff826a966e>] loop_control_ioctl+0x17e/0x2e0 drivers/block/loop.c:2516
->     [<ffffffff81597eec>] vfs_ioctl fs/ioctl.c:51 [inline]
->     [<ffffffff81597eec>] __do_sys_ioctl fs/ioctl.c:874 [inline]
->     [<ffffffff81597eec>] __se_sys_ioctl fs/ioctl.c:860 [inline]
->     [<ffffffff81597eec>] __x64_sys_ioctl+0xfc/0x140 fs/ioctl.c:860
->     [<ffffffff843fa745>] do_syscall_x64 arch/x86/entry/common.c:50 [inline]
->     [<ffffffff843fa745>] do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
->     [<ffffffff84600068>] entry_SYSCALL_64_after_hwframe+0x44/0xae
-> 
-> Once blk_throtl_init() queue init failed, blkcg_iolatency_exit() will
-> not be invoked for cleanup. That leads a memory leak. Swap the
-> blk_throtl_init() and blk_iolatency_init() calls can solve this.
+Dear maintainers,
+hi, our team has found a missing check bug on Linux kernel v5.10.7
+using static analysis.
+There is a checking path where cgroup1_get_tree() calls cgroup1_root_to_use=
+()
+to mount cgroup_root after checking capability.
+However, another no-checking path exists, cgroup1_reconfigure() calls
+trace_cgroup_remount()
+to remount without checking capability.
+We think there is a missing check bug before mounting cgroup_root in
+cgroup1_reconfigure().
 
-Applied, thanks.
+Specifically, cgroup1_get_tree() uses ns_capable(ctx->ns->user_ns,
+CAP_SYS_ADMIN) to check
+the permission before calling the critical function
+cgroup1_root_to_use() to mount.
 
--- 
-Jens Axboe
+1. // check ns_capable() ////////////////////////////
+2. int cgroup1_get_tree(struct fs_context *fc)
+3. {
+4.  struct cgroup_fs_context *ctx =3D cgroup_fc2context(fc);
+5.  int ret;
+6.  /* Check if the caller has permission to mount. */
+7.  if (!ns_capable(ctx->ns->user_ns, CAP_SYS_ADMIN))
+8.    return -EPERM;
+9.  cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
+10. ret =3D cgroup1_root_to_use(fc);
+11. ...
+12. }
 
+trace_cgroup_remount() is called to remount cgroup_root in
+cgroup1_reconfigure().
+However, it lacks the check.
+1. int cgroup1_reconfigure(struct fs_context *fc)
+2. {
+3.  struct cgroup_fs_context *ctx =3D cgroup_fc2context(fc);
+4.  struct kernfs_root *kf_root =3D kernfs_root_from_sb(fc->root->d_sb);
+5.  struct cgroup_root *root =3D cgroup_root_from_kf(kf_root);
+6.  int ret =3D 0;
+7.  u16 added_mask, removed_mask;
+8.  ...
+9.  trace_cgroup_remount(root);
+10. ...
+11. }
+
+We find cgroup1_reconfigure() is only used in a variable initialization.
+Function cgroup1_get_tree() is also used in this initialization.
+Both functions are indirectly called which is hard to trace.
+We reasonably consider that the two functions can be equally reached
+by the user,
+therefore, there is a missing check bug.
+1. static const struct fs_context_operations cgroup1_fs_context_ops =3D {
+2. =E2=80=A6
+3.  .get_tree =3D cgroup1_get_tree,
+4.  .reconfigure =3D cgroup1_reconfigure,
+5. };
+
+
+Thanks!
+
+
+Best regards,
+Jinmeng Zhou
