@@ -1,22 +1,22 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.10 5/8] blk-throttle: fix UAF by deleteing timer in blk_throtl_exit()
-Date: Thu, 16 Sep 2021 22:34:30 -0400
-Message-ID: <20210917023437.816574-5-sashal@kernel.org>
-References: <20210917023437.816574-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 4/5] blk-throttle: fix UAF by deleteing timer in blk_throtl_exit()
+Date: Thu, 16 Sep 2021 22:34:48 -0400
+Message-ID: <20210917023449.816713-4-sashal@kernel.org>
+References: <20210917023449.816713-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631846085;
-        bh=ShOueapY9efjuVpL9u11+txZuXerfKSAzn2XwpJAvlU=;
+        s=k20201202; t=1631846095;
+        bh=CRf4pmmB42oIEfAQAof8E/B+8MPRPrSI6N0MyPDOqts=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qfEW4P6VMe/gm6mJu1v2Qwy2sw608mD4Ak2kZZGio3LxorwdjfMqGasU4snIbBXWp
-         iB/qXM59qqWJIm64ReZeRcq4VZ+U9emr13Ybhgj6fYdBaWzDw+w0HeTnrSHY+xKLUf
-         8yT5WfytkrzVLA4utpiRk11MvQBwvnHOM8tYZYd7zUyS3to1UPkMgrjpXAzdwo8ZLm
-         6t3K526zSfGO3JqiL9RyWPfjtzh0vN9HmNyB5CSkBz6L2OIsbThnLIGN8FzGQD+jE4
-         LuMAmdOtXICwbplueE1pj1YFm6YNYkKEz8l3FF8OW1ZWyTeeRz8EBl61yZlPZAbjyy
-         u/wP2oIwihkfw==
-In-Reply-To: <20210917023437.816574-1-sashal@kernel.org>
+        b=RCaV+8XqqfBHz5YbUZf+Plnvr9x15+G+PBKaaxn3YtuPuKS3YIp993qw7oWy3pS84
+         RS1XjPlS4+Ic8kAD3Y4JkIuYLwVBoFSMPiVehofGo8LbMe90HslGe526/yhyMNG4Oo
+         6XsWnApbIKJO1lXapO4hj6xfs0cLZZO+8SHnNeD2FYepwedaSp9k3NY0snBD6LVQLr
+         WFjFSPGPPUclS51MPW+m+Cc6/OSFu685ss98jEh1bpWE68Ju3FuG26H6V18r0E+05w
+         Bb5pKCUc3+yalOK9+Dlh2HrjPRPfa01bMAM4jnY8i2vJI23jIx91WPeGABT1oi5nx/
+         oV3YQo2wolGgg==
+In-Reply-To: <20210917023449.816713-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -42,10 +42,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index b771c4299982..7ada49a174bf 100644
+index 18f773e52dfb..bd870f9ae458 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -2420,6 +2420,7 @@ int blk_throtl_init(struct request_queue *q)
+@@ -2414,6 +2414,7 @@ int blk_throtl_init(struct request_queue *q)
  void blk_throtl_exit(struct request_queue *q)
  {
  	BUG_ON(!q->td);
