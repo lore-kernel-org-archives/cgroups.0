@@ -1,39 +1,99 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: KCSAN: data-race in cgroup_rstat_flush_locked /
- cgroup_rstat_updated
-Date: Fri, 17 Sep 2021 18:41:23 +0200
-Message-ID: <20210917164123.GA13346@blackbody.suse.cz>
-References: <CACkBjsbPVdkub=e-E-p1WBOLxS515ith-53SFdmFHWV_QMo40w@mail.gmail.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: A missing check bug in cgroup1_reconfigure()
+Date: Fri, 17 Sep 2021 19:28:57 +0200
+Message-ID: <20210917172857.GB13346@blackbody.suse.cz>
+References: <CAA-qYXjxht4+GhTjNb0xmr4dLQYDVpDbO1R_FDcWtnsrQC=VNQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1631896884; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1631899739; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=HwaqMdctCtkMhcrq7X60eNjofQ9lWwgd/iusn9WBbEA=;
-        b=PbJoSdNsPCqlSw0D7Sh3n5rTllj5/wyXxBazr+qWOZMoQQlBybauEnqI8Gm8V/sIq94w/D
-        Lcp7rqPruJvO6LS5nLeXi8LvYc/Ap59lR/G+GBU1X9xN+Ig4Ea3rZYKd4MMetz4fi95PKC
-        R0JnTVpP0tBXTFhSmBy091qmE2UTVcI=
+        bh=rmT5s0ZIASojQz5Dpz34eZ0EtRJc756ScfCxuvg+I9w=;
+        b=nJ6FLBUA73ozuG4UevY4HKy5btbpDi/FkXCilpowyOoZrTGQqvI91XT2ZG8QtcCMLxdpFV
+        Qwq1mSfE28sIDMe78Fd9K+ztznY7QlOycZMAEGI1vu/rQyYYmlo2Ej4IyvC5Z+43TMoRgV
+        eXzrPKcWoHGqsxMj1f3ce+Wq3BJlcB8=
 Content-Disposition: inline
-In-Reply-To: <CACkBjsbPVdkub=e-E-p1WBOLxS515ith-53SFdmFHWV_QMo40w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <CAA-qYXjxht4+GhTjNb0xmr4dLQYDVpDbO1R_FDcWtnsrQC=VNQ@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Hao Sun <sunhao.th-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Jinmeng Zhou <jjjinmeng.zhou@gmail.com>
+Cc: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, shenwenbosmile@gmail.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org
 
-Hello Hao.
+On Thu, Sep 16, 2021 at 03:33:49PM +0800, Jinmeng Zhou <jjjinmeng.zhou@gmai=
+l.com> wrote:
+> Dear maintainers,
+> hi, our team has found a missing check bug on Linux kernel v5.10.7
+> using static analysis.
+> There is a checking path where cgroup1_get_tree() calls cgroup1_root_to_u=
+se()
+> to mount cgroup_root after checking capability.
+> However, another no-checking path exists, cgroup1_reconfigure() calls
+> trace_cgroup_remount()
+> to remount without checking capability.
+> We think there is a missing check bug before mounting cgroup_root in
+> cgroup1_reconfigure().
 
-On Thu, Sep 16, 2021 at 09:53:55PM +0800, Hao Sun <sunhao.th-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> KCSAN reported the following data race during the kernel booting when
-> using Healer to fuzz the latest Linux kernel.
-> [...]
->  cgroup_rstat_cpu_pop_updated kernel/cgroup/rstat.c:139 [inline]
->  [...]
->  cgroup_rstat_updated+0x53/0x1b0 kernel/cgroup/rstat.c:38
+Thanks for the report.
+AFAICS, the callers of the fs_context_operations callbacks do the checks
+themselves, therefore I _think_ even the check in cgroup1_get_tree() is
+superfluous (see also commit 23bf1b6be9c2 ("kernfs, sysfs, cgroup,
+intel_rdt: Support fs_context")).
 
-FWIW, it's a "safe" race between updaters and flushers (possibly
-missing the latest update(s)). This is expected as explained in
-cgroup_rstat_updated() comment.
+But let me CC also VFS folks for confirmation (rest of the message
+below).
 
-Michal
+> Specifically, cgroup1_get_tree() uses ns_capable(ctx->ns->user_ns,
+> CAP_SYS_ADMIN) to check
+> the permission before calling the critical function
+> cgroup1_root_to_use() to mount.
+>=20
+> 1. // check ns_capable() ////////////////////////////
+> 2. int cgroup1_get_tree(struct fs_context *fc)
+> 3. {
+> 4.  struct cgroup_fs_context *ctx =3D cgroup_fc2context(fc);
+> 5.  int ret;
+> 6.  /* Check if the caller has permission to mount. */
+> 7.  if (!ns_capable(ctx->ns->user_ns, CAP_SYS_ADMIN))
+> 8.    return -EPERM;
+> 9.  cgroup_lock_and_drain_offline(&cgrp_dfl_root.cgrp);
+> 10. ret =3D cgroup1_root_to_use(fc);
+> 11. ...
+> 12. }
+>=20
+> trace_cgroup_remount() is called to remount cgroup_root in
+> cgroup1_reconfigure().
+> However, it lacks the check.
+> 1. int cgroup1_reconfigure(struct fs_context *fc)
+> 2. {
+> 3.  struct cgroup_fs_context *ctx =3D cgroup_fc2context(fc);
+> 4.  struct kernfs_root *kf_root =3D kernfs_root_from_sb(fc->root->d_sb);
+> 5.  struct cgroup_root *root =3D cgroup_root_from_kf(kf_root);
+> 6.  int ret =3D 0;
+> 7.  u16 added_mask, removed_mask;
+> 8.  ...
+> 9.  trace_cgroup_remount(root);
+> 10. ...
+> 11. }
+>=20
+> We find cgroup1_reconfigure() is only used in a variable initialization.
+> Function cgroup1_get_tree() is also used in this initialization.
+> Both functions are indirectly called which is hard to trace.
+> We reasonably consider that the two functions can be equally reached
+> by the user,
+> therefore, there is a missing check bug.
+> 1. static const struct fs_context_operations cgroup1_fs_context_ops =3D {
+> 2. =E2=80=A6
+> 3.  .get_tree =3D cgroup1_get_tree,
+> 4.  .reconfigure =3D cgroup1_reconfigure,
+> 5. };
+>=20
+>=20
+> Thanks!
+>=20
+>=20
+> Best regards,
+> Jinmeng Zhou
+>=20
