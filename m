@@ -1,97 +1,69 @@
-From: Wang Jianchao <jianchao.wan9-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Memcached with cfs quota 400% performance boost after bind to 4 cpus
-Date: Fri, 17 Sep 2021 20:35:36 +0800
-Message-ID: <9f907d99-1cdb-37db-49ae-8e31c7ea8fe7@gmail.com>
+From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH v4 1/3] misc_cgroup: introduce misc.events to count failures
+Date: Fri, 17 Sep 2021 20:44:14 +0800
+Message-ID: <3834f917d50a6f19402e179e917ef6a9dde5f64a.1631881726.git.brookxu@tencent.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=to:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=FQwsk9IkT0pkz1OAyTjWRN8LUZCcAJQlWnRYcpAJ/2Q=;
-        b=Sx/8TbZu6minR3UE7ZYVFXTcIGWZUEpJK6hYotKjO+I8XS7A1yMD49OlB/Q5HA9p0A
-         OR7JhxxZ2tjLlQb7P3zdiTor4NgjpZlyNI9pZxJOFZ7W2Cty13tkZjRaqWq2DMn9fxyu
-         MQ4oJ9s3SpkoHeFwYpQRjXqT7JLkp8iJertAQtRIbMDt6GJBxxNRWdZU6q08XGQ1cL1c
-         PMSQn0n014I4xKq7RpqUKyNzdKJbHRxC9zoLK2C7rS0i+n+wVwMZOnydT7cqFpJryeZW
-         VXf6DJO6WaJtMb7baT6Kd/hDxhK7CiMkwn0LhgO4IsQlIP1u6Lj2Cd6fCeZEyA6jWgHE
-         u6TA==
-Content-Language: en-US
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=OSzpO0eGAMHb0t+Lo/U/QAbo5rkAO22JEZ3SR4zIPhU=;
+        b=F2twX6VgReOw1YqbdLwsv0Q5AKWCE1HmHVnz9MObbwagIuG7WHu0SkblkxjJcKmG4M
+         fAPL52/v52E/3lS9Iyku3hmzBrW57ZsbWXd4k5prUjR1wJ00L0zAydCtnTZHmuOUa+RB
+         FguENUUAqHmi1uoKxF6PulKMAp/HyO54/SbzzF6W7KY9rTMjNTV2AuqKnoHZ+ITF/a1+
+         cWtf3rsA8/GWOTvdSZndYXXsNUULeO20IZIBF/n/WuSND7sZ95b/J0APgrxG0yNEQL1a
+         hGo4NRYBBqpUCjbDIufI3vnHNPGEeGFo/l3bdaxVE3whW3Z9fgJVUo72Jq9q3D8AZTlZ
+         k59Q==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi list
-
-I have a test environment with following,
-A memcached (memcached -d -m 50000 -u root -p 12301 -c 1000000 -t 16) in cpu cgroup with following config,
-cpu.cfs_quota_us = 400000
-cpu.cfs_period_us = 100000
-
-And a mutilate loop (mutilate -s x.x.x.x:12301 -T 40 -c 20 -t 60 -W 5 -q 1000000) running on another host
-w/o any cgroup config,
-
-When bind memcached to  0-15 with cpuset, 
-==========================================
-mutilate showed,
-#type       avg     std     min     5th    10th    90th    95th    99th
-read     1275.8  6358.9    49.8   378.2   418.5   767.2   841.4 53998.5
-update      0.0     0.0     0.0     0.0     0.0     0.0     0.0     0.0
-op_q        1.0     0.0     1.0     1.0     1.0     1.1     1.1     1.1
-
-Total QPS = 626566.2 (37594133 / 60.0s)
-
-Misses = 0 (0.0%)
-Skipped TXs = 0 (0.0%)
-
-RX 9288150851 bytes :  147.6 MB/s
-TX 1353390552 bytes :   21.5 MB/s
-
-And perf on memcached showed,
-   635,602,955,852      cycles                                                        (30.07%)
-   479,554,401,177      instructions              #    0.75  insn per cycle           (40.02%)
-    12,585,059,799      L1-dcache-load-misses     #    9.31% of all L1-dcache hits    (50.07%)
-   135,140,424,785      L1-dcache-loads                                               (49.96%)
-    76,849,156,759      L1-dcache-stores                                              (50.02%)
-    45,700,267,543      L1-icache-load-misses                                         (49.97%)
-       495,149,862      LLC-load-misses           #   24.96% of all LL-cache hits     (39.95%)
-     1,984,134,589      LLC-loads                                                     (39.97%)
-       327,130,920      LLC-store-misses                                              (20.06%)
-     1,397,111,117      LLC-stores                                                    (20.06%)
-
-
-When bind memcached to 0-3 with cpuset,
-========================================
-mutilate showed,
-#type       avg     std     min     5th    10th    90th    95th    99th
-read      934.7  3669.3    41.1   112.8   129.5   385.3  3321.9 21923.7
-update      0.0     0.0     0.0     0.0     0.0     0.0     0.0     0.0
-op_q        1.0     0.0     1.0     1.0     1.0     1.1     1.1     1.1
-
-Total QPS = 852885.6 (51173140 / 60.0s)
-
-Misses = 0 (0.0%)
-Skipped TXs = 0 (0.0%)
-
-RX 12642165580 bytes :  200.9 MB/s
-TX 1842259932 bytes :   29.3 MB/s
-
-And perf on memcached showed,
-
-   621,311,916,151      cycles                                                        (30.01%)
-   599,835,965,997      instructions              #    0.97  insn per cycle           (40.02%)
-    12,585,889,988      L1-dcache-load-misses     #    7.59% of all L1-dcache hits    (50.00%)
-   165,750,518,361      L1-dcache-loads                                               (50.01%)
-    93,588,611,989      L1-dcache-stores                                              (50.00%)
-    44,445,213,037      L1-icache-load-misses                                         (50.01%)
-       568,410,466      LLC-load-misses           #   26.91% of all LL-cache hits     (40.03%)
-     2,112,218,392      LLC-loads                                                     (40.00%)
-       261,202,604      LLC-store-misses                                              (19.97%)
-     1,484,886,714      LLC-stores 
-
-
-We can see the IPC raised from 0.75 to 0.97, this should be the reason of the performance boost.
-What does cause the IPC boost ?
-
-Thanks a million for any help
-Jianchao
+RnJvbTogQ2h1bmd1YW5nIFh1IDxicm9va3h1LTFOejRwdXJLWWpSQkRnaks3eTdUVVFAcHVibGlj
+LmdtYW5lLm9yZz4KCkludHJvZHVjZSBtaXNjLmV2ZW50cyB0byBtYWtlIGl0IGVhc2llciBmb3Ig
+dXMgdG8gdW5kZXJzdGFuZAp0aGUgcHJlc3N1cmUgb2YgcmVzb3VyY2VzLiBDdXJyZW50bHkgb25s
+eSB0aGUgJ21heCcgZXZlbnQgaXMKaW1wbGVtZW50ZWQsIHdoaWNoIGluZGljYXRlcyB0aGUgdGlt
+ZXMgdGhlIHJlc291cmNlIGlzIGFib3V0CnRvIGV4Y2VlZHMgdGhlIG1heCBsaW1pdC4KClNpZ25l
+ZC1vZmYtYnk6IENodW5ndWFuZyBYdSA8YnJvb2t4dS0xTno0cHVyS1lqUkJEZ2pLN3k3VFVRQHB1
+YmxpYy5nbWFuZS5vcmc+ClJldmlld2VkLWJ5OiBWaXBpbiBTaGFybWEgPHZpcGluc2gtaHBJcXNE
+NEFLbGZRVDBkWlIrQWxmQUBwdWJsaWMuZ21hbmUub3JnPgpSZXZpZXdlZC1ieTogTWljaGFsIEtv
+dXRuw70gPG1rb3V0bnktSUJpOVJHL2I2N2tAcHVibGljLmdtYW5lLm9yZz4KLS0tCnYzOiByZW1v
+dmUgbWlzYy5ldmVudHMubG9jYWwKdjI6IHJlbW92ZSBjZ3JvdXAgdjEgZmlsZXMuCgogaW5jbHVk
+ZS9saW51eC9taXNjX2Nncm91cC5oIHwgIDUgKysrKysKIGtlcm5lbC9jZ3JvdXAvbWlzYy5jICAg
+ICAgICB8IDI0ICsrKysrKysrKysrKysrKysrKysrKysrKwogMiBmaWxlcyBjaGFuZ2VkLCAyOSBp
+bnNlcnRpb25zKCspCgpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9taXNjX2Nncm91cC5oIGIv
+aW5jbHVkZS9saW51eC9taXNjX2Nncm91cC5oCmluZGV4IGRhMjM2N2UuLjA5MWYyZDIgMTAwNjQ0
+Ci0tLSBhL2luY2x1ZGUvbGludXgvbWlzY19jZ3JvdXAuaAorKysgYi9pbmNsdWRlL2xpbnV4L21p
+c2NfY2dyb3VwLmgKQEAgLTM2LDYgKzM2LDcgQEAgZW51bSBtaXNjX3Jlc190eXBlIHsKIHN0cnVj
+dCBtaXNjX3JlcyB7CiAJdW5zaWduZWQgbG9uZyBtYXg7CiAJYXRvbWljX2xvbmdfdCB1c2FnZTsK
+KwlhdG9taWNfbG9uZ190IGV2ZW50czsKIAlib29sIGZhaWxlZDsKIH07CiAKQEAgLTQ2LDYgKzQ3
+LDEwIEBAIHN0cnVjdCBtaXNjX3JlcyB7CiAgKi8KIHN0cnVjdCBtaXNjX2NnIHsKIAlzdHJ1Y3Qg
+Y2dyb3VwX3N1YnN5c19zdGF0ZSBjc3M7CisKKwkvKiBtaXNjLmV2ZW50cyAqLworCXN0cnVjdCBj
+Z3JvdXBfZmlsZSBldmVudHNfZmlsZTsKKwogCXN0cnVjdCBtaXNjX3JlcyByZXNbTUlTQ19DR19S
+RVNfVFlQRVNdOwogfTsKIApkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9taXNjLmMgYi9rZXJu
+ZWwvY2dyb3VwL21pc2MuYwppbmRleCBlYzAyZDk2Li40YjJiNDkyIDEwMDY0NAotLS0gYS9rZXJu
+ZWwvY2dyb3VwL21pc2MuYworKysgYi9rZXJuZWwvY2dyb3VwL21pc2MuYwpAQCAtMTcxLDYgKzE3
+MSwxMSBAQCBpbnQgbWlzY19jZ190cnlfY2hhcmdlKGVudW0gbWlzY19yZXNfdHlwZSB0eXBlLCBz
+dHJ1Y3QgbWlzY19jZyAqY2csCiAJcmV0dXJuIDA7CiAKIGVycl9jaGFyZ2U6CisJZm9yIChqID0g
+aTsgajsgaiA9IHBhcmVudF9taXNjKGopKSB7CisJCWF0b21pY19sb25nX2luYygmai0+cmVzW3R5
+cGVdLmV2ZW50cyk7CisJCWNncm91cF9maWxlX25vdGlmeSgmai0+ZXZlbnRzX2ZpbGUpOworCX0K
+KwogCWZvciAoaiA9IGNnOyBqICE9IGk7IGogPSBwYXJlbnRfbWlzYyhqKSkKIAkJbWlzY19jZ19j
+YW5jZWxfY2hhcmdlKHR5cGUsIGosIGFtb3VudCk7CiAJbWlzY19jZ19jYW5jZWxfY2hhcmdlKHR5
+cGUsIGksIGFtb3VudCk7CkBAIC0zMzUsNiArMzQwLDE5IEBAIHN0YXRpYyBpbnQgbWlzY19jZ19j
+YXBhY2l0eV9zaG93KHN0cnVjdCBzZXFfZmlsZSAqc2YsIHZvaWQgKnYpCiAJcmV0dXJuIDA7CiB9
+CiAKK3N0YXRpYyBpbnQgbWlzY19ldmVudHNfc2hvdyhzdHJ1Y3Qgc2VxX2ZpbGUgKnNmLCB2b2lk
+ICp2KQoreworCXN0cnVjdCBtaXNjX2NnICpjZyA9IGNzc19taXNjKHNlcV9jc3Moc2YpKTsKKwl1
+bnNpZ25lZCBsb25nIGV2ZW50cywgaTsKKworCWZvciAoaSA9IDA7IGkgPCBNSVNDX0NHX1JFU19U
+WVBFUzsgaSsrKSB7CisJCWV2ZW50cyA9IGF0b21pY19sb25nX3JlYWQoJmNnLT5yZXNbaV0uZXZl
+bnRzKTsKKwkJaWYgKFJFQURfT05DRShtaXNjX3Jlc19jYXBhY2l0eVtpXSkgfHwgZXZlbnRzKQor
+CQkJc2VxX3ByaW50ZihzZiwgIiVzLm1heCAlbHVcbiIsIG1pc2NfcmVzX25hbWVbaV0sIGV2ZW50
+cyk7CisJfQorCXJldHVybiAwOworfQorCiAvKiBNaXNjIGNncm91cCBpbnRlcmZhY2UgZmlsZXMg
+Ki8KIHN0YXRpYyBzdHJ1Y3QgY2Z0eXBlIG1pc2NfY2dfZmlsZXNbXSA9IHsKIAl7CkBAIC0zNTMs
+NiArMzcxLDEyIEBAIHN0YXRpYyBpbnQgbWlzY19jZ19jYXBhY2l0eV9zaG93KHN0cnVjdCBzZXFf
+ZmlsZSAqc2YsIHZvaWQgKnYpCiAJCS5zZXFfc2hvdyA9IG1pc2NfY2dfY2FwYWNpdHlfc2hvdywK
+IAkJLmZsYWdzID0gQ0ZUWVBFX09OTFlfT05fUk9PVCwKIAl9LAorCXsKKwkJLm5hbWUgPSAiZXZl
+bnRzIiwKKwkJLmZsYWdzID0gQ0ZUWVBFX05PVF9PTl9ST09ULAorCQkuZmlsZV9vZmZzZXQgPSBv
+ZmZzZXRvZihzdHJ1Y3QgbWlzY19jZywgZXZlbnRzX2ZpbGUpLAorCQkuc2VxX3Nob3cgPSBtaXNj
+X2V2ZW50c19zaG93LAorCX0sCiAJe30KIH07CiAKLS0gCjEuOC4zLjEKCg==
