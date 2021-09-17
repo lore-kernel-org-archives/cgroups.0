@@ -1,26 +1,26 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.4] blk-throttle: fix UAF by deleteing timer in blk_throtl_exit()
-Date: Thu, 16 Sep 2021 22:35:10 -0400
-Message-ID: <20210917023510.817042-1-sashal@kernel.org>
+From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH AUTOSEL 4.9] blk-throttle: fix UAF by deleteing timer in blk_throtl_exit()
+Date: Thu, 16 Sep 2021 22:35:08 -0400
+Message-ID: <20210917023508.816980-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631846112;
-        bh=6aH8dp9T3XgSjhg9I796aCVMOowHmzCeAiNWxh0Ub2c=;
+        s=k20201202; t=1631846110;
+        bh=c3XCtVyOOmSN8//YWlQxWHyl3bALKGKJUAe/8BgASdE=;
         h=From:To:Cc:Subject:Date:From;
-        b=NZUrFoYFXviw/YlbmWbQXHTwtg1ayCbDwuiCtRoevnKlRd3XtDTALTP7IUS/bThHY
-         Z/V+8UHMX035EuwDDlxcRxyWvXLRksnoTmC9UPqW4jdBg+pgzCvm0J5zc07WOGDZcC
-         Wonu9Cd08UBWr9Yz6FhEkWmRC035Zrw267Qf+FHauBkj5vProCbd7+/sKzCgTrYEww
-         wOb9J1xxtO4UUJUklGAa6Z2dRYjSXY81HV4mtx6SXaCgrsGMV9t2wtoCPTZx9HCsNP
-         5a64gOFcIis71biBY976WOfogHZcSTfD79jmBxQ5/Ncn+4ExXpUW1nUw761OmSjK1F
-         s3B9ldGW/gD/w==
+        b=WW56fg2DEIBXn6QuZKh5v44CDC+eBZrYk+P7TzbcmHtRKAPjrVK526CA3Vo9vRkl/
+         d3j8ZZoTHmzw9eIxMn765ZrH275omKrfH+kuDTfXZSIxZTNx/k0QUdsONRqUUD8E/7
+         nsckq/HSOwAYlRbLu2Yml9CaH4iDPRwXYv+YLT12dXaNeJEQgY6/fatXsI3My7yHXj
+         +EUHkKZ8gZH4bt3jOpMXFClPptbscn2IBT+s3sqmB7LGiKiwIa/STu2TqG9Y4xToG5
+         Ki6AZ3g7boIoR2JQL7M62lJ1Rq9LB77z1x+EDqJaktihdL7YXN2rtZXtgWuz97Bmh3
+         vKBvx1nauHuOA==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Li Jinlin <lijinlin3@huawei.com>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, tj@kernel.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Li Jinlin <lijinlin3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Li Jinlin <lijinlin3@huawei.com>
+From: Li Jinlin <lijinlin3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
 [ Upstream commit 884f0e84f1e3195b801319c8ec3d5774e9bf2710 ]
 
@@ -31,19 +31,19 @@ result in a use-after-free.
 
 Fix by calling del_timer_sync() to delete the timer in blk_throtl_exit().
 
-Signed-off-by: Li Jinlin <lijinlin3@huawei.com>
-Link: https://lore.kernel.org/r/20210907121242.2885564-1-lijinlin3@huawei.com
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Li Jinlin <lijinlin3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Link: https://lore.kernel.org/r/20210907121242.2885564-1-lijinlin3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
  block/blk-throttle.c | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 17bdd6b55beb..fbd08c4569ce 100644
+index 3a4c9a3c1427..6435dc25be0a 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -1588,6 +1588,7 @@ int blk_throtl_init(struct request_queue *q)
+@@ -1584,6 +1584,7 @@ int blk_throtl_init(struct request_queue *q)
  void blk_throtl_exit(struct request_queue *q)
  {
  	BUG_ON(!q->td);
