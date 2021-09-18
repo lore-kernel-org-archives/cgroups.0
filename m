@@ -1,7 +1,7 @@
 From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH v7 09/12] sysfs: fix deadlock race with module removal
-Date: Fri, 17 Sep 2021 22:04:27 -0700
-Message-ID: <20210918050430.3671227-10-mcgrof@kernel.org>
+Subject: [PATCH v7 01/12] LICENSES: Add the copyleft-next-0.3.1 license
+Date: Fri, 17 Sep 2021 22:04:19 -0700
+Message-ID: <20210918050430.3671227-2-mcgrof@kernel.org>
 References: <20210918050430.3671227-1-mcgrof@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,12 +10,12 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=JPiPQLfbh0zvgSweOGGWu9LHmTLKw+6joIwG+XJiktQ=; b=Dl39X2CltgzrunxpQcnNoLMxo2
-        yL4KkYWiiV1BOk10H3QjCsRBM7yEIsJ+oN2pv4v048sGKpvBaNnSOgq8opLqSHnQWt4bgNqQpptfk
-        c2aF7STQXnHcvnPKP5raG9MGs7CPMqKvEszUM2aqZE20bsLTq5Xlqff4CfhpUGfD2dNfHHKz8phO4
-        2gk3BvKPkXM8CWCPbQZIU0atDoaR1oyt1nlV/bESdriPo2xDbk5a5aDruse48XiS0SuuRVvcy7QBI
-        f9haE9y0wl8aDIcah6VjZ9EkbwMFKiPSsZyTdyp5WVh0uaq181JQSQFy67iWp47YnevX69E826+VA
-        pEna2zlQ==;
+        bh=Z9fpf5M0U5jTveKWcwBUGzCZsVjpRJIF7aylaLlST7c=; b=QtECLdsNUkPiYRGXB2CFJCCdHP
+        SRs8uhXf62QTLfYG+ErfJ3FcdHljGfffqzond2VCiWi0d9p3bJcAKyZTMY+8tMA2YJFFKEsMHvgS8
+        IqBg1r4DaAE/ACQ9wlkExc7Zj9z66iPFK/9DgcEF3d8vjVzJi4H7Ko+Co3weFSUcOlVCbTiBGrIKn
+        6C+HJEF7qflqhDde1RMTarkgIuRyJQdb/u48X52B9I2ImxSuIbh5VxDleAjJLSuvwJS+SC5A1qR2R
+        H1Yzsu+ikKkUOJ0o7oWxpH3G384HzJ9WAWzb7AHh/1OinX6uUy472uiVDJqYLGLZh6YGEciXvIxUZ
+        BIXpZ5EA==;
 In-Reply-To: <20210918050430.3671227-1-mcgrof@kernel.org>
 Sender: Luis Chamberlain <mcgrof@infradead.org>
 List-ID: <cgroups.vger.kernel.org>
@@ -23,559 +23,348 @@ Content-Type: text/plain; charset="us-ascii"
 To: tj@kernel.org, gregkh@linuxfoundation.org, akpm@linux-foundation.org, minchan@kernel.org, jeyu@kernel.org, shuah@kernel.org
 Cc: rdunlap@infradead.org, rafael@kernel.org, masahiroy@kernel.org, ndesaulniers@google.com, yzaikin@google.com, nathan@kernel.org, ojeda@kernel.org, penguin-kernel@I-love.SAKURA.ne.jp, vitor@massaru.org, elver@google.com, jarkko@kernel.org, glider@google.com, rf@opensource.cirrus.com, stephen@networkplumber.org, David.Laight@ACULAB.COM, bvanassche@acm.org, jolsa@kernel.org, andriy.shevchenko@linux.intel.com, trishalfonso@google.com, andreyknvl@gmail.com, jikos@kernel.org, mbenes@suse.com, ngupta@vflare.org, sergey.senozhatsky.work@gmail.com, mcgrof@kernel.org, reinette.chatre@intel.com, fenghua.yu@intel.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com, lizefan.x@bytedance.com, hannes@cmpxchg.org, daniel.vetter@ffwll.ch, bhelgaas@google.com, kw@linux.com, dan.j.williams@intel.c
 
-When sysfs attributes use a lock also used on module removal we can
-race to deadlock. This happens when for instance a sysfs file on
-a driver is used, then at the same time we have module removal call
-trigger. The module removal call code holds a lock, and then the sysfs
-file entry waits for the same lock. While holding the lock the module
-removal tries to remove the sysfs entries, but these cannot be removed
-yet as one is waiting for a lock. This won't complete as the lock is
-already held. Likewise module removal cannot complete, and so we deadlock.
+Add the full text of the copyleft-next-0.3.1 license to the kernel
+tree as well as the required tags for reference and tooling.
+The license text was copied directly from the copyleft-next project's
+git tree [0].
 
-This can now be easily reproducible with our sysfs selftest as follows:
+Discussion of using copyleft-next-0.3.1 on Linux started since June,
+2016 [1]. In the end Linus' preference was to have drivers use
+MODULE_LICENSE("GPL") to make it clear that the GPL applies when it
+comes to Linux [2]. Additionally, even though copyleft-next-0.3.1 has
+been found to be to be GPLv2 compatible by three attorneys at SUSE and
+Redhat [3], to err on the side of caution we simply recommend to
+always use the "OR" language for this license [4].
 
-./tools/testing/selftests/sysfs/sysfs.sh -t 0027
+Even though it has been a goal of the project to be GPL-v2 compatible
+to be certain in 2016 I asked for a clarification about what makes
+copyleft-next GPLv2 compatible and also asked for a summary of
+benefits. This prompted some small minor changes to make compatibility
+even further clear and as of copyleft 0.3.1 compatibility should
+be crystal clear [5].
 
-To fix this we extend the struct kernfs_node with a module reference and
-use the try_module_get() after kernfs_get_active() is called which
-protects integrity and the existence of the kernfs node during the
-operation.
+The summary of why copyleft-next 0.3.1 is compatible with GPLv2
+is explained as follows:
 
-So long as the kernfs node is protected with kernfs_get_active() we know
-we can rely on its contents. And, as now just documented in the previous
-patch, we also now know that once kernfs_get_active() is called the module
-is also guarded to exist and cannot be removed.
+  Like GPLv2, copyleft-next requires distribution of derivative works
+  ("Derived Works" in copyleft-next 0.3.x) to be under the same license.
+  Ordinarily this would make the two licenses incompatible. However,
+  copyleft-next 0.3.1 says: "If the Derived Work includes material
+  licensed under the GPL, You may instead license the Derived Work under
+  the GPL." "GPL" is defined to include GPLv2.
 
-If try_module_get() fails we fail the operation on the kernfs node.
+In practice this means copyleft-next code in Linux may be licensed
+under the GPL2, however there are additional obvious gains for
+bringing contributions from Linux outbound where copyleft-next is
+preferred. A summary of benefits why projects outside of Linux might
+prefer to use copyleft-next >= 0.3.1 over GPLv2:
 
-We use a try method as a full lock means we'd then make our sysfs
-attributes busy us out from possible module removal, and so userspace
-could force denying module removal, a silly form of "DOS" against module
-removal. A try lock on the module removal ensures we give priority to
-module removal and interacting with sysfs attributes only comes second.
-Using a full lock could mean for instance that if you don't stop poking
-at sysfs files you cannot remove a module.
+o It is much shorter and simpler
+o It has an explicit patent license grant, unlike GPLv2
+o Its notice preservation conditions are clearer
+o More free software/open source licenses are compatible
+  with it (via section 4)
+o The source code requirement triggered by binary distribution
+  is much simpler in a procedural sense
+o Recipients potentially have a contract claim against distributors
+  who are noncompliant with the source code requirement
+o There is a built-in inbound=outbound policy for upstream
+  contributions (cf. Apache License 2.0 section 5)
+o There are disincentives to engage in the controversial practice
+  of copyleft/ proprietary dual-licensing
+o In 15 years copyleft expires, which can be advantageous
+  for legacy code
+o There are explicit disincentives to bringing patent infringement
+  claims accusing the licensed work of infringement (see 10b)
+o There is a cure period for licensees who are not compliant
+  with the license (there is no cure opportunity in GPLv2)
+o copyleft-next has a 'built-in or-later' provision
 
-Races between removal of sysfs files and the module are not possible
-given sysfs files are created by the same module, and when a sysfs file
-is being used kernfs prevents removal of the sysfs file. So if module
-removal is actually happening the removal would have to wait until
-the sysfs file operation is complete.
+The first driver submission to Linux under this dual strategy was
+lib/test_sysctl.c through commit 9308f2f9e7f05 ("test_sysctl: add
+dedicated proc sysctl test driver") merged in July 2017. Shortly after
+that I also added test_kmod through commit d9c6a72d6fa29 ("kmod: add
+test driver to stress test the module loader") in the same month. These
+two drivers went in just a few months before the SPDX license practice
+kicked in. In 2018 Kuno Woudt went through the process to get SPDX
+identifiers for copyleft-next [6] [7]. Although there are SPDX tags
+for copyleft-next-0.3.0, we only document use in Linux starting from
+copyleft-next-0.3.1 which makes GPLv2 compatibility crystal clear.
 
-This deadlock was first reported with the zram driver, however the live
-patching folks have acknowledged they have observed this as well with
-live patching, when a live patch is removed. I was then able to
-reproduce easily by creating a dedicated selftests.
+This patch will let us update the two Linux selftest drivers in
+subsequent patches with their respective SPDX license identifiers and
+let us remove repetitive license boiler plate.
 
-A sketch of how this can happen follows:
+[0] https://github.com/copyleft-next/copyleft-next/blob/master/Releases/copyleft-next-0.3.1
+[1] https://lore.kernel.org/lkml/1465929311-13509-1-git-send-email-mcgrof@kernel.org/
+[2] https://lore.kernel.org/lkml/CA+55aFyhxcvD+q7tp+-yrSFDKfR0mOHgyEAe=f_94aKLsOu0Og@mail.gmail.com/
+[3] https://lore.kernel.org/lkml/20170516232702.GL17314@wotan.suse.de/
+[4] https://lkml.kernel.org/r/1495234558.7848.122.camel@linux.intel.com
+[5] https://lists.fedorahosted.org/archives/list/copyleft-next@lists.fedorahosted.org/thread/JTGV56DDADWGKU7ZKTZA4DLXTGTLNJ57/#SQMDIKBRAVDOCT4UVNOOCRGBN2UJIKHZ
+[6] https://spdx.org/licenses/copyleft-next-0.3.0.html
+[7] https://spdx.org/licenses/copyleft-next-0.3.1.html
 
-CPU A                              CPU B
-                                   whatever_store()
-module_unload
-  mutex_lock(foo)
-                                   mutex_lock(foo)
-   del_gendisk(zram->disk);
-     device_del()
-       device_remove_groups()
-
-In this situation whatever_store() is waiting for the mutex foo to
-become unlocked, but that won't happen until module removal is complete.
-But module removal won't complete until the sysfs file being poked
-completes which is waiting for a lock already held.
-
+Cc: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Cc: Kuno Woudt <kuno@frob.nl>
+Cc: Richard Fontana <fontana@sharpeleven.org>
+Cc: copyleft-next@lists.fedorahosted.org
+Cc: Ciaran Farrell <Ciaran.Farrell@suse.com>
+Cc: Christopher De Nicolo <Christopher.DeNicolo@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Thorsten Leemhuis <linux@leemhuis.info>
+Cc: Andrew Morton <akpm@linux-foundation.org>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- arch/x86/kernel/cpu/resctrl/rdtgroup.c |  4 +-
- fs/kernfs/dir.c                        | 41 ++++++++++++++++++--
- fs/kernfs/file.c                       |  7 +++-
- fs/kernfs/kernfs-internal.h            |  1 +
- fs/kernfs/symlink.c                    |  3 +-
- fs/sysfs/dir.c                         |  4 +-
- fs/sysfs/file.c                        | 10 +++--
- fs/sysfs/group.c                       |  1 +
- include/linux/kernfs.h                 | 11 ++++--
- include/linux/sysfs.h                  | 52 ++++++++++++++++++++------
- kernel/cgroup/cgroup.c                 |  2 +-
- 11 files changed, 106 insertions(+), 30 deletions(-)
+ LICENSES/dual/copyleft-next-0.3.1 | 237 ++++++++++++++++++++++++++++++
+ 1 file changed, 237 insertions(+)
+ create mode 100644 LICENSES/dual/copyleft-next-0.3.1
 
-diff --git a/arch/x86/kernel/cpu/resctrl/rdtgroup.c b/arch/x86/kernel/cpu/resctrl/rdtgroup.c
-index b57b3db9a6a7..d40c486f46b9 100644
---- a/arch/x86/kernel/cpu/resctrl/rdtgroup.c
-+++ b/arch/x86/kernel/cpu/resctrl/rdtgroup.c
-@@ -207,7 +207,7 @@ static int rdtgroup_add_file(struct kernfs_node *parent_kn, struct rftype *rft)
- 	struct kernfs_node *kn;
- 	int ret;
- 
--	kn = __kernfs_create_file(parent_kn, rft->name, rft->mode,
-+	kn = __kernfs_create_file(parent_kn, rft->name, rft->mode, NULL,
- 				  GLOBAL_ROOT_UID, GLOBAL_ROOT_GID,
- 				  0, rft->kf_ops, rft, NULL, NULL);
- 	if (IS_ERR(kn))
-@@ -2480,7 +2480,7 @@ static int mon_addfile(struct kernfs_node *parent_kn, const char *name,
- 	struct kernfs_node *kn;
- 	int ret = 0;
- 
--	kn = __kernfs_create_file(parent_kn, name, 0444,
-+	kn = __kernfs_create_file(parent_kn, name, 0444, NULL,
- 				  GLOBAL_ROOT_UID, GLOBAL_ROOT_GID, 0,
- 				  &kf_mondata_ops, priv, NULL, NULL);
- 	if (IS_ERR(kn))
-diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
-index ba581429bf7b..f463878a5bf4 100644
---- a/fs/kernfs/dir.c
-+++ b/fs/kernfs/dir.c
-@@ -14,6 +14,7 @@
- #include <linux/slab.h>
- #include <linux/security.h>
- #include <linux/hash.h>
-+#include <linux/module.h>
- 
- #include "kernfs-internal.h"
- 
-@@ -414,12 +415,32 @@ static bool kernfs_unlink_sibling(struct kernfs_node *kn)
-  */
- struct kernfs_node *kernfs_get_active(struct kernfs_node *kn)
- {
-+	int v;
+diff --git a/LICENSES/dual/copyleft-next-0.3.1 b/LICENSES/dual/copyleft-next-0.3.1
+new file mode 100644
+index 000000000000..086bcb74b478
+--- /dev/null
++++ b/LICENSES/dual/copyleft-next-0.3.1
+@@ -0,0 +1,237 @@
++Valid-License-Identifier: copyleft-next-0.3.1
++SPDX-URL: https://spdx.org/licenses/copyleft-next-0.3.1
++Usage-Guide:
++  This license can be used in code, it has been found to be GPLv2 compatible
++  by attorneys at Redhat and SUSE, however to air on the side of caution,
++  it's best to only use it together with a GPL2 compatible license using "OR".
++  To use the copyleft-next-0.3.1 license put the following SPDX tag/value
++  pair into a comment according to the placement guidelines in the
++  licensing rules documentation:
++    SPDX-License-Identifier: GPL-2.0 OR copyleft-next-0.3.1
++    SPDX-License-Identifier: GPL-2.0-only OR copyleft-next 0.3.1
++    SPDX-License-Identifier: GPL-2.0+ OR copyleft-next-0.3.1
++    SPDX-License-Identifier: GPL-2.0-or-later OR copyleft-next-0.3.1
++License-Text:
 +
- 	if (unlikely(!kn))
- 		return NULL;
- 
- 	if (!atomic_inc_unless_negative(&kn->active))
- 		return NULL;
- 
-+	/*
-+	 * If a module created the kernfs_node, the module cannot possibly be
-+	 * removed if the above atomic_inc_unless_negative() succeeded. So the
-+	 * try_module_get() below is not to protect the lifetime of the module
-+	 * as that is already guaranteed. The try_module_get() below is used
-+	 * to ensure that we don't deadlock in case a kernfs operation and
-+	 * module removal used a shared lock.
-+	 *
-+	 * We use a try method to avoid userspace DOS'ing module removal with
-+	 * access to kernfs ops.
-+	 */
-+	if (!try_module_get(kn->owner)) {
-+		v = atomic_dec_return(&kn->active);
-+		if (unlikely(v == KN_DEACTIVATED_BIAS))
-+			wake_up_all(&kernfs_root(kn)->deactivate_waitq);
-+		return NULL;
-+	}
++=======================================================================
 +
- 	if (kernfs_lockdep(kn))
- 		rwsem_acquire_read(&kn->dep_map, 0, 1, _RET_IP_);
- 	return kn;
-@@ -442,6 +463,13 @@ void kernfs_put_active(struct kernfs_node *kn)
- 	if (kernfs_lockdep(kn))
- 		rwsem_release(&kn->dep_map, _RET_IP_);
- 	v = atomic_dec_return(&kn->active);
++                      copyleft-next 0.3.1 ("this License")
++                            Release date: 2016-04-29
 +
-+	/*
-+	 * We prevent module exit *until* we know for sure all possible
-+	 * kernfs ops are done.
-+	 */
-+	module_put(kn->owner);
++1. License Grants; No Trademark License
 +
- 	if (likely(v != KN_DEACTIVATED_BIAS))
- 		return;
- 
-@@ -571,6 +599,7 @@ struct kernfs_node *kernfs_node_from_dentry(struct dentry *dentry)
- static struct kernfs_node *__kernfs_new_node(struct kernfs_root *root,
- 					     struct kernfs_node *parent,
- 					     const char *name, umode_t mode,
-+					     struct module *owner,
- 					     kuid_t uid, kgid_t gid,
- 					     unsigned flags)
- {
-@@ -606,6 +635,7 @@ static struct kernfs_node *__kernfs_new_node(struct kernfs_root *root,
- 
- 	kn->name = name;
- 	kn->mode = mode;
-+	kn->owner = owner;
- 	kn->flags = flags;
- 
- 	if (!uid_eq(uid, GLOBAL_ROOT_UID) || !gid_eq(gid, GLOBAL_ROOT_GID)) {
-@@ -639,13 +669,14 @@ static struct kernfs_node *__kernfs_new_node(struct kernfs_root *root,
- 
- struct kernfs_node *kernfs_new_node(struct kernfs_node *parent,
- 				    const char *name, umode_t mode,
-+				    struct module *owner,
- 				    kuid_t uid, kgid_t gid,
- 				    unsigned flags)
- {
- 	struct kernfs_node *kn;
- 
- 	kn = __kernfs_new_node(kernfs_root(parent), parent,
--			       name, mode, uid, gid, flags);
-+			       name, mode, owner, uid, gid, flags);
- 	if (kn) {
- 		kernfs_get(parent);
- 		kn->parent = parent;
-@@ -926,7 +957,7 @@ struct kernfs_root *kernfs_create_root(struct kernfs_syscall_ops *scops,
- 		root->id_highbits = 1;
- 
- 	kn = __kernfs_new_node(root, NULL, "", S_IFDIR | S_IRUGO | S_IXUGO,
--			       GLOBAL_ROOT_UID, GLOBAL_ROOT_GID,
-+			       NULL, GLOBAL_ROOT_UID, GLOBAL_ROOT_GID,
- 			       KERNFS_DIR);
- 	if (!kn) {
- 		idr_destroy(&root->ino_idr);
-@@ -965,6 +996,7 @@ void kernfs_destroy_root(struct kernfs_root *root)
-  * @parent: parent in which to create a new directory
-  * @name: name of the new directory
-  * @mode: mode of the new directory
-+ * @owner: if set, the module owner of this directory
-  * @uid: uid of the new directory
-  * @gid: gid of the new directory
-  * @priv: opaque data associated with the new directory
-@@ -974,6 +1006,7 @@ void kernfs_destroy_root(struct kernfs_root *root)
-  */
- struct kernfs_node *kernfs_create_dir_ns(struct kernfs_node *parent,
- 					 const char *name, umode_t mode,
-+					 struct module *owner,
- 					 kuid_t uid, kgid_t gid,
- 					 void *priv, const void *ns)
- {
-@@ -982,7 +1015,7 @@ struct kernfs_node *kernfs_create_dir_ns(struct kernfs_node *parent,
- 
- 	/* allocate */
- 	kn = kernfs_new_node(parent, name, mode | S_IFDIR,
--			     uid, gid, KERNFS_DIR);
-+			     owner, uid, gid, KERNFS_DIR);
- 	if (!kn)
- 		return ERR_PTR(-ENOMEM);
- 
-@@ -1014,7 +1047,7 @@ struct kernfs_node *kernfs_create_empty_dir(struct kernfs_node *parent,
- 
- 	/* allocate */
- 	kn = kernfs_new_node(parent, name, S_IRUGO|S_IXUGO|S_IFDIR,
--			     GLOBAL_ROOT_UID, GLOBAL_ROOT_GID, KERNFS_DIR);
-+			     NULL, GLOBAL_ROOT_UID, GLOBAL_ROOT_GID, KERNFS_DIR);
- 	if (!kn)
- 		return ERR_PTR(-ENOMEM);
- 
-diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
-index 4479c6580333..73be39ddc856 100644
---- a/fs/kernfs/file.c
-+++ b/fs/kernfs/file.c
-@@ -974,6 +974,7 @@ const struct file_operations kernfs_file_fops = {
-  * @uid: uid of the file
-  * @gid: gid of the file
-  * @size: size of the file
-+ * @owner: if set, the module owner of the file
-  * @ops: kernfs operations for the file
-  * @priv: private data for the file
-  * @ns: optional namespace tag of the file
-@@ -983,7 +984,9 @@ const struct file_operations kernfs_file_fops = {
-  */
- struct kernfs_node *__kernfs_create_file(struct kernfs_node *parent,
- 					 const char *name,
--					 umode_t mode, kuid_t uid, kgid_t gid,
-+					 umode_t mode,
-+					 struct module *owner,
-+					 kuid_t uid, kgid_t gid,
- 					 loff_t size,
- 					 const struct kernfs_ops *ops,
- 					 void *priv, const void *ns,
-@@ -996,7 +999,7 @@ struct kernfs_node *__kernfs_create_file(struct kernfs_node *parent,
- 	flags = KERNFS_FILE;
- 
- 	kn = kernfs_new_node(parent, name, (mode & S_IALLUGO) | S_IFREG,
--			     uid, gid, flags);
-+			     owner, uid, gid, flags);
- 	if (!kn)
- 		return ERR_PTR(-ENOMEM);
- 
-diff --git a/fs/kernfs/kernfs-internal.h b/fs/kernfs/kernfs-internal.h
-index 9e3abf597e2d..3551f62f1449 100644
---- a/fs/kernfs/kernfs-internal.h
-+++ b/fs/kernfs/kernfs-internal.h
-@@ -133,6 +133,7 @@ void kernfs_put_active(struct kernfs_node *kn);
- int kernfs_add_one(struct kernfs_node *kn);
- struct kernfs_node *kernfs_new_node(struct kernfs_node *parent,
- 				    const char *name, umode_t mode,
-+				    struct module *owner,
- 				    kuid_t uid, kgid_t gid,
- 				    unsigned flags);
- 
-diff --git a/fs/kernfs/symlink.c b/fs/kernfs/symlink.c
-index 19a6c71c6ff5..1d781970bec7 100644
---- a/fs/kernfs/symlink.c
-+++ b/fs/kernfs/symlink.c
-@@ -36,7 +36,8 @@ struct kernfs_node *kernfs_create_link(struct kernfs_node *parent,
- 		gid = target->iattr->ia_gid;
- 	}
- 
--	kn = kernfs_new_node(parent, name, S_IFLNK|0777, uid, gid, KERNFS_LINK);
-+	kn = kernfs_new_node(parent, name, S_IFLNK|0777, target->owner, uid,
-+			     gid, KERNFS_LINK);
- 	if (!kn)
- 		return ERR_PTR(-ENOMEM);
- 
-diff --git a/fs/sysfs/dir.c b/fs/sysfs/dir.c
-index b6b6796e1616..01a0a53ee18e 100644
---- a/fs/sysfs/dir.c
-+++ b/fs/sysfs/dir.c
-@@ -56,8 +56,8 @@ int sysfs_create_dir_ns(struct kobject *kobj, const void *ns)
- 
- 	kobject_get_ownership(kobj, &uid, &gid);
- 
--	kn = kernfs_create_dir_ns(parent, kobject_name(kobj), 0755, uid, gid,
--				  kobj, ns);
-+	kn = kernfs_create_dir_ns(parent, kobject_name(kobj), 0755, NULL, uid,
-+				  gid, kobj, ns);
- 	if (IS_ERR(kn)) {
- 		if (PTR_ERR(kn) == -EEXIST)
- 			sysfs_warn_dup(parent, kobject_name(kobj));
-diff --git a/fs/sysfs/file.c b/fs/sysfs/file.c
-index 42dcf96881b6..5edc6e180a97 100644
---- a/fs/sysfs/file.c
-+++ b/fs/sysfs/file.c
-@@ -291,8 +291,9 @@ int sysfs_add_file_mode_ns(struct kernfs_node *parent,
- 		key = attr->key ?: (struct lock_class_key *)&attr->skey;
- #endif
- 
--	kn = __kernfs_create_file(parent, attr->name, mode & 0777, uid, gid,
--				  PAGE_SIZE, ops, (void *)attr, ns, key);
-+	kn = __kernfs_create_file(parent, attr->name, mode & 0777, attr->owner,
-+				  uid, gid, PAGE_SIZE, ops, (void *)attr, ns,
-+				  key);
- 	if (IS_ERR(kn)) {
- 		if (PTR_ERR(kn) == -EEXIST)
- 			sysfs_warn_dup(parent, attr->name);
-@@ -326,8 +327,9 @@ int sysfs_add_bin_file_mode_ns(struct kernfs_node *parent,
- 		key = attr->key ?: (struct lock_class_key *)&attr->skey;
- #endif
- 
--	kn = __kernfs_create_file(parent, attr->name, mode & 0777, uid, gid,
--				  battr->size, ops, (void *)attr, ns, key);
-+	kn = __kernfs_create_file(parent, attr->name, mode & 0777, attr->owner,
-+				  uid, gid, battr->size, ops, (void *)attr, ns,
-+				  key);
- 	if (IS_ERR(kn)) {
- 		if (PTR_ERR(kn) == -EEXIST)
- 			sysfs_warn_dup(parent, attr->name);
-diff --git a/fs/sysfs/group.c b/fs/sysfs/group.c
-index eeb0e3099421..283607c22eef 100644
---- a/fs/sysfs/group.c
-+++ b/fs/sysfs/group.c
-@@ -135,6 +135,7 @@ static int internal_create_group(struct kobject *kobj, int update,
- 		} else {
- 			kn = kernfs_create_dir_ns(kobj->sd, grp->name,
- 						  S_IRWXU | S_IRUGO | S_IXUGO,
-+						  grp->owner,
- 						  uid, gid, kobj, NULL);
- 			if (IS_ERR(kn)) {
- 				if (PTR_ERR(kn) == -EEXIST)
-diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-index cd968ee2b503..8655abd53c85 100644
---- a/include/linux/kernfs.h
-+++ b/include/linux/kernfs.h
-@@ -160,6 +160,7 @@ struct kernfs_node {
- 
- 	unsigned short		flags;
- 	umode_t			mode;
-+	struct module           *owner;
- 	struct kernfs_iattrs	*iattr;
- };
- 
-@@ -369,12 +370,14 @@ void kernfs_destroy_root(struct kernfs_root *root);
- 
- struct kernfs_node *kernfs_create_dir_ns(struct kernfs_node *parent,
- 					 const char *name, umode_t mode,
-+					 struct module *owner,
- 					 kuid_t uid, kgid_t gid,
- 					 void *priv, const void *ns);
- struct kernfs_node *kernfs_create_empty_dir(struct kernfs_node *parent,
- 					    const char *name);
- struct kernfs_node *__kernfs_create_file(struct kernfs_node *parent,
- 					 const char *name, umode_t mode,
-+					 struct module *owner,
- 					 kuid_t uid, kgid_t gid,
- 					 loff_t size,
- 					 const struct kernfs_ops *ops,
-@@ -471,13 +474,15 @@ static inline void kernfs_destroy_root(struct kernfs_root *root) { }
- 
- static inline struct kernfs_node *
- kernfs_create_dir_ns(struct kernfs_node *parent, const char *name,
--		     umode_t mode, kuid_t uid, kgid_t gid,
-+		     umode_t mode, struct module *owner,
-+		     kuid_t uid, kgid_t gid,
- 		     void *priv, const void *ns)
- { return ERR_PTR(-ENOSYS); }
- 
- static inline struct kernfs_node *
- __kernfs_create_file(struct kernfs_node *parent, const char *name,
--		     umode_t mode, kuid_t uid, kgid_t gid,
-+		     umode_t mode, struct module *owner,
-+		     kuid_t uid, kgid_t gid,
- 		     loff_t size, const struct kernfs_ops *ops,
- 		     void *priv, const void *ns, struct lock_class_key *key)
- { return ERR_PTR(-ENOSYS); }
-@@ -564,7 +569,7 @@ static inline struct kernfs_node *
- kernfs_create_dir(struct kernfs_node *parent, const char *name, umode_t mode,
- 		  void *priv)
- {
--	return kernfs_create_dir_ns(parent, name, mode,
-+	return kernfs_create_dir_ns(parent, name, mode, parent->owner,
- 				    GLOBAL_ROOT_UID, GLOBAL_ROOT_GID,
- 				    priv, NULL);
- }
-diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
-index e3f1e8ac1f85..babbabb460dc 100644
---- a/include/linux/sysfs.h
-+++ b/include/linux/sysfs.h
-@@ -30,6 +30,7 @@ enum kobj_ns_type;
- struct attribute {
- 	const char		*name;
- 	umode_t			mode;
-+	struct module           *owner;
- #ifdef CONFIG_DEBUG_LOCK_ALLOC
- 	bool			ignore_lockdep:1;
- 	struct lock_class_key	*key;
-@@ -80,6 +81,7 @@ do {							\
-  * @attrs:	Pointer to NULL terminated list of attributes.
-  * @bin_attrs:	Pointer to NULL terminated list of binary attributes.
-  *		Either attrs or bin_attrs or both must be provided.
-+ * @module:	If set, module responsible for this attribute group
-  */
- struct attribute_group {
- 	const char		*name;
-@@ -89,6 +91,7 @@ struct attribute_group {
- 						  struct bin_attribute *, int);
- 	struct attribute	**attrs;
- 	struct bin_attribute	**bin_attrs;
-+	struct module           *owner;
- };
- 
- /*
-@@ -100,38 +103,52 @@ struct attribute_group {
- 
- #define __ATTR(_name, _mode, _show, _store) {				\
- 	.attr = {.name = __stringify(_name),				\
--		 .mode = VERIFY_OCTAL_PERMISSIONS(_mode) },		\
-+		 .mode = VERIFY_OCTAL_PERMISSIONS(_mode),               \
-+		 .owner  = THIS_MODULE,                                 \
-+	},                                                             \
- 	.show	= _show,						\
- 	.store	= _store,						\
- }
- 
- #define __ATTR_PREALLOC(_name, _mode, _show, _store) {			\
- 	.attr = {.name = __stringify(_name),				\
--		 .mode = SYSFS_PREALLOC | VERIFY_OCTAL_PERMISSIONS(_mode) },\
-+		 .mode = SYSFS_PREALLOC | VERIFY_OCTAL_PERMISSIONS(_mode),\
-+		 .owner  = THIS_MODULE,                                 \
-+	},                                                              \
- 	.show	= _show,						\
- 	.store	= _store,						\
- }
- 
- #define __ATTR_RO(_name) {						\
--	.attr	= { .name = __stringify(_name), .mode = 0444 },		\
-+	.attr	= { .name = __stringify(_name),                         \
-+		    .mode = 0444,					\
-+		    .owner  = THIS_MODULE,				\
-+		},                                                     \
- 	.show	= _name##_show,						\
- }
- 
- #define __ATTR_RO_MODE(_name, _mode) {					\
- 	.attr	= { .name = __stringify(_name),				\
--		    .mode = VERIFY_OCTAL_PERMISSIONS(_mode) },		\
-+		    .mode = VERIFY_OCTAL_PERMISSIONS(_mode),            \
-+		    .owner  = THIS_MODULE,				\
-+	},                                                              \
- 	.show	= _name##_show,						\
- }
- 
- #define __ATTR_RW_MODE(_name, _mode) {					\
- 	.attr	= { .name = __stringify(_name),				\
--		    .mode = VERIFY_OCTAL_PERMISSIONS(_mode) },		\
-+		    .mode = VERIFY_OCTAL_PERMISSIONS(_mode),            \
-+		    .owner  = THIS_MODULE,                              \
-+	},								\
- 	.show	= _name##_show,						\
- 	.store	= _name##_store,					\
- }
- 
- #define __ATTR_WO(_name) {						\
--	.attr	= { .name = __stringify(_name), .mode = 0200 },		\
-+	.attr	= { .name = __stringify(_name),                         \
-+		    .mode = 0200,					\
-+		    .owner  = THIS_MODULE,				\
-+	},                                                              \
- 	.store	= _name##_store,					\
- }
- 
-@@ -141,8 +158,11 @@ struct attribute_group {
- 
- #ifdef CONFIG_DEBUG_LOCK_ALLOC
- #define __ATTR_IGNORE_LOCKDEP(_name, _mode, _show, _store) {	\
--	.attr = {.name = __stringify(_name), .mode = _mode,	\
--			.ignore_lockdep = true },		\
-+	.attr = {.name = __stringify(_name),                    \
-+		 .mode = _mode,					\
-+		 .ignore_lockdep = true,                        \
-+		 .owner  = THIS_MODULE,                         \
-+	},							\
- 	.show		= _show,				\
- 	.store		= _store,				\
- }
-@@ -159,6 +179,7 @@ static const struct attribute_group *_name##_groups[] = {	\
- #define ATTRIBUTE_GROUPS(_name)					\
- static const struct attribute_group _name##_group = {		\
- 	.attrs = _name##_attrs,					\
-+	.owner = THIS_MODULE,					\
- };								\
- __ATTRIBUTE_GROUPS(_name)
- 
-@@ -199,20 +220,29 @@ struct bin_attribute {
- 
- /* macros to create static binary attributes easier */
- #define __BIN_ATTR(_name, _mode, _read, _write, _size) {		\
--	.attr = { .name = __stringify(_name), .mode = _mode },		\
-+	.attr = { .name = __stringify(_name),                           \
-+		   .mode = _mode,					\
-+		   .owner = THIS_MODULE,				\
-+	},								\
- 	.read	= _read,						\
- 	.write	= _write,						\
- 	.size	= _size,						\
- }
- 
- #define __BIN_ATTR_RO(_name, _size) {					\
--	.attr	= { .name = __stringify(_name), .mode = 0444 },		\
-+	.attr	= { .name = __stringify(_name),                         \
-+		    .mode = 0444,					\
-+		    .owner = THIS_MODULE,				\
-+	},								\
- 	.read	= _name##_read,						\
- 	.size	= _size,						\
- }
- 
- #define __BIN_ATTR_WO(_name, _size) {					\
--	.attr	= { .name = __stringify(_name), .mode = 0200 },		\
-+	.attr	= { .name = __stringify(_name),                         \
-+		    .mode = 0200,					\
-+		    .owner = THIS_MODULE,				\
-+	},								\
- 	.write	= _name##_write,					\
- 	.size	= _size,						\
- }
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 8afa8690d288..b9886db9ecdd 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -3949,7 +3949,7 @@ static int cgroup_add_file(struct cgroup_subsys_state *css, struct cgroup *cgrp,
- 	key = &cft->lockdep_key;
- #endif
- 	kn = __kernfs_create_file(cgrp->kn, cgroup_file_name(cgrp, cft, name),
--				  cgroup_file_mode(cft),
-+				  cgroup_file_mode(cft), NULL,
- 				  GLOBAL_ROOT_UID, GLOBAL_ROOT_GID,
- 				  0, cft->kf_ops, cft,
- 				  NULL, key);
++   Subject to the terms of this License, I grant You:
++
++   a) A non-exclusive, worldwide, perpetual, royalty-free, irrevocable
++      copyright license, to reproduce, Distribute, prepare derivative works
++      of, publicly perform and publicly display My Work.
++
++   b) A non-exclusive, worldwide, perpetual, royalty-free, irrevocable
++      patent license under Licensed Patents to make, have made, use, sell,
++      offer for sale, and import Covered Works.
++
++   This License does not grant any rights in My name, trademarks, service
++   marks, or logos.
++
++2. Distribution: General Conditions
++
++   You may Distribute Covered Works, provided that You (i) inform
++   recipients how they can obtain a copy of this License; (ii) satisfy the
++   applicable conditions of sections 3 through 6; and (iii) preserve all
++   Legal Notices contained in My Work (to the extent they remain
++   pertinent). "Legal Notices" means copyright notices, license notices,
++   license texts, and author attributions, but does not include logos,
++   other graphical images, trademarks or trademark legends.
++
++3. Conditions for Distributing Derived Works; Outbound GPL Compatibility
++
++   If You Distribute a Derived Work, You must license the entire Derived
++   Work as a whole under this License, with prominent notice of such
++   licensing. This condition may not be avoided through such means as
++   separate Distribution of portions of the Derived Work.
++
++   If the Derived Work includes material licensed under the GPL, You may
++   instead license the Derived Work under the GPL.
++   
++4. Condition Against Further Restrictions; Inbound License Compatibility
++
++   When Distributing a Covered Work, You may not impose further
++   restrictions on the exercise of rights in the Covered Work granted under
++   this License. This condition is not excused merely because such
++   restrictions result from Your compliance with conditions or obligations
++   extrinsic to this License (such as a court order or an agreement with a
++   third party).
++
++   However, You may Distribute a Covered Work incorporating material
++   governed by a license that is both OSI-Approved and FSF-Free as of the
++   release date of this License, provided that compliance with such
++   other license would not conflict with any conditions stated in other
++   sections of this License.
++
++5. Conditions for Distributing Object Code
++
++   You may Distribute an Object Code form of a Covered Work, provided that
++   you accompany the Object Code with a URL through which the Corresponding
++   Source is made available, at no charge, by some standard or customary
++   means of providing network access to source code.
++
++   If you Distribute the Object Code in a physical product or tangible
++   storage medium ("Product"), the Corresponding Source must be available
++   through such URL for two years from the date of Your most recent
++   Distribution of the Object Code in the Product. However, if the Product
++   itself contains or is accompanied by the Corresponding Source (made
++   available in a customarily accessible manner), You need not also comply
++   with the first paragraph of this section.
++
++   Each direct and indirect recipient of the Covered Work from You is an
++   intended third-party beneficiary of this License solely as to this
++   section 5, with the right to enforce its terms.
++
++6. Symmetrical Licensing Condition for Upstream Contributions
++
++   If You Distribute a work to Me specifically for inclusion in or
++   modification of a Covered Work (a "Patch"), and no explicit licensing
++   terms apply to the Patch, You license the Patch under this License, to
++   the extent of Your copyright in the Patch. This condition does not
++   negate the other conditions of this License, if applicable to the Patch.
++
++7. Nullification of Copyleft/Proprietary Dual Licensing
++
++   If I offer to license, for a fee, a Covered Work under terms other than
++   a license that is OSI-Approved or FSF-Free as of the release date of this
++   License or a numbered version of copyleft-next released by the
++   Copyleft-Next Project, then the license I grant You under section 1 is no
++   longer subject to the conditions in sections 3 through 5.
++
++8. Copyleft Sunset
++
++   The conditions in sections 3 through 5 no longer apply once fifteen
++   years have elapsed from the date of My first Distribution of My Work
++   under this License.
++
++9. Pass-Through
++
++   When You Distribute a Covered Work, the recipient automatically receives
++   a license to My Work from Me, subject to the terms of this License.
++
++10. Termination
++
++    Your license grants under section 1 are automatically terminated if You
++
++    a) fail to comply with the conditions of this License, unless You cure
++       such noncompliance within thirty days after becoming aware of it, or
++
++    b) initiate a patent infringement litigation claim (excluding
++       declaratory judgment actions, counterclaims, and cross-claims)
++       alleging that any part of My Work directly or indirectly infringes
++       any patent.
++
++    Termination of Your license grants extends to all copies of Covered
++    Works You subsequently obtain. Termination does not terminate the
++    rights of those who have received copies or rights from You subject to
++    this License.
++
++    To the extent permission to make copies of a Covered Work is necessary
++    merely for running it, such permission is not terminable.
++
++11. Later License Versions
++
++    The Copyleft-Next Project may release new versions of copyleft-next,
++    designated by a distinguishing version number ("Later Versions").
++    Unless I explicitly remove the option of Distributing Covered Works
++    under Later Versions, You may Distribute Covered Works under any Later
++    Version.
++
++** 12. No Warranty                                                       **
++**                                                                       **
++**     My Work is provided "as-is", without warranty. You bear the risk  **
++**     of using it. To the extent permitted by applicable law, each      **
++**     Distributor of My Work excludes the implied warranties of title,  **
++**     merchantability, fitness for a particular purpose and             **
++**     non-infringement.                                                 **
++
++** 13. Limitation of Liability                                           **
++**                                                                       **
++**     To the extent permitted by applicable law, in no event will any   **
++**     Distributor of My Work be liable to You for any damages           **
++**     whatsoever, whether direct, indirect, special, incidental, or     **
++**     consequential damages, whether arising under contract, tort       **
++**     (including negligence), or otherwise, even where the Distributor  **
++**     knew or should have known about the possibility of such damages.  **
++
++14. Severability
++
++    The invalidity or unenforceability of any provision of this License
++    does not affect the validity or enforceability of the remainder of
++    this License. Such provision is to be reformed to the minimum extent
++    necessary to make it valid and enforceable.
++
++15. Definitions
++
++    "Copyleft-Next Project" means the project that maintains the source
++    code repository at <https://github.com/copyleft-next/copyleft-next.git/>
++    as of the release date of this License.
++
++    "Corresponding Source" of a Covered Work in Object Code form means (i)
++    the Source Code form of the Covered Work; (ii) all scripts,
++    instructions and similar information that are reasonably necessary for
++    a skilled developer to generate such Object Code from the Source Code
++    provided under (i); and (iii) a list clearly identifying all Separate
++    Works (other than those provided in compliance with (ii)) that were
++    specifically used in building and (if applicable) installing the
++    Covered Work (for example, a specified proprietary compiler including
++    its version number). Corresponding Source must be machine-readable.
++
++    "Covered Work" means My Work or a Derived Work.
++
++    "Derived Work" means a work of authorship that copies from, modifies,
++    adapts, is based on, is a derivative work of, transforms, translates or
++    contains all or part of My Work, such that copyright permission is
++    required. The following are not Derived Works: (i) Mere Aggregation;
++    (ii) a mere reproduction of My Work; and (iii) if My Work fails to
++    explicitly state an expectation otherwise, a work that merely makes
++    reference to My Work.
++
++    "Distribute" means to distribute, transfer or make a copy available to
++    someone else, such that copyright permission is required.
++
++    "Distributor" means Me and anyone else who Distributes a Covered Work.
++
++    "FSF-Free" means classified as 'free' by the Free Software Foundation.
++
++    "GPL" means a version of the GNU General Public License or the GNU
++    Affero General Public License.
++
++    "I"/"Me"/"My" refers to the individual or legal entity that places My
++    Work under this License. "You"/"Your" refers to the individual or legal
++    entity exercising rights in My Work under this License. A legal entity
++    includes each entity that controls, is controlled by, or is under
++    common control with such legal entity. "Control" means (a) the power to
++    direct the actions of such legal entity, whether by contract or
++    otherwise, or (b) ownership of more than fifty percent of the
++    outstanding shares or beneficial ownership of such legal entity.
++
++    "Licensed Patents" means all patent claims licensable royalty-free by
++    Me, now or in the future, that are necessarily infringed by making,
++    using, or selling My Work, and excludes claims that would be infringed
++    only as a consequence of further modification of My Work.
++
++    "Mere Aggregation" means an aggregation of a Covered Work with a
++    Separate Work.
++
++    "My Work" means the particular work of authorship I license to You
++    under this License.
++
++    "Object Code" means any form of a work that is not Source Code.
++
++    "OSI-Approved" means approved as 'Open Source' by the Open Source
++    Initiative.
++
++    "Separate Work" means a work that is separate from and independent of a
++    particular Covered Work and is not by its nature an extension or
++    enhancement of the Covered Work, and/or a runtime library, standard
++    library or similar component that is used to generate an Object Code
++    form of a Covered Work.
++
++    "Source Code" means the preferred form of a work for making
++    modifications to it.
 -- 
 2.30.2
 
