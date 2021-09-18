@@ -1,21 +1,21 @@
 From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH v7 02/12] testing: use the copyleft-next-0.3.1 SPDX tag
-Date: Fri, 17 Sep 2021 22:04:20 -0700
-Message-ID: <20210918050430.3671227-3-mcgrof@kernel.org>
+Subject: [PATCH v7 12/12] zram: use ATTRIBUTE_GROUPS to fix sysfs deadlock module removal
+Date: Fri, 17 Sep 2021 22:04:30 -0700
+Message-ID: <20210918050430.3671227-13-mcgrof@kernel.org>
 References: <20210918050430.3671227-1-mcgrof@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=q2+MnJ/oJog1W0Rk/dtsiaYdpoMihgX+djUDLDDhJ3E=; b=uUfkhq36ZNYHgaZ8euaXy/ld3F
-        ehNPiASo6yRNvYoZ5k/9LDC76Z7r7iJyX4APIz0OVxZ7Y0jZjfn4fVU2m/97SYtnmEXdEYtrhWwgV
-        70W1enzwQmsKtKNb5gJp5/ZErYiibbjVqjmL75+lXaxK3VDfSlSt3Vr9Mk01107bB/St6nNqhTOj5
-        iRSG7I8y7iXrvsX6J41+qC/28dE8oCQ1ZrJUt8HydoVYdkdgpRTK3scA0lbn2cToUm/+BUU3wRlQz
-        aSFlxE62O+qlFVzBi+tvJurYcGdgmdpx767ImIMAbMiIkImk5Ubnxyw1mP5zVRmSloW6jsaceYwY4
-        LkgntUcA==;
+        bh=w925P6ItKF9rs87b7yDYFnpWVAY11Rt3apCJxCqDXyQ=; b=ZQ6fiW0YAVh21GrE+PLOko0KTR
+        1gUJkd/ycRpagDzFKji3CIgEgvCyiPdx2M1yYra9IgiS5/oLomOcV/nbvGxdet+xn5DTiDIxSwbBz
+        zKjH2+bILCOx/G93NGgszpi5dU0sbYngJUby+kJerJHSas0JetLWLFBRB/2IliHYOR3OAZ8r3ohzL
+        P3Sp63TAmfdfTYuwjVqjnDt6UuPv4o6p6B1iuvUH7VLmwDiamOvTj0fvd5IJdalYCxrwMmNAXX4MG
+        hmzPOHd/b3jF1SJVREXrETLHGxi8BMet6/FH8DghewTQ9ZzRRGmzkX2+FxLmpts+zTvU5aiYwIfjE
+        bpz7J1kw==;
 In-Reply-To: <20210918050430.3671227-1-mcgrof@kernel.org>
 Sender: Luis Chamberlain <mcgrof@infradead.org>
 List-ID: <cgroups.vger.kernel.org>
@@ -23,124 +23,153 @@ Content-Type: text/plain; charset="us-ascii"
 To: tj@kernel.org, gregkh@linuxfoundation.org, akpm@linux-foundation.org, minchan@kernel.org, jeyu@kernel.org, shuah@kernel.org
 Cc: rdunlap@infradead.org, rafael@kernel.org, masahiroy@kernel.org, ndesaulniers@google.com, yzaikin@google.com, nathan@kernel.org, ojeda@kernel.org, penguin-kernel@I-love.SAKURA.ne.jp, vitor@massaru.org, elver@google.com, jarkko@kernel.org, glider@google.com, rf@opensource.cirrus.com, stephen@networkplumber.org, David.Laight@ACULAB.COM, bvanassche@acm.org, jolsa@kernel.org, andriy.shevchenko@linux.intel.com, trishalfonso@google.com, andreyknvl@gmail.com, jikos@kernel.org, mbenes@suse.com, ngupta@vflare.org, sergey.senozhatsky.work@gmail.com, mcgrof@kernel.org, reinette.chatre@intel.com, fenghua.yu@intel.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com, lizefan.x@bytedance.com, hannes@cmpxchg.org, daniel.vetter@ffwll.ch, bhelgaas@google.com, kw@linux.com, dan.j.williams@intel.c
 
-Two selftests drivers exist under the copyleft-next license.
-These drivers were added prior to SPDX practice taking full swing
-in the kernel. Now that we have an SPDX tag for copylef-next-0.3.1
-documented, embrace it and remove the boiler plate.
+The ATTRIBUTE_GROUPS is typically used to avoid boiler plate
+code which is used in many drivers. Embracing ATTRIBUTE_GROUPS was
+long due on the zram driver, however a recent fix for sysfs allows
+users of ATTRIBUTE_GROUPS to also associate a module to the group
+attribute.
 
-Cc: Goldwyn Rodrigues <rgoldwyn@suse.com>
-Cc: Kuno Woudt <kuno@frob.nl>
-Cc: Richard Fontana <fontana@sharpeleven.org>
-Cc: copyleft-next@lists.fedorahosted.org
-Cc: Ciaran Farrell <Ciaran.Farrell@suse.com>
-Cc: Christopher De Nicolo <Christopher.DeNicolo@suse.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: Thorsten Leemhuis <linux@leemhuis.info>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+In zram's case this also means it allows us to fix a race which triggers
+a deadlock on the zram driver. This deadlock happens when a sysfs attribute
+use a lock also used on module removal. This happens when for instance a
+sysfs file on a driver is used, then at the same time we have module
+removal call trigger. The module removal call code holds a lock, and then
+the sysfs file entry waits for the same lock. While holding the lock the
+module removal tries to remove the sysfs entries, but these cannot be
+removed yet as one is waiting for a lock. This won't complete as the lock
+is already held. Likewise module removal cannot complete, and so we
+deadlock.
+
+Sysfs fixes this when the group attributes have a module associated to
+it, sysfs will *try* to get a refcount to the module when a shared
+lock is used, prior to mucking with a sysfs attribute. If this fails we
+just give up right away.
+
+This deadlock was first reported with the zram driver, a sketch of how
+this can happen follows:
+
+CPU A                              CPU B
+                                   whatever_store()
+module_unload
+  mutex_lock(foo)
+                                   mutex_lock(foo)
+   del_gendisk(zram->disk);
+     device_del()
+       device_remove_groups()
+
+In this situation whatever_store() is waiting for the mutex foo to
+become unlocked, but that won't happen until module removal is complete.
+But module removal won't complete until the sysfs file being poked
+completes which is waiting for a lock already held.
+
+This issue can be reproduced easily on the zram driver as follows:
+
+Loop 1 on one terminal:
+
+while true;
+	do modprobe zram;
+	modprobe -r zram;
+done
+
+Loop 2 on a second terminal:
+while true; do
+	echo 1024 >  /sys/block/zram0/disksize;
+	echo 1 > /sys/block/zram0/reset;
+done
+
+Without this patch we end up in a deadlock, and the following
+stack trace is produced which hints to us what the issue was:
+
+INFO: task bash:888 blocked for more than 120 seconds.
+      Tainted: G            E 5.12.0-rc1-next-20210304+ #4
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+task:bash            state:D stack:    0 pid:  888 ppid: 887 flags:<etc>
+Call Trace:
+ __schedule+0x2e4/0x900
+ schedule+0x46/0xb0
+ schedule_preempt_disabled+0xa/0x10
+ __mutex_lock.constprop.0+0x2c3/0x490
+ ? _kstrtoull+0x35/0xd0
+ reset_store+0x6c/0x160 [zram]
+ kernfs_fop_write_iter+0x124/0x1b0
+ new_sync_write+0x11c/0x1b0
+ vfs_write+0x1c2/0x260
+ ksys_write+0x5f/0xe0
+ do_syscall_64+0x33/0x80
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7f34f2c3df33
+RSP: 002b:00007ffe751df6e8 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007f34f2c3df33
+RDX: 0000000000000002 RSI: 0000561ccb06ec10 RDI: 0000000000000001
+RBP: 0000561ccb06ec10 R08: 000000000000000a R09: 0000000000000001
+R10: 0000561ccb157590 R11: 0000000000000246 R12: 0000000000000002
+R13: 00007f34f2d0e6a0 R14: 0000000000000002 R15: 00007f34f2d0e8a0
+INFO: task modprobe:1104 can't die for more than 120 seconds.
+task:modprobe        state:D stack:    0 pid: 1104 ppid: 916 flags:<etc>
+Call Trace:
+ __schedule+0x2e4/0x900
+ schedule+0x46/0xb0
+ __kernfs_remove.part.0+0x228/0x2b0
+ ? finish_wait+0x80/0x80
+ kernfs_remove_by_name_ns+0x50/0x90
+ remove_files+0x2b/0x60
+ sysfs_remove_group+0x38/0x80
+ sysfs_remove_groups+0x29/0x40
+ device_remove_attrs+0x4a/0x80
+ device_del+0x183/0x3e0
+ ? mutex_lock+0xe/0x30
+ del_gendisk+0x27a/0x2d0
+ zram_remove+0x8a/0xb0 [zram]
+ ? hot_remove_store+0xf0/0xf0 [zram]
+ zram_remove_cb+0xd/0x10 [zram]
+ idr_for_each+0x5e/0xd0
+ destroy_devices+0x39/0x6f [zram]
+ __do_sys_delete_module+0x190/0x2a0
+ do_syscall_64+0x33/0x80
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7f32adf727d7
+RSP: 002b:00007ffc08bb38a8 EFLAGS: 00000206 ORIG_RAX: 00000000000000b0
+RAX: ffffffffffffffda RBX: 000055eea23cbb10 RCX: 00007f32adf727d7
+RDX: 0000000000000000 RSI: 0000000000000800 RDI: 000055eea23cbb78
+RBP: 000055eea23cbb10 R08: 0000000000000000 R09: 0000000000000000
+R10: 00007f32adfe5ac0 R11: 0000000000000206 R12: 000055eea23cbb78
+R13: 0000000000000000 R14: 0000000000000000 R15: 000055eea23cbc20
+
+[0] https://lkml.kernel.org/r/20210401235925.GR4332@42.do-not-panic.com
+
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- lib/test_kmod.c                          | 12 +-----------
- lib/test_sysctl.c                        | 12 +-----------
- tools/testing/selftests/kmod/kmod.sh     | 13 +------------
- tools/testing/selftests/sysctl/sysctl.sh | 12 +-----------
- 4 files changed, 4 insertions(+), 45 deletions(-)
+ drivers/block/zram/zram_drv.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/lib/test_kmod.c b/lib/test_kmod.c
-index ce1589391413..d62afd89dc63 100644
---- a/lib/test_kmod.c
-+++ b/lib/test_kmod.c
-@@ -1,18 +1,8 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later OR copyleft-next-0.3.1
- /*
-  * kmod stress test driver
-  *
-  * Copyright (C) 2017 Luis R. Rodriguez <mcgrof@kernel.org>
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License as published by the Free
-- * Software Foundation; either version 2 of the License, or at your option any
-- * later version; or, when distributed separately from the Linux kernel or
-- * when incorporated into other software packages, subject to the following
-- * license:
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of copyleft-next (version 0.3.1 or later) as published
-- * at http://copyleft-next.org/.
-  */
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
+index b26abcb955cc..60a55ae8cd91 100644
+--- a/drivers/block/zram/zram_drv.c
++++ b/drivers/block/zram/zram_drv.c
+@@ -1902,14 +1902,7 @@ static struct attribute *zram_disk_attrs[] = {
+ 	NULL,
+ };
  
-diff --git a/lib/test_sysctl.c b/lib/test_sysctl.c
-index 3750323973f4..9e5bd10a930a 100644
---- a/lib/test_sysctl.c
-+++ b/lib/test_sysctl.c
-@@ -1,18 +1,8 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later OR copyleft-next-0.3.1
- /*
-  * proc sysctl test driver
-  *
-  * Copyright (C) 2017 Luis R. Rodriguez <mcgrof@kernel.org>
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License as published by the Free
-- * Software Foundation; either version 2 of the License, or at your option any
-- * later version; or, when distributed separately from the Linux kernel or
-- * when incorporated into other software packages, subject to the following
-- * license:
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of copyleft-next (version 0.3.1 or later) as published
-- * at http://copyleft-next.org/.
-  */
- 
- /*
-diff --git a/tools/testing/selftests/kmod/kmod.sh b/tools/testing/selftests/kmod/kmod.sh
-index afd42387e8b2..7189715d7960 100755
---- a/tools/testing/selftests/kmod/kmod.sh
-+++ b/tools/testing/selftests/kmod/kmod.sh
-@@ -1,18 +1,7 @@
- #!/bin/bash
--#
-+# SPDX-License-Identifier: GPL-2.0-or-later OR copyleft-next-0.3.1
- # Copyright (C) 2017 Luis R. Rodriguez <mcgrof@kernel.org>
- #
--# This program is free software; you can redistribute it and/or modify it
--# under the terms of the GNU General Public License as published by the Free
--# Software Foundation; either version 2 of the License, or at your option any
--# later version; or, when distributed separately from the Linux kernel or
--# when incorporated into other software packages, subject to the following
--# license:
--#
--# This program is free software; you can redistribute it and/or modify it
--# under the terms of copyleft-next (version 0.3.1 or later) as published
--# at http://copyleft-next.org/.
+-static const struct attribute_group zram_disk_attr_group = {
+-	.attrs = zram_disk_attrs,
+-};
 -
- # This is a stress test script for kmod, the kernel module loader. It uses
- # test_kmod which exposes a series of knobs for the API for us so we can
- # tweak each test in userspace rather than in kernelspace.
-diff --git a/tools/testing/selftests/sysctl/sysctl.sh b/tools/testing/selftests/sysctl/sysctl.sh
-index 19515dcb7d04..2046c603a4d4 100755
---- a/tools/testing/selftests/sysctl/sysctl.sh
-+++ b/tools/testing/selftests/sysctl/sysctl.sh
-@@ -1,16 +1,6 @@
- #!/bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later OR copyleft-next-0.3.1
- # Copyright (C) 2017 Luis R. Rodriguez <mcgrof@kernel.org>
--#
--# This program is free software; you can redistribute it and/or modify it
--# under the terms of the GNU General Public License as published by the Free
--# Software Foundation; either version 2 of the License, or at your option any
--# later version; or, when distributed separately from the Linux kernel or
--# when incorporated into other software packages, subject to the following
--# license:
--#
--# This program is free software; you can redistribute it and/or modify it
--# under the terms of copyleft-next (version 0.3.1 or later) as published
--# at http://copyleft-next.org/.
+-static const struct attribute_group *zram_disk_attr_groups[] = {
+-	&zram_disk_attr_group,
+-	NULL,
+-};
++ATTRIBUTE_GROUPS(zram_disk);
  
- # This performs a series tests against the proc sysctl interface.
+ /*
+  * Allocate and initialize new zram device. the function returns
+@@ -1981,7 +1974,7 @@ static int zram_add(void)
+ 		blk_queue_max_write_zeroes_sectors(zram->disk->queue, UINT_MAX);
+ 
+ 	blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES, zram->disk->queue);
+-	device_add_disk(NULL, zram->disk, zram_disk_attr_groups);
++	device_add_disk(NULL, zram->disk, zram_disk_groups);
+ 
+ 	strlcpy(zram->compressor, default_compressor, sizeof(zram->compressor));
  
 -- 
 2.30.2
