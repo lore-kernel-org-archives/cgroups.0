@@ -1,302 +1,581 @@
-From: Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v7 11/12] zram: fix crashes with cpu hotplug multistate
-Date: Fri, 17 Sep 2021 22:04:29 -0700
-Message-ID: <20210918050430.3671227-12-mcgrof@kernel.org>
+From: Luis Chamberlain <mcgrof@kernel.org>
+Subject: [PATCH v7 09/12] sysfs: fix deadlock race with module removal
+Date: Fri, 17 Sep 2021 22:04:27 -0700
+Message-ID: <20210918050430.3671227-10-mcgrof@kernel.org>
 References: <20210918050430.3671227-1-mcgrof@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=iLr2BfS8YYUCeygaAmt/R+HlczMIR8qf/g0QxfjLNvI=; b=x0QoPsqaD70UPTchQbh4QdNtWw
-        +8PbSRK1NWLZQT4j+1f6WE+FyF8sO4mJw4m5frZ2tMlXEC1emMa7Th95tie8WzPNdC+ox5t/mGtks
-        LJtn8ZyjNh/xjXvCU1imLmZYez8vnNFynELUeJ4xDIU7kENnjqLIEa82jqPXmWkfpuRxvK8iDCpCl
-        kff8HMznGoiU2Lkc3+BLaiyMGN9v21HKQ0V9A8tHcN/EhaNkusjcFPtuVoqlvUkmBKAEAUvxQF4Iv
-        50INolU8PKKI1UsBxQEoTHaccbYEER4Ic/GbBEKQrfxzYxNoo0/Bf5nLDDkYM7TC31/MtkkExmzk2
-        PMtdF2nw==;
-In-Reply-To: <20210918050430.3671227-1-mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: Luis Chamberlain <mcgrof-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+        bh=JPiPQLfbh0zvgSweOGGWu9LHmTLKw+6joIwG+XJiktQ=; b=Dl39X2CltgzrunxpQcnNoLMxo2
+        yL4KkYWiiV1BOk10H3QjCsRBM7yEIsJ+oN2pv4v048sGKpvBaNnSOgq8opLqSHnQWt4bgNqQpptfk
+        c2aF7STQXnHcvnPKP5raG9MGs7CPMqKvEszUM2aqZE20bsLTq5Xlqff4CfhpUGfD2dNfHHKz8phO4
+        2gk3BvKPkXM8CWCPbQZIU0atDoaR1oyt1nlV/bESdriPo2xDbk5a5aDruse48XiS0SuuRVvcy7QBI
+        f9haE9y0wl8aDIcah6VjZ9EkbwMFKiPSsZyTdyp5WVh0uaq181JQSQFy67iWp47YnevX69E826+VA
+        pEna2zlQ==;
+In-Reply-To: <20210918050430.3671227-1-mcgrof@kernel.org>
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, jeyu-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ndesaulniers-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ojeda-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org, vitor-HdruG0TBZYlAfugRpC6u6w@public.gmane.org, elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rf-yzvPICuk2AA4QjBA90+/kJqQE7yCjDx5@public.gmane.org, stephen-OTpzqLSitTUnbdJkjeBofR2eb7JE58TQ@public.gmane.org, David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, trishalfonso-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jikos-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mbenes-IBi9RG/b67k@public.gmane.org, ngupta-KNmc09w0p+Ednm+yROfE0A@public.gmane.org, sergey.senozhatsky.work-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, fenghua.yu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, daniel.vetter-/w4YWyX8dFk@public.gmane.org, bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kw-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, dan.j.williams@intel.c
+To: tj@kernel.org, gregkh@linuxfoundation.org, akpm@linux-foundation.org, minchan@kernel.org, jeyu@kernel.org, shuah@kernel.org
+Cc: rdunlap@infradead.org, rafael@kernel.org, masahiroy@kernel.org, ndesaulniers@google.com, yzaikin@google.com, nathan@kernel.org, ojeda@kernel.org, penguin-kernel@I-love.SAKURA.ne.jp, vitor@massaru.org, elver@google.com, jarkko@kernel.org, glider@google.com, rf@opensource.cirrus.com, stephen@networkplumber.org, David.Laight@ACULAB.COM, bvanassche@acm.org, jolsa@kernel.org, andriy.shevchenko@linux.intel.com, trishalfonso@google.com, andreyknvl@gmail.com, jikos@kernel.org, mbenes@suse.com, ngupta@vflare.org, sergey.senozhatsky.work@gmail.com, mcgrof@kernel.org, reinette.chatre@intel.com, fenghua.yu@intel.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com, lizefan.x@bytedance.com, hannes@cmpxchg.org, daniel.vetter@ffwll.ch, bhelgaas@google.com, kw@linux.com, dan.j.williams@intel.c
 
-Provide a simple state machine to fix races with driver exit where we
-remove the CPU multistate callbacks and re-initialization / creation of
-new per CPU instances which should be managed by these callbacks.
+When sysfs attributes use a lock also used on module removal we can
+race to deadlock. This happens when for instance a sysfs file on
+a driver is used, then at the same time we have module removal call
+trigger. The module removal call code holds a lock, and then the sysfs
+file entry waits for the same lock. While holding the lock the module
+removal tries to remove the sysfs entries, but these cannot be removed
+yet as one is waiting for a lock. This won't complete as the lock is
+already held. Likewise module removal cannot complete, and so we deadlock.
 
-The zram driver makes use of cpu hotplug multistate support, whereby it
-associates a struct zcomp per CPU. Each struct zcomp represents a
-compression algorithm in charge of managing compression streams per
-CPU. Although a compiled zram driver only supports a fixed set of
-compression algorithms, each zram device gets a struct zcomp allocated
-per CPU. The "multi" in CPU hotplug multstate refers to these per
-cpu struct zcomp instances. Each of these will have the CPU hotplug
-callback called for it on CPU plug / unplug. The kernel's CPU hotplug
-multistate keeps a linked list of these different structures so that
-it will iterate over them on CPU transitions.
+This can now be easily reproducible with our sysfs selftest as follows:
 
-By default at driver initialization we will create just one zram device
-(num_devices=1) and a zcomp structure then set for the now default
-lzo-rle comrpession algorithm. At driver removal we first remove each
-zram device, and so we destroy the associated struct zcomp per CPU. But
-since we expose sysfs attributes to create new devices or reset /
-initialize existing zram devices, we can easily end up re-initializing
-a struct zcomp for a zram device before the exit routine of the module
-removes the cpu hotplug callback. When this happens the kernel's CPU
-hotplug will detect that at least one instance (struct zcomp for us)
-exists. This can happen in the following situation:
+./tools/testing/selftests/sysfs/sysfs.sh -t 0027
 
-CPU 1                            CPU 2
+To fix this we extend the struct kernfs_node with a module reference and
+use the try_module_get() after kernfs_get_active() is called which
+protects integrity and the existence of the kernfs node during the
+operation.
 
-                                disksize_store(...);
-class_unregister(...);
-idr_for_each(...);
-zram_debugfs_destroy();
+So long as the kernfs node is protected with kernfs_get_active() we know
+we can rely on its contents. And, as now just documented in the previous
+patch, we also now know that once kernfs_get_active() is called the module
+is also guarded to exist and cannot be removed.
 
-idr_destroy(...);
-unregister_blkdev(...);
-cpuhp_remove_multi_state(...);
+If try_module_get() fails we fail the operation on the kernfs node.
 
-The warning comes up on cpuhp_remove_multi_state() when it sees that the
-state for CPUHP_ZCOMP_PREPARE does not have an empty instance linked list.
-In this case, that a struct zcom still exists, the driver allowed its
-creation per CPU even though we could have just freed them per CPU
-though a call on another CPU, and we are then later trying to remove the
-hotplug callback.
+We use a try method as a full lock means we'd then make our sysfs
+attributes busy us out from possible module removal, and so userspace
+could force denying module removal, a silly form of "DOS" against module
+removal. A try lock on the module removal ensures we give priority to
+module removal and interacting with sysfs attributes only comes second.
+Using a full lock could mean for instance that if you don't stop poking
+at sysfs files you cannot remove a module.
 
-Fix all this by providing a zram initialization boolean
-protected the shared in the driver zram_index_mutex, which we
-can use to annotate when sysfs attributes are safe to use or
-not -- once the driver is properly initialized. When the driver
-is going down we also are sure to not let userspace muck with
-attributes which may affect each per cpu struct zcomp.
+Races between removal of sysfs files and the module are not possible
+given sysfs files are created by the same module, and when a sysfs file
+is being used kernfs prevents removal of the sysfs file. So if module
+removal is actually happening the removal would have to wait until
+the sysfs file operation is complete.
 
-This also fixes a series of possible memory leaks. The
-crashes and memory leaks can easily be caused by issuing
-the zram02.sh script from the LTP project [0] in a loop
-in two separate windows:
+This deadlock was first reported with the zram driver, however the live
+patching folks have acknowledged they have observed this as well with
+live patching, when a live patch is removed. I was then able to
+reproduce easily by creating a dedicated selftests.
 
-  cd testcases/kernel/device-drivers/zram
-  while true; do PATH=$PATH:$PWD:$PWD/../../../lib/ ./zram02.sh; done
+A sketch of how this can happen follows:
 
-You end up with a splat as follows:
+CPU A                              CPU B
+                                   whatever_store()
+module_unload
+  mutex_lock(foo)
+                                   mutex_lock(foo)
+   del_gendisk(zram->disk);
+     device_del()
+       device_remove_groups()
 
-kernel: zram: Removed device: zram0
-kernel: zram: Added device: zram0
-kernel: zram0: detected capacity change from 0 to 209715200
-kernel: Adding 104857596k swap on /dev/zram0.  <etc>
-kernel: zram0: detected capacitky change from 209715200 to 0
-kernel: zram0: detected capacity change from 0 to 209715200
-kernel: ------------[ cut here ]------------
-kernel: Error: Removing state 63 which has instances left.
-kernel: WARNING: CPU: 7 PID: 70457 at \
-	kernel/cpu.c:2069 __cpuhp_remove_state_cpuslocked+0xf9/0x100
-kernel: Modules linked in: zram(E-) zsmalloc(E) <etc>
-kernel: CPU: 7 PID: 70457 Comm: rmmod Tainted: G            \
-	E     5.12.0-rc1-next-20210304 #3
-kernel: Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), \
-	BIOS 1.14.0-2 04/01/2014
-kernel: RIP: 0010:__cpuhp_remove_state_cpuslocked+0xf9/0x100
-kernel: Code: <etc>
-kernel: RSP: 0018:ffffa800c139be98 EFLAGS: 00010282
-kernel: RAX: 0000000000000000 RBX: ffffffff9083db58 RCX: ffff9609f7dd86d8
-kernel: RDX: 00000000ffffffd8 RSI: 0000000000000027 RDI: ffff9609f7dd86d0
-kernel: RBP: 0000000000000000i R08: 0000000000000000 R09: ffffa800c139bcb8
-kernel: R10: ffffa800c139bcb0 R11: ffffffff908bea40 R12: 000000000000003f
-kernel: R13: 00000000000009d8 R14: 0000000000000000 R15: 0000000000000000
-kernel: FS: 00007f1b075a7540(0000) GS:ffff9609f7dc0000(0000) knlGS:<etc>
-kernel: CS:  0010 DS: 0000 ES 0000 CR0: 0000000080050033
-kernel: CR2: 00007f1b07610490 CR3: 00000001bd04e000 CR4: 0000000000350ee0
-kernel: Call Trace:
-kernel: __cpuhp_remove_state+0x2e/0x80
-kernel: __do_sys_delete_module+0x190/0x2a0
-kernel:  do_syscall_64+0x33/0x80
-kernel: entry_SYSCALL_64_after_hwframe+0x44/0xae
+In this situation whatever_store() is waiting for the mutex foo to
+become unlocked, but that won't happen until module removal is complete.
+But module removal won't complete until the sysfs file being poked
+completes which is waiting for a lock already held.
 
-The "Error: Removing state 63 which has instances left" refers
-to the zram per CPU struct zcomp instances left.
-
-[0] https://github.com/linux-test-project/ltp.git
-
-Acked-by: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Signed-off-by: Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/block/zram/zram_drv.c | 63 ++++++++++++++++++++++++++++++-----
- 1 file changed, 55 insertions(+), 8 deletions(-)
+ arch/x86/kernel/cpu/resctrl/rdtgroup.c |  4 +-
+ fs/kernfs/dir.c                        | 41 ++++++++++++++++++--
+ fs/kernfs/file.c                       |  7 +++-
+ fs/kernfs/kernfs-internal.h            |  1 +
+ fs/kernfs/symlink.c                    |  3 +-
+ fs/sysfs/dir.c                         |  4 +-
+ fs/sysfs/file.c                        | 10 +++--
+ fs/sysfs/group.c                       |  1 +
+ include/linux/kernfs.h                 | 11 ++++--
+ include/linux/sysfs.h                  | 52 ++++++++++++++++++++------
+ kernel/cgroup/cgroup.c                 |  2 +-
+ 11 files changed, 106 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
-index f61910c65f0f..b26abcb955cc 100644
---- a/drivers/block/zram/zram_drv.c
-+++ b/drivers/block/zram/zram_drv.c
-@@ -44,6 +44,8 @@ static DEFINE_MUTEX(zram_index_mutex);
- static int zram_major;
- static const char *default_compressor = CONFIG_ZRAM_DEF_COMP;
- 
-+static bool zram_up;
-+
- /* Module params (documentation at end) */
- static unsigned int num_devices = 1;
- /*
-@@ -1704,6 +1706,7 @@ static void zram_reset_device(struct zram *zram)
- 	comp = zram->comp;
- 	disksize = zram->disksize;
- 	zram->disksize = 0;
-+	zram->comp = NULL;
- 
- 	set_capacity_and_notify(zram->disk, 0);
- 	part_stat_set_all(zram->disk->part0, 0);
-@@ -1724,9 +1727,18 @@ static ssize_t disksize_store(struct device *dev,
- 	struct zram *zram = dev_to_zram(dev);
- 	int err;
- 
-+	mutex_lock(&zram_index_mutex);
-+
-+	if (!zram_up) {
-+		err = -ENODEV;
-+		goto out;
-+	}
-+
- 	disksize = memparse(buf, NULL);
--	if (!disksize)
--		return -EINVAL;
-+	if (!disksize) {
-+		err = -EINVAL;
-+		goto out;
-+	}
- 
- 	down_write(&zram->init_lock);
- 	if (init_done(zram)) {
-@@ -1754,12 +1766,16 @@ static ssize_t disksize_store(struct device *dev,
- 	set_capacity_and_notify(zram->disk, zram->disksize >> SECTOR_SHIFT);
- 	up_write(&zram->init_lock);
- 
-+	mutex_unlock(&zram_index_mutex);
-+
- 	return len;
- 
- out_free_meta:
- 	zram_meta_free(zram, disksize);
- out_unlock:
- 	up_write(&zram->init_lock);
-+out:
-+	mutex_unlock(&zram_index_mutex);
- 	return err;
- }
- 
-@@ -1775,8 +1791,17 @@ static ssize_t reset_store(struct device *dev,
- 	if (ret)
- 		return ret;
- 
--	if (!do_reset)
--		return -EINVAL;
-+	mutex_lock(&zram_index_mutex);
-+
-+	if (!zram_up) {
-+		len = -ENODEV;
-+		goto out;
-+	}
-+
-+	if (!do_reset) {
-+		len = -EINVAL;
-+		goto out;
-+	}
- 
- 	zram = dev_to_zram(dev);
- 	bdev = zram->disk->part0;
-@@ -1785,7 +1810,8 @@ static ssize_t reset_store(struct device *dev,
- 	/* Do not reset an active device or claimed device */
- 	if (bdev->bd_openers || zram->claim) {
- 		mutex_unlock(&bdev->bd_disk->open_mutex);
--		return -EBUSY;
-+		len = -EBUSY;
-+		goto out;
- 	}
- 
- 	/* From now on, anyone can't open /dev/zram[0-9] */
-@@ -1800,6 +1826,8 @@ static ssize_t reset_store(struct device *dev,
- 	zram->claim = false;
- 	mutex_unlock(&bdev->bd_disk->open_mutex);
- 
-+out:
-+	mutex_unlock(&zram_index_mutex);
- 	return len;
- }
- 
-@@ -2010,6 +2038,10 @@ static ssize_t hot_add_show(struct class *class,
+diff --git a/arch/x86/kernel/cpu/resctrl/rdtgroup.c b/arch/x86/kernel/cpu/resctrl/rdtgroup.c
+index b57b3db9a6a7..d40c486f46b9 100644
+--- a/arch/x86/kernel/cpu/resctrl/rdtgroup.c
++++ b/arch/x86/kernel/cpu/resctrl/rdtgroup.c
+@@ -207,7 +207,7 @@ static int rdtgroup_add_file(struct kernfs_node *parent_kn, struct rftype *rft)
+ 	struct kernfs_node *kn;
  	int ret;
  
- 	mutex_lock(&zram_index_mutex);
-+	if (!zram_up) {
-+		mutex_unlock(&zram_index_mutex);
-+		return -ENODEV;
-+	}
- 	ret = zram_add();
- 	mutex_unlock(&zram_index_mutex);
+-	kn = __kernfs_create_file(parent_kn, rft->name, rft->mode,
++	kn = __kernfs_create_file(parent_kn, rft->name, rft->mode, NULL,
+ 				  GLOBAL_ROOT_UID, GLOBAL_ROOT_GID,
+ 				  0, rft->kf_ops, rft, NULL, NULL);
+ 	if (IS_ERR(kn))
+@@ -2480,7 +2480,7 @@ static int mon_addfile(struct kernfs_node *parent_kn, const char *name,
+ 	struct kernfs_node *kn;
+ 	int ret = 0;
  
-@@ -2037,6 +2069,11 @@ static ssize_t hot_remove_store(struct class *class,
+-	kn = __kernfs_create_file(parent_kn, name, 0444,
++	kn = __kernfs_create_file(parent_kn, name, 0444, NULL,
+ 				  GLOBAL_ROOT_UID, GLOBAL_ROOT_GID, 0,
+ 				  &kf_mondata_ops, priv, NULL, NULL);
+ 	if (IS_ERR(kn))
+diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
+index ba581429bf7b..f463878a5bf4 100644
+--- a/fs/kernfs/dir.c
++++ b/fs/kernfs/dir.c
+@@ -14,6 +14,7 @@
+ #include <linux/slab.h>
+ #include <linux/security.h>
+ #include <linux/hash.h>
++#include <linux/module.h>
  
- 	mutex_lock(&zram_index_mutex);
+ #include "kernfs-internal.h"
  
-+	if (!zram_up) {
-+		ret = -ENODEV;
-+		goto out;
-+	}
-+
- 	zram = idr_find(&zram_index_idr, dev_id);
- 	if (zram) {
- 		ret = zram_remove(zram);
-@@ -2046,6 +2083,7 @@ static ssize_t hot_remove_store(struct class *class,
- 		ret = -ENODEV;
- 	}
- 
-+out:
- 	mutex_unlock(&zram_index_mutex);
- 	return ret ? ret : count;
- }
-@@ -2072,12 +2110,15 @@ static int zram_remove_cb(int id, void *ptr, void *data)
- 
- static void destroy_devices(void)
+@@ -414,12 +415,32 @@ static bool kernfs_unlink_sibling(struct kernfs_node *kn)
+  */
+ struct kernfs_node *kernfs_get_active(struct kernfs_node *kn)
  {
-+	mutex_lock(&zram_index_mutex);
-+	zram_up = false;
- 	class_unregister(&zram_control_class);
- 	idr_for_each(&zram_index_idr, &zram_remove_cb, NULL);
- 	zram_debugfs_destroy();
- 	idr_destroy(&zram_index_idr);
- 	unregister_blkdev(zram_major, "zram");
- 	cpuhp_remove_multi_state(CPUHP_ZCOMP_PREPARE);
-+	mutex_unlock(&zram_index_mutex);
++	int v;
++
+ 	if (unlikely(!kn))
+ 		return NULL;
+ 
+ 	if (!atomic_inc_unless_negative(&kn->active))
+ 		return NULL;
+ 
++	/*
++	 * If a module created the kernfs_node, the module cannot possibly be
++	 * removed if the above atomic_inc_unless_negative() succeeded. So the
++	 * try_module_get() below is not to protect the lifetime of the module
++	 * as that is already guaranteed. The try_module_get() below is used
++	 * to ensure that we don't deadlock in case a kernfs operation and
++	 * module removal used a shared lock.
++	 *
++	 * We use a try method to avoid userspace DOS'ing module removal with
++	 * access to kernfs ops.
++	 */
++	if (!try_module_get(kn->owner)) {
++		v = atomic_dec_return(&kn->active);
++		if (unlikely(v == KN_DEACTIVATED_BIAS))
++			wake_up_all(&kernfs_root(kn)->deactivate_waitq);
++		return NULL;
++	}
++
+ 	if (kernfs_lockdep(kn))
+ 		rwsem_acquire_read(&kn->dep_map, 0, 1, _RET_IP_);
+ 	return kn;
+@@ -442,6 +463,13 @@ void kernfs_put_active(struct kernfs_node *kn)
+ 	if (kernfs_lockdep(kn))
+ 		rwsem_release(&kn->dep_map, _RET_IP_);
+ 	v = atomic_dec_return(&kn->active);
++
++	/*
++	 * We prevent module exit *until* we know for sure all possible
++	 * kernfs ops are done.
++	 */
++	module_put(kn->owner);
++
+ 	if (likely(v != KN_DEACTIVATED_BIAS))
+ 		return;
+ 
+@@ -571,6 +599,7 @@ struct kernfs_node *kernfs_node_from_dentry(struct dentry *dentry)
+ static struct kernfs_node *__kernfs_new_node(struct kernfs_root *root,
+ 					     struct kernfs_node *parent,
+ 					     const char *name, umode_t mode,
++					     struct module *owner,
+ 					     kuid_t uid, kgid_t gid,
+ 					     unsigned flags)
+ {
+@@ -606,6 +635,7 @@ static struct kernfs_node *__kernfs_new_node(struct kernfs_root *root,
+ 
+ 	kn->name = name;
+ 	kn->mode = mode;
++	kn->owner = owner;
+ 	kn->flags = flags;
+ 
+ 	if (!uid_eq(uid, GLOBAL_ROOT_UID) || !gid_eq(gid, GLOBAL_ROOT_GID)) {
+@@ -639,13 +669,14 @@ static struct kernfs_node *__kernfs_new_node(struct kernfs_root *root,
+ 
+ struct kernfs_node *kernfs_new_node(struct kernfs_node *parent,
+ 				    const char *name, umode_t mode,
++				    struct module *owner,
+ 				    kuid_t uid, kgid_t gid,
+ 				    unsigned flags)
+ {
+ 	struct kernfs_node *kn;
+ 
+ 	kn = __kernfs_new_node(kernfs_root(parent), parent,
+-			       name, mode, uid, gid, flags);
++			       name, mode, owner, uid, gid, flags);
+ 	if (kn) {
+ 		kernfs_get(parent);
+ 		kn->parent = parent;
+@@ -926,7 +957,7 @@ struct kernfs_root *kernfs_create_root(struct kernfs_syscall_ops *scops,
+ 		root->id_highbits = 1;
+ 
+ 	kn = __kernfs_new_node(root, NULL, "", S_IFDIR | S_IRUGO | S_IXUGO,
+-			       GLOBAL_ROOT_UID, GLOBAL_ROOT_GID,
++			       NULL, GLOBAL_ROOT_UID, GLOBAL_ROOT_GID,
+ 			       KERNFS_DIR);
+ 	if (!kn) {
+ 		idr_destroy(&root->ino_idr);
+@@ -965,6 +996,7 @@ void kernfs_destroy_root(struct kernfs_root *root)
+  * @parent: parent in which to create a new directory
+  * @name: name of the new directory
+  * @mode: mode of the new directory
++ * @owner: if set, the module owner of this directory
+  * @uid: uid of the new directory
+  * @gid: gid of the new directory
+  * @priv: opaque data associated with the new directory
+@@ -974,6 +1006,7 @@ void kernfs_destroy_root(struct kernfs_root *root)
+  */
+ struct kernfs_node *kernfs_create_dir_ns(struct kernfs_node *parent,
+ 					 const char *name, umode_t mode,
++					 struct module *owner,
+ 					 kuid_t uid, kgid_t gid,
+ 					 void *priv, const void *ns)
+ {
+@@ -982,7 +1015,7 @@ struct kernfs_node *kernfs_create_dir_ns(struct kernfs_node *parent,
+ 
+ 	/* allocate */
+ 	kn = kernfs_new_node(parent, name, mode | S_IFDIR,
+-			     uid, gid, KERNFS_DIR);
++			     owner, uid, gid, KERNFS_DIR);
+ 	if (!kn)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -1014,7 +1047,7 @@ struct kernfs_node *kernfs_create_empty_dir(struct kernfs_node *parent,
+ 
+ 	/* allocate */
+ 	kn = kernfs_new_node(parent, name, S_IRUGO|S_IXUGO|S_IFDIR,
+-			     GLOBAL_ROOT_UID, GLOBAL_ROOT_GID, KERNFS_DIR);
++			     NULL, GLOBAL_ROOT_UID, GLOBAL_ROOT_GID, KERNFS_DIR);
+ 	if (!kn)
+ 		return ERR_PTR(-ENOMEM);
+ 
+diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
+index 4479c6580333..73be39ddc856 100644
+--- a/fs/kernfs/file.c
++++ b/fs/kernfs/file.c
+@@ -974,6 +974,7 @@ const struct file_operations kernfs_file_fops = {
+  * @uid: uid of the file
+  * @gid: gid of the file
+  * @size: size of the file
++ * @owner: if set, the module owner of the file
+  * @ops: kernfs operations for the file
+  * @priv: private data for the file
+  * @ns: optional namespace tag of the file
+@@ -983,7 +984,9 @@ const struct file_operations kernfs_file_fops = {
+  */
+ struct kernfs_node *__kernfs_create_file(struct kernfs_node *parent,
+ 					 const char *name,
+-					 umode_t mode, kuid_t uid, kgid_t gid,
++					 umode_t mode,
++					 struct module *owner,
++					 kuid_t uid, kgid_t gid,
+ 					 loff_t size,
+ 					 const struct kernfs_ops *ops,
+ 					 void *priv, const void *ns,
+@@ -996,7 +999,7 @@ struct kernfs_node *__kernfs_create_file(struct kernfs_node *parent,
+ 	flags = KERNFS_FILE;
+ 
+ 	kn = kernfs_new_node(parent, name, (mode & S_IALLUGO) | S_IFREG,
+-			     uid, gid, flags);
++			     owner, uid, gid, flags);
+ 	if (!kn)
+ 		return ERR_PTR(-ENOMEM);
+ 
+diff --git a/fs/kernfs/kernfs-internal.h b/fs/kernfs/kernfs-internal.h
+index 9e3abf597e2d..3551f62f1449 100644
+--- a/fs/kernfs/kernfs-internal.h
++++ b/fs/kernfs/kernfs-internal.h
+@@ -133,6 +133,7 @@ void kernfs_put_active(struct kernfs_node *kn);
+ int kernfs_add_one(struct kernfs_node *kn);
+ struct kernfs_node *kernfs_new_node(struct kernfs_node *parent,
+ 				    const char *name, umode_t mode,
++				    struct module *owner,
+ 				    kuid_t uid, kgid_t gid,
+ 				    unsigned flags);
+ 
+diff --git a/fs/kernfs/symlink.c b/fs/kernfs/symlink.c
+index 19a6c71c6ff5..1d781970bec7 100644
+--- a/fs/kernfs/symlink.c
++++ b/fs/kernfs/symlink.c
+@@ -36,7 +36,8 @@ struct kernfs_node *kernfs_create_link(struct kernfs_node *parent,
+ 		gid = target->iattr->ia_gid;
+ 	}
+ 
+-	kn = kernfs_new_node(parent, name, S_IFLNK|0777, uid, gid, KERNFS_LINK);
++	kn = kernfs_new_node(parent, name, S_IFLNK|0777, target->owner, uid,
++			     gid, KERNFS_LINK);
+ 	if (!kn)
+ 		return ERR_PTR(-ENOMEM);
+ 
+diff --git a/fs/sysfs/dir.c b/fs/sysfs/dir.c
+index b6b6796e1616..01a0a53ee18e 100644
+--- a/fs/sysfs/dir.c
++++ b/fs/sysfs/dir.c
+@@ -56,8 +56,8 @@ int sysfs_create_dir_ns(struct kobject *kobj, const void *ns)
+ 
+ 	kobject_get_ownership(kobj, &uid, &gid);
+ 
+-	kn = kernfs_create_dir_ns(parent, kobject_name(kobj), 0755, uid, gid,
+-				  kobj, ns);
++	kn = kernfs_create_dir_ns(parent, kobject_name(kobj), 0755, NULL, uid,
++				  gid, kobj, ns);
+ 	if (IS_ERR(kn)) {
+ 		if (PTR_ERR(kn) == -EEXIST)
+ 			sysfs_warn_dup(parent, kobject_name(kobj));
+diff --git a/fs/sysfs/file.c b/fs/sysfs/file.c
+index 42dcf96881b6..5edc6e180a97 100644
+--- a/fs/sysfs/file.c
++++ b/fs/sysfs/file.c
+@@ -291,8 +291,9 @@ int sysfs_add_file_mode_ns(struct kernfs_node *parent,
+ 		key = attr->key ?: (struct lock_class_key *)&attr->skey;
+ #endif
+ 
+-	kn = __kernfs_create_file(parent, attr->name, mode & 0777, uid, gid,
+-				  PAGE_SIZE, ops, (void *)attr, ns, key);
++	kn = __kernfs_create_file(parent, attr->name, mode & 0777, attr->owner,
++				  uid, gid, PAGE_SIZE, ops, (void *)attr, ns,
++				  key);
+ 	if (IS_ERR(kn)) {
+ 		if (PTR_ERR(kn) == -EEXIST)
+ 			sysfs_warn_dup(parent, attr->name);
+@@ -326,8 +327,9 @@ int sysfs_add_bin_file_mode_ns(struct kernfs_node *parent,
+ 		key = attr->key ?: (struct lock_class_key *)&attr->skey;
+ #endif
+ 
+-	kn = __kernfs_create_file(parent, attr->name, mode & 0777, uid, gid,
+-				  battr->size, ops, (void *)attr, ns, key);
++	kn = __kernfs_create_file(parent, attr->name, mode & 0777, attr->owner,
++				  uid, gid, battr->size, ops, (void *)attr, ns,
++				  key);
+ 	if (IS_ERR(kn)) {
+ 		if (PTR_ERR(kn) == -EEXIST)
+ 			sysfs_warn_dup(parent, attr->name);
+diff --git a/fs/sysfs/group.c b/fs/sysfs/group.c
+index eeb0e3099421..283607c22eef 100644
+--- a/fs/sysfs/group.c
++++ b/fs/sysfs/group.c
+@@ -135,6 +135,7 @@ static int internal_create_group(struct kobject *kobj, int update,
+ 		} else {
+ 			kn = kernfs_create_dir_ns(kobj->sd, grp->name,
+ 						  S_IRWXU | S_IRUGO | S_IXUGO,
++						  grp->owner,
+ 						  uid, gid, kobj, NULL);
+ 			if (IS_ERR(kn)) {
+ 				if (PTR_ERR(kn) == -EEXIST)
+diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+index cd968ee2b503..8655abd53c85 100644
+--- a/include/linux/kernfs.h
++++ b/include/linux/kernfs.h
+@@ -160,6 +160,7 @@ struct kernfs_node {
+ 
+ 	unsigned short		flags;
+ 	umode_t			mode;
++	struct module           *owner;
+ 	struct kernfs_iattrs	*iattr;
+ };
+ 
+@@ -369,12 +370,14 @@ void kernfs_destroy_root(struct kernfs_root *root);
+ 
+ struct kernfs_node *kernfs_create_dir_ns(struct kernfs_node *parent,
+ 					 const char *name, umode_t mode,
++					 struct module *owner,
+ 					 kuid_t uid, kgid_t gid,
+ 					 void *priv, const void *ns);
+ struct kernfs_node *kernfs_create_empty_dir(struct kernfs_node *parent,
+ 					    const char *name);
+ struct kernfs_node *__kernfs_create_file(struct kernfs_node *parent,
+ 					 const char *name, umode_t mode,
++					 struct module *owner,
+ 					 kuid_t uid, kgid_t gid,
+ 					 loff_t size,
+ 					 const struct kernfs_ops *ops,
+@@ -471,13 +474,15 @@ static inline void kernfs_destroy_root(struct kernfs_root *root) { }
+ 
+ static inline struct kernfs_node *
+ kernfs_create_dir_ns(struct kernfs_node *parent, const char *name,
+-		     umode_t mode, kuid_t uid, kgid_t gid,
++		     umode_t mode, struct module *owner,
++		     kuid_t uid, kgid_t gid,
+ 		     void *priv, const void *ns)
+ { return ERR_PTR(-ENOSYS); }
+ 
+ static inline struct kernfs_node *
+ __kernfs_create_file(struct kernfs_node *parent, const char *name,
+-		     umode_t mode, kuid_t uid, kgid_t gid,
++		     umode_t mode, struct module *owner,
++		     kuid_t uid, kgid_t gid,
+ 		     loff_t size, const struct kernfs_ops *ops,
+ 		     void *priv, const void *ns, struct lock_class_key *key)
+ { return ERR_PTR(-ENOSYS); }
+@@ -564,7 +569,7 @@ static inline struct kernfs_node *
+ kernfs_create_dir(struct kernfs_node *parent, const char *name, umode_t mode,
+ 		  void *priv)
+ {
+-	return kernfs_create_dir_ns(parent, name, mode,
++	return kernfs_create_dir_ns(parent, name, mode, parent->owner,
+ 				    GLOBAL_ROOT_UID, GLOBAL_ROOT_GID,
+ 				    priv, NULL);
+ }
+diff --git a/include/linux/sysfs.h b/include/linux/sysfs.h
+index e3f1e8ac1f85..babbabb460dc 100644
+--- a/include/linux/sysfs.h
++++ b/include/linux/sysfs.h
+@@ -30,6 +30,7 @@ enum kobj_ns_type;
+ struct attribute {
+ 	const char		*name;
+ 	umode_t			mode;
++	struct module           *owner;
+ #ifdef CONFIG_DEBUG_LOCK_ALLOC
+ 	bool			ignore_lockdep:1;
+ 	struct lock_class_key	*key;
+@@ -80,6 +81,7 @@ do {							\
+  * @attrs:	Pointer to NULL terminated list of attributes.
+  * @bin_attrs:	Pointer to NULL terminated list of binary attributes.
+  *		Either attrs or bin_attrs or both must be provided.
++ * @module:	If set, module responsible for this attribute group
+  */
+ struct attribute_group {
+ 	const char		*name;
+@@ -89,6 +91,7 @@ struct attribute_group {
+ 						  struct bin_attribute *, int);
+ 	struct attribute	**attrs;
+ 	struct bin_attribute	**bin_attrs;
++	struct module           *owner;
+ };
+ 
+ /*
+@@ -100,38 +103,52 @@ struct attribute_group {
+ 
+ #define __ATTR(_name, _mode, _show, _store) {				\
+ 	.attr = {.name = __stringify(_name),				\
+-		 .mode = VERIFY_OCTAL_PERMISSIONS(_mode) },		\
++		 .mode = VERIFY_OCTAL_PERMISSIONS(_mode),               \
++		 .owner  = THIS_MODULE,                                 \
++	},                                                             \
+ 	.show	= _show,						\
+ 	.store	= _store,						\
  }
  
- static int __init zram_init(void)
-@@ -2105,15 +2146,21 @@ static int __init zram_init(void)
- 		return -EBUSY;
- 	}
+ #define __ATTR_PREALLOC(_name, _mode, _show, _store) {			\
+ 	.attr = {.name = __stringify(_name),				\
+-		 .mode = SYSFS_PREALLOC | VERIFY_OCTAL_PERMISSIONS(_mode) },\
++		 .mode = SYSFS_PREALLOC | VERIFY_OCTAL_PERMISSIONS(_mode),\
++		 .owner  = THIS_MODULE,                                 \
++	},                                                              \
+ 	.show	= _show,						\
+ 	.store	= _store,						\
+ }
  
-+	mutex_lock(&zram_index_mutex);
-+
- 	while (num_devices != 0) {
--		mutex_lock(&zram_index_mutex);
- 		ret = zram_add();
--		mutex_unlock(&zram_index_mutex);
--		if (ret < 0)
-+		if (ret < 0) {
-+			mutex_unlock(&zram_index_mutex);
- 			goto out_error;
-+		}
- 		num_devices--;
- 	}
+ #define __ATTR_RO(_name) {						\
+-	.attr	= { .name = __stringify(_name), .mode = 0444 },		\
++	.attr	= { .name = __stringify(_name),                         \
++		    .mode = 0444,					\
++		    .owner  = THIS_MODULE,				\
++		},                                                     \
+ 	.show	= _name##_show,						\
+ }
  
-+	zram_up = true;
-+
-+	mutex_unlock(&zram_index_mutex);
-+
- 	return 0;
+ #define __ATTR_RO_MODE(_name, _mode) {					\
+ 	.attr	= { .name = __stringify(_name),				\
+-		    .mode = VERIFY_OCTAL_PERMISSIONS(_mode) },		\
++		    .mode = VERIFY_OCTAL_PERMISSIONS(_mode),            \
++		    .owner  = THIS_MODULE,				\
++	},                                                              \
+ 	.show	= _name##_show,						\
+ }
  
- out_error:
+ #define __ATTR_RW_MODE(_name, _mode) {					\
+ 	.attr	= { .name = __stringify(_name),				\
+-		    .mode = VERIFY_OCTAL_PERMISSIONS(_mode) },		\
++		    .mode = VERIFY_OCTAL_PERMISSIONS(_mode),            \
++		    .owner  = THIS_MODULE,                              \
++	},								\
+ 	.show	= _name##_show,						\
+ 	.store	= _name##_store,					\
+ }
+ 
+ #define __ATTR_WO(_name) {						\
+-	.attr	= { .name = __stringify(_name), .mode = 0200 },		\
++	.attr	= { .name = __stringify(_name),                         \
++		    .mode = 0200,					\
++		    .owner  = THIS_MODULE,				\
++	},                                                              \
+ 	.store	= _name##_store,					\
+ }
+ 
+@@ -141,8 +158,11 @@ struct attribute_group {
+ 
+ #ifdef CONFIG_DEBUG_LOCK_ALLOC
+ #define __ATTR_IGNORE_LOCKDEP(_name, _mode, _show, _store) {	\
+-	.attr = {.name = __stringify(_name), .mode = _mode,	\
+-			.ignore_lockdep = true },		\
++	.attr = {.name = __stringify(_name),                    \
++		 .mode = _mode,					\
++		 .ignore_lockdep = true,                        \
++		 .owner  = THIS_MODULE,                         \
++	},							\
+ 	.show		= _show,				\
+ 	.store		= _store,				\
+ }
+@@ -159,6 +179,7 @@ static const struct attribute_group *_name##_groups[] = {	\
+ #define ATTRIBUTE_GROUPS(_name)					\
+ static const struct attribute_group _name##_group = {		\
+ 	.attrs = _name##_attrs,					\
++	.owner = THIS_MODULE,					\
+ };								\
+ __ATTRIBUTE_GROUPS(_name)
+ 
+@@ -199,20 +220,29 @@ struct bin_attribute {
+ 
+ /* macros to create static binary attributes easier */
+ #define __BIN_ATTR(_name, _mode, _read, _write, _size) {		\
+-	.attr = { .name = __stringify(_name), .mode = _mode },		\
++	.attr = { .name = __stringify(_name),                           \
++		   .mode = _mode,					\
++		   .owner = THIS_MODULE,				\
++	},								\
+ 	.read	= _read,						\
+ 	.write	= _write,						\
+ 	.size	= _size,						\
+ }
+ 
+ #define __BIN_ATTR_RO(_name, _size) {					\
+-	.attr	= { .name = __stringify(_name), .mode = 0444 },		\
++	.attr	= { .name = __stringify(_name),                         \
++		    .mode = 0444,					\
++		    .owner = THIS_MODULE,				\
++	},								\
+ 	.read	= _name##_read,						\
+ 	.size	= _size,						\
+ }
+ 
+ #define __BIN_ATTR_WO(_name, _size) {					\
+-	.attr	= { .name = __stringify(_name), .mode = 0200 },		\
++	.attr	= { .name = __stringify(_name),                         \
++		    .mode = 0200,					\
++		    .owner = THIS_MODULE,				\
++	},								\
+ 	.write	= _name##_write,					\
+ 	.size	= _size,						\
+ }
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 8afa8690d288..b9886db9ecdd 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -3949,7 +3949,7 @@ static int cgroup_add_file(struct cgroup_subsys_state *css, struct cgroup *cgrp,
+ 	key = &cft->lockdep_key;
+ #endif
+ 	kn = __kernfs_create_file(cgrp->kn, cgroup_file_name(cgrp, cft, name),
+-				  cgroup_file_mode(cft),
++				  cgroup_file_mode(cft), NULL,
+ 				  GLOBAL_ROOT_UID, GLOBAL_ROOT_GID,
+ 				  0, cft->kf_ops, cft,
+ 				  NULL, key);
 -- 
 2.30.2
 
