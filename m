@@ -1,21 +1,21 @@
 From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH v7 06/12] kernel/module: add documentation for try_module_get()
-Date: Fri, 17 Sep 2021 22:04:24 -0700
-Message-ID: <20210918050430.3671227-7-mcgrof@kernel.org>
+Subject: [PATCH v7 08/12] fs/sysfs/dir.c: replace S_IRWXU|S_IRUGO|S_IXUGO with 0755 sysfs_create_dir_ns()
+Date: Fri, 17 Sep 2021 22:04:26 -0700
+Message-ID: <20210918050430.3671227-9-mcgrof@kernel.org>
 References: <20210918050430.3671227-1-mcgrof@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=b92mAeHk3N99JPkWqvyo9aOeWc+3cnxJoDw3jDX8Mm4=; b=eeTtMC4wY8BdtQg0gqt80SxVcA
-        39IX+w7rFelMrvoaCFJiUd4nRKVK/sHW5Pt/0Fs+3nxOC95/mHALQY8xvC5uUwIwcYfxEuGTRYres
-        BlYNIV4cy+WFIMeWlhvipLU5HDynUEWiS+Y2fOjqwi6IC210qa1yrSxSSRWkhjRn9kk9+ZeKGI7pM
-        zm6fC6FiL/KMGFgNYLCc/HgJPkvyVg0WyRY2AV+y2NREIsZVOyoNkEpT/XyWUMHiDAcWxArrABs4y
-        DJ93zDKWK9wvwbgdcJRjEloQBvTBaooSDmOwF4mgUxh//Pz0J8bmQg5ZRwvbpqUOioenmuCS4+SHv
-        FdNs8PCw==;
+        bh=eU0Ovi0loMOt90ZC44OHIOcp0Nb8ys+AmBqPx+DEBFM=; b=EGRNR6XrGcu/Y2nvAt7CVjcqem
+        d8ejBdVzVQkuLTb+tpdo/Smw903x9MvFfm/2gItW/7msby9ii/pgTa5xf0SPDjnVXRPyXm2J51q58
+        T52goTmkokygeDNOJwPEu79YH2R4gWk8rtbTvumS9ffE9ibqRbl/+Mz1G/vL/sMMXm1+rkkCbGlto
+        qPfl2oOV4tj53k99WTBILq+O2vGtMNm8h12a8ELjAhmN0ccVn85dq+a6hkh4KD6J/VFFfmDcpGrIo
+        HAtsArgtGtFtbKzMQBxPsuyhvHljGPjSd5f38Wd4Rj9d1M1nhO2t4/Wm9cmzFfqsU6eoEKlowafZJ
+        7m6bs+iA==;
 In-Reply-To: <20210918050430.3671227-1-mcgrof@kernel.org>
 Sender: Luis Chamberlain <mcgrof@infradead.org>
 List-ID: <cgroups.vger.kernel.org>
@@ -23,73 +23,31 @@ Content-Type: text/plain; charset="us-ascii"
 To: tj@kernel.org, gregkh@linuxfoundation.org, akpm@linux-foundation.org, minchan@kernel.org, jeyu@kernel.org, shuah@kernel.org
 Cc: rdunlap@infradead.org, rafael@kernel.org, masahiroy@kernel.org, ndesaulniers@google.com, yzaikin@google.com, nathan@kernel.org, ojeda@kernel.org, penguin-kernel@I-love.SAKURA.ne.jp, vitor@massaru.org, elver@google.com, jarkko@kernel.org, glider@google.com, rf@opensource.cirrus.com, stephen@networkplumber.org, David.Laight@ACULAB.COM, bvanassche@acm.org, jolsa@kernel.org, andriy.shevchenko@linux.intel.com, trishalfonso@google.com, andreyknvl@gmail.com, jikos@kernel.org, mbenes@suse.com, ngupta@vflare.org, sergey.senozhatsky.work@gmail.com, mcgrof@kernel.org, reinette.chatre@intel.com, fenghua.yu@intel.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com, lizefan.x@bytedance.com, hannes@cmpxchg.org, daniel.vetter@ffwll.ch, bhelgaas@google.com, kw@linux.com, dan.j.williams@intel.c
 
-There is quite a bit of tribal knowledge around proper use of
-try_module_get() and that it must be used only in a context which
-can ensure the module won't be gone during the operation. Document
-this little bit of tribal knowledge.
+If one ends up expanding on this line checkpatch will complain that the
+combination S_IRWXU|S_IRUGO|S_IXUGO should just be replaced with the
+octal 0755. Do that.
 
-I'm extending this tribal knowledge with new developments which it
-seems some folks do not yet believe to be true: we can be sure a
-module will exist during the lifetime of a sysfs file operation.
-For proof, refer to test_sysfs test #32:
-
-./tools/testing/selftests/sysfs/sysfs.sh -t 0032
-
-Without this being true, the write would fail or worse,
-a crash would happen, in this test. It does not.
+This makes no functional changes.
 
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- include/linux/module.h | 34 ++++++++++++++++++++++++++++++++--
- 1 file changed, 32 insertions(+), 2 deletions(-)
+ fs/sysfs/dir.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/include/linux/module.h b/include/linux/module.h
-index c9f1200b2312..22eacd5e1e85 100644
---- a/include/linux/module.h
-+++ b/include/linux/module.h
-@@ -609,10 +609,40 @@ void symbol_put_addr(void *addr);
-    to handle the error case (which only happens with rmmod --wait). */
- extern void __module_get(struct module *module);
+diff --git a/fs/sysfs/dir.c b/fs/sysfs/dir.c
+index 59dffd5ca517..b6b6796e1616 100644
+--- a/fs/sysfs/dir.c
++++ b/fs/sysfs/dir.c
+@@ -56,8 +56,7 @@ int sysfs_create_dir_ns(struct kobject *kobj, const void *ns)
  
--/* This is the Right Way to get a module: if it fails, it's being removed,
-- * so pretend it's not there. */
-+/**
-+ * try_module_get() - yields to module removal and bumps refcnt otherwise
-+ * @module: the module we should check for
-+ *
-+ * This can be used to try to bump the reference count of a module, so to
-+ * prevent module removal. The reference count of a module is not allowed
-+ * to be incremented if the module is already being removed.
-+ *
-+ * Care must be taken to ensure the module cannot be removed during the call to
-+ * try_module_get(). This can be done by having another entity other than the
-+ * module itself increment the module reference count, or through some other
-+ * means which guarantees the module could not be removed during an operation.
-+ * An example of this later case is using try_module_get() in a sysfs file
-+ * which the module created. The sysfs store / read file operations are
-+ * gauranteed to exist through the use of kernfs's active reference (see
-+ * kernfs_active()). If a sysfs file operation is being run, the module which
-+ * created it must still exist as the module is in charge of removing the same
-+ * sysfs file being read. Also, a sysfs / kernfs file removal cannot happen
-+ * unless the same file is not active.
-+ *
-+ * One of the real values to try_module_get() is the module_is_live() check
-+ * which ensures this the caller of try_module_get() can yield to userspace
-+ * module removal requests and fail whatever it was about to process.
-+ */
- extern bool try_module_get(struct module *module);
+ 	kobject_get_ownership(kobj, &uid, &gid);
  
-+/**
-+ * module_put() - release a reference count to a module
-+ * @module: the module we should release a reference count for
-+ *
-+ * If you successfully bump a reference count to a module with try_module_get(),
-+ * when you are finished you must call module_put() to release that reference
-+ * count.
-+ */
- extern void module_put(struct module *module);
- 
- #else /*!CONFIG_MODULE_UNLOAD*/
+-	kn = kernfs_create_dir_ns(parent, kobject_name(kobj),
+-				  S_IRWXU | S_IRUGO | S_IXUGO, uid, gid,
++	kn = kernfs_create_dir_ns(parent, kobject_name(kobj), 0755, uid, gid,
+ 				  kobj, ns);
+ 	if (IS_ERR(kn)) {
+ 		if (PTR_ERR(kn) == -EEXIST)
 -- 
 2.30.2
 
