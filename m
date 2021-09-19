@@ -1,49 +1,58 @@
-From: "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [RFC PATCH] blk-throttle: enable io throttle for root in cgroup
- v2
-Date: Sun, 19 Sep 2021 18:31:38 +0800
-Message-ID: <37f8c687-8549-104a-2501-532a0cfc9a48@huawei.com>
-References: <20210909140815.2600858-1-yukuai3@huawei.com>
- <20210917174103.GC13346@blackbody.suse.cz>
- <CACGdZYJiLuh6kED_tdWkYqbHDXc_18m-XJbevp-ri5ansvbtYg@mail.gmail.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH mm] vmalloc: back off when the current task is
+ OOM-killed
+Date: Sun, 19 Sep 2021 16:31:26 -0700
+Message-ID: <20210919163126.431674722b8db218453dc18c@linux-foundation.org>
+References: <YT8PEBbYZhLixEJD@dhcp22.suse.cz>
+        <d07a5540-3e07-44ba-1e59-067500f024d9@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CACGdZYJiLuh6kED_tdWkYqbHDXc_18m-XJbevp-ri5ansvbtYg@mail.gmail.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1632094288;
+        bh=zyJGiIuWE5OLgrUwe9tcbx/tG63SoIirkujQLHeuHsk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=ueCIGMa2UqDW7NZYr2xH1V1f2uLeYgpzucwCUQsgrMzW1PofIQ59as8TZpWnli+P9
+         EUKAVZXzAPzg4ZiWrxiQio7O2cU+4X6QoXL6rhQZrPG/m1WGOposi9Gb1c6ei6SMNY
+         QyzFxQUkv59B/4V5H9uH6lYE0kxYf0t55rngF3Sg=
+In-Reply-To: <d07a5540-3e07-44ba-1e59-067500f024d9-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"; format="flowed"
-To: Khazhy Kumykov <khazhy@google.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
-Cc: tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, "Uladzislau Rezki (Sony)" <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-T24gMjAyMS8wOS8xOCAzOjU4LCBLaGF6aHkgS3VteWtvdiB3cm90ZToKPiBPbiBGcmksIFNlcCAx
-NywgMjAyMSBhdCAxMDo0MSBBTSBNaWNoYWwgS291dG7DvSA8bWtvdXRueUBzdXNlLmNvbT4gd3Jv
-dGU6Cj4+Cj4+IEhlbGxvIFl1Lgo+Pgo+PiBPbiBUaHUsIFNlcCAwOSwgMjAyMSBhdCAxMDowODox
-NVBNICswODAwLCBZdSBLdWFpIDx5dWt1YWkzQGh1YXdlaS5jb20+IHdyb3RlOgo+Pj4gSSdtIG5v
-dCBzdXJlIHdoeSB0aGlzIGZlYXR1cmUgaXMgZGlzYWJsZWQgaW4gdGhlIGZpcnN0IHBsYWNlLCBp
-cwo+Pj4gdGhlcmUgYW55IHByb2JsZW0gb3IgZGVzaWduIGNvbnN0cmFpbnQ/Cj4+Cj4+IFRoZSBp
-ZGVhIGZvciB2MiBpcyB0aGF0IGluIHRoZSByb290IGNncm91cCByZW1haW4gb25seSBrZXJuZWwg
-dGhyZWFkcyB0aGF0Cj4+IHByb3ZpZGUgImdsb2JhbCIgc2VydmljZXMgYW5kIGFueSB1c2VyIHdv
-cmtsb2FkIHRoYXQgc2hvdWxkIGJlCj4+IGNvbnN0cmFpbmVkIGlzIHB1dCBpbnRvIG5vbi1yb290
-IGNncm91cHMuIEFkZGl0aW9uYWxseSwgaWYga2VybmVsCj4+IHRocmVhZHMgY2Fycnkgb3V0IHdv
-cmsgYXNzb2NpYXRlZCB3aXRoIGEgY2dyb3VwIHRoZXkgY2FuIGNoYXJnZSBpdCB0bwo+PiB0aGUg
-cmVzcGVjdGl2ZSBjZ3JvdXAuCj4+Cj4+IFtzbmlwXQo+Pj4gV2Ugd2FudCB0byBsaW1pdCB0aGUg
-b3ZlcmFsbCBpb3BzL2JwcyBvZiB0aGUgZGV2aWNlIGluIGNncm91cCB2MiwKPj4KPj4gQ3VpIGJv
-bm8/IChJIG1lYW4gd2hhdCBpcyB0aGUgcmVhc29uIGZvciB0aHJvdHRsaW5nIG9uIHRoZSBnbG9i
-YWwgbGV2ZWwKPj4gd2hlbiB0aGVyZSdzIG5vIG90aGVyIGVudGl0eSB1dGlsaXRpbmcgdGhlIHJl
-c2lkdWFsPwo+PiA8am9rZT5Zb3VyIGRyaXZlcyBhcmUgdG9vIGZhc3Q/PC9qb2tlPikKPiAKPiBX
-ZSdkIGJlIGludGVyZXN0ZWQgaW4gc29tZXRoaW5nIGxpa2UgdGhpcyBhcyB3ZWxsLiAoYXQgbGVh
-c3QgZm9yCj4gaW8ubWF4KS4gT3VyIHVzZSBjYXNlIGlzIHByb3ZpZGluZyByZW1vdGUgZGV2aWNl
-cyB3aGljaCBhcmUgYSBzaGFyZWQKPiByZXNvdXJjZS4gQSAiZ2xvYmFsIiB0aHJvdHRsZSBsaWtl
-IHRoaXMgKHdoaWNoIGlzIHNldCBieSBhIGxvY2FsCgpPdXIgdXNlIGNhc2UgaXMgc2ltaWxhaXIg
-dG8gdGhpcywgYSBob3N0IGNhbiBwcm92aWRlIHNldmVyYWwgcmVtb3RlCmRldmljZXMgdG8gZGlm
-aWVyZW50IGNsaWVudC4gSWYgb25lIGNsaWVudCBpcyB1bmRlciBoaWdoIGlvIHByZXNzdXJlLApv
-dGhlciBjbGllbnQgbWlnaHQgYmUgYWZmZWN0ZWQuIFRodXMgd2Ugd2FudCB0byBsaW1pdCB0aGUg
-b3ZlcmFsbAppb3BzL2JwcyBmcm9tIHRoZSBjbGllbnQuCgpUaGFua3MsCkt1YWkKCj4gbWFuYWdl
-bWVudCBkYWVtb24pIGFsbG93cyBmb3IgdGhyb3R0bGluZyBiZWZvcmUgc2VuZGluZyBuZXR3b3Jr
-Cj4gdHJhZmZpYy4gSXQncyBhbHNvIHVzZWZ1bCBzaW5jZSB3ZSBjYW4gcHV0IHRoaXMgdGhyb3R0
-bGUgb24gYSBkbSwgc28KPiB3ZSBjYW4gZW5mb3JjZSBhbiBhZ2dyZWdhdGUgdGhyb3R0bGUgd2l0
-aG91dCBuZWVkaW5nIGJhY2tjaGFubmVscyB0bwo+IGNvb3JkaW5hdGUgbXVsdGlwbGUgdGFyZ2V0
-cy4KPiAoVGhpcyBkb2VzIGFsc28gYnJpbmcgdXA6IGlmIHRoaXMgaXMgYSB1c2VmdWwgdGhpbmcs
-IHdvdWxkIGl0IG1ha2UKPiBzZW5zZSB0byB0aWUgdG8gdGhlIGRldmljZSwgdnMuIHJlcXVpcmlu
-ZyBjZ3JvdXAuIFdlIGhhcHBlbiB0byB1c2UKPiBjZ3JvdXBzIHNvIHRoYXQgcmVxdWlyZW1lbnQg
-ZG9lc24ndCBhZmZlY3QgdXMpLgo+IAo+IEtoYXpoeQo+Pgo+PiBNaWNoYWwK
+On Fri, 17 Sep 2021 11:06:49 +0300 Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
+
+> Huge vmalloc allocation on heavy loaded node can lead to a global
+> memory shortage. A task called vmalloc can have the worst badness
+> and be chosen by OOM-killer, however received fatal signal and
+> oom victim mark does not interrupt allocation cycle. Vmalloc will
+> continue allocating pages over and over again, exacerbating the crisis
+> and consuming the memory freed up by another killed tasks.
+> 
+> This patch allows OOM-killer to break vmalloc cycle, makes OOM more
+> effective and avoid host panic.
+> 
+> Unfortunately it is not 100% safe. Previous attempt to break vmalloc
+> cycle was reverted by commit b8c8a338f75e ("Revert "vmalloc: back off when
+> the current task is killed"") due to some vmalloc callers did not handled
+> failures properly. Found issues was resolved, however, there may
+> be other similar places.
+
+Well that was lame of us.
+
+I believe that at least one of the kernel testbots can utilize fault
+injection.  If we were to wire up vmalloc (as we have done with slab
+and pagealloc) then this will help to locate such buggy vmalloc callers.
+
+> Such failures may be acceptable for emergencies, such as OOM. On the other
+> hand, we would like to detect them earlier. However they are quite rare,
+> and will be hidden by OOM messages, so I'm afraid they wikk have quite
+> small chance of being noticed and reported.
+> 
+> To improve the detection of such places this patch also interrupts the vmalloc
+> allocation cycle for all fatal signals. The checks are hidden under DEBUG_VM
+> config option to do not break unaware production kernels.
+
+This sounds like a pretty sad half-measure?
+
