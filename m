@@ -1,55 +1,65 @@
-From: Luis Chamberlain <mcgrof@kernel.org>
+From: Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH v7 09/12] sysfs: fix deadlock race with module removal
-Date: Mon, 20 Sep 2021 12:38:05 -0700
-Message-ID: <YUjjHRHWCso1tjeX@bombadil.infradead.org>
+Date: Mon, 20 Sep 2021 14:43:45 -0700
+Message-ID: <YUkAkSUQtUZvNvTu@bombadil.infradead.org>
 References: <20210918050430.3671227-1-mcgrof@kernel.org>
  <20210918050430.3671227-10-mcgrof@kernel.org>
- <YUjKjLzqpcxjRyit@slm.duckdns.org>
- <YUjdytEDkCughtSz@bombadil.infradead.org>
- <YUjfeGuSVVq84iHc@mtj.duckdns.org>
+ <6db06c27-e3af-b0aa-6f38-9c31dd8194fa@acm.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
         MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=qVmGn1sB2+Ujqg7/u2BgWKG/M74nLAjBwZQeoBTm6k4=; b=n2OSSolklt7gOYko3iITzFkPyC
-        0CFZmnl1pIhaRTm5YGVOzTbvRlCC/5cbJo6Ol5dXncFos6LOkeVEHLM2n+RzZEn05VnTKrq3zRWzU
-        XDWlcRZQv+COitTH6USEtWmqcFGeK1vFJZ3+qDzVy3ZT5JivVC2bgCRk+JDE2V/ndiijQRC9gq9TM
-        wAdJ6bsCsa+zWJT6BzVz7DVLWlV3w9BDPq9VkZFJbjaXUJupVY1vq3XYUHtOJ2Zie/nuGNE/RNHOI
-        I95WQELiKoXkadSIaUtm+tDhfcClRPWgG9P9yXMv0rjhNcG8v2yzd/k9dv1zwPaZV0rcYjNrJrQTT
-        wax8de8w==;
+        bh=D26fSnJLbC9XZDfSrbIUPFGxJqUcYaE49d48YeAtGx8=; b=NBcRJuW96wCs2L5yciBjnu4F4c
+        Rn9oYNN1r/1pdLA61JWi8mSh2jw4C197H6PxcOg2RORNnVp0NHy3B2/mVwzXnkDgC9Bnt9SFoFpZq
+        E4HHHEzgLP5+gHSOKUS4bEvDYdobZ6BKb8IOsWWpInVAuyr0pBgxnJp8SXIHvvLfeLKukmB80eL+B
+        HOWdqQdII79WYdIrZ/4XgmeMgjaGc0llYrEViO4WDCrlrjRY4sBOgcW6IYtgGedGJUZuTpyw49ERA
+        cKp1wpEFy0klyQ3ztACi2tVfmneinCUyDoVWNGLeZRw814u7MRUpuq5zDgDHzlfmHeRjcjSf8u/Nl
+        pMB4G/bw==;
 Content-Disposition: inline
-In-Reply-To: <YUjfeGuSVVq84iHc@mtj.duckdns.org>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <6db06c27-e3af-b0aa-6f38-9c31dd8194fa-HInyCGIudOg@public.gmane.org>
+Sender: Luis Chamberlain <mcgrof-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: gregkh@linuxfoundation.org, akpm@linux-foundation.org, minchan@kernel.org, jeyu@kernel.org, shuah@kernel.org, rdunlap@infradead.org, rafael@kernel.org, masahiroy@kernel.org, ndesaulniers@google.com, yzaikin@google.com, nathan@kernel.org, ojeda@kernel.org, penguin-kernel@i-love.sakura.ne.jp, vitor@massaru.org, elver@google.com, jarkko@kernel.org, glider@google.com, rf@opensource.cirrus.com, stephen@networkplumber.org, David.Laight@aculab.com, bvanassche@acm.org, jolsa@kernel.org, andriy.shevchenko@linux.intel.com, trishalfonso@google.com, andreyknvl@gmail.com, jikos@kernel.org, mbenes@suse.com, ngupta@vflare.org, sergey.senozhatsky.work@gmail.com, reinette.chatre@intel.com, fenghua.yu@intel.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com, lizefan.x@bytedance.com, hannes@cmp
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, jeyu-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ndesaulniers-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ojeda-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org, vitor-HdruG0TBZYlAfugRpC6u6w@public.gmane.org, elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rf-yzvPICuk2AA4QjBA90+/kJqQE7yCjDx5@public.gmane.org, stephen-OTpzqLSitTUnbdJkjeBofR2eb7JE58TQ@public.gmane.org, David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, trishalfonso-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jikos-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mbenes-IBi9RG/b67k@public.gmane.org, ngupta-KNmc09w0p+Ednm+yROfE0A@public.gmane.org, sergey.senozhatsky.work-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, fenghua.yu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes@cmpxchg.
 
-On Mon, Sep 20, 2021 at 09:22:32AM -1000, Tejun Heo wrote:
-> On Mon, Sep 20, 2021 at 12:15:22PM -0700, Luis Chamberlain wrote:
+On Mon, Sep 20, 2021 at 02:36:38PM -0700, Bart Van Assche wrote:
+> On 9/17/21 10:04 PM, Luis Chamberlain wrote:
+> > A sketch of how this can happen follows:
+> > 
+> > CPU A                              CPU B
+> >                                     whatever_store()
+> > module_unload
+> >    mutex_lock(foo)
+> >                                     mutex_lock(foo)
+> >     del_gendisk(zram->disk);
+> >       device_del()
+> >         device_remove_groups()
+> > 
+> > In this situation whatever_store() is waiting for the mutex foo to
+> > become unlocked, but that won't happen until module removal is complete.
+> > But module removal won't complete until the sysfs file being poked
+> > completes which is waiting for a lock already held.
 > 
-> > Right, the reason I mention the alternative is that we technically don't
-> > need to use try in this case since during a kernfs op it is implied the
-> > module will be pinned, but we have further motivations to use a try
-> 
-> I'm confused. If the module is already pinned, why are we getting an
-> extra reference? 
+> If I remember correctly I encountered the deadlock scenario described
+> above for the first time about ten years ago while working on the SCST
+> project. We solved this deadlock by removing the sysfs attributes from
+> the module unload code before grabbing mutex_lock(foo), e.g. by calling
+> sysfs_remove_file().
 
-Sorry, I meant its pinned implicitly not through an actual refcount. A module
-exit can happen then in that case, it just that the sysfs removal will
-have to wait until the active reference for the kernfs ops go down.
+Well the sysfs attributes in zram do tons of funky mucking around so
+unfortunately no. It's not the only driver where this can happen. It is
+why I decided to work on a generic solution instead.
 
-> Also, I don't understand how this has that much to do
-> with preventing ddoses. I mean, it does cut down the duration of one
-> operation but the eventual gating is through whoever acquiring the
-> initial reference through try_module_get(), which again is the *only*
-> way to acquire a fresh reference.
+> This works because calling sysfs_remove_file()
+> multiple times in a row is safe. Is that solution good enough for the
+> zram driver?
 
-True. I can just leave that out from the commit log. But it is perhaps
-an implicit gain here that using try alows module exit to trump use
-of an kernfs op. Maybe's that's sufficient to mention.
+The sysfs attributes are group attributes part of the block, and so are
+removed for the driver on a del_gendisk(). So unfortunately no, this
+would not be a good solution in this case.
 
   Luis
