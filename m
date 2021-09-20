@@ -1,60 +1,44 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: KCSAN: data-race in cgroup_rstat_flush_locked /
- cgroup_rstat_updated
-Date: Mon, 20 Sep 2021 20:09:56 +0200
-Message-ID: <20210920180956.GA15043@blackbody.suse.cz>
-References: <CACkBjsbPVdkub=e-E-p1WBOLxS515ith-53SFdmFHWV_QMo40w@mail.gmail.com>
- <20210917164123.GA13346@blackbody.suse.cz>
- <CACkBjsZnp8Kf26tR3anbcLQNiMJ9=bqYMJ66tKBvXO6tkV3qyw@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH v7 09/12] sysfs: fix deadlock race with module removal
+Date: Mon, 20 Sep 2021 14:36:38 -0700
+Message-ID: <6db06c27-e3af-b0aa-6f38-9c31dd8194fa@acm.org>
+References: <20210918050430.3671227-1-mcgrof@kernel.org>
+ <20210918050430.3671227-10-mcgrof@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1632161398; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=yj+rn7X7blaGJxKz6YARrP61pm4Y5j/vfBu3FSYFlDA=;
-        b=qlehDK0CFFKnSnsii0H5002strjfvg/tJ9yr9Tlkpkwdvxv9Np/26+7aQvfmjvZ/f9kgOX
-        DplAYbk5REraP/V+Ok0WeqY/SG46eO8MnmcRCksvswS4NoPhRzQ0bLuC6WvsEgRoT8RfSe
-        wtlBzJtUDVCcAZBBkbpzKVbVXDL4wMo=
-Content-Disposition: inline
-In-Reply-To: <CACkBjsZnp8Kf26tR3anbcLQNiMJ9=bqYMJ66tKBvXO6tkV3qyw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hao Sun <sunhao.th-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <20210918050430.3671227-10-mcgrof@kernel.org>
+Content-Language: en-US
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Luis Chamberlain <mcgrof@kernel.org>, tj@kernel.org, gregkh@linuxfoundation.org, akpm@linux-foundation.org, minchan@kernel.org, jeyu@kernel.org, shuah@kernel.org
+Cc: rdunlap@infradead.org, rafael@kernel.org, masahiroy@kernel.org, ndesaulniers@google.com, yzaikin@google.com, nathan@kernel.org, ojeda@kernel.org, penguin-kernel@I-love.SAKURA.ne.jp, vitor@massaru.org, elver@google.com, jarkko@kernel.org, glider@google.com, rf@opensource.cirrus.com, stephen@networkplumber.org, David.Laight@ACULAB.COM, jolsa@kernel.org, andriy.shevchenko@linux.intel.com, trishalfonso@google.com, andreyknvl@gmail.com, jikos@kernel.org, mbenes@suse.com, ngupta@vflare.org, sergey.senozhatsky.work@gmail.com, reinette.chatre@intel.com, fenghua.yu@intel.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com, lizefan.x@bytedance.com, hannes@cmpxchg.org, daniel.vetter@ffwll.ch, bhelgaas@google.com, kw@linux.com, dan.j.williams@intel.com, senozhatsky@chromium.org, hch@lst.de
 
-On Sat, Sep 18, 2021 at 09:27:08AM +0800, Hao Sun <sunhao.th-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> Would it be better to add a `data_race` macro to the corresponding
-> location so that the false report can be disabled?
+On 9/17/21 10:04 PM, Luis Chamberlain wrote:
+> A sketch of how this can happen follows:
+> 
+> CPU A                              CPU B
+>                                     whatever_store()
+> module_unload
+>    mutex_lock(foo)
+>                                     mutex_lock(foo)
+>     del_gendisk(zram->disk);
+>       device_del()
+>         device_remove_groups()
+> 
+> In this situation whatever_store() is waiting for the mutex foo to
+> become unlocked, but that won't happen until module removal is complete.
+> But module removal won't complete until the sysfs file being poked
+> completes which is waiting for a lock already held.
 
-Something like this
-
---- a/kernel/cgroup/rstat.c
-+++ b/kernel/cgroup/rstat.c
-@@ -35,7 +35,7 @@ void cgroup_rstat_updated(struct cgroup *cgrp, int cpu)
-         * instead of NULL, we can tell whether @cgrp is on the list by
-         * testing the next pointer for NULL.
-         */
--       if (cgroup_rstat_cpu(cgrp, cpu)->updated_next)
-+       if (data_race(cgroup_rstat_cpu(cgrp, cpu)->updated_next))
-                return;
-
-        raw_spin_lock_irqsave(cpu_lock, flags);
-?
-
-Makes sense to me. Will you send a patch (if this resolves your KCSAN
-noise)?
-
-(IIUC, this becase more visible after commit aa48e47e3906 ("memcg:
-infrastructure to flush memcg stats") v5.15-rc1 but it was present since
-d8ef4b38cb69 ("Revert "cgroup: Add memory barriers to plug
-cgroup_rstat_updated() race window"") v5.7.)
-
-> See https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/tools/memory-model/Documentation/access-marking.txt#n58
-> for more details.
-
-(Interesting, learning...)
+If I remember correctly I encountered the deadlock scenario described
+above for the first time about ten years ago while working on the SCST
+project. We solved this deadlock by removing the sysfs attributes from
+the module unload code before grabbing mutex_lock(foo), e.g. by calling
+sysfs_remove_file(). This works because calling sysfs_remove_file()
+multiple times in a row is safe. Is that solution good enough for the
+zram driver?
 
 Thanks,
-Michal
+
+Bart.
