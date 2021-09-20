@@ -1,88 +1,60 @@
-From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [PATCH mm] vmalloc: back off when the current task is OOM-killed
-Date: Mon, 20 Sep 2021 13:59:35 +0300
-Message-ID: <c9d43874-138e-54a9-3222-a08c269eeeb5@virtuozzo.com>
-References: <YT8PEBbYZhLixEJD@dhcp22.suse.cz>
- <d07a5540-3e07-44ba-1e59-067500f024d9@virtuozzo.com>
- <20210919163126.431674722b8db218453dc18c@linux-foundation.org>
- <bb5616b0-faa6-e12a-102b-b9c402e27ec1@i-love.sakura.ne.jp>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: KCSAN: data-race in cgroup_rstat_flush_locked /
+ cgroup_rstat_updated
+Date: Mon, 20 Sep 2021 20:09:56 +0200
+Message-ID: <20210920180956.GA15043@blackbody.suse.cz>
+References: <CACkBjsbPVdkub=e-E-p1WBOLxS515ith-53SFdmFHWV_QMo40w@mail.gmail.com>
+ <20210917164123.GA13346@blackbody.suse.cz>
+ <CACkBjsZnp8Kf26tR3anbcLQNiMJ9=bqYMJ66tKBvXO6tkV3qyw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
-        Subject; bh=fcfmlYi3oAy4mMPZc/zpifYS2k4Mu/wKqEuxn9NCLX4=; b=EhkzUTTiPeP0y6QIE
-        tS5yZapeEnmboz9k8rcjYQVLemv3ZB7BlHR7WxOxSQlcuirn39nyxvtPU6OpMxggj32Oxd8GkTELH
-        iBig6CzhI8Yf4h49HvGp/nyMcA4lKhB3UwLQtv2FemHd4TnAPw9+ItZfEPuTGGNEldqb4uv1Nay6o
-        =;
-In-Reply-To: <bb5616b0-faa6-e12a-102b-b9c402e27ec1-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1632161398; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=yj+rn7X7blaGJxKz6YARrP61pm4Y5j/vfBu3FSYFlDA=;
+        b=qlehDK0CFFKnSnsii0H5002strjfvg/tJ9yr9Tlkpkwdvxv9Np/26+7aQvfmjvZ/f9kgOX
+        DplAYbk5REraP/V+Ok0WeqY/SG46eO8MnmcRCksvswS4NoPhRzQ0bLuC6WvsEgRoT8RfSe
+        wtlBzJtUDVCcAZBBkbpzKVbVXDL4wMo=
+Content-Disposition: inline
+In-Reply-To: <CACkBjsZnp8Kf26tR3anbcLQNiMJ9=bqYMJ66tKBvXO6tkV3qyw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, "Uladzislau Rezki (Sony)" <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Hao Sun <sunhao.th-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On 9/20/21 4:22 AM, Tetsuo Handa wrote:
-> On 2021/09/20 8:31, Andrew Morton wrote:
->> On Fri, 17 Sep 2021 11:06:49 +0300 Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
->>
->>> Huge vmalloc allocation on heavy loaded node can lead to a global
->>> memory shortage. A task called vmalloc can have the worst badness
->>> and be chosen by OOM-killer, however received fatal signal and
->>> oom victim mark does not interrupt allocation cycle. Vmalloc will
->>> continue allocating pages over and over again, exacerbating the crisis
->>> and consuming the memory freed up by another killed tasks.
->>>
->>> This patch allows OOM-killer to break vmalloc cycle, makes OOM more
->>> effective and avoid host panic.
->>>
->>> Unfortunately it is not 100% safe. Previous attempt to break vmalloc
->>> cycle was reverted by commit b8c8a338f75e ("Revert "vmalloc: back off when
->>> the current task is killed"") due to some vmalloc callers did not handled
->>> failures properly. Found issues was resolved, however, there may
->>> be other similar places.
->>
->> Well that was lame of us.
->>
->> I believe that at least one of the kernel testbots can utilize fault
->> injection.  If we were to wire up vmalloc (as we have done with slab
->> and pagealloc) then this will help to locate such buggy vmalloc callers.
+On Sat, Sep 18, 2021 at 09:27:08AM +0800, Hao Sun <sunhao.th-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> Would it be better to add a `data_race` macro to the corresponding
+> location so that the false report can be disabled?
 
-Andrew, could you please clarify how we can do it?
-Do you mean we can use exsiting allocation fault injection infrastructure to trigger
-such kind of issues? Unfortunately I found no ways to reach this goal.
-It  allows to emulate single faults with small probability, however it is not enough,
-we need to completely disable all vmalloc allocations. 
-I've tried to extend fault injection infrastructure however found that it is not trivial.
+Something like this
 
-That's why I've added direct fatal_signal_pending() check into my patch.
- 
-> __alloc_pages_bulk() has three callers.
-> 
->   alloc_pages_bulk_list() => No in-tree users.
-> 
->   alloc_pages_bulk_array() => Used by xfs_buf_alloc_pages(), __page_pool_alloc_pages_slow(), svc_alloc_arg().
-> 
->     xfs_buf_alloc_pages() => Might retry forever until all pages are allocated (i.e. effectively __GFP_NOFAIL). This patch can cause infinite loop problem.
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -35,7 +35,7 @@ void cgroup_rstat_updated(struct cgroup *cgrp, int cpu)
+         * instead of NULL, we can tell whether @cgrp is on the list by
+         * testing the next pointer for NULL.
+         */
+-       if (cgroup_rstat_cpu(cgrp, cpu)->updated_next)
++       if (data_race(cgroup_rstat_cpu(cgrp, cpu)->updated_next))
+                return;
 
-You are right, I've missed it.
-However __alloc_pages_bulk() can return no new pages without my patch too:
-- due to fault injection inside  prepare_alloc_pages()
-- if __rmqueue_pcplist() returns NULL and if array already had some assigned pages,
-- if both __rmqueue_pcplist() and following __alloc_pages(0) cannot get any page.
-On the other hand I cannot say that it is 100% xfs-related issue, it looks strange
-but they have some chance to get page after few attemps.
+        raw_spin_lock_irqsave(cpu_lock, flags);
+?
 
-So I think I can change 'break' to 'goto failed_irq', call __alloc_pages(0) and
-return 1 page. It seems is handled correctly in all callers too.
+Makes sense to me. Will you send a patch (if this resolves your KCSAN
+noise)?
 
->     __page_pool_alloc_pages_slow() => Will not retry if allocation failed. This patch might help.
-> 
->     svc_alloc_arg() => Will not retry if signal pending. This patch might help only if allocating a lot of pages.
-> 
->   alloc_pages_bulk_array_node() => Used by vm_area_alloc_pages().
-> 
-> vm_area_alloc_pages() => Used by __vmalloc_area_node() from __vmalloc_node_range() from vmalloc functions. Needs !__GFP_NOFAIL check?
+(IIUC, this becase more visible after commit aa48e47e3906 ("memcg:
+infrastructure to flush memcg stats") v5.15-rc1 but it was present since
+d8ef4b38cb69 ("Revert "cgroup: Add memory barriers to plug
+cgroup_rstat_updated() race window"") v5.7.)
 
-Comments in description of __vmalloc_node() and kvmalloc() claim that __GFP_NOFAIL is not supported,
-I did not found any other callers used this flag.
+> See https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/tools/memory-model/Documentation/access-marking.txt#n58
+> for more details.
+
+(Interesting, learning...)
+
+Thanks,
+Michal
