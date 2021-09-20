@@ -1,82 +1,60 @@
-From: Luis Chamberlain <mcgrof@kernel.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH v7 09/12] sysfs: fix deadlock race with module removal
-Date: Mon, 20 Sep 2021 12:15:22 -0700
-Message-ID: <YUjdytEDkCughtSz@bombadil.infradead.org>
+Date: Mon, 20 Sep 2021 09:22:32 -1000
+Message-ID: <YUjfeGuSVVq84iHc@mtj.duckdns.org>
 References: <20210918050430.3671227-1-mcgrof@kernel.org>
  <20210918050430.3671227-10-mcgrof@kernel.org>
  <YUjKjLzqpcxjRyit@slm.duckdns.org>
+ <YUjdytEDkCughtSz@bombadil.infradead.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Ce9uaTKd/D6QGSNbhvZvPAgEhomYs3uXfZuXWEuTyDo=; b=369USbNlI+62qdglSNQET5FERT
-        WUvD7ynkbpEFudjb0fzSZMx1jcQ0hKOHBeMIB+Pj2VdvtrEfRI3LKt0bQAnDxpHRqpv5P6niCIlsb
-        vlDnHHYc0zuAPHDcADuSeTRcnr78tG8F+7PK1OVCzWdHqzs8WbAVQXI7ZLfan7YbWZ7KDaPGTxirF
-        ZZUKGCVxE52zlioB/QkdVf6IrxxosbDb/xyQxcCB90Zl17FaLFDtLVrcFXNLdGJErM4FQk4iaUTAV
-        SaWz38ee84P1Ya6hFVMqeeHYnwzGrok3ud5aKaVEzLkEZd9ECbjJ+/ib+sgCJQAbOHqO0IwNeYwk+
-        Wfyl9zcQ==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=JRnq/4c87bKbiNxvafGN4wtXqF6Tb113NW1CCy3N52o=;
+        b=dP4iFexr0a+J311K54uCPdaewF9LzVRZkY/aDH2dPD9xGtZMHeZBij8v6wTihEifkg
+         bIk6GbffogctONMlgfddQ0fGCNpmpMWipeajx9Kyn00jXWS5Lh89zABYQjixzMBZ+eaL
+         Z57MjvIXj5H4kS2oNAwGRXtw/nv8xi3stLkDBC0ZBQ8vdA44wM0qv9TgId7KYVrQFIIj
+         r9NHcIiUB87XojT59VuOwo9LjdF4v5XE5loPh5rx3Uuhui2pBXa+MAb9l6U3Wrz/18ZN
+         8IPl4GNh1/xWGwqjOGo2nh7ySRJNyY6KBJST84Cnz0eSywHu1cHrx+2hzcPKYFzGH1NN
+         eH2g==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <YUjKjLzqpcxjRyit@slm.duckdns.org>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <YUjdytEDkCughtSz@bombadil.infradead.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
+To: Luis Chamberlain <mcgrof@kernel.org>
 Cc: gregkh@linuxfoundation.org, akpm@linux-foundation.org, minchan@kernel.org, jeyu@kernel.org, shuah@kernel.org, rdunlap@infradead.org, rafael@kernel.org, masahiroy@kernel.org, ndesaulniers@google.com, yzaikin@google.com, nathan@kernel.org, ojeda@kernel.org, penguin-kernel@i-love.sakura.ne.jp, vitor@massaru.org, elver@google.com, jarkko@kernel.org, glider@google.com, rf@opensource.cirrus.com, stephen@networkplumber.org, David.Laight@aculab.com, bvanassche@acm.org, jolsa@kernel.org, andriy.shevchenko@linux.intel.com, trishalfonso@google.com, andreyknvl@gmail.com, jikos@kernel.org, mbenes@suse.com, ngupta@vflare.org, sergey.senozhatsky.work@gmail.com, reinette.chatre@intel.com, fenghua.yu@intel.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com, lizefan.x@bytedance.com, hannes@cmp
 
-On Mon, Sep 20, 2021 at 07:53:16AM -1000, Tejun Heo wrote:
-> Hello,
+Hello,
+
+On Mon, Sep 20, 2021 at 12:15:22PM -0700, Luis Chamberlain wrote:
+> > I find this explanation odd because there's no real equivalent to locking
+> > the module (as opposed to try locking) 
 > 
-> On Fri, Sep 17, 2021 at 10:04:27PM -0700, Luis Chamberlain wrote:
-> > If try_module_get() fails we fail the operation on the kernfs node.
-> > 
-> > We use a try method as a full lock means we'd then make our sysfs
-> > attributes busy us out from possible module removal, and so userspace
-> > could force denying module removal, a silly form of "DOS" against module
-> > removal. A try lock on the module removal ensures we give priority to
-> > module removal and interacting with sysfs attributes only comes second.
-> > Using a full lock could mean for instance that if you don't stop poking
-> > at sysfs files you cannot remove a module.
-> 
-> I find this explanation odd because there's no real equivalent to locking
-> the module (as opposed to try locking) 
+> Actually there is, __module_get() but I suspect some of these users are
+> probably incorrect and should be be moved to try. The documentation
 
-Actually there is, __module_get() but I suspect some of these users are
-probably incorrect and should be be moved to try. The documentation
-about "rmmod --wait" for __module_get() is also outdated as that option
-is no longer supported. I'll send an update for that later.
+__module_get() is just getting an extra ref when the caller already
+has one (or more). It can't be used to freshly acquire a new
+reference. There is no equivalence between the relationship between
+try_module_get() and __module_get() and the one between spin_trylock()
+and spin_lock().
 
-> because you can't wait for the
-> removal to finish and then grant the lock, so any operation which increases
-> the reference *has* to be a try method unless the caller already holds a
-> reference to the same module and thus knows that the module is already
-> pinned.
+> Right, the reason I mention the alternative is that we technically don't
+> need to use try in this case since during a kernfs op it is implied the
+> module will be pinned, but we have further motivations to use a try
 
-Right, the reason I mention the alternative is that we technically don't
-need to use try in this case since during a kernfs op it is implied the
-module will be pinned, but we have further motivations to use a try
-method here: to avoid a possible DOS from module removal by userspace
-mucking with ops.
+I'm confused. If the module is already pinned, why are we getting an
+extra reference? Also, I don't understand how this has that much to do
+with preventing ddoses. I mean, it does cut down the duration of one
+operation but the eventual gating is through whoever acquiring the
+initial reference through try_module_get(), which again is the *only*
+way to acquire a fresh reference.
 
-> The code isn't wrong, so maybe just drop the related paragraphs in
-> the commit message?
+Thanks.
 
-Does it make sense to clarify the above a bit more somehow? Or do think
-its not needed?
-
-> >  static struct kernfs_node *__kernfs_new_node(struct kernfs_root *root,
-> >  					     struct kernfs_node *parent,
-> >  					     const char *name, umode_t mode,
-> > +					     struct module *owner,
-> >  					     kuid_t uid, kgid_t gid,
-> >  					     unsigned flags)
-> 
-> Is there a particular reason why @owner is added between @mode and @uid?
-> Sitting between two fs attributes seems a bit awkward. Maybe it can just be
-> the last one?
-
-No, I just picked an arbitrary place. Sure I'll move it to the end.
-
-  Luis
+-- 
+tejun
