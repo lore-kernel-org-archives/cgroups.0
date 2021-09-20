@@ -1,62 +1,41 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v7 09/12] sysfs: fix deadlock race with module removal
-Date: Mon, 20 Sep 2021 07:53:16 -1000
-Message-ID: <YUjKjLzqpcxjRyit@slm.duckdns.org>
+Subject: Re: [PATCH v7 00/12 (RESEND)] syfs: generic deadlock fix with module
+ removal
+Date: Mon, 20 Sep 2021 07:55:13 -1000
+Message-ID: <YUjLAbnEB5qPfnL8@slm.duckdns.org>
 References: <20210918050430.3671227-1-mcgrof@kernel.org>
- <20210918050430.3671227-10-mcgrof@kernel.org>
 Mime-Version: 1.0
 Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=d+/BuCVjaN7HPzmC7myyJXzlUqKvf/I929USDd6fV7g=;
-        b=n2GX8jSPxbkZ1xvB8BkjDvmfvLRoaGx/L8DK7Yizh16ZwZutGklps3rdNQcyW2wlcE
-         WTbymYI2YYMfs6YG9PxpSVvBpY+MVK1joh8rgyZur5GDKpN1aHV4ri/DLLqGJQwU7ky8
-         vcKO8VRVYskXez8XRgLxJmVB+sOMjmKcSYO4KsRBzOxT8UOTpBV6xv6+Vh8jL7kXZkzd
-         1lErsAicH4t4aGOLX5bvIyVg7YtwDdEqb9IMj4JcrNIKKTje3aMWd8OZVPRQQrK0DBII
-         9hYF6shA6nMg2BtGSJb6eQI3/M+V81scjHP3HU2ks+AsbE1jeO5w671e8QtBmfndWqlE
-         +L2w==
+        bh=vR0eyDgW0+ZEcHoejwvFez2+LwYKhi8aV0OBAhaelJo=;
+        b=p604AQfCitOKbr2cWdPPPs2nIliLZL00TGv3Mox5xld5PWEq869Y8KyemmmF7xDKy+
+         eznw9TiloP+yS7DvUdNW3EUPHieVBVpmlNyfHCirogTorYJwxpfJpot5/Ncknl0xQAaH
+         keNk/Kkw3utp2XrCGofJr7QxW+Z2eQxrPAlQNS/Hg3Xssdo9nLf1uk5t6rqnexz3sqqQ
+         CoXnFX4FmD5398RDC+ganCKBppgTv5Kx+xDyR87QID3hEpYWy592gHpA/ulKd3vB4TeC
+         nnXt3QpQy2wo59YDhIX9TDeNkTdxMt2xRg+S4TUzt9xzf7WJ6IT8GWvz0JS7bvFq2+KJ
+         Wf+A==
 Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20210918050430.3671227-10-mcgrof@kernel.org>
+In-Reply-To: <20210918050430.3671227-1-mcgrof@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Luis Chamberlain <mcgrof@kernel.org>
 Cc: gregkh@linuxfoundation.org, akpm@linux-foundation.org, minchan@kernel.org, jeyu@kernel.org, shuah@kernel.org, rdunlap@infradead.org, rafael@kernel.org, masahiroy@kernel.org, ndesaulniers@google.com, yzaikin@google.com, nathan@kernel.org, ojeda@kernel.org, penguin-kernel@i-love.sakura.ne.jp, vitor@massaru.org, elver@google.com, jarkko@kernel.org, glider@google.com, rf@opensource.cirrus.com, stephen@networkplumber.org, David.Laight@aculab.com, bvanassche@acm.org, jolsa@kernel.org, andriy.shevchenko@linux.intel.com, trishalfonso@google.com, andreyknvl@gmail.com, jikos@kernel.org, mbenes@suse.com, ngupta@vflare.org, sergey.senozhatsky.work@gmail.com, reinette.chatre@intel.com, fenghua.yu@intel.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com, lizefan.x@bytedance.com, hannes@cmp
 
-Hello,
+On Fri, Sep 17, 2021 at 10:04:18PM -0700, Luis Chamberlain wrote:
+> In this v7 I've decided it is best to merge all the effort together into
+> one patch set because communication was being lost when I split the
+> patches up. This was not helping in any way to either fix the zram
+> issues or come to consensus on a generic solution. The patches are also
+> merged now because they are all related now.
 
-On Fri, Sep 17, 2021 at 10:04:27PM -0700, Luis Chamberlain wrote:
-> If try_module_get() fails we fail the operation on the kernfs node.
-> 
-> We use a try method as a full lock means we'd then make our sysfs
-> attributes busy us out from possible module removal, and so userspace
-> could force denying module removal, a silly form of "DOS" against module
-> removal. A try lock on the module removal ensures we give priority to
-> module removal and interacting with sysfs attributes only comes second.
-> Using a full lock could mean for instance that if you don't stop poking
-> at sysfs files you cannot remove a module.
-
-I find this explanation odd because there's no real equivalent to locking
-the module (as opposed to try locking) because you can't wait for the
-removal to finish and then grant the lock, so any operation which increases
-the reference *has* to be a try method unless the caller already holds a
-reference to the same module and thus knows that the module is already
-pinned. The code isn't wrong, so maybe just drop the related paragraphs in
-the commit message?
-
->  static struct kernfs_node *__kernfs_new_node(struct kernfs_root *root,
->  					     struct kernfs_node *parent,
->  					     const char *name, umode_t mode,
-> +					     struct module *owner,
->  					     kuid_t uid, kgid_t gid,
->  					     unsigned flags)
-
-Is there a particular reason why @owner is added between @mode and @uid?
-Sitting between two fs attributes seems a bit awkward. Maybe it can just be
-the last one?
+Building up all the testing framewoork is really great. I have no opinions
+about the license related stuff but all other changes generally look good to
+me.
 
 Thanks.
 
