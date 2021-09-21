@@ -1,47 +1,55 @@
-From: Al Viro <viro@zeniv.linux.org.uk>
-Subject: Re: [syzbot] general protection fault in percpu_ref_put
-Date: Tue, 21 Sep 2021 06:23:17 +0000
-Message-ID: <YUl6VZhPHBqAx+6g@zeniv-ca.linux.org.uk>
-References: <000000000000f8be2b05cc788686@google.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [RFC PATCH] blk-throttle: enable io throttle for root in cgroup
+ v2
+Date: Tue, 21 Sep 2021 15:44:14 +0200
+Message-ID: <20210921134414.GE4091@blackbody.suse.cz>
+References: <20210909140815.2600858-1-yukuai3@huawei.com>
+ <20210917174103.GC13346@blackbody.suse.cz>
+ <CACGdZYJiLuh6kED_tdWkYqbHDXc_18m-XJbevp-ri5ansvbtYg@mail.gmail.com>
+ <37f8c687-8549-104a-2501-532a0cfc9a48@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1632231856; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=CoZFjUYonYzhLeSwSFFInp3fJp1MWSimvWrr2M9y5z0=;
+        b=fFHRp+PyX8nFEjo6545k/OVEsKq9G7hPqicI15E/whzFTyEOgindG4LI2Ezrd/XHCRCe/f
+        t53qH5/+b1pYVozrTj8l5BYE7PyQ9HPvf+OOp1MWSf2Ym4nKNLxwGIWo2JHw4RZ33f6CeH
+        Fz15o72HVrYvhAeBmFAHiHMG3a8G8h4=
 Content-Disposition: inline
-In-Reply-To: <000000000000f8be2b05cc788686@google.com>
-Sender: Al Viro <viro@ftp.linux.org.uk>
+In-Reply-To: <37f8c687-8549-104a-2501-532a0cfc9a48@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: syzbot <syzbot+533f389d4026d86a2a95@syzkaller.appspotmail.com>
-Cc: andrii@kernel.org, ast@kernel.org, axboe@kernel.dk, bpf@vger.kernel.org, cgroups@vger.kernel.org, christian.brauner@ubuntu.com, christian@brauner.io, daniel@iogearbox.net, dkadashev@gmail.com, hannes@cmpxchg.org, john.fastabend@gmail.com, kafai@fb.com, kpsingh@kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan.x@bytedance.com, netdev@vger.kernel.org, songliubraving@fb.com, syzkaller-bugs@googlegroups.com, tj@kernel.org, torvalds@linux-foundation.org, yhs@fb.com
+Content-Type: text/plain; charset="windows-1252"
+To: "yukuai (C)" <yukuai3@huawei.com>, Khazhy Kumykov <khazhy@google.com>
+Cc: tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-On Mon, Sep 20, 2021 at 07:55:16PM -0700, syzbot wrote:
-> Hello,
-> 
-> syzbot found the following issue on:
-> 
-> HEAD commit:    4357f03d6611 Merge tag 'pm-5.15-rc2' of git://git.kernel.o..
-> git tree:       upstream
-> console output: https://syzkaller.appspot.com/x/log.txt?x=173e2d27300000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=ccfb8533b1cbe3b1
-> dashboard link: https://syzkaller.appspot.com/bug?extid=533f389d4026d86a2a95
-> compiler:       Debian clang version 11.0.1-2, GNU ld (GNU Binutils for Debian) 2.35.2
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1395c6f1300000
-> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=11568cad300000
-> 
-> The issue was bisected to:
-> 
-> commit 020250f31c4c75ac7687a673e29c00786582a5f4
-> Author: Dmitry Kadashev <dkadashev@gmail.com>
-> Date:   Thu Jul 8 06:34:43 2021 +0000
-> 
->     namei: make do_linkat() take struct filename
-> 
-> bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=137e8a4b300000
-> final oops:     https://syzkaller.appspot.com/x/report.txt?x=10fe8a4b300000
-> console output: https://syzkaller.appspot.com/x/log.txt?x=177e8a4b300000
+On Sun, Sep 19, 2021 at 06:31:38PM +0800, "yukuai (C)" <yukuai3@huawei.com>=
+ wrote:
+> Our use case is similair to this, a host can provide several remote
+> devices to difierent client. If one client is under high io pressure,
+> other client might be affected. Thus we want to limit the overall
+> iops/bps from the client.
 
-I would be very surprised if that was true.  After the first step of bisect
-you've traded one oops for another, and *that* went to do_linkat() breakage.
-Which should be fixed by fdfc346302a7.
+I see where are you coming from now. (Perhaps I'd suggest
+allocating/prioritizing the allowances on the hosting side. If simply
+wrapping "everything" into a non-root cgroup is not enough.)
 
-Look at the oopsen - initial and final ones look very different.
+
+On 2021/09/18 3:58, Khazhy Kumykov wrote:
+> (This does also bring up: if this is a useful thing, would it make
+> sense to tie to the device, vs. requiring cgroup. We happen to use
+> cgroups so that requirement doesn't affect us).
+
+Good point, That's IMO a better idea, it'd be more consistent with other
+resources for which there exist global (cgroup independent) kernel
+constraints (e.g. threads-max sysctl, mem=3D cmdline, cpu hotplug) that
+double the root cgroup contraint role.
+
+OTOH, this also deepens the precedent of init NS root cgroup being
+special (more special than a container's root cgroup).
+
+My .02=E2=82=AC,
+Michal
