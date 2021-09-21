@@ -1,84 +1,70 @@
-From: Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v7 09/12] sysfs: fix deadlock race with module removal
-Date: Tue, 21 Sep 2021 08:48:49 -0700
-Message-ID: <CAB=NE6WjupsJFwsj94sC_j3gcYn2Qo0sx1=tMv=WUZ83jq_DFw@mail.gmail.com>
-References: <20210917194709.3562413-1-mcgrof@kernel.org> <20210917194709.3562413-10-mcgrof@kernel.org>
- <c70dcb03e27e43c5b5311e184357df39@AcuMS.aculab.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH mm] vmalloc: back off when the current task is
+ OOM-killed
+Date: Tue, 21 Sep 2021 11:55:23 -0700
+Message-ID: <20210921115523.8606cea0b2f0a5ca4e79cbd0@linux-foundation.org>
+References: <YT8PEBbYZhLixEJD@dhcp22.suse.cz>
+        <d07a5540-3e07-44ba-1e59-067500f024d9@virtuozzo.com>
+        <20210919163126.431674722b8db218453dc18c@linux-foundation.org>
+        <bb5616b0-faa6-e12a-102b-b9c402e27ec1@i-love.sakura.ne.jp>
+        <c9d43874-138e-54a9-3222-a08c269eeeb5@virtuozzo.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632239352;
-        bh=SYPIsUeB0QpNl9iOqz8TrUCBGO94e+noRg1ECZdTJME=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=UaaVRIqswzz+NS3S8fQEaKMO9RtdOXsyeprnTEIheXJKQGHNj08P7eyrd/PQOFBCR
-         AN5tBBs86O+nP3GdbvOj2N+vfIACcMw2gY7GyzZmcnfLHUMHWEqqTO8tVeryaAcPBC
-         wa3PUemimJFndCXNOCuGMsRHqw57UEYG+Vl8QmekwFARdVX0/7ufVsMqf8T+9g7Szp
-         diWZkbbph3gXn35UaYmr5cUyleLHlYXnKdZMqMkRG/D9zQZoy6oFBj2a59MNnxAHRK
-         YIYKWUHNZvNhOBYpWGFXq5g7hiH0GMlpMxwr02jYDVngebiKxCzBjK5YB3wvzgzdsQ
-         QI6X04sAKlF5w==
-In-Reply-To: <c70dcb03e27e43c5b5311e184357df39-1XygrNkDbNvwg4NCKwmqgw@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1632250524;
+        bh=4nfKbEEvnuIK73VTBrjV7lsPLdW7d5cR0/3cZDpflDE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=XQ+uwo9Ce+qeUe704wH19OCWWpxZTbGGZupNJ9QAWTxokV6Pl54kFG8CGUjfSin5P
+         2qTK4wVyhoeLepL7/wCyWf9SYbghTbeZ9lU9z7iIS+ZxtmF1wiEpq6H4d9beaaP3bG
+         FCxw6qzVjGkphbM53CO0re/aquN3en7e4TUSt7NY=
+In-Reply-To: <c9d43874-138e-54a9-3222-a08c269eeeb5@virtuozzo.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Laight <David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org>
-Cc: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org" <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "jeyu-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <jeyu-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org" <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "ndesaulniers-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <ndesaulniers-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "ojeda-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <ojeda-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "vitor-HdruG0TBZYlAfugRpC6u6w@public.gmane.org" <vitor-HdruG0TBZYlAfugRpC6u6w@public.gmane.org>, "elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, rf-yzvPICuk2AB0ssr/7FiavQ@public.gmane.org
+To: Vasily Averin <vvs@virtuozzo.com>
+Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel@openvz.org, "Uladzislau Rezki (Sony)" <urezki@gmail.com>
 
-On Tue, Sep 21, 2021 at 1:24 AM David Laight <David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org> wrote:
->
-> From: Luis Chamberlain
-> > Sent: 17 September 2021 20:47
-> >
-> > When sysfs attributes use a lock also used on module removal we can
-> > race to deadlock. This happens when for instance a sysfs file on
-> > a driver is used, then at the same time we have module removal call
-> > trigger. The module removal call code holds a lock, and then the sysfs
-> > file entry waits for the same lock. While holding the lock the module
-> > removal tries to remove the sysfs entries, but these cannot be removed
-> > yet as one is waiting for a lock. This won't complete as the lock is
-> > already held. Likewise module removal cannot complete, and so we deadlock.
->
-> Isn't the real problem the race between a sysfs file action and the
-> removal of the sysfs node?
+On Mon, 20 Sep 2021 13:59:35 +0300 Vasily Averin <vvs@virtuozzo.com> wrote:
 
-Nope, that is taken care of by kernfs.
+> On 9/20/21 4:22 AM, Tetsuo Handa wrote:
+> > On 2021/09/20 8:31, Andrew Morton wrote:
+> >> On Fri, 17 Sep 2021 11:06:49 +0300 Vasily Averin <vvs@virtuozzo.com> wrote:
+> >>
+> >>> Huge vmalloc allocation on heavy loaded node can lead to a global
+> >>> memory shortage. A task called vmalloc can have the worst badness
+> >>> and be chosen by OOM-killer, however received fatal signal and
+> >>> oom victim mark does not interrupt allocation cycle. Vmalloc will
+> >>> continue allocating pages over and over again, exacerbating the crisis
+> >>> and consuming the memory freed up by another killed tasks.
+> >>>
+> >>> This patch allows OOM-killer to break vmalloc cycle, makes OOM more
+> >>> effective and avoid host panic.
+> >>>
+> >>> Unfortunately it is not 100% safe. Previous attempt to break vmalloc
+> >>> cycle was reverted by commit b8c8a338f75e ("Revert "vmalloc: back off when
+> >>> the current task is killed"") due to some vmalloc callers did not handled
+> >>> failures properly. Found issues was resolved, however, there may
+> >>> be other similar places.
+> >>
+> >> Well that was lame of us.
+> >>
+> >> I believe that at least one of the kernel testbots can utilize fault
+> >> injection.  If we were to wire up vmalloc (as we have done with slab
+> >> and pagealloc) then this will help to locate such buggy vmalloc callers.
+> 
+> Andrew, could you please clarify how we can do it?
+> Do you mean we can use exsiting allocation fault injection infrastructure to trigger
+> such kind of issues? Unfortunately I found no ways to reach this goal.
+> It  allows to emulate single faults with small probability, however it is not enough,
+> we need to completely disable all vmalloc allocations. 
 
-> This isn't really related to module unload - except that may
-> well remove some sysfs nodes.
+I don't see why there's a problem?  You're saying "there might still be
+vmalloc() callers which don't correctly handle allocation failures",
+yes?
 
-Nope, the issue is a deadlock that can happen due to a shared lock on
-module removal and a driver sysfs operation.
+I'm suggesting that we use fault injection to cause a small proportion
+of vmalloc() calls to artificially fail, so such buggy callers will
+eventually be found and fixed.  Why does such a scheme require that
+*all* vmalloc() calls fail?
 
-> This is the same problem as removing any other kind of driver callback.
-> There are three basic solutions:
-> 1) Use a global lock - not usually useful.
-> 2) Have the remove call sleep until any callbacks are complete.
-> 3) Have the remove just request removal and have a final
->    callback (from a different context).
 
-Kernfs already does a sort of combination of 1) and 2) but 1) is using
-atomic reference counts.
-
-> If the remove can sleep (as in 2) then there is a requirement
-> on the driver code to not hold any locks across the 'remove'
-> that can be acquired during the callbacks.
-
-And this is the part that kernfs has no control over since the removal
-and sysfs operation are implementation specific.
-
-> Now, for sysfs, you probably only want to sleep the remove code
-> while a read/write is in progress - not just because the node
-> is open.
-> That probably requires marking an open node 'invalid' and
-> deferring delete to close.
-
-This is already done by kernfs.
-
-> None of this requires a reference count on the module.
-
-You are missing the point to the other aspect of the try_module_get(),
-it lets you also check if module exit has been entered. By using
-try_module_get() you let the module exit trump proceeding with an
-operation, therefore also preventing any potential use of a shared
-lock on module exit and the driver specific sysfs operation.
-
-  Luis
