@@ -1,71 +1,43 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH 2/4] blk-throtl: don't warn in tg_drain_bios()
-Date: Wed, 22 Sep 2021 20:51:13 +0800
-Message-ID: <20210922125115.381752-3-yukuai3@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 4/4] block: cancel all throttled bios in blk_cleanup_queue()
+Date: Wed, 22 Sep 2021 20:51:15 +0800
+Message-ID: <20210922125115.381752-5-yukuai3@huawei.com>
 References: <20210922125115.381752-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20210922125115.381752-1-yukuai3@huawei.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20210922125115.381752-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: axboe@kernel.dk, tj@kernel.org
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-tg_drain_bios() will iterate until throtl_rb_first() return NULL,
-don't warn in such situation.
+Throttled bios can't be issued after queue is dying in
+blk_cleanup_queue(), thus it's better to cancel them immediately
+rather than waiting for throttle is done.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+For example, if user thread is throttled with low bps while is
+issuing large io, and the device is deleted. The user thread will
+wait for a long time for io to return.
+
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-throttle.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ block/blk-core.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 43dee985170b..3892ead7a0b5 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -644,12 +644,13 @@ static void throtl_pd_free(struct blkg_policy_data *pd)
- }
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 5454db2fa263..356a56318068 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -389,6 +389,9 @@ void blk_cleanup_queue(struct request_queue *q)
  
- static struct throtl_grp *
--throtl_rb_first(struct throtl_service_queue *parent_sq)
-+throtl_rb_first(struct throtl_service_queue *parent_sq, bool warn)
- {
- 	struct rb_node *n;
+ 	blk_queue_flag_set(QUEUE_FLAG_DEAD, q);
  
- 	n = rb_first_cached(&parent_sq->pending_tree);
--	WARN_ON_ONCE(!n);
-+	if (warn)
-+		WARN_ON_ONCE(!n);
- 	if (!n)
- 		return NULL;
- 	return rb_entry_tg(n);
-@@ -667,7 +668,7 @@ static void update_min_dispatch_time(struct throtl_service_queue *parent_sq)
- {
- 	struct throtl_grp *tg;
- 
--	tg = throtl_rb_first(parent_sq);
-+	tg = throtl_rb_first(parent_sq, true);
- 	if (!tg)
- 		return;
- 
-@@ -1236,7 +1237,7 @@ static int throtl_select_dispatch(struct throtl_service_queue *parent_sq)
- 		if (!parent_sq->nr_pending)
- 			break;
- 
--		tg = throtl_rb_first(parent_sq);
-+		tg = throtl_rb_first(parent_sq, true);
- 		if (!tg)
- 			break;
- 
-@@ -2421,7 +2422,7 @@ static void tg_drain_bios(struct throtl_service_queue *parent_sq)
- {
- 	struct throtl_grp *tg;
- 
--	while ((tg = throtl_rb_first(parent_sq))) {
-+	while ((tg = throtl_rb_first(parent_sq, false))) {
- 		struct throtl_service_queue *sq = &tg->service_queue;
- 		struct bio *bio;
++	if (q->root_blkg)
++		blk_throtl_cancel_bios(q);
++
+ 	/* for synchronous bio-based driver finish in-flight integrity i/o */
+ 	blk_flush_integrity();
  
 -- 
 2.31.1
