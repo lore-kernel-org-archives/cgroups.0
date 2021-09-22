@@ -1,44 +1,38 @@
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 4/4] block: cancel all throttled bios in blk_cleanup_queue()
-Date: Wed, 22 Sep 2021 20:51:15 +0800
-Message-ID: <20210922125115.381752-5-yukuai3@huawei.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/4] block: cancel all throttled bios in
+ blk_cleanup_queue()
+Date: Wed, 22 Sep 2021 15:34:49 +0100
+Message-ID: <YUs/CcSKqNoIIXoW@infradead.org>
 References: <20210922125115.381752-1-yukuai3@huawei.com>
+ <20210922125115.381752-5-yukuai3@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20210922125115.381752-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=nHng5tIdS7Xn6BCJwl7sOAs/mlZQxYRxlcr0Xa3zcFk=; b=d5KDb4Prr992RAw/GFY1RWSeTa
+        llNVgLQCmWqwpJ9JEciqBa+ARq9gF0XftN3ZJUTsyloNNDdiDQI3OmdDaH+X9My+XzMSAKGAn93uA
+        yFwR2zypqoMgSNIuQT/mQrimgrfO+u3iCfWnLdFQxvlHHlnQKZSYK32iUAJMj2m4FEE1e8U70pKY/
+        rhMKWOcvE8gsvY7MNVodijz20hqinhSIkM7wcTm1eD/wiaBmLJynw1nrkhh26aASYrmzVQZKPoVUq
+        zNxjjF5SNzpo5xTycszrPX3VUMZ+LBz1KIFNs43+aG+Wr8V/nH6cVbBEmfgpJeJDm66+oIVlqXenI
+        Drzp+MJw==;
+Content-Disposition: inline
+In-Reply-To: <20210922125115.381752-5-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai3@huawei.com>
+Cc: axboe@kernel.dk, tj@kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, yi.zhang@huawei.com
 
-Throttled bios can't be issued after queue is dying in
-blk_cleanup_queue(), thus it's better to cancel them immediately
-rather than waiting for throttle is done.
+On Wed, Sep 22, 2021 at 08:51:15PM +0800, Yu Kuai wrote:
+> Throttled bios can't be issued after queue is dying in
+> blk_cleanup_queue(), thus it's better to cancel them immediately
+> rather than waiting for throttle is done.
+> 
+> For example, if user thread is throttled with low bps while is
+> issuing large io, and the device is deleted. The user thread will
+> wait for a long time for io to return.
 
-For example, if user thread is throttled with low bps while is
-issuing large io, and the device is deleted. The user thread will
-wait for a long time for io to return.
-
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- block/blk-core.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 5454db2fa263..356a56318068 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -389,6 +389,9 @@ void blk_cleanup_queue(struct request_queue *q)
- 
- 	blk_queue_flag_set(QUEUE_FLAG_DEAD, q);
- 
-+	if (q->root_blkg)
-+		blk_throtl_cancel_bios(q);
-+
- 	/* for synchronous bio-based driver finish in-flight integrity i/o */
- 	blk_flush_integrity();
- 
--- 
-2.31.1
-
+blk_cleanup_queue is too late, this will need to go into del_gendisk
+and on top of my "tear down file system I/O in del_gendisk" series.
