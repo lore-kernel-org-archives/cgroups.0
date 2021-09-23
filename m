@@ -1,18 +1,20 @@
 From: Xingyou Chen <rockrush-hTEXxzOs8fRg9hUCZPvPmw@public.gmane.org>
 Subject: Re: [PATCH v4 0/3] cgroup: New misc cgroup controller
-Date: Thu, 23 Sep 2021 23:38:49 +0800
-Message-ID: <f1955267-c009-4dea-970e-9145c7cd6dbc@rockwork.org>
+Date: Thu, 23 Sep 2021 23:35:08 +0800
+Message-ID: <084bfa50-649e-5247-1c4a-b398e55e7c15@rockwork.org>
 References: <20210330044206.2864329-1-vipinsh@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <20210330044206.2864329-1-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Type: text/plain; charset="utf-8"; format="flowed"
 To: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, jacob.jun.pan-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, thomas.lendacky-5C7GfCeVMHo@public.gmane.org, brijesh.singh-5C7GfCeVMHo@public.gmane.org, jon.grimm-5C7GfCeVMHo@public.gmane.org, eric.vantassell-5C7GfCeVMHo@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 Cc: corbet-T1hC0tSOHrs@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2021/3/30 12:42, Vipin Sharma wrote:
+
+
+在 2021/3/30 12:42, Vipin Sharma 写道:
 > Hello,
 > 
 > This patch series is creating a new misc cgroup controller for limiting
@@ -52,16 +54,16 @@ On 2021/3/30 12:42, Vipin Sharma wrote:
 > Misc controller is a generic controller which can be used by these
 > kinds of resources.
 
-Will we make this dynamic? Let resources be registered via something
-like misc_cg_res_{register,unregister}, at compile time or runtime,
+Will we make this dynamic? Let resources be registered via something 
+like misc_cg_res_{register,unregister}, at compile time or runtime, 
 instead of hard coded into misc_res_name/misc_res_capacity etc.
 
 There are needs as noted in drmcg session earlier this year. We may
 make misc cgroup stable, and let device drivers to register their
 own resources.
 
-This may make misc cgroup controller more complex than expected,
-but simpler than adding multiple similar controllers.
+This may make misc cgroup controller more complex than expected, but
+simpler than adding multiple similar controllers.
 
 > 
 > One suggestion was to use BPF for this purpose, however, there are
