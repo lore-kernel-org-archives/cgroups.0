@@ -1,63 +1,50 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH 1/6] rq-qos: introduce rq_qos_free()
-Date: Thu, 23 Sep 2021 21:46:26 +0800
-Message-ID: <20210923134631.105719-2-yukuai3@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 3/6] io-cost: introduce ioc_rqos_free()
+Date: Thu, 23 Sep 2021 21:46:28 +0800
+Message-ID: <20210923134631.105719-4-yukuai3@huawei.com>
 References: <20210923134631.105719-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20210923134631.105719-1-yukuai3@huawei.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20210923134631.105719-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: axboe@kernel.dk, tj@kernel.org
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Prepare to split the release of rq_qos from blk_cleanup_queue() to
-blk_release_queue() to fix a uaf problem, no functional changes.
+Prepare to split 'kfree(ioc)' from ioc_rqos_exit(), no functional changes.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-rq-qos.c | 10 ++++++++++
- block/blk-rq-qos.h |  2 ++
- 2 files changed, 12 insertions(+)
+ block/blk-iocost.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/block/blk-rq-qos.c b/block/blk-rq-qos.c
-index 14ff6d37698c..bc22d0312765 100644
---- a/block/blk-rq-qos.c
-+++ b/block/blk-rq-qos.c
-@@ -308,3 +308,13 @@ void rq_qos_exit(struct request_queue *q)
- 		rqos->ops->exit(rqos);
- 	}
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index b3880e4ba22a..b4a6c1f70eb0 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -2813,6 +2813,13 @@ static void ioc_rqos_exit(struct rq_qos *rqos)
+ 	kfree(ioc);
  }
-+
-+void rq_qos_free(struct request_queue *q)
+ 
++static void ioc_rqos_free(struct rq_qos *rqos)
 +{
-+	while (q->rq_qos) {
-+		struct rq_qos *rqos = q->rq_qos;
++	struct ioc *ioc = rqos_to_ioc(rqos);
 +
-+		q->rq_qos = rqos->next;
-+		rqos->ops->free(rqos);
-+	}
++	kfree(ioc);
 +}
-diff --git a/block/blk-rq-qos.h b/block/blk-rq-qos.h
-index f000f83e0621..0af5750bb737 100644
---- a/block/blk-rq-qos.h
-+++ b/block/blk-rq-qos.h
-@@ -46,6 +46,7 @@ struct rq_qos_ops {
- 	void (*cleanup)(struct rq_qos *, struct bio *);
- 	void (*queue_depth_changed)(struct rq_qos *);
- 	void (*exit)(struct rq_qos *);
-+	void (*free)(struct rq_qos *);
- 	const struct blk_mq_debugfs_attr *debugfs_attrs;
++
+ static struct rq_qos_ops ioc_rqos_ops = {
+ 	.throttle = ioc_rqos_throttle,
+ 	.merge = ioc_rqos_merge,
+@@ -2820,6 +2827,7 @@ static struct rq_qos_ops ioc_rqos_ops = {
+ 	.done = ioc_rqos_done,
+ 	.queue_depth_changed = ioc_rqos_queue_depth_changed,
+ 	.exit = ioc_rqos_exit,
++	.free = ioc_rqos_free,
  };
  
-@@ -215,5 +216,6 @@ static inline void rq_qos_queue_depth_changed(struct request_queue *q)
- }
- 
- void rq_qos_exit(struct request_queue *);
-+void rq_qos_free(struct request_queue *);
- 
- #endif
+ static int blk_iocost_init(struct request_queue *q)
 -- 
 2.31.1
 
