@@ -1,51 +1,73 @@
 From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 1/2] mem_cgroup: optimize the atomic count of
- wb_completion
-Date: Fri, 24 Sep 2021 16:01:51 +0200
-Message-ID: <YU3aT7i2vBNxewam@dhcp22.suse.cz>
-References: <1632465983-30525-1-git-send-email-brookxu.cn@gmail.com>
- <YU2boTZhfbo0h/Xi@dhcp22.suse.cz>
- <03145735-7764-4cd4-e15b-60402f4b447e@gmail.com>
+Subject: Re: [PATCH v3] vmpressure: wake up work only when there is
+ registration event
+Date: Fri, 24 Sep 2021 16:11:21 +0200
+Message-ID: <YU3ciRm7L2p9lJo6@dhcp22.suse.cz>
+References: <1632491065-10785-1-git-send-email-wang.yong12@zte.com.cn>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1632492114; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1632492681; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=dmtnQno5WAWYAwYyFrab1anhvWM53F0z0kxqT7Xw1k8=;
-        b=nRbMdbYvkFc6B1k0PP9awPeMPmfeeTv3mNv/96g99J9pGTDnAplSR8wAChc7G9xWP98BoD
-        gCteNo/1Cqk0O16O2ECCm4MqbJoI9lTh3LJINeTuulQtUUK0k+fNPQIAcU5EIOz6TGODVL
-        LwxJX5IWJ/ZTtg+XuAvIrWloxnzE3jg=
+        bh=xptrUF64qS+6u7xLV3tWOmzw4bsvaWDSNFYfVdST24M=;
+        b=picfxz/elp6W9f7CrwEaQtXFpVHkQ2uj6HVogFSG1fbe3TZ6Rp4MRjWYdS5gaBAaz8eySa
+        xry+lDDpqV1kUX56tSodaps3toJJXLjQ2T01KVkKlU2muVl907c/RGZT8ulP0oAIHJ8nlA
+        IKuWE5zGXaNvMWoQnX0qayxiW3eIzFU=
 Content-Disposition: inline
-In-Reply-To: <03145735-7764-4cd4-e15b-60402f4b447e-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <1632491065-10785-1-git-send-email-wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org
 
-On Fri 24-09-21 21:02:52, brookxu wrote:
-> Thanks for your time.
+On Fri 24-09-21 06:44:25, yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org wrote:
+> From: wangyong <wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 > 
-> Michal Hocko wrote on 2021/9/24 17:34:
-> > On Fri 24-09-21 14:46:22, brookxu wrote:
-> >> From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-> >>
-> >> In order to track inflight foreign writeback, we init
-> >> wb_completion.cnt to 1. For normal writeback, this cause
-> >> wb_wait_for_completion() to perform meaningless atomic
-> >> operations. Since foreign writebacks rarely occur in most
-> >> scenarios, we can init wb_completion.cnt to 0 and set
-> >> frn.done.cnt to 1. In this way we can avoid unnecessary
-> >> atomic operations.
-> > 
-> > Does this lead to any measurable differences?
+> Use the global variable num_events to record the number of vmpressure
+> events registered by the system, and wake up work only when there
+> is registration event.
+> Usually, the vmpressure event is not registered in the system, this patch
+> can avoid waking up work and doing nothing.
 > 
-> I created multiple cgroups that performed IO on multiple disks, 
-> then flushed the cache with sync command, and no measurable
-> differences have been observed so far.
+> Test with 5.14.0-rc5-next-20210813 on x86_64 4G ram.
+> Consume cgroup memory until it is about to be reclaimed, then execute
+> "perf stat -I 2000 malloc.out" command to trigger memory reclamation
+> and get performance results.
+> The context-switches is reduced by about 20 times.
+> 
+> unpatched:
+> Average of 10 test results
+> 582.4674048     task-clock(msec)
+> 19910.8         context-switches
+> 0               cpu-migrations
+> 1292.9          page-faults
+> 414784733.1     cycles
+> 580070698.4     instructions
+> 125572244.7     branches
+> 2073541.2       branch-misses
+> 
+> patched:
+> Average of 10 test results
+> 973.6174796     task-clock(msec)
+> 988.6           context-switches
+> 0               cpu-migrations
+> 1785.2          page-faults
+> 772883602.4     cycles
+> 1360280911      instructions
+> 290519434.9     branches
+> 3378378.2       branch-misses
 
-OK, so why do we want to optimize this code?
+Your data still doesn't make any sense. I have asked about that in the
+previous submission and you haven't really clarified anything. How come
+your task-clock has almost doubled. You are likely not not comparing
+apples to apples or something weird is going on.
+
+This patch is not going to fly without a sensible data and analysis of
+that data.
+
+Thanks!
 -- 
 Michal Hocko
 SUSE Labs
