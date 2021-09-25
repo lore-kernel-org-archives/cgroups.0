@@ -1,60 +1,215 @@
-From: "brookxu.cn" <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/2] mem_cgroup: optimize the atomic count of
- wb_completion
-Date: Fri, 24 Sep 2021 23:21:19 +0800
-Message-ID: <df9c2c8e-bc28-d929-c2e1-18f6f91ca336@gmail.com>
-References: <1632465983-30525-1-git-send-email-brookxu.cn@gmail.com>
- <YU2boTZhfbo0h/Xi@dhcp22.suse.cz>
- <03145735-7764-4cd4-e15b-60402f4b447e@gmail.com>
- <YU3aT7i2vBNxewam@dhcp22.suse.cz>
+From: Hans-Jacob Enemark <hjenemark-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: pthread_setschedparam returns 1 (Operation Not Permitted) after
+ including docker in yocto build
+Date: Sat, 25 Sep 2021 22:45:43 +0200
+Message-ID: <CAFx0Op3b7KeAT0_Dd_eAMKh85=6qY_X6-BHGJdS2TN8UtJMytg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=IWRHE1IksF7N6nES1jMNs1UVooFjxKrNMdCiqYqknKk=;
-        b=UDZUjjkUoxBjfAQ4BcGh4zDS6QNQMedJm0c91MDS4B53lfGBP9hGwV9ieWJBUDrTmP
-         qiSULABKykEaSMPub+/ykJ+xFAhIFg33dF5IfSUeIwMU+fgKn+dVt5+345rOe/v7v9vF
-         yrZO+2N2Gy+eoy5nrHcyzePL3ShWtfm6R2q2LyfMwe9kW1TetvHPgCs4+gQUZZ6kIAyV
-         GHHeXQlN9PrCyn5NNn2SGwoxTONbk5Pb6XSBIJ7AwMOTb5mzGqr/GDHJU+NZFZLXTW74
-         QzV+R1/l01RJacrzEcTvnwVL5MAhxkawdgzfhBj5BiggvEesd1jjuKbgKKfr6PegH/9s
-         qeyg==
-In-Reply-To: <YU3aT7i2vBNxewam-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Content-Language: en-US
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=4uS3HBDLrNVH5OQU2j6dDHcKqPuLsmrUNZZ6YSb7PBg=;
+        b=d/uTxYEYeqJ2+l/8hTE5bTj5SEuXMq/EBeRLi2SG307hDbyPQHuGO5sDaGHRwwyI0n
+         46IRki/tbyw4F1KTHm0ErJ9jcQZoEpNvjYT/FAeRStH9u92Ef/Pj74Z0tLBKrl9Jz1EM
+         edcHW+eL1LC9YPQV6PDRl0B8Wfd/P5hmFyv/JydLLxMj2U+AcdKMG1PZNUC1L3J0fFnS
+         lkJ5S8NfzBTY2U1LLivepGT/z9nnvHnTqHzjeZv32iJMq05GMcgMHna264IeO5Q/bIxs
+         s0MQugc1w4n29ZDeIM8hQdp0KCJFDCCIrSFV9cCq/H6DmQH5oyU78fGDkyypsyY4mdvl
+         JEBw==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Hans-Jacob Enemark <hjenemark-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Thanks for your time.
+Hi
+In a yocto build for a multicore system, pulling in docker through the
+meta-virtualization layer from open-embedded, a multi-threaded app
+suddenly starts failing.
+For some reason it is no longer possible to set the priority and the
+scheduling policy of a running pthread inside the thread function
+itself - even with the app running as root..
+The kernel configuration changed with the addition of the
+meta-virtualization layer.
+I hope to get docker running on the build to be able to build on that.
+So I hope you can help as this is beyond me
+Best regards
+Hans-Jacob S. Enemark
 
-On 2021/9/24 10:01 PM, Michal Hocko wrote:
-> On Fri 24-09-21 21:02:52, brookxu wrote:
->> Thanks for your time.
->>
->> Michal Hocko wrote on 2021/9/24 17:34:
->>> On Fri 24-09-21 14:46:22, brookxu wrote:
->>>> From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
->>>>
->>>> In order to track inflight foreign writeback, we init
->>>> wb_completion.cnt to 1. For normal writeback, this cause
->>>> wb_wait_for_completion() to perform meaningless atomic
->>>> operations. Since foreign writebacks rarely occur in most
->>>> scenarios, we can init wb_completion.cnt to 0 and set
->>>> frn.done.cnt to 1. In this way we can avoid unnecessary
->>>> atomic operations.
->>>
->>> Does this lead to any measurable differences?
->>
->> I created multiple cgroups that performed IO on multiple disks,
->> then flushed the cache with sync command, and no measurable
->> differences have been observed so far.
-> 
-> OK, so why do we want to optimize this code?
+Appendices:
+1) The minimal code that fails on the yocto build with docker but runs
+fine on the old build without the docker modifications.
+2) Kernel config diffs. Left has docker included. Right is the one
+without. Several cgroup configs has been enabled and the reason why I
+post to this mailing list.
+3) A small snippet of the strace output that shows the issue I am facing.
 
-Just a optimization point discovered during the diagnosis, no
-behavior change.
 
-> 
+1) ---------------------------------------------------------
+#include <stdio.h>
+#include <pthread.h>
+#include <string.h>
+#include <sys/resource.h>
+
+#define POLICY SCHED_FIFO
+static void *thread_routine(void *arg)
+{
+  int ret;
+  struct sched_param param;
+  param.sched_priority = sched_get_priority_max(POLICY) - 2;
+
+  ret = pthread_setschedparam(pthread_self(), POLICY, &param);
+
+  printf("%s: pthread_setschedparam result: [%d] %s\n", __func__, ret,
+strerror(ret));
+
+  return NULL;
+}
+
+int main(int argc, char* argv[])
+{
+  pthread_t threadId;
+
+  printf("Starting main\n");
+  if(pthread_create(&threadId, NULL, thread_routine, NULL)){
+    printf("%s: Thread creation failed\n", __func__);
+  }
+  pthread_join(threadId, NULL);
+  printf("Done with main\n");
+  return 0;
+}
+
+2) ---------------------------------------------------------
+140,143c140
+< CONFIG_PAGE_COUNTER=y
+< CONFIG_MEMCG=y
+< CONFIG_MEMCG_SWAP=y
+< CONFIG_MEMCG_SWAP_ENABLED=y
+---
+> # CONFIG_MEMCG is not set
+149c146
+< CONFIG_CGROUP_PIDS=y
+---
+> # CONFIG_CGROUP_PIDS is not set
+153c150
+< CONFIG_CGROUP_DEVICE=y
+---
+> # CONFIG_CGROUP_DEVICE is not set
+155c152
+< CONFIG_CGROUP_PERF=y
+---
+> # CONFIG_CGROUP_PERF is not set
+157c154
+< CONFIG_SOCK_CGROUP_DATA=y
+---
+> # CONFIG_SOCK_CGROUP_DATA is not set
+163c160
+< CONFIG_USER_NS=y
+---
+> # CONFIG_USER_NS is not set
+227d223
+< # CONFIG_SLUB_MEMCG_SYSFS_ON is not set
+791c787
+< CONFIG_BRIDGE_NETFILTER=y
+---
+> CONFIG_BRIDGE_NETFILTER=m
+877c873
+< CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y
+---
+> # CONFIG_NETFILTER_XT_MATCH_ADDRTYPE is not set
+898d893
+< CONFIG_NETFILTER_XT_MATCH_IPVS=y
+923,962c918
+< CONFIG_IP_VS=y
+< # CONFIG_IP_VS_IPV6 is not set
+< # CONFIG_IP_VS_DEBUG is not set
+< CONFIG_IP_VS_TAB_BITS=12
+<
+< #
+< # IPVS transport protocol load balancing support
+< #
+< # CONFIG_IP_VS_PROTO_TCP is not set
+< # CONFIG_IP_VS_PROTO_UDP is not set
+< # CONFIG_IP_VS_PROTO_AH_ESP is not set
+< # CONFIG_IP_VS_PROTO_ESP is not set
+< # CONFIG_IP_VS_PROTO_AH is not set
+< # CONFIG_IP_VS_PROTO_SCTP is not set
+<
+< #
+< # IPVS scheduler
+< #
+< # CONFIG_IP_VS_RR is not set
+< # CONFIG_IP_VS_WRR is not set
+< # CONFIG_IP_VS_LC is not set
+< # CONFIG_IP_VS_WLC is not set
+< # CONFIG_IP_VS_FO is not set
+< # CONFIG_IP_VS_OVF is not set
+< # CONFIG_IP_VS_LBLC is not set
+< # CONFIG_IP_VS_LBLCR is not set
+< # CONFIG_IP_VS_DH is not set
+< # CONFIG_IP_VS_SH is not set
+< # CONFIG_IP_VS_SED is not set
+< # CONFIG_IP_VS_NQ is not set
+<
+< #
+< # IPVS SH scheduler
+< #
+< CONFIG_IP_VS_SH_TAB_BITS=8
+<
+< #
+< # IPVS application helper
+< #
+< # CONFIG_IP_VS_NFCT is not set
+---
+> # CONFIG_IP_VS is not set
+1115c1071
+< CONFIG_NET_CLS_CGROUP=y
+---
+> # CONFIG_NET_CLS_CGROUP is not set
+1164,1165c1120,1121
+< CONFIG_CGROUP_NET_PRIO=y
+< CONFIG_CGROUP_NET_CLASSID=y
+---
+> # CONFIG_CGROUP_NET_PRIO is not set
+> # CONFIG_CGROUP_NET_CLASSID is not set
+1632c1588
+< CONFIG_VETH=y
+---
+> # CONFIG_VETH is not set
+4347,4352c4303
+< CONFIG_BTRFS_FS=y
+< CONFIG_BTRFS_FS_POSIX_ACL=y
+< # CONFIG_BTRFS_FS_CHECK_INTEGRITY is not set
+< # CONFIG_BTRFS_FS_RUN_SANITY_TESTS is not set
+< # CONFIG_BTRFS_DEBUG is not set
+< # CONFIG_BTRFS_ASSERT is not set
+---
+> # CONFIG_BTRFS_FS is not set
+4376,4378c4327
+< CONFIG_OVERLAY_FS=y
+< # CONFIG_OVERLAY_FS_REDIRECT_DIR is not set
+< # CONFIG_OVERLAY_FS_INDEX is not set
+---
+> # CONFIG_OVERLAY_FS is not set
+4776d4724
+< CONFIG_XOR_BLOCKS=y
+
+4944d4891
+< CONFIG_RAID6_PQ=y
+4968d4914
+< CONFIG_XXHASH=y
+4977,4978d4922
+< CONFIG_ZSTD_COMPRESS=y
+< CONFIG_ZSTD_DECOMPRESS=y
+
+3) ---------------------------------------------------------
+write(1, "Starting main\n", 14)         = 14
+mmap2(NULL, 8392704, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,
+-1, 0) = 0xb65cb000
+mprotect(0xb65cc000, 8388608, PROT_READ|PROT_WRITE) = 0
+clone(child_stack=0xb6dcaf98,
+flags=CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD|CLONE_SYSVSEM|CLONE_SETTLS|CLONE_PARENT_SETTID|CLONE_CHILD_CLEARTID,
+parent_tidptr=0xb6dcb4c8, tls=0xb6dcb920, child_tidptr=0xb6dcb4c8) =
+2779
+futex(0xb6dcb4c8, FUTEX_WAIT, 2779, NULL) = -1 EAGAIN (Resource
+temporarily unavailable)
+write(1, "Done with main\n", 15)        = 15
