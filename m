@@ -1,47 +1,35 @@
-From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: Re: [PATCH v7 00/12 (RESEND)] syfs: generic deadlock fix with module
- removal
-Date: Mon, 27 Sep 2021 08:11:45 -0700
-Message-ID: <YVHfMVmy8Lo0J3vR@bombadil.infradead.org>
-References: <20210918050430.3671227-1-mcgrof@kernel.org>
- <YUjLAbnEB5qPfnL8@slm.duckdns.org>
+From: yong w <yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v3] vmpressure: wake up work only when there is
+ registration event
+Date: Mon, 27 Sep 2021 23:43:04 +0800
+Message-ID: <CAOH5QeBA7+W3Pc6z50mExv_3Zoh+v_4wrxweiRBsnsXN66gOmg@mail.gmail.com>
+References: <1632491065-10785-1-git-send-email-wang.yong12@zte.com.cn> <YU3ciRm7L2p9lJo6@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=8XzwjHs843zXfH+an8ktBMeno92g9Ry3oPa0mEU0F9Y=; b=yl6jRQe2sVgWrVgWeBgFJ+S7oR
-        /e90qkak+HPKGyulGJm90XMNsFK/zfGqhgLeooNqscTavy6evL0HHFNge1Zzq2VrXwArcH6vbiw4z
-        3Q6j+sxPlW8GcIiHNRkx4xwKkp+wy696/EKhiGyZais1OM6i0hJjjx9qbfYBhuUQt4SKr6zuTQu45
-        F/FuoRActMgjTHcotZ+9bHWMAaDx37a7TEZpkeobrqw45MbXni9GhYrCB553/ALZwxOFsVSQJeeQR
-        bOJ86jrRrPfXU12tbNZQCps3ePRpwisKB7zfcqv5hmEWBJn93+QesNl3X42AveF9ZHUVHrpIrmKmh
-        cZHPP/IQ==;
-Content-Disposition: inline
-In-Reply-To: <YUjLAbnEB5qPfnL8@slm.duckdns.org>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Qlcc/wRWjVCOzhNQn26TjPzzhllhlD0uZ0dcQsuvCOI=;
+        b=Lghy197Op89Rz0QE1V1paJ2AHKVKbUHzvBosZt1g8cXNl6MJHK/V6ghe98wvxn63o/
+         QLFPsjs2Mpgd2/ucdkJCvIpCb7tOi6ANPHQhn+Q1WQ3Eg7KjVHjdV2VQf1v3Npw37rMT
+         q+d0a0jEsyDpdCoZ4DYaBU2FXVCjOI594qb1W28eeDT+KLiD0l2TTubBJhPClZYoUkv0
+         ISc8vfyS/oLmUOEoRzsJbMpRNO1rH5XkT2MomxVAQIVrtiAsPP7AxytwknXsXSyqSCTp
+         iXLaOBDiqnxtr+93ZrB4eBoZMqhaTFy683byNwuqRZdHmvsn4a+dNmf1ZHYXER0zA/z1
+         EiZQ==
+In-Reply-To: <YU3ciRm7L2p9lJo6-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: gregkh@linuxfoundation.org, akpm@linux-foundation.org, minchan@kernel.org, jeyu@kernel.org, shuah@kernel.org, rdunlap@infradead.org, rafael@kernel.org, masahiroy@kernel.org, ndesaulniers@google.com, yzaikin@google.com, nathan@kernel.org, ojeda@kernel.org, penguin-kernel@i-love.sakura.ne.jp, vitor@massaru.org, elver@google.com, jarkko@kernel.org, glider@google.com, rf@opensource.cirrus.com, stephen@networkplumber.org, David.Laight@aculab.com, bvanassche@acm.org, jolsa@kernel.org, andriy.shevchenko@linux.intel.com, trishalfonso@google.com, andreyknvl@gmail.com, jikos@kernel.org, mbenes@suse.com, ngupta@vflare.org, sergey.senozhatsky.work@gmail.com, reinette.chatre@intel.com, fenghua.yu@intel.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com, lizefan.x@bytedance.com, hannes@cmp
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Peter Zijlstra (Intel)" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org
 
-On Mon, Sep 20, 2021 at 07:55:13AM -1000, Tejun Heo wrote:
-> On Fri, Sep 17, 2021 at 10:04:18PM -0700, Luis Chamberlain wrote:
-> > In this v7 I've decided it is best to merge all the effort together into
-> > one patch set because communication was being lost when I split the
-> > patches up. This was not helping in any way to either fix the zram
-> > issues or come to consensus on a generic solution. The patches are also
-> > merged now because they are all related now.
-> 
-> Building up all the testing framewoork is really great. I have no opinions
-> about the license related stuff but all other changes generally look good to
-> me.
-
-OK I am going to send a v8 shortly with the changes from folks addressed.
-I'm going to trim the Cc list considerbly for that v8 as the list is already
-quite large and I think it may appear as spam to some lists, I'll drop the
-copyleft-next folks as hopefully the license stuff is out of the way.
-
-  Luis
-
+> Your data still doesn't make any sense. I have asked about that in the
+> previous submission and you haven't really clarified anything. How come
+> your task-clock has almost doubled. You are likely not not comparing
+> apples to apples or something weird is going on.
+>
+> This patch is not going to fly without a sensible data and analysis of
+> that data.
+I see. I'll try to test the optimization again.
+Thanks a lot!
