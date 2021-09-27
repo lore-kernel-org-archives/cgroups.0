@@ -1,35 +1,49 @@
-From: yong w <yongw.pur-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v3] vmpressure: wake up work only when there is
- registration event
-Date: Mon, 27 Sep 2021 23:43:04 +0800
-Message-ID: <CAOH5QeBA7+W3Pc6z50mExv_3Zoh+v_4wrxweiRBsnsXN66gOmg@mail.gmail.com>
-References: <1632491065-10785-1-git-send-email-wang.yong12@zte.com.cn> <YU3ciRm7L2p9lJo6@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup/debug: Fix lockdep splat with "%pK" format
+ specifier
+Date: Mon, 27 Sep 2021 06:43:36 -1000
+Message-ID: <YVH0uKGGmRjrIlFy@slm.duckdns.org>
+References: <20210927025807.26918-1-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Qlcc/wRWjVCOzhNQn26TjPzzhllhlD0uZ0dcQsuvCOI=;
-        b=Lghy197Op89Rz0QE1V1paJ2AHKVKbUHzvBosZt1g8cXNl6MJHK/V6ghe98wvxn63o/
-         QLFPsjs2Mpgd2/ucdkJCvIpCb7tOi6ANPHQhn+Q1WQ3Eg7KjVHjdV2VQf1v3Npw37rMT
-         q+d0a0jEsyDpdCoZ4DYaBU2FXVCjOI594qb1W28eeDT+KLiD0l2TTubBJhPClZYoUkv0
-         ISc8vfyS/oLmUOEoRzsJbMpRNO1rH5XkT2MomxVAQIVrtiAsPP7AxytwknXsXSyqSCTp
-         iXLaOBDiqnxtr+93ZrB4eBoZMqhaTFy683byNwuqRZdHmvsn4a+dNmf1ZHYXER0zA/z1
-         EiZQ==
-In-Reply-To: <YU3ciRm7L2p9lJo6-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Mpp3yt5UlhJzcT0WXNiNQ5zDVt3UnhzU5xESPpUlLrY=;
+        b=N6U4tHO7NsJPCAI0pl2qLjHILOWVWb0tMyq2HluBHcliYns5+8xvPinnRPTqZLH0Vp
+         mjDwUGERqM+OLJEABbwAol4NPWVJezO6I0MZVTKNORmd/B+h34NEDOcb68rAv0YmupuZ
+         8bkK3aG6reOpZDr0tyJ84dzBfEbp0AIADBf+YFz/B8Xh37dd+8jayjQ++afsnikievA0
+         hyvk7st00zP25LRpCvBlwq0w0Of4Sop9JeO9VLHlA21sz70pV4PKeb1VbDW6QVCFsBW/
+         aU+qGeKRdcYyDOavIovSgSbh4pdi9nQFhqQMkv5AQdDHphByKFQ2pvBbQxKAG4mdMzWO
+         aPpg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20210927025807.26918-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Peter Zijlstra (Intel)" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, wang.yong12-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-> Your data still doesn't make any sense. I have asked about that in the
-> previous submission and you haven't really clarified anything. How come
-> your task-clock has almost doubled. You are likely not not comparing
-> apples to apples or something weird is going on.
->
-> This patch is not going to fly without a sensible data and analysis of
-> that data.
-I see. I'll try to test the optimization again.
-Thanks a lot!
+Hello,
+
+On Sun, Sep 26, 2021 at 10:58:07PM -0400, Waiman Long wrote:
+> The lockdep splat is caused by the fact that the debug controller use the
+> "%pK" format specifier to print out address of cset's with css_set_lock
+> held. Under some circumstances, the use of "%pK" format specifier may
+> acquire the selinux_ss.policy_rwlock.
+> 
+> To avoid this possible deadlock scenario, we have to abandon the use of
+> the "%pK" format specifier and just use "%p" to always hash the cset
+> addresses. The actual cset addresses aren't that important as long as
+> they are unique for matching purpose.
+
+Isn't the right thing to do here making the selinux rwlock an irqsafe one?
+It's a bit crazy to have printf specifier to have restrictive locking
+requirements.
+
+Thanks.
+
+-- 
+tejun
