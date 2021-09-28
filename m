@@ -1,49 +1,57 @@
-From: =?UTF-8?B?5Y+w6L+Q5pa5?= <yunfangtai09-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [BUG] The usage of memory cgroup is not consistent with processes
- when using THP
-Date: Tue, 28 Sep 2021 15:15:44 +0800
-Message-ID: <CAHKqYaZAnz4wiHksKSZMLNEbk9eUUQ1z8iQCLwFgNW40ejByYQ@mail.gmail.com>
-References: <CAHKqYaa7H=M4E-=ObO0ecj+NE2KwZN5d7QSz4_b6tXz2vOo+VA@mail.gmail.com>
- <CAHbLzkpBCQp7UGK_WPJ-akdQ7HqkOEMtE6+9qX5ciu3DU-ZVrg@mail.gmail.com>
+From: Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [PATCH 04/11] ath11: Wstringop-overread warning
+Date: Tue, 28 Sep 2021 09:04:02 +0000 (UTC)
+Message-ID: <20210928090402.42913C43638@smtp.codeaurora.org>
+References: <20210322160253.4032422-5-arnd@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=Fp6qne4sDVozVPRfEtecOGCR659K+zxLKEYiNTurSnI=;
-        b=ZVyBiA9LDpqPSNtwJqMcXCGFJQQbh/QPpV70fpQWEehizxAhMa+lDnEld8hzrIHUiW
-         XSck4i/I03Y8CgPDwYTB5CSXWgRcTUx5a8+w0IRu3lPfNGxbMRNDjAqwc6EIf3ugN2UY
-         osJfTXRNoz7sUNbOxvtP52AR2Udm+NNDFh0Hw6JQvl2oxrRzJkJaduj7l0ZUWDIURdvr
-         MISHr/lPjdQoJQuJzEmSt36SVb3R84Wf5+RnO4anw9UNwd6/5Zw+5GdNsEy5hyzXpQpE
-         Iq9bbdAixvLBIVyUBIDLUvTS/IUaTjp22g7zFMWMuupEb0Z13zmBBeoexRr175WML3fW
-         3QgA==
-In-Reply-To: <CAHbLzkpBCQp7UGK_WPJ-akdQ7HqkOEMtE6+9qX5ciu3DU-ZVrg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1632819870; h=Date: Message-Id: Cc: To: References:
+ In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
+ Content-Type: Sender; bh=09C7+Iq0CKL2hGEdanYSFMJLK30HPDjpfQExa8Wp094=;
+ b=DHEeRTdIHZjKC/Bunjchtq8WT41KPhc4Xp1bz3CktbEFbwRNpaDlSHLLq+C7csJDutrcTG3b
+ oydPYoZKTba1ElOf8E8DCgDb1s3n57tZAacZ6hHqAYUoFDsHS1P7DJhVJHurrhTwFOie7Hf9
+ u5btYudTGZCGYHYfa0001pZDjVg=
+Sender: kvalo=codeaurora.org@mg.codeaurora.org
+In-Reply-To: <20210322160253.4032422-5-arnd@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Arnd Bergmann <arnd@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Arnd Bergmann <arnd@arndb.de>, x86@kernel.org, Ning Sun <ning.sun@intel.com>, Jani Nikula <jani.nikula@linux.intel.com>, Simon Kelley <simon@thekelleys.org.uk>, James Smart <james.smart@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>, Serge Hallyn <serge@hallyn.com>, Imre Deak <imre.deak@intel.com>, linux-arm-kernel@lists.infradead.org, tboot-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, ath11k@lists.infradead.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, cgroup
 
-Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> =E4=BA=8E2021=E5=B9=B49=E6=9C=8828=E6=97=A5=
-=E5=91=A8=E4=BA=8C =E4=B8=8A=E5=8D=881:28=E5=86=99=E9=81=93=EF=BC=9A
-> IMHO I don't think this is a bug. The disparity reflects the
-> difference in how the page life cycle is viewed between process and
-> cgroup. The usage of process comes from the rss_counter of mm. It
-> tracks the per-process mapped memory usage. So it is updated once the
-> page is zapped.
->
-> But from the point of cgroup, the page is charged when it is allocated
-> and uncharged when it is freed. The page may be zapped by one process,
-> but there might be other users pin the page to prevent it from being
-> freed. The pin may be very transient or may be indefinite. THP is one
-> of the pins. It is gone when the THP is split, but the split may
-> happen a long time after the page is zapped due to deferred split.
-Thank you for reply. I agree that it reflects the difference between
-process and cgroup. The memory usage of cgroup is usually used to
-indicate the memory usage of the container. It can be used to avoid
-the OOM and etc. The disparity will cause that the memory usage of
-containers with the same processes are randomly different (we found
-more than 30GB different). It is hard to manage them. Of course,
-disable THP is a way to solve it. Can it have another way to solve it
-?
+Arnd Bergmann <arnd@kernel.org> wrote:
+
+> gcc-11 with the kernel address sanitizer prints a warning for this
+> driver:
+> 
+> In function 'ath11k_peer_assoc_h_vht',
+>     inlined from 'ath11k_peer_assoc_prepare' at drivers/net/wireless/ath/ath11k/mac.c:1632:2:
+> drivers/net/wireless/ath/ath11k/mac.c:1164:13: error: 'ath11k_peer_assoc_h_vht_masked' reading 16 bytes from a region of size 4 [-Werror=stringop-overread]
+>  1164 |         if (ath11k_peer_assoc_h_vht_masked(vht_mcs_mask))
+>       |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath11k/mac.c: In function 'ath11k_peer_assoc_prepare':
+> drivers/net/wireless/ath/ath11k/mac.c:1164:13: note: referencing argument 1 of type 'const u16 *' {aka 'const short unsigned int *'}
+> drivers/net/wireless/ath/ath11k/mac.c:969:1: note: in a call to function 'ath11k_peer_assoc_h_vht_masked'
+>   969 | ath11k_peer_assoc_h_vht_masked(const u16 vht_mcs_mask[NL80211_VHT_NSS_MAX])
+>       | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> 
+> According to analysis from gcc developers, this is a glitch in the
+> way gcc tracks the size of struct members. This should really get
+> fixed in gcc, but it's also easy to work around this instance
+> by changing the function prototype to no include the length of
+> the array.
+> 
+> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99673
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+
+Patch applied to ath-next branch of ath.git, thanks.
+
+eb19efed836a ath11k: Wstringop-overread warning
+
+-- 
+https://patchwork.kernel.org/project/linux-wireless/patch/20210322160253.4032422-5-arnd@kernel.org/
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
