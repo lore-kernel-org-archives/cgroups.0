@@ -1,117 +1,78 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/2] memcg: unify memcg stat flushing
-Date: Wed, 29 Sep 2021 21:47:11 -0700
-Message-ID: <20210930044711.2892660-2-shakeelb@google.com>
-References: <20210930044711.2892660-1-shakeelb@google.com>
+From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/1] cgroup-v1: Grant CAP_SYS_NICE holders permission to
+ move tasks between cgroups
+Date: Thu, 30 Sep 2021 14:20:53 -0700
+Message-ID: <CAJuCfpHvRuapSMa2KMdF4_-8fKdqtx_gYVKyw5dYT6XjfRrDfg@mail.gmail.com>
+References: <20210617090941.340135-1-lee.jones@linaro.org> <YMs08Ij8PZ/gemLL@slm.duckdns.org>
+ <YMs5ssb50B208Aad@dell>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=3wCSVYwLyxFTgw/NEPcqwwI1Bpk2vqRKGXaqYC4gfms=;
-        b=DtSDabIIC+wI82CTcYe7egJAGdF/UFE2BKRj3Yae1ZQd2V54f2o78Q4UrdWf6YKqcr
-         0wFzisOz2LGitNBfKkvecCzJqQWOrcIwALJwdVcDjpLyGBqXFuE0neUoeoIzr6FbF6Hc
-         o/GZeEV5sqXh12jPc516sCjkzUNl/KaC1jmlcnsR9DUHvLoRX28wrFdu2nAtyXi95Hvj
-         JXk4dtsivlft9MddRs1ZmyQrGJBxpzcG4/4iyfcnmAPPSQJWjr2je++2ppdKs91qx7mk
-         9KqgdC5GaMuCyA5Bb8eMtD1wBT82M0MOUL3kW3ohFKxivrEagmT9gRJhVace95S4FYHx
-         tzcw==
-In-Reply-To: <20210930044711.2892660-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=c+ez2fuj6x2arikU4FELGnLHBGOaPBSZKyEOfKhurP0=;
+        b=Vjck3gCd3Rwg2cn5LKRjQog78fLTppRrQ4DyI31rbFU8aucgUnMYfxuS+Sq30YpzRT
+         RhDZXELtttMX+dNOY/hYQgHdjzJdsgRnbwAdl8zRc5AMFMFNWa+TxLyaobvvFzafzbQp
+         IbcMay1giYTIjiJwwjQy/W7o+Tr20zAjm6w9r9al838MBHHNlHzAY3Uhgmwj6fj/qDGj
+         FrHGFt639+INeUtXdPbeeVB9HOQMTP4uA1pCyIqjEBE+mi3haLKx0S4uQHUPP9UvVm6O
+         aG0tRL+7/tE8RVnGzPeUWQVdP+WhFbJ1sinaB8TpJk8/yEkatmPnIjuGVISSwB/Hz4GM
+         j4AA==
+In-Reply-To: <YMs5ssb50B208Aad@dell>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-The memcg stats can be flushed in multiple context and potentially in
-parallel too. For example multiple parallel user space readers for memcg
-stats will contend on the rstat locks with each other. There is no need
-for that. We just need one flusher and everyone else can benefit. In
-addition after aa48e47e3906 ("memcg: infrastructure to flush memcg
-stats") the kernel periodically flush the memcg stats from the root, so,
-the other flushers will potentially have much less work to do.
+On Thu, Jun 17, 2021 at 5:02 AM Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org> wrote:
+>
+> Hi Tejun,
+>
+> Thanks for your reply.
+>
+> On Thu, 17 Jun 2021, Tejun Heo wrote:
+> > On Thu, Jun 17, 2021 at 10:09:41AM +0100, Lee Jones wrote:
+> > > It should be possible for processes with CAP_SYS_NICE capabilities
+> > > (privileges) to move lower priority tasks within the same namespace t=
+o
+> > > different cgroups.
+> >
+> > I'm not sure that "should" is justified that easily given that cgroup c=
+an
+> > affect things like device access permissions and basic system organizat=
+ion.
+>
+> The latter part of that sentence does provide some additional caveats.
+>
+> > > One extremely common example of this is Android's 'system_server',
+> > > which moves processes around to different cgroups/cpusets, but should
+> > > not require any other root privileges.
+> >
+> > Why is this being brought up now after all the years?
 
-Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+Currently Android uses an out-of-tree patch to work around this issue.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 933dde29c67b..688c891448dd 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1425,7 +1425,7 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
- 	 *
- 	 * Current memory state:
- 	 */
--	cgroup_rstat_flush(memcg->css.cgroup);
-+	mem_cgroup_flush_stats();
- 
- 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
- 		u64 size;
-@@ -3529,8 +3529,7 @@ static unsigned long mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
- 	unsigned long val;
- 
- 	if (mem_cgroup_is_root(memcg)) {
--		/* mem_cgroup_threshold() calls here from irqsafe context */
--		cgroup_rstat_flush_irqsafe(memcg->css.cgroup);
-+		mem_cgroup_flush_stats();
- 		val = memcg_page_state(memcg, NR_FILE_PAGES) +
- 			memcg_page_state(memcg, NR_ANON_MAPPED);
- 		if (swap)
-@@ -3911,7 +3910,7 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
- 	int nid;
- 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
- 
--	cgroup_rstat_flush(memcg->css.cgroup);
-+	mem_cgroup_flush_stats();
- 
- 	for (stat = stats; stat < stats + ARRAY_SIZE(stats); stat++) {
- 		seq_printf(m, "%s=%lu", stat->name,
-@@ -3983,7 +3982,7 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- 
- 	BUILD_BUG_ON(ARRAY_SIZE(memcg1_stat_names) != ARRAY_SIZE(memcg1_stats));
- 
--	cgroup_rstat_flush(memcg->css.cgroup);
-+	mem_cgroup_flush_stats();
- 
- 	for (i = 0; i < ARRAY_SIZE(memcg1_stats); i++) {
- 		unsigned long nr;
-@@ -4486,7 +4485,7 @@ void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
- 	struct mem_cgroup *parent;
- 
--	cgroup_rstat_flush_irqsafe(memcg->css.cgroup);
-+	mem_cgroup_flush_stats();
- 
- 	*pdirty = memcg_page_state(memcg, NR_FILE_DIRTY);
- 	*pwriteback = memcg_page_state(memcg, NR_WRITEBACK);
-@@ -5354,12 +5353,14 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
- 
- static void __mem_cgroup_flush_stats(void)
- {
--	if (!spin_trylock(&stats_flush_lock))
-+	unsigned long flag;
-+
-+	if (!spin_trylock_irqsave(&stats_flush_lock, flag))
- 		return;
- 
- 	cgroup_rstat_flush_irqsafe(root_mem_cgroup->css.cgroup);
- 	atomic_set(&stats_flush_threshold, 0);
--	spin_unlock(&stats_flush_lock);
-+	spin_unlock_irqrestore(&stats_flush_lock, flag);
- }
- 
- void mem_cgroup_flush_stats(void)
-@@ -6391,7 +6392,7 @@ static int memory_numa_stat_show(struct seq_file *m, void *v)
- 	int i;
- 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
- 
--	cgroup_rstat_flush(memcg->css.cgroup);
-+	mem_cgroup_flush_stats();
- 
- 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
- 		int nid;
--- 
-2.33.0.685.g46640cef36-goog
+>
+> This has been discussed before?
+>
+> I didn't find any evidence of that on the lists.
 
+IIRC, John Stultz from Linaro tried to upstream a similar patch before.
+
+>
+> > Isn't android moving onto cgroup2 anyway?
+>
+> That I would have to check.
+
+Some of the controllers are moving to cgroup v2 but not all of them
+are there yet. For example, there are still some issues with moving
+the cpu controller to v2 which I believe were discussed during Android
+Microconference at LPC 2021.
+
+>
+> --
+> Lee Jones [=E6=9D=8E=E7=90=BC=E6=96=AF]
+> Senior Technical Lead - Developer Services
+> Linaro.org =E2=94=82 Open source software for Arm SoCs
+> Follow Linaro: Facebook | Twitter | Blog
