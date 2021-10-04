@@ -1,61 +1,44 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH] cgroup: rstat: optimize flush through speculative test
-Date: Mon, 4 Oct 2021 10:25:12 -0700
-Message-ID: <CALvZod5OKz=7pFpxCt1CONPyJO4wR5t+PH0nzdbFBT1SYpjrsg@mail.gmail.com>
-References: <20210929235936.2859271-1-shakeelb@google.com> <YVszNI97NAAYpHpm@slm.duckdns.org>
+From: John Stultz <john.stultz@linaro.org>
+Subject: Re: [PATCH 1/1] cgroup-v1: Grant CAP_SYS_NICE holders permission to
+ move tasks between cgroups
+Date: Mon, 4 Oct 2021 10:33:36 -0700
+Message-ID: <CALAqxLUE6D9aUgXQqFJ=qp3f2b6BCjHjP=Je+bo-sdX_qON+-Q@mail.gmail.com>
+References: <20210617090941.340135-1-lee.jones@linaro.org> <YMs08Ij8PZ/gemLL@slm.duckdns.org>
+ <YMs5ssb50B208Aad@dell> <CAJuCfpHvRuapSMa2KMdF4_-8fKdqtx_gYVKyw5dYT6XjfRrDfg@mail.gmail.com>
+ <YVsuw+UBZDY6Rkzd@slm.duckdns.org> <CAJuCfpHprdJWpR_HPSVm6DFEOJj4RWmWC10=ZdGYF_JFAvV+_g@mail.gmail.com>
+ <CALAqxLV-tOgBMAWd36sg+bh3s0XXqKWD+P-CYgVXf7Won4auAA@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
+        d=linaro.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=gKBTIHZkFkwseGAi5II5oGVj0iBXe7h2uvt78kuBKSA=;
-        b=bBqGZLltEUDsR1PL9Qc1Y/XRczlTpQxaY5AFRGuodqngidy2xOtDflakPH5qdOqet0
-         ny3SMOeBMt2G4zr7THRWei1s9a9znFAqdy7l8EbjWtiqoCkmH5ZY6ewRFn6M+9PmOZh7
-         DV3FZ5a8xAC6Y04zmZqcJ48/Js2PEaa/0LC0yJn4nRk0oiYY1nAkGggkRnmPKxPlmVF4
-         GErOtqrFb2+A5BIZdLLgIsEZ4qDah8/7VyCTtKaFb4za+Tk32wmnsjxI6tTj1hVG+M3Q
-         gwNbLXdk/1YG8nhU32hxUc+vnh5/8TgxuzvkLfzzX5LYxFxLY+ygKfBQ5MSfZKEW90Ew
-         SAsQ==
-In-Reply-To: <YVszNI97NAAYpHpm@slm.duckdns.org>
+        bh=UrVxeLwTCLFfP0PNaChfaLyqpPbEUwJEsqImRyts7cM=;
+        b=Vynspl7ipG69pEGw9eanD/OkuejKlf5+QISqvuW+GCjSqk9IjptTCbOAeTIRM2DyCo
+         PN3iv2aY2mjNTvCPwo15nbbxY6onJJ1fWST+/Hs9+I4UppLkZtjEWpS9nMhjgz0Yn1xv
+         UC1MmecKku1nVx9VZWWwjEJyXHuTxkX/yJ7ktyvWm8W/lYynLC58lGFue8oKvkAWqlPm
+         Iv5C7g9CDh6kzOyfALYZHl5QJdnaD6KSw5CYXb6QA2NQLBEyeKGl5eq3p13uIZPYAGhb
+         3Ma96eTzm6YCju0ycFznX1m5qTHuhIVTFiysRao0591z9aWAIrj5MHynEAFb7L5CunuE
+         AmjQ==
+In-Reply-To: <CALAqxLV-tOgBMAWd36sg+bh3s0XXqKWD+P-CYgVXf7Won4auAA@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Lee Jones <lee.jones@linaro.org>, LKML <linux-kernel@vger.kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups mailinglist <cgroups@vger.kernel.org>, Wei Wang <wvw@google.com>
 
-On Mon, Oct 4, 2021 at 10:00 AM Tejun Heo <tj@kernel.org> wrote:
+On Mon, Oct 4, 2021 at 10:23 AM John Stultz <john.stultz@linaro.org> wrote:
+> We sort of went in a big circle of creating a config time option w/
+> CAP_SYS_NICE, then a new CAP_CGROUP_MIGRATE then switching to
+> CAP_SYS_RESOURCE and then back to CAP_CGROUP_MIGRATE, and when that
+> was panned I gave up and we kept the small patch in the Android tree
+> that uses CAP_SYS_NICE.
 >
-> Hello, Shakeel.
->
-> On Wed, Sep 29, 2021 at 04:59:36PM -0700, Shakeel Butt wrote:
-> > Currently cgroup_rstat_updated() has a speculative already-on-list test
-> > to check if the given cgroup is already part of the rstat update tree.
-> > This helps in reducing the contention on the rstat cpu lock. This patch
-> > adds the similar speculative not-on-list test on the rstat flush
-> > codepath.
-> >
-> > Recently the commit aa48e47e3906 ("memcg: infrastructure to flush memcg
-> > stats") added periodic rstat flush. On a large system which is not much
-> > busy, most of the per-cpu rstat tree would be empty. So, the speculative
-> > not-on-list test helps in eliminating unnecessary work and potentially
-> > reducing contention on the rstat cpu lock. Please note this might
-> > introduce temporary inaccuracy but with the frequent and periodic flush
-> > this would not be an issue.
-> >
-> > To evaluate the impact of this patch, an 8 GiB tmpfs file is created on
-> > a system with swap-on-zram and the file was pushed to swap through
-> > memory.force_empty interface. On reading the whole file, the memcg stat
-> > flush in the refault code path is triggered. With this patch, we
-> > observed 38% reduction in the read time of 8 GiB file.
->
-> The patch looks fine to me but that's a lot of reduction in read time. Can
-> you elaborate a bit on why this makes such a huge difference? Who's hitting
-> on that lock so hard?
->
+> Links to previous attempts & discussion:
+> v1: https://lore.kernel.org/lkml/1475556090-6278-1-git-send-email-john.stultz@linaro.org/#t
+> v2: https://lore.kernel.org/lkml/1476743724-9104-1-git-send-email-john.stultz@linaro.org/
+> v4: https://lore.kernel.org/lkml/1478647728-30357-1-git-send-email-john.stultz@linaro.org/
+> v5: https://lore.kernel.org/lkml/1481593143-18756-1-git-send-email-john.stultz@linaro.org/
 
-It was actually due to machine size. I ran a single threaded workload
-without any interference on a 112 cpus machine. So, most of the time
-the flush was acquiring and releasing the per-cpu rstat lock for empty
-trees.
-
-Shakeel
+Whoops I missed one more before I gave up (CAP_CGROUP):
+v6: https://lore.kernel.org/lkml/1481949827-23613-1-git-send-email-john.stultz@linaro.org/#t
