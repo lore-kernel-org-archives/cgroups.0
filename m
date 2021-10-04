@@ -1,44 +1,56 @@
-From: John Stultz <john.stultz@linaro.org>
-Subject: Re: [PATCH 1/1] cgroup-v1: Grant CAP_SYS_NICE holders permission to
- move tasks between cgroups
-Date: Mon, 4 Oct 2021 10:33:36 -0700
-Message-ID: <CALAqxLUE6D9aUgXQqFJ=qp3f2b6BCjHjP=Je+bo-sdX_qON+-Q@mail.gmail.com>
-References: <20210617090941.340135-1-lee.jones@linaro.org> <YMs08Ij8PZ/gemLL@slm.duckdns.org>
- <YMs5ssb50B208Aad@dell> <CAJuCfpHvRuapSMa2KMdF4_-8fKdqtx_gYVKyw5dYT6XjfRrDfg@mail.gmail.com>
- <YVsuw+UBZDY6Rkzd@slm.duckdns.org> <CAJuCfpHprdJWpR_HPSVm6DFEOJj4RWmWC10=ZdGYF_JFAvV+_g@mail.gmail.com>
- <CALAqxLV-tOgBMAWd36sg+bh3s0XXqKWD+P-CYgVXf7Won4auAA@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: rstat: optimize flush through speculative test
+Date: Mon, 4 Oct 2021 07:44:24 -1000
+Message-ID: <YVs9eJnNJYwF/3f3@slm.duckdns.org>
+References: <20210929235936.2859271-1-shakeelb@google.com>
+ <YVszNI97NAAYpHpm@slm.duckdns.org>
+ <CALvZod5OKz=7pFpxCt1CONPyJO4wR5t+PH0nzdbFBT1SYpjrsg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=UrVxeLwTCLFfP0PNaChfaLyqpPbEUwJEsqImRyts7cM=;
-        b=Vynspl7ipG69pEGw9eanD/OkuejKlf5+QISqvuW+GCjSqk9IjptTCbOAeTIRM2DyCo
-         PN3iv2aY2mjNTvCPwo15nbbxY6onJJ1fWST+/Hs9+I4UppLkZtjEWpS9nMhjgz0Yn1xv
-         UC1MmecKku1nVx9VZWWwjEJyXHuTxkX/yJ7ktyvWm8W/lYynLC58lGFue8oKvkAWqlPm
-         Iv5C7g9CDh6kzOyfALYZHl5QJdnaD6KSw5CYXb6QA2NQLBEyeKGl5eq3p13uIZPYAGhb
-         3Ma96eTzm6YCju0ycFznX1m5qTHuhIVTFiysRao0591z9aWAIrj5MHynEAFb7L5CunuE
-         AmjQ==
-In-Reply-To: <CALAqxLV-tOgBMAWd36sg+bh3s0XXqKWD+P-CYgVXf7Won4auAA@mail.gmail.com>
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=GlP8WaB0zRZgpiKdt/BSMoK6ihgOV+T5zAu0xpLxZyQ=;
+        b=MrX57fwHmCyrgUKhL9es+GURrgy7bi5kQGDxIwCkl/coK/2RZmEGBuZqtlgxCmVqaB
+         uzqBtWgowXjuQRyRlJVYwDRdEJfkE1/MSIM/+EvBZoCemlBJCMW2Qv4PtgHAHXssT5aP
+         SKBBWXGjLZ+uQM6T35vAGDIxPKQr7EeyhcZDwKMVxCcGaf+nzpvl1HDMRFPR1nhteoTH
+         j33ozfp/gml4Fy2CPQ0RSY/5HyZ4uWzgUb2TMxSXMpsvN8UvfjFK7rJrb20juqnzkT+9
+         FXTdO9B8WR2O8ZIpKjcHY7p+18d2PiA2ECq2gNUDUOO95wuHitclGuSVWLBNpMDEqG6s
+         sFgw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CALvZod5OKz=7pFpxCt1CONPyJO4wR5t+PH0nzdbFBT1SYpjrsg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Lee Jones <lee.jones@linaro.org>, LKML <linux-kernel@vger.kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups mailinglist <cgroups@vger.kernel.org>, Wei Wang <wvw@google.com>
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Mon, Oct 4, 2021 at 10:23 AM John Stultz <john.stultz@linaro.org> wrote:
-> We sort of went in a big circle of creating a config time option w/
-> CAP_SYS_NICE, then a new CAP_CGROUP_MIGRATE then switching to
-> CAP_SYS_RESOURCE and then back to CAP_CGROUP_MIGRATE, and when that
-> was panned I gave up and we kept the small patch in the Android tree
-> that uses CAP_SYS_NICE.
->
-> Links to previous attempts & discussion:
-> v1: https://lore.kernel.org/lkml/1475556090-6278-1-git-send-email-john.stultz@linaro.org/#t
-> v2: https://lore.kernel.org/lkml/1476743724-9104-1-git-send-email-john.stultz@linaro.org/
-> v4: https://lore.kernel.org/lkml/1478647728-30357-1-git-send-email-john.stultz@linaro.org/
-> v5: https://lore.kernel.org/lkml/1481593143-18756-1-git-send-email-john.stultz@linaro.org/
+On Mon, Oct 04, 2021 at 10:25:12AM -0700, Shakeel Butt wrote:
+> > > To evaluate the impact of this patch, an 8 GiB tmpfs file is created on
+> > > a system with swap-on-zram and the file was pushed to swap through
+> > > memory.force_empty interface. On reading the whole file, the memcg stat
+> > > flush in the refault code path is triggered. With this patch, we
+> > > observed 38% reduction in the read time of 8 GiB file.
+> >
+> > The patch looks fine to me but that's a lot of reduction in read time. Can
+> > you elaborate a bit on why this makes such a huge difference? Who's hitting
+> > on that lock so hard?
+> 
+> It was actually due to machine size. I ran a single threaded workload
+> without any interference on a 112 cpus machine. So, most of the time
+> the flush was acquiring and releasing the per-cpu rstat lock for empty
+> trees.
 
-Whoops I missed one more before I gave up (CAP_CGROUP):
-v6: https://lore.kernel.org/lkml/1481949827-23613-1-git-send-email-john.stultz@linaro.org/#t
+Sorry for being so slow but can you point to the exact call path which gets
+slowed down so significantly? I'm mostly wondering whether we need some sort
+of time-batched flushes because even with lock avoidance the flush path
+really isn't great when called frequently. We can mitigate it further if
+necessary - e.g. by adding an "updated" bitmap so that the flusher doesn't
+have to go around touching the cachelines for all the cpus.
+
+Thanks.
+
+-- 
+tejun
