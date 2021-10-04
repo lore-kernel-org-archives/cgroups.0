@@ -1,19 +1,19 @@
 From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 4/4] cgroup: use parent directly instead of cgroup_parent()
-Date: Mon,  4 Oct 2021 08:49:28 +0000
-Message-ID: <20211004084928.17622-4-richard.weiyang@gmail.com>
+Subject: [PATCH 3/4] cgroup: simplify the cgroup descendant helper
+Date: Mon,  4 Oct 2021 08:49:27 +0000
+Message-ID: <20211004084928.17622-3-richard.weiyang@gmail.com>
 References: <20211004084928.17622-1-richard.weiyang@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=OexIHL7yzlEUfmmS4I0SOBuDrj/gY0LWs9jL52+pYx8=;
-        b=dVemWq3a+2beKnz+1YiJJNW7FjJjN+OMKxBI84+hIT78TOpTeokN1DKavY06NryK/G
-         NSlkpM3BEIz/E0QR0Vuc1mDjYlW2qc1JQNFOx+uPebZib3UiQj5abKYXuW2qS6/CFWXw
-         9ekjXV0RAfOt9Z/qAg14xStUshEMGk6hfUd5u7jhudiQdowDJ7WpYKwaTkPx8bXwIcHU
-         CAOrs1p0ezq+CElVjzy/BjgVVOdKTohTdD31IHlhuQrjkGYO8VsGRwtkJ1CXydpypGPD
-         ENSepy47rm13rLAIbt02xFUF42yUX/VjML4/KvrY/JsnMN9iz7sukRqSYIuX/rp+dqBt
-         jBDg==
+        bh=U+CztsD4lUTfyz/9KUwv0lAPbgM6DhNn+yw+6hcN6o8=;
+        b=Dbjki+3nMY172s6qwBDLQhjVjWRsINQvJ6c/Y1HBr6z7e/LkaWJLejV73MWWBxYFC4
+         Aj32cwVL2nb3FX5N1xoiWMNd7RiSVvIX6z9cEBBU9s3q5976Xc0taZo18Guvw7unbUcf
+         HYB2dK5zMMgfBrqCtoiF4gUDPUVgQWWikxNBU3NlTgLOm8+3DEzKkJo5fo4N+GjnbUmo
+         qqW3LyR2pvr9b9WNzAtnPGCJrl5jzX9Ua/GQvaQVPESXpmHtbPHqnwDSwTzg8OKFeIW3
+         1my4tSBVH89PkNpEiusb0eTDpfTI2br07hu9fAsHwOktH9deXdCMnzDQXnHk+P4nN28r
+         7NLw==
 In-Reply-To: <20211004084928.17622-1-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -22,28 +22,39 @@ Content-Transfer-Encoding: 7bit
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-During cgroup_create(), we are sure who is our parent.
+cgroup_for_each_live_descendant_[pre|post] use cgroup_css() to get the
+root. While since the 2nd parameter is NULL, cgroup_css() always return
+cgrp->self.
 
-Let's use parent directly instead of fetch it from cgroup hierarchy.
+Let's simplify this a little.
 
 Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- kernel/cgroup/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/cgroup/cgroup.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 457353aeb0ca..694b1c7803c2 100644
+index 570b0c97392a..457353aeb0ca 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -5368,7 +5368,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
- 	cgrp->self.serial_nr = css_serial_nr_next++;
+@@ -732,7 +732,7 @@ EXPORT_SYMBOL_GPL(of_css);
  
- 	/* allocation complete, commit to creation */
--	list_add_tail_rcu(&cgrp->self.sibling, &cgroup_parent(cgrp)->self.children);
-+	list_add_tail_rcu(&cgrp->self.sibling, &parent->self.children);
- 	atomic_inc(&root->nr_cgrps);
- 	cgroup_get_live(parent);
+ /* walk live descendants in pre order */
+ #define cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp)		\
+-	css_for_each_descendant_pre((d_css), cgroup_css((cgrp), NULL))	\
++	css_for_each_descendant_pre((d_css), &(cgrp)->self)		\
+ 		if (({ lockdep_assert_held(&cgroup_mutex);		\
+ 		       (dsct) = (d_css)->cgroup;			\
+ 		       cgroup_is_dead(dsct); }))			\
+@@ -741,7 +741,7 @@ EXPORT_SYMBOL_GPL(of_css);
  
+ /* walk live descendants in postorder */
+ #define cgroup_for_each_live_descendant_post(dsct, d_css, cgrp)		\
+-	css_for_each_descendant_post((d_css), cgroup_css((cgrp), NULL))	\
++	css_for_each_descendant_post((d_css), &(cgrp)->self)		\
+ 		if (({ lockdep_assert_held(&cgroup_mutex);		\
+ 		       (dsct) = (d_css)->cgroup;			\
+ 		       cgroup_is_dead(dsct); }))			\
 -- 
 2.23.0
 
