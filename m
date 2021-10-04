@@ -1,19 +1,19 @@
 From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 2/4] cgroup: reorder cgroup_subsys fields to save 8 byte
-Date: Mon,  4 Oct 2021 08:49:26 +0000
-Message-ID: <20211004084928.17622-2-richard.weiyang@gmail.com>
+Subject: [PATCH 4/4] cgroup: use parent directly instead of cgroup_parent()
+Date: Mon,  4 Oct 2021 08:49:28 +0000
+Message-ID: <20211004084928.17622-4-richard.weiyang@gmail.com>
 References: <20211004084928.17622-1-richard.weiyang@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=N3sruM3usLkej2geppAhAsEmxswQsSvrfu16yvAY3QU=;
-        b=PUaJh/0D5EDmWmLJIGwBb0YRcdlZP3U8HbZzUs3GyO0byzRLKQxiftuiNqVZbLBwuW
-         l127GSCaYwwQl5xI2Y5dZIp+b9IYz9tfkMa+YU6/gIaehp3tdwlDGUDPFPogiM9rUug+
-         2wlne4vBEDBYaQdGCT+3uSRLFEGa/GoE1uP8oRxe4yL5t843uxXb6sCodhsaYN3xyojx
-         fA053an6P3pQdpBwdzFna2bAHSpF2dWNY8IafpXYKRL4qZjqL09eICf2kDgUDcqPfU4p
-         vGOwDCsx4xZNVwtjMMCVA8pMFnPis+jJziABbBJpcIVGwAxcsViE/tgAos3uzkJdWhru
-         z4Kw==
+        bh=OexIHL7yzlEUfmmS4I0SOBuDrj/gY0LWs9jL52+pYx8=;
+        b=dVemWq3a+2beKnz+1YiJJNW7FjJjN+OMKxBI84+hIT78TOpTeokN1DKavY06NryK/G
+         NSlkpM3BEIz/E0QR0Vuc1mDjYlW2qc1JQNFOx+uPebZib3UiQj5abKYXuW2qS6/CFWXw
+         9ekjXV0RAfOt9Z/qAg14xStUshEMGk6hfUd5u7jhudiQdowDJ7WpYKwaTkPx8bXwIcHU
+         CAOrs1p0ezq+CElVjzy/BjgVVOdKTohTdD31IHlhuQrjkGYO8VsGRwtkJ1CXydpypGPD
+         ENSepy47rm13rLAIbt02xFUF42yUX/VjML4/KvrY/JsnMN9iz7sukRqSYIuX/rp+dqBt
+         jBDg==
 In-Reply-To: <20211004084928.17622-1-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -22,51 +22,28 @@ Content-Transfer-Encoding: 7bit
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On 64bit platform, struct is aligned by 8 bytes by default.
+During cgroup_create(), we are sure who is our parent.
 
-By moving cgroup_subsys.depends_on, we fit these adjacent fields into
-8 bytes alignment.
+Let's use parent directly instead of fetch it from cgroup hierarchy.
 
 Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- include/linux/cgroup-defs.h | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+ kernel/cgroup/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index f6d80896daab..4649d09396fd 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -672,6 +672,15 @@ struct cgroup_subsys {
- 	 */
- 	bool threaded:1;
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 457353aeb0ca..694b1c7803c2 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -5368,7 +5368,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
+ 	cgrp->self.serial_nr = css_serial_nr_next++;
  
-+	/*
-+	 * A subsystem may depend on other subsystems.  When such subsystem
-+	 * is enabled on a cgroup, the depended-upon subsystems are enabled
-+	 * together if available.  Subsystems enabled due to dependency are
-+	 * not visible to userland until explicitly enabled.  The following
-+	 * specifies the mask of subsystems that this one depends on.
-+	 */
-+	u16 depends_on;
-+
- 	/* the following two fields are initialized automatically during boot */
- 	int id;
- 	const char *name;
-@@ -698,14 +707,6 @@ struct cgroup_subsys {
- 	struct cftype *dfl_cftypes;	/* for the default hierarchy */
- 	struct cftype *legacy_cftypes;	/* for the legacy hierarchies */
+ 	/* allocation complete, commit to creation */
+-	list_add_tail_rcu(&cgrp->self.sibling, &cgroup_parent(cgrp)->self.children);
++	list_add_tail_rcu(&cgrp->self.sibling, &parent->self.children);
+ 	atomic_inc(&root->nr_cgrps);
+ 	cgroup_get_live(parent);
  
--	/*
--	 * A subsystem may depend on other subsystems.  When such subsystem
--	 * is enabled on a cgroup, the depended-upon subsystems are enabled
--	 * together if available.  Subsystems enabled due to dependency are
--	 * not visible to userland until explicitly enabled.  The following
--	 * specifies the mask of subsystems that this one depends on.
--	 */
--	u16 depends_on;
- };
- 
- extern struct percpu_rw_semaphore cgroup_threadgroup_rwsem;
 -- 
 2.23.0
 
