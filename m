@@ -1,39 +1,91 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: rstat: optimize flush through speculative test
-Date: Mon, 4 Oct 2021 11:35:12 -0700
-Message-ID: <CALvZod6fwur--Q6Kh6GSPRR_16DQdrNDyuZgYjgncDpPUENWVg@mail.gmail.com>
-References: <20210929235936.2859271-1-shakeelb@google.com> <YVszNI97NAAYpHpm@slm.duckdns.org>
- <CALvZod5OKz=7pFpxCt1CONPyJO4wR5t+PH0nzdbFBT1SYpjrsg@mail.gmail.com>
- <YVs9eJnNJYwF/3f3@slm.duckdns.org> <CALvZod47r=9j_MhZz9ngWv_JE4oqF1CrXTOQ2GpSSNFftZAsVA@mail.gmail.com>
- <YVtGHoboSix3rexr@slm.duckdns.org>
-Mime-Version: 1.0
+From: Vishal Verma <vverma-tWEdnPwa2b6ifxm/DiOjgA@public.gmane.org>
+Subject: [PATCH] cgroup: cgroup-v1: do not exclude cgrp_dfl_root
+Date: Mon,  4 Oct 2021 20:19:48 +0000
+Message-ID: <20211004201948.20293-1-vverma@digitalocean.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=q3rtjAMF0s155PLuGLifQ498nM8uqHQjjd2W39f9bKM=;
-        b=dNO+T06bp6n0e4wCqt2yTEMB3F80fM9Vgzh5jpZIO6mwe3DQMRXOaOdLXC2M1lh9Dq
-         mE8zj3N4kaJpFMlMmObQxrMYzYFijF3w/RodiCCzivMxJEkMGTHT9reE2Z2XmAQUHNUB
-         qBSFXy+3wiqJxSgNsmPxHifuceiJzF4H8lZLVfvrvY1Xk8lF8SdxcV9M8EtOmN0tT0c6
-         LSwA2ZHu9+qtrj9c/MDnNYT3a/aS6l3z3CvSBMjGEDRnzK9LjpdHqL57qmotS9zmJekZ
-         zyiWkTFDoth+KvmXIYzXgu+DnWmUElPhq7/W47WaMfHA7Sj87eZwJEUkCSy+IPjbnlDL
-         ud5Q==
-In-Reply-To: <YVtGHoboSix3rexr-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+        d=digitalocean.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=LQGXlr8JsxYTcOQMokcqY9RnbuNcOY4TaFS93GsjX5s=;
+        b=gBaPYPFr2c8ulT+/+JaIiT+5iPPcLGSJfTfBfJQwCOvCrhUQsImxweBvZ8n0PSx2Ar
+         9Hp5BCLgzXUucupqyOZjZuddMIjkxzRYWduE0FxjN1TZHe4f6SvzdXLQnN5xEdw1IY8w
+         rFEOyyNFQ+h0uIql+JqmelRn/dI30R5/EUF20=
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Vishal Verma <vverma-tWEdnPwa2b6ifxm/DiOjgA@public.gmane.org>
 
-On Mon, Oct 4, 2021 at 11:21 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
->
-[...]
-> What do you think about that approach? While the proposed patch looks fine,
-> it kinda bothers me that it's a very partial optimization - ie. if flush
-> frequency is high enough for this to matter, that for_each_possible_cpu()
-> scanning loop really isn't appropriate.
->
+Found an issue within cgroup_attach_task_all() fn which seem
+to exclude cgrp_dfl_root (cgroupv2) while attaching tasks to
+the given cgroup. This was noticed when the system was running
+qemu/kvm with kernel vhost helper threads. It appears that the
+vhost layer which uses cgroup_attach_task_all() fn to assign the
+vhost kthread to the right qemu cgroup works fine with cgroupv1
+based configuration but not in cgroupv2. With cgroupv2, the vhost
+helper thread ends up just belonging to the root cgroup as is
+shown below:
 
-Makes sense. I will take a stab at that.
+$ stat -fc %T /sys/fs/cgroup/
+cgroup2fs
+$ sudo pgrep qemu
+1916421
+$ ps -eL | grep 1916421
+1916421 1916421 ?        00:00:01 qemu-system-x86
+1916421 1916431 ?        00:00:00 call_rcu
+1916421 1916435 ?        00:00:00 IO mon_iothread
+1916421 1916436 ?        00:00:34 CPU 0/KVM
+1916421 1916439 ?        00:00:00 SPICE Worker
+1916421 1916440 ?        00:00:00 vnc_worker
+1916433 1916433 ?        00:00:00 vhost-1916421
+1916437 1916437 ?        00:00:00 kvm-pit/1916421
+$ cat /proc/1916421/cgroup
+0::/machine.slice/machine-qemu\x2d18\x2dDroplet\x2d7572850.scope/emulator
+$ cat /proc/1916439/cgroup
+0::/machine.slice/machine-qemu\x2d18\x2dDroplet\x2d7572850.scope/emulator
+$ cat /proc/1916433/cgroup
+0::/
+
+From above, it can be seen that the vhost kthread (PID: 1916433)
+doesn't seem to belong the qemu cgroup like other qemu PIDs.
+
+After applying this patch:
+
+$ pgrep qemu
+1643
+$ ps -eL | grep 1643
+   1643    1643 ?        00:00:00 qemu-system-x86
+   1643    1645 ?        00:00:00 call_rcu
+   1643    1648 ?        00:00:00 IO mon_iothread
+   1643    1649 ?        00:00:00 CPU 0/KVM
+   1643    1652 ?        00:00:00 SPICE Worker
+   1643    1653 ?        00:00:00 vnc_worker
+   1647    1647 ?        00:00:00 vhost-1643
+   1651    1651 ?        00:00:00 kvm-pit/1643
+$ cat /proc/1647/cgroup
+0::/machine.slice/machine-qemu\x2d18\x2dDroplet\x2d7572850.scope/emulator
+
+Suggested-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Vishal Verma <vverma-tWEdnPwa2b6ifxm/DiOjgA@public.gmane.org>
+---
+ kernel/cgroup/cgroup-v1.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 35b920328344..f6cc5f8484dc 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -63,9 +63,6 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+ 	for_each_root(root) {
+ 		struct cgroup *from_cgrp;
+ 
+-		if (root == &cgrp_dfl_root)
+-			continue;
+-
+ 		spin_lock_irq(&css_set_lock);
+ 		from_cgrp = task_cgroup_from_root(from, root);
+ 		spin_unlock_irq(&css_set_lock);
+-- 
+2.17.1
+
