@@ -1,49 +1,41 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [Question] io cgroup subsystem threaded support
-Date: Mon, 4 Oct 2021 06:40:13 -1000
-Message-ID: <YVsubc0I4tBmnudM@slm.duckdns.org>
-References: <20211001110645.uzw2w5t4rknwqhma@T580.localdomain>
+Subject: Re: [PATCH 1/1] cgroup-v1: Grant CAP_SYS_NICE holders permission to
+ move tasks between cgroups
+Date: Mon, 4 Oct 2021 06:41:39 -1000
+Message-ID: <YVsuw+UBZDY6Rkzd@slm.duckdns.org>
+References: <20210617090941.340135-1-lee.jones@linaro.org>
+ <YMs08Ij8PZ/gemLL@slm.duckdns.org>
+ <YMs5ssb50B208Aad@dell>
+ <CAJuCfpHvRuapSMa2KMdF4_-8fKdqtx_gYVKyw5dYT6XjfRrDfg@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=augfsTXb1EqvWcbD8kMG8Mmo1E+4/qJhNfszNseO99c=;
-        b=hsSNN+UJ6NnGshSkpom3FjtmdE+DbH8x9DAgnM1PuqqlMQrpzGIdTtoIPKr940w9Nr
-         PcEtV+ka2MnEV19RdJ4Hhn4xvp4EI1ggXEKh0vKP/V48uTCf4Ybg6OcsE3Jad5ViaBQw
-         7Zpdw7pd+PrAIct7CcloJQnlX4sE9JMGM3Th1ZdhDNqdxXkxUgbHY2pTWHI/HB56GpeE
-         sUg0X0NwLREDGoaflyojm8yN6hrwpmzOWsX8HvKK9QEvhOy9PCQgNDFw79mFbLaCaBlB
-         fSeUWa6jYdveegPdcucCE9C2YoWT6cExHjsq4czsR40QDqO3sJxXYzkxj3UYMDH1ip5Q
-         7V5g==
+        bh=DaLvQvhsWsf+s4lKV5/UMhvRlT3UszqwQeMdAkp1K3Y=;
+        b=quXUJID1FdabBGz7mwElEsxPvEcN27h5uU84QFos6CG76Q06RyCwmCRrgwdJ/NtBSe
+         eI4YUiwaxF8nBTgUyf0Eapc+zxNNJHBe1gG+O0Kr+uf1lk4zedFsGmcJp8foUlAnk9qF
+         ZaKp6+1M+vsx1Vykw52NXb3FwgFrlIfaERdI+0fCUn2Dt8HTz0rp1OxrcLDBbCTkQtcH
+         Zw/QwqmiIcpMerEn2QnER5fJkHTlgAQeBEHR3rzdbS8TMMmMzP13C33iHchRML/2fJPj
+         d7qvROcOuYc8A14dJR3AIYR7r5o3jQRTeRo9bsfCA0gmgpIZPs22J6pCCFqhdJgpDbp/
+         q9Zw==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20211001110645.uzw2w5t4rknwqhma-3Hjs5a4P6Kh82hYKe6nXyg@public.gmane.org>
+In-Reply-To: <CAJuCfpHvRuapSMa2KMdF4_-8fKdqtx_gYVKyw5dYT6XjfRrDfg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Odin Hultgren van der Horst <odin-KgRVb285F3Y0FkRhN5fn+A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Oct 01, 2021 at 01:06:45PM +0200, Odin Hultgren van der Horst wrote:
-> Posted to both cgroups and linux-block
-> 
-> Hi i read though some of the source code for cgroups, and from my understanding
-> the io cgroup subsystem does not support threaded cgroups. So i had some questions
-> regarding this.
-> 
->  - Is there any future plans for supporting threaded?
+On Thu, Sep 30, 2021 at 02:20:53PM -0700, Suren Baghdasaryan wrote:
+> Some of the controllers are moving to cgroup v2 but not all of them
+> are there yet. For example, there are still some issues with moving
+> the cpu controller to v2 which I believe were discussed during Android
+> Microconference at LPC 2021.
 
-Not at the moment.
-
->  - What are the main hurdles in adding threaded support to the io cgroup subsystem?
-
-The biggest is the fact that page cache pagse are owned by processes not
-threads. A related issue is that writeback tracks ownership per inode with a
-mechanism for transferring ownership when majority writer changes. Splitting
-IO control per-thread would increase friction there. So, the summary is that
-the kernel doesn't track related resource consumptions at thread
-granularity.
+Care to provide a summary?
 
 Thanks.
 
