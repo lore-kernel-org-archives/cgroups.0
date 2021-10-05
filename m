@@ -1,91 +1,145 @@
-From: Vishal Verma <vverma-tWEdnPwa2b6ifxm/DiOjgA@public.gmane.org>
-Subject: [PATCH] cgroup: cgroup-v1: do not exclude cgrp_dfl_root
-Date: Mon,  4 Oct 2021 20:19:48 +0000
-Message-ID: <20211004201948.20293-1-vverma@digitalocean.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=digitalocean.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=LQGXlr8JsxYTcOQMokcqY9RnbuNcOY4TaFS93GsjX5s=;
-        b=gBaPYPFr2c8ulT+/+JaIiT+5iPPcLGSJfTfBfJQwCOvCrhUQsImxweBvZ8n0PSx2Ar
-         9Hp5BCLgzXUucupqyOZjZuddMIjkxzRYWduE0FxjN1TZHe4f6SvzdXLQnN5xEdw1IY8w
-         rFEOyyNFQ+h0uIql+JqmelRn/dI30R5/EUF20=
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: [PATCH memcg v3] memcg: prohibit unconditional exceeding the limit of
+ dying tasks
+Date: Tue, 5 Oct 2021 16:52:31 +0300
+Message-ID: <b89715b5-6df7-34a3-f7b9-efa8e0eefd3e@virtuozzo.com>
+References: <YUM+saaJEce0TJyF@dhcp22.suse.cz>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Vishal Verma <vverma-tWEdnPwa2b6ifxm/DiOjgA@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
+        :From; bh=+lz1/go95FssiI/cLhtGGYl9CHp3b3jFYmH54jsnHyI=; b=rBz4zQKu+pNWpq26plJ
+        RkQg2gp595jIucfIjkMZBtUSmOs7SZEeLs/KfOtT7dvCvuI4YGwpxKVCV0hfRpVgnc6odjOAERqd9
+        RDwgjl9weNDyd/9ehQYG1gUZcHLtkcBrdO3cBXBa97CLsy2Gv1+8QEYTvGE+/1oTS0lNJbEEM60=;
+In-Reply-To: <YUM+saaJEce0TJyF-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: en-US
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-Found an issue within cgroup_attach_task_all() fn which seem
-to exclude cgrp_dfl_root (cgroupv2) while attaching tasks to
-the given cgroup. This was noticed when the system was running
-qemu/kvm with kernel vhost helper threads. It appears that the
-vhost layer which uses cgroup_attach_task_all() fn to assign the
-vhost kthread to the right qemu cgroup works fine with cgroupv1
-based configuration but not in cgroupv2. With cgroupv2, the vhost
-helper thread ends up just belonging to the root cgroup as is
-shown below:
+Memory cgroup charging allows killed or exiting tasks to exceed the hard
+limit. It is assumed that the amount of the memory charged by those
+tasks is bound and most of the memory will get released while the task
+is exiting. This is resembling a heuristic for the global OOM situation
+when tasks get access to memory reserves. There is no global memory
+shortage at the memcg level so the memcg heuristic is more relieved.
 
-$ stat -fc %T /sys/fs/cgroup/
-cgroup2fs
-$ sudo pgrep qemu
-1916421
-$ ps -eL | grep 1916421
-1916421 1916421 ?        00:00:01 qemu-system-x86
-1916421 1916431 ?        00:00:00 call_rcu
-1916421 1916435 ?        00:00:00 IO mon_iothread
-1916421 1916436 ?        00:00:34 CPU 0/KVM
-1916421 1916439 ?        00:00:00 SPICE Worker
-1916421 1916440 ?        00:00:00 vnc_worker
-1916433 1916433 ?        00:00:00 vhost-1916421
-1916437 1916437 ?        00:00:00 kvm-pit/1916421
-$ cat /proc/1916421/cgroup
-0::/machine.slice/machine-qemu\x2d18\x2dDroplet\x2d7572850.scope/emulator
-$ cat /proc/1916439/cgroup
-0::/machine.slice/machine-qemu\x2d18\x2dDroplet\x2d7572850.scope/emulator
-$ cat /proc/1916433/cgroup
-0::/
+The above assumption is overly optimistic though. E.g. vmalloc can scale
+to really large requests and the heuristic would allow that. We used to
+have an early break in the vmalloc allocator for killed tasks but this
+has been reverted by commit b8c8a338f75e ("Revert "vmalloc: back off when
+the current task is killed""). There are likely other similar code paths
+which do not check for fatal signals in an allocation&charge loop.
+Also there are some kernel objects charged to a memcg which are not
+bound to a process life time.
 
-From above, it can be seen that the vhost kthread (PID: 1916433)
-doesn't seem to belong the qemu cgroup like other qemu PIDs.
+It has been observed that it is not really hard to trigger these
+bypasses and cause global OOM situation.
 
-After applying this patch:
+One potential way to address these runaways would be to limit the amount
+of excess (similar to the global OOM with limited oom reserves). This is
+certainly possible but it is not really clear how much of an excess is
+desirable and still protects from global OOMs as that would have to
+consider the overall memcg configuration.
 
-$ pgrep qemu
-1643
-$ ps -eL | grep 1643
-   1643    1643 ?        00:00:00 qemu-system-x86
-   1643    1645 ?        00:00:00 call_rcu
-   1643    1648 ?        00:00:00 IO mon_iothread
-   1643    1649 ?        00:00:00 CPU 0/KVM
-   1643    1652 ?        00:00:00 SPICE Worker
-   1643    1653 ?        00:00:00 vnc_worker
-   1647    1647 ?        00:00:00 vhost-1643
-   1651    1651 ?        00:00:00 kvm-pit/1643
-$ cat /proc/1647/cgroup
-0::/machine.slice/machine-qemu\x2d18\x2dDroplet\x2d7572850.scope/emulator
+This patch is addressing the problem by removing the heuristic
+altogether. Bypass is only allowed for requests which either cannot fail
+or where the failure is not desirable while excess should be still
+limited (e.g. atomic requests). Implementation wise a killed or dying
+task fails to charge if it has passed the OOM killer stage. That should
+give all forms of reclaim chance to restore the limit before the
+failure (ENOMEM) and tell the caller to back off.
 
-Suggested-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Signed-off-by: Vishal Verma <vverma-tWEdnPwa2b6ifxm/DiOjgA@public.gmane.org>
+In addition, this patch renames should_force_charge() helper
+to task_is_dying() because now its use is not associated witch forced
+charging.
+
+Suggested-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 ---
- kernel/cgroup/cgroup-v1.c | 3 ---
- 1 file changed, 3 deletions(-)
+v3: no functional changes, just improved patch description
+v2: swicthed to patch version proposed by mhocko@
+---
+ mm/memcontrol.c | 27 ++++++++-------------------
+ 1 file changed, 8 insertions(+), 19 deletions(-)
 
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 35b920328344..f6cc5f8484dc 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -63,9 +63,6 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
- 	for_each_root(root) {
- 		struct cgroup *from_cgrp;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 6da5020a8656..87e41c3cac10 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -239,7 +239,7 @@ enum res_type {
+ 	     iter != NULL;				\
+ 	     iter = mem_cgroup_iter(NULL, iter, NULL))
  
--		if (root == &cgrp_dfl_root)
--			continue;
+-static inline bool should_force_charge(void)
++static inline bool task_is_dying(void)
+ {
+ 	return tsk_is_oom_victim(current) || fatal_signal_pending(current) ||
+ 		(current->flags & PF_EXITING);
+@@ -1575,7 +1575,7 @@ static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	 * A few threads which were not waiting at mutex_lock_killable() can
+ 	 * fail to bail out. Therefore, check again after holding oom_lock.
+ 	 */
+-	ret = should_force_charge() || out_of_memory(&oc);
++	ret = task_is_dying() || out_of_memory(&oc);
+ 
+ unlock:
+ 	mutex_unlock(&oom_lock);
+@@ -2530,6 +2530,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	struct page_counter *counter;
+ 	enum oom_status oom_status;
+ 	unsigned long nr_reclaimed;
++	bool passed_oom = false;
+ 	bool may_swap = true;
+ 	bool drained = false;
+ 	unsigned long pflags;
+@@ -2564,15 +2565,6 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (gfp_mask & __GFP_ATOMIC)
+ 		goto force;
+ 
+-	/*
+-	 * Unlike in global OOM situations, memcg is not in a physical
+-	 * memory shortage.  Allow dying and OOM-killed tasks to
+-	 * bypass the last charges so that they can exit quickly and
+-	 * free their memory.
+-	 */
+-	if (unlikely(should_force_charge()))
+-		goto force;
 -
- 		spin_lock_irq(&css_set_lock);
- 		from_cgrp = task_cgroup_from_root(from, root);
- 		spin_unlock_irq(&css_set_lock);
+ 	/*
+ 	 * Prevent unbounded recursion when reclaim operations need to
+ 	 * allocate memory. This might exceed the limits temporarily,
+@@ -2630,8 +2622,9 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (gfp_mask & __GFP_RETRY_MAYFAIL)
+ 		goto nomem;
+ 
+-	if (fatal_signal_pending(current))
+-		goto force;
++	/* Avoid endless loop for tasks bypassed by the oom killer */
++	if (passed_oom && task_is_dying())
++		goto nomem;
+ 
+ 	/*
+ 	 * keep retrying as long as the memcg oom killer is able to make
+@@ -2640,14 +2633,10 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	 */
+ 	oom_status = mem_cgroup_oom(mem_over_limit, gfp_mask,
+ 		       get_order(nr_pages * PAGE_SIZE));
+-	switch (oom_status) {
+-	case OOM_SUCCESS:
++	if (oom_status == OOM_SUCCESS) {
++		passed_oom = true;
+ 		nr_retries = MAX_RECLAIM_RETRIES;
+ 		goto retry;
+-	case OOM_FAILED:
+-		goto force;
+-	default:
+-		goto nomem;
+ 	}
+ nomem:
+ 	if (!(gfp_mask & __GFP_NOFAIL))
 -- 
-2.17.1
+2.31.1
 
