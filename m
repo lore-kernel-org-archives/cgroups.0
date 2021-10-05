@@ -1,47 +1,47 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH memcg v3] memcg: prohibit unconditional exceeding the
- limit of dying tasks
-Date: Tue, 5 Oct 2021 16:55:13 +0200
-Message-ID: <YVxnUZzR+rjRrGU3@dhcp22.suse.cz>
-References: <YUM+saaJEce0TJyF@dhcp22.suse.cz>
- <b89715b5-6df7-34a3-f7b9-efa8e0eefd3e@virtuozzo.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: cgroup-v1: do not exclude cgrp_dfl_root
+Date: Tue, 5 Oct 2021 06:14:23 -1000
+Message-ID: <YVx5342KvJ1RFoL+@slm.duckdns.org>
+References: <20211004201948.20293-1-vverma@digitalocean.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1633445714; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=S16oNrBuFcWuNh85hYkjoulTN4cPTW6zAgP9R8WFY7g=;
-        b=KRM3Clmotf21/ys7DEwncqQlncDujGhwquNy00mM6atBKUGyELdWliY5ZR0P0QUP1a58Xl
-        tngzGvs0v2qeAcZ+gK67gAhzUTwx+5jpEwqM0Jy8rAQ+qtBdGUvA+8OuvJ5xj48KltS8qo
-        /rrWjruydyulK56D7kfWPCJN2nJ2ATw=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=sWV3eCSW91vjz0ZnFEdePdyFv0khCWAXj63KXD3BxX4=;
+        b=m9fVw7Q4ARqPYCSirL0dcKTTY9WiiGEUQx/SHaP6js1Ej2mc3rFteVrje7naDzeB6w
+         k2u+A+0jUEbEI6P3EcTkTW93cOpQAQdP5Dic8C2Gyw2W1jNspuMSujON6JiDhr+w7i22
+         xflC2ZH1aT+3JYPgtUjbxZ8ASpXrFp9G7PEfBfw/QPAOuzWepkByV8l6h3WOT0xWW6CW
+         /CGh1qZtmK36Fjgg8juAgUp48tMVF5076wGTM9yG4oXs24AL/uhbtz37bTq0as3WIgS7
+         eb7EvA6L5SdU7YE/i+1PXymvJ252kYhyy/n8iUblDtBwlkbXz2xF5WZYDwOJsr/rKUc2
+         q+Rg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <b89715b5-6df7-34a3-f7b9-efa8e0eefd3e-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+In-Reply-To: <20211004201948.20293-1-vverma-tWEdnPwa2b6ifxm/DiOjgA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: Vishal Verma <vverma-tWEdnPwa2b6ifxm/DiOjgA@public.gmane.org>
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 05-10-21 16:52:31, Vasily Averin wrote:
-> v3: no functional changes, just improved patch description
+On Mon, Oct 04, 2021 at 08:19:48PM +0000, Vishal Verma wrote:
+> Found an issue within cgroup_attach_task_all() fn which seem
+> to exclude cgrp_dfl_root (cgroupv2) while attaching tasks to
+> the given cgroup. This was noticed when the system was running
+> qemu/kvm with kernel vhost helper threads. It appears that the
+> vhost layer which uses cgroup_attach_task_all() fn to assign the
+> vhost kthread to the right qemu cgroup works fine with cgroupv1
+> based configuration but not in cgroupv2. With cgroupv2, the vhost
+> helper thread ends up just belonging to the root cgroup as is
+> shown below:
+...
+> Suggested-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Signed-off-by: Vishal Verma <vverma-tWEdnPwa2b6ifxm/DiOjgA@public.gmane.org>
 
-You haven't addressed my review feedback regarding the oom invocation.
-Let me paste it here again:
-: > @@ -1607,7 +1607,7 @@ static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
-: >        * A few threads which were not waiting at mutex_lock_killable() can
-: >        * fail to bail out. Therefore, check again after holding oom_lock.
-: >        */
-: > -     ret = should_force_charge() || out_of_memory(&oc);
-: > +     ret = task_is_dying() || out_of_memory(&oc);
-: 
-: task_is_dying check will prevent the oom killer for dying tasks. There
-: is an additional bail out at out_of_memory layer. These checks are now
-: leading to a completely different behavior. Currently we simply use
-: "unlimited" reserves and therefore we do not have to kill any task. Now
-: the charge fails without using all reclaim measures. So I believe we
-: should drop those checks for memcg oom paths. I have to think about this
-: some more because I might be missing some other side effects.
+Applied to cgroup/for-5.16.
+
+Thanks.
+
 -- 
-Michal Hocko
-SUSE Labs
+tejun
