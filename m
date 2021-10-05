@@ -1,47 +1,74 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: cgroup-v1: do not exclude cgrp_dfl_root
-Date: Tue, 5 Oct 2021 06:14:23 -1000
-Message-ID: <YVx5342KvJ1RFoL+@slm.duckdns.org>
-References: <20211004201948.20293-1-vverma@digitalocean.com>
-Mime-Version: 1.0
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2] mm/memcg: Remove obsolete memcg_free_kmem()
+Date: Tue,  5 Oct 2021 16:24:50 -0400
+Message-ID: <20211005202450.11775-1-longman@redhat.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=sWV3eCSW91vjz0ZnFEdePdyFv0khCWAXj63KXD3BxX4=;
-        b=m9fVw7Q4ARqPYCSirL0dcKTTY9WiiGEUQx/SHaP6js1Ej2mc3rFteVrje7naDzeB6w
-         k2u+A+0jUEbEI6P3EcTkTW93cOpQAQdP5Dic8C2Gyw2W1jNspuMSujON6JiDhr+w7i22
-         xflC2ZH1aT+3JYPgtUjbxZ8ASpXrFp9G7PEfBfw/QPAOuzWepkByV8l6h3WOT0xWW6CW
-         /CGh1qZtmK36Fjgg8juAgUp48tMVF5076wGTM9yG4oXs24AL/uhbtz37bTq0as3WIgS7
-         eb7EvA6L5SdU7YE/i+1PXymvJ252kYhyy/n8iUblDtBwlkbXz2xF5WZYDwOJsr/rKUc2
-         q+Rg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20211004201948.20293-1-vverma-tWEdnPwa2b6ifxm/DiOjgA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1633465521;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=fphjzfCNo4ZpuqMZyls+oQxve30/shqr62DPT4ol2Kk=;
+        b=R42K2PpGzQebBVmX66VxdDAkkaUE/P80NDBx9vTPx/PcKaUvUu0CoCldRNTIP/+WrsKOQr
+        MQ+XwznikhSUCCD7cpOM+gIZ5s0q0mtXuNuTB+bQHekCk8NL9zaGbj/Enslg4Mc9V7dXgZ
+        MjUkYgFG40JEFdHPXgXQQETAduCjI6s=
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vishal Verma <vverma-tWEdnPwa2b6ifxm/DiOjgA@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Oct 04, 2021 at 08:19:48PM +0000, Vishal Verma wrote:
-> Found an issue within cgroup_attach_task_all() fn which seem
-> to exclude cgrp_dfl_root (cgroupv2) while attaching tasks to
-> the given cgroup. This was noticed when the system was running
-> qemu/kvm with kernel vhost helper threads. It appears that the
-> vhost layer which uses cgroup_attach_task_all() fn to assign the
-> vhost kthread to the right qemu cgroup works fine with cgroupv1
-> based configuration but not in cgroupv2. With cgroupv2, the vhost
-> helper thread ends up just belonging to the root cgroup as is
-> shown below:
-...
-> Suggested-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Signed-off-by: Vishal Verma <vverma-tWEdnPwa2b6ifxm/DiOjgA@public.gmane.org>
+Since commit d648bcc7fe65 ("mm: kmem: make memcg_kmem_enabled()
+irreversible"), the only thing memcg_free_kmem() does is to call
+memcg_offline_kmem() when the memcg is still online which can happen when
+online_css() fails due to -ENOMEM. However, the name memcg_free_kmem()
+is confusing and it is more clear and straight forward to call
+memcg_offline_kmem() directly from mem_cgroup_css_free().
 
-Applied to cgroup/for-5.16.
+Suggested-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-Thanks.
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 6da5020a8656..96a93c608d80 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3656,13 +3656,6 @@ static void memcg_offline_kmem(struct mem_cgroup *memcg)
+ 
+ 	memcg_free_cache_id(kmemcg_id);
+ }
+-
+-static void memcg_free_kmem(struct mem_cgroup *memcg)
+-{
+-	/* css_alloc() failed, offlining didn't happen */
+-	if (unlikely(memcg->kmem_state == KMEM_ONLINE))
+-		memcg_offline_kmem(memcg);
+-}
+ #else
+ static int memcg_online_kmem(struct mem_cgroup *memcg)
+ {
+@@ -3671,9 +3664,6 @@ static int memcg_online_kmem(struct mem_cgroup *memcg)
+ static void memcg_offline_kmem(struct mem_cgroup *memcg)
+ {
+ }
+-static void memcg_free_kmem(struct mem_cgroup *memcg)
+-{
+-}
+ #endif /* CONFIG_MEMCG_KMEM */
+ 
+ static int memcg_update_kmem_max(struct mem_cgroup *memcg,
+@@ -5308,7 +5298,9 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
+ 	cancel_work_sync(&memcg->high_work);
+ 	mem_cgroup_remove_from_trees(memcg);
+ 	free_shrinker_info(memcg);
+-	memcg_free_kmem(memcg);
++
++	/* Need to offline kmem if online_css() fails */
++	memcg_offline_kmem(memcg);
+ 	mem_cgroup_free(memcg);
+ }
+ 
 -- 
-tejun
+2.18.1
+
