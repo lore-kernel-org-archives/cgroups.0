@@ -1,95 +1,76 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH mm v2] vmalloc: back off when the current task is
- OOM-killed
-Date: Thu, 7 Oct 2021 12:47:53 +0200
-Message-ID: <YV7QWYO0MwHzXya7@dhcp22.suse.cz>
-References: <YVGmMSJ3NrQZjLP8@dhcp22.suse.cz>
- <83efc664-3a65-2adb-d7c4-2885784cf109@virtuozzo.com>
+From: quanyang.wang@windriver.com
+Subject: [PATCH] cgroup: fix memory leak caused by missing cgroup_bpf_offline
+Date: Thu,  7 Oct 2021 20:16:03 +0800
+Message-ID: <20211007121603.1484881-1-quanyang.wang@windriver.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1633603677; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=mcWJYTrnWNl9H+OH2VlIp+D8YPfOLYhVh6/tuPxFG6E=;
-        b=XLa1+jaF+yRNiuxXt1smb033r6qPpmsLlMjdHa2HtGvwNEuK5fBVKAPThwB7m1bk/Vi7dT
-        BZszrjex1rujp9HJ6R4DaGydGClIQPMBl2Dv4sFPEbaM6g9lRavt9Cywa9zVGxqqlQogRE
-        vEL107lCkhZivdYEgi/rxv64AAdFOmU=
-Content-Disposition: inline
-In-Reply-To: <83efc664-3a65-2adb-d7c4-2885784cf109-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com; h=from : to : cc :
+ subject : date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=PPS06212021;
+ bh=0M17u7nBGRmZAB+OlhuQ+eS7eccgkEkbHkBeG1wUEZ0=;
+ b=rwg0P+pc/9YsPFEi07u1kDrebYFMEdZtpi9Mmoss7YrtfeTckFhOlwhv7AES1mm0IVAW
+ NnHBcZzRVUM/91zvo28ENOJDOLGzZ/2skbLqIZ/fN2ykxKrynegBpxY8MBUNnl7bnDQb
+ VQhKyMp4s7kmB0SovLYuC/4A9597VnuP5binNzx9EwV96KYCby5bgp9jy00Dat/9SPkC
+ mBlYOJkqvJbiKFa6XHngjlbhOP6mbrg9sewbNU4AN7CLuF51dRTZdpADKbZm4vMQAA3G
+ 0g4DwFhU9dHipwiKairLyGDnDaINDMYufiiCDStDT/6C9PJN7NVP8h6mDQPZys7mybXK yQ== 
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, Quanyang Wang <quanyang.wang@windriver.com>
 
-On Tue 05-10-21 16:52:40, Vasily Averin wrote:
-> Huge vmalloc allocation on heavy loaded node can lead to a global
-> memory shortage. Task called vmalloc can have worst badness and
-> be selected by OOM-killer, however taken fatal signal does not
-> interrupt allocation cycle. Vmalloc repeat page allocaions
-> again and again, exacerbating the crisis and consuming the memory
-> freed up by another killed tasks.
-> 
-> After a successful completion of the allocation procedure, a fatal
-> signal will be processed and task will be destroyed finally.
-> However it may not release the consumed memory, since the allocated
-> object may have a lifetime unrelated to the completed task.
-> In the worst case, this can lead to the host will panic
-> due to "Out of memory and no killable processes..."
-> 
-> This patch allows OOM-killer to break vmalloc cycle, makes OOM more
-> effective and avoid host panic. It does not check oom condition directly,
-> however, and breaks page allocation cycle when fatal signal was received.
+From: Quanyang Wang <quanyang.wang@windriver.com>
 
-This will allow also interrupting a user space requist which happens to
-trigger a large vmalloc, hence the reason for going for
-fatal_signal_pending rather than oom specific condition.
+When enabling CONFIG_CGROUP_BPF, kmemleak can be observed by running
+the command as below:
 
-> This may trigger some hidden problems, when caller does not handle
-> vmalloc failures, or when rollaback after failed vmalloc calls own
-> vmallocs inside. However all of these scenarios are incorrect:
-> vmalloc does not guarantee successful allocation, it has never been called
-> with __GFP_NOFAIL and threfore either should not be used for any rollbacks
-> or should handle such errors correctly and not lead to critical
-> failures.
+    $mount -t cgroup -o none,name=foo cgroup cgroup/
+    $umount cgroup/
 
-__GFP_NOFAIL semantic is explicitly not supported for vmalloc.
+unreferenced object 0xc3585c40 (size 64):
+  comm "mount", pid 425, jiffies 4294959825 (age 31.990s)
+  hex dump (first 32 bytes):
+    01 00 00 80 84 8c 28 c0 00 00 00 00 00 00 00 00  ......(.........
+    00 00 00 00 00 00 00 00 6c 43 a0 c3 00 00 00 00  ........lC......
+  backtrace:
+    [<e95a2f9e>] cgroup_bpf_inherit+0x44/0x24c
+    [<1f03679c>] cgroup_setup_root+0x174/0x37c
+    [<ed4b0ac5>] cgroup1_get_tree+0x2c0/0x4a0
+    [<f85b12fd>] vfs_get_tree+0x24/0x108
+    [<f55aec5c>] path_mount+0x384/0x988
+    [<e2d5e9cd>] do_mount+0x64/0x9c
+    [<208c9cfe>] sys_mount+0xfc/0x1f4
+    [<06dd06e0>] ret_fast_syscall+0x0/0x48
+    [<a8308cb3>] 0xbeb4daa8
 
-> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+This is because that root_cgrp->bpf.refcnt.data is allocated by the
+function percpu_ref_init in cgroup_bpf_inherit which is called by
+cgroup_setup_root when mounting, but not freed along with root_cgrp
+when umounting. Adding cgroup_bpf_offline which calls percpu_ref_kill
+to cgroup_kill_sb can free root_cgrp->bpf.refcnt.data in umount path.
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Fixes: 2b0d3d3e4fcfb ("percpu_ref: reduce memory footprint of percpu_ref in fast path")
+Signed-off-by: Quanyang Wang <quanyang.wang@windriver.com>
+---
+ kernel/cgroup/cgroup.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-I would keep it sitting in the linux-next for some time to sort out
-potential fallouts and have them fixed before this one gets merged.
-
-Thanks!
-> ---
-> v2: tsk_is_oom_victim() check replaced by fatal_signal_pending(current),
->     removed check inside __alloc_pages_bulk(),
->     according to feedback from mhocko@.
->     Updated patch description.
-> ---
->  mm/vmalloc.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/mm/vmalloc.c b/mm/vmalloc.c
-> index d77830ff604c..71706f5447f0 100644
-> --- a/mm/vmalloc.c
-> +++ b/mm/vmalloc.c
-> @@ -2860,6 +2860,9 @@ vm_area_alloc_pages(gfp_t gfp, int nid,
->  		struct page *page;
->  		int i;
->  
-> +		if (fatal_signal_pending(current))
-> +			break;
-> +
->  		page = alloc_pages_node(nid, gfp, order);
->  		if (unlikely(!page))
->  			break;
-> -- 
-> 2.31.1
-
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index c8b811e039cc2..ce636deec5e41 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -2147,8 +2147,10 @@ static void cgroup_kill_sb(struct super_block *sb)
+ 	 * And don't kill the default root.
+ 	 */
+ 	if (list_empty(&root->cgrp.self.children) && root != &cgrp_dfl_root &&
+-	    !percpu_ref_is_dying(&root->cgrp.self.refcnt))
++			!percpu_ref_is_dying(&root->cgrp.self.refcnt)) {
++		cgroup_bpf_offline(&root->cgrp);
+ 		percpu_ref_kill(&root->cgrp.self.refcnt);
++	}
+ 	cgroup_put(&root->cgrp);
+ 	kernfs_kill_sb(sb);
+ }
 -- 
-Michal Hocko
-SUSE Labs
+2.25.1
+
