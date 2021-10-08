@@ -1,79 +1,182 @@
-From: quanyang.wang@windriver.com
-Subject: [RESEND][PATCH] cgroup: fix memory leak caused by missing cgroup_bpf_offline
-Date: Fri,  8 Oct 2021 08:46:00 +0800
-Message-ID: <20211008004600.1717681-1-quanyang.wang@windriver.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 0061270307f2ad5fa01db1ac5f1da0e83410adaf
+Date: Fri, 08 Oct 2021 11:37:00 +0800
+Message-ID: <615fbcdc.oJaHVNwD2GAKRLI/%lkp@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com; h=from : to : cc :
- subject : date : message-id : content-transfer-encoding : content-type :
- mime-version; s=PPS06212021;
- bh=uUvbEgspi3Xq0v8zC8XZkdI9qve7bozrIvhNLdHZ0dk=;
- b=XJtQKJO3flxzsCLMOpBRe3vbncPxzaFWR6R4kiZyTp0YnUKEbd0lEohNO39EUT+5v777
- V0HAatj2WT3+gM2JnslASHhlJjmz52bhDIgkL34h7PpgRqW2Yvm7CN9U+2tXcWOOuIZY
- bvH9D1aKOXbvPthgTHKGDlpcEI1b80bRiZCJpsRnDqzBiEEy1FyCDYkW3m6udab7POHR
- 76jXfib6M5Ul2vFs0FXaYGKXM1ELLpU3EyryHEuIrNUvBckl1G0jpkOsV7Rq5pzFp1xU
- IMpPynVKyTIMU21rIFd5dGdO+aJV1WWjGWFFrDypQrncZ5ecyFZzXT/sNMJlsVPesKjE 5w== 
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, Quanyang Wang <quanyang.wang@windriver.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Quanyang Wang <quanyang.wang@windriver.com>
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 0061270307f2ad5fa01db1ac5f1da0e83410adaf  cgroup: cgroup-v1: do not exclude cgrp_dfl_root
 
-When enabling CONFIG_CGROUP_BPF, kmemleak can be observed by running
-the command as below:
+elapsed time: 1216m
 
-    $mount -t cgroup -o none,name=foo cgroup cgroup/
-    $umount cgroup/
+configs tested: 149
+configs skipped: 3
 
-unreferenced object 0xc3585c40 (size 64):
-  comm "mount", pid 425, jiffies 4294959825 (age 31.990s)
-  hex dump (first 32 bytes):
-    01 00 00 80 84 8c 28 c0 00 00 00 00 00 00 00 00  ......(.........
-    00 00 00 00 00 00 00 00 6c 43 a0 c3 00 00 00 00  ........lC......
-  backtrace:
-    [<e95a2f9e>] cgroup_bpf_inherit+0x44/0x24c
-    [<1f03679c>] cgroup_setup_root+0x174/0x37c
-    [<ed4b0ac5>] cgroup1_get_tree+0x2c0/0x4a0
-    [<f85b12fd>] vfs_get_tree+0x24/0x108
-    [<f55aec5c>] path_mount+0x384/0x988
-    [<e2d5e9cd>] do_mount+0x64/0x9c
-    [<208c9cfe>] sys_mount+0xfc/0x1f4
-    [<06dd06e0>] ret_fast_syscall+0x0/0x48
-    [<a8308cb3>] 0xbeb4daa8
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-This is because that root_cgrp->bpf.refcnt.data is allocated by the
-function percpu_ref_init in cgroup_bpf_inherit which is called by
-cgroup_setup_root when mounting, but not freed along with root_cgrp
-when umounting. Adding cgroup_bpf_offline which calls percpu_ref_kill
-to cgroup_kill_sb can free root_cgrp->bpf.refcnt.data in umount path.
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allmodconfig
+arm                              allyesconfig
+m68k                       m5475evb_defconfig
+powerpc                     tqm5200_defconfig
+m68k                       m5249evb_defconfig
+powerpc                     skiroot_defconfig
+powerpc                   motionpro_defconfig
+arc                 nsimosci_hs_smp_defconfig
+m68k                          atari_defconfig
+powerpc                      ppc40x_defconfig
+powerpc                     stx_gp3_defconfig
+m68k                          multi_defconfig
+sh                          landisk_defconfig
+powerpc                      pcm030_defconfig
+mips                          malta_defconfig
+mips                        qi_lb60_defconfig
+mips                       bmips_be_defconfig
+powerpc                     tqm8560_defconfig
+sh                         microdev_defconfig
+powerpc                       ppc64_defconfig
+mips                          ath25_defconfig
+arm                         orion5x_defconfig
+arm                          collie_defconfig
+powerpc                      ppc6xx_defconfig
+powerpc                   microwatt_defconfig
+arm                        multi_v5_defconfig
+xtensa                       common_defconfig
+m68k                        m5272c3_defconfig
+s390                       zfcpdump_defconfig
+sparc                            alldefconfig
+sparc                       sparc64_defconfig
+sh                        sh7757lcr_defconfig
+sh                          rsk7264_defconfig
+mips                       capcella_defconfig
+arm                           h5000_defconfig
+sh                            migor_defconfig
+openrisc                    or1ksim_defconfig
+arc                          axs101_defconfig
+sh                          kfr2r09_defconfig
+mips                        maltaup_defconfig
+mips                      loongson3_defconfig
+sh                   sh7724_generic_defconfig
+arm                           viper_defconfig
+arm                          simpad_defconfig
+powerpc                         ps3_defconfig
+h8300                            allyesconfig
+powerpc                      pasemi_defconfig
+powerpc64                           defconfig
+arm                          moxart_defconfig
+arm                           sama5_defconfig
+arc                     nsimosci_hs_defconfig
+m68k                        stmark2_defconfig
+arm                       omap2plus_defconfig
+mips                           ip27_defconfig
+mips                      malta_kvm_defconfig
+riscv             nommu_k210_sdcard_defconfig
+arm                     davinci_all_defconfig
+sh                          polaris_defconfig
+xtensa                          iss_defconfig
+arm                       multi_v4t_defconfig
+powerpc                     ksi8560_defconfig
+mips                        bcm63xx_defconfig
+x86_64               randconfig-c001-20211003
+i386                 randconfig-c001-20211003
+arm                  randconfig-c002-20211003
+x86_64               randconfig-c001-20211004
+i386                 randconfig-c001-20211004
+arm                  randconfig-c002-20211004
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                                defconfig
+m68k                             allmodconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+nios2                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+xtensa                           allyesconfig
+parisc                              defconfig
+parisc                           allyesconfig
+s390                                defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+i386                             allyesconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+powerpc                          allyesconfig
+x86_64               randconfig-a015-20211004
+x86_64               randconfig-a012-20211004
+x86_64               randconfig-a016-20211004
+x86_64               randconfig-a014-20211004
+x86_64               randconfig-a013-20211004
+x86_64               randconfig-a011-20211004
+i386                 randconfig-a013-20211004
+i386                 randconfig-a016-20211004
+i386                 randconfig-a014-20211004
+i386                 randconfig-a011-20211004
+i386                 randconfig-a012-20211004
+i386                 randconfig-a015-20211004
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
+x86_64                           allyesconfig
 
-Fixes: 2b0d3d3e4fcfb ("percpu_ref: reduce memory footprint of percpu_ref in fast path")
-Signed-off-by: Quanyang Wang <quanyang.wang@windriver.com>
+clang tested configs:
+x86_64               randconfig-c007-20211003
+i386                 randconfig-c001-20211003
+arm                  randconfig-c002-20211003
+s390                 randconfig-c005-20211003
+powerpc              randconfig-c003-20211003
+riscv                randconfig-c006-20211003
+mips                 randconfig-c004-20211003
+x86_64               randconfig-a003-20211004
+x86_64               randconfig-a005-20211004
+x86_64               randconfig-a001-20211004
+x86_64               randconfig-a002-20211004
+x86_64               randconfig-a004-20211004
+x86_64               randconfig-a006-20211004
+i386                 randconfig-a001-20211004
+i386                 randconfig-a003-20211004
+i386                 randconfig-a005-20211004
+i386                 randconfig-a002-20211004
+i386                 randconfig-a004-20211004
+i386                 randconfig-a006-20211004
+hexagon              randconfig-r045-20211007
+hexagon              randconfig-r041-20211007
+s390                 randconfig-r044-20211007
+riscv                randconfig-r042-20211007
+
 ---
-One of the recipients' email is wrong, so I resend this patch.
-Sorry for any confusion caused.
----
- kernel/cgroup/cgroup.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 570b0c97392a9..183736ad72f2b 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -2187,8 +2187,10 @@ static void cgroup_kill_sb(struct super_block *sb)
- 	 * And don't kill the default root.
- 	 */
- 	if (list_empty(&root->cgrp.self.children) && root != &cgrp_dfl_root &&
--	    !percpu_ref_is_dying(&root->cgrp.self.refcnt))
-+			!percpu_ref_is_dying(&root->cgrp.self.refcnt)) {
-+		cgroup_bpf_offline(&root->cgrp);
- 		percpu_ref_kill(&root->cgrp.self.refcnt);
-+	}
- 	cgroup_put(&root->cgrp);
- 	kernfs_kill_sb(sb);
- }
--- 
-2.25.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
