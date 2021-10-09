@@ -1,145 +1,105 @@
-From: "Pratik R. Sampat" <psampat@linux.ibm.com>
-Subject: [RFC 3/5] cpuset/cpuns: Make cgroup CPUset CPU namespace aware
-Date: Sat,  9 Oct 2021 20:42:41 +0530
-Message-ID: <20211009151243.8825-4-psampat@linux.ibm.com>
+From: "Pratik R. Sampat" <psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Subject: [RFC 4/5] cpu/cpuns: Make sysfs CPU namespace aware
+Date: Sat,  9 Oct 2021 20:42:42 +0530
+Message-ID: <20211009151243.8825-5-psampat@linux.ibm.com>
 References: <20211009151243.8825-1-psampat@linux.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : subject :
  date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=qaKVf2iG3jJrJdTiPzN0ACJ6YGlKml1RY1+qmab/pd4=;
- b=aRTT0GYC6A4Rrx/GXzW1CpLNwxLZSD37TyFEKMyE63m57ioB3Eq7XPEBiYkOlAY3dIWV
- JL/FkNEhwfOC9ApafaVLAUKnPeUwbWupFndhQ7blr1/dENaZCFP0Zk768GUcedVxRpYX
- dTK/51ooNsf8P1u2Qrx7XOt3UaCATEmicaQW4awzjsbU5WoWsDAZYh3UwoHyNWFnoXNW
- jE8PvAb2ONsyycVQyiyt6e2DQOl6uqnsJEuNQwFFuOGGP2znlmeE3uKG1vUzj42uMQZs
- CXWoDPPr93PZiNNoWrE9sC8JiwlQHVBjljNIKh1RFqXxIQ1kmAE7pHrQXYth7UjEKhnV Cg== 
-In-Reply-To: <20211009151243.8825-1-psampat@linux.ibm.com>
+ bh=H8oRUsAit0rbQ+tvsmlBm/55SJ3NXZybEbA2lrRQqhU=;
+ b=pb7/HlUaF/JN7XGr75/+++4CjYbe3MJeWEoGzVfTzPzo3PNuUgkART0iGDnw9A+MBcQu
+ kyOoFASIZxKOKT8+xGE3DAZfHWbfZ6GNErJsW9l4fZLbJJh9oqe8CHYl5krLnMuhjmuV
+ nlaS+p5LDcFmx51dsoeRcRa9wRShJy0sTYvxvmstc/mbYwjnbnhtUhGm2vjQqi87QSiR
+ e8dJEV97wAQ43my2/t9Kw3gBEtCG3eeQO713kICmlhxFvIQKE2UAgZ6DZGl2KOlBOC3Z
+ uBcXbX6NKNSvqysLOfoR9/I3OkgVLFT53bmcO89OyCgq3dIcHfPGO/RIvPxuWVkPxYi9 +Q== 
+In-Reply-To: <20211009151243.8825-1-psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: bristot@redhat.com, christian@brauner.io, ebiederm@xmission.com, lizefan.x@bytedance.com, tj@kernel.org, hannes@cmpxchg.org, mingo@kernel.org, juri.lelli@redhat.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, containers@lists.linux.dev, containers@lists.linux-foundation.org, psampat@linux.ibm.com, pratik.r.sampat@gmail.com
+To: bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, pratik.r.sampat-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-When a new cgroup is created or a cpuset is updated, the mask supplied
-to it looks for its corresponding CPU translations for the restrictions
-to apply on.
+The commit adds support to sysfs files like online, offline, present to
+be CPU namespace context aware. It presents virtualized CPU information
+which is coherent to the cgroup cpuset restrictions that are set upon
+the tasks.
 
-The patch also updates the display interface such that tasks within the
-namespace can view the corresponding virtual CPUset based on the
-requested CPU namespace context.
-
-Signed-off-by: Pratik R. Sampat <psampat@linux.ibm.com>
+Signed-off-by: Pratik R. Sampat <psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 ---
- kernel/cgroup/cpuset.c | 57 +++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 54 insertions(+), 3 deletions(-)
+ drivers/base/cpu.c | 35 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 34 insertions(+), 1 deletion(-)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index adb5190c4429..eb1e950543cf 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -65,6 +65,7 @@
- #include <linux/mutex.h>
- #include <linux/cgroup.h>
- #include <linux/wait.h>
+diff --git a/drivers/base/cpu.c b/drivers/base/cpu.c
+index 5ef14db97904..1487b23e5472 100644
+--- a/drivers/base/cpu.c
++++ b/drivers/base/cpu.c
+@@ -20,6 +20,7 @@
+ #include <linux/tick.h>
+ #include <linux/pm_qos.h>
+ #include <linux/sched/isolation.h>
 +#include <linux/cpu_namespace.h>
  
- DEFINE_STATIC_KEY_FALSE(cpusets_pre_enable_key);
- DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
-@@ -1061,8 +1062,19 @@ static void update_tasks_cpumask(struct cpuset *cs)
- 	struct task_struct *task;
+ #include "base.h"
  
- 	css_task_iter_start(&cs->css, 0, &it);
--	while ((task = css_task_iter_next(&it)))
-+	while ((task = css_task_iter_next(&it))) {
+@@ -203,6 +204,24 @@ struct cpu_attr {
+ 	const struct cpumask *const map;
+ };
+ 
 +#ifdef CONFIG_CPU_NS
-+		cpumask_t pcpus;
-+		cpumask_t vcpus;
++static ssize_t show_cpuns_cpus_attr(struct device *dev,
++			      struct device_attribute *attr,
++			      char *buf)
++{
++	struct cpu_attr *ca = container_of(attr, struct cpu_attr, attr);
 +
-+		pcpus = get_pcpus_cpuns(current->nsproxy->cpu_ns, cs->effective_cpus);
-+		vcpus = get_vcpus_cpuns(task->nsproxy->cpu_ns, &pcpus);
-+		cpumask_copy(&task->nsproxy->cpu_ns->v_cpuset_cpus, &vcpus);
-+		set_cpus_allowed_ptr(task, &pcpus);
-+#else
- 		set_cpus_allowed_ptr(task, cs->effective_cpus);
++	if (current->nsproxy->cpu_ns == &init_cpu_ns)
++		return cpumap_print_to_pagebuf(true, buf, ca->map);
++
++	return cpumap_print_to_pagebuf(true, buf,
++				       &current->nsproxy->cpu_ns->v_cpuset_cpus);
++}
++
++#define _CPU_CPUNS_ATTR(name, map) \
++	{ __ATTR(name, 0444, show_cpuns_cpus_attr, NULL), map }
 +#endif
++
+ static ssize_t show_cpus_attr(struct device *dev,
+ 			      struct device_attribute *attr,
+ 			      char *buf)
+@@ -217,9 +236,14 @@ static ssize_t show_cpus_attr(struct device *dev,
+ 
+ /* Keep in sync with cpu_subsys_attrs */
+ static struct cpu_attr cpu_attrs[] = {
++#ifdef CONFIG_CPU_NS
++	_CPU_CPUNS_ATTR(online, &__cpu_online_mask),
++	_CPU_CPUNS_ATTR(present, &__cpu_present_mask),
++#else
+ 	_CPU_ATTR(online, &__cpu_online_mask),
+-	_CPU_ATTR(possible, &__cpu_possible_mask),
+ 	_CPU_ATTR(present, &__cpu_present_mask),
++#endif
++	_CPU_ATTR(possible, &__cpu_possible_mask),
+ };
+ 
+ /*
+@@ -244,7 +268,16 @@ static ssize_t print_cpus_offline(struct device *dev,
+ 	/* display offline cpus < nr_cpu_ids */
+ 	if (!alloc_cpumask_var(&offline, GFP_KERNEL))
+ 		return -ENOMEM;
++#ifdef CONFIG_CPU_NS
++	if (current->nsproxy->cpu_ns == &init_cpu_ns) {
++		cpumask_andnot(offline, cpu_possible_mask, cpu_online_mask);
++	} else {
++		cpumask_andnot(offline, cpu_possible_mask,
++			       &current->nsproxy->cpu_ns->v_cpuset_cpus);
 +	}
- 	css_task_iter_end(&it);
- }
- 
-@@ -2212,8 +2224,18 @@ static void cpuset_attach(struct cgroup_taskset *tset)
- 		 * can_attach beforehand should guarantee that this doesn't
- 		 * fail.  TODO: have a better way to handle failure here
- 		 */
--		WARN_ON_ONCE(set_cpus_allowed_ptr(task, cpus_attach));
-+#ifdef CONFIG_CPU_NS
-+		cpumask_t pcpus;
-+		cpumask_t vcpus;
- 
-+		pcpus = get_pcpus_cpuns(current->nsproxy->cpu_ns, cpus_attach);
-+		vcpus = get_vcpus_cpuns(task->nsproxy->cpu_ns, &pcpus);
-+		cpumask_copy(&task->nsproxy->cpu_ns->v_cpuset_cpus, &vcpus);
-+
-+		WARN_ON_ONCE(set_cpus_allowed_ptr(task, &pcpus));
 +#else
-+		WARN_ON_ONCE(set_cpus_allowed_ptr(task, cpus_attach));
+ 	cpumask_andnot(offline, cpu_possible_mask, cpu_online_mask);
 +#endif
- 		cpuset_change_task_nodemask(task, &cpuset_attach_nodemask_to);
- 		cpuset_update_task_spread_flag(cs, task);
- 	}
-@@ -2436,13 +2458,33 @@ static int cpuset_common_seq_show(struct seq_file *sf, void *v)
+ 	len += sysfs_emit_at(buf, len, "%*pbl", cpumask_pr_args(offline));
+ 	free_cpumask_var(offline);
  
- 	switch (type) {
- 	case FILE_CPULIST:
-+#ifdef CONFIG_CPU_NS
-+		if (current->nsproxy->cpu_ns == &init_cpu_ns) {
-+			seq_printf(sf, "%*pbl\n",
-+				   cpumask_pr_args(cs->cpus_allowed));
-+		} else {
-+			seq_printf(sf, "%*pbl\n",
-+				   cpumask_pr_args(&current->nsproxy->cpu_ns->v_cpuset_cpus));
-+		}
-+#else
- 		seq_printf(sf, "%*pbl\n", cpumask_pr_args(cs->cpus_allowed));
-+#endif
- 		break;
- 	case FILE_MEMLIST:
- 		seq_printf(sf, "%*pbl\n", nodemask_pr_args(&cs->mems_allowed));
- 		break;
- 	case FILE_EFFECTIVE_CPULIST:
-+#ifdef CONFIG_CPU_NS
-+		if (current->nsproxy->cpu_ns == &init_cpu_ns) {
-+			seq_printf(sf, "%*pbl\n",
-+				   cpumask_pr_args(cs->effective_cpus));
-+		} else {
-+			seq_printf(sf, "%*pbl\n",
-+				   cpumask_pr_args(&current->nsproxy->cpu_ns->v_cpuset_cpus));
-+		}
-+#else
- 		seq_printf(sf, "%*pbl\n", cpumask_pr_args(cs->effective_cpus));
-+#endif
- 		break;
- 	case FILE_EFFECTIVE_MEMLIST:
- 		seq_printf(sf, "%*pbl\n", nodemask_pr_args(&cs->effective_mems));
-@@ -2884,9 +2926,18 @@ static void cpuset_bind(struct cgroup_subsys_state *root_css)
-  */
- static void cpuset_fork(struct task_struct *task)
- {
-+#ifdef CONFIG_CPU_NS
-+	cpumask_t vcpus;
-+#endif
-+
- 	if (task_css_is_root(task, cpuset_cgrp_id))
- 		return;
--
-+#ifdef CONFIG_CPU_NS
-+	if (task->nsproxy->cpu_ns != &init_cpu_ns) {
-+		vcpus = get_vcpus_cpuns(task->nsproxy->cpu_ns, current->cpus_ptr);
-+		cpumask_copy(&task->nsproxy->cpu_ns->v_cpuset_cpus, &vcpus);
-+	}
-+#endif
- 	set_cpus_allowed_ptr(task, current->cpus_ptr);
- 	task->mems_allowed = current->mems_allowed;
- }
 -- 
 2.31.1
 
