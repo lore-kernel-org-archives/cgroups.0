@@ -1,122 +1,197 @@
 From: "Pratik R. Sampat" <psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-Subject: [RFC 2/5] ns: Add scrambling functionality to CPU namespace
-Date: Sat,  9 Oct 2021 20:42:40 +0530
-Message-ID: <20211009151243.8825-3-psampat@linux.ibm.com>
-References: <20211009151243.8825-1-psampat@linux.ibm.com>
+Subject: [RFC 0/5] kernel: Introduce CPU Namespace
+Date: Sat,  9 Oct 2021 20:42:38 +0530
+Message-ID: <20211009151243.8825-1-psampat@linux.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : subject :
- date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=pp1;
- bh=wZMiLGZUzgEyouT+WJGGnMy3kyxoJ4X+fjWI2QClu/8=;
- b=KEwQzclcdEFCxe36Tu5haHseOMMjrWuMhOHkP2103CM0r0z+KPdpczO5n+8SBs41kgzk
- s+9qrJL+S7mxh85mhKPpBEevEovud+q6WZ6Zkio9tsiB3nEnMgROK84sn5uPiOXoY2s7
- mKgUo1epCOuU2mIomWZV7UNBazD/R35BW2kA76g9ftcum0KH7RKEWIcuGmBHrnuTAgno
- IJQzw87Nvzm+C7QzoqAACoV5j47XC+SB2mMmlBSGNP9NbQiRkDALahczd21X/SSXsSux
- rdjGVldyKfDSm7GW8hGNufsuNe/+Be4Zp3IR+BHiPdKaLK/4ikOIHGletX7mD/HrtF5i EQ== 
-In-Reply-To: <20211009151243.8825-1-psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+ date : message-id : content-transfer-encoding : mime-version; s=pp1;
+ bh=U9ICzRSemhXpQ8Gs+IIYn/ZqK8DXxn+HFppPLXabDOs=;
+ b=fN7KxCITg5KNpdtbt7R7vrdHZ+xbeDV0CqbVRdH6SYSbVNMyBdGL5/VjA7O6FlTuLETZ
+ DnAnE2GWYzf29+cSo30RMyQ7sOsdy/ms1HcPknYOD08vsG38XbcMC95Xok4yp38XYz+R
+ u2ALPIIyvNDNp9OujvkE65DoVh+ckH06D90y9wG6ArlhkhU7Z+5OmhirzVSltqPpsfnz
+ fLIiiMXO2Z4fG7LNX4/hlpzFTlfNIbqACfzbEEDN8/aEeWrurDcQdQZ3DVcYAV9BRfCx
+ yutF/713YuO00vO+f7ZzzQ1MDABbm9FuVyz82gFZZq/38ebQ0+qv8Tf+vdysttJyTpgA dQ== 
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, pratik.r.sampat-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-The commit adds functionality to map every host CPU to a virtualized CPU
-in the namespace.
+An early prototype of to demonstrate CPU namespace interface and its
+mechanism.
 
-Every CPU namespace apart from the init namespace has its CPU map
-scrambled. The CPUs are mapped in a flat hierarchy. This means that
-regardless of the parent-child hierarchy of the namespace, each
-translation will map directly from the virtual namespace CPU to
-physical CPU without the need of traversal along the hierarchy.
+The kernel provides two ways to control CPU resources for tasks
+1. cgroup cpuset:
+   A control mechanism to restrict CPUs to a task or a
+   set of tasks attached to that group
+2. syscall sched_setaffinity:
+   A system call that can pin tasks to a set of CPUs
 
-Signed-off-by: Pratik R. Sampat <psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
----
- kernel/cpu_namespace.c | 49 ++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 45 insertions(+), 4 deletions(-)
+The kernel also provides three ways to view the CPU resources available
+to the system:
+1. sys/procfs:
+   CPU system information is divulged through sys and proc fs, it
+   exposes online, offline, present as well as load characteristics on
+   the CPUs
+2. syscall sched_getaffinity:
+   A system call interface to get the cpuset affinity of tasks
+3. cgroup cpuset:
+   While cgroup is more of a control mechanism than a display mechanism,
+   it can be viewed to retrieve the CPU restrictions applied on a group
+   of tasks
 
-diff --git a/kernel/cpu_namespace.c b/kernel/cpu_namespace.c
-index 6c700522352a..7b8b28f3d0e7 100644
---- a/kernel/cpu_namespace.c
-+++ b/kernel/cpu_namespace.c
-@@ -27,6 +27,33 @@ static void destroy_cpu_namespace(struct cpu_namespace *ns)
- 	put_user_ns(ns->user_ns);
- }
- 
-+/*
-+ * Shuffle
-+ * Arrange the N elements of ARRAY in random order.
-+ * Only effective if N is much smaller than RAND_MAX;
-+ * if this may not be the case, use a better random
-+ * number generator. -- Ben Pfaff.
-+ */
-+#define RAND_MAX	32767
-+void shuffle(int *array, size_t n)
-+{
-+	unsigned int rnd_num;
-+	int i, j, t;
-+
-+	if (n <= 1)
-+		return;
-+
-+	for (i = 0; i < n-1; i++) {
-+		get_random_bytes(&rnd_num, sizeof(rnd_num));
-+		rnd_num = rnd_num % RAND_MAX;
-+
-+		j = i + rnd_num / (RAND_MAX / (n - i) + 1);
-+		t = array[j];
-+		array[j] = array[i];
-+		array[i] = t;
-+	}
-+}
-+
- static struct ucounts *inc_cpu_namespaces(struct user_namespace *ns)
- {
- 	return inc_ucount(ns, current_euid(), UCOUNT_CPU_NAMESPACES);
-@@ -37,8 +64,9 @@ static struct cpu_namespace *create_cpu_namespace(struct user_namespace *user_ns
- {
- 	struct cpu_namespace *ns;
- 	struct ucounts *ucounts;
--	int err, i, cpu;
-+	int err, i, cpu, n = 0;
- 	cpumask_t temp;
-+	int *cpu_arr;
- 
- 	err = -EINVAL;
- 	if (!in_userns(parent_cpu_ns->user_ns, user_ns))
-@@ -62,10 +90,21 @@ static struct cpu_namespace *create_cpu_namespace(struct user_namespace *user_ns
- 	ns->parent = get_cpu_ns(parent_cpu_ns);
- 	ns->user_ns = get_user_ns(user_ns);
- 
--	for_each_present_cpu(cpu) {
--		ns->p_v_trans_map[cpu] = ns->parent->p_v_trans_map[cpu];
--		ns->v_p_trans_map[cpu] = ns->parent->v_p_trans_map[cpu];
-+	cpu_arr = kmalloc_array(num_possible_cpus(), sizeof(int), GFP_KERNEL);
-+	if (!cpu_arr)
-+		goto out_free_ns;
-+
-+	for_each_possible_cpu(cpu) {
-+		cpu_arr[n++] = cpu;
-+	}
-+
-+	shuffle(cpu_arr, n);
-+
-+	for (i = 0; i < n; i++) {
-+		ns->p_v_trans_map[i] = cpu_arr[i];
-+		ns->v_p_trans_map[cpu_arr[i]] = i;
- 	}
-+
- 	cpumask_clear(&temp);
- 	cpumask_clear(&ns->v_cpuset_cpus);
- 
-@@ -80,6 +119,8 @@ static struct cpu_namespace *create_cpu_namespace(struct user_namespace *user_ns
- 
- 	set_cpus_allowed_ptr(current, &temp);
- 
-+	kfree(cpu_arr);
-+
- 	return ns;
- 
- out_free_ns:
+Coherency of information
+------------------------
+The control and the display interface is fairly disjoint with each
+other. Restrictions can be set through control interfaces like cgroups,
+while many applications legacy or otherwise get the view of the system
+through sysfs/procfs and allocate resources like number of
+threads/processes, memory allocation based on that information.
+
+This can lead to unexpected running behaviors as well as have a high
+impact on performance.
+
+Existing solutions to the problem include userspace tools like LXCFS
+which can fake the sysfs information by mounting onto the sysfs online
+file to be in coherence with the limits set through cgroup cpuset.
+However, LXCFS is an external solution and needs to be explicitly setup
+for applications that require it. Another concern is also that tools
+like LXCFS don't handle all the other display mechanism like procfs load
+stats.
+
+Therefore, the need of a clean interface could be advocated for.
+
+Security and fair use implications
+----------------------------------
+In a multi-tenant system, multiple containers may exist and information
+about the entire system, rather than just the resources that are
+restricted upon them can cause security and fair use implications such
+as:
+1. A case where an actor can be in cognizance of the CPU node topology
+   can schedule workloads and select CPUs such that the bus is flooded
+   causing a Denial Of Service attack
+2. A case wherein identifying the CPU system topology can help identify
+   cores that are close to buses and peripherals such as GPUs to get an
+   undue latency advantage from the rest of the workloads
+
+A survey RFD discusses other potential solutions and their concerns are
+listed here: https://lkml.org/lkml/2021/7/22/204
+
+This prototype patchset introduces a new kernel namespace mechanism --
+CPU namespace.
+
+The CPU namespace isolates CPU information by virtualizing logical CPU
+IDs and creating a scrambled virtual CPU map of the same.
+It latches onto the task_struct and is the cpu translations designed to
+be in a flat hierarchy this means that every virtual namespace CPU maps
+to a physical CPU at the creation of the namespace. The advantage of a
+flat hierarchy is that translations are O(1) and children do not need
+to traverse up the tree to retrieve a translation.
+
+This namespace then allows both control and display interfaces to be
+CPU namespace context aware, such that a task within a namespace only
+gets the view and therefore control of its and view CPU resources
+available to it via a virtual CPU map.
+
+Experiment
+----------
+We designed an experiment to benchmark nginx configured with
+"worker_processes: auto" (which ensures that the number of processes to
+spawn will be derived from resources viewed on the system) and a
+benchmark/driver application wrk
+
+Nginx: Nginx is a web server that can also be used as a reverse proxy,
+load balancer, mail proxy and HTTP cache
+Wrk: wrk is a modern HTTP benchmarking tool capable of generating
+significant load when run on a single multi-core CPU
+
+Docker is used as the containerization platform of choice.
+
+The numbers gathered on IBM Power 9 CPU @ 2.979GHz with 176 CPUs and
+127GB memory
+kernel: 5.14
+
+Case1: vanilla kernel - cpuset 4 cpus, no optimization
+Case2: CPU namespace kernel - cpuset 4 cpus
+
+
++-----------------------+----------+----------+-----------------+
+|        Metric         |  Case1   |  Case2   | case2 vs case 1 |
++-----------------------+----------+----------+-----------------+
+| PIDs                  |      177 |        5 |        172 PIDs |
+| mem usage (init) (MB) |    272.8 |    11.12 |          95.92% |
+| mem usage (peak) (MB) |    281.3 |    20.62 |          92.66% |
+| Latency (avg ms)      |    70.91 |    25.36 |          64.23% |
+| Requests/sec          | 47011.05 | 47080.98 |           0.14% |
+| Transfer/sec (MB)     |    38.11 |    38.16 |           0.13% |
++-----------------------+----------+----------+-----------------+
+
+With the CPU namespace we see the correct number of PIDs spawning
+corresponding to the cpuset limits set. The memory utilization drops
+over 92-95%, the latency reduces by 64% and the the throughput like
+requests and transfer per second is unchanged.
+
+Note: To utilize this new namespace in a container runtime like docker,
+the clone CPU namespace flag was modified to coincide with the PID
+namespace as they are the building blocks of containers and will always
+be invoked.
+
+Current shortcomings in the prototype:
+--------------------------------------
+1. Containers also frequently use cfs period and quotas to restrict CPU
+   runtime also known as millicores in modern container runtimes.
+   The RFC interface currently does not account for this in
+   the scheme of things.
+2. While /proc/stat is now namespace aware and userspace programs like
+   top will see the CPU utilization for their view of virtual CPUs;
+   if the system or any other application outside the namespace
+   bumps up the CPU utilization it will still show up in sys/user time.
+   This should ideally be shown as stolen time instead.
+   The current implementation plugs into the display of stats rather
+   than accounting which causes incorrect reporting of stolen time.
+3. The current implementation assumes that no hotplug operations occur
+   within a container and hence the online and present cpus within a CPU
+   namespace are always the same and query the same CPU namespace mask
+4. As this is a proof of concept, currently we do not differentiate
+   between cgroup cpus_allowed and effective_cpus and plugs them into
+   the same virtual CPU map of the namespace
+5. As described in a fair use implication earlier, knowledge of the
+   CPU topology can potentially be taken an misused with a flood.
+   While scrambling the CPUset in the namespace can help by
+   obfuscation of information, the topology can still be roughly figured
+   out with the use of IPI latencies to determine siblings or far away
+   cores
+
+More information about the design and a video demo of the prototype can
+be found here: https://pratiksampat.github.io/cpu_namespace.html
+
+Pratik R. Sampat (5):
+  ns: Introduce CPU Namespace
+  ns: Add scrambling functionality to CPU namespace
+  cpuset/cpuns: Make cgroup CPUset CPU namespace aware
+  cpu/cpuns: Make sysfs CPU namespace aware
+  proc/cpuns: Make procfs load stats CPU namespace aware
+
+ drivers/base/cpu.c             |  35 ++++-
+ fs/proc/namespaces.c           |   4 +
+ fs/proc/stat.c                 |  50 +++++--
+ include/linux/cpu_namespace.h  | 159 ++++++++++++++++++++++
+ include/linux/nsproxy.h        |   2 +
+ include/linux/proc_ns.h        |   2 +
+ include/linux/user_namespace.h |   1 +
+ include/uapi/linux/sched.h     |   1 +
+ init/Kconfig                   |   8 ++
+ kernel/Makefile                |   1 +
+ kernel/cgroup/cpuset.c         |  57 +++++++-
+ kernel/cpu_namespace.c         | 233 +++++++++++++++++++++++++++++++++
+ kernel/fork.c                  |   2 +-
+ kernel/nsproxy.c               |  30 ++++-
+ kernel/sched/core.c            |  16 ++-
+ kernel/ucount.c                |   1 +
+ 16 files changed, 581 insertions(+), 21 deletions(-)
+ create mode 100644 include/linux/cpu_namespace.h
+ create mode 100644 kernel/cpu_namespace.c
+
 -- 
 2.31.1
 
