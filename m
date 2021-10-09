@@ -1,172 +1,122 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH memcg] memcg: enable memory accounting in __alloc_pages_bulk
-Date: Fri, 8 Oct 2021 10:35:22 -0700
-Message-ID: <CALvZod7_fhgV39HXmmMApubW-39CjJ5t+WjmkyA_DNGF7b5O+w@mail.gmail.com>
-References: <6411d3f7-b3a4-23a8-14fc-fcf6b9c5b73a@virtuozzo.com> <bf3b1364-2c48-533f-9dae-22470074a037@virtuozzo.com>
+From: "Pratik R. Sampat" <psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Subject: [RFC 2/5] ns: Add scrambling functionality to CPU namespace
+Date: Sat,  9 Oct 2021 20:42:40 +0530
+Message-ID: <20211009151243.8825-3-psampat@linux.ibm.com>
+References: <20211009151243.8825-1-psampat@linux.ibm.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=9VPAeexfeOB6o98JRDi1ACJzyuQXs5JhkfM02uJqTm0=;
-        b=FP13VZlniV+IoAFJLmoJcHDk8TtBwY9o9QaWTcNjuF8LFUXGyt1e/yMPp3IoW8c2gR
-         h2tWPVg9GWcbfFqHlFtA/6vMWP722nIhlOQQsfcKCkHlOVBYGfHb7KCX2OvGmygbbPA6
-         F2OmrLBLWpZx4Z6RLVeQuQmUDaUduMxFGdKKqAXBlegzGQ+WiQqNONZf8JCekyjfyQpG
-         739Ax5rs3sQkenq+RyBXTG78iNV/QEP71fwJtzKfR7BS5CtcFUjreZrNjOGRj2HtvebZ
-         9z4sTg9p9sZXq/V3B16Gt/puPG+04xXdXW66RHRfeZf2+aik86F6qhonX2ZN10Qyo3H8
-         ugUw==
-In-Reply-To: <bf3b1364-2c48-533f-9dae-22470074a037-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : subject :
+ date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=pp1;
+ bh=wZMiLGZUzgEyouT+WJGGnMy3kyxoJ4X+fjWI2QClu/8=;
+ b=KEwQzclcdEFCxe36Tu5haHseOMMjrWuMhOHkP2103CM0r0z+KPdpczO5n+8SBs41kgzk
+ s+9qrJL+S7mxh85mhKPpBEevEovud+q6WZ6Zkio9tsiB3nEnMgROK84sn5uPiOXoY2s7
+ mKgUo1epCOuU2mIomWZV7UNBazD/R35BW2kA76g9ftcum0KH7RKEWIcuGmBHrnuTAgno
+ IJQzw87Nvzm+C7QzoqAACoV5j47XC+SB2mMmlBSGNP9NbQiRkDALahczd21X/SSXsSux
+ rdjGVldyKfDSm7GW8hGNufsuNe/+Be4Zp3IR+BHiPdKaLK/4ikOIHGletX7mD/HrtF5i EQ== 
+In-Reply-To: <20211009151243.8825-1-psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+To: bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, pratik.r.sampat-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-+Roman
+The commit adds functionality to map every host CPU to a virtualized CPU
+in the namespace.
 
-On Fri, Oct 8, 2021 at 2:23 AM Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
->
-> Enable memory accounting for bulk page allocator.
->
-> Fixes: 387ba26fb1cb ("mm/page_alloc: add a bulk page allocator")
-> Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-> ---
->  mm/page_alloc.c | 64 +++++++++++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 62 insertions(+), 2 deletions(-)
->
-> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-> index b37435c274cf..602819a232e5 100644
-> --- a/mm/page_alloc.c
-> +++ b/mm/page_alloc.c
-> @@ -5172,6 +5172,55 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
->         return true;
->  }
->
+Every CPU namespace apart from the init namespace has its CPU map
+scrambled. The CPUs are mapped in a flat hierarchy. This means that
+regardless of the parent-child hierarchy of the namespace, each
+translation will map directly from the virtual namespace CPU to
+physical CPU without the need of traversal along the hierarchy.
 
-Please move the following memcg functions to memcontrol.[h|c] files.
+Signed-off-by: Pratik R. Sampat <psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+---
+ kernel/cpu_namespace.c | 49 ++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 45 insertions(+), 4 deletions(-)
 
-> +#ifdef CONFIG_MEMCG_KMEM
-> +static bool memcg_bulk_pre_charge_hook(struct obj_cgroup **objcgp, gfp_t gfp,
-> +                                       unsigned int nr_pages)
-> +{
-> +       struct obj_cgroup *objcg = NULL;
-> +
-> +       if (!memcg_kmem_enabled() || !(gfp & __GFP_ACCOUNT))
-> +               return true;
-> +
-> +       objcg = get_obj_cgroup_from_current();
-> +
-> +       if (objcg && obj_cgroup_charge(objcg, gfp, nr_pages << PAGE_SHIFT)) {
+diff --git a/kernel/cpu_namespace.c b/kernel/cpu_namespace.c
+index 6c700522352a..7b8b28f3d0e7 100644
+--- a/kernel/cpu_namespace.c
++++ b/kernel/cpu_namespace.c
+@@ -27,6 +27,33 @@ static void destroy_cpu_namespace(struct cpu_namespace *ns)
+ 	put_user_ns(ns->user_ns);
+ }
+ 
++/*
++ * Shuffle
++ * Arrange the N elements of ARRAY in random order.
++ * Only effective if N is much smaller than RAND_MAX;
++ * if this may not be the case, use a better random
++ * number generator. -- Ben Pfaff.
++ */
++#define RAND_MAX	32767
++void shuffle(int *array, size_t n)
++{
++	unsigned int rnd_num;
++	int i, j, t;
++
++	if (n <= 1)
++		return;
++
++	for (i = 0; i < n-1; i++) {
++		get_random_bytes(&rnd_num, sizeof(rnd_num));
++		rnd_num = rnd_num % RAND_MAX;
++
++		j = i + rnd_num / (RAND_MAX / (n - i) + 1);
++		t = array[j];
++		array[j] = array[i];
++		array[i] = t;
++	}
++}
++
+ static struct ucounts *inc_cpu_namespaces(struct user_namespace *ns)
+ {
+ 	return inc_ucount(ns, current_euid(), UCOUNT_CPU_NAMESPACES);
+@@ -37,8 +64,9 @@ static struct cpu_namespace *create_cpu_namespace(struct user_namespace *user_ns
+ {
+ 	struct cpu_namespace *ns;
+ 	struct ucounts *ucounts;
+-	int err, i, cpu;
++	int err, i, cpu, n = 0;
+ 	cpumask_t temp;
++	int *cpu_arr;
+ 
+ 	err = -EINVAL;
+ 	if (!in_userns(parent_cpu_ns->user_ns, user_ns))
+@@ -62,10 +90,21 @@ static struct cpu_namespace *create_cpu_namespace(struct user_namespace *user_ns
+ 	ns->parent = get_cpu_ns(parent_cpu_ns);
+ 	ns->user_ns = get_user_ns(user_ns);
+ 
+-	for_each_present_cpu(cpu) {
+-		ns->p_v_trans_map[cpu] = ns->parent->p_v_trans_map[cpu];
+-		ns->v_p_trans_map[cpu] = ns->parent->v_p_trans_map[cpu];
++	cpu_arr = kmalloc_array(num_possible_cpus(), sizeof(int), GFP_KERNEL);
++	if (!cpu_arr)
++		goto out_free_ns;
++
++	for_each_possible_cpu(cpu) {
++		cpu_arr[n++] = cpu;
++	}
++
++	shuffle(cpu_arr, n);
++
++	for (i = 0; i < n; i++) {
++		ns->p_v_trans_map[i] = cpu_arr[i];
++		ns->v_p_trans_map[cpu_arr[i]] = i;
+ 	}
++
+ 	cpumask_clear(&temp);
+ 	cpumask_clear(&ns->v_cpuset_cpus);
+ 
+@@ -80,6 +119,8 @@ static struct cpu_namespace *create_cpu_namespace(struct user_namespace *user_ns
+ 
+ 	set_cpus_allowed_ptr(current, &temp);
+ 
++	kfree(cpu_arr);
++
+ 	return ns;
+ 
+ out_free_ns:
+-- 
+2.31.1
 
-Please use obj_cgroup_charge_pages() when you move this code to memcontrol.c
-
-> +               obj_cgroup_put(objcg);
-> +               return false;
-> +       }
-> +       obj_cgroup_get_many(objcg, nr_pages);
-> +       *objcgp = objcg;
-> +       return true;
-> +}
-> +
-> +static void memcg_bulk_charge_hook(struct obj_cgroup *objcg,
-> +                                       struct page *page)
-> +{
-> +       page->memcg_data = (unsigned long)objcg | MEMCG_DATA_KMEM;
-> +}
-> +
-> +static void memcg_bulk_post_charge_hook(struct obj_cgroup *objcg,
-> +                                       unsigned int nr_pages)
-> +{
-> +       obj_cgroup_uncharge(objcg, nr_pages << PAGE_SHIFT);
-> +       percpu_ref_put_many(&objcg->refcnt, nr_pages + 1);
-
-Introduce the obj_cgroup_put_many() and you don't need to keep the
-extra ref from the pre hook i.e. put the ref in the pre hook.
-
-> +}
-> +#else
-> +static bool memcg_bulk_pre_charge_hook(struct obj_cgroup **objcgp, gfp_t gfp,
-> +                                       unsigned int nr_pages)
-> +{
-> +       return true;
-> +}
-> +
-> +static void memcg_bulk_charge_hook(struct obj_cgroup *objcgp,
-> +                                       struct page *page)
-> +{
-> +}
-> +
-> +static void memcg_bulk_post_charge_hook(struct obj_cgroup *objcg,
-> +                                       unsigned int nr_pages)
-> +{
-> +}
-> +#endif
->  /*
->   * __alloc_pages_bulk - Allocate a number of order-0 pages to a list or array
->   * @gfp: GFP flags for the allocation
-> @@ -5207,6 +5256,8 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
->         gfp_t alloc_gfp;
->         unsigned int alloc_flags = ALLOC_WMARK_LOW;
->         int nr_populated = 0, nr_account = 0;
-> +       unsigned int nr_pre_charge = 0;
-> +       struct obj_cgroup *objcg = NULL;
->
->         /*
->          * Skip populated array elements to determine if any pages need
-> @@ -5275,6 +5326,10 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
->         if (unlikely(!zone))
->                 goto failed;
->
-> +       nr_pre_charge = nr_pages - nr_populated;
-> +       if (!memcg_bulk_pre_charge_hook(&objcg, gfp, nr_pre_charge))
-> +               goto failed;
-> +
->         /* Attempt the batch allocation */
->         local_lock_irqsave(&pagesets.lock, flags);
->         pcp = this_cpu_ptr(zone->per_cpu_pageset);
-> @@ -5287,9 +5342,9 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
->                         nr_populated++;
->                         continue;
->                 }
-> -
->                 page = __rmqueue_pcplist(zone, 0, ac.migratetype, alloc_flags,
->                                                                 pcp, pcp_list);
-> +
->                 if (unlikely(!page)) {
->                         /* Try and get at least one page */
->                         if (!nr_populated)
-> @@ -5297,6 +5352,8 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
->                         break;
->                 }
->                 nr_account++;
-> +               if (objcg)
-> +                       memcg_bulk_charge_hook(objcg, page);
-
-Logically this above should be after prep_new_page().
-
->
->                 prep_new_page(page, 0, gfp, 0);
->                 if (page_list)
-> @@ -5310,13 +5367,16 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
->
->         __count_zid_vm_events(PGALLOC, zone_idx(zone), nr_account);
->         zone_statistics(ac.preferred_zoneref->zone, zone, nr_account);
-> +       if (objcg)
-> +               memcg_bulk_post_charge_hook(objcg, nr_pre_charge - nr_account);
->
->  out:
->         return nr_populated;
->
->  failed_irq:
->         local_unlock_irqrestore(&pagesets.lock, flags);
-> -
-> +       if (objcg)
-> +               memcg_bulk_post_charge_hook(objcg, nr_pre_charge);
->  failed:
->         page = __alloc_pages(gfp, 0, preferred_nid, nodemask);
->         if (page) {
-> --
-> 2.31.1
->
