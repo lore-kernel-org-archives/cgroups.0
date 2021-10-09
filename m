@@ -1,7 +1,7 @@
 From: "Pratik R. Sampat" <psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-Subject: [RFC 4/5] cpu/cpuns: Make sysfs CPU namespace aware
-Date: Sat,  9 Oct 2021 20:42:42 +0530
-Message-ID: <20211009151243.8825-5-psampat@linux.ibm.com>
+Subject: [RFC 5/5] proc/cpuns: Make procfs load stats CPU namespace aware
+Date: Sat,  9 Oct 2021 20:42:43 +0530
+Message-ID: <20211009151243.8825-6-psampat@linux.ibm.com>
 References: <20211009151243.8825-1-psampat@linux.ibm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,97 +9,139 @@ Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : subject :
  date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=pp1;
- bh=H8oRUsAit0rbQ+tvsmlBm/55SJ3NXZybEbA2lrRQqhU=;
- b=pb7/HlUaF/JN7XGr75/+++4CjYbe3MJeWEoGzVfTzPzo3PNuUgkART0iGDnw9A+MBcQu
- kyOoFASIZxKOKT8+xGE3DAZfHWbfZ6GNErJsW9l4fZLbJJh9oqe8CHYl5krLnMuhjmuV
- nlaS+p5LDcFmx51dsoeRcRa9wRShJy0sTYvxvmstc/mbYwjnbnhtUhGm2vjQqi87QSiR
- e8dJEV97wAQ43my2/t9Kw3gBEtCG3eeQO713kICmlhxFvIQKE2UAgZ6DZGl2KOlBOC3Z
- uBcXbX6NKNSvqysLOfoR9/I3OkgVLFT53bmcO89OyCgq3dIcHfPGO/RIvPxuWVkPxYi9 +Q== 
+ bh=OsjRPBuVAZJUiH/1Tx72owDpcys2APioOZ0ZDm+Jjuw=;
+ b=I83NbEN3nMcRnBJCS8ba6wlY7yuDfgQBwW4Al5U8+uXQXosXBSh7xS0LpD3EQU4NKvTm
+ 7ybvsGnlKwUmntopz6lmhCEebpA7Xija9E3eUCf87fBHRNIpGdLzW46eOULCHQLlXfnq
+ UB2fr/SP5vvD0aK/LtWUkolnK+SBxm6Qrg+HRqrWmKQaEMOQlURH+yLYsu3b9l6qMEMi
+ KFASBCXwuJ59QlEePc6OQkQXxWe7kVYrbA+aEm2G/EeQfc9qOtBmOTXHoI0X4LUmcQk1
+ sJcDApLmnBfrfkYsPttMr3tmzxd5Wlaj3Nru+2CFxpQMVonRQKhGelz3lO4vNeb7wGp9 4g== 
 In-Reply-To: <20211009151243.8825-1-psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, pratik.r.sampat-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-The commit adds support to sysfs files like online, offline, present to
-be CPU namespace context aware. It presents virtualized CPU information
-which is coherent to the cgroup cpuset restrictions that are set upon
-the tasks.
+This commit adds support provide a virtualized view to the /proc/stat
+load statistics. The load, idle, irq and the rest of the information of
+a physical CPU is now displayed for its corresponding virtual CPU
+counterpart.
+The procfs file only populates the virtualized view for the CPUs based
+on the restrictions from cgroupfs set upon it.
 
 Signed-off-by: Pratik R. Sampat <psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 ---
- drivers/base/cpu.c | 35 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 34 insertions(+), 1 deletion(-)
+ fs/proc/stat.c | 50 ++++++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 38 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/base/cpu.c b/drivers/base/cpu.c
-index 5ef14db97904..1487b23e5472 100644
---- a/drivers/base/cpu.c
-+++ b/drivers/base/cpu.c
-@@ -20,6 +20,7 @@
+diff --git a/fs/proc/stat.c b/fs/proc/stat.c
+index 6561a06ef905..3ff39e7362bb 100644
+--- a/fs/proc/stat.c
++++ b/fs/proc/stat.c
+@@ -14,6 +14,7 @@
+ #include <linux/irqnr.h>
+ #include <linux/sched/cputime.h>
  #include <linux/tick.h>
- #include <linux/pm_qos.h>
- #include <linux/sched/isolation.h>
 +#include <linux/cpu_namespace.h>
  
- #include "base.h"
+ #ifndef arch_irq_stat_cpu
+ #define arch_irq_stat_cpu(cpu) 0
+@@ -107,13 +108,14 @@ static void show_all_irqs(struct seq_file *p)
  
-@@ -203,6 +204,24 @@ struct cpu_attr {
- 	const struct cpumask *const map;
- };
+ static int show_stat(struct seq_file *p, void *v)
+ {
+-	int i, j;
++	int i, j, pcpu;
+ 	u64 user, nice, system, idle, iowait, irq, softirq, steal;
+ 	u64 guest, guest_nice;
+ 	u64 sum = 0;
+ 	u64 sum_softirq = 0;
+ 	unsigned int per_softirq_sums[NR_SOFTIRQS] = {0};
+ 	struct timespec64 boottime;
++	cpumask_var_t cpu_mask;
  
-+#ifdef CONFIG_CPU_NS
-+static ssize_t show_cpuns_cpus_attr(struct device *dev,
-+			      struct device_attribute *attr,
-+			      char *buf)
-+{
-+	struct cpu_attr *ca = container_of(attr, struct cpu_attr, attr);
-+
-+	if (current->nsproxy->cpu_ns == &init_cpu_ns)
-+		return cpumap_print_to_pagebuf(true, buf, ca->map);
-+
-+	return cpumap_print_to_pagebuf(true, buf,
-+				       &current->nsproxy->cpu_ns->v_cpuset_cpus);
-+}
-+
-+#define _CPU_CPUNS_ATTR(name, map) \
-+	{ __ATTR(name, 0444, show_cpuns_cpus_attr, NULL), map }
-+#endif
-+
- static ssize_t show_cpus_attr(struct device *dev,
- 			      struct device_attribute *attr,
- 			      char *buf)
-@@ -217,9 +236,14 @@ static ssize_t show_cpus_attr(struct device *dev,
+ 	user = nice = system = idle = iowait =
+ 		irq = softirq = steal = 0;
+@@ -122,27 +124,39 @@ static int show_stat(struct seq_file *p, void *v)
+ 	/* shift boot timestamp according to the timens offset */
+ 	timens_sub_boottime(&boottime);
  
- /* Keep in sync with cpu_subsys_attrs */
- static struct cpu_attr cpu_attrs[] = {
-+#ifdef CONFIG_CPU_NS
-+	_CPU_CPUNS_ATTR(online, &__cpu_online_mask),
-+	_CPU_CPUNS_ATTR(present, &__cpu_present_mask),
-+#else
- 	_CPU_ATTR(online, &__cpu_online_mask),
--	_CPU_ATTR(possible, &__cpu_possible_mask),
- 	_CPU_ATTR(present, &__cpu_present_mask),
-+#endif
-+	_CPU_ATTR(possible, &__cpu_possible_mask),
- };
- 
- /*
-@@ -244,7 +268,16 @@ static ssize_t print_cpus_offline(struct device *dev,
- 	/* display offline cpus < nr_cpu_ids */
- 	if (!alloc_cpumask_var(&offline, GFP_KERNEL))
- 		return -ENOMEM;
+-	for_each_possible_cpu(i) {
 +#ifdef CONFIG_CPU_NS
 +	if (current->nsproxy->cpu_ns == &init_cpu_ns) {
-+		cpumask_andnot(offline, cpu_possible_mask, cpu_online_mask);
++		cpumask_copy(cpu_mask, cpu_possible_mask);
 +	} else {
-+		cpumask_andnot(offline, cpu_possible_mask,
-+			       &current->nsproxy->cpu_ns->v_cpuset_cpus);
++		cpumask_copy(cpu_mask,
++			     &current->nsproxy->cpu_ns->v_cpuset_cpus);
 +	}
 +#else
- 	cpumask_andnot(offline, cpu_possible_mask, cpu_online_mask);
++	cpumask_copy(cpu_mask, cpu_possible_mask);
 +#endif
- 	len += sysfs_emit_at(buf, len, "%*pbl", cpumask_pr_args(offline));
- 	free_cpumask_var(offline);
++
++	for_each_cpu(i, cpu_mask) {
+ 		struct kernel_cpustat kcpustat;
+ 		u64 *cpustat = kcpustat.cpustat;
  
+-		kcpustat_cpu_fetch(&kcpustat, i);
++		pcpu = get_pcpu_cpuns(current->nsproxy->cpu_ns, i);
++		kcpustat_cpu_fetch(&kcpustat, pcpu);
+ 
+ 		user		+= cpustat[CPUTIME_USER];
+ 		nice		+= cpustat[CPUTIME_NICE];
+ 		system		+= cpustat[CPUTIME_SYSTEM];
+-		idle		+= get_idle_time(&kcpustat, i);
+-		iowait		+= get_iowait_time(&kcpustat, i);
++		idle		+= get_idle_time(&kcpustat, pcpu);
++		iowait		+= get_iowait_time(&kcpustat, pcpu);
+ 		irq		+= cpustat[CPUTIME_IRQ];
+ 		softirq		+= cpustat[CPUTIME_SOFTIRQ];
+ 		steal		+= cpustat[CPUTIME_STEAL];
+ 		guest		+= cpustat[CPUTIME_GUEST];
+ 		guest_nice	+= cpustat[CPUTIME_GUEST_NICE];
+-		sum		+= kstat_cpu_irqs_sum(i);
+-		sum		+= arch_irq_stat_cpu(i);
++		sum		+= kstat_cpu_irqs_sum(pcpu);
++		sum		+= arch_irq_stat_cpu(pcpu);
+ 
+ 		for (j = 0; j < NR_SOFTIRQS; j++) {
+-			unsigned int softirq_stat = kstat_softirqs_cpu(j, i);
++			unsigned int softirq_stat = kstat_softirqs_cpu(j, pcpu);
+ 
+ 			per_softirq_sums[j] += softirq_stat;
+ 			sum_softirq += softirq_stat;
+@@ -162,18 +176,30 @@ static int show_stat(struct seq_file *p, void *v)
+ 	seq_put_decimal_ull(p, " ", nsec_to_clock_t(guest_nice));
+ 	seq_putc(p, '\n');
+ 
+-	for_each_online_cpu(i) {
++#ifdef CONFIG_CPU_NS
++	if (current->nsproxy->cpu_ns == &init_cpu_ns) {
++		cpumask_copy(cpu_mask, cpu_online_mask);
++	} else {
++		cpumask_copy(cpu_mask,
++			     &current->nsproxy->cpu_ns->v_cpuset_cpus);
++	}
++#else
++	cpumask_copy(cpu_mask, cpu_online_mask);
++#endif
++	for_each_cpu(i, cpu_mask) {
+ 		struct kernel_cpustat kcpustat;
+ 		u64 *cpustat = kcpustat.cpustat;
+ 
+-		kcpustat_cpu_fetch(&kcpustat, i);
++		pcpu = get_pcpu_cpuns(current->nsproxy->cpu_ns, i);
++
++		kcpustat_cpu_fetch(&kcpustat, pcpu);
+ 
+ 		/* Copy values here to work around gcc-2.95.3, gcc-2.96 */
+ 		user		= cpustat[CPUTIME_USER];
+ 		nice		= cpustat[CPUTIME_NICE];
+ 		system		= cpustat[CPUTIME_SYSTEM];
+-		idle		= get_idle_time(&kcpustat, i);
+-		iowait		= get_iowait_time(&kcpustat, i);
++		idle		= get_idle_time(&kcpustat, pcpu);
++		iowait		= get_iowait_time(&kcpustat, pcpu);
+ 		irq		= cpustat[CPUTIME_IRQ];
+ 		softirq		= cpustat[CPUTIME_SOFTIRQ];
+ 		steal		= cpustat[CPUTIME_STEAL];
 -- 
 2.31.1
 
