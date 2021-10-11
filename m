@@ -1,56 +1,43 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH] cgroup: fix memory leak caused by missing
- cgroup_bpf_offline
-Date: Mon, 11 Oct 2021 09:29:22 -0700
-Message-ID: <YWRmYk4hHhPf602i@carbon.dhcp.thefacebook.com>
-References: <20211007121603.1484881-1-quanyang.wang@windriver.com>
- <20211011162128.GC61605@blackbody.suse.cz>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: pthread_setschedparam returns 1 (Operation Not Permitted) after
+ including docker in yocto build
+Date: Mon, 11 Oct 2021 19:00:21 +0200
+Message-ID: <20211011170021.GD61605@blackbody.suse.cz>
+References: <CAFx0Op3b7KeAT0_Dd_eAMKh85=6qY_X6-BHGJdS2TN8UtJMytg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=eBxjwOrWVhjFCG1WOcEx4A/Nn7jB5bvKwWh/zC/S87M=;
- b=q2zdpG21FJgM+40H5ySMc8qbKhV2smAlYY8pgvcs0XWTh6QodZSOaumRVH1t4RnNOHO8
- wNHG7mMHLVV01j3zrCwU8DFzuIjFhIFqkSDHktIYUTJ4RF+/H7MzAPSK5z0PXw3GWcNg
- zmFYQx7Qpfzrvkm/A2MhY5zXAOYynLCU+Bc= 
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1633971623; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=aLHDu14dPkuXVPX0xo7np8SfCtAB89ZamcliK/6Zp4c=;
+        b=TbwvUEE27w8fWTwyAdkBa3iSJCSHgH/lCnJSRE/f4xpYZI/5rJTWeoFVWWrM+abDdSd9Q+
+        vMYfLlmpgA/Ie86xuV+ubP/XBviW55t/7QYj+8Ku5wy/OCZgecaDZt8QZHOFSmfU0NYTvz
+        QvNUTSKUro8xYCLtWG6eR/U4yE3okIY=
 Content-Disposition: inline
-In-Reply-To: <20211011162128.GC61605@blackbody.suse.cz>
+In-Reply-To: <CAFx0Op3b7KeAT0_Dd_eAMKh85=6qY_X6-BHGJdS2TN8UtJMytg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: quanyang.wang@windriver.com, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org
+To: Hans-Jacob Enemark <hjenemark-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Oct 11, 2021 at 06:21:28PM +0200, Michal Koutny wrote:
-> Hello.
-> 
-> On Thu, Oct 07, 2021 at 08:16:03PM +0800, quanyang.wang@windriver.com wrote:
-> > This is because that root_cgrp->bpf.refcnt.data is allocated by the
-> > function percpu_ref_init in cgroup_bpf_inherit which is called by
-> > cgroup_setup_root when mounting, but not freed along with root_cgrp
-> > when umounting.
-> 
-> Good catch!
+Hello.
 
-+1
+On Sat, Sep 25, 2021 at 10:45:43PM +0200, Hans-Jacob Enemark <hjenemark-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> For some reason it is no longer possible to set the priority and the
+> scheduling policy of a running pthread inside the thread function
+> itself - even with the app running as root..
+> #define POLICY SCHED_FIFO
 
-> 
-> > Adding cgroup_bpf_offline which calls percpu_ref_kill to
-> > cgroup_kill_sb can free root_cgrp->bpf.refcnt.data in umount path.
-> 
-> That is sensible.
-> 
-> > Fixes: 2b0d3d3e4fcfb ("percpu_ref: reduce memory footprint of percpu_ref in fast path")
-> 
-> Why this Fixes:? Is the leak absent before the percpu_ref refactoring?
+You use an RT scheduling policy.
 
-I agree, the "fixes" tag looks dubious to me.
+It's not in your diff dump but my bet is on CONFIG_RT_GROUP_SCHED.
+The non-root RT groups have zero RT runtime allocation by default,
+therefore sched_setpriority would fail in such a cgroup.
 
-> I guess the embedded data are free'd together with cgroup. Makes me
-> wonder why struct cgroup_bpf has a separate percpu_ref counter from
-> struct cgroup...
+(The changes in your setup might have modified whether any CPU cgroups
+are created or only root cpu cgroup is present.)
 
-This is because a cgroup can stay a long time (sometimes effectively forever)
-in a dying state, so we want to release bpf structures earlier.
-
-Thanks!
+HTH,
+Michal
