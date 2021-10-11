@@ -1,86 +1,38 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH] blk-cgroup: check blkcg policy is enabled in
- blkg_create()
-Date: Mon, 11 Oct 2021 17:23:18 +0200
-Message-ID: <20211011152318.GA61605@blackbody.suse.cz>
-References: <20211008072720.797814-1-yukuai3@huawei.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: Re: [Question] io cgroup subsystem threaded support
+Date: Mon, 11 Oct 2021 17:34:16 +0200
+Message-ID: <20211011153416.GB61605@blackbody.suse.cz>
+References: <20211001110645.uzw2w5t4rknwqhma@T580.localdomain>
+ <20211007133916.mgk6qb65d2r57fc2@T580.localdomain>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1633965800; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1633966458; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=7c/NrmzTGTsgOvKn52EsTSKmzoG1TlQJCZXKhAlpBfA=;
-        b=hO7xF03Ts64S2p90ng+KaDHXFlaWeJQbfgY0oz5i8Z4FH2+GtaHZr5w66bllhb3wztRKmm
-        XaD8fXn7yC/jL8x/f+4DTJsSIVZCFPGD5xFoo8QO82SHqf6J62kCRtfiPELGQqmK5rwdJ8
-        /YGKVXaRserLrG2N0N67Fz8pFYZLkA0=
+        bh=ZL4FlCU5ckfxXlCQEcdiVJas2l+qPTW/K1inX6vWtpY=;
+        b=ZaVEyJ2OYsHCWHcdHtNktV8SP1RE4O5Hm9uc2Y8bLSEQ8tGgVWSeMa9/vwvfVALILKo2ms
+        WoTZtyamBomNpEvlr0MrPn3NnsfP0Cm46gvQwuCmllDkGxNsCG+nyP6yKr+Fq1FNHfWTDW
+        XylMA3SzpDtokKMxBgtByuYAUWiDlIc=
 Content-Disposition: inline
-In-Reply-To: <20211008072720.797814-1-yukuai3@huawei.com>
+In-Reply-To: <20211007133916.mgk6qb65d2r57fc2-3Hjs5a4P6Kh82hYKe6nXyg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai3@huawei.com>
-Cc: tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+To: Odin Hultgren van der Horst <odin-KgRVb285F3Y0FkRhN5fn+A@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 Hello.
 
-On Fri, Oct 08, 2021 at 03:27:20PM +0800, Yu Kuai <yukuai3@huawei.com> wrote:
-> This is because blkg_alloc() is called from blkg_conf_prep() without
-> holding 'q->queue_lock', and elevator is exited before blkg_create():
- 
-IIUC the problematic interleaving is this one (I've noticed `blkg->pd[i]
-= NULL` to thread 2 call trace):
+On Thu, Oct 07, 2021 at 03:39:16PM +0200, Odin Hultgren van der Horst <odin-KgRVb285F3Y0FkRhN5fn+A@public.gmane.org> wrote:
+> So mainly the writeback functionality or is it ingrained in all
+> functionality like latency and priority?
 
-> thread 1                            thread 2
-> blkg_conf_prep
->  spin_lock_irq(&q->queue_lock);
->  blkg_lookup_check -> return NULL
->  spin_unlock_irq(&q->queue_lock);
-> 
->  blkg_alloc
->   blkcg_policy_enabled -> true
->   pd = ->pd_alloc_fn
->                                    blk_mq_exit_sched
->                                     bfq_exit_queue
->                                      blkcg_deactivate_policy
->                                       spin_lock_irq(&q->queue_lock);
->                                       __clear_bit(pol->plid, q->blkcg_pols);
->
-                                        pol->pd_free_fn(blkg->pd[i]);
-                                        blkg->pd[i] = NULL;
->
->                                       spin_unlock_irq(&q->queue_lock);
->                                     q->elevator = NULL;
-    blkg->pd[i] = pd
->   spin_lock_irq(&q->queue_lock);
->    blkg_create
->     if (blkg->pd[i])
->      ->pd_init_fn -> q->elevator is NULL
->   spin_unlock_irq(&q->queue_lock);
+What do you want to achieve actually?
 
-In high-level terms, is this a race between (blk)io controller attribute
-write and a device scheduler (elevator) switch?
-If so, I'd add it to the commit message.
+> If not, is there a subset of io cgroup subsys that could easily support threading?
 
-> Fix the problem by checking that policy is still enabled in
-> blkg_create().
+I'd say such a subset would be similar to what can be done with
+ioprio_set(2).
 
-Is this sufficient wrt some other q->elevator users later?
-
-> @@ -252,6 +266,9 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
->  		goto err_free_blkg;
->  	}
->  
-
-I'd add a comment here like:
-
-> Re-check policies are still enabled, since the caller blkg_conf_prep()
-> temporarily drops q->queue_lock and we can race with
-> blk_mq_exit_sched() removing policies.
-
-> +	if (new_blkg)
-> +		blkg_check_pd(q, new_blkg);
-> +
-
-Thanks,
 Michal
