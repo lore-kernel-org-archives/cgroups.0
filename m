@@ -1,79 +1,86 @@
 From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [RFC 0/5] kernel: Introduce CPU Namespace
-Date: Mon, 11 Oct 2021 16:17:37 +0200
-Message-ID: <20211011141737.GA58758@blackbody.suse.cz>
-References: <20211009151243.8825-1-psampat@linux.ibm.com>
- <20211011101124.d5mm7skqfhe5g35h@wittgenstein>
+Subject: Re: [PATCH] blk-cgroup: check blkcg policy is enabled in
+ blkg_create()
+Date: Mon, 11 Oct 2021 17:23:18 +0200
+Message-ID: <20211011152318.GA61605@blackbody.suse.cz>
+References: <20211008072720.797814-1-yukuai3@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1633961859; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1633965800; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=kDLAV9SFvv6vvtysZB9q0KJpBPqNcjMVD5EZZnKETRs=;
-        b=pRmZ6LUSpykrXlML92cDxnZ8PEAkK1C0LwRxg2CWpfUisB/+GnN7aBbb0rDkdjhwzWL1dZ
-        z+AMaJzy8s/EzxpI/hZq9Fa+gnd03qTH0XVHintHLUI9p24dgjs4O881erPy+qWYiGkiKl
-        Kp/0fvtZPRYL7/bt2hVfXi5fhaKtYi0=
+        bh=7c/NrmzTGTsgOvKn52EsTSKmzoG1TlQJCZXKhAlpBfA=;
+        b=hO7xF03Ts64S2p90ng+KaDHXFlaWeJQbfgY0oz5i8Z4FH2+GtaHZr5w66bllhb3wztRKmm
+        XaD8fXn7yC/jL8x/f+4DTJsSIVZCFPGD5xFoo8QO82SHqf6J62kCRtfiPELGQqmK5rwdJ8
+        /YGKVXaRserLrG2N0N67Fz8pFYZLkA0=
 Content-Disposition: inline
-In-Reply-To: <20211011101124.d5mm7skqfhe5g35h@wittgenstein>
+In-Reply-To: <20211008072720.797814-1-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Christian Brauner <christian.brauner@ubuntu.com>
-Cc: "Pratik R. Sampat" <psampat@linux.ibm.com>, bristot@redhat.com, christian@brauner.io, ebiederm@xmission.com, lizefan.x@bytedance.com, tj@kernel.org, hannes@cmpxchg.org, mingo@kernel.org, juri.lelli@redhat.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, containers@lists.linux.dev, containers@lists.linux-foundation.org, pratik.r.sampat@gmail.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai3@huawei.com>
+Cc: tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-On Mon, Oct 11, 2021 at 12:11:24PM +0200, Christian Brauner <christian.brau=
-ner@ubuntu.com> wrote:
-> Fundamentally I think making this a new namespace is not the correct
-> approach.
+Hello.
 
-I tend to agree.=20
+On Fri, Oct 08, 2021 at 03:27:20PM +0800, Yu Kuai <yukuai3@huawei.com> wrote:
+> This is because blkg_alloc() is called from blkg_conf_prep() without
+> holding 'q->queue_lock', and elevator is exited before blkg_create():
+ 
+IIUC the problematic interleaving is this one (I've noticed `blkg->pd[i]
+= NULL` to thread 2 call trace):
 
-Also, generally, this is not only problem of cpuset but some other
-controllers well (the original letter mentions CPU bandwidth limits, another
-thing are memory limits (and I wonder whether some apps already adjust their
-behavior to available IO characteristics)).
-
-The problem as I see it is the mapping from a real dedicated HW to a
-cgroup restricted environment ("container"), which can be shared. In
-this instance, the virtualized view would not be able to represent a
-situation when a CPU is assigned non-exclusively to multiple cpusets.
-
-(Although, one speciality of the CPU namespace approach here is the
-remapping/scrambling of the CPU topology. Not sure if good or bad.)
-
-> I think that either we need to come up with new non-syscall based
-> interfaces that allow to query virtualized cpu information and buy into
-> the process of teaching userspace about them. This is even independent
-> of containers.
-
-For the reason above, I also agree with this. And I think this interface
-(mostly) exists -- the userspace could query the cgroup files
-(cpuset.cpus.effective in this case), they would even have the liberty
-to decide between querying available resources in their "container"
-(root cgroup (cgroup NS)) or further subdivision of that (the
-immediately encompassing cgroup).
-
-
-On Sat, Oct 09, 2021 at 08:42:38PM +0530, "Pratik R. Sampat" <psampat@linux=
-.ibm.com> wrote:
-> Existing solutions to the problem include userspace tools like LXCFS
-> which can fake the sysfs information by mounting onto the sysfs online
-> file to be in coherence with the limits set through cgroup cpuset.
-> However, LXCFS is an external solution and needs to be explicitly setup
-> for applications that require it. Another concern is also that tools
-> like LXCFS don't handle all the other display mechanism like procfs load
-> stats.
+> thread 1                            thread 2
+> blkg_conf_prep
+>  spin_lock_irq(&q->queue_lock);
+>  blkg_lookup_check -> return NULL
+>  spin_unlock_irq(&q->queue_lock);
+> 
+>  blkg_alloc
+>   blkcg_policy_enabled -> true
+>   pd = ->pd_alloc_fn
+>                                    blk_mq_exit_sched
+>                                     bfq_exit_queue
+>                                      blkcg_deactivate_policy
+>                                       spin_lock_irq(&q->queue_lock);
+>                                       __clear_bit(pol->plid, q->blkcg_pols);
 >
-> Therefore, the need of a clean interface could be advocated for.
+                                        pol->pd_free_fn(blkg->pd[i]);
+                                        blkg->pd[i] = NULL;
+>
+>                                       spin_unlock_irq(&q->queue_lock);
+>                                     q->elevator = NULL;
+    blkg->pd[i] = pd
+>   spin_lock_irq(&q->queue_lock);
+>    blkg_create
+>     if (blkg->pd[i])
+>      ->pd_init_fn -> q->elevator is NULL
+>   spin_unlock_irq(&q->queue_lock);
 
-I'd like to write something in support of your approach but I'm afraid that=
- the
-problem of the mapping (dedicated vs shared) makes this most suitable for s=
-ome
-external/separate entity such as the LCXFS already.
+In high-level terms, is this a race between (blk)io controller attribute
+write and a device scheduler (elevator) switch?
+If so, I'd add it to the commit message.
 
-My .02=E2=82=AC,
+> Fix the problem by checking that policy is still enabled in
+> blkg_create().
+
+Is this sufficient wrt some other q->elevator users later?
+
+> @@ -252,6 +266,9 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg,
+>  		goto err_free_blkg;
+>  	}
+>  
+
+I'd add a comment here like:
+
+> Re-check policies are still enabled, since the caller blkg_conf_prep()
+> temporarily drops q->queue_lock and we can race with
+> blk_mq_exit_sched() removing policies.
+
+> +	if (new_blkg)
+> +		blkg_check_pd(q, new_blkg);
+> +
+
+Thanks,
 Michal
-
