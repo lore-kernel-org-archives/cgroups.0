@@ -1,38 +1,62 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: Re: [Question] io cgroup subsystem threaded support
-Date: Mon, 11 Oct 2021 17:34:16 +0200
-Message-ID: <20211011153416.GB61605@blackbody.suse.cz>
-References: <20211001110645.uzw2w5t4rknwqhma@T580.localdomain>
- <20211007133916.mgk6qb65d2r57fc2@T580.localdomain>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH] cgroup: fix memory leak caused by missing
+ cgroup_bpf_offline
+Date: Mon, 11 Oct 2021 18:21:28 +0200
+Message-ID: <20211011162128.GC61605@blackbody.suse.cz>
+References: <20211007121603.1484881-1-quanyang.wang@windriver.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1633966458; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1633969289; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=ZL4FlCU5ckfxXlCQEcdiVJas2l+qPTW/K1inX6vWtpY=;
-        b=ZaVEyJ2OYsHCWHcdHtNktV8SP1RE4O5Hm9uc2Y8bLSEQ8tGgVWSeMa9/vwvfVALILKo2ms
-        WoTZtyamBomNpEvlr0MrPn3NnsfP0Cm46gvQwuCmllDkGxNsCG+nyP6yKr+Fq1FNHfWTDW
-        XylMA3SzpDtokKMxBgtByuYAUWiDlIc=
+        bh=j8grqsuiDa1p2LSXgYDqekInnTQ7Jhon0WjFTDwZwJs=;
+        b=TQj0MIlN7mg/iFLoicMLPRRgjwJjxnKhDlzHKKsy5eqTNIlGKN4X2cGLnM6joCpLDt5M+Y
+        8z3ZR6vJy9LB/YIcpGArNopx9B96owXx4jG48I2mk3pUG7kSYpzcyRk/wBJYBipHQYdVgt
+        0S7T4dqGiuFhd6SlWtRhBszhQgwdkp8=
 Content-Disposition: inline
-In-Reply-To: <20211007133916.mgk6qb65d2r57fc2-3Hjs5a4P6Kh82hYKe6nXyg@public.gmane.org>
+In-Reply-To: <20211007121603.1484881-1-quanyang.wang@windriver.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Odin Hultgren van der Horst <odin-KgRVb285F3Y0FkRhN5fn+A@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: quanyang.wang@windriver.com
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
 Hello.
 
-On Thu, Oct 07, 2021 at 03:39:16PM +0200, Odin Hultgren van der Horst <odin-KgRVb285F3Y0FkRhN5fn+A@public.gmane.org> wrote:
-> So mainly the writeback functionality or is it ingrained in all
-> functionality like latency and priority?
+On Thu, Oct 07, 2021 at 08:16:03PM +0800, quanyang.wang@windriver.com wrote:
+> This is because that root_cgrp->bpf.refcnt.data is allocated by the
+> function percpu_ref_init in cgroup_bpf_inherit which is called by
+> cgroup_setup_root when mounting, but not freed along with root_cgrp
+> when umounting.
 
-What do you want to achieve actually?
+Good catch!
 
-> If not, is there a subset of io cgroup subsys that could easily support threading?
+> Adding cgroup_bpf_offline which calls percpu_ref_kill to
+> cgroup_kill_sb can free root_cgrp->bpf.refcnt.data in umount path.
 
-I'd say such a subset would be similar to what can be done with
-ioprio_set(2).
+That is sensible.
 
-Michal
+> Fixes: 2b0d3d3e4fcfb ("percpu_ref: reduce memory footprint of percpu_ref in fast path")
+
+Why this Fixes:? Is the leak absent before the percpu_ref refactoring?
+I guess the embedded data are free'd together with cgroup. Makes me
+wonder why struct cgroup_bpf has a separate percpu_ref counter from
+struct cgroup...
+
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -2147,8 +2147,10 @@ static void cgroup_kill_sb(struct super_block *sb)
+>  	 * And don't kill the default root.
+>  	 */
+>  	if (list_empty(&root->cgrp.self.children) && root != &cgrp_dfl_root &&
+> -	    !percpu_ref_is_dying(&root->cgrp.self.refcnt))
+> +			!percpu_ref_is_dying(&root->cgrp.self.refcnt)) {
+> +		cgroup_bpf_offline(&root->cgrp);
+
+(You made some unnecessary whitespace here breaking indention :-)
+
+>  		percpu_ref_kill(&root->cgrp.self.refcnt);
+> +	}
+>  	cgroup_put(&root->cgrp);
+>  	kernfs_kill_sb(sb);
+>  }
