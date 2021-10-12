@@ -1,36 +1,92 @@
-From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Subject: Re: [GIT PULL] cgroup fixes for v5.15-rc6
-Date: Tue, 12 Oct 2021 00:30:39 +0000
-Message-ID: <163399863948.7007.18082768544664412722.pr-tracker-bot@kernel.org>
-References: <YWS0kcEY3MmKrZJk@slm.duckdns.org>
+From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] blk-cgroup: check blkcg policy is enabled in
+ blkg_create()
+Date: Tue, 12 Oct 2021 09:09:03 +0800
+Message-ID: <93193221-fbad-444f-c325-9f19d4c5931b@huawei.com>
+References: <20211008072720.797814-1-yukuai3@huawei.com>
+ <20211011152318.GA61605@blackbody.suse.cz>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1633998639;
-        bh=iXamAR3fOA7VQC/GpSHRF6/u7s4lBhGHbC6Cnw6DOuQ=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=bFZpKFaJw82WitBIVBZBU8Uud0FJmuYKKtLDihCqfOTJO6uRheR6yYvqwWPEllMza
-         zf8z/QNxZ0URDuCUmLsEH+H2Bpca5kXKY4JYx91mvucQHy3uo+nUQ8hk9WrtatTcH0
-         C0ydt+FD3Azn5eg3BBkaJNoT+aRAxrCQ7WKJ59JPFfbC/5OB6jbA/DfqSFWIsbR3/8
-         WBnETl3Z7iSAShJii39Zqv4PyG0EkY0ph1GQBxHsRMTSWtbD8WKdsc+dXqr+Qfyz7/
-         r47eGJpI+GwAwuq4LQ/oTmwDphbmE9ykk6O+jkxBsbRYd1wenzZSruhmQjuGGNMJTm
-         uWpR/DgglXjWA==
-In-Reply-To: <YWS0kcEY3MmKrZJk-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <20211011152318.GA61605-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-The pull request you sent on Mon, 11 Oct 2021 12:02:57 -1000:
+On 2021/10/11 23:23, Michal Koutn=C3=BD wrote:
+> Hello.
+>=20
+> On Fri, Oct 08, 2021 at 03:27:20PM +0800, Yu Kuai <yukuai3-hv44wF8Li93QT0=
+dZR+AlfA@public.gmane.org> wrote:
+>> This is because blkg_alloc() is called from blkg_conf_prep() without
+>> holding 'q->queue_lock', and elevator is exited before blkg_create():
+>  =20
+> IIUC the problematic interleaving is this one (I've noticed `blkg->pd[i]
+> =3D NULL` to thread 2 call trace):
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.15-fixes
+The new blkg will not add to blkg_list untill pd_init_fn() is done in
+blkg_create(), thus blkcg_deactivate_policy() can't access this blkg.
+>=20
+>> thread 1                            thread 2
+>> blkg_conf_prep
+>>   spin_lock_irq(&q->queue_lock);
+>>   blkg_lookup_check -> return NULL
+>>   spin_unlock_irq(&q->queue_lock);
+>>
+>>   blkg_alloc
+>>    blkcg_policy_enabled -> true
+>>    pd =3D ->pd_alloc_fn
+>>                                     blk_mq_exit_sched
+>>                                      bfq_exit_queue
+>>                                       blkcg_deactivate_policy
+>>                                        spin_lock_irq(&q->queue_lock);
+>>                                        __clear_bit(pol->plid, q->blkcg_p=
+ols);
+>>
+>                                          pol->pd_free_fn(blkg->pd[i]);
+>                                          blkg->pd[i] =3D NULL;
+>>
+>>                                        spin_unlock_irq(&q->queue_lock);
+>>                                      q->elevator =3D NULL;
+>      blkg->pd[i] =3D pd
+>>    spin_lock_irq(&q->queue_lock);
+>>     blkg_create
+>>      if (blkg->pd[i])
+>>       ->pd_init_fn -> q->elevator is NULL
+>>    spin_unlock_irq(&q->queue_lock);
+>=20
+> In high-level terms, is this a race between (blk)io controller attribute
+> write and a device scheduler (elevator) switch?
+> If so, I'd add it to the commit message.
+>=20
+>> Fix the problem by checking that policy is still enabled in
+>> blkg_create().
+>=20
+> Is this sufficient wrt some other q->elevator users later?
+>=20
+>> @@ -252,6 +266,9 @@ static struct blkcg_gq *blkg_create(struct blkcg *bl=
+kcg,
+>>   		goto err_free_blkg;
+>>   	}
+>>  =20
+>=20
+> I'd add a comment here like:
+>=20
+>> Re-check policies are still enabled, since the caller blkg_conf_prep()
+>> temporarily drops q->queue_lock and we can race with
+>> blk_mq_exit_sched() removing policies.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/459ea72c6cb98164ccacd6d06e3121554c13ba5e
+Thanks for your advice.
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Best regards,
+Kuai
+>=20
+>> +	if (new_blkg)
+>> +		blkg_check_pd(q, new_blkg);
+>> +
+>=20
+> Thanks,
+> Michal
+> .
+>=20
