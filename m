@@ -1,38 +1,174 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH] cgroup: fix memory leak caused by missing
- cgroup_bpf_offline
-Date: Tue, 12 Oct 2021 11:32:55 +0200
-Message-ID: <20211012093255.GA14510@blackbody.suse.cz>
-References: <20211007121603.1484881-1-quanyang.wang@windriver.com>
- <20211011162128.GC61605@blackbody.suse.cz>
- <6d76de0b-9de7-adbe-834b-c49ed991559d@windriver.com>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: [PATCH mm v2] memcg: enable memory accounting in __alloc_pages_bulk
+Date: Tue, 12 Oct 2021 13:18:39 +0300
+Message-ID: <2410e99a-087c-3f89-9bdf-b62a7d5df725@virtuozzo.com>
+References: <CALvZod7_fhgV39HXmmMApubW-39CjJ5t+WjmkyA_DNGF7b5O+w@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1634031177; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=uUH2uniB3EQO3dwCrSFaoRzeR2U8u7SDS04Yd4v70+U=;
-        b=YhyfbjO5nAw5bwwzh728WNI5DvAqHjJZFQzjmHA1K2+FdNCUYVxUjqsq9Ae4F6bDEzoqJQ
-        EEwVGKESG8YU55NGTFA+CFcmsIM5Doln5oqhNIvnNKw5GzbJco1gWy+9X50dKiW+sFqa2K
-        BV+UzYXo89KlPkPy75N9K1j65LCFY+I=
-Content-Disposition: inline
-In-Reply-To: <6d76de0b-9de7-adbe-834b-c49ed991559d@windriver.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
+        :From; bh=8rJ+XIdW21uQTmdwLWrTlCZ6Z0iC9PvW7PwYWi7Lxm8=; b=Fr5tYoeGULbawkQ7Adk
+        DF6UzznqTCzJ1QigjEfGsbfG2TfaU5+iSrPxt8sGQUE5sYdivT0hS1CPPW3zkQ00hBVpPVOLvJGM3
+        DG40JyQ+UnAP1EFkrG9HByh9CpRywktFBlpa3sDw0kK4IUXeU7N71gOD8mo0S+3nDBRKRyBywNs=;
+In-Reply-To: <CALvZod7_fhgV39HXmmMApubW-39CjJ5t+WjmkyA_DNGF7b5O+w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Quanyang Wang <quanyang.wang@windriver.com>
-Cc: Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Tue, Oct 12, 2021 at 02:22:13PM +0800, Quanyang Wang <quanyang.wang@windriver.com> wrote:
-> Before this commit, percpu_ref is embedded in cgroup, it can be freed along
-> with cgroup, so there is no memory leak. Since this commit, it causes the
-> memory leak.
-> Should I change it to "Fixes: 4bfc0bb2c60e ("bpf: decouple the lifetime of
-> cgroup_bpf from cgroup itself")"?
+Enable memory accounting for bulk page allocator.
 
-I see. The leak is a product so I'd tag both of them and explain it in
-the commit message.
+Fixes: 387ba26fb1cb ("mm/page_alloc: add a bulk page allocator")
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+---
+v2: modified according to Shakeel Butt's remarks
+---
+ include/linux/memcontrol.h | 11 +++++++++
+ mm/memcontrol.c            | 48 +++++++++++++++++++++++++++++++++++++-
+ mm/page_alloc.c            | 14 ++++++++++-
+ 3 files changed, 71 insertions(+), 2 deletions(-)
 
-Thank you,
-Michal
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 3096c9a0ee01..990acd70c846 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -810,6 +810,12 @@ static inline void obj_cgroup_put(struct obj_cgroup *objcg)
+ 	percpu_ref_put(&objcg->refcnt);
+ }
+ 
++static inline void obj_cgroup_put_many(struct obj_cgroup *objcg,
++				       unsigned long nr)
++{
++	percpu_ref_put_many(&objcg->refcnt, nr);
++}
++
+ static inline void mem_cgroup_put(struct mem_cgroup *memcg)
+ {
+ 	if (memcg)
+@@ -1746,4 +1752,9 @@ static inline struct mem_cgroup *mem_cgroup_from_obj(void *p)
+ 
+ #endif /* CONFIG_MEMCG_KMEM */
+ 
++bool memcg_bulk_pre_charge_hook(struct obj_cgroup **objcgp, gfp_t gfp,
++				unsigned int nr_pages);
++void memcg_bulk_charge_hook(struct obj_cgroup *objcgp, struct page *page);
++void memcg_bulk_post_charge_hook(struct obj_cgroup *objcg,
++				 unsigned int nr_pages);
+ #endif /* _LINUX_MEMCONTROL_H */
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 87e41c3cac10..16fe3384c12c 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3239,7 +3239,53 @@ void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size)
+ 	refill_obj_stock(objcg, size, true);
+ }
+ 
+-#endif /* CONFIG_MEMCG_KMEM */
++bool memcg_bulk_pre_charge_hook(struct obj_cgroup **objcgp, gfp_t gfp,
++				unsigned int nr_pages)
++{
++	struct obj_cgroup *objcg = NULL;
++
++	if (!memcg_kmem_enabled() || !(gfp & __GFP_ACCOUNT))
++		return true;
++
++	objcg = get_obj_cgroup_from_current();
++
++	if (objcg && obj_cgroup_charge_pages(objcg, gfp, nr_pages)) {
++		obj_cgroup_put(objcg);
++		return false;
++	}
++	obj_cgroup_get_many(objcg, nr_pages - 1);
++	*objcgp = objcg;
++	return true;
++}
++
++void memcg_bulk_charge_hook(struct obj_cgroup *objcg, struct page *page)
++{
++	page->memcg_data = (unsigned long)objcg | MEMCG_DATA_KMEM;
++}
++
++void memcg_bulk_post_charge_hook(struct obj_cgroup *objcg,
++				 unsigned int nr_pages)
++{
++	obj_cgroup_uncharge_pages(objcg, nr_pages);
++	obj_cgroup_put_many(objcg, nr_pages);
++}
++#else /* !CONFIG_MEMCG_KMEM */
++bool memcg_bulk_pre_charge_hook(struct obj_cgroup **objcgp, gfp_t gfp,
++				unsigned int nr_pages)
++{
++	return true;
++}
++
++void memcg_bulk_charge_hook(struct obj_cgroup *objcgp, struct page *page)
++{
++}
++
++void memcg_bulk_post_charge_hook(struct obj_cgroup *objcg,
++				 unsigned int nr_pages)
++{
++}
++#endif
++
+ 
+ /*
+  * Because page_memcg(head) is not set on tails, set it now.
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index b37435c274cf..eb37177bf507 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -5207,6 +5207,8 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+ 	gfp_t alloc_gfp;
+ 	unsigned int alloc_flags = ALLOC_WMARK_LOW;
+ 	int nr_populated = 0, nr_account = 0;
++	unsigned int nr_pre_charge = 0;
++	struct obj_cgroup *objcg = NULL;
+ 
+ 	/*
+ 	 * Skip populated array elements to determine if any pages need
+@@ -5275,6 +5277,10 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+ 	if (unlikely(!zone))
+ 		goto failed;
+ 
++	nr_pre_charge = nr_pages - nr_populated;
++	if (!memcg_bulk_pre_charge_hook(&objcg, gfp, nr_pre_charge))
++		goto failed;
++
+ 	/* Attempt the batch allocation */
+ 	local_lock_irqsave(&pagesets.lock, flags);
+ 	pcp = this_cpu_ptr(zone->per_cpu_pageset);
+@@ -5299,6 +5305,9 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+ 		nr_account++;
+ 
+ 		prep_new_page(page, 0, gfp, 0);
++		if (objcg)
++			memcg_bulk_charge_hook(objcg, page);
++
+ 		if (page_list)
+ 			list_add(&page->lru, page_list);
+ 		else
+@@ -5310,13 +5319,16 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+ 
+ 	__count_zid_vm_events(PGALLOC, zone_idx(zone), nr_account);
+ 	zone_statistics(ac.preferred_zoneref->zone, zone, nr_account);
++	if (objcg)
++		memcg_bulk_post_charge_hook(objcg, nr_pre_charge - nr_account);
+ 
+ out:
+ 	return nr_populated;
+ 
+ failed_irq:
+ 	local_unlock_irqrestore(&pagesets.lock, flags);
+-
++	if (objcg)
++		memcg_bulk_post_charge_hook(objcg, nr_pre_charge);
+ failed:
+ 	page = __alloc_pages(gfp, 0, preferred_nid, nodemask);
+ 	if (page) {
+-- 
+2.31.1
+
