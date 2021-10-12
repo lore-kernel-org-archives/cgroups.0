@@ -1,141 +1,38 @@
-From: Pratik Sampat <psampat@linux.ibm.com>
-Subject: Re: [RFC 0/5] kernel: Introduce CPU Namespace
-Date: Tue, 12 Oct 2021 14:12:18 +0530
-Message-ID: <a0f9ed06-1e5d-d3d0-21a5-710c8e27749c@linux.ibm.com>
-References: <20211009151243.8825-1-psampat@linux.ibm.com>
- <20211011101124.d5mm7skqfhe5g35h@wittgenstein>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH] cgroup: fix memory leak caused by missing
+ cgroup_bpf_offline
+Date: Tue, 12 Oct 2021 11:32:55 +0200
+Message-ID: <20211012093255.GA14510@blackbody.suse.cz>
+References: <20211007121603.1484881-1-quanyang.wang@windriver.com>
+ <20211011162128.GC61605@blackbody.suse.cz>
+ <6d76de0b-9de7-adbe-834b-c49ed991559d@windriver.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=rK3EwTpFj9LRvp36w/iPeujwAgGDeB8sSzAGLI+vZEQ=;
- b=pGidHLBzx7XnxMBwI17SZlst61RfbveN3cLfuPIqdp4IGjOGlxIaphUE3rtkrXRIIDUD
- F5X5H9bh7Pur2SYeKt0sVajbTXvSQNHGqCmVgtK75ALKLhPAAiVZbN04dqtqxZnk4t83
- u2YphOOy5G9D1kVlM7Siek3guh7fI7y/sPCNLI1ZhvlKMa0+4titwlG+IlVxsDh/t4VX
- lhJGXzg43N4r6IzSR5VlyGeICLnA5TYmGy4JiP2wNGaK3MVEe1gHeHCx3GRZ2HpeteNh
- ZVxmRLBkweDJdOydjKPHlw/vieqiIiKUhWwwLQ6K7G1VWgP+5xWo0F+lcdUFibDQq/gb Eg== 
-In-Reply-To: <20211011101124.d5mm7skqfhe5g35h@wittgenstein>
-Content-Language: en-US
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1634031177; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=uUH2uniB3EQO3dwCrSFaoRzeR2U8u7SDS04Yd4v70+U=;
+        b=YhyfbjO5nAw5bwwzh728WNI5DvAqHjJZFQzjmHA1K2+FdNCUYVxUjqsq9Ae4F6bDEzoqJQ
+        EEwVGKESG8YU55NGTFA+CFcmsIM5Doln5oqhNIvnNKw5GzbJco1gWy+9X50dKiW+sFqa2K
+        BV+UzYXo89KlPkPy75N9K1j65LCFY+I=
+Content-Disposition: inline
+In-Reply-To: <6d76de0b-9de7-adbe-834b-c49ed991559d@windriver.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Christian Brauner <christian.brauner@ubuntu.com>
-Cc: bristot@redhat.com, christian@brauner.io, ebiederm@xmission.com, lizefan.x@bytedance.com, tj@kernel.org, hannes@cmpxchg.org, mingo@kernel.org, juri.lelli@redhat.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, containers@lists.linux.dev, containers@lists.linux-foundation.org, pratik.r.sampat@gmail.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Quanyang Wang <quanyang.wang@windriver.com>
+Cc: Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org
 
-Hello,
-> Thank your for providing a new approach to this problem and thanks for
-> summarizing some of the painpoints and current solutions. I do agree
-> that this is a problem we should tackle in some form.
->
-> I have one design comment and one process related comments.
->
-> Fundamentally I think making this a new namespace is not the correct
-> approach. One core feature of a namespace it that it is an opt-in
-> isolation mechanism: if I do CLONE_NEW* that is when the new isolation
-> mechanism kicks. The correct reporting through procfs and sysfs is
-> built into that and we do bugfixes whenever reported information is
-> wrong.
->
-> The cpu namespace would be different; a point I think you're making as
-> well further above:
->
->> The control and the display interface is fairly disjoint with each
->> other. Restrictions can be set through control interfaces like cgroups,
-> A task wouldn't really opt-in to cpu isolation with CLONE_NEWCPU it
-> would only affect resource reporting. So it would be one half of the
-> semantics of a namespace.
->
-I completely agree with you on this, fundamentally a namespace should
-isolate both the resource as well as the reporting. As you mentioned
-too, cgroups handles the resource isolation while this namespace
-handles the reporting and this seems to break the semantics of what a
-namespace should really be.
+On Tue, Oct 12, 2021 at 02:22:13PM +0800, Quanyang Wang <quanyang.wang@windriver.com> wrote:
+> Before this commit, percpu_ref is embedded in cgroup, it can be freed along
+> with cgroup, so there is no memory leak. Since this commit, it causes the
+> memory leak.
+> Should I change it to "Fixes: 4bfc0bb2c60e ("bpf: decouple the lifetime of
+> cgroup_bpf from cgroup itself")"?
 
-The CPU resource is unique in that sense, at least in this context,
-which makes it tricky to design a interface that presents coherent
-information.
+I see. The leak is a product so I'd tag both of them and explain it in
+the commit message.
 
-> In all honesty, I think cpu resource reporting through procfs/sysfs as
-> done today without taking a tasks cgroup information into account is a
-> bug. But the community has long agreed that fixing this would be a
-> regression.
->
-> I think that either we need to come up with new non-syscall based
-> interfaces that allow to query virtualized cpu information and buy into
-> the process of teaching userspace about them. This is even independent
-> of containers.
-> This is in line with proposing e.g. new procfs/sysfs files. Userspace
-> can then keep supplementing cpu virtualization via e.g. stuff like LXCFS
-> until tools have switched to read their cpu information from new
-> interfaces. Something that they need to be taught anyway.
-
-I too think that having a brand new interface all together and teaching
-userspace about it is much cleaner approach.
-On the same lines, if were to do that, we could also add more useful
-metrics in that interface like ballpark number of threads to saturate
-usage as well as gather more such metrics as suggested by Tejun Heo.
-
-My only concern for this would be that if today applications aren't
-modifying their code to read the existing cgroup interface and would
-rather resort to using userspace side-channel solutions like LXCFS or
-wrapping them up in kata containers, would it now be compelling enough
-to introduce yet another interface?
-
-While I concur with Tejun Heo's comment the mail thread and overloading
-existing interfaces of sys and proc which were originally designed for
-system wide resources, may not be a great idea:
-
-> There is a fundamental problem with trying to represent a resource shared
-> environment controlled with cgroup using system-wide interfaces including
-> procfs
-
-A fundamental question we probably need to ascertain could be -
-Today, is it incorrect for applications to look at the sys and procfs to
-get resource information, regardless of their runtime environment?
-
-Also, if an application were to only be able to view the resources
-based on the restrictions set regardless of the interface - would there
-be a disadvantage for them if they could only see an overloaded context
-sensitive view rather than the whole system view?
-
-> Or if we really want to have this tied to a namespace then I think we
-> should consider extending CLONE_NEWCGROUP since cgroups are were cpu
-> isolation for containers is really happening. And arguably we should
-> restrict this to cgroup v2.
-
-Given some thought, I tend to agree this could be wrapped in a cgroup
-namespace. However, some more deliberation is definitely needed to
-determine if by including CPU isolation here we aren't breaking
-another semantic set by the cgroup namespace itself as cgroups don't
-necessarily have to have restrictions on CPUs set and can also allow
-mixing of restrictions from cpuset and cfs period-quota.
-
->
->  From a process perspective, I think this is something were we will need
-> strong guidance from the cgroup and cpu crowd. Ultimately, they need to
-> be the ones merging a feature like this as this is very much into their
-> territory.
-
-I agree, we definitely need the guidance from the cgroups and cpu folks
-from the community. We would also benefit from guidance from the
-userspace community like containers and understand how they use the
-existing interfaces so that we can arrive at a holistic view of what
-everybody could benefit by.
-
->
-> Christian
-
-Thank you once again for all the comments, the CPU namespace is me
-taking a stab trying to highlight the problem itself. Not without
-its flaws, having a coherent interface does seem to show benefits as
-well.
-Hence, if the consensus builds for the right interface for solving this
-problem, I would be glad to help in contributing to a solution towards
-it.
-
-Thanks,
-Pratik
-
-
-
+Thank you,
+Michal
