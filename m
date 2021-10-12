@@ -1,59 +1,36 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup fixes for v5.15-rc6
-Date: Mon, 11 Oct 2021 12:02:57 -1000
-Message-ID: <YWS0kcEY3MmKrZJk@slm.duckdns.org>
-Mime-Version: 1.0
+From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Subject: Re: [GIT PULL] cgroup fixes for v5.15-rc6
+Date: Tue, 12 Oct 2021 00:30:39 +0000
+Message-ID: <163399863948.7007.18082768544664412722.pr-tracker-bot@kernel.org>
+References: <YWS0kcEY3MmKrZJk@slm.duckdns.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=HAdOW08pUGdUyMrTZxurTqi+ppgklE5YNPt3pyK3J9Y=;
-        b=msXhSiuDh0TAfFpXf7otQ4GKX/jL9A3xSgn0ohRua33XqhiKTEwLRhyXaaueECwKeh
-         4FOUyz1OrCpiS5KlUDb60Fu6L6I6GWsAa5Jy7GHfcEwv7mX56CD9H7gb67LydZKqqWEx
-         za2+mtS2MGrNocBbyNpxOVnStZpVkJgnrrmsDBkSs48INoZuBgggWkJ9eyDXpK9IYlro
-         nzJAiTLGR0Fl1kFLb9qK0JRfQPZBIYKbz0A2CZ4+vLHrmGdyro1qFIIBkArE/oMY/1Vt
-         mTdsTFmBnul1MsYiC3UAp7E6aP39tFgn1trqg1mvD/xViQu2F++i95WG7e8AnGJgrrKL
-         kz+Q==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1633998639;
+        bh=iXamAR3fOA7VQC/GpSHRF6/u7s4lBhGHbC6Cnw6DOuQ=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=bFZpKFaJw82WitBIVBZBU8Uud0FJmuYKKtLDihCqfOTJO6uRheR6yYvqwWPEllMza
+         zf8z/QNxZ0URDuCUmLsEH+H2Bpca5kXKY4JYx91mvucQHy3uo+nUQ8hk9WrtatTcH0
+         C0ydt+FD3Azn5eg3BBkaJNoT+aRAxrCQ7WKJ59JPFfbC/5OB6jbA/DfqSFWIsbR3/8
+         WBnETl3Z7iSAShJii39Zqv4PyG0EkY0ph1GQBxHsRMTSWtbD8WKdsc+dXqr+Qfyz7/
+         r47eGJpI+GwAwuq4LQ/oTmwDphbmE9ykk6O+jkxBsbRYd1wenzZSruhmQjuGGNMJTm
+         uWpR/DgglXjWA==
+In-Reply-To: <YWS0kcEY3MmKrZJk-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Linus.
+The pull request you sent on Mon, 11 Oct 2021 12:02:57 -1000:
 
-All documentation / comment updates.
+> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.15-fixes
 
-Thanks.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/459ea72c6cb98164ccacd6d06e3121554c13ba5e
 
-The following changes since commit 6880fa6c56601bb8ed59df6c30fd390cc5f6dd8f:
-
-  Linux 5.15-rc1 (2021-09-12 16:28:37 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.15-fixes
-
-for you to fetch changes up to c0002d11d79900f8aa5c8375336434940d6afedf:
-
-  cgroupv2, docs: fix misinformation in "device controller" section (2021-09-13 08:08:46 -1000)
-
-----------------------------------------------------------------
-ArthurChiao (1):
-      cgroupv2, docs: fix misinformation in "device controller" section
-
-Chunguang Xu (1):
-      docs/cgroup: remove some duplicate words
-
-Waiman Long (1):
-      cgroup/cpuset: Change references of cpuset_mutex to cpuset_rwsem
-
- Documentation/admin-guide/cgroup-v2.rst | 28 ++++++++---------
- kernel/cgroup/cpuset.c                  | 56 +++++++++++++++++----------------
- 2 files changed, 43 insertions(+), 41 deletions(-)
+Thank you!
 
 -- 
-tejun
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
