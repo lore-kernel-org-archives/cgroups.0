@@ -1,61 +1,162 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH] memcg: page_alloc: skip bulk allocator for __GFP_ACCOUNT
-Date: Wed, 13 Oct 2021 15:03:43 -0700
-Message-ID: <YWdXv+RBjXvdmsK+@carbon.DHCP.thefacebook.com>
-References: <20211013194338.1804247-1-shakeelb@google.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v7 5/6] cgroup/cpuset: Update description of
+ cpuset.cpus.partition in cgroup-v2.rst
+Date: Wed, 13 Oct 2021 18:11:37 -0400
+Message-ID: <306d7fca-ee8a-e5dc-973e-5255d73de71f@redhat.com>
+References: <20210825213750.6933-1-longman@redhat.com>
+ <20210825213750.6933-6-longman@redhat.com> <YSfQ0mYWs2zUyqGY@mtj.duckdns.org>
+ <32e27fcc-32f1-b26c-ae91-9e03f7e433af@redhat.com>
+ <YShjb2WwvuB4s4gX@slm.duckdns.org>
+ <d22ea3be-2429-5923-a80c-5af3b384def9@redhat.com>
+ <YSlY0H/qeXQIGOfk@slm.duckdns.org>
+ <392c3724-f583-c7fc-cfa1-a3f1665114c9@redhat.com>
+ <YSl2yxEvnDrPxzUV@slm.duckdns.org>
+ <3533e4f9-169c-d13c-9c4e-d9ec6bdc78f0@redhat.com>
+ <20211012143913.GA22036@blackbody.suse.cz>
+ <5eacfdcc-148b-b599-3111-4f2971e7ddc0@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=2yYmfk642mQwFFUimUIRHFvXhzSEK0e061gZFS0gQHk=;
- b=P6i+TaxJlkDvVcrWf7MB+2xKvB2v9riQYOWt/JLZ0IHUUcWMeI/A3esUvPcl+1kb67rV
- 78baaQPr14u0rX5R2cd+070irVvpeijG28ZODqbo5UuoZ7Wbu4bQ38vsUSatndVXRP0m
- Fp4Tl12YumSIFts5wicj17A43md9WV73nQ8= 
-Content-Disposition: inline
-In-Reply-To: <20211013194338.1804247-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: multipart/mixed;
+ boundary="------------B9F95CE910141AE77C835857"
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1634163113;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=JmNllblB/cMMbHhwVjswqlhts6bUBeMmcJX0XzZQCXY=;
+        b=K9pGbCPG/SOaxdCrTiJK5Ev+SmRpv1Cnq4S0LUTX7jH3phYDEF92Zy0mkN3d6LlJr8DqWY
+        mi0P18cXZbB2MB8zwK7uaz8yM2HERr0rYWV1gH5ZWk+zAEtbys1LeaIB2JGnkgHfp3tmIV
+        tGiMUnkjheqAfozZjPO0nJhji5tMmzI=
+In-Reply-To: <5eacfdcc-148b-b599-3111-4f2971e7ddc0@redhat.com>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Waiman Long <llong@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
+
+This is a multi-part message in MIME format.
+--------------B9F95CE910141AE77C835857
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Oct 13, 2021 at 12:43:38PM -0700, Shakeel Butt wrote:
-> The commit 5c1f4e690eec ("mm/vmalloc: switch to bulk allocator in
-> __vmalloc_area_node()") switched to bulk page allocator for order 0
-> allocation backing vmalloc. However bulk page allocator does not support
-> __GFP_ACCOUNT allocations and there are several users of
-> kvmalloc(__GFP_ACCOUNT).
-> 
-> For now make __GFP_ACCOUNT allocations bypass bulk page allocator. In
-> future if there is workload that can be significantly improved with the
-> bulk page allocator with __GFP_ACCCOUNT support, we can revisit the
-> decision.
-> 
-> Fixes: 5c1f4e690eec ("mm/vmalloc: switch to bulk allocator in __vmalloc_area_node()")
-> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
->  mm/page_alloc.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-> index 668edb16446a..b3acad4615d3 100644
-> --- a/mm/page_alloc.c
-> +++ b/mm/page_alloc.c
-> @@ -5215,6 +5215,10 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
->  	unsigned int alloc_flags = ALLOC_WMARK_LOW;
->  	int nr_populated = 0, nr_account = 0;
->  
-> +	/* Bulk allocator does not support memcg accounting. */
-> +	if (unlikely(gfp & __GFP_ACCOUNT))
-> +		goto out;
-> +
+On 10/13/21 5:45 PM, Waiman Long wrote:
+>
+>
+>>
+>> In conclusion, it'd be good to have validity conditions separate from
+>> transition conditions (since hotplug transition can't be rejected) and
+>> perhaps treat administrative changes from an ancestor equally as a
+>> hotplug.
+>
+> I am trying to make the result of changing "cpuset.cpus" as close to 
+> hotplug as possible but there are cases where the "cpuset.cpus" change 
+> is prohibited but hotplug can still happen to remove the cpu.
+>
+> Hope this will help to clarify the current design.
+>
+BTW, the attached file is the current draft of cpuset.cpus.partition 
+document.
 
-Isn't it a bit too aggressive?
+Cheers,
+Longman
 
-How about
-    if (WARN_ON_ONCE(gfp & __GFP_ACCOUNT))
-       gfp &= ~__GFP_ACCOUNT;
 
-And maybe with some explanatory message?
+--------------B9F95CE910141AE77C835857
+Content-Type: text/plain; charset=UTF-8;
+ name="cpuset.cpus.partition.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="cpuset.cpus.partition.txt"
 
-Thanks!
+ICBjcHVzZXQuY3B1cy5wYXJ0aXRpb24KCUEgcmVhZC13cml0ZSBzaW5nbGUgdmFsdWUgZmls
+ZSB3aGljaCBleGlzdHMgb24gbm9uLXJvb3QKCWNwdXNldC1lbmFibGVkIGNncm91cHMuICBU
+aGlzIGZsYWcgaXMgb3duZWQgYnkgdGhlIHBhcmVudCBjZ3JvdXAKCWFuZCBpcyBub3QgZGVs
+ZWdhdGFibGUuCgoJSXQgYWNjZXB0cyBvbmx5IHRoZSBmb2xsb3dpbmcgaW5wdXQgdmFsdWVz
+IHdoZW4gd3JpdHRlbiB0by4KCgkgID09PT09PT09CT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09CgkgICJtZW1iZXIiCU5vbi1yb290IG1lbWJlciBvZiBhIHBhcnRpdGlvbgoJ
+ICAicm9vdCIJUGFydGl0aW9uIHJvb3QKCSAgImlzb2xhdGVkIglQYXJ0aXRpb24gcm9vdCB3
+aXRob3V0IGxvYWQgYmFsYW5jaW5nCgkgID09PT09PT09CT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09CgoJV2hlbiBzZXQgdG8gYmUgYSBwYXJ0aXRpb24gcm9vdCwgdGhlIGN1
+cnJlbnQgY2dyb3VwIGlzIHRoZQoJcm9vdCBvZiBhIG5ldyBwYXJ0aXRpb24gb3Igc2NoZWR1
+bGluZyBkb21haW4gdGhhdCBjb21wcmlzZXMKCWl0c2VsZiBhbmQgYWxsIGl0cyBkZXNjZW5k
+YW50cyBleGNlcHQgdGhvc2UgdGhhdCBhcmUgc2VwYXJhdGUKCXBhcnRpdGlvbiByb290cyB0
+aGVtc2VsdmVzIGFuZCB0aGVpciBkZXNjZW5kYW50cy4gIFRoZSByb290CgljZ3JvdXAgaXMg
+YWx3YXlzIGEgcGFydGl0aW9uIHJvb3QuCgoJV2hlbiBzZXQgdG8gImlzb2xhdGVkIiwgdGhl
+IENQVXMgaW4gdGhhdCBwYXJ0aXRpb24gcm9vdCB3aWxsCgliZSBpbiBhbiBpc29sYXRlZCBz
+dGF0ZSB3aXRob3V0IGFueSBsb2FkIGJhbGFuY2luZyBmcm9tIHRoZQoJc2NoZWR1bGVyLiAg
+VGFza3MgaW4gc3VjaCBhIHBhcnRpdGlvbiBtdXN0IGJlIGV4cGxpY2l0bHkgYm91bmQKCXRv
+IGVhY2ggaW5kaXZpZHVhbCBDUFUuCgoJImNwdXNldC5jcHVzIiBtdXN0IGFsd2F5cyBiZSBz
+ZXQgdXAgZmlyc3QgYmVmb3JlIGVuYWJsaW5nCglwYXJ0aXRpb24uICBVbmxpa2UgIm1lbWJl
+ciIgd2hvc2UgImNwdXNldC5jcHVzLmVmZmVjdGl2ZSIgY2FuCgljb250YWluIENQVXMgbm90
+IGluICJjcHVzZXQuY3B1cyIsIHRoaXMgY2FuIG5ldmVyIGhhcHBlbiB3aXRoIGEKCXZhbGlk
+IHBhcnRpdGlvbiByb290LiAgSW4gb3RoZXIgd29yZHMsICJjcHVzZXQuY3B1cy5lZmZlY3Rp
+dmUiCglpcyBhbHdheXMgYSBzdWJzZXQgb2YgImNwdXNldC5jcHVzIiBmb3IgYSB2YWxpZCBw
+YXJ0aXRpb24gcm9vdC4KCglXaGVuIGEgcGFyZW50IHBhcnRpdGlvbiByb290IGNhbm5vdCBl
+eGNsdXNpdmVseSBncmFudCBhbnkgb2YKCXRoZSBDUFVzIHNwZWNpZmllZCBpbiAiY3B1c2V0
+LmNwdXMiLCAiY3B1c2V0LmNwdXMuZWZmZWN0aXZlIgoJYmVjb21lcyBlbXB0eS4gSWYgdGhl
+cmUgYXJlIHRhc2tzIGluIHRoZSBwYXJ0aXRpb24gcm9vdCwgdGhlCglwYXJ0aXRpb24gcm9v
+dCBiZWNvbWVzIGludmFsaWQgYW5kICJjcHVzZXQuY3B1cy5lZmZlY3RpdmUiCglpcyByZXNl
+dCB0byB0aGF0IG9mIHRoZSBuZWFyZXN0IG5vbi1lbXB0eSBhbmNlc3Rvci4KCiAgICAgICAg
+Tm90ZSB0aGF0IGEgdGFzayBjYW5ub3QgYmUgbW92ZWQgdG8gYSBjZ3JvdXAgd2l0aCBlbXB0
+eQogICAgICAgICJjcHVzZXQuY3B1cy5lZmZlY3RpdmUiLgoKCVRoZXJlIGFyZSBhZGRpdGlv
+bmFsIGNvbnN0cmFpbnRzIG9uIHdoZXJlIGEgcGFydGl0aW9uIHJvb3QgY2FuCgliZSBlbmFi
+bGVkICgicm9vdCIgb3IgImlzb2xhdGVkIikuICBJdCBjYW4gb25seSBiZSBlbmFibGVkIGlu
+CglhIGNncm91cCBpZiBhbGwgdGhlIGZvbGxvd2luZyBjb25kaXRpb25zIGFyZSBtZXQuCgoJ
+MSkgVGhlICJjcHVzZXQuY3B1cyIgaXMgbm9uLWVtcHR5IGFuZCBleGNsdXNpdmUsIGkuZS4g
+dGhleSBhcmUKCSAgIG5vdCBzaGFyZWQgYnkgYW55IG9mIGl0cyBzaWJsaW5ncy4KCTIpIFRo
+ZSBwYXJlbnQgY2dyb3VwIGlzIGEgdmFsaWQgcGFydGl0aW9uIHJvb3QuCgkzKSBUaGUgImNw
+dXNldC5jcHVzIiBpcyBhIHN1YnNldCBvZiBwYXJlbnQncyAiY3B1c2V0LmNwdXMiLgoJNCkg
+VGhlcmUgaXMgbm8gY2hpbGQgY2dyb3VwcyB3aXRoIGNwdXNldCBlbmFibGVkLiAgVGhpcyBh
+dm9pZHMKCSAgIGNwdSBtaWdyYXRpb25zIG9mIG11bHRpcGxlIGNncm91cHMgc2ltdWx0YW5l
+b3VzbHkgd2hpY2ggY2FuCgkgICBiZSBwcm9ibGVtYXRpYy4KCglPbiByZWFkLCB0aGUgImNw
+dXNldC5jcHVzLnBhcnRpdGlvbiIgZmlsZSBjYW4gc2hvdyB0aGUgZm9sbG93aW5nCgl2YWx1
+ZXMuCgoJICA9PT09PT09PT09PT09PT09PT09PT09CT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PQoJICAibWVtYmVyIgkJCU5vbi1yb290IG1lbWJlciBvZiBhIHBhcnRpdGlvbgoJ
+ICAicm9vdCIJCQlQYXJ0aXRpb24gcm9vdAoJICAiaXNvbGF0ZWQiCQkJUGFydGl0aW9uIHJv
+b3Qgd2l0aG91dCBsb2FkIGJhbGFuY2luZwoJICAicm9vdCBpbnZhbGlkICg8cmVhc29uPiki
+CUludmFsaWQgcGFydGl0aW9uIHJvb3QKCSAgPT09PT09PT09PT09PT09PT09PT09PQk9PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT0KCiAgICAgICAgSW4gdGhlIGNhc2Ugb2YgYW4g
+aW52YWxpZCBwYXJ0aXRpb24gcm9vdCwgYSBkZXNjcmlwdGl2ZSBzdHJpbmcgb24KICAgICAg
+ICB3aHkgdGhlIHBhcnRpdGlvbiBpcyBpbnZhbGlkIGlzIGluY2x1ZGVkIHdpdGhpbiBwYXJl
+bnRoZXNlcy4KCglPbmNlIGJlY29taW5nIGEgcGFydGl0aW9uIHJvb3QsIGNoYW5nZXMgdG8g
+ImNwdXNldC5jcHVzIiBpcwoJZ2VuZXJhbGx5IGFsbG93ZWQgYXMgbG9uZyBhcyB0aGUgY3B1
+IGxpc3QgaXMgZXhjbHVzaXZlIGFuZCBpcwoJYSBzdXBlcnNldCBvZiBjaGlsZHJlbidzIGNw
+dSBsaXN0cy4KCiAgICAgICAgVGhlIGNvbnN0cmFpbnRzIG9mIGEgdmFsaWQgcGFydGl0aW9u
+IHJvb3QgYXJlIGFzIGZvbGxvd3M6CgogICAgICAgIDEpICJjcHVzZXQuY3B1cyIgaXMgbm9u
+LWVtcHR5IGFuZCBleGNsdXNpdmUuCiAgICAgICAgMikgVGhlIHBhcmVudCBjZ3JvdXAgaXMg
+YSB2YWxpZCBwYXJ0aXRpb24gcm9vdC4KICAgICAgICAzKSAiY3B1c2V0LmNwdXMuZWZmZWN0
+aXZlIiBpcyBhIHN1YnNldCBvZiAiY3B1c2V0LmNwdXMiCiAgICAgICAgNCkgImNwdXNldC5j
+cHVzLmVmZmVjdGl2ZSIgaXMgbm9uLWVtcHR5IHdoZW4gdGhlcmUgYXJlIHRhc2tzCiAgICAg
+ICAgICAgaW4gdGhlIHBhcnRpdGlvbi4KCglDaGFuZ2VzIHRvICJjcHVzZXQuY3B1cyIgb3Ig
+Y3B1IGhvdHBsdWcgbWF5IGNhdXNlIHRoZSBzdGF0ZQoJb2YgYSB2YWxpZCBwYXJ0aXRpb24g
+cm9vdCB0byBiZWNvbWUgaW52YWxpZCB3aGVuIG9uZSBvciBtb3JlCgljb25zdHJhaW50cyBv
+ZiBhIHZhbGlkIHBhcnRpdGlvbiByb290IGFyZSB2aW9sYXRlZC4gIFRoZXJlZm9yZSwKCXVz
+ZXIgc3BhY2UgYWdlbnRzIHRoYXQgbWFuYWdlIHBhcnRpdGlvbiByb290cyBzaG91bGQgYXZv
+aWQKCXVubmVjZXNzYXJ5IGNoYW5nZXMgdG8gImNwdXNldC5jcHVzIiBhbmQgYWx3YXlzIGNo
+ZWNrIHRoZSBzdGF0ZQoJb2YgImNwdXNldC5jcHVzLnBhcnRpdGlvbiIgYWZ0ZXIgbWFraW5n
+IGNoYW5nZXMgdG8gbWFrZSBzdXJlCgl0aGF0IHRoZSBwYXJ0aXRpb25zIGFyZSBmdW5jdGlv
+bmluZyBwcm9wZXJseSBhcyBleHBlY3RlZC4KCiAgICAgICAgQ2hhbmdpbmcgYSBwYXJ0aXRp
+b24gcm9vdCB0byAibWVtYmVyIiBpcyBhbHdheXMgYWxsb3dlZC4KICAgICAgICBJZiB0aGVy
+ZSBhcmUgY2hpbGQgcGFydGl0aW9uIHJvb3RzIHVuZGVybmVhdGggaXQsIGhvd2V2ZXIsCiAg
+ICAgICAgdGhleSB3aWxsIGJlIGZvcmNlZCB0byBiZSBzd2l0Y2hlZCBiYWNrIHRvICJtZW1i
+ZXIiIHRvbyBhbmQKICAgICAgICBsb3NlIHRoZWlyIHBhcnRpdGlvbnMuIFNvIGNhcmUgbXVz
+dCBiZSB0YWtlbiB0byBkb3VibGUgY2hlY2sKICAgICAgICBmb3IgdGhpcyBjb25kaXRpb24g
+YmVmb3JlIGRpc2FibGluZyBhIHBhcnRpdGlvbiByb290LgoKCVNldHRpbmcgYSBjZ3JvdXAg
+dG8gYSB2YWxpZCBwYXJ0aXRpb24gcm9vdCB3aWxsIHRha2UgdGhlIENQVXMKCWF3YXkgZnJv
+bSB0aGUgZWZmZWN0aXZlIENQVXMgb2YgdGhlIHBhcmVudCBwYXJ0aXRpb24uCgoJQSB2YWxp
+ZCBwYXJlbnQgcGFydGl0aW9uIG1heSBkaXN0cmlidXRlIG91dCBhbGwgaXRzIENQVXMgdG8K
+CWl0cyBjaGlsZCBwYXJ0aXRpb25zIGFzIGxvbmcgYXMgaXQgaXMgbm90IHRoZSByb290IGNn
+cm91cCBhcwoJd2UgbmVlZCBzb21lIGhvdXNlLWtlZXBpbmcgQ1BVcyBpbiB0aGUgcm9vdCBj
+Z3JvdXAuCgoJQW4gaW52YWxpZCBwYXJ0aXRpb24gaXMgbm90IGEgcmVhbCBwYXJ0aXRpb24g
+ZXZlbiB0aG91Z2ggc29tZQoJaW50ZXJuYWwgc3RhdGVzIG1heSBzdGlsbCBiZSBrZXB0LgoK
+CUFuIGludmFsaWQgcGFydGl0aW9uIHJvb3QgY2FuIGJlIHJldmVydGVkIGJhY2sgdG8gYSBy
+ZWFsCglwYXJ0aXRpb24gcm9vdCBpZiBub25lIG9mIHRoZSBjb25zdHJhaW50cyBvZiBhIHZh
+bGlkIHBhcnRpdGlvbgogICAgICAgIHJvb3QgYXJlIHZpb2xhdGVkLgoKCVBvbGwgYW5kIGlu
+b3RpZnkgZXZlbnRzIGFyZSB0cmlnZ2VyZWQgd2hlbmV2ZXIgdGhlIHN0YXRlIG9mCgkiY3B1
+c2V0LmNwdXMucGFydGl0aW9uIiBjaGFuZ2VzLiAgVGhhdCBpbmNsdWRlcyBjaGFuZ2VzIGNh
+dXNlZCBieQoJd3JpdGUgdG8gImNwdXNldC5jcHVzLnBhcnRpdGlvbiIsIGNwdSBob3RwbHVn
+IGFuZCBvdGhlciBjaGFuZ2VzCgl0aGF0IG1ha2UgdGhlIHBhcnRpdGlvbiBpbnZhbGlkLiAg
+VGhpcyB3aWxsIGFsbG93IHVzZXIgc3BhY2UKCWFnZW50cyB0byBtb25pdG9yIHVuZXhwZWN0
+ZWQgY2hhbmdlcyB0byAiY3B1c2V0LmNwdXMucGFydGl0aW9uIgoJd2l0aG91dCB0aGUgbmVl
+ZCB0byBkbyBjb250aW51b3VzIHBvbGxpbmcuCgo=
+--------------B9F95CE910141AE77C835857--
+
