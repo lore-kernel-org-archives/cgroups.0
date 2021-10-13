@@ -1,54 +1,91 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2 1/2] memcg: flush stats only if updated
-Date: Wed, 13 Oct 2021 20:01:30 +0200
-Message-ID: <20211013180130.GB22036@blackbody.suse.cz>
-References: <20211001190040.48086-1-shakeelb@google.com>
+From: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [RFC Proposal] Deterministic memcg charging for shared memory
+Date: Wed, 13 Oct 2021 12:23:19 -0700
+Message-ID: <CAHS8izMpzTvd5=x_xMhDJy1toV-eT3AS=GXM2ObkJoCmbDtz6w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1634148091; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=bnGWW8txEiGiwfqJHyEBYUwfb5etYjAXJP0AbtxNWE0=;
-        b=PRCA6mW40Xj9Xc312LnvvnDJ6HOaWqe1Gh/O1mgyfxcbtckTD1MXC4JkbNTLPidMAV33zL
-        9O2ZgrWeLF/cs8gPkqOfNTx2lLX1UkIapks1huu23KL9Aw+JEdyyx82RbnQT0mYl4jo2ln
-        NZH1Lrb38EY1aKBLkY0PiX0VdchuvEY=
-Content-Disposition: inline
-In-Reply-To: <20211001190040.48086-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to
+         :content-transfer-encoding;
+        bh=f83NlsNXjMg5QDwE3dqfC8dTeYtf/vdW3ZOd3Omo9rc=;
+        b=g/vAfOHiq9i34ozOpZngme9idv+KwO6KRzk+EqRmuWrF9SxgrFVCPVp1yzMi5gznyQ
+         qI5Z1X4fdM4w7fJWPVdAU6j4Pn2ymxli4PnNYnxurPuK9y7p3UTd3IR28W1ONqlS8edc
+         YcOC8jv5xaZwTvkt7bsUd+a8OcjLzQIHovzrbzXQKcwtkEzUBPXQmGXPrP5sQk9dbzGf
+         mqfdBsei9udsXlihndHTrjYcP4KYUlb26TqJ6SE2cdCGCEbffjCjukOdsK3y8HqWrIaJ
+         eX2MBqb5EyvxX13QGtrX9E27HrggpQP0cG1pyY4nJ7d9p1wFhCCBBuURlxVDCr8eyEVU
+         CeaQ==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Roman Gushchin <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "open list:FILESYSTEMS (VFS and infrastructure)" <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, riel-ebMLmSuQjDVBDgjK7y7TUQ@public.gmane.org
 
-On Fri, Oct 01, 2021 at 12:00:39PM -0700, Shakeel Butt <shakeelb-hpIqsD4AKl=
-fQT0dZR+AlfA@public.gmane.org> wrote:
-> In this patch we kept the stats update codepath very minimal and let the
-> stats reader side to flush the stats only when the updates are over a
-> specific threshold.  For now the threshold is (nr_cpus * CHARGE_BATCH).
+Below is a proposal for deterministic charging of shared memory.
+Please take a look and let me know if there are any major concerns:
 
-BTW, a noob question -- are the updates always single page sized?
+Problem:
+Currently shared memory is charged to the memcg of the allocating
+process. This makes memory usage of processes accessing shared memory
+a bit unpredictable since whichever process accesses the memory first
+will get charged. We have a number of use cases where our userspace
+would like deterministic charging of shared memory:
 
-This is motivated by apples vs oranges comparison since the
-	nr_cpus * MEMCG_CHARGE_BATCH=20
-suggests what could the expected error be in pages (bytes). But it's mostly
-wrong since: a) uncertain single-page updates, b) various counter
-updates summed together. I wonder whether the formula can serve to
-provide at least some (upper) estimate.
+1. System services allocating memory for client jobs:
+We have services (namely a network access service[1]) that provide
+functionality for clients running on the machine and allocate memory
+to carry out these services. The memory usage of these services
+depends on the number of jobs running on the machine and the nature of
+the requests made to the service, which makes the memory usage of
+these services hard to predict and thus hard to limit via memory.max.
+These system services would like a way to allocate memory and instruct
+the kernel to charge this memory to the client=E2=80=99s memcg.
 
+2. Shared filesystem between subtasks of a large job
+Our infrastructure has large meta jobs such as kubernetes which spawn
+multiple subtasks which share a tmpfs mount. These jobs and its
+subtasks use that tmpfs mount for various purposes such as data
+sharing or persistent data between the subtask restarts. In kubernetes
+terminology, the meta job is similar to pods and subtasks are
+containers under pods. We want the shared memory to be
+deterministically charged to the kubernetes's pod and independent to
+the lifetime of containers under the pod.
 
-> +static inline void memcg_rstat_updated(struct mem_cgroup *memcg)
-> +{
-> +	cgroup_rstat_updated(memcg->css.cgroup, smp_processor_id());
-> +	if (!(__this_cpu_inc_return(stats_updates) % MEMCG_CHARGE_BATCH))
-> +		atomic_inc(&stats_flush_threshold);
-> +}
+3. Shared libraries and language runtimes shared between independent jobs.
+We=E2=80=99d like to optimize memory usage on the machine by sharing librar=
+ies
+and language runtimes of many of the processes running on our machines
+in separate memcgs. This produces a side effect that one job may be
+unlucky to be the first to access many of the libraries and may get
+oom killed as all the cached files get charged to it.
 
-Neat trick! (I guess there are no benchmarks complaining about this
-(yet)).
+Design:
+My rough proposal to solve this problem is to simply add a
+=E2=80=98memcg=3D/path/to/memcg=E2=80=99 mount option for filesystems (name=
+ly tmpfs):
+directing all the memory of the file system to be =E2=80=98remote charged=
+=E2=80=99 to
+cgroup provided by that memcg=3D option.
 
-Overall,
+Caveats:
+1. One complication to address is the behavior when the target memcg
+hits its memory.max limit because of remote charging. In this case the
+oom-killer will be invoked, but the oom-killer may not find anything
+to kill in the target memcg being charged. In this case, I propose
+simply failing the remote charge which will cause the process
+executing the remote charge to get an ENOMEM This will be documented
+behavior of remote charging.
+2. I would like to provide an initial implementation that adds this
+support for tmpfs, while leaving the implementation generic enough for
+myself or others to extend to more filesystems where they find the
+feature useful.
+3. I would like to implement this for both cgroups v2 _and_ cgroups
+v1, as we still have cgroup v1 users. If this is unacceptable I can
+provide the v2 implementation only, and maintain a local patch for the
+v1 support.
 
-Reviewed-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
+If this proposal sounds good in principle. I have an experimental
+implementation that I can make ready for review. Please let me know of
+any concerns you may have. Thank you very much in advance!
+Mina Almasry
 
+[1] https://research.google/pubs/pub48630/
