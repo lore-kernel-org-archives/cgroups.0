@@ -1,30 +1,28 @@
-From: David Hildenbrand <david@redhat.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 Subject: Re: [PATCH v2] memcg: page_alloc: skip bulk allocator for
  __GFP_ACCOUNT
-Date: Thu, 14 Oct 2021 17:24:41 +0200
-Message-ID: <84b44b45-217e-885a-c513-de266315888f@redhat.com>
+Date: Thu, 14 Oct 2021 17:32:50 +0200
+Message-ID: <YWhNom2T+codyPea@dhcp22.suse.cz>
 References: <20211014151607.2171970-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1634225085;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1634225571; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=HBGMhkW5l3xF58RlsWd4EAEKmLqaalQ7yZY4iWVTFTE=;
-        b=Jjbea336RT/aL/DaqDW/p8ChAjnfygWDOqaiFcCIwJeEbB5OgttId5YRglkjINAy3ZogQr
-        RwcQ15JenuKxzY6ta2UJeudA5C6O54166J+HLJBLGBI34J0WVc/OcUPFYkJKxzkgn6/V7d
-        F9RgVs5gWVNRsUi30OEAgERisHnkbOk=
-Content-Language: en-US
-In-Reply-To: <20211014151607.2171970-1-shakeelb@google.com>
+        bh=8NI5g+v3yznxinmmoFT7TMX1/0izl9PQ4EZKztZniWc=;
+        b=jeXGfJreavv0Vk459TOje+YdBW0yWUXEzJlCcgd1R6KNcwJmHB97kYcO92BPxFHaXR0Ufw
+        dDD6vxtsXrtGNcnsbb9Za0hOJ7x0rXnSZ012V27ZkFjbj90RB+myCkmR0Jy6SxZiM+cU/5
+        LMQcrqnZw8fG8HOpl4dayFORdLAHKLo=
+Content-Disposition: inline
+In-Reply-To: <20211014151607.2171970-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Shakeel Butt <shakeelb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Mel Gorman <mgorman@techsingularity.net>
-Cc: Uladzislau Rezki <urezki@gmail.com>, Vasily Averin <vvs@virtuozzo.com>, Roman Gushchin <guro@fb.com>, Matthew Wilcox <willy@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 14.10.21 17:16, Shakeel Butt wrote:
+On Thu 14-10-21 08:16:07, Shakeel Butt wrote:
 > The commit 5c1f4e690eec ("mm/vmalloc: switch to bulk allocator in
 > __vmalloc_area_node()") switched to bulk page allocator for order 0
 > allocation backing vmalloc. However bulk page allocator does not support
@@ -32,12 +30,22 @@ On 14.10.21 17:16, Shakeel Butt wrote:
 > kvmalloc(__GFP_ACCOUNT).
 > 
 > For now make __GFP_ACCOUNT allocations bypass bulk page allocator. In
+
+I would go with
+For now make __GFP_ACCOUNT allocations bypass the fast path of the bulk
+allocator and make it fallback to the regular page allocator as if the
+former failed.
+
 > future if there is workload that can be significantly improved with the
 > bulk page allocator with __GFP_ACCCOUNT support, we can revisit the
 > decision.
 > 
 > Fixes: 5c1f4e690eec ("mm/vmalloc: switch to bulk allocator in __vmalloc_area_node()")
-> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Thanks!
+
 > ---
 > Changes since v1:
 > - do fallback allocation instead of failure, suggested by Michal Hocko.
@@ -61,14 +69,9 @@ On 14.10.21 17:16, Shakeel Butt wrote:
 >  	/* Use the single page allocator for one page. */
 >  	if (nr_pages - nr_populated == 1)
 >  		goto failed;
-> 
-
-LGTM
-
-Acked-by: David Hildenbrand <david@redhat.com>
+> -- 
+> 2.33.0.882.g93a45727a2-goog
 
 -- 
-Thanks,
-
-David / dhildenb
-
+Michal Hocko
+SUSE Labs
