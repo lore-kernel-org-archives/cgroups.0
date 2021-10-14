@@ -1,42 +1,28 @@
-From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 Subject: Re: [PATCH] memcg: page_alloc: skip bulk allocator for __GFP_ACCOUNT
-Date: Thu, 14 Oct 2021 10:05:21 +0300
-Message-ID: <4c92e227-2abc-c3cb-93eb-f5c45bef7fc6@virtuozzo.com>
+Date: Thu, 14 Oct 2021 09:16:04 +0200
+Message-ID: <YWfZNF7T7Fm69sik@dhcp22.suse.cz>
 References: <20211013194338.1804247-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
-        Subject; bh=S7LE65uhsCV8C643BVPxhF0qRh9OLtZ/h5F5Sin60rk=; b=CnQs1S9wNOJcAGp2Y
-        W9sNTKLUwcBl2VL7C98WHGBYNOPMmAhU6ns/gVLdD8bUMuM9OsfGEExgbsTkZhUmSfJ9ToCBCEUYN
-        w45ppZ3aM3ifjVT8c2lpQtXdbKIMq8rzMfUdz8BNNZU3PCaO5U1dAEn9J2J8zaVi/TFCLcrcYItGA
-        =;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1634195766; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=psDL5nan6SZCy/ZgVLbapa/8v4HIAOlEqUtXE6YYjOI=;
+        b=ZtNJuUPQ0p6nym5BoNWMIVPfO/mXnStoFPNKokOO/JFTZ9io30gEh7DhAICNABbrvjr8hx
+        RtFXUn0KBjSiUJHxZra5XdLtPbcvgswlq4KIpSpjK6BprtvbIGbNBUJrOzbOfQ2dUyiaoq
+        pO+FgmBolTc78KoobQwspZnzuD5cx5w=
+Content-Disposition: inline
 In-Reply-To: <20211013194338.1804247-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>
-Cc: Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 13.10.2021 22:43, Shakeel Butt wrote:
-> The commit 5c1f4e690eec ("mm/vmalloc: switch to bulk allocator in
-> __vmalloc_area_node()") switched to bulk page allocator for order 0
-> allocation backing vmalloc. However bulk page allocator does not support
-> __GFP_ACCOUNT allocations and there are several users of
-> kvmalloc(__GFP_ACCOUNT).
-> 
-> For now make __GFP_ACCOUNT allocations bypass bulk page allocator. In
-> future if there is workload that can be significantly improved with the
-> bulk page allocator with __GFP_ACCCOUNT support, we can revisit the
-> decision.
-> 
-> Fixes: 5c1f4e690eec ("mm/vmalloc: switch to bulk allocator in __vmalloc_area_node()")
-> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
->  mm/page_alloc.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
+On Wed 13-10-21 12:43:38, Shakeel Butt wrote:
+[...]
 > diff --git a/mm/page_alloc.c b/mm/page_alloc.c
 > index 668edb16446a..b3acad4615d3 100644
 > --- a/mm/page_alloc.c
@@ -48,12 +34,22 @@ On 13.10.2021 22:43, Shakeel Butt wrote:
 > +	/* Bulk allocator does not support memcg accounting. */
 > +	if (unlikely(gfp & __GFP_ACCOUNT))
 > +		goto out;
+
+Did you mean goto failed here? This would break some which do not
+have any fallback. E.g. xfs_buf_alloc_pages but likely more.
+
+Sorry I could have been more specific when talking about bypassing the
+bulk allocator. It is quite confusing because the bulk allocator
+interface consists of the bulk allocator and the fallback to the normal
+page allocator.
+
 > +
-
-May be (memcg_kmem_enabled() && (gfp & __GFP_ACCOUNT)) check is better here?
-
 >  	/*
 >  	 * Skip populated array elements to determine if any pages need
 >  	 * to be allocated before disabling IRQs.
-> 
+> -- 
+> 2.33.0.882.g93a45727a2-goog
 
+-- 
+Michal Hocko
+SUSE Labs
