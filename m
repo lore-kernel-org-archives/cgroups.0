@@ -1,34 +1,74 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH] memcg: page_alloc: skip bulk allocator for __GFP_ACCOUNT
-Date: Thu, 14 Oct 2021 11:23:36 -0400
-Message-ID: <YWhLeAL5RPfLjrlO@cmpxchg.org>
-References: <20211013194338.1804247-1-shakeelb@google.com>
- <YWfZNF7T7Fm69sik@dhcp22.suse.cz>
- <CALvZod4Br9iwq-qfdwj6dzgW2g1vEr2YL4=w_mQjOeWWDQzFjw@mail.gmail.com>
+From: David Hildenbrand <david@redhat.com>
+Subject: Re: [PATCH v2] memcg: page_alloc: skip bulk allocator for
+ __GFP_ACCOUNT
+Date: Thu, 14 Oct 2021 17:24:41 +0200
+Message-ID: <84b44b45-217e-885a-c513-de266315888f@redhat.com>
+References: <20211014151607.2171970-1-shakeelb@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=By52BGa835IE4lyaZQwwtW5rAiE3tQH6DwCoYXbpm9E=;
-        b=acZGhTzeICP5dR16o7d44zA806wjXfAFaH1u+XIyklzn3XApXetVdZA3xTVlo6FV5W
-         7mhpqHdrKn7qQG7YCGWrsqMSJ/LTR/sUkidAix1OyA/T5a0UqzOy5hF3mNNla4ltmNFv
-         Oay9ZIvxwsHCCOhe7oxdDn96wZcPm2/8GRVyNXK3Tsya2KnW4E7zPJ8qnAmCU+MNu/ve
-         HLuf6dKzLLJhCV4MCVolKpTi/TjWPmfzTh0oahUwDKa7TbJkhez4zxc3/dtIjbEd9/lt
-         Hx+Gx9w2Nxx8DFDInfXyLREY1KDQ3Irf/QLYT1oM84jVfQXe/4exZYV8UPDJWWWD9OtT
-         spzg==
-Content-Disposition: inline
-In-Reply-To: <CALvZod4Br9iwq-qfdwj6dzgW2g1vEr2YL4=w_mQjOeWWDQzFjw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1634225085;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=HBGMhkW5l3xF58RlsWd4EAEKmLqaalQ7yZY4iWVTFTE=;
+        b=Jjbea336RT/aL/DaqDW/p8ChAjnfygWDOqaiFcCIwJeEbB5OgttId5YRglkjINAy3ZogQr
+        RwcQ15JenuKxzY6ta2UJeudA5C6O54166J+HLJBLGBI34J0WVc/OcUPFYkJKxzkgn6/V7d
+        F9RgVs5gWVNRsUi30OEAgERisHnkbOk=
+Content-Language: en-US
+In-Reply-To: <20211014151607.2171970-1-shakeelb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Shakeel Butt <shakeelb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Mel Gorman <mgorman@techsingularity.net>
+Cc: Uladzislau Rezki <urezki@gmail.com>, Vasily Averin <vvs@virtuozzo.com>, Roman Gushchin <guro@fb.com>, Matthew Wilcox <willy@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Thu, Oct 14, 2021 at 08:01:16AM -0700, Shakeel Butt wrote:
-> Regarding xfs_buf_alloc_pages(), it is not using __GFP_ACCOUNT
+On 14.10.21 17:16, Shakeel Butt wrote:
+> The commit 5c1f4e690eec ("mm/vmalloc: switch to bulk allocator in
+> __vmalloc_area_node()") switched to bulk page allocator for order 0
+> allocation backing vmalloc. However bulk page allocator does not support
+> __GFP_ACCOUNT allocations and there are several users of
+> kvmalloc(__GFP_ACCOUNT).
+> 
+> For now make __GFP_ACCOUNT allocations bypass bulk page allocator. In
+> future if there is workload that can be significantly improved with the
+> bulk page allocator with __GFP_ACCCOUNT support, we can revisit the
+> decision.
+> 
+> Fixes: 5c1f4e690eec ("mm/vmalloc: switch to bulk allocator in __vmalloc_area_node()")
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> ---
+> Changes since v1:
+> - do fallback allocation instead of failure, suggested by Michal Hocko.
+> - Added memcg_kmem_enabled() check, corrected by Vasily Averin
+> 
+>  mm/page_alloc.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+> index 668edb16446a..9ca871dc8602 100644
+> --- a/mm/page_alloc.c
+> +++ b/mm/page_alloc.c
+> @@ -5230,6 +5230,10 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+>  	if (unlikely(page_array && nr_pages - nr_populated == 0))
+>  		goto out;
+>  
+> +	/* Bulk allocator does not support memcg accounting. */
+> +	if (memcg_kmem_enabled() && (gfp & __GFP_ACCOUNT))
+> +		goto failed;
+> +
+>  	/* Use the single page allocator for one page. */
+>  	if (nr_pages - nr_populated == 1)
+>  		goto failed;
+> 
 
-It probably should, actually. Sorry, somewhat off-topic, but we've
-seen this consume quite large amounts of memory. __GFP_ACCOUNT and
-vmstat tracking seems overdue for this one.
+LGTM
+
+Acked-by: David Hildenbrand <david@redhat.com>
+
+-- 
+Thanks,
+
+David / dhildenb
+
