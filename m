@@ -1,38 +1,28 @@
-From: "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH v2 -next] blk-cgroup: synchoronize blkg creation against
- policy deactivation
-Date: Fri, 15 Oct 2021 09:48:28 +0800
-Message-ID: <6fc9eaa8-c367-f458-4ed9-94af60b55ca0@huawei.com>
-References: <20211013124456.3186005-1-yukuai3@huawei.com>
- <YWi27oAU0v5v86eN@slm.duckdns.org>
+From: Odin Hultgren van der Horst <odin-KgRVb285F3Y0FkRhN5fn+A@public.gmane.org>
+Subject: Re: [Question] io cgroup subsystem threaded support
+Date: Fri, 15 Oct 2021 08:51:35 +0200
+Message-ID: <20211015065135.5hauecjmri2lytpv@T580.localdomain>
+References: <20211001110645.uzw2w5t4rknwqhma@T580.localdomain>
+ <20211007133916.mgk6qb65d2r57fc2@T580.localdomain>
+ <20211011153416.GB61605@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <YWi27oAU0v5v86eN@slm.duckdns.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20211011153416.GB61605-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, paolo.valente@linaro.org, fchecconi@gmail.com, avanzini.arianna@gmail.com, mkoutny@suse.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2021/10/15 7:02, Tejun Heo wrote:
-> On Wed, Oct 13, 2021 at 08:44:56PM +0800, Yu Kuai wrote:
->> @@ -1401,6 +1406,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
->>   	if (queue_is_mq(q))
->>   		blk_mq_freeze_queue(q);
->>   
->> +	mutex_lock(&q->blkg_lock);
->>   	spin_lock_irq(&q->queue_lock);
-> 
-> Given that deactivation drains q_usage_counter through
-> blk_mq_freeze_queue(), can't the blkg_conf_prep() just pin the usage count?
-> 
-
-In fact, the caller of blkcg_deactivate_policy() aready freeze the
-queue, either from blk_cleanup_queue() or from elevator_switch().
-
-Grab q_usage_counter in blk_conf_prep() can prevent concurrent with
-blkcg_deactivate_policy(), I'm afraid will it be too much since it
-will also be synchoronized with all the other freeze/unfreeze queues?
+On Thu, Oct 14, 2021 at 11:29:38AM +0200, Michal Koutn=FD wrote:
+> P.S. Is the reply only to me intentional or did you forget to hit
+> reply-all?
+Yeah, sorry forgot to hit reply-all.
+Whats to proper procedure here, re-send the original mail to retain
+history in the mailing list?
 
 Thanks,
-Kuai
+Odin
+
+I have gotten an answer to this from Michal Koutn=FD
