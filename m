@@ -1,77 +1,109 @@
-From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [PATCH memcg 0/1] false global OOM triggered by memcg-limited
- task
-Date: Mon, 18 Oct 2021 13:05:35 +0300
-Message-ID: <6b751abe-aa52-d1d8-2631-ec471975cc3a@virtuozzo.com>
-References: <9d10df01-0127-fb40-81c3-cc53c9733c3e@virtuozzo.com>
- <YW04jWSv6pQb2Goe@dhcp22.suse.cz>
+From: Quanyang Wang <quanyang.wang@windriver.com>
+Subject: Re: [V2][PATCH] cgroup: fix memory leak caused by missing
+ cgroup_bpf_offline
+Date: Mon, 18 Oct 2021 18:06:28 +0800
+Message-ID: <8fdcaded-474e-139b-a9bc-5ab6f91fbd4f@windriver.com>
+References: <20211018075623.26884-1-quanyang.wang@windriver.com>
+ <YW04Gqqm3lDisRTc@T590>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
-        Subject; bh=v4LeNmv3SwkPyguGAt7spZmFtAAdvhXagti3/HiYcJM=; b=r4Z5e0aOk/6+/4aZs
-        d7663+ojeE6T0F6uJmOyL5Pz4218rmSSlZlOHAF0M1+A5jfWkm9VZQCR2reaIs6T5hlleLq2aGsdg
-        /Lhhr8JbHMWL41nqvxptFCnM/ocSlQ/Z1BSsugLOrY81bJhOtJymU6dG8cwLy0kVZ+3C9JuHXUfjs
-        =;
-In-Reply-To: <YW04jWSv6pQb2Goe-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com; h=subject : to : cc
+ : references : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=PPS06212021;
+ bh=e6mL/tcgbZqVrGO/gRpWCz2Ek02OFJyMV0YVhGADKC0=;
+ b=UmIiBjWXLZ1lM4fT5OemfjBSsyP3wjy3qmyGgW6wSyvZBNbwSxExxo5XtDgTCsrEarkY
+ N/iAS7QCA/95NJ/duJwmbf9IDEC2bRUBbCrKT9MwEKhXxM/0yi9VhaPMfsyRugW91Z3W
+ VWlGJuR78FWRBONixmnK8BDXvBWfQWCd1rO2NTrvRvn6mB77oZ7Ipya8ly8WYCOBFPqa
+ KDHSHaxx4lKo+2b4Eh3lCkRBJxLh2pRqppiDZrsmbV9b4LZQ/vQcvSOvnKjh43dgKu3G
+ 191OW7JRD5+uQluEGVCrpdiQrBip67db8vAB/BmfBVwUdiflHWo8G4yTnfCeC0i4VojN 1Q== 
+In-Reply-To: <YW04Gqqm3lDisRTc@T590>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Jens Axboe <axboe@kernel.dk>, Roman Gushchin <guro@fb.com>, mkoutny@suse.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org
 
-On 18.10.2021 12:04, Michal Hocko wrote:
-> On Mon 18-10-21 11:13:52, Vasily Averin wrote:
-> [...]
->> How could this happen?
+Hi Ming,
+
+On 10/18/21 5:02 PM, Ming Lei wrote:
+> On Mon, Oct 18, 2021 at 03:56:23PM +0800, quanyang.wang@windriver.com wrote:
+>> From: Quanyang Wang <quanyang.wang@windriver.com>
 >>
->> User-space task inside the memcg-limited container generated a page fault,
->> its handler do_user_addr_fault() called handle_mm_fault which could not
->> allocate the page due to exceeding the memcg limit and returned VM_FAULT_OOM.
->> Then do_user_addr_fault() called pagefault_out_of_memory() which executed
->> out_of_memory() without set of memcg.
+>> When enabling CONFIG_CGROUP_BPF, kmemleak can be observed by running
+>> the command as below:
 >>
->> Partially this problem depends on one of my recent patches, disabled unlimited
->> memory allocation for dying tasks. However I think the problem can happen
->> on non-killed tasks too, for example because of kmem limit.
+>>      $mount -t cgroup -o none,name=foo cgroup cgroup/
+>>      $umount cgroup/
+>>
+>> unreferenced object 0xc3585c40 (size 64):
+>>    comm "mount", pid 425, jiffies 4294959825 (age 31.990s)
+>>    hex dump (first 32 bytes):
+>>      01 00 00 80 84 8c 28 c0 00 00 00 00 00 00 00 00  ......(.........
+>>      00 00 00 00 00 00 00 00 6c 43 a0 c3 00 00 00 00  ........lC......
+>>    backtrace:
+>>      [<e95a2f9e>] cgroup_bpf_inherit+0x44/0x24c
+>>      [<1f03679c>] cgroup_setup_root+0x174/0x37c
+>>      [<ed4b0ac5>] cgroup1_get_tree+0x2c0/0x4a0
+>>      [<f85b12fd>] vfs_get_tree+0x24/0x108
+>>      [<f55aec5c>] path_mount+0x384/0x988
+>>      [<e2d5e9cd>] do_mount+0x64/0x9c
+>>      [<208c9cfe>] sys_mount+0xfc/0x1f4
+>>      [<06dd06e0>] ret_fast_syscall+0x0/0x48
+>>      [<a8308cb3>] 0xbeb4daa8
+>>
+>> This is because that since the commit 2b0d3d3e4fcf ("percpu_ref: reduce
+>> memory footprint of percpu_ref in fast path") root_cgrp->bpf.refcnt.data
+>> is allocated by the function percpu_ref_init in cgroup_bpf_inherit which
+>> is called by cgroup_setup_root when mounting, but not freed along with
+>> root_cgrp when umounting. Adding cgroup_bpf_offline which calls
+>> percpu_ref_kill to cgroup_kill_sb can free root_cgrp->bpf.refcnt.data in
+>> umount path.
+>>
+>> This patch also fixes the commit 4bfc0bb2c60e ("bpf: decouple the lifetime
+>> of cgroup_bpf from cgroup itself"). A cgroup_bpf_offline is needed to do a
+>> cleanup that frees the resources which are allocated by cgroup_bpf_inherit
+>> in cgroup_setup_root.
+>>
+>> And inside cgroup_bpf_offline, cgroup_get() is at the beginning and
+>> cgroup_put is at the end of cgroup_bpf_release which is called by
+>> cgroup_bpf_offline. So cgroup_bpf_offline can keep the balance of
+>> cgroup's refcount.
+>>
+>> Fixes: 2b0d3d3e4fcf ("percpu_ref: reduce memory footprint of percpu_ref in fast path")
 > 
-> Could you be more specific on how this can happen without your patch? I
-> have to say I haven't realized this side effect when discussing it.
+> If I understand correctly, cgroup_bpf_release() won't be called without
+> your patch. So anything allocated in cgroup_bpf_inherit() will be
+> leaked?
+No, for now cgroup_bpf_release is called to release bpf.refcnt.data of 
+the cgroup which is not root_cgroup. Only root_cgroup's bpf data is leaked.
 
-We can reach obj_cgroup_charge_pages() for example via
+For non-root cgroup:
+cgroup_mkdir
+-> cgroup_create
+-->cgroup_bpf_inherit(cgrp_A)
+cgroup_rmdir
+->cgroup_destroy_locked()
+-->cgroup_bpf_offline(cgrp_A)
+So for non-root cgroup, there is no memory leak.
 
-do_user_addr_fault
-handle_mm_fault
-__handle_mm_fault
-p4d_alloc
-__p4d_alloc
-p4d_alloc_one
-get_zeroed_page
-__get_free_pages
-alloc_pages
-__alloc_pages
-__memcg_kmem_charge_page
-obj_cgroup_charge_pages
 
-Here we call try_charge_memcg() that return success and approve the allocation,
-however then we hit into kmem limit and fail the allocation.
+For root cgroup:
+cgroup_setup_root
+->cgroup_bpf_inherit(root_cgrp)
+cgroup_kill_sb:
+-> (Here should be call cgroup_bpf_offline, or else leak occurs)
 
-If required I can try to search how try_charge_memcg() can reject page allocation 
-of non-dying task too.
+Thanks,
+Quanyang
 
-> I will be honest that I am not really happy about pagefault_out_of_memory.
-> I have tried to remove it in the past. Without much success back then,
-> unfortunately[1]. 
-> Maybe we should get rid of it finally. The OOM is always triggered from
-> inside the allocator where we have much more infromation about the
-> allocation context. A first step would be to skip pagefault_out_of_memory
-> for killed or exiting processes.
 
-I like this idea, however it may be not enough, at least in scenario described above.
-
-> [1] I do not have msg-id so I cannot provide a lore link but google
-> pointed me to https://www.mail-archive.com/linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org/msg1400402.html
-
-Thank you, I'll read this discussion.
-	Vasily Averin
+> 
+> If that is true, 'Fixes: 2b0d3d3e4fcf' looks misleading, cause people has to
+> backport your patch if 4bfc0bb2c60e is applied. Meantime, this fix isn't
+> needed if 4bfc0bb2c60e isn't merged.
+> 
+> 
+> Thanks,
+> Ming
+> 
