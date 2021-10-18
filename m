@@ -1,52 +1,105 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH memcg 0/1] false global OOM triggered by memcg-limited
- task
-Date: Mon, 18 Oct 2021 14:27:31 +0200
-Message-ID: <YW1oMxNkUCaAimmg@dhcp22.suse.cz>
-References: <9d10df01-0127-fb40-81c3-cc53c9733c3e@virtuozzo.com>
- <YW04jWSv6pQb2Goe@dhcp22.suse.cz>
- <6b751abe-aa52-d1d8-2631-ec471975cc3a@virtuozzo.com>
- <YW1gRz0rTkJrvc4L@dhcp22.suse.cz>
- <27dc0c49-a0d6-875b-49c6-0ef5c0cc3ac8@virtuozzo.com>
+From: Mina Almasry <almasrymina@google.com>
+Subject: Re: [RFC Proposal] Deterministic memcg charging for shared memory
+Date: Mon, 18 Oct 2021 05:51:18 -0700
+Message-ID: <CAHS8izPZZG6MEmyieQL-4aR=NArjb87Bk6fB7FP7ohFHD5DWww@mail.gmail.com>
+References: <CAHS8izMpzTvd5=x_xMhDJy1toV-eT3AS=GXM2ObkJoCmbDtz6w@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1634560052; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=AsSJ46fWPAV0IFj3qTLOgd+in0HeJw5bzRCwtXuU/Uk=;
-        b=UJ6P3rvwwmuf+NLn07KFXlpInNHv/exUEHzjgL1dgEuXYvz97ilEtXh08qsdthN1U8Zwrp
-        NssW+sFhiRJeGnFGAto9l78Z83ZoJk8R+tvT5xb6BZ8IJD2saeRQHvrdVIa1gbu+7jX28X
-        h4bPccf2NNa1MJoiTPGUM96MCfWc3Oc=
-Content-Disposition: inline
-In-Reply-To: <27dc0c49-a0d6-875b-49c6-0ef5c0cc3ac8-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :content-transfer-encoding;
+        bh=qfX+ndSVWKM3Vi8c2fHOw8/MXzmsVryHdiKR0AyJ9xw=;
+        b=sSv9dZOV+JAzYZFPXw+1oG8Vh/GTMCXkKdXXtKcac2ijdJAv1EcSM3SkiA7mC6O3W+
+         2dRpqmvnGyYV9e2m64/IbFfC9zlgSxTLFtM7+I/brndJjnuxK0/vIiDIq6hDS+MmrgHB
+         2KrH6UwdouPpwMbLOfbK3Fj778dbO6ZyQJgipYsxVXN2MEotKlskxaRG8QrfoBa1/Ss/
+         hzpG8x9LQ3PhtOvpc2dq/k8jMQ4ABHTcTUI/UwXmDNl3TLOcRE5+d3szOYFWY4KutkbV
+         nIIZ/jBt++HPMC0vCZzQj0tEDUNP207JrL7ZoJQPircDipt9sBjBeSSdyrI2G18iUbrA
+         0GaQ==
+In-Reply-To: <CAHS8izMpzTvd5=x_xMhDJy1toV-eT3AS=GXM2ObkJoCmbDtz6w@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Roman Gushchin <songmuchun@bytedance.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Tejun Heo <tj@kernel.org>, Linux-MM <linux-mm@kvack.org>, "open list:FILESYSTEMS (VFS and infrastructure)" <linux-fsdevel@vger.kernel.org>, cgroups@vger.kernel.org, riel@surriel.com
 
-[restore the cc list]
+On Wed, Oct 13, 2021 at 12:23 PM Mina Almasry <almasrymina@google.com> wrot=
+e:
+>
+> Below is a proposal for deterministic charging of shared memory.
+> Please take a look and let me know if there are any major concerns:
+>
 
-On Mon 18-10-21 15:14:26, Vasily Averin wrote:
-> On 18.10.2021 14:53, Michal Hocko wrote:
-> > On Mon 18-10-21 13:05:35, Vasily Averin wrote:
-> >> On 18.10.2021 12:04, Michal Hocko wrote:
-> >> Here we call try_charge_memcg() that return success and approve the allocation,
-> >> however then we hit into kmem limit and fail the allocation.
-> > 
-> > Just to make sure I understand this would be for the v1 kmem explicit
-> > limit, correct?
-> 
-> yes, I mean this limit.
+Friendly ping on the proposal below. If there are any issues you see
+that I can address in the v1 I send for review, I would love to know.
+And if the proposal seems fine as is I would also love to know.
 
-OK, thanks for the clarification. This is a known problem. Have a look
-at I think we consider that one to 0158115f702b ("memcg, kmem: deprecate
-kmem.limit_in_bytes"). We are reporting the deprecated and to-be removed
-status since 2019 without any actual report sugested by the kernel
-message. Maybe we should try and remove it and see whether that prompts
-some pushback.
+Thanks!
+Mina
 
--- 
-Michal Hocko
-SUSE Labs
+> Problem:
+> Currently shared memory is charged to the memcg of the allocating
+> process. This makes memory usage of processes accessing shared memory
+> a bit unpredictable since whichever process accesses the memory first
+> will get charged. We have a number of use cases where our userspace
+> would like deterministic charging of shared memory:
+>
+> 1. System services allocating memory for client jobs:
+> We have services (namely a network access service[1]) that provide
+> functionality for clients running on the machine and allocate memory
+> to carry out these services. The memory usage of these services
+> depends on the number of jobs running on the machine and the nature of
+> the requests made to the service, which makes the memory usage of
+> these services hard to predict and thus hard to limit via memory.max.
+> These system services would like a way to allocate memory and instruct
+> the kernel to charge this memory to the client=E2=80=99s memcg.
+>
+> 2. Shared filesystem between subtasks of a large job
+> Our infrastructure has large meta jobs such as kubernetes which spawn
+> multiple subtasks which share a tmpfs mount. These jobs and its
+> subtasks use that tmpfs mount for various purposes such as data
+> sharing or persistent data between the subtask restarts. In kubernetes
+> terminology, the meta job is similar to pods and subtasks are
+> containers under pods. We want the shared memory to be
+> deterministically charged to the kubernetes's pod and independent to
+> the lifetime of containers under the pod.
+>
+> 3. Shared libraries and language runtimes shared between independent jobs=
+.
+> We=E2=80=99d like to optimize memory usage on the machine by sharing libr=
+aries
+> and language runtimes of many of the processes running on our machines
+> in separate memcgs. This produces a side effect that one job may be
+> unlucky to be the first to access many of the libraries and may get
+> oom killed as all the cached files get charged to it.
+>
+> Design:
+> My rough proposal to solve this problem is to simply add a
+> =E2=80=98memcg=3D/path/to/memcg=E2=80=99 mount option for filesystems (na=
+mely tmpfs):
+> directing all the memory of the file system to be =E2=80=98remote charged=
+=E2=80=99 to
+> cgroup provided by that memcg=3D option.
+>
+> Caveats:
+> 1. One complication to address is the behavior when the target memcg
+> hits its memory.max limit because of remote charging. In this case the
+> oom-killer will be invoked, but the oom-killer may not find anything
+> to kill in the target memcg being charged. In this case, I propose
+> simply failing the remote charge which will cause the process
+> executing the remote charge to get an ENOMEM This will be documented
+> behavior of remote charging.
+> 2. I would like to provide an initial implementation that adds this
+> support for tmpfs, while leaving the implementation generic enough for
+> myself or others to extend to more filesystems where they find the
+> feature useful.
+> 3. I would like to implement this for both cgroups v2 _and_ cgroups
+> v1, as we still have cgroup v1 users. If this is unacceptable I can
+> provide the v2 implementation only, and maintain a local patch for the
+> v1 support.
+>
+> If this proposal sounds good in principle. I have an experimental
+> implementation that I can make ready for review. Please let me know of
+> any concerns you may have. Thank you very much in advance!
+> Mina Almasry
+>
+> [1] https://research.google/pubs/pub48630/
