@@ -1,67 +1,53 @@
-From: Zheng Liang <zhengliang6-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2] block, bfq: fix UAF problem in bfqg_stats_init()
-Date: Mon, 18 Oct 2021 10:42:25 +0800
-Message-ID: <20211018024225.1493938-1-zhengliang6@huawei.com>
+From: Youfu Zhang <zhangyoufu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [BUG] blk-throttle panic on 32bit machine after startup
+Date: Mon, 18 Oct 2021 15:08:53 +0800
+Message-ID: <CAEKhA2x1Qi3Ywaj9fzdsaChabqDSMe2m2441wReg_V=39_Cuhg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=O/OZJC0HIUE3DNP74CA6ob2Ysy1RgHmyhS2ZxyEPXFQ=;
+        b=SSUOD1uC9IodrXjZW/i5EdgxkEgrD955N9s4FpbRkuCr8XDDCmVTbVqRPHDNRSENmQ
+         iz9t4oURkPyAIYFZ3pF4/7pS+eNQ6jTzoIb8Ev4KENA7b6ItNIiOxdYyMocXP4myvfsj
+         15woTtJGjmSTDkC3/6mQkEhMkSU7psQwGbmQfHehlpJMH3yHUwtWBcHFxxkAXVoKt9Ts
+         nBaKJ59mpV+je8EW4XMdc2rrfQz96tlTmC0TJu+NT3nZuvW7kx11mUXZ9afwkITGFFTH
+         VJ4YFQqqQCqqqoGqQaTuKHkzbE+8N/bVbWwHgsEX8SSO9yDK5OStQK0VbKm5QKeo1bcd
+         is/g==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, zhengliang6-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-In bfq_pd_alloc(), the function bfqg_stats_init() init bfqg. If
-blkg_rwstat_init() init bfqg_stats->bytes successful and init
-bfqg_stats->ios failed, bfqg_stats_init() return failed, bfqg will
-be freed. But blkg_rwstat->cpu_cnt is not deleted from the list of
-percpu_counters. If we traverse the list of percpu_counters, It will
-have UAF problem.
+Hi,
 
-we should use blkg_rwstat_exit() to cleanup bfqg_stats bytes in the
-above scenario.
+I ran into a kernel bug related to blk-throttle on CentOS 7 AltArch for i386.
+Userspace programs may panic the kernel if they hit the I/O limit
+within 5 minutes after startup.
 
-Fixes: commit fd41e60331b ("bfq-iosched: stop using blkg->stat_bytes and ->stat_ios")
-Signed-off-by: Zheng Liang <zhengliang6-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
-Changes since v1:
-    Change some description for this patch
----
- block/bfq-cgroup.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+Root cause:
+1. jiffies was initialized to -300HZ during boot on 32bit machines
+2. enable blkio cgroup hierarchy
+   __DEVEL__sane_behavior for cgroup v1 or default hierarchy for cgroup v2
+   EL7 kernel modified throtl_pd_init and always enable hierarchical throttling
+3. enable & trigger blkio throttling within 5 minutes after startup
+   bio propagated from child tg to parent
+4. enter throtl_start_new_slice_with_credit
+   if(time_after_eq(start, tg->slice_start[rw]))
+   aka. time_after_eq(0xFFFxxxxx, 0) does not hold
+   parent tg->slice_start[rw] was zero-initialized and not updated
+5. enter throtl_trim_slice
+   BUG_ON(time_before(tg->slice_end[rw], tg->slice_start[rw]))
+   aka. time_before(0xFFFxxxxx, 0) triggers a panic
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index e2f14508f2d6..243ffbc1f106 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -463,7 +463,7 @@ static int bfqg_stats_init(struct bfqg_stats *stats, gfp_t gfp)
- {
- 	if (blkg_rwstat_init(&stats->bytes, gfp) ||
- 	    blkg_rwstat_init(&stats->ios, gfp))
--		return -ENOMEM;
-+		goto error;
- 
- #ifdef CONFIG_BFQ_CGROUP_DEBUG
- 	if (blkg_rwstat_init(&stats->merged, gfp) ||
-@@ -476,13 +476,15 @@ static int bfqg_stats_init(struct bfqg_stats *stats, gfp_t gfp)
- 	    bfq_stat_init(&stats->dequeue, gfp) ||
- 	    bfq_stat_init(&stats->group_wait_time, gfp) ||
- 	    bfq_stat_init(&stats->idle_time, gfp) ||
--	    bfq_stat_init(&stats->empty_time, gfp)) {
--		bfqg_stats_exit(stats);
--		return -ENOMEM;
--	}
-+	    bfq_stat_init(&stats->empty_time, gfp))
-+		goto error;
- #endif
- 
- 	return 0;
-+
-+error:
-+	bfqg_stats_exit(stats);
-+	return -ENOMEM;
- }
- 
- static struct bfq_group_data *cpd_to_bfqgd(struct blkcg_policy_data *cpd)
--- 
-2.25.4
-
+Reproducer: (tested on Alpine Linux x86 kernel 5.10.X)
+#!/bin/sh
+CGROUP_PATH="$(mktemp -d)"
+mount -t cgroup2 none "$CGROUP_PATH"
+echo +io >"$CGROUP_PATH/cgroup.subtree_control"
+mkdir "$CGROUP_PATH/child"
+echo "7:0 riops=2" >"$CGROUP_PATH/child/io.max"
+echo 0 >"$CGROUP_PATH/child/cgroup.procs"
+echo 3 >/proc/sys/vm/drop_caches
+dd if=/dev/loop0 of=/dev/null count=3
