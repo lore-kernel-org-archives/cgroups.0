@@ -1,112 +1,38 @@
-From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH memcg 1/1] memcg: prevent false global OOM triggered by memcg
- limited task
-Date: Mon, 18 Oct 2021 11:14:18 +0300
-Message-ID: <fbc4a7f4-faf8-bb82-9df4-925543cc73ca@virtuozzo.com>
-References: <cover.1634543503.git.vvs@virtuozzo.com>
+From: Haoran Luo <www-ZNkeOWAYW7z9CHvZ6l3MoQ@public.gmane.org>
+Subject: Re: [BUG] blk-throttle panic on 32bit machine after startup
+Date: Mon, 18 Oct 2021 08:00:27 +0000
+Message-ID: <YW0pm5xcxgWnW98f@aegistudio>
+Reply-To: CAEKhA2x1Qi3Ywaj9fzdsaChabqDSMe2m2441wReg_V=39_Cuhg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
-        :From; bh=o6kTDCIX8m/7vi/Fj7ESJCu9Hrbtu/S6QWfa9zBOu9w=; b=Yui58D6boe8f6wHqXme
-        h9QuiSqbjd6C/vRXzdxWFiv5XKKzCzsSb+sDTmMl1DAPFXjkGljm/MRffisA8iVymhySz/zoc+Gim
-        QdMZOSg101MvhtW6KSn6qsBOV5eyql/UKp9ozis5XS07u/Ny2fKMdLtfOBFNrdme+wIaZKCAbiM=;
-In-Reply-To: <cover.1634543503.git.vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Content-Language: en-US
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: zhangyoufu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-Currently memcg-limited userspace can trigger false global OOM.
+(Sorry for the garbled message due to my mistaken the configuration of mutt)
 
-A user space task inside memcg-limited container generates a page fault,
-its handler do_user_addr_fault() calls handle_mm_fault(),
-which cannot allocate the page due to exceeding the memcg limit 
-and returns VM_FAULT_OOM.
-Then do_user_addr_fault() calls pagefault_out_of_memory()
-which finally executes out_of_memory() without set of memcg
-and triggers a false global OOM.
+I'm the college of the reporter and I would like to provide more
+information.
 
-At present do_user_addr_fault() does not know why page allocation was failed,
-i.e. was it global or memcg OOM.
+The code in 5.15-rc6 in "blk-throttle.c" around line 791 is written as
+below:
 
-Let's use new flag on task struct to save this information,
-it will be set in obj_cgroup_charge_pages (for memory controller)
-and in try_charge_memcg (for kmem controller), 
-and will be used in mem_cgroup_oom_synchronize() 
-called inside pagefault_out_of_memory():
-in case of memcg-related restrictions it does not allow to generate a
-false global OOM and will silently return to user space which will either
-retry the fault or kill the process if it got a fatal signal.
+	/*
+	 * Previous slice has expired. We must have trimmed it after
+	 * last
+	 * bio dispatch. That means since start of last slice, we never
+	 * used
+	 * that bandwidth. Do try to make use of that bandwidth while
+	 * giving
+	 * credit.
+	 */
+	if (time_after_eq(start, tg->slice_start[rw]))
+		tg->slice_start[rw] = start;
 
-Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
----
- include/linux/sched.h |  1 +
- mm/memcontrol.c       | 12 +++++++++---
- 2 files changed, 10 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index c1a927ddec64..62d186fffb26 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -910,6 +910,7 @@ struct task_struct {
- #endif
- #ifdef CONFIG_MEMCG
- 	unsigned			in_user_fault:1;
-+	unsigned			is_over_memcg_limit:1;
- #endif
- #ifdef CONFIG_COMPAT_BRK
- 	unsigned			brk_randomized:1;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 87e41c3cac10..c977d75bcc5f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1846,7 +1846,7 @@ bool mem_cgroup_oom_synchronize(bool handle)
- 
- 	/* OOM is global, do not handle */
- 	if (!memcg)
--		return false;
-+		return current->is_over_memcg_limit;
- 
- 	if (!handle)
- 		goto cleanup;
-@@ -2535,6 +2535,8 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	bool drained = false;
- 	unsigned long pflags;
- 
-+	if (current->in_user_fault)
-+		current->is_over_memcg_limit = false;
- retry:
- 	if (consume_stock(memcg, nr_pages))
- 		return 0;
-@@ -2639,8 +2641,11 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 		goto retry;
- 	}
- nomem:
--	if (!(gfp_mask & __GFP_NOFAIL))
-+	if (!(gfp_mask & __GFP_NOFAIL)) {
-+		if (current->in_user_fault)
-+			current->is_over_memcg_limit = true;
- 		return -ENOMEM;
-+	}
- force:
- 	/*
- 	 * The allocation either can't fail or will lead to more memory
-@@ -2964,10 +2969,11 @@ static int obj_cgroup_charge_pages(struct obj_cgroup *objcg, gfp_t gfp,
- 		}
- 		cancel_charge(memcg, nr_pages);
- 		ret = -ENOMEM;
-+		if (current->in_user_fault)
-+			current->is_over_memcg_limit = true;
- 	}
- out:
- 	css_put(&memcg->css);
--
- 	return ret;
- }
- 
--- 
-2.32.0
-
+I think this piece of code presumes all jiffies values are greater than
+0, which is the initial value assigned when kzalloc-ing throtl_grp. It
+fails on 32-bit linux for the first 5 minutes after booting, since the
+jiffies value then will be less than 0.
