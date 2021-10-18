@@ -1,54 +1,33 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH memcg 0/1] false global OOM triggered by memcg-limited
- task
-Date: Mon, 18 Oct 2021 11:04:13 +0200
-Message-ID: <YW04jWSv6pQb2Goe@dhcp22.suse.cz>
-References: <9d10df01-0127-fb40-81c3-cc53c9733c3e@virtuozzo.com>
+From: Haoran Luo <www-ZNkeOWAYW7z9CHvZ6l3MoQ@public.gmane.org>
+Subject: Re: [BUG] blk-throttle panic on 32bit machine after startup
+Date: Mon, 18 Oct 2021 09:25:11 +0000
+Message-ID: <YW09dxyhhsMwaO7T@aegistudio>
+Reply-To: YW0pm5xcxgWnW98f@aegistudio
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1634547853; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=z/vHFPDVM8hZbz3viTK/C8vH4oGvJ8bN8OaWpPhCHZA=;
-        b=mlAFk61d8h+oSQO3dORG+kD0uapYz7LR8uzHrxUR/4h6gZrn6tBqFtGaJdXynpE3yHSMNK
-        YL/qsLMTyZgoJD3G7YFKI5VAm27szaLmBj00FcNqg+eOlKtgZ08zzUOrgj0iNDSRFxZ6tc
-        8kq79DeG+dWHL856++NmRKI+2yWvH40=
 Content-Disposition: inline
-In-Reply-To: <9d10df01-0127-fb40-81c3-cc53c9733c3e-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: Haoran Luo <www-ZNkeOWAYW7z9CHvZ6l3MoQ@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, zhangyoufu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Mon 18-10-21 11:13:52, Vasily Averin wrote:
-[...]
-> How could this happen?
-> 
-> User-space task inside the memcg-limited container generated a page fault,
-> its handler do_user_addr_fault() called handle_mm_fault which could not
-> allocate the page due to exceeding the memcg limit and returned VM_FAULT_OOM.
-> Then do_user_addr_fault() called pagefault_out_of_memory() which executed
-> out_of_memory() without set of memcg.
-> 
-> Partially this problem depends on one of my recent patches, disabled unlimited
-> memory allocation for dying tasks. However I think the problem can happen
-> on non-killed tasks too, for example because of kmem limit.
+Pardon me for elaborating some of my opinions.
 
-Could you be more specific on how this can happen without your patch? I
-have to say I haven't realized this side effect when discussing it.
+> I think this piece of code presumes all jiffies values are greater than
+> 0, which is the initial value assigned when kzalloc-ing throtl_grp. It
+> fails on 32-bit linux for the first 5 minutes after booting, since the
+> jiffies value then will be less than 0.
 
-I will be honest that I am not really happy about pagefault_out_of_memory.
-I have tried to remove it in the past. Without much success back then,
-unfortunately[1]. 
-Maybe we should get rid of it finally. The OOM is always triggered from
-inside the allocator where we have much more infromation about the
-allocation context. A first step would be to skip pagefault_out_of_memory
-for killed or exiting processes.
+Expressing the jiffies value as greater or less than 0 is a mistake of vagueness. I actually means that comparison in macro "time_after_eq", which written as below in "5.16-rc2" in "include/linux/jiffies.h" at around line 110.
 
-[1] I do not have msg-id so I cannot provide a lore link but google
-pointed me to https://www.mail-archive.com/linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org/msg1400402.html
--- 
-Michal Hocko
-SUSE Labs
+	#define time_after_eq(a,b)	\
+		(typecheck(unsigned long, a) && \
+		 typecheck(unsigned long, b) && \
+		 ((long)((a) - (b)) >= 0))
+
+The "INITIAL_JIFFIES" which is defined as "((unsigned long)(unsigned int)-300*HZ)", converts to "((long)-300*HZ)" and is smaller than "((long)0)". And similarily "timer_after_eq(x, 0)" being evaluated to false holds for x ranged from `INITIAL_JIFFIES <= x <= MAX_LONG` on 32-bit linux.
+
+The same thing will not happen for 64-bit linux, since "((unsigned long)(unsigned int)-300*HZ)" is evaluated to a value greater than zero in the macro above.
+
+I actually cannot figure out a fix for this problem on 32-bit, if it presumes the jiffies value in "tg->slice_start[rw]" to be either "0" or jiffies "x" holding property of "time_after_eq(x, 0)".
