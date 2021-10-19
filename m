@@ -1,166 +1,67 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [PATCH v2] memcg, kmem: further deprecate kmem.limit_in_bytes
-Date: Tue, 19 Oct 2021 13:51:55 +0800
-Message-ID: <CAMZfGtUy5CQR4B1BFE+pEJfvzE2s0MDLJF2sC3cxkvZpahWKWg@mail.gmail.com>
-References: <20211019053058.2873615-1-shakeelb@google.com>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH memcg 0/1] false global OOM triggered by memcg-limited
+ task
+Date: Tue, 19 Oct 2021 09:30:18 +0300
+Message-ID: <339ae4b5-6efd-8fc2-33f1-2eb3aee71cb2@virtuozzo.com>
+References: <9d10df01-0127-fb40-81c3-cc53c9733c3e@virtuozzo.com>
+ <YW04jWSv6pQb2Goe@dhcp22.suse.cz>
+ <6b751abe-aa52-d1d8-2631-ec471975cc3a@virtuozzo.com>
+ <YW1gRz0rTkJrvc4L@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=hhQEzUyEKyXCEjjzkYdjEsFZ3KqkRdQuV0vIpz0DeEU=;
-        b=8GjQYpKjvAO+JbTgbadd4Qpv0oYVQW5dLMGDgEVDqvaHL6WbpvpMzwRNiJHLxAVaXb
-         lYxFY59tWmotTsbj3CGvxZ3s6AXrOyvXNkpsfaKIt7hwgO04SCFnoZuarqpRvGaQboj6
-         JPtTFD42/O2UOmNCTM8mKs3MTdBpYxvbpiQETy5yMbRT7P3WJtw+nqWWz/RJCNB0tFSD
-         8WehQP3Oc/7Pu2mSdAIGRWfKFpIRuRXdu2EklENy1Yhrs3+5Wu5cvZ4nsxZ7/5Rg+q6i
-         m9NikMGLce+kWvRCBxXdYDBbe97Wm8ZaE7B2nce10OEn1VMblIWVJuVoTmPUa6F8HBL4
-         nipw==
-In-Reply-To: <20211019053058.2873615-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
+        Subject; bh=tI9gj9p8cg4CnX2QaPSuoyzqKweCoJS55yHjYE7xcKM=; b=is7WHUREKxBUK1eox
+        a3i8e7lEICkLoC40q5DdZ9O1639miZT0QpjLzmTbey1KH61kzqfqNE46f3xVo3z+vEfv84cDtb3BC
+        5uvyqf7GIL1gRY7JUEs8Zy0etcbnAGPB4cxnlKeeFvMMW0HehqKkIbzMNocCK8KtCM4Z+5ti9g7d8
+        =;
+In-Reply-To: <YW1gRz0rTkJrvc4L-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Tue, Oct 19, 2021 at 1:31 PM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> The deprecation process of kmem.limit_in_bytes started with the commit
-> 0158115f702 ("memcg, kmem: deprecate kmem.limit_in_bytes") which also
-> explains in detail the motivation behind the deprecation. To summarize,
-> it is the unexpected behavior on hitting the kmem limit. This patch
-> moves the deprecation process to the next stage by disallowing to set
-> the kmem limit. In future we might just remove the kmem.limit_in_bytes
-> file completely.
->
-> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-> Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-> Cc: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> ---
-> Changes since v1:
-> - Replaced EINVAL with ENOTSUPP on setting kmem limits.
-> - V1 was posted last year at [0].
->
-> [0] https://lore.kernel.org/all/20201118175726.2453120-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
->
->  .../admin-guide/cgroup-v1/memory.rst          |  6 ++--
->  mm/memcontrol.c                               | 35 +++----------------
->  2 files changed, 6 insertions(+), 35 deletions(-)
->
-> diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
-> index 41191b5fb69d..9be961521743 100644
-> --- a/Documentation/admin-guide/cgroup-v1/memory.rst
-> +++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-> @@ -87,10 +87,8 @@ Brief summary of control files.
->   memory.oom_control                 set/show oom controls.
->   memory.numa_stat                   show the number of memory usage per numa
->                                      node
-> - memory.kmem.limit_in_bytes          set/show hard limit for kernel memory
-> -                                     This knob is deprecated and shouldn't be
-> -                                     used. It is planned that this be removed in
-> -                                     the foreseeable future.
-> + memory.kmem.limit_in_bytes          This knob is deprecated and writing to
-> +                                     it will return -ENOTSUPP.
->   memory.kmem.usage_in_bytes          show current kernel memory allocation
->   memory.kmem.failcnt                 show the number of kernel memory usage
->                                      hits limits
+On 18.10.2021 14:53, Michal Hocko wrote:
+> On Mon 18-10-21 13:05:35, Vasily Averin wrote:
+>> On 18.10.2021 12:04, Michal Hocko wrote:
+>>> On Mon 18-10-21 11:13:52, Vasily Averin wrote:
+>>> [...]
+>>>> How could this happen?
+>>>>
+>>>> User-space task inside the memcg-limited container generated a page fault,
+>>>> its handler do_user_addr_fault() called handle_mm_fault which could not
+>>>> allocate the page due to exceeding the memcg limit and returned VM_FAULT_OOM.
+>>>> Then do_user_addr_fault() called pagefault_out_of_memory() which executed
+>>>> out_of_memory() without set of memcg.
+>>>>
+>>>> Partially this problem depends on one of my recent patches, disabled unlimited
+>>>> memory allocation for dying tasks. However I think the problem can happen
+>>>> on non-killed tasks too, for example because of kmem limit.
+>>>
+>>> Could you be more specific on how this can happen without your patch? I
+>>> have to say I haven't realized this side effect when discussing it.
 
-Since memory.kmem.limit_in_bytes can not be set, how about removing
-those instructions as well?
+>> If required I can try to search how try_charge_memcg() can reject page allocation 
+>> of non-dying task too.
+> 
+> Yes.
 
-diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst
-b/Documentation/admin-guide/cgroup-v1/memory.rst
-index 41191b5fb69d..f710f36770fa 100644
---- a/Documentation/admin-guide/cgroup-v1/memory.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -518,11 +518,6 @@ will be charged as a new owner of it.
-   charged file caches. Some out-of-use page caches may keep charged until
-   memory pressure happens. If you want to avoid that, force_empty
-will be useful.
--   Also, note that when memory.kmem.limit_in_bytes is set the charges due to
--   kernel pages will still be seen. This is not considered a failure and the
--   write will still return success. In this case, it is expected that
--   memory.kmem.usage_in_bytes == memory.usage_in_bytes.
--
-5.2 stat file
--------------
+Now I think that such failure was very unlikely (w/o my patch and kmem limit).
+I cannot exclude it completely, because I did not finished this review and perhaps I missed something,
+but I checked most part of code and found nothing.
 
-With this changes,
+With my patch ("memcg: prohibit unconditional exceeding the limit of dying tasks") try_charge_memcg() can fail:
+a) due to fatal signal
+b) when mem_cgroup_oom -> mem_cgroup_out_of_memory -> out_of_memory() returns false (when select_bad_process() found nothing)
 
-Reviewed-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To handle a) we can follow to your suggestion and skip excution of out_of_memory() in pagefault_out_of memory()
+To handle b) we can go to retry: if mem_cgroup_oom() return OOM_FAILED.
 
-Thanks.
+However all these cases can be successfully handled by my new patch
+"memcg: prevent false global OOM triggered by memcg limited task"
+and I think it is better solution.
 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 8f1d9c028897..49a76049a885 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2999,7 +2999,6 @@ static void obj_cgroup_uncharge_pages(struct obj_cgroup *objcg,
->  static int obj_cgroup_charge_pages(struct obj_cgroup *objcg, gfp_t gfp,
->                                    unsigned int nr_pages)
->  {
-> -       struct page_counter *counter;
->         struct mem_cgroup *memcg;
->         int ret;
->
-> @@ -3009,21 +3008,8 @@ static int obj_cgroup_charge_pages(struct obj_cgroup *objcg, gfp_t gfp,
->         if (ret)
->                 goto out;
->
-> -       if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) &&
-> -           !page_counter_try_charge(&memcg->kmem, nr_pages, &counter)) {
-> -
-> -               /*
-> -                * Enforce __GFP_NOFAIL allocation because callers are not
-> -                * prepared to see failures and likely do not have any failure
-> -                * handling code.
-> -                */
-> -               if (gfp & __GFP_NOFAIL) {
-> -                       page_counter_charge(&memcg->kmem, nr_pages);
-> -                       goto out;
-> -               }
-> -               cancel_charge(memcg, nr_pages);
-> -               ret = -ENOMEM;
-> -       }
-> +       if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> +               page_counter_charge(&memcg->kmem, nr_pages);
->  out:
->         css_put(&memcg->css);
->
-> @@ -3715,17 +3701,6 @@ static void memcg_offline_kmem(struct mem_cgroup *memcg)
->  }
->  #endif /* CONFIG_MEMCG_KMEM */
->
-> -static int memcg_update_kmem_max(struct mem_cgroup *memcg,
-> -                                unsigned long max)
-> -{
-> -       int ret;
-> -
-> -       mutex_lock(&memcg_max_mutex);
-> -       ret = page_counter_set_max(&memcg->kmem, max);
-> -       mutex_unlock(&memcg_max_mutex);
-> -       return ret;
-> -}
-> -
->  static int memcg_update_tcp_max(struct mem_cgroup *memcg, unsigned long max)
->  {
->         int ret;
-> @@ -3791,10 +3766,8 @@ static ssize_t mem_cgroup_write(struct kernfs_open_file *of,
->                         ret = mem_cgroup_resize_max(memcg, nr_pages, true);
->                         break;
->                 case _KMEM:
-> -                       pr_warn_once("kmem.limit_in_bytes is deprecated and will be removed. "
-> -                                    "Please report your usecase to linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org if you "
-> -                                    "depend on this functionality.\n");
-> -                       ret = memcg_update_kmem_max(memcg, nr_pages);
-> +                       /* kmem.limit_in_bytes is deprecated. */
-> +                       ret = -ENOTSUPP;
->                         break;
->                 case _TCP:
->                         ret = memcg_update_tcp_max(memcg, nr_pages);
-> --
-> 2.33.0.1079.g6e70778dc9-goog
->
+Thank you,
+	Vasily Averin
