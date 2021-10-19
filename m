@@ -1,29 +1,29 @@
-From: Quanyang Wang <quanyang.wang-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+From: Quanyang Wang <quanyang.wang@windriver.com>
 Subject: Re: [V2][PATCH] cgroup: fix memory leak caused by missing
  cgroup_bpf_offline
-Date: Tue, 19 Oct 2021 18:41:14 +0800
-Message-ID: <a84aedfe-6ecf-7f48-505e-a11acfd6204c@windriver.com>
+Date: Tue, 19 Oct 2021 18:41:58 +0800
+Message-ID: <bf88f85b-59a4-e2de-8b3a-70871e63adf6@windriver.com>
 References: <20211018075623.26884-1-quanyang.wang@windriver.com>
  <YW04Gqqm3lDisRTc@T590> <8fdcaded-474e-139b-a9bc-5ab6f91fbd4f@windriver.com>
  <YW1vuXh4C4tX9ZHP@T590>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com; h=subject : to : cc
  : references : from : message-id : date : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=PPS06212021;
- bh=R9WzwAsfHJdXo2agfuKGPT29kGt1urdRgBEDxIyXQEg=;
- b=hJ1OC15jYdezq5aK/K9oYrIdRaUjQose+7JFuKLgKmuOhuyerZQ9UQK+UsCP3ZgVJ2I7
- HdLaA+m00IzjL2DwsPEeW5pLQ9EYldO3G5GOH7QUJp++6Li1fYNsOQ5hiIjiMDAQoM0g
- zxITxhKRmcB4vHtVPBwdbXeGAmZZNo+pXw8eu8r6EjPaIbRnqn5gCgYz3R3fF9vCQP+S
- cT4jwcRDrJjxazozDXphPMegIZ3+7AG3/WW5NWc+mwkbXVaKSKADr+eWuPAQKuyP5quz
- dZY/uIuZzeiuDHxiZNdzY09iF3LWWe/m2tYqWH5Sb+8jCDAW/NBKBCncDqDegAwoGfhq lg== 
+ bh=ywzSknGkVVIqBQC5auRutOtZaar3V5fb5Zdgs9WMiLE=;
+ b=Qb7xUf6q+Wg4E9IacsgPPdvvVl7/CXk8qj4vyBz6aE10slaSzl1I+wMhJmdl0a2QvRNZ
+ xCaUIgRBrtyGs4ky8rhnCsA8v58h/6L950GXj9UU1hFSgs++M7sZQPrNUZ4O544ymdQF
+ /s2BRXiE6pEuOsrv3w5Hkp4oX9BAmhvrkZm73c7gCsoGerBkYybQMzmgCPbPv4WcXzH3
+ BtVHJDfqboUwA6CfxaKYjUrIntX0vGjtcxFhR6Ts/9cRQVR49eqxa+52yEtkPWMi9l3n
+ /v8ME3SXcxiDCEE5PkrstfRvmEtEJTe9zyiSG7lhuAARqCUPcDkI/rJcPJ6+nRrsRj6Q yg== 
 In-Reply-To: <YW1vuXh4C4tX9ZHP@T590>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, mkoutny-IBi9RG/b67k@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Jens Axboe <axboe@kernel.dk>, Roman Gushchin <guro@fb.com>, mkoutny@suse.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org
 
 Hi Ming,
 
@@ -32,8 +32,8 @@ On 10/18/21 8:59 PM, Ming Lei wrote:
 >> Hi Ming,
 >>
 >> On 10/18/21 5:02 PM, Ming Lei wrote:
->>> On Mon, Oct 18, 2021 at 03:56:23PM +0800, quanyang.wang-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org wrote:
->>>> From: Quanyang Wang <quanyang.wang-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+>>> On Mon, Oct 18, 2021 at 03:56:23PM +0800, quanyang.wang@windriver.com wrote:
+>>>> From: Quanyang Wang <quanyang.wang@windriver.com>
 >>>>
 >>>> When enabling CONFIG_CGROUP_BPF, kmemleak can be observed by running
 >>>> the command as below:
@@ -84,25 +84,6 @@ On 10/18/21 8:59 PM, Ming Lei wrote:
 >> cgroup which is not root_cgroup. Only root_cgroup's bpf data is leaked.
 > 
 > You mean that cgroup_bpf_inherit() allocates nothing for root_cgroup?
-Yes, cgroup_bpf_inherit allocates something for root_cgroup.
-
-The earlier commit 4bfc0bb2c60e ("bpf: decouple the lifetime of 
-cgroup_bpf from cgroup itself") introduces an imbalance that call 
-cgroup_bpf_inherit(&root_cgroup) but not call 
-cgroup_bpf_offline(&root_cgroup). But there was no memory leak here.
-
-When the commit 2b0d3d3e4fcf ("percpu_ref: reduce memory footprint of 
-percpu_ref in fast path") applies, some data is allocated for 
-root_cgroup and not released with root_cgroup, and memory leak is observed.
-
-So I add 2 "Fixes tags" here to indicate that 2 commits introduce two 
-different issues.
-
-But it seems that 2 "Fixes tags" is misleading now.
-So maybe just fix earlier commit 4bfc0bb2c60e which introduces imbalance?
-
-Thanks,
-Quanyang
 > 
 > If yes, I agree you can add 'Fixes: 2b0d3d3e4fcf', otherwise please
 > remove it.
