@@ -1,26 +1,26 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 -next 1/2] blk-cgroup: don't call
- blk_mq_freeze_queue() in blkcg_deactivate_policy()
-Date: Tue, 19 Oct 2021 07:00:49 -1000
-Message-ID: <YW75wUcf9CcmqdD5@slm.duckdns.org>
+Subject: Re: [PATCH v3 -next 2/2] blk-cgroup: synchoronize blkg creation
+ against policy deactivation
+Date: Tue, 19 Oct 2021 07:03:13 -1000
+Message-ID: <YW76UThK20WaCWO6@slm.duckdns.org>
 References: <20211019024132.432458-1-yukuai3@huawei.com>
- <20211019024132.432458-2-yukuai3@huawei.com>
+ <20211019024132.432458-3-yukuai3@huawei.com>
 Mime-Version: 1.0
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=5oDh6wY5mxgjBgRFmj6OpdKqeAcazi57fngXpPsPLWE=;
-        b=lRts9Q2QN5BocnpFjJPqpBK3Fxaxv4kEBoF/rHLBeWaGIYwAxlKsPIhkQCB7sNAmRj
-         UERoxRYtgRGMzur8k2GM5Y/uFfigfGYqd1hcqOryGHOglz1dxWtZNVUYhgx0tD+hilKq
-         V8/oWKqn3J2sTUprRMG/t7pLpLgbMEIoyy/+Yyr6FKU3FUd/0I1Urd0FLCulQCkhKyz8
-         4TLlu7kFoFyRAEOHLSuV4dkq9oUAiIfZuvxmu4RCbRc28MpW7etPuuxUZLeetNOmIejx
-         9MpRHH231nr3EYgiUBiOpX+2Z1SpFRYcJy86zemrDgVuzLz5/JQWebAYxJqNe4SaNEB/
-         rBww==
+        bh=cb9GiFttJIShHLaHyamc/d4toGTaUJ3k9crbveF7gg0=;
+        b=BOmxdUfCMIyD2fZr8/EH5QtzCVoYpqEgfRrF3aH/hGloS6T1vl6Tdvj6YFM6KkUavy
+         RiUXbbMRJjlY/7JW6N+rgYfOaijFtrV2a2N5RWQjGjYI85VTkaXw4F6dEJMh/rwPnErE
+         9QvDSK3qqn5jZQmbFWAY01uZ8ra8GZSHVmcG88sibvQ4RKTsqXh8NXIegJhSOCJ96AsF
+         Vno+Bp3O5ZCNCbjIws4ckNImT7MTuDSOuciaJjDvQf91B2i9lFqT1X4AItb1f1dlFh6m
+         cHO+YPJKuZP4eSgU0q6J694zr7qbycHQ+3esEoDmKGhX7LfHVRQP9bFkEsGD61GBLbS7
+         QdNQ==
 Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20211019024132.432458-2-yukuai3@huawei.com>
+In-Reply-To: <20211019024132.432458-3-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -29,17 +29,27 @@ Cc: axboe@kernel.dk, paolo.valente@linaro.org, avanzini.arianna@gmail.com, fchec
 
 Hello,
 
-On Tue, Oct 19, 2021 at 10:41:31AM +0800, Yu Kuai wrote:
-> blkcg_deactivate_policy() can be called from either
-> blk_cleanup_queue() for all policies or elevator_switch() for bfq
-> policy. Thus there is no need to freeze queue in
-> blkcg_deactivate_policy() since the caller freeze the queue aready.
-> 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Some nitpicks.
 
-I would just keep the calls. The operation requires the q to be frozen and
-there isn't a good way to annotate that the caller must be holding a usage
-count, so it's useful even just as documentation.
+On Tue, Oct 19, 2021 at 10:41:32AM +0800, Yu Kuai wrote:
+...
+> Because blkcg_deactivate_policy() require queue to be freezed, thus grab
+                                    ^                   ^        ^
+                                    requires            frozen   we can grab
+
+> q_usage_counter to synchoronize blkg_conf_prep() against
+> blkcg_deactivate_policy().
+...
+> +	/*
+> +	 * blkcg_deactivate_policy() require queue to be freezed, thus grab
+> +	 * q_usage_counter to prevent concurrent with blkcg_deactivate_policy().
+> +	 */
+
+Same here.
+
+Looks good otherwise. Please feel free to add
+
+Acked-by: Tejun Heo <tj@kernel.org>
 
 Thanks.
 
