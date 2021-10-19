@@ -1,150 +1,47 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3] memcg, kmem: further deprecate kmem.limit_in_bytes
-Date: Tue, 19 Oct 2021 08:34:08 -0700
-Message-ID: <20211019153408.2916808-1-shakeelb@google.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 -next 1/2] blk-cgroup: don't call
+ blk_mq_freeze_queue() in blkcg_deactivate_policy()
+Date: Tue, 19 Oct 2021 07:00:49 -1000
+Message-ID: <YW75wUcf9CcmqdD5@slm.duckdns.org>
+References: <20211019024132.432458-1-yukuai3@huawei.com>
+ <20211019024132.432458-2-yukuai3@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=b4zuBMQ6rB3BJhMbiTI+bHBlQbKmGojFin0ETDqCqgs=;
-        b=rFMa8vwet/lkvToH0oW1p+K5cFqa7WZrolQyzwr5vqQX//r/Z65baLysr7T2GaQULv
-         8oJpbjYqV+ZCU+f10JFaYReHzKzhhZMU97gcW/GVrw0J8EMgaRITnTZ+aDP3YD2jzivp
-         bFdR3kTffPL94z08NhW7pOPcUf/BaP2+SVGmhUUMzQa4d8rtdoIHuxUUl7t4Y/MM6bND
-         EOPoxl6N3Yn+nPGBCM68QnnxI1FaOgkfjOS21e7UQtf8kEOiEpa1fC3pm11DahghiWu2
-         EYOjMMffkS3e9gi+9DLre4UUmxC4X9vAJLvcmd/cX2GLBvCG7XLopZw5lF7JHX72a0il
-         3NKw==
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=5oDh6wY5mxgjBgRFmj6OpdKqeAcazi57fngXpPsPLWE=;
+        b=lRts9Q2QN5BocnpFjJPqpBK3Fxaxv4kEBoF/rHLBeWaGIYwAxlKsPIhkQCB7sNAmRj
+         UERoxRYtgRGMzur8k2GM5Y/uFfigfGYqd1hcqOryGHOglz1dxWtZNVUYhgx0tD+hilKq
+         V8/oWKqn3J2sTUprRMG/t7pLpLgbMEIoyy/+Yyr6FKU3FUd/0I1Urd0FLCulQCkhKyz8
+         4TLlu7kFoFyRAEOHLSuV4dkq9oUAiIfZuvxmu4RCbRc28MpW7etPuuxUZLeetNOmIejx
+         9MpRHH231nr3EYgiUBiOpX+2Z1SpFRYcJy86zemrDgVuzLz5/JQWebAYxJqNe4SaNEB/
+         rBww==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20211019024132.432458-2-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: Yu Kuai <yukuai3@huawei.com>
+Cc: axboe@kernel.dk, paolo.valente@linaro.org, avanzini.arianna@gmail.com, fchecconi@gmail.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-The deprecation process of kmem.limit_in_bytes started with the commit
-0158115f702 ("memcg, kmem: deprecate kmem.limit_in_bytes") which also
-explains in detail the motivation behind the deprecation. To summarize,
-it is the unexpected behavior on hitting the kmem limit. This patch
-moves the deprecation process to the next stage by disallowing to set
-the kmem limit. In future we might just remove the kmem.limit_in_bytes
-file completely.
+Hello,
 
-Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Reviewed-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
----
-Changes since v2:
-- Updated the documentation
+On Tue, Oct 19, 2021 at 10:41:31AM +0800, Yu Kuai wrote:
+> blkcg_deactivate_policy() can be called from either
+> blk_cleanup_queue() for all policies or elevator_switch() for bfq
+> policy. Thus there is no need to freeze queue in
+> blkcg_deactivate_policy() since the caller freeze the queue aready.
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-Changes since v1:
-- Replaced EINVAL with ENOTSUPP on setting kmem limits.
-- V1 was posted last year at [0].
+I would just keep the calls. The operation requires the q to be frozen and
+there isn't a good way to annotate that the caller must be holding a usage
+count, so it's useful even just as documentation.
 
-[0] https://lore.kernel.org/all/20201118175726.2453120-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+Thanks.
 
- .../admin-guide/cgroup-v1/memory.rst          | 11 ++----
- mm/memcontrol.c                               | 35 +++----------------
- 2 files changed, 6 insertions(+), 40 deletions(-)
-
-diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
-index 41191b5fb69d..faac50149a22 100644
---- a/Documentation/admin-guide/cgroup-v1/memory.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -87,10 +87,8 @@ Brief summary of control files.
-  memory.oom_control		     set/show oom controls.
-  memory.numa_stat		     show the number of memory usage per numa
- 				     node
-- memory.kmem.limit_in_bytes          set/show hard limit for kernel memory
--                                     This knob is deprecated and shouldn't be
--                                     used. It is planned that this be removed in
--                                     the foreseeable future.
-+ memory.kmem.limit_in_bytes          This knob is deprecated and writing to
-+                                     it will return -ENOTSUPP.
-  memory.kmem.usage_in_bytes          show current kernel memory allocation
-  memory.kmem.failcnt                 show the number of kernel memory usage
- 				     hits limits
-@@ -518,11 +516,6 @@ will be charged as a new owner of it.
-   charged file caches. Some out-of-use page caches may keep charged until
-   memory pressure happens. If you want to avoid that, force_empty will be useful.
- 
--  Also, note that when memory.kmem.limit_in_bytes is set the charges due to
--  kernel pages will still be seen. This is not considered a failure and the
--  write will still return success. In this case, it is expected that
--  memory.kmem.usage_in_bytes == memory.usage_in_bytes.
--
- 5.2 stat file
- -------------
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8f1d9c028897..49a76049a885 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2999,7 +2999,6 @@ static void obj_cgroup_uncharge_pages(struct obj_cgroup *objcg,
- static int obj_cgroup_charge_pages(struct obj_cgroup *objcg, gfp_t gfp,
- 				   unsigned int nr_pages)
- {
--	struct page_counter *counter;
- 	struct mem_cgroup *memcg;
- 	int ret;
- 
-@@ -3009,21 +3008,8 @@ static int obj_cgroup_charge_pages(struct obj_cgroup *objcg, gfp_t gfp,
- 	if (ret)
- 		goto out;
- 
--	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) &&
--	    !page_counter_try_charge(&memcg->kmem, nr_pages, &counter)) {
--
--		/*
--		 * Enforce __GFP_NOFAIL allocation because callers are not
--		 * prepared to see failures and likely do not have any failure
--		 * handling code.
--		 */
--		if (gfp & __GFP_NOFAIL) {
--			page_counter_charge(&memcg->kmem, nr_pages);
--			goto out;
--		}
--		cancel_charge(memcg, nr_pages);
--		ret = -ENOMEM;
--	}
-+	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
-+		page_counter_charge(&memcg->kmem, nr_pages);
- out:
- 	css_put(&memcg->css);
- 
-@@ -3715,17 +3701,6 @@ static void memcg_offline_kmem(struct mem_cgroup *memcg)
- }
- #endif /* CONFIG_MEMCG_KMEM */
- 
--static int memcg_update_kmem_max(struct mem_cgroup *memcg,
--				 unsigned long max)
--{
--	int ret;
--
--	mutex_lock(&memcg_max_mutex);
--	ret = page_counter_set_max(&memcg->kmem, max);
--	mutex_unlock(&memcg_max_mutex);
--	return ret;
--}
--
- static int memcg_update_tcp_max(struct mem_cgroup *memcg, unsigned long max)
- {
- 	int ret;
-@@ -3791,10 +3766,8 @@ static ssize_t mem_cgroup_write(struct kernfs_open_file *of,
- 			ret = mem_cgroup_resize_max(memcg, nr_pages, true);
- 			break;
- 		case _KMEM:
--			pr_warn_once("kmem.limit_in_bytes is deprecated and will be removed. "
--				     "Please report your usecase to linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org if you "
--				     "depend on this functionality.\n");
--			ret = memcg_update_kmem_max(memcg, nr_pages);
-+			/* kmem.limit_in_bytes is deprecated. */
-+			ret = -ENOTSUPP;
- 			break;
- 		case _TCP:
- 			ret = memcg_update_tcp_max(memcg, nr_pages);
 -- 
-2.33.0.1079.g6e70778dc9-goog
-
+tejun
