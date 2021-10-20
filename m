@@ -1,222 +1,76 @@
-From: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: "Theodore Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>
 Subject: Re: [RFC Proposal] Deterministic memcg charging for shared memory
-Date: Wed, 20 Oct 2021 10:46:02 -0700
-Message-ID: <CAHS8izOcjfeakNC34C8=vsWPx_meexsgRkmY6Ga3TuPynH3OMA@mail.gmail.com>
+Date: Wed, 20 Oct 2021 15:02:42 -0400
+Message-ID: <YXBn0sHLZZQaYg5H@mit.edu>
 References: <CAHS8izMpzTvd5=x_xMhDJy1toV-eT3AS=GXM2ObkJoCmbDtz6w@mail.gmail.com>
- <YW13pS716ajeSgXj@dhcp22.suse.cz> <CAHS8izMnkiHtNLEzJXL64zNinbEp0oU96dPCJYfqJqk4AEQW2A@mail.gmail.com>
+ <YW13pS716ajeSgXj@dhcp22.suse.cz>
+ <CAHS8izMnkiHtNLEzJXL64zNinbEp0oU96dPCJYfqJqk4AEQW2A@mail.gmail.com>
  <YW/cs51K/GyhhJDk@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=0JoJJAhymZUhru82czrsY0Y2FZ4swxMwSG8/JZrk73k=;
-        b=Z4wnyiiXYRhxaW4NIfc88HMA402/gbtJGEpMex87OnANM+fpmjvo0OoE1VOaCnNxeo
-         v33whXf3v4XnFz2iy+inUm2hFjoukbJ+A8WMoaN6oUlwP88rCd9rj3esALNW1POlJ+xH
-         kdg4o47jwNcfmBfItnxZeRpnel8obYwcSmHebRJTWIsmmpUE8a3X7wD6zeSJPhyODyQ5
-         e4cedM9TJdcEK+kB/3A8gO+0QRQi3gZqYPIdzZ+pvZV8lHFODMPJ2bVlGCcBqXkZLvB4
-         0jeW/ZLSKz0lt2zfQJ0w8cyam9uKoFCnB6usV1piEGOrKe1bCoUO018+yU5HSYr0UWb/
-         Aoww==
+Content-Disposition: inline
 In-Reply-To: <YW/cs51K/GyhhJDk-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Roman Gushchin <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "open list:FILESYSTEMS (VFS and infrastructure)" <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, riel-ebMLmSuQjDVBDgjK7y7TUQ@public.gmane.org
+Cc: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "open list:FILESYSTEMS (VFS and infrastructure)" <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, riel-ebMLmSuQjDVBDgjK7y7TUQ@public.gmane.org
 
-On Wed, Oct 20, 2021 at 2:09 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
->
-> On Mon 18-10-21 07:31:58, Mina Almasry wrote:
-> > On Mon, Oct 18, 2021 at 6:33 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > >
-> > > On Wed 13-10-21 12:23:19, Mina Almasry wrote:
-> > > > Below is a proposal for deterministic charging of shared memory.
-> > > > Please take a look and let me know if there are any major concerns:
-> > > >
-> > > > Problem:
-> > > > Currently shared memory is charged to the memcg of the allocating
-> > > > process. This makes memory usage of processes accessing shared memo=
-ry
-> > > > a bit unpredictable since whichever process accesses the memory fir=
-st
-> > > > will get charged. We have a number of use cases where our userspace
-> > > > would like deterministic charging of shared memory:
-> > > >
-> > > > 1. System services allocating memory for client jobs:
-> > > > We have services (namely a network access service[1]) that provide
-> > > > functionality for clients running on the machine and allocate memor=
-y
-> > > > to carry out these services. The memory usage of these services
-> > > > depends on the number of jobs running on the machine and the nature=
- of
-> > > > the requests made to the service, which makes the memory usage of
-> > > > these services hard to predict and thus hard to limit via memory.ma=
-x.
-> > > > These system services would like a way to allocate memory and instr=
-uct
-> > > > the kernel to charge this memory to the client=E2=80=99s memcg.
-> > > >
-> > > > 2. Shared filesystem between subtasks of a large job
-> > > > Our infrastructure has large meta jobs such as kubernetes which spa=
-wn
-> > > > multiple subtasks which share a tmpfs mount. These jobs and its
-> > > > subtasks use that tmpfs mount for various purposes such as data
-> > > > sharing or persistent data between the subtask restarts. In kuberne=
-tes
-> > > > terminology, the meta job is similar to pods and subtasks are
-> > > > containers under pods. We want the shared memory to be
-> > > > deterministically charged to the kubernetes's pod and independent t=
-o
-> > > > the lifetime of containers under the pod.
-> > > >
-> > > > 3. Shared libraries and language runtimes shared between independen=
-t jobs.
-> > > > We=E2=80=99d like to optimize memory usage on the machine by sharin=
-g libraries
-> > > > and language runtimes of many of the processes running on our machi=
-nes
-> > > > in separate memcgs. This produces a side effect that one job may be
-> > > > unlucky to be the first to access many of the libraries and may get
-> > > > oom killed as all the cached files get charged to it.
-> > > >
-> > > > Design:
-> > > > My rough proposal to solve this problem is to simply add a
-> > > > =E2=80=98memcg=3D/path/to/memcg=E2=80=99 mount option for filesyste=
-ms (namely tmpfs):
-> > > > directing all the memory of the file system to be =E2=80=98remote c=
-harged=E2=80=99 to
-> > > > cgroup provided by that memcg=3D option.
-> > >
-> > > Could you be more specific about how this matches the above mentioned
-> > > usecases?
-> > >
-> >
-> > For the use cases I've listed respectively:
-> > 1. Our network service would mount a tmpfs with 'memcg=3D<path to
-> > client's memcg>'. Any memory the service is allocating on behalf of
-> > the client, the service will allocate inside of this tmpfs mount, thus
-> > charging it to the client's memcg without risk of hitting the
-> > service's limit.
-> > 2. The large job (kubernetes pod) would mount a tmpfs with
-> > 'memcg=3D<path to large job's memcg>. It will then share this tmpfs
-> > mount with the subtasks (containers in the pod). The subtasks can then
-> > allocate memory in the tmpfs, having it charged to the kubernetes job,
-> > without risk of hitting the container's limit.
->
-> There is still a risk that the limit is hit for the memcg of shmem
-> owner, right? What happens then? Isn't any of the shmem consumer a
-> DoS attack vector for everybody else consuming from that same target
-> memcg?
-
-This is an interesting point and thanks for bringing it up. I think
-there are a couple of things we can do about that:
-
-1. Only allow root to mount a tmpfs with memcg=3D<anything>
-2. Only processes allowed the enter cgroup at mount time can mount a
-tmpfs with memcg=3D<cgroup>
-
-Both address this DoS attack vector adequately I think. I have a
-strong preference to solution (2) as it keeps the feature useful for
-non-admins while still completely addressing the concern AFAICT.
-
-> In other words aren't all of them in the same memory resource
-> domain effectively? If we allow target memcg to live outside of that
-> resource domain then this opens interesting questions about resource
-> control in general, no? Something the unified hierarchy was aiming to
-> fix wrt cgroup v1.
->
-
-In my very humble opinion there are valid reasons for processes inside
-the same resource domain to want the memory to be charged to one of
-them and not the others, and there are valid reasons for the target
-memcg living outside the resource domain without really fundamentally
-breaking resource control. So breaking it down by use case:
-
-W.r.t. usecase #1: our network service needs to allocate memory to
-provide networking services to any job running on the system,
-regardless of which cgroup that job is in. You could say it's
-allocating memory to a cgroup outside its resource domain but IMHO
-it's a bit of a grey area. After all the network service is servicing
-network requests for jobs inside of that resource domain, and
-allocating memory on behalf of those jobs and not for its 'own'
-purposes in a sense.
-
-W.r.t. usecase #2: the large jobs (kubernetes) and all its sub-tasks
-(pods) are all in the same resource domain, but we still would like
-the shared memory deterministically charged to the large jobs and
-doesn't end up as part of the sub-task usage. I don't have concrete
-numbers (I'll work on getting them), but one can image a large job
-which owns a 10GB tmpfs mount. The sub-tasks say each use at most
-10MB, but they need access to the shared 10GB tmpfs mount. In that
-case the sub-tasks will get charged for the 10MB they privately use
-and anywhere between 0-10GB for the shared memory. In situations like
-these we'd like to enforce that subtasks only use 10MB of 'their'
-memory and that the total memory usage of the entire job doesn't use
-memory beyond a certain limit, say 10.5GB or something. There is no
-way to do that today AFAIK, but with deterministic shared memory
-charging this is possible.
-
-> You are saying that it is hard to properly set limits for
-> respective services but this would simply allow to hide a part of the
-> consumption somewhere else. Aren't you just shifting the problem
-> elsewhere? How do configure the target memcg?
->
-> Do you have any numbers about the consumption variation and how big of a
-> problem that is in practice?
->
-
-So for use case #1 I have concrete numbers. Our network service
-roughly allocates around 75MB/VM running on the machine. The exact
-number depends on the network activity of the VM and this is just a
-rough estimate. There are anywhere between 0-128 VMs running on a the
-machine. So the memory usage of the network service can be anywhere
-between almost 0 to 9.6GB. Statically deciding the memory limit of the
-network service's cgroup is not possible. Increasing/decreasing the
-limit when new VMs are scheduled on the machine is also not very
-workable, as the amount of memory the service uses depends on the
-network activity of the VM. Getting the limit wrong has disastrous
-consequences as the service is unable to serve the entire machine.
-With memcg=3D this becomes a trivial problem as each VM pads its memory
-usage with extra headroom for network activity. If the headroom is
-insufficient only that one VM is deprived of network services, not the
-entire machine.
-
-W.r.t usecase #2, I don't have concrete numbers, but I've outlined
-above one (hopefully) reasonable scenario where we'd have an issue.
-
+On Wed, Oct 20, 2021 at 11:09:07AM +0200, Michal Hocko wrote:
 > > 3. We would need to extend this functionality to other file systems of
-> > persistent disk, then mount that file system with 'memcg=3D<dedicated
+> > persistent disk, then mount that file system with 'memcg=<dedicated
 > > shared library memcg>'. Jobs can then use the shared library and any
 > > memory allocated due to loading the shared library is charged to a
 > > dedicated memcg, and not charged to the job using the shared library.
->
+> 
 > This is more of a question for fs people. My understanding is rather
 > limited so I cannot even imagine all the possible setups but just from
 > a very high level understanding bind mounts can get really interesting.
-> Can those disagree on the memcg?
->
-
-I will admit I've thought about the tmpfs support as much as possible,
-and that extending the support to other file system will generate more
-concerns, maybe even concerns specific to that file system. I'm hoping
-to build support for tmpfs and leave the implementation generic enough
-to be extended afterwards.
-
-I haven't thought of it thoroughly but I would imagine bind mounts
-shouldn't be able to disagree on the memcg. At least right now I can't
-think of a compelling use case for that.
-
+> Can those disagree on the memcg? 
+> 
 > I am pretty sure I didn't get to think through this very deeply, my gut
 > feeling tells me that this will open many interesting questions and I am
-> not sure whether it solves more problems than it introduces at this momen=
-t.
+> not sure whether it solves more problems than it introduces at this moment.
 > I would be really curious what others think about this.
 
-I would also obviously love to hear opinions of others (and thanks
-Michal for taking the time to review). I think I'll work on posting a
-patch series to the list and hope that solicits more opinions.
+My understanding of the proposal is that the mount option would be on
+the superblock, and it would not be a per-bind-mount option, ala the
+ro mount option.  In other words, the designation of the target memcg
+for which all tmpfs files would be charged would be something that
+would be stored in the struct super.  I'm also going to assume that
+the only thing that gets charged is memory for files that are backed
+on the tmpfs.  So for example, if there is a MAP_PRIVATE mapping, the
+base page would have be charged to the target memcg when the file was
+originally created.  However, if the process tries to modify a private
+mapping, and there page allocated on the copy-on-write would get
+charged to the process's memcg, and not to the tmpfs's target memcg.
 
-> --
-> Michal Hocko
-> SUSE Labs
+If we make these simplifying assumptions, then it should be fairly
+simple.  Essentially, the model is that whenever we do the file system
+equivalent of "block allocation" for the file system, the tmpfs file
+system has all of the pages associated with that file system is
+charged to the target memcg.  That's pretty straightforward, and is
+pretty easy to model and anticipate.
+
+In fact, if the only use case was #3 (shared libraries and library
+runtimes) this workload could be accomodated without needing any
+kernel changes.  This could be done by simply having the setup process
+run in the "target memcg", and it would simply copy all of the shared
+libraries and runtime files into the tmpfs at setup time.  So that
+would get charged to the memcg which first allocated the file, and
+that would be the setup memcg.  And all of the Kubernetes containers
+that use these shared libraries and language runtimes, when they map
+those pages read-only into their task processes, since those tmpfs
+pages were charged to the setup memcg, they won't get charged to the
+task containers.  And I *do* believe that it's much easier to
+anticipate how much memory will be used by these shared files, and so
+we don't need to potentially give a task container enough memory quota
+so that if it is the first container to start running, it gets charged
+with all of the memory, while all of the other containers can afford
+to freeload off the first container --- but we still have to give
+those containers enough memory in their memcg in case those *other*
+containers happen to be the first one to get launched.
+
+Cheers,
+
+						- Ted
