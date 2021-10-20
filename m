@@ -1,64 +1,208 @@
-From: Quanyang Wang <quanyang.wang@windriver.com>
-Subject: Re: [V2][PATCH] cgroup: fix memory leak caused by missing
- cgroup_bpf_offline
-Date: Wed, 20 Oct 2021 13:22:06 +0800
-Message-ID: <7a21a20d-eb12-e491-4e69-4e043b3b6d8d@windriver.com>
-References: <20211018075623.26884-1-quanyang.wang@windriver.com>
- <YW04Gqqm3lDisRTc@T590> <8fdcaded-474e-139b-a9bc-5ab6f91fbd4f@windriver.com>
- <YW1vuXh4C4tX9ZHP@T590> <a84aedfe-6ecf-7f48-505e-a11acfd6204c@windriver.com>
- <YW78AohHqgqM9Cuw@blackbook> <YW98RTBdzqin+9Ko@T590>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: [PATCH memcg v4] memcg: prohibit unconditional exceeding the limit of
+ dying tasks
+Date: Wed, 20 Oct 2021 11:07:02 +0300
+Message-ID: <f40cd82c-f03a-4d36-e953-f89399cb8f58@virtuozzo.com>
+References: <3c76e2d7-e545-ef34-b2c3-a5f63b1eff51@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com; h=subject : to : cc
- : references : from : message-id : date : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=PPS06212021;
- bh=M3zj3HR38ju4gp1SZHrNW/BA6M77hV0CkGIcQsrcsK0=;
- b=crGWu1huM+TIIna967vieg/UKP8sGSVESCR3YhUBXa3FYNlpHcQkTohcggmHzoMgisrt
- BDo9k5kHMlnrMdT237+b69G9trrewnowx5GbJDefq1qPOoPVBXenf0WgQBslSJOq004m
- xbVJtUPvNg8ISxYEQcTVt6Oty2WivXABfu/7c6eEFkQMRMJxMkIxA9t6zgsoyRcZoHAB
- RgtE/txvhI3kRZVTetucI2FH6DDF5y5Js81cTcc0x7kzPkVDyuvbEuCj7Q3IHogRi7pD
- t+qUWTJEdngwGnedgTr4z4e64aQkq8713KbmmrUvd+OrFciUV0MLUTyXnkDc6nky9M0d RQ== 
-In-Reply-To: <YW98RTBdzqin+9Ko@T590>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
+        :From; bh=YevvvMCiVzqy7JB/kdiCKehop5AjB5KIhCsQIr9tEAc=; b=NAreMZ+5hH/sWOc1gxX
+        2mH912t5b4sW5Wf2EthHkT/c49tt/iyxt1ZmyZf3SR6o37YHs1tRRGDpmXYHPLxgDBdLUHK6O9aRA
+        Monh6lpkMbpPhLL2k3UE/1qO6tiwuSKzN4CaesJdLSkcrbKYSPtB+LcUFHCP1jKSosW7g17Wd1s=;
+In-Reply-To: <3c76e2d7-e545-ef34-b2c3-a5f63b1eff51-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Ming Lei <ming.lei@redhat.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Jens Axboe <axboe@kernel.dk>, Roman Gushchin <guro@fb.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-Hi Ming,
+Memory cgroup charging allows killed or exiting tasks to exceed the hard
+limit. It is assumed that the amount of the memory charged by those
+tasks is bound and most of the memory will get released while the task
+is exiting. This is resembling a heuristic for the global OOM situation
+when tasks get access to memory reserves. There is no global memory
+shortage at the memcg level so the memcg heuristic is more relieved.
 
-On 10/20/21 10:17 AM, Ming Lei wrote:
-> On Tue, Oct 19, 2021 at 07:10:26PM +0200, Michal Koutn=C3=BD wrote:
->> Hi.
->>
->> On Tue, Oct 19, 2021 at 06:41:14PM +0800, Quanyang Wang <quanyang.wang@w=
-indriver.com> wrote:
->>> So I add 2 "Fixes tags" here to indicate that 2 commits introduce two
->>> different issues.
->>
->> AFAIU, both the changes are needed to cause the leak, a single patch
->> alone won't cause the issue. Is that correct? (Perhaps not as I realize,
->> see below.)
->>
->> But on second thought, the problem is the missing percpu_ref_exit() in
->> the (root) cgroup release path and percpu counter would allocate the
->> percpu_count_ptr anyway, so 4bfc0bb2c60e is only making the leak more
->> visible. Is this correct?
->>
->> I agree the commit 2b0d3d3e4fcf ("percpu_ref: reduce memory footprint of
->> percpu_ref in fast path") alone did nothing wrong.
->=20
-> If only precpu_ref data is leaked, it is fine to add "Fixes: 2b0d3d3e4fcf=
-",
-> I thought cgroup_bpf_release() needs to release more for root cgroup, but
-> looks not true.
-For now, I can only observe that precpu_ref data is leaked when running=20
-ltp testsuite.
-Thanks,
-Quanyang
->=20
->=20
-> Thanks,
-> Ming
->=20
+The above assumption is overly optimistic though. E.g. vmalloc can scale
+to really large requests and the heuristic would allow that. We used to
+have an early break in the vmalloc allocator for killed tasks but this
+has been reverted by commit b8c8a338f75e ("Revert "vmalloc: back off when
+the current task is killed""). There are likely other similar code paths
+which do not check for fatal signals in an allocation&charge loop.
+Also there are some kernel objects charged to a memcg which are not
+bound to a process life time.
+
+It has been observed that it is not really hard to trigger these
+bypasses and cause global OOM situation.
+
+One potential way to address these runaways would be to limit the amount
+of excess (similar to the global OOM with limited oom reserves). This is
+certainly possible but it is not really clear how much of an excess is
+desirable and still protects from global OOMs as that would have to
+consider the overall memcg configuration.
+
+This patch is addressing the problem by removing the heuristic
+altogether. Bypass is only allowed for requests which either cannot fail
+or where the failure is not desirable while excess should be still
+limited (e.g. atomic requests). Implementation wise a killed or dying
+task fails to charge if it has passed the OOM killer stage. That should
+give all forms of reclaim chance to restore the limit before the
+failure (ENOMEM) and tell the caller to back off.
+
+In addition, this patch renames should_force_charge() helper
+to task_is_dying() because now its use is not associated witch forced
+charging.
+
+If try_charge_memcg() is called from #PF, its new failres can force
+pagefault_out_of_memory() to execute the global OOM. To prevent it
+pagefault_out_of_memory() was updated to properly handle memcg-related
+restrictions.
+
+Suggested-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+---
+v4: updated pagefault_out_of_memory() to properly handle new memcg-related 
+     restrictions and not allow false global OOM 
+v3: no functional changes, just improved patch description
+v2: swicthed to patch version proposed by mhocko@
+
+ mm/memcontrol.c | 52 ++++++++++++++++++++++++++++---------------------
+ mm/oom_kill.c   |  3 +++
+ 2 files changed, 33 insertions(+), 22 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 6da5020a8656..b09d3c64f63f 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -239,7 +239,7 @@ enum res_type {
+ 	     iter != NULL;				\
+ 	     iter = mem_cgroup_iter(NULL, iter, NULL))
+ 
+-static inline bool should_force_charge(void)
++static inline bool task_is_dying(void)
+ {
+ 	return tsk_is_oom_victim(current) || fatal_signal_pending(current) ||
+ 		(current->flags & PF_EXITING);
+@@ -1575,7 +1575,7 @@ static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	 * A few threads which were not waiting at mutex_lock_killable() can
+ 	 * fail to bail out. Therefore, check again after holding oom_lock.
+ 	 */
+-	ret = should_force_charge() || out_of_memory(&oc);
++	ret = task_is_dying() || out_of_memory(&oc);
+ 
+ unlock:
+ 	mutex_unlock(&oom_lock);
+@@ -1810,11 +1810,21 @@ static enum oom_status mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int
+ 		mem_cgroup_oom_notify(memcg);
+ 
+ 	mem_cgroup_unmark_under_oom(memcg);
+-	if (mem_cgroup_out_of_memory(memcg, mask, order))
++	if (mem_cgroup_out_of_memory(memcg, mask, order)) {
+ 		ret = OOM_SUCCESS;
+-	else
++	} else {
+ 		ret = OOM_FAILED;
+-
++		/*
++		 * In some rare cases mem_cgroup_out_of_memory() can return false.
++		 * If it was called from #PF it forces handle_mm_fault()
++		 * return VM_FAULT_OOM and executes pagefault_out_of_memory().
++		 * memcg_in_oom is set here to notify pagefault_out_of_memory()
++		 * that it was a memcg-related failure and not allow to run
++		 * global OOM.
++		 */
++		if (current->in_user_fault)
++			current->memcg_in_oom = (struct mem_cgroup *)ret;
++	}
+ 	if (locked)
+ 		mem_cgroup_oom_unlock(memcg);
+ 
+@@ -1848,6 +1858,15 @@ bool mem_cgroup_oom_synchronize(bool handle)
+ 	if (!memcg)
+ 		return false;
+ 
++	/* OOM is memcg, however out_of_memory() found no victim */
++	if (memcg == (struct mem_cgroup *)OOM_FAILED) {
++		/*
++		 * Should be called from pagefault_out_of_memory() only,
++		 * where it is used to prevent false global OOM.
++		 */
++		current->memcg_in_oom = NULL;
++		return true;
++	}
+ 	if (!handle)
+ 		goto cleanup;
+ 
+@@ -2530,6 +2549,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	struct page_counter *counter;
+ 	enum oom_status oom_status;
+ 	unsigned long nr_reclaimed;
++	bool passed_oom = false;
+ 	bool may_swap = true;
+ 	bool drained = false;
+ 	unsigned long pflags;
+@@ -2564,15 +2584,6 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (gfp_mask & __GFP_ATOMIC)
+ 		goto force;
+ 
+-	/*
+-	 * Unlike in global OOM situations, memcg is not in a physical
+-	 * memory shortage.  Allow dying and OOM-killed tasks to
+-	 * bypass the last charges so that they can exit quickly and
+-	 * free their memory.
+-	 */
+-	if (unlikely(should_force_charge()))
+-		goto force;
+-
+ 	/*
+ 	 * Prevent unbounded recursion when reclaim operations need to
+ 	 * allocate memory. This might exceed the limits temporarily,
+@@ -2630,8 +2641,9 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (gfp_mask & __GFP_RETRY_MAYFAIL)
+ 		goto nomem;
+ 
+-	if (fatal_signal_pending(current))
+-		goto force;
++	/* Avoid endless loop for tasks bypassed by the oom killer */
++	if (passed_oom && task_is_dying())
++		goto nomem;
+ 
+ 	/*
+ 	 * keep retrying as long as the memcg oom killer is able to make
+@@ -2640,14 +2652,10 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	 */
+ 	oom_status = mem_cgroup_oom(mem_over_limit, gfp_mask,
+ 		       get_order(nr_pages * PAGE_SIZE));
+-	switch (oom_status) {
+-	case OOM_SUCCESS:
++	if (oom_status == OOM_SUCCESS) {
++		passed_oom = true;
+ 		nr_retries = MAX_RECLAIM_RETRIES;
+ 		goto retry;
+-	case OOM_FAILED:
+-		goto force;
+-	default:
+-		goto nomem;
+ 	}
+ nomem:
+ 	if (!(gfp_mask & __GFP_NOFAIL))
+diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+index 831340e7ad8b..1deef8c7a71b 100644
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -1137,6 +1137,9 @@ void pagefault_out_of_memory(void)
+ 	if (mem_cgroup_oom_synchronize(true))
+ 		return;
+ 
++	if (fatal_signal_pending(current))
++		return;
++
+ 	if (!mutex_trylock(&oom_lock))
+ 		return;
+ 	out_of_memory(&oc);
+-- 
+2.32.0
+
