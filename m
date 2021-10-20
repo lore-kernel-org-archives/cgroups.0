@@ -1,89 +1,74 @@
-From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [PATCH memcg 3/3] memcg: handle memcg oom failures
-Date: Wed, 20 Oct 2021 18:46:56 +0300
-Message-ID: <d3b32c72-6375-f755-7599-ab804719e1f6@virtuozzo.com>
-References: <YW/WoJDFM3ddHn7Y@dhcp22.suse.cz>
- <cover.1634730787.git.vvs@virtuozzo.com>
- <fb33f4bd-34cd-2187-eff4-7c1c11d5ae94@virtuozzo.com>
- <YXATW7KsUZzbbGHy@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC 0/5] kernel: Introduce CPU Namespace
+Date: Wed, 20 Oct 2021 06:35:32 -1000
+Message-ID: <YXBFVCc61nCG5rto@slm.duckdns.org>
+References: <20211009151243.8825-1-psampat@linux.ibm.com>
+ <20211011101124.d5mm7skqfhe5g35h@wittgenstein>
+ <a0f9ed06-1e5d-d3d0-21a5-710c8e27749c@linux.ibm.com>
+ <YWirxCjschoRJQ14@slm.duckdns.org>
+ <b5f8505c-38d5-af6f-0de7-4f9df7ae9b9b@linux.ibm.com>
+ <YW2g73Lwmrhjg/sv@slm.duckdns.org>
+ <77854748-081f-46c7-df51-357ca78b83b3@linux.ibm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
-        Subject; bh=ttAK6Gqf/TyX+MT4z0DPfUPRY7KYPOn3puccc9GorZE=; b=rqfgh5Q5comYze+CV
-        u0HaVR5J9Mkytg6GHPvR91X3KbZesnUGemY2IC41F4dwNhVLm/NOsEkGzpwcriwMuNZ7lJejaVELX
-        b5i5NPD2PCdADzCdMFoT5B+yheZly9Hk9agPrNnFVoHi05+aHXdAtXu+to+93VWpX8rGNeY3SvlLI
-        =;
-In-Reply-To: <YXATW7KsUZzbbGHy-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=rIB4RavRgXcRDUTdHan5IBjQWDQ5rtleRcIK4BBeq24=;
+        b=Dq+l1NK7j0k2wEeaEka8PtuRkbWUI5me6x4H3y/NPBhOwrtkvjXZAjEaOas436KnV2
+         gG6PMQIq1yCDlSpOFJqTbRwGuaHqi4NBsDeij5PHYLdqqBG1txBmVnnfuVsIEvwnW3ZL
+         qV4y3xiXseZ/JGB+NIpZLTyRC+0SYpkFkFQDu9pRlQJrhNVLFwNxc6vczwNTmJb7dlf1
+         thQOnjKhR83LyLLFoZcEUmCimKclCXoJmG0COBS+sVshkiAT7xs/NFgbk2kLf/zpiMBR
+         JIfG2xgxuac+KpO0LVdJ9dvK8pMAr98ttvMLuRxIlJVLfUpkerbnLI0/q2Bxx4p6Rq9v
+         X6qA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <77854748-081f-46c7-df51-357ca78b83b3-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Pratik Sampat <psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Cc: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, pratik.r.sampat-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On 20.10.2021 16:02, Michal Hocko wrote:
-> On Wed 20-10-21 15:14:27, Vasily Averin wrote:
->> mem_cgroup_oom() can fail if current task was marked unkillable
->> and oom killer cannot find any victim.
->>
->> Currently we force memcg charge for such allocations,
->> however it allow memcg-limited userspace task in to overuse assigned limits
->> and potentially trigger the global memory shortage.
-> 
-> You should really go into more details whether that is a practical
-> problem to handle. OOM_FAILED means that the memcg oom killer couldn't
-> find any oom victim so it cannot help with a forward progress. There are
-> not that many situations when that can happen. Naming that would be
-> really useful.
+Hello,
 
-I've pointed above: 
-"if current task was marked unkillable and oom killer cannot find any victim."
-This may happen when current task cannot be oom-killed because it was marked
-unkillable i.e. it have p->signal->oom_score_adj == OOM_SCORE_ADJ_MIN
-and other processes in memcg are either dying, or are kernel threads or are marked unkillable 
-by the same way. Or when memcg have this process only.
+On Wed, Oct 20, 2021 at 04:14:25PM +0530, Pratik Sampat wrote:
+> As you have elucidated, it doesn't like an easy feat to
+> define metrics like ballpark numbers as there are many variables
+> involved.
 
-If we always approve such kind of allocation, it can be misused.
-Process can mmap a lot of memory,
-ant then touch it and generate page fault and make overcharged memory allocations.
-Finally it can consume all node memory and trigger global memory shortage on the host.
+Yeah, it gets tricky and we want to get the basics right from the get go.
 
->> Let's fail the memory charge in such cases.
->>
->> This failure should be somehow recognised in #PF context,
-> 
-> explain why
+> For the CPU example, cpusets control the resource space whereas
+> period-quota control resource time. These seem like two vectors on
+> different axes.
+> Conveying these restrictions in one metric doesn't seem easy. Some
+> container runtime convert the period-quota time dimension to X CPUs
+> worth of runtime space dimension. However, we need to carefully model
+> what a ballpark metric in this sense would be and provide clearer
+> constraints as both of these restrictions can be active at a given
+> point in time and can influence how something is run.
 
-When #PF cannot allocate memory (due to reason described above), handle_mm_fault returns VM_FAULT_OOM,
-then its caller executes pagefault_out_of_memory(). If last one cannot recognize the real reason of this fail,
-it expect it was global memory shortage and executed global out_ouf_memory() that can kill random process 
-or just crash node if sysctl vm.panic_on_oom is set to 1.
+So, for CPU, the important functional number is the number of threads needed
+to saturate available resources and that one is pretty easy. The other
+metric would be the maximum available fractions of CPUs available to the
+cgroup subtree if the cgroup stays saturating. This number is trickier as it
+has to consider how much others are using but would be determined by the
+smaller of what would be available through cpu.weight and cpu.max.
 
-Currently pagefault_out_of_memory() knows about possible async memcg OOM and handles it correctly.
-However it is not aware that memcg can reject some other allocations, do not recognize the fault
-as memcg-related and allows to run global OOM.
+IO likely is in a similar boat. We can calculate metrics showing the
+rbps/riops/wbps/wiops available to a given cgroup subtree. This would factor
+in the limits from io.max and the resulting distribution from io.weight in
+iocost's case (iocost will give a % number but we can translate that to
+bps/iops numbers).
 
->> so let's use current->memcg_in_oom == (struct mem_cgroup *)OOM_FAILED
->>
->> ToDo: what is the best way to notify pagefault_out_of_memory() about 
->>     mem_cgroup_out_of_memory failure ?
-> 
-> why don't you simply remove out_of_memory from pagefault_out_of_memory
-> and leave it only with the blocking memcg OOM handling? Wouldn't that be a
-> more generic solution? Your first patch already goes that way partially.
+> Restrictions for memory are even more complicated to model as you have
+> pointed out as well.
 
-I clearly understand that global out_of_memory should not be trggired by memcg restrictions.
-I clearly understand that dying task will release some memory soon and we can do not run global oom if current task is dying.
+Yeah, this one is the most challenging.
 
-However I'm not sure that I can remove out_of_memory at all. At least I do not have good arguments to do it.
+Thanks.
 
-> This change is more risky than the first one. If somebody returns
-> VM_FAULT_OOM without invoking allocator then it can loop for ever but
-> invoking OOM killer in such a situation is equally wrong as the oom
-> killer cannot really help, right?
-
-I'm not ready to comment this right now and take time out to think about.
-
-Thank you,
-	Vasily Averin
+-- 
+tejun
