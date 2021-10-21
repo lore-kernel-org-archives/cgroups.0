@@ -1,83 +1,49 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org (Eric W. Biederman)
 Subject: Re: [RFC 0/5] kernel: Introduce CPU Namespace
-Date: Thu, 21 Oct 2021 07:06:05 -1000
-Message-ID: <YXGd/T0YHG/xEAkw@slm.duckdns.org>
+Date: Thu, 21 Oct 2021 12:15:22 -0500
+Message-ID: <87tuha7105.fsf@disp2133>
 References: <20211009151243.8825-1-psampat@linux.ibm.com>
- <20211011101124.d5mm7skqfhe5g35h@wittgenstein>
- <a0f9ed06-1e5d-d3d0-21a5-710c8e27749c@linux.ibm.com>
- <YWirxCjschoRJQ14@slm.duckdns.org>
- <b5f8505c-38d5-af6f-0de7-4f9df7ae9b9b@linux.ibm.com>
- <YW2g73Lwmrhjg/sv@slm.duckdns.org>
- <77854748-081f-46c7-df51-357ca78b83b3@linux.ibm.com>
- <YXBFVCc61nCG5rto@slm.duckdns.org>
- <bd1811cc-0e04-9e44-0b46-02689ff9a238@linux.ibm.com>
+        <20211011101124.d5mm7skqfhe5g35h@wittgenstein>
+        <a0f9ed06-1e5d-d3d0-21a5-710c8e27749c@linux.ibm.com>
+        <YWirxCjschoRJQ14@slm.duckdns.org>
+        <b5f8505c-38d5-af6f-0de7-4f9df7ae9b9b@linux.ibm.com>
+        <YW2g73Lwmrhjg/sv@slm.duckdns.org>
+        <77854748-081f-46c7-df51-357ca78b83b3@linux.ibm.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=jrhIGZEqu0h/B8SeVSRWWn+zXKY1Hb4XraNoMEue39w=;
-        b=OA705iIhr1YeBmH3LY1wuCrgfL3CUIvPxUFSRUYOFLixDWJ9TtX9x0pjMdukts/TdN
-         aqXY23DJC+n0Mhx1JwFCNmnb0QvKL+AkBtOPdksPbpodAsZGKpKUp/R3Pr6QRt0IuSzr
-         KS/WNb+Mvv5CVTVbuIdcK/5ZHYS6cN/etcx16Rc1NzHhH0IZGcAECTbnQfbgk3UY9FEG
-         HnsSFWAfHrLCWehkpvqtY8RYoCWngNQoyPpeHfkAEHxTnNraxY2i52QEePbjkdpoglgM
-         +cveexLYdYNMeRr61ZopCZ1boXOX6XShZbQEOJSZRz/3xBePCVgxaMhNi+E8oUdgznBY
-         JOvQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <bd1811cc-0e04-9e44-0b46-02689ff9a238-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+In-Reply-To: <77854748-081f-46c7-df51-357ca78b83b3-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org> (Pratik
+        Sampat's message of "Wed, 20 Oct 2021 16:14:25 +0530")
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Pratik Sampat <psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-Cc: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, pratik.r.sampat-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, containers-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, pratik.r.sampat-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Alexey Gladkov <legion-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Hello,
+Pratik Sampat <psampat-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org> writes:
 
-On Thu, Oct 21, 2021 at 01:14:10PM +0530, Pratik Sampat wrote:
-> I'm speculating, and please correct correct me if I'm wrong; suggesting
-> an optimal number of threads to spawn to saturate the available
-> resources can get convoluted right?
-> 
-> In the nginx example illustrated in the cover patch, it worked best
-> when the thread count was N+1 (N worker threads 1 master thread),
-> however different applications can work better with a different
-> configuration of threads spawned based on its usecase and
-> multi-threading requirements.
+> On 18/10/21 9:59 pm, Tejun Heo wrote:
+>> (cc'ing Johannes for memory sizing part)
+>>
+>> For memory, it's even trickier because in a lot of cases it's impossible to
+>> tell how much memory is actually available without trying to use them as
+>> active workingset can only be learned by trying to reclaim memory.
+>
+> Restrictions for memory are even more complicated to model as you have
+> pointed out as well.
 
-Yeah, I mean, the number would have to be based an ideal conditions - ie.
-the cgroup needs N always-runnable threads to saturate all the available
-CPUs and then applications can do what they need to do based on that
-information. Note that this is equivalent to making these decisions based on
-number of CPUs.
+For memory sizing we currently have MemAvailable in /proc/meminfo which
+makes a global guess at that.
 
-> Eventually looking at the load we maybe able to suggest more/less
-> threads to spawn, but initially we may have to have to suggest threads
-> to spawn as direct function of N CPUs available or N CPUs worth of
-> runtime available?
+We still need roughly that same approximation from an applications
+perspective that takes cgroups into account.
 
-That kind of dynamic tuning is best done with PSI which can reliably
-indicate saturation and the degree of contention.
+There was another conversation not too long ago and it was tenatively
+agreed that it could make sense to provide such a number.  However it
+was very much requested that an application that would actually use
+that number be found so it would be possible to tell what makes a
+difference in practice rather than what makes a difference in theory.
 
-> > The other
-> > metric would be the maximum available fractions of CPUs available to the
-> > cgroup subtree if the cgroup stays saturating. This number is trickier as it
-> > has to consider how much others are using but would be determined by the
-> > smaller of what would be available through cpu.weight and cpu.max.
-> 
-> I agree, this would be a very useful metric to have. Having the
-> knowledge for how much further we can scale when we're saturating our
-> limits keeping in mind of the other running applications can possibly
-> be really useful not just for the applications itself but also for the
-> container orchestrators as well.
+Eric
 
-Similarly, availability metrics would be useful in ballpark sizing so that
-applications don't have to dynamically tune across the entire range, the
-actual adustments to stay saturated is likely best done through PSI, which
-is the direct metric indicating resource saturation.
 
-Thanks.
 
--- 
-tejun
