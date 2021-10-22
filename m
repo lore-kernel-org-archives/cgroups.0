@@ -1,129 +1,90 @@
-From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4] blk-cgroup: synchoronize blkg creation against policy
- deactivation
-Date: Fri, 22 Oct 2021 09:28:32 +0800
-Message-ID: <461fa6c1-fbc3-2c66-ed11-8d035c45975a@huawei.com>
-References: <20211020014036.2141723-1-yukuai3@huawei.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [V2][PATCH] cgroup: fix memory leak caused by missing
+ cgroup_bpf_offline
+Date: Thu, 21 Oct 2021 18:30:24 -0700
+Message-ID: <YXIUMJWrXUcrvZf5@carbon.DHCP.thefacebook.com>
+References: <20211018075623.26884-1-quanyang.wang@windriver.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20211020014036.2141723-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=ZAI4ALD3IOPkn/ZDv37bBcofWD94RVNJhCNAaLserkY=;
+ b=BrffFq0QvdYXJy+HxkHv0ZIPDi9j6kg74RNMLpiG70tGCk/HmQCUQwYzwOjKeFrDgl3V
+ ZIVpOyZ7BmjjGar/4aVr73medsuvqwoqBxQLIQyrKwbt3NqPEv57uKLzyKtSqzDRlHS0
+ Rv+VCrOq/rYYjXU6G83miRIITzyhX8p8FXY= 
+Content-Disposition: inline
+In-Reply-To: <20211018075623.26884-1-quanyang.wang-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: quanyang.wang-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, mkoutny-IBi9RG/b67k@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi 2021/10/20 9:40, Yu Kuai wrote:
-> Out test report a null pointer dereference:
+On Mon, Oct 18, 2021 at 03:56:23PM +0800, quanyang.wang-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org wrote:
+> From: Quanyang Wang <quanyang.wang-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
 > 
-> [  168.534653] ==================================================================
-> [  168.535614] Disabling lock debugging due to kernel taint
-> [  168.536346] BUG: kernel NULL pointer dereference, address: 0000000000000008
-> [  168.537274] #PF: supervisor read access in kernel mode
-> [  168.537964] #PF: error_code(0x0000) - not-present page
-> [  168.538667] PGD 0 P4D 0
-> [  168.539025] Oops: 0000 [#1] PREEMPT SMP KASAN
-> [  168.539656] CPU: 13 PID: 759 Comm: bash Tainted: G    B             5.15.0-rc2-next-202100
-> [  168.540954] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_0738364
-> [  168.542736] RIP: 0010:bfq_pd_init+0x88/0x1e0
-> [  168.543318] Code: 98 00 00 00 e8 c9 e4 5b ff 4c 8b 65 00 49 8d 7c 24 08 e8 bb e4 5b ff 4d0
-> [  168.545803] RSP: 0018:ffff88817095f9c0 EFLAGS: 00010002
-> [  168.546497] RAX: 0000000000000001 RBX: ffff888101a1c000 RCX: 0000000000000000
-> [  168.547438] RDX: 0000000000000003 RSI: 0000000000000002 RDI: ffff888106553428
-> [  168.548402] RBP: ffff888106553400 R08: ffffffff961bcaf4 R09: 0000000000000001
-> [  168.549365] R10: ffffffffa2e16c27 R11: fffffbfff45c2d84 R12: 0000000000000000
-> [  168.550291] R13: ffff888101a1c098 R14: ffff88810c7a08c8 R15: ffffffffa55541a0
-> [  168.551221] FS:  00007fac75227700(0000) GS:ffff88839ba80000(0000) knlGS:0000000000000000
-> [  168.552278] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [  168.553040] CR2: 0000000000000008 CR3: 0000000165ce7000 CR4: 00000000000006e0
-> [  168.554000] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> [  168.554929] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> [  168.555888] Call Trace:
-> [  168.556221]  <TASK>
-> [  168.556510]  blkg_create+0x1c0/0x8c0
-> [  168.556989]  blkg_conf_prep+0x574/0x650
-> [  168.557502]  ? stack_trace_save+0x99/0xd0
-> [  168.558033]  ? blkcg_conf_open_bdev+0x1b0/0x1b0
-> [  168.558629]  tg_set_conf.constprop.0+0xb9/0x280
-> [  168.559231]  ? kasan_set_track+0x29/0x40
-> [  168.559758]  ? kasan_set_free_info+0x30/0x60
-> [  168.560344]  ? tg_set_limit+0xae0/0xae0
-> [  168.560853]  ? do_sys_openat2+0x33b/0x640
-> [  168.561383]  ? do_sys_open+0xa2/0x100
-> [  168.561877]  ? __x64_sys_open+0x4e/0x60
-> [  168.562383]  ? __kasan_check_write+0x20/0x30
-> [  168.562951]  ? copyin+0x48/0x70
-> [  168.563390]  ? _copy_from_iter+0x234/0x9e0
-> [  168.563948]  tg_set_conf_u64+0x17/0x20
-> [  168.564467]  cgroup_file_write+0x1ad/0x380
-> [  168.565014]  ? cgroup_file_poll+0x80/0x80
-> [  168.565568]  ? __mutex_lock_slowpath+0x30/0x30
-> [  168.566165]  ? pgd_free+0x100/0x160
-> [  168.566649]  kernfs_fop_write_iter+0x21d/0x340
-> [  168.567246]  ? cgroup_file_poll+0x80/0x80
-> [  168.567796]  new_sync_write+0x29f/0x3c0
-> [  168.568314]  ? new_sync_read+0x410/0x410
-> [  168.568840]  ? __handle_mm_fault+0x1c97/0x2d80
-> [  168.569425]  ? copy_page_range+0x2b10/0x2b10
-> [  168.570007]  ? _raw_read_lock_bh+0xa0/0xa0
-> [  168.570622]  vfs_write+0x46e/0x630
-> [  168.571091]  ksys_write+0xcd/0x1e0
-> [  168.571563]  ? __x64_sys_read+0x60/0x60
-> [  168.572081]  ? __kasan_check_write+0x20/0x30
-> [  168.572659]  ? do_user_addr_fault+0x446/0xff0
-> [  168.573264]  __x64_sys_write+0x46/0x60
-> [  168.573774]  do_syscall_64+0x35/0x80
-> [  168.574264]  entry_SYSCALL_64_after_hwframe+0x44/0xae
-> [  168.574960] RIP: 0033:0x7fac74915130
-> [  168.575456] Code: 73 01 c3 48 8b 0d 58 ed 2c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 0f 1f 444
-> [  168.577969] RSP: 002b:00007ffc3080e288 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
-> [  168.578986] RAX: ffffffffffffffda RBX: 0000000000000009 RCX: 00007fac74915130
-> [  168.579937] RDX: 0000000000000009 RSI: 000056007669f080 RDI: 0000000000000001
-> [  168.580884] RBP: 000056007669f080 R08: 000000000000000a R09: 00007fac75227700
-> [  168.581841] R10: 000056007655c8f0 R11: 0000000000000246 R12: 0000000000000009
-> [  168.582796] R13: 0000000000000001 R14: 00007fac74be55e0 R15: 00007fac74be08c0
-> [  168.583757]  </TASK>
-> [  168.584063] Modules linked in:
-> [  168.584494] CR2: 0000000000000008
-> [  168.584964] ---[ end trace 2475611ad0f77a1a ]---
+> When enabling CONFIG_CGROUP_BPF, kmemleak can be observed by running
+> the command as below:
 > 
-> This is because blkg_alloc() is called from blkg_conf_prep() without
-> holding 'q->queue_lock', and elevator is exited before blkg_create():
+>     $mount -t cgroup -o none,name=foo cgroup cgroup/
+>     $umount cgroup/
 > 
-> thread 1                            thread 2
-> blkg_conf_prep
->   spin_lock_irq(&q->queue_lock);
->   blkg_lookup_check -> return NULL
->   spin_unlock_irq(&q->queue_lock);
+> unreferenced object 0xc3585c40 (size 64):
+>   comm "mount", pid 425, jiffies 4294959825 (age 31.990s)
+>   hex dump (first 32 bytes):
+>     01 00 00 80 84 8c 28 c0 00 00 00 00 00 00 00 00  ......(.........
+>     00 00 00 00 00 00 00 00 6c 43 a0 c3 00 00 00 00  ........lC......
+>   backtrace:
+>     [<e95a2f9e>] cgroup_bpf_inherit+0x44/0x24c
+>     [<1f03679c>] cgroup_setup_root+0x174/0x37c
+>     [<ed4b0ac5>] cgroup1_get_tree+0x2c0/0x4a0
+>     [<f85b12fd>] vfs_get_tree+0x24/0x108
+>     [<f55aec5c>] path_mount+0x384/0x988
+>     [<e2d5e9cd>] do_mount+0x64/0x9c
+>     [<208c9cfe>] sys_mount+0xfc/0x1f4
+>     [<06dd06e0>] ret_fast_syscall+0x0/0x48
+>     [<a8308cb3>] 0xbeb4daa8
 > 
->   blkg_alloc
->    blkcg_policy_enabled -> true
->    pd = ->pd_alloc_fn
->    blkg->pd[i] = pd
->                                     blk_mq_exit_sched
->                                      bfq_exit_queue
->                                       blkcg_deactivate_policy
->                                        spin_lock_irq(&q->queue_lock);
->                                        __clear_bit(pol->plid, q->blkcg_pols);
->                                        spin_unlock_irq(&q->queue_lock);
->                                      q->elevator = NULL;
->    spin_lock_irq(&q->queue_lock);
->     blkg_create
->      if (blkg->pd[i])
->       ->pd_init_fn -> q->elevator is NULL
->    spin_unlock_irq(&q->queue_lock);
+> This is because that since the commit 2b0d3d3e4fcf ("percpu_ref: reduce
+> memory footprint of percpu_ref in fast path") root_cgrp->bpf.refcnt.data
+> is allocated by the function percpu_ref_init in cgroup_bpf_inherit which
+> is called by cgroup_setup_root when mounting, but not freed along with
+> root_cgrp when umounting. Adding cgroup_bpf_offline which calls
+> percpu_ref_kill to cgroup_kill_sb can free root_cgrp->bpf.refcnt.data in
+> umount path.
 > 
-> Because blkcg_deactivate_policy() requires queue to be frozen, we can
-> grab q_usage_counter to synchoronize blkg_conf_prep() against
-> blkcg_deactivate_policy().
+> This patch also fixes the commit 4bfc0bb2c60e ("bpf: decouple the lifetime
+> of cgroup_bpf from cgroup itself"). A cgroup_bpf_offline is needed to do a
+> cleanup that frees the resources which are allocated by cgroup_bpf_inherit
+> in cgroup_setup_root. 
 > 
-> Fixes: e21b7a0b9887 ("block, bfq: add full hierarchical scheduling and cgroups support")
-> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> And inside cgroup_bpf_offline, cgroup_get() is at the beginning and
+> cgroup_put is at the end of cgroup_bpf_release which is called by
+> cgroup_bpf_offline. So cgroup_bpf_offline can keep the balance of
+> cgroup's refcount.
+> 
+> Fixes: 2b0d3d3e4fcf ("percpu_ref: reduce memory footprint of percpu_ref in fast path")
+> Fixes: 4bfc0bb2c60e ("bpf: decouple the lifetime of cgroup_bpf from cgroup itself")
+> Signed-off-by: Quanyang Wang <quanyang.wang-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+> ---
+> V1 ---> V2:
+> 1. As per Daniel's suggestion, add description to commit msg about the
+> balance of cgroup's refcount in cgroup_bpf_offline.
+> 2. As per Michal's suggestion, add tag "Fixes: 4bfc0bb2c60e" and add
+> description about it.
+> 3. Fix indentation on the percpu_ref_is_dying line.
 
-Hi, jens
+Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-Can you please apply this patch?
+The fix looks correct, two fixes tag are fine too, if only it won't
+confuse scripts picking up patches for stable backports.
 
-Thanks,
-Kuai
+In fact, it's a very cold path, which is arguably never hit in the real
+life. On cgroup v2 it's not an issue. I'm not sure we need a stable
+backport at all, only if it creates a noise for some automation tests.
+
+Quanyang, out of curiosity, how did you find it?
+
+Anyway, thanks for catching and fixing it!
+
+Roman
