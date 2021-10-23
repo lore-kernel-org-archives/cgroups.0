@@ -1,45 +1,124 @@
-From: Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>
-Subject: Re: [PATCH memcg v3 2/3] mm, oom: do not trigger out_of_memory from
- the #PF
-Date: Sun, 24 Oct 2021 00:01:07 +0900
-Message-ID: <e2a847a2-a414-2535-e3d1-b100a023b9d1@i-love.sakura.ne.jp>
-References: <YXJ/63kIpTq8AOlD@dhcp22.suse.cz>
- <cover.1634994605.git.vvs@virtuozzo.com>
- <f5fd8dd8-0ad4-c524-5f65-920b01972a42@virtuozzo.com>
+From: syzbot <syzbot+01321b15cc98e6bf96d6@syzkaller.appspotmail.com>
+Subject: Re: [syzbot] memory leak in blk_iolatency_init
+Date: Sat, 23 Oct 2021 11:58:27 -0700
+Message-ID: <00000000000082261505cf09b69c@google.com>
+References: <0000000000004ee28405cbe8d287@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <f5fd8dd8-0ad4-c524-5f65-920b01972a42-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Content-Language: en-US
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <0000000000004ee28405cbe8d287@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: axboe@kernel.dk, cgroups@vger.kernel.org, gregkh@linuxfoundation.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, noreply@bizcloud-server.changyang.com.tw, sashal@kernel.org, stable@vger.kernel.org, syzkaller-bugs@googlegroups.com, tj@kernel.org, yanfei.xu@windriver.com
 
-On 2021/10/23 22:20, Vasily Averin wrote:
->  /*
-> - * The pagefault handler calls here because it is out of memory, so kill a
-> - * memory-hogging task. If oom_lock is held by somebody else, a parallel oom
-> - * killing is already in progress so do nothing.
-> + * The pagefault handler calls here because some allocation has failed. We have
-> + * to take care of the memcg OOM here because this is the only safe context without
-> + * any locks held but let the oom killer triggered from the allocation context care
-> + * about the global OOM.
->   */
+syzbot has found a reproducer for the following issue on:
 
-Excuse me for a stupid question. I consider
+HEAD commit:    9c0c4d24ac00 Merge tag 'block-5.15-2021-10-22' of git://gi..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=1709f5c4b00000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=d25eeb482b0f99b
+dashboard link: https://syzkaller.appspot.com/bug?extid=01321b15cc98e6bf96d6
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=102280acb00000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=144b96f8b00000
 
-  if (!mutex_trylock(&oom_lock))
-    return;
-  out_of_memory(&oc);
-  mutex_unlock(&oom_lock);
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+01321b15cc98e6bf96d6@syzkaller.appspotmail.com
 
-here as the last resort (safeguard) when neither __alloc_pages_may_oom()
-nor mem_cgroup_out_of_memory() can make progress. This patch says
+BUG: memory leak
+unreferenced object 0xffff888104729800 (size 96):
+  comm "kworker/u4:2", pid 156, jiffies 4294937755 (age 219.670s)
+  hex dump (first 32 bytes):
+    00 49 c9 85 ff ff ff ff e0 b0 8b 03 81 88 ff ff  .I..............
+    01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff82268cf8>] kmalloc include/linux/slab.h:591 [inline]
+    [<ffffffff82268cf8>] kzalloc include/linux/slab.h:721 [inline]
+    [<ffffffff82268cf8>] blk_iolatency_init+0x28/0x190 block/blk-iolatency.c:724
+    [<ffffffff8225f71e>] blkcg_init_queue+0xee/0x1c0 block/blk-cgroup.c:1193
+    [<ffffffff82228fca>] blk_alloc_queue+0x22a/0x2e0 block/blk-core.c:584
+    [<ffffffff8223ee35>] blk_mq_init_queue_data block/blk-mq.c:3119 [inline]
+    [<ffffffff8223ee35>] __blk_mq_alloc_disk+0x25/0xd0 block/blk-mq.c:3143
+    [<ffffffff826a187f>] floppy_alloc_disk+0x2f/0x130 drivers/block/floppy.c:4495
+    [<ffffffff86f2aaa9>] do_floppy_init drivers/block/floppy.c:4566 [inline]
+    [<ffffffff86f2aaa9>] floppy_async_init+0x10f/0x1329 drivers/block/floppy.c:4731
+    [<ffffffff81277354>] async_run_entry_fn+0x24/0xf0 kernel/async.c:127
+    [<ffffffff81265dbf>] process_one_work+0x2cf/0x620 kernel/workqueue.c:2297
+    [<ffffffff812666c9>] worker_thread+0x59/0x5d0 kernel/workqueue.c:2444
+    [<ffffffff8126fc48>] kthread+0x188/0x1d0 kernel/kthread.c:319
+    [<ffffffff810022cf>] ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:295
 
-  let the oom killer triggered from the allocation context care
-  about the global OOM.
+BUG: memory leak
+unreferenced object 0xffff888104729400 (size 96):
+  comm "kworker/u4:2", pid 156, jiffies 4294937755 (age 219.670s)
+  hex dump (first 32 bytes):
+    00 49 c9 85 ff ff ff ff 90 a8 8b 03 81 88 ff ff  .I..............
+    01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff82268cf8>] kmalloc include/linux/slab.h:591 [inline]
+    [<ffffffff82268cf8>] kzalloc include/linux/slab.h:721 [inline]
+    [<ffffffff82268cf8>] blk_iolatency_init+0x28/0x190 block/blk-iolatency.c:724
+    [<ffffffff8225f71e>] blkcg_init_queue+0xee/0x1c0 block/blk-cgroup.c:1193
+    [<ffffffff82228fca>] blk_alloc_queue+0x22a/0x2e0 block/blk-core.c:584
+    [<ffffffff8223ee35>] blk_mq_init_queue_data block/blk-mq.c:3119 [inline]
+    [<ffffffff8223ee35>] __blk_mq_alloc_disk+0x25/0xd0 block/blk-mq.c:3143
+    [<ffffffff826a187f>] floppy_alloc_disk+0x2f/0x130 drivers/block/floppy.c:4495
+    [<ffffffff86f2aaa9>] do_floppy_init drivers/block/floppy.c:4566 [inline]
+    [<ffffffff86f2aaa9>] floppy_async_init+0x10f/0x1329 drivers/block/floppy.c:4731
+    [<ffffffff81277354>] async_run_entry_fn+0x24/0xf0 kernel/async.c:127
+    [<ffffffff81265dbf>] process_one_work+0x2cf/0x620 kernel/workqueue.c:2297
+    [<ffffffff812666c9>] worker_thread+0x59/0x5d0 kernel/workqueue.c:2444
+    [<ffffffff8126fc48>] kthread+0x188/0x1d0 kernel/kthread.c:319
+    [<ffffffff810022cf>] ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:295
 
-but what if the OOM killer cannot be invoked from the allocation context?
-Is there a guarantee that all memory allocations which might result in
-VM_FAULT_OOM can invoke the OOM killer?
+BUG: memory leak
+unreferenced object 0xffff888104767e00 (size 96):
+  comm "kworker/u4:2", pid 156, jiffies 4294937755 (age 219.670s)
+  hex dump (first 32 bytes):
+    00 49 c9 85 ff ff ff ff 40 a0 8b 03 81 88 ff ff  .I......@.......
+    01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff82268cf8>] kmalloc include/linux/slab.h:591 [inline]
+    [<ffffffff82268cf8>] kzalloc include/linux/slab.h:721 [inline]
+    [<ffffffff82268cf8>] blk_iolatency_init+0x28/0x190 block/blk-iolatency.c:724
+    [<ffffffff8225f71e>] blkcg_init_queue+0xee/0x1c0 block/blk-cgroup.c:1193
+    [<ffffffff82228fca>] blk_alloc_queue+0x22a/0x2e0 block/blk-core.c:584
+    [<ffffffff8223ee35>] blk_mq_init_queue_data block/blk-mq.c:3119 [inline]
+    [<ffffffff8223ee35>] __blk_mq_alloc_disk+0x25/0xd0 block/blk-mq.c:3143
+    [<ffffffff826a187f>] floppy_alloc_disk+0x2f/0x130 drivers/block/floppy.c:4495
+    [<ffffffff86f2aaa9>] do_floppy_init drivers/block/floppy.c:4566 [inline]
+    [<ffffffff86f2aaa9>] floppy_async_init+0x10f/0x1329 drivers/block/floppy.c:4731
+    [<ffffffff81277354>] async_run_entry_fn+0x24/0xf0 kernel/async.c:127
+    [<ffffffff81265dbf>] process_one_work+0x2cf/0x620 kernel/workqueue.c:2297
+    [<ffffffff812666c9>] worker_thread+0x59/0x5d0 kernel/workqueue.c:2444
+    [<ffffffff8126fc48>] kthread+0x188/0x1d0 kernel/kthread.c:319
+    [<ffffffff810022cf>] ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:295
+
+BUG: memory leak
+unreferenced object 0xffff888104767500 (size 96):
+  comm "kworker/u4:2", pid 156, jiffies 4294937755 (age 219.670s)
+  hex dump (first 32 bytes):
+    00 49 c9 85 ff ff ff ff 60 31 88 03 81 88 ff ff  .I......`1......
+    01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  backtrace:
+    [<ffffffff82268cf8>] kmalloc include/linux/slab.h:591 [inline]
+    [<ffffffff82268cf8>] kzalloc include/linux/slab.h:721 [inline]
+    [<ffffffff82268cf8>] blk_iolatency_init+0x28/0x190 block/blk-iolatency.c:724
+    [<ffffffff8225f71e>] blkcg_init_queue+0xee/0x1c0 block/blk-cgroup.c:1193
+    [<ffffffff82228fca>] blk_alloc_queue+0x22a/0x2e0 block/blk-core.c:584
+    [<ffffffff8223ee35>] blk_mq_init_queue_data block/blk-mq.c:3119 [inline]
+    [<ffffffff8223ee35>] __blk_mq_alloc_disk+0x25/0xd0 block/blk-mq.c:3143
+    [<ffffffff826a187f>] floppy_alloc_disk+0x2f/0x130 drivers/block/floppy.c:4495
+    [<ffffffff86f2aaa9>] do_floppy_init drivers/block/floppy.c:4566 [inline]
+    [<ffffffff86f2aaa9>] floppy_async_init+0x10f/0x1329 drivers/block/floppy.c:4731
+    [<ffffffff81277354>] async_run_entry_fn+0x24/0xf0 kernel/async.c:127
+    [<ffffffff81265dbf>] process_one_work+0x2cf/0x620 kernel/workqueue.c:2297
+    [<ffffffff812666c9>] worker_thread+0x59/0x5d0 kernel/workqueue.c:2444
+    [<ffffffff8126fc48>] kthread+0x188/0x1d0 kernel/kthread.c:319
+    [<ffffffff810022cf>] ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:295
+
+write to /proc/sys/kernel/hung_task_check_interval_secs failed: No such file or directory
+write to /proc/sys/kernel/softlockup_all_cpu_backtrace failed: No such file or directory
+write to /proc/sys/kernel/hung_task_check_interval_secs failed: No such file or directory
+write to /proc/sys/kernel/softlockup_all_cpu_backtrace failed: No such file or directory
+
