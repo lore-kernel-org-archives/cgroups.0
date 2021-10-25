@@ -1,74 +1,68 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 3/3] cgroup: no need for cgroup_mutex for /proc/cgroups
-Date: Sun, 24 Oct 2021 23:19:16 -0700
-Message-ID: <20211025061916.3853623-3-shakeelb@google.com>
-References: <20211025061916.3853623-1-shakeelb@google.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH memcg v3 2/3] mm, oom: do not trigger out_of_memory from
+ the #PF
+Date: Mon, 25 Oct 2021 10:04:04 +0200
+Message-ID: <YXZk9Lr217e+saSM@dhcp22.suse.cz>
+References: <YXJ/63kIpTq8AOlD@dhcp22.suse.cz>
+ <cover.1634994605.git.vvs@virtuozzo.com>
+ <f5fd8dd8-0ad4-c524-5f65-920b01972a42@virtuozzo.com>
+ <e2a847a2-a414-2535-e3d1-b100a023b9d1@i-love.sakura.ne.jp>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=RvvgnIVJ5IfhyMI13kBptnFJgKfIo/YKqj1muP3uFSI=;
-        b=aZ8ak0XSK/nUIpVaIxYsqvQ3bOgvICTgXeDUq5NeDeyr5OL7iUyvWts44akfikGFMn
-         1aspFDXj9W11lkB0NYioB51giV7uGch6f5v0x3OT6iQNLR/94F1Q9CfGiv5uJETPK3Wo
-         RRNHaOTJwxbXyS/U62bh0IfOpVfp/MIyVQf0ZW7p3kUyjf0LKjh2h1ARVySaMSbTyMe7
-         fA1J+fHVAQrVVtfefQBHFwfSBMuFXgCIbm5oT2pCpy38ZaGkIqX1DuqV9iahGkUIKOjS
-         auBFJhXgVautfW4go+wrMVBb33tzy+CoC1yxOEPEifacHzz2s5Hoc259+ifLMsOwWif1
-         QPXQ==
-In-Reply-To: <20211025061916.3853623-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1635149045; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=l21SlX/9kh43Ic37AW53KRYg/QWXqmopDdPfmAH/kdc=;
+        b=eMrOCgSaFdI3lzR7WkVsSne/0Whu14mXXOGHTE5EXC7LHFchVV5T3UBKFzMCbaDaY613w1
+        ikdq4RNXE7zyGDMnT3jKdP2gKvt6jH33g8ZZPjWfjj8njf3MaNH5I51wDnqQYTCASz7FRd
+        r6Jz1WJWiRfnNmBh7Dku+xmZFCp0kl0=
+Content-Disposition: inline
+In-Reply-To: <e2a847a2-a414-2535-e3d1-b100a023b9d1-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>
+Cc: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On the real systems, the cgroups hierarchies are setup early and just
-once by the node controller, so, other than number of cgroups, all
-information in /proc/cgroups remain same for the system uptime. Let's
-remove the cgroup_mutex usage on reading /proc/cgroups. There is a
-chance of inconsistent number of cgroups for co-mounted cgroups while
-printing the information from /proc/cgroups but that is not a big
-issue. In addition /proc/cgroups is a v1 specific interface, so the
-dependency on it should reduce over time.
+On Sun 24-10-21 00:01:07, Tetsuo Handa wrote:
+> On 2021/10/23 22:20, Vasily Averin wrote:
+> >  /*
+> > - * The pagefault handler calls here because it is out of memory, so kill a
+> > - * memory-hogging task. If oom_lock is held by somebody else, a parallel oom
+> > - * killing is already in progress so do nothing.
+> > + * The pagefault handler calls here because some allocation has failed. We have
+> > + * to take care of the memcg OOM here because this is the only safe context without
+> > + * any locks held but let the oom killer triggered from the allocation context care
+> > + * about the global OOM.
+> >   */
+> 
+> Excuse me for a stupid question. I consider
+> 
+>   if (!mutex_trylock(&oom_lock))
+>     return;
+>   out_of_memory(&oc);
+>   mutex_unlock(&oom_lock);
+> 
+> here as the last resort (safeguard) when neither __alloc_pages_may_oom()
+> nor mem_cgroup_out_of_memory() can make progress. This patch says
+> 
+>   let the oom killer triggered from the allocation context care
+>   about the global OOM.
+> 
+> but what if the OOM killer cannot be invoked from the allocation context?
+> Is there a guarantee that all memory allocations which might result in
+> VM_FAULT_OOM can invoke the OOM killer?
 
-The main motivation for removing the cgroup_mutex from /proc/cgroups is
-to reduce the avenues of its contention. On our fleet, we have observed
-buggy application hammering on /proc/cgroups and drastically slowing
-down the node controller on the system which have many negative
-consequences on other workloads running on the system.
+I do not think there is any guarantee. This code has meant to be a
+safeguard but it turns out to be adding more harm than a safety. There
+are several scenarios mentioned in this thread where this would be
+counter productive or outright wrong thing to do.
 
-Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cgroup-v1.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index fd14a60379c1..81c9e0685948 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -659,11 +659,9 @@ int proc_cgroupstats_show(struct seq_file *m, void *v)
- 
- 	seq_puts(m, "#subsys_name\thierarchy\tnum_cgroups\tenabled\n");
- 	/*
--	 * ideally we don't want subsystems moving around while we do this.
--	 * cgroup_mutex is also necessary to guarantee an atomic snapshot of
--	 * subsys/hierarchy state.
-+	 * Grab the subsystems state racily. No need to add avenue to
-+	 * cgroup_mutex contention.
- 	 */
--	mutex_lock(&cgroup_mutex);
- 
- 	for_each_subsys(ss, i)
- 		seq_printf(m, "%s\t%d\t%d\t%d\n",
-@@ -671,7 +669,6 @@ int proc_cgroupstats_show(struct seq_file *m, void *v)
- 			   atomic_read(&ss->root->nr_cgrps),
- 			   cgroup_ssid_enabled(i));
- 
--	mutex_unlock(&cgroup_mutex);
- 	return 0;
- }
- 
+On the other hand it is hard to imagine any legitimate situation where
+this would be a right thing to do. Maybe you have something more
+specific in mind? What would be the legit code to rely on OOM handling
+out of the line (where the details about the allocation scope is lost)?
 -- 
-2.33.0.1079.g6e70778dc9-goog
-
+Michal Hocko
+SUSE Labs
