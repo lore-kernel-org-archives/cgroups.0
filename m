@@ -1,83 +1,124 @@
-From: Vasily Averin <vvs@virtuozzo.com>
-Subject: Re: [PATCH memcg v3 2/3] mm, oom: do not trigger out_of_memory from
- the #PF
-Date: Sat, 23 Oct 2021 22:15:19 +0300
-Message-ID: <5038ff2f-7358-80df-8167-3449c1a540fe@virtuozzo.com>
-References: <YXJ/63kIpTq8AOlD@dhcp22.suse.cz>
- <cover.1634994605.git.vvs@virtuozzo.com>
- <f5fd8dd8-0ad4-c524-5f65-920b01972a42@virtuozzo.com>
- <e2a847a2-a414-2535-e3d1-b100a023b9d1@i-love.sakura.ne.jp>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/3] cgroup: reduce dependency on cgroup_mutex
+Date: Sun, 24 Oct 2021 23:19:14 -0700
+Message-ID: <20211025061916.3853623-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
-        Subject; bh=ZuyZvSB+IWaABIIMJw/ofGXgNTuvJPGvRG6ORPX+xCg=; b=b7Oxo3QFYkhUf1+aI
-        vPwuGhnkZ+uxt4WvbR2ObgwJZxJp6oCuOj7RZTnquMghZb9hiJEd6Azb67tU4KnhnbHCdu13JAlWW
-        V4CxHMXB7c6kmU4Y6+2LRBdsC8J1Dt4hpk+dSis16Zs/lGfAdZFoHZ4NqP8QqfBE8tFluHxwv7UMU
-        =;
-In-Reply-To: <e2a847a2-a414-2535-e3d1-b100a023b9d1@i-love.sakura.ne.jp>
-Content-Language: en-US
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=AvgSYxSIhj04a4iCqNdbKAaA6wuU++C7nTwWAjHnasw=;
+        b=QVvsNPaKhT9W53NjgKlg06MbBvd9TrNlBshp7HsaNKeoIz1bJqnkLVXhzhOWsN2Vlj
+         pop9JnHT9hzums5WphcQ2wqzdyqcft6zVuQluJiJ73s/q1T6ZeECCAkLdB2mFirdJQx+
+         twfqNsBynQUA7LbzAEX92775+jtyazZKF104dShVaD/QJTrIzYY8Ja7vL4vdVzaFrEbg
+         0tTacCDqtp67YcJJgikaBVbmbD7FcpU2dyamb/nii+8MnA4mqXc28Eq9qjTxsTvjQ3iZ
+         qckX6vYRQm3BAlbr6M9t2RodeUZdb1XjCCskiXWrBhp7ZFChl4oK/y9tjYR0u+06Dzcl
+         1jqQ==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Michal Hocko <mhocko@kernel.org>
-Cc: Roman Gushchin <guro@fb.com>, Uladzislau Rezki <urezki@gmail.com>, Vlastimil Babka <vbabka@suse.cz>, Shakeel Butt <shakeelb@google.com>, Mel Gorman <mgorman@techsingularity.net>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel@openvz.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 23.10.2021 18:01, Tetsuo Handa wrote:
-> On 2021/10/23 22:20, Vasily Averin wrote:
->>  /*
->> - * The pagefault handler calls here because it is out of memory, so kill a
->> - * memory-hogging task. If oom_lock is held by somebody else, a parallel oom
->> - * killing is already in progress so do nothing.
->> + * The pagefault handler calls here because some allocation has failed. We have
->> + * to take care of the memcg OOM here because this is the only safe context without
->> + * any locks held but let the oom killer triggered from the allocation context care
->> + * about the global OOM.
->>   */
-> 
-> Excuse me for a stupid question. I consider
-> 
->   if (!mutex_trylock(&oom_lock))
->     return;
->   out_of_memory(&oc);
->   mutex_unlock(&oom_lock);
-> 
-> here as the last resort (safeguard) when neither __alloc_pages_may_oom()
-> nor mem_cgroup_out_of_memory() can make progress. This patch says
-> 
->   let the oom killer triggered from the allocation context care
->   about the global OOM.
-> 
-> but what if the OOM killer cannot be invoked from the allocation context?
-> Is there a guarantee that all memory allocations which might result in
-> VM_FAULT_OOM can invoke the OOM killer?
+Currently cgroup_get_from_path() and cgroup_get_from_id() grab
+cgroup_mutex before traversing the default hierarchy to find the
+kernfs_node corresponding to the path/id and then extract the linked
+cgroup. Since cgroup_mutex is still held, it is guaranteed that the
+cgroup will be alive and the reference can be taken on it.
 
-I don't think this question is stupid, since I asked it myself :)
-You can find this discussion here:
-https://lkml.org/lkml/2021/10/21/900
+However similar guarantee can be provided without depending on the
+cgroup_mutex and potentially reducing avenues of cgroup_mutex contentions.
+The kernfs_node's priv pointer is RCU protected pointer and with just
+rcu read lock we can grab the reference on the cgroup without
+cgroup_mutex. So, remove cgroup_mutex from them.
 
-Let me quote it here too
-:> 1) VM_FAULT_OOM may be triggered w/o execution of out_of_memory()
-:> for exampel it can be caused by incorrect vm fault operations, 
-:> (a) which can return this error without calling allocator at all.
-:
-:I would argue this to be a bug. How can that particular code tell
-:whether the system is OOM and the oom killer is the a reasonable measure
-:to take?
-:
-:> (b) or which can provide incorrect gfp flags and allocator can fail without execution of out_of_memory.
-:
-: I am not sure I can see any sensible scenario where pagefault oom killer
-: would be an appropriate fix for that.
-:
-:> (c) This may happen on stable/LTS kernels when successful allocation was failed by hit into limit of legacy memcg-kmem contoller.
-:> We'll drop it in upstream kernels, however how to handle it in old kenrels?
-:
-:Triggering the global oom killer for legacy kmem charge failure is
-:clearly wrong. Removing oom killer from #PF would fix that problem.
+Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 51 ++++++++++++++++++++++++------------------
+ 1 file changed, 29 insertions(+), 22 deletions(-)
 
-I would note: (c) is not theoretical but real life problem, in this case allocation was failed without execution of OOM,
-however, it is in this case that execution out_of_memory() from pagefault_out_of_memory() leads to a disaster.
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 02e2ac83a94e..f8605caba7ed 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -5932,17 +5932,20 @@ struct cgroup *cgroup_get_from_id(u64 id)
+ 	struct kernfs_node *kn;
+ 	struct cgroup *cgrp = NULL;
+ 
+-	mutex_lock(&cgroup_mutex);
+ 	kn = kernfs_find_and_get_node_by_id(cgrp_dfl_root.kf_root, id);
+ 	if (!kn)
+-		goto out_unlock;
++		goto out;
++
++	rcu_read_lock();
+ 
+-	cgrp = kn->priv;
+-	if (cgroup_is_dead(cgrp) || !cgroup_tryget(cgrp))
++	cgrp = rcu_dereference(*(void __rcu __force **)&kn->priv);
++	if (cgrp && !cgroup_tryget(cgrp))
+ 		cgrp = NULL;
++
++	rcu_read_unlock();
++
+ 	kernfs_put(kn);
+-out_unlock:
+-	mutex_unlock(&cgroup_mutex);
++out:
+ 	return cgrp;
+ }
+ EXPORT_SYMBOL_GPL(cgroup_get_from_id);
+@@ -6495,30 +6498,34 @@ struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss)
+  *
+  * Find the cgroup at @path on the default hierarchy, increment its
+  * reference count and return it.  Returns pointer to the found cgroup on
+- * success, ERR_PTR(-ENOENT) if @path doesn't exist and ERR_PTR(-ENOTDIR)
+- * if @path points to a non-directory.
++ * success, ERR_PTR(-ENOENT) if @path doesn't exist or if the cgroup has already
++ * been released and ERR_PTR(-ENOTDIR) if @path points to a non-directory.
+  */
+ struct cgroup *cgroup_get_from_path(const char *path)
+ {
+ 	struct kernfs_node *kn;
+-	struct cgroup *cgrp;
+-
+-	mutex_lock(&cgroup_mutex);
++	struct cgroup *cgrp = ERR_PTR(-ENOENT);
+ 
+ 	kn = kernfs_walk_and_get(cgrp_dfl_root.cgrp.kn, path);
+-	if (kn) {
+-		if (kernfs_type(kn) == KERNFS_DIR) {
+-			cgrp = kn->priv;
+-			cgroup_get_live(cgrp);
+-		} else {
+-			cgrp = ERR_PTR(-ENOTDIR);
+-		}
+-		kernfs_put(kn);
+-	} else {
+-		cgrp = ERR_PTR(-ENOENT);
++	if (!kn)
++		goto out;
++
++	if (kernfs_type(kn) != KERNFS_DIR) {
++		cgrp = ERR_PTR(-ENOTDIR);
++		goto out_kernfs;
+ 	}
+ 
+-	mutex_unlock(&cgroup_mutex);
++	rcu_read_lock();
++
++	cgrp = rcu_dereference(*(void __rcu __force **)&kn->priv);
++	if (!cgrp || !cgroup_tryget(cgrp))
++		cgrp = ERR_PTR(-ENOENT);
++
++	rcu_read_unlock();
++
++out_kernfs:
++	kernfs_put(kn);
++out:
+ 	return cgrp;
+ }
+ EXPORT_SYMBOL_GPL(cgroup_get_from_path);
+-- 
+2.33.0.1079.g6e70778dc9-goog
 
-Thank you,
-	Vasily Averin
