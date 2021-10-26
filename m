@@ -1,52 +1,49 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/3] cgroup: no need for cgroup_mutex for /proc/cgroups
-Date: Mon, 25 Oct 2021 07:27:02 -1000
-Message-ID: <YXbo5sKj0wgPTaMp@slm.duckdns.org>
-References: <20211025061916.3853623-1-shakeelb@google.com>
- <20211025061916.3853623-3-shakeelb@google.com>
+From: Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>
+Subject: Re: [PATCH memcg v3 2/3] mm, oom: do not trigger out_of_memory from
+ the #PF
+Date: Tue, 26 Oct 2021 22:56:44 +0900
+Message-ID: <62a326bc-37d2-b8c9-ddbf-7adaeaadf341@i-love.sakura.ne.jp>
+References: <YXJ/63kIpTq8AOlD@dhcp22.suse.cz>
+ <cover.1634994605.git.vvs@virtuozzo.com>
+ <f5fd8dd8-0ad4-c524-5f65-920b01972a42@virtuozzo.com>
+ <e2a847a2-a414-2535-e3d1-b100a023b9d1@i-love.sakura.ne.jp>
+ <YXZk9Lr217e+saSM@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=aCZMd4lnZUOWP3HuMJZrRTDzuvD7CVVCcTZfYmmmVYQ=;
-        b=jB5xsxczN9t/FAMcQj8CtRTnmhHtZXcl5SVodMk6K4L0F+P8ivxWvi/7AOYRNNw2c5
-         KgPQbGuOcYNZKx1m7ZpDeJVGp9IyLAFuM1H1CS7mMqU+ISDG24Qh2p6Eob0J9QViMiM4
-         u9ctfqMNOaSDV55qSmdjPIGyT64q4bwDb4sA/bO1X/PUCNARks1jSVYH+BdU1XvlLLjF
-         g/hIj+1qJQAWhQ72vovkRU8MFKxf0eTuqGdobXFdu51L2ZK1vyfZA/GQti8M8RJwq6DV
-         9TzFRGA8MWJ0er52eshkuUVcHxxcwY7IHlTAZOqrkJrskNDDBpzTj2Cr2VGyPEXE9fwZ
-         37Tg==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <20211025061916.3853623-3-shakeelb@google.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Language: en-US
+In-Reply-To: <YXZk9Lr217e+saSM-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Sun, Oct 24, 2021 at 11:19:16PM -0700, Shakeel Butt wrote:
-> On the real systems, the cgroups hierarchies are setup early and just
-> once by the node controller, so, other than number of cgroups, all
-> information in /proc/cgroups remain same for the system uptime. Let's
-> remove the cgroup_mutex usage on reading /proc/cgroups. There is a
-> chance of inconsistent number of cgroups for co-mounted cgroups while
-> printing the information from /proc/cgroups but that is not a big
-> issue. In addition /proc/cgroups is a v1 specific interface, so the
-> dependency on it should reduce over time.
+On 2021/10/25 17:04, Michal Hocko wrote:
+> I do not think there is any guarantee. This code has meant to be a
+> safeguard but it turns out to be adding more harm than a safety. There
+> are several scenarios mentioned in this thread where this would be
+> counter productive or outright wrong thing to do.
+
+Setting PR_IO_FLUSHER via prctl(PR_SET_IO_FLUSHER) + hitting legacy kmem
+charge limit might be an unexpected combination?
+
 > 
-> The main motivation for removing the cgroup_mutex from /proc/cgroups is
-> to reduce the avenues of its contention. On our fleet, we have observed
-> buggy application hammering on /proc/cgroups and drastically slowing
-> down the node controller on the system which have many negative
-> consequences on other workloads running on the system.
-> 
-> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> On the other hand it is hard to imagine any legitimate situation where
+> this would be a right thing to do. Maybe you have something more
+> specific in mind? What would be the legit code to rely on OOM handling
+> out of the line (where the details about the allocation scope is lost)?
 
-Applied 1-3 to cgroup/for-5.16.
+I don't have specific scenario, but I feel that it might be a chance to
+retry killable vmalloc(). Commit b8c8a338f75e ("Revert "vmalloc: back off
+when the current task is killed"") was 4.5 years ago, and fuzz testing found
+many bugs triggered by memory allocation fault injection. Thus, I think that
+the direction is going towards "we can fail memory allocation upon SIGKILL
+(rather than worrying about depleting memory reserves and/or escalating to
+global OOM killer invocations)". Most memory allocation requests which
+allocate memory for userspace process are willing to give up upon SIGKILL.
 
-Thanks.
+Like you are trying to add NOFS, NOIO, NOFAIL support to vmalloc(), you could
+consider KILLABLE support as well. Of course, direct reclaim makes it difficult
+to immediately give up upon SIGKILL, but killable allocation sounds still nice
+even if best-effort basis.
 
--- 
-tejun
