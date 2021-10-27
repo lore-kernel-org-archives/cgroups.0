@@ -1,98 +1,44 @@
-From: Barry Song <21cnbao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH RFC] cpuset: Make cpusets get restored on hotplug
-Date: Wed, 27 Oct 2021 15:42:29 +1300
-Message-ID: <CAGsJ_4y__nBDpLo6pmEHeTJQMQFtHmQhNLTsFFunBJLknChQsA@mail.gmail.com>
-References: <972a5c1b-6721-ac20-cec5-617af67e617d@redhat.com>
- <20211026235808.34168-1-21cnbao@gmail.com> <f795f8be-a184-408a-0b5a-553d26061385@redhat.com>
- <CAGsJ_4wZJyKh+FUsmL8TMaCHofmr9J5UCzk3YYEYckD8ZWZW+w@mail.gmail.com> <4637ebd4-61ef-5ad6-d2bd-976663f5c4a1@redhat.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH memcg v3 3/3] memcg: prohibit unconditional exceeding
+ the limit of dying tasks
+Date: Wed, 27 Oct 2021 15:36:08 -0700
+Message-ID: <20211027153608.9910f7db99d5ef574045370e@linux-foundation.org>
+References: <YXJ/63kIpTq8AOlD@dhcp22.suse.cz>
+        <cover.1634994605.git.vvs@virtuozzo.com>
+        <8f5cebbb-06da-4902-91f0-6566fc4b4203@virtuozzo.com>
+        <YXZ6qaMJBomVfV8O@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=1CEbUbWOhQSqqOGE19xqh9rkRH8otndDTOABWkoBG0A=;
-        b=iUCh//iTlainZark1GEBDt7mbEnmNwF/ebiApqKXkVVaFOKG4UvLUBOlHeN2Ukj+3I
-         m+joeM3Gj5SVnTm8ERqJ5tq25qKV2W6bh+vArU56GOB7wNCI6EqacKsNKKS2UuGeKj09
-         SofgfJ2g+2L1/N9CkbbcOmHuvtlZx8ZVx+iDwtUkOrhRBcZ+riMExomk40O85XX7eMXl
-         gqztk/7oFbzOxd0EEnOHBHZw+l0aIIR8gPEZGUpqKod2/pUcCFy2P9WdICP+PX6GQl9i
-         63S6+beQ+tAHwQ518y8fdrSGWG2uI0c4IAM1KeKepWXvRWQxZHcLF9pKNPG9TKVxSukG
-         2mcA==
-In-Reply-To: <4637ebd4-61ef-5ad6-d2bd-976663f5c4a1-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1635374170;
+        bh=zeRXlf3fAzntvGnBMpDwMgonqEP9pBriRbcBLNzhnE8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=voGDb2zXrSVNrVTxvYv+5pMhCPRA3F8fwGVSJ7e4sGicSa89iz8fbmPQ5IDUj6bbB
+         /7BX5p6IZvMH1BZP+4LX56HqXYw5bE76pXVRLoi98OHqHA5a8vD16kOneRNlBRbsGG
+         uykElR9RFUVO+G11QXqJr8RFcQrPCNZlTWAsud4Q=
+In-Reply-To: <YXZ6qaMJBomVfV8O-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Amit Pundir <amit.pundir-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, groeck-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org, jsbarnes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, Greg Kerr <kerrnel-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, sonnyrao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, vpillai-tWEdnPwa2b6ifxm/DiOjgA@public.gmane.org
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
 
-On Wed, Oct 27, 2021 at 3:35 PM Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
->
-> On 10/26/21 10:21 PM, Barry Song wrote:
-> > On Wed, Oct 27, 2021 at 2:06 PM Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> >>
-> >> On 10/26/21 7:58 PM, Barry Song wrote:
-> >>>> I think Tejun is concerned about a change in the default behavior of
-> >>>> cpuset v1.
-> >>>>
-> >>>> There is a special v2 mode for cpuset that is enabled by the mount
-> >>>> option "cpuset_v2_mode". This causes the cpuset v1 to adopt some of the
-> >>>> v2 behavior. I introduced this v2 mode a while back to address, I think,
-> >>>> a similar concern. Could you try that to see if it is able to address
-> >>>> your problem? If not, you can make some code adjustment within the
-> >>>> framework of the v2 mode. As long as it is an opt-in, I think we are
-> >>>> open to further change.
-> >>> I am also able to reproduce on Ubuntu 21.04 LTS.
-> >>>
-> >>> all docker will be put in this cgroups and its child cgroups:
-> >>> /sys/fs/cgroup/cpuset/docker
-> >>>
-> >>> disabling and enabling SMT by:
-> >>> echo off > /sys/devices/system/cpu/smt/control
-> >>> echo on > /sys/devices/system/cpu/smt/control
-> >>>
-> >>> or unpluging and pluging CPUs by:
-> >>> echo 0 > /sys/devices/system/cpu/cpuX/online
-> >>> echo 1 > /sys/devices/system/cpu/cpuX/online
-> >>>
-> >>> then all docker images will lose some CPUs.
-> >>>
-> >>> So should we document the broken behaviours somewhere?
-> >> Is the special cpuset_v2_mode mount option able to fix the issue?
-> >>
-> >> This mode is documented in
-> >>
-> >> Documentation/admin-guide/cgroup-v1/cpuset.rst:
-> >>
-> >> The cpuset.effective_cpus and cpuset.effective_mems files are
-> >> normally read-only copies of cpuset.cpus and cpuset.mems files
-> >> respectively.  If the cpuset cgroup filesystem is mounted with the
-> >> special "cpuset_v2_mode" option, the behavior of these files will become
-> >> similar to the corresponding files in cpuset v2.  In other words, hotplug
-> >> events will not change cpuset.cpus and cpuset.mems.  Those events will
-> >> only affect cpuset.effective_cpus and cpuset.effective_mems which show
-> >> the actual cpus and memory nodes that are currently used by this cpuset.
-> >> See Documentation/admin-guide/cgroup-v2.rst for more information about
-> >> cpuset v2 behavior.
-> >>
-> >> Maybe we can make it more visible.
-> > Is it possible to make cpuset_v2_mode true in default? not quite sure if
-> > it will harm something.
->
-> The cpuset_v2_mode is a change in v1 behavior and that is why it is an
-> opt-in as we don't want to break existing applications that have a
-> dependency on the current v1 behavior. If users switch to use cgroup v2,
-> they get the new behavior. Alternately, they can modify the system
-> startup script to use the v2 behavior by using the mount option. I don't
-> think we are going to change the v1 default behavior.
+On Mon, 25 Oct 2021 11:36:41 +0200 Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
 
-ok, understood.
+> My view on stable backport is similar to the previous patch. If we want
+> to have it there then let's wait for some time to see whether there are
+> any fallouts as this patch depends on the PF_OOM change.
 
-the old behaviour seems quite odd and linux distributions don't realize it.
-for example, ubuntu is simply losing cpu for docker.
+It's strange that [1/3] doesn't have cc:stable, but [2/3] and [3/3] do
+not.  What is the thinking here?
 
->
-> Cheers,
-> Longman
+I expect we'd be OK with merging these into 5.16-rc1.  This still gives
+another couple of months in -rc to shake out any problems.  But I
+suspect the -stable maintainers will merge and release the patches
+before they are released in 5.16.
 
-Thanks
-barry
+In which case an alternative would be not to mark these patches
+cc:stable and to somehow remember to ask the -stable maintainers to
+merge them after 5.16 has been on the streets for a suitable period.
+
+Greg, thoughts?
