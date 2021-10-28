@@ -1,82 +1,55 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v8 0/6] cgroup/cpuset: Add new cpuset partition type &
- empty effecitve cpus
-Date: Wed, 27 Oct 2021 19:05:36 -0400
-Message-ID: <55402d20-c23e-bb56-6a7a-6e208c08280a@redhat.com>
-References: <20211018143619.205065-1-longman@redhat.com>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH memcg v3 3/3] memcg: prohibit unconditional exceeding the
+ limit of dying tasks
+Date: Thu, 28 Oct 2021 10:22:56 +0300
+Message-ID: <ea14200f-ad2c-6901-25da-54900fe2ce14@virtuozzo.com>
+References: <YXJ/63kIpTq8AOlD@dhcp22.suse.cz>
+ <cover.1634994605.git.vvs@virtuozzo.com>
+ <8f5cebbb-06da-4902-91f0-6566fc4b4203@virtuozzo.com>
+ <YXZ6qaMJBomVfV8O@dhcp22.suse.cz>
+ <20211027153608.9910f7db99d5ef574045370e@linux-foundation.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1635375947;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fSEXEHxW0XKJ3A0RuRyJ3sw6tXP96RKh+PO7m5ry7Bs=;
-        b=G7NbejCAj3WseCpqOgnYXVVk1jjMOXl/6UZYwKbrM4CqJklU1oyDpCQOnPc8+GrU2FLMTq
-        Zggumjyv8XN00fZOOsZsv3+Ew/wc301Injz1EVe7YSjGzn4Gylwo8dnb1lvWvnNkItIeOv
-        S7ltcEogvj8dLY4Hi8cRjqkR7tTrz74=
-In-Reply-To: <20211018143619.205065-1-longman@redhat.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/y06wyIaTQk/vqnWTXXrbA0/17cWwIbbEVGj8aQ97gw=;
+ b=v0E1eKyk5HkI9KAhSRzN5tvx7lbiK4uS9uNhLCAGMXtyZ39nTwFO6n93BCM75aEYeizhPiQwNeBAKbAJE/VbQkGLN+g699ubbOAQmQHXiS64YmlC+msidD4htb+7ITDU4j7Jbhhf/wcicsPqCRS78YUaYE0PrTHOjAp7l44JAeg=
+In-Reply-To: <20211027153608.9910f7db99d5ef574045370e-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
 
-On 10/18/21 10:36 AM, Waiman Long wrote:
-> v8:
->   - Reorganize the patch series and rationalize the features and
->     constraints of a partition.
->   - Update patch descriptions and documentation accordingly.
->
-> v7:
->   - Simplify the documentation patch (patch 5) as suggested by Tejun.
->   - Fix a typo in patch 2 and improper commit log in patch 3.
->
-> v6:
->   - Remove duplicated tmpmask from update_prstate() which should fix the
->     frame size too large problem reported by kernel test robot.
->
-> This patchset makes four enhancements to the cpuset v2 code.
->
->   Patch 1: Enable partition with no task to have empty cpuset.cpus.effective.
->
->   Patch 2: Refining the features and constraints of a cpuset partition
->   clarifying what changes are allowed.
->
->   Patch 3: Add a new partition state "isolated" to create a partition
->   root without load balancing. This is for handling intermitten workloads
->   that have a strict low latency requirement.
->
->   Patch 4: Enable the "cpuset.cpus.partition" file to show the reason
->   that causes invalid partition like "root invalid (No cpu available
->   due to hotplug)".
->
-> Patch 5 updates the cgroup-v2.rst file accordingly. Patch 6 adds a new
-> cpuset test to test the new cpuset partition code.
->
-> Waiman Long (6):
->    cgroup/cpuset: Allow no-task partition to have empty
->      cpuset.cpus.effective
->    cgroup/cpuset: Refining features and constraints of a partition
->    cgroup/cpuset: Add a new isolated cpus.partition type
->    cgroup/cpuset: Show invalid partition reason string
->    cgroup/cpuset: Update description of cpuset.cpus.partition in
->      cgroup-v2.rst
->    kselftest/cgroup: Add cpuset v2 partition root state test
->
->   Documentation/admin-guide/cgroup-v2.rst       | 153 ++--
->   kernel/cgroup/cpuset.c                        | 393 +++++++----
->   tools/testing/selftests/cgroup/Makefile       |   5 +-
->   .../selftests/cgroup/test_cpuset_prs.sh       | 664 ++++++++++++++++++
->   tools/testing/selftests/cgroup/wait_inotify.c |  87 +++
->   5 files changed, 1115 insertions(+), 187 deletions(-)
->   create mode 100755 tools/testing/selftests/cgroup/test_cpuset_prs.sh
->   create mode 100644 tools/testing/selftests/cgroup/wait_inotify.c
+On 28.10.2021 01:36, Andrew Morton wrote:
+> On Mon, 25 Oct 2021 11:36:41 +0200 Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> 
+>> My view on stable backport is similar to the previous patch. If we want
+>> to have it there then let's wait for some time to see whether there are
+>> any fallouts as this patch depends on the PF_OOM change.
+> 
+> It's strange that [1/3] doesn't have cc:stable, but [2/3] and [3/3] do
+> not.  What is the thinking here?
 
-Any feedback on this patch series?
+My fault, I missed it.
+All 3 patches should be backported,
+I did it already to stables kernels since 4.4 and I'm ready to submit it in demand.
 
-Thanks,
-Longman
+> I expect we'd be OK with merging these into 5.16-rc1.  This still gives
+> another couple of months in -rc to shake out any problems.  But I
+> suspect the -stable maintainers will merge and release the patches
+> before they are released in 5.16.
+> 
+> In which case an alternative would be not to mark these patches
+> cc:stable and to somehow remember to ask the -stable maintainers to
+> merge them after 5.16 has been on the streets for a suitable period.
+> 
+> Greg, thoughts?
+
+If you wish I can remind Greg in a month or even after 5.17 release.
+
+Thank you,
+	Vasily Averin
 
