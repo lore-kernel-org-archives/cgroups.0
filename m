@@ -1,51 +1,206 @@
-From: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] cgroup: Fix rootcg cpu.stat guest double counting
-Date: Thu, 28 Oct 2021 15:15:27 -0700
-Message-ID: <20211028221528.2174284-1-schatzberg.dan@gmail.com>
+From: He Fengqing <hefengqing@huawei.com>
+Subject: [PATCH] cgroup: bpf: Move wrapper for __cgroup_bpf_*() to kernel/bpf/cgroup.c
+Date: Fri, 29 Oct 2021 02:39:06 +0000
+Message-ID: <20211029023906.245294-1-hefengqing@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=CE76jWMeyxCY5I/qaaAbgmKw1EMykfKV4BEuJDaHL6g=;
-        b=bC5SbaUerEviaszA0wT3TsZ+ctvQ/QnSXU7T7i7Fy6GxjbipoH+8sKTQiCIJfzRUSs
-         ovm57fVyR0Cxx+fiJP1BuUI/ZaqfOCMANrxpU9SYDCxLRI5tmCJTltM2I/sGr2/Q4ZC4
-         OK/KF/Ynq17jKFTkQWmmnSX5aW/JbZfmyYOIkn7ByKOju2mAb4iMZkEhe05yhUS9h/GQ
-         cTLiXhEevJw8JsJxvA1tEfsVxMY/XQqddtwKcOvDn9F8USO6FAVFlday3CS6fXnTYFIK
-         fNYN1JjbWPnZfqKsVhiu465bq9SDnAQvZqf141HWdEvURrdf3PdfVr0oatCtxJ+GOUdX
-         Ushg==
+Content-Transfer-Encoding: 7BIT
+Return-path: <bpf-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>, "open list:CONTROL GROUP CGROUP" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org
+Cc: bpf@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org
 
-In account_guest_time in kernel/sched/cputime.c guest time is
-attributed to both CPUTIME_NICE and CPUTIME_USER in addition to
-CPUTIME_GUEST_NICE and CPUTIME_GUEST respectively. Therefore, adding
-both to calculate usage results in double counting any guest time at
-the rootcg.
+In commit 324bda9e6c5a("bpf: multi program support for cgroup+bpf")
+cgroup_bpf_*() called from kernel/bpf/syscall.c, but now they are only
+used in kernel/bpf/cgroup.c, so move these function to
+kernel/bpf/cgroup.c, like cgroup_bpf_replace().
 
-Fixes: 936f2a70f207 ("cgroup: add cpu.stat file to root cgroup")
-Signed-off-by: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: He Fengqing <hefengqing@huawei.com>
 ---
- kernel/cgroup/rstat.c | 2 --
- 1 file changed, 2 deletions(-)
+ include/linux/bpf-cgroup.h | 20 --------------
+ kernel/bpf/cgroup.c        | 54 +++++++++++++++++++++++++++++++-------
+ kernel/cgroup/cgroup.c     | 38 ---------------------------
+ 3 files changed, 45 insertions(+), 67 deletions(-)
 
-diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-index b264ab5652ba..1486768f2318 100644
---- a/kernel/cgroup/rstat.c
-+++ b/kernel/cgroup/rstat.c
-@@ -433,8 +433,6 @@ static void root_cgroup_cputime(struct task_cputime *cputime)
- 		cputime->sum_exec_runtime += user;
- 		cputime->sum_exec_runtime += sys;
- 		cputime->sum_exec_runtime += cpustat[CPUTIME_STEAL];
--		cputime->sum_exec_runtime += cpustat[CPUTIME_GUEST];
--		cputime->sum_exec_runtime += cpustat[CPUTIME_GUEST_NICE];
- 	}
+diff --git a/include/linux/bpf-cgroup.h b/include/linux/bpf-cgroup.h
+index 2746fd804216..9aad4e3ca29b 100644
+--- a/include/linux/bpf-cgroup.h
++++ b/include/linux/bpf-cgroup.h
+@@ -157,26 +157,6 @@ struct cgroup_bpf {
+ int cgroup_bpf_inherit(struct cgroup *cgrp);
+ void cgroup_bpf_offline(struct cgroup *cgrp);
+ 
+-int __cgroup_bpf_attach(struct cgroup *cgrp,
+-			struct bpf_prog *prog, struct bpf_prog *replace_prog,
+-			struct bpf_cgroup_link *link,
+-			enum bpf_attach_type type, u32 flags);
+-int __cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
+-			struct bpf_cgroup_link *link,
+-			enum bpf_attach_type type);
+-int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
+-		       union bpf_attr __user *uattr);
+-
+-/* Wrapper for __cgroup_bpf_*() protected by cgroup_mutex */
+-int cgroup_bpf_attach(struct cgroup *cgrp,
+-		      struct bpf_prog *prog, struct bpf_prog *replace_prog,
+-		      struct bpf_cgroup_link *link, enum bpf_attach_type type,
+-		      u32 flags);
+-int cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
+-		      enum bpf_attach_type type);
+-int cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
+-		     union bpf_attr __user *uattr);
+-
+ int __cgroup_bpf_run_filter_skb(struct sock *sk,
+ 				struct sk_buff *skb,
+ 				enum cgroup_bpf_attach_type atype);
+diff --git a/kernel/bpf/cgroup.c b/kernel/bpf/cgroup.c
+index 03145d45e3d5..2ca643af9a54 100644
+--- a/kernel/bpf/cgroup.c
++++ b/kernel/bpf/cgroup.c
+@@ -430,10 +430,10 @@ static struct bpf_prog_list *find_attach_entry(struct list_head *progs,
+  * Exactly one of @prog or @link can be non-null.
+  * Must be called with cgroup_mutex held.
+  */
+-int __cgroup_bpf_attach(struct cgroup *cgrp,
+-			struct bpf_prog *prog, struct bpf_prog *replace_prog,
+-			struct bpf_cgroup_link *link,
+-			enum bpf_attach_type type, u32 flags)
++static int __cgroup_bpf_attach(struct cgroup *cgrp,
++			       struct bpf_prog *prog, struct bpf_prog *replace_prog,
++			       struct bpf_cgroup_link *link,
++			       enum bpf_attach_type type, u32 flags)
+ {
+ 	u32 saved_flags = (flags & (BPF_F_ALLOW_OVERRIDE | BPF_F_ALLOW_MULTI));
+ 	struct bpf_prog *old_prog = NULL;
+@@ -523,6 +523,20 @@ int __cgroup_bpf_attach(struct cgroup *cgrp,
+ 	return err;
  }
  
++static int cgroup_bpf_attach(struct cgroup *cgrp,
++			     struct bpf_prog *prog, struct bpf_prog *replace_prog,
++			     struct bpf_cgroup_link *link,
++			     enum bpf_attach_type type,
++			     u32 flags)
++{
++	int ret;
++
++	mutex_lock(&cgroup_mutex);
++	ret = __cgroup_bpf_attach(cgrp, prog, replace_prog, link, type, flags);
++	mutex_unlock(&cgroup_mutex);
++	return ret;
++}
++
+ /* Swap updated BPF program for given link in effective program arrays across
+  * all descendant cgroups. This function is guaranteed to succeed.
+  */
+@@ -672,14 +686,14 @@ static struct bpf_prog_list *find_detach_entry(struct list_head *progs,
+  *                         propagate the change to descendants
+  * @cgrp: The cgroup which descendants to traverse
+  * @prog: A program to detach or NULL
+- * @prog: A link to detach or NULL
++ * @link: A link to detach or NULL
+  * @type: Type of detach operation
+  *
+  * At most one of @prog or @link can be non-NULL.
+  * Must be called with cgroup_mutex held.
+  */
+-int __cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
+-			struct bpf_cgroup_link *link, enum bpf_attach_type type)
++static int __cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
++			       struct bpf_cgroup_link *link, enum bpf_attach_type type)
+ {
+ 	enum cgroup_bpf_attach_type atype;
+ 	struct bpf_prog *old_prog;
+@@ -730,9 +744,20 @@ int __cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
+ 	return err;
+ }
+ 
++static int cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
++			     enum bpf_attach_type type)
++{
++	int ret;
++
++	mutex_lock(&cgroup_mutex);
++	ret = __cgroup_bpf_detach(cgrp, prog, NULL, type);
++	mutex_unlock(&cgroup_mutex);
++	return ret;
++}
++
+ /* Must be called with cgroup_mutex held to avoid races. */
+-int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
+-		       union bpf_attr __user *uattr)
++static int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
++			      union bpf_attr __user *uattr)
+ {
+ 	__u32 __user *prog_ids = u64_to_user_ptr(attr->query.prog_ids);
+ 	enum bpf_attach_type type = attr->query.attach_type;
+@@ -789,6 +814,17 @@ int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
+ 	return ret;
+ }
+ 
++static int cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
++			    union bpf_attr __user *uattr)
++{
++	int ret;
++
++	mutex_lock(&cgroup_mutex);
++	ret = __cgroup_bpf_query(cgrp, attr, uattr);
++	mutex_unlock(&cgroup_mutex);
++	return ret;
++}
++
+ int cgroup_bpf_prog_attach(const union bpf_attr *attr,
+ 			   enum bpf_prog_type ptype, struct bpf_prog *prog)
+ {
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 570b0c97392a..ffc2f2b9b68f 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -6623,44 +6623,6 @@ void cgroup_sk_free(struct sock_cgroup_data *skcd)
+ 
+ #endif	/* CONFIG_SOCK_CGROUP_DATA */
+ 
+-#ifdef CONFIG_CGROUP_BPF
+-int cgroup_bpf_attach(struct cgroup *cgrp,
+-		      struct bpf_prog *prog, struct bpf_prog *replace_prog,
+-		      struct bpf_cgroup_link *link,
+-		      enum bpf_attach_type type,
+-		      u32 flags)
+-{
+-	int ret;
+-
+-	mutex_lock(&cgroup_mutex);
+-	ret = __cgroup_bpf_attach(cgrp, prog, replace_prog, link, type, flags);
+-	mutex_unlock(&cgroup_mutex);
+-	return ret;
+-}
+-
+-int cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
+-		      enum bpf_attach_type type)
+-{
+-	int ret;
+-
+-	mutex_lock(&cgroup_mutex);
+-	ret = __cgroup_bpf_detach(cgrp, prog, NULL, type);
+-	mutex_unlock(&cgroup_mutex);
+-	return ret;
+-}
+-
+-int cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
+-		     union bpf_attr __user *uattr)
+-{
+-	int ret;
+-
+-	mutex_lock(&cgroup_mutex);
+-	ret = __cgroup_bpf_query(cgrp, attr, uattr);
+-	mutex_unlock(&cgroup_mutex);
+-	return ret;
+-}
+-#endif /* CONFIG_CGROUP_BPF */
+-
+ #ifdef CONFIG_SYSFS
+ static ssize_t show_delegatable_files(struct cftype *files, char *buf,
+ 				      ssize_t size, const char *prefix)
 -- 
-2.30.2
+2.25.1
 
