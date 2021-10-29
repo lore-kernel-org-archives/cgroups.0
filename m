@@ -1,206 +1,61 @@
-From: He Fengqing <hefengqing@huawei.com>
-Subject: [PATCH] cgroup: bpf: Move wrapper for __cgroup_bpf_*() to kernel/bpf/cgroup.c
-Date: Fri, 29 Oct 2021 02:39:06 +0000
-Message-ID: <20211029023906.245294-1-hefengqing@huawei.com>
+From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCH memcg v3 3/3] memcg: prohibit unconditional exceeding the
+ limit of dying tasks
+Date: Fri, 29 Oct 2021 09:46:16 +0200
+Message-ID: <YXumyHT5GusoZOY8@kroah.com>
+References: <YXJ/63kIpTq8AOlD@dhcp22.suse.cz>
+ <cover.1634994605.git.vvs@virtuozzo.com>
+ <8f5cebbb-06da-4902-91f0-6566fc4b4203@virtuozzo.com>
+ <YXZ6qaMJBomVfV8O@dhcp22.suse.cz>
+ <20211027153608.9910f7db99d5ef574045370e@linux-foundation.org>
+ <ea14200f-ad2c-6901-25da-54900fe2ce14@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1635493578;
+        bh=CmRFDCkM+5+pmJyXLBO216K+Ezk6KWp7TPmW78qsJGA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Gp6Cc2HU1a8QNtbNxiSGoY3igMOXEd6afDTEJNnaMinOJK5AR9NA2fs2ga1qGoTD/
+         CDyxRzdSb3VpwHi4N+coZss6O1S0hj9Uld35ZI2dpq5sjLgXvX0W1AvkOePCe1k6Ot
+         fiEm76PEnRlwWhI8VvKz5OsWVts1V8Yd3s83maT4=
+Content-Disposition: inline
+In-Reply-To: <ea14200f-ad2c-6901-25da-54900fe2ce14-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org
-Cc: bpf@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org
+Content-Transfer-Encoding: 7bit
+To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Uladzislau Rezki <urezki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-In commit 324bda9e6c5a("bpf: multi program support for cgroup+bpf")
-cgroup_bpf_*() called from kernel/bpf/syscall.c, but now they are only
-used in kernel/bpf/cgroup.c, so move these function to
-kernel/bpf/cgroup.c, like cgroup_bpf_replace().
+On Thu, Oct 28, 2021 at 10:22:56AM +0300, Vasily Averin wrote:
+> On 28.10.2021 01:36, Andrew Morton wrote:
+> > On Mon, 25 Oct 2021 11:36:41 +0200 Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> > 
+> >> My view on stable backport is similar to the previous patch. If we want
+> >> to have it there then let's wait for some time to see whether there are
+> >> any fallouts as this patch depends on the PF_OOM change.
+> > 
+> > It's strange that [1/3] doesn't have cc:stable, but [2/3] and [3/3] do
+> > not.  What is the thinking here?
+> 
+> My fault, I missed it.
+> All 3 patches should be backported,
+> I did it already to stables kernels since 4.4 and I'm ready to submit it in demand.
+> 
+> > I expect we'd be OK with merging these into 5.16-rc1.  This still gives
+> > another couple of months in -rc to shake out any problems.  But I
+> > suspect the -stable maintainers will merge and release the patches
+> > before they are released in 5.16.
+> > 
+> > In which case an alternative would be not to mark these patches
+> > cc:stable and to somehow remember to ask the -stable maintainers to
+> > merge them after 5.16 has been on the streets for a suitable period.
+> > 
+> > Greg, thoughts?
+> 
+> If you wish I can remind Greg in a month or even after 5.17 release.
 
-Signed-off-by: He Fengqing <hefengqing@huawei.com>
----
- include/linux/bpf-cgroup.h | 20 --------------
- kernel/bpf/cgroup.c        | 54 +++++++++++++++++++++++++++++++-------
- kernel/cgroup/cgroup.c     | 38 ---------------------------
- 3 files changed, 45 insertions(+), 67 deletions(-)
+Please remind us then, otherwise I will not remember :)
 
-diff --git a/include/linux/bpf-cgroup.h b/include/linux/bpf-cgroup.h
-index 2746fd804216..9aad4e3ca29b 100644
---- a/include/linux/bpf-cgroup.h
-+++ b/include/linux/bpf-cgroup.h
-@@ -157,26 +157,6 @@ struct cgroup_bpf {
- int cgroup_bpf_inherit(struct cgroup *cgrp);
- void cgroup_bpf_offline(struct cgroup *cgrp);
- 
--int __cgroup_bpf_attach(struct cgroup *cgrp,
--			struct bpf_prog *prog, struct bpf_prog *replace_prog,
--			struct bpf_cgroup_link *link,
--			enum bpf_attach_type type, u32 flags);
--int __cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
--			struct bpf_cgroup_link *link,
--			enum bpf_attach_type type);
--int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
--		       union bpf_attr __user *uattr);
--
--/* Wrapper for __cgroup_bpf_*() protected by cgroup_mutex */
--int cgroup_bpf_attach(struct cgroup *cgrp,
--		      struct bpf_prog *prog, struct bpf_prog *replace_prog,
--		      struct bpf_cgroup_link *link, enum bpf_attach_type type,
--		      u32 flags);
--int cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
--		      enum bpf_attach_type type);
--int cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
--		     union bpf_attr __user *uattr);
--
- int __cgroup_bpf_run_filter_skb(struct sock *sk,
- 				struct sk_buff *skb,
- 				enum cgroup_bpf_attach_type atype);
-diff --git a/kernel/bpf/cgroup.c b/kernel/bpf/cgroup.c
-index 03145d45e3d5..2ca643af9a54 100644
---- a/kernel/bpf/cgroup.c
-+++ b/kernel/bpf/cgroup.c
-@@ -430,10 +430,10 @@ static struct bpf_prog_list *find_attach_entry(struct list_head *progs,
-  * Exactly one of @prog or @link can be non-null.
-  * Must be called with cgroup_mutex held.
-  */
--int __cgroup_bpf_attach(struct cgroup *cgrp,
--			struct bpf_prog *prog, struct bpf_prog *replace_prog,
--			struct bpf_cgroup_link *link,
--			enum bpf_attach_type type, u32 flags)
-+static int __cgroup_bpf_attach(struct cgroup *cgrp,
-+			       struct bpf_prog *prog, struct bpf_prog *replace_prog,
-+			       struct bpf_cgroup_link *link,
-+			       enum bpf_attach_type type, u32 flags)
- {
- 	u32 saved_flags = (flags & (BPF_F_ALLOW_OVERRIDE | BPF_F_ALLOW_MULTI));
- 	struct bpf_prog *old_prog = NULL;
-@@ -523,6 +523,20 @@ int __cgroup_bpf_attach(struct cgroup *cgrp,
- 	return err;
- }
- 
-+static int cgroup_bpf_attach(struct cgroup *cgrp,
-+			     struct bpf_prog *prog, struct bpf_prog *replace_prog,
-+			     struct bpf_cgroup_link *link,
-+			     enum bpf_attach_type type,
-+			     u32 flags)
-+{
-+	int ret;
-+
-+	mutex_lock(&cgroup_mutex);
-+	ret = __cgroup_bpf_attach(cgrp, prog, replace_prog, link, type, flags);
-+	mutex_unlock(&cgroup_mutex);
-+	return ret;
-+}
-+
- /* Swap updated BPF program for given link in effective program arrays across
-  * all descendant cgroups. This function is guaranteed to succeed.
-  */
-@@ -672,14 +686,14 @@ static struct bpf_prog_list *find_detach_entry(struct list_head *progs,
-  *                         propagate the change to descendants
-  * @cgrp: The cgroup which descendants to traverse
-  * @prog: A program to detach or NULL
-- * @prog: A link to detach or NULL
-+ * @link: A link to detach or NULL
-  * @type: Type of detach operation
-  *
-  * At most one of @prog or @link can be non-NULL.
-  * Must be called with cgroup_mutex held.
-  */
--int __cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
--			struct bpf_cgroup_link *link, enum bpf_attach_type type)
-+static int __cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
-+			       struct bpf_cgroup_link *link, enum bpf_attach_type type)
- {
- 	enum cgroup_bpf_attach_type atype;
- 	struct bpf_prog *old_prog;
-@@ -730,9 +744,20 @@ int __cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
- 	return err;
- }
- 
-+static int cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
-+			     enum bpf_attach_type type)
-+{
-+	int ret;
-+
-+	mutex_lock(&cgroup_mutex);
-+	ret = __cgroup_bpf_detach(cgrp, prog, NULL, type);
-+	mutex_unlock(&cgroup_mutex);
-+	return ret;
-+}
-+
- /* Must be called with cgroup_mutex held to avoid races. */
--int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
--		       union bpf_attr __user *uattr)
-+static int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
-+			      union bpf_attr __user *uattr)
- {
- 	__u32 __user *prog_ids = u64_to_user_ptr(attr->query.prog_ids);
- 	enum bpf_attach_type type = attr->query.attach_type;
-@@ -789,6 +814,17 @@ int __cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
- 	return ret;
- }
- 
-+static int cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
-+			    union bpf_attr __user *uattr)
-+{
-+	int ret;
-+
-+	mutex_lock(&cgroup_mutex);
-+	ret = __cgroup_bpf_query(cgrp, attr, uattr);
-+	mutex_unlock(&cgroup_mutex);
-+	return ret;
-+}
-+
- int cgroup_bpf_prog_attach(const union bpf_attr *attr,
- 			   enum bpf_prog_type ptype, struct bpf_prog *prog)
- {
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 570b0c97392a..ffc2f2b9b68f 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -6623,44 +6623,6 @@ void cgroup_sk_free(struct sock_cgroup_data *skcd)
- 
- #endif	/* CONFIG_SOCK_CGROUP_DATA */
- 
--#ifdef CONFIG_CGROUP_BPF
--int cgroup_bpf_attach(struct cgroup *cgrp,
--		      struct bpf_prog *prog, struct bpf_prog *replace_prog,
--		      struct bpf_cgroup_link *link,
--		      enum bpf_attach_type type,
--		      u32 flags)
--{
--	int ret;
--
--	mutex_lock(&cgroup_mutex);
--	ret = __cgroup_bpf_attach(cgrp, prog, replace_prog, link, type, flags);
--	mutex_unlock(&cgroup_mutex);
--	return ret;
--}
--
--int cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
--		      enum bpf_attach_type type)
--{
--	int ret;
--
--	mutex_lock(&cgroup_mutex);
--	ret = __cgroup_bpf_detach(cgrp, prog, NULL, type);
--	mutex_unlock(&cgroup_mutex);
--	return ret;
--}
--
--int cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
--		     union bpf_attr __user *uattr)
--{
--	int ret;
--
--	mutex_lock(&cgroup_mutex);
--	ret = __cgroup_bpf_query(cgrp, attr, uattr);
--	mutex_unlock(&cgroup_mutex);
--	return ret;
--}
--#endif /* CONFIG_CGROUP_BPF */
--
- #ifdef CONFIG_SYSFS
- static ssize_t show_delegatable_files(struct cftype *files, char *buf,
- 				      ssize_t size, const char *prefix)
--- 
-2.25.1
+thanks,
 
+greg k-h
