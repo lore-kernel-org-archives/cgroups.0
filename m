@@ -1,118 +1,43 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: Re: Unbounded priority inversion while assigning tasks into cgroups.
-Date: Fri, 29 Oct 2021 18:48:10 +0200
-Message-ID: <20211029164810.gfv6t2ml6oea3dd2@linutronix.de>
-References: <CAMJ=MEd9WuGA0MN+n0rGD6T+sgd=yciTmeEW9TjRjNXt+cF=qQ@mail.gmail.com>
- <20211027165800.md2gxbsku4avqjgt@linutronix.de>
- <CAMJ=MEfkQ9VaphaNS_qbWMOANo7P6h2Ln6iYg4JLWbWzxp85mA@mail.gmail.com>
- <20211028084654.bgtvnibvqnz2o5rh@linutronix.de>
- <CAMJ=MEez-+0mj2N0rz79eE5gJG2k99Yh+x8vdEG3YK1apiOuzg@mail.gmail.com>
+From: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup: Fix rootcg cpu.stat guest double counting
+Date: Fri, 29 Oct 2021 13:21:29 -0400
+Message-ID: <20211029172129.smeyk5adocjrwtlb@oracle.com>
+References: <20211028221528.2174284-1-schatzberg.dan@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-rt-users-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1635526092;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=FidfvpGxCpEED7Y8roiCwv6c14v5UAUT6Pgou9ogbrs=;
-        b=fYbGpxrOCut5U6uufJaSYtOeJJHB54X/Uoo74/kiY+ZRaKn1GukfYhrPZjsauVK+v9A9Ly
-        HUoVWF4nmbUQF0WVT+sHjIkpGSf6xfK9qlo2IpGlko/Hgcv1cktVO06GgByiU7DU7147qy
-        nOS0ky+89c9btDkRsRO9nwqIpPeMys9j3DpxD0ZSLvsYz79ewqfKnqrf3HQo8ctkfs/j5c
-        UaCJkRiCy3OLPRrwEf4wna6HyADGbv/KfFg/caqjTfpDSdnb5H0o4gdyO8yBWZHCoL8i/H
-        ssZIgRhJ+xSerFt9UkV6Oy/eHL0Fc/U5W5+9dOzHMdZV+KSAUM+B0RbT1mHzVQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1635526092;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=FidfvpGxCpEED7Y8roiCwv6c14v5UAUT6Pgou9ogbrs=;
-        b=w0rrlt39fq2XBzQN+BTx1h0qKyEVZk5XSWt/z/cR56I00Uyb3kKSBWUBITJZCsSMfX2a7e
-        spA4FX8OO4RqMpDg==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=corp-2021-07-09;
+ bh=2sWDVwzigqWs7t7Psm7fio//xf8iT/GtRo+3ZSvQHgI=;
+ b=Znme2SpqqAQwGf7LQlpr6mPwhCcPxkNPBdJHjTTA7iW9T9Nq7n3k0yEGiTUEJ4FmZ5rx
+ a9vjfrS17zcIw3vq0VZ+oKSB84xpR2tGVUbkqMnD5fdYEdcTdML8FPKUeFMYT73+vBpZ
+ UpB5qcBkIO5XrmtxRB16ZSZN9KjKZszCacLH+K32xGxYP3MVi91kMKZAXUw7ELDYa5Se
+ Wvd2nkYtg7zuulGx4wiF42V6IalI7CIUPHdblEn05n5dj8EMS26VgwN3oMwm+O5ctqDR
+ Wfn/17u+tu2ORzwrpDuQr/pVtLwPopPI8yj17zi9phryORncvAlDu4NBo71EBXelM6eY Ig== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=2sWDVwzigqWs7t7Psm7fio//xf8iT/GtRo+3ZSvQHgI=;
+ b=FtOLzYP6rzKZ5pM0O0yxkToDVvcTGN3tkIuxKxls6eKG4pnVPDlmHd8SwOxoo8/PYiMQwJnQcoru85UdGW+CQNgwULhFXy8OAia49QlF34OK2i+KNJXQLs4dQLURMWpkNTcPPkMFcNyyjuHLuGZMkhLfqrmAbLEnK9p5YJMjtHQ=
 Content-Disposition: inline
-In-Reply-To: <CAMJ=MEez-+0mj2N0rz79eE5gJG2k99Yh+x8vdEG3YK1apiOuzg@mail.gmail.com>
+In-Reply-To: <20211028221528.2174284-1-schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Ronny Meeus <ronny.meeus@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-rt-users@vger.kernel.org, cgroups@vger.kernel.org
+To: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Andrey Ryabinin <arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
 
-On 2021-10-29 11:42:25 [+0200], Ronny Meeus wrote:
-> Op do 28 okt. 2021 om 10:46 schreef Sebastian Andrzej Siewior
-> <bigeasy@linutronix.de>:
-> >
-> > On 2021-10-27 22:54:33 [+0200], Ronny Meeus wrote:
-> > > > From a looking at percpu_rw_semaphore implementation, no new readers are
-> > > > allowed as long as there is a writer pending. The writer has
-> > > > (unfortunately) to wait until all readers are out. But then I doubt that
-> > > > this takes up to two minutes for all existing readers to leave the
-> > > > critical section.
-> > > >
-> > >
-> > > The readers can be running at low priority while there can be other threads
-> > > with a medium priority will consume the complete cpu. So the low prio
-> > > readers are just waiting to be scheduled and by that also block the high
-> > > prio thread.
-> >
-> > Hmm. So you have say, 5 reads stuck in the RW semaphore while preempted
-> > be medium tasks and high-prio writer is then stuck on semaphore, waiting
-> > for the MED tasks to finish so the low-prio threads can leave the
-> > criticial section?
-> 
-> Correct. Note that 1 thread stuck in the read is already sufficient to
-> get into this.
-> Most of the heavy processing is done at medium priority and the
-> background tasks are running at the low priority.
-> Since the background tasks are implemented by scripts, a lot of
-> accesses to the read part are done at low prio.
+On Thu, Oct 28, 2021 at 03:15:27PM -0700, Dan Schatzberg wrote:
+> In account_guest_time in kernel/sched/cputime.c guest time is
+> attributed to both CPUTIME_NICE and CPUTIME_USER in addition to
+> CPUTIME_GUEST_NICE and CPUTIME_GUEST respectively. Therefore, adding
+> both to calculate usage results in double counting any guest time at
+> the rootcg.
 
-Yeah, one is enough. My guess would be that it is more visible on the
-small ones because on the bigger ones it is more likely that the thread
-gets migrated to another core.
+Yes, definitely a bug.  The same fix was posted a couple months ago as
+part of a series but never picked up:
 
-> > > Looking at v4.9.84, at least the RT implementation of rw_semaphore
-> > > > allows new readers if a writer is pending. So this could be culprit as
-> > > > you would have to wait until all reader are gone and the writer needs to
-> > > > grab the lock before another reader shows up. But then this shouldn't be
-> > > > the case for the generic implementation and new reader should wait until
-> > > > the writer got its chance.
-> > > >
-> > >
-> > > So what do you suggest for the v4.9 kernel as a solution? Move to the RT
-> > > version of the rw_semaphore and hope for the best?
-> >
-> > I don't think it will help. Based on what you wrote above it appears
-> > that the problem is that the readers are preempted and are not leaving
-> > the critical section soon enough.
-> >
-> > How many CPUs do you have? Maybe using a rtmutex here and allowing only
-> > one reader at a time isn't that bad in your case. With one CPU for
-> > instance, there isn't much space for multiple readers I guess.
-> >
-> 
-> The current system has 1 CPU with 2 cores but we have also devices
-> with 14 cores on which the impact will be bigger of course.
-> Note that with the rtmutex solution all accesses (read + write) will
-> be serialized.
+  https://x-lore.kernel.org/all/20210820094005.20596-3-arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org/
 
-So for the 1/2 core it should make no difference if you use an RTmutex
-instead. For the bigger ones it might not be optimal.
-
-> I wonder why other people do not see this issue since it is present in
-> all kernel versions.
-> And, especially in systems with strict deadlines, I consider this a
-> serious issue.
-
-My guess here is that most people don't use RT priorities and don't see
-this problem _or_ they have enough cores. Or they simply don't use that
-way.
-
-From PREEMPT_RT perspective, rwsem/rwlock used to be single-reader until
-late 3.x or early 4.x series (I don't remember exactly when it changed).
-Boosting multiple readers was tried once but didn't really work. 
-PREEMPT_RT has also this problem where multiple low-prio reader can
-block the high-prio writer but fortunately most critical rwsem users
-moved to RCU so it is not much of problem.
-
-> Ronny
- 
-Sebastian
+The series also touched cputime, so we might be waiting for scheduler
+folks?   +Ingo +Peter +Andrey
