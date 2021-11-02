@@ -1,188 +1,85 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 588e5d8766486e52ee332a4bb097b016a355b465
-Date: Tue, 02 Nov 2021 13:30:19 +0800
-Message-ID: <6180cceb.wbePYtd6CUEckGWg%lkp@intel.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup changes for v5.16-rc1
+Date: Tue, 2 Nov 2021 06:48:09 -1000
+Message-ID: <YYFryTJQxFok0jo/@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=Xhz9r7JZBOQDI5whNrjmgfij89zWmhOWkSDOjjnmQtU=;
+        b=LFq5SycnhAKDHq9ZyasKQkc8+vi8lqOCAUuILQ33aZtyJ1e00W9RjrwYzW3sja+mYk
+         5+lmaHTcJcMOCerhu4EIwjborGskve15iWDXO0KicLqjRXgrPY6cEH91q64qZMgZGFxy
+         83NRV1K6dz659Bzf43hOPPJvGnT3bMb44CiIyxCj0nVp00kXn7e4dV0Uy0d86tWWL7Uc
+         wD2AcpQMHRVzaeXEF7oCop5ZzXcbeAphTjQTb44rp0ixPRsWW4S9QobJPWfq3Q3SNO+m
+         XOiWQgWJ77XtntkkURIlAkL6y9Li3Yj953/27IS4g8QKBHMaW5fU2BqHXeeXL9ryyFV2
+         aEqg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 588e5d8766486e52ee332a4bb097b016a355b465  cgroup: bpf: Move wrapper for __cgroup_bpf_*() to kernel/bpf/cgroup.c
+Hello,
 
-elapsed time: 720m
+* The misc controller now reports allocation rejections through misc.events
+  instead of printking.
 
-configs tested: 155
-configs skipped: 3
+* cgroup_mutex usage is reduced to improve scalability of some operations.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+* vhost helper threads are now assigned to the right cgroup on cgroup2.
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                 randconfig-c001-20211101
-xtensa                    xip_kc705_defconfig
-sh                         microdev_defconfig
-arm                          pcm027_defconfig
-mips                            e55_defconfig
-s390                                defconfig
-i386                             allyesconfig
-arm                       aspeed_g5_defconfig
-sh                           se7712_defconfig
-arm                       netwinder_defconfig
-sh                  sh7785lcr_32bit_defconfig
-mips                   sb1250_swarm_defconfig
-powerpc                          allyesconfig
-powerpc                     powernv_defconfig
-arm                        shmobile_defconfig
-mips                            ar7_defconfig
-powerpc                   currituck_defconfig
-s390                       zfcpdump_defconfig
-arc                        nsim_700_defconfig
-powerpc                     sequoia_defconfig
-s390                             alldefconfig
-mips                           ip32_defconfig
-powerpc                 mpc837x_mds_defconfig
-m68k                        m5307c3_defconfig
-mips                           mtx1_defconfig
-mips                malta_qemu_32r6_defconfig
-h8300                       h8s-sim_defconfig
-powerpc                 mpc8540_ads_defconfig
-csky                                defconfig
-arm                       spear13xx_defconfig
-powerpc                    sam440ep_defconfig
-m68k                          atari_defconfig
-arm                            mmp2_defconfig
-mips                        jmr3927_defconfig
-arm                             ezx_defconfig
-arc                        vdk_hs38_defconfig
-powerpc                 mpc8272_ads_defconfig
-mips                           xway_defconfig
-sh                        apsh4ad0a_defconfig
-xtensa                  audio_kc705_defconfig
-m68k                             allmodconfig
-mips                           gcw0_defconfig
-arm                           corgi_defconfig
-sh                            shmin_defconfig
-arm                         s3c2410_defconfig
-powerpc                      tqm8xx_defconfig
-m68k                          hp300_defconfig
-parisc                generic-64bit_defconfig
-arm                  colibri_pxa270_defconfig
-xtensa                           alldefconfig
-s390                          debug_defconfig
-powerpc                 mpc834x_itx_defconfig
-powerpc                      acadia_defconfig
-arm                           h5000_defconfig
-arc                              alldefconfig
-sh                            hp6xx_defconfig
-m68k                            q40_defconfig
-sh                            titan_defconfig
-mips                       capcella_defconfig
-powerpc                     tqm8548_defconfig
-mips                     cu1830-neo_defconfig
-arm                            lart_defconfig
-sh                        edosk7760_defconfig
-arm                          pxa3xx_defconfig
-nds32                             allnoconfig
-mips                         bigsur_defconfig
-arm                             rpc_defconfig
-sh                           se7705_defconfig
-m68k                       m5475evb_defconfig
-powerpc                      cm5200_defconfig
-arm                        mvebu_v5_defconfig
-microblaze                      mmu_defconfig
-openrisc                         alldefconfig
-arm                         s3c6400_defconfig
-powerpc                     ep8248e_defconfig
-sh                            migor_defconfig
-arm                  randconfig-c002-20211101
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-i386                              debian-10.3
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64               randconfig-a012-20211101
-x86_64               randconfig-a015-20211101
-x86_64               randconfig-a016-20211101
-x86_64               randconfig-a013-20211101
-x86_64               randconfig-a011-20211101
-x86_64               randconfig-a014-20211101
-i386                 randconfig-a016-20211101
-i386                 randconfig-a014-20211101
-i386                 randconfig-a015-20211101
-i386                 randconfig-a013-20211101
-i386                 randconfig-a011-20211101
-i386                 randconfig-a012-20211101
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                           allyesconfig
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                          rhel-8.3-func
-x86_64                                  kexec
+* Bug fixes.
 
-clang tested configs:
-mips                 randconfig-c004-20211101
-arm                  randconfig-c002-20211101
-i386                 randconfig-c001-20211101
-s390                 randconfig-c005-20211101
-powerpc              randconfig-c003-20211101
-riscv                randconfig-c006-20211101
-x86_64               randconfig-c007-20211101
-x86_64               randconfig-a004-20211101
-x86_64               randconfig-a006-20211101
-x86_64               randconfig-a001-20211101
-x86_64               randconfig-a002-20211101
-x86_64               randconfig-a003-20211101
-x86_64               randconfig-a005-20211101
-i386                 randconfig-a005-20211101
-i386                 randconfig-a001-20211101
-i386                 randconfig-a003-20211101
-i386                 randconfig-a004-20211101
-i386                 randconfig-a006-20211101
-i386                 randconfig-a002-20211101
-hexagon              randconfig-r041-20211101
-hexagon              randconfig-r045-20211101
+Thanks.
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+The following changes since commit c0002d11d79900f8aa5c8375336434940d6afedf:
+
+  cgroupv2, docs: fix misinformation in "device controller" section (2021-09-13 08:08:46 -1000)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.16
+
+for you to fetch changes up to 588e5d8766486e52ee332a4bb097b016a355b465:
+
+  cgroup: bpf: Move wrapper for __cgroup_bpf_*() to kernel/bpf/cgroup.c (2021-11-01 06:49:00 -1000)
+
+----------------------------------------------------------------
+Chunguang Xu (3):
+      misc_cgroup: introduce misc.events to count failures
+      misc_cgroup: remove error log to avoid log flood
+      docs/cgroup: add entry for misc.events
+
+Dan Schatzberg (1):
+      cgroup: Fix rootcg cpu.stat guest double counting
+
+He Fengqing (1):
+      cgroup: bpf: Move wrapper for __cgroup_bpf_*() to kernel/bpf/cgroup.c
+
+Shakeel Butt (3):
+      cgroup: reduce dependency on cgroup_mutex
+      cgroup: remove cgroup_mutex from cgroupstats_build
+      cgroup: no need for cgroup_mutex for /proc/cgroups
+
+Vishal Verma (1):
+      cgroup: cgroup-v1: do not exclude cgrp_dfl_root
+
+Waiman Long (1):
+      cgroup: Make rebind_subsystems() disable v2 controllers all at once
+
+ Documentation/admin-guide/cgroup-v2.rst |  10 +++
+ include/linux/bpf-cgroup.h              |  20 ------
+ include/linux/misc_cgroup.h             |   6 +-
+ kernel/bpf/cgroup.c                     |  54 +++++++++++---
+ kernel/cgroup/cgroup-v1.c               |  17 ++---
+ kernel/cgroup/cgroup.c                  | 120 +++++++++++++++-----------------
+ kernel/cgroup/misc.c                    |  31 +++++++--
+ kernel/cgroup/rstat.c                   |   2 -
+ 8 files changed, 144 insertions(+), 116 deletions(-)
+
+-- 
+tejun
