@@ -1,42 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup: bpf: Move wrapper for __cgroup_bpf_*() to
- kernel/bpf/cgroup.c
-Date: Mon, 1 Nov 2021 06:50:23 -1000
-Message-ID: <YYAaz469VgwskHAq@slm.duckdns.org>
-References: <20211029023906.245294-1-hefengqing@huawei.com>
+From: Yu Kuai <yukuai3@huawei.com>
+Subject: [PATCH] blk-cgroup: fix missing put device in error path from blkg_conf_pref()
+Date: Tue, 2 Nov 2021 10:07:05 +0800
+Message-ID: <20211102020705.2321858-1-yukuai3@huawei.com>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=1lQPvAS9D0YptMbqbx4CESL2hczonDYMGmutZeU63Qs=;
-        b=Eu2gvCSrbOfvqQrgUNJpA4aXVLITzo0Rr5s2KHm4lkO4g+GGoqlRJzULM6xhsZVatz
-         /Ytrzcvgy0GStGdUWlFk2Dwqpmh5BeztdMWD3Min37Qb4AvvzT1Nx2GAqaFZYhfubv4u
-         GJzMqLVblF+R1GsAgMoj8pCPSE/Y+mVLDpNicX7YilRhxzm7+p5AzbjZvSge/1T8zUy/
-         /JCxUj30QQeKvTc+VanMVi7ZLme1zOy061siPLUb+FrOJWo2gbyUiuBZl6yUIJvXU8y5
-         +kPewJ1v5DxcEKS8vPINbiOyJb9+BrVNTs71KtbSmjb525fEdrSBOSkwAeQIDFtjx7gV
-         hzgQ==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <20211029023906.245294-1-hefengqing@huawei.com>
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-block-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: He Fengqing <hefengqing@huawei.com>
-Cc: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, bpf@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org
+To: tj@kernel.org, axboe@kernel.dk, yukuai3@huawei.com
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-On Fri, Oct 29, 2021 at 02:39:06AM +0000, He Fengqing wrote:
-> In commit 324bda9e6c5a("bpf: multi program support for cgroup+bpf")
-> cgroup_bpf_*() called from kernel/bpf/syscall.c, but now they are only
-> used in kernel/bpf/cgroup.c, so move these function to
-> kernel/bpf/cgroup.c, like cgroup_bpf_replace().
-> 
-> Signed-off-by: He Fengqing <hefengqing@huawei.com>
+If blk_queue_enter() failed due to queue is dying, the
+blkdev_put_no_open() is needed because blkcg_conf_open_bdev() succeeded.
 
-Applied to cgroup/for-5.16.
+Fixes: 0c9d338c8443 ("blk-cgroup: synchronize blkg creation against policy deactivation")
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ block/blk-cgroup.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-Thanks.
-
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 88b1fce90520..663aabfeba18 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -640,7 +640,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 	 */
+ 	ret = blk_queue_enter(q, 0);
+ 	if (ret)
+-		return ret;
++		goto fail;
+ 
+ 	rcu_read_lock();
+ 	spin_lock_irq(&q->queue_lock);
+@@ -676,13 +676,13 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 		new_blkg = blkg_alloc(pos, q, GFP_KERNEL);
+ 		if (unlikely(!new_blkg)) {
+ 			ret = -ENOMEM;
+-			goto fail;
++			goto fail_exit_queue;
+ 		}
+ 
+ 		if (radix_tree_preload(GFP_KERNEL)) {
+ 			blkg_free(new_blkg);
+ 			ret = -ENOMEM;
+-			goto fail;
++			goto fail_exit_queue;
+ 		}
+ 
+ 		rcu_read_lock();
+@@ -722,9 +722,10 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ fail_unlock:
+ 	spin_unlock_irq(&q->queue_lock);
+ 	rcu_read_unlock();
++fail_exit_queue:
++	blk_queue_exit(q);
+ fail:
+ 	blkdev_put_no_open(bdev);
+-	blk_queue_exit(q);
+ 	/*
+ 	 * If queue was bypassing, we should retry.  Do so after a
+ 	 * short msleep().  It isn't strictly necessary but queue
 -- 
-tejun
+2.31.1
+
