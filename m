@@ -1,36 +1,41 @@
-From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Subject: Re: [GIT PULL] cgroup changes for v5.16-rc1
-Date: Tue, 02 Nov 2021 22:57:39 +0000
-Message-ID: <163589385973.10018.9665498852958639394.pr-tracker-bot@kernel.org>
-References: <YYFryTJQxFok0jo/@slm.duckdns.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1635893859;
-        bh=Oaiylfv9vi5PDeBxdLnG+SiKoH+yFN3hSkpX5tBjHyU=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=BJt7L0VTKlKzPDm8AOEzVe0oDyU3Osfc9B3yDDUQvhaKP7KPgcfzT8Yta+w0ifnPP
-         p8+l28TKgNakoDgH42ihFWN2OeRJQ6bMcABbb62yMg+WzNYSX+1cT1N5aP0vqCmhQt
-         EmTvzZy4vivo71SNyW0P0GTECGujTmjJ/RWYLLp0K9CS9wPVSpOmIQED68Rj49vIGV
-         kxEjpa8G+0ZSUvKtalm4sTWEk7z1xmHhVCUAAgmKMiRzn1daodiS/bNoDIqZy/ZRl+
-         SsD1ZXhX99CBOBQ7cpHeLwrEEI6kcOyrOK+XoW4vfsQS/lpJrwJ/qNvgmPNSHfYu5v
-         8NEW0C1Z2dxNg==
-In-Reply-To: <YYFryTJQxFok0jo/@slm.duckdns.org>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Subject: [PATCH] cgroup: rstat: Mark benign data race to silence KCSAN
+Date: Wed,  3 Nov 2021 17:58:45 +0100
+Message-ID: <20211103165845.38226-1-mkoutny@suse.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1635958795; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=CZTso4db4Dar0whtzqs3akzB0bY3rGVZ6G9gzNMkSvI=;
+        b=m+8PyeoG2r9EvepaoRjSnJhUauQo7s69RvD++FEIn8UMwIML+is4JVtNWHsifUCGI4EOAp
+        EZK6n+P42yGr8EYHTRj3zKa6U16OmB6na3SLHMU4VAD69/2ptgtGqqG9d0n39liyYw68S0
+        XMxf3jwmqkMCTZZFj4aNWh7KVmKR4j8=
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: cgroups@vger.kernel.org
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, Hao Sun <sunhao.th@gmail.com>, linux-kernel@vger.kernel.org
 
-The pull request you sent on Tue, 2 Nov 2021 06:48:09 -1000:
-
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.16
-
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/a85373fe446adb37cab7b2702f054af1b275dc13
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+VGhlcmUgaXMgYSByYWNlIGJldHdlZW4gdXBkYXRlcnMgYW5kIGZsdXNoZXJzIChmbHVzaCBjYW4g
+cG9zc2libHkgbWlzcwp0aGUgbGF0ZXN0IHVwZGF0ZShzKSkuIFRoaXMgaXMgZXhwZWN0ZWQgYXMg
+ZXhwbGFpbmVkIGluCmNncm91cF9yc3RhdF91cGRhdGVkKCkgY29tbWVudCwgYWRkIGFsc28gbWFj
+aGluZSByZWFkYWJsZSBhbm5vdGF0aW9uIHNvCnRoYXQgS0NTQU4gcmVzdWx0cyBhcmVuJ3Qgbm9p
+c3kuCgpSZXBvcnRlZC1ieTogSGFvIFN1biA8c3VuaGFvLnRoQGdtYWlsLmNvbT4KTGluazogaHR0
+cHM6Ly9sb3JlLmtlcm5lbC5vcmcvci9DQUNrQmpzYlBWZGt1Yj1lLUUtcDFXQk9MeFM1MTVpdGgt
+NTNTRmRtRkhXVl9RTW80MHdAbWFpbC5nbWFpbC5jb20KU3VnZ2VzdGVkLWJ5OiBIYW8gU3VuIDxz
+dW5oYW8udGhAZ21haWwuY29tPgoKU2lnbmVkLW9mZi1ieTogTWljaGFsIEtvdXRuw70gPG1rb3V0
+bnlAc3VzZS5jb20+Ci0tLQoga2VybmVsL2Nncm91cC9yc3RhdC5jIHwgMiArLQogMSBmaWxlIGNo
+YW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0aW9uKC0pCgpIYW8gd2FzIHNpbGVudCBpbiB0
+aGUgcmVwb3J0aW5nIG1haWwgdGhyZWFkLCBzbyBJJ20gc2VuZGluZyB0aGUKc3VnZ2VzdGVkIGFu
+bm90YXRpbmcgcGF0Y2guCgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9yc3RhdC5jIGIva2Vy
+bmVsL2Nncm91cC9yc3RhdC5jCmluZGV4IDE0ODY3NjhmMjMxOC4uMWFiZTc0MTE0NTI3IDEwMDY0
+NAotLS0gYS9rZXJuZWwvY2dyb3VwL3JzdGF0LmMKKysrIGIva2VybmVsL2Nncm91cC9yc3RhdC5j
+CkBAIC0zNSw3ICszNSw3IEBAIHZvaWQgY2dyb3VwX3JzdGF0X3VwZGF0ZWQoc3RydWN0IGNncm91
+cCAqY2dycCwgaW50IGNwdSkKIAkgKiBpbnN0ZWFkIG9mIE5VTEwsIHdlIGNhbiB0ZWxsIHdoZXRo
+ZXIgQGNncnAgaXMgb24gdGhlIGxpc3QgYnkKIAkgKiB0ZXN0aW5nIHRoZSBuZXh0IHBvaW50ZXIg
+Zm9yIE5VTEwuCiAJICovCi0JaWYgKGNncm91cF9yc3RhdF9jcHUoY2dycCwgY3B1KS0+dXBkYXRl
+ZF9uZXh0KQorCWlmIChkYXRhX3JhY2UoY2dyb3VwX3JzdGF0X2NwdShjZ3JwLCBjcHUpLT51cGRh
+dGVkX25leHQpKQogCQlyZXR1cm47CiAKIAlyYXdfc3Bpbl9sb2NrX2lycXNhdmUoY3B1X2xvY2ss
+IGZsYWdzKTsKLS0gCjIuMzMuMQoK
