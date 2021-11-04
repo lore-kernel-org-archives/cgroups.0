@@ -1,40 +1,65 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH] cgroup: rstat: Mark benign data race to silence KCSAN
-Date: Wed, 3 Nov 2021 10:39:04 -0700
-Message-ID: <CALvZod5yLyuagfmG4LpAkNihMhisioYXnruKL7GA3owOTSvy-g@mail.gmail.com>
-References: <20211103165845.38226-1-mkoutny@suse.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH v2 1/2] memcg: flush stats only if updated
+Date: Thu, 4 Nov 2021 14:27:51 -0700
+Message-ID: <20211104142751.5ab290d5cf4be1749c9c87ed@linux-foundation.org>
+References: <20211013180130.GB22036@blackbody.suse.cz>
+        <20211014163146.2177266-1-shakeelb@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=8w2VytewPeRX4QkQuUg/BDVtpcxVWCV69c3Z6Wv2sj4=;
-        b=kWIx5CS8nvY10TsruGTm4C3fKrM9wXsuvooi2CRs+RYshqzqTzNF0+zH+R36YM1KlG
-         SXfOVbgb6TD5u3JxH7olKllrHzG6It7/DWNDjtiH6i7IGeC8VO26drKULHHoTboLtZqr
-         qt6acogm5Cw/YIO1D0fm+BHOtNKGbrIkhMajJNiNOM0CHv3OUXeA/JAyXansys5U55At
-         D5CyNObB1Mxv4G39O+PuDZVtGKecvzxA0M5Hd3/Weo/TEztQZP5T57VuPaX/aGBBGdHw
-         VMOGod5Y4HRwZSVvrWpcFL9AePxL6Vmq4JCuYYm2vgg9x9JX2Ecxpqz7znCnzZDjLfYT
-         QOEw==
-In-Reply-To: <20211103165845.38226-1-mkoutny@suse.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1636061274;
+        bh=i9bMCMWDq8qHtNLlg+d8d+bhz1QaRU5Lfr6G49bzhRs=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=W49zmmuOtuvil1F/FB/CNc96Rs+frDTFSY/kBa0OMbA6zracevDH8JNrTJpvcMOLJ
+         zvojXYCv8MRxejfqR2v9CDScI5Y2DFrHbUs1yDrF90ozZMDEr0IIqWVxkB4rapy9Xg
+         GY7j0KWCbsCGMfp/9cLEdNiwLY4e+eYMvtWFt274=
+In-Reply-To: <20211014163146.2177266-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, Hao Sun <sunhao.th@gmail.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: mkoutny-IBi9RG/b67k@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On Wed, Nov 3, 2021 at 9:59 AM Michal Koutn=C3=BD <mkoutny@suse.com> wrote:
->
-> There is a race between updaters and flushers (flush can possibly miss
-> the latest update(s)). This is expected as explained in
-> cgroup_rstat_updated() comment, add also machine readable annotation so
-> that KCSAN results aren't noisy.
->
-> Reported-by: Hao Sun <sunhao.th@gmail.com>
-> Link: https://lore.kernel.org/r/CACkBjsbPVdkub=3De-E-p1WBOLxS515ith-53SFd=
-mFHWV_QMo40w@mail.gmail.com
-> Suggested-by: Hao Sun <sunhao.th@gmail.com>
->
-> Signed-off-by: Michal Koutn=C3=BD <mkoutny@suse.com>
+On Thu, 14 Oct 2021 09:31:46 -0700 Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 
-Reviewed-by: Shakeel Butt <shakeelb@google.com>
+> Hi Michal,
+>=20
+> On Wed, Oct 13, 2021 at 11:01 AM Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org> wrote:
+> >
+> > On Fri, Oct 01, 2021 at 12:00:39PM -0700, Shakeel Butt <shakeelb@google=
+.com> wrote:
+> > > In this patch we kept the stats update codepath very minimal and let =
+the
+> > > stats reader side to flush the stats only when the updates are over a
+> > > specific threshold. =A0For now the threshold is (nr_cpus * CHARGE_BAT=
+CH).
+> >
+> > BTW, a noob question -- are the updates always single page sized?
+> >
+> > This is motivated by apples vs oranges comparison since the
+> > =A0 =A0 =A0 =A0 nr_cpus * MEMCG_CHARGE_BATCH
+> > suggests what could the expected error be in pages (bytes). But it's mo=
+stly
+> > wrong since: a) uncertain single-page updates, b) various counter
+> > updates summed together. I wonder whether the formula can serve to
+> > provide at least some (upper) estimate.
+> >
+>=20
+> Thanks for your review. This forces me to think more on this because each
+> update does not necessarily be a single page sized update e.g. adding a h=
+ugepage
+> to an LRU.
+>=20
+> Though I think the error is time bounded by 2 seconds but in those 2 seco=
+nds
+> mathematically the error can be large.
+
+Sounds significant?
+
+> What do you think of the following
+> change? It will bound the error better within the 2 seconds window.
+
+This didn't seem to go anywhere.  I'll send "memcg: flush stats only if
+updated" Linuswards, but please remember to resurrect this idea soonish
+(this month?) if you think such a change is desirable.
+
