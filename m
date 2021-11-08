@@ -1,120 +1,252 @@
-From: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v1 3/5] mm/oom: handle remote ooms
-Date: Mon,  8 Nov 2021 13:19:57 -0800
-Message-ID: <20211108211959.1750915-4-almasrymina@google.com>
+From: Mina Almasry <almasrymina@google.com>
+Subject: [PATCH v1 5/5] mm, shmem, selftests: add tmpfs memcg= mount option tests
+Date: Mon,  8 Nov 2021 13:19:59 -0800
+Message-ID: <20211108211959.1750915-6-almasrymina@google.com>
 References: <20211108211959.1750915-1-almasrymina@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:cc;
-        bh=HuOsUesI41VMxHbd9WL9Fs5X3h8wZbAlymoJuWa+M0o=;
-        b=mgCbALj0RzI1y7dYKpXbyaiAMLfsKBudFfa7Ub2nVulXL0OgGprL2nvZQ5jgnYWFQk
-         FyRwZRuXkDXDZQg/EmG5RPSKJ0THWJP0Gn8tavb7JhK0Lx6F7Dj9+4l1egra+m7YtrPy
-         lpmGx4XlaWZ9qtVHp2GizypVKABYErQ15IN9nQhWjo3/L/uwJ8MJb1L7MoiMNoVeyH0V
-         iwZn7AfMAJUXEPjwLeaNB9ZvVpm0reoL4Ua4Yl6E+SYJvPNIlcuk4x63koSryTbpjh2C
-         Dfoc/LjYIFQeWJUEHu9QP2jJta84c10T9HT3Jpk5hQhWEHbsuURruitDfys71o4MWJGi
-         BxHw==
-In-Reply-To: <20211108211959.1750915-1-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        bh=LgzEEqLYmw5ziRk+Zpmuo/4f8TX/yoKSNyIDF3U5Tf0=;
+        b=dkS19bQQYgTX6/T8jpDaR8pAVWMYF9eTHs7ItoEw3LmZ6NEboTY5qgaJunrQFd4nxd
+         hmIH43JH05TYBkiNZHmt7mz6SQpIc2T1RebaDAq+1gqUPbjJJwR8AV3q+lwvAj2efYGP
+         Ec7gzZ2pGVc+bS/HMhHLxxkVEiilmFOfyUWuktV2i91mDTDQ+rvUrdoh03H2cpyPTqYA
+         qLcppI1NNSqtON/IG5KuPPu/mL47x7Vh8EGcgUbF902dOTymSW8R3F8xglbi2XWS1Y8N
+         ImS/vJb3SmqXzR0z2tm19uedWyIS8L2xDAAIxDIbtsYANfcHr9OtX5Ab8TBfp7zN+qrN
+         GQTg==
+In-Reply-To: <20211108211959.1750915-1-almasrymina@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: 
-Cc: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, riel-ebMLmSuQjDVBDgjK7y7TUQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Mina Almasry <almasrymina@google.com>, Michal Hocko <mhocko@suse.com>, Theodore Ts'o <tytso@mit.edu>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Roman Gushchin <songmuchun@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, riel@surriel.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org
 
-On remote ooms (OOMs due to remote charging), the oom-killer will attempt
-to find a task to kill in the memcg under oom, if the oom-killer
-is unable to find one, the oom-killer should simply return ENOMEM to the
-allocating process.
+Signed-off-by: Mina Almasry <almasrymina@google.com>
 
-If we're in pagefault path and we're unable to return ENOMEM to the
-allocating process, we instead kill the allocating process.
-
-Signed-off-by: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>
-Cc: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Roman Gushchin <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: riel-ebMLmSuQjDVBDgjK7y7TUQ@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: Theodore Ts'o <tytso@mit.edu>
+Cc: Greg Thelen <gthelen@google.com>
+Cc: Shakeel Butt <shakeelb@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Roman Gushchin <songmuchun@bytedance.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Muchun Song <songmuchun@bytedance.com>
+Cc: riel@surriel.com
+Cc: linux-mm@kvack.org
+Cc: linux-fsdevel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
 
 ---
- mm/memcontrol.c | 21 +++++++++++++++++++++
- mm/oom_kill.c   | 21 +++++++++++++++++++++
- 2 files changed, 42 insertions(+)
+ tools/testing/selftests/vm/.gitignore     |   1 +
+ tools/testing/selftests/vm/mmap_write.c   | 105 ++++++++++++++++++++++
+ tools/testing/selftests/vm/tmpfs-memcg.sh |  70 +++++++++++++++
+ 3 files changed, 176 insertions(+)
+ create mode 100644 tools/testing/selftests/vm/mmap_write.c
+ create mode 100755 tools/testing/selftests/vm/tmpfs-memcg.sh
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2e4c20d09f959..fc9c6280266b6 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2664,6 +2664,27 @@ int mem_cgroup_get_name_from_sb(struct super_block *sb, char *buf, size_t len)
- 	return ret < 0 ? ret : 0;
- }
-
+diff --git a/tools/testing/selftests/vm/.gitignore b/tools/testing/selftests/vm/.gitignore
+index 2e7e86e852828..cb229974c5f15 100644
+--- a/tools/testing/selftests/vm/.gitignore
++++ b/tools/testing/selftests/vm/.gitignore
+@@ -19,6 +19,7 @@ madv_populate
+ userfaultfd
+ mlock-intersect-test
+ mlock-random-test
++mmap_write
+ virtual_address_range
+ gup_test
+ va_128TBswitch
+diff --git a/tools/testing/selftests/vm/mmap_write.c b/tools/testing/selftests/vm/mmap_write.c
+new file mode 100644
+index 0000000000000..3afeaccea9f44
+--- /dev/null
++++ b/tools/testing/selftests/vm/mmap_write.c
+@@ -0,0 +1,105 @@
++// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Returns true if current's mm is a descendant of the memcg_under_oom (or
-+ * equal to it). False otherwise. This is used by the oom-killer to detect
-+ * ooms due to remote charging.
++ * This program faults memory in tmpfs
 + */
-+bool is_remote_oom(struct mem_cgroup *memcg_under_oom)
++
++#include <err.h>
++#include <errno.h>
++#include <signal.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unistd.h>
++#include <fcntl.h>
++#include <sys/types.h>
++#include <sys/shm.h>
++#include <sys/stat.h>
++#include <sys/mman.h>
++
++/* Global definitions. */
++
++/* Global variables. */
++static const char *self;
++static char *shmaddr;
++static int shmid;
++
++/*
++ * Show usage and exit.
++ */
++static void exit_usage(void)
 +{
-+	struct mem_cgroup *current_memcg;
-+	bool is_remote_oom;
-+
-+	if (!memcg_under_oom)
-+		return false;
-+
-+	current_memcg = get_mem_cgroup_from_mm(current->mm);
-+	is_remote_oom =
-+		!mem_cgroup_is_descendant(current_memcg, memcg_under_oom);
-+	css_put(&current_memcg->css);
-+
-+	return is_remote_oom;
++	printf("Usage: %s -p <path to tmpfs file> -s <size to map>\n", self);
++	exit(EXIT_FAILURE);
 +}
 +
- /*
-  * Set or clear (if @memcg is NULL) charge association from file system to
-  * memcg.  If @memcg != NULL, then a css reference must be held by the caller to
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-index 0a7e16b16b8c3..556329dee273f 100644
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -1106,6 +1106,27 @@ bool out_of_memory(struct oom_control *oc)
- 	}
-
- 	select_bad_process(oc);
++int main(int argc, char **argv)
++{
++	int fd = 0;
++	int key = 0;
++	int *ptr = NULL;
++	int c = 0;
++	int size = 0;
++	char path[256] = "";
++	int want_sleep = 0, private = 0;
++	int populate = 0;
++	int write = 0;
++	int reserve = 1;
 +
-+	/*
-+	 * For remote ooms in userfaults, we have no choice but to kill the
-+	 * allocating process.
-+	 */
-+	if (!oc->chosen && is_remote_oom(oc->memcg) && current->in_user_fault &&
-+	    !oom_unkillable_task(current)) {
-+		get_task_struct(current);
-+		oc->chosen = current;
-+		oom_kill_process(
-+			oc, "Out of memory (Killing remote allocating task)");
-+		return true;
++	/* Parse command-line arguments. */
++	setvbuf(stdout, NULL, _IONBF, 0);
++	self = argv[0];
++
++	while ((c = getopt(argc, argv, ":s:p:")) != -1) {
++		switch (c) {
++		case 's':
++			size = atoi(optarg);
++			break;
++		case 'p':
++			strncpy(path, optarg, sizeof(path));
++			break;
++		default:
++			errno = EINVAL;
++			perror("Invalid arg");
++			exit_usage();
++		}
 +	}
 +
-+	/*
-+	 * For remote ooms in non-userfaults, simply return ENOMEM to the
-+	 * caller.
-+	 */
-+	if (!oc->chosen && is_remote_oom(oc->memcg))
-+		return false;
++	printf("%s\n", path);
++	if (strncmp(path, "", sizeof(path)) != 0) {
++		printf("Writing to this path: %s\n", path);
++	} else {
++		errno = EINVAL;
++		perror("path not found");
++		exit_usage();
++	}
 +
- 	/* Found nothing?!?! */
- 	if (!oc->chosen) {
- 		dump_header(oc, NULL);
++	if (size != 0) {
++		printf("Writing this size: %d\n", size);
++	} else {
++		errno = EINVAL;
++		perror("size not found");
++		exit_usage();
++	}
++
++	printf("Not writing to memory.\n");
++	printf("Allocating using HUGETLBFS.\n");
++	fd = open(path, O_CREAT | O_RDWR, 0777);
++	if (fd == -1)
++		err(1, "Failed to open file.");
++
++	if (ftruncate(fd, size))
++		err(1, "failed to ftruncate %s", path);
++
++	ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
++	if (ptr == MAP_FAILED) {
++		close(fd);
++		err(1, "Error mapping the file");
++	}
++
++	printf("Writing to memory.\n");
++	memset(ptr, 1, size);
++	printf("Done writing to memory.\n");
++	close(fd);
++
++	return 0;
++}
+diff --git a/tools/testing/selftests/vm/tmpfs-memcg.sh b/tools/testing/selftests/vm/tmpfs-memcg.sh
+new file mode 100755
+index 0000000000000..fe7ffe769f903
+--- /dev/null
++++ b/tools/testing/selftests/vm/tmpfs-memcg.sh
+@@ -0,0 +1,70 @@
++#!/bin/sh
++# SPDX-License-Identifier: GPL-2.0
++
++CGROUP_PATH=/dev/cgroup/memory/tmpfs-memcg-test
++
++function cleanup() {
++  rm -rf /mnt/tmpfs/*
++  umount /mnt/tmpfs
++  rm -rf /mnt/tmpfs
++
++  rmdir $CGROUP_PATH
++
++  echo CLEANUP DONE
++}
++
++function setup() {
++  mkdir -p $CGROUP_PATH
++  echo $((10 * 1024 * 1024)) > $CGROUP_PATH/memory.limit_in_bytes
++  echo 0 > $CGROUP_PATH/cpuset.cpus
++  echo 0 > $CGROUP_PATH/cpuset.mems
++
++  mkdir -p /mnt/tmpfs
++
++  echo SETUP DONE
++}
++
++function expect_equal() {
++  local expected="$1"
++  local actual="$2"
++  local error="$3"
++
++  if [[ "$expected" != "$actual" ]]; then
++    echo "expected ($expected) != actual ($actual): $3" >&2
++    cleanup
++    exit 1
++  fi
++}
++
++cleanup
++setup
++
++mount -t tmpfs -o memcg=$CGROUP_PATH tmpfs /mnt/tmpfs
++
++TARGET_MEMCG_USAGE=$(cat $CGROUP_PATH/memory.usage_in_bytes)
++expect_equal 0 "$TARGET_MEMCG_USAGE" "Before echo, memcg usage should be 0"
++
++# Echo to allocate a page in the tmpfs
++echo hello > /mnt/tmpfs/test
++TARGET_MEMCG_USAGE=$(cat $CGROUP_PATH/memory.usage_in_bytes)
++expect_equal 131072 "$TARGET_MEMCG_USAGE" "After echo, memcg usage should be 131072"
++echo "Echo test succeeded"
++
++# OOM the remote container on pagefault.
++echo
++echo
++echo "OOMing the remote container using pagefault."
++echo "This will take a long time because the kernel goes through reclaim retries,"
++echo "but should eventually be OOM-killed by 'Out of memory (Killing remote allocating task)'"
++tools/testing/selftests/vm/mmap_write -p /mnt/tmpfs/test -s $((11 * 1024 * 1024))
++
++# OOM the remote container on non pagefault.
++echo
++echo
++echo "OOMing the remote container using cat (non-pagefault)"
++echo "This will take a long time because the kernel goes through reclaim retries,"
++echo "but should eventually the cat command should receive an ENOMEM"
++cat /dev/random > /mnt/tmpfs/random
++
++cleanup
++echo SUCCESS
+--
+2.34.0.rc0.344.g81b53c2807-goog
