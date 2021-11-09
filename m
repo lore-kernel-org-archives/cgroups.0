@@ -1,137 +1,64 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v1 3/5] mm/oom: handle remote ooms
-Date: Mon, 8 Nov 2021 17:19:07 -0800
-Message-ID: <YYnMixe3zW4UEau0@carbon.dhcp.thefacebook.com>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v1 1/5] mm/shmem: support deterministic charging of tmpfs
+Date: Tue, 9 Nov 2021 12:18:37 +1100
+Message-ID: <20211109011837.GF418105@dread.disaster.area>
 References: <20211108211959.1750915-1-almasrymina@google.com>
- <20211108211959.1750915-4-almasrymina@google.com>
+ <20211108211959.1750915-2-almasrymina@google.com>
+ <20211108221047.GE418105@dread.disaster.area>
+ <YYm1v25dLZL99qKK@casper.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=kEe1gG5PhKBw5O/hvKp4ft7lMouVA+oZMvUv97iPlXA=;
- b=KQFDc0UxBOELTRJuxCzhLho6wmuY+1PvSSFv/XKtSSs+pa6eXmbyewLYX0h/mQ6Neyx2
- G4pRTuS7Sk7FLRoJrdIzyU2++bNHxHZkg8fscUrYXLnBT6KxoyfeDiHRprcM7yQvrY1s
- E7c9qBnfgavIeEKF3HrnfbedUo+rnLTmlsw= 
 Content-Disposition: inline
-In-Reply-To: <20211108211959.1750915-4-almasrymina@google.com>
+In-Reply-To: <YYm1v25dLZL99qKK@casper.infradead.org>
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mina Almasry <almasrymina@google.com>
-Cc: Michal Hocko <mhocko@suse.com>, Theodore Ts'o <tytso@mit.edu>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Roman Gushchin <songmuchun@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, riel@surriel.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Mina Almasry <almasrymina@google.com>, Michal Hocko <mhocko@suse.com>, Theodore Ts'o <tytso@mit.edu>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Roman Gushchin <songmuchun@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, riel@surriel.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Mon, Nov 08, 2021 at 01:19:57PM -0800, Mina Almasry wrote:
-> On remote ooms (OOMs due to remote charging), the oom-killer will attempt
-> to find a task to kill in the memcg under oom, if the oom-killer
-> is unable to find one, the oom-killer should simply return ENOMEM to the
-> allocating process.
+On Mon, Nov 08, 2021 at 11:41:51PM +0000, Matthew Wilcox wrote:
+> On Tue, Nov 09, 2021 at 09:10:47AM +1100, Dave Chinner wrote:
+> > > +	rcu_read_lock();
+> > > +	memcg = rcu_dereference(mapping->host->i_sb->s_memcg_to_charge);
+> > 
+> > Anything doing pointer chasing to obtain static, unchanging
+> > superblock state is poorly implemented. The s_memcg_to_charge value never
+> > changes, so this code should associate the memcg to charge directly
+> > on the mapping when the mapping is first initialised by the
+> > filesystem. We already do this with things like attaching address
+> > space ops and mapping specific gfp masks (i.e
+> > mapping_set_gfp_mask()), so this association should be set up that
+> > way, too (e.g. mapping_set_memcg_to_charge()).
 > 
-> If we're in pagefault path and we're unable to return ENOMEM to the
-> allocating process, we instead kill the allocating process.
-> 
-> Signed-off-by: Mina Almasry <almasrymina@google.com>
-> 
-> Cc: Michal Hocko <mhocko@suse.com>
-> Cc: Theodore Ts'o <tytso@mit.edu>
-> Cc: Greg Thelen <gthelen@google.com>
-> Cc: Shakeel Butt <shakeelb@google.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Hugh Dickins <hughd@google.com>
-> Cc: Roman Gushchin <songmuchun@bytedance.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Hugh Dickins <hughd@google.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: Muchun Song <songmuchun@bytedance.com>
-> Cc: riel@surriel.com
-> Cc: linux-mm@kvack.org
-> Cc: linux-fsdevel@vger.kernel.org
-> Cc: cgroups@vger.kernel.org
-> 
-> ---
->  mm/memcontrol.c | 21 +++++++++++++++++++++
->  mm/oom_kill.c   | 21 +++++++++++++++++++++
->  2 files changed, 42 insertions(+)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 2e4c20d09f959..fc9c6280266b6 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2664,6 +2664,27 @@ int mem_cgroup_get_name_from_sb(struct super_block *sb, char *buf, size_t len)
->  	return ret < 0 ? ret : 0;
->  }
-> 
-> +/*
-> + * Returns true if current's mm is a descendant of the memcg_under_oom (or
-> + * equal to it). False otherwise. This is used by the oom-killer to detect
-> + * ooms due to remote charging.
-> + */
-> +bool is_remote_oom(struct mem_cgroup *memcg_under_oom)
-> +{
-> +	struct mem_cgroup *current_memcg;
-> +	bool is_remote_oom;
-> +
-> +	if (!memcg_under_oom)
-> +		return false;
-> +
-> +	current_memcg = get_mem_cgroup_from_mm(current->mm);
-> +	is_remote_oom =
-> +		!mem_cgroup_is_descendant(current_memcg, memcg_under_oom);
-> +	css_put(&current_memcg->css);
-> +
-> +	return is_remote_oom;
+> I'm not a fan of enlarging struct address_space with another pointer
+> unless it's going to be used by all/most filesystems.  If this is
+> destined to be a shmem-only feature, then it should be in the
+> shmem_inode instead of the mapping.
 
-You'll be probably better with mem_cgroup_from_task(current) within an rcu read
-section?
+Neither am I, but I'm also not a fan of the filemap code still
+having to drill through the mapping to the host inode just to check
+if it needs to do special stuff for shmem inodes on every call that
+adds a page to the page cache. This is just as messy and intrusive
+and the memcg code really has no business digging about in the
+filesystem specific details of the inode behind the mapping.
 
-> +}
-> +
->  /*
->   * Set or clear (if @memcg is NULL) charge association from file system to
->   * memcg.  If @memcg != NULL, then a css reference must be held by the caller to
-> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-> index 0a7e16b16b8c3..556329dee273f 100644
-> --- a/mm/oom_kill.c
-> +++ b/mm/oom_kill.c
-> @@ -1106,6 +1106,27 @@ bool out_of_memory(struct oom_control *oc)
->  	}
-> 
->  	select_bad_process(oc);
-> +
-> +	/*
-> +	 * For remote ooms in userfaults, we have no choice but to kill the
-> +	 * allocating process.
-> +	 */
-> +	if (!oc->chosen && is_remote_oom(oc->memcg) && current->in_user_fault &&
-> +	    !oom_unkillable_task(current)) {
-> +		get_task_struct(current);
-> +		oc->chosen = current;
-> +		oom_kill_process(
-> +			oc, "Out of memory (Killing remote allocating task)");
-> +		return true;
-> +	}
-> +
-> +	/*
-> +	 * For remote ooms in non-userfaults, simply return ENOMEM to the
-> +	 * caller.
-> +	 */
-> +	if (!oc->chosen && is_remote_oom(oc->memcg))
-> +		return false;
-> +
->  	/* Found nothing?!?! */
->  	if (!oc->chosen) {
+Hmmm. The mem_cgroup_charge() call in filemap_add_folio() passes a
+null mm context, so deep in the guts it ends getting the memcg from
+active_memcg() in get_mem_cgroup_from_mm(). That ends up using
+current->active_memcg, so maybe a better approach here is to have
+shmem override current->active_memcg via set_active_memcg() before
+it enters the generic fs paths and restore it on return...
 
-I'd move both if's here:
+current_fsmemcg()?
 
-    	      if (is_remote_oom(oc->memcg)) {
-	      	 if (current->in_user_fault && !oom_unkillable_task(current)) {
-		    ...
-		 }
+> If we are to have this for all filesystems, then let's do that properly
+> and make it generic functionality from its introduction.
 
-		 return false;
-	      }
+Fully agree.
 
+Cheers,
 
->  		dump_header(oc, NULL);
-> --
-> 2.34.0.rc0.344.g81b53c2807-goog
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
