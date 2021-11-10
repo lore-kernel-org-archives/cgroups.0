@@ -1,43 +1,101 @@
-From: Jan Kiszka <jan.kiszka-kv7WeFo6aLtBDgjK7y7TUQ@public.gmane.org>
+From: Waiman Long <longman@redhat.com>
 Subject: Re: [PATCH v8 0/6] cgroup/cpuset: Add new cpuset partition type &
  empty effecitve cpus
-Date: Wed, 10 Nov 2021 19:04:36 +0100
-Message-ID: <44a28cc4-f68f-6e2c-1b0a-18b6570edc5f@siemens.com>
+Date: Wed, 10 Nov 2021 13:30:23 -0500
+Message-ID: <a6b9f5e7-3d4d-ba84-2c80-ba70187c3e10@redhat.com>
 References: <20211018143619.205065-1-longman@redhat.com>
  <20211110111357.17617-1-felix.moessbauer@siemens.com>
  <20211110135653.GD20566@blackbody.suse.cz>
  <AM9PR10MB4869C14EAE01B87C0037BF6A89939@AM9PR10MB4869.EURPRD10.PROD.OUTLOOK.COM>
  <20211110161020.GA20101@fuller.cnet>
  <c1e94031-a179-dc72-e5ee-3f8197bea492@siemens.com>
- <20211110175201.GA51149@blackbody.suse.cz>
+ <20211110172946.GA30250@fuller.cnet>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20211110175201.GA51149-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+Content-Transfer-Encoding: base64
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1636569037;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=RpX5BvbKEHNdXgGoPmln1SO/jawptVK+J9B4IT3zhNs=;
+        b=YXLPHBwYwk0aZH9NUhJLaIokoqEU0ssukY/tUlVr9zWYJCyB428+0y2/dAh30Q59dT+8/7
+        xMTZPelHdwn+zpqLT7lZOTHXFci3k70aBasEXRWIR6GFxfXfGOLS3ojhlihxA/4hHRbANa
+        BKB3u92jDYn1CALa47tl+VNv0bgjs1A=
 Content-Language: en-US
+In-Reply-To: <20211110172946.GA30250@fuller.cnet>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Moessbauer, Felix" <felix.moessbauer-kv7WeFo6aLtBDgjK7y7TUQ@public.gmane.org>, "longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "corbet-T1hC0tSOHrs@public.gmane.org" <corbet-T1hC0tSOHrs@public.gmane.org>, "frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "guro-b10kYP2dOMg@public.gmane.org" <guro-b10kYP2dOMg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Type: text/plain; charset="macroman"; format="flowed"
+To: Marcelo Tosatti <mtosatti@redhat.com>, Jan Kiszka <jan.kiszka@siemens.com>
+Cc: "Moessbauer, Felix" <felix.moessbauer@siemens.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "corbet@lwn.net" <corbet@lwn.net>, "frederic@kernel.org" <frederic@kernel.org>, "guro@fb.com" <guro@fb.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "juri.lelli@redhat.com" <juri.lelli@redhat.com>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-kselftest@vger.kernel.org" <linux-kselftest@vger.kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "pauld@redhat.com" <pauld@redhat.com>, "peterz@infradead.org" <peterz@infradead.org>, "shuah@kernel.org" <shuah@kernel.o>
 
-On 10.11.21 18:52, Michal Koutný wrote:
-> On Wed, Nov 10, 2021 at 05:15:41PM +0100, Jan Kiszka <jan.kiszka-kv7WeFo6aLtBDgjK7y7TUQ@public.gmane.org> wrote:
->> Is there pthread_attr_setcgroup_np()?
-> 
-> If I'm not mistaken the 'p' in pthreads stands for POSIX and cgroups are
-> Linux specific so you won't find that (unless you implement that
-> yourself). ¯\_(ツ)_/¯
-> 
-
-I know what it stands for :). But I don't want to re-implement pthreads
-just to have a single creation-time configurable injected. Neither would
-developer of standard application, e.g. libvirt for the rt-kvm special
-case while most of their use cases are fine with regular pthread APIs. I
-think there is also a demand for a programming model that fits into
-existing ones.
-
-Jan
-
--- 
-Siemens AG, T RDA IOT
-Corporate Competence Center Embedded Linux
+Ck9uIDExLzEwLzIxIDEyOjI5LCBNYXJjZWxvIFRvc2F0dGkgd3JvdGU6Cj4gT24gV2VkLCBOb3Yg
+MTAsIDIwMjEgYXQgMDU6MTU6NDFQTSArMDEwMCwgSmFuIEtpc3prYSB3cm90ZToKPj4gT24gMTAu
+MTEuMjEgMTc6MTAsIE1hcmNlbG8gVG9zYXR0aSB3cm90ZToKPj4+IE9uIFdlZCwgTm92IDEwLCAy
+MDIxIGF0IDAzOjIxOjU0UE0gKzAwMDAsIE1vZXNzYmF1ZXIsIEZlbGl4IHdyb3RlOgo+Pj4+Cj4+
+Pj4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tCj4+Pj4+IEZyb206IE1pY2hhbCBLb3V0bsO9
+IDxta291dG55QHN1c2UuY29tPgo+Pj4+PiBTZW50OiBXZWRuZXNkYXksIE5vdmVtYmVyIDEwLCAy
+MDIxIDI6NTcgUE0KPj4+Pj4gVG86IE1vZXNzYmF1ZXIsIEZlbGl4IChUIFJEQSBJT1QgU0VTLURF
+KSA8ZmVsaXgubW9lc3NiYXVlckBzaWVtZW5zLmNvbT4KPj4+Pj4gQ2M6IGxvbmdtYW5AcmVkaGF0
+LmNvbTsgYWtwbUBsaW51eC1mb3VuZGF0aW9uLm9yZzsKPj4+Pj4gY2dyb3Vwc0B2Z2VyLmtlcm5l
+bC5vcmc7IGNvcmJldEBsd24ubmV0OyBmcmVkZXJpY0BrZXJuZWwub3JnOyBndXJvQGZiLmNvbTsK
+Pj4+Pj4gaGFubmVzQGNtcHhjaGcub3JnOyBqdXJpLmxlbGxpQHJlZGhhdC5jb207IGxpbnV4LWRv
+Y0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQo+Pj4+PiBrZXJuZWxAdmdlci5rZXJuZWwub3JnOyBs
+aW51eC1rc2VsZnRlc3RAdmdlci5rZXJuZWwub3JnOwo+Pj4+PiBsaXplZmFuLnhAYnl0ZWRhbmNl
+LmNvbTsgbXRvc2F0dGlAcmVkaGF0LmNvbTsgcGF1bGRAcmVkaGF0LmNvbTsKPj4+Pj4gcGV0ZXJ6
+QGluZnJhZGVhZC5vcmc7IHNodWFoQGtlcm5lbC5vcmc7IHRqQGtlcm5lbC5vcmc7IEtpc3prYSwg
+SmFuIChUIFJEQQo+Pj4+PiBJT1QpIDxqYW4ua2lzemthQHNpZW1lbnMuY29tPjsgU2NoaWxkLCBI
+ZW5uaW5nIChUIFJEQSBJT1QgU0VTLURFKQo+Pj4+PiA8aGVubmluZy5zY2hpbGRAc2llbWVucy5j
+b20+Cj4+Pj4+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjggMC82XSBjZ3JvdXAvY3B1c2V0OiBBZGQg
+bmV3IGNwdXNldCBwYXJ0aXRpb24gdHlwZSAmCj4+Pj4+IGVtcHR5IGVmZmVjaXR2ZSBjcHVzCj4+
+Pj4+Cj4+Pj4+IEhlbGxvLgo+Pj4+Pgo+Pj4+PiBPbiBXZWQsIE5vdiAxMCwgMjAyMSBhdCAxMjox
+Mzo1N1BNICswMTAwLCBGZWxpeCBNb2Vzc2JhdWVyCj4+Pj4+IDxmZWxpeC5tb2Vzc2JhdWVyQHNp
+ZW1lbnMuY29tPiB3cm90ZToKPj4+Pj4+IEhvd2V2ZXIsIEkgd2FzIG5vdCBhYmxlIHRvIHNlZSBh
+bnkgbGF0ZW5jeSBpbXByb3ZlbWVudHMgd2hlbiB1c2luZwo+Pj4+Pj4gY3B1c2V0LmNwdXMucGFy
+dGl0aW9uPWlzb2xhdGVkLgo+Pj4+PiBJbnRlcmVzdGluZy4gV2hhdCB3YXMgdGhlIGJhc2VsaW5l
+IGFnYWluc3Qgd2hpY2ggeW91IGNvbXBhcmVkIGl0IChpc29sY3B1cywgbm8KPj4+Pj4gY3B1c2V0
+cywuLi4pPwo+Pj4+IEZvciB0aGlzIHRlc3QsIEkganVzdCBjb21wYXJlZCBib3RoIHNldHRpbmdz
+IGNwdXNldC5jcHVzLnBhcnRpdGlvbj1pc29sYXRlZHxyb290Lgo+Pj4+IFRoZXJlLCBJIGRpZCBu
+b3Qgc2VlIGEgc2lnbmlmaWNhbnQgZGlmZmVyZW5jZSAoYnV0IEkga25vdywgUlQgdHVuaW5nIGRl
+cGVuZHMgb24gYSB0b24gb2YgdGhpbmdzKS4KPj4+Pgo+Pj4+Pj4gVGhlIHRlc3Qgd2FzIHBlcmZv
+cm1lZCB3aXRoIGppdHRlcmRlYnVnZ2VyIG9uIENQVXMgMS0zIGFuZCB0aGUgZm9sbG93aW5nCj4+
+Pj4+IGNtZGxpbmU6Cj4+Pj4+PiByY3Vfbm9jYnM9MS00IG5vaHpfZnVsbD0xLTQgaXJxYWZmaW5p
+dHk9MCw1LTYsMTEgaW50ZWxfcHN0YXRlPWRpc2FibGUKPj4+Pj4+IE9uIHRoZSBvdGhlciBjcHVz
+LCBzdHJlc3Mtbmcgd2FzIGV4ZWN1dGVkIHRvIGdlbmVyYXRlIGxvYWQuCj4+Pj4+PiBbLi4uXQo+
+Pj4+Pj4gVGhpcyByZXF1aXJlcyBjZ3JvdXAudHlwZT10aHJlYWRlZCBvbiBib3RoIGNncm91cHMg
+YW5kIGNoYW5nZXMgdG8gdGhlCj4+Pj4+PiBhcHBsaWNhdGlvbiAodGhyZWFkcyBoYXZlIHRvIGJl
+IGJvcm4gaW4gbm9uLXJ0IGdyb3VwIGFuZCBtb3ZlZCB0byBydC1ncm91cCkuCj4+Pj4+IEJ1dCBl
+dmVuIHdpdGggaXNvbGNwdXMgdGhlIGFwcGxpY2F0aW9uIHdvdWxkIG5lZWQgdG8gc2V0IGFmZmlu
+aXR5IG9mIHRocmVhZHMgdG8KPj4+Pj4gdGhlIHNlbGVjdGVkIENQVXMgKGNmIGNncm91cCBtaWdy
+YXRpbmcpLiBEbyBJIG1pc3MgYW55dGhpbmc/Cj4+Pj4gWWVzLCB0aGF0J3MgdHJ1ZS4gQnV0IHRo
+ZXJlIGFyZSB0d28gZGlmZmVyZW5jZXMgKGdpdmVuIHRoYXQgeW91IHVzZSBpc29sY3B1cyk6Cj4+
+Pj4gMS4gdGhlIGFwcGxpY2F0aW9uIG9ubHkgaGFzIHRvIHNldCB0aGUgYWZmaW5pdHkgZm9yIHJ0
+IHRocmVhZHMuCj4+Pj4gICBUaHJlYWRzIHRoYXQgZG8gbm90IGV4cGxpY2l0bHkgc2V0IHRoZSBh
+ZmZpbml0eSBhcmUgYXV0b21hdGljYWxseSBleGNsdWRlZCBmcm9tIHRoZSBpc29sYXRlZCBjb3Jl
+cy4KPj4+PiAgIEV2ZW4gY29tbW9uIHJ0IHRlc3QgYXBwbGljYXRpb25zIGxpa2Ugaml0dGVyZGVi
+dWdnZXIgZG8gbm90IHBpbiB0aGVpciBub24tcnQgdGhyZWFkcy4KPj4+PiAyLiBUaHJlYWRzIGNh
+biBiZSBzdGFydGVkIG9uIG5vbi1ydCBDUFVzIGFuZCB0aGVuIGJvdW5kIHRvIGEgc3BlY2lmaWMg
+cnQgQ1BVLgo+Pj4+IFRoaXMgYmluZGluZyBjYW4gYmUgc3BlY2lmaWVkIGJlZm9yZSB0aHJlYWQg
+Y3JlYXRpb24gdmlhIHB0aHJlYWRfY3JlYXRlLgo+Pj4+IEJ5IHRoYXQsIHlvdSBjYW4gbWFrZSBz
+dXJlIHRoYXQgYXQgbm8gcG9pbnQgaW4gdGltZSBhIHRocmVhZCBoYXMgYSAiZm9yYmlkZGVuIiBD
+UFUgaW4gaXRzIGFmZmluaXRpZXMuCj4+Pj4KPj4+PiBXaXRoIGNncm91cDIsIHlvdSBjYW5ub3Qg
+Z3VhcmFudGVlIHRoZSBzZWNvbmQgYXNwZWN0LCBhcyB0aHJlYWQgY3JlYXRpb24gYW5kIG1vdmlu
+ZyB0byBhIGNncm91cCBpcyBub3QgYW4gYXRvbWljIG9wZXJhdGlvbi4KPj4+PiBBbHNvIC0gcGxl
+YXNlIGNvcnJlY3QgbWUgaWYgSSdtIHdyb25nIC0geW91IGZpcnN0IGhhdmUgdG8gY3JlYXRlIGEg
+dGhyZWFkIGJlZm9yZSBtb3ZpbmcgaXQgaW50byBhIGdyb3VwLgo+Pj4+IEF0IGNyZWF0aW9uIHRp
+bWUsIHlvdSBjYW5ub3Qgc2V0IHRoZSBmaW5hbCBhZmZpbml0eSBtYXNrIChhcyB5b3UgY3JlYXRl
+IGl0IGluIHRoZSBub24tcnQgZ3JvdXAgYW5kIHRoZXJlIHRoZSBDUFUgaXMgbm90IGluIHRoZSBj
+cHVzZXQuY3B1cykuCj4+Pj4gT25jZSB5b3UgbW92ZSB0aGUgdGhyZWFkIHRvIHRoZSBydCBjZ3Jv
+dXAsIGl0IGhhcyBhIGRlZmF1bHQgbWFzayBhbmQgYnkgdGhhdCBjYW4gYmUgZXhlY3V0ZWQgb24g
+b3RoZXIgcnQgY29yZXMuCj4+PiBtYW4gY2xvbmUzOgo+Pj4KPj4+ICAgICAgICAgQ0xPTkVfTkVX
+Q0dST1VQIChzaW5jZSBMaW51eCA0LjYpCj4+PiAgICAgICAgICAgICAgICBDcmVhdGUgIHRoZSAg
+cHJvY2VzcyAgaW4gIGEgIG5ldyBjZ3JvdXAgbmFtZXNwYWNlLiAgSWYgdGhpcyBmbGFnIGlzIG5v
+dCBzZXQsIHRoZW4gKGFzIHdpdGggZm9yaygyKSkgdGhlCj4+PiAgICAgICAgICAgICAgICBwcm9j
+ZXNzIGlzIGNyZWF0ZWQgaW4gdGhlIHNhbWUgY2dyb3VwIG5hbWVzcGFjZXMgYXMgdGhlIGNhbGxp
+bmcgcHJvY2Vzcy4KPj4+Cj4+PiAgICAgICAgICAgICAgICBGb3IgZnVydGhlciBpbmZvcm1hdGlv
+biBvbiBjZ3JvdXAgbmFtZXNwYWNlcywgc2VlIGNncm91cF9uYW1lc3BhY2VzKDcpLgo+Pj4KPj4+
+ICAgICAgICAgICAgICAgIE9ubHkgYSBwcml2aWxlZ2VkIHByb2Nlc3MgKENBUF9TWVNfQURNSU4p
+IGNhbiBlbXBsb3kgQ0xPTkVfTkVXQ0dST1VQLgo+Pj4KPj4gSXMgdGhlcmUgcHRocmVhZF9hdHRy
+X3NldGNncm91cF9ucCgpPwo+Pgo+PiBKYW4KPiBEb24ndCBrbm93Li4uIFdhaW1hbj8KCkkgZG9u
+J3QgdGhpbmsgdGhlcmUgaXMgc3VjaCBsaWJwdGhyZWFkIGNhbGwgeWV0LgoKLUxvbmdtYW4KCg==
