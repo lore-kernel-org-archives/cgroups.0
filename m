@@ -1,86 +1,63 @@
-From: Jan Kiszka <jan.kiszka@siemens.com>
-Subject: Re: [PATCH v8 0/6] cgroup/cpuset: Add new cpuset partition type &
- empty effecitve cpus
-Date: Wed, 10 Nov 2021 17:15:41 +0100
-Message-ID: <c1e94031-a179-dc72-e5ee-3f8197bea492@siemens.com>
-References: <20211018143619.205065-1-longman@redhat.com>
- <20211110111357.17617-1-felix.moessbauer@siemens.com>
- <20211110135653.GD20566@blackbody.suse.cz>
- <AM9PR10MB4869C14EAE01B87C0037BF6A89939@AM9PR10MB4869.EURPRD10.PROD.OUTLOOK.COM>
- <20211110161020.GA20101@fuller.cnet>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [RFC] psi: Add additional PSI counters for each type of memory
+ pressure
+Date: Wed, 10 Nov 2021 11:44:26 -0500
+Message-ID: <YYv26rKib03JnYZN@cmpxchg.org>
+References: <1636558597-248294-1-git-send-email-quic_c_gdjako@quicinc.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <20211110161020.GA20101@fuller.cnet>
-Content-Language: en-US
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=ZCxppkGRFPsisss/DePYM7NyPAJRZFk6RHTjGPknvLs=;
+        b=28ajj1Fad3jjq+pJTimln90y/+YAp3rK8HrgZJ21bws99je/aLNwJ1RbEpp+VOFLI5
+         wziDVyxazBE/4vX294wuICHRhpFBHB277qKLsw4E7XbZCqlr79wMi6mexuoOlNCT2KUg
+         +NThEa6rl1rpAb+x7b8Rg4YUzUR8AM6Ceh3SYN01pPaJ/6Lyf5BF97stdDC1tk/xfD4L
+         MatKRp0x77doAxnpSTgyQIAE+RbjFZK+sFICvR5ftw0sObz/cQGUCjcW4BHDuCaT/UW7
+         ZtSdZBb+RcfyxV4BMmMhvyBiL+x9D+twDGmCbtBBWkQJXPNaKFaLz1F5nl/w/CkVPb7q
+         dY2g==
+Content-Disposition: inline
+In-Reply-To: <1636558597-248294-1-git-send-email-quic_c_gdjako-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: Marcelo Tosatti <mtosatti@redhat.com>, "Moessbauer, Felix" <felix.moessbauer@siemens.com>
-Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, "longman@redhat.com" <longman@redhat.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "corbet@lwn.net" <corbet@lwn.net>, "frederic@kernel.org" <frederic@kernel.org>, "guro@fb.com" <guro@fb.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "juri.lelli@redhat.com" <juri.lelli@redhat.com>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-kselftest@vger.kernel.org" <linux-kselftest@vger.kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "pauld@redhat.com" <pauld@redhat.com>, "peterz@infradead.org" <peterz@infradead.org>, "shuah@kernel.org" <shuah@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Georgi Djakov <quic_c_gdjako-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
+Cc: vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, djakov-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-T24gMTAuMTEuMjEgMTc6MTAsIE1hcmNlbG8gVG9zYXR0aSB3cm90ZToKPiBPbiBXZWQsIE5vdiAx
-MCwgMjAyMSBhdCAwMzoyMTo1NFBNICswMDAwLCBNb2Vzc2JhdWVyLCBGZWxpeCB3cm90ZToKPj4K
-Pj4KPj4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tCj4+PiBGcm9tOiBNaWNoYWwgS291dG7D
-vSA8bWtvdXRueUBzdXNlLmNvbT4KPj4+IFNlbnQ6IFdlZG5lc2RheSwgTm92ZW1iZXIgMTAsIDIw
-MjEgMjo1NyBQTQo+Pj4gVG86IE1vZXNzYmF1ZXIsIEZlbGl4IChUIFJEQSBJT1QgU0VTLURFKSA8
-ZmVsaXgubW9lc3NiYXVlckBzaWVtZW5zLmNvbT4KPj4+IENjOiBsb25nbWFuQHJlZGhhdC5jb207
-IGFrcG1AbGludXgtZm91bmRhdGlvbi5vcmc7Cj4+PiBjZ3JvdXBzQHZnZXIua2VybmVsLm9yZzsg
-Y29yYmV0QGx3bi5uZXQ7IGZyZWRlcmljQGtlcm5lbC5vcmc7IGd1cm9AZmIuY29tOwo+Pj4gaGFu
-bmVzQGNtcHhjaGcub3JnOyBqdXJpLmxlbGxpQHJlZGhhdC5jb207IGxpbnV4LWRvY0B2Z2VyLmtl
-cm5lbC5vcmc7IGxpbnV4LQo+Pj4ga2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgta3NlbGZ0
-ZXN0QHZnZXIua2VybmVsLm9yZzsKPj4+IGxpemVmYW4ueEBieXRlZGFuY2UuY29tOyBtdG9zYXR0
-aUByZWRoYXQuY29tOyBwYXVsZEByZWRoYXQuY29tOwo+Pj4gcGV0ZXJ6QGluZnJhZGVhZC5vcmc7
-IHNodWFoQGtlcm5lbC5vcmc7IHRqQGtlcm5lbC5vcmc7IEtpc3prYSwgSmFuIChUIFJEQQo+Pj4g
-SU9UKSA8amFuLmtpc3prYUBzaWVtZW5zLmNvbT47IFNjaGlsZCwgSGVubmluZyAoVCBSREEgSU9U
-IFNFUy1ERSkKPj4+IDxoZW5uaW5nLnNjaGlsZEBzaWVtZW5zLmNvbT4KPj4+IFN1YmplY3Q6IFJl
-OiBbUEFUQ0ggdjggMC82XSBjZ3JvdXAvY3B1c2V0OiBBZGQgbmV3IGNwdXNldCBwYXJ0aXRpb24g
-dHlwZSAmCj4+PiBlbXB0eSBlZmZlY2l0dmUgY3B1cwo+Pj4KPj4+IEhlbGxvLgo+Pj4KPj4+IE9u
-IFdlZCwgTm92IDEwLCAyMDIxIGF0IDEyOjEzOjU3UE0gKzAxMDAsIEZlbGl4IE1vZXNzYmF1ZXIK
-Pj4+IDxmZWxpeC5tb2Vzc2JhdWVyQHNpZW1lbnMuY29tPiB3cm90ZToKPj4+PiBIb3dldmVyLCBJ
-IHdhcyBub3QgYWJsZSB0byBzZWUgYW55IGxhdGVuY3kgaW1wcm92ZW1lbnRzIHdoZW4gdXNpbmcK
-Pj4+PiBjcHVzZXQuY3B1cy5wYXJ0aXRpb249aXNvbGF0ZWQuCj4+Pgo+Pj4gSW50ZXJlc3Rpbmcu
-IFdoYXQgd2FzIHRoZSBiYXNlbGluZSBhZ2FpbnN0IHdoaWNoIHlvdSBjb21wYXJlZCBpdCAoaXNv
-bGNwdXMsIG5vCj4+PiBjcHVzZXRzLC4uLik/Cj4+Cj4+IEZvciB0aGlzIHRlc3QsIEkganVzdCBj
-b21wYXJlZCBib3RoIHNldHRpbmdzIGNwdXNldC5jcHVzLnBhcnRpdGlvbj1pc29sYXRlZHxyb290
-Lgo+PiBUaGVyZSwgSSBkaWQgbm90IHNlZSBhIHNpZ25pZmljYW50IGRpZmZlcmVuY2UgKGJ1dCBJ
-IGtub3csIFJUIHR1bmluZyBkZXBlbmRzIG9uIGEgdG9uIG9mIHRoaW5ncykuCj4+Cj4+Pgo+Pj4+
-IFRoZSB0ZXN0IHdhcyBwZXJmb3JtZWQgd2l0aCBqaXR0ZXJkZWJ1Z2dlciBvbiBDUFVzIDEtMyBh
-bmQgdGhlIGZvbGxvd2luZwo+Pj4gY21kbGluZToKPj4+PiByY3Vfbm9jYnM9MS00IG5vaHpfZnVs
-bD0xLTQgaXJxYWZmaW5pdHk9MCw1LTYsMTEgaW50ZWxfcHN0YXRlPWRpc2FibGUKPj4+PiBPbiB0
-aGUgb3RoZXIgY3B1cywgc3RyZXNzLW5nIHdhcyBleGVjdXRlZCB0byBnZW5lcmF0ZSBsb2FkLgo+
-Pj4+IFsuLi5dCj4+Pgo+Pj4+IFRoaXMgcmVxdWlyZXMgY2dyb3VwLnR5cGU9dGhyZWFkZWQgb24g
-Ym90aCBjZ3JvdXBzIGFuZCBjaGFuZ2VzIHRvIHRoZQo+Pj4+IGFwcGxpY2F0aW9uICh0aHJlYWRz
-IGhhdmUgdG8gYmUgYm9ybiBpbiBub24tcnQgZ3JvdXAgYW5kIG1vdmVkIHRvIHJ0LWdyb3VwKS4K
-Pj4+Cj4+PiBCdXQgZXZlbiB3aXRoIGlzb2xjcHVzIHRoZSBhcHBsaWNhdGlvbiB3b3VsZCBuZWVk
-IHRvIHNldCBhZmZpbml0eSBvZiB0aHJlYWRzIHRvCj4+PiB0aGUgc2VsZWN0ZWQgQ1BVcyAoY2Yg
-Y2dyb3VwIG1pZ3JhdGluZykuIERvIEkgbWlzcyBhbnl0aGluZz8KPj4KPj4gWWVzLCB0aGF0J3Mg
-dHJ1ZS4gQnV0IHRoZXJlIGFyZSB0d28gZGlmZmVyZW5jZXMgKGdpdmVuIHRoYXQgeW91IHVzZSBp
-c29sY3B1cyk6Cj4+IDEuIHRoZSBhcHBsaWNhdGlvbiBvbmx5IGhhcyB0byBzZXQgdGhlIGFmZmlu
-aXR5IGZvciBydCB0aHJlYWRzLgo+PiAgVGhyZWFkcyB0aGF0IGRvIG5vdCBleHBsaWNpdGx5IHNl
-dCB0aGUgYWZmaW5pdHkgYXJlIGF1dG9tYXRpY2FsbHkgZXhjbHVkZWQgZnJvbSB0aGUgaXNvbGF0
-ZWQgY29yZXMuCj4+ICBFdmVuIGNvbW1vbiBydCB0ZXN0IGFwcGxpY2F0aW9ucyBsaWtlIGppdHRl
-cmRlYnVnZ2VyIGRvIG5vdCBwaW4gdGhlaXIgbm9uLXJ0IHRocmVhZHMuCj4+IDIuIFRocmVhZHMg
-Y2FuIGJlIHN0YXJ0ZWQgb24gbm9uLXJ0IENQVXMgYW5kIHRoZW4gYm91bmQgdG8gYSBzcGVjaWZp
-YyBydCBDUFUuCj4+IFRoaXMgYmluZGluZyBjYW4gYmUgc3BlY2lmaWVkIGJlZm9yZSB0aHJlYWQg
-Y3JlYXRpb24gdmlhIHB0aHJlYWRfY3JlYXRlLgo+PiBCeSB0aGF0LCB5b3UgY2FuIG1ha2Ugc3Vy
-ZSB0aGF0IGF0IG5vIHBvaW50IGluIHRpbWUgYSB0aHJlYWQgaGFzIGEgImZvcmJpZGRlbiIgQ1BV
-IGluIGl0cyBhZmZpbml0aWVzLgo+Pgo+PiBXaXRoIGNncm91cDIsIHlvdSBjYW5ub3QgZ3VhcmFu
-dGVlIHRoZSBzZWNvbmQgYXNwZWN0LCBhcyB0aHJlYWQgY3JlYXRpb24gYW5kIG1vdmluZyB0byBh
-IGNncm91cCBpcyBub3QgYW4gYXRvbWljIG9wZXJhdGlvbi4KPj4gQWxzbyAtIHBsZWFzZSBjb3Jy
-ZWN0IG1lIGlmIEknbSB3cm9uZyAtIHlvdSBmaXJzdCBoYXZlIHRvIGNyZWF0ZSBhIHRocmVhZCBi
-ZWZvcmUgbW92aW5nIGl0IGludG8gYSBncm91cC4KPj4gQXQgY3JlYXRpb24gdGltZSwgeW91IGNh
-bm5vdCBzZXQgdGhlIGZpbmFsIGFmZmluaXR5IG1hc2sgKGFzIHlvdSBjcmVhdGUgaXQgaW4gdGhl
-IG5vbi1ydCBncm91cCBhbmQgdGhlcmUgdGhlIENQVSBpcyBub3QgaW4gdGhlIGNwdXNldC5jcHVz
-KS4KPj4gT25jZSB5b3UgbW92ZSB0aGUgdGhyZWFkIHRvIHRoZSBydCBjZ3JvdXAsIGl0IGhhcyBh
-IGRlZmF1bHQgbWFzayBhbmQgYnkgdGhhdCBjYW4gYmUgZXhlY3V0ZWQgb24gb3RoZXIgcnQgY29y
-ZXMuCj4gCj4gbWFuIGNsb25lMzoKPiAKPiAgICAgICAgQ0xPTkVfTkVXQ0dST1VQIChzaW5jZSBM
-aW51eCA0LjYpCj4gICAgICAgICAgICAgICBDcmVhdGUgIHRoZSAgcHJvY2VzcyAgaW4gIGEgIG5l
-dyBjZ3JvdXAgbmFtZXNwYWNlLiAgSWYgdGhpcyBmbGFnIGlzIG5vdCBzZXQsIHRoZW4gKGFzIHdp
-dGggZm9yaygyKSkgdGhlCj4gICAgICAgICAgICAgICBwcm9jZXNzIGlzIGNyZWF0ZWQgaW4gdGhl
-IHNhbWUgY2dyb3VwIG5hbWVzcGFjZXMgYXMgdGhlIGNhbGxpbmcgcHJvY2Vzcy4KPiAKPiAgICAg
-ICAgICAgICAgIEZvciBmdXJ0aGVyIGluZm9ybWF0aW9uIG9uIGNncm91cCBuYW1lc3BhY2VzLCBz
-ZWUgY2dyb3VwX25hbWVzcGFjZXMoNykuCj4gCj4gICAgICAgICAgICAgICBPbmx5IGEgcHJpdmls
-ZWdlZCBwcm9jZXNzIChDQVBfU1lTX0FETUlOKSBjYW4gZW1wbG95IENMT05FX05FV0NHUk9VUC4K
-PiAKCklzIHRoZXJlIHB0aHJlYWRfYXR0cl9zZXRjZ3JvdXBfbnAoKT8KCkphbgoKLS0gClNpZW1l
-bnMgQUcsIFQgUkRBIElPVApDb3Jwb3JhdGUgQ29tcGV0ZW5jZSBDZW50ZXIgRW1iZWRkZWQgTGlu
-dXgK
+On Wed, Nov 10, 2021 at 07:36:37AM -0800, Georgi Djakov wrote:
+> From: Carlos Ramirez <carlrami-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+> 
+> Calculates psi totals for memory pressure subevents:
+> compaction, thrashing, direct compaction, direct reclaim, and kswapd0.
+> Uses upper 16 bits of psi_flags to track memory subevents.
+
+Oof, that's quite heavy both in terms of branches, but also in terms
+of cache - which, depending on wakeup pattern and cpu topology can
+really hurt those paths.
+
+What's the usecase? Do you have automation that needs to act on one
+type of stall but not the others, for example?
+
+I find that looking at vmstat events on hosts with elevated pressure
+tends to give a pretty good idea of the source. It should also be
+possible to whip up a short bpftrace script to track down culprit
+callstacks of psi_memstall_*.
+
+> @@ -1053,19 +1128,56 @@ int psi_show(struct seq_file *m, struct psi_group *group, enum psi_res res)
+> +		seq_printf(m, "%s avg10=%lu.%02lu avg60=%lu.%02lu avg300=%lu.%02lu total=%llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu\n",
+>  			   full ? "full" : "some",
+>  			   LOAD_INT(avg[0]), LOAD_FRAC(avg[0]),
+>  			   LOAD_INT(avg[1]), LOAD_FRAC(avg[1]),
+>  			   LOAD_INT(avg[2]), LOAD_FRAC(avg[2]),
+> -			   total);
+> +			   total, total_blk_cgroup_throttle, total_bio, total_compaction,
+> +			   total_thrashing, total_cgroup_reclaim_high,
+> +			   total_cgroup_reclaim_high_sleep, total_cgroup_try_charge,
+> +			   total_direct_compaction, total_direct_reclaim, total_read_swappage,
+> +			   total_kswapd);
+
+The file format is a can of worms. I doubt we can change this at this
+point without breaking parsers, so those numbers would have to live
+somewhere else. But let's figure out the above questions before
+worrying about this.
