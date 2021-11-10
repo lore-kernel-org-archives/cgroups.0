@@ -1,127 +1,86 @@
-From: Marcelo Tosatti <mtosatti@redhat.com>
+From: Jan Kiszka <jan.kiszka@siemens.com>
 Subject: Re: [PATCH v8 0/6] cgroup/cpuset: Add new cpuset partition type &
  empty effecitve cpus
-Date: Wed, 10 Nov 2021 13:14:29 -0300
-Message-ID: <20211110161429.GA22855@fuller.cnet>
+Date: Wed, 10 Nov 2021 17:15:41 +0100
+Message-ID: <c1e94031-a179-dc72-e5ee-3f8197bea492@siemens.com>
 References: <20211018143619.205065-1-longman@redhat.com>
  <20211110111357.17617-1-felix.moessbauer@siemens.com>
  <20211110135653.GD20566@blackbody.suse.cz>
  <AM9PR10MB4869C14EAE01B87C0037BF6A89939@AM9PR10MB4869.EURPRD10.PROD.OUTLOOK.COM>
  <20211110161020.GA20101@fuller.cnet>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
 Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1636560916;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=pujqTrjEVvmX1Jx376eksYnuy7UjFSMiFW1jzdmHKRE=;
-        b=HKyWsFTy5AbnOGPcwQnm/29BaJ3R93f7cbU9kIxrHEirA+OFSH4zgICWg6CCJNUc76Gfer
-        qz0O6jCs8Zr3Mp88KjTmwTg4fu4JJth7lcyv1JWioggh9w7wAfdid1u2cFP6hIJfekyLv0
-        /jtjTkmZN7WLCTENVv2eBIGJVQkWPTI=
-Content-Disposition: inline
 In-Reply-To: <20211110161020.GA20101@fuller.cnet>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: "Moessbauer, Felix" <felix.moessbauer@siemens.com>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, "longman@redhat.com" <longman@redhat.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "corbet@lwn.net" <corbet@lwn.net>, "frederic@kernel.org" <frederic@kernel.org>, "guro@fb.com" <guro@fb.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "juri.lelli@redhat.com" <juri.lelli@redhat.com>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-kselftest@vger.kernel.org" <linux-kselftest@vger.kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "pauld@redhat.com" <pauld@redhat.com>, "peterz@infradead.org" <peterz@infradead.org>, "shuah@kernel.org" <shuah@kernel.org>
+Content-Type: text/plain; charset="macroman"
+To: Marcelo Tosatti <mtosatti@redhat.com>, "Moessbauer, Felix" <felix.moessbauer@siemens.com>
+Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, "longman@redhat.com" <longman@redhat.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "corbet@lwn.net" <corbet@lwn.net>, "frederic@kernel.org" <frederic@kernel.org>, "guro@fb.com" <guro@fb.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "juri.lelli@redhat.com" <juri.lelli@redhat.com>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-kselftest@vger.kernel.org" <linux-kselftest@vger.kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "pauld@redhat.com" <pauld@redhat.com>, "peterz@infradead.org" <peterz@infradead.org>, "shuah@kernel.org" <shuah@kernel.org>
 
-On Wed, Nov 10, 2021 at 01:10:20PM -0300, Marcelo Tosatti wrote:
-> On Wed, Nov 10, 2021 at 03:21:54PM +0000, Moessbauer, Felix wrote:
-> >=20
-> >=20
-> > > -----Original Message-----
-> > > From: Michal Koutn=FD <mkoutny@suse.com>
-> > > Sent: Wednesday, November 10, 2021 2:57 PM
-> > > To: Moessbauer, Felix (T RDA IOT SES-DE) <felix.moessbauer@siemens.co=
-m>
-> > > Cc: longman@redhat.com; akpm@linux-foundation.org;
-> > > cgroups@vger.kernel.org; corbet@lwn.net; frederic@kernel.org; guro@fb=
-.com;
-> > > hannes@cmpxchg.org; juri.lelli@redhat.com; linux-doc@vger.kernel.org;=
- linux-
-> > > kernel@vger.kernel.org; linux-kselftest@vger.kernel.org;
-> > > lizefan.x@bytedance.com; mtosatti@redhat.com; pauld@redhat.com;
-> > > peterz@infradead.org; shuah@kernel.org; tj@kernel.org; Kiszka, Jan (T=
- RDA
-> > > IOT) <jan.kiszka@siemens.com>; Schild, Henning (T RDA IOT SES-DE)
-> > > <henning.schild@siemens.com>
-> > > Subject: Re: [PATCH v8 0/6] cgroup/cpuset: Add new cpuset partition t=
-ype &
-> > > empty effecitve cpus
-> > >=20
-> > > Hello.
-> > >=20
-> > > On Wed, Nov 10, 2021 at 12:13:57PM +0100, Felix Moessbauer
-> > > <felix.moessbauer@siemens.com> wrote:
-> > > > However, I was not able to see any latency improvements when using
-> > > > cpuset.cpus.partition=3Disolated.
-> > >=20
-> > > Interesting. What was the baseline against which you compared it (iso=
-lcpus, no
-> > > cpusets,...)?
-> >=20
-> > For this test, I just compared both settings cpuset.cpus.partition=3Dis=
-olated|root.
-> > There, I did not see a significant difference (but I know, RT tuning de=
-pends on a ton of things).
-> >=20
-> > >=20
-> > > > The test was performed with jitterdebugger on CPUs 1-3 and the foll=
-owing
-> > > cmdline:
-> > > > rcu_nocbs=3D1-4 nohz_full=3D1-4 irqaffinity=3D0,5-6,11 intel_pstate=
-=3Ddisable
-> > > > On the other cpus, stress-ng was executed to generate load.
-> > > > [...]
-> > >=20
-> > > > This requires cgroup.type=3Dthreaded on both cgroups and changes to=
- the
-> > > > application (threads have to be born in non-rt group and moved to r=
-t-group).
-> > >=20
-> > > But even with isolcpus the application would need to set affinity of =
-threads to
-> > > the selected CPUs (cf cgroup migrating). Do I miss anything?
-> >=20
-> > Yes, that's true. But there are two differences (given that you use iso=
-lcpus):
-> > 1. the application only has to set the affinity for rt threads.
-> >  Threads that do not explicitly set the affinity are automatically excl=
-uded from the isolated cores.
-> >  Even common rt test applications like jitterdebugger do not pin their =
-non-rt threads.
-> > 2. Threads can be started on non-rt CPUs and then bound to a specific r=
-t CPU.
-> > This binding can be specified before thread creation via pthread_create.
-> > By that, you can make sure that at no point in time a thread has a "for=
-bidden" CPU in its affinities.
-> >=20
-> > With cgroup2, you cannot guarantee the second aspect, as thread creatio=
-n and moving to a cgroup is not an atomic operation.
-> > Also - please correct me if I'm wrong - you first have to create a thre=
-ad before moving it into a group.
-> > At creation time, you cannot set the final affinity mask (as you create=
- it in the non-rt group and there the CPU is not in the cpuset.cpus).
-> > Once you move the thread to the rt cgroup, it has a default mask and by=
- that can be executed on other rt cores.
->=20
-> man clone3:
->=20
->        CLONE_NEWCGROUP (since Linux 4.6)
->               Create  the  process  in  a  new cgroup namespace.  If this=
- flag is not set, then (as with fork(2)) the
->               process is created in the same cgroup namespaces as the cal=
-ling process.
->=20
->               For further information on cgroup namespaces, see cgroup_na=
-mespaces(7).
->=20
->               Only a privileged process (CAP_SYS_ADMIN) can employ CLONE_=
-NEWCGROUP.
->=20
-
-Err, CLONE_INTO_CGROUP.
-
+T24gMTAuMTEuMjEgMTc6MTAsIE1hcmNlbG8gVG9zYXR0aSB3cm90ZToKPiBPbiBXZWQsIE5vdiAx
+MCwgMjAyMSBhdCAwMzoyMTo1NFBNICswMDAwLCBNb2Vzc2JhdWVyLCBGZWxpeCB3cm90ZToKPj4K
+Pj4KPj4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tCj4+PiBGcm9tOiBNaWNoYWwgS291dG7D
+vSA8bWtvdXRueUBzdXNlLmNvbT4KPj4+IFNlbnQ6IFdlZG5lc2RheSwgTm92ZW1iZXIgMTAsIDIw
+MjEgMjo1NyBQTQo+Pj4gVG86IE1vZXNzYmF1ZXIsIEZlbGl4IChUIFJEQSBJT1QgU0VTLURFKSA8
+ZmVsaXgubW9lc3NiYXVlckBzaWVtZW5zLmNvbT4KPj4+IENjOiBsb25nbWFuQHJlZGhhdC5jb207
+IGFrcG1AbGludXgtZm91bmRhdGlvbi5vcmc7Cj4+PiBjZ3JvdXBzQHZnZXIua2VybmVsLm9yZzsg
+Y29yYmV0QGx3bi5uZXQ7IGZyZWRlcmljQGtlcm5lbC5vcmc7IGd1cm9AZmIuY29tOwo+Pj4gaGFu
+bmVzQGNtcHhjaGcub3JnOyBqdXJpLmxlbGxpQHJlZGhhdC5jb207IGxpbnV4LWRvY0B2Z2VyLmtl
+cm5lbC5vcmc7IGxpbnV4LQo+Pj4ga2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgta3NlbGZ0
+ZXN0QHZnZXIua2VybmVsLm9yZzsKPj4+IGxpemVmYW4ueEBieXRlZGFuY2UuY29tOyBtdG9zYXR0
+aUByZWRoYXQuY29tOyBwYXVsZEByZWRoYXQuY29tOwo+Pj4gcGV0ZXJ6QGluZnJhZGVhZC5vcmc7
+IHNodWFoQGtlcm5lbC5vcmc7IHRqQGtlcm5lbC5vcmc7IEtpc3prYSwgSmFuIChUIFJEQQo+Pj4g
+SU9UKSA8amFuLmtpc3prYUBzaWVtZW5zLmNvbT47IFNjaGlsZCwgSGVubmluZyAoVCBSREEgSU9U
+IFNFUy1ERSkKPj4+IDxoZW5uaW5nLnNjaGlsZEBzaWVtZW5zLmNvbT4KPj4+IFN1YmplY3Q6IFJl
+OiBbUEFUQ0ggdjggMC82XSBjZ3JvdXAvY3B1c2V0OiBBZGQgbmV3IGNwdXNldCBwYXJ0aXRpb24g
+dHlwZSAmCj4+PiBlbXB0eSBlZmZlY2l0dmUgY3B1cwo+Pj4KPj4+IEhlbGxvLgo+Pj4KPj4+IE9u
+IFdlZCwgTm92IDEwLCAyMDIxIGF0IDEyOjEzOjU3UE0gKzAxMDAsIEZlbGl4IE1vZXNzYmF1ZXIK
+Pj4+IDxmZWxpeC5tb2Vzc2JhdWVyQHNpZW1lbnMuY29tPiB3cm90ZToKPj4+PiBIb3dldmVyLCBJ
+IHdhcyBub3QgYWJsZSB0byBzZWUgYW55IGxhdGVuY3kgaW1wcm92ZW1lbnRzIHdoZW4gdXNpbmcK
+Pj4+PiBjcHVzZXQuY3B1cy5wYXJ0aXRpb249aXNvbGF0ZWQuCj4+Pgo+Pj4gSW50ZXJlc3Rpbmcu
+IFdoYXQgd2FzIHRoZSBiYXNlbGluZSBhZ2FpbnN0IHdoaWNoIHlvdSBjb21wYXJlZCBpdCAoaXNv
+bGNwdXMsIG5vCj4+PiBjcHVzZXRzLC4uLik/Cj4+Cj4+IEZvciB0aGlzIHRlc3QsIEkganVzdCBj
+b21wYXJlZCBib3RoIHNldHRpbmdzIGNwdXNldC5jcHVzLnBhcnRpdGlvbj1pc29sYXRlZHxyb290
+Lgo+PiBUaGVyZSwgSSBkaWQgbm90IHNlZSBhIHNpZ25pZmljYW50IGRpZmZlcmVuY2UgKGJ1dCBJ
+IGtub3csIFJUIHR1bmluZyBkZXBlbmRzIG9uIGEgdG9uIG9mIHRoaW5ncykuCj4+Cj4+Pgo+Pj4+
+IFRoZSB0ZXN0IHdhcyBwZXJmb3JtZWQgd2l0aCBqaXR0ZXJkZWJ1Z2dlciBvbiBDUFVzIDEtMyBh
+bmQgdGhlIGZvbGxvd2luZwo+Pj4gY21kbGluZToKPj4+PiByY3Vfbm9jYnM9MS00IG5vaHpfZnVs
+bD0xLTQgaXJxYWZmaW5pdHk9MCw1LTYsMTEgaW50ZWxfcHN0YXRlPWRpc2FibGUKPj4+PiBPbiB0
+aGUgb3RoZXIgY3B1cywgc3RyZXNzLW5nIHdhcyBleGVjdXRlZCB0byBnZW5lcmF0ZSBsb2FkLgo+
+Pj4+IFsuLi5dCj4+Pgo+Pj4+IFRoaXMgcmVxdWlyZXMgY2dyb3VwLnR5cGU9dGhyZWFkZWQgb24g
+Ym90aCBjZ3JvdXBzIGFuZCBjaGFuZ2VzIHRvIHRoZQo+Pj4+IGFwcGxpY2F0aW9uICh0aHJlYWRz
+IGhhdmUgdG8gYmUgYm9ybiBpbiBub24tcnQgZ3JvdXAgYW5kIG1vdmVkIHRvIHJ0LWdyb3VwKS4K
+Pj4+Cj4+PiBCdXQgZXZlbiB3aXRoIGlzb2xjcHVzIHRoZSBhcHBsaWNhdGlvbiB3b3VsZCBuZWVk
+IHRvIHNldCBhZmZpbml0eSBvZiB0aHJlYWRzIHRvCj4+PiB0aGUgc2VsZWN0ZWQgQ1BVcyAoY2Yg
+Y2dyb3VwIG1pZ3JhdGluZykuIERvIEkgbWlzcyBhbnl0aGluZz8KPj4KPj4gWWVzLCB0aGF0J3Mg
+dHJ1ZS4gQnV0IHRoZXJlIGFyZSB0d28gZGlmZmVyZW5jZXMgKGdpdmVuIHRoYXQgeW91IHVzZSBp
+c29sY3B1cyk6Cj4+IDEuIHRoZSBhcHBsaWNhdGlvbiBvbmx5IGhhcyB0byBzZXQgdGhlIGFmZmlu
+aXR5IGZvciBydCB0aHJlYWRzLgo+PiAgVGhyZWFkcyB0aGF0IGRvIG5vdCBleHBsaWNpdGx5IHNl
+dCB0aGUgYWZmaW5pdHkgYXJlIGF1dG9tYXRpY2FsbHkgZXhjbHVkZWQgZnJvbSB0aGUgaXNvbGF0
+ZWQgY29yZXMuCj4+ICBFdmVuIGNvbW1vbiBydCB0ZXN0IGFwcGxpY2F0aW9ucyBsaWtlIGppdHRl
+cmRlYnVnZ2VyIGRvIG5vdCBwaW4gdGhlaXIgbm9uLXJ0IHRocmVhZHMuCj4+IDIuIFRocmVhZHMg
+Y2FuIGJlIHN0YXJ0ZWQgb24gbm9uLXJ0IENQVXMgYW5kIHRoZW4gYm91bmQgdG8gYSBzcGVjaWZp
+YyBydCBDUFUuCj4+IFRoaXMgYmluZGluZyBjYW4gYmUgc3BlY2lmaWVkIGJlZm9yZSB0aHJlYWQg
+Y3JlYXRpb24gdmlhIHB0aHJlYWRfY3JlYXRlLgo+PiBCeSB0aGF0LCB5b3UgY2FuIG1ha2Ugc3Vy
+ZSB0aGF0IGF0IG5vIHBvaW50IGluIHRpbWUgYSB0aHJlYWQgaGFzIGEgImZvcmJpZGRlbiIgQ1BV
+IGluIGl0cyBhZmZpbml0aWVzLgo+Pgo+PiBXaXRoIGNncm91cDIsIHlvdSBjYW5ub3QgZ3VhcmFu
+dGVlIHRoZSBzZWNvbmQgYXNwZWN0LCBhcyB0aHJlYWQgY3JlYXRpb24gYW5kIG1vdmluZyB0byBh
+IGNncm91cCBpcyBub3QgYW4gYXRvbWljIG9wZXJhdGlvbi4KPj4gQWxzbyAtIHBsZWFzZSBjb3Jy
+ZWN0IG1lIGlmIEknbSB3cm9uZyAtIHlvdSBmaXJzdCBoYXZlIHRvIGNyZWF0ZSBhIHRocmVhZCBi
+ZWZvcmUgbW92aW5nIGl0IGludG8gYSBncm91cC4KPj4gQXQgY3JlYXRpb24gdGltZSwgeW91IGNh
+bm5vdCBzZXQgdGhlIGZpbmFsIGFmZmluaXR5IG1hc2sgKGFzIHlvdSBjcmVhdGUgaXQgaW4gdGhl
+IG5vbi1ydCBncm91cCBhbmQgdGhlcmUgdGhlIENQVSBpcyBub3QgaW4gdGhlIGNwdXNldC5jcHVz
+KS4KPj4gT25jZSB5b3UgbW92ZSB0aGUgdGhyZWFkIHRvIHRoZSBydCBjZ3JvdXAsIGl0IGhhcyBh
+IGRlZmF1bHQgbWFzayBhbmQgYnkgdGhhdCBjYW4gYmUgZXhlY3V0ZWQgb24gb3RoZXIgcnQgY29y
+ZXMuCj4gCj4gbWFuIGNsb25lMzoKPiAKPiAgICAgICAgQ0xPTkVfTkVXQ0dST1VQIChzaW5jZSBM
+aW51eCA0LjYpCj4gICAgICAgICAgICAgICBDcmVhdGUgIHRoZSAgcHJvY2VzcyAgaW4gIGEgIG5l
+dyBjZ3JvdXAgbmFtZXNwYWNlLiAgSWYgdGhpcyBmbGFnIGlzIG5vdCBzZXQsIHRoZW4gKGFzIHdp
+dGggZm9yaygyKSkgdGhlCj4gICAgICAgICAgICAgICBwcm9jZXNzIGlzIGNyZWF0ZWQgaW4gdGhl
+IHNhbWUgY2dyb3VwIG5hbWVzcGFjZXMgYXMgdGhlIGNhbGxpbmcgcHJvY2Vzcy4KPiAKPiAgICAg
+ICAgICAgICAgIEZvciBmdXJ0aGVyIGluZm9ybWF0aW9uIG9uIGNncm91cCBuYW1lc3BhY2VzLCBz
+ZWUgY2dyb3VwX25hbWVzcGFjZXMoNykuCj4gCj4gICAgICAgICAgICAgICBPbmx5IGEgcHJpdmls
+ZWdlZCBwcm9jZXNzIChDQVBfU1lTX0FETUlOKSBjYW4gZW1wbG95IENMT05FX05FV0NHUk9VUC4K
+PiAKCklzIHRoZXJlIHB0aHJlYWRfYXR0cl9zZXRjZ3JvdXBfbnAoKT8KCkphbgoKLS0gClNpZW1l
+bnMgQUcsIFQgUkRBIElPVApDb3Jwb3JhdGUgQ29tcGV0ZW5jZSBDZW50ZXIgRW1iZWRkZWQgTGlu
+dXgK
