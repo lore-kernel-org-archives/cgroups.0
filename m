@@ -1,70 +1,127 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [RFC] psi: Add additional PSI counters for each type of memory
- pressure
-Date: Wed, 10 Nov 2021 17:14:02 +0100
-Message-ID: <20211110161402.GB174703@worktop.programming.kicks-ass.net>
-References: <1636558597-248294-1-git-send-email-quic_c_gdjako@quicinc.com>
+From: Marcelo Tosatti <mtosatti@redhat.com>
+Subject: Re: [PATCH v8 0/6] cgroup/cpuset: Add new cpuset partition type &
+ empty effecitve cpus
+Date: Wed, 10 Nov 2021 13:14:29 -0300
+Message-ID: <20211110161429.GA22855@fuller.cnet>
+References: <20211018143619.205065-1-longman@redhat.com>
+ <20211110111357.17617-1-felix.moessbauer@siemens.com>
+ <20211110135653.GD20566@blackbody.suse.cz>
+ <AM9PR10MB4869C14EAE01B87C0037BF6A89939@AM9PR10MB4869.EURPRD10.PROD.OUTLOOK.COM>
+ <20211110161020.GA20101@fuller.cnet>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=NjWp/DEt+8bVHPs1gmDRocuQVRMShr5c3n+CoKHRG3Y=; b=FgTPGGCfgvuH/hxPJ+BKPW63ZY
-        2h9xXsa8BCA8uE7nrHtXOFynwE/3wW600gdD7y23kFti+2gx0Or+nKJxcni9NEVgR0taz97mPYEwp
-        +cNTH7BvpALxKGQpA4TsoBMFRlLoVyadyWiCwQ9vvSeW5hfnXKo50OoDN++CzUlZVDE3HjH23IcrL
-        HK8VVB4CTu5vahV/VTUIQYs1Twx3h/kEYMVYls/xN4Zx0oWdCTc9we4AunzgYMPXeGO5uENnHDIX2
-        jFW+u6R9AOPytdq+Oe9GnVSUx7948uS3hWAUxAWg3zy+Xr6uhbsOX+NS1tGx15JkaiUxUTYH1Lj8q
-        gdv9DCKQ==;
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1636560916;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=pujqTrjEVvmX1Jx376eksYnuy7UjFSMiFW1jzdmHKRE=;
+        b=HKyWsFTy5AbnOGPcwQnm/29BaJ3R93f7cbU9kIxrHEirA+OFSH4zgICWg6CCJNUc76Gfer
+        qz0O6jCs8Zr3Mp88KjTmwTg4fu4JJth7lcyv1JWioggh9w7wAfdid1u2cFP6hIJfekyLv0
+        /jtjTkmZN7WLCTENVv2eBIGJVQkWPTI=
 Content-Disposition: inline
-In-Reply-To: <1636558597-248294-1-git-send-email-quic_c_gdjako-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
+In-Reply-To: <20211110161020.GA20101@fuller.cnet>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Georgi Djakov <quic_c_gdjako-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, djakov-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: "Moessbauer, Felix" <felix.moessbauer@siemens.com>
+Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, "longman@redhat.com" <longman@redhat.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "corbet@lwn.net" <corbet@lwn.net>, "frederic@kernel.org" <frederic@kernel.org>, "guro@fb.com" <guro@fb.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "juri.lelli@redhat.com" <juri.lelli@redhat.com>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-kselftest@vger.kernel.org" <linux-kselftest@vger.kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "pauld@redhat.com" <pauld@redhat.com>, "peterz@infradead.org" <peterz@infradead.org>, "shuah@kernel.org" <shuah@kernel.org>
 
-On Wed, Nov 10, 2021 at 07:36:37AM -0800, Georgi Djakov wrote:
-> @@ -21,7 +19,18 @@ enum psi_task_count {
->  	 * don't have to special case any state tracking for it.
->  	 */
->  	NR_ONCPU,
-> -	NR_PSI_TASK_COUNTS = 4,
-> +	NR_BLK_CGROUP_THROTTLE,
-> +	NR_BIO,
-> +	NR_COMPACTION,
-> +	NR_THRASHING,
-> +	NR_CGROUP_RECLAIM_HIGH,
-> +	NR_CGROUP_RECLAIM_HIGH_SLEEP,
-> +	NR_CGROUP_TRY_CHARGE,
-> +	NR_DIRECT_COMPACTION,
-> +	NR_DIRECT_RECLAIM,
-> +	NR_READ_SWAPPAGE,
-> +	NR_KSWAPD,
-> +	NR_PSI_TASK_COUNTS = 16,
->  };
->  
+On Wed, Nov 10, 2021 at 01:10:20PM -0300, Marcelo Tosatti wrote:
+> On Wed, Nov 10, 2021 at 03:21:54PM +0000, Moessbauer, Felix wrote:
+> >=20
+> >=20
+> > > -----Original Message-----
+> > > From: Michal Koutn=FD <mkoutny@suse.com>
+> > > Sent: Wednesday, November 10, 2021 2:57 PM
+> > > To: Moessbauer, Felix (T RDA IOT SES-DE) <felix.moessbauer@siemens.co=
+m>
+> > > Cc: longman@redhat.com; akpm@linux-foundation.org;
+> > > cgroups@vger.kernel.org; corbet@lwn.net; frederic@kernel.org; guro@fb=
+.com;
+> > > hannes@cmpxchg.org; juri.lelli@redhat.com; linux-doc@vger.kernel.org;=
+ linux-
+> > > kernel@vger.kernel.org; linux-kselftest@vger.kernel.org;
+> > > lizefan.x@bytedance.com; mtosatti@redhat.com; pauld@redhat.com;
+> > > peterz@infradead.org; shuah@kernel.org; tj@kernel.org; Kiszka, Jan (T=
+ RDA
+> > > IOT) <jan.kiszka@siemens.com>; Schild, Henning (T RDA IOT SES-DE)
+> > > <henning.schild@siemens.com>
+> > > Subject: Re: [PATCH v8 0/6] cgroup/cpuset: Add new cpuset partition t=
+ype &
+> > > empty effecitve cpus
+> > >=20
+> > > Hello.
+> > >=20
+> > > On Wed, Nov 10, 2021 at 12:13:57PM +0100, Felix Moessbauer
+> > > <felix.moessbauer@siemens.com> wrote:
+> > > > However, I was not able to see any latency improvements when using
+> > > > cpuset.cpus.partition=3Disolated.
+> > >=20
+> > > Interesting. What was the baseline against which you compared it (iso=
+lcpus, no
+> > > cpusets,...)?
+> >=20
+> > For this test, I just compared both settings cpuset.cpus.partition=3Dis=
+olated|root.
+> > There, I did not see a significant difference (but I know, RT tuning de=
+pends on a ton of things).
+> >=20
+> > >=20
+> > > > The test was performed with jitterdebugger on CPUs 1-3 and the foll=
+owing
+> > > cmdline:
+> > > > rcu_nocbs=3D1-4 nohz_full=3D1-4 irqaffinity=3D0,5-6,11 intel_pstate=
+=3Ddisable
+> > > > On the other cpus, stress-ng was executed to generate load.
+> > > > [...]
+> > >=20
+> > > > This requires cgroup.type=3Dthreaded on both cgroups and changes to=
+ the
+> > > > application (threads have to be born in non-rt group and moved to r=
+t-group).
+> > >=20
+> > > But even with isolcpus the application would need to set affinity of =
+threads to
+> > > the selected CPUs (cf cgroup migrating). Do I miss anything?
+> >=20
+> > Yes, that's true. But there are two differences (given that you use iso=
+lcpus):
+> > 1. the application only has to set the affinity for rt threads.
+> >  Threads that do not explicitly set the affinity are automatically excl=
+uded from the isolated cores.
+> >  Even common rt test applications like jitterdebugger do not pin their =
+non-rt threads.
+> > 2. Threads can be started on non-rt CPUs and then bound to a specific r=
+t CPU.
+> > This binding can be specified before thread creation via pthread_create.
+> > By that, you can make sure that at no point in time a thread has a "for=
+bidden" CPU in its affinities.
+> >=20
+> > With cgroup2, you cannot guarantee the second aspect, as thread creatio=
+n and moving to a cgroup is not an atomic operation.
+> > Also - please correct me if I'm wrong - you first have to create a thre=
+ad before moving it into a group.
+> > At creation time, you cannot set the final affinity mask (as you create=
+ it in the non-rt group and there the CPU is not in the cpuset.cpus).
+> > Once you move the thread to the rt cgroup, it has a default mask and by=
+ that can be executed on other rt cores.
+>=20
+> man clone3:
+>=20
+>        CLONE_NEWCGROUP (since Linux 4.6)
+>               Create  the  process  in  a  new cgroup namespace.  If this=
+ flag is not set, then (as with fork(2)) the
+>               process is created in the same cgroup namespaces as the cal=
+ling process.
+>=20
+>               For further information on cgroup namespaces, see cgroup_na=
+mespaces(7).
+>=20
+>               Only a privileged process (CAP_SYS_ADMIN) can employ CLONE_=
+NEWCGROUP.
+>=20
 
-> @@ -51,9 +80,20 @@ enum psi_states {
->  	PSI_MEM_FULL,
->  	PSI_CPU_SOME,
->  	PSI_CPU_FULL,
-> +	PSI_BLK_CGROUP_THROTTLE,
-> +	PSI_BIO,
-> +	PSI_COMPACTION,
-> +	PSI_THRASHING,
-> +	PSI_CGROUP_RECLAIM_HIGH,
-> +	PSI_CGROUP_RECLAIM_HIGH_SLEEP,
-> +	PSI_CGROUP_TRY_CHARGE,
-> +	PSI_DIRECT_COMPACTION,
-> +	PSI_DIRECT_RECLAIM,
-> +	PSI_READ_SWAPPAGE,
-> +	PSI_KSWAPD,
->  	/* Only per-CPU, to weigh the CPU in the global average: */
->  	PSI_NONIDLE,
-> -	NR_PSI_STATES = 7,
-> +	NR_PSI_STATES = 18,
->  };
+Err, CLONE_INTO_CGROUP.
 
-Have you considered what this does to psi_group_cpu's size and layout
-and the impact thereof on performance?
