@@ -1,90 +1,53 @@
-From: Jan Kiszka <jan.kiszka-kv7WeFo6aLtBDgjK7y7TUQ@public.gmane.org>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Subject: Re: Questions about replacing isolcpus by cgroup-v2
-Date: Fri, 12 Nov 2021 16:46:08 +0100
-Message-ID: <2587fcb7-6c3f-e44c-ba4b-20e7327337e3@siemens.com>
+Date: Fri, 12 Nov 2021 16:54:11 +0100
+Message-ID: <20211112155411.gmpwaf5bkgs2i227@linutronix.de>
 References: <AM9PR10MB48692A964E3106D11AC0FDEE898D9@AM9PR10MB4869.EURPRD10.PROD.OUTLOOK.COM>
  <20211112153656.qkwyvdmb42ze25iw@linutronix.de>
  <AM9PR10MB4869F9A2D7F5F95C29B5521889959@AM9PR10MB4869.EURPRD10.PROD.OUTLOOK.COM>
+ <2587fcb7-6c3f-e44c-ba4b-20e7327337e3@siemens.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <AM9PR10MB4869F9A2D7F5F95C29B5521889959-M49tMopaQCDO+/9PLUklKbUAtUbAAahqZmpNikb/MY7jO8Y7rvWZVA@public.gmane.org>
-Content-Language: en-US
+Return-path: <linux-rt-users-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1636732453;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=IEtagM4Et8kzeQZy8+ha45gEF5OfK9xqtK0ZgxfSfk0=;
+        b=Dv1v8YtnEQ2v4yoUFwWiXbGpLSwLTCXV24SYYjuSlpEpv/i+m2VqXUhXIwl1fbotZmd4Yj
+        rWERSANWeJUEYbQfRQd+laM3jy7WtOzTmOwotS/SJF+z1wZMtFp1oiHwrWroXtuDv1j642
+        0WwJhZCI6Uq9x5OD9V45VdHzUDBeO8gw2+U1siy82v/tuYqTXy/TYaaLZkCSOn/+KCBXN5
+        AsWl8pHHaCMGmWZL3KZFbh1s7gsQpS426+0pX4z3fHI+hu46Vp0aqnk5261e2c6hS0Xnnx
+        wCNFRtTY5xWFadrWj0EeggKTeVNyE34oPoZBNQe/wtmXlqrEecBWgauSSqVMOw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1636732453;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=IEtagM4Et8kzeQZy8+ha45gEF5OfK9xqtK0ZgxfSfk0=;
+        b=RAHny7lC+VmQLwhjVY/jsQR+litAUWbIQQrdARneRGuLehOqxYGO3iT/KHa4FPeo9GDCDJ
+        lPc/ZIHrHwxyaxAw==
+Content-Disposition: inline
+In-Reply-To: <2587fcb7-6c3f-e44c-ba4b-20e7327337e3@siemens.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Moessbauer, Felix (T RDA IOT SES-DE)" <felix.moessbauer-kv7WeFo6aLtBDgjK7y7TUQ@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: "linux-rt-users-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rt-users-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Schild, Henning (T RDA IOT SES-DE)" <henning.schild-kv7WeFo6aLtBDgjK7y7TUQ@public.gmane.org>, "Schmidt, Adriaan (T RDA IOT SES-DE)" <adriaan.schmidt-kv7WeFo6aLtBDgjK7y7TUQ@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Jan Kiszka <jan.kiszka@siemens.com>
+Cc: "Moessbauer, Felix (T RDA IOT SES-DE)" <felix.moessbauer@siemens.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-rt-users@vger.kernel.org" <linux-rt-users@vger.kernel.org>, "Schild, Henning (T RDA IOT SES-DE)" <henning.schild@siemens.com>, "Schmidt, Adriaan (T RDA IOT SES-DE)" <adriaan.schmidt@siemens.com>, Frederic Weisbecker <frederic@kernel.org>
 
-On 12.11.21 16:45, Moessbauer, Felix (T RDA IOT SES-DE) wrote:
-> Hi Sebastian,
+On 2021-11-12 16:46:08 [+0100], Jan Kiszka wrote:
+> > https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html
+> > isolcpus=       [KNL,SMP,ISOL] Isolate a given set of CPUs from disturbance.
+> >                         [Deprecated - use cpusets instead]
+> >                         Format: [flag-list,]<cpu-list>
+> > 
 > 
->> -----Original Message-----
->> From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
->> Sent: Friday, November 12, 2021 4:37 PM
->> To: Moessbauer, Felix (T RDA IOT SES-DE) <felix.moessbauer-kv7WeFo6aLtBDgjK7y7TUQ@public.gmane.org>;
->> cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> Cc: linux-rt-users-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; Schild, Henning (T RDA IOT SES-DE)
->> <henning.schild-kv7WeFo6aLtBDgjK7y7TUQ@public.gmane.org>; Kiszka, Jan (T RDA IOT)
->> <jan.kiszka-kv7WeFo6aLtBDgjK7y7TUQ@public.gmane.org>; Schmidt, Adriaan (T RDA IOT SES-DE)
->> <adriaan.schmidt-kv7WeFo6aLtBDgjK7y7TUQ@public.gmane.org>; Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->> Subject: Re: Questions about replacing isolcpus by cgroup-v2
->>
->> On 2021-11-04 17:29:08 [+0000], Moessbauer, Felix wrote:
->>> Dear subscribers,
->> Hi,
->>
->> I Cced cgroups@vger since thus question fits there better.
->> I Cced Frederic in case he has come clues regarding isolcpus and cgroups.
-> 
-> Indeed. Thanks!
-> 
->>
->>> we are currently evaluating how to rework realtime tuning to use cgroup-v2
->> cpusets instead of the isolcpus kernel parameter.
->>> Our use-case are realtime applications with rt and non-rt threads. Hereby, the
->> non-rt thread might create additional non-rt threads:
->>>
->>> Example (RT CPU=1, 4 CPUs):
->>> - Non-RT Thread (A) with default affinity 0xD (1101b)
->>> - RT Thread (B) with Affinity 0x2 (0010b, via set_affinity)
->>>
->>> When using pure isolcpus and cgroup-v1, just setting isolcpus=1 perfectly
->> works:
->>> Thread A gets affinity 0xD, Thread B gets 0x2 and additional threads get a
->> default affinity of 0xD.
->>> By that, independent of the threads' priorities, we can ensure that nothing is
->> scheduled on our RT cpu (except from kernel threads, etc...).
->>>
->>> During this journey, we discovered the following:
->>>
->>> Using cgroup-v2 cpusets and isolcpus together seems to be incompatible:
->>> When activating the cpuset controller on a cgroup (for the first time), all
->> default CPU affinities are reset.
->>> By that, also the default affinity is set to 0xFFFF..., while with isolcpus we
->> expect it to be (0xFFFF - isolcpus).
->>> This breaks the example from above, as now the non-RT thread can also be
->> scheduled on the RT CPU.
->>>
->>> When only using cgroup-v2, we can isolate our RT process by placing it in a
->> cgroup with CPUs=0,1 and remove CPU=1 from all other cgroups.
->>> However, we do not know of a strategy to set a default affinity:
->>> Given the example above, we have no way to ensure that newly created
->> threads are born with an affinity of just 0x2 (without changing the application).
->>>
->>> Finally, isolcpus itself is deprecated since kernel 5.4.
->>
->> Where is this the deprecation of isolcpus announced/ written?
-> 
-> https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html
-> isolcpus=       [KNL,SMP,ISOL] Isolate a given set of CPUs from disturbance.
->                         [Deprecated - use cpusets instead]
->                         Format: [flag-list,]<cpu-list>
+> That was Frederic himself via b0d40d2b22fe - but already for 4.15...
+
+Just found out that myself after getting the pointer from Felix. Maybe
+he is able to answer the questions here :)
+
+> Jan
 > 
 
-That was Frederic himself via b0d40d2b22fe - but already for 4.15...
-
-Jan
-
--- 
-Siemens AG, T RDA IOT
-Corporate Competence Center Embedded Linux
+Sebastian
