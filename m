@@ -1,18 +1,18 @@
 From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] cgroup: pretty format /proc/cgroups
-Date: Mon, 15 Nov 2021 01:04:07 +0000
-Message-ID: <20211115010407.20380-1-richard.weiyang@gmail.com>
+Subject: [Patch v2] cgroup: pretty format /proc/cgroups
+Date: Mon, 15 Nov 2021 01:12:53 +0000
+Message-ID: <20211115011253.20778-1-richard.weiyang@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id;
-        bh=uejnxkT5XpebYh7AJgnAoZS2xCFi6l9f8v0QEmMOCyM=;
-        b=TNGczOiR+iwHno2SJBMCOT4TunVBBZElYiMRh8BVt9VPMWc5LI+5LhIufZSsv3H88Z
-         ikwlGPZnl4ZIiiXYkXUgQqYdI253+48ZCaxfV2m2bx3cBg9aU8XAy1+vghKH6Y7IP9Of
-         oiJgeovnV2OyfCOYubEtrU0hmanZAFcHfKFR5FroIxAVgLQKVkj8TuNC7oTX9FxQP+0Z
-         jacZe0CDY4fWA/o7Pe9MJfzApF8FgSrLp+1//UrQceZiOpaBzf9wLpzsvw71mTZXgSwe
-         37NdW4Pgsql6E0fKnlDDKoszgyK7RhFB+EZqm8d4B7IHk73yo3FttJQMwuTWFXMopayH
-         JhLQ==
+        bh=8dSDliGOTbrCRTDPXM+yPCUeDQ1veUO4KLyhLzS8ruY=;
+        b=apxFVYMKfx0nm/y0nIvv+SpIAJNFXAG1Oq4gGtfxk6xwJbv6V9aWCrObLHXv9MuOgY
+         oY2QbT34qrEJbKJSQsk1BnakQSjFI5o4kqPfJaWC7+WPLPNcH5khOR2dB3soh8iH9/jd
+         mdauPJeQx8gXmbkv8eu0h9UaZh8/OBb9F5b96CC7nmqfpWuVQUHxsDOT0bacEngndFxa
+         3bcoflvH4ETZq0pJUmmhd2igUsG40UE37H6MoujEHW8/Cq0ecMTB4vukz+eLYtWE29jn
+         VO1r8nVs/HXgpVzG9zVH/7p4+ciCmdJcftCEy4sxFt7T8tAfSfTwKcosNMaeNAhWa9nz
+         cjNA==
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,6 +22,7 @@ Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z
 
 Current /proc/cgroups looks like this:
 
+ subsys_name    hierarchy       num_cgroups     enabled
 cpuset  3       1       1
 cpu     2       1       1
 cpuacct 2       1       1
@@ -30,6 +31,7 @@ freezer 5       1       1
 
 Let's align the title and value. After this patch, it looks like this.
 
+ subsys_name    hierarchy       num_cgroups     enabled
       cpuset            5                 1           1
          cpu            3                 1           1
      cpuacct            3                 1           1
@@ -37,6 +39,10 @@ Let's align the title and value. After this patch, it looks like this.
      freezer            4                 1           1
 
 Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+---
+v2: the title line is omitted for the start "#"
+
 ---
  kernel/cgroup/cgroup-v1.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
