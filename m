@@ -1,85 +1,41 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH v8 5/6] cgroup/cpuset: Update description of
- cpuset.cpus.partition in cgroup-v2.rst
-Date: Tue, 16 Nov 2021 18:54:11 +0100
-Message-ID: <20211116175411.GA50019@blackbody.suse.cz>
-References: <20211018143619.205065-1-longman@redhat.com>
- <20211018143619.205065-6-longman@redhat.com>
- <20211115193122.GA16798@blackbody.suse.cz>
- <8f68692b-bd8f-33fd-44ae-f6f83bf2dc00@redhat.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [Patch v2] cgroup: pretty format /proc/cgroups
+Date: Tue, 16 Nov 2021 19:00:17 +0100
+Message-ID: <20211116180013.GA8884@blackbody.suse.cz>
+References: <20211115011253.20778-1-richard.weiyang@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1637085252; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1637085618; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=AQ4Vs3Ue9V/rPlPCCX2Ku26e9rOXlRcNGXZau4L0nns=;
-        b=WWKIaz/W38nsYFEg/zCDoNaH0kIwA0H6XZ/FTs4KYO6YXn8PB48U92vHHzY8eCaYtbXNAw
-        0bDRV5xqAZCLG+pNMxZJqK3emAMALV9Jw4J7trsryDzNOGA1ZVp1riAEmChz92M0DHw1cB
-        L/4UkS3yo+5VogH9yJjdHpqz3Sx7RAE=
+        bh=kyoKspNHubmntuojoiakxQgRvVcpyVRSO96mR7W75T8=;
+        b=G81YlzInUuiguuUMv+tpmWuHcUzfjsXqHA4ntdGsvok9VtuKuBH8WpeDevTBES3TIbZIEv
+        W+7Piog+eR4vlS8lxgUEK4FUCyFPgAy8rKcyVT8W+0xA6dCb7DNxBzqU80kLUDbyTMZVsJ
+        5J8w1MDLjqyA3T8c66GQdlfzTekB8YE=
 Content-Disposition: inline
-In-Reply-To: <8f68692b-bd8f-33fd-44ae-f6f83bf2dc00@redhat.com>
+In-Reply-To: <20211115011253.20778-1-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
+To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Nov 15, 2021 at 04:10:29PM -0500, Waiman Long <longman@redhat.com> wrote:
-> > On Mon, Oct 18, 2021 at 10:36:18AM -0400, Waiman Long <longman@redhat.com> wrote:
-> > > +	scheduler.  Tasks in such a partition must be explicitly bound
-> > > +	to each individual CPU.
-> [...]
-> 
-> It can be a problem when one is trying to move from one cgroup to another
-> cgroup with non-overlapping cpus laterally. However, if a task is initially
-> from a parent cgroup with affinity mask that include cpus in the isolated
-> child cgroup, I believe it should be able to move to the isolated child
-> cgroup without problem. Otherwise, it is a bug that needs to be fixed.
+Hello.
 
-app_root	cpuset.cpus=0-3
-`- non_rt	cpuset.cpus=0-1	cpuset.cpus.partition=member
-`- rt		cpuset.cpus=2-3	cpuset.cpus.partition=isolated
+On Mon, Nov 15, 2021 at 01:12:53AM +0000, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> Let's align the title and value. After this patch, it looks like this.
 
-The app_root would have cpuset.cpus.effective=0-1 so even the task in
-app_root can't sched_setaffinity() to cpus 2-3.
-But AFAICS, the migration calls set_cpus_allowed_ptr() anyway, so the
-task in the isolated partition needn't to bind explicitly with
-sched_setaffinity(). (It'd have two cpus available, so one more
-sched_setaffinity() or migration into a single-cpu list is desirable.)
+For machines this change may come as a surprise (so better not change
+it).
 
-All in all, I think the behavior is OK and the explicit binding of tasks
-in an isolated cpuset is optional (not a must as worded currently).
+For humans (for instance column from util-linux)
 
+$ column -t /proc/cgroups
+#subsys_name  hierarchy  num_cgroups  enabled
+cpuset        11         2            1
+cpu           4          9            1
+cpuacct       4          9            1
+...
 
-> I think the wording may be confusing. What I meant is none of the requested
-> cpu can be granted. So if there is at least one granted, the effective cpus
-> won't be empty.
-
-Ack.
-
-> You currently cannot make change to cpuset.cpus that violates the cpu
-> exclusivity rule. The above constraints will not disallow you to make the
-> change. They just affect the validity of the partition root.
-
-Sibling exclusivity should be a validity condition regardless of whether
-transition is allowed or not. (At least it looks simpler to me.)
-
-
-> > > +        Changing a partition root to "member" is always allowed.
-> > > +        If there are child partition roots underneath it, however,
-> > > +        they will be forced to be switched back to "member" too and
-> > > +        lose their partitions. So care must be taken to double check
-> > > +        for this condition before disabling a partition root.
-> > (Or is this how delegation is intended?) However, AFAICS, parent still
-> > can't remove cpuset.cpus even when the child is a "member". Otherwise,
-> > I agree with the back-switch.
-> There are only 2 possibilities here. Either we force the child partitions to
-> be become members or invalid partition root.
-
-My point here was mostly about preempting the cpus (as a v2 specific
-feature). (I'm rather indifferent whether children turn into invalid
-roots or members.)
-
-Thanks,
 Michal
