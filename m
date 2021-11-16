@@ -1,50 +1,85 @@
-From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [RFC PATCH 21/32] mm: Convert struct page to struct slab in
- functions used by other subsystems
-Date: Tue, 16 Nov 2021 17:32:58 +0100
-Message-ID: <6866ad09-f765-0e8b-4821-8dbdc6d0f24e@suse.cz>
-References: <20211116001628.24216-1-vbabka@suse.cz>
- <20211116001628.24216-22-vbabka@suse.cz>
- <CA+fCnZd_39cEvP+ktfxSrYAj6xdM02X6C0CxA5rLauaMhs2mxQ@mail.gmail.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH v8 5/6] cgroup/cpuset: Update description of
+ cpuset.cpus.partition in cgroup-v2.rst
+Date: Tue, 16 Nov 2021 18:54:11 +0100
+Message-ID: <20211116175411.GA50019@blackbody.suse.cz>
+References: <20211018143619.205065-1-longman@redhat.com>
+ <20211018143619.205065-6-longman@redhat.com>
+ <20211115193122.GA16798@blackbody.suse.cz>
+ <8f68692b-bd8f-33fd-44ae-f6f83bf2dc00@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1637080378; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1637085252; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=IdNHsSJ0TUD00V1kkWXYSG/GlAFO0QPXtO8TfYkofSY=;
-        b=MijUyi88lZ9DiijG3jxYOvHLk3fRiZzkR+fpqvw/u1z0LEueLN/0KUr7R3BvYU1M4z6aBE
-        zhnvy154JcLZ4I5wXS7KnTyl7U7XczcEzaEGt54cc8nMDHqImnQ2IfYFGx830RQdTAkIlY
-        4ss7d7Tu0HfV1mYRx3tt0igHxDXiZps=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1637080378;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=IdNHsSJ0TUD00V1kkWXYSG/GlAFO0QPXtO8TfYkofSY=;
-        b=JKrI4zxYmDk0OoP0A4AGw4Uj1AYkJhYXTHuBPrGvh+prinKuWrhEVkFyZhC891suL7lvHV
-        vhCNK4l3K5a0L5BQ==
-Content-Language: en-US
-In-Reply-To: <CA+fCnZd_39cEvP+ktfxSrYAj6xdM02X6C0CxA5rLauaMhs2mxQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        bh=AQ4Vs3Ue9V/rPlPCCX2Ku26e9rOXlRcNGXZau4L0nns=;
+        b=WWKIaz/W38nsYFEg/zCDoNaH0kIwA0H6XZ/FTs4KYO6YXn8PB48U92vHHzY8eCaYtbXNAw
+        0bDRV5xqAZCLG+pNMxZJqK3emAMALV9Jw4J7trsryDzNOGA1ZVp1riAEmChz92M0DHw1cB
+        L/4UkS3yo+5VogH9yJjdHpqz3Sx7RAE=
+Content-Disposition: inline
+In-Reply-To: <8f68692b-bd8f-33fd-44ae-f6f83bf2dc00@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrey Konovalov <andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Julia Lawall <julia.lawall-MZpvjPyXg2s@public.gmane.org>, Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, kasan-dev <kasan-dev-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
 
-On 11/16/21 15:02, Andrey Konovalov wrote:
->> --- a/mm/kasan/report.c
->> +++ b/mm/kasan/report.c
->> @@ -249,7 +249,7 @@ static void print_address_description(void *addr, u8 tag)
->>
->>         if (page && PageSlab(page)) {
->>                 struct kmem_cache *cache = page->slab_cache;
->> -               void *object = nearest_obj(cache, page, addr);
->> +               void *object = nearest_obj(cache, page_slab(page),      addr);
+On Mon, Nov 15, 2021 at 04:10:29PM -0500, Waiman Long <longman@redhat.com> wrote:
+> > On Mon, Oct 18, 2021 at 10:36:18AM -0400, Waiman Long <longman@redhat.com> wrote:
+> > > +	scheduler.  Tasks in such a partition must be explicitly bound
+> > > +	to each individual CPU.
+> [...]
 > 
-> The tab before addr should be a space. checkpatch should probably report this.
+> It can be a problem when one is trying to move from one cgroup to another
+> cgroup with non-overlapping cpus laterally. However, if a task is initially
+> from a parent cgroup with affinity mask that include cpus in the isolated
+> child cgroup, I believe it should be able to move to the isolated child
+> cgroup without problem. Otherwise, it is a bug that needs to be fixed.
 
-Good catch, thanks. Note the tab is there already before this patch, it just
-happened to appear identical to a single space before.
+app_root	cpuset.cpus=0-3
+`- non_rt	cpuset.cpus=0-1	cpuset.cpus.partition=member
+`- rt		cpuset.cpus=2-3	cpuset.cpus.partition=isolated
+
+The app_root would have cpuset.cpus.effective=0-1 so even the task in
+app_root can't sched_setaffinity() to cpus 2-3.
+But AFAICS, the migration calls set_cpus_allowed_ptr() anyway, so the
+task in the isolated partition needn't to bind explicitly with
+sched_setaffinity(). (It'd have two cpus available, so one more
+sched_setaffinity() or migration into a single-cpu list is desirable.)
+
+All in all, I think the behavior is OK and the explicit binding of tasks
+in an isolated cpuset is optional (not a must as worded currently).
+
+
+> I think the wording may be confusing. What I meant is none of the requested
+> cpu can be granted. So if there is at least one granted, the effective cpus
+> won't be empty.
+
+Ack.
+
+> You currently cannot make change to cpuset.cpus that violates the cpu
+> exclusivity rule. The above constraints will not disallow you to make the
+> change. They just affect the validity of the partition root.
+
+Sibling exclusivity should be a validity condition regardless of whether
+transition is allowed or not. (At least it looks simpler to me.)
+
+
+> > > +        Changing a partition root to "member" is always allowed.
+> > > +        If there are child partition roots underneath it, however,
+> > > +        they will be forced to be switched back to "member" too and
+> > > +        lose their partitions. So care must be taken to double check
+> > > +        for this condition before disabling a partition root.
+> > (Or is this how delegation is intended?) However, AFAICS, parent still
+> > can't remove cpuset.cpus even when the child is a "member". Otherwise,
+> > I agree with the back-switch.
+> There are only 2 possibilities here. Either we force the child partitions to
+> be become members or invalid partition root.
+
+My point here was mostly about preempting the cpus (as a v2 specific
+feature). (I'm rather indifferent whether children turn into invalid
+roots or members.)
+
+Thanks,
+Michal
