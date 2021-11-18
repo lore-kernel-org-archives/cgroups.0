@@ -1,51 +1,38 @@
-From: Laibin Qiu <qiulaibin-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next] blk-throttle: Set BIO_THROTTLED when bio has been throttled
-Date: Thu, 18 Nov 2021 21:15:51 +0800
-Message-ID: <20211118131551.810931-1-qiulaibin@huawei.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH v3 1/4] cputime, cpuacct: Include guest time in user time
+ in cpuacct.stat
+Date: Thu, 18 Nov 2021 15:29:51 +0100
+Message-ID: <YZZjX4NC5gc+poSI@hirez.programming.kicks-ass.net>
+References: <20211115164607.23784-1-arbn@yandex-team.com>
+ <YZLLyFnT95o4Sa8X@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=ekjbeMSSluitq89HmbpZTemKWo5ngK3iUKiP5ZJguVc=; b=VF+HazTrHE8GalajWnK4zFuJLv
+        D6WCXPblJLo7kFhjP+L3Uta2+eLf3mHsF6JXywBRZu7Q2I72TOBiYWvz5n95a+VQ4S6fDTJKKH3nU
+        pfNI0hd+eTSPtOXC0l+u9QDssagKuvjr2G8h+Nn70Sn0mwIYsSMw6r2i1AfEVk+GVTytDXuJd5rr5
+        eIkcgr7rtPSkjuR6memzpUw8VgQ6R1/pqPsKFhvEC41v7qoMTDzJN4CqhIQ3yNzjeAor1eWacV8ko
+        Q5jrpfDvqRUc5JkyXRkeuwG1dpXI7GY03XKuFOgKkDWtn9V/3RWe2X7fIzc4nxFJ96YQlQUR6KJUD
+        9cFvvqsA==;
+Content-Disposition: inline
+In-Reply-To: <YZLLyFnT95o4Sa8X@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Andrey Ryabinin <arbn@yandex-team.com>, Ingo Molnar <mingo@redhat.com>, Daniel Jordan <daniel.m.jordan@oracle.com>, stable@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Schatzberg <schatzberg.dan@gmail.com>
 
-1.In current process, all bio will set the BIO_THROTTLED flag
-after __blk_throtl_bio().
+On Mon, Nov 15, 2021 at 11:06:16AM -1000, Tejun Heo wrote:
+> Hello,
+> 
+> Ingo, Peter, this looks fine to be sans a couple typos in the descriptions.
+> Please let me know if you wanna take them through sched tree. Otherwise,
+> I'll route them through cgroup tree in a few days.
 
-2.If bio needs to be throttled, it will start the timer and
-stop submit bio directly. Bio will submit in blk_throtl_dispatch_work_fn()
-when the timer expires. But in the current process, if bio is throttled.
-The BIO_THROTTLED will be set to bio after timer start. If the bio
-has been completed, it may cause use-after-free.
+This is all cgroup only changes, right? That's not immediately obvious
+from the changelogs.
 
-Fix this by move BIO_THROTTLED set before timer set.
-
-Signed-off-by: Laibin Qiu <qiulaibin-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- block/blk-throttle.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 39bb6e68a9a2..ddfbff4465d5 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -2149,6 +2149,7 @@ bool __blk_throtl_bio(struct bio *bio)
- 	td->nr_queued[rw]++;
- 	throtl_add_bio_tg(bio, qn, tg);
- 	throttled = true;
-+	bio_set_flag(bio, BIO_THROTTLED);
- 
- 	/*
- 	 * Update @tg's dispatch time and force schedule dispatch if @tg
-@@ -2163,7 +2164,6 @@ bool __blk_throtl_bio(struct bio *bio)
- 
- out_unlock:
- 	spin_unlock_irq(&q->queue_lock);
--	bio_set_flag(bio, BIO_THROTTLED);
- 
- #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
- 	if (throttled || !td->track_bio_latency)
--- 
-2.22.0
-
+But yeah, I can take them I suppose. Lemme go queue them.
