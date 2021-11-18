@@ -1,38 +1,108 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH v3 1/4] cputime, cpuacct: Include guest time in user time
- in cpuacct.stat
-Date: Thu, 18 Nov 2021 15:29:51 +0100
-Message-ID: <YZZjX4NC5gc+poSI@hirez.programming.kicks-ass.net>
-References: <20211115164607.23784-1-arbn@yandex-team.com>
- <YZLLyFnT95o4Sa8X@slm.duckdns.org>
+From: Kenny Ho <Kenny.Ho@amd.com>
+Subject: [PATCH RFC 1/4] cgroup, perf: Add ability to connect to perf cgroup from other cgroup controller
+Date: Thu, 18 Nov 2021 15:28:37 -0500
+Message-ID: <20211118202840.1001787-2-Kenny.Ho@amd.com>
+References: <20211118202840.1001787-1-Kenny.Ho@amd.com>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=ekjbeMSSluitq89HmbpZTemKWo5ngK3iUKiP5ZJguVc=; b=VF+HazTrHE8GalajWnK4zFuJLv
-        D6WCXPblJLo7kFhjP+L3Uta2+eLf3mHsF6JXywBRZu7Q2I72TOBiYWvz5n95a+VQ4S6fDTJKKH3nU
-        pfNI0hd+eTSPtOXC0l+u9QDssagKuvjr2G8h+Nn70Sn0mwIYsSMw6r2i1AfEVk+GVTytDXuJd5rr5
-        eIkcgr7rtPSkjuR6memzpUw8VgQ6R1/pqPsKFhvEC41v7qoMTDzJN4CqhIQ3yNzjeAor1eWacV8ko
-        Q5jrpfDvqRUc5JkyXRkeuwG1dpXI7GY03XKuFOgKkDWtn9V/3RWe2X7fIzc4nxFJ96YQlQUR6KJUD
-        9cFvvqsA==;
-Content-Disposition: inline
-In-Reply-To: <YZLLyFnT95o4Sa8X@slm.duckdns.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=T73Z7+mHYZvKeeLZYHXHafx8/Qc7zeDlNYSdd4qtgbo=;
+ b=wxcAhmkVD9KITXfdrfqNJoaxKdmvkDxIo3OS3l8HuvtFtZAjzGw/9TSEqfMARb6VnPlttvf6EWlkaXu4UHwHgKvnKfewCsdoy65QdKce6TZUCdFLB8g9favxHatOhIdawqe+agtj/JlXRyjfrDIi6aX6ipVSYaLdksWBKbgERd0=
+In-Reply-To: <20211118202840.1001787-1-Kenny.Ho@amd.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Andrey Ryabinin <arbn@yandex-team.com>, Ingo Molnar <mingo@redhat.com>, Daniel Jordan <daniel.m.jordan@oracle.com>, stable@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Dan Schatzberg <schatzberg.dan@gmail.com>
+To: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Arnaldo Carvalho de Melo <acme@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alexander Shishkin <alexander.shishkin@linux.intel.com>, Jiri Olsa <jolsa@redhat.com>, Namhyung Kim <namhyung@kernel.org>, Steven Rostedt <rostedt@goodmis.org>, netdev@vger.kernel.org, bpf@vger.kernel.org, linux
 
-On Mon, Nov 15, 2021 at 11:06:16AM -1000, Tejun Heo wrote:
-> Hello,
-> 
-> Ingo, Peter, this looks fine to be sans a couple typos in the descriptions.
-> Please let me know if you wanna take them through sched tree. Otherwise,
-> I'll route them through cgroup tree in a few days.
+This provides the ability to allocate cgroup specific perf_event by
+bpf-cgroup in later patch
 
-This is all cgroup only changes, right? That's not immediately obvious
-from the changelogs.
+Change-Id: I13aa7f3dfc2883ba3663c0b94744a6169504bbd8
+Signed-off-by: Kenny Ho <Kenny.Ho@amd.com>
+---
+ include/linux/cgroup.h     |  2 ++
+ include/linux/perf_event.h |  2 ++
+ kernel/cgroup/cgroup.c     |  4 ++--
+ kernel/events/core.c       | 17 +++++++++++++++++
+ 4 files changed, 23 insertions(+), 2 deletions(-)
 
-But yeah, I can take them I suppose. Lemme go queue them.
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 75c151413fda..1754e33cfe5e 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -97,6 +97,8 @@ extern struct css_set init_css_set;
+ 
+ bool css_has_online_children(struct cgroup_subsys_state *css);
+ struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss);
++struct cgroup_subsys_state *cgroup_tryget_css(struct cgroup *cgroup,
++					      struct cgroup_subsys *ss);
+ struct cgroup_subsys_state *cgroup_e_css(struct cgroup *cgroup,
+ 					 struct cgroup_subsys *ss);
+ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgroup,
+diff --git a/include/linux/perf_event.h b/include/linux/perf_event.h
+index 0cbc5dfe1110..9c440db65c18 100644
+--- a/include/linux/perf_event.h
++++ b/include/linux/perf_event.h
+@@ -926,6 +926,8 @@ struct perf_cgroup {
+ 	struct perf_cgroup_info	__percpu *info;
+ };
+ 
++extern struct perf_cgroup *cgroup_tryget_perf_cgroup(struct cgroup *cgrp);
++
+ /*
+  * Must ensure cgroup is pinned (css_get) before calling
+  * this function. In other words, we cannot call this function
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 570b0c97392a..a645b212b69b 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -495,8 +495,8 @@ static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
+  * Find and get @cgrp's css associated with @ss.  If the css doesn't exist
+  * or is offline, %NULL is returned.
+  */
+-static struct cgroup_subsys_state *cgroup_tryget_css(struct cgroup *cgrp,
+-						     struct cgroup_subsys *ss)
++struct cgroup_subsys_state *cgroup_tryget_css(struct cgroup *cgrp,
++					      struct cgroup_subsys *ss)
+ {
+ 	struct cgroup_subsys_state *css;
+ 
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index 20367196fa9a..d34e00749c9b 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -941,6 +941,18 @@ static int perf_cgroup_ensure_storage(struct perf_event *event,
+ 	return ret;
+ }
+ 
++struct perf_cgroup *cgroup_tryget_perf_cgroup(struct cgroup *cgrp)
++{
++	struct cgroup_subsys_state *css;
++
++	css = cgroup_tryget_css(cgrp, &perf_event_cgrp_subsys);
++
++	if (!css)
++		return NULL;
++
++	return container_of(css, struct perf_cgroup, css);
++}
++
+ static inline int perf_cgroup_connect(int fd, struct perf_event *event,
+ 				      struct perf_event_attr *attr,
+ 				      struct perf_event *group_leader)
+@@ -1080,6 +1092,11 @@ static inline void perf_cgroup_sched_in(struct task_struct *prev,
+ {
+ }
+ 
++struct perf_cgroup *cgroup_tryget_perf_cgroup(struct cgroup *cgrp)
++{
++	return NULL;
++}
++
+ static inline int perf_cgroup_connect(pid_t pid, struct perf_event *event,
+ 				      struct perf_event_attr *attr,
+ 				      struct perf_event *group_leader)
+-- 
+2.25.1
+
