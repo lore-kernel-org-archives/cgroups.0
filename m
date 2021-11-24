@@ -1,84 +1,133 @@
-From: Mike Kravetz <mike.kravetz@oracle.com>
-Subject: Re: [PATCH v8] hugetlb: Add hugetlb.*.numa_stat file
-Date: Mon, 22 Nov 2021 19:30:21 -0800
-Message-ID: <53ce6e47-109d-af25-25fc-151ddf512287@oracle.com>
-References: <20211123001020.4083653-1-almasrymina@google.com>
+From: Hao Lee <haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] mm: reduce spinlock contention in release_pages()
+Date: Wed, 24 Nov 2021 15:19:15 +0000
+Message-ID: <20211124151915.GA6163@haolee.io>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=FJhRUVLF41IteNP30kjmIDQ0wvnfb7LrsYn2Y4FK0O8=;
- b=leWUqjA43YuNHTqWoFYWCDu1nOkEsWQP8lTGP7sc7bEp1fgQSNf2sj/7bZboGLdOJaUG
- tCAd+6kCY7Xy3/UrpbHffnxQvHbbgCnZHKOdOY7qLpSLMEqLo8WIGJpp6d9fawaiBMZa
- Pz5/nJBMN6br7DObjItS993ROv5+ya4Ci7ei52jQZwBqZE6flA3FHoItak3QqcZEWlF4
- ISYR56oBG0LXiz13nVGJKGAo7ZaB4pNQgB514Gyl0waSHKq8lM/HAfvR+UuXtXR0GmlD
- zM5W1oDAgMO1aQDSyxtkQeFgnj/Hbz/LQNHwgemZBmIxcpAbUoZyoWRNRV+K2vdao899 7w== 
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FJhRUVLF41IteNP30kjmIDQ0wvnfb7LrsYn2Y4FK0O8=;
- b=mM7XUHVVgdFMpRfIH8cPtHHvwdy8nssQ/6AVNS8Pw7Q2eUVkGUJ4l0cxwQkG69up5m0lXsyntXV19zQ0216Ntv1+UnECxthtyt23HV4K/RSbeuc5phuKxQXIEMHOBWhnvEsJh5o21BSFtVlB7IIgjr93dkTBKmGS/RyYfWi+k8A=
-Content-Language: en-US
-In-Reply-To: <20211123001020.4083653-1-almasrymina@google.com>
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=VQS9J9ET/JQ+uchySALu/6BIuoEYQrXpV1bknFuamdY=;
+        b=fK7/ysA9q+3lIpsi3NA5igDoHT6nob2CncLewzRyhJj7GxHFWBpXYzZck1N0SWi4D6
+         jaJ5RUL7SL3WnaYD2oDzS/379y4FSjRtBJaQbE7uAtQ4UZJ1L8ZB2USj7NZhSysju4Jo
+         e8t/JSZ3LoDp648sz8zMfd25a3MWpAmxjIsSVuccbIxw7OK+vWsU511Z5CtAF5FbWDeJ
+         2EmDdUiVBkvAN052YipJeEXp4N/xVe2RUtkJ4M50ba/10QPJyPw+ljEPP66VSvQhRHP3
+         Uu23aHp7jPw5CexlF/OXPRWpfiZ3rckMpllum0MfYvpIqw2ylBOiUbKsYbS7sUaujoZ/
+         YK2A==
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Mina Almasry <almasrymina@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Shuah Khan <shuah@kernel.org>, Miaohe Lin <linmiaohe@huawei.com>, Oscar Salvador <osalvador@suse.de>, Michal Hocko <mhocko@suse.com>, Muchun Song <songmuchun@bytedance.com>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Jue Wang <juew@google.com>, Yang Yao <ygyao@google.com>, Joanna Li <joannali@google.com>, Cannon Matthews <cannonmatthews@google.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 11/22/21 16:10, Mina Almasry wrote:
-> For hugetlb backed jobs/VMs it's critical to understand the numa
-> information for the memory backing these jobs to deliver optimal
-> performance.
->=20
-> Currently this technically can be queried from /proc/self/numa_maps, but
-> there are significant issues with that. Namely:
-> 1. Memory can be mapped or unmapped.
-> 2. numa_maps are per process and need to be aggregated across all
->    processes in the cgroup. For shared memory this is more involved as
->    the userspace needs to make sure it doesn't double count shared
->    mappings.
-> 3. I believe querying numa_maps needs to hold the mmap_lock which adds
->    to the contention on this lock.
->=20
-> For these reasons I propose simply adding hugetlb.*.numa_stat file,
-> which shows the numa information of the cgroup similarly to
-> memory.numa_stat.
->=20
-> On cgroup-v2:
->    cat /sys/fs/cgroup/unified/test/hugetlb.2MB.numa_stat
->    total=3D2097152 N0=3D2097152 N1=3D0
->=20
-> On cgroup-v1:
->    cat /sys/fs/cgroup/hugetlb/test/hugetlb.2MB.numa_stat
->    total=3D2097152 N0=3D2097152 N1=3D0
->    hierarichal_total=3D2097152 N0=3D2097152 N1=3D0
->=20
-> This patch was tested manually by allocating hugetlb memory and querying
-> the hugetlb.*.numa_stat file of the cgroup and its parents.
-> =EF=BF=BC
-> Cc: Mike Kravetz <mike.kravetz@oracle.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Shuah Khan <shuah@kernel.org>
-> Cc: Miaohe Lin <linmiaohe@huawei.com>
-> Cc: Oscar Salvador <osalvador@suse.de>
-> Cc: Michal Hocko <mhocko@suse.com>
-> Cc: Muchun Song <songmuchun@bytedance.com>
-> Cc: David Rientjes <rientjes@google.com>
-> Cc: Shakeel Butt <shakeelb@google.com>
-> Cc: Jue Wang <juew@google.com>
-> Cc: Yang Yao <ygyao@google.com>
-> Cc: Joanna Li <joannali@google.com>
-> Cc: Cannon Matthews <cannonmatthews@google.com>
-> Cc: linux-mm@kvack.org
-> Cc: linux-kernel@vger.kernel.org
->=20
-> Signed-off-by: Mina Almasry <almasrymina@google.com>
->=20
+When several tasks are terminated simultaneously, lots of pages will be
+released, which can cause severe spinlock contention. Other tasks which
+are running on the same core will be seriously affected. We can yield
+cpu to fix this problem.
 
-Thanks for continuing to update, this version looks good.
+Signed-off-by: Hao Lee <haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ include/linux/memcontrol.h | 26 ++++++++++++++++++++++++++
+ mm/memcontrol.c            | 12 ++++++++++++
+ mm/swap.c                  |  8 +++++++-
+ 3 files changed, 45 insertions(+), 1 deletion(-)
 
-Reviewed-by: Mike Kravetz <mike.kravetz@oracle.com>
---=20
-Mike Kravetz
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 0c5c403f4be6..b06a5bcfd8f6 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -800,6 +800,8 @@ struct lruvec *folio_lruvec_lock(struct folio *folio);
+ struct lruvec *folio_lruvec_lock_irq(struct folio *folio);
+ struct lruvec *folio_lruvec_lock_irqsave(struct folio *folio,
+ 						unsigned long *flags);
++struct lruvec *folio_lruvec_trylock_irqsave(struct folio *folio,
++						unsigned long *flags);
+ 
+ #ifdef CONFIG_DEBUG_VM
+ void lruvec_memcg_debug(struct lruvec *lruvec, struct folio *folio);
+@@ -1313,6 +1315,17 @@ static inline struct lruvec *folio_lruvec_lock_irqsave(struct folio *folio,
+ 	return &pgdat->__lruvec;
+ }
+ 
++static inline struct lruvec *folio_lruvec_trylock_irqsave(struct folio *folio,
++		unsigned long *flagsp)
++{
++	struct pglist_data *pgdat = folio_pgdat(folio);
++
++	if (spin_trylock_irqsave(&pgdat->__lruvec.lru_lock, *flagsp))
++		return &pgdat->__lruvec;
++	else
++		return NULL;
++}
++
+ static inline struct mem_cgroup *
+ mem_cgroup_iter(struct mem_cgroup *root,
+ 		struct mem_cgroup *prev,
+@@ -1598,6 +1611,19 @@ static inline struct lruvec *folio_lruvec_relock_irqsave(struct folio *folio,
+ 	return folio_lruvec_lock_irqsave(folio, flags);
+ }
+ 
++static inline struct lruvec *folio_lruvec_tryrelock_irqsave(struct folio *folio,
++		struct lruvec *locked_lruvec, unsigned long *flags)
++{
++	if (locked_lruvec) {
++		if (folio_matches_lruvec(folio, locked_lruvec))
++			return locked_lruvec;
++
++		unlock_page_lruvec_irqrestore(locked_lruvec, *flags);
++	}
++
++	return folio_lruvec_trylock_irqsave(folio, flags);
++}
++
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 
+ struct wb_domain *mem_cgroup_wb_domain(struct bdi_writeback *wb);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 781605e92015..b60ba54e2337 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1261,6 +1261,18 @@ struct lruvec *folio_lruvec_lock_irqsave(struct folio *folio,
+ 	return lruvec;
+ }
+ 
++struct lruvec *folio_lruvec_trylock_irqsave(struct folio *folio,
++		unsigned long *flags)
++{
++	struct lruvec *lruvec = folio_lruvec(folio);
++
++	if (spin_trylock_irqsave(&lruvec->lru_lock, *flags)) {
++		lruvec_memcg_debug(lruvec, folio);
++		return lruvec;
++	}
++
++	return NULL;
++}
+ /**
+  * mem_cgroup_update_lru_size - account for adding or removing an lru page
+  * @lruvec: mem_cgroup per zone lru vector
+diff --git a/mm/swap.c b/mm/swap.c
+index e8c9dc6d0377..91850d51a5a5 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -960,8 +960,14 @@ void release_pages(struct page **pages, int nr)
+ 		if (PageLRU(page)) {
+ 			struct lruvec *prev_lruvec = lruvec;
+ 
+-			lruvec = folio_lruvec_relock_irqsave(folio, lruvec,
++retry:
++			lruvec = folio_lruvec_tryrelock_irqsave(folio, lruvec,
+ 									&flags);
++			if (!lruvec) {
++				cond_resched();
++				goto retry;
++			}
++
+ 			if (prev_lruvec != lruvec)
+ 				lock_batch = 0;
+ 
+-- 
+2.31.1
+
