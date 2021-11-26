@@ -1,162 +1,105 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [RFC PATCH] sched/fair: Filter by css_is_dying() in the last tg_unthrottle_up()
-Date: Fri, 26 Nov 2021 14:06:19 +0100
-Message-ID: <20211126130619.30730-1-mkoutny@suse.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: Use after free with BFQ and cgroups
+Date: Fri, 26 Nov 2021 15:47:24 +0100
+Message-ID: <20211126144724.GA31093@blackbody.suse.cz>
+References: <20211125172809.GC19572@quack2.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1637932037; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1637938046; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=PYmPwItgfTb5oIyrcokImikMn/WoV6sWjXym+41Fkss=;
-        b=LWHL+8lUy7vS+IxjraC1bVY1oiHezfkeT5BpaFB02cle6T9pAyU0mP6xe0Rxwfyoit6f8Y
-        boAqoTZN0mER9qL+9YWB6yZ5n8Q0Tso/E1gKG7Rm44Fi3K7pOnfTM3ldAt1WYGTWpfl3Kb
-        CkfEOsI4YOx5IVnZgJa3Sfdjcq5entI=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=PKL1IwZU7Sf8I1Sm2EzfejGP6wBBqbshtaIBDh1BofM=;
+        b=C7pAf4h3g07Q2TWEZLwk8oQE5GvplJ6GetAKD4txvg72bG6VjE+6KthzoQjO1k9oShms+4
+        ltCzTwMsLuLSos6qiLd7NjWDoh9O/ph1xXqPW7Sd6PzhH0SLRJY7vG3VATsD+l821NZDrA
+        Fcxw3JXd4BxcE402EXYfJULMexR4ftc=
+Content-Disposition: inline
+In-Reply-To: <20211125172809.GC19572-4I4JzKEfoa/jFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: minipli-JNS0hek0TMl4qEwOxq4T+Q@public.gmane.org, Valentin.Schneider-5wv7dgnIgG8@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, kevin.tanguy-Rm6v+N6rxxBWk0Htik3J/w@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, odin-RObV4cXtwVA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, spender-JNS0hek0TMl4qEwOxq4T+Q@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fvogdt-l3A5Bk7waGM@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-VGhlIGNvbW1pdCBiMDI3Nzg5ZTVlNTAgKCJzY2hlZC9mYWlyOiBQcmV2ZW50IGRlYWQgdGFzayBn
-cm91cHMgZnJvbQpyZWdhaW5pbmcgY2ZzX3JxJ3MiKSB0YWNrbGVkIHRoZSBpc3N1ZSBvZiB1c2Ut
-YWZ0ZXItZnJlZSBvZiBjZnNfcnFzCnN1cnZpdmluZyBvbiB0aGUgbGVhZiBsaXN0IGFmdGVyIGNn
-cm91cCByZW1vdmFsLiBUd28ga2V5IGNoYW5nZXMgb2YgdGhlCmZpeCBhcmU6Ci0gbW92ZSBkZXN0
-cm95X2Nmc19iYW5kd2lkdGgoKSBiZWZvcmUgdGhlIGxpc3RfZGVsX2xlYWZfY2ZzX3JxKCkgc28g
-dGhhdAogIHRnX3VudGhyb3R0bGVfdXAoY2ZzX3JxKSB3aWxsIG5vdCByZS1hZGQgdGhlIGNmc19y
-cSBpbnRvIHRoZSBsaXN0LAotIGluc2VydCBSQ1UgR1AgYmV0d2VlbiB0YXNrX2dyb3VwIHRyZWUg
-dW5saW5raW5nIGFuZCBsZWFmIGxpc3QgcmVtb3ZhbAogIChhbmNlc3RvcnMgd2FsayB0aGUgdHJl
-ZSBhbmQgY291bGQgY2FsbCB0Z191bnRocm90dGxlX3VwKCkgKHJlLWFkZCkKICB0b28pLgoKVGhp
-cyBpcyBjb3JyZWN0IGJ1dCBpdCBtYWtlcyB0aGUgdGFza19ncm91cCByZW1vdmFsIHBhdGggaW4g
-Y3B1CmNvbnRyb2xsZXIgdW5uZWNlc3NhcmlseSBjb21wbGV4LiBUaGlzIHBhdGNoIHNpbXBsaWZp
-ZXMgdGhlIGNvZGUgYnkKcmVtb3ZpbmcgdGhlIEdQIGJ1dCBlbnN1cmluZyB0aGF0IGNmc19ycSB3
-b24ndCBiZSByZS1hZGRlZCB3aGVuIGl0IGlzCmdvaW5nIGF3YXkuIFRoZSBjc3NfaXNfZHlpbmco
-KSBjaGVjayBhbmQgbGlzdF9hZGRfbGVhZl9jZnNfcnEoKSBjYW5ub3QKcmFjZSBhZ2FpbnN0IHNj
-aGVkX3JlbGVhc2VkX2dyb3VwKCkgYmVjYXVzZSB0aGV5IGFyZSBib3RoIGluIG9uZSBSQ1UKcmVh
-ZCBzZWN0aW9uIGFuZCBjcHVfY2dyb3VwX2Nzc19yZWxlYXNlZCgpIGlzIGNhbGxlZCBhZnRlciBh
-biBSQ1UgR1AKKG1vcmUgcHJlY2lzZWx5IHRoZSBzZXF1ZW5jZSBpczogcm1kaXIsIGNzc19pc19k
-eWluZygpPTEsIEdQLAouY3NzX29mZmxpbmUoKSwgLmNzc19yZWxlYXNlZCgpKS4KCkF1dG9ncm91
-cHMgYXJlIG5vdCBjZ3JvdXBzIHNvIHRoZXkgYXJlIG5vdCBhZmZlY3RlZCBieSBiYW5kd2lkdGgg
-dGltZXIKKEdQIGJlZm9yZSBmcmVlIGlzIGtlcHQpLgoKQ2M6IFRlanVuIEhlbyA8dGotRGdFalQr
-QWkyeWdkbm0reVJPZkUwQUBwdWJsaWMuZ21hbmUub3JnPgpTaWduZWQtb2ZmLWJ5OiBNaWNoYWwg
-S291dG7DvSA8bWtvdXRueS1JQmk5UkcvYjY3a0BwdWJsaWMuZ21hbmUub3JnPgotLS0KIGtlcm5l
-bC9zY2hlZC9hdXRvZ3JvdXAuYyB8IDEwICsrKysrKy0tCiBrZXJuZWwvc2NoZWQvY29yZS5jICAg
-ICAgfCA1NSArKysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiBrZXJuZWwv
-c2NoZWQvZmFpci5jICAgICAgfCAgNiArKysrKwoga2VybmVsL3NjaGVkL3NjaGVkLmggICAgIHwg
-IDQgKy0tCiA0IGZpbGVzIGNoYW5nZWQsIDI3IGluc2VydGlvbnMoKyksIDQ4IGRlbGV0aW9ucygt
-KQoKQXMgZXhwbGFpbmVkIGluIHRoZSBtZXNzYWdlLCB0aGlzIHJlbGllcyBvbiB0aGUgUkNVIEdQ
-IGJldHdlZW4gY3NzX2lzX2R5aW5nKCkKcmV0dXJuaW5nIGZhbHNlIGFuZCB0aGUgcG90ZW50aWFs
-IC5jc3Nfb2ZmbGluZSgpIGNhbGwuIApUaGlzIGlzIHN0YXRlZCBpbiB0aGUgY3NzX2lzX2R5aW5n
-KCkgZG9jdW1lbnRhdGlvbjoKCj4gdGhlIGFjdHVhbCBvZmZsaW5lIG9wZXJhdGlvbnMgYXJlIFJD
-VSBkZWxheWVkIGFuZCB0aGlzIHRlc3QgcmV0dXJucyAldHJ1ZQo+IGFsc28gd2hlbiBAY3NzIGlz
-IHNjaGVkdWxlZCB0byBiZSBvZmZsaW5lZC4KCk9uIHRoZSBvdGhlciBoYW5kIHRoZSBkb2N1bWVu
-dGF0aW9uIG9mIHRoZSB1bmRlcmx5aW5nCnBlcmNwdV9yZWZfa2lsbF9hbmRfY29uZmlybSgpIHNh
-eXMgKHRvIGRpc2NvdXJhZ2UgcmVseWluZyBvbiBHUCk6Cgo+IFRoZXJlIGFyZSBubyBpbXBsaWVk
-IFJDVSBncmFjZSBwZXJpb2RzIGJldHdlZW4ga2lsbCBhbmQgcmVsZWFzZS4KClRoaXMgc2VlbXMg
-dG8gZGlzY29yZCB3aXRoIGVhY2ggb3RoZXIgYXQgZmlyc3QgdGhvdWdodC4gKFRoYXQncyB3aHkg
-SSBtYXJrZWQKdGhpcyBSRkMuKQoKSG93ZXZlciwgaWYgb25lIHRha2VzIGludG8gYWNjb3VudCB0
-aGF0IHBlcmNwdV9yZWZzIGFzIHVzZWQgYnkgY3NzIGFyZSBuZXZlcgpzd2l0Y2hlZCB0byBhdG9t
-aWMgYmVzaWRlcyB0aGUgYWN0dWFsIGtpbGxpbmcgKGFuZCB0aGV5IHN0YXJ0IGluIHBlci1jcHUg
-bW9kZSksCnRoZSBHUCAoaW5zZXJ0ZWQgaW4gX19wZXJjcHVfcmVmX3N3aXRjaF90b19hdG9taWMo
-KSkgaXMgd2FycmFudGVkLgoKCmRpZmYgLS1naXQgYS9rZXJuZWwvc2NoZWQvYXV0b2dyb3VwLmMg
-Yi9rZXJuZWwvc2NoZWQvYXV0b2dyb3VwLmMKaW5kZXggODYyOWIzN2QxMThlLi5lNTNkMWVhOWFm
-YzAgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9zY2hlZC9hdXRvZ3JvdXAuYworKysgYi9rZXJuZWwvc2No
-ZWQvYXV0b2dyb3VwLmMKQEAgLTIyLDYgKzIyLDExIEBAIHZvaWQgYXV0b2dyb3VwX2ZyZWUoc3Ry
-dWN0IHRhc2tfZ3JvdXAgKnRnKQogCWtmcmVlKHRnLT5hdXRvZ3JvdXApOwogfQogCitzdGF0aWMg
-dm9pZCBzY2hlZF9mcmVlX2dyb3VwX3JjdShzdHJ1Y3QgcmN1X2hlYWQgKnJjdSkKK3sKKwlzY2hl
-ZF9mcmVlX2dyb3VwKGNvbnRhaW5lcl9vZihyY3UsIHN0cnVjdCB0YXNrX2dyb3VwLCByY3UpKTsK
-K30KKwogc3RhdGljIGlubGluZSB2b2lkIGF1dG9ncm91cF9kZXN0cm95KHN0cnVjdCBrcmVmICpr
-cmVmKQogewogCXN0cnVjdCBhdXRvZ3JvdXAgKmFnID0gY29udGFpbmVyX29mKGtyZWYsIHN0cnVj
-dCBhdXRvZ3JvdXAsIGtyZWYpOwpAQCAtMzEsOCArMzYsOSBAQCBzdGF0aWMgaW5saW5lIHZvaWQg
-YXV0b2dyb3VwX2Rlc3Ryb3koc3RydWN0IGtyZWYgKmtyZWYpCiAJYWctPnRnLT5ydF9zZSA9IE5V
-TEw7CiAJYWctPnRnLT5ydF9ycSA9IE5VTEw7CiAjZW5kaWYKLQlzY2hlZF9yZWxlYXNlX2dyb3Vw
-KGFnLT50Zyk7Ci0Jc2NoZWRfZGVzdHJveV9ncm91cChhZy0+dGcpOworCXNjaGVkX3JlbGVhc2Vk
-X2dyb3VwKGFnLT50Zyk7CisJLyogV2FpdCBmb3IgcG9zc2libGUgY29uY3VycmVudCByZWZlcmVu
-Y2VzIHRvIGNmc19ycXMgY29tcGxldGU6ICovCisJY2FsbF9yY3UoJmFnLT50Zy0+cmN1LCBzY2hl
-ZF9mcmVlX2dyb3VwX3JjdSk7CiB9CiAKIHN0YXRpYyBpbmxpbmUgdm9pZCBhdXRvZ3JvdXBfa3Jl
-Zl9wdXQoc3RydWN0IGF1dG9ncm91cCAqYWcpCmRpZmYgLS1naXQgYS9rZXJuZWwvc2NoZWQvY29y
-ZS5jIGIva2VybmVsL3NjaGVkL2NvcmUuYwppbmRleCAzYzliMGZkYTY0YWMuLjJjNWIyMmY1NGFi
-OCAxMDA2NDQKLS0tIGEva2VybmVsL3NjaGVkL2NvcmUuYworKysgYi9rZXJuZWwvc2NoZWQvY29y
-ZS5jCkBAIC05NzExLDcgKzk3MTEsNyBAQCBzdGF0aWMgaW5saW5lIHZvaWQgYWxsb2NfdWNsYW1w
-X3NjaGVkX2dyb3VwKHN0cnVjdCB0YXNrX2dyb3VwICp0ZywKICNlbmRpZgogfQogCi1zdGF0aWMg
-dm9pZCBzY2hlZF9mcmVlX2dyb3VwKHN0cnVjdCB0YXNrX2dyb3VwICp0ZykKK3ZvaWQgc2NoZWRf
-ZnJlZV9ncm91cChzdHJ1Y3QgdGFza19ncm91cCAqdGcpCiB7CiAJZnJlZV9mYWlyX3NjaGVkX2dy
-b3VwKHRnKTsKIAlmcmVlX3J0X3NjaGVkX2dyb3VwKHRnKTsKQEAgLTk3MTksMjIgKzk3MTksNiBA
-QCBzdGF0aWMgdm9pZCBzY2hlZF9mcmVlX2dyb3VwKHN0cnVjdCB0YXNrX2dyb3VwICp0ZykKIAlr
-bWVtX2NhY2hlX2ZyZWUodGFza19ncm91cF9jYWNoZSwgdGcpOwogfQogCi1zdGF0aWMgdm9pZCBz
-Y2hlZF9mcmVlX2dyb3VwX3JjdShzdHJ1Y3QgcmN1X2hlYWQgKnJjdSkKLXsKLQlzY2hlZF9mcmVl
-X2dyb3VwKGNvbnRhaW5lcl9vZihyY3UsIHN0cnVjdCB0YXNrX2dyb3VwLCByY3UpKTsKLX0KLQot
-c3RhdGljIHZvaWQgc2NoZWRfdW5yZWdpc3Rlcl9ncm91cChzdHJ1Y3QgdGFza19ncm91cCAqdGcp
-Ci17Ci0JdW5yZWdpc3Rlcl9mYWlyX3NjaGVkX2dyb3VwKHRnKTsKLQl1bnJlZ2lzdGVyX3J0X3Nj
-aGVkX2dyb3VwKHRnKTsKLQkvKgotCSAqIFdlIGhhdmUgdG8gd2FpdCBmb3IgeWV0IGFub3RoZXIg
-UkNVIGdyYWNlIHBlcmlvZCB0byBleHBpcmUsIGFzCi0JICogcHJpbnRfY2ZzX3N0YXRzKCkgbWln
-aHQgcnVuIGNvbmN1cnJlbnRseS4KLQkgKi8KLQljYWxsX3JjdSgmdGctPnJjdSwgc2NoZWRfZnJl
-ZV9ncm91cF9yY3UpOwotfQotCiAvKiBhbGxvY2F0ZSBydW5xdWV1ZSBldGMgZm9yIGEgbmV3IHRh
-c2sgZ3JvdXAgKi8KIHN0cnVjdCB0YXNrX2dyb3VwICpzY2hlZF9jcmVhdGVfZ3JvdXAoc3RydWN0
-IHRhc2tfZ3JvdXAgKnBhcmVudCkKIHsKQEAgLTk3NzcsNDAgKzk3NjEsMjMgQEAgdm9pZCBzY2hl
-ZF9vbmxpbmVfZ3JvdXAoc3RydWN0IHRhc2tfZ3JvdXAgKnRnLCBzdHJ1Y3QgdGFza19ncm91cCAq
-cGFyZW50KQogCW9ubGluZV9mYWlyX3NjaGVkX2dyb3VwKHRnKTsKIH0KIAotLyogcmN1IGNhbGxi
-YWNrIHRvIGZyZWUgdmFyaW91cyBzdHJ1Y3R1cmVzIGFzc29jaWF0ZWQgd2l0aCBhIHRhc2sgZ3Jv
-dXAgKi8KLXN0YXRpYyB2b2lkIHNjaGVkX3VucmVnaXN0ZXJfZ3JvdXBfcmN1KHN0cnVjdCByY3Vf
-aGVhZCAqcmhwKQotewotCS8qIE5vdyBpdCBzaG91bGQgYmUgc2FmZSB0byBmcmVlIHRob3NlIGNm
-c19ycXM6ICovCi0Jc2NoZWRfdW5yZWdpc3Rlcl9ncm91cChjb250YWluZXJfb2YocmhwLCBzdHJ1
-Y3QgdGFza19ncm91cCwgcmN1KSk7Ci19Ci0KLXZvaWQgc2NoZWRfZGVzdHJveV9ncm91cChzdHJ1
-Y3QgdGFza19ncm91cCAqdGcpCi17Ci0JLyogV2FpdCBmb3IgcG9zc2libGUgY29uY3VycmVudCBy
-ZWZlcmVuY2VzIHRvIGNmc19ycXMgY29tcGxldGU6ICovCi0JY2FsbF9yY3UoJnRnLT5yY3UsIHNj
-aGVkX3VucmVnaXN0ZXJfZ3JvdXBfcmN1KTsKLX0KLQotdm9pZCBzY2hlZF9yZWxlYXNlX2dyb3Vw
-KHN0cnVjdCB0YXNrX2dyb3VwICp0ZykKK3ZvaWQgc2NoZWRfcmVsZWFzZWRfZ3JvdXAoc3RydWN0
-IHRhc2tfZ3JvdXAgKnRnKQogewogCXVuc2lnbmVkIGxvbmcgZmxhZ3M7CiAKIAkvKgotCSAqIFVu
-bGluayBmaXJzdCwgdG8gYXZvaWQgd2Fsa190Z190cmVlX2Zyb20oKSBmcm9tIGZpbmRpbmcgdXMg
-KHZpYQotCSAqIHNjaGVkX2Nmc19wZXJpb2RfdGltZXIoKSkuCi0JICoKLQkgKiBGb3IgdGhpcyB0
-byBiZSBlZmZlY3RpdmUsIHdlIGhhdmUgdG8gd2FpdCBmb3IgYWxsIHBlbmRpbmcgdXNlcnMgb2YK
-LQkgKiB0aGlzIHRhc2sgZ3JvdXAgdG8gbGVhdmUgdGhlaXIgUkNVIGNyaXRpY2FsIHNlY3Rpb24g
-dG8gZW5zdXJlIG5vIG5ldwotCSAqIHVzZXIgd2lsbCBzZWUgb3VyIGR5aW5nIHRhc2sgZ3JvdXAg
-YW55IG1vcmUuIFNwZWNpZmljYWxseSBlbnN1cmUKLQkgKiB0aGF0IHRnX3VudGhyb3R0bGVfdXAo
-KSB3b24ndCBhZGQgZGVjYXllZCBjZnNfcnEncyB0byBpdC4KLQkgKgotCSAqIFdlIHRoZXJlZm9y
-ZSBkZWZlciBjYWxsaW5nIHVucmVnaXN0ZXJfZmFpcl9zY2hlZF9ncm91cCgpIHRvCi0JICogc2No
-ZWRfdW5yZWdpc3Rlcl9ncm91cCgpIHdoaWNoIGlzIGd1YXJhbnRpZWQgdG8gZ2V0IGNhbGxlZCBv
-bmx5IGFmdGVyIHRoZQotCSAqIGN1cnJlbnQgUkNVIGdyYWNlIHBlcmlvZCBoYXMgZXhwaXJlZC4K
-KwkgKiBXZSBnZXQgaGVyZSBvbmx5IGFmdGVyIGFsbCBDUFVzIHNlZSB0ZyBhcyBkeWluZyBhbmQg
-YW4gUkNVIGdyYWNlCisJICogcGVyaW9kLiBEZXNwaXRlIHRoYXQgdGhlcmUgbWF5IHN0aWxsIGJl
-IGNvbmN1cnJlbnQgUkNVIHJlYWRlcnMKKwkgKiAod2Fsa190Z190cmVlX2Zyb20oKSBvciB0YXNr
-X2dyb3VwIGxpc3QpIGluIHRoZWlyIFJDVSBzZWN0aW9ucy4KKwkgKiBUaGVpciByZWZlcmVuY2Vz
-IHRvIHRnIHN0YXkgdmFsaWQgb25seSBpbnNpZGUgdGhlIFJDVSByZWFkIHNlY3Rpb24uCiAJICov
-CiAJc3Bpbl9sb2NrX2lycXNhdmUoJnRhc2tfZ3JvdXBfbG9jaywgZmxhZ3MpOwogCWxpc3RfZGVs
-X3JjdSgmdGctPmxpc3QpOwogCWxpc3RfZGVsX3JjdSgmdGctPnNpYmxpbmdzKTsKIAlzcGluX3Vu
-bG9ja19pcnFyZXN0b3JlKCZ0YXNrX2dyb3VwX2xvY2ssIGZsYWdzKTsKKworCXVucmVnaXN0ZXJf
-ZmFpcl9zY2hlZF9ncm91cCh0Zyk7CisJdW5yZWdpc3Rlcl9ydF9zY2hlZF9ncm91cCh0Zyk7CiB9
-CiAKIHN0YXRpYyB2b2lkIHNjaGVkX2NoYW5nZV9ncm91cChzdHJ1Y3QgdGFza19zdHJ1Y3QgKnRz
-aywgaW50IHR5cGUpCkBAIC05OTI1LDcgKzk4OTIsNyBAQCBzdGF0aWMgdm9pZCBjcHVfY2dyb3Vw
-X2Nzc19yZWxlYXNlZChzdHJ1Y3QgY2dyb3VwX3N1YnN5c19zdGF0ZSAqY3NzKQogewogCXN0cnVj
-dCB0YXNrX2dyb3VwICp0ZyA9IGNzc190Zyhjc3MpOwogCi0Jc2NoZWRfcmVsZWFzZV9ncm91cCh0
-Zyk7CisJc2NoZWRfcmVsZWFzZWRfZ3JvdXAodGcpOwogfQogCiBzdGF0aWMgdm9pZCBjcHVfY2dy
-b3VwX2Nzc19mcmVlKHN0cnVjdCBjZ3JvdXBfc3Vic3lzX3N0YXRlICpjc3MpCkBAIC05OTM1LDcg
-Kzk5MDIsNyBAQCBzdGF0aWMgdm9pZCBjcHVfY2dyb3VwX2Nzc19mcmVlKHN0cnVjdCBjZ3JvdXBf
-c3Vic3lzX3N0YXRlICpjc3MpCiAJLyoKIAkgKiBSZWxpZXMgb24gdGhlIFJDVSBncmFjZSBwZXJp
-b2QgYmV0d2VlbiBjc3NfcmVsZWFzZWQoKSBhbmQgdGhpcy4KIAkgKi8KLQlzY2hlZF91bnJlZ2lz
-dGVyX2dyb3VwKHRnKTsKKwlzY2hlZF9mcmVlX2dyb3VwKHRnKTsKIH0KIAogLyoKZGlmZiAtLWdp
-dCBhL2tlcm5lbC9zY2hlZC9mYWlyLmMgYi9rZXJuZWwvc2NoZWQvZmFpci5jCmluZGV4IDZlNDc2
-ZjZkOTQzNS4uYjMwODFlY2UyZTE2IDEwMDY0NAotLS0gYS9rZXJuZWwvc2NoZWQvZmFpci5jCisr
-KyBiL2tlcm5lbC9zY2hlZC9mYWlyLmMKQEAgLTQ3NjIsNiArNDc2MiwxMiBAQCBzdGF0aWMgaW50
-IHRnX3VudGhyb3R0bGVfdXAoc3RydWN0IHRhc2tfZ3JvdXAgKnRnLCB2b2lkICpkYXRhKQogCQlj
-ZnNfcnEtPnRocm90dGxlZF9jbG9ja190YXNrX3RpbWUgKz0gcnFfY2xvY2tfdGFzayhycSkgLQog
-CQkJCQkgICAgIGNmc19ycS0+dGhyb3R0bGVkX2Nsb2NrX3Rhc2s7CiAKKwkJLyoKKwkJICogTGFz
-dCB0Z191bnRocm90dGxlX3VwKCkgbWF5IGhhcHBlbiBpbiBhIHRhc2tfZ3JvdXAgYmVpbmcgcmVt
-b3ZlZCwKKwkJICogaXQgaXMgb25seSBSQ1UgcHJvdGVjdGVkIHNvIGRvbid0IHN0b3JlIGl0IGlu
-dG8gbGVhZiBsaXN0LgorCQkgKi8KKwkJaWYgKGNzc19pc19keWluZygmdGctPmNzcykpCisJCQly
-ZXR1cm4gMDsKIAkJLyogQWRkIGNmc19ycSB3aXRoIGxvYWQgb3Igb25lIG9yIG1vcmUgYWxyZWFk
-eSBydW5uaW5nIGVudGl0aWVzIHRvIHRoZSBsaXN0ICovCiAJCWlmICghY2ZzX3JxX2lzX2RlY2F5
-ZWQoY2ZzX3JxKSB8fCBjZnNfcnEtPm5yX3J1bm5pbmcpCiAJCQlsaXN0X2FkZF9sZWFmX2Nmc19y
-cShjZnNfcnEpOwpkaWZmIC0tZ2l0IGEva2VybmVsL3NjaGVkL3NjaGVkLmggYi9rZXJuZWwvc2No
-ZWQvc2NoZWQuaAppbmRleCAwZTY2NzQ5NDg2ZTcuLjU2MDE1MTI1OGQ5MiAxMDA2NDQKLS0tIGEv
-a2VybmVsL3NjaGVkL3NjaGVkLmgKKysrIGIva2VybmVsL3NjaGVkL3NjaGVkLmgKQEAgLTUwMyw4
-ICs1MDMsOCBAQCBleHRlcm4gaW50IHNjaGVkX3J0X2Nhbl9hdHRhY2goc3RydWN0IHRhc2tfZ3Jv
-dXAgKnRnLCBzdHJ1Y3QgdGFza19zdHJ1Y3QgKnRzayk7CiBleHRlcm4gc3RydWN0IHRhc2tfZ3Jv
-dXAgKnNjaGVkX2NyZWF0ZV9ncm91cChzdHJ1Y3QgdGFza19ncm91cCAqcGFyZW50KTsKIGV4dGVy
-biB2b2lkIHNjaGVkX29ubGluZV9ncm91cChzdHJ1Y3QgdGFza19ncm91cCAqdGcsCiAJCQkgICAg
-ICAgc3RydWN0IHRhc2tfZ3JvdXAgKnBhcmVudCk7Ci1leHRlcm4gdm9pZCBzY2hlZF9kZXN0cm95
-X2dyb3VwKHN0cnVjdCB0YXNrX2dyb3VwICp0Zyk7Ci1leHRlcm4gdm9pZCBzY2hlZF9yZWxlYXNl
-X2dyb3VwKHN0cnVjdCB0YXNrX2dyb3VwICp0Zyk7CitleHRlcm4gdm9pZCBzY2hlZF9yZWxlYXNl
-ZF9ncm91cChzdHJ1Y3QgdGFza19ncm91cCAqdGcpOworZXh0ZXJuIHZvaWQgc2NoZWRfZnJlZV9n
-cm91cChzdHJ1Y3QgdGFza19ncm91cCAqdGcpOwogCiBleHRlcm4gdm9pZCBzY2hlZF9tb3ZlX3Rh
-c2soc3RydWN0IHRhc2tfc3RydWN0ICp0c2spOwogCi0tIAoyLjMzLjEKCg==
+Hello.
+
+On Thu, Nov 25, 2021 at 06:28:09PM +0100, Jan Kara <jack-AlSwsSmVLrQ@public=
+.gmane.org> wrote:
+[...]
++Cc cgroups ML
+https://lore.kernel.org/linux-block/20211125172809.GC19572-4I4JzKEfoa/jFM9b=
+n6wA6Q@public.gmane.org/
+
+
+I understand there are more objects than blkcgs but I assume it can
+eventually boil down to blkcg references, so I suggest another
+alternative. (But I may easily miss the relations between BFQ objects,
+so consider this only high-level opinion.)
+
+> After some poking, looking into crashdumps, and applying some debug patch=
+es
+> the following seems to be happening: We have a process P in blkcg G. Now
+> G is taken offline so bfq_group is cleaned up in bfq_pd_offline() but P
+> still holds reference to G from its bfq_queue. Then P submits IO, G gets
+> inserted into service tree despite being already offline.
+
+(If G is offline, P can only be zombie, just saying. (I guess it can
+still be Q's IO on behalf of G.))
+
+IIUC, the reference to G is only held by P. If the G reference is copied
+into another structure (the service tree) it should get another
+reference. My na=EFve proposal would be css_get(). (1)
+
+> IO completes, P exits, bfq_queue pointing to G gets destroyed, the
+> last reference to G is dropped, G gets freed although is it still
+> inserted in the service tree.  Eventually someone trips over the freed
+> memory.
+
+Isn't it the bfq_queue.bfq_entity that's inserted in the service tree
+(not blkcg G)?
+You write bfq_queue is destroyed, shouldn't that remove it from the
+service tree? (2)
+
+> Now I was looking into how to best fix this. There are several
+> possibilities and I'm not sure which one to pick so that's why I'm writing
+> to you. bfq_pd_offline() is walking all entities in service trees and
+> trying to get rid of references to bfq_group (by reparenting entities).
+> Is this guaranteed to see all entities that point to G? From the scenario
+> I'm observing it seems this can miss entities pointing to G - e.g. if they
+> are in idle tree, we will just remove them from the idle tree but we won't
+> change entity->parent so they still point to G. This can be seen as one
+> culprit of the bug.
+
+There can be two types of references to blkcg (transitively via
+bfq_group):
+a) "plain" (just a pointer stored somewhere),
+b) "pinned" (marked by css_get() of the respective blkcg).
+
+The bfq_pd_offline() callback should erase all plain references (e.g. by
+reparenting) or poke the holders of pinned references to release (unpin)
+them eventually (so that blkcg goes away).
+
+I reckon it's not possible to traverse all references in the
+bfq_pd_offline().
+
+> Or alternatively, should we e.g. add __bfq_deactivate_entity() to
+> bfq_put_queue() when that function is dropping last queue in a bfq_group?
+
+I guess this is what I wondered about in (2). (But I'm not sure this
+really is proof against subsequent re-insertions into the tree.)
+
+> Or should we just reparent bfq queues that have already dead parent on
+> activation?
+
+If (1) used css_tryget_online(), the parent (or ancestor if it happened
+to be offlined too) could be the fallback.
+
+> What's your opinion?
+
+The question here is how long would stay the offlined blkcgs around if
+they were directly pinned upon the IO submission. If it's unbound, then
+reparenting makes more sense.
+
+
+Michal
