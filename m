@@ -1,146 +1,73 @@
 From: Hao Lee <haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH] mm: reduce spinlock contention in release_pages()
-Date: Fri, 26 Nov 2021 14:50:44 +0800
-Message-ID: <CA+PpKP=hsuBmvv09OcD2Nct8B8Cqa03UfKFHAHzKxwE0SXGP4g@mail.gmail.com>
+Date: Fri, 26 Nov 2021 14:54:23 +0800
+Message-ID: <CA+PpKPmHfHca07W8aO+3bGjsqpUYOid=qBzm6dNuTyMmmkEpzQ@mail.gmail.com>
 References: <20211124151915.GA6163@haolee.io> <YZ5o/VmU59evp65J@dhcp22.suse.cz>
  <CA+PpKPmy-u_BxYMCQOFyz78t2+3uM6nR9mQeX+MPyH6H2tOOHA@mail.gmail.com>
- <YZ8DZHERun6Fej2P@casper.infradead.org> <20211125080238.GA7356@haolee.io>
- <YZ9e3pzHKmn5nev0@dhcp22.suse.cz> <20211125123133.GA7758@haolee.io> <YZ+bI1fNpKar0bSU@dhcp22.suse.cz>
+ <YZ8DZHERun6Fej2P@casper.infradead.org> <20211125080238.GA7356@haolee.io> <YZ/QFWzt/XbsLCqR@casper.infradead.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=WVuV06/cptT1Gv9Nh1FCyXLQ2/5cgjt2/gcb2z+eqVY=;
-        b=NvnXTWQqpYcTMVuD/hsfAtDmpuu+159ataecL65048pQEZJcW1YIc7s5YEaFfEZGAW
-         /SUci0G1FbsjMC+hkIVIWnWr/UPWSnRjfi3vQ0f07Cn8F0EeO26cWcoegxBTy/waVH07
-         C29dFdUQ4y2VtroOGkyY5QXddXMHOoygQHbZUS8z7zWOqe9JSHmlNDn6ccUYlT7aE7DV
-         vqlvFmbMawXR/u4MfEcmX3vC6zYORDG/15A/keH8mUPrRGYZrGL/ofp3RIYLXypI8sKb
-         aVNnenQOgPIyfeH8eN/8ZFRgHNZgUTk7I3g1VjFL5n0EZRZliRY5uJ2t1uxW3KY3L2he
-         52JA==
-In-Reply-To: <YZ+bI1fNpKar0bSU-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+        bh=H19UTR6A3kWJJtvYx5Y6mT7M01EqlCEK84X1kiQHMws=;
+        b=bqxUG9GBwRxXusR0vQDwXIKE6tmcfVDsDscQDKgRdXOuIiQDmox3u/A8r0+NArAguX
+         ryOAq6uwAHZira08kD6Pu7FjfRAqNG2Lw8IkeSjlPR20UPa9uslZ6fEl85gCwOfaY2+Z
+         JvMMepT01lYXH6+p4Uc9HYYV7u0SXQwJ+cyxy4xHteJGk6Q61AlBs+kNfMFNkrbhpSmc
+         ugm+v0S6yqERyuaNatOq9swdrMA1oXVgA3qcsRD2bkC+DUc/bmeIIh/7UpPKWVJoGPnr
+         HSyCu7ECVTvXK1zs/ZvsEXHuU4LJSFp1p/J3gouteiUm/d9gBdoMZec9azTWVnnlofkV
+         8mFw==
+In-Reply-To: <YZ/QFWzt/XbsLCqR-FZi0V3Vbi30CUdFEqe4BF2D2FQJk+8+b@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, Nov 25, 2021 at 10:18 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+On Fri, Nov 26, 2021 at 2:04 AM Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
 >
-> On Thu 25-11-21 12:31:33, Hao Lee wrote:
-> > On Thu, Nov 25, 2021 at 11:01:02AM +0100, Michal Hocko wrote:
-> > > On Thu 25-11-21 08:02:38, Hao Lee wrote:
-> > > > On Thu, Nov 25, 2021 at 03:30:44AM +0000, Matthew Wilcox wrote:
-> > > > > On Thu, Nov 25, 2021 at 11:24:02AM +0800, Hao Lee wrote:
-> > > > > > On Thu, Nov 25, 2021 at 12:31 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > > > > > > We do batch currently so no single task should be
-> > > > > > > able to monopolize the cpu for too long. Why this is not sufficient?
-> > > > > >
-> > > > > > uncharge and unref indeed take advantage of the batch process, but
-> > > > > > del_from_lru needs more time to complete. Several tasks will contend
-> > > > > > spinlock in the loop if nr is very large.
-> > > > >
-> > > > > Is SWAP_CLUSTER_MAX too large?  Or does your architecture's spinlock
-> > > > > implementation need to be fixed?
-> > > > >
+> On Thu, Nov 25, 2021 at 08:02:38AM +0000, Hao Lee wrote:
+> > On Thu, Nov 25, 2021 at 03:30:44AM +0000, Matthew Wilcox wrote:
+> > > On Thu, Nov 25, 2021 at 11:24:02AM +0800, Hao Lee wrote:
+> > > > On Thu, Nov 25, 2021 at 12:31 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> > > > > We do batch currently so no single task should be
+> > > > > able to monopolize the cpu for too long. Why this is not sufficient?
 > > > >
-> > > > My testing server is x86_64 with 5.16-rc2. The spinlock should be normal.
-> > > >
-> > > > I think lock_batch is not the point. lock_batch only break spinning time
-> > > > into small parts, but it doesn't reduce spinning time. The thing may get
-> > > > worse if lock_batch is very small.
-> > > >
-> > > > Here is an example about two tasks contending spinlock. Let's assume each
-> > > > task need a total of 4 seconds in critical section to complete its work.
-> > > >
-> > > > Example1:
-> > > >
-> > > > lock_batch = x
-> > > >
-> > > > task A      taskB
-> > > > hold 4s     wait 4s
-> > > >             hold 4s
-> > > >
-> > > > total waiting time is 4s.
+> > > > uncharge and unref indeed take advantage of the batch process, but
+> > > > del_from_lru needs more time to complete. Several tasks will contend
+> > > > spinlock in the loop if nr is very large.
 > > >
-> > > 4s holding time is _way_ too long and something that this path should
-> > > never really reach. We are talking about SWAP_CLUSTER_MAX worth of LRU
-> > > pages. Sure there might be a bunch of pages freed that are not on LRU
-> > > but those are only added to a list. So again what is the actual problem?
+> > > Is SWAP_CLUSTER_MAX too large?  Or does your architecture's spinlock
+> > > implementation need to be fixed?
 > > >
 > >
-> > The measurement unit in my example may not be rigorous and may confuse you.
-> > What I mean is the batch processing can only gives each task fairness to
-> > compete for this spinlock, but it can't reduce the wasted cpu cycles during
-> > spinning waiting, no matter what the batch size is.
->
-> Correct. But isn't that a nature of pretty much any spinlock based
-> contention? There is not really much to be done except for removing the
-> lock.
-
-Yes...
-
-> Batching helps to amortize the spinning for the actual useful work
-> so that the spinning is not predominant. Trylocking to reduce that
-> spinning can be helpful only if you _know_ that other useful work could
-> be done and that you do not dalay the locked work way to much. This is a
-> tricky balance to make.
-
-Exactly, thanks for explanation.
-
->
-> > No matter what the
-> > lock_batch is set, the following perf report won't change much. Many cpu
-> > cycles are wasted on spinning. Other tasks running on the same cores will be
-> > delayed, which is unacceptable for our latency-critical jobs.
->
-> Could you share more about requirements for those? Why is unmapping in
-> any of their hot paths which really require low latencies? Because as
-> long as unmapping requires a shared resource - like lru lock - then you
-> have a bottle necks.
-
-We deploy best-effort (BE) jobs (e.g. bigdata, machine learning) and
-latency-critical (LC) jobs (e.g. map navigation, payments services) on the
-same servers to improve resource utilization. The running time of BE jobs are
-very short, but its memory consumption is large, and these jobs will run
-periodically. The LC jobs are long-run services and are sensitive to delays
-because jitters may cause customer churn.
-
-If a batch of BE jobs are finished simultaneously, lots of memory are freed,
-and spinlock contentions happen. BE jobs don't care about these contentions,
-but contentions cause them to spend more time in kernel mode, and thus, LC
-jobs running on the same cpu cores will be delayed and jitters occur. (The
-kernel preemption is disabled on our servers, and we try not to separate
-LC/BE using cpuset in order to achieve "complete mixture deployment"). Then
-LC services people will complain about the poor service stability. This
-scenario has occurred several times, so we want to find a way to avoid it.
-
->
-> > I'm trying to
-> > find if it's possible to reduce the delay and the contention , after all,
-> > 59.50% is too high. This is why I post the thoughtless `cond_resched()`
-> > approach.
->
-> What is the base for that 59.5%? Also how representative this is for
-> your sensitive workload?
-
-Unfortunately, we haven't found an accurate relationship between the
-acceptable jitters and the perf percentage. A reference datum is indeed
-essential, and we will try to setup it. Thanks for your tips.
-
->
-> > Here is the perf report when executing ./usemem -j 4096 -n 20 10g -s 5
+> > My testing server is x86_64 with 5.16-rc2. The spinlock should be normal.
 > >
-> > +   59.50%  usemem           [kernel.vmlinux]               [k] native_queued_spin_lock_slowpath
-> > +    4.36%  usemem           [kernel.vmlinux]               [k] check_preemption_disabled
-> > +    4.31%  usemem           [kernel.vmlinux]               [k] free_pcppages_bulk
-> > +    3.11%  usemem           [kernel.vmlinux]               [k] release_pages
-> > +    2.12%  usemem           [kernel.vmlinux]               [k] __mod_memcg_lruvec_state
-> > +    2.02%  usemem           [kernel.vmlinux]               [k] __list_del_entry_valid
-> > +    1.98%  usemem           [kernel.vmlinux]               [k] __mod_node_page_state
-> > +    1.67%  usemem           [kernel.vmlinux]               [k] unmap_page_range
-> > +    1.51%  usemem           [kernel.vmlinux]               [k] __mod_zone_page_state
-> --
-> Michal Hocko
-> SUSE Labs
+> > I think lock_batch is not the point. lock_batch only break spinning time
+> > into small parts, but it doesn't reduce spinning time. The thing may get
+> > worse if lock_batch is very small.
+>
+> OK.  So if I understand right, you've got a lot of processes all
+> calling exit_mmap() at the same time, which eventually becomes calls to
+> unmap_vmas(), unmap_single_vma(), unmap_page_range(), zap_pte_range(),
+> tlb_flush_mmu(), tlb_batch_pages_flush(), free_pages_and_swap_cache(),
+> release_pages(), and then you see high contention on the LRU lock.
+
+Exactly.
+
+>
+> Your use-case doesn't seem to mind sleeping (after all, these processes
+> are exiting).
+
+Yes!
+
+>  So we could put a semaphore in exit_mmap() to limit the
+> number of simultaneous callers to unmap_vmas().  Do you want to try
+> that out and see if it solves your problem?  You might want to make it
+> a counting semaphore (eg permit two tasks to exit at once) rather than
+> a mutex.  But maybe a mutex is just fine.
+
+This is really a good idea. My train of thought was trapped in reducing the
+lock contention. I will try to implement this idea and see if the service
+stability will be improved much. Thanks for your help!
