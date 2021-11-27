@@ -1,172 +1,47 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH RFC 9/9] block, bfq: decrease 'num_groups_with_pending_reqs' earlier
-Date: Sat, 27 Nov 2021 18:11:32 +0800
-Message-ID: <20211127101132.486806-10-yukuai3@huawei.com>
-References: <20211127101132.486806-1-yukuai3@huawei.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20211127101132.486806-1-yukuai3@huawei.com>
+From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 1/2] cgroup: cgroup_subsys[ssid] is never NULL
+Date: Sat, 27 Nov 2021 14:59:18 +0000
+Message-ID: <20211127145919.31159-1-richard.weiyang@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=jLD7GABe69Y2XIK8EiAw+ECm8aNoQireR1sVfpfjBUw=;
+        b=XZeYzcUqFHoWKneResRr679zdRHeMgo5U8ZyVqUHrxnhcTRHSuLmO2QbJVgmmmJ5PI
+         emrMJRDFtSew+vIqtyNpgmnOuT6ZXzc5h+cUGdd5yFK4kWlZVCTF7wsKotojpfNkxMGA
+         vGWnEIeLui9YEszzwYJ6DK7iVlghNaFBil3Wxfh7e2Lvg7JCFx9TGd1hx2WOuGX6Jcph
+         6j73Mc7Ih40R3MRxbaadn/Sa8bZmvxJIiNyFb2vD0o5pTZA/n79jzxpLeTA+YD94K/+4
+         FF68W5SYmJLerPI7RUzDvD6bPf+j7ZV3C1v9UmwtqTYq4xiDn0GCJCQgScXHfIDt7l4w
+         KEBA==
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+Content-Transfer-Encoding: 7bit
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Currently 'num_groups_with_pending_reqs' won't be decreased when
-the group doesn't have any pending requests, while any child group
-have any pending requests. The decrement is delayed to when all the
-child groups doesn't have any pending requests.
+When the check, (ssid) < CGROUP_SUBSYS_COUNT, passed, it means
+cgroup_subsys[ssid] is defined to its proper value. It is not
+necessary to use a true to enter the loop.
 
-For example:
-1) t1 issue sync io on root group, t2 and t3 issue sync io on the same
-child group. num_groups_with_pending_reqs is 2 now.
-2) t1 stopped, num_groups_with_pending_reqs is still 2. io from t2 and
-t3 still can't be handled concurrently.
-
-Fix the problem by decreasing 'num_groups_with_pending_reqs'
-immediately upon the deactivation of last entity of the group.
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- block/bfq-iosched.c | 58 ++++++++++++++++-----------------------------
- block/bfq-iosched.h | 16 ++++++-------
- 2 files changed, 29 insertions(+), 45 deletions(-)
+ kernel/cgroup/cgroup-internal.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 4239b3996e23..55925e1ee85d 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -873,6 +873,26 @@ void __bfq_weights_tree_remove(struct bfq_data *bfqd,
- 	bfq_put_queue(bfqq);
- }
+diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
+index bfbeabc17a9d..0c5d1df6cdef 100644
+--- a/kernel/cgroup/cgroup-internal.h
++++ b/kernel/cgroup/cgroup-internal.h
+@@ -163,7 +163,7 @@ extern struct file_system_type cgroup_fs_type;
+  */
+ #define for_each_subsys(ss, ssid)					\
+ 	for ((ssid) = 0; (ssid) < CGROUP_SUBSYS_COUNT &&		\
+-	     (((ss) = cgroup_subsys[ssid]) || true); (ssid)++)
++	     ((ss) = cgroup_subsys[ssid]); (ssid)++)
  
-+static void decrease_groups_with_pending_reqs(struct bfq_data *bfqd,
-+					      struct bfq_queue *bfqq)
-+{
-+#ifdef CONFIG_BFQ_GROUP_IOSCHED
-+	struct bfq_entity *entity = bfqq->entity.parent;
-+	struct bfq_group *bfqg = container_of(entity, struct bfq_group, entity);
-+
-+	/*
-+	 * The decrement of num_groups_with_pending_reqs is performed
-+	 * immediately upon the deactivation of last entity that have pending
-+	 * requests
-+	 */
-+	if (!bfqg->num_entities_with_pending_reqs &&
-+	    entity->in_groups_with_pending_reqs) {
-+		entity->in_groups_with_pending_reqs = false;
-+		bfqd->num_groups_with_pending_reqs--;
-+	}
-+#endif
-+}
-+
- /*
-  * Invoke __bfq_weights_tree_remove on bfqq and decrement the number
-  * of active groups for each queue's inactive parent entity.
-@@ -880,46 +900,10 @@ void __bfq_weights_tree_remove(struct bfq_data *bfqd,
- void bfq_weights_tree_remove(struct bfq_data *bfqd,
- 			     struct bfq_queue *bfqq)
+ static inline bool cgroup_is_dead(const struct cgroup *cgrp)
  {
--	struct bfq_entity *entity = bfqq->entity.parent;
--
- 	bfqq->ref++;
- 	__bfq_weights_tree_remove(bfqd, bfqq,
- 				  &bfqd->queue_weights_tree);
--
--	for_each_entity(entity) {
--		struct bfq_sched_data *sd = entity->my_sched_data;
--
--		if (sd && (sd->next_in_service || sd->in_service_entity)) {
--			/*
--			 * entity is still active, because either
--			 * next_in_service or in_service_entity is not
--			 * NULL (see the comments on the definition of
--			 * next_in_service for details on why
--			 * in_service_entity must be checked too).
--			 *
--			 * As a consequence, its parent entities are
--			 * active as well, and thus this loop must
--			 * stop here.
--			 */
--			break;
--		}
--
--		/*
--		 * The decrement of num_groups_with_pending_reqs is
--		 * not performed immediately upon the deactivation of
--		 * entity, but it is delayed to when it also happens
--		 * that the first leaf descendant bfqq of entity gets
--		 * all its pending requests completed. The following
--		 * instructions perform this delayed decrement, if
--		 * needed. See the comments on
--		 * num_groups_with_pending_reqs for details.
--		 */
--		if (entity->in_groups_with_pending_reqs) {
--			entity->in_groups_with_pending_reqs = false;
--			bfqd->num_groups_with_pending_reqs--;
--		}
--	}
--
-+	decrease_groups_with_pending_reqs(bfqd, bfqq);
- 	bfq_put_queue(bfqq);
- }
- 
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index df08bff89a70..7ae11f62900b 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -493,7 +493,7 @@ struct bfq_data {
- 	struct rb_root_cached queue_weights_tree;
- 
- 	/*
--	 * Number of groups with at least one descendant process that
-+	 * Number of groups with at least one process that
- 	 * has at least one request waiting for completion. Note that
- 	 * this accounts for also requests already dispatched, but not
- 	 * yet completed. Therefore this number of groups may differ
-@@ -506,14 +506,14 @@ struct bfq_data {
- 	 * bfq_better_to_idle().
- 	 *
- 	 * However, it is hard to compute this number exactly, for
--	 * groups with multiple descendant processes. Consider a group
--	 * that is inactive, i.e., that has no descendant process with
-+	 * groups with multiple processes. Consider a group
-+	 * that is inactive, i.e., that has no process with
- 	 * pending I/O inside BFQ queues. Then suppose that
- 	 * num_groups_with_pending_reqs is still accounting for this
--	 * group, because the group has descendant processes with some
-+	 * group, because the group has processes with some
- 	 * I/O request still in flight. num_groups_with_pending_reqs
- 	 * should be decremented when the in-flight request of the
--	 * last descendant process is finally completed (assuming that
-+	 * last process is finally completed (assuming that
- 	 * nothing else has changed for the group in the meantime, in
- 	 * terms of composition of the group and active/inactive state of child
- 	 * groups and processes). To accomplish this, an additional
-@@ -522,7 +522,7 @@ struct bfq_data {
- 	 * we resort to the following tradeoff between simplicity and
- 	 * accuracy: for an inactive group that is still counted in
- 	 * num_groups_with_pending_reqs, we decrement
--	 * num_groups_with_pending_reqs when the first descendant
-+	 * num_groups_with_pending_reqs when the last
- 	 * process of the group remains with no request waiting for
- 	 * completion.
- 	 *
-@@ -530,12 +530,12 @@ struct bfq_data {
- 	 * carefulness: to avoid multiple decrements, we flag a group,
- 	 * more precisely an entity representing a group, as still
- 	 * counted in num_groups_with_pending_reqs when it becomes
--	 * inactive. Then, when the first descendant queue of the
-+	 * inactive. Then, when the last queue of the
- 	 * entity remains with no request waiting for completion,
- 	 * num_groups_with_pending_reqs is decremented, and this flag
- 	 * is reset. After this flag is reset for the entity,
- 	 * num_groups_with_pending_reqs won't be decremented any
--	 * longer in case a new descendant queue of the entity remains
-+	 * longer in case a new queue of the entity remains
- 	 * with no request waiting for completion.
- 	 */
- 	unsigned int num_groups_with_pending_reqs;
 -- 
-2.31.1
+2.33.1
 
