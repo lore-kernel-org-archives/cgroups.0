@@ -1,66 +1,147 @@
 From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH RFC 1/9] block, bfq: add new apis to iterate bfq entities
-Date: Sat, 27 Nov 2021 18:11:24 +0800
-Message-ID: <20211127101132.486806-2-yukuai3@huawei.com>
+Subject: [PATCH RFC 2/9] block, bfq: apply news apis where root group is not expected
+Date: Sat, 27 Nov 2021 18:11:25 +0800
+Message-ID: <20211127101132.486806-3-yukuai3@huawei.com>
 References: <20211127101132.486806-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20211127101132.486806-1-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org
 Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
 
-The old and the new apis are the same currently, prepare to count
-root group into 'num_groups_with_pending_reqs'. The old apis will be
-used to iterate with root group's entity, and the new apis will be
-used to iterate without root group's entity.
+'entity->sched_data' is set to parent group's sched_data, thus it's NULL
+for root group. And for_each_entity() is used widely to access
+'entity->sched_data', thus aplly news apis if root group is not
+expected. The case that root group is expected will be handled in next
+patch.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- block/bfq-iosched.h | 19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
+ block/bfq-iosched.c |  2 +-
+ block/bfq-iosched.h | 22 ++++++++--------------
+ block/bfq-wf2q.c    | 10 +++++-----
+ 3 files changed, 14 insertions(+), 20 deletions(-)
 
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index 1ce1a99a7160..3262d062e21f 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -4273,7 +4273,7 @@ void bfq_bfqq_expire(struct bfq_data *bfqd,
+ 	 * service with the same budget.
+ 	 */
+ 	entity = entity->parent;
+-	for_each_entity(entity)
++	for_each_entity_not_root(entity)
+ 		entity->service = 0;
+ }
+ 
 diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index a73488eec8a4..f5afc80ff11c 100644
+index f5afc80ff11c..ef875b8046e5 100644
 --- a/block/bfq-iosched.h
 +++ b/block/bfq-iosched.h
-@@ -1034,9 +1034,20 @@ extern struct blkcg_policy blkcg_policy_bfq;
- #define for_each_entity_safe(entity, parent) \
- 	for (; entity && ({ parent = entity->parent; 1; }); entity = parent)
+@@ -1021,25 +1021,22 @@ extern struct blkcg_policy blkcg_policy_bfq;
+ /* - interface of the internal hierarchical B-WF2Q+ scheduler - */
  
-+#define is_root_entity(entity) \
-+	(entity->sched_data == NULL)
-+
-+#define for_each_entity_not_root(entity) \
-+	for (; entity && !is_root_entity(entity); entity = entity->parent)
-+
-+#define for_each_entity_not_root_safe(entity, parent) \
-+	for (; entity && !is_root_entity(entity) && \
-+	       ({ parent = entity->parent; 1; }); entity = parent)
- #else /* CONFIG_BFQ_GROUP_IOSCHED */
-+#define is_root_entity(entity) (false)
-+
+ #ifdef CONFIG_BFQ_GROUP_IOSCHED
+-/* both next loops stop at one of the child entities of the root group */
++/* stop at one of the child entities of the root group */
+ #define for_each_entity(entity)	\
+ 	for (; entity ; entity = entity->parent)
+ 
+-/*
+- * For each iteration, compute parent in advance, so as to be safe if
+- * entity is deallocated during the iteration. Such a deallocation may
+- * happen as a consequence of a bfq_put_queue that frees the bfq_queue
+- * containing entity.
+- */
+-#define for_each_entity_safe(entity, parent) \
+-	for (; entity && ({ parent = entity->parent; 1; }); entity = parent)
+-
+ #define is_root_entity(entity) \
+ 	(entity->sched_data == NULL)
+ 
+ #define for_each_entity_not_root(entity) \
+ 	for (; entity && !is_root_entity(entity); entity = entity->parent)
+ 
++/*
++ * For each iteration, compute parent in advance, so as to be safe if
++ * entity is deallocated during the iteration. Such a deallocation may
++ * happen as a consequence of a bfq_put_queue that frees the bfq_queue
++ * containing entity.
++ */
+ #define for_each_entity_not_root_safe(entity, parent) \
+ 	for (; entity && !is_root_entity(entity) && \
+ 	       ({ parent = entity->parent; 1; }); entity = parent)
+@@ -1047,16 +1044,13 @@ extern struct blkcg_policy blkcg_policy_bfq;
+ #define is_root_entity(entity) (false)
+ 
  /*
-- * Next two macros are fake loops when cgroups support is not
-+ * Next four macros are fake loops when cgroups support is not
+- * Next four macros are fake loops when cgroups support is not
++ * Next three macros are fake loops when cgroups support is not
   * enabled. I fact, in such a case, there is only one level to go up
   * (to reach the root group).
   */
-@@ -1045,6 +1056,12 @@ extern struct blkcg_policy blkcg_policy_bfq;
+ #define for_each_entity(entity)	\
+ 	for (; entity ; entity = NULL)
  
- #define for_each_entity_safe(entity, parent) \
- 	for (parent = NULL; entity ; entity = parent)
-+
-+#define for_each_entity_not_root(entity) \
-+	for (; entity ; entity = NULL)
-+
-+#define for_each_entity_not_root_safe(entity, parent) \
-+	for (parent = NULL; entity ; entity = parent)
- #endif /* CONFIG_BFQ_GROUP_IOSCHED */
+-#define for_each_entity_safe(entity, parent) \
+-	for (parent = NULL; entity ; entity = parent)
+-
+ #define for_each_entity_not_root(entity) \
+ 	for (; entity ; entity = NULL)
  
- struct bfq_group *bfq_bfqq_to_bfqg(struct bfq_queue *bfqq);
+diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+index b74cc0da118e..67e32481e455 100644
+--- a/block/bfq-wf2q.c
++++ b/block/bfq-wf2q.c
+@@ -830,7 +830,7 @@ void bfq_bfqq_served(struct bfq_queue *bfqq, int served)
+ 		bfqq->service_from_wr += served;
+ 
+ 	bfqq->service_from_backlogged += served;
+-	for_each_entity(entity) {
++	for_each_entity_not_root(entity) {
+ 		st = bfq_entity_service_tree(entity);
+ 
+ 		entity->service += served;
+@@ -1216,7 +1216,7 @@ static void bfq_deactivate_entity(struct bfq_entity *entity,
+ 	struct bfq_sched_data *sd;
+ 	struct bfq_entity *parent = NULL;
+ 
+-	for_each_entity_safe(entity, parent) {
++	for_each_entity_not_root_safe(entity, parent) {
+ 		sd = entity->sched_data;
+ 
+ 		if (!__bfq_deactivate_entity(entity, ins_into_idle_tree)) {
+@@ -1285,7 +1285,7 @@ static void bfq_deactivate_entity(struct bfq_entity *entity,
+ 	 * is not the case.
+ 	 */
+ 	entity = parent;
+-	for_each_entity(entity) {
++	for_each_entity_not_root(entity) {
+ 		/*
+ 		 * Invoke __bfq_requeue_entity on entity, even if
+ 		 * already active, to requeue/reposition it in the
+@@ -1585,7 +1585,7 @@ struct bfq_queue *bfq_get_next_queue(struct bfq_data *bfqd)
+ 	 * We can finally update all next-to-serve entities along the
+ 	 * path from the leaf entity just set in service to the root.
+ 	 */
+-	for_each_entity(entity) {
++	for_each_entity_not_root(entity) {
+ 		struct bfq_sched_data *sd = entity->sched_data;
+ 
+ 		if (!bfq_update_next_in_service(sd, NULL, false))
+@@ -1612,7 +1612,7 @@ bool __bfq_bfqd_reset_in_service(struct bfq_data *bfqd)
+ 	 * execute the final step: reset in_service_entity along the
+ 	 * path from entity to the root.
+ 	 */
+-	for_each_entity(entity)
++	for_each_entity_not_root(entity)
+ 		entity->sched_data->in_service_entity = NULL;
+ 
+ 	/*
 -- 
 2.31.1
 
