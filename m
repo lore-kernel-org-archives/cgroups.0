@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 4/4] block: cancel all throttled bios in del_gendisk()
-Date: Sat, 27 Nov 2021 18:10:59 +0800
-Message-ID: <20211127101059.477405-5-yukuai3@huawei.com>
+Subject: [PATCH 2/4] blk-throtl: don't warn in tg_drain_bios()
+Date: Sat, 27 Nov 2021 18:10:57 +0800
+Message-ID: <20211127101059.477405-3-yukuai3@huawei.com>
 References: <20211127101059.477405-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
@@ -12,39 +12,61 @@ Content-Type: text/plain; charset="us-ascii"
 To: hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Throttled bios can't be issued after del_gendisk() is done, thus
-it's better to cancel them immediately rather than waiting for
-throttle is done.
-
-For example, if user thread is throttled with low bps while it's
-issuing large io, and the device is deleted. The user thread will
-wait for a long time for io to return.
+tg_drain_bios() will iterate until throtl_rb_first() return NULL,
+don't warn in such situation.
 
 Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/genhd.c | 2 ++
- 1 file changed, 2 insertions(+)
+ block/blk-throttle.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 8e9cbf23c510..24fa3356d164 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -28,6 +28,7 @@
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 230e300c5856..25822c88bea1 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -497,12 +497,13 @@ static void throtl_pd_free(struct blkg_policy_data *pd)
+ }
  
- #include "blk.h"
- #include "blk-rq-qos.h"
-+#include "blk-throttle.h"
+ static struct throtl_grp *
+-throtl_rb_first(struct throtl_service_queue *parent_sq)
++throtl_rb_first(struct throtl_service_queue *parent_sq, bool warn)
+ {
+ 	struct rb_node *n;
  
- static struct kobject *block_depr;
+ 	n = rb_first_cached(&parent_sq->pending_tree);
+-	WARN_ON_ONCE(!n);
++	if (warn)
++		WARN_ON_ONCE(!n);
+ 	if (!n)
+ 		return NULL;
+ 	return rb_entry_tg(n);
+@@ -520,7 +521,7 @@ static void update_min_dispatch_time(struct throtl_service_queue *parent_sq)
+ {
+ 	struct throtl_grp *tg;
  
-@@ -619,6 +620,7 @@ void del_gendisk(struct gendisk *disk)
+-	tg = throtl_rb_first(parent_sq);
++	tg = throtl_rb_first(parent_sq, true);
+ 	if (!tg)
+ 		return;
  
- 	blk_mq_freeze_queue_wait(q);
+@@ -1089,7 +1090,7 @@ static int throtl_select_dispatch(struct throtl_service_queue *parent_sq)
+ 		if (!parent_sq->nr_pending)
+ 			break;
  
-+	blk_throtl_cancel_bios(q);
- 	rq_qos_exit(q);
- 	blk_sync_queue(q);
- 	blk_flush_integrity();
+-		tg = throtl_rb_first(parent_sq);
++		tg = throtl_rb_first(parent_sq, true);
+ 		if (!tg)
+ 			break;
+ 
+@@ -2266,7 +2267,7 @@ static void tg_drain_bios(struct throtl_service_queue *parent_sq)
+ {
+ 	struct throtl_grp *tg;
+ 
+-	while ((tg = throtl_rb_first(parent_sq))) {
++	while ((tg = throtl_rb_first(parent_sq, false))) {
+ 		struct throtl_service_queue *sq = &tg->service_queue;
+ 		struct bio *bio;
+ 
 -- 
 2.31.1
 
