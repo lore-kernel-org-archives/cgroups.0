@@ -1,43 +1,46 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/2] cgroup: cgroup_subsys[ssid] is never NULL
-Date: Mon, 29 Nov 2021 07:35:54 -1000
-Message-ID: <YaUPej4QUZoFAuOM@slm.duckdns.org>
+Subject: Re: [PATCH 2/2] cgroup: get the wrong css for css_alloc() during
+ cgroup_init_subsys()
+Date: Mon, 29 Nov 2021 07:39:49 -1000
+Message-ID: <YaUQZZbFDDOpwHYY@slm.duckdns.org>
 References: <20211127145919.31159-1-richard.weiyang@gmail.com>
+ <20211127145919.31159-2-richard.weiyang@gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=MNad6ulQb2gA8R5sf3rwypcW1oTk+N6PJavU21UoSX0=;
-        b=FWGyKh4ir5dwLU6wzNY4AJLk7HljqhNMYCeFeVvaqxs8gCT50QJ3U9flAKWziqBkf2
-         FzjNYNrbWyJuqX3bpLJzG1t/HB6WsNsu5AZQRT+j276x6Xc+sIHok3QqohhwiNvjEt+I
-         bHs6cBnaZ7EOnF3Djjg4IftrmvvmsLvavkapkrluDn9Vem/m/8k7LrMKjHm7/s8TzKgj
-         rWCb6qsPd4owm4M5CTfPXHnKfeiaMsCargSrBEpRCZ1HYSqvDpWmYv1PSeLXfTUNfKsq
-         +J7M722MkLXPzJBLNbw9Ohzriae/gSsCaenN6sbv+znTBeXsbnn85WHsWn2m2+qa6XWA
-         8pfQ==
+        bh=jXtNF/sPL2y+FUYzBp0rUX3UsbHP3l0DZcj0VSipxzQ=;
+        b=Ja64lXFdxwDLTwzcCX7CVYDIpHTlZxNqc0Fa6bm28nUCevMarEHl0xIPFIx8/H8NUV
+         D6NCwIn8E8TV6liXLFYmB4hDBK+HIz/lThf6bZVJvocJ6J8syTB/g5X05Cy3eJ9NaB7C
+         y+0wNiXp0x+DIlrvBdRkEkoHGRIU/0Dm4uEoEqcz4r0bl5SL7dMtug4+HlZrwpnfTWG+
+         b4Q3Wnge5QIK3/lfxSIvRUWuJv8am15+opOEPf2Nvv+FpbXzfqW5csZiK4GwB7vE/MFm
+         yQ27hpi+zg0inn1ldPqVacjNX9vRBj02UV6zz//ORkQLpARoEcY7eJNKPhvuF/3ZkFpA
+         Oq6Q==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20211127145919.31159-1-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <20211127145919.31159-2-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat, Nov 27, 2021 at 02:59:18PM +0000, Wei Yang wrote:
-> When the check, (ssid) < CGROUP_SUBSYS_COUNT, passed, it means
-> cgroup_subsys[ssid] is defined to its proper value. It is not
-> necessary to use a true to enter the loop.
-...
->  #define for_each_subsys(ss, ssid)					\
->  	for ((ssid) = 0; (ssid) < CGROUP_SUBSYS_COUNT &&		\
-> -	     (((ss) = cgroup_subsys[ssid]) || true); (ssid)++)
-> +	     ((ss) = cgroup_subsys[ssid]); (ssid)++)
+On Sat, Nov 27, 2021 at 02:59:19PM +0000, Wei Yang wrote:
+> css_alloc() needs the parent css, while cgroup_css() gets current
+> cgropu's css. So we are getting the wrong css during
+> cgroup_init_subsys().
+> 
+> Fortunately, cgrp_dfl_root.cgrp's css is not set yet, so the value we
+> pass to css_alloc() doesn't harm to the system.
+> 
+> Let's pass NULL directly during init, since we know there is no parent
+> yet.
+> 
+> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-So, now the compiler has to test whether ss is NULL or not before each
-iteration even though we know that it's never NULL. The whole point of that
-"|| true" is telling the compiler that the pointer is never NULL.
+Applied to cgroup/for-5.17 w/ minor description adjustment.
 
 Thanks.
 
