@@ -1,45 +1,68 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH] mm/memcg: Relocate mod_objcg_mlstate(), get_obj_stock()
- and put_obj_stock()
-Date: Mon, 29 Nov 2021 10:01:45 -0800
-Message-ID: <YaUViaGjXgoLGjUq@carbon.dhcp.thefacebook.com>
-References: <20211129161140.306488-1-longman@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC PATCH] sched/fair: Filter by css_is_dying() in the last
+ tg_unthrottle_up()
+Date: Mon, 29 Nov 2021 06:39:35 -1000
+Message-ID: <YaUCR4a0kes5XvF4@slm.duckdns.org>
+References: <20211126130619.30730-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=E6EXu5NsV9SHRzKySPr0Q0eWkJIFIkz0BNpEbQ0vjvw=;
- b=oLAfzOgimeuOJx951nMpPaa2eBhew1nYU0eeCLpP+rIPijeVoRCduUfKBAyEqlbHTcSw
- vJEyvjkMsgddMKyMItztoH1JWpsRWKmauJVFq3HhNKCBVJUgARnNQug0UHM7gELl1knR
- HmwvOpvX1dj1s+jmW5MnaYBq9kkOjar84ns= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=uN2SDh1OpNAmwOV7/X9bwxMmpaiYU2WulSlLqtLkQkY=;
+        b=KK4Dw2fMZbfFmVV6q17Pao6/+8xYHausH2l199e4NYZgTZVnoLqC4hb9YmsqEviUME
+         lsMzIDH3kTgDBKYo0FSwi7y/khD9Oi6Snyc8BOjJLVmdDVBFYZKiT9tX0oof2fVn78Td
+         CEtOJpLA0+Ucaq8lW2DUoJRed8CZzP8kngbXXiaU9LewFmRAAel019T2AgVXZjfvQ0Yr
+         yZQRRElxoAy8PXgjTNNFPazB6/W9imiFRJMYVJiR1pVdJbU+G6s9M5QMy/3S439s8uLd
+         umtxOw5ja4oKXXyaq+6X92gzcngC9Jo5tGDhmNPwgDE5gOZuv4A0claZyUAZ7JKHsaby
+         6tBA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20211129161140.306488-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20211126130619.30730-1-mkoutny-IBi9RG/b67k@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, minipli-JNS0hek0TMl4qEwOxq4T+Q@public.gmane.org, Valentin.Schneider-5wv7dgnIgG8@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, kevin.tanguy-Rm6v+N6rxxBWk0Htik3J/w@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, odin-RObV4cXtwVA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, spender-JNS0hek0TMl4qEwOxq4T+Q@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
 
-On Mon, Nov 29, 2021 at 11:11:40AM -0500, Waiman Long wrote:
-> All the calls to mod_objcg_mlstate(), get_obj_stock() and put_obj_stock()
-> are done by functions defined within the same "#ifdef CONFIG_MEMCG_KMEM"
-> compilation block. When CONFIG_MEMCG_KMEM isn't defined, the following
-> compilation warnings will be issued [1] and [2].
-> 
->   mm/memcontrol.c:785:20: warning: unused function 'mod_objcg_mlstate'
->   mm/memcontrol.c:2113:33: warning: unused function 'get_obj_stock'
-> 
-> Fix these warning by moving those functions to under the same
-> CONFIG_MEMCG_KMEM compilation block. There is no functional change.
-> 
-> [1] https://lore.kernel.org/lkml/202111272014.WOYNLUV6-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
-> [2] https://lore.kernel.org/lkml/202111280551.LXsWYt1T-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
-> 
-> Fixes: 559271146efc ("mm/memcg: optimize user context object stock access")
-> Fixes: 68ac5b3c8db2 ("mm/memcg: cache vmstat data in percpu memcg_stock_pcp")
-> Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Hello,
 
-Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+On Fri, Nov 26, 2021 at 02:06:19PM +0100, Michal Koutn=FD wrote:
+> As explained in the message, this relies on the RCU GP between css_is_dyi=
+ng()
+> returning false and the potential .css_offline() call.=20
+> This is stated in the css_is_dying() documentation:
+>=20
+> > the actual offline operations are RCU delayed and this test returns %tr=
+ue
+> > also when @css is scheduled to be offlined.
+>=20
+> On the other hand the documentation of the underlying
+> percpu_ref_kill_and_confirm() says (to discourage relying on GP):
+>=20
+> > There are no implied RCU grace periods between kill and release.
+>=20
+> This seems to discord with each other at first thought. (That's why I mar=
+ked
+> this RFC.)
+>=20
+> However, if one takes into account that percpu_refs as used by css are ne=
+ver
+> switched to atomic besides the actual killing (and they start in per-cpu =
+mode),
+> the GP (inserted in __percpu_ref_switch_to_atomic()) is warranted.
 
-Thanks!
+IIRC, one reason why I didn't want to make the implied RCU "official" was
+that there were different RCU types and cgroup was using the less common
+preempt variant. Now that the RCU types are unified, it may be okay to
+guarantee that e.g. percpu ref offlining has a guaranteed GP and then
+propagate that guarantee to the users. It may still be a bit brittle tho in
+that we may force the percpu ref to atomic mode for e.g. reference leak
+debugging. It'd be great if we can trigger a warning if we end up missing a
+GP for whatever reason.
+
+Thanks.
+
+--=20
+tejun
