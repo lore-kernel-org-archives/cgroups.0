@@ -1,177 +1,134 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] mm/memcg: Relocate mod_objcg_mlstate(), get_obj_stock() and put_obj_stock()
-Date: Mon, 29 Nov 2021 11:11:40 -0500
-Message-ID: <20211129161140.306488-1-longman@redhat.com>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: Use after free with BFQ and cgroups
+Date: Mon, 29 Nov 2021 18:11:15 +0100
+Message-ID: <20211129171115.GC29512@quack2.suse.cz>
+References: <20211125172809.GC19572@quack2.suse.cz>
+ <20211126144724.GA31093@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1638202334;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=iTSHlGaC4RwA82Y9GrcD/zJlYkWwy778pvuaQM45jus=;
-        b=JllfkNeQ3GhfLCw/4Lo3Kc3MQAedErEK3e7dGxogUT4kmyP5NiQ3X69vWroyN+amP5dzRR
-        8anKzamUI+BcUVDcP77LyW4WBS9IndcuRO8UtXQfFM1FqNvIIzXDKVww3kYmwITlYQX4u8
-        qSVPHQTH91JBnuNhegluwhF9KEl6U88=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1638205875; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=W99YQayPw77wzqXrx6MLXl/dSR3NLPlo5KdeeMbjv2s=;
+        b=BXp+b30+BGkNmEJB4Oq4HGpNDwueooCz+LMEk1UUiZU3/P2dK/AxKjp0IpfqzPlMdfWRAa
+        tA+rXNjtgOKNguPjhFaUuOCQZ2nWVZ7fYHFWnTBzJV9vdmWQxw138VelsEfBzWB8pNlPop
+        imT8qRFKtiV/44U3cQCVXL71XyWxuaU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1638205875;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=W99YQayPw77wzqXrx6MLXl/dSR3NLPlo5KdeeMbjv2s=;
+        b=a8YoAADl546MO/ok6S7UfrVJBGzQ39c1AaASnakkJ+fm8p7rWXgv9zdGmrgY5AKuZT57j8
+        y/n5IzGDpSioyBBw==
+Content-Disposition: inline
+In-Reply-To: <20211126144724.GA31093-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fvogt-l3A5Bk7waGM@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-All the calls to mod_objcg_mlstate(), get_obj_stock() and put_obj_stock()
-are done by functions defined within the same "#ifdef CONFIG_MEMCG_KMEM"
-compilation block. When CONFIG_MEMCG_KMEM isn't defined, the following
-compilation warnings will be issued [1] and [2].
+On Fri 26-11-21 15:47:24, Michal Koutn=FD wrote:
+> Hello.
+>=20
+> On Thu, Nov 25, 2021 at 06:28:09PM +0100, Jan Kara <jack-AlSwsSmVLrQ@publ=
+ic.gmane.org> wrote:
+> [...]
+> +Cc cgroups ML
+> https://lore.kernel.org/linux-block/20211125172809.GC19572-4I4JzKEfoa/jFM=
+9bn6wA6Q@public.gmane.org/
+>=20
+>=20
+> I understand there are more objects than blkcgs but I assume it can
+> eventually boil down to blkcg references, so I suggest another
+> alternative. (But I may easily miss the relations between BFQ objects,
+> so consider this only high-level opinion.)
+>=20
+> > After some poking, looking into crashdumps, and applying some debug pat=
+ches
+> > the following seems to be happening: We have a process P in blkcg G. Now
+> > G is taken offline so bfq_group is cleaned up in bfq_pd_offline() but P
+> > still holds reference to G from its bfq_queue. Then P submits IO, G gets
+> > inserted into service tree despite being already offline.
+>=20
+> (If G is offline, P can only be zombie, just saying. (I guess it can
+> still be Q's IO on behalf of G.))
+>=20
+> IIUC, the reference to G is only held by P. If the G reference is copied
+> into another structure (the service tree) it should get another
+> reference. My na=EFve proposal would be css_get(). (1)
 
-  mm/memcontrol.c:785:20: warning: unused function 'mod_objcg_mlstate'
-  mm/memcontrol.c:2113:33: warning: unused function 'get_obj_stock'
+So I was looking into this puzzle. The answer is following:
 
-Fix these warning by moving those functions to under the same
-CONFIG_MEMCG_KMEM compilation block. There is no functional change.
+The process P (podman, pid 2571) is currently attached to the root cgroup
+but it has io_context with BFQ queue that points to the already-offline G
+as a parent. The bio is thus associated with the root cgroup (via
+bio->bi_blkg) but BFQ uses io_context to lookup the BFQ queue where IO
+should be queued and then uses its parent to determine blkg which it should
+be charged and thus gets to the dying cgroup.
 
-[1] https://lore.kernel.org/lkml/202111272014.WOYNLUV6-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
-[2] https://lore.kernel.org/lkml/202111280551.LXsWYt1T-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+Apparently P got recently moved from G to the root cgroup and there was
+reference left in the BFQ queue structure to G.
 
-Fixes: 559271146efc ("mm/memcg: optimize user context object stock access")
-Fixes: 68ac5b3c8db2 ("mm/memcg: cache vmstat data in percpu memcg_stock_pcp")
-Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 106 ++++++++++++++++++++++++------------------------
- 1 file changed, 53 insertions(+), 53 deletions(-)
+> > IO completes, P exits, bfq_queue pointing to G gets destroyed, the
+> > last reference to G is dropped, G gets freed although is it still
+> > inserted in the service tree.  Eventually someone trips over the freed
+> > memory.
+>=20
+> Isn't it the bfq_queue.bfq_entity that's inserted in the service tree
+> (not blkcg G)?
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6863a834ed42..2ed5f2a0879d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -776,24 +776,6 @@ void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val)
- 	rcu_read_unlock();
- }
- 
--/*
-- * mod_objcg_mlstate() may be called with irq enabled, so
-- * mod_memcg_lruvec_state() should be used.
-- */
--static inline void mod_objcg_mlstate(struct obj_cgroup *objcg,
--				     struct pglist_data *pgdat,
--				     enum node_stat_item idx, int nr)
--{
--	struct mem_cgroup *memcg;
--	struct lruvec *lruvec;
--
--	rcu_read_lock();
--	memcg = obj_cgroup_memcg(objcg);
--	lruvec = mem_cgroup_lruvec(memcg, pgdat);
--	mod_memcg_lruvec_state(lruvec, idx, nr);
--	rcu_read_unlock();
--}
--
- /**
-  * __count_memcg_events - account VM events in a cgroup
-  * @memcg: the memory cgroup
-@@ -2137,41 +2119,6 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
- }
- #endif
- 
--/*
-- * Most kmem_cache_alloc() calls are from user context. The irq disable/enable
-- * sequence used in this case to access content from object stock is slow.
-- * To optimize for user context access, there are now two object stocks for
-- * task context and interrupt context access respectively.
-- *
-- * The task context object stock can be accessed by disabling preemption only
-- * which is cheap in non-preempt kernel. The interrupt context object stock
-- * can only be accessed after disabling interrupt. User context code can
-- * access interrupt object stock, but not vice versa.
-- */
--static inline struct obj_stock *get_obj_stock(unsigned long *pflags)
--{
--	struct memcg_stock_pcp *stock;
--
--	if (likely(in_task())) {
--		*pflags = 0UL;
--		preempt_disable();
--		stock = this_cpu_ptr(&memcg_stock);
--		return &stock->task_obj;
--	}
--
--	local_irq_save(*pflags);
--	stock = this_cpu_ptr(&memcg_stock);
--	return &stock->irq_obj;
--}
--
--static inline void put_obj_stock(unsigned long flags)
--{
--	if (likely(in_task()))
--		preempt_enable();
--	else
--		local_irq_restore(flags);
--}
--
- /**
-  * consume_stock: Try to consume stocked charge on this cpu.
-  * @memcg: memcg to consume from.
-@@ -2816,6 +2763,59 @@ static struct mem_cgroup *get_mem_cgroup_from_objcg(struct obj_cgroup *objcg)
-  */
- #define OBJCGS_CLEAR_MASK	(__GFP_DMA | __GFP_RECLAIMABLE | __GFP_ACCOUNT)
- 
-+/*
-+ * Most kmem_cache_alloc() calls are from user context. The irq disable/enable
-+ * sequence used in this case to access content from object stock is slow.
-+ * To optimize for user context access, there are now two object stocks for
-+ * task context and interrupt context access respectively.
-+ *
-+ * The task context object stock can be accessed by disabling preemption only
-+ * which is cheap in non-preempt kernel. The interrupt context object stock
-+ * can only be accessed after disabling interrupt. User context code can
-+ * access interrupt object stock, but not vice versa.
-+ */
-+static inline struct obj_stock *get_obj_stock(unsigned long *pflags)
-+{
-+	struct memcg_stock_pcp *stock;
-+
-+	if (likely(in_task())) {
-+		*pflags = 0UL;
-+		preempt_disable();
-+		stock = this_cpu_ptr(&memcg_stock);
-+		return &stock->task_obj;
-+	}
-+
-+	local_irq_save(*pflags);
-+	stock = this_cpu_ptr(&memcg_stock);
-+	return &stock->irq_obj;
-+}
-+
-+static inline void put_obj_stock(unsigned long flags)
-+{
-+	if (likely(in_task()))
-+		preempt_enable();
-+	else
-+		local_irq_restore(flags);
-+}
-+
-+/*
-+ * mod_objcg_mlstate() may be called with irq enabled, so
-+ * mod_memcg_lruvec_state() should be used.
-+ */
-+static inline void mod_objcg_mlstate(struct obj_cgroup *objcg,
-+				     struct pglist_data *pgdat,
-+				     enum node_stat_item idx, int nr)
-+{
-+	struct mem_cgroup *memcg;
-+	struct lruvec *lruvec;
-+
-+	rcu_read_lock();
-+	memcg = obj_cgroup_memcg(objcg);
-+	lruvec = mem_cgroup_lruvec(memcg, pgdat);
-+	mod_memcg_lruvec_state(lruvec, idx, nr);
-+	rcu_read_unlock();
-+}
-+
- int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
- 				 gfp_t gfp, bool new_page)
- {
--- 
-2.27.0
+Yes, it is. But the entity is part of bfq_group structure which is the pd
+for the blkcg.
 
+> You write bfq_queue is destroyed, shouldn't that remove it from the
+> service tree? (2)
+
+Yes, BFQ queue is removed from the service trees on destruction. But its
+parent - bfq_group - is not removed from its service tree. And that's where
+we hit the problem.
+
+> > Now I was looking into how to best fix this. There are several
+> > possibilities and I'm not sure which one to pick so that's why I'm writ=
+ing
+> > to you. bfq_pd_offline() is walking all entities in service trees and
+> > trying to get rid of references to bfq_group (by reparenting entities).
+> > Is this guaranteed to see all entities that point to G? From the scenar=
+io
+> > I'm observing it seems this can miss entities pointing to G - e.g. if t=
+hey
+> > are in idle tree, we will just remove them from the idle tree but we wo=
+n't
+> > change entity->parent so they still point to G. This can be seen as one
+> > culprit of the bug.
+>=20
+> There can be two types of references to blkcg (transitively via
+> bfq_group):
+> a) "plain" (just a pointer stored somewhere),
+> b) "pinned" (marked by css_get() of the respective blkcg).
+>=20
+> The bfq_pd_offline() callback should erase all plain references (e.g. by
+> reparenting) or poke the holders of pinned references to release (unpin)
+> them eventually (so that blkcg goes away).
+>=20
+> I reckon it's not possible to traverse all references in the
+> bfq_pd_offline().
+
+So bfq_pd_offline() does erase all plain references AFAICT. But later it
+can create new plain references (service tree) from the existing "pinned"
+ones and once pinned references go away, those created plain references
+cause trouble. And the more I'm looking into this the more I'm convinced
+bfq_pd_offline() should be more careful and remove also the pinned
+references from bfq queues. It actually does it for most queues but it can
+currently miss some... I'll look into that.
+
+Thanks for your very good questions and hints!
+
+								Honza
+--=20
+Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+SUSE Labs, CR
