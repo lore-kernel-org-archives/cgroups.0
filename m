@@ -1,41 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Use after free with BFQ and cgroups
-Date: Mon, 29 Nov 2021 07:12:42 -1000
-Message-ID: <YaUKCoK39FlZK9m5@slm.duckdns.org>
-References: <20211125172809.GC19572@quack2.suse.cz>
- <20211126144724.GA31093@blackbody.suse.cz>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm/memcg: Relocate mod_objcg_mlstate(), get_obj_stock()
+ and put_obj_stock()
+Date: Mon, 29 Nov 2021 09:19:04 -0800
+Message-ID: <CALvZod5mELR1OLEO+i6=wkDyckzGx8pXNFAYgLLxD8h+Q9K6Pw@mail.gmail.com>
+References: <20211129161140.306488-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=iqv7qLF7uITwuXt3oWFITR3Bhp8jkUr/nLRX6jeUX60=;
-        b=a/KS+rJo29zRyxgYOvHGrL87E6B0Jp7PSbf4q3c/bWycMj3+nFZUi+0XhTm3kpyFAP
-         HY/nHWdT2dD7ii1e97qDpyUAcc1mREhYZIZi6kVEV0R1TZ/AEQBBMfufIMjyuKRcBWr5
-         v3vFEw2cS6Ste1nsNiuin6pHy1Har2CYuWKvIpDljCU5dynoRivA3fGU++i+bUZ6Ic3H
-         GEx7q7zVlIZN0y2iJlnbird+UjPoe8NiH4GwzWKpd2u5paTLgj5ZhnLlbSrAe1pVSDRs
-         wu7fEOpCiYOI36yu7wSAdgcMY7PhgCmJiahM3bnwhwYng1wGYDzQnX6qRPSf0qDpDAAA
-         Aiww==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <20211126144724.GA31093@blackbody.suse.cz>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ULamTUST6L2A21kAICas7AlHR1YPJikHumKTUMz0JF4=;
+        b=KpLlvkXPiqlh90dRrkMiw6RVVebFtOcim8stxS8GSc3BRe262oEefo4fCtn/n5dSyF
+         AzCk9A3mr0ghtqEYFUnZ6LpyGMxRrIR56LcUAjfj6Y5coGW4WKof/0nURa9/WhzOna//
+         6KMeiBS7y93+57LjMtRLJWLV9Z8QG1Ulf86Zv/Qv5hr9iwB53s+NI9orCNCEtzv43Ma9
+         rMZ8vvSZclmxXvo24LkFGlyI+FP5aK1DmEBGo7Wad3dzcYpWOO2QItBnMc2TtZvu7Xl3
+         0dTtueijGHDAZWxLMaiuH5yXWBUn8CtZA3XEXtehRJPKfRP416Cf3jJVwV0guRHObDNu
+         9D9w==
+In-Reply-To: <20211129161140.306488-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: Jan Kara <jack@suse.cz>, Paolo Valente <paolo.valente@linaro.org>, linux-block@vger.kernel.org, fvogdt@suse.de, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Fri, Nov 26, 2021 at 03:47:24PM +0100, Michal Koutn=FD wrote:
-> The question here is how long would stay the offlined blkcgs around if
-> they were directly pinned upon the IO submission. If it's unbound, then
-> reparenting makes more sense.
+On Mon, Nov 29, 2021 at 8:12 AM Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> All the calls to mod_objcg_mlstate(), get_obj_stock() and put_obj_stock()
+> are done by functions defined within the same "#ifdef CONFIG_MEMCG_KMEM"
+> compilation block. When CONFIG_MEMCG_KMEM isn't defined, the following
+> compilation warnings will be issued [1] and [2].
+>
+>   mm/memcontrol.c:785:20: warning: unused function 'mod_objcg_mlstate'
+>   mm/memcontrol.c:2113:33: warning: unused function 'get_obj_stock'
+>
+> Fix these warning by moving those functions to under the same
+> CONFIG_MEMCG_KMEM compilation block. There is no functional change.
+>
+> [1] https://lore.kernel.org/lkml/202111272014.WOYNLUV6-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+> [2] https://lore.kernel.org/lkml/202111280551.LXsWYt1T-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+>
+> Fixes: 559271146efc ("mm/memcg: optimize user context object stock access")
+> Fixes: 68ac5b3c8db2 ("mm/memcg: cache vmstat data in percpu memcg_stock_pcp")
+> Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-It should be fine to pin whatever's necessary while related IOs are in
-flight and percpu_ref used for css refcnting isn't gonna make any noticeable
-difference in terms of overhead.
-
-Thanks.
-
---=20
-tejun
+Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
