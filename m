@@ -1,8 +1,8 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Waiman Long <longman@redhat.com>
 Subject: Re: [PATCH v8 5/6] cgroup/cpuset: Update description of
  cpuset.cpus.partition in cgroup-v2.rst
-Date: Wed, 1 Dec 2021 12:49:15 -0500
-Message-ID: <e16ccf4f-7302-8891-d9f6-081e0bc41c04@redhat.com>
+Date: Wed, 1 Dec 2021 13:05:44 -0500
+Message-ID: <4a021678-1896-2d16-4075-f626c7ab8513@redhat.com>
 References: <20211018143619.205065-1-longman@redhat.com>
  <20211018143619.205065-6-longman@redhat.com>
  <20211115193122.GA16798@blackbody.suse.cz>
@@ -11,47 +11,88 @@ References: <20211018143619.205065-1-longman@redhat.com>
  <293d7abf-aff6-fcd8-c999-b1dbda1cffb8@redhat.com>
  <YaZbXArNIMNvwJD/@slm.duckdns.org>
  <2347fe66-dc68-6d58-e63b-7ed2b8077b48@redhat.com>
- <20211201141350.GA54766@blackbody.suse.cz>
- <ec6e2b89-385a-fcc7-7cfa-7e9119fc34bc@redhat.com>
- <YaelRiqWOIzT5uRs@slm.duckdns.org>
+ <Yaem+r/YZ9BNXv9R@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1638380964;
+        s=mimecast20190719; t=1638381965;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=d3IYU06NP1ap6vKovk21hhbdlMoBPkQcBNAwBXt/XDY=;
-        b=OhsUsVUD/48gfapf93JSJAouyUgzw2OWmvoLlUFNw6aOSnxyRTb8xKVN6Dnd82y0xp0hjx
-        hHtmQ4T5WSM6uKra4LWimh89MVXCMZU6Qyg92mqFWLNfg0K1mCUFzJkYN9tJI9hB1oAJyK
-        IyMKtILcANm4LTh5mrnqYQR+kFkLfKM=
+        bh=nL9jEjCjXMQ2Hi/cW7zIosXzbREOuqBP0onxXEUO1oE=;
+        b=KgWcAPN04AjhIHgwoZYmKDl39i3gUbQ1GrJWAJWrHaDrjZXGlXu2jwnOTFUFc4xSbvSXvk
+        Dr2JQXQPKnHttp/AgcOXXkLs+nH6R5riTRrLBNouBqS3QT8EonxBECYzNsoIDAXd08p2Ty
+        Np3pfEbPvVxWNMQ2oDBICnfI6oj0nfo=
 Content-Language: en-US
-In-Reply-To: <YaelRiqWOIzT5uRs-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <Yaem+r/YZ9BNXv9R@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
 
 
-On 12/1/21 11:39, Tejun Heo wrote:
-> On Wed, Dec 01, 2021 at 09:56:21AM -0500, Waiman Long wrote:
->> Right, I shouldn't say corner cases. Having task in an intermediate
->> partition is possible depending on event sequence. I am aware that there=
- are
->> code in the cpuset code to prevent that, but it didn't block all cases.
->>>> A valid parent partition may distribute out all its CPUs to
->>>>   =C2=A0its child partitions as long as there is no task associated wi=
-th it.
->>> Assuming there's always at least one kernel thread in the root cgroup
->>> that can't be migrated anyway.]
->> I am aware of that. That is why I said root cgroup must have at least one
->> cpu in its "cpuset.cpus.effective".
-> In that case, let's explicitly describe that condition.
+On 12/1/21 11:46, Tejun Heo wrote:
+> Hello, Waiman.
+>
+> On Tue, Nov 30, 2021 at 10:56:34PM -0500, Waiman Long wrote:
+>>> What happens if an isolated domain becomes invalid and then valid again due
+>>> to cpu hotplug? Does it go "root invalid" and then back to "isolated"?
+>> Yes, the current code allow recovering from an invalid state. In this
+>> particular case, the transition will be "isolated" --> "root invalid" -->
+>> "isolated".
+> Wouldn't it be clearer if it became "isolated invalid"?
 
-Yes, I will. Only non-root cgroup can distribute out all its CPUs. I=20
-thought I said that in the documentation, maybe it is very clear.
+You are right. I have overlooked that. Will make the change.
+
+
+>
+>>> While it isn't necessarily tied to this series, it's a big no-no to restrict
+>>> what a parent can do depending on what its descendants are doing. A cgroup
+>>> higher up in the hierarchy should be able to change configuration however it
+>>> sees fit as deligation breaks down otherwise.
+>>>
+>>> Maybe you can argue that cpuset is special and shouldn't be subject to such
+>>> convention but I can't see strong enough justifications especially given
+>>> that most of these restrictions can be broken by hotplug operations anyway
+>>> and thus need code to handle those situations.
+>> These are all pre-existing restrictions before the introduction of
+>> partition. These are checks done in validate_change(). I am just saying out
+>> loud the existing behavior. If you think that needs to be changed, I am fine
+>> with that. However, it will be a separate patch as it is not a behavior that
+>> is introduced by this series.
+> I see. It looks more problematic now with the addtion of the state
+> transition error reporting, more possible state transitions and, well,
+> actual documentation.
+
+I am going to add a patch to take out the child superset limitation for 
+the default hierarchy as I believe it is probably an oversight that we 
+were not aware of before. I would like to keep the exclusivity rule 
+though as I think it makes sense.
+
+>
+>> Once an invalid partition is changed to "member", there is no way for a
+>> child invalid partition root to recover and become valid again. There is why
+>> I force them to become "member" also. I am OK if you believe it is better to
+>> keep them in the invalid state forever until we explicitly changed them to
+>> "member" eventually.
+> That's because we don't allow turning a cgroup with descendants into a
+> partition, right?
+Yes, that is a major part of it.
+>
+> So, when we were first adding the partition support, the thinking was that
+> as it's pretty niche anyway, we can take some aberrations and restrictions,
+> but I don't think it's a good direction to be building up on top of those
+> like this and would much prefer to clean up the rules and restrictions. I
+> know that this has been going on for quite a while and am sorry that am
+> coming back to the same issue repeatedly which isn't necessarily caused by
+> the proposed change. What do you think?
+
+I think I can relax some of the restrictions, but probably not all of 
+them at this time. We can certainly working on removing as much 
+restriction and limitations as possible in future update to the 
+partition code.
 
 Cheers,
 Longman
