@@ -1,47 +1,125 @@
-From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] cgroup: fix a typo in comment
-Date: Wed,  1 Dec 2021 01:17:36 +0000
-Message-ID: <20211201011736.10988-1-richard.weiyang@gmail.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id;
-        bh=Fq8BRlHQip6soD4MoiTVE5ZeVUWI7smXdjqRV9fIryk=;
-        b=Q97bIACX7BwWm5elsSdrBYHiMGe60S4Qij+w8V3Ah60WudJSar4xv9CxK7OLbC+k35
-         pCD5q9kHRg916PhilswOzQsTynUACFMsgC5K0okcihgdL6tWzDMYCDgI60NQWsdcYsmK
-         3TOqHQnrF0HZW7dHv+uNSXcD45QpN1llHS4yMlwrgP0ZGAT6SPI4M/E2lNCcaXpHIaOh
-         YPYhrBCR+wBfxngu6H9pwcQv5ECKm+nntQxWq46/Rm+vGCkM90qA2w4aM/mpoN6pMZwh
-         bFQJBk6d+IhPcha1DrUq446O7CX8TfvT6FTqYfWXUTRtjTQX3vvv4axNHcS+GVp5cpzO
-         eC4w==
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v8 5/6] cgroup/cpuset: Update description of
+ cpuset.cpus.partition in cgroup-v2.rst
+Date: Tue, 30 Nov 2021 22:56:34 -0500
+Message-ID: <2347fe66-dc68-6d58-e63b-7ed2b8077b48@redhat.com>
+References: <20211018143619.205065-1-longman@redhat.com>
+ <20211018143619.205065-6-longman@redhat.com>
+ <20211115193122.GA16798@blackbody.suse.cz>
+ <8f68692b-bd8f-33fd-44ae-f6f83bf2dc00@redhat.com>
+ <20211116175411.GA50019@blackbody.suse.cz>
+ <293d7abf-aff6-fcd8-c999-b1dbda1cffb8@redhat.com>
+ <YaZbXArNIMNvwJD/@slm.duckdns.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1638331007;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=MYPz1TwK62zcw/lQOKlOkIWpT4m/iI29fxtGFyZ0JI4=;
+        b=PWcBe0ibxSZnyaiE22dVSAagK8vmNu7iD0HjmNYV1XrP7dzoCrBigVmtQSsrFNEqP8wb5G
+        0tyYpO9DLxfy3YPjYuf7MhM2bVGmMyKD+SPDLtiZUsJDngo9RhpNJLkJ9dA8aorUCmTnyH
+        7rILDx7/QL3v5THNsw/sOkU4ua5Pb2s=
+Content-Language: en-US
+In-Reply-To: <YaZbXArNIMNvwJD/@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
 
-In commit 8699b7762a62 ("cgroup: s/child_subsys_mask/subtree_ss_mask/"),
-we rename child_subsys_mask to subtree_ss_mask. While it missed to
-rename this in comment.
+On 11/30/21 12:11, Tejun Heo wrote:
+> Hello, Waiman.
+>
+> On Tue, Nov 30, 2021 at 10:35:19AM -0500, Waiman Long wrote:
+>>      On read, the "cpuset.cpus.partition" file can show the following
+>>      values.
+>>
+>>        ======================    ==============================
+>>        "member"            Non-root member of a partition
+>>        "root"            Partition root
+>>        "isolated"            Partition root without load balancing
+>>        "root invalid (<reason>)"    Invalid partition root
+>>        ======================    ==============================
+> What happens if an isolated domain becomes invalid and then valid again due
+> to cpu hotplug? Does it go "root invalid" and then back to "isolated"?
+Yes, the current code allow recovering from an invalid state. In this 
+particular case, the transition will be "isolated" --> "root invalid" 
+--> "isolated".
+> ...
+>>      Before the "member" to partition root transition can happen,
+>>      the following conditions must be met or the transition will
+>>      not be allowed.
+>>
+>>      1) The "cpuset.cpus" is non-empty and exclusive, i.e. they are
+>>         not shared by any of its siblings.
+>>      2) The parent cgroup is a valid partition root.
+>>      3) The "cpuset.cpus" is a subset of parent's "cpuset.cpus".
+>>      4) There is no child cgroups with cpuset enabled.  This avoids
+>>         cpu migrations of multiple cgroups simultaneously which can
+>>         be problematic.
+> So, I still have a hard time justifying the above restrictions. 1) can be
+> broken through hotplug anyway. 2) can be broken by the parent switching to
+> member. 3) would mean that we'd need to restrict parent's config changes
+> depending on what children are doing. 4) is more understandable but it's an
+> implementation detail that we can address in the future.
+>
+The initial transition to a partition root has a higher barrier. Once it 
+becomes a partition root. Some restrictions are relaxed.
 
-Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- include/linux/cgroup-defs.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>>      Once becoming a partition root, the following two rules restrict
+>>      what changes can be made to "cpuset.cpus".
+>>
+>>      1) The value must be exclusive.
+>>      2) If child cpusets exist, the value must be a superset of what
+>>         are defined in the child cpusets.
+>>
+>>      The second rule applies even for "member". Other changes to
+>>      "cpuset.cpus" that do not violate the above rules are always
+>>      allowed.
+> While it isn't necessarily tied to this series, it's a big no-no to restrict
+> what a parent can do depending on what its descendants are doing. A cgroup
+> higher up in the hierarchy should be able to change configuration however it
+> sees fit as deligation breaks down otherwise.
+>
+> Maybe you can argue that cpuset is special and shouldn't be subject to such
+> convention but I can't see strong enough justifications especially given
+> that most of these restrictions can be broken by hotplug operations anyway
+> and thus need code to handle those situations.
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 4649d09396fd..e4763c892a3b 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -413,7 +413,7 @@ struct cgroup {
- 	/*
- 	 * The bitmask of subsystems enabled on the child cgroups.
- 	 * ->subtree_control is the one configured through
--	 * "cgroup.subtree_control" while ->child_ss_mask is the effective
-+	 * "cgroup.subtree_control" while ->subtree_ss_mask is the effective
- 	 * one which may have more subsystems enabled.  Controller knobs
- 	 * are made available iff it's enabled in ->subtree_control.
- 	 */
--- 
-2.33.1
+These are all pre-existing restrictions before the introduction of 
+partition. These are checks done in validate_change(). I am just saying 
+out loud the existing behavior. If you think that needs to be changed, I 
+am fine with that. However, it will be a separate patch as it is not a 
+behavior that is introduced by this series.
+
+
+>>      Changing a partition root (valid or invalid) to "member" is
+>>      always allowed.  If there are child partition roots underneath
+>>      it, however, they will be forced to be switched back to "member"
+>>      too and lose their partitions. So care must be taken to double
+>>      check for this condition before disabling a partition root.
+> Wouldn't it make more sense for them to retain their configuration and turn
+> invalid? Why is this special?
+
+Once an invalid partition is changed to "member", there is no way for a 
+child invalid partition root to recover and become valid again. There is 
+why I force them to become "member" also. I am OK if you believe it is 
+better to keep them in the invalid state forever until we explicitly 
+changed them to "member" eventually.
+
+
+>
+>>      A valid parent partition may distribute out all its CPUs to
+>>      its child partitions as long as it is not the root cgroup and
+>>      there is no task associated with it.
+> A valid parent partition which isn't root never has tasks in them to begin
+> with.
+I believe there is some corner cases where it is possible to put task in 
+an intermediate partition. That is why I put down this statement.
+
+Cheers,
+Longman
 
