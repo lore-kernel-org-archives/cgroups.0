@@ -1,124 +1,40 @@
-From: kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH] bfq: Fix use-after-free with cgroups
-Date: Thu, 2 Dec 2021 00:47:38 +0800
-Message-ID: <202112020023.Klrg0J1F-lkp@intel.com>
-References: <20211201133439.3309-1-jack@suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: fix a typo in comment
+Date: Wed, 1 Dec 2021 06:50:48 -1000
+Message-ID: <Yaen6KWQyhBAbsks@slm.duckdns.org>
+References: <20211201011736.10988-1-richard.weiyang@gmail.com>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=MRSYNLjvSzUUD2xStcS4K0DD5X/I++O60gfhBgUbT1A=;
+        b=qD/FVYfVYxmqsU9ppUga0DOisU5misR0u9i2eWCAlmghTQhk2rqoOHFkDMQAVEB5lr
+         agBx4fpPF7aHLeF7MxHf/bDvg99DY+6dIugyiOBecjhKRs/ikXPhTZ8ZopDe8vDuHGty
+         GDlC+FF6m3p44aef2NDAw2vhjotCIXWmjIWqK4n3Kh66nBFEYQ4fuR+ddkFku29Yw1vH
+         0D10wjaXiq155B8cUVi9WVyOjZU9of5qErlotVhwBmvZ1AQ2sZCAxNhimazk28IUvBCd
+         MsqbWrBwmOtyJCjwEFRfcV8u92k53umoHak17/mkA4E0CzHB4RMtzvZ+psbSxsOKDW3o
+         ruJw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20211201133439.3309-1-jack@suse.cz>
+In-Reply-To: <20211201011736.10988-1-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jan Kara <jack@suse.cz>, Paolo Valente <paolo.valente@linaro.org>
-Cc: kbuild-all@lists.01.org, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, fvogt@suse.de, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Jan Kara <jack@suse.cz>, stable@vger.kernel.org, Fabian Vogt <fvogt@suse.com>
+To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Jan,
+On Wed, Dec 01, 2021 at 01:17:36AM +0000, Wei Yang wrote:
+> In commit 8699b7762a62 ("cgroup: s/child_subsys_mask/subtree_ss_mask/"),
+> we rename child_subsys_mask to subtree_ss_mask. While it missed to
+> rename this in comment.
+> 
+> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-I love your patch! Yet something to improve:
+Applied to cgroup/for-5.17.
 
-[auto build test ERROR on axboe-block/for-next]
-[also build test ERROR on v5.16-rc3 next-20211201]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+Thanks.
 
-url:    https://github.com/0day-ci/linux/commits/Jan-Kara/bfq-Fix-use-after-free-with-cgroups/20211201-213549
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
-config: um-i386_defconfig (https://download.01.org/0day-ci/archive/20211202/202112020023.Klrg0J1F-lkp@intel.com/config)
-compiler: gcc-9 (Debian 9.3.0-22) 9.3.0
-reproduce (this is a W=1 build):
-        # https://github.com/0day-ci/linux/commit/2154a2da8d69308aca6bb431da2d4d9e3e687daa
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Jan-Kara/bfq-Fix-use-after-free-with-cgroups/20211201-213549
-        git checkout 2154a2da8d69308aca6bb431da2d4d9e3e687daa
-        # save the config file to linux build tree
-        mkdir build_dir
-        make W=1 O=build_dir ARCH=um SUBARCH=i386 SHELL=/bin/bash block/
-
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-All errors (new ones prefixed by >>):
-
-   block/bfq-iosched.c: In function 'bfq_init_bfqq':
->> block/bfq-iosched.c:5472:44: error: 'struct bfq_group' has no member named 'children'
-    5472 |  hlist_add_head(&bfqq->children_node, &bfqg->children);
-         |                                            ^~
-
-
-vim +5472 block/bfq-iosched.c
-
-  5460	
-  5461	static void bfq_init_bfqq(struct bfq_data *bfqd, struct bfq_group *bfqg,
-  5462				  struct bfq_queue *bfqq, struct bfq_io_cq *bic,
-  5463				  pid_t pid, int is_sync)
-  5464	{
-  5465		u64 now_ns = ktime_get_ns();
-  5466	
-  5467		RB_CLEAR_NODE(&bfqq->entity.rb_node);
-  5468		INIT_LIST_HEAD(&bfqq->fifo);
-  5469		INIT_HLIST_NODE(&bfqq->burst_list_node);
-  5470		INIT_HLIST_NODE(&bfqq->woken_list_node);
-  5471		INIT_HLIST_HEAD(&bfqq->woken_list);
-> 5472		hlist_add_head(&bfqq->children_node, &bfqg->children);
-  5473	
-  5474		bfqq->ref = 0;
-  5475		bfqq->bfqd = bfqd;
-  5476	
-  5477		if (bic)
-  5478			bfq_set_next_ioprio_data(bfqq, bic);
-  5479	
-  5480		if (is_sync) {
-  5481			/*
-  5482			 * No need to mark as has_short_ttime if in
-  5483			 * idle_class, because no device idling is performed
-  5484			 * for queues in idle class
-  5485			 */
-  5486			if (!bfq_class_idle(bfqq))
-  5487				/* tentatively mark as has_short_ttime */
-  5488				bfq_mark_bfqq_has_short_ttime(bfqq);
-  5489			bfq_mark_bfqq_sync(bfqq);
-  5490			bfq_mark_bfqq_just_created(bfqq);
-  5491		} else
-  5492			bfq_clear_bfqq_sync(bfqq);
-  5493	
-  5494		/* set end request to minus infinity from now */
-  5495		bfqq->ttime.last_end_request = now_ns + 1;
-  5496	
-  5497		bfqq->creation_time = jiffies;
-  5498	
-  5499		bfqq->io_start_time = now_ns;
-  5500	
-  5501		bfq_mark_bfqq_IO_bound(bfqq);
-  5502	
-  5503		bfqq->pid = pid;
-  5504	
-  5505		/* Tentative initial value to trade off between thr and lat */
-  5506		bfqq->max_budget = (2 * bfq_max_budget(bfqd)) / 3;
-  5507		bfqq->budget_timeout = bfq_smallest_from_now();
-  5508	
-  5509		bfqq->wr_coeff = 1;
-  5510		bfqq->last_wr_start_finish = jiffies;
-  5511		bfqq->wr_start_at_switch_to_srt = bfq_smallest_from_now();
-  5512		bfqq->split_time = bfq_smallest_from_now();
-  5513	
-  5514		/*
-  5515		 * To not forget the possibly high bandwidth consumed by a
-  5516		 * process/queue in the recent past,
-  5517		 * bfq_bfqq_softrt_next_start() returns a value at least equal
-  5518		 * to the current value of bfqq->soft_rt_next_start (see
-  5519		 * comments on bfq_bfqq_softrt_next_start).  Set
-  5520		 * soft_rt_next_start to now, to mean that bfqq has consumed
-  5521		 * no bandwidth so far.
-  5522		 */
-  5523		bfqq->soft_rt_next_start = jiffies;
-  5524	
-  5525		/* first request is almost certainly seeky */
-  5526		bfqq->seek_history = 1;
-  5527	}
-  5528	
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+-- 
+tejun
