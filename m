@@ -1,242 +1,97 @@
-From: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: Use after free with BFQ and cgroups
-Date: Thu, 9 Dec 2021 16:33:17 +0100
-Message-ID: <8F26C3C5-AC2C-47B9-83FC-17C78E15F14D@linaro.org>
-References: <20211125172809.GC19572@quack2.suse.cz>
- <20211126144724.GA31093@blackbody.suse.cz>
- <20211129171115.GC29512@quack2.suse.cz>
- <f03b2b1c-808a-c657-327d-03165b988e7d@huawei.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
-Content-Transfer-Encoding: quoted-printable
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v9 0/7] cgroup/cpuset: Add new cpuset partition type &
+ empty effecitve cpus
+Date: Thu, 9 Dec 2021 10:39:55 -0500
+Message-ID: <f74efd4a-eee8-3927-f975-92b4c457cb9c@redhat.com>
+References: <20211205183220.818872-1-longman@redhat.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=O7itgZdM7y3919RO6YNnPvjKLE+tq3HFWAix1utDOx0=;
-        b=J6dSXdbyKFMxWHStSJkRVCrEl5Agv0nsilyTn+tFdcaE3R52OMOz1n+GIvJOkypJJf
-         1g586dOIQY9Xm/iqkcJFF8ONXSrLJEBGSXgXJkoF5SV2FORrFSZCvbtTEeSYZZF1DByy
-         sRouYzLqgLZ9YpNLxrvGYu4dQoal6MNvyuHzNrSEukxE9HgbI4HpPpynhTZRzwNimYof
-         ftPFf0yVjeAugz5YlGQhz/npbPnvQavhjgZjzDkVGG55kM600uaPizfu0QFxE2HPGaZ3
-         oLRMIdf/WxHeqTKv/jqs4kTO8YGNL/Hm2UrdS7G7CVUvo2HO6AhoCW6Ki1kzp1MMIe15
-         BCmw==
-In-Reply-To: <f03b2b1c-808a-c657-327d-03165b988e7d-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1639064404;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=QT9+Eto76AQyhw6YgaOC53MIX23XQDyrz/FUT+QNKSA=;
+        b=dYjylCBIokIyQKxgJ1aSna9N1EbyiHGqWDSQHiIv2r+S3ugqP70v3LYBWJh0+D8FqJ/ln/
+        b0RI2zTGOiDY7Z//JWGZduwFgDaF8C0DvtvPqVkSrl1Zh9IGp8nAXWu4RDvqICPaJ0Ohd5
+        zAgP906+XSGnxNUc4OUq8u0RdmipaEk=
+Content-Language: en-US
+In-Reply-To: <20211205183220.818872-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, =?utf-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, fvogt-l3A5Bk7waGM@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 
+On 12/5/21 13:32, Waiman Long wrote:
+> v9:
+>   - Add a new patch 1 to remove the child cpuset restriction on parent's
+>     "cpuset.cpus".
+>   - Relax initial root partition entry limitation to allow cpuset.cpus to
+>     overlap that of parent's.
+>   - An "isolated invalid" displayed type is added to
+>     cpuset.cpus.partition.
+>   - Resetting partition root to "member" will leave child partition root
+>     as invalid.
+>   - Update documentation and test accordingly.
+>
+> v8:
+>   - Reorganize the patch series and rationalize the features and
+>     constraints of a partition.
+>   - Update patch descriptions and documentation accordingly.
+>
+> v7:
+>   - Simplify the documentation patch (patch 5) as suggested by Tejun.
+>   - Fix a typo in patch 2 and improper commit log in patch 3.
+>
+> This patchset includes one bug fix and four enhancements to the cpuset v2 code.
+>
+>   Patch 1: Allow parent to set "cpuset.cpus" that may not be a superset
+>   of children's "cpuset.cpus" for default hierarchy.
+>
+>   Patch 2: Enable partition with no task to have empty cpuset.cpus.effective.
+>
+>   Patch 3: Refining the features and constraints of a cpuset partition
+>   clarifying what changes are allowed.
+>
+>   Patch 4: Add a new partition state "isolated" to create a partition
+>   root without load balancing. This is for handling intermitten workloads
+>   that have a strict low latency requirement.
+>
+>   Patch 5: Enable the "cpuset.cpus.partition" file to show the reason
+>   that causes invalid partition like "root invalid (No cpu available
+>   due to hotplug)".
+>
+> Patch 6 updates the cgroup-v2.rst file accordingly. Patch 7 adds a new
+> cpuset test to test the new cpuset partition code.
+>
+> Waiman Long (7):
+>    cgroup/cpuset: Don't let child cpusets restrict parent in default
+>      hierarchy
+>    cgroup/cpuset: Allow no-task partition to have empty
+>      cpuset.cpus.effective
+>    cgroup/cpuset: Refining features and constraints of a partition
+>    cgroup/cpuset: Add a new isolated cpus.partition type
+>    cgroup/cpuset: Show invalid partition reason string
+>    cgroup/cpuset: Update description of cpuset.cpus.partition in
+>      cgroup-v2.rst
+>    kselftest/cgroup: Add cpuset v2 partition root state test
+>
+>   Documentation/admin-guide/cgroup-v2.rst       | 168 +++--
+>   kernel/cgroup/cpuset.c                        | 440 +++++++-----
+>   tools/testing/selftests/cgroup/Makefile       |   5 +-
+>   .../selftests/cgroup/test_cpuset_prs.sh       | 667 ++++++++++++++++++
+>   tools/testing/selftests/cgroup/wait_inotify.c |  87 +++
+>   5 files changed, 1142 insertions(+), 225 deletions(-)
+>   create mode 100755 tools/testing/selftests/cgroup/test_cpuset_prs.sh
+>   create mode 100644 tools/testing/selftests/cgroup/wait_inotify.c
+>
+Hi,
 
+Is this patch series good enough or is there other changes you would 
+still like to make in this series?
 
-> Il giorno 9 dic 2021, alle ore 03:23, yukuai (C) <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> =
-ha scritto:
->=20
-> =E5=9C=A8 2021/11/30 1:11, Jan Kara =E5=86=99=E9=81=93:
->> On Fri 26-11-21 15:47:24, Michal Koutn=C3=BD wrote:
->>> Hello.
->>>=20
->>> On Thu, Nov 25, 2021 at 06:28:09PM +0100, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org> =
-wrote:
->>> [...]
->>> +Cc cgroups ML
->>> =
-https://lore.kernel.org/linux-block/20211125172809.GC19572-4I4JzKEfoa/jFM9bn6wA6Q@public.gmane.org/=
-
->>>=20
->>>=20
->>> I understand there are more objects than blkcgs but I assume it can
->>> eventually boil down to blkcg references, so I suggest another
->>> alternative. (But I may easily miss the relations between BFQ =
-objects,
->>> so consider this only high-level opinion.)
->>>=20
->>>> After some poking, looking into crashdumps, and applying some debug =
-patches
->>>> the following seems to be happening: We have a process P in blkcg =
-G. Now
->>>> G is taken offline so bfq_group is cleaned up in bfq_pd_offline() =
-but P
->>>> still holds reference to G from its bfq_queue. Then P submits IO, G =
-gets
->>>> inserted into service tree despite being already offline.
->>>=20
->>> (If G is offline, P can only be zombie, just saying. (I guess it can
->>> still be Q's IO on behalf of G.))
->>>=20
->>> IIUC, the reference to G is only held by P. If the G reference is =
-copied
->>> into another structure (the service tree) it should get another
->>> reference. My na=C3=AFve proposal would be css_get(). (1)
->> So I was looking into this puzzle. The answer is following:
->> The process P (podman, pid 2571) is currently attached to the root =
-cgroup
->> but it has io_context with BFQ queue that points to the =
-already-offline G
->> as a parent. The bio is thus associated with the root cgroup (via
->> bio->bi_blkg) but BFQ uses io_context to lookup the BFQ queue where =
-IO
->> should be queued and then uses its parent to determine blkg which it =
-should
->> be charged and thus gets to the dying cgroup.
->=20
-> Hi, Jan
->=20
-> After some code review, we found that the root cause of the problem
-> semms to be different.
->=20
-> If the process is moved from group G to root group, and a new io is
-> issued from the process, then bfq should detect this and changing
-> bfq_queue's parent to root bfq_group:
->=20
-> bfq_insert_request
-> bfq_init_rq
->  bfq_bic_update_cgroup
->   serial_nr =3D __bio_blkcg(bio)->css.serial_nr; -> from root group
->   bic->blkcg_serial_nr =3D=3D serial_nr -> this do not pass=EF=BC=8Cbeca=
-use bic->blkcg_serial_nr is still from group G
->   __bfq_bic_change_cgroup -> bfq_queue parent will be changed to root =
-group
->=20
-> And we think the following path is possible to trigger the problem:
->=20
-> 1) process P1 and P2 is currently in cgroup C1, corresponding to
-> bfq_queue q1, q2 and bfq_group g1. And q1 and q2 are merged:
-> q1->next_bfqq =3D q2.
->=20
-> 2) move P1 from C1 to root_cgroup, q1->next_bfqq is still q2
-> and flag BFQQF_split_coop is not set yet.
->=20
-> 3) P2 exit, q2 won't exit because it's still referenced through
-> queue merge.
->=20
-> 4) delete C1, g1 is offlined
->=20
-> 5) issue a new io in q1, q1's parent entity will change to root,
-> however the io will end up in q1->next_bfqq =3D q2, and thus the
-> offlined g1 is inserted to service tree through q2.
->=20
-> 6) P1 exit, q2 exit, and finially g1 is freed, while g1 is still
-> in service tree of it's parent.
->=20
-> We confirmed this by our reproducer through a simple patch:
-> stop merging bfq_queues if their parents are different.
->=20
-> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-> index 1ce1a99a7160..14c1d1c3811e 100644
-> --- a/block/bfq-iosched.c
-> +++ b/block/bfq-iosched.c
-> @@ -2626,6 +2626,11 @@ bfq_setup_merge(struct bfq_queue *bfqq, struct =
-bfq_queue *new_bfqq)
->        while ((__bfqq =3D new_bfqq->new_bfqq)) {
->                if (__bfqq =3D=3D bfqq)
->                        return NULL;
-> +               if (__bfqq->entity.parent !=3D bfqq->entity.parent) {
-> +                       if (bfq_bfqq_coop(__bfqq))
-> +                               bfq_mark_bfqq_split_coop(__bfqq);
-> +                       return NULL;
-> +               }
->                new_bfqq =3D __bfqq;
->        }
->=20
-> @@ -2825,8 +2830,16 @@ bfq_setup_cooperator(struct bfq_data *bfqd, =
-struct bfq_queue *bfqq,
->        if (bfq_too_late_for_merging(bfqq))
->                return NULL;
->=20
-> -       if (bfqq->new_bfqq)
-> -               return bfqq->new_bfqq;
-> +       if (bfqq->new_bfqq) {
-> +               struct bfq_queue *new_bfqq =3D bfqq->new_bfqq;
-> +
-> +               if(bfqq->entity.parent =3D=3D new_bfqq->entity.parent)
-> +                       return new_bfqq;
-> +
-> +               if(bfq_bfqq_coop(new_bfqq))
-> +                       bfq_mark_bfqq_split_coop(new_bfqq);
-> +               return NULL;
-> +       }
->=20
-> Do you think this analysis is correct?
->=20
-
-Hi Kuai,
-I haven't checked all details, but, for sure, two bfq_queues belonging
-to different parent entities (i.e., to different groups) do not have
-to be merged.  So, if two bfq_queues happen to be (still) merged while
-belonging to different groups, then the scheduler is in an
-inconsistent state.  And rules may follow.
-
-Let's see comments from the other people working on this issue.
-
-Thanks for spotting this,
-Paolo
-
-> Thanks,
-> Kuai
->> Apparently P got recently moved from G to the root cgroup and there =
-was
->> reference left in the BFQ queue structure to G.
->>>> IO completes, P exits, bfq_queue pointing to G gets destroyed, the
->>>> last reference to G is dropped, G gets freed although is it still
->>>> inserted in the service tree.  Eventually someone trips over the =
-freed
->>>> memory.
->>>=20
->>> Isn't it the bfq_queue.bfq_entity that's inserted in the service =
-tree
->>> (not blkcg G)?
->> Yes, it is. But the entity is part of bfq_group structure which is =
-the pd
->> for the blkcg.
->>> You write bfq_queue is destroyed, shouldn't that remove it from the
->>> service tree? (2)
->> Yes, BFQ queue is removed from the service trees on destruction. But =
-its
->> parent - bfq_group - is not removed from its service tree. And that's =
-where
->> we hit the problem.
->>>> Now I was looking into how to best fix this. There are several
->>>> possibilities and I'm not sure which one to pick so that's why I'm =
-writing
->>>> to you. bfq_pd_offline() is walking all entities in service trees =
-and
->>>> trying to get rid of references to bfq_group (by reparenting =
-entities).
->>>> Is this guaranteed to see all entities that point to G? =46rom the =
-scenario
->>>> I'm observing it seems this can miss entities pointing to G - e.g. =
-if they
->>>> are in idle tree, we will just remove them from the idle tree but =
-we won't
->>>> change entity->parent so they still point to G. This can be seen as =
-one
->>>> culprit of the bug.
->>>=20
->>> There can be two types of references to blkcg (transitively via
->>> bfq_group):
->>> a) "plain" (just a pointer stored somewhere),
->>> b) "pinned" (marked by css_get() of the respective blkcg).
->>>=20
->>> The bfq_pd_offline() callback should erase all plain references =
-(e.g. by
->>> reparenting) or poke the holders of pinned references to release =
-(unpin)
->>> them eventually (so that blkcg goes away).
->>>=20
->>> I reckon it's not possible to traverse all references in the
->>> bfq_pd_offline().
->> So bfq_pd_offline() does erase all plain references AFAICT. But later =
-it
->> can create new plain references (service tree) from the existing =
-"pinned"
->> ones and once pinned references go away, those created plain =
-references
->> cause trouble. And the more I'm looking into this the more I'm =
-convinced
->> bfq_pd_offline() should be more careful and remove also the pinned
->> references from bfq queues. It actually does it for most queues but =
-it can
->> currently miss some... I'll look into that.
->> Thanks for your very good questions and hints!
->> 								Honza
+Cheers,
+Longman
 
