@@ -1,97 +1,159 @@
 From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v9 0/7] cgroup/cpuset: Add new cpuset partition type &
- empty effecitve cpus
-Date: Thu, 9 Dec 2021 10:39:55 -0500
-Message-ID: <f74efd4a-eee8-3927-f975-92b4c457cb9c@redhat.com>
-References: <20211205183220.818872-1-longman@redhat.com>
+Subject: [PATCH] mm/memcg: Properly handle memcg_stock access for PREEMPT_RT
+Date: Thu,  9 Dec 2021 21:06:32 -0500
+Message-ID: <20211210020632.150769-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1639064404;
+        s=mimecast20190719; t=1639102014;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=QT9+Eto76AQyhw6YgaOC53MIX23XQDyrz/FUT+QNKSA=;
-        b=dYjylCBIokIyQKxgJ1aSna9N1EbyiHGqWDSQHiIv2r+S3ugqP70v3LYBWJh0+D8FqJ/ln/
-        b0RI2zTGOiDY7Z//JWGZduwFgDaF8C0DvtvPqVkSrl1Zh9IGp8nAXWu4RDvqICPaJ0Ohd5
-        zAgP906+XSGnxNUc4OUq8u0RdmipaEk=
-Content-Language: en-US
-In-Reply-To: <20211205183220.818872-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Z2vD9OEgeBTpm8HRDHiQcgDjdIwItFgYD9G96kIg5Tw=;
+        b=A8DwdPE6V6RkqyrG5DQAm+SHrXuuvD+wkWbERUjHbctjwEtjU3XxucosICr8IwY7mSg0Cd
+        wVxClIAftIVxH7vAcGjzKofF0xZwqPTOdTRKPsCXusPwVG4eFTY6ZSD9GePmJrTFiJQR23
+        Tnk2BlurjSq943lTULslD65dJaQnjXM=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 12/5/21 13:32, Waiman Long wrote:
-> v9:
->   - Add a new patch 1 to remove the child cpuset restriction on parent's
->     "cpuset.cpus".
->   - Relax initial root partition entry limitation to allow cpuset.cpus to
->     overlap that of parent's.
->   - An "isolated invalid" displayed type is added to
->     cpuset.cpus.partition.
->   - Resetting partition root to "member" will leave child partition root
->     as invalid.
->   - Update documentation and test accordingly.
->
-> v8:
->   - Reorganize the patch series and rationalize the features and
->     constraints of a partition.
->   - Update patch descriptions and documentation accordingly.
->
-> v7:
->   - Simplify the documentation patch (patch 5) as suggested by Tejun.
->   - Fix a typo in patch 2 and improper commit log in patch 3.
->
-> This patchset includes one bug fix and four enhancements to the cpuset v2 code.
->
->   Patch 1: Allow parent to set "cpuset.cpus" that may not be a superset
->   of children's "cpuset.cpus" for default hierarchy.
->
->   Patch 2: Enable partition with no task to have empty cpuset.cpus.effective.
->
->   Patch 3: Refining the features and constraints of a cpuset partition
->   clarifying what changes are allowed.
->
->   Patch 4: Add a new partition state "isolated" to create a partition
->   root without load balancing. This is for handling intermitten workloads
->   that have a strict low latency requirement.
->
->   Patch 5: Enable the "cpuset.cpus.partition" file to show the reason
->   that causes invalid partition like "root invalid (No cpu available
->   due to hotplug)".
->
-> Patch 6 updates the cgroup-v2.rst file accordingly. Patch 7 adds a new
-> cpuset test to test the new cpuset partition code.
->
-> Waiman Long (7):
->    cgroup/cpuset: Don't let child cpusets restrict parent in default
->      hierarchy
->    cgroup/cpuset: Allow no-task partition to have empty
->      cpuset.cpus.effective
->    cgroup/cpuset: Refining features and constraints of a partition
->    cgroup/cpuset: Add a new isolated cpus.partition type
->    cgroup/cpuset: Show invalid partition reason string
->    cgroup/cpuset: Update description of cpuset.cpus.partition in
->      cgroup-v2.rst
->    kselftest/cgroup: Add cpuset v2 partition root state test
->
->   Documentation/admin-guide/cgroup-v2.rst       | 168 +++--
->   kernel/cgroup/cpuset.c                        | 440 +++++++-----
->   tools/testing/selftests/cgroup/Makefile       |   5 +-
->   .../selftests/cgroup/test_cpuset_prs.sh       | 667 ++++++++++++++++++
->   tools/testing/selftests/cgroup/wait_inotify.c |  87 +++
->   5 files changed, 1142 insertions(+), 225 deletions(-)
->   create mode 100755 tools/testing/selftests/cgroup/test_cpuset_prs.sh
->   create mode 100644 tools/testing/selftests/cgroup/wait_inotify.c
->
-Hi,
+Direct calls to local_irq_{save/restore}() and preempt_{enable/disable}()
+are not appropriate for PREEMPT_RT. To provide better PREEMPT_RT support,
+change local_irq_{save/restore}() to local_lock_irq{save/restore}() and
+add a local_lock_t to struct memcg_stock_pcp.
 
-Is this patch series good enough or is there other changes you would 
-still like to make in this series?
+Also disable the task and interrupt context optimization for obj_stock as
+there will be no performance gain in the case of PREEMPT_RT. In this case,
+task obj_stock will be there but remain unused.
 
-Cheers,
-Longman
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 41 ++++++++++++++++++++++-------------------
+ 1 file changed, 22 insertions(+), 19 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 6863a834ed42..c984d3054478 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2109,6 +2109,7 @@ struct obj_stock {
+ };
+ 
+ struct memcg_stock_pcp {
++	local_lock_t lock;
+ 	struct mem_cgroup *cached; /* this never be root cgroup */
+ 	unsigned int nr_pages;
+ 	struct obj_stock task_obj;
+@@ -2147,29 +2148,28 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+  * which is cheap in non-preempt kernel. The interrupt context object stock
+  * can only be accessed after disabling interrupt. User context code can
+  * access interrupt object stock, but not vice versa.
++ *
++ * This task and interrupt context optimization is disabled for PREEMPT_RT
++ * as there is no performance gain in this case.
+  */
+ static inline struct obj_stock *get_obj_stock(unsigned long *pflags)
+ {
+-	struct memcg_stock_pcp *stock;
+-
+-	if (likely(in_task())) {
++	if (likely(in_task()) && !IS_ENABLED(CONFIG_PREEMPT_RT)) {
+ 		*pflags = 0UL;
+ 		preempt_disable();
+-		stock = this_cpu_ptr(&memcg_stock);
+-		return &stock->task_obj;
++		return this_cpu_ptr(&memcg_stock.task_obj);
+ 	}
+ 
+-	local_irq_save(*pflags);
+-	stock = this_cpu_ptr(&memcg_stock);
+-	return &stock->irq_obj;
++	local_lock_irqsave(&memcg_stock.lock, *pflags);
++	return this_cpu_ptr(&memcg_stock.irq_obj);
+ }
+ 
+ static inline void put_obj_stock(unsigned long flags)
+ {
+-	if (likely(in_task()))
++	if (likely(in_task()) && !IS_ENABLED(CONFIG_PREEMPT_RT))
+ 		preempt_enable();
+ 	else
+-		local_irq_restore(flags);
++		local_unlock_irqrestore(&memcg_stock.lock, flags);
+ }
+ 
+ /**
+@@ -2192,7 +2192,7 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 	if (nr_pages > MEMCG_CHARGE_BATCH)
+ 		return ret;
+ 
+-	local_irq_save(flags);
++	local_lock_irqsave(&memcg_stock.lock, flags);
+ 
+ 	stock = this_cpu_ptr(&memcg_stock);
+ 	if (memcg == stock->cached && stock->nr_pages >= nr_pages) {
+@@ -2200,7 +2200,7 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 		ret = true;
+ 	}
+ 
+-	local_irq_restore(flags);
++	local_unlock_irqrestore(&memcg_stock.lock, flags);
+ 
+ 	return ret;
+ }
+@@ -2236,7 +2236,7 @@ static void drain_local_stock(struct work_struct *dummy)
+ 	 * drain_stock races is that we always operate on local CPU stock
+ 	 * here with IRQ disabled
+ 	 */
+-	local_irq_save(flags);
++	local_lock_irqsave(&memcg_stock.lock, flags);
+ 
+ 	stock = this_cpu_ptr(&memcg_stock);
+ 	drain_obj_stock(&stock->irq_obj);
+@@ -2245,7 +2245,7 @@ static void drain_local_stock(struct work_struct *dummy)
+ 	drain_stock(stock);
+ 	clear_bit(FLUSHING_CACHED_CHARGE, &stock->flags);
+ 
+-	local_irq_restore(flags);
++	local_unlock_irqrestore(&memcg_stock.lock, flags);
+ }
+ 
+ /*
+@@ -2257,7 +2257,7 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 	struct memcg_stock_pcp *stock;
+ 	unsigned long flags;
+ 
+-	local_irq_save(flags);
++	local_lock_irqsave(&memcg_stock.lock, flags);
+ 
+ 	stock = this_cpu_ptr(&memcg_stock);
+ 	if (stock->cached != memcg) { /* reset if necessary */
+@@ -2270,7 +2270,7 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 	if (stock->nr_pages > MEMCG_CHARGE_BATCH)
+ 		drain_stock(stock);
+ 
+-	local_irq_restore(flags);
++	local_unlock_irqrestore(&memcg_stock.lock, flags);
+ }
+ 
+ /*
+@@ -7059,9 +7059,12 @@ static int __init mem_cgroup_init(void)
+ 	cpuhp_setup_state_nocalls(CPUHP_MM_MEMCQ_DEAD, "mm/memctrl:dead", NULL,
+ 				  memcg_hotplug_cpu_dead);
+ 
+-	for_each_possible_cpu(cpu)
+-		INIT_WORK(&per_cpu_ptr(&memcg_stock, cpu)->work,
+-			  drain_local_stock);
++	for_each_possible_cpu(cpu) {
++		struct memcg_stock_pcp *stock = per_cpu_ptr(&memcg_stock, cpu);
++
++		INIT_WORK(&stock->work, drain_local_stock);
++		local_lock_init(&stock->lock);
++	}
+ 
+ 	for_each_node(node) {
+ 		struct mem_cgroup_tree_per_node *rtpn;
+-- 
+2.27.0
 
