@@ -1,69 +1,59 @@
-From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+From: Waiman Long <longman@redhat.com>
 Subject: Re: [PATCH-next v2] mm/memcg: Properly handle memcg_stock access for
  PREEMPT_RT
-Date: Fri, 10 Dec 2021 17:34:33 +0100
-Message-ID: <YbOBmYrInQVI+VOR@linutronix.de>
+Date: Fri, 10 Dec 2021 11:37:20 -0500
+Message-ID: <14de3f92-c1f8-e51e-0cd2-5ec9fc86d1c0@redhat.com>
 References: <20211210025228.158196-1-longman@redhat.com>
  <YbNPrGEjtKjzEjQa@linutronix.de>
  <80ee87bb-f36c-4a16-9095-43ea84818375@redhat.com>
+ <YbOBmYrInQVI+VOR@linutronix.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1639154074;
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1639154247;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=1optRwnSrbeTPq5hBXQ3ouIMBUA6Hs3VoxqW7Qdr5pQ=;
-        b=cnZTbXRHb2RdvBl953YymNVlA/R/XwIkNnZFSBQV7xPgJQJi3k+Ts4wU56zs4hB6gN9Zx9
-        zkt/xK85on0ihLpz4acHhJ9xGDUBdYiugnCJEdkk6QsZOj4pG4+ilNS2U9+alljTlyrisS
-        /F3LnJ6esbiYZPRMfzrY8Oj/jVgrjByGEsEAFQzC7+K5o/s6JlEgNnvzpdu1+NJtiCQyu/
-        kUAB6hG9mSPsbsymczRl189WujmmAsog42aw5+L1RWAx9TlF3JwXJ/Jc/ccjMJr2gWX7x6
-        NO0xIYJPypme254pSw/MVWnzfDx9GTXCG/uFfFvZOKvmO+2FU1IqjpgqRTuy+A==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1639154074;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=1optRwnSrbeTPq5hBXQ3ouIMBUA6Hs3VoxqW7Qdr5pQ=;
-        b=F1qbHzysXR9EGrBloIho2z2ExfYszOTiOtQNVU/EQ3u+tFM7ZODd5S9xeyggKtrxBYYpZP
-        9AMc1tMvD1ujHmDw==
-Content-Disposition: inline
-In-Reply-To: <80ee87bb-f36c-4a16-9095-43ea84818375-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=3RJ4kdqFy0a33uyqK6Ow9FidSYu04VaasEa+p2fofDM=;
+        b=NnmA5eo04F2eqVXbzN3umt6xxQhM0U9XbIuI0NqtoXlz1HAIOn1MUl30o5wke1Qk4K+8TO
+        gVP55p5LrfyqkmpD7KUWJXKA1NMP46+elqfgNbe+zbik3Pb5qUxasi9hGOAouJjmr+CP0O
+        fCiS6VaRuLORmrxY2pmYsTB1D8rKEkU=
+Content-Language: en-US
+In-Reply-To: <YbOBmYrInQVI+VOR@linutronix.de>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Thomas Gleixner <tglx@linutronix.de>, Peter Zijlstra <peterz@infradead.org>
 
-On 2021-12-10 11:29:31 [-0500], Waiman Long wrote:
->=20
-> On 12/10/21 08:01, Sebastian Andrzej Siewior wrote:
-> > On 2021-12-09 21:52:28 [-0500], Waiman Long wrote:
-> > =E2=80=A6
-> > > --- a/mm/memcontrol.c
-> > > +++ b/mm/memcontrol.c
-> > =E2=80=A6
-> > > @@ -2210,7 +2211,7 @@ static void refill_stock(struct mem_cgroup *mem=
-cg, unsigned int nr_pages)
-> > >   	struct memcg_stock_pcp *stock;
-> > >   	unsigned long flags;
-> > > -	local_irq_save(flags);
-> > > +	local_lock_irqsave(&memcg_stock.lock, flags);
-> > Why is this one using the lock? It isn't accessing irq_obj, right?
-> Well, the lock isn't just for irq_obj. It protects the whole memcg_stock
-> structure which include irq_obj. Sometimes, data in irq_obj (or task_obj)
-> will get transfer to nr_pages and vice versa. So it is easier to use one
-> single lock for the whole thing.
 
-This needs way better documentation what protects what any why.
-I don't like the quick slapping for RT only usage without any kind of
-explanation. Once you think you know it is irq_obj only you end up here
-where you have the lock again for no obvious reason.
+On 12/10/21 11:34, Sebastian Andrzej Siewior wrote:
+> On 2021-12-10 11:29:31 [-0500], Waiman Long wrote:
+>> On 12/10/21 08:01, Sebastian Andrzej Siewior wrote:
+>>> On 2021-12-09 21:52:28 [-0500], Waiman Long wrote:
+>>> …
+>>>> --- a/mm/memcontrol.c
+>>>> +++ b/mm/memcontrol.c
+>>> …
+>>>> @@ -2210,7 +2211,7 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+>>>>    	struct memcg_stock_pcp *stock;
+>>>>    	unsigned long flags;
+>>>> -	local_irq_save(flags);
+>>>> +	local_lock_irqsave(&memcg_stock.lock, flags);
+>>> Why is this one using the lock? It isn't accessing irq_obj, right?
+>> Well, the lock isn't just for irq_obj. It protects the whole memcg_stock
+>> structure which include irq_obj. Sometimes, data in irq_obj (or task_obj)
+>> will get transfer to nr_pages and vice versa. So it is easier to use one
+>> single lock for the whole thing.
+> This needs way better documentation what protects what any why.
+> I don't like the quick slapping for RT only usage without any kind of
+> explanation. Once you think you know it is irq_obj only you end up here
+> where you have the lock again for no obvious reason.
 
->=20
-> Cheers,
-> Longman
+Sure, I will update the patch description and add comments to document 
+that. Let's see what other feedback I have before I make the update.
 
-Sebastian
+Cheers,
+Longman
+
