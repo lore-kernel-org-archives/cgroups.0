@@ -1,91 +1,82 @@
-From: "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH RFC 0/9] support concurrent sync io for bfq on a specail
- occasion
-Date: Fri, 10 Dec 2021 17:50:34 +0800
-Message-ID: <809b90cc-20ba-c4fd-8c29-b9e3123c1cef@huawei.com>
+From: Paolo Valente <paolo.valente@linaro.org>
+Subject: Re: [PATCH RFC 8/9] block, bfq: move forward
+ __bfq_weights_tree_remove()
+Date: Fri, 10 Dec 2021 11:00:37 +0100
+Message-ID: <FA78962A-DC03-4A1F-9B79-D085A4908E5E@linaro.org>
 References: <20211127101132.486806-1-yukuai3@huawei.com>
- <D3FF0820-6A51-46A1-A363-8FFA8CCD2851@linaro.org>
-Mime-Version: 1.0
+ <20211127101132.486806-9-yukuai3@huawei.com>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <D3FF0820-6A51-46A1-A363-8FFA8CCD2851@linaro.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=O70batPj3wvi7RLrp3X+l52GyfZpEV965rgDfVwXWZY=;
+        b=nwrUIMOWOU4Q7yQqvPcI8A0eut+VItBwApaqSOQ+7tajte458rjWZjpOj5X8gek9ym
+         KNcvP0d6nah96lj4Uo1XXJAsRAD6FzdqerX+6KvqepB1GzUCjMY9dej0p2bfBRyGAEBs
+         eBajnOnM4yEoi8h6ZvLXUKd+Xh/IbjlK0HQWNWQhKlEhvTzRrFEXk6XjpJWncNA8OCvz
+         Jbc1y4sSDIcnlWVkWnwbGTRTqs2qmO5MvBtYlazwt2qViCfH5npWoN6A+0sQMCWMOP8v
+         0QTwsn6HfD4mneH4/49vSCl6EbDPRQAU3b33Fi0bzV0uuBfpTAZ4EJqHFWWZDkio675n
+         o4fQ==
+In-Reply-To: <20211127101132.486806-9-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Paolo Valente <paolo.valente@linaro.org>
-Cc: tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+To: Yu Kuai <yukuai3@huawei.com>
+Cc: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, yi.zhang@huawei.com
 
-=D4=DA 2021/12/10 17:20, Paolo Valente =D0=B4=B5=C0:
->=20
->=20
->> Il giorno 27 nov 2021, alle ore 11:11, Yu Kuai <yukuai3@huawei.com> ha s=
-critto:
->>
->> Bfq can't handle sync io concurrently as long as the io are not issued
->> from root group currently.
->>
->> Previous patch set:
->> https://lore.kernel.org/lkml/20211014014556.3597008-2-yukuai3@huawei.com=
-/t/
->>
->> During implemting the method mentioned by the above patch set, I found
->> more problems that will block implemting concurrent sync io. The
->> modifications of this patch set are as follows:
->>
->> 1) count root group into 'num_groups_with_pending_reqs';
->> 2) don't idle if 'num_groups_with_pending_reqs' is 1;
->> 3) If the group doesn't have pending requests while it's child groups
->> have pending requests, don't count the group.
->=20
-> Why don't yo count the parent group? It seems to me that we should count =
-it.
-Hi, Paolo
 
-For example, we only issue io in child group c2(root->c1->c2),
-'num_groups_with_pending_reqs' will end up greater than 1, thus it's
-impossible to handle sync io concurrently. Thus I don't count root and
-c1, only count c2.
->=20
->> 4) Once the group doesn't have pending requests, decrease
->> 'num_groups_with_pending_reqs' immediately. Don't delay to when all
->> it's child groups don't have pending requests.
->>
->=20
-> I guess this action is related to 3).
-Yes, if c1, c2 are both active, and then c1 don't have any pending reqs,
-I want to decrease num_groups_with_pending_reqs to 1 immediately. So
-that sync io on c2 can be handled concurrently.
 
-Thanks,
-Kuai
+> Il giorno 27 nov 2021, alle ore 11:11, Yu Kuai <yukuai3@huawei.com> ha =
+scritto:
+>=20
+> Prepare to decrease 'num_groups_with_pending_reqs' earlier.
+>=20
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+> block/bfq-iosched.c | 13 +++++--------
+> 1 file changed, 5 insertions(+), 8 deletions(-)
+>=20
+> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+> index e3c31db4bffb..4239b3996e23 100644
+> --- a/block/bfq-iosched.c
+> +++ b/block/bfq-iosched.c
+> @@ -882,6 +882,10 @@ void bfq_weights_tree_remove(struct bfq_data =
+*bfqd,
+> {
+> 	struct bfq_entity *entity =3D bfqq->entity.parent;
+>=20
+> +	bfqq->ref++;
+> +	__bfq_weights_tree_remove(bfqd, bfqq,
+> +				  &bfqd->queue_weights_tree);
+> +
+> 	for_each_entity(entity) {
+> 		struct bfq_sched_data *sd =3D entity->my_sched_data;
+>=20
+> @@ -916,14 +920,7 @@ void bfq_weights_tree_remove(struct bfq_data =
+*bfqd,
+> 		}
+> 	}
+>=20
+> -	/*
+> -	 * Next function is invoked last, because it causes bfqq to be
+> -	 * freed if the following holds: bfqq is not in service and
+> -	 * has no dispatched request. DO NOT use bfqq after the next
+> -	 * function invocation.
+> -	 */
+> -	__bfq_weights_tree_remove(bfqd, bfqq,
+> -				  &bfqd->queue_weights_tree);
+> +	bfq_put_queue(bfqq);
+> }
+>=20
 
+why it is not dangerous any longer to invoke __bfq_weights_tree_remove =
+earlier, and the comment can be removed?
+
+Paolo
+
+> /*
+> --=20
+> 2.31.1
 >=20
-> Thanks,
-> Paolo
->=20
->> Noted that I just tested basic functionality of this patchset, and I
->> think it's better to see if anyone have suggestions or better
->> solutions.
->>
->> Yu Kuai (9):
->>   block, bfq: add new apis to iterate bfq entities
->>   block, bfq: apply news apis where root group is not expected
->>   block, bfq: handle the case when for_each_entity() access root group
->>   block, bfq: count root group into 'num_groups_with_pending_reqs'
->>   block, bfq: do not idle if only one cgroup is activated
->>   block, bfq: only count group that the bfq_queue belongs to
->>   block, bfq: record how many queues have pending requests in bfq_group
->>   block, bfq: move forward __bfq_weights_tree_remove()
->>   block, bfq: decrease 'num_groups_with_pending_reqs' earlier
->>
->> block/bfq-cgroup.c  |  3 +-
->> block/bfq-iosched.c | 92 +++++++++++++++++++++++----------------------
->> block/bfq-iosched.h | 41 +++++++++++++-------
->> block/bfq-wf2q.c    | 44 +++++++++++++++-------
->> 4 files changed, 106 insertions(+), 74 deletions(-)
->>
->> --=20
->> 2.31.1
->>
->=20
-> .
->=20
+
