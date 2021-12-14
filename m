@@ -1,60 +1,78 @@
-From: QiuLaibin <qiulaibin-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -next] blk-throttle: Set BIO_THROTTLED when bio has been
- throttled
-Date: Tue, 14 Dec 2021 17:12:48 +0800
-Message-ID: <8c87a712-93fb-d794-6d08-cadf6452efc3@huawei.com>
-References: <20211118131551.810931-1-qiulaibin@huawei.com>
- <YaUZExR6v8IdZUeM@slm.duckdns.org>
- <03964258-10ff-7f19-10cb-ca4eccf72848@huawei.com>
- <YbepLpyMPqP2ao3J@slm.duckdns.org>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] mm: add group_oom_kill memory.event fix
+Date: Tue, 14 Dec 2021 10:38:47 +0100
+Message-ID: <YbhmJ63KXGLDpQo7@dhcp22.suse.cz>
+References: <20211213162511.2492267-1-schatzberg.dan@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
-In-Reply-To: <YbepLpyMPqP2ao3J-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1639474729; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DZOd/YlnoT6tjCOMidF4fHVU5QDgu/mXU178ktIvi5s=;
+        b=kuEtYIU7reYiVep3MAXrOtg9r/HPOo3becXk8V6gOocQyNceBmW9ZvQ7CnlAkD7kC4cmOK
+        GJTjoFlDbqJGuc3/oBRu3gf1HFGFEpzUgDQMDv858fev78o1v1fGcun5kHpqo+4T2K2fs0
+        xeRmqbHfcE8mmD7Xx4OCuWMl+JXehhA=
+Content-Disposition: inline
+In-Reply-To: <20211213162511.2492267-1-schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:DOCUMENTATION" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-
-
-On 2021/12/14 4:12, Tejun Heo wrote:
-> On Mon, Dec 13, 2021 at 05:24:00PM +0800, QiuLaibin wrote:
->>> * This function is called synchronously on the issue path. The bio isn't
->>>     seen by the queue and device driver yet and nothing can race to issue it
->>>     before this function returns.
->>>
->>
->> The bio is under throttle here, this submit_bio return directly. And
->> current process will queue a dispatch work by
->> throtl_schedule_pending_timer() to submit this bio before BIO_THROTTLED flag
->> set. If the bio is completed quickly after the dispatch work is queued, UAF
->> of bio will happen.
+On Mon 13-12-21 08:25:10, Dan Schatzberg wrote:
+> Andrew, could you please amend the prior patch "mm: add group_oom_kill
+> memory.event" with these changes from Johannes and Chris?
 > 
-> You are right, the timer can get to it. Can't it be solved by just
-> reordering spin_unlock and setting BIO_THROTTLED?
-> 
+> Also - small nit: it makes better sense to
+> s/group_oom_kill/oom_group_kill/g in the patch title.
 
-I think it can be solved by setting BIO_THROTTLED before queue dispatch 
-work.
+Agreed. This is more in line with the oom.group knob we export.
+> 
+> Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> Acked-by: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Signed-off-by: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
->>> * Now we're not setting BIO_THROTTLED when we're taking a different return
->>>     path through the out_unlock label and risks calling back into blk_throtl
->>>     again on the same bio.
->>>
->>
->> In my opinion, This flag can prevent the request from being throttled
->> multiple times. If the request itself does not need to be throttled, the
->> result of repeated entry will be the same.
->> If necessary, I think we can use other methods to achieve this effect for
->> request does not need to be throttled.
+With these changes feel free to add
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst | 3 +--
+>  mm/memcontrol.c                         | 3 ---
+>  2 files changed, 1 insertion(+), 5 deletions(-)
 > 
-> So that we don't change anything regarding this?
-> 
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index eec830ce2068..8269bfa240f4 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1269,8 +1269,7 @@ PAGE_SIZE multiple when read back.
+>  		killed by any kind of OOM killer.
+>  
+>            oom_group_kill
+> -                The number of times all tasks in the cgroup were killed
+> -                due to memory.oom.group.
+> +                The number of times a group OOM has occurred.
+>  
+>    memory.events.local
+>  	Similar to memory.events but the fields in the file are local
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 5ab3b9ce90de..b5454d8fc344 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4390,9 +4390,6 @@ static int mem_cgroup_oom_control_read(struct seq_file *sf, void *v)
+>  	seq_printf(sf, "under_oom %d\n", (bool)memcg->under_oom);
+>  	seq_printf(sf, "oom_kill %lu\n",
+>  		   atomic_long_read(&memcg->memory_events[MEMCG_OOM_KILL]));
+> -	seq_printf(sf, "oom_group_kill %lu\n",
+> -		   atomic_long_read(
+> -			&memcg->memory_events[MEMCG_OOM_GROUP_KILL]));
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.30.2
 
-I am thinking of adding a new bio tag (like BIO_THROTTLE_BYPASS) to 
-avoid those requests which do not need to be throttled to enter the 
-throttle multiple times.
-> Thanks.
-> 
+-- 
+Michal Hocko
+SUSE Labs
