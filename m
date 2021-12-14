@@ -1,79 +1,67 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2 23/33] mm/memcg: Convert slab objcgs from struct page
- to struct slab
-Date: Tue, 14 Dec 2021 15:43:07 +0100
-Message-ID: <Ybite9s1TS7cS67J@cmpxchg.org>
+From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v2 00/33] Separate struct slab from struct page
+Date: Tue, 14 Dec 2021 15:43:35 +0100
+Message-ID: <87584294-b1bc-aabe-d86a-1a8b93a7f4d4@suse.cz>
 References: <20211201181510.18784-1-vbabka@suse.cz>
- <20211201181510.18784-24-vbabka@suse.cz>
+ <4c3dfdfa-2e19-a9a7-7945-3d75bc87ca05@suse.cz>
+ <20211214143822.GA1063445@odroid>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=dDleZ4Lfyk2bTm2KE7iij6QxWvLTX00muEXEWoCAFGw=;
-        b=iToBXoZPyX1HmEjRD9DYcj8MEGHopo9xF75hiJtC8KcXiSNm3wV+yNTOLZJg0tTXFp
-         CcDnNBEVYlOJj98ra+ZqkK2W/NgaLZ60WNSJgEoN4NYNkCB2QB2oXRRd601ph8osCgLk
-         fE+GP8Xg2NA97G7JWsO8n9Y/ekNxl+SIrugEV1BfoHGDD3YmGU6uuDIRymcZmbPOOIAe
-         W4kbcehLY7lp4TcRp/BwMymv1KidNoHd+3va+GF5pSFIY8wfv9bThEhKSv+O5CUyk4Ct
-         lvOqX4Y7g5dNI6Ub4pRj7+97axD/CYyvgWHXxLVdliIm6dJhbYT7xdDsSHD3MhaLjIsj
-         SaMQ==
-Content-Disposition: inline
-In-Reply-To: <20211201181510.18784-24-vbabka-AlSwsSmVLrQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1639493016; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZZrdz8Rcb4mC0T+W0Se7DGbnZYarK1D3VtykBkZsxzg=;
+        b=EA5SlD72MoprmPOYuWB0TBd0mQWMStIAMPw0q8OXQEfFDTNCjBzCswijew0sm3VG5iRCnQ
+        cFse2rrr4bC7T2QaxPiIz5eQFASktG8vWNcvWtRCIijeDE6jQz0m8UR+/xMLiyQpBoeCOv
+        QDr9zYbdy6FMlwtJa5nk7fdb56GrTtc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1639493016;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZZrdz8Rcb4mC0T+W0Se7DGbnZYarK1D3VtykBkZsxzg=;
+        b=yAE+ZakutT0JG1tHE5b5QjagnVpFsoYUFzWqdFeP1c0gvkBTCTyG9OTtNoV9QS7VfhvBrK
+        XnVExmz6AsfpTYBw==
+Content-Language: en-US
+In-Reply-To: <20211214143822.GA1063445@odroid>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrey Konovalov <andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes@cmpxchg>
 
-On Wed, Dec 01, 2021 at 07:15:00PM +0100, Vlastimil Babka wrote:
-> page->memcg_data is used with MEMCG_DATA_OBJCGS flag only for slab pages
-> so convert all the related infrastructure to struct slab.
+On 12/14/21 15:38, Hyeonggon Yoo wrote:
+> On Tue, Dec 14, 2021 at 01:57:22PM +0100, Vlastimil Babka wrote:
+>> On 12/1/21 19:14, Vlastimil Babka wrote:
+>> > Folks from non-slab subsystems are Cc'd only to patches affecting them, and
+>> > this cover letter.
+>> > 
+>> > Series also available in git, based on 5.16-rc3:
+>> > https://git.kernel.org/pub/scm/linux/kernel/git/vbabka/linux.git/log/?h=slab-struct_slab-v2r2
+>> 
+>> Pushed a new branch slab-struct-slab-v3r3 with accumulated fixes and small tweaks
+>> and a new patch from Hyeonggon Yoo on top. To avoid too much spam, here's a range diff:
+>> 
 > 
-> To avoid include cycles, move the inline definitions of slab_objcgs() and
-> slab_objcgs_check() from memcontrol.h to mm/slab.h.
-> 
-> This is not just mechanistic changing of types and names. Now in
-> mem_cgroup_from_obj() we use PageSlab flag to decide if we interpret the page
-> as slab, instead of relying on MEMCG_DATA_OBJCGS bit checked in
-> page_objcgs_check() (now slab_objcgs_check()). Similarly in
-> memcg_slab_free_hook() where we can encounter kmalloc_large() pages (here the
-> PageSlab flag check is implied by virt_to_slab()).
+> Hello Vlastimil, Thank you for nice work.
+> I'm going to review and test new version soon in free time.
 
-Yup, this is great.
+Thanks!
 
-> @@ -2865,24 +2865,31 @@ int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
->   */
->  struct mem_cgroup *mem_cgroup_from_obj(void *p)
->  {
-> -	struct page *page;
-> +	struct folio *folio;
->  
->  	if (mem_cgroup_disabled())
->  		return NULL;
->  
-> -	page = virt_to_head_page(p);
-> +	folio = virt_to_folio(p);
->  
->  	/*
->  	 * Slab objects are accounted individually, not per-page.
->  	 * Memcg membership data for each individual object is saved in
->  	 * the page->obj_cgroups.
->  	 */
-> -	if (page_objcgs_check(page)) {
-> +	if (folio_test_slab(folio)) {
-> +		struct obj_cgroup **objcgs;
->  		struct obj_cgroup *objcg;
-> +		struct slab *slab;
->  		unsigned int off;
->  
-> -		off = obj_to_index(page->slab_cache, page_slab(page), p);
-> -		objcg = page_objcgs(page)[off];
-> +		slab = folio_slab(folio);
-> +		objcgs = slab_objcgs_check(slab);
+> Btw, I gave you some review and test tags and seems to be missing in new
+> series. Did I do review/test process wrongly? It's first time to review
+> patches so please let me know if I did it wrongly.
 
-AFAICS the change to the _check() variant was accidental.
+You did right, sorry! I didn't include them as those were for patches that I
+was additionally changing after your review/test and the decision what is
+substantial change enough to need a new test/review is often fuzzy. So if
+you can recheck the new versions it would be great and then I will pick that
+up, thanks!
 
-folio_test_slab() makes sure it's a slab page, so the legit options
-for memcg_data are NULL or |MEMCG_DATA_OBJCGS; using slab_objcgs()
-here would include the proper asserts, like page_objcgs() used to.
+> --
+> Thank you.
+> Hyeonggon.
+
