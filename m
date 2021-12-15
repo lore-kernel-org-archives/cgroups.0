@@ -1,123 +1,65 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH v9 1/7] cgroup/cpuset: Don't let child cpusets restrict
- parent in default hierarchy
-Date: Wed, 15 Dec 2021 13:23:36 +0100
-Message-ID: <20211215122336.GB25459@blackbody.suse.cz>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v9 6/7] cgroup/cpuset: Update description of
+ cpuset.cpus.partition in cgroup-v2.rst
+Date: Wed, 15 Dec 2021 15:44:51 +0100
+Message-ID: <20211215144450.GC25459@blackbody.suse.cz>
 References: <20211205183220.818872-1-longman@redhat.com>
- <20211205183220.818872-2-longman@redhat.com>
- <Ybev80+h4JArgMDz@slm.duckdns.org>
+ <20211205183220.818872-7-longman@redhat.com>
+ <Ybe0YWEo7Wp7wib9@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1639571018; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1639579492; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=avoTfhAIE8R7plOAMrdkELVazcBOzYRbmMgCN9727sU=;
-        b=T17FiyPAxKd0Yte7bfskTZz86haYl0Bhyu1oEU3dBC0Byq4R81utmk2R8NnWvJlLEkNjmQ
-        PQ2K4DAUcRZXOVdzOwGylMO1h2WGB0bo4/D0wWjpTbKtLayoEqYPqIm7XVSK6xn5fuAHgH
-        9acEHy8TFSSfSvxC/wiRw5dJdDouR0I=
+        bh=L+FwlFr7sookecjc9+Z4KJH3P8puADKn4avrNKuh3fg=;
+        b=V2YNGn1ryxEnaOg+uqD0czIqum5A+yvyyOQF3/o+zFpawFNR+AbAXZhquxTqZxu3w7E5n2
+        F0ottN2Pw6JXwcZNGP9VFmAgQ2j6z7rsoVTVmkKucdC1IAv+nbmrE/aj9oaCO4INsLri9u
+        /mi/m484fVNsR3E1xOvslXFMEQJcp6I=
 Content-Disposition: inline
-In-Reply-To: <Ybev80+h4JArgMDz@slm.duckdns.org>
+In-Reply-To: <Ybe0YWEo7Wp7wib9-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Waiman Long <longman@redhat.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Dec 13, 2021 at 10:41:23AM -1000, Tejun Heo <tj@kernel.org> wrote:
-> > To address this issue, the check is now removed for the default hierarchy
-> > to free parent cpusets from being restricted by child cpusets. The
-> > check will still apply for legacy hierarchy.
+On Mon, Dec 13, 2021 at 11:00:17AM -1000, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> * When a valid partition turns invalid, now we have a reliable way of
+>   discovering what exactly caused the transition. However, when a user now
+>   fails to turn a member into partition, all they get is -EINVAL and there's
+>   no way to discover why it failed and the failure conditions that -EINVAL
+>   represents aren't simple.
+> 
+> * In an automated configuration scenarios, this operation mode may be
+>   difficult to make reliable and lead to sporadic failures which can be
+>   tricky to track down. The core problem is that whether a given operation
+>   succeeds or not may depend on external states (CPU on/offline) which may
+>   change asynchronously in a way that the configuring entity doesn't have
+>   any control over.
+> 
+> It's true that both are existing problems with the current partition
+> interface and given that this is a pretty spcialized feature, this can be
+> okay. Michal, what are your thoughts?
 
-I'm trying to find whether something in update_cpumasks_hier() ensures
-the constraint is checkd on the legacy hierarchy but it seems to me this
-baby was thrown out with the bathwater. How is the legacy check still
-applied?
+Because of asynchronous changes, the return value should not be that
+important and the user should watch cpuset.partitions for the result
+(end state) anyway.
+Furthermore, the reasons should be IMO just informative (i.e. I like
+they're not explicitly documented) and not API.
 
-> Applied to cgroup/for-5.17.
+But I see there could be a distinction between -EINVAL (the supplied
+input makes no sense) and -EAGAIN(?) denoting that the switch to
+partition root could not happen (due to outer constraints).
 
-It comes out a bit more complex if I want to achieve both variants in
-the below followup:
+You seem to propose to replace the -EAGAIN above with a success code and
+allow the switch to an invalid root.
+The action of the configuring entity would be different: retry (when?)
+vs wait till transition happens (notification) (although the immediate
+effect (the change did not happen) is same).
+I considered the two variants equal but the clear information about when
+the change can happen I'd favor the variant allowing the switch to
+invalid root now.
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 0dd7d853ed17..8b6e06f504f6 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -590,6 +590,35 @@ static inline void free_cpuset(struct cpuset *cs)
- 	kfree(cs);
- }
- 
-+/*
-+ * validate_change_legacy() - Validate conditions specific to legacy (v1)
-+ *                            behavior.
-+ */
-+static int validate_change_legacy(struct cpuset *cur, struct cpuset *trial)
-+{
-+	struct cgroup_subsys_state *css;
-+	struct cpuset *c, *par;
-+	int ret;
-+
-+	WARN_ON_ONCE(!rcu_read_lock_held());
-+
-+	/* Each of our child cpusets must be a subset of us */
-+	ret = -EBUSY;
-+	cpuset_for_each_child(c, css, cur)
-+		if (!is_cpuset_subset(c, trial))
-+			goto out;
-+
-+	/* On legacy hierarchy, we must be a subset of our parent cpuset. */
-+	ret = -EACCES;
-+	par = parent_cs(cur);
-+	if (par && !is_cpuset_subset(trial, par))
-+		goto out;
-+
-+	ret = 0;
-+out:
-+	return ret;
-+}
-+
- /*
-  * validate_change() - Used to validate that any proposed cpuset change
-  *		       follows the structural rules for cpusets.
-@@ -614,20 +643,21 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
- {
- 	struct cgroup_subsys_state *css;
- 	struct cpuset *c, *par;
--	int ret;
--
--	/* The checks don't apply to root cpuset */
--	if (cur == &top_cpuset)
--		return 0;
-+	int ret = 0;
- 
- 	rcu_read_lock();
--	par = parent_cs(cur);
- 
--	/* On legacy hierarchy, we must be a subset of our parent cpuset. */
--	ret = -EACCES;
--	if (!is_in_v2_mode() && !is_cpuset_subset(trial, par))
-+	ret = validate_change_legacy(cur, trial);
-+	if (ret)
-+		goto out;
-+
-+	/* Remaining checks don't apply to root cpuset */
-+	ret = 0;
-+	if (cur == &top_cpuset)
- 		goto out;
- 
-+	par = parent_cs(cur);
-+
- 	/*
- 	 * If either I or some sibling (!= me) is exclusive, we can't
- 	 * overlap
-@@ -1175,9 +1205,7 @@ enum subparts_cmd {
-  *
-  * Because of the implicit cpu exclusive nature of a partition root,
-  * cpumask changes that violates the cpu exclusivity rule will not be
-- * permitted when checked by validate_change(). The validate_change()
-- * function will also prevent any changes to the cpu list if it is not
-- * a superset of children's cpu lists.
-+ * permitted when checked by validate_change().
-  */
- static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
- 					  struct cpumask *newmask,
+
+Michal
