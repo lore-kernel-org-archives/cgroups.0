@@ -1,67 +1,125 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v9 6/7] cgroup/cpuset: Update description of
- cpuset.cpus.partition in cgroup-v2.rst
-Date: Wed, 15 Dec 2021 13:55:05 -0500
-Message-ID: <58c06961-ffc4-27d7-01d2-4c91b0c9161d@redhat.com>
-References: <20211205183220.818872-1-longman@redhat.com>
- <20211205183220.818872-7-longman@redhat.com>
- <Ybe0YWEo7Wp7wib9@slm.duckdns.org> <20211215144450.GC25459@blackbody.suse.cz>
- <96018978-6b7f-1e7f-1012-9df7f7996ec5@redhat.com>
- <Ybo1jmNvM6sblcJq@slm.duckdns.org>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH v2 00/33] Separate struct slab from struct page
+Date: Wed, 15 Dec 2021 15:38:19 -0800
+Message-ID: <Ybp8a5JNndgCLy2w@carbon.dhcp.thefacebook.com>
+References: <20211201181510.18784-1-vbabka@suse.cz>
+ <4c3dfdfa-2e19-a9a7-7945-3d75bc87ca05@suse.cz>
+ <Ybk+0LKrsAJatILE@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1639594522;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=6p2PMg3IHKSv9HJVSyU/jUSPqlHttS0kc0XgSmw+DTI=;
-        b=IlmzxzopeT9hNUaavJY9qyshKFUlmyDcUrkIhXE8C4ZqTagtIbzapb+szqSOnuf8uLi3Xt
-        1Z4AREVU5eQ+P4Rc9BIpWOpkun972m9YAxNE8UK+1G+PCCXSgXNuM2A6DbqXmLWr6aEPzv
-        OfKmTE0506u8TSG67hFT/RGiOVYeUTU=
-Content-Language: en-US
-In-Reply-To: <Ybo1jmNvM6sblcJq@slm.duckdns.org>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=FISMclEalm7kRVdN9oOm4Xk4Dtn0W9Br+NPCqWkjADQ=;
+ b=Wy7dJd/hHD0a3/3lPONEkmkNHCBtUIfn4N2q07ittQlvv6HrAbw1hiWMK3O76FNXzNqj
+ EUF+hFHeii4mpY3yLUffGd3MAptl6j21ahCdjkSOhb75Cr8IbKkDVq45XtdM8yoHIvpA
+ HS0JIKaCb3rOrXxK/2VTlrvo5fV8jKWnqlU= 
+Content-Disposition: inline
+In-Reply-To: <Ybk+0LKrsAJatILE-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
+Content-Transfer-Encoding: 7bit
+To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrey Konovalov <andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes>
 
-On 12/15/21 13:35, Tejun Heo wrote:
-> Hello, Waiman.
->
-> On Wed, Dec 15, 2021 at 01:16:43PM -0500, Waiman Long wrote:
->> Allowing direct transition from member to invalid partition doesn't feel
->> right for me. A casual user may assume a partition is correctly formed
->> without double checking the "cpuset.partition" value. Returning an error
->> will prevent this kind of issue. If returning more information about the
->> failure is the main reason for allowing the invalid partition transition, we
->> can extend the "cpuset.partition" read syntax to also show the reason for
->> the previous failure.
-> I don't think it's a good idea to display error messages without a way to
-> link the error to the one who triggered it. This is the same problem we had
-> with resettable counters. It only works for scenarios where one guy is
-> sitting in front of the computer but gets nastry for more complex scnearios
-> and automation.
-Yes, I agree it is not a good way to handle this issue.
->
-> I understand that allowing transitions to invalid state can feel jarring.
-> There are pros and cons to both approaches. It's similar dynamics tho.
-> Erroring out may be more intuitive for a casual user but makes it harder for
-> more complex scenarios because whether a given operation errors or not is
-> dependent on external asynchronous states, there's no good way of reporting
-> the exact nature of the error or detecting when the operation would succeed
-> in the future, and the error conditions are rather arbitrary.
+On Tue, Dec 14, 2021 at 05:03:12PM -0800, Roman Gushchin wrote:
+> On Tue, Dec 14, 2021 at 01:57:22PM +0100, Vlastimil Babka wrote:
+> > On 12/1/21 19:14, Vlastimil Babka wrote:
+> > > Folks from non-slab subsystems are Cc'd only to patches affecting them, and
+> > > this cover letter.
+> > > 
+> > > Series also available in git, based on 5.16-rc3:
+> > > https://git.kernel.org/pub/scm/linux/kernel/git/vbabka/linux.git/log/?h=slab-struct_slab-v2r2
+> > 
+> > Pushed a new branch slab-struct-slab-v3r3 with accumulated fixes and small tweaks
+> > and a new patch from Hyeonggon Yoo on top. To avoid too much spam, here's a range diff:
+> 
+> Hi Vlastimil!
+> 
+> I've started to review this patchset (btw, a really nice work, I like
+> the resulting code way more). Because I'm looking at v3 and I don't have
+> the whole v2 in my mailbox, here is what I've now:
+> 
+> * mm: add virt_to_folio() and folio_address()
+> Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> 
+> * mm/slab: Dissolve slab_map_pages() in its caller
+> Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> 
+> * mm/slub: Make object_err() static
+> Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> 
+> * mm: Split slab into its own type
+> 1) Shouldn't SLAB_MATCH() macro use struct folio instead of struct page for the
+> comparison?
+> 2) page_slab() is used only in kasan and only in one place, so maybe it's better
+> to not introduce it as a generic helper?
+> Other than that
+> Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> 
+> * mm: Add account_slab() and unaccount_slab()
+> 1) maybe change the title to convert/replace instead of add?
+> 2) maybe move later changes to memcg_alloc_page_obj_cgroups() to this patch?
+> Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> 
+> * mm: Convert virt_to_cache() to use struct slab
+> Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> 
+> * mm: Convert __ksize() to struct slab
+> It looks like certain parts of __ksize() can be merged between slab, slub and slob?
+> Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> 
+> * mm: Use struct slab in kmem_obj_info()
+> Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-Thanks for the explanation. Yes, there are always pros and cons for 
-different approach to a problem. I am not totally against allowing 
-member to invalid partition transition. In that case, reading back 
-"cpuset.partition" is a must to verify that it is really a success.
+Part 2:
 
-How about we allow transition to an invalid partition state but still 
-return an error?
+* mm: Convert check_heap_object() to use struct slab
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-Regards,
-Longman
+* mm/slub: Convert detached_freelist to use a struct slab
+How about to convert free_nonslab_page() to free_nonslab_folio()?
+And maybe rename it to something like free_large_kmalloc()?
+If I'm not missing something, large kmallocs is the only way how we can end up
+there with a !slab folio/page.
 
+* mm/slub: Convert kfree() to use a struct slab
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+
+* mm/slub: Convert __slab_lock() and __slab_unlock() to struct slab
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+
+* mm/slub: Convert print_page_info() to print_slab_info()
+Do we really need to explicitly convert slab_folio()'s result to (struct folio *)?
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+
+* mm/slub: Convert alloc_slab_page() to return a struct slab
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+
+* mm/slub: Convert __free_slab() to use struct slab
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+
+* mm/slub: Convert pfmemalloc_match() to take a struct slab
+Cool! Removing pfmemalloc_unsafe() is really nice.
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+
+* mm/slub: Convert most struct page to struct slab by spatch
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+
+* mm/slub: Finish struct page to struct slab conversion
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+
+* mm/slab: Convert kmem_getpages() and kmem_freepages() to struct slab
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+
+* mm/slab: Convert most struct page to struct slab by spatch
+
+Another patch with the same title? Rebase error?
+
+* mm/slab: Finish struct page to struct slab conversion
+
+And this one too?
+
+
+Thanks!
+
+Roman
