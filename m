@@ -1,35 +1,50 @@
-From: Davidlohr Bueso <dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org>
-Subject: Re: [PATCH-next v3] mm/memcg: Properly handle memcg_stock access for
- PREEMPT_RT
-Date: Tue, 14 Dec 2021 20:36:57 -0800
-Message-ID: <20211215043657.ngmxlk6rgc2ysbmz@offworld>
-References: <20211214144412.447035-1-longman@redhat.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH v9 2/7] cgroup/cpuset: Allow no-task partition to have
+ empty cpuset.cpus.effective
+Date: Wed, 15 Dec 2021 11:36:29 +0100
+Message-ID: <20211215103629.GA25459@blackbody.suse.cz>
+References: <20211205183220.818872-1-longman@redhat.com>
+ <20211205183220.818872-3-longman@redhat.com>
+ <Ybew7d2oE2gLcLNO@slm.duckdns.org>
+ <810204ce-7967-e470-1267-7c3cfb521c89@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1639564591; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/aPaR9Uw4ulAkIgHecWl2en5QXeWEK3aOB4cy3NVwDI=;
+        b=N0Oi6iG4jR1Ii/2w8VZGdDCkCls7BxgRGgpITtz5WTEMqIEVtEn64XU5QoylIR/K2x/31p
+        dRUkaE8ntIn9pTwzN1kEQ9S+rdhVnK7upRk8kdKOg/KeAaBeb/daspbclQWbET4VvGyatI
+        iuTmVTTFyDVEZ/YCPSS9aAkJG5W4m/0=
 Content-Disposition: inline
-In-Reply-To: <20211214144412.447035-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <810204ce-7967-e470-1267-7c3cfb521c89@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
 
-On Tue, 14 Dec 2021, Waiman Long wrote:
+On Tue, Dec 14, 2021 at 10:24:22PM -0500, Waiman Long <longman@redhat.com> wrote:
+> AFAICS, there are code in cpuset.c that disallows the an non-child node to
+> hold tasks, but the check doesn't cover all the possible cases.
+> I remembered that I was able to create such a scenario without using
+> threaded domains.
 
->@@ -2189,7 +2194,7 @@ static void drain_local_stock(struct work_struct *dummy)
->	 * drain_stock races is that we always operate on local CPU stock
->	 * here with IRQ disabled
->	 */
->-	local_irq_save(flags);
->+	local_lock_irqsave(&memcg_stock.lock, flags);
->
->	stock = this_cpu_ptr(&memcg_stock);
->	drain_obj_stock(&stock->irq_obj);
+On the default hierarchy (with controller(s) enabled)? That sounds like a bug.
 
-So here there is still the problem that you can end up taking sleeping locks
-with irqs disabled via obj_cgroup_put() >> obj_cgroup_release() - ie: the
-percpu_ref_switch_lock and css_set_lock. It had occurred to me to promote
-the former to a raw spinlock, but doubt we can get away with the latter.
+> That is why I put in this conditional check. It has nothing to do with the
+> use of threaded domains.
 
-Thanks,
-Davidlohr
+But threaded domains are important nevertheless.
+I think that a structure like
+
+	app-cgroup	cgroup.type=threaded domain	cpuset.partition=root
+	`- rt		cgroup.type=threaded		cpuset.partition=isolated
+	`- normal	cgroup.type=threaded
+
+is a valid use case. Therefore I would not disallow partitioning inside
+threaded subtrees (as suggested).
+
+
+Michal
