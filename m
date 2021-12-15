@@ -1,44 +1,59 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH bpf-next v4 3/3] bpf: remove the cgroup -> bpf header
- dependecy
-Date: Wed, 15 Dec 2021 08:28:39 -1000
-Message-ID: <Yboz17Cd3NrdircO@slm.duckdns.org>
-References: <20211215181231.1053479-1-kuba@kernel.org>
- <20211215181231.1053479-4-kuba@kernel.org>
+Subject: Re: [PATCH v9 6/7] cgroup/cpuset: Update description of
+ cpuset.cpus.partition in cgroup-v2.rst
+Date: Wed, 15 Dec 2021 08:35:58 -1000
+Message-ID: <Ybo1jmNvM6sblcJq@slm.duckdns.org>
+References: <20211205183220.818872-1-longman@redhat.com>
+ <20211205183220.818872-7-longman@redhat.com>
+ <Ybe0YWEo7Wp7wib9@slm.duckdns.org>
+ <20211215144450.GC25459@blackbody.suse.cz>
+ <96018978-6b7f-1e7f-1012-9df7f7996ec5@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=a9xKB7125uY8kvHBhF0BhgO3Irg0Ekzdpi8lSoaB3TU=;
-        b=CzxiwAxOnRR49YKD5qgwaxrwRc7E6+GE1H/V6hV55mvovKfwUDglOhPkTSxG/bPWyx
-         f1dy6m1pSoAqHSC19ACg+Nm2LZrL7y1EOt105wfURgewtPi2sFVOG4di3yocH26zo0Rp
-         3CUlDHSyIxrB8yXASXHxzCRH8h6aMpRMbyJIDlVxeB6tnbZSfu/tbGOgfHqKtlppcACl
-         dY4aJcoZTt2RuFkFdOSX+L14PZdS36Tw1Z+EygnsRF30BUe2saYDD9aRDXjRAhitDKDt
-         rY0w3veSgYUdpcuMh8iRqCMsYlgstAUIfHlns1cHA4vksVynPV6n3r6OJPLX1lOU2HHl
-         70EQ==
+        bh=sphiaH5KnmKIhXvaCjxOtnGbcU9KdLom7iLRZ9t9/OM=;
+        b=OXZjFnMocX9uFmrlxixUhWGpHHaV1MbVgChhnY+iiHKbnMpZ0x8KzP0FsxC/s3DdzE
+         87++rrRG6KT0U4LWdkSCOtxJM2j7wSBBmHZ0+K0xnPSB5OHqh2JPdigZr/qy9dtPzF4B
+         pInBtHxZRy3a1+i8e8PAXoKVzDnPlgpSk+yt+TNL6jo1J15RfbGN/iCT6JhBEgiNclJO
+         lTltrL5JttU8S/fKw10ua4K2exbyUUK9nf7jI95EVoSTx3yrW7RJ2rjgjZCpDLquVgfr
+         G3EcqsbIAMBt5nVaGPyof3u5uwik8+RkIw5Rlk8q/CaO1/9ZmU9k7aJHOWcpyhqZwccf
+         J9aw==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20211215181231.1053479-4-kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <96018978-6b7f-1e7f-1012-9df7f7996ec5-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Dec 15, 2021 at 10:12:31AM -0800, Jakub Kicinski wrote:
-> Remove the dependency from cgroup-defs.h to bpf-cgroup.h and bpf.h.
-> This reduces the incremental build size of x86 allmodconfig after
-> bpf.h was touched from ~17k objects rebuilt to ~5k objects.
-> bpf.h is 2.2kLoC and is modified relatively often.
-> 
-> We need a new header with just the definition of struct cgroup_bpf
-> and enum cgroup_bpf_attach_type, this is akin to cgroup-defs.h.
-> 
-> Signed-off-by: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Hello, Waiman.
 
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+On Wed, Dec 15, 2021 at 01:16:43PM -0500, Waiman Long wrote:
+> Allowing direct transition from member to invalid partition doesn't feel
+> right for me. A casual user may assume a partition is correctly formed
+> without double checking the "cpuset.partition" value. Returning an error
+> will prevent this kind of issue. If returning more information about the
+> failure is the main reason for allowing the invalid partition transition, we
+> can extend the "cpuset.partition" read syntax to also show the reason for
+> the previous failure.
+
+I don't think it's a good idea to display error messages without a way to
+link the error to the one who triggered it. This is the same problem we had
+with resettable counters. It only works for scenarios where one guy is
+sitting in front of the computer but gets nastry for more complex scnearios
+and automation.
+
+I understand that allowing transitions to invalid state can feel jarring.
+There are pros and cons to both approaches. It's similar dynamics tho.
+Erroring out may be more intuitive for a casual user but makes it harder for
+more complex scenarios because whether a given operation errors or not is
+dependent on external asynchronous states, there's no good way of reporting
+the exact nature of the error or detecting when the operation would succeed
+in the future, and the error conditions are rather arbitrary.
 
 Thanks.
 
