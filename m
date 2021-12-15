@@ -1,88 +1,72 @@
-From: Roman Gushchin via iommu <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Subject: Re: [PATCH v2 00/33] Separate struct slab from struct page
-Date: Tue, 14 Dec 2021 17:03:12 -0800
-Message-ID: <Ybk+0LKrsAJatILE@carbon.dhcp.thefacebook.com>
-References: <20211201181510.18784-1-vbabka@suse.cz>
- <4c3dfdfa-2e19-a9a7-7945-3d75bc87ca05@suse.cz>
-Reply-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v9 2/7] cgroup/cpuset: Allow no-task partition to have
+ empty cpuset.cpus.effective
+Date: Tue, 14 Dec 2021 22:24:22 -0500
+Message-ID: <810204ce-7967-e470-1267-7c3cfb521c89@redhat.com>
+References: <20211205183220.818872-1-longman@redhat.com>
+ <20211205183220.818872-3-longman@redhat.com>
+ <Ybew7d2oE2gLcLNO@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com;
- h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=5iCF1rNv7/raNBX5b6Ddekpu+7nTy/ld4v6tScCL3hs=;
- b=Ebg9R/ddwTVeI+REYFYgspO+z5I6WPMMkerajj4xbb44Kkf2PCZxQWcmBsGlTF53wy25
- NvgDyG7Cmy/zNtairE4T8qAF64RdK6BCkqbOF4kHEhVO9m04X4RRisQ3hsp6yZM235E8
- TzoEJT8EROxvPN1RdtI7lAbsxZP26/ZtHI0= 
-Content-Disposition: inline
-In-Reply-To: <4c3dfdfa-2e19-a9a7-7945-3d75bc87ca05-AlSwsSmVLrQ@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kasan-dev-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Julia Lawall <julia.lawall-MZpvjPyXg2s@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Nitin Gupta <ngupta-KNmc09w0p+Ednm+yROfE0A@public.gmane.org>, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Joonsoo Kim <ia>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1639538682;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=wHvqWA9pCAW9hO772UCEPBtSbiKtXLn9xS2Zet02foU=;
+        b=D7XpqjJxZk1k/LrdSMz/4bLf2yxhg23ndlYStXLLubyHq36HkRjzH3ePi6cmypQHrBKjwm
+        VHKrsTeH9XiILdS8JDJfYy9BIjchp2OymSpx8k6cYGoQDDX0gx4bB8f4JcXQCu1KzLtpCd
+        uIWGkDBtlnxYbqFjPADZJW5SieXGrbM=
+Content-Language: en-US
+In-Reply-To: <Ybew7d2oE2gLcLNO-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 
-On Tue, Dec 14, 2021 at 01:57:22PM +0100, Vlastimil Babka wrote:
-> On 12/1/21 19:14, Vlastimil Babka wrote:
-> > Folks from non-slab subsystems are Cc'd only to patches affecting them, and
-> > this cover letter.
-> > 
-> > Series also available in git, based on 5.16-rc3:
-> > https://git.kernel.org/pub/scm/linux/kernel/git/vbabka/linux.git/log/?h=slab-struct_slab-v2r2
-> 
-> Pushed a new branch slab-struct-slab-v3r3 with accumulated fixes and small tweaks
-> and a new patch from Hyeonggon Yoo on top. To avoid too much spam, here's a range diff:
+On 12/13/21 15:45, Tejun Heo wrote:
+> On Sun, Dec 05, 2021 at 01:32:15PM -0500, Waiman Long wrote:
+>>   	adding = deleting = false;
+>>   	old_prs = new_prs = cpuset->partition_root_state;
+>>   	if (cmd == partcmd_enable) {
+>> +		/*
+>> +		 * Enabling partition root is not allowed if not all the CPUs
+>> +		 * can be granted from parent's effective_cpus.
+>> +		 */
+>> +		if (!cpumask_subset(cpuset->cpus_allowed, parent->effective_cpus))
+>> +			return -EINVAL;
+>> +
+>> +		/*
+>> +		 * A parent can be left with no CPU as long as there is no
+>> +		 * task directly associated with the parent partition. For
+>> +		 * such a parent, no new task can be moved into it.
+>> +		 */
+>> +		if (partition_is_populated(parent, cpuset) &&
+>> +		    cpumask_equal(cpuset->cpus_allowed, parent->effective_cpus))
+>> +			return -EINVAL;
+> So, given that this only happens with threaded domains, can we just not
+> allow partitions within threaded domains? The combination doesn't make whole
+> lot of sense to me anyway.
+AFAICS, there are code in cpuset.c that disallows the an non-child node 
+to hold tasks, but the check doesn't cover all the possible cases. I 
+remembered that I was able to create such a scenario without using 
+threaded domains. That is why I put in this conditional check. It has 
+nothing to do with the use of threaded domains.
+>> +	/*
+>> +	 * On default hierarchy, task cannot be moved to a cpuset with empty
+>> +	 * effective cpus.
+>> +	 */
+>> +	if (is_in_v2_mode() && cpumask_empty(cs->effective_cpus))
+>> +		goto out_unlock;
+> And then we can avoid this extra restriction too, right?
 
-Hi Vlastimil!
+This check is supposed to prevent a task to be moved to a leaf cpuset 
+partition with just offlined cpus and hence no effective cpu. A possible 
+alternative is to force the partition to become invalid, but I think not 
+allowing the move is easier until one or more offlined cpus are onlined.
 
-I've started to review this patchset (btw, a really nice work, I like
-the resulting code way more). Because I'm looking at v3 and I don't have
-the whole v2 in my mailbox, here is what I've now:
+Cheers,
+Longman
 
-* mm: add virt_to_folio() and folio_address()
-Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-
-* mm/slab: Dissolve slab_map_pages() in its caller
-Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-
-* mm/slub: Make object_err() static
-Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-
-* mm: Split slab into its own type
-1) Shouldn't SLAB_MATCH() macro use struct folio instead of struct page for the
-comparison?
-2) page_slab() is used only in kasan and only in one place, so maybe it's better
-to not introduce it as a generic helper?
-Other than that
-Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-
-* mm: Add account_slab() and unaccount_slab()
-1) maybe change the title to convert/replace instead of add?
-2) maybe move later changes to memcg_alloc_page_obj_cgroups() to this patch?
-Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-
-* mm: Convert virt_to_cache() to use struct slab
-Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-
-* mm: Convert __ksize() to struct slab
-It looks like certain parts of __ksize() can be merged between slab, slub and slob?
-Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-
-* mm: Use struct slab in kmem_obj_info()
-Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-
-
-I'll try to finish reviewing the patchset until the  end of the week.
-
-Thanks!
-
-Roman
