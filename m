@@ -1,238 +1,83 @@
-From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH bpf-next v4 3/3] bpf: remove the cgroup -> bpf header dependecy
-Date: Wed, 15 Dec 2021 10:12:31 -0800
-Message-ID: <20211215181231.1053479-4-kuba@kernel.org>
-References: <20211215181231.1053479-1-kuba@kernel.org>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v9 6/7] cgroup/cpuset: Update description of
+ cpuset.cpus.partition in cgroup-v2.rst
+Date: Wed, 15 Dec 2021 13:16:43 -0500
+Message-ID: <96018978-6b7f-1e7f-1012-9df7f7996ec5@redhat.com>
+References: <20211205183220.818872-1-longman@redhat.com>
+ <20211205183220.818872-7-longman@redhat.com>
+ <Ybe0YWEo7Wp7wib9@slm.duckdns.org> <20211215144450.GC25459@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639591955;
-        bh=1Y4PcUqeg02UGJ8ATK+MLlEQzKo7NaDhqBzMT7gQnfk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nOfHbzCwnrOlpm3PQfqJmsvYwhK/Ql2nMF7LBJ5Uss8zklDHvD4eKAm9HrlqA0dzU
-         gzP/6F3BnWCIqB7iJRphIbwTPQPoZ9FrRodW2UdA4zE4/GB3otSVK+c1k+yjvNB+9B
-         lvc58ttju6UjNIK+H7sstYW5kQ6omgA9pRcQrgR9nPiyjYcaMzZJDiK4ZmtEtNOPGQ
-         IbRXc6o7jSpdX/tu4dkybKSeMMjSTntwENdYFGwb3uMNHcXK04mnJ39vdz26xpG5EL
-         zpKIvFt12Z6TOZo6XocLWp3g4US9bjV6iMXI/0aSAoBvEPJiuXaDeLjPq3WV7+4O2N
-         8ofEYoNPCdWqA==
-In-Reply-To: <20211215181231.1053479-1-kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1639592220;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=vDOmbSgSfH5oVZVfeOYCn0yzGNbmiacT1UQDjK4tWws=;
+        b=aSaz4JWWNfCR86/ybUOOK7ijOBa0ZQz2DMEMSLqOA1pd2PLiOk8uFZO38unCct8SLa1GSl
+        I6LbsSJJuJTxbVn9t0elQLVDgoh9tpoGWLpuT2i/xW0uEdC60AS6yXBB0k5BB8g5uiWSWk
+        GNJqw36mwy87pNHlJlbcv/BPQqrgyB4=
+Content-Language: en-US
+In-Reply-To: <20211215144450.GC25459-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, kafai-b10kYP2dOMg@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Remove the dependency from cgroup-defs.h to bpf-cgroup.h and bpf.h.
-This reduces the incremental build size of x86 allmodconfig after
-bpf.h was touched from ~17k objects rebuilt to ~5k objects.
-bpf.h is 2.2kLoC and is modified relatively often.
+On 12/15/21 09:44, Michal Koutn=C3=BD wrote:
+> On Mon, Dec 13, 2021 at 11:00:17AM -1000, Tejun Heo <tj-DgEjT+Ai2ygdnm+yR=
+OfE0A@public.gmane.org> wrote:
+>> * When a valid partition turns invalid, now we have a reliable way of
+>>    discovering what exactly caused the transition. However, when a user =
+now
+>>    fails to turn a member into partition, all they get is -EINVAL and th=
+ere's
+>>    no way to discover why it failed and the failure conditions that -EIN=
+VAL
+>>    represents aren't simple.
+>>
+>> * In an automated configuration scenarios, this operation mode may be
+>>    difficult to make reliable and lead to sporadic failures which can be
+>>    tricky to track down. The core problem is that whether a given operat=
+ion
+>>    succeeds or not may depend on external states (CPU on/offline) which =
+may
+>>    change asynchronously in a way that the configuring entity doesn't ha=
+ve
+>>    any control over.
+>>
+>> It's true that both are existing problems with the current partition
+>> interface and given that this is a pretty spcialized feature, this can be
+>> okay. Michal, what are your thoughts?
+> Because of asynchronous changes, the return value should not be that
+> important and the user should watch cpuset.partitions for the result
+> (end state) anyway.
+> Furthermore, the reasons should be IMO just informative (i.e. I like
+> they're not explicitly documented) and not API.
+>
+> But I see there could be a distinction between -EINVAL (the supplied
+> input makes no sense) and -EAGAIN(?) denoting that the switch to
+> partition root could not happen (due to outer constraints).
+>
+> You seem to propose to replace the -EAGAIN above with a success code and
+> allow the switch to an invalid root.
+> The action of the configuring entity would be different: retry (when?)
+> vs wait till transition happens (notification) (although the immediate
+> effect (the change did not happen) is same).
+> I considered the two variants equal but the clear information about when
+> the change can happen I'd favor the variant allowing the switch to
+> invalid root now.
 
-We need a new header with just the definition of struct cgroup_bpf
-and enum cgroup_bpf_attach_type, this is akin to cgroup-defs.h.
+Allowing direct transition from member to invalid partition doesn't feel=20
+right for me. A casual user may assume a partition is correctly formed=20
+without double checking the "cpuset.partition" value. Returning an error=20
+will prevent this kind of issue. If returning more information about the=20
+failure is the main reason for allowing the invalid partition=20
+transition, we can extend the "cpuset.partition" read syntax to also=20
+show the reason for the previous failure.
 
-Signed-off-by: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
-CC: ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-CC: daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org
-CC: andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-CC: kafai-b10kYP2dOMg@public.gmane.org
-CC: songliubraving-b10kYP2dOMg@public.gmane.org
-CC: yhs-b10kYP2dOMg@public.gmane.org
-CC: john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-CC: kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-CC: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-CC: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
-CC: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-CC: bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-CC: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
----
- include/linux/bpf-cgroup-defs.h | 70 +++++++++++++++++++++++++++++++++
- include/linux/bpf-cgroup.h      | 57 +--------------------------
- include/linux/cgroup-defs.h     |  2 +-
- 3 files changed, 72 insertions(+), 57 deletions(-)
- create mode 100644 include/linux/bpf-cgroup-defs.h
-
-diff --git a/include/linux/bpf-cgroup-defs.h b/include/linux/bpf-cgroup-defs.h
-new file mode 100644
-index 000000000000..695d1224a71b
---- /dev/null
-+++ b/include/linux/bpf-cgroup-defs.h
-@@ -0,0 +1,70 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _BPF_CGROUP_DEFS_H
-+#define _BPF_CGROUP_DEFS_H
-+
-+#ifdef CONFIG_CGROUP_BPF
-+
-+#include <linux/list.h>
-+#include <linux/percpu-refcount.h>
-+#include <linux/workqueue.h>
-+
-+struct bpf_prog_array;
-+
-+enum cgroup_bpf_attach_type {
-+	CGROUP_BPF_ATTACH_TYPE_INVALID = -1,
-+	CGROUP_INET_INGRESS = 0,
-+	CGROUP_INET_EGRESS,
-+	CGROUP_INET_SOCK_CREATE,
-+	CGROUP_SOCK_OPS,
-+	CGROUP_DEVICE,
-+	CGROUP_INET4_BIND,
-+	CGROUP_INET6_BIND,
-+	CGROUP_INET4_CONNECT,
-+	CGROUP_INET6_CONNECT,
-+	CGROUP_INET4_POST_BIND,
-+	CGROUP_INET6_POST_BIND,
-+	CGROUP_UDP4_SENDMSG,
-+	CGROUP_UDP6_SENDMSG,
-+	CGROUP_SYSCTL,
-+	CGROUP_UDP4_RECVMSG,
-+	CGROUP_UDP6_RECVMSG,
-+	CGROUP_GETSOCKOPT,
-+	CGROUP_SETSOCKOPT,
-+	CGROUP_INET4_GETPEERNAME,
-+	CGROUP_INET6_GETPEERNAME,
-+	CGROUP_INET4_GETSOCKNAME,
-+	CGROUP_INET6_GETSOCKNAME,
-+	CGROUP_INET_SOCK_RELEASE,
-+	MAX_CGROUP_BPF_ATTACH_TYPE
-+};
-+
-+struct cgroup_bpf {
-+	/* array of effective progs in this cgroup */
-+	struct bpf_prog_array __rcu *effective[MAX_CGROUP_BPF_ATTACH_TYPE];
-+
-+	/* attached progs to this cgroup and attach flags
-+	 * when flags == 0 or BPF_F_ALLOW_OVERRIDE the progs list will
-+	 * have either zero or one element
-+	 * when BPF_F_ALLOW_MULTI the list can have up to BPF_CGROUP_MAX_PROGS
-+	 */
-+	struct list_head progs[MAX_CGROUP_BPF_ATTACH_TYPE];
-+	u32 flags[MAX_CGROUP_BPF_ATTACH_TYPE];
-+
-+	/* list of cgroup shared storages */
-+	struct list_head storages;
-+
-+	/* temp storage for effective prog array used by prog_attach/detach */
-+	struct bpf_prog_array *inactive;
-+
-+	/* reference counter used to detach bpf programs after cgroup removal */
-+	struct percpu_ref refcnt;
-+
-+	/* cgroup_bpf is released using a work queue */
-+	struct work_struct release_work;
-+};
-+
-+#else /* CONFIG_CGROUP_BPF */
-+struct cgroup_bpf {};
-+#endif /* CONFIG_CGROUP_BPF */
-+
-+#endif
-diff --git a/include/linux/bpf-cgroup.h b/include/linux/bpf-cgroup.h
-index 11820a430d6c..b525d8cdc25b 100644
---- a/include/linux/bpf-cgroup.h
-+++ b/include/linux/bpf-cgroup.h
-@@ -3,10 +3,10 @@
- #define _BPF_CGROUP_H
- 
- #include <linux/bpf.h>
-+#include <linux/bpf-cgroup-defs.h>
- #include <linux/errno.h>
- #include <linux/jump_label.h>
- #include <linux/percpu.h>
--#include <linux/percpu-refcount.h>
- #include <linux/rbtree.h>
- #include <uapi/linux/bpf.h>
- 
-@@ -23,33 +23,6 @@ struct ctl_table_header;
- struct task_struct;
- 
- #ifdef CONFIG_CGROUP_BPF
--enum cgroup_bpf_attach_type {
--	CGROUP_BPF_ATTACH_TYPE_INVALID = -1,
--	CGROUP_INET_INGRESS = 0,
--	CGROUP_INET_EGRESS,
--	CGROUP_INET_SOCK_CREATE,
--	CGROUP_SOCK_OPS,
--	CGROUP_DEVICE,
--	CGROUP_INET4_BIND,
--	CGROUP_INET6_BIND,
--	CGROUP_INET4_CONNECT,
--	CGROUP_INET6_CONNECT,
--	CGROUP_INET4_POST_BIND,
--	CGROUP_INET6_POST_BIND,
--	CGROUP_UDP4_SENDMSG,
--	CGROUP_UDP6_SENDMSG,
--	CGROUP_SYSCTL,
--	CGROUP_UDP4_RECVMSG,
--	CGROUP_UDP6_RECVMSG,
--	CGROUP_GETSOCKOPT,
--	CGROUP_SETSOCKOPT,
--	CGROUP_INET4_GETPEERNAME,
--	CGROUP_INET6_GETPEERNAME,
--	CGROUP_INET4_GETSOCKNAME,
--	CGROUP_INET6_GETSOCKNAME,
--	CGROUP_INET_SOCK_RELEASE,
--	MAX_CGROUP_BPF_ATTACH_TYPE
--};
- 
- #define CGROUP_ATYPE(type) \
- 	case BPF_##type: return type
-@@ -127,33 +100,6 @@ struct bpf_prog_list {
- 	struct bpf_cgroup_storage *storage[MAX_BPF_CGROUP_STORAGE_TYPE];
- };
- 
--struct bpf_prog_array;
--
--struct cgroup_bpf {
--	/* array of effective progs in this cgroup */
--	struct bpf_prog_array __rcu *effective[MAX_CGROUP_BPF_ATTACH_TYPE];
--
--	/* attached progs to this cgroup and attach flags
--	 * when flags == 0 or BPF_F_ALLOW_OVERRIDE the progs list will
--	 * have either zero or one element
--	 * when BPF_F_ALLOW_MULTI the list can have up to BPF_CGROUP_MAX_PROGS
--	 */
--	struct list_head progs[MAX_CGROUP_BPF_ATTACH_TYPE];
--	u32 flags[MAX_CGROUP_BPF_ATTACH_TYPE];
--
--	/* list of cgroup shared storages */
--	struct list_head storages;
--
--	/* temp storage for effective prog array used by prog_attach/detach */
--	struct bpf_prog_array *inactive;
--
--	/* reference counter used to detach bpf programs after cgroup removal */
--	struct percpu_ref refcnt;
--
--	/* cgroup_bpf is released using a work queue */
--	struct work_struct release_work;
--};
--
- int cgroup_bpf_inherit(struct cgroup *cgrp);
- void cgroup_bpf_offline(struct cgroup *cgrp);
- 
-@@ -451,7 +397,6 @@ int cgroup_bpf_prog_query(const union bpf_attr *attr,
- 			  union bpf_attr __user *uattr);
- #else
- 
--struct cgroup_bpf {};
- static inline int cgroup_bpf_inherit(struct cgroup *cgrp) { return 0; }
- static inline void cgroup_bpf_offline(struct cgroup *cgrp) {}
- 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index db2e147e069f..411684c80cf3 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -19,7 +19,7 @@
- #include <linux/percpu-rwsem.h>
- #include <linux/u64_stats_sync.h>
- #include <linux/workqueue.h>
--#include <linux/bpf-cgroup.h>
-+#include <linux/bpf-cgroup-defs.h>
- #include <linux/psi_types.h>
- 
- #ifdef CONFIG_CGROUPS
--- 
-2.31.1
+Cheers,
+Longman
 
