@@ -1,186 +1,56 @@
-From: Jakub Kicinski <kuba@kernel.org>
-Subject: [PATCH bpf-next v5 2/3] add missing bpf-cgroup.h includes
-Date: Wed, 15 Dec 2021 18:55:37 -0800
-Message-ID: <20211216025538.1649516-3-kuba@kernel.org>
-References: <20211216025538.1649516-1-kuba@kernel.org>
+From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Subject: Re: [PATCH] mm/memcontrol: Disable on PREEMPT_RT
+Date: Thu, 16 Dec 2021 08:51:52 +0100
+Message-ID: <YbrwGCoklB+IOqH0@linutronix.de>
+References: <20211207155208.eyre5svucpg7krxe@linutronix.de>
+ <Ya+SCkLOLBVN/kiY@cmpxchg.org>
+ <YbNwmUMPFM/MO0cX@linutronix.de>
+ <YbcbmvQk+Sgdsi9G@dhcp22.suse.cz>
+ <YbocOh+h3o/Yc5Ag@linutronix.de>
+ <YboeI1aTFdQpN0TI@dhcp22.suse.cz>
+ <YboiRA1znig/cbCt@linutronix.de>
+ <Ybo3cAkyg0SrUyJJ@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-security-module-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639623343;
-        bh=YxjBxNV2YAEjL3Otuf0fLRGjWC0v4OV97wVEW+8DHIU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RRuP0CDN60MoeW2/tqT0uv6Adl6l8mH0wRjReH52felfjiUipyQ39pfE4ieMDmMas
-         u7sy85vUmuWZoC3/K7bUaB/V+/LmSac/VuyA2JhIRDAHtAh+f9h9xIIkyzJaeCO8e/
-         w7MMZo6ggUsr+JbWgAON4JKS1KXlehxYRfXqGY5FBcBb9LmwJ0RmFr+WnaV8gdcp+L
-         8oKbiGj1fNww+rfCt+7JaCyIt9wbtpCUD6N1Nj4n2GKRi4HITq8LqVuIwsar9jgEqQ
-         FDacedxEOUfD/HOOE/XDZ81KQ2EQmXw0GxBWBzb4RWy7amOu4Xd2ELfUMPEu8QlJk1
-         oIeYUcbcgXUeQ==
-In-Reply-To: <20211216025538.1649516-1-kuba@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1639641113;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=7M0mhRgQajj4JooEekItEmeezbDQdgPBX9TAoVx0FJ4=;
+        b=fFIBCwWplbZ0Rdcm9iQ+R/u7UmGMd+qS7fmMP6RWtHq2X8wxzfHokIcFxQk9Fn/xFZhpbC
+        y8equxQrn8WrWM1R7Gi3s3ux6ycuV3Qkj5ssXxfeeymw20UjYrIQgkb+cYxDzaOERm1bxj
+        4X7xN0c1x9kj99x6vQz5HPLAbf6ou+LeBW17X6oyt4bg8GWjTBR6jWBAggamBoAC5nq8f1
+        6o7IDHjfrLH2NAIlK/N5Bv94kXywaz+BJR62yeM+5cEjB9ELtIvEgqxJRkY6e6v3nrifC2
+        wDKOhtt1p9VpK4ujtNK79ZdyRcvms2BvgRcRzVBFvpIAFAW3fIXnJ9Gtv2ekmg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1639641113;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=7M0mhRgQajj4JooEekItEmeezbDQdgPBX9TAoVx0FJ4=;
+        b=4DYVkaQQzSIvUTNyOabyRGRff4LFhI6EsnuFBJ/cD/VnzcEAIm2QGCrJVDH5iYiwhF6UQt
+        Q3hC1ZsoHK26A5Bg==
+Content-Disposition: inline
+In-Reply-To: <Ybo3cAkyg0SrUyJJ-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: daniel@iogearbox.net, ast@kernel.org, andrii@kernel.org
-Cc: bpf@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>, Tejun Heo <tj@kernel.org>, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, rostedt@goodmis.org, mingo@redhat.com, yoshfuji@linux-ipv6.org, dsahern@kernel.org, jmorris@namei.org, serge@hallyn.com, cgroups@vger.kernel.org, linux-security-module@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-We're about to break the cgroup-defs.h -> bpf-cgroup.h dependency,
-make sure those who actually need more than the definition of
-struct cgroup_bpf include bpf-cgroup.h explicitly.
+On 2021-12-15 19:44:00 [+0100], Michal Hocko wrote:
+> On Wed 15-12-21 18:13:40, Sebastian Andrzej Siewior wrote:
+> > Okay. What do I gain by doing this / how do I test this? Is running
+> > tools/testing/selftests/cgroup/test_*mem* sufficient to test all corner
+> > cases here?
+> 
+> I am not fully aware of all the tests but my point is that if the soft
+> limit is not configured then there are no soft limit tree manipulations
+> ever happening and therefore the code is effectivelly dead. Is this
+> sufficient for the RT patchset to ignore the RT incompatible parts?
 
-Acked-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Jakub Kicinski <kuba@kernel.org>
----
-CC: ast@kernel.org
-CC: daniel@iogearbox.net
-CC: andrii@kernel.org
-CC: kafai@fb.com
-CC: songliubraving@fb.com
-CC: yhs@fb.com
-CC: john.fastabend@gmail.com
-CC: kpsingh@kernel.org
-CC: lizefan.x@bytedance.com
-CC: hannes@cmpxchg.org
-CC: rostedt@goodmis.org
-CC: mingo@redhat.com
-CC: yoshfuji@linux-ipv6.org
-CC: dsahern@kernel.org
-CC: jmorris@namei.org
-CC: serge@hallyn.com
-CC: bpf@vger.kernel.org
-CC: cgroups@vger.kernel.org
-CC: linux-security-module@vger.kernel.org
----
- kernel/bpf/helpers.c        | 1 +
- kernel/bpf/syscall.c        | 1 +
- kernel/bpf/verifier.c       | 1 +
- kernel/cgroup/cgroup.c      | 1 +
- kernel/trace/trace_kprobe.c | 1 +
- kernel/trace/trace_uprobe.c | 1 +
- net/ipv4/udp.c              | 1 +
- net/ipv6/udp.c              | 1 +
- net/socket.c                | 1 +
- security/device_cgroup.c    | 1 +
- 10 files changed, 10 insertions(+)
+So if that softlimit is not essential and makes things easier by simply
+disabling it, yes I could try that. I will keep that in mind.
 
-diff --git a/kernel/bpf/helpers.c b/kernel/bpf/helpers.c
-index 8babae03d30a..34d6f91dec1c 100644
---- a/kernel/bpf/helpers.c
-+++ b/kernel/bpf/helpers.c
-@@ -2,6 +2,7 @@
- /* Copyright (c) 2011-2014 PLUMgrid, http://plumgrid.com
-  */
- #include <linux/bpf.h>
-+#include <linux/bpf-cgroup.h>
- #include <linux/rcupdate.h>
- #include <linux/random.h>
- #include <linux/smp.h>
-diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
-index ddd81d543203..da07bdf71697 100644
---- a/kernel/bpf/syscall.c
-+++ b/kernel/bpf/syscall.c
-@@ -2,6 +2,7 @@
- /* Copyright (c) 2011-2014 PLUMgrid, http://plumgrid.com
-  */
- #include <linux/bpf.h>
-+#include <linux/bpf-cgroup.h>
- #include <linux/bpf_trace.h>
- #include <linux/bpf_lirc.h>
- #include <linux/bpf_verifier.h>
-diff --git a/kernel/bpf/verifier.c b/kernel/bpf/verifier.c
-index d74e8a99412e..f0604796132f 100644
---- a/kernel/bpf/verifier.c
-+++ b/kernel/bpf/verifier.c
-@@ -4,6 +4,7 @@
-  * Copyright (c) 2018 Covalent IO, Inc. http://covalent.io
-  */
- #include <uapi/linux/btf.h>
-+#include <linux/bpf-cgroup.h>
- #include <linux/kernel.h>
- #include <linux/types.h>
- #include <linux/slab.h>
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 919194de39c8..cd4c23f7e3df 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -30,6 +30,7 @@
- 
- #include "cgroup-internal.h"
- 
-+#include <linux/bpf-cgroup.h>
- #include <linux/cred.h>
- #include <linux/errno.h>
- #include <linux/init_task.h>
-diff --git a/kernel/trace/trace_kprobe.c b/kernel/trace/trace_kprobe.c
-index 33272a7b6912..4e1257f50aa3 100644
---- a/kernel/trace/trace_kprobe.c
-+++ b/kernel/trace/trace_kprobe.c
-@@ -7,6 +7,7 @@
-  */
- #define pr_fmt(fmt)	"trace_kprobe: " fmt
- 
-+#include <linux/bpf-cgroup.h>
- #include <linux/security.h>
- #include <linux/module.h>
- #include <linux/uaccess.h>
-diff --git a/kernel/trace/trace_uprobe.c b/kernel/trace/trace_uprobe.c
-index f5f0039d31e5..4f35514a48f3 100644
---- a/kernel/trace/trace_uprobe.c
-+++ b/kernel/trace/trace_uprobe.c
-@@ -7,6 +7,7 @@
-  */
- #define pr_fmt(fmt)	"trace_uprobe: " fmt
- 
-+#include <linux/bpf-cgroup.h>
- #include <linux/security.h>
- #include <linux/ctype.h>
- #include <linux/module.h>
-diff --git a/net/ipv4/udp.c b/net/ipv4/udp.c
-index 69d30053fed9..99536127650b 100644
---- a/net/ipv4/udp.c
-+++ b/net/ipv4/udp.c
-@@ -74,6 +74,7 @@
- 
- #define pr_fmt(fmt) "UDP: " fmt
- 
-+#include <linux/bpf-cgroup.h>
- #include <linux/uaccess.h>
- #include <asm/ioctls.h>
- #include <linux/memblock.h>
-diff --git a/net/ipv6/udp.c b/net/ipv6/udp.c
-index 6a0e569f0bb8..ba8986d12413 100644
---- a/net/ipv6/udp.c
-+++ b/net/ipv6/udp.c
-@@ -17,6 +17,7 @@
-  *      YOSHIFUJI Hideaki @USAGI:	convert /proc/net/udp6 to seq_file.
-  */
- 
-+#include <linux/bpf-cgroup.h>
- #include <linux/errno.h>
- #include <linux/types.h>
- #include <linux/socket.h>
-diff --git a/net/socket.c b/net/socket.c
-index 7f64a6eccf63..721a5a1b1106 100644
---- a/net/socket.c
-+++ b/net/socket.c
-@@ -52,6 +52,7 @@
-  *	Based upon Swansea University Computer Society NET3.039
-  */
- 
-+#include <linux/bpf-cgroup.h>
- #include <linux/ethtool.h>
- #include <linux/mm.h>
- #include <linux/socket.h>
-diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-index 04375df52fc9..842889f3dcb7 100644
---- a/security/device_cgroup.c
-+++ b/security/device_cgroup.c
-@@ -5,6 +5,7 @@
-  * Copyright 2007 IBM Corp
-  */
- 
-+#include <linux/bpf-cgroup.h>
- #include <linux/device_cgroup.h>
- #include <linux/cgroup.h>
- #include <linux/ctype.h>
--- 
-2.31.1
-
+Sebastian
