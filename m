@@ -1,46 +1,238 @@
-From: Wang Weiyang <wangweiyang2@huawei.com>
-Subject: [PATCH -next] mm/memcg: Use struct_size() helper in kzalloc()
-Date: Thu, 16 Dec 2021 10:20:24 +0800
-Message-ID: <20211216022024.127375-1-wangweiyang2@huawei.com>
+From: Jakub Kicinski <kuba@kernel.org>
+Subject: [PATCH bpf-next v5 3/3] bpf: remove the cgroup -> bpf header dependecy
+Date: Wed, 15 Dec 2021 18:55:38 -0800
+Message-ID: <20211216025538.1649516-4-kuba@kernel.org>
+References: <20211216025538.1649516-1-kuba@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1639623343;
+        bh=2/LJwvJ0GMsKI+/4k7k587C4NMuPp8DFFYNp1vhg2TE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=rgm4bXynjKy1OQtDozeJhmK3x/Ey+yEwxfmuDlJH/NzQqzFTVti+6We9gjx0BpYzi
+         iQZSYa3kCPybhKweV97L312CIuny1VUjtQ9cR9J1laXifEP2uLZyO38RRg205QP5em
+         PG1O2zRisyU11Z+qBtC50R0hBNic+a5+XibvHsKAL91Sk95jzv30SDQo1vXCQANjoH
+         Wjk2ot6jwmCqceS6ID7teNaEtEOIz6YDXx5Jtz+9RdmwW0FueYqrxEPoG8KzDtoIs3
+         /a+TXUnQWCxMANchu9fvVZ+nyt8ZTHEiYn2zP88veE9tk25FT9Y7EHGDl8JrLM1G6Y
+         jHpEwsgNaiX8Q==
+In-Reply-To: <20211216025538.1649516-1-kuba@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: daniel@iogearbox.net, ast@kernel.org, andrii@kernel.org
+Cc: bpf@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>, Tejun Heo <tj@kernel.org>, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org
 
-Make use of the struct_size() helper instead of an open-coded version, in
-order to avoid any potential type mistakes or integer overflows that, in
-the worst scenario, could lead to heap overflows.
+Remove the dependency from cgroup-defs.h to bpf-cgroup.h and bpf.h.
+This reduces the incremental build size of x86 allmodconfig after
+bpf.h was touched from ~17k objects rebuilt to ~5k objects.
+bpf.h is 2.2kLoC and is modified relatively often.
 
-Link: https://github.com/KSPP/linux/issues/160
-Signed-off-by: Wang Weiyang <wangweiyang2@huawei.com>
+We need a new header with just the definition of struct cgroup_bpf
+and enum cgroup_bpf_attach_type, this is akin to cgroup-defs.h.
+
+Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
 ---
- mm/memcontrol.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+CC: ast@kernel.org
+CC: daniel@iogearbox.net
+CC: andrii@kernel.org
+CC: kafai@fb.com
+CC: songliubraving@fb.com
+CC: yhs@fb.com
+CC: john.fastabend@gmail.com
+CC: kpsingh@kernel.org
+CC: lizefan.x@bytedance.com
+CC: hannes@cmpxchg.org
+CC: bpf@vger.kernel.org
+CC: cgroups@vger.kernel.org
+---
+ include/linux/bpf-cgroup-defs.h | 70 +++++++++++++++++++++++++++++++++
+ include/linux/bpf-cgroup.h      | 57 +--------------------------
+ include/linux/cgroup-defs.h     |  2 +-
+ 3 files changed, 72 insertions(+), 57 deletions(-)
+ create mode 100644 include/linux/bpf-cgroup-defs.h
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 54afa29145e8..ec4b677cdcad 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5129,15 +5129,11 @@ static void mem_cgroup_free(struct mem_cgroup *memcg)
- static struct mem_cgroup *mem_cgroup_alloc(void)
- {
- 	struct mem_cgroup *memcg;
--	unsigned int size;
- 	int node;
- 	int __maybe_unused i;
- 	long error = -ENOMEM;
+diff --git a/include/linux/bpf-cgroup-defs.h b/include/linux/bpf-cgroup-defs.h
+new file mode 100644
+index 000000000000..695d1224a71b
+--- /dev/null
++++ b/include/linux/bpf-cgroup-defs.h
+@@ -0,0 +1,70 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _BPF_CGROUP_DEFS_H
++#define _BPF_CGROUP_DEFS_H
++
++#ifdef CONFIG_CGROUP_BPF
++
++#include <linux/list.h>
++#include <linux/percpu-refcount.h>
++#include <linux/workqueue.h>
++
++struct bpf_prog_array;
++
++enum cgroup_bpf_attach_type {
++	CGROUP_BPF_ATTACH_TYPE_INVALID = -1,
++	CGROUP_INET_INGRESS = 0,
++	CGROUP_INET_EGRESS,
++	CGROUP_INET_SOCK_CREATE,
++	CGROUP_SOCK_OPS,
++	CGROUP_DEVICE,
++	CGROUP_INET4_BIND,
++	CGROUP_INET6_BIND,
++	CGROUP_INET4_CONNECT,
++	CGROUP_INET6_CONNECT,
++	CGROUP_INET4_POST_BIND,
++	CGROUP_INET6_POST_BIND,
++	CGROUP_UDP4_SENDMSG,
++	CGROUP_UDP6_SENDMSG,
++	CGROUP_SYSCTL,
++	CGROUP_UDP4_RECVMSG,
++	CGROUP_UDP6_RECVMSG,
++	CGROUP_GETSOCKOPT,
++	CGROUP_SETSOCKOPT,
++	CGROUP_INET4_GETPEERNAME,
++	CGROUP_INET6_GETPEERNAME,
++	CGROUP_INET4_GETSOCKNAME,
++	CGROUP_INET6_GETSOCKNAME,
++	CGROUP_INET_SOCK_RELEASE,
++	MAX_CGROUP_BPF_ATTACH_TYPE
++};
++
++struct cgroup_bpf {
++	/* array of effective progs in this cgroup */
++	struct bpf_prog_array __rcu *effective[MAX_CGROUP_BPF_ATTACH_TYPE];
++
++	/* attached progs to this cgroup and attach flags
++	 * when flags == 0 or BPF_F_ALLOW_OVERRIDE the progs list will
++	 * have either zero or one element
++	 * when BPF_F_ALLOW_MULTI the list can have up to BPF_CGROUP_MAX_PROGS
++	 */
++	struct list_head progs[MAX_CGROUP_BPF_ATTACH_TYPE];
++	u32 flags[MAX_CGROUP_BPF_ATTACH_TYPE];
++
++	/* list of cgroup shared storages */
++	struct list_head storages;
++
++	/* temp storage for effective prog array used by prog_attach/detach */
++	struct bpf_prog_array *inactive;
++
++	/* reference counter used to detach bpf programs after cgroup removal */
++	struct percpu_ref refcnt;
++
++	/* cgroup_bpf is released using a work queue */
++	struct work_struct release_work;
++};
++
++#else /* CONFIG_CGROUP_BPF */
++struct cgroup_bpf {};
++#endif /* CONFIG_CGROUP_BPF */
++
++#endif
+diff --git a/include/linux/bpf-cgroup.h b/include/linux/bpf-cgroup.h
+index 11820a430d6c..b525d8cdc25b 100644
+--- a/include/linux/bpf-cgroup.h
++++ b/include/linux/bpf-cgroup.h
+@@ -3,10 +3,10 @@
+ #define _BPF_CGROUP_H
  
--	size = sizeof(struct mem_cgroup);
--	size += nr_node_ids * sizeof(struct mem_cgroup_per_node *);
+ #include <linux/bpf.h>
++#include <linux/bpf-cgroup-defs.h>
+ #include <linux/errno.h>
+ #include <linux/jump_label.h>
+ #include <linux/percpu.h>
+-#include <linux/percpu-refcount.h>
+ #include <linux/rbtree.h>
+ #include <uapi/linux/bpf.h>
+ 
+@@ -23,33 +23,6 @@ struct ctl_table_header;
+ struct task_struct;
+ 
+ #ifdef CONFIG_CGROUP_BPF
+-enum cgroup_bpf_attach_type {
+-	CGROUP_BPF_ATTACH_TYPE_INVALID = -1,
+-	CGROUP_INET_INGRESS = 0,
+-	CGROUP_INET_EGRESS,
+-	CGROUP_INET_SOCK_CREATE,
+-	CGROUP_SOCK_OPS,
+-	CGROUP_DEVICE,
+-	CGROUP_INET4_BIND,
+-	CGROUP_INET6_BIND,
+-	CGROUP_INET4_CONNECT,
+-	CGROUP_INET6_CONNECT,
+-	CGROUP_INET4_POST_BIND,
+-	CGROUP_INET6_POST_BIND,
+-	CGROUP_UDP4_SENDMSG,
+-	CGROUP_UDP6_SENDMSG,
+-	CGROUP_SYSCTL,
+-	CGROUP_UDP4_RECVMSG,
+-	CGROUP_UDP6_RECVMSG,
+-	CGROUP_GETSOCKOPT,
+-	CGROUP_SETSOCKOPT,
+-	CGROUP_INET4_GETPEERNAME,
+-	CGROUP_INET6_GETPEERNAME,
+-	CGROUP_INET4_GETSOCKNAME,
+-	CGROUP_INET6_GETSOCKNAME,
+-	CGROUP_INET_SOCK_RELEASE,
+-	MAX_CGROUP_BPF_ATTACH_TYPE
+-};
+ 
+ #define CGROUP_ATYPE(type) \
+ 	case BPF_##type: return type
+@@ -127,33 +100,6 @@ struct bpf_prog_list {
+ 	struct bpf_cgroup_storage *storage[MAX_BPF_CGROUP_STORAGE_TYPE];
+ };
+ 
+-struct bpf_prog_array;
 -
--	memcg = kzalloc(size, GFP_KERNEL);
-+	memcg = kzalloc(struct_size(memcg, nodeinfo, nr_node_ids), GFP_KERNEL);
- 	if (!memcg)
- 		return ERR_PTR(error);
+-struct cgroup_bpf {
+-	/* array of effective progs in this cgroup */
+-	struct bpf_prog_array __rcu *effective[MAX_CGROUP_BPF_ATTACH_TYPE];
+-
+-	/* attached progs to this cgroup and attach flags
+-	 * when flags == 0 or BPF_F_ALLOW_OVERRIDE the progs list will
+-	 * have either zero or one element
+-	 * when BPF_F_ALLOW_MULTI the list can have up to BPF_CGROUP_MAX_PROGS
+-	 */
+-	struct list_head progs[MAX_CGROUP_BPF_ATTACH_TYPE];
+-	u32 flags[MAX_CGROUP_BPF_ATTACH_TYPE];
+-
+-	/* list of cgroup shared storages */
+-	struct list_head storages;
+-
+-	/* temp storage for effective prog array used by prog_attach/detach */
+-	struct bpf_prog_array *inactive;
+-
+-	/* reference counter used to detach bpf programs after cgroup removal */
+-	struct percpu_ref refcnt;
+-
+-	/* cgroup_bpf is released using a work queue */
+-	struct work_struct release_work;
+-};
+-
+ int cgroup_bpf_inherit(struct cgroup *cgrp);
+ void cgroup_bpf_offline(struct cgroup *cgrp);
  
+@@ -451,7 +397,6 @@ int cgroup_bpf_prog_query(const union bpf_attr *attr,
+ 			  union bpf_attr __user *uattr);
+ #else
+ 
+-struct cgroup_bpf {};
+ static inline int cgroup_bpf_inherit(struct cgroup *cgrp) { return 0; }
+ static inline void cgroup_bpf_offline(struct cgroup *cgrp) {}
+ 
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index db2e147e069f..411684c80cf3 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -19,7 +19,7 @@
+ #include <linux/percpu-rwsem.h>
+ #include <linux/u64_stats_sync.h>
+ #include <linux/workqueue.h>
+-#include <linux/bpf-cgroup.h>
++#include <linux/bpf-cgroup-defs.h>
+ #include <linux/psi_types.h>
+ 
+ #ifdef CONFIG_CGROUPS
 -- 
-2.17.1
+2.31.1
 
