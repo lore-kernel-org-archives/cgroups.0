@@ -1,50 +1,35 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH v9 3/7] cgroup/cpuset: Refining features and constraints
- of a partition
-Date: Thu, 16 Dec 2021 10:28:37 +0100
-Message-ID: <20211216092837.GB46450@blackbody.suse.cz>
-References: <20211205183220.818872-1-longman@redhat.com>
- <20211205183220.818872-4-longman@redhat.com>
- <20211215144944.GE16798@blackbody.suse.cz>
- <98887e63-51de-f5ad-8fb8-56269aaf4bcf@redhat.com>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [PATCH -next] mm/memcg: Use struct_size() helper in kzalloc()
+Date: Thu, 16 Dec 2021 17:44:38 +0800
+Message-ID: <CAMZfGtUBSqgnHM+DSG7na=7tbNMyj_qS8pEOCn9nDdkPEzi-4g@mail.gmail.com>
+References: <20211216022024.127375-1-wangweiyang2@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1639646918; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=fGxktS/Uc4QdkNKSXK/IVadOzTG1ebMs/QUmVV6nIcE=;
-        b=Eh2Wx8s9jDwfC6jxKZuaZRo24mG2IrIk9796h9H2/iwEim4E06TJFI8j6yq9/wyc9rjpJo
-        396WeJCIzR7D9qq7Fr4tJgnwzwqPCQ6m9OgWHc/zxKAv52j9ARDUZxGkKQjCS636XLM66F
-        Tp76ek5AjK/Gkf8uXf/sx+eEV3Povs0=
-Content-Disposition: inline
-In-Reply-To: <98887e63-51de-f5ad-8fb8-56269aaf4bcf@redhat.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=A1MFole7nFko6XzmDNfgE5E+/1W8AedAM5ImSr4t3Mo=;
+        b=nsmQ/apsKdQztyc0yc5tiUuptN+9XlsBEAr0qz+gI5SZ+IV3uSUUFj52fE9YbQVI8n
+         SMbjtHrTJA6hukMVpoe9h0y6Rmfyrl+OHG/iOHic+VH5G02tOBfDdwGMpC7FfUrBGTu3
+         8XpRGgzs7x86Dl8C0S2EHzI480i8bV0jQS8+RviV1BOSx6kp/P/aMy3Hx325lxQFnmHw
+         X0cG1oWo6GktwZFd78AaZBgbbhnACTQenYXojWdQRhiJtzNFPn30D0eC0JI1ooH1p6wQ
+         p1NWPJE7pjmTIGoCX0RY9/cuWQjZRO11Ex/D2pnSThLbuR6dO5PA2wjt+xORpiYjw6W8
+         bveg==
+In-Reply-To: <20211216022024.127375-1-wangweiyang2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
+To: Wang Weiyang <wangweiyang2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Wed, Dec 15, 2021 at 11:29:41AM -0500, Waiman Long <longman@redhat.com> wrote:
-> There are additional checks for the member to partition transition which
-> requires that the target cpuset shouldn't have child cpuset.
+On Thu, Dec 16, 2021 at 10:21 AM Wang Weiyang <wangweiyang2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+>
+> Make use of the struct_size() helper instead of an open-coded version, in
+> order to avoid any potential type mistakes or integer overflows that, in
+> the worst scenario, could lead to heap overflows.
+>
+> Link: https://github.com/KSPP/linux/issues/160
+> Signed-off-by: Wang Weiyang <wangweiyang2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Ah, I forgot the transition condition no. 4 will apply here. Clear.
-
-So, currently full bottom up + top down walk is needed in (rare?) case
-the switch from root partition to member and back.
-
-> That prevents the recovering of a invalid partition root under a
-> member cpuset. We could certainly remove that restriction by adding
-> additional code as well as additional tests to verify it works. I
-> haven't done that simply to avoid adding more complexity to the
-> current code.
-
-I agree this restriction can be lifted later independently when the rest
-settles.  (It's not so different from controllers disabling on the
-unified hierarchy after all.)
-
-
-Thanks,
-Michal
-
+Reviewed-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
