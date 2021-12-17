@@ -1,81 +1,134 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [PATCH] cgroup/cpuset: Make child cpusets restrict parents on v1 hierarchy
-Date: Fri, 17 Dec 2021 16:48:54 +0100
-Message-ID: <20211217154854.41409-1-mkoutny@suse.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH] cgroup/cpuset: Make child cpusets restrict parents on v1
+ hierarchy
+Date: Fri, 17 Dec 2021 11:34:09 -0500
+Message-ID: <a7c9aaa1-b813-fccc-6623-0c6409642b6b@redhat.com>
 References: <8d73dc26-74e1-d763-d897-6e03cdac3c8c@redhat.com>
+ <20211217154854.41409-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1639756152; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1639758873;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=IMAVP9J2GHVSmKC+cLlgFMSosIKR4Gu62W3/R1oimQs=;
-        b=C5fXhkyP2MnU0nq4MLVst5WF2II5sGuDOjIZgvNjdXxGfo3wB51ZGJ5VTMQxvb39n+diVK
-        qiC0kGQeCM7d8SGibFBwLzKw0gVfk7h+jHJ4HDHCgIdURV58x38TuN74p7GGKt6k30tE91
-        GVKnPNVTmtSGP3wcvwASna04ilcjkF4=
-In-Reply-To: <8d73dc26-74e1-d763-d897-6e03cdac3c8c-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=iHsgYvtM2VbxZhXYtiIDslv8uvAy3OgBfsyPMPqyKfY=;
+        b=GH1/pCU/7YRCnIUb3oBfxURxOFj1EmDUaRg82g291Hbeu2qbytcoQkrMzAyLbvpEIe4Zny
+        FK42AtouCMkG/yPG7+VeADkFOZ71+N01NLE1Z2hVCFg8JamH9eClDq/5DZ5EDRvWkbt5gp
+        nTpVU1O3zCAOM5f5W0wKxZJ6dsIUAEk=
+Content-Language: en-US
+In-Reply-To: <20211217154854.41409-1-mkoutny@suse.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, tj@kernel.org
+Cc: akpm@linux-foundation.org, cgroups@vger.kernel.org, corbet@lwn.net, frederic@kernel.org, guro@fb.com, hannes@cmpxchg.org, juri.lelli@redhat.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, lizefan.x@bytedance.com, mtosatti@redhat.com, pauld@redhat.com, peterz@infradead.org, shuah@kernel.org
 
-VGhlIGNvbW1pdCAxZjE1NjJmY2QwNGEgKCJjZ3JvdXAvY3B1c2V0OiBEb24ndCBsZXQgY2hpbGQg
-Y3B1c2V0cwpyZXN0cmljdCBwYXJlbnQgaW4gZGVmYXVsdCBoaWVyYXJjaHkiKSBpbnRlZGVkIHRv
-IHJlbGF4IHRoZSBjaGVjayBvbmx5Cm9uIHRoZSBkZWZhdWx0IGhpZXJhcmNoeSAob3IgdjIgbW9k
-ZSkgYnV0IGl0IGRyb3BwZWQgdGhlIGNoZWNrIGluIHYxCnRvby4KClRoaXMgcGF0Y2ggcmV0dXJu
-cyBhbmQgc2VwYXJhdGVzIHRoZSBsZWdhY3ktb25seSB2YWxpZGF0aW9ucyBzbyB0aGF0CnRoZXkg
-Y2FuIGJlIGNvbnNpZGVyZWQgb25seSBpbiB0aGUgdjEgbW9kZSwgd2hpY2ggc2hvdWxkIGVuZm9y
-Y2UgdGhlIG9sZApjb25zdHJhaW50cyBmb3IgdGhlIHNha2Ugb2YgY29tcGF0aWJpbGl0eS4KCkZp
-eGVzOiAxZjE1NjJmY2QwNGEgKCJjZ3JvdXAvY3B1c2V0OiBEb24ndCBsZXQgY2hpbGQgY3B1c2V0
-cyByZXN0cmljdCBwYXJlbnQgaW4gZGVmYXVsdCBoaWVyYXJjaHkiKQpTdWdnZXN0ZWQtYnk6IFdh
-aW1hbiBMb25nIDxsb25nbWFuLUgrd1hhSHhmN2FMUVQwZFpSK0FsZkFAcHVibGljLmdtYW5lLm9y
-Zz4KU2lnbmVkLW9mZi1ieTogTWljaGFsIEtvdXRuw70gPG1rb3V0bnktSUJpOVJHL2I2N2tAcHVi
-bGljLmdtYW5lLm9yZz4KLS0tCiBrZXJuZWwvY2dyb3VwL2NwdXNldC5jIHwgNTIgKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgNDAgaW5z
-ZXJ0aW9ucygrKSwgMTIgZGVsZXRpb25zKC0pCgpUaGlzIGlzIGZvcm1hdHRlZCBhcyBhIHNlcGFy
-YXRlIHBhdGNoIGZpeGluZyB0aGUgYWxyZWFkeSBxdWV1ZWQgY2hhbmdlIGluCmZvci01LjE3IGJ1
-dCBpdCBjYW4gYmUgZXZlbnR1YWxseSBzcXVhc2hlZCBpbnRvIHRoZSByZWZlcmVuY2VkIGNvbW1p
-dCBBRkFJQUMuCgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9jcHVzZXQuYyBiL2tlcm5lbC9j
-Z3JvdXAvY3B1c2V0LmMKaW5kZXggMGRkN2Q4NTNlZDE3Li5jZTY5MjlkZGMwYjAgMTAwNjQ0Ci0t
-LSBhL2tlcm5lbC9jZ3JvdXAvY3B1c2V0LmMKKysrIGIva2VybmVsL2Nncm91cC9jcHVzZXQuYwpA
-QCAtNTkwLDYgKzU5MCwzNSBAQCBzdGF0aWMgaW5saW5lIHZvaWQgZnJlZV9jcHVzZXQoc3RydWN0
-IGNwdXNldCAqY3MpCiAJa2ZyZWUoY3MpOwogfQogCisvKgorICogdmFsaWRhdGVfY2hhbmdlX2xl
-Z2FjeSgpIC0gVmFsaWRhdGUgY29uZGl0aW9ucyBzcGVjaWZpYyB0byBsZWdhY3kgKHYxKQorICog
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgYmVoYXZpb3IuCisgKi8KK3N0YXRpYyBpbnQgdmFs
-aWRhdGVfY2hhbmdlX2xlZ2FjeShzdHJ1Y3QgY3B1c2V0ICpjdXIsIHN0cnVjdCBjcHVzZXQgKnRy
-aWFsKQoreworCXN0cnVjdCBjZ3JvdXBfc3Vic3lzX3N0YXRlICpjc3M7CisJc3RydWN0IGNwdXNl
-dCAqYywgKnBhcjsKKwlpbnQgcmV0OworCisJV0FSTl9PTl9PTkNFKCFyY3VfcmVhZF9sb2NrX2hl
-bGQoKSk7CisKKwkvKiBFYWNoIG9mIG91ciBjaGlsZCBjcHVzZXRzIG11c3QgYmUgYSBzdWJzZXQg
-b2YgdXMgKi8KKwlyZXQgPSAtRUJVU1k7CisJY3B1c2V0X2Zvcl9lYWNoX2NoaWxkKGMsIGNzcywg
-Y3VyKQorCQlpZiAoIWlzX2NwdXNldF9zdWJzZXQoYywgdHJpYWwpKQorCQkJZ290byBvdXQ7CisK
-KwkvKiBPbiBsZWdhY3kgaGllcmFyY2h5LCB3ZSBtdXN0IGJlIGEgc3Vic2V0IG9mIG91ciBwYXJl
-bnQgY3B1c2V0LiAqLworCXJldCA9IC1FQUNDRVM7CisJcGFyID0gcGFyZW50X2NzKGN1cik7CisJ
-aWYgKHBhciAmJiAhaXNfY3B1c2V0X3N1YnNldCh0cmlhbCwgcGFyKSkKKwkJZ290byBvdXQ7CisK
-KwlyZXQgPSAwOworb3V0OgorCXJldHVybiByZXQ7Cit9CisKIC8qCiAgKiB2YWxpZGF0ZV9jaGFu
-Z2UoKSAtIFVzZWQgdG8gdmFsaWRhdGUgdGhhdCBhbnkgcHJvcG9zZWQgY3B1c2V0IGNoYW5nZQog
-ICoJCSAgICAgICBmb2xsb3dzIHRoZSBzdHJ1Y3R1cmFsIHJ1bGVzIGZvciBjcHVzZXRzLgpAQCAt
-NjE0LDIwICs2NDMsMjEgQEAgc3RhdGljIGludCB2YWxpZGF0ZV9jaGFuZ2Uoc3RydWN0IGNwdXNl
-dCAqY3VyLCBzdHJ1Y3QgY3B1c2V0ICp0cmlhbCkKIHsKIAlzdHJ1Y3QgY2dyb3VwX3N1YnN5c19z
-dGF0ZSAqY3NzOwogCXN0cnVjdCBjcHVzZXQgKmMsICpwYXI7Ci0JaW50IHJldDsKLQotCS8qIFRo
-ZSBjaGVja3MgZG9uJ3QgYXBwbHkgdG8gcm9vdCBjcHVzZXQgKi8KLQlpZiAoY3VyID09ICZ0b3Bf
-Y3B1c2V0KQotCQlyZXR1cm4gMDsKKwlpbnQgcmV0ID0gMDsKIAogCXJjdV9yZWFkX2xvY2soKTsK
-LQlwYXIgPSBwYXJlbnRfY3MoY3VyKTsKIAotCS8qIE9uIGxlZ2FjeSBoaWVyYXJjaHksIHdlIG11
-c3QgYmUgYSBzdWJzZXQgb2Ygb3VyIHBhcmVudCBjcHVzZXQuICovCi0JcmV0ID0gLUVBQ0NFUzsK
-LQlpZiAoIWlzX2luX3YyX21vZGUoKSAmJiAhaXNfY3B1c2V0X3N1YnNldCh0cmlhbCwgcGFyKSkK
-KwlpZiAoIWlzX2luX3YyX21vZGUoKSkKKwkJcmV0ID0gdmFsaWRhdGVfY2hhbmdlX2xlZ2FjeShj
-dXIsIHRyaWFsKTsKKwlpZiAocmV0KQorCQlnb3RvIG91dDsKKworCS8qIFJlbWFpbmluZyBjaGVj
-a3MgZG9uJ3QgYXBwbHkgdG8gcm9vdCBjcHVzZXQgKi8KKwlpZiAoY3VyID09ICZ0b3BfY3B1c2V0
-KQogCQlnb3RvIG91dDsKIAorCXBhciA9IHBhcmVudF9jcyhjdXIpOworCiAJLyoKIAkgKiBJZiBl
-aXRoZXIgSSBvciBzb21lIHNpYmxpbmcgKCE9IG1lKSBpcyBleGNsdXNpdmUsIHdlIGNhbid0CiAJ
-ICogb3ZlcmxhcApAQCAtMTE3NSw5ICsxMjA1LDcgQEAgZW51bSBzdWJwYXJ0c19jbWQgewogICoK
-ICAqIEJlY2F1c2Ugb2YgdGhlIGltcGxpY2l0IGNwdSBleGNsdXNpdmUgbmF0dXJlIG9mIGEgcGFy
-dGl0aW9uIHJvb3QsCiAgKiBjcHVtYXNrIGNoYW5nZXMgdGhhdCB2aW9sYXRlcyB0aGUgY3B1IGV4
-Y2x1c2l2aXR5IHJ1bGUgd2lsbCBub3QgYmUKLSAqIHBlcm1pdHRlZCB3aGVuIGNoZWNrZWQgYnkg
-dmFsaWRhdGVfY2hhbmdlKCkuIFRoZSB2YWxpZGF0ZV9jaGFuZ2UoKQotICogZnVuY3Rpb24gd2ls
-bCBhbHNvIHByZXZlbnQgYW55IGNoYW5nZXMgdG8gdGhlIGNwdSBsaXN0IGlmIGl0IGlzIG5vdAot
-ICogYSBzdXBlcnNldCBvZiBjaGlsZHJlbidzIGNwdSBsaXN0cy4KKyAqIHBlcm1pdHRlZCB3aGVu
-IGNoZWNrZWQgYnkgdmFsaWRhdGVfY2hhbmdlKCkuCiAgKi8KIHN0YXRpYyBpbnQgdXBkYXRlX3Bh
-cmVudF9zdWJwYXJ0c19jcHVtYXNrKHN0cnVjdCBjcHVzZXQgKmNwdXNldCwgaW50IGNtZCwKIAkJ
-CQkJICBzdHJ1Y3QgY3B1bWFzayAqbmV3bWFzaywKLS0gCjIuMzMuMQoK
+On 12/17/21 10:48, Michal Koutný wrote:
+> The commit 1f1562fcd04a ("cgroup/cpuset: Don't let child cpusets
+> restrict parent in default hierarchy") inteded to relax the check only
+> on the default hierarchy (or v2 mode) but it dropped the check in v1
+> too.
+>
+> This patch returns and separates the legacy-only validations so that
+> they can be considered only in the v1 mode, which should enforce the old
+> constraints for the sake of compatibility.
+>
+> Fixes: 1f1562fcd04a ("cgroup/cpuset: Don't let child cpusets restrict parent in default hierarchy")
+> Suggested-by: Waiman Long <longman@redhat.com>
+> Signed-off-by: Michal Koutný <mkoutny@suse.com>
+> ---
+>   kernel/cgroup/cpuset.c | 52 ++++++++++++++++++++++++++++++++----------
+>   1 file changed, 40 insertions(+), 12 deletions(-)
+>
+> This is formatted as a separate patch fixing the already queued change in
+> for-5.17 but it can be eventually squashed into the referenced commit AFAIAC.
+>
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 0dd7d853ed17..ce6929ddc0b0 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -590,6 +590,35 @@ static inline void free_cpuset(struct cpuset *cs)
+>   	kfree(cs);
+>   }
+>   
+> +/*
+> + * validate_change_legacy() - Validate conditions specific to legacy (v1)
+> + *                            behavior.
+> + */
+> +static int validate_change_legacy(struct cpuset *cur, struct cpuset *trial)
+> +{
+> +	struct cgroup_subsys_state *css;
+> +	struct cpuset *c, *par;
+> +	int ret;
+> +
+> +	WARN_ON_ONCE(!rcu_read_lock_held());
+> +
+> +	/* Each of our child cpusets must be a subset of us */
+> +	ret = -EBUSY;
+> +	cpuset_for_each_child(c, css, cur)
+> +		if (!is_cpuset_subset(c, trial))
+> +			goto out;
+> +
+> +	/* On legacy hierarchy, we must be a subset of our parent cpuset. */
+> +	ret = -EACCES;
+> +	par = parent_cs(cur);
+> +	if (par && !is_cpuset_subset(trial, par))
+> +		goto out;
+> +
+> +	ret = 0;
+> +out:
+> +	return ret;
+> +}
+> +
+>   /*
+>    * validate_change() - Used to validate that any proposed cpuset change
+>    *		       follows the structural rules for cpusets.
+> @@ -614,20 +643,21 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+>   {
+>   	struct cgroup_subsys_state *css;
+>   	struct cpuset *c, *par;
+> -	int ret;
+> -
+> -	/* The checks don't apply to root cpuset */
+> -	if (cur == &top_cpuset)
+> -		return 0;
+> +	int ret = 0;
+>   
+>   	rcu_read_lock();
+> -	par = parent_cs(cur);
+>   
+> -	/* On legacy hierarchy, we must be a subset of our parent cpuset. */
+> -	ret = -EACCES;
+> -	if (!is_in_v2_mode() && !is_cpuset_subset(trial, par))
+> +	if (!is_in_v2_mode())
+> +		ret = validate_change_legacy(cur, trial);
+> +	if (ret)
+> +		goto out;
+> +
+> +	/* Remaining checks don't apply to root cpuset */
+> +	if (cur == &top_cpuset)
+>   		goto out;
+>   
+> +	par = parent_cs(cur);
+> +
+>   	/*
+>   	 * If either I or some sibling (!= me) is exclusive, we can't
+>   	 * overlap
+> @@ -1175,9 +1205,7 @@ enum subparts_cmd {
+>    *
+>    * Because of the implicit cpu exclusive nature of a partition root,
+>    * cpumask changes that violates the cpu exclusivity rule will not be
+> - * permitted when checked by validate_change(). The validate_change()
+> - * function will also prevent any changes to the cpu list if it is not
+> - * a superset of children's cpu lists.
+> + * permitted when checked by validate_change().
+>    */
+>   static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
+>   					  struct cpumask *newmask,
+
+Thanks for addressing this issue.
+
+Reviewed-by: Waiman Long <longman@redhat.com>
+
