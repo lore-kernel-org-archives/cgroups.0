@@ -1,134 +1,46 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH] cgroup/cpuset: Make child cpusets restrict parents on v1
- hierarchy
-Date: Fri, 17 Dec 2021 11:34:09 -0500
-Message-ID: <a7c9aaa1-b813-fccc-6623-0c6409642b6b@redhat.com>
-References: <8d73dc26-74e1-d763-d897-6e03cdac3c8c@redhat.com>
- <20211217154854.41409-1-mkoutny@suse.com>
+From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Subject: Re: [PATCH-next v3] mm/memcg: Properly handle memcg_stock access for
+ PREEMPT_RT
+Date: Fri, 17 Dec 2021 19:21:37 +0100
+Message-ID: <YbzVMURu2b2/++yi@linutronix.de>
+References: <20211214144412.447035-1-longman@redhat.com>
+ <Ybx3ubNFfGpCqhn0@linutronix.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1639758873;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1639765299;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=iHsgYvtM2VbxZhXYtiIDslv8uvAy3OgBfsyPMPqyKfY=;
-        b=GH1/pCU/7YRCnIUb3oBfxURxOFj1EmDUaRg82g291Hbeu2qbytcoQkrMzAyLbvpEIe4Zny
-        FK42AtouCMkG/yPG7+VeADkFOZ71+N01NLE1Z2hVCFg8JamH9eClDq/5DZ5EDRvWkbt5gp
-        nTpVU1O3zCAOM5f5W0wKxZJ6dsIUAEk=
-Content-Language: en-US
-In-Reply-To: <20211217154854.41409-1-mkoutny@suse.com>
+        bh=fm8Ji21c2eiKP0yW1lKrfGVuKLVJyDvJbeQwn/ZsYvM=;
+        b=YqrU3fHSQRfaFxUWraZUi980r3t8h7vYSYTYzSR3s0gWO5X9yKrM2rWbqwY39lGVyl0lSX
+        ONjIGeqwz29rc6M5TyE4S/cLoCfB9Dckz1DMBhjwSy0asb+U2J3j6IYEjiK4jOfYnQzpwA
+        Qi9+Idkz9wWSoDviGb6NrcMSxjOkBxKODW47A99mUb+LDX1V+mNK+rg9+7m5XI/FWfo/ak
+        29Qzc4S7++v3EotbBhJ1xtorSGNzhcAsKrH9ISvrSYT+I58TA4csXrlM3Ggtaqx5WK6/ZV
+        4o7mi8wdT3FZFilT5Znj32LIkdmV+NKQ28BWl9WBQfaDNg1qFHolx2kunWfE2Q==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1639765299;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=fm8Ji21c2eiKP0yW1lKrfGVuKLVJyDvJbeQwn/ZsYvM=;
+        b=9Tm2o/FLsPj4spSSiHLUbXy/DCYZ3PjoY5s5g+ZQy2QGHF7KQk9kTv/yEF/a//9Ryn4TzC
+        sA45eR7TuPsNTiDQ==
+Content-Disposition: inline
+In-Reply-To: <Ybx3ubNFfGpCqhn0-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, tj@kernel.org
-Cc: akpm@linux-foundation.org, cgroups@vger.kernel.org, corbet@lwn.net, frederic@kernel.org, guro@fb.com, hannes@cmpxchg.org, juri.lelli@redhat.com, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, lizefan.x@bytedance.com, mtosatti@redhat.com, pauld@redhat.com, peterz@infradead.org, shuah@kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
-On 12/17/21 10:48, Michal Koutný wrote:
-> The commit 1f1562fcd04a ("cgroup/cpuset: Don't let child cpusets
-> restrict parent in default hierarchy") inteded to relax the check only
-> on the default hierarchy (or v2 mode) but it dropped the check in v1
-> too.
->
-> This patch returns and separates the legacy-only validations so that
-> they can be considered only in the v1 mode, which should enforce the old
-> constraints for the sake of compatibility.
->
-> Fixes: 1f1562fcd04a ("cgroup/cpuset: Don't let child cpusets restrict parent in default hierarchy")
-> Suggested-by: Waiman Long <longman@redhat.com>
-> Signed-off-by: Michal Koutný <mkoutny@suse.com>
-> ---
->   kernel/cgroup/cpuset.c | 52 ++++++++++++++++++++++++++++++++----------
->   1 file changed, 40 insertions(+), 12 deletions(-)
->
-> This is formatted as a separate patch fixing the already queued change in
-> for-5.17 but it can be eventually squashed into the referenced commit AFAIAC.
->
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 0dd7d853ed17..ce6929ddc0b0 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -590,6 +590,35 @@ static inline void free_cpuset(struct cpuset *cs)
->   	kfree(cs);
->   }
->   
-> +/*
-> + * validate_change_legacy() - Validate conditions specific to legacy (v1)
-> + *                            behavior.
-> + */
-> +static int validate_change_legacy(struct cpuset *cur, struct cpuset *trial)
-> +{
-> +	struct cgroup_subsys_state *css;
-> +	struct cpuset *c, *par;
-> +	int ret;
-> +
-> +	WARN_ON_ONCE(!rcu_read_lock_held());
-> +
-> +	/* Each of our child cpusets must be a subset of us */
-> +	ret = -EBUSY;
-> +	cpuset_for_each_child(c, css, cur)
-> +		if (!is_cpuset_subset(c, trial))
-> +			goto out;
-> +
-> +	/* On legacy hierarchy, we must be a subset of our parent cpuset. */
-> +	ret = -EACCES;
-> +	par = parent_cs(cur);
-> +	if (par && !is_cpuset_subset(trial, par))
-> +		goto out;
-> +
-> +	ret = 0;
-> +out:
-> +	return ret;
-> +}
-> +
->   /*
->    * validate_change() - Used to validate that any proposed cpuset change
->    *		       follows the structural rules for cpusets.
-> @@ -614,20 +643,21 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
->   {
->   	struct cgroup_subsys_state *css;
->   	struct cpuset *c, *par;
-> -	int ret;
-> -
-> -	/* The checks don't apply to root cpuset */
-> -	if (cur == &top_cpuset)
-> -		return 0;
-> +	int ret = 0;
->   
->   	rcu_read_lock();
-> -	par = parent_cs(cur);
->   
-> -	/* On legacy hierarchy, we must be a subset of our parent cpuset. */
-> -	ret = -EACCES;
-> -	if (!is_in_v2_mode() && !is_cpuset_subset(trial, par))
-> +	if (!is_in_v2_mode())
-> +		ret = validate_change_legacy(cur, trial);
-> +	if (ret)
-> +		goto out;
-> +
-> +	/* Remaining checks don't apply to root cpuset */
-> +	if (cur == &top_cpuset)
->   		goto out;
->   
-> +	par = parent_cs(cur);
-> +
->   	/*
->   	 * If either I or some sibling (!= me) is exclusive, we can't
->   	 * overlap
-> @@ -1175,9 +1205,7 @@ enum subparts_cmd {
->    *
->    * Because of the implicit cpu exclusive nature of a partition root,
->    * cpumask changes that violates the cpu exclusivity rule will not be
-> - * permitted when checked by validate_change(). The validate_change()
-> - * function will also prevent any changes to the cpu list if it is not
-> - * a superset of children's cpu lists.
-> + * permitted when checked by validate_change().
->    */
->   static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
->   					  struct cpumask *newmask,
+On 2021-12-17 12:42:51 [+0100], To Waiman Long wrote:
+> On 2021-12-14 09:44:12 [-0500], Waiman Long wrote:
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -2096,7 +2096,12 @@ struct obj_stock {
 
-Thanks for addressing this issue.
+so I made something based on this. Let me clean this up and test it
+first. So it is just a heads up :)
 
-Reviewed-by: Waiman Long <longman@redhat.com>
-
+Sebastian
