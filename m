@@ -1,108 +1,81 @@
-From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: Re: [PATCH-next v3] mm/memcg: Properly handle memcg_stock access for
- PREEMPT_RT
-Date: Fri, 17 Dec 2021 12:42:49 +0100
-Message-ID: <Ybx3ubNFfGpCqhn0@linutronix.de>
-References: <20211214144412.447035-1-longman@redhat.com>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH] cgroup/cpuset: Make child cpusets restrict parents on v1 hierarchy
+Date: Fri, 17 Dec 2021 16:48:54 +0100
+Message-ID: <20211217154854.41409-1-mkoutny@suse.com>
+References: <8d73dc26-74e1-d763-d897-6e03cdac3c8c@redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1639741371;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1639756152; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=3/ancgIFgkXeO3NDEPeVGpgn07wkYNrxt0m0tDBAo20=;
-        b=r9nEpz+wZp4vfF/Gu2Vs1J8cQGszY5GTzaCwHMLoUcdK3QhP58IZzWaQFpOl+Ez/g+yCDV
-        eL/PwjSebD3D9tVO0d90NcbkeO5fuNs7862UwJMTdZAWnjZ8R8qQqHzTkzkKdDp7zqiXIq
-        rLLI/ShKnpmtSAlFha/c+luhZDNoXDSsst+e4bBBauovDVvfRAqXQ1F4R6aakFAcvHt7Ow
-        EGjtvUzpTu17fPvqlkxE68I18P3FNsJRsu4ZW6Fk7eu90NOJfYi5wnKF+daB8+NXUk/Wvo
-        O/f7RsowfsQxUmnbG3+uzA/zWnxCTJcaqyg339qiPsuTRQP1+Ly3bLAMLsY/OQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1639741371;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=3/ancgIFgkXeO3NDEPeVGpgn07wkYNrxt0m0tDBAo20=;
-        b=ExKsbpBJPazNTYPG4oRZ2RNYzMs9Rfo2Vd/yrEk6XGqBqAS5LzFrUd0qDG1XzlNZGMUfFQ
-        L/wNcK/zVkl+fJAQ==
-Content-Disposition: inline
-In-Reply-To: <20211214144412.447035-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=IMAVP9J2GHVSmKC+cLlgFMSosIKR4Gu62W3/R1oimQs=;
+        b=C5fXhkyP2MnU0nq4MLVst5WF2II5sGuDOjIZgvNjdXxGfo3wB51ZGJ5VTMQxvb39n+diVK
+        qiC0kGQeCM7d8SGibFBwLzKw0gVfk7h+jHJ4HDHCgIdURV58x38TuN74p7GGKt6k30tE91
+        GVKnPNVTmtSGP3wcvwASna04ilcjkF4=
+In-Reply-To: <8d73dc26-74e1-d763-d897-6e03cdac3c8c-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Content-Type: text/plain; charset="macroman"
+To: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On 2021-12-14 09:44:12 [-0500], Waiman Long wrote:
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2096,7 +2096,12 @@ struct obj_stock {
->  #endif
->  };
->  
-> +/*
-> + * The local_lock protects the whole memcg_stock_pcp structure including
-> + * the embedded obj_stock structures.
-> + */
->  struct memcg_stock_pcp {
-> +	local_lock_t lock;
->  	struct mem_cgroup *cached; /* this never be root cgroup */
->  	unsigned int nr_pages;
->  	struct obj_stock task_obj;
-> @@ -2145,7 +2150,7 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
->  	if (nr_pages > MEMCG_CHARGE_BATCH)
->  		return ret;
->  
-> -	local_irq_save(flags);
-> +	local_lock_irqsave(&memcg_stock.lock, flags);
-
-This still does not explain why the lock is acquired here where it
-appears to be unrelated to memcg_stock.lock.
-
->  
->  	stock = this_cpu_ptr(&memcg_stock);
->  	if (memcg == stock->cached && stock->nr_pages >= nr_pages) {
-> @@ -2779,29 +2784,34 @@ static struct mem_cgroup *get_mem_cgroup_from_objcg(struct obj_cgroup *objcg)
->   * which is cheap in non-preempt kernel. The interrupt context object stock
->   * can only be accessed after disabling interrupt. User context code can
->   * access interrupt object stock, but not vice versa.
-> + *
-> + * This task and interrupt context optimization is disabled for PREEMPT_RT
-> + * as there is no performance gain in this case and changes will be made to
-> + * irq_obj only.
-> + *
-> + * For non-PREEMPT_RT, we are not replacing preempt_disable() by local_lock()
-> + * as nesting of task_obj and irq_obj are allowed which may cause lockdep
-> + * splat if local_lock() is used. Using separate local locks will complicate
-> + * the interaction between obj_stock and the broader memcg_stock object.
->   */
->  static inline struct obj_stock *get_obj_stock(unsigned long *pflags)
->  {
-> -	struct memcg_stock_pcp *stock;
-> -
-> -	if (likely(in_task())) {
-> +	if (likely(in_task()) && !IS_ENABLED(CONFIG_PREEMPT_RT)) {
->  		*pflags = 0UL;
->  		preempt_disable();
-> -		stock = this_cpu_ptr(&memcg_stock);
-> -		return &stock->task_obj;
-> +		return this_cpu_ptr(&memcg_stock.task_obj);
-
-Do we need to keep the memcg_stock.task_obj for !RT?
-I'm not really convinced that disabling either preemption or interrupts
-is so much better compared to actual locking locking with lockdep
-annotation. Looking at the history, I'm also impressed by that fact that
-disabling/ enabling interrupts is *so* expensive that all this is
-actually worth it.
-
->  	}
->  
-> -	local_irq_save(*pflags);
-> -	stock = this_cpu_ptr(&memcg_stock);
-> -	return &stock->irq_obj;
-> +	local_lock_irqsave(&memcg_stock.lock, *pflags);
-> +	return this_cpu_ptr(&memcg_stock.irq_obj);
->  }
->  
-
-Sebastian
+VGhlIGNvbW1pdCAxZjE1NjJmY2QwNGEgKCJjZ3JvdXAvY3B1c2V0OiBEb24ndCBsZXQgY2hpbGQg
+Y3B1c2V0cwpyZXN0cmljdCBwYXJlbnQgaW4gZGVmYXVsdCBoaWVyYXJjaHkiKSBpbnRlZGVkIHRv
+IHJlbGF4IHRoZSBjaGVjayBvbmx5Cm9uIHRoZSBkZWZhdWx0IGhpZXJhcmNoeSAob3IgdjIgbW9k
+ZSkgYnV0IGl0IGRyb3BwZWQgdGhlIGNoZWNrIGluIHYxCnRvby4KClRoaXMgcGF0Y2ggcmV0dXJu
+cyBhbmQgc2VwYXJhdGVzIHRoZSBsZWdhY3ktb25seSB2YWxpZGF0aW9ucyBzbyB0aGF0CnRoZXkg
+Y2FuIGJlIGNvbnNpZGVyZWQgb25seSBpbiB0aGUgdjEgbW9kZSwgd2hpY2ggc2hvdWxkIGVuZm9y
+Y2UgdGhlIG9sZApjb25zdHJhaW50cyBmb3IgdGhlIHNha2Ugb2YgY29tcGF0aWJpbGl0eS4KCkZp
+eGVzOiAxZjE1NjJmY2QwNGEgKCJjZ3JvdXAvY3B1c2V0OiBEb24ndCBsZXQgY2hpbGQgY3B1c2V0
+cyByZXN0cmljdCBwYXJlbnQgaW4gZGVmYXVsdCBoaWVyYXJjaHkiKQpTdWdnZXN0ZWQtYnk6IFdh
+aW1hbiBMb25nIDxsb25nbWFuLUgrd1hhSHhmN2FMUVQwZFpSK0FsZkFAcHVibGljLmdtYW5lLm9y
+Zz4KU2lnbmVkLW9mZi1ieTogTWljaGFsIEtvdXRuw70gPG1rb3V0bnktSUJpOVJHL2I2N2tAcHVi
+bGljLmdtYW5lLm9yZz4KLS0tCiBrZXJuZWwvY2dyb3VwL2NwdXNldC5jIHwgNTIgKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgNDAgaW5z
+ZXJ0aW9ucygrKSwgMTIgZGVsZXRpb25zKC0pCgpUaGlzIGlzIGZvcm1hdHRlZCBhcyBhIHNlcGFy
+YXRlIHBhdGNoIGZpeGluZyB0aGUgYWxyZWFkeSBxdWV1ZWQgY2hhbmdlIGluCmZvci01LjE3IGJ1
+dCBpdCBjYW4gYmUgZXZlbnR1YWxseSBzcXVhc2hlZCBpbnRvIHRoZSByZWZlcmVuY2VkIGNvbW1p
+dCBBRkFJQUMuCgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9jcHVzZXQuYyBiL2tlcm5lbC9j
+Z3JvdXAvY3B1c2V0LmMKaW5kZXggMGRkN2Q4NTNlZDE3Li5jZTY5MjlkZGMwYjAgMTAwNjQ0Ci0t
+LSBhL2tlcm5lbC9jZ3JvdXAvY3B1c2V0LmMKKysrIGIva2VybmVsL2Nncm91cC9jcHVzZXQuYwpA
+QCAtNTkwLDYgKzU5MCwzNSBAQCBzdGF0aWMgaW5saW5lIHZvaWQgZnJlZV9jcHVzZXQoc3RydWN0
+IGNwdXNldCAqY3MpCiAJa2ZyZWUoY3MpOwogfQogCisvKgorICogdmFsaWRhdGVfY2hhbmdlX2xl
+Z2FjeSgpIC0gVmFsaWRhdGUgY29uZGl0aW9ucyBzcGVjaWZpYyB0byBsZWdhY3kgKHYxKQorICog
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgYmVoYXZpb3IuCisgKi8KK3N0YXRpYyBpbnQgdmFs
+aWRhdGVfY2hhbmdlX2xlZ2FjeShzdHJ1Y3QgY3B1c2V0ICpjdXIsIHN0cnVjdCBjcHVzZXQgKnRy
+aWFsKQoreworCXN0cnVjdCBjZ3JvdXBfc3Vic3lzX3N0YXRlICpjc3M7CisJc3RydWN0IGNwdXNl
+dCAqYywgKnBhcjsKKwlpbnQgcmV0OworCisJV0FSTl9PTl9PTkNFKCFyY3VfcmVhZF9sb2NrX2hl
+bGQoKSk7CisKKwkvKiBFYWNoIG9mIG91ciBjaGlsZCBjcHVzZXRzIG11c3QgYmUgYSBzdWJzZXQg
+b2YgdXMgKi8KKwlyZXQgPSAtRUJVU1k7CisJY3B1c2V0X2Zvcl9lYWNoX2NoaWxkKGMsIGNzcywg
+Y3VyKQorCQlpZiAoIWlzX2NwdXNldF9zdWJzZXQoYywgdHJpYWwpKQorCQkJZ290byBvdXQ7CisK
+KwkvKiBPbiBsZWdhY3kgaGllcmFyY2h5LCB3ZSBtdXN0IGJlIGEgc3Vic2V0IG9mIG91ciBwYXJl
+bnQgY3B1c2V0LiAqLworCXJldCA9IC1FQUNDRVM7CisJcGFyID0gcGFyZW50X2NzKGN1cik7CisJ
+aWYgKHBhciAmJiAhaXNfY3B1c2V0X3N1YnNldCh0cmlhbCwgcGFyKSkKKwkJZ290byBvdXQ7CisK
+KwlyZXQgPSAwOworb3V0OgorCXJldHVybiByZXQ7Cit9CisKIC8qCiAgKiB2YWxpZGF0ZV9jaGFu
+Z2UoKSAtIFVzZWQgdG8gdmFsaWRhdGUgdGhhdCBhbnkgcHJvcG9zZWQgY3B1c2V0IGNoYW5nZQog
+ICoJCSAgICAgICBmb2xsb3dzIHRoZSBzdHJ1Y3R1cmFsIHJ1bGVzIGZvciBjcHVzZXRzLgpAQCAt
+NjE0LDIwICs2NDMsMjEgQEAgc3RhdGljIGludCB2YWxpZGF0ZV9jaGFuZ2Uoc3RydWN0IGNwdXNl
+dCAqY3VyLCBzdHJ1Y3QgY3B1c2V0ICp0cmlhbCkKIHsKIAlzdHJ1Y3QgY2dyb3VwX3N1YnN5c19z
+dGF0ZSAqY3NzOwogCXN0cnVjdCBjcHVzZXQgKmMsICpwYXI7Ci0JaW50IHJldDsKLQotCS8qIFRo
+ZSBjaGVja3MgZG9uJ3QgYXBwbHkgdG8gcm9vdCBjcHVzZXQgKi8KLQlpZiAoY3VyID09ICZ0b3Bf
+Y3B1c2V0KQotCQlyZXR1cm4gMDsKKwlpbnQgcmV0ID0gMDsKIAogCXJjdV9yZWFkX2xvY2soKTsK
+LQlwYXIgPSBwYXJlbnRfY3MoY3VyKTsKIAotCS8qIE9uIGxlZ2FjeSBoaWVyYXJjaHksIHdlIG11
+c3QgYmUgYSBzdWJzZXQgb2Ygb3VyIHBhcmVudCBjcHVzZXQuICovCi0JcmV0ID0gLUVBQ0NFUzsK
+LQlpZiAoIWlzX2luX3YyX21vZGUoKSAmJiAhaXNfY3B1c2V0X3N1YnNldCh0cmlhbCwgcGFyKSkK
+KwlpZiAoIWlzX2luX3YyX21vZGUoKSkKKwkJcmV0ID0gdmFsaWRhdGVfY2hhbmdlX2xlZ2FjeShj
+dXIsIHRyaWFsKTsKKwlpZiAocmV0KQorCQlnb3RvIG91dDsKKworCS8qIFJlbWFpbmluZyBjaGVj
+a3MgZG9uJ3QgYXBwbHkgdG8gcm9vdCBjcHVzZXQgKi8KKwlpZiAoY3VyID09ICZ0b3BfY3B1c2V0
+KQogCQlnb3RvIG91dDsKIAorCXBhciA9IHBhcmVudF9jcyhjdXIpOworCiAJLyoKIAkgKiBJZiBl
+aXRoZXIgSSBvciBzb21lIHNpYmxpbmcgKCE9IG1lKSBpcyBleGNsdXNpdmUsIHdlIGNhbid0CiAJ
+ICogb3ZlcmxhcApAQCAtMTE3NSw5ICsxMjA1LDcgQEAgZW51bSBzdWJwYXJ0c19jbWQgewogICoK
+ICAqIEJlY2F1c2Ugb2YgdGhlIGltcGxpY2l0IGNwdSBleGNsdXNpdmUgbmF0dXJlIG9mIGEgcGFy
+dGl0aW9uIHJvb3QsCiAgKiBjcHVtYXNrIGNoYW5nZXMgdGhhdCB2aW9sYXRlcyB0aGUgY3B1IGV4
+Y2x1c2l2aXR5IHJ1bGUgd2lsbCBub3QgYmUKLSAqIHBlcm1pdHRlZCB3aGVuIGNoZWNrZWQgYnkg
+dmFsaWRhdGVfY2hhbmdlKCkuIFRoZSB2YWxpZGF0ZV9jaGFuZ2UoKQotICogZnVuY3Rpb24gd2ls
+bCBhbHNvIHByZXZlbnQgYW55IGNoYW5nZXMgdG8gdGhlIGNwdSBsaXN0IGlmIGl0IGlzIG5vdAot
+ICogYSBzdXBlcnNldCBvZiBjaGlsZHJlbidzIGNwdSBsaXN0cy4KKyAqIHBlcm1pdHRlZCB3aGVu
+IGNoZWNrZWQgYnkgdmFsaWRhdGVfY2hhbmdlKCkuCiAgKi8KIHN0YXRpYyBpbnQgdXBkYXRlX3Bh
+cmVudF9zdWJwYXJ0c19jcHVtYXNrKHN0cnVjdCBjcHVzZXQgKmNwdXNldCwgaW50IGNtZCwKIAkJ
+CQkJICBzdHJ1Y3QgY3B1bWFzayAqbmV3bWFzaywKLS0gCjIuMzMuMQoK
