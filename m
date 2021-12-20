@@ -1,94 +1,129 @@
 From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v2 23/33] mm/memcg: Convert slab objcgs from struct page
- to struct slab
-Date: Tue, 21 Dec 2021 00:31:16 +0100
-Message-ID: <9fb797dd-38ca-33f6-68ff-e425a9f5174c@suse.cz>
+Subject: Re: [PATCH v2 00/33] Separate struct slab from struct page
+Date: Tue, 21 Dec 2021 00:58:14 +0100
+Message-ID: <38976607-b9f9-1bce-9db9-60c23da65d2e@suse.cz>
 References: <20211201181510.18784-1-vbabka@suse.cz>
- <20211201181510.18784-24-vbabka@suse.cz> <Ybite9s1TS7cS67J@cmpxchg.org>
+ <4c3dfdfa-2e19-a9a7-7945-3d75bc87ca05@suse.cz>
+ <YbtUmi5kkhmlXEB1@ip-172-31-30-232.ap-northeast-1.compute.internal>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1640043077; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1640044695; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=8YhXpEhe+pCquDJVFSz7ORu16T7uTcxjpho57hipfy4=;
-        b=uoS0ALg2Zu7gjQuqyqBfwI4dUP2tAwMoVSRfcOn4QUjCGwWTPwP4XnRWwp1F37H8cpf1Dk
-        aVrEHjwPejR1KwlZRCJ7vLA/jIdfwyAsdW4ou28ps2Ohmkc+Oewz23wighFNonTN7JeNiW
-        CaClj6/2f2GDTcNyeZZTziKpX/Uq3rA=
+        bh=NJEE0BI+qmu1Y2XQPzW4LyX87NylVjyFwU3a62yJMoM=;
+        b=wJXxRniAryvtExwgE9oymzn2Fa+5ZF0CYgPiteubNJHY+MADFnIidh13cVDvzvhXwpwolX
+        FhhJAY1kWsxf0TZ6UC1tXKB8DjkFqHP8d8PYYxMXv/Vwc8jdNnYUlQcxCD96S/mn6YMoPN
+        Ahvvc6+YeJG+4OUNMaNkVg3zzJ5KNpI=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1640043077;
+        s=susede2_ed25519; t=1640044695;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=8YhXpEhe+pCquDJVFSz7ORu16T7uTcxjpho57hipfy4=;
-        b=dIY5PvzwWBkvlldg+X0mTZyZ1m0WXluQUsW/Mw0xG+gMcweUWu5DBV4rLKk1UiYhoROtVd
-        TiJTRYFCNSbgP7BA==
+        bh=NJEE0BI+qmu1Y2XQPzW4LyX87NylVjyFwU3a62yJMoM=;
+        b=J6OX02taWYPyGUcQXMthSq6c0YbIRbJKFXTo2zhLxG/xZx+d5n7EYwmO2bYwthPVUxnFPr
+        Jn2VvHjpbKV6s+Cg==
 Content-Language: en-US
-In-Reply-To: <Ybite9s1TS7cS67J-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <YbtUmi5kkhmlXEB1-UAkeum2rnor1owfsx/q8xBTA2CDgPq3U3JN/6IHv09UQhXZLsr/E6M+yXz+rYK7V@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrey Konovalov <andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes@cmpxchg>
 
-On 12/14/21 15:43, Johannes Weiner wrote:
-> On Wed, Dec 01, 2021 at 07:15:00PM +0100, Vlastimil Babka wrote:
->> page->memcg_data is used with MEMCG_DATA_OBJCGS flag only for slab pages
->> so convert all the related infrastructure to struct slab.
+On 12/16/21 16:00, Hyeonggon Yoo wrote:
+> On Tue, Dec 14, 2021 at 01:57:22PM +0100, Vlastimil Babka wrote:
+>> On 12/1/21 19:14, Vlastimil Babka wrote:
+>> > Folks from non-slab subsystems are Cc'd only to patches affecting them, and
+>> > this cover letter.
+>> > 
+>> > Series also available in git, based on 5.16-rc3:
+>> > https://git.kernel.org/pub/scm/linux/kernel/git/vbabka/linux.git/log/?h=slab-struct_slab-v2r2
 >> 
->> To avoid include cycles, move the inline definitions of slab_objcgs() and
->> slab_objcgs_check() from memcontrol.h to mm/slab.h.
->> 
->> This is not just mechanistic changing of types and names. Now in
->> mem_cgroup_from_obj() we use PageSlab flag to decide if we interpret the page
->> as slab, instead of relying on MEMCG_DATA_OBJCGS bit checked in
->> page_objcgs_check() (now slab_objcgs_check()). Similarly in
->> memcg_slab_free_hook() where we can encounter kmalloc_large() pages (here the
->> PageSlab flag check is implied by virt_to_slab()).
+>> Pushed a new branch slab-struct-slab-v3r3 with accumulated fixes and small tweaks
+>> and a new patch from Hyeonggon Yoo on top. To avoid too much spam, here's a range diff:
 > 
-> Yup, this is great.
+> Reviewing the whole patch series takes longer than I thought.
+> I'll try to review and test rest of patches when I have time.
 > 
->> @@ -2865,24 +2865,31 @@ int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
->>   */
->>  struct mem_cgroup *mem_cgroup_from_obj(void *p)
->>  {
->> -	struct page *page;
->> +	struct folio *folio;
->>  
->>  	if (mem_cgroup_disabled())
->>  		return NULL;
->>  
->> -	page = virt_to_head_page(p);
->> +	folio = virt_to_folio(p);
->>  
->>  	/*
->>  	 * Slab objects are accounted individually, not per-page.
->>  	 * Memcg membership data for each individual object is saved in
->>  	 * the page->obj_cgroups.
->>  	 */
->> -	if (page_objcgs_check(page)) {
->> +	if (folio_test_slab(folio)) {
->> +		struct obj_cgroup **objcgs;
->>  		struct obj_cgroup *objcg;
->> +		struct slab *slab;
->>  		unsigned int off;
->>  
->> -		off = obj_to_index(page->slab_cache, page_slab(page), p);
->> -		objcg = page_objcgs(page)[off];
->> +		slab = folio_slab(folio);
->> +		objcgs = slab_objcgs_check(slab);
-> 
-> AFAICS the change to the _check() variant was accidental.
-> 
-> folio_test_slab() makes sure it's a slab page, so the legit options
-> for memcg_data are NULL or |MEMCG_DATA_OBJCGS; using slab_objcgs()
-> here would include the proper asserts, like page_objcgs() used to.
+> I added Tested-by if kernel builds okay and kselftests
+> does not break the kernel on my machine.
+> (with CONFIG_SLAB/SLUB/SLOB depending on the patch),
 
-Well spotted. On closer look, it's actually the same in
-memcg_slab_free_hook() where I also added a folio_test_slab() as part of
-virt_to_slab(). In fact it means page_objcgs_check() can be just deleted
-instead of replaced by slab_objcgs_check(). Thanks!
+Thanks!
 
+> Let me know me if you know better way to test a patch.
 
+Testing on your machine is just fine.
+
+> # mm/slub: Define struct slab fields for CONFIG_SLUB_CPU_PARTIAL only when enabled
+> 
+> Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> 
+> Comment:
+> Works on both SLUB_CPU_PARTIAL and !SLUB_CPU_PARTIAL.
+> btw, do we need slabs_cpu_partial attribute when we don't use
+> cpu partials? (!SLUB_CPU_PARTIAL)
+
+The sysfs attribute? Yeah we should be consistent to userspace expecting to
+read it (even with zeroes), regardless of config.
+
+> # mm/slub: Simplify struct slab slabs field definition
+> Comment:
+> 
+> This is how struct page looks on the top of v3r3 branch:
+> struct page {
+> [...]
+>                 struct {        /* slab, slob and slub */
+>                         union {
+>                                 struct list_head slab_list;
+>                                 struct {        /* Partial pages */
+>                                         struct page *next;
+> #ifdef CONFIG_64BIT
+>                                         int pages;      /* Nr of pages left */
+> #else
+>                                         short int pages;
+> #endif
+>                                 };
+>                         };
+> [...]
+> 
+> It's not consistent with struct slab.
+
+Hm right. But as we don't actually use the struct page version anymore, and
+it's not one of the fields checked by SLAB_MATCH(), we can ignore this.
+
+> I think this is because "mm: Remove slab from struct page" was dropped.
+
+That was just postponed until iommu changes are in. Matthew mentioned those
+might be merged too, so that final cleanup will happen too and take care of
+the discrepancy above, so no need for extra churn to address it speficially.
+
+> Would you update some of patches?
+> 
+> # mm/sl*b: Differentiate struct slab fields by sl*b implementations
+> Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Works SL[AUO]B on my machine and makes code much better.
+> 
+> # mm/slob: Convert SLOB to use struct slab and struct folio
+> Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> It still works fine on SLOB.
+> 
+> # mm/slab: Convert kmem_getpages() and kmem_freepages() to struct slab
+> Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> 
+> # mm/slub: Convert __free_slab() to use struct slab
+> Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> 
+> Thanks,
+> Hyeonggon.
+
+Thanks again,
+Vlastimil
