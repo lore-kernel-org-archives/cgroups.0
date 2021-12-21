@@ -1,69 +1,123 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 2/4] block, bfq: avoid moving bfqq to it's parent bfqg
-Date: Tue, 21 Dec 2021 12:52:47 +0100
-Message-ID: <20211221115247.GE24748@quack2.suse.cz>
-References: <20211221032135.878550-1-yukuai3@huawei.com>
- <20211221032135.878550-3-yukuai3@huawei.com>
- <20211221101659.GB24748@quack2.suse.cz>
- <d1c91a5f-33f3-ffad-e1ad-fb91482eb864@huawei.com>
+From: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
+Subject: Re: [PATCH v2 00/33] Separate struct slab from struct page
+Date: Tue, 21 Dec 2021 17:25:01 +0000
+Message-ID: <db0ba937-8785-a27b-afff-55c55456ae19@arm.com>
+References: <20211201181510.18784-1-vbabka@suse.cz>
+ <4c3dfdfa-2e19-a9a7-7945-3d75bc87ca05@suse.cz>
+ <YbtUmi5kkhmlXEB1@ip-172-31-30-232.ap-northeast-1.compute.internal>
+ <38976607-b9f9-1bce-9db9-60c23da65d2e@suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1640087568; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=SCgxXcO/BZlBAUPu/jU/ISxCVbf1DpLofk5IlL3lQL0=;
-        b=AwOnU2FEPfu6mm17FwEKXn7vFLAM4F0SfFny4EAt8FaQO4BICBQwT3fhV37/GN7dVPiSHq
-        4l17UTn1xFdJBTXlqotg5IFAtFQp97PxtSFKmxnO9CymhXd0WFXxdkDxFPQqpYMGghUsmi
-        gXHZ7VcxkNW1SQbhPtA4js+l2DyTMZY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1640087568;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=SCgxXcO/BZlBAUPu/jU/ISxCVbf1DpLofk5IlL3lQL0=;
-        b=n8cmMnrBkFYeFhPOzJnGCilZY/ecndMZhBa8W0rTV9rJ+ESd8Xpgiigt4GB7GieARcNpDw
-        IRXWG93OA8y8V5Bg==
-Content-Disposition: inline
-In-Reply-To: <d1c91a5f-33f3-ffad-e1ad-fb91482eb864-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Language: en-GB
+In-Reply-To: <38976607-b9f9-1bce-9db9-60c23da65d2e-AlSwsSmVLrQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kasan-dev-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Julia Lawall <julia.lawall-MZpvjPyXg2s@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Nitin Gupta <ngupta-KNmc09w0p+Ednm+yROfE0A@public.gmane.org>, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, Andy Lutomirski <luto@kerne>
 
-On Tue 21-12-21 19:08:44, yukuai (C) wrote:
-> 在 2021/12/21 18:16, Jan Kara 写道:
-> > On Tue 21-12-21 11:21:33, Yu Kuai wrote:
-> > > Moving bfqq to it's parent bfqg is pointless.
-> > > 
-> > > Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> > 
-> > Did you notice that this is happening often enough that the check is worth
-> > it? Where do we do this?
-> > 
+On 2021-12-20 23:58, Vlastimil Babka wrote:
+> On 12/16/21 16:00, Hyeonggon Yoo wrote:
+>> On Tue, Dec 14, 2021 at 01:57:22PM +0100, Vlastimil Babka wrote:
+>>> On 12/1/21 19:14, Vlastimil Babka wrote:
+>>>> Folks from non-slab subsystems are Cc'd only to patches affecting them, and
+>>>> this cover letter.
+>>>>
+>>>> Series also available in git, based on 5.16-rc3:
+>>>> https://git.kernel.org/pub/scm/linux/kernel/git/vbabka/linux.git/log/?h=slab-struct_slab-v2r2
+>>>
+>>> Pushed a new branch slab-struct-slab-v3r3 with accumulated fixes and small tweaks
+>>> and a new patch from Hyeonggon Yoo on top. To avoid too much spam, here's a range diff:
+>>
+>> Reviewing the whole patch series takes longer than I thought.
+>> I'll try to review and test rest of patches when I have time.
+>>
+>> I added Tested-by if kernel builds okay and kselftests
+>> does not break the kernel on my machine.
+>> (with CONFIG_SLAB/SLUB/SLOB depending on the patch),
 > 
-> I noticed that this will happend when root group is offlined:
+> Thanks!
 > 
-> bfq_pd_offline
->  bfq_put_async_queues
->   __bfq_put_async_bfqq
->    bfq_bfqq_move
+>> Let me know me if you know better way to test a patch.
 > 
-> I'm not sure if there are other situations. I think bfq_bfqq_move()
-> is not happening often itself, thus the checking won't affect
-> performance.
+> Testing on your machine is just fine.
+> 
+>> # mm/slub: Define struct slab fields for CONFIG_SLUB_CPU_PARTIAL only when enabled
+>>
+>> Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>>
+>> Comment:
+>> Works on both SLUB_CPU_PARTIAL and !SLUB_CPU_PARTIAL.
+>> btw, do we need slabs_cpu_partial attribute when we don't use
+>> cpu partials? (!SLUB_CPU_PARTIAL)
+> 
+> The sysfs attribute? Yeah we should be consistent to userspace expecting to
+> read it (even with zeroes), regardless of config.
+> 
+>> # mm/slub: Simplify struct slab slabs field definition
+>> Comment:
+>>
+>> This is how struct page looks on the top of v3r3 branch:
+>> struct page {
+>> [...]
+>>                  struct {        /* slab, slob and slub */
+>>                          union {
+>>                                  struct list_head slab_list;
+>>                                  struct {        /* Partial pages */
+>>                                          struct page *next;
+>> #ifdef CONFIG_64BIT
+>>                                          int pages;      /* Nr of pages left */
+>> #else
+>>                                          short int pages;
+>> #endif
+>>                                  };
+>>                          };
+>> [...]
+>>
+>> It's not consistent with struct slab.
+> 
+> Hm right. But as we don't actually use the struct page version anymore, and
+> it's not one of the fields checked by SLAB_MATCH(), we can ignore this.
+> 
+>> I think this is because "mm: Remove slab from struct page" was dropped.
+> 
+> That was just postponed until iommu changes are in. Matthew mentioned those
+> might be merged too, so that final cleanup will happen too and take care of
+> the discrepancy above, so no need for extra churn to address it speficially.
 
-Yeah, OK, I was just wondering. I guess there's no harm in doing this
-check. Maybe add a comment that this can sometimes happen when dealing with
-the root cgroup. And then feel free to add:
+FYI the IOMMU changes are now queued in linux-next, so if all goes well 
+you might be able to sneak that final patch in too.
 
-Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Robin.
 
-								Honza
-
--- 
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-SUSE Labs, CR
+> 
+>> Would you update some of patches?
+>>
+>> # mm/sl*b: Differentiate struct slab fields by sl*b implementations
+>> Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> Works SL[AUO]B on my machine and makes code much better.
+>>
+>> # mm/slob: Convert SLOB to use struct slab and struct folio
+>> Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> It still works fine on SLOB.
+>>
+>> # mm/slab: Convert kmem_getpages() and kmem_freepages() to struct slab
+>> Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>>
+>> # mm/slub: Convert __free_slab() to use struct slab
+>> Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>>
+>> Thanks,
+>> Hyeonggon.
+> 
+> Thanks again,
+> Vlastimil
+> _______________________________________________
+> iommu mailing list
+> iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+> https://lists.linuxfoundation.org/mailman/listinfo/iommu
