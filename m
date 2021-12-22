@@ -1,100 +1,152 @@
-From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 4/4] block, bfq: update pos_root for idle bfq_queue in
- bfq_bfqq_move()
-Date: Wed, 22 Dec 2021 11:12:45 +0800
-Message-ID: <6ca1e924-47fa-b94e-598c-69a9549eb68e@huawei.com>
-References: <20211221032135.878550-1-yukuai3@huawei.com>
- <20211221032135.878550-5-yukuai3@huawei.com>
- <20211221115001.GD24748@quack2.suse.cz>
+From: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 00/33] Separate struct slab from struct page
+Date: Wed, 22 Dec 2021 07:36:33 +0000
+Message-ID: <YcLVgdpyhZjtAatZ@ip-172-31-30-232.ap-northeast-1.compute.internal>
+References: <20211201181510.18784-1-vbabka@suse.cz>
+ <4c3dfdfa-2e19-a9a7-7945-3d75bc87ca05@suse.cz>
+ <YbtUmi5kkhmlXEB1@ip-172-31-30-232.ap-northeast-1.compute.internal>
+ <38976607-b9f9-1bce-9db9-60c23da65d2e@suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20211221115001.GD24748-4I4JzKEfoa/jFM9bn6wA6Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=WrvvWhSLi37P9Hu9a/lN3dt16MiGegPkcEW+eWXvnco=;
+        b=RKpi5mEKObOsMfFa2Hh3uM3GzsMIBcjoLEKD7cwnOeZVwpA/d0V88BawrYNtOMnFn7
+         l9nLVd1NKaLq5pB3voPPj4Z2icjvncDwuZ1uCcPIm6/WMKIxRRSgNH/mDo7gCP9SqWkU
+         gYLMtOZHpZ2bc7XcFtJFnIgGuT/WDzmxB2cJqJdB0KPkqVUD86hast7AId9I1sCheseV
+         FXPC48nv7polwBlytcx80Ge2CfcadbncgdXZ3ZbZeK1wttQ3MYdrMcX33gMLD2b77cBe
+         1XVNoWD64mGKqnHA2cr7yfFsOmBI796jO3rcUEeDFIAJ9d2aBQsqNJ50N2r74mkiVcl+
+         IdoQ==
+Content-Disposition: inline
+In-Reply-To: <38976607-b9f9-1bce-9db9-60c23da65d2e-AlSwsSmVLrQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrey Konovalov <andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes@cmpxchg>
 
-=D4=DA 2021/12/21 19:50, Jan Kara =D0=B4=B5=C0:
-> On Tue 21-12-21 11:21:35, Yu Kuai wrote:
->> During code review, we found that if bfqq is not busy in
->> bfq_bfqq_move(), bfq_pos_tree_add_move() won't be called for the bfqq,
->> thus bfqq->pos_root still points to the old bfqg. However, the ref
->> that bfqq hold for the old bfqg will be released, so it's possible
->> that the old bfqg can be freed. This is problematic because the freed
->> bfqg can still be accessed by bfqq->pos_root.
->>
->> Fix the problem by calling bfq_pos_tree_add_move() for idle bfqq
->> as well.
->>
->> Fixes: e21b7a0b9887 ("block, bfq: add full hierarchical scheduling and c=
-groups support")
->> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->=20
-> I'm just wondering, how can it happen that !bfq_bfqq_busy() queue is in
-> pos_tree? Because bfq_remove_request() takes care to remove bfqq from the
-> pos_tree...
+On Tue, Dec 21, 2021 at 12:58:14AM +0100, Vlastimil Babka wrote:
+> On 12/16/21 16:00, Hyeonggon Yoo wrote:
+> > On Tue, Dec 14, 2021 at 01:57:22PM +0100, Vlastimil Babka wrote:
+> >> On 12/1/21 19:14, Vlastimil Babka wrote:
+> >> > Folks from non-slab subsystems are Cc'd only to patches affecting them, and
+> >> > this cover letter.
+> >> > 
+> >> > Series also available in git, based on 5.16-rc3:
+> >> > https://git.kernel.org/pub/scm/linux/kernel/git/vbabka/linux.git/log/?h=slab-struct_slab-v2r2
+> >> 
+> >> Pushed a new branch slab-struct-slab-v3r3 with accumulated fixes and small tweaks
+> >> and a new patch from Hyeonggon Yoo on top. To avoid too much spam, here's a range diff:
+> > 
+> > Reviewing the whole patch series takes longer than I thought.
+> > I'll try to review and test rest of patches when I have time.
+> > 
+> > I added Tested-by if kernel builds okay and kselftests
+> > does not break the kernel on my machine.
+> > (with CONFIG_SLAB/SLUB/SLOB depending on the patch),
+> 
+> Thanks!
+>
 
-Hi,
+:)
 
-It's right this is not a problem in common case. The problem seems to
-relate to queue merging and task migration. Because I once reporduced
-it with the same reporducer for the problem that offlined bfqg can be
-inserted into service tree. The uaf is exactly in
-bfq_remove_request->rb_rease(). However I didn't save the stack...
+> > Let me know me if you know better way to test a patch.
+> 
+> Testing on your machine is just fine.
+>
 
-I guess this is because bfq_del_bfqq_busy() is called from
-bfq_release_process_ref(), and queue merging prevert sunch bfqq to be
-freed, thus such bfqq is not in service tree, and it's pos_root can
-point to the old bfqg after bfq_bic_update_cgroup->bfq_bfqq_move.
+Good!
 
-I haven't confirmed this, however, this patch itself only cleared
-bfqq->pos_root for idle bfqq, there should be no harm.
+> > # mm/slub: Define struct slab fields for CONFIG_SLUB_CPU_PARTIAL only when enabled
+> > 
+> > Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > 
+> > Comment:
+> > Works on both SLUB_CPU_PARTIAL and !SLUB_CPU_PARTIAL.
+> > btw, do we need slabs_cpu_partial attribute when we don't use
+> > cpu partials? (!SLUB_CPU_PARTIAL)
+> 
+> The sysfs attribute? Yeah we should be consistent to userspace expecting to
+> read it (even with zeroes), regardless of config.
+> 
 
-Thanks,
-Kuai
->=20
-> 								Honza
->=20
->> ---
->>   block/bfq-cgroup.c | 14 +++++++++-----
->>   1 file changed, 9 insertions(+), 5 deletions(-)
->>
->> diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
->> index 8e8cf6b3d946..822dd28ecf53 100644
->> --- a/block/bfq-cgroup.c
->> +++ b/block/bfq-cgroup.c
->> @@ -677,7 +677,6 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq=
-_queue *bfqq,
->>   		bfq_deactivate_bfqq(bfqd, bfqq, false, false);
->>   	else if (entity->on_st_or_in_serv)
->>   		bfq_put_idle_entity(bfq_entity_service_tree(entity), entity);
->> -	bfqg_and_blkg_put(old_parent);
->>  =20
->>   	if (entity->parent &&
->>   	    entity->parent->last_bfqq_created =3D=3D bfqq)
->> @@ -690,11 +689,16 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct b=
-fq_queue *bfqq,
->>   	/* pin down bfqg and its associated blkg  */
->>   	bfqg_and_blkg_get(bfqg);
->>  =20
->> -	if (bfq_bfqq_busy(bfqq)) {
->> -		if (unlikely(!bfqd->nonrot_with_queueing))
->> -			bfq_pos_tree_add_move(bfqd, bfqq);
->> +	/*
->> +	 * Don't leave the pos_root to old bfqg, since the ref to old bfqg will
->> +	 * be released and the bfqg might be freed.
->> +	 */
->> +	if (unlikely(!bfqd->nonrot_with_queueing))
->> +		bfq_pos_tree_add_move(bfqd, bfqq);
->> +	bfqg_and_blkg_put(old_parent);
->> +
->> +	if (bfq_bfqq_busy(bfqq))
->>   		bfq_activate_bfqq(bfqd, bfqq);
->> -	}
->>  =20
->>   	if (!bfqd->in_service_queue && !bfqd->rq_in_driver)
->>   		bfq_schedule_dispatch(bfqd);
->> --=20
->> 2.31.1
->>
+I thought entirely disabling the attribute is simpler,
+But okay If it should be exposed even if it's always zero.
+
+> > # mm/slub: Simplify struct slab slabs field definition
+> > Comment:
+> > 
+> > This is how struct page looks on the top of v3r3 branch:
+> > struct page {
+> > [...]
+> >                 struct {        /* slab, slob and slub */
+> >                         union {
+> >                                 struct list_head slab_list;
+> >                                 struct {        /* Partial pages */
+> >                                         struct page *next;
+> > #ifdef CONFIG_64BIT
+> >                                         int pages;      /* Nr of pages left */
+> > #else
+> >                                         short int pages;
+> > #endif
+> >                                 };
+> >                         };
+> > [...]
+> > 
+> > It's not consistent with struct slab.
+> 
+> Hm right. But as we don't actually use the struct page version anymore, and
+> it's not one of the fields checked by SLAB_MATCH(), we can ignore this.
+>
+
+Yeah this is not a big problem. just mentioned this because 
+it looked weird and I didn't know when the patch "mm: Remove slab from struct page"
+will come back.
+
+> > I think this is because "mm: Remove slab from struct page" was dropped.
+>
+> That was just postponed until iommu changes are in. Matthew mentioned those
+> might be merged too, so that final cleanup will happen too and take care of
+> the discrepancy above, so no need for extra churn to address it speficially.
+> 
+
+Okay it seems no extra work needed until the iommu changes are in!
+
+BTW, in the patch (that I sent) ("mm/slob: Remove unnecessary page_mapcount_reset()
+function call"), it refers commit 4525180926f9  ("mm/sl*b: Differentiate struct slab fields by
+sl*b implementations"). But the commit hash 4525180926f9 changed after the
+tree has been changed.
+
+It will be nice to write a script to handle situations like this.
+
+> > Would you update some of patches?
+> > 
+> > # mm/sl*b: Differentiate struct slab fields by sl*b implementations
+> > Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Works SL[AUO]B on my machine and makes code much better.
+> > 
+> > # mm/slob: Convert SLOB to use struct slab and struct folio
+> > Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > It still works fine on SLOB.
+> > 
+> > # mm/slab: Convert kmem_getpages() and kmem_freepages() to struct slab
+> > Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> >
+> > # mm/slub: Convert __free_slab() to use struct slab
+> > Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > 
+> > Thanks,
+> > Hyeonggon.
+> 
+> Thanks again,
+> Vlastimil
+
+Have a nice day, thanks!
+Hyeonggon.
