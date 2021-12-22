@@ -1,84 +1,116 @@
-From: syzbot <syzbot+304cbc9725238275b855@syzkaller.appspotmail.com>
-Subject: [syzbot] INFO: task hung in cgroup_can_fork
-Date: Wed, 22 Dec 2021 14:13:17 -0800
-Message-ID: <000000000000cd9d6f05d3c36ddc@google.com>
+From: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2] KVM: Move VM's worker kthreads back to the original
+ cgroups before exiting.
+Date: Wed, 22 Dec 2021 22:53:50 +0000
+Message-ID: <20211222225350.1912249-1-vipinsh@google.com>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=oNIAkp8neiAB7783twgZn/TOQ9PM7zBBm/WLvA2Zt9k=;
+        b=nDgKUnHCmPH/1PpVRNkhtBbODzY52sRC85PwAtvQUnxfM7N0o2wARPvR/muu5AzNw8
+         82cyvFCb7Wj2w1u8zWMcOp8QNYGwL/2akDv6EUHpnUXxu7IpBCoweLw3zuLlYHP1E6yd
+         n3d2lnpsWohoKv+dDK7C02guj1oMsXtAJzdS8se6b3xhLXLG9/jwJIVUlRUThhIFjvTT
+         FRpeqgNndxxn5LjOdn7F4nrR24PUQ0km7DJLYwb393Z2d0MIPZAHiX9FtcTYHy+MuVKk
+         JqO6jT+Vt5UiwwOzBrhnUXfeg4HbfrUyflH5D6G8Qo/DNptyIxJFaaKQgcLmRgPMBqf5
+         yeSw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: andrii@kernel.org, ast@kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, christian@brauner.io, daniel@iogearbox.net, hannes@cmpxchg.org, john.fastabend@gmail.com, kafai@fb.com, kpsingh@kernel.org, linux-kernel@vger.kernel.org, lizefan.x@bytedance.com, netdev@vger.kernel.org, songliubraving@fb.com, syzkaller-bugs@googlegroups.com, tj@kernel.org, yhs@fb.com
+To: pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: dmatlack-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Hello,
+VM worker kthreads can linger in the VM process's cgroup for sometime
+after KVM terminates the VM process.
 
-syzbot found the following issue on:
+KVM terminates the worker kthreads by calling kthread_stop() which waits
+on the 'exited' completion, triggered by exit_mm(), via mm_release(),
+during kthread's exit.  However, these kthreads are removed from the
+cgroup using cgroup_exit() call which happens after exit_mm(). A VM
+process can terminate between the time window of exit_mm() to
+cgroup_exit(), leaving only worker kthreads in the cgroup.
 
-HEAD commit:    9eaa88c7036e Merge tag 'libata-5.16-rc6' of git://git.kern..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=11872543b00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=fa556098924b78f0
-dashboard link: https://syzkaller.appspot.com/bug?extid=304cbc9725238275b855
-compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=154716a3b00000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=111e92dbb00000
+Moving worker kthreads back to the original cgroup (kthreadd_task's
+cgroup) makes sure that cgroup is empty as soon as the main VM process
+is terminated.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+304cbc9725238275b855@syzkaller.appspotmail.com
+kthreadd_task is not an exported symbol which causes build errors if KVM
+is built as a loadable module. Both users (kvm_main & vhost) of
+cgroup_attach_task_all(), have the same issue, therefore, using
+kthreadd_task as a default option is chosen when the API is called with
+NULL argument.
 
-INFO: task syz-executor812:3663 blocked for more than 165 seconds.
-      Not tainted 5.16.0-rc5-syzkaller #0
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:syz-executor812 state:D stack:27552 pid: 3663 ppid:  3654 flags:0x00000000
-Call Trace:
- <TASK>
- context_switch kernel/sched/core.c:4972 [inline]
- context_switch kernel/sched/core.c:4972 [inline] kernel/sched/core.c:6253
- __schedule+0xa9a/0x4940 kernel/sched/core.c:6253 kernel/sched/core.c:6253
- schedule+0xd2/0x260 kernel/sched/core.c:6326 kernel/sched/core.c:6326
- schedule_preempt_disabled+0xf/0x20 kernel/sched/core.c:6385 kernel/sched/core.c:6385
- __mutex_lock_common kernel/locking/mutex.c:680 [inline]
- __mutex_lock_common kernel/locking/mutex.c:680 [inline] kernel/locking/mutex.c:740
- __mutex_lock+0xa32/0x12f0 kernel/locking/mutex.c:740 kernel/locking/mutex.c:740
- cgroup_css_set_fork kernel/cgroup/cgroup.c:6090 [inline]
- cgroup_css_set_fork kernel/cgroup/cgroup.c:6090 [inline] kernel/cgroup/cgroup.c:6206
- cgroup_can_fork+0x888/0xeb0 kernel/cgroup/cgroup.c:6206 kernel/cgroup/cgroup.c:6206
- copy_process+0x3636/0x75a0 kernel/fork.c:2292 kernel/fork.c:2292
- kernel_clone+0xe7/0xab0 kernel/fork.c:2582 kernel/fork.c:2582
- __do_sys_clone3+0x1ca/0x2e0 kernel/fork.c:2857 kernel/fork.c:2857
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_x64 arch/x86/entry/common.c:50 [inline] arch/x86/entry/common.c:80
- do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x44/0xae
-RIP: 0033:0x7fbc074509a9
-RSP: 002b:00007fbc074022f8 EFLAGS: 00000246 ORIG_RAX: 00000000000001b3
-RAX: ffffffffffffffda RBX: 0000000000000031 RCX: 00007fbc074509a9
-RDX: 00007fbc074509a9 RSI: 0000000000000058 RDI: 0000000020000080
-RBP: 00007fbc074d8408 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 00007fbc074d8400
-R13: 00007fbc074d840c R14: 00007fbc074a6074 R15: 0000000280000000
- </TASK>
-INFO: task syz-executor812:3664 blocked for more than 172 seconds.
-      Not tainted 5.16.0-rc5-syzkaller #0
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-task:syz-executor812 state:D stack:27552 pid: 3664 ppid:     1 flags:0x00000000
-Call Trace:
- <TASK>
- context_switch kernel/sched/core.c:4972 [inline]
- context_switch kernel/sched/core.c:4972 [inline] kernel/sched/core.c:6253
- __schedule+0xa9a/0x4940 kernel/sched/core.c:6253 kernel/sched/core.c:6253
- schedule+0xd2/0x260 kernel/sched/core.c:6326 kernel/sched/core.c:6326
- schedule_preempt_disabled+0xf/0x20 kernel/sched/core.c:6385 kernel/sched/core.c:6385
- __mutex_lock_common kernel/locking/mutex.c:680 [inline]
- __mutex_lock_common kernel/locking/mutex.c:680 [inline] kernel/locking/mutex.c:740
- __mutex_lock+0xa32/0x12f0 kernel/locking/mutex.c:740 kernel/locking/mutex.c:740
-
-
+Signed-off-by: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-syzbot can test patches for this issue, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+v2:
+- Use kthreadd_task in the cgroup API to avoid build issue.
+
+v1: https://lore.kernel.org/lkml/20211214050708.4040200-1-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+
+ kernel/cgroup/cgroup-v1.c |  5 +++++
+ virt/kvm/kvm_main.c       | 15 ++++++++++++++-
+ 2 files changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 81c9e0685948..81d4b2f2acf0 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -51,6 +51,8 @@ bool cgroup1_ssid_disabled(int ssid)
+  * @from: attach to all cgroups of a given task
+  * @tsk: the task to be attached
+  *
++ * If @from is NULL then use kthreadd_task for finding the destination cgroups.
++ *
+  * Return: %0 on success or a negative errno code on failure
+  */
+ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+@@ -58,6 +60,9 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+ 	struct cgroup_root *root;
+ 	int retval = 0;
+ 
++	if (!from)
++		from = kthreadd_task;
++
+ 	mutex_lock(&cgroup_mutex);
+ 	percpu_down_write(&cgroup_threadgroup_rwsem);
+ 	for_each_root(root) {
+diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
+index b0f7e6eb00ff..f7504578c374 100644
+--- a/virt/kvm/kvm_main.c
++++ b/virt/kvm/kvm_main.c
+@@ -5785,7 +5785,7 @@ static int kvm_vm_worker_thread(void *context)
+ 	init_context = NULL;
+ 
+ 	if (err)
+-		return err;
++		goto out;
+ 
+ 	/* Wait to be woken up by the spawner before proceeding. */
+ 	kthread_parkme();
+@@ -5793,6 +5793,19 @@ static int kvm_vm_worker_thread(void *context)
+ 	if (!kthread_should_stop())
+ 		err = thread_fn(kvm, data);
+ 
++out:
++	/*
++	 * We need to move the kthread back to its original cgroups, so that it
++	 * doesn't linger in the cgroups of the user process after the user
++	 * process has already terminated.
++	 *
++	 * kthread_stop() waits on 'exited' completion condition which is set
++	 * in exit_mm(), via mm_release(), in do_exit(). However, kthread
++	 * is removed from cgroups in the cgroup_exit() which is called after
++	 * exit_mm(). This causes lingering of kthreads in cgroups after main
++	 * VM process has finished.
++	 */
++	WARN_ON(cgroup_attach_task_all(NULL, current));
+ 	return err;
+ }
+ 
+
+base-commit: 5e4e84f1124aa02643833b7ea40abd5a8e964388
+-- 
+2.34.1.307.g9b7440fafd-goog
+
