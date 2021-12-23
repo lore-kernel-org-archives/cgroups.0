@@ -1,76 +1,47 @@
-From: "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH 4/4] block, bfq: update pos_root for idle bfq_queue in
- bfq_bfqq_move()
-Date: Thu, 23 Dec 2021 09:03:55 +0800
-Message-ID: <69bd1c5e-b692-3c8c-e90e-adc4d71eb04d@huawei.com>
-References: <20211221032135.878550-1-yukuai3@huawei.com>
- <20211221032135.878550-5-yukuai3@huawei.com>
- <20211221115001.GD24748@quack2.suse.cz>
- <6ca1e924-47fa-b94e-598c-69a9549eb68e@huawei.com>
- <20211222141722.GC685@quack2.suse.cz>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH 1/3] mm/memcg: Protect per-CPU counter by disabling
+ preemption on PREEMPT_RT
+Date: Wed, 22 Dec 2021 21:31:36 -0500
+Message-ID: <bdfc9791-4af2-f4fb-9ef5-dab1e2e3ff89@redhat.com>
+References: <20211222114111.2206248-1-bigeasy@linutronix.de>
+ <20211222114111.2206248-2-bigeasy@linutronix.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20211222141722.GC685@quack2.suse.cz>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1640226701;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ndDsEl87XhT/7c03RwGZ3BUnuqirZACHRsfL75QimI4=;
+        b=bbwNGcwXFMSx3M8piN8CZy1Jtfy09LSAB44oWBnJIh85iN3QYokhcUQdaMCvnW3JrMvezk
+        eFFigbMQn6eJ7RKAxRFBJDWzTv712qIPD52kVKiHN8/gdBHWO1OXArNL1Jvz5yFIOyQ5Vs
+        Yiq8aK0rHdT//0lRrjL0DO1fhgIXA1M=
+Content-Language: en-US
+In-Reply-To: <20211222114111.2206248-2-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Jan Kara <jack@suse.cz>
-Cc: tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org, fchecconi@gmail.com, avanzini.arianna@gmail.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-在 2021/12/22 22:17, Jan Kara 写道:
-> On Wed 22-12-21 11:12:45, yukuai (C) wrote:
->> 在 2021/12/21 19:50, Jan Kara 写道:
->>> On Tue 21-12-21 11:21:35, Yu Kuai wrote:
->>>> During code review, we found that if bfqq is not busy in
->>>> bfq_bfqq_move(), bfq_pos_tree_add_move() won't be called for the bfqq,
->>>> thus bfqq->pos_root still points to the old bfqg. However, the ref
->>>> that bfqq hold for the old bfqg will be released, so it's possible
->>>> that the old bfqg can be freed. This is problematic because the freed
->>>> bfqg can still be accessed by bfqq->pos_root.
->>>>
->>>> Fix the problem by calling bfq_pos_tree_add_move() for idle bfqq
->>>> as well.
->>>>
->>>> Fixes: e21b7a0b9887 ("block, bfq: add full hierarchical scheduling and cgroups support")
->>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->>>
->>> I'm just wondering, how can it happen that !bfq_bfqq_busy() queue is in
->>> pos_tree? Because bfq_remove_request() takes care to remove bfqq from the
->>> pos_tree...
->>
->> Hi,
->>
->> It's right this is not a problem in common case. The problem seems to
->> relate to queue merging and task migration. Because I once reporduced
->> it with the same reporducer for the problem that offlined bfqg can be
->> inserted into service tree. The uaf is exactly in
->> bfq_remove_request->rb_rease(). However I didn't save the stack...
->>
->> I guess this is because bfq_del_bfqq_busy() is called from
->> bfq_release_process_ref(), and queue merging prevert sunch bfqq to be
->> freed, thus such bfqq is not in service tree, and it's pos_root can
->> point to the old bfqg after bfq_bic_update_cgroup->bfq_bfqq_move.
->>
->> I haven't confirmed this, however, this patch itself only cleared
->> bfqq->pos_root for idle bfqq, there should be no harm.
-> 
-> Well, I agree this patch does no harm but in my opinion it is just papering
-> over the real problem which is that we leave bfqq without any request in
-> the pos_tree which can have also other unexpected consequences. I don't
-> think your scenario with bfq_release_process_ref() calling
-> bfq_del_bfqq_busy() really answers my question because we call
-> bfq_del_bfqq_busy() only if RB_EMPTY_ROOT(&bfqq->sort_list) (i.e., bfqq has
-> no requests) and when sort_list was becoming empty, bfq_remove_request()
-> should have removed bfqq from the pos_tree. So I think proper fix lies
-> elsewhere and I would not merge this patch until we better understand what
-> is happening in this case.
+On 12/22/21 06:41, Sebastian Andrzej Siewior wrote:
+> The per-CPU counter are modified with the non-atomic modifier. The
+> consistency is ensure by disabling interrupts for the update.
+> This breaks on PREEMPT_RT because some sections additionally
+> acquire a spinlock_t lock (which becomes sleeping and must not be
+> acquired with disabled interrupts). Another problem is that
+> mem_cgroup_swapout() expects to be invoked with disabled interrupts
+> because the caller has to acquire a spinlock_t which is acquired with
+> disabled interrupts. Since spinlock_t never disables interrupts on
+> PREEMPT_RT the interrupts are never disabled at this point.
+>
+> The code is never called from in_irq() context on PREEMPT_RT therefore
 
-Hi,
+How do you guarantee that these percpu update functions won't be called 
+in in_irq() context for PREEMPT_RT? Do you think we should add a 
+WARN_ON_ONCE(in_irq()) just to be sure?
 
-I'll try to reporduce the UAF, and take a look at it.
+Cheers,
+Longman
 
-Thanks,
-Kuai
-> 
-> 								Honza
-> 
