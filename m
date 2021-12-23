@@ -1,61 +1,351 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: Use after free with BFQ and cgroups
-Date: Thu, 23 Dec 2021 18:13:45 +0100
-Message-ID: <20211223171345.GE19129@quack2.suse.cz>
-References: <20211125172809.GC19572@quack2.suse.cz>
- <20211126144724.GA31093@blackbody.suse.cz>
- <20211129171115.GC29512@quack2.suse.cz>
- <f03b2b1c-808a-c657-327d-03165b988e7d@huawei.com>
- <20211222152103.GF685@quack2.suse.cz>
- <d770663a-911c-c9c1-1185-558634f4c738@huawei.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH 2/3] mm/memcg: Add a local_lock_t for IRQ and TASK
+ object.
+Date: Thu, 23 Dec 2021 16:38:35 -0500
+Message-ID: <4fe30c89-df34-bbdb-a9a1-5519e0363cc5@redhat.com>
+References: <20211222114111.2206248-1-bigeasy@linutronix.de>
+ <20211222114111.2206248-3-bigeasy@linutronix.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1640279628; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1640295520;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=TK8w/l2QmkKbweJf4VP5hkqJcVEfLR6+7DArEF8svg0=;
-        b=N3/Mg4U+xanWLS7bAaYDZP3g6btzRSuYvsvFl8fzz3i/KoD0mzhP2WkozLnYEXg7pAYEcL
-        7aZqzXk5T/hOrNJpK83n2KFLjdJYNcdM6OyxH6/i40b0Rrmcwyo8mJ1Sed6xjKpip4/MmU
-        30TjoOc1SpPAloZxkLpf6Q8a8FnMLa8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1640279628;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TK8w/l2QmkKbweJf4VP5hkqJcVEfLR6+7DArEF8svg0=;
-        b=fZsVIT/8nYiFKohB3PYI+Tz1zhjd13tVgKSwUm+zfPngwa8hyJelVLscYzOYaxhslRz9Z4
-        HQOjiTluRe2hvyAQ==
-Content-Disposition: inline
-In-Reply-To: <d770663a-911c-c9c1-1185-558634f4c738-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        bh=mIiB2tmCLCxm5/agd9wee1S6uhwF711lKE9ChgbcsDw=;
+        b=hXcxrR0I8MEnLl+bQW0aw5D9lpy54pRrUUuXSJQNIbBXf6mARq++uHMk6+xx5Hid7khmv+
+        Uvaj4zrZ+JBVVAh22GyNUS0gmjOLwVnl8kKTRakti3Tu0ksgYfDWlFiIz1+Id56+oMc7nw
+        PmEaRCViE4pVu9azywpeKCMHSDDDMSU=
+Content-Language: en-US
+In-Reply-To: <20211222114111.2206248-3-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fvogt-l3A5Bk7waGM@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Thu 23-12-21 09:02:55, yukuai (C) wrote:
-> 在 2021/12/22 23:21, Jan Kara 写道:
-> > On Thu 09-12-21 10:23:33, yukuai (C) wrote:
-> > > We confirmed this by our reproducer through a simple patch:
-> > > stop merging bfq_queues if their parents are different.
-> > 
-> > Can you please share your reproducer? I have prepared some patches which
-> > I'd like to verify before posting... Thanks!
-> 
-> Hi,
-> 
-> Here is the reproducer, usually the problem will come up within an
-> hour.
+On 12/22/21 06:41, Sebastian Andrzej Siewior wrote:
+> The members of the per-CPU structure memcg_stock_pcp are protected
+> either by disabling interrupts or by disabling preemption if the
+> invocation occurred in process context.
+> Disabling interrupts protects most of the structure excluding task_obj
+> while disabling preemption protects only task_obj.
+> This schema is incompatible with PREEMPT_RT because it creates atomic
+> context in which actions are performed which require preemptible
+> context. One example is obj_cgroup_release().
+>
+> The IRQ-disable and preempt-disable sections can be replaced with
+> local_lock_t which preserves the explicit disabling of interrupts while
+> keeps the code preemptible on PREEMPT_RT.
+>
+> The task_obj has been added for performance reason on non-preemptible
+> kernels where preempt_disable() is a NOP. On the PREEMPT_RT preemption
+> model preempt_disable() is always implemented. Also there are no memory
+> allocations in_irq() context and softirqs are processed in (preemptible)
+> process context. Therefore it makes sense to avoid using task_obj.
+>
+> Don't use task_obj on PREEMPT_RT and replace manual disabling of
+> interrupts with a local_lock_t. This change requires some factoring:
+>
+> - drain_obj_stock() drops a reference on obj_cgroup which leads to an
+>    invocation of obj_cgroup_release() if it is the last object. This in
+>    turn leads to recursive locking of the local_lock_t. To avoid this,
+>    obj_cgroup_release() is invoked outside of the locked section.
+>
+> - drain_obj_stock() gets a memcg_stock_pcp passed if the stock_lock has been
+>    acquired (instead of the task_obj_lock) to avoid recursive locking later
+>    in refill_stock().
+>
+> - drain_all_stock() disables preemption via get_cpu() and then invokes
+>    drain_local_stock() if it is the local CPU to avoid scheduling a worker
+>    (which invokes the same function). Disabling preemption here is
+>    problematic due to the sleeping locks in drain_local_stock().
+>    This can be avoided by always scheduling a worker, even for the local
+>    CPU. Using cpus_read_lock() stabilizes cpu_online_mask which ensures
+>    that no worker is scheduled for an offline CPU. Since there is no
+>    flush_work(), it is still possible that a worker is invoked on the wrong
+>    CPU but it is okay since it operates always on the local-CPU data.
+>
+> - drain_local_stock() is always invoked as a worker so it can be optimized
+>    by removing in_task() (it is always true) and avoiding the "irq_save"
+>    variant because interrupts are always enabled here. Operating on
+>    task_obj first allows to acquire the lock_lock_t without lockdep
+>    complains.
+>
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+> ---
+>   mm/memcontrol.c | 171 +++++++++++++++++++++++++++++++-----------------
+>   1 file changed, 112 insertions(+), 59 deletions(-)
+>
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index d2687d5ed544b..1e76f26be2c15 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -261,8 +261,10 @@ bool mem_cgroup_kmem_disabled(void)
+>   	return cgroup_memory_nokmem;
+>   }
+>   
+> +struct memcg_stock_pcp;
+>   static void obj_cgroup_uncharge_pages(struct obj_cgroup *objcg,
+> -				      unsigned int nr_pages);
+> +				      unsigned int nr_pages,
+> +				      struct memcg_stock_pcp *stock_pcp);
 
-Thanks! For some reason the reproducer does not trigger the KASAN warning
-for me (with or without my patches). But anyway, I'll post my fixes and
-we'll see what do people think, also I'd be grateful if you can test them
-in your environment. Thanks.
+AFAICS, stock_pcp is set to indicate that the stock_lock has been 
+acquired. Since stock_pcp, if set, should be the same as 
+this_cpu_ptr(&memcg_stock), it is a bit confusing to pass it to a 
+function that also does a percpu access to memcg_stock. Why don't you 
+just pass a boolean, say, stock_locked to indicate this instead. It will 
+be more clear and less confusing.
 
-								Honza
--- 
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-SUSE Labs, CR
+
+>   
+>   static void obj_cgroup_release(struct percpu_ref *ref)
+>   {
+> @@ -296,7 +298,7 @@ static void obj_cgroup_release(struct percpu_ref *ref)
+>   	nr_pages = nr_bytes >> PAGE_SHIFT;
+>   
+>   	if (nr_pages)
+> -		obj_cgroup_uncharge_pages(objcg, nr_pages);
+> +		obj_cgroup_uncharge_pages(objcg, nr_pages, NULL);
+>   
+>   	spin_lock_irqsave(&css_set_lock, flags);
+>   	list_del(&objcg->list);
+> @@ -2120,26 +2122,40 @@ struct obj_stock {
+>   };
+>   
+>   struct memcg_stock_pcp {
+> +	/* Protects memcg_stock_pcp */
+> +	local_lock_t stock_lock;
+>   	struct mem_cgroup *cached; /* this never be root cgroup */
+>   	unsigned int nr_pages;
+> +#ifndef CONFIG_PREEMPT_RT
+> +	/* Protects only task_obj */
+> +	local_lock_t task_obj_lock;
+>   	struct obj_stock task_obj;
+> +#endif
+>   	struct obj_stock irq_obj;
+>   
+>   	struct work_struct work;
+>   	unsigned long flags;
+>   #define FLUSHING_CACHED_CHARGE	0
+>   };
+> -static DEFINE_PER_CPU(struct memcg_stock_pcp, memcg_stock);
+> +static DEFINE_PER_CPU(struct memcg_stock_pcp, memcg_stock) = {
+> +	.stock_lock = INIT_LOCAL_LOCK(stock_lock),
+> +#ifndef CONFIG_PREEMPT_RT
+> +	.task_obj_lock = INIT_LOCAL_LOCK(task_obj_lock),
+> +#endif
+> +};
+>   static DEFINE_MUTEX(percpu_charge_mutex);
+>   
+>   #ifdef CONFIG_MEMCG_KMEM
+> -static void drain_obj_stock(struct obj_stock *stock);
+> +static struct obj_cgroup *drain_obj_stock(struct obj_stock *stock,
+> +					  struct memcg_stock_pcp *stock_pcp);
+>   static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+>   				     struct mem_cgroup *root_memcg);
+>   
+>   #else
+> -static inline void drain_obj_stock(struct obj_stock *stock)
+> +static inline struct obj_cgroup *drain_obj_stock(struct obj_stock *stock,
+> +						 struct memcg_stock_pcp *stock_pcp)
+>   {
+> +	return NULL;
+>   }
+>   static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+>   				     struct mem_cgroup *root_memcg)
+> @@ -2168,7 +2184,7 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+>   	if (nr_pages > MEMCG_CHARGE_BATCH)
+>   		return ret;
+>   
+> -	local_irq_save(flags);
+> +	local_lock_irqsave(&memcg_stock.stock_lock, flags);
+>   
+>   	stock = this_cpu_ptr(&memcg_stock);
+>   	if (memcg == stock->cached && stock->nr_pages >= nr_pages) {
+> @@ -2176,7 +2192,7 @@ static bool consume_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+>   		ret = true;
+>   	}
+>   
+> -	local_irq_restore(flags);
+> +	local_unlock_irqrestore(&memcg_stock.stock_lock, flags);
+>   
+>   	return ret;
+>   }
+> @@ -2204,38 +2220,43 @@ static void drain_stock(struct memcg_stock_pcp *stock)
+>   
+>   static void drain_local_stock(struct work_struct *dummy)
+>   {
+> -	struct memcg_stock_pcp *stock;
+> -	unsigned long flags;
+> +	struct memcg_stock_pcp *stock_pcp;
+> +	struct obj_cgroup *old;
+>   
+>   	/*
+>   	 * The only protection from cpu hotplug (memcg_hotplug_cpu_dead) vs.
+>   	 * drain_stock races is that we always operate on local CPU stock
+>   	 * here with IRQ disabled
+>   	 */
+> -	local_irq_save(flags);
+> +#ifndef CONFIG_PREEMPT_RT
+> +	local_lock(&memcg_stock.task_obj_lock);
+> +	old = drain_obj_stock(&this_cpu_ptr(&memcg_stock)->task_obj, NULL);
+> +	local_unlock(&memcg_stock.task_obj_lock);
+> +	if (old)
+> +		obj_cgroup_put(old);
+> +#endif
+>   
+> -	stock = this_cpu_ptr(&memcg_stock);
+> -	drain_obj_stock(&stock->irq_obj);
+> -	if (in_task())
+> -		drain_obj_stock(&stock->task_obj);
+> -	drain_stock(stock);
+> -	clear_bit(FLUSHING_CACHED_CHARGE, &stock->flags);
+> +	local_lock_irq(&memcg_stock.stock_lock);
+> +	stock_pcp = this_cpu_ptr(&memcg_stock);
+> +	old = drain_obj_stock(&stock_pcp->irq_obj, stock_pcp);
+>   
+> -	local_irq_restore(flags);
+> +	drain_stock(stock_pcp);
+> +	clear_bit(FLUSHING_CACHED_CHARGE, &stock_pcp->flags);
+> +
+> +	local_unlock_irq(&memcg_stock.stock_lock);
+> +	if (old)
+> +		obj_cgroup_put(old);
+>   }
+>   
+>   /*
+>    * Cache charges(val) to local per_cpu area.
+>    * This will be consumed by consume_stock() function, later.
+>    */
+> -static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+> +static void __refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages,
+> +			   struct memcg_stock_pcp *stock)
+>   {
+> -	struct memcg_stock_pcp *stock;
+> -	unsigned long flags;
+> +	lockdep_assert_held(&stock->stock_lock);
+>   
+> -	local_irq_save(flags);
+> -
+> -	stock = this_cpu_ptr(&memcg_stock);
+>   	if (stock->cached != memcg) { /* reset if necessary */
+>   		drain_stock(stock);
+>   		css_get(&memcg->css);
+> @@ -2245,8 +2266,20 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+>   
+>   	if (stock->nr_pages > MEMCG_CHARGE_BATCH)
+>   		drain_stock(stock);
+> +}
+>   
+> -	local_irq_restore(flags);
+> +static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages,
+> +			 struct memcg_stock_pcp *stock_pcp)
+> +{
+> +	unsigned long flags;
+> +
+> +	if (stock_pcp) {
+> +		__refill_stock(memcg, nr_pages, stock_pcp);
+> +		return;
+> +	}
+> +	local_lock_irqsave(&memcg_stock.stock_lock, flags);
+> +	__refill_stock(memcg, nr_pages, this_cpu_ptr(&memcg_stock));
+> +	local_unlock_irqrestore(&memcg_stock.stock_lock, flags);
+>   }
+>   
+>   /*
+> @@ -2255,7 +2288,7 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+>    */
+>   static void drain_all_stock(struct mem_cgroup *root_memcg)
+>   {
+> -	int cpu, curcpu;
+> +	int cpu;
+>   
+>   	/* If someone's already draining, avoid adding running more workers. */
+>   	if (!mutex_trylock(&percpu_charge_mutex))
+> @@ -2266,7 +2299,7 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
+>   	 * as well as workers from this path always operate on the local
+>   	 * per-cpu data. CPU up doesn't touch memcg_stock at all.
+>   	 */
+> -	curcpu = get_cpu();
+> +	cpus_read_lock();
+>   	for_each_online_cpu(cpu) {
+>   		struct memcg_stock_pcp *stock = &per_cpu(memcg_stock, cpu);
+>   		struct mem_cgroup *memcg;
+> @@ -2282,14 +2315,10 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
+>   		rcu_read_unlock();
+>   
+>   		if (flush &&
+> -		    !test_and_set_bit(FLUSHING_CACHED_CHARGE, &stock->flags)) {
+> -			if (cpu == curcpu)
+> -				drain_local_stock(&stock->work);
+> -			else
+> -				schedule_work_on(cpu, &stock->work);
+> -		}
+> +		    !test_and_set_bit(FLUSHING_CACHED_CHARGE, &stock->flags))
+> +			schedule_work_on(cpu, &stock->work);
+>   	}
+> -	put_cpu();
+> +	cpus_read_unlock();
+>   	mutex_unlock(&percpu_charge_mutex);
+>   }
+>   
+> @@ -2690,7 +2719,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>   
+>   done_restock:
+>   	if (batch > nr_pages)
+> -		refill_stock(memcg, batch - nr_pages);
+> +		refill_stock(memcg, batch - nr_pages, NULL);
+>   
+>   	/*
+>   	 * If the hierarchy is above the normal consumption range, schedule
+> @@ -2803,28 +2832,35 @@ static struct mem_cgroup *get_mem_cgroup_from_objcg(struct obj_cgroup *objcg)
+>    * can only be accessed after disabling interrupt. User context code can
+>    * access interrupt object stock, but not vice versa.
+>    */
+> -static inline struct obj_stock *get_obj_stock(unsigned long *pflags)
+> +static inline struct obj_stock *get_obj_stock(unsigned long *pflags,
+> +					      struct memcg_stock_pcp **stock_pcp)
+>   {
+>   	struct memcg_stock_pcp *stock;
+>   
+> +#ifndef CONFIG_PREEMPT_RT
+>   	if (likely(in_task())) {
+>   		*pflags = 0UL;
+> -		preempt_disable();
+> +		*stock_pcp = NULL;
+> +		local_lock(&memcg_stock.task_obj_lock);
+>   		stock = this_cpu_ptr(&memcg_stock);
+>   		return &stock->task_obj;
+>   	}
+> -
+> -	local_irq_save(*pflags);
+> +#endif
+> +	local_lock_irqsave(&memcg_stock.stock_lock, *pflags);
+>   	stock = this_cpu_ptr(&memcg_stock);
+> +	*stock_pcp = stock;
+>   	return &stock->irq_obj;
+>   }
+>   
+> -static inline void put_obj_stock(unsigned long flags)
+> +static inline void put_obj_stock(unsigned long flags,
+> +				 struct memcg_stock_pcp *stock_pcp)
+>   {
+> -	if (likely(in_task()))
+> -		preempt_enable();
+> +#ifndef CONFIG_PREEMPT_RT
+> +	if (likely(!stock_pcp))
+> +		local_unlock(&memcg_stock.task_obj_lock);
+>   	else
+> -		local_irq_restore(flags);
+If you skip the "else" and add a "return", there will be a more natural 
+indentation for the following lock_unlock_irqrestore(). Also we may not 
+really need the additional stock_pcp argument here.
+> +#endif
+> +		local_unlock_irqrestore(&memcg_stock.stock_lock, flags);
+>   }
+Cheers,
+Longman
+
