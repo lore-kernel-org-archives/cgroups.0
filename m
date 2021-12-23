@@ -1,116 +1,189 @@
-From: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2] KVM: Move VM's worker kthreads back to the original
- cgroups before exiting.
-Date: Wed, 22 Dec 2021 22:53:50 +0000
-Message-ID: <20211222225350.1912249-1-vipinsh@google.com>
+From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: Use after free with BFQ and cgroups
+Date: Thu, 23 Dec 2021 09:02:55 +0800
+Message-ID: <d770663a-911c-c9c1-1185-558634f4c738@huawei.com>
+References: <20211125172809.GC19572@quack2.suse.cz>
+ <20211126144724.GA31093@blackbody.suse.cz>
+ <20211129171115.GC29512@quack2.suse.cz>
+ <f03b2b1c-808a-c657-327d-03165b988e7d@huawei.com>
+ <20211222152103.GF685@quack2.suse.cz>
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+        boundary="------------DBDA67AA3D957847EA8B3933"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=oNIAkp8neiAB7783twgZn/TOQ9PM7zBBm/WLvA2Zt9k=;
-        b=nDgKUnHCmPH/1PpVRNkhtBbODzY52sRC85PwAtvQUnxfM7N0o2wARPvR/muu5AzNw8
-         82cyvFCb7Wj2w1u8zWMcOp8QNYGwL/2akDv6EUHpnUXxu7IpBCoweLw3zuLlYHP1E6yd
-         n3d2lnpsWohoKv+dDK7C02guj1oMsXtAJzdS8se6b3xhLXLG9/jwJIVUlRUThhIFjvTT
-         FRpeqgNndxxn5LjOdn7F4nrR24PUQ0km7DJLYwb393Z2d0MIPZAHiX9FtcTYHy+MuVKk
-         JqO6jT+Vt5UiwwOzBrhnUXfeg4HbfrUyflH5D6G8Qo/DNptyIxJFaaKQgcLmRgPMBqf5
-         yeSw==
+In-Reply-To: <20211222152103.GF685-4I4JzKEfoa/jFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fvogt-l3A5Bk7waGM@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+
+--------------DBDA67AA3D957847EA8B3933
+Content-Type: text/plain; charset="gbk"; format="flowed"
+Content-Transfer-Encoding: base64
+
+1NogMjAyMS8xMi8yMiAyMzoyMSwgSmFuIEthcmEg0LS1wDoKPiBPbiBUaHUgMDktMTItMjEgMTA6
+MjM6MzMsIHl1a3VhaSAoQykgd3JvdGU6Cj4+IFdlIGNvbmZpcm1lZCB0aGlzIGJ5IG91ciByZXBy
+b2R1Y2VyIHRocm91Z2ggYSBzaW1wbGUgcGF0Y2g6Cj4+IHN0b3AgbWVyZ2luZyBiZnFfcXVldWVz
+IGlmIHRoZWlyIHBhcmVudHMgYXJlIGRpZmZlcmVudC4KPiAKPiBDYW4geW91IHBsZWFzZSBzaGFy
+ZSB5b3VyIHJlcHJvZHVjZXI/IEkgaGF2ZSBwcmVwYXJlZCBzb21lIHBhdGNoZXMgd2hpY2gKPiBJ
+J2QgbGlrZSB0byB2ZXJpZnkgYmVmb3JlIHBvc3RpbmcuLi4gVGhhbmtzIQoKSGksCgpIZXJlIGlz
+IHRoZSByZXByb2R1Y2VyLCB1c3VhbGx5IHRoZSBwcm9ibGVtIHdpbGwgY29tZSB1cCB3aXRoaW4g
+YW4KaG91ci4KClRoYW5rcywKS3VhaQo+IAo+IAkJCQkJCQkJSG9uemEKPiAK
+
+--------------DBDA67AA3D957847EA8B3933
+Content-Type: text/plain; charset="UTF-8"; name="null_bad.sh"
 Content-Transfer-Encoding: 7bit
-To: pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: dmatlack-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Disposition: attachment; filename="null_bad.sh"
 
-VM worker kthreads can linger in the VM process's cgroup for sometime
-after KVM terminates the VM process.
+#!/bin/bash
+NR=1
+basedir=/sys/fs/cgroup/blkio/null
+CG_PREFIX=/sys/fs/cgroup/blkio/null/nullb
 
-KVM terminates the worker kthreads by calling kthread_stop() which waits
-on the 'exited' completion, triggered by exit_mm(), via mm_release(),
-during kthread's exit.  However, these kthreads are removed from the
-cgroup using cgroup_exit() call which happens after exit_mm(). A VM
-process can terminate between the time window of exit_mm() to
-cgroup_exit(), leaving only worker kthreads in the cgroup.
+function set_cgroup()
+{
+	testdir=$1
+	dev_id=$2
+	let weight=RANDOM%900+100
+	let iops=RANDOM%1000+100
+	let bps=RANDOM%10485760+10485760
+	echo "$weight" > $testdir/blkio.bfq.weight
+	echo "$dev_id $iops" > $testdir/blkio.throttle.read_iops_device
+	echo "$dev_id $iops" > $testdir/blkio.throttle.write_iops_device
+	echo "$dev_id $bps" > $testdir/blkio.throttle.read_bps_device
+	echo "$dev_id $bps" > $testdir/blkio.throttle.write_bps_device
+}
 
-Moving worker kthreads back to the original cgroup (kthreadd_task's
-cgroup) makes sure that cgroup is empty as soon as the main VM process
-is terminated.
+function set_sys()
+{
+	local queue_dir=/sys/block/$1/queue
 
-kthreadd_task is not an exported symbol which causes build errors if KVM
-is built as a loadable module. Both users (kvm_main & vhost) of
-cgroup_attach_task_all(), have the same issue, therefore, using
-kthreadd_task as a default option is chosen when the API is called with
-NULL argument.
+	let rq_affinity=RANDOM%3
+	echo $rq_affinity > $queue_dir/rq_affinity
 
-Signed-off-by: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
+	let add_random=RANDOM%2
+	echo $add_random > $queue_dir/add_random
 
-v2:
-- Use kthreadd_task in the cgroup API to avoid build issue.
+	let rotational=RANDOM%2
+	echo $rotational > $queue_dir/rotational
 
-v1: https://lore.kernel.org/lkml/20211214050708.4040200-1-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+	let nomerges=RANDOM%2
+	echo $nomerges > $queue_dir/nomerges
 
- kernel/cgroup/cgroup-v1.c |  5 +++++
- virt/kvm/kvm_main.c       | 15 ++++++++++++++-
- 2 files changed, 19 insertions(+), 1 deletion(-)
+	let s_num=RANDOM%5
+	case $s_num in
+		0)
+		scheduler=none
+		;;
+		1)
+		scheduler=bfq
+		;;
+		2)
+		scheduler=bfq
+		;;
+		3)
+		scheduler=none
+		;;
+	esac
+	echo bfq > $queue_dir/scheduler
+}
 
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 81c9e0685948..81d4b2f2acf0 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -51,6 +51,8 @@ bool cgroup1_ssid_disabled(int ssid)
-  * @from: attach to all cgroups of a given task
-  * @tsk: the task to be attached
-  *
-+ * If @from is NULL then use kthreadd_task for finding the destination cgroups.
-+ *
-  * Return: %0 on success or a negative errno code on failure
-  */
- int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
-@@ -58,6 +60,9 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
- 	struct cgroup_root *root;
- 	int retval = 0;
- 
-+	if (!from)
-+		from = kthreadd_task;
-+
- 	mutex_lock(&cgroup_mutex);
- 	percpu_down_write(&cgroup_threadgroup_rwsem);
- 	for_each_root(root) {
-diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
-index b0f7e6eb00ff..f7504578c374 100644
---- a/virt/kvm/kvm_main.c
-+++ b/virt/kvm/kvm_main.c
-@@ -5785,7 +5785,7 @@ static int kvm_vm_worker_thread(void *context)
- 	init_context = NULL;
- 
- 	if (err)
--		return err;
-+		goto out;
- 
- 	/* Wait to be woken up by the spawner before proceeding. */
- 	kthread_parkme();
-@@ -5793,6 +5793,19 @@ static int kvm_vm_worker_thread(void *context)
- 	if (!kthread_should_stop())
- 		err = thread_fn(kvm, data);
- 
-+out:
-+	/*
-+	 * We need to move the kthread back to its original cgroups, so that it
-+	 * doesn't linger in the cgroups of the user process after the user
-+	 * process has already terminated.
-+	 *
-+	 * kthread_stop() waits on 'exited' completion condition which is set
-+	 * in exit_mm(), via mm_release(), in do_exit(). However, kthread
-+	 * is removed from cgroups in the cgroup_exit() which is called after
-+	 * exit_mm(). This causes lingering of kthreads in cgroups after main
-+	 * VM process has finished.
-+	 */
-+	WARN_ON(cgroup_attach_task_all(NULL, current));
- 	return err;
- }
- 
+create_cg()
+{
+	local i
+	local path
 
-base-commit: 5e4e84f1124aa02643833b7ea40abd5a8e964388
--- 
-2.34.1.307.g9b7440fafd-goog
+	for i in $(seq 0 $NR)
+	do
+		path=${CG_PREFIX}${i}
+		mkdir -p $path
+	done
+}
 
+switch_cg()
+{
+	local path=${CG_PREFIX}$1
+	local t
+
+	for t in $(cat $path/tasks)
+	do
+		echo $t > /sys/fs/cgroup/blkio/tasks
+	done
+
+	echo "tasks in $path"
+	cat $path/tasks
+}
+
+rm_cg()
+{
+	local path=${CG_PREFIX}$1
+
+	rmdir $path
+	return $?
+}
+
+mkdir $basedir
+cgdir1=/sys/fs/cgroup/blkio/null/nullb0
+cgdir2=/sys/fs/cgroup/blkio/null/nullb1
+
+ADD_MOD="modprobe null_blk"
+while true
+do
+	let flag=RANDOM%2
+	if [ $flag -eq 1 ];then
+		$ADD_MOD queue_mode=2 blocking=1 nr_devices=2
+	else
+		$ADD_MOD queue_mode=2 nr_devices=2
+	fi
+		
+	create_cg
+
+	dev_id=`lsblk | grep nullb0 | awk '{print $2}'`
+	set_cgroup $basedir $dev_id 
+	set_sys nullb0
+
+	dev_id=`lsblk | grep nullb1 | awk '{print $2}'`
+	set_cgroup $basedir $dev_id 
+	set_sys nullb1
+
+	let flag=RANDOM%20
+	if [ $flag -eq 5 ];then
+		echo 1 > /sys/block/nullb0/make-it-fail
+		echo 1 > /sys/block/nullb1/make-it-fail
+	else
+		echo 0 > /sys/block/nullb0/make-it-fail
+		echo 0 > /sys/block/nullb1/make-it-fail
+	fi
+
+	i=0
+	while [ $i -le 3 ]
+	do
+		cgexec -g "blkio:null/nullb0" fio -filename=/dev/nullb0 -ioengine=libaio -time_based=1 -rw=rw -thread -size=100g -bs=512 -numjobs=4 -iodepth=8 -runtime=5 -group_reporting -name=brd-IOwrite -rwmixread=50 &>/dev/null &
+		cgexec -g "blkio:null/nullb0" fio -filename=/dev/nullb0 -ioengine=psync -direct=1 -time_based=1 -rw=rw -thread -size=100g -bs=512 -numjobs=4 -iodepth=8 -runtime=5 -group_reporting -name=brd-IOwrite -rwmixread=50 &>/dev/null &
+		cgexec -g "blkio:null/nullb1" fio -filename=/dev/nullb1 -ioengine=libaio -time_based=1 -rw=rw -thread -size=100g -bs=1024k -numjobs=4 -iodepth=8 -runtime=5 -group_reporting -name=brd-IOwrite -rwmixread=50 &>/dev/null &
+		cgexec -g "blkio:null/nullb1" fio -filename=/dev/nullb1 -ioengine=psync -direct=1 -time_based=1 -rw=rw -thread -size=100g -bs=1024k -numjobs=4 -iodepth=8 -runtime=5 -group_reporting -name=brd-IOwrite -rwmixread=50 &>/dev/null &
+		((i=i+1))
+	done
+
+	sleep 3
+
+	until rm_cg 0
+	do
+		switch_cg 0
+		sleep 0.1
+	done
+
+	until rm_cg 1
+	do
+		switch_cg 1
+		sleep 0.1
+	done
+
+	while true
+	do
+		rmmod null_blk &>/dev/null && break
+		sleep 0.1
+	done
+done
+
+
+--------------DBDA67AA3D957847EA8B3933--
