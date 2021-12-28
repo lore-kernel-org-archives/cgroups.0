@@ -1,60 +1,112 @@
-From: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 00/33] Separate struct slab from struct page
-Date: Mon, 27 Dec 2021 02:43:15 +0000
-Message-ID: <YckoQ7tkLgFhJA7u@ip-172-31-30-232.ap-northeast-1.compute.internal>
-References: <20211201181510.18784-1-vbabka@suse.cz>
- <4c3dfdfa-2e19-a9a7-7945-3d75bc87ca05@suse.cz>
- <f3a83708-3f3c-a634-7bee-dcfcaaa7f36e@suse.cz>
- <Ycbhh5n8TBODWHR+@ip-172-31-30-232.ap-northeast-1.compute.internal>
- <Ycdak5J48i7CGkHU@casper.infradead.org>
+From: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2] KVM: Move VM's worker kthreads back to the original
+ cgroups before exiting.
+Date: Tue, 28 Dec 2021 17:17:41 +0000
+Message-ID: <YctGtWzYcNP2iTaN@google.com>
+References: <20211222225350.1912249-1-vipinsh@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
+        d=google.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=sbWmY9NIBHJbspqdt0/iFybWiUNO01ZpzPEk+bSzcIc=;
-        b=b6Cjg8EDgami9tihXmahcFs5gZMUl0ofSM1Wj+YZ2Q6XRHsDdBRl90zeF1jbOOSz3+
-         9SoQiZ4EdbCG+Jmg4MzA5/6shK8RZg8xrV2gqJVuZDyAYqtXwqlmry/aJAkQ4oiG8ngV
-         7rpAaYsMSPY9gaW/AMeOV2RIDPlYhOIi7V3RAasnd56UnpIcH6qs4tNiIeLbz9RuGyMQ
-         3rfi/aFyW60zG42gzOC8ll2ZU35Xujv3pg6CUtvkdcaI6VRRKTlNpdBWUeCpGeADhAXG
-         JPgrgb5sX7zdu4h1uMAdv/6rtljcukOvJ4HPQR8PbQw3YwGslBNSSpCAuWszimU1l/o9
-         DGlw==
+        bh=ivoEdS/CxNoGT7D8SqF0HNjUYAr9Hq6dlyJRhMADj5U=;
+        b=mE6AwGIQ3sval0uBHIKCCq+gF2bQ7hglSjPsTsleu2wn0+ggU2al7iWlZSUBWYp6/U
+         L2ClRIPzUoRTvHwD/IoZcmKsJvbS5ND/UrnQl+3+TfS3g6V8fIkCuLr2Fle/F2GL6D1y
+         E6BXtrTkjuOBPsiaG0tMdkhQy+RW1SwuGVTxXj1KuwQaLfRc6I2IN+GUMo93p1EVtVyJ
+         2FUGCZzPjE//OZQsKHMVP2fQbmyeOWU82IN/kXeEizDHzXnvqCziCoOIRj3799XlISo5
+         aENIZTOWJLYG1KnocCv8m3Me3F4WGRrooPpJjvRFa6iM92TmU0WyOvaSVg6CdAuCgUPb
+         l6ug==
 Content-Disposition: inline
-In-Reply-To: <Ycdak5J48i7CGkHU-FZi0V3Vbi30CUdFEqe4BF2D2FQJk+8+b@public.gmane.org>
+In-Reply-To: <20211222225350.1912249-1-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrey Konovalov <andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dmatlack-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat, Dec 25, 2021 at 05:53:23PM +0000, Matthew Wilcox wrote:
-> On Sat, Dec 25, 2021 at 09:16:55AM +0000, Hyeonggon Yoo wrote:
-> > # mm: Convert struct page to struct slab in functions used by other subsystems
-> > I'm not familiar with kasan, but to ask:
-> > Does ____kasan_slab_free detect invalid free if someone frees
-> > an object that is not allocated from slab?
-> > 
-> > @@ -341,7 +341,7 @@ static inline bool ____kasan_slab_free(struct kmem_cache *cache, void *object,
-> > -       if (unlikely(nearest_obj(cache, virt_to_head_page(object), object) !=
-> > +       if (unlikely(nearest_obj(cache, virt_to_slab(object), object) !=
-> >             object)) {
-> >                 kasan_report_invalid_free(tagged_object, ip);
-> >                 return true;
-> > 
-> > I'm asking this because virt_to_slab() will return NULL if folio_test_slab()
-> > returns false. That will cause NULL pointer dereference in nearest_obj.
-> > I don't think this change is intended.
+On Wed, Dec 22, 2021, Vipin Sharma wrote:
+> kthreadd_task is not an exported symbol which causes build errors if KVM
+> is built as a loadable module. Both users (kvm_main & vhost) of
+> cgroup_attach_task_all(), have the same issue, therefore, using
+> kthreadd_task as a default option is chosen when the API is called with
+> NULL argument.
+
+...
+
+> diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+> index 81c9e0685948..81d4b2f2acf0 100644
+> --- a/kernel/cgroup/cgroup-v1.c
+> +++ b/kernel/cgroup/cgroup-v1.c
+> @@ -51,6 +51,8 @@ bool cgroup1_ssid_disabled(int ssid)
+>   * @from: attach to all cgroups of a given task
+>   * @tsk: the task to be attached
+>   *
+> + * If @from is NULL then use kthreadd_task for finding the destination cgroups.
+> + *
+>   * Return: %0 on success or a negative errno code on failure
+>   */
+>  int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+> @@ -58,6 +60,9 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+>  	struct cgroup_root *root;
+>  	int retval = 0;
+>  
+> +	if (!from)
+> +		from = kthreadd_task;
+
+Rather than sully cgroup_attach_task_all() with this behavior, can't KVM do
+
+	cgroup_attach_task_all(current->real_parent, current)
+
+since AFAICT real_parent is guaranteed to point at kthreadd_task.
+
+> +
+>  	mutex_lock(&cgroup_mutex);
+>  	percpu_down_write(&cgroup_threadgroup_rwsem);
+>  	for_each_root(root) {
+> diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
+> index b0f7e6eb00ff..f7504578c374 100644
+> --- a/virt/kvm/kvm_main.c
+> +++ b/virt/kvm/kvm_main.c
+> @@ -5785,7 +5785,7 @@ static int kvm_vm_worker_thread(void *context)
+>  	init_context = NULL;
+>  
+>  	if (err)
+> -		return err;
+> +		goto out;
+>  
+>  	/* Wait to be woken up by the spawner before proceeding. */
+>  	kthread_parkme();
+> @@ -5793,6 +5793,19 @@ static int kvm_vm_worker_thread(void *context)
+>  	if (!kthread_should_stop())
+>  		err = thread_fn(kvm, data);
+>  
+> +out:
+> +	/*
+> +	 * We need to move the kthread back to its original cgroups, so that it
+
+Please state what is being done, not what "needs" to be done.  The need to do
+something is implicit, otherwise we wouldn't be doing it.
+
+> +	 * doesn't linger in the cgroups of the user process after the user
+> +	 * process has already terminated.
+> +	 *
+> +	 * kthread_stop() waits on 'exited' completion condition which is set
+> +	 * in exit_mm(), via mm_release(), in do_exit(). However, kthread
+> +	 * is removed from cgroups in the cgroup_exit() which is called after
+> +	 * exit_mm(). This causes lingering of kthreads in cgroups after main
+> +	 * VM process has finished.
+> +	 */
+> +	WARN_ON(cgroup_attach_task_all(NULL, current));
+
+This should not WARN, cgroup_attach_task_all() needs to perform allocations and
+will fail with -ENOMEM even in the absense of kernel bugs.
+
+>  	return err;
+>  }
+>  
 > 
-> You need to track down how this could happen.  As far as I can tell,
-> it's always called when we know the object is part of a slab.  That's
-> where the cachep pointer is deduced from.
-
-Thank you Matthew, you are right. I read the code too narrowly.
-when we call kasan hooks, we know that the object is allocated from
-the slab cache. (through cache_from_obj)
-
-I'll review that patch again in part 3!
-
-Thanks,
-Hyeonggon
+> base-commit: 5e4e84f1124aa02643833b7ea40abd5a8e964388
+> -- 
+> 2.34.1.307.g9b7440fafd-goog
+> 
