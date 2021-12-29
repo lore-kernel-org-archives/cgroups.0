@@ -1,112 +1,113 @@
-From: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] KVM: Move VM's worker kthreads back to the original
- cgroups before exiting.
-Date: Tue, 28 Dec 2021 17:17:41 +0000
-Message-ID: <YctGtWzYcNP2iTaN@google.com>
-References: <20211222225350.1912249-1-vipinsh@google.com>
+From: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 00/33] Separate struct slab from struct page
+Date: Wed, 29 Dec 2021 11:22:54 +0000
+Message-ID: <YcxFDuPXlTwrPSPk@ip-172-31-30-232.ap-northeast-1.compute.internal>
+References: <20211201181510.18784-1-vbabka@suse.cz>
+ <4c3dfdfa-2e19-a9a7-7945-3d75bc87ca05@suse.cz>
+ <f3a83708-3f3c-a634-7bee-dcfcaaa7f36e@suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
+        d=gmail.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=ivoEdS/CxNoGT7D8SqF0HNjUYAr9Hq6dlyJRhMADj5U=;
-        b=mE6AwGIQ3sval0uBHIKCCq+gF2bQ7hglSjPsTsleu2wn0+ggU2al7iWlZSUBWYp6/U
-         L2ClRIPzUoRTvHwD/IoZcmKsJvbS5ND/UrnQl+3+TfS3g6V8fIkCuLr2Fle/F2GL6D1y
-         E6BXtrTkjuOBPsiaG0tMdkhQy+RW1SwuGVTxXj1KuwQaLfRc6I2IN+GUMo93p1EVtVyJ
-         2FUGCZzPjE//OZQsKHMVP2fQbmyeOWU82IN/kXeEizDHzXnvqCziCoOIRj3799XlISo5
-         aENIZTOWJLYG1KnocCv8m3Me3F4WGRrooPpJjvRFa6iM92TmU0WyOvaSVg6CdAuCgUPb
-         l6ug==
+        bh=B8D9h3oa8OpyqxIH3xe2rIOLYO1p/ntyh/ItEZc2ers=;
+        b=WGgAxIa78MQr67iJtQ1TD1NaSUDzL8Sj14e4SvxYWhEN9di3WJIBnUF+L3ExcGr1oj
+         QG61NAIFhjT/XTvY0CDIKSy0x2wdhjgp5o3CP/sn9tLZp0iIoIh8BXvPhaMFXpuLfzRl
+         ssYONzQtGOvuMs4NA/1vndNqMZ2aeOxJ5COnpBFYJWM3L7v9L5GRfb6CzWNnmn7NDNB5
+         Y3k9y/k0SaoD8ZsB9lFCcDRjDybncaD5TD9GRZZ/dYi8Nrw8/TG12zPX6PJi/KX88OD2
+         OuID2/9IQHJyO+voFSIrf5Pg524R1rvzzNEz20N8dgdaI7Q3jfQjIb0uJgqdnoHZZxJI
+         MBfA==
 Content-Disposition: inline
-In-Reply-To: <20211222225350.1912249-1-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <f3a83708-3f3c-a634-7bee-dcfcaaa7f36e-AlSwsSmVLrQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dmatlack-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrey Konovalov <andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes@cmpxchg>
 
-On Wed, Dec 22, 2021, Vipin Sharma wrote:
-> kthreadd_task is not an exported symbol which causes build errors if KVM
-> is built as a loadable module. Both users (kvm_main & vhost) of
-> cgroup_attach_task_all(), have the same issue, therefore, using
-> kthreadd_task as a default option is chosen when the API is called with
-> NULL argument.
-
-...
-
-> diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-> index 81c9e0685948..81d4b2f2acf0 100644
-> --- a/kernel/cgroup/cgroup-v1.c
-> +++ b/kernel/cgroup/cgroup-v1.c
-> @@ -51,6 +51,8 @@ bool cgroup1_ssid_disabled(int ssid)
->   * @from: attach to all cgroups of a given task
->   * @tsk: the task to be attached
->   *
-> + * If @from is NULL then use kthreadd_task for finding the destination cgroups.
-> + *
->   * Return: %0 on success or a negative errno code on failure
->   */
->  int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
-> @@ -58,6 +60,9 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
->  	struct cgroup_root *root;
->  	int retval = 0;
->  
-> +	if (!from)
-> +		from = kthreadd_task;
-
-Rather than sully cgroup_attach_task_all() with this behavior, can't KVM do
-
-	cgroup_attach_task_all(current->real_parent, current)
-
-since AFAICT real_parent is guaranteed to point at kthreadd_task.
-
-> +
->  	mutex_lock(&cgroup_mutex);
->  	percpu_down_write(&cgroup_threadgroup_rwsem);
->  	for_each_root(root) {
-> diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
-> index b0f7e6eb00ff..f7504578c374 100644
-> --- a/virt/kvm/kvm_main.c
-> +++ b/virt/kvm/kvm_main.c
-> @@ -5785,7 +5785,7 @@ static int kvm_vm_worker_thread(void *context)
->  	init_context = NULL;
->  
->  	if (err)
-> -		return err;
-> +		goto out;
->  
->  	/* Wait to be woken up by the spawner before proceeding. */
->  	kthread_parkme();
-> @@ -5793,6 +5793,19 @@ static int kvm_vm_worker_thread(void *context)
->  	if (!kthread_should_stop())
->  		err = thread_fn(kvm, data);
->  
-> +out:
-> +	/*
-> +	 * We need to move the kthread back to its original cgroups, so that it
-
-Please state what is being done, not what "needs" to be done.  The need to do
-something is implicit, otherwise we wouldn't be doing it.
-
-> +	 * doesn't linger in the cgroups of the user process after the user
-> +	 * process has already terminated.
-> +	 *
-> +	 * kthread_stop() waits on 'exited' completion condition which is set
-> +	 * in exit_mm(), via mm_release(), in do_exit(). However, kthread
-> +	 * is removed from cgroups in the cgroup_exit() which is called after
-> +	 * exit_mm(). This causes lingering of kthreads in cgroups after main
-> +	 * VM process has finished.
-> +	 */
-> +	WARN_ON(cgroup_attach_task_all(NULL, current));
-
-This should not WARN, cgroup_attach_task_all() needs to perform allocations and
-will fail with -ENOMEM even in the absense of kernel bugs.
-
->  	return err;
->  }
->  
+On Wed, Dec 22, 2021 at 05:56:50PM +0100, Vlastimil Babka wrote:
+> On 12/14/21 13:57, Vlastimil Babka wrote:
+> > On 12/1/21 19:14, Vlastimil Babka wrote:
+> >> Folks from non-slab subsystems are Cc'd only to patches affecting them, and
+> >> this cover letter.
+> >>
+> >> Series also available in git, based on 5.16-rc3:
+> >> https://git.kernel.org/pub/scm/linux/kernel/git/vbabka/linux.git/log/?h=slab-struct_slab-v2r2
+> > 
+> > Pushed a new branch slab-struct-slab-v3r3 with accumulated fixes and small tweaks
+> > and a new patch from Hyeonggon Yoo on top. To avoid too much spam, here's a range diff:
 > 
-> base-commit: 5e4e84f1124aa02643833b7ea40abd5a8e964388
-> -- 
-> 2.34.1.307.g9b7440fafd-goog
-> 
+> Hi, I've pushed another update branch slab-struct_slab-v4r1, and also to
+> -next. I've shortened git commit log lines to make checkpatch happier,
+> so no range-diff as it would be too long. I believe it would be useless
+> spam to post the whole series now, shortly before xmas, so I will do it
+> at rc8 time, to hopefully collect remaining reviews. But if anyone wants
+> a mailed version, I can do that.
+>
+
+Hello Matthew and Vlastimil.
+it's part 3 of review.
+
+# mm: Convert struct page to struct slab in functions used by other subsystems
+Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+
+# mm/slub: Convert most struct page to struct slab by spatch
+Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+with a question below.
+
+-static int check_slab(struct kmem_cache *s, struct page *page)
++static int check_slab(struct kmem_cache *s, struct slab *slab)
+ {
+        int maxobj;
+ 
+-       if (!PageSlab(page)) {
+-               slab_err(s, page, "Not a valid slab page");
++       if (!folio_test_slab(slab_folio(slab))) {
++               slab_err(s, slab, "Not a valid slab page");
+                return 0;
+        }
+
+Can't we guarantee that struct slab * always points to a slab?
+
+for struct page * it can be !PageSlab(page) because struct page *
+can be other than slab. but struct slab * can only be slab
+unlike struct page. code will be simpler if we guarantee that
+struct slab * always points to a slab (or NULL).
+
+
+# mm/slub: Convert pfmemalloc_match() to take a struct slab
+It's confusing to me because the original pfmemalloc_match() is removed
+and pfmemalloc_match_unsafe() was renamed to pfmemalloc_match() and
+converted to use slab_test_pfmemalloc() helper.
+
+But I agree with the resulting code. so:
+Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+
+# mm/slub: Convert alloc_slab_page() to return a struct slab
+Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+
+# mm/slub: Convert print_page_info() to print_slab_info()
+Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+I hope to review rest of patches in a week.
+
+Thanks,
+Hyeonggon
+
+> Changes in v4:
+> - rebase to 5.16-rc6 to avoid a conflict with mainline
+> - collect acks/reviews/tested-by from Johannes, Roman, Hyeonggon Yoo -
+> thanks!
+> - in patch "mm/slub: Convert detached_freelist to use a struct slab"
+> renamed free_nonslab_page() to free_large_kmalloc() and use folio there,
+> as suggested by Roman
+> - in "mm/memcg: Convert slab objcgs from struct page to struct slab"
+> change one caller of slab_objcgs_check() to slab_objcgs() as suggested
+> by Johannes, realize the other caller should be also changed, and remove
+> slab_objcgs_check() completely.
