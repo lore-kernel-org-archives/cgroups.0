@@ -1,113 +1,79 @@
-From: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 00/33] Separate struct slab from struct page
-Date: Wed, 29 Dec 2021 11:22:54 +0000
-Message-ID: <YcxFDuPXlTwrPSPk@ip-172-31-30-232.ap-northeast-1.compute.internal>
-References: <20211201181510.18784-1-vbabka@suse.cz>
- <4c3dfdfa-2e19-a9a7-7945-3d75bc87ca05@suse.cz>
- <f3a83708-3f3c-a634-7bee-dcfcaaa7f36e@suse.cz>
+From: syzbot <syzbot+568dc81cd20b72d4a49f-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
+Subject: [syzbot] WARNING in cpuset_write_resmask
+Date: Wed, 29 Dec 2021 08:54:22 -0800
+Message-ID: <000000000000264b2a05d44bca80@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=B8D9h3oa8OpyqxIH3xe2rIOLYO1p/ntyh/ItEZc2ers=;
-        b=WGgAxIa78MQr67iJtQ1TD1NaSUDzL8Sj14e4SvxYWhEN9di3WJIBnUF+L3ExcGr1oj
-         QG61NAIFhjT/XTvY0CDIKSy0x2wdhjgp5o3CP/sn9tLZp0iIoIh8BXvPhaMFXpuLfzRl
-         ssYONzQtGOvuMs4NA/1vndNqMZ2aeOxJ5COnpBFYJWM3L7v9L5GRfb6CzWNnmn7NDNB5
-         Y3k9y/k0SaoD8ZsB9lFCcDRjDybncaD5TD9GRZZ/dYi8Nrw8/TG12zPX6PJi/KX88OD2
-         OuID2/9IQHJyO+voFSIrf5Pg524R1rvzzNEz20N8dgdaI7Q3jfQjIb0uJgqdnoHZZxJI
-         MBfA==
-Content-Disposition: inline
-In-Reply-To: <f3a83708-3f3c-a634-7bee-dcfcaaa7f36e-AlSwsSmVLrQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrey Konovalov <andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes@cmpxchg>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On Wed, Dec 22, 2021 at 05:56:50PM +0100, Vlastimil Babka wrote:
-> On 12/14/21 13:57, Vlastimil Babka wrote:
-> > On 12/1/21 19:14, Vlastimil Babka wrote:
-> >> Folks from non-slab subsystems are Cc'd only to patches affecting them, and
-> >> this cover letter.
-> >>
-> >> Series also available in git, based on 5.16-rc3:
-> >> https://git.kernel.org/pub/scm/linux/kernel/git/vbabka/linux.git/log/?h=slab-struct_slab-v2r2
-> > 
-> > Pushed a new branch slab-struct-slab-v3r3 with accumulated fixes and small tweaks
-> > and a new patch from Hyeonggon Yoo on top. To avoid too much spam, here's a range diff:
-> 
-> Hi, I've pushed another update branch slab-struct_slab-v4r1, and also to
-> -next. I've shortened git commit log lines to make checkpatch happier,
-> so no range-diff as it would be too long. I believe it would be useless
-> spam to post the whole series now, shortly before xmas, so I will do it
-> at rc8 time, to hopefully collect remaining reviews. But if anyone wants
-> a mailed version, I can do that.
->
+Hello,
 
-Hello Matthew and Vlastimil.
-it's part 3 of review.
+syzbot found the following issue on:
 
-# mm: Convert struct page to struct slab in functions used by other subsystems
-Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+HEAD commit:    ea586a076e8a Add linux-next specific files for 20211224
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=15677063b00000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=a9c4e3dde2c568fb
+dashboard link: https://syzkaller.appspot.com/bug?extid=568dc81cd20b72d4a49f
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
 
+Unfortunately, I don't have any reproducer for this issue yet.
 
-# mm/slub: Convert most struct page to struct slab by spatch
-Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-with a question below.
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+568dc81cd20b72d4a49f-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
 
--static int check_slab(struct kmem_cache *s, struct page *page)
-+static int check_slab(struct kmem_cache *s, struct slab *slab)
- {
-        int maxobj;
- 
--       if (!PageSlab(page)) {
--               slab_err(s, page, "Not a valid slab page");
-+       if (!folio_test_slab(slab_folio(slab))) {
-+               slab_err(s, slab, "Not a valid slab page");
-                return 0;
-        }
-
-Can't we guarantee that struct slab * always points to a slab?
-
-for struct page * it can be !PageSlab(page) because struct page *
-can be other than slab. but struct slab * can only be slab
-unlike struct page. code will be simpler if we guarantee that
-struct slab * always points to a slab (or NULL).
-
-
-# mm/slub: Convert pfmemalloc_match() to take a struct slab
-It's confusing to me because the original pfmemalloc_match() is removed
-and pfmemalloc_match_unsafe() was renamed to pfmemalloc_match() and
-converted to use slab_test_pfmemalloc() helper.
-
-But I agree with the resulting code. so:
-Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-
-
-# mm/slub: Convert alloc_slab_page() to return a struct slab
-Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Tested-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 5329 at kernel/cgroup/cpuset.c:1817 update_nodemasks_hier kernel/cgroup/cpuset.c:1817 [inline]
+WARNING: CPU: 0 PID: 5329 at kernel/cgroup/cpuset.c:1817 update_nodemask kernel/cgroup/cpuset.c:1890 [inline]
+WARNING: CPU: 0 PID: 5329 at kernel/cgroup/cpuset.c:1817 cpuset_write_resmask+0x167b/0x20f0 kernel/cgroup/cpuset.c:2457
+Modules linked in:
+CPU: 0 PID: 5329 Comm: syz-executor.3 Not tainted 5.16.0-rc6-next-20211224-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+RIP: 0010:update_nodemasks_hier kernel/cgroup/cpuset.c:1817 [inline]
+RIP: 0010:update_nodemask kernel/cgroup/cpuset.c:1890 [inline]
+RIP: 0010:cpuset_write_resmask+0x167b/0x20f0 kernel/cgroup/cpuset.c:2457
+Code: 3c 08 00 0f 85 ed 08 00 00 49 8b 9c 24 38 01 00 00 48 89 ef 48 89 de e8 53 4a 04 00 48 39 dd 0f 84 dd ef ff ff e8 d5 46 04 00 <0f> 0b e9 d1 ef ff ff e8 c9 46 04 00 e8 34 9d ef ff e8 bf 46 04 00
+RSP: 0018:ffffc900094af970 EFLAGS: 00010212
+RAX: 0000000000003f9c RBX: 0000000000000001 RCX: ffffc90003eba000
+RDX: 0000000000040000 RSI: ffffffff8173bdab RDI: 0000000000000003
+RBP: 0000000000000003 R08: 0000000000000003 R09: ffffffff8ffb5957
+R10: ffffffff8173bd9d R11: 0000000000000001 R12: ffff88807c37f800
+R13: ffff88807c37f854 R14: ffff88807c37f938 R15: 0000000000000000
+FS:  00007fa6a243a700(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007f5868fc51b8 CR3: 000000003c8a6000 CR4: 00000000003506e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ cgroup_file_write+0x1ec/0x780 kernel/cgroup/cgroup.c:3853
+ kernfs_fop_write_iter+0x342/0x500 fs/kernfs/file.c:296
+ call_write_iter include/linux/fs.h:2079 [inline]
+ do_iter_readv_writev+0x47a/0x750 fs/read_write.c:725
+ do_iter_write+0x188/0x710 fs/read_write.c:851
+ vfs_writev+0x1aa/0x630 fs/read_write.c:924
+ do_writev+0x139/0x300 fs/read_write.c:967
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7fa6a3ac4e99
+Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fa6a243a168 EFLAGS: 00000246 ORIG_RAX: 0000000000000014
+RAX: ffffffffffffffda RBX: 00007fa6a3bd7f60 RCX: 00007fa6a3ac4e99
+RDX: 0000000000000008 RSI: 0000000020000040 RDI: 0000000000000005
+RBP: 00007fa6a3b1eff1 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
+R13: 00007ffd7ace88ff R14: 00007fa6a243a300 R15: 0000000000022000
+ </TASK>
 
 
-# mm/slub: Convert print_page_info() to print_slab_info()
-Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
 
-I hope to review rest of patches in a week.
-
-Thanks,
-Hyeonggon
-
-> Changes in v4:
-> - rebase to 5.16-rc6 to avoid a conflict with mainline
-> - collect acks/reviews/tested-by from Johannes, Roman, Hyeonggon Yoo -
-> thanks!
-> - in patch "mm/slub: Convert detached_freelist to use a struct slab"
-> renamed free_nonslab_page() to free_large_kmalloc() and use folio there,
-> as suggested by Roman
-> - in "mm/memcg: Convert slab objcgs from struct page to struct slab"
-> change one caller of slab_objcgs_check() to slab_objcgs() as suggested
-> by Johannes, realize the other caller should be also changed, and remove
-> slab_objcgs_check() completely.
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
