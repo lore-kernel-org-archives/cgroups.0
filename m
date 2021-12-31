@@ -1,79 +1,30 @@
-From: syzbot <syzbot+568dc81cd20b72d4a49f-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
-Subject: [syzbot] WARNING in cpuset_write_resmask
-Date: Wed, 29 Dec 2021 08:54:22 -0800
-Message-ID: <000000000000264b2a05d44bca80@google.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 0/3] block, bfq: minor cleanup and fix
+Date: Fri, 31 Dec 2021 11:23:51 +0800
+Message-ID: <20211231032354.793092-1-yukuai3@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+To: jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Hello,
+Chagnes in v2:
+ - add comment in patch 2
+ - remove patch 4, since the problem do not exist.
 
-syzbot found the following issue on:
+Yu Kuai (3):
+  block, bfq: cleanup bfq_bfqq_to_bfqg()
+  block, bfq: avoid moving bfqq to it's parent bfqg
+  block, bfq: don't move oom_bfqq
 
-HEAD commit:    ea586a076e8a Add linux-next specific files for 20211224
-git tree:       linux-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=15677063b00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=a9c4e3dde2c568fb
-dashboard link: https://syzkaller.appspot.com/bug?extid=568dc81cd20b72d4a49f
-compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+ block/bfq-cgroup.c  | 16 +++++++++++++++-
+ block/bfq-iosched.c |  4 ++--
+ block/bfq-iosched.h |  1 -
+ block/bfq-wf2q.c    | 15 ---------------
+ 4 files changed, 17 insertions(+), 19 deletions(-)
 
-Unfortunately, I don't have any reproducer for this issue yet.
+-- 
+2.31.1
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+568dc81cd20b72d4a49f-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
-
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 5329 at kernel/cgroup/cpuset.c:1817 update_nodemasks_hier kernel/cgroup/cpuset.c:1817 [inline]
-WARNING: CPU: 0 PID: 5329 at kernel/cgroup/cpuset.c:1817 update_nodemask kernel/cgroup/cpuset.c:1890 [inline]
-WARNING: CPU: 0 PID: 5329 at kernel/cgroup/cpuset.c:1817 cpuset_write_resmask+0x167b/0x20f0 kernel/cgroup/cpuset.c:2457
-Modules linked in:
-CPU: 0 PID: 5329 Comm: syz-executor.3 Not tainted 5.16.0-rc6-next-20211224-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-RIP: 0010:update_nodemasks_hier kernel/cgroup/cpuset.c:1817 [inline]
-RIP: 0010:update_nodemask kernel/cgroup/cpuset.c:1890 [inline]
-RIP: 0010:cpuset_write_resmask+0x167b/0x20f0 kernel/cgroup/cpuset.c:2457
-Code: 3c 08 00 0f 85 ed 08 00 00 49 8b 9c 24 38 01 00 00 48 89 ef 48 89 de e8 53 4a 04 00 48 39 dd 0f 84 dd ef ff ff e8 d5 46 04 00 <0f> 0b e9 d1 ef ff ff e8 c9 46 04 00 e8 34 9d ef ff e8 bf 46 04 00
-RSP: 0018:ffffc900094af970 EFLAGS: 00010212
-RAX: 0000000000003f9c RBX: 0000000000000001 RCX: ffffc90003eba000
-RDX: 0000000000040000 RSI: ffffffff8173bdab RDI: 0000000000000003
-RBP: 0000000000000003 R08: 0000000000000003 R09: ffffffff8ffb5957
-R10: ffffffff8173bd9d R11: 0000000000000001 R12: ffff88807c37f800
-R13: ffff88807c37f854 R14: ffff88807c37f938 R15: 0000000000000000
-FS:  00007fa6a243a700(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f5868fc51b8 CR3: 000000003c8a6000 CR4: 00000000003506e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <TASK>
- cgroup_file_write+0x1ec/0x780 kernel/cgroup/cgroup.c:3853
- kernfs_fop_write_iter+0x342/0x500 fs/kernfs/file.c:296
- call_write_iter include/linux/fs.h:2079 [inline]
- do_iter_readv_writev+0x47a/0x750 fs/read_write.c:725
- do_iter_write+0x188/0x710 fs/read_write.c:851
- vfs_writev+0x1aa/0x630 fs/read_write.c:924
- do_writev+0x139/0x300 fs/read_write.c:967
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x44/0xae
-RIP: 0033:0x7fa6a3ac4e99
-Code: ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 bc ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007fa6a243a168 EFLAGS: 00000246 ORIG_RAX: 0000000000000014
-RAX: ffffffffffffffda RBX: 00007fa6a3bd7f60 RCX: 00007fa6a3ac4e99
-RDX: 0000000000000008 RSI: 0000000020000040 RDI: 0000000000000005
-RBP: 00007fa6a3b1eff1 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-R13: 00007ffd7ace88ff R14: 00007fa6a243a300 R15: 0000000000022000
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
