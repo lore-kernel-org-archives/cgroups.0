@@ -1,172 +1,396 @@
 From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Subject: [PATCH v4 00/32] Separate struct slab from struct page
-Date: Tue,  4 Jan 2022 01:10:14 +0100
-Message-ID: <20220104001046.12263-1-vbabka@suse.cz>
+Subject: [PATCH v4 23/32] mm/memcg: Convert slab objcgs from struct page to struct slab
+Date: Tue,  4 Jan 2022 01:10:37 +0100
+Message-ID: <20220104001046.12263-24-vbabka@suse.cz>
+References: <20220104001046.12263-1-vbabka@suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1641255052; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=UXaf9uC0yYgj8UoQwGZWBVf6JmBt0lJxsQgnWsQtcO0=;
-        b=n8krX/PrPub0SVsre8/SLQeYX7KXQf8NLCLV+ubPTYlNtzwfTORfM69IFQNUzPIw96r+Po
-        tqSOOJN8G1pRG530VEH8zjbtcFeAmXqAd4Plfgm0l0vDsd0KmiO+RgECWLaM8rG+P84tnk
-        grdo1L2ebGheuMHUt2WmsNiU/JyCh6U=
+        t=1641255057; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=E+GXhAyL81JOkjJ3S7yX7lfTDVviGfQ32wAAzJDsNRk=;
+        b=0Zx49nJayWh4lsbQKp2hbirkSFF6A+raj7Em0gQ6xOAi4GTJ0BeLsDmA7GFRBj8MIID5zf
+        Sr/r/C4PBqAzfol6qIPwyfTRTsf0ZCJBm+rfWQOpQJwgAMOkINu/leGppu4Oj8be9VJ5vX
+        3ylI3AUtr/NKgpvh1+CkzXDYW4yU0MI=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1641255052;
+        s=susede2_ed25519; t=1641255057;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=UXaf9uC0yYgj8UoQwGZWBVf6JmBt0lJxsQgnWsQtcO0=;
-        b=qOgAdn94Q/fmsGBLoCURpJT9EZ0mYFI07sEPdvOZS5/ZZqjR9DuZMgdTvudMcROeKLTkuj
-        kxJEAne9s3HcrXDg==
-X-Developer-Signature: v=1; a=openpgp-sha256; l=6877; h=from:subject; bh=eOU73DU2R3hiX6ZTz0IVJqWoxCtxeG917wETQZKQato=; b=owEBbQGS/pANAwAIAeAhynPxiakQAcsmYgBh05Bpj4k8YTH2hlMn7F5iXTAu0XxQ385rOPwcQkTF VOpOIdaJATMEAAEIAB0WIQSNS5MBqTXjGL5IXszgIcpz8YmpEAUCYdOQaQAKCRDgIcpz8YmpEK41B/ 91il7ZCibzyFB9paEVEvC5Hoh3WWOJx5XAPHsslQF7ojSGH2mztLJnOahhjZpSC+AzQbu0BrhbbGK9 sv3Y/MSnYu13NrbzAlUEDB6Unya8GQ3H5u4zGdTVtcOmjMpQ5djzk/YCPIRMm4UeMNM4kR6LVIx6RY Cdh4UCrVVVlqMnMKaPVCb9Wx07ghgYwhJezqttD5RYhS68vnoeAaPkmT1/pFOQHvbyz62Z3COZS8/K NxSbN1iLkyVrx4i6zmlbwE//4MVVFxF4PXTidKHDhuZzrEQGsQIjkHJn9ZhnpndCVdAN5voaK04IpF HdSm1x5ApsAOXQg9lB4o6ipOG9FNT8
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=E+GXhAyL81JOkjJ3S7yX7lfTDVviGfQ32wAAzJDsNRk=;
+        b=nAFmogaAT/6WZjPdwVsg2YBrQ9baCZ7WiGXhwP5plIJm2vnyefWpFwLxmFYFaMcoAk/R66
+        8MG3/v7z6wJNUtCA==
+In-Reply-To: <20220104001046.12263-1-vbabka-AlSwsSmVLrQ@public.gmane.org>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=12077; h=from:subject; bh=qQr4AikaXJrn+y5Z8+YWzfzLAVohfoz65fizj22bXio=; b=owEBbQGS/pANAwAIAeAhynPxiakQAcsmYgBh05B9mEHMctx8oP+j4T23YODk9oUZskRnF5hVJywd upMFioyJATMEAAEIAB0WIQSNS5MBqTXjGL5IXszgIcpz8YmpEAUCYdOQfQAKCRDgIcpz8YmpEN1ZB/ 99s84Azv2O/89ABVdT9zUq9jBtqCN6lsSxhIxmnnREwvOqq9kPaJJx8KE144rRxsIu08o9Wa1houNl MXc1Ty4Aq1wAVTwQ2deOcLCjaqp8Bta9mK+GJADH2/hU4bgIcIev6NPPpzepzlnQxWR0XnLeaPOyzq rFjj1EsPO9U9M4xO7nN+b5NCbSg4GEQBqJrOD5JWNyseZQu8nIW3MiLdRCEbdb+b/mgVP3A4ERR/Q4 28XEvTENcKlCXycRLNiutx9xJVBdTqer6ikdRWG8Y0ADm1DTJmV+4RDEohySn+yvrqFE1YnQryZ4w5 JMRDIyMtMQscMsu3kldSITrlDS/s4S
 X-Developer-Key: i=vbabka-AlSwsSmVLrQ@public.gmane.org; a=openpgp; fpr=A940D434992C2E8E99103D50224FA7E7CC82A664
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrey Konovalov <andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andy Lutomirski <luto-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Julia Lawall <julia.lawall-MZpvjPyXg2s@public.gmane.org>, kasan-dev-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mi
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Folks from non-slab subsystems are Cc'd only to patches affecting them, and
-this cover letter.
+page->memcg_data is used with MEMCG_DATA_OBJCGS flag only for slab pages
+so convert all the related infrastructure to struct slab. Also use
+struct folio instead of struct page when resolving object pointers.
 
-Series also available in git, based on 5.16-rc6:
-https://git.kernel.org/pub/scm/linux/kernel/git/vbabka/linux.git/log/?h=slab-struct_slab-v4r2
+This is not just mechanistic changing of types and names. Now in
+mem_cgroup_from_obj() we use folio_test_slab() to decide if we interpret
+the folio as a real slab instead of a large kmalloc, instead of relying
+on MEMCG_DATA_OBJCGS bit that used to be checked in page_objcgs_check().
+Similarly in memcg_slab_free_hook() where we can encounter
+kmalloc_large() pages (here the folio slab flag check is implied by
+virt_to_slab()). As a result, page_objcgs_check() can be dropped instead
+of converted.
 
-The plan is to submit as pull request, the previous versions have been
-in linux-next since v2 early December. This v4 was in linux-next since
-Dec 22:
-https://lore.kernel.org/all/f3a83708-3f3c-a634-7bee-dcfcaaa7f36e-AlSwsSmVLrQ@public.gmane.org/
-I planned to post it on mailing list for any final review in January, so
-this is it. Added only reviewed/tested tags from Hyeonggon Yoo
-meahwhile.
+To avoid include cycles, move the inline definition of slab_objcgs()
+from memcontrol.h to mm/slab.h.
 
-Changes from v3:
-https://lore.kernel.org/all/4c3dfdfa-2e19-a9a7-7945-3d75bc87ca05-AlSwsSmVLrQ@public.gmane.org/
-- rebase to 5.16-rc6 to avoid a conflict with mainline
-- collect acks/reviews/tested-by from Johannes, Roman, Hyeonggon Yoo -
-thanks!
-- in patch "mm/slub: Convert detached_freelist to use a struct slab"
-renamed free_nonslab_page() to free_large_kmalloc() and use folio there,
-as suggested by Roman
-- in "mm/memcg: Convert slab objcgs from struct page to struct slab"
-change one caller of slab_objcgs_check() to slab_objcgs() as suggested
-by Johannes, realize the other caller should be also changed, and remove
-slab_objcgs_check() completely.
+Signed-off-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+---
+ include/linux/memcontrol.h | 48 ------------------------
+ mm/memcontrol.c            | 47 ++++++++++++-----------
+ mm/slab.h                  | 76 ++++++++++++++++++++++++++------------
+ 3 files changed, 79 insertions(+), 92 deletions(-)
 
-Initial version from Matthew Wilcox:
-https://lore.kernel.org/all/20211004134650.4031813-1-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org/
-
-LWN coverage of the above:
-https://lwn.net/Articles/871982/
-
-This is originally an offshoot of the folio work by Matthew. One of the more
-complex parts of the struct page definition are the parts used by the slab
-allocators. It would be good for the MM in general if struct slab were its own
-data type, and it also helps to prevent tail pages from slipping in anywhere.
-As Matthew requested in his proof of concept series, I have taken over the
-development of this series, so it's a mix of patches from him (often modified
-by me) and my own.
-
-One big difference is the use of coccinelle to perform the relatively trivial
-parts of the conversions automatically and at once, instead of a larger number
-of smaller incremental reviewable steps. Thanks to Julia Lawall and Luis
-Chamberlain for all their help!
-
-Another notable difference is (based also on review feedback) I don't represent
-with a struct slab the large kmalloc allocations which are not really a slab,
-but use page allocator directly. When going from an object address to a struct
-slab, the code tests first folio slab flag, and only if it's set it converts to
-struct slab. This makes the struct slab type stronger.
-
-Finally, although Matthew's version didn't use any of the folio work, the
-initial support has been merged meanwhile so my version builds on top of it
-where appropriate. This eliminates some of the redundant compound_head()
-being performed e.g. when testing the slab flag.
-
-To sum up, after this series, struct page fields used by slab allocators are
-moved from struct page to a new struct slab, that uses the same physical
-storage. The availability of the fields is further distinguished by the
-selected slab allocator implementation. The advantages include:
-
-- Similar to folios, if the slab is of order > 0, struct slab always is
-  guaranteed to be the head page. Additionally it's guaranteed to be an actual
-  slab page, not a large kmalloc. This removes uncertainty and potential for
-  bugs.
-- It's not possible to accidentally use fields of the slab implementation that's
-  not configured.
-- Other subsystems cannot use slab's fields in struct page anymore (some
-  existing non-slab usages had to be adjusted in this series), so slab
-  implementations have more freedom in rearranging them in the struct slab.
-
-Hyeonggon Yoo (1):
-  mm/slob: Remove unnecessary page_mapcount_reset() function call
-
-Matthew Wilcox (Oracle) (14):
-  mm: Split slab into its own type
-  mm: Convert [un]account_slab_page() to struct slab
-  mm: Convert virt_to_cache() to use struct slab
-  mm: Convert __ksize() to struct slab
-  mm: Use struct slab in kmem_obj_info()
-  mm: Convert check_heap_object() to use struct slab
-  mm/slub: Convert detached_freelist to use a struct slab
-  mm/slub: Convert kfree() to use a struct slab
-  mm/slub: Convert print_page_info() to print_slab_info()
-  mm/slub: Convert pfmemalloc_match() to take a struct slab
-  mm/slob: Convert SLOB to use struct slab and struct folio
-  mm/kasan: Convert to struct folio and struct slab
-  zsmalloc: Stop using slab fields in struct page
-  bootmem: Use page->index instead of page->freelist
-
-Vlastimil Babka (17):
-  mm: add virt_to_folio() and folio_address()
-  mm/slab: Dissolve slab_map_pages() in its caller
-  mm/slub: Make object_err() static
-  mm/slub: Convert __slab_lock() and __slab_unlock() to struct slab
-  mm/slub: Convert alloc_slab_page() to return a struct slab
-  mm/slub: Convert __free_slab() to use struct slab
-  mm/slub: Convert most struct page to struct slab by spatch
-  mm/slub: Finish struct page to struct slab conversion
-  mm/slab: Convert kmem_getpages() and kmem_freepages() to struct slab
-  mm/slab: Convert most struct page to struct slab by spatch
-  mm/slab: Finish struct page to struct slab conversion
-  mm: Convert struct page to struct slab in functions used by other
-    subsystems
-  mm/memcg: Convert slab objcgs from struct page to struct slab
-  mm/kfence: Convert kfence_guarded_alloc() to struct slab
-  mm/sl*b: Differentiate struct slab fields by sl*b implementations
-  mm/slub: Simplify struct slab slabs field definition
-  mm/slub: Define struct slab fields for CONFIG_SLUB_CPU_PARTIAL only
-    when enabled
-
- arch/x86/mm/init_64.c        |    2 +-
- include/linux/bootmem_info.h |    2 +-
- include/linux/kasan.h        |    9 +-
- include/linux/memcontrol.h   |   48 --
- include/linux/mm.h           |   12 +
- include/linux/mm_types.h     |   10 +-
- include/linux/slab.h         |    8 -
- include/linux/slab_def.h     |   16 +-
- include/linux/slub_def.h     |   29 +-
- mm/bootmem_info.c            |    7 +-
- mm/kasan/common.c            |   27 +-
- mm/kasan/generic.c           |    8 +-
- mm/kasan/kasan.h             |    1 +
- mm/kasan/quarantine.c        |    2 +-
- mm/kasan/report.c            |   13 +-
- mm/kasan/report_tags.c       |   10 +-
- mm/kfence/core.c             |   17 +-
- mm/kfence/kfence_test.c      |    6 +-
- mm/memcontrol.c              |   47 +-
- mm/slab.c                    |  456 +++++++------
- mm/slab.h                    |  305 +++++++--
- mm/slab_common.c             |   14 +-
- mm/slob.c                    |   62 +-
- mm/slub.c                    | 1177 +++++++++++++++++-----------------
- mm/sparse.c                  |    2 +-
- mm/usercopy.c                |   13 +-
- mm/zsmalloc.c                |   18 +-
- 27 files changed, 1263 insertions(+), 1058 deletions(-)
-
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 0c5c403f4be6..e34112f6a369 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -536,45 +536,6 @@ static inline bool folio_memcg_kmem(struct folio *folio)
+ 	return folio->memcg_data & MEMCG_DATA_KMEM;
+ }
+ 
+-/*
+- * page_objcgs - get the object cgroups vector associated with a page
+- * @page: a pointer to the page struct
+- *
+- * Returns a pointer to the object cgroups vector associated with the page,
+- * or NULL. This function assumes that the page is known to have an
+- * associated object cgroups vector. It's not safe to call this function
+- * against pages, which might have an associated memory cgroup: e.g.
+- * kernel stack pages.
+- */
+-static inline struct obj_cgroup **page_objcgs(struct page *page)
+-{
+-	unsigned long memcg_data = READ_ONCE(page->memcg_data);
+-
+-	VM_BUG_ON_PAGE(memcg_data && !(memcg_data & MEMCG_DATA_OBJCGS), page);
+-	VM_BUG_ON_PAGE(memcg_data & MEMCG_DATA_KMEM, page);
+-
+-	return (struct obj_cgroup **)(memcg_data & ~MEMCG_DATA_FLAGS_MASK);
+-}
+-
+-/*
+- * page_objcgs_check - get the object cgroups vector associated with a page
+- * @page: a pointer to the page struct
+- *
+- * Returns a pointer to the object cgroups vector associated with the page,
+- * or NULL. This function is safe to use if the page can be directly associated
+- * with a memory cgroup.
+- */
+-static inline struct obj_cgroup **page_objcgs_check(struct page *page)
+-{
+-	unsigned long memcg_data = READ_ONCE(page->memcg_data);
+-
+-	if (!memcg_data || !(memcg_data & MEMCG_DATA_OBJCGS))
+-		return NULL;
+-
+-	VM_BUG_ON_PAGE(memcg_data & MEMCG_DATA_KMEM, page);
+-
+-	return (struct obj_cgroup **)(memcg_data & ~MEMCG_DATA_FLAGS_MASK);
+-}
+ 
+ #else
+ static inline bool folio_memcg_kmem(struct folio *folio)
+@@ -582,15 +543,6 @@ static inline bool folio_memcg_kmem(struct folio *folio)
+ 	return false;
+ }
+ 
+-static inline struct obj_cgroup **page_objcgs(struct page *page)
+-{
+-	return NULL;
+-}
+-
+-static inline struct obj_cgroup **page_objcgs_check(struct page *page)
+-{
+-	return NULL;
+-}
+ #endif
+ 
+ static inline bool PageMemcgKmem(struct page *page)
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f7b789e692a0..f4fdd5675991 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2816,31 +2816,31 @@ static inline void mod_objcg_mlstate(struct obj_cgroup *objcg,
+ 	rcu_read_unlock();
+ }
+ 
+-int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
+-				 gfp_t gfp, bool new_page)
++int memcg_alloc_slab_cgroups(struct slab *slab, struct kmem_cache *s,
++				 gfp_t gfp, bool new_slab)
+ {
+-	unsigned int objects = objs_per_slab(s, page_slab(page));
++	unsigned int objects = objs_per_slab(s, slab);
+ 	unsigned long memcg_data;
+ 	void *vec;
+ 
+ 	gfp &= ~OBJCGS_CLEAR_MASK;
+ 	vec = kcalloc_node(objects, sizeof(struct obj_cgroup *), gfp,
+-			   page_to_nid(page));
++			   slab_nid(slab));
+ 	if (!vec)
+ 		return -ENOMEM;
+ 
+ 	memcg_data = (unsigned long) vec | MEMCG_DATA_OBJCGS;
+-	if (new_page) {
++	if (new_slab) {
+ 		/*
+-		 * If the slab page is brand new and nobody can yet access
+-		 * it's memcg_data, no synchronization is required and
+-		 * memcg_data can be simply assigned.
++		 * If the slab is brand new and nobody can yet access its
++		 * memcg_data, no synchronization is required and memcg_data can
++		 * be simply assigned.
+ 		 */
+-		page->memcg_data = memcg_data;
+-	} else if (cmpxchg(&page->memcg_data, 0, memcg_data)) {
++		slab->memcg_data = memcg_data;
++	} else if (cmpxchg(&slab->memcg_data, 0, memcg_data)) {
+ 		/*
+-		 * If the slab page is already in use, somebody can allocate
+-		 * and assign obj_cgroups in parallel. In this case the existing
++		 * If the slab is already in use, somebody can allocate and
++		 * assign obj_cgroups in parallel. In this case the existing
+ 		 * objcg vector should be reused.
+ 		 */
+ 		kfree(vec);
+@@ -2865,26 +2865,31 @@ int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
+  */
+ struct mem_cgroup *mem_cgroup_from_obj(void *p)
+ {
+-	struct page *page;
++	struct folio *folio;
+ 
+ 	if (mem_cgroup_disabled())
+ 		return NULL;
+ 
+-	page = virt_to_head_page(p);
++	folio = virt_to_folio(p);
+ 
+ 	/*
+ 	 * Slab objects are accounted individually, not per-page.
+ 	 * Memcg membership data for each individual object is saved in
+ 	 * the page->obj_cgroups.
+ 	 */
+-	if (page_objcgs_check(page)) {
+-		struct obj_cgroup *objcg;
++	if (folio_test_slab(folio)) {
++		struct obj_cgroup **objcgs;
++		struct slab *slab;
+ 		unsigned int off;
+ 
+-		off = obj_to_index(page->slab_cache, page_slab(page), p);
+-		objcg = page_objcgs(page)[off];
+-		if (objcg)
+-			return obj_cgroup_memcg(objcg);
++		slab = folio_slab(folio);
++		objcgs = slab_objcgs(slab);
++		if (!objcgs)
++			return NULL;
++
++		off = obj_to_index(slab->slab_cache, slab, p);
++		if (objcgs[off])
++			return obj_cgroup_memcg(objcgs[off]);
+ 
+ 		return NULL;
+ 	}
+@@ -2896,7 +2901,7 @@ struct mem_cgroup *mem_cgroup_from_obj(void *p)
+ 	 * page_memcg_check(page) will guarantee that a proper memory
+ 	 * cgroup pointer or NULL will be returned.
+ 	 */
+-	return page_memcg_check(page);
++	return page_memcg_check(folio_page(folio, 0));
+ }
+ 
+ __always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
+diff --git a/mm/slab.h b/mm/slab.h
+index bca9181e96d7..36e0022d8267 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -412,15 +412,36 @@ static inline bool kmem_cache_debug_flags(struct kmem_cache *s, slab_flags_t fla
+ }
+ 
+ #ifdef CONFIG_MEMCG_KMEM
+-int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
+-				 gfp_t gfp, bool new_page);
++/*
++ * slab_objcgs - get the object cgroups vector associated with a slab
++ * @slab: a pointer to the slab struct
++ *
++ * Returns a pointer to the object cgroups vector associated with the slab,
++ * or NULL. This function assumes that the slab is known to have an
++ * associated object cgroups vector. It's not safe to call this function
++ * against slabs with underlying pages, which might have an associated memory
++ * cgroup: e.g.  kernel stack pages.
++ */
++static inline struct obj_cgroup **slab_objcgs(struct slab *slab)
++{
++	unsigned long memcg_data = READ_ONCE(slab->memcg_data);
++
++	VM_BUG_ON_PAGE(memcg_data && !(memcg_data & MEMCG_DATA_OBJCGS),
++							slab_page(slab));
++	VM_BUG_ON_PAGE(memcg_data & MEMCG_DATA_KMEM, slab_page(slab));
++
++	return (struct obj_cgroup **)(memcg_data & ~MEMCG_DATA_FLAGS_MASK);
++}
++
++int memcg_alloc_slab_cgroups(struct slab *slab, struct kmem_cache *s,
++				 gfp_t gfp, bool new_slab);
+ void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
+ 		     enum node_stat_item idx, int nr);
+ 
+-static inline void memcg_free_page_obj_cgroups(struct page *page)
++static inline void memcg_free_slab_cgroups(struct slab *slab)
+ {
+-	kfree(page_objcgs(page));
+-	page->memcg_data = 0;
++	kfree(slab_objcgs(slab));
++	slab->memcg_data = 0;
+ }
+ 
+ static inline size_t obj_full_size(struct kmem_cache *s)
+@@ -465,7 +486,7 @@ static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
+ 					      gfp_t flags, size_t size,
+ 					      void **p)
+ {
+-	struct page *page;
++	struct slab *slab;
+ 	unsigned long off;
+ 	size_t i;
+ 
+@@ -474,19 +495,19 @@ static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
+ 
+ 	for (i = 0; i < size; i++) {
+ 		if (likely(p[i])) {
+-			page = virt_to_head_page(p[i]);
++			slab = virt_to_slab(p[i]);
+ 
+-			if (!page_objcgs(page) &&
+-			    memcg_alloc_page_obj_cgroups(page, s, flags,
++			if (!slab_objcgs(slab) &&
++			    memcg_alloc_slab_cgroups(slab, s, flags,
+ 							 false)) {
+ 				obj_cgroup_uncharge(objcg, obj_full_size(s));
+ 				continue;
+ 			}
+ 
+-			off = obj_to_index(s, page_slab(page), p[i]);
++			off = obj_to_index(s, slab, p[i]);
+ 			obj_cgroup_get(objcg);
+-			page_objcgs(page)[off] = objcg;
+-			mod_objcg_state(objcg, page_pgdat(page),
++			slab_objcgs(slab)[off] = objcg;
++			mod_objcg_state(objcg, slab_pgdat(slab),
+ 					cache_vmstat_idx(s), obj_full_size(s));
+ 		} else {
+ 			obj_cgroup_uncharge(objcg, obj_full_size(s));
+@@ -501,7 +522,7 @@ static inline void memcg_slab_free_hook(struct kmem_cache *s_orig,
+ 	struct kmem_cache *s;
+ 	struct obj_cgroup **objcgs;
+ 	struct obj_cgroup *objcg;
+-	struct page *page;
++	struct slab *slab;
+ 	unsigned int off;
+ 	int i;
+ 
+@@ -512,43 +533,52 @@ static inline void memcg_slab_free_hook(struct kmem_cache *s_orig,
+ 		if (unlikely(!p[i]))
+ 			continue;
+ 
+-		page = virt_to_head_page(p[i]);
+-		objcgs = page_objcgs_check(page);
++		slab = virt_to_slab(p[i]);
++		/* we could be given a kmalloc_large() object, skip those */
++		if (!slab)
++			continue;
++
++		objcgs = slab_objcgs(slab);
+ 		if (!objcgs)
+ 			continue;
+ 
+ 		if (!s_orig)
+-			s = page->slab_cache;
++			s = slab->slab_cache;
+ 		else
+ 			s = s_orig;
+ 
+-		off = obj_to_index(s, page_slab(page), p[i]);
++		off = obj_to_index(s, slab, p[i]);
+ 		objcg = objcgs[off];
+ 		if (!objcg)
+ 			continue;
+ 
+ 		objcgs[off] = NULL;
+ 		obj_cgroup_uncharge(objcg, obj_full_size(s));
+-		mod_objcg_state(objcg, page_pgdat(page), cache_vmstat_idx(s),
++		mod_objcg_state(objcg, slab_pgdat(slab), cache_vmstat_idx(s),
+ 				-obj_full_size(s));
+ 		obj_cgroup_put(objcg);
+ 	}
+ }
+ 
+ #else /* CONFIG_MEMCG_KMEM */
++static inline struct obj_cgroup **slab_objcgs(struct slab *slab)
++{
++	return NULL;
++}
++
+ static inline struct mem_cgroup *memcg_from_slab_obj(void *ptr)
+ {
+ 	return NULL;
+ }
+ 
+-static inline int memcg_alloc_page_obj_cgroups(struct page *page,
++static inline int memcg_alloc_slab_cgroups(struct slab *slab,
+ 					       struct kmem_cache *s, gfp_t gfp,
+-					       bool new_page)
++					       bool new_slab)
+ {
+ 	return 0;
+ }
+ 
+-static inline void memcg_free_page_obj_cgroups(struct page *page)
++static inline void memcg_free_slab_cgroups(struct slab *slab)
+ {
+ }
+ 
+@@ -587,7 +617,7 @@ static __always_inline void account_slab(struct slab *slab, int order,
+ 					 struct kmem_cache *s, gfp_t gfp)
+ {
+ 	if (memcg_kmem_enabled() && (s->flags & SLAB_ACCOUNT))
+-		memcg_alloc_page_obj_cgroups(slab_page(slab), s, gfp, true);
++		memcg_alloc_slab_cgroups(slab, s, gfp, true);
+ 
+ 	mod_node_page_state(slab_pgdat(slab), cache_vmstat_idx(s),
+ 			    PAGE_SIZE << order);
+@@ -597,7 +627,7 @@ static __always_inline void unaccount_slab(struct slab *slab, int order,
+ 					   struct kmem_cache *s)
+ {
+ 	if (memcg_kmem_enabled())
+-		memcg_free_page_obj_cgroups(slab_page(slab));
++		memcg_free_slab_cgroups(slab);
+ 
+ 	mod_node_page_state(slab_pgdat(slab), cache_vmstat_idx(s),
+ 			    -(PAGE_SIZE << order));
 -- 
 2.34.1
 
