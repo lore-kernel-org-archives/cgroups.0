@@ -1,53 +1,61 @@
-From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: Re: [RFC PATCH 0/3] mm/memcg: Address PREEMPT_RT problems instead of
- disabling it.
-Date: Wed, 5 Jan 2022 16:06:05 +0100
-Message-ID: <YdWz3RvPemg3m7WD@linutronix.de>
-References: <20211222114111.2206248-1-bigeasy@linutronix.de>
- <20220105145956.GB6464@blackbody.suse.cz>
+From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v4 22/32] mm: Convert struct page to struct slab in
+ functions used by other subsystems
+Date: Wed, 5 Jan 2022 17:39:10 +0100
+Message-ID: <d49a5ea1-3592-3db2-24d5-e274be880e35@suse.cz>
+References: <20220104001046.12263-1-vbabka@suse.cz>
+ <20220104001046.12263-23-vbabka@suse.cz>
+ <YdT+qU4xgQeZc/jP@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1641395167;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1641400750; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=7zU5XndrFq1/DafMJeyDTRNBd9Wg4rCfP6rL7TcC+Lc=;
-        b=24kGuqLfhX/BEMR4PTr/BvWPUcn1JGhQ5Zw4BtzQW9OZd3CM2f+BjM5utCwhvxqapFbneX
-        Q2Zwva6OXJ/Bw88fm9pg6NAw+AiQB9zDsQ+3/7M52slVkzO21P+u2Uui4TbRTwjwNJ+JS9
-        3dztBRTTt6VC9vC4sxj88X5A8zGA+1bu9h6M2vk3qiXQ4Nqqu/+gxO6jmYbE140b8KMMSj
-        7GmvVZuRAJ6di1/LgAI5Nyvc+VGKnFpZped4B6hsYNZRStWcgCWNkHonRJqErX/cCnxVq7
-        3jGQZEVDlR6HBqmW3r2XYHD1AO/VPbD9tElTcrw2SrhpyPrfp88mSVI74qEJ9g==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1641395167;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+        bh=671oRtpp5WCs8Fk9Hz2g9PU50UrRMSTbK7reBDGjtCs=;
+        b=NRsZKCZitYMeU3RMI4mLOr+6li06jujBRhQsffYRQUkFW9PzULWtrL9sf+TAZSnQfN/PFW
+        vM6/MTfW8m/iSdJQlSZGTuf8ommuOTf4zyXfj2xodWa580XJFAlrfobKzZGZpOqhkgcw7b
+        w7Rkd3lRVPo05v08Q4Ze6NDY68SHnmQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1641400750;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=7zU5XndrFq1/DafMJeyDTRNBd9Wg4rCfP6rL7TcC+Lc=;
-        b=co63aLbokqKOOwFoxm+1Taneq4FpYk5r/lTtHAduUD3NL3Lq5RIZNn4RQ3QBibFnkuAJ/3
-        H2ldUGLDfljEIABQ==
-Content-Disposition: inline
-In-Reply-To: <20220105145956.GB6464-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+        bh=671oRtpp5WCs8Fk9Hz2g9PU50UrRMSTbK7reBDGjtCs=;
+        b=A7c4TZBO+fD7rEud8NwULvyOqkWaT+XnEGjIj6AYNSs4vZ4Apwth/CZG0akr5xMhlAzuDJ
+        JMYPGpTT1ZH7AUAw==
+Content-Language: en-US
+In-Reply-To: <YdT+qU4xgQeZc/jP-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Andrey Konovalov <andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Julia Lawall <julia.lawall-MZpvjPyXg2s@public.gmane.org>, Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, kasan-dev-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2022-01-05 15:59:56 [+0100], Michal Koutn=C3=BD wrote:
-> On Wed, Dec 22, 2021 at 12:41:08PM +0100, Sebastian Andrzej Siewior <bige=
-asy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org> wrote:
-> > - lockdep complains were triggered by test_core and test_freezer (both
-> >   had to run):
->=20
-> This doesn't happen on the patched kernel, correct?
+On 1/5/22 03:12, Roman Gushchin wrote:
+> On Tue, Jan 04, 2022 at 01:10:36AM +0100, Vlastimil Babka wrote:
+>> --- a/mm/kasan/report.c
+>> +++ b/mm/kasan/report.c
+>> @@ -249,7 +249,7 @@ static void print_address_description(void *addr, u8 tag)
+>>  
+>>  	if (page && PageSlab(page)) {
+>>  		struct kmem_cache *cache = page->slab_cache;
+>> -		void *object = nearest_obj(cache, page,	addr);
+>> +		void *object = nearest_obj(cache, page_slab(page),	addr);
+>                                                                   s/tab/space
 
-I saw it first on the patched kernel (with this series) then went back
-to the -rc and saw it there, too.
+Yeah it was pointed out earlier that the tab was already there but only this
+change made it stand out. Fixing that up here would go against the automated
+spatch conversion, so it's done in later manual patch that also touches this
+line.
 
-> Thanks,
-> Michal
+>> 2.34.1
+>> 
+> 
+> Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> 
+> Thanks!
 
-Sebastian
+Thanks!
