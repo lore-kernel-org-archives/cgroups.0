@@ -1,415 +1,259 @@
 From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v4 22/32] mm: Convert struct page to struct slab in
- functions used by other subsystems
-Date: Tue, 4 Jan 2022 18:12:57 -0800
-Message-ID: <YdT+qU4xgQeZc/jP@carbon.dhcp.thefacebook.com>
+Subject: Re: [PATCH v4 23/32] mm/memcg: Convert slab objcgs from struct page
+ to struct slab
+Date: Tue, 4 Jan 2022 18:41:33 -0800
+Message-ID: <YdUFXUbeYGdFbVbq@carbon.dhcp.thefacebook.com>
 References: <20220104001046.12263-1-vbabka@suse.cz>
- <20220104001046.12263-23-vbabka@suse.cz>
+ <20220104001046.12263-24-vbabka@suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=qoFuzAoQGTty1MDmSTgR1v+HnkoMu0EvYAC9Bf/VzM4=;
- b=YcMvLxwbYcs9MbRU/sfxTEQ5YFx1m6b8fIKx4yvCnfDWazyI4+FmN0XwtwBHlH3GRnZR
- MGCzYJ6qvoC6evK/kfpwgrgXKuTdFavWx5IYZUtGLnMUa8eMmhK1Z14DPTuep2aNnd91
- KGzA7g5YqizRv6EN94b0g7hzhYzDgAO71JY= 
+ mime-version; s=facebook; bh=2JKALd0e4lP+WrJfsg9C4lrp3tw2nN+vlPsIuNo0Qjc=;
+ b=BFWvrczTj8RzAxk7IcT7UK5swk7S78KHJFE0gvGnAI+QK1+LUNvgkqBWBR/hQJiSYaKd
+ /fNtoSWtE6U5518A/iq81nBYl6DgQOc/OxNNaTU36iseI6Cr8tWkhxxRmn4R0COWSvMA
+ cOA4aDaw1b+EPobAr49fg9MR1G8HlIOmJis= 
 Content-Disposition: inline
-In-Reply-To: <20220104001046.12263-23-vbabka-AlSwsSmVLrQ@public.gmane.org>
+In-Reply-To: <20220104001046.12263-24-vbabka-AlSwsSmVLrQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
 To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Andrey Konovalov <andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Julia Lawall <julia.lawall-MZpvjPyXg2s@public.gmane.org>, Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, kasan-dev-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jan 04, 2022 at 01:10:36AM +0100, Vlastimil Babka wrote:
-> KASAN, KFENCE and memcg interact with SLAB or SLUB internals through
-> functions nearest_obj(), obj_to_index() and objs_per_slab() that use
-> struct page as parameter. This patch converts it to struct slab
-> including all callers, through a coccinelle semantic patch.
+On Tue, Jan 04, 2022 at 01:10:37AM +0100, Vlastimil Babka wrote:
+> page->memcg_data is used with MEMCG_DATA_OBJCGS flag only for slab pages
+> so convert all the related infrastructure to struct slab. Also use
+> struct folio instead of struct page when resolving object pointers.
 > 
-> // Options: --include-headers --no-includes --smpl-spacing include/linux/slab_def.h include/linux/slub_def.h mm/slab.h mm/kasan/*.c mm/kfence/kfence_test.c mm/memcontrol.c mm/slab.c mm/slub.c
-> // Note: needs coccinelle 1.1.1 to avoid breaking whitespace
+> This is not just mechanistic changing of types and names. Now in
+> mem_cgroup_from_obj() we use folio_test_slab() to decide if we interpret
+> the folio as a real slab instead of a large kmalloc, instead of relying
+> on MEMCG_DATA_OBJCGS bit that used to be checked in page_objcgs_check().
+> Similarly in memcg_slab_free_hook() where we can encounter
+> kmalloc_large() pages (here the folio slab flag check is implied by
+> virt_to_slab()). As a result, page_objcgs_check() can be dropped instead
+> of converted.
 > 
-> @@
-> @@
-> 
-> -objs_per_slab_page(
-> +objs_per_slab(
->  ...
->  )
->  { ... }
-> 
-> @@
-> @@
-> 
-> -objs_per_slab_page(
-> +objs_per_slab(
->  ...
->  )
-> 
-> @@
-> identifier fn =~ "obj_to_index|objs_per_slab";
-> @@
-> 
->  fn(...,
-> -   const struct page *page
-> +   const struct slab *slab
->     ,...)
->  {
-> <...
-> (
-> - page_address(page)
-> + slab_address(slab)
-> |
-> - page
-> + slab
-> )
-> ...>
->  }
-> 
-> @@
-> identifier fn =~ "nearest_obj";
-> @@
-> 
->  fn(...,
-> -   struct page *page
-> +   const struct slab *slab
->     ,...)
->  {
-> <...
-> (
-> - page_address(page)
-> + slab_address(slab)
-> |
-> - page
-> + slab
-> )
-> ...>
->  }
-> 
-> @@
-> identifier fn =~ "nearest_obj|obj_to_index|objs_per_slab";
-> expression E;
-> @@
-> 
->  fn(...,
-> (
-> - slab_page(E)
-> + E
-> |
-> - virt_to_page(E)
-> + virt_to_slab(E)
-> |
-> - virt_to_head_page(E)
-> + virt_to_slab(E)
-> |
-> - page
-> + page_slab(page)
-> )
->   ,...)
+> To avoid include cycles, move the inline definition of slab_objcgs()
+> from memcontrol.h to mm/slab.h.
 > 
 > Signed-off-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-> Reviewed-by: Andrey Konovalov <andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Julia Lawall <julia.lawall-MZpvjPyXg2s@public.gmane.org>
-> Cc: Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Andrey Ryabinin <ryabinin.a.a-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: Alexander Potapenko <glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Andrey Konovalov <andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 > Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 > Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: <kasan-dev-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 > Cc: <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 > ---
->  include/linux/slab_def.h | 16 ++++++++--------
->  include/linux/slub_def.h | 18 +++++++++---------
->  mm/kasan/common.c        |  4 ++--
->  mm/kasan/generic.c       |  2 +-
->  mm/kasan/report.c        |  2 +-
->  mm/kasan/report_tags.c   |  2 +-
->  mm/kfence/kfence_test.c  |  4 ++--
->  mm/memcontrol.c          |  4 ++--
->  mm/slab.c                | 10 +++++-----
->  mm/slab.h                |  4 ++--
->  mm/slub.c                |  2 +-
->  11 files changed, 34 insertions(+), 34 deletions(-)
+>  include/linux/memcontrol.h | 48 ------------------------
+>  mm/memcontrol.c            | 47 ++++++++++++-----------
+>  mm/slab.h                  | 76 ++++++++++++++++++++++++++------------
+>  3 files changed, 79 insertions(+), 92 deletions(-)
 > 
-> diff --git a/include/linux/slab_def.h b/include/linux/slab_def.h
-> index 3aa5e1e73ab6..e24c9aff6fed 100644
-> --- a/include/linux/slab_def.h
-> +++ b/include/linux/slab_def.h
-> @@ -87,11 +87,11 @@ struct kmem_cache {
->  	struct kmem_cache_node *node[MAX_NUMNODES];
->  };
->  
-> -static inline void *nearest_obj(struct kmem_cache *cache, struct page *page,
-> +static inline void *nearest_obj(struct kmem_cache *cache, const struct slab *slab,
->  				void *x)
->  {
-> -	void *object = x - (x - page->s_mem) % cache->size;
-> -	void *last_object = page->s_mem + (cache->num - 1) * cache->size;
-> +	void *object = x - (x - slab->s_mem) % cache->size;
-> +	void *last_object = slab->s_mem + (cache->num - 1) * cache->size;
->  
->  	if (unlikely(object > last_object))
->  		return last_object;
-> @@ -106,16 +106,16 @@ static inline void *nearest_obj(struct kmem_cache *cache, struct page *page,
->   *   reciprocal_divide(offset, cache->reciprocal_buffer_size)
->   */
->  static inline unsigned int obj_to_index(const struct kmem_cache *cache,
-> -					const struct page *page, void *obj)
-> +					const struct slab *slab, void *obj)
->  {
-> -	u32 offset = (obj - page->s_mem);
-> +	u32 offset = (obj - slab->s_mem);
->  	return reciprocal_divide(offset, cache->reciprocal_buffer_size);
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 0c5c403f4be6..e34112f6a369 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -536,45 +536,6 @@ static inline bool folio_memcg_kmem(struct folio *folio)
+>  	return folio->memcg_data & MEMCG_DATA_KMEM;
 >  }
 >  
-> -static inline int objs_per_slab_page(const struct kmem_cache *cache,
-> -				     const struct page *page)
-> +static inline int objs_per_slab(const struct kmem_cache *cache,
-> +				     const struct slab *slab)
-
-Nice! It looks indeed better.
-
->  {
-> -	if (is_kfence_address(page_address(page)))
-> +	if (is_kfence_address(slab_address(slab)))
->  		return 1;
->  	return cache->num;
->  }
-> diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
-> index 8a9c2876ca89..33c5c0e3bd8d 100644
-> --- a/include/linux/slub_def.h
-> +++ b/include/linux/slub_def.h
-> @@ -158,11 +158,11 @@ static inline void sysfs_slab_release(struct kmem_cache *s)
+> -/*
+> - * page_objcgs - get the object cgroups vector associated with a page
+> - * @page: a pointer to the page struct
+> - *
+> - * Returns a pointer to the object cgroups vector associated with the page,
+> - * or NULL. This function assumes that the page is known to have an
+> - * associated object cgroups vector. It's not safe to call this function
+> - * against pages, which might have an associated memory cgroup: e.g.
+> - * kernel stack pages.
+> - */
+> -static inline struct obj_cgroup **page_objcgs(struct page *page)
+> -{
+> -	unsigned long memcg_data = READ_ONCE(page->memcg_data);
+> -
+> -	VM_BUG_ON_PAGE(memcg_data && !(memcg_data & MEMCG_DATA_OBJCGS), page);
+> -	VM_BUG_ON_PAGE(memcg_data & MEMCG_DATA_KMEM, page);
+> -
+> -	return (struct obj_cgroup **)(memcg_data & ~MEMCG_DATA_FLAGS_MASK);
+> -}
+> -
+> -/*
+> - * page_objcgs_check - get the object cgroups vector associated with a page
+> - * @page: a pointer to the page struct
+> - *
+> - * Returns a pointer to the object cgroups vector associated with the page,
+> - * or NULL. This function is safe to use if the page can be directly associated
+> - * with a memory cgroup.
+> - */
+> -static inline struct obj_cgroup **page_objcgs_check(struct page *page)
+> -{
+> -	unsigned long memcg_data = READ_ONCE(page->memcg_data);
+> -
+> -	if (!memcg_data || !(memcg_data & MEMCG_DATA_OBJCGS))
+> -		return NULL;
+> -
+> -	VM_BUG_ON_PAGE(memcg_data & MEMCG_DATA_KMEM, page);
+> -
+> -	return (struct obj_cgroup **)(memcg_data & ~MEMCG_DATA_FLAGS_MASK);
+> -}
 >  
->  void *fixup_red_left(struct kmem_cache *s, void *p);
->  
-> -static inline void *nearest_obj(struct kmem_cache *cache, struct page *page,
-> +static inline void *nearest_obj(struct kmem_cache *cache, const struct slab *slab,
->  				void *x) {
-> -	void *object = x - (x - page_address(page)) % cache->size;
-> -	void *last_object = page_address(page) +
-> -		(page->objects - 1) * cache->size;
-> +	void *object = x - (x - slab_address(slab)) % cache->size;
-> +	void *last_object = slab_address(slab) +
-> +		(slab->objects - 1) * cache->size;
->  	void *result = (unlikely(object > last_object)) ? last_object : object;
->  
->  	result = fixup_red_left(cache, result);
-> @@ -178,16 +178,16 @@ static inline unsigned int __obj_to_index(const struct kmem_cache *cache,
->  }
->  
->  static inline unsigned int obj_to_index(const struct kmem_cache *cache,
-> -					const struct page *page, void *obj)
-> +					const struct slab *slab, void *obj)
->  {
->  	if (is_kfence_address(obj))
->  		return 0;
-> -	return __obj_to_index(cache, page_address(page), obj);
-> +	return __obj_to_index(cache, slab_address(slab), obj);
->  }
->  
-> -static inline int objs_per_slab_page(const struct kmem_cache *cache,
-> -				     const struct page *page)
-> +static inline int objs_per_slab(const struct kmem_cache *cache,
-> +				     const struct slab *slab)
->  {
-> -	return page->objects;
-> +	return slab->objects;
->  }
->  #endif /* _LINUX_SLUB_DEF_H */
-> diff --git a/mm/kasan/common.c b/mm/kasan/common.c
-> index 8428da2aaf17..6a1cd2d38bff 100644
-> --- a/mm/kasan/common.c
-> +++ b/mm/kasan/common.c
-> @@ -298,7 +298,7 @@ static inline u8 assign_tag(struct kmem_cache *cache,
->  	/* For caches that either have a constructor or SLAB_TYPESAFE_BY_RCU: */
->  #ifdef CONFIG_SLAB
->  	/* For SLAB assign tags based on the object index in the freelist. */
-> -	return (u8)obj_to_index(cache, virt_to_head_page(object), (void *)object);
-> +	return (u8)obj_to_index(cache, virt_to_slab(object), (void *)object);
 >  #else
->  	/*
->  	 * For SLUB assign a random tag during slab creation, otherwise reuse
-> @@ -341,7 +341,7 @@ static inline bool ____kasan_slab_free(struct kmem_cache *cache, void *object,
->  	if (is_kfence_address(object))
->  		return false;
+>  static inline bool folio_memcg_kmem(struct folio *folio)
+> @@ -582,15 +543,6 @@ static inline bool folio_memcg_kmem(struct folio *folio)
+>  	return false;
+>  }
 >  
-> -	if (unlikely(nearest_obj(cache, virt_to_head_page(object), object) !=
-> +	if (unlikely(nearest_obj(cache, virt_to_slab(object), object) !=
->  	    object)) {
->  		kasan_report_invalid_free(tagged_object, ip);
->  		return true;
-> diff --git a/mm/kasan/generic.c b/mm/kasan/generic.c
-> index 84a038b07c6f..5d0b79416c4e 100644
-> --- a/mm/kasan/generic.c
-> +++ b/mm/kasan/generic.c
-> @@ -339,7 +339,7 @@ static void __kasan_record_aux_stack(void *addr, bool can_alloc)
->  		return;
+> -static inline struct obj_cgroup **page_objcgs(struct page *page)
+> -{
+> -	return NULL;
+> -}
+> -
+> -static inline struct obj_cgroup **page_objcgs_check(struct page *page)
+> -{
+> -	return NULL;
+> -}
+>  #endif
 >  
->  	cache = page->slab_cache;
-> -	object = nearest_obj(cache, page, addr);
-> +	object = nearest_obj(cache, page_slab(page), addr);
->  	alloc_meta = kasan_get_alloc_meta(cache, object);
->  	if (!alloc_meta)
->  		return;
-> diff --git a/mm/kasan/report.c b/mm/kasan/report.c
-> index 0bc10f452f7e..e00999dc6499 100644
-> --- a/mm/kasan/report.c
-> +++ b/mm/kasan/report.c
-> @@ -249,7 +249,7 @@ static void print_address_description(void *addr, u8 tag)
->  
->  	if (page && PageSlab(page)) {
->  		struct kmem_cache *cache = page->slab_cache;
-> -		void *object = nearest_obj(cache, page,	addr);
-> +		void *object = nearest_obj(cache, page_slab(page),	addr);
-                                                                  s/tab/space
->  
->  		describe_object(cache, object, addr, tag);
->  	}
-> diff --git a/mm/kasan/report_tags.c b/mm/kasan/report_tags.c
-> index 8a319fc16dab..06c21dd77493 100644
-> --- a/mm/kasan/report_tags.c
-> +++ b/mm/kasan/report_tags.c
-> @@ -23,7 +23,7 @@ const char *kasan_get_bug_type(struct kasan_access_info *info)
->  	page = kasan_addr_to_page(addr);
->  	if (page && PageSlab(page)) {
->  		cache = page->slab_cache;
-> -		object = nearest_obj(cache, page, (void *)addr);
-> +		object = nearest_obj(cache, page_slab(page), (void *)addr);
->  		alloc_meta = kasan_get_alloc_meta(cache, object);
->  
->  		if (alloc_meta) {
-> diff --git a/mm/kfence/kfence_test.c b/mm/kfence/kfence_test.c
-> index 695030c1fff8..f7276711d7b9 100644
-> --- a/mm/kfence/kfence_test.c
-> +++ b/mm/kfence/kfence_test.c
-> @@ -291,8 +291,8 @@ static void *test_alloc(struct kunit *test, size_t size, gfp_t gfp, enum allocat
->  			 * even for KFENCE objects; these are required so that
->  			 * memcg accounting works correctly.
->  			 */
-> -			KUNIT_EXPECT_EQ(test, obj_to_index(s, page, alloc), 0U);
-> -			KUNIT_EXPECT_EQ(test, objs_per_slab_page(s, page), 1);
-> +			KUNIT_EXPECT_EQ(test, obj_to_index(s, page_slab(page), alloc), 0U);
-> +			KUNIT_EXPECT_EQ(test, objs_per_slab(s, page_slab(page)), 1);
->  
->  			if (policy == ALLOCATE_ANY)
->  				return alloc;
+>  static inline bool PageMemcgKmem(struct page *page)
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 2ed5f2a0879d..f7b789e692a0 100644
+> index f7b789e692a0..f4fdd5675991 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -2819,7 +2819,7 @@ static inline void mod_objcg_mlstate(struct obj_cgroup *objcg,
->  int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
->  				 gfp_t gfp, bool new_page)
+> @@ -2816,31 +2816,31 @@ static inline void mod_objcg_mlstate(struct obj_cgroup *objcg,
+>  	rcu_read_unlock();
+>  }
+>  
+> -int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
+> -				 gfp_t gfp, bool new_page)
+> +int memcg_alloc_slab_cgroups(struct slab *slab, struct kmem_cache *s,
+> +				 gfp_t gfp, bool new_slab)
 >  {
-> -	unsigned int objects = objs_per_slab_page(s, page);
-> +	unsigned int objects = objs_per_slab(s, page_slab(page));
+> -	unsigned int objects = objs_per_slab(s, page_slab(page));
+> +	unsigned int objects = objs_per_slab(s, slab);
 >  	unsigned long memcg_data;
 >  	void *vec;
 >  
-> @@ -2881,7 +2881,7 @@ struct mem_cgroup *mem_cgroup_from_obj(void *p)
->  		struct obj_cgroup *objcg;
+>  	gfp &= ~OBJCGS_CLEAR_MASK;
+>  	vec = kcalloc_node(objects, sizeof(struct obj_cgroup *), gfp,
+> -			   page_to_nid(page));
+> +			   slab_nid(slab));
+>  	if (!vec)
+>  		return -ENOMEM;
+>  
+>  	memcg_data = (unsigned long) vec | MEMCG_DATA_OBJCGS;
+> -	if (new_page) {
+> +	if (new_slab) {
+>  		/*
+> -		 * If the slab page is brand new and nobody can yet access
+> -		 * it's memcg_data, no synchronization is required and
+> -		 * memcg_data can be simply assigned.
+> +		 * If the slab is brand new and nobody can yet access its
+> +		 * memcg_data, no synchronization is required and memcg_data can
+> +		 * be simply assigned.
+>  		 */
+> -		page->memcg_data = memcg_data;
+> -	} else if (cmpxchg(&page->memcg_data, 0, memcg_data)) {
+> +		slab->memcg_data = memcg_data;
+> +	} else if (cmpxchg(&slab->memcg_data, 0, memcg_data)) {
+>  		/*
+> -		 * If the slab page is already in use, somebody can allocate
+> -		 * and assign obj_cgroups in parallel. In this case the existing
+> +		 * If the slab is already in use, somebody can allocate and
+> +		 * assign obj_cgroups in parallel. In this case the existing
+>  		 * objcg vector should be reused.
+>  		 */
+>  		kfree(vec);
+> @@ -2865,26 +2865,31 @@ int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
+>   */
+>  struct mem_cgroup *mem_cgroup_from_obj(void *p)
+>  {
+> -	struct page *page;
+> +	struct folio *folio;
+>  
+>  	if (mem_cgroup_disabled())
+>  		return NULL;
+>  
+> -	page = virt_to_head_page(p);
+> +	folio = virt_to_folio(p);
+>  
+>  	/*
+>  	 * Slab objects are accounted individually, not per-page.
+>  	 * Memcg membership data for each individual object is saved in
+>  	 * the page->obj_cgroups.
+               ^^^^^^^^^^^^^^^^^
+	       slab->memcg_data
+
+>  	 */
+> -	if (page_objcgs_check(page)) {
+> -		struct obj_cgroup *objcg;
+> +	if (folio_test_slab(folio)) {
+> +		struct obj_cgroup **objcgs;
+> +		struct slab *slab;
 >  		unsigned int off;
 >  
-> -		off = obj_to_index(page->slab_cache, page, p);
-> +		off = obj_to_index(page->slab_cache, page_slab(page), p);
->  		objcg = page_objcgs(page)[off];
->  		if (objcg)
->  			return obj_cgroup_memcg(objcg);
-> diff --git a/mm/slab.c b/mm/slab.c
-> index 547ed068a569..c13258116791 100644
-> --- a/mm/slab.c
-> +++ b/mm/slab.c
-> @@ -1559,7 +1559,7 @@ static void check_poison_obj(struct kmem_cache *cachep, void *objp)
->  		struct slab *slab = virt_to_slab(objp);
->  		unsigned int objnr;
+> -		off = obj_to_index(page->slab_cache, page_slab(page), p);
+> -		objcg = page_objcgs(page)[off];
+> -		if (objcg)
+> -			return obj_cgroup_memcg(objcg);
+> +		slab = folio_slab(folio);
+> +		objcgs = slab_objcgs(slab);
+> +		if (!objcgs)
+> +			return NULL;
+> +
+> +		off = obj_to_index(slab->slab_cache, slab, p);
+> +		if (objcgs[off])
+> +			return obj_cgroup_memcg(objcgs[off]);
 >  
-> -		objnr = obj_to_index(cachep, slab_page(slab), objp);
-> +		objnr = obj_to_index(cachep, slab, objp);
->  		if (objnr) {
->  			objp = index_to_obj(cachep, slab, objnr - 1);
->  			realobj = (char *)objp + obj_offset(cachep);
-> @@ -2529,7 +2529,7 @@ static void *slab_get_obj(struct kmem_cache *cachep, struct slab *slab)
->  static void slab_put_obj(struct kmem_cache *cachep,
->  			struct slab *slab, void *objp)
->  {
-> -	unsigned int objnr = obj_to_index(cachep, slab_page(slab), objp);
-> +	unsigned int objnr = obj_to_index(cachep, slab, objp);
->  #if DEBUG
->  	unsigned int i;
+>  		return NULL;
+>  	}
+
+There is a comment below, which needs some changes:
+	/*
+	 * page_memcg_check() is used here, because page_has_obj_cgroups()
+	 * check above could fail because the object cgroups vector wasn't set
+	 * at that moment, but it can be set concurrently.
+	 * page_memcg_check(page) will guarantee that a proper memory
+	 * cgroup pointer or NULL will be returned.
+	 */
+
+In reality the folio's slab flag can be cleared before releasing the objcgs \
+vector. It seems that there is no such possibility at setting the flag,
+it's always set before allocating and assigning the objcg vector.
+
+> @@ -2896,7 +2901,7 @@ struct mem_cgroup *mem_cgroup_from_obj(void *p)
+>  	 * page_memcg_check(page) will guarantee that a proper memory
+>  	 * cgroup pointer or NULL will be returned.
+>  	 */
+> -	return page_memcg_check(page);
+> +	return page_memcg_check(folio_page(folio, 0));
+>  }
 >  
-> @@ -2716,7 +2716,7 @@ static void *cache_free_debugcheck(struct kmem_cache *cachep, void *objp,
->  	if (cachep->flags & SLAB_STORE_USER)
->  		*dbg_userword(cachep, objp) = (void *)caller;
->  
-> -	objnr = obj_to_index(cachep, slab_page(slab), objp);
-> +	objnr = obj_to_index(cachep, slab, objp);
->  
->  	BUG_ON(objnr >= cachep->num);
->  	BUG_ON(objp != index_to_obj(cachep, slab, objnr));
-> @@ -3662,7 +3662,7 @@ void kmem_obj_info(struct kmem_obj_info *kpp, void *object, struct slab *slab)
->  	objp = object - obj_offset(cachep);
->  	kpp->kp_data_offset = obj_offset(cachep);
->  	slab = virt_to_slab(objp);
-> -	objnr = obj_to_index(cachep, slab_page(slab), objp);
-> +	objnr = obj_to_index(cachep, slab, objp);
->  	objp = index_to_obj(cachep, slab, objnr);
->  	kpp->kp_objp = objp;
->  	if (DEBUG && cachep->flags & SLAB_STORE_USER)
-> @@ -4180,7 +4180,7 @@ void __check_heap_object(const void *ptr, unsigned long n,
->  
->  	/* Find and validate object. */
->  	cachep = slab->slab_cache;
-> -	objnr = obj_to_index(cachep, slab_page(slab), (void *)ptr);
-> +	objnr = obj_to_index(cachep, slab, (void *)ptr);
->  	BUG_ON(objnr >= cachep->num);
->  
->  	/* Find offset within object. */
+>  __always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
 > diff --git a/mm/slab.h b/mm/slab.h
-> index 039babfde2fe..bca9181e96d7 100644
+> index bca9181e96d7..36e0022d8267 100644
 > --- a/mm/slab.h
 > +++ b/mm/slab.h
-> @@ -483,7 +483,7 @@ static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
->  				continue;
->  			}
+> @@ -412,15 +412,36 @@ static inline bool kmem_cache_debug_flags(struct kmem_cache *s, slab_flags_t fla
+>  }
 >  
-> -			off = obj_to_index(s, page, p[i]);
-> +			off = obj_to_index(s, page_slab(page), p[i]);
->  			obj_cgroup_get(objcg);
->  			page_objcgs(page)[off] = objcg;
->  			mod_objcg_state(objcg, page_pgdat(page),
-> @@ -522,7 +522,7 @@ static inline void memcg_slab_free_hook(struct kmem_cache *s_orig,
->  		else
->  			s = s_orig;
->  
-> -		off = obj_to_index(s, page, p[i]);
-> +		off = obj_to_index(s, page_slab(page), p[i]);
->  		objcg = objcgs[off];
->  		if (!objcg)
->  			continue;
-> diff --git a/mm/slub.c b/mm/slub.c
-> index cc64ba9d9963..ddf21c7a381a 100644
-> --- a/mm/slub.c
-> +++ b/mm/slub.c
-> @@ -4342,7 +4342,7 @@ void kmem_obj_info(struct kmem_obj_info *kpp, void *object, struct slab *slab)
->  #else
->  	objp = objp0;
->  #endif
-> -	objnr = obj_to_index(s, slab_page(slab), objp);
-> +	objnr = obj_to_index(s, slab, objp);
->  	kpp->kp_data_offset = (unsigned long)((char *)objp0 - (char *)objp);
->  	objp = base + s->size * objnr;
->  	kpp->kp_objp = objp;
-> -- 
-> 2.34.1
-> 
+>  #ifdef CONFIG_MEMCG_KMEM
+> -int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
+> -				 gfp_t gfp, bool new_page);
+> +/*
+> + * slab_objcgs - get the object cgroups vector associated with a slab
+> + * @slab: a pointer to the slab struct
+> + *
+> + * Returns a pointer to the object cgroups vector associated with the slab,
+> + * or NULL. This function assumes that the slab is known to have an
+> + * associated object cgroups vector. It's not safe to call this function
+> + * against slabs with underlying pages, which might have an associated memory
+> + * cgroup: e.g.  kernel stack pages.
 
+Hm, is it still true? I don't think so. It must be safe to call it for any
+slab now.
+
+The rest looks good to me, please feel free to add
 Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+after fixing these comments.
 
 Thanks!
