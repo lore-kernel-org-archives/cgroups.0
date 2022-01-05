@@ -1,42 +1,43 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v4 23/32] mm/memcg: Convert slab objcgs from struct page
- to struct slab
-Date: Tue, 4 Jan 2022 18:55:11 -0800
-Message-ID: <YdUIj9chzbeOFpIJ@carbon.dhcp.thefacebook.com>
-References: <20220104001046.12263-1-vbabka@suse.cz>
- <20220104001046.12263-24-vbabka@suse.cz>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [RFC PATCH 1/3] mm/memcg: Protect per-CPU counter by disabling
+ preemption on PREEMPT_RT
+Date: Wed, 5 Jan 2022 15:16:53 +0100
+Message-ID: <20220105141653.GA6464@blackbody.suse.cz>
+References: <20211222114111.2206248-1-bigeasy@linutronix.de>
+ <20211222114111.2206248-2-bigeasy@linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=maK8sIYCrJV1weWYvOBPXD6pF0RnAd+Y0RAPQ6xmjiQ=;
- b=ol2Mnc0vKYX+tylIfHRtrT4wOcDrBtqLhfdlWgXIxMDZstu3UgSKnKjHnd42j2lrEei7
- qR111S3DYxdAKa3USBeP4OqjZGa/Q7AOXo9+sCdG7aWilJE0GxoYjRpBTTHSz2gdSury
- VQJyDpY+iuiIiC43duYWyFbLMBc4ujhl5B4= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1641392214; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=+WLxA9/1x+7qLb1Bx+bH8yfotWhgKxpBD6Y91WrBPbQ=;
+        b=PAV1YMrbk39la/pf4jUdMUxaJx7luCh/1FN7SIUMJSyUYitC0PrA9E1VgkCh4UraOVmpCW
+        +8BmyHXXMxdMUUZt92yHwdC6UfUeiVDIiLcYDZZKA7x/dKlQYzcwlFtdozw5tMUSedbc0s
+        dEWuIryro2F81voSW5mEdShvjMtk74A=
 Content-Disposition: inline
-In-Reply-To: <20220104001046.12263-24-vbabka-AlSwsSmVLrQ@public.gmane.org>
+In-Reply-To: <20211222114111.2206248-2-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Tue, Jan 04, 2022 at 01:10:37AM +0100, Vlastimil Babka wrote:
-> page->memcg_data is used with MEMCG_DATA_OBJCGS flag only for slab pages
-> so convert all the related infrastructure to struct slab. Also use
-> struct folio instead of struct page when resolving object pointers.
-> 
-> This is not just mechanistic changing of types and names. Now in
-> mem_cgroup_from_obj() we use folio_test_slab() to decide if we interpret
-> the folio as a real slab instead of a large kmalloc, instead of relying
-> on MEMCG_DATA_OBJCGS bit that used to be checked in page_objcgs_check().
-> Similarly in memcg_slab_free_hook() where we can encounter
-> kmalloc_large() pages (here the folio slab flag check is implied by
-> virt_to_slab()). As a result, page_objcgs_check() can be dropped instead
-> of converted.
+On Wed, Dec 22, 2021 at 12:41:09PM +0100, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org> wrote:
+> The sections with disabled preemption must exclude
+> memcg_check_events() so that spinlock_t locks can still be acquired
+> (for instance in eventfd_signal()).
 
-Btw, it seems that with some minimal changes we can drop the whole thing
-with the changing of the lower bit and rely on the slab page flag.
-I'll prepare a patch on top of your series.
+The resulting construct in uncharge_batch() raises eybrows. If you can decouple
+per-cpu updates from memcg_check_events() on PREEMPT_RT, why not tackle
+it the same way on !PREEMPT_RT too (and have just one variant of the
+block)?
 
-Thanks!
+(Actually, it doesn't seem to me that memcg_check_events() can be
+extracted like this from the preempt disabled block since
+mem_cgroup_event_ratelimit() relies on similar RMW pattern.
+Things would be simpler if PREEMPT_RT didn't allow the threshold event
+handlers (akin to Michal Hocko's suggestion of rejecting soft limit).)
+
+Thanks,
+Michal
