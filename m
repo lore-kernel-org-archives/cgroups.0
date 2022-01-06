@@ -1,43 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH -next] blk-throttle: Set BIO_THROTTLED when bio has been
- throttled
-Date: Thu, 6 Jan 2022 09:52:33 -1000
-Message-ID: <YddIgWU73LabYICc@slm.duckdns.org>
-References: <20211118131551.810931-1-qiulaibin@huawei.com>
- <YaUZExR6v8IdZUeM@slm.duckdns.org>
- <03964258-10ff-7f19-10cb-ca4eccf72848@huawei.com>
- <YbepLpyMPqP2ao3J@slm.duckdns.org>
- <8c87a712-93fb-d794-6d08-cadf6452efc3@huawei.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/2] cgroup: rstat: explicitly put loop variant in while
+Date: Thu, 6 Jan 2022 11:10:33 -1000
+Message-ID: <YddayTDXQd21lxvt@slm.duckdns.org>
+References: <20211225000932.7253-1-richard.weiyang@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=FMCYSxfBHDKrU2xtUn5iYVpLMUW2H/Uaai2PBAbWbI4=;
-        b=kLnEU6mmNacpPREArN2iOC4bExYQSNan1xlnuUEIUu/f9MIY1GKKH0ycKAdCknNg8f
-         Mj/AbvEndlEgJczppSeUzmbnj9r41HfyP7xYrXkiU5bhD2L5rYHxHLFYJIGBNLVS7Gj2
-         IpEDW8GEOZ2YYJccx9M8lwjJj7Z1sBygpt6vdoFdPSMa86ImKFX9pic6sOOhsj8t/OiO
-         J4gWFEzgUTdwygFjwUdI5h0l+aQ/Cu+0+ks7b6t063dHaOeJBk5LcXHt+9W6//uNTqTp
-         i6nqtBtF4xN8OHzTDmv6KggQCobF31b72TpRAcV1yCO6erR8ZjH4PABoPbBO0pE8IZ4C
-         pwSg==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=MJG9lGZ6QLSV3BSYotGztqDw0fy0Zwnl6zTi3BAaNIs=;
+        b=B1XPEpvAtkf3Q1a5/T7kG5xY8AU6SOVPZ1+GtVa82Sbi26LKm4UyCC7TliLFocG7cW
+         huTZjXszQXSttUSSFiURgxdLRC6X7MW0YdVervf5CdOz0Q1iq7SpLuKXF0Q2PMKPPgzg
+         NledNo2s88DkvZf76UPIJ4VwgTBDpkJp9Z5vbXeRKJqgQaJPZb9K1cpOIZwYyATsmBC9
+         jJKa1nWLk1o24FDfnMjSux2DUWnVQynLrsbNyAH0Skb6sSOspjtXRRiE8DzA6c0uZr5S
+         jqvlNpzMg9FyJrRqlN0ieSn14DWPER0NZKovM99TQzxnzGCEWIRENTbNbro3f2qXlveX
+         t7NQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <8c87a712-93fb-d794-6d08-cadf6452efc3@huawei.com>
+In-Reply-To: <20211225000932.7253-1-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: QiuLaibin <qiulaibin@huawei.com>
-Cc: axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Dec 14, 2021 at 05:12:48PM +0800, QiuLaibin wrote:
-> I am thinking of adding a new bio tag (like BIO_THROTTLE_BYPASS) to avoid
-> those requests which do not need to be throttled to enter the throttle
-> multiple times.
+On Sat, Dec 25, 2021 at 12:09:31AM +0000, Wei Yang wrote:
+> Instead of do while unconditionally, let's put the loop variant in
+> while.
+> 
+> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Sorry about the long delay. Was off for several weeks, so my recommendation
-would be separating the two issues. It'd make a lot of sense to fix the
-immediate bug in a minimal way first.
+Applied to cgorup/for-5.17.
 
 Thanks.
 
