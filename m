@@ -1,31 +1,48 @@
-From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 4/4] block, bfq: update pos_root for idle bfq_queue in
- bfq_bfqq_move()
-Date: Fri, 7 Jan 2022 09:04:45 +0800
-Message-ID: <44c41001-c072-8e13-77e3-c19b8c12ab41@huawei.com>
-References: <20211221032135.878550-1-yukuai3@huawei.com>
- <20211221032135.878550-5-yukuai3@huawei.com>
- <20211221115001.GD24748@quack2.suse.cz>
- <6ca1e924-47fa-b94e-598c-69a9549eb68e@huawei.com>
- <20211222141722.GC685@quack2.suse.cz>
- <9743fc5a-f3f0-a23a-5d21-0c04c90e90e1@huawei.com>
- <5b42943f-4a8e-c4ec-05da-57e36cc14113@huawei.com>
- <20220103153732.pcfsmadzlqqroxcj@quack3>
+From: "yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH v5 0/2] cancel all throttled bios in del_gendisk()
+Date: Fri, 7 Jan 2022 09:08:15 +0800
+Message-ID: <29a780c6-ad65-ece8-4fbc-acd766b681f8@huawei.com>
+References: <20211210083143.3181535-1-yukuai3@huawei.com>
+ <ca8d39fc-48d3-cfd9-3fa4-a329bb37b91b@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220103153732.pcfsmadzlqqroxcj@quack3>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <ca8d39fc-48d3-cfd9-3fa4-a329bb37b91b@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, fchecconi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, avanzini.arianna-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: tj@kernel.org, mkoutny@suse.com, hch@infradead.org, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-在 2022/01/03 23:37, Jan Kara 写道:
-> OK, thanks for following up on this. So do I understand you correctly that
-> the problem with empty bfqq being in pos_tree does not exist in current
-> upstream kernel?
+在 2021/12/18 17:09, yukuai (C) 写道:
+> 在 2021/12/10 16:31, Yu Kuai 写道:
+>> If del_gendisk() is done when some io are still throttled, such io
+>> will not be handled until the throttle is done, which is not
+>> necessary.
+>>
+>> Changes in v2:
+>>   - move WARN_ON_ONCE() from throtl_rb_first() to it's caller
+>>   - merge some patches into one.
+>>
+>> Changes in v3:
+>>   - some code optimization in patch 1
+>>   - hold queue lock to cancel bios in patch 2
+>>
+>> Changes in v4:
+>>   - delete rcu_read_lock() and rcu_read_unlock() in patch 2
+>>
+>> Changes in v5:
+>>   - add comment about rcu lock
+> Friendly ping...
 
-Yes, I had this patch removed in v2 patchset.
+Friendly ping ...
 
-Thanks,
-Kuai
+>>
+>> Yu Kuai (2):
+>>    blk-throtl: move WARN_ON_ONCE() from throtl_rb_first() to it's caller
+>>    block: cancel all throttled bios in del_gendisk()
+>>
+>>   block/blk-throttle.c | 75 ++++++++++++++++++++++++++++++++++++++++++--
+>>   block/blk-throttle.h |  2 ++
+>>   block/genhd.c        |  2 ++
+>>   3 files changed, 76 insertions(+), 3 deletions(-)
+>>
