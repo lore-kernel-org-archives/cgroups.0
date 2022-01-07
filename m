@@ -1,35 +1,35 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-5.17] BUILD SUCCESS
- f5f60d235e7058da13a643c33fc7599c05ec0b73
-Date: Fri, 07 Jan 2022 18:50:28 +0800
-Message-ID: <61d81af4.Iu+3p75saWQEzacJ%lkp@intel.com>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ a091b198ba1ab51c1d3ec1564b2263941f297d65
+Date: Fri, 07 Jan 2022 19:15:48 +0800
+Message-ID: <61d820e4.J5jQIFRuMs5lW1GP%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1641552653; x=1673088653;
+  t=1641554214; x=1673090214;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=aSupsn26Duu5U0NKRkTsA1uIjy+pe2OrDgaCadGnXAw=;
-  b=E+eZeE8/wlifTKUbefw5soRHODAyzzxXPApYfO/cAhW3h/zuQuokPUuR
-   GX33VM5RoExZqKljDfAesE+FSyO5XN+B/q4yhsTQHXsfYlcHBwsCySRsu
-   0NdAAswKKEEUfqnS3/fecc0IhA06tEECBciQ0sxErTuvNs5wsMAb67ETP
-   0jPRo/HH1hUZgsxVS/E4kOLv3MyXPCgPIFzZtkqWk+z4lN1Hpe8tjoeWv
-   R3umPZfAhIA5XkIwf4PawJVCipXbnyhahVm7HpUvTfTq+DmYAmYZaooFn
-   PjEsxGpP5tJrXhFpT494sZFGjLdLKqKoAEtn1Ic2RewOdEiYEtXrd131q
-   A==;
+  bh=9EslOF7mLae/oC9PAgQ0+tIaLX6bWQUnKoqqOUiOy58=;
+  b=lP2kUQdjqa9aWNWYqfUHz/useK/Llp352wDLLCvqRpF+H6n7HqWS6N5/
+   AaaMUv+pjff7uEvnqhwBKJYHfHSqEVfOjOFPecL9hphTFHXdyG7uOjQAy
+   JiBwzH8b/3KCW/EXAShZpDyn9BQ1rdJsUD3xFY8wDcgFMlOYeCyv5KjQy
+   zz3N+3ixzDLAC7wxyoDd4GnYFScX/hdHZzMfDuCV9pJnq0JhkLeAfbflC
+   w3s7AvwJPCqAeEwcorbz4EHYtRl0qVFGeMnHGco986Dntvp0MCw3BQ5nk
+   h4/Qr+9efa49idaQUZu6CaG6KNbvHP1dDIheVc6zA2Jw8zv2pq7i74jby
+   w==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.17
-branch HEAD: f5f60d235e7058da13a643c33fc7599c05ec0b73  cgroup/rstat: check updated_next only for root
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: a091b198ba1ab51c1d3ec1564b2263941f297d65  Merge branch 'for-5.17' into for-next
 
-elapsed time: 732m
+elapsed time: 757m
 
-configs tested: 109
+configs tested: 111
 configs skipped: 3
 
 The following configs have been built successfully.
@@ -54,6 +54,8 @@ powerpc                      chrp32_defconfig
 powerpc                      mgcoge_defconfig
 mips                           jazz_defconfig
 arm                           viper_defconfig
+arc                         haps_hs_defconfig
+mips                         mpc30x_defconfig
 xtensa                    smp_lx200_defconfig
 sparc64                          alldefconfig
 arm                           h5000_defconfig
@@ -78,10 +80,10 @@ xtensa                           allyesconfig
 h8300                            allyesconfig
 arc                                 defconfig
 sh                               allmodconfig
-parisc                           allyesconfig
 parisc                              defconfig
 s390                             allyesconfig
 s390                             allmodconfig
+parisc                           allyesconfig
 s390                                defconfig
 i386                             allyesconfig
 sparc                            allyesconfig
