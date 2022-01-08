@@ -1,36 +1,56 @@
-From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Subject: Re: [GIT PULL] cgroup fixes for v5.16-rc8
-Date: Sat, 08 Jan 2022 00:02:07 +0000
-Message-ID: <164160012782.14023.3781753125840093469.pr-tracker-bot@kernel.org>
-References: <YdjAAK4AtsUDv5vw@slm.duckdns.org>
+From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 1/2] cgroup: rstat: use same convention to assign cgroup_base_stat
+Date: Sat,  8 Jan 2022 00:38:16 +0000
+Message-ID: <20220108003817.6619-1-richard.weiyang@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1641600127;
-        bh=I20x4Wyk5/OEgv0aB7SmYSXRN4pt2WIGX2rzKyoO5Bs=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=muE/+lZacqB1IZIM/MuWz6CE7BmcNJzXW7d25CrPgf+Gvh3ZV75PKgVbRgipb0rd2
-         /I1emWrwm1CjCI0/YZNG7jCa4gXIWmqo9J30Odeg89QtmDaGEI20FAO/jQ6/9BFv+n
-         0sltFri1SwsiYfrnrdLwj9CJSzHRkP9kC+/crP94DlHUSyBHjRHX10xxsI1UqYuYgw
-         Mwp6S2mdO4bDgcCUHoFkcn5KLy+9XhYL9kGrd4ItprEUUsW5Rve0+SGR1bf4WrC5dM
-         uQhZjDg1DgdjgXoSiy4wfH+xtiga2Ccfv2vF9rfBw5NG2Dx+CKUnanjlKf5wMUQyr/
-         eMNhiv5mF2n5A==
-In-Reply-To: <YdjAAK4AtsUDv5vw-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=+thfZnjVJKWIwHVQowEtHa5pcMezvSbOgv9V4uT2rnw=;
+        b=beAqvpsgAzbk5EtvsevPMK/hkrF/5AyZY+Q26XM++1/QXE1h2l/9vVcEKgLFvHqEd4
+         2KjHwcqOVB2PQKWyUxsc3FBsaqmSkMPAjrWC7uENY7WiNI7uYjEfF5p6AE2wCcpf3bxP
+         zyvmrvK+Ou/88nasMIAtGscl52qJopK41AIPuNX4PsE1T0izPuK0f6paZCeqNpMisLch
+         oG95OnSQS96BtQ+I7BhH04JxkKmD1md4tkaOtv2In1k1beorC/qPvHckSJWb1RLoLIOV
+         gtcUHo0g9sASNT1XZzeJ2pcdmT0SNqf5ug/AdvdNAAoM7kiWC+JCpH9CPYs4zlgFffu9
+         DP8w==
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-The pull request you sent on Fri, 7 Jan 2022 12:34:40 -1000:
+In function cgroup_base_stat_flush(), we update cgroup_base_stat by
+getting rstatc->bstat and adjust delta to related fields.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.16-fixes
+There are two convention to assign cgroup_base_stat in this function:
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/d1587f7bfe9a0f97a75d42ac1489aeda551106bc
+  * rstat2 = rstat1
+  * rstat2.cputime = rstat1.cputime
 
-Thank you!
+The second convention may make audience think just field "cputime" is
+updated, while cputime is the only field in cgroup_base_stat.
 
+Let's use the same convention to eliminate this confusion.
+
+Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ kernel/cgroup/rstat.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index a00875375f7d..c626d5a526c4 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -324,7 +324,7 @@ static void cgroup_base_stat_flush(struct cgroup *cgrp, int cpu)
+ 	/* fetch the current per-cpu values */
+ 	do {
+ 		seq = __u64_stats_fetch_begin(&rstatc->bsync);
+-		cur.cputime = rstatc->bstat.cputime;
++		cur = rstatc->bstat;
+ 	} while (__u64_stats_fetch_retry(&rstatc->bsync, seq));
+ 
+ 	/* propagate percpu delta to global */
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.33.1
+
