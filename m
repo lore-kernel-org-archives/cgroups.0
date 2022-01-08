@@ -1,31 +1,31 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 12ab2b5c8a0e7cb0af8e70593b8eb80c3e588986
-Date: Sat, 08 Jan 2022 18:34:40 +0800
-Message-ID: <61d968c0.j4X7REPG4O+NXElx%lkp@intel.com>
+Subject: [tj-cgroup:for-5.17] BUILD SUCCESS
+ d4296faebd337e5f76c0fddb815de33d2b0ad118
+Date: Sat, 08 Jan 2022 18:34:48 +0800
+Message-ID: <61d968c8.6C6FQwjY23gCV6x0%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1641638092; x=1673174092;
+  t=1641638153; x=1673174153;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=NbjU9Qs/7EkrrA8beOvnY9qn2sv9VzrpAZw+C72mlVg=;
-  b=DjOCsf8uVLfEJn593w+KUFe7bb9eDcsxF7t/HFenwlzFRWD5fdDgzokr
-   CxqjDjGMYdXBVqs+TiLWdpmSxsRKqwzH3NqelMp51ZWFA6T1dshJJY0fp
-   4bdlXV8Wk9D/NSrcUPP3fYAmIy++unUKoo11DnQLUNBGZFDvXPK4AmTDG
-   m7sUNFZ9/oeCZdnOyAJUnoH/xnHHLXEYYYY8OA5E7A43n+eY31kJW7YcU
-   CRvOwCa3/O724akLeae4knlYCJTTFsFCSMgPEvfqRZzU/DeP3qJp+OC1c
-   rDi8+CBHrUa8COEh7qrM/o63Uklu5r6aJ70ZwFu1FjW5Frw40o2Q9YbPh
-   A==;
+  bh=7qsJpxkbFWhSanLCb25u5fZc1kxTj+hIOlKL5i7SRkM=;
+  b=dqCpmtd6nG4CiK40JaGcJcqcswv6RpX6I4z7/jfHoOxapBT7vpu/qVg/
+   1mA5m8PbJeNWMK+uZuRCs+31RsROrZHNTMDbJyfsZeZoDEA8sxIz2M3da
+   pm5eJwXpl/ANPAQ+/mH3aYdZwmgK9EVDi4aI3llQhWvqbKvzVAjUAZdQ/
+   qTSmbkEWiZqZgG8muRcz5zzjcKXX10QHqRLKLyRpn09cTVqGYE6CI2JSP
+   6OKB9PjFZ6Rd77wM3e648iWOwcFMM27gSEEgmI40s3dLskwMbEuozemsv
+   WY/LJK0PnjuL8WQafcS5hJ2hevy/C0Ad+QyJRqzn5GB6bRZueMzIzhGSj
+   Q==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 12ab2b5c8a0e7cb0af8e70593b8eb80c3e588986  Merge branch 'for-5.17' into for-next
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.17
+branch HEAD: d4296faebd337e5f76c0fddb815de33d2b0ad118  cpuset: convert 'allowed' in __cpuset_node_allowed() to be boolean
 
 elapsed time: 728m
 
