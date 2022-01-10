@@ -1,53 +1,71 @@
-From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] blk-throtl: avoid double charge of bio IOPS due to split
-Date: Mon, 10 Jan 2022 16:29:23 +0800
-Message-ID: <1641803363-27550-1-git-send-email-brookxu.cn@gmail.com>
+From: Wolfgang Bumiller <w.bumiller-YTcQvvOqK21BDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCH linux] blk-cgroup: always terminate io.stat lines
+Date: Mon, 10 Jan 2022 11:37:24 +0100
+Message-ID: <20220110103724.11743-1-w.bumiller@proxmox.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id;
-        bh=ZbHmoJTvhu1ZJHvYjVegih6S2199NdYzTfdyg0if26A=;
-        b=HYBLvzRW8JYt51HdI/oGR7NhCjlv3HKUo+3R8MK/A2QmXDOpfeXDrE4OjEKm9hyr/f
-         z5hX0nD3/ELjvCIWF3aW7LoLRpbBM3CKM9oC0yCAspprbuIglE0aPyjqcHkod9waOtca
-         jACUuUUMU78auMMafwnfGwvnN7p3AZGIQrnJFXjhJgW9a6cjPA5f4TfMTLNcrk6/lSrj
-         dBnOaXvOggkJTMyvlJqd2KtzgMZ/4mtVYVoAjFAQ2Bkc0sZySQB6oQ8/btLK5dPWlvZ/
-         2ywGopmL+wwuf31otpzF9BsUiYay3Gy7Ib/XhmoOHpMu6jaer01guxfqSmTd4wrbNiol
-         Fb3g==
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 
-From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+With the removal of seq_get_buf in blkcg_print_one_stat, we
+cannot make adding the newline conditional on there being
+relevant stats because the name has already been written
+unconditionally.
+Otherwise we may end up with multiple device names in one
+line which is confusing and doesn't follow the nested-keyed
+file format.
 
-After commit 900e08075202("block: move queue enter logic into
-blk_mq_submit_bio()"), submit_bio_checks() moved to __submit_bio_fops()
-and blk_mq_submit_bio(). The IOs go through blk_mq_submit_bio()
-may be splited before entering blk-throtl, so we need to check
-whether the BIO is throttled, and only update the io_split_cnt
-for the THROTTLED bio to avoid double charge.
-
-Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Wolfgang Bumiller <w.bumiller-YTcQvvOqK21BDgjK7y7TUQ@public.gmane.org>
+Fixes: 252c651a4c85 ("blk-cgroup: stop using seq_get_buf")
 ---
- block/blk-throttle.c | 3 +++
- 1 file changed, 3 insertions(+)
+I also switched to `seq_puts` as suggested by `checkpatch.pl`
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 39bb6e6..2b12fc7 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -2049,6 +2049,9 @@ void blk_throtl_charge_bio_split(struct bio *bio)
- 	struct throtl_service_queue *parent_sq;
- 	bool rw = bio_data_dir(bio);
+This seemed like the simplest approach, so I thought I'd
+send a patch.
+
+On my physical machine, creating a new thin lv and starting
+a container on it created lines such as
+
+    253:10 253:5 rbytes=0 wbytes=0 rios=0 wios=1 dbytes=0 dios=0
+    ^~~~~~ ^~~~~
+
+This *looks* like the devices might just happen to have the
+same stats, but that's not the case (and doesn't follow the
+documented format).
+
+With this patch this becomes:
+
+    253:10
+    253:5 rbytes=0 wbytes=0 rios=0 wios=1 dbytes=0 dios=0
+
+Let me know if you prefer a different solution. I'm not sure
+a temporary buffer that can be discarded would be much
+better than the previous seq_get_buf() version. Otherwise
+we'd need to change the `pd_stat_fn` interface to collect
+the data separately and do the formatting afterwards I
+suppose?
+
+ block/blk-cgroup.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 663aabfeba18..e3e3e826dff7 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -937,8 +937,7 @@ static void blkcg_print_one_stat(struct blkcg_gq *blkg, struct seq_file *s)
+ 			has_stats = true;
+ 	}
  
-+	if (!bio_flagged(bio, BIO_THROTTLED))
-+		return;
-+
- 	do {
- 		if (!parent->has_rules[rw])
- 			break;
+-	if (has_stats)
+-		seq_printf(s, "\n");
++	seq_puts(s, "\n");
+ }
+ 
+ static int blkcg_print_stat(struct seq_file *sf, void *v)
 -- 
-1.8.3.1
+2.30.2
+
 
