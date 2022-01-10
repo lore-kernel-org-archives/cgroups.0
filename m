@@ -1,83 +1,53 @@
-From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v5 2/2] block: cancel all throttled bios in del_gendisk()
-Date: Mon, 10 Jan 2022 09:28:29 +0800
-Message-ID: <9e318511-b33c-37c6-8ffd-75302280246d@huawei.com>
-References: <20211210083143.3181535-1-yukuai3@huawei.com>
- <20211210083143.3181535-3-yukuai3@huawei.com>
- <20220107150519.GA26824@blackbody.suse.cz> <YdiuN9kv5OvE/Rtf@slm.duckdns.org>
- <20220107213612.GQ4202@paulmck-ThinkPad-P17-Gen-1>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] blk-throtl: avoid double charge of bio IOPS due to split
+Date: Mon, 10 Jan 2022 16:29:23 +0800
+Message-ID: <1641803363-27550-1-git-send-email-brookxu.cn@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220107213612.GQ4202@paulmck-ThinkPad-P17-Gen-1>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=ZbHmoJTvhu1ZJHvYjVegih6S2199NdYzTfdyg0if26A=;
+        b=HYBLvzRW8JYt51HdI/oGR7NhCjlv3HKUo+3R8MK/A2QmXDOpfeXDrE4OjEKm9hyr/f
+         z5hX0nD3/ELjvCIWF3aW7LoLRpbBM3CKM9oC0yCAspprbuIglE0aPyjqcHkod9waOtca
+         jACUuUUMU78auMMafwnfGwvnN7p3AZGIQrnJFXjhJgW9a6cjPA5f4TfMTLNcrk6/lSrj
+         dBnOaXvOggkJTMyvlJqd2KtzgMZ/4mtVYVoAjFAQ2Bkc0sZySQB6oQ8/btLK5dPWlvZ/
+         2ywGopmL+wwuf31otpzF9BsUiYay3Gy7Ib/XhmoOHpMu6jaer01guxfqSmTd4wrbNiol
+         Fb3g==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-在 2022/01/08 5:36, Paul E. McKenney 写道:
-> On Fri, Jan 07, 2022 at 11:18:47AM -1000, Tejun Heo wrote:
->> Hello,
->>
->> On Fri, Jan 07, 2022 at 04:05:19PM +0100, Michal Koutný wrote:
->>> On Fri, Dec 10, 2021 at 04:31:43PM +0800, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->>>> +	 * queue_lock is held, rcu lock is not needed here.
->>>> +	 */
->>>> +	blkg_for_each_descendant_post(blkg, pos_css, td->queue->root_blkg)
->>>> +		tg_drain_bios(&blkg_to_tg(blkg)->service_queue);
->>>
->>> FTR, I acknowledge this can work due to RCU peculiarities, however, I
->>> don't understand why is it preferred against more robust explict
->>> rcu_read_lock().
->>>
->>> (All in all, this isn't a deal breaker and I'm not confident evaluating
->>> the rest of the patch.)
->>
->> Cc'ing Paul for RCU. Paul, this nit is around whether or not to use
->> rcu_read_lock() in an irq disabled section. I can see both sides of the
->> arguments - it's weird to put in an extra rcu_read_lock() when technically
->> unnecessary but it's also nice to have something explicit and structured to
->> mark parts which require RCU protection. Putting in a comment is okay but
->> consistency is difficult to achieve that way.
->>
->> Maybe all these are unnecessary as lockdep would be able to catch them
->> anyway, or maybe we'd want something to explicitly mark RCU protected
->> sections. I don't know but whichever way, I think we need to establish a
->> convention.
-> 
-> The easiest thing to do is to use rcu_dereference_sched() instead of
-> rcu_dereference().  This will cause lockdep to insist on preemption
-> (for example, interrupts) being disabled.
-> 
-> Or is this a case where a function containing rcu_dereference() is invoked
-> with interrupts disabled from some call sites and under rcu_read_lock()
-> protection from other call sites?  In this case, it is usually best to
-> include that redundant rcu_read_lock() [1].
+From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Hi,
+After commit 900e08075202("block: move queue enter logic into
+blk_mq_submit_bio()"), submit_bio_checks() moved to __submit_bio_fops()
+and blk_mq_submit_bio(). The IOs go through blk_mq_submit_bio()
+may be splited before entering blk-throtl, so we need to check
+whether the BIO is throttled, and only update the io_split_cnt
+for the THROTTLED bio to avoid double charge.
 
-This is the later case, so I guess I'll include that redundant
-rcu_read_lock().
+Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+---
+ block/blk-throttle.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Thanks,
-Kuai
-> 
-> 							Thanx, Paul
-> 
-> [1]	If you are a glutton for punishment, or if you would otherwise
-> 	have to add a cubic goatskin of rcu_read_lock() calls, you
-> 	could instead write this priceless gem in place of the calls to
-> 	rcu_dereference() in that common function:
-> 
-> 	p = rcu_dereference_check(ptr, rcu_read_lock_sched_held());
-> 
-> 	This would cause lockdep to be happy with either rcu_read_lock()
-> 	or preemption being disabled.
-> 
-> 	This is more precise, and would be preferable in some cases,
-> 	for example, if there were lots of hotpath callsites with
-> 	interrupts disabled.  "Do we add 25 pairs of rcu_read_lock()
-> 	and rcu_read_unlock()?	Or do we add just the one ugly
-> 	rcu_dereference_check()?"
-> .
-> 
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 39bb6e6..2b12fc7 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -2049,6 +2049,9 @@ void blk_throtl_charge_bio_split(struct bio *bio)
+ 	struct throtl_service_queue *parent_sq;
+ 	bool rw = bio_data_dir(bio);
+ 
++	if (!bio_flagged(bio, BIO_THROTTLED))
++		return;
++
+ 	do {
+ 		if (!parent->has_rules[rw])
+ 			break;
+-- 
+1.8.3.1
+
