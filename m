@@ -1,71 +1,49 @@
-From: Wolfgang Bumiller <w.bumiller-YTcQvvOqK21BDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH linux] blk-cgroup: always terminate io.stat lines
-Date: Mon, 10 Jan 2022 11:37:24 +0100
-Message-ID: <20220110103724.11743-1-w.bumiller@proxmox.com>
+From: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] blk-throtl: avoid double charge of bio IOPS due to split
+Date: Mon, 10 Jan 2022 18:51:26 +0800
+Message-ID: <YdwPrsdhwX39IlDG@T590>
+References: <1641803363-27550-1-git-send-email-brookxu.cn@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1641811901;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Uep8m/hs5XUyZjO6T2O4qnfO84NUY7Xj8s7kTpYwtJo=;
+        b=KhL+bAjpyDhIqqHNGPDwo8y1KSCBd5bKlgA4Z985oc4t8adVq2iUSxKxvXilyVWZuXAmN2
+        QDgRlqidAgVsRYKMtk8wwuw5qIjqDiCIC/oNB4XDJN72ZCq0hmkAU2OW908drY7FVUmnj+
+        qONFvYV0b7shHHCAd4OopMlQiL18NsA=
+Content-Disposition: inline
+In-Reply-To: <1641803363-27550-1-git-send-email-brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-With the removal of seq_get_buf in blkcg_print_one_stat, we
-cannot make adding the newline conditional on there being
-relevant stats because the name has already been written
-unconditionally.
-Otherwise we may end up with multiple device names in one
-line which is confusing and doesn't follow the nested-keyed
-file format.
+Hi Chunguang,
 
-Signed-off-by: Wolfgang Bumiller <w.bumiller-YTcQvvOqK21BDgjK7y7TUQ@public.gmane.org>
-Fixes: 252c651a4c85 ("blk-cgroup: stop using seq_get_buf")
----
-I also switched to `seq_puts` as suggested by `checkpatch.pl`
+On Mon, Jan 10, 2022 at 04:29:23PM +0800, brookxu wrote:
+> From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+> 
+> After commit 900e08075202("block: move queue enter logic into
+> blk_mq_submit_bio()"), submit_bio_checks() moved to __submit_bio_fops()
+> and blk_mq_submit_bio(). The IOs go through blk_mq_submit_bio()
+> may be splited before entering blk-throtl, so we need to check
+> whether the BIO is throttled, and only update the io_split_cnt
+> for the THROTTLED bio to avoid double charge.
 
-This seemed like the simplest approach, so I thought I'd
-send a patch.
+Today Jens has merged the patch[1] of "block: don't protect
+submit_bio_checks by q_usage_counter", so the behavior is switched
+back to previous behavior: running bio check before calling
+blk_mq_submit_bio() or ->submit_bio().
 
-On my physical machine, creating a new thin lv and starting
-a container on it created lines such as
+Then looks your patch isn't needn't any more.
 
-    253:10 253:5 rbytes=0 wbytes=0 rios=0 wios=1 dbytes=0 dios=0
-    ^~~~~~ ^~~~~
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/commit/?h=for-5.17/block&id=9d497e2941c30a060ba62d5485b3bc9d91ffb09e
 
-This *looks* like the devices might just happen to have the
-same stats, but that's not the case (and doesn't follow the
-documented format).
 
-With this patch this becomes:
-
-    253:10
-    253:5 rbytes=0 wbytes=0 rios=0 wios=1 dbytes=0 dios=0
-
-Let me know if you prefer a different solution. I'm not sure
-a temporary buffer that can be discarded would be much
-better than the previous seq_get_buf() version. Otherwise
-we'd need to change the `pd_stat_fn` interface to collect
-the data separately and do the formatting afterwards I
-suppose?
-
- block/blk-cgroup.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 663aabfeba18..e3e3e826dff7 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -937,8 +937,7 @@ static void blkcg_print_one_stat(struct blkcg_gq *blkg, struct seq_file *s)
- 			has_stats = true;
- 	}
- 
--	if (has_stats)
--		seq_printf(s, "\n");
-+	seq_puts(s, "\n");
- }
- 
- static int blkcg_print_stat(struct seq_file *sf, void *v)
--- 
-2.30.2
-
+Thanks,
+Ming
 
