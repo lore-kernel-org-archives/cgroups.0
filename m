@@ -1,23 +1,22 @@
 From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [PATCH 1/4] mm/memcg: use NUMA_NO_NODE to indicate allocation
- from unspecified node
-Date: Tue, 11 Jan 2022 10:23:57 +0800
-Message-ID: <CAMZfGtVR90mUTL_JgKwO_4ek_nk8CbZGPchn3GxvwtN9q+dxbg@mail.gmail.com>
-References: <20220111010302.8864-1-richard.weiyang@gmail.com>
+Subject: Re: [PATCH 2/4] mm/memcg: mem_cgroup_per_node is already set to 0 on allocation
+Date: Tue, 11 Jan 2022 10:25:37 +0800
+Message-ID: <CAMZfGtWBt+qYB1-NS+G8Tzk0pm6UZGvENZFBWrz+i35=N1kOAw@mail.gmail.com>
+References: <20220111010302.8864-1-richard.weiyang@gmail.com> <20220111010302.8864-2-richard.weiyang@gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=QSQyDPVUrDTpPa0aeIkb88gZSvWQCxb+kxHI+54cFz0=;
-        b=XP3yQrg8fDZpSWUZkuN/qfg9052nmszm/0Ms512ggngyobd7ttIvqnXRyrfbVQTWaf
-         /zGqSCW6zCzW84h4JMDO76dAuixk4yxZqFqgmYbuFIecfy++oe16hNrJXFTIYI3h86rj
-         7J7KqCLyp1LCIst+ibhYsv6zCd9IeG9Hlhapn40NZpRLtRAxXaJ3m9P3fifzHCfrX0+Z
-         rYtTnG1Ldv3rswgr8S0TJTBmeTDEr5CdzTxhHwZdq0Y2dYKVSTgZVBR3bPP/PoKSsE6/
-         h2T8vQYugkLWcuH4JEaXMIvSedPawB/waoT7n5CVkTpXpLBJCdawHZLGfukgzi3IKixh
-         f8Wg==
-In-Reply-To: <20220111010302.8864-1-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=P1ENhSWsAV/dz7z50ZJCYCuaP4VRXWxn4r2j+Sg+6UA=;
+        b=T55GOK2PpaNsrGqiMFTAqH2V7QdMHJhf0a3BMQ7I8S2f2h7BI4JXGBsntFUbrKsnrl
+         rEzOH+AqALeZAy8Qhyi3rFQo8NaIqguy97C9ERCdlxVx+n7E8WH64/TjwHln91YBdBBk
+         AWYzFw4wU9mhtUfJSXGLzZymCyI9uQqeU39t+zioXUDqxTWAI0BMcwXbJxPBATEie6rv
+         xQARIPZV9m3Nn76w+UJ2xS8QDkRdVgio/eXbMdoElnUL60H99TIz4WO/aNSZ8URTri7U
+         84EE4GnWjFwaNRNtzSO8JCOqqvhya0pINZ5DHiHwfs7OeADtTaDkmdukFBkr8yOlXG57
+         zZYQ==
+In-Reply-To: <20220111010302.8864-2-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -26,7 +25,8 @@ Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hoc
 
 On Tue, Jan 11, 2022 at 9:03 AM Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
 >
-> Instead of use "-1", let's use NUMA_NO_NODE for consistency.
+> kzalloc_node() would set data to 0, so it's not necessary to set it
+> again.
 >
 > Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
