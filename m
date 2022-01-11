@@ -1,114 +1,100 @@
-From: Suren Baghdasaryan <surenb@google.com>
+From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Subject: Re: [PATCH v2 1/1] psi: Fix uaf issue when psi trigger is destroyed
  while being polled
-Date: Tue, 11 Jan 2022 11:45:50 -0800
-Message-ID: <CAJuCfpHq+YuvGxUN_6T0Hhit9xqrHptEURUYA9yoQ=a4Mxm=ug@mail.gmail.com>
+Date: Tue, 11 Jan 2022 12:14:55 -0800
+Message-ID: <CAHk-=wiQ-qzKU8vyhgm8xsWE8DG6rR4jmbvOfBvbjVYq4SKQMA@mail.gmail.com>
 References: <20220111071212.1210124-1-surenb@google.com> <Yd3RClhoz24rrU04@sol.localdomain>
  <CAHk-=wgwb6pJjvHYmOMT-yp5RYvw0pbv810Wcxdm5S7dWc-s0g@mail.gmail.com> <Yd3dZklleDnJCQ46@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
+        d=linux-foundation.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=cYM3w6sF3GdNlmdqLvAoD7AhfrvfG2EVFga6RBsDJ9A=;
-        b=Mt4ZASK5zi7OxlYN4uGWn9Al8aSRx+NyY1vjI15KA4jFibPPBJTK0LsBdKI5/wVDN8
-         eaABaF1xFQE5sKb+gEqCtpMfku5ENOs52hdnXevVJEeqkfTXfnGEpBFzZsj+jfJWBUkt
-         cN+W5nWoQmVm/euxNmr/0ztHk2yUYx/vRTQTcNKIwSpGIz2F/Gb5GzPPiWUP4kPl0H51
-         XyiW2xfhxi12nT22oA6Ee1rnwDGadXCICsVO0HHCylk/goPrjd8gJLBDggGTVy3r7aPM
-         QbQs5su1PWXq2rThuWhQNw/0zOCtFqj/I0l7eSxQsagO9kSbvlXtzMZJmIzsuJPPtLHJ
-         VqIg==
-In-Reply-To: <Yd3dZklleDnJCQ46@gmail.com>
+        bh=QIPHuIOvokpeNHmHUixV0mApYnjljbKFO0KUPR67zl4=;
+        b=WkUrQMItIdviW32gVxTME1qmG78cK09N/WFqLy9Iv0myOcHM0JJ6ekcU8JpQUo1c6s
+         EwUt9qH+HwlFUcOS9uJquiUQoS0opheUzJrb5L+hu3uiCv/lHpZjZUIRYpu+6riD7OVJ
+         g1sIlIT7CN1X65a9ArD4h2V5w+0vG4Ns+U5Lo=
+In-Reply-To: <Yd3dZklleDnJCQ46-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Eric Biggers <ebiggers@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, Jonathan Corbet <corbet@lwn.net>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, stable <stable@vger.kernel.org>, Android Kernel Team <kernel-team@android.com>, s
+To: Eric Biggers <ebiggers-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "open list:DOCUMENTATION" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, stable <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, syzbot <s>
 
-On Tue, Jan 11, 2022 at 11:41 AM Eric Biggers <ebiggers@kernel.org> wrote:
+On Tue, Jan 11, 2022 at 11:41 AM Eric Biggers <ebiggers-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
 >
-> On Tue, Jan 11, 2022 at 11:11:32AM -0800, Linus Torvalds wrote:
-> > On Tue, Jan 11, 2022 at 10:48 AM Eric Biggers <ebiggers@kernel.org> wrote:
-> > >
-> > > The write here needs to use smp_store_release(), since it is paired with the
-> > > concurrent READ_ONCE() in psi_trigger_poll().
-> >
-> > A smp_store_release() doesn't make sense pairing with a READ_ONCE().
-> >
-> > Any memory ordering that the smp_store_release() does on the writing
-> > side is entirely irrelevant, since the READ_ONCE() doesn't imply any
-> > ordering on the reading side. Ordering one but not the other is
-> > nonsensical.
-> >
-> > So the proper pattern is to use a WRITE_ONCE() to pair with a
-> > READ_ONCE() (when you don't care about memory ordering, or you handle
-> > it explicitly), or a smp_load_acquire() with a smp_store_release() (in
-> > which case writes before the smp_store_release() on the writing side
-> > will be ordered wrt accesses after smp_load_acquire() on the reading
-> > side).
-> >
-> > Of course, in practice, for pointers, the whole "dereference off a
-> > pointer" on the read side *does* imply a barrier in all relevant
-> > situations. So yes, a smp_store_release() -> READ_ONCE() does work in
-> > practice, although it's technically wrong (in particular, it's wrong
-> > on alpha, because of the completely broken memory ordering that alpha
-> > has that doesn't even honor data dependencies as read-side orderings)
-> >
-> > But in this case, I do think that since there's some setup involved
-> > with the trigger pointer, the proper serialization is to use
-> > smp_store_release() to set the pointer, and then smp_load_acquire() on
-> > the reading side.
-> >
-> > Or just use the RCU primitives - they are even better optimized, and
-> > handle exactly that case, and can be more efficient on some
-> > architectures if release->acquire isn't already cheap.
-> >
-> > That said, we've pretty much always accepted that normal word writes
-> > are not going to tear, so we *have* also accepted just
-> >
-> >  - do any normal store of a value on the write side
-> >
-> >  - do a READ_ONCE() on the reading side
-> >
-> > where the reading side doesn't actually care *what* value it gets, it
-> > only cares that the value it gets is *stable* (ie no compiler reloads
-> > that might show up as two different values on the reading side).
-> >
-> > Of course, that has the same issue as WRITE_ONCE/READ_ONCE - you need
-> > to worry about memory ordering separately.
-> >
-> > > > +     seq->private = new;
-> > >
-> > > Likewise here.
-> >
-> > Yeah, same deal, except here you can't even use the RCU ones, because
-> > 'seq->private' isn't annotated for RCU.
-> >
-> > Or you'd do the casting, of course.
-> >
->
-> This is yet another case of "one time init".  There have been long discussions
-> on this topic before:
-> * https://lore.kernel.org/linux-fsdevel/20200713033330.205104-1-ebiggers@kernel.org/T/#u
-> * https://lore.kernel.org/lkml/20200916233042.51634-1-ebiggers@kernel.org/T/#u
-> * https://lwn.net/Articles/827180/
->
-> I even attempted to document the best practices:
-> * https://lore.kernel.org/linux-fsdevel/20200717044427.68747-1-ebiggers@kernel.org/T/#u
->
-> However, no one could agree on whether READ_ONCE() or smp_load_acquire() should
-> be used.  smp_load_acquire() is always correct, so it remains my preference.
-> However, READ_ONCE() is correct in some cases, and some people (including the
-> primary LKMM maintainer) insist that it be used in all such cases, as well as in
-> rcu_dereference() even though this places difficult-to-understand constraints on
-> how rcu_dereference() can be used.
->
-> My preference is that smp_load_acquire() be used.  But be aware that this risks
-> the READ_ONCE() people coming out of the woodwork and arguing for READ_ONCE().
+> This is yet another case of "one time init".
 
-I like my chances here (I believe we do need memory ordering in this
-case). I'll post a fix with smp_load_acquire/smp_store_release shortly
-after I run my tests. Thanks for the guidance!
+Ehh. It's somewhat debatable.
 
->
-> - Eric
+For a flag that sets a value once, the rules are somewhat different.
+In that case, people may simply not care about memory ordering at all,
+because all they care about is the actual flag value, and - thanks to
+the one-time behavior - basically whether some transition had happened
+or not. That's not all that unusual.
+
+But when you fetch a pointer, things are at least conceptually
+slightly different.
+
+Of course, you may use the existence of the pointer itself as a flag
+(ie just a "NULL or not"), in which case it's the same as any other
+one-time flag thing.
+
+But if you use it to dereference something, then _by_definition_
+you're not just fetching a one-time flag - even if the pointer is only
+set once. At that point, at a minimum, you require that that thing has
+been initialized.
+
+Now, it's then absolutely true that the stuff behind the pointer may
+then have other reasons not to care about memory ordering again, and
+you may be able to avoid memory ordering even then. If you're just
+switching the pointer around between different objects that has been
+statically allocated and initialized, then there is no memory ordering
+required, for example. You might be back to the "I just want one or
+the other of these two pointers".
+
+But if you have something that was initialized before the pointer was
+assigned, you really do hit the problem we had on alpha, where even if
+you order the pointer write side accesses, the dereferencing of the
+pointer may not be ordered on the read side.
+
+Now, alpha is basically dead, and we probably don't really care. Even
+on alpha, the whole "data dependency isn't a memory ordering" is
+almost impossible to trigger.
+
+And in fact, to avoid too much pain we ended up saying "screw alpha"
+and added a memory barrier to READ_ONCE(), so it turns out that
+smp_store_release -> READ_ONCE() does work because we just couldn't be
+bothered to try something more proper.
+
+So yeah, READ_ONCE() ends up making the "access through a pointer"
+thing safe, but that's less of a "it should be safe" and more of a "we
+can't waste time dealing with braindamage on platforms that don't
+matter".
+
+In general, I think the rule should be that READ_ONCE() is for things
+that simply don't care about memory ordering at all (or do whatever
+ordering they want explicitly). And yes, one such very common case is
+the "one-way flag" where once a certain state has been reached, it's
+idempotent.
+
+Of course, then we have the fact that READ_ONCE() can be more
+efficient than "smp_load_acquire()" on some platforms, so if something
+is *hugely* performance-critical, you might use READ_ONCE() even if
+it's not really technically the right thing.
+
+So it's complicated.
+
+A lot of READ_ONCE() users exist just for historical reasons because
+they predated smp_store_release/smp_load_acquire. They may well have
+been using ACCESS_ONCE() long ago.
+
+And some are there because it's a very critical piece of code, and
+it's very intentional.
+
+But if you don't have some huge reasons, I really would prefer people
+use "smp_store_release -> smp_load_acquire" as a very clear "handoff"
+event.
+
+              Linus
