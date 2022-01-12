@@ -1,62 +1,121 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v9 4/7] cgroup/cpuset: Add a new isolated cpus.partition
- type
-Date: Wed, 12 Jan 2022 10:40:01 -0500
-Message-ID: <0cf37ac0-69c7-2da4-22a6-58e78dc35cef@redhat.com>
-References: <20211205183220.818872-1-longman@redhat.com>
- <20211205183220.818872-5-longman@redhat.com>
- <Yd7x3P+wGCVfYtza@hirez.programming.kicks-ass.net>
+From: Suren Baghdasaryan <surenb@google.com>
+Subject: Re: [PATCH v3 1/1] psi: Fix uaf issue when psi trigger is destroyed
+ while being polled
+Date: Wed, 12 Jan 2022 09:43:43 -0800
+Message-ID: <CAJuCfpGHLXDvMU1GLMcgK_K72_ErPhbcFh1ZvEeHg025yinNuw@mail.gmail.com>
+References: <20220111232309.1786347-1-surenb@google.com> <Yd7oPlxCpnzNmFzc@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1642002036;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=gJmHbv9SCbjdwt82aanZM10+dOvSdHukj6nnuz8zRSw=;
-        b=Otx7kFuf6KKIGrYWvzjSkWIjeqz6E1Q+cMTZR/nBCVmiyZVXjatnUv1GPwOEY/8jT476fO
-        uP5xVwUqeqIILpwLwuf/O4Tm2q+D9tK5YkwVJ3Z6MSaYdIX4qgy1urmKagVi9dQHRAY40G
-        jCnsIC+te68oGIHPSLhuVTiByv1noVg=
-Content-Language: en-US
-In-Reply-To: <Yd7x3P+wGCVfYtza-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=eP5J8KdvwPTzx2Kh8QKLifNfox7/NjpkOpmG9av6VCk=;
+        b=KOnNi/erjJKDmXshSZZv7C3gKcJm3IwJxMouUmE8kJwjg35FNi2J3VpRJJE/XQaq+f
+         ouYLgnZDFAaNV/dqxDZDk6O3Fv6kndvxJTf9AH6O4akiYKs9CyjyX3pWSP26jU17VEXI
+         6ErUlQZ3+TUb2xsmk1ccCDw9ox3MzN4DbY+Gik5rJVQOkCfjDDk7H1g7Yf66gTgdMZ0B
+         xX7ItBjgp1QlQISrAdgTibHYblom3PdgqvpX8tr+VOTUf+X4TBASg+486PvrMw4KlZD7
+         CYY5L51LKMZK8LUaHHFZsldW3arkrea20wfWQ0cJ5wMJObXD8DPKu+feJ+i17rNp84mq
+         Jraw==
+In-Reply-To: <Yd7oPlxCpnzNmFzc@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Eric Biggers <ebiggers@kernel.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Benjamin Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, Jonathan Corbet <corbet@lwn.net>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, cgroups mailinglist <cgroups@vger.kernel.org>, stable <stable@vger.kernel.org>, kernel-team <kernel-team@android.com>, syzbot
 
+)
 
-On 1/12/22 10:21, Peter Zijlstra wrote:
-> On Sun, Dec 05, 2021 at 01:32:17PM -0500, Waiman Long wrote:
->> Cpuset v1 uses the sched_load_balance control file to determine if load
->> balancing should be enabled.  Cpuset v2 gets rid of sched_load_balance
->> as its use may require disabling load balancing at cgroup root.
->>
->> For workloads that require very low latency like DPDK, the latency
->> jitters caused by periodic load balancing may exceed the desired
->> latency limit.
->>
->> When cpuset v2 is in use, the only way to avoid this latency cost is to
->> use the "isolcpus=" kernel boot option to isolate a set of CPUs. After
->> the kernel boot, however, there is no way to add or remove CPUs from
->> this isolated set. For workloads that are more dynamic in nature, that
->> means users have to provision enough CPUs for the worst case situation
->> resulting in excess idle CPUs.
->>
->> To address this issue for cpuset v2, a new cpuset.cpus.partition type
->> "isolated" is added which allows the creation of a cpuset partition
->> without load balancing. This will allow system administrators to
->> dynamically adjust the size of isolated partition to the current need
->> of the workload without rebooting the system.
-> you can, ofcourse, create lots of 1 cpu partitions, which is effectively
-> what you're doing, except there was a problem with that which you also
-> forgot to mention.
+On Wed, Jan 12, 2022 at 6:40 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
+>
+> On Tue, Jan 11, 2022 at 03:23:09PM -0800, Suren Baghdasaryan wrote:
+> > With write operation on psi files replacing old trigger with a new one,
+> > the lifetime of its waitqueue is totally arbitrary. Overwriting an
+> > existing trigger causes its waitqueue to be freed and pending poll()
+> > will stumble on trigger->event_wait which was destroyed.
+> > Fix this by disallowing to redefine an existing psi trigger. If a write
+> > operation is used on a file descriptor with an already existing psi
+> > trigger, the operation will fail with EBUSY error.
+> > Also bypass a check for psi_disabled in the psi_trigger_destroy as the
+> > flag can be flipped after the trigger is created, leading to a memory
+> > leak.
+> >
+> > Fixes: 0e94682b73bf ("psi: introduce psi monitor")
+> > Cc: stable@vger.kernel.org
+> > Reported-by: syzbot+cdb5dd11c97cc532efad@syzkaller.appspotmail.com
+> > Analyzed-by: Eric Biggers <ebiggers@kernel.org>
+> > Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
+> > Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+>
+> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 
-Yes, that is a possible workaround. However, it makes cgroup management 
-much harder especially in the cgroup v2 environment where multiple 
-controllers are likely to be enabled in the same cgroup.
+Hmm. kernel test robot notified me of new (which are not really new)
+warnings but I don't think this patch specifically introduced them:
 
-Cheers,
-Longman
+kernel/sched/psi.c:1112:21: warning: no previous prototype for
+function 'psi_trigger_create' [-Wmissing-prototypes]
+   struct psi_trigger *psi_trigger_create(struct psi_group *group,
+                       ^
+   kernel/sched/psi.c:1112:1: note: declare 'static' if the function
+is not intended to be used outside of this translation unit
+   struct psi_trigger *psi_trigger_create(struct psi_group *group,
+   ^
+   static
+>> kernel/sched/psi.c:1182:6: warning: no previous prototype for function 'psi_trigger_destroy' [-Wmissing-prototypes]
+   void psi_trigger_destroy(struct psi_trigger *t)
+        ^
+   kernel/sched/psi.c:1182:1: note: declare 'static' if the function
+is not intended to be used outside of this translation unit
+   void psi_trigger_destroy(struct psi_trigger *t)
+   ^
+   static
+   kernel/sched/psi.c:1249:10: warning: no previous prototype for
+function 'psi_trigger_poll' [-Wmissing-prototypes]
+   __poll_t psi_trigger_poll(void **trigger_ptr,
+            ^
+   kernel/sched/psi.c:1249:1: note: declare 'static' if the function
+is not intended to be used outside of this translation unit
+   __poll_t psi_trigger_poll(void **trigger_ptr,
+   ^
 
+This happens with the following config:
+
+CONFIG_CGROUPS=n
+CONFIG_PSI=y
+
+With cgroups disabled these functions are defined as non-static but
+are not defined in the header
+(https://elixir.bootlin.com/linux/latest/source/include/linux/psi.h#L28)
+since the only external user cgroup.c is disabled. The cleanest way to
+fix these I think is by doing smth like this in psi.c:
+
+struct psi_trigger *_psi_trigger_create(struct psi_group *group, char
+*buf, size_t nbytes, enum psi_res res)
+{
+  // original psi_trigger_create code
+}
+
+#ifdef CONFIG_CGROUPS
+
+struct psi_trigger *psi_trigger_create(struct psi_group *group, char
+*buf, size_t nbytes, enum psi_res res)
+{
+    return _psi_trigger_create(group, buf, nbytes, res);
+}
+
+#else
+
+static struct psi_trigger *psi_trigger_create(struct psi_group *group,
+char *buf, size_t nbytes, enum psi_res res)
+{
+    return _psi_trigger_create(group, buf, nbytes, res);
+}
+
+#endif
+
+Two questions:
+1. Is this even worth fixing?
+2. If so, I would like to do that as a separate patch (these warnings
+are unrelated to the changes in this patch). Would that be ok?
+Thanks,
+Suren.
