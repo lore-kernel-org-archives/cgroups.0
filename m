@@ -1,59 +1,52 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] sched/core: Forced idle accounting per-cpu
-Date: Wed, 12 Jan 2022 13:27:39 +0100
-Message-ID: <Yd7JO1UYlRXR0dWE@hirez.programming.kicks-ass.net>
-References: <1641894961-9241-1-git-send-email-CruzZhao@linux.alibaba.com>
- <1641894961-9241-3-git-send-email-CruzZhao@linux.alibaba.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v2 1/1] psi: Fix uaf issue when psi trigger is destroyed
+ while being polled
+Date: Wed, 12 Jan 2022 09:37:10 -0500
+Message-ID: <Yd7nlpb5C1asdT9p@cmpxchg.org>
+References: <20220111071212.1210124-1-surenb@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=aJdQ3WfBr8szpr2DYItlqsfb9rRoIL3kxZXhJL3L8aU=; b=bjjePTTHviZfIwg1tJnjLcwgzq
-        xwRs1BQRnIuvC9fEfyAbETRcppiCmDzGfV4S3UpUf5YKhDqZeEdbflYzTx9efKxCuDuf1xVvfV3KZ
-        IMT6nxP55MioxAOHwZ68Ie1+TQRP68nc2jy9Ur9RoDlAX5IxBJPhipI2cUpaSMzrq75VVik6YEY0c
-        3ltXPVRvJ8JSYw2XTljbUt26BDi0gZFGns1P+tGSSfyAVjGKVpe+lhoH/YzNUdRwsnGHhDRZBeiC+
-        xxTMbLUmKAu6NSftSa+T8zGRAUA3xmyAm3GXAHCx72setLknaxvqasqnV6MlGn0cXFlnJpNmZafjh
-        HeWKFCxQ==;
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=gN6nYxQ+pi+EX1rhDvVBrSftakRyc+dgBWa+b+GYGOw=;
+        b=mUYM4mY5CMZFdZf8LoZxSmr2HrBtGWy/OuRuqq61O/YzMtji9cyv80GCzVs3+/yBQM
+         ea8h1TgnQuxezzPUpv+dYIPkHwYXJi8s8RLc3/qoVBJIdyMcJhSjmxQmUkiMYq3Ma/mk
+         FCYSRjNlYgSsNDINKB5/QzVJm37I8VUcYMKVK1npArHn3Q6M8h3+azxH7i00hNJ3x5GH
+         /MOIqnam32dgIasH341bE3XTjvVfDKCVLNSfwExXT1QlmErmH+Ao3P6BgqP5XnvYn4WD
+         4jkB6eQQ2fqopSlJvC4a/kF34giBDtsHPoVyc1PJ8OLUBC1+AAZopBx4/zXrVog6uTYo
+         wZRg==
 Content-Disposition: inline
-In-Reply-To: <1641894961-9241-3-git-send-email-CruzZhao-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+In-Reply-To: <20220111071212.1210124-1-surenb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Cruz Zhao <CruzZhao-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: torvalds@linux-foundation.org, ebiggers@kernel.org, tj@kernel.org, lizefan.x@bytedance.com, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, corbet@lwn.net, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, stable@vger.kernel.org, kernel-team@android.com, syzbot+cdb5dd11c97cc532efad@syzkaller.appspotmail.com
 
-On Tue, Jan 11, 2022 at 05:56:00PM +0800, Cruz Zhao wrote:
+On Mon, Jan 10, 2022 at 11:12:12PM -0800, Suren Baghdasaryan wrote:
+> With write operation on psi files replacing old trigger with a new one,
+> the lifetime of its waitqueue is totally arbitrary. Overwriting an
+> existing trigger causes its waitqueue to be freed and pending poll()
+> will stumble on trigger->event_wait which was destroyed.
+> Fix this by disallowing to redefine an existing psi trigger. If a write
+> operation is used on a file descriptor with an already existing psi
+> trigger, the operation will fail with EBUSY error.
+> Also bypass a check for psi_disabled in the psi_trigger_destroy as the
+> flag can be flipped after the trigger is created, leading to a memory
+> leak.
+> 
+> Fixes: 0e94682b73bf ("psi: introduce psi monitor")
+> Cc: stable@vger.kernel.org
+> Reported-by: syzbot+cdb5dd11c97cc532efad@syzkaller.appspotmail.com
+> Analyzed-by: Eric Biggers <ebiggers@kernel.org>
+> Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
+> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
 
-> @@ -1115,6 +1118,7 @@ struct rq {
->  	unsigned int		core_forceidle_seq;
->  	unsigned int		core_forceidle_occupation;
->  	u64			core_forceidle_start;
-> +	bool			in_forcedidle;
+That looks good to me, thanks Suren.
 
-naming is wrong
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 
->  #endif
->  };
->  
-> diff --git a/kernel/sched/stats.c b/kernel/sched/stats.c
-> index 07dde29..ea22a8c 100644
-> --- a/kernel/sched/stats.c
-> +++ b/kernel/sched/stats.c
-> @@ -108,6 +108,16 @@ void __update_stats_enqueue_sleeper(struct rq *rq, struct task_struct *p,
->  	}
->  }
->  
-> +#ifdef CONFIG_SCHED_CORE
-> +static inline u64 get_rq_forceidle_time(struct rq *rq) {
-> +	return rq->rq_forceidle_time;
-> +}
-> +#else
-> +static inline u64 get_rq_forceidle_time(struct rq *rq) {
-> +	return 0;
-> +}
-> +#endif
-
-indent is wrong, and if you put the #ifdef inside the function it'll be
-smaller.
+Peter, would you mind picking this up and routing this to Linus
+through the sched tree, please?
