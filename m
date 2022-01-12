@@ -1,89 +1,48 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 1/4] mm/memcg: use NUMA_NO_NODE to indicate allocation
- from unspecified node
-Date: Wed, 12 Jan 2022 09:56:15 +0100
-Message-ID: <Yd6Xr7K9bKGVgGtI@dhcp22.suse.cz>
-References: <20220111010302.8864-1-richard.weiyang@gmail.com>
- <Yd1CdJA5NelzoK1D@dhcp22.suse.cz>
- <20220112004634.dc5suwei4ymyxaxg@master>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH v3 1/1] psi: Fix uaf issue when psi trigger is destroyed
+ while being polled
+Date: Wed, 12 Jan 2022 11:03:52 +0100
+Message-ID: <Yd6niK1gzKc5lIJ8@hirez.programming.kicks-ass.net>
+References: <20220111232309.1786347-1-surenb@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1641977777; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=uBzH2mVPP3ctB/WRYSae7RVF7fvvNk6lw/YieWT7XoY=;
-        b=emOHqq2ajf3XQKAtY6MDJLTTxLdgpdZuzRzgsgUybOUXZau2wtcPEN+0xr/6g9XFLCUxaN
-        gbR5sH+syOJ7AMleiVDT3t5vtqUQQUBLBKTGlufLw6GethRo+KdXM0yImTJbsHGn4+F+En
-        ITLplvGE0N3IntYNvADruyzhJCyB1uc=
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Kh/HKj3/o1WOFn9L3CDxPNGxXJ5OR1S9mBMFhWz9mXY=; b=Inj4tqlAk9DWNVe9v6+4CQ6Xhe
+        FWOdQX8JvqI/7oePa/z66spHCoPa/5xqHj8tZpSjqJDFIOojup1PaO+6R0MCymfVsXdCJ9TNPlgrA
+        hm8GM1IbQTs2nENXPRwRIEu+309+J20VXtvD5kcHstRRhDWDasaCeN0NzuiLZ+WEzOTNC9fRAweYZ
+        1zVnbBBN1HKqMueamY1H0hFVgEBiUm9bsrZYfsKmxj0DVhptvsT8upBEWoPzJjuvZEdLvz2EdrDTW
+        gqUctnWJpjoo1SPh6JlMNKLAe8Zr5+PXmvk92vCrUFCTGiZ2GKzC5J7r3IyTagGVf6AjVFOHIlMeC
+        9cpQyi2Q==;
 Content-Disposition: inline
-In-Reply-To: <20220112004634.dc5suwei4ymyxaxg@master>
+In-Reply-To: <20220111232309.1786347-1-surenb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: hannes@cmpxchg.org, torvalds@linux-foundation.org, ebiggers@kernel.org, tj@kernel.org, lizefan.x@bytedance.com, mingo@redhat.com, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, corbet@lwn.net, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, stable@vger.kernel.org, kernel-team@android.com, syzbot+cdb5dd11c97cc532efad@syzkaller.appspotmail.com
 
-On Wed 12-01-22 00:46:34, Wei Yang wrote:
-> On Tue, Jan 11, 2022 at 09:40:20AM +0100, Michal Hocko wrote:
-> >On Tue 11-01-22 01:02:59, Wei Yang wrote:
-> >> Instead of use "-1", let's use NUMA_NO_NODE for consistency.
-> >> 
-> >> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> >
-> >I am not really sure this is worth it. After the merge window I plan to
-> >post http://lkml.kernel.org/r/20211214100732.26335-1-mhocko-DgEjT+Ai2yi4UlQgPVntAg@public.gmane.org
+On Tue, Jan 11, 2022 at 03:23:09PM -0800, Suren Baghdasaryan wrote:
+> With write operation on psi files replacing old trigger with a new one,
+> the lifetime of its waitqueue is totally arbitrary. Overwriting an
+> existing trigger causes its waitqueue to be freed and pending poll()
+> will stumble on trigger->event_wait which was destroyed.
+> Fix this by disallowing to redefine an existing psi trigger. If a write
+> operation is used on a file descriptor with an already existing psi
+> trigger, the operation will fail with EBUSY error.
+> Also bypass a check for psi_disabled in the psi_trigger_destroy as the
+> flag can be flipped after the trigger is created, leading to a memory
+> leak.
 > 
-> Give me some time to understand it :-)
+> Fixes: 0e94682b73bf ("psi: introduce psi monitor")
+> Cc: stable@vger.kernel.org
+> Reported-by: syzbot+cdb5dd11c97cc532efad@syzkaller.appspotmail.com
+> Analyzed-by: Eric Biggers <ebiggers@kernel.org>
+> Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
+> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+> ---
 
-Just for the record, here is what I have put on top of that series:
---- 
-From b7195eba02fe6308a6927450f4630057c05e808e Mon Sep 17 00:00:00 2001
-From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date: Tue, 11 Jan 2022 09:45:25 +0100
-Subject: [PATCH] memcg: do not tweak node in alloc_mem_cgroup_per_node_info
-
-alloc_mem_cgroup_per_node_info is allocated for each possible node and
-this used to be a problem because not !node_online nodes didn't have
-appropriate data structure allocated. This has changed by "mm: handle
-uninitialized numa nodes gracefully" so we can drop the special casing
-here.
-
-Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
----
- mm/memcontrol.c | 14 ++------------
- 1 file changed, 2 insertions(+), 12 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 781605e92015..ed19a21ee14e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5044,18 +5044,8 @@ struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
- static int alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
- {
- 	struct mem_cgroup_per_node *pn;
--	int tmp = node;
--	/*
--	 * This routine is called against possible nodes.
--	 * But it's BUG to call kmalloc() against offline node.
--	 *
--	 * TODO: this routine can waste much memory for nodes which will
--	 *       never be onlined. It's better to use memory hotplug callback
--	 *       function.
--	 */
--	if (!node_state(node, N_NORMAL_MEMORY))
--		tmp = -1;
--	pn = kzalloc_node(sizeof(*pn), GFP_KERNEL, tmp);
-+
-+	pn = kzalloc_node(sizeof(*pn), GFP_KERNEL, node);
- 	if (!pn)
- 		return 1;
- 
--- 
-2.30.2
-
-
--- 
-Michal Hocko
-SUSE Labs
+Thanks, I'll go stick this in sched/urgent unless Linus picks it up
+himself.
