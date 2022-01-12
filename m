@@ -1,47 +1,54 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v3 1/1] psi: Fix uaf issue when psi trigger is destroyed
- while being polled
-Date: Wed, 12 Jan 2022 09:39:58 -0500
-Message-ID: <Yd7oPlxCpnzNmFzc@cmpxchg.org>
-References: <20220111232309.1786347-1-surenb@google.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH v9 4/7] cgroup/cpuset: Add a new isolated cpus.partition
+ type
+Date: Wed, 12 Jan 2022 16:21:00 +0100
+Message-ID: <Yd7x3P+wGCVfYtza@hirez.programming.kicks-ass.net>
+References: <20211205183220.818872-1-longman@redhat.com>
+ <20211205183220.818872-5-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=azTS6tnDk3tgwE9tswmIFeSjakmtEkN/3qV9mBsYccQ=;
-        b=lTRxPpgHABlbCins2TOnLV9LVjCQ26SweG5q5/C2dMrN7f4+7+CdEQaKc4xcdS/zs3
-         DnnJODvxalPzEBmfycggfJ4lZoZUdSfkcT1FFajWBuoDH4tbJJLL2YuL6VbiKPY23zjT
-         s9abyL/GVEQlgdsFh47XnaBAIlnd4r3ZyvPyN5/9fVlr23f1ZQ+zFnmJ2EknoM6EVijq
-         DtrWB4hpPieJhguRemvh6pArWmjvKs5iO38IbvNSIbHAERKk9TjFr3Jxk2ED+QMTUtWB
-         yC+ONdLHxP7q+hbMjaRXE0DQCgYR737mTcvby6eksJwvQM1crqiY6MklMC7KIIBeXrYS
-         SJPg==
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=PeT2LoZXZw99I6PIg4z9VVN/0YLATJTsoI1YHe2dcKg=; b=Y2RbGA40kz18bOBofpUu+nLNyz
+        71OBT4yUrBNu1aldnyDPbWRDXY2pOatTuDqzuY4Zb3CKxogY/whi+VDJZGw27whuQhrLoJUGPPR/A
+        SMl8hhueSWk2N2dLb//FURhbOz+HrZ1jtiqoqdU4KsKaa8pXqdMSX+obvMHs0mbOBvJlwXUo/YbUP
+        eFcGHx85qsqO0uFFJMjTcv1kcrKqe2JRut633rMY8gsx7Mlz9eOUtLpk9gIOxV1OF1tGaMqhUOOoc
+        AgZvDsOnRLmSZyStd9mX7FYfN0P2CTCkhhC7ye0x6TlZUJHgS3+g1VMF7mVdj7PKrbWGsCBnrw3k0
+        ccKB8yXg==;
 Content-Disposition: inline
-In-Reply-To: <20220111232309.1786347-1-surenb@google.com>
+In-Reply-To: <20211205183220.818872-5-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: torvalds@linux-foundation.org, ebiggers@kernel.org, tj@kernel.org, lizefan.x@bytedance.com, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, corbet@lwn.net, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, stable@vger.kernel.org, kernel-team@android.com, syzbot+cdb5dd11c97cc532efad@syzkaller.appspotmail.com
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
 
-On Tue, Jan 11, 2022 at 03:23:09PM -0800, Suren Baghdasaryan wrote:
-> With write operation on psi files replacing old trigger with a new one,
-> the lifetime of its waitqueue is totally arbitrary. Overwriting an
-> existing trigger causes its waitqueue to be freed and pending poll()
-> will stumble on trigger->event_wait which was destroyed.
-> Fix this by disallowing to redefine an existing psi trigger. If a write
-> operation is used on a file descriptor with an already existing psi
-> trigger, the operation will fail with EBUSY error.
-> Also bypass a check for psi_disabled in the psi_trigger_destroy as the
-> flag can be flipped after the trigger is created, leading to a memory
-> leak.
+On Sun, Dec 05, 2021 at 01:32:17PM -0500, Waiman Long wrote:
+> Cpuset v1 uses the sched_load_balance control file to determine if load
+> balancing should be enabled.  Cpuset v2 gets rid of sched_load_balance
+> as its use may require disabling load balancing at cgroup root.
 > 
-> Fixes: 0e94682b73bf ("psi: introduce psi monitor")
-> Cc: stable@vger.kernel.org
-> Reported-by: syzbot+cdb5dd11c97cc532efad@syzkaller.appspotmail.com
-> Analyzed-by: Eric Biggers <ebiggers@kernel.org>
-> Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+> For workloads that require very low latency like DPDK, the latency
+> jitters caused by periodic load balancing may exceed the desired
+> latency limit.
+> 
+> When cpuset v2 is in use, the only way to avoid this latency cost is to
+> use the "isolcpus=" kernel boot option to isolate a set of CPUs. After
+> the kernel boot, however, there is no way to add or remove CPUs from
+> this isolated set. For workloads that are more dynamic in nature, that
+> means users have to provision enough CPUs for the worst case situation
+> resulting in excess idle CPUs.
+> 
+> To address this issue for cpuset v2, a new cpuset.cpus.partition type
+> "isolated" is added which allows the creation of a cpuset partition
+> without load balancing. This will allow system administrators to
+> dynamically adjust the size of isolated partition to the current need
+> of the workload without rebooting the system.
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+you can, ofcourse, create lots of 1 cpu partitions, which is effectively
+what you're doing, except there was a problem with that which you also
+forgot to mention.
+
+
