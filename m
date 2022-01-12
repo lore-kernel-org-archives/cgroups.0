@@ -1,40 +1,59 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH v2 1/1] psi: Fix uaf issue when psi trigger is destroyed
- while being polled
-Date: Wed, 12 Jan 2022 12:06:04 +0100
-Message-ID: <Yd62HBixfq6jn6jR@hirez.programming.kicks-ass.net>
-References: <20220111071212.1210124-1-surenb@google.com>
- <Yd3RClhoz24rrU04@sol.localdomain>
- <CAHk-=wgwb6pJjvHYmOMT-yp5RYvw0pbv810Wcxdm5S7dWc-s0g@mail.gmail.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH v2 2/3] sched/core: Forced idle accounting per-cpu
+Date: Wed, 12 Jan 2022 13:27:39 +0100
+Message-ID: <Yd7JO1UYlRXR0dWE@hirez.programming.kicks-ass.net>
+References: <1641894961-9241-1-git-send-email-CruzZhao@linux.alibaba.com>
+ <1641894961-9241-3-git-send-email-CruzZhao@linux.alibaba.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=nv9oEebndkSiqv8pTcj7NImvDdA6KxSCBwjzUgND6Ac=; b=taEKJ6bDdHze7bETZnYl9/7wDa
-        i1PB5dTa9T6SL6KmLnXcEdUBEYRvwYZrthrA3g0T1QrqulikClYv9M9HvbNDcUVJb2H7n7NdLliLW
-        IjvOI145W5idiyDI878zCLuASw1nGZxjQgo3mBCuEYVAOyyT3v4NjAfBpVvre+S50zbLfIN+ncqLF
-        EdYH9w6eiC1i03M8nm/At/P5M5zsSY6mqDCtZhyXCJ6G8EtJh7hiXfnaujw8dwc5bThZeAgfc8RhL
-        bl2P43CB+lVqBXcekr+4SfEOyavXzuvyo6bi97AI529TiCHN3jeX+vfa5JU/RHAEW/P2OWsK8Zi94
-        z5mbKIDA==;
+        bh=aJdQ3WfBr8szpr2DYItlqsfb9rRoIL3kxZXhJL3L8aU=; b=bjjePTTHviZfIwg1tJnjLcwgzq
+        xwRs1BQRnIuvC9fEfyAbETRcppiCmDzGfV4S3UpUf5YKhDqZeEdbflYzTx9efKxCuDuf1xVvfV3KZ
+        IMT6nxP55MioxAOHwZ68Ie1+TQRP68nc2jy9Ur9RoDlAX5IxBJPhipI2cUpaSMzrq75VVik6YEY0c
+        3ltXPVRvJ8JSYw2XTljbUt26BDi0gZFGns1P+tGSSfyAVjGKVpe+lhoH/YzNUdRwsnGHhDRZBeiC+
+        xxTMbLUmKAu6NSftSa+T8zGRAUA3xmyAm3GXAHCx72setLknaxvqasqnV6MlGn0cXFlnJpNmZafjh
+        HeWKFCxQ==;
 Content-Disposition: inline
-In-Reply-To: <CAHk-=wgwb6pJjvHYmOMT-yp5RYvw0pbv810Wcxdm5S7dWc-s0g@mail.gmail.com>
+In-Reply-To: <1641894961-9241-3-git-send-email-CruzZhao-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Eric Biggers <ebiggers@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, Jonathan Corbet <corbet@lwn.net>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, stable <stable@vger.kernel.org>, Android Kernel Team <kernel-team@android.com>, syzbot <syzb>
+To: Cruz Zhao <CruzZhao-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jan 11, 2022 at 11:11:32AM -0800, Linus Torvalds wrote:
+On Tue, Jan 11, 2022 at 05:56:00PM +0800, Cruz Zhao wrote:
 
-> Of course, in practice, for pointers, the whole "dereference off a
-> pointer" on the read side *does* imply a barrier in all relevant
-> situations. So yes, a smp_store_release() -> READ_ONCE() does work in
-> practice, although it's technically wrong (in particular, it's wrong
-> on alpha, because of the completely broken memory ordering that alpha
-> has that doesn't even honor data dependencies as read-side orderings)
+> @@ -1115,6 +1118,7 @@ struct rq {
+>  	unsigned int		core_forceidle_seq;
+>  	unsigned int		core_forceidle_occupation;
+>  	u64			core_forceidle_start;
+> +	bool			in_forcedidle;
 
-On a tangent, that actually works, even on Alpha, see commit
-d646285885154 ("alpha: Override READ_ONCE() with barriered
-implementation").
+naming is wrong
+
+>  #endif
+>  };
+>  
+> diff --git a/kernel/sched/stats.c b/kernel/sched/stats.c
+> index 07dde29..ea22a8c 100644
+> --- a/kernel/sched/stats.c
+> +++ b/kernel/sched/stats.c
+> @@ -108,6 +108,16 @@ void __update_stats_enqueue_sleeper(struct rq *rq, struct task_struct *p,
+>  	}
+>  }
+>  
+> +#ifdef CONFIG_SCHED_CORE
+> +static inline u64 get_rq_forceidle_time(struct rq *rq) {
+> +	return rq->rq_forceidle_time;
+> +}
+> +#else
+> +static inline u64 get_rq_forceidle_time(struct rq *rq) {
+> +	return 0;
+> +}
+> +#endif
+
+indent is wrong, and if you put the #ifdef inside the function it'll be
+smaller.
