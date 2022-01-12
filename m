@@ -1,48 +1,40 @@
 From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH v3 1/1] psi: Fix uaf issue when psi trigger is destroyed
+Subject: Re: [PATCH v2 1/1] psi: Fix uaf issue when psi trigger is destroyed
  while being polled
-Date: Wed, 12 Jan 2022 11:03:52 +0100
-Message-ID: <Yd6niK1gzKc5lIJ8@hirez.programming.kicks-ass.net>
-References: <20220111232309.1786347-1-surenb@google.com>
+Date: Wed, 12 Jan 2022 12:06:04 +0100
+Message-ID: <Yd62HBixfq6jn6jR@hirez.programming.kicks-ass.net>
+References: <20220111071212.1210124-1-surenb@google.com>
+ <Yd3RClhoz24rrU04@sol.localdomain>
+ <CAHk-=wgwb6pJjvHYmOMT-yp5RYvw0pbv810Wcxdm5S7dWc-s0g@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Kh/HKj3/o1WOFn9L3CDxPNGxXJ5OR1S9mBMFhWz9mXY=; b=Inj4tqlAk9DWNVe9v6+4CQ6Xhe
-        FWOdQX8JvqI/7oePa/z66spHCoPa/5xqHj8tZpSjqJDFIOojup1PaO+6R0MCymfVsXdCJ9TNPlgrA
-        hm8GM1IbQTs2nENXPRwRIEu+309+J20VXtvD5kcHstRRhDWDasaCeN0NzuiLZ+WEzOTNC9fRAweYZ
-        1zVnbBBN1HKqMueamY1H0hFVgEBiUm9bsrZYfsKmxj0DVhptvsT8upBEWoPzJjuvZEdLvz2EdrDTW
-        gqUctnWJpjoo1SPh6JlMNKLAe8Zr5+PXmvk92vCrUFCTGiZ2GKzC5J7r3IyTagGVf6AjVFOHIlMeC
-        9cpQyi2Q==;
+        bh=nv9oEebndkSiqv8pTcj7NImvDdA6KxSCBwjzUgND6Ac=; b=taEKJ6bDdHze7bETZnYl9/7wDa
+        i1PB5dTa9T6SL6KmLnXcEdUBEYRvwYZrthrA3g0T1QrqulikClYv9M9HvbNDcUVJb2H7n7NdLliLW
+        IjvOI145W5idiyDI878zCLuASw1nGZxjQgo3mBCuEYVAOyyT3v4NjAfBpVvre+S50zbLfIN+ncqLF
+        EdYH9w6eiC1i03M8nm/At/P5M5zsSY6mqDCtZhyXCJ6G8EtJh7hiXfnaujw8dwc5bThZeAgfc8RhL
+        bl2P43CB+lVqBXcekr+4SfEOyavXzuvyo6bi97AI529TiCHN3jeX+vfa5JU/RHAEW/P2OWsK8Zi94
+        z5mbKIDA==;
 Content-Disposition: inline
-In-Reply-To: <20220111232309.1786347-1-surenb@google.com>
+In-Reply-To: <CAHk-=wgwb6pJjvHYmOMT-yp5RYvw0pbv810Wcxdm5S7dWc-s0g@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: hannes@cmpxchg.org, torvalds@linux-foundation.org, ebiggers@kernel.org, tj@kernel.org, lizefan.x@bytedance.com, mingo@redhat.com, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, corbet@lwn.net, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, stable@vger.kernel.org, kernel-team@android.com, syzbot+cdb5dd11c97cc532efad@syzkaller.appspotmail.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Eric Biggers <ebiggers@kernel.org>, Suren Baghdasaryan <surenb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, Jonathan Corbet <corbet@lwn.net>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, stable <stable@vger.kernel.org>, Android Kernel Team <kernel-team@android.com>, syzbot <syzb>
 
-On Tue, Jan 11, 2022 at 03:23:09PM -0800, Suren Baghdasaryan wrote:
-> With write operation on psi files replacing old trigger with a new one,
-> the lifetime of its waitqueue is totally arbitrary. Overwriting an
-> existing trigger causes its waitqueue to be freed and pending poll()
-> will stumble on trigger->event_wait which was destroyed.
-> Fix this by disallowing to redefine an existing psi trigger. If a write
-> operation is used on a file descriptor with an already existing psi
-> trigger, the operation will fail with EBUSY error.
-> Also bypass a check for psi_disabled in the psi_trigger_destroy as the
-> flag can be flipped after the trigger is created, leading to a memory
-> leak.
-> 
-> Fixes: 0e94682b73bf ("psi: introduce psi monitor")
-> Cc: stable@vger.kernel.org
-> Reported-by: syzbot+cdb5dd11c97cc532efad@syzkaller.appspotmail.com
-> Analyzed-by: Eric Biggers <ebiggers@kernel.org>
-> Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-> ---
+On Tue, Jan 11, 2022 at 11:11:32AM -0800, Linus Torvalds wrote:
 
-Thanks, I'll go stick this in sched/urgent unless Linus picks it up
-himself.
+> Of course, in practice, for pointers, the whole "dereference off a
+> pointer" on the read side *does* imply a barrier in all relevant
+> situations. So yes, a smp_store_release() -> READ_ONCE() does work in
+> practice, although it's technically wrong (in particular, it's wrong
+> on alpha, because of the completely broken memory ordering that alpha
+> has that doesn't even honor data dependencies as read-side orderings)
+
+On a tangent, that actually works, even on Alpha, see commit
+d646285885154 ("alpha: Override READ_ONCE() with barriered
+implementation").
