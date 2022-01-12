@@ -1,143 +1,32 @@
-From: Suren Baghdasaryan <surenb@google.com>
+From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Subject: Re: [PATCH v3 1/1] psi: Fix uaf issue when psi trigger is destroyed
  while being polled
-Date: Wed, 12 Jan 2022 09:49:00 -0800
-Message-ID: <CAJuCfpEaM3KoPy3MUG7HW2yzcT6oJ5gdceyHPNpHrqTErq27eQ@mail.gmail.com>
-References: <20220111232309.1786347-1-surenb@google.com> <Yd7oPlxCpnzNmFzc@cmpxchg.org>
- <CAJuCfpGHLXDvMU1GLMcgK_K72_ErPhbcFh1ZvEeHg025yinNuw@mail.gmail.com>
+Date: Wed, 12 Jan 2022 10:03:33 -0800
+Message-ID: <CAHk-=wiNQD6o-REKoZv_5cHWrGmsT_KgduYCsLdLqbdHWUKcdw@mail.gmail.com>
+References: <20220111232309.1786347-1-surenb@google.com> <Yd6niK1gzKc5lIJ8@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
+        d=linux-foundation.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=FGEfHWlf9UMI6v4enCzCD7r7seKvBt4wr+xOvzAydtg=;
-        b=WbGG70yB5ix1xJm1WZIdyIccnKWNDVsMGBobYnUvRJtVGwRDFABrhR3HRodaO2H2gT
-         o+mvzdaj9LW0ogQ/fZRLZ/G14ELweRvxby5HD2yygkGanrwyi0saa1PLA/b2HANEP9wP
-         uVBQAarQx5wX6tUlOrtGMc8zeFxL6B2vOiWjnaC9BUVZle/bRqhOpgFK7qozPGiliRpF
-         KQaDAmpG3GhdrpqiN7KljC2pW8M/Z/6NhEvocoQhtnW+0wIJ3qYItndrv8QOCrbR/Jxa
-         UB+N+Y+r+k/dW13lG7nxHXxFVvAgkFh1FoS5a/O9Z9S/tPGYbuQ9WwEOG5hY/jGGrlg2
-         U5EA==
-In-Reply-To: <CAJuCfpGHLXDvMU1GLMcgK_K72_ErPhbcFh1ZvEeHg025yinNuw@mail.gmail.com>
+        bh=DhSCFec3TdzZgoMmjiOtfrqEeP0ETxz+5Dx8yofaKqk=;
+        b=ACYcmQYX22hOF9eHsSpz63wI3cG/WXMRlzAlN2whKAaJhPR9GPIxx9qzxyuqNMjA+7
+         rZivP0MyhKT2m5OXVlrJzc4KyBRcDy7L36J2mi7wYToYCPNHQweiy7y/QtQh9y37tYtS
+         Q95EMM11LnVKXAhQsE7YRBQZnsA8tqq/mJJvI=
+In-Reply-To: <Yd6niK1gzKc5lIJ8-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Eric Biggers <ebiggers@kernel.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Benjamin Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, Jonathan Corbet <corbet@lwn.net>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, cgroups mailinglist <cgroups@vger.kernel.org>, stable <stable@vger.kernel.org>, kernel-team <kernel-team@android.com>, syzbot
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Eric Biggers <ebiggers-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "open list:DOCUMENTATION" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, stable <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Android Kernel Team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, syzbot <syzb>
 
-On Wed, Jan 12, 2022 at 9:43 AM Suren Baghdasaryan <surenb@google.com> wrote:
+On Wed, Jan 12, 2022 at 2:04 AM Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
 >
-> )
->
-> On Wed, Jan 12, 2022 at 6:40 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
-> >
-> > On Tue, Jan 11, 2022 at 03:23:09PM -0800, Suren Baghdasaryan wrote:
-> > > With write operation on psi files replacing old trigger with a new one,
-> > > the lifetime of its waitqueue is totally arbitrary. Overwriting an
-> > > existing trigger causes its waitqueue to be freed and pending poll()
-> > > will stumble on trigger->event_wait which was destroyed.
-> > > Fix this by disallowing to redefine an existing psi trigger. If a write
-> > > operation is used on a file descriptor with an already existing psi
-> > > trigger, the operation will fail with EBUSY error.
-> > > Also bypass a check for psi_disabled in the psi_trigger_destroy as the
-> > > flag can be flipped after the trigger is created, leading to a memory
-> > > leak.
-> > >
-> > > Fixes: 0e94682b73bf ("psi: introduce psi monitor")
-> > > Cc: stable@vger.kernel.org
-> > > Reported-by: syzbot+cdb5dd11c97cc532efad@syzkaller.appspotmail.com
-> > > Analyzed-by: Eric Biggers <ebiggers@kernel.org>
-> > > Suggested-by: Linus Torvalds <torvalds@linux-foundation.org>
-> > > Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-> >
-> > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
->
-> Hmm. kernel test robot notified me of new (which are not really new)
-> warnings but I don't think this patch specifically introduced them:
->
-> kernel/sched/psi.c:1112:21: warning: no previous prototype for
-> function 'psi_trigger_create' [-Wmissing-prototypes]
->    struct psi_trigger *psi_trigger_create(struct psi_group *group,
->                        ^
->    kernel/sched/psi.c:1112:1: note: declare 'static' if the function
-> is not intended to be used outside of this translation unit
->    struct psi_trigger *psi_trigger_create(struct psi_group *group,
->    ^
->    static
-> >> kernel/sched/psi.c:1182:6: warning: no previous prototype for function 'psi_trigger_destroy' [-Wmissing-prototypes]
->    void psi_trigger_destroy(struct psi_trigger *t)
->         ^
->    kernel/sched/psi.c:1182:1: note: declare 'static' if the function
-> is not intended to be used outside of this translation unit
->    void psi_trigger_destroy(struct psi_trigger *t)
->    ^
->    static
->    kernel/sched/psi.c:1249:10: warning: no previous prototype for
-> function 'psi_trigger_poll' [-Wmissing-prototypes]
->    __poll_t psi_trigger_poll(void **trigger_ptr,
->             ^
->    kernel/sched/psi.c:1249:1: note: declare 'static' if the function
-> is not intended to be used outside of this translation unit
->    __poll_t psi_trigger_poll(void **trigger_ptr,
->    ^
->
-> This happens with the following config:
->
-> CONFIG_CGROUPS=n
-> CONFIG_PSI=y
->
-> With cgroups disabled these functions are defined as non-static but
-> are not defined in the header
-> (https://elixir.bootlin.com/linux/latest/source/include/linux/psi.h#L28)
-> since the only external user cgroup.c is disabled. The cleanest way to
-> fix these I think is by doing smth like this in psi.c:
->
-> struct psi_trigger *_psi_trigger_create(struct psi_group *group, char
-> *buf, size_t nbytes, enum psi_res res)
-> {
->   // original psi_trigger_create code
-> }
->
-> #ifdef CONFIG_CGROUPS
->
-> struct psi_trigger *psi_trigger_create(struct psi_group *group, char
-> *buf, size_t nbytes, enum psi_res res)
-> {
->     return _psi_trigger_create(group, buf, nbytes, res);
-> }
->
-> #else
->
-> static struct psi_trigger *psi_trigger_create(struct psi_group *group,
-> char *buf, size_t nbytes, enum psi_res res)
-> {
->     return _psi_trigger_create(group, buf, nbytes, res);
-> }
->
-> #endif
+> Thanks, I'll go stick this in sched/urgent unless Linus picks it up
+> himself.
 
-Actually this would be enough:
+I'll let it go through the proper channels, it's not like a few days
+or whatever will make a difference.
 
-static struct psi_trigger *_psi_trigger_create(struct psi_group
-*group, char *buf, size_t nbytes, enum psi_res res)
-{
-   // original psi_trigger_create code
-}
-
-#ifdef CONFIG_CGROUPS
- struct psi_trigger *psi_trigger_create(struct psi_group *group, char
-*buf, size_t nbytes, enum psi_res res)
- {
-     return _psi_trigger_create(group, buf, nbytes, res);
- }
-#endif
-
-and locally we use _psi_trigger_create().
-
->
-> Two questions:
-> 1. Is this even worth fixing?
-> 2. If so, I would like to do that as a separate patch (these warnings
-> are unrelated to the changes in this patch). Would that be ok?
-> Thanks,
-> Suren.
+               Linus
