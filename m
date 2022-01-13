@@ -1,200 +1,74 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:test-merge-for-5.17] BUILD SUCCESS
- 5733aea7abddbb24b7611ef82688b576acf0dcbd
-Date: Thu, 13 Jan 2022 17:38:29 +0800
-Message-ID: <61dff315.T0aZMxIXh0uZEivm%lkp@intel.com>
+From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Subject: Re: [RFC PATCH 1/3] mm/memcg: Protect per-CPU counter by disabling
+ preemption on PREEMPT_RT
+Date: Thu, 13 Jan 2022 14:08:10 +0100
+Message-ID: <YeAkOm0YsAe5jFRb@linutronix.de>
+References: <20211222114111.2206248-1-bigeasy@linutronix.de>
+ <20211222114111.2206248-2-bigeasy@linutronix.de>
+ <20220105141653.GA6464@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1642066719; x=1673602719;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=Dp0luOpI9ODzo8ZsqXUcIAQZzIg8GhdBt/D9aXLQZdQ=;
-  b=Xr0WCcamyBVCaGTAZ1mERRSAnlkg5Yv3+xkIB5DSYIt+8qzuogczVzr1
-   tgpHHxTYpTHE4/cO/RH43vKfjPp3lQlhpciZRHpiNumT8ZZq+dS1OfjZr
-   LfJqXUGYENM4IRG5MNngr5/LudWU7j9P9OLGrZSkY67sSxBcwVwJcBtFe
-   VeLuaYIM/HNo7cQ7KEVk0dqZonAk1F7x4Y6cGosa7Dl4wfXmTqHzcSrAP
-   QomjrXyDFuoHLvwtml4qg37jSD2MFBeBMyHeyB0vJFw08AqnEOmVx65ra
-   Xl736jzz/NqbczUsg0aZmtfMRiUYci+yfvIWk6CYmYokcPz4v8ouJY+bS
-   A==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1642079291;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=fYgLEwvs5VRdvN1sFaMXFPXbTNezugG6bv5lyd4Ctj4=;
+        b=v1uyQhmEmw9G5cmDCunfbkUxXr32EpMeccAD1gd6U6W+73VwRBiba9y14BQAX1/ZTUmJ1a
+        d/3HnbGf2cgsuUnoe/WY2GSOkznC3Sn6RDV1PxEAXJHFTAZOzew+4s5qDV/qHlRoHq5T6I
+        rwX/+EC6H/DVSeD2ut/PazZ8EHI2P3r5tIG4CumOj/9RKKsPVano8a0FSrWBDd1GPxsbp8
+        w6OKtu1+Bumi+4qS6RNrBRzhGSQanBDP2ue4KBTrewUcQcHL6f0uNLj0oIT0WTpgL6AzAs
+        jkHTvMTUS+pvGd9s8D5lPHD6OsTaVXhe/fWrWopfUnGCcUgji65PAI5rUWWd8g==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1642079291;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=fYgLEwvs5VRdvN1sFaMXFPXbTNezugG6bv5lyd4Ctj4=;
+        b=e8hxGV5XP7MuUwHHDk4O9a9OrESgBC00df0u70Hyf7ZMiqhZbPf1spzi+CdMAKxlt8sfKo
+        jOqH5hlwCstqJcAw==
+Content-Disposition: inline
+In-Reply-To: <20220105141653.GA6464-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git test-merge-for-5.17
-branch HEAD: 5733aea7abddbb24b7611ef82688b576acf0dcbd  Merge branch 'for-5.17' into test-merge-for-5.17
+On 2022-01-05 15:16:53 [+0100], Michal Koutn=C3=BD wrote:
+> On Wed, Dec 22, 2021 at 12:41:09PM +0100, Sebastian Andrzej Siewior <bige=
+asy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org> wrote:
+> > The sections with disabled preemption must exclude
+> > memcg_check_events() so that spinlock_t locks can still be acquired
+> > (for instance in eventfd_signal()).
+>=20
+> The resulting construct in uncharge_batch() raises eybrows. If you can de=
+couple
+> per-cpu updates from memcg_check_events() on PREEMPT_RT, why not tackle
+> it the same way on !PREEMPT_RT too (and have just one variant of the
+> block)?
 
-elapsed time: 724m
+That would mean that mem_cgroup_event_ratelimit() needs a
+local_irq_save(). If that is okay then sure I can move it that way.
 
-configs tested: 154
-configs skipped: 3
+> (Actually, it doesn't seem to me that memcg_check_events() can be
+> extracted like this from the preempt disabled block since
+> mem_cgroup_event_ratelimit() relies on similar RMW pattern.
+> Things would be simpler if PREEMPT_RT didn't allow the threshold event
+> handlers (akin to Michal Hocko's suggestion of rejecting soft limit).)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+I added a preempt-disable() section restricted to RT to
+mem_cgroup_event_ratelimit(). I had to exclude memcg_check_events() from
+the block because of the spinlock_t locks involved down the road
+(eventfd_signal() for instance).
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                          randconfig-c001
-m68k                             alldefconfig
-sh                          sdk7780_defconfig
-ia64                        generic_defconfig
-ia64                         bigsur_defconfig
-sh                     magicpanelr2_defconfig
-sh                          landisk_defconfig
-sh                   sh7724_generic_defconfig
-mips                  maltasmvp_eva_defconfig
-sh                                  defconfig
-mips                       capcella_defconfig
-powerpc                      ppc40x_defconfig
-m68k                             allyesconfig
-powerpc                           allnoconfig
-sh                               alldefconfig
-powerpc                      mgcoge_defconfig
-arm                            lart_defconfig
-powerpc                    klondike_defconfig
-arm                           stm32_defconfig
-powerpc                      bamboo_defconfig
-csky                             alldefconfig
-sparc                       sparc32_defconfig
-sh                          rsk7269_defconfig
-um                           x86_64_defconfig
-sh                               j2_defconfig
-powerpc64                        alldefconfig
-mips                     decstation_defconfig
-powerpc                       holly_defconfig
-csky                                defconfig
-powerpc                        warp_defconfig
-m68k                       m5475evb_defconfig
-mips                             allyesconfig
-arm                            pleb_defconfig
-arm                        trizeps4_defconfig
-sh                           se7705_defconfig
-mips                         mpc30x_defconfig
-xtensa                  audio_kc705_defconfig
-mips                 decstation_r4k_defconfig
-nios2                            alldefconfig
-powerpc                      pasemi_defconfig
-m68k                            q40_defconfig
-arm                           tegra_defconfig
-arm                          badge4_defconfig
-sh                   sh7770_generic_defconfig
-arm                          exynos_defconfig
-ia64                             allmodconfig
-sh                         apsh4a3a_defconfig
-mips                           xway_defconfig
-powerpc                       ppc64_defconfig
-arm                          simpad_defconfig
-arm                         lpc18xx_defconfig
-m68k                        mvme16x_defconfig
-ia64                          tiger_defconfig
-m68k                       bvme6000_defconfig
-sh                             sh03_defconfig
-arm                        cerfcube_defconfig
-powerpc                 mpc837x_mds_defconfig
-xtensa                  nommu_kc705_defconfig
-sh                          r7785rp_defconfig
-arm                            hisi_defconfig
-powerpc                       maple_defconfig
-i386                             alldefconfig
-arm                           sunxi_defconfig
-sh                           se7721_defconfig
-sh                           se7780_defconfig
-powerpc                   motionpro_defconfig
-arm                           h3600_defconfig
-m68k                         amcore_defconfig
-sh                          rsk7264_defconfig
-sh                          kfr2r09_defconfig
-um                             i386_defconfig
-h8300                               defconfig
-arm                  randconfig-c002-20220113
-arm                  randconfig-c002-20220112
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                                defconfig
-m68k                             allmodconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-x86_64                        randconfig-a002
-i386                          randconfig-a012
-i386                          randconfig-a014
-i386                          randconfig-a016
-x86_64                        randconfig-a006
-x86_64                        randconfig-a004
-riscv                randconfig-r042-20220113
-arc                  randconfig-r043-20220113
-s390                 randconfig-r044-20220113
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                           allyesconfig
-x86_64                               rhel-8.3
-x86_64                          rhel-8.3-func
-x86_64                                  kexec
+I remember Michal (Hocko) suggested excluding/ rejecting soft limit but
+I didn't know where exactly and its implications. In this block here I
+just followed the replacement of irq-off with preempt-off for RT.
 
-clang tested configs:
-arm                  randconfig-c002-20220113
-x86_64                        randconfig-c007
-riscv                randconfig-c006-20220113
-powerpc              randconfig-c003-20220113
-i386                          randconfig-c001
-mips                 randconfig-c004-20220113
-mips                        bcm63xx_defconfig
-mips                   sb1250_swarm_defconfig
-powerpc                      pmac32_defconfig
-i386                          randconfig-a002
-i386                          randconfig-a006
-i386                          randconfig-a004
-x86_64                        randconfig-a012
-x86_64                        randconfig-a014
-x86_64                        randconfig-a016
-i386                          randconfig-a011
-i386                          randconfig-a013
-i386                          randconfig-a015
-x86_64                        randconfig-a005
-x86_64                        randconfig-a003
-x86_64                        randconfig-a001
-hexagon              randconfig-r045-20220113
-hexagon              randconfig-r041-20220113
-hexagon              randconfig-r045-20220112
-riscv                randconfig-r042-20220112
-hexagon              randconfig-r041-20220112
+> Thanks,
+> Michal
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+Sebastian
