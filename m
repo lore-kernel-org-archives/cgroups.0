@@ -1,31 +1,31 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-5.17-fixes] BUILD SUCCESS
- d068eebbd4822b6c14a7ea375dfe53ca5c69c776
-Date: Fri, 14 Jan 2022 00:25:20 +0800
-Message-ID: <61e05270.hcwfrlKrYr6X1ct4%lkp@intel.com>
+Subject: [tj-cgroup:for-5.18] BUILD SUCCESS
+ ffacbd11e2580a93546733d2e4e320c181f76844
+Date: Fri, 14 Jan 2022 00:25:15 +0800
+Message-ID: <61e0526b.aOOagla/5A808hh8%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1642091159; x=1673627159;
+  t=1642091173; x=1673627173;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=mnAIH6dIYqS4MUYKYWWDy+VJ/L/oSWRWlRtucrQBfuQ=;
-  b=fr6YX5AMDxPXmVE+gaHdwSMGur2awNLfulD7x4OtxCSlr4+vhuuBdb5Y
-   AdHVvFAaH5CSaeC9Ez3DbwtedtqV/IAaGyb4yhKhUrYiJdfcizyKm1MMY
-   Ms45yp6q0Gluo5mu1BXdxDQlFEXEq7U3hws04A4rLAkEH4Ifwhy0+KOzn
-   uG4zdS1uz/XFRVretOtQ0H6ezPfPMo/0LZeYS5zYk96C+nKB+n8rFlGBx
-   qQ8NJzccvfnrnnVmJHzBCxI3HkUgWsOq/pma3s8AO/K5dxLsr7EC+NFas
-   p3AZRkmcXjfFd5UqSNeo1Hx8pSDAO+rVkbXaMCIABm/FED61ITdWSv8Ml
-   g==;
+  bh=oIyZ9WIQ6HvcM1TI7rqfqttQJSiUxyfx+XBviiKuB8A=;
+  b=FLt4sts9GJ2dwe9gRzaE9WpwlWDDvk/I6XUaIIB0ooq6bQ+83/moxbS4
+   jya/LJW9tFknXkR/h18O7rH6PrDl7P4iuNNkRneY3EMnT+Ie897NR5pNJ
+   nvEZQgg+XRkan8tIGt1sto1im+mlMVBjTi1Lxm+N9sNDWLmcDEBJLItxu
+   4BnbFxZBGt0EDiOqKbpzZnR7bW3jjbOD2xAX4hpqf3pOiw/0EUZ4XMCIR
+   IxeLaR01a3FvXdE3NPneXByA9MwxKUZZBBNB7WtEhAfAMv+7vUNFRoEng
+   yqAB6hcuSZuaRBI8GOO0jP3Szqi1PcDx2A/2tP9WSDf2h3YpRsT2clCt6
+   A==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.17-fixes
-branch HEAD: d068eebbd4822b6c14a7ea375dfe53ca5c69c776  cgroup/cpuset: Make child cpusets restrict parents on v1 hierarchy
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.18
+branch HEAD: ffacbd11e2580a93546733d2e4e320c181f76844  cgroup: Fix cgroup_can_fork() and cgroup_post_fork() kernel-doc comment
 
 elapsed time: 1133m
 
