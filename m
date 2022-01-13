@@ -1,83 +1,189 @@
-From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: Re: [RFC PATCH 3/3] mm/memcg: Allow the task_obj optimization only
- on non-PREEMPTIBLE kernels.
-Date: Thu, 13 Jan 2022 16:26:53 +0100
-Message-ID: <YeBEvaggZ7/6y5ij@linutronix.de>
-References: <20211222114111.2206248-1-bigeasy@linutronix.de>
- <20211222114111.2206248-4-bigeasy@linutronix.de>
- <f6bb93c8-3940-6141-d0e0-50144549a4f5@redhat.com>
- <YdML2zaU17clEZgt@linutronix.de>
- <df637005-6c72-a1c6-c6b9-70f81f74884d@redhat.com>
- <YdX+INO9gQje6d0S@linutronix.de>
- <29457251-cf4f-4c7d-b36d-c2a0af4da707@redhat.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-5.17-fixes] BUILD SUCCESS
+ d068eebbd4822b6c14a7ea375dfe53ca5c69c776
+Date: Fri, 14 Jan 2022 00:25:20 +0800
+Message-ID: <61e05270.hcwfrlKrYr6X1ct4%lkp@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1642087615;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=3PME2FpL39l8UfdTGdt/K8iiXCT0iRe1U4l/qKjasvE=;
-        b=xyYobnza+rb0w299CIUfcT/8YSuAWX8YPSXQp3auduyovbXL8q+0gDqfU0egc539YdIIHN
-        HmZ9rSmXHTfbSOIxtojfout368SBx8GEiR8LW7reD6QgcjqgppdzEW0yktcI6b7PN/S6y7
-        ibrSA9eIvw3uCkFMJtbRQ0JTh/cDBUijsGjTSbVbsHqVi31OmOcF4+PmJVUv22RTZ69Vnp
-        A9HplElzCOx0in20rwUsz9AQdyNW0JekuI+c556EQJWy+H92Qaib8jYN7i4lWoPQDp3IU7
-        REOvCYncjQjCw0y36eo77a24hUYomATr0n6eH2f4cKsvfzbXlIYxMCYkGUowEQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1642087615;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=3PME2FpL39l8UfdTGdt/K8iiXCT0iRe1U4l/qKjasvE=;
-        b=cEVxRwtThmIYCDbZjpCk1IC2I9dmoi9VxWBYoVhlo0M0NRHU0M/iRll8vIGuk+mYBn4TKd
-        BYyqMdwuwJxavUCQ==
-Content-Disposition: inline
-In-Reply-To: <29457251-cf4f-4c7d-b36d-c2a0af4da707-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1642091159; x=1673627159;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=mnAIH6dIYqS4MUYKYWWDy+VJ/L/oSWRWlRtucrQBfuQ=;
+  b=fr6YX5AMDxPXmVE+gaHdwSMGur2awNLfulD7x4OtxCSlr4+vhuuBdb5Y
+   AdHVvFAaH5CSaeC9Ez3DbwtedtqV/IAaGyb4yhKhUrYiJdfcizyKm1MMY
+   Ms45yp6q0Gluo5mu1BXdxDQlFEXEq7U3hws04A4rLAkEH4Ifwhy0+KOzn
+   uG4zdS1uz/XFRVretOtQ0H6ezPfPMo/0LZeYS5zYk96C+nKB+n8rFlGBx
+   qQ8NJzccvfnrnnVmJHzBCxI3HkUgWsOq/pma3s8AO/K5dxLsr7EC+NFas
+   p3AZRkmcXjfFd5UqSNeo1Hx8pSDAO+rVkbXaMCIABm/FED61ITdWSv8Ml
+   g==;
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-9"
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2022-01-05 22:28:10 [-0500], Waiman Long wrote:
-> Thanks for the extensive testing. I usually perform my performance test on
-> Intel hardware. I don't realize that Zen2 and arm64 perform better with i=
-rq
-> on/off.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.17-fixes
+branch HEAD: d068eebbd4822b6c14a7ea375dfe53ca5c69c776  cgroup/cpuset: Make child cpusets restrict parents on v1 hierarchy
 
-Maybe you have access to more recent =C2=B5Arch from Intel which could beha=
-ve
-different.
+elapsed time: 1133m
 
-> My own testing when tracking the number of times in_task() is true or fal=
-se
-> indicated most of the kmalloc() call is done by tasks. Only a few percents
-> of the time is in_task() false. That is the reason why I optimize the case
-> that in_task() is true.
+configs tested: 143
+configs skipped: 3
 
-Right. This relies on the fact that changing preemption is cheaper which
-is not always true. The ultimate benefit is of course when the
-preemption changes can be removed/ optimized away.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-> > Based on that, I don't see any added value by the optimisation once
-> > PREEMPT_DYNAMIC is enabled.
->=20
-> The PREEMPT_DYNAMIC result is a bit surprising to me. Given the data poin=
-ts,
-> I am not going to object to this patch then. I will try to look further i=
-nto
-> why this is the case when I have time.
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+i386                          randconfig-c001
+m68k                             alldefconfig
+sh                          sdk7780_defconfig
+ia64                        generic_defconfig
+ia64                         bigsur_defconfig
+sh                     magicpanelr2_defconfig
+sh                          landisk_defconfig
+sh                   sh7724_generic_defconfig
+mips                  maltasmvp_eva_defconfig
+sh                               alldefconfig
+powerpc                      mgcoge_defconfig
+arm                            lart_defconfig
+powerpc                    klondike_defconfig
+arm                           stm32_defconfig
+powerpc                      bamboo_defconfig
+csky                             alldefconfig
+sparc                       sparc32_defconfig
+sh                          rsk7269_defconfig
+um                           x86_64_defconfig
+sh                               j2_defconfig
+powerpc64                        alldefconfig
+mips                     decstation_defconfig
+powerpc                       holly_defconfig
+csky                                defconfig
+powerpc                        warp_defconfig
+m68k                       m5475evb_defconfig
+mips                             allyesconfig
+arm                            pleb_defconfig
+arm                        trizeps4_defconfig
+sh                           se7705_defconfig
+mips                         mpc30x_defconfig
+nios2                            alldefconfig
+powerpc                      pasemi_defconfig
+m68k                            q40_defconfig
+arm                           tegra_defconfig
+arm                          badge4_defconfig
+sh                   sh7770_generic_defconfig
+arm                          exynos_defconfig
+ia64                             allmodconfig
+sh                         apsh4a3a_defconfig
+mips                           xway_defconfig
+powerpc                       ppc64_defconfig
+arm                          simpad_defconfig
+sh                             sh03_defconfig
+arm                        cerfcube_defconfig
+powerpc                 mpc837x_mds_defconfig
+xtensa                  nommu_kc705_defconfig
+sh                          r7785rp_defconfig
+arm                            hisi_defconfig
+powerpc                       maple_defconfig
+i386                             alldefconfig
+arm                           sunxi_defconfig
+sh                           se7721_defconfig
+sh                           se7780_defconfig
+powerpc                   motionpro_defconfig
+arm                           h3600_defconfig
+m68k                         amcore_defconfig
+sh                          rsk7264_defconfig
+sh                          kfr2r09_defconfig
+um                             i386_defconfig
+h8300                               defconfig
+arm                  randconfig-c002-20220113
+arm                  randconfig-c002-20220112
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nds32                               defconfig
+nios2                            allyesconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+i386                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64                        randconfig-a002
+i386                          randconfig-a012
+i386                          randconfig-a014
+i386                          randconfig-a016
+riscv                randconfig-r042-20220113
+arc                  randconfig-r043-20220113
+s390                 randconfig-r044-20220113
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                    rhel-8.3-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                          rhel-8.3-func
+x86_64                                  kexec
+x86_64                           allyesconfig
 
-Okay, thank you.
-In the SERVER case we keep the preemption counter so this has obviously
-an impact. I am a little surprised that the DYN-FULL and DYN-NONE
-differ a little since the code runs with disabled interrupts. But then
-this might be the extra jump to preempt_schedule() which is patched-out
-in the SERVER case.
+clang tested configs:
+arm                  randconfig-c002-20220113
+x86_64                        randconfig-c007
+riscv                randconfig-c006-20220113
+powerpc              randconfig-c003-20220113
+i386                          randconfig-c001
+mips                 randconfig-c004-20220113
+mips                        bcm63xx_defconfig
+mips                   sb1250_swarm_defconfig
+powerpc                      pmac32_defconfig
+i386                          randconfig-a002
+i386                          randconfig-a006
+i386                          randconfig-a004
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+i386                          randconfig-a011
+i386                          randconfig-a013
+i386                          randconfig-a015
+x86_64                        randconfig-a005
+x86_64                        randconfig-a003
+x86_64                        randconfig-a001
+hexagon              randconfig-r045-20220113
+hexagon              randconfig-r041-20220113
+hexagon              randconfig-r045-20220112
+riscv                randconfig-r042-20220112
+hexagon              randconfig-r041-20220112
 
-> Cheers,
-> Longman
-
-Sebastian
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
