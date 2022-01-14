@@ -1,71 +1,114 @@
-From: cruzzhao <cruzzhao-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] sched/core: Forced idle accounting per-cpu
-Date: Fri, 14 Jan 2022 23:04:11 +0800
-Message-ID: <86fbc313-e179-0cbd-8f5b-66e7b5964b14@linux.alibaba.com>
-References: <1641894961-9241-1-git-send-email-CruzZhao@linux.alibaba.com>
- <1641894961-9241-3-git-send-email-CruzZhao@linux.alibaba.com>
- <CABk29NtonxXS53J-+3w_GTLTVurf8HS4v35T9evoGyERB0uDqA@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [Question] set_cpus_allowed_ptr() call failed at cpuset_attach()
+Date: Fri, 14 Jan 2022 06:20:43 -1000
+Message-ID: <YeGi2yjRi/uZIF/2@slm.duckdns.org>
+References: <09ce5796-798e-83d0-f1a6-ba38a787bfc5@huawei.com>
+ <4415cd09-6de3-bb2d-386d-8beb4927fb46@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
-In-Reply-To: <CABk29NtonxXS53J-+3w_GTLTVurf8HS4v35T9evoGyERB0uDqA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=tI6w3Ew9uGi/4Ws14FKORId620oBYfchKOW7qmy41Pg=;
+        b=HY0j4wzABS+0tmo1ciIn9OCG9WYpveD9/CRFtxUR5s4EpAiRsgOpumJrKXnwlBLfUL
+         nVTvlv9ycgETcPJb61MfGbv5wMjcEITUx+zvjfNb9MSHX3XDDVcs8WNed6zhGA/KHzpT
+         /0t5yY66BEYEhydFy2UABlDPGDoxaQK15gknPQK7D8LvUKMoq5f3vrxo1x4jwLBMNAed
+         ouJ8OYK2gG/XOpNdyjeGecwrfQJdJXzOt+Zg3LREIvkRtn1kp8iMmHxNEdLvqlDvkclD
+         5MTmBAXXOL2LFhOX4Y44zMm+rfapaNeNkeTsUL+oV76GFKVa65cE/NaWThNwlXb/cjPg
+         7arQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4415cd09-6de3-bb2d-386d-8beb4927fb46-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Benjamin Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Zhang Qiao <zhangqiao22-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 
+(cc'ing Waiman and Michal and quoting whole body)
 
+Seems sane to me but let's hear what Waiman and Michal think.
 
-在 2022/1/12 上午9:59, Josh Don 写道:
-> On Tue, Jan 11, 2022 at 1:56 AM Cruz Zhao <CruzZhao-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote:
->>
->> Accounting for "forced idle" time per cpu, which is the time a cpu is
->> forced to idle by its SMT sibling.
->>
->> As it's not accurate to measure the capacity loss only by cookie'd forced
->> idle time, and it's hard to trace the forced idle time caused by all the
->> uncookie'd tasks, we account the forced idle time from the perspective of
->> the cpu.
->>
->> Forced idle time per cpu is displayed via /proc/schedstat, we can get the
->> forced idle time of cpu x from the 10th column of the row for cpu x. The
->> unit is ns. It also requires that schedstats is enabled.
->>
->> Signed-off-by: Cruz Zhao <CruzZhao-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
->> ---
+On Fri, Jan 14, 2022 at 09:15:06AM +0800, Zhang Qiao wrote:
 > 
-> Two quick followup questions:
+> Hello everyone
 > 
-> 1) From your v1, I still wasn't quite sure if the per-cpu time was
-> useful or not for you versus a single overall sum (ie. I think other
-> metrics could be more useful for analyzing steal_cookie if that's what
-> you're specifically interested in). Do you definitely want the per-cpu
-> totals?
+> 	I found the following warning log on qemu. I migrated a task from one cpuset cgroup to
+> another, while I also performed the cpu hotplug operation, and got following calltrace.
 > 
-IMO, the per-cpu forced idle time can help us get to know whether the
-forced idle time is uniform among the core, or among all the cpus. IMO,
-it's a kind of balance.
+> 	This may lead to a inconsistency between the affinity of the task and cpuset.cpus of the
+> dest cpuset, but this task can be successfully migrated to the dest cpuset cgroup.
+> 
+> 	Can we use cpus_read_lock()/cpus_read_unlock() to guarantee that set_cpus_allowed_ptr()
+> doesn't fail, as follows:
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index d0e163a02099..2535d23d2c51 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -2265,6 +2265,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
+>         guarantee_online_mems(cs, &cpuset_attach_nodemask_to);
+> 
+>         cgroup_taskset_for_each(task, css, tset) {
+> +               cpus_read_lock();
+>                 if (cs != &top_cpuset)
+>                         guarantee_online_cpus(task, cpus_attach);
+>                 else
+> @@ -2274,6 +2275,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
+>                  * fail.  TODO: have a better way to handle failure here
+>                  */
+>                 WARN_ON_ONCE(set_cpus_allowed_ptr(task, cpus_attach));
+> +               cpus_read_unlock();
+> 
+> 
+> 	Is there a better solution?
+> 
+> 	Thanks
+> 
+> log:
+> [   43.853794] ------------[ cut here ]------------
+> [   43.853798] WARNING: CPU: 7 PID: 463 at ../kernel/cgroup/cpuset.c:2279 cpuset_attach+0xee/0x1f0
+> [   43.853806] Modules linked in:
+> [   43.853807] CPU: 7 PID: 463 Comm: bash Not tainted 5.16.0-rc4+ #10
+> [   43.853810] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.13.0-48-gd9c812dda519-prebuilt.qemu.org 04/01/2014
+> [   43.853811] RIP: 0010:cpuset_attach+0xee/0x1f0
+> [   43.853814] Code: ff ff 48 85 c0 48 89 c3 74 24 48 81 fd 40 42 54 82 75 96 80 bb 38 07 00 00 6f 48 8b 05 93 b3 55 01 48 89 05 bc 05 bb 01 75 97 <0f> 0b eb b3 48 8b 85 e8 00 00 00 48 85
+> [   43.853816] RSP: 0018:ffffc90000623c30 EFLAGS: 00010246
+> [   43.853818] RAX: 0000000000000000 RBX: ffff888101f39c80 RCX: 0000000000000001
+> [   43.853819] RDX: 0000000000007fff RSI: ffffffff82cd5708 RDI: ffff888101f39c80
+> [   43.853821] RBP: ffff8881001afe00 R08: 0000000000000000 R09: ffffc90000623d00
+> [   43.853822] R10: ffffc900000a3de8 R11: 0000000000000001 R12: ffffc90000623cf0
+> [   43.853823] R13: ffffffff82cd56d0 R14: ffffffff82544240 R15: 0000000000000001
+> [   43.853824] FS:  00007f012414d740(0000) GS:ffff8882b5bc0000(0000) knlGS:0000000000000000
+> [   43.853828] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [   43.853829] CR2: 000055cfdb27de28 CR3: 00000001020cc000 CR4: 00000000000006e0
+> [   43.853830] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> [   43.853831] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> [   43.853832] Call Trace:
+> [   43.853846]  <TASK>
+> [   43.853848]  cgroup_migrate_execute+0x319/0x410
+> [   43.853853]  cgroup_attach_task+0x159/0x200
+> [   43.853857]  ? __cgroup1_procs_write.constprop.21+0x10d/0x170
+> [   43.853858]  __cgroup1_procs_write.constprop.21+0x10d/0x170
+> [   43.853860]  cgroup_file_write+0x65/0x160
+> [   43.853863]  kernfs_fop_write_iter+0x12a/0x1a0
+> [   43.853870]  new_sync_write+0x11d/0x1b0
+> [   43.853877]  vfs_write+0x232/0x290
+> [   43.853880]  ksys_write+0x9c/0xd0
+> [   43.853882]  ? fpregs_assert_state_consistent+0x19/0x40
+> [   43.853886]  do_syscall_64+0x3a/0x80
+> [   43.853896]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> [   43.853902] RIP: 0033:0x7f012381f224
+> [   43.853904] Code: 89 02 48 c7 c0 ff ff ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 66 90 48 8d 05 c1 07 2e 00 8b 00 85 c0 75 13 b8 01 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 54 f3 c3 66 90 45
+> [   43.853906] RSP: 002b:00007ffd3f411f28 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+> [   43.853908] RAX: ffffffffffffffda RBX: 0000000000000004 RCX: 00007f012381f224
+> [   43.853909] RDX: 0000000000000004 RSI: 000055cfdb297a70 RDI: 0000000000000001
+> [   43.853910] RBP: 000055cfdb297a70 R08: 000000000000000a R09: 0000000000000003
+> [   43.853911] R10: 000000000000000a R11: 0000000000000246 R12: 00007f0123afb760
+> [   43.853913] R13: 0000000000000004 R14: 00007f0123af72a0 R15: 00007f0123af6760
+> [   43.853914]  </TASK>
+> [   43.853915] ---[ end trace 8292bcee7ea90403 ]---
 
-> 2) If your cgroup accounting patch is merged, do you still want this
-> patch? You can grab the global values from the root cgroup (assuming
-> you have cgroups enabled). The only potential gap is if you need
-> per-cpu totals, though I'm working to add percpu stats to cgroup-v2:
-> https://lkml.kernel.org/r/%3C20220107234138.1765668-1-joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org%3E
-
-If cgroup accounting patch is merged, this patch is still needed.
-
-Consider the following scenario:
-Task p of cgroup A is running on cpu x, and it forces cpu y into idle
-for t ns. The forceidle time of cgroup A on cpu x increases t ns, and
-the forcedidle time of cpu y increases t ns.
-
-That is, the force idle time of cgroup is defined as the forced idle
-time it caused, and the force idle time of cpu is defined as the time
-the cpu is forced into idle, which have different meanings from each other.
-
-And for SMT > 2, we cannot caculate the forced idle time of cpu x from
-the cgroup interface.
-
-Best,
-Cruz Zhao
+-- 
+tejun
