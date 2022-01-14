@@ -1,69 +1,59 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v2 0/3] block, bfq: minor cleanup and fix
-Date: Fri, 14 Jan 2022 10:59:50 +0100
-Message-ID: <20220114095950.fa3gofecmryztivs@quack3.lan>
-References: <20211231032354.793092-1-yukuai3@huawei.com>
- <5696c767-8248-09a4-f04e-ac93138d30ef@huawei.com>
- <1cdb99ba-ed52-c755-fec4-86ee5f9bc61d@huawei.com>
+From: cruzzhao <cruzzhao@linux.alibaba.com>
+Subject: Re: [PATCH v2 2/3] sched/core: Forced idle accounting per-cpu
+Date: Fri, 14 Jan 2022 19:06:30 +0800
+Message-ID: <e071a66e-e7d5-8657-725b-8d48cb8ddbb7@linux.alibaba.com>
+References: <1641894961-9241-1-git-send-email-CruzZhao@linux.alibaba.com>
+ <1641894961-9241-3-git-send-email-CruzZhao@linux.alibaba.com>
+ <Yd7JO1UYlRXR0dWE@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1642154391; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=qmwbDXCD1IYxhc8Rn4/92BZfIPK0fFdxSVgthJ5taA4=;
-        b=J4BVfOXcoK+w1RCl2Zw4sZxvBV7m3oaac6fwGpQXId2pL+KIV+ughVxTxQ2zeit4y/cv0k
-        6RGNq6gHnAVqsCAHjqgmOfRRuSumWxuEWMrajJ5Rh7hvcmCILmaG2n+qCTD+0gJruobjkP
-        Jje0H/AIsgcT22TnebB7nLPWxCJtEaM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1642154391;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=qmwbDXCD1IYxhc8Rn4/92BZfIPK0fFdxSVgthJ5taA4=;
-        b=puAmxENJ+nE7lagW0XsW5t1PTGbkxEpFb9sBE4MLPvZEWOdNSvddqAQV1h7jvkwy1BGs0C
-        6k5WF/eEsv6GEkBQ==
-Content-Disposition: inline
-In-Reply-To: <1cdb99ba-ed52-c755-fec4-86ee5f9bc61d-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+In-Reply-To: <Yd7JO1UYlRXR0dWE@hirez.programming.kicks-ass.net>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, mingo@redhat.com, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, joshdon@google.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri 14-01-22 16:23:36, yukuai (C) wrote:
-> 在 2022/01/11 9:40, yukuai (C) 写道:
-> > 在 2021/12/31 11:23, Yu Kuai 写道:
-> > > Chagnes in v2:
-> > >   - add comment in patch 2
-> > >   - remove patch 4, since the problem do not exist.
-> > > 
-> > friendly ping ...
+
+
+在 2022/1/12 下午8:27, Peter Zijlstra 写道:
+> On Tue, Jan 11, 2022 at 05:56:00PM +0800, Cruz Zhao wrote:
 > 
-> Hi, Jens
+>> @@ -1115,6 +1118,7 @@ struct rq {
+>>  	unsigned int		core_forceidle_seq;
+>>  	unsigned int		core_forceidle_occupation;
+>>  	u64			core_forceidle_start;
+>> +	bool			in_forcedidle;
 > 
-> Can this patchset be applied?
-
-Maybe Jens is waiting for Paolo's ack as a BFQ maintainer. Paolo, what do
-you think about the cleanups? They seem mostly obvious to me...
-
-								Honza
-
+> naming is wrong
 > 
-> Thanks
-> > > Yu Kuai (3):
-> > >    block, bfq: cleanup bfq_bfqq_to_bfqg()
-> > >    block, bfq: avoid moving bfqq to it's parent bfqg
-> > >    block, bfq: don't move oom_bfqq
-> > > 
-> > >   block/bfq-cgroup.c  | 16 +++++++++++++++-
-> > >   block/bfq-iosched.c |  4 ++--
-> > >   block/bfq-iosched.h |  1 -
-> > >   block/bfq-wf2q.c    | 15 ---------------
-> > >   4 files changed, 17 insertions(+), 19 deletions(-)
-> > > 
--- 
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-SUSE Labs, CR
+>>  #endif
+>>  };
+>>  
+>> diff --git a/kernel/sched/stats.c b/kernel/sched/stats.c
+>> index 07dde29..ea22a8c 100644
+>> --- a/kernel/sched/stats.c
+>> +++ b/kernel/sched/stats.c
+>> @@ -108,6 +108,16 @@ void __update_stats_enqueue_sleeper(struct rq *rq, struct task_struct *p,
+>>  	}
+>>  }
+>>  
+>> +#ifdef CONFIG_SCHED_CORE
+>> +static inline u64 get_rq_forceidle_time(struct rq *rq) {
+>> +	return rq->rq_forceidle_time;
+>> +}
+>> +#else
+>> +static inline u64 get_rq_forceidle_time(struct rq *rq) {
+>> +	return 0;
+>> +}
+>> +#endif
+> 
+> indent is wrong, and if you put the #ifdef inside the function it'll be
+> smaller.
+
+Thanks for reviewing and suggestions, I'll fix these problems in the
+next version.
+
+Best,
+Cruz Zhao
