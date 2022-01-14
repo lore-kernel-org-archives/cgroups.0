@@ -1,74 +1,66 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [Question] set_cpus_allowed_ptr() call failed at cpuset_attach()
-Date: Fri, 14 Jan 2022 15:33:34 -0500
-Message-ID: <8bda2a8d-7faf-621d-c3c0-6351a49219ea@redhat.com>
-References: <09ce5796-798e-83d0-f1a6-ba38a787bfc5@huawei.com>
- <4415cd09-6de3-bb2d-386d-8beb4927fb46@huawei.com>
- <YeGi2yjRi/uZIF/2@slm.duckdns.org>
+From: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 2/3] sched/core: Forced idle accounting per-cpu
+Date: Fri, 14 Jan 2022 15:40:43 -0800
+Message-ID: <CABk29Nu0iCs83VjuipEohL63mdUg_4L-=dKPS0yzE=SfYXtcxw@mail.gmail.com>
+References: <1641894961-9241-1-git-send-email-CruzZhao@linux.alibaba.com>
+ <1641894961-9241-3-git-send-email-CruzZhao@linux.alibaba.com>
+ <CABk29NtonxXS53J-+3w_GTLTVurf8HS4v35T9evoGyERB0uDqA@mail.gmail.com> <86fbc313-e179-0cbd-8f5b-66e7b5964b14@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1642192422;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=3JSMWn4K5l2lYnB0cb+D9eToBHXluoZS4fKlQdOWiSk=;
-        b=EdrYShyqeowt+5L/jnQw0MRxF11d89aFiND9bpiipnhelmL8LtZuLSapF5/xveSQAIUQOa
-        4yVFcgomP5/GMj5ODA5c9TEECyNwmEVgDe+KXjDRpg4bN8otohMQkA9NpVA0mI+lXCpZFn
-        uamfLDIXsdSLxHdX+Vh6VmKsgZn/hrc=
-Content-Language: en-US
-In-Reply-To: <YeGi2yjRi/uZIF/2@slm.duckdns.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=QiwAHNhKS7wc00xP0NkWpMqOI7Wv0fb83E9HIPmzpeQ=;
+        b=f5K79nKirjMw1uZAqB8jvKCYF2VSIM89RFH6n+QkXCfokaesvVBgMlOYEtAdSqZTRe
+         lU4Y83UqCN+A3ynzeu7Cc4A9Lze0vLHbfv4p82QUhm8UmXcH325CogYt9rgsMlhnr/tV
+         o/BT2s/rIgeLPW2C8NyBCiWzOGTujj3UUp4uH+JcE5JScDKqp4VIzxf9QwQRJWX1NqZv
+         uQQzr+LiOIxKC3vnSuq3o93vk3tOnscteB93o+ySjio9QbMGwlI+RR5LEeUp/pMtTbcB
+         ioyvpduZTWaApn0ya56DywySKvdjIltTLxfYxnBRWUb55S3b6RHYaE9yhxwshTIoSXdi
+         4agw==
+In-Reply-To: <86fbc313-e179-0cbd-8f5b-66e7b5964b14-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zhang Qiao <zhangqiao22-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: cruzzhao <cruzzhao-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Benjamin Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 1/14/22 11:20, Tejun Heo wrote:
-> (cc'ing Waiman and Michal and quoting whole body)
+> > 1) From your v1, I still wasn't quite sure if the per-cpu time was
+> > useful or not for you versus a single overall sum (ie. I think other
+> > metrics could be more useful for analyzing steal_cookie if that's what
+> > you're specifically interested in). Do you definitely want the per-cpu
+> > totals?
+> >
+> IMO, the per-cpu forced idle time can help us get to know whether the
+> forced idle time is uniform among the core, or among all the cpus. IMO,
+> it's a kind of balance.
+
+Sure, I'm not opposed to it.
+
+> > 2) If your cgroup accounting patch is merged, do you still want this
+> > patch? You can grab the global values from the root cgroup (assuming
+> > you have cgroups enabled). The only potential gap is if you need
+> > per-cpu totals, though I'm working to add percpu stats to cgroup-v2:
+> > https://lkml.kernel.org/r/%3C20220107234138.1765668-1-joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org%3E
 >
-> Seems sane to me but let's hear what Waiman and Michal think.
+> If cgroup accounting patch is merged, this patch is still needed.
 >
-> On Fri, Jan 14, 2022 at 09:15:06AM +0800, Zhang Qiao wrote:
->> Hello everyone
->>
->> 	I found the following warning log on qemu. I migrated a task from one cpuset cgroup to
->> another, while I also performed the cpu hotplug operation, and got following calltrace.
->>
->> 	This may lead to a inconsistency between the affinity of the task and cpuset.cpus of the
->> dest cpuset, but this task can be successfully migrated to the dest cpuset cgroup.
->>
->> 	Can we use cpus_read_lock()/cpus_read_unlock() to guarantee that set_cpus_allowed_ptr()
->> doesn't fail, as follows:
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index d0e163a02099..2535d23d2c51 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -2265,6 +2265,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
->>          guarantee_online_mems(cs, &cpuset_attach_nodemask_to);
->>
->>          cgroup_taskset_for_each(task, css, tset) {
->> +               cpus_read_lock();
->>                  if (cs != &top_cpuset)
->>                          guarantee_online_cpus(task, cpus_attach);
->>                  else
->> @@ -2274,6 +2275,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
->>                   * fail.  TODO: have a better way to handle failure here
->>                   */
->>                  WARN_ON_ONCE(set_cpus_allowed_ptr(task, cpus_attach));
->> +               cpus_read_unlock();
->>
->>
->> 	Is there a better solution?
->>
->> 	Thanks
+> Consider the following scenario:
+> Task p of cgroup A is running on cpu x, and it forces cpu y into idle
+> for t ns. The forceidle time of cgroup A on cpu x increases t ns, and
+> the forcedidle time of cpu y increases t ns.
+>
+> That is, the force idle time of cgroup is defined as the forced idle
+> time it caused, and the force idle time of cpu is defined as the time
+> the cpu is forced into idle, which have different meanings from each other.
+>
+> And for SMT > 2, we cannot caculate the forced idle time of cpu x from
+> the cgroup interface.
 
-The change looks OK to me. However, we may need to run the full set of 
-regression test to make sure that lockdep won't complain about potential 
-deadlock.
-
-Cheers,
-Longman
-
+Ack. Note that the patch I linked above for per-cpu stats for
+cgroup-v2 has been nack'd, so it is unlikely we'll have kernel exports
+for cgroup-v2 per-cpu stats (but perhaps some export via BPF). In v2,
+we could at least export the cgroup sum force idle time in cpu.stat,
+if you feel it would be useful and want to add the accounting to
+rstat. If you really just want the per-cpu root stats then I'm fine
+with skipping cgroup for now.
