@@ -1,106 +1,92 @@
-From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/4] mm/memcg: use NUMA_NO_NODE to indicate allocation
- from unspecified node
-Date: Fri, 14 Jan 2022 00:29:37 +0000
-Message-ID: <20220114002937.fnyq3yyk36j4nb3d@master>
-References: <20220111010302.8864-1-richard.weiyang@gmail.com>
- <Yd1CdJA5NelzoK1D@dhcp22.suse.cz>
- <20220112004634.dc5suwei4ymyxaxg@master>
- <Yd6Xr7K9bKGVgGtI@dhcp22.suse.cz>
-Reply-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Zhang Qiao <zhangqiao22-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [Question] set_cpus_allowed_ptr() call failed at cpuset_attach()
+Date: Fri, 14 Jan 2022 09:15:06 +0800
+Message-ID: <4415cd09-6de3-bb2d-386d-8beb4927fb46@huawei.com>
+References: <09ce5796-798e-83d0-f1a6-ba38a787bfc5@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=8EJiE87iFvzZs2wfpp7MhZSruKW5x9ebf2/nsWfIQAY=;
-        b=KzGxA/Mn5jnF3eZqy7OWsndDxgnJpSHZAE+/AsMtTVpwYdR+j5o7zqZybAwsY3FtfC
-         Zdhb4E/EIDEzf3/C/I6WWnCyQ3MVlat+azg4xSdQJ5PMhoLivaX+W0w2Ks8GBbKdjJKO
-         8cDYIaYTatdFa5sunv/AGeKgu/Bw4ABOVqHsc70RH7d0C5oA8w1qz2cMAQuH5ITEcfdf
-         euxQZ8B3cT42PKxNQL0n8RDQyw5ILnnDrH6mR0+p5FeilycRyArnNQtA1lHzQMCBWEvq
-         uSGjp71IEJm70ZrPWH56e7JGMeqBHO6cUeH1QRx0COuJBM1M3RxbXAH+TvdBkY7sRDuk
-         fQ5Q==
-Content-Disposition: inline
-In-Reply-To: <Yd6Xr7K9bKGVgGtI-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <09ce5796-798e-83d0-f1a6-ba38a787bfc5-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jan 12, 2022 at 09:56:15AM +0100, Michal Hocko wrote:
->On Wed 12-01-22 00:46:34, Wei Yang wrote:
->> On Tue, Jan 11, 2022 at 09:40:20AM +0100, Michal Hocko wrote:
->> >On Tue 11-01-22 01:02:59, Wei Yang wrote:
->> >> Instead of use "-1", let's use NUMA_NO_NODE for consistency.
->> >> 
->> >> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> >
->> >I am not really sure this is worth it. After the merge window I plan to
->> >post http://lkml.kernel.org/r/20211214100732.26335-1-mhocko-DgEjT+Ai2yi4UlQgPVntAg@public.gmane.org
->> 
->> Give me some time to understand it :-)
->
->Just for the record, here is what I have put on top of that series:
 
-Ok, I got what you try to resolve. I am ok with the following change except
-one point.
+Hello everyone
 
->--- 
->>From b7195eba02fe6308a6927450f4630057c05e808e Mon Sep 17 00:00:00 2001
->From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->Date: Tue, 11 Jan 2022 09:45:25 +0100
->Subject: [PATCH] memcg: do not tweak node in alloc_mem_cgroup_per_node_info
->
->alloc_mem_cgroup_per_node_info is allocated for each possible node and
->this used to be a problem because not !node_online nodes didn't have
->appropriate data structure allocated. This has changed by "mm: handle
->uninitialized numa nodes gracefully" so we can drop the special casing
->here.
->
->Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->Signed-off-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
->---
-> mm/memcontrol.c | 14 ++------------
-> 1 file changed, 2 insertions(+), 12 deletions(-)
->
->diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->index 781605e92015..ed19a21ee14e 100644
->--- a/mm/memcontrol.c
->+++ b/mm/memcontrol.c
->@@ -5044,18 +5044,8 @@ struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
-> static int alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
-> {
-> 	struct mem_cgroup_per_node *pn;
->-	int tmp = node;
->-	/*
->-	 * This routine is called against possible nodes.
->-	 * But it's BUG to call kmalloc() against offline node.
->-	 *
->-	 * TODO: this routine can waste much memory for nodes which will
->-	 *       never be onlined. It's better to use memory hotplug callback
->-	 *       function.
->-	 */
+	I found the following warning log on qemu. I migrated a task from one cpuset cgroup to
+another, while I also performed the cpu hotplug operation, and got following calltrace.
 
-Do you think this TODO is not related to this change?
+	This may lead to a inconsistency between the affinity of the task and cpuset.cpus of the
+dest cpuset, but this task can be successfully migrated to the dest cpuset cgroup.
 
->-	if (!node_state(node, N_NORMAL_MEMORY))
->-		tmp = -1;
->-	pn = kzalloc_node(sizeof(*pn), GFP_KERNEL, tmp);
->+
->+	pn = kzalloc_node(sizeof(*pn), GFP_KERNEL, node);
-> 	if (!pn)
-> 		return 1;
-> 
->-- 
->2.30.2
->
->
->-- 
->Michal Hocko
->SUSE Labs
+	Can we use cpus_read_lock()/cpus_read_unlock() to guarantee that set_cpus_allowed_ptr()
+doesn't fail, as follows:
 
--- 
-Wei Yang
-Help you, Help me
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index d0e163a02099..2535d23d2c51 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2265,6 +2265,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
+        guarantee_online_mems(cs, &cpuset_attach_nodemask_to);
+
+        cgroup_taskset_for_each(task, css, tset) {
++               cpus_read_lock();
+                if (cs != &top_cpuset)
+                        guarantee_online_cpus(task, cpus_attach);
+                else
+@@ -2274,6 +2275,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
+                 * fail.  TODO: have a better way to handle failure here
+                 */
+                WARN_ON_ONCE(set_cpus_allowed_ptr(task, cpus_attach));
++               cpus_read_unlock();
+
+
+	Is there a better solution?
+
+	Thanks
+
+log:
+[   43.853794] ------------[ cut here ]------------
+[   43.853798] WARNING: CPU: 7 PID: 463 at ../kernel/cgroup/cpuset.c:2279 cpuset_attach+0xee/0x1f0
+[   43.853806] Modules linked in:
+[   43.853807] CPU: 7 PID: 463 Comm: bash Not tainted 5.16.0-rc4+ #10
+[   43.853810] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.13.0-48-gd9c812dda519-prebuilt.qemu.org 04/01/2014
+[   43.853811] RIP: 0010:cpuset_attach+0xee/0x1f0
+[   43.853814] Code: ff ff 48 85 c0 48 89 c3 74 24 48 81 fd 40 42 54 82 75 96 80 bb 38 07 00 00 6f 48 8b 05 93 b3 55 01 48 89 05 bc 05 bb 01 75 97 <0f> 0b eb b3 48 8b 85 e8 00 00 00 48 85
+[   43.853816] RSP: 0018:ffffc90000623c30 EFLAGS: 00010246
+[   43.853818] RAX: 0000000000000000 RBX: ffff888101f39c80 RCX: 0000000000000001
+[   43.853819] RDX: 0000000000007fff RSI: ffffffff82cd5708 RDI: ffff888101f39c80
+[   43.853821] RBP: ffff8881001afe00 R08: 0000000000000000 R09: ffffc90000623d00
+[   43.853822] R10: ffffc900000a3de8 R11: 0000000000000001 R12: ffffc90000623cf0
+[   43.853823] R13: ffffffff82cd56d0 R14: ffffffff82544240 R15: 0000000000000001
+[   43.853824] FS:  00007f012414d740(0000) GS:ffff8882b5bc0000(0000) knlGS:0000000000000000
+[   43.853828] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   43.853829] CR2: 000055cfdb27de28 CR3: 00000001020cc000 CR4: 00000000000006e0
+[   43.853830] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   43.853831] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   43.853832] Call Trace:
+[   43.853846]  <TASK>
+[   43.853848]  cgroup_migrate_execute+0x319/0x410
+[   43.853853]  cgroup_attach_task+0x159/0x200
+[   43.853857]  ? __cgroup1_procs_write.constprop.21+0x10d/0x170
+[   43.853858]  __cgroup1_procs_write.constprop.21+0x10d/0x170
+[   43.853860]  cgroup_file_write+0x65/0x160
+[   43.853863]  kernfs_fop_write_iter+0x12a/0x1a0
+[   43.853870]  new_sync_write+0x11d/0x1b0
+[   43.853877]  vfs_write+0x232/0x290
+[   43.853880]  ksys_write+0x9c/0xd0
+[   43.853882]  ? fpregs_assert_state_consistent+0x19/0x40
+[   43.853886]  do_syscall_64+0x3a/0x80
+[   43.853896]  entry_SYSCALL_64_after_hwframe+0x44/0xae
+[   43.853902] RIP: 0033:0x7f012381f224
+[   43.853904] Code: 89 02 48 c7 c0 ff ff ff ff c3 66 2e 0f 1f 84 00 00 00 00 00 66 90 48 8d 05 c1 07 2e 00 8b 00 85 c0 75 13 b8 01 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 54 f3 c3 66 90 45
+[   43.853906] RSP: 002b:00007ffd3f411f28 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+[   43.853908] RAX: ffffffffffffffda RBX: 0000000000000004 RCX: 00007f012381f224
+[   43.853909] RDX: 0000000000000004 RSI: 000055cfdb297a70 RDI: 0000000000000001
+[   43.853910] RBP: 000055cfdb297a70 R08: 000000000000000a R09: 0000000000000003
+[   43.853911] R10: 000000000000000a R11: 0000000000000246 R12: 00007f0123afb760
+[   43.853913] R13: 0000000000000004 R14: 00007f0123af72a0 R15: 00007f0123af6760
+[   43.853914]  </TASK>
+[   43.853915] ---[ end trace 8292bcee7ea90403 ]---
