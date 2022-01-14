@@ -1,53 +1,55 @@
-From: Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/4] mm/memcg: use NUMA_NO_NODE to indicate allocation
- from unspecified node
-Date: Fri, 14 Jan 2022 13:07:05 +0200
-Message-ID: <YeFZWQn79xMG6Z3L@kernel.org>
+From: Mike Rapoport <rppt@kernel.org>
+Subject: Re: [PATCH 2/4] mm/memcg: mem_cgroup_per_node is already set to 0 on
+ allocation
+Date: Fri, 14 Jan 2022 13:08:28 +0200
+Message-ID: <YeFZrEAaPw1Y5wwd@kernel.org>
 References: <20220111010302.8864-1-richard.weiyang@gmail.com>
+ <20220111010302.8864-2-richard.weiyang@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642158434;
-        bh=rg04tT8R1FkbVTYI0SCSCtVRaw71c3Km2IEW1JE51T4=;
+        s=k20201202; t=1642158516;
+        bh=OF5OUUAm25dp5cp+JT0GiuvYGOwzKMtdyhATZeQWCM4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QmK6P2ERTNTveN2AIVdc6Lnz3VzhcoPkYWRz3fR9Y0QTcs/iKutdB1GOzjm5pX3CO
-         7edBo8SNpYe4DWdGV73ntqSi+gUcrRdeUS5ahZ/R5+z5R2GKqgDimdxk2/vXM0XxKZ
-         hDdW+Iiq8p8Jjd8OuWUonO7ylUrE2cl9VXuKNk5GhadV2F7gwcrmUk/CZhBXSWb0+8
-         W4j0mKwZHQOLAM3MZGm0BgctEep/5hg1fsr9vPGpVEb3me3N6+e0RAYOpjppChkMM1
-         KLjsilIw3SY9lAipeHc/tICBEHJBwvl1pGkKlTefDkI5s7pagKZnsZVNWMPG4Xv73F
-         T1UCuSqIlcBRg==
+        b=anWYlmeAreoucUVCTnYlq5eLjpIWYUu97Eer6MAZxeInCL2iyNeuvzdkr4wXTCilh
+         ADbkMRQOsbDKfGrQhI/Krb3R7WFGc/QG6nzEmEKa0alTS2JpzXrfMo3TEZhlLl22fu
+         O/XvQqtC6HrkjNYMciuW/e+EteHpY6ZAvt5AX88lFtxPpWvzn6Pcd5BkA/Buu0SDru
+         e1xE+5quxorgWd+xmEB8LlUeq1b3EJ600qkDwcuSgR9Ly/WxVGoAduHQwChY7NaAx+
+         0Dtj5KrkdTYWGk26kAp8EQbFDtPRuo2/rBAFXH4k8BrxHPAgx19pRBUIhVExEPYznV
+         2326WkH6r4Fng==
 Content-Disposition: inline
-In-Reply-To: <20220111010302.8864-1-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <20220111010302.8864-2-richard.weiyang@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Wei Yang <richard.weiyang@gmail.com>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, shakeelb@google.com, guro@fb.com, vbabka@suse.cz, willy@infradead.org, songmuchun@bytedance.com, shy828301@gmail.com, surenb@google.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Tue, Jan 11, 2022 at 01:02:59AM +0000, Wei Yang wrote:
-> Instead of use "-1", let's use NUMA_NO_NODE for consistency.
+On Tue, Jan 11, 2022 at 01:03:00AM +0000, Wei Yang wrote:
+> kzalloc_node() would set data to 0, so it's not necessary to set it
+> again.
 > 
-> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Wei Yang <richard.weiyang@gmail.com>
 
-Reviewed-by: Mike Rapoport <rppt-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Reviewed-by: Mike Rapoport <rppt@linux.ibm.com>
 
 > ---
->  mm/memcontrol.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  mm/memcontrol.c | 2 --
+>  1 file changed, 2 deletions(-)
 > 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 2ed5f2a0879d..11715f7323c0 100644
+> index 11715f7323c0..a504616f904a 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -5054,7 +5054,7 @@ static int alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
->  	 *       function.
->  	 */
->  	if (!node_state(node, N_NORMAL_MEMORY))
-> -		tmp = -1;
-> +		tmp = NUMA_NO_NODE;
->  	pn = kzalloc_node(sizeof(*pn), GFP_KERNEL, tmp);
->  	if (!pn)
->  		return 1;
+> @@ -5067,8 +5067,6 @@ static int alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
+>  	}
+>  
+>  	lruvec_init(&pn->lruvec);
+> -	pn->usage_in_excess = 0;
+> -	pn->on_tree = false;
+>  	pn->memcg = memcg;
+>  
+>  	memcg->nodeinfo[node] = pn;
 > -- 
 > 2.33.1
 > 
