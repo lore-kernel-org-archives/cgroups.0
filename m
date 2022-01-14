@@ -1,192 +1,106 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 27fe872b5169140b93c5eecd9ebd4fac7f5475ac
-Date: Fri, 14 Jan 2022 00:25:08 +0800
-Message-ID: <61e05264.ZDaz+iGmEVXG4Hz2%lkp@intel.com>
+From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 1/4] mm/memcg: use NUMA_NO_NODE to indicate allocation
+ from unspecified node
+Date: Fri, 14 Jan 2022 00:29:37 +0000
+Message-ID: <20220114002937.fnyq3yyk36j4nb3d@master>
+References: <20220111010302.8864-1-richard.weiyang@gmail.com>
+ <Yd1CdJA5NelzoK1D@dhcp22.suse.cz>
+ <20220112004634.dc5suwei4ymyxaxg@master>
+ <Yd6Xr7K9bKGVgGtI@dhcp22.suse.cz>
+Reply-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1642091184; x=1673627184;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=gBq4m4zhBGWa7wPSPlkC8swdh6SNgrYfbHPlXejXkIc=;
-  b=No23wV4exdyTjXXYXGnlclJ2ou/EUzl2TRDFUaHJZwY2eK0h8+roT5UQ
-   rO9I1M5fuvxMBtgxtYLRbv5f/++aPMO73PCwFAKR/tZC1kADOhk8yhO2z
-   /q4AtVDqxrHFxbuoDlQwu8wTPX6J4f3zuHd82hWNX9OBORCPhBxASKDC+
-   QVfer5fc6LYnFqMp63bVXMHRA/ZhxngdNjAzunWjynJ/TaIe6y8e34CLD
-   AmlTMvheEf5I9FWQbdBdzTJuXX6jqD++eOgz5l2nkosbKdE48LS41spQ8
-   6KVbh/FZ8GF2eDAq5BcVAqAhm8kRpSoCNQpJC0diLg/toZZMO0qZbVvli
-   w==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=8EJiE87iFvzZs2wfpp7MhZSruKW5x9ebf2/nsWfIQAY=;
+        b=KzGxA/Mn5jnF3eZqy7OWsndDxgnJpSHZAE+/AsMtTVpwYdR+j5o7zqZybAwsY3FtfC
+         Zdhb4E/EIDEzf3/C/I6WWnCyQ3MVlat+azg4xSdQJ5PMhoLivaX+W0w2Ks8GBbKdjJKO
+         8cDYIaYTatdFa5sunv/AGeKgu/Bw4ABOVqHsc70RH7d0C5oA8w1qz2cMAQuH5ITEcfdf
+         euxQZ8B3cT42PKxNQL0n8RDQyw5ILnnDrH6mR0+p5FeilycRyArnNQtA1lHzQMCBWEvq
+         uSGjp71IEJm70ZrPWH56e7JGMeqBHO6cUeH1QRx0COuJBM1M3RxbXAH+TvdBkY7sRDuk
+         fQ5Q==
+Content-Disposition: inline
+In-Reply-To: <Yd6Xr7K9bKGVgGtI-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 27fe872b5169140b93c5eecd9ebd4fac7f5475ac  Merge branch 'for-5.17-fixes' into for-next
+On Wed, Jan 12, 2022 at 09:56:15AM +0100, Michal Hocko wrote:
+>On Wed 12-01-22 00:46:34, Wei Yang wrote:
+>> On Tue, Jan 11, 2022 at 09:40:20AM +0100, Michal Hocko wrote:
+>> >On Tue 11-01-22 01:02:59, Wei Yang wrote:
+>> >> Instead of use "-1", let's use NUMA_NO_NODE for consistency.
+>> >> 
+>> >> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> >
+>> >I am not really sure this is worth it. After the merge window I plan to
+>> >post http://lkml.kernel.org/r/20211214100732.26335-1-mhocko-DgEjT+Ai2yi4UlQgPVntAg@public.gmane.org
+>> 
+>> Give me some time to understand it :-)
+>
+>Just for the record, here is what I have put on top of that series:
 
-elapsed time: 1132m
+Ok, I got what you try to resolve. I am ok with the following change except
+one point.
 
-configs tested: 146
-configs skipped: 3
+>--- 
+>>From b7195eba02fe6308a6927450f4630057c05e808e Mon Sep 17 00:00:00 2001
+>From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>Date: Tue, 11 Jan 2022 09:45:25 +0100
+>Subject: [PATCH] memcg: do not tweak node in alloc_mem_cgroup_per_node_info
+>
+>alloc_mem_cgroup_per_node_info is allocated for each possible node and
+>this used to be a problem because not !node_online nodes didn't have
+>appropriate data structure allocated. This has changed by "mm: handle
+>uninitialized numa nodes gracefully" so we can drop the special casing
+>here.
+>
+>Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>Signed-off-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+>---
+> mm/memcontrol.c | 14 ++------------
+> 1 file changed, 2 insertions(+), 12 deletions(-)
+>
+>diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>index 781605e92015..ed19a21ee14e 100644
+>--- a/mm/memcontrol.c
+>+++ b/mm/memcontrol.c
+>@@ -5044,18 +5044,8 @@ struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
+> static int alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
+> {
+> 	struct mem_cgroup_per_node *pn;
+>-	int tmp = node;
+>-	/*
+>-	 * This routine is called against possible nodes.
+>-	 * But it's BUG to call kmalloc() against offline node.
+>-	 *
+>-	 * TODO: this routine can waste much memory for nodes which will
+>-	 *       never be onlined. It's better to use memory hotplug callback
+>-	 *       function.
+>-	 */
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Do you think this TODO is not related to this change?
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                          randconfig-c001
-m68k                             alldefconfig
-sh                          sdk7780_defconfig
-ia64                        generic_defconfig
-ia64                         bigsur_defconfig
-sh                     magicpanelr2_defconfig
-sh                          landisk_defconfig
-sh                   sh7724_generic_defconfig
-mips                  maltasmvp_eva_defconfig
-sh                               alldefconfig
-powerpc                      mgcoge_defconfig
-arm                            lart_defconfig
-powerpc                    klondike_defconfig
-arm                           stm32_defconfig
-powerpc                      bamboo_defconfig
-csky                             alldefconfig
-sparc                       sparc32_defconfig
-sh                          rsk7269_defconfig
-um                           x86_64_defconfig
-sh                               j2_defconfig
-powerpc64                        alldefconfig
-mips                     decstation_defconfig
-powerpc                       holly_defconfig
-csky                                defconfig
-powerpc                        warp_defconfig
-m68k                       m5475evb_defconfig
-mips                             allyesconfig
-arm                            pleb_defconfig
-arm                        trizeps4_defconfig
-sh                           se7705_defconfig
-mips                         mpc30x_defconfig
-nios2                            alldefconfig
-powerpc                      pasemi_defconfig
-m68k                            q40_defconfig
-arm                           tegra_defconfig
-arm                          badge4_defconfig
-sh                   sh7770_generic_defconfig
-arm                          exynos_defconfig
-ia64                             allmodconfig
-sh                         apsh4a3a_defconfig
-mips                           xway_defconfig
-powerpc                       ppc64_defconfig
-arm                          simpad_defconfig
-sh                             sh03_defconfig
-arm                        cerfcube_defconfig
-powerpc                 mpc837x_mds_defconfig
-xtensa                  nommu_kc705_defconfig
-sh                          r7785rp_defconfig
-arm                            hisi_defconfig
-powerpc                       maple_defconfig
-i386                             alldefconfig
-arm                           sunxi_defconfig
-sh                           se7721_defconfig
-sh                           se7780_defconfig
-powerpc                   motionpro_defconfig
-arm                           h3600_defconfig
-m68k                         amcore_defconfig
-sh                          rsk7264_defconfig
-sh                          kfr2r09_defconfig
-um                             i386_defconfig
-h8300                               defconfig
-arm                  randconfig-c002-20220113
-arm                  randconfig-c002-20220112
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-i386                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64                        randconfig-a002
-x86_64                        randconfig-a006
-x86_64                        randconfig-a004
-i386                          randconfig-a012
-i386                          randconfig-a014
-i386                          randconfig-a016
-riscv                randconfig-r042-20220113
-arc                  randconfig-r043-20220113
-s390                 randconfig-r044-20220113
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                          rhel-8.3-func
-x86_64                                  kexec
-x86_64                           allyesconfig
+>-	if (!node_state(node, N_NORMAL_MEMORY))
+>-		tmp = -1;
+>-	pn = kzalloc_node(sizeof(*pn), GFP_KERNEL, tmp);
+>+
+>+	pn = kzalloc_node(sizeof(*pn), GFP_KERNEL, node);
+> 	if (!pn)
+> 		return 1;
+> 
+>-- 
+>2.30.2
+>
+>
+>-- 
+>Michal Hocko
+>SUSE Labs
 
-clang tested configs:
-arm                  randconfig-c002-20220113
-x86_64                        randconfig-c007
-riscv                randconfig-c006-20220113
-powerpc              randconfig-c003-20220113
-i386                          randconfig-c001
-mips                 randconfig-c004-20220113
-powerpc                     ppa8548_defconfig
-mips                        bcm63xx_defconfig
-mips                   sb1250_swarm_defconfig
-powerpc                      pmac32_defconfig
-i386                          randconfig-a002
-i386                          randconfig-a006
-i386                          randconfig-a004
-x86_64                        randconfig-a012
-x86_64                        randconfig-a014
-x86_64                        randconfig-a016
-i386                          randconfig-a011
-i386                          randconfig-a013
-i386                          randconfig-a015
-x86_64                        randconfig-a005
-x86_64                        randconfig-a003
-x86_64                        randconfig-a001
-hexagon              randconfig-r045-20220113
-hexagon              randconfig-r041-20220113
-hexagon              randconfig-r045-20220112
-riscv                randconfig-r042-20220112
-hexagon              randconfig-r041-20220112
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+-- 
+Wei Yang
+Help you, Help me
