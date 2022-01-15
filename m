@@ -1,135 +1,220 @@
-From: Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [RFC 6/6] android: binder: Add a buffer flag to relinquish ownership
- of fds
-Date: Fri, 14 Jan 2022 17:06:04 -0800
-Message-ID: <20220115010622.3185921-7-hridya__10502.2349905752$1642208956$gmane$org@google.com>
-References: <20220115010622.3185921-1-hridya@google.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: LTP test suite triggers LOCKDEP_CIRCULAR on linux-next
+Date: Fri, 14 Jan 2022 19:13:53 -0800
+Message-ID: <YeI78TMjU12qRmQ8@carbon.dhcp.thefacebook.com>
+References: <87mtjzslv7.fsf@oc8242746057.ibm.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=kkjQvBHUpUsPJOcuRnb4FbpqpDLYZFNC/PGNH3Zg5WU=;
-        b=B7HrMalKbOrQ0jLo+t2k5LKQyXsYTrKPSnoCQbJTFt3xXAdNgf+Y3bG0OwuuV3conm
-         9YDTffSi81yddsv2BoH3Yepu0Qf4t9Yufib51okExGf5c00BzhktLBE/1fgctRjU17A0
-         FE5Q2yG/2zZsbcQO5KIgRMuIdtuJb3ntKNdMvUrJDIlln1wNgH3uN1Xs3Tq4HUuo2nQw
-         vX/4a2fLq5zN8JuJ/ROXboM4iqrNUfkxyQzzeG4K6rLmd0dL8lZlsn2U8cU340A6r7rt
-         CrzHH2yHQihIsNpJ9nYxK0RZUUVox7TiNHvKS/20HXPEnTeOhUMt/SoHjy/YrqoHfDGB
-         975A==
-In-Reply-To: <20220115010622.3185921-1-hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=T/PGvIy/Oab9op+wfEJ/+5uRZE2PPNhbKsvxjnIw2/M=;
+ b=HVRc/S3PXnl7WBH+HNSJP1q1f5Kcy4S63SsoPNOZ22DIjwspsPaTFgsspZocr+8m9lt7
+ F+FymwEiK3VYTgTkV2zlmfEwnYvrBknNjixrZBKBooL9pnGS7U5WHgRkYGdynbrKB+YM
+ oJLOWeo7GHc6wfG/qJz8UVvH5V/sKAnTO1Y= 
+Content-Disposition: inline
+In-Reply-To: <87mtjzslv7.fsf-NkpGzEVru+PSGbUrCpOCvVaTQe2KTcn/@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org>, Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Benjamin Gaignard <benjamin.gaignard-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Liam Mark <lmark-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Laura Abbott <labbott-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Brian Starkey <Brian.Starkey@arm>
-Cc: Kenny.Ho-5C7GfCeVMHo@public.gmane.org, daniels-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+To: Alexander Egorenkov <egorenar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This patch introduces a buffer flag BINDER_BUFFER_FLAG_SENDER_NO_NEED
-that a process sending an fd array to another process over binder IPC
-can set to relinquish ownership of the fds being sent for memory
-accounting purposes. If the flag is found to be set during the fd array
-translation and the fd is for a DMA-BUF, the buffer is uncharged from
-the sender's cgroup and charged to the receiving process's cgroup
-instead.
+On Thu, Jan 13, 2022 at 04:20:44PM +0100, Alexander Egorenkov wrote:
 
-It is upto the sending process to ensure that it closes the fds
-regardless of whether the transfer failed or succeeded.
+Hi Alexander!
 
-Most graphics shared memory allocations in Android are done by the
-graphics allocator HAL process. On requests from clients, the HAL process
-allocates memory and sends the fds to the clients over binder IPC.
-The graphics allocator HAL will not retain any references to the
-buffers. When the HAL sets the BINDER_BUFFER_FLAG_SENDER_NO_NEED for fd
-arrays holding DMA-BUF fds, the gpu cgroup controller will be able to
-correctly charge the buffers to the client processes instead of the
-graphics allocator HAL.
+Can you, please, check if the following patch is fixing the problem for you?
 
-Signed-off-by: Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Thanks a lot in advance!
+
+--------------------------------------------------------------------------------
+
+From a3b61581014409c1f916c449d1cbf2745adde03d Mon Sep 17 00:00:00 2001
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Date: Fri, 14 Jan 2022 10:47:53 -0800
+Subject: [PATCH] mm: memcg: synchronize objcg lists with a dedicated spinlock
+
+Alexander reported a circular lock dependency revealed by the mmap1
+ltp test:
+  LOCKDEP_CIRCULAR (suite: ltp, case: mtest06 (mmap1))
+          WARNING: possible circular locking dependency detected
+          5.17.0-20220113.rc0.git0.f2211f194038.300.fc35.s390x+debug #1 Not tainted
+          ------------------------------------------------------
+          mmap1/202299 is trying to acquire lock:
+          00000001892c0188 (css_set_lock){..-.}-{2:2}, at: obj_cgroup_release+0x4a/0xe0
+          but task is already holding lock:
+          00000000ca3b3818 (&sighand->siglock){-.-.}-{2:2}, at: force_sig_info_to_task+0x38/0x180
+          which lock already depends on the new lock.
+          the existing dependency chain (in reverse order) is:
+          -> #1 (&sighand->siglock){-.-.}-{2:2}:
+                 __lock_acquire+0x604/0xbd8
+                 lock_acquire.part.0+0xe2/0x238
+                 lock_acquire+0xb0/0x200
+                 _raw_spin_lock_irqsave+0x6a/0xd8
+                 __lock_task_sighand+0x90/0x190
+                 cgroup_freeze_task+0x2e/0x90
+                 cgroup_migrate_execute+0x11c/0x608
+                 cgroup_update_dfl_csses+0x246/0x270
+                 cgroup_subtree_control_write+0x238/0x518
+                 kernfs_fop_write_iter+0x13e/0x1e0
+                 new_sync_write+0x100/0x190
+                 vfs_write+0x22c/0x2d8
+                 ksys_write+0x6c/0xf8
+                 __do_syscall+0x1da/0x208
+                 system_call+0x82/0xb0
+          -> #0 (css_set_lock){..-.}-{2:2}:
+                 check_prev_add+0xe0/0xed8
+                 validate_chain+0x736/0xb20
+                 __lock_acquire+0x604/0xbd8
+                 lock_acquire.part.0+0xe2/0x238
+                 lock_acquire+0xb0/0x200
+                 _raw_spin_lock_irqsave+0x6a/0xd8
+                 obj_cgroup_release+0x4a/0xe0
+                 percpu_ref_put_many.constprop.0+0x150/0x168
+                 drain_obj_stock+0x94/0xe8
+                 refill_obj_stock+0x94/0x278
+                 obj_cgroup_charge+0x164/0x1d8
+                 kmem_cache_alloc+0xac/0x528
+                 __sigqueue_alloc+0x150/0x308
+                 __send_signal+0x260/0x550
+                 send_signal+0x7e/0x348
+                 force_sig_info_to_task+0x104/0x180
+                 force_sig_fault+0x48/0x58
+                 __do_pgm_check+0x120/0x1f0
+                 pgm_check_handler+0x11e/0x180
+          other info that might help us debug this:
+           Possible unsafe locking scenario:
+                 CPU0                    CPU1
+                 ----                    ----
+            lock(&sighand->siglock);
+                                         lock(css_set_lock);
+                                         lock(&sighand->siglock);
+            lock(css_set_lock);
+           *** DEADLOCK ***
+          2 locks held by mmap1/202299:
+           #0: 00000000ca3b3818 (&sighand->siglock){-.-.}-{2:2}, at: force_sig_info_to_task+0x38/0x180
+           #1: 00000001892ad560 (rcu_read_lock){....}-{1:2}, at: percpu_ref_put_many.constprop.0+0x0/0x168
+          stack backtrace:
+          CPU: 15 PID: 202299 Comm: mmap1 Not tainted 5.17.0-20220113.rc0.git0.f2211f194038.300.fc35.s390x+debug #1
+          Hardware name: IBM 3906 M04 704 (LPAR)
+          Call Trace:
+           [<00000001888aacfe>] dump_stack_lvl+0x76/0x98
+           [<0000000187c6d7be>] check_noncircular+0x136/0x158
+           [<0000000187c6e888>] check_prev_add+0xe0/0xed8
+           [<0000000187c6fdb6>] validate_chain+0x736/0xb20
+           [<0000000187c71e54>] __lock_acquire+0x604/0xbd8
+           [<0000000187c7301a>] lock_acquire.part.0+0xe2/0x238
+           [<0000000187c73220>] lock_acquire+0xb0/0x200
+           [<00000001888bf9aa>] _raw_spin_lock_irqsave+0x6a/0xd8
+           [<0000000187ef6862>] obj_cgroup_release+0x4a/0xe0
+           [<0000000187ef6498>] percpu_ref_put_many.constprop.0+0x150/0x168
+           [<0000000187ef9674>] drain_obj_stock+0x94/0xe8
+           [<0000000187efa464>] refill_obj_stock+0x94/0x278
+           [<0000000187eff55c>] obj_cgroup_charge+0x164/0x1d8
+           [<0000000187ed8aa4>] kmem_cache_alloc+0xac/0x528
+           [<0000000187bf2eb8>] __sigqueue_alloc+0x150/0x308
+           [<0000000187bf4210>] __send_signal+0x260/0x550
+           [<0000000187bf5f06>] send_signal+0x7e/0x348
+           [<0000000187bf7274>] force_sig_info_to_task+0x104/0x180
+           [<0000000187bf7758>] force_sig_fault+0x48/0x58
+           [<00000001888ae160>] __do_pgm_check+0x120/0x1f0
+           [<00000001888c0cde>] pgm_check_handler+0x11e/0x180
+          INFO: lockdep is turned off.
+
+In this example a slab allocation from __send_signal() caused a
+refilling and draining of a percpu objcg stock, resulted in a
+releasing of another non-related objcg. Objcg release path requires
+taking the css_set_lock, which is used to synchronize objcg lists.
+
+This can create a circular dependency with the sighandler lock,
+which is taken with the locked css_set_lock by the freezer code
+(to freeze a task).
+
+In general it seems that using css_set_lock to synchronize objcg lists
+makes any slab allocations and deallocation with the locked
+css_set_lock and any intervened locks risky.
+
+To fix the problem and make the code more robust let's stop using
+css_set_lock to synchronize objcg lists and use a new dedicated
+spinlock instead.
+
+Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Reported-by: Alexander Egorenkov <egorenar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- drivers/android/binder.c            | 32 +++++++++++++++++++++++++++++
- include/uapi/linux/android/binder.h |  1 +
- 2 files changed, 33 insertions(+)
+ include/linux/memcontrol.h |  5 +++--
+ mm/memcontrol.c            | 10 +++++-----
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/android/binder.c b/drivers/android/binder.c
-index 5497797ab258..83082fd1ab6a 100644
---- a/drivers/android/binder.c
-+++ b/drivers/android/binder.c
-@@ -42,6 +42,7 @@
- 
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
- 
-+#include <linux/dma-buf.h>
- #include <linux/fdtable.h>
- #include <linux/file.h>
- #include <linux/freezer.h>
-@@ -2482,8 +2483,11 @@ static int binder_translate_fd_array(struct list_head *pf_head,
- {
- 	binder_size_t fdi, fd_buf_size;
- 	binder_size_t fda_offset;
-+	bool transfer_gpu_charge = false;
- 	const void __user *sender_ufda_base;
- 	struct binder_proc *proc = thread->proc;
-+	struct binder_proc *target_proc = t->to_proc;
-+
- 	int ret;
- 
- 	fd_buf_size = sizeof(u32) * fda->num_fds;
-@@ -2520,8 +2524,15 @@ static int binder_translate_fd_array(struct list_head *pf_head,
- 	if (ret)
- 		return ret;
- 
-+	if (IS_ENABLED(CONFIG_CGROUP_GPU) &&
-+	    parent->flags & BINDER_BUFFER_FLAG_SENDER_NO_NEED)
-+		transfer_gpu_charge = true;
-+
- 	for (fdi = 0; fdi < fda->num_fds; fdi++) {
- 		u32 fd;
-+		struct dma_buf *dmabuf;
-+		struct gpucg *gpucg;
-+
- 		binder_size_t offset = fda_offset + fdi * sizeof(fd);
- 		binder_size_t sender_uoffset = fdi * sizeof(fd);
- 
-@@ -2531,6 +2542,27 @@ static int binder_translate_fd_array(struct list_head *pf_head,
- 						  in_reply_to);
- 		if (ret)
- 			return ret > 0 ? -EINVAL : ret;
-+
-+		if (!transfer_gpu_charge)
-+			continue;
-+
-+		dmabuf = dma_buf_get(fd);
-+		if (IS_ERR(dmabuf))
-+			continue;
-+
-+		if (dmabuf->ops->charge_to_cgroup) {
-+			gpucg = gpucg_get(target_proc->tsk);
-+			ret = dmabuf->ops->charge_to_cgroup(dmabuf, gpucg);
-+			if (ret) {
-+				pr_warn("%d:%d Unable to transfer DMA-BUF fd charge to %d",
-+					proc->pid, thread->pid, target_proc->pid);
-+				gpucg_put(gpucg);
-+			}
-+		} else {
-+			pr_warn("%d:%d DMA-BUF exporter %s is not configured correctly for GPU cgroup memory accounting",
-+				proc->pid, thread->pid, dmabuf->exp_name);
-+		}
-+		dma_buf_put(dmabuf);
- 	}
- 	return 0;
- }
-diff --git a/include/uapi/linux/android/binder.h b/include/uapi/linux/android/binder.h
-index ad619623571e..c85f0014c341 100644
---- a/include/uapi/linux/android/binder.h
-+++ b/include/uapi/linux/android/binder.h
-@@ -137,6 +137,7 @@ struct binder_buffer_object {
- 
- enum {
- 	BINDER_BUFFER_FLAG_HAS_PARENT = 0x01,
-+	BINDER_BUFFER_FLAG_SENDER_NO_NEED = 0x02,
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 0c5c403f4be6..5c59d045359b 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -217,7 +217,7 @@ struct obj_cgroup {
+ 	struct mem_cgroup *memcg;
+ 	atomic_t nr_charged_bytes;
+ 	union {
+-		struct list_head list;
++		struct list_head list; /* protected by objcg_lock */
+ 		struct rcu_head rcu;
+ 	};
  };
+@@ -313,7 +313,8 @@ struct mem_cgroup {
+ #ifdef CONFIG_MEMCG_KMEM
+ 	int kmemcg_id;
+ 	struct obj_cgroup __rcu *objcg;
+-	struct list_head objcg_list; /* list of inherited objcgs */
++	/* list of inherited objcgs, protected by objcg_lock */
++	struct list_head objcg_list;
+ #endif
  
- /* struct binder_fd_array_object - object describing an array of fds in a buffer
+ 	MEMCG_PADDING(_pad2_);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 781605e92015..d4d1fb58e7a0 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -254,7 +254,7 @@ struct mem_cgroup *vmpressure_to_memcg(struct vmpressure *vmpr)
+ }
+ 
+ #ifdef CONFIG_MEMCG_KMEM
+-extern spinlock_t css_set_lock;
++static DEFINE_SPINLOCK(objcg_lock);
+ 
+ bool mem_cgroup_kmem_disabled(void)
+ {
+@@ -298,9 +298,9 @@ static void obj_cgroup_release(struct percpu_ref *ref)
+ 	if (nr_pages)
+ 		obj_cgroup_uncharge_pages(objcg, nr_pages);
+ 
+-	spin_lock_irqsave(&css_set_lock, flags);
++	spin_lock_irqsave(&objcg_lock, flags);
+ 	list_del(&objcg->list);
+-	spin_unlock_irqrestore(&css_set_lock, flags);
++	spin_unlock_irqrestore(&objcg_lock, flags);
+ 
+ 	percpu_ref_exit(ref);
+ 	kfree_rcu(objcg, rcu);
+@@ -332,7 +332,7 @@ static void memcg_reparent_objcgs(struct mem_cgroup *memcg,
+ 
+ 	objcg = rcu_replace_pointer(memcg->objcg, NULL, true);
+ 
+-	spin_lock_irq(&css_set_lock);
++	spin_lock_irq(&objcg_lock);
+ 
+ 	/* 1) Ready to reparent active objcg. */
+ 	list_add(&objcg->list, &memcg->objcg_list);
+@@ -342,7 +342,7 @@ static void memcg_reparent_objcgs(struct mem_cgroup *memcg,
+ 	/* 3) Move already reparented objcgs to the parent's list */
+ 	list_splice(&memcg->objcg_list, &parent->objcg_list);
+ 
+-	spin_unlock_irq(&css_set_lock);
++	spin_unlock_irq(&objcg_lock);
+ 
+ 	percpu_ref_kill(&objcg->refcnt);
+ }
 -- 
-2.34.1.703.g22d0c6ccf7-goog
+2.34.1
 
