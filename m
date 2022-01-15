@@ -1,220 +1,107 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: LTP test suite triggers LOCKDEP_CIRCULAR on linux-next
-Date: Fri, 14 Jan 2022 19:13:53 -0800
-Message-ID: <YeI78TMjU12qRmQ8@carbon.dhcp.thefacebook.com>
-References: <87mtjzslv7.fsf@oc8242746057.ibm.com>
+From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 1/4] mm/memcg: use NUMA_NO_NODE to indicate allocation
+ from unspecified node
+Date: Sat, 15 Jan 2022 22:10:23 +0000
+Message-ID: <20220115221023.qndjlehjxdrj5r6b@master>
+References: <20220111010302.8864-1-richard.weiyang@gmail.com>
+ <Yd1CdJA5NelzoK1D@dhcp22.suse.cz>
+ <20220112004634.dc5suwei4ymyxaxg@master>
+ <Yd6Xr7K9bKGVgGtI@dhcp22.suse.cz>
+ <20220114002937.fnyq3yyk36j4nb3d@master>
+ <YeE5k79uP3xBPCv7@dhcp22.suse.cz>
+Reply-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=T/PGvIy/Oab9op+wfEJ/+5uRZE2PPNhbKsvxjnIw2/M=;
- b=HVRc/S3PXnl7WBH+HNSJP1q1f5Kcy4S63SsoPNOZ22DIjwspsPaTFgsspZocr+8m9lt7
- F+FymwEiK3VYTgTkV2zlmfEwnYvrBknNjixrZBKBooL9pnGS7U5WHgRkYGdynbrKB+YM
- oJLOWeo7GHc6wfG/qJz8UVvH5V/sKAnTO1Y= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=EPbI8Tt0WfUMwAmaR0DL4u0NGyT4Pfp5ibYD0UcG0DI=;
+        b=agj6fChYEnKrSoNxBVq48eG35QoBd5Z4IF+iAiicRpU2JWeJ9LfMJNox6L4q2g2RBL
+         4ETDJyBfAyhwTeit7qORH7ag0LnhF2LlADK4vfaVOzEQi/ZW5lHvfa82MDys4hXQK+C3
+         4hJN/NnQMc73yqTl5qISSYt5yrcUMzgCFAXwTi3GLM1kOeIw6js15Tx/R0XIYwz6PTXa
+         4ZwyvjW7pSAjcoWl9BMhmTQ0SloTVQLPkExYXobQE08n1ZfTuuww4aVBjSKCVRKtf75l
+         UwhvkbPdJkfEIcvOk0IyuUjkHa+J6Ffexa9DabrExe6AtDsr+WdXHHvkyFsvbMoVt92K
+         o4yg==
 Content-Disposition: inline
-In-Reply-To: <87mtjzslv7.fsf-NkpGzEVru+PSGbUrCpOCvVaTQe2KTcn/@public.gmane.org>
+In-Reply-To: <YeE5k79uP3xBPCv7-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alexander Egorenkov <egorenar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Thu, Jan 13, 2022 at 04:20:44PM +0100, Alexander Egorenkov wrote:
+On Fri, Jan 14, 2022 at 09:51:31AM +0100, Michal Hocko wrote:
+>On Fri 14-01-22 00:29:37, Wei Yang wrote:
+>> On Wed, Jan 12, 2022 at 09:56:15AM +0100, Michal Hocko wrote:
+>> >On Wed 12-01-22 00:46:34, Wei Yang wrote:
+>> >> On Tue, Jan 11, 2022 at 09:40:20AM +0100, Michal Hocko wrote:
+>> >> >On Tue 11-01-22 01:02:59, Wei Yang wrote:
+>> >> >> Instead of use "-1", let's use NUMA_NO_NODE for consistency.
+>> >> >> 
+>> >> >> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> >> >
+>> >> >I am not really sure this is worth it. After the merge window I plan to
+>> >> >post http://lkml.kernel.org/r/20211214100732.26335-1-mhocko-DgEjT+Ai2yi4UlQgPVntAg@public.gmane.org
+>> >> 
+>> >> Give me some time to understand it :-)
+>> >
+>> >Just for the record, here is what I have put on top of that series:
+>> 
+>> Ok, I got what you try to resolve. I am ok with the following change except
+>> one point.
+>> 
+>> >--- 
+>> >>From b7195eba02fe6308a6927450f4630057c05e808e Mon Sep 17 00:00:00 2001
+>> >From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> >Date: Tue, 11 Jan 2022 09:45:25 +0100
+>> >Subject: [PATCH] memcg: do not tweak node in alloc_mem_cgroup_per_node_info
+>> >
+>> >alloc_mem_cgroup_per_node_info is allocated for each possible node and
+>> >this used to be a problem because not !node_online nodes didn't have
+>> >appropriate data structure allocated. This has changed by "mm: handle
+>> >uninitialized numa nodes gracefully" so we can drop the special casing
+>> >here.
+>> >
+>> >Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> >Signed-off-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+>> >---
+>> > mm/memcontrol.c | 14 ++------------
+>> > 1 file changed, 2 insertions(+), 12 deletions(-)
+>> >
+>> >diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> >index 781605e92015..ed19a21ee14e 100644
+>> >--- a/mm/memcontrol.c
+>> >+++ b/mm/memcontrol.c
+>> >@@ -5044,18 +5044,8 @@ struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
+>> > static int alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
+>> > {
+>> > 	struct mem_cgroup_per_node *pn;
+>> >-	int tmp = node;
+>> >-	/*
+>> >-	 * This routine is called against possible nodes.
+>> >-	 * But it's BUG to call kmalloc() against offline node.
+>> >-	 *
+>> >-	 * TODO: this routine can waste much memory for nodes which will
+>> >-	 *       never be onlined. It's better to use memory hotplug callback
+>> >-	 *       function.
+>> >-	 */
+>> 
+>> Do you think this TODO is not related to this change?
+>
+>It is not really related but I am not sure how useful it is. Essentially
+>any allocation that is per-possible node is in the same situation and if
+>we really need to deal with large and sparse possible nodes masks.
+>
 
-Hi Alexander!
+Sounds reasonable :-)
 
-Can you, please, check if the following patch is fixing the problem for you?
+>If you want me to keep the TODO I will do it though.
+>
+>-- 
+>Michal Hocko
+>SUSE Labs
 
-Thanks a lot in advance!
-
---------------------------------------------------------------------------------
-
-From a3b61581014409c1f916c449d1cbf2745adde03d Mon Sep 17 00:00:00 2001
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Date: Fri, 14 Jan 2022 10:47:53 -0800
-Subject: [PATCH] mm: memcg: synchronize objcg lists with a dedicated spinlock
-
-Alexander reported a circular lock dependency revealed by the mmap1
-ltp test:
-  LOCKDEP_CIRCULAR (suite: ltp, case: mtest06 (mmap1))
-          WARNING: possible circular locking dependency detected
-          5.17.0-20220113.rc0.git0.f2211f194038.300.fc35.s390x+debug #1 Not tainted
-          ------------------------------------------------------
-          mmap1/202299 is trying to acquire lock:
-          00000001892c0188 (css_set_lock){..-.}-{2:2}, at: obj_cgroup_release+0x4a/0xe0
-          but task is already holding lock:
-          00000000ca3b3818 (&sighand->siglock){-.-.}-{2:2}, at: force_sig_info_to_task+0x38/0x180
-          which lock already depends on the new lock.
-          the existing dependency chain (in reverse order) is:
-          -> #1 (&sighand->siglock){-.-.}-{2:2}:
-                 __lock_acquire+0x604/0xbd8
-                 lock_acquire.part.0+0xe2/0x238
-                 lock_acquire+0xb0/0x200
-                 _raw_spin_lock_irqsave+0x6a/0xd8
-                 __lock_task_sighand+0x90/0x190
-                 cgroup_freeze_task+0x2e/0x90
-                 cgroup_migrate_execute+0x11c/0x608
-                 cgroup_update_dfl_csses+0x246/0x270
-                 cgroup_subtree_control_write+0x238/0x518
-                 kernfs_fop_write_iter+0x13e/0x1e0
-                 new_sync_write+0x100/0x190
-                 vfs_write+0x22c/0x2d8
-                 ksys_write+0x6c/0xf8
-                 __do_syscall+0x1da/0x208
-                 system_call+0x82/0xb0
-          -> #0 (css_set_lock){..-.}-{2:2}:
-                 check_prev_add+0xe0/0xed8
-                 validate_chain+0x736/0xb20
-                 __lock_acquire+0x604/0xbd8
-                 lock_acquire.part.0+0xe2/0x238
-                 lock_acquire+0xb0/0x200
-                 _raw_spin_lock_irqsave+0x6a/0xd8
-                 obj_cgroup_release+0x4a/0xe0
-                 percpu_ref_put_many.constprop.0+0x150/0x168
-                 drain_obj_stock+0x94/0xe8
-                 refill_obj_stock+0x94/0x278
-                 obj_cgroup_charge+0x164/0x1d8
-                 kmem_cache_alloc+0xac/0x528
-                 __sigqueue_alloc+0x150/0x308
-                 __send_signal+0x260/0x550
-                 send_signal+0x7e/0x348
-                 force_sig_info_to_task+0x104/0x180
-                 force_sig_fault+0x48/0x58
-                 __do_pgm_check+0x120/0x1f0
-                 pgm_check_handler+0x11e/0x180
-          other info that might help us debug this:
-           Possible unsafe locking scenario:
-                 CPU0                    CPU1
-                 ----                    ----
-            lock(&sighand->siglock);
-                                         lock(css_set_lock);
-                                         lock(&sighand->siglock);
-            lock(css_set_lock);
-           *** DEADLOCK ***
-          2 locks held by mmap1/202299:
-           #0: 00000000ca3b3818 (&sighand->siglock){-.-.}-{2:2}, at: force_sig_info_to_task+0x38/0x180
-           #1: 00000001892ad560 (rcu_read_lock){....}-{1:2}, at: percpu_ref_put_many.constprop.0+0x0/0x168
-          stack backtrace:
-          CPU: 15 PID: 202299 Comm: mmap1 Not tainted 5.17.0-20220113.rc0.git0.f2211f194038.300.fc35.s390x+debug #1
-          Hardware name: IBM 3906 M04 704 (LPAR)
-          Call Trace:
-           [<00000001888aacfe>] dump_stack_lvl+0x76/0x98
-           [<0000000187c6d7be>] check_noncircular+0x136/0x158
-           [<0000000187c6e888>] check_prev_add+0xe0/0xed8
-           [<0000000187c6fdb6>] validate_chain+0x736/0xb20
-           [<0000000187c71e54>] __lock_acquire+0x604/0xbd8
-           [<0000000187c7301a>] lock_acquire.part.0+0xe2/0x238
-           [<0000000187c73220>] lock_acquire+0xb0/0x200
-           [<00000001888bf9aa>] _raw_spin_lock_irqsave+0x6a/0xd8
-           [<0000000187ef6862>] obj_cgroup_release+0x4a/0xe0
-           [<0000000187ef6498>] percpu_ref_put_many.constprop.0+0x150/0x168
-           [<0000000187ef9674>] drain_obj_stock+0x94/0xe8
-           [<0000000187efa464>] refill_obj_stock+0x94/0x278
-           [<0000000187eff55c>] obj_cgroup_charge+0x164/0x1d8
-           [<0000000187ed8aa4>] kmem_cache_alloc+0xac/0x528
-           [<0000000187bf2eb8>] __sigqueue_alloc+0x150/0x308
-           [<0000000187bf4210>] __send_signal+0x260/0x550
-           [<0000000187bf5f06>] send_signal+0x7e/0x348
-           [<0000000187bf7274>] force_sig_info_to_task+0x104/0x180
-           [<0000000187bf7758>] force_sig_fault+0x48/0x58
-           [<00000001888ae160>] __do_pgm_check+0x120/0x1f0
-           [<00000001888c0cde>] pgm_check_handler+0x11e/0x180
-          INFO: lockdep is turned off.
-
-In this example a slab allocation from __send_signal() caused a
-refilling and draining of a percpu objcg stock, resulted in a
-releasing of another non-related objcg. Objcg release path requires
-taking the css_set_lock, which is used to synchronize objcg lists.
-
-This can create a circular dependency with the sighandler lock,
-which is taken with the locked css_set_lock by the freezer code
-(to freeze a task).
-
-In general it seems that using css_set_lock to synchronize objcg lists
-makes any slab allocations and deallocation with the locked
-css_set_lock and any intervened locks risky.
-
-To fix the problem and make the code more robust let's stop using
-css_set_lock to synchronize objcg lists and use a new dedicated
-spinlock instead.
-
-Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Reported-by: Alexander Egorenkov <egorenar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
----
- include/linux/memcontrol.h |  5 +++--
- mm/memcontrol.c            | 10 +++++-----
- 2 files changed, 8 insertions(+), 7 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 0c5c403f4be6..5c59d045359b 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -217,7 +217,7 @@ struct obj_cgroup {
- 	struct mem_cgroup *memcg;
- 	atomic_t nr_charged_bytes;
- 	union {
--		struct list_head list;
-+		struct list_head list; /* protected by objcg_lock */
- 		struct rcu_head rcu;
- 	};
- };
-@@ -313,7 +313,8 @@ struct mem_cgroup {
- #ifdef CONFIG_MEMCG_KMEM
- 	int kmemcg_id;
- 	struct obj_cgroup __rcu *objcg;
--	struct list_head objcg_list; /* list of inherited objcgs */
-+	/* list of inherited objcgs, protected by objcg_lock */
-+	struct list_head objcg_list;
- #endif
- 
- 	MEMCG_PADDING(_pad2_);
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 781605e92015..d4d1fb58e7a0 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -254,7 +254,7 @@ struct mem_cgroup *vmpressure_to_memcg(struct vmpressure *vmpr)
- }
- 
- #ifdef CONFIG_MEMCG_KMEM
--extern spinlock_t css_set_lock;
-+static DEFINE_SPINLOCK(objcg_lock);
- 
- bool mem_cgroup_kmem_disabled(void)
- {
-@@ -298,9 +298,9 @@ static void obj_cgroup_release(struct percpu_ref *ref)
- 	if (nr_pages)
- 		obj_cgroup_uncharge_pages(objcg, nr_pages);
- 
--	spin_lock_irqsave(&css_set_lock, flags);
-+	spin_lock_irqsave(&objcg_lock, flags);
- 	list_del(&objcg->list);
--	spin_unlock_irqrestore(&css_set_lock, flags);
-+	spin_unlock_irqrestore(&objcg_lock, flags);
- 
- 	percpu_ref_exit(ref);
- 	kfree_rcu(objcg, rcu);
-@@ -332,7 +332,7 @@ static void memcg_reparent_objcgs(struct mem_cgroup *memcg,
- 
- 	objcg = rcu_replace_pointer(memcg->objcg, NULL, true);
- 
--	spin_lock_irq(&css_set_lock);
-+	spin_lock_irq(&objcg_lock);
- 
- 	/* 1) Ready to reparent active objcg. */
- 	list_add(&objcg->list, &memcg->objcg_list);
-@@ -342,7 +342,7 @@ static void memcg_reparent_objcgs(struct mem_cgroup *memcg,
- 	/* 3) Move already reparented objcgs to the parent's list */
- 	list_splice(&memcg->objcg_list, &parent->objcg_list);
- 
--	spin_unlock_irq(&css_set_lock);
-+	spin_unlock_irq(&objcg_lock);
- 
- 	percpu_ref_kill(&objcg->refcnt);
- }
 -- 
-2.34.1
-
+Wei Yang
+Help you, Help me
