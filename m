@@ -1,66 +1,75 @@
-From: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] sched/core: Forced idle accounting per-cpu
-Date: Fri, 14 Jan 2022 15:40:43 -0800
-Message-ID: <CABk29Nu0iCs83VjuipEohL63mdUg_4L-=dKPS0yzE=SfYXtcxw@mail.gmail.com>
-References: <1641894961-9241-1-git-send-email-CruzZhao@linux.alibaba.com>
- <1641894961-9241-3-git-send-email-CruzZhao@linux.alibaba.com>
- <CABk29NtonxXS53J-+3w_GTLTVurf8HS4v35T9evoGyERB0uDqA@mail.gmail.com> <86fbc313-e179-0cbd-8f5b-66e7b5964b14@linux.alibaba.com>
+From: Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [RFC 0/6] Proposal for a GPU cgroup controller
+Date: Fri, 14 Jan 2022 17:05:58 -0800
+Message-ID: <20220115010622.3185921-1-hridya@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=QiwAHNhKS7wc00xP0NkWpMqOI7Wv0fb83E9HIPmzpeQ=;
-        b=f5K79nKirjMw1uZAqB8jvKCYF2VSIM89RFH6n+QkXCfokaesvVBgMlOYEtAdSqZTRe
-         lU4Y83UqCN+A3ynzeu7Cc4A9Lze0vLHbfv4p82QUhm8UmXcH325CogYt9rgsMlhnr/tV
-         o/BT2s/rIgeLPW2C8NyBCiWzOGTujj3UUp4uH+JcE5JScDKqp4VIzxf9QwQRJWX1NqZv
-         uQQzr+LiOIxKC3vnSuq3o93vk3tOnscteB93o+ySjio9QbMGwlI+RR5LEeUp/pMtTbcB
-         ioyvpduZTWaApn0ya56DywySKvdjIltTLxfYxnBRWUb55S3b6RHYaE9yhxwshTIoSXdi
-         4agw==
-In-Reply-To: <86fbc313-e179-0cbd-8f5b-66e7b5964b14-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=wG/PbGVmKjgf1eOd11ftVQTDqJEywAnSirRvk8YQoEA=;
+        b=ra40WJSnTd+Sg9D3TIvHREEZJO5QmFxwXzwakhy95Pj15AdCn96Rg7F+gGkzzdoPHL
+         /LCXltr47kWOGGC4J/j+jKdN7xu6RyW7gUeuH5vavWrndAu7BzKurEIyahiOS6sTnazd
+         kjhutzh5GjtqfNnBjsMi1N1OKm+eTNmejUCgViGcOUkB/EFui5twnu1ZKaXi21WPA1C7
+         hDv3dAKWpj1mixAwX1dUro0zgPo6Npzf7sXOSvaZIstusYMToZmeNzSzidVL3FAMroY6
+         HrShrnaUArO3g2alaInh2tQWQ8dpEbE6FBLnde1xIXMV4W2bjw4NgeUFBmdKReIihG44
+         DGmQ==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cruzzhao <cruzzhao-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Benjamin Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org>, Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Benjamin Gaignard <benjamin.gaignard-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Liam Mark <lmark-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Laura Abbott <labbott-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Brian Starkey <Brian.Sta>
+Cc: Kenny.Ho-5C7GfCeVMHo@public.gmane.org, daniels-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-> > 1) From your v1, I still wasn't quite sure if the per-cpu time was
-> > useful or not for you versus a single overall sum (ie. I think other
-> > metrics could be more useful for analyzing steal_cookie if that's what
-> > you're specifically interested in). Do you definitely want the per-cpu
-> > totals?
-> >
-> IMO, the per-cpu forced idle time can help us get to know whether the
-> forced idle time is uniform among the core, or among all the cpus. IMO,
-> it's a kind of balance.
+This patch series revisits the proposal for a GPU cgroup controller to
+track and limit memory allocations by various device/allocator
+subsystems. The patch series also contains a simple prototype to
+illustrate how Android intends to implement DMA-BUF allocator
+attribution using the GPU cgroup controller. The prototype does not
+include resource limit enforcements.
 
-Sure, I'm not opposed to it.
+History of the GPU cgroup controller
+====================================
+The GPU/DRM cgroup controller came into being when a consensus[1]
+was reached that the resources it tracked were unsuitable to be integrated
+into memcg. Originally, the proposed controller was specific to the DRM
+subsystem and was intended to track GEM buffers and GPU-specific resources[2].
+In order to help establish a unified memory accounting model for all GPU and
+all related subsystems, Daniel Vetter put forth a suggestion to move it out of
+the DRM subsystem so that it can be used by other DMA-BUF exporters as well[3].
+This RFC proposes an interface that does the same.
 
-> > 2) If your cgroup accounting patch is merged, do you still want this
-> > patch? You can grab the global values from the root cgroup (assuming
-> > you have cgroups enabled). The only potential gap is if you need
-> > per-cpu totals, though I'm working to add percpu stats to cgroup-v2:
-> > https://lkml.kernel.org/r/%3C20220107234138.1765668-1-joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org%3E
->
-> If cgroup accounting patch is merged, this patch is still needed.
->
-> Consider the following scenario:
-> Task p of cgroup A is running on cpu x, and it forces cpu y into idle
-> for t ns. The forceidle time of cgroup A on cpu x increases t ns, and
-> the forcedidle time of cpu y increases t ns.
->
-> That is, the force idle time of cgroup is defined as the forced idle
-> time it caused, and the force idle time of cpu is defined as the time
-> the cpu is forced into idle, which have different meanings from each other.
->
-> And for SMT > 2, we cannot caculate the forced idle time of cpu x from
-> the cgroup interface.
+[1]: https://patchwork.kernel.org/project/dri-devel/cover/20190501140438.9506-1-brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/#22624705
+[2]: https://lore.kernel.org/amd-gfx/20210126214626.16260-1-brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+[3]: https://lore.kernel.org/amd-gfx/YCVOl8%2F87bqRSQei-dv86pmgwkMBes7Z6vYuT8azUEOm+Xw19@public.gmane.org/
 
-Ack. Note that the patch I linked above for per-cpu stats for
-cgroup-v2 has been nack'd, so it is unlikely we'll have kernel exports
-for cgroup-v2 per-cpu stats (but perhaps some export via BPF). In v2,
-we could at least export the cgroup sum force idle time in cpu.stat,
-if you feel it would be useful and want to add the accounting to
-rstat. If you really just want the per-cpu root stats then I'm fine
-with skipping cgroup for now.
+Hridya Valsaraju (6):
+  gpu: rfc: Proposal for a GPU cgroup controller
+  cgroup: gpu: Add a cgroup controller for allocator attribution of GPU
+    memory
+  dmabuf: heaps: Use the GPU cgroup charge/uncharge APIs
+  dma-buf: Add DMA-BUF exporter op to charge a DMA-BUF to a cgroup.
+  dmabuf: system_heap: implement dma-buf op for GPU cgroup charge
+    transfer
+  android: binder: Add a buffer flag to relinquish ownership of fds
+
+ Documentation/gpu/rfc/gpu-cgroup.rst | 192 +++++++++++++++++
+ Documentation/gpu/rfc/index.rst      |   4 +
+ drivers/android/binder.c             |  32 +++
+ drivers/dma-buf/dma-heap.c           |  27 +++
+ drivers/dma-buf/heaps/system_heap.c  |  68 ++++++
+ include/linux/cgroup_gpu.h           | 120 +++++++++++
+ include/linux/cgroup_subsys.h        |   4 +
+ include/linux/dma-buf.h              |  18 ++
+ include/linux/dma-heap.h             |  11 +
+ include/uapi/linux/android/binder.h  |   1 +
+ init/Kconfig                         |   7 +
+ kernel/cgroup/Makefile               |   1 +
+ kernel/cgroup/gpu.c                  | 305 +++++++++++++++++++++++++++
+ 13 files changed, 790 insertions(+)
+ create mode 100644 Documentation/gpu/rfc/gpu-cgroup.rst
+ create mode 100644 include/linux/cgroup_gpu.h
+ create mode 100644 kernel/cgroup/gpu.c
+
+-- 
+2.34.1.703.g22d0c6ccf7-goog
+
