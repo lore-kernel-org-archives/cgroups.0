@@ -1,22 +1,22 @@
 From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/4] mm/memcg: mem_cgroup_per_node is already set to 0 on allocation
-Date: Sun, 16 Jan 2022 11:24:03 -0800
-Message-ID: <CALvZod5ycSmk7URBoLGGJAiyjGQ1E0HR2RnJ-3uZai=t+KpEKA@mail.gmail.com>
-References: <20220111010302.8864-1-richard.weiyang@gmail.com> <20220111010302.8864-2-richard.weiyang@gmail.com>
+Subject: Re: [PATCH 3/4] mm/memcg: retrieve parent memcg from css.parent
+Date: Sun, 16 Jan 2022 11:54:24 -0800
+Message-ID: <CALvZod52PWUhaFW1jOjJFd_Ef4pBrj7=q8MaBEAWMqawapxQ6Q@mail.gmail.com>
+References: <20220111010302.8864-1-richard.weiyang@gmail.com> <20220111010302.8864-3-richard.weiyang@gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=c6evELW+tkD7CtjU/q82JAh8zwV9sibyS+oVT1wgMIo=;
-        b=pS/LRlqPd2v795c2ySY+8PL8UpC5Zl/zUN5+ti7B4CoFeYTvYKCSFwKmMbUVOPcDVc
-         7eDStVWQH+iALVLXbJ//2+WauF9fp7eC+h+NWylp10lReOm2dExRzmxX6TmsUpamL0FA
-         3mhzljQgdxIjCnOhaoIUlIh/xT31WP7v/ZND528u73eUybliaipUhuZ8Myurkri9/Bn0
-         VMYcEsiO5g5dBYFv1judak18DlWxlI2misGKjlM0Uy/c9j5/lFYy/XHbPdCQhuXVVchu
-         erkNGuEzUvBLWQC3ykVipjL4zjFm2geGKSIDKJvecb5eGqp9umVpwKPwj9v6mlgDm1G1
-         E4Cg==
-In-Reply-To: <20220111010302.8864-2-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=32ZGPXHe3Ged0KnD2WiQsFB3QGx2BbSWPhOV/bW7jNc=;
+        b=RMd20O9hiJ+E++mZyFCDgYsG99GnasXx9c7mZSzw0rI5QCZRUDgY7035Y/jwkEIhET
+         //SyReKW9JjjJucOIxRqhB29/qOd4FJouwJMwOq05gVXJnoAaw9T8BRB2KyG/rTWdf/3
+         JChxfan6qdczRC8W0KyNqWCcGtDTmC/Dkg1vIrMMrJS8DHl6PHjNIY+V4aHI/Ct1MUx+
+         eWAX6pjHBWif9lJixach4FExApXyy+orxoCRlPl5egBwUKbfvgBbI0LxRO4uqztDVEGx
+         zcs89gRS7lDl7xhNTMO0tfkzqTOrF99K6B28pwaFimR4JkOr12A8c0sB/e3NKvoHqzWt
+         KJ5w==
+In-Reply-To: <20220111010302.8864-3-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -25,8 +25,11 @@ Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hoc
 
 On Mon, Jan 10, 2022 at 5:03 PM Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
 >
-> kzalloc_node() would set data to 0, so it's not necessary to set it
-> again.
+> The parent we get from page_counter is correct, while this is two
+> different hierarchy.
+>
+> Let's retrieve the parent memcg from css.parent just like parent_cs(),
+> blkcg_parent(), etc.
 >
 > Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
