@@ -1,82 +1,251 @@
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
-Subject: Re: [RFC 4/6] dma-buf: Add DMA-BUF exporter op to charge a DMA-BUF to
- a cgroup.
-Date: Mon, 17 Jan 2022 08:46:16 +0100
-Message-ID: <f8c8b196-7d12-6242-97ac-38149f3a3ba3__3109.77946953557$1642405606$gmane$org@amd.com>
-References: <20220115010622.3185921-1-hridya@google.com>
- <20220115010622.3185921-5-hridya@google.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH v6 2/2] block: cancel all throttled bios in del_gendisk()
+Date: Mon, 17 Jan 2022 17:21:06 +0800
+Message-ID: <YeU1AmG4/2wXMgxh@T590>
+References: <20220110134758.2233758-1-yukuai3@huawei.com>
+ <20220110134758.2233758-3-yukuai3@huawei.com>
+ <Yd5FkuhYX9YcgQkZ@T590>
+ <2221953d-be40-3433-d46c-f40acd044482@huawei.com>
+ <CAFj5m9KmHB6FtUZ3E42BMZo+=aNNfn2bLu=kNhBOsRdxbfT6nw@mail.gmail.com>
+ <c5d1d7b5-b815-0dda-b7d3-8151189a8203@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WabEuyZOpi6hrDKYblBKZo897m2mA5zex7rqbD8ZYyg=;
- b=fANnBJY54iPRC/9/VrZ/FrSVF54Km99fnS5QRZEPZuz7WUdhpwc7JcqI3s4MaWuz8SvZwQaoLzFb5SyHOwcQNK1RaESv/7SjBiD0GI7D3Hd2LScLV9ifHhis9lOFeW2Ct507o/ozw9EsjKx6zLxYkiJQ5uLaSojuKEB6orWlB4E=
-In-Reply-To: <20220115010622.3185921-5-hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1642411288;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=L6PIZ9qAkLGSwxSYKsKeMVS21mSglR9Hz6z0y0CEJDo=;
+        b=Ql7mkiAQACujcTgPajlmiS5tIIEU3jmovQizkEEH1bRd1LWwLGVvVXQo+d6ryPKJiEIx4Q
+        1yWq9S7lzeaL8F1UbPXk95D/ulBV6333qrMAU8hh0yajhPQXr5pOk8CsIjpI8HDhIcEgGZ
+        HlL+SW6lDLrCC/cP20fA8BjouB4AG10=
+Content-Disposition: inline
+In-Reply-To: <c5d1d7b5-b815-0dda-b7d3-8151189a8203@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, =?UTF-8?Q?Arve_Hj=c3=b8nnev=c3=a5g?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Benjamin Gaignard <benjamin.gaignard-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Liam Mark <lmark-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Laura Abbott <labbott-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Brian Starkey <Brian.Starkey>
-Cc: Kenny.Ho-5C7GfCeVMHo@public.gmane.org, daniels-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: "yukuai (C)" <yukuai3@huawei.com>
+Cc: mkoutny@suse.com, paulmck@kernel.org, tj@kernel.org, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-Am 15.01.22 um 02:06 schrieb Hridya Valsaraju:
-> The optional exporter op provides a way for processes to transfer
-> charge of a buffer to a different process. This is essential for the
-> cases where a central allocator process does allocations for various
-> subsystems, hands over the fd to the client who
-> requested the memory and drops all references to the allocated memory.
->
-> Signed-off-by: Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
->   include/linux/dma-buf.h | 18 ++++++++++++++++++
->   1 file changed, 18 insertions(+)
->
-> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
-> index 7ab50076e7a6..d5e52f81cc6f 100644
-> --- a/include/linux/dma-buf.h
-> +++ b/include/linux/dma-buf.h
-> @@ -13,6 +13,7 @@
->   #ifndef __DMA_BUF_H__
->   #define __DMA_BUF_H__
->   
-> +#include <linux/cgroup_gpu.h>
->   #include <linux/dma-buf-map.h>
->   #include <linux/file.h>
->   #include <linux/err.h>
-> @@ -285,6 +286,23 @@ struct dma_buf_ops {
->   
->   	int (*vmap)(struct dma_buf *dmabuf, struct dma_buf_map *map);
->   	void (*vunmap)(struct dma_buf *dmabuf, struct dma_buf_map *map);
-> +
-> +	/**
-> +	 * @charge_to_cgroup:
-> +	 *
-> +	 * This is called by an exporter to charge a buffer to the specified
-> +	 * cgroup.
+On Fri, Jan 14, 2022 at 04:21:04PM +0800, yukuai (C) wrote:
+> 在 2022/01/14 11:05, Ming Lei 写道:
+> > On Thu, Jan 13, 2022 at 04:46:18PM +0800, yukuai (C) wrote:
+> > > 在 2022/01/12 11:05, Ming Lei 写道:
+> > > > Hello Yu Kuai,
+> > > > 
+> > > > On Mon, Jan 10, 2022 at 09:47:58PM +0800, Yu Kuai wrote:
+> > > > > Throttled bios can't be issued after del_gendisk() is done, thus
+> > > > > it's better to cancel them immediately rather than waiting for
+> > > > > throttle is done.
+> > > > > 
+> > > > > For example, if user thread is throttled with low bps while it's
+> > > > > issuing large io, and the device is deleted. The user thread will
+> > > > > wait for a long time for io to return.
+> > > > > 
+> > > > > Noted this patch is mainly from revertion of commit 32e3374304c7
+> > > > > ("blk-throttle: remove tg_drain_bios") and commit b77412372b68
+> > > > > ("blk-throttle: remove blk_throtl_drain").
+> > > > > 
+> > > > > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> > > > > ---
+> > > > >    block/blk-throttle.c | 77 ++++++++++++++++++++++++++++++++++++++++++++
+> > > > >    block/blk-throttle.h |  2 ++
+> > > > >    block/genhd.c        |  2 ++
+> > > > >    3 files changed, 81 insertions(+)
+> > > > 
+> > > > Just wondering why not take the built-in way in throtl_upgrade_state() for
+> > > > canceling throttled bios? Something like the following, then we can avoid
+> > > > to re-invent the wheel.
+> > > > 
+> > > >    block/blk-throttle.c | 38 +++++++++++++++++++++++++++++++-------
+> > > >    block/blk-throttle.h |  2 ++
+> > > >    block/genhd.c        |  3 +++
+> > > >    3 files changed, 36 insertions(+), 7 deletions(-)
+> > > > 
+> > > > diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+> > > > index cf7e20804f1b..17e56b2e44c4 100644
+> > > > --- a/block/blk-throttle.c
+> > > > +++ b/block/blk-throttle.c
+> > > > @@ -1816,16 +1816,11 @@ static void throtl_upgrade_check(struct throtl_grp *tg)
+> > > >              throtl_upgrade_state(tg->td);
+> > > >    }
+> > > > -static void throtl_upgrade_state(struct throtl_data *td)
+> > > > +static void __throtl_cancel_bios(struct throtl_data *td)
+> > > >    {
+> > > >      struct cgroup_subsys_state *pos_css;
+> > > >      struct blkcg_gq *blkg;
+> > > > -   throtl_log(&td->service_queue, "upgrade to max");
+> > > > -   td->limit_index = LIMIT_MAX;
+> > > > -   td->low_upgrade_time = jiffies;
+> > > > -   td->scale = 0;
+> > > > -   rcu_read_lock();
+> > > >      blkg_for_each_descendant_post(blkg, pos_css, td->queue->root_blkg) {
+> > > >              struct throtl_grp *tg = blkg_to_tg(blkg);
+> > > >              struct throtl_service_queue *sq = &tg->service_queue;
+> > > > @@ -1834,12 +1829,41 @@ static void throtl_upgrade_state(struct throtl_data *td)
+> > > >              throtl_select_dispatch(sq);
+> > > >              throtl_schedule_next_dispatch(sq, true);
+> > > Hi, Ming Lei
+> > > 
+> > > I'm confused that how can bios be canceled here?
+> > > tg->iops and tg->bps stay untouched, how can throttled bios
+> > > dispatch?
+> > 
+> > I thought that throttled bios will be canceled by 'tg->disptime = jiffies - 1;'
+> > and the following dispatch schedule.
+> > 
+> > But looks it isn't enough, since tg_update_disptime() updates
+> > ->disptime. However,
+> > this problem can be solved easily by not updating ->disptime in case that we are
+> > canceling.
+> > 
+> > > >      }
+> > > > -   rcu_read_unlock();
+> > > >      throtl_select_dispatch(&td->service_queue);
+> > > >      throtl_schedule_next_dispatch(&td->service_queue, true);
+> > > >      queue_work(kthrotld_workqueue, &td->dispatch_work);
+> > > >    }
+> > > > +void blk_throtl_cancel_bios(struct request_queue *q)
+> > > > +{
+> > > > +   struct cgroup_subsys_state *pos_css;
+> > > > +   struct blkcg_gq *blkg;
+> > > > +
+> > > > +   rcu_read_lock();
+> > > > +   spin_lock_irq(&q->queue_lock);
+> > > > +   __throtl_cancel_bios(q->td);
+> > > > +   spin_unlock_irq(&q->queue_lock);
+> > > > +   rcu_read_unlock();
+> > > > +
+> > > > +   blkg_for_each_descendant_post(blkg, pos_css, q->root_blkg)
+> > > > +           del_timer_sync(&blkg_to_tg(blkg)->service_queue.pending_timer);
+> > > > +   del_timer_sync(&q->td->service_queue.pending_timer);
+> > > 
+> > > By the way, I think delete timer will end up io hung here if there are
+> > > some bios still be throttled.
+> > 
+> > Firstly ->queue_lock is held by blk_throtl_cancel_bios(), so no new bios
+> > will be throttled.
+> > 
+> > Also if we don't update ->disptime, any new bios throttled after releasing
+> > ->queue_lock will be dispatched soon.
+> 
+> Hi, Ming Lei
+> 
+> Just to be curiosity, I'm still trying to understand the logic here:
+> 
+> For example, if bps is set to 1k, and a io with size 16k is just
+> dispatched, then io throtle should wait for 16s untill new io can be
 
-Well that sentence makes absolutely no sense at all.
+There isn't such wait code in blk-throttle, and the magic is just in
+how to compute tg->disptime.
 
-The dma_buf_ops are supposed to be called by the DMA-buf subsystem on 
-behalves of the importer and never by the exporter itself.
+> dispatched. (details in tg_with_in_bps_limit）.
+> 
+> How does such mechanism bypassed here?
 
-I hope that this is just a documentation mixup.
+The point is that tg->disptime is always set as one past time, so all
+throttled IOs will be dispatched immediately if ->disptime is older than
+jiffies, and I have verified that the following patch can work as expected.
 
-Regards,
-Christian.
 
->   The caller must hold a reference to @gpucg obtained via
-> +	 * gpucg_get(). The DMA-BUF will be uncharged from the cgroup it is
-> +	 * currently charged to before being charged to @gpucg. The caller must
-> +	 * belong to the cgroup the buffer is currently charged to.
-> +	 *
-> +	 * This callback is optional.
-> +	 *
-> +	 * Returns:
-> +	 *
-> +	 * 0 on success or negative error code on failure.
-> +	 */
-> +	int (*charge_to_cgroup)(struct dma_buf *dmabuf, struct gpucg *gpucg);
->   };
->   
->   /**
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 7c462c006b26..d9845afccd97 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -45,6 +45,7 @@ static struct workqueue_struct *kthrotld_workqueue;
+ enum tg_state_flags {
+ 	THROTL_TG_PENDING	= 1 << 0,	/* on parent's pending tree */
+ 	THROTL_TG_WAS_EMPTY	= 1 << 1,	/* bio_lists[] became non-empty */
++	THROTL_TG_CANCELING	= 1 << 2,	/* starts to cancel all bios */
+ };
+ 
+ #define rb_entry_tg(node)	rb_entry((node), struct throtl_grp, rb_node)
+@@ -974,6 +975,9 @@ static void tg_update_disptime(struct throtl_grp *tg)
+ 	unsigned long read_wait = -1, write_wait = -1, min_wait = -1, disptime;
+ 	struct bio *bio;
+ 
++	if (tg->flags & THROTL_TG_CANCELING)
++		goto update;
++
+ 	bio = throtl_peek_queued(&sq->queued[READ]);
+ 	if (bio)
+ 		tg_may_dispatch(tg, bio, &read_wait);
+@@ -983,6 +987,7 @@ static void tg_update_disptime(struct throtl_grp *tg)
+ 		tg_may_dispatch(tg, bio, &write_wait);
+ 
+ 	min_wait = min(read_wait, write_wait);
++update:
+ 	disptime = jiffies + min_wait;
+ 
+ 	/* Update dispatch time */
+@@ -1836,6 +1841,25 @@ static void throtl_upgrade_state(struct throtl_data *td)
+ 	queue_work(kthrotld_workqueue, &td->dispatch_work);
+ }
+ 
++void blk_throtl_cancel_bios(struct request_queue *q)
++{
++	struct cgroup_subsys_state *pos_css;
++	struct blkcg_gq *blkg;
++
++	rcu_read_lock();
++	spin_lock_irq(&q->queue_lock);
++	blkg_for_each_descendant_post(blkg, pos_css, q->root_blkg) {
++		struct throtl_grp *tg = blkg_to_tg(blkg);
++		struct throtl_service_queue *sq = &tg->service_queue;
++
++		tg->disptime = jiffies - 1;
++		blkg_to_tg(blkg)->flags |= THROTL_TG_CANCELING;
++		throtl_schedule_pending_timer(sq, jiffies + 1);
++	}
++	spin_unlock_irq(&q->queue_lock);
++	rcu_read_unlock();
++}
++
+ static void throtl_downgrade_state(struct throtl_data *td)
+ {
+ 	td->scale /= 2;
+diff --git a/block/blk-throttle.h b/block/blk-throttle.h
+index 175f03abd9e4..b412a4d7cc1e 100644
+--- a/block/blk-throttle.h
++++ b/block/blk-throttle.h
+@@ -160,12 +160,14 @@ static inline void blk_throtl_exit(struct request_queue *q) { }
+ static inline void blk_throtl_register_queue(struct request_queue *q) { }
+ static inline void blk_throtl_charge_bio_split(struct bio *bio) { }
+ static inline bool blk_throtl_bio(struct bio *bio) { return false; }
++static inline void blk_throtl_cancel_bios(struct request_queue *q) {}
+ #else /* CONFIG_BLK_DEV_THROTTLING */
+ int blk_throtl_init(struct request_queue *q);
+ void blk_throtl_exit(struct request_queue *q);
+ void blk_throtl_register_queue(struct request_queue *q);
+ void blk_throtl_charge_bio_split(struct bio *bio);
+ bool __blk_throtl_bio(struct bio *bio);
++void blk_throtl_cancel_bios(struct request_queue *q);
+ static inline bool blk_throtl_bio(struct bio *bio)
+ {
+ 	struct throtl_grp *tg = blkg_to_tg(bio->bi_blkg);
+diff --git a/block/genhd.c b/block/genhd.c
+index f7577dde18fc..a32d48b87223 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -29,6 +29,7 @@
+ 
+ #include "blk.h"
+ #include "blk-mq-sched.h"
++#include "blk-throttle.h"
+ 
+ static struct kobject *block_depr;
+ 
+@@ -576,6 +577,8 @@ void del_gendisk(struct gendisk *disk)
+ 	blk_integrity_del(disk);
+ 	disk_del_events(disk);
+ 
++	blk_throtl_cancel_bios(disk->queue);
++
+ 	mutex_lock(&disk->open_mutex);
+ 	remove_inode_hash(disk->part0->bd_inode);
+ 	blk_drop_partitions(disk);
+
+Thanks,
+Ming
 
