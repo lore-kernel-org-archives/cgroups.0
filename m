@@ -1,140 +1,82 @@
-From: Zhang Qiao <zhangqiao22-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [Question] set_cpus_allowed_ptr() call failed at cpuset_attach()
-Date: Mon, 17 Jan 2022 14:27:28 +0800
-Message-ID: <c5028595-7e76-60f2-e744-c2815f917ee4@huawei.com>
-References: <09ce5796-798e-83d0-f1a6-ba38a787bfc5@huawei.com>
- <4415cd09-6de3-bb2d-386d-8beb4927fb46@huawei.com>
- <YeGi2yjRi/uZIF/2@slm.duckdns.org>
- <8bda2a8d-7faf-621d-c3c0-6351a49219ea@redhat.com>
- <c618f413-8b58-d1d8-3129-bb5624fc140a@huawei.com>
- <a8789e06-ebae-30f1-f592-add05df818d9@redhat.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
+Subject: Re: [RFC 4/6] dma-buf: Add DMA-BUF exporter op to charge a DMA-BUF to
+ a cgroup.
+Date: Mon, 17 Jan 2022 08:46:16 +0100
+Message-ID: <f8c8b196-7d12-6242-97ac-38149f3a3ba3__3109.77946953557$1642405606$gmane$org@amd.com>
+References: <20220115010622.3185921-1-hridya@google.com>
+ <20220115010622.3185921-5-hridya@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <a8789e06-ebae-30f1-f592-add05df818d9-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=WabEuyZOpi6hrDKYblBKZo897m2mA5zex7rqbD8ZYyg=;
+ b=fANnBJY54iPRC/9/VrZ/FrSVF54Km99fnS5QRZEPZuz7WUdhpwc7JcqI3s4MaWuz8SvZwQaoLzFb5SyHOwcQNK1RaESv/7SjBiD0GI7D3Hd2LScLV9ifHhis9lOFeW2Ct507o/ozw9EsjKx6zLxYkiJQ5uLaSojuKEB6orWlB4E=
+In-Reply-To: <20220115010622.3185921-5-hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, =?UTF-8?Q?Arve_Hj=c3=b8nnev=c3=a5g?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Benjamin Gaignard <benjamin.gaignard-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Liam Mark <lmark-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Laura Abbott <labbott-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Brian Starkey <Brian.Starkey>
+Cc: Kenny.Ho-5C7GfCeVMHo@public.gmane.org, daniels-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
+Am 15.01.22 um 02:06 schrieb Hridya Valsaraju:
+> The optional exporter op provides a way for processes to transfer
+> charge of a buffer to a different process. This is essential for the
+> cases where a central allocator process does allocations for various
+> subsystems, hands over the fd to the client who
+> requested the memory and drops all references to the allocated memory.
+>
+> Signed-off-by: Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>   include/linux/dma-buf.h | 18 ++++++++++++++++++
+>   1 file changed, 18 insertions(+)
+>
+> diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
+> index 7ab50076e7a6..d5e52f81cc6f 100644
+> --- a/include/linux/dma-buf.h
+> +++ b/include/linux/dma-buf.h
+> @@ -13,6 +13,7 @@
+>   #ifndef __DMA_BUF_H__
+>   #define __DMA_BUF_H__
+>   
+> +#include <linux/cgroup_gpu.h>
+>   #include <linux/dma-buf-map.h>
+>   #include <linux/file.h>
+>   #include <linux/err.h>
+> @@ -285,6 +286,23 @@ struct dma_buf_ops {
+>   
+>   	int (*vmap)(struct dma_buf *dmabuf, struct dma_buf_map *map);
+>   	void (*vunmap)(struct dma_buf *dmabuf, struct dma_buf_map *map);
+> +
+> +	/**
+> +	 * @charge_to_cgroup:
+> +	 *
+> +	 * This is called by an exporter to charge a buffer to the specified
+> +	 * cgroup.
 
+Well that sentence makes absolutely no sense at all.
 
-在 2022/1/17 12:35, Waiman Long 写道:
-> On 1/16/22 21:25, Zhang Qiao wrote:
->> hello
->>
->> 在 2022/1/15 4:33, Waiman Long 写道:
->>> On 1/14/22 11:20, Tejun Heo wrote:
->>>> (cc'ing Waiman and Michal and quoting whole body)
->>>>
->>>> Seems sane to me but let's hear what Waiman and Michal think.
->>>>
->>>> On Fri, Jan 14, 2022 at 09:15:06AM +0800, Zhang Qiao wrote:
->>>>> Hello everyone
->>>>>
->>>>>      I found the following warning log on qemu. I migrated a task from one cpuset cgroup to
->>>>> another, while I also performed the cpu hotplug operation, and got following calltrace.
->>>>>
->>>>>      This may lead to a inconsistency between the affinity of the task and cpuset.cpus of the
->>>>> dest cpuset, but this task can be successfully migrated to the dest cpuset cgroup.
->>>>>
->>>>>      Can we use cpus_read_lock()/cpus_read_unlock() to guarantee that set_cpus_allowed_ptr()
->>>>> doesn't fail, as follows:
->>>>>
->>>>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->>>>> index d0e163a02099..2535d23d2c51 100644
->>>>> --- a/kernel/cgroup/cpuset.c
->>>>> +++ b/kernel/cgroup/cpuset.c
->>>>> @@ -2265,6 +2265,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
->>>>>           guarantee_online_mems(cs, &cpuset_attach_nodemask_to);
->>>>>
->>>>>           cgroup_taskset_for_each(task, css, tset) {
->>>>> +               cpus_read_lock();
->>>>>                   if (cs != &top_cpuset)
->>>>>                           guarantee_online_cpus(task, cpus_attach);
->>>>>                   else
->>>>> @@ -2274,6 +2275,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
->>>>>                    * fail.  TODO: have a better way to handle failure here
->>>>>                    */
->>>>>                   WARN_ON_ONCE(set_cpus_allowed_ptr(task, cpus_attach));
->>>>> +               cpus_read_unlock();
->>>>>
->>>>>
->>>>>      Is there a better solution?
->>>>>
->>>>>      Thanks
->>> The change looks OK to me. However, we may need to run the full set of regression test to make sure that lockdep won't complain about potential deadlock.
->>>
->> I run the test with lockdep enabled, and got lockdep warning like that below.
->> so we should take the cpu_hotplug_lock first, then take the cpuset_rwsem lock.
->>
->> thanks,
->> Zhang Qiao
->>
->> [   38.420372] ======================================================
->> [   38.421339] WARNING: possible circular locking dependency detected
->> [   38.422312] 5.16.0-rc4+ #13 Not tainted
->> [   38.422920] ------------------------------------------------------
->> [   38.423883] bash/594 is trying to acquire lock:
->> [   38.424595] ffffffff8286afc0 (cpu_hotplug_lock){++++}-{0:0}, at: cpuset_attach+0xc2/0x1e0
->> [   38.425880]
->> [   38.425880] but task is already holding lock:
->> [   38.426787] ffffffff8296a5a0 (&cpuset_rwsem){++++}-{0:0}, at: cpuset_attach+0x3e/0x1e0
->> [   38.428015]
->> [   38.428015] which lock already depends on the new lock.
->> [   38.428015]
->> [   38.429279]
->> [   38.429279] the existing dependency chain (in reverse order) is:
->> [   38.430445]
->> [   38.430445] -> #1 (&cpuset_rwsem){++++}-{0:0}:
->> [   38.431371]        percpu_down_write+0x42/0x130
->> [   38.432085]        cpuset_css_online+0x2b/0x2e0
->> [   38.432808]        online_css+0x24/0x80
->> [   38.433411]        cgroup_apply_control_enable+0x2fa/0x330
->> [   38.434273]        cgroup_mkdir+0x396/0x4c0
->> [   38.434930]        kernfs_iop_mkdir+0x56/0x80
->> [   38.435614]        vfs_mkdir+0xde/0x190
->> [   38.436220]        do_mkdirat+0x7d/0xf0
->> [   38.436824]        __x64_sys_mkdir+0x21/0x30
->> [   38.437495]        do_syscall_64+0x3a/0x80
->> [   38.438145]        entry_SYSCALL_64_after_hwframe+0x44/0xae
->> [   38.439015]
->> [   38.439015] -> #0 (cpu_hotplug_lock){++++}-{0:0}:
->> [   38.439980]        __lock_acquire+0x17f6/0x2260
->> [   38.440691]        lock_acquire+0x277/0x320
->> [   38.441347]        cpus_read_lock+0x37/0xc0
->> [   38.442011]        cpuset_attach+0xc2/0x1e0
->> [   38.442671]        cgroup_migrate_execute+0x3a6/0x490
->> [   38.443461]        cgroup_attach_task+0x22c/0x3d0
->> [   38.444197]        __cgroup1_procs_write.constprop.21+0x10d/0x170
->> [   38.445145]        cgroup_file_write+0x6f/0x230
->> [   38.445860]        kernfs_fop_write_iter+0x130/0x1b0
->> [   38.446636]        new_sync_write+0x120/0x1b0
->> [   38.447319]        vfs_write+0x359/0x3b0
->> [   38.447937]        ksys_write+0xa2/0xe0
->> [   38.448540]        do_syscall_64+0x3a/0x80
->> [   38.449183]        entry_SYSCALL_64_after_hwframe+0x44/0xae
->> [   38.450057]
->> [   38.450057] other info that might help us debug this:
->> [   38.450057]
->> [   38.451297]  Possible unsafe locking scenario:
->> [   38.451297]
->> [   38.452218]        CPU0                    CPU1
->> [   38.452935]        ----                    ----
->> [   38.453650]   lock(&cpuset_rwsem);
->> [   38.454188]                                lock(cpu_hotplug_lock);
->> [   38.455148]                                lock(&cpuset_rwsem);
->> [   38.456069]   lock(cpu_hotplug_lock);
-> 
-> Yes, you need to play around with lock ordering to make sure that lockdep won't complain.
-> 
-Thank you for taking a look!
-if ok, i will send a patch.
+The dma_buf_ops are supposed to be called by the DMA-buf subsystem on 
+behalves of the importer and never by the exporter itself.
 
-Thanks,
-Zhang Qiao.
+I hope that this is just a documentation mixup.
 
-> Cheers,
-> Longman
-> 
-> .
+Regards,
+Christian.
+
+>   The caller must hold a reference to @gpucg obtained via
+> +	 * gpucg_get(). The DMA-BUF will be uncharged from the cgroup it is
+> +	 * currently charged to before being charged to @gpucg. The caller must
+> +	 * belong to the cgroup the buffer is currently charged to.
+> +	 *
+> +	 * This callback is optional.
+> +	 *
+> +	 * Returns:
+> +	 *
+> +	 * 0 on success or negative error code on failure.
+> +	 */
+> +	int (*charge_to_cgroup)(struct dma_buf *dmabuf, struct gpucg *gpucg);
+>   };
+>   
+>   /**
+
