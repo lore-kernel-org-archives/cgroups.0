@@ -1,57 +1,93 @@
-From: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 0/3] block, bfq: minor cleanup and fix
-Date: Tue, 18 Jan 2022 18:53:01 +0100
-Message-ID: <4E86637B-382D-4A6E-8E5C-F788589FD395@linaro.org>
-References: <20211231032354.793092-1-yukuai3@huawei.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
-Content-Transfer-Encoding: quoted-printable
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH] mm/memcg: Do not check v1 event counter when not needed
+Date: Tue, 18 Jan 2022 19:26:00 +0100
+Message-ID: <20220118182600.15007-1-mkoutny@suse.com>
+References: <YeE9zyUokSY9L2ZI@linutronix.de>
+Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=M7FBzDoAriv8xQwZLoTeD6TT/AZBvb4RBjfiUlayd0k=;
-        b=s9eeoFqeWryDhzZWuDTcq1vMbgdJuw61xJU6xmMrmmjzk2833fTJhClgBKm/9Buvzr
-         /CJRd9eeYG1vrSUWpvusfrFg3CIQZ9w2oS6ZErGCfNXDXvMFXvZIufkgGhDve3v2ci5t
-         z1IPHvF4sIXYz0uPjj/8Rq7qgyRJ4mTjJ43gn7dx+GDYDh46kSASXq/5jPJHWku4OUiK
-         s7ajzbmCQG98b1myDBKC/2AN5kDUXloC7E8nrUUgPnEciKZZpt0GGYFn8BENphBjCkXQ
-         BDQnGiM04AsymRvjsm3PIAOdm67ECL77HleUijs3FE6bHBj8IWLOBqKDEt8OY0I0PGV2
-         gRDg==
-In-Reply-To: <20211231032354.793092-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1642530370; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ge3g8LQjPPjPT4iWHPjDIO/ZDcQCDnvHvSUhi3iQ1rQ=;
+        b=OrSB7UBk3Zx97KIJkOYB5/kufBllUFb5h0WOoqblWugIrDuY6fI4jMScI8ZXt28J8tyxS1
+        bS38D81tmtfhLt1vAcQlfLpfAqsWk7kcK5h/W40SGY9cXN/ZY7TVfEA3pKjrCwqhplgM/8
+        CQJV6oKK94ZSeCnenftUsSkJ0Ok5ARQ=
+In-Reply-To: <YeE9zyUokSY9L2ZI-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-
-
-> Il giorno 31 dic 2021, alle ore 04:23, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> ha =
-scritto:
->=20
-> Chagnes in v2:
-> - add comment in patch 2
-> - remove patch 4, since the problem do not exist.
->=20
-> Yu Kuai (3):
->  block, bfq: cleanup bfq_bfqq_to_bfqg()
->  block, bfq: avoid moving bfqq to it's parent bfqg
->  block, bfq: don't move oom_bfqq
->=20
-
-All
-Acked-by: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-
-Thanks,
-Paolo
-
-
-> block/bfq-cgroup.c  | 16 +++++++++++++++-
-> block/bfq-iosched.c |  4 ++--
-> block/bfq-iosched.h |  1 -
-> block/bfq-wf2q.c    | 15 ---------------
-> 4 files changed, 17 insertions(+), 19 deletions(-)
->=20
-> --=20
-> 2.31.1
->=20
-
+VGhlIGZ1bmN0aW9uIG1lbWNnX2NoZWNrX2V2ZW50cygpIGlzIGNhbGxlZCB0byB0cmlnZ2VyIHBv
+c3NpYmxlIGV2ZW50Cm5vdGlmaWNhdGlvbnMgb3Igc29mdCBsaW1pdCB1cGRhdGVzIHdoZW4gcGFn
+ZSBldmVudCAiY2xvY2siIG1vdmVzCnN1ZmZpY2llbnRseS4gVGhpcyB0cmFja2luZyBpcyBub3Qg
+bmVlZGVkIHdoZW4gbmVpdGhlciBzb2Z0IGxpbWl0IG5vciAodjEpCmV2ZW50IG5vdGlmaWNhdGlv
+bnMgYXJlIGNvbmZpZ3VyZWQuIFRoZSB0cmFja2luZyBjYW4gY2F0Y2gtdXAKd2l0aCB0aGUgY2xv
+Y2sgYXQgYW55IHRpbWUgdXBvbiB0aHJlc2hvbGRzIGNvbmZpZ3VyYXRpb24uCgpHdWFyZCB0aGlz
+IGZ1bmN0aW9uYWxpdHkgYmVoaW5kIGFuIHVubGlrZWx5IHN0YXRpYyBicmFuY2ggKHNvZnQgbGlt
+aXQKYW5kIGV2ZW50cyBhcmUgcHJlc3VtYWJseSByYXRoZXIgdW51c2VkIHRoYW4gdXNlZCkuCgpU
+aGlzIGhhcyBzbGlnaHQgaW5zaWduaWZpY2FudCBwZXJmb3JtYW5jZSBnYWluIGluIHBhZ2UtZmF1
+bHQgc3BlY2lmaWMKYmVuY2htYXJrIGJ1dCBvdmVyYWxsIG5vIHBlcmZvcm1hbmNlIGltcGFjdCBp
+cyBleHBlY3RlZC4gVGhlIGdvYWwgaXMgdG8KcGFydGl0aW9uIHRoZSBjaGFyZ2luZyBjb2RlIHBl
+ciBwcm92aWRlZCB1c2VyIGZ1bmN0aW9uYWxpdHkuCgpTdWdnZXN0ZWQtYnk6IE1pY2hhbCBIb2Nr
+byA8bWhvY2tvLUlCaTlSRy9iNjdrQHB1YmxpYy5nbWFuZS5vcmc+ClNpZ25lZC1vZmYtYnk6IE1p
+Y2hhbCBLb3V0bsO9IDxta291dG55LUlCaTlSRy9iNjdrQHB1YmxpYy5nbWFuZS5vcmc+Ci0tLQog
+bW0vbWVtY29udHJvbC5jIHwgOCArKysrKysrKwogMSBmaWxlIGNoYW5nZWQsIDggaW5zZXJ0aW9u
+cygrKQoKCk9uIEZyaSwgSmFuIDE0LCAyMDIyIGF0IDEwOjA5OjM1QU0gKzAxMDAsIFNlYmFzdGlh
+biBBbmRyemVqIFNpZXdpb3IgPGJpZ2Vhc3ktaGZadGVzcUZuY1lPd0JXNGtHNEtzUUBwdWJsaWMu
+Z21hbmUub3JnPiB3cm90ZToKPiBTbyBhdm9pZGluZyB0aGVzZSB0d28gYWxzbyBhdm9pZHMgbWVt
+Y2dfY2hlY2tfZXZlbnRzKCk/CgpJJ3ZlIG1hZGUgdGhlIG1hdHRlciBleHBsaWNpdCB3aXRoIHRo
+ZSBzdXJyb3VuZGluZyBwYXRjaC4KClsKVGhlIHBlcmZvcm1hbmNlICJnYWluIiBpcyBuZWdsaWdp
+YmxlIChkaWZmZXJlbmNlcyBvZiBwZnQgWzFdIGFyZSBkb21pbmF0ZWQgYnkKbm9uLXJvb3QgbWVt
+Y2cgY2xhc3NpZmljYXRpb24pOgoKICAgICAgICAgICAgICAgICAgICAgICAgIG5vY2csIG5vcGF0
+Y2ggICAgICAgICAgICBjZywgbm9wYXRjaCAgICAgICAgICAgICAgbm9jZywgcGF0Y2ggICAgICAg
+ICAgICAgIGNnLCBwYXRjaApIbWVhbiAgICAgZmF1bHRzL3NlYy0yICAgMjczMzY2LjYzMTIgKCAg
+IDAuMDAlKSAgIDI0MzU3My4zNzY3ICogLTEwLjkwJSogICAyNzM5MDEuOTcwOSAqICAgMC4yMCUq
+ICAgMjQ3NzAyLjQxMDQgKiAgLTkuMzklKgpDb2VmZlZhciAgZmF1bHRzL3NlYy0yICAgICAgICAz
+Ljg3NzEgKCAgIDAuMDAlKSAgICAgICAgMy44Mzk2ICggICAwLjk3JSkgICAgICAgIDMuMTQwMCAo
+ICAxOS4wMSUpICAgICAgICA0LjExODggKCAgLTYuMjQlKQoKICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjZywgbm9wYXRjaCAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgIGNnLCBwYXRjaApIbWVhbiAgICAgZmF1bHRzL3NlYy0yICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgIDI0MzU3My4zNzY3ICggICAwLjAwJSkgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgMjQ3NzAyLjQxMDQgKiAgIDEuNzAlKgpDb2VmZlZhciAgZmF1bHRz
+L3NlYy0yICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgMy44Mzk2ICggICAwLjAwJSkg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA0LjExODggKCAgLTcuMjclKQoKT24gbGVz
+cyB0YXJnZXR0ZWQgYmVuY2htYXJrcyBpdCdzIHdlbGwgYmVsb3cgbm9pc2UuCl0KCkkgdGhpbmsg
+aXQgd291bGQgbWFrZSBzZW5zZSBpbnNlcnRpbmcgdGhlIHBhdGNoIGludG8geW91ciBzZXJpZXMg
+YW5kCnN1YnNlcXVlbnRseSByZWplY3QgZW5hYmxpbmcgb24gUFJFRU1QVF9SVCAtLSBwcm92aWRl
+ZCB0aGlzIHBhdGNoIG1ha2VzIHNlbnNlCnRvIG90aGVycyB0b28gLS0gdGhlIGp1c3RpZmljYXRp
+b24gaXMgcmF0aGVyIGZ1bmN0aW9uYWxpdHkgc3BsaXR0aW5nIGZvcgp0aGlzIFBSRUVNUFRfUlQg
+ZWZmb3J0LgoKPiBBcmUgdGhlcmUgcGxhbnMgdG8gcmVtb3ZlIHYxIG9yIGlzIHRoaXMgcGFydCBv
+ZiAid2UgbXVzdCBub3QgYnJlYWsKPiB1c2VybGFuZCI/CgpJdCdzIHBhcnQgb2YgdGhhdCBtYW50
+cmEsIHNvIHYxIGNhbid0IGJlIHNpbXBseSByZW1vdmVkLiBPVE9ILCBteSBzZW5zaW5nIGlzCnRo
+YXQgdGhpcyBjaGFuZ2UgYWxzbyBmaXRzIHVuZGVyIG5vdCBleHRlbmRpbmcgdjEgKHRvIGF2b2lk
+IGRvdWJsaW5nIGVmZm9ydCBvbgpldmVyeXRoaW5nKS4KCk1pY2hhbAoKWzFdIGh0dHBzOi8vZ2l0
+aHViLmNvbS9nb3JtYW5tL21tdGVzdHMvYmxvYi82YmNiOGIzMDFhNDgzODZlMGNjNjNhMjFmNzY0
+MjA0OGEzY2VhZWQ1L2NvbmZpZ3MvY29uZmlnLXBhZ2VhbGxvYy1wZXJmb3JtYW5jZSNMNgoKZGlm
+ZiAtLWdpdCBhL21tL21lbWNvbnRyb2wuYyBiL21tL21lbWNvbnRyb2wuYwppbmRleCA0YTdiM2Vi
+ZjhlNDguLjdmNjRjZTMzZDEzNyAxMDA2NDQKLS0tIGEvbW0vbWVtY29udHJvbC5jCisrKyBiL21t
+L21lbWNvbnRyb2wuYwpAQCAtMTA2LDYgKzEwNiw4IEBAIHN0YXRpYyBib29sIGRvX21lbXN3X2Fj
+Y291bnQodm9pZCkKICNkZWZpbmUgVEhSRVNIT0xEU19FVkVOVFNfVEFSR0VUIDEyOAogI2RlZmlu
+ZSBTT0ZUTElNSVRfRVZFTlRTX1RBUkdFVCAxMDI0CiAKK0RFRklORV9TVEFUSUNfS0VZX0ZBTFNF
+KG1lbWNnX3YxX2V2ZW50c19lbmFibGVkX2tleSk7CisKIC8qCiAgKiBDZ3JvdXBzIGFib3ZlIHRo
+ZWlyIGxpbWl0cyBhcmUgbWFpbnRhaW5lZCBpbiBhIFJCLVRyZWUsIGluZGVwZW5kZW50IG9mCiAg
+KiB0aGVpciBoaWVyYXJjaHkgcmVwcmVzZW50YXRpb24KQEAgLTg1Miw2ICs4NTQsOSBAQCBzdGF0
+aWMgYm9vbCBtZW1fY2dyb3VwX2V2ZW50X3JhdGVsaW1pdChzdHJ1Y3QgbWVtX2Nncm91cCAqbWVt
+Y2csCiAgKi8KIHN0YXRpYyB2b2lkIG1lbWNnX2NoZWNrX2V2ZW50cyhzdHJ1Y3QgbWVtX2Nncm91
+cCAqbWVtY2csIGludCBuaWQpCiB7CisJaWYgKCFzdGF0aWNfYnJhbmNoX3VubGlrZWx5KCZtZW1j
+Z192MV9ldmVudHNfZW5hYmxlZF9rZXkpKQorCQlyZXR1cm47CisKIAkvKiB0aHJlc2hvbGQgZXZl
+bnQgaXMgdHJpZ2dlcmVkIGluIGZpbmVyIGdyYWluIHRoYW4gc29mdCBsaW1pdCAqLwogCWlmICh1
+bmxpa2VseShtZW1fY2dyb3VwX2V2ZW50X3JhdGVsaW1pdChtZW1jZywKIAkJCQkJCU1FTV9DR1JP
+VVBfVEFSR0VUX1RIUkVTSCkpKSB7CkBAIC0zNzU3LDYgKzM3NjIsNyBAQCBzdGF0aWMgc3NpemVf
+dCBtZW1fY2dyb3VwX3dyaXRlKHN0cnVjdCBrZXJuZnNfb3Blbl9maWxlICpvZiwKIAkJYnJlYWs7
+CiAJY2FzZSBSRVNfU09GVF9MSU1JVDoKIAkJbWVtY2ctPnNvZnRfbGltaXQgPSBucl9wYWdlczsK
+KwkJc3RhdGljX2JyYW5jaF9lbmFibGUoJm1lbWNnX3YxX2V2ZW50c19lbmFibGVkX2tleSk7CiAJ
+CXJldCA9IDA7CiAJCWJyZWFrOwogCX0KQEAgLTQ4MzEsNiArNDgzNyw4IEBAIHN0YXRpYyBzc2l6
+ZV90IG1lbWNnX3dyaXRlX2V2ZW50X2NvbnRyb2woc3RydWN0IGtlcm5mc19vcGVuX2ZpbGUgKm9m
+LAogCWxpc3RfYWRkKCZldmVudC0+bGlzdCwgJm1lbWNnLT5ldmVudF9saXN0KTsKIAlzcGluX3Vu
+bG9ja19pcnEoJm1lbWNnLT5ldmVudF9saXN0X2xvY2spOwogCisJc3RhdGljX2JyYW5jaF9lbmFi
+bGUoJm1lbWNnX3YxX2V2ZW50c19lbmFibGVkX2tleSk7CisKIAlmZHB1dChjZmlsZSk7CiAJZmRw
+dXQoZWZpbGUpOwogCi0tIAoyLjM0LjEKCg==
