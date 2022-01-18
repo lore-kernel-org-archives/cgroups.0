@@ -1,56 +1,81 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cpuset: Fix the bug that subpart_cpus updated wrongly in
- update_cpumask()
-Date: Tue, 18 Jan 2022 15:21:44 -0500
-Message-ID: <7610638e-9954-a6b2-63b2-e1df334a288f@redhat.com>
-References: <20220118100518.2381118-1-dtcccc@linux.alibaba.com>
+From: Vipin Sharma <vipinsh@google.com>
+Subject: Re: [PATCH v2] KVM: Move VM's worker kthreads back to the original
+ cgroups before exiting.
+Date: Tue, 18 Jan 2022 12:25:48 -0800
+Message-ID: <CAHVum0e84nUcGtdPYQaJDQszKj-QVP5gM+nteBpSTaQ2sWYpmQ@mail.gmail.com>
+References: <20211222225350.1912249-1-vipinsh@google.com> <20220105180420.GC6464@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1642537311;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Y8gyhqFvKMeBPNaQH3F4JAzHy306fMW6cgpFncW//cw=;
-        b=QV53UVZ/BYqP0ijap8Pv1d1/rtme04KvBjm9FN4cjeMpcMXivtSPd2p0P+EpmpD7muhDC2
-        qfw2w0/daZe3WYQyna3k+Z6gZofX7xK6u+yGRej+zRHVjV7ySHqrDKk3pzVww7eOWBO4PT
-        1erNdqDiBUfLYXhPfq5UNs0FNGguifo=
-Content-Language: en-US
-In-Reply-To: <20220118100518.2381118-1-dtcccc-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <kvm-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=03H0oTsaoOJAVZroctwt5LNhXL/5/pvtJL1WK73zL4I=;
+        b=EZI+N5TPNsYGSEEP5udv90ztg+d10rOBWo0oS6CZy6ayJg9vspmRINQQ23ZsK2x3WE
+         fsVZ6UjHH11JuwZd2hHEdulDYeF0i/12p1N1+s6RAZ55S+4R0Oqe9IIPXwKFWG86TAPP
+         MOOwht0RoXbyTwIzY0O/saU54N3BAvWM7e6tCAlScWSMZiXr5F2tI/kV4pApStDBfMUw
+         d1JBMfvUzGjVD7DKs8P2oN54ssu0br9vA/ADCNDadV2WNfKCU+7kgpKh7+bHe9u6k/3j
+         Q+Nobgcj8jm7ElmI6/ATWDOa8y4K9ktRrsOA9QZea9/WUpoQDnV4SPpO9Tz147NM/xry
+         XTTQ==
+In-Reply-To: <20220105180420.GC6464@blackbody.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tianchen Ding <dtcccc-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "Peter Zijlstra (Intel)" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: pbonzini@redhat.com, seanjc@google.com, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, dmatlack@google.com, jiangshanlai@gmail.com, kvm@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 1/18/22 05:05, Tianchen Ding wrote:
-> subparts_cpus should be limited as a subset of cpus_allowed, but it is
-> updated wrongly by using cpumask_andnot(). Use cpumask_and() instead to
-> fix it.
+Hi Michal,
+
+Thanks for looking into this patch. I will be using Sean's suggestion
+and use real_parent of the task. This will avoid my ugly code in the
+cgroup APIs.
+
+On Wed, Jan 5, 2022 at 10:04 AM Michal Koutn=C3=BD <mkoutny@suse.com> wrote=
+:
 >
-> Fixes: ee8dde0cd2ce ("cpuset: Add new v2 cpuset.sched.partition flag")
-> Signed-off-by: Tianchen Ding <dtcccc-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> ---
->   kernel/cgroup/cpuset.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
+> Hi Vipin.
 >
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index bb3531e7fda7..804ff5738c5f 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -1635,8 +1635,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
->   	 * Make sure that subparts_cpus is a subset of cpus_allowed.
->   	 */
->   	if (cs->nr_subparts_cpus) {
-> -		cpumask_andnot(cs->subparts_cpus, cs->subparts_cpus,
-> -			       cs->cpus_allowed);
-> +		cpumask_and(cs->subparts_cpus, cs->subparts_cpus, cs->cpus_allowed);
->   		cs->nr_subparts_cpus = cpumask_weight(cs->subparts_cpus);
->   	}
->   	spin_unlock_irq(&callback_lock);
+> On Wed, Dec 22, 2021 at 10:53:50PM +0000, Vipin Sharma <vipinsh@google.co=
+m> wrote:
+> > VM worker kthreads can linger in the VM process's cgroup for sometime
+> > after KVM terminates the VM process.
+>
+> Why is it a problem? And how long are we talking about?
+>
 
-Thanks for the fix.
+Automated tools/scripts which delete VM cgroups after the main KVM
+process ends were seeing deletion errors because kernel worker threads
+were still running inside those cgroups. This is not a very frequent
+issue but we noticed it happens every now and then.
 
-Reviewed-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
+> > A VM process can terminate between the time window of exit_mm() to
+> > cgroup_exit(), leaving only worker kthreads in the cgroup.
+>
+> Even kthreads should eventually have PF_EXITING set, they shouldd be
+> treated as "user-space" zombies by cgroups, i.e. mostly invisible (e.g.
+> it doesn't prevent rmdir'ing the cgroup).
+>
+
+Since that eventual time period is not known, we can either pause the
+script for sometime before starting the cleanup or add some x number
+of retries. Both of which are not preferable due to indeterministic
+nature.
+
+> (And after the last task_struct reference is gone, the cgroup structs
+> can be released too. Maybe the cause is holding the reference to the KVM
+> worker thread somewhere for too long.)
+>
+> > Moving worker kthreads back to the original cgroup (kthreadd_task's
+> > cgroup) makes sure that cgroup is empty as soon as the main VM process
+> > is terminated.
+>
+> BTW this used to be done for "user-space" tasks too (migrate to root
+> cgroup) but it was replaced with the less transactional "ignore zombies"
+> approach. So this change seems inconsistent.
+>
+Interesting, however, until PF_EXITING is set those threads will also
+exhibit the same behavior if it comes to deletion. Thanks for the
+background, good to know.
+
+Thanks
