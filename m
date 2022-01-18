@@ -1,118 +1,89 @@
-From: Hridya Valsaraju <hridya@google.com>
-Subject: Re: [RFC 4/6] dma-buf: Add DMA-BUF exporter op to charge a DMA-BUF to
- a cgroup.
-Date: Tue, 18 Jan 2022 10:54:16 -0800
-Message-ID: <CA+wgaPMjCfjQS4LA8hmVwAaGfXZhoJvvTUnOGt3duOhFb3orTw@mail.gmail.com>
-References: <20220115010622.3185921-1-hridya@google.com> <20220115010622.3185921-5-hridya@google.com>
- <f8c8b196-7d12-6242-97ac-38149f3a3ba3@amd.com>
+From: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2] KVM: Move VM's worker kthreads back to the original
+ cgroups before exiting.
+Date: Tue, 18 Jan 2022 11:53:39 -0800
+Message-ID: <CAHVum0czVQqugNs4BhwJpUx-+f6GZQHFRkTpH01Mmsu0FXSd+w@mail.gmail.com>
+References: <20211222225350.1912249-1-vipinsh@google.com> <YctGtWzYcNP2iTaN@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-media-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=QuweckTQS4ipVDvmzbXJd32fRhDvTN+WDj7gwwJ5UoU=;
-        b=jQFQQg8xNBNZ796rZm7JSGtcgk/RVRlUMQOrW3OprZAwIy/2ezKxTUPzerHa5MEWoA
-         +kfQjBOqWihjoI8v514cV21UvUHS5JntgpKuZ/16liMkZGbbSOZYF4w1r6JCuqamghHv
-         vowP4DYmSxtE//fgZqRAITszSqg91cqu9Gg64FsXe9W1savFkk2plmXtLm5fBBA0jF0b
-         oImfjSzLxxePgVhSUZSsFU9ZJ84ZiyGtkbd0T7VyhnxMEoyDyxlSw/pOQe3BAymEfuQ2
-         L/UK5sx9cvQq7XnTqbleIw48nFYsStzQLbt2Y29R65fkhq5UTeKah55mvbCMv7n+zmyV
-         rtAA==
-In-Reply-To: <f8c8b196-7d12-6242-97ac-38149f3a3ba3@amd.com>
+         :cc;
+        bh=hLG3IDzGCmMuTJ6Lo7fCzvTJqI3hQH1J7qtya62FFTI=;
+        b=FBf0wEoEZmYrfY/6yOjBzgydEx8VKqwZ8Ch024JkOhYKPMTXZB+t8YyjAURKEhqryK
+         JN+VJ2NZigyahygOqJOGPDF/OmkyCI4BjOvNzGmnDmAfzUJVOodUutd9oqYw1AllHdEd
+         jACTBytbhyPlqIQ4hYKIl96SBtUPCZix9Gbo0MUlRZmWis8a8xywWSmu3m6i+kmjrmuz
+         t4LICgPw4Tb3O17gcn5o7I176EivuuydQKXTKooOxhMHJ94PoDUAxJuZYnigi201uoXq
+         7f9XQQBHzAOvBB4PpEeWDjfOnw/UTG4F5Y5Dz6c3yFfHoq8npWj/4KkzcseYO1x+G1bE
+         RXpg==
+In-Reply-To: <YctGtWzYcNP2iTaN-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <christian@brauner.io>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, Benjamin Gaignard <benjamin.gaignard@linaro.org>, Liam Mark <lmark@codeaurora.org>, Laura Abbott <labbott@redhat.com>, Brian Starkey <Brian.Starkey@arm.com>, John Stultz <john.stultz@li>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dmatlack-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, Jan 16, 2022 at 11:46 PM Christian K=C3=B6nig
-<christian.koenig@amd.com> wrote:
+On Tue, Dec 28, 2021 at 9:17 AM Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 >
-> Am 15.01.22 um 02:06 schrieb Hridya Valsaraju:
-> > The optional exporter op provides a way for processes to transfer
-> > charge of a buffer to a different process. This is essential for the
-> > cases where a central allocator process does allocations for various
-> > subsystems, hands over the fd to the client who
-> > requested the memory and drops all references to the allocated memory.
+> On Wed, Dec 22, 2021, Vipin Sharma wrote:
+> > diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+> > index 81c9e0685948..81d4b2f2acf0 100644
+> > --- a/kernel/cgroup/cgroup-v1.c
+> > +++ b/kernel/cgroup/cgroup-v1.c
+> >  int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+> > @@ -58,6 +60,9 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+> >       struct cgroup_root *root;
+> >       int retval = 0;
 > >
-> > Signed-off-by: Hridya Valsaraju <hridya@google.com>
-> > ---
-> >   include/linux/dma-buf.h | 18 ++++++++++++++++++
-> >   1 file changed, 18 insertions(+)
+> > +     if (!from)
+> > +             from = kthreadd_task;
+>
+> Rather than sully cgroup_attach_task_all() with this behavior, can't KVM do
+>
+>         cgroup_attach_task_all(current->real_parent, current)
+>
+> since AFAICT real_parent is guaranteed to point at kthreadd_task.
+>
+
+Thanks for the "real_parent" suggestion. This is much cleaner and
+better than changing cgroup logic. I will make this change.
+
+> > diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
+> > index b0f7e6eb00ff..f7504578c374 100644
+> > --- a/virt/kvm/kvm_main.c
+> > +++ b/virt/kvm/kvm_main.c
+> > @@ -5793,6 +5793,19 @@ static int kvm_vm_worker_thread(void *context)
+> >       if (!kthread_should_stop())
+> >               err = thread_fn(kvm, data);
 > >
-> > diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
-> > index 7ab50076e7a6..d5e52f81cc6f 100644
-> > --- a/include/linux/dma-buf.h
-> > +++ b/include/linux/dma-buf.h
-> > @@ -13,6 +13,7 @@
-> >   #ifndef __DMA_BUF_H__
-> >   #define __DMA_BUF_H__
-> >
-> > +#include <linux/cgroup_gpu.h>
-> >   #include <linux/dma-buf-map.h>
-> >   #include <linux/file.h>
-> >   #include <linux/err.h>
-> > @@ -285,6 +286,23 @@ struct dma_buf_ops {
-> >
-> >       int (*vmap)(struct dma_buf *dmabuf, struct dma_buf_map *map);
-> >       void (*vunmap)(struct dma_buf *dmabuf, struct dma_buf_map *map);
-> > +
-> > +     /**
-> > +      * @charge_to_cgroup:
+> > +out:
+> > +     /*
+> > +      * We need to move the kthread back to its original cgroups, so that it
+>
+> Please state what is being done, not what "needs" to be done.  The need to do
+> something is implicit, otherwise we wouldn't be doing it.
+>
+
+I will update the statement. Thanks.
+
+> > +      * doesn't linger in the cgroups of the user process after the user
+> > +      * process has already terminated.
 > > +      *
-> > +      * This is called by an exporter to charge a buffer to the specif=
-ied
-> > +      * cgroup.
->
-> Well that sentence makes absolutely no sense at all.
->
-> The dma_buf_ops are supposed to be called by the DMA-buf subsystem on
-> behalves of the importer and never by the exporter itself.
->
-> I hope that this is just a documentation mixup.
-
-Thank you for taking a look Christian!
-
-Yes, that was poor wording, sorry about that. It should instead say
-that the op would be called by the process the buffer is currently
-charged to in order to transfer the buffer's charge to a different
-cgroup. This is helpful in the case where a process acts as an
-allocator for multiple client processes and we would like the
-allocated buffers to be charged to the clients who requested their
-allocation(instead of the allocating process as is the default
-behavior). In Android, the graphics allocator HAL process[1] does
-most of the graphics allocations on behalf of various clients. After
-allocation, the HAL process passes the fd to the client over binder
-IPC and the binder driver invokes the charge_to_cgroup() DMA-BUF op to
-uncharge the buffer from the HAL process and charge it to the client
-process instead.
-
-[1]: https://source.android.com/devices/graphics/arch-bq-gralloc
-
-Regards,
-Hridya
-
-
->
-> Regards,
-> Christian.
->
-> >   The caller must hold a reference to @gpucg obtained via
-> > +      * gpucg_get(). The DMA-BUF will be uncharged from the cgroup it =
-is
-> > +      * currently charged to before being charged to @gpucg. The calle=
-r must
-> > +      * belong to the cgroup the buffer is currently charged to.
-> > +      *
-> > +      * This callback is optional.
-> > +      *
-> > +      * Returns:
-> > +      *
-> > +      * 0 on success or negative error code on failure.
+> > +      * kthread_stop() waits on 'exited' completion condition which is set
+> > +      * in exit_mm(), via mm_release(), in do_exit(). However, kthread
+> > +      * is removed from cgroups in the cgroup_exit() which is called after
+> > +      * exit_mm(). This causes lingering of kthreads in cgroups after main
+> > +      * VM process has finished.
 > > +      */
-> > +     int (*charge_to_cgroup)(struct dma_buf *dmabuf, struct gpucg *gpu=
-cg);
-> >   };
-> >
-> >   /**
+> > +     WARN_ON(cgroup_attach_task_all(NULL, current));
 >
+> This should not WARN, cgroup_attach_task_all() needs to perform allocations and
+> will fail with -ENOMEM even in the absense of kernel bugs.
+>
+
+I will remove WARN_ON and print an error using kvm_err(), it will be
+similar to the earlier call of cgroup_attach_task_all() in the same
+function.
+
+Thanks
