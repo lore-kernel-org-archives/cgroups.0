@@ -1,81 +1,47 @@
-From: Vipin Sharma <vipinsh@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH v2] KVM: Move VM's worker kthreads back to the original
  cgroups before exiting.
-Date: Tue, 18 Jan 2022 12:25:48 -0800
-Message-ID: <CAHVum0e84nUcGtdPYQaJDQszKj-QVP5gM+nteBpSTaQ2sWYpmQ@mail.gmail.com>
-References: <20211222225350.1912249-1-vipinsh@google.com> <20220105180420.GC6464@blackbody.suse.cz>
+Date: Tue, 18 Jan 2022 10:39:09 -1000
+Message-ID: <Yeclbe3GNdCMLlHz@slm.duckdns.org>
+References: <20211222225350.1912249-1-vipinsh@google.com>
+ <20220105180420.GC6464@blackbody.suse.cz>
+ <CAHVum0e84nUcGtdPYQaJDQszKj-QVP5gM+nteBpSTaQ2sWYpmQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <kvm-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=03H0oTsaoOJAVZroctwt5LNhXL/5/pvtJL1WK73zL4I=;
-        b=EZI+N5TPNsYGSEEP5udv90ztg+d10rOBWo0oS6CZy6ayJg9vspmRINQQ23ZsK2x3WE
-         fsVZ6UjHH11JuwZd2hHEdulDYeF0i/12p1N1+s6RAZ55S+4R0Oqe9IIPXwKFWG86TAPP
-         MOOwht0RoXbyTwIzY0O/saU54N3BAvWM7e6tCAlScWSMZiXr5F2tI/kV4pApStDBfMUw
-         d1JBMfvUzGjVD7DKs8P2oN54ssu0br9vA/ADCNDadV2WNfKCU+7kgpKh7+bHe9u6k/3j
-         Q+Nobgcj8jm7ElmI6/ATWDOa8y4K9ktRrsOA9QZea9/WUpoQDnV4SPpO9Tz147NM/xry
-         XTTQ==
-In-Reply-To: <20220105180420.GC6464@blackbody.suse.cz>
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=rTxSIYtF/qhDMdpcunv+R2Pnv7mrcydD4DvIe4qQgBA=;
+        b=XzNVA7WFscHIr9quBbwN1Zl6DlOEBX9F8WsDR4fZuQmtO7dSeFEckqOuxbRK5Dbr36
+         /eNURLliqpELZFheqowDPzNq72XN2bbp84c7+2gEmZWBXHzwINhnbQmHL+COLhW/mH7B
+         sEyyYr0KSen0K0Oz8LuUJAMgc5YGn6FdzO6XUxUA0ZHD/46rOBRY6iZqcfjk3s4c3c+G
+         tQ0FJvOpkvJ1cM8BKRmRfnNY0v9QN+Kor7sdjGPNwfcPoNNyO9VuyPm3JdHZi95ha43F
+         kAYsOqWFk/ykFHxFzIQuyr5djbFrIif7ZEGmKHeNwzi3xNaqHdgLcnaN11LGGvahgN+J
+         qjXA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAHVum0e84nUcGtdPYQaJDQszKj-QVP5gM+nteBpSTaQ2sWYpmQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: pbonzini@redhat.com, seanjc@google.com, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, dmatlack@google.com, jiangshanlai@gmail.com, kvm@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dmatlack-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Michal,
+Hello,
 
-Thanks for looking into this patch. I will be using Sean's suggestion
-and use real_parent of the task. This will avoid my ugly code in the
-cgroup APIs.
+On Tue, Jan 18, 2022 at 12:25:48PM -0800, Vipin Sharma wrote:
+> Automated tools/scripts which delete VM cgroups after the main KVM
+> process ends were seeing deletion errors because kernel worker threads
+> were still running inside those cgroups. This is not a very frequent
+> issue but we noticed it happens every now and then.
 
-On Wed, Jan 5, 2022 at 10:04 AM Michal Koutn=C3=BD <mkoutny@suse.com> wrote=
-:
->
-> Hi Vipin.
->
-> On Wed, Dec 22, 2021 at 10:53:50PM +0000, Vipin Sharma <vipinsh@google.co=
-m> wrote:
-> > VM worker kthreads can linger in the VM process's cgroup for sometime
-> > after KVM terminates the VM process.
->
-> Why is it a problem? And how long are we talking about?
->
+So, these are normally driven by the !populated events. That's how everyone
+else is doing it. If you want to tie the kvm workers lifetimes to kvm
+process, wouldn't it be cleaner to do so from kvm side? ie. let kvm process
+exit wait for the workers to be cleaned up.
 
-Automated tools/scripts which delete VM cgroups after the main KVM
-process ends were seeing deletion errors because kernel worker threads
-were still running inside those cgroups. This is not a very frequent
-issue but we noticed it happens every now and then.
+Thanks.
 
-
-> > A VM process can terminate between the time window of exit_mm() to
-> > cgroup_exit(), leaving only worker kthreads in the cgroup.
->
-> Even kthreads should eventually have PF_EXITING set, they shouldd be
-> treated as "user-space" zombies by cgroups, i.e. mostly invisible (e.g.
-> it doesn't prevent rmdir'ing the cgroup).
->
-
-Since that eventual time period is not known, we can either pause the
-script for sometime before starting the cleanup or add some x number
-of retries. Both of which are not preferable due to indeterministic
-nature.
-
-> (And after the last task_struct reference is gone, the cgroup structs
-> can be released too. Maybe the cause is holding the reference to the KVM
-> worker thread somewhere for too long.)
->
-> > Moving worker kthreads back to the original cgroup (kthreadd_task's
-> > cgroup) makes sure that cgroup is empty as soon as the main VM process
-> > is terminated.
->
-> BTW this used to be done for "user-space" tasks too (migrate to root
-> cgroup) but it was replaced with the less transactional "ignore zombies"
-> approach. So this change seems inconsistent.
->
-Interesting, however, until PF_EXITING is set those threads will also
-exhibit the same behavior if it comes to deletion. Thanks for the
-background, good to know.
-
-Thanks
+-- 
+tejun
