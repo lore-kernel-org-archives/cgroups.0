@@ -1,93 +1,118 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [PATCH] mm/memcg: Do not check v1 event counter when not needed
-Date: Tue, 18 Jan 2022 19:26:00 +0100
-Message-ID: <20220118182600.15007-1-mkoutny@suse.com>
-References: <YeE9zyUokSY9L2ZI@linutronix.de>
+From: Hridya Valsaraju <hridya@google.com>
+Subject: Re: [RFC 4/6] dma-buf: Add DMA-BUF exporter op to charge a DMA-BUF to
+ a cgroup.
+Date: Tue, 18 Jan 2022 10:54:16 -0800
+Message-ID: <CA+wgaPMjCfjQS4LA8hmVwAaGfXZhoJvvTUnOGt3duOhFb3orTw@mail.gmail.com>
+References: <20220115010622.3185921-1-hridya@google.com> <20220115010622.3185921-5-hridya@google.com>
+ <f8c8b196-7d12-6242-97ac-38149f3a3ba3@amd.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1642530370; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ge3g8LQjPPjPT4iWHPjDIO/ZDcQCDnvHvSUhi3iQ1rQ=;
-        b=OrSB7UBk3Zx97KIJkOYB5/kufBllUFb5h0WOoqblWugIrDuY6fI4jMScI8ZXt28J8tyxS1
-        bS38D81tmtfhLt1vAcQlfLpfAqsWk7kcK5h/W40SGY9cXN/ZY7TVfEA3pKjrCwqhplgM/8
-        CQJV6oKK94ZSeCnenftUsSkJ0Ok5ARQ=
-In-Reply-To: <YeE9zyUokSY9L2ZI-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-media-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=QuweckTQS4ipVDvmzbXJd32fRhDvTN+WDj7gwwJ5UoU=;
+        b=jQFQQg8xNBNZ796rZm7JSGtcgk/RVRlUMQOrW3OprZAwIy/2ezKxTUPzerHa5MEWoA
+         +kfQjBOqWihjoI8v514cV21UvUHS5JntgpKuZ/16liMkZGbbSOZYF4w1r6JCuqamghHv
+         vowP4DYmSxtE//fgZqRAITszSqg91cqu9Gg64FsXe9W1savFkk2plmXtLm5fBBA0jF0b
+         oImfjSzLxxePgVhSUZSsFU9ZJ84ZiyGtkbd0T7VyhnxMEoyDyxlSw/pOQe3BAymEfuQ2
+         L/UK5sx9cvQq7XnTqbleIw48nFYsStzQLbt2Y29R65fkhq5UTeKah55mvbCMv7n+zmyV
+         rtAA==
+In-Reply-To: <f8c8b196-7d12-6242-97ac-38149f3a3ba3@amd.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <christian@brauner.io>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, Benjamin Gaignard <benjamin.gaignard@linaro.org>, Liam Mark <lmark@codeaurora.org>, Laura Abbott <labbott@redhat.com>, Brian Starkey <Brian.Starkey@arm.com>, John Stultz <john.stultz@li>
 
-VGhlIGZ1bmN0aW9uIG1lbWNnX2NoZWNrX2V2ZW50cygpIGlzIGNhbGxlZCB0byB0cmlnZ2VyIHBv
-c3NpYmxlIGV2ZW50Cm5vdGlmaWNhdGlvbnMgb3Igc29mdCBsaW1pdCB1cGRhdGVzIHdoZW4gcGFn
-ZSBldmVudCAiY2xvY2siIG1vdmVzCnN1ZmZpY2llbnRseS4gVGhpcyB0cmFja2luZyBpcyBub3Qg
-bmVlZGVkIHdoZW4gbmVpdGhlciBzb2Z0IGxpbWl0IG5vciAodjEpCmV2ZW50IG5vdGlmaWNhdGlv
-bnMgYXJlIGNvbmZpZ3VyZWQuIFRoZSB0cmFja2luZyBjYW4gY2F0Y2gtdXAKd2l0aCB0aGUgY2xv
-Y2sgYXQgYW55IHRpbWUgdXBvbiB0aHJlc2hvbGRzIGNvbmZpZ3VyYXRpb24uCgpHdWFyZCB0aGlz
-IGZ1bmN0aW9uYWxpdHkgYmVoaW5kIGFuIHVubGlrZWx5IHN0YXRpYyBicmFuY2ggKHNvZnQgbGlt
-aXQKYW5kIGV2ZW50cyBhcmUgcHJlc3VtYWJseSByYXRoZXIgdW51c2VkIHRoYW4gdXNlZCkuCgpU
-aGlzIGhhcyBzbGlnaHQgaW5zaWduaWZpY2FudCBwZXJmb3JtYW5jZSBnYWluIGluIHBhZ2UtZmF1
-bHQgc3BlY2lmaWMKYmVuY2htYXJrIGJ1dCBvdmVyYWxsIG5vIHBlcmZvcm1hbmNlIGltcGFjdCBp
-cyBleHBlY3RlZC4gVGhlIGdvYWwgaXMgdG8KcGFydGl0aW9uIHRoZSBjaGFyZ2luZyBjb2RlIHBl
-ciBwcm92aWRlZCB1c2VyIGZ1bmN0aW9uYWxpdHkuCgpTdWdnZXN0ZWQtYnk6IE1pY2hhbCBIb2Nr
-byA8bWhvY2tvLUlCaTlSRy9iNjdrQHB1YmxpYy5nbWFuZS5vcmc+ClNpZ25lZC1vZmYtYnk6IE1p
-Y2hhbCBLb3V0bsO9IDxta291dG55LUlCaTlSRy9iNjdrQHB1YmxpYy5nbWFuZS5vcmc+Ci0tLQog
-bW0vbWVtY29udHJvbC5jIHwgOCArKysrKysrKwogMSBmaWxlIGNoYW5nZWQsIDggaW5zZXJ0aW9u
-cygrKQoKCk9uIEZyaSwgSmFuIDE0LCAyMDIyIGF0IDEwOjA5OjM1QU0gKzAxMDAsIFNlYmFzdGlh
-biBBbmRyemVqIFNpZXdpb3IgPGJpZ2Vhc3ktaGZadGVzcUZuY1lPd0JXNGtHNEtzUUBwdWJsaWMu
-Z21hbmUub3JnPiB3cm90ZToKPiBTbyBhdm9pZGluZyB0aGVzZSB0d28gYWxzbyBhdm9pZHMgbWVt
-Y2dfY2hlY2tfZXZlbnRzKCk/CgpJJ3ZlIG1hZGUgdGhlIG1hdHRlciBleHBsaWNpdCB3aXRoIHRo
-ZSBzdXJyb3VuZGluZyBwYXRjaC4KClsKVGhlIHBlcmZvcm1hbmNlICJnYWluIiBpcyBuZWdsaWdp
-YmxlIChkaWZmZXJlbmNlcyBvZiBwZnQgWzFdIGFyZSBkb21pbmF0ZWQgYnkKbm9uLXJvb3QgbWVt
-Y2cgY2xhc3NpZmljYXRpb24pOgoKICAgICAgICAgICAgICAgICAgICAgICAgIG5vY2csIG5vcGF0
-Y2ggICAgICAgICAgICBjZywgbm9wYXRjaCAgICAgICAgICAgICAgbm9jZywgcGF0Y2ggICAgICAg
-ICAgICAgIGNnLCBwYXRjaApIbWVhbiAgICAgZmF1bHRzL3NlYy0yICAgMjczMzY2LjYzMTIgKCAg
-IDAuMDAlKSAgIDI0MzU3My4zNzY3ICogLTEwLjkwJSogICAyNzM5MDEuOTcwOSAqICAgMC4yMCUq
-ICAgMjQ3NzAyLjQxMDQgKiAgLTkuMzklKgpDb2VmZlZhciAgZmF1bHRzL3NlYy0yICAgICAgICAz
-Ljg3NzEgKCAgIDAuMDAlKSAgICAgICAgMy44Mzk2ICggICAwLjk3JSkgICAgICAgIDMuMTQwMCAo
-ICAxOS4wMSUpICAgICAgICA0LjExODggKCAgLTYuMjQlKQoKICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjZywgbm9wYXRjaCAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgIGNnLCBwYXRjaApIbWVhbiAgICAgZmF1bHRzL3NlYy0yICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIDI0MzU3My4zNzY3ICggICAwLjAwJSkgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgMjQ3NzAyLjQxMDQgKiAgIDEuNzAlKgpDb2VmZlZhciAgZmF1bHRz
-L3NlYy0yICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgMy44Mzk2ICggICAwLjAwJSkg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA0LjExODggKCAgLTcuMjclKQoKT24gbGVz
-cyB0YXJnZXR0ZWQgYmVuY2htYXJrcyBpdCdzIHdlbGwgYmVsb3cgbm9pc2UuCl0KCkkgdGhpbmsg
-aXQgd291bGQgbWFrZSBzZW5zZSBpbnNlcnRpbmcgdGhlIHBhdGNoIGludG8geW91ciBzZXJpZXMg
-YW5kCnN1YnNlcXVlbnRseSByZWplY3QgZW5hYmxpbmcgb24gUFJFRU1QVF9SVCAtLSBwcm92aWRl
-ZCB0aGlzIHBhdGNoIG1ha2VzIHNlbnNlCnRvIG90aGVycyB0b28gLS0gdGhlIGp1c3RpZmljYXRp
-b24gaXMgcmF0aGVyIGZ1bmN0aW9uYWxpdHkgc3BsaXR0aW5nIGZvcgp0aGlzIFBSRUVNUFRfUlQg
-ZWZmb3J0LgoKPiBBcmUgdGhlcmUgcGxhbnMgdG8gcmVtb3ZlIHYxIG9yIGlzIHRoaXMgcGFydCBv
-ZiAid2UgbXVzdCBub3QgYnJlYWsKPiB1c2VybGFuZCI/CgpJdCdzIHBhcnQgb2YgdGhhdCBtYW50
-cmEsIHNvIHYxIGNhbid0IGJlIHNpbXBseSByZW1vdmVkLiBPVE9ILCBteSBzZW5zaW5nIGlzCnRo
-YXQgdGhpcyBjaGFuZ2UgYWxzbyBmaXRzIHVuZGVyIG5vdCBleHRlbmRpbmcgdjEgKHRvIGF2b2lk
-IGRvdWJsaW5nIGVmZm9ydCBvbgpldmVyeXRoaW5nKS4KCk1pY2hhbAoKWzFdIGh0dHBzOi8vZ2l0
-aHViLmNvbS9nb3JtYW5tL21tdGVzdHMvYmxvYi82YmNiOGIzMDFhNDgzODZlMGNjNjNhMjFmNzY0
-MjA0OGEzY2VhZWQ1L2NvbmZpZ3MvY29uZmlnLXBhZ2VhbGxvYy1wZXJmb3JtYW5jZSNMNgoKZGlm
-ZiAtLWdpdCBhL21tL21lbWNvbnRyb2wuYyBiL21tL21lbWNvbnRyb2wuYwppbmRleCA0YTdiM2Vi
-ZjhlNDguLjdmNjRjZTMzZDEzNyAxMDA2NDQKLS0tIGEvbW0vbWVtY29udHJvbC5jCisrKyBiL21t
-L21lbWNvbnRyb2wuYwpAQCAtMTA2LDYgKzEwNiw4IEBAIHN0YXRpYyBib29sIGRvX21lbXN3X2Fj
-Y291bnQodm9pZCkKICNkZWZpbmUgVEhSRVNIT0xEU19FVkVOVFNfVEFSR0VUIDEyOAogI2RlZmlu
-ZSBTT0ZUTElNSVRfRVZFTlRTX1RBUkdFVCAxMDI0CiAKK0RFRklORV9TVEFUSUNfS0VZX0ZBTFNF
-KG1lbWNnX3YxX2V2ZW50c19lbmFibGVkX2tleSk7CisKIC8qCiAgKiBDZ3JvdXBzIGFib3ZlIHRo
-ZWlyIGxpbWl0cyBhcmUgbWFpbnRhaW5lZCBpbiBhIFJCLVRyZWUsIGluZGVwZW5kZW50IG9mCiAg
-KiB0aGVpciBoaWVyYXJjaHkgcmVwcmVzZW50YXRpb24KQEAgLTg1Miw2ICs4NTQsOSBAQCBzdGF0
-aWMgYm9vbCBtZW1fY2dyb3VwX2V2ZW50X3JhdGVsaW1pdChzdHJ1Y3QgbWVtX2Nncm91cCAqbWVt
-Y2csCiAgKi8KIHN0YXRpYyB2b2lkIG1lbWNnX2NoZWNrX2V2ZW50cyhzdHJ1Y3QgbWVtX2Nncm91
-cCAqbWVtY2csIGludCBuaWQpCiB7CisJaWYgKCFzdGF0aWNfYnJhbmNoX3VubGlrZWx5KCZtZW1j
-Z192MV9ldmVudHNfZW5hYmxlZF9rZXkpKQorCQlyZXR1cm47CisKIAkvKiB0aHJlc2hvbGQgZXZl
-bnQgaXMgdHJpZ2dlcmVkIGluIGZpbmVyIGdyYWluIHRoYW4gc29mdCBsaW1pdCAqLwogCWlmICh1
-bmxpa2VseShtZW1fY2dyb3VwX2V2ZW50X3JhdGVsaW1pdChtZW1jZywKIAkJCQkJCU1FTV9DR1JP
-VVBfVEFSR0VUX1RIUkVTSCkpKSB7CkBAIC0zNzU3LDYgKzM3NjIsNyBAQCBzdGF0aWMgc3NpemVf
-dCBtZW1fY2dyb3VwX3dyaXRlKHN0cnVjdCBrZXJuZnNfb3Blbl9maWxlICpvZiwKIAkJYnJlYWs7
-CiAJY2FzZSBSRVNfU09GVF9MSU1JVDoKIAkJbWVtY2ctPnNvZnRfbGltaXQgPSBucl9wYWdlczsK
-KwkJc3RhdGljX2JyYW5jaF9lbmFibGUoJm1lbWNnX3YxX2V2ZW50c19lbmFibGVkX2tleSk7CiAJ
-CXJldCA9IDA7CiAJCWJyZWFrOwogCX0KQEAgLTQ4MzEsNiArNDgzNyw4IEBAIHN0YXRpYyBzc2l6
-ZV90IG1lbWNnX3dyaXRlX2V2ZW50X2NvbnRyb2woc3RydWN0IGtlcm5mc19vcGVuX2ZpbGUgKm9m
-LAogCWxpc3RfYWRkKCZldmVudC0+bGlzdCwgJm1lbWNnLT5ldmVudF9saXN0KTsKIAlzcGluX3Vu
-bG9ja19pcnEoJm1lbWNnLT5ldmVudF9saXN0X2xvY2spOwogCisJc3RhdGljX2JyYW5jaF9lbmFi
-bGUoJm1lbWNnX3YxX2V2ZW50c19lbmFibGVkX2tleSk7CisKIAlmZHB1dChjZmlsZSk7CiAJZmRw
-dXQoZWZpbGUpOwogCi0tIAoyLjM0LjEKCg==
+On Sun, Jan 16, 2022 at 11:46 PM Christian K=C3=B6nig
+<christian.koenig@amd.com> wrote:
+>
+> Am 15.01.22 um 02:06 schrieb Hridya Valsaraju:
+> > The optional exporter op provides a way for processes to transfer
+> > charge of a buffer to a different process. This is essential for the
+> > cases where a central allocator process does allocations for various
+> > subsystems, hands over the fd to the client who
+> > requested the memory and drops all references to the allocated memory.
+> >
+> > Signed-off-by: Hridya Valsaraju <hridya@google.com>
+> > ---
+> >   include/linux/dma-buf.h | 18 ++++++++++++++++++
+> >   1 file changed, 18 insertions(+)
+> >
+> > diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
+> > index 7ab50076e7a6..d5e52f81cc6f 100644
+> > --- a/include/linux/dma-buf.h
+> > +++ b/include/linux/dma-buf.h
+> > @@ -13,6 +13,7 @@
+> >   #ifndef __DMA_BUF_H__
+> >   #define __DMA_BUF_H__
+> >
+> > +#include <linux/cgroup_gpu.h>
+> >   #include <linux/dma-buf-map.h>
+> >   #include <linux/file.h>
+> >   #include <linux/err.h>
+> > @@ -285,6 +286,23 @@ struct dma_buf_ops {
+> >
+> >       int (*vmap)(struct dma_buf *dmabuf, struct dma_buf_map *map);
+> >       void (*vunmap)(struct dma_buf *dmabuf, struct dma_buf_map *map);
+> > +
+> > +     /**
+> > +      * @charge_to_cgroup:
+> > +      *
+> > +      * This is called by an exporter to charge a buffer to the specif=
+ied
+> > +      * cgroup.
+>
+> Well that sentence makes absolutely no sense at all.
+>
+> The dma_buf_ops are supposed to be called by the DMA-buf subsystem on
+> behalves of the importer and never by the exporter itself.
+>
+> I hope that this is just a documentation mixup.
+
+Thank you for taking a look Christian!
+
+Yes, that was poor wording, sorry about that. It should instead say
+that the op would be called by the process the buffer is currently
+charged to in order to transfer the buffer's charge to a different
+cgroup. This is helpful in the case where a process acts as an
+allocator for multiple client processes and we would like the
+allocated buffers to be charged to the clients who requested their
+allocation(instead of the allocating process as is the default
+behavior). In Android, the graphics allocator HAL process[1] does
+most of the graphics allocations on behalf of various clients. After
+allocation, the HAL process passes the fd to the client over binder
+IPC and the binder driver invokes the charge_to_cgroup() DMA-BUF op to
+uncharge the buffer from the HAL process and charge it to the client
+process instead.
+
+[1]: https://source.android.com/devices/graphics/arch-bq-gralloc
+
+Regards,
+Hridya
+
+
+>
+> Regards,
+> Christian.
+>
+> >   The caller must hold a reference to @gpucg obtained via
+> > +      * gpucg_get(). The DMA-BUF will be uncharged from the cgroup it =
+is
+> > +      * currently charged to before being charged to @gpucg. The calle=
+r must
+> > +      * belong to the cgroup the buffer is currently charged to.
+> > +      *
+> > +      * This callback is optional.
+> > +      *
+> > +      * Returns:
+> > +      *
+> > +      * 0 on success or negative error code on failure.
+> > +      */
+> > +     int (*charge_to_cgroup)(struct dma_buf *dmabuf, struct gpucg *gpu=
+cg);
+> >   };
+> >
+> >   /**
+>
