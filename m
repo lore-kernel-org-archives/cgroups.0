@@ -1,89 +1,167 @@
-From: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] KVM: Move VM's worker kthreads back to the original
- cgroups before exiting.
-Date: Tue, 18 Jan 2022 11:53:39 -0800
-Message-ID: <CAHVum0czVQqugNs4BhwJpUx-+f6GZQHFRkTpH01Mmsu0FXSd+w@mail.gmail.com>
-References: <20211222225350.1912249-1-vipinsh@google.com> <YctGtWzYcNP2iTaN@google.com>
+From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Subject: Re: [PATCH] mm/memcg: Do not check v1 event counter when not needed
+Date: Tue, 18 Jan 2022 20:57:17 +0100
+Message-ID: <YecbnYDuBXgAjPs1@linutronix.de>
+References: <YeE9zyUokSY9L2ZI@linutronix.de>
+ <20220118182600.15007-1-mkoutny@suse.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=hLG3IDzGCmMuTJ6Lo7fCzvTJqI3hQH1J7qtya62FFTI=;
-        b=FBf0wEoEZmYrfY/6yOjBzgydEx8VKqwZ8Ch024JkOhYKPMTXZB+t8YyjAURKEhqryK
-         JN+VJ2NZigyahygOqJOGPDF/OmkyCI4BjOvNzGmnDmAfzUJVOodUutd9oqYw1AllHdEd
-         jACTBytbhyPlqIQ4hYKIl96SBtUPCZix9Gbo0MUlRZmWis8a8xywWSmu3m6i+kmjrmuz
-         t4LICgPw4Tb3O17gcn5o7I176EivuuydQKXTKooOxhMHJ94PoDUAxJuZYnigi201uoXq
-         7f9XQQBHzAOvBB4PpEeWDjfOnw/UTG4F5Y5Dz6c3yFfHoq8npWj/4KkzcseYO1x+G1bE
-         RXpg==
-In-Reply-To: <YctGtWzYcNP2iTaN-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1642535839;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ekB+1/vJxKtPMPKgiG7Ixi8Eki0Fc2E/bH0E5cSRR1U=;
+        b=fHbWgepw/aDQjBLvnCI80P8N8EsYANtaojRx+/2VtR2gTR96Znt6hFYewAfcs4Cgi60vhg
+        OAKzIpQyKV22TsLsIYGs+OtmNWqM6tFcgBNpBZ1xZoREsQhx9zo1thIl71HhSu97f0Sn2D
+        30C4qXVtet1nPP2RmbxVLJmrk8bc9qXqe92BxzP3qhexJisiADg8HX0JtMy4QQ5hTVych7
+        hV2qt/+L1CANDPUWnDb76dbxNEyhcneBAe7MmNoma6GdFuOmwHGwn00sseFz+refXsyBnz
+        yWtege5K79p81K9pBAyGfwY0MZ5R3ffsaioyn8nif07fUHPYDuTaIjI82FX3yw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1642535839;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ekB+1/vJxKtPMPKgiG7Ixi8Eki0Fc2E/bH0E5cSRR1U=;
+        b=JSgnI20eM18xM0ejtTlxLGa5wEIFBRjVgZdESG86vOupEzU6H4EPwN/ilnrRzKM04mVLQo
+        3sFvJfzJRcZJdvAg==
+Content-Disposition: inline
+In-Reply-To: <20220118182600.15007-1-mkoutny-IBi9RG/b67k@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dmatlack-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Tue, Dec 28, 2021 at 9:17 AM Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> On Wed, Dec 22, 2021, Vipin Sharma wrote:
-> > diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-> > index 81c9e0685948..81d4b2f2acf0 100644
-> > --- a/kernel/cgroup/cgroup-v1.c
-> > +++ b/kernel/cgroup/cgroup-v1.c
-> >  int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
-> > @@ -58,6 +60,9 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
-> >       struct cgroup_root *root;
-> >       int retval = 0;
-> >
-> > +     if (!from)
-> > +             from = kthreadd_task;
->
-> Rather than sully cgroup_attach_task_all() with this behavior, can't KVM do
->
->         cgroup_attach_task_all(current->real_parent, current)
->
-> since AFAICT real_parent is guaranteed to point at kthreadd_task.
->
+On 2022-01-18 19:26:00 [+0100], Michal Koutn=C3=BD wrote:
+> I think it would make sense inserting the patch into your series and
+> subsequently reject enabling on PREEMPT_RT -- provided this patch makes s=
+ense
+> to others too -- the justification is rather functionality splitting for
+> this PREEMPT_RT effort.
 
-Thanks for the "real_parent" suggestion. This is much cleaner and
-better than changing cgroup logic. I will make this change.
+Interesting. So while looking at this today I came up with the patch at
+the bottom. The other things I had looked way uglier and then since
+nobody probably will use it=E2=80=A6
+Let me know how you want it to be integrated.
 
-> > diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
-> > index b0f7e6eb00ff..f7504578c374 100644
-> > --- a/virt/kvm/kvm_main.c
-> > +++ b/virt/kvm/kvm_main.c
-> > @@ -5793,6 +5793,19 @@ static int kvm_vm_worker_thread(void *context)
-> >       if (!kthread_should_stop())
-> >               err = thread_fn(kvm, data);
-> >
-> > +out:
-> > +     /*
-> > +      * We need to move the kthread back to its original cgroups, so that it
->
-> Please state what is being done, not what "needs" to be done.  The need to do
-> something is implicit, otherwise we wouldn't be doing it.
->
+------>8------
 
-I will update the statement. Thanks.
+=46rom: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Date: Tue, 18 Jan 2022 17:28:07 +0100
+Subject: [PATCH] mm/memcg: Disable threshold event handlers on PREEMPT_RT
+MIME-Version: 1.0
+Content-Type: text/plain; charset=3DUTF-8
+Content-Transfer-Encoding: 8bit
 
-> > +      * doesn't linger in the cgroups of the user process after the user
-> > +      * process has already terminated.
-> > +      *
-> > +      * kthread_stop() waits on 'exited' completion condition which is set
-> > +      * in exit_mm(), via mm_release(), in do_exit(). However, kthread
-> > +      * is removed from cgroups in the cgroup_exit() which is called after
-> > +      * exit_mm(). This causes lingering of kthreads in cgroups after main
-> > +      * VM process has finished.
-> > +      */
-> > +     WARN_ON(cgroup_attach_task_all(NULL, current));
->
-> This should not WARN, cgroup_attach_task_all() needs to perform allocations and
-> will fail with -ENOMEM even in the absense of kernel bugs.
->
+During the integration of PREEMPT_RT support, the code flow around
+memcg_check_events() resulted in `twisted code'. Moving the code around
+and avoiding then would then lead to an additional local-irq-save
+section within memcg_check_events(). While looking better, it adds a
+local-irq-save section to code flow which is usually within an
+local-irq-save block.
 
-I will remove WARN_ON and print an error using kvm_err(), it will be
-similar to the earlier call of cgroup_attach_task_all() in the same
-function.
+The threshold event handler is a deprecated memcg v1 feature. Instead of
+trying to get it to work under PREEMPT_RT just disable it. There should
+have not been any users on PREEMPT_RT. From that perspective makes it
+even less sense to get it to work under PREEMPT_RT while having zero
+users.
 
-Thanks
+Make memory.soft_limit_in_bytes and cgroup.event_control return
+-EOPNOTSUPP on PREEMPT_RT. Make memcg_check_events() empty on PREEMPT_RT
+since it won't do anything. Document that the two knobs are disabled on
+PREEMPT_RT.
+
+Suggested-by: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Suggested-by: Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org>
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+---
+ Documentation/admin-guide/cgroup-v1/memory.rst |  2 ++
+ mm/memcontrol.c                                | 12 ++++++++++++
+ 2 files changed, 14 insertions(+)
+
+diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation=
+/admin-guide/cgroup-v1/memory.rst
+index faac50149a222..2cc502a75ef64 100644
+--- a/Documentation/admin-guide/cgroup-v1/memory.rst
++++ b/Documentation/admin-guide/cgroup-v1/memory.rst
+@@ -64,6 +64,7 @@ Brief summary of control files.
+ 				     threads
+  cgroup.procs			     show list of processes
+  cgroup.event_control		     an interface for event_fd()
++				     This knob is not available on CONFIG_PREEMPT_RT systems.
+  memory.usage_in_bytes		     show current usage for memory
+ 				     (See 5.5 for details)
+  memory.memsw.usage_in_bytes	     show current usage for memory+Swap
+@@ -75,6 +76,7 @@ Brief summary of control files.
+  memory.max_usage_in_bytes	     show max memory usage recorded
+  memory.memsw.max_usage_in_bytes     show max memory+Swap usage recorded
+  memory.soft_limit_in_bytes	     set/show soft limit of memory usage
++				     This knob is not available on CONFIG_PREEMPT_RT systems.
+  memory.stat			     show various statistics
+  memory.use_hierarchy		     set/show hierarchical account enabled
+                                      This knob is deprecated and shouldn't=
+ be
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2ed5f2a0879d3..3c4f7a0fd0039 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -821,6 +821,7 @@ static void mem_cgroup_charge_statistics(struct mem_cgr=
+oup *memcg,
+ 	__this_cpu_add(memcg->vmstats_percpu->nr_page_events, nr_pages);
+ }
+=20
++#ifndef CONFIG_PREEMPT_RT
+ static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
+ 				       enum mem_cgroup_events_target target)
+ {
+@@ -864,6 +865,9 @@ static void memcg_check_events(struct mem_cgroup *memcg=
+, int nid)
+ 			mem_cgroup_update_tree(memcg, nid);
+ 	}
+ }
++#else
++static void memcg_check_events(struct mem_cgroup *memcg, int nid) { }
++#endif
+=20
+ struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p)
+ {
+@@ -3751,8 +3755,12 @@ static ssize_t mem_cgroup_write(struct kernfs_open_f=
+ile *of,
+ 		}
+ 		break;
+ 	case RES_SOFT_LIMIT:
++#ifndef CONFIG_PREEMPT_RT
+ 		memcg->soft_limit =3D nr_pages;
+ 		ret =3D 0;
++#else
++		ret =3D -EOPNOTSUPP;
++#endif
+ 		break;
+ 	}
+ 	return ret ?: nbytes;
+@@ -4717,6 +4725,7 @@ static void memcg_event_ptable_queue_proc(struct file=
+ *file,
+ static ssize_t memcg_write_event_control(struct kernfs_open_file *of,
+ 					 char *buf, size_t nbytes, loff_t off)
+ {
++#ifndef CONFIG_PREEMPT_RT
+ 	struct cgroup_subsys_state *css =3D of_css(of);
+ 	struct mem_cgroup *memcg =3D mem_cgroup_from_css(css);
+ 	struct mem_cgroup_event *event;
+@@ -4843,6 +4852,9 @@ static ssize_t memcg_write_event_control(struct kernf=
+s_open_file *of,
+ 	kfree(event);
+=20
+ 	return ret;
++#else
++	return -EOPNOTSUPP;
++#endif
+ }
+=20
+ static struct cftype mem_cgroup_legacy_files[] =3D {
+--=20
+2.34.1
+
