@@ -1,65 +1,58 @@
-From: Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC 2/6] cgroup: gpu: Add a cgroup controller for allocator
- attribution of GPU memory
-Date: Wed, 19 Jan 2022 10:24:33 -0800
-Message-ID: <CA+wgaPNqXSCxhby8xzQGCZ-GGJQ475Nx==ki63=DR_i25P_PiA@mail.gmail.com>
-References: <20220115010622.3185921-1-hridya@google.com> <20220115010622.3185921-3-hridya@google.com>
- <aea5b741-c994-4007-156e-d8a3a5b9bbcc@infradead.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2] KVM: Move VM's worker kthreads back to the original
+ cgroups before exiting.
+Date: Wed, 19 Jan 2022 08:30:43 -1000
+Message-ID: <YehY0z2vHYVZk52J@slm.duckdns.org>
+References: <20211222225350.1912249-1-vipinsh@google.com>
+ <20220105180420.GC6464@blackbody.suse.cz>
+ <CAHVum0e84nUcGtdPYQaJDQszKj-QVP5gM+nteBpSTaQ2sWYpmQ@mail.gmail.com>
+ <Yeclbe3GNdCMLlHz@slm.duckdns.org>
+ <7a0bc562-9f25-392d-5c05-9dbcd350d002@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=qhZUjSqSQkfhZLoYn5e7bhCr/SYhnGpXe4Qg5Zbv7IY=;
-        b=KcjIc7Fy7AyXlztjvbf4TXqfnkrciDNXOMtpFzvtF3QorWdBdCJcZNxXQir+xqCgM/
-         vhWvU4puaDNNHZIf8tBZKxSuEwQBcTPRaILKpqqMlp0EO0agvObWm58HneQ/F52afxd+
-         6yk9sB6uJI4kgfYa9xXzLl1IhZoi8Xr/g+mGUrRUzF3gyQ9ppLz97Lc6tXjX5m/whFY+
-         ECRNg2HIhE2665MiG3OSXjnIgdouodrSJyK4mwNzw4KfTZvN2jBb+EzlnKNLhNJrQzDp
-         62ZPButvLcfnCM8PWDujKudROIKqyKSbycC36/wmwUvk0cT2ZnfhnIf8hQfmUytuiq2F
-         Dvuw==
-In-Reply-To: <aea5b741-c994-4007-156e-d8a3a5b9bbcc-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=pILDFV1B0pcs8CFlfnc4VuEEfnu7s3r3AjaWa+U4qlU=;
+        b=G/3SbGpYSVIOIGF7kh+kzHoGUA5tjQNhhwD8Ct/g4lU1Vu7oi22nFS+AZudtTGWnr3
+         rrhbbDLZytfxj5YVdB3iT4iolvT7lMZWM+MNINx7AQydBvXsMdbYOmkzq2tgcTNbGPWu
+         Qpa+33b4JH7QozpPtVL7r0KodsrkmTOGQP2niwVLRhBjZo9fy3C+npjUu6X50dKpWeEM
+         yKN/XtEo/mnaJhpjliB+QNljmjRXxQlYGPfYEPyyoxvCI5hzEnSFX540cpRZtqmRW9A+
+         Ji9zM1OR2SJi0kJeAZdohbNCC1kjFVNUXaYGmn8+JxFeoizkJJ86x1FDWsXiU1XNd3oN
+         hbag==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <7a0bc562-9f25-392d-5c05-9dbcd350d002-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Benjamin Gaignard <benjamin.gaignard-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Liam Mark <lmark-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Laura Abbott <labbott-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Brian Starkey <Brian.Starkey-5wv7dgnIgG8@public.gmane.org>, John Stultz <john.stultz@li>
+To: Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dmatlack-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jan 19, 2022 at 7:40 AM Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
->
-> Hi--
->
-> On 1/14/22 17:06, Hridya Valsaraju wrote:
-> > diff --git a/init/Kconfig b/init/Kconfig
-> > index cd23faa163d1..408910b21387 100644
-> > --- a/init/Kconfig
-> > +++ b/init/Kconfig
-> > @@ -990,6 +990,13 @@ config BLK_CGROUP
-> >
-> >       See Documentation/admin-guide/cgroup-v1/blkio-controller.rst for more information.
-> >
-> > +config CGROUP_GPU
-> > +       bool "gpu cgroup controller (EXPERIMENTAL)"
-> > +       select PAGE_COUNTER
-> > +       help
-> > +     Provides accounting and limit setting for memory allocations by the GPU
-> > +     and GPU-related subsystems.
->
-> Please follow coding-style for Kconfig files:
->
-> (from Documentation/process/coding-style.rst, section 10):
->
-> For all of the Kconfig* configuration files throughout the source tree,
-> the indentation is somewhat different.  Lines under a ``config`` definition
-> are indented with one tab, while help text is indented an additional two
-> spaces.
+On Wed, Jan 19, 2022 at 07:02:53PM +0100, Paolo Bonzini wrote:
+> On 1/18/22 21:39, Tejun Heo wrote:
+> > So, these are normally driven by the !populated events. That's how everyone
+> > else is doing it. If you want to tie the kvm workers lifetimes to kvm
+> > process, wouldn't it be cleaner to do so from kvm side? ie. let kvm process
+> > exit wait for the workers to be cleaned up.
+> 
+> It does.  For example kvm_mmu_post_init_vm's call to
+> kvm_vm_create_worker_thread is matched with the call to
+> kthread_stop in kvm_mmu_pre_destroy_vm.
+> According to Vpin, the problem is that there's a small amount of time
+> between the return from kthread_stop and the point where the cgroup
+> can be removed.  My understanding of the race is the following:
 
-Thanks Randy, sounds good! Will fix it in the next version!
+Okay, this is because kthread_stop piggy backs on vfork_done to wait for the
+task exit intead of the usual exit notification, so it only waits till
+exit_mm(), which is uhh... weird. So, migrating is one option, I guess,
+albeit a rather ugly one. It'd be nicer if we can make kthread_stop()
+waiting more regular but I couldn't find a good existing place and routing
+the usual parent signaling might be too complicated. Anyone has better
+ideas?
 
->
->
-> thanks.
+Thanks.
 
->
-> --
-> ~Randy
+-- 
+tejun
