@@ -1,71 +1,59 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [Question] set_cpus_allowed_ptr() call failed at cpuset_attach()
-Date: Wed, 19 Jan 2022 14:02:22 +0100
-Message-ID: <20220119130221.GA31037@blackbody.suse.cz>
-References: <09ce5796-798e-83d0-f1a6-ba38a787bfc5@huawei.com>
- <4415cd09-6de3-bb2d-386d-8beb4927fb46@huawei.com>
+From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [RFC 2/6] cgroup: gpu: Add a cgroup controller for allocator
+ attribution of GPU memory
+Date: Wed, 19 Jan 2022 07:40:30 -0800
+Message-ID: <aea5b741-c994-4007-156e-d8a3a5b9bbcc__41341.1272851349$1642606904$gmane$org@infradead.org>
+References: <20220115010622.3185921-1-hridya@google.com>
+ <20220115010622.3185921-3-hridya@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1642597343; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=RkiBdzpfXdOX7MXZnhxrmQteAOQNnX9ERhFe1qzjPU0=;
-        b=lT7JXlp02MR/i1jZ/yNF3al5FTGadcBqD8X3i/eOVe6bqBYGMKowI3ZTW0wO8Vu4ifeqVB
-        Xl+mDX1mPTcK98Eax6zG9jhbmxDlYLTGa6NRYXB/qLPkx7j3GLA7YoET3Dke19bp95HpUY
-        Xgv+befEEnMmIw52lDoAhd0gD3wOCfQ=
-Content-Disposition: inline
-In-Reply-To: <4415cd09-6de3-bb2d-386d-8beb4927fb46-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=desiato.20200630; h=Content-Transfer-Encoding:Content-Type
+        :In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=pxPDysxsLzRS9m3h8MM0+hZnUy5KDuxOZAnHkZ+LiUU=; b=P6ZwT2AKXUwgwui+4YXZ3+S5JB
+        aHNGnZbcF7P0JjQ2N9a3uww5zTv3szmJXvjflxI/R9cm4iHHtjkTZlZZnN7sPr7B+1C6nCW3p0fqX
+        DYFOssgLzTGUjKwS6687wmMBof+9C3nc7L2X+Ie0WIui7iCrANpuwmi9xVW2ufFYlQIuY4UQusx9I
+        aK7D6KPidQ0p0zcs86E7CjnpH2pWzCpNCPEf30CwVb0ikL3hGDBb+Iqwm4CoClWea/Kn28LragZYK
+        sr7sXjUvS/ffkG8+oNECDa6fOeeafsWYlPwh6Kmn96xrLnm5RgXLjTPl+64wXXpx/WxZoNk1VVkXg
+        ++56dLGA==;
+Content-Language: en-US
+In-Reply-To: <20220115010622.3185921-3-hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Zhang Qiao <zhangqiao22-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, =?UTF-8?Q?Arve_Hj=c3=b8nnev=c3=a5g?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Benjamin Gaignard <benjamin.gaignard-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Liam Mark <lmark-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Laura Abbott <labbott-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Brian Starkey <Brian.Starkey>
+Cc: Kenny.Ho-5C7GfCeVMHo@public.gmane.org, daniels-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On Fri, Jan 14, 2022 at 09:15:06AM +0800, Zhang Qiao <zhangqiao22-hv44wF8Li=
-93QT0dZR+AlfA@public.gmane.org> wrote:
-> 	I found the following warning log on qemu. I migrated a task from one cp=
-uset cgroup to
-> another, while I also performed the cpu hotplug operation, and got follow=
-ing calltrace.
+Hi--
 
-Do you have more information on what hotplug event and what error
-(from set_cpus_allowed_ptr() you observe? (And what's src/dst cpuset wrt
-root/non-root)?
+On 1/14/22 17:06, Hridya Valsaraju wrote:
+> diff --git a/init/Kconfig b/init/Kconfig
+> index cd23faa163d1..408910b21387 100644
+> --- a/init/Kconfig
+> +++ b/init/Kconfig
+> @@ -990,6 +990,13 @@ config BLK_CGROUP
+>  
+>  	See Documentation/admin-guide/cgroup-v1/blkio-controller.rst for more information.
+>  
+> +config CGROUP_GPU
+> +       bool "gpu cgroup controller (EXPERIMENTAL)"
+> +       select PAGE_COUNTER
+> +       help
+> +	Provides accounting and limit setting for memory allocations by the GPU
+> +	and GPU-related subsystems.
 
-> 	Can we use cpus_read_lock()/cpus_read_unlock() to guarantee that set_cpu=
-s_allowed_ptr()
-> doesn't fail, as follows:
+Please follow coding-style for Kconfig files:
 
-I'm wondering what can be wrong with the current actors:
+(from Documentation/process/coding-style.rst, section 10):
 
-    cpuset_can_attach
-      down_read(cpuset_rwsem)
-        // check all migratees
-      up_read(cpuset_rwsem)
-                                      [ _cpu_down / cpuhp_setup_state ]
-                                      schedule_work
-                                      ...
-                                      cpuset_hotplug_update_tasks
-                                        down_write(cpuset_rwsem)
-                                        up_write(cpuset_rwsem)
-                                      ... flush_work
-                                      [ _cpu_down / cpu_up_down_serialize_t=
-rainwrecks ]
-    cpuset_attach
-      down_write(cpuset_rwsem)
-        set_cpus_allowed_ptr(allowed_cpus_weird)
-      up_write(cpuset_rwsem)
+For all of the Kconfig* configuration files throughout the source tree,
+the indentation is somewhat different.  Lines under a ``config`` definition
+are indented with one tab, while help text is indented an additional two
+spaces.
 
-The statement in cpuset_attach() about cpuset_can_attach() test is not
-so strong since task_can_attach() is mostly a pass for non-deadline
-tasks. Still, the use of cpuset_rwsem above should synchronize (I may be
-mistaken) the changes of cpuset's cpu masks, so I'd be interested about
-the details above to understand why the current approach doesn't work.
 
-The additional cpus_read_{,un}lock (when reordered wrt cpuset_rwsem)
-may work but your patch should explain why (in what situation).
+thanks.
 
-My .02=E2=82=AC,
-Michal
+-- 
+~Randy
