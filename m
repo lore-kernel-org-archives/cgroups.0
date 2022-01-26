@@ -1,54 +1,103 @@
-From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: Re: [PATCH 2/4] mm/memcg: Protect per-CPU counter by disabling
- preemption on PREEMPT_RT where needed.
-Date: Wed, 26 Jan 2022 12:24:25 +0100
-Message-ID: <YfEvaeCXoL+I3z05@linutronix.de>
-References: <20220125164337.2071854-1-bigeasy@linutronix.de>
- <20220125164337.2071854-3-bigeasy@linutronix.de>
- <86eeed07-b7dc-b387-ea4d-1a4a41334fe3@suse.cz>
+From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] cgroup: minor optimization around the usage of cur_tasks_head
+Date: Wed, 26 Jan 2022 14:17:05 +0000
+Message-ID: <20220126141705.6497-1-laoar.shao@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1643196266;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=22UvY86Kfs4AbFGAcdoC8Kdx7cTmd+khf9zUEu3+8JU=;
-        b=Y7kQkiCmXIll4GHMf/OXPjc7GbWHeMX4BK6a60kJv+OtHkOlHBIWzwoVlUecRRVSGLleqq
-        xN0exkry7H3DhKWYBAycSgPYGE2nREK85PvJSSZxiqEwLbP6yfMYNXD5gZ55/XBHzBmUs4
-        P5epcx+y7dqy9Xh40pdCjwKrEjd2oIik+PPGmirzfJptqanxbweSltevfnCAEPTRKX1SQS
-        +rCwDQj4W6YDWwWg/dIVUcbg93Z+K6M+K1jYKCoApUGInNkLU3HyDMlZTwmgYAD0CJ9I1W
-        WbI5qs2CetZVCe6yGPVfH8hNPVtZ9r/MWOdLmkXCfF47Y5uXtGvABUB4uvnOrA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1643196266;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=22UvY86Kfs4AbFGAcdoC8Kdx7cTmd+khf9zUEu3+8JU=;
-        b=igt4CRlkzJpPqZFeay9GJE8KSEMkn9bNkM5J8GrPivTBxt7zcI40CakmKrJraSCsziuMtB
-        dBEtsKhIHBrZkxCQ==
-Content-Disposition: inline
-In-Reply-To: <86eeed07-b7dc-b387-ea4d-1a4a41334fe3-AlSwsSmVLrQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=QuBjI/BryKVkGIA4h31vhmSSCk11smyr2XD+Upk34ss=;
+        b=eLgorfddK9RDt16GtJUDSQjE2iZvbV3tiZ19IQiNbHso9K5YwgELoAegHUh6ZjivMI
+         IZLfI7pCrI7uBYBwthU5+CPYcxUn2OnwKcISkz+ACEnzl5PhDDnPSMSQuIAOyI6/PzSw
+         sf2XJ0jaumGZPt3Az/dV2emlU3/3B/1YL2FPiI5zP6OpHXc87P3eNYSmX+z7KEpjoDWp
+         vqrhEfW/AequoC+byd7VPhnzvH5p9gqS3gVS8qRhHulpiUWCqKV3vB1G8SbOpZTK4ekK
+         YowgSXGjIuA8ZM+itgeLTa7pU4YbyphWbbCgVNojYjPlxtMxGrB91l2eYtPCnysgDOAw
+         M8xw==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="macroman"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 
-On 2022-01-26 11:06:40 [+0100], Vlastimil Babka wrote:
-> So it's like c68ed7945701 ("mm/vmstat: protect per cpu variables with
-> preempt disable on RT") but we still don't want a wrapper of those
-> constructs so they don't spread further, right :)
-
-Right. We only have them because of assumption based on spin_lock_irq()
-which are not true on PREEMPT_RT. Having a generic one might let people
-to use them for the wrong reasons.
-The commit you mentioned changed all users while here I only changed
-those which missed it. Also I wasn't sure if preemption should be
-disabled or interrupts (to align with the other local_irq_save()).
-
-> Acked-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-
-Thank you.
-
-Sebastian
+UmVjZW50bHkgdGhlcmUgd2FzIGFuIGlzc3VlIG9jY3VycmVkIG9uIG91ciBwcm9kdWN0aW9uIGVu
+dnJpb25tZW50IHdpdGggYQp2ZXJ5IG9sZCBrZXJuZWwgdmVyc2lvbiA0LjE5LiBUaGF0IGlzc3Vl
+IGNhbiBiZSBmaXhlZCBieSB1cHN0cmVhbQpjb21taXQgOWM5NzRjNzcyNDY0ICgiY2dyb3VwOiBJ
+dGVyYXRlIHRhc2tzIHRoYXQgZGlkIG5vdCBmaW5pc2ggZG9fZXhpdCgpIikKCldoZW4gSSB3YXMg
+dHJ5aW5nIHRvIGZpeCB0aGF0IGlzc3VlIG9uIG91ciBwcm9kdWN0aW9uIGVudmlyb25tZW50LCBJ
+IGZvdW5kCndlIGNhbiBjcmVhdGUgYSBob3RmaXggd2l0aCBhIHNpbXBsaWZpZWQgdmVyc2lvbiBv
+ZiB0aGUgY29tbWl0IC0KCkFzIHRoZSB1c2FnZSBvZiBjdXJfdGFza3NfaGVhZCBpcyB3aXRoaW4g
+dGhlIGZ1bmN0aW9uCmNzc190YXNrX2l0ZXJfYWR2YW5jZSgpLCB3ZSBjYW4gbWFrZSBpdCBhcyBh
+IGxvY2FsIHZhcmlhYmxlLiBUaGF0IGNvdWxkCm1ha2UgaXQgbW9yZSBjbGVhciBhbmQgZWFzaWVy
+IHRvIHVuZGVyc3RhbmQuIEFub3RoZXIgYmVuZWZpdCBpcyB3ZSBkb24ndApuZWVkIHRvIGNhcnJ5
+IGl0IGluIGNzc190YXNrX2l0ZXIuCgpTaWduZWQtb2ZmLWJ5OiBZYWZhbmcgU2hhbyA8bGFvYXIu
+c2hhby1SZTVKUUVlUXFlOEF2eHRpdU13eDN3QHB1YmxpYy5nbWFuZS5vcmc+CkNjOiBNaWNoYWwg
+S291dG7DvSA8bWtvdXRueS1JQmk5UkcvYjY3a0BwdWJsaWMuZ21hbmUub3JnPgotLS0KIGluY2x1
+ZGUvbGludXgvY2dyb3VwLmggfCAgMSAtCiBrZXJuZWwvY2dyb3VwL2Nncm91cC5jIHwgMjkgKysr
+KysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0KIDIgZmlsZXMgY2hhbmdlZCwgMTYgaW5zZXJ0aW9u
+cygrKSwgMTQgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9jZ3JvdXAu
+aCBiL2luY2x1ZGUvbGludXgvY2dyb3VwLmgKaW5kZXggNzVjMTUxNDEzZmRhLi5mNjE5YTkyZDBm
+YTAgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvY2dyb3VwLmgKKysrIGIvaW5jbHVkZS9saW51
+eC9jZ3JvdXAuaApAQCAtNjEsNyArNjEsNiBAQCBzdHJ1Y3QgY3NzX3Rhc2tfaXRlciB7CiAKIAlz
+dHJ1Y3QgbGlzdF9oZWFkCQkqdGFza19wb3M7CiAKLQlzdHJ1Y3QgbGlzdF9oZWFkCQkqY3VyX3Rh
+c2tzX2hlYWQ7CiAJc3RydWN0IGNzc19zZXQJCQkqY3VyX2NzZXQ7CiAJc3RydWN0IGNzc19zZXQJ
+CQkqY3VyX2Rjc2V0OwogCXN0cnVjdCB0YXNrX3N0cnVjdAkJKmN1cl90YXNrOwpkaWZmIC0tZ2l0
+IGEva2VybmVsL2Nncm91cC9jZ3JvdXAuYyBiL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMKaW5kZXgg
+OTE5MTk0ZGUzOWM4Li5mZmIwYzg2M2I5N2EgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9jZ3JvdXAvY2dy
+b3VwLmMKKysrIGIva2VybmVsL2Nncm91cC9jZ3JvdXAuYwpAQCAtNDU0NSwxMCArNDU0NSwxMiBA
+QCBzdGF0aWMgc3RydWN0IGNzc19zZXQgKmNzc190YXNrX2l0ZXJfbmV4dF9jc3Nfc2V0KHN0cnVj
+dCBjc3NfdGFza19pdGVyICppdCkKIC8qKgogICogY3NzX3Rhc2tfaXRlcl9hZHZhbmNlX2Nzc19z
+ZXQgLSBhZHZhbmNlIGEgdGFzayBpdGVyYXRvciB0byB0aGUgbmV4dCBjc3Nfc2V0CiAgKiBAaXQ6
+IHRoZSBpdGVyYXRvciB0byBhZHZhbmNlCisgKiBAY3VyX3Rhc2tzX2hlYWQ6IGhlYWQgb2YgY3Vy
+cmVudCB0YXNrcwogICoKICAqIEFkdmFuY2UgQGl0IHRvIHRoZSBuZXh0IGNzc19zZXQgdG8gd2Fs
+ay4KICAqLwotc3RhdGljIHZvaWQgY3NzX3Rhc2tfaXRlcl9hZHZhbmNlX2Nzc19zZXQoc3RydWN0
+IGNzc190YXNrX2l0ZXIgKml0KQorc3RhdGljIHZvaWQgY3NzX3Rhc2tfaXRlcl9hZHZhbmNlX2Nz
+c19zZXQoc3RydWN0IGNzc190YXNrX2l0ZXIgKml0LAorCQkJCXN0cnVjdCBsaXN0X2hlYWQgKipj
+dXJfdGFza3NfaGVhZCkKIHsKIAlzdHJ1Y3QgY3NzX3NldCAqY3NldDsKIApAQCAtNDU1NywxMyAr
+NDU1OSwxMyBAQCBzdGF0aWMgdm9pZCBjc3NfdGFza19pdGVyX2FkdmFuY2VfY3NzX3NldChzdHJ1
+Y3QgY3NzX3Rhc2tfaXRlciAqaXQpCiAJLyogQWR2YW5jZSB0byB0aGUgbmV4dCBub24tZW1wdHkg
+Y3NzX3NldCBhbmQgZmluZCBmaXJzdCBub24tZW1wdHkgdGFza3MgbGlzdCovCiAJd2hpbGUgKChj
+c2V0ID0gY3NzX3Rhc2tfaXRlcl9uZXh0X2Nzc19zZXQoaXQpKSkgewogCQlpZiAoIWxpc3RfZW1w
+dHkoJmNzZXQtPnRhc2tzKSkgewotCQkJaXQtPmN1cl90YXNrc19oZWFkID0gJmNzZXQtPnRhc2tz
+OworCQkJKmN1cl90YXNrc19oZWFkID0gJmNzZXQtPnRhc2tzOwogCQkJYnJlYWs7CiAJCX0gZWxz
+ZSBpZiAoIWxpc3RfZW1wdHkoJmNzZXQtPm1nX3Rhc2tzKSkgewotCQkJaXQtPmN1cl90YXNrc19o
+ZWFkID0gJmNzZXQtPm1nX3Rhc2tzOworCQkJKmN1cl90YXNrc19oZWFkID0gJmNzZXQtPm1nX3Rh
+c2tzOwogCQkJYnJlYWs7CiAJCX0gZWxzZSBpZiAoIWxpc3RfZW1wdHkoJmNzZXQtPmR5aW5nX3Rh
+c2tzKSkgewotCQkJaXQtPmN1cl90YXNrc19oZWFkID0gJmNzZXQtPmR5aW5nX3Rhc2tzOworCQkJ
+KmN1cl90YXNrc19oZWFkID0gJmNzZXQtPmR5aW5nX3Rhc2tzOwogCQkJYnJlYWs7CiAJCX0KIAl9
+CkBAIC00NTcxLDcgKzQ1NzMsNyBAQCBzdGF0aWMgdm9pZCBjc3NfdGFza19pdGVyX2FkdmFuY2Vf
+Y3NzX3NldChzdHJ1Y3QgY3NzX3Rhc2tfaXRlciAqaXQpCiAJCWl0LT50YXNrX3BvcyA9IE5VTEw7
+CiAJCXJldHVybjsKIAl9Ci0JaXQtPnRhc2tfcG9zID0gaXQtPmN1cl90YXNrc19oZWFkLT5uZXh0
+OworCWl0LT50YXNrX3BvcyA9ICgqY3VyX3Rhc2tzX2hlYWQpLT5uZXh0OwogCiAJLyoKIAkgKiBX
+ZSBkb24ndCBrZWVwIGNzc19zZXRzIGxvY2tlZCBhY3Jvc3MgaXRlcmF0aW9uIHN0ZXBzIGFuZCB0
+aHVzCkBAIC00NjEwLDYgKzQ2MTIsNyBAQCBzdGF0aWMgdm9pZCBjc3NfdGFza19pdGVyX3NraXAo
+c3RydWN0IGNzc190YXNrX2l0ZXIgKml0LAogCiBzdGF0aWMgdm9pZCBjc3NfdGFza19pdGVyX2Fk
+dmFuY2Uoc3RydWN0IGNzc190YXNrX2l0ZXIgKml0KQogeworCXN0cnVjdCBsaXN0X2hlYWQgKmN1
+cl90YXNrc19oZWFkID0gTlVMTDsKIAlzdHJ1Y3QgdGFza19zdHJ1Y3QgKnRhc2s7CiAKIAlsb2Nr
+ZGVwX2Fzc2VydF9oZWxkKCZjc3Nfc2V0X2xvY2spOwpAQCAtNDYyNiwxOCArNDYyOSwxOCBAQCBz
+dGF0aWMgdm9pZCBjc3NfdGFza19pdGVyX2FkdmFuY2Uoc3RydWN0IGNzc190YXNrX2l0ZXIgKml0
+KQogCQkJaXQtPnRhc2tfcG9zID0gaXQtPnRhc2tfcG9zLT5uZXh0OwogCiAJCWlmIChpdC0+dGFz
+a19wb3MgPT0gJml0LT5jdXJfY3NldC0+dGFza3MpIHsKLQkJCWl0LT5jdXJfdGFza3NfaGVhZCA9
+ICZpdC0+Y3VyX2NzZXQtPm1nX3Rhc2tzOwotCQkJaXQtPnRhc2tfcG9zID0gaXQtPmN1cl90YXNr
+c19oZWFkLT5uZXh0OworCQkJY3VyX3Rhc2tzX2hlYWQgPSAmaXQtPmN1cl9jc2V0LT5tZ190YXNr
+czsKKwkJCWl0LT50YXNrX3BvcyA9IGN1cl90YXNrc19oZWFkLT5uZXh0OwogCQl9CiAJCWlmIChp
+dC0+dGFza19wb3MgPT0gJml0LT5jdXJfY3NldC0+bWdfdGFza3MpIHsKLQkJCWl0LT5jdXJfdGFz
+a3NfaGVhZCA9ICZpdC0+Y3VyX2NzZXQtPmR5aW5nX3Rhc2tzOwotCQkJaXQtPnRhc2tfcG9zID0g
+aXQtPmN1cl90YXNrc19oZWFkLT5uZXh0OworCQkJY3VyX3Rhc2tzX2hlYWQgPSAmaXQtPmN1cl9j
+c2V0LT5keWluZ190YXNrczsKKwkJCWl0LT50YXNrX3BvcyA9IGN1cl90YXNrc19oZWFkLT5uZXh0
+OwogCQl9CiAJCWlmIChpdC0+dGFza19wb3MgPT0gJml0LT5jdXJfY3NldC0+ZHlpbmdfdGFza3Mp
+Ci0JCQljc3NfdGFza19pdGVyX2FkdmFuY2VfY3NzX3NldChpdCk7CisJCQljc3NfdGFza19pdGVy
+X2FkdmFuY2VfY3NzX3NldChpdCwgJmN1cl90YXNrc19oZWFkKTsKIAl9IGVsc2UgewogCQkvKiBj
+YWxsZWQgZnJvbSBzdGFydCwgcHJvY2VlZCB0byB0aGUgZmlyc3QgY3NldCAqLwotCQljc3NfdGFz
+a19pdGVyX2FkdmFuY2VfY3NzX3NldChpdCk7CisJCWNzc190YXNrX2l0ZXJfYWR2YW5jZV9jc3Nf
+c2V0KGl0LCAmY3VyX3Rhc2tzX2hlYWQpOwogCX0KIAogCWlmICghaXQtPnRhc2tfcG9zKQpAQCAt
+NDY1MSwxMiArNDY1NCwxMiBAQCBzdGF0aWMgdm9pZCBjc3NfdGFza19pdGVyX2FkdmFuY2Uoc3Ry
+dWN0IGNzc190YXNrX2l0ZXIgKml0KQogCQkJZ290byByZXBlYXQ7CiAKIAkJLyogYW5kIGR5aW5n
+IGxlYWRlcnMgdy9vIGxpdmUgbWVtYmVyIHRocmVhZHMgKi8KLQkJaWYgKGl0LT5jdXJfdGFza3Nf
+aGVhZCA9PSAmaXQtPmN1cl9jc2V0LT5keWluZ190YXNrcyAmJgorCQlpZiAoY3VyX3Rhc2tzX2hl
+YWQgPT0gJml0LT5jdXJfY3NldC0+ZHlpbmdfdGFza3MgJiYKIAkJICAgICFhdG9taWNfcmVhZCgm
+dGFzay0+c2lnbmFsLT5saXZlKSkKIAkJCWdvdG8gcmVwZWF0OwogCX0gZWxzZSB7CiAJCS8qIHNr
+aXAgYWxsIGR5aW5nIG9uZXMgKi8KLQkJaWYgKGl0LT5jdXJfdGFza3NfaGVhZCA9PSAmaXQtPmN1
+cl9jc2V0LT5keWluZ190YXNrcykKKwkJaWYgKGN1cl90YXNrc19oZWFkID09ICZpdC0+Y3VyX2Nz
+ZXQtPmR5aW5nX3Rhc2tzKQogCQkJZ290byByZXBlYXQ7CiAJfQogfQotLSAKMi4xNy4xCgo=
