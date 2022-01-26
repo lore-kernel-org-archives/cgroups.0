@@ -1,54 +1,124 @@
-From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: Re: [PATCH 1/4] mm/memcg: Disable threshold event handlers on
- PREEMPT_RT
-Date: Wed, 26 Jan 2022 15:45:20 +0100
-Message-ID: <YfFegDwQSm9v2Qcu@linutronix.de>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 2/4] mm/memcg: Protect per-CPU counter by disabling
+ preemption on PREEMPT_RT where needed.
+Date: Wed, 26 Jan 2022 15:56:52 +0100
+Message-ID: <YfFhNOZgZGEGswsU@dhcp22.suse.cz>
 References: <20220125164337.2071854-1-bigeasy@linutronix.de>
- <20220125164337.2071854-2-bigeasy@linutronix.de>
- <YfFddqkAhd1YKqX9@dhcp22.suse.cz>
+ <20220125164337.2071854-3-bigeasy@linutronix.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1643208321;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1643209015; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=oHTX2+frIu1UrhvB+dpyRcYGwmhZVbTk9VdBIsf28C0=;
-        b=KHbir9cR5tJpv8jOUgX7x/r5Tk/L0cuWYWeeFytmAi8psS1tmbSxE081S2e8Y3KGsCU3gQ
-        cv6mX9dMpwrZw3wwI3IsNghlLDfYdk5nvE6kAVIPY8XRMuVclHzgf+JDasZFIrYcs2sH+4
-        NMc0ms8jS23QybtGd1JsDzEQ2HIxQFVnQTfUxa7ptOUbzKLd9SO7krduTma0OjkEsKB0Mq
-        WkAwfysMe5xjx8AhWcQg1Iy7MBzheZgwqF08O6UD7hLH/G7g6DKHoHqJUYqPrj1m6Tv1ak
-        ntOysuqxSe15Us1UATkiclte65DG8Vkk8Kewp+/rJ1MlF6hircPCtOoQsJKYKw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1643208321;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=oHTX2+frIu1UrhvB+dpyRcYGwmhZVbTk9VdBIsf28C0=;
-        b=+KcseHn/VigDpGR4syaqZQM7QlhQHbLoVsEP/sUWC4bNzMjC4P3GLRl4HEmFgbocdgG1BK
-        rqMKQ+qvjPpsfgBw==
+        bh=UeaomIGUdhSiqk8Q8VOQigps7LLu2LVmLRRyq9SaCY4=;
+        b=KRy7/W1n2hWD1uB+K3X+aGTi9kfJu58jX2jUbpS/1gPVT1rZKrOJtY4fDEiASSaUbzo5pY
+        WpTWZsmJJeW4G65E1maueXQ5/1gsvuSmq+SixKRHa97eTjiCYc1eXuvnAMSjppF4bcuISy
+        cMyQgYk5Gm92IJZEKba0IVDsbT/hBo0=
 Content-Disposition: inline
-In-Reply-To: <YfFddqkAhd1YKqX9-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <20220125164337.2071854-3-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 2022-01-26 15:40:54 [+0100], Michal Hocko wrote:
-> I still support this approach but the patch is much larger than
-> necessary. The code moving shouldn't be really necessary and a simple
-> "do not allow" to set any thresholds or soft limit should be good
-> enough.=20
->=20
-> While in general it is better to disable the unreachable code I do not
-> think this is worth the code churn here.
+On Tue 25-01-22 17:43:35, Sebastian Andrzej Siewior wrote:
+> The per-CPU counter are modified with the non-atomic modifier. The
+> consistency is ensured by disabling interrupts for the update.
+> On non PREEMPT_RT configuration this works because acquiring a
+> spinlock_t typed lock with the _irq() suffix disables interrupts. On
+> PREEMPT_RT configurations the RMW operation can be interrupted.
+> 
+> Another problem is that mem_cgroup_swapout() expects to be invoked with
+> disabled interrupts because the caller has to acquire a spinlock_t which
+> is acquired with disabled interrupts. Since spinlock_t never disables
+> interrupts on PREEMPT_RT the interrupts are never disabled at this
+> point.
+> 
+> The code is never called from in_irq() context on PREEMPT_RT therefore
+> disabling preemption during the update is sufficient on PREEMPT_RT.
+> The sections which explicitly disable interrupts can remain on
+> PREEMPT_RT because the sections remain short and they don't involve
+> sleeping locks (memcg_check_events() is doing nothing on PREEMPT_RT).
+> 
+> Disable preemption during update of the per-CPU variables which do not
+> explicitly disable interrupts.
+> 
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
-I got the "defined but not used" warnings by the compiler after I
-disabled the two functions. Then I moved everything to one code block to
-avoid the multiple ifdefs.
-If that is not good, let me think of something else=E2=80=A6
+I can see that you have already discussed the choice for open coded
+version with Vlastimil. I do not have a strong opinion but I have to say
+I dislike the construct because it is not really clear just from reading
+the code. A wrapper could go and explain the underlying problem -
+including potential asserts for !PREEMPT_RT. One way or the other the
+change looks correct AFAICS.
 
-Sebastian
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+
+> ---
+>  mm/memcontrol.c | 21 +++++++++++++++++++--
+>  1 file changed, 19 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 36d27db673ca9..3d1b7cdd83db0 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -667,6 +667,8 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+>  	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+>  	memcg = pn->memcg;
+>  
+> +	if (IS_ENABLED(CONFIG_PREEMPT_RT))
+> +		preempt_disable();
+>  	/* Update memcg */
+>  	__this_cpu_add(memcg->vmstats_percpu->state[idx], val);
+>  
+> @@ -674,6 +676,8 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+>  	__this_cpu_add(pn->lruvec_stats_percpu->state[idx], val);
+>  
+>  	memcg_rstat_updated(memcg, val);
+> +	if (IS_ENABLED(CONFIG_PREEMPT_RT))
+> +		preempt_enable();
+>  }
+>  
+>  /**
+> @@ -756,8 +760,12 @@ void __count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
+>  	if (mem_cgroup_disabled())
+>  		return;
+>  
+> +	if (IS_ENABLED(PREEMPT_RT))
+> +		preempt_disable();
+>  	__this_cpu_add(memcg->vmstats_percpu->events[idx], count);
+>  	memcg_rstat_updated(memcg, count);
+> +	if (IS_ENABLED(PREEMPT_RT))
+> +		preempt_enable();
+>  }
+>  
+>  static unsigned long memcg_events(struct mem_cgroup *memcg, int event)
+> @@ -7194,9 +7202,18 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+>  	 * i_pages lock which is taken with interrupts-off. It is
+>  	 * important here to have the interrupts disabled because it is the
+>  	 * only synchronisation we have for updating the per-CPU variables.
+> +	 * On PREEMPT_RT interrupts are never disabled and the updates to per-CPU
+> +	 * variables are synchronised by keeping preemption disabled.
+>  	 */
+> -	VM_BUG_ON(!irqs_disabled());
+> -	mem_cgroup_charge_statistics(memcg, -nr_entries);
+> +	if (!IS_ENABLED(CONFIG_PREEMPT_RT)) {
+> +		VM_BUG_ON(!irqs_disabled());
+> +		mem_cgroup_charge_statistics(memcg, -nr_entries);
+> +	} else {
+> +		preempt_disable();
+> +		mem_cgroup_charge_statistics(memcg, -nr_entries);
+> +		preempt_enable();
+> +	}
+> +
+>  	memcg_check_events(memcg, page_to_nid(page));
+>  
+>  	css_put(&memcg->css);
+> -- 
+> 2.34.1
+
+-- 
+Michal Hocko
+SUSE Labs
