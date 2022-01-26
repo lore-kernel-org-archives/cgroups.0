@@ -1,37 +1,66 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v6 2/2] block: cancel all throttled bios in del_gendisk()
-Date: Wed, 26 Jan 2022 07:03:06 -1000
-Message-ID: <YfF+yukISfkuc9IK@slm.duckdns.org>
-References: <20220110134758.2233758-1-yukuai3@huawei.com>
- <20220110134758.2233758-3-yukuai3@huawei.com>
- <Yd5FkuhYX9YcgQkZ@T590>
- <b416e6a6-f2c9-caf3-dacd-f937746207da@huawei.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH -next] blk-throttle: enable io throttle for root in
+ cgroup v2
+Date: Wed, 26 Jan 2022 07:29:24 -1000
+Message-ID: <YfGE9L4i7DtNTo08@slm.duckdns.org>
+References: <20220114093000.3323470-1-yukuai3@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=AwYHKz1GfwyPBAeaDvfhIvi+S5N70d9KsK6NMZPpRu0=;
-        b=G43+bA1dTI/pzs7p8eykDJ6DRBvA00FoYTGWOy8LNRG+HKOJndQBXGBO0TJvffG7rB
-         t2X5cteQXJTkmavc0204qAqPFBZi0Q8Ki8to+HmHZlNc7BEPiZw+LS+dd3lwrys7tjF1
-         ZkwqkPS1xpGGj3fr9hCnkQrefH038dMHVFlSGd7LL0HNcLN0j+vTifguCFW1BwBlhJ1x
-         HZCRCeJGKa0D5k0TRNUV5Ws1eB7T8JLVe3k4t87kJJmeq9yikZVeTi1+eIwlYOk3FFWg
-         hYug8J9JYnWru2MIomZE/ucY+Vi/dK8dMqVNVxgSvruDnFRBZUN0kfmluLWJ52LTdJq/
-         q9iQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=o7yVQ6gsvTTab9fYp8q+lCU+rLwohNUxOjiCLgJGdGM=;
+        b=O6zfBzmd+BywBFqXzIfiy3ycqMOwjnMfDYKV8Xlu61A5NUaAdxjhLjXRk91Zxmp379
+         0Zfjblp8ROfH7rGfRhEtsP/JWG6yw+G/qBGkEN722dXIW53FMFuWEu01agN9bdHb9we0
+         XOfCUvJMOBV/VWzq7SmjsTPdvjJ7m8E7DPaqPCR2KdqEhdKUcN20ZgDnwHGrUrZ6+I3h
+         8R/tO/SPoduJvlIslRZbhDKzQDuMNWYkbGxVq/ggvEDK6IeFnDzjVzrDuCHhUptS6yE3
+         zTZNooS0kFSqw6KKe8jJQpHWqMqYs1PMrHkCKAl3tpRiDJB4Eimn0LqYUPgEWvGJZSkJ
+         kK4w==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <b416e6a6-f2c9-caf3-dacd-f937746207da-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20220114093000.3323470-1-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, mkoutny-IBi9RG/b67k@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Yu Kuai <yukuai3@huawei.com>
+Cc: axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-On Mon, Jan 24, 2022 at 11:50:11AM +0800, yukuai (C) wrote:
-> Both ways can fix the problem, which way do you prefer?
+On Fri, Jan 14, 2022 at 05:30:00PM +0800, Yu Kuai wrote:
+> RFC patch: https://lkml.org/lkml/2021/9/9/1432
+> 
+> There is a proformance problem in our environment:
+> 
+> A host can provide a remote device to difierent client. If one client is
+> under high io pressure, other clients might be affected.
+> 
+> Limit the overall iops/bps(io.max) from the client can fix the problem,
+> however, config files do not exist in root cgroup currently, which makes
+> it impossible.
+> 
+> This patch enables io throttle for root cgroup:
+>  - enable "io.max" and "io.low" in root
+>  - don't skip root group in tg_iops_limit() and tg_bps_limit()
+>  - don't skip root group in tg_conf_updated()
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-Ming's suggested change seems simpler, no?
+Yeah, I'm kinda split. It's a simple change with some utility, but it's also
+something which doesn't fit with the cgroup feature or interface. It's
+regulating the whole system behavior. There's no reason for any of the
+control "groups" to be involved here and semantically the interface would
+fit a lot better under /proc, /sys or some other system-wide location. Here
+are some points to consider:
+
+* As a comparison, it'd be rather absurd to enable memory.max at system root
+  in terms of interface and most likely break whole lot of mm operations.
+
+* Resource control knobs of a cgroup belong to the parent as the parent is
+  responsible for divvying up the available resources to its children. Here
+  too, the knobs are making sense because there's a higher level parent
+  (whether that's hypervisor or some network server).
+
+Is your use case VMs or network attached storage?
 
 Thanks.
 
