@@ -1,55 +1,42 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: minor optimization around the usage of
- cur_tasks_head
-Date: Wed, 26 Jan 2022 06:47:11 -1000
-Message-ID: <YfF7DwvzzTxY+2Io@slm.duckdns.org>
-References: <20220126141705.6497-1-laoar.shao@gmail.com>
+Subject: Re: [PATCH] cpuset: Fix the bug that subpart_cpus updated wrongly in
+ update_cpumask()
+Date: Wed, 26 Jan 2022 06:49:56 -1000
+Message-ID: <YfF7tPxxNT2SxWxl@slm.duckdns.org>
+References: <20220118100518.2381118-1-dtcccc@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=7tjkVWkeJikq0MYiRHHkM9K0li9PU6oyj23BwxkVz/4=;
-        b=L6uQCEsWfha23cY9vLp5bDKfNpb0ng8apf1wuq0/YmnUr11q04UbSGTzyeyoJUVejD
-         zvk/aAn6lhfj0MHMQ4Aby1rlHO7LC4ODl6PeH9SVGtxLw2z3VVA+7j9hYiE3X1bpCSml
-         6HmwFidqgQBnqsbmRFqxuXFTqgiaOMUso5OtBqA1iICkeHQScbO7c6WOY8Qnk6FHG3cQ
-         jfpqL7P+opQXXJs00VuIC5KzbfFknG6knrHs1tP6iG/1gUm10CwaKAJAmlJexXXqTGaF
-         7na+gzbI40WGd0AieBd269viVnWp6arPOG6lnrL4vtrJ6woPhRwkE2igLLm7TuYV9Y1a
-         g9aQ==
+         :content-disposition:in-reply-to;
+        bh=qHKkyLNz3BcJqhVoJVmJSW+AQ6LC+YMbazKnt8TVUkM=;
+        b=EqkmYvUuHqLMrlellKgtt5dH4fjRwBxeLQlg4yOHiXrlRPwkZmEvL5zjR9gsWSQj8e
+         FH/FdYO/EASM4JiRC2XMNbbtLLaauL4WXuAHKZc0or3hXKBCPHdtOFGpP+luU0nhVRhw
+         ISVG1N4X6ctoZfEnl3UB1LEwNQISpF5UBMCga4EdNsAAxwXm9gMzD+tjcICd2bG9L0sA
+         Fj66vuOp0rx9m6DVJ724BgsVjrxTHV+lVjBnWgTXX25kBbEXt0zAvwtvq72HmheS7iva
+         z/wkmZSUkSjfDI6IaTzK9NHM1ChbYGdI5oqObJRJF0ttryPec4a4MTIJ2NWrucNChbJy
+         ugzA==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20220126141705.6497-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <20220118100518.2381118-1-dtcccc-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tianchen Ding <dtcccc-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Peter Zijlstra (Intel)" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jan 26, 2022 at 02:17:05PM +0000, Yafang Shao wrote:
-> Recently there was an issue occurred on our production envrionment with a
-> very old kernel version 4.19. That issue can be fixed by upstream
-> commit 9c974c772464 ("cgroup: Iterate tasks that did not finish do_exit()=
-")
->=20
-> When I was trying to fix that issue on our production environment, I found
-> we can create a hotfix with a simplified version of the commit -
->=20
-> As the usage of cur_tasks_head is within the function
-> css_task_iter_advance(), we can make it as a local variable. That could
-> make it more clear and easier to understand. Another benefit is we don't
-> need to carry it in css_task_iter.
->=20
-> Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gman=
-e.org>
-> Cc: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
+On Tue, Jan 18, 2022 at 06:05:18PM +0800, Tianchen Ding wrote:
+> subparts_cpus should be limited as a subset of cpus_allowed, but it is
+> updated wrongly by using cpumask_andnot(). Use cpumask_and() instead to
+> fix it.
+> 
+> Fixes: ee8dde0cd2ce ("cpuset: Add new v2 cpuset.sched.partition flag")
+> Signed-off-by: Tianchen Ding <dtcccc-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 
-I can't tell whether this is better or not. Sure, it loses one pointer from
-the struct but that doesn't really gain anything practical. On the other
-hand, before, we could understand where the iteration was by just dumping
-the struct. After, we can't. At best, maybe this change is a wash.
+Applied to cgroup/for-5.17-fixes.
 
 Thanks.
 
---=20
+-- 
 tejun
