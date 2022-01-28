@@ -1,66 +1,67 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH v2 0/3] block, bfq: minor cleanup and fix
-Date: Fri, 28 Jan 2022 12:27:49 -0700
-Message-ID: <2579c500-549f-ff04-d1e1-6cf3db10b428@kernel.dk>
-References: <20211231032354.793092-1-yukuai3@huawei.com>
- <164338111974.263985.3933987922467783334.b4-ty@kernel.dk>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 0/2] mm/page_owner: Extend page_owner to show memcg
+Date: Fri, 28 Jan 2022 14:56:40 -0500
+Message-ID: <20220128195642.416743-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=subject:from:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=44YundMarG4oJcqLVS+4O9jZDmTBDcQhSRUVkk3ZKW4=;
-        b=nzXb4/P8PZ7yZyUUX6bta1uJ4avIKH+OTNZMoILFmYcqEFNTBgCmKiROLNV0+OmkXy
-         Yy+iYbgFPQ7Sn9NwzwQ/PEjvsGe7KRpuNDASfopAeJS+786MEYBKUr01VYv5Gn8dOGpv
-         FRyacLGvPbb0F4gGtmZtTw63lbdst8ml+siXk5Ld2C8fUyRe4y3JrjdR+yAbbA7AJ6H7
-         T6unhvbXrf4FS1WhU6yBTa6D4XqXNBiO21JWt6qS6askgA6Ejac1T5gML9kvI0ybrUEK
-         YGlHGbdDw6XCPqwIQoL+p0TVEO9cUclnfkWNzaRJjE1iOtvYJnFFjCOGugLrXBqwv4e5
-         DJ1Q==
-In-Reply-To: <164338111974.263985.3933987922467783334.b4-ty-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1643399848;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=4AGco3DPR26g1wodgd1tvssEUzEAzvT6zrwEdwptTuI=;
+        b=O2RyyyQTcsLDCoHy8P5gN8RCTM1P4YNXAecVG4YyurJgpeF3ccBj+M1Lp9QxbYrIyI5j3y
+        ufRV1HV1qtI2WYNTrQI3wIXB8GodNA8Jwo8+XXNqTcFyB4UNabUVOi8uFbE6KBZYkYZzNa
+        3m7mWRsPexD8D18VIAapfM+oqB9cyXc=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 1/28/22 7:45 AM, Jens Axboe wrote:
-> On Fri, 31 Dec 2021 11:23:51 +0800, Yu Kuai wrote:
->> Chagnes in v2:
->>  - add comment in patch 2
->>  - remove patch 4, since the problem do not exist.
->>
->> Yu Kuai (3):
->>   block, bfq: cleanup bfq_bfqq_to_bfqg()
->>   block, bfq: avoid moving bfqq to it's parent bfqg
->>   block, bfq: don't move oom_bfqq
->>
->> [...]
-> 
-> Applied, thanks!
-> 
-> [1/3] block, bfq: cleanup bfq_bfqq_to_bfqg()
->       commit: a9c77f6ec0b566439182a10b64dd3e60a0408849
-> [2/3] block, bfq: avoid moving bfqq to it's parent bfqg
->       commit: 36ad7fe0ec7485ee435f7a40452c7a58598779d4
-> [3/3] block, bfq: don't move oom_bfqq
->       commit: a0b98e6fba18a40aa9672cc3e0abf980456f3ae6
+While debugging the constant increase in percpu memory consumption on
+a system that spawned large number of containers, it was found that a
+lot of offlined mem_cgroup structures remained in place without being
+freed. Further investigation indicated that those mem_cgroup structures
+were pinned by some pages.
 
-For all those pings, this patchset sure didn't see a lot of compiles:
+In order to find out what those pages are, the existing page_owner
+debugging tool is extended to show memory cgroup information and whether
+those memcgs are offlined or not. With the enhanced page_owner tool,
+the following is a typical page that pinned the mem_cgroup structure
+in my test case:
 
-block/bfq-cgroup.c: In function ‘bfq_bfqq_move’:
-block/bfq-cgroup.c:648:40: error: implicit declaration of function ‘bfq_group’; did you mean ‘bfqq_group’? [-Werror=implicit-function-declaration]
-  648 |         struct bfq_group *old_parent = bfq_group(bfqq);
-      |                                        ^~~~~~~~~
-      |                                        bfqq_group
-block/bfq-cgroup.c:648:40: error: initialization of ‘struct bfq_group *’ from ‘int’ makes pointer from integer without a cast [-Werror=int-conversion]
-cc1: all warnings being treated as errors
-make[1]: *** [scripts/Makefile.build:288: block/bfq-cgroup.o] Error 1
-make: *** [Makefile:1831: block] Error 2
+Page allocated via order 0, mask 0x1100cca(GFP_HIGHUSER_MOVABLE), pid 62760, ts 119274296592 ns, free_ts 118989764823 ns
+PFN 1273412 type Movable Block 2487 type Movable Flags 0x17ffffc00c001c(uptodate|dirty|lru|reclaim|swapbacked|node=0|zone=2|lastcpupid=0x1fffff)
+ prep_new_page+0x8e/0xb0
+ get_page_from_freelist+0xc4d/0xe50
+ __alloc_pages+0x172/0x320
+ alloc_pages_vma+0x84/0x230
+ shmem_alloc_page+0x3f/0x90
+ shmem_alloc_and_acct_page+0x76/0x1c0
+ shmem_getpage_gfp+0x48d/0x890
+ shmem_write_begin+0x36/0xc0
+ generic_perform_write+0xed/0x1d0
+ __generic_file_write_iter+0xdc/0x1b0
+ generic_file_write_iter+0x5d/0xb0
+ new_sync_write+0x11f/0x1b0
+ vfs_write+0x1ba/0x2a0
+ ksys_write+0x59/0xd0
+ do_syscall_64+0x37/0x80
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+Charged to offlined memcg libpod-conmon-e59cc83faf807bacc61223fec6a80c1540ebe8f83c802870c6af4708d58f77ea
 
-Dropped.
+So the page was not freed because it was part of a shmem segment. That
+is useful information that can help users to diagnose similar problems.
+
+Waiman Long (2):
+  mm/page_owner: Introduce SNPRINTF() macro that includes length error
+    check
+  mm/page_owner: Dump memcg information
+
+ mm/page_owner.c | 76 ++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 50 insertions(+), 26 deletions(-)
 
 -- 
-Jens Axboe
+2.27.0
 
