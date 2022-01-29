@@ -1,73 +1,86 @@
 From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 0/3] mm/page_owner: Extend page_owner to show memcg information
-Date: Sat, 29 Jan 2022 15:53:12 -0500
-Message-ID: <20220129205315.478628-1-longman@redhat.com>
+Subject: [PATCH v2 2/3] mm/page_owner: Use scnprintf() to avoid excessive buffer overrun check
+Date: Sat, 29 Jan 2022 15:53:14 -0500
+Message-ID: <20220129205315.478628-3-longman@redhat.com>
+References: <20220129205315.478628-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643489629;
+        s=mimecast20190719; t=1643489631;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=sryFgTCSFHX+LlbTjqU4BHuCFjlOyZxrEe4xCO3rDAc=;
-        b=TKZG6Uqr7+NHBTjcGbv44utqlXgrIhxlYVNUggLiRasjDmc607k70QUpCt3ZRPY5fwLBta
-        GrISyGci5bZdSn4Z3WTDXhvMRTcjuvTIreaDDJwC0qpOHe2RgFwdh10xmbcyQOxc3XqH0C
-        Oh6oAHzDjdEnLdbgubcAY6OH6dKZm7U=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=f1x6j7RB7xRENYfNa+FT/BlT6fNQP5UqbN6D/s+vZCU=;
+        b=BOsTCullRWUIjRtIgfa0syBgm4klReLuo32xYTKRIBBad/MVHgzRjbjSFGf5LYlLTwOMEy
+        i3wjIg76Vn0bCOZw+DUHPHKjlxDo22YaLaJnqgr1QlP+Nw4scucH+GjbM5Zrq8xjTnR+oX
+        Gu9dspbRda6M/+n3uZSaSCycvH/ZHxU=
+In-Reply-To: <20220129205315.478628-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
- v2:
-  - Remove the SNPRINTF() macro as suggested by Ira and use scnprintf()
-    instead to remove some buffer overrun checks.
-  - Add a patch to optimize vscnprintf with a size parameter of 0.
+The snprintf() function can return a length greater than the given
+input size. That will require a check for buffer overrun after each
+invocation of snprintf(). scnprintf(), on the other hand, will never
+return a greater length. By using scnprintf() in selected places, we
+can avoid some buffer overrun checks except after stack_depot_snprint()
+and after the last snprintf().
 
-While debugging the constant increase in percpu memory consumption on
-a system that spawned large number of containers, it was found that a
-lot of offlined mem_cgroup structures remained in place without being
-freed. Further investigation indicated that those mem_cgroup structures
-were pinned by some pages.
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ mm/page_owner.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-In order to find out what those pages are, the existing page_owner
-debugging tool is extended to show memory cgroup information and whether
-those memcgs are offlined or not. With the enhanced page_owner tool,
-the following is a typical page that pinned the mem_cgroup structure
-in my test case:
-
-Page allocated via order 0, mask 0x1100cca(GFP_HIGHUSER_MOVABLE), pid 62760, ts 119274296592 ns, free_ts 118989764823 ns
-PFN 1273412 type Movable Block 2487 type Movable Flags 0x17ffffc00c001c(uptodate|dirty|lru|reclaim|swapbacked|node=0|zone=2|lastcpupid=0x1fffff)
- prep_new_page+0x8e/0xb0
- get_page_from_freelist+0xc4d/0xe50
- __alloc_pages+0x172/0x320
- alloc_pages_vma+0x84/0x230
- shmem_alloc_page+0x3f/0x90
- shmem_alloc_and_acct_page+0x76/0x1c0
- shmem_getpage_gfp+0x48d/0x890
- shmem_write_begin+0x36/0xc0
- generic_perform_write+0xed/0x1d0
- __generic_file_write_iter+0xdc/0x1b0
- generic_file_write_iter+0x5d/0xb0
- new_sync_write+0x11f/0x1b0
- vfs_write+0x1ba/0x2a0
- ksys_write+0x59/0xd0
- do_syscall_64+0x37/0x80
- entry_SYSCALL_64_after_hwframe+0x44/0xae
-Charged to offlined memcg libpod-conmon-e59cc83faf807bacc61223fec6a80c1540ebe8f83c802870c6af4708d58f77ea
-
-So the page was not freed because it was part of a shmem segment. That
-is useful information that can help users to diagnose similar problems.
-
-Waiman Long (3):
-  lib/vsprintf: Avoid redundant work with 0 size
-  mm/page_owner: Use scnprintf() to avoid excessive buffer overrun check
-  mm/page_owner: Dump memcg information
-
- lib/vsprintf.c  |  8 +++++---
- mm/page_owner.c | 45 ++++++++++++++++++++++++++++++++++-----------
- 2 files changed, 39 insertions(+), 14 deletions(-)
-
+diff --git a/mm/page_owner.c b/mm/page_owner.c
+index 99e360df9465..28dac73e0542 100644
+--- a/mm/page_owner.c
++++ b/mm/page_owner.c
+@@ -338,19 +338,16 @@ print_page_owner(char __user *buf, size_t count, unsigned long pfn,
+ 	if (!kbuf)
+ 		return -ENOMEM;
+ 
+-	ret = snprintf(kbuf, count,
++	ret = scnprintf(kbuf, count,
+ 			"Page allocated via order %u, mask %#x(%pGg), pid %d, ts %llu ns, free_ts %llu ns\n",
+ 			page_owner->order, page_owner->gfp_mask,
+ 			&page_owner->gfp_mask, page_owner->pid,
+ 			page_owner->ts_nsec, page_owner->free_ts_nsec);
+ 
+-	if (ret >= count)
+-		goto err;
+-
+ 	/* Print information relevant to grouping pages by mobility */
+ 	pageblock_mt = get_pageblock_migratetype(page);
+ 	page_mt  = gfp_migratetype(page_owner->gfp_mask);
+-	ret += snprintf(kbuf + ret, count - ret,
++	ret += scnprintf(kbuf + ret, count - ret,
+ 			"PFN %lu type %s Block %lu type %s Flags %pGp\n",
+ 			pfn,
+ 			migratetype_names[page_mt],
+@@ -358,19 +355,14 @@ print_page_owner(char __user *buf, size_t count, unsigned long pfn,
+ 			migratetype_names[pageblock_mt],
+ 			&page->flags);
+ 
+-	if (ret >= count)
+-		goto err;
+-
+ 	ret += stack_depot_snprint(handle, kbuf + ret, count - ret, 0);
+ 	if (ret >= count)
+ 		goto err;
+ 
+ 	if (page_owner->last_migrate_reason != -1) {
+-		ret += snprintf(kbuf + ret, count - ret,
++		ret += scnprintf(kbuf + ret, count - ret,
+ 			"Page has been migrated, last migrate reason: %s\n",
+ 			migrate_reason_names[page_owner->last_migrate_reason]);
+-		if (ret >= count)
+-			goto err;
+ 	}
+ 
+ 	ret += snprintf(kbuf + ret, count - ret, "\n");
 -- 
 2.27.0
 
