@@ -1,65 +1,108 @@
 From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3 1/4] lib/vsprintf: Avoid redundant work with 0 size
-Date: Mon, 31 Jan 2022 14:23:05 -0500
-Message-ID: <20220131192308.608837-2-longman@redhat.com>
+Subject: [PATCH v3 3/4] mm/page_owner: Print memcg information
+Date: Mon, 31 Jan 2022 14:23:07 -0500
+Message-ID: <20220131192308.608837-4-longman@redhat.com>
 References: <20220131192308.608837-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643657007;
+        s=mimecast20190719; t=1643657013;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=FSCcYBtevS72h8Rb3ThNAKipb4CG2TPJPslkwwiiaHA=;
-        b=Kv6OpiGlPcm2ido+I3DpncVSGJhrpb8LXzBbwSbgzfQqEBb3eKJEmKemMwxuccLHxSmbH3
-        zWbdWDPWHLRJlZWlQsREYuG/aHNlz1B2oiuYaksqC/DA7ZYlIbXQk3lVISJNjaHX+F7CrB
-        yDCQkxflbzVASSxiSkxfkZeIREe5tYM=
+        bh=AqKO5lknN2+Nsr0yWLMZlCagaD5YFaBIvpU1YV0vjJ8=;
+        b=D5HLeURrdhU7FmHdatBQz2nXIU/paVkcnKNrmYr7x6cyBCsqvRlnlzKJSZKENfKsV/8Hce
+        4Sf/23xr9hAOFaK7MpItlMXai9OCwvRw5lQf3YW78dh3hsfqZgJJNDUwDsWqCHqinJ3B4U
+        xzoQ+uyYhiysfdaNt4lkdenE7pR4bjE=
 In-Reply-To: <20220131192308.608837-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-For *scnprintf(), vsnprintf() is always called even if the input size is
-0. That is a waste of time, so just return 0 in this case.
+It was found that a number of offlined memcgs were not freed because
+they were pinned by some charged pages that were present. Even "echo
+1 > /proc/sys/vm/drop_caches" wasn't able to free those pages. These
+offlined but not freed memcgs tend to increase in number over time with
+the side effect that percpu memory consumption as shown in /proc/meminfo
+also increases over time.
 
-Note that vsnprintf() will never return -1 to indicate an error. So
-skipping the call to vsnprintf() when size is 0 will have no functional
-impact at all.
+In order to find out more information about those pages that pin
+offlined memcgs, the page_owner feature is extended to print memory
+cgroup information especially whether the cgroup is offlined or not.
 
 Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 ---
- lib/vsprintf.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ mm/page_owner.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-index 3b8129dd374c..d419154b47bb 100644
---- a/lib/vsprintf.c
-+++ b/lib/vsprintf.c
-@@ -2895,13 +2895,15 @@ int vscnprintf(char *buf, size_t size, const char *fmt, va_list args)
- {
- 	int i;
+diff --git a/mm/page_owner.c b/mm/page_owner.c
+index 28dac73e0542..a471c74c7fe0 100644
+--- a/mm/page_owner.c
++++ b/mm/page_owner.c
+@@ -10,6 +10,7 @@
+ #include <linux/migrate.h>
+ #include <linux/stackdepot.h>
+ #include <linux/seq_file.h>
++#include <linux/memcontrol.h>
+ #include <linux/sched/clock.h>
  
-+	if (unlikely(!size))
-+		return 0;
-+
- 	i = vsnprintf(buf, size, fmt, args);
- 
- 	if (likely(i < size))
- 		return i;
--	if (size != 0)
--		return size - 1;
--	return 0;
-+
-+	return size - 1;
+ #include "internal.h"
+@@ -325,6 +326,42 @@ void pagetypeinfo_showmixedcount_print(struct seq_file *m,
+ 	seq_putc(m, '\n');
  }
- EXPORT_SYMBOL(vscnprintf);
  
++#ifdef CONFIG_MEMCG
++/*
++ * Looking for memcg information and print it out
++ */
++static inline void print_page_owner_memcg(char *kbuf, size_t count, int *pret,
++					  struct page *page)
++{
++	unsigned long memcg_data = READ_ONCE(page->memcg_data);
++	struct mem_cgroup *memcg;
++	bool onlined;
++	char name[80];
++
++	if (!memcg_data)
++		return;
++
++	if (memcg_data & MEMCG_DATA_OBJCGS)
++		*pret += scnprintf(kbuf + *pret, count - *pret,
++				"Slab cache page\n");
++
++	memcg = page_memcg_check(page);
++	if (!memcg)
++		return;
++
++	onlined = (memcg->css.flags & CSS_ONLINE);
++	cgroup_name(memcg->css.cgroup, name, sizeof(name));
++	*pret += scnprintf(kbuf + *pret, count - *pret,
++			"Charged %sto %smemcg %s\n",
++			PageMemcgKmem(page) ? "(via objcg) " : "",
++			onlined ? "" : "offlined ",
++			name);
++}
++#else /* CONFIG_MEMCG */
++static inline void print_page_owner_memcg(char *kbuf, size_t count, int *pret,
++					  struct page *page) { }
++#endif /* CONFIG_MEMCG */
++
+ static ssize_t
+ print_page_owner(char __user *buf, size_t count, unsigned long pfn,
+ 		struct page *page, struct page_owner *page_owner,
+@@ -365,6 +402,8 @@ print_page_owner(char __user *buf, size_t count, unsigned long pfn,
+ 			migrate_reason_names[page_owner->last_migrate_reason]);
+ 	}
+ 
++	print_page_owner_memcg(kbuf, count, &ret, page);
++
+ 	ret += snprintf(kbuf + ret, count - ret, "\n");
+ 	if (ret >= count)
+ 		goto err;
 -- 
 2.27.0
 
