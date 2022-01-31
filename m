@@ -1,53 +1,69 @@
-From: Alexander Egorenkov <egorenar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-Subject: Re: LTP test suite triggers LOCKDEP_CIRCULAR on linux-next
-Date: Mon, 31 Jan 2022 18:19:02 +0100
-Message-ID: <87r18nj01l.fsf@oc8242746057.ibm.com>
-References: <87mtjzslv7.fsf@oc8242746057.ibm.com>
- <YeI78TMjU12qRmQ8@carbon.dhcp.thefacebook.com>
- <YfgWAuzAo2WDyPH+@carbon.dhcp.thefacebook.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH 1/3] mm, memcg: Don't put offlined memcg into local stock
+Date: Mon, 31 Jan 2022 09:19:29 -0800
+Message-ID: <YfgaIcSJhqEOnh65@carbon.dhcp.thefacebook.com>
+References: <20211001190938.14050-1-longman@redhat.com>
+ <20211001190938.14050-2-longman@redhat.com>
+ <YVefHLo1+6lgw3aB@carbon.dhcp.thefacebook.com>
+ <f7026256-4086-6632-569e-5b13594cb3fc@redhat.com>
+ <YfgV2iiaVlR0hozD@carbon.dhcp.thefacebook.com>
+ <95ba1931-e9c9-45c3-b080-d28f2ad368a7@redhat.com>
+ <c950a93d-bb70-9a97-dabe-a1d58d755dad@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : cc :
- subject : in-reply-to : in-reply-to : references : date : message-id :
- mime-version : content-type; s=pp1;
- bh=poY0kfQh15XSlaopeCLHDnvfnTwXN0R1WdEoLg1//UI=;
- b=totHUAPubofj9Gd2V6jJYRo46ExN8ckmGGxwgMrWTUfvO6vK9uRGr17d+0UgburzWOiM
- G+yszAeaO3Yx7rCo8NYlEVhgL90n+ufMSkKiFC8F6imMAXe9gXgtkpf3AyPuiN3jUvUh
- 9CPIsjLibWGLwGyStPcDE9WS9U8yQWPOC6Icu6YTJP9+HjBNXYbMhazFJNuWvz+y48kS
- Qr/9Iz06IIcALxFGM3H4tjmubNTLbgoJT9//JuUu8+E0SodB2Em8/5EaPee7fTJFuyEZ
- Uk4mWLp9l9lrQ+pJfEc1WVzz+xIX2Nu5L9EmexLgvv8bgJYfVJUgBOsG6+7bBqUjGgYd CQ== 
-In-Reply-To: <YfgWAuzAo2WDyPH+-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=+QHk6bNqeMKQZkDd1PYJJBzp+I+WKzcnh3AcPFsPbHQ=;
+ b=OEs3JlE1SKXj79mR0e8nCU7RWyw2cUucZdWJD8NdOoIBxB6A2v0QQ0mApV1uO0bPP8vr
+ IR77pde4Zsq/tWVnmbG6/SIrPOz9n8AagMLTzRX9Fwc02lGkUN45g8dXeudTrr+VTX1L
+ 7ESOnVQTUTM24hxl+Bt+orHgyCG85S2Ses4= 
+Content-Disposition: inline
+In-Reply-To: <c950a93d-bb70-9a97-dabe-a1d58d755dad-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-Hi Roman,
+On Mon, Jan 31, 2022 at 12:15:19PM -0500, Waiman Long wrote:
+> On 1/31/22 12:09, Waiman Long wrote:
+> > On 1/31/22 12:01, Roman Gushchin wrote:
+> > > On Sun, Jan 30, 2022 at 10:55:56PM -0500, Waiman Long wrote:
+> > > > On 10/1/21 19:51, Roman Gushchin wrote:
+> > > > > On Fri, Oct 01, 2021 at 03:09:36PM -0400, Waiman Long wrote:
+> > > > > > When freeing a page associated with an offlined memcg, refill_stock()
+> > > > > > will put it into local stock delaying its demise until another memcg
+> > > > > > comes in to take its place in the stock. To avoid that, we now check
+> > > > > > for offlined memcg and go directly in this case to the slowpath for
+> > > > > > the uncharge via the repurposed cancel_charge() function.
+> > > > > Hi Waiman!
+> > > > > 
+> > > > > I'm afraid it can make a cleanup of a dying cgroup slower: for every
+> > > > > released page we'll potentially traverse the whole cgroup tree and
+> > > > > decrease atomic page counters.
+> > > > > 
+> > > > > I'm not sure I understand the benefits we get from this change which
+> > > > > do justify the slowdown on the cleanup path.
+> > > > > 
+> > > > > Thanks!
+> > > > I was notified of a lockdep splat that this patch may help to prevent.
+> > > Would you mind to test this patch:
+> > > https://www.spinics.net/lists/cgroups/msg31244.html  ?
+> > > 
+> > > It should address this dependency.
+> > 
+> > Thanks for the pointer. I believe that your patch should be able to
+> > address this circular locking dependency.
+> > 
+> > Feel free to add my
+> > 
+> > Reviewed-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> 
+> BTW, have you posted it to lkml? If not, would you mind doing so?
 
+Not yet.
 
-Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> writes:
+I was waiting for Alexander to confirm that it resolves the originally reported
+issue. I just pinged him, will wait for tomorrow and post the patch in any case.
 
-> On Fri, Jan 14, 2022 at 07:13:53PM -0800, Roman Gushchin wrote:
->> On Thu, Jan 13, 2022 at 04:20:44PM +0100, Alexander Egorenkov wrote:
->> 
->> Hi Alexander!
->> 
->> Can you, please, check if the following patch is fixing the problem for you?
->> 
->> Thanks a lot in advance!
->
-> Friendly ping.
->
-> Thanks!
-
-I'm very sorry for late response,
-we just noticed your mails :(
-We installed your patch and today's CI run will use it for testing on
-s390 arch.
-I will have reports tomorrow.
-
-Thanks for prompt response!
-
-Regards
-Alex
+Thanks!
