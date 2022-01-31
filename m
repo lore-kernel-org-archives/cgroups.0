@@ -1,103 +1,91 @@
-From: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH v2 1/3] lib/vsprintf: Avoid redundant work with 0 size
-Date: Mon, 31 Jan 2022 13:22:42 +0200
-Message-ID: <YffGgozjI4W2Vamp@smile.fi.intel.com>
-References: <20220129205315.478628-1-longman@redhat.com>
- <20220129205315.478628-2-longman@redhat.com>
- <d99b3c4b-7b6e-529-6e4b-b91b65c92d81@google.com>
- <Yfe5Bb3U6Uil7Y6g@smile.fi.intel.com>
- <Yfe6SfG4CqzWSaMM@smile.fi.intel.com>
- <Yfe7Q5cx+MoaOev/@smile.fi.intel.com>
- <d44824d4-2dd1-a8ab-d3ee-ac67b749ca6f@rasmusvillemoes.dk>
+From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Subject: Re: [PATCH 3/4] mm/memcg: Add a local_lock_t for IRQ and TASK object.
+Date: Mon, 31 Jan 2022 16:06:30 +0100
+Message-ID: <Yff69slA4UTz5Q1Y@linutronix.de>
+References: <20220125164337.2071854-1-bigeasy@linutronix.de>
+ <20220125164337.2071854-4-bigeasy@linutronix.de>
+ <7f4928b8-16e2-88b3-2688-1519a19653a9@suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1643628639; x=1675164639;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=IrCfoF7eVv9DU6g4PgHgEV5cLq0Eof4NwIuHTMoZg8E=;
-  b=dYUK0g8hidnaRro/VYR1kcNEvPpOtfYedQMtUIUXT/kSOxPuSixeQ+JH
-   3pawBbmGx9snj+aq7xvPMJIUgy45aQaPzGOa24Fdd8dp2+v5/O9YCQlSy
-   Gk1cXXXJR+703azR6a/Rco1OirRU2/hnaW/1O6qnfu5/hfWQRAzWhTDnI
-   NFeN4wc/ip6Vu4qFGcAlbpaycTj18UWgwIOiIbrLSFyls/u9m8jMR7s1K
-   OwUwKcBr7yRYopHzLhVMkbh5dJ1hxYJYC1OD7EA80pvsR19bWGKPuVsgc
-   aOplCg+lPJ3iEf7csgzxzeFPQk6+mLaeFKhvUoCj0XbNv+uuvcwRIWTxJ
-   w==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1643641592;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=w0NFiv/w/Cs5H22tLULVbOiZiCXLk9Q8Uppqq+mmVWE=;
+        b=ITwPnNVNsBPallxs5zUMi9DOOpAhk6imEl29XzDT9MGobpamlZEVxC0uwSPXiwyoAqtOuN
+        Hrwl3I5fISii+Y/OSbWmGCc6EQERKZdXnhx/vPX4nTQqUQk4qyit5lxFOo5iWifIhWj1ph
+        WoTtowcpcyOyip8EKhw5RpLPnvAtJ1tjClZFVuHC9xg3yqt47DMJ+dI4GPCqXOlOkTiB5+
+        HP2Nt28QdqUkdNgDhBG/SV77OyQyT1jkxb6VmdKdZ/JMkNIXqV14SVHCfEDhSZcAbv3Xuf
+        YohzS0CvFocKMugUENcXzjz+0oMSMD0gLABmWKAfDXO06HABuUjiymEQtKZHfg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1643641592;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=w0NFiv/w/Cs5H22tLULVbOiZiCXLk9Q8Uppqq+mmVWE=;
+        b=kDAzeZihk9torF7OFmhGe5sb/Dan/+Ie9U+8pJm4pG3edO3Y116sFbfMFGf++mfgG7JzSV
+        x53bPvamwbn6AGCg==
 Content-Disposition: inline
-In-Reply-To: <d44824d4-2dd1-a8ab-d3ee-ac67b749ca6f-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>
+In-Reply-To: <7f4928b8-16e2-88b3-2688-1519a19653a9-AlSwsSmVLrQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Jan 31, 2022 at 12:02:29PM +0100, Rasmus Villemoes wrote:
-> On 31/01/2022 11.34, Andy Shevchenko wrote:
-> > On Mon, Jan 31, 2022 at 12:30:33PM +0200, Andy Shevchenko wrote:
-> >> On Mon, Jan 31, 2022 at 12:25:09PM +0200, Andy Shevchenko wrote:
-> >>> On Sun, Jan 30, 2022 at 12:49:37PM -0800, David Rientjes wrote:
-> >>>> On Sat, 29 Jan 2022, Waiman Long wrote:
-> >>>>
-> >>>>> For *scnprintf(), vsnprintf() is always called even if the input size is
-> >>>>> 0. That is a waste of time, so just return 0 in this case.
-> >>>
-> >>> Why do you think it's not legit?
-> >>
-> >> I have to elaborate.
-> >>
-> >> For *nprintf() the size=0 is quite useful to have.
-> >> For *cnprintf() the size=0 makes less sense, but, if we read `man snprintf()`:
-> >>
-> >>   The  functions  snprintf() and vsnprintf() do not write more than size bytes
-> >>   (including the terminating null byte ('\0')). If the output was truncated due
-> >>   to this limit, then the return value is the  number of  characters (excluding
-> >>   the terminating null byte) which would have been written to the final string
-> >>   if enough space had been available. Thus, a return value of size or more
-> >>   means  that  the  output  was truncated.  (See also below under NOTES.)
-> >>
-> >>   If an output error is encountered, a negative value is returned.
-> >>
-> >> Note the last sentence there. You need to answer to it in the commit message
-> >> why your change is okay and it will show that you thought through all possible
-> >> scenarios.
-> > 
-> > Also it seems currently the kernel documentation is not aligned with the code
-> > 
-> >   "If @size is == 0 the function returns 0."
-> > 
-> > It should mention the (theoretical?) possibility of getting negative value,
-> > if vsnprintf() returns negative value.
-> > 
+On 2022-01-26 17:57:14 [+0100], Vlastimil Babka wrote:
+> > - drain_obj_stock() gets a memcg_stock_pcp passed if the stock_lock has been
+> >   acquired (instead of the task_obj_lock) to avoid recursive locking later
+> >   in refill_stock().
 > 
-> The kernel's vsnprintf _will never_ return a negative value. There is
-> way too much code which relies on that. It also has to work from any
-> context, so we'll never do any memory allocation or anything else that
-> could possibly force us to error out, and even if we encounter some
-> impossible situation, we do not return a negative value, but just stop
-> the output where we are.
+> Looks like this was maybe true in some previous version but now
+> drain_obj_stock() gets a bool parameter that is passed to
+> obj_cgroup_uncharge_pages(). But drain_local_stock() uses a NULL or
+> stock_pcp for that bool parameter which is weird.
 
-Yep, I see the code. My comments more or less are related to the (better)
-commit message which may include what you just said.
+buh. Sorry, that is a left over and should have been true/false instead.
 
-> So yes, micro-optimizing [v]scnprintf() is completely valid, but I've
-> never bothered to send the patch because the use case for scnprintf() is
-> primarily the
+> > - drain_all_stock() disables preemption via get_cpu() and then invokes
+> >   drain_local_stock() if it is the local CPU to avoid scheduling a worker
+> >   (which invokes the same function). Disabling preemption here is
+> >   problematic due to the sleeping locks in drain_local_stock().
+> >   This can be avoided by always scheduling a worker, even for the local
+> >   CPU. Using cpus_read_lock() stabilizes cpu_online_mask which ensures
+> >   that no worker is scheduled for an offline CPU. Since there is no
+> >   flush_work(), it is still possible that a worker is invoked on the wrong
+> >   CPU but it is okay since it operates always on the local-CPU data.
+> > 
+> > - drain_local_stock() is always invoked as a worker so it can be optimized
+> >   by removing in_task() (it is always true) and avoiding the "irq_save"
+> >   variant because interrupts are always enabled here. Operating on
+> >   task_obj first allows to acquire the lock_lock_t without lockdep
+> >   complains.
+> > 
+> > Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 > 
->   ret += scnprintf(buf + ret, size - ret, ...);
+> The problem is that this pattern where get_obj_stock() sets a
+> stock_lock_acquried bool and this is passed down and acted upon elsewhere,
+> is a well known massive red flag for Linus :/
+> Maybe we should indeed just revert 559271146efc, as Michal noted there were
+> no hard numbers to justify it, and in previous discussion it seemed to
+> surface that the costs of irq disable/enable are not that bad on recent cpus
+> as assumed?
+
+I added some number, fell free re-run.
+Let me know if a revert is preferred or you want to keep that so that I
+can prepare the patches accordingly before posting.
+
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -260,8 +260,10 @@ bool mem_cgroup_kmem_disabled(void)
+> >  	return cgroup_memory_nokmem;
+> >  }
+> >  
+> > +struct memcg_stock_pcp;
 > 
-> pattern, with ret starting out at 0 and size being some non-zero number.
-> When given a non-zero size, scnprintf() is guaranteed to return
-> something _strictly less_ than that value; that invariant guarantees
-> that the size-ret expression never becomes 0. So if scnprintf() is
-> properly used, I can't think of any situation where size will be 0,
-> hence I see that patch as correct-but-mostly-pointless.
+> Seems this forward declaration is unused.
+you, thanks.
 
-Good remark and again commit message probably should elaborate this as
-well.
-
--- 
-With Best Regards,
-Andy Shevchenko
-
-
+Sebastian
