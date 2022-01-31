@@ -1,91 +1,54 @@
-From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: Re: [PATCH 3/4] mm/memcg: Add a local_lock_t for IRQ and TASK object.
-Date: Mon, 31 Jan 2022 16:06:30 +0100
-Message-ID: <Yff69slA4UTz5Q1Y@linutronix.de>
-References: <20220125164337.2071854-1-bigeasy@linutronix.de>
- <20220125164337.2071854-4-bigeasy@linutronix.de>
- <7f4928b8-16e2-88b3-2688-1519a19653a9@suse.cz>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v2 3/3] mm/page_owner: Dump memcg information
+Date: Mon, 31 Jan 2022 11:53:19 -0500
+Message-ID: <YfgT/9tEREQNiiAN@cmpxchg.org>
+References: <20220129205315.478628-1-longman@redhat.com>
+ <20220129205315.478628-4-longman@redhat.com>
+ <YfeuK5j7cbgM+Oo+@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1643641592;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=w0NFiv/w/Cs5H22tLULVbOiZiCXLk9Q8Uppqq+mmVWE=;
-        b=ITwPnNVNsBPallxs5zUMi9DOOpAhk6imEl29XzDT9MGobpamlZEVxC0uwSPXiwyoAqtOuN
-        Hrwl3I5fISii+Y/OSbWmGCc6EQERKZdXnhx/vPX4nTQqUQk4qyit5lxFOo5iWifIhWj1ph
-        WoTtowcpcyOyip8EKhw5RpLPnvAtJ1tjClZFVuHC9xg3yqt47DMJ+dI4GPCqXOlOkTiB5+
-        HP2Nt28QdqUkdNgDhBG/SV77OyQyT1jkxb6VmdKdZ/JMkNIXqV14SVHCfEDhSZcAbv3Xuf
-        YohzS0CvFocKMugUENcXzjz+0oMSMD0gLABmWKAfDXO06HABuUjiymEQtKZHfg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1643641592;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=w0NFiv/w/Cs5H22tLULVbOiZiCXLk9Q8Uppqq+mmVWE=;
-        b=kDAzeZihk9torF7OFmhGe5sb/Dan/+Ie9U+8pJm4pG3edO3Y116sFbfMFGf++mfgG7JzSV
-        x53bPvamwbn6AGCg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=kCLY9awXUZ+VaBKEx7Kf5fe8lUKb+8FACIctpfMa/JA=;
+        b=vcKL8lE+2CbEB7y6dB2JbuBXT040U9YHCdWxDounbU74q0EijmUnVJ989O7FOH2YfG
+         sIyFOWWg/pJqWPPaxxt4JSHVuQrwqNVtNr6SLvVBRxJ2NihBphaaUXwhHi7Ps8gRoRK+
+         hzBa0M0K2TBF6HlXg8gEU+nnS0Yyt9XDisazb66sFWHRm9yfzCdH7T+KJNyBdXsyUGB/
+         mqaAFN+OPNz38LWlbBIEICRfpAHOdAE93OghZ77qivsyHj6bsGl4RPvxQEouzM+j0agZ
+         /MoQ4WH1Jcb20Hbor6rBTGTmrsKgI/wQqvx93dKfYMhQuxtvtGBmRAVxhFhWaFchsH5E
+         mpYw==
 Content-Disposition: inline
-In-Reply-To: <7f4928b8-16e2-88b3-2688-1519a19653a9-AlSwsSmVLrQ@public.gmane.org>
+In-Reply-To: <YfeuK5j7cbgM+Oo+-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 2022-01-26 17:57:14 [+0100], Vlastimil Babka wrote:
-> > - drain_obj_stock() gets a memcg_stock_pcp passed if the stock_lock has been
-> >   acquired (instead of the task_obj_lock) to avoid recursive locking later
-> >   in refill_stock().
-> 
-> Looks like this was maybe true in some previous version but now
-> drain_obj_stock() gets a bool parameter that is passed to
-> obj_cgroup_uncharge_pages(). But drain_local_stock() uses a NULL or
-> stock_pcp for that bool parameter which is weird.
-
-buh. Sorry, that is a left over and should have been true/false instead.
-
-> > - drain_all_stock() disables preemption via get_cpu() and then invokes
-> >   drain_local_stock() if it is the local CPU to avoid scheduling a worker
-> >   (which invokes the same function). Disabling preemption here is
-> >   problematic due to the sleeping locks in drain_local_stock().
-> >   This can be avoided by always scheduling a worker, even for the local
-> >   CPU. Using cpus_read_lock() stabilizes cpu_online_mask which ensures
-> >   that no worker is scheduled for an offline CPU. Since there is no
-> >   flush_work(), it is still possible that a worker is invoked on the wrong
-> >   CPU but it is okay since it operates always on the local-CPU data.
+On Mon, Jan 31, 2022 at 10:38:51AM +0100, Michal Hocko wrote:
+> On Sat 29-01-22 15:53:15, Waiman Long wrote:
+> > It was found that a number of offlined memcgs were not freed because
+> > they were pinned by some charged pages that were present. Even "echo
+> > 1 > /proc/sys/vm/drop_caches" wasn't able to free those pages. These
+> > offlined but not freed memcgs tend to increase in number over time with
+> > the side effect that percpu memory consumption as shown in /proc/meminfo
+> > also increases over time.
 > > 
-> > - drain_local_stock() is always invoked as a worker so it can be optimized
-> >   by removing in_task() (it is always true) and avoiding the "irq_save"
-> >   variant because interrupts are always enabled here. Operating on
-> >   task_obj first allows to acquire the lock_lock_t without lockdep
-> >   complains.
-> > 
-> > Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+> > In order to find out more information about those pages that pin
+> > offlined memcgs, the page_owner feature is extended to dump memory
+> > cgroup information especially whether the cgroup is offlined or not.
 > 
-> The problem is that this pattern where get_obj_stock() sets a
-> stock_lock_acquried bool and this is passed down and acted upon elsewhere,
-> is a well known massive red flag for Linus :/
-> Maybe we should indeed just revert 559271146efc, as Michal noted there were
-> no hard numbers to justify it, and in previous discussion it seemed to
-> surface that the costs of irq disable/enable are not that bad on recent cpus
-> as assumed?
+> It is not really clear to me how this is supposed to be used. Are you
+> really dumping all the pages in the system to find out offline memcgs?
+> That looks rather clumsy to me. I am not against adding memcg
+> information to the page owner output. That can be useful in other
+> contexts.
 
-I added some number, fell free re-run.
-Let me know if a revert is preferred or you want to keep that so that I
-can prepare the patches accordingly before posting.
+We've sometimes done exactly that in production, but with drgn
+scripts. It's not very common, so it doesn't need to be very efficient
+either. Typically, we'd encounter a host with an unusual number of
+dying cgroups, ssh in and poke around with drgn to figure out what
+kind of objects are still pinning the cgroups in question.
 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -260,8 +260,10 @@ bool mem_cgroup_kmem_disabled(void)
-> >  	return cgroup_memory_nokmem;
-> >  }
-> >  
-> > +struct memcg_stock_pcp;
-> 
-> Seems this forward declaration is unused.
-you, thanks.
-
-Sebastian
+This patch would make that process a little easier, I suppose.
