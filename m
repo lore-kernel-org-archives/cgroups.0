@@ -1,54 +1,51 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2 3/3] mm/page_owner: Dump memcg information
-Date: Mon, 31 Jan 2022 11:53:19 -0500
-Message-ID: <YfgT/9tEREQNiiAN@cmpxchg.org>
-References: <20220129205315.478628-1-longman@redhat.com>
- <20220129205315.478628-4-longman@redhat.com>
- <YfeuK5j7cbgM+Oo+@dhcp22.suse.cz>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH 1/3] mm, memcg: Don't put offlined memcg into local stock
+Date: Mon, 31 Jan 2022 09:01:14 -0800
+Message-ID: <YfgV2iiaVlR0hozD@carbon.dhcp.thefacebook.com>
+References: <20211001190938.14050-1-longman@redhat.com>
+ <20211001190938.14050-2-longman@redhat.com>
+ <YVefHLo1+6lgw3aB@carbon.dhcp.thefacebook.com>
+ <f7026256-4086-6632-569e-5b13594cb3fc@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=kCLY9awXUZ+VaBKEx7Kf5fe8lUKb+8FACIctpfMa/JA=;
-        b=vcKL8lE+2CbEB7y6dB2JbuBXT040U9YHCdWxDounbU74q0EijmUnVJ989O7FOH2YfG
-         sIyFOWWg/pJqWPPaxxt4JSHVuQrwqNVtNr6SLvVBRxJ2NihBphaaUXwhHi7Ps8gRoRK+
-         hzBa0M0K2TBF6HlXg8gEU+nnS0Yyt9XDisazb66sFWHRm9yfzCdH7T+KJNyBdXsyUGB/
-         mqaAFN+OPNz38LWlbBIEICRfpAHOdAE93OghZ77qivsyHj6bsGl4RPvxQEouzM+j0agZ
-         /MoQ4WH1Jcb20Hbor6rBTGTmrsKgI/wQqvx93dKfYMhQuxtvtGBmRAVxhFhWaFchsH5E
-         mpYw==
-Content-Disposition: inline
-In-Reply-To: <YfeuK5j7cbgM+Oo+-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=Y4HUQwPeuAbzYap8tBpYSb9KNcPloBhp0o+4zwLzb7s=;
+ b=WmqesgWQT0e/urveuv4u/sp5o892fmT0SwOSn6lorEPgiZI5adxBdwbUz1b0Qbx5rXQh
+ hUGV+Uef9jgjjZSJZGU/0V3aRCt7QRHn7JoVpR7pYuegCeLrPVs7900chOs580donmrC
+ 5/ahSCWZWfsALgNRwUyITfUKQGiEPhLwTsY= 
+Content-Disposition: inline
+In-Reply-To: <f7026256-4086-6632-569e-5b13594cb3fc@redhat.com>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Waiman Long <longman@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Vlastimil Babka <vbabka@suse.cz>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>
 
-On Mon, Jan 31, 2022 at 10:38:51AM +0100, Michal Hocko wrote:
-> On Sat 29-01-22 15:53:15, Waiman Long wrote:
-> > It was found that a number of offlined memcgs were not freed because
-> > they were pinned by some charged pages that were present. Even "echo
-> > 1 > /proc/sys/vm/drop_caches" wasn't able to free those pages. These
-> > offlined but not freed memcgs tend to increase in number over time with
-> > the side effect that percpu memory consumption as shown in /proc/meminfo
-> > also increases over time.
+On Sun, Jan 30, 2022 at 10:55:56PM -0500, Waiman Long wrote:
+> On 10/1/21 19:51, Roman Gushchin wrote:
+> > On Fri, Oct 01, 2021 at 03:09:36PM -0400, Waiman Long wrote:
+> > > When freeing a page associated with an offlined memcg, refill_stock()
+> > > will put it into local stock delaying its demise until another memcg
+> > > comes in to take its place in the stock. To avoid that, we now check
+> > > for offlined memcg and go directly in this case to the slowpath for
+> > > the uncharge via the repurposed cancel_charge() function.
+> > Hi Waiman!
 > > 
-> > In order to find out more information about those pages that pin
-> > offlined memcgs, the page_owner feature is extended to dump memory
-> > cgroup information especially whether the cgroup is offlined or not.
+> > I'm afraid it can make a cleanup of a dying cgroup slower: for every
+> > released page we'll potentially traverse the whole cgroup tree and
+> > decrease atomic page counters.
+> > 
+> > I'm not sure I understand the benefits we get from this change which
+> > do justify the slowdown on the cleanup path.
+> > 
+> > Thanks!
 > 
-> It is not really clear to me how this is supposed to be used. Are you
-> really dumping all the pages in the system to find out offline memcgs?
-> That looks rather clumsy to me. I am not against adding memcg
-> information to the page owner output. That can be useful in other
-> contexts.
+> I was notified of a lockdep splat that this patch may help to prevent.
 
-We've sometimes done exactly that in production, but with drgn
-scripts. It's not very common, so it doesn't need to be very efficient
-either. Typically, we'd encounter a host with an unusual number of
-dying cgroups, ssh in and poke around with drgn to figure out what
-kind of objects are still pinning the cgroups in question.
+Would you mind to test this patch:
+https://www.spinics.net/lists/cgroups/msg31244.html ?
 
-This patch would make that process a little easier, I suppose.
+It should address this dependency.
+
+Thanks!
