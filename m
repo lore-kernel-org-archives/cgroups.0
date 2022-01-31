@@ -1,7 +1,7 @@
-From: Waiman Long <longman@redhat.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 Subject: Re: [PATCH 1/3] mm, memcg: Don't put offlined memcg into local stock
-Date: Mon, 31 Jan 2022 12:15:19 -0500
-Message-ID: <c950a93d-bb70-9a97-dabe-a1d58d755dad@redhat.com>
+Date: Mon, 31 Jan 2022 09:15:41 -0800
+Message-ID: <YfgZPSs8H6PBCwdt@carbon.dhcp.thefacebook.com>
 References: <20211001190938.14050-1-longman@redhat.com>
  <20211001190938.14050-2-longman@redhat.com>
  <YVefHLo1+6lgw3aB@carbon.dhcp.thefacebook.com>
@@ -9,60 +9,52 @@ References: <20211001190938.14050-1-longman@redhat.com>
  <YfgV2iiaVlR0hozD@carbon.dhcp.thefacebook.com>
  <95ba1931-e9c9-45c3-b080-d28f2ad368a7@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643649328;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=517osVusanMuP0Y4/rkshkWytofYaoASsE2dV7IDjz4=;
-        b=GQoIFbBRWeiRf4N9CsF7PdyA0eHlVE0YH4YINazUsLg4a7bkjpLgZF3NFAMlskNnqT162r
-        E2eoG6s0dx7uYIBUn1CIgvlylD2reMkd7hvr8CyfbQEBfN56xPixSd5sXU1Y4sWiWycTKm
-        HOozRL7UumCIGKepaPq4mst2yEZa4Eg=
-Content-Language: en-US
-In-Reply-To: <95ba1931-e9c9-45c3-b080-d28f2ad368a7@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=eCRYYz8CwNO8O2JABlB8+ChoY0hda0ZxFN3fTK4Xn+8=;
+ b=Pg6Dze3XEAWrkTME0ubICe1S0BW96KIIb2kTwK0l47yJHhECMzLkCrtex6iQg0C5yCaN
+ pTdtpaEaYayqZIb4SVwMWAl7BS+SzdfZXSEjg/b8ol6g0CYC2FrMAm0dkBFVSsF5wIIx
+ lAt9V7ken9z18Etb4m8ihca/rxgJcpwIyXM= 
+Content-Disposition: inline
+In-Reply-To: <95ba1931-e9c9-45c3-b080-d28f2ad368a7-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Roman Gushchin <guro@fb.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Vlastimil Babka <vbabka@suse.cz>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-On 1/31/22 12:09, Waiman Long wrote:
+On Mon, Jan 31, 2022 at 12:09:09PM -0500, Waiman Long wrote:
 > On 1/31/22 12:01, Roman Gushchin wrote:
->> On Sun, Jan 30, 2022 at 10:55:56PM -0500, Waiman Long wrote:
->>> On 10/1/21 19:51, Roman Gushchin wrote:
->>>> On Fri, Oct 01, 2021 at 03:09:36PM -0400, Waiman Long wrote:
->>>>> When freeing a page associated with an offlined memcg, refill_stock()
->>>>> will put it into local stock delaying its demise until another memcg
->>>>> comes in to take its place in the stock. To avoid that, we now check
->>>>> for offlined memcg and go directly in this case to the slowpath for
->>>>> the uncharge via the repurposed cancel_charge() function.
->>>> Hi Waiman!
->>>>
->>>> I'm afraid it can make a cleanup of a dying cgroup slower: for every
->>>> released page we'll potentially traverse the whole cgroup tree and
->>>> decrease atomic page counters.
->>>>
->>>> I'm not sure I understand the benefits we get from this change which
->>>> do justify the slowdown on the cleanup path.
->>>>
->>>> Thanks!
->>> I was notified of a lockdep splat that this patch may help to prevent.
->> Would you mind to test this patch:
->> https://www.spinics.net/lists/cgroups/msg31244.html ?
->>
->> It should address this dependency.
->
-> Thanks for the pointer. I believe that your patch should be able to 
-> address this circular locking dependency.
->
+> > On Sun, Jan 30, 2022 at 10:55:56PM -0500, Waiman Long wrote:
+> > > On 10/1/21 19:51, Roman Gushchin wrote:
+> > > > On Fri, Oct 01, 2021 at 03:09:36PM -0400, Waiman Long wrote:
+> > > > > When freeing a page associated with an offlined memcg, refill_stock()
+> > > > > will put it into local stock delaying its demise until another memcg
+> > > > > comes in to take its place in the stock. To avoid that, we now check
+> > > > > for offlined memcg and go directly in this case to the slowpath for
+> > > > > the uncharge via the repurposed cancel_charge() function.
+> > > > Hi Waiman!
+> > > > 
+> > > > I'm afraid it can make a cleanup of a dying cgroup slower: for every
+> > > > released page we'll potentially traverse the whole cgroup tree and
+> > > > decrease atomic page counters.
+> > > > 
+> > > > I'm not sure I understand the benefits we get from this change which
+> > > > do justify the slowdown on the cleanup path.
+> > > > 
+> > > > Thanks!
+> > > I was notified of a lockdep splat that this patch may help to prevent.
+> > Would you mind to test this patch:
+> > https://www.spinics.net/lists/cgroups/msg31244.html  ?
+> > 
+> > It should address this dependency.
+> 
+> Thanks for the pointer. I believe that your patch should be able to address
+> this circular locking dependency.
+> 
 > Feel free to add my
->
-> Reviewed-by: Waiman Long <longman@redhat.com>
+> 
+> Reviewed-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-BTW, have you posted it to lkml? If not, would you mind doing so?
-
-Thanks,
-Longman
-
+Thank you!
