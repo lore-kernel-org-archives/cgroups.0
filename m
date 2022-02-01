@@ -1,67 +1,49 @@
-From: Alexander Egorenkov <egorenar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-Subject: Re: LTP test suite triggers LOCKDEP_CIRCULAR on linux-next
-Date: Tue, 01 Feb 2022 08:57:29 +0100
-Message-ID: <87tudjow7q.fsf@oc8242746057.ibm.com>
-References: <87mtjzslv7.fsf@oc8242746057.ibm.com>
- <YeI78TMjU12qRmQ8@carbon.dhcp.thefacebook.com>
- <YfgWAuzAo2WDyPH+@carbon.dhcp.thefacebook.com>
- <87r18nj01l.fsf@oc8242746057.ibm.com>
- <Yfgaf885yDFPtjJH@carbon.dhcp.thefacebook.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v2 3/3] mm/page_owner: Dump memcg information
+Date: Tue, 1 Feb 2022 11:49:11 +0100
+Message-ID: <YfkQJ4QhfY0dICB9@dhcp22.suse.cz>
+References: <20220129205315.478628-1-longman@redhat.com>
+ <20220129205315.478628-4-longman@redhat.com>
+ <YfeuK5j7cbgM+Oo+@dhcp22.suse.cz>
+ <YfgT/9tEREQNiiAN@cmpxchg.org>
+ <YfgnUZQBRkqhrEIb@carbon.dhcp.thefacebook.com>
+ <Yfgpknwr1tMnPkqh@dhcp22.suse.cz>
+ <12686956-612d-d89b-5641-470d5e913090@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : cc :
- subject : in-reply-to : in-reply-to : references : date : message-id :
- mime-version : content-type; s=pp1;
- bh=uuxhueiyYauBBegXUW2RmKe02lmKTiZq/8hDUJP4EZY=;
- b=sSvPViUMD2obHA44CvZkGPhjj691gKY6i3MGlIHqHDqlCHTh5u1PlPeA1T0cONpKYl/Z
- mHNQNqXMQN43Vk8T0R1J9HApRBfxi6c6U6hGGH6m73TpIDuFe5uPVnkQr/pKTz7sVLKY
- gYPtiSm1cjimhWzEguWSkiVC8zGn4hdu/Ph5GllPbSWABysqXSp7RhpHvXte7HgEKtA9
- em9xATQGNwY1WNpIJEICnsAvdh0yth1KNY08CRPkMw9wg8GDGjRa/DMjCKg8oozfYbOf
- q7BIZyL1iBuCMTlkNhEoymDZEEPzd2Tkvi/dCcQJERdhMdmtcZTt4pMLQJ0R+qTHz/z7 DQ== 
-In-Reply-To: <Yfgaf885yDFPtjJH-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1643712552; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=l6Bn0nz2rnpcXkXYw/gRthu/0RqSHCGbN5yIH2/zMno=;
+        b=LsrFLxhXhW9MQ5itj+U/rbYQQCU2+RZgxSgqRPFPCH62iHD/1uuU1u+XTeTmuwRN7c3vBl
+        7xp0WzHh84RoSxn0EONv306e8MJ1H89YhCsuKp+FnGzVoE92rGb1n/4pI20rWUQi1J/SmO
+        giL7UgDUxBg/dDgNhnO46MAaplPB8qo=
+Content-Disposition: inline
+In-Reply-To: <12686956-612d-d89b-5641-470d5e913090-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hi Roman,
+On Mon 31-01-22 13:38:28, Waiman Long wrote:
+[...]
+> Of course, it is also possible to have a debugfs interface to list those
+> dead memcg information, displaying more information about the page that pins
+> the memcg will be hard without using the page owner tool.
 
-Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> writes:
+Yes, you will need page owner or hook into the kernel by other means
+(like already mentioned drgn). The question is whether scanning all
+existing pages to get that information is the best we can offer.
 
-> On Mon, Jan 31, 2022 at 06:19:02PM +0100, Alexander Egorenkov wrote:
->> Hi Roman,
->> 
->> 
->> Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> writes:
->> 
->> > On Fri, Jan 14, 2022 at 07:13:53PM -0800, Roman Gushchin wrote:
->> >> On Thu, Jan 13, 2022 at 04:20:44PM +0100, Alexander Egorenkov wrote:
->> >> 
->> >> Hi Alexander!
->> >> 
->> >> Can you, please, check if the following patch is fixing the problem for you?
->> >> 
->> >> Thanks a lot in advance!
->> >
->> > Friendly ping.
->> >
->> > Thanks!
->> 
->> I'm very sorry for late response,
->> we just noticed your mails :(
->> We installed your patch and today's CI run will use it for testing on
->> s390 arch.
->> I will have reports tomorrow.
->> 
->> Thanks for prompt response!
->
-> Perfect, thank you so much!
+> Keeping track of
+> the list of dead memcg's may also have some runtime overhead.
 
-i'm happy to report that the provided patch fixed the message
-and our CI tests for s390 cannot reproduce the situation anymore.
+Could you be more specific? Offlined memcgs are still part of the
+hierarchy IIRC. So it shouldn't be much more than iterating the whole
+cgroup tree and collect interesting data about dead cgroups.
 
-Thanks!
-
-Regards
-Alex
+-- 
+Michal Hocko
+SUSE Labs
