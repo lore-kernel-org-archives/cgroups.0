@@ -1,126 +1,215 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3 3/4] mm/page_owner: Print memcg information
-Date: Wed, 2 Feb 2022 11:12:36 -0500
-Message-ID: <723f0d47-5450-a403-ed90-4643910f2eb2@redhat.com>
-References: <20220131192308.608837-1-longman@redhat.com>
- <20220131192308.608837-4-longman@redhat.com>
- <YfkRS75D3xcqLT85@dhcp22.suse.cz>
- <33be132c-874d-1061-9003-50942275b221@redhat.com>
- <YfpFkVLBb0GsDFsi@dhcp22.suse.cz>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH RESEND] mm: memcg: synchronize objcg lists with a
+ dedicated spinlock
+Date: Wed, 2 Feb 2022 08:19:26 -0800
+Message-ID: <YfqvDvvyFcoXHzRe@carbon.dhcp.thefacebook.com>
+References: <Yfm1IHmoGdyUR81T@carbon.dhcp.thefacebook.com>
+ <49447f71-bb84-8e1d-e0cb-c9e482d3459b@arm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643818373;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Cm+XqTSkKFeyik40aW5v4P/kwC/jDTxnt6Ut6ZlmWb0=;
-        b=VRZoJ62EzviT2deZP49FuzAG/lXvTswQGiFpDYmWAFtMczMpY332kNpovVjr6D2AKoCbYn
-        dsrDIMMTrykO1AWXJi//ZLfGlBdL4MNfSqwN2chwXMS/YXns0LmcMYV+HIXnaAbKFZGp0h
-        VMHk2zYuJPgPxkKMmdvpSa2DHRVynLg=
-Content-Language: en-US
-In-Reply-To: <YfpFkVLBb0GsDFsi-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=O2ypQy06D8d1fwnU6n/8FzoRwjuAoe1Etk5yRumMdSs=;
+ b=UZ0f+WqtXJezwcyWXC+ljcU8h+4n66ArX6qcaZH5b7H5Qd9bdmSj2D1rE76OJckjMiim
+ NXWWpyNZybiRYGa3dkyR9WjTNbdKZYNfEQkmuU3wDjWQOX2R/HGnpZ77QFTRDYHJcqe9
+ ne15TVXYMSPM/Gy+orYgLWz0Tzrc2dFHSjI= 
+Content-Disposition: inline
+In-Reply-To: <49447f71-bb84-8e1d-e0cb-c9e482d3459b-5wv7dgnIgG8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Jeremy Linton <jeremy.linton-5wv7dgnIgG8@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexander Egorenkov <egorenar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2/2/22 03:49, Michal Hocko wrote:
-> On Tue 01-02-22 12:04:37, Waiman Long wrote:
->> On 2/1/22 05:54, Michal Hocko wrote:
->>> On Mon 31-01-22 14:23:07, Waiman Long wrote:
->>>> It was found that a number of offlined memcgs were not freed because
->>>> they were pinned by some charged pages that were present. Even "echo
->>>> 1 > /proc/sys/vm/drop_caches" wasn't able to free those pages. These
->>>> offlined but not freed memcgs tend to increase in number over time with
->>>> the side effect that percpu memory consumption as shown in /proc/meminfo
->>>> also increases over time.
->>>>
->>>> In order to find out more information about those pages that pin
->>>> offlined memcgs, the page_owner feature is extended to print memory
->>>> cgroup information especially whether the cgroup is offlined or not.
->>>>
->>>> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>>> Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->>>> ---
->>>>    mm/page_owner.c | 39 +++++++++++++++++++++++++++++++++++++++
->>>>    1 file changed, 39 insertions(+)
->>>>
->>>> diff --git a/mm/page_owner.c b/mm/page_owner.c
->>>> index 28dac73e0542..a471c74c7fe0 100644
->>>> --- a/mm/page_owner.c
->>>> +++ b/mm/page_owner.c
->>>> @@ -10,6 +10,7 @@
->>>>    #include <linux/migrate.h>
->>>>    #include <linux/stackdepot.h>
->>>>    #include <linux/seq_file.h>
->>>> +#include <linux/memcontrol.h>
->>>>    #include <linux/sched/clock.h>
->>>>    #include "internal.h"
->>>> @@ -325,6 +326,42 @@ void pagetypeinfo_showmixedcount_print(struct seq_file *m,
->>>>    	seq_putc(m, '\n');
->>>>    }
->>>> +#ifdef CONFIG_MEMCG
->>>> +/*
->>>> + * Looking for memcg information and print it out
->>>> + */
->>>> +static inline void print_page_owner_memcg(char *kbuf, size_t count, int *pret,
->>>> +					  struct page *page)
->>>> +{
->>>> +	unsigned long memcg_data = READ_ONCE(page->memcg_data);
->>>> +	struct mem_cgroup *memcg;
->>>> +	bool onlined;
->>>> +	char name[80];
->>>> +
->>>> +	if (!memcg_data)
->>>> +		return;
->>>> +
->>>> +	if (memcg_data & MEMCG_DATA_OBJCGS)
->>>> +		*pret += scnprintf(kbuf + *pret, count - *pret,
->>>> +				"Slab cache page\n");
->>>> +
->>>> +	memcg = page_memcg_check(page);
->>>> +	if (!memcg)
->>>> +		return;
->>>> +
->>>> +	onlined = (memcg->css.flags & CSS_ONLINE);
->>>> +	cgroup_name(memcg->css.cgroup, name, sizeof(name));
->>>> +	*pret += scnprintf(kbuf + *pret, count - *pret,
->>>> +			"Charged %sto %smemcg %s\n",
->>>> +			PageMemcgKmem(page) ? "(via objcg) " : "",
->>>> +			onlined ? "" : "offlined ",
->>>> +			name);
->>> I have asked in the previous version already but what makes the memcg
->>> stable (why it cannot go away and be reallocated for something else)
->>> while you are trying to get its name?
->> The memcg is not going away as long as the page isn't freed unless if it is
->> indirectly connected via objcg. Of course, there can be a race between the
->> page is going to be freed while the page_owner information is being
->> displayed.
-> Right. And that means that cgtoup_name can go off the rail and wander
-> through memory correct?
->
->> One solution is to add a simple bit lock to each of the
->> page_owner structure and acquire the lock when it is being written to or
->> read from.
-> I do not really see how a bit lock could prevent memcg from going away.
-> On the other hand I think RCU read lock should be sufficient to keep the
-> memcg from going away completely.
-Using rcu_read_lock() is also what I have been thinking of doing. So I 
-will update the patch to add that for safety.
->
->> Anyway a lot of these debugging aids or tools don't eliminate all
->> the race conditions that affect the accuracy of the displayed information. I
->> can add a patch to eliminate this direct memcg race if you think this is
->> necessary.
-> I do not mind inaccurate information. That is natural but reading
-> through a freed memory can be really harmfull. So this really need to be
-> sorted out.
+On Wed, Feb 02, 2022 at 09:58:15AM -0600, Jeremy Linton wrote:
+> On 2/1/22 16:33, Roman Gushchin wrote:
+> > Alexander reported a circular lock dependency revealed by the mmap1
+> > ltp test:
+> >    LOCKDEP_CIRCULAR (suite: ltp, case: mtest06 (mmap1))
+> >            WARNING: possible circular locking dependency detected
+> >            5.17.0-20220113.rc0.git0.f2211f194038.300.fc35.s390x+debug #1 Not tainted
+> >            ------------------------------------------------------
+> >            mmap1/202299 is trying to acquire lock:
+> >            00000001892c0188 (css_set_lock){..-.}-{2:2}, at: obj_cgroup_release+0x4a/0xe0
+> >            but task is already holding lock:
+> >            00000000ca3b3818 (&sighand->siglock){-.-.}-{2:2}, at: force_sig_info_to_task+0x38/0x180
+> >            which lock already depends on the new lock.
+> >            the existing dependency chain (in reverse order) is:
+> >            -> #1 (&sighand->siglock){-.-.}-{2:2}:
+> >                   __lock_acquire+0x604/0xbd8
+> >                   lock_acquire.part.0+0xe2/0x238
+> >                   lock_acquire+0xb0/0x200
+> >                   _raw_spin_lock_irqsave+0x6a/0xd8
+> >                   __lock_task_sighand+0x90/0x190
+> >                   cgroup_freeze_task+0x2e/0x90
+> >                   cgroup_migrate_execute+0x11c/0x608
+> >                   cgroup_update_dfl_csses+0x246/0x270
+> >                   cgroup_subtree_control_write+0x238/0x518
+> >                   kernfs_fop_write_iter+0x13e/0x1e0
+> >                   new_sync_write+0x100/0x190
+> >                   vfs_write+0x22c/0x2d8
+> >                   ksys_write+0x6c/0xf8
+> >                   __do_syscall+0x1da/0x208
+> >                   system_call+0x82/0xb0
+> >            -> #0 (css_set_lock){..-.}-{2:2}:
+> >                   check_prev_add+0xe0/0xed8
+> >                   validate_chain+0x736/0xb20
+> >                   __lock_acquire+0x604/0xbd8
+> >                   lock_acquire.part.0+0xe2/0x238
+> >                   lock_acquire+0xb0/0x200
+> >                   _raw_spin_lock_irqsave+0x6a/0xd8
+> >                   obj_cgroup_release+0x4a/0xe0
+> >                   percpu_ref_put_many.constprop.0+0x150/0x168
+> >                   drain_obj_stock+0x94/0xe8
+> >                   refill_obj_stock+0x94/0x278
+> >                   obj_cgroup_charge+0x164/0x1d8
+> >                   kmem_cache_alloc+0xac/0x528
+> >                   __sigqueue_alloc+0x150/0x308
+> >                   __send_signal+0x260/0x550
+> >                   send_signal+0x7e/0x348
+> >                   force_sig_info_to_task+0x104/0x180
+> >                   force_sig_fault+0x48/0x58
+> >                   __do_pgm_check+0x120/0x1f0
+> >                   pgm_check_handler+0x11e/0x180
+> >            other info that might help us debug this:
+> >             Possible unsafe locking scenario:
+> >                   CPU0                    CPU1
+> >                   ----                    ----
+> >              lock(&sighand->siglock);
+> >                                           lock(css_set_lock);
+> >                                           lock(&sighand->siglock);
+> >              lock(css_set_lock);
+> >             *** DEADLOCK ***
+> >            2 locks held by mmap1/202299:
+> >             #0: 00000000ca3b3818 (&sighand->siglock){-.-.}-{2:2}, at: force_sig_info_to_task+0x38/0x180
+> >             #1: 00000001892ad560 (rcu_read_lock){....}-{1:2}, at: percpu_ref_put_many.constprop.0+0x0/0x168
+> >            stack backtrace:
+> >            CPU: 15 PID: 202299 Comm: mmap1 Not tainted 5.17.0-20220113.rc0.git0.f2211f194038.300.fc35.s390x+debug #1
+> >            Hardware name: IBM 3906 M04 704 (LPAR)
+> >            Call Trace:
+> >             [<00000001888aacfe>] dump_stack_lvl+0x76/0x98
+> >             [<0000000187c6d7be>] check_noncircular+0x136/0x158
+> >             [<0000000187c6e888>] check_prev_add+0xe0/0xed8
+> >             [<0000000187c6fdb6>] validate_chain+0x736/0xb20
+> >             [<0000000187c71e54>] __lock_acquire+0x604/0xbd8
+> >             [<0000000187c7301a>] lock_acquire.part.0+0xe2/0x238
+> >             [<0000000187c73220>] lock_acquire+0xb0/0x200
+> >             [<00000001888bf9aa>] _raw_spin_lock_irqsave+0x6a/0xd8
+> >             [<0000000187ef6862>] obj_cgroup_release+0x4a/0xe0
+> >             [<0000000187ef6498>] percpu_ref_put_many.constprop.0+0x150/0x168
+> >             [<0000000187ef9674>] drain_obj_stock+0x94/0xe8
+> >             [<0000000187efa464>] refill_obj_stock+0x94/0x278
+> >             [<0000000187eff55c>] obj_cgroup_charge+0x164/0x1d8
+> >             [<0000000187ed8aa4>] kmem_cache_alloc+0xac/0x528
+> >             [<0000000187bf2eb8>] __sigqueue_alloc+0x150/0x308
+> >             [<0000000187bf4210>] __send_signal+0x260/0x550
+> >             [<0000000187bf5f06>] send_signal+0x7e/0x348
+> >             [<0000000187bf7274>] force_sig_info_to_task+0x104/0x180
+> >             [<0000000187bf7758>] force_sig_fault+0x48/0x58
+> >             [<00000001888ae160>] __do_pgm_check+0x120/0x1f0
+> >             [<00000001888c0cde>] pgm_check_handler+0x11e/0x180
+> >            INFO: lockdep is turned off.
+> > 
+> > In this example a slab allocation from __send_signal() caused a
+> > refilling and draining of a percpu objcg stock, resulted in a
+> > releasing of another non-related objcg. Objcg release path requires
+> > taking the css_set_lock, which is used to synchronize objcg lists.
+> > 
+> > This can create a circular dependency with the sighandler lock,
+> > which is taken with the locked css_set_lock by the freezer code
+> > (to freeze a task).
+> > 
+> > In general it seems that using css_set_lock to synchronize objcg lists
+> > makes any slab allocations and deallocation with the locked
+> > css_set_lock and any intervened locks risky.
+> > 
+> > To fix the problem and make the code more robust let's stop using
+> > css_set_lock to synchronize objcg lists and use a new dedicated
+> > spinlock instead.
+> > 
+> > Fixes: bf4f059954dc ("mm: memcg/slab: obj_cgroup API")
+> > Signed-off-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> > Reported-by: Alexander Egorenkov <egorenar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+> > Tested-by: Alexander Egorenkov <egorenar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+> > Reviewed-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> > Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> > Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > Cc: Jeremy Linton <jeremy.linton-5wv7dgnIgG8@public.gmane.org>
+> > Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > ---
+> >   include/linux/memcontrol.h |  5 +++--
+> >   mm/memcontrol.c            | 10 +++++-----
+> >   2 files changed, 8 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> > index b72d75141e12..0abbd685703b 100644
+> > --- a/include/linux/memcontrol.h
+> > +++ b/include/linux/memcontrol.h
+> > @@ -219,7 +219,7 @@ struct obj_cgroup {
+> >   	struct mem_cgroup *memcg;
+> >   	atomic_t nr_charged_bytes;
+> >   	union {
+> > -		struct list_head list;
+> > +		struct list_head list; /* protected by objcg_lock */
+> >   		struct rcu_head rcu;
+> >   	};
+> >   };
+> > @@ -315,7 +315,8 @@ struct mem_cgroup {
+> >   #ifdef CONFIG_MEMCG_KMEM
+> >   	int kmemcg_id;
+> >   	struct obj_cgroup __rcu *objcg;
+> > -	struct list_head objcg_list; /* list of inherited objcgs */
+> > +	/* list of inherited objcgs, protected by objcg_lock */
+> > +	struct list_head objcg_list;
+> >   #endif
+> >   	MEMCG_PADDING(_pad2_);
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 09d342c7cbd0..36e9f38c919d 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -254,7 +254,7 @@ struct mem_cgroup *vmpressure_to_memcg(struct vmpressure *vmpr)
+> >   }
+> >   #ifdef CONFIG_MEMCG_KMEM
+> > -extern spinlock_t css_set_lock;
+> > +static DEFINE_SPINLOCK(objcg_lock);
+> >   bool mem_cgroup_kmem_disabled(void)
+> >   {
+> > @@ -298,9 +298,9 @@ static void obj_cgroup_release(struct percpu_ref *ref)
+> >   	if (nr_pages)
+> >   		obj_cgroup_uncharge_pages(objcg, nr_pages);
+> > -	spin_lock_irqsave(&css_set_lock, flags);
+> > +	spin_lock_irqsave(&objcg_lock, flags);
+> >   	list_del(&objcg->list);
+> > -	spin_unlock_irqrestore(&css_set_lock, flags);
+> > +	spin_unlock_irqrestore(&objcg_lock, flags);
+> >   	percpu_ref_exit(ref);
+> >   	kfree_rcu(objcg, rcu);
+> > @@ -332,7 +332,7 @@ static void memcg_reparent_objcgs(struct mem_cgroup *memcg,
+> >   	objcg = rcu_replace_pointer(memcg->objcg, NULL, true);
+> > -	spin_lock_irq(&css_set_lock);
+> > +	spin_lock_irq(&objcg_lock);
+> >   	/* 1) Ready to reparent active objcg. */
+> >   	list_add(&objcg->list, &memcg->objcg_list);
+> > @@ -342,7 +342,7 @@ static void memcg_reparent_objcgs(struct mem_cgroup *memcg,
+> >   	/* 3) Move already reparented objcgs to the parent's list */
+> >   	list_splice(&memcg->objcg_list, &parent->objcg_list);
+> > -	spin_unlock_irq(&css_set_lock);
+> > +	spin_unlock_irq(&objcg_lock);
+> >   	percpu_ref_kill(&objcg->refcnt);
+> >   }
+> > 
+> 
+> Thanks for taking care of this. Since it looks the same as my patch aside
+> from the fact that I also defensivly converted the list_del to a
+> list_del_rcu.
+> 
+> 
+> Reviewed-by: Jeremy Linton <jeremy.linton-5wv7dgnIgG8@public.gmane.org>
+> 
+> and
+> 
+> Tested-by: Jeremy Linton <jeremy.linton-5wv7dgnIgG8@public.gmane.org>
+> 
 
-Thanks for the review.
-
-Cheers,
-Longman
-
+Thank you!
