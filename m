@@ -1,114 +1,110 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 3/4] mm/page_owner: Print memcg information
-Date: Wed,  2 Feb 2022 15:30:35 -0500
-Message-ID: <20220202203036.744010-4-longman@redhat.com>
+From: Rafael Aquini <aquini@redhat.com>
+Subject: Re: [PATCH v4 0/4] mm/page_owner: Extend page_owner to show memcg
+ information
+Date: Wed, 2 Feb 2022 18:06:51 -0500
+Message-ID: <YfsOi38nXkyCrYam@optiplex-fbsd>
 References: <20220131192308.608837-5-longman@redhat.com>
+ <20220202203036.744010-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643834039;
+        s=mimecast20190719; t=1643843216;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=w+Q+AFP6tIEythEP8N9DfZ2WkxdGuyQHwcgj9xdFRo8=;
-        b=VFh9NlQpERcsQoFCMSBNisaXlntkey8qbZMssh5OJlztEiP3n8aW0NiuEPrV3inBlHBNSG
-        AGRE0E7ekOnGWV2RKus+tD6m25Y/TetvqdeJ9C4kfvfNwNLJgPQgnQ+1X0S5Q5k2CGpCWy
-        Pyg9p1+NYChTBeK5sK83hWooK8WeeAs=
-In-Reply-To: <20220131192308.608837-5-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=srHq4RerCPcuK2/I9lWBI5nczQqLUr4zYMys9nonwW0=;
+        b=ANHHMEoEt4kme7PJSzZBjj3biAAgFIaNGmWaDG62aj49RUPavtiX6235XGQ+nM/Ujpq3L/
+        rIfzsl9T9wEBizsO/qTCKd+8YrhVswQpFyCxekSzqghzOobv74asghUS6tWYHam7OdDaIt
+        YqWDL/Yz3GlXUlf2bzJ/WHdnPYpJl2k=
+Content-Disposition: inline
+In-Reply-To: <20220202203036.744010-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Petr Mladek <pmladek@suse.com>, Steven Rostedt <rostedt@goodmis.org>, Sergey Senozhatsky <senozhatsky@chromium.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>, Mike Rapoport <rppt@kernel.org>, David Rientjes <rientjes@google.com>, Roman Gushchin <guro@fb.com>
 
-It was found that a number of offline memcgs were not freed because
-they were pinned by some charged pages that were present. Even "echo 1 >
-/proc/sys/vm/drop_caches" wasn't able to free those pages. These offline
-but not freed memcgs tend to increase in number over time with the side
-effect that percpu memory consumption as shown in /proc/meminfo also
-increases over time.
+On Wed, Feb 02, 2022 at 03:30:32PM -0500, Waiman Long wrote:
+>  v4:
+>   - Take rcu_read_lock() when memcg is being accessed as suggested by
+>     Michal.
+>   - Make print_page_owner_memcg() return the new offset into the buffer
+>     and put CONFIG_MEMCG block inside as suggested by Mike.
+>   - Directly use TASK_COMM_LEN as length of name buffer as suggested by
+>     Roman.
+> 
+>  v3:
+>   - Add unlikely() to patch 1 and clarify that -1 will not be returned.
+>   - Use a helper function to print out memcg information in patch 3.
+>   - Add a new patch 4 to store task command name in page_owner
+>     structure.
+> 
+>  v2:
+>   - Remove the SNPRINTF() macro as suggested by Ira and use scnprintf()
+>     instead to remove some buffer overrun checks.
+>   - Add a patch to optimize vscnprintf with a size parameter of 0.
+> 
+> While debugging the constant increase in percpu memory consumption on
+> a system that spawned large number of containers, it was found that a
+> lot of offline mem_cgroup structures remained in place without being
+> freed. Further investigation indicated that those mem_cgroup structures
+> were pinned by some pages.
+> 
+> In order to find out what those pages are, the existing page_owner
+> debugging tool is extended to show memory cgroup information and whether
+> those memcgs are offline or not. With the enhanced page_owner tool,
+> the following is a typical page that pinned the mem_cgroup structure
+> in my test case:
+> 
+> Page allocated via order 0, mask 0x1100cca(GFP_HIGHUSER_MOVABLE), pid 162970 (podman), ts 1097761405537 ns, free_ts 1097760838089 ns
+> PFN 1925700 type Movable Block 3761 type Movable Flags 0x17ffffc00c001c(uptodate|dirty|lru|reclaim|swapbacked|node=0|zone=2|lastcpupid=0x1fffff)
+>  prep_new_page+0xac/0xe0
+>  get_page_from_freelist+0x1327/0x14d0
+>  __alloc_pages+0x191/0x340
+>  alloc_pages_vma+0x84/0x250
+>  shmem_alloc_page+0x3f/0x90
+>  shmem_alloc_and_acct_page+0x76/0x1c0
+>  shmem_getpage_gfp+0x281/0x940
+>  shmem_write_begin+0x36/0xe0
+>  generic_perform_write+0xed/0x1d0
+>  __generic_file_write_iter+0xdc/0x1b0
+>  generic_file_write_iter+0x5d/0xb0
+>  new_sync_write+0x11f/0x1b0
+>  vfs_write+0x1ba/0x2a0
+>  ksys_write+0x59/0xd0
+>  do_syscall_64+0x37/0x80
+>  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> Charged to offline memcg libpod-conmon-15e4f9c758422306b73b2dd99f9d50a5ea53cbb16b4a13a2c2308a4253cc0ec8.
+> 
+> So the page was not freed because it was part of a shmem segment. That
+> is useful information that can help users to diagnose similar problems.
+> 
+> With cgroup v1, /proc/cgroups can be read to find out the total number
+> of memory cgroups (online + offline). With cgroup v2, the cgroup.stat of
+> the root cgroup can be read to find the number of dying cgroups (most
+> likely pinned by dying memcgs).
+> 
+> The page_owner feature is not supposed to be enabled for production
+> system due to its memory overhead. However, if it is suspected that
+> dying memcgs are increasing over time, a test environment with page_owner
+> enabled can then be set up with appropriate workload for further analysis
+> on what may be causing the increasing number of dying memcgs.
+> 
+> Waiman Long (4):
+>   lib/vsprintf: Avoid redundant work with 0 size
+>   mm/page_owner: Use scnprintf() to avoid excessive buffer overrun check
+>   mm/page_owner: Print memcg information
+>   mm/page_owner: Record task command name
+> 
+>  lib/vsprintf.c  |  8 +++---
+>  mm/page_owner.c | 70 ++++++++++++++++++++++++++++++++++++++-----------
+>  2 files changed, 60 insertions(+), 18 deletions(-)
+> 
+> -- 
+> 2.27.0
+>
 
-In order to find out more information about those pages that pin
-offline memcgs, the page_owner feature is extended to print memory
-cgroup information especially whether the cgroup is offline or not.
-RCU read lock is taken when memcg is being accessed to make sure
-that it won't be freed.
+Thank you, Waiman.
 
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
----
- mm/page_owner.c | 42 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
-
-diff --git a/mm/page_owner.c b/mm/page_owner.c
-index 28dac73e0542..f7820357e4d4 100644
---- a/mm/page_owner.c
-+++ b/mm/page_owner.c
-@@ -10,6 +10,7 @@
- #include <linux/migrate.h>
- #include <linux/stackdepot.h>
- #include <linux/seq_file.h>
-+#include <linux/memcontrol.h>
- #include <linux/sched/clock.h>
- 
- #include "internal.h"
-@@ -325,6 +326,45 @@ void pagetypeinfo_showmixedcount_print(struct seq_file *m,
- 	seq_putc(m, '\n');
- }
- 
-+/*
-+ * Looking for memcg information and print it out
-+ */
-+static inline int print_page_owner_memcg(char *kbuf, size_t count, int ret,
-+					 struct page *page)
-+{
-+#ifdef CONFIG_MEMCG
-+	unsigned long memcg_data;
-+	struct mem_cgroup *memcg;
-+	bool online;
-+	char name[80];
-+
-+	rcu_read_lock();
-+	memcg_data = READ_ONCE(page->memcg_data);
-+	if (!memcg_data)
-+		goto out_unlock;
-+
-+	if (memcg_data & MEMCG_DATA_OBJCGS)
-+		ret += scnprintf(kbuf + ret, count - ret,
-+				"Slab cache page\n");
-+
-+	memcg = page_memcg_check(page);
-+	if (!memcg)
-+		goto out_unlock;
-+
-+	online = (memcg->css.flags & CSS_ONLINE);
-+	cgroup_name(memcg->css.cgroup, name, sizeof(name));
-+	ret += scnprintf(kbuf + ret, count - ret,
-+			"Charged %sto %smemcg %s\n",
-+			PageMemcgKmem(page) ? "(via objcg) " : "",
-+			online ? "" : "offline ",
-+			name);
-+out_unlock:
-+	rcu_read_unlock();
-+#endif /* CONFIG_MEMCG */
-+
-+	return ret;
-+}
-+
- static ssize_t
- print_page_owner(char __user *buf, size_t count, unsigned long pfn,
- 		struct page *page, struct page_owner *page_owner,
-@@ -365,6 +405,8 @@ print_page_owner(char __user *buf, size_t count, unsigned long pfn,
- 			migrate_reason_names[page_owner->last_migrate_reason]);
- 	}
- 
-+	ret = print_page_owner_memcg(kbuf, count, ret, page);
-+
- 	ret += snprintf(kbuf + ret, count - ret, "\n");
- 	if (ret >= count)
- 		goto err;
--- 
-2.27.0
+Acked-by: Rafael Aquini <aquini@redhat.com>
 
