@@ -1,35 +1,35 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- b1c852c717192f76894aa22c84aec887d7f3b2dd
-Date: Wed, 02 Feb 2022 16:20:00 +0800
-Message-ID: <61fa3eb0.ob2inuh6ZXvpZqQj%lkp@intel.com>
+Subject: [tj-cgroup:for-5.17-fixes] BUILD SUCCESS
+ 24f6008564183aa120d07c03d9289519c2fe02af
+Date: Wed, 02 Feb 2022 16:20:29 +0800
+Message-ID: <61fa3ecd.t7nSwvQoJaFOo4Cm%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1643790049; x=1675326049;
+  t=1643790050; x=1675326050;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=o38vpGYhnB25rK5p1/XLgOU1fKSlrs0uhdzlNYdZD1U=;
-  b=K4/za9JJbQUZVn0vjMrqPShnv8e5Jn+0DTkAvPztZGdWIS8fNhTziVe/
-   XMbbbkOc6B0h8nDEZxWuTZjfvJHuQYVaoZSfLsIqluREQux/nFbl8myTz
-   FL9b3IJABqJmNDev4mDS8rOpNtP2jaZ0PjOU/TCqEE1kNyPuvVNtzwPjr
-   0EH4IvZcQm0owSud27PAy3rCl3NvALkS0zlFiDgyeI7BJ0p/qGLtNJ5Yp
-   LkVnJq5Iu3FwAwFyPaTE+1Wm7qoKf7PMoaw6ns77xP+oFTgQRhxcT1d5V
-   VovpytXqRE8Zb5pKptJEUXyuwioQdAFgYtsQQp146skJ40sLCVGszKO/a
-   w==;
+  bh=gN7PNiVMB5P42VT5SOCXwVGr7vty9Njpx9bn0UseexI=;
+  b=dJd0bjJLjCuPuF4p4kev8wS8DQFveN61ZsObJwY0QgzKfiux2vTEs+T+
+   QMouDAFWCtoM5agnAEPwC1mE/XHwZJCtUxmoAKbuk8CMeuO2po59uKf7A
+   LtbIbiXkD94+MMdLrf+tv1BGb2GIRWiiBWY5lsAX4Omn/fWsc8ukIb2oO
+   Qmc1sOlsD8Ta55RZ+5KESvNhPSiHtOAnsGttqNoFnlP4TtCu5Md6fGEKn
+   CRjiVudK7BsrM3vfOjDmGaouBFh68zABdc+E+zZNnAfxrP1i4wkewOBae
+   7UjbAaRNzLKVRb7UbP5NJ1OD464UC411XVkaetB0SdxzuYiYuL7Ux/9Xo
+   Q==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: b1c852c717192f76894aa22c84aec887d7f3b2dd  Merge branch 'for-5.17-fixes' into for-next
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.17-fixes
+branch HEAD: 24f6008564183aa120d07c03d9289519c2fe02af  cgroup-v1: Require capabilities to set release_agent
 
-elapsed time: 731m
+elapsed time: 732m
 
-configs tested: 170
+configs tested: 167
 configs skipped: 4
 
 The following configs have been built successfully.
@@ -67,9 +67,6 @@ arm                        mvebu_v7_defconfig
 mips                         rt305x_defconfig
 powerpc                    adder875_defconfig
 arm                      integrator_defconfig
-sh                           se7705_defconfig
-sh                                  defconfig
-mips                        vocore2_defconfig
 m68k                        mvme147_defconfig
 sh                           se7343_defconfig
 mips                           ip32_defconfig
