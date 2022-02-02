@@ -1,72 +1,56 @@
-From: syzbot <syzbot+13b13d204fb13cfda744-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
-Subject: [syzbot] WARNING: ODEBUG bug in __init_work (3)
-Date: Wed, 02 Feb 2022 01:30:22 -0800
-Message-ID: <000000000000b8c08805d705aaa2@google.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH v2 3/3] mm/page_owner: Dump memcg information
+Date: Wed, 2 Feb 2022 07:54:48 -0800
+Message-ID: <YfqpSPLC+LAdqbJX@carbon.dhcp.thefacebook.com>
+References: <20220129205315.478628-1-longman@redhat.com>
+ <20220129205315.478628-4-longman@redhat.com>
+ <YfeuK5j7cbgM+Oo+@dhcp22.suse.cz>
+ <YfgT/9tEREQNiiAN@cmpxchg.org>
+ <YfgnUZQBRkqhrEIb@carbon.dhcp.thefacebook.com>
+ <Yfgpknwr1tMnPkqh@dhcp22.suse.cz>
+ <12686956-612d-d89b-5641-470d5e913090@redhat.com>
+ <YfkQJ4QhfY0dICB9@dhcp22.suse.cz>
+ <268a8bdf-4c70-b967-f34c-2293b54186f0@redhat.com>
+ <YfpHbtffFi2x1L4p@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=PntVkuMfTienoR7WfCrdOCIGWX4pTWY+Pz9DpDetKJ8=;
+ b=VNORFQ5cMkGak4CBsI4tJMn4n3sMeUXdGyjd3r/Fju07zsvC3A9PN7yicCXrCUMt8bqM
+ KAShRCFV65f0gGH2CG4R6o2Fr5zeNvUrOUfMj8/sv4OPNaxdHtZTSfqpVYB0TNOEVfUm
+ sIFpjZa1K15G7SLbHOsDhrla2cMKQ/8McMY= 
+Content-Disposition: inline
+In-Reply-To: <YfpHbtffFi2x1L4p-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hello,
+On Wed, Feb 02, 2022 at 09:57:18AM +0100, Michal Hocko wrote:
+> On Tue 01-02-22 11:41:19, Waiman Long wrote:
+> > 
+> > On 2/1/22 05:49, Michal Hocko wrote:
+> [...]
+> > > Could you be more specific? Offlined memcgs are still part of the
+> > > hierarchy IIRC. So it shouldn't be much more than iterating the whole
+> > > cgroup tree and collect interesting data about dead cgroups.
+> > 
+> > What I mean is that without piggybacking on top of page_owner, we will to
+> > add a lot more code to collect and display those information which may have
+> > some overhead of its own.
+> 
+> Yes, there is nothing like a free lunch. Page owner is certainly a tool
+> that can be used. My main concern is that this tool doesn't really
+> scale on large machines with a lots of memory. It will provide a very
+> detailed information but I am not sure this is particularly helpful to
+> most admins (why should people process tons of allocation backtraces in
+> the first place). Wouldn't it be sufficient to have per dead memcg stats
+> to see where the memory sits?
+> 
+> Accumulated offline memcgs is something that bothers more people and I
+> am really wondering whether we can do more for those people to evaluate
+> the current state.
 
-syzbot found the following issue on:
-
-HEAD commit:    b76bbb34dc80 net: stmmac: dwmac-sun8i: make clk really gat..
-git tree:       net-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=16cccccbb00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=ae0d71385f83fe54
-dashboard link: https://syzkaller.appspot.com/bug?extid=13b13d204fb13cfda744
-compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-
-Unfortunately, I don't have any reproducer for this issue yet.
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+13b13d204fb13cfda744-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
-
-------------[ cut here ]------------
-ODEBUG: init active (active state 0) object type: work_struct hint: css_killed_work_fn+0x0/0x5e0 kernel/cgroup/cgroup.c:3947
-WARNING: CPU: 0 PID: 13 at lib/debugobjects.c:505 debug_print_object+0x16e/0x250 lib/debugobjects.c:505
-Modules linked in:
-
-CPU: 0 PID: 13 Comm: ksoftirqd/0 Not tainted 5.17.0-rc1-syzkaller-00460-gb76bbb34dc80 #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-RIP: 0010:debug_print_object+0x16e/0x250 lib/debugobjects.c:505
-Code: ff df 48 89 fa 48 c1 ea 03 80 3c 02 00 0f 85 af 00 00 00 48 8b 14 dd 40 30 06 8a 4c 89 ee 48 c7 c7 40 24 06 8a e8 0c 57 27 05 <0f> 0b 83 05 55 7f b2 09 01 48 83 c4 18 5b 5d 41 5c 41 5d 41 5e c3
-RSP: 0018:ffffc90000d27ba8 EFLAGS: 00010286
-
-RAX: 0000000000000000 RBX: 0000000000000003 RCX: 0000000000000000
-RDX: ffff888011928000 RSI: ffffffff815fa1d8 RDI: fffff520001a4f67
-RBP: 0000000000000001 R08: 0000000000000000 R09: 0000000000000001
-R10: ffffffff815f3f3e R11: 0000000000000000 R12: ffffffff89ab5380
-R13: ffffffff8a062940 R14: ffffffff814bda70 R15: ffffffff90788e18
-FS:  0000000000000000(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000001b2eb22000 CR3: 0000000053d45000 CR4: 00000000003506f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <TASK>
- __debug_object_init+0x524/0xd10 lib/debugobjects.c:593
- __init_work+0x48/0x50 kernel/workqueue.c:518
- css_release+0x1a/0x110 kernel/cgroup/cgroup.c:5213
- percpu_ref_put_many.constprop.0+0x22b/0x260 include/linux/percpu-refcount.h:335
- rcu_do_batch kernel/rcu/tree.c:2527 [inline]
- rcu_core+0x7b8/0x1540 kernel/rcu/tree.c:2778
- __do_softirq+0x29b/0x9c2 kernel/softirq.c:558
- run_ksoftirqd kernel/softirq.c:921 [inline]
- run_ksoftirqd+0x2d/0x60 kernel/softirq.c:913
- smpboot_thread_fn+0x645/0x9c0 kernel/smpboot.c:164
- kthread+0x2e9/0x3a0 kernel/kthread.c:377
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:295
- </TASK>
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+Cgroup v2 has corresponding counters for years. Or do you mean something different?
