@@ -1,127 +1,93 @@
-From: Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v4 3/4] mm/page_owner: Print memcg information
-Date: Thu, 3 Feb 2022 08:53:10 +0200
-Message-ID: <Yft71q+OO7lg90sl@kernel.org>
-References: <20220131192308.608837-5-longman@redhat.com>
- <20220202203036.744010-4-longman@redhat.com>
+From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Subject: Re: [PATCH 3/4] mm/memcg: Add a local_lock_t for IRQ and TASK object.
+Date: Thu, 3 Feb 2022 10:54:07 +0100
+Message-ID: <YfumP3u1VCjKHE3b@linutronix.de>
+References: <20220125164337.2071854-1-bigeasy@linutronix.de>
+ <20220125164337.2071854-4-bigeasy@linutronix.de>
+ <YfFmxH1IXeegNOa9@dhcp22.suse.cz>
+ <YfKHxKda7bGJmrLJ@linutronix.de>
+ <YfkhsiWHzsyQSBfl@dhcp22.suse.cz>
+ <Yfkjjamj09lZn4sA@linutronix.de>
+ <YflR3/RuGjYuQZPH@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643871201;
-        bh=9nbtztfsgUhdr6aIZKYDMaKCReVO1EVdAswxzSjNC7E=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=L6HEisU3wiHHxL8R9caiTeqrkK56FJXhwb2DFel+9K7/RdNm4Abym6AZjPQJ+NRIG
-         RUmDLCvDW+mWgyKh8KuFV1evSRBK58szRcB/zqQzJv+AxciTxWg8rz133mfo6wSxUi
-         9c2ELDV7ixzAhlyQEz7+VvbHhyH1QoadIgBpJBu5nUpDAha3FFEuOXoqJlgQp2p6Hv
-         gPkrqy9u/H3pGZmDePLjGeGyXE5NXCe7adhLerCiQsWgbnb4LELuRs/bSzlztvlAds
-         Q7suEazu8PcoROGWUdjBttRsFysrf0TPvRT9JysqR1aAii9GBOGpVSCrzoq3fW9HVA
-         YbQYF9iNsK73g==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1643882048;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=zdELBxlfBs+RZUwmCEVQd1bUq7O2YyUtK61hoTYBgqg=;
+        b=IfJmhtbwX2obrfSDNgct9EwtFtBmqz0EJ887+lW17EFlNEbw+vhQfGZE7FhV6/SGy7QM5y
+        jN8X1B1nSRWlFl2F1nl/m7JV+oHwNJN3XJPKTBiMK9GHPNck1ClVPtujVKIE4kG6nkDNc5
+        iR9T1SAXjdHCJs00P4hnfqzN3HM+B8KpAcRxcvEjSUpvTiElVCMbjf+Zkeeg1VoHITV23o
+        k4v+9jexPWzxbfh0stdGq5DJ08xhxlYJImY+ynQ8FqSjXXZ/JQNGDm027hjl9uvDSo6Dnc
+        tNTU4mt+wi1dZhUDMPhkMbP9VoRBVmt+0iRyyXRBf8zTjWvZHzQrKkFYxjjzVw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1643882048;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=zdELBxlfBs+RZUwmCEVQd1bUq7O2YyUtK61hoTYBgqg=;
+        b=n+xCuimFf8XggWNU87WmjzdNQ0+gYt/+hK2eC85G0DeT2CAyAiati4G2XEbobv1EQ061DI
+        LmAFwAbmAOjC6SAw==
 Content-Disposition: inline
-In-Reply-To: <20220202203036.744010-4-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <YflR3/RuGjYuQZPH-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Wed, Feb 02, 2022 at 03:30:35PM -0500, Waiman Long wrote:
-> It was found that a number of offline memcgs were not freed because
-> they were pinned by some charged pages that were present. Even "echo 1 >
-> /proc/sys/vm/drop_caches" wasn't able to free those pages. These offline
-> but not freed memcgs tend to increase in number over time with the side
-> effect that percpu memory consumption as shown in /proc/meminfo also
-> increases over time.
+On 2022-02-01 16:29:35 [+0100], Michal Hocko wrote:
+> > > Sorry, I know that this all is not really related to your work but if
+> > > the original optimization is solely based on artificial benchmarks then
+> > > I would rather drop it and also make your RT patchset easier.
+> > 
+> > Do you have any real-world benchmark in mind? Like something that is
+> > already used for testing/ benchmarking and would fit here?
 > 
-> In order to find out more information about those pages that pin
-> offline memcgs, the page_owner feature is extended to print memory
-> cgroup information especially whether the cgroup is offline or not.
-> RCU read lock is taken when memcg is being accessed to make sure
-> that it won't be freed.
-> 
-> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> Anything that even remotely resembles a real allocation heavy workload.
 
-Acked-by: Mike Rapoport <rppt-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+So I figured out that build the kernel as user triggers the allocation
+path in_task() and in_interrupt(). I booted a PREEMPT_NONE kernel and
+run "perf stat -r 5 b.sh" where b.sh unpacks a kernel and runs a
+allmodconfig build on /dev/shm. The slow disk should not be a problem.
 
-And my akcs for the first two patches are missing somehow in v4...
+With the optimisation:
+|  Performance counter stats for './b.sh' (5 runs):
+| 
+|       43.367.405,59 msec task-clock                #   30,901 CPUs utilized            ( +-  0,01% )
+|           7.393.238      context-switches          #  170,499 /sec                     ( +-  0,13% )
+|             832.364      cpu-migrations            #   19,196 /sec                     ( +-  0,15% )
+|         625.235.644      page-faults               #   14,419 K/sec                    ( +-  0,00% )
+| 103.822.081.026.160      cycles                    #    2,394 GHz                      ( +-  0,01% )
+|  75.392.684.840.822      stalled-cycles-frontend   #   72,63% frontend cycles idle     ( +-  0,02% )
+|  54.971.177.787.990      stalled-cycles-backend    #   52,95% backend cycles idle      ( +-  0,02% )
+|  69.543.893.308.966      instructions              #    0,67  insn per cycle
+|                                                    #    1,08  stalled cycles per insn  ( +-  0,00% )
+|  14.585.269.354.314      branches                  #  336,357 M/sec                    ( +-  0,00% )
+|     558.029.270.966      branch-misses             #    3,83% of all branches          ( +-  0,01% )
+|  
+|            1403,441 +- 0,466 seconds time elapsed  ( +-  0,03% )
 
-> ---
->  mm/page_owner.c | 42 ++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 42 insertions(+)
-> 
-> diff --git a/mm/page_owner.c b/mm/page_owner.c
-> index 28dac73e0542..f7820357e4d4 100644
-> --- a/mm/page_owner.c
-> +++ b/mm/page_owner.c
-> @@ -10,6 +10,7 @@
->  #include <linux/migrate.h>
->  #include <linux/stackdepot.h>
->  #include <linux/seq_file.h>
-> +#include <linux/memcontrol.h>
->  #include <linux/sched/clock.h>
->  
->  #include "internal.h"
-> @@ -325,6 +326,45 @@ void pagetypeinfo_showmixedcount_print(struct seq_file *m,
->  	seq_putc(m, '\n');
->  }
->  
-> +/*
-> + * Looking for memcg information and print it out
-> + */
-> +static inline int print_page_owner_memcg(char *kbuf, size_t count, int ret,
-> +					 struct page *page)
-> +{
-> +#ifdef CONFIG_MEMCG
-> +	unsigned long memcg_data;
-> +	struct mem_cgroup *memcg;
-> +	bool online;
-> +	char name[80];
-> +
-> +	rcu_read_lock();
-> +	memcg_data = READ_ONCE(page->memcg_data);
-> +	if (!memcg_data)
-> +		goto out_unlock;
-> +
-> +	if (memcg_data & MEMCG_DATA_OBJCGS)
-> +		ret += scnprintf(kbuf + ret, count - ret,
-> +				"Slab cache page\n");
-> +
-> +	memcg = page_memcg_check(page);
-> +	if (!memcg)
-> +		goto out_unlock;
-> +
-> +	online = (memcg->css.flags & CSS_ONLINE);
-> +	cgroup_name(memcg->css.cgroup, name, sizeof(name));
-> +	ret += scnprintf(kbuf + ret, count - ret,
-> +			"Charged %sto %smemcg %s\n",
-> +			PageMemcgKmem(page) ? "(via objcg) " : "",
-> +			online ? "" : "offline ",
-> +			name);
-> +out_unlock:
-> +	rcu_read_unlock();
-> +#endif /* CONFIG_MEMCG */
-> +
-> +	return ret;
-> +}
-> +
->  static ssize_t
->  print_page_owner(char __user *buf, size_t count, unsigned long pfn,
->  		struct page *page, struct page_owner *page_owner,
-> @@ -365,6 +405,8 @@ print_page_owner(char __user *buf, size_t count, unsigned long pfn,
->  			migrate_reason_names[page_owner->last_migrate_reason]);
->  	}
->  
-> +	ret = print_page_owner_memcg(kbuf, count, ret, page);
-> +
->  	ret += snprintf(kbuf + ret, count - ret, "\n");
->  	if (ret >= count)
->  		goto err;
-> -- 
-> 2.27.0
-> 
-> 
 
--- 
-Sincerely yours,
-Mike.
+With the optimisation disabled:
+|  Performance counter stats for './b.sh' (5 runs):
+| 
+|       43.354.742,31 msec task-clock                #   30,869 CPUs utilized            ( +-  0,01% )
+|           7.394.210      context-switches          #  170,601 /sec                     ( +-  0,06% )
+|             842.835      cpu-migrations            #   19,446 /sec                     ( +-  0,63% )
+|         625.242.341      page-faults               #   14,426 K/sec                    ( +-  0,00% )
+| 103.791.714.272.978      cycles                    #    2,395 GHz                      ( +-  0,01% )
+|  75.369.652.256.425      stalled-cycles-frontend   #   72,64% frontend cycles idle     ( +-  0,01% )
+|  54.947.610.706.450      stalled-cycles-backend    #   52,96% backend cycles idle      ( +-  0,01% )
+|  69.529.388.440.691      instructions              #    0,67  insn per cycle
+|                                                    #    1,08  stalled cycles per insn  ( +-  0,01% )
+|  14.584.515.016.870      branches                  #  336,497 M/sec                    ( +-  0,00% )
+|     557.716.885.609      branch-misses             #    3,82% of all branches          ( +-  0,02% )
+|  
+|             1404,47 +- 1,05 seconds time elapsed  ( +-  0,08% )
+
+I'm still open to a more specific test ;)
+
+Sebastian
