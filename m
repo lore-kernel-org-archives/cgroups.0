@@ -1,55 +1,88 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v4 3/4] mm/page_owner: Print memcg information
-Date: Thu, 3 Feb 2022 13:46:31 +0100
-Message-ID: <YfvOp5VXrxy9IW1w@dhcp22.suse.cz>
-References: <20220131192308.608837-5-longman@redhat.com>
- <20220202203036.744010-4-longman@redhat.com>
+From: Phil Auld <pauld@redhat.com>
+Subject: Re: [PATCH] cgroup/cpuset: Fix "suspicious RCU usage" lockdep warning
+Date: Thu, 3 Feb 2022 10:23:22 -0500
+Message-ID: <Yfvzaudy0hOduSMc@lorien.usersys.redhat.com>
+References: <20220203033103.773030-1-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1643892392; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1643901810;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=WD0KsuFGAKxwPJ8TEDz3MZAplll7b1MiXcSJo4CExx4=;
-        b=CQmLudPTvW4RaIzlWaw2EchZq5DbsHcpikxLxdiNyQzFdoT3+nVxC9O6xi3q9rw27Ye6Lp
-        7ygFDsjVCbZNeC2UEUGl9dY/9Gcry845qVzIqZPWuHDHO0NJgA4S862fpTyluqIeFsoRn4
-        p7lD24R7/HNiHwa1VlivOZxKVRNMnAQ=
+        bh=hSeQIZ/CtCE+d0vB+jizfse1LNxVSYoWhLdejmi7nC0=;
+        b=RrP7Oz/LWFR9TSQrEfVSKMwBJWTgkrMqccWJRXCBVmkGCxiOF7P8V2SiualnRvbCvyrdqm
+        IlVWY9xWOPqvY3AvGyoEVpfbc5drckvKtw3MMaAJ4pcgyo9/LCRb+8PPrN7pt4fC50J0Ls
+        m37j2OlDVtubtWzXZv1V0KIxm3HqQ5I=
 Content-Disposition: inline
-In-Reply-To: <20220202203036.744010-4-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20220203033103.773030-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed 02-02-22 15:30:35, Waiman Long wrote:
-[...]
-> +#ifdef CONFIG_MEMCG
-> +	unsigned long memcg_data;
-> +	struct mem_cgroup *memcg;
-> +	bool online;
-> +	char name[80];
+On Wed, Feb 02, 2022 at 10:31:03PM -0500 Waiman Long wrote:
+> It was found that a "suspicious RCU usage" lockdep warning was issued
+> with the rcu_read_lock() call in update_sibling_cpumasks().  It is
+> because the update_cpumasks_hier() function may sleep. So we have
+> to release the RCU lock, call update_cpumasks_hier() and reacquire
+> it afterward.
+> 
+> Also add a percpu_rwsem_assert_held() in update_sibling_cpumasks()
+> instead of stating that in the comment.
+> 
+> Fixes: 4716909cc5c5 ("cpuset: Track cpusets that use parent's effective_cpus")
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> ---
+>  kernel/cgroup/cpuset.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index dc653ab26e50..b147acece984 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1522,10 +1522,15 @@ static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
+>  	struct cpuset *sibling;
+>  	struct cgroup_subsys_state *pos_css;
+>  
+> +	percpu_rwsem_assert_held(&cpuset_rwsem);
 > +
-> +	rcu_read_lock();
-> +	memcg_data = READ_ONCE(page->memcg_data);
-> +	if (!memcg_data)
-> +		goto out_unlock;
-> +
-> +	if (memcg_data & MEMCG_DATA_OBJCGS)
-> +		ret += scnprintf(kbuf + ret, count - ret,
-> +				"Slab cache page\n");
-> +
-> +	memcg = page_memcg_check(page);
-> +	if (!memcg)
-> +		goto out_unlock;
-> +
-> +	online = (memcg->css.flags & CSS_ONLINE);
-> +	cgroup_name(memcg->css.cgroup, name, sizeof(name));
+>  	/*
+>  	 * Check all its siblings and call update_cpumasks_hier()
+>  	 * if their use_parent_ecpus flag is set in order for them
+>  	 * to use the right effective_cpus value.
+> +	 *
+> +	 * The update_cpumasks_hier() function may sleep. So we have to
+> +	 * release the RCU read lock before calling it.
+>  	 */
+>  	rcu_read_lock();
+>  	cpuset_for_each_child(sibling, pos_css, parent) {
+> @@ -1533,8 +1538,13 @@ static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
+>  			continue;
+>  		if (!sibling->use_parent_ecpus)
+>  			continue;
+> +		if (!css_tryget_online(&sibling->css))
+> +			continue;
+>  
+> +		rcu_read_unlock();
+>  		update_cpumasks_hier(sibling, tmp);
+> +		rcu_read_lock();
+> +		css_put(&sibling->css);
+>  	}
+>  	rcu_read_unlock();
+>  }
+> -- 
+> 2.27.0
+> 
 
-Is there any specific reason to use another buffer allocated on the
-stack? Also 80B seems too short to cover NAME_MAX.
+This looks good. Thanks Waiman.
 
-Nothing else jumped at me.
+Tested-by: Phil Auld <pauld@redhat.com>
+Reviewed-by: Phil Auld <pauld@redhat.com>
+
+
+Cheers,
+Phil
 -- 
-Michal Hocko
-SUSE Labs
+
