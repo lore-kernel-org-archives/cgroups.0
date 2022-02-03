@@ -1,72 +1,53 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup fixes for v5.17-rc2
-Date: Thu, 3 Feb 2022 06:13:32 -1000
-Message-ID: <Yfv/LMxqHSa3s5YS@slm.duckdns.org>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v4 2/4] mm/page_owner: Use scnprintf() to avoid excessive
+ buffer overrun check
+Date: Thu, 3 Feb 2022 13:49:02 -0500
+Message-ID: <42cca916-d4c8-daa1-4a91-60738c499c89@redhat.com>
+References: <20220131192308.608837-5-longman@redhat.com>
+ <20220202203036.744010-3-longman@redhat.com>
+ <5c03fa31-35a5-4cbc-6b0e-872d5db82a41@suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:content-transfer-encoding;
-        bh=uOJP/dHIjrt3Mk14YimQ7oK5vd7nsEQbU3Iru0dLJMs=;
-        b=DctRaEel5LO3as8bp8Q61ufK6PmYwfRynGpoS9S0XFEZDYYnIvtW5bLY+wBWVVI1pX
-         xt/CFxBrzuvUFyGTTkuJCSbVDUvkUANCQuSpKo5YiAoNeiL9X2IcJB3jxTlQ3aTD/EBy
-         suVMO53T83SDzqZF9CXZRS1wDrXInC6sU01MR99dATKQSO1puIbKbwJk7c0d2l8Tl9mK
-         keVyFE3lpmOedsoGf25+HK7KhvAlouycn9FFw9CAvWwqnA5V9DN4DC2Uk4DALP0xw0q6
-         6IfDFk5Hnz4ZW1LmvdYJI5VUWskhDW/g6cE0zkZahFVCXGLEmm6LRZMIGdxdDwbD0Sjk
-         MO+g==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1643914152;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=xvwI014RI3T9gp2AWaO1azWgkMohE5MRNXNJ2U28y3Q=;
+        b=CGwYX2/ytROtX0a4EVA7ZzbZ/H0TVDn2l8l+6e6eWp6VvHvhSlfD+6fZTiE8LSU56PLCXs
+        Jh6bLs0cNRXZS3JD3S81CkWx5MTzs4p1TfMr4atA4lQ93H1knhNS5g+fLLRp9+DAyBdJW9
+        6ls4IOzNC3D6e63JxfyoRhBNLBwDWNA=
+Content-Language: en-US
+In-Reply-To: <5c03fa31-35a5-4cbc-6b0e-872d5db82a41-AlSwsSmVLrQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hello, Linus.
+On 2/3/22 10:46, Vlastimil Babka wrote:
+> On 2/2/22 21:30, Waiman Long wrote:
+>> The snprintf() function can return a length greater than the given
+>> input size. That will require a check for buffer overrun after each
+>> invocation of snprintf(). scnprintf(), on the other hand, will never
+>> return a greater length. By using scnprintf() in selected places, we
+>> can avoid some buffer overrun checks except after stack_depot_snprint()
+>> and after the last snprintf().
+>>
+>> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>> Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>> Reviewed-by: Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+> Looks like this will work, but note that if the purpose of patch 1/4 was
+> that after the first scnprintf() that overflows the following calls will be
+> short-cut thanks to passing the size as 0, AFAICS that won't work. Because
+> scnprintf() returns the number without trailing zero, 'ret' will be 'count -
+> 1' after the overflow, so 'count - ret' will be 1, never 0.
 
-cgroup fixes for v5.17-rc2 including:
+Yes, I am aware of that. Patch 1 is just a micro-optimization for the 
+very rare case.
 
-* Eric's fix for a long standing cgroup1 permission issue where it only
-  checks for uid 0 instead of CAP which inadvertently allows unprivileged
-  userns roots to modify release_agent userhelper.
+Cheers,
+Longman
 
-* Fixes for the fallouts from Waiman's recent cpuset work.
 
-Thanks.
-
-The following changes since commit daadb3bd0e8d3e317e36bc2c1542e86c528665e5:
-
-  Merge tag 'locking_core_for_v5.17_rc1' of git://git.kernel.org/pub/scm/li=
-nux/kernel/git/tip/tip (2022-01-11 17:24:45 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.17-fixes
-
-for you to fetch changes up to 2bdfd2825c9662463371e6691b1a794e97fa36b4:
-
-  cgroup/cpuset: Fix "suspicious RCU usage" lockdep warning (2022-02-03 05:=
-59:01 -1000)
-
-----------------------------------------------------------------
-Eric W. Biederman (1):
-      cgroup-v1: Require capabilities to set release_agent
-
-Michal Koutn=FD (1):
-      cgroup/cpuset: Make child cpusets restrict parents on v1 hierarchy
-
-Tianchen Ding (1):
-      cpuset: Fix the bug that subpart_cpus updated wrongly in update_cpuma=
-sk()
-
-Waiman Long (1):
-      cgroup/cpuset: Fix "suspicious RCU usage" lockdep warning
-
- kernel/cgroup/cgroup-v1.c | 14 ++++++++++
- kernel/cgroup/cpuset.c    | 65 +++++++++++++++++++++++++++++++++++++------=
-----
- 2 files changed, 65 insertions(+), 14 deletions(-)
-
---=20
-tejun
