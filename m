@@ -1,53 +1,66 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 2/4] mm/page_owner: Use scnprintf() to avoid excessive
- buffer overrun check
-Date: Thu, 3 Feb 2022 13:49:02 -0500
-Message-ID: <42cca916-d4c8-daa1-4a91-60738c499c89@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v4 4/4] mm/page_owner: Record task command name
+Date: Thu, 3 Feb 2022 13:53:10 -0500
+Message-ID: <88619dad-6d41-6a91-a8d6-72e3aaf3575d@redhat.com>
 References: <20220131192308.608837-5-longman@redhat.com>
- <20220202203036.744010-3-longman@redhat.com>
- <5c03fa31-35a5-4cbc-6b0e-872d5db82a41@suse.cz>
+ <20220131220328.622162-1-longman@redhat.com>
+ <YflRjeoC0jbzArDG@dhcp22.suse.cz>
+ <4ba66abe-5c6d-26a7-f11c-c3b8514bfb34@redhat.com>
+ <91fb8637-6550-dc37-a95b-df7812b02b0a@suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1643914152;
+        s=mimecast20190719; t=1643914432;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=xvwI014RI3T9gp2AWaO1azWgkMohE5MRNXNJ2U28y3Q=;
-        b=CGwYX2/ytROtX0a4EVA7ZzbZ/H0TVDn2l8l+6e6eWp6VvHvhSlfD+6fZTiE8LSU56PLCXs
-        Jh6bLs0cNRXZS3JD3S81CkWx5MTzs4p1TfMr4atA4lQ93H1knhNS5g+fLLRp9+DAyBdJW9
-        6ls4IOzNC3D6e63JxfyoRhBNLBwDWNA=
+        bh=X9DO1jLJUL5DivNcmSp8xo0wxBcJI5YNywWCMphqcSI=;
+        b=L8h3wgZvPTpUbFbRNDEeNDGCfySgy6En0LPiby1pso5XQPXlqXq+gS51hte5kSKmUf5BKq
+        QcLyCCqJkHCWVGz/5D6/rk3XhKJ8R5XjyAObw6UTEJEZ8D1J5yjhg9D+BaCfeNdY95dW5N
+        Ib2w9WK6inq1zPvv5j5oYe97axBAWTA=
 Content-Language: en-US
-In-Reply-To: <5c03fa31-35a5-4cbc-6b0e-872d5db82a41-AlSwsSmVLrQ@public.gmane.org>
+In-Reply-To: <91fb8637-6550-dc37-a95b-df7812b02b0a@suse.cz>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@suse.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Petr Mladek <pmladek@suse.com>, Steven Rostedt <rostedt@goodmis.org>, Sergey Senozhatsky <senozhatsky@chromium.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>, Mike Rapoport <rppt@kernel.org>, David Rientjes <rientjes@google.com>, Roman Gushchin <guro@fb.com>, Rafael Aquini <aquini@redhat.com>
 
-On 2/3/22 10:46, Vlastimil Babka wrote:
-> On 2/2/22 21:30, Waiman Long wrote:
->> The snprintf() function can return a length greater than the given
->> input size. That will require a check for buffer overrun after each
->> invocation of snprintf(). scnprintf(), on the other hand, will never
->> return a greater length. By using scnprintf() in selected places, we
->> can avoid some buffer overrun checks except after stack_depot_snprint()
->> and after the last snprintf().
->>
->> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->> Reviewed-by: Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-> Looks like this will work, but note that if the purpose of patch 1/4 was
-> that after the first scnprintf() that overflows the following calls will be
-> short-cut thanks to passing the size as 0, AFAICS that won't work. Because
-> scnprintf() returns the number without trailing zero, 'ret' will be 'count -
-> 1' after the overflow, so 'count - ret' will be 1, never 0.
+On 2/3/22 07:10, Vlastimil Babka wrote:
+> On 2/2/22 17:53, Waiman Long wrote:
+>> On 2/1/22 10:28, Michal Hocko wrote:
+>>> Cc Vlastimil
+>>>
+>>> On Mon 31-01-22 17:03:28, Waiman Long wrote:
+>>>> The page_owner information currently includes the pid of the calling
+>>>> task. That is useful as long as the task is still running. Otherwise,
+>>>> the number is meaningless. To have more information about the allocating
+>>>> tasks that had exited by the time the page_owner information is
+>>>> retrieved, we need to store the command name of the task.
+>>>>
+>>>> Add a new comm field into page_owner structure to store the command name
+>>>> and display it when the page_owner information is retrieved.
+>>> I completely agree that pid is effectivelly useless (if not misleading)
+>>> but is comm really telling all that much to compensate for the
+>>> additional storage required for _each_ page in the system?
+>> Yes, it does add an extra 16 bytes per page overhead. The command name can
+>> be useful if one want to find out which userspace command is responsible for
+>> a problematic page allocation. Maybe we can remove pid from page_owner to
+>> save 8 bytes as you also agree that this number is not that useful.
+> Pid could be used to correlate command instances (not perfectly if reuse
+> happens), but command name could have a higher chance to be useful. In my
+> experience the most useful were the stacktraces and gfp/order etc. anyway.
+> So I wouldn't be opposed replacing pid with comm. The mild size increase
+> should be acceptable, this is an opt-in feature for debugging sessions with
+> known tradeoff for memory and cpu overhead for the extra info.
 
-Yes, I am aware of that. Patch 1 is just a micro-optimization for the 
-very rare case.
+Thanks for the information.
 
-Cheers,
+I floated around dropping pid just as a possible way to reduce overall 
+memory overhead. I did not do that in my patch and I am not planning to 
+post any patch unless everybody agree.
+
+Cheer,
 Longman
-
 
