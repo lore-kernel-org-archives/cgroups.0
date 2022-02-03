@@ -1,36 +1,36 @@
-From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Subject: Re: [GIT PULL] cgroup fixes for v5.17-rc2
-Date: Thu, 03 Feb 2022 19:40:22 +0000
-Message-ID: <164391722203.21505.14786787349066651579.pr-tracker-bot@kernel.org>
-References: <Yfv/LMxqHSa3s5YS@slm.duckdns.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643917222;
-        bh=/0QUOiReOFNNywPWXIehNo6nlkCCJhv9EHrfvrPyW4Y=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=LgxRNuDKjlycBVITOho0n2QnclXE5obeBA2XlH69isSaoJGZg/zS9xdQiafhnKRxx
-         cKbKF791mIUctJSEeMHbpL1icHRFI68mRUF5yUK7ovB5xcv58d2L+DOoOEotXBwn5E
-         aq9fW5fF6321S33PcmLG0gfczW/hPhRNU2xMhwlVKFVuA99Gg08jSoxWxYpnhs/H1v
-         9KwwQ0R37KeIbUin1OlLvIc5amw3TcwfWVrMmZ1At9cod4kmPbx3hJN2E0EH3kJP44
-         LCc/455uuFSB3HNNAzMW0A2YE+pL1kSnz9zb7cYohYz2Nk3MOxk4iMlaa6tpiXADSt
-         8tXOY/gxknzWg==
-In-Reply-To: <Yfv/LMxqHSa3s5YS-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH RESEND] mm: memcg: synchronize objcg lists with a
+ dedicated spinlock
+Date: Thu, 3 Feb 2022 15:19:12 -0800
+Message-ID: <20220203151912.87d47b82c1bc3f0d56be0e3a@linux-foundation.org>
+References: <Yfm1IHmoGdyUR81T@carbon.dhcp.thefacebook.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1643930353;
+        bh=QAHuBZ+lX2RUpSHwgEocw6rmoaPtXDKxXRloyq8ZEec=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=CjspKTS1bIPfibcKITrREBKeKQlZmkOykOg6E5BXy0zEwtnZIRsD4PFTz6byuzX9r
+         +lFOI56eEYmixY6vm3Qq137KAT2W9/9MD417k/Q5JaOKMvDs+3P27ZGynHSXbyEx35
+         c/dnEzqXOQRUU29oM0utwLQvmRN+owV/pen03xtc=
+In-Reply-To: <Yfm1IHmoGdyUR81T@carbon.dhcp.thefacebook.com>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Roman Gushchin <guro@fb.com>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Alexander Egorenkov <egorenar@linux.ibm.com>, Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Jeremy Linton <jeremy.linton@arm.com>, cgroups@vger.kernel.org
 
-The pull request you sent on Thu, 3 Feb 2022 06:13:32 -1000:
+On Tue, 1 Feb 2022 14:33:04 -0800 Roman Gushchin <guro@fb.com> wrote:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.17-fixes
+> Alexander reported a circular lock dependency revealed by the mmap1
+> ltp test:
+>   LOCKDEP_CIRCULAR (suite: ltp, case: mtest06 (mmap1))
+> 
+> ...
+>
+> Fixes: bf4f059954dc ("mm: memcg/slab: obj_cgroup API")
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/305e6c42e8de565864431510230a8ad75c85f4d4
+I'm thinking it needs cc:stable.  It sounds unlikely that we'll hit it
+in real life, but lockdep splats are concerning and I expect downstream
+kernel consumers will end up merging this anyway, for this reason.
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
