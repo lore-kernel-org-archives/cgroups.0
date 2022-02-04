@@ -1,35 +1,35 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-5.17-fixes] BUILD SUCCESS
- 2bdfd2825c9662463371e6691b1a794e97fa36b4
-Date: Fri, 04 Feb 2022 12:59:32 +0800
-Message-ID: <61fcb2b4.L9D7stnFVzlOdjPV%lkp@intel.com>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 48da2ddc4c785b908364be6e37eff1f55c189579
+Date: Fri, 04 Feb 2022 12:59:22 +0800
+Message-ID: <61fcb2aa.5fSSlrHwALb5sh1Q%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1643950799; x=1675486799;
+  t=1643950798; x=1675486798;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=AZC63PdOl+2M3gPZ+e6O5UCCcUMhpCWIo3eFFE7tSd4=;
-  b=Ybu6B7smjLIiV4zBBNsdpZcsG2mkjTOTSCFBi4nT29pn+z0qNQShDiTF
-   BzjsOfr/V55IdasPn2SKfUhE6u9WB+KJHjdAPXNDgN84D9bgiegjkZ8qS
-   3/lGM4AN+PV6ovjexoWGEKZFMavCqnsu3i1+RZhNIbRc5YCuJuHL0njGX
-   KxtiAdnmuCfaw80bebzf/47XgxTQbYTYMjSCpJ/rIdyUXKhEfhuFfKtbx
-   YjLP1NhuD3Fj9xRA2com/OAq4O971FEO+KqqO6wNOtoBM89cICaGc8x1v
-   Yq5PX3lyoCwwgwU1sBNzGzV72qPlhkHAdIyl1D9v1NAKH4BJC0s+D22/Q
+  bh=l0NtKdegugXGI6z/G98c+q6POOYIzyo19ClDlNsQLBQ=;
+  b=Ku0p31R/SEnUXu4eZNSll3TX3LXz3nnvNXu1PJRyVIUF58OfflGZnNQU
+   ofV4t5l7zLzouxxAHhcDlHF8H/2oDj5yzc8VP5RXb90FxcAn9gzHJJAS0
+   PN6FngOUbEt6AZUI7SIFm/dYncHsKBHy8PZjxnIGfmb6ejPNVJ3DV3Vmq
+   jN/CwMF4pClF0LmXGcOcD3MW9d12BpiBjwdCAWUVGfJBjxBpjmpUtl+1m
+   sHXAzYxpyLKLZUyL8sKfmmel7Gmj3fqk6/RbnTt7LLowIURHiiVOYxC/Q
+   3FsRCHAnRZMyMj38K1uUYXMMHxHDdD5jrbxququS51vt9pks//gdrmLLW
    w==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.17-fixes
-branch HEAD: 2bdfd2825c9662463371e6691b1a794e97fa36b4  cgroup/cpuset: Fix "suspicious RCU usage" lockdep warning
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 48da2ddc4c785b908364be6e37eff1f55c189579  Merge branch 'for-5.17-fixes' into for-next
 
-elapsed time: 724m
+elapsed time: 723m
 
-configs tested: 176
+configs tested: 171
 configs skipped: 4
 
 The following configs have been built successfully.
@@ -49,6 +49,9 @@ mips                            ar7_defconfig
 powerpc                     rainier_defconfig
 arm                           h5000_defconfig
 ia64                         bigsur_defconfig
+sh                   secureedge5410_defconfig
+arc                        nsim_700_defconfig
+mips                           ci20_defconfig
 sh                           se7750_defconfig
 sh                         microdev_defconfig
 arc                            hsdk_defconfig
@@ -57,8 +60,6 @@ parisc                           allyesconfig
 arc                          axs101_defconfig
 arm                            mps2_defconfig
 arm                           sunxi_defconfig
-powerpc                mpc7448_hpc2_defconfig
-powerpc                  iss476-smp_defconfig
 sparc                            allyesconfig
 powerpc                     mpc83xx_defconfig
 powerpc                     stx_gp3_defconfig
@@ -141,9 +142,6 @@ i386                 randconfig-a004-20220131
 i386                          randconfig-a012
 i386                          randconfig-a014
 i386                          randconfig-a016
-x86_64                        randconfig-a002
-x86_64                        randconfig-a006
-x86_64                        randconfig-a004
 riscv                randconfig-r042-20220130
 arc                  randconfig-r043-20220130
 s390                 randconfig-r044-20220130
@@ -209,9 +207,6 @@ i386                 randconfig-a016-20220131
 i386                          randconfig-a011
 i386                          randconfig-a013
 i386                          randconfig-a015
-x86_64                        randconfig-a003
-x86_64                        randconfig-a001
-x86_64                        randconfig-a005
 riscv                randconfig-r042-20220131
 hexagon              randconfig-r045-20220130
 hexagon              randconfig-r045-20220131
