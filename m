@@ -1,70 +1,81 @@
-From: Zhang Qiao <zhangqiao22@huawei.com>
-Subject: Re: [PATCH] cgroup/cpuset: Fix a race between cpuset_attach() and cpu
- hotplug
-Date: Mon, 7 Feb 2022 14:17:30 +0800
-Message-ID: <0761d941-8fbb-d06b-3d0b-8330c8b54499@huawei.com>
-References: <20220121101210.84926-1-zhangqiao22@huawei.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH v7 1/2] blk-throtl: introduce a new flag
+ THROTL_TG_CANCELING
+Date: Mon, 7 Feb 2022 16:15:06 +0800
+Message-ID: <YgDVCjkjJe1CSVxv@T590>
+References: <20220128084522.3169961-1-yukuai3@huawei.com>
+ <20220128084522.3169961-2-yukuai3@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20220121101210.84926-1-zhangqiao22@huawei.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1644221750;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=fZCtKdGV/PdaGul2Xel2hTCDnJYx95E5j/0H+d54vhM=;
+        b=cYdCKnvXBL9hcdC9e+tOr2P3CvH5Wpdbtu8hne1S5HsOKlVVpe3to3DMMeJhhTp0FoY2Am
+        Uo9qW5metTSSb1yVDkvMiO08oFio5lqIDMLslgPLAn3xt/xNNd5fwkIyOFo+A8OmI3NLif
+        oyWQ0nOC3sTeYwquzV/hFfcIJN8WQoA=
+Content-Disposition: inline
+In-Reply-To: <20220128084522.3169961-2-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, matthltc@us.ibm.com, bblum@google.com, menage@google.com, akpm@linux-foundation.org, longman@redhat.com, mkoutny@suse.com, zhaogongyi@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai3@huawei.com>
+Cc: tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-Gentle ping on this patch.
-
-在 2022/1/21 18:12, Zhang Qiao 写道:
-> As previously discussed(https://lkml.org/lkml/2022/1/20/51),
-> cpuset_attach() is affected with similar cpu hotplug race,
-> as follow scenario:
+On Fri, Jan 28, 2022 at 04:45:21PM +0800, Yu Kuai wrote:
+> If the new flag is set, then the throtl_grp will stop throttling bios.
+> Prepare to canceling all throttled bios if the disk is gone.
 > 
->      cpuset_attach()				cpu hotplug
->     ---------------------------            ----------------------
->     down_write(cpuset_rwsem)
->     guarantee_online_cpus() // (load cpus_attach)
-> 					sched_cpu_deactivate
-> 					  set_cpu_active()
-> 					  // will change cpu_active_mask
->     set_cpus_allowed_ptr(cpus_attach)
->       __set_cpus_allowed_ptr_locked()
->        // (if the intersection of cpus_attach and
->          cpu_active_mask is empty, will return -EINVAL)
->     up_write(cpuset_rwsem)
-> 
-> To avoid races such as described above, protect cpuset_attach() call
-> with cpu_hotplug_lock.
-> 
-> Fixes: be367d099270 ("cgroups: let ss->can_attach and ss->attach do whole threadgroups at a time")
-> Reported-by: Zhao Gongyi <zhaogongyi@huawei.com>
-> Signed-off-by: Zhang Qiao <zhangqiao22@huawei.com>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 > ---
->  kernel/cgroup/cpuset.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  block/blk-throttle.c | 17 +++++++++++++----
+>  1 file changed, 13 insertions(+), 4 deletions(-)
 > 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index dc653ab26e50..0af5725cc1df 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -2252,6 +2252,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
->  	cgroup_taskset_first(tset, &css);
->  	cs = css_cs(css);
-> 
-> +	cpus_read_lock();
->  	percpu_down_write(&cpuset_rwsem);
-> 
->  	guarantee_online_mems(cs, &cpuset_attach_nodemask_to);
-> @@ -2305,6 +2306,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
->  		wake_up(&cpuset_attach_wq);
-> 
->  	percpu_up_write(&cpuset_rwsem);
-> +	cpus_read_unlock();
->  }
-> 
->  /* The various types of files and directories in a cpuset file system */
-> --
-> 2.18.0
-> 
-> .
-> 
+> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+> index 7c462c006b26..abc5e506c72d 100644
+> --- a/block/blk-throttle.c
+> +++ b/block/blk-throttle.c
+> @@ -43,8 +43,12 @@
+>  static struct workqueue_struct *kthrotld_workqueue;
+>  
+>  enum tg_state_flags {
+> -	THROTL_TG_PENDING	= 1 << 0,	/* on parent's pending tree */
+> -	THROTL_TG_WAS_EMPTY	= 1 << 1,	/* bio_lists[] became non-empty */
+> +	/* on parent's pending tree */
+> +	THROTL_TG_PENDING	= 1 << 0,
+> +	/* bio_lists[] became non-empty */
+> +	THROTL_TG_WAS_EMPTY	= 1 << 1,
+> +	/* starts to cancel all bios, will be set if the disk is deleted */
+> +	THROTL_TG_CANCELING	= 1 << 2,
+>  };
+>  
+>  #define rb_entry_tg(node)	rb_entry((node), struct throtl_grp, rb_node)
+> @@ -871,7 +875,8 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
+>  	       bio != throtl_peek_queued(&tg->service_queue.queued[rw]));
+>  
+>  	/* If tg->bps = -1, then BW is unlimited */
+> -	if (bps_limit == U64_MAX && iops_limit == UINT_MAX) {
+> +	if ((bps_limit == U64_MAX && iops_limit == UINT_MAX) ||
+> +	    tg->flags & THROTL_TG_CANCELING) {
+>  		if (wait)
+>  			*wait = 0;
+>  		return true;
+> @@ -974,6 +979,9 @@ static void tg_update_disptime(struct throtl_grp *tg)
+>  	unsigned long read_wait = -1, write_wait = -1, min_wait = -1, disptime;
+>  	struct bio *bio;
+>  
+> +	if (tg->flags & THROTL_TG_CANCELING)
+> +		goto update;
+> +
+
+The above change and the following one in tg_update_disptime() isn't
+needed actually.
+
+Also I'd suggest to fold the two into one patch.
+
+
+Thanks,
+Ming
+
