@@ -1,48 +1,70 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH RESEND] mm: memcg: synchronize objcg lists with a
- dedicated spinlock
-Date: Sat, 5 Feb 2022 08:58:26 -0800
-Message-ID: <Yf6sskyXcffxTA+b@carbon.dhcp.thefacebook.com>
-References: <Yfm1IHmoGdyUR81T@carbon.dhcp.thefacebook.com>
- <20220203151912.87d47b82c1bc3f0d56be0e3a@linux-foundation.org>
+From: Zhang Qiao <zhangqiao22@huawei.com>
+Subject: Re: [PATCH] cgroup/cpuset: Fix a race between cpuset_attach() and cpu
+ hotplug
+Date: Mon, 7 Feb 2022 14:17:30 +0800
+Message-ID: <0761d941-8fbb-d06b-3d0b-8330c8b54499@huawei.com>
+References: <20220121101210.84926-1-zhangqiao22@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=s2vIlAN/7DsTxLiP+mwrPc0mOmUin6NW3bRsxKydZ4M=;
- b=Ulk3+gg4Y+T4cbmvtkS4IYNUbhPTxGTXWU13ShGYoC4lNRfVyidgORBSIwJDocDobYnA
- 972k/Aee33geuclOFOMlweyQHKrq9+7Ren3J6fKkvd24P//SKFRs6QhbMwKL0q9y9s/t
- m+Ax2ZglKB0jzuwjZBBjUEdsXNcfQrHenuQ= 
-Content-Disposition: inline
-In-Reply-To: <20220203151912.87d47b82c1bc3f0d56be0e3a-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20220121101210.84926-1-zhangqiao22@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexander Egorenkov <egorenar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jeremy Linton <jeremy.linton-5wv7dgnIgG8@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, matthltc@us.ibm.com, bblum@google.com, menage@google.com, akpm@linux-foundation.org, longman@redhat.com, mkoutny@suse.com, zhaogongyi@huawei.com
 
-On Thu, Feb 03, 2022 at 03:19:12PM -0800, Andrew Morton wrote:
-> On Tue, 1 Feb 2022 14:33:04 -0800 Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
+Gentle ping on this patch.
+
+在 2022/1/21 18:12, Zhang Qiao 写道:
+> As previously discussed(https://lkml.org/lkml/2022/1/20/51),
+> cpuset_attach() is affected with similar cpu hotplug race,
+> as follow scenario:
 > 
-> > Alexander reported a circular lock dependency revealed by the mmap1
-> > ltp test:
-> >   LOCKDEP_CIRCULAR (suite: ltp, case: mtest06 (mmap1))
-> > 
-> > ...
-> >
-> > Fixes: bf4f059954dc ("mm: memcg/slab: obj_cgroup API")
+>      cpuset_attach()				cpu hotplug
+>     ---------------------------            ----------------------
+>     down_write(cpuset_rwsem)
+>     guarantee_online_cpus() // (load cpus_attach)
+> 					sched_cpu_deactivate
+> 					  set_cpu_active()
+> 					  // will change cpu_active_mask
+>     set_cpus_allowed_ptr(cpus_attach)
+>       __set_cpus_allowed_ptr_locked()
+>        // (if the intersection of cpus_attach and
+>          cpu_active_mask is empty, will return -EINVAL)
+>     up_write(cpuset_rwsem)
 > 
-> I'm thinking it needs cc:stable.  It sounds unlikely that we'll hit it
-> in real life, but lockdep splats are concerning and I expect downstream
-> kernel consumers will end up merging this anyway, for this reason.
+> To avoid races such as described above, protect cpuset_attach() call
+> with cpu_hotplug_lock.
 > 
-
-I agree.
-
-I'm somewhat surprised that we haven't seen any such warnings until recently,
-so I guess some recent kmem accounting change made it more probable.
-
-Anyway, it feels like it's a low risk change and I see no reasons
-to not backport it to stable.
-
-Thank you!
+> Fixes: be367d099270 ("cgroups: let ss->can_attach and ss->attach do whole threadgroups at a time")
+> Reported-by: Zhao Gongyi <zhaogongyi@huawei.com>
+> Signed-off-by: Zhang Qiao <zhangqiao22@huawei.com>
+> ---
+>  kernel/cgroup/cpuset.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index dc653ab26e50..0af5725cc1df 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -2252,6 +2252,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
+>  	cgroup_taskset_first(tset, &css);
+>  	cs = css_cs(css);
+> 
+> +	cpus_read_lock();
+>  	percpu_down_write(&cpuset_rwsem);
+> 
+>  	guarantee_online_mems(cs, &cpuset_attach_nodemask_to);
+> @@ -2305,6 +2306,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
+>  		wake_up(&cpuset_attach_wq);
+> 
+>  	percpu_up_write(&cpuset_rwsem);
+> +	cpus_read_unlock();
+>  }
+> 
+>  /* The various types of files and directories in a cpuset file system */
+> --
+> 2.18.0
+> 
+> .
+> 
