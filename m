@@ -1,68 +1,55 @@
-From: Namhyung Kim <namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 02/12] cgroup: rstat: Make cgroup_rstat_cpu_lock name readable
-Date: Tue,  8 Feb 2022 10:41:58 -0800
-Message-ID: <20220208184208.79303-3-namhyung@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 02/12] cgroup: rstat: Make cgroup_rstat_cpu_lock name
+ readable
+Date: Tue, 8 Feb 2022 08:46:43 -1000
+Message-ID: <YgK6k4TXnRbm02dh@slm.duckdns.org>
 References: <20220208184208.79303-1-namhyung@kernel.org>
+ <20220208184208.79303-3-namhyung@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=DVqQIGXek9gqjDYZ5x5feEwzLs2GJZs4gUa7i+kzwxU=;
-        b=eZkvb8+7UyFnR21L5G1zcGI8qmb7Z6a9FPI1whMSBLG+SQouRtRGXHvgWofofksj4X
-         gZB5sFr6ghXQvJW/Qq3wOP/ubVYRVVqZWpEXOJmHLHA+9yVi2iic/bTxbCgLKsYFNUWx
-         nWOGj1PItndZXy9CxHYxkoPIZYgXs+AvTDgCbI5hEiHLb/9u/ASKrijJAysQub7y88RG
-         FMA3a1+KBL0mqLyGYcIfSihA58L1nbkquzmiHjIu9u28yKitN1sxuU6vO4J9BW61CWiX
-         1gvLzqO7GENqtEdf8SQH8I9Z6MeL3HfDxjye5PqXcFHWOAn5lm2GV0kMVKD8KMbkYT/q
-         pwKg==
-Sender: Namhyung Kim <namhyung-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-In-Reply-To: <20220208184208.79303-1-namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=1liiLSuYIW9j6jQFc6OEJ1fextR2u28LmbY2MxPqeU4=;
+        b=S4F32V8+CrxKsU7uCl/D8b+9z3GIEhP7EcY0HQyP6a4Hu1ugw4jLGnFWrpWzLRUaGF
+         Tj4HjXVQvz8ks8LPynj0KVjdf5Tj0h5J61V+9uAFNbcQDmlWfP7jtXXQ1dwDXWkDMwLB
+         iHzvT8dXNqLFszTi/YK6SCqTGJ5kiT90rTT5U5E0wlIXy141dM9iNa4WwYMzdxRgScUs
+         JExdPpR3P2/2+b4bKe2FDui3LbPhAh16wU0RJyK8IwB9PW3/t3IJhUVT32PR4e7viY3d
+         60XxmnbcPlNvyGToKFK1BXwHHV61S3/t/6BRgpSODpc3Y9pspU7+lz+6mjb69xSeIi8p
+         ntUw==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20220208184208.79303-3-namhyung@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Boqun Feng <boqun.feng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Byungchul Park <byungchul.park-Hm3cg6mZ9cc@public.gmane.org>, "Paul E. McKenney" <paul.mckenney-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Mathieu Desnoyers <mathieu.desnoyers-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>, Radoslaw Burny <rburny-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Namhyung Kim <namhyung@kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Will Deacon <will@kernel.org>, Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>, Byungchul Park <byungchul.park@lge.com>, "Paul E. McKenney" <paul.mckenney@linaro.org>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Radoslaw Burny <rburny@google.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
-The raw_spin_lock_init() uses the argument to name its lockdep map.
-But passing per_cpu_ptr() macro directly makes it a very very long
-name as it expanded like below:
+On Tue, Feb 08, 2022 at 10:41:58AM -0800, Namhyung Kim wrote:
+> The raw_spin_lock_init() uses the argument to name its lockdep map.
+> But passing per_cpu_ptr() macro directly makes it a very very long
+> name as it expanded like below:
+> 
+>   ({ do { const void *__vpp_verify = (typeof((&cgroup_rstat_cpu_lock) ...
+> 
+> Let's fix it by passing a local variable instead.  With this change,
+> the name now looks like:
+> 
+>   cgrp_rstat_cpu_lock
+> 
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Zefan Li <lizefan.x@bytedance.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: cgroups@vger.kernel.org
+> Signed-off-by: Namhyung Kim <namhyung@kernel.org>
 
-  ({ do { const void *__vpp_verify = (typeof((&cgroup_rstat_cpu_lock) ...
+Acked-by: Tejun Heo <tj@kernel.org>
 
-Let's fix it by passing a local variable instead.  With this change,
-the name now looks like:
+but maybe add a comment explaining what's going on?
 
-  cgrp_rstat_cpu_lock
+Thanks.
 
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Signed-off-by: Namhyung Kim <namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- kernel/cgroup/rstat.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-index 9d331ba44870..d1845f1196c9 100644
---- a/kernel/cgroup/rstat.c
-+++ b/kernel/cgroup/rstat.c
-@@ -286,9 +286,12 @@ void cgroup_rstat_exit(struct cgroup *cgrp)
- void __init cgroup_rstat_boot(void)
- {
- 	int cpu;
-+	raw_spinlock_t *cgrp_rstat_cpu_lock;
- 
--	for_each_possible_cpu(cpu)
--		raw_spin_lock_init(per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu));
-+	for_each_possible_cpu(cpu) {
-+		cgrp_rstat_cpu_lock = per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu);
-+		raw_spin_lock_init(cgrp_rstat_cpu_lock);
-+	}
- }
- 
- /*
 -- 
-2.35.0.263.gb82422642f-goog
-
+tejun
