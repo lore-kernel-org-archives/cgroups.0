@@ -1,53 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 02/12] cgroup: rstat: Make cgroup_rstat_cpu_lock name
- readable
-Date: Tue, 8 Feb 2022 08:46:43 -1000
-Message-ID: <YgK6k4TXnRbm02dh@slm.duckdns.org>
-References: <20220208184208.79303-1-namhyung@kernel.org>
- <20220208184208.79303-3-namhyung@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH -next] blk-throttle: enable io throttle for root in
+ cgroup v2
+Date: Tue, 8 Feb 2022 08:49:11 -1000
+Message-ID: <YgK7J8TFyFvp/rv1@slm.duckdns.org>
+References: <20220114093000.3323470-1-yukuai3@huawei.com>
+ <YfGE9L4i7DtNTo08@slm.duckdns.org>
+ <235b0757-d322-2b6e-3ab6-ecc8c82f8f1e@huawei.com>
+ <Yflr4FzUTWsiLTC/@slm.duckdns.org>
+ <32b6949d-60b1-82ce-ae44-1cf089a78276@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=1liiLSuYIW9j6jQFc6OEJ1fextR2u28LmbY2MxPqeU4=;
-        b=S4F32V8+CrxKsU7uCl/D8b+9z3GIEhP7EcY0HQyP6a4Hu1ugw4jLGnFWrpWzLRUaGF
-         Tj4HjXVQvz8ks8LPynj0KVjdf5Tj0h5J61V+9uAFNbcQDmlWfP7jtXXQ1dwDXWkDMwLB
-         iHzvT8dXNqLFszTi/YK6SCqTGJ5kiT90rTT5U5E0wlIXy141dM9iNa4WwYMzdxRgScUs
-         JExdPpR3P2/2+b4bKe2FDui3LbPhAh16wU0RJyK8IwB9PW3/t3IJhUVT32PR4e7viY3d
-         60XxmnbcPlNvyGToKFK1BXwHHV61S3/t/6BRgpSODpc3Y9pspU7+lz+6mjb69xSeIi8p
-         ntUw==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=HzqJzWy6/gVejSAN5h5m+QbHqL8I+Ih3BBbS9yeEwMQ=;
+        b=N4MKN8A1dy9x/0fQ3O5ZkWlr8CY4zUnafoD5iZJ2GzR2vHrPtZ9c3Augj8QVTK/AOB
+         6/Q0T9TxM0VSWHm37lP2a4E0TiBrzrW1EhYPumJszYBdF7eUpgZwahZdkzXGgG8+uijN
+         EmyFn0npWdJy1OTjwf8aZ/+9k7emBiOHVNUqPcClPbMfn2VqEkoBj+u0tEthGor79MHU
+         Q+YzcmqT/YYt5W56qTcPGLmXCR1cUCzJMQ48WnZQUTxPcgO02slV04kbISsKtoFvVS58
+         LCwvTK7xcTi0/LT7PubbSs8+5waC1a9C1PTTqMm+3ZHp1Zz7rUdlBA27X4l7qSY3SA+s
+         X3fw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20220208184208.79303-3-namhyung@kernel.org>
+In-Reply-To: <32b6949d-60b1-82ce-ae44-1cf089a78276-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Namhyung Kim <namhyung@kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Will Deacon <will@kernel.org>, Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>, Byungchul Park <byungchul.park@lge.com>, "Paul E. McKenney" <paul.mckenney@linaro.org>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Radoslaw Burny <rburny@google.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
+To: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Tue, Feb 08, 2022 at 10:41:58AM -0800, Namhyung Kim wrote:
-> The raw_spin_lock_init() uses the argument to name its lockdep map.
-> But passing per_cpu_ptr() macro directly makes it a very very long
-> name as it expanded like below:
-> 
->   ({ do { const void *__vpp_verify = (typeof((&cgroup_rstat_cpu_lock) ...
-> 
-> Let's fix it by passing a local variable instead.  With this change,
-> the name now looks like:
-> 
->   cgrp_rstat_cpu_lock
-> 
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Zefan Li <lizefan.x@bytedance.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: cgroups@vger.kernel.org
-> Signed-off-by: Namhyung Kim <namhyung@kernel.org>
+Hello,
 
-Acked-by: Tejun Heo <tj@kernel.org>
+On Tue, Feb 08, 2022 at 09:38:33AM +0800, yukuai (C) wrote:
+> 3) If we limit iops to 8 for each client from server, client should work
+> fine, however, server can receive 64 x 8 = 512 io at most at the same
+> time, which might cause too much pressure on the server.(maybe bps is
+> more appropriate to explain the high pressure).
 
-but maybe add a comment explaining what's going on?
+I don't follow this part. Why can't the server control however it wanna
+control?
 
 Thanks.
 
