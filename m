@@ -1,98 +1,129 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/4] mm/memcg: Add a local_lock_t for IRQ and TASK object.
-Date: Tue, 8 Feb 2022 09:58:27 -0800
-Message-ID: <CALvZod7yovQ5OTWr=k_eiEBVb1LTRvPkbsY8joAtyigQnvBUww@mail.gmail.com>
-References: <20220125164337.2071854-1-bigeasy@linutronix.de>
- <20220125164337.2071854-4-bigeasy@linutronix.de> <YfFmxH1IXeegNOa9@dhcp22.suse.cz>
- <YfKHxKda7bGJmrLJ@linutronix.de> <YfkhsiWHzsyQSBfl@dhcp22.suse.cz>
- <Yfkjjamj09lZn4sA@linutronix.de> <YflR3/RuGjYuQZPH@dhcp22.suse.cz>
- <YfumP3u1VCjKHE3b@linutronix.de> <Yfup9THPcSIPDSoH@dhcp22.suse.cz>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v5 3/4] mm/page_owner: Print memcg information
+Date: Tue, 8 Feb 2022 13:40:57 -0500
+Message-ID: <e897adca-168e-13db-8001-4afbef3aa648@redhat.com>
+References: <20220208000532.1054311-1-longman@redhat.com>
+ <20220208000532.1054311-4-longman@redhat.com>
+ <YgJeWth50eP9L0PK@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=+CQgr5ve9zRzrNvBukJhKnL+pLaCQfJXdaqimLxBtNw=;
-        b=E2UoFvQVzm+7bHzoMVzVa5ubhrCgFht99UH8rY/REMe83oGfWQbtPaijzy5V1htQAM
-         BkkNX7I3Loju1qPFQ5SKiuN5gRGm//MXKuPFU/+lAiqJjC612uxlmflrzBxtp0cWwYp0
-         0Kn0O12jqVtQTdqiqNJsAs/kerC4f1FDmDdBVHLKxxjOtW327uXZ7o+HvwuC70xxjlJl
-         gSSvHFw3+VHuGjkG/d+Df6+eQ0ecY2ISbQ4wyFZX0Fpw5/u3TLH17KBnUcAF9XaLd/bl
-         if5ThueUvsEl4EwY0MmqrEAzcqWRBNvYY6S6rsWOgW3CuGWUHJPk569Mef72P68WBent
-         D8HA==
-In-Reply-To: <Yfup9THPcSIPDSoH-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1644345674;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=xML1xNkIw3e0hTYk74bi0fSg0bcnbMZm5u6L4MPv8BA=;
+        b=bck0yfKicJmKETmL+MCTzBS/qgOqMz1tJSizTsus6ltfq9Cp0UGNPIQn/SEu3tSNynlTHH
+        onTPxwk711oQoqxDMFJJzbycFeZldhZVO8NqtHgGeXsREglZo8IUT2ldqiNSjW1ZZzW1mf
+        WlZHGyi6MUlWPl3tfygVWYmD8iZ8wLk=
+Content-Language: en-US
+In-Reply-To: <YgJeWth50eP9L0PK@dhcp22.suse.cz>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Michal Hocko <mhocko@suse.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Petr Mladek <pmladek@suse.com>, Steven Rostedt <rostedt@goodmis.org>, Sergey Senozhatsky <senozhatsky@chromium.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>, Mike Rapoport <rppt@kernel.org>, David Rientjes <rientjes@google.com>, Roman Gushchin <guro@fb.com>, Rafael Aquini <aquini@redhat.com>, Mike Rapoport <rppt@linux.ibm.com>
 
-On Thu, Feb 3, 2022 at 2:10 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+On 2/8/22 07:13, Michal Hocko wrote:
+> On Mon 07-02-22 19:05:31, Waiman Long wrote:
+>> It was found that a number of dying memcgs were not freed because
+>> they were pinned by some charged pages that were present. Even "echo 1 >
+>> /proc/sys/vm/drop_caches" wasn't able to free those pages. These dying
+>> but not freed memcgs tend to increase in number over time with the side
+>> effect that percpu memory consumption as shown in /proc/meminfo also
+>> increases over time.
+> I still believe that this is very suboptimal way to debug offline memcgs
+> but memcg information can be useful in other contexts and it doesn't
+> cost us anything except for an additional output so I am fine with this.
+I am planning to have a follow-up patch to add a new debugfs file for 
+just printing page information associated with dying memcgs only. It 
+will be based on the existing page_owner code, though. So I need to get 
+this patch in first.
+>   
+>> In order to find out more information about those pages that pin
+>> dying memcgs, the page_owner feature is extended to print memory
+>> cgroup information especially whether the cgroup is dying or not.
+>> RCU read lock is taken when memcg is being accessed to make sure
+>> that it won't be freed.
+>>
+>> Signed-off-by: Waiman Long <longman@redhat.com>
+>> Acked-by: David Rientjes <rientjes@google.com>
+>> Acked-by: Roman Gushchin <guro@fb.com>
+>> Acked-by: Mike Rapoport <rppt@linux.ibm.com>
+> With few comments/questions below.
 >
-> On Thu 03-02-22 10:54:07, Sebastian Andrzej Siewior wrote:
-> > On 2022-02-01 16:29:35 [+0100], Michal Hocko wrote:
-> > > > > Sorry, I know that this all is not really related to your work but if
-> > > > > the original optimization is solely based on artificial benchmarks then
-> > > > > I would rather drop it and also make your RT patchset easier.
-> > > >
-> > > > Do you have any real-world benchmark in mind? Like something that is
-> > > > already used for testing/ benchmarking and would fit here?
-> > >
-> > > Anything that even remotely resembles a real allocation heavy workload.
-> >
-> > So I figured out that build the kernel as user triggers the allocation
-> > path in_task() and in_interrupt(). I booted a PREEMPT_NONE kernel and
-> > run "perf stat -r 5 b.sh" where b.sh unpacks a kernel and runs a
-> > allmodconfig build on /dev/shm. The slow disk should not be a problem.
-> >
-> > With the optimisation:
-> > |  Performance counter stats for './b.sh' (5 runs):
-> > |
-> > |       43.367.405,59 msec task-clock                #   30,901 CPUs utilized            ( +-  0,01% )
-> > |           7.393.238      context-switches          #  170,499 /sec                     ( +-  0,13% )
-> > |             832.364      cpu-migrations            #   19,196 /sec                     ( +-  0,15% )
-> > |         625.235.644      page-faults               #   14,419 K/sec                    ( +-  0,00% )
-> > | 103.822.081.026.160      cycles                    #    2,394 GHz                      ( +-  0,01% )
-> > |  75.392.684.840.822      stalled-cycles-frontend   #   72,63% frontend cycles idle     ( +-  0,02% )
-> > |  54.971.177.787.990      stalled-cycles-backend    #   52,95% backend cycles idle      ( +-  0,02% )
-> > |  69.543.893.308.966      instructions              #    0,67  insn per cycle
-> > |                                                    #    1,08  stalled cycles per insn  ( +-  0,00% )
-> > |  14.585.269.354.314      branches                  #  336,357 M/sec                    ( +-  0,00% )
-> > |     558.029.270.966      branch-misses             #    3,83% of all branches          ( +-  0,01% )
-> > |
-> > |            1403,441 +- 0,466 seconds time elapsed  ( +-  0,03% )
-> >
-> >
-> > With the optimisation disabled:
-> > |  Performance counter stats for './b.sh' (5 runs):
-> > |
-> > |       43.354.742,31 msec task-clock                #   30,869 CPUs utilized            ( +-  0,01% )
-> > |           7.394.210      context-switches          #  170,601 /sec                     ( +-  0,06% )
-> > |             842.835      cpu-migrations            #   19,446 /sec                     ( +-  0,63% )
-> > |         625.242.341      page-faults               #   14,426 K/sec                    ( +-  0,00% )
-> > | 103.791.714.272.978      cycles                    #    2,395 GHz                      ( +-  0,01% )
-> > |  75.369.652.256.425      stalled-cycles-frontend   #   72,64% frontend cycles idle     ( +-  0,01% )
-> > |  54.947.610.706.450      stalled-cycles-backend    #   52,96% backend cycles idle      ( +-  0,01% )
-> > |  69.529.388.440.691      instructions              #    0,67  insn per cycle
-> > |                                                    #    1,08  stalled cycles per insn  ( +-  0,01% )
-> > |  14.584.515.016.870      branches                  #  336,497 M/sec                    ( +-  0,00% )
-> > |     557.716.885.609      branch-misses             #    3,82% of all branches          ( +-  0,02% )
-> > |
-> > |             1404,47 +- 1,05 seconds time elapsed  ( +-  0,08% )
-> >
-> > I'm still open to a more specific test ;)
+>> ---
+>>   mm/page_owner.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 44 insertions(+)
+>>
+>> diff --git a/mm/page_owner.c b/mm/page_owner.c
+>> index 28dac73e0542..d4c311455753 100644
+>> --- a/mm/page_owner.c
+>> +++ b/mm/page_owner.c
+>> @@ -10,6 +10,7 @@
+>>   #include <linux/migrate.h>
+>>   #include <linux/stackdepot.h>
+>>   #include <linux/seq_file.h>
+>> +#include <linux/memcontrol.h>
+>>   #include <linux/sched/clock.h>
+>>   
+>>   #include "internal.h"
+>> @@ -325,6 +326,47 @@ void pagetypeinfo_showmixedcount_print(struct seq_file *m,
+>>   	seq_putc(m, '\n');
+>>   }
+>>   
+>> +/*
+>> + * Looking for memcg information and print it out
+>> + */
+> I am not sure this is particularly useful comment.
+Right, I can remove that.
 >
-> Thanks for this test. I do assume that both have been run inside a
-> non-root memcg.
+>> +static inline int print_page_owner_memcg(char *kbuf, size_t count, int ret,
+>> +					 struct page *page)
+>> +{
+>> +#ifdef CONFIG_MEMCG
+>> +	unsigned long memcg_data;
+>> +	struct mem_cgroup *memcg;
+>> +	bool dying;
+>> +
+>> +	rcu_read_lock();
+>> +	memcg_data = READ_ONCE(page->memcg_data);
+>> +	if (!memcg_data)
+>> +		goto out_unlock;
+>> +
+>> +	if (memcg_data & MEMCG_DATA_OBJCGS)
+>> +		ret += scnprintf(kbuf + ret, count - ret,
+>> +				"Slab cache page\n");
+>> +
+>> +	memcg = page_memcg_check(page);
+>> +	if (!memcg)
+>> +		goto out_unlock;
+>> +
+>> +	dying = (memcg->css.flags & CSS_DYING);
+> Is there any specific reason why you haven't used mem_cgroup_online?
+Not really. However, I think checking for CSS_DYING makes more sense now 
+that I using the term "dying".
 >
-> Weiman, what was the original motivation for 559271146efc0? Because as
-> this RT patch shows it makes future changes much more complex and I
-> would prefer a simpler and easier to maintain code than some micro
-> optimizations that do not have any visible effect on real workloads.
+>> +	ret += scnprintf(kbuf + ret, count - ret,
+>> +			"Charged %sto %smemcg ",
+>> +			PageMemcgKmem(page) ? "(via objcg) " : "",
+>> +			dying ? "dying " : "");
+>> +
+>> +	/* Write cgroup name directly into kbuf */
+>> +	cgroup_name(memcg->css.cgroup, kbuf + ret, count - ret);
+>> +	ret += strlen(kbuf + ret);
+> cgroup_name should return the length of the path added to the buffer.
+I realized that after I sent out the patch. I will remove te redundant 
+strlen() in a future update.
+>
+>> +	ret += scnprintf(kbuf + ret, count - ret, "\n");
+> I do not see any overflow prevention here. I believe you really need to
+> check ret >= count after each scnprintf/cgroup_name.
 
-commit 559271146efc0 is a part of patch series "mm/memcg: Reduce
-kmemcache memory accounting overhead". For perf numbers you can see
-the cover letter in the commit fdbcb2a6d677 ("mm/memcg: move
-mod_objcg_state() to memcontrol.c").
+As you have realized, the beauty of using scnprintf() is to not needing 
+an overflow check after each invocation.
 
-BTW I am onboard with preferring simpler code over complicated optimized code.
+Cheers,
+Longman
+
