@@ -1,66 +1,97 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v5 1/4] lib/vsprintf: Avoid redundant work with 0 size
-Date: Mon,  7 Feb 2022 19:05:29 -0500
-Message-ID: <20220208000532.1054311-2-longman@redhat.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v5 4/4] mm/page_owner: Record task command name
+Date: Mon,  7 Feb 2022 19:05:32 -0500
+Message-ID: <20220208000532.1054311-5-longman@redhat.com>
 References: <20220208000532.1054311-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1644278765;
+        s=mimecast20190719; t=1644278803;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=EpG/a8UGSgxQkJKVhwJeqMQ36JzcPE9kOn8DL2mEYFQ=;
-        b=T4M3f8zni9eTM5JJIhhkFXkcc2N0gpLPm8vJaAWffQgPxW+Da8LtUQ7NdJw9D9Z2vyuPhV
-        U2Fs4ZxROqWQKm+EJa8V63HdXhpOw2f55RggckP4R2B4WqctdlMNpfXTIVWqIN2Ie/BGWp
-        5At/h9hqvISgIHHWAkMUUfpfrRrJQgQ=
-In-Reply-To: <20220208000532.1054311-1-longman@redhat.com>
+        bh=qSeJD0brKmpckZLSCQ8ujFjUI9lZNWQ7mt4YwsrLwjM=;
+        b=agCqqumPLZF8WvuwHYX/M5WyV0Sg0IHpMm7QlY6vBUYtkP9KuFewznRxTKB8i+nK7vgrqg
+        s3USMmZEzVEPxYA5sAJ2EZQw5LIeq2h7qNQu2eotJFF6zcRCNwqIHtIG9ZxSahxkS7K8j5
+        jNfV/FlnNbM8gj64BB3sZlsdPmO7ztI=
+In-Reply-To: <20220208000532.1054311-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Petr Mladek <pmladek@suse.com>, Steven Rostedt <rostedt@goodmis.org>, Sergey Senozhatsky <senozhatsky@chromium.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>, Mike Rapoport <rppt@kernel.org>, David Rientjes <rientjes@google.com>, Roman Gushchin <guro@fb.com>, Rafael Aquini <aquini@redhat.com>, Waiman Long <longman@redhat.com>, Mike Rapoport <rppt@linux.ibm.com>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ira Weiny <ira.weiny-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Rafael Aquini <aquini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-For *scnprintf(), vsnprintf() is always called even if the input size is
-0. That is a waste of time, so just return 0 in this case.
+The page_owner information currently includes the pid of the calling
+task. That is useful as long as the task is still running. Otherwise,
+the number is meaningless. To have more information about the allocating
+tasks that had exited by the time the page_owner information is
+retrieved, we need to store the command name of the task.
 
-Note that vsnprintf() will never return -1 to indicate an error. So
-skipping the call to vsnprintf() when size is 0 will have no functional
-impact at all.
+Add a new comm field into page_owner structure to store the command name
+and display it when the page_owner information is retrieved.
 
-Signed-off-by: Waiman Long <longman@redhat.com>
-Acked-by: David Rientjes <rientjes@google.com>
-Reviewed-by: Sergey Senozhatsky <senozhatsky@chromium.org>
-Acked-by: Roman Gushchin <guro@fb.com>
-Acked-by: Mike Rapoport <rppt@linux.ibm.com>
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- lib/vsprintf.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ mm/page_owner.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-index 3b8129dd374c..d419154b47bb 100644
---- a/lib/vsprintf.c
-+++ b/lib/vsprintf.c
-@@ -2895,13 +2895,15 @@ int vscnprintf(char *buf, size_t size, const char *fmt, va_list args)
- {
- 	int i;
+diff --git a/mm/page_owner.c b/mm/page_owner.c
+index d4c311455753..0d2017ebe3d8 100644
+--- a/mm/page_owner.c
++++ b/mm/page_owner.c
+@@ -29,6 +29,7 @@ struct page_owner {
+ 	depot_stack_handle_t free_handle;
+ 	u64 ts_nsec;
+ 	u64 free_ts_nsec;
++	char comm[TASK_COMM_LEN];
+ 	pid_t pid;
+ };
  
-+	if (unlikely(!size))
-+		return 0;
-+
- 	i = vsnprintf(buf, size, fmt, args);
+@@ -165,6 +166,8 @@ static inline void __set_page_owner_handle(struct page_ext *page_ext,
+ 		page_owner->last_migrate_reason = -1;
+ 		page_owner->pid = current->pid;
+ 		page_owner->ts_nsec = local_clock();
++		strlcpy(page_owner->comm, current->comm,
++			sizeof(page_owner->comm));
+ 		__set_bit(PAGE_EXT_OWNER, &page_ext->flags);
+ 		__set_bit(PAGE_EXT_OWNER_ALLOCATED, &page_ext->flags);
  
- 	if (likely(i < size))
- 		return i;
--	if (size != 0)
--		return size - 1;
--	return 0;
-+
-+	return size - 1;
- }
- EXPORT_SYMBOL(vscnprintf);
+@@ -232,6 +235,7 @@ void __folio_copy_owner(struct folio *newfolio, struct folio *old)
+ 	new_page_owner->pid = old_page_owner->pid;
+ 	new_page_owner->ts_nsec = old_page_owner->ts_nsec;
+ 	new_page_owner->free_ts_nsec = old_page_owner->ts_nsec;
++	strcpy(new_page_owner->comm, old_page_owner->comm);
  
+ 	/*
+ 	 * We don't clear the bit on the old folio as it's going to be freed
+@@ -381,10 +385,11 @@ print_page_owner(char __user *buf, size_t count, unsigned long pfn,
+ 		return -ENOMEM;
+ 
+ 	ret = scnprintf(kbuf, count,
+-			"Page allocated via order %u, mask %#x(%pGg), pid %d, ts %llu ns, free_ts %llu ns\n",
++			"Page allocated via order %u, mask %#x(%pGg), pid %d (%s), ts %llu ns, free_ts %llu ns\n",
+ 			page_owner->order, page_owner->gfp_mask,
+ 			&page_owner->gfp_mask, page_owner->pid,
+-			page_owner->ts_nsec, page_owner->free_ts_nsec);
++			page_owner->comm, page_owner->ts_nsec,
++			page_owner->free_ts_nsec);
+ 
+ 	/* Print information relevant to grouping pages by mobility */
+ 	pageblock_mt = get_pageblock_migratetype(page);
+@@ -451,9 +456,10 @@ void __dump_page_owner(const struct page *page)
+ 	else
+ 		pr_alert("page_owner tracks the page as freed\n");
+ 
+-	pr_alert("page last allocated via order %u, migratetype %s, gfp_mask %#x(%pGg), pid %d, ts %llu, free_ts %llu\n",
++	pr_alert("page last allocated via order %u, migratetype %s, gfp_mask %#x(%pGg), pid %d (%s), ts %llu, free_ts %llu\n",
+ 		 page_owner->order, migratetype_names[mt], gfp_mask, &gfp_mask,
+-		 page_owner->pid, page_owner->ts_nsec, page_owner->free_ts_nsec);
++		 page_owner->pid, page_owner->comm, page_owner->ts_nsec,
++		 page_owner->free_ts_nsec);
+ 
+ 	handle = READ_ONCE(page_owner->handle);
+ 	if (!handle)
 -- 
 2.27.0
 
