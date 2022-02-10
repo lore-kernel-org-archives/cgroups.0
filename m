@@ -1,45 +1,63 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 02/12] cgroup: rstat: Make cgroup_rstat_cpu_lock name
- readable
-Date: Wed, 9 Feb 2022 13:29:16 -1000
-Message-ID: <YgROTNCwS50FSCx9@slm.duckdns.org>
-References: <20220208194324.85333-1-namhyung@kernel.org>
- <20220208194324.85333-3-namhyung@kernel.org>
- <4b58c74d-6ad6-3658-30fb-1957a7b212dc@redhat.com>
+From: Namhyung Kim <namhyung@kernel.org>
+Subject: Re: [RFC 00/12] locking: Separate lock tracepoints from
+ lockdep/lock_stat (v1)
+Date: Wed, 9 Feb 2022 16:27:13 -0800
+Message-ID: <CAM9d7chH0Pvxx_FURL0sZvawwenRmjPyfac_9oinOaRwv8isng@mail.gmail.com>
+References: <20220208184208.79303-1-namhyung@kernel.org>
+ <20220209090908.GK23216@worktop.programming.kicks-ass.net>
+ <24fe6a08-5931-8e8d-8d77-459388c4654e@redhat.com>
+ <919214156.50301.1644431371345.JavaMail.zimbra@efficios.com>
+ <69e5f778-8715-4acf-c027-58b6ec4a9e77@redhat.com>
+ <CAM9d7ci=N2NVj57k=W0ebqBzfW+ThBqYSrx-CZbgwGcbOSrEGA@mail.gmail.com>
+ <718973621.50447.1644434890744.JavaMail.zimbra@efficios.com>
+ <CAM9d7cj=tj6pA48q_wkQOGn-2vUc9FRj63bMBOm5R7OukmMbTQ@mail.gmail.com>
+ <f8b7760f-16a2-6ada-de88-9e21a7e8fef9@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=Vyxdt1qWwEixzQmfvtesRM+4XY4WJ+b7HT9Q8ZLfLAs=;
-        b=pZi+PzBgTTefzJeng26sb/vNM7MsBFngkh6o84QEptniKvStYo9EIzPewsyVg2dOyf
-         fG/NKLlkk0Sprdqloz7mNTwVMJR93Fg2z8pNm6e2jqtpDYjBmhDJdNKfHQXmzFXDiXCv
-         JA7Vtwt57onmIqPQYdaOknNh2Z6/sqm4jkjEAfQn4ynDMSIBekuHsbiByNBuXRcIF0EH
-         FCAQ2Z9HJ9GOs9ZQenWKWEoyA6iNyKABSXd+9DLjeajfXBmFlYZvBxZBkBjK/Z855UvD
-         kstoetOSqUgPaLcpDkWbIxoovoqKHk716dho+phSXFGtyI1CgQJ3M1+R2nypg592amPQ
-         CiPw==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <4b58c74d-6ad6-3658-30fb-1957a7b212dc-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+In-Reply-To: <f8b7760f-16a2-6ada-de88-9e21a7e8fef9@redhat.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Namhyung Kim <namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Boqun Feng <boqun.feng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Byungchul Park <byungchul.park-Hm3cg6mZ9cc@public.gmane.org>, "Paul E. McKenney" <paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mathieu Desnoyers <mathieu.desnoyers-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>, Radoslaw Burny <rburny-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Waiman Long <longman@redhat.com>
+Cc: rcu <rcu@vger.kernel.org>, paulmck <paulmck@kernel.org>, Peter Zijlstra <peterz@infradead.org>, Boqun Feng <boqun.feng@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, rostedt <rostedt@goodmis.org>, Radoslaw Burny <rburny@google.com>, Byungchul Park <byungchul.park@lge.com>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, intel-gfx <intel-gfx@lists.freedesktop.org>, Tejun Heo <tj@kernel.org>, cgroups <cgroups@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>, Will Deacon <will@kernel.org>, Ingo Molnar <mingo@kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On Wed, Feb 09, 2022 at 03:20:42PM -0500, Waiman Long wrote:
-> That is a standalone fix. Maybe Tejun can take it directly into the cgroup
-> tree.
-> 
-> Acked-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+On Wed, Feb 9, 2022 at 12:17 PM Waiman Long <longman@redhat.com> wrote:
+>
+>
+> On 2/9/22 14:45, Namhyung Kim wrote:
+> > On Wed, Feb 9, 2022 at 11:28 AM Mathieu Desnoyers
+> > <mathieu.desnoyers@efficios.com> wrote:
+> >> ----- On Feb 9, 2022, at 2:22 PM, Namhyung Kim namhyung@kernel.org wrote:
+> >>> I'm also concerning dynamic allocated locks in a data structure.
+> >>> If we keep the info in a hash table, we should delete it when the
+> >>> lock is gone.  I'm not sure we have a good place to hook it up all.
+> >> I was wondering about this use case as well. Can we make it mandatory to
+> >> declare the lock "class" (including the name) statically, even though the
+> >> lock per-se is allocated dynamically ? Then the initialization of the lock
+> >> embedded within the data structure would simply refer to the lock class
+> >> definition.
+> > Isn't it still the same if we have static lock classes that the entry needs
+> > to be deleted from the hash table when it frees the data structure?
+> > I'm more concerned about free than alloc as there seems to be no
+> > API to track that in a place.
+>
+> We may have to invent some new APIs to do that. For example,
+> spin_lock_exit() can be the counterpart of spin_lock_init() and so on.
+> Of course, existing kernel code have to be modified to designate the
+> point after which a lock is no longer being used or is freed.
 
-Yeah, I sure can but the change is rather immaterial from cgroup POV and it
-might be easier to route it with the rest of the patchset to avoid cross
-tree pulls. I'd be happy either way. Please let me know once things settle
-and the patchset is ready for merging.
+Yeah, but I'm afraid that it could be easy to miss something.
+Also it would add some runtime overhead due to maintaining
+the hash table even if the tracepoints are not used.
 
-Thanks.
-
--- 
-tejun
+Thanks,
+Namhyung
