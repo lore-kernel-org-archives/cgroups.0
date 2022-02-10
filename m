@@ -1,145 +1,60 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH v9] block: cancel all throttled bios in del_gendisk()
-Date: Thu, 10 Feb 2022 19:56:37 +0800
-Message-ID: <20220210115637.1074927-1-yukuai3@huawei.com>
+From: "yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH v3 0/3] block, bfq: minor cleanup and fix
+Date: Thu, 10 Feb 2022 19:46:04 +0800
+Message-ID: <0215f548-5d5f-107d-9c8e-3a802a51e00f@huawei.com>
+References: <20220129015924.3958918-1-yukuai3@huawei.com>
+ <7cb40388-02e9-712a-6a40-ccabd5605880@kernel.dk>
+ <9ed6bf05-4c31-eef1-1736-65915e55eb8e@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <9ed6bf05-4c31-eef1-1736-65915e55eb8e@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: ming.lei@redhat.com, tj@kernel.org, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Jens Axboe <axboe@kernel.dk>
+Cc: paolo.valente@linaro.org, jack@suse.cz, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-Throttled bios can't be issued after del_gendisk() is done, thus
-it's better to cancel them immediately rather than waiting for
-throttle is done.
+在 2022/01/29 10:05, yukuai (C) 写道:
+> 在 2022/01/29 9:51, Jens Axboe 写道:
+>> On 1/28/22 6:59 PM, Yu Kuai wrote:
+>>> Changes in v3:
+>>>   - fix a clerical error in patch 2
+>>>
+>>> Chagnes in v2:
+>>>   - add comment in patch 2
+>>>   - remove patch 4, since the problem do not exist.
+>>>
+>>> Yu Kuai (3):
+>>>    block, bfq: cleanup bfq_bfqq_to_bfqg()
+>>>    block, bfq: avoid moving bfqq to it's parent bfqg
+>>>    block, bfq: don't move oom_bfqq
+>>>
+>>>   block/bfq-cgroup.c  | 16 +++++++++++++++-
+>>>   block/bfq-iosched.c |  4 ++--
+>>>   block/bfq-iosched.h |  1 -
+>>>   block/bfq-wf2q.c    | 15 ---------------
+>>>   4 files changed, 17 insertions(+), 19 deletions(-)
+>>
+>> I'm not even looking at this until you tell me that:
+>>
+>> a) you've actually compiled this one. which, btw, I can't believe
+>>     needs mentioning, particularly when you had enough time to keep
+>>     pinging about this patchset.
+>>
+>> b) it's actually be run. last one was clearly not.
+>>
+> Hi,
+> 
+> I compiled and tested the patchset locally in a different version,
+> v4.19 specifically. However, after I decide to send them to mainline,
+> I made such clerical mistake and forgot to check the patches.
+> 
+> My sincerely apologize again...
+> Kuai
 
-For example, if user thread is throttled with low bps while it's
-issuing large io, and the device is deleted. The user thread will
-wait for a long time for io to return.
+Hi, Jens
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
-Changes in v9:
- - some minor changes as suggested by Ming.
-Changes in v8:
- - fold two patches into one
-Changes in v7:
- - use the new solution as suggested by Ming.
+Can you please apply this patch this time?
 
- block/blk-throttle.c | 44 +++++++++++++++++++++++++++++++++++++++++---
- block/blk-throttle.h |  2 ++
- block/genhd.c        |  2 ++
- 3 files changed, 45 insertions(+), 3 deletions(-)
-
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 7c462c006b26..ca92e5fa2769 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -43,8 +43,12 @@
- static struct workqueue_struct *kthrotld_workqueue;
- 
- enum tg_state_flags {
--	THROTL_TG_PENDING	= 1 << 0,	/* on parent's pending tree */
--	THROTL_TG_WAS_EMPTY	= 1 << 1,	/* bio_lists[] became non-empty */
-+	/* on parent's pending tree */
-+	THROTL_TG_PENDING	= 1 << 0,
-+	/* bio_lists[] became non-empty */
-+	THROTL_TG_WAS_EMPTY	= 1 << 1,
-+	/* starts to cancel all bios, will be set if the disk is deleted */
-+	THROTL_TG_CANCELING	= 1 << 2,
- };
- 
- #define rb_entry_tg(node)	rb_entry((node), struct throtl_grp, rb_node)
-@@ -871,7 +875,8 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
- 	       bio != throtl_peek_queued(&tg->service_queue.queued[rw]));
- 
- 	/* If tg->bps = -1, then BW is unlimited */
--	if (bps_limit == U64_MAX && iops_limit == UINT_MAX) {
-+	if ((bps_limit == U64_MAX && iops_limit == UINT_MAX) ||
-+	    tg->flags & THROTL_TG_CANCELING) {
- 		if (wait)
- 			*wait = 0;
- 		return true;
-@@ -1763,6 +1768,39 @@ static bool throtl_hierarchy_can_upgrade(struct throtl_grp *tg)
- 	return false;
- }
- 
-+void blk_throtl_cancel_bios(struct request_queue *q)
-+{
-+	struct cgroup_subsys_state *pos_css;
-+	struct blkcg_gq *blkg;
-+
-+	spin_lock_irq(&q->queue_lock);
-+	/*
-+	 * queue_lock is held, rcu lock is not needed here technically.
-+	 * However, rcu lock is still held to emphasize that following
-+	 * path need RCU protection and to prevent warning from lockdep.
-+	 */
-+	rcu_read_lock();
-+	blkg_for_each_descendant_post(blkg, pos_css, q->root_blkg) {
-+		struct throtl_grp *tg = blkg_to_tg(blkg);
-+		struct throtl_service_queue *sq = &tg->service_queue;
-+
-+		/*
-+		 * Set the flag to make sure throtl_pending_timer_fn() won't
-+		 * stop until all throttled bios are dispatched.
-+		 */
-+		blkg_to_tg(blkg)->flags |= THROTL_TG_CANCELING;
-+		/*
-+		 * Update disptime after setting the above flag to make sure
-+		 * throtl_select_dispatch() won't exit without dispatching.
-+		 */
-+		tg_update_disptime(tg);
-+
-+		throtl_schedule_pending_timer(sq, jiffies + 1);
-+	}
-+	rcu_read_unlock();
-+	spin_unlock_irq(&q->queue_lock);
-+}
-+
- static bool throtl_can_upgrade(struct throtl_data *td,
- 	struct throtl_grp *this_tg)
- {
-diff --git a/block/blk-throttle.h b/block/blk-throttle.h
-index 175f03abd9e4..2ae467ac17ea 100644
---- a/block/blk-throttle.h
-+++ b/block/blk-throttle.h
-@@ -160,12 +160,14 @@ static inline void blk_throtl_exit(struct request_queue *q) { }
- static inline void blk_throtl_register_queue(struct request_queue *q) { }
- static inline void blk_throtl_charge_bio_split(struct bio *bio) { }
- static inline bool blk_throtl_bio(struct bio *bio) { return false; }
-+static inline void blk_throtl_cancel_bios(struct request_queue *q) { }
- #else /* CONFIG_BLK_DEV_THROTTLING */
- int blk_throtl_init(struct request_queue *q);
- void blk_throtl_exit(struct request_queue *q);
- void blk_throtl_register_queue(struct request_queue *q);
- void blk_throtl_charge_bio_split(struct bio *bio);
- bool __blk_throtl_bio(struct bio *bio);
-+void blk_throtl_cancel_bios(struct request_queue *q);
- static inline bool blk_throtl_bio(struct bio *bio)
- {
- 	struct throtl_grp *tg = blkg_to_tg(bio->bi_blkg);
-diff --git a/block/genhd.c b/block/genhd.c
-index 9589d1d59afa..6acc98cd0365 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -29,6 +29,7 @@
- #include "blk.h"
- #include "blk-mq-sched.h"
- #include "blk-rq-qos.h"
-+#include "blk-throttle.h"
- 
- static struct kobject *block_depr;
- 
-@@ -625,6 +626,7 @@ void del_gendisk(struct gendisk *disk)
- 
- 	blk_mq_freeze_queue_wait(q);
- 
-+	blk_throtl_cancel_bios(disk->queue);
- 	rq_qos_exit(q);
- 	blk_sync_queue(q);
- 	blk_flush_integrity();
--- 
-2.31.1
-
+Thanks,
+Kuai
