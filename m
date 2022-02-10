@@ -1,60 +1,70 @@
-From: "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH v3 0/3] block, bfq: minor cleanup and fix
-Date: Thu, 10 Feb 2022 19:46:04 +0800
-Message-ID: <0215f548-5d5f-107d-9c8e-3a802a51e00f@huawei.com>
-References: <20220129015924.3958918-1-yukuai3@huawei.com>
- <7cb40388-02e9-712a-6a40-ccabd5605880@kernel.dk>
- <9ed6bf05-4c31-eef1-1736-65915e55eb8e@huawei.com>
+From: "Paul E. McKenney" <paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC 00/12] locking: Separate lock tracepoints from
+ lockdep/lock_stat (v1)
+Date: Thu, 10 Feb 2022 11:14:04 -0800
+Message-ID: <20220210191404.GM4285@paulmck-ThinkPad-P17-Gen-1>
+References: <20220208184208.79303-1-namhyung@kernel.org>
+ <20220209090908.GK23216@worktop.programming.kicks-ass.net>
+ <CAM9d7cgq+jxu6FJuKhZkprn7dO4DiG5pDjmYZzneQYTfKOM85g@mail.gmail.com>
+ <YgTXUQ9CBoo3+A+c@hirez.programming.kicks-ass.net>
+Reply-To: paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <9ed6bf05-4c31-eef1-1736-65915e55eb8e@huawei.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1644520444;
+        bh=WjFROMNd1IDU206aRk23NJcrAg8BywhNavE19EBdG/0=;
+        h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
+        b=m3ZVI2AAQHOMjrcCGJ6VwrOluEThb79Sq2erIf7FUBaapEDlc4eWMhD0fOg+xoHNG
+         G/cRK8z4Nv0rhEzUVNUeZVN59LmSQpXDBr/t4yw6CwB9xPYbe3cDip2xE2s4SzWqXl
+         XzCqb1jsqwBlP9LKjhcLltSQ9zM1DoqttenCly2XmJF7+VY74MQqm0zvFhiDG/M4oh
+         ucUsBxIyGI5EG441otrKgwAbAnaWbzSUTJmWv0IkF6g9vZAXay0HXsJG7QLzDsApoP
+         wc2esxdrzTu/jVwoklohDToPfaiKFilWTbMZ3DJgTmqW326ijFiy4UhSOwsYYsvR0j
+         AFLo4q5BNHDlw==
+Content-Disposition: inline
+In-Reply-To: <YgTXUQ9CBoo3+A+c-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Jens Axboe <axboe@kernel.dk>
-Cc: paolo.valente@linaro.org, jack@suse.cz, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Namhyung Kim <namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Boqun Feng <boqun.feng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Byungchul Park <byungchul.park-Hm3cg6mZ9cc@public.gmane.org>, Mathieu Desnoyers <mathieu.desnoyers-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>, Radoslaw Burny <rburny-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, rcu <rcu-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-btrfs <linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, intel-gfx <intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 
-在 2022/01/29 10:05, yukuai (C) 写道:
-> 在 2022/01/29 9:51, Jens Axboe 写道:
->> On 1/28/22 6:59 PM, Yu Kuai wrote:
->>> Changes in v3:
->>>   - fix a clerical error in patch 2
->>>
->>> Chagnes in v2:
->>>   - add comment in patch 2
->>>   - remove patch 4, since the problem do not exist.
->>>
->>> Yu Kuai (3):
->>>    block, bfq: cleanup bfq_bfqq_to_bfqg()
->>>    block, bfq: avoid moving bfqq to it's parent bfqg
->>>    block, bfq: don't move oom_bfqq
->>>
->>>   block/bfq-cgroup.c  | 16 +++++++++++++++-
->>>   block/bfq-iosched.c |  4 ++--
->>>   block/bfq-iosched.h |  1 -
->>>   block/bfq-wf2q.c    | 15 ---------------
->>>   4 files changed, 17 insertions(+), 19 deletions(-)
->>
->> I'm not even looking at this until you tell me that:
->>
->> a) you've actually compiled this one. which, btw, I can't believe
->>     needs mentioning, particularly when you had enough time to keep
->>     pinging about this patchset.
->>
->> b) it's actually be run. last one was clearly not.
->>
-> Hi,
+On Thu, Feb 10, 2022 at 10:13:53AM +0100, Peter Zijlstra wrote:
+> On Wed, Feb 09, 2022 at 04:32:58PM -0800, Namhyung Kim wrote:
+> > On Wed, Feb 9, 2022 at 1:09 AM Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+> > >
+> > > On Tue, Feb 08, 2022 at 10:41:56AM -0800, Namhyung Kim wrote:
+> > >
+> > > > Eventually I'm mostly interested in the contended locks only and I
+> > > > want to reduce the overhead in the fast path.  By moving that, it'd be
+> > > > easy to track contended locks with timing by using two tracepoints.
+> > >
+> > > So why not put in two new tracepoints and call it a day?
+> > >
+> > > Why muck about with all that lockdep stuff just to preserve the name
+> > > (and in the process continue to blow up data structures etc..). This
+> > > leaves distros in a bind, will they enable this config and provide
+> > > tracepoints while bloating the data structures and destroying things
+> > > like lockref (which relies on sizeof(spinlock_t)), or not provide this
+> > > at all.
+> > 
+> > If it's only lockref, is it possible to change it to use arch_spinlock_t
+> > so that it can remain in 4 bytes?  It'd be really nice if we can keep
+> > spin lock size, but it'd be easier to carry the name with it for
+> > analysis IMHO.
 > 
-> I compiled and tested the patchset locally in a different version,
-> v4.19 specifically. However, after I decide to send them to mainline,
-> I made such clerical mistake and forgot to check the patches.
+> It's just vile and disgusting to blow up the lock size for convenience
+> like this.
 > 
-> My sincerely apologize again...
-> Kuai
+> And no, there's more of that around. A lot of effort has been spend to
+> make sure spinlocks are 32bit and we're not going to give that up for
+> something as daft as this.
+> 
+> Just think harder on the analysis side. Like said; I'm thinking the
+> caller IP should be good enough most of the time.
 
-Hi, Jens
+Another option is to keep any additional storage in a separate data
+structure keyed off of lock address, lockdep class, or whatever.
 
-Can you please apply this patch this time?
+Whether or not this is a -good- option, well, who knows?  ;-)
 
-Thanks,
-Kuai
+						Thanx, Paul
