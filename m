@@ -1,81 +1,51 @@
-From: Namhyung Kim <namhyung@kernel.org>
-Subject: Re: [RFC 00/12] locking: Separate lock tracepoints from
- lockdep/lock_stat (v1)
-Date: Thu, 10 Feb 2022 21:57:43 -0800
-Message-ID: <CAM9d7cj-PhX16jKu8DT=tfVf=OfH78xYYaMB8BVk-Hj_eoR4kQ@mail.gmail.com>
-References: <20220208184208.79303-1-namhyung@kernel.org>
- <20220209090908.GK23216@worktop.programming.kicks-ass.net>
- <CAM9d7cgq+jxu6FJuKhZkprn7dO4DiG5pDjmYZzneQYTfKOM85g@mail.gmail.com>
- <YgTXUQ9CBoo3+A+c@hirez.programming.kicks-ass.net>
- <20220210191404.GM4285@paulmck-ThinkPad-P17-Gen-1>
- <52de2e14-33d9-bdda-4b37-3e72ae9954c7@redhat.com>
- <20220210201058.GP4285@paulmck-ThinkPad-P17-Gen-1>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH v2 0/4] memcg: robust enforcement of memory.high
+Date: Thu, 10 Feb 2022 22:49:13 -0800
+Message-ID: <20220211064917.2028469-1-shakeelb@google.com>
 Mime-Version: 1.0
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <20220210201058.GP4285@paulmck-ThinkPad-P17-Gen-1>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=7cEUUMm8No+47SEC0UonhOqIuTdbXjwICtqwH1vHhoQ=;
+        b=fb3bmiUsrp8W4YmAG3agpua6xnfwRewOZ8YA8GXSqnYAPC8zDIVx6AoedzrfSysYph
+         zzvjaiNO751h5z4oCLk4zWH107SG09igxaI4HWBb1br4poFMySSL6hi1EE3b+DYhoSkr
+         E8isZ/nwurJsTuixeh5zQ22wHMxuwcRqJYWTA+SlpVkjSTo1VKwRMe+ZUHsup7SwY5XP
+         j0dXPMF/835VLYM3EhP1F/flECnKhOMqisNWuPeE9/Uo+X/0hqoGEnt+lp+mcMd8/d04
+         p1R9iZ10rYSwdyqK3vsqBTfPZ8kYkC+5e/3cs9ufj47kI+7yPQufY7yIHZMwKB5NfcpC
+         ioxA==
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Paul E. McKenney" <paulmck@kernel.org>
-Cc: rcu <rcu@vger.kernel.org>, intel-gfx <intel-gfx@lists.freedesktop.org>, Peter Zijlstra <peterz@infradead.org>, Boqun Feng <boqun.feng@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Steven Rostedt <rostedt@goodmis.org>, Radoslaw Burny <rburny@google.com>, Byungchul Park <byungchul.park@lge.com>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, cgroups <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Waiman Long <longman@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Will Deacon <will@kernel.org>, Ingo Molnar <mingo@kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>
+Cc: Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
 
-Hi Paul,
+Due to the semantics of memory.high enforcement i.e. throttle the
+workload without oom-kill, we are trying to use it for right sizing the
+workloads in our production environment. However we observed the
+mechanism fails for some specific applications which does big chunck of
+allocations in a single syscall. The reason behind this failure is due
+to the limitation of the memory.high enforcement's current
+implementation. This patch series solves this issue by enforcing the
+memory.high synchronously if the current process has accumulated a large
+amount of high overcharge.
 
-On Thu, Feb 10, 2022 at 12:10 PM Paul E. McKenney <paulmck@kernel.org> wrote:
->
-> On Thu, Feb 10, 2022 at 02:27:11PM -0500, Waiman Long wrote:
-> > On 2/10/22 14:14, Paul E. McKenney wrote:
-> > > On Thu, Feb 10, 2022 at 10:13:53AM +0100, Peter Zijlstra wrote:
-> > > > On Wed, Feb 09, 2022 at 04:32:58PM -0800, Namhyung Kim wrote:
-> > > > > On Wed, Feb 9, 2022 at 1:09 AM Peter Zijlstra <peterz@infradead.org> wrote:
-> > > > > > On Tue, Feb 08, 2022 at 10:41:56AM -0800, Namhyung Kim wrote:
-> > > > > >
-> > > > > > > Eventually I'm mostly interested in the contended locks only and I
-> > > > > > > want to reduce the overhead in the fast path.  By moving that, it'd be
-> > > > > > > easy to track contended locks with timing by using two tracepoints.
-> > > > > > So why not put in two new tracepoints and call it a day?
-> > > > > >
-> > > > > > Why muck about with all that lockdep stuff just to preserve the name
-> > > > > > (and in the process continue to blow up data structures etc..). This
-> > > > > > leaves distros in a bind, will they enable this config and provide
-> > > > > > tracepoints while bloating the data structures and destroying things
-> > > > > > like lockref (which relies on sizeof(spinlock_t)), or not provide this
-> > > > > > at all.
-> > > > > If it's only lockref, is it possible to change it to use arch_spinlock_t
-> > > > > so that it can remain in 4 bytes?  It'd be really nice if we can keep
-> > > > > spin lock size, but it'd be easier to carry the name with it for
-> > > > > analysis IMHO.
-> > > > It's just vile and disgusting to blow up the lock size for convenience
-> > > > like this.
-> > > >
-> > > > And no, there's more of that around. A lot of effort has been spend to
-> > > > make sure spinlocks are 32bit and we're not going to give that up for
-> > > > something as daft as this.
-> > > >
-> > > > Just think harder on the analysis side. Like said; I'm thinking the
-> > > > caller IP should be good enough most of the time.
-> > >
-> > > Another option is to keep any additional storage in a separate data
-> > > structure keyed off of lock address, lockdep class, or whatever.
-> > >
-> > > Whether or not this is a -good- option, well, who knows?  ;-)
-> >
-> > I have suggested that too. Unfortunately, I was replying to an email with
-> > your wrong email address. So you might not have received it.
->
-> Plus I was too lazy to go look at lore.  ;-)
+Changes since v1:
+- Based on Roman's comment simply the sync enforcement and only target
+  the extreme cases.
 
-Sorry for the noise about the email address in the first place.
-It has been so long since the last time I sent you a patch..
+Shakeel Butt (4):
+  memcg: refactor mem_cgroup_oom
+  memcg: unify force charging conditions
+  selftests: memcg: test high limit for single entry allocation
+  memcg: synchronously enforce memory.high for large overcharges
 
-Thanks,
-Namhyung
+ mm/memcontrol.c                               | 66 +++++++---------
+ tools/testing/selftests/cgroup/cgroup_util.c  | 15 +++-
+ tools/testing/selftests/cgroup/cgroup_util.h  |  1 +
+ .../selftests/cgroup/test_memcontrol.c        | 78 +++++++++++++++++++
+ 4 files changed, 120 insertions(+), 40 deletions(-)
+
+-- 
+2.35.1.265.g69c8d7142f-goog
+
