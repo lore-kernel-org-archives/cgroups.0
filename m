@@ -1,46 +1,100 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [RFC 00/12] locking: Separate lock tracepoints from
- lockdep/lock_stat (v1)
-Date: Fri, 11 Feb 2022 11:39:13 +0100
-Message-ID: <20220211103913.GR23216@worktop.programming.kicks-ass.net>
-References: <20220208184208.79303-1-namhyung@kernel.org>
- <20220209090908.GK23216@worktop.programming.kicks-ass.net>
- <CAM9d7cgq+jxu6FJuKhZkprn7dO4DiG5pDjmYZzneQYTfKOM85g@mail.gmail.com>
- <YgTXUQ9CBoo3+A+c@hirez.programming.kicks-ass.net>
- <CAM9d7cgPFLjQyopX04MwG6Leq6DwDJF2q6BxOL_Nw6J2LEZF4g@mail.gmail.com>
+From: Chris Down <chris@chrisdown.name>
+Subject: Re: [PATCH v2 4/4] memcg: synchronously enforce memory.high for
+ large overcharges
+Date: Fri, 11 Feb 2022 12:13:45 +0000
+Message-ID: <YgZS+YijLo0/WmEd@chrisdown.name>
+References: <20220211064917.2028469-1-shakeelb@google.com>
+ <20220211064917.2028469-5-shakeelb@google.com>
 Mime-Version: 1.0
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
- References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
- Content-Transfer-Encoding:Content-ID:Content-Description;
- bh=OF/IgiH+v6IN/Pzp4IQTqAUh7fLzy/AMqRrw5uRs6QM=; b=LbJP76jKebDs3mjRSiss+VrY7f
- dyaOfWlffhDUHwB5AhCZaYYvYgwPKcloLfHaKYcpTn89ucITWQacDwWZdCUpXsJ1W4aPGDu1CoKWg
- Rfzrrf4xgw1gmNI7TdQWjDRc8mKeLyhdnOKMRPCY5pRyEN3Wib9vTBUNOwdD95nCv5VqFC6/0V7FQ
- Haq8I+dR+Ow1pT7b6qWtQv5lKaUKPND5wFWM1sqdcOOios9N3Wn/zaVMAzaStBFXvrfKDhY+htVJN
- 9uOg2NJnn422jyJBwlc67KqBfJSE0Vw19ZHFnLq5WuwjQtRMOFXBa8cNi2XxrR2RAgKJ34Y8iRUb+
- Lw5VTLVQ==;
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=OZFYLN+S6IkbZKtWQGnLOGDHtfELHim7rgW7KJNl2oA=;
+        b=GgzQiLfzSmdOrEWpzLCjSq3QC0hcb9rDCloigLalwdcFW/g9GKJ3a3Z0+28hLH8wbK
+         xp8IGtFCVCVQSyA9ZhpEaqrHjiShC/ZCizU4JmHjIzZ1F66JmvkQELHdJPnjFBAkJI3Q
+         hXYU9/IjNZR9rTRX5wDuSaFBFFg905KXUmqWg=
 Content-Disposition: inline
-In-Reply-To: <CAM9d7cgPFLjQyopX04MwG6Leq6DwDJF2q6BxOL_Nw6J2LEZF4g@mail.gmail.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20220211064917.2028469-5-shakeelb@google.com>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 Content-Transfer-Encoding: 7bit
-To: Namhyung Kim <namhyung@kernel.org>
-Cc: rcu <rcu@vger.kernel.org>, "Paul E. McKenney" <paulmck@kernel.org>, intel-gfx <intel-gfx@lists.freedesktop.org>, Boqun Feng <boqun.feng@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Steven Rostedt <rostedt@goodmis.org>, Radoslaw Burny <rburny@google.com>, Byungchul Park <byungchul.park@lge.com>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, cgroups <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Waiman Long <longman@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Will Deacon <will@kernel.org>, Ingo Molnar <mingo@kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Thu, Feb 10, 2022 at 09:55:27PM -0800, Namhyung Kim wrote:
+Shakeel Butt writes:
+>The high limit is used to throttle the workload without invoking the
+>oom-killer. Recently we tried to use the high limit to right size our
+>internal workloads. More specifically dynamically adjusting the limits
+>of the workload without letting the workload get oom-killed. However due
+>to the limitation of the implementation of high limit enforcement, we
+>observed the mechanism fails for some real workloads.
+>
+>The high limit is enforced on return-to-userspace i.e. the kernel let
+>the usage goes over the limit and when the execution returns to
+>userspace, the high reclaim is triggered and the process can get
+>throttled as well. However this mechanism fails for workloads which do
+>large allocations in a single kernel entry e.g. applications that
+>mlock() a large chunk of memory in a single syscall. Such applications
+>bypass the high limit and can trigger the oom-killer.
+>
+>To make high limit enforcement more robust, this patch makes the limit
+>enforcement synchronous only if the accumulated overcharge becomes
+>larger than MEMCG_CHARGE_BATCH. So, most of the allocations would still
+>be throttled on the return-to-userspace path but only the extreme
+>allocations which accumulates large amount of overcharge without
+>returning to the userspace will be throttled synchronously. The value
+>MEMCG_CHARGE_BATCH is a bit arbitrary but most of other places in the
+>memcg codebase uses this constant therefore for now uses the same one.
 
-> So you are ok with adding two new tracepoints, even if they are
-> similar to what we already have in lockdep/lock_stat, right?
+Note that mem_cgroup_handle_over_high() has its own allocator throttling grace 
+period, where it bails out if the penalty to apply is less than 10ms. The 
+reclaim will still happen, though. So throttling might not happen even for 
+roughly MEMCG_CHARGE_BATCH-sized allocations, depending on the overall size of 
+the cgroup and its protection.
 
-Yeah, I don't think adding tracepoints to the slowpaths of the various
-locks should be a problem.
+>Signed-off-by: Shakeel Butt <shakeelb@google.com>
+>---
+>Changes since v1:
+>- Based on Roman's comment simply the sync enforcement and only target
+>  the extreme cases.
+>
+> mm/memcontrol.c | 5 +++++
+> 1 file changed, 5 insertions(+)
+>
+>diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>index 292b0b99a2c7..0da4be4798e7 100644
+>--- a/mm/memcontrol.c
+>+++ b/mm/memcontrol.c
+>@@ -2703,6 +2703,11 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> 		}
+> 	} while ((memcg = parent_mem_cgroup(memcg)));
+>
+>+	if (current->memcg_nr_pages_over_high > MEMCG_CHARGE_BATCH &&
+>+	    !(current->flags & PF_MEMALLOC) &&
+>+	    gfpflags_allow_blocking(gfp_mask)) {
+>+		mem_cgroup_handle_over_high();
+
+Thanks, I was going to comment on v1 that I prefer to keep the implementation 
+of mem_cgroup_handle_over_high if possible since we know that the mechanism has 
+been safe in production over the past few years.
+
+One question I have is about throttling. It looks like this new 
+mem_cgroup_handle_over_high callsite may mean that throttling is invoked more 
+than once on a misbehaving workload that's failing to reclaim since the 
+throttling could be invoked both here and in return to userspace, right? That 
+might not be a problem, but we should think about the implications of that, 
+especially in relation to MEMCG_MAX_HIGH_DELAY_JIFFIES.
+
+Maybe we should record if throttling happened previously and avoid doing it 
+again for this entry into kernelspace? Not certain that's the right answer, but 
+we should think about what the new semantics should be.
+
+>+	}
+> 	return 0;
+> }
+>
+>-- 
+>2.35.1.265.g69c8d7142f-goog
+>
