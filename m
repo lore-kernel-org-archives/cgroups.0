@@ -1,58 +1,111 @@
-From: John Stultz <john.stultz@linaro.org>
-Subject: Re: [RFC v2 6/6] android: binder: Add a buffer flag to relinquish
- ownership of fds
-Date: Mon, 14 Feb 2022 12:37:11 -0800
-Message-ID: <CALAqxLVeLsv9ESCL2EoZQ8-tRgp0V+tmdYbkyakFetf=ewTH+A@mail.gmail.com>
-References: <20220211161831.3493782-1-tjmercier@google.com>
- <20220211161831.3493782-7-tjmercier@google.com> <Ygdfe3XSvN8iFuUc@kroah.com>
- <CAHRSSEwoJ67Sr_=gtSaP91cbpjJjZdOo57cfAhv3r-ye0da7PA@mail.gmail.com>
- <CAJuCfpHf=Ewm0e9kguY3MEGVHU_cyviVXByi0oQtq7kTtOOD=A@mail.gmail.com> <CAHRSSEzsn-EVKXTRfmpbPR9u0wNpdvdZoX64Tm_mB1DQMRSUPQ@mail.gmail.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH v2 3/4] mm/memcg: Protect per-CPU counter by disabling
+ preemption on PREEMPT_RT where needed.
+Date: Mon, 14 Feb 2022 11:53:38 -0800
+Message-ID: <YgqzQqGIGJYsdGwC@carbon.dhcp.thefacebook.com>
+References: <20220211223537.2175879-1-bigeasy@linutronix.de>
+ <20220211223537.2175879-4-bigeasy@linutronix.de>
+ <YgqHSIa/WvJSXERe@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=wAGH315FsgjXdEGosIxU9yIWVg26bgKxObDK7qxcQ9o=;
-        b=EU778RaLDa/8FhJux3O09PvW3/LCZKPXp2DEFIoy3E0/73tubhMvN6FLWVL/0bcIJW
-         kmCnl5Rc6b20E+xTOO/KCGrPDECOpDCo/nXmeIOuENhZ10zOy0IF3Ph387b1C8fJzq5D
-         +WjvseaeLKZ8mgXil65+h1q2t7pc8gvHirSGUwM9w31eIQ4CFgJL4tlDfb98dwjLGGaI
-         oKjbNkxktCSCXTv4prlhEbo9s9sT7DZTHxj6OpsP3QwYf4mqyLx0SJJnVML5/95sQgyb
-         lYEW9dTjF6nZxRSHVkN/BN9o2g2BHt5B8QNM0gL8UjDYHW8ypcP+fBvoFUxYojQxDjSt
-         GgWg==
-In-Reply-To: <CAHRSSEzsn-EVKXTRfmpbPR9u0wNpdvdZoX64Tm_mB1DQMRSUPQ@mail.gmail.com>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=gSrE5ptjElCy1olfypgphHxI8neUSADFfac50rgksms=;
+ b=jrIjO9LNVDV0HEQ0paTORp9SnNFvFhnBOppSv9dDYShvuDlS5nR+GNR03kA50FqjxadC
+ IKfFdBEZQyOVvNzAt88DqnNOOEqz5haDMe1lGl1Tnn0BDMLB915Y8ocotkPubFc9P/id
+ Yht/OR5SL90M1IkXIVVwh//9JTV3skaC9ns= 
+Content-Disposition: inline
+In-Reply-To: <YgqHSIa/WvJSXERe-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Todd Kjos <tkjos@google.com>
-Cc: Suren Baghdasaryan <surenb@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "T.J. Mercier" <tjmercier@google.com>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@linaro.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Feb 14, 2022 at 12:19 PM Todd Kjos <tkjos@google.com> wrote:
-> On Mon, Feb 14, 2022 at 11:29 AM Suren Baghdasaryan <surenb@google.com> wrote:
-> > On Mon, Feb 14, 2022 at 10:33 AM Todd Kjos <tkjos@google.com> wrote:
-> > >
-> > > Since we are creating a new gpu cgroup abstraction, couldn't this
-> > > "transfer" be done in userspace by the target instead of in the kernel
-> > > driver? Then this patch would reduce to just a flag on the buffer
-> > > object.
-> >
-> > Are you suggesting to have a userspace accessible cgroup interface for
-> > transferring buffer charges and the target process to use that
-> > interface for requesting the buffer to be charged to its cgroup?
->
-> Well, I'm asking why we need to do these cgroup-ish actions in the
-> kernel when it seems more natural to do it in userspace.
->
+On Mon, Feb 14, 2022 at 11:46:00AM -0500, Johannes Weiner wrote:
+> On Fri, Feb 11, 2022 at 11:35:36PM +0100, Sebastian Andrzej Siewior wrote:
+> > The per-CPU counter are modified with the non-atomic modifier. The
+> > consistency is ensured by disabling interrupts for the update.
+> > On non PREEMPT_RT configuration this works because acquiring a
+> > spinlock_t typed lock with the _irq() suffix disables interrupts. On
+> > PREEMPT_RT configurations the RMW operation can be interrupted.
+> > 
+> > Another problem is that mem_cgroup_swapout() expects to be invoked with
+> > disabled interrupts because the caller has to acquire a spinlock_t which
+> > is acquired with disabled interrupts. Since spinlock_t never disables
+> > interrupts on PREEMPT_RT the interrupts are never disabled at this
+> > point.
+> > 
+> > The code is never called from in_irq() context on PREEMPT_RT therefore
+> > disabling preemption during the update is sufficient on PREEMPT_RT.
+> > The sections which explicitly disable interrupts can remain on
+> > PREEMPT_RT because the sections remain short and they don't involve
+> > sleeping locks (memcg_check_events() is doing nothing on PREEMPT_RT).
+> > 
+> > Disable preemption during update of the per-CPU variables which do not
+> > explicitly disable interrupts.
+> > 
+> > Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+> > ---
+> >  mm/memcontrol.c | 21 +++++++++++++++++++--
+> >  1 file changed, 19 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index c1caa662946dc..466466f285cea 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -705,6 +705,8 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+> >  	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+> >  	memcg = pn->memcg;
+> >  
+> > +	if (IS_ENABLED(CONFIG_PREEMPT_RT))
+> > +		preempt_disable();
+> >  	/* Update memcg */
+> >  	__this_cpu_add(memcg->vmstats_percpu->state[idx], val);
+> >  
+> > @@ -712,6 +714,8 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+> >  	__this_cpu_add(pn->lruvec_stats_percpu->state[idx], val);
+> >  
+> >  	memcg_rstat_updated(memcg, val);
+> > +	if (IS_ENABLED(CONFIG_PREEMPT_RT))
+> > +		preempt_enable();
+> >  }
+> 
+> I notice you didn't annoate __mod_memcg_state(). I suppose that is
+> because it's called with explicit local_irq_disable(), and that
+> disables preemption on rt? And you only need another preempt_disable()
+> for stacks that rely on coming from spin_lock_irq(save)?
+> 
+> That makes sense, but it's difficult to maintain. It'll easily break
+> if somebody adds more memory accounting sites that may also rely on an
+> irq-disabled spinlock somewhere.
+> 
+> So better to make this an unconditional locking protocol:
+> 
+> static void memcg_stats_lock(void)
+> {
+> #ifdef CONFIG_PREEMPT_RT
+> 	preempt_disable();
+> #else
+> 	VM_BUG_ON(!irqs_disabled());
+> #endif
+> }
+> 
+> static void memcg_stats_unlock(void)
+> {
+> #ifdef CONFIG_PREEMPT_RT
+> 	preempt_enable();
+> #endif
+> }
+> 
+> and always use these around the counter updates.
 
-In case its useful, some additional context from some of the Linux
-Plumber's discussions last fall:
+Thanks, Johannes, this looks really good to me. The code is already quite
+complicated, the suggested locking protocol makes it easier to read and
+support.
 
-Daniel Stone outlines some concerns with the cgroup userland handling
-for accounting:
-  https://youtu.be/3OqllZONTiQ?t=3430
+Otherwise the patch looks good to me. Sebastian, please, feel to add
+Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> after incorporating Johannes's
+suggestion.
 
-And the binder ownership transfer bit was suggested here by Daniel Vetter:
-  https://youtu.be/3OqllZONTiQ?t=3730
-
-thanks
--john
+Thanks!
