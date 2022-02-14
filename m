@@ -1,54 +1,53 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2 1/4] mm/memcg: Revert ("mm/memcg: optimize user
- context object stock access")
-Date: Mon, 14 Feb 2022 11:23:33 -0500
-Message-ID: <YgqCBU4mVwkgnBi2@cmpxchg.org>
+Subject: Re: [PATCH v2 2/4] mm/memcg: Disable threshold event handlers on
+ PREEMPT_RT
+Date: Mon, 14 Feb 2022 11:23:59 -0500
+Message-ID: <YgqCH1CcutS8Z2wU@cmpxchg.org>
 References: <20220211223537.2175879-1-bigeasy@linutronix.de>
- <20220211223537.2175879-2-bigeasy@linutronix.de>
+ <20220211223537.2175879-3-bigeasy@linutronix.de>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=x0S57OtD5YWbc+A1GxyslYvaWYv57bktzT6DJRKKi4o=;
-        b=2KF50jQJOk201/VzTxLzvo9tjknPWNwu2jq/ZfgmRAUVpqtndEci1YGElVvMe9FLtS
-         GEfQPmOnDIboOy2xW5TOVpQM9OThMYIKu5l0KeXWoW30aMdjupqwujmJ/pRkgFCbrWBn
-         XGeLik/uEYbK2QO5lhy251iXcjVaIbny5gymo5CB+wGit2CHhHKfqyIToIviWlzyTrsA
-         cilVLQw40SsmdtHZq73lUfhv3Skge2BiknSX0i4YI+KGEoZpL78HoSL1R3ahdQrq/c4D
-         JtVmvLR3+a2yrPHIUSb0QlGWoNa9y33b+j8jakbnOySnimEPhzB0aqbdWYdq9UM1buCZ
-         BJ2w==
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=7iaUyRhGkUA7PAMU1c+vAYFq1GgavVmjQYa91iIOiFk=;
+        b=q98xAfK0lidrBW3RZafWMOaYOlDwjN3XqwR4nUA67A2As9jAY5LV1kUhegVVmDYwtb
+         GId+u1ckugUhdD9kAIdvECoq8vwbT/sHhuME55ExdOiMAMM+OpkQcEJQQtGZ3s7ykrfr
+         pWuk815AxI31/odpXIjDXdn0Odh7mfoPzjVlpHfzki+pC0g/UCgw3nwiL7XHxUx+VBbZ
+         27IXTcBAugv13y4UIonMdIDwbH9XteHNVuBBoO1xLrYjcKtxz7t68G5FH3zShns/WMRB
+         cgzXsnsjuDQOcm7VBzmMYhqkpcqoDuhyjShjXrMDg5bm0wdOsjQMvnUOnmjVqcCEUnqr
+         n49g==
 Content-Disposition: inline
-In-Reply-To: <20220211223537.2175879-2-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+In-Reply-To: <20220211223537.2175879-3-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
 To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Fri, Feb 11, 2022 at 11:35:34PM +0100, Sebastian Andrzej Siewior wrote:
-> From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-> 
-> The optimisation is based on a micro benchmark where local_irq_save() is
-> more expensive than a preempt_disable(). There is no evidence that it is
-> visible in a real-world workload and there are CPUs where the opposite is
-> true (local_irq_save() is cheaper than preempt_disable()).
-> 
-> Based on micro benchmarks, the optimisation makes sense on PREEMPT_NONE
-> where preempt_disable() is optimized away. There is no improvement with
-> PREEMPT_DYNAMIC since the preemption counter is always available.
-> 
-> The optimization makes also the PREEMPT_RT integration more complicated
-> since most of the assumption are not true on PREEMPT_RT.
-> 
-> Revert the optimisation since it complicates the PREEMPT_RT integration
-> and the improvement is hardly visible.
-> 
-> [ bigeasy: Patch body around Michal's diff ]
-> 
-> Link: https://lore.kernel.org/all/YgOGkXXCrD%2F1k+p4-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org
-> Link: https://lkml.kernel.org/r/YdX+INO9gQje6d0S-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org
-> Signed-off-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+On Fri, Feb 11, 2022 at 11:35:35PM +0100, Sebastian Andrzej Siewior wrote:
+> During the integration of PREEMPT_RT support, the code flow around
+> memcg_check_events() resulted in `twisted code'. Moving the code around
+> and avoiding then would then lead to an additional local-irq-save
+> section within memcg_check_events(). While looking better, it adds a
+> local-irq-save section to code flow which is usually within an
+> local-irq-off block on non-PREEMPT_RT configurations.
+>=20
+> The threshold event handler is a deprecated memcg v1 feature. Instead of
+> trying to get it to work under PREEMPT_RT just disable it. There should
+> be no users on PREEMPT_RT. From that perspective it makes even less
+> sense to get it to work under PREEMPT_RT while having zero users.
+>=20
+> Make memory.soft_limit_in_bytes and cgroup.event_control return
+> -EOPNOTSUPP on PREEMPT_RT. Make an empty memcg_check_events() and
+> memcg_write_event_control() which return only -EOPNOTSUPP on PREEMPT_RT.
+> Document that the two knobs are disabled on PREEMPT_RT.
+>=20
+> Suggested-by: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.or=
+g>
+> Suggested-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@=
+public.gmane.org>
 
 Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
