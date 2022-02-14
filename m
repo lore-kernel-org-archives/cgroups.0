@@ -1,49 +1,58 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v2 2/4] mm/memcg: Disable threshold event handlers on
- PREEMPT_RT
-Date: Mon, 14 Feb 2022 11:46:02 -0800
-Message-ID: <Ygqxeq3UmFNrZqjP@carbon.dhcp.thefacebook.com>
-References: <20220211223537.2175879-1-bigeasy@linutronix.de>
- <20220211223537.2175879-3-bigeasy@linutronix.de>
+From: John Stultz <john.stultz@linaro.org>
+Subject: Re: [RFC v2 6/6] android: binder: Add a buffer flag to relinquish
+ ownership of fds
+Date: Mon, 14 Feb 2022 12:37:11 -0800
+Message-ID: <CALAqxLVeLsv9ESCL2EoZQ8-tRgp0V+tmdYbkyakFetf=ewTH+A@mail.gmail.com>
+References: <20220211161831.3493782-1-tjmercier@google.com>
+ <20220211161831.3493782-7-tjmercier@google.com> <Ygdfe3XSvN8iFuUc@kroah.com>
+ <CAHRSSEwoJ67Sr_=gtSaP91cbpjJjZdOo57cfAhv3r-ye0da7PA@mail.gmail.com>
+ <CAJuCfpHf=Ewm0e9kguY3MEGVHU_cyviVXByi0oQtq7kTtOOD=A@mail.gmail.com> <CAHRSSEzsn-EVKXTRfmpbPR9u0wNpdvdZoX64Tm_mB1DQMRSUPQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type :
- content-transfer-encoding : in-reply-to : mime-version; s=facebook;
- bh=kp6jXOEWknOWNgnpUOx3BYl1M1+KkCwo+I5QKInsF9U=;
- b=m3GzsayCxUahVgZcNrBR6i2eEbfu+gFQRburn7nb+7/3DVkPw1g03oCZ8YEnH5M/z3M1
- Kp2Z8D2Hqrq8qOjZjbV9HFGfTxaRsE69SwzMMVaQYVlFO0GQ+jqvx5OmetYBZ07UxWnZ
- E8IiCX4+GM4eVmMtdSVvJqfpaMPvf1wnCSs= 
-Content-Disposition: inline
-In-Reply-To: <20220211223537.2175879-3-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=wAGH315FsgjXdEGosIxU9yIWVg26bgKxObDK7qxcQ9o=;
+        b=EU778RaLDa/8FhJux3O09PvW3/LCZKPXp2DEFIoy3E0/73tubhMvN6FLWVL/0bcIJW
+         kmCnl5Rc6b20E+xTOO/KCGrPDECOpDCo/nXmeIOuENhZ10zOy0IF3Ph387b1C8fJzq5D
+         +WjvseaeLKZ8mgXil65+h1q2t7pc8gvHirSGUwM9w31eIQ4CFgJL4tlDfb98dwjLGGaI
+         oKjbNkxktCSCXTv4prlhEbo9s9sT7DZTHxj6OpsP3QwYf4mqyLx0SJJnVML5/95sQgyb
+         lYEW9dTjF6nZxRSHVkN/BN9o2g2BHt5B8QNM0gL8UjDYHW8ypcP+fBvoFUxYojQxDjSt
+         GgWg==
+In-Reply-To: <CAHRSSEzsn-EVKXTRfmpbPR9u0wNpdvdZoX64Tm_mB1DQMRSUPQ@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Todd Kjos <tkjos@google.com>
+Cc: Suren Baghdasaryan <surenb@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "T.J. Mercier" <tjmercier@google.com>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@linaro.org>
 
-On Fri, Feb 11, 2022 at 11:35:35PM +0100, Sebastian Andrzej Siewior wrote:
-> During the integration of PREEMPT_RT support, the code flow around
-> memcg_check_events() resulted in `twisted code'. Moving the code around
-> and avoiding then would then lead to an additional local-irq-save
-> section within memcg_check_events(). While looking better, it adds a
-> local-irq-save section to code flow which is usually within an
-> local-irq-off block on non-PREEMPT_RT configurations.
->=20
-> The threshold event handler is a deprecated memcg v1 feature. Instead of
-> trying to get it to work under PREEMPT_RT just disable it. There should
-> be no users on PREEMPT_RT. From that perspective it makes even less
-> sense to get it to work under PREEMPT_RT while having zero users.
->=20
-> Make memory.soft_limit_in_bytes and cgroup.event_control return
-> -EOPNOTSUPP on PREEMPT_RT. Make an empty memcg_check_events() and
-> memcg_write_event_control() which return only -EOPNOTSUPP on PREEMPT_RT.
-> Document that the two knobs are disabled on PREEMPT_RT.
->=20
-> Suggested-by: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.or=
-g>
-> Suggested-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
-> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@=
-public.gmane.org>
+On Mon, Feb 14, 2022 at 12:19 PM Todd Kjos <tkjos@google.com> wrote:
+> On Mon, Feb 14, 2022 at 11:29 AM Suren Baghdasaryan <surenb@google.com> wrote:
+> > On Mon, Feb 14, 2022 at 10:33 AM Todd Kjos <tkjos@google.com> wrote:
+> > >
+> > > Since we are creating a new gpu cgroup abstraction, couldn't this
+> > > "transfer" be done in userspace by the target instead of in the kernel
+> > > driver? Then this patch would reduce to just a flag on the buffer
+> > > object.
+> >
+> > Are you suggesting to have a userspace accessible cgroup interface for
+> > transferring buffer charges and the target process to use that
+> > interface for requesting the buffer to be charged to its cgroup?
+>
+> Well, I'm asking why we need to do these cgroup-ish actions in the
+> kernel when it seems more natural to do it in userspace.
+>
 
-Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+In case its useful, some additional context from some of the Linux
+Plumber's discussions last fall:
+
+Daniel Stone outlines some concerns with the cgroup userland handling
+for accounting:
+  https://youtu.be/3OqllZONTiQ?t=3430
+
+And the binder ownership transfer bit was suggested here by Daniel Vetter:
+  https://youtu.be/3OqllZONTiQ?t=3730
+
+thanks
+-john
