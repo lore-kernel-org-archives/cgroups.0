@@ -1,52 +1,173 @@
-From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [Phishing Risk] [External] Re: [PATCH] blk-cgroup: set blkg
- iostat after percpu stat aggregation
-Date: Tue, 15 Feb 2022 20:10:05 +0800
-Message-ID: <c4b3b8c3-890a-59d1-623a-3341abcf290e@bytedance.com>
-References: <20220213085902.88884-1-zhouchengming@bytedance.com>
- <Ygqmjsbu96+UZDw+@slm.duckdns.org>
+From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Subject: Re: [PATCH v2 3/4] mm/memcg: Protect per-CPU counter by disabling
+ preemption on PREEMPT_RT where needed.
+Date: Tue, 15 Feb 2022 19:01:02 +0100
+Message-ID: <YgvqXqya2Aoo93/y@linutronix.de>
+References: <20220211223537.2175879-1-bigeasy@linutronix.de>
+ <20220211223537.2175879-4-bigeasy@linutronix.de>
+ <YgqHSIa/WvJSXERe@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=Rvc5VFNuQvOUoAjdswhh5nR82Ho+mPvuJf8m7WDO3Qs=;
-        b=xtE/ytqcCPY1yN5pIplQeeZomXpKV5da0WHr6CnDmO4fmr9rg8Zr9b3UABGLxx8V3u
-         NDNsNtiv5jxI1QCHK7eI3QQKYPuOnQoFIk7qgfFewZ7YvL7MNyQAmr7w1JwmKQxwcAiw
-         GJwoOrkN7OZ4C4IKmVNpoSCOB3apeP2UORrDJRJa1/lkq5lBbX+pSCaIM1fIYLOQep5i
-         OdNRbnYd+Qc74cE8kHsyBYQNbsumy3whUl0KtR/KQb+tWGWQJ5FrYimIpbZejLR/Gefh
-         cLpIHXyY/a5xV3XSh9/zfHngVTYXBqsFWdxKHGGF409sAG6RXss20rkdj+DIkw7G2Hld
-         tGKQ==
-Content-Language: en-US
-In-Reply-To: <Ygqmjsbu96+UZDw+-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1644948063;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=q51LtZ2w/96ITqPXE16sCnoUk2TYcGVB7Ha6CRaE3C4=;
+        b=e/8WehrcariZC3ulS2jIlDHBgj49qR4qabiVUXjKm1eLXzcuNQQd3ZqOWGMIGqadwJk338
+        vTQ9YMSeFmQWo03dsxB7raczJiFSWfuPLljmkbLnskBFL4wGayG6mCQOVTEbZNSTn4NJXu
+        KclurHNMc6sQi7G7HJ+dM2LcosMpCjNP9w0pByUvXnF02T0wtY8JwI17KHLJNsJTK7fQ5Z
+        GjljbJ3Oz3fjkn/8Zi1CZtQsBcwPTOZcyvNkfdHShZa/qcaZkdBjAbW+rnijcMBxF1zbzm
+        AWaPm/JIXRwMr2sEdD6OWZdAlZ8/GDoBaITGnwdXCnCjJKefW2waFOOxZdzhug==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1644948063;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=q51LtZ2w/96ITqPXE16sCnoUk2TYcGVB7Ha6CRaE3C4=;
+        b=WVM3mcP/CXCZ3b7ewDccoCOtQP6a4TAwiW0zeHLt1cN+Eki3oGaX9STQ/9KMq8dYRDUu7o
+        u5ViBf7OrQneS4DQ==
+Content-Disposition: inline
+In-Reply-To: <YgqHSIa/WvJSXERe-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, boris-UrQYPotlwNs@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 2022/2/15 2:59 上午, Tejun Heo wrote:
-> On Sun, Feb 13, 2022 at 04:59:02PM +0800, Chengming Zhou wrote:
->> Don't need to do blkg_iostat_set for top blkg iostat on each CPU,
->> so move it after percpu stat aggregation.
->>
->> Fixes: ef45fe470e1e ("blk-cgroup: show global disk stats in root cgroup
->> io.stat")
+On 2022-02-14 11:46:00 [-0500], Johannes Weiner wrote:
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index c1caa662946dc..466466f285cea 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -705,6 +705,8 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+> >  	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+> >  	memcg = pn->memcg;
+> >  
+> > +	if (IS_ENABLED(CONFIG_PREEMPT_RT))
+> > +		preempt_disable();
+> >  	/* Update memcg */
+> >  	__this_cpu_add(memcg->vmstats_percpu->state[idx], val);
+> >  
+> > @@ -712,6 +714,8 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+> >  	__this_cpu_add(pn->lruvec_stats_percpu->state[idx], val);
+> >  
+> >  	memcg_rstat_updated(memcg, val);
+> > +	if (IS_ENABLED(CONFIG_PREEMPT_RT))
+> > +		preempt_enable();
+> >  }
 > 
-> I'm not sure Fixes tag is necessary here.
+> I notice you didn't annoate __mod_memcg_state(). I suppose that is
+> because it's called with explicit local_irq_disable(), and that
+> disables preemption on rt? And you only need another preempt_disable()
+> for stacks that rely on coming from spin_lock_irq(save)?
 
-I'm also not sure, since the io.stat reports correct data after all. I put
-the Fixes tag here in case someone wants it. Please feel free to delete it.
+Correct. The code is not used in_hardirq() on PREEMPT_RT so
+preempt_disable() is sufficient. I didn't bother to replace all
+local_irq_save() with preempt_disable() since it is probably not worth
+it.
+And yes: spin_lock_irq() does not disable interrupts so I need something
+here to ensure that the RMW operation is not interrupted.
 
-Thanks.
+> That makes sense, but it's difficult to maintain. It'll easily break
+> if somebody adds more memory accounting sites that may also rely on an
+> irq-disabled spinlock somewhere.
+> 
+> So better to make this an unconditional locking protocol:
+> 
+> static void memcg_stats_lock(void)
+> {
+> #ifdef CONFIG_PREEMPT_RT
+> 	preempt_disable();
+> #else
+> 	VM_BUG_ON(!irqs_disabled());
+> #endif
+> }
+> 
+> static void memcg_stats_unlock(void)
+> {
+> #ifdef CONFIG_PREEMPT_RT
+> 	preempt_enable();
+> #endif
+> }
+> 
+> and always use these around the counter updates.
 
-> 
->> Signed-off-by: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> 
-> but other than that,
-> 
-> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> 
-> Thanks.
-> 
+Something like the following perhaps? I didn't add anything to
+__mod_memcg_state() since it has no users besides the one which does
+local_irq_save().
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c1caa662946dc..69130a5fe3d51 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -629,6 +629,28 @@ static DEFINE_SPINLOCK(stats_flush_lock);
+ static DEFINE_PER_CPU(unsigned int, stats_updates);
+ static atomic_t stats_flush_threshold = ATOMIC_INIT(0);
+ 
++/*
++ * Accessors to ensure that preemption is disabled on PREEMPT_RT because it can
++ * not rely on this as part of an acquired spinlock_t lock. These functions are
++ * never used in hardirq context on PREEMPT_RT and therefore disabling preemtion
++ * is sufficient.
++ */
++static void memcg_stats_lock(void)
++{
++#ifdef CONFIG_PREEMPT_RT
++      preempt_disable();
++#else
++      VM_BUG_ON(!irqs_disabled());
++#endif
++}
++
++static void memcg_stats_unlock(void)
++{
++#ifdef CONFIG_PREEMPT_RT
++      preempt_enable();
++#endif
++}
++
+ static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
+ {
+ 	unsigned int x;
+@@ -705,6 +727,7 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+ 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+ 	memcg = pn->memcg;
+ 
++	memcg_stats_lock();
+ 	/* Update memcg */
+ 	__this_cpu_add(memcg->vmstats_percpu->state[idx], val);
+ 
+@@ -712,6 +735,7 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+ 	__this_cpu_add(pn->lruvec_stats_percpu->state[idx], val);
+ 
+ 	memcg_rstat_updated(memcg, val);
++	memcg_stats_unlock();
+ }
+ 
+ /**
+@@ -794,8 +818,10 @@ void __count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
+ 	if (mem_cgroup_disabled())
+ 		return;
+ 
++	memcg_stats_lock();
+ 	__this_cpu_add(memcg->vmstats_percpu->events[idx], count);
+ 	memcg_rstat_updated(memcg, count);
++	memcg_stats_unlock();
+ }
+ 
+ static unsigned long memcg_events(struct mem_cgroup *memcg, int event)
+@@ -7149,8 +7175,9 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ 	 * important here to have the interrupts disabled because it is the
+ 	 * only synchronisation we have for updating the per-CPU variables.
+ 	 */
+-	VM_BUG_ON(!irqs_disabled());
++	memcg_stats_lock();
+ 	mem_cgroup_charge_statistics(memcg, -nr_entries);
++	memcg_stats_unlock();
+ 	memcg_check_events(memcg, page_to_nid(page));
+ 
+ 	css_put(&memcg->css);
+-- 
+2.34.1
+
