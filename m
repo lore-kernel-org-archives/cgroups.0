@@ -1,33 +1,33 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- ad9bff39fb84a8e81855ef7d728a18bd398fb67e
-Date: Tue, 15 Feb 2022 18:56:09 +0800
-Message-ID: <620b86c9.zTCYGgjXOtOXP6iM%lkp@intel.com>
+Subject: [tj-cgroup:for-5.17-fixes] BUILD SUCCESS
+ 05c7b7a92cc87ff8d7fde189d0fade250697573c
+Date: Tue, 15 Feb 2022 18:56:18 +0800
+Message-ID: <620b86d2.nNPwny8A1vWIHN19%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1644922605; x=1676458605;
+  t=1644922606; x=1676458606;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=TKHOT0y5hSb4aHCGkOD/3iDP69IvAoy47CBrR3YmYns=;
-  b=B3Ca4Ajaro9J5qDS/JRWKqKS30MDZWmYeip/jEhbm+fk0yVGVcRKTPDf
-   HjP41X3zO3cycgD+1BEJwUopmo2DGNB1iJQuETMR+37Pc9LU4y30AfD9F
-   o2/DKb5ECCmTpWm7lSaXmilD1yxe3JBw/jh4p0KBk9o97tRwACoUp9jFn
-   7Il//y/ifQdy87jpFQ7rNk61Fn7fOnyRgoEoOzyFd0fN6oWy+l3g/Zewk
-   +ow/7A6jDV/E6cHGJQ0JL4pqC5GhAtz5xmEka/JOVsrBl9x97eb8EV/Fu
-   mx1VzT94wio/R0A7RlMnSHyptzK8YYpR14UixpeSs8pCN3W5V/XFRxZg0
-   w==;
+  bh=q4fZAfoN5nCqH7PYonogbz3yTS0aQLYVzDgMJqhT9V0=;
+  b=A9h0AFk0BTqVTzIzlzvD/RI8S6hSh7n9I1ymVL9FzqICddn3jfNqM0c+
+   DStJLXF0u1PbAZWMK3QZiwyGVXfhSjawy3bq0StnAjZ6fo1yLGyRNq5k/
+   fMPpHSH47MJ9dCnosu5iQfeUdA/03Gy1bJ1IWeZ8R4XlA1rKkGTzwuYTC
+   ML8E7hJQEvlAI7AiSLIIqGOar+ymKPiQerRcXv95goPETWn2ULWwhU6On
+   FKyMk29l9ET6ZOwrHv+r5yCzToDK8RAB44gq7MDkqk3PbrAHbZY0KlFKG
+   fBakFz5CC0r8XVvga6hMesDqVw1CelclCB5l+n36vX5C2FLrHmlFNDy+1
+   g==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: ad9bff39fb84a8e81855ef7d728a18bd398fb67e  Merge branch 'for-5.17-fixes' into for-next
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.17-fixes
+branch HEAD: 05c7b7a92cc87ff8d7fde189d0fade250697573c  cgroup/cpuset: Fix a race between cpuset_attach() and cpu hotplug
 
-elapsed time: 729m
+elapsed time: 730m
 
 configs tested: 129
 configs skipped: 3
