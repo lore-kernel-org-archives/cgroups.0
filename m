@@ -1,125 +1,91 @@
-From: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] KVM: Move VM's worker kthreads back to the original
- cgroups before exiting.
-Date: Wed, 16 Feb 2022 09:37:45 -0800
-Message-ID: <CAHVum0fOP-2XcUcG3PqW08DY7CmpDroG6Fcv9KoD1FqLmGpB8w@mail.gmail.com>
-References: <20211222225350.1912249-1-vipinsh@google.com> <20220105180420.GC6464@blackbody.suse.cz>
- <CAHVum0e84nUcGtdPYQaJDQszKj-QVP5gM+nteBpSTaQ2sWYpmQ@mail.gmail.com>
- <Yeclbe3GNdCMLlHz@slm.duckdns.org> <7a0bc562-9f25-392d-5c05-9dbcd350d002@redhat.com>
- <YehY0z2vHYVZk52J@slm.duckdns.org> <20220120150502.GC27269@blackbody.suse.cz>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v2 4/4] mm/memcg: Protect memcg_stock with a local_lock_t
+Date: Wed, 16 Feb 2022 13:08:55 -0500
+Message-ID: <Yg09t/j5Z0X9L7aX@cmpxchg.org>
+References: <20220211223537.2175879-1-bigeasy@linutronix.de>
+ <20220211223537.2175879-5-bigeasy@linutronix.de>
+ <YgqB77SaViGRAtgt@cmpxchg.org>
+ <Yg0dctKholvzADYP@linutronix.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=CLGpzGzLWEEIPQa2RoBV1b48UAm//y/cN1v178XuBnY=;
-        b=YIKcsqMF3eKCVXPEAvcBo0+LNPTAgkAASeO6TNkeW/s+2ROdkA/A6HTyBI6TEk091E
-         B+exaNzlJPBcARjAcThzqD4S5H2FK9wus6v6wgaLIcKaG9xbSqNh5dr+JoMY/IeVZ6HC
-         26KBmcLh4TfDJEHR0OxdK2PearXUSrey6TC85sSCQM4kpIoBfcFgh5f7BJlHw0vEWk+s
-         cjX7wCAZPK2PEtYu3K4aHj66MVQsSX+im8nuXKCvlrMiart2SBR8er73ICykTrReN3/r
-         QEnKJtgYFY/mZbTIQCb6SI/3L5fSkEQPTmVqa4mH1IjhzaCsuObSUs93pQeBcOmqG2WH
-         ZY4w==
-In-Reply-To: <20220120150502.GC27269-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=CU/AXfwa3Im1uRiNONAlogBiTBFdbTVUfdiUCLuEKiU=;
+        b=yiK42wLBMgMpyLohAN1o3Njdrw1GDrndn/LnvGp1r/2/zpQQ19LDq26SHKCoy4MABR
+         KnxhFYtTwOz86H7aytfUSLMEqPySVagV3hwu/eHxBVMcZ+urO7BETp5mTcoi4NO/XgkK
+         Tv15THJP3UINtYcAQ6rhbrjp0fnwzUYkzGsjWdBC8HSW9U1klmFXz6mTaIZ6VhliM1HV
+         Qf7FqeaE4l2ShY8jI6dBkaUF5j9eg0KZcydK99isY/wyAgg/OBAHndTRvv7SYEG49fO7
+         nuIfwtpUfWaqZa5ANse9pWfIHdyqGc3Lt3FgZxZ+FRNW3Kk56RBywgCH3RKsxKRAgl/2
+         54sQ==
+Content-Disposition: inline
+In-Reply-To: <Yg0dctKholvzADYP-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dmatlack-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, kernel test robot <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Hi Paolo, Michal
+On Wed, Feb 16, 2022 at 04:51:14PM +0100, Sebastian Andrzej Siewior wrote:
+> On 2022-02-14 11:23:11 [-0500], Johannes Weiner wrote:
+> > Hi Sebastian,
+> Hi Johannes,
+> 
+> > This is a bit dubious in terms of layering. It's an objcg operation,
+> > but what's "locked" isn't the objcg, it's the underlying stock. That
+> > function then looks it up again, even though we have it right there.
+> > 
+> > You can open-code it and factor out the stock operation instead, and
+> > it makes things much simpler and clearer.
+> > 
+> > I.e. something like this (untested!):
+> 
+> This then:
+> 
+> ------>8------
+> 
+> From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Date: Wed, 16 Feb 2022 13:25:49 +0100
+> Subject: [PATCH] mm/memcg: Opencode the inner part of
+>  obj_cgroup_uncharge_pages() in drain_obj_stock()
+> 
+> Provide the inner part of refill_stock() as __refill_stock() without
+> disabling interrupts. This eases the integration of local_lock_t where
+> recursive locking must be avoided.
+> Open code obj_cgroup_uncharge_pages() in drain_obj_stock() and use
+> __refill_stock(). The caller of drain_obj_stock() already disables
+> interrupts.
+> 
+> [bigeasy: Patch body around Johannes' diff ]
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
-Paolo:
-Will you accept a patch which uses real_parent in
-kvm_vm_worker_thread() as suggested by Sean, while I figure out the
-recommendation from Michal about making kthread_stop() wait on
-kernel_wait()?
-        cgroup_attach_task_all(current->real_parent, current)
+I thought you'd fold it into yours, but separate patch works too,
+thanks!
 
-Michal:
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Thu, Jan 20, 2022 at 7:05 AM Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org> wrote=
-:
->
-> On Wed, Jan 19, 2022 at 08:30:43AM -1000, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote=
-:
-> > It'd be nicer if we can make kthread_stop() waiting more regular but I
-> > couldn't find a good existing place and routing the usual parent
-> > signaling might be too complicated. Anyone has better ideas?
->
-> The regular way is pictured in Paolo's diagram already, the
-> exit_notify/do_signal_parent -> wait4 path.
->
-> Actually, I can see that there exists already kernel_wait() and is used
-> by a UMH wrapper kthread. kthreadd issues ignore_signals() so (besides
-> no well defined point of signalling a kthread) the signal notification
-> is moot and only waking up the waiter is relevant. So kthread_stop()
-> could wait via kernel_wait() based on pid (extracted from task_struct).
->
-> Have I missed an obstacle?
->
+One important note, though:
 
-I must admit I do not have a good understanding of kernel_wait() and
-kthread_stop() APIs. I tried making some changes in the kthread_stop()
-but I was not able to successfully use the API. I tested it by a
-writing a test module, where during the init I start a kthread which
-prints some message every few seconds and during the module exit I
-call kernel_stop(). This module worked as intended without the
-kernel_wait() changes in the kthread_stop() API.
+> @@ -3151,8 +3155,17 @@ static void drain_obj_stock(struct memcg_stock_pcp *stock)
+>  		unsigned int nr_pages = stock->nr_bytes >> PAGE_SHIFT;
+>  		unsigned int nr_bytes = stock->nr_bytes & (PAGE_SIZE - 1);
+>  
+> -		if (nr_pages)
+> -			obj_cgroup_uncharge_pages(old, nr_pages);
+> +		if (nr_pages) {
+> +			struct mem_cgroup *memcg;
+> +
+> +			memcg = get_mem_cgroup_from_objcg(old);
+> +
+> +			if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
+> +				page_counter_uncharge(&memcg->kmem, nr_pages);
+> +			__refill_stock(memcg, nr_pages);
 
-My changes were basically replacing wait_for_completion() with
-kernel_wait() call.
+This doesn't take "memcg: add per-memcg total kernel memory stat"
+queued in -mm into account and so will break kmem accounting.
 
-@@ -645,8 +645,9 @@ int kthread_stop(struct task_struct *k)
-        set_bit(KTHREAD_SHOULD_STOP, &kthread->flags);
-        kthread_unpark(k);
-        wake_up_process(k);
--       wait_for_completion(&kthread->exited);
--       ret =3D k->exit_code;
-+       kernel_wait(k->pid, &ret);
-+//     kernel_wait(task_pid_vnr(k), &ret);
-+//     wait_for_completion(&kthread->exited);
-+//     ret =3D k->exit_code;
-        put_task_struct(k);
-
-I used few other combination where I put kernel_wait() call after
-put_task_struct(k) call.
-
-Every time during the module exit, kernel was crashing like:
-
-[  285.014612] RIP: 0010:0xffffffffc04ed074
-[  285.018537] RSP: 0018:ffff9ccdc8365ee8 EFLAGS: 00010246
-[  285.023761] RAX: 0000000000000000 RBX: 0000000000000012 RCX: 00000000000=
-00001
-[  285.030896] RDX: 0000000000000000 RSI: 0000000000000286 RDI: ffff9cce3f7=
-d9cc0
-[  285.038028] RBP: ffff9ccdc8365ef8 R08: 0000000000000000 R09: 00000000000=
-15504
-[  285.045160] R10: 000000000000004b R11: ffffffff8dd92880 R12: 00000000000=
-00012
-[  285.052293] R13: ffff9ccdc813db90 R14: ffff9ccdc7e66240 R15: ffffffffc04=
-ed000
-[  285.059425] FS:  0000000000000000(0000) GS:ffff9cce3f7c0000(0000)
-knlGS:0000000000000000
-[  285.067510] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  285.073258] CR2: ffffffffc04ed074 CR3: 000000c07f20e002 CR4: 00000000003=
-62ef0
-[  285.080390] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 00000000000=
-00000
-[  285.087522] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 00000000000=
-00400
-[  285.094656] Call Trace:
-[  285.097112]  kthread+0x148/0x1b0
-[  285.100343]  ? kthread_blkcg+0x30/0x30
-[  285.104096]  ret_from_fork+0x3a/0x60
-[  285.107671] Code:  Bad RIP value.
-[  285.107671] IP: 0xffffffffc04ecff4:
-
-Crash is not observed if I keep wait_for_completion(&kthread->exited)
-along with kernel_wait(), but I guess the kernel_wait() should be
-sufficient by itself if I figure out proper way to use it.
-
-Do you have any suggestions what might be the right way to use this API?
-
-Thanks
-Vipin
+Make sure to rebase the patches to the -mm tree before sending it
+out. You can find it here: https://github.com/hnaz/linux-mm
