@@ -1,129 +1,110 @@
 From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: [PATCH v3 2/5] mm/memcg: Disable threshold event handlers on PREEMPT_RT
-Date: Thu, 17 Feb 2022 10:47:59 +0100
-Message-ID: <20220217094802.3644569-3-bigeasy@linutronix.de>
+Subject: [PATCH v3 4/5] mm/memcg: Opencode the inner part of obj_cgroup_uncharge_pages() in drain_obj_stock()
+Date: Thu, 17 Feb 2022 10:48:01 +0100
+Message-ID: <20220217094802.3644569-5-bigeasy@linutronix.de>
 References: <20220217094802.3644569-1-bigeasy@linutronix.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1645091287;
+        s=2020; t=1645091288;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=+YK9BAbzRHLQMq1juWmxjiOoknuxlRDdzwwjsluBi8c=;
-        b=q8lRQHoGi2PQHO36VPEbo4ntN5HOPDTRaTDTHZnQh5sMU4uEMIvJd7E3AhwIhpuW/g8JPp
-        v23JGi57QjBX5HgSJiYtXmp5tK9CtXfpNyFu76Vppiecl7SLEmUxVS/s/2KlD84KaSaJVP
-        B/EPT6TlKbO7rbhe6nlVo2oUsO6eVaTqBJrd5HW9Gpp2n17S3v8sfFnqJDL7OHEtcr3jK9
-        A4/7Nzi1K/KLUrjWEVgqeiBceQ8SoDJheW0pQvdjThKBuRoACRCj5ZMQ40vXoC/E64V3jw
-        eqOIduXysDAZ5LjmpE+HvkRARbKEDghL0GNXOikP/AuHYUnrz7RXRshdjmwlag==
+        bh=kVZ+pt/1JgatWwehiTV0O06PG+qwCoPYYdHavMUynSM=;
+        b=4x9pQZ/+arQ/FUcXDBSf7ajEi9bG8limTx2HLP/v/9S+hPtIQiVs8TUZ8cG1MNt9qftfG1
+        wv6Vu94lG30+5KKsrMfPkT3v9fx0ZbkXKaunTjctUGxxhpbQzq2Vx7yKsPGjirqDjBEGcD
+        0bcWb4Nr93llKX1bRJpOpGDY11Ov4PZIJGZ3WZffELk9zawW1CjsxP6qBZujcEYsDvzXGb
+        HEF0IxoGx4udky4Y6xLnXqf+yIvU5BA4ruPxXDxfYmVCTmD7w6bpyilKwKUE/TojuN1z53
+        E5ziOGJx7FRydzUfWPyvqYbxAtj7GEX44mhz64RntOsELfDJCyF4G+Jfqan3OQ==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1645091287;
+        s=2020e; t=1645091288;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=+YK9BAbzRHLQMq1juWmxjiOoknuxlRDdzwwjsluBi8c=;
-        b=B9qWJiYyQi0ZyyZWOQpXIjJpMplXI6p4y/mwX0DdmDiNPfy4Ftmc0xHh06mvYz5t0690c5
-        poc62RSFgWO1FsCQ==
+        bh=kVZ+pt/1JgatWwehiTV0O06PG+qwCoPYYdHavMUynSM=;
+        b=QVjj988fUUlnn/EqqXHo3xd5ZhfV68qeGSA1a8/kZBPOggQ+//vcqDwdf3nC068q2JU6qu
+        OKpWyyCYjWCXCdBw==
 In-Reply-To: <20220217094802.3644569-1-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
+Content-Type: text/plain; charset="us-ascii"
 To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
-During the integration of PREEMPT_RT support, the code flow around
-memcg_check_events() resulted in `twisted code'. Moving the code around
-and avoiding then would then lead to an additional local-irq-save
-section within memcg_check_events(). While looking better, it adds a
-local-irq-save section to code flow which is usually within an
-local-irq-off block on non-PREEMPT_RT configurations.
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-The threshold event handler is a deprecated memcg v1 feature. Instead of
-trying to get it to work under PREEMPT_RT just disable it. There should
-be no users on PREEMPT_RT. From that perspective it makes even less
-sense to get it to work under PREEMPT_RT while having zero users.
+Provide the inner part of refill_stock() as __refill_stock() without
+disabling interrupts. This eases the integration of local_lock_t where
+recursive locking must be avoided.
+Open code obj_cgroup_uncharge_pages() in drain_obj_stock() and use
+__refill_stock(). The caller of drain_obj_stock() already disables
+interrupts.
 
-Make memory.soft_limit_in_bytes and cgroup.event_control return
--EOPNOTSUPP on PREEMPT_RT. Make an empty memcg_check_events() and
-memcg_write_event_control() which return only -EOPNOTSUPP on PREEMPT_RT.
-Document that the two knobs are disabled on PREEMPT_RT.
+[bigeasy: Patch body around Johannes' diff ]
 
-Suggested-by: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Suggested-by: Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org>
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- Documentation/admin-guide/cgroup-v1/memory.rst |  2 ++
- mm/memcontrol.c                                | 14 ++++++++++++--
- 2 files changed, 14 insertions(+), 2 deletions(-)
+ mm/memcontrol.c | 24 ++++++++++++++++++------
+ 1 file changed, 18 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation=
-/admin-guide/cgroup-v1/memory.rst
-index faac50149a222..2cc502a75ef64 100644
---- a/Documentation/admin-guide/cgroup-v1/memory.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -64,6 +64,7 @@ Brief summary of control files.
- 				     threads
-  cgroup.procs			     show list of processes
-  cgroup.event_control		     an interface for event_fd()
-+				     This knob is not available on CONFIG_PREEMPT_RT systems.
-  memory.usage_in_bytes		     show current usage for memory
- 				     (See 5.5 for details)
-  memory.memsw.usage_in_bytes	     show current usage for memory+Swap
-@@ -75,6 +76,7 @@ Brief summary of control files.
-  memory.max_usage_in_bytes	     show max memory usage recorded
-  memory.memsw.max_usage_in_bytes     show max memory+Swap usage recorded
-  memory.soft_limit_in_bytes	     set/show soft limit of memory usage
-+				     This knob is not available on CONFIG_PREEMPT_RT systems.
-  memory.stat			     show various statistics
-  memory.use_hierarchy		     set/show hierarchical account enabled
-                                      This knob is deprecated and shouldn't=
- be
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8ab2dc75e70ec..0b5117ed2ae08 100644
+index 36ab3660f2c6d..a3225501cce36 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -859,6 +859,9 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgrou=
-p *memcg,
+@@ -2224,12 +2224,9 @@ static void drain_local_stock(struct work_struct *du=
+mmy)
+  * Cache charges(val) to local per_cpu area.
+  * This will be consumed by consume_stock() function, later.
   */
- static void memcg_check_events(struct mem_cgroup *memcg, int nid)
+-static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
++static void __refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
  {
-+	if (IS_ENABLED(CONFIG_PREEMPT_RT))
-+		return;
+ 	struct memcg_stock_pcp *stock;
+-	unsigned long flags;
+-
+-	local_irq_save(flags);
+=20
+ 	stock =3D this_cpu_ptr(&memcg_stock);
+ 	if (stock->cached !=3D memcg) { /* reset if necessary */
+@@ -2241,7 +2238,14 @@ static void refill_stock(struct mem_cgroup *memcg, u=
+nsigned int nr_pages)
+=20
+ 	if (stock->nr_pages > MEMCG_CHARGE_BATCH)
+ 		drain_stock(stock);
++}
+=20
++static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
++{
++	unsigned long flags;
 +
- 	/* threshold event is triggered in finer grain than soft limit */
- 	if (unlikely(mem_cgroup_event_ratelimit(memcg,
- 						MEM_CGROUP_TARGET_THRESH))) {
-@@ -3731,8 +3734,12 @@ static ssize_t mem_cgroup_write(struct kernfs_open_f=
-ile *of,
- 		}
- 		break;
- 	case RES_SOFT_LIMIT:
--		memcg->soft_limit =3D nr_pages;
--		ret =3D 0;
-+		if (IS_ENABLED(CONFIG_PREEMPT_RT)) {
-+			ret =3D -EOPNOTSUPP;
-+		} else {
-+			memcg->soft_limit =3D nr_pages;
-+			ret =3D 0;
++	local_irq_save(flags);
++	__refill_stock(memcg, nr_pages);
+ 	local_irq_restore(flags);
+ }
+=20
+@@ -3158,8 +3162,16 @@ static void drain_obj_stock(struct memcg_stock_pcp *=
+stock)
+ 		unsigned int nr_pages =3D stock->nr_bytes >> PAGE_SHIFT;
+ 		unsigned int nr_bytes =3D stock->nr_bytes & (PAGE_SIZE - 1);
+=20
+-		if (nr_pages)
+-			obj_cgroup_uncharge_pages(old, nr_pages);
++		if (nr_pages) {
++			struct mem_cgroup *memcg;
++
++			memcg =3D get_mem_cgroup_from_objcg(old);
++
++			memcg_account_kmem(memcg, -nr_pages);
++			__refill_stock(memcg, nr_pages);
++
++			css_put(&memcg->css);
 +		}
- 		break;
- 	}
- 	return ret ?: nbytes;
-@@ -4708,6 +4715,9 @@ static ssize_t memcg_write_event_control(struct kernf=
-s_open_file *of,
- 	char *endp;
- 	int ret;
 =20
-+	if (IS_ENABLED(CONFIG_PREEMPT_RT))
-+		return -EOPNOTSUPP;
-+
- 	buf =3D strstrip(buf);
-=20
- 	efd =3D simple_strtoul(buf, &endp, 10);
+ 		/*
+ 		 * The leftover is flushed to the centralized per-memcg value.
 --=20
 2.34.1
 
