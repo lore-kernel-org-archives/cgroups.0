@@ -1,47 +1,51 @@
-From: Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3] KVM: Move VM's worker kthreads back to the original
- cgroup before exiting.
-Date: Thu, 17 Feb 2022 17:05:45 +0100
-Message-ID: <3113f00a-e910-2dfb-479f-268566445630@redhat.com>
-References: <20220217061616.3303271-1-vipinsh@google.com>
- <202202172046.GuW8pHQc-lkp@intel.com>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH] cgroup-v1: Correct privileges check in release_agent writes
+Date: Thu, 17 Feb 2022 17:11:28 +0100
+Message-ID: <20220217161128.20291-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1645113950;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=q8C5mBTF/zQPiu7mRTQ0V1X+3+5OQ4DWAsdzOSei6/I=;
-        b=g0/DkOjF130rSLL0p9nt5505Y/iggj+13Tzt4sfNyOz/3X4rjSLPiNKNyZFolR9QqMVaa8
-        nQ/dVp9CScKvddp+4umIV9KQELbcV7X3b81qf2qDxshcoySmCKlIMhH+Rq9tIwHYsf7pOM
-        6wc0NE72ghfjO/qbzvcwh0T/XrAnELI=
-Content-Language: en-US
-In-Reply-To: <202202172046.GuW8pHQc-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1645114299; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=trkaAj42Qk58nzvh5xCn9D72uPJ0Goap4j9Xg6GQj54=;
+        b=dIt60ilvthbCzGmprCu9i0vdIACxkq2NIlLVQSHwrsUEUHqFlF7hbQprfIAEY7l2wMM/3W
+        PYS5RX+QIa3rGOFDU3MRy5wmcKBI6jB3NUXLFjp4KQRY9AwhYyciJ+tW0WGDSaausdAEir
+        hzOr+3+QNiRqmnreY2jgWr6606D4ZQs=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, dmatlack-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jiangshanlai-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: "Eric W. Biederman" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
+Cc: Masami Ichikawa <masami.ichikawa-PrdBLQq2n+6wLyZP7ziBtg@public.gmane.org>, Tabitha Sable <tabitha.c.sable-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2/17/22 13:34, kernel test robot wrote:
->> 5859		reattach_err = cgroup_attach_task_all(current->real_parent, current);
-
-This needs to be within rcu_dereference().
-
-Paolo
-
->    5860		if (reattach_err) {
->    5861			kvm_err("%s: cgroup_attach_task_all failed on reattach with err %d\n",
->    5862				__func__, reattach_err);
->    5863		}
->    5864		return err;
->    5865	}
->    5866	
-> 
-> ---
-> 0-DAY CI Kernel Test Service, Intel Corporation
-> https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
-> 
-
+VGhlIGlkZWEgaXMgdG8gY2hlY2s6IGEpIHRoZSBvd25pbmcgdXNlcl9ucyBvZiBjZ3JvdXBfbnMs
+IGIpCmNhcGFiaWxpdGllcyBpbiBpbml0X3VzZXJfbnMuCgpUaGUgY29tbWl0IDI0ZjYwMDg1NjQx
+OCAoImNncm91cC12MTogUmVxdWlyZSBjYXBhYmlsaXRpZXMgdG8gc2V0CnJlbGVhc2VfYWdlbnQi
+KSBnb3QgdGhpcyB3cm9uZyBpbiB0aGUgd3JpdGUgaGFuZGxlciBvZiByZWxlYXNlX2FnZW50CnNp
+bmNlIGl0IGNoZWNrZWQgdXNlcl9ucyBvZiB0aGUgb3BlbmVyIChtYXkgYmUgZGlmZmVyZW50IGZy
+b20gdGhlIG93bmluZwp1c2VyX25zIG9mIGNncm91cF9ucykuClNlY29uZGx5LCB0byBhdm9pZCBw
+b3NzaWJseSBjb25mdXNlZCBkZXB1dHksIHRoZSBjYXBhYmlsaXR5IG9mIHRoZQpvcGVuZXIgbXVz
+dCBiZSBjaGVja2VkLgoKRml4ZXM6IDI0ZjYwMDg1NjQxOCAoImNncm91cC12MTogUmVxdWlyZSBj
+YXBhYmlsaXRpZXMgdG8gc2V0IHJlbGVhc2VfYWdlbnQiKQpDYzogc3RhYmxlLXU3OXV3WEwyOVRZ
+NzZaMnJNNW1IWEFAcHVibGljLmdtYW5lLm9yZwpMaW5rOiBodHRwczovL2xvcmUua2VybmVsLm9y
+Zy9zdGFibGUvMjAyMjAyMTYxMjExNDIuR0IzMDAzNS05T3VkSDNldWw1amN2cmF3Rm5IK2E2VlhL
+dUZUaXE4N0BwdWJsaWMuZ21hbmUub3JnLwpTaWduZWQtb2ZmLWJ5OiBNaWNoYWwgS291dG7DvSA8
+bWtvdXRueS1JQmk5UkcvYjY3a0BwdWJsaWMuZ21hbmUub3JnPgotLS0KIGtlcm5lbC9jZ3JvdXAv
+Y2dyb3VwLXYxLmMgfCA2ICsrKystLQogMSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwg
+MiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9rZXJuZWwvY2dyb3VwL2Nncm91cC12MS5jIGIv
+a2VybmVsL2Nncm91cC9jZ3JvdXAtdjEuYwppbmRleCAwZTg3N2RiY2ZlZWEuLmFmYzZjMGU5Yzk2
+NiAxMDA2NDQKLS0tIGEva2VybmVsL2Nncm91cC9jZ3JvdXAtdjEuYworKysgYi9rZXJuZWwvY2dy
+b3VwL2Nncm91cC12MS5jCkBAIC01NDYsNiArNTQ2LDcgQEAgc3RhdGljIHNzaXplX3QgY2dyb3Vw
+X3JlbGVhc2VfYWdlbnRfd3JpdGUoc3RydWN0IGtlcm5mc19vcGVuX2ZpbGUgKm9mLAogCQkJCQkg
+IGNoYXIgKmJ1Ziwgc2l6ZV90IG5ieXRlcywgbG9mZl90IG9mZikKIHsKIAlzdHJ1Y3QgY2dyb3Vw
+ICpjZ3JwOworCXN0cnVjdCBjZ3JvdXBfZmlsZV9jdHggKmN0eDsKIAogCUJVSUxEX0JVR19PTihz
+aXplb2YoY2dycC0+cm9vdC0+cmVsZWFzZV9hZ2VudF9wYXRoKSA8IFBBVEhfTUFYKTsKIApAQCAt
+NTUzLDggKzU1NCw5IEBAIHN0YXRpYyBzc2l6ZV90IGNncm91cF9yZWxlYXNlX2FnZW50X3dyaXRl
+KHN0cnVjdCBrZXJuZnNfb3Blbl9maWxlICpvZiwKIAkgKiBSZWxlYXNlIGFnZW50IGdldHMgY2Fs
+bGVkIHdpdGggYWxsIGNhcGFiaWxpdGllcywKIAkgKiByZXF1aXJlIGNhcGFiaWxpdGllcyB0byBz
+ZXQgcmVsZWFzZSBhZ2VudC4KIAkgKi8KLQlpZiAoKG9mLT5maWxlLT5mX2NyZWQtPnVzZXJfbnMg
+IT0gJmluaXRfdXNlcl9ucykgfHwKLQkgICAgIWNhcGFibGUoQ0FQX1NZU19BRE1JTikpCisJY3R4
+ID0gb2YtPnByaXY7CisJaWYgKChjdHgtPm5zLT51c2VyX25zICE9ICZpbml0X3VzZXJfbnMpIHx8
+CisJICAgICFmaWxlX25zX2NhcGFibGUob2YtPmZpbGUsICZpbml0X3VzZXJfbnMsIENBUF9TWVNf
+QURNSU4pKQogCQlyZXR1cm4gLUVQRVJNOwogCiAJY2dycCA9IGNncm91cF9rbl9sb2NrX2xpdmUo
+b2YtPmtuLCBmYWxzZSk7Ci0tIAoyLjM0LjEKCg==
