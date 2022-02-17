@@ -1,24 +1,24 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH v3] KVM: Move VM's worker kthreads back to the original
  cgroup before exiting.
-Date: Fri, 18 Feb 2022 03:47:28 +0800
-Message-ID: <202202180218.msk1UR5R-lkp@intel.com>
+Date: Fri, 18 Feb 2022 07:22:54 +0800
+Message-ID: <202202180730.AAgeOZkF-lkp@intel.com>
 References: <20220217061616.3303271-1-vipinsh@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1645127290; x=1676663290;
+  t=1645143683; x=1676679683;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=kVVoUac+9++cZ9L6mpXFpdsjVJethaHpin9YxElk0ak=;
-  b=AzlqY0sIJScikXaRTPV8Ph69ToeuY1FNz2zGLtT0l6FGZALYJKiaCgKd
-   RaIah6K9tsTL6TPD1I96FWS5f4xk0A66BkTRwX6/P7Y292OXKvJP5p7Nz
-   Fi/UZWNxepCra20TPeN+Uy9XIIgSO7Ob6bY4qo6sQNovvYD3L90pLVGNg
-   6wV0sYYGIlW7Jpk+KIvT0t7OcSsQlf+zq9P86lwnQy8MZ4Bt8LscLthDC
-   by0NC4QzPYyiwQsTLAJG4Baz9B2Ld9foi+O91Ny/l9e5YyiU0Sn8CnH2Y
-   vFs5cmrxIM8S5oE6Q1irMReVbjyls22k//h95b5CEwmCamrGL6GOyRX9F
-   A==;
+  bh=N32BdLCCicYvF88PVJV2JjNN97uAJo3pxS97Q2b1+KM=;
+  b=JebK25hjQclsv7jqSHiEE0DjhouD4qt1Hlweeh/N3JaaLPvOya/WDJl3
+   c2PnjKG1mJU6qLzaGAmlHipha9jFsT95Yg/4DMrb/NXTXgaR110a6iTsC
+   I8UBubYHZRc7skItWk8OucBwc0SYrc+cZxM1teB+tUxmS7XaEnnKjPz0R
+   tiosmwmc/T2cXlMHRA7YINkMxoRrRF17Mds1pXK9dWUcBmY2zjn1AYr2H
+   6llKIJQL8NOTTbuV7UzINeTx2ik026zG72tzcPOd1+4t7yyEP9JIFLQya
+   RsAY4lSZ02S62N1y8PDSqYcW4/KuivP+Yahwn6QOn7gU6P+3w2LYXcKRi
+   w==;
 Content-Disposition: inline
 In-Reply-To: <20220217061616.3303271-1-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
@@ -35,11 +35,9 @@ Thank you for the patch! Perhaps something to improve:
 
 url:    https://github.com/0day-ci/linux/commits/Vipin-Sharma/KVM-Move-VM-s-worker-kthreads-back-to-the-original-cgroup-before-exiting/20220217-141723
 base:   db6e7adf8de9b3b99a9856acb73870cc3a70e3ca
-config: arm64-randconfig-s032-20220217 (https://download.01.org/0day-ci/archive/20220218/202202180218.msk1UR5R-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
-compiler: aarch64-linux-gcc (GCC) 11.2.0
+config: x86_64-rhel-8.3-kselftests (https://download.01.org/0day-ci/archive/20220218/202202180730.AAgeOZkF-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
+compiler: gcc-9 (Debian 9.3.0-22) 9.3.0
 reproduce:
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
         # apt-get install sparse
         # sparse version: v0.6.4-dirty
         # https://github.com/0day-ci/linux/commit/1abffef71ef85b6fb8f1296e6ef38febc4f2b007
@@ -48,28 +46,28 @@ reproduce:
         git checkout 1abffef71ef85b6fb8f1296e6ef38febc4f2b007
         # save the config file to linux build tree
         mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=arm64 SHELL=/bin/bash
+        make W=1 C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=x86_64 SHELL=/bin/bash
 
 If you fix the issue, kindly add following tag as appropriate
 Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
 
 sparse warnings: (new ones prefixed by >>)
-   arch/arm64/kvm/../../../virt/kvm/kvm_main.c: note: in included file:
+   arch/x86/kvm/../../../virt/kvm/kvm_main.c: note: in included file:
    include/linux/kvm_host.h:1877:54: sparse: sparse: array of flexible structures
    include/linux/kvm_host.h:1879:56: sparse: sparse: array of flexible structures
->> arch/arm64/kvm/../../../virt/kvm/kvm_main.c:5859:54: sparse: sparse: incorrect type in argument 1 (different address spaces) @@     expected struct task_struct *from @@     got struct task_struct [noderef] __rcu *real_parent @@
-   arch/arm64/kvm/../../../virt/kvm/kvm_main.c:5859:54: sparse:     expected struct task_struct *from
-   arch/arm64/kvm/../../../virt/kvm/kvm_main.c:5859:54: sparse:     got struct task_struct [noderef] __rcu *real_parent
-   arch/arm64/kvm/../../../virt/kvm/kvm_main.c:538:9: sparse: sparse: context imbalance in 'kvm_mmu_notifier_change_pte' - different lock contexts for basic block
-   arch/arm64/kvm/../../../virt/kvm/kvm_main.c:538:9: sparse: sparse: context imbalance in 'kvm_mmu_notifier_invalidate_range_start' - different lock contexts for basic block
-   arch/arm64/kvm/../../../virt/kvm/kvm_main.c:538:9: sparse: sparse: context imbalance in 'kvm_mmu_notifier_invalidate_range_end' - different lock contexts for basic block
-   arch/arm64/kvm/../../../virt/kvm/kvm_main.c:538:9: sparse: sparse: context imbalance in 'kvm_mmu_notifier_clear_flush_young' - different lock contexts for basic block
-   arch/arm64/kvm/../../../virt/kvm/kvm_main.c:538:9: sparse: sparse: context imbalance in 'kvm_mmu_notifier_clear_young' - different lock contexts for basic block
-   arch/arm64/kvm/../../../virt/kvm/kvm_main.c:538:9: sparse: sparse: context imbalance in 'kvm_mmu_notifier_test_young' - different lock contexts for basic block
-   arch/arm64/kvm/../../../virt/kvm/kvm_main.c:2522:9: sparse: sparse: context imbalance in 'hva_to_pfn_remapped' - unexpected unlock
+>> arch/x86/kvm/../../../virt/kvm/kvm_main.c:5859:54: sparse: sparse: incorrect type in argument 1 (different address spaces) @@     expected struct task_struct *from @@     got struct task_struct [noderef] __rcu *real_parent @@
+   arch/x86/kvm/../../../virt/kvm/kvm_main.c:5859:54: sparse:     expected struct task_struct *from
+   arch/x86/kvm/../../../virt/kvm/kvm_main.c:5859:54: sparse:     got struct task_struct [noderef] __rcu *real_parent
+   arch/x86/kvm/../../../virt/kvm/kvm_main.c:538:9: sparse: sparse: context imbalance in 'kvm_mmu_notifier_change_pte' - different lock contexts for basic block
+   arch/x86/kvm/../../../virt/kvm/kvm_main.c:538:9: sparse: sparse: context imbalance in 'kvm_mmu_notifier_invalidate_range_start' - different lock contexts for basic block
+   arch/x86/kvm/../../../virt/kvm/kvm_main.c:538:9: sparse: sparse: context imbalance in 'kvm_mmu_notifier_invalidate_range_end' - different lock contexts for basic block
+   arch/x86/kvm/../../../virt/kvm/kvm_main.c:538:9: sparse: sparse: context imbalance in 'kvm_mmu_notifier_clear_flush_young' - different lock contexts for basic block
+   arch/x86/kvm/../../../virt/kvm/kvm_main.c:538:9: sparse: sparse: context imbalance in 'kvm_mmu_notifier_clear_young' - different lock contexts for basic block
+   arch/x86/kvm/../../../virt/kvm/kvm_main.c:538:9: sparse: sparse: context imbalance in 'kvm_mmu_notifier_test_young' - different lock contexts for basic block
+   arch/x86/kvm/../../../virt/kvm/kvm_main.c:2522:9: sparse: sparse: context imbalance in 'hva_to_pfn_remapped' - unexpected unlock
 
-vim +5859 arch/arm64/kvm/../../../virt/kvm/kvm_main.c
+vim +5859 arch/x86/kvm/../../../virt/kvm/kvm_main.c
 
   5805	
   5806	static int kvm_vm_worker_thread(void *context)
