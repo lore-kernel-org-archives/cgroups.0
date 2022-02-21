@@ -1,130 +1,106 @@
 From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v3 2/5] mm/memcg: Disable threshold event handlers on
- PREEMPT_RT
-Date: Mon, 21 Feb 2022 15:27:19 +0100
-Message-ID: <YhOhRzAqC4PxsSx6@dhcp22.suse.cz>
+Subject: Re: [PATCH v3 4/5] mm/memcg: Opencode the inner part of
+ obj_cgroup_uncharge_pages() in drain_obj_stock()
+Date: Mon, 21 Feb 2022 15:30:14 +0100
+Message-ID: <YhOh9jr9mBpMFmSn@dhcp22.suse.cz>
 References: <20220217094802.3644569-1-bigeasy@linutronix.de>
- <20220217094802.3644569-3-bigeasy@linutronix.de>
+ <20220217094802.3644569-5-bigeasy@linutronix.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1645453640; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1645453814; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=x7qlynhI6VNEu44qmvL7ARJ1jvjijtZcw+Rs2WqC7BU=;
-        b=cQs2PZLCJnE2+44odjuVX/QVbqM5A9SJqHn/bj8zvDOHajtiXL1KUsXpytN/TTFMh1UVSW
-        QAzf9biM8mwylRViQrjJqU6EIstjeY2LSDu6uFMLtTt6/F9lhgR2Q7ARQgISSsCc4EUvlt
-        Ms4d/g60ij+I1u4EPbKqUX2FwA2z7y8=
+        bh=Xm5m5YiRWNUhvkICSeUY+DU1RylDk3jyPhrK51qcDfU=;
+        b=RI+5ECT2uxILC9RTBymw2xV51hIRlXaYMtIXbM3ktUPQUicUDNCR7d1vERywSgHfdUd7n0
+        AgTDm8Lc6+1ZeJhJV2fPialDUPlHZB8eyDXBj1QUcnHZ55bTgR/fFlDb4lZ4oMWZTnlyWq
+        545ns6J9/mvk9C8peXnTcNCen1lZz90=
 Content-Disposition: inline
-In-Reply-To: <20220217094802.3644569-3-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+In-Reply-To: <20220217094802.3644569-5-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Thu 17-02-22 10:47:59, Sebastian Andrzej Siewior wrote:
-> During the integration of PREEMPT_RT support, the code flow around
-> memcg_check_events() resulted in `twisted code'. Moving the code around
-> and avoiding then would then lead to an additional local-irq-save
-> section within memcg_check_events(). While looking better, it adds a
-> local-irq-save section to code flow which is usually within an
-> local-irq-off block on non-PREEMPT_RT configurations.
->=20
-> The threshold event handler is a deprecated memcg v1 feature. Instead of
-> trying to get it to work under PREEMPT_RT just disable it. There should
-> be no users on PREEMPT_RT. From that perspective it makes even less
-> sense to get it to work under PREEMPT_RT while having zero users.
->=20
-> Make memory.soft_limit_in_bytes and cgroup.event_control return
-> -EOPNOTSUPP on PREEMPT_RT. Make an empty memcg_check_events() and
-> memcg_write_event_control() which return only -EOPNOTSUPP on PREEMPT_RT.
-> Document that the two knobs are disabled on PREEMPT_RT.
->=20
-> Suggested-by: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.or=
-g>
-> Suggested-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
-> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@=
-public.gmane.org>
-> Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+On Thu 17-02-22 10:48:01, Sebastian Andrzej Siewior wrote:
+> From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> 
+> Provide the inner part of refill_stock() as __refill_stock() without
+> disabling interrupts. This eases the integration of local_lock_t where
+> recursive locking must be avoided.
+> Open code obj_cgroup_uncharge_pages() in drain_obj_stock() and use
+> __refill_stock(). The caller of drain_obj_stock() already disables
+> interrupts.
+> 
+> [bigeasy: Patch body around Johannes' diff ]
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
 Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+
 Thanks!
 
 > ---
->  Documentation/admin-guide/cgroup-v1/memory.rst |  2 ++
->  mm/memcontrol.c                                | 14 ++++++++++++--
->  2 files changed, 14 insertions(+), 2 deletions(-)
->=20
-> diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentati=
-on/admin-guide/cgroup-v1/memory.rst
-> index faac50149a222..2cc502a75ef64 100644
-> --- a/Documentation/admin-guide/cgroup-v1/memory.rst
-> +++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-> @@ -64,6 +64,7 @@ Brief summary of control files.
->  				     threads
->   cgroup.procs			     show list of processes
->   cgroup.event_control		     an interface for event_fd()
-> +				     This knob is not available on CONFIG_PREEMPT_RT systems.
->   memory.usage_in_bytes		     show current usage for memory
->  				     (See 5.5 for details)
->   memory.memsw.usage_in_bytes	     show current usage for memory+Swap
-> @@ -75,6 +76,7 @@ Brief summary of control files.
->   memory.max_usage_in_bytes	     show max memory usage recorded
->   memory.memsw.max_usage_in_bytes     show max memory+Swap usage recorded
->   memory.soft_limit_in_bytes	     set/show soft limit of memory usage
-> +				     This knob is not available on CONFIG_PREEMPT_RT systems.
->   memory.stat			     show various statistics
->   memory.use_hierarchy		     set/show hierarchical account enabled
->                                       This knob is deprecated and shouldn=
-'t be
+>  mm/memcontrol.c | 24 ++++++++++++++++++------
+>  1 file changed, 18 insertions(+), 6 deletions(-)
+> 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 8ab2dc75e70ec..0b5117ed2ae08 100644
+> index 36ab3660f2c6d..a3225501cce36 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -859,6 +859,9 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgr=
-oup *memcg,
+> @@ -2224,12 +2224,9 @@ static void drain_local_stock(struct work_struct *dummy)
+>   * Cache charges(val) to local per_cpu area.
+>   * This will be consumed by consume_stock() function, later.
 >   */
->  static void memcg_check_events(struct mem_cgroup *memcg, int nid)
+> -static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+> +static void __refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
 >  {
-> +	if (IS_ENABLED(CONFIG_PREEMPT_RT))
-> +		return;
+>  	struct memcg_stock_pcp *stock;
+> -	unsigned long flags;
+> -
+> -	local_irq_save(flags);
+>  
+>  	stock = this_cpu_ptr(&memcg_stock);
+>  	if (stock->cached != memcg) { /* reset if necessary */
+> @@ -2241,7 +2238,14 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+>  
+>  	if (stock->nr_pages > MEMCG_CHARGE_BATCH)
+>  		drain_stock(stock);
+> +}
+>  
+> +static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+> +{
+> +	unsigned long flags;
 > +
->  	/* threshold event is triggered in finer grain than soft limit */
->  	if (unlikely(mem_cgroup_event_ratelimit(memcg,
->  						MEM_CGROUP_TARGET_THRESH))) {
-> @@ -3731,8 +3734,12 @@ static ssize_t mem_cgroup_write(struct kernfs_open=
-_file *of,
->  		}
->  		break;
->  	case RES_SOFT_LIMIT:
-> -		memcg->soft_limit =3D nr_pages;
-> -		ret =3D 0;
-> +		if (IS_ENABLED(CONFIG_PREEMPT_RT)) {
-> +			ret =3D -EOPNOTSUPP;
-> +		} else {
-> +			memcg->soft_limit =3D nr_pages;
-> +			ret =3D 0;
+> +	local_irq_save(flags);
+> +	__refill_stock(memcg, nr_pages);
+>  	local_irq_restore(flags);
+>  }
+>  
+> @@ -3158,8 +3162,16 @@ static void drain_obj_stock(struct memcg_stock_pcp *stock)
+>  		unsigned int nr_pages = stock->nr_bytes >> PAGE_SHIFT;
+>  		unsigned int nr_bytes = stock->nr_bytes & (PAGE_SIZE - 1);
+>  
+> -		if (nr_pages)
+> -			obj_cgroup_uncharge_pages(old, nr_pages);
+> +		if (nr_pages) {
+> +			struct mem_cgroup *memcg;
+> +
+> +			memcg = get_mem_cgroup_from_objcg(old);
+> +
+> +			memcg_account_kmem(memcg, -nr_pages);
+> +			__refill_stock(memcg, nr_pages);
+> +
+> +			css_put(&memcg->css);
 > +		}
->  		break;
->  	}
->  	return ret ?: nbytes;
-> @@ -4708,6 +4715,9 @@ static ssize_t memcg_write_event_control(struct ker=
-nfs_open_file *of,
->  	char *endp;
->  	int ret;
-> =20
-> +	if (IS_ENABLED(CONFIG_PREEMPT_RT))
-> +		return -EOPNOTSUPP;
-> +
->  	buf =3D strstrip(buf);
-> =20
->  	efd =3D simple_strtoul(buf, &endp, 10);
-> --=20
+>  
+>  		/*
+>  		 * The leftover is flushed to the centralized per-memcg value.
+> -- 
 > 2.34.1
 
---=20
+-- 
 Michal Hocko
 SUSE Labs
