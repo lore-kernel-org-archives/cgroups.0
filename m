@@ -1,61 +1,64 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v3 5/5] mm/memcg: Protect memcg_stock with a local_lock_t
-Date: Mon, 21 Feb 2022 15:46:30 +0100
-Message-ID: <YhOlxsLOOU/OVSzu@dhcp22.suse.cz>
-References: <20220217094802.3644569-1-bigeasy@linutronix.de>
- <20220217094802.3644569-6-bigeasy@linutronix.de>
+From: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH] cgroup: clarify cgroup_css_set_fork()
+Date: Mon, 21 Feb 2022 16:16:39 +0100
+Message-ID: <20220221151639.3828143-1-brauner@kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1645454791; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=EqsD0+PUucg5iQZfEeVVmjRSWohazjOc9cWwEfg7gWQ=;
-        b=S9RSPoFRigrL5qMv/KMVZC7pUGpUkd/8yaw0GTN00pBHVYNtVUVkqFaUKo5sOpLFxhaNEP
-        C3MbcBsSyVJnzwDSA0jGAX/qFbmIl7vZ4hdBnEY4g+Jvez705ER6wV3LCJSOJurw8Enq1u
-        b5Rasq4exl90T33lXZSWWnyCQbWx40w=
-Content-Disposition: inline
-In-Reply-To: <20220217094802.3644569-6-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1645456609;
+        bh=7ju0dRgH/yYPJtn4KOG60za9bLFOf4tZUIskehK0LyI=;
+        h=From:To:Cc:Subject:Date:From;
+        b=C4JlmNoX87DCg4yP2xOZVFwBCLHDl95bGvlr++KOG3/OG56RRxg0dPXqYJryh2fF1
+         oes715dVRKo4OUXGVfMtq3QQsswPlV54cuhEF5awvdSH6AIIaBOSSxvUBskVrZUz7h
+         W820oYXs+87vrrLFjiJ7NUXDt0xFwhapunn35UhwCpGeJOQbluHwd7ISenQO9OKqZl
+         I4w/BhFuSGsjzNv5BpFU1PFkHil4UzxUCH7IbVsOKeKoDVdUjBMXwZmlKyaUVyb890
+         Ycpo1dp0QCJICQOFusySwOjs4eUloM8rUVokO4v1xX72osvV+KSHmAEWgFlIpDnqi0
+         v+zI3ct3z3Umg==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1559; h=from:subject; bh=7ju0dRgH/yYPJtn4KOG60za9bLFOf4tZUIskehK0LyI=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMSQJr3J1W2Xaf+XqhDfMExM5e3z++i9fXmNudUvsyFr/CdcW 9T3g6ShlYRDjYpAVU2RxaDcJl1vOU7HZKFMDZg4rE8gQBi5OAZhIxj1Ghjm1Lw7xvfkelLFcREWAKy 1v2S7XCZctjSWe1zxTCtus+53hf8DnuGRmQ79qjU27F/74mXrY6JdUwzF9A3Mbo5Q1spKVzAA=
+X-Developer-Key: i=brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, kernel test robot <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Thu 17-02-22 10:48:02, Sebastian Andrzej Siewior wrote:
-[...]
-> @@ -2266,7 +2273,6 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
->  	 * as well as workers from this path always operate on the local
->  	 * per-cpu data. CPU up doesn't touch memcg_stock at all.
->  	 */
-> -	curcpu = get_cpu();
+With recent fixes for the permission checking when moving a task into a cgroup
+using a file descriptor to a cgroup's cgroup.procs file and calling write() it
+seems a good idea to clarify CLONE_INTO_CGROUP permission checking with a
+comment.
 
-Could you make this a separate patch?
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Signed-off-by: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
->  	for_each_online_cpu(cpu) {
->  		struct memcg_stock_pcp *stock = &per_cpu(memcg_stock, cpu);
->  		struct mem_cgroup *memcg;
-> @@ -2282,14 +2288,9 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
->  		rcu_read_unlock();
->  
->  		if (flush &&
-> -		    !test_and_set_bit(FLUSHING_CACHED_CHARGE, &stock->flags)) {
-> -			if (cpu == curcpu)
-> -				drain_local_stock(&stock->work);
-> -			else
-> -				schedule_work_on(cpu, &stock->work);
-> -		}
-> +		    !test_and_set_bit(FLUSHING_CACHED_CHARGE, &stock->flags))
-> +			schedule_work_on(cpu, &stock->work);
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 9d05c3ca2d5e..0f8bd120be17 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -6166,6 +6166,18 @@ static int cgroup_css_set_fork(struct kernel_clone_args *kargs)
+ 	if (ret)
+ 		goto err;
+ 
++	/*
++	 * Note, spawning a task directly into a cgroup works by passing a file
++	 * descriptor to the target cgroup directory. This can even be an
++	 * O_PATH file descriptor. But it can never be a cgroup.procs file
++	 * descriptor. This was done on purpose so spawning into a cgroup could
++	 * be conceptualized as an atomic
++	 * fd = openat(dfd_cgroup, "cgroup.procs", ...);
++	 * write(fd, <child-pid>, ...);
++	 * sequence, i.e. it's a shorthand for the caller opening and writing
++	 * cgroup.procs of the cgroup indicated by @dfd_cgroup. This allows
++	 * us to always use the caller's credentials.
++	 */
+ 	ret = cgroup_attach_permissions(cset->dfl_cgrp, dst_cgrp, sb,
+ 					!(kargs->flags & CLONE_THREAD),
+ 					current->nsproxy->cgroup_ns);
 
-Maybe I am missing but on !PREEMPT kernels there is nothing really
-guaranteeing that the worker runs so there should be cond_resched after
-the mutex is unlocked. I do not think we want to rely on callers to be
-aware of this subtlety.
-
-An alternative would be to split out __drain_local_stock which doesn't
-do local_lock.
-
+base-commit: cfb92440ee71adcc2105b0890bb01ac3cddb8507
 -- 
-Michal Hocko
-SUSE Labs
+2.32.0
+
