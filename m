@@ -1,52 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup-v1: Correct privileges check in release_agent
- writes
-Date: Tue, 22 Feb 2022 08:13:09 -1000
-Message-ID: <YhUntajxL3YrDXXg@slm.duckdns.org>
-References: <20220217161128.20291-1-mkoutny@suse.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [syzbot] WARNING in cpuset_write_resmask
+Date: Tue, 22 Feb 2022 13:22:13 -0500
+Message-ID: <a1baa10e-2c73-1fdd-0228-820310455dd5@redhat.com>
+References: <000000000000264b2a05d44bca80@google.com>
+ <0000000000008f71e305d89070bb@google.com> <YhUc10UcAmot1AJK@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=ZB+Gu7YpATSeA5t+N3YCnRgIG2ZtKKuUBwZ11FHjUfE=;
-        b=RA5ZZcKVCaJu4k9+anC+SKGCGQerWGqOhKJaggLKQV7bGyHctRS7qpuJKLwzWJx3Wv
-         Dey7ap2D5hO5jWRp53MeEF17hEm4V6cizKN1IjBybApavS5+4d3vKAO/eKEsgi5+pAct
-         T9nbvEwNjHtHjH9OgbB4FdyB2PvlFDtrjGVHPbwXprRB+8x87LSxY4CLxE6wq0eSWYp0
-         kjemJDp8QbuSY3VuODIS7aPNIfSVcqPvUNP1XKdmms7J15ZcFjzqJV529On+vnt42uIg
-         ebWKFeYpqqrrqB0/DsXzqj2GtLcqPx0Qv/SuFKNMC/hqf3R+P8HbwUJWy+I5Ua+Q1Qjs
-         f7zQ==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <20220217161128.20291-1-mkoutny@suse.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1645554138;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=wpBwJl6c6s7sx3w93zOGpJgVfvC/ipdRSEUJaReqDhs=;
+        b=bLXiMZbCyFJXifWNUDQ783REY1qRW2Wstt/VIHLgRNLSLE84shDT0CKLwF2KjI/obbcDg7
+        ZwYh96Q8pTwuZoxI1AWY2FErexaw4+CHNQz0ffIfIkRKZQ/Ugfb0GrAPulFI/VRxIp1ak4
+        li5d5snoqiuxX73rUWpkqpvgB1Zv2uE=
+Content-Language: en-US
+In-Reply-To: <YhUc10UcAmot1AJK-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Masami Ichikawa <masami.ichikawa@cybertrust.co.jp>, Tabitha Sable <tabitha.c.sable@gmail.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, stable@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, syzbot <syzbot+568dc81cd20b72d4a49f-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 
-On Thu, Feb 17, 2022 at 05:11:28PM +0100, Michal Koutn=FD wrote:
-> The idea is to check: a) the owning user_ns of cgroup_ns, b)
-> capabilities in init_user_ns.
->=20
-> The commit 24f600856418 ("cgroup-v1: Require capabilities to set
-> release_agent") got this wrong in the write handler of release_agent
-> since it checked user_ns of the opener (may be different from the owning
-> user_ns of cgroup_ns).
-> Secondly, to avoid possibly confused deputy, the capability of the
-> opener must be checked.
->=20
-> Fixes: 24f600856418 ("cgroup-v1: Require capabilities to set release_agen=
-t")
-> Cc: stable@vger.kernel.org
-> Link: https://lore.kernel.org/stable/20220216121142.GB30035@blackbody.sus=
-e.cz/
-> Signed-off-by: Michal Koutn=FD <mkoutny@suse.com>
+On 2/22/22 12:26, Tejun Heo wrote:
+> (cc'ing Waiman and quoting whole body)
+>
+> Hello, Waiman.
+>
+> It looks like it's hitting
+>
+>   WARN_ON(!is_in_v2_mode() && !nodes_equal(cp->mems_allowed, cp->effective_mems))
+>
+> Can you take a look?
 
-Applied to cgroup/for-5.17-fixes.
+My preliminary analysis is that the warning may be caused by my commit 
+1f1562fcd04a ("cgroup/cpuset: Don't let child cpusets restrict parent in 
+default hierarchy") since the merge branch e5313968c41b is missing the 
+fix commit d068eebbd482 ("cgroup/cpuset: Make child cpusets restrict 
+parents on v1 hierarchy"). I believe the problem should be gone once the 
+merge branch is updated to a later upstream baseline.
 
-Thanks.
+Cheers,
+Longman
 
---=20
-tejun
