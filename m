@@ -1,85 +1,101 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v4 6/6] mm/memcg: Disable migration instead of preemption
- in drain_all_stock().
-Date: Tue, 22 Feb 2022 10:56:41 +0100
-Message-ID: <YhSzWXyPe14vOaGa@dhcp22.suse.cz>
-References: <20220221182540.380526-1-bigeasy@linutronix.de>
- <20220221182540.380526-7-bigeasy@linutronix.de>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [syzbot] WARNING in cpuset_write_resmask
+Date: Tue, 22 Feb 2022 07:26:47 -1000
+Message-ID: <YhUc10UcAmot1AJK@slm.duckdns.org>
+References: <000000000000264b2a05d44bca80@google.com>
+ <0000000000008f71e305d89070bb@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1645523802; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=VGiep3feZi3i71q2uR3AtjKvdwdXMRiWG5Ve1qZIums=;
-        b=HH/AA24vtus8H7QzqmXfaHlpyMoTTdIz4y7K1qhVbmoA0oHm70LgWbqT7UD5GdFkWF18uu
-        6PWMKoEWPeLobCcxBRmt/+cxE91ngjt3PJR1FWOxIrecN5iuOvg8hafX5lil//rLNxm2tF
-        DM5K8wHHX7YrlQpH9ouqeYgQBo/Jx/4=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=QATrpVd/puNrA3QEY1KgNyb1yfnb8yP4bnZQ0jYrArQ=;
+        b=JwmCyLf28KeVXuvrXF6hFEhw9Zam+KkE4sEx8vR6O+NMvatzDbK2m5ZEq6YcBaYNx5
+         p8AQwMA3ow5AnpkNxTgZocQQvrxPMMmJvjYbFb0hbvnSbc5l6ifwAS8/3+/TYX934cCY
+         KPO5PmPiRGPTBXGtpAoOKc5qQJJMBZK6gCSycp9yFAAHAqIBYPvh4jsZS03tRjQHvxZL
+         oJWnDqcK7H8FSRRdjNhegKwacn6TmDmtK0cWx9oYXVzHISon5ROIRviED+16TeEf0JZi
+         943G3mQXrdePa2qxbW6aOCXFaXkUgYqHWgYcWh2RBOJjy/FTyzkpzX7Odwp6+mwWDfX4
+         mwWA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20220221182540.380526-7-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+In-Reply-To: <0000000000008f71e305d89070bb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: syzbot <syzbot+568dc81cd20b72d4a49f-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Mon 21-02-22 19:25:40, Sebastian Andrzej Siewior wrote:
-> Before the for-each-CPU loop, preemption is disabled so that so that
-> drain_local_stock() can be invoked directly instead of scheduling a
-> worker. Ensuring that drain_local_stock() completed on the local CPU is
-> not correctness problem. It _could_ be that the charging path will be
-> forced to reclaim memory because cached charges are still waiting for
-> their draining.
+(cc'ing Waiman and quoting whole body)
+
+Hello, Waiman.
+
+It looks like it's hitting
+
+ WARN_ON(!is_in_v2_mode() && !nodes_equal(cp->mems_allowed, cp->effective_mems))
+
+Can you take a look?
+
+Thanks.
+
+On Mon, Feb 21, 2022 at 04:29:18PM -0800, syzbot wrote:
+> syzbot has found a reproducer for the following issue on:
 > 
-> Disabling preemption before invoking drain_local_stock() is problematic
-> on PREEMPT_RT due to the sleeping locks involved. To ensure that no CPU
-> migrations happens across the for_each_online_cpu() it is enouhg to use
-> migrate_disable() which disables migration and keeps context preemptible
-> to a sleeping lock can be acquired.
-
-I would just add that a race with cpu hotplug is not a problem because
-pcp data is not going away. In the worst case we just schedule draining
-of an empty stock.
+> HEAD commit:    e5313968c41b Merge branch 'Split bpf_sk_lookup remote_port..
+> git tree:       bpf-next
+> console output: https://syzkaller.appspot.com/x/log.txt?x=113aeefa700000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=c40b67275bfe2a58
+> dashboard link: https://syzkaller.appspot.com/bug?extid=568dc81cd20b72d4a49f
+> compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13bb97ce700000
+> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=12062c8e700000
 > 
-> Use migrate_disable() instead of get_cpu() around the
-> for_each_online_cpu() loop.
+> IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> Reported-by: syzbot+568dc81cd20b72d4a49f-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
 > 
-> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-
-Thanks!
-
-> ---
->  mm/memcontrol.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+> ------------[ cut here ]------------
+> WARNING: CPU: 1 PID: 3647 at kernel/cgroup/cpuset.c:1817 update_nodemasks_hier kernel/cgroup/cpuset.c:1817 [inline]
+> WARNING: CPU: 1 PID: 3647 at kernel/cgroup/cpuset.c:1817 update_nodemask kernel/cgroup/cpuset.c:1890 [inline]
+> WARNING: CPU: 1 PID: 3647 at kernel/cgroup/cpuset.c:1817 cpuset_write_resmask+0x167b/0x20f0 kernel/cgroup/cpuset.c:2457
+> Modules linked in:
+> CPU: 0 PID: 3647 Comm: syz-executor287 Not tainted 5.16.0-syzkaller-11655-ge5313968c41b #0
+> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+> RIP: 0010:update_nodemasks_hier kernel/cgroup/cpuset.c:1817 [inline]
+> RIP: 0010:update_nodemask kernel/cgroup/cpuset.c:1890 [inline]
+> RIP: 0010:cpuset_write_resmask+0x167b/0x20f0 kernel/cgroup/cpuset.c:2457
+> Code: 3c 08 00 0f 85 ed 08 00 00 49 8b 9c 24 38 01 00 00 48 89 ef 48 89 de e8 63 4a 04 00 48 39 dd 0f 84 dd ef ff ff e8 e5 46 04 00 <0f> 0b e9 d1 ef ff ff e8 d9 46 04 00 e8 b4 a5 ef ff e8 cf 46 04 00
+> RSP: 0018:ffffc90003acfb18 EFLAGS: 00010293
+> RAX: 0000000000000000 RBX: 0000000000000001 RCX: 0000000000000000
+> RDX: ffff88801e193a00 RSI: ffffffff81740f0b RDI: 0000000000000003
+> RBP: 0000000000000003 R08: 0000000000000003 R09: ffffffff8fdeca17
+> R10: ffffffff81740efd R11: 0000000000000001 R12: ffff888074f2e000
+> R13: ffff888074f2e054 R14: ffff888074f2e138 R15: 0000000000000000
+> FS:  00007fee62f33700(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 00007ffcf8240960 CR3: 0000000072ae3000 CR4: 00000000003506f0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> Call Trace:
+>  <TASK>
+>  cgroup_file_write+0x1de/0x760 kernel/cgroup/cgroup.c:3877
+>  kernfs_fop_write_iter+0x342/0x500 fs/kernfs/file.c:296
+>  call_write_iter include/linux/fs.h:2086 [inline]
+>  new_sync_write+0x431/0x660 fs/read_write.c:503
+>  vfs_write+0x7cd/0xae0 fs/read_write.c:590
+>  ksys_write+0x12d/0x250 fs/read_write.c:643
+>  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+>  do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
+>  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> RIP: 0033:0x7fee62f82b79
+> Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 b1 15 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
+> RSP: 002b:00007fee62f33308 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+> RAX: ffffffffffffffda RBX: 00007fee6300c4c8 RCX: 00007fee62f82b79
+> RDX: 0000000000000001 RSI: 0000000020000080 RDI: 0000000000000006
+> RBP: 00007fee6300c4c0 R08: 0000000000000012 R09: 0000000000000000
+> R10: 0000000000000000 R11: 0000000000000246 R12: 00007fee6300c4cc
+> R13: 00007fee62fd92b0 R14: 6d2e746573757063 R15: 0000000000022000
+>  </TASK>
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 3d7ccb104374c..9c29b1a0e6bec 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2293,7 +2293,8 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
->  	 * as well as workers from this path always operate on the local
->  	 * per-cpu data. CPU up doesn't touch memcg_stock at all.
->  	 */
-> -	curcpu = get_cpu();
-> +	migrate_disable();
-> +	curcpu = smp_processor_id();
->  	for_each_online_cpu(cpu) {
->  		struct memcg_stock_pcp *stock = &per_cpu(memcg_stock, cpu);
->  		struct mem_cgroup *memcg;
-> @@ -2316,7 +2317,7 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
->  				schedule_work_on(cpu, &stock->work);
->  		}
->  	}
-> -	put_cpu();
-> +	migrate_enable();
->  	mutex_unlock(&percpu_charge_mutex);
->  }
->  
-> -- 
-> 2.35.1
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
