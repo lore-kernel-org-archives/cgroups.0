@@ -1,131 +1,70 @@
-From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: [PATCH v4 2/6] mm/memcg: Disable threshold event handlers on PREEMPT_RT
-Date: Mon, 21 Feb 2022 19:25:36 +0100
-Message-ID: <20220221182540.380526-3-bigeasy@linutronix.de>
-References: <20220221182540.380526-1-bigeasy@linutronix.de>
+From: syzbot <syzbot+568dc81cd20b72d4a49f-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
+Subject: Re: [syzbot] WARNING in cpuset_write_resmask
+Date: Mon, 21 Feb 2022 16:29:18 -0800
+Message-ID: <0000000000008f71e305d89070bb@google.com>
+References: <000000000000264b2a05d44bca80@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1645467967;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=mCAlyN0P4ukGqzwBCvXW6Rkz9k8c5aTlYxZl8s5hStA=;
-        b=riNAtniPxiGLfX/KB8qDVId0dJt06KCVgJlZPVPKvmCvk//JxPZlqhL2dMOL50hAF8DIBN
-        8pRMX0KFVS8+zV9ELidUvukOoVRv6g3Zr/jbqEy6BR0O5K11n+4s9WXCXMo8fmyAtTHg4T
-        ABvVR9E61CYU18R7fLQ26S4h7NW57rDGThAuPk6CXxGhq73tMK3pZ0ALD6HpGFsyNPRYC2
-        nchN49cGJglFs2lTYuA0iqApCDXKgOS/UXb76MKTOQuhMplNoNtf0MNfThMzkORWfinoH4
-        idLCdjyQZjMKI2XfhZ9ttOXl1Seoa49xcaKJXjLoFODfox5U7GkIGVnzwBlEQw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1645467967;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=mCAlyN0P4ukGqzwBCvXW6Rkz9k8c5aTlYxZl8s5hStA=;
-        b=XRYFk/IvaeM1P5GlpFRkTvH9OlThc34VajLPgGeCDe8VMNgK7wjGgnvRlZspnqDinbYkOG
-        qljAq84Gb+/5/dAQ==
-In-Reply-To: <20220221182540.380526-1-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+In-Reply-To: <000000000000264b2a05d44bca80-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-During the integration of PREEMPT_RT support, the code flow around
-memcg_check_events() resulted in `twisted code'. Moving the code around
-and avoiding then would then lead to an additional local-irq-save
-section within memcg_check_events(). While looking better, it adds a
-local-irq-save section to code flow which is usually within an
-local-irq-off block on non-PREEMPT_RT configurations.
+syzbot has found a reproducer for the following issue on:
 
-The threshold event handler is a deprecated memcg v1 feature. Instead of
-trying to get it to work under PREEMPT_RT just disable it. There should
-be no users on PREEMPT_RT. From that perspective it makes even less
-sense to get it to work under PREEMPT_RT while having zero users.
+HEAD commit:    e5313968c41b Merge branch 'Split bpf_sk_lookup remote_port..
+git tree:       bpf-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=113aeefa700000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=c40b67275bfe2a58
+dashboard link: https://syzkaller.appspot.com/bug?extid=568dc81cd20b72d4a49f
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13bb97ce700000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=12062c8e700000
 
-Make memory.soft_limit_in_bytes and cgroup.event_control return
--EOPNOTSUPP on PREEMPT_RT. Make an empty memcg_check_events() and
-memcg_write_event_control() which return only -EOPNOTSUPP on PREEMPT_RT.
-Document that the two knobs are disabled on PREEMPT_RT.
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+568dc81cd20b72d4a49f-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
 
-Suggested-by: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Suggested-by: Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org>
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
----
- Documentation/admin-guide/cgroup-v1/memory.rst |  2 ++
- mm/memcontrol.c                                | 14 ++++++++++++--
- 2 files changed, 14 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation=
-/admin-guide/cgroup-v1/memory.rst
-index faac50149a222..2cc502a75ef64 100644
---- a/Documentation/admin-guide/cgroup-v1/memory.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -64,6 +64,7 @@ Brief summary of control files.
- 				     threads
-  cgroup.procs			     show list of processes
-  cgroup.event_control		     an interface for event_fd()
-+				     This knob is not available on CONFIG_PREEMPT_RT systems.
-  memory.usage_in_bytes		     show current usage for memory
- 				     (See 5.5 for details)
-  memory.memsw.usage_in_bytes	     show current usage for memory+Swap
-@@ -75,6 +76,7 @@ Brief summary of control files.
-  memory.max_usage_in_bytes	     show max memory usage recorded
-  memory.memsw.max_usage_in_bytes     show max memory+Swap usage recorded
-  memory.soft_limit_in_bytes	     set/show soft limit of memory usage
-+				     This knob is not available on CONFIG_PREEMPT_RT systems.
-  memory.stat			     show various statistics
-  memory.use_hierarchy		     set/show hierarchical account enabled
-                                      This knob is deprecated and shouldn't=
- be
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8ab2dc75e70ec..0b5117ed2ae08 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -859,6 +859,9 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgrou=
-p *memcg,
-  */
- static void memcg_check_events(struct mem_cgroup *memcg, int nid)
- {
-+	if (IS_ENABLED(CONFIG_PREEMPT_RT))
-+		return;
-+
- 	/* threshold event is triggered in finer grain than soft limit */
- 	if (unlikely(mem_cgroup_event_ratelimit(memcg,
- 						MEM_CGROUP_TARGET_THRESH))) {
-@@ -3731,8 +3734,12 @@ static ssize_t mem_cgroup_write(struct kernfs_open_f=
-ile *of,
- 		}
- 		break;
- 	case RES_SOFT_LIMIT:
--		memcg->soft_limit =3D nr_pages;
--		ret =3D 0;
-+		if (IS_ENABLED(CONFIG_PREEMPT_RT)) {
-+			ret =3D -EOPNOTSUPP;
-+		} else {
-+			memcg->soft_limit =3D nr_pages;
-+			ret =3D 0;
-+		}
- 		break;
- 	}
- 	return ret ?: nbytes;
-@@ -4708,6 +4715,9 @@ static ssize_t memcg_write_event_control(struct kernf=
-s_open_file *of,
- 	char *endp;
- 	int ret;
-=20
-+	if (IS_ENABLED(CONFIG_PREEMPT_RT))
-+		return -EOPNOTSUPP;
-+
- 	buf =3D strstrip(buf);
-=20
- 	efd =3D simple_strtoul(buf, &endp, 10);
---=20
-2.35.1
+------------[ cut here ]------------
+WARNING: CPU: 1 PID: 3647 at kernel/cgroup/cpuset.c:1817 update_nodemasks_hier kernel/cgroup/cpuset.c:1817 [inline]
+WARNING: CPU: 1 PID: 3647 at kernel/cgroup/cpuset.c:1817 update_nodemask kernel/cgroup/cpuset.c:1890 [inline]
+WARNING: CPU: 1 PID: 3647 at kernel/cgroup/cpuset.c:1817 cpuset_write_resmask+0x167b/0x20f0 kernel/cgroup/cpuset.c:2457
+Modules linked in:
+CPU: 0 PID: 3647 Comm: syz-executor287 Not tainted 5.16.0-syzkaller-11655-ge5313968c41b #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+RIP: 0010:update_nodemasks_hier kernel/cgroup/cpuset.c:1817 [inline]
+RIP: 0010:update_nodemask kernel/cgroup/cpuset.c:1890 [inline]
+RIP: 0010:cpuset_write_resmask+0x167b/0x20f0 kernel/cgroup/cpuset.c:2457
+Code: 3c 08 00 0f 85 ed 08 00 00 49 8b 9c 24 38 01 00 00 48 89 ef 48 89 de e8 63 4a 04 00 48 39 dd 0f 84 dd ef ff ff e8 e5 46 04 00 <0f> 0b e9 d1 ef ff ff e8 d9 46 04 00 e8 b4 a5 ef ff e8 cf 46 04 00
+RSP: 0018:ffffc90003acfb18 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: 0000000000000001 RCX: 0000000000000000
+RDX: ffff88801e193a00 RSI: ffffffff81740f0b RDI: 0000000000000003
+RBP: 0000000000000003 R08: 0000000000000003 R09: ffffffff8fdeca17
+R10: ffffffff81740efd R11: 0000000000000001 R12: ffff888074f2e000
+R13: ffff888074f2e054 R14: ffff888074f2e138 R15: 0000000000000000
+FS:  00007fee62f33700(0000) GS:ffff8880b9c00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 00007ffcf8240960 CR3: 0000000072ae3000 CR4: 00000000003506f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ <TASK>
+ cgroup_file_write+0x1de/0x760 kernel/cgroup/cgroup.c:3877
+ kernfs_fop_write_iter+0x342/0x500 fs/kernfs/file.c:296
+ call_write_iter include/linux/fs.h:2086 [inline]
+ new_sync_write+0x431/0x660 fs/read_write.c:503
+ vfs_write+0x7cd/0xae0 fs/read_write.c:590
+ ksys_write+0x12d/0x250 fs/read_write.c:643
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+RIP: 0033:0x7fee62f82b79
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 b1 15 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fee62f33308 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 00007fee6300c4c8 RCX: 00007fee62f82b79
+RDX: 0000000000000001 RSI: 0000000020000080 RDI: 0000000000000006
+RBP: 00007fee6300c4c0 R08: 0000000000000012 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 00007fee6300c4cc
+R13: 00007fee62fd92b0 R14: 6d2e746573757063 R15: 0000000000022000
+ </TASK>
 
