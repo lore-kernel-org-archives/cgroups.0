@@ -1,35 +1,35 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-5.17-fixes] BUILD SUCCESS
- c70cd039f1d779126347a896a58876782dcc5284
-Date: Wed, 23 Feb 2022 19:11:43 +0800
-Message-ID: <6216166f.GgjiobT0DQTXr+b9%lkp@intel.com>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 88ea791b5665730a864088be384d4f4f6833e63b
+Date: Wed, 23 Feb 2022 19:11:28 +0800
+Message-ID: <62161660.43vY/3Ac0ErXhVlM%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1645614749; x=1677150749;
+  t=1645614804; x=1677150804;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=UaB/xzidvRGHRZl35orXEO8AoLRThwMZp15id5ztVSQ=;
-  b=EVUrV0sLKMr7CDTJN25++ih/z/4esH0BXHw44BD7ILEAyKeA8S09a6bc
-   OGD5kapdWLG0K8cjbcUqEZ1DZQamniGwjXwKtlXgsDbSR24q84i5YhM1i
-   e7RJeCmLnx+9z4qQiH/0m0hINhN0dlzP0Rlw1XXtp9bjoeD0laPI9bLfo
-   QVK9zK8ktnbIkYBKXEqeUuGVkMdL0YDMhtSIKztfWENhv+n9I2w8Js+o3
-   RzK52h81MoroPKpMYO0vn3l4tvYY35CMXJwoRwYwFe99k7qWVyXzMtrjC
-   YRxfzUP325i6QuFB8q/IUZqVpcrKTbxV02xFa2+3bGiENa943qwXAQDBr
+  bh=u1vYYb/8MTV6Kw/NHiPnj185eP5JJjrhuMXU788jlWM=;
+  b=DZx+wFOgx+ABwKOE0lrI3a0Q5FaUHxqQ8tCfx4tnVHP7zWGQEcPVHrdK
+   zOjb1VlR/h/jGC7CRnqH98V36G4vowIKMGhSdd7SWFKyF+rdwmsZDpzmr
+   NZzpMDXnwRSwEXgBEeqnUgTB8uY82E2y7UhXYRURYkghMR1qlvLgOQIGB
+   dvcfOKayS2kbQX7zlrB0xmd2COjHViUn4a9JtAVLm17wjE9Ow9KfgWdDM
+   aEhi/AI2Vg5MBSMPwB4j2VZSQg8nAPRqH2nim6CQBSjA/+Bbds4m8h+nn
+   ItisqjuuZMUtrRtnSomx2226J+zp+IytWjwqH7TZutJ1ISiVTPtXljwL8
    g==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.17-fixes
-branch HEAD: c70cd039f1d779126347a896a58876782dcc5284  cpuset: Fix kernel-doc
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 88ea791b5665730a864088be384d4f4f6833e63b  Merge branch 'for-5.17-fixes' into for-next
 
 elapsed time: 736m
 
-configs tested: 161
+configs tested: 155
 configs skipped: 4
 
 The following configs have been built successfully.
@@ -92,12 +92,11 @@ mips                           ci20_defconfig
 arm                           h3600_defconfig
 arc                        nsim_700_defconfig
 arm                  randconfig-c002-20220221
-arm                  randconfig-c002-20220222
 ia64                             allmodconfig
 ia64                                defconfig
 ia64                             allyesconfig
-m68k                                defconfig
 m68k                             allmodconfig
+m68k                                defconfig
 nios2                               defconfig
 arc                              allyesconfig
 nds32                             allnoconfig
@@ -122,9 +121,9 @@ i386                   debian-10.3-kselftests
 i386                              debian-10.3
 mips                             allyesconfig
 mips                             allmodconfig
-powerpc                           allnoconfig
-powerpc                          allmodconfig
 powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
 x86_64                        randconfig-a006
 x86_64                        randconfig-a004
 x86_64                        randconfig-a002
@@ -135,14 +134,11 @@ x86_64               randconfig-a006-20220221
 x86_64               randconfig-a001-20220221
 x86_64               randconfig-a004-20220221
 i386                 randconfig-a002-20220221
+i386                 randconfig-a003-20220221
+i386                 randconfig-a004-20220221
 i386                 randconfig-a001-20220221
 i386                 randconfig-a005-20220221
-i386                 randconfig-a003-20220221
 i386                 randconfig-a006-20220221
-i386                 randconfig-a004-20220221
-arc                  randconfig-r043-20220222
-riscv                randconfig-r042-20220222
-s390                 randconfig-r044-20220222
 riscv                    nommu_k210_defconfig
 riscv                            allyesconfig
 riscv                    nommu_virt_defconfig
@@ -200,8 +196,6 @@ i386                 randconfig-a013-20220221
 hexagon              randconfig-r045-20220221
 hexagon              randconfig-r041-20220221
 riscv                randconfig-r042-20220221
-hexagon              randconfig-r041-20220222
-hexagon              randconfig-r045-20220222
 
 ---
 0-DAY CI Kernel Test Service, Intel Corporation
