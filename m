@@ -1,49 +1,39 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] MAINTAINERS: add myself as a memcg co-maintainer as well
-Date: Wed, 23 Feb 2022 22:01:48 -0800
-Message-ID: <20220224060148.4092228-1-shakeelb@google.com>
+From: Roman Gushchin <roman.gushchin@linux.dev>
+Subject: Re: [PATCH] MAINTAINERS: add myself as a memcg co-maintainer as well
+Date: Wed, 23 Feb 2022 22:23:50 -0800
+Message-ID: <YhckdjLpfkGPo+ch@carbon.DHCP.thefacebook.com>
+References: <20220224060148.4092228-1-shakeelb@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=OO7dB9NTGAXAhA+gBMGfXBf6knvYeWfSe3D67/xkaoQ=;
-        b=BldGrl8aFcOSbdVR4P9FzFom2hvFMTJ2CdwBc7COsLaKo1cqiF/+Gv99lsd8c1msIk
-         3PD3Be4u1NT5Uq9QMkdoXYWRZOLLsqG5XPtMpaeNhTEQG8GTp9GnTdUEAPEl5akR1sNj
-         WnqgtfZa3bJx8sd7/c5cCwNm9VXJZY46+8anaKY/zgT/j0wXuns5FpJFZHo2AmBLU4nu
-         gf97IPxANjPSyVqDP4u7V9J64qkz7Sb+ZiAHC7iFbec6WNOV9mbmtfUGmS3TLmEr54jN
-         LkVheQoAnmVvPsWELK0en87WmNFB7+QZFMwJBc10XRolneDIfLb6xZ22Hqek9MO2leHx
-         14dQ==
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1645683837;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=UfRRB507FAUwLF7B8DKy+7SBrgyByqWpyw8Xby+hOGM=;
+        b=n6eTh83r0CWizVsvF7N1ipejbpvEP1n8J91rFEO+0RA514Yy5K1PxocEngDR20DAM4tnV0
+        t8qv1t1WBUxTWxzQ0VjU74QkH0L5hYXtqeC+3zoU1MkGlVKmqcAeXrxrrHqjmIbAyDoR/1
+        s5m7nDHHMcpiCuHYTpnPoTESF8i9O7s=
+Content-Disposition: inline
+In-Reply-To: <20220224060148.4092228-1-shakeelb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-I have been contributing and reviewing to the memcg codebase for last
-couple of years. So, making it official.
+On Wed, Feb 23, 2022 at 10:01:48PM -0800, Shakeel Butt wrote:
+> I have been contributing and reviewing to the memcg codebase for last
+> couple of years. So, making it official.
+> 
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Roman Gushchin <roman.gushchin@linux.dev>
 
-Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
 
----
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+It was always a pleasure to work with you, Shakeel.
+Looking for more...
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ab8f1621d027..cb97140e7dda 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5014,6 +5014,7 @@ CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)
- M:	Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
- M:	Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
- M:	Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-+M:	Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
- L:	cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
- L:	linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
- S:	Maintained
--- 
-2.35.1.574.g5d30c73bfb-goog
-
+Thanks!
