@@ -1,67 +1,152 @@
-From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 3/3] mm/memcg: move generation assignment and comparison together
-Date: Fri, 25 Feb 2022 00:34:37 +0000
-Message-ID: <20220225003437.12620-4-richard.weiyang@gmail.com>
-References: <20220225003437.12620-1-richard.weiyang@gmail.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ilQGiGw+cHHnWYdpNd2TsqiqLrmn72vknxopCrZER/Q=;
-        b=EXhP+YADKLWYCXD23XUiXLkpefnymxGvQ/D3MVz2Nk0z3XGGwRNe8I8uITmCtQwIFm
-         4VBod9Tn78bwab2BZ6kHXnt2BwHZ8uUEHy7OzOAKBSZJ6fc1QETVMyQqbXCcNsyyNHmj
-         97dZX0Epb88JPt0lOOpWx5jvJ4XY959jv7wVBuSoVSgpqg8I0ylEXoDrTok1pLCiMh5F
-         tXdlQvD1HPzeefQzeA955geaPEZK76a0puWvb624G1Uk60kRkYJM9LXDRiEGmrQ7jnYq
-         0HtNtCuP/AO4ipwxFWETbeAfyVM1DbdZnpvq2VBPheijzUBcevHVMOJzgQp4VUcYlosT
-         Qe9w==
-In-Reply-To: <20220225003437.12620-1-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: "yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH v9] block: cancel all throttled bios in del_gendisk()
+Date: Fri, 25 Feb 2022 15:18:00 +0800
+Message-ID: <c000951a-b304-4663-4752-4a2cf8a4cbbb@huawei.com>
+References: <20220210115637.1074927-1-yukuai3@huawei.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20220210115637.1074927-1-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: ming.lei@redhat.com, tj@kernel.org, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-For each round-trip, we assign generation on first invocation and
-compare it on subsequent invocations.
+friendly ping ...
 
-Let's move them together to make it more self-explaining. Also this
-reduce a check on prev.
-
-Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- mm/memcontrol.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 03399146168f..17da93c2f94e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -996,7 +996,14 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 		mz = root->nodeinfo[reclaim->pgdat->node_id];
- 		iter = &mz->iter;
- 
--		if (prev && reclaim->generation != iter->generation)
-+		/*
-+		 * On first invocation, assign iter->generation to
-+		 * reclaim->generation.
-+		 * On subsequent invocations, make sure no one else jump in.
-+		 */
-+		if (!prev)
-+			reclaim->generation = iter->generation;
-+		else if (reclaim->generation != iter->generation)
- 			goto out_unlock;
- 
- 		while (1) {
-@@ -1056,8 +1063,6 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 
- 		if (!memcg)
- 			iter->generation++;
--		else if (!prev)
--			reclaim->generation = iter->generation;
- 	}
- 
- out_unlock:
--- 
-2.33.1
-
+=D4=DA 2022/02/10 19:56, Yu Kuai =D0=B4=B5=C0:
+> Throttled bios can't be issued after del_gendisk() is done, thus
+> it's better to cancel them immediately rather than waiting for
+> throttle is done.
+>=20
+> For example, if user thread is throttled with low bps while it's
+> issuing large io, and the device is deleted. The user thread will
+> wait for a long time for io to return.
+>=20
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+> Changes in v9:
+>   - some minor changes as suggested by Ming.
+> Changes in v8:
+>   - fold two patches into one
+> Changes in v7:
+>   - use the new solution as suggested by Ming.
+>=20
+>   block/blk-throttle.c | 44 +++++++++++++++++++++++++++++++++++++++++---
+>   block/blk-throttle.h |  2 ++
+>   block/genhd.c        |  2 ++
+>   3 files changed, 45 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+> index 7c462c006b26..ca92e5fa2769 100644
+> --- a/block/blk-throttle.c
+> +++ b/block/blk-throttle.c
+> @@ -43,8 +43,12 @@
+>   static struct workqueue_struct *kthrotld_workqueue;
+>  =20
+>   enum tg_state_flags {
+> -	THROTL_TG_PENDING	=3D 1 << 0,	/* on parent's pending tree */
+> -	THROTL_TG_WAS_EMPTY	=3D 1 << 1,	/* bio_lists[] became non-empty */
+> +	/* on parent's pending tree */
+> +	THROTL_TG_PENDING	=3D 1 << 0,
+> +	/* bio_lists[] became non-empty */
+> +	THROTL_TG_WAS_EMPTY	=3D 1 << 1,
+> +	/* starts to cancel all bios, will be set if the disk is deleted */
+> +	THROTL_TG_CANCELING	=3D 1 << 2,
+>   };
+>  =20
+>   #define rb_entry_tg(node)	rb_entry((node), struct throtl_grp, rb_node)
+> @@ -871,7 +875,8 @@ static bool tg_may_dispatch(struct throtl_grp *tg, st=
+ruct bio *bio,
+>   	       bio !=3D throtl_peek_queued(&tg->service_queue.queued[rw]));
+>  =20
+>   	/* If tg->bps =3D -1, then BW is unlimited */
+> -	if (bps_limit =3D=3D U64_MAX && iops_limit =3D=3D UINT_MAX) {
+> +	if ((bps_limit =3D=3D U64_MAX && iops_limit =3D=3D UINT_MAX) ||
+> +	    tg->flags & THROTL_TG_CANCELING) {
+>   		if (wait)
+>   			*wait =3D 0;
+>   		return true;
+> @@ -1763,6 +1768,39 @@ static bool throtl_hierarchy_can_upgrade(struct th=
+rotl_grp *tg)
+>   	return false;
+>   }
+>  =20
+> +void blk_throtl_cancel_bios(struct request_queue *q)
+> +{
+> +	struct cgroup_subsys_state *pos_css;
+> +	struct blkcg_gq *blkg;
+> +
+> +	spin_lock_irq(&q->queue_lock);
+> +	/*
+> +	 * queue_lock is held, rcu lock is not needed here technically.
+> +	 * However, rcu lock is still held to emphasize that following
+> +	 * path need RCU protection and to prevent warning from lockdep.
+> +	 */
+> +	rcu_read_lock();
+> +	blkg_for_each_descendant_post(blkg, pos_css, q->root_blkg) {
+> +		struct throtl_grp *tg =3D blkg_to_tg(blkg);
+> +		struct throtl_service_queue *sq =3D &tg->service_queue;
+> +
+> +		/*
+> +		 * Set the flag to make sure throtl_pending_timer_fn() won't
+> +		 * stop until all throttled bios are dispatched.
+> +		 */
+> +		blkg_to_tg(blkg)->flags |=3D THROTL_TG_CANCELING;
+> +		/*
+> +		 * Update disptime after setting the above flag to make sure
+> +		 * throtl_select_dispatch() won't exit without dispatching.
+> +		 */
+> +		tg_update_disptime(tg);
+> +
+> +		throtl_schedule_pending_timer(sq, jiffies + 1);
+> +	}
+> +	rcu_read_unlock();
+> +	spin_unlock_irq(&q->queue_lock);
+> +}
+> +
+>   static bool throtl_can_upgrade(struct throtl_data *td,
+>   	struct throtl_grp *this_tg)
+>   {
+> diff --git a/block/blk-throttle.h b/block/blk-throttle.h
+> index 175f03abd9e4..2ae467ac17ea 100644
+> --- a/block/blk-throttle.h
+> +++ b/block/blk-throttle.h
+> @@ -160,12 +160,14 @@ static inline void blk_throtl_exit(struct request_q=
+ueue *q) { }
+>   static inline void blk_throtl_register_queue(struct request_queue *q) {=
+ }
+>   static inline void blk_throtl_charge_bio_split(struct bio *bio) { }
+>   static inline bool blk_throtl_bio(struct bio *bio) { return false; }
+> +static inline void blk_throtl_cancel_bios(struct request_queue *q) { }
+>   #else /* CONFIG_BLK_DEV_THROTTLING */
+>   int blk_throtl_init(struct request_queue *q);
+>   void blk_throtl_exit(struct request_queue *q);
+>   void blk_throtl_register_queue(struct request_queue *q);
+>   void blk_throtl_charge_bio_split(struct bio *bio);
+>   bool __blk_throtl_bio(struct bio *bio);
+> +void blk_throtl_cancel_bios(struct request_queue *q);
+>   static inline bool blk_throtl_bio(struct bio *bio)
+>   {
+>   	struct throtl_grp *tg =3D blkg_to_tg(bio->bi_blkg);
+> diff --git a/block/genhd.c b/block/genhd.c
+> index 9589d1d59afa..6acc98cd0365 100644
+> --- a/block/genhd.c
+> +++ b/block/genhd.c
+> @@ -29,6 +29,7 @@
+>   #include "blk.h"
+>   #include "blk-mq-sched.h"
+>   #include "blk-rq-qos.h"
+> +#include "blk-throttle.h"
+>  =20
+>   static struct kobject *block_depr;
+>  =20
+> @@ -625,6 +626,7 @@ void del_gendisk(struct gendisk *disk)
+>  =20
+>   	blk_mq_freeze_queue_wait(q);
+>  =20
+> +	blk_throtl_cancel_bios(disk->queue);
+>   	rq_qos_exit(q);
+>   	blk_sync_queue(q);
+>   	blk_flush_integrity();
+>=20
