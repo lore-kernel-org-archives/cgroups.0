@@ -1,93 +1,70 @@
 From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: [PATCH v5 6/6] mm/memcg: Disable migration instead of preemption in
- drain_all_stock().
-Date: Fri, 25 Feb 2022 21:13:07 +0100
-Message-ID: <Yhk4UzA++ucRDwNk@linutronix.de>
+Subject: [PATCH] mm/memcg: Only perform the debug checks on !PREEMPT_RT
+Date: Sat, 26 Feb 2022 00:01:47 +0100
+Message-ID: <Yhlf29/HqyNMOvGb@linutronix.de>
 References: <20220221182540.380526-1-bigeasy@linutronix.de>
- <20220221182540.380526-7-bigeasy@linutronix.de>
- <YhSzWXyPe14vOaGa@dhcp22.suse.cz>
+ <20220221182540.380526-4-bigeasy@linutronix.de>
+ <CALvZod7DfxHp+_NenW+NY81WN_Li4kEx4rDodb2vKhpC==sd5g@mail.gmail.com>
+ <YhjzE/8LgbULbj/C@linutronix.de>
+ <CALvZod48Tp7i_BbA4Um57m989iuFU5kSvbzLhSOUt23_CiWmjw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1645819989;
+        s=2020; t=1645830109;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=/BpWwwa3UrrnGqWsSuMc0gDmuI2beFCWr4sjiH+86Ao=;
-        b=s6tT3aqsGpNGkByofJ8qal7wMVDI0W7iqVOV12HqnDaiKUsxmrIOKh3k0eljr0PexTw4Gm
-        Wu1Fdg2TsNtx7y51zvh0+DbStqHXUiilKWQh9EwkgqQm+5c3zraEfrWRJkwQNu1Jo8HTYj
-        uGw3enVlEnmaWJHY3ohrmPWxjPvpuG5v5btCTtNfGodOYSm6Vjcpd7D6psCLzCRWY6DQ3r
-        TxhrjGOCKAqbD5dXqReq4XvRlLbrxCsNaUrm5ag5LIMP0REukScBEoWJtRYLJ1w6lbG7mL
-        2z9yGNPPUOQBQnxkdVF9XsCTm6oy/AQzvnCQ7pCiEI3iszSHkqJ3007RQT4ICQ==
+        bh=eLa2DAYUTcrHbqT9bu1hfoW/mNp9mXnBGQU+a1wSrFo=;
+        b=HhsLwetpyGJFs2/zxUDRAIa9PNAY1BbeDq4Evc1MkFnyHxdsK9dPIGZ5i5aOL/PMFUKjcf
+        xD98AWfMqYC4sVIM0nS2UWlgfRWFUBXx1ZiXNhbpk/zgbnSh2R1Z4uxpaqPorZdUW3xZLe
+        5pZ5qdjKjGXuC8DcSaZFPEI6x30V3gqq1W7ACNSKObCrRYztOR4Nc/5oQFb/0Xy08JfL9r
+        tGNADO9A++ZGKr3o27100KF1QLAqfdpLFTqKFaIfU/qwkTmyifIjzGlhCe7BK7fKUvChM4
+        giy/Z1CmicL/cNNwdvrLbIVN0Ik56EGLc61frE66jHcxamyBurt3hhZWjsY1fA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1645819989;
+        s=2020e; t=1645830109;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=/BpWwwa3UrrnGqWsSuMc0gDmuI2beFCWr4sjiH+86Ao=;
-        b=bC/EK5l9Fp6eX5seGNFdGpmEbBkH3Jm745DF9MTAVqVkRNXhRpaxYCDISco2G5pQxZu47l
-        ZXgnBdR98uPNi+AQ==
+        bh=eLa2DAYUTcrHbqT9bu1hfoW/mNp9mXnBGQU+a1wSrFo=;
+        b=AsKrXs5arxs4uQjRegtTn8SRZAH3B1ZW9zg7LO4+o3PsHyiYRVcHitgVNhuY9ybY7Cuu9a
+        OiRIivkR/0QEkzCg==
 Content-Disposition: inline
-In-Reply-To: <YhSzWXyPe14vOaGa-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <CALvZod48Tp7i_BbA4Um57m989iuFU5kSvbzLhSOUt23_CiWmjw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-Before the for-each-CPU loop, preemption is disabled so that so that
-drain_local_stock() can be invoked directly instead of scheduling a
-worker. Ensuring that drain_local_stock() completed on the local CPU is
-not correctness problem. It _could_ be that the charging path will be
-forced to reclaim memory because cached charges are still waiting for
-their draining.
+On PREEMPT_RT interrupts and preemption is always enabled. The locking
+function __memcg_stats_lock() always disabled preemptions. The recently
+added checks need to performed only on !PREEMPT_RT where preemption and
+disabled interrupts are used.
 
-Disabling preemption before invoking drain_local_stock() is problematic
-on PREEMPT_RT due to the sleeping locks involved. To ensure that no CPU
-migrations happens across for_each_online_cpu() it is enouhg to use
-migrate_disable() which disables migration and keeps context preemptible
-to a sleeping lock can be acquired.
-A race with CPU hotplug is not a problem because pcp data is not going away.
-In the worst case we just schedule draining of an empty stock.
-
-Use migrate_disable() instead of get_cpu() around the
-for_each_online_cpu() loop.
+Please fold into:
+	"Protect per-CPU counter by disabling preemption on PREEMPT_RT"
 
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 ---
-v4=E2=80=A6v5: Added Michal's notes regarding CPU hotplug.
 
- mm/memcontrol.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Andrew, if this getting to confused at some point, I can fold it myself
+and repost the whole lot. Whatever works best for your.
+
+ mm/memcontrol.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 3d7ccb104374c..9c29b1a0e6bec 100644
+index 73832cd1e9da4..63287fd03250b 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2293,7 +2293,8 @@ static void drain_all_stock(struct mem_cgroup *root_m=
-emcg)
- 	 * as well as workers from this path always operate on the local
- 	 * per-cpu data. CPU up doesn't touch memcg_stock at all.
+@@ -741,7 +741,7 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+ 	 * interrupt context while other caller need to have disabled interrupt.
  	 */
--	curcpu =3D get_cpu();
-+	migrate_disable();
-+	curcpu =3D smp_processor_id();
- 	for_each_online_cpu(cpu) {
- 		struct memcg_stock_pcp *stock =3D &per_cpu(memcg_stock, cpu);
- 		struct mem_cgroup *memcg;
-@@ -2316,7 +2317,7 @@ static void drain_all_stock(struct mem_cgroup *root_m=
-emcg)
- 				schedule_work_on(cpu, &stock->work);
- 		}
- 	}
--	put_cpu();
-+	migrate_enable();
- 	mutex_unlock(&percpu_charge_mutex);
- }
-=20
---=20
+ 	__memcg_stats_lock();
+-	if (IS_ENABLED(CONFIG_DEBUG_VM)) {
++	if (IS_ENABLED(CONFIG_DEBUG_VM) && !IS_ENABLED(CONFIG_PREEMPT_RT)) {
+ 		switch (idx) {
+ 		case NR_ANON_MAPPED:
+ 		case NR_FILE_MAPPED:
+-- 
 2.35.1
-
