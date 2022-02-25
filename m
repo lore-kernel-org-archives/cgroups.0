@@ -1,59 +1,35 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] MAINTAINERS: add myself as a memcg co-maintainer as well
-Date: Thu, 24 Feb 2022 08:39:34 +0100
-Message-ID: <Yhc2NryrtsqPN4Jr@dhcp22.suse.cz>
-References: <20220224060148.4092228-1-shakeelb@google.com>
-Mime-Version: 1.0
+From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 0/3] mm/memcg: some cleanup for mem_cgroup_iter()
+Date: Fri, 25 Feb 2022 00:34:34 +0000
+Message-ID: <20220225003437.12620-1-richard.weiyang@gmail.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1645688375; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=qEgq5b010Dc6+wc2/YsOMt1qe+8jokFJKfqLno0+jwE=;
-        b=QjzSY5riKfB7KYO1FLjOw7ijkE4br3EC2PSfKMS59pnnJ6juy//nXJPCTK+XueysGy/69D
-        TPToJ1yuwUnYW41+f3ezzYFH+KnA7QHSHKbuBu0wLyzvHrS65PRLQD0FolGrxjuiccO7oG
-        T0+KYA2MHXIM5exHnXEPmb81gVQqOf0=
-Content-Disposition: inline
-In-Reply-To: <20220224060148.4092228-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=l406JsmQ/9uHOd645BEgXJ9iwo5dFGG+M3DDOGQskWM=;
+        b=AxgCPgFo9m4iTfxiNc3Kp/VTeCR+mrjpl/1u4/YA7zC01jyqIlaAvaz1O7r5gh9sr4
+         xRsjVa8DlT5P1IYmHb/vPOYa1eqfogoBw8FdWBKPlE5NfrBoabHtn34nmJZBju5Q1PhT
+         Nbz6TaFicOpbm8B0Z/j4/nRJaj0fVirZD/Nx0kVsktldUuqZoI3nXV1KJP6C5djg0VWJ
+         NUIY1CGZfGaLJzzzJV3PZSiGMF6IBpUwK4r+/SzzTLdR9H5zd0CXrcWaNALW2CSTYN2j
+         VxqNB2p/RRFpUeDOBqCVlPrw317qXse8GZ3XZ+H8sLe0OLcIzXPVTDHPc6P4/AxwGuAt
+         nMAw==
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Wed 23-02-22 22:01:48, Shakeel Butt wrote:
-> I have been contributing and reviewing to the memcg codebase for last
-> couple of years. So, making it official.
-> 
-> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+No functional change, try to make it more readable.
 
-Thanks for stepping up, Shakeel!
+Wei Yang (3):
+  mm/memcg: set memcg after css verified and got reference
+  mm/memcg: set pos to prev unconditionally
+  mm/memcg: move generation assignment and comparison together
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-
-> 
-> ---
->  MAINTAINERS | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index ab8f1621d027..cb97140e7dda 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -5014,6 +5014,7 @@ CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)
->  M:	Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
->  M:	Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->  M:	Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-> +M:	Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->  L:	cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->  L:	linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
->  S:	Maintained
-> -- 
-> 2.35.1.574.g5d30c73bfb-goog
+ mm/memcontrol.c | 27 ++++++++++++---------------
+ 1 file changed, 12 insertions(+), 15 deletions(-)
 
 -- 
-Michal Hocko
-SUSE Labs
+2.33.1
+
