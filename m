@@ -1,117 +1,42 @@
-From: Benjamin Berg <benjamin-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
-Subject: Explanation for difference between memcg swap accounting and
- smaps_rollup
-Date: Fri, 25 Feb 2022 17:10:05 +0100
-Message-ID: <12f7d0bef9340035b82a007cc37bd09c48d86c3f.camel@sipsolutions.net>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm/memcg: Add missing counter index which are not update
+ in interrupt.
+Date: Fri, 25 Feb 2022 09:08:22 -0800
+Message-ID: <CALvZod48Tp7i_BbA4Um57m989iuFU5kSvbzLhSOUt23_CiWmjw@mail.gmail.com>
+References: <20220221182540.380526-1-bigeasy@linutronix.de>
+ <20220221182540.380526-4-bigeasy@linutronix.de> <CALvZod7DfxHp+_NenW+NY81WN_Li4kEx4rDodb2vKhpC==sd5g@mail.gmail.com>
+ <YhjzE/8LgbULbj/C@linutronix.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-JS88UdKRWg/hWx/X89Sq"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sipsolutions.net; s=mail; h=MIME-Version:Content-Type:Date:Cc:To:From:
-        Subject:Message-ID:Content-Transfer-Encoding:Sender:Reply-To:Content-ID:
-        Content-Description:Resent-Date:Resent-From:Resent-To:Resent-Cc:
-        Resent-Message-ID:In-Reply-To:References;
-        bh=MOPpvdNhNU2RpS1RZ3R8uWYUUQon8ir3K7hmN0BpFk4=; t=1645805409; x=1647015009; 
-        b=RGad7qr6QXLvY8o51al/BrrhLX/N9sLXuCopOGqt3kzY75ye0OQO6FTzll/iDZUKtTcYNRk21K9
-        R1tlDulf5oi/DLuJQyX3gF+NCqRqUS9Anv2/sH6qwbFzwuqgJ31CqjPhBnIH13bNG39erPwDQ0MCP
-        UJtDRQLfYZwjTlTfock/O+jZk1uSjlllG/Pcy9sBlN6Xp3hjsX/ECR01aFqO6VTiIbULG2/dtL/+i
-        ZaTRvqFlEtybY8sXE8x7lO5grGYvLyAA0V9HqrK67zjlxvRyCVEBgClQ3el5OcSYQ3RdakbbPvcoe
-        FrUn/9iQpeULkzY+Ob4fTMJ004olJ0YIQFrw==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=JKBFp/+QmdkMl3W2CNCuhdgLoZgTOVOm62o/vgJZi/w=;
+        b=HvtTf0aOv5iPGo064vKxcuLQ17FFIg+BoA294KV6ssoXN0UKe1Irs+22XOPAWWqtGE
+         4iEfPdX03oAOFR9M7UMcq6Yfzj85bvEYotaIp6nft1LKgTj/QgVYoNRtIVQvi271iVY2
+         qfVuvMzoZfV/R9IegCaNbraeZ222UG0SN6Bco9sAgTRz0lbWGhbXqMhUjGJkeB+SNUG3
+         re3NDnnS1q0E3NnRZiZJS+swJy/YLm8Xo9UGKX1PXWmp+eEZbhrQZkQM8Inh3BZpIrkq
+         YFN2ixSSHfssooXM+6HvJY/i1VNwO4802U2JuKTiozHH0MGmg7/JrsyEpL0ztObKX3TN
+         hG2g==
+In-Reply-To: <YhjzE/8LgbULbj/C@linutronix.de>
 List-ID: <cgroups.vger.kernel.org>
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Anita Zhang <the.anitazha-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-
-
---=-JS88UdKRWg/hWx/X89Sq
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-Hi,
-
-I am seeing memory.swap.current usages for the gnome-shell cgroup that
-seem high if I compare them to smaps_rollup for the contained
-processes. As I don't have an explanation, I thought I would ask here
-(shared memory?).
-
-What I am seeing is (see below, after a tail /dev/zero):
-
-memory.swap.current:
-  686MiB
-"Swap" lines from /proc/$pid/smaps_rollup added up:
-  435MiB
-
-We should be moving launched applications out of the shell cgroup
-before doing execve(), so I think we can rule out that as a possible
-explanation.
-
-I am mostly curious as we currently do swap based kills using systemd-
-oomd. So if swap accounting for GNOME Shell is high, then it makes it a
-more likely target unfortunately.
-
-Am I missing something obvious?
-
-Benjamin
-
-$ uname -r
-5.16.8-200.fc35.x86_64
-$ grep -H . org.gnome.Shell-r28gBBs99rhXz5zEmyOJwQ@public.gmane.org/memory.swap.current; for p in $=
-( cat org.gnome.Shell-r28gBBs99rhXz5zEmyOJwQ@public.gmane.org/cgroup.procs ); do ls -l /proc/$p/exe=
-; grep Swap /proc/$p/smaps_rollup; done
-org.gnome.Shell-r28gBBs99rhXz5zEmyOJwQ@public.gmane.org/memory.swap.current:712396800
-lrwxrwxrwx. 1 benjamin benjamin 0 Feb 25 16:00 /proc/2521/exe -> '/usr/bin/=
-gnome-shell (deleted)'
-Swap:             294528 kB
-SwapPss:          244060 kB
-lrwxrwxrwx. 1 benjamin benjamin 0 Feb 25 16:01 /proc/3853/exe -> /usr/bin/X=
-wayland
-Swap:              55580 kB
-SwapPss:           46628 kB
-lrwxrwxrwx. 1 benjamin benjamin 0 Feb 25 16:01 /proc/3884/exe -> /usr/bin/i=
-bus-daemon
-Swap:               4104 kB
-SwapPss:            4104 kB
-lrwxrwxrwx. 1 benjamin benjamin 0 Feb 25 16:01 /proc/3891/exe -> /usr/libex=
-ec/ibus-dconf
-Swap:                800 kB
-SwapPss:             796 kB
-lrwxrwxrwx. 1 benjamin benjamin 0 Feb 25 16:01 /proc/3892/exe -> /usr/libex=
-ec/ibus-extension-gtk3
-Swap:              13020 kB
-SwapPss:           11864 kB
-lrwxrwxrwx. 1 benjamin benjamin 0 Feb 25 16:01 /proc/3894/exe -> /usr/libex=
-ec/ibus-x11
-Swap:              16284 kB
-SwapPss:           16284 kB
-lrwxrwxrwx. 1 benjamin benjamin 0 Feb 25 16:01 /proc/3931/exe -> /usr/libex=
-ec/ibus-engine-simple
-Swap:                312 kB
-SwapPss:             312 kB
-lrwxrwxrwx. 1 benjamin benjamin 0 Feb 25 16:01 /proc/4086/exe -> /usr/bin/p=
-ython3.10
-Swap:              50640 kB
-SwapPss:           49476 kB
-
---=-JS88UdKRWg/hWx/X89Sq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
------BEGIN PGP SIGNATURE-----
+On Fri, Feb 25, 2022 at 7:17 AM Sebastian Andrzej Siewior
+<bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org> wrote:
+>
+> Shakeel Butt reported that I missed a few counters which are not updated
+> in-interrupt context and therefore disabling preemption is fine.
+>
+> Please fold into:
+>      "Protect per-CPU counter by disabling preemption on PREEMPT_RT"
+>
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
-iQIzBAABCAAdFiEED2NO4vMS33W8E4AFq6ZWhpmFY3AFAmIY/10ACgkQq6ZWhpmF
-Y3BZeQ/9FzHHT2frvGoELarNQeuI2JbdvRK5XJWFut/xJZTLxuxxcdfTXo3dR/3A
-puYHwUcfKgxzrG42o1+665BNoU1MUiTPJXQF6P94UG31Y38SB53sPZ2EI21wr6W9
-3GfnA5BB37ILVZOF32NcqLo9AAmBRRJqWicO4tyZzfv5nJ6KhJa/2YNSGAoEtQgY
-SvDr1u2c2RJsqh5vU9wDNtTxK+gOhI2Yn2QJhzjrjrbb55Xw02JyYqR4zq7wspF+
-depqwLXdoGuagoQLnULRw+KF9mca3oX1WLBs/6XEp4Wm8roT5zFVpVY2w3K7vnp3
-7uqm0M1VYWy4eRWueVTjwup9JA5pPgKmqb5Slb1NBDPy/7eEuiLq6wfC8ACwbG8W
-BCsoF4aGXj0uVanmaf7V6+fKhl10fFpJhf224oXKf35jWb2YBV7hDkh1CJy4Ws8A
-74VoQk+sqHebzaE54zZLH8erKqkfx+5hyu3SIt7jrIgjPcFfw8DasddCg+JWaZrH
-1Ii5kpuv18RC8avFjrNrJCJQ5J220BKzywy6/hH7PGmNE+p3Nw/NVogLDRMUPZmI
-oQZxxa5hSgtD+ZRwagGC7tc27h1CEs1PZ6vxs/KcOm9KfKLwukFP2B9fweQ+Rsed
-xHI+ZtEGhWZ4m4GAMGQu9BLSXramF8jz4uzefa8LRWf+KNjP6yg=
-=cuTS
------END PGP SIGNATURE-----
+Thanks. For the folded patch:
 
---=-JS88UdKRWg/hWx/X89Sq--
+Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
