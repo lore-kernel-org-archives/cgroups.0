@@ -1,42 +1,66 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm/memcg: Add missing counter index which are not update
- in interrupt.
-Date: Fri, 25 Feb 2022 09:08:22 -0800
-Message-ID: <CALvZod48Tp7i_BbA4Um57m989iuFU5kSvbzLhSOUt23_CiWmjw@mail.gmail.com>
-References: <20220221182540.380526-1-bigeasy@linutronix.de>
- <20220221182540.380526-4-bigeasy@linutronix.de> <CALvZod7DfxHp+_NenW+NY81WN_Li4kEx4rDodb2vKhpC==sd5g@mail.gmail.com>
- <YhjzE/8LgbULbj/C@linutronix.de>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH v2] KVM: Move VM's worker kthreads back to the original
+ cgroups before exiting.
+Date: Fri, 25 Feb 2022 18:37:35 +0100
+Message-ID: <20220225173734.GA26252@blackbody.suse.cz>
+References: <20211222225350.1912249-1-vipinsh@google.com>
+ <20220105180420.GC6464@blackbody.suse.cz>
+ <CAHVum0e84nUcGtdPYQaJDQszKj-QVP5gM+nteBpSTaQ2sWYpmQ@mail.gmail.com>
+ <Yeclbe3GNdCMLlHz@slm.duckdns.org>
+ <7a0bc562-9f25-392d-5c05-9dbcd350d002@redhat.com>
+ <YehY0z2vHYVZk52J@slm.duckdns.org>
+ <20220120150502.GC27269@blackbody.suse.cz>
+ <CAHVum0fOP-2XcUcG3PqW08DY7CmpDroG6Fcv9KoD1FqLmGpB8w@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=JKBFp/+QmdkMl3W2CNCuhdgLoZgTOVOm62o/vgJZi/w=;
-        b=HvtTf0aOv5iPGo064vKxcuLQ17FFIg+BoA294KV6ssoXN0UKe1Irs+22XOPAWWqtGE
-         4iEfPdX03oAOFR9M7UMcq6Yfzj85bvEYotaIp6nft1LKgTj/QgVYoNRtIVQvi271iVY2
-         qfVuvMzoZfV/R9IegCaNbraeZ222UG0SN6Bco9sAgTRz0lbWGhbXqMhUjGJkeB+SNUG3
-         re3NDnnS1q0E3NnRZiZJS+swJy/YLm8Xo9UGKX1PXWmp+eEZbhrQZkQM8Inh3BZpIrkq
-         YFN2ixSSHfssooXM+6HvJY/i1VNwO4802U2JuKTiozHH0MGmg7/JrsyEpL0ztObKX3TN
-         hG2g==
-In-Reply-To: <YhjzE/8LgbULbj/C@linutronix.de>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <kvm-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1645810656; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=GY0iFUW9uJV4Vgn8uP3pu0/kxNIDCy02Hy0asV7edUo=;
+        b=TXIXb+dwDLgXu7FYESoUdvIw3WVo04Tn7lfRoljMYCviwhHmW1InDMG9ZQjzhXih8TqnNI
+        ES+6S6tUSmYt1b2swWoy9lcUJ69gLBkQP4/kolRUjgAXtxWkGHRG+fNa8+fQejAvYGAu+U
+        AhFlb6bQkB59K5/cvejRsALjZ6OA0UI=
+Content-Disposition: inline
+In-Reply-To: <CAHVum0fOP-2XcUcG3PqW08DY7CmpDroG6Fcv9KoD1FqLmGpB8w@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Vipin Sharma <vipinsh@google.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, Tejun Heo <tj@kernel.org>, seanjc@google.com, lizefan.x@bytedance.com, hannes@cmpxchg.org, dmatlack@google.com, jiangshanlai@gmail.com, kvm@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Feb 25, 2022 at 7:17 AM Sebastian Andrzej Siewior
-<bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org> wrote:
->
-> Shakeel Butt reported that I missed a few counters which are not updated
-> in-interrupt context and therefore disabling preemption is fine.
->
-> Please fold into:
->      "Protect per-CPU counter by disabling preemption on PREEMPT_RT"
->
-> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Hi Vipin.
 
-Thanks. For the folded patch:
+On Wed, Feb 16, 2022 at 09:37:45AM -0800, Vipin Sharma <vipinsh@google.com>=
+ wrote:
+> On Thu, Jan 20, 2022 at 7:05 AM Michal Koutn=FD <mkoutny@suse.com> wrote:
+> > Have I missed an obstacle?
 
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Aha...
+
+[
+> I used few other combination where I put kernel_wait() call after
+> put_task_struct(k) call.
+>=20
+> Every time during the module exit, kernel was crashing like:
+
+Thanks for trying this out.
+]
+
+> Do you have any suggestions what might be the right way to use this API?
+
+...it has occured to me now -- the KVM kthread is not a child of the
+wanna-wait user task. So the kernel_wait() silently errs with -ECHILD
+and task_struct is released too early and that (probably) brings about
+the crash.
+
+I'm sorry for not realizing that initially.
+
+(Generally, any kthread_create'd task would be affected by this. I guess
+the KVM worker threads can't be forked from the kvm_create_vm() callers?
+(It could prevent the double migration to and from caller's cgroup
+though.))
+
+Michal
+
