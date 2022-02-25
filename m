@@ -1,46 +1,41 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 0/3] mm/memcg: some cleanup for mem_cgroup_iter()
-Date: Fri, 25 Feb 2022 09:13:46 +0100
-Message-ID: <YhiPuokZpIk1MYaB@dhcp22.suse.cz>
-References: <20220225003437.12620-1-richard.weiyang@gmail.com>
+From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Subject: Re: [PATCH v9] block: cancel all throttled bios in del_gendisk()
+Date: Fri, 25 Feb 2022 07:27:11 -0700
+Message-ID: <6db54b86-4f25-af15-692b-af067823d77e@kernel.dk>
+References: <20220210115637.1074927-1-yukuai3@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1645776827; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=a9XUtHgFIXz3Y7VU5CfuvkiImWSSj6M2SSPgIuQZxWw=;
-        b=P51WeZJwQaSXAs3kehFkP5GgGwrp0kmlZJytxgvWQc9SXsNbzmcUW37g2LTuqRdG6+JVHX
-        x49lzoHoYwtXjQ9ason8Vzr7s9hOBPm1En8NXOGujqR4T2RM+XUx4MdLOeKZL0Q7hYIfIQ
-        AiUg+xtD4wBqtK75jF2ZvixJTvQ968A=
-Content-Disposition: inline
-In-Reply-To: <20220225003437.12620-1-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=CueWZXVwpZqdL5pKcLH+mDQMXSj/tgq8h6dqyMSiTWc=;
+        b=PfpjwGmuxVMO98b9FDuDLsLE9btC0WBH7LhsJ8t4TpjmMe2OedybHGRFlbaMxvYueI
+         GLqc6LyVGQuJqh2jy8NIWPv0N0tKhYKhSghFrdptUgkE7MxEqeWrePJD0232xturOP2i
+         df8DJgH6f6Jr0nFGXKB7PXidirxCjRPva+wV9HkYaIj524bMF5Slt5aPVJh4G/B9xohN
+         yS6/VWCFrOF0R5IASe5MFC60DxuRiDjAhaKPiK2d+udCx4FGyiMGBw5knhW0hY8Cx1j7
+         tRFkY6hwSHgmjZy1IprRmpUfS8AE64hOqjHRilR3OGHIem0SxKWFJIyhdmRxNcjZ094D
+         FUmQ==
+Content-Language: en-US
+In-Reply-To: <20220210115637.1074927-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Fri 25-02-22 00:34:34, Wei Yang wrote:
-> No functional change, try to make it more readable.
+On 2/10/22 4:56 AM, Yu Kuai wrote:
+> Throttled bios can't be issued after del_gendisk() is done, thus
+> it's better to cancel them immediately rather than waiting for
+> throttle is done.
 > 
-> Wei Yang (3):
->   mm/memcg: set memcg after css verified and got reference
->   mm/memcg: set pos to prev unconditionally
->   mm/memcg: move generation assignment and comparison together
-> 
->  mm/memcontrol.c | 27 ++++++++++++---------------
->  1 file changed, 12 insertions(+), 15 deletions(-)
+> For example, if user thread is throttled with low bps while it's
+> issuing large io, and the device is deleted. The user thread will
+> wait for a long time for io to return.
 
-I am sorry but I do not really see these changes to be simplifying 
-the iterator code enough to be worth touching the code. The iterator
-code is really subtle and we have experienced some subtle bugs there.
-I would be really reluctant to touch it unless the result is a clear
-simplification or a bug fix. Please keep in mind that the review
-overhead is far from negligible here.
+I hand applied this for 5.18 as it's conflicting with other
+changes. Please double check the end result.
 
-Unless Johannes sees that as a clear improvement then I would suggest
-dropping these patches from the akpm's tree.
 -- 
-Michal Hocko
-SUSE Labs
+Jens Axboe
+
