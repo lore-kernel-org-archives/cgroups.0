@@ -1,90 +1,49 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [syzbot] linux-next test error: WARNING in
- __mod_memcg_lruvec_state
-Date: Sun, 27 Feb 2022 22:09:43 -0800
-Message-ID: <20220227220943.490fb7b5f7c57d872f9523cb@linux-foundation.org>
-References: <000000000000c7fde605d8e6b085@google.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH v9] block: cancel all throttled bios in del_gendisk()
+Date: Mon, 28 Feb 2022 14:11:30 +0800
+Message-ID: <Yhxnkg0AEaj36t+a@T590>
+References: <20220210115637.1074927-1-yukuai3@huawei.com>
+ <YhuyBgZSS6m/Mwu6@infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1646028584;
-        bh=ntKdtcU1juj+MTKalehAxm9wVv/ZFIUKyu9HCPrRBsE=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=IzEis12xQ2W/u3ivCICTkdEQHfJ/CwCv4cUGmbh85egPesemCln2XPrga7g0/3D1H
-         Y9MI5y8id5DjmrJzEwIgsuQuiWHqDNKD/NynTUXwyvZPTPFHzfl2RduRTat6YFHGMr
-         cLTNXAuKoUP4erBpq+xK36lXshrrChYsHidFAtBg=
-In-Reply-To: <000000000000c7fde605d8e6b085-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1646028720;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=koDNyhpZRRWUbZFhH9KWUoWf+UDX5NXH16ZSUqLPEwY=;
+        b=KygYL8GXXMd9+htAZDQw0Ye1IVMuKEi+xcQAUW/kppRaQoKqzAc++g8yMGwOpo9hTxXmBg
+        VjSswtEUvC7ByJf/hThqHvRBnmiPxQRVBKqX086L07KgMPZH1i066U26xPi/xP1jtPeEVS
+        Oz2EP75izlM1CZYn7b8Che1k/l3LoFc=
+Content-Disposition: inline
+In-Reply-To: <YhuyBgZSS6m/Mwu6@infradead.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: syzbot <syzbot+a526c269335f529d25c8-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Yu Kuai <yukuai3@huawei.com>, tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-(cc bigeasy)
+Hi Christoph,
 
-                        WARN_ON_ONCE(!irqs_disabled());
+On Sun, Feb 27, 2022 at 09:16:54AM -0800, Christoph Hellwig wrote:
+> On Thu, Feb 10, 2022 at 07:56:37PM +0800, Yu Kuai wrote:
+> > Throttled bios can't be issued after del_gendisk() is done, thus
+> > it's better to cancel them immediately rather than waiting for
+> > throttle is done.
+> > 
+> > For example, if user thread is throttled with low bps while it's
+> > issuing large io, and the device is deleted. The user thread will
+> > wait for a long time for io to return.
+> 
+> FYI, this crashed left rigt and center when running xfstests with
+> traces pointing to throtl_pending_timer_fn.
 
-in __mod_memcg_lruvec_state(), methinks.
+Can you share the exact xfstests test(fs, test)? Or panic log?
 
-On Fri, 25 Feb 2022 23:23:23 -0800 syzbot <syzbot+a526c269335f529d25c8-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org> wrote:
+I can't reproduce it when running './check -g auto' on XFS, meantime
+tracking throtl_pending_timer_fn().
 
-> Hello,
-> 
-> syzbot found the following issue on:
-> 
-> HEAD commit:    06aeb1495c39 Add linux-next specific files for 20220225
-> git tree:       linux-next
-> console output: https://syzkaller.appspot.com/x/log.txt?x=17a69c8e700000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=8d8bf144f45f9b3
-> dashboard link: https://syzkaller.appspot.com/bug?extid=a526c269335f529d25c8
-> compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-> 
-> IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> Reported-by: syzbot+a526c269335f529d25c8-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
-> 
-> ------------[ cut here ]------------
-> WARNING: CPU: 1 PID: 3590 at mm/memcontrol.c:749 __mod_memcg_lruvec_state+0x1ab/0x220
-> Modules linked in:
-> CPU: 1 PID: 3590 Comm: syz-fuzzer Not tainted 5.17.0-rc5-next-20220225-syzkaller #0
-> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-> RIP: 0010:__mod_memcg_lruvec_state+0x1ab/0x220
-> Code: bb 23 92 0e 48 c7 c7 e0 b6 d9 89 e8 af d9 95 07 65 c7 05 f4 c8 37 7e 00 00 00 00 48 83 c4 08 5b 5d 41 5c 41 5d 41 5e 41 5f c3 <0f> 0b e9 a6 fe ff ff 4c 89 f6 48 c7 c7 60 63 ee 8b e8 8f d3 45 02
-> RSP: 0000:ffffc900039efbc0 EFLAGS: 00010202
-> RAX: 0000000000000206 RBX: 0000000000000200 RCX: ffffffff81aafa53
-> RDX: 1ffff1100218fa8d RSI: 000000000000001c RDI: ffff888010c7d468
-> RBP: ffff888010c7d000 R08: 0000000000000001 R09: ffffffff8ba144e7
-> R10: fffffbfff174289c R11: 0000000000000001 R12: 000000000000001c
-> R13: ffff88813fe38000 R14: ffff88813fe38000 R15: ffff88813fffa000
-> FS:  000000c0001d2c90(0000) GS:ffff8880b9d00000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 000000c000e00000 CR3: 000000001cfb0000 CR4: 00000000003506e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> Call Trace:
->  <TASK>
->  __mod_lruvec_page_state+0x1e5/0x3e0
->  page_add_new_anon_rmap+0x2e5/0x930
->  do_huge_pmd_anonymous_page+0x102c/0x2350
->  __handle_mm_fault+0x2a66/0x4110
->  handle_mm_fault+0x1c8/0x790
->  do_user_addr_fault+0x489/0x11c0
->  exc_page_fault+0x9e/0x180
->  asm_exc_page_fault+0x1e/0x30
-> RIP: 0033:0x465e33
-> Code: 00 00 c5 fe 6f 06 c5 fe 6f 4e 20 c5 fe 6f 56 40 c5 fe 6f 5e 60 48 81 c6 80 00 00 00 c5 fd e7 07 c5 fd e7 4f 20 c5 fd e7 57 40 <c5> fd e7 5f 60 48 81 c7 80 00 00 00 48 81 eb 80 00 00 00 77 b5 0f
-> RSP: 002b:000000c0003533b8 EFLAGS: 00010202
-> RAX: 000000c000db4000 RBX: 0000000000423fe0 RCX: 000000c001224000
-> RDX: 000000c001224001 RSI: 000000c000990020 RDI: 000000c000dfffa0
-> RBP: 000000c000353418 R08: 000000c000db4000 R09: 0000000000000000
-> R10: 0000000000000020 R11: 0000000000000206 R12: 000000c000243f18
-> R13: 000000000000002e R14: 000000c0000001a0 R15: 0000000000000000
->  </TASK>
-> 
-> 
-> ---
-> This report is generated by a bot. It may contain errors.
-> See https://goo.gl/tpsmEJ for more information about syzbot.
-> syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-> 
-> syzbot will keep track of this issue. See:
-> https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+Thanks,
+Ming
+
