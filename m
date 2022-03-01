@@ -1,87 +1,83 @@
-From: "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH v9] block: cancel all throttled bios in del_gendisk()
-Date: Tue, 1 Mar 2022 21:54:28 +0800
-Message-ID: <836f0686-4ac8-327d-2bab-64a762ea8673@huawei.com>
-References: <20220210115637.1074927-1-yukuai3@huawei.com>
- <YhuyBgZSS6m/Mwu6@infradead.org> <Yhxnkg0AEaj36t+a@T590>
- <YhyYpWHGVhs3J/dk@infradead.org> <Yh31bQu3gbXoDBuK@T590>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: Explanation for difference between memcg swap accounting and
+ smaps_rollup
+Date: Tue, 1 Mar 2022 11:53:35 -0500
+Message-ID: <Yh5Pj5Z6pXbUyfio@cmpxchg.org>
+References: <12f7d0bef9340035b82a007cc37bd09c48d86c3f.camel@sipsolutions.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <Yh31bQu3gbXoDBuK@T590>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=NBf4zMMtjHDXxe1QGY4+VAhDQU0P1h16it+M1Z5ezfk=;
+        b=JlsDWggs0x19ThNsAcnAVPOtWKVoCdk27Gb/UtoTg5zblhrKphPa6ffd7zsHRqZdW9
+         WeTSHEoX+wjpaAMYfetDfCwhDuBKy/xZc7004bh3Rfj5JA+tFuC0DkqxXasX+DC7VhUw
+         78D71MUvqHc0ByixFnc8lAIHomB1zt0avWk3qw3fNik0nkORny6KgGP2qfxa/pQj317B
+         hRy1+w6M9mx/vJwiHTuHWR70vS2izBh4TljfNt4WsiziktHJBW9ew8YPcKRqLDPBq2dE
+         vKLXPDJ/+nrLU8EEX+Gp8oZGuza3Cs4YsFP7hiUdgPO+xX38LQXHyM6asHW6gZEMSVTz
+         vy6Q==
+Content-Disposition: inline
+In-Reply-To: <12f7d0bef9340035b82a007cc37bd09c48d86c3f.camel-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@infradead.org>
-Cc: tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Benjamin Berg <benjamin-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Anita Zhang <the.anitazha-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-=D4=DA 2022/03/01 18:29, Ming Lei =D0=B4=B5=C0:
-> On Mon, Feb 28, 2022 at 01:40:53AM -0800, Christoph Hellwig wrote:
->> On Mon, Feb 28, 2022 at 02:11:30PM +0800, Ming Lei wrote:
->>>> FYI, this crashed left rigt and center when running xfstests with
->>>> traces pointing to throtl_pending_timer_fn.
->>>
->>> Can you share the exact xfstests test(fs, test)? Or panic log?
->>>
->>> I can't reproduce it when running './check -g auto' on XFS, meantime
->>> tracking throtl_pending_timer_fn().
->>
->>  From a quick run using f2fs:
->>
->> generic/081 files ... [  316.487861] run fstests generic/081 at 2022-02-=
-28 09:38:40
->=20
-> Thanks for providing the reproducer.
->=20
-> The reason is that the pending timer is deleted in blkg's release
-> handler, so the timer can still be live after request queue is released.
->=20
-> The patch of 'block: cancel all throttled bios in del_gendisk()' should j=
-ust
-> make it easier to trigger.
->=20
-> After patch of "block: move blkcg initialization/destroy into disk alloca=
-tion/
-> release handler" lands, the issue can be fixed easily by:
+Hi Benjamin,
 
-Hi,
+On Fri, Feb 25, 2022 at 05:10:05PM +0100, Benjamin Berg wrote:
+> Hi,
+> 
+> I am seeing memory.swap.current usages for the gnome-shell cgroup that
+> seem high if I compare them to smaps_rollup for the contained
+> processes. As I don't have an explanation, I thought I would ask here
+> (shared memory?).
+> 
+> What I am seeing is (see below, after a tail /dev/zero):
+> 
+> memory.swap.current:
+>   686MiB
+> "Swap" lines from /proc/$pid/smaps_rollup added up:
+>   435MiB
+> 
+> We should be moving launched applications out of the shell cgroup
+> before doing execve(), so I think we can rule out that as a possible
+> explanation.
+>
+> I am mostly curious as we currently do swap based kills using systemd-
+> oomd. So if swap accounting for GNOME Shell is high, then it makes it a
+> more likely target unfortunately.
 
-Thanks for locating this problem,
+Shared memory is one option. For example, when you access tmpfs files
+with open() read() write() close() instead of mmap().
 
-Perhaps this patch should wait for the problem to be solved.
+Another option is swapcache. When swap space is plentiful, the kernel
+makes it hold on to copies of pages even after they've been swapped
+back in. This way, the next time they need to get "swapped out", it
+doesn't require any IO, it can just drop the in-memory copy. From an
+smaps POV, swapped in pages are Rss, not Swap. But their swap copies
+still contribute to memory.swap.current, hence the discrepancy.
 
-Thanks,
-Kuai
->=20
-> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> index fa063c6c0338..e8d4be5e1de3 100644
-> --- a/block/blk-cgroup.c
-> +++ b/block/blk-cgroup.c
-> @@ -82,6 +82,7 @@ static void blkg_free(struct blkcg_gq *blkg)
->   		if (blkg->pd[i])
->   			blkcg_policy[i]->pd_free_fn(blkg->pd[i]);
->  =20
-> +	blk_put_queue(blkg->q);
->   	free_percpu(blkg->iostat_cpu);
->   	percpu_ref_exit(&blkg->refcnt);
->   	kfree(blkg);
-> @@ -297,9 +298,10 @@ static struct blkcg_gq *blkg_create(struct blkcg *bl=
-kcg,
->   	blkg->online =3D true;
->   	spin_unlock(&blkcg->lock);
->  =20
-> -	if (!ret)
-> +	if (!ret && blk_get_queue(q))
->   		return blkg;
-> -
-> +	else if (!ret)
-> +		ret =3D -ENODEV;
->   	/* @blkg failed fully initialized, use the usual release path */
->   	blkg_put(blkg);
->   	return ERR_PTR(ret);
->=20
->=20
-> Thanks,
-> Ming
->=20
-> .
->=20
+In terms of OOM killing, the kernel will stop keeping swap copies
+around when more than half of swap space is used. That should give
+plenty of headroom toward the OOM killing thresholds.
+
+If you want to poke around on your machine, here is a drgn script that
+tallies up the cache-only swap entries:
+
+---
+#!/usr/bin/drgn
+
+MAX_SWAPFILES=25
+SWAP_HAS_CACHE=0x40
+
+swapcache=0
+for i in range(MAX_SWAPFILES):
+    si = prog['swap_info'][i]
+    if si:
+        for offset in range(si.max.value_()):
+            if si.swap_map[offset].value_() == SWAP_HAS_CACHE:
+                swapcache += 1
+print("Cache-only swap space: %.2fM" % (swapcache * 4 / 1024.0))
