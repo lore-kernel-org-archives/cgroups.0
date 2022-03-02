@@ -1,54 +1,41 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Add a comment to cgroup_rstat_flush_locked().
-Date: Wed, 2 Mar 2022 05:47:16 -1000
-Message-ID: <Yh+RhFuPKGL+wpA0@slm.duckdns.org>
-References: <[PATCH0/2]CorrectlockingassumptiononPREEMPT_RT>
- <20220301122143.1521823-1-bigeasy@linutronix.de>
- <20220301122143.1521823-2-bigeasy@linutronix.de>
- <Yh8Q+wjgk6dkDphR@slm.duckdns.org>
- <Yh+DOK73hfVV5ThX@linutronix.de>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 1/2] mm/memcontrol: return 1 from cgroup.memory __setup()
+ handler
+Date: Wed, 2 Mar 2022 19:53:00 +0100
+Message-ID: <20220302185300.GA19699@blackbody.suse.cz>
+References: <20220222005811.10672-1-rdunlap@infradead.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=+TXEHf/Ffw9IRANu1j/U09cF+iyN1ryNSiaGmtROC/c=;
-        b=E9TP1aQWp7/Dq8MS1gRXWqpotSaejMD0Vl/XuhfYiXbfMlpPINIjlSdESYNCIXZsUH
-         iKLdYY+9gbkouxRibpbnlb/+rF4+t+FUMd4+3SR57L5gyqaWzlC6BfnDV0Krffq13wzI
-         q3UChBYZk4RTPQao8TEy6OdZWUFWwUck+ou32qXsoJ/6bDf4XADKkTSCEvM+xSUhLYup
-         sbApjAGmkm6UfcSLTDMfqsVToQ/zJMi1j5mAxsYFdRuMP+7Y2Li8GRp4qvsMRMIgDOOz
-         3zC9BacGl7B5rjFLqmhtRsFcN/cU92MBf4/awNcFN0hWrYoUJX/+isEqApPRtxLDOuIu
-         QiPw==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1646247182; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ETq8HlggMKKBEmSfyL4EONAS/CABlZuOFa+QsLe+Wf0=;
+        b=c7wRWHji8ylj9sHDg9NDHuzDIlBJ16wywrGqA7MV3iPFIDOmbyfk2fp5AfxGW2aRW4qEQO
+        Xl1GPMbT8oIlcw28I2y0Sjf2Vr1YKp8p2ytZDrEbez1r9eZUQArwjQkLuriRYD5lZIswfa
+        F52D6RLBu3hZ1GVDeyanclxKTsFDny4=
 Content-Disposition: inline
-In-Reply-To: <Yh+DOK73hfVV5ThX-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+In-Reply-To: <20220222005811.10672-1-rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+To: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Igor Zhbanov <i.zhbanov-4G3FwjhnV40EXkLx5dDeUA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Mar 02, 2022 at 03:46:16PM +0100, Sebastian Andrzej Siewior wrote:
-> Add a comment why spin_lock_irq() -> raw_spin_lock_irqsave() is needed.
-> 
-> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-> ---
-> On 2022-03-01 20:38:51 [-1000], Tejun Heo wrote:
-> > Hello,
-> 
-> Hello Tejun,
-> 
-> > Can you please add a comment explaining why irqsave is being used? As it
-> > stands, it just looks spurious.
-> 
-> Something like this?
+On Mon, Feb 21, 2022 at 04:58:11PM -0800, Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+> __setup() handlers should return 1 if the command line option is handled
+> and 0 if not (or maybe never return 0; it just pollutes init's environment).
 
-Yeah, looks good to me.
+Interesting.
 
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Instead of relying on this '.' quirk, just return 1 to indicate that
+> the boot option has been handled.
 
-Thanks.
+But your patch would return 1 even when no accepted value was passed,
+i.e. is the command line option considered handled in that case?
 
--- 
-tejun
+Did you want to return 1 only when the cgroup.memory= value is
+recognized?
+
+Thanks,
+Michal
