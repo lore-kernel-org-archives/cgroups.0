@@ -1,71 +1,107 @@
-From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 1/2] mm/memcontrol: return 1 from cgroup.memory __setup()
- handler
-Date: Thu, 3 Mar 2022 14:53:59 -0800
-Message-ID: <8c61e14d-493d-ecea-6bc5-076781e8e93d@infradead.org>
-References: <20220222005811.10672-1-rdunlap@infradead.org>
- <20220302185300.GA19699@blackbody.suse.cz>
- <9f8d4ddb-81ce-738a-d1f7-346ff9bf8ebd@infradead.org>
- <20220303101406.GE10867@blackbody.suse.cz>
- <5130da56-0f22-8212-0ea3-6ddb8a8f5455@infradead.org>
- <YiFCAFZwG//aeQP2@blackbook>
+From: syzbot <syzbot+16e3f2c77e7c5a0113f9@syzkaller.appspotmail.com>
+Subject: [syzbot] linux-next boot error: WARNING: suspicious RCU usage in cpuacct_charge
+Date: Fri, 04 Mar 2022 02:41:21 -0800
+Message-ID: <000000000000cf53e605d96227cd@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description;
-        bh=WhlL7h61341iIESeWTlGbuGhMPR1lyzTfnmPlu4dcLQ=; b=SCFq8+cO6okq1ihYq2bG0Y1KNL
-        AdmVymHxeldmywraXF2E/01Df0bz2MzSsQbpLLy4eD7iL2hltsD/4KXshR4FmgEp3vNhjyv9C94n+
-        r42JfSLPt8b6a+pAo7vx3UajGo1JZi9bpNegCTmSLaXHJJFzsOKU2PqJ5UPSjoYD6tN6gMQA6pXeY
-        Oh2sGCJ8qeT2mpBtzfjfINkRtttkHBXJjHs8xlRMLgQIdNqdqJBQkXpiq42qvedN4f9IDnGLLYFae
-        DlPxT5/h4R9ZA7udADgVmsGtNDtMBGKN84O9S9kKdGfHx+tPuIvBhjrMJ9PX4mMb0a5Lgof8bVfGX
-        ArPe3CUg==;
-Content-Language: en-US
-In-Reply-To: <YiFCAFZwG//aeQP2@blackbook>
+Return-path: <bpf-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Igor Zhbanov <i.zhbanov-4G3FwjhnV40EXkLx5dDeUA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: andrii@kernel.org, ast@kernel.org, bpf@vger.kernel.org, brauner@kernel.org, cgroups@vger.kernel.org, daniel@iogearbox.net, hannes@cmpxchg.org, john.fastabend@gmail.com, kafai@fb.com, kpsingh@kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org, lizefan.x@bytedance.com, netdev@vger.kernel.org, sfr@canb.auug.org.au, songliubraving@fb.com, syzkaller-bugs@googlegroups.com, tj@kernel.org, yhs@fb.com
+
+Hello,
+
+syzbot found the following issue on:
+
+HEAD commit:    6d284ba80c0c Add linux-next specific files for 20220304
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=15c283d1700000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=26714bde6b3ad08b
+dashboard link: https://syzkaller.appspot.com/bug?extid=16e3f2c77e7c5a0113f9
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+16e3f2c77e7c5a0113f9@syzkaller.appspotmail.com
 
 
+=============================
+WARNING: suspicious RCU usage
+5.17.0-rc6-next-20220304-syzkaller #0 Not tainted
+-----------------------------
+include/linux/cgroup.h:494 suspicious rcu_dereference_check() usage!
 
-On 3/3/22 14:32, Michal Koutn=C3=BD wrote:
-> On Thu, Mar 03, 2022 at 01:53:03PM -0800, Randy Dunlap <rdunlap-wEGCiKHe2=
-LqWVfeAwA7xHQ@public.gmane.org> wrote:
->>> Isn't mere presence of the handler sufficient to filter those out? [1]
->>
->> What is [1] here?
->=20
-> Please ignore, too much editing on my side.
->=20
->> I don't know of any case where "foo=3D2" should be passed to init if
->> there is a setup function for "foo=3D" defined.
->=20
-> Good. I was asking because of the following semantics:
-> - absent handler -- pass to init,
+other info that might help us debug this:
 
-Ack: if the handler code is not built, it is an Unknown boot option
-and is passed to init.
 
-> - returns 0 -- filter out,
-> - returns negative -- filter out, print message.
+rcu_scheduler_active = 1, debug_locks = 1
+2 locks held by kthreadd/2:
+ #0: ffff8881401726e0 (&p->pi_lock){....}-{2:2}, at: task_rq_lock+0x63/0x360 kernel/sched/core.c:578
+ #1: ffff8880b9c39f98 (&rq->__lock){-...}-{2:2}, at: raw_spin_rq_lock_nested+0x2b/0x120 kernel/sched/core.c:478
 
-Currently setup functions should return 1 (or any non-zero value)
-to indicate "handled" or should return 0 to indicate "not handled".
+stack backtrace:
+CPU: 0 PID: 2 Comm: kthreadd Not tainted 5.17.0-rc6-next-20220304-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0xcd/0x134 lib/dump_stack.c:106
+ task_css include/linux/cgroup.h:494 [inline]
+ task_ca kernel/sched/cpuacct.c:40 [inline]
+ cpuacct_charge+0x2af/0x3c0 kernel/sched/cpuacct.c:342
+ cgroup_account_cputime include/linux/cgroup.h:792 [inline]
+ update_curr+0x37b/0x830 kernel/sched/fair.c:907
+ dequeue_entity+0x23/0xfd0 kernel/sched/fair.c:4422
+ dequeue_task_fair+0x238/0xea0 kernel/sched/fair.c:5771
+ dequeue_task kernel/sched/core.c:2019 [inline]
+ __do_set_cpus_allowed+0x186/0x960 kernel/sched/core.c:2508
+ __set_cpus_allowed_ptr_locked+0x2ba/0x4e0 kernel/sched/core.c:2841
+ __set_cpus_allowed_ptr kernel/sched/core.c:2874 [inline]
+ set_cpus_allowed_ptr+0x78/0xa0 kernel/sched/core.c:2879
+ kthreadd+0x44/0x750 kernel/kthread.c:724
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:295
+ </TASK>
 
-Andrew has a patch in mmotm: include/linux/init.h so that the comment
-before __setup() says:
+=============================
+WARNING: suspicious RCU usage
+5.17.0-rc6-next-20220304-syzkaller #0 Not tainted
+-----------------------------
+include/linux/cgroup.h:481 suspicious rcu_dereference_check() usage!
 
-/*
- * NOTE: __setup functions return values:
- * @fn returns 1 (or non-zero) if the option argument is "handled"
- * and returns 0 if the option argument is "not handled".
- */
+other info that might help us debug this:
 
->>> (Richer reporting or -EINVAL is by my understanding now a different
->>> problem.)
 
---=20
-~Randy
+rcu_scheduler_active = 1, debug_locks = 1
+2 locks held by kthreadd/2:
+ #0: ffff8881401726e0 (&p->pi_lock){....}-{2:2}, at: task_rq_lock+0x63/0x360 kernel/sched/core.c:578
+ #1: ffff8880b9c39f98 (&rq->__lock){-...}-{2:2}, at: raw_spin_rq_lock_nested+0x2b/0x120 kernel/sched/core.c:478
+
+stack backtrace:
+CPU: 0 PID: 2 Comm: kthreadd Not tainted 5.17.0-rc6-next-20220304-syzkaller #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0xcd/0x134 lib/dump_stack.c:106
+ task_css_set include/linux/cgroup.h:481 [inline]
+ task_dfl_cgroup include/linux/cgroup.h:550 [inline]
+ cgroup_account_cputime include/linux/cgroup.h:794 [inline]
+ update_curr+0x671/0x830 kernel/sched/fair.c:907
+ dequeue_entity+0x23/0xfd0 kernel/sched/fair.c:4422
+ dequeue_task_fair+0x238/0xea0 kernel/sched/fair.c:5771
+ dequeue_task kernel/sched/core.c:2019 [inline]
+ __do_set_cpus_allowed+0x186/0x960 kernel/sched/core.c:2508
+ __set_cpus_allowed_ptr_locked+0x2ba/0x4e0 kernel/sched/core.c:2841
+ __set_cpus_allowed_ptr kernel/sched/core.c:2874 [inline]
+ set_cpus_allowed_ptr+0x78/0xa0 kernel/sched/core.c:2879
+ kthreadd+0x44/0x750 kernel/kthread.c:724
+ ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:295
+ </TASK>
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
