@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next 05/11] block, bfq: count root group into 'num_groups_with_pending_reqs'
-Date: Sat, 5 Mar 2022 17:11:59 +0800
-Message-ID: <20220305091205.4188398-6-yukuai3@huawei.com>
+Subject: [PATCH -next 07/11] block, bfq: only count parent bfqg when bfqq is activated
+Date: Sat, 5 Mar 2022 17:12:01 +0800
+Message-ID: <20220305091205.4188398-8-yukuai3@huawei.com>
 References: <20220305091205.4188398-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
@@ -12,88 +12,49 @@ Content-Type: text/plain; charset="us-ascii"
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Root group is not counted into 'num_groups_with_pending_reqs' because
-'entity->parent' is set to NULL for child entities, thus
-for_each_entity() can't access root group.
+Currently, bfqg will be counted into 'num_groups_with_pending_reqs'
+once it's child cgroup is activated, even if the group doesn't have
+any pending requests itself.
 
-This patch set root_group's entity to 'entity->parent' for child
-entities, this way root_group will be counted because for_each_entity()
-can access root_group in bfq_activate_requeue_entity(),
+For example, if we issue sync io in cgroup /root/c1/c2, root, c1 and c2
+will all be counted into 'num_groups_with_pending_reqs', which makes it
+impossible to handle requests concurrently.
+
+This patch doesn't count the group that doesn't have any pending
+requests while it's child group has pending requests.
 
 Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/bfq-cgroup.c  | 6 +++---
- block/bfq-iosched.h | 3 ++-
- block/bfq-wf2q.c    | 5 +++++
- 3 files changed, 10 insertions(+), 4 deletions(-)
+ block/bfq-wf2q.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 420eda2589c0..6cd65b5e790d 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -436,7 +436,7 @@ void bfq_init_entity(struct bfq_entity *entity, struct bfq_group *bfqg)
- 		 */
- 		bfqg_and_blkg_get(bfqg);
- 	}
--	entity->parent = bfqg->my_entity; /* NULL for root group */
-+	entity->parent = &bfqg->entity;
- 	entity->sched_data = &bfqg->sched_data;
- }
- 
-@@ -581,7 +581,7 @@ static void bfq_group_set_parent(struct bfq_group *bfqg,
- 	struct bfq_entity *entity;
- 
- 	entity = &bfqg->entity;
--	entity->parent = parent->my_entity;
-+	entity->parent = &parent->entity;
- 	entity->sched_data = &parent->sched_data;
- }
- 
-@@ -688,7 +688,7 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 	else if (bfqd->last_bfqq_created == bfqq)
- 		bfqd->last_bfqq_created = NULL;
- 
--	entity->parent = bfqg->my_entity;
-+	entity->parent = &bfqg->entity;
- 	entity->sched_data = &bfqg->sched_data;
- 	/* pin down bfqg and its associated blkg  */
- 	bfqg_and_blkg_get(bfqg);
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index ddd8eff5c272..4530ab8b42ac 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -1024,13 +1024,14 @@ extern struct blkcg_policy blkcg_policy_bfq;
- /* - interface of the internal hierarchical B-WF2Q+ scheduler - */
- 
- #ifdef CONFIG_BFQ_GROUP_IOSCHED
--/* stop at one of the child entities of the root group */
-+/* stop at root group */
- #define for_each_entity(entity)	\
- 	for (; entity ; entity = entity->parent)
- 
- #define is_root_entity(entity) \
- 	(entity->sched_data == NULL)
- 
-+/* stop at one of the child entities of the root group */
- #define for_each_entity_not_root(entity) \
- 	for (; entity && !is_root_entity(entity); entity = entity->parent)
- 
 diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index 17f1d2c5b8dc..138a2950b841 100644
+index 138a2950b841..db066ae35a71 100644
 --- a/block/bfq-wf2q.c
 +++ b/block/bfq-wf2q.c
-@@ -1125,6 +1125,11 @@ static void bfq_activate_requeue_entity(struct bfq_entity *entity,
+@@ -1123,13 +1123,7 @@ static void bfq_activate_requeue_entity(struct bfq_entity *entity,
+ 					bool non_blocking_wait_rq,
+ 					bool requeue, bool expiration)
  {
- 	for_each_entity(entity) {
- 		bfq_update_groups_with_pending_reqs(entity);
-+
-+		/* root group is not in service tree */
-+		if (is_root_entity(entity))
-+			break;
-+
+-	for_each_entity(entity) {
+-		bfq_update_groups_with_pending_reqs(entity);
+-
+-		/* root group is not in service tree */
+-		if (is_root_entity(entity))
+-			break;
+-
++	for_each_entity_not_root(entity) {
  		__bfq_activate_requeue_entity(entity, non_blocking_wait_rq);
  
  		if (!bfq_update_next_in_service(entity->sched_data, entity,
+@@ -1640,6 +1634,7 @@ void bfq_activate_bfqq(struct bfq_data *bfqd, struct bfq_queue *bfqq)
+ {
+ 	struct bfq_entity *entity = &bfqq->entity;
+ 
++	bfq_update_groups_with_pending_reqs(bfqq->entity.parent);
+ 	bfq_activate_requeue_entity(entity, bfq_bfqq_non_blocking_wait_rq(bfqq),
+ 				    false, false);
+ 	bfq_clear_bfqq_non_blocking_wait_rq(bfqq);
 -- 
 2.31.1
 
