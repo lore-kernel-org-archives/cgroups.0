@@ -1,55 +1,99 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH -next 06/11] block, bfq: do not idle if only one cgroup is activated
-Date: Sat, 5 Mar 2022 17:12:00 +0800
-Message-ID: <20220305091205.4188398-7-yukuai3@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH -next 05/11] block, bfq: count root group into 'num_groups_with_pending_reqs'
+Date: Sat, 5 Mar 2022 17:11:59 +0800
+Message-ID: <20220305091205.4188398-6-yukuai3@huawei.com>
 References: <20220305091205.4188398-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20220305091205.4188398-1-yukuai3@huawei.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20220305091205.4188398-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org, jack@suse.cz
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Now that root group is counted into 'num_groups_with_pending_reqs',
-'num_groups_with_pending_reqs > 0' is always true in
-bfq_asymmetric_scenario().
+Root group is not counted into 'num_groups_with_pending_reqs' because
+'entity->parent' is set to NULL for child entities, thus
+for_each_entity() can't access root group.
 
-Thus change the condition to 'num_groups_with_pending_reqs > 1', so
-it's consistent without counting root group.
+This patch set root_group's entity to 'entity->parent' for child
+entities, this way root_group will be counted because for_each_entity()
+can access root_group in bfq_activate_requeue_entity(),
 
-On the other hand, with the following patches to only count groups(not
-ancestors) with pending requests, sync io can be handled concurrently
-if only one group has pending requests.
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/bfq-iosched.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ block/bfq-cgroup.c  | 6 +++---
+ block/bfq-iosched.h | 3 ++-
+ block/bfq-wf2q.c    | 5 +++++
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 3bc7a7686aad..07027dc9dc4c 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -812,7 +812,7 @@ bfq_pos_tree_add_move(struct bfq_data *bfqd, struct bfq_queue *bfqq)
-  * much easier to maintain the needed state:
-  * 1) all active queues have the same weight,
-  * 2) all active queues belong to the same I/O-priority class,
-- * 3) there are no active groups.
-+ * 3) there are one active groups at most.
-  * In particular, the last condition is always true if hierarchical
-  * support or the cgroups interface are not enabled, thus no state
-  * needs to be maintained in this case.
-@@ -844,7 +844,7 @@ static bool bfq_asymmetric_scenario(struct bfq_data *bfqd,
- 
- 	return varied_queue_weights || multiple_classes_busy
- #ifdef CONFIG_BFQ_GROUP_IOSCHED
--	       || bfqd->num_groups_with_pending_reqs > 0
-+	       || bfqd->num_groups_with_pending_reqs > 1
- #endif
- 		;
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index 420eda2589c0..6cd65b5e790d 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -436,7 +436,7 @@ void bfq_init_entity(struct bfq_entity *entity, struct bfq_group *bfqg)
+ 		 */
+ 		bfqg_and_blkg_get(bfqg);
+ 	}
+-	entity->parent = bfqg->my_entity; /* NULL for root group */
++	entity->parent = &bfqg->entity;
+ 	entity->sched_data = &bfqg->sched_data;
  }
+ 
+@@ -581,7 +581,7 @@ static void bfq_group_set_parent(struct bfq_group *bfqg,
+ 	struct bfq_entity *entity;
+ 
+ 	entity = &bfqg->entity;
+-	entity->parent = parent->my_entity;
++	entity->parent = &parent->entity;
+ 	entity->sched_data = &parent->sched_data;
+ }
+ 
+@@ -688,7 +688,7 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+ 	else if (bfqd->last_bfqq_created == bfqq)
+ 		bfqd->last_bfqq_created = NULL;
+ 
+-	entity->parent = bfqg->my_entity;
++	entity->parent = &bfqg->entity;
+ 	entity->sched_data = &bfqg->sched_data;
+ 	/* pin down bfqg and its associated blkg  */
+ 	bfqg_and_blkg_get(bfqg);
+diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+index ddd8eff5c272..4530ab8b42ac 100644
+--- a/block/bfq-iosched.h
++++ b/block/bfq-iosched.h
+@@ -1024,13 +1024,14 @@ extern struct blkcg_policy blkcg_policy_bfq;
+ /* - interface of the internal hierarchical B-WF2Q+ scheduler - */
+ 
+ #ifdef CONFIG_BFQ_GROUP_IOSCHED
+-/* stop at one of the child entities of the root group */
++/* stop at root group */
+ #define for_each_entity(entity)	\
+ 	for (; entity ; entity = entity->parent)
+ 
+ #define is_root_entity(entity) \
+ 	(entity->sched_data == NULL)
+ 
++/* stop at one of the child entities of the root group */
+ #define for_each_entity_not_root(entity) \
+ 	for (; entity && !is_root_entity(entity); entity = entity->parent)
+ 
+diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+index 17f1d2c5b8dc..138a2950b841 100644
+--- a/block/bfq-wf2q.c
++++ b/block/bfq-wf2q.c
+@@ -1125,6 +1125,11 @@ static void bfq_activate_requeue_entity(struct bfq_entity *entity,
+ {
+ 	for_each_entity(entity) {
+ 		bfq_update_groups_with_pending_reqs(entity);
++
++		/* root group is not in service tree */
++		if (is_root_entity(entity))
++			break;
++
+ 		__bfq_activate_requeue_entity(entity, non_blocking_wait_rq);
+ 
+ 		if (!bfq_update_next_in_service(entity->sched_data, entity,
 -- 
 2.31.1
 
