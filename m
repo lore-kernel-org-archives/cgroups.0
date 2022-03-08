@@ -1,82 +1,44 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 2/3] mm: use vmalloc_array and vcalloc for array
- allocations
-Date: Tue, 8 Mar 2022 14:49:01 +0100
-Message-ID: <YidezSPVZBCQcGJ4@dhcp22.suse.cz>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 1/3] mm: vmalloc: introduce array allocation functions
+Date: Tue, 8 Mar 2022 14:55:39 +0100
+Message-ID: <77a34051-2672-88cf-99dd-60f5acfb905e@redhat.com>
 References: <20220308105918.615575-1-pbonzini@redhat.com>
- <20220308105918.615575-3-pbonzini@redhat.com>
+ <20220308105918.615575-2-pbonzini@redhat.com>
+ <Yidefp4G/Hk2Twfy@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1646747341; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=SyTgM5F6+9CT4oBrYUK4bC/XMWpEt2BZNDE3I1Sk7Ys=;
-        b=SOLJf8KzF3lpV2Z1nK2RtJ/mCHih8E/LOT3+NtV9WjuFZrbvkvNGfz9md9KsmuMAmYb4xl
-        mrgfppZj4eTymdy2LnRjU7ToP7z5QKvHD+Fb5G9Y3hGjHgDOXnP7/F9d/3dhoWrdQoV6gE
-        PQ9kK/Trd67H0yxar7509l2hpkGD6SA=
-Content-Disposition: inline
-In-Reply-To: <20220308105918.615575-3-pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michael Ellerman <mpe-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1646747743;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=1IBDuOS2fA0Ut8e4IiZznBpFVrC7yMpgLFek2NZWFfs=;
+        b=T9jdB2dl3v0/ZLlYNeb/oV5yazRPOl3B0PMh7i0TVzuoN7zaGGMzmOc9so1ojgD0wqGcD+
+        73HiKHAH3CxBWesrCftjhqI6Wv5YuDHTTBFMd8aUBltsxyeQZ9DTiwLUM+rgvpkVKqrOlv
+        DQc7v2LxRtC0qDkT72WjrIYEU9Dt6VY=
+Content-Language: en-US
+In-Reply-To: <Yidefp4G/Hk2Twfy@dhcp22.suse.cz>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Michal Hocko <mhocko@suse.com>
+Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>, Andrew Morton <akpm@linux-foundation.org>, Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, stable@vger.kernel.org
 
-On Tue 08-03-22 05:59:17, Paolo Bonzini wrote:
-> Instead of using array_size or just a multiply, use a function that
-> takes care of both the multiplication and the overflow checks.
+On 3/8/22 14:47, Michal Hocko wrote:
+> Seems useful
+> Acked-by: Michal Hocko<mhocko@suse.com>
 > 
-> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-> Signed-off-by: Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Is there any reason you haven't used __alloc_size(1, 2) annotation?
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+It's enough to have them in the header:
 
-The resulting code is easier to read indeed.
+>> +extern void *__vmalloc_array(size_t n, size_t size, gfp_t flags) __alloc_size(1, 2);
+>> +extern void *vmalloc_array(size_t n, size_t size) __alloc_size(1, 2);
+>> +extern void *__vcalloc(size_t n, size_t size, gfp_t flags) __alloc_size(1, 2);
+>> +extern void *vcalloc(size_t n, size_t size) __alloc_size(1, 2);
 
-> ---
->  mm/percpu-stats.c | 2 +-
->  mm/swap_cgroup.c  | 4 +---
->  2 files changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/mm/percpu-stats.c b/mm/percpu-stats.c
-> index c6bd092ff7a3..e71651cda2de 100644
-> --- a/mm/percpu-stats.c
-> +++ b/mm/percpu-stats.c
-> @@ -144,7 +144,7 @@ static int percpu_stats_show(struct seq_file *m, void *v)
->  	spin_unlock_irq(&pcpu_lock);
->  
->  	/* there can be at most this many free and allocated fragments */
-> -	buffer = vmalloc(array_size(sizeof(int), (2 * max_nr_alloc + 1)));
-> +	buffer = vmalloc_array(2 * max_nr_alloc + 1, sizeof(int));
->  	if (!buffer)
->  		return -ENOMEM;
->  
-> diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
-> index 7f34343c075a..5a9442979a18 100644
-> --- a/mm/swap_cgroup.c
-> +++ b/mm/swap_cgroup.c
-> @@ -167,14 +167,12 @@ unsigned short lookup_swap_cgroup_id(swp_entry_t ent)
->  int swap_cgroup_swapon(int type, unsigned long max_pages)
->  {
->  	void *array;
-> -	unsigned long array_size;
->  	unsigned long length;
->  	struct swap_cgroup_ctrl *ctrl;
->  
->  	length = DIV_ROUND_UP(max_pages, SC_PER_PAGE);
-> -	array_size = length * sizeof(void *);
->  
-> -	array = vzalloc(array_size);
-> +	array = vcalloc(length, sizeof(void *));
->  	if (!array)
->  		goto nomem;
->  
-> -- 
-> 2.31.1
-> 
-> 
+Thanks for the quick review!
 
--- 
-Michal Hocko
-SUSE Labs
+Paolo
+
