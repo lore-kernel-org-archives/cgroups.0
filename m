@@ -1,45 +1,40 @@
-From: David Hildenbrand <david@redhat.com>
-Subject: Re: [PATCH 3/3] KVM: use vcalloc/__vcalloc for very large allocations
-Date: Tue, 8 Mar 2022 15:25:11 +0100
-Message-ID: <d170ca91-4913-900c-1d2b-b8fc63076124@redhat.com>
+From: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/3] mm: vmalloc: introduce array allocation functions
+Date: Tue, 8 Mar 2022 15:26:36 +0100
+Message-ID: <1338e4bf-015d-3323-1b8e-3a9e80d254a1@redhat.com>
 References: <20220308105918.615575-1-pbonzini@redhat.com>
- <20220308105918.615575-4-pbonzini@redhat.com>
+ <20220308105918.615575-2-pbonzini@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1646749515;
+        s=mimecast20190719; t=1646749600;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=kumltRP5xoYTs9zCrvASai08H9k31B5+7rHSh9VugPY=;
-        b=aN7D5xEulCZO4qN5dGw0dpoS6gsjmzUc/Uu5dRThH8THuJ03gvhVJ5t2oCX9AT1rFAzJbz
-        VIzI9nfc13VS5F1Wb6vXSMroz0Wc+YKQBzpw6p3UYNPuTKF6SehruKMB5Ows1Cn5j2p1U7
-        tTqCE2aO47szaAdMARSxBX4OKHTJHro=
+        bh=3cfnVlv/RlDuTe6slefgIRueT6ZidGHZwyrNWbarjPs=;
+        b=b3IQ8a7iD+nhT+YNAZooYl6eCXcuutjdBfpydxw8ECy+6VRvUGqAUuAX0BSnpoK1QYID5I
+        bN/OTuZzNu3t5opgSq9D7tW96Mme452A5nBGGFktkpa4MtUQBuTnDIxmZvB71+lOW2uR2m
+        v9GrxpOaVgJIftsPdqSEaJHrhzREQoU=
 Content-Language: en-US
-In-Reply-To: <20220308105918.615575-4-pbonzini@redhat.com>
+In-Reply-To: <20220308105918.615575-2-pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, kvm@vger.kernel.org
-Cc: Michael Ellerman <mpe@ellerman.id.au>, Andrew Morton <akpm@linux-foundation.org>, Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, stable@vger.kernel.org
+To: Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Michael Ellerman <mpe-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 On 08.03.22 11:59, Paolo Bonzini wrote:
-> Allocations whose size is related to the memslot size can be arbitrarily
-> large.  Do not use kvzalloc/kvcalloc, as those are limited to "not crazy"
-> sizes that fit in 32 bits.  Now that it is available, they can use either
-> vcalloc or __vcalloc, the latter if accounting is required.
+> Linux has dozens of occurrences of vmalloc(array_size()) and
+> vzalloc(array_size()).  Allow to simplify the code by providing
+> vmalloc_array and vcalloc, as well as the underscored variants that let
+> the caller specify the GFP flags.
 > 
-> Cc: stable@vger.kernel.org
-> Cc: kvm@vger.kernel.org
-> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+> Signed-off-by: Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Fixes: 7661809d493b ("mm: don't allow oversized kvmalloc() calls")
-
-?
-
-Reviewed-by: David Hildenbrand <david@redhat.com>
-
+Reviewed-by: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
 -- 
 Thanks,
