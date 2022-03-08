@@ -1,45 +1,71 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 1/3] mm: vmalloc: introduce array allocation functions
-Date: Tue, 8 Mar 2022 16:26:26 +0100
-Message-ID: <Yid1orgE/Yf56WSV@dhcp22.suse.cz>
+From: Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/3] mm: use vmalloc_array and vcalloc for array
+ allocations
+Date: Tue, 8 Mar 2022 11:13:44 -0500
+Message-ID: <YieAuCGMRrJjEHMR@fedora>
 References: <20220308105918.615575-1-pbonzini@redhat.com>
- <20220308105918.615575-2-pbonzini@redhat.com>
- <Yidefp4G/Hk2Twfy@dhcp22.suse.cz>
- <77a34051-2672-88cf-99dd-60f5acfb905e@redhat.com>
+ <20220308105918.615575-3-pbonzini@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1646753188; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=m2m+Ogcvgk7zAck8lJL9y5rOuyf0bq56RUWhNvKb8gE=;
-        b=OFDOb0EX8vyJa+0LJDX7Xt+dj6BWiRqgtFSXsPFEiYkQ6sdEw/loo4IXxjnn4hrfyZx4nu
-        xtvYdMNA0TmRGdgQCsrBvDWK+/YB3GNo5U1S690uSfCWm1EOUwu+z/F/Fl1e8LfoiK7zg1
-        decbmKM6dxZOdt3C97MlG/yD3bCKPZY=
 Content-Disposition: inline
-In-Reply-To: <77a34051-2672-88cf-99dd-60f5acfb905e-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20220308105918.615575-3-pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michael Ellerman <mpe-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michael Ellerman <mpe-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 08-03-22 14:55:39, Paolo Bonzini wrote:
-> On 3/8/22 14:47, Michal Hocko wrote:
-> > Seems useful
-> > Acked-by: Michal Hocko<mhocko-IBi9RG/b67k@public.gmane.org>
-> > 
-> > Is there any reason you haven't used __alloc_size(1, 2) annotation?
-> 
-> It's enough to have them in the header:
-> 
-> > > +extern void *__vmalloc_array(size_t n, size_t size, gfp_t flags) __alloc_size(1, 2);
-> > > +extern void *vmalloc_array(size_t n, size_t size) __alloc_size(1, 2);
-> > > +extern void *__vcalloc(size_t n, size_t size, gfp_t flags) __alloc_size(1, 2);
-> > > +extern void *vcalloc(size_t n, size_t size) __alloc_size(1, 2);
+Hello,
 
-My bad, I have expected __alloc_size before the function name and simply
-haven't noticed it at the end.
--- 
-Michal Hocko
-SUSE Labs
+On Tue, Mar 08, 2022 at 05:59:17AM -0500, Paolo Bonzini wrote:
+> Instead of using array_size or just a multiply, use a function that
+> takes care of both the multiplication and the overflow checks.
+> 
+> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+> Signed-off-by: Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>  mm/percpu-stats.c | 2 +-
+>  mm/swap_cgroup.c  | 4 +---
+>  2 files changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/mm/percpu-stats.c b/mm/percpu-stats.c
+> index c6bd092ff7a3..e71651cda2de 100644
+> --- a/mm/percpu-stats.c
+> +++ b/mm/percpu-stats.c
+> @@ -144,7 +144,7 @@ static int percpu_stats_show(struct seq_file *m, void *v)
+>  	spin_unlock_irq(&pcpu_lock);
+>  
+>  	/* there can be at most this many free and allocated fragments */
+> -	buffer = vmalloc(array_size(sizeof(int), (2 * max_nr_alloc + 1)));
+> +	buffer = vmalloc_array(2 * max_nr_alloc + 1, sizeof(int));
+>  	if (!buffer)
+>  		return -ENOMEM;
+>  
+> diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
+> index 7f34343c075a..5a9442979a18 100644
+> --- a/mm/swap_cgroup.c
+> +++ b/mm/swap_cgroup.c
+> @@ -167,14 +167,12 @@ unsigned short lookup_swap_cgroup_id(swp_entry_t ent)
+>  int swap_cgroup_swapon(int type, unsigned long max_pages)
+>  {
+>  	void *array;
+> -	unsigned long array_size;
+>  	unsigned long length;
+>  	struct swap_cgroup_ctrl *ctrl;
+>  
+>  	length = DIV_ROUND_UP(max_pages, SC_PER_PAGE);
+> -	array_size = length * sizeof(void *);
+>  
+> -	array = vzalloc(array_size);
+> +	array = vcalloc(length, sizeof(void *));
+>  	if (!array)
+>  		goto nomem;
+>  
+> -- 
+> 2.31.1
+> 
+
+Acked-by: Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+
+Thanks,
+Dennis
