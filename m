@@ -1,60 +1,71 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 3/3] mm/memcg: add next_mz back if not reclaimed yet
-Date: Tue, 8 Mar 2022 09:17:58 +0100
-Message-ID: <YicRNofU+L1cKIQp@dhcp22.suse.cz>
-References: <20220308012047.26638-1-richard.weiyang@gmail.com>
- <20220308012047.26638-3-richard.weiyang@gmail.com>
+From: Tianchen Ding <dtcccc-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [RFC PATCH v2 0/4] Introduce group balancer
+Date: Tue,  8 Mar 2022 17:26:25 +0800
+Message-ID: <20220308092629.40431-1-dtcccc@linux.alibaba.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1646727481; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=lVmEixqpuJvqpe4IHKN+rIuyorY+AJrE8NHUQyQr4Js=;
-        b=ao5dkugfz7BsUWyZQdmyUiUpvjVl+MyShWu+tmWxVWcOIksv0OiGkegrzjfru2LSNV7wmD
-        A0iTPnr5VU00LshqEMNkjtOn/mkwjbjWGsIhJnMXUpjgcnG4tx/dBbIdFNBxflqUX570dw
-        CP76Zz+Nr4VW1Rg7dcSuU01nTducrYc=
-Content-Disposition: inline
-In-Reply-To: <20220308012047.26638-3-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tianchen Ding <dtcccc-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Michael Wang <yun.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Cruz Zhao <cruzzhao-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Masahiro Yamada <masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Nathan Chancellor <nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vlastimil Babka <vbabka@suse.>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 08-03-22 01:20:47, Wei Yang wrote:
-> next_mz is removed from rb_tree, let's add it back if no reclaim has
-> been tried.
+Modern platform are growing fast on CPU numbers. To achieve better
+utility of CPU resource, multiple apps are starting to sharing the CPUs.
 
-Could you elaborate more why we need/want this?
+What we need is a way to ease confliction in share mode,
+make groups as exclusive as possible, to gain both performance
+and resource efficiency.
 
-> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
->  mm/memcontrol.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 344a7e891bc5..e803ff02aae2 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3493,8 +3493,13 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
->  			loop > MEM_CGROUP_MAX_SOFT_LIMIT_RECLAIM_LOOPS))
->  			break;
->  	} while (!nr_reclaimed);
-> -	if (next_mz)
-> +	if (next_mz) {
-> +		spin_lock_irq(&mctz->lock);
-> +		excess = soft_limit_excess(next_mz->memcg);
-> +		__mem_cgroup_insert_exceeded(next_mz, mctz, excess);
-> +		spin_unlock_irq(&mctz->lock);
->  		css_put(&next_mz->memcg->css);
-> +	}
->  	return nr_reclaimed;
->  }
->  
-> -- 
-> 2.33.1
+The main idea of group balancer is to fulfill this requirement
+by balancing groups of tasks among groups of CPUs, consider this
+as a dynamic demi-exclusive mode. Task trigger work to settle it's
+group into a proper partition (minimum predicted load), then try
+migrate itself into it. To gradually settle groups into the most
+exclusively partition.
+
+GB can be seen as an optimize policy based on load balance,
+it obeys the main idea of load balance and makes adjustment
+based on that.
+
+Our test on ARM64 platform with 128 CPUs shows that,
+throughput of sysbench memory is improved about 25%,
+and redis-benchmark is improved up to about 10%.
+
+See each patch for detail:
+The 1st patch introduces infrastructure.
+The 2nd patch introduces detail about partition info.
+The 3rd patch is the main part of group balancer.
+The 4th patch is about stats.
+
+v2:
+Put partition info and period settings to cpuset subsys of cgroup_v2.
+
+v1: https://lore.kernel.org/all/98f41efd-74b2-198a-839c-51b785b748a6-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org/
+
+Michael Wang (1):
+  sched: Introduce group balancer
+
+Tianchen Ding (3):
+  sched, cpuset: Introduce infrastructure of group balancer
+  cpuset: Handle input of partition info for group balancer
+  cpuset, gb: Add stat for group balancer
+
+ include/linux/cpuset.h   |   5 +
+ include/linux/sched.h    |   5 +
+ include/linux/sched/gb.h |  70 ++++++
+ init/Kconfig             |  12 +
+ kernel/cgroup/cpuset.c   | 405 +++++++++++++++++++++++++++++++-
+ kernel/sched/Makefile    |   1 +
+ kernel/sched/core.c      |   5 +
+ kernel/sched/debug.c     |  10 +-
+ kernel/sched/fair.c      |  26 ++-
+ kernel/sched/gb.c        | 487 +++++++++++++++++++++++++++++++++++++++
+ kernel/sched/sched.h     |  14 ++
+ 11 files changed, 1037 insertions(+), 3 deletions(-)
+ create mode 100644 include/linux/sched/gb.h
+ create mode 100644 kernel/sched/gb.c
 
 -- 
-Michal Hocko
-SUSE Labs
+2.27.0
+
