@@ -1,44 +1,48 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 1/3] mm: vmalloc: introduce array allocation functions
-Date: Tue, 8 Mar 2022 14:55:39 +0100
-Message-ID: <77a34051-2672-88cf-99dd-60f5acfb905e@redhat.com>
+From: David Hildenbrand <david@redhat.com>
+Subject: Re: [PATCH 3/3] KVM: use vcalloc/__vcalloc for very large allocations
+Date: Tue, 8 Mar 2022 15:25:11 +0100
+Message-ID: <d170ca91-4913-900c-1d2b-b8fc63076124@redhat.com>
 References: <20220308105918.615575-1-pbonzini@redhat.com>
- <20220308105918.615575-2-pbonzini@redhat.com>
- <Yidefp4G/Hk2Twfy@dhcp22.suse.cz>
+ <20220308105918.615575-4-pbonzini@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1646747743;
+        s=mimecast20190719; t=1646749515;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=1IBDuOS2fA0Ut8e4IiZznBpFVrC7yMpgLFek2NZWFfs=;
-        b=T9jdB2dl3v0/ZLlYNeb/oV5yazRPOl3B0PMh7i0TVzuoN7zaGGMzmOc9so1ojgD0wqGcD+
-        73HiKHAH3CxBWesrCftjhqI6Wv5YuDHTTBFMd8aUBltsxyeQZ9DTiwLUM+rgvpkVKqrOlv
-        DQc7v2LxRtC0qDkT72WjrIYEU9Dt6VY=
+        bh=kumltRP5xoYTs9zCrvASai08H9k31B5+7rHSh9VugPY=;
+        b=aN7D5xEulCZO4qN5dGw0dpoS6gsjmzUc/Uu5dRThH8THuJ03gvhVJ5t2oCX9AT1rFAzJbz
+        VIzI9nfc13VS5F1Wb6vXSMroz0Wc+YKQBzpw6p3UYNPuTKF6SehruKMB5Ows1Cn5j2p1U7
+        tTqCE2aO47szaAdMARSxBX4OKHTJHro=
 Content-Language: en-US
-In-Reply-To: <Yidefp4G/Hk2Twfy@dhcp22.suse.cz>
+In-Reply-To: <20220308105918.615575-4-pbonzini@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Michal Hocko <mhocko@suse.com>
-Cc: linux-kernel@vger.kernel.org, kvm@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>, Andrew Morton <akpm@linux-foundation.org>, Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, kvm@vger.kernel.org
+Cc: Michael Ellerman <mpe@ellerman.id.au>, Andrew Morton <akpm@linux-foundation.org>, Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, stable@vger.kernel.org
 
-On 3/8/22 14:47, Michal Hocko wrote:
-> Seems useful
-> Acked-by: Michal Hocko<mhocko@suse.com>
+On 08.03.22 11:59, Paolo Bonzini wrote:
+> Allocations whose size is related to the memslot size can be arbitrarily
+> large.  Do not use kvzalloc/kvcalloc, as those are limited to "not crazy"
+> sizes that fit in 32 bits.  Now that it is available, they can use either
+> vcalloc or __vcalloc, the latter if accounting is required.
 > 
-> Is there any reason you haven't used __alloc_size(1, 2) annotation?
+> Cc: stable@vger.kernel.org
+> Cc: kvm@vger.kernel.org
+> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 
-It's enough to have them in the header:
+Fixes: 7661809d493b ("mm: don't allow oversized kvmalloc() calls")
 
->> +extern void *__vmalloc_array(size_t n, size_t size, gfp_t flags) __alloc_size(1, 2);
->> +extern void *vmalloc_array(size_t n, size_t size) __alloc_size(1, 2);
->> +extern void *__vcalloc(size_t n, size_t size, gfp_t flags) __alloc_size(1, 2);
->> +extern void *vcalloc(size_t n, size_t size) __alloc_size(1, 2);
+?
 
-Thanks for the quick review!
+Reviewed-by: David Hildenbrand <david@redhat.com>
 
-Paolo
+
+-- 
+Thanks,
+
+David / dhildenb
 
