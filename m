@@ -1,172 +1,555 @@
-From: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [RFC v3 6/8] binder: Add a buffer flag to relinquish ownership of fds
-Date: Wed,  9 Mar 2022 16:52:16 +0000
-Message-ID: <20220309165222.2843651-7-tjmercier@google.com>
+From: "T.J. Mercier" <tjmercier@google.com>
+Subject: [RFC v3 2/8] cgroup: gpu: Add a cgroup controller for allocator
+ attribution of GPU memory
+Date: Wed,  9 Mar 2022 16:52:12 +0000
+Message-ID: <20220309165222.2843651-3-tjmercier@google.com>
 References: <20220309165222.2843651-1-tjmercier@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-media-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc:content-transfer-encoding;
-        bh=ArtryYFgH5mlYpraW6Z9pzBKDmlE5B7N8QDWxuF8nCw=;
-        b=ET2G8YAxigglCgwH9ORXjYEpMOwkLAxVMGluElrrT20Iij1J38dmr6UP8EdlHvk4DN
-         azfkhu/4N5mTJEJm6TVVmQy58D9W8S5IKUZrU96emS4lJxesAiyxiaL+UhI4peXvb1ET
-         2NfRSubT3bKB7llEizgDSk5WlvkFPBL2wIZ+UrsonprCR0wGscERyJLQ5lFI6A7C+Mqr
-         bBt/5MUBkAllxZeIaBAydEb4kU5tR1u3dOU4OHuIMqo5beiURrjjfEoxT78k7cZx6CKK
-         JslptEply/Lv5cfDpBB3GPPAcjhXmY9D9nxBJ4PiqVjPoV/QbfVEvtvJmrpZObB+eaR2
-         BMJg==
-In-Reply-To: <20220309165222.2843651-1-tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+         :cc;
+        bh=UmU6sI76GZbXk6wC8vwHaoIhH+sqK51YaZKa3zn+yg0=;
+        b=L6RrUUg6AleHliPPCSb/Og6BCcO+9ZzZi0gcaKY0umFXOat44tvD7z/jU9mqR7Ings
+         PgFRGbbdu8fru49qpAi97DKO2y8ZDu+JlEJ8xgJtSTkw+DXs968vNir6XXQ1FxAt957m
+         QHncNNeJMj2PtwXp5OQ6PnIsLjsx7Tu4BXeI6WjTsRmH7gK2gEw1PQCXDSLg7TJAP6K4
+         ZJ598TwhS889TkJPlJAuT9QjtKlxSaH5rOQdrlSOXCFWyl1uc9DV4hZSPg6YJVBvAkVS
+         qJG3a3EgY37YyECjlfQEaz4wC7yuU5plA9DnUCIi9jjebE7Ib+RQ630qh/lf2/+WxxRM
+         3efg==
+In-Reply-To: <20220309165222.2843651-1-tjmercier@google.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Benjamin Gaignard <benjamin.gaignard-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Liam Mark <lmark-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Cc: kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linaro-mm-sig-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@linaro.org>, Liam Mark <lmark@codeaurora.org>
+Cc: kaleshsingh@google.com, Kenny.Ho@amd.com, "T.J. Mercier" <tjmercier@google.com>, dri-devel@lists.freedesktop.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, linaro-mm-sig@lists.linaro.org, cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org
 
-From: Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: Hridya Valsaraju <hridya@google.com>
 
-This patch introduces a buffer flag BINDER_BUFFER_FLAG_SENDER_NO_NEED
-that a process sending an fd array to another process over binder IPC
-can set to relinquish ownership of the fds being sent for memory
-accounting purposes. If the flag is found to be set during the fd array
-translation and the fd is for a DMA-BUF, the buffer is uncharged from
-the sender's cgroup and charged to the receiving process's cgroup
-instead.
+The cgroup controller provides accounting for GPU and GPU-related
+memory allocations. The memory being accounted can be device memory or
+memory allocated from pools dedicated to serve GPU-related tasks.
 
-It is up to the sending process to ensure that it closes the fds
-regardless of whether the transfer failed or succeeded.
+This patch adds APIs to:
+-allow a device to register for memory accounting using the GPU cgroup
+controller.
+-charge and uncharge allocated memory to a cgroup.
 
-Most graphics shared memory allocations in Android are done by the
-graphics allocator HAL process. On requests from clients, the HAL process
-allocates memory and sends the fds to the clients over binder IPC.
-The graphics allocator HAL will not retain any references to the
-buffers. When the HAL sets the BINDER_BUFFER_FLAG_SENDER_NO_NEED for fd
-arrays holding DMA-BUF fds, the gpu cgroup controller will be able to
-correctly charge the buffers to the client processes instead of the
-graphics allocator HAL.
+When the cgroup controller is enabled, it would expose information about
+the memory allocated by each device(registered for GPU cgroup memory
+accounting) for each cgroup.
 
-Since this is a new feature exposed to userspace, the kernel and userspace
-must be compatible for the accounting to work for transfers. In all cases
-the allocation and transport of DMA buffers via binder will succeed, but
-only when both the kernel supports, and userspace depends on this feature
-will the transfer accounting work. The possible scenarios are detailed
-below:
+The API/UAPI can be extended to set per-device/total allocation limits
+in the future.
 
-1. new kernel + old userspace
-The kernel supports the feature but userspace does not use it. The old
-userspace won't mount the new cgroup controller, accounting is not
-performed, charge is not transferred.
+The cgroup controller has been named following the discussion in [1].
 
-2. old kernel + new userspace
-The new cgroup controller is not supported by the kernel, accounting is
-not performed, charge is not transferred.
+[1]: https://lore.kernel.org/amd-gfx/YCJp%2F%2FkMC7YjVMXv@phenom.ffwll.local/
 
-3. old kernel + old userspace
-Same as #2
-
-4. new kernel + new userspace
-Cgroup is mounted, feature is supported and used.
-
-Signed-off-by: Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: T.J. Mercier <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Hridya Valsaraju <hridya@google.com>
+Signed-off-by: T.J. Mercier <tjmercier@google.com>
 
 ---
 v3 changes
-Remove android from title per Todd Kjos.
-
 Use more common dual author commit message format per John Stultz.
 
-Include details on behavior for all combinations of kernel/userspace
-versions in changelog (thanks Suren Baghdasaryan) per Greg Kroah-Hartman.
-
 v2 changes
-Move dma-buf cgroup charge transfer from a dma_buf_op defined by every
-heap to a single dma-buf function for all heaps per Daniel Vetter and
-Christian K=C3=B6nig.
+Fix incorrect Kconfig help section indentation per Randy Dunlap.
 ---
- drivers/android/binder.c            | 26 ++++++++++++++++++++++++++
- include/uapi/linux/android/binder.h |  1 +
- 2 files changed, 27 insertions(+)
+ include/linux/cgroup_gpu.h    | 127 ++++++++++++++
+ include/linux/cgroup_subsys.h |   4 +
+ init/Kconfig                  |   7 +
+ kernel/cgroup/Makefile        |   1 +
+ kernel/cgroup/gpu.c           | 304 ++++++++++++++++++++++++++++++++++
+ 5 files changed, 443 insertions(+)
+ create mode 100644 include/linux/cgroup_gpu.h
+ create mode 100644 kernel/cgroup/gpu.c
 
-diff --git a/drivers/android/binder.c b/drivers/android/binder.c
-index 8351c5638880..f50d88ded188 100644
---- a/drivers/android/binder.c
-+++ b/drivers/android/binder.c
-@@ -42,6 +42,7 @@
-=20
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-=20
-+#include <linux/dma-buf.h>
- #include <linux/fdtable.h>
- #include <linux/file.h>
- #include <linux/freezer.h>
-@@ -2482,8 +2483,10 @@ static int binder_translate_fd_array(struct list_hea=
-d *pf_head,
- {
- 	binder_size_t fdi, fd_buf_size;
- 	binder_size_t fda_offset;
-+	bool transfer_gpu_charge =3D false;
- 	const void __user *sender_ufda_base;
- 	struct binder_proc *proc =3D thread->proc;
-+	struct binder_proc *target_proc =3D t->to_proc;
- 	int ret;
-=20
- 	fd_buf_size =3D sizeof(u32) * fda->num_fds;
-@@ -2521,8 +2524,15 @@ static int binder_translate_fd_array(struct list_hea=
-d *pf_head,
- 	if (ret)
- 		return ret;
-=20
-+	if (IS_ENABLED(CONFIG_CGROUP_GPU) &&
-+		parent->flags & BINDER_BUFFER_FLAG_SENDER_NO_NEED)
-+		transfer_gpu_charge =3D true;
+diff --git a/include/linux/cgroup_gpu.h b/include/linux/cgroup_gpu.h
+new file mode 100644
+index 000000000000..c5bc2b882783
+--- /dev/null
++++ b/include/linux/cgroup_gpu.h
+@@ -0,0 +1,127 @@
++/* SPDX-License-Identifier: MIT
++ * Copyright 2019 Advanced Micro Devices, Inc.
++ * Copyright (C) 2022 Google LLC.
++ */
++#ifndef _CGROUP_GPU_H
++#define _CGROUP_GPU_H
 +
- 	for (fdi =3D 0; fdi < fda->num_fds; fdi++) {
- 		u32 fd;
-+		struct dma_buf *dmabuf;
-+		struct gpucg *gpucg;
++#include <linux/cgroup.h>
++#include <linux/page_counter.h>
 +
- 		binder_size_t offset =3D fda_offset + fdi * sizeof(fd);
- 		binder_size_t sender_uoffset =3D fdi * sizeof(fd);
-=20
-@@ -2532,6 +2542,22 @@ static int binder_translate_fd_array(struct list_hea=
-d *pf_head,
- 						  in_reply_to);
- 		if (ret)
- 			return ret > 0 ? -EINVAL : ret;
++#ifdef CONFIG_CGROUP_GPU
++ /* The GPU cgroup controller data structure */
++struct gpucg {
++	struct cgroup_subsys_state css;
 +
-+		if (!transfer_gpu_charge)
-+			continue;
++	/* list of all resource pools that belong to this cgroup */
++	struct list_head rpools;
++};
 +
-+		dmabuf =3D dma_buf_get(fd);
-+		if (IS_ERR(dmabuf))
-+			continue;
++struct gpucg_device {
++	/*
++	 * list  of various resource pools in various cgroups that the device is
++	 * part of.
++	 */
++	struct list_head rpools;
 +
-+		gpucg =3D gpucg_get(target_proc->tsk);
-+		ret =3D dma_buf_charge_transfer(dmabuf, gpucg);
-+		if (ret) {
-+			pr_warn("%d:%d Unable to transfer DMA-BUF fd charge to %d",
-+				proc->pid, thread->pid, target_proc->pid);
-+			gpucg_put(gpucg);
-+		}
-+		dma_buf_put(dmabuf);
- 	}
- 	return 0;
- }
-diff --git a/include/uapi/linux/android/binder.h b/include/uapi/linux/andro=
-id/binder.h
-index 3246f2c74696..169fd5069a1a 100644
---- a/include/uapi/linux/android/binder.h
-+++ b/include/uapi/linux/android/binder.h
-@@ -137,6 +137,7 @@ struct binder_buffer_object {
-=20
- enum {
- 	BINDER_BUFFER_FLAG_HAS_PARENT =3D 0x01,
-+	BINDER_BUFFER_FLAG_SENDER_NO_NEED =3D 0x02,
- };
-=20
- /* struct binder_fd_array_object - object describing an array of fds in a =
-buffer
---=20
++	/* list of all devices registered for GPU cgroup accounting */
++	struct list_head dev_node;
++
++	/*
++	 * pointer to string literal to be used as identifier for accounting and
++	 * limit setting
++	 */
++	const char *name;
++};
++
++/**
++ * css_to_gpucg - get the corresponding gpucg ref from a cgroup_subsys_state
++ * @css: the target cgroup_subsys_state
++ *
++ * Returns: gpu cgroup that contains the @css
++ */
++static inline struct gpucg *css_to_gpucg(struct cgroup_subsys_state *css)
++{
++	return css ? container_of(css, struct gpucg, css) : NULL;
++}
++
++/**
++ * gpucg_get - get the gpucg reference that a task belongs to
++ * @task: the target task
++ *
++ * This increases the reference count of the css that the @task belongs to.
++ *
++ * Returns: reference to the gpu cgroup the task belongs to.
++ */
++static inline struct gpucg *gpucg_get(struct task_struct *task)
++{
++	if (!cgroup_subsys_enabled(gpu_cgrp_subsys))
++		return NULL;
++	return css_to_gpucg(task_get_css(task, gpu_cgrp_id));
++}
++
++/**
++ * gpucg_put - put a gpucg reference
++ * @gpucg: the target gpucg
++ *
++ * Put a reference obtained via gpucg_get
++ */
++static inline void gpucg_put(struct gpucg *gpucg)
++{
++	if (gpucg)
++		css_put(&gpucg->css);
++}
++
++/**
++ * gpucg_parent - find the parent of a gpu cgroup
++ * @cg: the target gpucg
++ *
++ * This does not increase the reference count of the parent cgroup
++ *
++ * Returns: parent gpu cgroup of @cg
++ */
++static inline struct gpucg *gpucg_parent(struct gpucg *cg)
++{
++	return css_to_gpucg(cg->css.parent);
++}
++
++int gpucg_try_charge(struct gpucg *gpucg, struct gpucg_device *device, u64 usage);
++void gpucg_uncharge(struct gpucg *gpucg, struct gpucg_device *device, u64 usage);
++void gpucg_register_device(struct gpucg_device *gpucg_dev, const char *name);
++#else /* CONFIG_CGROUP_GPU */
++
++struct gpucg;
++struct gpucg_device;
++
++static inline struct gpucg *css_to_gpucg(struct cgroup_subsys_state *css)
++{
++	return NULL;
++}
++
++static inline struct gpucg *gpucg_get(struct task_struct *task)
++{
++	return NULL;
++}
++
++static inline void gpucg_put(struct gpucg *gpucg) {}
++
++static inline struct gpucg *gpucg_parent(struct gpucg *cg)
++{
++	return NULL;
++}
++
++static inline int gpucg_try_charge(struct gpucg *gpucg,
++				   struct gpucg_device *device,
++				   u64 usage)
++{
++	return 0;
++}
++
++static inline void gpucg_uncharge(struct gpucg *gpucg,
++				  struct gpucg_device *device,
++				  u64 usage) {}
++
++static inline void gpucg_register_device(struct gpucg_device *gpucg_dev,
++					 const char *name) {}
++#endif /* CONFIG_CGROUP_GPU */
++#endif /* _CGROUP_GPU_H */
+diff --git a/include/linux/cgroup_subsys.h b/include/linux/cgroup_subsys.h
+index 445235487230..46a2a7b93c41 100644
+--- a/include/linux/cgroup_subsys.h
++++ b/include/linux/cgroup_subsys.h
+@@ -65,6 +65,10 @@ SUBSYS(rdma)
+ SUBSYS(misc)
+ #endif
+ 
++#if IS_ENABLED(CONFIG_CGROUP_GPU)
++SUBSYS(gpu)
++#endif
++
+ /*
+  * The following subsystems are not supported on the default hierarchy.
+  */
+diff --git a/init/Kconfig b/init/Kconfig
+index e9119bf54b1f..43568472930a 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -980,6 +980,13 @@ config BLK_CGROUP
+ 
+ 	See Documentation/admin-guide/cgroup-v1/blkio-controller.rst for more information.
+ 
++config CGROUP_GPU
++	bool "gpu cgroup controller (EXPERIMENTAL)"
++	select PAGE_COUNTER
++	help
++	  Provides accounting and limit setting for memory allocations by the GPU and
++	  GPU-related subsystems.
++
+ config CGROUP_WRITEBACK
+ 	bool
+ 	depends on MEMCG && BLK_CGROUP
+diff --git a/kernel/cgroup/Makefile b/kernel/cgroup/Makefile
+index 12f8457ad1f9..be95a5a532fc 100644
+--- a/kernel/cgroup/Makefile
++++ b/kernel/cgroup/Makefile
+@@ -7,3 +7,4 @@ obj-$(CONFIG_CGROUP_RDMA) += rdma.o
+ obj-$(CONFIG_CPUSETS) += cpuset.o
+ obj-$(CONFIG_CGROUP_MISC) += misc.o
+ obj-$(CONFIG_CGROUP_DEBUG) += debug.o
++obj-$(CONFIG_CGROUP_GPU) += gpu.o
+diff --git a/kernel/cgroup/gpu.c b/kernel/cgroup/gpu.c
+new file mode 100644
+index 000000000000..3e9bfb45c6af
+--- /dev/null
++++ b/kernel/cgroup/gpu.c
+@@ -0,0 +1,304 @@
++// SPDX-License-Identifier: MIT
++// Copyright 2019 Advanced Micro Devices, Inc.
++// Copyright (C) 2022 Google LLC.
++
++#include <linux/cgroup.h>
++#include <linux/cgroup_gpu.h>
++#include <linux/mm.h>
++#include <linux/page_counter.h>
++#include <linux/seq_file.h>
++#include <linux/slab.h>
++
++static struct gpucg *root_gpucg __read_mostly;
++
++/*
++ * Protects list of resource pools maintained on per cgroup basis
++ * and list of devices registered for memory accounting using the GPU cgroup
++ * controller.
++ */
++static DEFINE_MUTEX(gpucg_mutex);
++static LIST_HEAD(gpucg_devices);
++
++struct gpucg_resource_pool {
++	/* The device whose resource usage is tracked by this resource pool */
++	struct gpucg_device *device;
++
++	/* list of all resource pools for the cgroup */
++	struct list_head cg_node;
++
++	/*
++	 * list maintained by the gpucg_device to keep track of its
++	 * resource pools
++	 */
++	struct list_head dev_node;
++
++	/* tracks memory usage of the resource pool */
++	struct page_counter total;
++};
++
++static void free_cg_rpool_locked(struct gpucg_resource_pool *rpool)
++{
++	lockdep_assert_held(&gpucg_mutex);
++
++	list_del(&rpool->cg_node);
++	list_del(&rpool->dev_node);
++	kfree(rpool);
++}
++
++static void gpucg_css_free(struct cgroup_subsys_state *css)
++{
++	struct gpucg_resource_pool *rpool, *tmp;
++	struct gpucg *gpucg = css_to_gpucg(css);
++
++	// delete all resource pools
++	mutex_lock(&gpucg_mutex);
++	list_for_each_entry_safe(rpool, tmp, &gpucg->rpools, cg_node)
++		free_cg_rpool_locked(rpool);
++	mutex_unlock(&gpucg_mutex);
++
++	kfree(gpucg);
++}
++
++static struct cgroup_subsys_state *
++gpucg_css_alloc(struct cgroup_subsys_state *parent_css)
++{
++	struct gpucg *gpucg, *parent;
++
++	gpucg = kzalloc(sizeof(struct gpucg), GFP_KERNEL);
++	if (!gpucg)
++		return ERR_PTR(-ENOMEM);
++
++	parent = css_to_gpucg(parent_css);
++	if (!parent)
++		root_gpucg = gpucg;
++
++	INIT_LIST_HEAD(&gpucg->rpools);
++
++	return &gpucg->css;
++}
++
++static struct gpucg_resource_pool *find_cg_rpool_locked(
++	struct gpucg *cg,
++	struct gpucg_device *device)
++{
++	struct gpucg_resource_pool *pool;
++
++	lockdep_assert_held(&gpucg_mutex);
++
++	list_for_each_entry(pool, &cg->rpools, cg_node)
++		if (pool->device == device)
++			return pool;
++
++	return NULL;
++}
++
++static struct gpucg_resource_pool *init_cg_rpool(struct gpucg *cg,
++						 struct gpucg_device *device)
++{
++	struct gpucg_resource_pool *rpool = kzalloc(sizeof(*rpool),
++							GFP_KERNEL);
++	if (!rpool)
++		return ERR_PTR(-ENOMEM);
++
++	rpool->device = device;
++
++	page_counter_init(&rpool->total, NULL);
++	INIT_LIST_HEAD(&rpool->cg_node);
++	INIT_LIST_HEAD(&rpool->dev_node);
++	list_add_tail(&rpool->cg_node, &cg->rpools);
++	list_add_tail(&rpool->dev_node, &device->rpools);
++
++	return rpool;
++}
++
++/**
++ * get_cg_rpool_locked - find the resource pool for the specified device and
++ * specified cgroup. If the resource pool does not exist for the cg, it is
++ * created in a hierarchical manner in the cgroup and its ancestor cgroups who
++ * do not already have a resource pool entry for the device.
++ *
++ * @cg: The cgroup to find the resource pool for.
++ * @device: The device associated with the returned resource pool.
++ *
++ * Return: return resource pool entry corresponding to the specified device in
++ * the specified cgroup (hierarchically creating them if not existing already).
++ *
++ */
++static struct gpucg_resource_pool *
++get_cg_rpool_locked(struct gpucg *cg, struct gpucg_device *device)
++{
++	struct gpucg *parent_cg, *p, *stop_cg;
++	struct gpucg_resource_pool *rpool, *tmp_rpool;
++	struct gpucg_resource_pool *parent_rpool = NULL, *leaf_rpool = NULL;
++
++	rpool = find_cg_rpool_locked(cg, device);
++	if (rpool)
++		return rpool;
++
++	stop_cg = cg;
++	do {
++		rpool = init_cg_rpool(stop_cg, device);
++		if (IS_ERR(rpool))
++			goto err;
++
++		if (!leaf_rpool)
++			leaf_rpool = rpool;
++
++		stop_cg = gpucg_parent(stop_cg);
++		if (!stop_cg)
++			break;
++
++		rpool = find_cg_rpool_locked(stop_cg, device);
++	} while (!rpool);
++
++	/*
++	 * Re-initialize page counters of all rpools created in this invocation
++	 * to enable hierarchical charging.
++	 * stop_cg is the first ancestor cg who already had a resource pool for
++	 * the device. It can also be NULL if no ancestors had a pre-existing
++	 * resource pool for the device before this invocation.
++	 */
++	rpool = leaf_rpool;
++	for (p = cg; p != stop_cg; p = parent_cg) {
++		parent_cg = gpucg_parent(p);
++		if (!parent_cg)
++			break;
++		parent_rpool = find_cg_rpool_locked(parent_cg, device);
++		page_counter_init(&rpool->total, &parent_rpool->total);
++
++		rpool = parent_rpool;
++	}
++
++	return leaf_rpool;
++err:
++	for (p = cg; p != stop_cg; p = gpucg_parent(p)) {
++		tmp_rpool = find_cg_rpool_locked(p, device);
++		free_cg_rpool_locked(tmp_rpool);
++	}
++	return rpool;
++}
++
++/**
++ * gpucg_try_charge - charge memory to the specified gpucg and gpucg_device.
++ * Caller must hold a reference to @gpucg obtained through gpucg_get(). The size
++ * of the memory is rounded up to be a multiple of the page size.
++ *
++ * @gpucg: The gpu cgroup to charge the memory to.
++ * @device: The device to charge the memory to.
++ * @usage: size of memory to charge in bytes.
++ *
++ * Return: returns 0 if the charging is successful and otherwise returns an
++ * error code.
++ */
++int gpucg_try_charge(struct gpucg *gpucg, struct gpucg_device *device, u64 usage)
++{
++	struct page_counter *counter;
++	u64 nr_pages;
++	struct gpucg_resource_pool *rp;
++	int ret = 0;
++
++	mutex_lock(&gpucg_mutex);
++	rp = get_cg_rpool_locked(gpucg, device);
++	/*
++	 * gpucg_mutex can be unlocked here, rp will stay valid until gpucg is
++	 * freed and the caller is holding a reference to the gpucg.
++	 */
++	mutex_unlock(&gpucg_mutex);
++
++	if (IS_ERR(rp))
++		return PTR_ERR(rp);
++
++	nr_pages = PAGE_ALIGN(usage) >> PAGE_SHIFT;
++	if (page_counter_try_charge(&rp->total, nr_pages, &counter))
++		css_get_many(&gpucg->css, nr_pages);
++	else
++		ret = -ENOMEM;
++
++	return ret;
++}
++
++/**
++ * gpucg_uncharge - uncharge memory from the specified gpucg and gpucg_device.
++ * The caller must hold a reference to @gpucg obtained through gpucg_get().
++ *
++ * @gpucg: The gpu cgroup to uncharge the memory from.
++ * @device: The device to uncharge the memory from.
++ * @usage: size of memory to uncharge in bytes.
++ */
++void gpucg_uncharge(struct gpucg *gpucg, struct gpucg_device *device, u64 usage)
++{
++	u64 nr_pages;
++	struct gpucg_resource_pool *rp;
++
++	mutex_lock(&gpucg_mutex);
++	rp = find_cg_rpool_locked(gpucg, device);
++	/*
++	 * gpucg_mutex can be unlocked here, rp will stay valid until gpucg is
++	 * freed and there are active refs on gpucg.
++	 */
++	mutex_unlock(&gpucg_mutex);
++
++	if (unlikely(!rp)) {
++		pr_err("Resource pool not found, incorrect charge/uncharge ordering?\n");
++		return;
++	}
++
++	nr_pages = PAGE_ALIGN(usage) >> PAGE_SHIFT;
++	page_counter_uncharge(&rp->total, nr_pages);
++	css_put_many(&gpucg->css, nr_pages);
++}
++
++/**
++ * gpucg_register_device - Registers a device for memory accounting using the
++ * GPU cgroup controller.
++ *
++ * @device: The device to register for memory accounting.
++ * @name: Pointer to a string literal to denote the name of the device.
++ *
++ * Both @device andd @name must remain valid.
++ */
++void gpucg_register_device(struct gpucg_device *device, const char *name)
++{
++	if (!device)
++		return;
++
++	INIT_LIST_HEAD(&device->dev_node);
++	INIT_LIST_HEAD(&device->rpools);
++
++	mutex_lock(&gpucg_mutex);
++	list_add_tail(&device->dev_node, &gpucg_devices);
++	mutex_unlock(&gpucg_mutex);
++
++	device->name = name;
++}
++
++static int gpucg_resource_show(struct seq_file *sf, void *v)
++{
++	struct gpucg_resource_pool *rpool;
++	struct gpucg *cg = css_to_gpucg(seq_css(sf));
++
++	mutex_lock(&gpucg_mutex);
++	list_for_each_entry(rpool, &cg->rpools, cg_node) {
++		seq_printf(sf, "%s %lu\n", rpool->device->name,
++			   page_counter_read(&rpool->total) * PAGE_SIZE);
++	}
++	mutex_unlock(&gpucg_mutex);
++
++	return 0;
++}
++
++struct cftype files[] = {
++	{
++		.name = "memory.current",
++		.seq_show = gpucg_resource_show,
++	},
++	{ }     /* terminate */
++};
++
++struct cgroup_subsys gpu_cgrp_subsys = {
++	.css_alloc      = gpucg_css_alloc,
++	.css_free       = gpucg_css_free,
++	.early_init     = false,
++	.legacy_cftypes = files,
++	.dfl_cftypes    = files,
++};
+-- 
 2.35.1.616.g0bdcbb4464-goog
 
