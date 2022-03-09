@@ -1,67 +1,87 @@
-From: Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH linux-next] cgroup: fix suspicious
- rcu_dereference_check() usage warning
-Date: Wed, 9 Mar 2022 08:10:26 +0100
-Message-ID: <1be951c7-442f-eb45-a4fc-41fdb771eef7@samsung.com>
-References: <20220305034103.57123-1-zhouchengming@bytedance.com>
-        <CGME20220309071027eucas1p1f066b42f49e524404d898929b60b344f@eucas1p1.samsung.com>
+From: Tianchen Ding <dtcccc-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [RFC PATCH v2 0/4] Introduce group balancer
+Date: Wed, 9 Mar 2022 16:30:51 +0800
+Message-ID: <defa02c1-9660-f335-a764-d89dbe2f502e@linux.alibaba.com>
+References: <20220308092629.40431-1-dtcccc@linux.alibaba.com>
+ <YieOvaqJeEW2lta/@slm.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20220309071028euoutp01bcb322db18626cb9b6f3ed8dd985d28a~apNBUJ4ER3177831778euoutp01K
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1646809828;
-        bh=TjJEXRfVW4361xBOm+SseNKtnQiXRSWqUUa3WAQ1Cj8=;
-        h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-        b=hV4/QhmnUfl4CmIIXt2Ah4Oh1n2aOFiC9nETBVRPgE7NjZcH5ZBSYGE5EA8cv1K/V
-         Qb1FUKRdi05wvtvPGH7Cpemxuo9VuxFdc6lgAN6rZ/jAhCcTlpjEzPHZUMeDKnh4El
-         ncxX/CCzIkdzCTnx0niXPI0tDCKCAaSGARapk4lo=
 Content-Language: en-US
-In-Reply-To: <20220305034103.57123-1-zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+In-Reply-To: <YieOvaqJeEW2lta/@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Linux Kernel Functional Testing <lkft-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, syzbot+16e3f2c77e7c5a0113f9-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org, Zhouyi Zhou <zhouzhouyi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michael Wang <yun.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Cruz Zhao <cruzzhao-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Masahiro Yamada <masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Nathan Chancellor <nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, "Gustavo A. R. Silva" <gustavoars-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Arnd Bergmann <ar>
 
-On 05.03.2022 04:41, Chengming Zhou wrote:
-> task_css_set_check() will use rcu_dereference_check() to check for
-> rcu_read_lock_held() on the read-side, which is not true after commit
-> dc6e0818bc9a ("sched/cpuacct: Optimize away RCU read lock"). This
-> commit drop explicit rcu_read_lock(), change to RCU-sched read-side
-> critical section. So fix the RCU warning by adding check for
-> rcu_read_lock_sched_held().
->
-> Fixes: dc6e0818bc9a ("sched/cpuacct: Optimize away RCU read lock")
-> Reported-by: Linux Kernel Functional Testing <lkft-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-> Reported-by: syzbot+16e3f2c77e7c5a0113f9-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
-> Tested-by: Zhouyi Zhou <zhouzhouyi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+On 2022/3/9 01:13, Tejun Heo wrote:
+> Hello,
+> 
+> On Tue, Mar 08, 2022 at 05:26:25PM +0800, Tianchen Ding wrote:
+>> Modern platform are growing fast on CPU numbers. To achieve better
+>> utility of CPU resource, multiple apps are starting to sharing the CPUs.
+>>
+>> What we need is a way to ease confliction in share mode,
+>> make groups as exclusive as possible, to gain both performance
+>> and resource efficiency.
+>>
+>> The main idea of group balancer is to fulfill this requirement
+>> by balancing groups of tasks among groups of CPUs, consider this
+>> as a dynamic demi-exclusive mode. Task trigger work to settle it's
+>> group into a proper partition (minimum predicted load), then try
+>> migrate itself into it. To gradually settle groups into the most
+>> exclusively partition.
+>>
+>> GB can be seen as an optimize policy based on load balance,
+>> it obeys the main idea of load balance and makes adjustment
+>> based on that.
+>>
+>> Our test on ARM64 platform with 128 CPUs shows that,
+>> throughput of sysbench memory is improved about 25%,
+>> and redis-benchmark is improved up to about 10%.
+> 
+> The motivation makes sense to me but I'm not sure this is the right way to
+> architecture it. We already have the framework to do all these - the sched
+> domains and the load balancer. Architecturally, what the suggested patchset
+> is doing is building a separate load balancer on top of cpuset after using
+> cpuset to disable the existing load balancer, which is rather obviously
+> convoluted.
+> 
 
-Right, this fixes the issue I've reported here:
+"the sched domains and the load balancer" you mentioned are the ways to 
+"balance" tasks on each domains. However, this patchset aims to "group" 
+them together to win hot cache and less competition, which is different 
+from load balancer. See commit log of the patch 3/4 and this link:
+https://lore.kernel.org/all/11d4c86a-40ef-6ce5-6d08-e9d0bc9b512a-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org/
 
-https://lore.kernel.org/all/f4bc652b-115f-35b5-91db-bad3b30fed9b-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org/
+> * AFAICS, none of what the suggested code does is all that complicated or
+>    needs a lot of input from userspace. it should be possible to parametrize
+>    the existing load balancer to behave better.
+> 
 
-Tested-by: Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Group balancer mainly needs 2 inputs from userspace: cpu partition info 
+and cgroup info.
+Cpu partition info does need user input (and maybe a bit complicated). 
+As a result, the division methods are __free__ to users(can refer to 
+NUMA nodes, clusters, cache, etc.)
+Cgroup info doesn't need extra input. It's naturally configured.
 
-> ---
->   include/linux/cgroup.h | 1 +
->   1 file changed, 1 insertion(+)
->
-> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-> index 1e356c222756..0d1ada8968d7 100644
-> --- a/include/linux/cgroup.h
-> +++ b/include/linux/cgroup.h
-> @@ -450,6 +450,7 @@ extern struct mutex cgroup_mutex;
->   extern spinlock_t css_set_lock;
->   #define task_css_set_check(task, __c)					\
->   	rcu_dereference_check((task)->cgroups,				\
-> +		rcu_read_lock_sched_held() ||				\
->   		lockdep_is_held(&cgroup_mutex) ||			\
->   		lockdep_is_held(&css_set_lock) ||			\
->   		((task)->flags & PF_EXITING) || (__c))
+It do parametrize the existing load balancer to behave better.
+Group balancer is a kind of optimize policy, and should obey the basic
+policy (load balance) and improve it.
+The relationship between load balancer and group balancer is explained 
+in detail at the above link.
 
-Best regards
--- 
-Marek Szyprowski, PhD
-Samsung R&D Institute Poland
+> * If, for some reason, you need more customizable behavior in terms of cpu
+>    allocation, which is what cpuset is for, maybe it'd be better to build the
+>    load balancer in userspace. That'd fit way better with how cgroup is used
+>    in general and with threaded cgroups, it should fit nicely with everything
+>    else.
+> 
+
+We put group balancer in kernel space because this new policy does not 
+depend on userspace apps. It's a "general" feature.
+Doing "dynamic cpuset" in userspace may also introduce performance 
+issue, since it may need to bind and unbind different cpusets for 
+several times, and is too strict(compared with our "soft bind").
 
