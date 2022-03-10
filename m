@@ -1,108 +1,66 @@
-From: Tianchen Ding <dtcccc-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [RFC PATCH v2 0/4] Introduce group balancer
-Date: Thu, 10 Mar 2022 13:47:34 +0800
-Message-ID: <014c8afe-e57f-0f31-32bb-cf4ff3d3cb95@linux.alibaba.com>
-References: <20220308092629.40431-1-dtcccc@linux.alibaba.com>
- <YieOvaqJeEW2lta/@slm.duckdns.org>
- <defa02c1-9660-f335-a764-d89dbe2f502e@linux.alibaba.com>
- <YijrVmzG8/yT9a0f@slm.duckdns.org>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 3/3] mm/memcg: add next_mz back if not reclaimed yet
+Date: Thu, 10 Mar 2022 09:53:59 +0100
+Message-ID: <Yim8p0C4CxC6SskI@dhcp22.suse.cz>
+References: <20220308012047.26638-1-richard.weiyang@gmail.com>
+ <20220308012047.26638-3-richard.weiyang@gmail.com>
+ <YicRNofU+L1cKIQp@dhcp22.suse.cz>
+ <20220309004620.fgotfh4wsquscbfn@master>
+ <YiiwPaCESiTuH22a@dhcp22.suse.cz>
+ <20220310011350.2b6fxa66it5nugcy@master>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
-In-Reply-To: <YijrVmzG8/yT9a0f-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1646902441; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=bB4O0HFf3zvgJcW3Y2L9rgnwJyEhjx/ntH/JW+sY980=;
+        b=eDKdavwIJn6UYpw1ar2leRFjV+vHAIb4jBDc71F1xDlxTmIVxbJo+0JohdSWIYcvUqx8Pn
+        up/o1qJDlZClUxrza1JKTjahrfhp5OMLN35sIWcHGRubsBvN0qKeJaJtZhqtOOG6Hgwr13
+        uIg+SgiUY1xoUclY93/SX+M4ukzuRQ8=
+Content-Disposition: inline
+In-Reply-To: <20220310011350.2b6fxa66it5nugcy@master>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michael Wang <yun.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Cruz Zhao <cruzzhao-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Masahiro Yamada <masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Nathan Chancellor <nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, "Gustavo A. R. Silva" <gustavoars-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Arnd Bergmann <ar>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-On 2022/3/10 02:00, Tejun Heo wrote:
-> Hello,
->=20
-> On Wed, Mar 09, 2022 at 04:30:51PM +0800, Tianchen Ding wrote:
->> "the sched domains and the load balancer" you mentioned are the ways to
->> "balance" tasks on each domains. However, this patchset aims to "group" =
-them
->> together to win hot cache and less competition, which is different from =
-load
->> balancer. See commit log of the patch 3/4 and this link:
->> https://lore.kernel.org/all/11d4c86a-40ef-6ce5-6d08-e9d0bc9b512a-KPsoFbN=
-s7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org/
->=20
-> I read that but it doesn't make whole lot of sense to me. As Peter noted,=
- we
-> already have issues with cross NUMA node balancing interacting with in-no=
-de
-> balancing, which likely indicates that it needs more unified solution rat=
-her
-> than more fragmented. I have a hard time seeing how adding yet another la=
-yer
-> on top helps the situation.
->=20
->>> * If, for some reason, you need more customizable behavior in terms of =
-cpu
->>>     allocation, which is what cpuset is for, maybe it'd be better to bu=
-ild the
->>>     load balancer in userspace. That'd fit way better with how cgroup i=
-s used
->>>     in general and with threaded cgroups, it should fit nicely with eve=
-rything
->>>     else.
->>>
->>
->> We put group balancer in kernel space because this new policy does not
->> depend on userspace apps. It's a "general" feature.
->=20
-> Well, it's general for use cases which are happy with the two knobs that =
-you
-> defined for your use case.
->=20
->> Doing "dynamic cpuset" in userspace may also introduce performance issue,
->> since it may need to bind and unbind different cpusets for several times,
->> and is too strict(compared with our "soft bind").
->=20
-> My bet is that you're gonna be able to get just about the same bench resu=
-lts
-> with userspace diddling with thread cgroup membership. Why not try that
-> first? The interface is already there. I have a hard time seeing the
-> justification for hard coding this into the kernel at this stage.
->=20
-> Thanks.
->=20
+On Thu 10-03-22 01:13:50, Wei Yang wrote:
+> On Wed, Mar 09, 2022 at 02:48:45PM +0100, Michal Hocko wrote:
+> >[Cc Tim - the patch is http://lkml.kernel.org/r/20220308012047.26638-3-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org]
+> >
+> >On Wed 09-03-22 00:46:20, Wei Yang wrote:
+> >> On Tue, Mar 08, 2022 at 09:17:58AM +0100, Michal Hocko wrote:
+> >> >On Tue 08-03-22 01:20:47, Wei Yang wrote:
+> >> >> next_mz is removed from rb_tree, let's add it back if no reclaim has
+> >> >> been tried.
+> >> >
+> >> >Could you elaborate more why we need/want this?
+> >> >
+> >> 
+> >> Per my understanding, we add back the right most node even reclaim makes no
+> >> progress, so it is reasonable to add back a node if we didn't get a chance to
+> >> do reclaim on it.
+> >
+> >Your patch sounded familiar and I can remember now. The same fix has
+> >been posted by Tim last year
+> >https://lore.kernel.org/linux-mm/8d35206601ccf0e1fe021d24405b2a0c2f4e052f.1613584277.git.tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org/
+> >It was posted with other changes to the soft limit code which I didn't
+> >like but I have acked this particular one. Not sure what has happened
+> >with it afterwards.
+> 
+> Because of this ?
+> 4f09feb8bf:  vm-scalability.throughput -4.3% regression
+> https://lore.kernel.org/linux-mm/20210302062521.GB23892@xsang-OptiPlex-9020/
 
-Well, I understand your point is putting this in userspace. However,=20
-we've considered about that but found it hard to do so. If you have any=20
-better idea, please share with us. :-)
+That was a regression for a different patch in the series AFAICS:
+: FYI, we noticed a -4.3% regression of vm-scalability.throughput due to commit:
+: 
+: commit: 4f09feb8bf083be3834080ddf3782aee12a7c3f7 ("mm: Force update of mem cgroup soft limit tree on usage excess")
 
-If we want to build group balancer in userspace, we need:
-   1) gather load info from each rq periodically
-   2) make decision to set cpuset.cpus of each cgroup
-
-However, there're some problems about this way.
-
-For 1), we need to consider how frequently collecting these info, which=20
-may impact performance and accuracy. If the load changes hugely right=20
-after we get it once, our data are expired and then the decision may be=20
-wrong. (If we are in kernel, faster action can be taken.)
-
-We believe 2) is harder. The specific policy may be complex and alter=20
-according to different scenes. There's not a general method.
-e.g., with 16cpus and 4 cgroups, how to decide when we set one of them=20
-0-3(when busy)or 0-7(when some of other cgroups are idle)? If there are=20
-much more threads in cgroupA than cgroupB/C/D , and we want to satisfy=20
-cgroupA as far as possible(on the premise of fairness of B/C/D)=EF=BC=8C=20
-dynamically enlarging(when B/C/D partly idle) and shrinking(when B/C/D=20
-busy) cpuset of cgroupA requires complex policy. In this example,=20
-fairness and performance can be provided by existing scheduler, but when=20
-it comes to grouping hot cache or decreasing competion, both scheduler=20
-in kernel and action in userspace are hard to solve.
-What's more, in many cloud computing scenes, there may be hundreds or=20
-thousands of containers, which are much larger than partition number.=20
-These containers may be dynamically created and destroyed at any time.=20
-Making policy to manage them from userspace will not be practical.
-
-These problems become easy when going to kernelspace. We get info=20
-directly from scheduler, and help revising its decision at some key=20
-points, or do some support work(e.g., task migration if possible).
-
-Thanks.
+That patch has played with how often memcg_check_events is called and
+that can lead to a visible performance difference.
+-- 
+Michal Hocko
+SUSE Labs
