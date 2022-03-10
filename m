@@ -1,60 +1,59 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 3/3] mm/memcg: add next_mz back if not reclaimed yet
-Date: Thu, 10 Mar 2022 09:59:30 +0100
-Message-ID: <Yim98uGgFjTu2HeK@dhcp22.suse.cz>
-References: <20220308012047.26638-1-richard.weiyang@gmail.com>
- <20220308012047.26638-3-richard.weiyang@gmail.com>
- <YicRNofU+L1cKIQp@dhcp22.suse.cz>
- <20220309004620.fgotfh4wsquscbfn@master>
- <YiiwPaCESiTuH22a@dhcp22.suse.cz>
+From: Todd Kjos <tkjos@google.com>
+Subject: Re: [RFC v3 7/8] binder: use __kernel_pid_t and __kernel_uid_t for userspace
+Date: Thu, 10 Mar 2022 11:33:20 -0800
+Message-ID: <CAHRSSEy5_h9LJB4q5_OJA7fSq=ROo68UaK+hdPz-Vj-wac1Qhg@mail.gmail.com>
+References: <20220309165222.2843651-1-tjmercier@google.com> <20220309165222.2843651-8-tjmercier@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1646902771; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=A2tx04p/KSEJFzMMLCMxNtcpoNboTHg9YDAAKmm2DYA=;
-        b=VXIAcD8dd86ZuUY5S18Rif2jBHHChRst37CsbQWmebMzB8YUvjurTIktrQhDc3P0Sxt+t1
-        IjWfmL1RSs37CJgYqBM+kctOhUC17Ds3eoPlCFKxMUtucTi04tYGW0hD/KJooRW7k/MZfn
-        lxqWyCqFgd+Cop+/Ma29drhBxZ0FJCs=
-Content-Disposition: inline
-In-Reply-To: <YiiwPaCESiTuH22a-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=4n6+idQ0426w+zkqVp6H2ORC9fnCFio1PZzrW8WKfUg=;
+        b=OqorwzMtB49Fqip4wdm9stFVvynD2x0VggX/za+LSk2+cpHubYR90RJjOnsqoXAZJS
+         PKEVUeYOlX9QtjBhjnUyqb2PSsDR+wETukIDxJkkWJI/DMsjfuTMhgIY8mWPWQI2oyra
+         o9JsTO9TomWo7QJKLuNr0wMP8y/j0gAZ8MvjywUAmGwereXi3I5q/gwobTMAtCKGo3oi
+         vt/8ah4AtRtGVIPPYFZ4mhGu4YhvT3BEEVZTIY2Bk+dPnS0QYjByJLaLoXqCs3CRn8kZ
+         L0EpsvYejfkgMhc+/apIKBKxCkq9x+U6bH72wsz5pbyzAid1oMjnyYZpZwTlBQCy59QM
+         HvbQ==
+In-Reply-To: <20220309165222.2843651-8-tjmercier@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+To: "T.J. Mercier" <tjmercier@google.com>
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@linaro.org>, Liam Mark <lmark@codeaurora.org>, Laur
 
-On Wed 09-03-22 14:48:46, Michal Hocko wrote:
-> [Cc Tim - the patch is http://lkml.kernel.org/r/20220308012047.26638-3-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org]
-> 
-> On Wed 09-03-22 00:46:20, Wei Yang wrote:
-> > On Tue, Mar 08, 2022 at 09:17:58AM +0100, Michal Hocko wrote:
-> > >On Tue 08-03-22 01:20:47, Wei Yang wrote:
-> > >> next_mz is removed from rb_tree, let's add it back if no reclaim has
-> > >> been tried.
-> > >
-> > >Could you elaborate more why we need/want this?
-> > >
-> > 
-> > Per my understanding, we add back the right most node even reclaim makes no
-> > progress, so it is reasonable to add back a node if we didn't get a chance to
-> > do reclaim on it.
-> 
-> Your patch sounded familiar and I can remember now. The same fix has
-> been posted by Tim last year
-> https://lore.kernel.org/linux-mm/8d35206601ccf0e1fe021d24405b2a0c2f4e052f.1613584277.git.tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org/
+On Wed, Mar 9, 2022 at 8:52 AM T.J. Mercier <tjmercier@google.com> wrote:
+>
+> The kernel interface should use types that the kernel defines instead of
+> pid_t and uid_t, whose definiton is owned by libc. This fixes the header
+> so that it can be included without first including sys/types.h.
+>
+> Signed-off-by: T.J. Mercier <tjmercier@google.com>
+> ---
+>  include/uapi/linux/android/binder.h | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/include/uapi/linux/android/binder.h b/include/uapi/linux/android/binder.h
+> index 169fd5069a1a..aa28454dbca3 100644
+> --- a/include/uapi/linux/android/binder.h
+> +++ b/include/uapi/linux/android/binder.h
+> @@ -289,8 +289,8 @@ struct binder_transaction_data {
+>
+>         /* General information about the transaction. */
+>         __u32           flags;
+> -       pid_t           sender_pid;
+> -       uid_t           sender_euid;
+> +       __kernel_pid_t  sender_pid;
+> +       __kernel_uid_t  sender_euid;
 
-Btw. I forgot to mention yesterday. Whatever was the reason this has
-slipped through cracks it would great if you could reuse the changelog
-of the original patch which was more verbose and explicit about the
-underlying problem. The only remaining part I would add is a description
-of how serious the problem is. The removed memcg would be out of the
-excess tree until further memory charges would get it back. But that can
-take arbitrary amount of time. Whether that is a real problem would
-depend on the workload of course but considering how coarse of a tool
-the soft limit is it is possible that this is not something most users
-would even notice.
--- 
-Michal Hocko
-SUSE Labs
+Are we guaranteed that this does not affect the UAPI at all? Userspace
+code using this definition will have to run with kernels using the old
+definition and visa-versa.
+
+>         binder_size_t   data_size;      /* number of bytes of data */
+>         binder_size_t   offsets_size;   /* number of bytes of offsets */
+>
+> --
+> 2.35.1.616.g0bdcbb4464-goog
+>
