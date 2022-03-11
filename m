@@ -1,79 +1,120 @@
-From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 3/3] mm/memcg: add next_mz back if not reclaimed yet
-Date: Thu, 10 Mar 2022 23:57:29 +0000
-Message-ID: <20220310235729.txnjuhcptsp2sc2a@master>
-References: <20220308012047.26638-1-richard.weiyang@gmail.com>
- <20220308012047.26638-3-richard.weiyang@gmail.com>
- <YicRNofU+L1cKIQp@dhcp22.suse.cz>
- <20220309004620.fgotfh4wsquscbfn@master>
- <YiiwPaCESiTuH22a@dhcp22.suse.cz>
- <20220310011350.2b6fxa66it5nugcy@master>
- <Yim8p0C4CxC6SskI@dhcp22.suse.cz>
-Reply-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: "yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH -next 00/11] support concurrent sync io for bfq on a
+ specail occasion
+Date: Fri, 11 Mar 2022 14:31:58 +0800
+Message-ID: <e299180e-cdbd-0837-8478-5e397ac8166b@huawei.com>
+References: <20220305091205.4188398-1-yukuai3@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=OkAryEzutT6iAK7gGQZ0EX71N3D+2tmBltCJ6yrSjxw=;
-        b=IZ7jNCsyI1YiomKE/iwIDgeEEkJXqEWgThkJSlbsnONKYJQVuGgW0mVeMkdfA+jZRH
-         dNX+J5WhKU9aDgLZozigkohOsN23JbVUrVCEbKkIyM/HmVWPmsCDo+ve/OmcMY/R4L46
-         wc+Lpbkm0irrf4LPBje32HvD7opm/vcqBJyRTGLFpMx/D1zcb1xYMpYJhf0+HgrDPAp5
-         6tladH5AFii+KrgzJAR0ueHVwgFZUs3pXkyggWSMBbFFukQv65AhTfvyA0Ze4E0qEcDo
-         PqrBduRvnl0lXJSkKKKVsmhC9wNqLAIbF2JT18xVIRI6ZIN+LUKgZZB2N2vgkv7hhx2T
-         v1YA==
-Content-Disposition: inline
-In-Reply-To: <Yim8p0C4CxC6SskI-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20220305091205.4188398-1-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org, jack@suse.cz
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-On Thu, Mar 10, 2022 at 09:53:59AM +0100, Michal Hocko wrote:
->On Thu 10-03-22 01:13:50, Wei Yang wrote:
->> On Wed, Mar 09, 2022 at 02:48:45PM +0100, Michal Hocko wrote:
->> >[Cc Tim - the patch is http://lkml.kernel.org/r/20220308012047.26638-3-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org]
->> >
->> >On Wed 09-03-22 00:46:20, Wei Yang wrote:
->> >> On Tue, Mar 08, 2022 at 09:17:58AM +0100, Michal Hocko wrote:
->> >> >On Tue 08-03-22 01:20:47, Wei Yang wrote:
->> >> >> next_mz is removed from rb_tree, let's add it back if no reclaim has
->> >> >> been tried.
->> >> >
->> >> >Could you elaborate more why we need/want this?
->> >> >
->> >> 
->> >> Per my understanding, we add back the right most node even reclaim makes no
->> >> progress, so it is reasonable to add back a node if we didn't get a chance to
->> >> do reclaim on it.
->> >
->> >Your patch sounded familiar and I can remember now. The same fix has
->> >been posted by Tim last year
->> >https://lore.kernel.org/linux-mm/8d35206601ccf0e1fe021d24405b2a0c2f4e052f.1613584277.git.tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org/
->> >It was posted with other changes to the soft limit code which I didn't
->> >like but I have acked this particular one. Not sure what has happened
->> >with it afterwards.
->> 
->> Because of this ?
->> 4f09feb8bf:  vm-scalability.throughput -4.3% regression
->> https://lore.kernel.org/linux-mm/20210302062521.GB23892@xsang-OptiPlex-9020/
->
->That was a regression for a different patch in the series AFAICS:
->: FYI, we noticed a -4.3% regression of vm-scalability.throughput due to commit:
->: 
->: commit: 4f09feb8bf083be3834080ddf3782aee12a7c3f7 ("mm: Force update of mem cgroup soft limit tree on usage excess")
->
->That patch has played with how often memcg_check_events is called and
->that can lead to a visible performance difference.
+friendly ping ...
 
-Yes, I mean maybe because of this regression, the whole patch set is removed.
-
->-- 
->Michal Hocko
->SUSE Labs
-
--- 
-Wei Yang
-Help you, Help me
+=D4=DA 2022/03/05 17:11, Yu Kuai =D0=B4=B5=C0:
+> Currently, bfq can't handle sync io concurrently as long as they
+> are not issued from root group. This is because
+> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
+> bfq_asymmetric_scenario().
+>=20
+> This patchset tries to support concurrent sync io if all the sync ios
+> are issued from the same cgroup:
+>=20
+> 1) Count root_group into 'num_groups_with_pending_reqs', patch 1-5;
+>=20
+> 2) Don't idle if 'num_groups_with_pending_reqs' is 1, patch 6;
+>=20
+> 3) Don't count the group if the group doesn't have pending requests,
+> while it's child groups may have pending requests, patch 7;
+>=20
+> This is because, for example:
+> if sync ios are issued from cgroup /root/c1/c2, root, c1 and c2
+> will all be counted into 'num_groups_with_pending_reqs',
+> which makes it impossible to handle sync ios concurrently.
+>=20
+> 4) Decrease 'num_groups_with_pending_reqs' when the last queue completes
+> all the requests, while child groups may still have pending
+> requests, patch 8-10;
+>=20
+> This is because, for example:
+> t1 issue sync io on root group, t2 and t3 issue sync io on the same
+> child group. num_groups_with_pending_reqs is 2 now.
+> After t1 stopped, num_groups_with_pending_reqs is still 2. sync io from
+> t2 and t3 still can't be handled concurrently.
+>=20
+> fio test script: startdelay is used to avoid queue merging
+> [global]
+> filename=3D/dev/nvme0n1
+> allow_mounted_write=3D0
+> ioengine=3Dpsync
+> direct=3D1
+> ioscheduler=3Dbfq
+> offset_increment=3D10g
+> group_reporting
+> rw=3Drandwrite
+> bs=3D4k
+>=20
+> [test1]
+> numjobs=3D1
+>=20
+> [test2]
+> startdelay=3D1
+> numjobs=3D1
+>=20
+> [test3]
+> startdelay=3D2
+> numjobs=3D1
+>=20
+> [test4]
+> startdelay=3D3
+> numjobs=3D1
+>=20
+> [test5]
+> startdelay=3D4
+> numjobs=3D1
+>=20
+> [test6]
+> startdelay=3D5
+> numjobs=3D1
+>=20
+> [test7]
+> startdelay=3D6
+> numjobs=3D1
+>=20
+> [test8]
+> startdelay=3D7
+> numjobs=3D1
+>=20
+> test result:
+> running fio on root cgroup
+> v5.17-rc6:	   550 Mib/s
+> v5.17-rc6-patched: 550 Mib/s
+>=20
+> running fio on non-root cgroup
+> v5.17-rc6:	   349 Mib/s
+> v5.17-rc6-patched: 550 Mib/s
+>=20
+> Yu Kuai (11):
+>    block, bfq: add new apis to iterate bfq entities
+>    block, bfq: apply news apis where root group is not expected
+>    block, bfq: cleanup for __bfq_activate_requeue_entity()
+>    block, bfq: move the increasement of 'num_groups_with_pending_reqs' to
+>      it's caller
+>    block, bfq: count root group into 'num_groups_with_pending_reqs'
+>    block, bfq: do not idle if only one cgroup is activated
+>    block, bfq: only count parent bfqg when bfqq is activated
+>    block, bfq: record how many queues have pending requests in bfq_group
+>    block, bfq: move forward __bfq_weights_tree_remove()
+>    block, bfq: decrease 'num_groups_with_pending_reqs' earlier
+>    block, bfq: cleanup bfqq_group()
+>=20
+>   block/bfq-cgroup.c  | 13 +++----
+>   block/bfq-iosched.c | 87 +++++++++++++++++++++++----------------------
+>   block/bfq-iosched.h | 41 +++++++++++++--------
+>   block/bfq-wf2q.c    | 56 +++++++++++++++--------------
+>   4 files changed, 106 insertions(+), 91 deletions(-)
+>=20
