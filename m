@@ -1,120 +1,123 @@
-From: "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH -next 00/11] support concurrent sync io for bfq on a
- specail occasion
-Date: Fri, 11 Mar 2022 14:31:58 +0800
-Message-ID: <e299180e-cdbd-0837-8478-5e397ac8166b@huawei.com>
-References: <20220305091205.4188398-1-yukuai3@huawei.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] memcg: sync flush only if periodic flush is delayed
+Date: Fri, 11 Mar 2022 17:00:51 +0100
+Message-ID: <20220311160051.GA24796@blackbody.suse.cz>
+References: <20220304184040.1304781-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20220305091205.4188398-1-yukuai3@huawei.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1647014453; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=SAaUOGAe1srGHsWHBvn1FZ7QUyxX7XpJoMnIGqLANGo=;
+        b=JC9r4EOT7aEN0yB8Qf9FysIjDt/Lfq9D5zM4Ke/NbM9uN/KN1uAZpE5K4BgUSbilo63d9z
+        ht/QmX4FXDK1KjhUAtCwUayHbXzLF9H3rBvvtmdT+W0F37+q8YPjroPqnmmlYH+VtrjBi7
+        QtXDY6i3jI+KGH0cCUUGI9NsJFBQN9M=
+Content-Disposition: inline
+In-Reply-To: <20220304184040.1304781-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org, jack@suse.cz
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="utf-8"
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Frank Hofmann <fhofmann-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Dao <dqminh-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-friendly ping ...
+Hello.
 
-=D4=DA 2022/03/05 17:11, Yu Kuai =D0=B4=B5=C0:
-> Currently, bfq can't handle sync io concurrently as long as they
-> are not issued from root group. This is because
-> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
-> bfq_asymmetric_scenario().
->=20
-> This patchset tries to support concurrent sync io if all the sync ios
-> are issued from the same cgroup:
->=20
-> 1) Count root_group into 'num_groups_with_pending_reqs', patch 1-5;
->=20
-> 2) Don't idle if 'num_groups_with_pending_reqs' is 1, patch 6;
->=20
-> 3) Don't count the group if the group doesn't have pending requests,
-> while it's child groups may have pending requests, patch 7;
->=20
-> This is because, for example:
-> if sync ios are issued from cgroup /root/c1/c2, root, c1 and c2
-> will all be counted into 'num_groups_with_pending_reqs',
-> which makes it impossible to handle sync ios concurrently.
->=20
-> 4) Decrease 'num_groups_with_pending_reqs' when the last queue completes
-> all the requests, while child groups may still have pending
-> requests, patch 8-10;
->=20
-> This is because, for example:
-> t1 issue sync io on root group, t2 and t3 issue sync io on the same
-> child group. num_groups_with_pending_reqs is 2 now.
-> After t1 stopped, num_groups_with_pending_reqs is still 2. sync io from
-> t2 and t3 still can't be handled concurrently.
->=20
-> fio test script: startdelay is used to avoid queue merging
-> [global]
-> filename=3D/dev/nvme0n1
-> allow_mounted_write=3D0
-> ioengine=3Dpsync
-> direct=3D1
-> ioscheduler=3Dbfq
-> offset_increment=3D10g
-> group_reporting
-> rw=3Drandwrite
-> bs=3D4k
->=20
-> [test1]
-> numjobs=3D1
->=20
-> [test2]
-> startdelay=3D1
-> numjobs=3D1
->=20
-> [test3]
-> startdelay=3D2
-> numjobs=3D1
->=20
-> [test4]
-> startdelay=3D3
-> numjobs=3D1
->=20
-> [test5]
-> startdelay=3D4
-> numjobs=3D1
->=20
-> [test6]
-> startdelay=3D5
-> numjobs=3D1
->=20
-> [test7]
-> startdelay=3D6
-> numjobs=3D1
->=20
-> [test8]
-> startdelay=3D7
-> numjobs=3D1
->=20
-> test result:
-> running fio on root cgroup
-> v5.17-rc6:	   550 Mib/s
-> v5.17-rc6-patched: 550 Mib/s
->=20
-> running fio on non-root cgroup
-> v5.17-rc6:	   349 Mib/s
-> v5.17-rc6-patched: 550 Mib/s
->=20
-> Yu Kuai (11):
->    block, bfq: add new apis to iterate bfq entities
->    block, bfq: apply news apis where root group is not expected
->    block, bfq: cleanup for __bfq_activate_requeue_entity()
->    block, bfq: move the increasement of 'num_groups_with_pending_reqs' to
->      it's caller
->    block, bfq: count root group into 'num_groups_with_pending_reqs'
->    block, bfq: do not idle if only one cgroup is activated
->    block, bfq: only count parent bfqg when bfqq is activated
->    block, bfq: record how many queues have pending requests in bfq_group
->    block, bfq: move forward __bfq_weights_tree_remove()
->    block, bfq: decrease 'num_groups_with_pending_reqs' earlier
->    block, bfq: cleanup bfqq_group()
->=20
->   block/bfq-cgroup.c  | 13 +++----
->   block/bfq-iosched.c | 87 +++++++++++++++++++++++----------------------
->   block/bfq-iosched.h | 41 +++++++++++++--------
->   block/bfq-wf2q.c    | 56 +++++++++++++++--------------
->   4 files changed, 106 insertions(+), 91 deletions(-)
->=20
+TL;DR rstats are slow but accurate on reader side. To tackle the
+performance regression no flush seems simpler than this patch.
+
+
+So, I've made an overview for myself what were the relevant changes with
+rstat introduction.
+The amount of work is:
+- before
+  R: O(1)
+  W: O(tree_depth)
+
+- after
+  R: O(nr_cpus * nr_cgroups(subtree) * nr_counters) 
+  W: O(tree_depth)
+
+That doesn't look like a positive change especially on the reader side.
+
+(In theory, the reader's work would be amortized but as the original
+report here shows, not all workloads are diluting the flushes
+sufficiently. [1])
+
+The benefit this was traded for was the greater accuracy, the possible
+error is:
+- before
+  - O(nr_cpus * nr_cgroups(subtree) * MEMCG_CHARGE_BATCH)	(1)
+- after
+    O(nr_cpus * MEMCG_CHARGE_BATCH) // sync. flush
+    or
+    O(flush_period * max_cr) // periodic flush only		(2)
+                             // max_cr is per-counter max change rate
+
+So we could argue that if the pre-rstat kernels did just fine with the
+error (1), they would not be worse with periodic flush if we can compare
+(1) and (2). 
+
+On Fri, Mar 04, 2022 at 06:40:40PM +0000, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> This patch fixes this regression by making the rstat flushing
+> conditional in the performance critical codepaths. More specifically,
+> the kernel relies on the async periodic rstat flusher to flush the stats
+> and only if the periodic flusher is delayed by more than twice the
+> amount of its normal time window then the kernel allows rstat flushing
+> from the performance critical codepaths.
+
+I'm not sure whether your patch attempts to solve the problem of
+(a) periodic flush getting stuck or (b) limiting error on refault path.
+If it's (a), it should be tackled more systematically (dedicated wq?).
+If it's (b), why not just rely on periodic flush (self answer: (1) and
+(2) comparison is workload dependent).
+
+> Now the question: what are the side-effects of this change? The worst
+> that can happen is the refault codepath will see 4sec old lruvec stats
+> and may cause false (or missed) activations of the refaulted page which
+> may under-or-overestimate the workingset size. Though that is not very
+> concerning as the kernel can already miss or do false activations.
+
+We can't argue what's the effect of periodic only flushing so this
+newly introduced factor would inherit that too. I find it superfluous.
+
+
+Michal
+
+[1] This is worth looking at in more detail.
+
+From the flush condition we have
+  cr * Δt = nr_cpus * MEMCG_CHARGE_BATCH 
+where Δt is time between flushes and cr is global change rate.
+
+cr composes of all updates together (corresponds to stats_updates in
+memcg_rstat_updated(), max_cr is change rate per counter)
+  cr = Σ cr_i <= nr_counters * max_cr 
+
+By combining these two we get shortest time between flushes:
+  cr * Δt <= nr_counters * max_cr * Δt
+  nr_cpus * MEMCG_CHARGE_BATCH <= nr_counters * max_cr * Δt
+  Δt >= (nr_cpus * MEMCG_CHARGE_BATCH) / (nr_counters * max_cr)
+
+We are interested in 
+  R_amort = flush_work / Δt
+which is
+  R_amort <= flush_work * nr_counters * max_cr / (nr_cpus * MEMCG_CHARGE_BATCH)
+
+R_amort: O( nr_cpus * nr_cgroups(subtree) * nr_counters * (nr_counters * max_cr) / (nr_cpus * MEMCG_CHARGE_BATCH) )
+R_amort: O( nr_cgroups(subtree) * nr_counters^2 * max_cr) / (MEMCG_CHARGE_BATCH) )
+
+The square looks interesting given there are already tens of counters.
+(As data from Ivan have shown, we can hardly restore the pre-rstat
+performance on the read side even with mere mod_delayed_work().)
+This is what you partially solved with introduction of NR_MEMCG_EVENTS
+but the stats_updates was still sum of all events, so the flush might
+have still triggered too frequently.
+
+Maybe that would be better long-term approach, splitting into accurate
+and approximate counters and reflect that in the error estimator stats_updates.
+
+Or some other optimization of mem_cgroup_css_rstat_flush().
+
+
