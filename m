@@ -1,71 +1,118 @@
-From: Chengming Zhou <zhouchengming@bytedance.com>
-Subject: Re: [External] Re: [PATCH linux-next] cgroup: fix suspicious
- rcu_dereference_check() usage warning
-Date: Sat, 12 Mar 2022 23:54:28 +0800
-Message-ID: <bde81f0b-4b30-1b10-aa2c-bed969675c42@bytedance.com>
-References: <20220305034103.57123-1-zhouchengming@bytedance.com>
- <20220312121913.GA28057@worktop.programming.kicks-ass.net>
- <20220312133445.GA28086@worktop.programming.kicks-ass.net>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] memcg: sync flush only if periodic flush is delayed
+Date: Sat, 12 Mar 2022 19:07:15 +0000
+Message-ID: <20220312190715.cx4aznnzf6zdp7wv@google.com>
+References: <20220304184040.1304781-1-shakeelb@google.com> <20220311160051.GA24796@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=t5hRVqsCZQix2UY1u0pXX2LoR2L7u3LZkbnGzh3aN1w=;
-        b=x0vGbkjA4ZMve+h8aOuwoEFFDAiZeBsbsA3hLtcw48KN9IQYfrMOTSjVdXlMrQnKBS
-         8Pwra4IFKSvVJ7Zt9WOkyAxXekH5VxgwAbUiGPnQts8mijCZPi32wSr4q+z4bd/D8bA3
-         +vkG0ULgFnefCGx4rC/cP48IvQxQRNbEkqmrBeos2QSV9kv1DjRNrDWfiy+wFQajqd21
-         ZCK7Fxtj8+vRYo1YPEUJIDkk/RxafJVAtcSR1YvG7fjOHDwBMYLzdjLJJ1wqoTGoEet7
-         eA/6JG+NFqYfX+sFUwTBd9AxJlkC6fcFE/qJnPfOxThHvA/g0LZLKsJ8zLLl5LnlXFZb
-         LEBQ==
-Content-Language: en-US
-In-Reply-To: <20220312133445.GA28086@worktop.programming.kicks-ass.net>
+        d=google.com; s=20210112;
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc:content-transfer-encoding;
+        bh=TWhUcEhJnfBz1oTu7BiAWZwmJa9vzrkYnnSYzliORuM=;
+        b=YlL5wbo0sMKLZYKtJvoEY2SZ/FFC4zjf4E0ldQCYpcuQWiSq6tThSfLpZXtjOymvO0
+         zjD3DkgKcLDthdXByQmLr8kU7NGYUeJEJvN6F72GWhtz78HJQP3DpFshdY24SfaMxjTG
+         7pZXfq6bIgmxKpXHWte/pr0AuKz9s7VSgoSOYQV9ArZz4sLdjMS02gBMIDzBOMSLAc0Z
+         TMLehhLhzoWfUkvUQlwiq8mqeYokM5OOjt2YEjn9JhOva+1q+pW6zbdO7xwq/TWpwrr7
+         cCMi+uWUnhod11KQWTTeZtHhhean/gyxtSr+o2uRczHcH3q3JKX5gXFcwtUTWcPywtRY
+         rN/g==
+In-Reply-To: <20220311160051.GA24796-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com, Linux Kernel Functional Testing <lkft@linaro.org>, syzbot+16e3f2c77e7c5a0113f9@syzkaller.appspotmail.com, Zhouyi Zhou <zhouzhouyi@gmail.com>
+Content-Type: text/plain; charset="utf-8"; format="flowed"; delsp="yes"
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Frank Hofmann <fhofmann-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Dao <dqminh-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2022/3/12 9:34 下午, Peter Zijlstra wrote:
-> On Sat, Mar 12, 2022 at 01:19:13PM +0100, Peter Zijlstra wrote:
->> On Sat, Mar 05, 2022 at 11:41:03AM +0800, Chengming Zhou wrote:
->>> task_css_set_check() will use rcu_dereference_check() to check for
->>> rcu_read_lock_held() on the read-side, which is not true after commit
->>> dc6e0818bc9a ("sched/cpuacct: Optimize away RCU read lock"). This
->>> commit drop explicit rcu_read_lock(), change to RCU-sched read-side
->>> critical section. So fix the RCU warning by adding check for
->>> rcu_read_lock_sched_held().
->>>
->>> Fixes: dc6e0818bc9a ("sched/cpuacct: Optimize away RCU read lock")
->>> Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
->>> Reported-by: syzbot+16e3f2c77e7c5a0113f9@syzkaller.appspotmail.com
->>> Tested-by: Zhouyi Zhou <zhouzhouyi@gmail.com>
->>> Signed-off-by: Chengming Zhou <zhouchengming@bytedance.com>
->>
->> Thanks, I'll go stick this in sched/core so it's in the same branch that
->> caused the problem.
-> 
-> FWIW I never saw this patch because it doesn't instantly look like a
-> patch I should be interested in. It's classified as 'for-next' and I
-> don't run -next, sfr does that. Then it's tagged as cgroup, which I also
-> don't do.
-
-Oh, sorry for this.. I should've add "cpuacct" in the subject. The
-"linux-next" prefix was added because I thought any patch based on
-the linux-next branch should add this prefix.
-
-> 
-> Nowhere does that look like a patch that wants to go in sched/core and
-> fixes a cpuacct issue.
-> 
-> On top of that, I still don't agree with this, I really think
-> rcu_dereference_check() itself should be changed.
-
-Yes, I think so too. This patch is workaround to fix the warning to
-follow the usage in RCU Documentation.
-
-Maybe changes should be made in RCU code to make rcu_dereference_check()
-more flexible as you expressed in the conversation with Paul.
-
-Thanks.
+SGkgTWljaGFsLA0KDQpPbiBGcmksIE1hciAxMSwgMjAyMiBhdCAwNTowMDo1MVBNICswMTAwLCBN
+aWNoYWwgS291dG7DvSB3cm90ZToNCj4gSGVsbG8uDQoNCj4gVEw7RFIgcnN0YXRzIGFyZSBzbG93
+IGJ1dCBhY2N1cmF0ZSBvbiByZWFkZXIgc2lkZS4gVG8gdGFja2xlIHRoZQ0KPiBwZXJmb3JtYW5j
+ZSByZWdyZXNzaW9uIG5vIGZsdXNoIHNlZW1zIHNpbXBsZXIgdGhhbiB0aGlzIHBhdGNoLg0KDQoN
+ClRoZSB0ZXJtICdzaW1wbGVyJyBpcyB2ZXJ5IHN1YmplY3RpdmUgaGVyZSBhbmQgSSB3b3VsZCBh
+cmd1ZSB0aGlzIHBhdGNoDQppcyBub3QgdGhhdCBjb21wbGljYXRlZCB0aGFuIG5vIGZsdXNoIGJ1
+dCBJIHRoaW5rIHRoZXJlIGlzIG5vIGJlbmVmaXQgb24NCmFyZ3Vpbmcgb24gdGhpcyBhcyB0aGVz
+ZSBhcmUgbm90IHNvbWUgc3RhYmxlIEFQSSB3aGljaCBjYW4gbm90IGJlDQpjaGFuZ2VkIGxhdGVy
+LiBXZSBjYW4gYWx3YXlzIGNvbWUgYmFjayBhbmQgY2hhbmdlIGJhc2VkIG9uIG5ldyBmaW5kaW5n
+cy4NCg0KQmVmb3JlIGdvaW5nIGZ1cnRoZXIsIEkgZG8gd2FudCB0byBtZW50aW9uIHRoZSBtYWlu
+IHJlYXNvbiB0byBtb3ZlIHRvDQpyc3RhdCBpbmZyYXN0cnVjdHVyZSB3YXMgdG8gZGVjb3VwbGUg
+dGhlIGVycm9yIHJhdGUgaW4gdGhlIHN0YXRzIGZyb20NCnRoZSBudW1iZXIgb2YgbWVtb3J5IGNn
+cm91cHMgYW5kIHRoZSBudW1iZXIgb2Ygc3RhdCBpdGVtcy4gU28sIEkgd2lsbA0KZm9jdXMgb24g
+dGhlIGVycm9yIHJhdGUgaW4gdGhpcyBlbWFpbC4NCg0KWy4uLl0NCg0KPiBUaGUgYmVuZWZpdCB0
+aGlzIHdhcyB0cmFkZWQgZm9yIHdhcyB0aGUgZ3JlYXRlciBhY2N1cmFjeSwgdGhlIHBvc3NpYmxl
+DQo+IGVycm9yIGlzOg0KPiAtIGJlZm9yZQ0KPiAgICAtIE8obnJfY3B1cyAqIG5yX2Nncm91cHMo
+c3VidHJlZSkgKiBNRU1DR19DSEFSR0VfQkFUQ0gpCSgxKQ0KDQpQbGVhc2Ugbm90ZSB0aGF0ICgx
+KSBpcyB0aGUgcG9zc2libGUgZXJyb3IgZm9yIGVhY2ggc3RhdCBpdGVtIGFuZA0Kd2l0aG91dCBh
+bnkgdGltZSBib3VuZC4NCg0KPiAtIGFmdGVyDQo+ICAgICAgTyhucl9jcHVzICogTUVNQ0dfQ0hB
+UkdFX0JBVENIKSAvLyBzeW5jLiBmbHVzaA0KDQpUaGUgYWJvdmUgaXMgYWNyb3NzIGFsbCB0aGUg
+c3RhdCBpdGVtcy4NCg0KPiAgICAgIG9yDQo+ICAgICAgTyhmbHVzaF9wZXJpb2QgKiBtYXhfY3Ip
+IC8vIHBlcmlvZGljIGZsdXNoIG9ubHkJCSgyKQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAvLyBtYXhfY3IgaXMgcGVyLWNvdW50ZXIgbWF4IGNoYW5nZSByYXRlDQoNCkFuZCB0aGlz
+IGFib3ZlIG9uZSwgSSBhbSBhc3N1bWluZywgaXMgZm9yIHBlcmZvcm1hbmNlIGNyaXRpY2FsIHJl
+YWRlcnMNCih3b3JraW5nc2V0X3JlZmF1bHQgaW50cm9kdWNlZCBieSB0aGlzIHBhdGNoKSBhbmQg
+Zmx1c2hfcGVyaW9kIGhlcmUgaXMgNA0Kc2Vjb25kcy4gUGxlYXNlIGNvcnJlY3QgbWUgaWYgSSBt
+aXN1bmRlcnN0b29kIHRoaXMuDQoNCg0KPiBTbyB3ZSBjb3VsZCBhcmd1ZSB0aGF0IGlmIHRoZSBw
+cmUtcnN0YXQga2VybmVscyBkaWQganVzdCBmaW5lIHdpdGggdGhlDQo+IGVycm9yICgxKSwgdGhl
+eSB3b3VsZCBub3QgYmUgd29yc2Ugd2l0aCBwZXJpb2RpYyBmbHVzaCBpZiB3ZSBjYW4gY29tcGFy
+ZQ0KPiAoMSkgYW5kICgyKS4NCg0KSSBhZ3JlZSB3aXRoIHRoaXMgYXNzZXNzbWVudCBidXQgcGxl
+YXNlIG5vdGUgdGhhdCBwcmUtcnN0YXQga2VybmVscyB3ZXJlDQpub3QgZ29vZCBmb3IgbWFjaGlu
+ZXMgd2l0aCBsYXJnZSBudW1iZXIgb2YgQ1BVcyBhbmQgcnVubmluZyBsYXJnZSBudW1iZXINCm9m
+IHdvcmtsb2Fkcy4NCg0KWy4uLl0NCg0KPiBJJ20gbm90IHN1cmUgd2hldGhlciB5b3VyIHBhdGNo
+IGF0dGVtcHRzIHRvIHNvbHZlIHRoZSBwcm9ibGVtIG9mDQo+IChhKSBwZXJpb2RpYyBmbHVzaCBn
+ZXR0aW5nIHN0dWNrIG9yIChiKSBsaW1pdGluZyBlcnJvciBvbiByZWZhdWx0IHBhdGguDQo+IElm
+IGl0J3MgKGEpLCBpdCBzaG91bGQgYmUgdGFja2xlZCBtb3JlIHN5c3RlbWF0aWNhbGx5IChkZWRp
+Y2F0ZWQgd3E/KS4NCj4gSWYgaXQncyAoYiksIHdoeSBub3QganVzdCByZWx5IG9uIHBlcmlvZGlj
+IGZsdXNoIChzZWxmIGFuc3dlcjogKDEpIGFuZA0KPiAoMikgY29tcGFyaXNvbiBpcyB3b3JrbG9h
+ZCBkZXBlbmRlbnQpLg0KDQoNCkl0IGlzIChiKSB0aGF0IEkgYW0gYWltaW5nIGZvciBpbiB0aGlz
+IHBhdGNoLiBBdCBsZWFzdCAoYSkgd2FzIG5vdA0KaGFwcGVuaW5nIGluIHRoZSBjbG91ZGZsYXJl
+IGV4cGVyaW1lbnRzLiBBcmUgeW91IHN1Z2dlc3RpbmcgaGF2aW5nIGENCmRlZGljYXRlZCBoaWdo
+IHByaW9yaXR5IHdxIHdvdWxkIHNvbHZlIGJvdGggKGEpIGFuZCAoYik/DQoNCj4gPiBOb3cgdGhl
+IHF1ZXN0aW9uOiB3aGF0IGFyZSB0aGUgc2lkZS1lZmZlY3RzIG9mIHRoaXMgY2hhbmdlPyBUaGUg
+d29yc3QNCj4gPiB0aGF0IGNhbiBoYXBwZW4gaXMgdGhlIHJlZmF1bHQgY29kZXBhdGggd2lsbCBz
+ZWUgNHNlYyBvbGQgbHJ1dmVjIHN0YXRzDQo+ID4gYW5kIG1heSBjYXVzZSBmYWxzZSAob3IgbWlz
+c2VkKSBhY3RpdmF0aW9ucyBvZiB0aGUgcmVmYXVsdGVkIHBhZ2Ugd2hpY2gNCj4gPiBtYXkgdW5k
+ZXItb3Itb3ZlcmVzdGltYXRlIHRoZSB3b3JraW5nc2V0IHNpemUuIFRob3VnaCB0aGF0IGlzIG5v
+dCB2ZXJ5DQo+ID4gY29uY2VybmluZyBhcyB0aGUga2VybmVsIGNhbiBhbHJlYWR5IG1pc3Mgb3Ig
+ZG8gZmFsc2UgYWN0aXZhdGlvbnMuDQoNCj4gV2UgY2FuJ3QgYXJndWUgd2hhdCdzIHRoZSBlZmZl
+Y3Qgb2YgcGVyaW9kaWMgb25seSBmbHVzaGluZyBzbyB0aGlzDQo+IG5ld2x5IGludHJvZHVjZWQg
+ZmFjdG9yIHdvdWxkIGluaGVyaXQgdGhhdCB0b28uIEkgZmluZCBpdCBzdXBlcmZsdW91cy4NCg0K
+DQpTb3JyeSBJIGRpZG4ndCBnZXQgeW91ciBwb2ludC4gV2hhdCBpcyBzdXBlcmZsdW91cz8NCg0K
+DQo+IE1pY2hhbA0KDQo+IFsxXSBUaGlzIGlzIHdvcnRoIGxvb2tpbmcgYXQgaW4gbW9yZSBkZXRh
+aWwuDQoNCg0KT2ggeW91IGRpZCBzb21lIGF3ZXNvbWUgYW5hbHlzaXMgaGVyZS4NCg0KPiAgRnJv
+bSB0aGUgZmx1c2ggY29uZGl0aW9uIHdlIGhhdmUNCj4gICAgY3IgKiDOlHQgPSBucl9jcHVzICog
+TUVNQ0dfQ0hBUkdFX0JBVENIDQo+IHdoZXJlIM6UdCBpcyB0aW1lIGJldHdlZW4gZmx1c2hlcyBh
+bmQgY3IgaXMgZ2xvYmFsIGNoYW5nZSByYXRlLg0KDQo+IGNyIGNvbXBvc2VzIG9mIGFsbCB1cGRh
+dGVzIHRvZ2V0aGVyIChjb3JyZXNwb25kcyB0byBzdGF0c191cGRhdGVzIGluDQo+IG1lbWNnX3Jz
+dGF0X3VwZGF0ZWQoKSwgbWF4X2NyIGlzIGNoYW5nZSByYXRlIHBlciBjb3VudGVyKQ0KPiAgICBj
+ciA9IM6jIGNyX2kgPD0gbnJfY291bnRlcnMgKiBtYXhfY3INCg0KSSBkb24ndCBnZXQgdGhlIHJl
+YXNvbiBvZiBicmVha2luZyAnY3InIGludG8gaW5kaXZpZHVhbCBzdGF0IGl0ZW0gb3INCmNvdW50
+ZXIuIFdoYXQgaXMgdGhlIGJlbmVmaXQ/IFdlIHdhbnQgdG8ga2VlcCB0aGUgZXJyb3IgcmF0ZSBk
+ZWNvdXBsZWQNCmZyb20gdGhlIG51bWJlciBvZiBjb3VudGVycyAob3Igc3RhdCBpdGVtcykuDQoN
+Cg0KPiBCeSBjb21iaW5pbmcgdGhlc2UgdHdvIHdlIGdldCBzaG9ydGVzdCB0aW1lIGJldHdlZW4g
+Zmx1c2hlczoNCj4gICAgY3IgKiDOlHQgPD0gbnJfY291bnRlcnMgKiBtYXhfY3IgKiDOlHQNCj4g
+ICAgbnJfY3B1cyAqIE1FTUNHX0NIQVJHRV9CQVRDSCA8PSBucl9jb3VudGVycyAqIG1heF9jciAq
+IM6UdA0KPiAgICDOlHQgPj0gKG5yX2NwdXMgKiBNRU1DR19DSEFSR0VfQkFUQ0gpIC8gKG5yX2Nv
+dW50ZXJzICogbWF4X2NyKQ0KDQo+IFdlIGFyZSBpbnRlcmVzdGVkIGluDQo+ICAgIFJfYW1vcnQg
+PSBmbHVzaF93b3JrIC8gzpR0DQo+IHdoaWNoIGlzDQo+ICAgIFJfYW1vcnQgPD0gZmx1c2hfd29y
+ayAqIG5yX2NvdW50ZXJzICogbWF4X2NyIC8gKG5yX2NwdXMgKiAgDQo+IE1FTUNHX0NIQVJHRV9C
+QVRDSCkNCg0KPiBSX2Ftb3J0OiBPKCBucl9jcHVzICogbnJfY2dyb3VwcyhzdWJ0cmVlKSAqIG5y
+X2NvdW50ZXJzICogKG5yX2NvdW50ZXJzICogIA0KPiBtYXhfY3IpIC8gKG5yX2NwdXMgKiBNRU1D
+R19DSEFSR0VfQkFUQ0gpICkNCj4gUl9hbW9ydDogTyggbnJfY2dyb3VwcyhzdWJ0cmVlKSAqIG5y
+X2NvdW50ZXJzXjIgKiBtYXhfY3IpIC8gIA0KPiAoTUVNQ0dfQ0hBUkdFX0JBVENIKSApDQoNCj4g
+VGhlIHNxdWFyZSBsb29rcyBpbnRlcmVzdGluZyBnaXZlbiB0aGVyZSBhcmUgYWxyZWFkeSB0ZW5z
+IG9mIGNvdW50ZXJzLg0KPiAoQXMgZGF0YSBmcm9tIEl2YW4gaGF2ZSBzaG93biwgd2UgY2FuIGhh
+cmRseSByZXN0b3JlIHRoZSBwcmUtcnN0YXQNCj4gcGVyZm9ybWFuY2Ugb24gdGhlIHJlYWQgc2lk
+ZSBldmVuIHdpdGggbWVyZSBtb2RfZGVsYXllZF93b3JrKCkuKQ0KPiBUaGlzIGlzIHdoYXQgeW91
+IHBhcnRpYWxseSBzb2x2ZWQgd2l0aCBpbnRyb2R1Y3Rpb24gb2YgTlJfTUVNQ0dfRVZFTlRTDQoN
+Ck15IG1haW4gcmVhc29uIGJlaGluZCB0cnlpbmcgTlJfTUVNQ0dfRVZFTlRTIHdhcyB0byByZWR1
+Y2UgZmx1c2hfd29yayBieQ0KcmVkdWNpbmcgbnJfY291bnRlcnMgYW5kIEkgZG9uJ3QgdGhpbmsg
+bnJfY291bnRlcnMgc2hvdWxkIGhhdmUgYW4gaW1wYWN0DQpvbiDOlHQuDQoNCj4gYnV0IHRoZSBz
+dGF0c191cGRhdGVzIHdhcyBzdGlsbCBzdW0gb2YgYWxsIGV2ZW50cywgc28gdGhlIGZsdXNoIG1p
+Z2h0DQo+IGhhdmUgc3RpbGwgdHJpZ2dlcmVkIHRvbyBmcmVxdWVudGx5Lg0KDQo+IE1heWJlIHRo
+YXQgd291bGQgYmUgYmV0dGVyIGxvbmctdGVybSBhcHByb2FjaCwgc3BsaXR0aW5nIGludG8gYWNj
+dXJhdGUNCj4gYW5kIGFwcHJveGltYXRlIGNvdW50ZXJzIGFuZCByZWZsZWN0IHRoYXQgaW4gdGhl
+IGVycm9yIGVzdGltYXRvciAgDQo+IHN0YXRzX3VwZGF0ZXMuDQoNCj4gT3Igc29tZSBvdGhlciBv
+cHRpbWl6YXRpb24gb2YgbWVtX2Nncm91cF9jc3NfcnN0YXRfZmx1c2goKS4NCg0KDQpUaGFua3Mg
+Zm9yIHlvdXIgaW5zaWdodHMuIFRoaXMgaXMgcmVhbGx5IGF3ZXNvbWUgYW5kIGdvb2QgdG8gZXhw
+bG9yZSB0aGUNCmxvbmctdGVybSBhcHByb2FjaC4gRG8geW91IGhhdmUgYW55IHN0cm9uZyBjb25j
+ZXJucyB3aXRoIHRoZSBjdXJyZWN0DQpwYXRjaD8gSSB0aGluayB3ZSBzaG91bGQgcHJvY2VlZCB3
+aXRoIHRoaXMgYW5kIGZvY3VzIG1vcmUgb24gbG9uZy10ZXJtDQphcHByb2FjaC4NCg0KdGhhbmtz
+LA0KU2hha2VlbA0KDQoNCg0K
