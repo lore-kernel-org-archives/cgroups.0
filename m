@@ -1,63 +1,89 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC bpf-next] Hierarchical Cgroup Stats Collection Using BPF
-Date: Sun, 13 Mar 2022 19:35:42 -1000
-Message-ID: <Yi7ULpR70HatVP/8@slm.duckdns.org>
-References: <CAJD7tkbQNpeX8MGw9dXa5gi6am=VNXwgwUoTd6+K=foixEm1fw@mail.gmail.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [Patch v2 3/3] mm/memcg: add next_mz back to soft limit tree if
+ not reclaimed yet
+Date: Mon, 14 Mar 2022 10:41:13 +0100
+Message-ID: <Yi8NudEX/sZsO2nO@dhcp22.suse.cz>
+References: <20220312071623.19050-1-richard.weiyang@gmail.com>
+ <20220312071623.19050-3-richard.weiyang@gmail.com>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=C2/3lb1hdkF97hNbei7dfXomt9xkrDDtfYf9ru8Gdm4=;
-        b=oNVR0qUtUkejwD2PE40U3m3bOfecNXxVeKkVp9fOm+3Me77M45+NPeo55ubqZlKq7r
-         MB7tiA63/q1i44rKG6d5ltclJzQv3Qz6hhh3RVq9xq7IO4ncnICocd4C9j5XVYHLTf1H
-         0t37CbsvKjlG0aLe8uQgii2HaQrObeg3Am1odGPvV1Uc+c31V9C/Ju30rReVHe8B7ESC
-         epUdibdIm8U4Wa6yuG/J9mGpJ520zSl63IpEll5h0ZCNatE7cUD1FFvlYx5LP4BamLZT
-         MjTkoUVR2DYc65MSqHiATmVgOUcADjVgzLehE3W1M6UCy8UGQSH8LXrnv7gEq+fTE4Gr
-         17Kw==
-Sender: Tejun Heo <htejun@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1647250873; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=vjCAmfOeIAmJsBLZGTQdftIhcJ0qr7uynuuuQ3TesCo=;
+        b=NzzajjqEfhDUN2nmysnf+Itb4aFQe8SNtcbcddDI3ZQKOLMqLXLomuKFhQbSjmDeW6Lekw
+        7b5Hl1XvWv8QXxMRHPR6mBKZIsXYiF69jyNsz+nsuhsZ2iZB/auOvRvq5e22Q+WIs2Hc3R
+        DfgIu7LRtH+3wSJn0pEhnJzOMIKDtUE=
 Content-Disposition: inline
-In-Reply-To: <CAJD7tkbQNpeX8MGw9dXa5gi6am=VNXwgwUoTd6+K=foixEm1fw@mail.gmail.com>
+In-Reply-To: <20220312071623.19050-3-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Alexei Starovoitov <ast@kernel.org>, Andrii Nakryiko <andrii@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Johannes Weiner <hannes@cmpxchg.org>, Hao Luo <haoluo@google.com>, Shakeel Butt <shakeelb@google.com>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, bpf@vger.kernel.org, KP Singh <kpsingh@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Hello,
+On Sat 12-03-22 07:16:23, Wei Yang wrote:
+> When memory reclaim failed for a maximum number of attempts and we bail
+> out of the reclaim loop, we forgot to put the target mem_cgroup chosen
+> for next reclaim back to the soft limit tree. This prevented pages in
+> the mem_cgroup from being reclaimed in the future even though the
+> mem_cgroup exceeded its soft limit.
+> 
+> Let's say there are two mem_cgroup and both of them exceed the soft
+> limit, while the first one is more active then the second. Since we add
+> a mem_cgroup to soft limit tree every 1024 event, the second one just
+> get a rare chance to be put on soft limit tree even it exceeds the
+> limit.
 
-On Wed, Mar 09, 2022 at 12:27:15PM -0800, Yosry Ahmed wrote:
-...
-> These problems are already addressed by the rstat aggregation
-> mechanism in the kernel, which is primarily used for memcg stats. We
+yes, 1024 could be just 4MB of memory or 2GB if all the charged pages
+are THPs. So the excess can build up considerably.
 
-Not that it matters all that much but I don't think the above statement is
-true given that sched stats are an integrated part of the rstat
-implementation and io was converted before memcg.
+> As time goes on, the first mem_cgroup was kept close to its soft limit
+> due to reclaim activities, while the memory usage of the second
+> mem_cgroup keeps growing over the soft limit for a long time due to its
+> relatively rare occurrence.
+> 
+> This patch adds next_mz back to prevent this sceanrio.
+> 
+> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-> - For every cgroup, we will either use flags to distinguish BPF stats
-> updates from normal stats updates, or flush both anyway (memcg stats
-> are periodically flushed anyway).
+Even though your changelog is different the change itself is identical to
+https://lore.kernel.org/linux-mm/8d35206601ccf0e1fe021d24405b2a0c2f4e052f.1613584277.git.tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org/
+In those cases I would preserve the the original authorship by
+From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+and add his s-o-b before yours.
 
-I'd just keep them together. Usually most activities tend to happen
-together, so it's cheaper to aggregate all of them in one go in most cases.
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-> - Provide flags to enable/disable using per-cpu arrays (for stats that
-> are not updated frequently), and enable/disable hierarchical
-> aggregation (for non-hierarchical stats, they can still make benefit
-> of the automatic entries creation & deletion).
-> - Provide different hierarchical aggregation operations : SUM, MAX, MIN, etc.
-> - Instead of an array as the map value, use a struct, and let the user
-> provide an aggregator function in the form of a BPF program.
+Thanks!
 
-I'm more partial to the last option. It does make the usage a bit more
-compilcated but hopefully it shouldn't be too bad with good examples.
-
-I don't have strong opinions on the bpf side of things but it'd be great to
-be able to use rstat from bpf.
-
-Thanks.
+> ---
+>  mm/memcontrol.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 344a7e891bc5..e803ff02aae2 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3493,8 +3493,13 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+>  			loop > MEM_CGROUP_MAX_SOFT_LIMIT_RECLAIM_LOOPS))
+>  			break;
+>  	} while (!nr_reclaimed);
+> -	if (next_mz)
+> +	if (next_mz) {
+> +		spin_lock_irq(&mctz->lock);
+> +		excess = soft_limit_excess(next_mz->memcg);
+> +		__mem_cgroup_insert_exceeded(next_mz, mctz, excess);
+> +		spin_unlock_irq(&mctz->lock);
+>  		css_put(&next_mz->memcg->css);
+> +	}
+>  	return nr_reclaimed;
+>  }
+>  
+> -- 
+> 2.33.1
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
