@@ -1,11 +1,10 @@
 From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [Patch v2 3/3] mm/memcg: add next_mz back to soft limit tree if
- not reclaimed yet
-Date: Mon, 14 Mar 2022 23:05:48 +0000
-Message-ID: <20220314230548.wo4colcwqxhhf3mx@master>
+Subject: Re: [Patch v2 1/3] mm/memcg: mz already removed from rb_tree in
+ mem_cgroup_largest_soft_limit_node()
+Date: Mon, 14 Mar 2022 23:21:33 +0000
+Message-ID: <20220314232133.owoq5vzsd2bvggma@master>
 References: <20220312071623.19050-1-richard.weiyang@gmail.com>
- <20220312071623.19050-3-richard.weiyang@gmail.com>
- <Yi8NudEX/sZsO2nO@dhcp22.suse.cz>
+ <Yi8QN+5oeUWWJQNv@dhcp22.suse.cz>
 Reply-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -13,65 +12,82 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=Qviwn+qqmEMoumEZT2BJtbr5DY+V57MiiCdripFWHEs=;
-        b=oWwPhqNJsbdbfbBEvYxrbM0l6Anq0/f5kesf3PtfoAYrvrPg0pv3IZh1/A9zTnTx++
-         eWJ/nZLUEdArGsuk25+IHuZA6tO1dK2E8uTUfmZzYzSJ28Oya28iZ1W74uc0T5DcfmZG
-         RI5GDkYYG4dKRoL6xf34peOMoUHy2JqYZoSbzHkg3wNLPo5fEoFsn3pOcZ0m2nW2AFtB
-         S02gITXU151YZ7SeK9tv+xerQaq4J/IF2de6aMO1Qd/gYePQlogovXbOmGIP9kMz8JRm
-         ZfaGBrHO1Vy2N4tKxhclnKj074FuOSdgE0zQQxk0SynlzkCIScyZZQTgsZmysNBjnPPF
-         JQcg==
+        bh=6R11bvjmYsahK0gJVGfVX+7+GFhuag8IbRPGFQJNZaM=;
+        b=j/wjktA6qFCOxz1OA06/g8dx7uSwFMKqT1oNnSCtnjX9Lwo4cFU16UFCNsIueVvXs3
+         45cYyul1S9P2C1B2MTsXqDa+LqH63ZmJDUpI/YuAkns8KCXgyzG+XhkXpr/Sb2PaBZVQ
+         jtm2fGEWfakDVIzWQT6BBDk4cQ/qmZE24a5z6tPgjz6b8d3yvqR33lFdb9rzMIoz9f6y
+         UzW/dz/Hy034/KJ/7PKPUFNDjOoOqD/03/K1NY/K9qqYu58Yw5ZUpnevBvhbCt9D35Xs
+         CJNYN4OQxQcseaAPOhKoLWG9KQ70ftA298t96NXG+TUhplqRXylnSw91DLK+l9P+g6r/
+         kAmQ==
 Content-Disposition: inline
-In-Reply-To: <Yi8NudEX/sZsO2nO-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <Yi8QN+5oeUWWJQNv-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Mon, Mar 14, 2022 at 10:41:13AM +0100, Michal Hocko wrote:
->On Sat 12-03-22 07:16:23, Wei Yang wrote:
->> When memory reclaim failed for a maximum number of attempts and we bail
->> out of the reclaim loop, we forgot to put the target mem_cgroup chosen
->> for next reclaim back to the soft limit tree. This prevented pages in
->> the mem_cgroup from being reclaimed in the future even though the
->> mem_cgroup exceeded its soft limit.
+On Mon, Mar 14, 2022 at 10:51:51AM +0100, Michal Hocko wrote:
+>On Sat 12-03-22 07:16:21, Wei Yang wrote:
+>> When mz is not NULL, mem_cgroup_largest_soft_limit_node() has removed
+>> it from rb_tree.
 >> 
->> Let's say there are two mem_cgroup and both of them exceed the soft
->> limit, while the first one is more active then the second. Since we add
->> a mem_cgroup to soft limit tree every 1024 event, the second one just
->> get a rare chance to be put on soft limit tree even it exceeds the
->> limit.
+>> Not necessary to call __mem_cgroup_remove_exceeded() again.
 >
->yes, 1024 could be just 4MB of memory or 2GB if all the charged pages
->are THPs. So the excess can build up considerably.
->
->> As time goes on, the first mem_cgroup was kept close to its soft limit
->> due to reclaim activities, while the memory usage of the second
->> mem_cgroup keeps growing over the soft limit for a long time due to its
->> relatively rare occurrence.
->> 
->> This patch adds next_mz back to prevent this sceanrio.
->> 
+>Yes, the call seems to be unnecessary with the current code. mz can
+>either come from mem_cgroup_largest_soft_limit_node or
+>__mem_cgroup_largest_soft_limit_node both rely on the latter so the mz
+>is always off the tree indeed.
+> 
 >> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 >
->Even though your changelog is different the change itself is identical to
->https://lore.kernel.org/linux-mm/8d35206601ccf0e1fe021d24405b2a0c2f4e052f.1613584277.git.tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org/
->In those cases I would preserve the the original authorship by
->From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
->and add his s-o-b before yours.
-
-TBH I don't think this is fair.
-
-I didn't see his original change before I sent this patch. This is a
-coincidence we found the same point for improvement.
-
-It hurts me if you want to change authorship. Well, if you really thinks this
-is what it should be, please remove my s-o-b.
-
->
+>After the changelog is completed you can add
 >Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+
+Will adjust it.
+
 >
+>In general, though, I am not a super fan of changes like these. The code
+>works as expected, the call for __mem_cgroup_remove_exceeded will not
+>really add much of an overhead and at least we can see that mz is always
+>removed before it is re-added back. In a hot path I would care much more
+>of course but this is effectivelly a dead code as the soft limit itself
+>is mostly a relict of past.
+>
+>Please keep this in mind when you want to make further changes to this
+>area. The review is not free of cost and I am not sure spending time on
+>this area is worthwhile unless there is a real usecase in mind.
+>
+
+Yes, after more understanding of the code, I found soft reclaim seems to be
+not that often.
+
+Thanks for your time and will choose some more important area for change.
+
 >Thanks!
+>
+>> ---
+>>  mm/memcontrol.c | 1 -
+>>  1 file changed, 1 deletion(-)
+>> 
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index f898320b678a..d70bf5cf04eb 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -3458,7 +3458,6 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+>>  		nr_reclaimed += reclaimed;
+>>  		*total_scanned += nr_scanned;
+>>  		spin_lock_irq(&mctz->lock);
+>> -		__mem_cgroup_remove_exceeded(mz, mctz);
+>>  
+>>  		/*
+>>  		 * If we failed to reclaim anything from this memory cgroup
+>> -- 
+>> 2.33.1
+>
+>-- 
+>Michal Hocko
+>SUSE Labs
 
 -- 
 Wei Yang
