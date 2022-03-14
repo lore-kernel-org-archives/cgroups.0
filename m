@@ -1,75 +1,56 @@
-From: Olsson John <john.olsson-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org>
-Subject: Split process across multiple schedulers?
-Date: Mon, 14 Mar 2022 15:19:56 +0000
-Message-ID: <b5039be462e8492085b6638df2a761ca@saabgroup.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: Split process across multiple schedulers?
+Date: Mon, 14 Mar 2022 17:43:33 +0100
+Message-ID: <20220314164332.GA20424@blackbody.suse.cz>
+References: <b5039be462e8492085b6638df2a761ca@saabgroup.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 weald.air.saab.se 22EFJvQC027332
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=saabgroup.com;
-        s=weald; t=1647271197;
-        bh=NMfKos0nNiB4Oz0OvKT1xPjH3pw3nC156jsh/mE4gqA=;
-        h=From:To:Subject:Date:From;
-        b=KhboJGrOoKjVSprJ1Ht/lodOSl1Qq7upDHE+RDdylmnRszT66GbthShl941htHTzx
-         C9iikMaFooKa6oodzHo4wwnSrH5zb4fb+7XAGVa/8SKK4NpolKoq2s9Gu8E+bXGsOR
-         sTo3igf9yXe690SmXcPATsG4l9H9CB0ejoOrK5As=
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1647276214; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=U8aU7ATJhIHHpbiq1kzf5ExUEOuGSR5q8FMA3efJl9M=;
+        b=UEr/ewUMeqbiMGFJRQ4009Df5u0krJ3RVo5m9R5yvzdo/MnFsuOSsUDcnHMnjZ/HSubxAH
+        YP5vU5U4XDnG5CSdufFH4QcBxVNUHYTbY+v99/hd2sFMb+XpiylFvDmkHaveyfRKiKqByY
+        sFc4fxtbqUoUU46itK8l6myhdeixj5s=
+Content-Disposition: inline
+In-Reply-To: <b5039be462e8492085b6638df2a761ca-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Olsson John <john.olsson-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi!
+Hello.
 
-I have tried reading the documentation for CGroups V1 and V2 and it seems t=
-hat there is one usecase that we are interested in that *is* supported by C=
-Groups V1 but not by CGroups V2. I really hope that I have overlooked somet=
-hing and you can tell med to RTFM. ;)
+On Mon, Mar 14, 2022 at 03:19:56PM +0000, Olsson John <john.olsson-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org> wrote:
+> I have tried reading the documentation for CGroups V1 and V2 and it
+> seems that there is one usecase that we are interested in that *is*
+> supported by CGroups V1 but not by CGroups V2.
 
-Assume that you want to have a virtual machine running on at least one core=
-. Connected to the VM you need to also have a VMM (Virtual Machine Monitor)=
- that acts as some sort of glue between KVM and the Guest in the VM. For in=
-stance Virtual Box on Linux uses QEmu as its VMM. Within the VM each virtua=
-l core is connected to a thread in the Host computer, and usually you want =
-to have a 1:1 mapping between virtual core threads and physical cores.
+Are you missing CONFIG_RT_GROUP_SCHED and v1 cpu controller's
+cpu.rt_{runtime,period}_us? (Just asking, you didn't mention this
+explicitly in your e-mail but it sounds so and it's a thing that's
+indeed missing in v2.)
 
-Preferably for optimal performance you want to isolate the cores where the =
-virtual core threads are running so nothing else interferes with them (besi=
-des kernel threads connected to IRQs that can't be moved from the isolated =
-cores). The VMM is then running on another core that is not running a virtu=
-al core thread. CGroups is the preferred way of accomplishing this. :)
+> My understanding of CGroups V1 is that it is possible to have one
+> scheduler associated  there are use cases where you might want to have
+> one kind of scheduler for the VMM process (for instance CFS) and
+> another scheduler for the virtual core threads (for instance FIFO).
 
-The virtual core threads need to have some parent process and the VMM proce=
-ss is the natural home of for these threads. My understanding of CGroups V1=
- is that it is possible to have one scheduler associated  there are use cas=
-es where you might want to have one kind of scheduler for the VMM process (=
-for instance CFS) and another scheduler for the virtual core threads (for i=
-nstance FIFO).
+sched_setscheduler(2) applies to threads regardless of cgroup
+membership, there's no change between v1 and v2.
 
-My conclusion after reading the documentation for CGroups V2 is that the ab=
-ove scenario is no longer possible to do. Or have I misunderstood something=
- here?
+(Without CONFIG_RT_GROUP_SCHED all RT threads are effectively in the
+root cgroup.)
 
+> My conclusion after reading the documentation for CGroups V2 is that
+> the above scenario is no longer possible to do. Or have I
+> misunderstood something here?
 
-A bit more detailed background after the general idea behind my question. A=
-ssume that the software running within the VM is an old Windows 98 game you=
- have the license key for (for instance SimCity 3000). The developers of Si=
-mCity 3000 didn't anticipate that you would want to run the game on a compu=
-ter that was several times faster than what existed at its release. Music p=
-lays fine, but when you try to scroll around when zoomed in using the curso=
-r keys on the keyboard (or the mouse by placing the mouse pointer on the ed=
-ge of the screen) the scrolling speed is inhumanly fast. Basically the game=
- is no longer enjoyable to play. It runs too fast.
+You may need to enable threaded mode on v2 (see cgroup.type) to
+manipulate with individual threads across cgroups. (E.g. if you want to
+use cpuset controller to pin/restrict individual threads.)
 
-Trying to slow it down using a tool like cpulimit is way too coarse; the mu=
-sic is no longer possible to listen to as it is played in bursts. However i=
-f you instead have a specially designed scheduler that tries to execute a p=
-rogram with a configured "slow-down"-factor (each scheduling tick you ensur=
-e that it is executed only a fraction of that tick) then you could get it t=
-o run with a just about right speed. However you do not want to slow down V=
-MM with the same scheduler and thus you want to be able to set different sc=
-hedulers for different threads within a single process (assuming that they =
-are running on different cores).
-
-And yes, there are other applications for this besides running old games. ;=
-)
-=20
+Regards,
+Michal
