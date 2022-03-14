@@ -1,33 +1,33 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 1be9b7206b7dbff54b223eee7ef3bc91b80433aa
-Date: Tue, 15 Mar 2022 02:07:04 +0800
-Message-ID: <622f8448.gRZfm2GcpiEE9qdN%lkp@intel.com>
+Subject: [tj-cgroup:for-5.18] BUILD SUCCESS
+ f9da322e864e5cd3dc217480e73f78f47cf40c5b
+Date: Tue, 15 Mar 2022 02:07:11 +0800
+Message-ID: <622f844f./amqu4oGlkN9QUak%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1647281252; x=1678817252;
+  t=1647281295; x=1678817295;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=XVf2pH1d466RZxcPnP6O/bRhFgwua0sKD+tz3OE/LBo=;
-  b=AbcmFh1r6/VxUXqbjR6asRG7BpV4Oo/AXcz2zsXQCpiUbdlqQinqx4hv
-   7cBDTd7UvmGbmhy0TTNBYxHIpcl4E4tJY6lrHnhYTFREhQezjjEtLSe+i
-   ou/UgTips3HSYWBbYvFRQbXcCwJ+46govilYvF2lAwMkxPxwgvCsoT48U
-   DNSjeKMl/HudohjSWuS8hmZERAt3V1uMh6IvUjHV/peE+gHtNXTrBtcLL
-   evOU/g3lK+tje+5dGzFveBNc66xUIlTJe+fdML1wAPt7IkKuF8e8pFV2d
-   bLLzzHIrJD7WVH2KX1/cy3JbgBMfGHhcV/miZ/lpCoijemMtpbd67eJ31
+  bh=ZsZ/YVPtgr3g0B7nWePzofoAP8EzCT6HF1aDW+aWnQ0=;
+  b=hJJUUFV6F2873zXs/c8tL/invZuH40gwt+lCyY97RPGTjxMrydlcD/hq
+   uljUlu/tQBxeaPIqdGvshCf1ArBlMOMAB7jXZ77waBAhOcDaM+Lgl7dl8
+   9iOS0I7B76+3TTy6vnCe80zPak8aKMV+/lumo9w2sPd4Fo7hTP4I4Ep1l
+   8j756v+DPJd+aQ5zyEZt0B6CR8MD9uCB82LuxQpwMli4vpsYO4TUWZQcI
+   iFfyuB6C5GwJ8JYUYngwAct56wdW4s/XvYsHQvyFmTHUlT+79LBi1C5BI
+   Ur2UMLPimajizq8xO76/oytYImeQ0nB/vxCSFt8wrQrRPV//9968fEGlB
    w==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 1be9b7206b7dbff54b223eee7ef3bc91b80433aa  Merge branch 'for-5.18' into for-next
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.18
+branch HEAD: f9da322e864e5cd3dc217480e73f78f47cf40c5b  cgroup: cleanup comments
 
-elapsed time: 726m
+elapsed time: 727m
 
 configs tested: 180
 configs skipped: 3
@@ -66,8 +66,8 @@ powerpc                     ep8248e_defconfig
 powerpc                     tqm8555_defconfig
 powerpc                 linkstation_defconfig
 powerpc                      bamboo_defconfig
-um                           x86_64_defconfig
 ia64                         bigsur_defconfig
+um                           x86_64_defconfig
 arm                         lpc18xx_defconfig
 i386                                defconfig
 sh                          kfr2r09_defconfig
@@ -193,8 +193,8 @@ mips                      bmips_stb_defconfig
 arm                       cns3420vb_defconfig
 arm                      pxa255-idp_defconfig
 arm                        magician_defconfig
-mips                         tb0287_defconfig
 arm                         lpc32xx_defconfig
+mips                         tb0287_defconfig
 powerpc                      obs600_defconfig
 powerpc                      ppc64e_defconfig
 powerpc                 mpc8313_rdb_defconfig
