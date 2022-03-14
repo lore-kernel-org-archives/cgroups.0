@@ -1,66 +1,84 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [Patch v2 2/3] mm/memcg: __mem_cgroup_remove_exceeded could
- handle a !on-tree mz properly
-Date: Mon, 14 Mar 2022 10:54:03 +0100
-Message-ID: <Yi8Qu/1V4H1M9qZV@dhcp22.suse.cz>
-References: <20220312071623.19050-1-richard.weiyang@gmail.com>
- <20220312071623.19050-2-richard.weiyang@gmail.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] memcg: sync flush only if periodic flush is delayed
+Date: Mon, 14 Mar 2022 13:57:03 +0100
+Message-ID: <20220314125703.GA11645@blackbody.suse.cz>
+References: <20220304184040.1304781-1-shakeelb@google.com>
+ <20220311160051.GA24796@blackbody.suse.cz>
+ <20220312190715.cx4aznnzf6zdp7wv@google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1647251643; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1647262624; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=6VPBVQrxRZ4Cx7+iuRgH+2wDidcAf0gmeaDeqXu8ow8=;
-        b=uoiY0spO/Ap8AdtaUTbRUJl58srkazDganaxbtxD0SvT4OF+KtD/ux6hk3ueqxX3EGYSu8
-        3c7E3zpadTc2qGeE9wDEVL6l9ZxN/hlQAFwh+2UJy2pFUjgaa0NOxcMOR6iuKz6UyqfBHr
-        k6RF+rr6F+tvDC5mnQrI0i5fti0aj78=
+        bh=TaLNlzXGwgt3rIVBhMb8m6A+9RFUlVGbRu4EdMRGlyg=;
+        b=eFmcNQFmrNsywdOeFr5SEDup6JsmNK0K+YScoACNqR2qy1LHFFYhq1WsNq+LI5EPmA8/2Q
+        bQCv7UfngnJKKpainDF0pEVNMNsKVuHf3pi0c/ifsViuOWtm9nfJR/G4o6naP5tiL4+IiB
+        27UYnqde9XPDx7asXLRv5oXrc/eu6lc=
 Content-Disposition: inline
-In-Reply-To: <20220312071623.19050-2-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <20220312190715.cx4aznnzf6zdp7wv-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Frank Hofmann <fhofmann-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Dao <dqminh-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat 12-03-22 07:16:22, Wei Yang wrote:
-> There is no tree operation if mz is not on-tree.
+Hi.
 
-This doesn't explain problem you are trying to solve nor does it make
-much sense to me TBH.
+On Sat, Mar 12, 2022 at 07:07:15PM +0000, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> So, I will focus on the error rate in this email.
 
-> Let's remove the extra check.
+(OK, I'll stick to error estimate (for long-term) in this message and
+will send another about the current patch.)
 
-What would happen if the mz was already in the excess tree and the
-excess has grown?
-
-> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
->  mm/memcontrol.c | 8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
+> [...]
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index d70bf5cf04eb..344a7e891bc5 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -545,9 +545,11 @@ static void mem_cgroup_update_tree(struct mem_cgroup *memcg, int nid)
->  			unsigned long flags;
->  
->  			spin_lock_irqsave(&mctz->lock, flags);
-> -			/* if on-tree, remove it */
-> -			if (mz->on_tree)
-> -				__mem_cgroup_remove_exceeded(mz, mctz);
-> +			/*
-> +			 * remove it first
-> +			 * If not on-tree, no tree ops.
-> +			 */
-> +			__mem_cgroup_remove_exceeded(mz, mctz);
->  			/*
->  			 * Insert again. mz->usage_in_excess will be updated.
->  			 * If excess is 0, no tree ops.
-> -- 
-> 2.33.1
+> > The benefit this was traded for was the greater accuracy, the possible
+> > error is:
+> > - before
+> >    - O(nr_cpus * nr_cgroups(subtree) * MEMCG_CHARGE_BATCH)	(1)
+> 
+> Please note that (1) is the possible error for each stat item and
+> without any time bound.
 
--- 
-Michal Hocko
-SUSE Labs
+I agree (forgot to highlight this can stuck forever).
+
+> 
+> > - after
+> >      O(nr_cpus * MEMCG_CHARGE_BATCH) // sync. flush
+> 
+> The above is across all the stat items.
+
+Can it be used to argue about the error?
+E.g.
+    nr_cpus * MEMCG_CHARGE_BATCH / nr_counters
+looks appealing but that's IMO too optimistic.
+
+The individual item updates are correlated so in practice a single item
+would see a lower error than my first relation but without delving too
+much into correlations the upper bound is nr_counters independent.
+
+
+> I don't get the reason of breaking 'cr' into individual stat item or
+> counter. What is the benefit? We want to keep the error rate decoupled
+> from the number of counters (or stat items).
+
+It's just a model, it should capture that every stat item (change)
+contributes to the common error estimate. (So it moves more towards the 
+  nr_cpus * MEMCG_CHARGE_BATCH / nr_counters
+per-item error (but here we're asking about processing time.))
+
+[...]
+
+> My main reason behind trying NR_MEMCG_EVENTS was to reduce flush_work by
+> reducing nr_counters and I don't think nr_counters should have an impact
+> on Δt.
+
+The higher number of items is changing, the sooner they accumulate the
+target error, no?
+
+(Δt is not the periodic flush period, it's variable time between two
+sync flushes.)
+
+Michal
