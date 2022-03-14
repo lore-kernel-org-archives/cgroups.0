@@ -1,56 +1,227 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: Split process across multiple schedulers?
-Date: Mon, 14 Mar 2022 17:43:33 +0100
-Message-ID: <20220314164332.GA20424@blackbody.suse.cz>
-References: <b5039be462e8492085b6638df2a761ca@saabgroup.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 1be9b7206b7dbff54b223eee7ef3bc91b80433aa
+Date: Tue, 15 Mar 2022 02:07:04 +0800
+Message-ID: <622f8448.gRZfm2GcpiEE9qdN%lkp@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1647276214; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=U8aU7ATJhIHHpbiq1kzf5ExUEOuGSR5q8FMA3efJl9M=;
-        b=UEr/ewUMeqbiMGFJRQ4009Df5u0krJ3RVo5m9R5yvzdo/MnFsuOSsUDcnHMnjZ/HSubxAH
-        YP5vU5U4XDnG5CSdufFH4QcBxVNUHYTbY+v99/hd2sFMb+XpiylFvDmkHaveyfRKiKqByY
-        sFc4fxtbqUoUU46itK8l6myhdeixj5s=
-Content-Disposition: inline
-In-Reply-To: <b5039be462e8492085b6638df2a761ca-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1647281252; x=1678817252;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=XVf2pH1d466RZxcPnP6O/bRhFgwua0sKD+tz3OE/LBo=;
+  b=AbcmFh1r6/VxUXqbjR6asRG7BpV4Oo/AXcz2zsXQCpiUbdlqQinqx4hv
+   7cBDTd7UvmGbmhy0TTNBYxHIpcl4E4tJY6lrHnhYTFREhQezjjEtLSe+i
+   ou/UgTips3HSYWBbYvFRQbXcCwJ+46govilYvF2lAwMkxPxwgvCsoT48U
+   DNSjeKMl/HudohjSWuS8hmZERAt3V1uMh6IvUjHV/peE+gHtNXTrBtcLL
+   evOU/g3lK+tje+5dGzFveBNc66xUIlTJe+fdML1wAPt7IkKuF8e8pFV2d
+   bLLzzHIrJD7WVH2KX1/cy3JbgBMfGHhcV/miZ/lpCoijemMtpbd67eJ31
+   w==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Olsson John <john.olsson-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 1be9b7206b7dbff54b223eee7ef3bc91b80433aa  Merge branch 'for-5.18' into for-next
 
-On Mon, Mar 14, 2022 at 03:19:56PM +0000, Olsson John <john.olsson-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org> wrote:
-> I have tried reading the documentation for CGroups V1 and V2 and it
-> seems that there is one usecase that we are interested in that *is*
-> supported by CGroups V1 but not by CGroups V2.
+elapsed time: 726m
 
-Are you missing CONFIG_RT_GROUP_SCHED and v1 cpu controller's
-cpu.rt_{runtime,period}_us? (Just asking, you didn't mention this
-explicitly in your e-mail but it sounds so and it's a thing that's
-indeed missing in v2.)
+configs tested: 180
+configs skipped: 3
 
-> My understanding of CGroups V1 is that it is possible to have one
-> scheduler associated  there are use cases where you might want to have
-> one kind of scheduler for the VMM process (for instance CFS) and
-> another scheduler for the virtual core threads (for instance FIFO).
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-sched_setscheduler(2) applies to threads regardless of cgroup
-membership, there's no change between v1 and v2.
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+i386                          randconfig-c001
+i386                 randconfig-c001-20220314
+mips                 randconfig-c004-20220314
+powerpc              randconfig-c003-20220313
+arm                            zeus_defconfig
+sh                                  defconfig
+mips                           xway_defconfig
+arm                          pxa910_defconfig
+m68k                          multi_defconfig
+h8300                            allyesconfig
+arm                           u8500_defconfig
+mips                        jmr3927_defconfig
+arm                            xcep_defconfig
+sh                           se7343_defconfig
+sh                          rsk7264_defconfig
+m68k                        mvme16x_defconfig
+powerpc                         ps3_defconfig
+sh                   sh7724_generic_defconfig
+sh                          rsk7269_defconfig
+powerpc                      mgcoge_defconfig
+arm                       omap2plus_defconfig
+powerpc                     ep8248e_defconfig
+powerpc                     tqm8555_defconfig
+powerpc                 linkstation_defconfig
+powerpc                      bamboo_defconfig
+um                           x86_64_defconfig
+ia64                         bigsur_defconfig
+arm                         lpc18xx_defconfig
+i386                                defconfig
+sh                          kfr2r09_defconfig
+mips                      fuloong2e_defconfig
+sparc                            alldefconfig
+sh                   sh7770_generic_defconfig
+s390                                defconfig
+powerpc                      makalu_defconfig
+sh                            migor_defconfig
+xtensa                  nommu_kc705_defconfig
+arc                           tb10x_defconfig
+powerpc                       maple_defconfig
+arm                             rpc_defconfig
+arm                             ezx_defconfig
+riscv             nommu_k210_sdcard_defconfig
+powerpc                   motionpro_defconfig
+arc                                 defconfig
+sh                            titan_defconfig
+xtensa                  audio_kc705_defconfig
+sh                      rts7751r2d1_defconfig
+nds32                               defconfig
+powerpc                    amigaone_defconfig
+arm                        cerfcube_defconfig
+sh                           se7721_defconfig
+s390                          debug_defconfig
+m68k                         amcore_defconfig
+powerpc                     tqm8548_defconfig
+i386                             alldefconfig
+arc                         haps_hs_defconfig
+x86_64                              defconfig
+sh                        sh7785lcr_defconfig
+arm                            hisi_defconfig
+ia64                            zx1_defconfig
+sh                     sh7710voipgw_defconfig
+sh                           se7750_defconfig
+arm                        mini2440_defconfig
+mips                           ip32_defconfig
+sh                   rts7751r2dplus_defconfig
+m68k                        stmark2_defconfig
+powerpc                 mpc8540_ads_defconfig
+sh                          sdk7780_defconfig
+ia64                             allmodconfig
+arm                           h3600_defconfig
+arm                            lart_defconfig
+mips                 decstation_r4k_defconfig
+arm                  randconfig-c002-20220313
+arm                  randconfig-c002-20220314
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+sh                               allmodconfig
+xtensa                           allyesconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc64                            defconfig
+parisc                           allyesconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64                        randconfig-a006
+x86_64                        randconfig-a004
+x86_64                        randconfig-a002
+x86_64               randconfig-a004-20220314
+x86_64               randconfig-a005-20220314
+x86_64               randconfig-a003-20220314
+x86_64               randconfig-a002-20220314
+x86_64               randconfig-a006-20220314
+x86_64               randconfig-a001-20220314
+i386                 randconfig-a003-20220314
+i386                 randconfig-a004-20220314
+i386                 randconfig-a001-20220314
+i386                 randconfig-a006-20220314
+i386                 randconfig-a002-20220314
+i386                 randconfig-a005-20220314
+arc                  randconfig-r043-20220313
+arc                  randconfig-r043-20220314
+riscv                randconfig-r042-20220313
+s390                 randconfig-r044-20220313
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                    rhel-8.3-kselftests
+um                             i386_defconfig
+x86_64                           allyesconfig
+x86_64                               rhel-8.3
+x86_64                          rhel-8.3-func
+x86_64                         rhel-8.3-kunit
+x86_64                                  kexec
 
-(Without CONFIG_RT_GROUP_SCHED all RT threads are effectively in the
-root cgroup.)
+clang tested configs:
+s390                 randconfig-c005-20220313
+arm                  randconfig-c002-20220313
+x86_64                        randconfig-c007
+powerpc              randconfig-c003-20220313
+riscv                randconfig-c006-20220313
+mips                 randconfig-c004-20220313
+i386                          randconfig-c001
+hexagon                             defconfig
+powerpc                    socrates_defconfig
+powerpc                       ebony_defconfig
+mips                      bmips_stb_defconfig
+arm                       cns3420vb_defconfig
+arm                      pxa255-idp_defconfig
+arm                        magician_defconfig
+mips                         tb0287_defconfig
+arm                         lpc32xx_defconfig
+powerpc                      obs600_defconfig
+powerpc                      ppc64e_defconfig
+powerpc                 mpc8313_rdb_defconfig
+powerpc                      ppc44x_defconfig
+powerpc                     mpc512x_defconfig
+powerpc                     kilauea_defconfig
+mips                      malta_kvm_defconfig
+arm                          pxa168_defconfig
+x86_64               randconfig-a014-20220314
+x86_64               randconfig-a015-20220314
+x86_64               randconfig-a016-20220314
+x86_64               randconfig-a012-20220314
+x86_64               randconfig-a013-20220314
+x86_64               randconfig-a011-20220314
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+i386                          randconfig-a011
+i386                          randconfig-a013
+i386                          randconfig-a015
+i386                 randconfig-a013-20220314
+i386                 randconfig-a015-20220314
+i386                 randconfig-a014-20220314
+i386                 randconfig-a011-20220314
+i386                 randconfig-a016-20220314
+i386                 randconfig-a012-20220314
 
-> My conclusion after reading the documentation for CGroups V2 is that
-> the above scenario is no longer possible to do. Or have I
-> misunderstood something here?
-
-You may need to enable threaded mode on v2 (see cgroup.type) to
-manipulate with individual threads across cgroups. (E.g. if you want to
-use cpuset controller to pin/restrict individual threads.)
-
-Regards,
-Michal
+---
+0-DAY CI Kernel Test Service
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
