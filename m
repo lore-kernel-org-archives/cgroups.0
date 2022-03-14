@@ -1,227 +1,54 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-5.18] BUILD SUCCESS
- f9da322e864e5cd3dc217480e73f78f47cf40c5b
-Date: Tue, 15 Mar 2022 02:07:11 +0800
-Message-ID: <622f844f./amqu4oGlkN9QUak%lkp@intel.com>
+From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Patch v2 2/3] mm/memcg: __mem_cgroup_remove_exceeded could
+ handle a !on-tree mz properly
+Date: Mon, 14 Mar 2022 22:51:50 +0000
+Message-ID: <20220314225150.fhwny4yhxgjevwxx@master>
+References: <20220312071623.19050-1-richard.weiyang@gmail.com>
+ <20220312071623.19050-2-richard.weiyang@gmail.com>
+ <Yi8Qu/1V4H1M9qZV@dhcp22.suse.cz>
+Reply-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1647281295; x=1678817295;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=ZsZ/YVPtgr3g0B7nWePzofoAP8EzCT6HF1aDW+aWnQ0=;
-  b=hJJUUFV6F2873zXs/c8tL/invZuH40gwt+lCyY97RPGTjxMrydlcD/hq
-   uljUlu/tQBxeaPIqdGvshCf1ArBlMOMAB7jXZ77waBAhOcDaM+Lgl7dl8
-   9iOS0I7B76+3TTy6vnCe80zPak8aKMV+/lumo9w2sPd4Fo7hTP4I4Ep1l
-   8j756v+DPJd+aQ5zyEZt0B6CR8MD9uCB82LuxQpwMli4vpsYO4TUWZQcI
-   iFfyuB6C5GwJ8JYUYngwAct56wdW4s/XvYsHQvyFmTHUlT+79LBi1C5BI
-   Ur2UMLPimajizq8xO76/oytYImeQ0nB/vxCSFt8wrQrRPV//9968fEGlB
-   w==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=wCeR5z7Z9I0OZ5CW9/ENgLziIVfJwONuLcSxsmCrGvQ=;
+        b=C0C8NN3xNrpb0KoqYriDF0/coODFEYWWLzYOmoHnZsjra3mm06pm8YS0CMGKFLt21h
+         d4xtohTHd3MOFp9xPgAKmy0nXJ9B7PV7He5Eh6K+4Cb4BXdxHUMBQ8gR0gTnvwhdqfqQ
+         d8QZA0r26ZW7orl+WkOUjr1mqXxWk1UeBzJRuoMT0TRM6Vm3xzLfA8OYL8OE+Qa+Wc2s
+         oo72lh8kFvnijMO8WnuQDRAvIQDQuQEVGDu4/LdvDKzpjyVDEi6SZk2+0ouqqAIiwoAc
+         qMCkkLK+Vy/bRn4QOskN46wbNMNVONWyeZtF/FI9lTRWxBh0RChuviSAXIRryv8SvqoX
+         +n3w==
+Content-Disposition: inline
+In-Reply-To: <Yi8Qu/1V4H1M9qZV-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.18
-branch HEAD: f9da322e864e5cd3dc217480e73f78f47cf40c5b  cgroup: cleanup comments
+On Mon, Mar 14, 2022 at 10:54:03AM +0100, Michal Hocko wrote:
+>On Sat 12-03-22 07:16:22, Wei Yang wrote:
+>> There is no tree operation if mz is not on-tree.
+>
+>This doesn't explain problem you are trying to solve nor does it make
+>much sense to me TBH.
+>
 
-elapsed time: 727m
+This just tries to make the code looks consistent.
 
-configs tested: 180
-configs skipped: 3
+>> Let's remove the extra check.
+>
+>What would happen if the mz was already in the excess tree and the
+>excess has grown?
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+The purpose mem_cgroup_update_tree() is to update the soft limit tree. And the
+approach is to remove and add it back to the tree with new excess.
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-i386                          randconfig-c001
-i386                 randconfig-c001-20220314
-mips                 randconfig-c004-20220314
-powerpc              randconfig-c003-20220313
-arm                            zeus_defconfig
-sh                                  defconfig
-mips                           xway_defconfig
-arm                          pxa910_defconfig
-m68k                          multi_defconfig
-h8300                            allyesconfig
-arm                           u8500_defconfig
-mips                        jmr3927_defconfig
-arm                            xcep_defconfig
-sh                           se7343_defconfig
-sh                          rsk7264_defconfig
-m68k                        mvme16x_defconfig
-powerpc                         ps3_defconfig
-sh                   sh7724_generic_defconfig
-sh                          rsk7269_defconfig
-powerpc                      mgcoge_defconfig
-arm                       omap2plus_defconfig
-powerpc                     ep8248e_defconfig
-powerpc                     tqm8555_defconfig
-powerpc                 linkstation_defconfig
-powerpc                      bamboo_defconfig
-ia64                         bigsur_defconfig
-um                           x86_64_defconfig
-arm                         lpc18xx_defconfig
-i386                                defconfig
-sh                          kfr2r09_defconfig
-mips                      fuloong2e_defconfig
-sparc                            alldefconfig
-sh                   sh7770_generic_defconfig
-s390                                defconfig
-powerpc                      makalu_defconfig
-sh                            migor_defconfig
-xtensa                  nommu_kc705_defconfig
-arc                           tb10x_defconfig
-powerpc                       maple_defconfig
-arm                             rpc_defconfig
-arm                             ezx_defconfig
-riscv             nommu_k210_sdcard_defconfig
-powerpc                   motionpro_defconfig
-arc                                 defconfig
-sh                            titan_defconfig
-xtensa                  audio_kc705_defconfig
-sh                      rts7751r2d1_defconfig
-nds32                               defconfig
-powerpc                    amigaone_defconfig
-arm                        cerfcube_defconfig
-sh                           se7721_defconfig
-s390                          debug_defconfig
-m68k                         amcore_defconfig
-powerpc                     tqm8548_defconfig
-i386                             alldefconfig
-arc                         haps_hs_defconfig
-x86_64                              defconfig
-sh                        sh7785lcr_defconfig
-arm                            hisi_defconfig
-ia64                            zx1_defconfig
-sh                     sh7710voipgw_defconfig
-sh                           se7750_defconfig
-arm                        mini2440_defconfig
-mips                           ip32_defconfig
-sh                   rts7751r2dplus_defconfig
-m68k                        stmark2_defconfig
-powerpc                 mpc8540_ads_defconfig
-sh                          sdk7780_defconfig
-ia64                             allmodconfig
-arm                           h3600_defconfig
-arm                            lart_defconfig
-mips                 decstation_r4k_defconfig
-arm                  randconfig-c002-20220313
-arm                  randconfig-c002-20220314
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-sh                               allmodconfig
-xtensa                           allyesconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc64                            defconfig
-parisc                           allyesconfig
-i386                             allyesconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-x86_64                        randconfig-a006
-x86_64                        randconfig-a004
-x86_64                        randconfig-a002
-x86_64               randconfig-a004-20220314
-x86_64               randconfig-a005-20220314
-x86_64               randconfig-a003-20220314
-x86_64               randconfig-a002-20220314
-x86_64               randconfig-a006-20220314
-x86_64               randconfig-a001-20220314
-i386                 randconfig-a003-20220314
-i386                 randconfig-a004-20220314
-i386                 randconfig-a001-20220314
-i386                 randconfig-a006-20220314
-i386                 randconfig-a002-20220314
-i386                 randconfig-a005-20220314
-arc                  randconfig-r043-20220313
-arc                  randconfig-r043-20220314
-riscv                randconfig-r042-20220313
-s390                 randconfig-r044-20220313
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                    rhel-8.3-kselftests
-um                             i386_defconfig
-x86_64                           allyesconfig
-x86_64                               rhel-8.3
-x86_64                          rhel-8.3-func
-x86_64                         rhel-8.3-kunit
-x86_64                                  kexec
+I don't get your point for this question.
 
-clang tested configs:
-s390                 randconfig-c005-20220313
-arm                  randconfig-c002-20220313
-x86_64                        randconfig-c007
-powerpc              randconfig-c003-20220313
-riscv                randconfig-c006-20220313
-mips                 randconfig-c004-20220313
-i386                          randconfig-c001
-hexagon                             defconfig
-powerpc                    socrates_defconfig
-powerpc                       ebony_defconfig
-mips                      bmips_stb_defconfig
-arm                       cns3420vb_defconfig
-arm                      pxa255-idp_defconfig
-arm                        magician_defconfig
-arm                         lpc32xx_defconfig
-mips                         tb0287_defconfig
-powerpc                      obs600_defconfig
-powerpc                      ppc64e_defconfig
-powerpc                 mpc8313_rdb_defconfig
-powerpc                      ppc44x_defconfig
-powerpc                     mpc512x_defconfig
-powerpc                     kilauea_defconfig
-mips                      malta_kvm_defconfig
-arm                          pxa168_defconfig
-x86_64               randconfig-a014-20220314
-x86_64               randconfig-a015-20220314
-x86_64               randconfig-a016-20220314
-x86_64               randconfig-a012-20220314
-x86_64               randconfig-a013-20220314
-x86_64               randconfig-a011-20220314
-x86_64                        randconfig-a012
-x86_64                        randconfig-a014
-x86_64                        randconfig-a016
-i386                          randconfig-a011
-i386                          randconfig-a013
-i386                          randconfig-a015
-i386                 randconfig-a013-20220314
-i386                 randconfig-a015-20220314
-i386                 randconfig-a014-20220314
-i386                 randconfig-a011-20220314
-i386                 randconfig-a016-20220314
-i386                 randconfig-a012-20220314
 
----
-0-DAY CI Kernel Test Service
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+-- 
+Wei Yang
+Help you, Help me
