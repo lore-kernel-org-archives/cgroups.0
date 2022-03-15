@@ -1,51 +1,99 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [EXTERNAL] Re: Split process across multiple schedulers?
-Date: Tue, 15 Mar 2022 18:33:31 +0100
-Message-ID: <20220315173329.GB3780@blackbody.suse.cz>
-References: <b5039be462e8492085b6638df2a761ca@saabgroup.com>
- <20220314164332.GA20424@blackbody.suse.cz>
- <bf2ea0888a9e45d3aafe412f0094cf86@saabgroup.com>
- <20220315103553.GA3780@blackbody.suse.cz>
- <84e5b8652edd47d29597d499f29753d6@saabgroup.com>
+From: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC v3 7/8] binder: use __kernel_pid_t and __kernel_uid_t for userspace
+Date: Tue, 15 Mar 2022 12:02:35 -0700
+Message-ID: <CABdmKX3NEm8+pDBj2VG-r8E91CVHwQ+gGcKhG8D=5MgWcgincg@mail.gmail.com>
+References: <20220309165222.2843651-1-tjmercier@google.com>
+ <20220309165222.2843651-8-tjmercier@google.com> <CAHRSSEy5_h9LJB4q5_OJA7fSq=ROo68UaK+hdPz-Vj-wac1Qhg@mail.gmail.com>
+ <CABdmKX1G0Rwmz7=BP1ER+TmtrnkGiE0nROsPTHKxnj=6bHhY3Q@mail.gmail.com> <a365a5f6c7864a879b133b99d1f43fb2@AcuMS.aculab.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1647365612; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=4SCnDXkSTk7b/B3VCA90vLf8UjLiVvHK4RLBoX9cBfI=;
-        b=N6uWbM2pvpNvTSV+X9Jc71F4clakLdT6Y46VqAJMCwxztGuq+nFvlfrZMsTW63LSan0ydQ
-        1pkfaUpBhmqBGL9hka/eENM1TZQrClRjQ2k/AWZo7Wm9Sx7wLrNHak5YMGgWq9YhkfKsUY
-        x3riBzhht+yXsB8jjTXrJqk0dTqZxAA=
-Content-Disposition: inline
-In-Reply-To: <84e5b8652edd47d29597d499f29753d6-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=nYOjHF+WhaOll744zl3KXczQ6UnybRfVr7cW3I5uN/U=;
+        b=eWq9aQSnpFSM7gGPtqgzIwr8bb/qKsDMvo0mIbS4s59AMIIHEMyCDMwhpLWRS+EYBR
+         qN4oTEZNXWPjiFCM5wbN4L3FVB0yMfHlzKy9DLlhHVCdkUAg+H8m96o6+l6phOAtZZtL
+         HqEaabMV1A231GA5THyiGjQn+CcdPV6Wcj7+UPW4PCAGWku/81HP+8C5q//5lWvhO0Pu
+         3zeib+NRZoI9eWeTsoj34Li0T9JVhg3Z1kUYOR1XGxD8A2nRmcx8ve9PFlZCqJIC6N4E
+         zEz1m0vSJoc3+NJsHrbvJr8ATMwQ+P3zv+QChYRQcRSYL4oNsBWZ06rrB2G0G0fVIJ1p
+         NQSA==
+In-Reply-To: <a365a5f6c7864a879b133b99d1f43fb2-1XygrNkDbNvwg4NCKwmqgw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Olsson John <john.olsson-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: David Laight <David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org>
+Cc: Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Benjamin Gaignard <benjamin.gaignard-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Liam
 
-On Tue, Mar 15, 2022 at 03:49:52PM +0000, Olsson John <john.olsson-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org> wrote:
-> As you might have already surmised it was a placeholder example to
-> give the general idea. I think it is time to add some more details. :)
+On Tue, Mar 15, 2022 at 12:56 AM David Laight <David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> From: T.J. Mercier
+> > Sent: 14 March 2022 23:45
+> >
+> > On Thu, Mar 10, 2022 at 11:33 AM Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> > >
+> > > On Wed, Mar 9, 2022 at 8:52 AM T.J. Mercier <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> > > >
+> > > > The kernel interface should use types that the kernel defines instead of
+> > > > pid_t and uid_t, whose definiton is owned by libc. This fixes the header
+> > > > so that it can be included without first including sys/types.h.
+> > > >
+> > > > Signed-off-by: T.J. Mercier <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > > > ---
+> > > >  include/uapi/linux/android/binder.h | 4 ++--
+> > > >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > > >
+> > > > diff --git a/include/uapi/linux/android/binder.h b/include/uapi/linux/android/binder.h
+> > > > index 169fd5069a1a..aa28454dbca3 100644
+> > > > --- a/include/uapi/linux/android/binder.h
+> > > > +++ b/include/uapi/linux/android/binder.h
+> > > > @@ -289,8 +289,8 @@ struct binder_transaction_data {
+> > > >
+> > > >         /* General information about the transaction. */
+> > > >         __u32           flags;
+> > > > -       pid_t           sender_pid;
+> > > > -       uid_t           sender_euid;
+> > > > +       __kernel_pid_t  sender_pid;
+> > > > +       __kernel_uid_t  sender_euid;
+> > >
+> > > Are we guaranteed that this does not affect the UAPI at all? Userspace
+> > > code using this definition will have to run with kernels using the old
+> > > definition and visa-versa.
+> >
+> > A standards compliant userspace should be expecting a signed integer
+> > type here. So the only way I can think userspace would be affected is
+> > if:
+> > 1) pid_t is a long AND
+> > 2) sizeof(long) > sizeof(int) AND
+> > 3) Consumers of the pid_t definition actually attempt to mutate the
+> > result to make use of extra bits in the variable (which are not there)
+>
+> Or the userspace headers have a 16bit pid_t.
 
-Thanks for sharing the additional description.
+Since the kernel uses an int for PIDs, wouldn't a 16 bit pid_t already
+be potentially broken (overflow) on systems where int is not 16 bits?
+On systems where int is 16 bits, there is no change here except to
+achieve uniform use of __kernel_pid_t in the kernel headers and fix
+the include problem.
 
-> Assume that you have an embedded system running some kind of software
-> with real time like properties. You want to develop and debug your
-> software locally on your high-end machine since it is much more
-> convenient. Alas the software runs way too fast due to the difference
-> in performance so you can't detect overruns etc.
+>
+> I can't help feeling that uapi headers should only use explicit
+> fixed sized types.
+> There is no point indirecting the type names - the sizes still
+> can't be changes.
 
-There are certainly more knowledgeable people than me to help with
-debugging such environments.
+I think it's still unlikely to be an actual problem. For example there
+are other occasions where a switch like this was made:
+https://github.com/torvalds/linux/commit/694a58e29ef27c4c26f103a9decfd053f94dd34c
+https://github.com/torvalds/linux/commit/269b8fd5d058f2c0da01a42b20315ffc2640d99b
 
-> One way of implementing this kind of scheduler would be to create a
-> fork of the FIFO scheduler that have this behavior.
-
-I think you've complete info now how threads are handled with cgroups.
-
-Good luck with the fork :-)
+And also since Binder's only known user is Android through Bionic
+which already expects the type of pid_t to be __kernel_pid_t.
 
 
-Michal
+>
+>         David
+>
+> -
+> Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+> Registration No: 1397386 (Wales)
