@@ -1,58 +1,77 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: [RFC v3 7/8] binder: use __kernel_pid_t and __kernel_uid_t for
- userspace
-Date: Tue, 15 Mar 2022 07:56:26 +0000
-Message-ID: <a365a5f6c7864a879b133b99d1f43fb2@AcuMS.aculab.com>
-References: <20220309165222.2843651-1-tjmercier@google.com>
- <20220309165222.2843651-8-tjmercier@google.com>
- <CAHRSSEy5_h9LJB4q5_OJA7fSq=ROo68UaK+hdPz-Vj-wac1Qhg@mail.gmail.com>
- <CABdmKX1G0Rwmz7=BP1ER+TmtrnkGiE0nROsPTHKxnj=6bHhY3Q@mail.gmail.com>
+From: Olsson John <john.olsson-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org>
+Subject: RE: [EXTERNAL] Re: Split process across multiple schedulers?
+Date: Tue, 15 Mar 2022 08:19:26 +0000
+Message-ID: <bf2ea0888a9e45d3aafe412f0094cf86@saabgroup.com>
+References: <b5039be462e8492085b6638df2a761ca@saabgroup.com>
+ <20220314164332.GA20424@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CABdmKX1G0Rwmz7=BP1ER+TmtrnkGiE0nROsPTHKxnj=6bHhY3Q@mail.gmail.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 weald.air.saab.se 22F8JTxJ094642
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=saabgroup.com;
+        s=weald; t=1647332369;
+        bh=Ta1UU1ZM9feM3kIV3ZbiDmewkZry9QpuDsZ21Fr45XE=;
+        h=From:To:CC:Subject:Date:References:In-Reply-To:From;
+        b=ueKodJhjDRiv6sqU6EZeL46LXdLsT6Lh6JZZhBpARnls7pXmYufWpJDTTuq7iyU6M
+         c87HScapL+X6ZK+aYGHY2pBoi0CKk65vkk9aHNF9/8f3+i0sDhgHeMjSAbYaHuuDpw
+         LBu7LYoBARcT1OceKkD0lUD8InRl0OGry1xWojM8=
+In-Reply-To: <20220314164332.GA20424-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "'T.J. Mercier'" <tjmercier@google.com>, Todd Kjos <tkjos@google.com>
-Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?utf-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@linaro.org>, Liam Mark <lmark@codeaurora.org>
+To: =?iso-8859-1?Q?Michal_Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-RnJvbTogVC5KLiBNZXJjaWVyDQo+IFNlbnQ6IDE0IE1hcmNoIDIwMjIgMjM6NDUNCj4gDQo+IE9u
-IFRodSwgTWFyIDEwLCAyMDIyIGF0IDExOjMzIEFNIFRvZGQgS2pvcyA8dGtqb3NAZ29vZ2xlLmNv
-bT4gd3JvdGU6DQo+ID4NCj4gPiBPbiBXZWQsIE1hciA5LCAyMDIyIGF0IDg6NTIgQU0gVC5KLiBN
-ZXJjaWVyIDx0am1lcmNpZXJAZ29vZ2xlLmNvbT4gd3JvdGU6DQo+ID4gPg0KPiA+ID4gVGhlIGtl
-cm5lbCBpbnRlcmZhY2Ugc2hvdWxkIHVzZSB0eXBlcyB0aGF0IHRoZSBrZXJuZWwgZGVmaW5lcyBp
-bnN0ZWFkIG9mDQo+ID4gPiBwaWRfdCBhbmQgdWlkX3QsIHdob3NlIGRlZmluaXRvbiBpcyBvd25l
-ZCBieSBsaWJjLiBUaGlzIGZpeGVzIHRoZSBoZWFkZXINCj4gPiA+IHNvIHRoYXQgaXQgY2FuIGJl
-IGluY2x1ZGVkIHdpdGhvdXQgZmlyc3QgaW5jbHVkaW5nIHN5cy90eXBlcy5oLg0KPiA+ID4NCj4g
-PiA+IFNpZ25lZC1vZmYtYnk6IFQuSi4gTWVyY2llciA8dGptZXJjaWVyQGdvb2dsZS5jb20+DQo+
-ID4gPiAtLS0NCj4gPiA+ICBpbmNsdWRlL3VhcGkvbGludXgvYW5kcm9pZC9iaW5kZXIuaCB8IDQg
-KystLQ0KPiA+ID4gIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25z
-KC0pDQo+ID4gPg0KPiA+ID4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvdWFwaS9saW51eC9hbmRyb2lk
-L2JpbmRlci5oIGIvaW5jbHVkZS91YXBpL2xpbnV4L2FuZHJvaWQvYmluZGVyLmgNCj4gPiA+IGlu
-ZGV4IDE2OWZkNTA2OWExYS4uYWEyODQ1NGRiY2EzIDEwMDY0NA0KPiA+ID4gLS0tIGEvaW5jbHVk
-ZS91YXBpL2xpbnV4L2FuZHJvaWQvYmluZGVyLmgNCj4gPiA+ICsrKyBiL2luY2x1ZGUvdWFwaS9s
-aW51eC9hbmRyb2lkL2JpbmRlci5oDQo+ID4gPiBAQCAtMjg5LDggKzI4OSw4IEBAIHN0cnVjdCBi
-aW5kZXJfdHJhbnNhY3Rpb25fZGF0YSB7DQo+ID4gPg0KPiA+ID4gICAgICAgICAvKiBHZW5lcmFs
-IGluZm9ybWF0aW9uIGFib3V0IHRoZSB0cmFuc2FjdGlvbi4gKi8NCj4gPiA+ICAgICAgICAgX191
-MzIgICAgICAgICAgIGZsYWdzOw0KPiA+ID4gLSAgICAgICBwaWRfdCAgICAgICAgICAgc2VuZGVy
-X3BpZDsNCj4gPiA+IC0gICAgICAgdWlkX3QgICAgICAgICAgIHNlbmRlcl9ldWlkOw0KPiA+ID4g
-KyAgICAgICBfX2tlcm5lbF9waWRfdCAgc2VuZGVyX3BpZDsNCj4gPiA+ICsgICAgICAgX19rZXJu
-ZWxfdWlkX3QgIHNlbmRlcl9ldWlkOw0KPiA+DQo+ID4gQXJlIHdlIGd1YXJhbnRlZWQgdGhhdCB0
-aGlzIGRvZXMgbm90IGFmZmVjdCB0aGUgVUFQSSBhdCBhbGw/IFVzZXJzcGFjZQ0KPiA+IGNvZGUg
-dXNpbmcgdGhpcyBkZWZpbml0aW9uIHdpbGwgaGF2ZSB0byBydW4gd2l0aCBrZXJuZWxzIHVzaW5n
-IHRoZSBvbGQNCj4gPiBkZWZpbml0aW9uIGFuZCB2aXNhLXZlcnNhLg0KPiANCj4gQSBzdGFuZGFy
-ZHMgY29tcGxpYW50IHVzZXJzcGFjZSBzaG91bGQgYmUgZXhwZWN0aW5nIGEgc2lnbmVkIGludGVn
-ZXINCj4gdHlwZSBoZXJlLiBTbyB0aGUgb25seSB3YXkgSSBjYW4gdGhpbmsgdXNlcnNwYWNlIHdv
-dWxkIGJlIGFmZmVjdGVkIGlzDQo+IGlmOg0KPiAxKSBwaWRfdCBpcyBhIGxvbmcgQU5EDQo+IDIp
-IHNpemVvZihsb25nKSA+IHNpemVvZihpbnQpIEFORA0KPiAzKSBDb25zdW1lcnMgb2YgdGhlIHBp
-ZF90IGRlZmluaXRpb24gYWN0dWFsbHkgYXR0ZW1wdCB0byBtdXRhdGUgdGhlDQo+IHJlc3VsdCB0
-byBtYWtlIHVzZSBvZiBleHRyYSBiaXRzIGluIHRoZSB2YXJpYWJsZSAod2hpY2ggYXJlIG5vdCB0
-aGVyZSkNCg0KT3IgdGhlIHVzZXJzcGFjZSBoZWFkZXJzIGhhdmUgYSAxNmJpdCBwaWRfdC4NCg0K
-SSBjYW4ndCBoZWxwIGZlZWxpbmcgdGhhdCB1YXBpIGhlYWRlcnMgc2hvdWxkIG9ubHkgdXNlIGV4
-cGxpY2l0DQpmaXhlZCBzaXplZCB0eXBlcy4NClRoZXJlIGlzIG5vIHBvaW50IGluZGlyZWN0aW5n
-IHRoZSB0eXBlIG5hbWVzIC0gdGhlIHNpemVzIHN0aWxsDQpjYW4ndCBiZSBjaGFuZ2VzLg0KDQoJ
-RGF2aWQNCg0KLQ0KUmVnaXN0ZXJlZCBBZGRyZXNzIExha2VzaWRlLCBCcmFtbGV5IFJvYWQsIE1v
-dW50IEZhcm0sIE1pbHRvbiBLZXluZXMsIE1LMSAxUFQsIFVLDQpSZWdpc3RyYXRpb24gTm86IDEz
-OTczODYgKFdhbGVzKQ0K
+Thank you for your pointers Michal! :)
+
+
+> Are you missing CONFIG_RT_GROUP_SCHED and v1 cpu controller's
+> cpu.rt_{runtime,period}_us? (Just asking, you didn't mention this
+> explicitly in your e-mail but it sounds so and it's a thing that's
+> indeed missing in v2.)
+
+I'm not sure. I have to double check. If I'm indeed missing
+CONFIG_RT_GROUP_SCHED I'll let you know. ;)
+
+
+> sched_setscheduler(2) applies to threads regardless of cgroup
+> membership, there's no change between v1 and v2.
+
+If I'm understanding you correctly this effectively means that it is
+possible to spread a process and its threads across multiple cgroups
+that in turn may have different schedulers (and CPU affinity)
+associated with them?
+
+
+> (Without CONFIG_RT_GROUP_SCHED all RT threads are effectively in the
+> root cgroup.)
+
+Interesting! I have missed this little tidbit of information. This is
+indeed very good to know!
+
+A side effect of this is that in V2 you can't have an RT thread pinned
+to a specific core that is evacuated, right? If you could do this it
+would also be possible to remove the portion of the scheduling
+interval that is left for non-RT threads in the cgroup config since
+there would not be any other threads on this evacuated core. By doing
+that you would eliminate jitter due to that otherwise the scheduler
+would interrupt the RT thread and immediately re-schedule it
+again. And thus you would theoretically get very good RT properties
+(unless you make system calls).
+
+Now one could argue that there is no point in having a pinned RT
+thread on a single core that is evacuated, but that means that the
+thread would be interrupted HZ times per second. If you instead used
+FIFO scheduling (which handles RT threads only, right?) then you could
+eliminate this noise. Or I am just showing off how little I understand
+about scheduling in Linux. ;)
+
+
+> You may need to enable threaded mode on v2 (see cgroup.type) to
+> manipulate with individual threads across cgroups. (E.g. if you want
+> to use cpuset controller to pin/restrict individual threads.)
+
+I'll read up a bit more and try what you suggest. If we have
+misunderstood each other I'll contact the mailing list again with more
+details. :)
 
