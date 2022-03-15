@@ -1,180 +1,58 @@
-From: Todd Kjos <tkjos@google.com>
-Subject: Re: [RFC v3 6/8] binder: Add a buffer flag to relinquish ownership of fds
-Date: Mon, 14 Mar 2022 17:50:05 -0700
-Message-ID: <CAHRSSEwY=1ns9LZSZi-yiYgx1UDE2_+L-+VFYPdWVqRuTSkYhw@mail.gmail.com>
-References: <20220309165222.2843651-1-tjmercier@google.com> <20220309165222.2843651-7-tjmercier@google.com>
+From: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: [RFC v3 7/8] binder: use __kernel_pid_t and __kernel_uid_t for
+ userspace
+Date: Tue, 15 Mar 2022 07:56:26 +0000
+Message-ID: <a365a5f6c7864a879b133b99d1f43fb2@AcuMS.aculab.com>
+References: <20220309165222.2843651-1-tjmercier@google.com>
+ <20220309165222.2843651-8-tjmercier@google.com>
+ <CAHRSSEy5_h9LJB4q5_OJA7fSq=ROo68UaK+hdPz-Vj-wac1Qhg@mail.gmail.com>
+ <CABdmKX1G0Rwmz7=BP1ER+TmtrnkGiE0nROsPTHKxnj=6bHhY3Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=iu1dDKMiO58IJTgn0Y5YT/ep6c6PH/A2I1xn5i2OO4M=;
-        b=A/QKF0mF9Rm2tSG6t2Q7FLiZsPmEh4wgSlnqrxSBzJTT18Tx/25nw5YitC+o5T1NIl
-         dHsn3dewSXLFAeqA/+ODgjyTVd/Tx+QWjF8zqtLmD0tIAydAS7721bsNCRqIJbtKOJmx
-         0AOy5rNA4qcgql5krqMhed3+t3qfYgcMOOsOjE3tnNwFKmr/qDH771GV9A5uGgXx8oaE
-         Vj+L8eHW1IIPVnDdUjCH5rbstiX6McbtDPBKBdIhI8BKsO6vPZplxqdd24rIn7fSlSIs
-         voa9xljon/WNiPC2LT2+MCpCtOQTHWC9qylrpk6wockoK/XRJO4YexgeGVa3vcONg4mj
-         368Q==
-In-Reply-To: <20220309165222.2843651-7-tjmercier@google.com>
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CABdmKX1G0Rwmz7=BP1ER+TmtrnkGiE0nROsPTHKxnj=6bHhY3Q@mail.gmail.com>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: "T.J. Mercier" <tjmercier@google.com>
-Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@linaro.org>, Liam Mark <lmark@codeaurora.org>, Laur
+Content-Type: text/plain; charset="us-ascii"
+To: "'T.J. Mercier'" <tjmercier@google.com>, Todd Kjos <tkjos@google.com>
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?utf-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@linaro.org>, Liam Mark <lmark@codeaurora.org>
 
-On Wed, Mar 9, 2022 at 8:52 AM T.J. Mercier <tjmercier@google.com> wrote:
->
-> From: Hridya Valsaraju <hridya@google.com>
->
-> This patch introduces a buffer flag BINDER_BUFFER_FLAG_SENDER_NO_NEED
-> that a process sending an fd array to another process over binder IPC
-> can set to relinquish ownership of the fds being sent for memory
-> accounting purposes. If the flag is found to be set during the fd array
-> translation and the fd is for a DMA-BUF, the buffer is uncharged from
-> the sender's cgroup and charged to the receiving process's cgroup
-> instead.
->
-> It is up to the sending process to ensure that it closes the fds
-> regardless of whether the transfer failed or succeeded.
->
-> Most graphics shared memory allocations in Android are done by the
-> graphics allocator HAL process. On requests from clients, the HAL process
-> allocates memory and sends the fds to the clients over binder IPC.
-> The graphics allocator HAL will not retain any references to the
-> buffers. When the HAL sets the BINDER_BUFFER_FLAG_SENDER_NO_NEED for fd
-> arrays holding DMA-BUF fds, the gpu cgroup controller will be able to
-> correctly charge the buffers to the client processes instead of the
-> graphics allocator HAL.
->
-> Since this is a new feature exposed to userspace, the kernel and userspac=
-e
-> must be compatible for the accounting to work for transfers. In all cases
-> the allocation and transport of DMA buffers via binder will succeed, but
-> only when both the kernel supports, and userspace depends on this feature
-> will the transfer accounting work. The possible scenarios are detailed
-> below:
->
-> 1. new kernel + old userspace
-> The kernel supports the feature but userspace does not use it. The old
-> userspace won't mount the new cgroup controller, accounting is not
-> performed, charge is not transferred.
->
-> 2. old kernel + new userspace
-> The new cgroup controller is not supported by the kernel, accounting is
-> not performed, charge is not transferred.
->
-> 3. old kernel + old userspace
-> Same as #2
->
-> 4. new kernel + new userspace
-> Cgroup is mounted, feature is supported and used.
->
-> Signed-off-by: Hridya Valsaraju <hridya@google.com>
-> Signed-off-by: T.J. Mercier <tjmercier@google.com>
+RnJvbTogVC5KLiBNZXJjaWVyDQo+IFNlbnQ6IDE0IE1hcmNoIDIwMjIgMjM6NDUNCj4gDQo+IE9u
+IFRodSwgTWFyIDEwLCAyMDIyIGF0IDExOjMzIEFNIFRvZGQgS2pvcyA8dGtqb3NAZ29vZ2xlLmNv
+bT4gd3JvdGU6DQo+ID4NCj4gPiBPbiBXZWQsIE1hciA5LCAyMDIyIGF0IDg6NTIgQU0gVC5KLiBN
+ZXJjaWVyIDx0am1lcmNpZXJAZ29vZ2xlLmNvbT4gd3JvdGU6DQo+ID4gPg0KPiA+ID4gVGhlIGtl
+cm5lbCBpbnRlcmZhY2Ugc2hvdWxkIHVzZSB0eXBlcyB0aGF0IHRoZSBrZXJuZWwgZGVmaW5lcyBp
+bnN0ZWFkIG9mDQo+ID4gPiBwaWRfdCBhbmQgdWlkX3QsIHdob3NlIGRlZmluaXRvbiBpcyBvd25l
+ZCBieSBsaWJjLiBUaGlzIGZpeGVzIHRoZSBoZWFkZXINCj4gPiA+IHNvIHRoYXQgaXQgY2FuIGJl
+IGluY2x1ZGVkIHdpdGhvdXQgZmlyc3QgaW5jbHVkaW5nIHN5cy90eXBlcy5oLg0KPiA+ID4NCj4g
+PiA+IFNpZ25lZC1vZmYtYnk6IFQuSi4gTWVyY2llciA8dGptZXJjaWVyQGdvb2dsZS5jb20+DQo+
+ID4gPiAtLS0NCj4gPiA+ICBpbmNsdWRlL3VhcGkvbGludXgvYW5kcm9pZC9iaW5kZXIuaCB8IDQg
+KystLQ0KPiA+ID4gIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25z
+KC0pDQo+ID4gPg0KPiA+ID4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvdWFwaS9saW51eC9hbmRyb2lk
+L2JpbmRlci5oIGIvaW5jbHVkZS91YXBpL2xpbnV4L2FuZHJvaWQvYmluZGVyLmgNCj4gPiA+IGlu
+ZGV4IDE2OWZkNTA2OWExYS4uYWEyODQ1NGRiY2EzIDEwMDY0NA0KPiA+ID4gLS0tIGEvaW5jbHVk
+ZS91YXBpL2xpbnV4L2FuZHJvaWQvYmluZGVyLmgNCj4gPiA+ICsrKyBiL2luY2x1ZGUvdWFwaS9s
+aW51eC9hbmRyb2lkL2JpbmRlci5oDQo+ID4gPiBAQCAtMjg5LDggKzI4OSw4IEBAIHN0cnVjdCBi
+aW5kZXJfdHJhbnNhY3Rpb25fZGF0YSB7DQo+ID4gPg0KPiA+ID4gICAgICAgICAvKiBHZW5lcmFs
+IGluZm9ybWF0aW9uIGFib3V0IHRoZSB0cmFuc2FjdGlvbi4gKi8NCj4gPiA+ICAgICAgICAgX191
+MzIgICAgICAgICAgIGZsYWdzOw0KPiA+ID4gLSAgICAgICBwaWRfdCAgICAgICAgICAgc2VuZGVy
+X3BpZDsNCj4gPiA+IC0gICAgICAgdWlkX3QgICAgICAgICAgIHNlbmRlcl9ldWlkOw0KPiA+ID4g
+KyAgICAgICBfX2tlcm5lbF9waWRfdCAgc2VuZGVyX3BpZDsNCj4gPiA+ICsgICAgICAgX19rZXJu
+ZWxfdWlkX3QgIHNlbmRlcl9ldWlkOw0KPiA+DQo+ID4gQXJlIHdlIGd1YXJhbnRlZWQgdGhhdCB0
+aGlzIGRvZXMgbm90IGFmZmVjdCB0aGUgVUFQSSBhdCBhbGw/IFVzZXJzcGFjZQ0KPiA+IGNvZGUg
+dXNpbmcgdGhpcyBkZWZpbml0aW9uIHdpbGwgaGF2ZSB0byBydW4gd2l0aCBrZXJuZWxzIHVzaW5n
+IHRoZSBvbGQNCj4gPiBkZWZpbml0aW9uIGFuZCB2aXNhLXZlcnNhLg0KPiANCj4gQSBzdGFuZGFy
+ZHMgY29tcGxpYW50IHVzZXJzcGFjZSBzaG91bGQgYmUgZXhwZWN0aW5nIGEgc2lnbmVkIGludGVn
+ZXINCj4gdHlwZSBoZXJlLiBTbyB0aGUgb25seSB3YXkgSSBjYW4gdGhpbmsgdXNlcnNwYWNlIHdv
+dWxkIGJlIGFmZmVjdGVkIGlzDQo+IGlmOg0KPiAxKSBwaWRfdCBpcyBhIGxvbmcgQU5EDQo+IDIp
+IHNpemVvZihsb25nKSA+IHNpemVvZihpbnQpIEFORA0KPiAzKSBDb25zdW1lcnMgb2YgdGhlIHBp
+ZF90IGRlZmluaXRpb24gYWN0dWFsbHkgYXR0ZW1wdCB0byBtdXRhdGUgdGhlDQo+IHJlc3VsdCB0
+byBtYWtlIHVzZSBvZiBleHRyYSBiaXRzIGluIHRoZSB2YXJpYWJsZSAod2hpY2ggYXJlIG5vdCB0
+aGVyZSkNCg0KT3IgdGhlIHVzZXJzcGFjZSBoZWFkZXJzIGhhdmUgYSAxNmJpdCBwaWRfdC4NCg0K
+SSBjYW4ndCBoZWxwIGZlZWxpbmcgdGhhdCB1YXBpIGhlYWRlcnMgc2hvdWxkIG9ubHkgdXNlIGV4
+cGxpY2l0DQpmaXhlZCBzaXplZCB0eXBlcy4NClRoZXJlIGlzIG5vIHBvaW50IGluZGlyZWN0aW5n
+IHRoZSB0eXBlIG5hbWVzIC0gdGhlIHNpemVzIHN0aWxsDQpjYW4ndCBiZSBjaGFuZ2VzLg0KDQoJ
+RGF2aWQNCg0KLQ0KUmVnaXN0ZXJlZCBBZGRyZXNzIExha2VzaWRlLCBCcmFtbGV5IFJvYWQsIE1v
+dW50IEZhcm0sIE1pbHRvbiBLZXluZXMsIE1LMSAxUFQsIFVLDQpSZWdpc3RyYXRpb24gTm86IDEz
+OTczODYgKFdhbGVzKQ0K
 
-Acked-by: Todd Kjos <tkjos@google.com>
-
->
-> ---
-> v3 changes
-> Remove android from title per Todd Kjos.
->
-> Use more common dual author commit message format per John Stultz.
->
-> Include details on behavior for all combinations of kernel/userspace
-> versions in changelog (thanks Suren Baghdasaryan) per Greg Kroah-Hartman.
->
-> v2 changes
-> Move dma-buf cgroup charge transfer from a dma_buf_op defined by every
-> heap to a single dma-buf function for all heaps per Daniel Vetter and
-> Christian K=C3=B6nig.
-> ---
->  drivers/android/binder.c            | 26 ++++++++++++++++++++++++++
->  include/uapi/linux/android/binder.h |  1 +
->  2 files changed, 27 insertions(+)
->
-> diff --git a/drivers/android/binder.c b/drivers/android/binder.c
-> index 8351c5638880..f50d88ded188 100644
-> --- a/drivers/android/binder.c
-> +++ b/drivers/android/binder.c
-> @@ -42,6 +42,7 @@
->
->  #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
->
-> +#include <linux/dma-buf.h>
->  #include <linux/fdtable.h>
->  #include <linux/file.h>
->  #include <linux/freezer.h>
-> @@ -2482,8 +2483,10 @@ static int binder_translate_fd_array(struct list_h=
-ead *pf_head,
->  {
->         binder_size_t fdi, fd_buf_size;
->         binder_size_t fda_offset;
-> +       bool transfer_gpu_charge =3D false;
->         const void __user *sender_ufda_base;
->         struct binder_proc *proc =3D thread->proc;
-> +       struct binder_proc *target_proc =3D t->to_proc;
->         int ret;
->
->         fd_buf_size =3D sizeof(u32) * fda->num_fds;
-> @@ -2521,8 +2524,15 @@ static int binder_translate_fd_array(struct list_h=
-ead *pf_head,
->         if (ret)
->                 return ret;
->
-> +       if (IS_ENABLED(CONFIG_CGROUP_GPU) &&
-> +               parent->flags & BINDER_BUFFER_FLAG_SENDER_NO_NEED)
-> +               transfer_gpu_charge =3D true;
-> +
->         for (fdi =3D 0; fdi < fda->num_fds; fdi++) {
->                 u32 fd;
-> +               struct dma_buf *dmabuf;
-> +               struct gpucg *gpucg;
-> +
->                 binder_size_t offset =3D fda_offset + fdi * sizeof(fd);
->                 binder_size_t sender_uoffset =3D fdi * sizeof(fd);
->
-> @@ -2532,6 +2542,22 @@ static int binder_translate_fd_array(struct list_h=
-ead *pf_head,
->                                                   in_reply_to);
->                 if (ret)
->                         return ret > 0 ? -EINVAL : ret;
-> +
-> +               if (!transfer_gpu_charge)
-> +                       continue;
-> +
-> +               dmabuf =3D dma_buf_get(fd);
-> +               if (IS_ERR(dmabuf))
-> +                       continue;
-> +
-> +               gpucg =3D gpucg_get(target_proc->tsk);
-> +               ret =3D dma_buf_charge_transfer(dmabuf, gpucg);
-> +               if (ret) {
-> +                       pr_warn("%d:%d Unable to transfer DMA-BUF fd char=
-ge to %d",
-> +                               proc->pid, thread->pid, target_proc->pid)=
-;
-> +                       gpucg_put(gpucg);
-> +               }
-> +               dma_buf_put(dmabuf);
->         }
->         return 0;
->  }
-> diff --git a/include/uapi/linux/android/binder.h b/include/uapi/linux/and=
-roid/binder.h
-> index 3246f2c74696..169fd5069a1a 100644
-> --- a/include/uapi/linux/android/binder.h
-> +++ b/include/uapi/linux/android/binder.h
-> @@ -137,6 +137,7 @@ struct binder_buffer_object {
->
->  enum {
->         BINDER_BUFFER_FLAG_HAS_PARENT =3D 0x01,
-> +       BINDER_BUFFER_FLAG_SENDER_NO_NEED =3D 0x02,
->  };
->
->  /* struct binder_fd_array_object - object describing an array of fds in =
-a buffer
-> --
-> 2.35.1.616.g0bdcbb4464-goog
->
