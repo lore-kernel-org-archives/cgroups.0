@@ -1,99 +1,52 @@
-From: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC v3 7/8] binder: use __kernel_pid_t and __kernel_uid_t for userspace
-Date: Tue, 15 Mar 2022 12:02:35 -0700
-Message-ID: <CABdmKX3NEm8+pDBj2VG-r8E91CVHwQ+gGcKhG8D=5MgWcgincg@mail.gmail.com>
-References: <20220309165222.2843651-1-tjmercier@google.com>
- <20220309165222.2843651-8-tjmercier@google.com> <CAHRSSEy5_h9LJB4q5_OJA7fSq=ROo68UaK+hdPz-Vj-wac1Qhg@mail.gmail.com>
- <CABdmKX1G0Rwmz7=BP1ER+TmtrnkGiE0nROsPTHKxnj=6bHhY3Q@mail.gmail.com> <a365a5f6c7864a879b133b99d1f43fb2@AcuMS.aculab.com>
+From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Patch v2 2/3] mm/memcg: __mem_cgroup_remove_exceeded could
+ handle a !on-tree mz properly
+Date: Wed, 16 Mar 2022 07:54:29 +0800
+Message-ID: <CADZGycbApX1D8sn4kCXmpYoB2m3Ysn9Ew-6rmdr6Rfhfv6jRjw@mail.gmail.com>
+References: <20220312071623.19050-1-richard.weiyang@gmail.com>
+ <20220312071623.19050-2-richard.weiyang@gmail.com> <Yi8Qu/1V4H1M9qZV@dhcp22.suse.cz>
+ <20220314225150.fhwny4yhxgjevwxx@master> <YjBT6emPlZD1lg5z@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
+        d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=nYOjHF+WhaOll744zl3KXczQ6UnybRfVr7cW3I5uN/U=;
-        b=eWq9aQSnpFSM7gGPtqgzIwr8bb/qKsDMvo0mIbS4s59AMIIHEMyCDMwhpLWRS+EYBR
-         qN4oTEZNXWPjiFCM5wbN4L3FVB0yMfHlzKy9DLlhHVCdkUAg+H8m96o6+l6phOAtZZtL
-         HqEaabMV1A231GA5THyiGjQn+CcdPV6Wcj7+UPW4PCAGWku/81HP+8C5q//5lWvhO0Pu
-         3zeib+NRZoI9eWeTsoj34Li0T9JVhg3Z1kUYOR1XGxD8A2nRmcx8ve9PFlZCqJIC6N4E
-         zEz1m0vSJoc3+NJsHrbvJr8ATMwQ+P3zv+QChYRQcRSYL4oNsBWZ06rrB2G0G0fVIJ1p
-         NQSA==
-In-Reply-To: <a365a5f6c7864a879b133b99d1f43fb2-1XygrNkDbNvwg4NCKwmqgw@public.gmane.org>
+        bh=0xlurKCUM4YSmUkIVypyj8embDeL9DxbXlFAmffyKHk=;
+        b=YWSK8NXNXoQdi7hNWVycl/TbZbyaLklUKLlRfiKBEuWLOF0/L8MCT0qMoSamK0odp1
+         j/F0IyEUGNK+I3IIPuzjui1frCebhVZ9JzC3hxOaH49yz/TV//yBMXsn3GwArjSJBjX/
+         /szB69aoQsdlXaDuD9NLam6OVNouDpHdu8VHZOQfqsJz0CW1ouuoBlG2bMqGTzWer6Dq
+         8zsJ9oBClj/hG+jKc0nVWkuyA//yiT9P1VXVfp/65DB3it2wGfiHtlJiItXbHWEY+8cy
+         VXPi46LE0urxlF6Oqm2TONwHpQmLC01YM7qYzT34XlkZ+UHBpRfXX2py4hD9hjU2nwY6
+         kuvw==
+In-Reply-To: <YjBT6emPlZD1lg5z-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Laight <David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org>
-Cc: Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Benjamin Gaignard <benjamin.gaignard-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Liam
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Tue, Mar 15, 2022 at 12:56 AM David Laight <David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org> wrote:
+On Tue, Mar 15, 2022 at 4:52 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
 >
-> From: T.J. Mercier
-> > Sent: 14 March 2022 23:45
-> >
-> > On Thu, Mar 10, 2022 at 11:33 AM Todd Kjos <tkjos-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> On Mon 14-03-22 22:51:50, Wei Yang wrote:
+> > On Mon, Mar 14, 2022 at 10:54:03AM +0100, Michal Hocko wrote:
+> > >On Sat 12-03-22 07:16:22, Wei Yang wrote:
+> > >> There is no tree operation if mz is not on-tree.
 > > >
-> > > On Wed, Mar 9, 2022 at 8:52 AM T.J. Mercier <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> > > >
-> > > > The kernel interface should use types that the kernel defines instead of
-> > > > pid_t and uid_t, whose definiton is owned by libc. This fixes the header
-> > > > so that it can be included without first including sys/types.h.
-> > > >
-> > > > Signed-off-by: T.J. Mercier <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > > > ---
-> > > >  include/uapi/linux/android/binder.h | 4 ++--
-> > > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > > >
-> > > > diff --git a/include/uapi/linux/android/binder.h b/include/uapi/linux/android/binder.h
-> > > > index 169fd5069a1a..aa28454dbca3 100644
-> > > > --- a/include/uapi/linux/android/binder.h
-> > > > +++ b/include/uapi/linux/android/binder.h
-> > > > @@ -289,8 +289,8 @@ struct binder_transaction_data {
-> > > >
-> > > >         /* General information about the transaction. */
-> > > >         __u32           flags;
-> > > > -       pid_t           sender_pid;
-> > > > -       uid_t           sender_euid;
-> > > > +       __kernel_pid_t  sender_pid;
-> > > > +       __kernel_uid_t  sender_euid;
+> > >This doesn't explain problem you are trying to solve nor does it make
+> > >much sense to me TBH.
 > > >
-> > > Are we guaranteed that this does not affect the UAPI at all? Userspace
-> > > code using this definition will have to run with kernels using the old
-> > > definition and visa-versa.
 > >
-> > A standards compliant userspace should be expecting a signed integer
-> > type here. So the only way I can think userspace would be affected is
-> > if:
-> > 1) pid_t is a long AND
-> > 2) sizeof(long) > sizeof(int) AND
-> > 3) Consumers of the pid_t definition actually attempt to mutate the
-> > result to make use of extra bits in the variable (which are not there)
+> > This just tries to make the code looks consistent.
 >
-> Or the userspace headers have a 16bit pid_t.
+> I guess this is rather subjective. One could argue that the check is
+> more descriptive because it obviously removes the node from the tree
+> when it is on the tree.
 
-Since the kernel uses an int for PIDs, wouldn't a 16 bit pid_t already
-be potentially broken (overflow) on systems where int is not 16 bits?
-On systems where int is 16 bits, there is no change here except to
-achieve uniform use of __kernel_pid_t in the kernel headers and fix
-the include problem.
+Hmm... maybe yes.
 
->
-> I can't help feeling that uapi headers should only use explicit
-> fixed sized types.
-> There is no point indirecting the type names - the sizes still
-> can't be changes.
+If someone else prefer the original one, I am ok with it.
 
-I think it's still unlikely to be an actual problem. For example there
-are other occasions where a switch like this was made:
-https://github.com/torvalds/linux/commit/694a58e29ef27c4c26f103a9decfd053f94dd34c
-https://github.com/torvalds/linux/commit/269b8fd5d058f2c0da01a42b20315ffc2640d99b
-
-And also since Binder's only known user is Android through Bionic
-which already expects the type of pid_t to be __kernel_pid_t.
-
-
->
->         David
->
-> -
-> Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-> Registration No: 1397386 (Wales)
+> --
+> Michal Hocko
+> SUSE Labs
