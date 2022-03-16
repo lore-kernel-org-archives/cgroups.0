@@ -1,52 +1,47 @@
-From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [Patch v2 2/3] mm/memcg: __mem_cgroup_remove_exceeded could
- handle a !on-tree mz properly
-Date: Wed, 16 Mar 2022 07:54:29 +0800
-Message-ID: <CADZGycbApX1D8sn4kCXmpYoB2m3Ysn9Ew-6rmdr6Rfhfv6jRjw@mail.gmail.com>
-References: <20220312071623.19050-1-richard.weiyang@gmail.com>
- <20220312071623.19050-2-richard.weiyang@gmail.com> <Yi8Qu/1V4H1M9qZV@dhcp22.suse.cz>
- <20220314225150.fhwny4yhxgjevwxx@master> <YjBT6emPlZD1lg5z@dhcp22.suse.cz>
+From: Song Liu <song@kernel.org>
+Subject: Re: [RFC bpf-next] Hierarchical Cgroup Stats Collection Using BPF
+Date: Tue, 15 Mar 2022 23:04:56 -0700
+Message-ID: <CAPhsuW5qHSZNSEh8CQK3wYqtJ4XB+EwFEJWKA9SkA+wGFbvNCg@mail.gmail.com>
+References: <CAJD7tkbQNpeX8MGw9dXa5gi6am=VNXwgwUoTd6+K=foixEm1fw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=0xlurKCUM4YSmUkIVypyj8embDeL9DxbXlFAmffyKHk=;
-        b=YWSK8NXNXoQdi7hNWVycl/TbZbyaLklUKLlRfiKBEuWLOF0/L8MCT0qMoSamK0odp1
-         j/F0IyEUGNK+I3IIPuzjui1frCebhVZ9JzC3hxOaH49yz/TV//yBMXsn3GwArjSJBjX/
-         /szB69aoQsdlXaDuD9NLam6OVNouDpHdu8VHZOQfqsJz0CW1ouuoBlG2bMqGTzWer6Dq
-         8zsJ9oBClj/hG+jKc0nVWkuyA//yiT9P1VXVfp/65DB3it2wGfiHtlJiItXbHWEY+8cy
-         VXPi46LE0urxlF6Oqm2TONwHpQmLC01YM7qYzT34XlkZ+UHBpRfXX2py4hD9hjU2nwY6
-         kuvw==
-In-Reply-To: <YjBT6emPlZD1lg5z-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1647410708;
+        bh=9u56X5trjDPRUeXIbiXX2WgWMHiQeCwaMD920ZfRi8s=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=kc/I2DRyrHvrgXU4oXkzFIkF9sFInZFOl+OfPblLYNxgfZbu4INP1YHZgxKSlgVTY
+         jOZ+3aH9aLNfZLH8TSfxhdoz2+IRoL9KQWru0qiP3xt8Bd3N3XBDQF9mWN8KsDteTB
+         SGwlr1EtPeo1r9XqiLJnBiZs2nysC41wMtI7VoOaN7BtI6CYW4DRuRoP/lp1vNfpKk
+         yJccTxZdroLG7a8zFUBdTbVUgQQab2HUgS3gX5MTK0lCEGF/w6CYMEbG9rUmPOaAFL
+         lP8OJpOfAbyNXEzqw5Mo2NzyRCY+rzAZzc3/39F0eaLDUWvFTEpHCClOPC+D0zjfnu
+         UD4RFJxxNoc8Q==
+In-Reply-To: <CAJD7tkbQNpeX8MGw9dXa5gi6am=VNXwgwUoTd6+K=foixEm1fw@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Alexei Starovoitov <ast@kernel.org>, Andrii Nakryiko <andrii@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Johannes Weiner <hannes@cmpxchg.org>, Hao Luo <haoluo@google.com>, Shakeel Butt <shakeelb@google.com>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, bpf <bpf@vger.kernel.org>, KP Singh <kpsingh@kernel.org>, cgroups@vger.kernel.org, Linux-MM <linux-mm@kvack.org>
 
-On Tue, Mar 15, 2022 at 4:52 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+On Wed, Mar 9, 2022 at 12:27 PM Yosry Ahmed <yosryahmed@google.com> wrote:
 >
-> On Mon 14-03-22 22:51:50, Wei Yang wrote:
-> > On Mon, Mar 14, 2022 at 10:54:03AM +0100, Michal Hocko wrote:
-> > >On Sat 12-03-22 07:16:22, Wei Yang wrote:
-> > >> There is no tree operation if mz is not on-tree.
-> > >
-> > >This doesn't explain problem you are trying to solve nor does it make
-> > >much sense to me TBH.
-> > >
-> >
-> > This just tries to make the code looks consistent.
+[...]
 >
-> I guess this is rather subjective. One could argue that the check is
-> more descriptive because it obviously removes the node from the tree
-> when it is on the tree.
+> The map usage by BPF programs and integration with rstat can be as follows:
+> - Internally, each map entry has per-cpu arrays, a total array, and a
+> pending array. BPF programs and user space only see one array.
+> - The update interface is disabled. BPF programs use helpers to modify
+> elements. Internally, the modifications are made to per-cpu arrays,
+> and invoke a call to cgroup_bpf_updated()  or an equivalent.
+> - Lookups (from BPF programs or user space) invoke an rstat flush and
+> read from the total array.
 
-Hmm... maybe yes.
+Lookups invoke a rstat flush, so we still walk every node of a subtree for
+each lookup, no? So the actual cost should be similar than walking the
+subtree with some BPF program? Did I miss something?
 
-If someone else prefer the original one, I am ok with it.
+Thanks,
+Song
 
-> --
-> Michal Hocko
-> SUSE Labs
+> - In cgroup_rstat_flush_locked() flush BPF stats as well.
+>
+[...]
