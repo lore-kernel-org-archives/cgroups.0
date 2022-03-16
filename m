@@ -1,73 +1,51 @@
-From: Olsson John <john.olsson-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org>
-Subject: RE: [EXTERNAL] Re: Split process across multiple schedulers?
-Date: Wed, 16 Mar 2022 08:17:04 +0000
-Message-ID: <77e72fcbbff94977a5179446265c18d2@saabgroup.com>
-References: <b5039be462e8492085b6638df2a761ca@saabgroup.com>
- <20220314164332.GA20424@blackbody.suse.cz>
- <bf2ea0888a9e45d3aafe412f0094cf86@saabgroup.com>
- <20220315103553.GA3780@blackbody.suse.cz>
- <84e5b8652edd47d29597d499f29753d6@saabgroup.com>
- <20220315173329.GB3780@blackbody.suse.cz>
+From: Yang Li <yang.lee-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH -next] block: Add parameter description in kernel-doc comment
+Date: Wed, 16 Mar 2022 20:53:27 +0800
+Message-ID: <20220316125327.126996-1-yang.lee@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 weald.air.saab.se 22G8H7g0007954
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=saabgroup.com;
-        s=weald; t=1647418627;
-        bh=nS2kp8sjDDEi2HeJUbR6OjAh6tLLzGTSTiLmbumiWbM=;
-        h=From:To:CC:Subject:Date:References:In-Reply-To:From;
-        b=js5nsw9AEIXY6vsi4cYtXY6dvrKF8Aa0qdixEbfhtEHSd3E1EDv7wzFi6lGGfZ4LP
-         Aod4UpRRBFrG2qkQ03UUHGYlhNNIx0fHngXoNayK4pJ6eHWSr6FTUya81XCRtl5Dfl
-         O4fBP0he8zmwjY/2jUbeB8UhHgDoUyEDN9HzURwg=
-In-Reply-To: <20220315173329.GB3780-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
-Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-To: =?iso-8859-1?Q?Michal_Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yang Li <yang.lee-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Abaci Robot <abaci-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 
-> I think you've complete info now how threads are handled with cgroups.
+Add the description of @ioprio_class in bfq_reparent_leaf_entity()
+and bfq_reparent_active_queues() kernel-doc comment to remove
+warning found by running scripts/kernel-doc, which is caused by
+using 'make W=1'.
 
-Thank you for your excellent support! :D
+block/bfq-cgroup.c:848: warning: Function parameter or member
+'ioprio_class' not described in 'bfq_reparent_leaf_entity'
+block/bfq-cgroup.c:878: warning: Function parameter or member
+'ioprio_class' not described in 'bfq_reparent_active_queues'
 
+Reported-by: Abaci Robot <abaci-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Signed-off-by: Yang Li <yang.lee-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+---
+ block/bfq-cgroup.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> Good luck with the fork :-)
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index 420eda2589c0..af92c2e5fd98 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -841,6 +841,7 @@ static void bfq_flush_idle_tree(struct bfq_service_tree *st)
+  * @bfqd: the device data structure with the root group.
+  * @entity: the entity to move, if entity is a leaf; or the parent entity
+  *	    of an active leaf entity to move, if entity is not a leaf.
++ * @ioprio_class: the offset used to manipulate the service_tree
+  */
+ static void bfq_reparent_leaf_entity(struct bfq_data *bfqd,
+ 				     struct bfq_entity *entity,
+@@ -870,6 +871,7 @@ static void bfq_reparent_leaf_entity(struct bfq_data *bfqd,
+  * @bfqd: the device data structure with the root group.
+  * @bfqg: the group to move from.
+  * @st: the service tree to start the search from.
++ * @ioprio_class: the offset used to manipulate the service_tree
+  */
+ static void bfq_reparent_active_queues(struct bfq_data *bfqd,
+ 				       struct bfq_group *bfqg,
+-- 
+2.20.1.7.g153144c
 
-It's basically already done as part of a Master Thesis. Now we'll
-experiment with it and see how theory clashes with the real world. :)
-
-
-/John
-
------Original Message-----
-From: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>=20
-Sent: den 15 mars 2022 18:34
-To: Olsson John <john.olsson-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Subject: Re: [EXTERNAL] Re: Split process across multiple schedulers?
-
-On Tue, Mar 15, 2022 at 03:49:52PM +0000, Olsson John <john.olsson@saabgrou=
-p.com> wrote:
-> As you might have already surmised it was a placeholder example to=20
-> give the general idea. I think it is time to add some more details. :)
-
-Thanks for sharing the additional description.
-
-> Assume that you have an embedded system running some kind of software=20
-> with real time like properties. You want to develop and debug your=20
-> software locally on your high-end machine since it is much more=20
-> convenient. Alas the software runs way too fast due to the difference=20
-> in performance so you can't detect overruns etc.
-
-There are certainly more knowledgeable people than me to help with debuggin=
-g such environments.
-
-> One way of implementing this kind of scheduler would be to create a=20
-> fork of the FIFO scheduler that have this behavior.
-
-I think you've complete info now how threads are handled with cgroups.
-
-Good luck with the fork :-)
-
-
-Michal
