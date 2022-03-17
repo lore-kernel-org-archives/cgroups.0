@@ -1,124 +1,85 @@
-From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -next 00/11] support concurrent sync io for bfq on a
- specail occasion
-Date: Thu, 17 Mar 2022 09:49:16 +0800
-Message-ID: <11fda851-a552-97ea-d083-d0288c17ba53@huawei.com>
-References: <20220305091205.4188398-1-yukuai3@huawei.com>
- <e299180e-cdbd-0837-8478-5e397ac8166b@huawei.com>
+From: Olsson John <john.olsson-zlDGZTLOEuz3oGB3hsPCZA@public.gmane.org>
+Subject: RE: [EXTERNAL] Re: Split process across multiple schedulers?
+Date: Thu, 17 Mar 2022 09:30:09 +0000
+Message-ID: <943440a04e4c4731a3e9e6a7b1259251@saabgroup.com>
+References: <b5039be462e8492085b6638df2a761ca@saabgroup.com>
+ <YjIShE3mwRyNbO53@slm.duckdns.org>
+ <e9cac4aba6384c5c91125a9f7d61a4e8@saabgroup.com>
+ <YjIfMLG5W2a/E4vX@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <e299180e-cdbd-0837-8478-5e397ac8166b-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 weald.air.saab.se 22H9UAHZ073375
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=saabgroup.com;
+        s=weald; t=1647509411;
+        bh=b6FqKrBh6NuQz0yvGHKXPjeDUeXTkFJrPXcooHJHzV4=;
+        h=From:To:CC:Subject:Date:References:In-Reply-To:From;
+        b=o6fXvX9Q0tncD/kN53hCHF4dU0FVKcL60NwupF1CCQ4PHXHkgT9sAhd4yjrxBOMIS
+         F2Krn57chEGI77kPFaanrLUtBHlHjMIcmVOzypWKOyV+xohsewJ+MjVN/bYp09w6eA
+         YzsqGugrhrBus9ylMNG3Er4YAxBtCBUH5N8nYg+Y=
+In-Reply-To: <YjIfMLG5W2a/E4vX-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-friendly ping ...
+> Yeah, mostly curious from cgroup design POV. It'd be nice to support
+> use cases like this well but we likely don't wanna twist anything
+> for it.
 
-在 2022/03/11 14:31, yukuai (C) 写道:
-> friendly ping ...
-> 
-> 在 2022/03/05 17:11, Yu Kuai 写道:
->> Currently, bfq can't handle sync io concurrently as long as they
->> are not issued from root group. This is because
->> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
->> bfq_asymmetric_scenario().
->>
->> This patchset tries to support concurrent sync io if all the sync ios
->> are issued from the same cgroup:
->>
->> 1) Count root_group into 'num_groups_with_pending_reqs', patch 1-5;
->>
->> 2) Don't idle if 'num_groups_with_pending_reqs' is 1, patch 6;
->>
->> 3) Don't count the group if the group doesn't have pending requests,
->> while it's child groups may have pending requests, patch 7;
->>
->> This is because, for example:
->> if sync ios are issued from cgroup /root/c1/c2, root, c1 and c2
->> will all be counted into 'num_groups_with_pending_reqs',
->> which makes it impossible to handle sync ios concurrently.
->>
->> 4) Decrease 'num_groups_with_pending_reqs' when the last queue completes
->> all the requests, while child groups may still have pending
->> requests, patch 8-10;
->>
->> This is because, for example:
->> t1 issue sync io on root group, t2 and t3 issue sync io on the same
->> child group. num_groups_with_pending_reqs is 2 now.
->> After t1 stopped, num_groups_with_pending_reqs is still 2. sync io from
->> t2 and t3 still can't be handled concurrently.
->>
->> fio test script: startdelay is used to avoid queue merging
->> [global]
->> filename=/dev/nvme0n1
->> allow_mounted_write=0
->> ioengine=psync
->> direct=1
->> ioscheduler=bfq
->> offset_increment=10g
->> group_reporting
->> rw=randwrite
->> bs=4k
->>
->> [test1]
->> numjobs=1
->>
->> [test2]
->> startdelay=1
->> numjobs=1
->>
->> [test3]
->> startdelay=2
->> numjobs=1
->>
->> [test4]
->> startdelay=3
->> numjobs=1
->>
->> [test5]
->> startdelay=4
->> numjobs=1
->>
->> [test6]
->> startdelay=5
->> numjobs=1
->>
->> [test7]
->> startdelay=6
->> numjobs=1
->>
->> [test8]
->> startdelay=7
->> numjobs=1
->>
->> test result:
->> running fio on root cgroup
->> v5.17-rc6:       550 Mib/s
->> v5.17-rc6-patched: 550 Mib/s
->>
->> running fio on non-root cgroup
->> v5.17-rc6:       349 Mib/s
->> v5.17-rc6-patched: 550 Mib/s
->>
->> Yu Kuai (11):
->>    block, bfq: add new apis to iterate bfq entities
->>    block, bfq: apply news apis where root group is not expected
->>    block, bfq: cleanup for __bfq_activate_requeue_entity()
->>    block, bfq: move the increasement of 'num_groups_with_pending_reqs' to
->>      it's caller
->>    block, bfq: count root group into 'num_groups_with_pending_reqs'
->>    block, bfq: do not idle if only one cgroup is activated
->>    block, bfq: only count parent bfqg when bfqq is activated
->>    block, bfq: record how many queues have pending requests in bfq_group
->>    block, bfq: move forward __bfq_weights_tree_remove()
->>    block, bfq: decrease 'num_groups_with_pending_reqs' earlier
->>    block, bfq: cleanup bfqq_group()
->>
->>   block/bfq-cgroup.c  | 13 +++----
->>   block/bfq-iosched.c | 87 +++++++++++++++++++++++----------------------
->>   block/bfq-iosched.h | 41 +++++++++++++--------
->>   block/bfq-wf2q.c    | 56 +++++++++++++++--------------
->>   4 files changed, 106 insertions(+), 91 deletions(-)
->>
+Ok. I'll give you some more details. :)
+
+The building block we are discussing here (running a VM where VMM and
+virtual core threads are scheduled using different schedulers and thus
+effectively on different cores) is a building block in a larger
+context. The use cases I have provided so far are still valid and
+needed.
+
+What you run in the VM is the OS plus application of some embedded
+multicore system where the target hardware is way less competent than
+what you are running the VM on. It will most likely even be using a
+different CPU architecture so you cross compile to for instance x86.
+
+Now put this building block in a simulator where other parts of the
+larger system are connected to this VM. This simulator is used to
+train persons who operate the real system and it is important it's
+behavior closely mimics the actual real system. For instance response
+times from the embedded system may not be too fast nor to too slow.
+
+
+> Yeah, deligation can be useful. However, given that the
+> configuration would need some automation / scripting anyway, it
+> shouldn't be too difficult to work around.
+
+Think of it like this. IT department installs the OS of the Host and
+sets up cgroup node where a user group controls access to a
+subtree. Developers belonging to this group are then allowed to
+configure cgroup using abstract names for the nodes in the tree. The
+software running on the server uses these abstract names and does not
+need to know how they are configured. This means that when the
+software is deployed in a different setting where you want another
+behavior you just need to reconfigure the cgroup without needing to
+recompile the software. And by relying on cgroups you also get less
+source code to maintain (and that you might get wrong).
+
+
+> The thing is, to put different threads of a process into different
+> cgroups, one has to know which threads are doing what, which is the
+> same knowledge needed to configure per-thread attributes.
+
+Well, you might also have generic rules like for VM named "foo" you
+put the VMM thread in "foo-vmm" and virtual core threads in
+"foo-vct01" through "foo-vctnn". The actual mapping of these cgroups
+to physical cores might differ from server to server. And you might
+also select different schedulers and so on depending on server
+configuration and the intention with the software installation. For
+instance CI-loops that run batches where real-time behavior (matching
+elapsed wall clock time in the simulation to actual system) is not
+that important and you can fast-forward the simulation as you are
+interested in functional tests and so on. This mean that the actual
+software does not need to worry about such things.
+
+
+/John
+
