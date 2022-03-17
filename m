@@ -1,52 +1,90 @@
-From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v9] block: cancel all throttled bios in del_gendisk()
-Date: Thu, 17 Mar 2022 19:22:04 +0800
-Message-ID: <f46c8512-400b-144f-e2ba-c57cc895fca8@huawei.com>
-References: <20220210115637.1074927-1-yukuai3@huawei.com>
- <YhuyBgZSS6m/Mwu6@infradead.org> <Yhxnkg0AEaj36t+a@T590>
- <YhyYpWHGVhs3J/dk@infradead.org> <Yh31bQu3gbXoDBuK@T590>
- <836f0686-4ac8-327d-2bab-64a762ea8673@huawei.com> <Yh6/dH2CERzsBPJd@T590>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [RFC] memcg: Convert mc_target.page to mc_target.folio
+Date: Thu, 17 Mar 2022 12:58:46 +0100
+Message-ID: <YjMidqgZbieEyBuF@dhcp22.suse.cz>
+References: <YjJJIrENYb1qFHzl@casper.infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Yh6/dH2CERzsBPJd@T590>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1647518330; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=wChL9XS63MYTCqGru1PZgU6kXfV3LAvy/qvsXt5I990=;
+        b=h3+TM1ZrSfGxCkXKnqPsDUbK+eHEVAXknuif+p/x7hAdQHZFNK1NeAZO4y21h3OblEiA9R
+        OqYeRMTMbn+OoLUt2baZDoi4ptha3Yma20C64NsqA0ksLVxffDpaNs1UsQwQNeOMV1jFk+
+        q05bG4BaY7leR0xAACBdJcsddQyxbMk=
+Content-Disposition: inline
+In-Reply-To: <YjJJIrENYb1qFHzl-FZi0V3Vbi30CUdFEqe4BF2D2FQJk+8+b@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-在 2022/03/02 8:51, Ming Lei 写道:
-> On Tue, Mar 01, 2022 at 09:54:28PM +0800, yukuai (C) wrote:
->> 在 2022/03/01 18:29, Ming Lei 写道:
->>> On Mon, Feb 28, 2022 at 01:40:53AM -0800, Christoph Hellwig wrote:
->>>> On Mon, Feb 28, 2022 at 02:11:30PM +0800, Ming Lei wrote:
->>>>>> FYI, this crashed left rigt and center when running xfstests with
->>>>>> traces pointing to throtl_pending_timer_fn.
->>>>>
->>>>> Can you share the exact xfstests test(fs, test)? Or panic log?
->>>>>
->>>>> I can't reproduce it when running './check -g auto' on XFS, meantime
->>>>> tracking throtl_pending_timer_fn().
->>>>
->>>>   From a quick run using f2fs:
->>>>
->>>> generic/081 files ... [  316.487861] run fstests generic/081 at 2022-02-28 09:38:40
->>>
->>> Thanks for providing the reproducer.
->>>
->>> The reason is that the pending timer is deleted in blkg's release
->>> handler, so the timer can still be live after request queue is released.
->>>
->>> The patch of 'block: cancel all throttled bios in del_gendisk()' should just
->>> make it easier to trigger.
->>>
->>> After patch of "block: move blkcg initialization/destroy into disk allocation/
->>> release handler" lands, the issue can be fixed easily by:
+On Wed 16-03-22 20:31:30, Matthew Wilcox wrote:
+> This is a fairly mechanical change to convert mc_target.page to
+> mc_target.folio.  This is a prerequisite for converting
+> find_get_incore_page() to find_get_incore_folio().  But I'm not
+> convinced it's right, and I'm not convinced the existing code is
+> quite right either.
+> 
+> In particular, the code in hunk @@ -6036,28 +6041,26 @@ needs
+> careful review.  There are also assumptions in here that a memory
+> allocation is never larger than a PMD, which is true today, but I've
+> been asked about larger allocations.
 
-Hi, Ming
+Could you be more specific about those usecases? Are they really
+interested in supporting larger pages for the memcg migration which is
+v1 only feature? Or you are interested merely to have the code more
+generic?
 
-Now that the above patch is landed in linux-next, do you intend to fix
-the above problem? Or I can take over if you don't mind.
+[...]
+> @@ -6036,28 +6041,26 @@ static int mem_cgroup_move_charge_pte_range(pmd_t *pmd,
+>  		case MC_TARGET_DEVICE:
+>  			device = true;
+>  			fallthrough;
+> -		case MC_TARGET_PAGE:
+> -			page = target.page;
+> +		case MC_TARGET_FOLIO:
+> +			folio = target.folio;
+>  			/*
+> -			 * We can have a part of the split pmd here. Moving it
+> -			 * can be done but it would be too convoluted so simply
+> -			 * ignore such a partial THP and keep it in original
+> -			 * memcg. There should be somebody mapping the head.
+> +			 * Is bailing out here with a large folio still the
+> +			 * right thing to do?  Unclear.
+>  			 */
+> -			if (PageTransCompound(page))
+> +			if (folio_test_large(folio))
+>  				goto put;
+> -			if (!device && isolate_lru_page(page))
+> +			if (!device && folio_isolate_lru(folio))
+>  				goto put;
+> -			if (!mem_cgroup_move_account(page, false,
+> +			if (!mem_cgroup_move_account(folio, false,
+>  						mc.from, mc.to)) {
+>  				mc.precharge--;
+>  				/* we uncharge from mc.from later. */
+>  				mc.moved_charge++;
+>  			}
+>  			if (!device)
+> -				putback_lru_page(page);
+> -put:			/* get_mctgt_type() gets the page */
+> -			put_page(page);
+> +				folio_putback_lru(folio);
+> +put:			/* get_mctgt_type() gets the folio */
+> +			folio_put(folio);
+>  			break;
+>  		case MC_TARGET_SWAP:
+>  			ent = target.ent;
 
-Thanks,
-Kuai
+It's been some time since I've looked at this particular code but my
+recollection and current understanding is that we are skipping over pte
+mapped huge pages for simplicity so that we do not have to recharge
+all other ptes from the same huge page. What kind of concern do you see
+there?
+
+-- 
+Michal Hocko
+SUSE Labs
