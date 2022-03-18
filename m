@@ -1,113 +1,74 @@
-From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [RFC] memcg: Convert mc_target.page to mc_target.folio
-Date: Fri, 18 Mar 2022 03:49:27 +0000
-Message-ID: <YjQBRx1+Rq7CYC4M@casper.infradead.org>
-References: <YjJJIrENYb1qFHzl@casper.infradead.org>
- <YjMidqgZbieEyBuF@dhcp22.suse.cz>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH v9] block: cancel all throttled bios in del_gendisk()
+Date: Fri, 18 Mar 2022 15:04:00 +0800
+Message-ID: <YjQu4FfpUq33pyDx@T590>
+References: <20220210115637.1074927-1-yukuai3@huawei.com>
+ <YhuyBgZSS6m/Mwu6@infradead.org>
+ <Yhxnkg0AEaj36t+a@T590>
+ <YhyYpWHGVhs3J/dk@infradead.org>
+ <Yh31bQu3gbXoDBuK@T590>
+ <836f0686-4ac8-327d-2bab-64a762ea8673@huawei.com>
+ <Yh6/dH2CERzsBPJd@T590>
+ <f46c8512-400b-144f-e2ba-c57cc895fca8@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=P+lmjWlX8RjtV4mSys5aX5+QRT1CeRIMXrpuZ7wboyQ=; b=jDNKNbq2aqbauFSSIrR/iLvQkl
-        vrOkqrmhcjWFh9YriZGIq1lRPIe0eMDRRbbDlJR8eD+nq/l6SUNwOvk7hK6SVYZApWVJdzgRh+Aui
-        cHEGJJCs/zcTRHBC/6CWE9lcreR4hvpqoWFEM9TtaBeAKeq9wwmt07ZmeHopDAfYFORwgYFvSoVAt
-        ckr3uLD3/KKM+XL1JwMSTb7URzAMRyW70QzpxD451khxD3pU7qNqwx9IqJcJlPjTVZhlLczjZhQUn
-        duJmerinql6KSGBddJIM1OpulEXPRNtnoFTHZ4fhmLaOpYc3jVJMVuakCmHKHsepUjl3aaHA+ReXV
-        KjQDzDOA==;
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1647587059;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=dRxKY2ALGuJ0XownOAjggWtKbSTTBHbjSbBWPLWoaKg=;
+        b=A7bsFf8izkMxu/V45gHtDxv47MfjIMKoBpizja7G43wNQyAjsOXceHI8T93oBoCq9YxAEu
+        qQHko++Qw8MaW8a2pFAQEeWyT+D3ij6KIOLK6/6A/DzN4FDgIscS88GEM21he1a9iotj3V
+        u1H/zMBux6iTBZ6YBm2iyr0MPHRw6MA=
 Content-Disposition: inline
-In-Reply-To: <YjMidqgZbieEyBuF-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <f46c8512-400b-144f-e2ba-c57cc895fca8@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: "yukuai (C)" <yukuai3@huawei.com>
+Cc: Christoph Hellwig <hch@infradead.org>, tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-On Thu, Mar 17, 2022 at 12:58:46PM +0100, Michal Hocko wrote:
-> On Wed 16-03-22 20:31:30, Matthew Wilcox wrote:
-> > This is a fairly mechanical change to convert mc_target.page to
-> > mc_target.folio.  This is a prerequisite for converting
-> > find_get_incore_page() to find_get_incore_folio().  But I'm not
-> > convinced it's right, and I'm not convinced the existing code is
-> > quite right either.
-> > 
-> > In particular, the code in hunk @@ -6036,28 +6041,26 @@ needs
-> > careful review.  There are also assumptions in here that a memory
-> > allocation is never larger than a PMD, which is true today, but I've
-> > been asked about larger allocations.
+On Thu, Mar 17, 2022 at 07:22:04PM +0800, yukuai (C) wrote:
+> 在 2022/03/02 8:51, Ming Lei 写道:
+> > On Tue, Mar 01, 2022 at 09:54:28PM +0800, yukuai (C) wrote:
+> > > 在 2022/03/01 18:29, Ming Lei 写道:
+> > > > On Mon, Feb 28, 2022 at 01:40:53AM -0800, Christoph Hellwig wrote:
+> > > > > On Mon, Feb 28, 2022 at 02:11:30PM +0800, Ming Lei wrote:
+> > > > > > > FYI, this crashed left rigt and center when running xfstests with
+> > > > > > > traces pointing to throtl_pending_timer_fn.
+> > > > > > 
+> > > > > > Can you share the exact xfstests test(fs, test)? Or panic log?
+> > > > > > 
+> > > > > > I can't reproduce it when running './check -g auto' on XFS, meantime
+> > > > > > tracking throtl_pending_timer_fn().
+> > > > > 
+> > > > >   From a quick run using f2fs:
+> > > > > 
+> > > > > generic/081 files ... [  316.487861] run fstests generic/081 at 2022-02-28 09:38:40
+> > > > 
+> > > > Thanks for providing the reproducer.
+> > > > 
+> > > > The reason is that the pending timer is deleted in blkg's release
+> > > > handler, so the timer can still be live after request queue is released.
+> > > > 
+> > > > The patch of 'block: cancel all throttled bios in del_gendisk()' should just
+> > > > make it easier to trigger.
+> > > > 
+> > > > After patch of "block: move blkcg initialization/destroy into disk allocation/
+> > > > release handler" lands, the issue can be fixed easily by:
 > 
-> Could you be more specific about those usecases? Are they really
-> interested in supporting larger pages for the memcg migration which is
-> v1 only feature? Or you are interested merely to have the code more
-> generic?
-
-Ah!  I didn't realise memcg migration was a v1-only feature.  I think
-that makes all of the questions much less interesting.  I've done some
-more reading, and it seems like all of this is "best effort", so it
-doesn't really matter if some folios get skipped.
-
-I'm not entirely sure what the usecases are for >PMD sized folios.
-I think the people who are asking for them probably overestimate how
-useful / practical they'll turn out to be.  I sense it's a case of "our
-hardware supports a range of sizes, and we'd like to be able to support
-them all", rather than any sensible evaluation of the pros and cons.
-
-> [...]
-> > @@ -6036,28 +6041,26 @@ static int mem_cgroup_move_charge_pte_range(pmd_t *pmd,
-> >  		case MC_TARGET_DEVICE:
-> >  			device = true;
-> >  			fallthrough;
-> > -		case MC_TARGET_PAGE:
-> > -			page = target.page;
-> > +		case MC_TARGET_FOLIO:
-> > +			folio = target.folio;
-> >  			/*
-> > -			 * We can have a part of the split pmd here. Moving it
-> > -			 * can be done but it would be too convoluted so simply
-> > -			 * ignore such a partial THP and keep it in original
-> > -			 * memcg. There should be somebody mapping the head.
-> > +			 * Is bailing out here with a large folio still the
-> > +			 * right thing to do?  Unclear.
-> >  			 */
-> > -			if (PageTransCompound(page))
-> > +			if (folio_test_large(folio))
-> >  				goto put;
-> > -			if (!device && isolate_lru_page(page))
-> > +			if (!device && folio_isolate_lru(folio))
-> >  				goto put;
-> > -			if (!mem_cgroup_move_account(page, false,
-> > +			if (!mem_cgroup_move_account(folio, false,
-> >  						mc.from, mc.to)) {
-> >  				mc.precharge--;
-> >  				/* we uncharge from mc.from later. */
-> >  				mc.moved_charge++;
-> >  			}
-> >  			if (!device)
-> > -				putback_lru_page(page);
-> > -put:			/* get_mctgt_type() gets the page */
-> > -			put_page(page);
-> > +				folio_putback_lru(folio);
-> > +put:			/* get_mctgt_type() gets the folio */
-> > +			folio_put(folio);
-> >  			break;
-> >  		case MC_TARGET_SWAP:
-> >  			ent = target.ent;
+> Hi, Ming
 > 
-> It's been some time since I've looked at this particular code but my
-> recollection and current understanding is that we are skipping over pte
-> mapped huge pages for simplicity so that we do not have to recharge
-> all other ptes from the same huge page. What kind of concern do you see
-> there?
+> Now that the above patch is landed in linux-next, do you intend to fix
+> the above problem? Or I can take over if you don't mind.
 
-That makes sense.  I think the case that's currently mishandled is a
-THP in tmpfs which is misaligned when mapped to userspace.  It's
-skipped, even if the entire THP is mapped.  But maybe that simply
-doesn't matter.
+Hi Yu Kuai, 
 
-I suppose the question is: Do we care if mappings of files are not
-migrated to the new memcg?  I'm getting a sense that the answer is "no",
-and if we actually ended up skipping all file mappings, it wouldn't
-matter.
+I will send one fix and your V9 later.
 
-Thanks for taking a look!
+
+Thanks,
+Ming
+
