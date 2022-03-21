@@ -1,7 +1,7 @@
 From: Zi Yan <zi.yan-vRdzynncJC4@public.gmane.org>
-Subject: [RFC PATCH 4/5] mm: truncate: split huge page cache page to a non-zero order if possible.
-Date: Mon, 21 Mar 2022 10:21:27 -0400
-Message-ID: <20220321142128.2471199-5-zi.yan@sent.com>
+Subject: [RFC PATCH 1/5] mm: memcg: make memcg huge page split support any order split.
+Date: Mon, 21 Mar 2022 10:21:24 -0400
+Message-ID: <20220321142128.2471199-2-zi.yan@sent.com>
 References: <20220321142128.2471199-1-zi.yan@sent.com>
 Reply-To: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Mime-Version: 1.0
@@ -10,25 +10,25 @@ Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sent.com; h=cc
         :cc:content-transfer-encoding:date:date:from:from:in-reply-to
         :in-reply-to:message-id:mime-version:references:reply-to
-        :reply-to:sender:subject:subject:to:to; s=fm3; bh=kIpuEveA7/YbA0
-        pSxKdFASwEtWdRLdBg+ont8QAUBuo=; b=CibfHPfPc9bJSaTTlmtIw04wVD3Dd8
-        3VqLqKQ5Qj071muc/kNIs2STVuogk3JFo13FuAM03CbTtbgDmccuFLrp16kcWIFO
-        d8hl8FQdMKdjmKXPCk8wtZrl7DxcvoIkEU6WPV5hxZfDz6lMpV6fIMjLkx/76nna
-        EiQGdMJQ4AHaL7eEaHpuGV9NSE8Jz4Uyw4k7ck2Xv9E4nyia9/ltn8+f8P4NCO4S
-        pWq2hAlxRldvFm0hWFywi+rVo9wSbo+fCZjdR9azvHjTXQYxlq5iIoHuX4RkIEVm
-        FQSLn+aFimBxOseDQcxdLoDoRcSy19BnL6Vr8ZjP8+p6fihROf/0XYog==
+        :reply-to:sender:subject:subject:to:to; s=fm3; bh=tXqvAixMw5LH0Y
+        fUtbzaonW6xe08jm3VyFZaFA2A5hg=; b=VoXtG0rUj89HL8a9t9XSClLnA8qdst
+        867J3UhDpvuwxZH1/qCkd+tC36HHVUp9+psR0m5rLxjQnCsl11s0X3oEIZn5Ujzu
+        8P7ytscIn/61BrN5V0bSaOZoJ5ghBW6G58wME90QPfXVz7Zb5hVceQf8L5ifDwuX
+        TFlUEtSJSbguZFydh1JSTHXBo0X57SzRxGnzb5DeH5GbTM18KPl7dexgLXlrPyQl
+        i2gbubj0ViTAng/8kTUazkVDGDIrQoWiXWPU7Ns3JWmRr9018v8bf9Fx7FRYM5XN
+        fLIW1E77O8zl0GtkXJzleXw1xKF/4EgTJaSNPRocdaffgl2l7TpTWhIw==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:cc:content-transfer-encoding:date:date
         :from:from:in-reply-to:in-reply-to:message-id:mime-version
         :references:reply-to:reply-to:sender:subject:subject:to:to
         :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm3; bh=kIpuEveA7/YbA0pSxKdFASwEtWdRLdBg+ont8QAUBuo=; b=E/noCP1M
-        yVMAjJAqn0BOQsC1e5+7xwiXuijpihKmellqXIdOMkNlCUVSAxhx4Kd+SpYbrHZC
-        859nDk2ffs3FaMVJ2H8nYHlyBwQfulEJt82/xmqBk35GfQl17pHlh+LsRT5amo9F
-        9fHbMugbzGkL1bUPv04Em/0LCmEuKSST9ks7BXA+EtCtAejx77G71LwjzTDABnRk
-        QC+4FeO+2n45rW13BcrSz+Rb+rhR+ykehSmSEa2+UEGc/q3br86XTzp0kPBFcpjg
-        NGv2FBJh9ZEVa9hqzEd15pOAjSLI0fyr4n8FHDlffeWtOwjp5cEWta7I5OOKO5aj
-        5TsOJLkr5wx+Vw==
+        fm3; bh=tXqvAixMw5LH0YfUtbzaonW6xe08jm3VyFZaFA2A5hg=; b=jGBvfn8p
+        94GYrztj2DXLXLso38ehz7889cnUZ/x9YmTqksFcoL7VPRu7EQmAqJcHmJJ1KVn4
+        xgSpaUyPZ+rb8hdcJH3j0d8+SZJfB1i3cE4Mya3KhGHS8jcLTJ0oxZ3Xq4AvLnfX
+        gG1skxrFc3nYWSfQ7TtJlS858djSMdpZR0bXd/kpyRfka1sLmfM/hVGEnombtuyZ
+        nT6phmcZVc2ftCk8VdI0w1Y9F2QkOioVmOjUGEoSuR0I5MbXK296E6n935TUIu+X
+        eKPKpbCj2pVaJTZGcnhsGfZoS78/jX1ntxu7MDxy+7o+s6+RRAEhvHLg2By6UJIw
+        lih5zEh3K0T5mQ==
 In-Reply-To: <20220321142128.2471199-1-zi.yan-vRdzynncJC4@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -37,108 +37,95 @@ Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shu
 
 From: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 
-To minimize the number of pages after a huge page truncation, we do not
-need to split it all the way down to order-0. The huge page has at most
-three parts, the part before offset, the part to be truncated, the part
-remaining at the end. Find the greatest common power of two multiplier of
-the non-zero values of them as the new order, so we can split the huge
-page to this order and keep the remaining pages as large and as few as
-possible.
+It sets memcg information for the pages after the split. A new parameter
+new_order is added to tell the new page order, always 0 for now. It
+prepares for upcoming changes to support split huge page to any lower
+order.
 
 Signed-off-by: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 ---
- mm/huge_memory.c |  1 +
- mm/truncate.c    | 33 +++++++++++++++++++++++++++++++--
- 2 files changed, 32 insertions(+), 2 deletions(-)
+ include/linux/memcontrol.h |  2 +-
+ mm/huge_memory.c           |  2 +-
+ mm/memcontrol.c            | 10 +++++-----
+ mm/page_alloc.c            |  2 +-
+ 4 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 3617aa3ad0b1..76db0092a1e2 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -2349,6 +2349,7 @@ static void __split_huge_page_tail(struct page *head,=
- int tail,
- 		prep_compound_page(page_tail, new_order);
- 		prep_transhuge_page(page_tail);
- 	}
-+	VM_BUG_ON_PAGE(PageTail(page_tail), page_tail);
-=20
- 	/* Finally unfreeze refcount. Additional reference from page cache. */
- 	page_ref_unfreeze(page_tail, 1 + ((!PageAnon(head) ||
-diff --git a/mm/truncate.c b/mm/truncate.c
-index ab50d0d59a2a..4f71e67dec09 100644
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -197,6 +197,14 @@ int truncate_inode_folio(struct address_space *mapping=
-, struct folio *folio)
- 	return 0;
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 89b14729d59f..e71189454bf0 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1116,7 +1116,7 @@ static inline void memcg_memory_event_mm(struct mm_st=
+ruct *mm,
+ 	rcu_read_unlock();
  }
 =20
-+static unsigned int greatest_pow_of_two_multiplier(unsigned int num)
-+{
-+	if (num & 1)
-+		return 0;
-+	return min_t(unsigned int, ilog2(num),
-+		ilog2(num - rounddown_pow_of_two(num)));
-+}
-+
+-void split_page_memcg(struct page *head, unsigned int nr);
++void split_page_memcg(struct page *head, unsigned int nr, unsigned int new=
+_order);
+=20
+ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+ 						gfp_t gfp_mask,
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 2fe38212e07c..640040c386f0 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2371,7 +2371,7 @@ static void __split_huge_page(struct page *page, stru=
+ct list_head *list,
+ 	int i;
+=20
+ 	/* complete memcg works before add pages to LRU */
+-	split_page_memcg(head, nr);
++	split_page_memcg(head, nr, 0);
+=20
+ 	if (PageAnon(head) && PageSwapCache(head)) {
+ 		swp_entry_t entry =3D { .val =3D page_private(head) };
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 43b2a22ce812..e7da413ac174 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3262,22 +3262,22 @@ void obj_cgroup_uncharge(struct obj_cgroup *objcg, =
+size_t size)
  /*
-  * Handle partial folios.  The folio may be entirely within the
-  * range if a split has raced with us.  If not, we zero the part of the
-@@ -211,7 +219,8 @@ int truncate_inode_folio(struct address_space *mapping,=
- struct folio *folio)
- bool truncate_inode_partial_folio(struct folio *folio, loff_t start, loff_=
-t end)
+  * Because page_memcg(head) is not set on tails, set it now.
+  */
+-void split_page_memcg(struct page *head, unsigned int nr)
++void split_page_memcg(struct page *head, unsigned int nr, unsigned int new=
+_order)
  {
- 	loff_t pos =3D folio_pos(folio);
--	unsigned int offset, length;
-+	unsigned int offset, length, remaining;
-+	unsigned int new_order =3D folio_order(folio);
+ 	struct folio *folio =3D page_folio(head);
+ 	struct mem_cgroup *memcg =3D folio_memcg(folio);
+-	int i;
++	int i, new_nr =3D 1 << new_order;
 =20
- 	if (pos < start)
- 		offset =3D start - pos;
-@@ -222,6 +231,7 @@ bool truncate_inode_partial_folio(struct folio *folio, =
-loff_t start, loff_t end)
- 		length =3D length - offset;
+ 	if (mem_cgroup_disabled() || !memcg)
+ 		return;
+=20
+-	for (i =3D 1; i < nr; i++)
++	for (i =3D new_nr; i < nr; i +=3D new_nr)
+ 		folio_page(folio, i)->memcg_data =3D folio->memcg_data;
+=20
+ 	if (folio_memcg_kmem(folio))
+-		obj_cgroup_get_many(__folio_objcg(folio), nr - 1);
++		obj_cgroup_get_many(__folio_objcg(folio), nr / new_nr - 1);
  	else
- 		length =3D end + 1 - pos - offset;
-+	remaining =3D folio_size(folio) - offset - length;
+-		css_get_many(&memcg->css, nr - 1);
++		css_get_many(&memcg->css, nr / new_nr - 1);
+ }
 =20
- 	folio_wait_writeback(folio);
- 	if (length =3D=3D folio_size(folio)) {
-@@ -236,11 +246,30 @@ bool truncate_inode_partial_folio(struct folio *folio=
-, loff_t start, loff_t end)
- 	 */
- 	folio_zero_range(folio, offset, length);
+ #ifdef CONFIG_MEMCG_SWAP
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index f648decfe39d..d982919b9e51 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -3515,7 +3515,7 @@ void split_page(struct page *page, unsigned int order)
+ 	for (i =3D 1; i < (1 << order); i++)
+ 		set_page_refcounted(page + i);
+ 	split_page_owner(page, 1 << order);
+-	split_page_memcg(page, 1 << order);
++	split_page_memcg(page, 1 << order, 0);
+ }
+ EXPORT_SYMBOL_GPL(split_page);
 =20
-+	/*
-+	 * Find the greatest common power of two multiplier of the non-zero
-+	 * offset, length, and remaining as the new order. So we can truncate
-+	 * a subpage as large as possible.
-+	 */
-+	if (offset)
-+		new_order =3D greatest_pow_of_two_multiplier(offset / PAGE_SIZE);
-+	if (length)
-+		new_order =3D min_t(unsigned int, new_order,
-+			greatest_pow_of_two_multiplier(length / PAGE_SIZE));
-+	if (remaining)
-+		new_order =3D min_t(unsigned int, new_order,
-+			greatest_pow_of_two_multiplier(remaining / PAGE_SIZE));
-+
-+	/* order-1 THP not supported, downgrade to order-0 */
-+	if (new_order =3D=3D 1)
-+		new_order =3D 0;
-+
-+
- 	if (folio_has_private(folio))
- 		folio_invalidate(folio, offset, length);
- 	if (!folio_test_large(folio))
- 		return true;
--	if (split_huge_page(&folio->page) =3D=3D 0)
-+	if (split_huge_page_to_list_to_order(&folio->page, NULL, new_order) =3D=
-=3D 0)
- 		return true;
- 	if (folio_test_dirty(folio))
- 		return false;
 --=20
 2.35.1
 
