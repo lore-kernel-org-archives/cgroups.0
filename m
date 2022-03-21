@@ -1,40 +1,91 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [RFC PATCH 4/5] mm: truncate: split huge page cache page to a
- non-zero order if possible.
-Date: Mon, 21 Mar 2022 15:32:53 -0700
-Message-ID: <Yjj9FaoChB3u0Gbh@carbon.dhcp.thefacebook.com>
-References: <20220321142128.2471199-1-zi.yan@sent.com>
- <20220321142128.2471199-5-zi.yan@sent.com>
+From: "T.J. Mercier" <tjmercier@google.com>
+Subject: Re: [RFC v3 5/8] dmabuf: Add gpu cgroup charge transfer function
+Date: Mon, 21 Mar 2022 16:54:26 -0700
+Message-ID: <CABdmKX3+mTjxWzgrv44SKWT7mdGnQKMrv6c26d=iWdNPG7f1VQ@mail.gmail.com>
+References: <20220309165222.2843651-1-tjmercier@google.com>
+ <20220309165222.2843651-6-tjmercier@google.com> <20220321174530.GB9640@blackbody.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1647901979;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=4OY/H+zb0RIXu5WxaVqPmTsIU0BzpBHr2Aoo03K23OQ=;
-        b=lWfBFFlwAImoY6uLwKWFs0S0tB3p39fYyxokhIeIaZPj4jja16BD+f2jryUMXCpvSoQH58
-        KeNgR9rDqZZ733hMRZ75cM3upum9/Xboyi1T1hrsp4FdNCyEUqd/OOG+FlIywmGiFjuF4e
-        0dwiI5FqWUCpfqADo77fjlQiIREimSI=
-Content-Disposition: inline
-In-Reply-To: <20220321142128.2471199-5-zi.yan-vRdzynncJC4@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-media-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=qiaO27WzdyEkhPCgtVcKJYNpZr9WKp2+zwnsf/1VvSc=;
+        b=Ri8yuR7/Vfc3fPL9gQLx7nlC2w5WarFCPritcrnsHpSsxuLwI5G3Voo8JeXcgyszLb
+         +2uoYc1aMEeZckMfuvJ2tS1RQ4sV4x2bEw3/t6bZI8mymUrBIyCvE8fdVOZNpVekttmd
+         gL3/aF9rUmS8p0UDTQfskhyx+I2egHowIc+sQ/N03tFWDWkkas9yz9J6z6/pRbfJotOJ
+         Hya7yMo0Sw59opqFkSYTZhc7F9NiPgJ8uwx1p8C0nJ00wLf8jKvLHqjCFphRAZgfpYi+
+         VVSQCs5iHmIrTMa+g/VlfDJHcUV27McnejGmfZoaaKiH2IvdAJP5kg+Lda21FYCK3UME
+         MrGg==
+In-Reply-To: <20220321174530.GB9640@blackbody.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Kirill A . Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@linaro.org>, Liam Mark <lmark@codeaurora.org>, Laur
 
-On Mon, Mar 21, 2022 at 10:21:27AM -0400, Zi Yan wrote:
-> From: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> 
-> To minimize the number of pages after a huge page truncation, we do not
-> need to split it all the way down to order-0. The huge page has at most
-> three parts, the part before offset, the part to be truncated, the part
-> remaining at the end. Find the greatest common power of two multiplier of
-> the non-zero values of them as the new order, so we can split the huge
-> page to this order and keep the remaining pages as large and as few as
-> possible.
+On Mon, Mar 21, 2022 at 10:45 AM Michal Koutn=C3=BD <mkoutny@suse.com> wrot=
+e:
+>
+> Hello.
+>
+> On Wed, Mar 09, 2022 at 04:52:15PM +0000, "T.J. Mercier" <tjmercier@googl=
+e.com> wrote:
+> > +int dma_buf_charge_transfer(struct dma_buf *dmabuf, struct gpucg *gpuc=
+g)
+> > +{
+> > +#ifdef CONFIG_CGROUP_GPU
+> > +     struct gpucg *current_gpucg;
+> > +     int ret =3D 0;
+> > +
+> > +     /*
+> > +      * Verify that the cgroup of the process requesting the transfer =
+is the
+> > +      * same as the one the buffer is currently charged to.
+> > +      */
+> > +     current_gpucg =3D gpucg_get(current);
+> > +     mutex_lock(&dmabuf->lock);
+> > +     if (current_gpucg !=3D dmabuf->gpucg) {
+> > +             ret =3D -EPERM;
+> > +             goto err;
+> > +     }
+>
+> Add a shortcut for gpucg =3D=3D current_gpucg?
 
-Would you mind please to describe the algorithm in more details?
+Good idea, thank you!
+
+>
+> > +
+> > +     ret =3D gpucg_try_charge(gpucg, dmabuf->gpucg_dev, dmabuf->size);
+> > +     if (ret)
+> > +             goto err;
+> > +
+> > +     dmabuf->gpucg =3D gpucg;
+> > +
+> > +     /* uncharge the buffer from the cgroup it's currently charged to.=
+ */
+> > +     gpucg_uncharge(current_gpucg, dmabuf->gpucg_dev, dmabuf->size);
+>
+> I think gpucg_* API would need to cater for such transfers too since
+> possibly transitional breach of a limit during the transfer may
+> unnecessarily fail the operation.
+
+Since the charge is duplicated in two cgroups for a short period
+before it is uncharged from the source cgroup I guess the situation
+you're thinking about is a global (or common ancestor) limit? I can
+see how that would be a problem for transfers done this way and an
+alternative would be to swap the order of the charge operations: first
+uncharge, then try_charge. To be certain the uncharge is reversible if
+the try_charge fails, I think I'd need either a mutex used at all
+gpucg_*charge call sites or access to the gpucg_mutex, which implies
+adding transfer support to gpu.c as part of the gpucg_* API itself and
+calling it here. Am I following correctly here?
+
+This series doesn't actually add limit support just accounting, but
+I'd like to get it right here.
+
+>
+> My 0.02=E2=82=AC,
+> Michal
 
 Thanks!
