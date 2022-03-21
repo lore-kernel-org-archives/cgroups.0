@@ -1,62 +1,44 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup changes for v5.18-rc1
-Date: Mon, 21 Mar 2022 10:16:17 -1000
-Message-ID: <YjjdEUPIoYyPjsvh@slm.duckdns.org>
+From: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH 1/5] mm: memcg: make memcg huge page split support any order split.
+Date: Mon, 21 Mar 2022 16:26:55 -0400
+Message-ID: <2FBD6D12-EDBE-4061-8738-E5E333F2367C@nvidia.com>
+References: <20220321142128.2471199-1-zi.yan@sent.com>
+ <20220321142128.2471199-2-zi.yan@sent.com>
+ <YjjKh2NoWGcq28Oo@carbon.dhcp.thefacebook.com>
+ <0001CABA-9436-4EFF-9C7F-F67300D09DA1@nvidia.com>
+ <YjjX/bZrUmQfFjHC@casper.infradead.org>
 Mime-Version: 1.0
+Content-Type: multipart/signed;
+ boundary="=_MailMate_2F541385-50E7-4360-9312-72AE9C63E581_=";
+ micalg=pgp-sha512; protocol="application/pgp-signature"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=H5h/m458Q7wYqGc+3uQIHPjw143NJQEVleeRF9aQtyI=;
-        b=DOmbSvaV5SAVC3ugCRngQsMixY5lvDsFiyMunecammQfl0Gf5b+ThHvaVvxxyOWHru
-         jHqfr0edtm4anbxQDhXIKIEi5p/OGGHf6JKH2asyxA4EBM7jm97RJdoFg8jAc2+12OwN
-         XWPawlMTUJ6srDY4NhOv8VAg+h6Q9hzsT79TUt6vRHJbwrMoQlHTUItS31izjo+aTBEx
-         BUOykWK5iERg9CnVQeSpYxR0N2rB3X63J8KvIzXztZ4N+F4A6DH77lKbU20Oau6jxdYV
-         +JziBrbJ/M9bE+2KEV4/WDz8AWlAEpw9N5cJoRfOyhP5PlGoLgih1KGlIz7uYbd1AZL0
-         mdEQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=sFbAVOgB5L3qOPG9VdCAPxzY821z39LgMQbDCE9M8Vo=;
+ b=O6BRFysnBo22kJOzG33391zJ3P1+7YUzmBUm9pGfnxJ3h+B9z6RFZnCumP+C/LhgfIiHcrVtbV/g6MDeT1+QxLar/5P7r2yeIM/zi03WlTqlaTt+SZ1gLHfeOPVlIVGiCu+APv31PUyN3bmoX2vyXjWOdQkvw7rGcBRGQuS6t05ziwk5mP8ROLChnXjwAv0ivBx7seP6w3DZjEvvJpj6BbZvQrWFZbu+P2XNlzSAGuXGrziMLP+B4fC3YG2TpR7I6pkNKkFwE7Ez3tUug0wprFUlFOvCp7MGsKosZ9MRXVKTt92qXBpJfvr7MlNV1JycStcHoOv0YXMb9rmUarfuNg==
+In-Reply-To: <YjjX/bZrUmQfFjHC-FZi0V3Vbi30CUdFEqe4BF2D2FQJk+8+b@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Kirill A . Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+--=_MailMate_2F541385-50E7-4360-9312-72AE9C63E581_=
+Content-Type: text/plain
 
-All trivial cleanups without meaningful behavior changes.
+On 21 Mar 2022, at 15:54, Matthew Wilcox wrote:
 
-Thanks.
+> On Mon, Mar 21, 2022 at 03:07:46PM -0400, Zi Yan wrote:
+>> Yes. Will change it to new_nr to be consistent.
+>
+> uh, you're going to call ilog2?
 
-The following changes since commit daadb3bd0e8d3e317e36bc2c1542e86c528665e5:
+fortunately, no. Inside split_page_memcg(), I probably
+need to add VM_BUG_ON(nr % new_nr != 0) to make sure
+new_nr is a divisor of nr, since there are a couple
+of nr / new_nr operations. Otherwise, new_nr works.
 
-  Merge tag 'locking_core_for_v5.17_rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip (2022-01-11 17:24:45 -0800)
+>
+> I think this would look less inconsistent if 'nr' were an unsigned long
+> (how long until we need 16GB pages?  Think PPC already supports those)
 
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.18
-
-for you to fetch changes up to f9da322e864e5cd3dc217480e73f78f47cf40c5b:
-
-  cgroup: cleanup comments (2022-03-13 19:19:27 -1000)
-
-----------------------------------------------------------------
-Tom Rix (1):
-      cgroup: cleanup comments
-
-Wei Yang (2):
-      cgroup: rstat: use same convention to assign cgroup_base_stat
-      cgroup: rstat: retrieve current bstat to delta directly
-
-Yang Li (1):
-      cgroup: Fix cgroup_can_fork() and cgroup_post_fork() kernel-doc comment
-
- kernel/cgroup/cgroup.c  |  2 ++
- kernel/cgroup/cpuset.c  | 10 +++++-----
- kernel/cgroup/freezer.c |  2 +-
- kernel/cgroup/rstat.c   |  5 ++---
- 4 files changed, 10 insertions(+), 9 deletions(-)
-
--- 
-tejun
+--=_MailMate_2F541385-50E7-4360-9312-72AE9C63E581_=--
