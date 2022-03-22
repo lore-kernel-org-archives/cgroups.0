@@ -1,90 +1,130 @@
-From: Yonghong Song <yhs@fb.com>
-Subject: Re: [RFC bpf-next] Hierarchical Cgroup Stats Collection Using BPF
-Date: Tue, 22 Mar 2022 11:09:41 -0700
-Message-ID: <f049c2f6-499b-ff7a-3910-38487878606a@fb.com>
-References: <CAJD7tkbQNpeX8MGw9dXa5gi6am=VNXwgwUoTd6+K=foixEm1fw@mail.gmail.com>
- <Yi7ULpR70HatVP/8@slm.duckdns.org>
- <CAJD7tkYGUaeeFMJSWNbdgaoEq=kFTkZzx8Jy1fwWBvt2WEfqAA@mail.gmail.com>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [RFC PATCH] mm: memcg: Do not count memory.low reclaim if it does not happen
+Date: Tue, 22 Mar 2022 19:22:48 +0100
+Message-ID: <20220322182248.29121-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=facebook;
- bh=0R6AdsNxQYKtlx7c+ZJCr8SBiOh+ERMXe+tI/ibvU3U=;
- b=GQ/WaR9OUbPS7ycajmt3WsfD633j0J+jJdANZ5ANXOOY6+e/YkR2dzq4iyMMWOBQ6IFV
- MKiyZFlS2A1OF9KDEFwkmm1/4lG0arcapo4qQoKxsXYNnKvE3rfL47WqruoThvoezcBi
- ZYaxh13DHA8iYyUOlmyh06E93QdErsA4Ba0= 
-Content-Language: en-US
-In-Reply-To: <CAJD7tkYGUaeeFMJSWNbdgaoEq=kFTkZzx8Jy1fwWBvt2WEfqAA@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1647973391; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=jKxuo3tSnTqh2UAPL1+VAIp6n+IcAR/qJqwZEPA/Ep0=;
+        b=pejEAflbD21zArvB8wKtKlgVaGQeoKrHBbjaNQ+yMhdLHxpcZ5nSjgpEPiuPF3IwpPCuTN
+        kdOtpj5t1Kj+d0NpiDAtZwrchSIQpMrEws2qmz681mePvSYG9jyO1PXoABxfa1eApIX/gQ
+        v3p8YpFlcSdFbFKNVSoUFV6FpkRp080=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Yosry Ahmed <yosryahmed@google.com>, Tejun Heo <tj@kernel.org>
-Cc: Alexei Starovoitov <ast@kernel.org>, Andrii Nakryiko <andrii@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Johannes Weiner <hannes@cmpxchg.org>, Hao Luo <haoluo@google.com>, Shakeel Butt <shakeelb@google.com>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, bpf <bpf@vger.kernel.org>, KP Singh <kpsingh@kernel.org>, cgroups@vger.kernel.org, Linux-MM <linux-mm@kvack.org>
+Content-Type: text/plain; charset="utf-8"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Richard Palethorpe <rpalethorpe-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
 
+This was observed with memcontrol selftest/new LTP test but can be also
+reproduced in simplified setup of two siblings:
 
+	`parent .low=50M
+	  ` s1	.low=50M  .current=50M+ε
+	  ` s2  .low=0M   .current=50M
 
-On 3/16/22 9:35 AM, Yosry Ahmed wrote:
-> Hi Tejun,
-> 
-> Thanks for taking the time to read my proposal! Sorry for the late
-> reply. This email skipped my inbox for some reason.
-> 
-> On Sun, Mar 13, 2022 at 10:35 PM Tejun Heo <tj@kernel.org> wrote:
->>
->> Hello,
->>
->> On Wed, Mar 09, 2022 at 12:27:15PM -0800, Yosry Ahmed wrote:
->> ...
->>> These problems are already addressed by the rstat aggregation
->>> mechanism in the kernel, which is primarily used for memcg stats. We
->>
->> Not that it matters all that much but I don't think the above statement is
->> true given that sched stats are an integrated part of the rstat
->> implementation and io was converted before memcg.
->>
-> 
-> Excuse my ignorance, I am new to kernel development. I only saw calls
-> to cgroup_rstat_updated() in memcg and io and assumed they were the
-> only users. Now I found cpu_account_cputime() :)
-> 
->>> - For every cgroup, we will either use flags to distinguish BPF stats
->>> updates from normal stats updates, or flush both anyway (memcg stats
->>> are periodically flushed anyway).
->>
->> I'd just keep them together. Usually most activities tend to happen
->> together, so it's cheaper to aggregate all of them in one go in most cases.
-> 
-> This makes sense to me, thanks.
-> 
->>
->>> - Provide flags to enable/disable using per-cpu arrays (for stats that
->>> are not updated frequently), and enable/disable hierarchical
->>> aggregation (for non-hierarchical stats, they can still make benefit
->>> of the automatic entries creation & deletion).
->>> - Provide different hierarchical aggregation operations : SUM, MAX, MIN, etc.
->>> - Instead of an array as the map value, use a struct, and let the user
->>> provide an aggregator function in the form of a BPF program.
->>
->> I'm more partial to the last option. It does make the usage a bit more
->> compilcated but hopefully it shouldn't be too bad with good examples.
->>
->> I don't have strong opinions on the bpf side of things but it'd be great to
->> be able to use rstat from bpf.
-> 
-> It indeed gives more flexibility but is more complicated. Also, I am
-> not sure about the overhead to make calls to BPF programs in every
-> aggregation step. Looking forward to get feedback on the bpf side of
-> things.
+The expectation is that s2/memory.events:low will be zero under outer
+reclaimer since no protection should be given to cgroup s2 (even with
+memory_recursiveprot).
 
-Hi, Yosry, I heard this was discussed in bpf office hour which I
-didn't attend. Could you summarize the conclusion and what is the
-step forward? We also have an internal tool which collects cgroup
-stats and this might help us as well. Thanks!
+However, this does not happen. The apparent reason is that when s1 is
+considered for (proportional) reclaim the scanned proportion is rounded
+up to SWAP_CLUSTER_MAX and slightly over-proportional amount is
+reclaimed. Consequently, when the effective low value of s2 is
+calculated, it observes unclaimed parent's protection from s1
+(ε-SWAP_CLUSTER_MAX in theory) and effectively appropriates it.
+The effect is slightly regularized protection (workload dependent)
+between siblings and misreported MEMCG_LOW event when reclaiming s2 with
+this protection.
 
-> 
->>
->> Thanks.
->>
->> --
->> tejun
+Fix the behavior by not reporting breached memory.low in such
+situations. (This affects also setups where all siblings have
+memory.low=0, parent's memory.events:low will still be non-zero when
+parent's memory.low is breached but it will be reduced by the events
+originated in children.)
+
+Fixes: 8a931f801340 ("mm: memcontrol: recursive memory.low protection")
+Reported-by: Richard Palethorpe <rpalethorpe-IBi9RG/b67k@public.gmane.org>
+Link: https://lore.kernel.org/all/20220321101429.3703-1-rpalethorpe-IBi9RG/b67k@public.gmane.org/
+Signed-off-by: Michal Koutný <mkoutny-IBi9RG/b67k@public.gmane.org>
+---
+ include/linux/memcontrol.h | 8 ++++----
+ mm/vmscan.c                | 5 +++--
+ 2 files changed, 7 insertions(+), 6 deletions(-)
+
+Why is this RFC?
+
+1) It changes number of events observed on parent/memory.events:low (especially
+   for truly recursive configs where all children specify memory.low=0).
+   IIUC past discussions about equality of all-zeros and all-infinities, those
+   eagerly reported MEMCG_LOW events (in latter case) were deemed skewing the
+   stats [1].
+2) The observed behavior slightly impacts distribution of parent's memory.low. 
+   Constructed example is a passive protected workload in s1 and active in s2
+   (active ~ counteracts the reclaim with allocations). It could strip
+   protection from s1 one by one (one:=SWAP_CLUSTER_MAX/2^sc.priority).
+   That may be considered both wrong (s1 should have been more protected) or
+   correct s2 deserves protection due to its activity.
+   I don't have (didn't collect) data for this, so I think just masking the
+   false events is sufficient (or independent).
+
+[1] https://lore.kernel.org/r/20200221185839.GB70967-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 0abbd685703b..99ac72e00bff 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -626,13 +626,13 @@ static inline bool mem_cgroup_supports_protection(struct mem_cgroup *memcg)
+ 
+ }
+ 
+-static inline bool mem_cgroup_below_low(struct mem_cgroup *memcg)
++static inline bool mem_cgroup_below_low(struct mem_cgroup *memcg, bool effective)
+ {
+ 	if (!mem_cgroup_supports_protection(memcg))
+ 		return false;
+ 
+-	return READ_ONCE(memcg->memory.elow) >=
+-		page_counter_read(&memcg->memory);
++	return page_counter_read(&memcg->memory) <= (effective ?
++		READ_ONCE(memcg->memory.elow) :	READ_ONCE(memcg->memory.low));
+ }
+ 
+ static inline bool mem_cgroup_below_min(struct mem_cgroup *memcg)
+@@ -1177,7 +1177,7 @@ static inline void mem_cgroup_calculate_protection(struct mem_cgroup *root,
+ {
+ }
+ 
+-static inline bool mem_cgroup_below_low(struct mem_cgroup *memcg)
++static inline bool mem_cgroup_below_low(struct mem_cgroup *memcg, bool effective)
+ {
+ 	return false;
+ }
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 59b14e0d696c..3bdb35d6bee6 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -3152,7 +3152,7 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
+ 			 * If there is no reclaimable memory, OOM.
+ 			 */
+ 			continue;
+-		} else if (mem_cgroup_below_low(memcg)) {
++		} else if (mem_cgroup_below_low(memcg, true)) {
+ 			/*
+ 			 * Soft protection.
+ 			 * Respect the protection only as long as
+@@ -3163,7 +3163,8 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
+ 				sc->memcg_low_skipped = 1;
+ 				continue;
+ 			}
+-			memcg_memory_event(memcg, MEMCG_LOW);
++			if (mem_cgroup_below_low(memcg, false))
++				memcg_memory_event(memcg, MEMCG_LOW);
+ 		}
+ 
+ 		reclaimed = sc->nr_reclaimed;
+-- 
+2.35.1
+
