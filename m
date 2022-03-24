@@ -1,80 +1,246 @@
-From: "T.J. Mercier" <tjmercier@google.com>
-Subject: Re: [RFC v3 5/8] dmabuf: Add gpu cgroup charge transfer function
-Date: Wed, 23 Mar 2022 16:37:08 -0700
-Message-ID: <CABdmKX3Un=k3yU1BuCnEEoZkOqMovVrjcg=GiqDEtLZD_awX3g@mail.gmail.com>
-References: <20220322095223.GG8477@blackbody.suse.cz> <CABdmKX2hZChBO09xfhqB7EbH6RY9JdmDp7zh23DaGuwidn=v4w@mail.gmail.com>
+From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH 3/5] mm: thp: split huge page to any lower order
+ pages.
+Date: Thu, 24 Mar 2022 10:02:19 +0800
+Message-ID: <6587a8af-8d6d-c947-2cee-11f75ceefef6@huawei.com>
+References: <20220321142128.2471199-1-zi.yan@sent.com>
+ <20220321142128.2471199-4-zi.yan@sent.com>
+ <165ec1a8-2b35-f6fb-82d3-b94613dd437a@huawei.com>
+ <D03D6945-8BFE-4137-BDB6-BD884656B65B@nvidia.com>
+ <ed175cd4-1411-459e-e892-7d889e1253c0@huawei.com>
+ <87E48455-3FDD-47FC-A953-CBAB52FD3889@nvidia.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-media-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=lYs3d+G/MqnkVL5mPK5nuhjYbBx01naVFSe4Xk42kfM=;
-        b=lKb4AaK6N9O62KVZSBFpoXMFMKi2DX++d0hcldo7VKltrYvP1ZV+I9dYXZlx13MpxC
-         U6xbiC42KS2p1EnoJU/ZpUu2VFNzNn/B5ByWL9Zt/vr5XdA+yDneUYBZIcau3mhQ0muv
-         V4ah+EZCicq3OsyPu2g/e6akuJDlkHFQFQdx2jnBGU1XDVC3q67LkJ1lTpu2QD3b10Gm
-         //++HMvqfQRnNJ7DQNGYM/1Pf8y6AjoqHMxScOBz3cW/cZXBbkCYsHBTNfYHMC39INi5
-         cHWn+JRXaDWTnRSK6VSSXCSqWAo9ASLt+74RRIvM/eLnYs1Iz3CUqvYDSdMrTd/CQ+rq
-         7Uww==
-In-Reply-To: <CABdmKX2hZChBO09xfhqB7EbH6RY9JdmDp7zh23DaGuwidn=v4w@mail.gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <87E48455-3FDD-47FC-A953-CBAB52FD3889-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@linaro.org>, Liam Mark <lmark@codeaurora.org>, Laur
+Content-Type: text/plain; charset="windows-1252"
+To: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Kirill A . Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Tue, Mar 22, 2022 at 9:47 AM T.J. Mercier <tjmercier@google.com> wrote:
->
-> On Tue, Mar 22, 2022 at 2:52 AM Michal Koutn=C3=BD <mkoutny@suse.com> wro=
-te:
-> >
-> > On Mon, Mar 21, 2022 at 04:54:26PM -0700, "T.J. Mercier"
-> > <tjmercier@google.com> wrote:
-> > > Since the charge is duplicated in two cgroups for a short period
-> > > before it is uncharged from the source cgroup I guess the situation
-> > > you're thinking about is a global (or common ancestor) limit?
-> >
-> > The common ancestor was on my mind (after the self-shortcut).
-> >
-> > > I can see how that would be a problem for transfers done this way and
-> > > an alternative would be to swap the order of the charge operations:
-> > > first uncharge, then try_charge. To be certain the uncharge is
-> > > reversible if the try_charge fails, I think I'd need either a mutex
-> > > used at all gpucg_*charge call sites or access to the gpucg_mutex,
-> >
-> > Yes, that'd provide safe conditions for such operations, although I'm
-> > not sure these special types of memory can afford global lock on their
-> > fast paths.
->
-> I have a benchmark I think is suitable, so let me try this change to
-> the transfer implementation and see how it compares.
+On 2022/3/24 6:10, Zi Yan wrote:
+> On 22 Mar 2022, at 22:31, Miaohe Lin wrote:
+>=20
+>> On 2022/3/22 22:30, Zi Yan wrote:
+>>> On 21 Mar 2022, at 23:21, Miaohe Lin wrote:
+>>>
+>>>> On 2022/3/21 22:21, Zi Yan wrote:
+>>>>> From: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+>>>>>
+>>>>> To split a THP to any lower order pages, we need to reform THPs on
+>>>>> subpages at given order and add page refcount based on the new page
+>>>>> order. Also we need to reinitialize page_deferred_list after removing
+>>>>> the page from the split_queue, otherwise a subsequent split will see
+>>>>> list corruption when checking the page_deferred_list again.
+>>>>>
+>>>>> It has many uses, like minimizing the number of pages after
+>>>>> truncating a pagecache THP. For anonymous THPs, we can only split them
+>>>>> to order-0 like before until we add support for any size anonymous TH=
+Ps.
+>>>>>
+>>>>> Signed-off-by: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+>>>>> ---
+>>>>>  include/linux/huge_mm.h |   8 +++
+>>>>>  mm/huge_memory.c        | 111 ++++++++++++++++++++++++++++++--------=
+--
+>>>>>  2 files changed, 91 insertions(+), 28 deletions(-)
+>>>>>
+>>>>> diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
+>>>>> index 2999190adc22..c7153cd7e9e4 100644
+>>>>> --- a/include/linux/huge_mm.h
+>>>>> +++ b/include/linux/huge_mm.h
+>>>>> @@ -186,6 +186,8 @@ void free_transhuge_page(struct page *page);
+>>>>>
+>>>>>  bool can_split_folio(struct folio *folio, int *pextra_pins);
+>>>>>  int split_huge_page_to_list(struct page *page, struct list_head *lis=
+t);
+>>>>> +int split_huge_page_to_list_to_order(struct page *page, struct list_=
+head *list,
+>>>>> +		unsigned int new_order);
+>>>>>  static inline int split_huge_page(struct page *page)
+>>>>>  {
+>>>>>  	return split_huge_page_to_list(page, NULL);
+>>>>> @@ -355,6 +357,12 @@ split_huge_page_to_list(struct page *page, struc=
+t list_head *list)
+>>>>>  {
+>>>>>  	return 0;
+>>>>>  }
+>>>>> +static inline int
+>>>>> +split_huge_page_to_list_to_order(struct page *page, struct list_head=
+ *list,
+>>>>> +		unsigned int new_order)
+>>>>> +{
+>>>>> +	return 0;
+>>>>> +}
+>>>>>  static inline int split_huge_page(struct page *page)
+>>>>>  {
+>>>>>  	return 0;
+>>>>> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+>>>>> index fcfa46af6c4c..3617aa3ad0b1 100644
+>>>>> --- a/mm/huge_memory.c
+>>>>> +++ b/mm/huge_memory.c
+>>>>> @@ -2236,11 +2236,13 @@ void vma_adjust_trans_huge(struct vm_area_str=
+uct *vma,
+>>>>>  static void unmap_page(struct page *page)
+>>>>>  {
+>>>>>  	struct folio *folio =3D page_folio(page);
+>>>>> -	enum ttu_flags ttu_flags =3D TTU_RMAP_LOCKED | TTU_SPLIT_HUGE_PMD |
+>>>>> -		TTU_SYNC;
+>>>>> +	enum ttu_flags ttu_flags =3D TTU_RMAP_LOCKED | TTU_SYNC;
+>>>>>
+>>>>>  	VM_BUG_ON_PAGE(!PageHead(page), page);
+>>>>>
+>>>>> +	if (folio_order(folio) >=3D HPAGE_PMD_ORDER)
+>>>>> +		ttu_flags |=3D TTU_SPLIT_HUGE_PMD;
+>>>>> +
+>>>>>  	/*
+>>>>>  	 * Anon pages need migration entries to preserve them, but file
+>>>>>  	 * pages can simply be left unmapped, then faulted back on demand.
+>>>>> @@ -2254,9 +2256,9 @@ static void unmap_page(struct page *page)
+>>>>>  	VM_WARN_ON_ONCE_PAGE(page_mapped(page), page);
+>>>>>  }
+>>>>>
+>>>>> -static void remap_page(struct folio *folio, unsigned long nr)
+>>>>> +static void remap_page(struct folio *folio, unsigned short nr)
+>>>>>  {
+>>>>> -	int i =3D 0;
+>>>>> +	unsigned int i;
+>>>>>
+>>>>>  	/* If unmap_page() uses try_to_migrate() on file, remove this check=
+ */
+>>>>>  	if (!folio_test_anon(folio))
+>>>>> @@ -2274,7 +2276,6 @@ static void lru_add_page_tail(struct page *head=
+, struct page *tail,
+>>>>>  		struct lruvec *lruvec, struct list_head *list)
+>>>>>  {
+>>>>>  	VM_BUG_ON_PAGE(!PageHead(head), head);
+>>>>> -	VM_BUG_ON_PAGE(PageCompound(tail), head);
+>>>>>  	VM_BUG_ON_PAGE(PageLRU(tail), head);
+>>>>>  	lockdep_assert_held(&lruvec->lru_lock);
+>>>>>
+>>>>> @@ -2295,9 +2296,10 @@ static void lru_add_page_tail(struct page *hea=
+d, struct page *tail,
+>>>>>  }
+>>>>>
+>>>>>  static void __split_huge_page_tail(struct page *head, int tail,
+>>>>> -		struct lruvec *lruvec, struct list_head *list)
+>>>>> +		struct lruvec *lruvec, struct list_head *list, unsigned int new_or=
+der)
+>>>>>  {
+>>>>>  	struct page *page_tail =3D head + tail;
+>>>>> +	unsigned long compound_head_flag =3D new_order ? (1L << PG_head) : =
+0;
+>>>>>
+>>>>>  	VM_BUG_ON_PAGE(atomic_read(&page_tail->_mapcount) !=3D -1, page_tai=
+l);
+>>>>>
+>>>>> @@ -2321,6 +2323,7 @@ static void __split_huge_page_tail(struct page =
+*head, int tail,
+>>>>>  #ifdef CONFIG_64BIT
+>>>>>  			 (1L << PG_arch_2) |
+>>>>>  #endif
+>>>>> +			 compound_head_flag |
+>>>>>  			 (1L << PG_dirty)));
+>>>>>
+>>>>>  	/* ->mapping in first tail page is compound_mapcount */
+>>>>> @@ -2329,7 +2332,10 @@ static void __split_huge_page_tail(struct page=
+ *head, int tail,
+>>>>>  	page_tail->mapping =3D head->mapping;
+>>>>>  	page_tail->index =3D head->index + tail;
+>>>>>
+>>>>> -	/* Page flags must be visible before we make the page non-compound.=
+ */
+>>>>> +	/*
+>>>>> +	 * Page flags must be visible before we make the page non-compound =
+or
+>>>>> +	 * a compound page in new_order.
+>>>>> +	 */
+>>>>>  	smp_wmb();
+>>>>>
+>>>>>  	/*
+>>>>> @@ -2339,10 +2345,15 @@ static void __split_huge_page_tail(struct pag=
+e *head, int tail,
+>>>>>  	 * which needs correct compound_head().
+>>>>>  	 */
+>>>>>  	clear_compound_head(page_tail);
+>>>>> +	if (new_order) {
+>>>>> +		prep_compound_page(page_tail, new_order);
+>>>>> +		prep_transhuge_page(page_tail);
+>>>>> +	}
+>>>>
+>>>> Many thanks for your series. It looks really good. One question:
+>>>> IIUC, It seems there has assumption that LRU compound_pages should
+>>>> be PageTransHuge. So PageTransHuge just checks PageHead:
+>>>>
+>>>> static inline int PageTransHuge(struct page *page)
+>>>> {
+>>>> 	VM_BUG_ON_PAGE(PageTail(page), page);
+>>>> 	return PageHead(page);
+>>>> }
+>>>>
+>>>> So LRU pages with any order( > 0) will might be wrongly treated as THP=
+ which
+>>>> has order =3D HPAGE_PMD_ORDER. We should ensure thp_nr_pages is used i=
+nstead of
+>>>> hard coded HPAGE_PMD_ORDER.
+>>>>
+>>>> Looks at the below code snippet:
+>>>> mm/mempolicy.c:
+>>>> static struct page *new_page(struct page *page, unsigned long start)
+>>>> {
+>>>> ...
+>>>> 	} else if (PageTransHuge(page)) {
+>>>> 		struct page *thp;
+>>>>
+>>>> 		thp =3D alloc_hugepage_vma(GFP_TRANSHUGE, vma, address,
+>>>> 					 HPAGE_PMD_ORDER);
+>>>> 					 ^^^^^^^^^^^^^^^^
+>>>> 		if (!thp)
+>>>> 			return NULL;
+>>>> 		prep_transhuge_page(thp);
+>>>> 		return thp;
+>>>> 	}
+>>>> ...
+>>>> }
+>>>>
+>>>> HPAGE_PMD_ORDER is used instead of thp_nr_pages. So the lower order pa=
+ges might be
+>>>> used as if its order is HPAGE_PMD_ORDER. All of such usage might need =
+to be fixed.
+>>>> Or am I miss something ?
+>>>>
+>>>> Thanks again for your work. :)
+>>>
+>>> THP will still only have HPAGE_PMD_ORDER and will not be split into any=
+ order
+>>> other than 0. This series only allows to split huge page cache folio (a=
+dded by Matthew)
+>>> into any lower order. I have an explicit VM_BUG_ON() to ensure new_order
+>>> is only 0 when non page cache page is the input. Since there is still n=
+on-trivial
+>>> amount of work to add any order THP support in the kernel. IIRC, Yu Zha=
+o (cc=E2=80=99d) was
+>>> planning to work on that.
+>>>
+>>
+>> Many thanks for clarifying. I'm sorry but I haven't followed Matthew's p=
+atches. I am
+>> wondering could huge page cache folio be treated as THP ? If so, how to =
+ensure the
+>> correctness of huge page cache ?
+>=20
+> You are right. All these HPAGE_PMD_ORDRE locations should be replaced by =
+thp_nr_pages().
+> I will look into it.
+>=20
 
-I added a mutex to struct gpucg which is locked when charging the
-cgroup initially during allocation, and also only for the source
-cgroup during dma_buf_charge_transfer. Then I used a multithreaded
-benchmark where each thread allocates 4, 8, 16, or 32 DMA buffers and
-then sends them through Binder to another process with charge transfer
-enabled. This was intended to generate contention for the mutex in
-dma_buf_charge_transfer. The results of this benchmark show that the
-difference between a mutex protected charge transfer and an
-unprotected charge transfer is within measurement noise. The worst
-data point shows about 3% overheard for the mutex.
+Many thanks for doing this. :)
 
-So I'll prep this change for the next revision. Thanks for pointing it out.
->
-> >
-> > > which implies adding transfer support to gpu.c as part of the gpucg_*
-> > > API itself and calling it here. Am I following correctly here?
-> >
-> > My idea was to provide a special API (apart from
-> > gpucp_{try_charge,uncharge}) to facilitate transfers...
-> >
-> > > This series doesn't actually add limit support just accounting, but
-> > > I'd like to get it right here.
-> >
-> > ...which could be implemented (or changed) depending on how the chargin=
-g
-> > is realized internally.
-> >
-> >
-> > Michal
+> Thanks a lot.
+>=20
+> --
+> Best Regards,
+> Yan, Zi
+>=20
+
