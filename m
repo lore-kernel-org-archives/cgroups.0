@@ -1,82 +1,44 @@
-From: "zhaoyang.huang" <zhaoyang.huang@unisoc.com>
-Subject: [RFC PATCH] cgroup: introduce proportional protection on memcg
-Date: Thu, 24 Mar 2022 17:22:23 +0800
-Message-ID: <1648113743-32622-1-git-send-email-zhaoyang.huang@unisoc.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [RFC PATCH] mm: memcg: Do not count memory.low reclaim if it
+ does not happen
+Date: Thu, 24 Mar 2022 10:51:57 +0100
+Message-ID: <20220324095157.GA16685@blackbody.suse.cz>
+References: <20220322182248.29121-1-mkoutny@suse.com>
+ <YjuUuLW+8iRtYOmP@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1648115519; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=7gpGpR3wa2+cKOuymKs7lOAFj3Lr0LMnbgKaKE1lmS0=;
+        b=BGawxnk4ZkQIE7RH/c/DMxnbfBkVfcFqPuS610Wd3K1lipapLcY5WY8j8HJStzYE0qHan9
+        vrS4rkjy97O26ObUlec4H4FLbLds3Pdx2zDW0dSGgyhnAZScTDYtdQ/kEqDrcs3RcUTORB
+        ad8lq6Av0xdWgp0oZGGgHRSkCsgq2j8=
+Content-Disposition: inline
+In-Reply-To: <YjuUuLW+8iRtYOmP-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, ke wang <ke.wang@unisoc.com>, Zhaoyang Huang <huangzhaoyang@gmail.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Palethorpe <rpalethorpe-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
 
-From: Zhaoyang Huang <zhaoyang.huang@unisoc.com>
+On Wed, Mar 23, 2022 at 02:44:24PM -0700, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
+> Does it mean that in the following configuration:
+> 	`parent .low=50M
+> 	  ` s1	.low=0M   .current=50M
+> 	  ` s2  .low=0M   .current=50M
+> there will be no memory.events::low at all? (assuming the recursive thing is on)
 
-current memcg protection via min,low,high asks for an evaluation of
-protected entity, which could be hard for some system. Furthermore, the usage
-could also be various under different scenarios(imagin keep protecting 50M when
-usage change from 100M to 300M), which make the protection less meaning.
-So we introduce the proportional protection over memcg's ever highest
-usage(watermark) to overcome above constraints.
+True, no memory.events:low among siblings.
+Number of memory.events:low in the parent depends on how much has to be
+reclaimed (>50M means carving into parent's protection, hence it'll be
+counted).
 
-Signed-off-by: Zhaoyang Huang <zhaoyang.huang@unisoc.com>
----
- include/linux/page_counter.h |  3 +++
- mm/memcontrol.c              | 17 +++++++++++++----
- 2 files changed, 16 insertions(+), 4 deletions(-)
+This is a quantitative change in the events reporting (point 1 of
+RFCness), my understanding is that the potential events due to recursive
+surplus protection carry no new information regarding configured
+memory.low.
 
-diff --git a/include/linux/page_counter.h b/include/linux/page_counter.h
-index 6795913..7762629 100644
---- a/include/linux/page_counter.h
-+++ b/include/linux/page_counter.h
-@@ -27,6 +27,9 @@ struct page_counter {
- 	unsigned long watermark;
- 	unsigned long failcnt;
- 
-+	/* proportional protection */
-+	unsigned long min_prop;
-+	unsigned long low_prop;
- 	/*
- 	 * 'parent' is placed here to be far from 'usage' to reduce
- 	 * cache false sharing, as 'usage' is written mostly while
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 508bcea..937c6ce 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6616,6 +6616,7 @@ void mem_cgroup_calculate_protection(struct mem_cgroup *root,
- {
- 	unsigned long usage, parent_usage;
- 	struct mem_cgroup *parent;
-+	unsigned long memcg_emin, memcg_elow, parent_emin, parent_elow;
- 
- 	if (mem_cgroup_disabled())
- 		return;
-@@ -6650,14 +6651,22 @@ void mem_cgroup_calculate_protection(struct mem_cgroup *root,
- 
- 	parent_usage = page_counter_read(&parent->memory);
- 
-+	/* use proportional protect first and take 1024 as 100% */
-+	memcg_emin = READ_ONCE(memcg->memory.min_prop) ?
-+		READ_ONCE(memcg->memory.min_prop) * READ_ONCE(memcg->memory.watermark) / 1024 : READ_ONCE(memcg->memory.min);
-+	memcg_elow = READ_ONCE(memcg->memory.low_prop) ?
-+		READ_ONCE(memcg->memory.low_prop) * READ_ONCE(memcg->memory.watermark) / 1024 : READ_ONCE(memcg->memory.low);
-+	parent_emin = READ_ONCE(parent->memory.min_prop) ?
-+		READ_ONCE(parent->memory.min_prop) * READ_ONCE(parent->memory.watermark) / 1024 : READ_ONCE(parent->memory.emin);
-+	parent_elow = READ_ONCE(parent->memory.low_prop) ?
-+		READ_ONCE(parent->memory.low_prop) * READ_ONCE(parent->memory.watermark) / 1024 : READ_ONCE(parent->memory.elow);
-+
- 	WRITE_ONCE(memcg->memory.emin, effective_protection(usage, parent_usage,
--			READ_ONCE(memcg->memory.min),
--			READ_ONCE(parent->memory.emin),
-+			memcg_emin, parent_emin,
- 			atomic_long_read(&parent->memory.children_min_usage)));
- 
- 	WRITE_ONCE(memcg->memory.elow, effective_protection(usage, parent_usage,
--			READ_ONCE(memcg->memory.low),
--			READ_ONCE(parent->memory.elow),
-+			memcg_elow, parent_elow,
- 			atomic_long_read(&parent->memory.children_low_usage)));
- }
- 
--- 
-1.9.1
 
+Michal
