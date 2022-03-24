@@ -1,49 +1,51 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [RFC PATCH] cgroup: introduce proportional protection on memcg
-Date: Thu, 24 Mar 2022 09:23:44 -0700
-Message-ID: <FE4CCCF9-CF08-424B-85D0-B5C1BA63329D@linux.dev>
-References: <Yjx/3yi7BfH7wLPz@chrisdown.name>
+From: Roman Gushchin <roman.gushchin@linux.dev>
+Subject: Re: [RFC PATCH] mm: memcg: Do not count memory.low reclaim if it does not happen
+Date: Thu, 24 Mar 2022 11:17:14 -0700
+Message-ID: <5049EBC3-5BAE-4509-BA63-1F4A7D913517@linux.dev>
+References: <20220324095157.GA16685@blackbody.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1648139027;
+        t=1648145837;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=jlU6JpVYC93QtZ6D2/Ze8QjTZ71IF09IQ/nMKJqg8hc=;
-        b=Dz+/nGu1/jm2+vB4zQIBb+nXE2hZlNTrO17gf+Lf9ZPWIfmxoX4vihNvVMbGxXdtPDE4E7
-        lYaSsRYI4FwNYMrnKL0Q9AnJhmAisTnqXmAn/ACjniKDXU20eF4DP71R5eHHuWmzE924jp
-        4njvGX3E9hG2vnT2mEOR5vDAcrZBfhU=
-In-Reply-To: <Yjx/3yi7BfH7wLPz-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+        bh=+Xdg6AguU1tCjET4IpuuuOj6DcGbMJAnyZKDx5p9X6o=;
+        b=CaznleEkIgnUPwdpezvS7Q1Z4Lx0QM+qd453HpZhRxWImtUouqJZERSIMyPP1D2gE8ZEgK
+        hunDJ2I4gzVQNoBZ4dAQD8M976MYphFJnDpz5hcIVyr8TlmscQS2WpsWbWgfK1i5SJvIAc
+        0p6Mq5sqgguQ1ED1eaSfq88c1oCQ5Go=
+In-Reply-To: <20220324095157.GA16685@blackbody.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Cc: "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, ke wang <ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: =?utf-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Richard Palethorpe <rpalethorpe@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>, Michal Hocko <mhocko@suse.com>, Vlastimil Babka <vbabka@suse.cz>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Muchun Song <songmuchun@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Yang Shi <shy828301@gmail.com>, Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>, Chris Down <chris@chrisdown.name>
 
-It seems like what=E2=80=99s being proposed is an ability to express the pro=
-tection in % of the current usage rather than an absolute number.
-It=E2=80=99s an equivalent for something like a memory (reclaim) priority: e=
-.g. a cgroup with 80% protection is _always_ reclaimed less aggressively tha=
-n one with a 20% protection.
 
-That said, I=E2=80=99m not a fan of this idea.
-It might make sense in some reasonable range of usages, but if your workload=
- is simply leaking memory and growing indefinitely, protecting it seems like=
- a bad idea. And the first part can be easily achieved using an userspace to=
-ol.
-
-Thanks!
-
-> On Mar 24, 2022, at 7:33 AM, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org> wrote:
+> On Mar 24, 2022, at 2:52 AM, Michal Koutn=C3=BD <mkoutny@suse.com> wrote:
 >=20
-> =EF=BB=BFI'm confused by the aims of this patch. We already have proportio=
-nal reclaim for memory.min and memory.low, and memory.high is already "propo=
-rtional" by its nature to drive memory back down behind the configured thres=
-hold.
+> =EF=BB=BFOn Wed, Mar 23, 2022 at 02:44:24PM -0700, Roman Gushchin <roman.g=
+ushchin@linux.dev> wrote:
+>> Does it mean that in the following configuration:
+>>    `parent .low=3D50M
+>>      ` s1    .low=3D0M   .current=3D50M
+>>      ` s2  .low=3D0M   .current=3D50M
+>> there will be no memory.events::low at all? (assuming the recursive thing=
+ is on)
 >=20
-> Could you please be more clear about what you're trying to achieve and in w=
-hat way the existing proportional reclaim mechanisms are insufficient for yo=
-u?
->=20
+> True, no memory.events:low among siblings.
+> Number of memory.events:low in the parent depends on how much has to be
+> reclaimed (>50M means carving into parent's protection, hence it'll be
+> counted).
+
+Ok, so it=E2=80=99s not really about the implementation details of the recla=
+im mechanism (I mean rounding up to the batch size etc), it=E2=80=99s a more=
+ generic change: do not generate low events for cgroups not explicitly prote=
+cted by a non-zero memory.low value.
+
+Idk, I don=E2=80=99t have a strong argument against this change (except that=
+ it changes the existing behavior), but I also don=E2=80=99t see why such ev=
+ents are harmful. Do you mind elaborating a bit more?
+
+Thank you!=
