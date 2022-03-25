@@ -1,100 +1,54 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [RFC PATCH] mm: memcg: Do not count memory.low reclaim if it
- does not happen
-Date: Fri, 25 Mar 2022 11:31:18 +0100
-Message-ID: <20220325103118.GC2828@blackbody.suse.cz>
-References: <20220324095157.GA16685@blackbody.suse.cz>
- <5049EBC3-5BAE-4509-BA63-1F4A7D913517@linux.dev>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [RFC PATCH] cgroup: introduce proportional protection on memcg
+Date: Fri, 25 Mar 2022 13:49:59 +0100
+Message-ID: <Yj26d7eQ2DHXqiE4@dhcp22.suse.cz>
+References: <1648113743-32622-1-git-send-email-zhaoyang.huang@unisoc.com>
+ <Yjx/3yi7BfH7wLPz@chrisdown.name>
+ <CAGWkznGLO7xpQK7E07dLv7ZfO53nx2fn54tVNw7-b46QnzKwkA@mail.gmail.com>
+ <CAGWkznGAmML4XB0t5jOZEoafQrFk=gXvP96Lmgh221Y22bUuyw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1648204280; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1648212604; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=h6jomU3pNhNfJYGm9LatF9aqOCiUlgqkCJJ0ZhBuK44=;
-        b=OsMPUua2iforFSm/UO/9WA9UJuZ+xXzZyx7U7SbDGrfPWJ19fd6uUDvHS5HlFiizH8bmb/
-        p2dURGMdjGTgK315FM0aQYhh88yWszyYJUdLrvzWW2gJttjV5HsA9O+13YgiZIiNGIXf9t
-        fn7HnjdhscuOqORQ1tnVhDPzk3vTItA=
+        bh=A9k72q4nGxTZAjXFEZ3O4X+oiukJzFsmhEYIKREvjY4=;
+        b=Orc9+Oa8vO07QT9vWpudH/xLJRCJV4ACZ1UzXBWsZ075CvmEEv9RklCIYYfU8tpcvGlSfs
+        wQrd7Gr3sORgQ9cdVHZLTMTm7X/EehcTpc8lkeim5gbrdGP7E7qK/Aw61CuJ3rh48/eMjY
+        lopuxx+qN2k8ovkkWyPfVAHjtYQMadg=
 Content-Disposition: inline
-In-Reply-To: <5049EBC3-5BAE-4509-BA63-1F4A7D913517-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+In-Reply-To: <CAGWkznGAmML4XB0t5jOZEoafQrFk=gXvP96Lmgh221Y22bUuyw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Palethorpe <rpalethorpe-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, ke wang <ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, "open list:MEMORY MANAGEMENT" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Mar 24, 2022 at 11:17:14AM -0700, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
-> Ok, so it’s not really about the implementation details of the reclaim
-> mechanism (I mean rounding up to the batch size etc),
+On Fri 25-03-22 11:08:00, Zhaoyang Huang wrote:
+> On Fri, Mar 25, 2022 at 11:02 AM Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> >
+> > On Thu, Mar 24, 2022 at 10:27 PM Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org> wrote:
+> > >
+> > > I'm confused by the aims of this patch. We already have proportional reclaim
+> > > for memory.min and memory.low, and memory.high is already "proportional" by its
+> > > nature to drive memory back down behind the configured threshold.
+> > >
+> > > Could you please be more clear about what you're trying to achieve and in what
+> > > way the existing proportional reclaim mechanisms are insufficient for you?
+> 
+> sorry for the bad formatting of previous reply, resend it in new format
+> 
+>  What I am trying to solve is that, the memcg's protection judgment[1]
+>  is based on a set of fixed value on current design, while the real
+>  scan and reclaim number[2] is based on the proportional min/low on the
+>  real memory usage which you mentioned above. Fixed value setting has
+>  some constraints as
+>  1. It is an experienced value based on observation, which could be inaccurate.
+>  2. working load is various from scenarios.
+>  3. fixed value from [1] could be against the dynamic cgroup_size in [2].
 
-Actually, that was what I deemed more serious first.
-It's the point 2 of RFCness:
-
-| 2) The observed behavior slightly impacts distribution of parent's memory.low.
-|    Constructed example is a passive protected workload in s1 and active in s2
-|    (active ~ counteracts the reclaim with allocations). It could strip
-|    protection from s1 one by one (one:=SWAP_CLUSTER_MAX/2^sc.priority).
-|    That may be considered both wrong (s1 should have been more protected) or
-|    correct s2 deserves protection due to its activity.
-|    I don't have (didn't collect) data for this, so I think just masking the
-|    false events is sufficient (or independent).
-
-> Idk, I don’t have a strong argument against this change (except that
-> it changes the existing behavior), but I also don’t see why such
-> events are harmful. Do you mind elaborating a bit more?
-
-So I've collected some demo data now.
-
-	systemd-run \
-	        -u precious.service --slice=test-protected.slice \
-	        -p MemoryLow=50M \
-	        /root/memeater 50 # allocates 50M anon, doesn't use it
-	
-	systemd-run \
-	        -u victim.service --slice=test-protected.slice \
-	        -p MemoryLow=0M \
-	        /root/memeater -m 50 50 # allocates 50M anon, uses it
-	
-	echo "Started workloads"
-	
-	systemctl set-property --runtime test.slice MemoryMax=200M
-	systemctl set-property --runtime test-protected.slice MemoryLow=50M
-	
-	sleep 5
-	
-	systemd-run \
-	        -u pressure.service --slice=test.slice \
-	        -p MemorySwapMax=0M \ # to push test-protected.slice to swap
-	        /root/memeater -m 170 170
-	
-	sleep 5
-	systemd-cgtop -b -1 -m test.slice
-
-Result with memory_recursiveprot
-
-> Control Group                                                        Tasks   %CPU   Memory  Input/s Output/s
-> test.slice                                                               3      -   199.9M        -        -
-> test.slice/pressure.service                                              1      -   170.5M        -        -
-> test.slice/test-protected.slice                                          2      -    29.4M        -        -
-> test.slice/test-protected.slice/victim.service                           1      -    29.1M        -        -
-> test.slice/test-protected.slice/precious.service                         1      -   292.0K        -        -
-
-Result without memory_recursiveprot
-
-> Control Group                                                        Tasks   %CPU   Memory  Input/s Output/s
-> test.slice                                                               3      -   199.8M        -        -
-> test.slice/pressure.service                                              1      -   170.5M        -        -
-> test.slice/test-protected.slice                                          2      -    29.3M        -        -
-> test.slice/test-protected.slice/precious.service                         1      -    28.7M        -        -
-> test.slice/test-protected.slice/victim.service                           1      -   560.0K        -        -
-
-(kernel 5.17.0, systemd 249.10)
-
-So with this result, I'd say the event reporting is an independent change
-(admiteddly, thanks to the current implementation (not the proposal of
-mine) I noticed this issue).
-/me scratches head, let me review my other approaches...
-
-
-Michal
+Could you elaborate some more about those points. I guess providing an
+example how you are using the new interface instead would be helpful.
+-- 
+Michal Hocko
+SUSE Labs
