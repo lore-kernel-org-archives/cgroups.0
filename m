@@ -1,54 +1,129 @@
-From: Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH] cgroup: introduce proportional protection on memcg
-Date: Fri, 25 Mar 2022 11:10:19 +0800
-Message-ID: <CAGWkznGnDUvAqX3KCP+HZCyn49XU9=2bV9vfiFbutsQw8mK=hw@mail.gmail.com>
-References: <Yjx/3yi7BfH7wLPz@chrisdown.name> <FE4CCCF9-CF08-424B-85D0-B5C1BA63329D@linux.dev>
+From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -next 00/11] support concurrent sync io for bfq on a
+ specail occasion
+Date: Fri, 25 Mar 2022 15:30:26 +0800
+Message-ID: <e78fc7c5-cf08-9fc7-3f81-7ff8aaf37673@huawei.com>
+References: <20220305091205.4188398-1-yukuai3@huawei.com>
+ <e299180e-cdbd-0837-8478-5e397ac8166b@huawei.com>
+ <11fda851-a552-97ea-d083-d0288c17ba53@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=rZkrO50N8MIM5fdKHsVpbm2U8iuVkvk0CAUhdGmqqWM=;
-        b=LEzCQ1BWpC5mhJuQigVniD6FG8W+FawIPFRfZn+Kc8wgPtrkzAdxNxjdF2z4sGF77R
-         vx2tdr04eu9K+qltad/QTWCS+aJIjicWUybB4qRGdUGf2MFLsUJ26Wt2s/Yd3g/69drO
-         nfmJa7B2HNNRWw5dUCx6PEQbxGEKpJEBmTZ+oYi4Mk4h7XqPLyFV36M4lrktps1MDGIM
-         7416CjhidMppBvW1QZARuGBCy9CPxN2gcZDERMFLwvRVPuByqnQ60bhEsGDqoBoYMpzf
-         oYJTqoXCa3jnCaLnvzBLSEQ3zz+UytX3asngvJyWKFknxSwXSATB4MWAIynVxZeEhPvl
-         u90Q==
-In-Reply-To: <FE4CCCF9-CF08-424B-85D0-B5C1BA63329D-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+In-Reply-To: <11fda851-a552-97ea-d083-d0288c17ba53-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, ke wang <ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, "open list:MEMORY MANAGEMENT" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Fri, Mar 25, 2022 at 12:23 AM Roman Gushchin
-<roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
->
-> It seems like what=E2=80=99s being proposed is an ability to express the =
-protection in % of the current usage rather than an absolute number.
-> It=E2=80=99s an equivalent for something like a memory (reclaim) priority=
-: e.g. a cgroup with 80% protection is _always_ reclaimed less aggressively=
- than one with a 20% protection.
->
-> That said, I=E2=80=99m not a fan of this idea.
-> It might make sense in some reasonable range of usages, but if your workl=
-oad is simply leaking memory and growing indefinitely, protecting it seems =
-like a bad idea. And the first part can be easily achieved using an userspa=
-ce tool.
->
-> Thanks!
->
-> > On Mar 24, 2022, at 7:33 AM, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org> wrote:
-> >
-> > =EF=BB=BFI'm confused by the aims of this patch. We already have propor=
-tional reclaim for memory.min and memory.low, and memory.high is already "p=
-roportional" by its nature to drive memory back down behind the configured =
-threshold.
-> >
-> > Could you please be more clear about what you're trying to achieve and =
-in what way the existing proportional reclaim mechanisms are insufficient f=
-or you?
-ok, I think it could be fixable for memory leak issues. Please refer
-to my reply on Chris's comment for more explanation.
+friendly ping ...
+
+在 2022/03/17 9:49, yukuai (C) 写道:
+> friendly ping ...
+> 
+> 在 2022/03/11 14:31, yukuai (C) 写道:
+>> friendly ping ...
+>>
+>> 在 2022/03/05 17:11, Yu Kuai 写道:
+>>> Currently, bfq can't handle sync io concurrently as long as they
+>>> are not issued from root group. This is because
+>>> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
+>>> bfq_asymmetric_scenario().
+>>>
+>>> This patchset tries to support concurrent sync io if all the sync ios
+>>> are issued from the same cgroup:
+>>>
+>>> 1) Count root_group into 'num_groups_with_pending_reqs', patch 1-5;
+>>>
+>>> 2) Don't idle if 'num_groups_with_pending_reqs' is 1, patch 6;
+>>>
+>>> 3) Don't count the group if the group doesn't have pending requests,
+>>> while it's child groups may have pending requests, patch 7;
+>>>
+>>> This is because, for example:
+>>> if sync ios are issued from cgroup /root/c1/c2, root, c1 and c2
+>>> will all be counted into 'num_groups_with_pending_reqs',
+>>> which makes it impossible to handle sync ios concurrently.
+>>>
+>>> 4) Decrease 'num_groups_with_pending_reqs' when the last queue completes
+>>> all the requests, while child groups may still have pending
+>>> requests, patch 8-10;
+>>>
+>>> This is because, for example:
+>>> t1 issue sync io on root group, t2 and t3 issue sync io on the same
+>>> child group. num_groups_with_pending_reqs is 2 now.
+>>> After t1 stopped, num_groups_with_pending_reqs is still 2. sync io from
+>>> t2 and t3 still can't be handled concurrently.
+>>>
+>>> fio test script: startdelay is used to avoid queue merging
+>>> [global]
+>>> filename=/dev/nvme0n1
+>>> allow_mounted_write=0
+>>> ioengine=psync
+>>> direct=1
+>>> ioscheduler=bfq
+>>> offset_increment=10g
+>>> group_reporting
+>>> rw=randwrite
+>>> bs=4k
+>>>
+>>> [test1]
+>>> numjobs=1
+>>>
+>>> [test2]
+>>> startdelay=1
+>>> numjobs=1
+>>>
+>>> [test3]
+>>> startdelay=2
+>>> numjobs=1
+>>>
+>>> [test4]
+>>> startdelay=3
+>>> numjobs=1
+>>>
+>>> [test5]
+>>> startdelay=4
+>>> numjobs=1
+>>>
+>>> [test6]
+>>> startdelay=5
+>>> numjobs=1
+>>>
+>>> [test7]
+>>> startdelay=6
+>>> numjobs=1
+>>>
+>>> [test8]
+>>> startdelay=7
+>>> numjobs=1
+>>>
+>>> test result:
+>>> running fio on root cgroup
+>>> v5.17-rc6:       550 Mib/s
+>>> v5.17-rc6-patched: 550 Mib/s
+>>>
+>>> running fio on non-root cgroup
+>>> v5.17-rc6:       349 Mib/s
+>>> v5.17-rc6-patched: 550 Mib/s
+>>>
+>>> Yu Kuai (11):
+>>>    block, bfq: add new apis to iterate bfq entities
+>>>    block, bfq: apply news apis where root group is not expected
+>>>    block, bfq: cleanup for __bfq_activate_requeue_entity()
+>>>    block, bfq: move the increasement of 
+>>> 'num_groups_with_pending_reqs' to
+>>>      it's caller
+>>>    block, bfq: count root group into 'num_groups_with_pending_reqs'
+>>>    block, bfq: do not idle if only one cgroup is activated
+>>>    block, bfq: only count parent bfqg when bfqq is activated
+>>>    block, bfq: record how many queues have pending requests in bfq_group
+>>>    block, bfq: move forward __bfq_weights_tree_remove()
+>>>    block, bfq: decrease 'num_groups_with_pending_reqs' earlier
+>>>    block, bfq: cleanup bfqq_group()
+>>>
+>>>   block/bfq-cgroup.c  | 13 +++----
+>>>   block/bfq-iosched.c | 87 +++++++++++++++++++++++----------------------
+>>>   block/bfq-iosched.h | 41 +++++++++++++--------
+>>>   block/bfq-wf2q.c    | 56 +++++++++++++++--------------
+>>>   4 files changed, 106 insertions(+), 91 deletions(-)
+>>>
