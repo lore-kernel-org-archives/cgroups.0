@@ -1,28 +1,28 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.15 10/29] block, bfq: don't move oom_bfqq
-Date: Mon, 28 Mar 2022 07:21:12 -0400
-Message-ID: <20220328112132.1555683-10-sashal@kernel.org>
-References: <20220328112132.1555683-1-sashal@kernel.org>
+From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH AUTOSEL 5.4 04/16] block, bfq: don't move oom_bfqq
+Date: Mon, 28 Mar 2022 07:23:33 -0400
+Message-ID: <20220328112345.1556601-4-sashal@kernel.org>
+References: <20220328112345.1556601-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648466509;
-        bh=ocxmqrhFe+3/lIramiGQhKBRQ/Os4hCCByY+saZzH/k=;
+        s=k20201202; t=1648466634;
+        bh=6UuD1ojtt85+jOATQ/HpRoPyGXO2N8C2h2UJZXoI+wk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rDDsVHFIlUNfLwt8bxLcjxCLTubCirpY6l6nVRIx3D+4OEfoVwpDshKEPg2r+2xGU
-         BEH4x9W2ys6/un0rapn1A45loErghSgJ2VVzu1tSacvirvXTPLW2QSkke5j4hgMRNg
-         lF9Bdo23yxV9CiRGKA2Dp83oDJ5j7wdvrKCdptUcJaXFqAmGfDWg7MjhNMH+4hJmvZ
-         yw3isEMi2aOfyj/PzkaC1NMaPhqSRXqlsKYG/ur16nJPS6nGVy5xzlEnwJu+MfeNq4
-         Tgam7RzLddPTHys3LHOvM0vKWQCg+S3TgZtzEQaRYmRu3Gke78du53o8APADsmu2fK
-         D7zsU8vHRJs5w==
-In-Reply-To: <20220328112132.1555683-1-sashal@kernel.org>
+        b=ZYYVHVRotR4BwbhY82ydqGy4zNzIEJEWQoOzw3k3BxpTDJi1xK7jluu4PjDr54Vci
+         MPuck89oiiAmcSuIqCIjggdP7HMPfXRu8bTVRjKiqORtKKzJWd5p7fg1iJILjRfSZc
+         rl79mnc/HnAeo7MAiB+rsrtYW6oip1a6WA7AAAw3+alEgKRuq/50pXjlaRpA5/oKaS
+         DcEfeDpqZh5TXuzYkYqfsahd2ObXou9xe43+l5wAAYd0QKVtp3tAr+/wpWEteNARjm
+         xN9ohnxCU5ICw+TqrHfxZ3nKG8jQlgozo7rcO+p5Q8xtajwnh/YM7eUttSAiHfvmpq
+         gGMjaeGg5YHDg==
+In-Reply-To: <20220328112345.1556601-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Yu Kuai <yukuai3@huawei.com>, Jan Kara <jack@suse.cz>, Paolo Valente <paolo.valente@linaro.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, tj@kernel.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
 [ Upstream commit 8410f70977734f21b8ed45c37e925d311dfda2e7 ]
 
@@ -129,21 +129,21 @@ is freed earlier.
 
 Thus fix the problem by don't move oom_bfqq.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Acked-by: Paolo Valente <paolo.valente@linaro.org>
-Link: https://lore.kernel.org/r/20220129015924.3958918-4-yukuai3@huawei.com
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Acked-by: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Link: https://lore.kernel.org/r/20220129015924.3958918-4-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
  block/bfq-cgroup.c | 6 ++++++
  1 file changed, 6 insertions(+)
 
 diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 85b8e1c3a762..e37af3f8a733 100644
+index 342a1cfa48c5..c17eb794f0ae 100644
 --- a/block/bfq-cgroup.c
 +++ b/block/bfq-cgroup.c
-@@ -644,6 +644,12 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+@@ -625,6 +625,12 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
  {
  	struct bfq_entity *entity = &bfqq->entity;
  
