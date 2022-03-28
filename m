@@ -1,28 +1,28 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 5.17 14/43] block, bfq: don't move oom_bfqq
-Date: Mon, 28 Mar 2022 07:17:58 -0400
-Message-ID: <20220328111828.1554086-14-sashal@kernel.org>
-References: <20220328111828.1554086-1-sashal@kernel.org>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.16 13/35] block, bfq: don't move oom_bfqq
+Date: Mon, 28 Mar 2022 07:19:49 -0400
+Message-ID: <20220328112011.1555169-13-sashal@kernel.org>
+References: <20220328112011.1555169-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648466336;
+        s=k20201202; t=1648466434;
         bh=ZDyOslAUBS84y2GsNWoVzj90MIaPrf2MpBT4KPBB4jg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Z+Z050mqowa/ountmYJ4ezzdP6GPutPrcnwG9yBDGjKFqMpoRkoQntCKLygPHUXRS
-         qh2vk1+f5IW8j/kIB9ZHoz2A7DfmL4u5khjxqRlOLzTPcVva0FRFx+eX/AkxaRzjZ9
-         rvqTv1QYePK99KsrkSWL/221ikDYHfjJf4bozBKWD/fBRraGr0RLfak2IwIu9Q4ZiS
-         sivrHixDVMMuu/uPSWFtdrqne95GbQlBc9j/4jhceGRb1Md9ROOK2HFY3ZQ6JNPKg2
-         sPyEvtgcl2uwMVAcXWehr3rR72Lg0WNycUlOipzUSdqhmkkLEdno3WjPK4kY6//7Im
-         INi+lBrxe6uaQ==
-In-Reply-To: <20220328111828.1554086-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        b=aRbhZi7/frQJ1tDtKW7GCDrxOO+uGtlyOvBoiKi0ZwgRIthpvRTiuRK9YuQauT2YE
+         ZqVu3TbIGZREidZ3lZZWF60AGyb4JjzRjKeLtaS8h0/I5jiA/8UX2eb3AyoXFPlu8E
+         tTPHnqF83Du6bT3wwpBfpGluw6L2GTKoPrgHfRjPOy23I9SiToGo45n6Qs+/ij5c1F
+         nehWpeTU3nG09qg9NnOv+Nm5YiFNxWmbBOfSkYg28eAkmG2pVy6/miNK8Vvw2B0gsX
+         c+B9CTK+/OTb6zVS8zCplQnAlkNTgtGiJdTKtUALt+KP+Gir/o/6trDnIhY0vyo1+v
+         U18w9hsu4VzYQ==
+In-Reply-To: <20220328112011.1555169-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Yu Kuai <yukuai3@huawei.com>, Jan Kara <jack@suse.cz>, Paolo Valente <paolo.valente@linaro.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Yu Kuai <yukuai3@huawei.com>
 
 [ Upstream commit 8410f70977734f21b8ed45c37e925d311dfda2e7 ]
 
@@ -129,12 +129,12 @@ is freed earlier.
 
 Thus fix the problem by don't move oom_bfqq.
 
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Acked-by: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Link: https://lore.kernel.org/r/20220129015924.3958918-4-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Acked-by: Paolo Valente <paolo.valente@linaro.org>
+Link: https://lore.kernel.org/r/20220129015924.3958918-4-yukuai3@huawei.com
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
  block/bfq-cgroup.c | 6 ++++++
  1 file changed, 6 insertions(+)
