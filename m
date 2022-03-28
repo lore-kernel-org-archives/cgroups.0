@@ -1,26 +1,26 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.10 05/21] block, bfq: don't move oom_bfqq
-Date: Mon, 28 Mar 2022 07:22:38 -0400
-Message-ID: <20220328112254.1556286-5-sashal@kernel.org>
-References: <20220328112254.1556286-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 10/29] block, bfq: don't move oom_bfqq
+Date: Mon, 28 Mar 2022 07:21:12 -0400
+Message-ID: <20220328112132.1555683-10-sashal@kernel.org>
+References: <20220328112132.1555683-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1648466588;
-        bh=D7zehDB5ZT+cPJglemgyT0v37ZSf+QM4AK+whiwO7mQ=;
+        s=k20201202; t=1648466509;
+        bh=ocxmqrhFe+3/lIramiGQhKBRQ/Os4hCCByY+saZzH/k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rcEQ5BzMOiNupz15FGivAI6C4IqPwJYHHn9ntCEb4dku4GQtMT7j5WAmG90J5/g0a
-         l+phooA3E2PH3XJsNpBdK/PKSD5pbfAFqYbTMSzY+lCy6HupFmfMdrkRcI8tAjr7kG
-         o62YOiCFpillZp2VNIIBJLGNBVlbfG/AUGPANhyT6rV+X6U448wyQEns5Em8tfvASf
-         b1zBGd9NRifuomvupqJ3E6RQ/HwOZFpmi0LVzkll4xDFHTsUiTawfaO6nS4rx5Acmc
-         +fhb5GbMqX6CZ165Pyc2+i9/6qVaK2R2VF2gdkRhzmKce9+2iq4+aL3WPzKjB6Ledc
-         +NCqjm70UbNKg==
-In-Reply-To: <20220328112254.1556286-1-sashal@kernel.org>
+        b=rDDsVHFIlUNfLwt8bxLcjxCLTubCirpY6l6nVRIx3D+4OEfoVwpDshKEPg2r+2xGU
+         BEH4x9W2ys6/un0rapn1A45loErghSgJ2VVzu1tSacvirvXTPLW2QSkke5j4hgMRNg
+         lF9Bdo23yxV9CiRGKA2Dp83oDJ5j7wdvrKCdptUcJaXFqAmGfDWg7MjhNMH+4hJmvZ
+         yw3isEMi2aOfyj/PzkaC1NMaPhqSRXqlsKYG/ur16nJPS6nGVy5xzlEnwJu+MfeNq4
+         Tgam7RzLddPTHys3LHOvM0vKWQCg+S3TgZtzEQaRYmRu3Gke78du53o8APADsmu2fK
+         D7zsU8vHRJs5w==
+In-Reply-To: <20220328112132.1555683-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Yu Kuai <yukuai3@huawei.com>, Jan Kara <jack@suse.cz>, Paolo Valente <paolo.valente@linaro.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org
+Cc: Yu Kuai <yukuai3@huawei.com>, Jan Kara <jack@suse.cz>, Paolo Valente <paolo.valente@linaro.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, tj@kernel.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
@@ -140,10 +140,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 6 insertions(+)
 
 diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index b791e2041e49..c2fdd6fcdaee 100644
+index 85b8e1c3a762..e37af3f8a733 100644
 --- a/block/bfq-cgroup.c
 +++ b/block/bfq-cgroup.c
-@@ -642,6 +642,12 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+@@ -644,6 +644,12 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
  {
  	struct bfq_entity *entity = &bfqq->entity;
  
