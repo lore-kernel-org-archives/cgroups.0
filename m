@@ -1,106 +1,51 @@
-From: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 2/3] mm/memcg: set pos to prev unconditionally
-Date: Wed, 30 Mar 2022 00:47:50 +0000
-Message-ID: <20220330004750.fx4jr4bnehz4ynpf@master>
-References: <20220225003437.12620-1-richard.weiyang@gmail.com>
- <20220225003437.12620-3-richard.weiyang@gmail.com>
- <YkNUZYrSHPjJ1XOb@cmpxchg.org>
-Reply-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [syzbot] possible deadlock in throtl_pending_timer_fn
+Date: Wed, 30 Mar 2022 10:52:38 +0800
+Message-ID: <CAFj5m9+Gc-t6vD17yWBNos-fk9vmhUTLsXYGrSx4Bdzn7R67JQ@mail.gmail.com>
+References: <000000000000921fd405db62096a@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=aUg+nsxlXPscnfiMYKd+M7CmvIDxhBFg2TxnVLMBR5s=;
-        b=kX4HPddeobRAwdKEOnLTw4DYufDEk5c8qxuMObUBbwxa3aPvdY7LNLDGNalvMKvNKt
-         F6jP6FhmeL+vsQ3CGykJmjwsST/Wba5VeZJ/Ou7Bg88KA3ZYI8jZCBK2zTUUGLcPECTp
-         hwi30uLJsriwV0WJU/eHst1MWIbyhtSIA1SHOv5fwNP0C9Txq5brTn04fkHUtq9L8Fgd
-         7KtMs8b4AWITjk1htYA6IbtbpDBOTkPMPVM43gsJpLbApkLr9FQzBIYN3rD58r9GqzEI
-         bEbbb46WFRzhbK9EoZsgb4v8ClkPsVfVyUzHMqBYoUUb6zzqW3WdSw6odrdPaMeqn7Vj
-         fUGA==
-Content-Disposition: inline
-In-Reply-To: <YkNUZYrSHPjJ1XOb-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1648608773;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Ma0cdZKvD2y8q033msWkRp2PLEzhGQ/8y/lyYzyaHeg=;
+        b=Mx0ieUTdU+kloR8uaNZpzoFCKpCyeUTDNFRCywoyz0HjglZ96A7Ji6/f6/EgZqwPhSfWKC
+        7bty6q6dNbU7xnnAaWvJGfoeC6zM12a5MJ5pKuCc4YUHvA3Ul6oEk3A8qhoyNQqmHm1mFJ
+        bS5euydr777E/LfkH6EsnoRtuohv0MQ=
+In-Reply-To: <000000000000921fd405db62096a-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: syzbot <syzbot+934ebb67352c8a490bf3-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On Tue, Mar 29, 2022 at 02:48:05PM -0400, Johannes Weiner wrote:
->On Fri, Feb 25, 2022 at 12:34:36AM +0000, Wei Yang wrote:
->> Current code set pos to prev based on condition (prev && !reclaim),
->> while we can do this unconditionally.
->> 
->> Since:
->> 
->>   * If !reclaim, pos is the same as prev no matter it is NULL or not.
->>   * If reclaim, pos would be set properly from iter->position.
->> 
->> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> ---
->>  mm/memcontrol.c | 5 +----
->>  1 file changed, 1 insertion(+), 4 deletions(-)
->> 
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 9464fe2aa329..03399146168f 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -980,7 +980,7 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
->>  	struct mem_cgroup_reclaim_iter *iter;
->>  	struct cgroup_subsys_state *css = NULL;
->>  	struct mem_cgroup *memcg = NULL;
->> -	struct mem_cgroup *pos = NULL;
->> +	struct mem_cgroup *pos = prev;
+On Wed, Mar 30, 2022 at 5:23 AM syzbot
+<syzbot+934ebb67352c8a490bf3-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org> wrote:
 >
->I don't like this so much. It suggests pos always starts with prev, no
->matter what. But this isn't true for reclaim mode, which overrides the
->initialized value again.
+> Hello,
 >
->>  	if (mem_cgroup_disabled())
->>  		return NULL;
->> @@ -988,9 +988,6 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
->>  	if (!root)
->>  		root = root_mem_cgroup;
->>  
->> -	if (prev && !reclaim)
->> -		pos = prev;
+> syzbot found the following issue on:
 >
->How about making the reclaim vs non-reclaim mode explicit and do:
+> HEAD commit:    cb7cbaae7fd9 Merge tag 'drm-next-2022-03-25' of git://anon..
+> git tree:       upstream
+> console output: https://syzkaller.appspot.com/x/log.txt?x=17ef8b43700000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=7094767cefc58fb9
+> dashboard link: https://syzkaller.appspot.com/bug?extid=934ebb67352c8a490bf3
+> compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
 >
->	if (reclaim) {
->		...
->		pos = iter->position;
->		...
->	} else {
->		pos = prev;
->	}
+> Unfortunately, I don't have any reproducer for this issue yet.
+>
+> IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> Reported-by: syzbot+934ebb67352c8a490bf3-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
 
-Something like this?
+#syz test: git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
+for-5.18/block
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index eed9916cdce5..5d433b79ba47 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1005,9 +1005,6 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 	if (!root)
- 		root = root_mem_cgroup;
- 
--	if (prev && !reclaim)
--		pos = prev;
--
- 	rcu_read_lock();
- 
- 	if (reclaim) {
-@@ -1033,6 +1030,8 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 			 */
- 			(void)cmpxchg(&iter->position, pos, NULL);
- 		}
-+	} else if (prev) {
-+		pos = prev;
- 	}
- 
- 	if (pos)
--- 
-Wei Yang
-Help you, Help me
+It should be fixed by:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/commit/?h=for-5.18/block&id=d578c770c85233af592e54537f93f3831bde7e9a
+
+Thanks,
+
