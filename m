@@ -1,57 +1,57 @@
-From: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [syzbot] possible deadlock in throtl_pending_timer_fn
-Date: Wed, 30 Mar 2022 11:01:40 +0800
-Message-ID: <YkPIFKn0osBGOgma@T590>
-References: <CAFj5m9+Gc-t6vD17yWBNos-fk9vmhUTLsXYGrSx4Bdzn7R67JQ@mail.gmail.com>
- <0000000000009518f205db66a47a@google.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 2/3] mm/memcg: set pos to prev unconditionally
+Date: Wed, 30 Mar 2022 08:08:49 -0400
+Message-ID: <YkRIUbEGHVIbVRNO@cmpxchg.org>
+References: <20220225003437.12620-1-richard.weiyang@gmail.com>
+ <20220225003437.12620-3-richard.weiyang@gmail.com>
+ <YkNUZYrSHPjJ1XOb@cmpxchg.org>
+ <20220330004750.fx4jr4bnehz4ynpf@master>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1648609323;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=xxzvoUYwD8SSYfs6qQXKCiAwI4oUDxgTEMP9uTO4mCk=;
-        b=KFyV9WEfOFVEh2fyBt/2wDS2gnGK3LWjZYYCUu10rQ6kPP2iBMQVjnlQDyw1PqYK0nigwZ
-        7XrumxjBl6LxVhvm1wm0z3hdKK5ZHD39XKx9RYgTbafwMDoaVSrZWzDQgIKq6Y+Dq8ZamS
-        uMG5Aou5sQN5Ss9K6DZvrpA/TmN1v3A=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=3I4Wbaw8kW2EJmKRBW9VuujWkyfUQDWPpToJHWZ1Qxw=;
+        b=kJ787gVx9QHZo7fifirsTebaVbsgM8uMPI7864OsHOZ3EgMFvXCs3vCmHRRw3xcQBH
+         Wcl5CxrShaHSDA7OgMLJTtUwQ3CyvHjey7usvwz80QYsP82N3F9hQ2yg+qwJnmRIV/+i
+         83uwETu83rMHK6xuRJWxOtHE8OwXGCpMp8iKb9EDLjwvlJrBxhPVfHZ2u6dr/vPs6KgY
+         KUbLkeFACeDgEZuSdhxqxJiMwoEUuW94gtay9eXCBTPgUOrs86Ii6/oFZuzfJWHYxYcx
+         HpjqHXQUK7V9lmwpZd32YuBkVIRpuvfVpQNnNBgWNQiE5p8TXRvyN+SPZ4DA+iYSXq/F
+         R6dg==
 Content-Disposition: inline
-In-Reply-To: <0000000000009518f205db66a47a-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20220330004750.fx4jr4bnehz4ynpf@master>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: syzbot <syzbot+934ebb67352c8a490bf3-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Tue, Mar 29, 2022 at 07:52:57PM -0700, syzbot wrote:
-> > On Wed, Mar 30, 2022 at 5:23 AM syzbot
-> > <syzbot+934ebb67352c8a490bf3-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org> wrote:
-> >>
-> >> Hello,
-> >>
-> >> syzbot found the following issue on:
-> >>
-> >> HEAD commit:    cb7cbaae7fd9 Merge tag 'drm-next-2022-03-25' of git://anon..
-> >> git tree:       upstream
-> >> console output: https://syzkaller.appspot.com/x/log.txt?x=17ef8b43700000
-> >> kernel config:  https://syzkaller.appspot.com/x/.config?x=7094767cefc58fb9
-> >> dashboard link: https://syzkaller.appspot.com/bug?extid=934ebb67352c8a490bf3
-> >> compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-> >>
-> >> Unfortunately, I don't have any reproducer for this issue yet.
-> >>
-> >> IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> >> Reported-by: syzbot+934ebb67352c8a490bf3-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
-> >
-> > #syz test: git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
+On Wed, Mar 30, 2022 at 12:47:50AM +0000, Wei Yang wrote:
+> Something like this?
 > 
-> This crash does not have a reproducer. I cannot test it.
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index eed9916cdce5..5d433b79ba47 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1005,9 +1005,6 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+>  	if (!root)
+>  		root = root_mem_cgroup;
+>  
+> -	if (prev && !reclaim)
+> -		pos = prev;
+> -
+>  	rcu_read_lock();
+>  
+>  	if (reclaim) {
+> @@ -1033,6 +1030,8 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+>  			 */
+>  			(void)cmpxchg(&iter->position, pos, NULL);
+>  		}
+> +	} else if (prev) {
+> +		pos = prev;
+>  	}
+>  
+>  	if (pos)
 
-This one is triggered in case of memory allocation failure, especially blkg_free()
-is called from blkg_alloc() directly. That is why it is hard to reproduce, and it
-is one old issue.
-
-
-Thanks,
-Ming
-
+Yep!
