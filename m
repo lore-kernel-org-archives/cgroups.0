@@ -1,67 +1,61 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 3/3] mm/memcg: move generation assignment and comparison
- together
-Date: Wed, 30 Mar 2022 11:57:07 -0400
-Message-ID: <YkR902CHgavwleet@cmpxchg.org>
-References: <20220225003437.12620-1-richard.weiyang@gmail.com>
- <20220225003437.12620-4-richard.weiyang@gmail.com>
+From: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC v4 2/8] cgroup: gpu: Add a cgroup controller for allocator
+ attribution of GPU memory
+Date: Wed, 30 Mar 2022 13:56:09 -0700
+Message-ID: <CABdmKX2Gxg35k7QiL2Vn4zWhmQ4UnM-Z8cnOXR0fwBWyJnZ+Ng@mail.gmail.com>
+References: <20220328035951.1817417-1-tjmercier@google.com>
+ <20220328035951.1817417-3-tjmercier@google.com> <YkM6/57mVxoNfSvm@slm.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=2DqrTDJij/+jnL6IguPlfSJVz0YoCK5Qn6m+J92VWzI=;
-        b=orgO24LkHCF4EOuz/ab4HIS8kjgemcfoGLDYGu7EWuXlTISEDMSKr4h2nrxRs2PzEc
-         EjAshco2pN7gXzRJhW+0+mjZnkG0Xxm5vCR41OHjwj7BNKSAbpspP9aKawjBtJt4ZKKk
-         Iat4FhW+5tFjMxnCnwdh8Bfl7HaK837UV+gjMj9/2UCWjyP+V8to1NZzXlrfzbZHkzeX
-         WwPTYlpbpMAm35NaEV1dkfMAfyfgI3ZCHwuPlupG2iXlGyuDmKzIaZ/YYwDXbMdDNC9p
-         km4O1WETMIikl7k5dpkF/phamL+DERfeGpjhuTN3hR+/OfQDxFYdrJ2a9p8r5UE1gffJ
-         TTpA==
-Content-Disposition: inline
-In-Reply-To: <20220225003437.12620-4-richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=nrCvj7Yq7SSib6FwgrmdzFU7UXWII5P9ju8EtUscCW0=;
+        b=boNOk7s9MFWRe9Q5TIHyCBcLZAL3UIEBNmLOOWFhXw6emE+CwKKHdvhC0KffHeh0nF
+         M6pQueP4aCRuJFI7dDzsd8w7oMHmH5zQ1LRTPvQqJiDWbX35wE19ft4HqpfvXL9C1Got
+         NCX+Q7kxCou/I+IrAEJ9Str9SLE8Vpfu1F+nizveKZzqZBmp0ZbLt4163c8iNRc9oq8L
+         +OvcysVAV7F4grrtlsY0RpODotiBIJhRyklfusZBaq0zNt0ADmOlhrzyjpVkba5kg+sN
+         XtIoUFtjlMDxb5pCPzyxnwJLsJ9yaQfPKTqYXEV4ifVXSG43LsveuoFab9UFC5oCyEkr
+         VAUA==
+In-Reply-To: <YkM6/57mVxoNfSvm-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Benjamin Gaignard <benjamin.gaignard-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Liam Mark <lmark-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Laura
 
-On Fri, Feb 25, 2022 at 12:34:37AM +0000, Wei Yang wrote:
-> For each round-trip, we assign generation on first invocation and
-> compare it on subsequent invocations.
-> 
-> Let's move them together to make it more self-explaining. Also this
-> reduce a check on prev.
-> 
-> Signed-off-by: Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+On Tue, Mar 29, 2022 at 9:59 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+> Hello,
 
-This makes sense. The function is structured into 1) load state, 2)
-advance, 3) save state. The load state is a better fit for
-initializing reclaim->generation.
+I'm sorry for the delay Tejun, my test device stopped working and my
+attention has been occupied with that.
 
-> @@ -996,7 +996,14 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
->  		mz = root->nodeinfo[reclaim->pgdat->node_id];
->  		iter = &mz->iter;
->  
-> -		if (prev && reclaim->generation != iter->generation)
-> +		/*
-> +		 * On first invocation, assign iter->generation to
-> +		 * reclaim->generation.
-> +		 * On subsequent invocations, make sure no one else jump in.
-> +		 */
-> +		if (!prev)
-> +			reclaim->generation = iter->generation;
-> +		else if (reclaim->generation != iter->generation)
->  			goto out_unlock;
+>
+> On Mon, Mar 28, 2022 at 03:59:41AM +0000, T.J. Mercier wrote:
+> > The API/UAPI can be extended to set per-device/total allocation limits
+> > in the future.
+>
+> This total thing kinda bothers me. Can you please provide some concrete
+> examples of how this and per-device limits would be used?
 
-The comment duplicates the code, it doesn't explain why we're doing
-this. How about:
+The use case we have for accounting the total (separate from the
+individual devices) is to include the value as part of bugreports, for
+understanding the system-wide amount of dmabuf allocations. I'm not
+aware of an existing need to limit the total. Admittedly this is just
+the sum over the devices, but we currently maintain out of tree code
+to do this sort of thing today. [1]
 
-		/*
-		 * On start, join the current reclaim iteration cycle.
-		 * Exit when a concurrent walker completes it.
-		 */
+The per-device limits would be used to restrict the amount of each
+type of allocation charged to an individual application to prevent
+hogging or to completely prevent access. This limitation is not
+something we have implemented today, but it is on our roadmap.
 
-With that, please feel free to add:
+[1] https://android-review.googlesource.com/c/kernel/common/+/1566704/3/drivers/dma-buf/dma-heap.c
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>
+> Thanks.
+>
+> --
+> tejun
