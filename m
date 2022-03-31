@@ -1,262 +1,200 @@
-From: "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
-Subject: [RFC PATCH] cgroup: introduce dynamic protection for memcg
-Date: Thu, 31 Mar 2022 16:00:56 +0800
-Message-ID: <1648713656-24254-1-git-send-email-zhaoyang.huang@unisoc.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [PATCH resend] memcg: introduce per-memcg reclaim interface
+Date: Thu, 31 Mar 2022 08:41:51 +0000
+Message-ID: <20220331084151.2600229-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=dJR2UF7wpFVBWBgJ9O65H/XFooxj9+B28f9BB5t99yU=;
+        b=Uw8yGthrisayNeORy4SJ0M18Sm95p4V7hygwzdHg6T2IFLejLl/kkfy77e3J2MZghG
+         QIAja02cdJ6iGsot5VfVtPIlTLtEHl8iJJz6E3NX8tpU6bejFYq4Fz5wQ8MAKSrbfY92
+         O1TrJHO1sbNGFv3kKywVlM1Gj4SviJ2ra9aY43blbOD1K+xzRSX9Y7n5FfEtLw/qOMbt
+         Qq0KyErJpuLjD3ZLTF8tHweLvo2o96Q6o18wIaXW2wvG9b4yUYwLgXPiq1XRRf+OdWJ1
+         gIQ5YW1B/+3pIWYyO8ZH0YxFklgV/aPPnq80r9V1XXbgyj2wkf9ekrYoqSRcvCyLWnBh
+         CAeQ==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>, Yosry Ahmed <yosryahmed@google.com>
 
-From: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+From: Shakeel Butt <shakeelb@google.com>
 
-For some kind of memcg, the usage is varies greatly from scenarios. Such as
-multimedia app could have the usage range from 50MB to 500MB, which generated
-by loading an special algorithm into its virtual address space and make it hard
-to protect the expanded usage without userspace's interaction. Furthermore, fixed
-memory.low is a little bit against its role of soft protection as it will response
-any system's memory pressure in same way.
+Introduce an memcg interface to trigger memory reclaim on a memory cgroup.
 
-Taking all above into consideration, we introduce a kind of dynamic protection
-based on group's watermark and system's memory pressure in this patch. Our aims are:
-1. dynamic protection with no fixed setting
-2. proper protection value on memory.current
-3. time based decay protection
-4. memory pressue related protection
+Use case: Proactive Reclaim
+---------------------------
 
-The basic concept could be descripted as bellowing, where we take group->watermark
-as a representative of usage
-		group->memory.low = decayed_watermark * decay_factor
-		decayed_watermark = group->watermark * func_wm_decay(time)
-		decay_factor = psi_system[PSI_MEM][time]
+A userspace proactive reclaimer can continuously probe the memcg to
+reclaim a small amount of memory. This gives more accurate and
+up-to-date workingset estimation as the LRUs are continuously
+sorted and can potentially provide more deterministic memory
+overcommit behavior. The memory overcommit controller can provide
+more proactive response to the changing behavior of the running
+applications instead of being reactive.
 
-func_wm_decay could be deemed as a linear decay funcion that will decay 1/2 in
-68s(36bit).If we take 2048 as "1", it could be descripted as:
-		decayed_watermark = time >> (group->wm_dec_factor - 10)
-		decayed_watermark = new_usage(if new_usage > decayed_watermark)
+A userspace reclaimer's purpose in this case is not a complete replacement
+for kswapd or direct reclaim, it is to proactively identify memory savings
+opportunities and reclaim some amount of cold pages set by the policy
+to free up the memory for more demanding jobs or scheduling new jobs.
 
-decay_factor is as simple as a table lookingup and compose the final value by
-weight of some and full as
-		some = psi_system.avg[PSI_MEM * 2][time]
-		full = psi_system.avg[PSI_MEM * 2 + 1][time]
-		decay_factor = some * 70% + full *30%
+A user space proactive reclaimer is used in Google data centers.
+Additionally, Meta's TMO paper recently referenced a very similar
+interface used for user space proactive reclaim:
+https://dl.acm.org/doi/pdf/10.1145/3503222.3507731
 
-We simply test above change on a v5.4 based system in bellowing topology and
-observe some behavious as we expected:
-      A
-     / \
-    B   C
-1. With regard to the protection, elow is in a proper range as proportion of watermark.
-2. Elapsed time has positive impact on elow via decayed_watermark.
-3. Memory pressure has negitive impact on elow which could keep more usage when
-   system is under less pressure.
+Benefits of a user space reclaimer:
+-----------------------------------
 
-PS: It should be configured as a sub-type of memcg and choosed by the user when
-create the group.
+1) More flexible on who should be charged for the cpu of the memory
+reclaim. For proactive reclaim, it makes more sense to be centralized.
 
-Signed-off-by: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+2) More flexible on dedicating the resources (like cpu). The memory
+overcommit controller can balance the cost between the cpu usage and
+the memory reclaimed.
+
+3) Provides a way to the applications to keep their LRUs sorted, so,
+under memory pressure better reclaim candidates are selected. This also
+gives more accurate and uptodate notion of working set for an
+application.
+
+Why memory.high is not enough?
+------------------------------
+
+- memory.high can be used to trigger reclaim in a memcg and can
+  potentially be used for proactive reclaim.
+  However there is a big downside in using memory.high. It can potentially
+  introduce high reclaim stalls in the target application as the
+  allocations from the processes or the threads of the application can hit
+  the temporary memory.high limit.
+
+- Userspace proactive reclaimers usually use feedback loops to decide
+  how much memory to proactively reclaim from a workload. The metrics
+  used for this are usually either refaults or PSI, and these metrics
+  will become messy if the application gets throttled by hitting the
+  high limit.
+
+- memory.high is a stateful interface, if the userspace proactive
+  reclaimer crashes for any reason while triggering reclaim it can leave
+  the application in a bad state.
+
+- If a workload is rapidly expanding, setting memory.high to proactively
+  reclaim memory can result in actually reclaiming more memory than
+  intended.
+
+The benefits of such interface and shortcomings of existing interface
+were further discussed in this RFC thread:
+https://lore.kernel.org/linux-mm/5df21376-7dd1-bf81-8414-32a73cea45dd@google.com/
+
+Interface:
+----------
+
+Introducing a very simple memcg interface 'echo 10M > memory.reclaim' to
+trigger reclaim in the target memory cgroup.
+
+
+Possible Extensions:
+--------------------
+
+- This interface can be extended with an additional parameter or flags
+  to allow specifying one or more types of memory to reclaim from (e.g.
+  file, anon, ..).
+
+- The interface can also be extended with a node mask to reclaim from
+  specific nodes. This has use cases for reclaim-based demotion in memory
+  tiering systens.
+
+- A similar per-node interface can also be added to support proactive
+  reclaim and reclaim-based demotion in systems without memcg.
+
+For now, let's keep things simple by adding the basic functionality.
+
+[yosryahmed@google.com: refreshed to current master, updated commit
+message based on recent discussions and use cases]
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
+Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
 ---
- include/linux/memcontrol.h   | 50 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/page_counter.h |  4 ++++
- include/linux/psi.h          |  2 ++
- kernel/sched/psi.c           | 18 ++++++++++++++++
- mm/memcontrol.c              |  4 ++++
- mm/page_counter.c            |  4 ++++
- 6 files changed, 82 insertions(+)
+ Documentation/admin-guide/cgroup-v2.rst |  9 ++++++
+ mm/memcontrol.c                         | 37 +++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 0c5c403..a510057 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -21,6 +21,9 @@
- #include <linux/vmstat.h>
- #include <linux/writeback.h>
- #include <linux/page-flags.h>
-+#include <linux/sched/loadavg.h>
-+#include <linux/sched/clock.h>
-+#include <linux/psi.h>
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 69d7a6983f78..925aaabb2247 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1208,6 +1208,15 @@ PAGE_SIZE multiple when read back.
+ 	high limit is used and monitored properly, this limit's
+ 	utility is limited to providing the final safety net.
  
- struct mem_cgroup;
- struct obj_cgroup;
-@@ -28,6 +31,8 @@
- struct mm_struct;
- struct kmem_cache;
- 
-+#define MEMCG_INTERVAL	(2*HZ+1)	/* 2 sec intervals */
++  memory.reclaim
++	A write-only file which exists on non-root cgroups.
 +
- /* Cgroup-specific page state, on top of universal node page state */
- enum memcg_stat_item {
- 	MEMCG_SWAP = NR_VM_NODE_STAT_ITEMS,
-@@ -340,6 +345,10 @@ struct mem_cgroup {
- 	struct deferred_split deferred_split_queue;
- #endif
- 
-+	u64 wm_dec_fact;
-+	u64 avg_next_update;
-+	u64 avg_last_update;
++	This is a simple interface to trigger memory reclaim in the
++	target cgroup. Write the number of bytes to reclaim to this
++	file and the kernel will try to reclaim that much memory.
++	Please note that the kernel can over or under reclaim from
++	the target cgroup.
 +
- 	struct mem_cgroup_per_node *nodeinfo[];
- };
- 
-@@ -608,6 +617,47 @@ static inline bool mem_cgroup_disabled(void)
- 	return !cgroup_subsys_enabled(memory_cgrp_subsys);
- }
- 
-+/*
-+ * calculate memory.low based on the historic watermark and memory pressure
-+ */
-+static inline void calc_protected_low(struct mem_cgroup *group)
-+{
-+	u64 now, decay_factor;
-+	u64 decayed_watermark;
-+	u64 delta_time;
-+
-+	now = sched_clock();
-+
-+	if (!group->avg_next_update) {
-+		group->avg_next_update = now + jiffies_to_nsecs(5*HZ);
-+		return;
-+	}
-+
-+	if (time_before((unsigned long)now, (unsigned long)group->avg_next_update))
-+		return;
-+
-+	delta_time = group->avg_last_update ? now - group->avg_last_update : 0;
-+	/*
-+	 * we take 2048 as "1" and 68s decay 1/2(36bit) by default
-+	 * decay_factor = 1024 * delta_time / 68s(0x1000000000)
-+	 * 0.5(1024)/68s = decay_factor/delta_time ==> decay_factor = delta_time >> 26
-+	 */
-+	decay_factor = (2048 - min(2048ULL, delta_time >> (group->wm_dec_fact - 10)));
-+	decayed_watermark = group->memory.decayed_watermark * decay_factor / 2048;
-+	/* decay_factor: based on average memory pressure over elapsed time */
-+	decay_factor = psi_mem_get(delta_time);
-+	group->memory.low = decayed_watermark * (100 - decay_factor) / 100;
-+
-+	/*
-+	 * avg_next_update: expected expire time according to current status
-+	 */
-+	group->memory.decayed_watermark = decayed_watermark;
-+	group->avg_last_update = now;
-+	group->avg_next_update = now + jiffies_to_nsecs(2*HZ);
-+
-+	return;
-+}
-+
- static inline void mem_cgroup_protection(struct mem_cgroup *root,
- 					 struct mem_cgroup *memcg,
- 					 unsigned long *min,
-diff --git a/include/linux/page_counter.h b/include/linux/page_counter.h
-index 6795913..2720eb9f 100644
---- a/include/linux/page_counter.h
-+++ b/include/linux/page_counter.h
-@@ -25,8 +25,12 @@ struct page_counter {
- 
- 	/* legacy */
- 	unsigned long watermark;
-+	unsigned long decayed_watermark;
- 	unsigned long failcnt;
- 
-+	/* proportional protection */
-+	unsigned long min_prop;
-+	unsigned long low_prop;
- 	/*
- 	 * 'parent' is placed here to be far from 'usage' to reduce
- 	 * cache false sharing, as 'usage' is written mostly while
-diff --git a/include/linux/psi.h b/include/linux/psi.h
-index 65eb147..6c76993 100644
---- a/include/linux/psi.h
-+++ b/include/linux/psi.h
-@@ -25,6 +25,8 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
- 
- int psi_show(struct seq_file *s, struct psi_group *group, enum psi_res res);
- 
-+unsigned long psi_mem_get(unsigned long time);
-+
- #ifdef CONFIG_CGROUPS
- int psi_cgroup_alloc(struct cgroup *cgrp);
- void psi_cgroup_free(struct cgroup *cgrp);
-diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
-index dd80bd2..8d315e0 100644
---- a/kernel/sched/psi.c
-+++ b/kernel/sched/psi.c
-@@ -291,6 +291,24 @@ static void get_recent_times(struct psi_group *group, int cpu,
- 	}
- }
- 
-+unsigned long psi_mem_get(unsigned long time_ns)
-+{
-+	unsigned long time_sec = time_ns / (1000 * 1000 * 1000);
-+	unsigned long some, full;
-+	if (time_sec < 10) {
-+		some = LOAD_INT(psi_system.avg[PSI_MEM * 2][0]);
-+		full = LOAD_INT(psi_system.avg[PSI_MEM * 2 + 1][0]);
-+	} else if (time_sec < 60) {
-+		some = LOAD_INT(psi_system.avg[PSI_MEM * 2][1]);
-+		full = LOAD_INT(psi_system.avg[PSI_MEM * 2 + 1][1]);
-+	} else {
-+		some = LOAD_INT(psi_system.avg[PSI_MEM * 2][2]);
-+		full = LOAD_INT(psi_system.avg[PSI_MEM * 2 + 1][2]);
-+	}
-+
-+	return (some * 768 + full * 256) / 1024;
-+}
-+
- static void calc_avgs(unsigned long avg[3], int missed_periods,
- 		      u64 time, u64 period)
- {
+   memory.oom.group
+ 	A read-write single value file which exists on non-root
+ 	cgroups.  The default value is "0".
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 508bcea..6b579a4 100644
+index 725f76723220..994849fab7df 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -5188,6 +5188,7 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
- 	page_counter_set_high(&memcg->memory, PAGE_COUNTER_MAX);
- 	memcg->soft_limit = PAGE_COUNTER_MAX;
- 	page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
-+	memcg->wm_dec_fact = 36;
- 	if (parent) {
- 		memcg->swappiness = mem_cgroup_swappiness(parent);
- 		memcg->oom_kill_disable = parent->oom_kill_disable;
-@@ -6616,6 +6617,8 @@ void mem_cgroup_calculate_protection(struct mem_cgroup *root,
- {
- 	unsigned long usage, parent_usage;
- 	struct mem_cgroup *parent;
-+	unsigned long memcg_emin, memcg_elow, parent_emin, parent_elow;
-+	unsigned long watermark;
- 
- 	if (mem_cgroup_disabled())
- 		return;
-@@ -6642,6 +6645,7 @@ void mem_cgroup_calculate_protection(struct mem_cgroup *root,
- 	if (!parent)
- 		return;
- 
-+	calc_protected_low(memcg);
- 	if (parent == root) {
- 		memcg->memory.emin = READ_ONCE(memcg->memory.min);
- 		memcg->memory.elow = READ_ONCE(memcg->memory.low);
-diff --git a/mm/page_counter.c b/mm/page_counter.c
-index 7d83641..18abfdd 100644
---- a/mm/page_counter.c
-+++ b/mm/page_counter.c
-@@ -83,6 +83,8 @@ void page_counter_charge(struct page_counter *counter, unsigned long nr_pages)
- 		 */
- 		if (new > READ_ONCE(c->watermark))
- 			WRITE_ONCE(c->watermark, new);
-+		if (new > READ_ONCE(c->decayed_watermark))
-+			WRITE_ONCE(c->decayed_watermark, new);
- 	}
+@@ -6355,6 +6355,38 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
+ 	return nbytes;
  }
  
-@@ -137,6 +139,8 @@ bool page_counter_try_charge(struct page_counter *counter,
- 		 */
- 		if (new > READ_ONCE(c->watermark))
- 			WRITE_ONCE(c->watermark, new);
-+		if (new > READ_ONCE(c->decayed_watermark))
-+			WRITE_ONCE(c->decayed_watermark, new);
- 	}
- 	return true;
++static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
++			      size_t nbytes, loff_t off)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
++	unsigned int nr_retries = MAX_RECLAIM_RETRIES;
++	unsigned long nr_to_reclaim, nr_reclaimed = 0;
++	int err;
++
++	buf = strstrip(buf);
++	err = page_counter_memparse(buf, "", &nr_to_reclaim);
++	if (err)
++		return err;
++
++	while (nr_reclaimed < nr_to_reclaim) {
++		unsigned long reclaimed;
++
++		if (signal_pending(current))
++			break;
++
++		reclaimed = try_to_free_mem_cgroup_pages(memcg,
++						nr_to_reclaim - nr_reclaimed,
++						GFP_KERNEL, true);
++
++		if (!reclaimed && !nr_retries--)
++			break;
++
++		nr_reclaimed += reclaimed;
++	}
++
++	return nbytes;
++}
++
+ static struct cftype memory_files[] = {
+ 	{
+ 		.name = "current",
+@@ -6413,6 +6445,11 @@ static struct cftype memory_files[] = {
+ 		.seq_show = memory_oom_group_show,
+ 		.write = memory_oom_group_write,
+ 	},
++	{
++		.name = "reclaim",
++		.flags = CFTYPE_NOT_ON_ROOT | CFTYPE_NS_DELEGATABLE,
++		.write = memory_reclaim,
++	},
+ 	{ }	/* terminate */
+ };
  
 -- 
-1.9.1
+2.35.1.1021.g381101b075-goog
 
