@@ -1,136 +1,211 @@
-From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -next 00/11] support concurrent sync io for bfq on a
- specail occasion
-Date: Fri, 1 Apr 2022 11:43:09 +0800
-Message-ID: <81cfac80-83f6-7381-d4ad-560dfcdd9a9d@huawei.com>
-References: <20220305091205.4188398-1-yukuai3@huawei.com>
- <e299180e-cdbd-0837-8478-5e397ac8166b@huawei.com>
- <11fda851-a552-97ea-d083-d0288c17ba53@huawei.com>
- <e78fc7c5-cf08-9fc7-3f81-7ff8aaf37673@huawei.com>
+From: Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
+Date: Thu, 31 Mar 2022 21:05:15 -0700
+Message-ID: <CAAPL-u8g2qkhdTQtFtBS3GNYz0WnyahWEXvR4g_OSaKv+7EozA@mail.gmail.com>
+References: <20220331084151.2600229-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <e78fc7c5-cf08-9fc7-3f81-7ff8aaf37673-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=B+CLss0WbItuifu72dHflWYaudPs9OpOIrtnBZ+LuaU=;
+        b=W4lP36K+Sb0fsBGicZNNHA2PdXSFLxGLOGu+QIo0Pr+K09Bfb/JQ9y7h29SJTwHCkL
+         qo9Meye8l/bh5ZdCafGJlboKfyAh3OTCZiwV615CLHt7foV27/crahdWIZpXP9o5zyDT
+         f4B0knRfleCmNsT7S/1gVtK/jnuLe8dMnvgnkEw7P3BsrmJSWJR0z6u8myMWpvrwhycC
+         K0MJjUxswzx2hsClKurU0lxBklqJnt5jCMfdXO/WkmQApUMQX+vefGDz6SReFNqKkDvo
+         OLqXgs1GpET++yDSsieKbkumlNIePUfHJvkrEdI24CUoKeH4Ge+57mvK0e8QEpJiPpQ6
+         0WeQ==
+In-Reply-To: <20220331084151.2600229-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-friendly ping ...
+On Thu, Mar 31, 2022 at 1:42 AM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>
+> Introduce an memcg interface to trigger memory reclaim on a memory cgroup.
+>
+> Use case: Proactive Reclaim
+> ---------------------------
+>
+> A userspace proactive reclaimer can continuously probe the memcg to
+> reclaim a small amount of memory. This gives more accurate and
+> up-to-date workingset estimation as the LRUs are continuously
+> sorted and can potentially provide more deterministic memory
+> overcommit behavior. The memory overcommit controller can provide
+> more proactive response to the changing behavior of the running
+> applications instead of being reactive.
+>
+> A userspace reclaimer's purpose in this case is not a complete replacement
+> for kswapd or direct reclaim, it is to proactively identify memory savings
+> opportunities and reclaim some amount of cold pages set by the policy
+> to free up the memory for more demanding jobs or scheduling new jobs.
+>
+> A user space proactive reclaimer is used in Google data centers.
+> Additionally, Meta's TMO paper recently referenced a very similar
+> interface used for user space proactive reclaim:
+> https://dl.acm.org/doi/pdf/10.1145/3503222.3507731
+>
+> Benefits of a user space reclaimer:
+> -----------------------------------
+>
+> 1) More flexible on who should be charged for the cpu of the memory
+> reclaim. For proactive reclaim, it makes more sense to be centralized.
+>
+> 2) More flexible on dedicating the resources (like cpu). The memory
+> overcommit controller can balance the cost between the cpu usage and
+> the memory reclaimed.
+>
+> 3) Provides a way to the applications to keep their LRUs sorted, so,
+> under memory pressure better reclaim candidates are selected. This also
+> gives more accurate and uptodate notion of working set for an
+> application.
+>
+> Why memory.high is not enough?
+> ------------------------------
+>
+> - memory.high can be used to trigger reclaim in a memcg and can
+>   potentially be used for proactive reclaim.
+>   However there is a big downside in using memory.high. It can potentially
+>   introduce high reclaim stalls in the target application as the
+>   allocations from the processes or the threads of the application can hit
+>   the temporary memory.high limit.
+>
+> - Userspace proactive reclaimers usually use feedback loops to decide
+>   how much memory to proactively reclaim from a workload. The metrics
+>   used for this are usually either refaults or PSI, and these metrics
+>   will become messy if the application gets throttled by hitting the
+>   high limit.
+>
+> - memory.high is a stateful interface, if the userspace proactive
+>   reclaimer crashes for any reason while triggering reclaim it can leave
+>   the application in a bad state.
+>
+> - If a workload is rapidly expanding, setting memory.high to proactively
+>   reclaim memory can result in actually reclaiming more memory than
+>   intended.
+>
+> The benefits of such interface and shortcomings of existing interface
+> were further discussed in this RFC thread:
+> https://lore.kernel.org/linux-mm/5df21376-7dd1-bf81-8414-32a73cea45dd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+>
+> Interface:
+> ----------
+>
+> Introducing a very simple memcg interface 'echo 10M > memory.reclaim' to
+> trigger reclaim in the target memory cgroup.
+>
+>
+> Possible Extensions:
+> --------------------
+>
+> - This interface can be extended with an additional parameter or flags
+>   to allow specifying one or more types of memory to reclaim from (e.g.
+>   file, anon, ..).
+>
+> - The interface can also be extended with a node mask to reclaim from
+>   specific nodes. This has use cases for reclaim-based demotion in memory
+>   tiering systens.
+>
+> - A similar per-node interface can also be added to support proactive
+>   reclaim and reclaim-based demotion in systems without memcg.
+>
+> For now, let's keep things simple by adding the basic functionality.
+>
+> [yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org: refreshed to current master, updated commit
+> message based on recent discussions and use cases]
+> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst |  9 ++++++
+>  mm/memcontrol.c                         | 37 +++++++++++++++++++++++++
+>  2 files changed, 46 insertions(+)
+>
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 69d7a6983f78..925aaabb2247 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1208,6 +1208,15 @@ PAGE_SIZE multiple when read back.
+>         high limit is used and monitored properly, this limit's
+>         utility is limited to providing the final safety net.
+>
+> +  memory.reclaim
+> +       A write-only file which exists on non-root cgroups.
+> +
+> +       This is a simple interface to trigger memory reclaim in the
+> +       target cgroup. Write the number of bytes to reclaim to this
+> +       file and the kernel will try to reclaim that much memory.
+> +       Please note that the kernel can over or under reclaim from
+> +       the target cgroup.
+> +
+>    memory.oom.group
+>         A read-write single value file which exists on non-root
+>         cgroups.  The default value is "0".
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 725f76723220..994849fab7df 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -6355,6 +6355,38 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
+>         return nbytes;
+>  }
+>
+> +static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+> +                             size_t nbytes, loff_t off)
+> +{
+> +       struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+> +       unsigned int nr_retries = MAX_RECLAIM_RETRIES;
+> +       unsigned long nr_to_reclaim, nr_reclaimed = 0;
+> +       int err;
+> +
+> +       buf = strstrip(buf);
+> +       err = page_counter_memparse(buf, "", &nr_to_reclaim);
+> +       if (err)
+> +               return err;
+> +
+> +       while (nr_reclaimed < nr_to_reclaim) {
+> +               unsigned long reclaimed;
+> +
+> +               if (signal_pending(current))
+> +                       break;
+> +
+> +               reclaimed = try_to_free_mem_cgroup_pages(memcg,
+> +                                               nr_to_reclaim - nr_reclaimed,
+> +                                               GFP_KERNEL, true);
+> +
+> +               if (!reclaimed && !nr_retries--)
+> +                       break;
+> +
+> +               nr_reclaimed += reclaimed;
+> +       }
+> +
+> +       return nbytes;
 
-在 2022/03/25 15:30, yukuai (C) 写道:
-> friendly ping ...
-> 
-> 在 2022/03/17 9:49, yukuai (C) 写道:
->> friendly ping ...
->>
->> 在 2022/03/11 14:31, yukuai (C) 写道:
->>> friendly ping ...
->>>
->>> 在 2022/03/05 17:11, Yu Kuai 写道:
->>>> Currently, bfq can't handle sync io concurrently as long as they
->>>> are not issued from root group. This is because
->>>> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
->>>> bfq_asymmetric_scenario().
->>>>
->>>> This patchset tries to support concurrent sync io if all the sync ios
->>>> are issued from the same cgroup:
->>>>
->>>> 1) Count root_group into 'num_groups_with_pending_reqs', patch 1-5;
->>>>
->>>> 2) Don't idle if 'num_groups_with_pending_reqs' is 1, patch 6;
->>>>
->>>> 3) Don't count the group if the group doesn't have pending requests,
->>>> while it's child groups may have pending requests, patch 7;
->>>>
->>>> This is because, for example:
->>>> if sync ios are issued from cgroup /root/c1/c2, root, c1 and c2
->>>> will all be counted into 'num_groups_with_pending_reqs',
->>>> which makes it impossible to handle sync ios concurrently.
->>>>
->>>> 4) Decrease 'num_groups_with_pending_reqs' when the last queue 
->>>> completes
->>>> all the requests, while child groups may still have pending
->>>> requests, patch 8-10;
->>>>
->>>> This is because, for example:
->>>> t1 issue sync io on root group, t2 and t3 issue sync io on the same
->>>> child group. num_groups_with_pending_reqs is 2 now.
->>>> After t1 stopped, num_groups_with_pending_reqs is still 2. sync io from
->>>> t2 and t3 still can't be handled concurrently.
->>>>
->>>> fio test script: startdelay is used to avoid queue merging
->>>> [global]
->>>> filename=/dev/nvme0n1
->>>> allow_mounted_write=0
->>>> ioengine=psync
->>>> direct=1
->>>> ioscheduler=bfq
->>>> offset_increment=10g
->>>> group_reporting
->>>> rw=randwrite
->>>> bs=4k
->>>>
->>>> [test1]
->>>> numjobs=1
->>>>
->>>> [test2]
->>>> startdelay=1
->>>> numjobs=1
->>>>
->>>> [test3]
->>>> startdelay=2
->>>> numjobs=1
->>>>
->>>> [test4]
->>>> startdelay=3
->>>> numjobs=1
->>>>
->>>> [test5]
->>>> startdelay=4
->>>> numjobs=1
->>>>
->>>> [test6]
->>>> startdelay=5
->>>> numjobs=1
->>>>
->>>> [test7]
->>>> startdelay=6
->>>> numjobs=1
->>>>
->>>> [test8]
->>>> startdelay=7
->>>> numjobs=1
->>>>
->>>> test result:
->>>> running fio on root cgroup
->>>> v5.17-rc6:       550 Mib/s
->>>> v5.17-rc6-patched: 550 Mib/s
->>>>
->>>> running fio on non-root cgroup
->>>> v5.17-rc6:       349 Mib/s
->>>> v5.17-rc6-patched: 550 Mib/s
->>>>
->>>> Yu Kuai (11):
->>>>    block, bfq: add new apis to iterate bfq entities
->>>>    block, bfq: apply news apis where root group is not expected
->>>>    block, bfq: cleanup for __bfq_activate_requeue_entity()
->>>>    block, bfq: move the increasement of 
->>>> 'num_groups_with_pending_reqs' to
->>>>      it's caller
->>>>    block, bfq: count root group into 'num_groups_with_pending_reqs'
->>>>    block, bfq: do not idle if only one cgroup is activated
->>>>    block, bfq: only count parent bfqg when bfqq is activated
->>>>    block, bfq: record how many queues have pending requests in 
->>>> bfq_group
->>>>    block, bfq: move forward __bfq_weights_tree_remove()
->>>>    block, bfq: decrease 'num_groups_with_pending_reqs' earlier
->>>>    block, bfq: cleanup bfqq_group()
->>>>
->>>>   block/bfq-cgroup.c  | 13 +++----
->>>>   block/bfq-iosched.c | 87 
->>>> +++++++++++++++++++++++----------------------
->>>>   block/bfq-iosched.h | 41 +++++++++++++--------
->>>>   block/bfq-wf2q.c    | 56 +++++++++++++++--------------
->>>>   4 files changed, 106 insertions(+), 91 deletions(-)
->>>>
+It is better to return an error code (e.g. -EBUSY) when
+memory_reclaim() fails to reclaim nr_to_reclaim bytes of memory,
+except if the cgroup memory usage is already 0.  We can also return
+-EINVAL if nr_to_reclaim is too large (e.g. > limit).
+
+> +}
+> +
+>  static struct cftype memory_files[] = {
+>         {
+>                 .name = "current",
+> @@ -6413,6 +6445,11 @@ static struct cftype memory_files[] = {
+>                 .seq_show = memory_oom_group_show,
+>                 .write = memory_oom_group_write,
+>         },
+> +       {
+> +               .name = "reclaim",
+> +               .flags = CFTYPE_NOT_ON_ROOT | CFTYPE_NS_DELEGATABLE,
+> +               .write = memory_reclaim,
+> +       },
+>         { }     /* terminate */
+>  };
+>
+> --
+> 2.35.1.1021.g381101b075-goog
+>
