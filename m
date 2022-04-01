@@ -1,239 +1,54 @@
-From: Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: Vaibhav Jain <vaibhav@linux.ibm.com>
 Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
-Date: Thu, 31 Mar 2022 23:01:52 -0700
-Message-ID: <CAAPL-u82EZaxty3qdSYO=xrjBYSejNcvafQKyn1xKF=_UwXBbg@mail.gmail.com>
-References: <20220331084151.2600229-1-yosryahmed@google.com> <YkXkA+Oh1Bx33PrU@carbon.dhcp.thefacebook.com>
+Date: Fri, 01 Apr 2022 14:09:25 +0530
+Message-ID: <874k3d6vuq.fsf@vajain21.in.ibm.com>
+References: <20220331084151.2600229-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=XCQogSO+OfQ1sQZIBbyR5sB6BN62JapXBysf7xbNdFM=;
-        b=WcxfXkHfqkWMH8NzwYnDbFDQrtiIfVncrQpugkatih0ZARHjEPk/pVgfdYyyDSuUc8
-         jlVE9so5wHjQWLT0wLMm2SBrDyZ+l5PIJVEuXib7s5u8ptOQIg+va8Nk0ft3tDnoqXmQ
-         MXqQePXWd9RpKiA7z0hwsOBfNI+0nwp1DLARFdes99kzzYB9rhD4gDZvRcS2XOvuf5M/
-         yPnOc0yzFcgWklX/bBb8bLhteFwhYa1DybzBufe+DWdL3JSDCAewpKbdupqcbwjwOtov
-         Wffpti1yfLI/665TXuMlDmlom1mhR6eZOjZyzhMi5F3NzDtO+o1rwtJLdFRHcTLg1Vj2
-         aCgQ==
-In-Reply-To: <YkXkA+Oh1Bx33PrU-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : in-reply-to : references : date : message-id : mime-version :
+ content-type; s=pp1; bh=G5ux5PrsqjCTdlNQQ3/bauu6+cMr/v2RVE88yklbG+E=;
+ b=Qnyfejn1aUQcBYsQhL85YqKJSbN56nBITnvu9+GgL94Qa/kNf4DYzoNNM3W1GMsS/qmi
+ VejqjlbGKw+W3HaXb+j8d9eYn7Fj01jAjbnJEZjTirOTsUNbrn+29S4Fv9ftx6smO+Fr
+ Ujsm0Tb9gaB6XhsyeKOSU+SOC9rJu1VvbyCENboE4ZUHuOpmQY+2dPcveCREuVb1szdC
+ 0fIHTSvR9y46SQ5K6Jvhl+FgUYG61lyYCLAgir8Xj3TXV7t3oZp2wGiVcro6TK0dhGEE
+ uEhEZI6lcGqbfnFbSLynbzcmOMHECGyNOyHxM1RqsRSYoZWc3EKVBoR4orIWS3sr5rKA bA== 
+In-Reply-To: <20220331084151.2600229-1-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Yosry Ahmed <yosryahmed@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>, Yosry Ahmed <yosryahmed@google.com>
 
-On Thu, Mar 31, 2022 at 10:25 AM Roman Gushchin
-<roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
+
+Yosry Ahmed <yosryahmed@google.com> writes:
+> From: Shakeel Butt <shakeelb@google.com>
 >
-> On Thu, Mar 31, 2022 at 08:41:51AM +0000, Yosry Ahmed wrote:
-> > From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> >
-> > Introduce an memcg interface to trigger memory reclaim on a memory cgroup.
-> >
-> > Use case: Proactive Reclaim
-> > ---------------------------
-> >
-> > A userspace proactive reclaimer can continuously probe the memcg to
-> > reclaim a small amount of memory. This gives more accurate and
-> > up-to-date workingset estimation as the LRUs are continuously
-> > sorted and can potentially provide more deterministic memory
-> > overcommit behavior. The memory overcommit controller can provide
-> > more proactive response to the changing behavior of the running
-> > applications instead of being reactive.
-> >
-> > A userspace reclaimer's purpose in this case is not a complete replacement
-> > for kswapd or direct reclaim, it is to proactively identify memory savings
-> > opportunities and reclaim some amount of cold pages set by the policy
-> > to free up the memory for more demanding jobs or scheduling new jobs.
-> >
-> > A user space proactive reclaimer is used in Google data centers.
-> > Additionally, Meta's TMO paper recently referenced a very similar
-> > interface used for user space proactive reclaim:
-> > https://dl.acm.org/doi/pdf/10.1145/3503222.3507731
-> >
-> > Benefits of a user space reclaimer:
-> > -----------------------------------
-> >
-> > 1) More flexible on who should be charged for the cpu of the memory
-> > reclaim. For proactive reclaim, it makes more sense to be centralized.
-> >
-> > 2) More flexible on dedicating the resources (like cpu). The memory
-> > overcommit controller can balance the cost between the cpu usage and
-> > the memory reclaimed.
-> >
-> > 3) Provides a way to the applications to keep their LRUs sorted, so,
-> > under memory pressure better reclaim candidates are selected. This also
-> > gives more accurate and uptodate notion of working set for an
-> > application.
-> >
-> > Why memory.high is not enough?
-> > ------------------------------
-> >
-> > - memory.high can be used to trigger reclaim in a memcg and can
-> >   potentially be used for proactive reclaim.
-> >   However there is a big downside in using memory.high. It can potentially
-> >   introduce high reclaim stalls in the target application as the
-> >   allocations from the processes or the threads of the application can hit
-> >   the temporary memory.high limit.
-> >
-> > - Userspace proactive reclaimers usually use feedback loops to decide
-> >   how much memory to proactively reclaim from a workload. The metrics
-> >   used for this are usually either refaults or PSI, and these metrics
-> >   will become messy if the application gets throttled by hitting the
-> >   high limit.
-> >
-> > - memory.high is a stateful interface, if the userspace proactive
-> >   reclaimer crashes for any reason while triggering reclaim it can leave
-> >   the application in a bad state.
-> >
-> > - If a workload is rapidly expanding, setting memory.high to proactively
-> >   reclaim memory can result in actually reclaiming more memory than
-> >   intended.
-> >
-> > The benefits of such interface and shortcomings of existing interface
-> > were further discussed in this RFC thread:
-> > https://lore.kernel.org/linux-mm/5df21376-7dd1-bf81-8414-32a73cea45dd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
->
-> Hello!
->
-> I'm totally up for the proposed feature! It makes total sense and is proved
-> to be useful, let's add it.
->
-> >
-> > Interface:
-> > ----------
-> >
-> > Introducing a very simple memcg interface 'echo 10M > memory.reclaim' to
-> > trigger reclaim in the target memory cgroup.
-> >
-> >
-> > Possible Extensions:
-> > --------------------
-> >
-> > - This interface can be extended with an additional parameter or flags
-> >   to allow specifying one or more types of memory to reclaim from (e.g.
-> >   file, anon, ..).
-> >
-> > - The interface can also be extended with a node mask to reclaim from
-> >   specific nodes. This has use cases for reclaim-based demotion in memory
-> >   tiering systens.
-> >
-> > - A similar per-node interface can also be added to support proactive
-> >   reclaim and reclaim-based demotion in systems without memcg.
->
-> Maybe an option to specify a timeout? That might simplify the userspace part.
+> Introduce an memcg interface to trigger memory reclaim on a memory cgroup.
+<snip>
 
-A timeout is a good idea.  I think it can be added as an extension,
-similar to other extensions.
+> +
+> +	while (nr_reclaimed < nr_to_reclaim) {
+> +		unsigned long reclaimed;
+> +
+> +		if (signal_pending(current))
+> +			break;
+> +
+> +		reclaimed = try_to_free_mem_cgroup_pages(memcg,
+> +						nr_to_reclaim - nr_reclaimed,
+> +						GFP_KERNEL, true);
+> +
+> +		if (!reclaimed && !nr_retries--)
+> +			break;
+> +
+> +		nr_reclaimed += reclaimed;
 
-> Also, please please add a test to selftests/cgroup/memcg tests.
-> It will also provide an example on how the userspace can use the feature.
+I think there should be a cond_resched() in this loop before
+try_to_free_mem_cgroup_pages() to have better chances of reclaim
+succeding early.
 
-+1
+<snip>
 
-> >
-> > For now, let's keep things simple by adding the basic functionality.
->
-> What I'm worried about is how we gonna extend it? How do you see the interface
-> with 2-3 extensions from the list above? All these extensions look very
-> reasonable to me, so we'll likely have to implement them soon. So let's think
-> about the extensibility now.
-
-For the first two extensions (flags and nodemask), they can be
-implemented as additional positional arguments of memory.reclaim.
-
-The non-memcg use cases will need a different interface, which can be
-either a sysfs file or a syscall.
-
-> I wonder if it makes more sense to introduce a sys_reclaim() syscall instead?
-> In the end, such a feature might make sense on the system level too.
-> Yes, there is the drop_caches sysctl, but it's too radical for many cases.
-
-sys_reclaim() syscall is a good proposal for non-memcg use cases.  But
-for memcg-based proactive reclaim,  memory.reclaim should be more
-natural. It is not common to have cgroup as a syscall argument.
-
-> >
-> > [yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org: refreshed to current master, updated commit
-> > message based on recent discussions and use cases]
-> > Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > ---
-> >  Documentation/admin-guide/cgroup-v2.rst |  9 ++++++
-> >  mm/memcontrol.c                         | 37 +++++++++++++++++++++++++
-> >  2 files changed, 46 insertions(+)
-> >
-> > diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> > index 69d7a6983f78..925aaabb2247 100644
-> > --- a/Documentation/admin-guide/cgroup-v2.rst
-> > +++ b/Documentation/admin-guide/cgroup-v2.rst
-> > @@ -1208,6 +1208,15 @@ PAGE_SIZE multiple when read back.
-> >       high limit is used and monitored properly, this limit's
-> >       utility is limited to providing the final safety net.
-> >
-> > +  memory.reclaim
-> > +     A write-only file which exists on non-root cgroups.
-> > +
-> > +     This is a simple interface to trigger memory reclaim in the
-> > +     target cgroup. Write the number of bytes to reclaim to this
-> > +     file and the kernel will try to reclaim that much memory.
-> > +     Please note that the kernel can over or under reclaim from
-> > +     the target cgroup.
-> > +
-> >    memory.oom.group
-> >       A read-write single value file which exists on non-root
-> >       cgroups.  The default value is "0".
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 725f76723220..994849fab7df 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -6355,6 +6355,38 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
-> >       return nbytes;
-> >  }
-> >
-> > +static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
-> > +                           size_t nbytes, loff_t off)
-> > +{
-> > +     struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-> > +     unsigned int nr_retries = MAX_RECLAIM_RETRIES;
-> > +     unsigned long nr_to_reclaim, nr_reclaimed = 0;
-> > +     int err;
-> > +
-> > +     buf = strstrip(buf);
-> > +     err = page_counter_memparse(buf, "", &nr_to_reclaim);
-> > +     if (err)
-> > +             return err;
-> > +
-> > +     while (nr_reclaimed < nr_to_reclaim) {
-> > +             unsigned long reclaimed;
-> > +
-> > +             if (signal_pending(current))
-> > +                     break;
-> > +
-> > +             reclaimed = try_to_free_mem_cgroup_pages(memcg,
-> > +                                             nr_to_reclaim - nr_reclaimed,
-> > +                                             GFP_KERNEL, true);
-> > +
-> > +             if (!reclaimed && !nr_retries--)
-> > +                     break;
-> > +
-> > +             nr_reclaimed += reclaimed;
-> > +     }
-> > +
-> > +     return nbytes;
-> > +}
-> > +
-> >  static struct cftype memory_files[] = {
-> >       {
-> >               .name = "current",
-> > @@ -6413,6 +6445,11 @@ static struct cftype memory_files[] = {
-> >               .seq_show = memory_oom_group_show,
-> >               .write = memory_oom_group_write,
-> >       },
-> > +     {
-> > +             .name = "reclaim",
-> > +             .flags = CFTYPE_NOT_ON_ROOT | CFTYPE_NS_DELEGATABLE,
-> > +             .write = memory_reclaim,
->
-> Btw, why not on root?
+-- 
+Cheers
+~ Vaibhav
