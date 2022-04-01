@@ -1,7 +1,7 @@
 From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
-Date: Fri, 1 Apr 2022 02:11:51 -0700
-Message-ID: <CAJD7tkYVpnf1+sa9vRAQCw5H0LUH6zE6_yhNAFwKF3sW0BLzEA@mail.gmail.com>
+Date: Fri, 1 Apr 2022 02:15:41 -0700
+Message-ID: <CAJD7tkZxqWg2NRi=83wSWLiykZBfrP8Kx_C5JWy48=rZoBWoHw@mail.gmail.com>
 References: <20220331084151.2600229-1-yosryahmed@google.com> <YkXkA+Oh1Bx33PrU@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -9,13 +9,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=TTgjpbxi+atnp9axNVFkq7OGFubJ8g3qn22nFzknXc0=;
-        b=BJ7yd3RqMpeyZP/nXaJIqtS0xR9zz6WFUei6+PbJx29crBeMBoajAHTDBFqT/NP/E9
-         oDskgt1nDRh5HaFRpNsKLfCBPspbWgH8cCGdFcCBdjHXQsgZe7KYIL2BHqwf89YC2KqE
-         FU1D88az6OaXiSSpAJa0xhtQvr3n9BKcuFwA/YBZ/Jyf7/x9liXJJ0BGx8kvbP4eC8sV
-         bnF/eQBu+fZeYpJPE1wiLaT1wHA93zccpcqbztUDXVgRcYURXvHnX+RbafbV1iWb4j5D
-         gn0lTg7NhGi/NMUl3PMdZ11PMU3EVUfR9yFC1YuR3rOGIjL/88llWWZvDc4Oi9MsFlpW
-         BsNQ==
+        bh=mVtM4JSAbem5vI9+iuqfBK73jb3O87WJ5L8y1a9lG0k=;
+        b=qBhXowGyC8QPVrqYIiBrDRqGidNxRPybkTr1qpdVQuxv2f1BsLDxISO4qXFuFcNK7k
+         CjkH1IIsBGXG5QGrrQilYhMyUyVQ6Ffguxz8o4aPErdkR+RyesWbakUcwsTVHuRnggU5
+         41PA8xIK8/aT4fT3MRjvLBsVrYLlprc8AQiOzUWqTvvbWJjGQ6I/nhZQoH/ahBpr5noN
+         O2+Eq72KeLQLXtISp5EFkDKwDOvhw5J4Wx3vr2sHnwgWl4dGDROEQ3tfLw7yGl0x5C+q
+         XLbIfJS6nMf3DsP5oxD6k4cHALXNs2ggeBrQWfkIHsrAf++kuBxMf6i5Pqxf1SogT8Mo
+         nUVg==
 In-Reply-To: <YkXkA+Oh1Bx33PrU-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -126,15 +126,6 @@ On Thu, Mar 31, 2022 at 10:25 AM Roman Gushchin
 > Also, please please add a test to selftests/cgroup/memcg tests.
 > It will also provide an example on how the userspace can use the feature.
 >
-
-Hi Roman, thanks for taking the time to review this!
-
-A timeout can be a good extension, I will add it to the commit message
-in the next version in possible extensions.
-
-I will add a test in v2, thanks!
-
->
 > >
 > > For now, let's keep things simple by adding the basic functionality.
 >
@@ -143,24 +134,10 @@ I will add a test in v2, thanks!
 > reasonable to me, so we'll likely have to implement them soon. So let's think
 > about the extensibility now.
 >
-
-My idea is to have these extensions as optional positional arguments
-(like Wei suggested), so that the interface does not get too
-complicated for users who don't care about tuning these options. If
-this is the case then I think there is nothing to worry about.
-Otherwise, if you think some of these options make sense to be a
-required argument instead, we can rethink the initial interface.
-
 > I wonder if it makes more sense to introduce a sys_reclaim() syscall instead?
 > In the end, such a feature might make sense on the system level too.
 > Yes, there is the drop_caches sysctl, but it's too radical for many cases.
 >
-
-I think in the RFC discussion there was consensus to add both a
-per-memcg knob, as well as per-node / per-system knobs (through sysfs
-or syscalls) later. Wei also points out that it's not common for a
-syscall to have a cgroup argument.
-
 > >
 > > [yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org: refreshed to current master, updated commit
 > > message based on recent discussions and use cases]
@@ -244,3 +221,11 @@ syscall to have a cgroup argument.
 > > +             .write = memory_reclaim,
 >
 > Btw, why not on root?
+
+I missed the root question in my first reply. I think this was
+originally modeled after the memory.high interface, but I don't know
+if there are other reasons. Shakeel would know better.
+
+AFAIK this should work naturally on root as well, but I think it makes
+more sense then to use a global interface (hopefully introduced soon)?
+I don't have an opinion here let me know what you prefer for v2.
