@@ -1,77 +1,136 @@
-From: Wei Xu <weixugc@google.com>
-Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
-Date: Thu, 31 Mar 2022 20:38:38 -0700
-Message-ID: <CAAPL-u-_Da0qe7h_o70HCz4gPtjT8_bjx4rVNdgKZh3KNruzpA@mail.gmail.com>
-References: <20220331084151.2600229-1-yosryahmed@google.com> <20220331173350.1fe09370479a4a6f916b477d@linux-foundation.org>
+From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -next 00/11] support concurrent sync io for bfq on a
+ specail occasion
+Date: Fri, 1 Apr 2022 11:43:09 +0800
+Message-ID: <81cfac80-83f6-7381-d4ad-560dfcdd9a9d@huawei.com>
+References: <20220305091205.4188398-1-yukuai3@huawei.com>
+ <e299180e-cdbd-0837-8478-5e397ac8166b@huawei.com>
+ <11fda851-a552-97ea-d083-d0288c17ba53@huawei.com>
+ <e78fc7c5-cf08-9fc7-3f81-7ff8aaf37673@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=hJ9w0vjGF60hV1jwTCwkmqKMT8MPf1xtJXL++UES4qY=;
-        b=sdZWMtzHnJv1VHTyDpKpYUwNhjIuI9a7tcXI/FgRTIIZ5ukpZ4YE1gzZ4NIwUJ/yLW
-         ontK0twBtMRgMUAuB3XoVPBxkx1u8ljBY3neVZ/ZbKwoxvvOmtITTYduYFewRSwCrzgg
-         9ZgIB9ihjVZADAfyBSTxCQxVJHg0wEwL+QsxHCNc5OYHJcDV1fFk4tAcv81F2UhtPley
-         Hncdj/WWY39C2l70OUJY7Tby2YvHAG4c/hVHDFx4R78Dj60TZX/eDiMRa82AM73wK7wh
-         xP5FKWMZLhlqm3Z4lOn+c0+dLNADzkK1dadFETFvblqC8MQuUarqI4R43OmYEFbg22nl
-         MCwg==
-In-Reply-To: <20220331173350.1fe09370479a4a6f916b477d@linux-foundation.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <e78fc7c5-cf08-9fc7-3f81-7ff8aaf37673-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Yosry Ahmed <yosryahmed@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Greg Thelen <gthelen@google.com>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Thu, Mar 31, 2022 at 5:33 PM Andrew Morton <akpm@linux-foundation.org> wrote:
->
-> On Thu, 31 Mar 2022 08:41:51 +0000 Yosry Ahmed <yosryahmed@google.com> wrote:
->
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -6355,6 +6355,38 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
-> >       return nbytes;
-> >  }
-> >
-> > +static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
-> > +                           size_t nbytes, loff_t off)
-> > +{
-> > +     struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-> > +     unsigned int nr_retries = MAX_RECLAIM_RETRIES;
-> > +     unsigned long nr_to_reclaim, nr_reclaimed = 0;
-> > +     int err;
-> > +
-> > +     buf = strstrip(buf);
-> > +     err = page_counter_memparse(buf, "", &nr_to_reclaim);
-> > +     if (err)
-> > +             return err;
-> > +
-> > +     while (nr_reclaimed < nr_to_reclaim) {
-> > +             unsigned long reclaimed;
-> > +
-> > +             if (signal_pending(current))
-> > +                     break;
-> > +
-> > +             reclaimed = try_to_free_mem_cgroup_pages(memcg,
-> > +                                             nr_to_reclaim - nr_reclaimed,
-> > +                                             GFP_KERNEL, true);
-> > +
-> > +             if (!reclaimed && !nr_retries--)
-> > +                     break;
-> > +
-> > +             nr_reclaimed += reclaimed;
-> > +     }
->
-> Is there any way in which this can be provoked into triggering the
-> softlockup detector?
+friendly ping ...
 
-memory.reclaim is similar to memory.high w.r.t. reclaiming memory,
-except that memory.reclaim is stateless, while the kernel remembers
-the state set by memory.high.  So memory.reclaim should not bring in
-any new risks of triggering soft lockup, if any.
-
-> Is it optimal to do the MAX_RECLAIM_RETRIES loop in the kernel?
-> Would additional flexibility be gained by letting userspace handle
-> retrying?
-
-I agree it is better to retry from the userspace.
+在 2022/03/25 15:30, yukuai (C) 写道:
+> friendly ping ...
+> 
+> 在 2022/03/17 9:49, yukuai (C) 写道:
+>> friendly ping ...
+>>
+>> 在 2022/03/11 14:31, yukuai (C) 写道:
+>>> friendly ping ...
+>>>
+>>> 在 2022/03/05 17:11, Yu Kuai 写道:
+>>>> Currently, bfq can't handle sync io concurrently as long as they
+>>>> are not issued from root group. This is because
+>>>> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
+>>>> bfq_asymmetric_scenario().
+>>>>
+>>>> This patchset tries to support concurrent sync io if all the sync ios
+>>>> are issued from the same cgroup:
+>>>>
+>>>> 1) Count root_group into 'num_groups_with_pending_reqs', patch 1-5;
+>>>>
+>>>> 2) Don't idle if 'num_groups_with_pending_reqs' is 1, patch 6;
+>>>>
+>>>> 3) Don't count the group if the group doesn't have pending requests,
+>>>> while it's child groups may have pending requests, patch 7;
+>>>>
+>>>> This is because, for example:
+>>>> if sync ios are issued from cgroup /root/c1/c2, root, c1 and c2
+>>>> will all be counted into 'num_groups_with_pending_reqs',
+>>>> which makes it impossible to handle sync ios concurrently.
+>>>>
+>>>> 4) Decrease 'num_groups_with_pending_reqs' when the last queue 
+>>>> completes
+>>>> all the requests, while child groups may still have pending
+>>>> requests, patch 8-10;
+>>>>
+>>>> This is because, for example:
+>>>> t1 issue sync io on root group, t2 and t3 issue sync io on the same
+>>>> child group. num_groups_with_pending_reqs is 2 now.
+>>>> After t1 stopped, num_groups_with_pending_reqs is still 2. sync io from
+>>>> t2 and t3 still can't be handled concurrently.
+>>>>
+>>>> fio test script: startdelay is used to avoid queue merging
+>>>> [global]
+>>>> filename=/dev/nvme0n1
+>>>> allow_mounted_write=0
+>>>> ioengine=psync
+>>>> direct=1
+>>>> ioscheduler=bfq
+>>>> offset_increment=10g
+>>>> group_reporting
+>>>> rw=randwrite
+>>>> bs=4k
+>>>>
+>>>> [test1]
+>>>> numjobs=1
+>>>>
+>>>> [test2]
+>>>> startdelay=1
+>>>> numjobs=1
+>>>>
+>>>> [test3]
+>>>> startdelay=2
+>>>> numjobs=1
+>>>>
+>>>> [test4]
+>>>> startdelay=3
+>>>> numjobs=1
+>>>>
+>>>> [test5]
+>>>> startdelay=4
+>>>> numjobs=1
+>>>>
+>>>> [test6]
+>>>> startdelay=5
+>>>> numjobs=1
+>>>>
+>>>> [test7]
+>>>> startdelay=6
+>>>> numjobs=1
+>>>>
+>>>> [test8]
+>>>> startdelay=7
+>>>> numjobs=1
+>>>>
+>>>> test result:
+>>>> running fio on root cgroup
+>>>> v5.17-rc6:       550 Mib/s
+>>>> v5.17-rc6-patched: 550 Mib/s
+>>>>
+>>>> running fio on non-root cgroup
+>>>> v5.17-rc6:       349 Mib/s
+>>>> v5.17-rc6-patched: 550 Mib/s
+>>>>
+>>>> Yu Kuai (11):
+>>>>    block, bfq: add new apis to iterate bfq entities
+>>>>    block, bfq: apply news apis where root group is not expected
+>>>>    block, bfq: cleanup for __bfq_activate_requeue_entity()
+>>>>    block, bfq: move the increasement of 
+>>>> 'num_groups_with_pending_reqs' to
+>>>>      it's caller
+>>>>    block, bfq: count root group into 'num_groups_with_pending_reqs'
+>>>>    block, bfq: do not idle if only one cgroup is activated
+>>>>    block, bfq: only count parent bfqg when bfqq is activated
+>>>>    block, bfq: record how many queues have pending requests in 
+>>>> bfq_group
+>>>>    block, bfq: move forward __bfq_weights_tree_remove()
+>>>>    block, bfq: decrease 'num_groups_with_pending_reqs' earlier
+>>>>    block, bfq: cleanup bfqq_group()
+>>>>
+>>>>   block/bfq-cgroup.c  | 13 +++----
+>>>>   block/bfq-iosched.c | 87 
+>>>> +++++++++++++++++++++++----------------------
+>>>>   block/bfq-iosched.h | 41 +++++++++++++--------
+>>>>   block/bfq-wf2q.c    | 56 +++++++++++++++--------------
+>>>>   4 files changed, 106 insertions(+), 91 deletions(-)
+>>>>
