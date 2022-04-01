@@ -1,66 +1,43 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
-Date: Thu, 31 Mar 2022 17:33:50 -0700
-Message-ID: <20220331173350.1fe09370479a4a6f916b477d@linux-foundation.org>
-References: <20220331084151.2600229-1-yosryahmed@google.com>
+From: Wei Yang <richard.weiyang@gmail.com>
+Subject: Re: [PATCH] mm/memcg: remove unneeded nr_scanned
+Date: Fri, 1 Apr 2022 01:06:50 +0000
+Message-ID: <20220401010650.reelvkf2pbxkf4gl@master>
+References: <20220328114144.53389-1-linmiaohe@huawei.com>
+Reply-To: Wei Yang <richard.weiyang@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1648773231;
-        bh=og4lU4dyrILrjlo8MbO414DxVtLpdEFdDjD3sS0QOBw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=U5o07Jxr93Bh9u6zSuP89IQcL92kcAZ770UBXZgKYQhmAKYXLDrkqGlg6AvIB0FHv
-         14Swf4CBx/hO7N8YcVLLInn2Sfp3NjT3dBk628qB+FYc9C4Z8jZZDhJLwXD6RMXoFP
-         B5npudLXVCs+sY72+8rR2+3cyLmHtzPdxAJZykjk=
-In-Reply-To: <20220331084151.2600229-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:reply-to:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=c4Oi4+nEs2DuySa9fWn+II5/KnAf5RCOAxddnuEBjOo=;
+        b=lfJTMOnXLxxBegeJG4M42CyKemTU/7xuAJV2g/QkGorJ5kHTAh/M5uKr6kG4xoBNfR
+         L1xhi5B2ZyPy/f0mZ5YRo3ikrGrYDzZRu3RAdN18kTWK+UujBZoPAObDDm+F9YRAGl+l
+         FOw9eob8rUJZ/k8ShN5GTEUW0dc6D+LeL5F/EO/BDprdVBrO5HTrWdE9CSvV6SdLG+X/
+         Gpy6uKexODNQePKE2QVgrMi3JfsQhqsK4g6innaeK6jizr/lMKYbhtOZS4+ONqPy8B3m
+         wZWZqn/cMxIqqWyzj7B2Nyk02w5F6p87DndFTpuoA+usFGlgs94EnlTR30hzdxOktTrD
+         hiaQ==
+Content-Disposition: inline
+In-Reply-To: <20220328114144.53389-1-linmiaohe@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Miaohe Lin <linmiaohe@huawei.com>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Thu, 31 Mar 2022 08:41:51 +0000 Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+On Mon, Mar 28, 2022 at 07:41:44PM +0800, Miaohe Lin wrote:
+>The local variable nr_scanned is unneeded as mem_cgroup_soft_reclaim always
+>does *total_scanned += nr_scanned. So we can pass total_scanned directly to
+>the mem_cgroup_soft_reclaim to simplify the code and save some cpu cycles
+>of adding nr_scanned to total_scanned.
+>
+>Signed-off-by: Miaohe Lin <linmiaohe@huawei.com>
+>---
 
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -6355,6 +6355,38 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
->  	return nbytes;
->  }
->  
-> +static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
-> +			      size_t nbytes, loff_t off)
-> +{
-> +	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-> +	unsigned int nr_retries = MAX_RECLAIM_RETRIES;
-> +	unsigned long nr_to_reclaim, nr_reclaimed = 0;
-> +	int err;
-> +
-> +	buf = strstrip(buf);
-> +	err = page_counter_memparse(buf, "", &nr_to_reclaim);
-> +	if (err)
-> +		return err;
-> +
-> +	while (nr_reclaimed < nr_to_reclaim) {
-> +		unsigned long reclaimed;
-> +
-> +		if (signal_pending(current))
-> +			break;
-> +
-> +		reclaimed = try_to_free_mem_cgroup_pages(memcg,
-> +						nr_to_reclaim - nr_reclaimed,
-> +						GFP_KERNEL, true);
-> +
-> +		if (!reclaimed && !nr_retries--)
-> +			break;
-> +
-> +		nr_reclaimed += reclaimed;
-> +	}
+Reviewed-by: Wei Yang <richard.weiyang@gmail.com>
 
-Is there any way in which this can be provoked into triggering the
-softlockup detector?
+Thanks
 
-Is it optimal to do the MAX_RECLAIM_RETRIES loop in the kernel? 
-Would additional flexibility be gained by letting userspace handle
-retrying?
-
-
+-- 
+Wei Yang
+Help you, Help me
