@@ -1,56 +1,136 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
-Date: Fri, 1 Apr 2022 17:51:41 -0400
-Message-ID: <Ykdz7fiMFZeFltYy@cmpxchg.org>
-References: <YkdrEG5FlL7Gq2Vi@cmpxchg.org>
- <243A0156-D26A-47C9-982A-C8B0CDD69DA2@linux.dev>
+From: Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC PATCH] cgroup: introduce dynamic protection for memcg
+Date: Sat, 2 Apr 2022 11:21:18 +0800
+Message-ID: <CAGWkznFZbz6TJM=kceTsNrAKu10_aXWf0=pbXXeNh3cCw7OJ4A@mail.gmail.com>
+References: <1648713656-24254-1-git-send-email-zhaoyang.huang@unisoc.com>
+ <YkVt0m+VxnXgnulq@dhcp22.suse.cz> <CAGWkznF4qb2EP3=xVamKO8qk08vaFg9JeHD7g80xvBfxm39Hkg@mail.gmail.com>
+ <YkWR8t8yEe6xyzCM@dhcp22.suse.cz> <CAJuCfpFgi+Dph-dcDAvGQXwgeZVDBhok1UQ3X5kxFEfPQnxSSg@mail.gmail.com>
+ <CAGWkznHyAG1wZcUrGE4-amptT_MkSnpZCrDLy0vUWBm3z2cmJw@mail.gmail.com> <CAJuCfpEyDqiB2a+KqC1+Un0UJB1m3c0Aej6y3Umna3fdCPhvaQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=M11X+y56T/1F4fHNq5auQu00TlcNFHXDYbY/RsKteOE=;
-        b=c99U3qkEZHhIEc7ajhsZpxJqU4l3cAi/NL5cixEEbUy7C6XoKYSnxPRQBhDUZTmgW3
-         CdaWd0g1Bby07fp/jIyG1J3+95Fzgp/LQjARdfXbFBUkPZqyz7od9HefPpO8KeihaS2q
-         AlvwqXjClIn82Ow/qtMIqMEuy5CmEAoKGT4g+DwYdedW4fXEssdeJNdj65X6UuIG3Gye
-         uo1vCgIZbKpkm4ga/owAOGsj/OUuejccn7DdhxMou/c44twsSE4v7r5tzRnQ3jKJpheT
-         vGlmiuBEeWfJ6E0nzDdCP0Neo+0FVxArhDDUs374m/wmtChQS97scg1pGgtlfoHSbhwi
-         XX8Q==
-Content-Disposition: inline
-In-Reply-To: <243A0156-D26A-47C9-982A-C8B0CDD69DA2@linux.dev>
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=jmwCIqyPXnCB8aA5w+kz04qMXqDkkG33h9HD7X6PkyE=;
+        b=Es64RWPEOMaeUpsTBsp9QH8SB0bTj+XPwPQVv+sjmZQ1aJBaPnYGsq8c+Uy7XOMGtP
+         LEsk1MmN8KAZ9r1EtKVWw7XQ54XW3BEEQGGAAN/xVyMstrKhZ03d6MBD7GhxYMiE2hwV
+         my4S7GUbgUaEQ4ieOpwX7MorMufPrHPiQaoi3YOr/QUSdwLLCLkPu1iMoTtqmflRd441
+         jQoboPhRpY28knGoYz++639zH09EBeFHXFLHv8uQ69pW83wM3Y5PNyqN9w8dRKAaMEH8
+         GymvHjC6LcuOsiBTSZvemZIa3crKu9ddu09nOPbIu7IQe3Dw4xL45KBG1+5720KDS3tI
+         AlPw==
+In-Reply-To: <CAJuCfpEyDqiB2a+KqC1+Un0UJB1m3c0Aej6y3Umna3fdCPhvaQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Roman Gushchin <roman.gushchin@linux.dev>
-Cc: Yosry Ahmed <yosryahmed@google.com>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Linux-MM <linux-mm@kvack.org>, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:MEMORY MANAGEMENT" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ke Wang <ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
 
-On Fri, Apr 01, 2022 at 02:21:52PM -0700, Roman Gushchin wrote:
-> > On Apr 1, 2022, at 2:13 PM, Johannes Weiner <hannes@cmpxchg.org> wrote:
-> > 
-> > ﻿On Fri, Apr 01, 2022 at 11:39:30AM -0700, Roman Gushchin wrote:
-> >> The interface you're proposing is not really extensible, so we'll likely need to
-> >> introduce a new interface like memory.reclaim_ext very soon. Why not create
-> >> an extensible API from scratch?
-> >> 
-> >> I'm looking at cgroup v2 documentation which describes various interface files
-> >> formats and it seems like given the number of potential optional arguments
-> >> the best option is nested keyed (please, refer to the Interface Files section).
-> >> 
-> >> E.g. the format can be:
-> >> echo "1G type=file nodemask=1-2 timeout=30s" > memory.reclaim
-> > 
-> > Yeah, that syntax looks perfect.
-> > 
-> > But why do you think it's not extensible from the current patch? We
-> > can add those arguments one by one as we agree on them, and return
-> > -EINVAL if somebody passes an unknown parameter.
-> > 
-> > It seems to me the current proposal is forward-compatible that way
-> > (with the current set of keyword pararms being the empty set :-))
-> 
-> It wasn’t obvious to me. We spoke about positional arguments and then it wasn’t clear how to add them in a backward-compatible way. The last thing we want is a bunch of memory.reclaim* interfaces :)
-> 
-> So yeah, let’s just describe it properly in the documentation, no code changes are needed.
+On Fri, Apr 1, 2022 at 12:46 PM Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> On Thu, Mar 31, 2022 at 6:51 PM Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> >
+> > On Fri, Apr 1, 2022 at 3:26 AM Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> > >
+> > > On Thu, Mar 31, 2022 at 4:35 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> > > >
+> > > > On Thu 31-03-22 19:18:58, Zhaoyang Huang wrote:
+> > > > > On Thu, Mar 31, 2022 at 5:01 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> > > > > >
+> > > > > > On Thu 31-03-22 16:00:56, zhaoyang.huang wrote:
+> > > > > > > From: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+> > > > > > >
+> > > > > > > For some kind of memcg, the usage is varies greatly from scenarios. Such as
+> > > > > > > multimedia app could have the usage range from 50MB to 500MB, which generated
+> > > > > > > by loading an special algorithm into its virtual address space and make it hard
+> > > > > > > to protect the expanded usage without userspace's interaction.
+> > > > > >
+> > > > > > Do I get it correctly that the concern you have is that you do not know
+> > > > > > how much memory your workload will need because that depends on some
+> > > > > > parameters?
+> > > > > right. such as a camera APP will expand the usage from 50MB to 500MB
+> > > > > because of launching a special function(face beauty etc need special
+> > > > > algorithm)
+> > > > > >
+> > > > > > > Furthermore, fixed
+> > > > > > > memory.low is a little bit against its role of soft protection as it will response
+> > > > > > > any system's memory pressure in same way.
+> > > > > >
+> > > > > > Could you be more specific about this as well?
+> > > > > As the camera case above, if we set memory.low as 200MB to keep the
+> > > > > APP run smoothly, the system will experience high memory pressure when
+> > > > > another high load APP launched simultaneously. I would like to have
+> > > > > camera be reclaimed under this scenario.
+> > > >
+> > > > OK, so you effectivelly want to keep the memory protection when there is
+> > > > a "normal" memory pressure but want to relax the protection on other
+> > > > high memory utilization situations?
+> > > >
+> > > > How do you exactly tell a difference between a steady memory pressure
+> > > > (say stream IO on the page cache) from "high load APP launched"? Should
+> > > > you reduce the protection on the stram IO situation as well?
+> > >
+> > > IIUC what you are implementing here is a "memory allowance boost"
+> > > feature and it seems you are implementing it entirely inside the
+> > > kernel, while only userspace knows when to apply this boost (say at
+> > > app launch time). This does not make sense to me.
+> > I am wondering if it could be more helpful to apply this patch on the
+> > background services(system_server etc) than APP, while the latter ones
+> > are persistent to the system.
+> > >
+> > > >
+> > > > [...]
+> > > > > > One very important thing that I am missing here is the overall objective of this
+> > > > > > tuning. From the above it seems that you want to (ab)use memory->low to
+> > > > > > protect some portion of the charged memory and that the protection
+> > > > > > shrinks over time depending on the the global PSI metrict and time.
+> > > > > > But why this is a good thing?
+> > > > > 'Good' means it meets my original goal of keeping the usage during a
+> > > > > period of time and responding to the system's memory pressure. For an
+> > > > > android like system, memory is almost forever being in a tight status
+> > > > > no matter how many RAM it has. What we need from memcg is more than
+> > > > > control and grouping, we need it to be more responsive to the system's
+> > > > > load and could  sacrifice its usage  under certain criteria.
+> > > >
+> > > > Why existing tools/APIs are insufficient for that? You can watch for
+> > > > both global and memcg memory pressure including PSI metrics and update
+> > > > limits dynamically. Why is it necessary to put such a logic into the
+> > > > kernel?
+> > >
+> > > I had exactly the same thought while reading through this.
+> > > In Android you would probably need to implement a userspace service
+> > > which would temporarily relax the memcg limits when required, monitor
+> > > PSI levels and adjust the limits accordingly.
+> > As my response to Michal's comment. Userspace monitors introduce
+> > latency. Take LMKD as an example, it is actually driven by the
+> > PSI_POLL_PERIOD_XXX_MS after first wakeup, which means
+> > PSI_WINDOW_SIZE_MS could be too big to rely on. IMHO, with regards to
+> > the responding time, LMKD is less efficient than lmk driver but more
+> > strong in strategy things. I would like to test this patch in real
+> > android's work load and feedback in next version.
+>
+> LMKD is a reactive mechanism which does not know when memory pressure
+> might rise, therefore its response latency matters.
+> The usecases you mentioned seemed to imply that userspace was aware of
+> increased memory demands of the process (app startup time, maybe the
+> moment the app becomes foreground, etc.). Therefore the userspace
+> could relax memory allowance before that memory is requested. Was my
+> understanding incorrect?
+In terms of Android specific scenarios, I think it is not the best
+choice to have AMS relax memory allowance directly when activity
+arised, as:
+1. AMS also has to face latency issues like LMKD does when polling
+systems PSI value
+2. AMS needs to launch syscalls to act.  A read for either
+memcg.usage/watermark and a write on memcg.min/low.
+3. Processes in CACHED adj are not capable of shrinking themselves
+except waiting to be killed by LMKD.
 
-Sounds good to me!
+IMO, this patch is alike an Pressure Aware Per Process Reclaim which
+does NOT launch real reclaiming.
+>
+> > >
+> > > >
+> > > > --
+> > > > Michal Hocko
+> > > > SUSE Labs
