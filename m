@@ -1,7 +1,7 @@
 From: Wei Xu <weixugc@google.com>
 Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
-Date: Sat, 2 Apr 2022 23:46:29 -0700
-Message-ID: <CAAPL-u_zLTs6cMSN8sOtktCHKncfSWo+qWxXU7_iL3hhwhL8QA@mail.gmail.com>
+Date: Sat, 2 Apr 2022 23:56:19 -0700
+Message-ID: <CAAPL-u8wjtBRE7KZyZjoQ0eTJecnW35uEXAE3KU0M+AvL=5-ug@mail.gmail.com>
 References: <20220331084151.2600229-1-yosryahmed@google.com>
  <YkcEMdsi9G5y8mX4@dhcp22.suse.cz> <CAAPL-u_i-Mp-Bo7LtP_4aJscY=1JHG_y1H_-A7N_HRAgtz+arg@mail.gmail.com>
  <87y20nzyw4.fsf@yhuang6-desk2.ccr.corp.intel.com>
@@ -11,13 +11,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=t6+k/4Om7VsqLidja8hb8+QMIWaL5Tmj1wC2cL00ays=;
-        b=nOlAijP5ZZ9vsdwJxJUZqAvchhR2fSeQGoSus10DZCtVRxLYXfh3CaMWft73tMME1m
-         t8EEPpLhVAmbmIitm4y9QYf8gD29WnqYP9IPk0DbsJRQ306l1QfJlfZBvwV0n6/apy1q
-         kE/dBq22AAuWR+VBcGZKlXr/FEVoU2mgB22M1LxnKoR+KLx+gi822+ieZ9bQV5DPkPDX
-         rv0cbX0UhZ/st6FHWyCx4nSEY24sHkWVOJgCK96qcxkxAp+J+AvawMuPwG3FbWM+qvsh
-         z1YzQW9HvQJnNjv85bt720LiaBD3IDsndMwp3VULMTwSwWfSyKEqFX+sUpd6E8sAOFuU
-         nD8g==
+        bh=LZlimpDrEHgO1rzyCYuAbLljxvciHy4QdNJs4xVtrnk=;
+        b=T2EKk7dyMep8/29cdvnmpJvSBhC3tVejpCx/rLNsKf9qKNg480LjqMQQCRXV1WS/ql
+         IiF4bR7DYMvv35us0w7WT1RPk7OpoLdrERvZ8VyxZJqHoBllBNyHAYErlPDEkLB+DHQN
+         pqmkgvAu33MWBs0sIXCOx4fkIX797PCMn7wSpeVMYSEIROsVlttHatLTe/nIo46c5Yu9
+         +PI1uA1Pynxd42/t/8MA5rtp2aNcmszrbKSoR5yHjyZfvqumvyp6bSGaB3AGan996wek
+         XoIdhE2QCNIGkDF/ozpMGNF1ex5zm1Zqts+fajdYUF28OEIrsXf5yYKjIK5jzzYybDaa
+         3idg==
 In-Reply-To: <87y20nzyw4.fsf@yhuang6-desk2.ccr.corp.intel.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -79,3 +79,14 @@ On Sat, Apr 2, 2022 at 1:13 AM Huang, Ying <ying.huang@intel.com> wrote:
 > We need to either extending the semantics of memory reclaiming (to
 > include memory demoting too), or add another interface for memory
 > demoting.
+
+Good point.  With the "demote pages during reclaim" patch series,
+reclaim is already extended to demote pages as well.  For example,
+can_reclaim_anon_pages() returns true if demotion is allowed and
+shrink_page_list() can demote pages instead of reclaiming pages.
+
+Currently, demotion is disabled for memcg reclaim, which I think can
+be relaxed and also necessary for memcg-based proactive demotion.  I'd
+like to suggest that we extend the semantics of memory.reclaim to
+cover memory demotion as well.  A flag can be used to enable/disable
+the demotion behavior.
