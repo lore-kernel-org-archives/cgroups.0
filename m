@@ -1,92 +1,96 @@
-From: Wei Xu <weixugc@google.com>
-Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
-Date: Sat, 2 Apr 2022 23:56:19 -0700
-Message-ID: <CAAPL-u8wjtBRE7KZyZjoQ0eTJecnW35uEXAE3KU0M+AvL=5-ug@mail.gmail.com>
-References: <20220331084151.2600229-1-yosryahmed@google.com>
- <YkcEMdsi9G5y8mX4@dhcp22.suse.cz> <CAAPL-u_i-Mp-Bo7LtP_4aJscY=1JHG_y1H_-A7N_HRAgtz+arg@mail.gmail.com>
- <87y20nzyw4.fsf@yhuang6-desk2.ccr.corp.intel.com>
+From: Bui Quang Minh <minhquangbui99-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] cgroup: Kill the parent controller when its last child is killed
+Date: Sun,  3 Apr 2022 20:57:17 +0700
+Message-ID: <20220403135717.8294-1-minhquangbui99@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=LZlimpDrEHgO1rzyCYuAbLljxvciHy4QdNJs4xVtrnk=;
-        b=T2EKk7dyMep8/29cdvnmpJvSBhC3tVejpCx/rLNsKf9qKNg480LjqMQQCRXV1WS/ql
-         IiF4bR7DYMvv35us0w7WT1RPk7OpoLdrERvZ8VyxZJqHoBllBNyHAYErlPDEkLB+DHQN
-         pqmkgvAu33MWBs0sIXCOx4fkIX797PCMn7wSpeVMYSEIROsVlttHatLTe/nIo46c5Yu9
-         +PI1uA1Pynxd42/t/8MA5rtp2aNcmszrbKSoR5yHjyZfvqumvyp6bSGaB3AGan996wek
-         XoIdhE2QCNIGkDF/ozpMGNF1ex5zm1Zqts+fajdYUF28OEIrsXf5yYKjIK5jzzYybDaa
-         3idg==
-In-Reply-To: <87y20nzyw4.fsf@yhuang6-desk2.ccr.corp.intel.com>
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=J5mbcZTsiDy3mrNkZULEao/0esdA8VeRyfo3ZqOjIFQ=;
+        b=GVcAdkoyMokXfTR2LLDHuHD1vCyTv/CL4Mr0zcmD71hYcQLNx4trRtToCqpmglZ6p2
+         PfyrVY4bjMJXXryJlFSZQ/inrpyn7w0puiD1GGEY/XC92cwwNU1SxUYrW9IZcp7i+jIG
+         rr5TENhHGiX+LNgYDXHa6AVCI/VsyUXghylGxj7jMkpLT2FqRqavlgYBDmPuRHB89kl8
+         LftNF2g36cg6yha8KtSQVaDjIdftf5xi+Cxgar9wFbNJrCDeMY8KnnM9bq3P4Ey3m9Nh
+         /DgblGo29ZvOgCxzDuGnjFXgYqF5WmFRf1nyTgxTlrFEjhoJR6cvszzuclZGerOi/1Vw
+         FlQg==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Huang, Ying" <ying.huang@intel.com>
-Cc: Michal Hocko <mhocko@suse.com>, Yosry Ahmed <yosryahmed@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Greg Thelen <gthelen@google.com>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Bui Quang Minh <minhquangbui99-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat, Apr 2, 2022 at 1:13 AM Huang, Ying <ying.huang@intel.com> wrote:
->
-> Wei Xu <weixugc@google.com> writes:
->
-> > On Fri, Apr 1, 2022 at 6:54 AM Michal Hocko <mhocko@suse.com> wrote:
-> >>
-> >> On Thu 31-03-22 08:41:51, Yosry Ahmed wrote:
-> >> > From: Shakeel Butt <shakeelb@google.com>
-> >> >
->
-> [snip]
->
-> >> > Possible Extensions:
-> >> > --------------------
-> >> >
-> >> > - This interface can be extended with an additional parameter or flags
-> >> >   to allow specifying one or more types of memory to reclaim from (e.g.
-> >> >   file, anon, ..).
-> >> >
-> >> > - The interface can also be extended with a node mask to reclaim from
-> >> >   specific nodes. This has use cases for reclaim-based demotion in memory
-> >> >   tiering systens.
-> >> >
-> >> > - A similar per-node interface can also be added to support proactive
-> >> >   reclaim and reclaim-based demotion in systems without memcg.
-> >> >
-> >> > For now, let's keep things simple by adding the basic functionality.
-> >>
-> >> Yes, I am for the simplicity and this really looks like a bare minumum
-> >> interface. But it is not really clear who do you want to add flags on
-> >> top of it?
-> >>
-> >> I am not really sure we really need a node aware interface for memcg.
-> >> The global reclaim interface will likely need a different node because
-> >> we do not want to make this CONFIG_MEMCG constrained.
-> >
-> > A nodemask argument for memory.reclaim can be useful for memory
-> > tiering between NUMA nodes with different performance.  Similar to
-> > proactive reclaim, it can allow a userspace daemon to drive
-> > memcg-based proactive demotion via the reclaim-based demotion
-> > mechanism in the kernel.
->
-> I am not sure whether nodemask is a good way for demoting pages between
-> different types of memory.  For example, for a system with DRAM and
-> PMEM, if specifying DRAM node in nodemask means demoting to PMEM, what
-> is the meaning of specifying PMEM node? reclaiming to disk?
->
-> In general, I have no objection to the idea in general.  But we should
-> have a clear and consistent interface.  Per my understanding the default
-> memcg interface is for memory, regardless of memory types.  The memory
-> reclaiming means reduce the memory usage, regardless of memory types.
-> We need to either extending the semantics of memory reclaiming (to
-> include memory demoting too), or add another interface for memory
-> demoting.
+When umounting a cgroup controller, in case the controller has no children,
+the initial ref will be dropped in cgroup_kill_sb. In cgroup_rmdir path,
+the controller is deleted from the parent's children list in
+css_release_work_fn, which is run on a kernel worker.
 
-Good point.  With the "demote pages during reclaim" patch series,
-reclaim is already extended to demote pages as well.  For example,
-can_reclaim_anon_pages() returns true if demotion is allowed and
-shrink_page_list() can demote pages instead of reclaiming pages.
+With this simple script
 
-Currently, demotion is disabled for memcg reclaim, which I think can
-be relaxed and also necessary for memcg-based proactive demotion.  I'd
-like to suggest that we extend the semantics of memory.reclaim to
-cover memory demotion as well.  A flag can be used to enable/disable
-the demotion behavior.
+	#!/bin/sh
+
+	mount -t cgroup -o none,name=test test ./tmp
+	mkdir -p ./tmp/abc
+
+	rmdir ./tmp/abc
+	umount ./tmp
+
+	sleep 5
+	cat /proc/self/cgroup
+
+The rmdir will remove the last child and umount is expected to kill the
+parent controller. However, when running the above script, we may get
+
+	1:name=test:/
+
+This shows that the parent controller has not been killed. The reason is
+after rmdir is completed, it is not guaranteed that the parent's children
+list is empty as css_release_work_fn is deferred to run on a worker. In
+case cgroup_kill_sb is run before that work, it does not drop the initial
+ref. Later in the worker, it just removes the child from the list without
+checking the list is empty to kill the parent controller. As a result, the
+parent controller still has the initial ref but without any logical refs
+(children ref, mount ref).
+
+This commit adds a free parent controller path into the worker function to
+free up the parent controller when the last child is killed.
+
+Signed-off-by: Bui Quang Minh <minhquangbui99-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index a557eea7166f..220eb1742961 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -5157,12 +5157,25 @@ static void css_release_work_fn(struct work_struct *work)
+ 		container_of(work, struct cgroup_subsys_state, destroy_work);
+ 	struct cgroup_subsys *ss = css->ss;
+ 	struct cgroup *cgrp = css->cgroup;
++	struct cgroup *parent = cgroup_parent(cgrp);
+ 
+ 	mutex_lock(&cgroup_mutex);
+ 
+ 	css->flags |= CSS_RELEASED;
+ 	list_del_rcu(&css->sibling);
+ 
++	/*
++	 * If parent doesn't have any children, start killing it.
++	 * And don't kill the default root.
++	 */
++	if (parent && list_empty(&parent->self.children) &&
++	    parent != &cgrp_dfl_root.cgrp &&
++	    !percpu_ref_is_dying(&parent->self.refcnt)) {
++		if (!percpu_ref_is_dying(&cgrp->bpf.refcnt))
++			cgroup_bpf_offline(parent);
++		percpu_ref_kill(&parent->self.refcnt);
++	}
++
+ 	if (ss) {
+ 		/* css release path */
+ 		if (!list_empty(&css->rstat_css_node)) {
+-- 
+2.25.1
+
