@@ -1,31 +1,31 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+From: kernel test robot <lkp@intel.com>
 Subject: Re: [PATCH] cgroup: Kill the parent controller when its last child
  is killed
-Date: Sun, 3 Apr 2022 23:59:39 +0800
-Message-ID: <202204032330.l2wsF3mf-lkp@intel.com>
+Date: Mon, 4 Apr 2022 01:22:18 +0800
+Message-ID: <202204040103.yTRTggqu-lkp@intel.com>
 References: <20220403135717.8294-1-minhquangbui99@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649001638; x=1680537638;
+  t=1649006562; x=1680542562;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=qvHYdvxr81dj6BSTtdc044toQ4oANBTAS7xvEFGuayI=;
-  b=lgX3zuPsEyQ2cveb8kTh0NN+IR9or3qvf8xtw1YERTPWDrY7zaIvVuwp
-   wfZxaDWRVY8AhrST2o2Y/RhXm+0Bi2hIIW3S/F1p9ftMSq2tpC2t878hv
-   JC9/fXFMba13awo+JwrZ6CR1Hxl9O/1cME+kMoKgM3PLWtOZfYshCRSz5
-   MZQ9YfDCg/prYshujp4TjIcSJ6xE9c4yqfBJpVMmxDkWvLILfsAX++P0/
-   00OBhz1gZ2V75QuyI7IwPbC2LZyEzlFQmoHvdO2AZ+J6fWkoQP2Fw6cbM
-   Uwq0xVx3s8kVFYop/dz+H12RXjpz69rzU3UrTed+ZQaJPZUeDdU9VhlHX
-   g==;
+  bh=Kg3nT9zXXv061+GqAw9adWjDJuUK/w2Dr4majqksh4k=;
+  b=Z0eZ59Fp7LPrRDbZMeKQdugdoFWL1UzSdHs0uI3Kl0mInG5l6+65iFog
+   jnAYMbh0fypUYxk2KXOGTRh8R1V3vgeQA9qN8APWaajePoooBtLjQgUZK
+   ELGwXWuZfl12h4nN2g+zvtXkq/g11P4q5njB6uHfuOUR4aZM8g7U2ZMsK
+   lhUynb5EofZQvPqz8IRYFF82BAQoxPM4G8UbcbEtPIW7wHEblBwaGWB9X
+   ZJGOQ/bN1Sd92gLPfI7zPiujOEu5V4lMjZzSVLTbcOvn0U3cvUIydEEG7
+   99E+GoYgYcIDdV4RrbNiEqvUqDcwukT2KskkIMfqw8QGYE3jY6ssCb+GV
+   w==;
 Content-Disposition: inline
-In-Reply-To: <20220403135717.8294-1-minhquangbui99-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <20220403135717.8294-1-minhquangbui99@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Bui Quang Minh <minhquangbui99-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Bui Quang Minh <minhquangbui99-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bui Quang Minh <minhquangbui99@gmail.com>, cgroups@vger.kernel.org
+Cc: llvm@lists.linux.dev, kbuild-all@lists.01.org, Bui Quang Minh <minhquangbui99@gmail.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org
 
 Hi Bui,
 
@@ -39,26 +39,30 @@ https://git-scm.com/docs/git-format-patch]
 
 url:    https://github.com/intel-lab-lkp/linux/commits/Bui-Quang-Minh/cgroup-Kill-the-parent-controller-when-its-last-child-is-killed/20220403-215911
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-config: i386-randconfig-m021 (https://download.01.org/0day-ci/archive/20220403/202204032330.l2wsF3mf-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
-compiler: gcc-11 (Debian 11.2.0-19) 11.2.0
+config: arm-mxs_defconfig (https://download.01.org/0day-ci/archive/20220404/202204040103.yTRTggqu-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project c4a1b07d0979e7ff20d7d541af666d822d66b566)
 reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # install arm cross compiling tool for clang build
+        # apt-get install binutils-arm-linux-gnueabi
         # https://github.com/intel-lab-lkp/linux/commit/2bc22feae8a913c7f371bc79ef9967122d8d326c
         git remote add linux-review https://github.com/intel-lab-lkp/linux
         git fetch --no-tags linux-review Bui-Quang-Minh/cgroup-Kill-the-parent-controller-when-its-last-child-is-killed/20220403-215911
         git checkout 2bc22feae8a913c7f371bc79ef9967122d8d326c
         # save the config file to linux build tree
         mkdir build_dir
-        make W=1 O=build_dir ARCH=i386 SHELL=/bin/bash kernel/
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=arm SHELL=/bin/bash
 
 If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Reported-by: kernel test robot <lkp@intel.com>
 
 All errors (new ones prefixed by >>):
 
-   kernel/cgroup/cgroup.c: In function 'css_release_work_fn':
->> kernel/cgroup/cgroup.c:5169:52: error: 'struct cgroup_bpf' has no member named 'refcnt'
-    5169 |                 if (!percpu_ref_is_dying(&cgrp->bpf.refcnt))
-         |                                                    ^
+>> kernel/cgroup/cgroup.c:5169:39: error: no member named 'refcnt' in 'struct cgroup_bpf'
+                   if (!percpu_ref_is_dying(&cgrp->bpf.refcnt))
+                                             ~~~~~~~~~ ^
+   1 error generated.
 
 
 vim +5169 kernel/cgroup/cgroup.c
