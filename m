@@ -1,56 +1,68 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
-Date: Mon, 4 Apr 2022 10:44:04 +0200
-Message-ID: <Ykqv1CvGwgmF2jlT@dhcp22.suse.cz>
-References: <20220331084151.2600229-1-yosryahmed@google.com>
- <YkXkA+Oh1Bx33PrU@carbon.dhcp.thefacebook.com>
- <YkcC3z5ReeQ5vdg9@dhcp22.suse.cz>
- <YkcvU2hosJV3cL8F@carbon.dhcp.thefacebook.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [RFC PATCH] cgroup: introduce dynamic protection for memcg
+Date: Mon, 4 Apr 2022 10:51:48 +0200
+Message-ID: <YkqxpEW4m6iU3zMq@dhcp22.suse.cz>
+References: <1648713656-24254-1-git-send-email-zhaoyang.huang@unisoc.com>
+ <YkVt0m+VxnXgnulq@dhcp22.suse.cz>
+ <CAGWkznF4qb2EP3=xVamKO8qk08vaFg9JeHD7g80xvBfxm39Hkg@mail.gmail.com>
+ <YkWR8t8yEe6xyzCM@dhcp22.suse.cz>
+ <CAGWkznHxAD0757m1i1Csw1CVRDtQddfCL08dYf12fa47=-uYYQ@mail.gmail.com>
+ <YkbjNYMY8VjHoSHR@dhcp22.suse.cz>
+ <CAGWkznF7cSyPU0ceYwH6zweJzf-X1bQnS6AJ2-J+WEL0u8jzng@mail.gmail.com>
+ <CAJuCfpHneDZMXO_MmQDPA+igAOdAPRUChiq+zftFXGfDzPHNhQ@mail.gmail.com>
+ <CAGWkznFTQCm0cusVxA_55fu2WfT-w2coVHrT=JA1D_9_2728mQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1649061845; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1649062309; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=X0N2SxV6GjMVBOdoERBEDYeu88UwXc3gO4jWk0FL4TE=;
-        b=G27ShgYo1cdjBzpUTqcaG4sKAhfdAMb+RpuR95Gu71a11RnyRiUj34mel/G84IricAzl1X
-        kyXI1UO5gR94PqCsnRxPa/AuFaQunXNCiDC9YAXhbTvnBHFk6MjUBQwrQPN3/Paj6Ur3bl
-        eW8JqnJcBgsgVlF6rexeyRdjGKsJWyE=
+        bh=8dVesPMKaUut+TR+yGDooheAhutrkDr3IKERwS5AoSk=;
+        b=llLqVXQVAuNVhRTxpopykvgOo5UDxL0+UVttQORgi7aeqOzxr0beKggQRRtiym8WzDZ4Qt
+        GbJRJ10wLx240JOdmPbpx+/0eROIKFzQSN+bI6CSp2pTBrhNp1eNW3sGqfCOjn9fiS01bc
+        30ovvrP+E6SgyIM6U5zj5D9JlKi04HM=
 Content-Disposition: inline
-In-Reply-To: <YkcvU2hosJV3cL8F@carbon.dhcp.thefacebook.com>
+In-Reply-To: <CAGWkznFTQCm0cusVxA_55fu2WfT-w2coVHrT=JA1D_9_2728mQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <roman.gushchin@linux.dev>
-Cc: Yosry Ahmed <yosryahmed@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>
+To: Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:MEMORY MANAGEMENT" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ke Wang <ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
 
-On Fri 01-04-22 09:58:59, Roman Gushchin wrote:
-> On Fri, Apr 01, 2022 at 03:49:19PM +0200, Michal Hocko wrote:
-> > On Thu 31-03-22 10:25:23, Roman Gushchin wrote:
-> > > On Thu, Mar 31, 2022 at 08:41:51AM +0000, Yosry Ahmed wrote:
-> > [...]
-> > > > - A similar per-node interface can also be added to support proactive
-> > > >   reclaim and reclaim-based demotion in systems without memcg.
-> > > 
-> > > Maybe an option to specify a timeout? That might simplify the userspace part.
-> > 
-> > What do you mean by timeout here? Isn't
-> > timeout $N echo $RECLAIM > ....
-> > 
-> > enough?
-> 
-> It's nice and simple when it's a bash script, but when it's a complex
-> application trying to do the same, it quickly becomes less simple and
-> likely will require a dedicated thread to avoid blocking the main app
-> for too long and a mechanism to unblock it by timer/when the need arises.
-> 
-> In my experience using correctly such semi-blocking interfaces (semi- because
-> it's not clearly defined how much time the syscall can take and whether it
-> makes sense to wait longer) is tricky.
+On Mon 04-04-22 10:33:58, Zhaoyang Huang wrote:
+[...]
+> > One thing that I don't understand in this approach is: why memory.low
+> > should depend on the system's memory pressure. It seems you want to
+> > allow a process to allocate more when memory pressure is high. That is
+> > very counter-intuitive to me. Could you please explain the underlying
+> > logic of why this is the right thing to do, without going into
+> > technical details?
+> What I want to achieve is make memory.low be positive correlation with
+> timing and negative to memory pressure, which means the protected
+> memcg should lower its protection(via lower memcg.low) for helping
+> system's memory pressure when it's high.
 
-We have the same approach to setting other limits which need to perform
-the reclaim. Have we ever hit that as a limitation that would make
-userspace unnecessarily too complex?
+I have to say this is still very confusing to me. The low limit is a
+protection against external (e.g. global) memory pressure. Decreasing
+the protection based on the external pressure sounds like it goes right
+against the purpose of the knob. I can see reasons to update protection
+based on refaults or other metrics from the userspace but I still do not
+see how this is a good auto-magic tuning done by the kernel.
+
+> The concept behind is memcg's
+> fault back of dropped memory is less important than system's latency
+> on high memory pressure.
+
+Can you give some specific examples?
+
+> Please refer to my new version's test data
+> for more detail.
+
+Please note that sending new RFCs will just make the discussion spread
+over several email threads which will get increasingly hard to follow.
+So do not post another version until it is really clear what is the
+actual semantic you are proposing.
+
 -- 
 Michal Hocko
 SUSE Labs
