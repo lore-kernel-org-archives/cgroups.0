@@ -1,74 +1,77 @@
-From: Roman Gushchin <roman.gushchin@linux.dev>
+From: Shakeel Butt <shakeelb@google.com>
 Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
-Date: Mon, 4 Apr 2022 11:25:35 -0700
-Message-ID: <Yks4H1pQx1YN37gH@carbon.dhcp.thefacebook.com>
-References: <20220331084151.2600229-1-yosryahmed@google.com>
- <YkXkA+Oh1Bx33PrU@carbon.dhcp.thefacebook.com>
- <YkcC3z5ReeQ5vdg9@dhcp22.suse.cz>
- <YkcvU2hosJV3cL8F@carbon.dhcp.thefacebook.com>
- <Ykqv1CvGwgmF2jlT@dhcp22.suse.cz>
+Date: Mon, 4 Apr 2022 10:14:36 -0700
+Message-ID: <CALvZod466jLN8Bb67X9=iF5TvjOo-oEsHA-mGhpHnywGCP+WvA@mail.gmail.com>
+References: <YkdrEG5FlL7Gq2Vi@cmpxchg.org> <243A0156-D26A-47C9-982A-C8B0CDD69DA2@linux.dev>
+ <Ykdz7fiMFZeFltYy@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1649096743;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Og7JJS97Y7kZpeaH/i0wuDH1r4Ru5n8sJ0IhUTsaTkc=;
-        b=IFf94GWr/6nr/4HgPNIQTPJGHrC3WBKmIpRxtM36jz9zsR04NOjeL/8OfSzqcvZG0zgjq5
-        bxiztvliLfe6bwYLU/TybmMsDuIL3Dv81VLiVs4OB9hzOhwlSPvHK8CDaU4e7vrJKGzg2u
-        I0k54olorsvEY4ZnPZLQZx8TVXRhjg8=
-Content-Disposition: inline
-In-Reply-To: <Ykqv1CvGwgmF2jlT@dhcp22.suse.cz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=9G0a90Ep/Bz5OOoDZhbBO26Y5kHqZZt4pCiJoHTyyw4=;
+        b=dbsKFhi7Qrtq/Rq9OZDWGOfaDFXlehFA5Dvy8IhvRrLeU0T4wP85YNiBqYaU9XUcaR
+         eUVN69DjjMnifijLW25m+YKzc/I0odbx2wV1tPCdU+KBxslLKSqFwvkD4pVvTF50IUQa
+         +QaIH7XLXTeNMaw7eguYI4S17J2ihOJkhUqbubb0twU+NF44WOBEs4KEZwuyI2cQ1OWg
+         DjvmsdfzKYHIffEOCxLZBCluUxcZ7//A9FO1lCcnt+AcAMATqSVWgw8Xu0BUE/Jl7VQw
+         rtUspdPnkhbICsCmzGy+IMML4dl30xRIEscdXvevjnn2tvTt7h6mqDEkiKuyZ7Z/UY9Z
+         FpEA==
+In-Reply-To: <Ykdz7fiMFZeFltYy@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.com>
-Cc: Yosry Ahmed <yosryahmed@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>
+Content-Type: text/plain; charset="utf-8"
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Roman Gushchin <roman.gushchin@linux.dev>, Yosry Ahmed <yosryahmed@google.com>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Cgroups <cgroups@vger.kernel.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>
 
-On Mon, Apr 04, 2022 at 10:44:04AM +0200, Michal Hocko wrote:
-> On Fri 01-04-22 09:58:59, Roman Gushchin wrote:
-> > On Fri, Apr 01, 2022 at 03:49:19PM +0200, Michal Hocko wrote:
-> > > On Thu 31-03-22 10:25:23, Roman Gushchin wrote:
-> > > > On Thu, Mar 31, 2022 at 08:41:51AM +0000, Yosry Ahmed wrote:
-> > > [...]
-> > > > > - A similar per-node interface can also be added to support proactive
-> > > > >   reclaim and reclaim-based demotion in systems without memcg.
-> > > > 
-> > > > Maybe an option to specify a timeout? That might simplify the userspace part.
-> > > 
-> > > What do you mean by timeout here? Isn't
-> > > timeout $N echo $RECLAIM > ....
-> > > 
-> > > enough?
-> > 
-> > It's nice and simple when it's a bash script, but when it's a complex
-> > application trying to do the same, it quickly becomes less simple and
-> > likely will require a dedicated thread to avoid blocking the main app
-> > for too long and a mechanism to unblock it by timer/when the need arises.
-> > 
-> > In my experience using correctly such semi-blocking interfaces (semi- because
-> > it's not clearly defined how much time the syscall can take and whether it
-> > makes sense to wait longer) is tricky.
-> 
-> We have the same approach to setting other limits which need to perform
-> the reclaim. Have we ever hit that as a limitation that would make
-> userspace unnecessarily too complex?
+On Fri, Apr 1, 2022 at 2:51 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
+>
+> On Fri, Apr 01, 2022 at 02:21:52PM -0700, Roman Gushchin wrote:
+> > > On Apr 1, 2022, at 2:13 PM, Johannes Weiner <hannes@cmpxchg.org> wrot=
+e:
+> > >
+> > > =EF=BB=BFOn Fri, Apr 01, 2022 at 11:39:30AM -0700, Roman Gushchin wro=
+te:
+> > >> The interface you're proposing is not really extensible, so we'll li=
+kely need to
+> > >> introduce a new interface like memory.reclaim_ext very soon. Why not=
+ create
+> > >> an extensible API from scratch?
+> > >>
+> > >> I'm looking at cgroup v2 documentation which describes various inter=
+face files
+> > >> formats and it seems like given the number of potential optional arg=
+uments
+> > >> the best option is nested keyed (please, refer to the Interface File=
+s section).
+> > >>
+> > >> E.g. the format can be:
+> > >> echo "1G type=3Dfile nodemask=3D1-2 timeout=3D30s" > memory.reclaim
+> > >
+> > > Yeah, that syntax looks perfect.
+> > >
+> > > But why do you think it's not extensible from the current patch? We
+> > > can add those arguments one by one as we agree on them, and return
+> > > -EINVAL if somebody passes an unknown parameter.
+> > >
+> > > It seems to me the current proposal is forward-compatible that way
+> > > (with the current set of keyword pararms being the empty set :-))
+> >
+> > It wasn=E2=80=99t obvious to me. We spoke about positional arguments an=
+d then it wasn=E2=80=99t clear how to add them in a backward-compatible way=
+. The last thing we want is a bunch of memory.reclaim* interfaces :)
+> >
+> > So yeah, let=E2=80=99s just describe it properly in the documentation, =
+no code changes are needed.
+>
+> Sounds good to me!
 
-The difference here is that some limits are most likely set once and
-never adjusted, e.g. memory.max or memory.low.
-I do definitely remember some issues around memory.high, but as I recall,
-we've fixed them on the kernel side. We've even had a private memory.high.tmp
-interface with a value and a timeout, which later was replaced with
-a memory.reclaim interface similar to what we discuss here.
-But with memory.high we set the limit first, so if a user tries to reclaim
-a lot of hot memory, it will soon put all processes in the cgroup into
-the sleep/direct reclaim. So it's not expected to block for too long.
+To summarize for next version:
 
-In general it all comes to the question how hard the kernel should try to
-reclaim the memory before giving up. The userspace might have different
-needs in different cases. But if the interface is defined very vaguely like
-it tries for an undefined amount of time and then gives up, it's hard to
-use it in a predictive manner.
+1) Add selftests.
+2) Add documentation for potential future extension, so whoever adds
+those features in future should follow the key-value format Roman is
+suggesting.
 
-Thanks!
+Yosry, once we have agreement on the return value, please send the
+next version resolving these three points.
