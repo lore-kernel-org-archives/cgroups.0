@@ -1,156 +1,74 @@
-From: Yosry Ahmed <yosryahmed@google.com>
+From: Roman Gushchin <roman.gushchin@linux.dev>
 Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
-Date: Mon, 4 Apr 2022 10:09:54 -0700
-Message-ID: <CAJD7tkZrOYsT1bsFB2ge5_wGccGhpS99y+OkzQHhRVgZwexL4A@mail.gmail.com>
-References: <20220331084151.2600229-1-yosryahmed@google.com> <YkcEMdsi9G5y8mX4@dhcp22.suse.cz>
+Date: Mon, 4 Apr 2022 11:25:35 -0700
+Message-ID: <Yks4H1pQx1YN37gH@carbon.dhcp.thefacebook.com>
+References: <20220331084151.2600229-1-yosryahmed@google.com>
+ <YkXkA+Oh1Bx33PrU@carbon.dhcp.thefacebook.com>
+ <YkcC3z5ReeQ5vdg9@dhcp22.suse.cz>
+ <YkcvU2hosJV3cL8F@carbon.dhcp.thefacebook.com>
+ <Ykqv1CvGwgmF2jlT@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=p/iyktzXudPCfsWubC5IGLZO/YpQQ0A/MFOUPzzm2b0=;
-        b=mW/8Tu6ZltQOiQBFgHuiFl7Pk1NcBx+SPbJ3DvfPZWtRFVLA6QDIvkx5RmvEpQJSFS
-         PMCkiVebbjN2ZHLZo4qC7OkKkwUevM+/pdELqWBhsiRlT1IqR5OJNEM7nBIEgeh0Baiq
-         cI+wSLIwiNZ1HuCVps5Z/l0IHHZat2g6JPQLkBLWT3v3nr61u76MH12Mhcsrme4V+BCM
-         cLAu8Ow+7epFHYar0KsG9PmFRJWXInORNEB39EAIQT8PLnj7XIAvCcBL9l5fVuE6qYzM
-         4CEAvbJCOiTRoKgT7aBbbYoJTPGfu6murdWXn5/A/R4cmFPhtpH7ySDp3OV54nOmeGBM
-         VHmA==
-In-Reply-To: <YkcEMdsi9G5y8mX4@dhcp22.suse.cz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1649096743;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Og7JJS97Y7kZpeaH/i0wuDH1r4Ru5n8sJ0IhUTsaTkc=;
+        b=IFf94GWr/6nr/4HgPNIQTPJGHrC3WBKmIpRxtM36jz9zsR04NOjeL/8OfSzqcvZG0zgjq5
+        bxiztvliLfe6bwYLU/TybmMsDuIL3Dv81VLiVs4OB9hzOhwlSPvHK8CDaU4e7vrJKGzg2u
+        I0k54olorsvEY4ZnPZLQZx8TVXRhjg8=
+Content-Disposition: inline
+In-Reply-To: <Ykqv1CvGwgmF2jlT@dhcp22.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@suse.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>
+Cc: Yosry Ahmed <yosryahmed@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>
 
-On Fri, Apr 1, 2022 at 6:54 AM Michal Hocko <mhocko@suse.com> wrote:
->
-> On Thu 31-03-22 08:41:51, Yosry Ahmed wrote:
-> > From: Shakeel Butt <shakeelb@google.com>
-> >
-> > Introduce an memcg interface to trigger memory reclaim on a memory cgroup.
-> >
-> > Use case: Proactive Reclaim
-> > ---------------------------
-> >
-> > A userspace proactive reclaimer can continuously probe the memcg to
-> > reclaim a small amount of memory. This gives more accurate and
-> > up-to-date workingset estimation as the LRUs are continuously
-> > sorted and can potentially provide more deterministic memory
-> > overcommit behavior. The memory overcommit controller can provide
-> > more proactive response to the changing behavior of the running
-> > applications instead of being reactive.
-> >
-> > A userspace reclaimer's purpose in this case is not a complete replacement
-> > for kswapd or direct reclaim, it is to proactively identify memory savings
-> > opportunities and reclaim some amount of cold pages set by the policy
-> > to free up the memory for more demanding jobs or scheduling new jobs.
-> >
-> > A user space proactive reclaimer is used in Google data centers.
-> > Additionally, Meta's TMO paper recently referenced a very similar
-> > interface used for user space proactive reclaim:
-> > https://dl.acm.org/doi/pdf/10.1145/3503222.3507731
-> >
-> > Benefits of a user space reclaimer:
-> > -----------------------------------
-> >
-> > 1) More flexible on who should be charged for the cpu of the memory
-> > reclaim. For proactive reclaim, it makes more sense to be centralized.
-> >
-> > 2) More flexible on dedicating the resources (like cpu). The memory
-> > overcommit controller can balance the cost between the cpu usage and
-> > the memory reclaimed.
-> >
-> > 3) Provides a way to the applications to keep their LRUs sorted, so,
-> > under memory pressure better reclaim candidates are selected. This also
-> > gives more accurate and uptodate notion of working set for an
-> > application.
-> >
-> > Why memory.high is not enough?
-> > ------------------------------
-> >
-> > - memory.high can be used to trigger reclaim in a memcg and can
-> >   potentially be used for proactive reclaim.
-> >   However there is a big downside in using memory.high. It can potentially
-> >   introduce high reclaim stalls in the target application as the
-> >   allocations from the processes or the threads of the application can hit
-> >   the temporary memory.high limit.
-> >
-> > - Userspace proactive reclaimers usually use feedback loops to decide
-> >   how much memory to proactively reclaim from a workload. The metrics
-> >   used for this are usually either refaults or PSI, and these metrics
-> >   will become messy if the application gets throttled by hitting the
-> >   high limit.
-> >
-> > - memory.high is a stateful interface, if the userspace proactive
-> >   reclaimer crashes for any reason while triggering reclaim it can leave
-> >   the application in a bad state.
-> >
-> > - If a workload is rapidly expanding, setting memory.high to proactively
-> >   reclaim memory can result in actually reclaiming more memory than
-> >   intended.
-> >
-> > The benefits of such interface and shortcomings of existing interface
-> > were further discussed in this RFC thread:
-> > https://lore.kernel.org/linux-mm/5df21376-7dd1-bf81-8414-32a73cea45dd@google.com/
-> >
-> > Interface:
-> > ----------
-> >
-> > Introducing a very simple memcg interface 'echo 10M > memory.reclaim' to
-> > trigger reclaim in the target memory cgroup.
-> >
-> >
-> > Possible Extensions:
-> > --------------------
-> >
-> > - This interface can be extended with an additional parameter or flags
-> >   to allow specifying one or more types of memory to reclaim from (e.g.
-> >   file, anon, ..).
-> >
-> > - The interface can also be extended with a node mask to reclaim from
-> >   specific nodes. This has use cases for reclaim-based demotion in memory
-> >   tiering systens.
-> >
-> > - A similar per-node interface can also be added to support proactive
-> >   reclaim and reclaim-based demotion in systems without memcg.
-> >
-> > For now, let's keep things simple by adding the basic functionality.
->
-> Yes, I am for the simplicity and this really looks like a bare minumum
-> interface. But it is not really clear who do you want to add flags on
-> top of it?
->
+On Mon, Apr 04, 2022 at 10:44:04AM +0200, Michal Hocko wrote:
+> On Fri 01-04-22 09:58:59, Roman Gushchin wrote:
+> > On Fri, Apr 01, 2022 at 03:49:19PM +0200, Michal Hocko wrote:
+> > > On Thu 31-03-22 10:25:23, Roman Gushchin wrote:
+> > > > On Thu, Mar 31, 2022 at 08:41:51AM +0000, Yosry Ahmed wrote:
+> > > [...]
+> > > > > - A similar per-node interface can also be added to support proactive
+> > > > >   reclaim and reclaim-based demotion in systems without memcg.
+> > > > 
+> > > > Maybe an option to specify a timeout? That might simplify the userspace part.
+> > > 
+> > > What do you mean by timeout here? Isn't
+> > > timeout $N echo $RECLAIM > ....
+> > > 
+> > > enough?
+> > 
+> > It's nice and simple when it's a bash script, but when it's a complex
+> > application trying to do the same, it quickly becomes less simple and
+> > likely will require a dedicated thread to avoid blocking the main app
+> > for too long and a mechanism to unblock it by timer/when the need arises.
+> > 
+> > In my experience using correctly such semi-blocking interfaces (semi- because
+> > it's not clearly defined how much time the syscall can take and whether it
+> > makes sense to wait longer) is tricky.
+> 
+> We have the same approach to setting other limits which need to perform
+> the reclaim. Have we ever hit that as a limitation that would make
+> userspace unnecessarily too complex?
 
-Mostly I (or someone at Google) will follow-up with patches to add
-most of these features. We just wanted to get consensus on the bare
-minimum interface first, and to avoid derailing this discussion with
-whether or not we need each of those features and what the best way to
-implement them is.
+The difference here is that some limits are most likely set once and
+never adjusted, e.g. memory.max or memory.low.
+I do definitely remember some issues around memory.high, but as I recall,
+we've fixed them on the kernel side. We've even had a private memory.high.tmp
+interface with a value and a timeout, which later was replaced with
+a memory.reclaim interface similar to what we discuss here.
+But with memory.high we set the limit first, so if a user tries to reclaim
+a lot of hot memory, it will soon put all processes in the cgroup into
+the sleep/direct reclaim. So it's not expected to block for too long.
 
-> I am not really sure we really need a node aware interface for memcg.
-> The global reclaim interface will likely need a different node because
-> we do not want to make this CONFIG_MEMCG constrained.
->
+In general it all comes to the question how hard the kernel should try to
+reclaim the memory before giving up. The userspace might have different
+needs in different cases. But if the interface is defined very vaguely like
+it tries for an undefined amount of time and then gives up, it's hard to
+use it in a predictive manner.
 
-The main use case, as Wei mentioned, is memcg-based proactive demotion
-via the reclaim-based demotion
-mechanism in the kernel. We can still have a nodemask argument to the
-global reclaim interface as well.
-
-
-> > [yosryahmed@google.com: refreshed to current master, updated commit
-> > message based on recent discussions and use cases]
-> > Signed-off-by: Shakeel Butt <shakeelb@google.com>
-> > Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
->
-> All that being said. I haven't been a great fan for explicit reclaim
-> triggered from the userspace but I do recognize that limitations of the
-> existing interfaces is just too restrictive.
->
-> Acked-by: Michal Hocko <mhocko@suse.com>
->
-> Thanks!
-> --
-> Michal Hocko
-> SUSE Labs
+Thanks!
