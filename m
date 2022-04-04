@@ -1,89 +1,56 @@
-From: Vaibhav Jain <vaibhav@linux.ibm.com>
+From: Michal Hocko <mhocko@suse.com>
 Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
-Date: Mon, 04 Apr 2022 09:20:16 +0530
-Message-ID: <871qyd7bif.fsf@vajain21.in.ibm.com>
+Date: Mon, 4 Apr 2022 10:44:04 +0200
+Message-ID: <Ykqv1CvGwgmF2jlT@dhcp22.suse.cz>
 References: <20220331084151.2600229-1-yosryahmed@google.com>
- <874k3d6vuq.fsf@vajain21.in.ibm.com>
- <CAJD7tka1UstKYBVrie-_1CgvtaLtVD1uwgzfk5SifxW4FQbOVw@mail.gmail.com>
+ <YkXkA+Oh1Bx33PrU@carbon.dhcp.thefacebook.com>
+ <YkcC3z5ReeQ5vdg9@dhcp22.suse.cz>
+ <YkcvU2hosJV3cL8F@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
 Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : in-reply-to : references : date : message-id : mime-version :
- content-type; s=pp1; bh=9dfEKjiqJk7peBrMbPWk18ZVy+8Q9UvJWWfMRHUvo6k=;
- b=BmhSMTkV4aoD1xA4JdlOkFBk33G1s0UQNOSavGiLW4aOEhSuC4jwUg+FABcgc7aDxbru
- H99MrhYeN6HqwAnTKjoB1W/DYRIh+k21qapAByc6gB1Bh+IKiJakFbKrVvtKrZPsWUiT
- 89KRrpPtO00R3pq0xYQHFUwaoo33d8Lw4J7BKawk1bHjIK/4915rerisvd5q2145wg2I
- 9/8lkLGYhs1ntgmr0Rs48coRyVl+KGHaExQuQbfKR7nvvBNo1JhzWNvyvH7i1M8QtM5w
- S+U5wecnCelw0GhRnO26XBS1kwbZuL60JZcAKt1x6sL0bC/lifhVhPu/EN99gbmamj0D GA== 
-In-Reply-To: <CAJD7tka1UstKYBVrie-_1CgvtaLtVD1uwgzfk5SifxW4FQbOVw@mail.gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1649061845; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=X0N2SxV6GjMVBOdoERBEDYeu88UwXc3gO4jWk0FL4TE=;
+        b=G27ShgYo1cdjBzpUTqcaG4sKAhfdAMb+RpuR95Gu71a11RnyRiUj34mel/G84IricAzl1X
+        kyXI1UO5gR94PqCsnRxPa/AuFaQunXNCiDC9YAXhbTvnBHFk6MjUBQwrQPN3/Paj6Ur3bl
+        eW8JqnJcBgsgVlF6rexeyRdjGKsJWyE=
+Content-Disposition: inline
+In-Reply-To: <YkcvU2hosJV3cL8F@carbon.dhcp.thefacebook.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Linux-MM <linux-mm@kvack.org>, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>
+To: Roman Gushchin <roman.gushchin@linux.dev>
+Cc: Yosry Ahmed <yosryahmed@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>
 
+On Fri 01-04-22 09:58:59, Roman Gushchin wrote:
+> On Fri, Apr 01, 2022 at 03:49:19PM +0200, Michal Hocko wrote:
+> > On Thu 31-03-22 10:25:23, Roman Gushchin wrote:
+> > > On Thu, Mar 31, 2022 at 08:41:51AM +0000, Yosry Ahmed wrote:
+> > [...]
+> > > > - A similar per-node interface can also be added to support proactive
+> > > >   reclaim and reclaim-based demotion in systems without memcg.
+> > > 
+> > > Maybe an option to specify a timeout? That might simplify the userspace part.
+> > 
+> > What do you mean by timeout here? Isn't
+> > timeout $N echo $RECLAIM > ....
+> > 
+> > enough?
+> 
+> It's nice and simple when it's a bash script, but when it's a complex
+> application trying to do the same, it quickly becomes less simple and
+> likely will require a dedicated thread to avoid blocking the main app
+> for too long and a mechanism to unblock it by timer/when the need arises.
+> 
+> In my experience using correctly such semi-blocking interfaces (semi- because
+> it's not clearly defined how much time the syscall can take and whether it
+> makes sense to wait longer) is tricky.
 
-Apologies for the delayed response,
-
-Yosry Ahmed <yosryahmed@google.com> writes:
-
-> On Fri, Apr 1, 2022 at 1:39 AM Vaibhav Jain <vaibhav@linux.ibm.com> wrote:
->>
->>
->> Yosry Ahmed <yosryahmed@google.com> writes:
->> > From: Shakeel Butt <shakeelb@google.com>
->> >
->> > Introduce an memcg interface to trigger memory reclaim on a memory cgroup.
->> <snip>
->>
->> > +
->> > +     while (nr_reclaimed < nr_to_reclaim) {
->> > +             unsigned long reclaimed;
->> > +
->> > +             if (signal_pending(current))
->> > +                     break;
->> > +
->> > +             reclaimed = try_to_free_mem_cgroup_pages(memcg,
->> > +                                             nr_to_reclaim - nr_reclaimed,
->> > +                                             GFP_KERNEL, true);
->> > +
->> > +             if (!reclaimed && !nr_retries--)
->> > +                     break;
->> > +
->> > +             nr_reclaimed += reclaimed;
->>
->> I think there should be a cond_resched() in this loop before
->> try_to_free_mem_cgroup_pages() to have better chances of reclaim
->> succeding early.
->>
-> Thanks for taking the time to look at this!
->
-> I believe this loop is modeled after the loop in memory_high_write()
-> for the memory.high interface. Is there a reason why it should be
-> needed here but not there?
->
-
-memory_high_write() calls drain_all_stock() atleast once before calling
-try_to_free_mem_cgroup_pages(). This would drain all percpu stocks
-for the given memcg and its descendents, giving a high chance
-try_to_free_mem_cgroup_pages() to succeed quickly. Such a functionality
-is missing from this patch.
-
-Adding a cond_resched() would atleast give chance to other processess
-within the memcg to run and make forward progress thereby making more
-pages available for reclaim.
-
-Suggestion is partly based on __perform_reclaim() issues a cond_resche()
-as it may get called repeatedly during direct reclaim path.
-
-
->> <snip>
->>
->> --
->> Cheers
->> ~ Vaibhav
->
-
+We have the same approach to setting other limits which need to perform
+the reclaim. Have we ever hit that as a limitation that would make
+userspace unnecessarily too complex?
 -- 
-Cheers
-~ Vaibhav
+Michal Hocko
+SUSE Labs
