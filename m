@@ -1,30 +1,96 @@
-From: syzbot <syzbot+568dc81cd20b72d4a49f@syzkaller.appspotmail.com>
-Subject: Re: [syzbot] WARNING in cpuset_write_resmask
-Date: Mon, 04 Apr 2022 12:25:14 -0700
-Message-ID: <00000000000070561105dbd91673@google.com>
-References: <000000000000264b2a05d44bca80@google.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
+Date: Mon, 4 Apr 2022 10:18:42 -0700
+Message-ID: <CAJD7tka01bKnxQuizxTN7MtHj_hYu+dSztC2fY0jUPCcvk-9JA@mail.gmail.com>
+References: <20220331084151.2600229-1-yosryahmed@google.com>
+ <874k3d6vuq.fsf@vajain21.in.ibm.com> <CAJD7tka1UstKYBVrie-_1CgvtaLtVD1uwgzfk5SifxW4FQbOVw@mail.gmail.com>
+ <871qyd7bif.fsf@vajain21.in.ibm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <000000000000264b2a05d44bca80@google.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=uhZvWBIYSPxrHtL/UXP4sOCKqMqAgTQ5cHbzprIzUlI=;
+        b=rzW4aaUe8wJHBTW/ExLvJddgYRg1t4YhtSpQVQScLfUwXMUjqtSxLLNi52Rpn5/B9e
+         4fm33kwEjNNC8PObxWVWNVFke/MshRfAUZolEP0oeRGIcWs1cMZ8dqnCMHUOTSSXF2R+
+         Nxc7bj+ITBZAcBUCg6yEKcw6zz2obIN/RDEpBS+4YLPJ4AjvRWmQYm9ga69a1RiY4EDX
+         oGzty137ABa8Ztyvwr1RlrkdXRpVcepr1eO0rJxfGr76K3XVs6VQ3L6PIza3Wro/7erv
+         oZSbbPlhDhdZagCPj0TuB4euNN0h0a1bfMWvh80WoOYfDkjShCEByhv1m6HFJ/OrDhaM
+         E/NQ==
+In-Reply-To: <871qyd7bif.fsf@vajain21.in.ibm.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: cgroups@vger.kernel.org, changbin.du@intel.com, christian.brauner@ubuntu.com, davem@davemloft.net, edumazet@google.com, hannes@cmpxchg.org, hkallweit1@gmail.com, kuba@kernel.org, linux-kernel@vger.kernel.org, lizefan.x@bytedance.com, longman@redhat.com, mkoutny@suse.com, netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com, tj@kernel.org, yajun.deng@linux.dev
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vaibhav Jain <vaibhav@linux.ibm.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>
 
-c3l6Ym90IHN1c3BlY3RzIHRoaXMgaXNzdWUgd2FzIGZpeGVkIGJ5IGNvbW1pdDoKCmNvbW1pdCBk
-MDY4ZWViYmQ0ODIyYjZjMTRhN2VhMzc1ZGZlNTNjYTVjNjljNzc2CkF1dGhvcjogTWljaGFsIEtv
-dXRuw70gPG1rb3V0bnlAc3VzZS5jb20+CkRhdGU6ICAgRnJpIERlYyAxNyAxNTo0ODo1NCAyMDIx
-ICswMDAwCgogICAgY2dyb3VwL2NwdXNldDogTWFrZSBjaGlsZCBjcHVzZXRzIHJlc3RyaWN0IHBh
-cmVudHMgb24gdjEgaGllcmFyY2h5CgpiaXNlY3Rpb24gbG9nOiAgaHR0cHM6Ly9zeXprYWxsZXIu
-YXBwc3BvdC5jb20veC9iaXNlY3QudHh0P3g9MTQyZjE3Zjc3MDAwMDAKc3RhcnQgY29tbWl0OiAg
-IGU1MzEzOTY4YzQxYiBNZXJnZSBicmFuY2ggJ1NwbGl0IGJwZl9za19sb29rdXAgcmVtb3RlX3Bv
-cnQuLgpnaXQgdHJlZTogICAgICAgYnBmLW5leHQKa2VybmVsIGNvbmZpZzogIGh0dHBzOi8vc3l6
-a2FsbGVyLmFwcHNwb3QuY29tL3gvLmNvbmZpZz94PWM0MGI2NzI3NWJmZTJhNTgKZGFzaGJvYXJk
-IGxpbms6IGh0dHBzOi8vc3l6a2FsbGVyLmFwcHNwb3QuY29tL2J1Zz9leHRpZD01NjhkYzgxY2Qy
-MGI3MmQ0YTQ5ZgpzeXogcmVwcm86ICAgICAgaHR0cHM6Ly9zeXprYWxsZXIuYXBwc3BvdC5jb20v
-eC9yZXByby5zeXo/eD0xM2JiOTdjZTcwMDAwMApDIHJlcHJvZHVjZXI6ICAgaHR0cHM6Ly9zeXpr
-YWxsZXIuYXBwc3BvdC5jb20veC9yZXByby5jP3g9MTIwNjJjOGU3MDAwMDAKCklmIHRoZSByZXN1
-bHQgbG9va3MgY29ycmVjdCwgcGxlYXNlIG1hcmsgdGhlIGlzc3VlIGFzIGZpeGVkIGJ5IHJlcGx5
-aW5nIHdpdGg6Cgojc3l6IGZpeDogY2dyb3VwL2NwdXNldDogTWFrZSBjaGlsZCBjcHVzZXRzIHJl
-c3RyaWN0IHBhcmVudHMgb24gdjEgaGllcmFyY2h5CgpGb3IgaW5mb3JtYXRpb24gYWJvdXQgYmlz
-ZWN0aW9uIHByb2Nlc3Mgc2VlOiBodHRwczovL2dvby5nbC90cHNtRUojYmlzZWN0aW9uCg==
+On Sun, Apr 3, 2022 at 8:50 PM Vaibhav Jain <vaibhav@linux.ibm.com> wrote:
+>
+>
+> Apologies for the delayed response,
+>
+> Yosry Ahmed <yosryahmed@google.com> writes:
+>
+> > On Fri, Apr 1, 2022 at 1:39 AM Vaibhav Jain <vaibhav@linux.ibm.com> wrote:
+> >>
+> >>
+> >> Yosry Ahmed <yosryahmed@google.com> writes:
+> >> > From: Shakeel Butt <shakeelb@google.com>
+> >> >
+> >> > Introduce an memcg interface to trigger memory reclaim on a memory cgroup.
+> >> <snip>
+> >>
+> >> > +
+> >> > +     while (nr_reclaimed < nr_to_reclaim) {
+> >> > +             unsigned long reclaimed;
+> >> > +
+> >> > +             if (signal_pending(current))
+> >> > +                     break;
+> >> > +
+> >> > +             reclaimed = try_to_free_mem_cgroup_pages(memcg,
+> >> > +                                             nr_to_reclaim - nr_reclaimed,
+> >> > +                                             GFP_KERNEL, true);
+> >> > +
+> >> > +             if (!reclaimed && !nr_retries--)
+> >> > +                     break;
+> >> > +
+> >> > +             nr_reclaimed += reclaimed;
+> >>
+> >> I think there should be a cond_resched() in this loop before
+> >> try_to_free_mem_cgroup_pages() to have better chances of reclaim
+> >> succeding early.
+> >>
+> > Thanks for taking the time to look at this!
+> >
+> > I believe this loop is modeled after the loop in memory_high_write()
+> > for the memory.high interface. Is there a reason why it should be
+> > needed here but not there?
+> >
+>
+> memory_high_write() calls drain_all_stock() atleast once before calling
+> try_to_free_mem_cgroup_pages(). This would drain all percpu stocks
+> for the given memcg and its descendents, giving a high chance
+> try_to_free_mem_cgroup_pages() to succeed quickly. Such a functionality
+> is missing from this patch.
+>
+> Adding a cond_resched() would atleast give chance to other processess
+> within the memcg to run and make forward progress thereby making more
+> pages available for reclaim.
+>
+> Suggestion is partly based on __perform_reclaim() issues a cond_resche()
+> as it may get called repeatedly during direct reclaim path.
+>
+As Michal pointed out, there is already a call to cond_resched() in
+shrink_node_memcgs().
+>
+> >> <snip>
+> >>
+> >> --
+> >> Cheers
+> >> ~ Vaibhav
+> >
+>
+> --
+> Cheers
+> ~ Vaibhav
