@@ -1,66 +1,62 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [RFC PATCH] cgroup: introduce dynamic protection for memcg
-Date: Tue, 5 Apr 2022 14:08:21 +0200
-Message-ID: <YkwxNaJIg6ptJOYT@dhcp22.suse.cz>
-References: <CAGWkznF7cSyPU0ceYwH6zweJzf-X1bQnS6AJ2-J+WEL0u8jzng@mail.gmail.com>
- <CAJuCfpHneDZMXO_MmQDPA+igAOdAPRUChiq+zftFXGfDzPHNhQ@mail.gmail.com>
- <CAGWkznFTQCm0cusVxA_55fu2WfT-w2coVHrT=JA1D_9_2728mQ@mail.gmail.com>
- <YkqxpEW4m6iU3zMq@dhcp22.suse.cz>
- <CAGWkznG4L3w=9bpZp8TjyWHmqFyZQk-3m4xCZ96zhHCLPawBgQ@mail.gmail.com>
- <CAGWkznGMRohE2_at4Qh8KbwSqNmNqOAG2N1EM+7uE9wKqzRm0A@mail.gmail.com>
- <Ykq7KUleuAg5QnNU@dhcp22.suse.cz>
- <CAGWkznGbd5TOTHZE8uUhak3SnHqEWx_9QCJVtUFUSg9rk3xYEQ@mail.gmail.com>
- <Ykrkx4JML4c81gBV@dhcp22.suse.cz>
- <CAGWkznEaEavCz9GeiYuTqsox2qZK43iQKevt8njkzaHv6KiW-A@mail.gmail.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: Wrapper to run a command in a temporary cgroup
+Date: Tue, 5 Apr 2022 13:27:43 +0200
+Message-ID: <20220405112743.GC13806@blackbody.suse.cz>
+References: <0174490d-8679-3885-df31-e9f6c1e7205b@gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1649160503; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1649158064; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=VYOi21VBdrnEfgCIXqKolf+TBqlw4Pd+D8zmojzTZKg=;
-        b=IzlVwj1UBmMOQmHd3Zp7EfAXZmHByCFtW1hb2ofyTRxldgM0qGnGQd6hQt8jCSab/6KcQa
-        DvpaN+BbZ0cPKEbNjPfbufOi006FMFq43iNjeXx+OsbgAgJLj9TyIVm1NfWnLhJysJp1ob
-        x43XW5Auch1IHBKqWUSgRQ4Q6Do+kNI=
+        bh=S4RYhhYYgL2nQUXq/1MYpaBKBxeBnU3Dj31ERHGSis8=;
+        b=qtPQqZC1moA5TLgAvs7AZe9Ksa/HPjEqpo3mBs5dL2NYE66pYPmmw3R9brwHzd4EtNSzZY
+        0aSQsTeOmrOeLCMddapTYRluiqgu411jHFwFT1TZrgu6X03epsdtSmYOIj2GYEcKR/QTBS
+        RagW8WedBfSTyebZ0lMgh+uNP88yk1k=
 Content-Disposition: inline
-In-Reply-To: <CAGWkznEaEavCz9GeiYuTqsox2qZK43iQKevt8njkzaHv6KiW-A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <0174490d-8679-3885-df31-e9f6c1e7205b-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:MEMORY MANAGEMENT" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ke Wang <ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+To: "R. Diez" <rdiez1999-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Mon 04-04-22 21:14:40, Zhaoyang Huang wrote:
-[...]
-> Please be noticed that this patch DOES protect the memcg when external
-> pressure is 1GB as fixed low does.
+Hello.
 
-This is getting more and more confusing (at least to me). Could you
-describe the behavior of the reclaim for the following setups/situations?
+On Mon, Apr 04, 2022 at 02:25:27PM +0200, "R. Diez" <rdiez1999-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> run-on-temporary-cgroup.sh cmd arg1 ... argn.
+> 
+> The tool should create a temporary cgroup, run the process inside, and
+> return the same exit code as the user command.
 
-a) mostly reclaiming a clean page cache - via kswapd
-b) same as above but the direct reclaim is necessary but very
-   lightweight
-c) direct reclaim makes fwd progress but not enough to satisfy the
-   allocation request (so the reclaim has to be retried)
-d) direct reclaim not making progress and low limit protection is
-   ignored.
+This sounds very much like `systemd-run --scope`.
 
-Say we have several memcgs and only some have low memory protection
-configured. What is the user observable state of the protected group and
-when and how much the protection can be updated?
+> Those requirements are similar to what systemd-run does, but I need an
+> alternative which does not depend on systemd.
 
-I think it would be also helpful to describe the high level semantic of
-this feature.
+Fair enough.
 
-> Besides, how does the admin decide
-> the exact number of low/min if it expand from small to even xGB in a
-> quick changing scenario?
+> Even if you have systemd, systemd-run is rather convenient, but it is
+> somewhat heavy weight 
 
-This is not really related, is it? There are different ways to tune for
-the protection.
+Then a suggestion of using a container runtime is likely out of question
+too.
 
-[...]
--- 
-Michal Hocko
-SUSE Labs
+> If there is no such a tool, can someone give me some hints on how to
+> implement one? Is it possible in Shell or Perl? Or do I need to reach
+> to C / C++? Is there anything similar I could take as basis?
+
+There's also libcg [1] (whose cgroup v2 support is WIP AFAIK) with its
+cgexec utility. I don't know other tools (besides the named previously).
+
+You can implement it in whatever environment that can interact with
+filesystem (and perhaps poll for events), it's all documented in [2]
+(alternatively [3], which I'd discourage for a new project).
+
+HTH,
+Michal
+
+[1] https://github.com/libcgroup/libcgroup/blob/main/README
+[2] https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html
+[3] https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/cgroups.html
+
