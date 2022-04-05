@@ -1,34 +1,42 @@
-From: =?UTF-8?B?0JXQvdGM0YjQuNC9INCQ0L3QtNGA0LXQuQ==?= 
-        <and.enshin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: reclaim memory from cgrouped app(/kernel)
-Date: Tue, 5 Apr 2022 18:37:10 +0900
-Message-ID: <CAHoi7SvtE971BuMWwnt=8V-DutO5=sgUGow637MiPq_+3NYbQg@mail.gmail.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
+Date: Tue, 5 Apr 2022 12:09:06 +0200
+Message-ID: <20220405100906.GB13806@blackbody.suse.cz>
+References: <20220331084151.2600229-1-yosryahmed@google.com>
+ <CAAPL-u8g2qkhdTQtFtBS3GNYz0WnyahWEXvR4g_OSaKv+7EozA@mail.gmail.com>
+ <YkcYq8F6MYlMi+yS@cmpxchg.org>
+ <CAAPL-u-za-TTyyC5uMVev9eQyhxZS7q3pVqaUxCFjqk+Sv9+ig@mail.gmail.com>
+ <CALvZod4-fKfv6vbZPZ3nCE=Bue4FUnC+9t27wsznmyd+JKgDbg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=8YjdKne984sfE1TFRfUKmP3/44deiAaiEdvrqOqJMtM=;
-        b=EqSwsfAKfrawy7t8TIrkzB/pZuBKFa36fgsssyo48iNUnMIxKKRCf1pXgUYzWJ7BgI
-         85YRcfppFcrZOBaNypf0/3E5uGd4IvH7X5YoyMfDRrdevnX2q1BfQDMkv1yqKbtkPIZL
-         nCw+nhuyrA65FLKhcnbp+0dIsdQ6b+1sviHN5uoUrUnzKg1eplyo1+haaW+BpwKQZl3k
-         CrhlIYflzKyANa1FtIiXtV0mgZ5/ZIEKcYQ0ThZ+fJUbRY5vSNdD6DqWY++eVL7AeDHw
-         04k4Wij0SCOFfWQ+uv7pcUNaGRfHsa4RCsz6y0MqNRBSuZyDz9mcycQYlh7KbH+sfWCv
-         pOEg==
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1649153348; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=s2JAhA7wRXjstDGSBxsda1XlMcvrnOLvDvnRGSGBhWQ=;
+        b=VUzkhbo1IP8rBXBSTb+xi5+IO+JKiwE8GKiq1RV8GvLLp621TtLgWINmac+lMjA3AxHC7/
+        U+KDroTz7bzqhgUsS1Gvm4ACqI7ELwJOUTcIP0zkEutls9EakN7ohOic0E9tlWNymY7qr2
+        xEeaJnx+CzP6OJK8UrMwCtA0b8swnf8=
+Content-Disposition: inline
+In-Reply-To: <CALvZod4-fKfv6vbZPZ3nCE=Bue4FUnC+9t27wsznmyd+JKgDbg@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Wei Xu <weixugc@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosryahmed@google.com>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, Cgroups <cgroups@vger.kernel.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Greg Thelen <gthelen@google.com>
 
-Hi,
+On Mon, Apr 04, 2022 at 10:08:43AM -0700, Shakeel Butt <shakeelb@google.com> wrote:
+> What would be the challenge on returning the number of bytes reclaimed
+> through cgroup interface?
 
-does kernel reclaim memory inside cgroup - from apps running inside
-cgroup and from part of kernel taking memory somehow related to this
-cgroup - if there is no overall memory pressure in system but memory
-usage in this particular cgroup is close to limit?
+You'd need an object that represents the write size:
 
-If yes, will kernel reclaim pages marked as MADV_FREE?
+> bfd = open("/sys/kernel/mm/reclaim/balloon", O_RDWR);
+> dprintf(bfd, "type=file nodemask=1-2 timeout=30\n")
+> 
+> fd = open("/sys/kernel/fs/cgroup/foo/memory.reclaim", O_WRONLY);
+> reclaimed = splice(bfd, NULL, fd, NULL, reclaim_size);
 
--- 
-Best Regards,
-Andrei Enshin
+(I'm joking with this API but it is a resembling concept.)
+
+Michal
