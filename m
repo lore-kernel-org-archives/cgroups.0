@@ -1,42 +1,78 @@
 From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
-Date: Tue, 5 Apr 2022 12:09:06 +0200
-Message-ID: <20220405100906.GB13806@blackbody.suse.cz>
-References: <20220331084151.2600229-1-yosryahmed@google.com>
- <CAAPL-u8g2qkhdTQtFtBS3GNYz0WnyahWEXvR4g_OSaKv+7EozA@mail.gmail.com>
- <YkcYq8F6MYlMi+yS@cmpxchg.org>
- <CAAPL-u-za-TTyyC5uMVev9eQyhxZS7q3pVqaUxCFjqk+Sv9+ig@mail.gmail.com>
- <CALvZod4-fKfv6vbZPZ3nCE=Bue4FUnC+9t27wsznmyd+JKgDbg@mail.gmail.com>
+Subject: Re: [RFC v4 5/8] dmabuf: Add gpu cgroup charge transfer function
+Date: Tue, 5 Apr 2022 14:12:45 +0200
+Message-ID: <20220405121245.GA30368@blackbody.suse.cz>
+References: <20220328035951.1817417-1-tjmercier@google.com>
+ <20220328035951.1817417-6-tjmercier@google.com>
+ <20220329152142.GA15794@blackbody.suse.cz>
+ <CABdmKX2874NdYCBzpKLnqWhZQDkC2wKz4ZL_aFNqrec6iAutpQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-media-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1649153348; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1649160767; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=s2JAhA7wRXjstDGSBxsda1XlMcvrnOLvDvnRGSGBhWQ=;
-        b=VUzkhbo1IP8rBXBSTb+xi5+IO+JKiwE8GKiq1RV8GvLLp621TtLgWINmac+lMjA3AxHC7/
-        U+KDroTz7bzqhgUsS1Gvm4ACqI7ELwJOUTcIP0zkEutls9EakN7ohOic0E9tlWNymY7qr2
-        xEeaJnx+CzP6OJK8UrMwCtA0b8swnf8=
+        bh=YGolTQlWegdqsJgfgfOCgFdotBM/n5qIvgfFfvEjxd0=;
+        b=BK6a6qL8o7p/MJgbNqqctnSF5bmv5BGKuuqBTv2USITbTpPoKI1f15ogW871KoTo/RdheN
+        2ofE8y9/q59bmAhdL1seIYTAGQd263xP4FVoKwCcc/FYdRc3tUwqP3pmlISrihOeY4NF+U
+        B5AcViJAx3CYaDGctEIJbO7LJzMoxwU=
 Content-Disposition: inline
-In-Reply-To: <CALvZod4-fKfv6vbZPZ3nCE=Bue4FUnC+9t27wsznmyd+JKgDbg@mail.gmail.com>
+In-Reply-To: <CABdmKX2874NdYCBzpKLnqWhZQDkC2wKz4ZL_aFNqrec6iAutpQ@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Wei Xu <weixugc@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosryahmed@google.com>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, Cgroups <cgroups@vger.kernel.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Greg Thelen <gthelen@google.com>
+To: "T.J. Mercier" <tjmercier@google.com>
+Cc: David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arve =?iso-8859-1?B?SGr4bm5lduVn?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@linaro.org>, Liam Mark <lmark@codeaurora.org>, Laura
 
-On Mon, Apr 04, 2022 at 10:08:43AM -0700, Shakeel Butt <shakeelb@google.com> wrote:
-> What would be the challenge on returning the number of bytes reclaimed
-> through cgroup interface?
+On Fri, Apr 01, 2022 at 11:41:36AM -0700, "T.J. Mercier" <tjmercier@google.com> wrote:
+> This link doesn't work for me, but I think you're referring to the
+> discussion about your "RAM_backed_buffers" comment from March 23rd.
 
-You'd need an object that represents the write size:
+(Oops, it's a non-public message. But yes, you guessed it right ;-))
 
-> bfd = open("/sys/kernel/mm/reclaim/balloon", O_RDWR);
-> dprintf(bfd, "type=file nodemask=1-2 timeout=30\n")
+> Anyway the test I did goes like this: enable memcg and gpu cgoups
+> tracking and run a process that allocates 100MiB of dmabufs. Observe
+> memcg and gpu accounting values before and after the allocation.
+
+Thanks for this measurement/dem/demoo.
+
+> Before
+> # cat memory.current gpu.memory.current
+> 14909440
+> system 0
 > 
-> fd = open("/sys/kernel/fs/cgroup/foo/memory.reclaim", O_WRONLY);
-> reclaimed = splice(bfd, NULL, fd, NULL, reclaim_size);
+> <Test program does the allocation of 100MiB of dmabufs>
+> 
+> After
+> # cat memory.current gpu.memory.current
+> 48025600
+> system 104857600
+> 
+> So the memcg value increases by about 30 MiB while the gpu values
+> increases by 100 MiB.
 
-(I'm joking with this API but it is a resembling concept.)
+> This is with kmem enabled, and the /proc/maps
+> file for this process indicates that the majority of that 30 MiB is
+> kernel memory.
+
+> I think this result shows that neither the kernel nor process memory
+> overlap with the gpu cgroup tracking of these allocations.
+
+It depends how the semantics of the 'system' entry is defined, no?
+As I grasped from other thread, the 'total' is going to be removed, so
+'system' represents exclusively device memory?
+
+
+> So despite the fact that these buffers are in main memory, they are
+> allocated in a way that does not result in memcg attribution. (It
+> looks to me like __GFP_ACCOUNT is not set for these.)
+
+(I thought you knew what dmabufs your program used :-p)
+
+So, the goal is to do the tracking and migrations only via the gpu cg
+layer, regardless how memcg charges it (or not).
+
+(I have no opinion on that, I'm just summing it so that we're on the
+same page.)
 
 Michal
