@@ -1,76 +1,180 @@
-From: Tianchen Ding <dtcccc-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [RFC PATCH v2 0/4] Introduce group balancer
-Date: Wed, 6 Apr 2022 10:47:53 +0800
-Message-ID: <b8c08e6f-bb34-7266-0dbc-1e673b6a965c@linux.alibaba.com>
-References: <20220308092629.40431-1-dtcccc@linux.alibaba.com>
+From: "Huang, Ying" <ying.huang@intel.com>
+Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
+Date: Wed, 06 Apr 2022 14:32:24 +0800
+Message-ID: <877d82vi13.fsf@yhuang6-desk2.ccr.corp.intel.com>
+References: <20220331084151.2600229-1-yosryahmed@google.com>
+        <YkcEMdsi9G5y8mX4@dhcp22.suse.cz>
+        <CAAPL-u_i-Mp-Bo7LtP_4aJscY=1JHG_y1H_-A7N_HRAgtz+arg@mail.gmail.com>
+        <87y20nzyw4.fsf@yhuang6-desk2.ccr.corp.intel.com>
+        <CAAPL-u8wjtBRE7KZyZjoQ0eTJecnW35uEXAE3KU0M+AvL=5-ug@mail.gmail.com>
+        <87o81fujdc.fsf@yhuang6-desk2.ccr.corp.intel.com>
+        <CAAPL-u_6XqQYtLAMNFvEo+0XU2VR=XYm0T9btL=g6rVVW2h93w@mail.gmail.com>
+        <87bkxfudrk.fsf@yhuang6-desk2.ccr.corp.intel.com>
+        <CAAPL-u_FVEVE+wTBNYfDibLVKsRuOwEnpigYYRiZ2MbeUs1u8w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
-In-Reply-To: <20220308092629.40431-1-dtcccc-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1649226751; x=1680762751;
+  h=from:to:cc:subject:references:date:in-reply-to:
+   message-id:mime-version;
+  bh=DRhUZhi+ke2tCAFDOkKtZrnyyEngvYwmfRdoy6Io8Ts=;
+  b=GyrRfB3FqCkLokIVTf4cQ5+oUUTL1jAX1I1bzJkd/ZZYs6v5M4eyFFFC
+   ak2yTR9dCCmHsn42LosqbTF6ZDX33atsxZ0bppvu714oMHuTlNQD8KVwk
+   mGEB0u3UWSkn6Z+bgOleoB/vgOtIPUH6JQffPQIIJJUYUKcpz9Bp5gIcl
+   r5fsuyJG2ZIzMgZEE1XTCTFWEMDkrHNNvhgFUQ63vFU/v6wBlGWtyPtB5
+   pw0n80F3LvdPfJ3cCutqfVCsLvulbEiH+wH0U2NUr2UmsyXS+yqWkobJ/
+   p8r8Zs8TOy7OfxtwmX4xK02zxWWWD5AtkQQ9i6X4BehgwJiIkZaNdl2tR
+   w==;
+In-Reply-To: <CAAPL-u_FVEVE+wTBNYfDibLVKsRuOwEnpigYYRiZ2MbeUs1u8w@mail.gmail.com>
+        (Wei Xu's message of "Tue, 5 Apr 2022 22:02:03 -0700")
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michael Wang <yun.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Cruz Zhao <cruzzhao-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Masahiro Yamada <masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Nathan Chancellor <nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, "Gustavo A. R. Silva" <gustavoars@ker>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Wei Xu <weixugc@google.com>
+Cc: Michal Hocko <mhocko@suse.com>, Yosry Ahmed <yosryahmed@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, Cgroups <cgroups@vger.kernel.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Greg Thelen <gthelen@google.com>, Tim Chen <tim.c.chen@linux.intel.com>
 
-Ping~
-Any idea for this patchset? :-)
+Wei Xu <weixugc@google.com> writes:
 
-On 2022/3/8 17:26, Tianchen Ding wrote:
-> Modern platform are growing fast on CPU numbers. To achieve better
-> utility of CPU resource, multiple apps are starting to sharing the CPUs.
-> 
-> What we need is a way to ease confliction in share mode,
-> make groups as exclusive as possible, to gain both performance
-> and resource efficiency.
-> 
-> The main idea of group balancer is to fulfill this requirement
-> by balancing groups of tasks among groups of CPUs, consider this
-> as a dynamic demi-exclusive mode. Task trigger work to settle it's
-> group into a proper partition (minimum predicted load), then try
-> migrate itself into it. To gradually settle groups into the most
-> exclusively partition.
-> 
-> GB can be seen as an optimize policy based on load balance,
-> it obeys the main idea of load balance and makes adjustment
-> based on that.
-> 
-> Our test on ARM64 platform with 128 CPUs shows that,
-> throughput of sysbench memory is improved about 25%,
-> and redis-benchmark is improved up to about 10%.
-> 
-> See each patch for detail:
-> The 1st patch introduces infrastructure.
-> The 2nd patch introduces detail about partition info.
-> The 3rd patch is the main part of group balancer.
-> The 4th patch is about stats.
-> 
-> v2:
-> Put partition info and period settings to cpuset subsys of cgroup_v2.
-> 
-> v1: https://lore.kernel.org/all/98f41efd-74b2-198a-839c-51b785b748a6-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org/
-> 
-> Michael Wang (1):
->    sched: Introduce group balancer
-> 
-> Tianchen Ding (3):
->    sched, cpuset: Introduce infrastructure of group balancer
->    cpuset: Handle input of partition info for group balancer
->    cpuset, gb: Add stat for group balancer
-> 
->   include/linux/cpuset.h   |   5 +
->   include/linux/sched.h    |   5 +
->   include/linux/sched/gb.h |  70 ++++++
->   init/Kconfig             |  12 +
->   kernel/cgroup/cpuset.c   | 405 +++++++++++++++++++++++++++++++-
->   kernel/sched/Makefile    |   1 +
->   kernel/sched/core.c      |   5 +
->   kernel/sched/debug.c     |  10 +-
->   kernel/sched/fair.c      |  26 ++-
->   kernel/sched/gb.c        | 487 +++++++++++++++++++++++++++++++++++++++
->   kernel/sched/sched.h     |  14 ++
->   11 files changed, 1037 insertions(+), 3 deletions(-)
->   create mode 100644 include/linux/sched/gb.h
->   create mode 100644 kernel/sched/gb.c
-> 
+> On Tue, Apr 5, 2022 at 7:50 PM Huang, Ying <ying.huang@intel.com> wrote:
+>>
+>> Wei Xu <weixugc@google.com> writes:
+>>
+>> > On Tue, Apr 5, 2022 at 5:49 PM Huang, Ying <ying.huang@intel.com> wrote:
+>> >>
+>> >> Wei Xu <weixugc@google.com> writes:
+>> >>
+>> >> > On Sat, Apr 2, 2022 at 1:13 AM Huang, Ying <ying.huang@intel.com> wrote:
+>> >> >>
+>> >> >> Wei Xu <weixugc@google.com> writes:
+>> >> >>
+>> >> >> > On Fri, Apr 1, 2022 at 6:54 AM Michal Hocko <mhocko@suse.com> wrote:
+>> >> >> >>
+>> >> >> >> On Thu 31-03-22 08:41:51, Yosry Ahmed wrote:
+>> >> >> >> > From: Shakeel Butt <shakeelb@google.com>
+>> >> >> >> >
+>> >> >>
+>> >> >> [snip]
+>> >> >>
+>> >> >> >> > Possible Extensions:
+>> >> >> >> > --------------------
+>> >> >> >> >
+>> >> >> >> > - This interface can be extended with an additional parameter or flags
+>> >> >> >> >   to allow specifying one or more types of memory to reclaim from (e.g.
+>> >> >> >> >   file, anon, ..).
+>> >> >> >> >
+>> >> >> >> > - The interface can also be extended with a node mask to reclaim from
+>> >> >> >> >   specific nodes. This has use cases for reclaim-based demotion in memory
+>> >> >> >> >   tiering systens.
+>> >> >> >> >
+>> >> >> >> > - A similar per-node interface can also be added to support proactive
+>> >> >> >> >   reclaim and reclaim-based demotion in systems without memcg.
+>> >> >> >> >
+>> >> >> >> > For now, let's keep things simple by adding the basic functionality.
+>> >> >> >>
+>> >> >> >> Yes, I am for the simplicity and this really looks like a bare minumum
+>> >> >> >> interface. But it is not really clear who do you want to add flags on
+>> >> >> >> top of it?
+>> >> >> >>
+>> >> >> >> I am not really sure we really need a node aware interface for memcg.
+>> >> >> >> The global reclaim interface will likely need a different node because
+>> >> >> >> we do not want to make this CONFIG_MEMCG constrained.
+>> >> >> >
+>> >> >> > A nodemask argument for memory.reclaim can be useful for memory
+>> >> >> > tiering between NUMA nodes with different performance.  Similar to
+>> >> >> > proactive reclaim, it can allow a userspace daemon to drive
+>> >> >> > memcg-based proactive demotion via the reclaim-based demotion
+>> >> >> > mechanism in the kernel.
+>> >> >>
+>> >> >> I am not sure whether nodemask is a good way for demoting pages between
+>> >> >> different types of memory.  For example, for a system with DRAM and
+>> >> >> PMEM, if specifying DRAM node in nodemask means demoting to PMEM, what
+>> >> >> is the meaning of specifying PMEM node? reclaiming to disk?
+>> >> >>
+>> >> >> In general, I have no objection to the idea in general.  But we should
+>> >> >> have a clear and consistent interface.  Per my understanding the default
+>> >> >> memcg interface is for memory, regardless of memory types.  The memory
+>> >> >> reclaiming means reduce the memory usage, regardless of memory types.
+>> >> >> We need to either extending the semantics of memory reclaiming (to
+>> >> >> include memory demoting too), or add another interface for memory
+>> >> >> demoting.
+>> >> >
+>> >> > Good point.  With the "demote pages during reclaim" patch series,
+>> >> > reclaim is already extended to demote pages as well.  For example,
+>> >> > can_reclaim_anon_pages() returns true if demotion is allowed and
+>> >> > shrink_page_list() can demote pages instead of reclaiming pages.
+>> >>
+>> >> These are in-kernel implementation, not the ABI.  So we still have
+>> >> the opportunity to define the ABI now.
+>> >>
+>> >> > Currently, demotion is disabled for memcg reclaim, which I think can
+>> >> > be relaxed and also necessary for memcg-based proactive demotion.  I'd
+>> >> > like to suggest that we extend the semantics of memory.reclaim to
+>> >> > cover memory demotion as well.  A flag can be used to enable/disable
+>> >> > the demotion behavior.
+>> >>
+>> >> If so,
+>> >>
+>> >> # echo A > memory.reclaim
+>> >>
+>> >> means
+>> >>
+>> >> a) "A" bytes memory are freed from the memcg, regardless demoting is
+>> >>    used or not.
+>> >>
+>> >> or
+>> >>
+>> >> b) "A" bytes memory are reclaimed from the memcg, some of them may be
+>> >>    freed, some of them may be just demoted from DRAM to PMEM.  The total
+>> >>    number is "A".
+>> >>
+>> >> For me, a) looks more reasonable.
+>> >>
+>> >
+>> > We can use a DEMOTE flag to control the demotion behavior for
+>> > memory.reclaim.  If the flag is not set (the default), then
+>> > no_demotion of scan_control can be set to 1, similar to
+>> > reclaim_pages().
+>>
+>> If we have to use a flag to control the behavior, I think it's better to
+>> have a separate interface (e.g. memory.demote).  But do we really need b)?
+>>
+>
+> I am fine with either approach: a separate interface similar to
+> memory.reclaim, but dedicated to demotion, or multiplexing
+> memory.reclaim for demotion with a flag.
+>
+> My understanding is that with the "demote pages during reclaim"
+> support, b) is the expected behavior, or more precisely, pages that
+> cannot be demoted may be freed or swapped out.  This is reasonable.
+> Demotion-only can also be supported via some arguments to the
+> interface and changes to demotion code in the kernel.  After all, this
+> interface is being designed to be extensible based on the discussions
+> so far.
 
+I think we should define the interface not from the current
+implementation point of view, but from the requirement point of view.
+For proactive reclaim, per my understanding, the requirement is,
+
+  we found that there's some cold pages in some workloads, so we can
+  take advantage of the proactive reclaim to reclaim some pages so that
+  other workload can use the freed memory.
+
+For proactive demotion, per my understanding, the requirement could be,
+
+  We found that there's some cold pages in fast memory (e.g. DRAM) in
+  some workloads, so we can take advantage of the proactive demotion to
+  demote some pages so that other workload can use the freed fast
+  memory.  Given the DRAM partition support Tim (Cced) is working on.
+
+Why do we need something in the middle?
+
+Best Regards,
+Huang, Ying
+
+>> > The question is then whether we want to rename memory.reclaim to
+>> > something more general.  I think this name is fine if reclaim-based
+>> > demotion is an accepted concept.
+>>
+>> Best Regards,
+>> Huang, Ying
