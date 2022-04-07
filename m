@@ -1,77 +1,75 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 3/4] selftests: cgroup: fix alloc_anon_noexit()
- instantly freeing memory
-Date: Thu, 7 Apr 2022 16:04:22 -0700
-Message-ID: <CAJD7tkaPaXQ4M_w-YxJizD2DG8co-3Q2bVDfd7_FaG2ivgT6UA@mail.gmail.com>
-References: <20220407224244.1374102-1-yosryahmed@google.com> <20220407224244.1374102-4-yosryahmed@google.com>
+From: Tim Chen <tim.c.chen@linux.intel.com>
+Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
+Date: Thu, 07 Apr 2022 16:11:06 -0700
+Message-ID: <df6110a09cacc80ee1cbe905a71273a5f3953e16.camel@linux.intel.com>
+References: <20220331084151.2600229-1-yosryahmed@google.com>
+         <YkcEMdsi9G5y8mX4@dhcp22.suse.cz>
+         <CAAPL-u_i-Mp-Bo7LtP_4aJscY=1JHG_y1H_-A7N_HRAgtz+arg@mail.gmail.com>
+         <87y20nzyw4.fsf@yhuang6-desk2.ccr.corp.intel.com>
+         <CAAPL-u8wjtBRE7KZyZjoQ0eTJecnW35uEXAE3KU0M+AvL=5-ug@mail.gmail.com>
+         <87o81fujdc.fsf@yhuang6-desk2.ccr.corp.intel.com>
+         <CAAPL-u_6XqQYtLAMNFvEo+0XU2VR=XYm0T9btL=g6rVVW2h93w@mail.gmail.com>
+         <87bkxfudrk.fsf@yhuang6-desk2.ccr.corp.intel.com>
+         <215bd7332aee0ed1092bad4d826a42854ebfd04a.camel@linux.intel.com>
+         <CAAPL-u_aAbDOmATSA8ZvjnfBk_7EoXvLoh0etM0fB0aY1845VQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=LQwT+/mAGUqM3bKuuBQMYn0uTeyRqxSYD1X0xo7/rPE=;
-        b=Te8C7q8zW+qLm4J/emex42n1YOTNTgYioZ6aL6jd2MEBaCBiG1MonTEaVigQYrxCnX
-         lc2a1Zp9F/CS9bGuKEKpu93mdMYLs+lQfsbi5mhteuVgcuoJm0wqWfraYddXR8D2bRg6
-         g80ZitZ42SJag/feMLrn8DX95l13h9byUhXsltGRKCs9KWV88T/Q6QdZkDXhfdleSkQe
-         ryLxvSOK7GWWj6jsOpKFb2APmR0DtW+cvDsI5vs30igZtouAhcFKm2Hq3Ic2zZxJev/e
-         Hyk2ptU132DXhvbF7YzTGVCDK2FzEn2yYfELqe296BiWwOwU5IvauV2Zbzna4r5BI7u0
-         VEvQ==
-In-Reply-To: <20220407224244.1374102-4-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1649373068; x=1680909068;
+  h=message-id:subject:from:to:cc:date:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=dUrof2VxTLYM9v29u7hGUQzQzbvw3951Xsun8u5eDL4=;
+  b=mJMpwghtkg8+RC4t+uTG7hFap8ZZ10816fv++IhnmoVAGLcnKqEWFCcI
+   BHbk3g8rh2f4VnqHDjecymjkeKE5RZFozo6IBDSwp8FdQSUVXhVpPzvLf
+   LpCXQ1OcOAOrGAL30xp29Fs5pOQbIhIRRZIRyoT1WY5cwOsyC6GuFGNRN
+   U3At7u5n3YQKtumTArnRKTc6vtWtjHVmLiz4riAoxla05TMCkAfWSeUnX
+   n4lEgNv/8hrXujKlVE8SQUXeigU0pyKWiMvqZXopb4FCqSEkRmTFVer1x
+   FlnBBX4PohqSKJ1MaSCNnCV/PE0pIf3R0TM1tYzI92awE7azS2JN6sHa2
+   A==;
+In-Reply-To: <CAAPL-u_aAbDOmATSA8ZvjnfBk_7EoXvLoh0etM0fB0aY1845VQ@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Vaibhav Jain <vaibhav-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Huang-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel
+To: Wei Xu <weixugc@google.com>
+Cc: "Huang, Ying" <ying.huang@intel.com>, Michal Hocko <mhocko@suse.com>, Yosry Ahmed <yosryahmed@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, Cgroups <cgroups@vger.kernel.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Greg Thelen <gthelen@google.com>
 
-On Thu, Apr 7, 2022 at 3:43 PM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> Currently, alloc_anon_noexit() calls alloc_anon() which instantly frees
-> the allocated memory. alloc_anon_noexit() is usually used with
-> cg_run_nowait() to run a process in the background that allocates
-> memory. It makes sense for the background process to keep the memory
-> allocated and not instantly free it (otherwise there is no point of
-> running it in the background).
->
-> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
->  tools/testing/selftests/cgroup/test_memcontrol.c | 9 +++++++--
->  1 file changed, 7 insertions(+), 2 deletions(-)
->
-> diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-> index 36ccf2322e21..c1ec71d83af7 100644
-> --- a/tools/testing/selftests/cgroup/test_memcontrol.c
-> +++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-> @@ -211,13 +211,18 @@ static int alloc_pagecache_50M_noexit(const char *cgroup, void *arg)
->  static int alloc_anon_noexit(const char *cgroup, void *arg)
->  {
->         int ppid = getppid();
-> +       size_t size = (unsigned long)arg;
-> +       char *buf, *ptr;
->
-> -       if (alloc_anon(cgroup, arg))
-> -               return -1;
-> +       buf = malloc(size);
-> +       for (ptr = buf; ptr < buf + size; ptr += PAGE_SIZE)
-> +               *ptr = 0;
->
->         while (getppid() == ppid)
->                 sleep(1);
->
-> +       printf("Freeing buffer");
+On Thu, 2022-04-07 at 15:12 -0700, Wei Xu wrote:
 
-Hey Andew,
+> 
+> (resending in plain-text, sorry).
+> 
+> memory.demote can work with any level of memory tiers if a nodemask
+> argument (or a tier argument if there is a more-explicitly defined,
+> userspace visible tiering representation) is provided.  The semantics
+> can be to demote X bytes from these nodes to their next tier.
+> 
 
-I am very sorry but I left a debugging printf there by mistake. If
-it's no hassle, do you mind removing it from the patch (assuming I
-won't need to send a v3 anyway)?
+We do need some kind of userspace visible tiering representation.
+Will be nice if I can tell the memory type, nodemask of nodes in tier Y with
 
-Thanks!
+cat memory.tier_Y
 
-> +       free(buf);
->         return 0;
->  }
->
-> --
-> 2.35.1.1178.g4f1659d476-goog
->
+
+> memory_dram/memory_pmem assumes the hardware for a particular memory
+> tier, which is undesirable.  For example, it is entirely possible that
+> a slow memory tier is implemented by a lower-cost/lower-performance
+> DDR device connected via CXL.mem, not by PMEM.  It is better for this
+> interface to speak in either the NUMA node abstraction or a new tier
+> abstraction.
+
+Just from the perspective of memory.reclaim and memory.demote, I think
+they could work with nodemask.  For ease of management,
+some kind of abstraction of tier information like nodemask, memory type
+and expected performance should be readily accessible by user space.  
+
+Tim
+
+> 
+> It is also desirable to make this interface stateless, i.e. not to
+> require the setting of memory_dram.reclaim_policy.  Any policy can be
+> specified as arguments to the request itself and should only affect
+> that particular request.
+> 
+> Wei
+
