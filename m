@@ -1,100 +1,228 @@
-From: "Huang, Ying" <ying.huang@intel.com>
-Subject: Re: [PATCH resend] memcg: introduce per-memcg reclaim interface
-Date: Fri, 08 Apr 2022 11:08:28 +0800
-Message-ID: <87y20gtgpf.fsf@yhuang6-desk2.ccr.corp.intel.com>
-References: <20220331084151.2600229-1-yosryahmed@google.com>
-        <YkcEMdsi9G5y8mX4@dhcp22.suse.cz>
-        <CAAPL-u_i-Mp-Bo7LtP_4aJscY=1JHG_y1H_-A7N_HRAgtz+arg@mail.gmail.com>
-        <87y20nzyw4.fsf@yhuang6-desk2.ccr.corp.intel.com>
-        <CAAPL-u8wjtBRE7KZyZjoQ0eTJecnW35uEXAE3KU0M+AvL=5-ug@mail.gmail.com>
-        <87o81fujdc.fsf@yhuang6-desk2.ccr.corp.intel.com>
-        <CAAPL-u_6XqQYtLAMNFvEo+0XU2VR=XYm0T9btL=g6rVVW2h93w@mail.gmail.com>
-        <87bkxfudrk.fsf@yhuang6-desk2.ccr.corp.intel.com>
-        <215bd7332aee0ed1092bad4d826a42854ebfd04a.camel@linux.intel.com>
-        <CAAPL-u_aAbDOmATSA8ZvjnfBk_7EoXvLoh0etM0fB0aY1845VQ@mail.gmail.com>
-        <df6110a09cacc80ee1cbe905a71273a5f3953e16.camel@linux.intel.com>
-        <CAAPL-u-oF5HQ26w1czNCmA5VadXOfC54GbGpSppva86YEkefyA@mail.gmail.com>
+From: Wei Xu <weixugc@google.com>
+Subject: Re: [PATCH v2 1/4] memcg: introduce per-memcg reclaim interface
+Date: Thu, 7 Apr 2022 20:50:01 -0700
+Message-ID: <CAAPL-u_rUqOV4FTy3NKjFw4X4Nnm+eoG46jiN3Qa7TJbogcZ=Q@mail.gmail.com>
+References: <20220407224244.1374102-1-yosryahmed@google.com> <20220407224244.1374102-2-yosryahmed@google.com>
 Mime-Version: 1.0
 Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1649387315; x=1680923315;
-  h=from:to:cc:subject:references:date:in-reply-to:
-   message-id:mime-version;
-  bh=mip+/VJYm0x9QxlXtQ8hn3QtLV04GsE06YGBmuPIRI4=;
-  b=HL0IFoDeS9iaslDDdNpKjMpVdK5dVbPpV4hZ+O7IEV8Ncscsp7SnE6mD
-   fpFXfnQKKML4CK+/ZO19AR75HEhb01D9+Em+GR05AF6fkSIYB2avinusx
-   IJxe51a5uGcTN/SGbMSFjiiqO3GbsBGhUJPXH19+gffw0W+/1IxqhUG/p
-   09rXXdOt8TJTcik9dqa8SY5mBdltWKg4yh8timcgiaOv471w/WWzo6G6R
-   mJL46Nl6AXGa43A7SO72n0qIA9KNrJi1K/zTchEFcpCML/Ney/CZHO9SV
-   0yYScdOHq8j5wWnw5irpYjEF+Cxfp0q6nqOwxXOS9eFSTkLkWBEi0Xk5K
-   A==;
-In-Reply-To: <CAAPL-u-oF5HQ26w1czNCmA5VadXOfC54GbGpSppva86YEkefyA@mail.gmail.com>
-        (Wei Xu's message of "Thu, 7 Apr 2022 19:10:20 -0700")
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=2QmAYw2YLFK+N9yPKn4RBghklNnQzBJleL0zBPtPDBI=;
+        b=sOPdU5+aYTOb3Ha6VI8yahXVwXAUfRMGetQTs3UZXodIXilTGhISQ2xWnnoNYFbOCE
+         4w+P0CMEgeaKhwhopVLt3fTsdUJlIZNCRx7v92BnBuDFo5Mw1CwLwOQxMmEhwzt907Km
+         LdWcsGOQJKeuBQVG93y+qP0RiTyTIyA7knvtBivZPWiU1Gxx7CCgXsSvltU5XbPnjtGQ
+         P6WeuYF0IvSYvCLNs4Q5a52B0sleld017mpp59YWGetE+8TzuKF0HHhoWxu+sbpSTu4u
+         L+CvAT5Tu9iaTyZIuG7s5g4HvzoX4UP4FFvzjnL7pwc9+KYaBDn6MuWY1m52qTpiJoiJ
+         P4rQ==
+In-Reply-To: <20220407224244.1374102-2-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wei Xu <weixugc@google.com>
-Cc: Tim Chen <tim.c.chen@linux.intel.com>, Michal Hocko <mhocko@suse.com>, Yosry Ahmed <yosryahmed@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, Cgroups <cgroups@vger.kernel.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Jonathan Corbet <corbet@lwn.net>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Greg Thelen <gthelen@google.com>
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Greg Thelen <gthelen@google.com>, Chen Wandun <chenwandun@huawei.com>, Vaibhav Jain <vaibhav@linux.ibm.com>, Huang@google.com, Ying <ying.huang@intel.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Tim Chen <tim.c.chen@linux.intel.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Wei Xu <weixugc@google.com> writes:
-
-> On Thu, Apr 7, 2022 at 4:11 PM Tim Chen <tim.c.chen@linux.intel.com> wrote:
->>
->> On Thu, 2022-04-07 at 15:12 -0700, Wei Xu wrote:
->>
->> >
->> > (resending in plain-text, sorry).
->> >
->> > memory.demote can work with any level of memory tiers if a nodemask
->> > argument (or a tier argument if there is a more-explicitly defined,
->> > userspace visible tiering representation) is provided.  The semantics
->> > can be to demote X bytes from these nodes to their next tier.
->> >
->>
->> We do need some kind of userspace visible tiering representation.
->> Will be nice if I can tell the memory type, nodemask of nodes in tier Y with
->>
->> cat memory.tier_Y
->>
->>
->> > memory_dram/memory_pmem assumes the hardware for a particular memory
->> > tier, which is undesirable.  For example, it is entirely possible that
->> > a slow memory tier is implemented by a lower-cost/lower-performance
->> > DDR device connected via CXL.mem, not by PMEM.  It is better for this
->> > interface to speak in either the NUMA node abstraction or a new tier
->> > abstraction.
->>
->> Just from the perspective of memory.reclaim and memory.demote, I think
->> they could work with nodemask.  For ease of management,
->> some kind of abstraction of tier information like nodemask, memory type
->> and expected performance should be readily accessible by user space.
->>
+On Thu, Apr 7, 2022 at 3:43 PM Yosry Ahmed <yosryahmed@google.com> wrote:
 >
-> I agree.  The tier information should be provided at the system level.
-> One suggestion is to have a new directory "/sys/devices/system/tier/"
-> for tiers, e.g.:
+> From: Shakeel Butt <shakeelb@google.com>
 >
-> /sys/devices/system/tier/tier0/memlist: all memory nodes in tier 0.
-> /sys/devices/system/tier/tier1/memlist: all memory nodes in tier 1.
-
-I think that it may be sufficient to make tier an attribute of "node".
-Some thing like,
-
-/sys/devices/system/node/nodeX/memory_tier
-
-Best Regards,
-Huang, Ying
-
-> We can discuss this tier representation in a new thread.
+> Introduce a memcg interface to trigger memory reclaim on a memory cgroup.
 >
->> Tim
->>
->> >
->> > It is also desirable to make this interface stateless, i.e. not to
->> > require the setting of memory_dram.reclaim_policy.  Any policy can be
->> > specified as arguments to the request itself and should only affect
->> > that particular request.
->> >
->> > Wei
->>
+> Use case: Proactive Reclaim
+> ---------------------------
+>
+> A userspace proactive reclaimer can continuously probe the memcg to
+> reclaim a small amount of memory. This gives more accurate and
+> up-to-date workingset estimation as the LRUs are continuously
+> sorted and can potentially provide more deterministic memory
+> overcommit behavior. The memory overcommit controller can provide
+> more proactive response to the changing behavior of the running
+> applications instead of being reactive.
+>
+> A userspace reclaimer's purpose in this case is not a complete replacement
+> for kswapd or direct reclaim, it is to proactively identify memory savings
+> opportunities and reclaim some amount of cold pages set by the policy
+> to free up the memory for more demanding jobs or scheduling new jobs.
+>
+> A user space proactive reclaimer is used in Google data centers.
+> Additionally, Meta's TMO paper recently referenced a very similar
+> interface used for user space proactive reclaim:
+> https://dl.acm.org/doi/pdf/10.1145/3503222.3507731
+>
+> Benefits of a user space reclaimer:
+> -----------------------------------
+>
+> 1) More flexible on who should be charged for the cpu of the memory
+> reclaim. For proactive reclaim, it makes more sense to be centralized.
+>
+> 2) More flexible on dedicating the resources (like cpu). The memory
+> overcommit controller can balance the cost between the cpu usage and
+> the memory reclaimed.
+>
+> 3) Provides a way to the applications to keep their LRUs sorted, so,
+> under memory pressure better reclaim candidates are selected. This also
+> gives more accurate and uptodate notion of working set for an
+> application.
+>
+> Why memory.high is not enough?
+> ------------------------------
+>
+> - memory.high can be used to trigger reclaim in a memcg and can
+>   potentially be used for proactive reclaim.
+>   However there is a big downside in using memory.high. It can potentially
+>   introduce high reclaim stalls in the target application as the
+>   allocations from the processes or the threads of the application can hit
+>   the temporary memory.high limit.
+>
+> - Userspace proactive reclaimers usually use feedback loops to decide
+>   how much memory to proactively reclaim from a workload. The metrics
+>   used for this are usually either refaults or PSI, and these metrics
+>   will become messy if the application gets throttled by hitting the
+>   high limit.
+>
+> - memory.high is a stateful interface, if the userspace proactive
+>   reclaimer crashes for any reason while triggering reclaim it can leave
+>   the application in a bad state.
+>
+> - If a workload is rapidly expanding, setting memory.high to proactively
+>   reclaim memory can result in actually reclaiming more memory than
+>   intended.
+>
+> The benefits of such interface and shortcomings of existing interface
+> were further discussed in this RFC thread:
+> https://lore.kernel.org/linux-mm/5df21376-7dd1-bf81-8414-32a73cea45dd@google.com/
+>
+> Interface:
+> ----------
+>
+> Introducing a very simple memcg interface 'echo 10M > memory.reclaim' to
+> trigger reclaim in the target memory cgroup.
+>
+> The interface is introduced as a nested-keyed file to allow for future
+> optional arguments to be easily added to configure the behavior of
+> reclaim.
+>
+> Possible Extensions:
+> --------------------
+>
+> - This interface can be extended with an additional parameter or flags
+>   to allow specifying one or more types of memory to reclaim from (e.g.
+>   file, anon, ..).
+>
+> - The interface can also be extended with a node mask to reclaim from
+>   specific nodes. This has use cases for reclaim-based demotion in memory
+>   tiering systens.
+>
+> - A similar per-node interface can also be added to support proactive
+>   reclaim and reclaim-based demotion in systems without memcg.
+>
+> - Add a timeout parameter to make it easier for user space to call the
+>   interface without worrying about being blocked for an undefined amount
+>   of time.
+>
+> For now, let's keep things simple by adding the basic functionality.
+>
+> [yosryahmed@google.com: refreshed to current master, updated commit
+> message based on recent discussions and use cases]
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> Acked-by: Michal Hocko <mhocko@suse.com>
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst | 21 ++++++++++++++
+>  mm/memcontrol.c                         | 37 +++++++++++++++++++++++++
+>  2 files changed, 58 insertions(+)
+>
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 69d7a6983f78..19bcd73cad03 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1208,6 +1208,27 @@ PAGE_SIZE multiple when read back.
+>         high limit is used and monitored properly, this limit's
+>         utility is limited to providing the final safety net.
+>
+> +  memory.reclaim
+> +       A write-only nested-keyed file which exists for all cgroups.
+> +
+> +       This is a simple interface to trigger memory reclaim in the
+> +       target cgroup.
+> +
+> +       This file accepts a single key, the number of bytes to reclaim.
+> +       No nested keys are currently supported.
+> +
+> +       Example::
+> +
+> +         echo "1G" > memory.reclaim
+> +
+> +       The interface can be later extended with nested keys to
+> +       configure the reclaim behavior. For example, specify the
+> +       type of memory to reclaim from (anon, file, ..).
+> +
+> +       Please note that the kernel can over or under reclaim from
+> +       the target cgroup. If less bytes are reclaimed than the
+> +       specified amount, -EAGAIN is returned.
+> +
+>    memory.oom.group
+>         A read-write single value file which exists on non-root
+>         cgroups.  The default value is "0".
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 725f76723220..2b214b66d333 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -6355,6 +6355,38 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
+>         return nbytes;
+>  }
+>
+> +static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+> +                             size_t nbytes, loff_t off)
+> +{
+> +       struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+> +       unsigned int nr_retries = MAX_RECLAIM_RETRIES;
+> +       unsigned long nr_to_reclaim, nr_reclaimed = 0;
+> +       int err;
+> +
+> +       buf = strstrip(buf);
+> +       err = page_counter_memparse(buf, "", &nr_to_reclaim);
+> +       if (err)
+> +               return err;
+> +
+> +       while (nr_reclaimed < nr_to_reclaim) {
+> +               unsigned long reclaimed;
+> +
+> +               if (signal_pending(current))
+> +                       break;
+> +
+> +               reclaimed = try_to_free_mem_cgroup_pages(memcg,
+> +                                               nr_to_reclaim - nr_reclaimed,
+> +                                               GFP_KERNEL, true);
+> +
+> +               if (!reclaimed && !nr_retries--)
+> +                       break;
+> +
+> +               nr_reclaimed += reclaimed;
+> +       }
+> +
+> +       return nr_reclaimed < nr_to_reclaim ? -EAGAIN : nbytes;
+> +}
+> +
+>  static struct cftype memory_files[] = {
+>         {
+>                 .name = "current",
+> @@ -6413,6 +6445,11 @@ static struct cftype memory_files[] = {
+>                 .seq_show = memory_oom_group_show,
+>                 .write = memory_oom_group_write,
+>         },
+> +       {
+> +               .name = "reclaim",
+> +               .flags = CFTYPE_NS_DELEGATABLE,
+> +               .write = memory_reclaim,
+> +       },
+>         { }     /* terminate */
+>  };
+>
+> --
+> 2.35.1.1178.g4f1659d476-goog
+>
+
+Acked-by: Wei Xu <weixugc@google.com>
