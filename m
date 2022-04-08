@@ -1,41 +1,91 @@
-From: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Yosry Ahmed <yosryahmed@google.com>
 Subject: Re: [PATCH v3 1/4] memcg: introduce per-memcg reclaim interface
-Date: Fri, 8 Apr 2022 10:55:56 -0400
-Message-ID: <YlBM/HlPyPUZew5N@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
+Date: Fri, 8 Apr 2022 10:21:09 -0700
+Message-ID: <CAJD7tkY8NwjOVeZX30Fc72kp5zRESBWRgXW3Ji-Owp0jjDuEbw@mail.gmail.com>
 References: <20220408045743.1432968-1-yosryahmed@google.com>
- <20220408045743.1432968-2-yosryahmed@google.com>
- <YlA754XNFAmWQcm6@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
- <YlBCeadBqbeVvALK@dhcp22.suse.cz>
+ <20220408045743.1432968-2-yosryahmed@google.com> <YlA754XNFAmWQcm6@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=RkQdhzMDs8tUm3hby//Hd4ev3pWtbOp3xvInpobyZS4=;
-        b=lrvPVCsfGDkCGwWe+RqJphGmx2SiDaJ/okIVXFr8qJJlv4iQ0V5JkRw7+guRP5MaZw
-         mSDnFKo0tUG8SHb/7TwFtprWvMIxR8/ouU0ZIgADO7mnBVZmIqpXtIXqhxOLaBkQG8Lf
-         MXzCgZYkcqy/gIIW0fdXxdV/4AmvuSD1c0L9oQyKOoAgESKgyuvDqrC3xLPjHwcs6kSI
-         3gBvM9nBKrAH4VCbo0mws7lAb+6OwhEpHeKM2Q2ymtjm+DXvVzPOBR/r5P1dnjBUVIDL
-         e97dBtSrb3+S3OvirDjNe8NRRCKOtTA52lXeSjeZj+y3RaXdT5vClJ5bg0/IR9EuISIP
-         /wPg==
-Content-Disposition: inline
-In-Reply-To: <YlBCeadBqbeVvALK-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=iM6uzIK2cRc6kF+XG8vLt5tKa+TcH20c4ZrUE/qi6/w=;
+        b=lhsl/nELK+CjK9EjiqEgxM40CNFrd8O33D5yScOZeEFmN2mtYBl1RRyh7teoVon061
+         kj8aY6QVT/NAOTigSUu8Y7225f3BAoDTOIFbFJkqfikA4nBu9W5zKfjzNjscVbUZpCEL
+         TOfbFvs9CWUtBubunb4AJlZmBb5dRqOf9Yk4pxiGSjBWmoRGBB5QRajWXj9az8Q251gb
+         crS7qVsWxwVcQFaYZGkjAOUYH9TaUrXMqf5Y/wuhESvfTMT3NyPb+tqY6eFtedGk1kHC
+         uNhWX+utb/ZtxKPlsJceIR3VICKbc1+Hr9yOvb7P/hl/5YSRR9rMdsoD2qOcmmo91tnf
+         ktpA==
+In-Reply-To: <YlA754XNFAmWQcm6@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Vaibhav Jain <vaibhav-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, l
+To: Dan Schatzberg <schatzberg.dan@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>, Chen Wandun <chenwandun@huawei.com>, Vaibhav Jain <vaibhav@linux.ibm.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Tim Chen <tim.c.chen@linux.intel.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Fri, Apr 08, 2022 at 04:11:05PM +0200, Michal Hocko wrote:
-> Regarding "max" as a possible input. I am not really sure to be honest.
-> I can imagine that it could be legit to simply reclaim all the charges
-> (e.g. before removing the memcg) which should be achieveable by
-> reclaiming the reported consumption. Or what exactly should be the
-> semantic?
+On Fri, Apr 8, 2022 at 6:43 AM Dan Schatzberg <schatzberg.dan@gmail.com> wrote:
+>
+> On Fri, Apr 08, 2022 at 04:57:40AM +0000, Yosry Ahmed wrote:
+> > +static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+> > +                           size_t nbytes, loff_t off)
+> > +{
+> > +     struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+> > +     unsigned int nr_retries = MAX_RECLAIM_RETRIES;
+> > +     unsigned long nr_to_reclaim, nr_reclaimed = 0;
+> > +     int err;
+> > +
+> > +     buf = strstrip(buf);
+> > +     err = page_counter_memparse(buf, "", &nr_to_reclaim);
+>
+> Is there a reason not to support "max"? Empty string seems odd to me
+> here.
 
-Yeah, it just allows you to avoid reading memory.current to just
-reclaim everything if you can specify "max" - you're still protected
-by nretries to eventually bail out. Mostly, though I just feel like
-supporting "max" makes memory.reclaim semetric with a lot of the
-cgroup memory control files which tend to support "max".
+We can certainly support "max" to reclaim as much as we can with
+MAX_RECLAIM_RETRIES, if there are no objections from the maintainers.
+
+>
+> > +     if (err)
+> > +             return err;
+> > +
+> > +     while (nr_reclaimed < nr_to_reclaim) {
+> > +             unsigned long reclaimed;
+> > +
+> > +             if (signal_pending(current))
+> > +                     break;
+>
+> I think this should be `return -EINTR;`
+
+Yes this makes more sense. I think this was modeled after the if block
+in memory_high_write(), but maybe it makes sense there to just report
+success as the new high limit was set anyway.
+Will change it in the next version.
+
+>
+> > +
+> > +             reclaimed = try_to_free_mem_cgroup_pages(memcg,
+> > +                                             nr_to_reclaim - nr_reclaimed,
+> > +                                             GFP_KERNEL, true);
+> > +
+> > +             if (!reclaimed && !nr_retries--)
+> > +                     break;
+>
+> Here you can just `return -EAGAIN;`
+
+Will do.
+>
+> > +
+> > +             nr_reclaimed += reclaimed;
+> > +     }
+> > +
+> > +     return nr_reclaimed < nr_to_reclaim ? -EAGAIN : nbytes;
+>
+> Then this can just be `return nbytes;`
+
+Will do.
+
+>
+> I'm very much in favor of this new interface. Thanks for working on
+> it!
+
+Thanks so much for reviewing it!
