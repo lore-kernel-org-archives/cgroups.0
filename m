@@ -1,64 +1,100 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3 0/4] memcg: introduce per-memcg proactive reclaim
-Date: Fri,  8 Apr 2022 04:57:39 +0000
-Message-ID: <20220408045743.1432968-1-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [PATCH v3 2/4] selftests: cgroup: return the errno of write() in
+ cg_write() on failure
+Date: Fri,  8 Apr 2022 04:57:41 +0000
+Message-ID: <20220408045743.1432968-3-yosryahmed@google.com>
+References: <20220408045743.1432968-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=gNaeesmpk/bm+MvfeH4duevmtiNSegapk87qzryE4Rg=;
-        b=VpC1ILFh71v7mqF4BnD526/zj/1F9/XWSKZb9oFAzDRpeFV9yY/r/588MgB3g8zJ6y
-         9815ldbxekiYjWVP/6ssWMPIv1e6OOWSYXhPJD5ehrJh2cPyZkAbco6d9GNMUG8lAvY9
-         dgzR/DFOkStbhSrRdvZxFaSrP/VvGFLF0vj8sLGDEAsNk4dniKdJXCvpc1jyoH8QkyIS
-         7U6YMCqjLB+EJr/Z6ZFDhpBTUOImx4UBG+GjU4uqsmqL9rJOwxWamOcDIMkEfXdfSf8Z
-         iNbxoOtRAxHdZOpmu11faMMTfVi93twrruvLp8IpCeBXtSA9DW3R9D6v0ehQCsPE3Eei
-         dAKQ==
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=RpFXlKvwb4pUJyIrx0BwPq/Sz7TwgzSMaU3KXpjsnFg=;
+        b=PZfwTndHaHFeiId6kJJWIk58eh5ykRjdyumVYKw/V0Oluj34d7Lv6G9QfbAO6MG68X
+         5Cp8uWVnKwShcF0BFnxZHLWp6ZB5aWPOXG/Oix4YaoRQJT/TamzL0Z+Q0C1feePcwpoK
+         FENgXFWEzQHHDlbUa6+OWFMfZy/Zs5THpeXzBDDUoSOpdHazwli+xVssStSpQX6dXP87
+         +gEZWfq2i6qSv+b+zRxuTxamA08CMwUpQtHbpqJp/ibE+JIapaGcj0/Y8FuPUv9ANtvB
+         K64P3pZuES8BJSknRtTorjKzVC0kiVkym17TcMpzn9ih6gm1W5AFO0y+l2ijh3LMEALt
+         vIDg==
+In-Reply-To: <20220408045743.1432968-1-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Vaibhav Jain <vaibhav-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <roman.gushchin@linux.dev>
+Cc: David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>, Chen Wandun <chenwandun@huawei.com>, Vaibhav Jain <vaibhav@linux.ibm.com>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Tim Chen <tim.c.chen@linux.intel.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
 
-This patch series adds a memory.reclaim proactive reclaim interface.
-The rationale behind the interface and how it works are in the first
-patch.
+Currently, cg_write() returns 0 on success and -1 on failure. Modify it
+to return the errno of write() syscall when write() fails.
 
+Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
 ---
+ tools/testing/selftests/cgroup/cgroup_util.c | 32 +++++++++++---------
+ 1 file changed, 17 insertions(+), 15 deletions(-)
 
-Changes in V3:
-- Fix cg_write() (in patch 2) to properly return -1 if open() fails
-  and not fail if len == errno.
-- Remove debug printf() in patch 3.
-
-Changes in V2:
-- Add the interface to root as well.
-- Added a selftest.
-- Documented the interface as a nested-keyed interface, which makes
-  adding optional arguments in the future easier (see doc updates in the
-  first patch).
-- Modified the commit message to reflect changes and add a timeout
-  argument as a suggested possible extension
-- Return -EAGAIN if the kernel fails to reclaim the full requested
-  amount.
-
----
-
-Shakeel Butt (1):
-  memcg: introduce per-memcg reclaim interface
-
-Yosry Ahmed (3):
-  selftests: cgroup: return the errno of write() in cg_write() on
-    failure
-  selftests: cgroup: fix alloc_anon_noexit() instantly freeing memory
-  selftests: cgroup: add a selftest for memory.reclaim
-
- Documentation/admin-guide/cgroup-v2.rst       | 21 +++++
- mm/memcontrol.c                               | 37 ++++++++
- tools/testing/selftests/cgroup/cgroup_util.c  | 32 ++++---
- .../selftests/cgroup/test_memcontrol.c        | 93 ++++++++++++++++++-
- 4 files changed, 166 insertions(+), 17 deletions(-)
-
+diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
+index dbaa7aabbb4a..3b6bb09985fa 100644
+--- a/tools/testing/selftests/cgroup/cgroup_util.c
++++ b/tools/testing/selftests/cgroup/cgroup_util.c
+@@ -38,23 +38,23 @@ static ssize_t read_text(const char *path, char *buf, size_t max_len)
+ 	return len;
+ }
+ 
+-static ssize_t write_text(const char *path, char *buf, ssize_t len)
++/*
++ * Returns:
++ *	success -> 0
++ *	open() failure -> -1
++ *	write() failure -> errno
++ */
++static int write_text(const char *path, char *buf, ssize_t len)
+ {
+-	int fd;
++	int fd, ret;
+ 
+ 	fd = open(path, O_WRONLY | O_APPEND);
+ 	if (fd < 0)
+ 		return fd;
+ 
+-	len = write(fd, buf, len);
+-	if (len < 0) {
+-		close(fd);
+-		return len;
+-	}
+-
++	ret = write(fd, buf, len) < 0 ? errno : 0;
+ 	close(fd);
+-
+-	return len;
++	return ret;
+ }
+ 
+ char *cg_name(const char *root, const char *name)
+@@ -177,17 +177,19 @@ long cg_read_lc(const char *cgroup, const char *control)
+ 	return cnt;
+ }
+ 
++/*
++ * Returns:
++ *	success -> 0
++ *	open() failure -> -1
++ *	write() failure -> errno
++ */
+ int cg_write(const char *cgroup, const char *control, char *buf)
+ {
+ 	char path[PATH_MAX];
+ 	ssize_t len = strlen(buf);
+ 
+ 	snprintf(path, sizeof(path), "%s/%s", cgroup, control);
+-
+-	if (write_text(path, buf, len) == len)
+-		return 0;
+-
+-	return -1;
++	return write_text(path, buf, len);
+ }
+ 
+ int cg_find_unified_root(char *root, size_t len)
 -- 
 2.35.1.1178.g4f1659d476-goog
 
