@@ -1,136 +1,110 @@
-From: Roman Gushchin <roman.gushchin@linux.dev>
-Subject: Re: [PATCH v3 1/4] memcg: introduce per-memcg reclaim interface
-Date: Fri, 8 Apr 2022 18:13:29 -0700
-Message-ID: <YlDduQ0LMTyfJxIs@carbon.dhcp.thefacebook.com>
-References: <20220408045743.1432968-1-yosryahmed@google.com>
- <20220408045743.1432968-2-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3 2/4] selftests: cgroup: return the errno of write() in
+ cg_write() on failure
+Date: Fri, 8 Apr 2022 18:21:55 -0700
+Message-ID: <CAJD7tkb6VJt=pfqnW11r6S7A0r2Vh85a3YZaVso-qyiCM06nDQ@mail.gmail.com>
+References: <20220408045743.1432968-1-yosryahmed@google.com> <20220408045743.1432968-3-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1649466820;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=H//e2ty06NElxV3oXbEOWS2Nb6fAWBDWPPJzb55T3rY=;
-        b=XapiOUYqHdDb2K9tAA0ftrN5h20ybKOWHg0Iy/mqlm/WVinf4DBP7ahmYtxacOGutc2mn+
-        /cfvwtisoA3IBAhwkTQzrE/nnr8q+0Iz01Zfw/1SaelKbAteprCeRQ3avIk7jvNtWWpjCs
-        WFvmxmZYFGMacn8G4oNFAGXKJEkLHa8=
-Content-Disposition: inline
-In-Reply-To: <20220408045743.1432968-2-yosryahmed@google.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=I0F2P2ML/pBi824KYgTw5KU1Y45bJmTHodkEFj/msPE=;
+        b=rnIIkb90V9I9bcpVMa5/w0cTf4Gar8GVFDke+JSlU2hEHFp3OsRcTAqk7dfPeFG8tF
+         dDExEmFCxiNoVK2EMa1ylHUlmv7DSThq6XmiX4TNJLDsXoKoUElD/mYy3ENP5lUCX6Cm
+         L0cqaNurq1CWtLL/S3jZRhd8I253TJx1CfvGJLV8g4b2GyGGXfVeqwYyZcNtCYqWoaTJ
+         rljgm3m6gGpplEG1geT3BvdWqZgCrGRUG3e99TyERwVqbDQLP1p54prwkHbmcNQHKk4J
+         2yNkYps6CqNhbHgl2xIZXaESlcelXNqaHtoVajN8GB4WEs0RS7UrQYqzpjddvSoSRqdi
+         sZ6Q==
+In-Reply-To: <20220408045743.1432968-3-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>, Chen Wandun <chenwandun@huawei.com>, Vaibhav Jain <vaibhav@linux.ibm.com>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Tim Chen <tim.c.chen@linux.intel.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, Michal Hocko <>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Vaibhav Jain <vaibhav-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Apr 08, 2022 at 04:57:40AM +0000, Yosry Ahmed wrote:
-> From: Shakeel Butt <shakeelb@google.com>
-> 
-> Introduce a memcg interface to trigger memory reclaim on a memory cgroup.
-> 
-> Use case: Proactive Reclaim
-> ---------------------------
-> 
-> A userspace proactive reclaimer can continuously probe the memcg to
-> reclaim a small amount of memory. This gives more accurate and
-> up-to-date workingset estimation as the LRUs are continuously
-> sorted and can potentially provide more deterministic memory
-> overcommit behavior. The memory overcommit controller can provide
-> more proactive response to the changing behavior of the running
-> applications instead of being reactive.
-> 
-> A userspace reclaimer's purpose in this case is not a complete replacement
-> for kswapd or direct reclaim, it is to proactively identify memory savings
-> opportunities and reclaim some amount of cold pages set by the policy
-> to free up the memory for more demanding jobs or scheduling new jobs.
-> 
-> A user space proactive reclaimer is used in Google data centers.
-> Additionally, Meta's TMO paper recently referenced a very similar
-> interface used for user space proactive reclaim:
-> https://dl.acm.org/doi/pdf/10.1145/3503222.3507731
-> 
-> Benefits of a user space reclaimer:
-> -----------------------------------
-> 
-> 1) More flexible on who should be charged for the cpu of the memory
-> reclaim. For proactive reclaim, it makes more sense to be centralized.
-> 
-> 2) More flexible on dedicating the resources (like cpu). The memory
-> overcommit controller can balance the cost between the cpu usage and
-> the memory reclaimed.
-> 
-> 3) Provides a way to the applications to keep their LRUs sorted, so,
-> under memory pressure better reclaim candidates are selected. This also
-> gives more accurate and uptodate notion of working set for an
-> application.
-> 
-> Why memory.high is not enough?
-> ------------------------------
-> 
-> - memory.high can be used to trigger reclaim in a memcg and can
->   potentially be used for proactive reclaim.
->   However there is a big downside in using memory.high. It can potentially
->   introduce high reclaim stalls in the target application as the
->   allocations from the processes or the threads of the application can hit
->   the temporary memory.high limit.
-> 
-> - Userspace proactive reclaimers usually use feedback loops to decide
->   how much memory to proactively reclaim from a workload. The metrics
->   used for this are usually either refaults or PSI, and these metrics
->   will become messy if the application gets throttled by hitting the
->   high limit.
-> 
-> - memory.high is a stateful interface, if the userspace proactive
->   reclaimer crashes for any reason while triggering reclaim it can leave
->   the application in a bad state.
-> 
-> - If a workload is rapidly expanding, setting memory.high to proactively
->   reclaim memory can result in actually reclaiming more memory than
->   intended.
-> 
-> The benefits of such interface and shortcomings of existing interface
-> were further discussed in this RFC thread:
-> https://lore.kernel.org/linux-mm/5df21376-7dd1-bf81-8414-32a73cea45dd@google.com/
-> 
-> Interface:
-> ----------
-> 
-> Introducing a very simple memcg interface 'echo 10M > memory.reclaim' to
-> trigger reclaim in the target memory cgroup.
-> 
-> The interface is introduced as a nested-keyed file to allow for future
-> optional arguments to be easily added to configure the behavior of
-> reclaim.
-> 
-> Possible Extensions:
-> --------------------
-> 
-> - This interface can be extended with an additional parameter or flags
->   to allow specifying one or more types of memory to reclaim from (e.g.
->   file, anon, ..).
-> 
-> - The interface can also be extended with a node mask to reclaim from
->   specific nodes. This has use cases for reclaim-based demotion in memory
->   tiering systens.
-> 
-> - A similar per-node interface can also be added to support proactive
->   reclaim and reclaim-based demotion in systems without memcg.
-> 
-> - Add a timeout parameter to make it easier for user space to call the
->   interface without worrying about being blocked for an undefined amount
->   of time.
-> 
-> For now, let's keep things simple by adding the basic functionality.
-> 
-> [yosryahmed@google.com: refreshed to current master, updated commit
-> message based on recent discussions and use cases]
-> Signed-off-by: Shakeel Butt <shakeelb@google.com>
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> Acked-by: Michal Hocko <mhocko@suse.com>
-> Acked-by: Wei Xu <weixugc@google.com>
+On Thu, Apr 7, 2022 at 9:57 PM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> Currently, cg_write() returns 0 on success and -1 on failure. Modify it
+> to return the errno of write() syscall when write() fails.
+>
+> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  tools/testing/selftests/cgroup/cgroup_util.c | 32 +++++++++++---------
+>  1 file changed, 17 insertions(+), 15 deletions(-)
+>
+> diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
+> index dbaa7aabbb4a..3b6bb09985fa 100644
+> --- a/tools/testing/selftests/cgroup/cgroup_util.c
+> +++ b/tools/testing/selftests/cgroup/cgroup_util.c
+> @@ -38,23 +38,23 @@ static ssize_t read_text(const char *path, char *buf, size_t max_len)
+>         return len;
+>  }
+>
+> -static ssize_t write_text(const char *path, char *buf, ssize_t len)
+> +/*
+> + * Returns:
+> + *     success -> 0
+> + *     open() failure -> -1
+> + *     write() failure -> errno
+> + */
+> +static int write_text(const char *path, char *buf, ssize_t len)
+>  {
+> -       int fd;
+> +       int fd, ret;
+>
+>         fd = open(path, O_WRONLY | O_APPEND);
+>         if (fd < 0)
+>                 return fd;
+>
+> -       len = write(fd, buf, len);
+> -       if (len < 0) {
+> -               close(fd);
+> -               return len;
+> -       }
+> -
+> +       ret = write(fd, buf, len) < 0 ? errno : 0;
+>         close(fd);
+> -
+> -       return len;
+> +       return ret;
+>  }
+>
+>  char *cg_name(const char *root, const char *name)
+> @@ -177,17 +177,19 @@ long cg_read_lc(const char *cgroup, const char *control)
+>         return cnt;
+>  }
+>
+> +/*
+> + * Returns:
+> + *     success -> 0
+> + *     open() failure -> -1
+> + *     write() failure -> errno
+> + */
+>  int cg_write(const char *cgroup, const char *control, char *buf)
+>  {
+>         char path[PATH_MAX];
+>         ssize_t len = strlen(buf);
+>
+>         snprintf(path, sizeof(path), "%s/%s", cgroup, control);
+> -
+> -       if (write_text(path, buf, len) == len)
+> -               return 0;
+> -
+> -       return -1;
+> +       return write_text(path, buf, len);
+>  }
 
-Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
+I have changed this in v4 to a cleaner implementation that either
+returns 0 on success or -errno on failure. I also made sure to check
+that the full buffer was being written, and updated cg_read() as well
+for the interface to be consistent.
 
-Thank you for incorporating all the feedback!
-Nice work!
+Will send out once the discussion on patch 1 in v3 reaches a consensus.
+
+>
+>  int cg_find_unified_root(char *root, size_t len)
+> --
+> 2.35.1.1178.g4f1659d476-goog
+>
