@@ -1,211 +1,46 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH -next 10/11] block, bfq: decrease
- 'num_groups_with_pending_reqs' earlier
-Date: Wed, 13 Apr 2022 13:28:16 +0200
-Message-ID: <20220413112816.fwobg4cp6ttpnpk6@quack3.lan>
+From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -next 00/11] support concurrent sync io for bfq on a
+ specail occasion
+Date: Wed, 13 Apr 2022 19:33:28 +0800
+Message-ID: <36f0923c-bb9b-12f1-b3bc-cdbe0bbcca55@huawei.com>
 References: <20220305091205.4188398-1-yukuai3@huawei.com>
- <20220305091205.4188398-11-yukuai3@huawei.com>
+ <20220413111216.npgrdzaubsvjsmy3@quack3.lan>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1649849296; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Mze/fDiC5ezzJg+W3G0h0m1cO48i6A3nZBdGSu3s5qo=;
-        b=HN2yCrhfOh+I91LWqJzvr9q3kctCtrMukFDUxB5iGOyMHCn/hA+nyVLrf5vKXN56XiMAfn
-        yG95po4dthpTicUALGWCET0l8s9HY13wvSRnPcNqFQZuLM5QMrzfImzn2c62CCsjGRKbpm
-        0CZ+fZj6kXdomhwx4FJ2zWMvGP/+al0=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1649849296;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Mze/fDiC5ezzJg+W3G0h0m1cO48i6A3nZBdGSu3s5qo=;
-        b=/1mis1vVCHFUMJVTf6hg6nOA1qeWjApeaHCZG3KX4XN9jKK2DiBShIrTcw5lTInFw+D31h
-        fLM/NF51aGZu5FBQ==
-Content-Disposition: inline
-In-Reply-To: <20220305091205.4188398-11-yukuai3@huawei.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20220413111216.npgrdzaubsvjsmy3-/1kMjMImKQN+urZeOPWqwQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai3@huawei.com>
-Cc: tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org, jack@suse.cz, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Sat 05-03-22 17:12:04, Yu Kuai wrote:
-> Currently 'num_groups_with_pending_reqs' won't be decreased when
-> the group doesn't have any pending requests, while some child group
-> still have pending requests. The decrement is delayed to when all the
-> child groups doesn't have any pending requests.
-> 
-> For example:
-> 1) t1 issue sync io on root group, t2 and t3 issue sync io on the same
-> child group. num_groups_with_pending_reqs is 2 now.
-> 2) t1 stopped, num_groups_with_pending_reqs is still 2. io from t2 and
-> t3 still can't be handled concurrently.
-> 
-> Fix the problem by decreasing 'num_groups_with_pending_reqs'
-> immediately upon the weights_tree removal of last bfqq of the group.
-> 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+=D4=DA 2022/04/13 19:12, Jan Kara =D0=B4=B5=C0:
+> On Sat 05-03-22 17:11:54, Yu Kuai wrote:
+>> Currently, bfq can't handle sync io concurrently as long as they
+>> are not issued from root group. This is because
+>> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
+>> bfq_asymmetric_scenario().
+>>
+>> This patchset tries to support concurrent sync io if all the sync ios
+>> are issued from the same cgroup:
+>>
+>> 1) Count root_group into 'num_groups_with_pending_reqs', patch 1-5;
+>=20
+> Seeing the complications and special casing for root_group I wonder: Won't
+> we be better off to create fake bfq_sched_data in bfq_data and point
+> root_group->sched_data there? AFAICS it would simplify the code
 
-So I'd find the logic easier to follow if you completely removed
-entity->in_groups_with_pending_reqs and did updates of
-bfqd->num_groups_with_pending_reqs like:
+Hi,
 
-	if (!bfqg->num_entities_with_pending_reqs++)
-		bfqd->num_groups_with_pending_reqs++;
+That sounds an good idel, in this case we only need to make sure the
+fake service tree will always be empty, which means we only need to
+special casing bfq_active/idle_insert to the fake service tree.
 
-and similarly on the remove side. And there would we literally two places
-(addition & removal from weight tree) that would need to touch these
-counters. Pretty obvious and all can be done in patch 9.
-
-								Honza
-
-> ---
->  block/bfq-iosched.c | 56 +++++++++++++++------------------------------
->  block/bfq-iosched.h | 16 ++++++-------
->  2 files changed, 27 insertions(+), 45 deletions(-)
-> 
-> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-> index f221e9cab4d0..119b64c9c1d9 100644
-> --- a/block/bfq-iosched.c
-> +++ b/block/bfq-iosched.c
-> @@ -970,6 +970,24 @@ void __bfq_weights_tree_remove(struct bfq_data *bfqd,
->  	bfq_put_queue(bfqq);
->  }
->  
-> +static void decrease_groups_with_pending_reqs(struct bfq_data *bfqd,
-> +					      struct bfq_queue *bfqq)
-> +{
-> +#ifdef CONFIG_BFQ_GROUP_IOSCHED
-> +	struct bfq_entity *entity = bfqq->entity.parent;
-> +
-> +	/*
-> +	 * The decrement of num_groups_with_pending_reqs is performed
-> +	 * immediately when the last bfqq completes all the requests.
-> +	 */
-> +	if (!bfqq_group(bfqq)->num_entities_with_pending_reqs &&
-> +	    entity->in_groups_with_pending_reqs) {
-> +		entity->in_groups_with_pending_reqs = false;
-> +		bfqd->num_groups_with_pending_reqs--;
-> +	}
-> +#endif
-> +}
-> +
->  /*
->   * Invoke __bfq_weights_tree_remove on bfqq and decrement the number
->   * of active groups for each queue's inactive parent entity.
-> @@ -977,8 +995,6 @@ void __bfq_weights_tree_remove(struct bfq_data *bfqd,
->  void bfq_weights_tree_remove(struct bfq_data *bfqd,
->  			     struct bfq_queue *bfqq)
->  {
-> -	struct bfq_entity *entity = bfqq->entity.parent;
-> -
->  	/*
->  	 * grab a ref to prevent bfqq to be freed in
->  	 * __bfq_weights_tree_remove
-> @@ -991,41 +1007,7 @@ void bfq_weights_tree_remove(struct bfq_data *bfqd,
->  	 */
->  	__bfq_weights_tree_remove(bfqd, bfqq,
->  				  &bfqd->queue_weights_tree);
-> -
-> -	for_each_entity(entity) {
-> -		struct bfq_sched_data *sd = entity->my_sched_data;
-> -
-> -		if (sd->next_in_service || sd->in_service_entity) {
-> -			/*
-> -			 * entity is still active, because either
-> -			 * next_in_service or in_service_entity is not
-> -			 * NULL (see the comments on the definition of
-> -			 * next_in_service for details on why
-> -			 * in_service_entity must be checked too).
-> -			 *
-> -			 * As a consequence, its parent entities are
-> -			 * active as well, and thus this loop must
-> -			 * stop here.
-> -			 */
-> -			break;
-> -		}
-> -
-> -		/*
-> -		 * The decrement of num_groups_with_pending_reqs is
-> -		 * not performed immediately upon the deactivation of
-> -		 * entity, but it is delayed to when it also happens
-> -		 * that the first leaf descendant bfqq of entity gets
-> -		 * all its pending requests completed. The following
-> -		 * instructions perform this delayed decrement, if
-> -		 * needed. See the comments on
-> -		 * num_groups_with_pending_reqs for details.
-> -		 */
-> -		if (entity->in_groups_with_pending_reqs) {
-> -			entity->in_groups_with_pending_reqs = false;
-> -			bfqd->num_groups_with_pending_reqs--;
-> -		}
-> -	}
-> -
-> +	decrease_groups_with_pending_reqs(bfqd, bfqq);
->  	bfq_put_queue(bfqq);
->  }
->  
-> diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-> index 5d904851519c..9ec72bd24fc2 100644
-> --- a/block/bfq-iosched.h
-> +++ b/block/bfq-iosched.h
-> @@ -495,7 +495,7 @@ struct bfq_data {
->  	struct rb_root_cached queue_weights_tree;
->  
->  	/*
-> -	 * Number of groups with at least one descendant process that
-> +	 * Number of groups with at least one process that
->  	 * has at least one request waiting for completion. Note that
->  	 * this accounts for also requests already dispatched, but not
->  	 * yet completed. Therefore this number of groups may differ
-> @@ -508,14 +508,14 @@ struct bfq_data {
->  	 * bfq_better_to_idle().
->  	 *
->  	 * However, it is hard to compute this number exactly, for
-> -	 * groups with multiple descendant processes. Consider a group
-> -	 * that is inactive, i.e., that has no descendant process with
-> +	 * groups with multiple processes. Consider a group
-> +	 * that is inactive, i.e., that has no process with
->  	 * pending I/O inside BFQ queues. Then suppose that
->  	 * num_groups_with_pending_reqs is still accounting for this
-> -	 * group, because the group has descendant processes with some
-> +	 * group, because the group has processes with some
->  	 * I/O request still in flight. num_groups_with_pending_reqs
->  	 * should be decremented when the in-flight request of the
-> -	 * last descendant process is finally completed (assuming that
-> +	 * last process is finally completed (assuming that
->  	 * nothing else has changed for the group in the meantime, in
->  	 * terms of composition of the group and active/inactive state of child
->  	 * groups and processes). To accomplish this, an additional
-> @@ -524,7 +524,7 @@ struct bfq_data {
->  	 * we resort to the following tradeoff between simplicity and
->  	 * accuracy: for an inactive group that is still counted in
->  	 * num_groups_with_pending_reqs, we decrement
-> -	 * num_groups_with_pending_reqs when the first descendant
-> +	 * num_groups_with_pending_reqs when the last
->  	 * process of the group remains with no request waiting for
->  	 * completion.
->  	 *
-> @@ -532,12 +532,12 @@ struct bfq_data {
->  	 * carefulness: to avoid multiple decrements, we flag a group,
->  	 * more precisely an entity representing a group, as still
->  	 * counted in num_groups_with_pending_reqs when it becomes
-> -	 * inactive. Then, when the first descendant queue of the
-> +	 * inactive. Then, when the last queue of the
->  	 * entity remains with no request waiting for completion,
->  	 * num_groups_with_pending_reqs is decremented, and this flag
->  	 * is reset. After this flag is reset for the entity,
->  	 * num_groups_with_pending_reqs won't be decremented any
-> -	 * longer in case a new descendant queue of the entity remains
-> +	 * longer in case a new queue of the entity remains
->  	 * with no request waiting for completion.
->  	 */
->  	unsigned int num_groups_with_pending_reqs;
-> -- 
-> 2.31.1
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Thanks,
+Kuai
+> considerably as root_group would be just another bfq_group, no need to
+> special case it in various places, no games with bfqg->my_entity, etc.
+> Paolo, do you see any problem with that?
+>=20
+> 								Honza
+>=20
