@@ -1,69 +1,75 @@
-From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -next 10/11] block, bfq: decrease
- 'num_groups_with_pending_reqs' earlier
-Date: Fri, 15 Apr 2022 09:10:06 +0800
-Message-ID: <ef7bad8c-b8dd-f625-330c-9a22e303844b@huawei.com>
-References: <20220305091205.4188398-1-yukuai3@huawei.com>
- <20220305091205.4188398-11-yukuai3@huawei.com>
- <20220413112816.fwobg4cp6ttpnpk6@quack3.lan>
- <f3ed507a-7c85-cd69-3ad5-3e9c0e75c372@huawei.com>
+From: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
+Subject: Re: [PATCH 1/4] kselftests: memcg: update the oom group leaf events
+ test
+Date: Fri, 15 Apr 2022 07:08:17 -0700
+Message-ID: <20220415140817.ljznpvacne6nchg5@dev0025.ash9.facebook.com>
+References: <20220415000133.3955987-1-roman.gushchin@linux.dev>
+ <20220415000133.3955987-2-roman.gushchin@linux.dev>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <f3ed507a-7c85-cd69-3ad5-3e9c0e75c372-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20220415000133.3955987-2-roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
 
-在 2022/04/13 19:40, yukuai (C) 写道:
-> 在 2022/04/13 19:28, Jan Kara 写道:
->> On Sat 05-03-22 17:12:04, Yu Kuai wrote:
->>> Currently 'num_groups_with_pending_reqs' won't be decreased when
->>> the group doesn't have any pending requests, while some child group
->>> still have pending requests. The decrement is delayed to when all the
->>> child groups doesn't have any pending requests.
->>>
->>> For example:
->>> 1) t1 issue sync io on root group, t2 and t3 issue sync io on the same
->>> child group. num_groups_with_pending_reqs is 2 now.
->>> 2) t1 stopped, num_groups_with_pending_reqs is still 2. io from t2 and
->>> t3 still can't be handled concurrently.
->>>
->>> Fix the problem by decreasing 'num_groups_with_pending_reqs'
->>> immediately upon the weights_tree removal of last bfqq of the group.
->>>
->>> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->>
->> So I'd find the logic easier to follow if you completely removed
->> entity->in_groups_with_pending_reqs and did updates of
->> bfqd->num_groups_with_pending_reqs like:
->>
->>     if (!bfqg->num_entities_with_pending_reqs++)
->>         bfqd->num_groups_with_pending_reqs++;
->>
-> Hi,
+On Thu, Apr 14, 2022 at 05:01:30PM -0700, Roman Gushchin wrote:
+> Commit 9852ae3fe529 ("mm, memcg: consider subtrees in memory.events") made
+> memory.events recursive: all events are propagated upwards by the
+> tree. It was a change in semantics.
+
+In one of our offline discussions you mentioned that we may want to
+consider having the test take mount options into account. If we decide to
+go that route we should probably have this testcase take memory_localevents
+into account as well. If so, I'm happy to take care of that in a follow-on
+patch after this is merged as I already have a patch locally that reads and
+parses /proc/mounts to detect these mount options.
+
 > 
-> Indeed, this is an excellent idle, and much better than the way I did.
+> It broke the oom group leaf events test: it assumes that after
+> an OOM the oom_kill counter is zero on parent's level.
 > 
-> Thanks,
-> Kuai
+> Let's adjust the test: it should have similar expectations
+> for the child and parent levels.
 > 
->> and similarly on the remove side. And there would we literally two places
->> (addition & removal from weight tree) that would need to touch these
->> counters. Pretty obvious and all can be done in patch 9.
->>
->>                                 Honza
-Hi, Jan
+> The test passes after this fix.
+> 
+> Signed-off-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+> Cc: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> ---
+>  tools/testing/selftests/cgroup/test_memcontrol.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+> index 36ccf2322e21..00b430e7f2a2 100644
+> --- a/tools/testing/selftests/cgroup/test_memcontrol.c
+> +++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+> @@ -1079,7 +1079,8 @@ static int test_memcg_sock(const char *root)
+>  /*
+>   * This test disables swapping and tries to allocate anonymous memory
+>   * up to OOM with memory.group.oom set. Then it checks that all
+> - * processes in the leaf (but not the parent) were killed.
+> + * processes in the leaf were killed. It also checks that oom_events
+> + * were propagated to the parent level.
+>   */
+>  static int test_memcg_oom_group_leaf_events(const char *root)
+>  {
+> @@ -1122,7 +1123,7 @@ static int test_memcg_oom_group_leaf_events(const char *root)
+>  	if (cg_read_key_long(child, "memory.events", "oom_kill ") <= 0)
+>  		goto cleanup;
+>  
+> -	if (cg_read_key_long(parent, "memory.events", "oom_kill ") != 0)
+> +	if (cg_read_key_long(parent, "memory.events", "oom_kill ") <= 0)
+>  		goto cleanup;
+>  
+>  	ret = KSFT_PASS;
+> -- 
+> 2.35.1
+> 
 
-I think with this change, we can count root_group while activating bfqqs
-that are under root_group, thus there is no need to modify
-for_each_entity(or fake bfq_sched_data) any more.
+Looks good, thanks.
 
-The special case is that weight racing bfqqs are not inserted into
-weights tree, and I think this can be handled by adding a fake
-bfq_weight_counter for such bfqqs.
-
-What do you think ?
-
-Kuai
+Reviewed-by: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
