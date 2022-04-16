@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next v2 5/5] block, bfq: do not idle if only one cgroup is activated
-Date: Sat, 16 Apr 2022 17:37:53 +0800
-Message-ID: <20220416093753.3054696-6-yukuai3@huawei.com>
+Subject: [PATCH -next v2 3/5] bfq, block: record how many queues have pending requests in bfq_group
+Date: Sat, 16 Apr 2022 17:37:51 +0800
+Message-ID: <20220416093753.3054696-4-yukuai3@huawei.com>
 References: <20220416093753.3054696-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
@@ -12,34 +12,86 @@ Content-Type: text/plain; charset="us-ascii"
 To: jack-AlSwsSmVLrQ@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Now that root group is counted into 'num_groups_with_pending_reqs',
-'num_groups_with_pending_reqs > 0' is always true in
-bfq_asymmetric_scenario().
+Prepare to refactor the counting of 'num_groups_with_pending_reqs'.
 
-Thus change the condition to 'num_groups_with_pending_reqs > 1'.
-
-On the other hand, now that 'num_groups_with_pending_reqs' represents
-how many groups have pending requests, this change can enable concurrent
-sync io is only on cgroup is activated.
+bfqq will be inserted to weights_tree when new io is inserted to it, and
+bfqq will be removed from weights_tree when all the requests are completed.
+Thus use weights_tree insertion and removal to track how many queues have
+pending requests.
 
 Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/bfq-iosched.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/bfq-cgroup.c  |  1 +
+ block/bfq-iosched.c | 17 ++++++++++++++++-
+ block/bfq-iosched.h |  1 +
+ 3 files changed, 18 insertions(+), 1 deletion(-)
 
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index 420eda2589c0..e8b58b2361a6 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -557,6 +557,7 @@ static void bfq_pd_init(struct blkg_policy_data *pd)
+ 				   */
+ 	bfqg->bfqd = bfqd;
+ 	bfqg->active_entities = 0;
++	bfqg->num_entities_with_pending_reqs = 0;
+ 	bfqg->rq_pos_tree = RB_ROOT;
+ }
+ 
 diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 39abcd95df8e..7d9f94882f8e 100644
+index a2977c938c70..994c6b36a5d5 100644
 --- a/block/bfq-iosched.c
 +++ b/block/bfq-iosched.c
-@@ -846,7 +846,7 @@ static bool bfq_asymmetric_scenario(struct bfq_data *bfqd,
+@@ -889,7 +889,7 @@ void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq)
+ 	if (bfqq->wr_coeff != 1) {
+ 		bfqq->weight_counter = BFQ_FAKE_WEIGHT_COUNTER;
+ 		bfqq->ref++;
+-		return;
++		goto update;
+ 	}
  
- 	return varied_queue_weights || multiple_classes_busy
- #ifdef CONFIG_BFQ_GROUP_IOSCHED
--	       || bfqd->num_groups_with_pending_reqs > 0
-+	       || bfqd->num_groups_with_pending_reqs > 1
- #endif
- 		;
+ 	while (*new) {
+@@ -936,6 +936,14 @@ void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq)
+ inc_counter:
+ 	bfqq->weight_counter->num_active++;
+ 	bfqq->ref++;
++
++update:
++#ifdef CONFIG_BFQ_GROUP_IOSCHED
++	if (!entity->in_groups_with_pending_reqs) {
++		entity->in_groups_with_pending_reqs = true;
++		bfqq_group(bfqq)->num_entities_with_pending_reqs++;
++	}
++#endif
  }
+ 
+ /*
+@@ -963,6 +971,13 @@ void __bfq_weights_tree_remove(struct bfq_data *bfqd, struct bfq_queue *bfqq)
+ 	kfree(bfqq->weight_counter);
+ 
+ reset_entity_pointer:
++#ifdef CONFIG_BFQ_GROUP_IOSCHED
++	if (bfqq->entity.in_groups_with_pending_reqs) {
++		bfqq->entity.in_groups_with_pending_reqs = false;
++		bfqq_group(bfqq)->num_entities_with_pending_reqs--;
++	}
++#endif
++
+ 	bfqq->weight_counter = NULL;
+ 	bfq_put_queue(bfqq);
+ }
+diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+index 072099b0c11a..5e1a0ead2b6a 100644
+--- a/block/bfq-iosched.h
++++ b/block/bfq-iosched.h
+@@ -940,6 +940,7 @@ struct bfq_group {
+ 	struct bfq_entity *my_entity;
+ 
+ 	int active_entities;
++	int num_entities_with_pending_reqs;
+ 
+ 	struct rb_root rq_pos_tree;
+ 
 -- 
 2.31.1
 
