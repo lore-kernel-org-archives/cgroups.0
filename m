@@ -1,77 +1,202 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v3 1/4] memcg: introduce per-memcg reclaim interface
-Date: Wed, 20 Apr 2022 14:47:10 +0200
-Message-ID: <YmAAzkwGg6GspCiu@dhcp22.suse.cz>
-References: <20220408045743.1432968-1-yosryahmed@google.com>
- <20220408045743.1432968-2-yosryahmed@google.com>
- <YlA754XNFAmWQcm6@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
- <YlBCeadBqbeVvALK@dhcp22.suse.cz>
- <YlBM/HlPyPUZew5N@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
- <CAJD7tkbFjbGJ7CnNogpGq5enh_uhP8T5c0U+ku9PfwMoVLf2gg@mail.gmail.com>
- <CAJD7tkYJj2O-zaux9BZxJxG+JBjPrwRYKXPAAAh7i9GVE53VGQ@mail.gmail.com>
+From: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [RFC v5 0/6] Proposal for a GPU cgroup controller
+Date: Wed, 20 Apr 2022 23:52:18 +0000
+Message-ID: <20220420235228.2767816-1-tjmercier@google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1650458832; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=fE2JVFjVSECX2xSom7dha9uadrw2m4rx6MxVgcht3TU=;
-        b=ls08cpYNS6BsFKbzep+CNbq8sfVdl2ellBWBujxnccydNYGlZusiruxwRBWAGNdG+LbEjN
-        jBIdNmHiFta1RBcAXwfZU0dmIdTZsOgoaKPo4njd2eiadAdPKoabYOFObP16BYeeo/IWJ6
-        6qVYRksrngynbRG+maQ3Tkc4EqFNkn0=
-Content-Disposition: inline
-In-Reply-To: <CAJD7tkYJj2O-zaux9BZxJxG+JBjPrwRYKXPAAAh7i9GVE53VGQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:message-id:mime-version:subject:from:to:cc
+         :content-transfer-encoding;
+        bh=WCvt67lICr/Yuj88iOpNjknsfyrSj02eDdei0Ztr4rU=;
+        b=PHp312CvTRWed1qeu49duubCaKZ5ru59t1UpzP4ri0+yr6PwVAlL336j+PM9F11x5Y
+         su6AZsETCH/0Dz/02RJxJBMCiB9A04TTbNki31e2j81/0pVQuUNeec3fxOPR1CpTt0eJ
+         eeLiND8WZ9vssDi3VrLxqYYEYlPfdNWvqL04gxaQIcz+BejkP5Cp6J/VK8vucRhkXIjg
+         L8k2X2LHssmgjIkV/pS8pZ8kPskg7XKaZ/OYbRU7WIASoAJyTo+s5IajhUDa0MWwK7EA
+         ZGOf6Retq+9rwOjFKEDG9Qng/LV5PoAeYzd2SghVzYTthgFFkfjcf1tgvbQeE0dyzIbe
+         qmMg==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Vaibhav Jain <vaibhav-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kern>
+Content-Type: text/plain; charset="utf-8"
+To: tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Benjamin Gaignard <benjamin.gaignard-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>, Liam Mark <lma>
+Cc: jstultz-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cmllamas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, skhan-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linaro-mm-sig-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu 14-04-22 10:25:29, Yosry Ahmed wrote:
-> On Fri, Apr 8, 2022 at 1:08 PM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >
-> > On Fri, Apr 8, 2022 at 7:55 AM Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> > >
-> > > On Fri, Apr 08, 2022 at 04:11:05PM +0200, Michal Hocko wrote:
-> > > > Regarding "max" as a possible input. I am not really sure to be honest.
-> > > > I can imagine that it could be legit to simply reclaim all the charges
-> > > > (e.g. before removing the memcg) which should be achieveable by
-> > > > reclaiming the reported consumption. Or what exactly should be the
-> > > > semantic?
-> > >
-> > > Yeah, it just allows you to avoid reading memory.current to just
-> > > reclaim everything if you can specify "max" - you're still protected
-> > > by nretries to eventually bail out. Mostly, though I just feel like
-> > > supporting "max" makes memory.reclaim semetric with a lot of the
-> > > cgroup memory control files which tend to support "max".
-> >
-> > One possible approach here is to have force_empty behavior when we
-> > write "max" to memory.reclaim. From Google's perspective we don't have
-> > a preference, but it seems to me like logical behavior. We can do this
-> > either by directly calling mem_cgroup_force_empty() or just draining
-> > stock and lrus in memory_reclaim().
-> >
-> > This actually brings up another interesting point. Do you think we
-> > should drain lrus if try_to_free_mem_cgroup_pages() fails to reclaim
-> > the request amount? We can do this after the first call or before the
-> > last one. It could introduce more evictable pages for
-> > try_to_free_mem_cgroup_pages() to free.
-> 
-> Hey Michal, any thoughts on this? I am looking for feedback on this
-> before I send out v4.
+This patch series revisits the proposal for a GPU cgroup controller to
+track and limit memory allocations by various device/allocator
+subsystems. The patch series also contains a simple prototype to
+illustrate how Android intends to implement DMA-BUF allocator
+attribution using the GPU cgroup controller. The prototype does not
+include resource limit enforcements.
 
-As I've already said I do not have strong preferences for the "max"
-value to be accepted by the interface. Maybe you can add a support for
-max in a separate patch so the discussion would not delay the rest of
-the work.
+Changelog:
+v5:
+Rebase on top of v5.18-rc3
 
-For the LRU draining I do not see any problem for that to be added. The
-overhead of the operation would increase, especially on larger machines,
-which could be a concern. So the real question is whether not doing so
-is a big problem. Our force_empty implementation optimistically drains
-pcp caches but please note that this is not really guranteeing anything
-as charges can happen at any time. 
+Drop the global GPU cgroup "total" (sum of all device totals) portion
+of the design since there is no currently known use for this per
+Tejun Heo.
 
--- 
-Michal Hocko
-SUSE Labs
+Fix commit message which still contained the old name for
+dma_buf_transfer_charge per Michal Koutn=C3=BD.
+
+Remove all GPU cgroup code except what's necessary to support charge transf=
+er
+from dma_buf. Previously charging was done in export, but for non-Android
+graphics use-cases this is not ideal since there may be a delay between
+allocation and export, during which time there is no accounting.
+
+Merge dmabuf: Use the GPU cgroup charge/uncharge APIs patch into
+dmabuf: heaps: export system_heap buffers with GPU cgroup charging as a
+result of above.
+
+Put the charge and uncharge code in the same file (system_heap_allocate,
+system_heap_dma_buf_release) instead of splitting them between the heap and
+the dma_buf_release. This avoids asymmetric management of the gpucg charges=
+.
+
+Modify the dma_buf_transfer_charge API to accept a task_struct instead
+of a gpucg. This avoids requiring the caller to manage the refcount
+of the gpucg upon failure and confusing ownership transfer logic.
+
+Support all strings for gpucg_register_bucket instead of just string
+literals.
+
+Enforce globally unique gpucg_bucket names.
+
+Constrain gpucg_bucket name lengths to 64 bytes.
+
+Append "-heap" to gpucg_bucket names from dmabuf-heaps.
+
+Drop patch 7 from the series, which changed the types of
+binder_transaction_data's sender_pid and sender_euid fields. This was
+done in another commit here:
+https://lore.kernel.org/all/20220210021129.3386083-4-masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org/
+
+Rename:
+  gpucg_try_charge -> gpucg_charge
+  find_cg_rpool_locked -> cg_rpool_find_locked
+  init_cg_rpool -> cg_rpool_init
+  get_cg_rpool_locked -> cg_rpool_get_locked
+  "gpu cgroup controller" -> "GPU controller"
+  gpucg_device -> gpucg_bucket
+  usage -> size
+
+Tests:
+  Support both binder_fd_array_object and binder_fd_object. This is
+  necessary because new versions of Android will use binder_fd_object
+  instead of binder_fd_array_object, and we need to support both.
+
+  Tests for both binder_fd_array_object and binder_fd_object.
+
+  For binder_utils return error codes instead of
+  struct binder{fs}_ctx.
+
+  Use ifdef __ANDROID__ to choose platform-dependent temp path instead
+  of a runtime fallback.
+
+  Ensure binderfs_mntpt ends with a trailing '/' character instead of
+  prepending it where used.
+
+v4:
+Skip test if not run as root per Shuah Khan
+
+Add better test logging for abnormal child termination per Shuah Khan
+
+Adjust ordering of charge/uncharge during transfer to avoid potentially
+hitting cgroup limit per Michal Koutn=C3=BD
+
+Adjust gpucg_try_charge critical section for charge transfer functionality
+
+Fix uninitialized return code error for dmabuf_try_charge error case
+
+v3:
+Remove Upstreaming Plan from gpu-cgroup.rst per John Stultz
+
+Use more common dual author commit message format per John Stultz
+
+Remove android from binder changes title per Todd Kjos
+
+Add a kselftest for this new behavior per Greg Kroah-Hartman
+
+Include details on behavior for all combinations of kernel/userspace
+versions in changelog (thanks Suren Baghdasaryan) per Greg Kroah-Hartman.
+
+Fix pid and uid types in binder UAPI header
+
+v2:
+See the previous revision of this change submitted by Hridya Valsaraju
+at: https://lore.kernel.org/all/20220115010622.3185921-1-hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+
+Move dma-buf cgroup charge transfer from a dma_buf_op defined by every
+heap to a single dma-buf function for all heaps per Daniel Vetter and
+Christian K=C3=B6nig. Pointers to struct gpucg and struct gpucg_device
+tracking the current associations were added to the dma_buf struct to
+achieve this.
+
+Fix incorrect Kconfig help section indentation per Randy Dunlap.
+
+History of the GPU cgroup controller
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+The GPU/DRM cgroup controller came into being when a consensus[1]
+was reached that the resources it tracked were unsuitable to be integrated
+into memcg. Originally, the proposed controller was specific to the DRM
+subsystem and was intended to track GEM buffers and GPU-specific
+resources[2]. In order to help establish a unified memory accounting model
+for all GPU and all related subsystems, Daniel Vetter put forth a
+suggestion to move it out of the DRM subsystem so that it can be used by
+other DMA-BUF exporters as well[3]. This RFC proposes an interface that
+does the same.
+
+[1]: https://patchwork.kernel.org/project/dri-devel/cover/20190501140438.95=
+06-1-brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/#22624705
+[2]: https://lore.kernel.org/amd-gfx/20210126214626.16260-1-brian.welty@int=
+el.com/
+[3]: https://lore.kernel.org/amd-gfx/YCVOl8%2F87bqRSQei-dv86pmgwkMBes7Z6vYuT8azUEOm+Xw19@public.gmane.org/
+
+Hridya Valsaraju (3):
+  gpu: rfc: Proposal for a GPU cgroup controller
+  cgroup: gpu: Add a cgroup controller for allocator attribution of GPU
+    memory
+  binder: Add flags to relinquish ownership of fds
+
+T.J. Mercier (3):
+  dmabuf: heaps: export system_heap buffers with GPU cgroup charging
+  dmabuf: Add gpu cgroup charge transfer function
+  selftests: Add binder cgroup gpu memory transfer tests
+
+ Documentation/gpu/rfc/gpu-cgroup.rst          | 190 +++++++
+ Documentation/gpu/rfc/index.rst               |   4 +
+ drivers/android/binder.c                      |  27 +-
+ drivers/dma-buf/dma-buf.c                     |  80 ++-
+ drivers/dma-buf/dma-heap.c                    |  39 ++
+ drivers/dma-buf/heaps/system_heap.c           |  28 +-
+ include/linux/cgroup_gpu.h                    | 137 +++++
+ include/linux/cgroup_subsys.h                 |   4 +
+ include/linux/dma-buf.h                       |  49 +-
+ include/linux/dma-heap.h                      |  15 +
+ include/uapi/linux/android/binder.h           |  23 +-
+ init/Kconfig                                  |   7 +
+ kernel/cgroup/Makefile                        |   1 +
+ kernel/cgroup/gpu.c                           | 386 +++++++++++++
+ .../selftests/drivers/android/binder/Makefile |   8 +
+ .../drivers/android/binder/binder_util.c      | 250 +++++++++
+ .../drivers/android/binder/binder_util.h      |  32 ++
+ .../selftests/drivers/android/binder/config   |   4 +
+ .../binder/test_dmabuf_cgroup_transfer.c      | 526 ++++++++++++++++++
+ 19 files changed, 1787 insertions(+), 23 deletions(-)
+ create mode 100644 Documentation/gpu/rfc/gpu-cgroup.rst
+ create mode 100644 include/linux/cgroup_gpu.h
+ create mode 100644 kernel/cgroup/gpu.c
+ create mode 100644 tools/testing/selftests/drivers/android/binder/Makefile
+ create mode 100644 tools/testing/selftests/drivers/android/binder/binder_u=
+til.c
+ create mode 100644 tools/testing/selftests/drivers/android/binder/binder_u=
+til.h
+ create mode 100644 tools/testing/selftests/drivers/android/binder/config
+ create mode 100644 tools/testing/selftests/drivers/android/binder/test_dma=
+buf_cgroup_transfer.c
+
+--=20
+2.36.0.rc0.470.gd361397f0d-goog
+
