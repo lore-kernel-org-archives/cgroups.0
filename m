@@ -1,71 +1,64 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/15] nvme-fc: fold t fc_update_appid into fc_appid_store
-Date: Wed, 20 Apr 2022 06:27:11 +0200
-Message-ID: <20220420042723.1010598-4-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 02/15] nvme-fc: don't support the appid attribute without CONFIG_BLK_CGROUP_FC_APPID
+Date: Wed, 20 Apr 2022 06:27:10 +0200
+Message-ID: <20220420042723.1010598-3-hch@lst.de>
 References: <20220420042723.1010598-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=y/ovE2zEN2kLE1A2FRhhKOcbowUkSDsa75PAEbmLpG0=; b=DOLgdQusEBimK3YMZin66R/BjH
-        KIRbmuSDM431VciG1e+sHRmUmEJugXKLLuYU0opQ6vCOSlhXMD61pZTijh1pLp2D6HqCYHj4dOoVA
-        1aSheLwYo2wRPaY7OoXnoXSvxO+f+8BaosjWBlbP2S/I9iIbRmm8BYezQCvXuutIxIvA+TnsrRVCG
-        ErhmbmsIu0ylBSu6HsHJkDbf/VkBmNN3fGWgy1ycMqiil+m2ICbNMhlgUcElPyS9085V54ijOiU1J
-        uVzgoOvSXJMRoLHMkkMM6lLG7F8SFLajpZZyyamt4pij31J78UapbHHe+WJOueO34ANbLEvC76q4E
-        BI4fq2xg==;
-In-Reply-To: <20220420042723.1010598-1-hch@lst.de>
+        bh=IQ4ESgW0h9CMQrcwqxrNIrPn85MSIrk1H7//P0ImuCw=; b=PrEScC5s/tQxuu9heXFJwXhG7S
+        NFpHoR4XLzL55dkcu7UMwI50gBtpf4k1P+uL5GaW6+9bwzG3j4zq1Y8/IQ/Ks6SK5ZFzcHxgVwdj5
+        YQAH55VNCPdQ23V7w22PRIEL7sAXbRX9ENM57nJM/wBu5e9v5hqVNVp1Ed5P7q7NUYQGM3agmcnEj
+        h8CIC4zC8nGgaf523aGgGuvEjzqzCGKzTT1dqAIt528WMiH93lmROrfiBcg9Eomeq/wqYni3EEoxY
+        t1rC1wGpHQZAfAHMFjgzT1MurdfwOLKFX7+dKVrTjlvlJszZtYT4+wNeFXwZ5Go5Qsos2KlexkEyO
+        cpxOH61A==;
+In-Reply-To: <20220420042723.1010598-1-hch-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Paolo Valente <paolo.valente@linaro.org>, Tejun Heo <tj@kernel.org>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-nvme@lists.infradead.org, linux-mm@kvack.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Smart <james.smart-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Dick Kennedy <dick.kennedy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-No need for this wrapper.
+nvme-fc appid support needs CONFIG_BLK_CGROUP_FC_APPID to work, so disable
+the whole code if the option is not set.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- drivers/nvme/host/fc.c | 19 +++----------------
- 1 file changed, 3 insertions(+), 16 deletions(-)
+ drivers/nvme/host/fc.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
-index caa0fff7bf1f5..7ae72c7a211b9 100644
+index 080f85f4105f3..caa0fff7bf1f5 100644
 --- a/drivers/nvme/host/fc.c
 +++ b/drivers/nvme/host/fc.c
-@@ -3857,12 +3857,10 @@ static int fc_parse_cgrpid(const char *buf, u64 *id)
- }
- 
- /*
-- * fc_update_appid: Parse and update the appid in the blkcg associated with
-- * cgroupid.
-- * @buf: buf contains both cgrpid and appid info
-- * @count: size of the buffer
-+ * Parse and update the appid in the blkcg associated with the cgroupid.
-  */
--static int fc_update_appid(const char *buf, size_t count)
-+static ssize_t fc_appid_store(struct device *dev,
-+		struct device_attribute *attr, const char *buf, size_t count)
- {
- 	u64 cgrp_id;
- 	int appid_len = 0;
-@@ -3890,17 +3888,6 @@ static int fc_update_appid(const char *buf, size_t count)
- 		return ret;
+@@ -3831,6 +3831,9 @@ static ssize_t nvme_fc_nvme_discovery_store(struct device *dev,
  	return count;
  }
--
--static ssize_t fc_appid_store(struct device *dev,
--		struct device_attribute *attr, const char *buf, size_t count)
--{
--	int ret  = 0;
--
--	ret = fc_update_appid(buf, count);
--	if (ret < 0)
--		return -EINVAL;
--	return count;
--}
+ 
++static DEVICE_ATTR(nvme_discovery, 0200, NULL, nvme_fc_nvme_discovery_store);
++
++#ifdef CONFIG_BLK_CGROUP_FC_APPID
+ /* Parse the cgroup id from a buf and return the length of cgrpid */
+ static int fc_parse_cgrpid(const char *buf, u64 *id)
+ {
+@@ -3898,12 +3901,14 @@ static ssize_t fc_appid_store(struct device *dev,
+ 		return -EINVAL;
+ 	return count;
+ }
+-static DEVICE_ATTR(nvme_discovery, 0200, NULL, nvme_fc_nvme_discovery_store);
  static DEVICE_ATTR(appid_store, 0200, NULL, fc_appid_store);
- #endif /* CONFIG_BLK_CGROUP_FC_APPID */
++#endif /* CONFIG_BLK_CGROUP_FC_APPID */
+ 
+ static struct attribute *nvme_fc_attrs[] = {
+ 	&dev_attr_nvme_discovery.attr,
++#ifdef CONFIG_BLK_CGROUP_FC_APPID
+ 	&dev_attr_appid_store.attr,
++#endif
+ 	NULL
+ };
  
 -- 
 2.30.2
