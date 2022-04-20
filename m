@@ -1,60 +1,59 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/15] blk-cgroup: cleanup blkcg_maybe_throttle_current
-Date: Wed, 20 Apr 2022 06:27:22 +0200
-Message-ID: <20220420042723.1010598-15-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 15/15] kthread: unexport kthread_blkcg
+Date: Wed, 20 Apr 2022 06:27:23 +0200
+Message-ID: <20220420042723.1010598-16-hch@lst.de>
 References: <20220420042723.1010598-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=xmlR5HUFOAI8yqQFKY2MjEXGwXGx785pMDVfAqM57ow=; b=LMiuO+Sz6pZtEd/3zHUKL+74hk
-        RpDt274l1HCMYrW1VFhdZfv9C/v4MJmcABLxfjJSnH1xD1FymXQDAiM1XRKJ0bfzpPnyq6JA7vTsJ
-        U6ighNPhZ6WMln3DZRgZGB8IrKD8jsHv7+Zcz+q/n0qQb8Qln1SRuvSUhu8rnPRAO4NkoUS+IYw5E
-        UpWlcjxj53dat92wmf8kUZLE+5nDicqZ1JW7ngiAfEgWoQyG34+GlzY5iwkasD8PrBCyhI7EY/6c5
-        UV72fx2cclo9+GXOvxhux5g04dBiY3tCpN9Axb2GlbCQepBEpSDQCvzIUQQJTy26JU9m0aKkIi0li
-        OvH2sV+w==;
-In-Reply-To: <20220420042723.1010598-1-hch@lst.de>
+        bh=FWpABD+wYsNJbTOYNRknLUaqgBYkljHxZCLKg/Ghs/k=; b=qVDpFHnA0++8zAeUACrsAqkpLM
+        AsLLzUzFxeBBeMXuQaFLMtGXuAInVkXTCA6wD586JWcU1DNhi4Wz0IDIquCFWNU1GZq31ZhwXxhm3
+        UlKZ/DZM7mFEA/Jnh4yriH7DlbkuQYDenS79lIVVcLMZ8X72WgqJU94629ntNN6L8AYwGIgGVbOJl
+        aVJQAJX9tRZJFmC4oXSoZUyTZMhLujgu2gzr2dmrVFDcmRa+HesgW6AQ2/hpVY/k7zN+oxsV4m/Gj
+        RDbVU/GqxWVwA23LhC0BO4za7A5zyut55+VywvUzTEwaCsYGaplIZ/VxF6/L/UHz8GU2dDdwxdmhN
+        50p2p5pg==;
+In-Reply-To: <20220420042723.1010598-1-hch-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Paolo Valente <paolo.valente@linaro.org>, Tejun Heo <tj@kernel.org>, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-nvme@lists.infradead.org, linux-mm@kvack.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Smart <james.smart-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Dick Kennedy <dick.kennedy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Use blkcg_css instead of opencoding it.
+kthread_blkcg is only used by the built-in blk-cgroup code.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- block/blk-cgroup.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ include/linux/kthread.h | 4 ----
+ kernel/kthread.c        | 1 -
+ 2 files changed, 5 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 5684a8ce1f755..a91f8ae18b49b 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1808,7 +1808,6 @@ static void blkcg_maybe_throttle_blkg(struct blkcg_gq *blkg, bool use_memdelay)
- void blkcg_maybe_throttle_current(void)
- {
- 	struct request_queue *q = current->throttle_queue;
--	struct cgroup_subsys_state *css;
- 	struct blkcg *blkcg;
- 	struct blkcg_gq *blkg;
- 	bool use_memdelay = current->use_memdelay;
-@@ -1820,12 +1819,7 @@ void blkcg_maybe_throttle_current(void)
- 	current->use_memdelay = false;
- 
- 	rcu_read_lock();
--	css = kthread_blkcg();
--	if (css)
--		blkcg = css_to_blkcg(css);
--	else
--		blkcg = css_to_blkcg(task_css(current, io_cgrp_id));
--
-+	blkcg = css_to_blkcg(blkcg_css());
- 	if (!blkcg)
- 		goto out;
- 	blkg = blkg_lookup(blkcg, q);
+diff --git a/include/linux/kthread.h b/include/linux/kthread.h
+index de5d75bafd665..30e5bec81d2b6 100644
+--- a/include/linux/kthread.h
++++ b/include/linux/kthread.h
+@@ -222,9 +222,5 @@ void kthread_associate_blkcg(struct cgroup_subsys_state *css);
+ struct cgroup_subsys_state *kthread_blkcg(void);
+ #else
+ static inline void kthread_associate_blkcg(struct cgroup_subsys_state *css) { }
+-static inline struct cgroup_subsys_state *kthread_blkcg(void)
+-{
+-	return NULL;
+-}
+ #endif
+ #endif /* _LINUX_KTHREAD_H */
+diff --git a/kernel/kthread.c b/kernel/kthread.c
+index 50265f69a1354..544fd40974068 100644
+--- a/kernel/kthread.c
++++ b/kernel/kthread.c
+@@ -1522,5 +1522,4 @@ struct cgroup_subsys_state *kthread_blkcg(void)
+ 	}
+ 	return NULL;
+ }
+-EXPORT_SYMBOL(kthread_blkcg);
+ #endif
 -- 
 2.30.2
 
