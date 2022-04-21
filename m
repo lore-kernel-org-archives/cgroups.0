@@ -1,76 +1,78 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC PATCH] cgroup/cpuset: fix a memory binding failure for
- cgroup v2
-Date: Thu, 21 Apr 2022 12:22:35 -1000
-Message-ID: <YmHZK+M470GjeJCV@slm.duckdns.org>
-References: <20220419020958.40419-1-feng.tang@intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] cgroup: Kill the parent controller when its last
+ child is killed
+Date: Thu, 21 Apr 2022 12:37:46 -1000
+Message-ID: <YmHcuuhKYfjI8nXA@slm.duckdns.org>
+References: <20220404142535.145975-1-minhquangbui99@gmail.com>
+ <Ykss1N/VYX7femqw@slm.duckdns.org>
+ <20220405091158.GA13806@blackbody.suse.cz>
+ <bdd4104d-390e-74c7-0de1-a275044831a5@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=y6WfdHbJCYQzab5SHoARzKzrfz2r1T0YKiP1hNGHigk=;
-        b=ZO4eaJJc1D/7LWDis399vvRSyw5MBy95K81Welr1tTB6Wq6BW/lnNe2/GwfAzvcz6I
-         U8IY9rPktTgn8KKX28BEbFqA2GiE6eHzQ9XWVWv7mNUeVqphiyNt+GJUxnsztz8BpCPV
-         pzc//pxX7LAS0hEczz1kc/IY7mbLuU43a71tTY8CiViZu7u09/nrRr3pBLVXcrulUICa
-         cIwUXxKbhjYv/yFzkWpLASqQfnmniPnwYmJUAhxZLyJJzhA6nFTI0HbFrYdvYl8E/Nh6
-         JEmekiIqu9b3PmiaUaSqwKeUHq7TokiOmj5/CZqHGBre+241ESZz3lxcjwDeUbJwsIJn
-         WIuA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=TGnA1HghBHzaSRRxb3yDXY7uSkV0l4dlxYm07Mzp3eI=;
+        b=dFLWUJYXH3dFISAztAecv3Yf1mdemauc2q2OxHs3xuKtNlSr8LppwaIILxfTl/CNyR
+         kr3THRthZfoHqEj/5OGLdycki5BRTSoCriRigD1l0TtUqzKqN6uI3LzFSDvVctO3E1RE
+         NCAtYPJ4GhVtCp3b/XFDm4PNopKSQONjpmTayoBiOEG7uwfZm/v745lmKWTdqS0mmKGO
+         t58jj8zjJLgWKNup0fbSpaSCt5i1Ec+cPtsCYrHiVS3VT5hRArzMIlfGmVnBBqpGcYCJ
+         iMwDqG7VnTYEDh46pkMd9Lk8zPW49PsPzUD5sN9IxcfZCtjbqN7VbItpzPg0+jwGmXnc
+         PYMA==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20220419020958.40419-1-feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <bdd4104d-390e-74c7-0de1-a275044831a5@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Bui Quang Minh <minhquangbui99@gmail.com>
+Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, cgroups@vger.kernel.org, kernel test robot <lkp@intel.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org
 
-cc'ing Waiman and copying the whole body.
+On Tue, Apr 05, 2022 at 09:58:01PM +0700, Bui Quang Minh wrote:
+> @@ -5152,12 +5153,28 @@ static void css_release_work_fn(struct work_struct
+> *work)
+>                 container_of(work, struct cgroup_subsys_state,
+> destroy_work);
+>         struct cgroup_subsys *ss = css->ss;
+>         struct cgroup *cgrp = css->cgroup;
+> +       struct cgroup *parent = cgroup_parent(cgrp);
+> 
+>         mutex_lock(&cgroup_mutex);
+> 
+>         css->flags |= CSS_RELEASED;
+>         list_del_rcu(&css->sibling);
+> 
+> +       /*
+> +        * If parent doesn't have any children, start killing it.
+> +        * And don't kill the default root.
+> +        */
+> +       if (parent && list_empty(&parent->self.children) &&
+> +           parent->flags & CGRP_UMOUNT &&
+> +           parent != &cgrp_dfl_root.cgrp &&
+> +           !percpu_ref_is_dying(&parent->self.refcnt)) {
+> +#ifdef CONFIG_CGROUP_BPF
+> +               if (!percpu_ref_is_dying(&cgrp->bpf.refcnt))
+> +                       cgroup_bpf_offline(parent);
+> +#endif
+> +               percpu_ref_kill(&parent->self.refcnt);
+> +       }
+> +
+>         if (ss) {
+>                 /* css release path */
+>                 if (!list_empty(&css->rstat_css_node)) {
+> 
+> The idea is to set a flag in the umount path, in the rmdir it will destroy
+> the css in case its direct parent is umounted, no recursive here. This is
+> just an incomplete example, we may need to reset that flag when remounting.
 
-Waiman, can you please take a look?
+I'm generally against adding complexities for this given that it's never
+gonna be actually reliable. If adding one liner flush_workqueue makes life
+easier in some cases, why not? But the root cause is something which can't
+be solved from messing with release / umount paths and something we decided
+against supporting.
 
 Thanks.
-
-On Tue, Apr 19, 2022 at 10:09:58AM +0800, Feng Tang wrote:
-> We got report that setting cpuset.mems failed when the nodemask
-> contains a newly onlined memory node (not enumerated during boot)
-> for cgroup v2, while the binding succeeded for cgroup v1.
-> 
-> The root cause is, for cgroup v2, when a new memory node is onlined,
-> top_cpuset's 'mem_allowed' is not updated with the new nodemask of
-> memory nodes, and the following setting memory nodemask will fail,
-> if the nodemask contains a new node.
-> 
-> Fix it by updating top_cpuset.mems_allowed right after the
-> new memory node is onlined, just like v1.
-> 
-> Signed-off-by: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> ---
-> Very likely I missed some details here, but it looks strange that
-> the top_cpuset.mem_allowed is not updatd even after we onlined
-> several memory nodes after boot.
-> 
->  kernel/cgroup/cpuset.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 9390bfd9f1cd..b97caaf16374 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -3314,8 +3314,7 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
->  	/* synchronize mems_allowed to N_MEMORY */
->  	if (mems_updated) {
->  		spin_lock_irq(&callback_lock);
-> -		if (!on_dfl)
-> -			top_cpuset.mems_allowed = new_mems;
-> +		top_cpuset.mems_allowed = new_mems;
->  		top_cpuset.effective_mems = new_mems;
->  		spin_unlock_irq(&callback_lock);
->  		update_tasks_nodemask(&top_cpuset);
-> -- 
-> 2.27.0
-> 
 
 -- 
 tejun
