@@ -1,85 +1,72 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH memcg RFC] net: set proper memcg for net_init hooks allocations
-Date: Thu, 21 Apr 2022 08:56:12 -0700
-Message-ID: <CALvZod47PARcupR4P41p5XJRfCaTqSuy-cfXs7Ky9=-aJQuoFA@mail.gmail.com>
-References: <46c1c59e-1368-620d-e57a-f35c2c82084d@linux.dev> <55605876-d05a-8be3-a6ae-ec26de9ee178@openvz.org>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH] mm/memcg: Free percpu stats memory of dying memcg's
+Date: Thu, 21 Apr 2022 09:33:36 -0700
+Message-ID: <YmGHYNuAp8957ouq@carbon>
+References: <20220421145845.1044652-1-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Tb6I/vNw4MkH6cXJACmThyQFIFSwo0v3WzOA2XSKmSs=;
-        b=hkeImdbTeSMXSMeckvO9JBqgK+ypyTZt/okKK7TMyp+Jj42kGAhZ/7QBcpqgOpnqZj
-         gGCX5b138SAqJNu67mSEPBS6HjBSc3NUwwii2N9q3VIj1j6hfggpfT0NzCG9RSRX5XzX
-         nem4EvlLHjThukcbQCBeuQSpwwkuANGAiKT4jdpMxO+QaID+CZCjyfdsqCFNkXN894SL
-         ibNTaINtlSpFjl1GBaz7n+xDgttL7ngW7o2eXndy6RqXfSveGmsHbAN72F463+yh9jhQ
-         LwpxF/i4bpdWG8LRcg6N36V32wZxeba+ZnbpooMdNjNU398VMLDoMlcqVKTjzjuxKwPh
-         7KWg==
-In-Reply-To: <55605876-d05a-8be3-a6ae-ec26de9ee178@openvz.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1650558823;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=2j4GtVd07DMMzhasl57D24rZquXEpncLF4sks2SC8Tg=;
+        b=RzjnYy6yqwp7ePlZWOGy4zJ7p9tV7LrQaNicdlcEY3otLSxF2tbfcewQc9CCnxrqW1twUV
+        PjfdmRGXTs8IcJWhdFuts+UCnSa5O7u1XeW3jZzhif5rGQE0fMuGg6v+TLoMZC6988/yR4
+        Ru8kP7QTO3rUc1mNC/uroAU8bT28HyM=
+Content-Disposition: inline
+In-Reply-To: <20220421145845.1044652-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs@openvz.org>
-Cc: Vlastimil Babka <vbabka@suse.cz>, Roman Gushchin <roman.gushchin@linux.dev>, kernel@openvz.org, LKML <linux-kernel@vger.kernel.org>, netdev <netdev@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.com>, Florian Westphal <fw@strlen.de>, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
 
-On Sat, Apr 16, 2022 at 11:39 PM Vasily Averin <vvs@openvz.org> wrote:
->
-> __register_pernet_operations() executes init hook of registered
-> pernet_operation structure in all existing net namespaces.
->
-> Typically, these hooks are called by a process associated with
-> the specified net namespace, and all __GFP_ACCOUNTING marked
-> allocation are accounted for corresponding container/memcg.
->
-> However __register_pernet_operations() calls the hooks in the same
-> context, and as a result all marked allocations are accounted
-> to one memcg for all processed net namespaces.
->
-> This patch adjusts active memcg for each net namespace and helps
-> to account memory allocated inside ops_init() into the proper memcg.
->
-> Signed-off-by: Vasily Averin <vvs@openvz.org>
-> ---
-> Dear Vlastimil, Roman,
-> I'm not sure that memcg is used correctly here,
-> is it perhaps some additional locking required?
-> ---
->  net/core/net_namespace.c | 7 +++++++
->  1 file changed, 7 insertions(+)
->
-> diff --git a/net/core/net_namespace.c b/net/core/net_namespace.c
-> index a5b5bb99c644..171c6e0b2337 100644
-> --- a/net/core/net_namespace.c
-> +++ b/net/core/net_namespace.c
-> @@ -26,6 +26,7 @@
->  #include <net/net_namespace.h>
->  #include <net/netns/generic.h>
->
-> +#include <linux/sched/mm.h>
->  /*
->   *     Our network namespace constructor/destructor lists
->   */
-> @@ -1147,7 +1148,13 @@ static int __register_pernet_operations(struct list_head *list,
->                  * setup_net() and cleanup_net() are not possible.
->                  */
->                 for_each_net(net) {
-> +                       struct mem_cgroup *old, *memcg = NULL;
-> +#ifdef CONFIG_MEMCG
-> +                       memcg = (net == &init_net) ? root_mem_cgroup : mem_cgroup_from_obj(net);
+On Thu, Apr 21, 2022 at 10:58:45AM -0400, Waiman Long wrote:
+> For systems with large number of CPUs, the majority of the memory
+> consumed by the mem_cgroup structure is actually the percpu stats
+> memory. When a large number of memory cgroups are continuously created
+> and destroyed (like in a container host), it is possible that more
+> and more mem_cgroup structures remained in the dying state holding up
+> increasing amount of percpu memory.
+> 
+> We can't free up the memory of the dying mem_cgroup structure due to
+> active references in some other places. However, the percpu stats memory
+> allocated to that mem_cgroup is a different story.
+> 
+> This patch adds a new percpu_stats_disabled variable to keep track of
+> the state of the percpu stats memory. If the variable is set, percpu
+> stats update will be disabled for that particular memcg. All the stats
+> update will be forward to its parent instead. Reading of the its percpu
+> stats will return 0.
+> 
+> The flushing and freeing of the percpu stats memory is a multi-step
+> process. The percpu_stats_disabled variable is set when the memcg is
+> being set to offline state. After a grace period with the help of RCU,
+> the percpu stats data are flushed and then freed.
+> 
+> This will greatly reduce the amount of memory held up by dying memory
+> cgroups.
+> 
+> By running a simple management tool for container 2000 times per test
+> run, below are the results of increases of percpu memory (as reported
+> in /proc/meminfo) and nr_dying_descendants in root's cgroup.stat.
 
-memcg from obj is unstable, so you need a reference on memcg. You can
-introduce get_mem_cgroup_from_kmem() which works for both
-MEMCG_DATA_OBJCGS and MEMCG_DATA_KMEM. For uncharged objects (like
-init_net) it should return NULL.
+Hi Waiman!
 
-> +#endif
-> +                       old = set_active_memcg(memcg);
->                         error = ops_init(ops, net);
-> +                       set_active_memcg(old);
->                         if (error)
->                                 goto out_undo;
->                         list_add_tail(&net->exit_list, &net_exit_list);
-> --
-> 2.31.1
->
+I've been proposing the same idea some time ago:
+https://lore.kernel.org/all/20190312223404.28665-7-guro-b10kYP2dOMg@public.gmane.org/T/ .
+
+However I dropped it with the thinking that with many other fixes
+preventing the accumulation of the dying cgroups it's not worth the added
+complexity and a potential cpu overhead.
+
+I think it ultimately comes to the number of dying cgroups. If it's low,
+memory savings are not worth the cpu overhead. If it's high, they are.
+I hope long-term to drive it down significantly (with lru-pages reparenting
+being the first major milestone), but it might take a while.
+
+I don't have a strong opinion either way, just want to dump my thoughts
+on this.
+
+Thanks!
