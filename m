@@ -1,58 +1,37 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: make the blkcg and blkcg structures private
-Date: Fri, 22 Apr 2022 05:42:31 -1000
-Message-ID: <YmLM5/1+VH5mdQ/o@slm.duckdns.org>
-References: <20220420042723.1010598-1-hch@lst.de>
- <YmHQS1pyIglK+gfS@slm.duckdns.org>
- <20220422042318.GA9977@lst.de>
+From: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
+Subject: [PATCH 0/5] Fix bugs in memcontroller cgroup tests
+Date: Fri, 22 Apr 2022 08:57:24 -0700
+Message-ID: <20220422155728.3055914-1-void@manifault.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=/2bXBH57zZDvmeIOYDk/m7NyaBAKN+vWWjfrVhEZ7T4=;
-        b=XYZOLh+Jv2kL2sx884zx4C5eFWyZUuKY38ML9XvAYhNcR9BREu4ndvKecAC8kiH8Wl
-         2v8yd4kPP2gu4bBvSJJYHpMRWaZdWMCPawASUwvIYLt/36hDOsoQF6/PRGnoA/fP3+Iy
-         OdYf/Am/17PxHTlnZSv3KbSRM9TsczBeb1wQS6jyeQwBOuRzRhaolF58FR4l9A1SPpSs
-         HkM3GxADfbMO/Zvs8ImLLAeCMjyTOUQSJdFg27FdWbQ+EuDUKbiREIqdpGpAdH81y42c
-         dVVAZmsCS7qchIwgGY0c3HnDxcg2FfvolA13AyZ8voskHxh/DdCWa9uIdpnjrvxytLup
-         fQpg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20220422042318.GA9977-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, James Smart <james.smart-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Dick Kennedy <dick.kennedy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org
 
-Hello,
+tools/testing/selftests/cgroup/test_memcontrol.c contains a set of
+testcases which validate expected behavior of the cgroup memory controller.
+Roman Gushchin recently sent out a patchset that fixed a few issues in the
+test. This patchset continues that effort by fixing a few more issues that
+were causing non-deterministic failures in the suite. With this patchset,
+I'm unable to reproduce any more errors after running the tests in a
+continuous loop for many iterations. Before, I was able to reproduce at
+least one of the errors fixed in this patchset with just one or two runs.
 
-On Fri, Apr 22, 2022 at 06:23:18AM +0200, Christoph Hellwig wrote:
-> On Thu, Apr 21, 2022 at 11:44:43AM -1000, Tejun Heo wrote:
-> > The patches look all good to me and I'm not against making things more
-> > private but can you elaborate on the rationale a bit more? By and large, we
-> > have never been shy about putting things in the headers if there's *any*
-> > (perceived) gain to be made from doing so, or even just as a way to pick the
-> > locations for different things - type defs go on header and so on. Most of
-> > the inlines and [un]likely's that we have are rather silly with modern
-> > compilers with global optimizations, so it does make sense to get tidier,
-> > but if that's the rationale, mentioning that in the commit message, even
-> > briefly, would be great - ie. it should explain the benefits of adding these
-> > few accessors to keep the definition private.
-> 
-> Mostly to help me understand the code :)  between all the moving to
-> and from the css struture it is a bit of a mess, and limiting the scope
-> that deals with the structures greatly helps with that.
+David Vernet (5):
+  cgroups: Refactor children cgroups in memcg tests
+  cgroup: Account for memory_recursiveprot in test_memcg_low()
+  cgroup: Account for memory_localevents in
+    test_memcg_oom_group_leaf_events()
+  cgroup: Removing racy check in test_memcg_sock()
+  cgroup: Fix racy check in alloc_pagecache_max_30M() helper function
 
-Hahaha, yeah, fair enough. I don't see a reason to not apply the patchset
-given that the code is better organized and easier to follow afterewards.
-For the series,
-
- Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-Thanks.
+ tools/testing/selftests/cgroup/cgroup_util.c  | 12 ++++
+ tools/testing/selftests/cgroup/cgroup_util.h  |  1 +
+ .../selftests/cgroup/test_memcontrol.c        | 69 +++++++++++++------
+ 3 files changed, 61 insertions(+), 21 deletions(-)
 
 -- 
-tejun
+2.30.2
+
