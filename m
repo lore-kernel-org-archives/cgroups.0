@@ -1,41 +1,128 @@
-From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Subject: Re: [RFC v5 0/6] Proposal for a GPU cgroup controller
-Date: Fri, 22 Apr 2022 16:53:00 +0200
-Message-ID: <YmLBTBd+5RHzr9MK@kroah.com>
-References: <20220420235228.2767816-1-tjmercier@google.com>
+From: Roman Gushchin <roman.gushchin@linux.dev>
+Subject: Re: [PATCH] mm/memcg: Free percpu stats memory of dying memcg's
+Date: Fri, 22 Apr 2022 08:00:39 -0700
+Message-ID: <YmLDF58Mz3inl9Ev@carbon>
+References: <20220421145845.1044652-1-longman@redhat.com>
+ <YmGHYNuAp8957ouq@carbon>
+ <112a4d7f-bc53-6e59-7bb8-6fecb65d045d@redhat.com>
+ <YmGbmrH/Hg1VJlUc@carbon>
+ <58c41f14-356e-88dd-54aa-dc6873bf80ff@redhat.com>
+ <YmIZ9Lpvx5pY3oTV@carbon>
+ <YmKDCjJFYMmfa8sG@FVFYT0MHHV2J.usts.net>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1650639183;
-        bh=T9UBwXuqufvpPkwkvMfLrSuvMpCvswDkzG2OAhXGXms=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=gtR6ueBjj90k6uXG+sGb62mjEPhUyWqCc4g/LYsDAGDC86QvoXlQYy95NhT2btdF8
-         P0xl3sQ3qmwmyqmSN38lcytsJbQgKvLmqdrL0dhCwz49yEBz1tKjoPpydxABJtmKdz
-         GxSusnTu+4goI0K1PWwTnb2+/G0VhcVxFy2lzYdc=
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1650639644;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=d3IirLrwzfP+t0cf/Qt/pjPqRe913cYQABamRgMemA8=;
+        b=Lm54JO89yEThLSIOPkqiO6LOVwh/7ZwT7BCwz0zLcI/aXxl9HFRy2wt5mfdfSbbE+e+BYB
+        bQyb0q49de7JTreNY6cN9UX4H5WWDQWzNEHLbyyXbGLILRdK/dSOz1lUkEN4UbqazIhnP8
+        3DvXNVVjpOLYzc3+lxM/e73OuXDStK4=
 Content-Disposition: inline
-In-Reply-To: <20220420235228.2767816-1-tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <YmKDCjJFYMmfa8sG@FVFYT0MHHV2J.usts.net>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: daniel-/w4YWyX8dFk@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Arve =?iso-8859-1?B?SGr4bm5lduVn?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Benjamin Gaignard <benjamin.gaignard-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>, Liam Mark <lmark-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Laura Abbott <labbott-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Brian Starkey <B>
+To: Muchun Song <songmuchun@bytedance.com>
+Cc: Waiman Long <longman@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yang Shi <shy828301@gmail.com>, Vlastimil Babka <vbabka@suse.cz>
 
-On Wed, Apr 20, 2022 at 11:52:18PM +0000, T.J. Mercier wrote:
-> This patch series revisits the proposal for a GPU cgroup controller to
-> track and limit memory allocations by various device/allocator
-> subsystems. The patch series also contains a simple prototype to
-> illustrate how Android intends to implement DMA-BUF allocator
-> attribution using the GPU cgroup controller. The prototype does not
-> include resource limit enforcements.
+On Fri, Apr 22, 2022 at 06:27:22PM +0800, Muchun Song wrote:
+> On Thu, Apr 21, 2022 at 07:59:00PM -0700, Roman Gushchin wrote:
+> > On Thu, Apr 21, 2022 at 02:46:00PM -0400, Waiman Long wrote:
+> > > On 4/21/22 13:59, Roman Gushchin wrote:
+> > > > On Thu, Apr 21, 2022 at 01:28:20PM -0400, Waiman Long wrote:
+> > > > > On 4/21/22 12:33, Roman Gushchin wrote:
+> > > > > > On Thu, Apr 21, 2022 at 10:58:45AM -0400, Waiman Long wrote:
+> > > > > > > For systems with large number of CPUs, the majority of the memory
+> > > > > > > consumed by the mem_cgroup structure is actually the percpu stats
+> > > > > > > memory. When a large number of memory cgroups are continuously created
+> > > > > > > and destroyed (like in a container host), it is possible that more
+> > > > > > > and more mem_cgroup structures remained in the dying state holding up
+> > > > > > > increasing amount of percpu memory.
+> > > > > > > 
+> > > > > > > We can't free up the memory of the dying mem_cgroup structure due to
+> > > > > > > active references in some other places. However, the percpu stats memory
+> > > > > > > allocated to that mem_cgroup is a different story.
+> > > > > > > 
+> > > > > > > This patch adds a new percpu_stats_disabled variable to keep track of
+> > > > > > > the state of the percpu stats memory. If the variable is set, percpu
+> > > > > > > stats update will be disabled for that particular memcg. All the stats
+> > > > > > > update will be forward to its parent instead. Reading of the its percpu
+> > > > > > > stats will return 0.
+> > > > > > > 
+> > > > > > > The flushing and freeing of the percpu stats memory is a multi-step
+> > > > > > > process. The percpu_stats_disabled variable is set when the memcg is
+> > > > > > > being set to offline state. After a grace period with the help of RCU,
+> > > > > > > the percpu stats data are flushed and then freed.
+> > > > > > > 
+> > > > > > > This will greatly reduce the amount of memory held up by dying memory
+> > > > > > > cgroups.
+> > > > > > > 
+> > > > > > > By running a simple management tool for container 2000 times per test
+> > > > > > > run, below are the results of increases of percpu memory (as reported
+> > > > > > > in /proc/meminfo) and nr_dying_descendants in root's cgroup.stat.
+> > > > > > Hi Waiman!
+> > > > > > 
+> > > > > > I've been proposing the same idea some time ago:
+> > > > > > https://lore.kernel.org/all/20190312223404.28665-7-guro@fb.com/T/ .
+> > > > > > 
+> > > > > > However I dropped it with the thinking that with many other fixes
+> > > > > > preventing the accumulation of the dying cgroups it's not worth the added
+> > > > > > complexity and a potential cpu overhead.
+> > > > > > 
+> > > > > > I think it ultimately comes to the number of dying cgroups. If it's low,
+> > > > > > memory savings are not worth the cpu overhead. If it's high, they are.
+> > > > > > I hope long-term to drive it down significantly (with lru-pages reparenting
+> > > > > > being the first major milestone), but it might take a while.
+> > > > > > 
+> > > > > > I don't have a strong opinion either way, just want to dump my thoughts
+> > > > > > on this.
+> > > > > I have quite a number of customer cases complaining about increasing percpu
+> > > > > memory usages. The number of dying memcg's can go to tens of thousands. From
+> > > > > my own investigation, I believe that those dying memcg's are not freed
+> > > > > because they are pinned down by references in the page structure. I am aware
+> > > > > that we support the use of objcg in the page structure which will allow easy
+> > > > > reparenting, but most pages don't do that and it is not easy to do this
+> > > > > conversion and it may take quite a while to do that.
+> > > > The big question is whether there is a memory pressure on those systems.
+> > > > If yes, and the number of dying cgroups is growing, it's worth investigating.
+> > > > It might be due to the sharing of pagecache pages and this will be ultimately
+> > > > fixed with implementing of the pagecache reparenting. But it also might be due
+> > > > to other bugs, which are fixable, so it would be great to understand.
+> > > 
+> > > 
+> > > Pagecache reparenting will probably fix the problem that I have seen. Is
+> > > someone working on this?
+> > 
+> > Some time ago Muchun posted patches based on the reusing of the obj_cgroup API.
+> >
 > 
-> Changelog:
-> v5:
-> Rebase on top of v5.18-rc3
+> Yep. It is here:
+> 
+> https://lore.kernel.org/all/20220216115132.52602-1-songmuchun@bytedance.com/.
+>  
+> > I'm not strictly against this approach, but in my opinion it's not the best.
+> > I suggested to use lru vectors as an intermediate objects. In theory, it might
+> 
+> I remember this.
+> 
+> > allow to avoid bumping reference counters for all charged pages at all: live
+> > cgroups will be protected by being live, dying cgroups will only need
+> > a temporarily protection while lru vectors and associated pages are reparenting.
+> > 
+> > There are pros and cons:
+> > + cgroup reference counting becomes simpler and more debuggable
+> > + potential perf wins from fewer operations with live cgroups css refcounters
+> > = I hope to see code simplifications (but not guaranteed)
+> > - deleting cgroups becomes more expensive, but the cost can be spread to
+> >   asynchronous workers
+> > 
+> > Idk if Muchun tried to implement it. If not, I might try myself.
+> >
+> 
+> Yep. I have implemented a initial version recently. I'll do some stability tests
+> and send it out ASAP.
 
-Why is a "RFC" series on v5?  I treat "RFC" as "not ready to be merged,
-if people are interested, please look at it".  But v5 seems like you
-think this is real.
-
-confused,
-
-greg k-h
+Great! Looking forward to see it! And thank you for working on it!
