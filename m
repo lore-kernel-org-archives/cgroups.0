@@ -1,128 +1,58 @@
-From: Roman Gushchin <roman.gushchin@linux.dev>
-Subject: Re: [PATCH] mm/memcg: Free percpu stats memory of dying memcg's
-Date: Fri, 22 Apr 2022 08:00:39 -0700
-Message-ID: <YmLDF58Mz3inl9Ev@carbon>
-References: <20220421145845.1044652-1-longman@redhat.com>
- <YmGHYNuAp8957ouq@carbon>
- <112a4d7f-bc53-6e59-7bb8-6fecb65d045d@redhat.com>
- <YmGbmrH/Hg1VJlUc@carbon>
- <58c41f14-356e-88dd-54aa-dc6873bf80ff@redhat.com>
- <YmIZ9Lpvx5pY3oTV@carbon>
- <YmKDCjJFYMmfa8sG@FVFYT0MHHV2J.usts.net>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: make the blkcg and blkcg structures private
+Date: Fri, 22 Apr 2022 05:42:31 -1000
+Message-ID: <YmLM5/1+VH5mdQ/o@slm.duckdns.org>
+References: <20220420042723.1010598-1-hch@lst.de>
+ <YmHQS1pyIglK+gfS@slm.duckdns.org>
+ <20220422042318.GA9977@lst.de>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1650639644;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=d3IirLrwzfP+t0cf/Qt/pjPqRe913cYQABamRgMemA8=;
-        b=Lm54JO89yEThLSIOPkqiO6LOVwh/7ZwT7BCwz0zLcI/aXxl9HFRy2wt5mfdfSbbE+e+BYB
-        bQyb0q49de7JTreNY6cN9UX4H5WWDQWzNEHLbyyXbGLILRdK/dSOz1lUkEN4UbqazIhnP8
-        3DvXNVVjpOLYzc3+lxM/e73OuXDStK4=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=/2bXBH57zZDvmeIOYDk/m7NyaBAKN+vWWjfrVhEZ7T4=;
+        b=XYZOLh+Jv2kL2sx884zx4C5eFWyZUuKY38ML9XvAYhNcR9BREu4ndvKecAC8kiH8Wl
+         2v8yd4kPP2gu4bBvSJJYHpMRWaZdWMCPawASUwvIYLt/36hDOsoQF6/PRGnoA/fP3+Iy
+         OdYf/Am/17PxHTlnZSv3KbSRM9TsczBeb1wQS6jyeQwBOuRzRhaolF58FR4l9A1SPpSs
+         HkM3GxADfbMO/Zvs8ImLLAeCMjyTOUQSJdFg27FdWbQ+EuDUKbiREIqdpGpAdH81y42c
+         dVVAZmsCS7qchIwgGY0c3HnDxcg2FfvolA13AyZ8voskHxh/DdCWa9uIdpnjrvxytLup
+         fQpg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <YmKDCjJFYMmfa8sG@FVFYT0MHHV2J.usts.net>
+In-Reply-To: <20220422042318.GA9977-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Muchun Song <songmuchun@bytedance.com>
-Cc: Waiman Long <longman@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yang Shi <shy828301@gmail.com>, Vlastimil Babka <vbabka@suse.cz>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, James Smart <james.smart-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Dick Kennedy <dick.kennedy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Fri, Apr 22, 2022 at 06:27:22PM +0800, Muchun Song wrote:
-> On Thu, Apr 21, 2022 at 07:59:00PM -0700, Roman Gushchin wrote:
-> > On Thu, Apr 21, 2022 at 02:46:00PM -0400, Waiman Long wrote:
-> > > On 4/21/22 13:59, Roman Gushchin wrote:
-> > > > On Thu, Apr 21, 2022 at 01:28:20PM -0400, Waiman Long wrote:
-> > > > > On 4/21/22 12:33, Roman Gushchin wrote:
-> > > > > > On Thu, Apr 21, 2022 at 10:58:45AM -0400, Waiman Long wrote:
-> > > > > > > For systems with large number of CPUs, the majority of the memory
-> > > > > > > consumed by the mem_cgroup structure is actually the percpu stats
-> > > > > > > memory. When a large number of memory cgroups are continuously created
-> > > > > > > and destroyed (like in a container host), it is possible that more
-> > > > > > > and more mem_cgroup structures remained in the dying state holding up
-> > > > > > > increasing amount of percpu memory.
-> > > > > > > 
-> > > > > > > We can't free up the memory of the dying mem_cgroup structure due to
-> > > > > > > active references in some other places. However, the percpu stats memory
-> > > > > > > allocated to that mem_cgroup is a different story.
-> > > > > > > 
-> > > > > > > This patch adds a new percpu_stats_disabled variable to keep track of
-> > > > > > > the state of the percpu stats memory. If the variable is set, percpu
-> > > > > > > stats update will be disabled for that particular memcg. All the stats
-> > > > > > > update will be forward to its parent instead. Reading of the its percpu
-> > > > > > > stats will return 0.
-> > > > > > > 
-> > > > > > > The flushing and freeing of the percpu stats memory is a multi-step
-> > > > > > > process. The percpu_stats_disabled variable is set when the memcg is
-> > > > > > > being set to offline state. After a grace period with the help of RCU,
-> > > > > > > the percpu stats data are flushed and then freed.
-> > > > > > > 
-> > > > > > > This will greatly reduce the amount of memory held up by dying memory
-> > > > > > > cgroups.
-> > > > > > > 
-> > > > > > > By running a simple management tool for container 2000 times per test
-> > > > > > > run, below are the results of increases of percpu memory (as reported
-> > > > > > > in /proc/meminfo) and nr_dying_descendants in root's cgroup.stat.
-> > > > > > Hi Waiman!
-> > > > > > 
-> > > > > > I've been proposing the same idea some time ago:
-> > > > > > https://lore.kernel.org/all/20190312223404.28665-7-guro@fb.com/T/ .
-> > > > > > 
-> > > > > > However I dropped it with the thinking that with many other fixes
-> > > > > > preventing the accumulation of the dying cgroups it's not worth the added
-> > > > > > complexity and a potential cpu overhead.
-> > > > > > 
-> > > > > > I think it ultimately comes to the number of dying cgroups. If it's low,
-> > > > > > memory savings are not worth the cpu overhead. If it's high, they are.
-> > > > > > I hope long-term to drive it down significantly (with lru-pages reparenting
-> > > > > > being the first major milestone), but it might take a while.
-> > > > > > 
-> > > > > > I don't have a strong opinion either way, just want to dump my thoughts
-> > > > > > on this.
-> > > > > I have quite a number of customer cases complaining about increasing percpu
-> > > > > memory usages. The number of dying memcg's can go to tens of thousands. From
-> > > > > my own investigation, I believe that those dying memcg's are not freed
-> > > > > because they are pinned down by references in the page structure. I am aware
-> > > > > that we support the use of objcg in the page structure which will allow easy
-> > > > > reparenting, but most pages don't do that and it is not easy to do this
-> > > > > conversion and it may take quite a while to do that.
-> > > > The big question is whether there is a memory pressure on those systems.
-> > > > If yes, and the number of dying cgroups is growing, it's worth investigating.
-> > > > It might be due to the sharing of pagecache pages and this will be ultimately
-> > > > fixed with implementing of the pagecache reparenting. But it also might be due
-> > > > to other bugs, which are fixable, so it would be great to understand.
-> > > 
-> > > 
-> > > Pagecache reparenting will probably fix the problem that I have seen. Is
-> > > someone working on this?
-> > 
-> > Some time ago Muchun posted patches based on the reusing of the obj_cgroup API.
-> >
-> 
-> Yep. It is here:
-> 
-> https://lore.kernel.org/all/20220216115132.52602-1-songmuchun@bytedance.com/.
->  
-> > I'm not strictly against this approach, but in my opinion it's not the best.
-> > I suggested to use lru vectors as an intermediate objects. In theory, it might
-> 
-> I remember this.
-> 
-> > allow to avoid bumping reference counters for all charged pages at all: live
-> > cgroups will be protected by being live, dying cgroups will only need
-> > a temporarily protection while lru vectors and associated pages are reparenting.
-> > 
-> > There are pros and cons:
-> > + cgroup reference counting becomes simpler and more debuggable
-> > + potential perf wins from fewer operations with live cgroups css refcounters
-> > = I hope to see code simplifications (but not guaranteed)
-> > - deleting cgroups becomes more expensive, but the cost can be spread to
-> >   asynchronous workers
-> > 
-> > Idk if Muchun tried to implement it. If not, I might try myself.
-> >
-> 
-> Yep. I have implemented a initial version recently. I'll do some stability tests
-> and send it out ASAP.
+Hello,
 
-Great! Looking forward to see it! And thank you for working on it!
+On Fri, Apr 22, 2022 at 06:23:18AM +0200, Christoph Hellwig wrote:
+> On Thu, Apr 21, 2022 at 11:44:43AM -1000, Tejun Heo wrote:
+> > The patches look all good to me and I'm not against making things more
+> > private but can you elaborate on the rationale a bit more? By and large, we
+> > have never been shy about putting things in the headers if there's *any*
+> > (perceived) gain to be made from doing so, or even just as a way to pick the
+> > locations for different things - type defs go on header and so on. Most of
+> > the inlines and [un]likely's that we have are rather silly with modern
+> > compilers with global optimizations, so it does make sense to get tidier,
+> > but if that's the rationale, mentioning that in the commit message, even
+> > briefly, would be great - ie. it should explain the benefits of adding these
+> > few accessors to keep the definition private.
+> 
+> Mostly to help me understand the code :)  between all the moving to
+> and from the css struture it is a bit of a mess, and limiting the scope
+> that deals with the structures greatly helps with that.
+
+Hahaha, yeah, fair enough. I don't see a reason to not apply the patchset
+given that the code is better organized and easier to follow afterewards.
+For the series,
+
+ Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+
+Thanks.
+
+-- 
+tejun
