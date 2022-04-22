@@ -1,65 +1,49 @@
-From: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
-Subject: [PATCH 5/5] cgroup: Fix racy check in alloc_pagecache_max_30M() helper function
-Date: Fri, 22 Apr 2022 08:57:29 -0700
-Message-ID: <20220422155728.3055914-6-void@manifault.com>
-References: <20220422155728.3055914-1-void@manifault.com>
+From: "T.J. Mercier" <tjmercier@google.com>
+Subject: Re: [RFC v5 0/6] Proposal for a GPU cgroup controller
+Date: Fri, 22 Apr 2022 09:40:41 -0700
+Message-ID: <CABdmKX2X6VqK4rw90+OtSOF+aFZELefuzd=YOY3+cqiOqqYALQ@mail.gmail.com>
+References: <20220420235228.2767816-1-tjmercier@google.com> <YmLBTBd+5RHzr9MK@kroah.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220422155728.3055914-1-void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
+Return-path: <linux-media-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=CoGqA9rNsKJzYU/Obb8AAvf20gVKLeXNXFwl6nZ00rM=;
+        b=puSEmprmz1nabSt+ml3920aGPKkUVGoZm9P1z5qEs6WOb5oaEqNdPuB+XnBF/+pdaO
+         BVteA6H2VgQlmb0Vq/J/n/1XVZvrvGQjt3mVj7lbZ/55jU+YzyVz0YPnKdWjffXAa8Sz
+         MZZheTPjT0XiMePlwtP5H2lntWYI8T7f3sghXXsJd3g7Ti463gREa1RRPDULw3YuULJU
+         V2eu6FowolcgcwIpjbYp+q6SYrrPz3TtrfOdT2/aZwIAQaPxpVJyN7CzTxgTka8GC3Wa
+         WXEDYA8EWuQGKrc2twCsC4WwQ7w8TiQWt2zr4dmLhdutg4v2XDEey0Wxj5JTGpSZAciX
+         TulA==
+In-Reply-To: <YmLBTBd+5RHzr9MK@kroah.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Daniel Vetter <daniel@ffwll.ch>, Tejun Heo <tj@kernel.org>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@linux.ie>, Jonathan Corbet <corbet@lwn.net>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@collabora.com>, Liam Mark <lmark@codeaurora.org>, Laura Abbott <labbott@redhat.co>
 
-alloc_pagecache_max_30M() in the cgroup memcg tests performs a 50MB
-pagecache allocation, which it expects to be capped at 30MB due to the
-calling process having a memory.high setting of 30MB. After the allocation,
-the function contains a check that verifies that MB(29) < memory.current <=
-MB(30). This check can actually fail non-deterministically.
+On Fri, Apr 22, 2022 at 7:53 AM Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+>
+> On Wed, Apr 20, 2022 at 11:52:18PM +0000, T.J. Mercier wrote:
+> > This patch series revisits the proposal for a GPU cgroup controller to
+> > track and limit memory allocations by various device/allocator
+> > subsystems. The patch series also contains a simple prototype to
+> > illustrate how Android intends to implement DMA-BUF allocator
+> > attribution using the GPU cgroup controller. The prototype does not
+> > include resource limit enforcements.
+> >
+> > Changelog:
+> > v5:
+> > Rebase on top of v5.18-rc3
+>
+> Why is a "RFC" series on v5?  I treat "RFC" as "not ready to be merged,
+> if people are interested, please look at it".  But v5 seems like you
+> think this is real.
+>
+> confused,
+>
+> greg k-h
 
-The testcases that use this function are test_memcg_high() and
-test_memcg_max(), which set memory.min and memory.max to 30MB respectively
-for the cgroup under test. The allocation can slightly exceed this number
-in both cases, and for memory.max, the process performing the allocation
-will not have the OOM killer invoked as it's performing a pagecache
-allocation.  This patchset therefore updates the above check to instead use
-the verify_close() helper function.
-
-Signed-off-by: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
----
- tools/testing/selftests/cgroup/test_memcontrol.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index c4735fa36a3d..088850f01ae7 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -564,9 +564,14 @@ static int alloc_pagecache_max_30M(const char *cgroup, void *arg)
- {
- 	size_t size = MB(50);
- 	int ret = -1;
--	long current;
-+	long current, high, max;
- 	int fd;
- 
-+	high = cg_read_long(cgroup, "memory.high");
-+	max = cg_read_long(cgroup, "memory.max");
-+	if (high != MB(30) && max != MB(30))
-+		goto cleanup;
-+
- 	fd = get_temp_fd();
- 	if (fd < 0)
- 		return -1;
-@@ -575,7 +580,7 @@ static int alloc_pagecache_max_30M(const char *cgroup, void *arg)
- 		goto cleanup;
- 
- 	current = cg_read_long(cgroup, "memory.current");
--	if (current <= MB(29) || current > MB(30))
-+	if (!values_close(current, MB(30), 5))
- 		goto cleanup;
- 
- 	ret = 0;
--- 
-2.30.2
-
+I'm sorry for the confusion. I'll change this to PATCH in future revisions.
