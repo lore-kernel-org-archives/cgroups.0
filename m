@@ -1,7 +1,7 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 Subject: Re: [PATCH] mm/memcg: Free percpu stats memory of dying memcg's
-Date: Fri, 22 Apr 2022 10:29:36 +0800
-Message-ID: <YmITEEdEbaKCK3BN@FVFYT0MHHV2J.usts.net>
+Date: Thu, 21 Apr 2022 19:59:00 -0700
+Message-ID: <YmIZ9Lpvx5pY3oTV@carbon>
 References: <20220421145845.1044652-1-longman@redhat.com>
  <YmGHYNuAp8957ouq@carbon>
  <112a4d7f-bc53-6e59-7bb8-6fecb65d045d@redhat.com>
@@ -9,24 +9,22 @@ References: <20220421145845.1044652-1-longman@redhat.com>
  <58c41f14-356e-88dd-54aa-dc6873bf80ff@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=vnwa2/E4TTvsZNdvRU29uFcAMGoetyFfng2lxAsZyvs=;
-        b=i1aDJ+cBEN/Qi0ifvWu89VN2VtJEAI+sUbVu6CO17eUtch7Lc4hQk6+ROT49jL6OLb
-         m19kGV7c4Ku7RsiVZieFkbNkwoFiYrXk2EbJxTzXlFy+iEqdeSHMzmTrZFtYLZGehrO2
-         78TfXZ93IpSmgjFbprLy1RpRR1/MfIGKvkfleAnU/Y9ASAj+uNjV0FHWwQn3h0Hxguov
-         6uIT34XqSqtOTLHKsHxDYLoX0EfRtHrEdCLBTn4MAQdoHSznb43hyaaTXbZvzZXJjSf5
-         x5augORvT5fWzGVwH/qBPybU6plMoSpSjehao1MPjubdz6MWConLgheFyK9RQOZecART
-         hS3A==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1650596346;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=YNU0A0wQbRo9vG6Fxcfru5+fUFZat7gNvd1jVI3Drpk=;
+        b=stes4zkEnsmvTJz5l51I1gDs5kSJMVg38xIaxChenqK2FebUpU213JCujyBQIb1T30xiR+
+        Kpf2JNlLhViag4fyJVNU5xNc+XLPRJR0W1FRMN51j8fsi3yQLZnnXc0mcI2d2TcsmzThzw
+        CqOdvcxQHKDeyWRrDj5USIoxTEMIC7g=
 Content-Disposition: inline
 In-Reply-To: <58c41f14-356e-88dd-54aa-dc6873bf80ff-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
 
 On Thu, Apr 21, 2022 at 02:46:00PM -0400, Waiman Long wrote:
 > On 4/21/22 13:59, Roman Gushchin wrote:
@@ -93,13 +91,22 @@ On Thu, Apr 21, 2022 at 02:46:00PM -0400, Waiman Long wrote:
 > 
 > Pagecache reparenting will probably fix the problem that I have seen. Is
 > someone working on this?
->
 
-We also encountered dying cgroup issue on our servers for a long time.
-I have worked on this for a while and proposed a resolution [1] based
-on obj_cgroup APIs to charge the LRU pages.
+Some time ago Muchun posted patches based on the reusing of the obj_cgroup API.
 
-[1] https://lore.kernel.org/all/20220216115132.52602-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+I'm not strictly against this approach, but in my opinion it's not the best.
+I suggested to use lru vectors as an intermediate objects. In theory, it might
+allow to avoid bumping reference counters for all charged pages at all: live
+cgroups will be protected by being live, dying cgroups will only need
+a temporarily protection while lru vectors and associated pages are reparenting.
 
-Thanks.
+There are pros and cons:
++ cgroup reference counting becomes simpler and more debuggable
++ potential perf wins from fewer operations with live cgroups css refcounters
+= I hope to see code simplifications (but not guaranteed)
+- deleting cgroups becomes more expensive, but the cost can be spread to
+  asynchronous workers
 
+Idk if Muchun tried to implement it. If not, I might try myself.
+
+Thanks!
