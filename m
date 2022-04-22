@@ -1,45 +1,35 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup: don't queue css_release_work if one already
- pending
-Date: Thu, 21 Apr 2022 14:00:56 -1000
-Message-ID: <YmHwOAdGY2Lwl+M3@slm.duckdns.org>
-References: <20220412192459.227740-1-tadeusz.struk@linaro.org>
- <20220414164409.GA5404@blackbody.suse.cz>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [PATCH -next] mm/memcontrol.c: make cgroup_memory_noswap static
+Date: Fri, 22 Apr 2022 10:23:02 +0800
+Message-ID: <YmIRhikdGutx6TeE@FVFYT0MHHV2J.usts.net>
+References: <20220421124736.62180-1-lujialin4@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=zNM0T6G9nbgHrNZ4fTkXwyWCBaHcehFw/2xC4YUFDsI=;
-        b=EuvVsx4ZgPslFCb7gOV55CeCnLpdDVKzvax8LPd7QTAK+3cU87Nftp2h7LeD7u3x2U
-         PO69KJYfLa71urQQP2eN+4+QzGZOFbUrNStJDozSoWX4l5jGuO1fYDQUPM7oTzQ8wB2U
-         8EIgEV6FSttJlevNQj86csduSGRTjcTwZHEIHMy9jGjOczOnergao1IJkSzCCnshkNPJ
-         Py6NTTy2g3djoSt3B+mT0dIwNsW/H2Eqoy9JrURvzKTT9fe9QNKppdTpHmWnLEPGs5gR
-         mcaxAyyi41329d31VgPJuKePYtKsinZGMVLpeuN/3ZZvqvZv6ZUF8piVfQllRNkVMPdm
-         7ZLw==
-Sender: Tejun Heo <htejun@gmail.com>
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=/r6xw+gj3ZTku8Ban2Ty+342ukm24iTASQaEDp2KNQM=;
+        b=Ib8b5bLDkA26LrA6dCcYGi19rtQ+3Mrl6DdFt3V0pfQltiTIh6katrX1tWJQA7hCPd
+         41Ga7W4SB7elDpM08p0ULKc3OfwLM6N4aOwQPVAfvEhJnVZiiNDQYp9a+gv/dEQ/GO75
+         C/Y0//i7ekOZj7Xi+eB06n63ANAWPwLyckiVSNQynddV6XvJSIcaiYOEP2mvAmjIZKyu
+         BvnD/t/fseEXFrc45GU4xVEBEun6biSDbiELpy+XpCabvEPJ4OUYK+VQM/XB0NiUytoC
+         Wno6y/lSbCTrO5OY4/A7HcRrEmE8XfnxzYt8dHvQa7pcRY2iAgGWzRo1ydNtrNOaZ8XH
+         1SUg==
 Content-Disposition: inline
-In-Reply-To: <20220414164409.GA5404@blackbody.suse.cz>
+In-Reply-To: <20220421124736.62180-1-lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: Tadeusz Struk <tadeusz.struk@linaro.org>, cgroups@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Christian Brauner <brauner@kernel.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, netdev@vger.kernel.org, bpf@vger.kernel.org, stable@vger.kernel.org, linux-kernel@vger.kernel.org, syzbot+e42ae441c3b10acf9e9d@syzkaller.appspotmail.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Wang Weiyang <wangweiyang2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Thu, Apr 14, 2022 at 06:44:09PM +0200, Michal Koutn=FD wrote:
-> I suspect the double-queuing is a result of the fact that there exists
-> only the single reference to the css->refcnt. I.e. it's
-> percpu_ref_kill_and_confirm()'d and released both at the same time.
->=20
-> (Normally (when not killing the last reference), css->destroy_work reuse
-> is not a problem because of the sequenced chain
-> css_killed_work_fn()->css_put()->css_release().)
+On Thu, Apr 21, 2022 at 08:47:36PM +0800, Lu Jialin wrote:
+> cgroup_memory_noswap is only used in mm/memcontrol.c, therefore just make
+> it static, and remove export in include/linux/memcontrol.h
+> 
+> Signed-off-by: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-If this is the case, we need to hold an extra reference to be put by the
-css_killed_work_fn(), right?
+Reviewed-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
 Thanks.
-
---=20
-tejun
