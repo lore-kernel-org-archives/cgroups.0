@@ -1,81 +1,60 @@
-From: Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [syzbot] WARNING in __kfence_free
-Date: Fri, 22 Apr 2022 12:37:48 +0200
-Message-ID: <CANpmjNPyBV8RCXf_=4oOvkLCavmgeLKw9w3M4zQEFcNMG7RCDg@mail.gmail.com>
-References: <000000000000f46c6305dd264f30@google.com> <YmEf8dpSXJeZ2813@elver.google.com>
- <YmI4d8xR3tafv2Cq@FVFYT0MHHV2J.usts.net>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH] cgroup: don't queue css_release_work if one already
+ pending
+Date: Fri, 22 Apr 2022 13:05:06 +0200
+Message-ID: <20220422100400.GA29552@blackbody.suse.cz>
+References: <20220412192459.227740-1-tadeusz.struk@linaro.org>
+ <20220414164409.GA5404@blackbody.suse.cz>
+ <YmHwOAdGY2Lwl+M3@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=CsjTxEEAvysZcrGQCgnoFVKXKLqNd9huKoE9KzmmMI0=;
-        b=svVpZpsCBwi05D6HGuAV6VNl0TnNbi1By/r9OWleeVotyMkYhrsbqEJDIDSdPkREjz
-         3362oZIRJFtkLcg5aEJpF3n1xd6ipXFEq/j48MVsozpuWi4XWg+JUCI54KpRFm6k9fuH
-         iuiYLtukeDIzvPYOnFvdeD/Dh3cWMScn6ijy/wJ9dMAM+Ai2YRgE3cPtVrKFn8pBOMiS
-         p0gTaif83J768pmvmDZo9cf506rFJd/SfdoLFgYs7uAXbxxuhhAh95UKsS8QPEpG0lM9
-         hAwDNyeI/sHaoL/fQQkj7rT73VhtZtRoFC2YjZupOfhfwmA9IsZitPApsKPfei2M4NAh
-         nktA==
-In-Reply-To: <YmI4d8xR3tafv2Cq-t1y1lxtqHnnw2QbUemf3bixXY32XiHfO@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1650625508; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=XTMtHe0DEbqpErS7R1TOOp7bMasIBNeqbkGsdmdc7Ko=;
+        b=DmAowioWLy8q8gJS/SZc36jXbfkIdJwSSjsgJm84KkmORCTeRBGeM09xLnm2auCaldw7vo
+        9TXlA5rQ653io4fIcCQIE189VIAv9PTX/BDhefqN6exSlqsaHCa8XSG7AwoAMqnsc6wRGg
+        0mCC4yuHYyIqjLc3C6dpDnTg/MUIZjc=
+Content-Disposition: inline
+In-Reply-To: <YmHwOAdGY2Lwl+M3@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: syzbot <syzbot+ffe71f1ff7f8061bcc98-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, glider-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kasan-dev-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrey Konovalov <andreyknvl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Tadeusz Struk <tadeusz.struk@linaro.org>, cgroups@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Christian Brauner <brauner@kernel.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, netdev@vger.kernel.org, bpf@vger.kernel.org, stable@vger.kernel.org, linux-kernel@vger.kernel.org, syzbot+e42ae441c3b10acf9e9d@syzkaller.appspotmail.com
 
-On Fri, 22 Apr 2022 at 07:09, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
->
-> On Thu, Apr 21, 2022 at 11:12:17AM +0200, Marco Elver wrote:
-> > On Thu, Apr 21, 2022 at 01:58AM -0700, syzbot wrote:
-> > > Hello,
-> > >
-> > > syzbot found the following issue on:
-> > >
-> > > HEAD commit:    559089e0a93d vmalloc: replace VM_NO_HUGE_VMAP with VM_ALLO..
-> > > git tree:       upstream
-> > > console output: https://syzkaller.appspot.com/x/log.txt?x=10853220f00000
-> > > kernel config:  https://syzkaller.appspot.com/x/.config?x=2e1f9b9947966f42
-> > > dashboard link: https://syzkaller.appspot.com/bug?extid=ffe71f1ff7f8061bcc98
-> > > compiler:       aarch64-linux-gnu-gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
-> > > userspace arch: arm64
-> > >
-> > > Unfortunately, I don't have any reproducer for this issue yet.
-> > >
-> > > IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> > > Reported-by: syzbot+ffe71f1ff7f8061bcc98-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
-> > >
-> > > ------------[ cut here ]------------
-> > > WARNING: CPU: 0 PID: 2216 at mm/kfence/core.c:1022 __kfence_free+0x84/0xc0 mm/kfence/core.c:1022
-> >
-> > That's this warning in __kfence_free:
-> >
-> >       #ifdef CONFIG_MEMCG
-> >               KFENCE_WARN_ON(meta->objcg);
-> >       #endif
-> >
-> > introduced in 8f0b36497303 ("mm: kfence: fix objcgs vector allocation").
-> >
-> > Muchun, are there any circumstances where the assumption may be broken?
-> > Or a new bug elsewhere?
->
-> meta->objcg always should be NULL when reaching __kfence_free().
-> In theory, meta->objcg should be cleared via memcg_slab_free_hook().
->
-> I found the following code snippet in do_slab_free().
->
->   /* memcg_slab_free_hook() is already called for bulk free. */
->   if (!tail)
->         memcg_slab_free_hook(s, &head, 1);
->
-> The only posibility is @tail is not NULL, which is the case of
-> kmem_cache_free_bulk(). However, here the call trace is kfree(),
-> it seems to be impossible that missing call memcg_slab_free_hook().
+On Thu, Apr 21, 2022 at 02:00:56PM -1000, Tejun Heo <tj@kernel.org> wrote:
+> If this is the case, we need to hold an extra reference to be put by the
+> css_killed_work_fn(), right?
 
-Fair enough - we can probably wait for the bug to reoccur on another
-instance, and until then assume something else wrong. What is slightly
-suspicious is that it only occurred once on a QEMU TCG arm64 MTE
-instance.
+I looked into it a bit more lately and found that there already is such
+a fuse in kill_css() [1].
 
-Thanks,
--- Marco
+At the same type syzbots stack trace demonstrates the fuse is
+ineffective
+
+> css_release+0xae/0xc0 kernel/cgroup/cgroup.c:5146                    (**)
+> percpu_ref_put_many include/linux/percpu-refcount.h:322 [inline]
+> percpu_ref_put include/linux/percpu-refcount.h:338 [inline]
+> percpu_ref_call_confirm_rcu lib/percpu-refcount.c:162 [inline]        (*)
+> percpu_ref_switch_to_atomic_rcu+0x5a2/0x5b0 lib/percpu-refcount.c:199
+> rcu_do_batch+0x4f8/0xbc0 kernel/rcu/tree.c:2485
+> rcu_core+0x59b/0xe30 kernel/rcu/tree.c:2722
+> rcu_core_si+0x9/0x10 kernel/rcu/tree.c:2735
+> __do_softirq+0x27e/0x596 kernel/softirq.c:305
+
+(*) this calls css_killed_ref_fn confirm_switch
+(**) zero references after confirmed kill?
+
+So, I was also looking at the possible race with css_free_rwork_fn()
+(from failed css_create()) but that would likely emit a warning from
+__percpu_ref_exit().
+
+So, I still think there's something fishy (so far possible only via
+artificial ENOMEM injection) that needs an explanation...
+
+Michal
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/cgroup/cgroup.c#n5608
+
