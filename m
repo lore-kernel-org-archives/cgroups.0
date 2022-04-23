@@ -1,43 +1,71 @@
-From: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
-Subject: [PATCH 5/5] cgroup: Add config file to cgroup selftest suite
-Date: Sat, 23 Apr 2022 05:30:54 -0700
-Message-ID: <20220423123053.2982931-5-void@manifault.com>
-References: <20220423123053.2982931-1-void@manifault.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v4 1/4] memcg: introduce per-memcg reclaim interface
+Date: Sat, 23 Apr 2022 13:30:35 +0000
+Message-ID: <20220423133035.b6iz6vzhzlym3m4w@google.com>
+References: <20220421234426.3494842-1-yosryahmed@google.com> <20220421234426.3494842-2-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220423123053.2982931-1-void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=Aem2PdHshEukZ4FbitCFbjtHLa6kiNwj57G3fxoNlVk=;
+        b=XMNhXPfkwDK4e/banSthnWhXs9a5a1aYvMVU0NMfybXNvVEmGdmNtMSK5oZ++QlHWR
+         V3ufPwN5hRsYkM5z7ddo0Hd5/C0+X86gdeDg/EcbOv27ChnnE88NajcxBj4l6hUotTKL
+         6tfKwnl6G2aAPMEmhO1Yt7R0ge16i+pGXVJ2xPTzPY66OOpXaSAgdxQEYnybzB9GAExs
+         VtlV4OYLzO1vWnYGB9iH8I6VOegPQXleK6VLBFgcWRkY7enBxEw+MDSDLoh5bF3WVyfH
+         FqpESvZE7ugxZsVz8I+JwrKaWP6J3N54HEMtZksvV6fAOOhKYCeurqhF2C19tTrZ6OiL
+         0y0Q==
+In-Reply-To: <20220421234426.3494842-2-yosryahmed@google.com>
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>, Chen Wandun <chenwandun@huawei.com>, Vaibhav Jain <vaibhav@linux.ibm.com>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Tim Chen <tim.c.chen@linux.intel.com>, Dan Schatzberg <schatzberg.dan@gmail.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.or
 
-Most of the test suites in tools/testing/selftests contain a config file
-that specifies which kernel config options need to be present in order for
-the test suite to be able to run and perform meaningful validation. There
-is no config file for the tools/testing/selftests/cgroup test suite, so
-this patch adds one.
+On Thu, Apr 21, 2022 at 11:44:23PM +0000, Yosry Ahmed wrote:
+> From: Shakeel Butt <shakeelb@google.com>
+[...]
+> 
+> [yosryahmed@google.com: refreshed to current master, updated commit
+> message based on recent discussions and use cases]
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
 
-Signed-off-by: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
----
- tools/testing/selftests/cgroup/config | 8 ++++++++
- 1 file changed, 8 insertions(+)
- create mode 100644 tools/testing/selftests/cgroup/config
+You should add "Co-developed-by" tag for yourself here.
 
-diff --git a/tools/testing/selftests/cgroup/config b/tools/testing/selftests/cgroup/config
-new file mode 100644
-index 000000000000..84fe884fad86
---- /dev/null
-+++ b/tools/testing/selftests/cgroup/config
-@@ -0,0 +1,8 @@
-+CONFIG_CGROUPS=y
-+CONFIG_CGROUP_CPUACCT=y
-+CONFIG_CGROUP_FREEZER=y
-+CONFIG_CGROUP_SCHED=y
-+CONFIG_MEMCG=y
-+CONFIG_MEMCG_KMEM=y
-+CONFIG_MEMCG_SWAP=y
-+CONFIG_PAGE_COUNTER=y
--- 
-2.30.2
+> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> Acked-by: Michal Hocko <mhocko@suse.com>
+> Acked-by: Wei Xu <weixugc@google.com>
+> Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
+> ---
+>  
+[...]
+> +static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+> +			      size_t nbytes, loff_t off)
+> +{
+> +	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+> +	unsigned int nr_retries = MAX_RECLAIM_RETRIES;
+> +	unsigned long nr_to_reclaim, nr_reclaimed = 0;
+> +	int err;
+> +
+> +	buf = strstrip(buf);
+> +	err = page_counter_memparse(buf, "", &nr_to_reclaim);
+> +	if (err)
+> +		return err;
+> +
+> +	while (nr_reclaimed < nr_to_reclaim) {
+> +		unsigned long reclaimed;
+> +
+> +		if (signal_pending(current))
+> +			return -EINTR;
+> +
+> +		/* This is the final attempt, drain percpu lru caches in the
 
+Fix the comment format. "/*" should be on its own line.
+
+> +		 * hope of introducing more evictable pages for
+> +		 * try_to_free_mem_cgroup_pages().
+> +		 */
+
+No need to send a new version if Andrew can fix these in the mm tree.
