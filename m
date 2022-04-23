@@ -1,83 +1,49 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH v4 4/4] selftests: cgroup: add a selftest for memory.reclaim
-Date: Sat, 23 Apr 2022 14:28:01 +0000
-Message-ID: <20220423142801.gnvd42cdcsz4hpon@google.com>
-References: <20220421234426.3494842-1-yosryahmed@google.com> <20220421234426.3494842-5-yosryahmed@google.com>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH 1/5] cgroups: Refactor children cgroups in memcg tests
+Date: Sat, 23 Apr 2022 08:19:12 -0700
+Message-ID: <EEC47283-0467-4C97-AAB2-73F17A97CE15@linux.dev>
+References: <20220423113037.gnfysktiuzmfnpmp@dev0025.ash9.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=DXAXkVZYPHcetFXE1oISHIeSMz1Xot5LLxB15W3LMjk=;
-        b=tQibwGA8uz8Ue+E3pvs+c8ZLtax4gGb4dFOV3dy8bzYAyRQotxBRYtX3oExAAr/e5W
-         lcJykMgKZDqXuCRcUTWrpgdKqNqa7SDK7R5LQ1iWkeMFOMj4/GvkIliYrru0Fcz3ot5h
-         cvD+hIJBFRnHqnE3eBGsznogk3ef/KiPrus6ZbeRLGrGf+/GlLHeLPEohW773ai5NpM2
-         pXrvOgHb8VQuBDo7BbJ8vcpHd3CLD6msHLW5xjWZJUln3dl7h6R0dYjUMivzqyXucYGI
-         E+67TMHQeiyQW5PXgSo8AKsLGTtBzdyQAAlPZ+C99mPyDJfjZvDTgswF9XlojwtZrxoc
-         qXMw==
-In-Reply-To: <20220421234426.3494842-5-yosryahmed@google.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1650727155;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=aW7jQR0KWBIkc4nx/X//lum8iJfo1esC27ROXDMIAM4=;
+        b=tO1NY6Tjb52mvbTO2n1UoZ4ofdNFJe5Rn2F3aOr80/443JzWwjPwIHRZaB09H7e/SGTT+A
+        DwxwMMOFZrWW7uiKMhXg/LEb0QHoJ001PDYSYQONXpFIWirG5EHMvcNcz4JIPAEkycaEAJ
+        yYqK0l9Jyyn+PjxfPemSMfh0be1Ox3o=
+In-Reply-To: <20220423113037.gnfysktiuzmfnpmp-2sxDN0k4oOr/D8ZFBB3Vemm1Eemhq0z/AL8bYrjMMd8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>, Chen Wandun <chenwandun@huawei.com>, Vaibhav Jain <vaibhav@linux.ibm.com>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Tim Chen <tim.c.chen@linux.intel.com>, Dan Schatzberg <schatzberg.dan@gmail.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.or
+Content-Type: text/plain; charset="utf-8"
+To: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Thu, Apr 21, 2022 at 11:44:26PM +0000, Yosry Ahmed wrote:
-> Add a new test for memory.reclaim that verifies that the interface
-> correctly reclaims memory as intended, from both anon and file pages.
-> 
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
-> ---
->  .../selftests/cgroup/test_memcontrol.c        | 86 +++++++++++++++++++
->  1 file changed, 86 insertions(+)
-> 
-> diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-> index f2ffb3a30194..5f7c20de2426 100644
-> --- a/tools/testing/selftests/cgroup/test_memcontrol.c
-> +++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-> @@ -760,6 +760,91 @@ static int test_memcg_max(const char *root)
->  	return ret;
->  }
->  
-> +/*
-> + * This test checks that memory.reclaim reclaims the given
-> + * amount of memory (from both anon and file).
-> + */
-> +static int test_memcg_reclaim(const char *root)
-> +{
-> +	int ret = KSFT_FAIL, fd, retries;
-> +	char *memcg;
-> +	long current, to_reclaim;
-> +	char buf[64];
-> +
-> +	memcg = cg_name(root, "memcg_test");
-> +	if (!memcg)
-> +		goto cleanup;
-> +
-> +	if (cg_create(memcg))
-> +		goto cleanup;
-> +
-> +	current = cg_read_long(memcg, "memory.current");
-> +	if (current != 0)
-> +		goto cleanup;
-> +
-> +	cg_run_nowait(memcg, alloc_anon_noexit, (void *) MB(50));
 
-Don't you need is_swap_enabled() check before deciding to do the anon
-allocations?
+> On Apr 23, 2022, at 4:30 AM, David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org> wrote:
+>=20
+> =EF=BB=BFOn Fri, Apr 22, 2022 at 04:04:15PM -0700, Roman Gushchin wrote:
+>>=20
+>=20
+> Thanks for the reviews on this patchset, Roman. FYI I think Andrew already=
 
-> +	sleep(1);
-> +
-> +	fd = get_temp_fd();
-> +	if (fd < 0)
-> +		goto cleanup;
-> +
-> +	cg_run_nowait(memcg, alloc_pagecache_50M_noexit, (void *)(long)fd);
-> +	sleep(1);
+> merged these patches to the -mm tree. I'll send out a follow-on patch that=
 
-These sleep(1)s do not seem robust. Since kernel keeps the page cache
-around, you can convert anon to use tmpfs and use simple cg_run to
-trigger the allocations of anon (tmpfs) and file which will remain in
-memory even after return from cg_run.
+> fixes everything you pointed out, both here and on the other patches in th=
+e
+> set.
+
+The mm tree isn=E2=80=99t a git tree, but a collection of the text patches, m=
+anaged by Andrew. So you can send a new version and Andrew can update it in p=
+lace. It=E2=80=99s happening all the time: mostly for adding reviewed-by/ack=
+ed-by tags etc, but for code updates as well.
+It=E2=80=99s not uncommon for some patchset to mature while being in the mm t=
+ree, this allows to include them into linux-next and give some more testing,=
+ but without doing many reverts/fixups (Andrew is often squashing fixups int=
+o the original patch too). So long story short, you can just send a new vers=
+ion, especially because all changes all minor.
+
+Thanks!=
