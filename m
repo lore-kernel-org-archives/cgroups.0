@@ -1,42 +1,103 @@
-From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -next v2 2/5] block, bfq: add fake weight_counter for
- weight-raised queue
-Date: Mon, 25 Apr 2022 21:55:46 +0800
-Message-ID: <4048cc0c-adc8-8097-4a40-762137c4c282@huawei.com>
-References: <20220416093753.3054696-1-yukuai3@huawei.com>
- <20220416093753.3054696-3-yukuai3@huawei.com>
- <20220425094856.qgkhba2klguduxot@quack3.lan>
- <a27b8c79-867f-9253-84db-1d39c964b3ed@huawei.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH] cgroup/cpuset: Remove redundant cpu/node masks setup in
+ cpuset_init_smp()
+Date: Mon, 25 Apr 2022 10:43:16 -0400
+Message-ID: <690fb0ac-6f8c-7e52-2485-4acc030bbc07@redhat.com>
+References: <20220425020926.1264611-1-longman@redhat.com>
+ <20220425073011.GJ46405@shbuild999.sh.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <a27b8c79-867f-9253-84db-1d39c964b3ed-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1650897801;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=oj3e9OxZuBcl3Mrg5cN9YNi1sy73Km34y8js1iAThkg=;
+        b=TgOiHEGsr5t5g6WByWuw/mdpdKpH/n0377+oWJzx8Q1TF8H5eBnT9rsLIjTLj29iEALX4R
+        RacUnXJTx7UFgVv0rrzYYk7jj03gU7UOIkYHgPXMvQpjQoFRaLC2huTbGueqT0LYQ7iSl5
+        qRAZ0dBecTCMhwvuzrYpncyGhSabQlQ=
+Content-Language: en-US
+In-Reply-To: <20220425073011.GJ46405@shbuild999.sh.intel.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="gb2312"; format="flowed"
-To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Feng Tang <feng.tang@intel.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Dave Hansen <dave.hansen@intel.com>, ying.huang@intel.com, stable@vger.kernel.org
 
-1NogMjAyMi8wNC8yNSAyMTozNCwgeXVrdWFpIChDKSDQtLXAOgo+INTaIDIwMjIvMDQvMjUgMTc6
-NDgsIEphbiBLYXJhINC0tcA6Cj4+IE9uIFNhdCAxNi0wNC0yMiAxNzozNzo1MCwgWXUgS3VhaSB3
-cm90ZToKPj4+IFdlaWdodC1yYWlzZWQgcXVldWUgaXMgbm90IGluc2VydGVkIHRvIHdlaWdodHNf
-dHJlZSwgd2hpY2ggbWFrZXMgaXQKPj4+IGltcG9zc2libGUgdG8gdHJhY2sgaG93IG1hbnkgcXVl
-dWVzIGhhdmUgcGVuZGluZyByZXF1ZXN0cyB0aHJvdWdoCj4+PiB3ZWlnaHRzX3RyZWUgaW5zZXJ0
-aW9uIGFuZCByZW1vdmVsLiBUaGlzIHBhdGNoIGFkZCBmYWtlIHdlaWdodF9jb3VudGVyCj4+PiBm
-b3Igd2VpZ2h0LXJhaXNlZCBxdWV1ZSB0byBkbyB0aGF0Lgo+Pj4KPj4+IFNpZ25lZC1vZmYtYnk6
-IFl1IEt1YWkgPHl1a3VhaTMtaHY0NHdGOExpOTNRVDBkWlIrQWxmQUBwdWJsaWMuZ21hbmUub3Jn
-Pgo+Pgo+PiBUaGlzIGlzIGEgYml0IGhhY2t5LiBJIHdhcyBsb29raW5nIGludG8gYSBiZXR0ZXIg
-cGxhY2Ugd2hlcmUgdG8gaG9vayB0bwo+PiBjb3VudCBlbnRpdGllcyBpbiBhIGJmcV9ncm91cCB3
-aXRoIHJlcXVlc3RzIGFuZCBJIHRoaW5rIAo+PiBiZnFfYWRkX2JmcXFfYnVzeSgpCj4+IGFuZCBi
-ZnFfZGVsX2JmcXFfYnVzeSgpIGFyZSBpZGVhbCBmb3IgdGhpcy4gSXQgYWxzbyBtYWtlcyBiZXR0
-ZXIgc2Vuc2UKPj4gY29uY2VwdHVhbGx5IHRoYW4gaG9va2luZyBpbnRvIHdlaWdodHMgdHJlZSBo
-YW5kbGluZy4KPj4KPiBIaSwKPiAKPiBiZnFfZGVsX2JmcXFfYnVzeSgpIHdpbGwgYmUgY2FsbGVk
-IHdoZW4gYWxsIHRoZSByZXFzIGluIHRoZSBiZnFxIGFyZQo+IGRpc3BhdGNoZWQsIGhvd2V2ZXIg
-dGhlcmUgbWlnaHQgc3RpbGwgc29tZSByZXFzIGFyZSd0IGNvbXBsZXRlZCB5ZXQuCj4gCj4gSGVy
-ZSB3aGF0IHdlIHdhbnQgdG8gdHJhY2sgaXMgaG93IG1hbnkgYmZxcXMgaGF2ZSBwZW5kaW5nIHJl
-cXMsCj4gc3BlY2lmaWNhbGx5IGlmIHRoZSBiZnFxIGhhdmUgcmVxcyBhcmUndCBjb21wbHRlZC4K
-PiAKPiBUaHVzIEkgdGhpbmsgYmZxX2RlbF9iZnFxX2J1c3koKSBpcyBub3QgdGhlIHJpZ2h0IHBs
-YWNlIHRvIGRvIHRoYXQuCgpCVFcsIHRoZXJlIGlzIGEgY291bnRlciAnZGlzcGF0Y2hlZCcgaW4g
-YmZxcSwgaG93IGFib3V0IHdlIHJlbmFtZSBpdAp0byAnaW5mbGlnaHQnLCBhbmQgaW5jIHdoZW4g
-YWRkaW5nIHJlcSB0byBiZnFxLCBkZWMgdGhlIHNhbWUgYXMKJ2Rpc3BhdGNoZWQnID8KClRoaXMg
-d2F5IHdlIGNhbiBjb3VudCBiZnFxIHdoZW4gYWRkaW5nICdpbmZsaWdodCcgZnJvbSAwIHRvIDEs
-IGFuZApzdG9wIHdoZW4gZGVjcmVhc2luZyAnaW5mbGlnaHQnIGZyb20gMSB0byAwLgoK
+On 4/25/22 03:30, Feng Tang wrote:
+> Hi Waiman,
+>
+> Thanks for the patch!
+>
+> On Sun, Apr 24, 2022 at 10:09:26PM -0400, Waiman Long wrote:
+>> There are 3 places where the cpu and node masks of the top cpuset can
+>> be initialized in the order they are executed:
+>>   1) start_kernel -> cpuset_init()
+>>   2) start_kernel -> cgroup_init() -> cpuset_bind()
+>>   3) kernel_init_freeable() -> do_basic_setup() -> cpuset_init_smp()
+>>
+>> The first cpuset_init() function just sets all the bits in the masks.
+>> The last one executed is cpuset_init_smp() which sets up cpu and node
+>> masks suitable for v1, but not v2.  cpuset_bind() does the right setup
+>> for both v1 and v2 assuming that effective_mems and effective_cpus have
+>> been set up properly which is not strictly the case here. As a result,
+>> cpu and memory node hot add may fail to update the cpu and node masks
+>> of the top cpuset to include the newly added cpu or node in a cgroup
+>> v2 environment.
+>>
+>> To fix this problem, the redundant cpus_allowed and mems_allowed
+>> mask setup in cpuset_init_smp() are removed. The effective_cpus and
+>> effective_mems setup there are moved to cpuset_bind().
+>>
+>> cc: stable@vger.kernel.org
+>> Signed-off-by: Waiman Long <longman@redhat.com>
+>> ---
+>>   kernel/cgroup/cpuset.c | 10 +++-------
+>>   1 file changed, 3 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index 9390bfd9f1cd..a2e15a43397e 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -2961,6 +2961,9 @@ static void cpuset_bind(struct cgroup_subsys_state *root_css)
+>>   	percpu_down_write(&cpuset_rwsem);
+>>   	spin_lock_irq(&callback_lock);
+>>   
+>> +	cpumask_copy(top_cpuset.effective_cpus, cpu_active_mask);
+>> +	top_cpuset.effective_mems = node_states[N_MEMORY];
+>> +
+>>   	if (is_in_v2_mode()) {
+>>   		cpumask_copy(top_cpuset.cpus_allowed, cpu_possible_mask);
+>>   		top_cpuset.mems_allowed = node_possible_map;
+>> @@ -3390,13 +3393,6 @@ static struct notifier_block cpuset_track_online_nodes_nb = {
+>>    */
+>>   void __init cpuset_init_smp(void)
+>>   {
+>> -	cpumask_copy(top_cpuset.cpus_allowed, cpu_active_mask);
+>> -	top_cpuset.mems_allowed = node_states[N_MEMORY];
+>> -	top_cpuset.old_mems_allowed = top_cpuset.mems_allowed;
+>> -
+>> -	cpumask_copy(top_cpuset.effective_cpus, cpu_active_mask);
+>> -	top_cpuset.effective_mems = node_states[N_MEMORY];
+> IIUC, the init order is:
+> 	cpuset_bind()
+> 	smp_init()
+> 	cpuset_init_smp()
+>
+> while all cpus except boot cpu is brought up in smp_init(), so I'm
+> thinking moving the cpus_allowed init from cpuset_init_smp() to
+> cpuset_bind() may cause some problem.
+
+Good point. So cpuset_init_smp() is still useful for setting the right 
+effective_cpus and probably effective_mems. I will update the patch 
+accordingly.
+
+Thanks,
+Longman
+
+>
+> Thanks,
+> Feng
+>
+
