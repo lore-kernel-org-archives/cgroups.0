@@ -1,83 +1,46 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH -next v2 2/5] block, bfq: add fake weight_counter for
- weight-raised queue
-Date: Mon, 25 Apr 2022 18:26:08 +0200
-Message-ID: <20220425162608.feya66a5amdnsr4e@quack3.lan>
-References: <20220416093753.3054696-1-yukuai3@huawei.com>
- <20220416093753.3054696-3-yukuai3@huawei.com>
- <20220425094856.qgkhba2klguduxot@quack3.lan>
- <a27b8c79-867f-9253-84db-1d39c964b3ed@huawei.com>
- <4048cc0c-adc8-8097-4a40-762137c4c282@huawei.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/5] cgroup: Adding
+ test_cpucg_nested_weight_overprovisioned() testcase
+Date: Mon, 25 Apr 2022 07:28:17 -1000
+Message-ID: <YmbaMZfBJp3Ngd/6@slm.duckdns.org>
+References: <20220423123053.2982931-1-void@manifault.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1650903968; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=VUB+heCNyeRFdPDI1DhMrxZcGuxVYUwZDE80GwpHJU8=;
-        b=pdXu4C9WWm9PwhxJ4kncFBH/N6LpW+See8N92WAtqIGuzAwMFB2MW2lwZkGZStmGNMJT/S
-        Oql8ZjWpYrf8ogzL8VQ3cIPkfW8AWk8h4BuJHKGZWzp0ignZcWNfNucjWTl9vFEEoDD+tN
-        dJo8wa5/oF7v9fgW10I9mAzX1xSkm/g=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1650903968;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=VUB+heCNyeRFdPDI1DhMrxZcGuxVYUwZDE80GwpHJU8=;
-        b=kj1ovTZoxRmdmq25y5rwYeLhZBg+ACRAbP3a30Yt/bDVvCkDIQOoWuoBrgv7Mip8r98v41
-        2lUqmZqKseXVKkDg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=5PTbB51BgaGPargq7ZsmCLhWUmXSpuGaWJQBYhiIAqM=;
+        b=jfEQSXCifXo8CbMxyMkfZLGgdeAPSaigLwoXp5yW++2rRa9M5CmBL6z6FWKIBm47C3
+         yVYrHOs7mVmpSyk81b4oQpjc7OsAX6tFMawE2QyyY4izvbg93Q/0KA1MTtMc9DkFe+73
+         7WIVoPtDV8EhN1cmZlcpo3cyPw6p/nxOz+v0jVHqdGYvgbr+14qeU/9/VQQaGeEgiM1N
+         riZww7vzL9oSM3ttxkEVOFHU8QL0ZRdko+qQecaPJg1SFgGCG/pJGy5aEdH+wzF/z7oU
+         0wEASrUuazY1kNpifl7RJudbG3ZnWraPZx00vMM6Wr8gcCpfmZHqE6+wS+7GtLjJSDeN
+         1zCQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <4048cc0c-adc8-8097-4a40-762137c4c282-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20220423123053.2982931-1-void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Mon 25-04-22 21:55:46, yukuai (C) wrote:
-> 在 2022/04/25 21:34, yukuai (C) 写道:
-> > 在 2022/04/25 17:48, Jan Kara 写道:
-> > > On Sat 16-04-22 17:37:50, Yu Kuai wrote:
-> > > > Weight-raised queue is not inserted to weights_tree, which makes it
-> > > > impossible to track how many queues have pending requests through
-> > > > weights_tree insertion and removel. This patch add fake weight_counter
-> > > > for weight-raised queue to do that.
-> > > > 
-> > > > Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> > > 
-> > > This is a bit hacky. I was looking into a better place where to hook to
-> > > count entities in a bfq_group with requests and I think
-> > > bfq_add_bfqq_busy()
-> > > and bfq_del_bfqq_busy() are ideal for this. It also makes better sense
-> > > conceptually than hooking into weights tree handling.
-> > > 
-> > Hi,
-> > 
-> > bfq_del_bfqq_busy() will be called when all the reqs in the bfqq are
-> > dispatched, however there might still some reqs are't completed yet.
-> > 
-> > Here what we want to track is how many bfqqs have pending reqs,
-> > specifically if the bfqq have reqs are't complted.
-> > 
-> > Thus I think bfq_del_bfqq_busy() is not the right place to do that.
+On Sat, Apr 23, 2022 at 05:30:50AM -0700, David Vernet wrote:
+> The cgroup cpu controller tests in
+> tools/testing/selftests/cgroup/test_cpu.c have some testcases that validate
+> the expected behavior of setting cpu.weight on cgroups, and then hogging
+> CPUs. What is still missing from the suite is a testcase that validates
+> nested cgroups. This patch adds test_cpucg_nested_weight_overprovisioned(),
+> which validates that a parent's cpu.weight will override its children if
+> they overcommit a host, and properly protect any sibling groups of that
+> parent.
 > 
-> BTW, there is a counter 'dispatched' in bfqq, how about we rename it
-> to 'inflight', and inc when adding req to bfqq, dec the same as
-> 'dispatched' ?
-> 
-> This way we can count bfqq when adding 'inflight' from 0 to 1, and
-> stop when decreasing 'inflight' from 1 to 0.
+> Signed-off-by: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
 
-Well, but 'dispatched' is used in quite a few places and it would require
-quite some thinking to decide which impact using 'inflight' has there...
-But we also have 'bfqq->entity.allocated' which is number of requests in
-some state associated with bfqq and we could use that. But as I wrote in my
-previous email, I'm not convinced it is really necessary...
+Applied 1-5 to cgroup/for-5.19.
 
-								Honza
+Thanks.
 
 -- 
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-SUSE Labs, CR
+tejun
