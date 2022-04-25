@@ -1,106 +1,77 @@
 From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm/memcg: Free percpu stats memory of dying memcg's
-Date: Sun, 24 Apr 2022 21:01:39 -0400
-Message-ID: <cd0b2d8c-1bbb-1da5-89f5-51abf5a8a6ce@redhat.com>
-References: <20220421145845.1044652-1-longman@redhat.com>
- <YmGHYNuAp8957ouq@carbon> <112a4d7f-bc53-6e59-7bb8-6fecb65d045d@redhat.com>
- <YmGbmrH/Hg1VJlUc@carbon> <58c41f14-356e-88dd-54aa-dc6873bf80ff@redhat.com>
- <YmITEEdEbaKCK3BN@FVFYT0MHHV2J.usts.net>
+Subject: [PATCH] cgroup/cpuset: Remove redundant cpu/node masks setup in cpuset_init_smp()
+Date: Sun, 24 Apr 2022 22:09:26 -0400
+Message-ID: <20220425020926.1264611-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1650848504;
+        s=mimecast20190719; t=1650852607;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5murYanTtEXbPZyarPU70weW32pWscxaeP6vQe3sXWI=;
-        b=Nk8vKt9NxPLVeEFiEA7vFl0oTSwH5ZwQccvGwo1DHDeCyPH0TRKhslpYTflv/KGEuHGdAV
-        fmCK2Ny/JcTmrx6lnxQibDqu1ZVbdKaKTaKpw4KkZaWGuOFWEwx11Cmvvd6EM0fO7tB8Gp
-        SidHHmOc0aAudZZI5YOdFT4yVuYlIdk=
-Content-Language: en-US
-In-Reply-To: <YmITEEdEbaKCK3BN-t1y1lxtqHnnw2QbUemf3bixXY32XiHfO@public.gmane.org>
+         content-transfer-encoding:content-transfer-encoding;
+        bh=IWt3Bi21zseUs/ls2Wi4USmCY2Ri5eVFWeb4jdyhkTo=;
+        b=OUIiyn3SXc0B9Nrscx1i9n88mUKK/2od6hX1NiwMSXT57W3lakndtjlklOdHftZerf86qx
+        +A04pZDCC4Gk7oE1ksPLoH3ScvN+3SW+Az0PeE+iPUxrKlBbi+995lhx7aDQUvfrMSym1p
+        Q82lTPQXExvc25t6zHd1B83w9PbD/ak=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 4/21/22 22:29, Muchun Song wrote:
-> On Thu, Apr 21, 2022 at 02:46:00PM -0400, Waiman Long wrote:
->> On 4/21/22 13:59, Roman Gushchin wrote:
->>> On Thu, Apr 21, 2022 at 01:28:20PM -0400, Waiman Long wrote:
->>>> On 4/21/22 12:33, Roman Gushchin wrote:
->>>>> On Thu, Apr 21, 2022 at 10:58:45AM -0400, Waiman Long wrote:
->>>>>> For systems with large number of CPUs, the majority of the memory
->>>>>> consumed by the mem_cgroup structure is actually the percpu stats
->>>>>> memory. When a large number of memory cgroups are continuously created
->>>>>> and destroyed (like in a container host), it is possible that more
->>>>>> and more mem_cgroup structures remained in the dying state holding up
->>>>>> increasing amount of percpu memory.
->>>>>>
->>>>>> We can't free up the memory of the dying mem_cgroup structure due to
->>>>>> active references in some other places. However, the percpu stats memory
->>>>>> allocated to that mem_cgroup is a different story.
->>>>>>
->>>>>> This patch adds a new percpu_stats_disabled variable to keep track of
->>>>>> the state of the percpu stats memory. If the variable is set, percpu
->>>>>> stats update will be disabled for that particular memcg. All the stats
->>>>>> update will be forward to its parent instead. Reading of the its percpu
->>>>>> stats will return 0.
->>>>>>
->>>>>> The flushing and freeing of the percpu stats memory is a multi-step
->>>>>> process. The percpu_stats_disabled variable is set when the memcg is
->>>>>> being set to offline state. After a grace period with the help of RCU,
->>>>>> the percpu stats data are flushed and then freed.
->>>>>>
->>>>>> This will greatly reduce the amount of memory held up by dying memory
->>>>>> cgroups.
->>>>>>
->>>>>> By running a simple management tool for container 2000 times per test
->>>>>> run, below are the results of increases of percpu memory (as reported
->>>>>> in /proc/meminfo) and nr_dying_descendants in root's cgroup.stat.
->>>>> Hi Waiman!
->>>>>
->>>>> I've been proposing the same idea some time ago:
->>>>> https://lore.kernel.org/all/20190312223404.28665-7-guro-b10kYP2dOMg@public.gmane.org/T/ .
->>>>>
->>>>> However I dropped it with the thinking that with many other fixes
->>>>> preventing the accumulation of the dying cgroups it's not worth the added
->>>>> complexity and a potential cpu overhead.
->>>>>
->>>>> I think it ultimately comes to the number of dying cgroups. If it's low,
->>>>> memory savings are not worth the cpu overhead. If it's high, they are.
->>>>> I hope long-term to drive it down significantly (with lru-pages reparenting
->>>>> being the first major milestone), but it might take a while.
->>>>>
->>>>> I don't have a strong opinion either way, just want to dump my thoughts
->>>>> on this.
->>>> I have quite a number of customer cases complaining about increasing percpu
->>>> memory usages. The number of dying memcg's can go to tens of thousands. From
->>>> my own investigation, I believe that those dying memcg's are not freed
->>>> because they are pinned down by references in the page structure. I am aware
->>>> that we support the use of objcg in the page structure which will allow easy
->>>> reparenting, but most pages don't do that and it is not easy to do this
->>>> conversion and it may take quite a while to do that.
->>> The big question is whether there is a memory pressure on those systems.
->>> If yes, and the number of dying cgroups is growing, it's worth investigating.
->>> It might be due to the sharing of pagecache pages and this will be ultimately
->>> fixed with implementing of the pagecache reparenting. But it also might be due
->>> to other bugs, which are fixable, so it would be great to understand.
->>
->> Pagecache reparenting will probably fix the problem that I have seen. Is
->> someone working on this?
->>
-> We also encountered dying cgroup issue on our servers for a long time.
-> I have worked on this for a while and proposed a resolution [1] based
-> on obj_cgroup APIs to charge the LRU pages.
->
-> [1] https://lore.kernel.org/all/20220216115132.52602-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+There are 3 places where the cpu and node masks of the top cpuset can
+be initialized in the order they are executed:
+ 1) start_kernel -> cpuset_init()
+ 2) start_kernel -> cgroup_init() -> cpuset_bind()
+ 3) kernel_init_freeable() -> do_basic_setup() -> cpuset_init_smp()
 
-Thanks for the pointer. I am interested in this patch series. Please cc 
-me if you need to generate a new revision.
+The first cpuset_init() function just sets all the bits in the masks.
+The last one executed is cpuset_init_smp() which sets up cpu and node
+masks suitable for v1, but not v2.  cpuset_bind() does the right setup
+for both v1 and v2 assuming that effective_mems and effective_cpus have
+been set up properly which is not strictly the case here. As a result,
+cpu and memory node hot add may fail to update the cpu and node masks
+of the top cpuset to include the newly added cpu or node in a cgroup
+v2 environment.
 
-Cheers,
-Longman
+To fix this problem, the redundant cpus_allowed and mems_allowed
+mask setup in cpuset_init_smp() are removed. The effective_cpus and
+effective_mems setup there are moved to cpuset_bind().
+
+cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cpuset.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
+
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 9390bfd9f1cd..a2e15a43397e 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2961,6 +2961,9 @@ static void cpuset_bind(struct cgroup_subsys_state *root_css)
+ 	percpu_down_write(&cpuset_rwsem);
+ 	spin_lock_irq(&callback_lock);
+ 
++	cpumask_copy(top_cpuset.effective_cpus, cpu_active_mask);
++	top_cpuset.effective_mems = node_states[N_MEMORY];
++
+ 	if (is_in_v2_mode()) {
+ 		cpumask_copy(top_cpuset.cpus_allowed, cpu_possible_mask);
+ 		top_cpuset.mems_allowed = node_possible_map;
+@@ -3390,13 +3393,6 @@ static struct notifier_block cpuset_track_online_nodes_nb = {
+  */
+ void __init cpuset_init_smp(void)
+ {
+-	cpumask_copy(top_cpuset.cpus_allowed, cpu_active_mask);
+-	top_cpuset.mems_allowed = node_states[N_MEMORY];
+-	top_cpuset.old_mems_allowed = top_cpuset.mems_allowed;
+-
+-	cpumask_copy(top_cpuset.effective_cpus, cpu_active_mask);
+-	top_cpuset.effective_mems = node_states[N_MEMORY];
+-
+ 	register_hotmemory_notifier(&cpuset_track_online_nodes_nb);
+ 
+ 	cpuset_migrate_mm_wq = alloc_ordered_workqueue("cpuset_migrate_mm", 0);
+-- 
+2.27.0
 
