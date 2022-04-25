@@ -1,47 +1,42 @@
-From: "yukuai (C)" <yukuai3@huawei.com>
+From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH -next v2 2/5] block, bfq: add fake weight_counter for
  weight-raised queue
-Date: Mon, 25 Apr 2022 21:34:16 +0800
-Message-ID: <a27b8c79-867f-9253-84db-1d39c964b3ed@huawei.com>
+Date: Mon, 25 Apr 2022 21:55:46 +0800
+Message-ID: <4048cc0c-adc8-8097-4a40-762137c4c282@huawei.com>
 References: <20220416093753.3054696-1-yukuai3@huawei.com>
  <20220416093753.3054696-3-yukuai3@huawei.com>
  <20220425094856.qgkhba2klguduxot@quack3.lan>
+ <a27b8c79-867f-9253-84db-1d39c964b3ed@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20220425094856.qgkhba2klguduxot@quack3.lan>
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <a27b8c79-867f-9253-84db-1d39c964b3ed-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Jan Kara <jack@suse.cz>
-Cc: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="gb2312"; format="flowed"
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-=D4=DA 2022/04/25 17:48, Jan Kara =D0=B4=B5=C0:
-> On Sat 16-04-22 17:37:50, Yu Kuai wrote:
->> Weight-raised queue is not inserted to weights_tree, which makes it
->> impossible to track how many queues have pending requests through
->> weights_tree insertion and removel. This patch add fake weight_counter
->> for weight-raised queue to do that.
->>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->=20
-> This is a bit hacky. I was looking into a better place where to hook to
-> count entities in a bfq_group with requests and I think bfq_add_bfqq_busy=
-()
-> and bfq_del_bfqq_busy() are ideal for this. It also makes better sense
-> conceptually than hooking into weights tree handling.
->=20
-Hi,
-
-bfq_del_bfqq_busy() will be called when all the reqs in the bfqq are
-dispatched, however there might still some reqs are't completed yet.
-
-Here what we want to track is how many bfqqs have pending reqs,
-specifically if the bfqq have reqs are't complted.
-
-Thus I think bfq_del_bfqq_busy() is not the right place to do that.
-
-Thanks,
-Kuai
-> Other than this the rest of the series looks fine to me.
->=20
-> 								Honza
+1NogMjAyMi8wNC8yNSAyMTozNCwgeXVrdWFpIChDKSDQtLXAOgo+INTaIDIwMjIvMDQvMjUgMTc6
+NDgsIEphbiBLYXJhINC0tcA6Cj4+IE9uIFNhdCAxNi0wNC0yMiAxNzozNzo1MCwgWXUgS3VhaSB3
+cm90ZToKPj4+IFdlaWdodC1yYWlzZWQgcXVldWUgaXMgbm90IGluc2VydGVkIHRvIHdlaWdodHNf
+dHJlZSwgd2hpY2ggbWFrZXMgaXQKPj4+IGltcG9zc2libGUgdG8gdHJhY2sgaG93IG1hbnkgcXVl
+dWVzIGhhdmUgcGVuZGluZyByZXF1ZXN0cyB0aHJvdWdoCj4+PiB3ZWlnaHRzX3RyZWUgaW5zZXJ0
+aW9uIGFuZCByZW1vdmVsLiBUaGlzIHBhdGNoIGFkZCBmYWtlIHdlaWdodF9jb3VudGVyCj4+PiBm
+b3Igd2VpZ2h0LXJhaXNlZCBxdWV1ZSB0byBkbyB0aGF0Lgo+Pj4KPj4+IFNpZ25lZC1vZmYtYnk6
+IFl1IEt1YWkgPHl1a3VhaTMtaHY0NHdGOExpOTNRVDBkWlIrQWxmQUBwdWJsaWMuZ21hbmUub3Jn
+Pgo+Pgo+PiBUaGlzIGlzIGEgYml0IGhhY2t5LiBJIHdhcyBsb29raW5nIGludG8gYSBiZXR0ZXIg
+cGxhY2Ugd2hlcmUgdG8gaG9vayB0bwo+PiBjb3VudCBlbnRpdGllcyBpbiBhIGJmcV9ncm91cCB3
+aXRoIHJlcXVlc3RzIGFuZCBJIHRoaW5rIAo+PiBiZnFfYWRkX2JmcXFfYnVzeSgpCj4+IGFuZCBi
+ZnFfZGVsX2JmcXFfYnVzeSgpIGFyZSBpZGVhbCBmb3IgdGhpcy4gSXQgYWxzbyBtYWtlcyBiZXR0
+ZXIgc2Vuc2UKPj4gY29uY2VwdHVhbGx5IHRoYW4gaG9va2luZyBpbnRvIHdlaWdodHMgdHJlZSBo
+YW5kbGluZy4KPj4KPiBIaSwKPiAKPiBiZnFfZGVsX2JmcXFfYnVzeSgpIHdpbGwgYmUgY2FsbGVk
+IHdoZW4gYWxsIHRoZSByZXFzIGluIHRoZSBiZnFxIGFyZQo+IGRpc3BhdGNoZWQsIGhvd2V2ZXIg
+dGhlcmUgbWlnaHQgc3RpbGwgc29tZSByZXFzIGFyZSd0IGNvbXBsZXRlZCB5ZXQuCj4gCj4gSGVy
+ZSB3aGF0IHdlIHdhbnQgdG8gdHJhY2sgaXMgaG93IG1hbnkgYmZxcXMgaGF2ZSBwZW5kaW5nIHJl
+cXMsCj4gc3BlY2lmaWNhbGx5IGlmIHRoZSBiZnFxIGhhdmUgcmVxcyBhcmUndCBjb21wbHRlZC4K
+PiAKPiBUaHVzIEkgdGhpbmsgYmZxX2RlbF9iZnFxX2J1c3koKSBpcyBub3QgdGhlIHJpZ2h0IHBs
+YWNlIHRvIGRvIHRoYXQuCgpCVFcsIHRoZXJlIGlzIGEgY291bnRlciAnZGlzcGF0Y2hlZCcgaW4g
+YmZxcSwgaG93IGFib3V0IHdlIHJlbmFtZSBpdAp0byAnaW5mbGlnaHQnLCBhbmQgaW5jIHdoZW4g
+YWRkaW5nIHJlcSB0byBiZnFxLCBkZWMgdGhlIHNhbWUgYXMKJ2Rpc3BhdGNoZWQnID8KClRoaXMg
+d2F5IHdlIGNhbiBjb3VudCBiZnFxIHdoZW4gYWRkaW5nICdpbmZsaWdodCcgZnJvbSAwIHRvIDEs
+IGFuZApzdG9wIHdoZW4gZGVjcmVhc2luZyAnaW5mbGlnaHQnIGZyb20gMSB0byAwLgoK
