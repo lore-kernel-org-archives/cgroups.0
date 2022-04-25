@@ -1,103 +1,76 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH] cgroup/cpuset: Remove redundant cpu/node masks setup in
- cpuset_init_smp()
-Date: Mon, 25 Apr 2022 10:43:16 -0400
-Message-ID: <690fb0ac-6f8c-7e52-2485-4acc030bbc07@redhat.com>
-References: <20220425020926.1264611-1-longman@redhat.com>
- <20220425073011.GJ46405@shbuild999.sh.intel.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v4 4/4] selftests: cgroup: add a selftest for memory.reclaim
+Date: Mon, 25 Apr 2022 15:16:12 +0000
+Message-ID: <20220425151612.izmxhkgugq6isyz3@google.com>
+References: <20220421234426.3494842-1-yosryahmed@google.com>
+ <20220421234426.3494842-5-yosryahmed@google.com> <20220423142801.gnvd42cdcsz4hpon@google.com>
+ <CAJD7tkbhjJDNXcAmiAkGT8RCvBSz=SAfh7JR3AJysSz29hcEgw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1650897801;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=oj3e9OxZuBcl3Mrg5cN9YNi1sy73Km34y8js1iAThkg=;
-        b=TgOiHEGsr5t5g6WByWuw/mdpdKpH/n0377+oWJzx8Q1TF8H5eBnT9rsLIjTLj29iEALX4R
-        RacUnXJTx7UFgVv0rrzYYk7jj03gU7UOIkYHgPXMvQpjQoFRaLC2huTbGueqT0LYQ7iSl5
-        qRAZ0dBecTCMhwvuzrYpncyGhSabQlQ=
-Content-Language: en-US
-In-Reply-To: <20220425073011.GJ46405@shbuild999.sh.intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=VgCwJNrSWLamwr26sf8FxhD/HG4cXOd5kOE1NHtb3Lc=;
+        b=n+3K4I/06qyEIawpbSiGFoxmIG2WckzHJniuNA3IrWYHIDmrQJPps1fZCv8oZNwSmM
+         djRwqb8qKIJdhL5flEOwoWrVf3bgw6r6rtBL6CiLjfJjgVeHt9rbRyZvi2iSQtcSgL0m
+         65ns45Ge3Iq2HNetZYhGnHOJBhbwo86ueRNoo7CPPkWaqJ5XyjXrA6fYqELFFEZSjet5
+         0OWyA1mggzBwOWq2YcP+eq1e9fceZkTFP0kFcxB7g7bqxE3NHOKo/3QkDrmhQK19CILR
+         xTvPRmKD1wfvVAMuwJG6R7P9g1gkSn/gsfhl21Nj9xXHYQ1wxqgQ0MMJhY0uXSFekZE/
+         Z5QQ==
+In-Reply-To: <CAJD7tkbhjJDNXcAmiAkGT8RCvBSz=SAfh7JR3AJysSz29hcEgw@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Feng Tang <feng.tang@intel.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Dave Hansen <dave.hansen@intel.com>, ying.huang@intel.com, stable@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>, Chen Wandun <chenwandun@huawei.com>, Vaibhav Jain <vaibhav@linux.ibm.com>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Tim Chen <tim.c.chen@linux.intel.com>, Dan Schatzberg <schatzberg.dan@gmail.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.ke>
 
-On 4/25/22 03:30, Feng Tang wrote:
-> Hi Waiman,
->
-> Thanks for the patch!
->
-> On Sun, Apr 24, 2022 at 10:09:26PM -0400, Waiman Long wrote:
->> There are 3 places where the cpu and node masks of the top cpuset can
->> be initialized in the order they are executed:
->>   1) start_kernel -> cpuset_init()
->>   2) start_kernel -> cgroup_init() -> cpuset_bind()
->>   3) kernel_init_freeable() -> do_basic_setup() -> cpuset_init_smp()
->>
->> The first cpuset_init() function just sets all the bits in the masks.
->> The last one executed is cpuset_init_smp() which sets up cpu and node
->> masks suitable for v1, but not v2.  cpuset_bind() does the right setup
->> for both v1 and v2 assuming that effective_mems and effective_cpus have
->> been set up properly which is not strictly the case here. As a result,
->> cpu and memory node hot add may fail to update the cpu and node masks
->> of the top cpuset to include the newly added cpu or node in a cgroup
->> v2 environment.
->>
->> To fix this problem, the redundant cpus_allowed and mems_allowed
->> mask setup in cpuset_init_smp() are removed. The effective_cpus and
->> effective_mems setup there are moved to cpuset_bind().
->>
->> cc: stable@vger.kernel.org
->> Signed-off-by: Waiman Long <longman@redhat.com>
->> ---
->>   kernel/cgroup/cpuset.c | 10 +++-------
->>   1 file changed, 3 insertions(+), 7 deletions(-)
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index 9390bfd9f1cd..a2e15a43397e 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -2961,6 +2961,9 @@ static void cpuset_bind(struct cgroup_subsys_state *root_css)
->>   	percpu_down_write(&cpuset_rwsem);
->>   	spin_lock_irq(&callback_lock);
->>   
->> +	cpumask_copy(top_cpuset.effective_cpus, cpu_active_mask);
->> +	top_cpuset.effective_mems = node_states[N_MEMORY];
->> +
->>   	if (is_in_v2_mode()) {
->>   		cpumask_copy(top_cpuset.cpus_allowed, cpu_possible_mask);
->>   		top_cpuset.mems_allowed = node_possible_map;
->> @@ -3390,13 +3393,6 @@ static struct notifier_block cpuset_track_online_nodes_nb = {
->>    */
->>   void __init cpuset_init_smp(void)
->>   {
->> -	cpumask_copy(top_cpuset.cpus_allowed, cpu_active_mask);
->> -	top_cpuset.mems_allowed = node_states[N_MEMORY];
->> -	top_cpuset.old_mems_allowed = top_cpuset.mems_allowed;
->> -
->> -	cpumask_copy(top_cpuset.effective_cpus, cpu_active_mask);
->> -	top_cpuset.effective_mems = node_states[N_MEMORY];
-> IIUC, the init order is:
-> 	cpuset_bind()
-> 	smp_init()
-> 	cpuset_init_smp()
->
-> while all cpus except boot cpu is brought up in smp_init(), so I'm
-> thinking moving the cpus_allowed init from cpuset_init_smp() to
-> cpuset_bind() may cause some problem.
+On Sat, Apr 23, 2022 at 02:43:13PM -0700, Yosry Ahmed wrote:
+[...]
+> > > +     cg_run_nowait(memcg, alloc_pagecache_50M_noexit, (void *)(long)fd);
+> > > +     sleep(1);
+> >
+> > These sleep(1)s do not seem robust. Since kernel keeps the page cache
+> > around, you can convert anon to use tmpfs and use simple cg_run to
+> > trigger the allocations of anon (tmpfs) and file which will remain in
+> > memory even after return from cg_run.
+> 
+> Other tests in the file are also using sleep approach (see
+> test_memcg_min, although it retries for multiple times until
+> memory.current reaches an expected amount). In my experience it hasn't
+> been flaky running for multiple times on different machines, but I
+> agree it can be flaky (false negative).
+> 
 
-Good point. So cpuset_init_smp() is still useful for setting the right 
-effective_cpus and probably effective_mems. I will update the patch 
-accordingly.
+If other tests are doing the same then ignore this comment for now.
+There should be a separate effort to move towards more deterministic
+approach for the tests instead of sleep().
 
-Thanks,
-Longman
+> I am not sure about the allocating file pages with cg_run, is it
+> guaranteed that the page cache will remain in memory until the test
+> ends? If it doesn't, it can also flake, but it would produce false
+> positives (the test could pass because the kernel drained page cache
+> for some other reason although the interface is not working
+> correctly).
+> 
+> In my personal opinion, false negative flakes are better than false
+> positives. At least currently the test explicitly and clearly fails if
+> the allocations are not successful. If we rely on the page cache
+> remaining until the test finishes then it could silently pass if the
+> interface is not working correctly.
+> 
+> There are a few ways we can go forward with this:
+> 1) Keep everything as-is, but print a message if the test fails due to
+> memory.current not reaching 100MB to make it clear that it didn't fail
+> due to a problem with the interface.
+> 2) Add a sleep/retry loop similar to test_memcg_min instead of sleeping once.
+> 3) Send a signal from forked children when they are done with the
+> allocation, and wait to receive this signal in the test to make sure
+> the allocation is completed.
+> 
+> In my opinion we should do (1) (and maybe (2)) for now as (3) could be
+> an overkill if the test is normal passing. Maybe add a comment about
+> (3) being an option in the future if the test flakes. Let me know what
+> you think?
 
->
-> Thanks,
-> Feng
->
-
+I am ok with (1).
