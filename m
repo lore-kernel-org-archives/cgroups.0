@@ -1,90 +1,102 @@
-From: Oliver Upton <oupton@google.com>
-Subject: Re: [PATCH v3 4/6] KVM: arm64/mmu: count KVM page table pages in
- pagetable stats
-Date: Tue, 26 Apr 2022 07:34:56 +0000
-Message-ID: <YmegoB/fBkfwaE5z@google.com>
-References: <20220426053904.3684293-1-yosryahmed@google.com>
- <20220426053904.3684293-5-yosryahmed@google.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH -next v2 2/5] block, bfq: add fake weight_counter for
+ weight-raised queue
+Date: Tue, 26 Apr 2022 09:40:23 +0200
+Message-ID: <20220426074023.5y4gwvjsjzem3vgp@quack3.lan>
+References: <20220416093753.3054696-1-yukuai3@huawei.com>
+ <20220416093753.3054696-3-yukuai3@huawei.com>
+ <20220425094856.qgkhba2klguduxot@quack3.lan>
+ <a27b8c79-867f-9253-84db-1d39c964b3ed@huawei.com>
+ <20220425161650.xzyijgkb5yzviea3@quack3.lan>
+ <4591d02d-1f14-c928-1c50-6e434dfbb7b2@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=T6uVKqz/bxBh0XcbvcuRA0UyoUPF9VXe65F1cQD8y4Q=;
-        b=ObEunFSl4crRLGfpGD9vb4uNjucdcW+SwMC5wjs68ErQM98eX2dd/1bhFqvb4MQrUZ
-         aNBQiYOEZs6DAFrjwy4GxIX9P710BE5dNtb9ren8SoNbyoDCq1JSrqMW6bcxyN3g457u
-         /+gBpA8szyFlMBKjZqPcqtIcg53tpCAgbfmBRZ+EQiSDL0bYkiLUkJAuAA+ESILGYbW5
-         jVcb61+A+66M7v7MKaJKTdQY27E/r9amtlm20dB0rHCxpqld0qjq5eRsqvCmPNleg1uA
-         MTGwgfxKApBNNdQAeaBp8qoeybFa8FJ6gos+fYTUTeB4wg78apx7w8FkSb2oMxvxLXSe
-         mDTA==
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1650958824; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=TzIWVJ6EAqjRbZdTdcHexxp67XQ0RbOshNKrsYIiSGw=;
+        b=HEKQn3ZNZDXr5N9BnyZVgEfdr/N/FPYgznPqSkR3gh+MssKWIATSMZQ9KQir0TwYryIgeM
+        vPoVMchQ76WSLK7rnM/QEMx/dLo91F7OQwRtxhtIQZ9E/rqMEUAyIlN9JXf7ZOWJ/UqScS
+        kM8uEOZOlqVJ30Rl9VGN5x8PzIVV0HE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1650958824;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=TzIWVJ6EAqjRbZdTdcHexxp67XQ0RbOshNKrsYIiSGw=;
+        b=p5T6zNi4/s2xl8tShY9ElhnTBewZdrvUmQifOHQhh37BeTdsOAYD6X2REHk4nclxYXrlK8
+        UPx9RNBM+1j+WnBQ==
 Content-Disposition: inline
-In-Reply-To: <20220426053904.3684293-5-yosryahmed@google.com>
+In-Reply-To: <4591d02d-1f14-c928-1c50-6e434dfbb7b2@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Sean Christopherson <seanjc@google.com>, Huacai Chen <chenhuacai@kernel.org>, Aleksandar Markovic <aleksandar.qemu.devel@gmail.com>, Anup Patel <anup@brainfault.org>, Atish Patra <atishp@atishpatra.org>, Paolo Bonzini <pbonzini@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Wanpeng Li <wanpengli@tencent.com>, Jim Mattson <jmattson@google.com>, Joerg Roedel <joro@8bytes.org>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, James Morse <james.morse@arm.com>, Catalin Marinas <catalin.marinas@arm.com>, Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>, Marc Zyngier <maz@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: "yukuai (C)" <yukuai3@huawei.com>
+Cc: Jan Kara <jack@suse.cz>, paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-Hi Yosry,
-
-On Tue, Apr 26, 2022 at 05:39:02AM +0000, Yosry Ahmed wrote:
-> Count the pages used by KVM in arm64 for page tables in pagetable stats.
+On Tue 26-04-22 09:49:04, yukuai (C) wrote:
+> 在 2022/04/26 0:16, Jan Kara 写道:
+> > Hello!
+> > 
+> > On Mon 25-04-22 21:34:16, yukuai (C) wrote:
+> > > 在 2022/04/25 17:48, Jan Kara 写道:
+> > > > On Sat 16-04-22 17:37:50, Yu Kuai wrote:
+> > > > > Weight-raised queue is not inserted to weights_tree, which makes it
+> > > > > impossible to track how many queues have pending requests through
+> > > > > weights_tree insertion and removel. This patch add fake weight_counter
+> > > > > for weight-raised queue to do that.
+> > > > > 
+> > > > > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> > > > 
+> > > > This is a bit hacky. I was looking into a better place where to hook to
+> > > > count entities in a bfq_group with requests and I think bfq_add_bfqq_busy()
+> > > > and bfq_del_bfqq_busy() are ideal for this. It also makes better sense
+> > > > conceptually than hooking into weights tree handling.
+> > > 
+> > > bfq_del_bfqq_busy() will be called when all the reqs in the bfqq are
+> > > dispatched, however there might still some reqs are't completed yet.
+> > > 
+> > > Here what we want to track is how many bfqqs have pending reqs,
+> > > specifically if the bfqq have reqs are't complted.
+> > > 
+> > > Thus I think bfq_del_bfqq_busy() is not the right place to do that.
+> > 
+> > Yes, I'm aware there will be a difference. But note that bfqq can stay busy
+> > with only dispatched requests because the logic in __bfq_bfqq_expire() will
+> > not call bfq_del_bfqq_busy() if idling is needed for service guarantees. So
+> > I think using bfq_add/del_bfqq_busy() would work OK.
+> Hi,
 > 
-> Account pages allocated for PTEs in pgtable init functions and
-> kvm_set_table_pte().
+> I didn't think of that before. If bfqq stay busy after dispathing all
+> the requests, there are two other places that bfqq can clear busy:
 > 
-> Since most page table pages are freed using put_page(), add a helper
-> function put_pte_page() that checks if this is the last ref for a pte
-> page before putting it, and unaccounts stats accordingly.
-> 
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> ---
->  arch/arm64/kernel/image-vars.h |  3 ++
->  arch/arm64/kvm/hyp/pgtable.c   | 50 +++++++++++++++++++++-------------
->  2 files changed, 34 insertions(+), 19 deletions(-)
-> 
-> diff --git a/arch/arm64/kernel/image-vars.h b/arch/arm64/kernel/image-vars.h
-> index 241c86b67d01..25bf058714f6 100644
-> --- a/arch/arm64/kernel/image-vars.h
-> +++ b/arch/arm64/kernel/image-vars.h
-> @@ -143,6 +143,9 @@ KVM_NVHE_ALIAS(__hyp_rodata_end);
->  /* pKVM static key */
->  KVM_NVHE_ALIAS(kvm_protected_mode_initialized);
->  
-> +/* Called by kvm_account_pgtable_pages() to update pagetable stats */
-> +KVM_NVHE_ALIAS(__mod_lruvec_page_state);
-> +
->  #endif /* CONFIG_KVM */
->  
->  #endif /* __ARM64_KERNEL_IMAGE_VARS_H */
-> diff --git a/arch/arm64/kvm/hyp/pgtable.c b/arch/arm64/kvm/hyp/pgtable.c
-> index 2cb3867eb7c2..53e13c3313e9 100644
-> --- a/arch/arm64/kvm/hyp/pgtable.c
-> +++ b/arch/arm64/kvm/hyp/pgtable.c
-> @@ -152,6 +152,7 @@ static void kvm_set_table_pte(kvm_pte_t *ptep, kvm_pte_t *childp,
->  
->  	WARN_ON(kvm_pte_valid(old));
->  	smp_store_release(ptep, pte);
-> +	kvm_account_pgtable_pages((void *)childp, +1);
+> 1) bfq_remove_request(), bfqq has to insert a new req while it's not in
+> service.
 
-What page tables do we want to account? KVM on ARM manages several page
-tables.
+Yes and the request then would have to be dispatched or merged. Which
+generally means another bfqq from the same bfqg is currently active and
+thus this should have no impact on service guarantees we are interested in.
 
-For regular KVM, the host kernel manages allocations for the hyp stage 1
-tables in addition to the stage 2 tables used for a particular VM. The
-former is system overhead whereas the latter could be attributed to a
-guest VM.
+> 2) bfq_release_process_ref(), user thread is gone / moved, or old bfqq
+> is gone due to merge / ioprio change.
 
-I imagine protected KVM is out of scope, since it actually manages its
-own allocations outside of the host kernel.
+Yes, here there's no new IO for the bfqq so no point in maintaining any
+service guarantees to it.
 
-Given this, I would recommend adding the accounting hooks to mmu.c as
-that is where we alloc/free table pages and it is in the host address
-space. kvm_s2_mm_ops and kvm_hyp_mm_ops point to all the relevant
-functions, though the latter is only relevant if we want to count system
-page tables too.
+> I wonder, will bfq_del_bfqq_busy() be called immediately when requests
+> are completed? (It seems not to me...). For example, a user thread
+> issue a sync io just once, and it keep running without issuing new io,
+> then when does the bfqq clears the busy state?
 
---
-Thanks,
-Oliver
+No, when bfqq is kept busy, it will get scheduled as in-service queue in
+the future. Then what happens depends on whether it will get more requests
+or not. But generally its busy state will get cleared once it is expired
+for other reason than preemption.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
