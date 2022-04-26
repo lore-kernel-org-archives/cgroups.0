@@ -1,70 +1,36 @@
-From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -next v2 2/5] block, bfq: add fake weight_counter for
- weight-raised queue
-Date: Tue, 26 Apr 2022 09:49:04 +0800
-Message-ID: <4591d02d-1f14-c928-1c50-6e434dfbb7b2@huawei.com>
-References: <20220416093753.3054696-1-yukuai3@huawei.com>
- <20220416093753.3054696-3-yukuai3@huawei.com>
- <20220425094856.qgkhba2klguduxot@quack3.lan>
- <a27b8c79-867f-9253-84db-1d39c964b3ed@huawei.com>
- <20220425161650.xzyijgkb5yzviea3@quack3.lan>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH v5 2/4] selftests: cgroup: return -errno from
+ cg_read()/cg_write() on failure
+Date: Mon, 25 Apr 2022 18:53:50 -0700
+Message-ID: <YmdQrql2rSMwjmY4@carbon>
+References: <20220425190040.2475377-1-yosryahmed@google.com>
+ <20220425190040.2475377-3-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220425161650.xzyijgkb5yzviea3-/1kMjMImKQN+urZeOPWqwQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1650938042;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=dZsy6ZebabS1TsQcaFiZ0sPD2AjyXhLmbrTmljIpUeA=;
+        b=Pi1rV36/KmttICAXEd0fKT1KpBXiMySRUBxxWjE2+dRPpMgGjZlxHRKt6LrkdEU97QrkS+
+        S5iwFooeG+o4SgYZ1oWAlxvXobVWlOqWdlLqCkA1vu08s6FEvumTymbGTVXfQD6X7IHluN
+        OORjBvR/DN+bY8gxVyu3IwOtj9fkjFA=
+Content-Disposition: inline
+In-Reply-To: <20220425190040.2475377-3-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Vaibhav Jain <vaibhav-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-在 2022/04/26 0:16, Jan Kara 写道:
-> Hello!
+On Mon, Apr 25, 2022 at 07:00:38PM +0000, Yosry Ahmed wrote:
+> Currently, cg_read()/cg_write() returns 0 on success and -1 on failure.
+> Modify them to return the -errno on failure.
 > 
-> On Mon 25-04-22 21:34:16, yukuai (C) wrote:
->> 在 2022/04/25 17:48, Jan Kara 写道:
->>> On Sat 16-04-22 17:37:50, Yu Kuai wrote:
->>>> Weight-raised queue is not inserted to weights_tree, which makes it
->>>> impossible to track how many queues have pending requests through
->>>> weights_tree insertion and removel. This patch add fake weight_counter
->>>> for weight-raised queue to do that.
->>>>
->>>> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->>>
->>> This is a bit hacky. I was looking into a better place where to hook to
->>> count entities in a bfq_group with requests and I think bfq_add_bfqq_busy()
->>> and bfq_del_bfqq_busy() are ideal for this. It also makes better sense
->>> conceptually than hooking into weights tree handling.
->>
->> bfq_del_bfqq_busy() will be called when all the reqs in the bfqq are
->> dispatched, however there might still some reqs are't completed yet.
->>
->> Here what we want to track is how many bfqqs have pending reqs,
->> specifically if the bfqq have reqs are't complted.
->>
->> Thus I think bfq_del_bfqq_busy() is not the right place to do that.
-> 
-> Yes, I'm aware there will be a difference. But note that bfqq can stay busy
-> with only dispatched requests because the logic in __bfq_bfqq_expire() will
-> not call bfq_del_bfqq_busy() if idling is needed for service guarantees. So
-> I think using bfq_add/del_bfqq_busy() would work OK.
-Hi,
+> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-I didn't think of that before. If bfqq stay busy after dispathing all
-the requests, there are two other places that bfqq can clear busy:
+Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 
-1) bfq_remove_request(), bfqq has to insert a new req while it's not in
-service.
-
-2) bfq_release_process_ref(), user thread is gone / moved, or old bfqq
-is gone due to merge / ioprio change.
-
-I wonder, will bfq_del_bfqq_busy() be called immediately when requests
-are completed? (It seems not to me...). For example, a user thread
-issue a sync io just once, and it keep running without issuing new io,
-then when does the bfqq clears the busy state?
-
-Thanks,
-Kuai
-> 
-> 								Honza
-> 
+Thanks!
