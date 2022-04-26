@@ -1,104 +1,88 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3 6/6] KVM: mips/mmu: count KVM page table pages in pagetable stats
-Date: Tue, 26 Apr 2022 05:39:04 +0000
-Message-ID: <20220426053904.3684293-7-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [PATCH v3 5/6] KVM: riscv/mmu: count KVM page table pages in
+ pagetable stats
+Date: Tue, 26 Apr 2022 05:39:03 +0000
+Message-ID: <20220426053904.3684293-6-yosryahmed@google.com>
 References: <20220426053904.3684293-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-mips-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=UwrHlKcfzo3tcKJryiZhc3lnWD2SSBQRLRI0NxtXWrY=;
-        b=lNtBON0+mp7QtqbJUF/yxX4uqPIpQ5Y7hbeXAfVLxM4ZET7uCEK3knJCpkoyZMJa9s
-         i7nzVR4VlmZxg+avleS7/Kn/bJZBjnZBXIxlYf/uArgxa5lJaYe/WDTMeZAb28KsbwWU
-         ocTkXwvTjA1uESTwFj+I7wr5Rl5sM2mE2cN5TIARIpTfKY2dD2+gpHj1coFpygAy+fc7
-         zaCTEQdiWA+0CcKFMaPUEAafXSOqS1yBx10IaODNf6+xQNBSZhNIV/u+JCOUySMFWRfr
-         Ms9jv8dEpQuxx8npEiVjqTZIl7JhMtAENDSGpOK7TpWZOGwxxlN4+Ot896M99UFlnkfM
-         gIIQ==
-In-Reply-To: <20220426053904.3684293-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        bh=a9VzBJlMLigws4pRoWaDUwEnDDiqJQ0nJjM8cxStkWo=;
+        b=p8mJqCwHacTbFhvYHu8ybGXK2P+PghFMqaxHHJuqdpta07t/m8JQTkdFg82eEvuWYd
+         OdSYMSKPBvO7ptjR046sAX/bHvFVjhg/pzuwVzXmGfoIsID/2GXXQHWYzh25sp8Zhqzf
+         htWeN1iMzxl7/9Pdv1zinxHd6q+dx76sncvVGGjZOTWwwfxxB2qSbB8gn6IY5+O3yc7/
+         BeF9G0WjghrY1fZ5jCmiJkVNg5fp3DJ1BPeCzpmLCtKqzsEWqGLssoJmyaPfwKCC+CiD
+         5TQ/VweVfCM1sVLfYaViWaZEyQtlCxE0YpkORn8opIIBD11EyDSBFcvRbtm+lxTTiRjt
+         7Vwg==
+In-Reply-To: <20220426053904.3684293-1-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Huacai Chen <chenhuacai-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Aleksandar Markovic <aleksandar.qemu.devel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Anup Patel <anup-aa5cPYPs4nSSZfiimGR9Ow@public.gmane.org>, Atish Patra <atishp-WKKQYwWt7ev9JmXXK+q4OQ@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Shameer Kolothum <shameerali.kolothum.thodi-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-mips-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kvm-riscv-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, kvmarm-FPEHb7Xf0XXUo1n7N8X6UoWGPAHP3yOg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Sean Christopherson <seanjc@google.com>, Huacai Chen <chenhuacai@kernel.org>, Aleksandar Markovic <aleksandar.qemu.devel@gmail.com>, Anup Patel <anup@brainfault.org>, Atish Patra <atishp@atishpatra.org>, Paolo Bonzini <pbonzini@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Wanpeng Li <wanpengli@tencent.com>, Jim Mattson <jmattson@google.com>, Joerg Roedel <joro@8bytes.org>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, James Morse <james.morse@arm.com>, Catalin Marinas <catalin.marinas@arm.com>, Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>, Marc Zyngier <maz@kernel.org>
+Cc: linux-mips@vger.kernel.org, kvm@vger.kernel.org, kvm-riscv@lists.infradead.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org, kvmarm@lists.cs.columbia.edu, Yosry Ahmed <yosryahmed@google.com>
 
-Count the pages used by KVM in mips for page tables in pagetable stats.
+Count the pages used by KVM in riscv for page tables in pagetable stats.
 
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
 ---
- arch/mips/kvm/mips.c | 1 +
- arch/mips/kvm/mmu.c  | 9 ++++++++-
- 2 files changed, 9 insertions(+), 1 deletion(-)
+ arch/riscv/kvm/mmu.c | 26 +++++++++++++++++++-------
+ 1 file changed, 19 insertions(+), 7 deletions(-)
 
-diff --git a/arch/mips/kvm/mips.c b/arch/mips/kvm/mips.c
-index a25e0b73ee70..e60c1920a408 100644
---- a/arch/mips/kvm/mips.c
-+++ b/arch/mips/kvm/mips.c
-@@ -175,6 +175,7 @@ static void kvm_mips_free_gpa_pt(struct kvm *kvm)
+diff --git a/arch/riscv/kvm/mmu.c b/arch/riscv/kvm/mmu.c
+index f80a34fbf102..fcfb75713750 100644
+--- a/arch/riscv/kvm/mmu.c
++++ b/arch/riscv/kvm/mmu.c
+@@ -152,6 +152,7 @@ static int stage2_set_pte(struct kvm *kvm, u32 level,
+ 			next_ptep = kvm_mmu_memory_cache_alloc(pcache);
+ 			if (!next_ptep)
+ 				return -ENOMEM;
++			kvm_account_pgtable_pages((void *)next_ptep, +1);
+ 			*ptep = pfn_pte(PFN_DOWN(__pa(next_ptep)),
+ 					__pgprot(_PAGE_TABLE));
+ 		} else {
+@@ -229,6 +230,7 @@ static void stage2_op_pte(struct kvm *kvm, gpa_t addr,
+ 	pte_t *next_ptep;
+ 	u32 next_ptep_level;
+ 	unsigned long next_page_size, page_size;
++	struct page *p;
+ 
+ 	ret = stage2_level_to_page_size(ptep_level, &page_size);
+ 	if (ret)
+@@ -252,8 +254,13 @@ static void stage2_op_pte(struct kvm *kvm, gpa_t addr,
+ 		for (i = 0; i < PTRS_PER_PTE; i++)
+ 			stage2_op_pte(kvm, addr + i * next_page_size,
+ 					&next_ptep[i], next_ptep_level, op);
+-		if (op == STAGE2_OP_CLEAR)
+-			put_page(virt_to_page(next_ptep));
++		if (op == STAGE2_OP_CLEAR) {
++			p = virt_to_page(next_ptep);
++			if (page_count(p) == 1)
++				kvm_account_pgtable_pages((void *)next_ptep,
++							  -1);
++			put_page(p);
++		}
+ 	} else {
+ 		if (op == STAGE2_OP_CLEAR)
+ 			set_pte(ptep, __pte(0));
+@@ -700,25 +707,27 @@ int kvm_riscv_stage2_map(struct kvm_vcpu *vcpu,
+ int kvm_riscv_stage2_alloc_pgd(struct kvm *kvm)
  {
- 	/* It should always be safe to remove after flushing the whole range */
- 	WARN_ON(!kvm_mips_flush_gpa_pt(kvm, 0, ~0));
-+	kvm_account_pgtable_pages((void *)kvm->arch.gpa_mm.pgd, -1);
- 	pgd_free(NULL, kvm->arch.gpa_mm.pgd);
- }
+ 	struct page *pgd_page;
++	int order;
  
-diff --git a/arch/mips/kvm/mmu.c b/arch/mips/kvm/mmu.c
-index 1bfd1b501d82..18da2ac2ded7 100644
---- a/arch/mips/kvm/mmu.c
-+++ b/arch/mips/kvm/mmu.c
-@@ -81,8 +81,10 @@ pgd_t *kvm_pgd_alloc(void)
- 	pgd_t *ret;
- 
- 	ret = (pgd_t *)__get_free_pages(GFP_KERNEL, PGD_ORDER);
--	if (ret)
-+	if (ret) {
- 		kvm_pgd_init(ret);
-+		kvm_account_pgtable_pages((void *)ret, +1);
-+	}
- 
- 	return ret;
- }
-@@ -125,6 +127,7 @@ static pte_t *kvm_mips_walk_pgd(pgd_t *pgd, struct kvm_mmu_memory_cache *cache,
- 		pmd_init((unsigned long)new_pmd,
- 			 (unsigned long)invalid_pte_table);
- 		pud_populate(NULL, pud, new_pmd);
-+		kvm_account_pgtable_pages((void *)new_pmd, +1);
+ 	if (kvm->arch.pgd != NULL) {
+ 		kvm_err("kvm_arch already initialized?\n");
+ 		return -EINVAL;
  	}
- 	pmd = pmd_offset(pud, addr);
- 	if (pmd_none(*pmd)) {
-@@ -135,6 +138,7 @@ static pte_t *kvm_mips_walk_pgd(pgd_t *pgd, struct kvm_mmu_memory_cache *cache,
- 		new_pte = kvm_mmu_memory_cache_alloc(cache);
- 		clear_page(new_pte);
- 		pmd_populate_kernel(NULL, pmd, new_pte);
-+		kvm_account_pgtable_pages((void *)new_pte, +1);
- 	}
- 	return pte_offset_kernel(pmd, addr);
- }
-@@ -189,6 +193,7 @@ static bool kvm_mips_flush_gpa_pmd(pmd_t *pmd, unsigned long start_gpa,
  
- 		if (kvm_mips_flush_gpa_pte(pte, start_gpa, end)) {
- 			pmd_clear(pmd + i);
-+			kvm_account_pgtable_pages((void *)pte, -1);
- 			pte_free_kernel(NULL, pte);
- 		} else {
- 			safe_to_remove = false;
-@@ -217,6 +222,7 @@ static bool kvm_mips_flush_gpa_pud(pud_t *pud, unsigned long start_gpa,
- 
- 		if (kvm_mips_flush_gpa_pmd(pmd, start_gpa, end)) {
- 			pud_clear(pud + i);
-+			kvm_account_pgtable_pages((void *)pmd, -1);
- 			pmd_free(NULL, pmd);
- 		} else {
- 			safe_to_remove = false;
-@@ -247,6 +253,7 @@ static bool kvm_mips_flush_gpa_pgd(pgd_t *pgd, unsigned long start_gpa,
- 
- 		if (kvm_mips_flush_gpa_pud(pud, start_gpa, end)) {
- 			pgd_clear(pgd + i);
-+			kvm_account_pgtable_pages((void *)pud, -1);
- 			pud_free(NULL, pud);
- 		} else {
- 			safe_to_remove = false;
--- 
-2.36.0.rc2.479.g8af0fa9b8e-goog
-
+-	pgd_page = alloc_pages(GFP_KERNEL | __GFP_ZERO,
+-				get_order(stage2_pgd_size));
++	order = get_order(stage2_pgd_size);
++	pgd_page = alloc_pages(GFP_KERNEL | __GFP_ZERO, order);
+ 	if (!pgd_page)
+ 		return -ENOMEM;
+ 	kvm->arch.pgd = page_to_virt(pgd_page);
+ 	kvm->arch.pgd_phys = page_to_phys(pgd_page);
