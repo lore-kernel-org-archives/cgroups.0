@@ -1,102 +1,55 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH -next v2 2/5] block, bfq: add fake weight_counter for
- weight-raised queue
-Date: Tue, 26 Apr 2022 09:40:23 +0200
-Message-ID: <20220426074023.5y4gwvjsjzem3vgp@quack3.lan>
-References: <20220416093753.3054696-1-yukuai3@huawei.com>
- <20220416093753.3054696-3-yukuai3@huawei.com>
- <20220425094856.qgkhba2klguduxot@quack3.lan>
- <a27b8c79-867f-9253-84db-1d39c964b3ed@huawei.com>
- <20220425161650.xzyijgkb5yzviea3@quack3.lan>
- <4591d02d-1f14-c928-1c50-6e434dfbb7b2@huawei.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v5 1/4] memcg: introduce per-memcg reclaim interface
+Date: Tue, 26 Apr 2022 10:22:42 +0200
+Message-ID: <Ymer0qeaJlRY1Ju6@dhcp22.suse.cz>
+References: <20220425190040.2475377-1-yosryahmed@google.com>
+ <20220425190040.2475377-2-yosryahmed@google.com>
+ <a4c3d067-d08d-409d-e7b-b6e0b1d2dfda@google.com>
+ <CAJD7tka_96du2UUx0xuseR62wu005-KPf7fSyDTAuXOWsgUQDg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1650958824; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1650961366; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=TzIWVJ6EAqjRbZdTdcHexxp67XQ0RbOshNKrsYIiSGw=;
-        b=HEKQn3ZNZDXr5N9BnyZVgEfdr/N/FPYgznPqSkR3gh+MssKWIATSMZQ9KQir0TwYryIgeM
-        vPoVMchQ76WSLK7rnM/QEMx/dLo91F7OQwRtxhtIQZ9E/rqMEUAyIlN9JXf7ZOWJ/UqScS
-        kM8uEOZOlqVJ30Rl9VGN5x8PzIVV0HE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1650958824;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TzIWVJ6EAqjRbZdTdcHexxp67XQ0RbOshNKrsYIiSGw=;
-        b=p5T6zNi4/s2xl8tShY9ElhnTBewZdrvUmQifOHQhh37BeTdsOAYD6X2REHk4nclxYXrlK8
-        UPx9RNBM+1j+WnBQ==
+        bh=NKbpFjMDPqd7TQ514NLGknGrSkR1xvTuZ+twvGBw1Ds=;
+        b=Ku8RBnA0Rf9zQsz4S8BTrgHF20lahZ8buxMT5bsutog3s+qQEzlQpjXalln29/WK/9rWTe
+        y/9DNr88hxHzQwcPkYA9KVTaL8FZ7DTVb/ZbTuzWAufvvhtv6te6DXO8ZUj85HjsIehW/n
+        qbSDE3xjlsTQgKOtmALRZ+WjV1K1F3E=
 Content-Disposition: inline
-In-Reply-To: <4591d02d-1f14-c928-1c50-6e434dfbb7b2@huawei.com>
+In-Reply-To: <CAJD7tka_96du2UUx0xuseR62wu005-KPf7fSyDTAuXOWsgUQDg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: "yukuai (C)" <yukuai3@huawei.com>
-Cc: Jan Kara <jack@suse.cz>, paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Vaibhav Jain <vaibhav-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Tue 26-04-22 09:49:04, yukuai (C) wrote:
-> 在 2022/04/26 0:16, Jan Kara 写道:
-> > Hello!
-> > 
-> > On Mon 25-04-22 21:34:16, yukuai (C) wrote:
-> > > 在 2022/04/25 17:48, Jan Kara 写道:
-> > > > On Sat 16-04-22 17:37:50, Yu Kuai wrote:
-> > > > > Weight-raised queue is not inserted to weights_tree, which makes it
-> > > > > impossible to track how many queues have pending requests through
-> > > > > weights_tree insertion and removel. This patch add fake weight_counter
-> > > > > for weight-raised queue to do that.
-> > > > > 
-> > > > > Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> > > > 
-> > > > This is a bit hacky. I was looking into a better place where to hook to
-> > > > count entities in a bfq_group with requests and I think bfq_add_bfqq_busy()
-> > > > and bfq_del_bfqq_busy() are ideal for this. It also makes better sense
-> > > > conceptually than hooking into weights tree handling.
-> > > 
-> > > bfq_del_bfqq_busy() will be called when all the reqs in the bfqq are
-> > > dispatched, however there might still some reqs are't completed yet.
-> > > 
-> > > Here what we want to track is how many bfqqs have pending reqs,
-> > > specifically if the bfqq have reqs are't complted.
-> > > 
-> > > Thus I think bfq_del_bfqq_busy() is not the right place to do that.
-> > 
-> > Yes, I'm aware there will be a difference. But note that bfqq can stay busy
-> > with only dispatched requests because the logic in __bfq_bfqq_expire() will
-> > not call bfq_del_bfqq_busy() if idling is needed for service guarantees. So
-> > I think using bfq_add/del_bfqq_busy() would work OK.
-> Hi,
+On Mon 25-04-22 12:31:51, Yosry Ahmed wrote:
+> On Mon, Apr 25, 2022 at 12:15 PM David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+[...]
+> > "can over or under reclaim from the target cgroup" begs the question of
+> > how much more memory the kernel can decide to reclaim :)  I think it's
+> > assumed that it's minimal and that matches the current implementation that
+> > rounds up to SWAP_CLUSTER_MAX, though, so looks good.
+> >
+> > Thanks Yosry!
 > 
-> I didn't think of that before. If bfqq stay busy after dispathing all
-> the requests, there are two other places that bfqq can clear busy:
-> 
-> 1) bfq_remove_request(), bfqq has to insert a new req while it's not in
-> service.
+> I think it could be more complex than this. Some functions that get
+> called during reclaim only use the nr_to_reclaim parameter to check if
+> they need one more iteration, but not to limit the actual reclaimed
+> pages per say. For example, nr_to_reclaim is not even passed to
+> shrink_slab() or mem_cgroup_soft_limit_reclaim(), so they have no way
+> to know that they should stop if nr_to_reclaim was already satisfied.
+> I think the general assumption is that each of these calls normally
+> does not reclaim a huge number of pages, so like you said, the kernel
+> should not over-reclaim too much. However, I don't think there are
+> guarantees about this.
 
-Yes and the request then would have to be dispatched or merged. Which
-generally means another bfqq from the same bfqg is currently active and
-thus this should have no impact on service guarantees we are interested in.
-
-> 2) bfq_release_process_ref(), user thread is gone / moved, or old bfqq
-> is gone due to merge / ioprio change.
-
-Yes, here there's no new IO for the bfqq so no point in maintaining any
-service guarantees to it.
-
-> I wonder, will bfq_del_bfqq_busy() be called immediately when requests
-> are completed? (It seems not to me...). For example, a user thread
-> issue a sync io just once, and it keep running without issuing new io,
-> then when does the bfqq clears the busy state?
-
-No, when bfqq is kept busy, it will get scheduled as in-service queue in
-the future. Then what happens depends on whether it will get more requests
-or not. But generally its busy state will get cleared once it is expired
-for other reason than preemption.
-
-								Honza
+There are no guarantees indeed and it si definitely good to be explicit
+about that so that userspace tools expect that and consider that in
+the imeplementation. Sure we do not want to go overboard and huge excess
+should be considered a bug. I am not sure we do agree on the notion of
+"huge" so let's see.
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Michal Hocko
+SUSE Labs
