@@ -1,138 +1,90 @@
-From: Vasily Averin <vvs@openvz.org>
-Subject: [PATCH memcg v4] net: set proper memcg for net_init hooks allocations
-Date: Tue, 26 Apr 2022 09:43:43 +0300
-Message-ID: <33085523-a8b9-1bf6-2726-f456f59015ef@openvz.org>
-References: <YmdeCqi6wmgiSiWh@carbon>
+From: Oliver Upton <oupton@google.com>
+Subject: Re: [PATCH v3 4/6] KVM: arm64/mmu: count KVM page table pages in
+ pagetable stats
+Date: Tue, 26 Apr 2022 07:34:56 +0000
+Message-ID: <YmegoB/fBkfwaE5z@google.com>
+References: <20220426053904.3684293-1-yosryahmed@google.com>
+ <20220426053904.3684293-5-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=openvz-org.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:from:subject:to:cc
-         :references:content-language:in-reply-to:content-transfer-encoding;
-        bh=K2d011P8KfcYwwiHkCEUfdA6HfAgaJe5w6mALwX0ubY=;
-        b=ucopxF9WfhVVHWRqZ21ScpWY3F6vUeftNTSf7toMamrheU0OxvUcaaprhBe62s1n6f
-         BqKhFXXKeG3P27w76cKmJ8S58bNyKrj9iB9MutS65aXrnRUDQMPgtk78QOqLaxKTJVgg
-         jCElShjmCrninAIOEh0HkazA1QytgiAb3/ylLwDsMCfpHdwPWpdK0wu0EU0WuHnGAX7b
-         VzyQpskFimFQ/P20V1oMC+fOFshJ0YgCRkk9wO4Pom6O40sGavzvkSe9J3DVn4mNIHZY
-         IODiJtXsb8FzKtweUwAVQcyz7029ke5hIhdXaVinNFcaRH2JaEm9psZ2+oq9F+Momo7a
-         kwMQ==
-Content-Language: en-US
-In-Reply-To: <YmdeCqi6wmgiSiWh@carbon>
+        d=google.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=T6uVKqz/bxBh0XcbvcuRA0UyoUPF9VXe65F1cQD8y4Q=;
+        b=ObEunFSl4crRLGfpGD9vb4uNjucdcW+SwMC5wjs68ErQM98eX2dd/1bhFqvb4MQrUZ
+         aNBQiYOEZs6DAFrjwy4GxIX9P710BE5dNtb9ren8SoNbyoDCq1JSrqMW6bcxyN3g457u
+         /+gBpA8szyFlMBKjZqPcqtIcg53tpCAgbfmBRZ+EQiSDL0bYkiLUkJAuAA+ESILGYbW5
+         jVcb61+A+66M7v7MKaJKTdQY27E/r9amtlm20dB0rHCxpqld0qjq5eRsqvCmPNleg1uA
+         MTGwgfxKApBNNdQAeaBp8qoeybFa8FJ6gos+fYTUTeB4wg78apx7w8FkSb2oMxvxLXSe
+         mDTA==
+Content-Disposition: inline
+In-Reply-To: <20220426053904.3684293-5-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Vlastimil Babka <vbabka@suse.cz>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <roman.gushchin@linux.dev>
-Cc: kernel@openvz.org, Florian Westphal <fw@strlen.de>, linux-kernel@vger.kernel.org, Michal Hocko <mhocko@suse.com>, cgroups@vger.kernel.org, netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>
+Content-Transfer-Encoding: 7bit
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Sean Christopherson <seanjc@google.com>, Huacai Chen <chenhuacai@kernel.org>, Aleksandar Markovic <aleksandar.qemu.devel@gmail.com>, Anup Patel <anup@brainfault.org>, Atish Patra <atishp@atishpatra.org>, Paolo Bonzini <pbonzini@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Wanpeng Li <wanpengli@tencent.com>, Jim Mattson <jmattson@google.com>, Joerg Roedel <joro@8bytes.org>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, James Morse <james.morse@arm.com>, Catalin Marinas <catalin.marinas@arm.com>, Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>, Marc Zyngier <maz@kernel.org>
 
-__register_pernet_operations() executes init hook of registered
-pernet_operation structure in all existing net namespaces.
+Hi Yosry,
 
-Typically, these hooks are called by a process associated with
-the specified net namespace, and all __GFP_ACCOUNT marked
-allocation are accounted for corresponding container/memcg.
+On Tue, Apr 26, 2022 at 05:39:02AM +0000, Yosry Ahmed wrote:
+> Count the pages used by KVM in arm64 for page tables in pagetable stats.
+> 
+> Account pages allocated for PTEs in pgtable init functions and
+> kvm_set_table_pte().
+> 
+> Since most page table pages are freed using put_page(), add a helper
+> function put_pte_page() that checks if this is the last ref for a pte
+> page before putting it, and unaccounts stats accordingly.
+> 
+> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+> ---
+>  arch/arm64/kernel/image-vars.h |  3 ++
+>  arch/arm64/kvm/hyp/pgtable.c   | 50 +++++++++++++++++++++-------------
+>  2 files changed, 34 insertions(+), 19 deletions(-)
+> 
+> diff --git a/arch/arm64/kernel/image-vars.h b/arch/arm64/kernel/image-vars.h
+> index 241c86b67d01..25bf058714f6 100644
+> --- a/arch/arm64/kernel/image-vars.h
+> +++ b/arch/arm64/kernel/image-vars.h
+> @@ -143,6 +143,9 @@ KVM_NVHE_ALIAS(__hyp_rodata_end);
+>  /* pKVM static key */
+>  KVM_NVHE_ALIAS(kvm_protected_mode_initialized);
+>  
+> +/* Called by kvm_account_pgtable_pages() to update pagetable stats */
+> +KVM_NVHE_ALIAS(__mod_lruvec_page_state);
+> +
+>  #endif /* CONFIG_KVM */
+>  
+>  #endif /* __ARM64_KERNEL_IMAGE_VARS_H */
+> diff --git a/arch/arm64/kvm/hyp/pgtable.c b/arch/arm64/kvm/hyp/pgtable.c
+> index 2cb3867eb7c2..53e13c3313e9 100644
+> --- a/arch/arm64/kvm/hyp/pgtable.c
+> +++ b/arch/arm64/kvm/hyp/pgtable.c
+> @@ -152,6 +152,7 @@ static void kvm_set_table_pte(kvm_pte_t *ptep, kvm_pte_t *childp,
+>  
+>  	WARN_ON(kvm_pte_valid(old));
+>  	smp_store_release(ptep, pte);
+> +	kvm_account_pgtable_pages((void *)childp, +1);
 
-However __register_pernet_operations() calls the hooks in the same
-context, and as a result all marked allocations are accounted
-to one memcg for all processed net namespaces.
+What page tables do we want to account? KVM on ARM manages several page
+tables.
 
-This patch adjusts active memcg for each net namespace and helps
-to account memory allocated inside ops_init() into the proper memcg.
+For regular KVM, the host kernel manages allocations for the hyp stage 1
+tables in addition to the stage 2 tables used for a particular VM. The
+former is system overhead whereas the latter could be attributed to a
+guest VM.
 
-Signed-off-by: Vasily Averin <vvs@openvz.org>
----
-v4: get_mem_cgroup_from_kmem() renamed to get_mem_cgroup_from_obj(),
-    get_net_memcg() replaced by mem_cgroup_or_root(), suggested by Roman.
+I imagine protected KVM is out of scope, since it actually manages its
+own allocations outside of the host kernel.
 
-v3: put_net_memcg() replaced by an alreay existing mem_cgroup_put()
-    It checks memcg before accessing it, this is required for
-    __register_pernet_operations() called before memcg initialization.
-    Additionally fixed leading whitespaces in non-memcg_kmem version
-    of mem_cgroup_from_obj().
+Given this, I would recommend adding the accounting hooks to mmu.c as
+that is where we alloc/free table pages and it is in the host address
+space. kvm_s2_mm_ops and kvm_hyp_mm_ops point to all the relevant
+functions, though the latter is only relevant if we want to count system
+page tables too.
 
-v2: introduced get/put_net_memcg(),
-    new functions are moved under CONFIG_MEMCG_KMEM
-    to fix compilation issues reported by Intel's kernel test robot
-
-v1: introduced get_mem_cgroup_from_kmem(), which takes the refcount
-    for the found memcg, suggested by Shakeel
----
- include/linux/memcontrol.h | 27 ++++++++++++++++++++++++++-
- net/core/net_namespace.c   |  7 +++++++
- 2 files changed, 33 insertions(+), 1 deletion(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 0abbd685703b..6dd4ed7d3b6f 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -1714,6 +1714,22 @@ static inline int memcg_cache_id(struct mem_cgroup *memcg)
- 
- struct mem_cgroup *mem_cgroup_from_obj(void *p);
- 
-+static inline struct mem_cgroup *get_mem_cgroup_from_obj(void *p)
-+{
-+	struct mem_cgroup *memcg;
-+
-+	rcu_read_lock();
-+	do {
-+		memcg = mem_cgroup_from_obj(p);
-+	} while (memcg && !css_tryget(&memcg->css));
-+	rcu_read_unlock();
-+	return memcg;
-+}
-+
-+static inline struct mem_cgroup *mem_cgroup_or_root(struct mem_cgroup *memcg)
-+{
-+	return memcg ? memcg : root_mem_cgroup;
-+}
- #else
- static inline bool mem_cgroup_kmem_disabled(void)
- {
-@@ -1763,9 +1779,18 @@ static inline void memcg_put_cache_ids(void)
- 
- static inline struct mem_cgroup *mem_cgroup_from_obj(void *p)
- {
--       return NULL;
-+	return NULL;
- }
- 
-+static inline struct mem_cgroup *get_mem_cgroup_from_obj(void *p)
-+{
-+	return NULL;
-+}
-+
-+static inline struct mem_cgroup *mem_cgroup_or_root(struct mem_cgroup *memcg)
-+{
-+	return NULL;
-+}
- #endif /* CONFIG_MEMCG_KMEM */
- 
- #endif /* _LINUX_MEMCONTROL_H */
-diff --git a/net/core/net_namespace.c b/net/core/net_namespace.c
-index a5b5bb99c644..240f3db77dec 100644
---- a/net/core/net_namespace.c
-+++ b/net/core/net_namespace.c
-@@ -26,6 +26,7 @@
- #include <net/net_namespace.h>
- #include <net/netns/generic.h>
- 
-+#include <linux/sched/mm.h>
- /*
-  *	Our network namespace constructor/destructor lists
-  */
-@@ -1147,7 +1148,13 @@ static int __register_pernet_operations(struct list_head *list,
- 		 * setup_net() and cleanup_net() are not possible.
- 		 */
- 		for_each_net(net) {
-+			struct mem_cgroup *old, *memcg;
-+
-+			memcg = mem_cgroup_or_root(get_mem_cgroup_from_obj(net));
-+			old = set_active_memcg(memcg);
- 			error = ops_init(ops, net);
-+			set_active_memcg(old);
-+			mem_cgroup_put(memcg);
- 			if (error)
- 				goto out_undo;
- 			list_add_tail(&net->exit_list, &net_exit_list);
--- 
-2.31.1
-
+--
+Thanks,
+Oliver
