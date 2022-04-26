@@ -1,62 +1,138 @@
-From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH memcg v3] net: set proper memcg for net_init hooks
- allocations
-Date: Tue, 26 Apr 2022 08:58:07 +0300
-Message-ID: <a153e5da-b22a-2ea5-f0ef-a46337711400@openvz.org>
-References: <20220424144627.GB13403@xsang-OptiPlex-9020>
- <c2f0139a-62e2-5985-34e9-d42faac81960@openvz.org> <YmdeCqi6wmgiSiWh@carbon>
+From: Vasily Averin <vvs@openvz.org>
+Subject: [PATCH memcg v4] net: set proper memcg for net_init hooks allocations
+Date: Tue, 26 Apr 2022 09:43:43 +0300
+Message-ID: <33085523-a8b9-1bf6-2726-f456f59015ef@openvz.org>
+References: <YmdeCqi6wmgiSiWh@carbon>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=openvz-org.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=ZBYAGN8Bb7OvFzAe7F9Y2LfgGtxk1nTfvTdOaaOXGBo=;
-        b=Jq6JdD8VzFEq18+o276NScliYwVuNJf4Rn3tazrd5OBUECXdtwysjbVzisP42H7Zfg
-         AzLF13iBPuGB4G8laKbcZXc+vG2Nd6M+Fk6lwgFd3A2z8Y97UPbC0O5FCrHPpHCQfkNj
-         LsXD2YsfDHX3vGdtEbPWrIaeng7NCC/JLJLjHxphWsPsxrCBycx7sWesbCjiyTLJkQcU
-         FFpPWUdRKmtffIo1OD6Dfll3JGIziSw1stDsXiz0KhtuGy3kd9vpS4CwqwZguWcs3uEG
-         CaYqiqwcLSyiA8L314rfaauhH780shmI3tTGilQpxB+MADc1Eq9p/n3OpAQrudz4xvnl
-         +1Kg==
+        h=message-id:date:mime-version:user-agent:from:subject:to:cc
+         :references:content-language:in-reply-to:content-transfer-encoding;
+        bh=K2d011P8KfcYwwiHkCEUfdA6HfAgaJe5w6mALwX0ubY=;
+        b=ucopxF9WfhVVHWRqZ21ScpWY3F6vUeftNTSf7toMamrheU0OxvUcaaprhBe62s1n6f
+         BqKhFXXKeG3P27w76cKmJ8S58bNyKrj9iB9MutS65aXrnRUDQMPgtk78QOqLaxKTJVgg
+         jCElShjmCrninAIOEh0HkazA1QytgiAb3/ylLwDsMCfpHdwPWpdK0wu0EU0WuHnGAX7b
+         VzyQpskFimFQ/P20V1oMC+fOFshJ0YgCRkk9wO4Pom6O40sGavzvkSe9J3DVn4mNIHZY
+         IODiJtXsb8FzKtweUwAVQcyz7029ke5hIhdXaVinNFcaRH2JaEm9psZ2+oq9F+Momo7a
+         kwMQ==
 Content-Language: en-US
 In-Reply-To: <YmdeCqi6wmgiSiWh@carbon>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Vlastimil Babka <vbabka@suse.cz>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <roman.gushchin@linux.dev>
+Cc: kernel@openvz.org, Florian Westphal <fw@strlen.de>, linux-kernel@vger.kernel.org, Michal Hocko <mhocko@suse.com>, cgroups@vger.kernel.org, netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>
 
-On 4/26/22 05:50, Roman Gushchin wrote:
-> On Mon, Apr 25, 2022 at 01:56:02PM +0300, Vasily Averin wrote:
->> +
->> +static inline struct mem_cgroup *get_net_memcg(void *p)
->> +{
->> +	struct mem_cgroup *memcg;
->> +
->> +	memcg = get_mem_cgroup_from_kmem(p);
->> +
->> +	if (!memcg)
->> +		memcg = root_mem_cgroup;
->> +
->> +	return memcg;
->> +}
-> 
-> I'm not a fan of this helper: it has nothing to do with the networking,
-> actually it's a wrapper of get_mem_cgroup_from_kmem() replacing NULL
-> with root_mem_cgroup.
-> 
-> Overall the handling of root_mem_cgroup is very messy, I don't blame
-> this patch. But I wonder if it's better to simple move this code
-> to the call site without introducing a new function?
+__register_pernet_operations() executes init hook of registered
+pernet_operation structure in all existing net namespaces.
 
-Unfortunately root_mem_cgroup is defined under CONFIG_MEMCG,
-so we cannot use it outside without ifdefs.
+Typically, these hooks are called by a process associated with
+the specified net namespace, and all __GFP_ACCOUNT marked
+allocation are accounted for corresponding container/memcg.
 
-> Alternatively, you can introduce something like:
-> struct mem_cgroup *mem_cgroup_or_root(struct mem_cgroup *memcg)
-> {
-> 	return memcg ? memcg : root_mem_cgroup;
-> }
+However __register_pernet_operations() calls the hooks in the same
+context, and as a result all marked allocations are accounted
+to one memcg for all processed net namespaces.
 
-Thank you for the hint, this looks much better.
-	Vasily Averin
+This patch adjusts active memcg for each net namespace and helps
+to account memory allocated inside ops_init() into the proper memcg.
+
+Signed-off-by: Vasily Averin <vvs@openvz.org>
+---
+v4: get_mem_cgroup_from_kmem() renamed to get_mem_cgroup_from_obj(),
+    get_net_memcg() replaced by mem_cgroup_or_root(), suggested by Roman.
+
+v3: put_net_memcg() replaced by an alreay existing mem_cgroup_put()
+    It checks memcg before accessing it, this is required for
+    __register_pernet_operations() called before memcg initialization.
+    Additionally fixed leading whitespaces in non-memcg_kmem version
+    of mem_cgroup_from_obj().
+
+v2: introduced get/put_net_memcg(),
+    new functions are moved under CONFIG_MEMCG_KMEM
+    to fix compilation issues reported by Intel's kernel test robot
+
+v1: introduced get_mem_cgroup_from_kmem(), which takes the refcount
+    for the found memcg, suggested by Shakeel
+---
+ include/linux/memcontrol.h | 27 ++++++++++++++++++++++++++-
+ net/core/net_namespace.c   |  7 +++++++
+ 2 files changed, 33 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 0abbd685703b..6dd4ed7d3b6f 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1714,6 +1714,22 @@ static inline int memcg_cache_id(struct mem_cgroup *memcg)
+ 
+ struct mem_cgroup *mem_cgroup_from_obj(void *p);
+ 
++static inline struct mem_cgroup *get_mem_cgroup_from_obj(void *p)
++{
++	struct mem_cgroup *memcg;
++
++	rcu_read_lock();
++	do {
++		memcg = mem_cgroup_from_obj(p);
++	} while (memcg && !css_tryget(&memcg->css));
++	rcu_read_unlock();
++	return memcg;
++}
++
++static inline struct mem_cgroup *mem_cgroup_or_root(struct mem_cgroup *memcg)
++{
++	return memcg ? memcg : root_mem_cgroup;
++}
+ #else
+ static inline bool mem_cgroup_kmem_disabled(void)
+ {
+@@ -1763,9 +1779,18 @@ static inline void memcg_put_cache_ids(void)
+ 
+ static inline struct mem_cgroup *mem_cgroup_from_obj(void *p)
+ {
+-       return NULL;
++	return NULL;
+ }
+ 
++static inline struct mem_cgroup *get_mem_cgroup_from_obj(void *p)
++{
++	return NULL;
++}
++
++static inline struct mem_cgroup *mem_cgroup_or_root(struct mem_cgroup *memcg)
++{
++	return NULL;
++}
+ #endif /* CONFIG_MEMCG_KMEM */
+ 
+ #endif /* _LINUX_MEMCONTROL_H */
+diff --git a/net/core/net_namespace.c b/net/core/net_namespace.c
+index a5b5bb99c644..240f3db77dec 100644
+--- a/net/core/net_namespace.c
++++ b/net/core/net_namespace.c
+@@ -26,6 +26,7 @@
+ #include <net/net_namespace.h>
+ #include <net/netns/generic.h>
+ 
++#include <linux/sched/mm.h>
+ /*
+  *	Our network namespace constructor/destructor lists
+  */
+@@ -1147,7 +1148,13 @@ static int __register_pernet_operations(struct list_head *list,
+ 		 * setup_net() and cleanup_net() are not possible.
+ 		 */
+ 		for_each_net(net) {
++			struct mem_cgroup *old, *memcg;
++
++			memcg = mem_cgroup_or_root(get_mem_cgroup_from_obj(net));
++			old = set_active_memcg(memcg);
+ 			error = ops_init(ops, net);
++			set_active_memcg(old);
++			mem_cgroup_put(memcg);
+ 			if (error)
+ 				goto out_undo;
+ 			list_add_tail(&net->exit_list, &net_exit_list);
+-- 
+2.31.1
+
