@@ -1,64 +1,53 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH memcg v4] net: set proper memcg for net_init hooks allocations
-Date: Tue, 26 Apr 2022 22:23:32 -0700
-Message-ID: <CALvZod4oaj9MpBDVUp9KGmnqu4F3UxjXgOLkrkvmRfFjA7F1dw@mail.gmail.com>
-References: <YmdeCqi6wmgiSiWh@carbon> <33085523-a8b9-1bf6-2726-f456f59015ef@openvz.org>
+From: Jiapeng Chong <jiapeng.chong-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH] selftests: cgroup: Fix unsigned expression compared with zero
+Date: Wed, 27 Apr 2022 14:17:56 +0800
+Message-ID: <20220427061756.56893-1-jiapeng.chong@linux.alibaba.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=pwauUeBlcHvBLcNyAimJGJIhIGSQVXs8oid0dWAxNRI=;
-        b=nxABqQf6lZRKa97gncv5efuRIZgUZAdO5gy+OF4jUXCOKpj9bbJWK3r1gjH4Xw8PuN
-         ktWmeG+np9gFm5AlHfhYGoEF6hgQvbXAvE8Quf/i9hC0H/nngx/EtDJDD9UyTTDYkAJT
-         uHEDpmH3K3X7h19iV2m7d+uEYToyhrRt5/3VUYkZg4SOCqK0j5Nwhb1AdhdzECIqPo0D
-         6fiUmxExbZNRQJj1AZPLh48eAj/VDbqfjf/2RVcThYoIBxWVFZI0Gnq9jo9vnf4orWCu
-         AcfxlihjntfM/JqbBBJDAEDbfYDCrNFcrzMLq9J5zMricu4rMtwS+dqCljWdIGdyWkVj
-         vUAA==
-In-Reply-To: <33085523-a8b9-1bf6-2726-f456f59015ef@openvz.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs@openvz.org>
-Cc: Vlastimil Babka <vbabka@suse.cz>, Roman Gushchin <roman.gushchin@linux.dev>, kernel@openvz.org, Florian Westphal <fw@strlen.de>, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>, Cgroups <cgroups@vger.kernel.org>, netdev <netdev@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jiapeng Chong <jiapeng.chong-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Abaci Robot <abaci-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 
-On Mon, Apr 25, 2022 at 11:43 PM Vasily Averin <vvs@openvz.org> wrote:
->
-> __register_pernet_operations() executes init hook of registered
-> pernet_operation structure in all existing net namespaces.
->
-> Typically, these hooks are called by a process associated with
-> the specified net namespace, and all __GFP_ACCOUNT marked
-> allocation are accounted for corresponding container/memcg.
->
-> However __register_pernet_operations() calls the hooks in the same
-> context, and as a result all marked allocations are accounted
-> to one memcg for all processed net namespaces.
->
-> This patch adjusts active memcg for each net namespace and helps
-> to account memory allocated inside ops_init() into the proper memcg.
->
-> Signed-off-by: Vasily Averin <vvs@openvz.org>
+Fix the following coccicheck warnings:
 
-Acked-by: Shakeel Butt <shakeelb@google.com>
+./tools/testing/selftests/cgroup/cgroup_util.c:566:8-12: WARNING:
+Unsigned expression compared with zero: size < 0.
 
-[...]
->
-> +static inline struct mem_cgroup *get_mem_cgroup_from_obj(void *p)
-> +{
-> +       struct mem_cgroup *memcg;
-> +
+Reported-by: Abaci Robot <abaci-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Signed-off-by: Jiapeng Chong <jiapeng.chong-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+---
+ tools/testing/selftests/cgroup/cgroup_util.c | 2 +-
+ tools/testing/selftests/cgroup/cgroup_util.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Do we need memcg_kmem_enabled() check here or maybe
-mem_cgroup_from_obj() should be doing memcg_kmem_enabled() instead of
-mem_cgroup_disabled() as we can have "cgroup.memory=nokmem" boot
-param.
+diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
+index 4c52cc6f2f9c..661e06b94a43 100644
+--- a/tools/testing/selftests/cgroup/cgroup_util.c
++++ b/tools/testing/selftests/cgroup/cgroup_util.c
+@@ -552,7 +552,7 @@ int proc_mount_contains(const char *option)
+ 	return strstr(buf, option) != NULL;
+ }
+ 
+-ssize_t proc_read_text(int pid, bool thread, const char *item, char *buf, size_t size)
++ssize_t proc_read_text(int pid, bool thread, const char *item, char *buf, ssize_t size)
+ {
+ 	char path[PATH_MAX];
+ 
+diff --git a/tools/testing/selftests/cgroup/cgroup_util.h b/tools/testing/selftests/cgroup/cgroup_util.h
+index c92df4e5d395..7b3865805f50 100644
+--- a/tools/testing/selftests/cgroup/cgroup_util.h
++++ b/tools/testing/selftests/cgroup/cgroup_util.h
+@@ -53,7 +53,7 @@ extern int set_oom_adj_score(int pid, int score);
+ extern int cg_wait_for_proc_count(const char *cgroup, int count);
+ extern int cg_killall(const char *cgroup);
+ int proc_mount_contains(const char *option);
+-extern ssize_t proc_read_text(int pid, bool thread, const char *item, char *buf, size_t size);
++extern ssize_t proc_read_text(int pid, bool thread, const char *item, char *buf, ssize_t size);
+ extern int proc_read_strstr(int pid, bool thread, const char *item, const char *needle);
+ extern pid_t clone_into_cgroup(int cgroup_fd);
+ extern int clone_reap(pid_t pid, int options);
+-- 
+2.20.1.7.g153144c
 
-> +       rcu_read_lock();
-> +       do {
-> +               memcg = mem_cgroup_from_obj(p);
-> +       } while (memcg && !css_tryget(&memcg->css));
-> +       rcu_read_unlock();
-> +       return memcg;
-> +}
