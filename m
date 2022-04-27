@@ -1,68 +1,57 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3] cgroup/cpuset: Remove cpus_allowed/mems_allowed setup in cpuset_init_smp()
-Date: Wed, 27 Apr 2022 10:54:28 -0400
-Message-ID: <20220427145428.1411867-1-longman@redhat.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH memcg v4] net: set proper memcg for net_init hooks allocations
+Date: Wed, 27 Apr 2022 08:06:10 -0700
+Message-ID: <CALvZod7v0taU51TNRu=OM5iJ-bnm1ryu9shjs80PuE-SWobqFg@mail.gmail.com>
+References: <YmdeCqi6wmgiSiWh@carbon> <33085523-a8b9-1bf6-2726-f456f59015ef@openvz.org>
+ <CALvZod4oaj9MpBDVUp9KGmnqu4F3UxjXgOLkrkvmRfFjA7F1dw@mail.gmail.com> <20220427122232.GA9823@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1651071295;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=0IQvTcMEBnE+yly3Jqj1m7ej/vPl078aXENmc+H4j+E=;
-        b=SbWrfMzfDkn1DxuPq4J5ZjOQZ2etBpuIYwsVQqaFopRyh4aBjkZXsZvNaVpT4iN0oW4Z/C
-        efqX8dJZGScNCgJW5VLH1tHmP0ig/nehmGfQDHo/LsScCjHTiQFK0Qt7dtsw9RenBYvu2O
-        3Pnvm/JKAb7oEfAJR3UZ8JumX1AlAp8=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=XS75V+e2Ct78C2HTr9fzu0rvESRlSHMev5cWIVD79uw=;
+        b=r/YR+XZjsNKfW6ntLhVS2qvC7q4aKCieabb65nb4ICf0i6WPU76Rc+tkeTTxtOSp4r
+         Cp4ikH5UOnW0RwHI0VWzuKZyB2yx+/3AEW56212jW8nk916NwlrBUrYbb5yh6HFUn/3g
+         7C24RG1alHoU/CY45Nv2Q+KqmGQGYipv6EK7gRTDqW9eWMqt2je5/dYX0pSpvobCGJ2U
+         T++YUMItnBRWW3mLRtwxTf5lcgwHzksUW2ykha3mFO2hChZdUZ9YL6VgaQRSBgXZJ1CA
+         KE42kd5aMrtcbglmkWfum3XmBqsylzcpg0FRfxBDKbVvhz6YeFwQIJ/RD9fCyF/VAJ6e
+         4lcA==
+In-Reply-To: <20220427122232.GA9823-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="macroman"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-VGhlcmUgYXJlIDMgcGxhY2VzIHdoZXJlIHRoZSBjcHUgYW5kIG5vZGUgbWFza3Mgb2YgdGhlIHRv
-cCBjcHVzZXQgY2FuCmJlIGluaXRpYWxpemVkIGluIHRoZSBvcmRlciB0aGV5IGFyZSBleGVjdXRl
-ZDoKIDEpIHN0YXJ0X2tlcm5lbCAtPiBjcHVzZXRfaW5pdCgpCiAyKSBzdGFydF9rZXJuZWwgLT4g
-Y2dyb3VwX2luaXQoKSAtPiBjcHVzZXRfYmluZCgpCiAzKSBrZXJuZWxfaW5pdF9mcmVlYWJsZSgp
-IC0+IGRvX2Jhc2ljX3NldHVwKCkgLT4gY3B1c2V0X2luaXRfc21wKCkKClRoZSBmaXJzdCBjcHVz
-ZXRfaW5pdCgpIGNhbGwganVzdCBzZXRzIGFsbCB0aGUgYml0cyBpbiB0aGUgbWFza3MuClRoZSBz
-ZWNvbmQgY3B1c2V0X2JpbmQoKSBjYWxsIHNldHMgY3B1c19hbGxvd2VkIGFuZCBtZW1zX2FsbG93
-ZWQgdG8gdGhlCmRlZmF1bHQgdjIgdmFsdWVzLiBUaGUgdGhpcmQgY3B1c2V0X2luaXRfc21wKCkg
-Y2FsbCBzZXRzIHRoZW0gYmFjayB0bwp2MSB2YWx1ZXMuCgpGb3Igc3lzdGVtcyB3aXRoIGNncm91
-cCB2MiBzZXR1cCwgY3B1c2V0X2JpbmQoKSBpcyBjYWxsZWQgb25jZS4gIEFzIGEKcmVzdWx0LCBj
-cHUgYW5kIG1lbW9yeSBub2RlIGhvdCBhZGQgbWF5IGZhaWwgdG8gdXBkYXRlIHRoZSBjcHUgYW5k
-IG5vZGUKbWFza3Mgb2YgdGhlIHRvcCBjcHVzZXQgdG8gaW5jbHVkZSB0aGUgbmV3bHkgYWRkZWQg
-Y3B1IG9yIG5vZGUgaW4gYQpjZ3JvdXAgdjIgZW52aXJvbm1lbnQuCgpGb3Igc3lzdGVtcyB3aXRo
-IGNncm91cCB2MSBzZXR1cCwgY3B1c2V0X2JpbmQoKSBpcyBjYWxsZWQgYWdhaW4gYnkKcmViaW5k
-X3N1YnN5c3RlbSgpIHdoZW4gdGhlIHYxIGNwdXNldCBmaWxlc3lzdGVtIGlzIG1vdW50ZWQgYXMg
-c2hvd24KaW4gdGhlIGRtZXNnIGxvZyBiZWxvdyB3aXRoIGFuIGluc3RydW1lbnRlZCBrZXJuZWwu
-CgogIFsgICAgMi42MDk3ODFdIGNwdXNldF9iaW5kKCkgY2FsbGVkIC0gdjIgPSAxCiAgWyAgICAz
-LjA3OTQ3M10gY3B1c2V0X2luaXRfc21wKCkgY2FsbGVkCiAgWyAgICA3LjEwMzcxMF0gY3B1c2V0
-X2JpbmQoKSBjYWxsZWQgLSB2MiA9IDAKCnNtcF9pbml0KCkgaXMgY2FsbGVkIGFmdGVyIHRoZSBm
-aXJzdCB0d28gaW5pdCBmdW5jdGlvbnMuICBTbyB3ZSBkb24ndApoYXZlIGEgY29tcGxldGUgbGlz
-dCBvZiBhY3RpdmUgY3B1cyBhbmQgbWVtb3J5IG5vZGVzIHVudGlsIGxhdGVyIGluCmNwdXNldF9p
-bml0X3NtcCgpIHdoaWNoIGlzIHRoZSByaWdodCB0aW1lIHRvIHNldCB1cCBlZmZlY3RpdmVfY3B1
-cwphbmQgZWZmZWN0aXZlX21lbXMuCgpUbyBmaXggdGhpcyBjZ3JvdXAgdjIgbWFzayBzZXR1cCBw
-cm9ibGVtLCB0aGUgcG90ZW50aWFsbHkgaW5jb3JyZWN0CmNwdXNfYWxsb3dlZCAmIG1lbXNfYWxs
-b3dlZCBzZXR0aW5nIGluIGNwdXNldF9pbml0X3NtcCgpIGFyZSByZW1vdmVkLgpGb3IgY2dyb3Vw
-IHYyIHN5c3RlbXMsIHRoZSBpbml0aWFsIGNwdXNldF9iaW5kKCkgY2FsbCB3aWxsIHNldCB0aGUg
-bWFza3MKY29ycmVjdGx5LiAgRm9yIGNncm91cCB2MSBzeXN0ZW1zLCB0aGUgc2Vjb25kIGNhbGwg
-dG8gY3B1c2V0X2JpbmQoKQp3aWxsIGRvIHRoZSByaWdodCBzZXR1cC4KCmNjOiBzdGFibGUtdTc5
-dXdYTDI5VFk3Nloyck01bUhYQUBwdWJsaWMuZ21hbmUub3JnClNpZ25lZC1vZmYtYnk6IFdhaW1h
-biBMb25nIDxsb25nbWFuLUgrd1hhSHhmN2FMUVQwZFpSK0FsZkFAcHVibGljLmdtYW5lLm9yZz4K
-VGVzdGVkLWJ5OiBGZW5nIFRhbmcgPGZlbmcudGFuZy1yYWwySlFDcmh1RUF2eHRpdU13eDN3QHB1
-YmxpYy5nbWFuZS5vcmc+ClJldmlld2VkLWJ5OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueS1JQmk5
-UkcvYjY3a0BwdWJsaWMuZ21hbmUub3JnPgotLS0KIGtlcm5lbC9jZ3JvdXAvY3B1c2V0LmMgfCA3
-ICsrKysrLS0KIDEgZmlsZSBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0p
-CgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9jcHVzZXQuYyBiL2tlcm5lbC9jZ3JvdXAvY3B1
-c2V0LmMKaW5kZXggOTM5MGJmZDlmMWNkLi43MWE0MTg4NThhNWUgMTAwNjQ0Ci0tLSBhL2tlcm5l
-bC9jZ3JvdXAvY3B1c2V0LmMKKysrIGIva2VybmVsL2Nncm91cC9jcHVzZXQuYwpAQCAtMzM5MCw4
-ICszMzkwLDExIEBAIHN0YXRpYyBzdHJ1Y3Qgbm90aWZpZXJfYmxvY2sgY3B1c2V0X3RyYWNrX29u
-bGluZV9ub2Rlc19uYiA9IHsKICAqLwogdm9pZCBfX2luaXQgY3B1c2V0X2luaXRfc21wKHZvaWQp
-CiB7Ci0JY3B1bWFza19jb3B5KHRvcF9jcHVzZXQuY3B1c19hbGxvd2VkLCBjcHVfYWN0aXZlX21h
-c2spOwotCXRvcF9jcHVzZXQubWVtc19hbGxvd2VkID0gbm9kZV9zdGF0ZXNbTl9NRU1PUlldOwor
-CS8qCisJICogY3B1c19hbGxvd2QvbWVtc19hbGxvd2VkIHNldCB0byB2MiB2YWx1ZXMgaW4gdGhl
-IGluaXRpYWwKKwkgKiBjcHVzZXRfYmluZCgpIGNhbGwgd2lsbCBiZSByZXNldCB0byB2MSB2YWx1
-ZXMgaW4gYW5vdGhlcgorCSAqIGNwdXNldF9iaW5kKCkgY2FsbCB3aGVuIHYxIGNwdXNldCBpcyBt
-b3VudGVkLgorCSAqLwogCXRvcF9jcHVzZXQub2xkX21lbXNfYWxsb3dlZCA9IHRvcF9jcHVzZXQu
-bWVtc19hbGxvd2VkOwogCiAJY3B1bWFza19jb3B5KHRvcF9jcHVzZXQuZWZmZWN0aXZlX2NwdXMs
-IGNwdV9hY3RpdmVfbWFzayk7Ci0tIAoyLjI3LjAKCg==
+On Wed, Apr 27, 2022 at 5:22 AM Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org> wrote=
+:
+>
+> On Tue, Apr 26, 2022 at 10:23:32PM -0700, Shakeel Butt <shakeelb@google.c=
+om> wrote:
+> > [...]
+> > >
+> > > +static inline struct mem_cgroup *get_mem_cgroup_from_obj(void *p)
+> > > +{
+> > > +       struct mem_cgroup *memcg;
+> > > +
+> >
+> > Do we need memcg_kmem_enabled() check here or maybe
+> > mem_cgroup_from_obj() should be doing memcg_kmem_enabled() instead of
+> > mem_cgroup_disabled() as we can have "cgroup.memory=3Dnokmem" boot
+> > param.
+>
+> I reckon such a guard is on the charge side and readers should treat
+> NULL and root_mem_group equally. Or is there a case when these two are
+> different?
+>
+> (I can see it's different semantics when stored in current->active_memcg
+> (and active_memcg() getter) but for such "outer" callers like here it
+> seems equal.)
+
+I was more thinking about possible shortcut optimization and unrelated
+to this patch.
+
+Vasily, can you please add documentation for get_mem_cgroup_from_obj()
+similar to get_mem_cgroup_from_mm()? Also for mem_cgroup_or_root().
+Please note that root_mem_cgroup can be NULL during early boot.
