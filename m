@@ -1,57 +1,167 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH memcg v4] net: set proper memcg for net_init hooks allocations
-Date: Wed, 27 Apr 2022 08:06:10 -0700
-Message-ID: <CALvZod7v0taU51TNRu=OM5iJ-bnm1ryu9shjs80PuE-SWobqFg@mail.gmail.com>
-References: <YmdeCqi6wmgiSiWh@carbon> <33085523-a8b9-1bf6-2726-f456f59015ef@openvz.org>
- <CALvZod4oaj9MpBDVUp9KGmnqu4F3UxjXgOLkrkvmRfFjA7F1dw@mail.gmail.com> <20220427122232.GA9823@blackbody.suse.cz>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [PATCH 4/5] mm: zswap: add basic meminfo and vmstat coverage
+Date: Wed, 27 Apr 2022 12:00:15 -0400
+Message-ID: <20220427160016.144237-5-hannes@cmpxchg.org>
+References: <20220427160016.144237-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=XS75V+e2Ct78C2HTr9fzu0rvESRlSHMev5cWIVD79uw=;
-        b=r/YR+XZjsNKfW6ntLhVS2qvC7q4aKCieabb65nb4ICf0i6WPU76Rc+tkeTTxtOSp4r
-         Cp4ikH5UOnW0RwHI0VWzuKZyB2yx+/3AEW56212jW8nk916NwlrBUrYbb5yh6HFUn/3g
-         7C24RG1alHoU/CY45Nv2Q+KqmGQGYipv6EK7gRTDqW9eWMqt2je5/dYX0pSpvobCGJ2U
-         T++YUMItnBRWW3mLRtwxTf5lcgwHzksUW2ykha3mFO2hChZdUZ9YL6VgaQRSBgXZJ1CA
-         KE42kd5aMrtcbglmkWfum3XmBqsylzcpg0FRfxBDKbVvhz6YeFwQIJ/RD9fCyF/VAJ6e
-         4lcA==
-In-Reply-To: <20220427122232.GA9823-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=ZBgzXdZ466rlUwUQs0EI6DMIFSVYYfxcwIa0A3d1nko=;
+        b=fhTowtKO2j1gIyehsLjMg/Ft2943puC7KRcfEZIVbM5qcRk82f1+ST9TguF/qrnxuX
+         a9bXww4C8aR196N7uarXdk5H0jokAohUVeAKI/HORyHGmZ//sbuDt6+a4Qwp1azl2rUE
+         JIbm07to9H1IyQkS8DuWRRfE++12PUX7Sghe34t7kNHf57BKJBB1N2CWsKgZ9C2CMBZ7
+         e422CKVuaMPKW92Hel8KMu/yHBGk762q8V3UB3iN2J1MjkSaZaEcKTsvc7W5hDRyVK07
+         WHsfe42LQ8R/fNSho0yYxEdItM0KgOI//PeSkQ2WQ4B8zqqSFuNG6r4uzD/9r/CZiWcC
+         0SSA==
+In-Reply-To: <20220427160016.144237-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed, Apr 27, 2022 at 5:22 AM Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org> wrote=
-:
->
-> On Tue, Apr 26, 2022 at 10:23:32PM -0700, Shakeel Butt <shakeelb@google.c=
-om> wrote:
-> > [...]
-> > >
-> > > +static inline struct mem_cgroup *get_mem_cgroup_from_obj(void *p)
-> > > +{
-> > > +       struct mem_cgroup *memcg;
-> > > +
-> >
-> > Do we need memcg_kmem_enabled() check here or maybe
-> > mem_cgroup_from_obj() should be doing memcg_kmem_enabled() instead of
-> > mem_cgroup_disabled() as we can have "cgroup.memory=3Dnokmem" boot
-> > param.
->
-> I reckon such a guard is on the charge side and readers should treat
-> NULL and root_mem_group equally. Or is there a case when these two are
-> different?
->
-> (I can see it's different semantics when stored in current->active_memcg
-> (and active_memcg() getter) but for such "outer" callers like here it
-> seems equal.)
+Currently it requires poking at debugfs to figure out the size and
+population of the zswap cache on a host. There are no counters for
+reads and writes against the cache. As a result, it's difficult to
+understand zswap behavior on production systems.
 
-I was more thinking about possible shortcut optimization and unrelated
-to this patch.
+Print zswap memory consumption and how many pages are zswapped out in
+/proc/meminfo. Count zswapouts and zswapins in /proc/vmstat.
 
-Vasily, can you please add documentation for get_mem_cgroup_from_obj()
-similar to get_mem_cgroup_from_mm()? Also for mem_cgroup_or_root().
-Please note that root_mem_cgroup can be NULL during early boot.
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ fs/proc/meminfo.c             |  7 +++++++
+ include/linux/swap.h          |  5 +++++
+ include/linux/vm_event_item.h |  4 ++++
+ mm/vmstat.c                   |  4 ++++
+ mm/zswap.c                    | 13 ++++++-------
+ 5 files changed, 26 insertions(+), 7 deletions(-)
+
+diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
+index 6fa761c9cc78..6e89f0e2fd20 100644
+--- a/fs/proc/meminfo.c
++++ b/fs/proc/meminfo.c
+@@ -86,6 +86,13 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
+ 
+ 	show_val_kb(m, "SwapTotal:      ", i.totalswap);
+ 	show_val_kb(m, "SwapFree:       ", i.freeswap);
++#ifdef CONFIG_ZSWAP
++	seq_printf(m,  "Zswap:          %8lu kB\n",
++		   (unsigned long)(zswap_pool_total_size >> 10));
++	seq_printf(m,  "Zswapped:       %8lu kB\n",
++		   (unsigned long)atomic_read(&zswap_stored_pages) <<
++		   (PAGE_SHIFT - 10));
++#endif
+ 	show_val_kb(m, "Dirty:          ",
+ 		    global_node_page_state(NR_FILE_DIRTY));
+ 	show_val_kb(m, "Writeback:      ",
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index b82c196d8867..07074afa79a7 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -632,6 +632,11 @@ static inline int mem_cgroup_swappiness(struct mem_cgroup *mem)
+ }
+ #endif
+ 
++#ifdef CONFIG_ZSWAP
++extern u64 zswap_pool_total_size;
++extern atomic_t zswap_stored_pages;
++#endif
++
+ #if defined(CONFIG_SWAP) && defined(CONFIG_MEMCG) && defined(CONFIG_BLK_CGROUP)
+ extern void __cgroup_throttle_swaprate(struct page *page, gfp_t gfp_mask);
+ static inline  void cgroup_throttle_swaprate(struct page *page, gfp_t gfp_mask)
+diff --git a/include/linux/vm_event_item.h b/include/linux/vm_event_item.h
+index 5e80138ce624..1ce8fadb2b1c 100644
+--- a/include/linux/vm_event_item.h
++++ b/include/linux/vm_event_item.h
+@@ -132,6 +132,10 @@ enum vm_event_item { PGPGIN, PGPGOUT, PSWPIN, PSWPOUT,
+ #ifdef CONFIG_KSM
+ 		COW_KSM,
+ #endif
++#ifdef CONFIG_ZSWAP
++		ZSWPIN,
++		ZSWPOUT,
++#endif
+ #ifdef CONFIG_X86
+ 		DIRECT_MAP_LEVEL2_SPLIT,
+ 		DIRECT_MAP_LEVEL3_SPLIT,
+diff --git a/mm/vmstat.c b/mm/vmstat.c
+index 4a2aa2fa88db..da7e389cf33c 100644
+--- a/mm/vmstat.c
++++ b/mm/vmstat.c
+@@ -1392,6 +1392,10 @@ const char * const vmstat_text[] = {
+ #ifdef CONFIG_KSM
+ 	"cow_ksm",
+ #endif
++#ifdef CONFIG_ZSWAP
++	"zswpin",
++	"zswpout",
++#endif
+ #ifdef CONFIG_X86
+ 	"direct_map_level2_splits",
+ 	"direct_map_level3_splits",
+diff --git a/mm/zswap.c b/mm/zswap.c
+index 2c5db4cbedea..e3c16a70f533 100644
+--- a/mm/zswap.c
++++ b/mm/zswap.c
+@@ -42,9 +42,9 @@
+ * statistics
+ **********************************/
+ /* Total bytes used by the compressed storage */
+-static u64 zswap_pool_total_size;
++u64 zswap_pool_total_size;
+ /* The number of compressed pages currently stored in zswap */
+-static atomic_t zswap_stored_pages = ATOMIC_INIT(0);
++atomic_t zswap_stored_pages = ATOMIC_INIT(0);
+ /* The number of same-value filled pages currently stored in zswap */
+ static atomic_t zswap_same_filled_pages = ATOMIC_INIT(0);
+ 
+@@ -1243,6 +1243,7 @@ static int zswap_frontswap_store(unsigned type, pgoff_t offset,
+ 	/* update stats */
+ 	atomic_inc(&zswap_stored_pages);
+ 	zswap_update_total_size();
++	count_vm_event(ZSWPOUT);
+ 
+ 	return 0;
+ 
+@@ -1285,11 +1286,10 @@ static int zswap_frontswap_load(unsigned type, pgoff_t offset,
+ 		zswap_fill_page(dst, entry->value);
+ 		kunmap_atomic(dst);
+ 		ret = 0;
+-		goto freeentry;
++		goto stats;
+ 	}
+ 
+ 	if (!zpool_can_sleep_mapped(entry->pool->zpool)) {
+-
+ 		tmp = kmalloc(entry->length, GFP_ATOMIC);
+ 		if (!tmp) {
+ 			ret = -ENOMEM;
+@@ -1304,10 +1304,8 @@ static int zswap_frontswap_load(unsigned type, pgoff_t offset,
+ 		src += sizeof(struct zswap_header);
+ 
+ 	if (!zpool_can_sleep_mapped(entry->pool->zpool)) {
+-
+ 		memcpy(tmp, src, entry->length);
+ 		src = tmp;
+-
+ 		zpool_unmap_handle(entry->pool->zpool, entry->handle);
+ 	}
+ 
+@@ -1326,7 +1324,8 @@ static int zswap_frontswap_load(unsigned type, pgoff_t offset,
+ 		kfree(tmp);
+ 
+ 	BUG_ON(ret);
+-
++stats:
++	count_vm_event(ZSWPIN);
+ freeentry:
+ 	spin_lock(&tree->lock);
+ 	zswap_entry_put(tree, entry);
+-- 
+2.35.3
+
