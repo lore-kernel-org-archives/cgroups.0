@@ -1,35 +1,39 @@
-From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] memcg: enable accounting for veth queues
-Date: Wed, 27 Apr 2022 09:58:54 -0700
-Message-ID: <20220427095854.79554fab@kernel.org>
-References: <1c338b99-8133-6126-2ff2-94a4d3f26451@openvz.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH 4/5] mm: zswap: add basic meminfo and vmstat coverage
+Date: Wed, 27 Apr 2022 11:36:54 -0700
+Message-ID: <20220427113654.ef8f543d7ba279952deff6f7@linux-foundation.org>
+References: <20220427160016.144237-1-hannes@cmpxchg.org>
+        <20220427160016.144237-5-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651078736;
-        bh=FmfW5mMXWhX2Mi+Sbzj2wt7tROQxvWHwctYg2Qae4Bs=;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1651084615;
+        bh=OMICTGO/WYqPH3eg8uS6ToJj8mhJ9pJAhueCepETYGw=;
         h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=kJEVq7HesLGTQJq0kIoH1ndsPmZ40qDReAmWZS3ti4uUl2G/kn9RMhEPqshgxYuMF
-         lGJaIqTtcb4mcnCDfdf/OonSC6z2Af/PcKHGWs98w32UM1488iy1uz+ZNYkWwRKJa6
-         b+D7b6pS34Y6LmzCkItPYwixCmyXYgCoCyUF/FsOsl6rXGCVi2pR60nKFZZWOS5mXC
-         CevsIgWlc1zSpToivy+avqALh9jYDmynXs7DtjEErefOuq0UZ1/xaFJMGTqJ3GQ8pa
-         b5DVuBoD+dssYoLYK2Hfdmz9EE5QREy9P5CNDR9GAtoh18aG/O8Bx0Z4rzDpM5zw+Z
-         Iyd+tjZb5I7tg==
-In-Reply-To: <1c338b99-8133-6126-2ff2-94a4d3f26451-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+        b=mL5WuWxE1oAHwTgDVWF/ZSPjveU0MDpd5Uvw46vXoBCYn2+/LaKGjCRkzm4GlsAIM
+         7b/mKi2m9pR5S0iab7gFXcUa6WjTZ82mYZgSVkrTfOxFluiScSimCscnu58NstAxiI
+         U9cw/bYMDrCdB3fqlz02HDDXeqW1WRZ9YtXIArtE=
+In-Reply-To: <20220427160016.144237-5-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed, 27 Apr 2022 13:34:29 +0300 Vasily Averin wrote:
-> Subject: [PATCH] memcg: enable accounting for veth queues
+On Wed, 27 Apr 2022 12:00:15 -0400 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 
-This is a pure networking patch, right? The prefix should be "net: ",
-I think.
-
-> veth netdevice defines own rx queues and allocates array containing
-> up to 4095 ~750-bytes-long 'struct veth_rq' elements. Such allocation
-> is quite huge and should be accounted to memcg.
+> Currently it requires poking at debugfs to figure out the size and
+> population of the zswap cache on a host. There are no counters for
+> reads and writes against the cache. As a result, it's difficult to
+> understand zswap behavior on production systems.
 > 
-> Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+> Print zswap memory consumption and how many pages are zswapped out in
+> /proc/meminfo. Count zswapouts and zswapins in /proc/vmstat.
+
+/proc/meminfo is rather prime real estate.  Is this important enough to
+be placed in there, or should it instead be in the more lowly
+/proc/vmstat?
+
+/proc/meminfo is documented in Documentation/filesystems/proc.rst ;)
+
+That file appears to need a bit of updating for other things.
