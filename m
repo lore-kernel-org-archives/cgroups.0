@@ -1,78 +1,68 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v2] cgroup/cpuset: Remove cpus_allowed/mems_allowed setup
- in cpuset_init_smp()
-Date: Wed, 27 Apr 2022 10:33:04 -0400
-Message-ID: <3791e950-d997-23c0-07ff-909fd170d0a7@redhat.com>
-References: <20220425155505.1292896-1-longman@redhat.com>
- <20220427135324.GB9823@blackbody.suse.cz>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v3] cgroup/cpuset: Remove cpus_allowed/mems_allowed setup in cpuset_init_smp()
+Date: Wed, 27 Apr 2022 10:54:28 -0400
+Message-ID: <20220427145428.1411867-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1651069991;
+        s=mimecast20190719; t=1651071295;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=pCszdxGtpE1ozcn4mZloZJWxhovKrd6sE3m0QUQcezY=;
-        b=KHM522vAqW5YlYhVROlL1ykFj+obrSloZko7efXqFHscQrykt4p4gtkEG+nresV7Ktd/QU
-        MIlstMabkI/VKMAaQipYcEJMfCzIewYiMEctaZffEmD7WxIW+MF6eWV+KVj0kmuxVRsWn2
-        ICHvwwtPceQCzFTZuFyOVvAgueGGb1k=
-Content-Language: en-US
-In-Reply-To: <20220427135324.GB9823@blackbody.suse.cz>
+         content-transfer-encoding:content-transfer-encoding;
+        bh=0IQvTcMEBnE+yly3Jqj1m7ej/vPl078aXENmc+H4j+E=;
+        b=SbWrfMzfDkn1DxuPq4J5ZjOQZ2etBpuIYwsVQqaFopRyh4aBjkZXsZvNaVpT4iN0oW4Z/C
+        efqX8dJZGScNCgJW5VLH1tHmP0ig/nehmGfQDHo/LsScCjHTiQFK0Qt7dtsw9RenBYvu2O
+        3Pnvm/JKAb7oEfAJR3UZ8JumX1AlAp8=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Feng Tang <feng.tang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Dave Hansen <dave.hansen@intel.com>, ying.huang@intel.com, stable@vger.kernel.org
+Content-Type: text/plain; charset="macroman"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 4/27/22 09:53, Michal Koutný wrote:
-> Hello.
->
-> On Mon, Apr 25, 2022 at 11:55:05AM -0400, Waiman Long <longman@redhat.com> wrote:
->> smp_init() is called after the first two init functions.  So we don't
->> have a complete list of active cpus and memory nodes until later in
->> cpuset_init_smp() which is the right time to set up effective_cpus
->> and effective_mems.
-> Yes.
->
-> 	setup_arch
-> 	  prefill_possible_map
-> 	cpuset_init (1)
-> 	cgroup_init
-> 	  cpuset_bind (2a)
-> 	...
-> 	kernel_init
-> 	  kernel_init_freeable
-> 	    ...
-> 	      cpuset_init_smp (3)
-> 	...
-> 	...
-> 	cpuset_bind (2b)
->
->
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index 9390bfd9f1cd..6bd8f5ef40fe 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -3390,8 +3390,9 @@ static struct notifier_block cpuset_track_online_nodes_nb = {
->>    */
->>   void __init cpuset_init_smp(void)
->>   {
->> -	cpumask_copy(top_cpuset.cpus_allowed, cpu_active_mask);
->> -	top_cpuset.mems_allowed = node_states[N_MEMORY];
->> +	/*
->> +	 * cpus_allowd/mems_allowed will be properly set up in cpuset_bind().
->> +	 */
-> IIUC, the comment should say
->
->> +	 * cpus_allowed/mems_allowed were (v2) or will be (v1) properly set up in cpuset_bind().
-> (nit)
->
-> Reviewed-by: Michal Koutný <mkoutny@suse.com>
->
-Thanks for the review. I plan to post v3 with updated commit log and 
-comment soon.
-
-Cheers,
-Longman
-
+VGhlcmUgYXJlIDMgcGxhY2VzIHdoZXJlIHRoZSBjcHUgYW5kIG5vZGUgbWFza3Mgb2YgdGhlIHRv
+cCBjcHVzZXQgY2FuCmJlIGluaXRpYWxpemVkIGluIHRoZSBvcmRlciB0aGV5IGFyZSBleGVjdXRl
+ZDoKIDEpIHN0YXJ0X2tlcm5lbCAtPiBjcHVzZXRfaW5pdCgpCiAyKSBzdGFydF9rZXJuZWwgLT4g
+Y2dyb3VwX2luaXQoKSAtPiBjcHVzZXRfYmluZCgpCiAzKSBrZXJuZWxfaW5pdF9mcmVlYWJsZSgp
+IC0+IGRvX2Jhc2ljX3NldHVwKCkgLT4gY3B1c2V0X2luaXRfc21wKCkKClRoZSBmaXJzdCBjcHVz
+ZXRfaW5pdCgpIGNhbGwganVzdCBzZXRzIGFsbCB0aGUgYml0cyBpbiB0aGUgbWFza3MuClRoZSBz
+ZWNvbmQgY3B1c2V0X2JpbmQoKSBjYWxsIHNldHMgY3B1c19hbGxvd2VkIGFuZCBtZW1zX2FsbG93
+ZWQgdG8gdGhlCmRlZmF1bHQgdjIgdmFsdWVzLiBUaGUgdGhpcmQgY3B1c2V0X2luaXRfc21wKCkg
+Y2FsbCBzZXRzIHRoZW0gYmFjayB0bwp2MSB2YWx1ZXMuCgpGb3Igc3lzdGVtcyB3aXRoIGNncm91
+cCB2MiBzZXR1cCwgY3B1c2V0X2JpbmQoKSBpcyBjYWxsZWQgb25jZS4gIEFzIGEKcmVzdWx0LCBj
+cHUgYW5kIG1lbW9yeSBub2RlIGhvdCBhZGQgbWF5IGZhaWwgdG8gdXBkYXRlIHRoZSBjcHUgYW5k
+IG5vZGUKbWFza3Mgb2YgdGhlIHRvcCBjcHVzZXQgdG8gaW5jbHVkZSB0aGUgbmV3bHkgYWRkZWQg
+Y3B1IG9yIG5vZGUgaW4gYQpjZ3JvdXAgdjIgZW52aXJvbm1lbnQuCgpGb3Igc3lzdGVtcyB3aXRo
+IGNncm91cCB2MSBzZXR1cCwgY3B1c2V0X2JpbmQoKSBpcyBjYWxsZWQgYWdhaW4gYnkKcmViaW5k
+X3N1YnN5c3RlbSgpIHdoZW4gdGhlIHYxIGNwdXNldCBmaWxlc3lzdGVtIGlzIG1vdW50ZWQgYXMg
+c2hvd24KaW4gdGhlIGRtZXNnIGxvZyBiZWxvdyB3aXRoIGFuIGluc3RydW1lbnRlZCBrZXJuZWwu
+CgogIFsgICAgMi42MDk3ODFdIGNwdXNldF9iaW5kKCkgY2FsbGVkIC0gdjIgPSAxCiAgWyAgICAz
+LjA3OTQ3M10gY3B1c2V0X2luaXRfc21wKCkgY2FsbGVkCiAgWyAgICA3LjEwMzcxMF0gY3B1c2V0
+X2JpbmQoKSBjYWxsZWQgLSB2MiA9IDAKCnNtcF9pbml0KCkgaXMgY2FsbGVkIGFmdGVyIHRoZSBm
+aXJzdCB0d28gaW5pdCBmdW5jdGlvbnMuICBTbyB3ZSBkb24ndApoYXZlIGEgY29tcGxldGUgbGlz
+dCBvZiBhY3RpdmUgY3B1cyBhbmQgbWVtb3J5IG5vZGVzIHVudGlsIGxhdGVyIGluCmNwdXNldF9p
+bml0X3NtcCgpIHdoaWNoIGlzIHRoZSByaWdodCB0aW1lIHRvIHNldCB1cCBlZmZlY3RpdmVfY3B1
+cwphbmQgZWZmZWN0aXZlX21lbXMuCgpUbyBmaXggdGhpcyBjZ3JvdXAgdjIgbWFzayBzZXR1cCBw
+cm9ibGVtLCB0aGUgcG90ZW50aWFsbHkgaW5jb3JyZWN0CmNwdXNfYWxsb3dlZCAmIG1lbXNfYWxs
+b3dlZCBzZXR0aW5nIGluIGNwdXNldF9pbml0X3NtcCgpIGFyZSByZW1vdmVkLgpGb3IgY2dyb3Vw
+IHYyIHN5c3RlbXMsIHRoZSBpbml0aWFsIGNwdXNldF9iaW5kKCkgY2FsbCB3aWxsIHNldCB0aGUg
+bWFza3MKY29ycmVjdGx5LiAgRm9yIGNncm91cCB2MSBzeXN0ZW1zLCB0aGUgc2Vjb25kIGNhbGwg
+dG8gY3B1c2V0X2JpbmQoKQp3aWxsIGRvIHRoZSByaWdodCBzZXR1cC4KCmNjOiBzdGFibGUtdTc5
+dXdYTDI5VFk3Nloyck01bUhYQUBwdWJsaWMuZ21hbmUub3JnClNpZ25lZC1vZmYtYnk6IFdhaW1h
+biBMb25nIDxsb25nbWFuLUgrd1hhSHhmN2FMUVQwZFpSK0FsZkFAcHVibGljLmdtYW5lLm9yZz4K
+VGVzdGVkLWJ5OiBGZW5nIFRhbmcgPGZlbmcudGFuZy1yYWwySlFDcmh1RUF2eHRpdU13eDN3QHB1
+YmxpYy5nbWFuZS5vcmc+ClJldmlld2VkLWJ5OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueS1JQmk5
+UkcvYjY3a0BwdWJsaWMuZ21hbmUub3JnPgotLS0KIGtlcm5lbC9jZ3JvdXAvY3B1c2V0LmMgfCA3
+ICsrKysrLS0KIDEgZmlsZSBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0p
+CgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9jcHVzZXQuYyBiL2tlcm5lbC9jZ3JvdXAvY3B1
+c2V0LmMKaW5kZXggOTM5MGJmZDlmMWNkLi43MWE0MTg4NThhNWUgMTAwNjQ0Ci0tLSBhL2tlcm5l
+bC9jZ3JvdXAvY3B1c2V0LmMKKysrIGIva2VybmVsL2Nncm91cC9jcHVzZXQuYwpAQCAtMzM5MCw4
+ICszMzkwLDExIEBAIHN0YXRpYyBzdHJ1Y3Qgbm90aWZpZXJfYmxvY2sgY3B1c2V0X3RyYWNrX29u
+bGluZV9ub2Rlc19uYiA9IHsKICAqLwogdm9pZCBfX2luaXQgY3B1c2V0X2luaXRfc21wKHZvaWQp
+CiB7Ci0JY3B1bWFza19jb3B5KHRvcF9jcHVzZXQuY3B1c19hbGxvd2VkLCBjcHVfYWN0aXZlX21h
+c2spOwotCXRvcF9jcHVzZXQubWVtc19hbGxvd2VkID0gbm9kZV9zdGF0ZXNbTl9NRU1PUlldOwor
+CS8qCisJICogY3B1c19hbGxvd2QvbWVtc19hbGxvd2VkIHNldCB0byB2MiB2YWx1ZXMgaW4gdGhl
+IGluaXRpYWwKKwkgKiBjcHVzZXRfYmluZCgpIGNhbGwgd2lsbCBiZSByZXNldCB0byB2MSB2YWx1
+ZXMgaW4gYW5vdGhlcgorCSAqIGNwdXNldF9iaW5kKCkgY2FsbCB3aGVuIHYxIGNwdXNldCBpcyBt
+b3VudGVkLgorCSAqLwogCXRvcF9jcHVzZXQub2xkX21lbXNfYWxsb3dlZCA9IHRvcF9jcHVzZXQu
+bWVtc19hbGxvd2VkOwogCiAJY3B1bWFza19jb3B5KHRvcF9jcHVzZXQuZWZmZWN0aXZlX2NwdXMs
+IGNwdV9hY3RpdmVfbWFzayk7Ci0tIAoyLjI3LjAKCg==
