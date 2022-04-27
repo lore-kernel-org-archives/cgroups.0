@@ -1,69 +1,72 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
+From: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 4/5] mm: zswap: add basic meminfo and vmstat coverage
-Date: Wed, 27 Apr 2022 15:51:55 -0400
-Message-ID: <Ymme244DTWy/tAli@cmpxchg.org>
+Date: Wed, 27 Apr 2022 13:29:34 -0700
+Message-ID: <Ymmnrkn0mSWcuvmH@google.com>
 References: <20220427160016.144237-1-hannes@cmpxchg.org>
  <20220427160016.144237-5-hannes@cmpxchg.org>
- <20220427113654.ef8f543d7ba279952deff6f7@linux-foundation.org>
- <YmmRFOXJsjLj4a7T@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=5hVT2KZy0tNO5QjzJ5BALuuraIswglFaGXimoEvq+80=;
-        b=RoLeBSaeDEDxPoktV5qrOLc4/I2Dx+LTpNZ7Wj6fyQ77YMNwSeXgLPRJ1qSONbpqLR
-         mHqNHPCRGKYe4R+86xtlO2LmdTXr+KGN3o2tP5wf1HtVfe2yfZhPfgKQ/S0pSXjGeWkc
-         mxQ86Ev3GYvi7pRNES2AeprnQeaQfkrJsRuJwSjC6LRlRdwc3/TvxRjyMO+O/MRok5Px
-         FhRWQcQ5QwoUtjRBdLtHkOqa6ia+JwES89j3PzlUKwIvB9YocPRIFt9yXcpXWS0SHeAa
-         OYC3h+xkoY6Sima1XoDlvOxF49Whe+96OBjV3uqLt3BX1y19vbvUsaastqGEdSSxG0RR
-         66Pg==
+        bh=KjZdJc+2UDuaCV9hUSLVuNI4CiOYxCjI+J/98h/W9G4=;
+        b=Tac3djEA5bXqIgvvbxyz8RUsVLAM/lkHxNcYv/gitY3QhUpuLEKTucRMeN/6RsXCGY
+         o+ND4wPwR7gIoVajI8XzV34aqcMZYBllRJa5CVXDwBN9THDIzgLL7016DHdilf1gzjMz
+         JBJSBtSylrg2tT/vIHuAsyDgpuPlKRq43zYsflK5fOqXp1BiJE+1A1+Mu1h/oSLoWtio
+         2hWay8lfn1y8G5t3h/vJ5ZSoxP6MHkL/FCYcr4gUwQao3/hJOqIu6jF52DW8/vVqxW3u
+         bDaHlEKJ801uxbQhxfssVyszMyKhnTbbk9wfJf/4+AJLMyhhD4fHNXagJ1XlR7rrf97D
+         RTNw==
+Sender: Minchan Kim <minchan.kim-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <YmmRFOXJsjLj4a7T@cmpxchg.org>
+In-Reply-To: <20220427160016.144237-5-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Seth Jennings <sjenning@redhat.com>, Dan Streetman <ddstreet@ieee.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed, Apr 27, 2022 at 02:53:10PM -0400, Johannes Weiner wrote:
-> [...] and a delta fixlet for 4/5.
+Hi Johannes,
 
-From 35851ad3ddbf30122d755bdf8abea6dc188492a2 Mon Sep 17 00:00:00 2001
-From: Johannes Weiner <hannes@cmpxchg.org>
-Date: Wed, 27 Apr 2022 15:44:23 -0400
-Subject: [PATCH 6/7] mm: zswap: add basic meminfo and vmstat coverage fix
+On Wed, Apr 27, 2022 at 12:00:15PM -0400, Johannes Weiner wrote:
+> Currently it requires poking at debugfs to figure out the size and
+> population of the zswap cache on a host. There are no counters for
+> reads and writes against the cache. As a result, it's difficult to
+> understand zswap behavior on production systems.
+> 
+> Print zswap memory consumption and how many pages are zswapped out in
+> /proc/meminfo. Count zswapouts and zswapins in /proc/vmstat.
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> ---
+>  fs/proc/meminfo.c             |  7 +++++++
+>  include/linux/swap.h          |  5 +++++
+>  include/linux/vm_event_item.h |  4 ++++
+>  mm/vmstat.c                   |  4 ++++
+>  mm/zswap.c                    | 13 ++++++-------
+>  5 files changed, 26 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
+> index 6fa761c9cc78..6e89f0e2fd20 100644
+> --- a/fs/proc/meminfo.c
+> +++ b/fs/proc/meminfo.c
+> @@ -86,6 +86,13 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
+>  
+>  	show_val_kb(m, "SwapTotal:      ", i.totalswap);
+>  	show_val_kb(m, "SwapFree:       ", i.freeswap);
+> +#ifdef CONFIG_ZSWAP
+> +	seq_printf(m,  "Zswap:          %8lu kB\n",
+> +		   (unsigned long)(zswap_pool_total_size >> 10));
+> +	seq_printf(m,  "Zswapped:       %8lu kB\n",
+> +		   (unsigned long)atomic_read(&zswap_stored_pages) <<
+> +		   (PAGE_SHIFT - 10));
+> +#endif
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- Documentation/filesystems/proc.rst | 6 ++++++
- 1 file changed, 6 insertions(+)
+I agree it would be very handy to have the memory consumption in meminfo
 
-diff --git a/Documentation/filesystems/proc.rst b/Documentation/filesystems/proc.rst
-index 736ed384750c..8b5a94cfa722 100644
---- a/Documentation/filesystems/proc.rst
-+++ b/Documentation/filesystems/proc.rst
-@@ -964,6 +964,8 @@ Example output. You may not have all of these fields.
-     Mlocked:               0 kB
-     SwapTotal:             0 kB
-     SwapFree:              0 kB
-+    Zswap:              1904 kB
-+    Zswapped:           7792 kB
-     Dirty:                12 kB
-     Writeback:             0 kB
-     AnonPages:       4654780 kB
-@@ -1055,6 +1057,10 @@ SwapTotal
- SwapFree
-               Memory which has been evicted from RAM, and is temporarily
-               on the disk
-+Zswap
-+              Memory consumed by the zswap backend (compressed size)
-+Zswapped
-+              Amount of anonymous memory stored in zswap (original size)
- Dirty
-               Memory which is waiting to get written back to the disk
- Writeback
--- 
-2.35.3
+https://lore.kernel.org/all/YYwZXrL3Fu8%2FvLZw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
 
+If we really go this Zswap only metric instead of general term
+"Compressed", I'd like to post maybe "Zram:" with same reason
+in this patchset. Do you think that's better idea instead of
+introducing general term like "Compressed:" or something else?
