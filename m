@@ -1,121 +1,42 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH -next v3 0/3] support concurrent sync io for bfq on a specail occasion
-Date: Wed, 27 Apr 2022 20:47:19 +0800
-Message-ID: <20220427124722.48465-1-yukuai3@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH -next v3 3/3] block, bfq: do not idle if only one group is activated
+Date: Wed, 27 Apr 2022 20:47:22 +0800
+Message-ID: <20220427124722.48465-4-yukuai3@huawei.com>
+References: <20220427124722.48465-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20220427124722.48465-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: jack@suse.cz, tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+To: jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Changes in v3:
- - remove the cleanup patch that is irrelevant now(I'll post it
-   separately).
- - instead of hacking wr queues and using weights tree insertion/removal,
-   using bfq_add/del_bfqq_busy() to count the number of groups
-   (suggested by Jan Kara).
+Now that root group is counted into 'num_groups_with_busy_queues',
+'num_groups_with_busy_queues > 0' is always true in
+bfq_asymmetric_scenario(). Thus change the condition to '> 1'.
 
-Changes in v2:
- - Use a different approch to count root group, which is much simple.
-
-Currently, bfq can't handle sync io concurrently as long as they
-are not issued from root group. This is because
-'bfqd->num_groups_with_pending_reqs > 0' is always true in
-bfq_asymmetric_scenario().
-
-The way that bfqg is counted into 'num_groups_with_pending_reqs':
-
-Before this patchset:
- 1) root group will never be counted.
- 2) Count if bfqg or it's child bfqgs have pending requests.
- 3) Don't count if bfqg and it's child bfqgs complete all the requests.
-
-After this patchset:
- 1) root group is counted.
- 2) Count if bfqg have at least one bfqq that is marked busy.
- 3) Don't count if bfqg doesn't have any busy bfqqs.
-
-The main reason to use busy state of bfqq instead of 'pending requests'
-is that bfqq can stay busy after dispatching the last request if idling
-is needed for service guarantees.
-
-With the above changes, concurrent sync io can be supported if only
+On the other hand, this change can enable concurrent sync io if only
 one group is activated.
 
-fio test script(startdelay is used to avoid queue merging):
-[global]
-filename=/dev/nvme0n1
-allow_mounted_write=0
-ioengine=psync
-direct=1
-ioscheduler=bfq
-offset_increment=10g
-group_reporting
-rw=randwrite
-bs=4k
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ block/bfq-iosched.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-[test1]
-numjobs=1
-
-[test2]
-startdelay=1
-numjobs=1
-
-[test3]
-startdelay=2
-numjobs=1
-
-[test4]
-startdelay=3
-numjobs=1
-
-[test5]
-startdelay=4
-numjobs=1
-
-[test6]
-startdelay=5
-numjobs=1
-
-[test7]
-startdelay=6
-numjobs=1
-
-[test8]
-startdelay=7
-numjobs=1
-
-test result:
-running fio on root cgroup
-v5.18-rc1:	   550 Mib/s
-v5.18-rc1-patched: 550 Mib/s
-
-running fio on non-root cgroup
-v5.18-rc1:	   349 Mib/s
-v5.18-rc1-patched: 550 Mib/s
-
-Note that I also test null_blk with "irqmode=2
-completion_nsec=100000000(100ms) hw_queue_depth=1", and tests show
-that service guarantees are still preserved.
-
-Previous versions:
-RFC: https://lore.kernel.org/all/20211127101132.486806-1-yukuai3@huawei.com/
-v1: https://lore.kernel.org/all/20220305091205.4188398-1-yukuai3@huawei.com/
-v2: https://lore.kernel.org/all/20220416093753.3054696-1-yukuai3@huawei.com/
-
-Yu Kuai (3):
-  block, bfq: record how many queues are busy in bfq_group
-  block, bfq: refactor the counting of 'num_groups_with_pending_reqs'
-  block, bfq: do not idle if only one group is activated
-
- block/bfq-cgroup.c  |  1 +
- block/bfq-iosched.c | 46 ++------------------------------------
- block/bfq-iosched.h | 54 ++++++++-------------------------------------
- block/bfq-wf2q.c    | 29 +++++++++++++-----------
- 4 files changed, 28 insertions(+), 102 deletions(-)
-
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index 609b4e894684..aeba9001da0b 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -844,7 +844,7 @@ static bool bfq_asymmetric_scenario(struct bfq_data *bfqd,
+ 
+ 	return varied_queue_weights || multiple_classes_busy
+ #ifdef CONFIG_BFQ_GROUP_IOSCHED
+-	       || bfqd->num_groups_with_busy_queues > 0
++	       || bfqd->num_groups_with_busy_queues > 1
+ #endif
+ 		;
+ }
 -- 
 2.31.1
 
