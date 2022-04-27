@@ -1,135 +1,71 @@
-From: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 4/5] mm: zswap: add basic meminfo and vmstat coverage
-Date: Wed, 27 Apr 2022 15:16:48 -0700
-Message-ID: <YmnA0Da90IURbxrM@google.com>
-References: <20220427160016.144237-1-hannes@cmpxchg.org>
- <20220427160016.144237-5-hannes@cmpxchg.org>
- <Ymmnrkn0mSWcuvmH@google.com>
- <YmmznQ8AO5RLxicA@cmpxchg.org>
+From: Vasily Averin <vvs@openvz.org>
+Subject: Re: [PATCH memcg v4] net: set proper memcg for net_init hooks
+ allocations
+Date: Thu, 28 Apr 2022 01:16:53 +0300
+Message-ID: <6b18f82d-1950-b38e-f3f5-94f6c23f0edb@openvz.org>
+References: <YmdeCqi6wmgiSiWh@carbon>
+ <33085523-a8b9-1bf6-2726-f456f59015ef@openvz.org>
+ <CALvZod4oaj9MpBDVUp9KGmnqu4F3UxjXgOLkrkvmRfFjA7F1dw@mail.gmail.com>
+ <20220427122232.GA9823@blackbody.suse.cz>
+ <CALvZod7v0taU51TNRu=OM5iJ-bnm1ryu9shjs80PuE-SWobqFg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=2RoFaE1ytRBTyXgweqhP00vnNCFBWuqPT9MahXuxpik=;
-        b=TXgc7SpRW4PY86E79NxGxT/h7KY/SJkkCDx3kBxe7VJ98gCHJ86n8sPgZeFo9p/O6c
-         ulCHi53fjQKhKCqe6S8lFxfrbHxZSPxC9kPYHdh9+c7XDZzS90uxFvp3agkHKJe+0Or4
-         TjPdNh5MxypqyG2xi3F8z3EmdTA8UGKCgbLbVVRingY9D+XGHRAAKkVkIzyMOv1Xm7zG
-         o6Lh4eMvgjkeCHqaZVNCdpuAg0SQ+/QSpPpaAhH2UOBGT49H1VSN3WZwbOTPsqSlhU8T
-         DtrssrAqFHr5TMYpTrQpCvE345AEgT292jIPY3U2lbtqPLbIX4Ftn6BAxNnUcj2onBFZ
-         pnFA==
-Sender: Minchan Kim <minchan.kim-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <YmmznQ8AO5RLxicA-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        d=openvz-org.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=oLug1+azcE2h7QMeDbpYAnTwrafPSTpRFVPk0zNJveg=;
+        b=zI/nSf1n1K3Do1i5nBCb7lwViY+DJKmUvfVcoGHl/Q5SvQj83PNn1mVYoRuClPrpw9
+         sCkAImuE2tFKtQFVPcYA9jGml9m/Bwy/ymA5Te4m1zi4dRCXKacQNmNJgYeS0VEfkWbh
+         FvpiNqvdCThOvFYOiROhJZSsBkCxP0ox1W6C1im3DrClwe4LGTwoTkmKjqIyNiDE7bF0
+         IWrLpdiZfx31n46ZBikenK9K101cENCfFgSuYqLOkJ+QkFHBJEC++7GoEDz9r43mo8AA
+         LxJWR0R9yV0SBiYBa/bFhSnWkwE1pEHgs0W4l9FVYG8LeYNpO4bMEe33NvulIrzx7+7e
+         S/ew==
+Content-Language: en-US
+In-Reply-To: <CALvZod7v0taU51TNRu=OM5iJ-bnm1ryu9shjs80PuE-SWobqFg@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: Shakeel Butt <shakeelb@google.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Cc: Vlastimil Babka <vbabka@suse.cz>, Roman Gushchin <roman.gushchin@linux.dev>, kernel@openvz.org, Florian Westphal <fw@strlen.de>, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@suse.com>, Cgroups <cgroups@vger.kernel.org>, netdev <netdev@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>
 
-On Wed, Apr 27, 2022 at 05:20:29PM -0400, Johannes Weiner wrote:
-> On Wed, Apr 27, 2022 at 01:29:34PM -0700, Minchan Kim wrote:
-> > Hi Johannes,
-> > 
-> > On Wed, Apr 27, 2022 at 12:00:15PM -0400, Johannes Weiner wrote:
-> > > Currently it requires poking at debugfs to figure out the size and
-> > > population of the zswap cache on a host. There are no counters for
-> > > reads and writes against the cache. As a result, it's difficult to
-> > > understand zswap behavior on production systems.
-> > > 
-> > > Print zswap memory consumption and how many pages are zswapped out in
-> > > /proc/meminfo. Count zswapouts and zswapins in /proc/vmstat.
-> > > 
-> > > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> > > ---
-> > >  fs/proc/meminfo.c             |  7 +++++++
-> > >  include/linux/swap.h          |  5 +++++
-> > >  include/linux/vm_event_item.h |  4 ++++
-> > >  mm/vmstat.c                   |  4 ++++
-> > >  mm/zswap.c                    | 13 ++++++-------
-> > >  5 files changed, 26 insertions(+), 7 deletions(-)
-> > > 
-> > > diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
-> > > index 6fa761c9cc78..6e89f0e2fd20 100644
-> > > --- a/fs/proc/meminfo.c
-> > > +++ b/fs/proc/meminfo.c
-> > > @@ -86,6 +86,13 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
-> > >  
-> > >  	show_val_kb(m, "SwapTotal:      ", i.totalswap);
-> > >  	show_val_kb(m, "SwapFree:       ", i.freeswap);
-> > > +#ifdef CONFIG_ZSWAP
-> > > +	seq_printf(m,  "Zswap:          %8lu kB\n",
-> > > +		   (unsigned long)(zswap_pool_total_size >> 10));
-> > > +	seq_printf(m,  "Zswapped:       %8lu kB\n",
-> > > +		   (unsigned long)atomic_read(&zswap_stored_pages) <<
-> > > +		   (PAGE_SHIFT - 10));
-> > > +#endif
-> > 
-> > I agree it would be very handy to have the memory consumption in meminfo
-> > 
-> > https://lore.kernel.org/all/YYwZXrL3Fu8%2FvLZw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
-> > 
-> > If we really go this Zswap only metric instead of general term
-> > "Compressed", I'd like to post maybe "Zram:" with same reason
-> > in this patchset. Do you think that's better idea instead of
-> > introducing general term like "Compressed:" or something else?
-> 
-> I'm fine with changing it to Compressed. If somebody cares about a
-> more detailed breakdown, we can add Zswap, Zram subsets as needed.
-
-Thanks! Please consider ZSWPIN to rename more general term, too.
-
-> 
-> From 8e9e2d6490b7082c41743fbdb9ffd2db4e3ce962 Mon Sep 17 00:00:00 2001
-> From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Date: Wed, 27 Apr 2022 17:15:15 -0400
-> Subject: [PATCH] mm: zswap: add basic meminfo and vmstat coverage fix fix
-> 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> ---
->  Documentation/filesystems/proc.rst | 7 ++++---
->  fs/proc/meminfo.c                  | 2 +-
->  2 files changed, 5 insertions(+), 4 deletions(-)
-> 
-> diff --git a/Documentation/filesystems/proc.rst b/Documentation/filesystems/proc.rst
-> index 8b5a94cfa722..93edcf233464 100644
-> --- a/Documentation/filesystems/proc.rst
-> +++ b/Documentation/filesystems/proc.rst
-> @@ -964,7 +964,7 @@ Example output. You may not have all of these fields.
->      Mlocked:               0 kB
->      SwapTotal:             0 kB
->      SwapFree:              0 kB
-> -    Zswap:              1904 kB
-> +    Compressed:         1904 kB
->      Zswapped:           7792 kB
->      Dirty:                12 kB
->      Writeback:             0 kB
-> @@ -1057,8 +1057,9 @@ SwapTotal
->  SwapFree
->                Memory which has been evicted from RAM, and is temporarily
->                on the disk
-> -Zswap
-> -              Memory consumed by the zswap backend (compressed size)
-> +Compressed
-> +              Memory consumed by compression backends, such as zswap
-> +              (compressed size)
->  Zswapped
->                Amount of anonymous memory stored in zswap (original size)
->  Dirty
-> diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
-> index 6e89f0e2fd20..554d6f230e67 100644
-> --- a/fs/proc/meminfo.c
-> +++ b/fs/proc/meminfo.c
-> @@ -87,7 +87,7 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
->  	show_val_kb(m, "SwapTotal:      ", i.totalswap);
->  	show_val_kb(m, "SwapFree:       ", i.freeswap);
->  #ifdef CONFIG_ZSWAP
-> -	seq_printf(m,  "Zswap:          %8lu kB\n",
-> +	seq_printf(m,  "Compressed:     %8lu kB\n",
->  		   (unsigned long)(zswap_pool_total_size >> 10));
->  	seq_printf(m,  "Zswapped:       %8lu kB\n",
->  		   (unsigned long)atomic_read(&zswap_stored_pages) <<
-> -- 
-> 2.35.3
-> 
+T24gNC8yNy8yMiAxODowNiwgU2hha2VlbCBCdXR0IHdyb3RlOgo+IE9uIFdlZCwgQXByIDI3LCAy
+MDIyIGF0IDU6MjIgQU0gTWljaGFsIEtvdXRuw70gPG1rb3V0bnlAc3VzZS5jb20+IHdyb3RlOgo+
+Pgo+PiBPbiBUdWUsIEFwciAyNiwgMjAyMiBhdCAxMDoyMzozMlBNIC0wNzAwLCBTaGFrZWVsIEJ1
+dHQgPHNoYWtlZWxiQGdvb2dsZS5jb20+IHdyb3RlOgo+Pj4gWy4uLl0KPj4+Pgo+Pj4+ICtzdGF0
+aWMgaW5saW5lIHN0cnVjdCBtZW1fY2dyb3VwICpnZXRfbWVtX2Nncm91cF9mcm9tX29iaih2b2lk
+ICpwKQo+Pj4+ICt7Cj4+Pj4gKyAgICAgICBzdHJ1Y3QgbWVtX2Nncm91cCAqbWVtY2c7Cj4+Pj4g
+Kwo+Pj4KPj4+IERvIHdlIG5lZWQgbWVtY2dfa21lbV9lbmFibGVkKCkgY2hlY2sgaGVyZSBvciBt
+YXliZQo+Pj4gbWVtX2Nncm91cF9mcm9tX29iaigpIHNob3VsZCBiZSBkb2luZyBtZW1jZ19rbWVt
+X2VuYWJsZWQoKSBpbnN0ZWFkIG9mCj4+PiBtZW1fY2dyb3VwX2Rpc2FibGVkKCkgYXMgd2UgY2Fu
+IGhhdmUgImNncm91cC5tZW1vcnk9bm9rbWVtIiBib290Cj4+PiBwYXJhbS4KClNoYWtlZWwsIHVu
+Zm9ydHVuYXRlbHkgSSdtIG5vdCByZWFkeSB0byBhbnN3ZXIgdGhpcyBxdWVzdGlvbiByaWdodCBu
+b3cuCkkgZXZlbiBkaWQgbm90IG5vdGljZWQgdGhhdCBtZW1jZ19rbWVtX2VuYWJsZWQoKSBhbmQg
+bWVtX2Nncm91cF9kaXNhYmxlZCgpCmhhdmUgYSBkaWZmZXJlbnQgbmF0dXJlLgpJZiB5b3UgaGF2
+ZSBubyBvYmplY3Rpb25zIEknbSBnb2luZyB0byBrZWVwIHRoaXMgcGxhY2UgYXMgaXMgYW5kIGlu
+dmVzdGlnYXRlCnRoaXMgcXVlc3Rpb24gbGF0ZXIuIAoKPj4gSSByZWNrb24gc3VjaCBhIGd1YXJk
+IGlzIG9uIHRoZSBjaGFyZ2Ugc2lkZSBhbmQgcmVhZGVycyBzaG91bGQgdHJlYXQKPj4gTlVMTCBh
+bmQgcm9vdF9tZW1fZ3JvdXAgZXF1YWxseS4gT3IgaXMgdGhlcmUgYSBjYXNlIHdoZW4gdGhlc2Ug
+dHdvIGFyZQo+PiBkaWZmZXJlbnQ/Cj4+Cj4+IChJIGNhbiBzZWUgaXQncyBkaWZmZXJlbnQgc2Vt
+YW50aWNzIHdoZW4gc3RvcmVkIGluIGN1cnJlbnQtPmFjdGl2ZV9tZW1jZwo+PiAoYW5kIGFjdGl2
+ZV9tZW1jZygpIGdldHRlcikgYnV0IGZvciBzdWNoICJvdXRlciIgY2FsbGVycyBsaWtlIGhlcmUg
+aXQKPj4gc2VlbXMgZXF1YWwuKQoKRGVhciBNaWNoYWwsCkkgbWF5IGhhdmUgbWlzdW5kZXJzdG9v
+ZCB5b3VyIHBvaW50IG9mIHZpZXcsIHNvIGxldCBtZSBleHBsYWluIG15IHZpc2lvbgppbiBtb3Jl
+IGRldGFpbC4KSSBkbyBub3QgdGhpbmsgdGhhdCBOVUxMIGFuZCByb290X21lbV9jZ3JvdXAgYXJl
+IGVxdWFsIGhlcmU6Ci0gd2UgaGF2ZSBlbmFibGVkIGNncm91cHMgYW5kIHdlbGwtZGVmaW5lZCBy
+b290X21lbV9jZ3JvdXAsCi0gdGhpcyBmdW5jdGlvbiBpcyBjYWxsZWQgZnJvbSBpbnNpZGUgbWVt
+Y2ctbGltaXRlZCBjb250YWluZXIsCi0gd2UgdHJpZWQgdG8gZ2V0IG1lbWNnIGZyb20gbmV0LCBi
+dXQgd2l0aG91dCBzdWNjZXNzLAogIGFuZCBhcyByZXN1bHQgZ290IE5VTEwgZnJvbSAgbWVtX2Nn
+cm91cF9mcm9tX29iaigpCiAgKGZyYW5rbHkgc3BlYWtpbmcgSSBkbyBub3QgdGhpbmsgdGhpcyBz
+aXR1YXRpb24gaXMgcmVhbGx5IHBvc3NpYmxlKQpJZiB3ZSBrZWVwIG1lbWNnID0gTlVMTCwgdGhl
+biBjdXJyZW50J3MgbWVtY2cgd2lsbCBub3QgYmUgbWFza2VkIGFuZApuZXRfaW5pdCdzIGFsbG9j
+YXRpb25zIHdpbGwgYmUgYWNjb3VudGVkIHRvIGN1cnJlbnQncyBtZW1jZy4gClNvIHdlIG5lZWQg
+dG8gc2V0IGFjdGl2ZV9tZW1jZyB0byByb290X21lbV9jZ3JvdXAsIGl0IGhlbHBzIHRvIGF2b2lk
+CmluY29ycmVjdCBhY2NvdW50aW5nLgoKPiBJIHdhcyBtb3JlIHRoaW5raW5nIGFib3V0IHBvc3Np
+YmxlIHNob3J0Y3V0IG9wdGltaXphdGlvbiBhbmQgdW5yZWxhdGVkCj4gdG8gdGhpcyBwYXRjaC4K
+PiAKPiBWYXNpbHksIGNhbiB5b3UgcGxlYXNlIGFkZCBkb2N1bWVudGF0aW9uIGZvciBnZXRfbWVt
+X2Nncm91cF9mcm9tX29iaigpCj4gc2ltaWxhciB0byBnZXRfbWVtX2Nncm91cF9mcm9tX21tKCk/
+IEFsc28gZm9yIG1lbV9jZ3JvdXBfb3Jfcm9vdCgpLgo+IFBsZWFzZSBub3RlIHRoYXQgcm9vdF9t
+ZW1fY2dyb3VwIGNhbiBiZSBOVUxMIGR1cmluZyBlYXJseSBib290LgoKT2ssIHRoYW5rIHlvdSBm
+b3IgdGhlIHJlbWFyaywgSSdsbCBpbXByb3ZlIGl0IGluIG5leHQgcGF0Y2ggdmVyc2lvbi4KClRo
+YW5rIHlvdSwKCVZhc2lseSBBdmVyaW4K
