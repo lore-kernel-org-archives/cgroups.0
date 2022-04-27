@@ -1,158 +1,113 @@
-From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH] memcg: accounting for objects allocated for new netdevice
-Date: Wed, 27 Apr 2022 13:37:50 +0300
-Message-ID: <7e867cb0-89d6-402c-33d2-9b9ba0ba1523@openvz.org>
+From: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2] cgroup/cpuset: Remove cpus_allowed/mems_allowed setup
+ in cpuset_init_smp()
+Date: Wed, 27 Apr 2022 20:09:58 +0800
+Message-ID: <20220427120958.GD84190@shbuild999.sh.intel.com>
+References: <20220425155505.1292896-1-longman@redhat.com>
+ <20220426032337.GA84190@shbuild999.sh.intel.com>
+ <be293d58-1084-b586-2267-6a1e6a400762@redhat.com>
+ <20220427010654.GC84190@shbuild999.sh.intel.com>
+ <4c6847ba-4c8d-9776-a065-684a8b95130b@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=openvz-org.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:from:subject:to:cc
-         :content-language:content-transfer-encoding;
-        bh=jRN8XksCdAf0+x8Uj8a/DButwn5KzLonnaobSsBfglg=;
-        b=DK23ya2EJ5weoMmh1t7kx/QodejkNkn8M5NyBLC6YNDDq/iyYjlsNadZ2EHYSJ5Fqg
-         v6gIuXZexBcUPt7oHC2h4qRgCgC/5A3dmpZmQsJ+8GqVCb1x/lOqbf91P7uw5Ww0uqKD
-         uyHVfyKv/F1Mc0YNVKPWcoHW3ohxieUlWta8+KHFA8/SQJvfuKwbBS+TFPT4bO6XlV24
-         H/uUZxi93xoDkhBCqfXOOKQhO/48gVdV2wprUxrQeRwT2K32euRbJz7E7YXAoFNXApwv
-         SLu4nXXcpWgbpsAiiuxu+zsOGeWaGuKPZ7cmgu84GIuIDg25iFm84RkrJJ73rKF+8/gg
-         IwGA==
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1651061404; x=1682597404;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=UNTq8c3nGCVicANYsW9zJ0pFSSw7ENqHGTRz5ROMqyA=;
+  b=IcuMM4uG2sWIs7oQqQnJL/jKz0aSGck6prsuMTwza4JdAghiX2b4YONo
+   ozZPfGtzpJKAQod8ukNBpTwnT0B2jnJXaVGFAY0MvYhBlqriW09JEIFzM
+   rbENq4iCiWgPA8RuVLy9UPUCf/dvBmp6kRhNjTcG+7Eyfc3Yu3QDSRf4q
+   05SZ6aJ+8vXjK19xu02s057xCwkXnY8+C7uNppxhyxYYtBnIt5B0rPFuK
+   qtmjtrPr78d8g2LTzPKC5W9qNrgmPcV7nAI7H/BjCiGBs8k9uKJeIwaFj
+   BbVOyJ0+kjhwwGRsrEGuEvNpDd8Em6aaBOODrME2oWmmGnNkPUJOpKe1H
+   Q==;
+Content-Disposition: inline
+In-Reply-To: <4c6847ba-4c8d-9776-a065-684a8b95130b-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Iurii Zaikin <yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Hansen, Dave" <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Creating a new netdevice allocates at least ~50Kb of memory for various
-kernel objects, but only ~5Kb of them are accounted to memcg. As a result,
-creating an unlimited number of netdevice inside a memcg-limited container
-does not fall within memcg restrictions, consumes a significant part
-of the host's memory, can cause global OOM and lead to random kills of
-host processes.
+On Tue, Apr 26, 2022 at 10:34:21PM -0400, Waiman Long wrote:
+> On 4/26/22 21:06, Feng Tang wrote:
+> > On Tue, Apr 26, 2022 at 10:58:21PM +0800, Waiman Long wrote:
+> > > On 4/25/22 23:23, Feng Tang wrote:
+> > > > Hi Waiman,
+> > > > 
+> > > > On Mon, Apr 25, 2022 at 11:55:05AM -0400, Waiman Long wrote:
+> > > > > There are 3 places where the cpu and node masks of the top cpuset can
+> > > > > be initialized in the order they are executed:
+> > > > >    1) start_kernel -> cpuset_init()
+> > > > >    2) start_kernel -> cgroup_init() -> cpuset_bind()
+> > > > >    3) kernel_init_freeable() -> do_basic_setup() -> cpuset_init_smp()
+> > > > > 
+> > > > > The first cpuset_init() function just sets all the bits in the masks.
+> > > > > The last one executed is cpuset_init_smp() which sets up cpu and node
+> > > > > masks suitable for v1, but not v2.  cpuset_bind() does the right setup
+> > > > > for both v1 and v2.
+> > > > > 
+> > > > > For systems with cgroup v2 setup, cpuset_bind() is called once. For
+> > > > > systems with cgroup v1 setup, cpuset_bind() is called twice. It is
+> > > > > first called before cpuset_init_smp() in cgroup v2 mode.  Then it is
+> > > > > called again when cgroup v1 filesystem is mounted in v1 mode after
+> > > > > cpuset_init_smp().
+> > > > > 
+> > > > >     [    2.609781] cpuset_bind() called - v2 = 1
+> > > > >     [    3.079473] cpuset_init_smp() called
+> > > > >     [    7.103710] cpuset_bind() called - v2 = 0
+> > > > I run some test, on a server with centOS, this did happen that
+> > > > cpuset_bind() is called twice, first as v2 during kernel boot,
+> > > > and then as v1 post-boot.
+> > > > 
+> > > > However on a QEMU running with a basic debian rootfs image,
+> > > > the second  call of cpuset_bind() didn't happen.
+> > > The first time cpuset_bind() is called in cgroup_init(), the kernel
+> > > doesn't know if userspace is going to mount v1 or v2 cgroup. By default,
+> > > it is assumed to be v2. However, if userspace mounts the cgroup v1
+> > > filesystem for cpuset, cpuset_bind() will be run at this point by
+> > > rebind_subsystem() to set up cgroup v1 environment and
+> > > cpus_allowed/mems_allowed will be correctly set at this point. Mounting
+> > > the cgroup v2 filesystem, however, does not cause rebind_subsystem() to
+> > > run and hence cpuset_bind() is not called again.
+> > > 
+> > > Is the QEMU setup not mounting any cgroup filesystem at all? If so, does
+> > > it matter whether v1 or v2 setup is used?
+> > When I got the cpuset binding error report, I tried first on qemu to
+> > reproduce and failed (due to there was no memory hotplug), then I
+> > reproduced it on a real server. For both system, I used "cgroup_no_v1=all"
+> > cmdline parameter to test cgroup-v2, could this be the reason? (TBH,
+> > this is the first time I use cgroup-v2).
+> > 
+> > Here is the info dump:
+> > 
+> > # mount | grep cgroup
+> > tmpfs on /sys/fs/cgroup type tmpfs (ro,nosuid,nodev,noexec,mode=755)
+> > cgroup on /sys/fs/cgroup/systemd type cgroup (rw,nosuid,nodev,noexec,relatime,xattr,release_agent=/lib/systemd/systemd-cgroups-agent,name=systemd)
+> > 
+> > #cat /proc/filesystems | grep cgroup
+> > nodev   cgroup
+> > nodev   cgroup2
+> > 
+> > Thanks,
+> > Feng
+> 
+> For cgroup v2, cpus_allowed should be set to cpu_possible_mask and
+> mems_allowed to node_possible_map as is done in the first invocation of
+> cpuset_bind(). That is the correct behavior.
+ 
+OK. For the cgroup v2 mem binding problem with hot-added nodes, I
+retested today, and it can't be reproduced with this patch. So feel
+free to add:
+  
+  Tested-by: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-The main consumers of non-accounted memory are:
- ~10Kb   80+ kernfs nodes
- ~6Kb    ipv6_add_dev() allocations
-  6Kb    __register_sysctl_table() allocations
-  4Kb    neigh_sysctl_register() allocations
-  4Kb    __devinet_sysctl_register() allocations
-  4Kb    __addrconf_sysctl_register() allocations
+Thanks,
+Feng
 
-Accounting of these objects allows to increase the share of memcg-related
-memory up to 60-70% (~38Kb accounted vs ~54Kb total for dummy netdevice
-on typical VM with default Fedora 35 kernel) and this should be enough
-to somehow protect the host from misuse inside container.
 
-Other related objects are quite small and may not be taken into account
-to minimize the expected performance degradation.
-
-It should be separately mentonied ~300 bytes of percpu allocation
-of struct ipstats_mib in snmp6_alloc_dev(), on huge multi-cpu nodes
-it can become the main consumer of memory.
-
-Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
----
-RFC was discussed here:
-https://lore.kernel.org/all/a5e09e93-106d-0527-5b1e-48dbf3b48b4e-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org/
----
- fs/kernfs/mount.c     | 2 +-
- fs/proc/proc_sysctl.c | 2 +-
- net/core/neighbour.c  | 2 +-
- net/ipv4/devinet.c    | 2 +-
- net/ipv6/addrconf.c   | 8 ++++----
- 5 files changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
-index cfa79715fc1a..2881aeeaa880 100644
---- a/fs/kernfs/mount.c
-+++ b/fs/kernfs/mount.c
-@@ -391,7 +391,7 @@ void __init kernfs_init(void)
- {
- 	kernfs_node_cache = kmem_cache_create("kernfs_node_cache",
- 					      sizeof(struct kernfs_node),
--					      0, SLAB_PANIC, NULL);
-+					      0, SLAB_PANIC | SLAB_ACCOUNT, NULL);
- 
- 	/* Creates slab cache for kernfs inode attributes */
- 	kernfs_iattrs_cache  = kmem_cache_create("kernfs_iattrs_cache",
-diff --git a/fs/proc/proc_sysctl.c b/fs/proc/proc_sysctl.c
-index 7d9cfc730bd4..df4604fea4f8 100644
---- a/fs/proc/proc_sysctl.c
-+++ b/fs/proc/proc_sysctl.c
-@@ -1333,7 +1333,7 @@ struct ctl_table_header *__register_sysctl_table(
- 		nr_entries++;
- 
- 	header = kzalloc(sizeof(struct ctl_table_header) +
--			 sizeof(struct ctl_node)*nr_entries, GFP_KERNEL);
-+			 sizeof(struct ctl_node)*nr_entries, GFP_KERNEL_ACCOUNT);
- 	if (!header)
- 		return NULL;
- 
-diff --git a/net/core/neighbour.c b/net/core/neighbour.c
-index ec0bf737b076..3dcda2a54f86 100644
---- a/net/core/neighbour.c
-+++ b/net/core/neighbour.c
-@@ -3728,7 +3728,7 @@ int neigh_sysctl_register(struct net_device *dev, struct neigh_parms *p,
- 	char neigh_path[ sizeof("net//neigh/") + IFNAMSIZ + IFNAMSIZ ];
- 	char *p_name;
- 
--	t = kmemdup(&neigh_sysctl_template, sizeof(*t), GFP_KERNEL);
-+	t = kmemdup(&neigh_sysctl_template, sizeof(*t), GFP_KERNEL_ACCOUNT);
- 	if (!t)
- 		goto err;
- 
-diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
-index fba2bffd65f7..47523fe5b891 100644
---- a/net/ipv4/devinet.c
-+++ b/net/ipv4/devinet.c
-@@ -2566,7 +2566,7 @@ static int __devinet_sysctl_register(struct net *net, char *dev_name,
- 	struct devinet_sysctl_table *t;
- 	char path[sizeof("net/ipv4/conf/") + IFNAMSIZ];
- 
--	t = kmemdup(&devinet_sysctl, sizeof(*t), GFP_KERNEL);
-+	t = kmemdup(&devinet_sysctl, sizeof(*t), GFP_KERNEL_ACCOUNT);
- 	if (!t)
- 		goto out;
- 
-diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
-index f908e2fd30b2..e79621ee4a0a 100644
---- a/net/ipv6/addrconf.c
-+++ b/net/ipv6/addrconf.c
-@@ -342,7 +342,7 @@ static int snmp6_alloc_dev(struct inet6_dev *idev)
- {
- 	int i;
- 
--	idev->stats.ipv6 = alloc_percpu(struct ipstats_mib);
-+	idev->stats.ipv6 = alloc_percpu_gfp(struct ipstats_mib, GFP_KERNEL_ACCOUNT);
- 	if (!idev->stats.ipv6)
- 		goto err_ip;
- 
-@@ -358,7 +358,7 @@ static int snmp6_alloc_dev(struct inet6_dev *idev)
- 	if (!idev->stats.icmpv6dev)
- 		goto err_icmp;
- 	idev->stats.icmpv6msgdev = kzalloc(sizeof(struct icmpv6msg_mib_device),
--					   GFP_KERNEL);
-+					   GFP_KERNEL_ACCOUNT);
- 	if (!idev->stats.icmpv6msgdev)
- 		goto err_icmpmsg;
- 
-@@ -382,7 +382,7 @@ static struct inet6_dev *ipv6_add_dev(struct net_device *dev)
- 	if (dev->mtu < IPV6_MIN_MTU)
- 		return ERR_PTR(-EINVAL);
- 
--	ndev = kzalloc(sizeof(struct inet6_dev), GFP_KERNEL);
-+	ndev = kzalloc(sizeof(struct inet6_dev), GFP_KERNEL_ACCOUNT);
- 	if (!ndev)
- 		return ERR_PTR(err);
- 
-@@ -7029,7 +7029,7 @@ static int __addrconf_sysctl_register(struct net *net, char *dev_name,
- 	struct ctl_table *table;
- 	char path[sizeof("net/ipv6/conf/") + IFNAMSIZ];
- 
--	table = kmemdup(addrconf_sysctl, sizeof(addrconf_sysctl), GFP_KERNEL);
-+	table = kmemdup(addrconf_sysctl, sizeof(addrconf_sysctl), GFP_KERNEL_ACCOUNT);
- 	if (!table)
- 		goto out;
- 
--- 
-2.31.1
-
+> Cheers,
+> Longman
+> 
