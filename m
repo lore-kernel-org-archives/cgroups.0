@@ -1,71 +1,75 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH -next v3 1/3] block, bfq: record how many queues are busy
- in bfq_group
-Date: Wed, 27 Apr 2022 14:52:51 +0200
-Message-ID: <20220427125251.yl7ff4ti33w6ktrf@quack3.lan>
-References: <20220427124722.48465-1-yukuai3@huawei.com>
- <20220427124722.48465-2-yukuai3@huawei.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH v2] cgroup/cpuset: Remove cpus_allowed/mems_allowed setup
+ in cpuset_init_smp()
+Date: Wed, 27 Apr 2022 15:53:24 +0200
+Message-ID: <20220427135324.GB9823@blackbody.suse.cz>
+References: <20220425155505.1292896-1-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1651063972; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+Content-Transfer-Encoding: quoted-printable
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1651067606; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=yhhsQZ/apy3ajEmL5BMkQH4udIsKMO/zX6YXUvskbjo=;
-        b=HKwz9nxCbcYcqN9QwfH1r/OK8igSL7ddbDwQPY0FTJ9uWwqeDCyym37BrWo7AuYPgFyIfr
-        ZZUi0JysOo5F8s8wa3Efo0O62vpkwufpcdX5yjShpE8Nb6w+Qo8LJrQ/J/IQwp1cmsbITY
-        30oslwuMsB2FRM+EppyUlA2FiA7c9DM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1651063972;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=yhhsQZ/apy3ajEmL5BMkQH4udIsKMO/zX6YXUvskbjo=;
-        b=HMVy/XOhIcTAl6OpMei3jxWEDWxT8+4SiZ5FoEVgdmSiCFbi8a8tlLNJLhHJTzd2g71rRw
-        2X9PmFajXjj4N0Cw==
+        bh=z0VSn2vEXwWXMGAfap1HPPywpjqAc/nB4nW5xPcHwuA=;
+        b=f/xNu/kDIRTMogOu0Uw02XT1TextwCqsKVU5GEime6fEx0GQmAShKNghzduSIpnAvkWvIl
+        4XLpd3AXnkkx71Us1FiykJTL38kwzzkcISvSZKWwnE24AiQJotbu2LNxhs2RA6jAzmKmeI
+        YWMQC29ImtGt9spIXjuzKoHdmIYLXW0=
 Content-Disposition: inline
-In-Reply-To: <20220427124722.48465-2-yukuai3@huawei.com>
+In-Reply-To: <20220425155505.1292896-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai3@huawei.com>
-Cc: jack@suse.cz, tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="iso-8859-1"
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Feng Tang <feng.tang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Dave Hansen <dave.hansen@intel.com>, ying.huang@intel.com, stable@vger.kernel.org
 
-On Wed 27-04-22 20:47:20, Yu Kuai wrote:
-> Prepare to refactor the counting of 'num_groups_with_pending_reqs'.
-> 
-> Add a counter 'busy_queues' in bfq_group, and update it in
-> bfq_add/del_bfqq_busy().
-> 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Hello.
 
-...
+On Mon, Apr 25, 2022 at 11:55:05AM -0400, Waiman Long <longman@redhat.com> =
+wrote:
+> smp_init() is called after the first two init functions.  So we don't
+> have a complete list of active cpus and memory nodes until later in
+> cpuset_init_smp() which is the right time to set up effective_cpus
+> and effective_mems.
 
-> diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-> index f8eb340381cf..53826797430f 100644
-> --- a/block/bfq-wf2q.c
-> +++ b/block/bfq-wf2q.c
-> @@ -218,6 +218,14 @@ static bool bfq_no_longer_next_in_service(struct bfq_entity *entity)
->  	return false;
->  }
->  
-> +static void bfq_update_busy_queues(struct bfq_queue *bfqq, bool is_add)
-> +{
-> +	if (is_add)
-> +		bfqq_group(bfqq)->busy_queues++;
-> +	else
-> +		bfqq_group(bfqq)->busy_queues--;
-> +}
-> +
->  #else /* CONFIG_BFQ_GROUP_IOSCHED */
+Yes.
 
-I think the bool argument here unnecessarily hurts readability (it's
-difficult to see what the argument means without looking into the
-implementation). I'd rather create two functions bfq_{inc,dec}_busy_queues()
-or if you really insist on a single function, we can have
-bfq_add_busy_queues() and have 'int' argument that will be +1 or -1.
+	setup_arch
+	  prefill_possible_map
+	cpuset_init (1)
+	cgroup_init
+	  cpuset_bind (2a)
+	...
+	kernel_init
+	  kernel_init_freeable
+	    ...
+	      cpuset_init_smp (3)
+	...
+	...
+	cpuset_bind (2b)
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+
+>=20
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 9390bfd9f1cd..6bd8f5ef40fe 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -3390,8 +3390,9 @@ static struct notifier_block cpuset_track_online_no=
+des_nb =3D {
+>   */
+>  void __init cpuset_init_smp(void)
+>  {
+> -	cpumask_copy(top_cpuset.cpus_allowed, cpu_active_mask);
+> -	top_cpuset.mems_allowed =3D node_states[N_MEMORY];
+> +	/*
+> +	 * cpus_allowd/mems_allowed will be properly set up in cpuset_bind().
+> +	 */
+
+IIUC, the comment should say
+
+> +	 * cpus_allowed/mems_allowed were (v2) or will be (v1) properly set up =
+in cpuset_bind().
+
+(nit)
+
+Reviewed-by: Michal Koutn=FD <mkoutny@suse.com>
