@@ -1,58 +1,52 @@
-From: "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH -next v3 1/3] block, bfq: record how many queues are busy
- in bfq_group
-Date: Thu, 28 Apr 2022 09:08:14 +0800
-Message-ID: <4c783fa9-f01b-1f9e-9bcb-0e26431d0d24@huawei.com>
+From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -next v3 2/3] block, bfq: refactor the counting of
+ 'num_groups_with_pending_reqs'
+Date: Thu, 28 Apr 2022 09:09:36 +0800
+Message-ID: <d36b4904-3db8-537c-5040-b496272ccf70@huawei.com>
 References: <20220427124722.48465-1-yukuai3@huawei.com>
- <20220427124722.48465-2-yukuai3@huawei.com>
- <20220427125251.yl7ff4ti33w6ktrf@quack3.lan>
+ <20220427124722.48465-3-yukuai3@huawei.com>
+ <20220427124908.o3cl72h2uflmufso@quack3.lan>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20220427125251.yl7ff4ti33w6ktrf@quack3.lan>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20220427124908.o3cl72h2uflmufso-/1kMjMImKQN+urZeOPWqwQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Jan Kara <jack@suse.cz>
-Cc: tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-=D4=DA 2022/04/27 20:52, Jan Kara =D0=B4=B5=C0:
-> On Wed 27-04-22 20:47:20, Yu Kuai wrote:
->> Prepare to refactor the counting of 'num_groups_with_pending_reqs'.
+=D4=DA 2022/04/27 20:49, Jan Kara =D0=B4=B5=C0:
+> On Wed 27-04-22 20:47:21, Yu Kuai wrote:
+>> Currently, bfq can't handle sync io concurrently as long as they
+>> are not issued from root group. This is because
+>> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
+>> bfq_asymmetric_scenario().
 >>
->> Add a counter 'busy_queues' in bfq_group, and update it in
->> bfq_add/del_bfqq_busy().
+>> The way that bfqg is counted into 'num_groups_with_pending_reqs':
 >>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> Before this patch:
+>>   1) root group will never be counted.
+>>   2) Count if bfqg or it's child bfqgs have pending requests.
+>>   3) Don't count if bfqg and it's child bfqgs complete all the requests.
+>>
+>> After this patch:
+>>   1) root group is counted.
+>>   2) Count if bfqg have at least one bfqq that is marked busy.
+>>   3) Don't count if bfqg doesn't have any busy bfqqs.
+>>
+>> With this change, the occasion that only one group is activated can be
+>> detected, and next patch will support concurrent sync io in the
+>> occasion.
+>>
+>> This patch also rename 'num_groups_with_pending_reqs' to
+>> 'num_groups_with_busy_queues'.
+>>
+>> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 >=20
-> ...
->=20
->> diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
->> index f8eb340381cf..53826797430f 100644
->> --- a/block/bfq-wf2q.c
->> +++ b/block/bfq-wf2q.c
->> @@ -218,6 +218,14 @@ static bool bfq_no_longer_next_in_service(struct bf=
-q_entity *entity)
->>   	return false;
->>   }
->>  =20
->> +static void bfq_update_busy_queues(struct bfq_queue *bfqq, bool is_add)
->> +{
->> +	if (is_add)
->> +		bfqq_group(bfqq)->busy_queues++;
->> +	else
->> +		bfqq_group(bfqq)->busy_queues--;
->> +}
->> +
->>   #else /* CONFIG_BFQ_GROUP_IOSCHED */
->=20
-> I think the bool argument here unnecessarily hurts readability (it's
-> difficult to see what the argument means without looking into the
-> implementation). I'd rather create two functions bfq_{inc,dec}_busy_queue=
-s()
-> or if you really insist on a single function, we can have
-> bfq_add_busy_queues() and have 'int' argument that will be +1 or -1.
+> Looks good. Just I think you forgot to remove in_groups_with_pending_reqs,
+> which is now unused, from bfq_entity.
 
-Thanks for the suggestion, I'll create two functions in next iteration.
->=20
-> 								Honza
->=20
+Will remove it in the next iteration.
+
+Thanks,
+Kuai
