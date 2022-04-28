@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next v4 1/3] block, bfq: record how many queues are busy in bfq_group
-Date: Thu, 28 Apr 2022 19:19:05 +0800
-Message-ID: <20220428111907.3635820-2-yukuai3@huawei.com>
+Subject: [PATCH -next v4 3/3] block, bfq: do not idle if only one group is activated
+Date: Thu, 28 Apr 2022 19:19:07 +0800
+Message-ID: <20220428111907.3635820-4-yukuai3@huawei.com>
 References: <20220428111907.3635820-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
@@ -12,102 +12,31 @@ Content-Type: text/plain; charset="us-ascii"
 To: jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Prepare to refactor the counting of 'num_groups_with_pending_reqs'.
+Now that root group is counted into 'num_groups_with_busy_queues',
+'num_groups_with_busy_queues > 0' is always true in
+bfq_asymmetric_scenario(). Thus change the condition to '> 1'.
 
-Add a counter 'busy_queues' in bfq_group, and update it in
-bfq_add/del_bfqq_busy().
+On the other hand, this change can enable concurrent sync io if only
+one group is activated.
 
 Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/bfq-cgroup.c  |  1 +
- block/bfq-iosched.h |  2 ++
- block/bfq-wf2q.c    | 20 ++++++++++++++++++++
- 3 files changed, 23 insertions(+)
+ block/bfq-iosched.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 09574af83566..4d516879d9fa 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -557,6 +557,7 @@ static void bfq_pd_init(struct blkg_policy_data *pd)
- 				   */
- 	bfqg->bfqd = bfqd;
- 	bfqg->active_entities = 0;
-+	bfqg->busy_queues = 0;
- 	bfqg->online = true;
- 	bfqg->rq_pos_tree = RB_ROOT;
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index 609b4e894684..aeba9001da0b 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -844,7 +844,7 @@ static bool bfq_asymmetric_scenario(struct bfq_data *bfqd,
+ 
+ 	return varied_queue_weights || multiple_classes_busy
+ #ifdef CONFIG_BFQ_GROUP_IOSCHED
+-	       || bfqd->num_groups_with_busy_queues > 0
++	       || bfqd->num_groups_with_busy_queues > 1
+ #endif
+ 		;
  }
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 978ef5d6fe6a..3847f4ab77ac 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -906,6 +906,7 @@ struct bfq_group_data {
-  *                   are groups with more than one active @bfq_entity
-  *                   (see the comments to the function
-  *                   bfq_bfqq_may_idle()).
-+ * @busy_queues: number of busy bfqqs.
-  * @rq_pos_tree: rbtree sorted by next_request position, used when
-  *               determining if two or more queues have interleaving
-  *               requests (see bfq_find_close_cooperator()).
-@@ -942,6 +943,7 @@ struct bfq_group {
- 	struct bfq_entity *my_entity;
- 
- 	int active_entities;
-+	int busy_queues;
- 
- 	struct rb_root rq_pos_tree;
- 
-diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index f8eb340381cf..9489e9d820b7 100644
---- a/block/bfq-wf2q.c
-+++ b/block/bfq-wf2q.c
-@@ -218,6 +218,16 @@ static bool bfq_no_longer_next_in_service(struct bfq_entity *entity)
- 	return false;
- }
- 
-+static void bfq_add_busy_queues(struct bfq_queue *bfqq)
-+{
-+	bfqq_group(bfqq)->busy_queues++;
-+}
-+
-+static void bfq_dec_busy_queues(struct bfq_queue *bfqq)
-+{
-+	bfqq_group(bfqq)->busy_queues--;
-+}
-+
- #else /* CONFIG_BFQ_GROUP_IOSCHED */
- 
- static bool bfq_update_parent_budget(struct bfq_entity *next_in_service)
-@@ -230,6 +240,14 @@ static bool bfq_no_longer_next_in_service(struct bfq_entity *entity)
- 	return true;
- }
- 
-+static void bfq_add_busy_queues(struct bfq_queue *bfqq)
-+{
-+}
-+
-+static void bfq_add_busy_queues(struct bfq_queue *bfqq)
-+{
-+}
-+
- #endif /* CONFIG_BFQ_GROUP_IOSCHED */
- 
- /*
-@@ -1660,6 +1678,7 @@ void bfq_del_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 	bfq_clear_bfqq_busy(bfqq);
- 
- 	bfqd->busy_queues[bfqq->ioprio_class - 1]--;
-+	bfq_add_busy_queues(bfqq);
- 
- 	if (bfqq->wr_coeff > 1)
- 		bfqd->wr_busy_queues--;
-@@ -1683,6 +1702,7 @@ void bfq_add_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq)
- 
- 	bfq_mark_bfqq_busy(bfqq);
- 	bfqd->busy_queues[bfqq->ioprio_class - 1]++;
-+	bfq_dec_busy_queues(bfqq);
- 
- 	if (!bfqq->dispatched)
- 		if (bfqq->wr_coeff == 1)
 -- 
 2.31.1
 
