@@ -1,41 +1,37 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Yang Shi <shy828301@gmail.com>
 Subject: Re: [PATCH 4/5] mm: zswap: add basic meminfo and vmstat coverage
-Date: Thu, 28 Apr 2022 11:16:43 -0400
-Message-ID: <Ymqv25+8IX2wqKzu@cmpxchg.org>
-References: <20220427160016.144237-1-hannes@cmpxchg.org>
- <20220427160016.144237-5-hannes@cmpxchg.org>
- <Ymmnrkn0mSWcuvmH@google.com>
- <YmmznQ8AO5RLxicA@cmpxchg.org>
- <Ymm3WpvJWby4gaD/@cmpxchg.org>
- <CALvZod5LBi5V6q1uHUTSNnLz64HbD499a+OZvdYsUcmcWSt8Jg@mail.gmail.com>
- <YmqmWPrIagEEceN1@cmpxchg.org>
- <CALvZod7wOyXpA3pycM2dav9_F9sW5ezC84or-75u8GdQyu30nw@mail.gmail.com>
+Date: Thu, 28 Apr 2022 09:54:39 -0700
+Message-ID: <CAHbLzkqOUkaud4hQZeAbnO3T6VJpku4aKn1EYv9RunB+Kmu9Sg@mail.gmail.com>
+References: <20220427160016.144237-1-hannes@cmpxchg.org> <20220427160016.144237-5-hannes@cmpxchg.org>
+ <Ymmnrkn0mSWcuvmH@google.com> <YmmznQ8AO5RLxicA@cmpxchg.org>
+ <Ymm3WpvJWby4gaD/@cmpxchg.org> <CALvZod5LBi5V6q1uHUTSNnLz64HbD499a+OZvdYsUcmcWSt8Jg@mail.gmail.com>
+ <YmqmWPrIagEEceN1@cmpxchg.org> <CALvZod7wOyXpA3pycM2dav9_F9sW5ezC84or-75u8GdQyu30nw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=E9UW1bag0U6JwSp2lSKEFTQPx6fxwp66hBJxsfKUM1Q=;
-        b=gRA6hbtN/01k4+k22fV/ZVyh8d/v1uJ8gcamYPxonMAcJx8uuQTXaMsl2cAvgDzKIc
-         T30+pFpIeJOxFtaGF4H5w4QDpMhBfMSa/IRig4pA91KK2J2EJzCeU/kvPwG9qeMDkqSF
-         0M1jjIIyWzHmkshwPgA9MnNY7YW688hDVNGtwpEeV2ReIGCcLZH4TNUWSoGDgPJVmYn4
-         kgSq4l7TidxAF7IByp5uYg3VTk2iRG6Ry6VhBr65yYljjeJzuHfdY5/1+38fgLYlR5R8
-         QNRygU8Tuw7ukszTHI58UOlwMgnF/uUo5NrUz0ocjhfKfbeQGWiHY7eplLvMEXdnC0mD
-         OkoQ==
-Content-Disposition: inline
-In-Reply-To: <CALvZod7wOyXpA3pycM2dav9_F9sW5ezC84or-75u8GdQyu30nw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=MvCOJLEv0diYuRsRJ3vfm9TWORadeU8jtlQyqpscZYs=;
+        b=Wj8UXDdE0X8gpr6LoRyZmqUQOw2kxuuPyrfVfL1bKAAZqgSatnq6bYzfRifjXKI+FX
+         Wm9USQkdGM8HZGBT7ts1RW4ABEbw+glCOKAVM2+/Kk3j//GfWRCpzt+Zh9uEuyVTS3RE
+         +BSxCzbRHgD+qVLgtP8lSGFNihGOMbsjyBDNZ+gcJx/AHUi+zyX5Z2+nAFvx/N/QhlRS
+         7PuL9T3OQ4hj5tyqcKkjBLDhVV7d5z9g2aOVx/D7OCeALJGjMrAi8pkEeLNK13IQC2D2
+         fjsgAARRjCsT2bNtUGofF1e30Q8XgIa9z97MYStEAnk5Cs0NUbGtoiUeCTdfMFw3D/BW
+         PvEQ==
+In-Reply-To: <CALvZod7wOyXpA3pycM2dav9_F9sW5ezC84or-75u8GdQyu30nw@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Minchan Kim <minchan@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Seth Jennings <sjenning@redhat.com>, Dan Streetman <ddstreet@ieee.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <kernel-team@fb.com>
 
-On Thu, Apr 28, 2022 at 07:49:33AM -0700, Shakeel Butt wrote:
-> On Thu, Apr 28, 2022 at 7:36 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+On Thu, Apr 28, 2022 at 7:49 AM Shakeel Butt <shakeelb@google.com> wrote:
+>
+> On Thu, Apr 28, 2022 at 7:36 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
 > >
 > > On Wed, Apr 27, 2022 at 04:36:22PM -0700, Shakeel Butt wrote:
-> > > On Wed, Apr 27, 2022 at 3:32 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+> > > On Wed, Apr 27, 2022 at 3:32 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
 > > > >
 > > > > On Wed, Apr 27, 2022 at 05:20:31PM -0400, Johannes Weiner wrote:
 > > > > > On Wed, Apr 27, 2022 at 01:29:34PM -0700, Minchan Kim wrote:
@@ -50,7 +46,7 @@ On Thu, Apr 28, 2022 at 07:49:33AM -0700, Shakeel Butt wrote:
 > > > > > > > Print zswap memory consumption and how many pages are zswapped out in
 > > > > > > > /proc/meminfo. Count zswapouts and zswapins in /proc/vmstat.
 > > > > > > >
-> > > > > > > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> > > > > > > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 > > > > > > > ---
 > > > > > > >  fs/proc/meminfo.c             |  7 +++++++
 > > > > > > >  include/linux/swap.h          |  5 +++++
@@ -77,7 +73,7 @@ On Thu, Apr 28, 2022 at 07:49:33AM -0700, Shakeel Butt wrote:
 > > > > > >
 > > > > > > I agree it would be very handy to have the memory consumption in meminfo
 > > > > > >
-> > > > > > https://lore.kernel.org/all/YYwZXrL3Fu8%2FvLZw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+> > > > > > https://lore.kernel.org/all/YYwZXrL3Fu8%2FvLZw@google.com/
 > > > > > >
 > > > > > > If we really go this Zswap only metric instead of general term
 > > > > > > "Compressed", I'd like to post maybe "Zram:" with same reason
@@ -122,25 +118,21 @@ On Thu, Apr 28, 2022 at 07:49:33AM -0700, Shakeel Butt wrote:
 > >
 > > In the DC, I guess you don't use disk swap in conjunction with zswap,
 > > so those writeback cache controls are less interesting to you?
-> 
+>
 > Yes, we have some modifications to zswap to make it work without any
-> backing real swap.
+> backing real swap. Though there is a future plan to move to zram
+> eventually.
 
-Not sure if you can share them, but I would be interested in those
-changes. We have real backing swap, but because of the way swap
-entries are allocated, pages stored in zswap will consume physical
-disk slots. So on top of regular swap, you need to provision disk
-space for zswap as well, which is unfortunate.
+Interesting, if so why not just simply use zram?
 
-What could be useful is a separate swap entry address space that maps
-zswap slots and disk slots alike. This would fix the above problem. It
-would have the added benefit of making swapoff much simpler and faster
-too, as it doesn't need to chase down page tables to free disk slots.
-
+>
+> >
 > > But it sounds like you would benefit from the zswap(ped) counters in
 > > memory.stat at least.
-> 
+>
 > Yes and I think if we need zram specific counters/stats in future,
 > those can be added then.
-
-I agree.
+>
+> >
+> > Thanks, that is enlightening!
+>
