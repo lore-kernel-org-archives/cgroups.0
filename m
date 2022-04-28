@@ -1,42 +1,127 @@
-From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH memcg v4] net: set proper memcg for net_init hooks
- allocations
-Date: Thu, 28 Apr 2022 07:37:00 +0300
-Message-ID: <ec08a059-2a04-3e9c-cbad-a5af2d2744e0@openvz.org>
-References: <YmdeCqi6wmgiSiWh@carbon>
- <33085523-a8b9-1bf6-2726-f456f59015ef@openvz.org>
- <CALvZod4oaj9MpBDVUp9KGmnqu4F3UxjXgOLkrkvmRfFjA7F1dw@mail.gmail.com>
- <20220427122232.GA9823@blackbody.suse.cz>
- <CALvZod7v0taU51TNRu=OM5iJ-bnm1ryu9shjs80PuE-SWobqFg@mail.gmail.com>
- <6b18f82d-1950-b38e-f3f5-94f6c23f0edb@openvz.org> <YmnFUwhmqJwYGQ5j@carbon>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH -next v4 0/3] support concurrent sync io for bfq on a specail occasion
+Date: Thu, 28 Apr 2022 19:19:04 +0800
+Message-ID: <20220428111907.3635820-1-yukuai3@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=openvz-org.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=LTNCTDXwD0m5fnU3nRCZyUZ2Z4+nGspg+RVsi3XsvCA=;
-        b=D9tvI1Yc8PHKlElRfTCfEiW/GgIxV8hjidcQv77IWEgZ2VsrSnRa1t4dk7eQ47p0IQ
-         zPzi4kCwsaFXzkKGmV6K96vHeHOHys/YFeiSaOosFjBpT/HDLwwKL69IoqZSwKCJ6LfZ
-         WXdAbqt0h0S57RV/0tyalW9ev1TiDIYbPlXhQe+v+joufiVTjHZ0nAUbqj/nx2T4+7g5
-         VMl5r6q+cprizf0qxT0Sw1ck/IJYekUH24djwznD86UB9XPRQ65+gg9INgUHap7lo5Dc
-         WlPq9FezKQH9gMBqRlbUDkTZ750ueKUcMLFwtp+LrG81EnQ+dHzI8Y8IDLykpLRvXOBA
-         jJlA==
-Content-Language: en-US
-In-Reply-To: <YmnFUwhmqJwYGQ5j@carbon>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On 4/28/22 01:36, Roman Gushchin wrote:
-> We can point root_mem_cgroup at a statically allocated structure
-> on both CONFIG_MEMCG and !CONFIG_MEMCG.
-> Does it sound reasonable or I'm missing some important points?
+Changes in v4:
+ - split bfq_update_busy_queues() to bfq_add/dec_busy_queues(),
+   suggested by Jan Kara.
+ - remove unused 'in_groups_with_pending_reqs',
 
-I expect Embedded developers will be highly disagree.
-Pointer only should be acceptable for them.
+Changes in v3:
+ - remove the cleanup patch that is irrelevant now(I'll post it
+   separately).
+ - instead of hacking wr queues and using weights tree insertion/removal,
+   using bfq_add/del_bfqq_busy() to count the number of groups
+   (suggested by Jan Kara).
 
-Thank you,
-	Vasily Averin
+Changes in v2:
+ - Use a different approch to count root group, which is much simple.
+
+Currently, bfq can't handle sync io concurrently as long as they
+are not issued from root group. This is because
+'bfqd->num_groups_with_pending_reqs > 0' is always true in
+bfq_asymmetric_scenario().
+
+The way that bfqg is counted into 'num_groups_with_pending_reqs':
+
+Before this patchset:
+ 1) root group will never be counted.
+ 2) Count if bfqg or it's child bfqgs have pending requests.
+ 3) Don't count if bfqg and it's child bfqgs complete all the requests.
+
+After this patchset:
+ 1) root group is counted.
+ 2) Count if bfqg have at least one bfqq that is marked busy.
+ 3) Don't count if bfqg doesn't have any busy bfqqs.
+
+The main reason to use busy state of bfqq instead of 'pending requests'
+is that bfqq can stay busy after dispatching the last request if idling
+is needed for service guarantees.
+
+With the above changes, concurrent sync io can be supported if only
+one group is activated.
+
+fio test script(startdelay is used to avoid queue merging):
+[global]
+filename=/dev/nvme0n1
+allow_mounted_write=0
+ioengine=psync
+direct=1
+ioscheduler=bfq
+offset_increment=10g
+group_reporting
+rw=randwrite
+bs=4k
+
+[test1]
+numjobs=1
+
+[test2]
+startdelay=1
+numjobs=1
+
+[test3]
+startdelay=2
+numjobs=1
+
+[test4]
+startdelay=3
+numjobs=1
+
+[test5]
+startdelay=4
+numjobs=1
+
+[test6]
+startdelay=5
+numjobs=1
+
+[test7]
+startdelay=6
+numjobs=1
+
+[test8]
+startdelay=7
+numjobs=1
+
+test result:
+running fio on root cgroup
+v5.18-rc1:	   550 Mib/s
+v5.18-rc1-patched: 550 Mib/s
+
+running fio on non-root cgroup
+v5.18-rc1:	   349 Mib/s
+v5.18-rc1-patched: 550 Mib/s
+
+Note that I also test null_blk with "irqmode=2
+completion_nsec=100000000(100ms) hw_queue_depth=1", and tests show
+that service guarantees are still preserved.
+
+Previous versions:
+RFC: https://lore.kernel.org/all/20211127101132.486806-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+v1: https://lore.kernel.org/all/20220305091205.4188398-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+v2: https://lore.kernel.org/all/20220416093753.3054696-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+v3: https://lore.kernel.org/all/20220427124722.48465-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+
+Yu Kuai (3):
+  block, bfq: record how many queues are busy in bfq_group
+  block, bfq: refactor the counting of 'num_groups_with_pending_reqs'
+  block, bfq: do not idle if only one group is activated
+
+ block/bfq-cgroup.c  |  1 +
+ block/bfq-iosched.c | 46 ++----------------------------------
+ block/bfq-iosched.h | 57 +++++++--------------------------------------
+ block/bfq-wf2q.c    | 35 +++++++++++++++++-----------
+ 4 files changed, 34 insertions(+), 105 deletions(-)
+
+-- 
+2.31.1
+
