@@ -1,73 +1,76 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2 2/5] cgroup: Account for memory_recursiveprot in
- test_memcg_low()
-Date: Fri, 29 Apr 2022 11:26:20 +0200
-Message-ID: <20220429092620.GA23621@blackbody.suse.cz>
-References: <20220423155619.3669555-1-void@manifault.com>
- <20220423155619.3669555-3-void@manifault.com>
- <20220427140928.GD9823@blackbody.suse.cz>
- <20220429010333.5rt2jwpiumnbuapf@dev0025.ash9.facebook.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v4 0/4] KVM: mm: count KVM mmu usage in memory stats
+Date: Fri, 29 Apr 2022 20:11:27 +0000
+Message-ID: <20220429201131.3397875-1-yosryahmed@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1651224381; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=U29ZMPPzFK4uUEyUYePHiz2qlt3Ri7SCZ7aNiH026UY=;
-        b=IGPyVwbIILUdzwZFwC6tg5ufsIZXP5ClacMvrcvkQiCZaeUgVRAYMM/AoNO9PpHjD/AEcL
-        fOWpgPD83vJ1gjAAlqWmAdKmqOLaAsi5QlzP+Y1N3FfIUGIGGIZFJNt++GwMtNRmpzL3Rs
-        N46aQwwVuCxWp71FRvxzu2n0+VXMq3Q=
-Content-Disposition: inline
-In-Reply-To: <20220429010333.5rt2jwpiumnbuapf-2sxDN0k4oOr/D8ZFBB3Vemm1Eemhq0z/AL8bYrjMMd8@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=an+yRArve5ZrSQoHDO73aNF7aPP+aWpAaWAPrlB9pIk=;
+        b=rVCOmuzI6Jkg0VCtxq3Vv4tNhvcYa/7dy0aktfX+JU+3ABY/r1NuUYg6gNufzdzZyl
+         TDx1/jOeHCUYV9kesQSDCM7gJuIkuCPZ3CI4xBiGyBYzao4KJxWyjV/wpOnUty7d2gkO
+         xxgzezsPH49IA+C2wqMwqPUxHg+sr/u2pJ62e25BKh1gnBlY4tBxVuP6uCBRMMN8Bn0A
+         o1aa0m514YE3U+J37NsZZ2A48FIIXDI4WlykXmRNEDZ9x5sTM9dO2kFgrvtI4EV9z//v
+         PwFQ3hahtu5wgS2IyOj4qxw1dMwLZ0jJ58K/MjgmBn8W0hkXkDKsnnvkTtmina/ADpu8
+         G4Uw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Richard Palethorpe <rpalethorpe-IBi9RG/b67k@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, kvmarm-FPEHb7Xf0XXUo1n7N8X6UoWGPAHP3yOg@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Thu, Apr 28, 2022 at 06:03:33PM -0700, David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org> wrote:
-> but my interpretation of the rest of that discussion with Roman is
-> that we haven't yet decided whether we don't want to propagate
-> memory.low events from children cgroups with memory.low == 0. Or at
-> the very least, some more justification was requested on why not
-> counting such events was prudent.
+We keep track of several kernel memory stats (total kernel memory, page
+tables, stack, vmalloc, etc) on multiple levels (global, per-node,
+per-memcg, etc). These stats give insights to users to how much memory
+is used by the kernel and for what purposes.
 
-I'm not a fan of that original proposal of mine anymore (to be more
-precise, of _only_ that patch, there's still the RFCness reason 1) to
-consider).
-As I shared with the last reply there, there's a problem in the behavior
-which shouldn't be masked by filtering some events.
+Currently, memory used by kvm mmu is not accounted in any of those
+kernel memory stats. This patch series accounts the memory pages
+used by KVM for page tables in those stats in a new
+NR_SECONDARY_PAGETABLE stat.
 
-> Would you be ok with merging this patch so that the cgroup selftests can
-> pass again based on the current behavior of the kernel, and we can then
-> revert the changes to test_memcg_low() later on if and when we decide that
-> we don't want to propagate memory.low events for memory.low == 0 children?
+---
 
-I still think that the behavior when there's no protection left for the
-memory.low == 0 child, there should be no memory.low events (not just
-uncounted but not happening) and test should not accept this (even
-though it's the current behavior).
+Changes in V4:
+- Changed accounting hooks in arm64 to only account s2 page tables and
+  refactored them to a much cleaner form, based on recommendations from
+  Oliver Upton and Marc Zyngier.
+- Dropped patches for mips and riscv. I am not interested in those archs
+  anyway and don't have the resources to test them. I posted them for
+  completeness but it doesn't seem like anyone was interested.
 
-What might improve the test space would be to have two configs like
+Changes in V3:
+- Added NR_SECONDARY_PAGETABLE instead of piggybacking on NR_PAGETABLE
+  stats.
 
-Original one (simplified here)
-	parent		memory.low=50M	memory.current=100M
-	` child1	memory.low=50M	memory.current=50M
-	` child2	memory.low=0M	memory.current=50M
+Changes in V2:
+- Added accounting stats for other archs than x86.
+- Changed locations in the code where x86 KVM page table stats were
+  accounted based on suggestions from Sean Christopherson.
 
-New one (checks events due to recursive protection)
-	parent		memory.low=50M	memory.current=100M
-	` child1	memory.low=40M	memory.current=50M
-	` child2	memory.low=0M	memory.current=50M
+---
 
-The second config assigns recursive protection to child2 and should
-therefore cause memory.low events in child2 (with memory_recursiveprot
-enabled of course).
+Yosry Ahmed (4):
+  mm: add NR_SECONDARY_PAGETABLE to count secondary page table uses.
+  KVM: mmu: add a helper to account memory used by KVM mmu.
+  KVM: x86/mmu: count KVM mmu usage in secondary pagetable stats.
+  KVM: arm64/mmu: count KVM s2 mmu usage in secondary pagetable stats
 
-Or alternative new one (checks events due to recursive protection)
-	parent		memory.low=50M	memory.current=100M
-	` child1	memory.low=0M	memory.current=50M
-	` child2	memory.low=0M	memory.current=50M
+ Documentation/admin-guide/cgroup-v2.rst |  5 ++++
+ Documentation/filesystems/proc.rst      |  4 +++
+ arch/arm64/kvm/mmu.c                    | 35 ++++++++++++++++++++++---
+ arch/x86/kvm/mmu/mmu.c                  | 16 +++++++++--
+ arch/x86/kvm/mmu/tdp_mmu.c              | 16 +++++++++--
+ drivers/base/node.c                     |  2 ++
+ fs/proc/meminfo.c                       |  2 ++
+ include/linux/kvm_host.h                |  9 +++++++
+ include/linux/mmzone.h                  |  1 +
+ mm/memcontrol.c                         |  1 +
+ mm/page_alloc.c                         |  6 ++++-
+ mm/vmstat.c                             |  1 +
+ 12 files changed, 89 insertions(+), 9 deletions(-)
 
-HTH,
-Michal
+-- 
+2.36.0.464.gb9c8b46e94-goog
+
