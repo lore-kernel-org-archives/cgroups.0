@@ -1,58 +1,51 @@
-From: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
-Subject: Re: [PATCH v2 2/5] cgroup: Account for memory_recursiveprot in
- test_memcg_low()
-Date: Thu, 28 Apr 2022 18:03:33 -0700
-Message-ID: <20220429010333.5rt2jwpiumnbuapf@dev0025.ash9.facebook.com>
-References: <20220423155619.3669555-1-void@manifault.com>
- <20220423155619.3669555-3-void@manifault.com>
- <20220427140928.GD9823@blackbody.suse.cz>
+From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH net] net: enable memcg accounting for veth queues
+Date: Fri, 29 Apr 2022 08:17:35 +0300
+Message-ID: <0b28d49b-605c-ac1a-df85-643164e69039@openvz.org>
+References: <1c338b99-8133-6126-2ff2-94a4d3f26451@openvz.org>
+ <20220427095854.79554fab@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20220427140928.GD9823-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=openvz-org.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=s9wfiyI3JBIiISlABF9nzSzidRhd08PN5K7/7gRJUwU=;
+        b=zgh0lqmxqjAmYpfMJeInqwyar5RpKgn6nKPhjU0zE/mRkRAEOsvk01q11mzTkDptGi
+         TwBcOx3EARcSI0hAy15m/EW2/0NDVnNDO95agwC6gbWdQLW4BjUE7CMli5n1iR5y8wOa
+         g2LGTfB+wEs9BisfMzb6MrrgDQhrA5OanuAZ+TT5md3h2aag3jDAPyzctlDCCG97MKPQ
+         e06ZJtfPG7utnP0hWSxpaUVfENEu7U2BcFuBCJbGdkJRiMjrPXJVr2P3nK0MraYFi6sz
+         dmNYSv5MxKsD7AUI5Bf0T5Y0G9OWIbekQq8sNqNLeTRfjuqk1lZZeNVGgx24s+tILIfP
+         7Q2A==
+Content-Language: en-US
+In-Reply-To: <20220427095854.79554fab-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Richard Palethorpe <rpalethorpe-IBi9RG/b67k@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hi Michal,
+veth netdevice defines own rx queues and allocates array containing
+up to 4095 ~750-bytes-long 'struct veth_rq' elements. Such allocation
+is quite huge and should be accounted to memcg.
 
-On Wed, Apr 27, 2022 at 04:09:28PM +0200, Michal Koutn=FD wrote:
-> Hello David.
->=20
-> On Sat, Apr 23, 2022 at 08:56:19AM -0700, David Vernet <void-gq6j2QGBifHb=
-y3iVrkZq2A@public.gmane.org> wrote:
-> > This unfortunately broke the memcg tests, which asserts that a sibling
-> > that experienced reclaim but had a memory.low value of 0, would not
-> > observe any memory.low events. This patch updates test_memcg_low() to
-> > account for the new behavior introduced by memory_recursiveprot.
->=20
-> I think the test is correct, there should be no (not even recursive)
-> protection in this particular case (when the remaining siblings consume
-> all of parental protection).
->=20
-> This should be fixed in the kernel (see also [1], no updates from me yet
-> :-/)
->=20
-> Michal
->=20
-> [1] https://lore.kernel.org/lkml/20220322182248.29121-1-mkoutny-IBi9RG/b6=
-7k@public.gmane.org/
->=20
+Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+---
+ drivers/net/veth.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I see, thanks for sharing that context. I think I see your point about the
-implementation of the reclaim mechanism potentially overcounting, but my
-interpretation of the rest of that discussion with Roman is that we haven't
-yet decided whether we don't want to propagate memory.low events from
-children cgroups with memory.low =3D=3D 0. Or at the very least, some more
-justification was requested on why not counting such events was prudent.
-
-Would you be ok with merging this patch so that the cgroup selftests can
-pass again based on the current behavior of the kernel, and we can then
-revert the changes to test_memcg_low() later on if and when we decide that
-we don't want to propagate memory.low events for memory.low =3D=3D 0 childr=
-en?
-
-Thanks,
-David
+diff --git a/drivers/net/veth.c b/drivers/net/veth.c
+index d29fb9759cc9..bd67f458641a 100644
+--- a/drivers/net/veth.c
++++ b/drivers/net/veth.c
+@@ -1310,7 +1310,7 @@ static int veth_alloc_queues(struct net_device *dev)
+ 	struct veth_priv *priv = netdev_priv(dev);
+ 	int i;
+ 
+-	priv->rq = kcalloc(dev->num_rx_queues, sizeof(*priv->rq), GFP_KERNEL);
++	priv->rq = kcalloc(dev->num_rx_queues, sizeof(*priv->rq), GFP_KERNEL_ACCOUNT);
+ 	if (!priv->rq)
+ 		return -ENOMEM;
+ 
+-- 
+2.31.1
