@@ -1,107 +1,386 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 4/4] KVM: arm64/mmu: count KVM s2 mmu usage in secondary
- pagetable stats
-Date: Fri, 29 Apr 2022 20:11:31 +0000
-Message-ID: <20220429201131.3397875-5-yosryahmed@google.com>
-References: <20220429201131.3397875-1-yosryahmed@google.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 5c26993c31f0f726aa1f90158f17ec95069b7cb2
+Date: Sat, 30 Apr 2022 09:45:56 +0800
+Message-ID: <626c94d4.SOGEfn36ZhwK2Mvh%lkp@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=S3BBsZ5bvk4uzoCkIECYzRGc2TYJKfjLopd3GTSDAKA=;
-        b=jyU87f8rJUN/0hbg4f3kdULDqmUiyc07Xb66s8cBmC8eSW5afxPVORIXgO/XcbFugu
-         /GO6FtfJ4ZPnIibnkDPCd2vWdazZzlWxhMF1+MfgeVHE4EB8soDI4WiD7pxUHc0XysjZ
-         dz0NPsguoIx0yCM0GzW+6AJFD3eMtBn5IljqCyl24S9cni2H7/qF97uyykmSQ8zzR3qj
-         0ctQn1mlUvVg2EZJl93vg7f3fTcTbPn8ws29rj4RPyM04s2wTJC2/9P5OL5vwTLWBxg5
-         QDDNee7lmxpZqa2y/Fn8/pPEocI38Oecy4dHL012AY61PD0PXJ/gQDtUls02A2N8uheX
-         E/zA==
-In-Reply-To: <20220429201131.3397875-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1651283191; x=1682819191;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=z1wYF2kjQXly2YOsiw5KfFNorNDFoeG0VdiKGBGhixw=;
+  b=YuzcWQU8n0ikesp2F1jAJ4PCuuo+U1gt1+08huDDsTtKXpkcqUd7T/Bp
+   eTmjWxApaVB94+krWqxwJTw3siNVvbuy6Tya+KDczcOOZb9L924DCmDa7
+   mPBKRgpTV4Zk4GPXlpS0kzOEJC5ORktHDg5Yrf7K4dk5Y1MT7ZIuwEabA
+   xlio4ZmLzfcx7sU7iqRK1oS7okdiVKpMYDK2TAImemASJHiTYyTlTgoNL
+   joz6R+mE7pfLobGmJMCmOvdVcDcYWRzVDgGDALyWF0A/MxT8gqB9ffwmv
+   mS44qiI82dXSdHJXbWLoAtmNN/yHx/tol25m6FukiWyUgQvz8FjqXsgcc
+   Q==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, kvmarm-FPEHb7Xf0XXUo1n7N8X6UoWGPAHP3yOg@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Count the pages used by KVM in arm64 for stage2 mmu in secondary pagetable
-stats.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 5c26993c31f0f726aa1f90158f17ec95069b7cb2  cgroup: Add config file to cgroup selftest suite
 
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- arch/arm64/kvm/mmu.c | 35 +++++++++++++++++++++++++++++++----
- 1 file changed, 31 insertions(+), 4 deletions(-)
+elapsed time: 6191m
 
-diff --git a/arch/arm64/kvm/mmu.c b/arch/arm64/kvm/mmu.c
-index 53ae2c0640bc..fc5030307cce 100644
---- a/arch/arm64/kvm/mmu.c
-+++ b/arch/arm64/kvm/mmu.c
-@@ -92,9 +92,13 @@ static bool kvm_is_device_pfn(unsigned long pfn)
- static void *stage2_memcache_zalloc_page(void *arg)
- {
- 	struct kvm_mmu_memory_cache *mc = arg;
-+	void *virt;
- 
- 	/* Allocated with __GFP_ZERO, so no need to zero */
--	return kvm_mmu_memory_cache_alloc(mc);
-+	virt = kvm_mmu_memory_cache_alloc(mc);
-+	if (virt)
-+		kvm_account_pgtable_pages(virt, +1);
-+	return virt;
- }
- 
- static void *kvm_host_zalloc_pages_exact(size_t size)
-@@ -102,6 +106,20 @@ static void *kvm_host_zalloc_pages_exact(size_t size)
- 	return alloc_pages_exact(size, GFP_KERNEL_ACCOUNT | __GFP_ZERO);
- }
- 
-+static void *kvm_s2_zalloc_pages_exact(size_t size)
-+{
-+	void *virt = kvm_host_zalloc_pages_exact(size);
-+	if (virt)
-+		kvm_account_pgtable_pages(virt, +(size >> PAGE_SHIFT));
-+	return virt;
-+}
-+
-+static void kvm_s2_free_pages_exact(void *virt, size_t size)
-+{
-+	kvm_account_pgtable_pages(virt, -(size >> PAGE_SHIFT));
-+	free_pages_exact(virt, size);
-+}
-+
- static void kvm_host_get_page(void *addr)
- {
- 	get_page(virt_to_page(addr));
-@@ -112,6 +130,15 @@ static void kvm_host_put_page(void *addr)
- 	put_page(virt_to_page(addr));
- }
- 
-+static void kvm_s2_put_page(void *addr)
-+{
-+	struct page *p = virt_to_page(addr);
-+	/* Dropping last refcount, the page will be freed */
-+	if (page_count(p) == 1)
-+		kvm_account_pgtable_pages(addr, -1);
-+	put_page(p);
-+}
-+
- static int kvm_host_page_count(void *addr)
- {
- 	return page_count(virt_to_page(addr));
-@@ -603,10 +630,10 @@ static int get_user_mapping_size(struct kvm *kvm, u64 addr)
- 
- static struct kvm_pgtable_mm_ops kvm_s2_mm_ops = {
- 	.zalloc_page		= stage2_memcache_zalloc_page,
--	.zalloc_pages_exact	= kvm_host_zalloc_pages_exact,
--	.free_pages_exact	= free_pages_exact,
-+	.zalloc_pages_exact	= kvm_s2_zalloc_pages_exact,
-+	.free_pages_exact	= kvm_s2_free_pages_exact,
- 	.get_page		= kvm_host_get_page,
--	.put_page		= kvm_host_put_page,
-+	.put_page		= kvm_s2_put_page,
- 	.page_count		= kvm_host_page_count,
- 	.phys_to_virt		= kvm_host_va,
- 	.virt_to_phys		= kvm_host_pa,
+configs tested: 330
+configs skipped: 6
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm64                               defconfig
+arm64                            allyesconfig
+arm                              allmodconfig
+arm                                 defconfig
+arm                              allyesconfig
+mips                 randconfig-c004-20220425
+i386                 randconfig-c001-20220425
+i386                          randconfig-c001
+ia64                          tiger_defconfig
+sh                            shmin_defconfig
+mips                           ip32_defconfig
+nios2                               defconfig
+mips                     decstation_defconfig
+m68k                            q40_defconfig
+arm                           corgi_defconfig
+sh                           se7724_defconfig
+parisc                generic-32bit_defconfig
+m68k                         amcore_defconfig
+arc                        nsim_700_defconfig
+sh                           se7206_defconfig
+mips                         cobalt_defconfig
+powerpc                       ppc64_defconfig
+powerpc                    amigaone_defconfig
+sh                        sh7785lcr_defconfig
+um                               alldefconfig
+powerpc                      makalu_defconfig
+sh                               j2_defconfig
+arm                        cerfcube_defconfig
+sh                           se7751_defconfig
+arm                         assabet_defconfig
+mips                  decstation_64_defconfig
+arm                            zeus_defconfig
+arm                      integrator_defconfig
+arc                              alldefconfig
+arm                           sunxi_defconfig
+s390                             allmodconfig
+sh                          rsk7264_defconfig
+mips                  maltasmvp_eva_defconfig
+mips                      maltasmvp_defconfig
+arm                        clps711x_defconfig
+arm                        spear6xx_defconfig
+sh                         ecovec24_defconfig
+arc                        nsimosci_defconfig
+powerpc                      arches_defconfig
+powerpc                 linkstation_defconfig
+sh                     sh7710voipgw_defconfig
+sh                        edosk7705_defconfig
+arm                           viper_defconfig
+h8300                            alldefconfig
+arm                            xcep_defconfig
+powerpc                 mpc8540_ads_defconfig
+sh                        sh7763rdp_defconfig
+openrisc                  or1klitex_defconfig
+mips                       bmips_be_defconfig
+arm                         lpc18xx_defconfig
+arm                          pxa910_defconfig
+powerpc                     ep8248e_defconfig
+s390                                defconfig
+mips                         tb0226_defconfig
+sh                        edosk7760_defconfig
+powerpc                 mpc834x_mds_defconfig
+powerpc                      ppc6xx_defconfig
+arm                       multi_v4t_defconfig
+arm                      jornada720_defconfig
+powerpc                    adder875_defconfig
+sh                           se7619_defconfig
+sh                   secureedge5410_defconfig
+sh                          r7780mp_defconfig
+sh                     magicpanelr2_defconfig
+powerpc                     taishan_defconfig
+sparc                       sparc64_defconfig
+powerpc                        cell_defconfig
+parisc                generic-64bit_defconfig
+arm                         cm_x300_defconfig
+sh                             sh03_defconfig
+arm                       imx_v6_v7_defconfig
+ia64                      gensparse_defconfig
+m68k                            mac_defconfig
+i386                             alldefconfig
+powerpc                     tqm8541_defconfig
+powerpc                       holly_defconfig
+mips                            gpr_defconfig
+arc                           tb10x_defconfig
+xtensa                          iss_defconfig
+arm                            lart_defconfig
+powerpc                         ps3_defconfig
+sh                          r7785rp_defconfig
+alpha                               defconfig
+arm                             pxa_defconfig
+arm                        keystone_defconfig
+arm                         vf610m4_defconfig
+m68k                           sun3_defconfig
+sh                              ul2_defconfig
+sh                          sdk7786_defconfig
+powerpc                     mpc83xx_defconfig
+sh                      rts7751r2d1_defconfig
+m68k                       m5249evb_defconfig
+xtensa                              defconfig
+arm                          iop32x_defconfig
+sparc                               defconfig
+arm                        mini2440_defconfig
+sh                ecovec24-romimage_defconfig
+sh                         ap325rxa_defconfig
+m68k                        m5272c3_defconfig
+sh                             shx3_defconfig
+sh                           se7780_defconfig
+arc                     nsimosci_hs_defconfig
+xtensa                           alldefconfig
+arm                          gemini_defconfig
+sh                          kfr2r09_defconfig
+m68k                       bvme6000_defconfig
+sh                          landisk_defconfig
+arc                         haps_hs_defconfig
+xtensa                         virt_defconfig
+powerpc                      mgcoge_defconfig
+powerpc                   motionpro_defconfig
+m68k                       m5475evb_defconfig
+powerpc                 mpc837x_mds_defconfig
+arc                            hsdk_defconfig
+arm                            qcom_defconfig
+arm                          simpad_defconfig
+m68k                          sun3x_defconfig
+nios2                            allyesconfig
+m68k                                defconfig
+sh                          rsk7201_defconfig
+arm                        oxnas_v6_defconfig
+arm                        multi_v7_defconfig
+microblaze                          defconfig
+powerpc                     pq2fads_defconfig
+m68k                       m5208evb_defconfig
+arc                 nsimosci_hs_smp_defconfig
+arm                            pleb_defconfig
+ia64                             alldefconfig
+parisc                              defconfig
+sh                          lboxre2_defconfig
+arm                         nhk8815_defconfig
+sh                           sh2007_defconfig
+powerpc                     asp8347_defconfig
+m68k                        mvme147_defconfig
+h8300                       h8s-sim_defconfig
+sparc64                          alldefconfig
+sh                           se7750_defconfig
+sh                  sh7785lcr_32bit_defconfig
+sparc64                             defconfig
+powerpc                  storcenter_defconfig
+riscv                            allmodconfig
+arc                      axs103_smp_defconfig
+m68k                             alldefconfig
+arm                           h3600_defconfig
+sh                           se7721_defconfig
+powerpc                           allnoconfig
+powerpc                   currituck_defconfig
+powerpc                      cm5200_defconfig
+arm                           tegra_defconfig
+sh                            hp6xx_defconfig
+openrisc                 simple_smp_defconfig
+xtensa                  cadence_csp_defconfig
+m68k                        mvme16x_defconfig
+arm                        mvebu_v7_defconfig
+parisc64                            defconfig
+sh                          sdk7780_defconfig
+arm                      footbridge_defconfig
+mips                       capcella_defconfig
+powerpc                 mpc85xx_cds_defconfig
+sh                   rts7751r2dplus_defconfig
+arm                         lubbock_defconfig
+arc                     haps_hs_smp_defconfig
+xtensa                  nommu_kc705_defconfig
+arc                                 defconfig
+mips                          rb532_defconfig
+x86_64                           alldefconfig
+openrisc                    or1ksim_defconfig
+x86_64               randconfig-c001-20220425
+arm                  randconfig-c002-20220425
+x86_64                        randconfig-c001
+arm                  randconfig-c002-20220428
+arm                  randconfig-c002-20220427
+arm                  randconfig-c002-20220429
+arm                  randconfig-c002-20220426
+ia64                                defconfig
+ia64                             allmodconfig
+ia64                             allyesconfig
+m68k                             allyesconfig
+m68k                             allmodconfig
+arc                              allyesconfig
+csky                                defconfig
+alpha                            allyesconfig
+h8300                            allyesconfig
+xtensa                           allyesconfig
+sh                               allmodconfig
+parisc                           allyesconfig
+s390                             allyesconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+i386                                defconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+x86_64                        randconfig-a002
+x86_64                        randconfig-a006
+x86_64                        randconfig-a004
+x86_64                        randconfig-a011
+x86_64                        randconfig-a013
+x86_64                        randconfig-a015
+x86_64               randconfig-a015-20220425
+x86_64               randconfig-a014-20220425
+x86_64               randconfig-a011-20220425
+x86_64               randconfig-a013-20220425
+x86_64               randconfig-a012-20220425
+x86_64               randconfig-a016-20220425
+i386                 randconfig-a014-20220425
+i386                 randconfig-a012-20220425
+i386                 randconfig-a011-20220425
+i386                 randconfig-a015-20220425
+i386                 randconfig-a013-20220425
+i386                 randconfig-a016-20220425
+i386                          randconfig-a012
+i386                          randconfig-a016
+i386                          randconfig-a014
+arc                  randconfig-r043-20220425
+s390                 randconfig-r044-20220425
+riscv                randconfig-r042-20220425
+arc                  randconfig-r043-20220428
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+riscv                    nommu_k210_defconfig
+x86_64                    rhel-8.3-kselftests
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                          rhel-8.3-func
+x86_64                                  kexec
+x86_64                              defconfig
+x86_64                           allyesconfig
+x86_64                         rhel-8.3-kunit
+x86_64                               rhel-8.3
+x86_64                           rhel-8.3-syz
+
+clang tested configs:
+riscv                randconfig-c006-20220425
+mips                 randconfig-c004-20220425
+x86_64               randconfig-c007-20220425
+arm                  randconfig-c002-20220425
+i386                 randconfig-c001-20220425
+powerpc              randconfig-c003-20220425
+riscv                randconfig-c006-20220427
+mips                 randconfig-c004-20220427
+x86_64                        randconfig-c007
+i386                          randconfig-c001
+arm                  randconfig-c002-20220427
+powerpc              randconfig-c003-20220427
+riscv                randconfig-c006-20220428
+mips                 randconfig-c004-20220428
+arm                  randconfig-c002-20220428
+powerpc              randconfig-c003-20220428
+riscv                randconfig-c006-20220429
+mips                 randconfig-c004-20220429
+arm                  randconfig-c002-20220429
+powerpc              randconfig-c003-20220429
+mips                          ath79_defconfig
+arm                       spear13xx_defconfig
+mips                   sb1250_swarm_defconfig
+arm                         shannon_defconfig
+mips                     loongson2k_defconfig
+arm                        vexpress_defconfig
+powerpc                  mpc866_ads_defconfig
+arm                          pxa168_defconfig
+powerpc                    socrates_defconfig
+arm                            dove_defconfig
+powerpc                     tqm5200_defconfig
+powerpc                 mpc832x_rdb_defconfig
+mips                     cu1830-neo_defconfig
+arm                      pxa255-idp_defconfig
+powerpc                 mpc8315_rdb_defconfig
+arm                       aspeed_g4_defconfig
+powerpc                      walnut_defconfig
+arm                              alldefconfig
+mips                            e55_defconfig
+arm                        magician_defconfig
+powerpc                       ebony_defconfig
+powerpc                        icon_defconfig
+arm                          moxart_defconfig
+mips                           mtx1_defconfig
+arm                       cns3420vb_defconfig
+arm                     davinci_all_defconfig
+arm                         bcm2835_defconfig
+mips                malta_qemu_32r6_defconfig
+mips                          rm200_defconfig
+arm                       netwinder_defconfig
+mips                          ath25_defconfig
+mips                           ip22_defconfig
+powerpc                  mpc885_ads_defconfig
+arm                       imx_v4_v5_defconfig
+powerpc                          allyesconfig
+powerpc                      katmai_defconfig
+powerpc                     pseries_defconfig
+mips                       lemote2f_defconfig
+powerpc                     kmeter1_defconfig
+x86_64                           allyesconfig
+powerpc                        fsp2_defconfig
+mips                      malta_kvm_defconfig
+mips                           ip27_defconfig
+mips                       rbtx49xx_defconfig
+powerpc                          allmodconfig
+powerpc                 mpc8560_ads_defconfig
+riscv                          rv32_defconfig
+mips                     cu1000-neo_defconfig
+arm                             mxs_defconfig
+mips                         tb0287_defconfig
+powerpc                 linkstation_defconfig
+mips                        workpad_defconfig
+mips                      bmips_stb_defconfig
+arm                       versatile_defconfig
+x86_64               randconfig-a005-20220425
+x86_64               randconfig-a006-20220425
+x86_64               randconfig-a002-20220425
+x86_64               randconfig-a004-20220425
+x86_64               randconfig-a003-20220425
+x86_64               randconfig-a001-20220425
+x86_64                        randconfig-a005
+x86_64                        randconfig-a003
+x86_64                        randconfig-a001
+i386                          randconfig-a002
+i386                          randconfig-a006
+i386                          randconfig-a004
+i386                 randconfig-a006-20220425
+i386                 randconfig-a002-20220425
+i386                 randconfig-a005-20220425
+i386                 randconfig-a003-20220425
+i386                 randconfig-a001-20220425
+i386                 randconfig-a004-20220425
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+hexagon              randconfig-r041-20220425
+hexagon              randconfig-r045-20220425
+hexagon              randconfig-r041-20220428
+riscv                randconfig-r042-20220428
+hexagon              randconfig-r045-20220428
+
 -- 
-2.36.0.464.gb9c8b46e94-goog
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
