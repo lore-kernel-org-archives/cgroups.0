@@ -1,164 +1,62 @@
-From: Vasily Averin <vvs@openvz.org>
-Subject: [PATCH memcg v5] net: set proper memcg for net_init hooks allocations
-Date: Mon, 2 May 2022 03:10:32 +0300
-Message-ID: <0ccfe7a4-c178-0b66-d481-2326c85a8ffb@openvz.org>
-References: <CALvZod5HugCO2G3+Av3pXC6s2sy0zKW_HRaRyhOO9GOOWV1SsQ@mail.gmail.com>
+From: Oliver Upton <oupton@google.com>
+Subject: Re: [PATCH v4 4/4] KVM: arm64/mmu: count KVM s2 mmu usage in
+ secondary pagetable stats
+Date: Mon, 2 May 2022 07:24:28 +0000
+Message-ID: <Ym+HLD/U0wwrxtaB@google.com>
+References: <20220429201131.3397875-1-yosryahmed@google.com>
+ <20220429201131.3397875-5-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <kvm-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=openvz-org.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:from:subject:to:cc
-         :references:content-language:in-reply-to:content-transfer-encoding;
-        bh=hd0y1OR/b4IeCBpDcty8eQdPQFVx3QSyhq2QmkPNM2U=;
-        b=69H2sZp3OJ0LOKrRShXopodHHx0OU2Q0oQ9nk2IPizjQ/AESBps1VdJ5Oq3dfBorHr
-         0Jpr+Ii0XIGAC9b027CE9SenODK76DnAoIWWvlqEW49Gu+29PZg2IyeJlFBM/wh5nMS5
-         yXq0RGQ8lNdwBpZIn0z/YqxF4Irp+B7lqzBA+PLV0/1eB6yiziFT4L+VbngWvp7+pT9j
-         i5zbmCEXZ3SaVNtPgvOS97VSGcHt1obphxpMqauFcLOizuZT94JuFThr6wCUy4EfD65Z
-         2sgiTD7dDr5lf7+AyxpsELyBBnmxFl4tKJ8AlhaZ0bV6G0MyHZoodMaXa13o7wi3NjNn
-         rbtg==
-Content-Language: en-US
-In-Reply-To: <CALvZod5HugCO2G3+Av3pXC6s2sy0zKW_HRaRyhOO9GOOWV1SsQ@mail.gmail.com>
+        d=google.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=U3yK116U7QtcL5LqxzCgKsq8iaHrCKZT63ym/sXbAKc=;
+        b=Bzi+R0R7QaC+1bjX2bo/eUhZOcarNK1lhHQK3BnkDNsZ/YQ2kF65HgubGNE1g9QjAF
+         VClt8yFpYSC5oht9s5BVdGzylLx1SGefdWn/yZSkP43v9ZQ/U115ldRP4mIaned4xy+i
+         XIOYoMJFeLcWOEhr5AxcXnBEpdEmwdLfO6uO7xJ6U4GX4NaQbgjWU8WH2H/DzUzqOLnG
+         Y07pCf3IIYshAUYH77brXREcB5+CeW72v1d84nST1hyzetu4eMbN4GXW/ybvmO2gKA4z
+         6cXwi4THka5cWO2I5lnhUndPk6YD5GJn9zIhAtE8MWZojqFyir63YUwehSgoAGHPtqPb
+         sMAQ==
+Content-Disposition: inline
+In-Reply-To: <20220429201131.3397875-5-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>
-Cc: kernel@openvz.org, Florian Westphal <fw@strlen.de>, linux-kernel@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@suse.com>, cgroups@vger.kernel.org, netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>
+Content-Transfer-Encoding: 7bit
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Marc Zyngier <maz@kernel.org>, James Morse <james.morse@arm.com>, Alexandru Elisei <alexandru.elisei@arm.com>, Suzuki K Poulose <suzuki.poulose@arm.com>, Paolo Bonzini <pbonzini@redhat.com>, Sean Christopherson <seanjc@google.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Wanpeng Li <wanpengli@tencent.com>, Jim Mattson <jmattson@google.com>, Joerg Roedel <joro@8bytes.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, kvmarm@lists.cs.columbia.edu, kvm@v
 
-__register_pernet_operations() executes init hook of registered
-pernet_operation structure in all existing net namespaces.
+Hi Yosry,
 
-Typically, these hooks are called by a process associated with
-the specified net namespace, and all __GFP_ACCOUNT marked
-allocation are accounted for corresponding container/memcg.
+On Fri, Apr 29, 2022 at 08:11:31PM +0000, Yosry Ahmed wrote:
+> Count the pages used by KVM in arm64 for stage2 mmu in secondary pagetable
+> stats.
+> 
+> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+> ---
+>  arch/arm64/kvm/mmu.c | 35 +++++++++++++++++++++++++++++++----
+>  1 file changed, 31 insertions(+), 4 deletions(-)
+> 
+> diff --git a/arch/arm64/kvm/mmu.c b/arch/arm64/kvm/mmu.c
+> index 53ae2c0640bc..fc5030307cce 100644
+> --- a/arch/arm64/kvm/mmu.c
+> +++ b/arch/arm64/kvm/mmu.c
+> @@ -92,9 +92,13 @@ static bool kvm_is_device_pfn(unsigned long pfn)
+>  static void *stage2_memcache_zalloc_page(void *arg)
+>  {
+>  	struct kvm_mmu_memory_cache *mc = arg;
+> +	void *virt;
+>  
+>  	/* Allocated with __GFP_ZERO, so no need to zero */
+> -	return kvm_mmu_memory_cache_alloc(mc);
+> +	virt = kvm_mmu_memory_cache_alloc(mc);
+> +	if (virt)
+> +		kvm_account_pgtable_pages(virt, +1);
 
-However __register_pernet_operations() calls the hooks in the same
-context, and as a result all marked allocations are accounted
-to one memcg for all processed net namespaces.
+Sorry I didn't say it last time around, would now be a good time to
+clean up the funky sign convention of kvm_mod_used_mmu_pages()? Or limit
+the funk to just x86 :)
 
-This patch adjusts active memcg for each net namespace and helps
-to account memory allocated inside ops_init() into the proper memcg.
-
-Signed-off-by: Vasily Averin <vvs@openvz.org>
-Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
-Acked-by: Shakeel Butt <shakeelb@google.com>
-
----
-v5: documented get_mem_cgroup_from_obj() and for mem_cgroup_or_root()
-    functions, asked by Shakeel.
-
-v4: get_mem_cgroup_from_kmem() renamed to get_mem_cgroup_from_obj(),
-    get_net_memcg() renamed to mem_cgroup_or_root(), suggested by Roman.
-
-v3: put_net_memcg() replaced by an alreay existing mem_cgroup_put()
-    It checks memcg before accessing it, this is required for
-    __register_pernet_operations() called before memcg initialization.
-    Additionally fixed leading whitespaces in non-memcg_kmem version
-    of mem_cgroup_from_obj().
-
-v2: introduced get/put_net_memcg(),
-    new functions are moved under CONFIG_MEMCG_KMEM
-    to fix compilation issues reported by Intel's kernel test robot
-
-v1: introduced get_mem_cgroup_from_kmem(), which takes the refcount
-    for the found memcg, suggested by Shakeel
----
- include/linux/memcontrol.h | 47 +++++++++++++++++++++++++++++++++++++-
- net/core/net_namespace.c   |  7 ++++++
- 2 files changed, 53 insertions(+), 1 deletion(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 0abbd685703b..6405f9b8f5a8 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -1714,6 +1714,42 @@ static inline int memcg_cache_id(struct mem_cgroup *memcg)
- 
- struct mem_cgroup *mem_cgroup_from_obj(void *p);
- 
-+/**
-+ * get_mem_cgroup_from_obj - get a memcg associated with passed kernel object.
-+ * @p: pointer to object from which memcg should be extracted. It can be NULL.
-+ *
-+ * Retrieves the memory group into which the memory of the pointed kernel
-+ * object is accounted. If memcg is found, its reference is taken.
-+ * If a passed kernel object is uncharged, or if proper memcg cannot be found,
-+ * as well as if mem_cgroup is disabled, NULL is returned.
-+ *
-+ * Return: valid memcg pointer with taken reference or NULL.
-+ */
-+static inline struct mem_cgroup *get_mem_cgroup_from_obj(void *p)
-+{
-+	struct mem_cgroup *memcg;
-+
-+	rcu_read_lock();
-+	do {
-+		memcg = mem_cgroup_from_obj(p);
-+	} while (memcg && !css_tryget(&memcg->css));
-+	rcu_read_unlock();
-+	return memcg;
-+}
-+
-+/**
-+ * mem_cgroup_or_root - always returns a pointer to a valid memory cgroup.
-+ * @memcg: pointer to a valid memory cgroup or NULL.
-+ *
-+ * If passed argument is not NULL, returns it without any additional checks
-+ * and changes. Otherwise, root_mem_cgroup is returned.
-+ *
-+ * NOTE: root_mem_cgroup can be NULL during early boot.
-+ */
-+static inline struct mem_cgroup *mem_cgroup_or_root(struct mem_cgroup *memcg)
-+{
-+	return memcg ? memcg : root_mem_cgroup;
-+}
- #else
- static inline bool mem_cgroup_kmem_disabled(void)
- {
-@@ -1763,9 +1799,18 @@ static inline void memcg_put_cache_ids(void)
- 
- static inline struct mem_cgroup *mem_cgroup_from_obj(void *p)
- {
--       return NULL;
-+	return NULL;
- }
- 
-+static inline struct mem_cgroup *get_mem_cgroup_from_obj(void *p)
-+{
-+	return NULL;
-+}
-+
-+static inline struct mem_cgroup *mem_cgroup_or_root(struct mem_cgroup *memcg)
-+{
-+	return NULL;
-+}
- #endif /* CONFIG_MEMCG_KMEM */
- 
- #endif /* _LINUX_MEMCONTROL_H */
-diff --git a/net/core/net_namespace.c b/net/core/net_namespace.c
-index a5b5bb99c644..240f3db77dec 100644
---- a/net/core/net_namespace.c
-+++ b/net/core/net_namespace.c
-@@ -26,6 +26,7 @@
- #include <net/net_namespace.h>
- #include <net/netns/generic.h>
- 
-+#include <linux/sched/mm.h>
- /*
-  *	Our network namespace constructor/destructor lists
-  */
-@@ -1147,7 +1148,13 @@ static int __register_pernet_operations(struct list_head *list,
- 		 * setup_net() and cleanup_net() are not possible.
- 		 */
- 		for_each_net(net) {
-+			struct mem_cgroup *old, *memcg;
-+
-+			memcg = mem_cgroup_or_root(get_mem_cgroup_from_obj(net));
-+			old = set_active_memcg(memcg);
- 			error = ops_init(ops, net);
-+			set_active_memcg(old);
-+			mem_cgroup_put(memcg);
- 			if (error)
- 				goto out_undo;
- 			list_add_tail(&net->exit_list, &net_exit_list);
--- 
-2.31.1
-
+--
+Thanks,
+Oliver
