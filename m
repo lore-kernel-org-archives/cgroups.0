@@ -1,17 +1,102 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: make the blkcg and blkcg structures private
-Date: Mon, 2 May 2022 18:46:37 +0200
-Message-ID: <20220502164637.GB21569@lst.de>
-References: <20220420042723.1010598-1-hch@lst.de>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v4 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
+ page table uses.
+Date: Mon, 2 May 2022 11:46:26 -0700
+Message-ID: <CAJD7tkY7JF25XXUFq2mGroetMkfo-2zGOaQC94pjZE3D42+oaw@mail.gmail.com>
+References: <20220429201131.3397875-1-yosryahmed@google.com>
+ <20220429201131.3397875-2-yosryahmed@google.com> <87ilqoi77b.wl-maz@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20220420042723.1010598-1-hch-jcswGhMUV9g@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=u9wSiuSwEdY5mnTnkaPbFc68dMNs+2B7Kv3x/mlBROY=;
+        b=B5EJ0yX/6p4KphD4mHUJ1Rf/ah2ZGGbyCj3/Fg8jz6NZgaKjFGHXri9nWa56usJkQV
+         i315aF1sZwZQCXuqR1GAJi/UydKqqqyJKrMK8NO2ltYq2E6LzRLcZv32EwENsp7gEeoz
+         iSHMNZvgfxxeDjj5++SiliEGaOkXpt+a8RHyXVhO5DpOnU48kj++PVL3oUiAbWHvgwWt
+         /8Cr6IfX5ViwgwukGvi0D67RRVTS2aaUOaOIh181LsfJrySzqwochKRZSrWUxxtwgj0X
+         utkbg7G1h+72m4iLsTXSquLZ7P0i2NJO3VNDlb1N0tn+bpBJNirD0jDtdQa9nWw8JgOP
+         HsHw==
+In-Reply-To: <87ilqoi77b.wl-maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Smart <james.smart-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Dick Kennedy <dick.kennedy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, kvma
 
-ping?
+On Mon, May 2, 2022 at 3:01 AM Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+> On Fri, 29 Apr 2022 21:11:28 +0100,
+> Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> >
+> > Add NR_SECONDARY_PAGETABLE stat to count secondary page table uses, e.g.
+> > KVM mmu. This provides more insights on the kernel memory used
+> > by a workload.
+> >
+> > This stat will be used by subsequent patches to count KVM mmu
+> > memory usage.
+> >
+> > Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > ---
+> >  Documentation/admin-guide/cgroup-v2.rst | 5 +++++
+> >  Documentation/filesystems/proc.rst      | 4 ++++
+> >  drivers/base/node.c                     | 2 ++
+> >  fs/proc/meminfo.c                       | 2 ++
+> >  include/linux/mmzone.h                  | 1 +
+> >  mm/memcontrol.c                         | 1 +
+> >  mm/page_alloc.c                         | 6 +++++-
+> >  mm/vmstat.c                             | 1 +
+> >  8 files changed, 21 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> > index 69d7a6983f78..828cb6b6f918 100644
+> > --- a/Documentation/admin-guide/cgroup-v2.rst
+> > +++ b/Documentation/admin-guide/cgroup-v2.rst
+> > @@ -1312,6 +1312,11 @@ PAGE_SIZE multiple when read back.
+> >         pagetables
+> >                  Amount of memory allocated for page tables.
+> >
+> > +       secondary_pagetables
+> > +             Amount of memory allocated for secondary page tables,
+> > +             this currently includes KVM mmu allocations on x86
+> > +             and arm64.
+>
+> Can you please explain what the rationale is for this? We already
+> account for the (arm64) S2 PTs as a userspace allocation (see
 
+This can be considered as continuation for that work. The mentioned
+commit accounts S2 PTs to the VM process cgroup kernel memory. We have
+stats for the total kernel memory, and some fine-grained categories of
+that, like (pagetables, stack, slab, etc.).
+
+This patch just adds another category to give further insights into
+what exactly is using kernel memory.
+
+> 115bae923ac8bb29ee635). You are saying that this is related to a
+> 'workload', but given that the accounting is global, I fail to see how
+> you can attribute these allocations on a particular VM.
+
+The main motivation is having the memcg stats, which give attribution
+to workloads. If you think it's more appropriate, we can add it as a
+memcg-only stat, like MEMCG_VMALLOC (see 4e5aa1f4c2b4 ("memcg: add
+per-memcg vmalloc stat")). The only reason I made this as a global
+stat too is to be consistent with NR_PAGETABLE.
+
+>
+> What do you plan to do for IOMMU page tables? After all, they serve
+> the exact same purpose, and I'd expect these to be handled the same
+> way (i.e. why is this KVM specific?).
+
+The reason this was named NR_SECONDARY_PAGTABLE instead of
+NR_KVM_PAGETABLE is exactly that. To leave room to incrementally
+account other types of secondary page tables to this stat. It is just
+that we are currently interested in the KVM MMU usage.
+
+>
+> Thanks,
+>
+>         M.
+>
+> --
+> Without deviation from the norm, progress is not possible.
