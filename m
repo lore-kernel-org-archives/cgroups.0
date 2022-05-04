@@ -1,68 +1,93 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: kernfs memcg accounting
-Date: Wed, 4 May 2022 16:10:01 +0200
-Message-ID: <20220504141001.GA10890@blackbody.suse.cz>
-References: <7e867cb0-89d6-402c-33d2-9b9ba0ba1523@openvz.org>
- <20220427140153.GC9823@blackbody.suse.cz>
- <7509fa9f-9d15-2f29-cb2f-ac0e8d99a948@openvz.org>
- <YnBLge4ZQNbbxufc@blackbook>
- <52a9f35b-458b-44c4-7fc8-d05c8db0c73f@openvz.org>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v10 7/8] cgroup/cpuset: Update description of
+ cpuset.cpus.partition in cgroup-v2.rst
+Date: Wed, 4 May 2022 12:02:19 -0400
+Message-ID: <379138a0-1721-d6fa-4d1d-cb8d79f28474@redhat.com>
+References: <20220503162149.1764245-1-longman@redhat.com>
+ <20220503162149.1764245-8-longman@redhat.com>
+ <20220504112552.GA15266@blackbody.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1651673402; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1651680144;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=X8N/2j1iMVEWPhLHwXlf1lbWHCy97qgMOd6RtCKAAHI=;
-        b=YUvahhi8lIQnKT+/35TWCpA0GcF25PHrlG0nI6I37i/XqOeTn+w+dV7CC77XJJbhzSF9d6
-        hg6QJYGL24C0qMCZELbiXO5XFTcgbVtkpXWBBhhbCSTgPBQPb3AtS78QY6poz0CYHIWK+m
-        IWbijGNan7qNqCzpWSk4Oe9ejmyXlUI=
-Content-Disposition: inline
-In-Reply-To: <52a9f35b-458b-44c4-7fc8-d05c8db0c73f-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+        bh=Kx7MkkZT+Yq+fM3GfswobHpHpBTfL9nTvycJqnYKSP8=;
+        b=g64HKG3q7K9kl0OdgE3bVx0t56mL25HfPcdeYHdrnZG95Gt95xSWwL3EWg2VMMvjGH/6IU
+        G/YZ2Xg/1Apbh17i2zs+e3ofB+tM9ShMxCQaqEtlrEw5zbFUbGp24Fird2Rk7fP1pdF7sz
+        eelDZJqopjQ7GRxGKAZBsAJ5ITqW7RY=
+Content-Language: en-US
+In-Reply-To: <20220504112552.GA15266@blackbody.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
 
-On Wed, May 04, 2022 at 12:00:18PM +0300, Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
-> My patches protect the host mostly from misuse, when someone creates
-> a huge number of nedevices inside a container.
+On 5/4/22 07:25, Michal Koutný wrote:
+> Hello.
+>
+> On Tue, May 03, 2022 at 12:21:48PM -0400, Waiman Long <longman@redhat.com> wrote:
+>>   Documentation/admin-guide/cgroup-v2.rst | 145 +++++++++++++-----------
+>>   1 file changed, 79 insertions(+), 66 deletions(-)
+> A note across various lines -- it seems your new text accidentally mixes
+> both spaces and tabs for indentation.
 
-Understood.
+You are right. I will fix that.
 
-> Frankly speaking I do not see a big difference between memcg of current process,
-> memcg of newly created child and memcg of its parent.
+>
+>> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+>> index 69d7a6983f78..94e1e3771830 100644
+>> --- a/Documentation/admin-guide/cgroup-v2.rst
+>> +++ b/Documentation/admin-guide/cgroup-v2.rst
+>> [...]
+>> +	The value shown in "cpuset.cpus.effective" of a partition root is
+>> +	the CPUs that the parent partition root can dedicate to the new
+>> +	partition root.  They are subtracted from "cpuset.cpus.effective"
+>> +	of the parent and may be different from "cpuset.cpus"
+> I find this paragraph a bit hard to comprehend (I read it as it talks
+> about three levels of cgroups (parent, child, grandparent). It is
+> correct but I'd suggect following formulation (where I additionally
+> simplifed it by talking about "available" cpus):
+>
+>> The value shown in "cpuset.cpus.effective" of a partition root is
+>> the CPUs that the partition root can dedicate to a potential new child
+>> partition root. The new child subtracts available CPUs from its parent
+>> "cpuset.cpus.effective".
 
-I agree that's not substantial difference. It's relevant for outer
-entities "injecting" something into a subtree.
-As I wrote previously, charging to the creator in the generic case is
-sensible.
 
-> As far as I understand, Roman chose the parent memcg because it was a special
-> case of creating a new memory group. He temporally changed active memcg
-> in mem_cgroup_css_alloc() and properly accounted all required memcg-specific
-> allocations.
+Thanks for the suggestion, will modify the text as suggested.
 
-> However, he ignored accounting for a rather large struct mem_cgroup
-> therefore I think we can do not worry about 128 bytes of kernfs node.
 
-Are you referring to the current code (>= v5.18-rc2)? All big structs
-related to mem_cgroup should be accounted. What is ignored?
+>
+>> +	For a partition root to become valid, the following conditions
+>> +	must be met.
+>> +
+>> +	1) The "cpuset.cpus" is exclusive, i.e. they are not shared by
+>> +	   any of its siblings (exclusivity rule).
+>> +	2) The parent cgroup is a valid partition root.
+>> +	3) The "cpuset.cpus" is not empty and must contain at least
+>> +	   one of the CPUs from parent's "cpuset.cpus", i.e. they overlap.
+>> +        4) The "cpuset.cpus.effective" must be a subset of "cpuset.cpus"
+>> +           and cannot be empty unless there is no task associated with
+>> +           this partition.
+> This sounds good to me.
+>
+>> +        Care must be taken to change a valid partition root to "member"
+>> +        as all its child partitions, if present, will become invalid.
+> This does not talk about recovering. Is it intentional? (I.e. to left
+> implementation defined)
 
-> Primary I mean here struct mem_cgroup allocation in mem_cgroup_alloc().
+This new patch series does have the ability to recover now.  I am just 
+not emphasizing the recovery aspect of it in the doc file. I will add a 
+sentence about it.
 
-Just note that memory controller may not be always enabled so
-cgroup_mkdir != mem_cgroup_alloc().
-
-> However, I think we need to take into account any other distributions called
-> inside cgroup_mkdir: struct cgroup and kernefs node in common part and 
-> any other cgroup-cpecific allocations in other .css_alloc functions.
-> They all can be called from inside container, allocates non-accountable
-> memory and by this way theoretically can be misused.
-
-Also note that (if you're purely on unified hierachy) you can protect
-against that with cgroup.max.descendants and cgroup.max.depth.
+>
+> Except the remarks above, I find the concepts described here good. I'll
+> reply to implementation separately & later.
 
 Thanks,
-Michal
+Longman
+
