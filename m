@@ -1,69 +1,68 @@
 From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v6 2/6] cgroup: gpu: Add a cgroup controller for
- allocator attribution of GPU memory
-Date: Wed, 4 May 2022 14:25:58 +0200
-Message-ID: <20220504122558.GB24172@blackbody.suse.cz>
-References: <20220502231944.3891435-1-tjmercier@google.com>
- <20220502231944.3891435-3-tjmercier@google.com>
+Subject: Re: kernfs memcg accounting
+Date: Wed, 4 May 2022 16:10:01 +0200
+Message-ID: <20220504141001.GA10890@blackbody.suse.cz>
+References: <7e867cb0-89d6-402c-33d2-9b9ba0ba1523@openvz.org>
+ <20220427140153.GC9823@blackbody.suse.cz>
+ <7509fa9f-9d15-2f29-cb2f-ac0e8d99a948@openvz.org>
+ <YnBLge4ZQNbbxufc@blackbook>
+ <52a9f35b-458b-44c4-7fc8-d05c8db0c73f@openvz.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1651667160; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1651673402; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=doyRZ/aPo6CAu2aRJZdJIbiD5u5Ey0uZjhyvfP1Ctxg=;
-        b=N2vaxZGJ2unb+3IDJGpPKSzFqAbVU0whcBJYvGepz19nZuYUtUZV1YeQwH/896HEErAkZE
-        Y6ajefODov6DJ/roi62apFVoZZ+Qv0Mkw7J15GK+8M7slaceWBctJQU5sdF7elqYx4+hbf
-        sd773fem46TOty3AXl7mg/7SEvNr6/U=
+        bh=X8N/2j1iMVEWPhLHwXlf1lbWHCy97qgMOd6RtCKAAHI=;
+        b=YUvahhi8lIQnKT+/35TWCpA0GcF25PHrlG0nI6I37i/XqOeTn+w+dV7CC77XJJbhzSF9d6
+        hg6QJYGL24C0qMCZELbiXO5XFTcgbVtkpXWBBhhbCSTgPBQPb3AtS78QY6poz0CYHIWK+m
+        IWbijGNan7qNqCzpWSk4Oe9ejmyXlUI=
 Content-Disposition: inline
-In-Reply-To: <20220502231944.3891435-3-tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <52a9f35b-458b-44c4-7fc8-d05c8db0c73f-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, daniel-/w4YWyX8dFk@public.gmane.org, hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, christian.koenig-5C7GfCeVMHo@public.gmane.org, jstultz-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, cmllamas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, skhan-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Hello.
+On Wed, May 04, 2022 at 12:00:18PM +0300, Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
+> My patches protect the host mostly from misuse, when someone creates
+> a huge number of nedevices inside a container.
 
-On Mon, May 02, 2022 at 11:19:36PM +0000, "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> This patch adds APIs to:
-> -allow a device to register for memory accounting using the GPU cgroup
-> controller.
-> -charge and uncharge allocated memory to a cgroup.
+Understood.
 
-Is this API for separately built consumers?
-The respective functions should be exported (EXPORT_SYMBOL_GPL) if I
-haven't missed anything.
+> Frankly speaking I do not see a big difference between memcg of current process,
+> memcg of newly created child and memcg of its parent.
 
-> +#ifdef CONFIG_CGROUP_GPU
-> + /* The GPU cgroup controller data structure */
-> +struct gpucg {
-> +	struct cgroup_subsys_state css;
-> +
-> +	/* list of all resource pools that belong to this cgroup */
-> +	struct list_head rpools;
-> +};
-> +
-> +/* A named entity representing bucket of tracked memory. */
-> +struct gpucg_bucket {
-> +	/* list of various resource pools in various cgroups that the bucket is part of */
-> +	struct list_head rpools;
-> +
-> +	/* list of all buckets registered for GPU cgroup accounting */
-> +	struct list_head bucket_node;
-> +
-> +	/* string to be used as identifier for accounting and limit setting */
-> +	const char *name;
-> +};
+I agree that's not substantial difference. It's relevant for outer
+entities "injecting" something into a subtree.
+As I wrote previously, charging to the creator in the generic case is
+sensible.
 
-Do these struct have to be defined "publicly"?
-I.e. the driver code could just work with gpucg and gpucg_bucket
-pointers.
+> As far as I understand, Roman chose the parent memcg because it was a special
+> case of creating a new memory group. He temporally changed active memcg
+> in mem_cgroup_css_alloc() and properly accounted all required memcg-specific
+> allocations.
 
-> +int gpucg_register_bucket(struct gpucg_bucket *bucket, const char *name)
+> However, he ignored accounting for a rather large struct mem_cgroup
+> therefore I think we can do not worry about 128 bytes of kernfs node.
 
-...and the registration function would return a pointer to newly
-(internally) allocated gpucg_bucket.
+Are you referring to the current code (>= v5.18-rc2)? All big structs
+related to mem_cgroup should be accounted. What is ignored?
 
-Regards,
+> Primary I mean here struct mem_cgroup allocation in mem_cgroup_alloc().
+
+Just note that memory controller may not be always enabled so
+cgroup_mkdir != mem_cgroup_alloc().
+
+> However, I think we need to take into account any other distributions called
+> inside cgroup_mkdir: struct cgroup and kernefs node in common part and 
+> any other cgroup-cpecific allocations in other .css_alloc functions.
+> They all can be called from inside container, allocates non-accountable
+> memory and by this way theoretically can be misused.
+
+Also note that (if you're purely on unified hierachy) you can protect
+against that with cgroup.max.descendants and cgroup.max.depth.
+
+Thanks,
 Michal
