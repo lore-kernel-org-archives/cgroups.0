@@ -1,139 +1,98 @@
-From: Davidlohr Bueso <dave@stgolabs.net>
-Subject: Re: [PATCH v5 1/4] memcg: introduce per-memcg reclaim interface
-Date: Tue, 3 May 2022 17:13:34 -0700
-Message-ID: <20220504001334.4va3c5ul33jbauti@offworld>
-References: <20220425190040.2475377-1-yosryahmed@google.com>
- <20220425190040.2475377-2-yosryahmed@google.com>
+From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: Re: kernfs memcg accounting
+Date: Wed, 4 May 2022 12:00:18 +0300
+Message-ID: <52a9f35b-458b-44c4-7fc8-d05c8db0c73f@openvz.org>
+References: <7e867cb0-89d6-402c-33d2-9b9ba0ba1523@openvz.org>
+ <20220427140153.GC9823@blackbody.suse.cz>
+ <7509fa9f-9d15-2f29-cb2f-ac0e8d99a948@openvz.org>
+ <YnBLge4ZQNbbxufc@blackbook>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
-        s=dreamhost; t=1651623923;
-        bh=Hdg6qiQIlirwga0S1D4eAt0+896iFphupiKzUuqyi/Q=;
-        h=Date:From:To:Cc:Subject:Content-Type;
-        b=rgUIAvoTFpTkfb3mIEefutvc2YskV5Y59hB3NobYW57orXBSp86moSb5KsmPlkCEy
-         4T/OCMcMwH3iZPPxh1h5nPyhB5fAoZvimb0PcS3XNJnjchUw+DQD/rmQpqIdf+f7uP
-         HOImaf1V1Ac64X8bg7vcd8m686bCjLbNV7gKUzITd5iFTYPS8pEJeZNgalR+b6lVKW
-         E9ssdneLShN65tkb6grnT8Z2jjV42h94o4otHpZ4KqnX2SpPKGJmHBu+SmOU9abMGq
-         AahW7vdKwo/9qR48/jfMRq4blgJXsSGsGT/yQLzMmetNKmFwcd9rAwulvFe1OM/VSC
-         vrBjviOfCrqyw==
-Content-Disposition: inline
-In-Reply-To: <20220425190040.2475377-2-yosryahmed@google.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=openvz-org.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=9h40UHG4+Vlt8Ck/eT8J9TW5C6yu4qO7t/1/LFEGiqY=;
+        b=WV8AFjx0yOFxd5rVjjr2sLJ5mz+V5+uLTb8SILkuM1yrcMqzUSvPWiS2mpZw8xGb4r
+         9qZ4I/VkzSXsP28HaPRPIrFVlF/ASJZx9O7CTX8EzLap0XCMvySddHQy7j98gc1T3N+w
+         5C6I73NA84YBQltR4hG9pjh9Ip9cTCZicfKpbFFzp0NtpwgxPD/AH1MC8Lp0hvqVwJqC
+         YXkbk/fZs0S5ef8KwZ0KTWOZHNzZiICXs9YcutrZ5rkun9sYbnD8JpXfWJgA8fFTrzFD
+         MpWCsX9wWoxokW6zDRuaLX48cKgi+EoPmdbIPxi1GGEW7QJDhnMkWuLmbpidhOenlIf4
+         rdUw==
+Content-Language: en-US
+In-Reply-To: <YnBLge4ZQNbbxufc@blackbook>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, Yu Zhao <yuzhao@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>, Chen Wandun <chenwandun@huawei.com>, Vaibhav Jain <vaibhav@linux.ibm.com>, Michal =?utf-8?B?S291dG7Dr8K/wr0=?= <mkoutny@suse.com>, Tim Chen <tim.c.chen@linux.intel.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, l
+Content-Type: text/plain; charset="iso-8859-1"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Mon, 25 Apr 2022, Yosry Ahmed wrote:
+On 5/3/22 00:22, Michal Koutn=C3=BD wrote:
+> When struct mem_cgroup charging was introduced, there was a similar
+> discussion [1].
 
->From: Shakeel Butt <shakeelb@google.com>
->
->Introduce a memcg interface to trigger memory reclaim on a memory cgroup.
->
->Use case: Proactive Reclaim
->---------------------------
->
->A userspace proactive reclaimer can continuously probe the memcg to
->reclaim a small amount of memory. This gives more accurate and
->up-to-date workingset estimation as the LRUs are continuously
->sorted and can potentially provide more deterministic memory
->overcommit behavior. The memory overcommit controller can provide
->more proactive response to the changing behavior of the running
->applications instead of being reactive.
->
->A userspace reclaimer's purpose in this case is not a complete replacement
->for kswapd or direct reclaim, it is to proactively identify memory savings
->opportunities and reclaim some amount of cold pages set by the policy
->to free up the memory for more demanding jobs or scheduling new jobs.
->
->A user space proactive reclaimer is used in Google data centers.
->Additionally, Meta's TMO paper recently referenced a very similar
->interface used for user space proactive reclaim:
->https://dl.acm.org/doi/pdf/10.1145/3503222.3507731
->
->Benefits of a user space reclaimer:
->-----------------------------------
->
->1) More flexible on who should be charged for the cpu of the memory
->reclaim. For proactive reclaim, it makes more sense to be centralized.
->
->2) More flexible on dedicating the resources (like cpu). The memory
->overcommit controller can balance the cost between the cpu usage and
->the memory reclaimed.
->
->3) Provides a way to the applications to keep their LRUs sorted, so,
->under memory pressure better reclaim candidates are selected. This also
->gives more accurate and uptodate notion of working set for an
->application.
->
->Why memory.high is not enough?
->------------------------------
->
->- memory.high can be used to trigger reclaim in a memcg and can
->  potentially be used for proactive reclaim.
->  However there is a big downside in using memory.high. It can potentially
->  introduce high reclaim stalls in the target application as the
->  allocations from the processes or the threads of the application can hit
->  the temporary memory.high limit.
->
->- Userspace proactive reclaimers usually use feedback loops to decide
->  how much memory to proactively reclaim from a workload. The metrics
->  used for this are usually either refaults or PSI, and these metrics
->  will become messy if the application gets throttled by hitting the
->  high limit.
->
->- memory.high is a stateful interface, if the userspace proactive
->  reclaimer crashes for any reason while triggering reclaim it can leave
->  the application in a bad state.
->
->- If a workload is rapidly expanding, setting memory.high to proactively
->  reclaim memory can result in actually reclaiming more memory than
->  intended.
->
->The benefits of such interface and shortcomings of existing interface
->were further discussed in this RFC thread:
->https://lore.kernel.org/linux-mm/5df21376-7dd1-bf81-8414-32a73cea45dd@google.com/
->
->Interface:
->----------
->
->Introducing a very simple memcg interface 'echo 10M > memory.reclaim' to
->trigger reclaim in the target memory cgroup.
->
->The interface is introduced as a nested-keyed file to allow for future
->optional arguments to be easily added to configure the behavior of
->reclaim.
->
->Possible Extensions:
->--------------------
->
->- This interface can be extended with an additional parameter or flags
->  to allow specifying one or more types of memory to reclaim from (e.g.
->  file, anon, ..).
->
->- The interface can also be extended with a node mask to reclaim from
->  specific nodes. This has use cases for reclaim-based demotion in memory
->  tiering systens.
->
->- A similar per-node interface can also be added to support proactive
->  reclaim and reclaim-based demotion in systems without memcg.
->
->- Add a timeout parameter to make it easier for user space to call the
->  interface without worrying about being blocked for an undefined amount
->  of time.
->
->For now, let's keep things simple by adding the basic functionality.
->
->[yosryahmed@google.com: worked on versions v2 onwards, refreshed to
->current master, updated commit message based on recent
->discussions and use cases]
->
->Signed-off-by: Shakeel Butt <shakeelb@google.com>
->Co-developed-by: Yosry Ahmed <yosryahmed@google.com>
->Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
->Acked-by: Johannes Weiner <hannes@cmpxchg.org>
->Acked-by: Michal Hocko <mhocko@suse.com>
->Acked-by: Wei Xu <weixugc@google.com>
->Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
+Thank you, I'm missed this patch, it was very interesting and useful.
+I would note though, that OpenVZ and LXC have another usecase:
+we have separate and independent systemd instances inside OS containers.
+So container's cgroups are created not in host's root memcg but=20
+inside accountable container's root memcg. =20
 
-Reviewed-by: Davidlohr Bueso <dave@stgolabs.net>
+> I can see following aspects here:
+> 1) absolute size of kernfs_objects,
+> 2) practical difference between a) and b),
+> 3) consistency with memcg,
+> 4) v1 vs v2 behavior.
+...
+> How do these reasonings align with your original intention of net
+> devices accounting? (Are the creators of net devices inside the
+> container?)
+
+It is possible to create netdevice in one namespace/container=20
+and then move them to another one, and this possibility is widely used.
+With my patch memory allocated by these devices will be not accounted
+to new memcg, however I do not think it is a problem.
+My patches protect the host mostly from misuse, when someone creates
+a huge number of nedevices inside a container.
+
+>> Do you think it is incorrect and new kernfs node should be accounted
+>> to memcg of parent cgroup, as mem_cgroup_css_alloc()-> mem_cgroup_alloc(=
+) does?
+>=20
+> I don't think either variant is incorrect. I'd very much prefer the
+> consistency with memcg behavior (variant a)) but as I've listed the
+> arguments above, it seems such a consistency can't be easily justified.
+
+From my point of view it is most important to account allocated memory
+to any cgroup inside container. Select of proper memcg is a secondary goal =
+here.
+Frankly speaking I do not see a big difference between memcg of current pro=
+cess,
+memcg of newly created child and memcg of its parent.
+
+As far as I understand, Roman chose the parent memcg because it was a speci=
+al
+case of creating a new memory group. He temporally changed active memcg
+in mem_cgroup_css_alloc() and properly accounted all required memcg-specific
+allocations.
+However, he ignored accounting for a rather large struct mem_cgroup
+therefore I think we can do not worry about 128 bytes of kernfs node.
+Yes, it will be accounted to some other memcg, but the same thing
+happens with kernfs nodes of other groups.
+I don't think that's a problem.
+
+>> Perhaps you mean that in this case kernfs should not be counted at all,
+>> as almost all neighboring allocations do?
+>=20
+> No, I think it wouldn't help here [2]. (Or which neighboring allocations
+> do you mean? There must be at least nr_cgroups of them.)
+
+Primary I mean here struct mem_cgroup allocation in mem_cgroup_alloc().
+However, I think we need to take into account any other distributions called
+inside cgroup_mkdir: struct cgroup and kernefs node in common part and=20
+any other cgroup-cpecific allocations in other .css_alloc functions.
+They all can be called from inside container, allocates non-accountable
+memory and by this way theoretically can be misused.
+So I'm going to check this scenario a bit later.
+
+Thank you,
+	Vasily Averin
