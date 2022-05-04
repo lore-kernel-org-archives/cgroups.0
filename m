@@ -1,98 +1,80 @@
-From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: Re: kernfs memcg accounting
-Date: Wed, 4 May 2022 12:00:18 +0300
-Message-ID: <52a9f35b-458b-44c4-7fc8-d05c8db0c73f@openvz.org>
-References: <7e867cb0-89d6-402c-33d2-9b9ba0ba1523@openvz.org>
- <20220427140153.GC9823@blackbody.suse.cz>
- <7509fa9f-9d15-2f29-cb2f-ac0e8d99a948@openvz.org>
- <YnBLge4ZQNbbxufc@blackbook>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH v10 7/8] cgroup/cpuset: Update description of
+ cpuset.cpus.partition in cgroup-v2.rst
+Date: Wed, 4 May 2022 13:25:52 +0200
+Message-ID: <20220504112552.GA15266@blackbody.suse.cz>
+References: <20220503162149.1764245-1-longman@redhat.com>
+ <20220503162149.1764245-8-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=openvz-org.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=9h40UHG4+Vlt8Ck/eT8J9TW5C6yu4qO7t/1/LFEGiqY=;
-        b=WV8AFjx0yOFxd5rVjjr2sLJ5mz+V5+uLTb8SILkuM1yrcMqzUSvPWiS2mpZw8xGb4r
-         9qZ4I/VkzSXsP28HaPRPIrFVlF/ASJZx9O7CTX8EzLap0XCMvySddHQy7j98gc1T3N+w
-         5C6I73NA84YBQltR4hG9pjh9Ip9cTCZicfKpbFFzp0NtpwgxPD/AH1MC8Lp0hvqVwJqC
-         YXkbk/fZs0S5ef8KwZ0KTWOZHNzZiICXs9YcutrZ5rkun9sYbnD8JpXfWJgA8fFTrzFD
-         MpWCsX9wWoxokW6zDRuaLX48cKgi+EoPmdbIPxi1GGEW7QJDhnMkWuLmbpidhOenlIf4
-         rdUw==
-Content-Language: en-US
-In-Reply-To: <YnBLge4ZQNbbxufc@blackbook>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1651663553; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=IHotc1tLxNFQnMsMhQ4/PAmmsXVX/ZrmEY2hoLkhoeY=;
+        b=prmLabugZEs93348NyPI+Rk+PvbnW03y6T9MnWqgkElCaLaxD76fSofTgRaeDBgj+VsO+6
+        JJrL0pJY5taH3pcpCX3mOYmFXRH4wLu2FwI9+uFoFQy61iIBDOsN98iOmHbJLnWAaSemYH
+        wBbOqgwKNBoCX7DWQOQHFbvaRdjwiaA=
+Content-Disposition: inline
+In-Reply-To: <20220503162149.1764245-8-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
 
-On 5/3/22 00:22, Michal Koutn=C3=BD wrote:
-> When struct mem_cgroup charging was introduced, there was a similar
-> discussion [1].
+Hello.
 
-Thank you, I'm missed this patch, it was very interesting and useful.
-I would note though, that OpenVZ and LXC have another usecase:
-we have separate and independent systemd instances inside OS containers.
-So container's cgroups are created not in host's root memcg but=20
-inside accountable container's root memcg. =20
+On Tue, May 03, 2022 at 12:21:48PM -0400, Waiman Long <longman@redhat.com> wrote:
+>  Documentation/admin-guide/cgroup-v2.rst | 145 +++++++++++++-----------
+>  1 file changed, 79 insertions(+), 66 deletions(-)
 
-> I can see following aspects here:
-> 1) absolute size of kernfs_objects,
-> 2) practical difference between a) and b),
-> 3) consistency with memcg,
-> 4) v1 vs v2 behavior.
-...
-> How do these reasonings align with your original intention of net
-> devices accounting? (Are the creators of net devices inside the
-> container?)
+A note across various lines -- it seems your new text accidentally mixes
+both spaces and tabs for indentation.
 
-It is possible to create netdevice in one namespace/container=20
-and then move them to another one, and this possibility is widely used.
-With my patch memory allocated by these devices will be not accounted
-to new memcg, however I do not think it is a problem.
-My patches protect the host mostly from misuse, when someone creates
-a huge number of nedevices inside a container.
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 69d7a6983f78..94e1e3771830 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> [...]
+> +	The value shown in "cpuset.cpus.effective" of a partition root is
+> +	the CPUs that the parent partition root can dedicate to the new
+> +	partition root.  They are subtracted from "cpuset.cpus.effective"
+> +	of the parent and may be different from "cpuset.cpus"
 
->> Do you think it is incorrect and new kernfs node should be accounted
->> to memcg of parent cgroup, as mem_cgroup_css_alloc()-> mem_cgroup_alloc(=
-) does?
->=20
-> I don't think either variant is incorrect. I'd very much prefer the
-> consistency with memcg behavior (variant a)) but as I've listed the
-> arguments above, it seems such a consistency can't be easily justified.
+I find this paragraph a bit hard to comprehend (I read it as it talks
+about three levels of cgroups (parent, child, grandparent). It is
+correct but I'd suggect following formulation (where I additionally
+simplifed it by talking about "available" cpus):
 
-From my point of view it is most important to account allocated memory
-to any cgroup inside container. Select of proper memcg is a secondary goal =
-here.
-Frankly speaking I do not see a big difference between memcg of current pro=
-cess,
-memcg of newly created child and memcg of its parent.
+> The value shown in "cpuset.cpus.effective" of a partition root is
+> the CPUs that the partition root can dedicate to a potential new child
+> partition root. The new child subtracts available CPUs from its parent
+> "cpuset.cpus.effective".
 
-As far as I understand, Roman chose the parent memcg because it was a speci=
-al
-case of creating a new memory group. He temporally changed active memcg
-in mem_cgroup_css_alloc() and properly accounted all required memcg-specific
-allocations.
-However, he ignored accounting for a rather large struct mem_cgroup
-therefore I think we can do not worry about 128 bytes of kernfs node.
-Yes, it will be accounted to some other memcg, but the same thing
-happens with kernfs nodes of other groups.
-I don't think that's a problem.
 
->> Perhaps you mean that in this case kernfs should not be counted at all,
->> as almost all neighboring allocations do?
->=20
-> No, I think it wouldn't help here [2]. (Or which neighboring allocations
-> do you mean? There must be at least nr_cgroups of them.)
+> +	For a partition root to become valid, the following conditions
+> +	must be met.
+> +
+> +	1) The "cpuset.cpus" is exclusive, i.e. they are not shared by
+> +	   any of its siblings (exclusivity rule).
+> +	2) The parent cgroup is a valid partition root.
+> +	3) The "cpuset.cpus" is not empty and must contain at least
+> +	   one of the CPUs from parent's "cpuset.cpus", i.e. they overlap.
+> +        4) The "cpuset.cpus.effective" must be a subset of "cpuset.cpus"
+> +           and cannot be empty unless there is no task associated with
+> +           this partition.
 
-Primary I mean here struct mem_cgroup allocation in mem_cgroup_alloc().
-However, I think we need to take into account any other distributions called
-inside cgroup_mkdir: struct cgroup and kernefs node in common part and=20
-any other cgroup-cpecific allocations in other .css_alloc functions.
-They all can be called from inside container, allocates non-accountable
-memory and by this way theoretically can be misused.
-So I'm going to check this scenario a bit later.
+This sounds good to me.
 
-Thank you,
-	Vasily Averin
+> +        Care must be taken to change a valid partition root to "member"
+> +        as all its child partitions, if present, will become invalid.
+
+This does not talk about recovering. Is it intentional? (I.e. to left
+implementation defined)
+
+Except the remarks above, I find the concepts described here good. I'll
+reply to implementation separately & later.
+
+Regards,
+Michal
