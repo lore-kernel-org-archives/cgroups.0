@@ -1,93 +1,68 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v10 7/8] cgroup/cpuset: Update description of
- cpuset.cpus.partition in cgroup-v2.rst
-Date: Wed, 4 May 2022 12:02:19 -0400
-Message-ID: <379138a0-1721-d6fa-4d1d-cb8d79f28474@redhat.com>
-References: <20220503162149.1764245-1-longman@redhat.com>
- <20220503162149.1764245-8-longman@redhat.com>
- <20220504112552.GA15266@blackbody.suse.cz>
+From: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v6 1/6] gpu: rfc: Proposal for a GPU cgroup controller
+Date: Wed, 4 May 2022 10:16:50 -0700
+Message-ID: <CABdmKX2nbXLrngK8XRFCBCP=Zz-AMgKviiUdpWvEiYc-jOqang@mail.gmail.com>
+References: <20220502231944.3891435-1-tjmercier@google.com>
+ <20220502231944.3891435-2-tjmercier@google.com> <20220504121052.GA24172@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1651680144;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Kx7MkkZT+Yq+fM3GfswobHpHpBTfL9nTvycJqnYKSP8=;
-        b=g64HKG3q7K9kl0OdgE3bVx0t56mL25HfPcdeYHdrnZG95Gt95xSWwL3EWg2VMMvjGH/6IU
-        G/YZ2Xg/1Apbh17i2zs+e3ofB+tM9ShMxCQaqEtlrEw5zbFUbGp24Fird2Rk7fP1pdF7sz
-        eelDZJqopjQ7GRxGKAZBsAJ5ITqW7RY=
-Content-Language: en-US
-In-Reply-To: <20220504112552.GA15266@blackbody.suse.cz>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=FnWaMtJ2reMZ0hSCzzXuNRbvuXwq8gpuYV5+BFONKAE=;
+        b=ebMRE72btSfbTu94JZ+XbYWhvE/t1czQ57kEXj7uZgqVNjU0RU05kt542IcNMw286P
+         mZ6xpaFHpoeprnPd/kWTrSQM1G1BlgktJBr4xG6RhrWbvNpjLFl0+ecdobJz9KuMfktV
+         UlJP10pRifyYNtb3y8yF7fYoE45nmhJGPuHRr8itCnr4dcm9iT/w1jRlWmB9PS7QeasX
+         MBbnOipnG539gw+r56zTNE0rnzgfv4xUxVI+yvcMCj1GqXyXDIgz3lhz/guXrQx5FvT8
+         2GLVwiFONxmqgCymujrhnutcpLdrZszCr9yLOce9QDwfXfAXYsJDEcTv/UtDWzRMX6T4
+         WUAQ==
+In-Reply-To: <20220504121052.GA24172-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
+Content-Type: text/plain; charset="macroman"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, John Stultz <jstultz-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Carlos Llamas <cmllamas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kalesh Singh <kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, Shuah Khan <skhan-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 5/4/22 07:25, Michal Koutný wrote:
+On Wed, May 4, 2022 at 5:10 AM Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org> wrote:
+>
 > Hello.
 >
-> On Tue, May 03, 2022 at 12:21:48PM -0400, Waiman Long <longman@redhat.com> wrote:
->>   Documentation/admin-guide/cgroup-v2.rst | 145 +++++++++++++-----------
->>   1 file changed, 79 insertions(+), 66 deletions(-)
-> A note across various lines -- it seems your new text accidentally mixes
-> both spaces and tabs for indentation.
-
-You are right. I will fix that.
-
+> On Mon, May 02, 2022 at 11:19:35PM +0000, "T.J. Mercier" <tjmercier@googl=
+e.com> wrote:
+> > --- a/Documentation/admin-guide/cgroup-v2.rst
+> > +++ b/Documentation/admin-guide/cgroup-v2.rst
+> > [...]
+> > +     The device name string is set by a device driver when it register=
+s with the
+> > +     GPU cgroup controller to participate in resource accounting.
 >
->> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
->> index 69d7a6983f78..94e1e3771830 100644
->> --- a/Documentation/admin-guide/cgroup-v2.rst
->> +++ b/Documentation/admin-guide/cgroup-v2.rst
->> [...]
->> +	The value shown in "cpuset.cpus.effective" of a partition root is
->> +	the CPUs that the parent partition root can dedicate to the new
->> +	partition root.  They are subtracted from "cpuset.cpus.effective"
->> +	of the parent and may be different from "cpuset.cpus"
-> I find this paragraph a bit hard to comprehend (I read it as it talks
-> about three levels of cgroups (parent, child, grandparent). It is
-> correct but I'd suggect following formulation (where I additionally
-> simplifed it by talking about "available" cpus):
+> Are these names available anywhere else for the user? (I.e. would
+> drivers add respective sysfs attributes or similar?)
 >
->> The value shown in "cpuset.cpus.effective" of a partition root is
->> the CPUs that the partition root can dedicate to a potential new child
->> partition root. The new child subtracts available CPUs from its parent
->> "cpuset.cpus.effective".
+Hi, this sounds like it could be a good idea but it'd probably be best
+to do this inside gpucg_register_bucket instead of requiring drivers
+to perform this externally, possibly in a non-uniform way. Maybe a
+sysfs file that prints each name of the gpucg_buckets elements?
+However the only names that would result from this series are the
+names of the dma-buf heaps, with "-heap" appended. So they are
+predictable from the /dev/dma_heap/* names, and only the system and
+cma heaps currently exist upstream.
 
-
-Thanks for the suggestion, will modify the text as suggested.
-
-
+For other future uses of this controller I thought we were headed in
+the direction of "standardized" names which would be
+predefined/hardcoded and documented, so these names wouldn't really
+need to be made available to a user at runtime.
+https://lore.kernel.org/lkml/CABdmKX3gTAohaOwkNccGrQyXN9tzT-oEVibO5ZPF+eP+V=
+q=3DAOg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
 >
->> +	For a partition root to become valid, the following conditions
->> +	must be met.
->> +
->> +	1) The "cpuset.cpus" is exclusive, i.e. they are not shared by
->> +	   any of its siblings (exclusivity rule).
->> +	2) The parent cgroup is a valid partition root.
->> +	3) The "cpuset.cpus" is not empty and must contain at least
->> +	   one of the CPUs from parent's "cpuset.cpus", i.e. they overlap.
->> +        4) The "cpuset.cpus.effective" must be a subset of "cpuset.cpus"
->> +           and cannot be empty unless there is no task associated with
->> +           this partition.
-> This sounds good to me.
+> > +     Non-unique names will be rejected at the point of registration.
 >
->> +        Care must be taken to change a valid partition root to "member"
->> +        as all its child partitions, if present, will become invalid.
-> This does not talk about recovering. Is it intentional? (I.e. to left
-> implementation defined)
-
-This new patch series does have the ability to recover now.  I am just 
-not emphasizing the recovery aspect of it in the doc file. I will add a 
-sentence about it.
-
+> This doesn't seem relevant to the cgroupfs user, does it?
+> I think it should be mentioned at the respective API.
 >
-> Except the remarks above, I find the concepts described here good. I'll
-> reply to implementation separately & later.
+Yeah you're right. Thank you.
 
-Thanks,
-Longman
-
+> HTH,
+> Michal
+>
