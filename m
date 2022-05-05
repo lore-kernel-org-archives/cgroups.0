@@ -1,93 +1,149 @@
-From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: Re: kernfs memcg accounting
-Date: Thu, 5 May 2022 00:16:12 +0300
-Message-ID: <65244222-02c5-6e8d-7f4b-83651f378ce2@openvz.org>
-References: <7e867cb0-89d6-402c-33d2-9b9ba0ba1523@openvz.org>
- <20220427140153.GC9823@blackbody.suse.cz>
- <7509fa9f-9d15-2f29-cb2f-ac0e8d99a948@openvz.org>
- <YnBLge4ZQNbbxufc@blackbook>
- <52a9f35b-458b-44c4-7fc8-d05c8db0c73f@openvz.org>
- <20220504141001.GA10890@blackbody.suse.cz>
+From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -next v5 0/3] support concurrent sync io for bfq on a
+ specail occasion
+Date: Thu, 5 May 2022 09:00:42 +0800
+Message-ID: <d50df657-d859-79cf-c292-412eaa383d2c@huawei.com>
+References: <20220428120837.3737765-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=openvz-org.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=tdFt0uQlPJ4mzIwCT11tWacBOCFR/O+DCJD9m2elhvY=;
-        b=4BtgJE6tIVi5spqKRy2safmJJvFhDwqig/gu8SOgJVMNlQoN7e6oyggAGtbh0Ai3u+
-         mR+n9pawKCECW0w4KaZIWSRlsLDNrXNLicQze8WR7YOF14HoGfcdcRrLoH9tjDGrbzFy
-         WDWbyL2Nu4xZje0kDJ17xDqguvfoDCMUQSyM3hLgoAUlMcGEsTF7qPjnbhKhdYfxmucs
-         wHUTkWv/1+fU/qFlF5OKiFmii/NXaHWgs3XvRrl4Eifnz5ATici85iWc4YhEkszOJAxc
-         Bha+LOrKUOvCCgZ0Q3zYOFb0L/mULFRJtIuA6ZizjW+wmIlKvPAcW/NJrfdYapYD95QF
-         c2mg==
-Content-Language: en-US
-In-Reply-To: <20220504141001.GA10890-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+In-Reply-To: <20220428120837.3737765-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On 5/4/22 17:10, Michal Koutn=C3=BD wrote:
-> On Wed, May 04, 2022 at 12:00:18PM +0300, Vasily Averin <vvs-GEFAQzZX7r8d=
-nm+yROfE0A@public.gmane.org> wrote:
->> As far as I understand, Roman chose the parent memcg because it was a sp=
-ecial
->> case of creating a new memory group. He temporally changed active memcg
->> in mem_cgroup_css_alloc() and properly accounted all required memcg-spec=
-ific
->> allocations.
+Hi, Paolo
+
+Can you take a look at this patchset? It has been quite a long time
+since we spotted this problem...
+
+Thanks,
+Kuai
+
+=D4=DA 2022/04/28 20:08, Yu Kuai =D0=B4=B5=C0:
+> Changes in v5:
+>   - rename bfq_add_busy_queues() to bfq_inc_busy_queues() in patch 1
+>   - fix wrong definition in patch 1
+>   - fix spelling mistake in patch 2: leaset -> least
+>   - update comments in patch 3
+>   - add reviewed-by tag in patch 2,3
 >=20
->> However, he ignored accounting for a rather large struct mem_cgroup
->> therefore I think we can do not worry about 128 bytes of kernfs node.
+> Changes in v4:
+>   - split bfq_update_busy_queues() to bfq_add/dec_busy_queues(),
+>     suggested by Jan Kara.
+>   - remove unused 'in_groups_with_pending_reqs',
 >=20
-> Are you referring to the current code (>=3D v5.18-rc2)? All big structs
-> related to mem_cgroup should be accounted. What is ignored?
-
-mm/memcontrol.c:
-5079 static struct mem_cgroup *mem_cgroup_alloc(void)
-5080 {
-5081         struct mem_cgroup *memcg;
-...
-5086         memcg =3D kzalloc(struct_size(memcg, nodeinfo, nr_node_ids), G=
-FP_KERNEL);
-
-I think it should allocate at least 2 pages.
-
->> Primary I mean here struct mem_cgroup allocation in mem_cgroup_alloc().
+> Changes in v3:
+>   - remove the cleanup patch that is irrelevant now(I'll post it
+>     separately).
+>   - instead of hacking wr queues and using weights tree insertion/removal,
+>     using bfq_add/del_bfqq_busy() to count the number of groups
+>     (suggested by Jan Kara).
 >=20
-> Just note that memory controller may not be always enabled so
-> cgroup_mkdir !=3D mem_cgroup_alloc().
-
-However if cgroup_mkdir() calls mem_cgroup_alloc() it correctly account hug=
-e percpu
-allocations but ignores neighbour multipage allocation.
-
->> However, I think we need to take into account any other distributions ca=
-lled
->> inside cgroup_mkdir: struct cgroup and kernefs node in common part and=20
->> any other cgroup-cpecific allocations in other .css_alloc functions.
->> They all can be called from inside container, allocates non-accountable
->> memory and by this way theoretically can be misused.
+> Changes in v2:
+>   - Use a different approch to count root group, which is much simple.
 >=20
-> Also note that (if you're purely on unified hierachy) you can protect
-> against that with cgroup.max.descendants and cgroup.max.depth.
-
-In past OpenVz had a lot of limits for various resources (for example we ha=
-d a limit=20
-for iptable rules), but it was very hard to configure them properly.
-Finally we  decided to replace all such custom limits by common memory limi=
-t.
-It isn't important how many resources tries to use container as long as
-it doesn't exceed the memory limit.
-Such resource limits can be useful, especially to prevent possible misuses.
-However sooner or later there will be a legal user who will rest against th=
-em.
-All you can do in this situation is to recommend him just increase the limi=
-t,
-that makes the limit senseless.
-Memory limits looks much more reasonable and understandable.
-
-Thank you,
-	Vasily Averin
+> Currently, bfq can't handle sync io concurrently as long as they
+> are not issued from root group. This is because
+> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
+> bfq_asymmetric_scenario().
+>=20
+> The way that bfqg is counted into 'num_groups_with_pending_reqs':
+>=20
+> Before this patchset:
+>   1) root group will never be counted.
+>   2) Count if bfqg or it's child bfqgs have pending requests.
+>   3) Don't count if bfqg and it's child bfqgs complete all the requests.
+>=20
+> After this patchset:
+>   1) root group is counted.
+>   2) Count if bfqg have at least one bfqq that is marked busy.
+>   3) Don't count if bfqg doesn't have any busy bfqqs.
+>=20
+> The main reason to use busy state of bfqq instead of 'pending requests'
+> is that bfqq can stay busy after dispatching the last request if idling
+> is needed for service guarantees.
+>=20
+> With the above changes, concurrent sync io can be supported if only
+> one group is activated.
+>=20
+> fio test script(startdelay is used to avoid queue merging):
+> [global]
+> filename=3D/dev/nvme0n1
+> allow_mounted_write=3D0
+> ioengine=3Dpsync
+> direct=3D1
+> ioscheduler=3Dbfq
+> offset_increment=3D10g
+> group_reporting
+> rw=3Drandwrite
+> bs=3D4k
+>=20
+> [test1]
+> numjobs=3D1
+>=20
+> [test2]
+> startdelay=3D1
+> numjobs=3D1
+>=20
+> [test3]
+> startdelay=3D2
+> numjobs=3D1
+>=20
+> [test4]
+> startdelay=3D3
+> numjobs=3D1
+>=20
+> [test5]
+> startdelay=3D4
+> numjobs=3D1
+>=20
+> [test6]
+> startdelay=3D5
+> numjobs=3D1
+>=20
+> [test7]
+> startdelay=3D6
+> numjobs=3D1
+>=20
+> [test8]
+> startdelay=3D7
+> numjobs=3D1
+>=20
+> test result:
+> running fio on root cgroup
+> v5.18-rc1:	   550 Mib/s
+> v5.18-rc1-patched: 550 Mib/s
+>=20
+> running fio on non-root cgroup
+> v5.18-rc1:	   349 Mib/s
+> v5.18-rc1-patched: 550 Mib/s
+>=20
+> Note that I also test null_blk with "irqmode=3D2
+> completion_nsec=3D100000000(100ms) hw_queue_depth=3D1", and tests show
+> that service guarantees are still preserved.
+>=20
+> Previous versions:
+> RFC: https://lore.kernel.org/all/20211127101132.486806-1-yukuai3-hv44wF8L=
+i93QT0dZR+AlfA@public.gmane.org/
+> v1: https://lore.kernel.org/all/20220305091205.4188398-1-yukuai3-hv44wF8L=
+i93QT0dZR+AlfA@public.gmane.org/
+> v2: https://lore.kernel.org/all/20220416093753.3054696-1-yukuai3-hv44wF8L=
+i93QT0dZR+AlfA@public.gmane.org/
+> v3: https://lore.kernel.org/all/20220427124722.48465-1-yukuai3-hv44wF8Li9=
+3QT0dZR+AlfA@public.gmane.org/
+> v4: https://lore.kernel.org/all/20220428111907.3635820-1-yukuai3-hv44wF8L=
+i93QT0dZR+AlfA@public.gmane.org/
+>=20
+> Yu Kuai (3):
+>    block, bfq: record how many queues are busy in bfq_group
+>    block, bfq: refactor the counting of 'num_groups_with_pending_reqs'
+>    block, bfq: do not idle if only one group is activated
+>=20
+>   block/bfq-cgroup.c  |  1 +
+>   block/bfq-iosched.c | 48 +++-----------------------------------
+>   block/bfq-iosched.h | 57 +++++++--------------------------------------
+>   block/bfq-wf2q.c    | 35 +++++++++++++++++-----------
+>   4 files changed, 35 insertions(+), 106 deletions(-)
+>=20
