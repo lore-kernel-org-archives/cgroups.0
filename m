@@ -1,45 +1,51 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: kernfs memcg accounting
-Date: Thu, 5 May 2022 11:47:04 +0200
-Message-ID: <20220505094704.GB10890@blackbody.suse.cz>
-References: <7e867cb0-89d6-402c-33d2-9b9ba0ba1523@openvz.org>
- <20220427140153.GC9823@blackbody.suse.cz>
- <7509fa9f-9d15-2f29-cb2f-ac0e8d99a948@openvz.org>
- <YnBLge4ZQNbbxufc@blackbook>
- <52a9f35b-458b-44c4-7fc8-d05c8db0c73f@openvz.org>
- <20220504141001.GA10890@blackbody.suse.cz>
- <65244222-02c5-6e8d-7f4b-83651f378ce2@openvz.org>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH v6 1/6] gpu: rfc: Proposal for a GPU cgroup controller
+Date: Thu, 5 May 2022 13:29:08 +0200
+Message-ID: <20220505112908.GC10890@blackbody.suse.cz>
+References: <20220502231944.3891435-1-tjmercier@google.com>
+ <20220502231944.3891435-2-tjmercier@google.com>
+ <20220504121052.GA24172@blackbody.suse.cz>
+ <CABdmKX2nbXLrngK8XRFCBCP=Zz-AMgKviiUdpWvEiYc-jOqang@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1651744025; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1651750149; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=9UR1yAl5TuOKPXs8xewFpELkQ8J8mZZySCuXUINaiZ8=;
-        b=ohURCbNOo2RJ/iazwraZdarADgzIdXUJbgxG/iAU7mBk1yalYm6Z3rluGWxuPENvMTsqsE
-        fHfJZm+HCTsJND5hEJKSEt6nrFOm3ZeJaME2+RjY7Q2tcYOXOVnIC/3RYVTEweETeKq1UT
-        aC9V3D1cYBJ8i9avDe84kHWVKwG58Pk=
+        bh=QztzfHPTmSF8udy99M+oiNjmEJKR+vOVp0C/C48CDH0=;
+        b=fVa9/jQVA7FxoB2Yvgew58chqzIPQcGNV6v5gZHvfXRqjnza7FHT+mNpST0Y3E8/sgE4i4
+        kOBTu5dWEezH/1d+DmxP/Q9zc4M+fSwEPDDv3OezauwSF7Lr1avS55OVFjZ3eSNxM2MBzB
+        K9wQFZaM4ALSnkcoClgDJbFqZmtQnQY=
 Content-Disposition: inline
-In-Reply-To: <65244222-02c5-6e8d-7f4b-83651f378ce2-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+In-Reply-To: <CABdmKX2nbXLrngK8XRFCBCP=Zz-AMgKviiUdpWvEiYc-jOqang@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: "T.J. Mercier" <tjmercier@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Daniel Vetter <daniel@ffwll.ch>, Hridya Valsaraju <hridya@google.com>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, John Stultz <jstultz@google.com>, Todd Kjos <tkjos@android.com>, Carlos Llamas <cmllamas@google.com>, Suren Baghdasaryan <surenb@google.com>, Kalesh Singh <kaleshsingh@google.com>, Kenny.Ho@amd.com, Shuah Khan <skhan@linuxfoundation.org>, kernel-team@android.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, May 05, 2022 at 12:16:12AM +0300, Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
-> I think it should allocate at least 2 pages.
+On Wed, May 04, 2022 at 10:16:50AM -0700, "T.J. Mercier" <tjmercier@google.com> wrote:
+> However the only names that would result from this series are the
+> names of the dma-buf heaps, with "-heap" appended. So they are
+> predictable from the /dev/dma_heap/* names, and only the system and
+> cma heaps currently exist upstream.
 
-After decoding kmalloc_type(), I agree this falls into a global
-(unaccouted) kmalloc_cache.
+It's not so important with the read-only stats currently posted (a
+crafted sysfs file with these names would be an overlikill)...
 
-> However if cgroup_mkdir() calls mem_cgroup_alloc() it correctly account huge percpu
-> allocations but ignores neighbour multipage allocation.
+> 
+> For other future uses of this controller I thought we were headed in
+> the direction of "standardized" names which would be
+> predefined/hardcoded and documented, so these names wouldn't really
+> need to be made available to a user at runtime.
+> https://lore.kernel.org/lkml/CABdmKX3gTAohaOwkNccGrQyXN9tzT-oEVibO5ZPF+eP+Vq=AOg@mail.gmail.com/
 
-So, the spillover is bound and proportional to memcg limit (same ration
-like these two sizes).
-But it may be better to account it properly, especially if it's
-contribution form an offlined mem_cgroup.
+(Ah, I see.)
 
-Thanks,
+...but if writers (limits) are envisioned, the keys should represent
+something that the user can derive/construct from available info -- e.g.
+the documentation.
+
+OK, so I understand current form just presents some statistics.
+
 Michal
