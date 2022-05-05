@@ -1,50 +1,45 @@
-From: patchwork-bot+netdevbpf-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Subject: Re: [PATCH memcg v2] memcg: accounting for objects allocated for new
- netdevice
-Date: Thu, 05 May 2022 03:50:14 +0000
-Message-ID: <165172261402.3043.8768888843456379249.git-patchwork-notify@kernel.org>
-References: <354a0a5f-9ec3-a25c-3215-304eab2157bc@openvz.org>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: kernfs memcg accounting
+Date: Thu, 5 May 2022 11:47:04 +0200
+Message-ID: <20220505094704.GB10890@blackbody.suse.cz>
+References: <7e867cb0-89d6-402c-33d2-9b9ba0ba1523@openvz.org>
+ <20220427140153.GC9823@blackbody.suse.cz>
+ <7509fa9f-9d15-2f29-cb2f-ac0e8d99a948@openvz.org>
+ <YnBLge4ZQNbbxufc@blackbook>
+ <52a9f35b-458b-44c4-7fc8-d05c8db0c73f@openvz.org>
+ <20220504141001.GA10890@blackbody.suse.cz>
+ <65244222-02c5-6e8d-7f4b-83651f378ce2@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1651722614;
-        bh=4dZ1A8x6z9o0xBW3mvbt9kERx1ptdza+ot3uRKX85RI=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=OINEX8NI+m2lY6VcIdMmGXP5yNQYrvaFkv7urohtnNjDBW0aWA+cj6gG+BBc3i1GP
-         FFN88R4csBepant6j0jIZPS3L2NiKKB1HBgOdzVeRPzqIRNEE+aeg1vtdDrWPifriN
-         hfKLpxlHiCYT8Con3AUFMziOpsTSmUeAazo06Glp+BItdUaBuBTgQXcDP+PYlbfLVF
-         h9ikV4IJDCk38DKh3XhfBTrgKcB8OVioOP7LDWdflpEf8i/bCAN2kxXpG1jXCPt1oe
-         jS2rolX5yyJnw11AMUXwgrrpv1D8rpnkjzLHrKXTBJQaugOHIUlPwY6Hbksz0VQEV2
-         kvXTYPvWU3wgQ==
-In-Reply-To: <354a0a5f-9ec3-a25c-3215-304eab2157bc-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1651744025; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=9UR1yAl5TuOKPXs8xewFpELkQ8J8mZZySCuXUINaiZ8=;
+        b=ohURCbNOo2RJ/iazwraZdarADgzIdXUJbgxG/iAU7mBk1yalYm6Z3rluGWxuPENvMTsqsE
+        fHfJZm+HCTsJND5hEJKSEt6nrFOm3ZeJaME2+RjY7Q2tcYOXOVnIC/3RYVTEweETeKq1UT
+        aC9V3D1cYBJ8i9avDe84kHWVKwG58Pk=
+Content-Disposition: inline
+In-Reply-To: <65244222-02c5-6e8d-7f4b-83651f378ce2-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Hello:
+On Thu, May 05, 2022 at 12:16:12AM +0300, Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
+> I think it should allocate at least 2 pages.
 
-This patch was applied to netdev/net-next.git (master)
-by Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>:
+After decoding kmalloc_type(), I agree this falls into a global
+(unaccouted) kmalloc_cache.
 
-On Mon, 2 May 2022 15:15:51 +0300 you wrote:
-> Creating a new netdevice allocates at least ~50Kb of memory for various
-> kernel objects, but only ~5Kb of them are accounted to memcg. As a result,
-> creating an unlimited number of netdevice inside a memcg-limited container
-> does not fall within memcg restrictions, consumes a significant part
-> of the host's memory, can cause global OOM and lead to random kills of
-> host processes.
-> 
-> [...]
+> However if cgroup_mkdir() calls mem_cgroup_alloc() it correctly account huge percpu
+> allocations but ignores neighbour multipage allocation.
 
-Here is the summary with links:
-  - [memcg,v2] memcg: accounting for objects allocated for new netdevice
-    https://git.kernel.org/netdev/net-next/c/425b9c7f51c9
+So, the spillover is bound and proportional to memcg limit (same ration
+like these two sizes).
+But it may be better to account it properly, especially if it's
+contribution form an offlined mem_cgroup.
 
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+Thanks,
+Michal
