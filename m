@@ -1,63 +1,34 @@
-From: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm/memcontrol: Export memcg->watermark via sysfs for v2 memcg
-Date: Thu, 5 May 2022 22:57:03 +0530
-Message-ID: <CAPD3tpG1BeTOwTBxkXCxoJagvbn6n1aAEkt0P65g91N9gtK03w@mail.gmail.com>
-References: <20220505121329.GA32827@us192.sjc.aristanetworks.com> <CALvZod5xiSuJaDjGb+NM18puejwhnPWweSj+N=0RGQrjpjfxbw@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3] cgroup/cpuset: Remove cpus_allowed/mems_allowed setup
+ in cpuset_init_smp()
+Date: Thu, 5 May 2022 08:58:14 -1000
+Message-ID: <YnQeRppX2bPoqOTL@slm.duckdns.org>
+References: <20220427145428.1411867-1-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=arista.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=zsF+kn83mNqrMxbS9TzRocPMWDU65sPUevlcCkR0pr0=;
-        b=QOOvGNSB2CcE2vA0mwKhSu3u77etXDnR3iIJvPwzvnl7ScQ+6VWb3TFM6EwGqlAPO0
-         cYcV3gTjSab/nDBsg6safyBYjUDkSiH3Irz6oBZD1t0InszqFZtGfHilSGaW3cZHgljR
-         1r7dIUPtTqBHfMPU2NhUZqkF22aV2GqjWTGAHW1+Gho1zOL6kr0J3SsYM84bfncvJi1I
-         LVlc+VJCUdj9gDHyBNAE9zndwCzC58ikYSrPP/Rqv+uj84lCKpTA5qQ/PG2ogq9t53+q
-         3faNtN41LW3s0tLWPEE65+itf70mt6NG2HRuqpv79OfYVXRJXuX+3NrWNtvix1xkWpL0
-         kEkA==
-In-Reply-To: <CALvZod5xiSuJaDjGb+NM18puejwhnPWweSj+N=0RGQrjpjfxbw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=hl7WfbK9DHwjRygGR7ADeqierefpNYfJm5+DL9udtug=;
+        b=OFfZ/N4ZNieS82RLO2lUXkmMIoP9FiYRII/KMVevjj+bVGRYg+mMTBKbb0/JqotQUX
+         9gp5wY5MKel5KW8ncLjcRhENadQvO/QeL3ySyVmwDP57xrwu/6juk+NdBLTkHyXG/rvY
+         9lR//nyvP1XRepA7+H29tJouOo+ags2gYvRwTIkcrTGGuNHiqu899zZAmOpWaKRXtq8C
+         XHDypD2dSJ4KOm5a7M++yHrAQPG1TUhN7jYAG7KeOrEV6iHCZtdjY4WgBBB2aG4sSg6+
+         rxrv54wA8R2U+XoTc29ubK0wCy1tLqZoPSLv7No7NsEvodbNt4t0RdQrjAX0/NVMVp7M
+         tnWg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20220427145428.1411867-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, May 5, 2022 at 9:42 PM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> On Thu, May 5, 2022 at 5:13 AM Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org> wrote:
-> >
-> > v1 memcg exports memcg->watermark as "memory.mem_usage_in_bytes" in
->
-> *max_usage_in_bytes
+Applied to cgroup/for-5.18-fixes.
 
-Oops, thanks for the correction.
+Thanks.
 
-> > sysfs. This is missing for v2 memcg though "memory.current" is exported.
-> > There is no other easy way of getting this information in Linux.
-> > getrsuage() returns ru_maxrss but that's the max RSS of a single process
-> > instead of the aggregated max RSS of all the processes. Hence, expose
-> > memcg->watermark as "memory.watermark" for v2 memcg.
-> >
-> > Signed-off-by: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
->
-> Can you please explain the use-case for which you need this metric?
-> Also note that this is not really an aggregated RSS of all the
-> processes in the cgroup. So, do you want max RSS or max charge and for
-> what use-case?
-
-We run a lot of automated tests when building our software and used to
-run into OOM scenarios when the tests run unbounded. We use this metric
-to heuristically limit how many tests can run in parallel using per test
-historical data.
-
-I understand this isn't really aggregated RSS, max charge works. We just
-need some metric to account for the peak memory usage.  We don't need
-it to be super accurate because there's significant variance between test
-runs anyway. We conservatively use the historical max to limit parallelism.
-
-Since this metric is not exposed in v2 memcg, the only alternative is to
-poll "memory.current" which would be quite inefficient and grossly
-inaccurate.
-
-Ganesan
+-- 
+tejun
