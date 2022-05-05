@@ -1,23 +1,23 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH] mm/memcg: support control THP behaviour in cgroup
-Date: Thu, 5 May 2022 20:49:47 +0800
-Message-ID: <202205052006.qFYTjcyt-lkp@intel.com>
+Date: Thu, 5 May 2022 21:31:19 +0800
+Message-ID: <202205052101.TsTEcZoc-lkp@intel.com>
 References: <20220505033814.103256-1-xu.xin16@zte.com.cn>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1651755013; x=1683291013;
+  t=1651757531; x=1683293531;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=A9PXcXkJKXOiPlbiJL9+S1g3O2eDE4FkjAv8/9Dq67g=;
-  b=m7jai3T36OY75WFYibDaVdjr0qQkh5wOl6MtJyrjDpy0GNGycZEsFOar
-   /dBOLGgUexM0hUngYQfl9cz6/ws1xamE+ETcMHaZdDaU7XeuFVbi385in
-   GcLS5oPlMaUrh/BeQZ0jHL6aiLfuWPorXuJsTCB+B1/M3SVRCzv6DeIPY
-   gD4rOcg+eS7Oryj9kn7ZA36g2KNTCCJvbHw2OL40aA5fZMJH0F2D27VIt
-   9agn6HqRXoc5OSFpNwv3shpzmtS5Zsc8HUEKscCfi/s5SQFA4Fr+iwTeH
-   qErsDc1w0/Gh/74GnZiDhgPforyovwM4+dW2/lzhprO/K6mWKiT7AzhZk
-   Q==;
+  bh=0n9xKziNJR4TEkk9TsrLeTOHao554U8zzlo+fCxG4Ow=;
+  b=HUV3jhWcDBoqOh5Gdqgx7j6ITYlNWOhwFs2Pz03YC9FfbkWBqUM/IMHd
+   I8d5FhPJB/w2gX9wFIhD4si6lJv2JqdWwWzO12PvENxAcVbSCfdfF33X/
+   f1zDWgj6WzoQ2YkQaMVhJHWr+YAYLTObpFLaYUT8lFw+M1qZZ3OeeRnie
+   0m2DbKL5jkKBX5c7zXK/1GR6hJPR8gw4zKpea7/PBF5IbjGnsYVAgY8bA
+   hwxI2DePHP+kjJTxfY3BfEJMAkSc8LQGwpr5rjKytdZACHFdw3j4dPcGm
+   FjQojIZD7bUpSvF/Ka+X12bXXTBxdQllAn0d3ceF5ynRdSTbralTwaJuZ
+   g==;
 Content-Disposition: inline
 In-Reply-To: <20220505033814.103256-1-xu.xin16-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
@@ -39,29 +39,27 @@ https://git-scm.com/docs/git-format-patch]
 
 url:    https://github.com/intel-lab-lkp/linux/commits/cgel-zte-gmail-com/mm-memcg-support-control-THP-behaviour-in-cgroup/20220505-114028
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git 107c948d1d3e61d10aee9d0f7c3d81bbee9842af
-config: mips-decstation_64_defconfig (https://download.01.org/0day-ci/archive/20220505/202205052006.qFYTjcyt-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
-compiler: mips64el-linux-gcc (GCC) 11.3.0
+config: i386-randconfig-a001 (https://download.01.org/0day-ci/archive/20220505/202205052101.TsTEcZoc-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
+compiler: gcc-11 (Debian 11.2.0-20) 11.2.0
 reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
         # https://github.com/intel-lab-lkp/linux/commit/f08a35b9798572693a91c6a3d823ed9ae54ef688
         git remote add linux-review https://github.com/intel-lab-lkp/linux
         git fetch --no-tags linux-review cgel-zte-gmail-com/mm-memcg-support-control-THP-behaviour-in-cgroup/20220505-114028
         git checkout f08a35b9798572693a91c6a3d823ed9ae54ef688
         # save the config file
         mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=mips SHELL=/bin/bash
+        make W=1 O=build_dir ARCH=i386 SHELL=/bin/bash
 
 If you fix the issue, kindly add following tag as appropriate
 Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
 All errors (new ones prefixed by >>):
 
-   mips64el-linux-ld: mm/memory.o: in function `__handle_mm_fault':
-   memory.c:(.text+0x60a8): undefined reference to `__transparent_hugepage_enabled'
->> mips64el-linux-ld: memory.c:(.text+0x6108): undefined reference to `__transparent_hugepage_enabled'
-   mips64el-linux-ld: mm/huge_memory.o: in function `transparent_hugepage_active':
-   huge_memory.c:(.text+0x21e4): undefined reference to `__transparent_hugepage_enabled'
+   ld: mm/memory.o: in function `__handle_mm_fault':
+>> memory.c:(.text+0xc6f9): undefined reference to `__transparent_hugepage_enabled'
+>> ld: memory.c:(.text+0xc751): undefined reference to `__transparent_hugepage_enabled'
+   ld: mm/huge_memory.o: in function `transparent_hugepage_active':
+>> huge_memory.c:(.text+0x6351): undefined reference to `__transparent_hugepage_enabled'
 
 -- 
 0-DAY CI Kernel Test Service
