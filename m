@@ -1,70 +1,88 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm/memcontrol: Export memcg->watermark via sysfs for v2 memcg
-Date: Fri, 6 May 2022 14:04:00 -0700
-Message-ID: <CALvZod5V1OTLPu339=gNForq0WdErCABDuhtraps1UEk+qEM7w@mail.gmail.com>
-References: <20220505121329.GA32827@us192.sjc.aristanetworks.com>
- <YnU3EuaWCKL5LZLy@cmpxchg.org> <CALvZod6jcdhHqFEo1r-y5QufA+LxeCDy9hnD2ag_8vkvxXtp2Q@mail.gmail.com>
- <YnWJ5QgRyc+Ualjx@cmpxchg.org>
+From: kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH v2] mm/memcg: support control THP behaviour in cgroup
+Date: Sat, 7 May 2022 07:12:20 +0800
+Message-ID: <202205070730.ekn8xxfz-lkp@intel.com>
+References: <20220506031804.437642-1-yang.yang29@zte.com.cn>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=0/GiMZkwziqGVKRswzEq3KwN0WZ0d2CZmkLA7V2xges=;
-        b=rLijwaVPAMsRydy7EXWF4RLC/0NsdSSaCfI/QiICpS/c5u8iUKncH59HRzLuoFhl0M
-         WF+udOYUKCFKzaw7r4wqvM08AqPTC3aInhgNle06I9Dcn5wOpLqW5/OVm9klyCcvVUre
-         yS4VfOh9A6/Y2BEBeviTklCXMYTmDelnOP97hySBEICezb6xFanRb7fzTqclHrraw9c+
-         lfImj5dXVX7gMDnMNB3agTiCY4S+n4tVeUarOaMkn/+28nfy2LFr594ysBdYPmWZBZYU
-         G6VZmjkgkJ4gjPBQdrbPwVU87/4Q/pYxrrcmVDkafSpBsvsl0ezEUrgDC4DUuuvs9BXU
-         Dufw==
-In-Reply-To: <YnWJ5QgRyc+Ualjx-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1651878780; x=1683414780;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=ivKLSc3Gz/VoaAyyf+KCJfvGkIFxkKCWMielKh/Fppg=;
+  b=GVG6h9CZA1jfByghGDw1R65aQ32f9pMEAdoBEWbj90Q0r5YLFXDnmcc6
+   dh1y0+Gc0N/ECEjmrkCTLfd7tnJ4sn/Ukd4PFBc3r1uNYrfCl8iWoghnc
+   IYW/1mujkVQVidenIlzhdOTOd8YRtrBDcCPG8wqOsUmta/rkddahyW0M/
+   q0HT1+3COSeLNnyxnWEQgY2k5ZnqblheXYJN5ZuVT47571pdmUBx3ctuH
+   xh/k4jgxKjA0rxZ5RSJA2naZCe0I84Yf+iM56o2B0mSyttNGpFq57oSGh
+   khYBJZMBc20RExNu/JfzomMgjw2OdoQC5iF3tvdqgsPyLljBy3G/W72Fa
+   w==;
+Content-Disposition: inline
+In-Reply-To: <20220506031804.437642-1-yang.yang29@zte.com.cn>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: cgel.zte@gmail.com, akpm@linux-foundation.org, hannes@cmpxchg.org, willy@infradead.org, shy828301@gmail.com
+Cc: kbuild-all@lists.01.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, linmiaohe@huawei.com, hughd@google.com, songmuchun@bytedance.com, surenb@google.com, vbabka@suse.cz, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, william.kucharski@oracle.com, peterx@redhat.com, Yang Yang <yang.yang29@zte.com.cn>
 
-On Fri, May 6, 2022 at 1:50 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> On Fri, May 06, 2022 at 08:56:31AM -0700, Shakeel Butt wrote:
-> > On Fri, May 6, 2022 at 7:57 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> > >
-> > > On Thu, May 05, 2022 at 05:13:30AM -0700, Ganesan Rajagopal wrote:
-> > > > v1 memcg exports memcg->watermark as "memory.mem_usage_in_bytes" in
-> > > > sysfs. This is missing for v2 memcg though "memory.current" is exported.
-> > > > There is no other easy way of getting this information in Linux.
-> > > > getrsuage() returns ru_maxrss but that's the max RSS of a single process
-> > > > instead of the aggregated max RSS of all the processes. Hence, expose
-> > > > memcg->watermark as "memory.watermark" for v2 memcg.
-> > > >
-> > > > Signed-off-by: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
-> > >
-> > > This wasn't initially added to cgroup2 because its usefulness is very
-> > > specific: it's (mostly) useless on limited cgroups, on long-running
-> > > cgroups, and on cgroups that are recycled for multiple jobs. And I
-> > > expect these categories apply to the majority of cgroup usecases.
-> > >
-> > > However, for the situation where you want to measure the footprint of
-> > > a short-lived, unlimited one-off cgroup, there really is no good
-> > > alternative. And it's a legitimate usecase. It doesn't cost much to
-> > > maintain this info. So I think we should go ahead with this patch.
-> > >
-> > > But please add a blurb to Documentation/admin-guide/cgroup-v2.rst.
-> >
-> > No objection from me. I do have two points: (1) watermark is not a
-> > good name for this interface, maybe max_usage or something.
->
-> How about memory.peak? It'd be nice to avoid underscores.
->
-> > (2) a way to reset (i.e. write to it, reset it).
->
-> We used to have that with cgroup1, but it gets weird in modern cgroup
-> environments when there can be multiple consumers. One of them resets
-> the stat for their own purpose, now the others have no idea what
-> sample time frame they are looking at.
->
-> It'd be more robust if we just said "peak usage since birth of
-> cgroup". If you want to sample new work, create a new cgroup.
+Hi,
 
-SGTM for both.
+Thank you for the patch! Yet something to improve:
+
+[auto build test ERROR on akpm-mm/mm-everything]
+[also build test ERROR on linux/master linus/master v5.18-rc5 next-20220506]
+[cannot apply to hnaz-mm/master]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/cgel-zte-gmail-com/mm-memcg-support-control-THP-behaviour-in-cgroup/20220506-112100
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
+config: arm64-randconfig-r005-20220506 (https://download.01.org/0day-ci/archive/20220507/202205070730.ekn8xxfz-lkp@intel.com/config)
+compiler: aarch64-linux-gcc (GCC) 11.3.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/01b750c350f3c12ca3908e94dc4447041ac9d89b
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review cgel-zte-gmail-com/mm-memcg-support-control-THP-behaviour-in-cgroup/20220506-112100
+        git checkout 01b750c350f3c12ca3908e94dc4447041ac9d89b
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=arm64 SHELL=/bin/bash
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+   aarch64-linux-ld: Unexpected GOT/PLT entries detected!
+   aarch64-linux-ld: Unexpected run-time procedure linkages detected!
+   aarch64-linux-ld: mm/shmem.o: in function `shmem_zero_setup':
+   shmem.c:(.text+0x6a0): undefined reference to `khugepaged_always'
+>> aarch64-linux-ld: shmem.c:(.text+0x6b4): undefined reference to `khugepaged_req_madv'
+   aarch64-linux-ld: mm/huge_memory.o: in function `do_huge_pmd_anonymous_page':
+   huge_memory.c:(.text+0x3a78): undefined reference to `khugepaged_always'
+>> aarch64-linux-ld: huge_memory.c:(.text+0x3a8c): undefined reference to `khugepaged_req_madv'
+   aarch64-linux-ld: mm/khugepaged.o: in function `hugepage_vma_check':
+   khugepaged.c:(.text+0x1370): undefined reference to `khugepaged_always'
+   aarch64-linux-ld: mm/khugepaged.o: in function `set_recommended_min_free_kbytes':
+   khugepaged.c:(.text+0x1654): undefined reference to `khugepaged_enabled'
+   aarch64-linux-ld: mm/khugepaged.o: in function `khugepaged_wait_work':
+   khugepaged.c:(.text+0x1b08): undefined reference to `khugepaged_enabled'
+>> aarch64-linux-ld: khugepaged.c:(.text+0x1c4c): undefined reference to `khugepaged_enabled'
+   aarch64-linux-ld: mm/khugepaged.o: in function `khugepaged_do_scan':
+   khugepaged.c:(.text+0x3a58): undefined reference to `khugepaged_enabled'
+   aarch64-linux-ld: khugepaged.c:(.text+0x3b10): undefined reference to `khugepaged_enabled'
+   aarch64-linux-ld: mm/khugepaged.o: in function `khugepaged_enter_vma_merge':
+   khugepaged.c:(.text+0x3f6c): undefined reference to `khugepaged_always'
+>> aarch64-linux-ld: khugepaged.c:(.text+0x3f80): undefined reference to `khugepaged_req_madv'
+   aarch64-linux-ld: mm/khugepaged.o: in function `start_stop_khugepaged':
+   khugepaged.c:(.text+0x42ec): undefined reference to `khugepaged_enabled'
+   aarch64-linux-ld: mm/khugepaged.o: in function `khugepaged_min_free_kbytes_update':
+   khugepaged.c:(.text+0x442c): undefined reference to `khugepaged_enabled'
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
