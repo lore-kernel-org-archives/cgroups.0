@@ -1,86 +1,48 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2] mm/memcg: support control THP behaviour in cgroup
-Date: Fri, 6 May 2022 22:29:44 +0800
-Message-ID: <202205062206.5pPA18rP-lkp@intel.com>
-References: <20220506031804.437642-1-yang.yang29@zte.com.cn>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH] mm/memcontrol: Export memcg->watermark via sysfs for v2
+ memcg
+Date: Fri, 6 May 2022 07:56:18 -0700
+Message-ID: <YnU3EuaWCKL5LZLy@cmpxchg.org>
+References: <20220505121329.GA32827@us192.sjc.aristanetworks.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1651847410; x=1683383410;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=/3bQs46ARc9z6IxvGQKAIeVw9c66t2zrtmGP1N90Tss=;
-  b=kIlxcGKBxmL8XxzICY8ODoqt39SOIU1lTJf2fwm3FuIJVE0oooGDznnO
-   oWtjwc5d1fEMNMC6SPePgk5d6lCIx9KIE0Dh49E+yWN9g5AUCupasuxjD
-   w1U76aLwEYMckJcdklun//fIRSnHkqyHTcIujFCj0gLkHg3kiIkIui/kN
-   6YIZ8CbwweVEpGO/m6Sg1uUyQCH9euRI7VjJJZtpJ5vUqctcRaDxbgzvG
-   e5Kml5gQdYGcPBC5EZlam1VF98PXcImhSxP+FaU5WT1TYZudx6c1iD5s4
-   8GFKmLe/M4qP6DO1WmaLv4qgHRq9uq0GZ6UfgRxMJMx5eDgRbuqnooz/i
-   Q==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=UMiJdnXRi9aL2AL9Vognq71+6oZgB61YztBopTVtQsI=;
+        b=OQ7BK+mietcxdA+xGJIfTtOaowVb7K7X3AIK/p0uNueclD7Y7fS3s2OecMUE77qV1X
+         c5lrVZcv3qzT9iXvcohzhZThbkkrY27rW1TYJFoKXU87Fxb1hBAfMPjp+DroOAMnb6nN
+         +RfzBqhZFn1AVmUXUpoBS9Trkeaxg0rtJvWx8qbh3OrPmSLNw5vnbauJAcTj0z0MhCcG
+         mbYIi4s4dytVvlg4zrOl3UEGEs6uXvVXQF4xq6kn4ruyxufmUY7+/P7yQuNSuYV6koW5
+         B/kpsin/bvmMqHv6TwomKQg2J7PkZUjlJwogTKj2UXnpv+Dy9OYdeHM54qs9blfKuACF
+         kiIQ==
 Content-Disposition: inline
-In-Reply-To: <20220506031804.437642-1-yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+In-Reply-To: <20220505121329.GA32827-pF7uKtACKh3GmWBmRUYTj5O0Dwfk+90YVpNB7YpNyf8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, william.kucharski-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Yang Yang <yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+To: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
+Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Hi,
+On Thu, May 05, 2022 at 05:13:30AM -0700, Ganesan Rajagopal wrote:
+> v1 memcg exports memcg->watermark as "memory.mem_usage_in_bytes" in
+> sysfs. This is missing for v2 memcg though "memory.current" is exported.
+> There is no other easy way of getting this information in Linux.
+> getrsuage() returns ru_maxrss but that's the max RSS of a single process
+> instead of the aggregated max RSS of all the processes. Hence, expose
+> memcg->watermark as "memory.watermark" for v2 memcg.
+> 
+> Signed-off-by: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
 
-Thank you for the patch! Yet something to improve:
+This wasn't initially added to cgroup2 because its usefulness is very
+specific: it's (mostly) useless on limited cgroups, on long-running
+cgroups, and on cgroups that are recycled for multiple jobs. And I
+expect these categories apply to the majority of cgroup usecases.
 
-[auto build test ERROR on akpm-mm/mm-everything]
-[also build test ERROR on linux/master linus/master v5.18-rc5 next-20220506]
-[cannot apply to hnaz-mm/master]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+However, for the situation where you want to measure the footprint of
+a short-lived, unlimited one-off cgroup, there really is no good
+alternative. And it's a legitimate usecase. It doesn't cost much to
+maintain this info. So I think we should go ahead with this patch.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/cgel-zte-gmail-com/mm-memcg-support-control-THP-behaviour-in-cgroup/20220506-112100
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
-config: s390-randconfig-r013-20220505 (https://download.01.org/0day-ci/archive/20220506/202205062206.5pPA18rP-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
-compiler: s390-linux-gcc (GCC) 11.3.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/01b750c350f3c12ca3908e94dc4447041ac9d89b
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review cgel-zte-gmail-com/mm-memcg-support-control-THP-behaviour-in-cgroup/20220506-112100
-        git checkout 01b750c350f3c12ca3908e94dc4447041ac9d89b
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=s390 SHELL=/bin/bash
-
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-
-All errors (new ones prefixed by >>):
-
-   s390-linux-ld: mm/shmem.o: in function `shmem_zero_setup':
-   shmem.c:(.text+0x380): undefined reference to `khugepaged_always'
->> s390-linux-ld: shmem.c:(.text+0x3f2): undefined reference to `khugepaged_req_madv'
-   s390-linux-ld: mm/huge_memory.o: in function `do_huge_pmd_anonymous_page':
->> huge_memory.c:(.text+0x3d9c): undefined reference to `khugepaged_always'
->> s390-linux-ld: huge_memory.c:(.text+0x3e2a): undefined reference to `khugepaged_req_madv'
-   s390-linux-ld: mm/khugepaged.o: in function `set_recommended_min_free_kbytes':
-   khugepaged.c:(.text+0x1d06): undefined reference to `khugepaged_enabled'
-   s390-linux-ld: mm/khugepaged.o: in function `hugepage_vma_check.part.0':
-   khugepaged.c:(.text+0x24c4): undefined reference to `khugepaged_always'
-   s390-linux-ld: mm/khugepaged.o: in function `khugepaged_wait_work':
-   khugepaged.c:(.text+0x2da8): undefined reference to `khugepaged_enabled'
->> s390-linux-ld: khugepaged.c:(.text+0x2e94): undefined reference to `khugepaged_enabled'
-   s390-linux-ld: mm/khugepaged.o: in function `khugepaged_do_scan':
-   khugepaged.c:(.text+0x46e8): undefined reference to `khugepaged_enabled'
-   s390-linux-ld: khugepaged.c:(.text+0x482a): undefined reference to `khugepaged_enabled'
-   s390-linux-ld: mm/khugepaged.o: in function `khugepaged_enter_vma_merge':
-   khugepaged.c:(.text+0x4bb2): undefined reference to `khugepaged_always'
->> s390-linux-ld: khugepaged.c:(.text+0x4c1a): undefined reference to `khugepaged_req_madv'
-   s390-linux-ld: mm/khugepaged.o: in function `start_stop_khugepaged':
-   khugepaged.c:(.text+0x4eb6): undefined reference to `khugepaged_enabled'
-   s390-linux-ld: mm/khugepaged.o: in function `khugepaged_min_free_kbytes_update':
-   khugepaged.c:(.text+0x5066): undefined reference to `khugepaged_enabled'
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+But please add a blurb to Documentation/admin-guide/cgroup-v2.rst.
