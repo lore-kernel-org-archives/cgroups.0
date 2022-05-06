@@ -1,29 +1,29 @@
-From: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH] mm/memcontrol: Export memcg->watermark via sysfs for v2 memcg
-Date: Fri, 6 May 2022 20:34:34 +0530
-Message-ID: <CAPD3tpEStjm02QXE=vpUKhttc3RroJ8LNdX7iBaAgCOpdcy8-A@mail.gmail.com>
+Date: Fri, 6 May 2022 08:56:31 -0700
+Message-ID: <CALvZod6jcdhHqFEo1r-y5QufA+LxeCDy9hnD2ag_8vkvxXtp2Q@mail.gmail.com>
 References: <20220505121329.GA32827@us192.sjc.aristanetworks.com> <YnU3EuaWCKL5LZLy@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=arista.com; s=google;
+        d=google.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=2LpI0DImiuDC2UzRqfJHQ2qAza8P08IbEZJSnDfETww=;
-        b=C3DmY9zqQpuSybTFOak9V+J6u4wDYDHiArS7riORo4yB6KdqsWLxhsWFUXdp5Zs75r
-         KlULlrzTb6vVdS+TmD/jo/bV8PW3aZ5GW7HeytlG87S0bd1BJT21JxJdPWnjs0hSF3SU
-         zV/hZEYf+9AtoPpN49UXruQAhUzGe606FESKKBMPigXxbhAw9OFDNrCDZXxjxGJZYD/A
-         VBaa9IqZP05rI4wxT6MUkVDoNQOipok6hfIKKdi9UVogn/sEkGZSRfzgP16cJnQki1Il
-         D8XmaVr2p3CeL/fFfwnlhIqGTkcSaaLAssco5zlEM4tyNawoaqQiJXtR6lcRyYHVaZPU
-         +lbw==
+        bh=m81d4j0n4jrU8+EkDRIdTToCet26p62xWOxrVZBvafg=;
+        b=S1iVkf0yZxiaHzRBF42XNyBBVYQtqIWrWcb4akJVYnJMmXnItPsVLmg4coDg8m/z67
+         zbApxIKZInjNBYxMJw8GIMzyj7M3bgKFUnKdDhR/ihqiUbAQkrfwyXdCvuTc/G/2I+4h
+         dWxhx4OhlpzjbIwrxJblu6/FndBQSKOCVwpoCXNUsiWW/IMOJmsWE/bLctyGJdeaJOCb
+         aRQE95Jbf47BWzr6ax2qXBxI7K+cBRdcaxoFdUKc5y16WUBwk0VM2M5GNhyCZqOk4Wkw
+         F9Bvu8K6Ft+b68SNWYjQMKhxpzKetTu3oAOcHDoSa/7tlueVVUgn83GnY5mOciJpzE0O
+         Y9gQ==
 In-Reply-To: <YnU3EuaWCKL5LZLy-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Fri, May 6, 2022 at 8:27 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+On Fri, May 6, 2022 at 7:57 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 >
 > On Thu, May 05, 2022 at 05:13:30AM -0700, Ganesan Rajagopal wrote:
 > > v1 memcg exports memcg->watermark as "memory.mem_usage_in_bytes" in
@@ -47,6 +47,6 @@ On Fri, May 6, 2022 at 8:27 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@pu
 >
 > But please add a blurb to Documentation/admin-guide/cgroup-v2.rst.
 
-Thank you for the review. I'll refresh the patch with the documentation blurb.
-
-Ganesan
+No objection from me. I do have two points: (1) watermark is not a
+good name for this interface, maybe max_usage or something. (2) a way
+to reset (i.e. write to it, reset it).
