@@ -1,73 +1,102 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2 2/5] cgroup: Account for memory_recursiveprot in
- test_memcg_low()
-Date: Mon, 9 May 2022 11:09:15 -0400
-Message-ID: <Ynkum8DeJIAtGi9y@cmpxchg.org>
-References: <20220423155619.3669555-1-void@manifault.com>
- <20220423155619.3669555-3-void@manifault.com>
- <20220427140928.GD9823@blackbody.suse.cz>
- <20220429010333.5rt2jwpiumnbuapf@dev0025.ash9.facebook.com>
- <20220429092620.GA23621@blackbody.suse.cz>
- <20220506164015.fsdsuv226nhllos5@dev0025.ash9.facebook.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v4 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
+ page table uses.
+Date: Mon, 9 May 2022 09:38:17 -0700
+Message-ID: <CAJD7tkbfT-FRs3LE2GPddqrQSWw_eC1R6k3z04x=z9Zvt5yLpg@mail.gmail.com>
+References: <20220429201131.3397875-1-yosryahmed@google.com>
+ <20220429201131.3397875-2-yosryahmed@google.com> <87ilqoi77b.wl-maz@kernel.org>
+ <CAJD7tkY7JF25XXUFq2mGroetMkfo-2zGOaQC94pjZE3D42+oaw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=4MK5Z5duMa87oHfTgQRev3JJqnSTwXWH5fVcV34L7dM=;
-        b=l+MeEY8PFGfskD3FsCOlvSab9XgG1oPg/iynQwlXTFrp/alh8KkZYehnFpakdk+2y6
-         jKiO9k7kOkYPU29eqCecdB6DUs7C1PNR2Ev/yXH8aw2fNbvvy9l/YtVVbQahxBmKHV76
-         m/29e1REy8tS9WU0KLk8b+3BVI/mNjWrTP6+evBbdVEgKqv6XW/bg6XuZXwtDZOlT/Hf
-         fQDDLvknV+r9yrtTnJrM1LaVNhutiu1tHOYhsUCqSsvBfrOsnuazqm6H4R9vbMlZoy6J
-         3FHixuJyOBVhZ7sr+23dJSEwCWrY0/paq2Z0MtQCeTzBTz5qsjpX6Mro80MNDaSvgMJT
-         nGGA==
-Content-Disposition: inline
-In-Reply-To: <20220506164015.fsdsuv226nhllos5-2sxDN0k4oOr/D8ZFBB3Vemm1Eemhq0z/AL8bYrjMMd8@public.gmane.org>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=zHCy33IfC5TyILOeQkmukBylQEbte8TBRw0A+aY3Nnw=;
+        b=H6nlUcikiCWMQ0NyQpEOvAX9YWAzxJVOMo8TCOD+MTF5x++KFtykM38ezcNgkrqf/k
+         HsEf3EJd5U1zetXK4vcQ2qXVxKjVLLmxk64eVHzC1lhLd+csiUOWanUBOMc0ehk+lL8Z
+         8kMOXwBH5hATNTPogQUXQIImHkrg03NEi/77hdTa1677HBxwaUfkv/QQ7yLseBE1HcJE
+         YPtPpea4ak7+T4Dqx7q3oWEasv5JJswYYW1+IlWiL+SM1CpjXzbyzq9KKAOv4Z51ZAoC
+         p4WvvEjdiEI05l2ZOHE80zU68Yi/ftR+9e3AoP2yMz5PBJyRJ0fD1vQ47PM6C0czbLOE
+         9nDg==
+In-Reply-To: <CAJD7tkY7JF25XXUFq2mGroetMkfo-2zGOaQC94pjZE3D42+oaw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Richard Palethorpe <rpalethorpe-IBi9RG/b67k@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, kvma
 
-On Fri, May 06, 2022 at 09:40:15AM -0700, David Vernet wrote:
-> Sorry for the delayed reply, Michal. I've been at LSFMM this week.
->=20
-> On Fri, Apr 29, 2022 at 11:26:20AM +0200, Michal Koutn=FD wrote:
-> > I still think that the behavior when there's no protection left for the
-> > memory.low =3D=3D 0 child, there should be no memory.low events (not ju=
-st
-> > uncounted but not happening) and test should not accept this (even
-> > though it's the current behavior).
+On Mon, May 2, 2022 at 11:46 AM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 >
-> That's fair. I think part of the problem here is that in general, the
-> memcontroller itself is quite heuristic, so it's tough to write tests that
-> provide useful coverage while also being sufficiently flexible to avoid
-> flakiness and over-prescribing expected behavior. In this case I think it=
-'s
-> probably correct that the memory.low =3D=3D 0 child shouldn't inherit
-> protection from its parent under any circumstances due to its siblings
-> overcommitting the parent's protection, but I also wonder if it's really
-> necessary to enforce that. If you look at how much memory A/B/E gets at t=
-he
-> end of the reclaim, it's still far less than 1MB (though should it be 0?).
-> I'd be curious to hear what Johannes thinks.
+> On Mon, May 2, 2022 at 3:01 AM Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> >
+> > On Fri, 29 Apr 2022 21:11:28 +0100,
+> > Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> > >
+> > > Add NR_SECONDARY_PAGETABLE stat to count secondary page table uses, e.g.
+> > > KVM mmu. This provides more insights on the kernel memory used
+> > > by a workload.
+> > >
+> > > This stat will be used by subsequent patches to count KVM mmu
+> > > memory usage.
+> > >
+> > > Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > > ---
+> > >  Documentation/admin-guide/cgroup-v2.rst | 5 +++++
+> > >  Documentation/filesystems/proc.rst      | 4 ++++
+> > >  drivers/base/node.c                     | 2 ++
+> > >  fs/proc/meminfo.c                       | 2 ++
+> > >  include/linux/mmzone.h                  | 1 +
+> > >  mm/memcontrol.c                         | 1 +
+> > >  mm/page_alloc.c                         | 6 +++++-
+> > >  mm/vmstat.c                             | 1 +
+> > >  8 files changed, 21 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> > > index 69d7a6983f78..828cb6b6f918 100644
+> > > --- a/Documentation/admin-guide/cgroup-v2.rst
+> > > +++ b/Documentation/admin-guide/cgroup-v2.rst
+> > > @@ -1312,6 +1312,11 @@ PAGE_SIZE multiple when read back.
+> > >         pagetables
+> > >                  Amount of memory allocated for page tables.
+> > >
+> > > +       secondary_pagetables
+> > > +             Amount of memory allocated for secondary page tables,
+> > > +             this currently includes KVM mmu allocations on x86
+> > > +             and arm64.
+> >
+> > Can you please explain what the rationale is for this? We already
+> > account for the (arm64) S2 PTs as a userspace allocation (see
+>
+> This can be considered as continuation for that work. The mentioned
+> commit accounts S2 PTs to the VM process cgroup kernel memory. We have
+> stats for the total kernel memory, and some fine-grained categories of
+> that, like (pagetables, stack, slab, etc.).
+>
+> This patch just adds another category to give further insights into
+> what exactly is using kernel memory.
+>
+> > 115bae923ac8bb29ee635). You are saying that this is related to a
+> > 'workload', but given that the accounting is global, I fail to see how
+> > you can attribute these allocations on a particular VM.
+>
+> The main motivation is having the memcg stats, which give attribution
+> to workloads. If you think it's more appropriate, we can add it as a
+> memcg-only stat, like MEMCG_VMALLOC (see 4e5aa1f4c2b4 ("memcg: add
+> per-memcg vmalloc stat")). The only reason I made this as a global
+> stat too is to be consistent with NR_PAGETABLE.
+>
+> >
+> > What do you plan to do for IOMMU page tables? After all, they serve
+> > the exact same purpose, and I'd expect these to be handled the same
+> > way (i.e. why is this KVM specific?).
+>
+> The reason this was named NR_SECONDARY_PAGTABLE instead of
+> NR_KVM_PAGETABLE is exactly that. To leave room to incrementally
+> account other types of secondary page tables to this stat. It is just
+> that we are currently interested in the KVM MMU usage.
+>
 
-We need to distinguish between what the siblings declare and what they
-consume.
 
-My understanding of the issue you're raising, Michal, is that
-protected siblings start with current > low, then get reclaimed
-slightly too much and end up with current < low. This results in a
-tiny bit of float that then gets assigned to the low=3D0 sibling; when
-that sibling gets reclaimed regardless, it sees a low event. Correct
-me if I missed a detail or nuance here.
-
-But unused float going to siblings is intentional. This is documented
-in point 3 in the comment above effective_protection(): if you use
-less than you're legitimately claiming, the float goes to your
-siblings. So the problem doesn't seem to be with low accounting and
-event generation, but rather it's simply overreclaim.
-
-It's conceivable to make reclaim more precise and then tighten up the
-test. But right now, David's patch looks correct to me.
+Any thoughts on this? Do you think MEMCG_SECONDARY_PAGETABLE would be
+more appropriate here?
