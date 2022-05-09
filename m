@@ -1,47 +1,51 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] mm/memcontrol: Export memcg->watermark via sysfs for
- v2 memcg
-Date: Sat, 7 May 2022 08:33:46 -0700
-Message-ID: <CALvZod6upThQzqDGs1DCG4GuSf=rhfOncMU5=_eEoX8HH5Ri_w@mail.gmail.com>
-References: <20220507050916.GA13577@us192.sjc.aristanetworks.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] mm/memcg: support control THP behaviour in cgroup
+Date: Mon, 9 May 2022 12:00:28 +0200
+Message-ID: <YnjmPAToTR0C5o8x@dhcp22.suse.cz>
+References: <20220505033814.103256-1-xu.xin16@zte.com.cn>
+ <YnUlntNFR4zeD+qa@dhcp22.suse.cz>
+ <6275d3e7.1c69fb81.1d62.4504@mx.google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=RKIrTDgFPzQoY+nQlkFGe6GXuT/mXqMIOBgKZEviWa0=;
-        b=mM/QEyG8NRrxogssx348Xw9iuXFePPCxz8tD/ChHoVABmGa9Gd4j9lTAsRGn3NNyDx
-         lLE+53P1YvhbEKq8ks3ha7QiBoEPsulerpQIV3rs6YO1z3IU5EJy4WpgJ+OUlq8bApJl
-         nq4qk70mU++hxHK+ppYFPS7ICMK32ngwAwwbAks2652HVZ5+YaeEJb+3VCHR9xheSxMo
-         Jw0DPaLDO3mh0mYxsPZYnKKAJoYtaKKZDlWysgfuwZKr5ZNhUb5w21H6hwZI0gC5y4Yr
-         C7UkSnjzkcDMxeGNk+Hw3/sIVo+WCABP0JJpxOWIkbwwQrQZlnjf8fOGHROhVY7vQcis
-         W/Lw==
-In-Reply-To: <20220507050916.GA13577-pF7uKtACKh3GmWBmRUYTj5O0Dwfk+90YVpNB7YpNyf8@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1652090433; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=EnVbGbF3CiTcycSBZO/loerdaCBwAlV6olMPMO9R0Qs=;
+        b=crXHB0LGP0sk30wzd0kWaM5SpjARbCCh70lfRoTsVFXEIuaZcoMvyMb1tID3C62z31gqYe
+        yQ7D8QfaK+pJpNbEPL+K5d78N02gEkqfCsXBVAgUwGGbsSMibVYHliBh+Lr3X45ftFpA+w
+        keJFS3J/goZuc+Z0vjcFJEU3EQEGDXE=
+Content-Disposition: inline
+In-Reply-To: <6275d3e7.1c69fb81.1d62.4504-ATjtLOhZ0NVl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: CGEL <cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, william.kucharski-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yang Yang <yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 
-On Fri, May 6, 2022 at 10:09 PM Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org> wrote:
->
-> We run a lot of automated tests when building our software and run into
-> OOM scenarios when the tests run unbounded. v1 memcg exports
-> memcg->watermark as "memory.max_usage_in_bytes" in sysfs. We use this
-> metric to heuristically limit the number of tests that can run in
-> parallel based on per test historical data.
->
-> This metric is currently not exported for v2 memcg and there is no
-> other easy way of getting this information. getrusage() syscall returns
-> "ru_maxrss" which can be used as an approximation but that's the max
-> RSS of a single child process across all children instead of the
-> aggregated max for all child processes. The only work around is to
-> periodically poll "memory.current" but that's not practical for
-> short-lived one-off cgroups.
->
-> Hence, expose memcg->watermark as "memory.peak" for v2 memcg.
->
-> Signed-off-by: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
+On Sat 07-05-22 02:05:25, CGEL wrote:
+[...]
+> If there are many containers to run on one host, and some of them have high
+> performance requirements, administrator could turn on thp for them:
+> # docker run -it --thp-enabled=always
+> Then all the processes in those containers will always use thp.
+> While other containers turn off thp by:
+> # docker run -it --thp-enabled=never
 
-Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+I do not know. The THP config space is already too confusing and complex
+and this just adds on top. E.g. is the behavior of the knob
+hierarchical? What is the policy if parent memcg says madivise while
+child says always? How does the per-application configuration aligns
+with all that (e.g. memcg policy madivise but application says never via
+prctl while still uses some madvised - e.g. via library).
+
+> By doing this we could promote important containers's performance with less
+> footprint of thp.
+
+Do we really want to provide something like THP based QoS? To me it
+sounds like a bad idea and if the justification is "it might be useful"
+then I would say no. So you really need to come with a very good usecase
+to promote this further.
+-- 
+Michal Hocko
+SUSE Labs
