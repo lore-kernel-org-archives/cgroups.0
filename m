@@ -1,61 +1,50 @@
-From: Hao Luo <haoluo@google.com>
-Subject: Re: [RFC PATCH bpf-next 8/9] bpf: Introduce cgroup iter
-Date: Tue, 10 May 2022 11:25:13 -0700
-Message-ID: <CA+khW7i1Pcc9_bfxVhtzGQkevmodie7=M-57ScMqUyw5U=KW4A@mail.gmail.com>
-References: <20220510001807.4132027-1-yosryahmed@google.com> <20220510001807.4132027-9-yosryahmed@google.com>
+From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH bpf-next 7/9] cgroup: Add cgroup_put() in
+ !CONFIG_CGROUPS case
+Date: Tue, 10 May 2022 11:25:42 -0700
+Message-ID: <CA+khW7hbHEEv9JsSCRj5ko=rA2ZorimkpyCCKD=7usv+fTfMNg@mail.gmail.com>
+References: <20220510001807.4132027-1-yosryahmed@google.com> <20220510001807.4132027-8-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=i/K+z4FbavDUp9taCkfXpbx13rVcW3GTSvwjLfREXAU=;
-        b=Tty5wMz7Ghu646JswlNLX+XwgMjXTrtdIAnTGLzWswd7pJqjghhee9uTTrSBkA1mS5
-         TASpWLvrSWJ0o/VmKB1zZ2EKL7bj0qTC3lvVRuamF3i9rZ6kaQX5QDmWCn9TRCB5uXkV
-         r8gOHaTXenDSj1D57niaR5CpxS9xrrcL40YA8vpjqNI+g1gL5pCdsCqYcSLce1I6fc3z
-         kWNzuDcKIBDb+SwqrxV9F0c+DchRf6wXrjkpR+hTKigiASG8TQ/T4toShl24UGOGYEeY
-         ZEnNjV6vVbfPH9Mde3cglN60wQIz6IJ5FIeBa8eN2oVUv11BpQol0cmvcrU6FhcjdmJZ
-         DX4A==
-In-Reply-To: <20220510001807.4132027-9-yosryahmed@google.com>
+        bh=yHb/t4sJWtaUrfKkQwH3/sfbd07PYe3PiYuK/lpKKSM=;
+        b=XF0oB5IuvA6vJGEyZOrGfxGamHtbVLL4rlc9UC4pYza1Scg0lYG1lQjzP2+uF4mYKg
+         k5SqANXoXiMKqwfOjo/kCTJ1wE2u5Oh0t5b3zwwBN12RRjqZg2eGmMtC3vO29ME5jttc
+         u8/DTuiEBDHhQ3IT3Tvh+OgaSJhVvk4AxYOiHIHpE+HqpB/QvLCevvw26Hs3WYNOUuT8
+         UOHVIWJy37iQItWWuiSHZ2v0tMF5ao8PrVU9FwmB+Edemgi4WxwESF85LNNfolrVn0C0
+         BS5Fyo4ODK6JUclQ/DNpWR7V60B/ysAFObHrRLJmgpUAivLmKv3mmULFcV+xH5hnIiyS
+         zx2g==
+In-Reply-To: <20220510001807.4132027-8-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, May 9, 2022 at 5:18 PM Yosry Ahmed <yosryahmed@google.com> wrote:
+On Mon, May 9, 2022 at 5:18 PM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 >
-> From: Hao Luo <haoluo@google.com>
+> From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 >
-> Introduce a new type of iter prog: cgroup. Unlike other bpf_iter, this
-> iter doesn't iterate a set of kernel objects. Instead, it is supposed to
-> be parameterized by a cgroup id and prints only that cgroup. So one
-> needs to specify a target cgroup id when attaching this iter. The target
-> cgroup's state can be read out via a link of this iter.
+> There is already a cgroup_get_from_id() in the !CONFIG_CGROUPS case,
+> let's have a matching cgroup_put() in !CONFIG_CGROUPS too.
 >
-> Signed-off-by: Hao Luo <haoluo@google.com>
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+> Signed-off-by: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 > ---
->  include/linux/bpf.h            |   2 +
->  include/uapi/linux/bpf.h       |   6 ++
->  kernel/bpf/Makefile            |   2 +-
->  kernel/bpf/cgroup_iter.c       | 148 +++++++++++++++++++++++++++++++++
->  tools/include/uapi/linux/bpf.h |   6 ++
->  5 files changed, 163 insertions(+), 1 deletion(-)
->  create mode 100644 kernel/bpf/cgroup_iter.c
+>  include/linux/cgroup.h | 3 +++
+>  1 file changed, 3 insertions(+)
 >
+> diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+> index 5408c74d5c44..4f1d8febb9fd 100644
+> --- a/include/linux/cgroup.h
+> +++ b/include/linux/cgroup.h
+[...]
+> +
+> +static inline struct cgroup *cgroup_put(void)
+> +{}
 
-Thanks Yosry for posting this patch! Dear reviewers, this is v2 of the
-cgroup_iter change I sent previously at
-
-https://lore.kernel.org/bpf/20220225234339.2386398-9-haoluo@google.com/
-
-v1 - > v2:
-- Getting the cgroup's reference at the time at attaching, instead of
-at the time when iterating. (Yonghong) (context [1])
-- Remove .init_seq_private and .fini_seq_private callbacks for
-cgroup_iter. They are not needed now. (Yonghong)
-
-[1] https://lore.kernel.org/bpf/f780fc3a-dbc2-986c-d5a0-6b0ef1c4311f@fb.com/
-
-Hao
+Sorry Yosry, the return type and parameter type are mixed up. I will
+fix it and send you an updated version.
