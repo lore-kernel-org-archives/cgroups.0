@@ -1,218 +1,114 @@
 From: "T.J. Mercier" <tjmercier@google.com>
-Subject: [PATCH v7 0/6] Proposal for a GPU cgroup controller
-Date: Tue, 10 May 2022 23:56:44 +0000
-Message-ID: <20220510235653.933868-1-tjmercier@google.com>
+Subject: [PATCH v7 1/6] gpu: rfc: Proposal for a GPU cgroup controller
+Date: Tue, 10 May 2022 23:56:45 +0000
+Message-ID: <20220510235653.933868-2-tjmercier@google.com>
+References: <20220510235653.933868-1-tjmercier@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=date:message-id:mime-version:subject:from:to:cc
-         :content-transfer-encoding;
-        bh=8wgwWyWBAO6K1kQcjl7QjLCZGLS4aKj0FBaC6WwhJdI=;
-        b=qAYLyisyyXSk7BzH3nmLvQXdJt3d5qR4CpwkUlSCAlxxvdtqzVN1xC/GBhDcXQ+AHX
-         bLOvEu+XGuKU/81vlK/f3FLcJ/0slTtnfXChNkgikt5dQIFy5MGBu1PwluanOmrMHu7o
-         vb0Xq1aNl917Wu+eUXiInx9Y2/cfGlqvNqwFQCwtsK22jdhOyD5pHpCcpJrIlCLur5cy
-         cBoJbiNkMqktkKvNFP8kg/UJY/Kwaa5lGVLiDC0KnZ3rmrPZNN5K0Gn946fuXQOHi9xU
-         XmSllLF/cK9feAy13MLeQK4E0M7s/CowRGV4L06o2Ql4CZBs9ImveHZrPy4lgBm0ZkSh
-         oZFg==
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc:content-transfer-encoding;
+        bh=4KvDBY92RR8WKuUjzgohCsuZSchRL19v0jjqGuoq0no=;
+        b=EVnDMIpZB27MCIXhHatilUnRYlxARdcdAd7PK1rHIXFEB09aYu4tovCAvBFw8cZxyT
+         gXDSSt3iUIN/1CO3fml62gvLZRGE+EMeeeLDQuSX7c4jbLENEPCC9PDIZujw5VNhH0q0
+         FNlArlRA5Ob2e7UO2kZWZMCqvsuYh5DB5yxiuRlqYM4K6p8fNfkF+nvk4AffdLlQoCVj
+         Iow7SxlzmL5Vq+/E0YXhlhfw88NjMLlc65QX53QBUS8PoggN6lNR+09aPb47Qcif87k3
+         deyEJ4awwrFwdjAObdu51OKvcIO1OpNdSGWxV/SAb3A5rkBNGUpnsa8mp82Pi0LrZ+EP
+         djEA==
+In-Reply-To: <20220510235653.933868-1-tjmercier@google.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: tjmercier@google.com, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@collabora.com>, Liam Mark <lmark@codeaurora.org>, Laura Abbott <labbott@redhat.com>, Brian Starkey <Brian.Starkey@arm.com>
-Cc: daniel@ffwll.ch, jstultz@google.com, cmllamas@google.com, kaleshsingh@google.com, Kenny.Ho@amd.com, mkoutny@suse.com, skhan@linuxfoundation.org, kernel-team@android.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, linux-kselftest@vger.kernel.org
+Content-Type: text/plain; charset="macroman"
+To: tjmercier@google.com, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>
+Cc: daniel@ffwll.ch, hridya@google.com, christian.koenig@amd.com, jstultz@google.com, tkjos@android.com, cmllamas@google.com, surenb@google.com, kaleshsingh@google.com, Kenny.Ho@amd.com, mkoutny@suse.com, skhan@linuxfoundation.org, kernel-team@android.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch series revisits the proposal for a GPU cgroup controller to
-track and limit memory allocations by various device/allocator
-subsystems. The patch series also contains a simple prototype to
-illustrate how Android intends to implement DMA-BUF allocator
-attribution using the GPU cgroup controller. The prototype does not
-include resource limit enforcements.
+From: Hridya Valsaraju <hridya@google.com>
 
-Changelog:
-v7:
-Hide gpucg and gpucg_bucket struct definitions per Michal Koutn=C3=BD.
-This means gpucg_register_bucket now returns an internally allocated
-struct gpucg_bucket.
+This patch adds a proposal for a new GPU cgroup controller for
+accounting/limiting GPU and GPU-related memory allocations.
+The proposed controller is based on the DRM cgroup controller[1] and
+follows the design of the RDMA cgroup controller.
 
-Move all public function documentation to the cgroup_gpu.h header.
+The new cgroup controller would:
+* Allow setting per-device limits on the total size of buffers
+  allocated by device within a cgroup.
+* Expose a per-device/allocator breakdown of the buffers charged to a
+  cgroup.
 
-Remove comment in documentation about duplicate name rejection which
-is not relevant to cgroups users per Michal Koutn=C3=BD.
+The prototype in the following patches is only for memory accounting
+using the GPU cgroup controller and does not implement limit setting.
 
-v6:
+[1]: https://lore.kernel.org/amd-gfx/20210126214626.16260-1-brian.welty@int=
+el.com/
+
+Signed-off-by: Hridya Valsaraju <hridya@google.com>
+Signed-off-by: T.J. Mercier <tjmercier@google.com>
+
+---
+v7 changes
+Remove comment about duplicate name rejection which is not relevant to
+cgroups users per Michal Koutn=C3=BD.
+
+v6 changes
 Move documentation into cgroup-v2.rst per Tejun Heo.
 
-Rename BINDER_FD{A}_FLAG_SENDER_NO_NEED ->
-BINDER_FD{A}_FLAG_XFER_CHARGE per Carlos Llamas.
-
-Return error on transfer failure per Carlos Llamas.
-
-v5:
-Rebase on top of v5.18-rc3
-
+v5 changes
 Drop the global GPU cgroup "total" (sum of all device totals) portion
 of the design since there is no currently known use for this per
 Tejun Heo.
 
-Fix commit message which still contained the old name for
-dma_buf_transfer_charge per Michal Koutn=C3=BD.
+Update for renamed functions/variables.
 
-Remove all GPU cgroup code except what's necessary to support charge transf=
-er
-from dma_buf. Previously charging was done in export, but for non-Android
-graphics use-cases this is not ideal since there may be a delay between
-allocation and export, during which time there is no accounting.
+v3 changes
+Remove Upstreaming Plan from gpu-cgroup.rst per John Stultz.
 
-Merge dmabuf: Use the GPU cgroup charge/uncharge APIs patch into
-dmabuf: heaps: export system_heap buffers with GPU cgroup charging as a
-result of above.
+Use more common dual author commit message format per John Stultz.
+---
+ Documentation/admin-guide/cgroup-v2.rst | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-Put the charge and uncharge code in the same file (system_heap_allocate,
-system_heap_dma_buf_release) instead of splitting them between the heap and
-the dma_buf_release. This avoids asymmetric management of the gpucg charges=
-.
-
-Modify the dma_buf_transfer_charge API to accept a task_struct instead
-of a gpucg. This avoids requiring the caller to manage the refcount
-of the gpucg upon failure and confusing ownership transfer logic.
-
-Support all strings for gpucg_register_bucket instead of just string
-literals.
-
-Enforce globally unique gpucg_bucket names.
-
-Constrain gpucg_bucket name lengths to 64 bytes.
-
-Append "-heap" to gpucg_bucket names from dmabuf-heaps.
-
-Drop patch 7 from the series, which changed the types of
-binder_transaction_data's sender_pid and sender_euid fields. This was
-done in another commit here:
-https://lore.kernel.org/all/20220210021129.3386083-4-masahiroy@kernel.org/
-
-Rename:
-  gpucg_try_charge -> gpucg_charge
-  find_cg_rpool_locked -> cg_rpool_find_locked
-  init_cg_rpool -> cg_rpool_init
-  get_cg_rpool_locked -> cg_rpool_get_locked
-  "gpu cgroup controller" -> "GPU controller"
-  gpucg_device -> gpucg_bucket
-  usage -> size
-
-Tests:
-  Support both binder_fd_array_object and binder_fd_object. This is
-  necessary because new versions of Android will use binder_fd_object
-  instead of binder_fd_array_object, and we need to support both.
-
-  Tests for both binder_fd_array_object and binder_fd_object.
-
-  For binder_utils return error codes instead of
-  struct binder{fs}_ctx.
-
-  Use ifdef __ANDROID__ to choose platform-dependent temp path instead
-  of a runtime fallback.
-
-  Ensure binderfs_mntpt ends with a trailing '/' character instead of
-  prepending it where used.
-
-v4:
-Skip test if not run as root per Shuah Khan
-
-Add better test logging for abnormal child termination per Shuah Khan
-
-Adjust ordering of charge/uncharge during transfer to avoid potentially
-hitting cgroup limit per Michal Koutn=C3=BD
-
-Adjust gpucg_try_charge critical section for charge transfer functionality
-
-Fix uninitialized return code error for dmabuf_try_charge error case
-
-v3:
-Remove Upstreaming Plan from gpu-cgroup.rst per John Stultz
-
-Use more common dual author commit message format per John Stultz
-
-Remove android from binder changes title per Todd Kjos
-
-Add a kselftest for this new behavior per Greg Kroah-Hartman
-
-Include details on behavior for all combinations of kernel/userspace
-versions in changelog (thanks Suren Baghdasaryan) per Greg Kroah-Hartman.
-
-Fix pid and uid types in binder UAPI header
-
-v2:
-See the previous revision of this change submitted by Hridya Valsaraju
-at: https://lore.kernel.org/all/20220115010622.3185921-1-hridya@google.com/
-
-Move dma-buf cgroup charge transfer from a dma_buf_op defined by every
-heap to a single dma-buf function for all heaps per Daniel Vetter and
-Christian K=C3=B6nig. Pointers to struct gpucg and struct gpucg_device
-tracking the current associations were added to the dma_buf struct to
-achieve this.
-
-Fix incorrect Kconfig help section indentation per Randy Dunlap.
-
-History of the GPU cgroup controller
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-The GPU/DRM cgroup controller came into being when a consensus[1]
-was reached that the resources it tracked were unsuitable to be integrated
-into memcg. Originally, the proposed controller was specific to the DRM
-subsystem and was intended to track GEM buffers and GPU-specific
-resources[2]. In order to help establish a unified memory accounting model
-for all GPU and all related subsystems, Daniel Vetter put forth a
-suggestion to move it out of the DRM subsystem so that it can be used by
-other DMA-BUF exporters as well[3]. This RFC proposes an interface that
-does the same.
-
-[1]: https://patchwork.kernel.org/project/dri-devel/cover/20190501140438.95=
-06-1-brian.welty@intel.com/#22624705
-[2]: https://lore.kernel.org/amd-gfx/20210126214626.16260-1-brian.welty@int=
-el.com/
-[3]: https://lore.kernel.org/amd-gfx/YCVOl8%2F87bqRSQei@phenom.ffwll.local/
-
-Hridya Valsaraju (3):
-  gpu: rfc: Proposal for a GPU cgroup controller
-  cgroup: gpu: Add a cgroup controller for allocator attribution of GPU
-    memory
-  binder: Add flags to relinquish ownership of fds
-
-T.J. Mercier (3):
-  dmabuf: heaps: export system_heap buffers with GPU cgroup charging
-  dmabuf: Add gpu cgroup charge transfer function
-  selftests: Add binder cgroup gpu memory transfer tests
-
- Documentation/admin-guide/cgroup-v2.rst       |  23 +
- drivers/android/binder.c                      |  31 +-
- drivers/dma-buf/dma-buf.c                     |  80 ++-
- drivers/dma-buf/dma-heap.c                    |  38 ++
- drivers/dma-buf/heaps/system_heap.c           |  28 +-
- include/linux/cgroup_gpu.h                    | 146 +++++
- include/linux/cgroup_subsys.h                 |   4 +
- include/linux/dma-buf.h                       |  49 +-
- include/linux/dma-heap.h                      |  15 +
- include/uapi/linux/android/binder.h           |  23 +-
- init/Kconfig                                  |   7 +
- kernel/cgroup/Makefile                        |   1 +
- kernel/cgroup/gpu.c                           | 390 +++++++++++++
- .../selftests/drivers/android/binder/Makefile |   8 +
- .../drivers/android/binder/binder_util.c      | 250 +++++++++
- .../drivers/android/binder/binder_util.h      |  32 ++
- .../selftests/drivers/android/binder/config   |   4 +
- .../binder/test_dmabuf_cgroup_transfer.c      | 526 ++++++++++++++++++
- 18 files changed, 1632 insertions(+), 23 deletions(-)
- create mode 100644 include/linux/cgroup_gpu.h
- create mode 100644 kernel/cgroup/gpu.c
- create mode 100644 tools/testing/selftests/drivers/android/binder/Makefile
- create mode 100644 tools/testing/selftests/drivers/android/binder/binder_u=
-til.c
- create mode 100644 tools/testing/selftests/drivers/android/binder/binder_u=
-til.h
- create mode 100644 tools/testing/selftests/drivers/android/binder/config
- create mode 100644 tools/testing/selftests/drivers/android/binder/test_dma=
-buf_cgroup_transfer.c
-
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-=
+guide/cgroup-v2.rst
+index 69d7a6983f78..2e1d26e327c7 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2352,6 +2352,29 @@ first, and stays charged to that cgroup until that r=
+esource is freed. Migrating
+ a process to a different cgroup does not move the charge to the destinatio=
+n
+ cgroup where the process has moved.
+=20
++
++GPU
++---
++
++The GPU controller accounts for device and system memory allocated by the =
+GPU
++and related subsystems for graphics use. Resource limits are not currently
++supported.
++
++GPU Interface Files
++~~~~~~~~~~~~~~~~~~~~
++
++  gpu.memory.current
++	A read-only file containing memory allocations in flat-keyed format. The =
+key
++	is a string representing the device name. The value is the size of the me=
+mory
++	charged to the device in bytes. The device names are globally unique.::
++
++	  $ cat /sys/kernel/fs/cgroup1/gpu.memory.current
++	  dev1 4194304
++	  dev2 104857600
++
++	The device name string is set by a device driver when it registers with t=
+he
++	GPU cgroup controller to participate in resource accounting.
++
+ Others
+ ------
+=20
 --=20
 2.36.0.512.ge40c2bad7a-goog
 
