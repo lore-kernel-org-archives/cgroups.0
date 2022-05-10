@@ -1,49 +1,58 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH v2 3/6] mm: Kconfig: group swap, slab, hotplug and thp
- options into submenus
-Date: Tue, 10 May 2022 15:40:37 -0700
-Message-ID: <20220510154037.c7916ee9d7de90eedd12f92c@linux-foundation.org>
-References: <20220510152847.230957-1-hannes@cmpxchg.org>
-        <20220510152847.230957-4-hannes@cmpxchg.org>
+From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH bpf-next 8/9] bpf: Introduce cgroup iter
+Date: Tue, 10 May 2022 15:49:59 -0700
+Message-ID: <CA+khW7gUdZQq77jO2_A6rvE6f+HV=sGfBVGvAmazGPvwudE0RQ@mail.gmail.com>
+References: <20220510001807.4132027-1-yosryahmed@google.com>
+ <20220510001807.4132027-9-yosryahmed@google.com> <Ynq04gC1l7C2tx6o@slm.duckdns.org>
+ <CA+khW7girnNwap1ABN1a4XuvkEEnmkztTV+fsuC3MsxNeB08Yg@mail.gmail.com> <YnriMPYyOP9ibskc@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1652222439;
-        bh=Uep9omWAHUgcNmftnhT+OxXsLVstbaEvQlnJP1mh//w=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=aU3hfLPZDr+uUiq73DIBtXvAfY5S2GiWrylBB7qJs04cVSM3a032pbem+F+SzA3nD
-         NmTFsl/iikJ9L8A13NTBsku9/0KwxWXCPXKeZ6/c0JvI6ckcVLMmTGJmlWcWt3QzJh
-         PiasBPNTr9le1p4IUa0r4IApkoasZ/VAVs0RChD0=
-In-Reply-To: <20220510152847.230957-4-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=5pgf2LC4mfZtxmKKitMud+Oy12RPGcU3F46iHWGsadA=;
+        b=ekAQBJLQ0g2H+FUmFV5f70dwdMJlmpMe43UT4QIXA58jzQ7eDTurlQUHhbMjmFXgUn
+         iSvHyXVOpjYMsk92HbvRZQl8ByOek4TmP4dutBYmWmysLSp+0lz8VY73TGj93QW0TK/I
+         wFDu3nWggMxUUhT25DqnrpkQRHcZyfZQlsTbTl94c/g9RyI7z/yYTSrr78bkYPz4zPE6
+         iY4Bp9up41gXopOTZgVvz0svbTi1cJwop5wCmJ5rigsS40iOXz4jYN10Zh1qCwptI9S1
+         NrCYR94Zlax6XmK+bd61BAf+16YQeV+dhN2Bpph/aIHzuhFyMVqWf35ODyxRjEeOQHST
+         hZVg==
+In-Reply-To: <YnriMPYyOP9ibskc-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, 10 May 2022 11:28:44 -0400 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+On Tue, May 10, 2022 at 3:07 PM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+> Hello,
+>
+> On Tue, May 10, 2022 at 02:12:16PM -0700, Hao Luo wrote:
+> > > Is there a reason why this can't be a proper iterator which supports
+> > > lseek64() to locate a specific cgroup?
+> > >
+> >
+> > There are two reasons:
+> >
+> > - Bpf_iter assumes no_llseek. I haven't looked closely on why this is
+> > so and whether we can add its support.
+> >
+> > - Second, the name 'iter' in this patch is misleading. What this patch
+> > really does is reusing the functionality of dumping in bpf_iter.
+> > 'Dumper' is a better name. We want to create one file in bpffs for
+> > each cgroup. We are essentially just iterating a set of one single
+> > element.
+>
+> I see. I'm just shooting in the dark without context but at least in
+> principle there's no reason why cgroups wouldn't be iterable, so it might be
+> something worth at least thinking about before baking in the interface.
+>
 
-> There are several clusters of related config options spread throughout
-> the mostly flat MM submenu. Group them together and put specialization
-> options into further subdirectories to make the MM submenu a bit more
-> organized and easier to navigate.
+Yep. Conceptually there should be no problem to iterate cgroups in the
+system. It may be better to have two independent bpf objects: bpf_iter
+and bpf_dumper. In our use case, we want bpf_dumper, which just
+exports data out through fs interface.
 
-Causes
-
-hp2:/usr/src/25> make allnoconfig
-
-WARNING: unmet direct dependencies detected for ARCH_WANT_GENERAL_HUGETLB
-  Depends on [n]: TRANSPARENT_HUGEPAGE [=n]
-  Selected by [y]:
-  - X86 [=y]
-
-WARNING: unmet direct dependencies detected for ARCH_WANTS_THP_SWAP
-  Depends on [n]: TRANSPARENT_HUGEPAGE [=n]
-  Selected by [y]:
-  - X86 [=y] && X86_64 [=y]
-#
-# configuration written to .config
-#
-
-
-I'll disable this and [4/6] for now.
+Hao
