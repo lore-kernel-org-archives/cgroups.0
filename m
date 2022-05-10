@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH v2 5/6] mm: zswap: add basic meminfo and vmstat coverage
-Date: Tue, 10 May 2022 11:28:46 -0400
-Message-ID: <20220510152847.230957-6-hannes@cmpxchg.org>
+Subject: [PATCH v2 2/6] mm: Kconfig: move swap and slab config options to the MM section
+Date: Tue, 10 May 2022 11:28:43 -0400
+Message-ID: <20220510152847.230957-3-hannes@cmpxchg.org>
 References: <20220510152847.230957-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,183 +10,302 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=1yG/TJhB6zlP07vbHCoo0HduI7PCeWdcxAz4SbIPm6g=;
-        b=hYXYP5PLEeo7CWqbg91X9DjtuKyxX3nuIcfj1DY2YZFuCI5Tv7eKMNmOdMMJBXnitY
-         InB3K9/dKqFuwniT0XOjIT8ag03Bi2rdY0zELe1bydaRxxCmhT5XBDYhHcRATBD0gTW9
-         82aWLEwfg8Rw3dU355CL5bO+YfQfs0siYNI5qgEYs3DiW5le4KD1r+E/pLdI+7Ysl3NX
-         0REqoFrifGI+iD/68c+EE7P0/2RWWWJzWXsGiUSDNvbEyYx99U1dh6t/ArTtwqqdkTKl
-         nLctnuV1D650TjZnkMxYRIpcGyxQF52r3Op/D0hEAL6Mwq+g+TIr02XEcBr+6zgtYOd6
-         InYQ==
+        bh=bsj16Ee0guBN0gpdXp2AuLzbDIq1BETjMO2kD2xZlKg=;
+        b=YP3zZgh2jWYcOfyu5clL/3s4FWFRSZGWm5A0/IMVIbhy3w2aHSPb8w+Ov37scDmv/N
+         DKe2+oSFuWsht5QEVzewPrDIB6yaJv3UN5829aCHgAHCX+bdpmf/pdIxyKvfvc+D9jCF
+         zQf5VBMyeVQsBrSa7wblypzmav/PO6vpyyDVupwuFYOXhkJsq98Tf16UZDN/aHCRc/sE
+         KIcGid4tEhAqBCEsCulsucaRH8E9EpMFIAcjDMYc5GSyxvD4wXnLVrkenXLS9TkwgI8O
+         rZ19YwGKw64aKpCJo/jFAmXOU+DnI6Z2Ncsg1Sm23gK1/EbXojPdnYb4oBscTjxpVYxB
+         kXCw==
 In-Reply-To: <20220510152847.230957-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Currently it requires poking at debugfs to figure out the size and
-population of the zswap cache on a host. There are no counters for
-reads and writes against the cache. As a result, it's difficult to
-understand zswap behavior on production systems.
-
-Print zswap memory consumption and how many pages are zswapped out in
-/proc/meminfo. Count zswapouts and zswapins in /proc/vmstat.
+These are currently under General Setup. MM seems like a better fit.
 
 Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- Documentation/filesystems/proc.rst |  6 ++++++
- fs/proc/meminfo.c                  |  7 +++++++
- include/linux/swap.h               |  5 +++++
- include/linux/vm_event_item.h      |  4 ++++
- mm/vmstat.c                        |  4 ++++
- mm/zswap.c                         | 13 ++++++-------
- 6 files changed, 32 insertions(+), 7 deletions(-)
+ init/Kconfig | 123 ---------------------------------------------------
+ mm/Kconfig   | 123 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 123 insertions(+), 123 deletions(-)
 
-diff --git a/Documentation/filesystems/proc.rst b/Documentation/filesystems/proc.rst
-index 736ed384750c..8b5a94cfa722 100644
---- a/Documentation/filesystems/proc.rst
-+++ b/Documentation/filesystems/proc.rst
-@@ -964,6 +964,8 @@ Example output. You may not have all of these fields.
-     Mlocked:               0 kB
-     SwapTotal:             0 kB
-     SwapFree:              0 kB
-+    Zswap:              1904 kB
-+    Zswapped:           7792 kB
-     Dirty:                12 kB
-     Writeback:             0 kB
-     AnonPages:       4654780 kB
-@@ -1055,6 +1057,10 @@ SwapTotal
- SwapFree
-               Memory which has been evicted from RAM, and is temporarily
-               on the disk
-+Zswap
-+              Memory consumed by the zswap backend (compressed size)
-+Zswapped
-+              Amount of anonymous memory stored in zswap (original size)
- Dirty
-               Memory which is waiting to get written back to the disk
- Writeback
-diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
-index 6fa761c9cc78..6e89f0e2fd20 100644
---- a/fs/proc/meminfo.c
-+++ b/fs/proc/meminfo.c
-@@ -86,6 +86,13 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
+diff --git a/init/Kconfig b/init/Kconfig
+index 4489416f1e5c..468fe27cec0b 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -375,23 +375,6 @@ config DEFAULT_HOSTNAME
+ 	  but you may wish to use a different default here to make a minimal
+ 	  system more usable with less configuration.
  
- 	show_val_kb(m, "SwapTotal:      ", i.totalswap);
- 	show_val_kb(m, "SwapFree:       ", i.freeswap);
-+#ifdef CONFIG_ZSWAP
-+	seq_printf(m,  "Zswap:          %8lu kB\n",
-+		   (unsigned long)(zswap_pool_total_size >> 10));
-+	seq_printf(m,  "Zswapped:       %8lu kB\n",
-+		   (unsigned long)atomic_read(&zswap_stored_pages) <<
-+		   (PAGE_SHIFT - 10));
-+#endif
- 	show_val_kb(m, "Dirty:          ",
- 		    global_node_page_state(NR_FILE_DIRTY));
- 	show_val_kb(m, "Writeback:      ",
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index b82c196d8867..07074afa79a7 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -632,6 +632,11 @@ static inline int mem_cgroup_swappiness(struct mem_cgroup *mem)
- }
- #endif
+-#
+-# For some reason microblaze and nios2 hard code SWAP=n.  Hopefully we can
+-# add proper SWAP support to them, in which case this can be remove.
+-#
+-config ARCH_NO_SWAP
+-	bool
+-
+-config SWAP
+-	bool "Support for paging of anonymous memory (swap)"
+-	depends on MMU && BLOCK && !ARCH_NO_SWAP
+-	default y
+-	help
+-	  This option allows you to choose whether you want to have support
+-	  for so called swap devices or swap files in your kernel that are
+-	  used to provide more virtual memory than the actual RAM present
+-	  in your computer.  If unsure say Y.
+-
+ config SYSVIPC
+ 	bool "System V IPC"
+ 	help
+@@ -1909,112 +1892,6 @@ config COMPAT_BRK
  
-+#ifdef CONFIG_ZSWAP
-+extern u64 zswap_pool_total_size;
-+extern atomic_t zswap_stored_pages;
-+#endif
+ 	  On non-ancient distros (post-2000 ones) N is usually a safe choice.
+ 
+-choice
+-	prompt "Choose SLAB allocator"
+-	default SLUB
+-	help
+-	   This option allows to select a slab allocator.
+-
+-config SLAB
+-	bool "SLAB"
+-	depends on !PREEMPT_RT
+-	select HAVE_HARDENED_USERCOPY_ALLOCATOR
+-	help
+-	  The regular slab allocator that is established and known to work
+-	  well in all environments. It organizes cache hot objects in
+-	  per cpu and per node queues.
+-
+-config SLUB
+-	bool "SLUB (Unqueued Allocator)"
+-	select HAVE_HARDENED_USERCOPY_ALLOCATOR
+-	help
+-	   SLUB is a slab allocator that minimizes cache line usage
+-	   instead of managing queues of cached objects (SLAB approach).
+-	   Per cpu caching is realized using slabs of objects instead
+-	   of queues of objects. SLUB can use memory efficiently
+-	   and has enhanced diagnostics. SLUB is the default choice for
+-	   a slab allocator.
+-
+-config SLOB
+-	depends on EXPERT
+-	bool "SLOB (Simple Allocator)"
+-	depends on !PREEMPT_RT
+-	help
+-	   SLOB replaces the stock allocator with a drastically simpler
+-	   allocator. SLOB is generally more space efficient but
+-	   does not perform as well on large systems.
+-
+-endchoice
+-
+-config SLAB_MERGE_DEFAULT
+-	bool "Allow slab caches to be merged"
+-	default y
+-	depends on SLAB || SLUB
+-	help
+-	  For reduced kernel memory fragmentation, slab caches can be
+-	  merged when they share the same size and other characteristics.
+-	  This carries a risk of kernel heap overflows being able to
+-	  overwrite objects from merged caches (and more easily control
+-	  cache layout), which makes such heap attacks easier to exploit
+-	  by attackers. By keeping caches unmerged, these kinds of exploits
+-	  can usually only damage objects in the same cache. To disable
+-	  merging at runtime, "slab_nomerge" can be passed on the kernel
+-	  command line.
+-
+-config SLAB_FREELIST_RANDOM
+-	bool "Randomize slab freelist"
+-	depends on SLAB || SLUB
+-	help
+-	  Randomizes the freelist order used on creating new pages. This
+-	  security feature reduces the predictability of the kernel slab
+-	  allocator against heap overflows.
+-
+-config SLAB_FREELIST_HARDENED
+-	bool "Harden slab freelist metadata"
+-	depends on SLAB || SLUB
+-	help
+-	  Many kernel heap attacks try to target slab cache metadata and
+-	  other infrastructure. This options makes minor performance
+-	  sacrifices to harden the kernel slab allocator against common
+-	  freelist exploit methods. Some slab implementations have more
+-	  sanity-checking than others. This option is most effective with
+-	  CONFIG_SLUB.
+-
+-config SHUFFLE_PAGE_ALLOCATOR
+-	bool "Page allocator randomization"
+-	default SLAB_FREELIST_RANDOM && ACPI_NUMA
+-	help
+-	  Randomization of the page allocator improves the average
+-	  utilization of a direct-mapped memory-side-cache. See section
+-	  5.2.27 Heterogeneous Memory Attribute Table (HMAT) in the ACPI
+-	  6.2a specification for an example of how a platform advertises
+-	  the presence of a memory-side-cache. There are also incidental
+-	  security benefits as it reduces the predictability of page
+-	  allocations to compliment SLAB_FREELIST_RANDOM, but the
+-	  default granularity of shuffling on the "MAX_ORDER - 1" i.e,
+-	  10th order of pages is selected based on cache utilization
+-	  benefits on x86.
+-
+-	  While the randomization improves cache utilization it may
+-	  negatively impact workloads on platforms without a cache. For
+-	  this reason, by default, the randomization is enabled only
+-	  after runtime detection of a direct-mapped memory-side-cache.
+-	  Otherwise, the randomization may be force enabled with the
+-	  'page_alloc.shuffle' kernel command line parameter.
+-
+-	  Say Y if unsure.
+-
+-config SLUB_CPU_PARTIAL
+-	default y
+-	depends on SLUB && SMP
+-	bool "SLUB per cpu partial cache"
+-	help
+-	  Per cpu partial caches accelerate objects allocation and freeing
+-	  that is local to a processor at the price of more indeterminism
+-	  in the latency of the free. On overflow these caches will be cleared
+-	  which requires the taking of locks that may cause latency spikes.
+-	  Typically one would choose no for a realtime system.
+-
+ config MMAP_ALLOW_UNINITIALIZED
+ 	bool "Allow mmapped anonymous memory to be uninitialized"
+ 	depends on EXPERT && !MMU
+diff --git a/mm/Kconfig b/mm/Kconfig
+index c2141dd639e3..675a6be43739 100644
+--- a/mm/Kconfig
++++ b/mm/Kconfig
+@@ -2,6 +2,129 @@
+ 
+ menu "Memory Management options"
+ 
++#
++# For some reason microblaze and nios2 hard code SWAP=n.  Hopefully we can
++# add proper SWAP support to them, in which case this can be remove.
++#
++config ARCH_NO_SWAP
++	bool
 +
- #if defined(CONFIG_SWAP) && defined(CONFIG_MEMCG) && defined(CONFIG_BLK_CGROUP)
- extern void __cgroup_throttle_swaprate(struct page *page, gfp_t gfp_mask);
- static inline  void cgroup_throttle_swaprate(struct page *page, gfp_t gfp_mask)
-diff --git a/include/linux/vm_event_item.h b/include/linux/vm_event_item.h
-index 5e80138ce624..1ce8fadb2b1c 100644
---- a/include/linux/vm_event_item.h
-+++ b/include/linux/vm_event_item.h
-@@ -132,6 +132,10 @@ enum vm_event_item { PGPGIN, PGPGOUT, PSWPIN, PSWPOUT,
- #ifdef CONFIG_KSM
- 		COW_KSM,
- #endif
-+#ifdef CONFIG_ZSWAP
-+		ZSWPIN,
-+		ZSWPOUT,
-+#endif
- #ifdef CONFIG_X86
- 		DIRECT_MAP_LEVEL2_SPLIT,
- 		DIRECT_MAP_LEVEL3_SPLIT,
-diff --git a/mm/vmstat.c b/mm/vmstat.c
-index 4a2aa2fa88db..da7e389cf33c 100644
---- a/mm/vmstat.c
-+++ b/mm/vmstat.c
-@@ -1392,6 +1392,10 @@ const char * const vmstat_text[] = {
- #ifdef CONFIG_KSM
- 	"cow_ksm",
- #endif
-+#ifdef CONFIG_ZSWAP
-+	"zswpin",
-+	"zswpout",
-+#endif
- #ifdef CONFIG_X86
- 	"direct_map_level2_splits",
- 	"direct_map_level3_splits",
-diff --git a/mm/zswap.c b/mm/zswap.c
-index 2c5db4cbedea..e3c16a70f533 100644
---- a/mm/zswap.c
-+++ b/mm/zswap.c
-@@ -42,9 +42,9 @@
- * statistics
- **********************************/
- /* Total bytes used by the compressed storage */
--static u64 zswap_pool_total_size;
-+u64 zswap_pool_total_size;
- /* The number of compressed pages currently stored in zswap */
--static atomic_t zswap_stored_pages = ATOMIC_INIT(0);
-+atomic_t zswap_stored_pages = ATOMIC_INIT(0);
- /* The number of same-value filled pages currently stored in zswap */
- static atomic_t zswap_same_filled_pages = ATOMIC_INIT(0);
- 
-@@ -1243,6 +1243,7 @@ static int zswap_frontswap_store(unsigned type, pgoff_t offset,
- 	/* update stats */
- 	atomic_inc(&zswap_stored_pages);
- 	zswap_update_total_size();
-+	count_vm_event(ZSWPOUT);
- 
- 	return 0;
- 
-@@ -1285,11 +1286,10 @@ static int zswap_frontswap_load(unsigned type, pgoff_t offset,
- 		zswap_fill_page(dst, entry->value);
- 		kunmap_atomic(dst);
- 		ret = 0;
--		goto freeentry;
-+		goto stats;
- 	}
- 
- 	if (!zpool_can_sleep_mapped(entry->pool->zpool)) {
--
- 		tmp = kmalloc(entry->length, GFP_ATOMIC);
- 		if (!tmp) {
- 			ret = -ENOMEM;
-@@ -1304,10 +1304,8 @@ static int zswap_frontswap_load(unsigned type, pgoff_t offset,
- 		src += sizeof(struct zswap_header);
- 
- 	if (!zpool_can_sleep_mapped(entry->pool->zpool)) {
--
- 		memcpy(tmp, src, entry->length);
- 		src = tmp;
--
- 		zpool_unmap_handle(entry->pool->zpool, entry->handle);
- 	}
- 
-@@ -1326,7 +1324,8 @@ static int zswap_frontswap_load(unsigned type, pgoff_t offset,
- 		kfree(tmp);
- 
- 	BUG_ON(ret);
--
-+stats:
-+	count_vm_event(ZSWPIN);
- freeentry:
- 	spin_lock(&tree->lock);
- 	zswap_entry_put(tree, entry);
++config SWAP
++	bool "Support for paging of anonymous memory (swap)"
++	depends on MMU && BLOCK && !ARCH_NO_SWAP
++	default y
++	help
++	  This option allows you to choose whether you want to have support
++	  for so called swap devices or swap files in your kernel that are
++	  used to provide more virtual memory than the actual RAM present
++	  in your computer.  If unsure say Y.
++
++choice
++	prompt "Choose SLAB allocator"
++	default SLUB
++	help
++	   This option allows to select a slab allocator.
++
++config SLAB
++	bool "SLAB"
++	depends on !PREEMPT_RT
++	select HAVE_HARDENED_USERCOPY_ALLOCATOR
++	help
++	  The regular slab allocator that is established and known to work
++	  well in all environments. It organizes cache hot objects in
++	  per cpu and per node queues.
++
++config SLUB
++	bool "SLUB (Unqueued Allocator)"
++	select HAVE_HARDENED_USERCOPY_ALLOCATOR
++	help
++	   SLUB is a slab allocator that minimizes cache line usage
++	   instead of managing queues of cached objects (SLAB approach).
++	   Per cpu caching is realized using slabs of objects instead
++	   of queues of objects. SLUB can use memory efficiently
++	   and has enhanced diagnostics. SLUB is the default choice for
++	   a slab allocator.
++
++config SLOB
++	depends on EXPERT
++	bool "SLOB (Simple Allocator)"
++	depends on !PREEMPT_RT
++	help
++	   SLOB replaces the stock allocator with a drastically simpler
++	   allocator. SLOB is generally more space efficient but
++	   does not perform as well on large systems.
++
++endchoice
++
++config SLAB_MERGE_DEFAULT
++	bool "Allow slab caches to be merged"
++	default y
++	depends on SLAB || SLUB
++	help
++	  For reduced kernel memory fragmentation, slab caches can be
++	  merged when they share the same size and other characteristics.
++	  This carries a risk of kernel heap overflows being able to
++	  overwrite objects from merged caches (and more easily control
++	  cache layout), which makes such heap attacks easier to exploit
++	  by attackers. By keeping caches unmerged, these kinds of exploits
++	  can usually only damage objects in the same cache. To disable
++	  merging at runtime, "slab_nomerge" can be passed on the kernel
++	  command line.
++
++config SLAB_FREELIST_RANDOM
++	bool "Randomize slab freelist"
++	depends on SLAB || SLUB
++	help
++	  Randomizes the freelist order used on creating new pages. This
++	  security feature reduces the predictability of the kernel slab
++	  allocator against heap overflows.
++
++config SLAB_FREELIST_HARDENED
++	bool "Harden slab freelist metadata"
++	depends on SLAB || SLUB
++	help
++	  Many kernel heap attacks try to target slab cache metadata and
++	  other infrastructure. This options makes minor performance
++	  sacrifices to harden the kernel slab allocator against common
++	  freelist exploit methods. Some slab implementations have more
++	  sanity-checking than others. This option is most effective with
++	  CONFIG_SLUB.
++
++config SHUFFLE_PAGE_ALLOCATOR
++	bool "Page allocator randomization"
++	default SLAB_FREELIST_RANDOM && ACPI_NUMA
++	help
++	  Randomization of the page allocator improves the average
++	  utilization of a direct-mapped memory-side-cache. See section
++	  5.2.27 Heterogeneous Memory Attribute Table (HMAT) in the ACPI
++	  6.2a specification for an example of how a platform advertises
++	  the presence of a memory-side-cache. There are also incidental
++	  security benefits as it reduces the predictability of page
++	  allocations to compliment SLAB_FREELIST_RANDOM, but the
++	  default granularity of shuffling on the "MAX_ORDER - 1" i.e,
++	  10th order of pages is selected based on cache utilization
++	  benefits on x86.
++
++	  While the randomization improves cache utilization it may
++	  negatively impact workloads on platforms without a cache. For
++	  this reason, by default, the randomization is enabled only
++	  after runtime detection of a direct-mapped memory-side-cache.
++	  Otherwise, the randomization may be force enabled with the
++	  'page_alloc.shuffle' kernel command line parameter.
++
++	  Say Y if unsure.
++
++config SLUB_CPU_PARTIAL
++	default y
++	depends on SLUB && SMP
++	bool "SLUB per cpu partial cache"
++	help
++	  Per cpu partial caches accelerate objects allocation and freeing
++	  that is local to a processor at the price of more indeterminism
++	  in the latency of the free. On overflow these caches will be cleared
++	  which requires the taking of locks that may cause latency spikes.
++	  Typically one would choose no for a realtime system.
++
+ config SELECT_MEMORY_MODEL
+ 	def_bool y
+ 	depends on ARCH_SELECT_MEMORY_MODEL
 -- 
 2.35.3
 
