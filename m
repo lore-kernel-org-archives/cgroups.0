@@ -1,84 +1,73 @@
-From: Yosry Ahmed <yosryahmed@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [RFC PATCH bpf-next 1/9] bpf: introduce CGROUP_SUBSYS_RSTAT
  program type
-Date: Tue, 10 May 2022 13:43:46 -0700
-Message-ID: <CAJD7tkahC1e-_K0xJMu-xXwd8WNVzYDRgJFua9=JhNRq7b+G8A@mail.gmail.com>
+Date: Tue, 10 May 2022 11:01:32 -1000
+Message-ID: <YnrSrKFTBn3IyUfa@slm.duckdns.org>
 References: <20220510001807.4132027-1-yosryahmed@google.com>
- <20220510001807.4132027-2-yosryahmed@google.com> <Ynqyh+K1tMyNCTUW@slm.duckdns.org>
- <CAJD7tkZVXJY3s2k8M4pcq+eJVD+aX=iMDiDKtdE=j0_q+UWQzA@mail.gmail.com> <YnrEDfZs1kuB1gu5@slm.duckdns.org>
+ <20220510001807.4132027-2-yosryahmed@google.com>
+ <Ynqyh+K1tMyNCTUW@slm.duckdns.org>
+ <CAJD7tkZVXJY3s2k8M4pcq+eJVD+aX=iMDiDKtdE=j0_q+UWQzA@mail.gmail.com>
+ <YnrEDfZs1kuB1gu5@slm.duckdns.org>
+ <CAJD7tkahC1e-_K0xJMu-xXwd8WNVzYDRgJFua9=JhNRq7b+G8A@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=H+z42sapPI1YBphYIrh6dW0GFMAVRokw99cL8ZqGxg8=;
-        b=CTpiNl02mk2asLHcnBsuNAVd8tR5UxljFjwGWN7EPCdyw8jw1qTJN8Kj958PoCw+f9
-         C32LJd3iJyAPIc7JnhsDf3F+CLv0mIznaGhwzjGKAYcrkMmcqX0unecnaIRY4eg2RdS/
-         0wpRZMze08BUkQN9Kfpmmxj4PSmOnYIqgNxsMT/R3rkcd0HxVerVL26sQmKyCcoM0a/m
-         s7JJXvfYmJef+dh/gZmajmQP15BB/zKpZ1gNodzL0OvqccJTjiHJ10N8+lrMEhpadzdu
-         fFFf+dHjfdsLLT+W0V8q1dm0F4FO7Oj3L3kgVi1f9Ro2JBTKBHwIl+3Ypo+uOj1B/r4q
-         F3zQ==
-In-Reply-To: <YnrEDfZs1kuB1gu5@slm.duckdns.org>
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=j3rcz6qVNZi20/uUbB9766ZMC6kcEWw22DciqK9/zDQ=;
+        b=M5ccWIy7d+bh8DqBj2aI3HFZZKskE0cwfDgQq3SKLrVgdAEFxXFPBkEBMgJ4qngmA2
+         6H8woKrDHM1reouusOvd4aPscHfCRI6hEodeZJsd4D6vPzWpj+/ESYcRIaKuxdIo+A+Q
+         REO2UUrR8BzAZBYQDBIpzFkYPdqzj+joI8K38ONynFtD+rXLjCemnJJiB6b4CFMkjshY
+         CYR1R/+q+MdBzjd4wFuiVS17ecBinIwmowmWql+VGUH65xm+Uu8/uHde/uKwZ03XLtU1
+         905SUSDqeXRgRwg7ZHM6aBsoRSIR0O+RAeQn1ZgTa7JGGDNCVlqjo9fhIzsr4tSQQYUz
+         Sx6A==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAJD7tkahC1e-_K0xJMu-xXwd8WNVzYDRgJFua9=JhNRq7b+G8A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@vger.kernel.org>, bpf <bpf@vger.kernel.org>
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Networking <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue, May 10, 2022 at 12:59 PM Tejun Heo <tj@kernel.org> wrote:
->
-> Hello,
->
-> On Tue, May 10, 2022 at 12:34:42PM -0700, Yosry Ahmed wrote:
-> > The rationale behind associating this work with cgroup_subsys is that
-> > usually the stats are associated with a resource (e.g. memory, cpu,
-> > etc). For example, if the memory controller is only enabled for a
-> > subtree in a big hierarchy, it would be more efficient to only run BPF
-> > rstat programs for those cgroups, not the entire hierarchy. It
-> > provides a way to control what part of the hierarchy you want to
-> > collect stats for. This is also semantically similar to the
-> > css_rstat_flush() callback.
->
-> Hmm... one major point of rstat is not having to worry about these things
-> because we iterate what's been active rather than what exists. Now, this
-> isn't entirely true because we share the same updated list for all sources.
-> This is a trade-off which makes sense because 1. the number of cgroups to
-> iterate each cycle is generally really low anyway 2. different controllers
-> often get enabled together. If the balance tilts towards "we're walking too
-> many due to the sharing of updated list across different sources", the
-> solution would be splitting the updated list so that we make the walk finer
-> grained.
->
-> Note that the above doesn't really affect the conceptual model. It's purely
-> an optimization decision. Tying these things to a cgroup_subsys does affect
-> the conceptual model and, in this case, the userland API for a performance
-> consideration which can be solved otherwise.
->
-> So, let's please keep this simple and in the (unlikely) case that the
-> overhead becomes an issue, solve it from rstat operation side.
->
-> Thanks.
+Hello,
 
-I assume if we do this optimization, and have separate updated lists
-for controllers, we will still have a "core" updated list that is not
-tied to any controller. Is this correct?
+On Tue, May 10, 2022 at 01:43:46PM -0700, Yosry Ahmed wrote:
+> I assume if we do this optimization, and have separate updated lists
+> for controllers, we will still have a "core" updated list that is not
+> tied to any controller. Is this correct?
 
-If yes, then we can make the interface controller-agnostic (a global
-list of BPF flushers). If we do the optimization later, we tie BPF
-stats to the "core" updated list. We can even extend the userland
-interface then to allow for controller-specific BPF stats if found
-useful.
+Or we can create a dedicated updated list for the bpf progs, or even
+multiple for groups of them and so on.
 
-If not, and there will only be controller-specific updated lists then,
-then we might need to maintain a "core" updated list just for the sake
-of BPF programs, which I don't think would be favorable.
+> If yes, then we can make the interface controller-agnostic (a global
+> list of BPF flushers). If we do the optimization later, we tie BPF
+> stats to the "core" updated list. We can even extend the userland
+> interface then to allow for controller-specific BPF stats if found
+> useful.
 
-What do you think? Either-way, I will try to document our discussion
-outcome in the commit message (and maybe the code), so that
-if-and-when this optimization is made, we can come back to it.
+We'll need that anyway as cpustats are tied to the cgroup themselves rather
+than the cpu controller.
 
+> If not, and there will only be controller-specific updated lists then,
+> then we might need to maintain a "core" updated list just for the sake
+> of BPF programs, which I don't think would be favorable.
 
->
-> --
-> tejun
+If needed, that's fine actually.
+
+> What do you think? Either-way, I will try to document our discussion
+> outcome in the commit message (and maybe the code), so that
+> if-and-when this optimization is made, we can come back to it.
+
+So, the main focus is keeping the userspace interface as simple as possible
+and solving performance issues on the rstat side. If we need however many
+updated lists to do that, that's all fine. FWIW, the experience up until now
+has been consistent with the assumptions that the current implementation
+makes and I haven't seen real any world cases where the shared updated list
+are problematic.
+
+Thanks.
+
+-- 
+tejun
