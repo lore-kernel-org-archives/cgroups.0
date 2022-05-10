@@ -1,146 +1,53 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: [RFC PATCH bpf-next 3/9] libbpf: Add support for rstat progs and links
-Date: Tue, 10 May 2022 00:18:01 +0000
-Message-ID: <20220510001807.4132027-4-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [RFC PATCH bpf-next 7/9] cgroup: Add cgroup_put() in !CONFIG_CGROUPS case
+Date: Tue, 10 May 2022 00:18:05 +0000
+Message-ID: <20220510001807.4132027-8-yosryahmed@google.com>
 References: <20220510001807.4132027-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=jUygyQcHmQCX+4t0PO9Lj98oGxUhwQRCqcIwRtRRuu0=;
-        b=b9L6wIY6W3JHgNc21GkxYFtPGgfmo5QUJKkjlOhi4hW3quxxLCFiGsyjlcSg3mOEte
-         xmYcnYmek/bOQXhLz+sI4VQviMEA+cmcQ45gAHFT3NM89PNw3VF2taoJOECrNh688Ieh
-         XVEE6g3VTkOhPesLqypGO5fy0bGZ8/jL+ZYAYtCCGQJukNlJAI77UUs0ewH/ySwBGf6S
-         euh6YXkx+e0I2eJNJCkjlpGpu/IgzPTDz31AoWxHLCsaa08vNcDkWlzYVZ3WX+++HFY+
-         JMd+L9/ZBEFMpxJLXdRZehKNGnT/yoi38iBjacCWDEVlkD8M9h/fuKz/vEF7G+xhBP93
-         CS6w==
-In-Reply-To: <20220510001807.4132027-1-yosryahmed@google.com>
+        bh=2lpWRE3YG+N9rpa27nVaVWWHXRfllKAdvtsLrNhKAK8=;
+        b=E2tVTWuknXlQ+T7MTDseqm2kLasAoY5TbquTKQN6G7HFagvNqmuYGwrGCvXPasSU3N
+         X7Hfaz6BkAsSlJCS8floN1LW1Ls3ez8PP3Qk4CDVxNmG8LczACkldG8ojDGR0v0+Q7lZ
+         21MumA+UYt52X45SeiI4gFrF5deapKiOdu+hj+4jT0AI8QNFnGPAtcYnE+rE1vLh3I/p
+         DgTM+ee4LV0B+gFa0sepONWuiGDP56tlAl4OGQqNbhtSDbkgWBB0l4UraO/yy1Apvxzl
+         ZeZuNJv+q2z07LlTR07+RdQp7xf+QnHW2FhcVMIRWFBWLCQI9fLvZVExE5a870tRXnw3
+         sazg==
+In-Reply-To: <20220510001807.4132027-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>
-Cc: Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
+To: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Add support to attach "cgroup_subsys/rstat" programs to a subsystem by
-calling bpf_program__attach_subsys. Currently, only CGROUP_SUBSYS_RSTAT
-programs are supported for attachment to subsystems.
+From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+There is already a cgroup_get_from_id() in the !CONFIG_CGROUPS case,
+let's have a matching cgroup_put() in !CONFIG_CGROUPS too.
+
+Signed-off-by: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- tools/lib/bpf/bpf.c      |  3 +++
- tools/lib/bpf/bpf.h      |  3 +++
- tools/lib/bpf/libbpf.c   | 35 +++++++++++++++++++++++++++++++++++
- tools/lib/bpf/libbpf.h   |  3 +++
- tools/lib/bpf/libbpf.map |  1 +
- 5 files changed, 45 insertions(+)
+ include/linux/cgroup.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/tools/lib/bpf/bpf.c b/tools/lib/bpf/bpf.c
-index cf27251adb92..abfff17cfa07 100644
---- a/tools/lib/bpf/bpf.c
-+++ b/tools/lib/bpf/bpf.c
-@@ -863,6 +863,9 @@ int bpf_link_create(int prog_fd, int target_fd,
- 		if (!OPTS_ZEROED(opts, kprobe_multi))
- 			return libbpf_err(-EINVAL);
- 		break;
-+	case BPF_CGROUP_SUBSYS_RSTAT:
-+		attr.link_create.cgroup_subsys.name = ptr_to_u64(OPTS_GET(opts, cgroup_subsys.name, 0));
-+		break;
- 	default:
- 		if (!OPTS_ZEROED(opts, flags))
- 			return libbpf_err(-EINVAL);
-diff --git a/tools/lib/bpf/bpf.h b/tools/lib/bpf/bpf.h
-index f4b4afb6d4ba..384767a9ffd3 100644
---- a/tools/lib/bpf/bpf.h
-+++ b/tools/lib/bpf/bpf.h
-@@ -413,6 +413,9 @@ struct bpf_link_create_opts {
- 		struct {
- 			__u64 bpf_cookie;
- 		} perf_event;
-+		struct {
-+			const char *name;
-+		} cgroup_subsys;
- 		struct {
- 			__u32 flags;
- 			__u32 cnt;
-diff --git a/tools/lib/bpf/libbpf.c b/tools/lib/bpf/libbpf.c
-index 809fe209cdcc..56380953df55 100644
---- a/tools/lib/bpf/libbpf.c
-+++ b/tools/lib/bpf/libbpf.c
-@@ -8715,6 +8715,7 @@ static const struct bpf_sec_def section_defs[] = {
- 	SEC_DEF("cgroup/setsockopt",	CGROUP_SOCKOPT, BPF_CGROUP_SETSOCKOPT, SEC_ATTACHABLE | SEC_SLOPPY_PFX),
- 	SEC_DEF("struct_ops+",		STRUCT_OPS, 0, SEC_NONE),
- 	SEC_DEF("sk_lookup",		SK_LOOKUP, BPF_SK_LOOKUP, SEC_ATTACHABLE | SEC_SLOPPY_PFX),
-+	SEC_DEF("cgroup_subsys/rstat",	CGROUP_SUBSYS_RSTAT, 0, SEC_NONE),
- };
- 
- static size_t custom_sec_def_cnt;
-@@ -10957,6 +10958,40 @@ static int attach_iter(const struct bpf_program *prog, long cookie, struct bpf_l
- 	return libbpf_get_error(*link);
- }
- 
-+struct bpf_link *bpf_program__attach_subsys(const struct bpf_program *prog,
-+					     const char *subsys_name)
-+{
-+	DECLARE_LIBBPF_OPTS(bpf_link_create_opts, lopts,
-+			    .cgroup_subsys.name = subsys_name);
-+	struct bpf_link *link = NULL;
-+	char errmsg[STRERR_BUFSIZE];
-+	int err, prog_fd, link_fd;
-+
-+	prog_fd = bpf_program__fd(prog);
-+	if (prog_fd < 0) {
-+		pr_warn("prog '%s': can't attach before loaded\n", prog->name);
-+		return libbpf_err_ptr(-EINVAL);
-+	}
-+
-+	link = calloc(1, sizeof(*link));
-+	if (!link)
-+		return libbpf_err_ptr(-ENOMEM);
-+	link->detach = &bpf_link__detach_fd;
-+
-+	link_fd = bpf_link_create(prog_fd, 0, BPF_CGROUP_SUBSYS_RSTAT, &lopts);
-+	if (link_fd < 0) {
-+		err = -errno;
-+		pr_warn("prog '%s': failed to attach: %s\n",
-+			prog->name, libbpf_strerror_r(err, errmsg,
-+						      sizeof(errmsg)));
-+		free(link);
-+		return libbpf_err_ptr(err);
-+	}
-+
-+	link->fd = link_fd;
-+	return link;
-+}
-+
- struct bpf_link *bpf_program__attach(const struct bpf_program *prog)
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 5408c74d5c44..4f1d8febb9fd 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -759,6 +759,9 @@ static inline struct cgroup *cgroup_get_from_id(u64 id)
  {
- 	struct bpf_link *link = NULL;
-diff --git a/tools/lib/bpf/libbpf.h b/tools/lib/bpf/libbpf.h
-index 05dde85e19a6..eddbffcd39f7 100644
---- a/tools/lib/bpf/libbpf.h
-+++ b/tools/lib/bpf/libbpf.h
-@@ -537,6 +537,9 @@ bpf_program__attach_xdp(const struct bpf_program *prog, int ifindex);
- LIBBPF_API struct bpf_link *
- bpf_program__attach_freplace(const struct bpf_program *prog,
- 			     int target_fd, const char *attach_func_name);
-+LIBBPF_API struct bpf_link *
-+bpf_program__attach_subsys(const struct bpf_program *prog,
-+			   const char *subsys_name);
+ 	return NULL;
+ }
++
++static inline struct cgroup *cgroup_put(void)
++{}
+ #endif /* !CONFIG_CGROUPS */
  
- struct bpf_map;
- 
-diff --git a/tools/lib/bpf/libbpf.map b/tools/lib/bpf/libbpf.map
-index dd35ee58bfaa..5583a2dbfb7c 100644
---- a/tools/lib/bpf/libbpf.map
-+++ b/tools/lib/bpf/libbpf.map
-@@ -447,4 +447,5 @@ LIBBPF_0.8.0 {
- 		libbpf_register_prog_handler;
- 		libbpf_unregister_prog_handler;
- 		bpf_program__attach_kprobe_multi_opts;
-+		bpf_program__attach_subsys;
- } LIBBPF_0.7.0;
+ #ifdef CONFIG_CGROUPS
 -- 
 2.36.0.512.ge40c2bad7a-goog
 
