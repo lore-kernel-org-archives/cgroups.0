@@ -1,65 +1,84 @@
-From: Tejun Heo <tj@kernel.org>
+From: Yosry Ahmed <yosryahmed@google.com>
 Subject: Re: [RFC PATCH bpf-next 1/9] bpf: introduce CGROUP_SUBSYS_RSTAT
  program type
-Date: Tue, 10 May 2022 09:59:09 -1000
-Message-ID: <YnrEDfZs1kuB1gu5@slm.duckdns.org>
+Date: Tue, 10 May 2022 13:43:46 -0700
+Message-ID: <CAJD7tkahC1e-_K0xJMu-xXwd8WNVzYDRgJFua9=JhNRq7b+G8A@mail.gmail.com>
 References: <20220510001807.4132027-1-yosryahmed@google.com>
- <20220510001807.4132027-2-yosryahmed@google.com>
- <Ynqyh+K1tMyNCTUW@slm.duckdns.org>
- <CAJD7tkZVXJY3s2k8M4pcq+eJVD+aX=iMDiDKtdE=j0_q+UWQzA@mail.gmail.com>
+ <20220510001807.4132027-2-yosryahmed@google.com> <Ynqyh+K1tMyNCTUW@slm.duckdns.org>
+ <CAJD7tkZVXJY3s2k8M4pcq+eJVD+aX=iMDiDKtdE=j0_q+UWQzA@mail.gmail.com> <YnrEDfZs1kuB1gu5@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=ifWnOEmdxbqq+pQ/jtBb+5/wpjcSm5B451TRcuFaBz4=;
-        b=XZ/MltcLn2qF6IyLMV0/mPQJt8rZIy78P4eJuB0QU2eaBVpsrZlP7tUoqmdrWS2yj+
-         vWYqqnbf3lOc7b4Alt2qhyJUaB+lZ/zk+EnBC4TvVhuIhj34HNt5QemVHi1KSsjqRzFe
-         P0ITuUVCOI+wGJdUKoLj4oBezceqxaYdMrEh/IHF63rcY106hyuIU8JMxTIbV6jyc9A2
-         lHvnq+3XaMgyVMgK8rl+XNxLU1gWuiGjqS9c8zoMwwSdcGQ71842MoL5FoFtP/d+DM7f
-         rGwMJU0Czi+8FTsBMFrke532nzjuPCm1UByIgY5efNQ/9kJVomOP6Lqfmoldu3AKaPmK
-         AxzQ==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <CAJD7tkZVXJY3s2k8M4pcq+eJVD+aX=iMDiDKtdE=j0_q+UWQzA@mail.gmail.com>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=H+z42sapPI1YBphYIrh6dW0GFMAVRokw99cL8ZqGxg8=;
+        b=CTpiNl02mk2asLHcnBsuNAVd8tR5UxljFjwGWN7EPCdyw8jw1qTJN8Kj958PoCw+f9
+         C32LJd3iJyAPIc7JnhsDf3F+CLv0mIznaGhwzjGKAYcrkMmcqX0unecnaIRY4eg2RdS/
+         0wpRZMze08BUkQN9Kfpmmxj4PSmOnYIqgNxsMT/R3rkcd0HxVerVL26sQmKyCcoM0a/m
+         s7JJXvfYmJef+dh/gZmajmQP15BB/zKpZ1gNodzL0OvqccJTjiHJ10N8+lrMEhpadzdu
+         fFFf+dHjfdsLLT+W0V8q1dm0F4FO7Oj3L3kgVi1f9Ro2JBTKBHwIl+3Ypo+uOj1B/r4q
+         F3zQ==
+In-Reply-To: <YnrEDfZs1kuB1gu5@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
+To: Tejun Heo <tj@kernel.org>
 Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@vger.kernel.org>, bpf <bpf@vger.kernel.org>
 
-Hello,
+On Tue, May 10, 2022 at 12:59 PM Tejun Heo <tj@kernel.org> wrote:
+>
+> Hello,
+>
+> On Tue, May 10, 2022 at 12:34:42PM -0700, Yosry Ahmed wrote:
+> > The rationale behind associating this work with cgroup_subsys is that
+> > usually the stats are associated with a resource (e.g. memory, cpu,
+> > etc). For example, if the memory controller is only enabled for a
+> > subtree in a big hierarchy, it would be more efficient to only run BPF
+> > rstat programs for those cgroups, not the entire hierarchy. It
+> > provides a way to control what part of the hierarchy you want to
+> > collect stats for. This is also semantically similar to the
+> > css_rstat_flush() callback.
+>
+> Hmm... one major point of rstat is not having to worry about these things
+> because we iterate what's been active rather than what exists. Now, this
+> isn't entirely true because we share the same updated list for all sources.
+> This is a trade-off which makes sense because 1. the number of cgroups to
+> iterate each cycle is generally really low anyway 2. different controllers
+> often get enabled together. If the balance tilts towards "we're walking too
+> many due to the sharing of updated list across different sources", the
+> solution would be splitting the updated list so that we make the walk finer
+> grained.
+>
+> Note that the above doesn't really affect the conceptual model. It's purely
+> an optimization decision. Tying these things to a cgroup_subsys does affect
+> the conceptual model and, in this case, the userland API for a performance
+> consideration which can be solved otherwise.
+>
+> So, let's please keep this simple and in the (unlikely) case that the
+> overhead becomes an issue, solve it from rstat operation side.
+>
+> Thanks.
 
-On Tue, May 10, 2022 at 12:34:42PM -0700, Yosry Ahmed wrote:
-> The rationale behind associating this work with cgroup_subsys is that
-> usually the stats are associated with a resource (e.g. memory, cpu,
-> etc). For example, if the memory controller is only enabled for a
-> subtree in a big hierarchy, it would be more efficient to only run BPF
-> rstat programs for those cgroups, not the entire hierarchy. It
-> provides a way to control what part of the hierarchy you want to
-> collect stats for. This is also semantically similar to the
-> css_rstat_flush() callback.
+I assume if we do this optimization, and have separate updated lists
+for controllers, we will still have a "core" updated list that is not
+tied to any controller. Is this correct?
 
-Hmm... one major point of rstat is not having to worry about these things
-because we iterate what's been active rather than what exists. Now, this
-isn't entirely true because we share the same updated list for all sources.
-This is a trade-off which makes sense because 1. the number of cgroups to
-iterate each cycle is generally really low anyway 2. different controllers
-often get enabled together. If the balance tilts towards "we're walking too
-many due to the sharing of updated list across different sources", the
-solution would be splitting the updated list so that we make the walk finer
-grained.
+If yes, then we can make the interface controller-agnostic (a global
+list of BPF flushers). If we do the optimization later, we tie BPF
+stats to the "core" updated list. We can even extend the userland
+interface then to allow for controller-specific BPF stats if found
+useful.
 
-Note that the above doesn't really affect the conceptual model. It's purely
-an optimization decision. Tying these things to a cgroup_subsys does affect
-the conceptual model and, in this case, the userland API for a performance
-consideration which can be solved otherwise.
+If not, and there will only be controller-specific updated lists then,
+then we might need to maintain a "core" updated list just for the sake
+of BPF programs, which I don't think would be favorable.
 
-So, let's please keep this simple and in the (unlikely) case that the
-overhead becomes an issue, solve it from rstat operation side.
+What do you think? Either-way, I will try to document our discussion
+outcome in the commit message (and maybe the code), so that
+if-and-when this optimization is made, we can come back to it.
 
-Thanks.
 
--- 
-tejun
+>
+> --
+> tejun
