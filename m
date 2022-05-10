@@ -1,54 +1,48 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC PATCH bpf-next 8/9] bpf: Introduce cgroup iter
-Date: Tue, 10 May 2022 12:07:44 -1000
-Message-ID: <YnriMPYyOP9ibskc@slm.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC PATCH bpf-next 1/9] bpf: introduce CGROUP_SUBSYS_RSTAT
+ program type
+Date: Tue, 10 May 2022 12:09:17 -1000
+Message-ID: <YnrijQK6l77qAo+z@slm.duckdns.org>
 References: <20220510001807.4132027-1-yosryahmed@google.com>
- <20220510001807.4132027-9-yosryahmed@google.com>
- <Ynq04gC1l7C2tx6o@slm.duckdns.org>
- <CA+khW7girnNwap1ABN1a4XuvkEEnmkztTV+fsuC3MsxNeB08Yg@mail.gmail.com>
+ <20220510001807.4132027-2-yosryahmed@google.com>
+ <Ynqyh+K1tMyNCTUW@slm.duckdns.org>
+ <CAJD7tkZVXJY3s2k8M4pcq+eJVD+aX=iMDiDKtdE=j0_q+UWQzA@mail.gmail.com>
+ <YnrEDfZs1kuB1gu5@slm.duckdns.org>
+ <CAJD7tkahC1e-_K0xJMu-xXwd8WNVzYDRgJFua9=JhNRq7b+G8A@mail.gmail.com>
+ <YnrSrKFTBn3IyUfa@slm.duckdns.org>
+ <CAJD7tkbeZPH9UJXtGeopPnTSVPYN-GzzM51SE_QNuLmiaVNpeA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=/D0OGw2on3AvUmlzv6/hmtVTR0FwAvCOjEZGHeN3148=;
-        b=D+gxb7yJZ8m9WsThtL1BuBBOK9yZLCBXHYCPmiuC3APueeYrvaQ54LuI6lVJ9KDkGH
-         bq8GCDiooCm7ohQyIPpk/Kemojg6ouW6d3J42fNcrTqpgF5QKN4NAP95JpFbeuv6tpy8
-         eydzSFu4lyZgZrhRoHv/IdwFTGtzmVWzOiM/azxGTFxwwaR8UBZ8EFSiEh9bdNBHdb0B
-         pxZ0jZeBQbGHGF+LgD5PRcmJm4mDJ/Ajquo0bduwqzhPfvj2IYFI0EwegKDL3MFvKjDU
-         4Hi5BLDA2H/KhFY4EuEhj+wqb2D5jVc74T94LZr/+9gDTT4iItLQjiB9E6fH5zaQNaPy
-         bEeg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=K/YRl0EHG6/vXUptECv10Aauq/B8k7rs/JZcz3pAi9w=;
+        b=CJvFFv58sImc2fcQ7NsltAoprTMkf9aZO2qc39iio4VUJ+QAhHceQxanfIuUeIi5Nm
+         W24275MUyU6Z6K6+FBOiW62RkCq2sZC1HOJ/ffKJabKOHIBTVrPBRDzdofuuLXhcOfqg
+         1lnstTBHmuonZVrjv3cX/EM733/CP+IwyYzrH1GcL2u0Wn0aXSxPYXiKakw4rB/NA3UH
+         X+V1l4tH5u7VXfQ5syp8MZv8EF5IUZRjUdKpaoTP/mQXZAM2WISVdqSZW8Ly95fHSSwg
+         LyqF6dVvC9WnSNLoa6nEfPa6DEwLmOVttivdoBEHQEcwqapkfLt6jxYRbhyTSZ1486Hy
+         8h9Q==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <CA+khW7girnNwap1ABN1a4XuvkEEnmkztTV+fsuC3MsxNeB08Yg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <CAJD7tkbeZPH9UJXtGeopPnTSVPYN-GzzM51SE_QNuLmiaVNpeA@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@vger.kernel.org>, bpf <bpf@vger.kernel.org>
 
 Hello,
 
-On Tue, May 10, 2022 at 02:12:16PM -0700, Hao Luo wrote:
-> > Is there a reason why this can't be a proper iterator which supports
-> > lseek64() to locate a specific cgroup?
-> >
-> 
-> There are two reasons:
-> 
-> - Bpf_iter assumes no_llseek. I haven't looked closely on why this is
-> so and whether we can add its support.
-> 
-> - Second, the name 'iter' in this patch is misleading. What this patch
-> really does is reusing the functionality of dumping in bpf_iter.
-> 'Dumper' is a better name. We want to create one file in bpffs for
-> each cgroup. We are essentially just iterating a set of one single
-> element.
+On Tue, May 10, 2022 at 02:55:32PM -0700, Yosry Ahmed wrote:
+> That's great to hear. I am all in for making the userspace interface
+> simpler. I will rework this patch series so that the BPF programs just
+> attach to "rstat" and send a V1.
+> Any other concerns you have that you think I should address in V1?
 
-I see. I'm just shooting in the dark without context but at least in
-principle there's no reason why cgroups wouldn't be iterable, so it might be
-something worth at least thinking about before baking in the interface.
+Not that I can think of right now but my bpf side insight is really limited,
+so it might be worthwhile to wait for some bpf folks to chime in?
 
 Thanks.
 
