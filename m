@@ -1,79 +1,120 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH v2 2/5] cgroup: Account for memory_recursiveprot in
- test_memcg_low()
-Date: Mon, 9 May 2022 17:44:24 -0700
-Message-ID: <20220509174424.e43e695ffe0f7333c187fba8@linux-foundation.org>
-References: <20220423155619.3669555-1-void@manifault.com>
-        <20220423155619.3669555-3-void@manifault.com>
-        <20220427140928.GD9823@blackbody.suse.cz>
-        <20220429010333.5rt2jwpiumnbuapf@dev0025.ash9.facebook.com>
-        <20220429092620.GA23621@blackbody.suse.cz>
-        <20220506164015.fsdsuv226nhllos5@dev0025.ash9.facebook.com>
-        <Ynkum8DeJIAtGi9y@cmpxchg.org>
+From: CGEL <cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] mm/memcg: support control THP behaviour in cgroup
+Date: Tue, 10 May 2022 01:43:38 +0000
+Message-ID: <6279c354.1c69fb81.7f6c1.15e0@mx.google.com>
+References: <20220505033814.103256-1-xu.xin16@zte.com.cn>
+ <YnUlntNFR4zeD+qa@dhcp22.suse.cz>
+ <6275d3e7.1c69fb81.1d62.4504@mx.google.com>
+ <YnjmPAToTR0C5o8x@dhcp22.suse.cz>
+ <6278fa75.1c69fb81.9c598.f794@mx.google.com>
+ <Ynj/l+pyFJxKfcbQ@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1652143465;
-        bh=K0UKY0ySeiFuDmMGhu1CLNh5evnfc+t09/RQFlXE1vQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=r2fDG/los3M43jggaD960JLHPjml0wyQki6J5AgpUG5+3V7pGIF2guVWMjqM9WMGM
-         rby7uK5PK+FbhWL9YT2LyKZeKJbPyfOYDGhIL8Nel5V7s9/Iz+sTuzDkyD8wZvLufl
-         pr0HgM3+XMRD6oT3RVYI9q7E9pjzf57vpAKMman8=
-In-Reply-To: <Ynkum8DeJIAtGi9y-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:date:from:to:cc:subject:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=HgGTA2L0WTR4KLBkAGFUu4sFQBHJ/DJdCql0JMw+UdA=;
+        b=PQtM78l2Szcsfpy4oz0zTJGNYjLHXrbEDGhoEKp+SP/Pa1siwRO+rDz3t0BFl3resm
+         dd8tcXGT5i6a82bz80DTxIKuLb3u8lAwq8yUsRIx0GhudcTqTvxtzIEeBaOjbjpCitNq
+         q+VyfCneFhYGz4mP2xJ3gYDnKji0GVSkfrT2Oee3fXek4xuIo880FhrxH+lMXsrr5xwx
+         Nq1pIdHfa41nMi5miCZmzs4D/xeLesHo5FfIvycHlMyBPbIUJeXhmdjr3j9zvs+wYUH5
+         o6+K3hpdHvKaBvRM4E/gsKQoEwDwy4zBLdaqaK3c6sqnny9rfkbdfe6hT5+LSAR8EzcN
+         /8NQ==
+Content-Disposition: inline
+In-Reply-To: <Ynj/l+pyFJxKfcbQ-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>, Michal =?ISO-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Richard Palethorpe <rpalethorpe-IBi9RG/b67k@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, william.kucharski-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yang Yang <yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 
-On Mon, 9 May 2022 11:09:15 -0400 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrot=
-e:
+On Mon, May 09, 2022 at 01:48:39PM +0200, Michal Hocko wrote:
+> On Mon 09-05-22 11:26:43, CGEL wrote:
+> > On Mon, May 09, 2022 at 12:00:28PM +0200, Michal Hocko wrote:
+> > > On Sat 07-05-22 02:05:25, CGEL wrote:
+> > > [...]
+> > > > If there are many containers to run on one host, and some of them have high
+> > > > performance requirements, administrator could turn on thp for them:
+> > > > # docker run -it --thp-enabled=always
+> > > > Then all the processes in those containers will always use thp.
+> > > > While other containers turn off thp by:
+> > > > # docker run -it --thp-enabled=never
+> > > 
+> > > I do not know. The THP config space is already too confusing and complex
+> > > and this just adds on top. E.g. is the behavior of the knob
+> > > hierarchical? What is the policy if parent memcg says madivise while
+> > > child says always? How does the per-application configuration aligns
+> > > with all that (e.g. memcg policy madivise but application says never via
+> > > prctl while still uses some madvised - e.g. via library).
+> > >
+> > 
+> > The cgroup THP behavior is align to host and totally independent just likes
+> > /sys/fs/cgroup/memory.swappiness. That means if one cgroup config 'always'
+> > for thp, it has no matter with host or other cgroup. This make it simple for
+> > user to understand or control.
+> 
+> All controls in cgroup v2 should be hierarchical. This is really
+> required for a proper delegation semantic.
+>
 
-> On Fri, May 06, 2022 at 09:40:15AM -0700, David Vernet wrote:
-> > Sorry for the delayed reply, Michal. I've been at LSFMM this week.
-> >=20
-> > On Fri, Apr 29, 2022 at 11:26:20AM +0200, Michal Koutn=FD wrote:
-> > > I still think that the behavior when there's no protection left for t=
-he
-> > > memory.low =3D=3D 0 child, there should be no memory.low events (not =
-just
-> > > uncounted but not happening) and test should not accept this (even
-> > > though it's the current behavior).
-> >
-> > That's fair. I think part of the problem here is that in general, the
-> > memcontroller itself is quite heuristic, so it's tough to write tests t=
-hat
-> > provide useful coverage while also being sufficiently flexible to avoid
-> > flakiness and over-prescribing expected behavior. In this case I think =
-it's
-> > probably correct that the memory.low =3D=3D 0 child shouldn't inherit
-> > protection from its parent under any circumstances due to its siblings
-> > overcommitting the parent's protection, but I also wonder if it's really
-> > necessary to enforce that. If you look at how much memory A/B/E gets at=
- the
-> > end of the reclaim, it's still far less than 1MB (though should it be 0=
-?).
-> > I'd be curious to hear what Johannes thinks.
->=20
-> We need to distinguish between what the siblings declare and what they
-> consume.
->=20
-> My understanding of the issue you're raising, Michal, is that
-> protected siblings start with current > low, then get reclaimed
-> slightly too much and end up with current < low. This results in a
-> tiny bit of float that then gets assigned to the low=3D0 sibling; when
-> that sibling gets reclaimed regardless, it sees a low event. Correct
-> me if I missed a detail or nuance here.
->=20
-> But unused float going to siblings is intentional. This is documented
-> in point 3 in the comment above effective_protection(): if you use
-> less than you're legitimately claiming, the float goes to your
-> siblings. So the problem doesn't seem to be with low accounting and
-> event generation, but rather it's simply overreclaim.
->=20
-> It's conceivable to make reclaim more precise and then tighten up the
-> test. But right now, David's patch looks correct to me.
+Could we align to the semantic of /sys/fs/cgroup/memory.swappiness?
+Some distributions like Ubuntu is still using cgroup v1.
 
-So I think we're OK with [2/5] now.  Unless there be objections, I'll
-be looking to get this series into mm-stable later this week.
+> > If memcg policy madivise but application says never, just like host, the result
+> > is no THP for that application.
+> > 
+> > > > By doing this we could promote important containers's performance with less
+> > > > footprint of thp.
+> > > 
+> > > Do we really want to provide something like THP based QoS? To me it
+> > > sounds like a bad idea and if the justification is "it might be useful"
+> > > then I would say no. So you really need to come with a very good usecase
+> > > to promote this further.
+> > 
+> > At least on some 5G(communication technology) machine, it's useful to provide
+> > THP based QoS. Those 5G machine use micro-service software architecture, in
+> > other words one service application runs in one container.
+> 
+> I am not really sure I understand. If this is one application per
+> container (cgroup) then why do you really need per-group setting?
+> Does the application is a set of different processes which are only very
+> loosely tight?
+> 
+For micro-service architecture, the application in one container is not a
+set of loosely tight processes, it's aim at provide one certain service,
+so different containers means different service, and different service
+has different QoS demand. 
 
+The reason why we need per-group(per-container) setting is because most
+container are managed by compose software, the compose software provide
+UI to decide how to run a container(likes setting swappiness value). For
+example the docker compose:
+https://docs.docker.com/compose/#compose-v2-and-the-new-docker-compose-command
+
+To make it clearer, I try to make a summary for why container needs this patch:
+    1.one machine can run different containers;
+    2.for some scenario, container runs only one service inside(can be only one
+application);
+    3.different containers provide different services, different services have
+different QoS demands;
+    4.THP has big influence on QoS. It's fast for memory access, but eat more
+memory;
+    5.containers usually managed by compose software, which treats container as
+base management unit;
+    6.this patch provide cgroup THP controller, which can be a method to adjust
+container memory QoS.
+
+> > Container becomes
+> > the suitable management unit but not the whole host. And some performance
+> > sensitive containers desiderate THP to provide low latency communication.
+> > But if we use THP with 'always', it will consume more memory(on our machine
+> > that is about 10% of total memory). And unnecessary huge pages will increase
+> > memory pressure, add latency for minor pages faults, and add overhead when
+> > splitting huge pages or coalescing normal sized pages into huge pages.
+> 
+> It is still not really clear to me how do you achieve that the whole
+> workload in the said container has the same THP requirements.
+> -- 
+> Michal Hocko
+> SUSE Labs
