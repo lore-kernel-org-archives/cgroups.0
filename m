@@ -1,120 +1,81 @@
-From: CGEL <cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] mm/memcg: support control THP behaviour in cgroup
-Date: Tue, 10 May 2022 01:43:38 +0000
-Message-ID: <6279c354.1c69fb81.7f6c1.15e0@mx.google.com>
-References: <20220505033814.103256-1-xu.xin16@zte.com.cn>
- <YnUlntNFR4zeD+qa@dhcp22.suse.cz>
- <6275d3e7.1c69fb81.1d62.4504@mx.google.com>
- <YnjmPAToTR0C5o8x@dhcp22.suse.cz>
- <6278fa75.1c69fb81.9c598.f794@mx.google.com>
- <Ynj/l+pyFJxKfcbQ@dhcp22.suse.cz>
+From: Vasily Averin <vvs@openvz.org>
+Subject: Re: [PATCH] percpu: improve percpu_alloc_percpu event trace
+Date: Tue, 10 May 2022 07:22:02 +0300
+Message-ID: <6e68298c-7cdd-9984-215e-7e6fb3d03fe8@openvz.org>
+References: <8d627f02-183f-c4e7-7c15-77b2b438536b@openvz.org>
+ <202205070420.aAhuqpYk-lkp@intel.com>
+ <e1c09bbb-2c58-a986-c704-1db538da905a@openvz.org>
+ <20220509170605.2eb7637e@gandalf.local.home>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:from:to:cc:subject:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=HgGTA2L0WTR4KLBkAGFUu4sFQBHJ/DJdCql0JMw+UdA=;
-        b=PQtM78l2Szcsfpy4oz0zTJGNYjLHXrbEDGhoEKp+SP/Pa1siwRO+rDz3t0BFl3resm
-         dd8tcXGT5i6a82bz80DTxIKuLb3u8lAwq8yUsRIx0GhudcTqTvxtzIEeBaOjbjpCitNq
-         q+VyfCneFhYGz4mP2xJ3gYDnKji0GVSkfrT2Oee3fXek4xuIo880FhrxH+lMXsrr5xwx
-         Nq1pIdHfa41nMi5miCZmzs4D/xeLesHo5FfIvycHlMyBPbIUJeXhmdjr3j9zvs+wYUH5
-         o6+K3hpdHvKaBvRM4E/gsKQoEwDwy4zBLdaqaK3c6sqnny9rfkbdfe6hT5+LSAR8EzcN
-         /8NQ==
-Content-Disposition: inline
-In-Reply-To: <Ynj/l+pyFJxKfcbQ-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+        d=openvz-org.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=zoEuUNsSlASJkELQDVjOkHOErXZlwArgTvgzzDIC9n0=;
+        b=gmW6F2GnDKFqhfw4ydsqrHtImdNG0vq/A9SMKKxqTihVL6+9LHIjjj/Vxi50uf4lGN
+         5xVUs3QHYdEsWLGEBkSAE/HPkENUvkywBsUuE69A6thZJVD6JfEjo0IRCGl+bhVzTLnF
+         W3cUyJnsn90QYF65Np8+ojp1xyqETEP3nNNXcSLCPK3nG21knJOePFONJTDQRRC1XhWh
+         4rYfbw2TkPm4m4TEP2wYE2GVevLcTjDolRQJs4oMOfxm392QMSg7Z+p2lSSWhyRVY9BQ
+         UeC6g4gc+k0t/wZtqaesomF2i4O0sHfreOyxeMfaP+YgNYsTLyf5bI4JkqXRmIaT5/r7
+         J8tw==
+Content-Language: en-US
+In-Reply-To: <20220509170605.2eb7637e@gandalf.local.home>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, william.kucharski-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yang Yang <yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: kernel test robot <lkp@intel.com>, Ingo Molnar <mingo@redhat.com>, kbuild-all@lists.01.org, Shakeel Butt <shakeelb@google.com>, kernel@openvz.org, linux-kernel@vger.kernel.org, Roman Gushchin <roman.gushchin@linux.dev>, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@suse.com>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Linux Memory Management List <linux-mm@kvack.org>, Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux-foundation.org>
 
-On Mon, May 09, 2022 at 01:48:39PM +0200, Michal Hocko wrote:
-> On Mon 09-05-22 11:26:43, CGEL wrote:
-> > On Mon, May 09, 2022 at 12:00:28PM +0200, Michal Hocko wrote:
-> > > On Sat 07-05-22 02:05:25, CGEL wrote:
-> > > [...]
-> > > > If there are many containers to run on one host, and some of them have high
-> > > > performance requirements, administrator could turn on thp for them:
-> > > > # docker run -it --thp-enabled=always
-> > > > Then all the processes in those containers will always use thp.
-> > > > While other containers turn off thp by:
-> > > > # docker run -it --thp-enabled=never
-> > > 
-> > > I do not know. The THP config space is already too confusing and complex
-> > > and this just adds on top. E.g. is the behavior of the knob
-> > > hierarchical? What is the policy if parent memcg says madivise while
-> > > child says always? How does the per-application configuration aligns
-> > > with all that (e.g. memcg policy madivise but application says never via
-> > > prctl while still uses some madvised - e.g. via library).
-> > >
-> > 
-> > The cgroup THP behavior is align to host and totally independent just likes
-> > /sys/fs/cgroup/memory.swappiness. That means if one cgroup config 'always'
-> > for thp, it has no matter with host or other cgroup. This make it simple for
-> > user to understand or control.
-> 
-> All controls in cgroup v2 should be hierarchical. This is really
-> required for a proper delegation semantic.
->
+On 5/10/22 00:06, Steven Rostedt wrote:
+> I'm curious as to where the gfp_t to unsigned long is happening in the
+> macros?
 
-Could we align to the semantic of /sys/fs/cgroup/memory.swappiness?
-Some distributions like Ubuntu is still using cgroup v1.
+original ___GFP_* flags are usual defines
 
-> > If memcg policy madivise but application says never, just like host, the result
-> > is no THP for that application.
-> > 
-> > > > By doing this we could promote important containers's performance with less
-> > > > footprint of thp.
-> > > 
-> > > Do we really want to provide something like THP based QoS? To me it
-> > > sounds like a bad idea and if the justification is "it might be useful"
-> > > then I would say no. So you really need to come with a very good usecase
-> > > to promote this further.
-> > 
-> > At least on some 5G(communication technology) machine, it's useful to provide
-> > THP based QoS. Those 5G machine use micro-service software architecture, in
-> > other words one service application runs in one container.
-> 
-> I am not really sure I understand. If this is one application per
-> container (cgroup) then why do you really need per-group setting?
-> Does the application is a set of different processes which are only very
-> loosely tight?
-> 
-For micro-service architecture, the application in one container is not a
-set of loosely tight processes, it's aim at provide one certain service,
-so different containers means different service, and different service
-has different QoS demand. 
+/* Plain integer GFP bitmasks. Do not use this directly. */
+#define ___GFP_DMA              0x01u
+#define ___GFP_HIGHMEM          0x02u
+#define ___GFP_DMA32            0x04u
 
-The reason why we need per-group(per-container) setting is because most
-container are managed by compose software, the compose software provide
-UI to decide how to run a container(likes setting swappiness value). For
-example the docker compose:
-https://docs.docker.com/compose/#compose-v2-and-the-new-docker-compose-command
+... but __GFP_* flags used elsewhere are declared as 'forced to gfp_t'
 
-To make it clearer, I try to make a summary for why container needs this patch:
-    1.one machine can run different containers;
-    2.for some scenario, container runs only one service inside(can be only one
-application);
-    3.different containers provide different services, different services have
-different QoS demands;
-    4.THP has big influence on QoS. It's fast for memory access, but eat more
-memory;
-    5.containers usually managed by compose software, which treats container as
-base management unit;
-    6.this patch provide cgroup THP controller, which can be a method to adjust
-container memory QoS.
+#define __GFP_DMA       ((__force gfp_t)___GFP_DMA)
+#define __GFP_HIGHMEM   ((__force gfp_t)___GFP_HIGHMEM)
+#define __GFP_DMA32     ((__force gfp_t)___GFP_DMA32)
+...
+#define GFP_DMA         __GFP_DMA
+#define GFP_DMA32       __GFP_DMA32
 
-> > Container becomes
-> > the suitable management unit but not the whole host. And some performance
-> > sensitive containers desiderate THP to provide low latency communication.
-> > But if we use THP with 'always', it will consume more memory(on our machine
-> > that is about 10% of total memory). And unnecessary huge pages will increase
-> > memory pressure, add latency for minor pages faults, and add overhead when
-> > splitting huge pages or coalescing normal sized pages into huge pages.
-> 
-> It is still not really clear to me how do you achieve that the whole
-> workload in the said container has the same THP requirements.
-> -- 
-> Michal Hocko
-> SUSE Labs
+... and when  __def_gfpflag_names() traslates them to unsigned long
+
+       {(unsigned long)GFP_DMA,                "GFP_DMA"},             \
+       {(unsigned long)__GFP_HIGHMEM,          "__GFP_HIGHMEM"},       \
+       {(unsigned long)GFP_DMA32,              "GFP_DMA32"},           \
+
+... it leads to sparse warnings bacuse type gfp_t was declared as 'bitwise'
+From mas sparse
+
+       -Wbitwise
+              Warn about unsupported operations or type mismatches with
+              restricted integer types.
+
+               Sparse supports an extended attribute,
+              __attribute__((bitwise)), which creates a new restricted
+              integer type from a base integer type, distinct from the
+              base integer type and from any other restricted integer
+              type not declared in the same declaration or typedef.
+
+             __bitwise is for *unique types* that cannot be mixed with
+              other types, and that you'd never want to just use as a
+              random integer (the integer 0 is special, though, and gets
+              silently accepted iirc - it's kind of like "NULL" for
+              pointers). So "gfp_t" or the "safe endianness" types would
+              be __bitwise: you can only operate on them by doing
+              specific operations that know about *that* particular
+              type.
+
+              Sparse issues these warnings by default.
+
+Thank you,
+	Vasily Averin
