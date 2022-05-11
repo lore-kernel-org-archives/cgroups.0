@@ -1,111 +1,91 @@
 From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2] mm/memcontrol: Export memcg->watermark via sysfs for
- v2 memcg
-Date: Wed, 11 May 2022 09:13:23 +0200
-Message-ID: <YntiE+qNnHQBV4zE@dhcp22.suse.cz>
-References: <20220507050916.GA13577@us192.sjc.aristanetworks.com>
+Subject: Re: [PATCH] mm/memcg: support control THP behaviour in cgroup
+Date: Wed, 11 May 2022 09:21:53 +0200
+Message-ID: <YntkEUKPquTbBjMu@dhcp22.suse.cz>
+References: <YnUlntNFR4zeD+qa@dhcp22.suse.cz>
+ <6275d3e7.1c69fb81.1d62.4504@mx.google.com>
+ <YnjmPAToTR0C5o8x@dhcp22.suse.cz>
+ <6278fa75.1c69fb81.9c598.f794@mx.google.com>
+ <Ynj/l+pyFJxKfcbQ@dhcp22.suse.cz>
+ <6279c354.1c69fb81.7f6c1.15e0@mx.google.com>
+ <Yno3pNQOn1lAMPnu@dhcp22.suse.cz>
+ <627a5214.1c69fb81.1b7fb.47be@mx.google.com>
+ <YnpqYte2jLdcBiPg@dhcp22.suse.cz>
+ <627b1899.1c69fb81.cd831.12d9@mx.google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1652253204; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1652253715; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=v3MEE3PCAin488+Sg3Y+cPevPCOC3na5cXBSCbF/tME=;
-        b=hii84q44ZpbI1s2/MUpEY3XkgMdDGRV2xp78zOJXyihOgzmQEi+DNBtqkYvHwDXFUJNOsW
-        3r6eitcIEOKRtc3ctO4Z6BS337p/XjSUR88unGCHvAeKx1SdDBlKwRliO8LTFlHDwyg9YF
-        t3j9/HCDO2FZ4TvAUwSTCh49OYvHv1U=
+        bh=oPT7y3vtMr9hrPGl5KbXi6Udsxr9fQRC1iNa9w9V8TY=;
+        b=cxU4a2s88K5U+Lf0tA0v8r+T4GnaUuAC/B1HkF4OQxBRySnalhHSOl+sexwH0SSsLMsyBe
+        NDG/A+Le+GpX3XoULZqJJM4maXRrpUufl9aMyUGBKwFcKKuvCGC19Bn0LMIEBSOge1PgJM
+        KEty8LVfXNuk0DhuHnGvY6VS15VD/Qs=
 Content-Disposition: inline
-In-Reply-To: <20220507050916.GA13577-pF7uKtACKh3GmWBmRUYTj5O0Dwfk+90YVpNB7YpNyf8@public.gmane.org>
+In-Reply-To: <627b1899.1c69fb81.cd831.12d9-ATjtLOhZ0NVl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: CGEL <cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, william.kucharski-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yang Yang <yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 
-On Fri 06-05-22 22:09:16, Ganesan Rajagopal wrote:
-> We run a lot of automated tests when building our software and run into
-> OOM scenarios when the tests run unbounded. v1 memcg exports
-> memcg->watermark as "memory.max_usage_in_bytes" in sysfs. We use this
-> metric to heuristically limit the number of tests that can run in
-> parallel based on per test historical data.
+On Wed 11-05-22 01:59:52, CGEL wrote:
+> On Tue, May 10, 2022 at 03:36:34PM +0200, Michal Hocko wrote:
+[...]
+> > Can you come up with a sane hierarchical behavior?
+> >
 > 
-> This metric is currently not exported for v2 memcg and there is no
-> other easy way of getting this information. getrusage() syscall returns
-> "ru_maxrss" which can be used as an approximation but that's the max
-> RSS of a single child process across all children instead of the
-> aggregated max for all child processes. The only work around is to
-> periodically poll "memory.current" but that's not practical for
-> short-lived one-off cgroups.
+> I think this new interface better be independent not hierarchical anyway. Especially
+> when we treat container as lightweight virtual machine.
+
+I suspect you are focusing too much on your usecase and do not realize
+wider consequences of this being an user interface that still has to be
+sensible for other usecases. Take a delagation of the control to
+subgroups as an example. If this is a per memcg knob (like swappiness)
+then children can override parent's THP policy. This might be a less of
+the deal for swappiness because the anon/file reclaim balancing should
+be mostly an internal thing. But THP policy is different because it has
+other effects to workloads running outside of the said cgroup - higher
+memory demand, higher contention for high-order memory etc.
+
+I do not really see how this could be a sensible per-memcg policy
+without being fully hierarchical.
+
 > 
-> Hence, expose memcg->watermark as "memory.peak" for v2 memcg.
-
-Yes, I can imagine that a very short lived process can easily escape
-from the monitoring. The memory consumption can be still significant
-though.
-
-The v1 interface allows to reset the value by writing to the file. Have
-you considered that as well?
- 
-> Signed-off-by: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
-
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-
-> ---
->  Documentation/admin-guide/cgroup-v2.rst |  7 +++++++
->  mm/memcontrol.c                         | 13 +++++++++++++
->  2 files changed, 20 insertions(+)
+> > [...]
+> > > > > For micro-service architecture, the application in one container is not a
+> > > > > set of loosely tight processes, it's aim at provide one certain service,
+> > > > > so different containers means different service, and different service
+> > > > > has different QoS demand. 
+> > > > 
+> > > > OK, if they are tightly coupled you could apply the same THP policy by
+> > > > an existing prctl interface. Why is that not feasible. As you are noting
+> > > > below...
+> > > > 
+> > > > >     5.containers usually managed by compose software, which treats container as
+> > > > > base management unit;
+> > > > 
+> > > > ..so the compose software can easily start up the workload by using prctl
+> > > > to disable THP for whatever workloads it is not suitable for.
+> > > 
+> > > prctl(PR_SET_THP_DISABLE..) can not be elegance to support the semantic we
+> > > need. If only some containers needs THP, other containers and host do not need
+> > > THP. We must set host THP to always first, and call prctl() to close THP for
+> > > host tasks and other containers one by one,
+> > 
+> > It might not be the most elegant solution but it should work.
 > 
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index 69d7a6983f78..828ce037fb2a 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -1208,6 +1208,13 @@ PAGE_SIZE multiple when read back.
->  	high limit is used and monitored properly, this limit's
->  	utility is limited to providing the final safety net.
->  
-> +  memory.peak
-> +	A read-only single value file which exists on non-root
-> +	cgroups.
-> +
-> +	The max memory usage recorded for the cgroup and its
-> +	descendants since the creation of the cgroup.
-> +
->    memory.oom.group
->  	A read-write single value file which exists on non-root
->  	cgroups.  The default value is "0".
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 725f76723220..88fa70b5d8af 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -6098,6 +6098,14 @@ static u64 memory_current_read(struct cgroup_subsys_state *css,
->  	return (u64)page_counter_read(&memcg->memory) * PAGE_SIZE;
->  }
->  
-> +static u64 memory_peak_read(struct cgroup_subsys_state *css,
-> +			    struct cftype *cft)
-> +{
-> +	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-> +
-> +	return (u64)memcg->memory.watermark * PAGE_SIZE;
-> +}
-> +
->  static int memory_min_show(struct seq_file *m, void *v)
->  {
->  	return seq_puts_memcg_tunable(m,
-> @@ -6361,6 +6369,11 @@ static struct cftype memory_files[] = {
->  		.flags = CFTYPE_NOT_ON_ROOT,
->  		.read_u64 = memory_current_read,
->  	},
-> +	{
-> +		.name = "peak",
-> +		.flags = CFTYPE_NOT_ON_ROOT,
-> +		.read_u64 = memory_peak_read,
-> +	},
->  	{
->  		.name = "min",
->  		.flags = CFTYPE_NOT_ON_ROOT,
-> -- 
-> 2.28.0
+> So you agree it's reasonable to set THP policy for process in container, right?
+
+Yes, like in any other processes.
+
+> If so, IMHO, when there are thousands of processes launch and die on the machine,
+> it will be horrible to do so by calling prctl(), I don't see the reasonability.
+
+Could you be more specific? The usual prctl use would be normally
+handled by the launcher and rely on the per-process policy to be
+inherited down the road.
 
 -- 
 Michal Hocko
