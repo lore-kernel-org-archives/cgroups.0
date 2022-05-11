@@ -1,90 +1,112 @@
-From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: Re: kernfs memcg accounting
-Date: Wed, 11 May 2022 09:01:40 +0300
-Message-ID: <0eec6575-548e-23e0-0d99-4e079a33d338@openvz.org>
-References: <7e867cb0-89d6-402c-33d2-9b9ba0ba1523@openvz.org>
- <20220427140153.GC9823@blackbody.suse.cz>
- <7509fa9f-9d15-2f29-cb2f-ac0e8d99a948@openvz.org>
- <YnBLge4ZQNbbxufc@blackbook>
- <52a9f35b-458b-44c4-7fc8-d05c8db0c73f@openvz.org> <YnsoMEuWjlpDcmt3@carbon>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v2] mm/memcontrol: Export memcg->watermark via sysfs for
+ v2 memcg
+Date: Wed, 11 May 2022 09:13:23 +0200
+Message-ID: <YntiE+qNnHQBV4zE@dhcp22.suse.cz>
+References: <20220507050916.GA13577@us192.sjc.aristanetworks.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=openvz-org.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=KG2LP7lqw9uskhHUdz+/neRzxuQzhpKu6yMc7xnK/Nw=;
-        b=ymECTCTfY6HysdomwfmKw5QWUX/LYJLfLVPUX3cID7988CkBbdzv4Aku3xtSvlHixS
-         mLEUKjlqqEjDC/D0dqLnlo2CRSmatHUUKoX0cT2CfKO7C856mRyrIXYdTvYhusfPWxLA
-         qgK4HNLVdHR50zn89GYGFuYzzQIPmwysOCOoGl0fi6a9fVknY6UH33Yk/lLXJvqdaKZC
-         tphhA4klMvM9w/djtKoUNrB6JxH51OCpzoP6u8mQ2MulTxFfP9ygmlYJ2tbJQw5owmHm
-         oC8clKUaILQ+G8AYEjejlZG6vDBahYAeBM+8p9Y3+ALCzbkyKzV6zMJwTti7o7nYmmsO
-         mYrA==
-Content-Language: en-US
-In-Reply-To: <YnsoMEuWjlpDcmt3@carbon>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1652253204; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=v3MEE3PCAin488+Sg3Y+cPevPCOC3na5cXBSCbF/tME=;
+        b=hii84q44ZpbI1s2/MUpEY3XkgMdDGRV2xp78zOJXyihOgzmQEi+DNBtqkYvHwDXFUJNOsW
+        3r6eitcIEOKRtc3ctO4Z6BS337p/XjSUR88unGCHvAeKx1SdDBlKwRliO8LTFlHDwyg9YF
+        t3j9/HCDO2FZ4TvAUwSTCh49OYvHv1U=
+Content-Disposition: inline
+In-Reply-To: <20220507050916.GA13577-pF7uKtACKh3GmWBmRUYTj5O0Dwfk+90YVpNB7YpNyf8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On 5/11/22 06:06, Roman Gushchin wrote:
-> On Wed, May 04, 2022 at 12:00:18PM +0300, Vasily Averin wrote:
->> From my point of view it is most important to account allocated memory
->> to any cgroup inside container. Select of proper memcg is a secondary goal here.
->> Frankly speaking I do not see a big difference between memcg of current process,
->> memcg of newly created child and memcg of its parent.
->>
->> As far as I understand, Roman chose the parent memcg because it was a special
->> case of creating a new memory group. He temporally changed active memcg
->> in mem_cgroup_css_alloc() and properly accounted all required memcg-specific
->> allocations.
+On Fri 06-05-22 22:09:16, Ganesan Rajagopal wrote:
+> We run a lot of automated tests when building our software and run into
+> OOM scenarios when the tests run unbounded. v1 memcg exports
+> memcg->watermark as "memory.max_usage_in_bytes" in sysfs. We use this
+> metric to heuristically limit the number of tests that can run in
+> parallel based on per test historical data.
 > 
-> My primary goal was to apply the memory pressure on memory cgroups with a lot
-> of (dying) children cgroups. On a multi-cpu machine a memory cgroup structure
-> is way larger than a page, so a cgroup which looks small can be really large
-> if we calculate the amount of memory taken by all children memcg internals.
+> This metric is currently not exported for v2 memcg and there is no
+> other easy way of getting this information. getrusage() syscall returns
+> "ru_maxrss" which can be used as an approximation but that's the max
+> RSS of a single child process across all children instead of the
+> aggregated max for all child processes. The only work around is to
+> periodically poll "memory.current" but that's not practical for
+> short-lived one-off cgroups.
 > 
-> Applying this pressure to another cgroup (e.g. the one which contains systemd)
-> doesn't help to reclaim any pages which are pinning the dying cgroups.
+> Hence, expose memcg->watermark as "memory.peak" for v2 memcg.
+
+Yes, I can imagine that a very short lived process can easily escape
+from the monitoring. The memory consumption can be still significant
+though.
+
+The v1 interface allows to reset the value by writing to the file. Have
+you considered that as well?
+ 
+> Signed-off-by: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
+
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst |  7 +++++++
+>  mm/memcontrol.c                         | 13 +++++++++++++
+>  2 files changed, 20 insertions(+)
 > 
-> For other controllers (maybe blkcg aside, idk) it shouldn't matter, because
-> there is no such problem there.
-> 
-> For consistency reasons I'd suggest to charge all *large* allocations
-> (e.g. percpu) to the parent cgroup. Small allocations can be ignored.
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 69d7a6983f78..828ce037fb2a 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1208,6 +1208,13 @@ PAGE_SIZE multiple when read back.
+>  	high limit is used and monitored properly, this limit's
+>  	utility is limited to providing the final safety net.
+>  
+> +  memory.peak
+> +	A read-only single value file which exists on non-root
+> +	cgroups.
+> +
+> +	The max memory usage recorded for the cgroup and its
+> +	descendants since the creation of the cgroup.
+> +
+>    memory.oom.group
+>  	A read-write single value file which exists on non-root
+>  	cgroups.  The default value is "0".
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 725f76723220..88fa70b5d8af 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -6098,6 +6098,14 @@ static u64 memory_current_read(struct cgroup_subsys_state *css,
+>  	return (u64)page_counter_read(&memcg->memory) * PAGE_SIZE;
+>  }
+>  
+> +static u64 memory_peak_read(struct cgroup_subsys_state *css,
+> +			    struct cftype *cft)
+> +{
+> +	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+> +
+> +	return (u64)memcg->memory.watermark * PAGE_SIZE;
+> +}
+> +
+>  static int memory_min_show(struct seq_file *m, void *v)
+>  {
+>  	return seq_puts_memcg_tunable(m,
+> @@ -6361,6 +6369,11 @@ static struct cftype memory_files[] = {
+>  		.flags = CFTYPE_NOT_ON_ROOT,
+>  		.read_u64 = memory_current_read,
+>  	},
+> +	{
+> +		.name = "peak",
+> +		.flags = CFTYPE_NOT_ON_ROOT,
+> +		.read_u64 = memory_peak_read,
+> +	},
+>  	{
+>  		.name = "min",
+>  		.flags = CFTYPE_NOT_ON_ROOT,
+> -- 
+> 2.28.0
 
-I showed in [1] other large allocation:
-"
-number	bytes	$1*$2	sum	note	call_site
-of	alloc
-allocs
-------------------------------------------------------------
-1       14448   14448   14448   =       percpu_alloc_percpu:
-1       8192    8192    22640   ++      (mem_cgroup_css_alloc+0x54)
-49      128     6272    28912   ++      (__kernfs_new_node+0x4e)
-49      96      4704    33616   ?       (simple_xattr_alloc+0x2c)
-49      88      4312    37928   ++      (__kernfs_iattrs+0x56)
-1       4096    4096    42024   ++      (cgroup_mkdir+0xc7)
-1       3840    3840    45864   =       percpu_alloc_percpu:
-4       512     2048    47912   +       (alloc_fair_sched_group+0x166)
-4       512     2048    49960   +       (alloc_fair_sched_group+0x139)
-1       2048    2048    52008   ++      (mem_cgroup_css_alloc+0x109)
-"
-[1] https://lore.kernel.org/all/1aa4cd22-fcb6-0e8d-a1c6-23661d618864-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org/
-=	already accounted
-++	to be accounted first
-+	to be accounted a bit later
-
-There is no problems with objects allocated in mem_cgroup_alloc(),
-they will be accounted to parent's memcg.
-However I do not understand how to handle other large objects?
-
-We could move set_active_memcg(parent) call from mem_cgroup_css_alloc() 
-to cgroup_apply_control_enable() and handle allocation in all .css_alloc()
-
-However I need to handle allocations called from cgroup_mkdir() too and
-badly understand how to do it properly.
-
-Thank you,
-	Vasily Averin
+-- 
+Michal Hocko
+SUSE Labs
