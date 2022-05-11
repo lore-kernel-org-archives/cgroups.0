@@ -1,77 +1,186 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: kernfs memcg accounting
-Date: Wed, 11 May 2022 18:49:45 +0200
-Message-ID: <20220511164945.GA31592@blackbody.suse.cz>
-References: <7e867cb0-89d6-402c-33d2-9b9ba0ba1523@openvz.org>
- <20220427140153.GC9823@blackbody.suse.cz>
- <7509fa9f-9d15-2f29-cb2f-ac0e8d99a948@openvz.org>
- <YnBLge4ZQNbbxufc@blackbook>
- <52a9f35b-458b-44c4-7fc8-d05c8db0c73f@openvz.org>
- <YnsoMEuWjlpDcmt3@carbon>
- <0eec6575-548e-23e0-0d99-4e079a33d338@openvz.org>
+From: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 1/6] Documentation: filesystems: proc: update meminfo
+ section
+Date: Wed, 11 May 2022 19:11:06 +0200
+Message-ID: <7a6f8520-a496-e3c3-1fd9-8a30b7a12b14@redhat.com>
+References: <20220510152847.230957-1-hannes@cmpxchg.org>
+ <20220510152847.230957-2-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1652287787; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1652289071;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=BT7PhFjb0yfnX8Jyg1myJFbP9avxJpO8kwYrkhn3Qao=;
-        b=Rqw7tlXYAK6aOCv5cU2S5SjeLkNYuQNaHQjxOxoinQtMjkhzD4QD7va4YazZecdAXkcqd0
-        hI8qsZ9LllH1OeY0mt/7zDJAI90AYjelKRQkzXYfT5rpLBqATrF3Uwbsysu1bjmOWYfnWM
-        dAojk1ZewHtUCFuM7IjkVl+KdZmRADY=
-Content-Disposition: inline
-In-Reply-To: <0eec6575-548e-23e0-0d99-4e079a33d338-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+        bh=RYPmGtyjBZOHGfPmY4qtA0SgpPfAbbk9gSbu0qqBm3I=;
+        b=bA8bhxMFDHqc2dyDX1/HqqfbW+9KvoBp5MDUA43f5CREItuBe7eMfKXvr2dPLR1lYcXA8V
+        tE3aTDTp7/6jenOlLOIBj0SZwuwa+/3mx+Hw1Ee2LoXg1TLO+sIGtIbvYyMjjlTJPXrgQu
+        HHBXjK/WLQga7dDoQuEHOZ5IpKVE6Jg=
+Content-Language: en-US
+In-Reply-To: <20220510152847.230957-2-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed, May 11, 2022 at 09:01:40AM +0300, Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
-> number	bytes	$1*$2	sum	note	call_site
-> of	alloc
-> allocs
-> ------------------------------------------------------------
-> 1       14448   14448   14448   =       percpu_alloc_percpu:
-> 1       8192    8192    22640   ++      (mem_cgroup_css_alloc+0x54)
-
-This requires just adding GFP_KERNEL_ACCOUNT (no new active memcg
-switch).
-
-> 49      128     6272    28912   ++      (__kernfs_new_node+0x4e)
-> 49      96      4704    33616   ?       (simple_xattr_alloc+0x2c)
-> 49      88      4312    37928   ++      (__kernfs_iattrs+0x56)
-> 1       4096    4096    42024   ++      (cgroup_mkdir+0xc7)
-> 1       3840    3840    45864   =       percpu_alloc_percpu:
-> 4       512     2048    47912   +       (alloc_fair_sched_group+0x166)
-> 4       512     2048    49960   +       (alloc_fair_sched_group+0x139)
-> 1       2048    2048    52008   ++      (mem_cgroup_css_alloc+0x109)
-> "
-> [1] https://lore.kernel.org/all/1aa4cd22-fcb6-0e8d-a1c6-23661d618864-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org/
-> =	already accounted
-> ++	to be accounted first
-> +	to be accounted a bit later
+On 10.05.22 17:28, Johannes Weiner wrote:
+> Add new entries. Minor corrections and cleanups.
 > 
-> There is no problems with objects allocated in mem_cgroup_alloc(),
-> they will be accounted to parent's memcg.
-> However I do not understand how to handle other large objects?
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> ---
+>  Documentation/filesystems/proc.rst | 155 ++++++++++++++++++-----------
+>  1 file changed, 99 insertions(+), 56 deletions(-)
 > 
-> We could move set_active_memcg(parent) call from mem_cgroup_css_alloc() 
-> to cgroup_apply_control_enable() and handle allocation in all .css_alloc()
-> 
-> However I need to handle allocations called from cgroup_mkdir() too and
-> badly understand how to do it properly.
+> diff --git a/Documentation/filesystems/proc.rst b/Documentation/filesystems/proc.rst
+> index 061744c436d9..736ed384750c 100644
+> --- a/Documentation/filesystems/proc.rst
+> +++ b/Documentation/filesystems/proc.rst
+> @@ -942,56 +942,71 @@ can be substantial.  In many cases there are other means to find out
+>  additional memory using subsystem specific interfaces, for instance
+>  /proc/net/sockstat for TCP memory allocations.
+>  
+> -The following is from a 16GB PIII, which has highmem enabled.
+> -You may not have all of these fields.
+> +Example output. You may not have all of these fields.
+>  
+>  ::
+>  
+>      > cat /proc/meminfo
+>  
+> -    MemTotal:     16344972 kB
+> -    MemFree:      13634064 kB
+> -    MemAvailable: 14836172 kB
+> -    Buffers:          3656 kB
+> -    Cached:        1195708 kB
+> -    SwapCached:          0 kB
+> -    Active:         891636 kB
+> -    Inactive:      1077224 kB
+> -    HighTotal:    15597528 kB
+> -    HighFree:     13629632 kB
+> -    LowTotal:       747444 kB
+> -    LowFree:          4432 kB
+> -    SwapTotal:           0 kB
+> -    SwapFree:            0 kB
+> -    Dirty:             968 kB
+> -    Writeback:           0 kB
+> -    AnonPages:      861800 kB
+> -    Mapped:         280372 kB
+> -    Shmem:             644 kB
+> -    KReclaimable:   168048 kB
+> -    Slab:           284364 kB
+> -    SReclaimable:   159856 kB
+> -    SUnreclaim:     124508 kB
+> -    PageTables:      24448 kB
+> -    NFS_Unstable:        0 kB
+> -    Bounce:              0 kB
+> -    WritebackTmp:        0 kB
+> -    CommitLimit:   7669796 kB
+> -    Committed_AS:   100056 kB
+> -    VmallocTotal:   112216 kB
+> -    VmallocUsed:       428 kB
+> -    VmallocChunk:   111088 kB
+> -    Percpu:          62080 kB
+> -    HardwareCorrupted:   0 kB
+> -    AnonHugePages:   49152 kB
+> -    ShmemHugePages:      0 kB
+> -    ShmemPmdMapped:      0 kB
+> +    MemTotal:       32858820 kB
+> +    MemFree:        21001236 kB
+> +    MemAvailable:   27214312 kB
+> +    Buffers:          581092 kB
+> +    Cached:          5587612 kB
+> +    SwapCached:            0 kB
+> +    Active:          3237152 kB
+> +    Inactive:        7586256 kB
+> +    Active(anon):      94064 kB
+> +    Inactive(anon):  4570616 kB
+> +    Active(file):    3143088 kB
+> +    Inactive(file):  3015640 kB
+> +    Unevictable:           0 kB
+> +    Mlocked:               0 kB
+> +    SwapTotal:             0 kB
+> +    SwapFree:              0 kB
+> +    Dirty:                12 kB
+> +    Writeback:             0 kB
+> +    AnonPages:       4654780 kB
+> +    Mapped:           266244 kB
+> +    Shmem:              9976 kB
+> +    KReclaimable:     517708 kB
+> +    Slab:             660044 kB
+> +    SReclaimable:     517708 kB
+> +    SUnreclaim:       142336 kB
+> +    KernelStack:       11168 kB
+> +    PageTables:        20540 kB
+> +    NFS_Unstable:          0 kB
+> +    Bounce:                0 kB
+> +    WritebackTmp:          0 kB
+> +    CommitLimit:    16429408 kB
+> +    Committed_AS:    7715148 kB
+> +    VmallocTotal:   34359738367 kB
+> +    VmallocUsed:       40444 kB
+> +    VmallocChunk:          0 kB
+> +    Percpu:            29312 kB
+> +    HardwareCorrupted:     0 kB
+> +    AnonHugePages:   4149248 kB
+> +    ShmemHugePages:        0 kB
+> +    ShmemPmdMapped:        0 kB
+> +    FileHugePages:         0 kB
+> +    FilePmdMapped:         0 kB
+> +    CmaTotal:              0 kB
+> +    CmaFree:               0 kB
+> +    HugePages_Total:       0
+> +    HugePages_Free:        0
+> +    HugePages_Rsvd:        0
+> +    HugePages_Surp:        0
+> +    Hugepagesize:       2048 kB
+> +    Hugetlb:               0 kB
+> +    DirectMap4k:      401152 kB
+> +    DirectMap2M:    10008576 kB
+> +    DirectMap1G:    24117248 kB
+>  
+>  MemTotal
+>                Total usable RAM (i.e. physical RAM minus a few reserved
+>                bits and the kernel binary code)
+>  MemFree
+> -              The sum of LowFree+HighFree
+> +              Total free RAM. On highmem systems, the sum of LowFree+HighFree
+>  MemAvailable
+>                An estimate of how much memory is available for starting new
+>                applications, without swapping. Calculated from MemFree,
+> @@ -1005,8 +1020,9 @@ Buffers
+>                Relatively temporary storage for raw disk blocks
+>                shouldn't get tremendously large (20MB or so)
+>  Cached
+> -              in-memory cache for files read from the disk (the
+> -              pagecache).  Doesn't include SwapCached
+> +              In-memory cache for files read from the disk (the
+> +              pagecache) as well as tmpfs & shmem.
+> +              Doesn't include SwapCached.
+>  SwapCached
+>                Memory that once was swapped out, is swapped back in but
+>                still also is in the swapfile (if memory is needed it
+> @@ -1018,6 +1034,11 @@ Active
+>  Inactive
+>                Memory which has been less recently used.  It is more
+>                eligible to be reclaimed for other purposes
+> +Unevictable
+> +              Memory that cannot be reclaimed, such as mlocked pages,
+> +              ramfs backing pages, secret memfd pages etc.
 
-If we consent to charge to the creator, the change would be just passing
-GFP_ACCOUNT at fewer (right) places, wouldn't it?
 
-Also, my undertanding of memcgs is that they're not hermetically tight,
-so I think charging just kernfs_nodes (for dirs and files) provides
-sufficient bound.
+A little imprecise, because this only includes memory to be mapped into
+user space. For example, all kernel allocations are unevictable but not
+accounted here.
 
-Except for, the xattrs, my older notes say: "make kernfs simple_xattr kernel
-accounted, up to KERNFS_USER_XATTR_SIZE_LIMIT*KERNFS_MAX_USER_XATTRS =
-128k * 128 = 16M / inode".
+Apart from that
 
-HTH,
-Michal
+Acked-by: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+
+
+-- 
+Thanks,
+
+David / dhildenb
+
