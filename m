@@ -1,146 +1,76 @@
-From: CGEL <cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] mm/memcg: support control THP behaviour in cgroup
-Date: Wed, 11 May 2022 02:19:36 +0000
-Message-ID: <627b1d39.1c69fb81.fe952.6426@mx.google.com>
-References: <20220505033814.103256-1-xu.xin16@zte.com.cn>
- <YnUlntNFR4zeD+qa@dhcp22.suse.cz>
- <6275d3e7.1c69fb81.1d62.4504@mx.google.com>
- <YnjmPAToTR0C5o8x@dhcp22.suse.cz>
- <6278fa75.1c69fb81.9c598.f794@mx.google.com>
- <Ynj/l+pyFJxKfcbQ@dhcp22.suse.cz>
- <6279c354.1c69fb81.7f6c1.15e0@mx.google.com>
- <CAHbLzkqztB+NXVcxtd7bVo7onH6AcMJ3JWCAHHqH3OAdbZsMOQ@mail.gmail.com>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH v2] percpu: improve percpu_alloc_percpu event trace
+Date: Tue, 10 May 2022 19:33:17 -0700
+Message-ID: <YnsgbXKiNNSF+1ZO@carbon>
+References: <2b388d09-940e-990f-1f8a-2fdaa9210fa0@openvz.org>
+ <a07be858-c8a3-7851-9086-e3262cbcf707@openvz.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:from:to:cc:subject:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=iOQsmKhE+QYLxlfOvaiJ7/uZihyRqcydotN8UT2grzk=;
-        b=ckn4xqwpqLh1KdI/cP99nep/Gpf0f4YULWG2yE1siFHCa56FOuA/1bRjNSSpaZA4pW
-         fAxEH+XM1mGBsAkVwHob3tml3YTmD+xRqUvY64xGIONsysx82gG3NeLMchX35vb3SkCQ
-         GGtU9Yoi7+GhmjMXRQrkkofCC4tWRHH0uLBCDNPzb1gYVGlwqY+83xG9Q4BB7zUzxNvg
-         Pw0LgbAUpctjdTmtf4v42EGIE9D0vqnBLwaNsi7ndpM67zmubzkz+EosmphbVbYBr2w+
-         LgjS1ZRlqf8Yn29EIKiH2vvXuMzQIVuyVzSIeXEeyhrZs4yffXp/+1P45ADC0y0I6OCF
-         XhHA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1652236405;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=A/7S2Nfdl9mg+NTUlm8YRagGmVcuRP9spTCxvE0H5V8=;
+        b=vBWdSRKNrRSnj63/2q34r3/NwsV2orkeonfypPwEqGznWLw2L0Fz8zfCr/hxvZ99MgLFvr
+        WXMEKbGUubwgtQ2jbWiF1CSeAE8kxPdzTlzkXm3kZhuot9A3XTqfPMRehOC6DjskJh353p
+        ILl2YaVkng/sfDDk+asuaFioScNzVjo=
 Content-Disposition: inline
-In-Reply-To: <CAHbLzkqztB+NXVcxtd7bVo7onH6AcMJ3JWCAHHqH3OAdbZsMOQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <a07be858-c8a3-7851-9086-e3262cbcf707-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, William Kucharski <william.kucharski-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Peter Xu <peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Yang Yang <yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Tue, May 10, 2022 at 12:34:20PM -0700, Yang Shi wrote:
-> On Mon, May 9, 2022 at 6:43 PM CGEL <cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> >
-> > On Mon, May 09, 2022 at 01:48:39PM +0200, Michal Hocko wrote:
-> > > On Mon 09-05-22 11:26:43, CGEL wrote:
-> > > > On Mon, May 09, 2022 at 12:00:28PM +0200, Michal Hocko wrote:
-> > > > > On Sat 07-05-22 02:05:25, CGEL wrote:
-> > > > > [...]
-> > > > > > If there are many containers to run on one host, and some of them have high
-> > > > > > performance requirements, administrator could turn on thp for them:
-> > > > > > # docker run -it --thp-enabled=always
-> > > > > > Then all the processes in those containers will always use thp.
-> > > > > > While other containers turn off thp by:
-> > > > > > # docker run -it --thp-enabled=never
-> > > > >
-> > > > > I do not know. The THP config space is already too confusing and complex
-> > > > > and this just adds on top. E.g. is the behavior of the knob
-> > > > > hierarchical? What is the policy if parent memcg says madivise while
-> > > > > child says always? How does the per-application configuration aligns
-> > > > > with all that (e.g. memcg policy madivise but application says never via
-> > > > > prctl while still uses some madvised - e.g. via library).
-> > > > >
-> > > >
-> > > > The cgroup THP behavior is align to host and totally independent just likes
-> > > > /sys/fs/cgroup/memory.swappiness. That means if one cgroup config 'always'
-> > > > for thp, it has no matter with host or other cgroup. This make it simple for
-> > > > user to understand or control.
-> > >
-> > > All controls in cgroup v2 should be hierarchical. This is really
-> > > required for a proper delegation semantic.
-> > >
-> >
-> > Could we align to the semantic of /sys/fs/cgroup/memory.swappiness?
-> > Some distributions like Ubuntu is still using cgroup v1.
+On Fri, May 06, 2022 at 10:29:25PM +0300, Vasily Averin wrote:
+> Added call_site, bytes_alloc and gfp_flags fields to the output
+> of the percpu_alloc_percpu ftrace event:
 > 
-> Other than enable flag, how would you handle the defrag flag
-> hierarchically? It is much more complicated.
-
-Refer to memory.swappiness for cgroup, this new interface better be independent.
-> >
-> > > > If memcg policy madivise but application says never, just like host, the result
-> > > > is no THP for that application.
-> > > >
-> > > > > > By doing this we could promote important containers's performance with less
-> > > > > > footprint of thp.
-> > > > >
-> > > > > Do we really want to provide something like THP based QoS? To me it
-> > > > > sounds like a bad idea and if the justification is "it might be useful"
-> > > > > then I would say no. So you really need to come with a very good usecase
-> > > > > to promote this further.
-> > > >
-> > > > At least on some 5G(communication technology) machine, it's useful to provide
-> > > > THP based QoS. Those 5G machine use micro-service software architecture, in
-> > > > other words one service application runs in one container.
-> > >
-> > > I am not really sure I understand. If this is one application per
-> > > container (cgroup) then why do you really need per-group setting?
-> > > Does the application is a set of different processes which are only very
-> > > loosely tight?
-> > >
-> > For micro-service architecture, the application in one container is not a
-> > set of loosely tight processes, it's aim at provide one certain service,
-> > so different containers means different service, and different service
-> > has different QoS demand.
-> >
-> > The reason why we need per-group(per-container) setting is because most
-> > container are managed by compose software, the compose software provide
-> > UI to decide how to run a container(likes setting swappiness value). For
-> > example the docker compose:
-> > https://docs.docker.com/compose/#compose-v2-and-the-new-docker-compose-command
-> >
-> > To make it clearer, I try to make a summary for why container needs this patch:
-> >     1.one machine can run different containers;
-> >     2.for some scenario, container runs only one service inside(can be only one
-> > application);
-> >     3.different containers provide different services, different services have
-> > different QoS demands;
-> >     4.THP has big influence on QoS. It's fast for memory access, but eat more
-> > memory;
+> mkdir-4393  [001]   169.334788: percpu_alloc_percpu:
+>  call_site=mem_cgroup_css_alloc+0xa6 reserved=0 is_atomic=0 size=2408 align=8
+>   base_addr=0xffffc7117fc00000 off=402176 ptr=0x3dc867a62300 bytes_alloc=14448
+>    gfp_flags=GFP_KERNEL_ACCOUNT
 > 
-> I have been involved in this kind of topic discussion offline a couple
-> of times. But TBH I don't see how you could achieve QoS by this flag.
-> THP allocation is *NOT* guaranteed. And the overhead may be quite
-> high. It depends on how fragmented the system is.
-
-For THP, the word 'QoS' maybe too absolute, so let's describe it in the way why user
-need THP: seeking for better memory performance.
-Yes as you said THP may be quite overhead, and madvise() may not be suitable some time
-(see PR_SET_THP_DISABLE https://man7.org/linux/man-pages/man2/prctl.2.html).
-
-So I think this is just the reason why we need the patch: give user a method to use
-THP with more precise range(only the performance sensitive containers) and reduce
-overhead.
-
+> This is required to track memcg-accounted percpu allocations.
 > 
-> >     5.containers usually managed by compose software, which treats container as
-> > base management unit;
-> >     6.this patch provide cgroup THP controller, which can be a method to adjust
-> > container memory QoS.
-> >
-> > > > Container becomes
-> > > > the suitable management unit but not the whole host. And some performance
-> > > > sensitive containers desiderate THP to provide low latency communication.
-> > > > But if we use THP with 'always', it will consume more memory(on our machine
-> > > > that is about 10% of total memory). And unnecessary huge pages will increase
-> > > > memory pressure, add latency for minor pages faults, and add overhead when
-> > > > splitting huge pages or coalescing normal sized pages into huge pages.
-> > >
-> > > It is still not really clear to me how do you achieve that the whole
-> > > workload in the said container has the same THP requirements.
-> > > --
-> > > Michal Hocko
-> > > SUSE Labs
+> Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+
+Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+
+LGTM, thanks Vasily!
+
+One minor thing below.
+
+> ---
+> v2: added call_site, improved patch description
+> ---
+>  include/trace/events/percpu.h | 23 +++++++++++++++++------
+>  mm/percpu-internal.h          |  8 ++++----
+>  mm/percpu.c                   |  5 +++--
+>  3 files changed, 24 insertions(+), 12 deletions(-)
+> 
+> diff --git a/include/trace/events/percpu.h b/include/trace/events/percpu.h
+> index df112a64f6c9..e989cefc0def 100644
+> --- a/include/trace/events/percpu.h
+> +++ b/include/trace/events/percpu.h
+> @@ -6,15 +6,20 @@
+>  #define _TRACE_PERCPU_H
+>  
+>  #include <linux/tracepoint.h>
+> +#include <trace/events/mmflags.h>
+>  
+>  TRACE_EVENT(percpu_alloc_percpu,
+>  
+> -	TP_PROTO(bool reserved, bool is_atomic, size_t size,
+> -		 size_t align, void *base_addr, int off, void __percpu *ptr),
+> +	TP_PROTO(unsigned long call_site,
+> +		 bool reserved, bool is_atomic, size_t size,
+> +		 size_t align, void *base_addr, int off,
+> +		 void __percpu *ptr, size_t bytes_alloc, gfp_t gfp_flags),
+
+Don't we want to preserve the order and add the call_site at the end?
+Trace events are not ABI, but if we don't have a strong reason to break it,
+I'd preserve the old order.
+
+Thanks!
