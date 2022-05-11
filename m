@@ -1,123 +1,105 @@
-From: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] mm/memcontrol: Export memcg->watermark via sysfs for
- v2 memcg
-Date: Wed, 11 May 2022 12:52:57 +0530
-Message-ID: <CAPD3tpGgkMKMtMJGbOHSzjut2MQ1hvBsnmuw_JaUws_L0NqizQ@mail.gmail.com>
-References: <20220507050916.GA13577@us192.sjc.aristanetworks.com> <YntiE+qNnHQBV4zE@dhcp22.suse.cz>
+From: CGEL <cgel.zte@gmail.com>
+Subject: Re: [PATCH] mm/memcg: support control THP behaviour in cgroup
+Date: Wed, 11 May 2022 09:47:47 +0000
+Message-ID: <627b8645.1c69fb81.5f934.3086@mx.google.com>
+References: <6275d3e7.1c69fb81.1d62.4504@mx.google.com>
+ <YnjmPAToTR0C5o8x@dhcp22.suse.cz>
+ <6278fa75.1c69fb81.9c598.f794@mx.google.com>
+ <Ynj/l+pyFJxKfcbQ@dhcp22.suse.cz>
+ <6279c354.1c69fb81.7f6c1.15e0@mx.google.com>
+ <Yno3pNQOn1lAMPnu@dhcp22.suse.cz>
+ <627a5214.1c69fb81.1b7fb.47be@mx.google.com>
+ <YnpqYte2jLdcBiPg@dhcp22.suse.cz>
+ <627b1899.1c69fb81.cd831.12d9@mx.google.com>
+ <YntkEUKPquTbBjMu@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=arista.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=aJSkUgLXvualcu4yScFNgMcnLoh/M7+w0nEwWnW4pbs=;
-        b=cj77kxh/M2LDVTpVxQojt06kHiCwZik0yMWg84kwgaBpWv0OvH+OF0I9uUiCDdo27i
-         a0mqHBBFXFURc6yyAA2l8Iy0PFNTeDPlmCCWoKnSlF5Sikk/UTxshwtA8zRW756wXuiY
-         yf8CEbmTrAngMsngIGr0TpwT92kzwZ7owMaguKQNb0NVOfxBNlo11U+fEwtsIKO1y4Oe
-         n2OLd88b4zcAPMTifMTnT/TojDZOgfBIWU/iW1Zsn498Chc9+Z6A5CbN9TYnExji7Vzn
-         FxarmoF0Iz2pcul4TVFxp6otlhQqS5o9LAaaItAgPOYMr2pHKwUc3VKqppdrFLpku7x3
-         hiow==
-In-Reply-To: <YntiE+qNnHQBV4zE-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+        d=gmail.com; s=20210112;
+        h=message-id:date:from:to:cc:subject:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Cf/PeTJbEoBsfw/lhXYoJEgURdTIh89gvchfxAGn2nU=;
+        b=PzYHM/ViCEy70BYdoGBxCtT6atNffiFaFydDfkT9aQJb3pJgXdtSnHgdGvWy7Uiay4
+         R6fKLsYJogAA+dypr6QjY4Q2APT1hsrAHTm3bDEMpjsKH8DEzhgCHpcqtdyDDjMD0fKg
+         TEVnRqgRsKbPHPWih2+gslNFAbxkM5zVmYqROc9Wpa1J0Zsed+Bz2urej8u7YIhqgGMK
+         erY9/DBsHjK6vvcEJxTlMdYfsXuL7FD+T4Bp9vZ4k2C/XjOfjHpFLuY1SWsdL+uJtR/F
+         iICE50NHXZCjlIoxVP67SYAHpA97TPWG/wh/kcNNL7PUJlUc0ZeDTTtZihv7+bx5t4Mv
+         8B9g==
+Content-Disposition: inline
+In-Reply-To: <YntkEUKPquTbBjMu@dhcp22.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Michal Hocko <mhocko@suse.com>
+Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, willy@infradead.org, shy828301@gmail.com, roman.gushchin@linux.dev, shakeelb@google.com, linmiaohe@huawei.com, william.kucharski@oracle.com, peterx@redhat.com, hughd@google.com, vbabka@suse.cz, songmuchun@bytedance.com, surenb@google.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Yang Yang <yang.yang29@zte.com.cn>
 
-On Wed, May 11, 2022 at 12:43 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
->
-> On Fri 06-05-22 22:09:16, Ganesan Rajagopal wrote:
-> > We run a lot of automated tests when building our software and run into
-> > OOM scenarios when the tests run unbounded. v1 memcg exports
-> > memcg->watermark as "memory.max_usage_in_bytes" in sysfs. We use this
-> > metric to heuristically limit the number of tests that can run in
-> > parallel based on per test historical data.
-> >
-> > This metric is currently not exported for v2 memcg and there is no
-> > other easy way of getting this information. getrusage() syscall returns
-> > "ru_maxrss" which can be used as an approximation but that's the max
-> > RSS of a single child process across all children instead of the
-> > aggregated max for all child processes. The only work around is to
-> > periodically poll "memory.current" but that's not practical for
-> > short-lived one-off cgroups.
-> >
-> > Hence, expose memcg->watermark as "memory.peak" for v2 memcg.
->
-> Yes, I can imagine that a very short lived process can easily escape
-> from the monitoring. The memory consumption can be still significant
-> though.
->
-> The v1 interface allows to reset the value by writing to the file. Have
-> you considered that as well?
+On Wed, May 11, 2022 at 09:21:53AM +0200, Michal Hocko wrote:
+> On Wed 11-05-22 01:59:52, CGEL wrote:
+> > On Tue, May 10, 2022 at 03:36:34PM +0200, Michal Hocko wrote:
+> [...]
+> > > Can you come up with a sane hierarchical behavior?
+> > >
+> > 
+> > I think this new interface better be independent not hierarchical anyway. Especially
+> > when we treat container as lightweight virtual machine.
+> 
+> I suspect you are focusing too much on your usecase and do not realize
+> wider consequences of this being an user interface that still has to be
+> sensible for other usecases. Take a delagation of the control to
+> subgroups as an example. If this is a per memcg knob (like swappiness)
+> then children can override parent's THP policy. This might be a less of
+> the deal for swappiness because the anon/file reclaim balancing should
+> be mostly an internal thing. But THP policy is different because it has
+> other effects to workloads running outside of the said cgroup - higher
+> memory demand, higher contention for high-order memory etc.
+> 
 
-I hadn't originally but this was discussed and dropped when I posted the
-first version of this patch. See
-https://www.spinics.net/lists/cgroups/msg32476.html
+Higher memory demand will be limited by memsw.limit_in_bytes right?
+And cgroup really cares about high-order memory usage? At least for
+now there are no cgroup limit for this.
 
-Ganesan
+> I do not really see how this could be a sensible per-memcg policy
+> without being fully hierarchical.
+>
 
+Thanks to your patient discuss, as Roman said, I will try to realize this
+with bpf.
+
+> > 
+> > > [...]
+> > > > > > For micro-service architecture, the application in one container is not a
+> > > > > > set of loosely tight processes, it's aim at provide one certain service,
+> > > > > > so different containers means different service, and different service
+> > > > > > has different QoS demand. 
+> > > > > 
+> > > > > OK, if they are tightly coupled you could apply the same THP policy by
+> > > > > an existing prctl interface. Why is that not feasible. As you are noting
+> > > > > below...
+> > > > > 
+> > > > > >     5.containers usually managed by compose software, which treats container as
+> > > > > > base management unit;
+> > > > > 
+> > > > > ..so the compose software can easily start up the workload by using prctl
+> > > > > to disable THP for whatever workloads it is not suitable for.
+> > > > 
+> > > > prctl(PR_SET_THP_DISABLE..) can not be elegance to support the semantic we
+> > > > need. If only some containers needs THP, other containers and host do not need
+> > > > THP. We must set host THP to always first, and call prctl() to close THP for
+> > > > host tasks and other containers one by one,
+> > > 
+> > > It might not be the most elegant solution but it should work.
+> > 
+> > So you agree it's reasonable to set THP policy for process in container, right?
+> 
+> Yes, like in any other processes.
+> 
+> > If so, IMHO, when there are thousands of processes launch and die on the machine,
+> > it will be horrible to do so by calling prctl(), I don't see the reasonability.
+> 
+> Could you be more specific? The usual prctl use would be normally
+> handled by the launcher and rely on the per-process policy to be
+> inherited down the road.
 >
-> > Signed-off-by: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
->
-> Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
->
-> > ---
-> >  Documentation/admin-guide/cgroup-v2.rst |  7 +++++++
-> >  mm/memcontrol.c                         | 13 +++++++++++++
-> >  2 files changed, 20 insertions(+)
-> >
-> > diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> > index 69d7a6983f78..828ce037fb2a 100644
-> > --- a/Documentation/admin-guide/cgroup-v2.rst
-> > +++ b/Documentation/admin-guide/cgroup-v2.rst
-> > @@ -1208,6 +1208,13 @@ PAGE_SIZE multiple when read back.
-> >       high limit is used and monitored properly, this limit's
-> >       utility is limited to providing the final safety net.
-> >
-> > +  memory.peak
-> > +     A read-only single value file which exists on non-root
-> > +     cgroups.
-> > +
-> > +     The max memory usage recorded for the cgroup and its
-> > +     descendants since the creation of the cgroup.
-> > +
-> >    memory.oom.group
-> >       A read-write single value file which exists on non-root
-> >       cgroups.  The default value is "0".
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 725f76723220..88fa70b5d8af 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -6098,6 +6098,14 @@ static u64 memory_current_read(struct cgroup_subsys_state *css,
-> >       return (u64)page_counter_read(&memcg->memory) * PAGE_SIZE;
-> >  }
-> >
-> > +static u64 memory_peak_read(struct cgroup_subsys_state *css,
-> > +                         struct cftype *cft)
-> > +{
-> > +     struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-> > +
-> > +     return (u64)memcg->memory.watermark * PAGE_SIZE;
-> > +}
-> > +
-> >  static int memory_min_show(struct seq_file *m, void *v)
-> >  {
-> >       return seq_puts_memcg_tunable(m,
-> > @@ -6361,6 +6369,11 @@ static struct cftype memory_files[] = {
-> >               .flags = CFTYPE_NOT_ON_ROOT,
-> >               .read_u64 = memory_current_read,
-> >       },
-> > +     {
-> > +             .name = "peak",
-> > +             .flags = CFTYPE_NOT_ON_ROOT,
-> > +             .read_u64 = memory_peak_read,
-> > +     },
-> >       {
-> >               .name = "min",
-> >               .flags = CFTYPE_NOT_ON_ROOT,
-> > --
-> > 2.28.0
->
-> --
+> -- 
 > Michal Hocko
 > SUSE Labs
