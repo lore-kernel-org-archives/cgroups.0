@@ -1,97 +1,61 @@
 From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: kernfs memcg accounting
-Date: Tue, 10 May 2022 20:06:24 -0700
-Message-ID: <YnsoMEuWjlpDcmt3@carbon>
-References: <7e867cb0-89d6-402c-33d2-9b9ba0ba1523@openvz.org>
- <20220427140153.GC9823@blackbody.suse.cz>
- <7509fa9f-9d15-2f29-cb2f-ac0e8d99a948@openvz.org>
- <YnBLge4ZQNbbxufc@blackbook>
- <52a9f35b-458b-44c4-7fc8-d05c8db0c73f@openvz.org>
+Subject: Re: [PATCH] mm/memcg: support control THP behaviour in cgroup
+Date: Tue, 10 May 2022 20:11:16 -0700
+Message-ID: <YnspVPGOtzlo5n+7@carbon>
+References: <20220505033814.103256-1-xu.xin16@zte.com.cn>
+ <YnUlntNFR4zeD+qa@dhcp22.suse.cz>
+ <6275d3e7.1c69fb81.1d62.4504@mx.google.com>
+ <YnjmPAToTR0C5o8x@dhcp22.suse.cz>
+ <6278fa75.1c69fb81.9c598.f794@mx.google.com>
+ <Ynj/l+pyFJxKfcbQ@dhcp22.suse.cz>
+ <6279c354.1c69fb81.7f6c1.15e0@mx.google.com>
+ <CAHbLzkqztB+NXVcxtd7bVo7onH6AcMJ3JWCAHHqH3OAdbZsMOQ@mail.gmail.com>
+ <627b1d39.1c69fb81.fe952.6426@mx.google.com>
+ <CALvZod5aqZjUE8BBQZxwHDBuSWOSEAOqW4_xE22Am0sGZZs4sw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1652238390;
+        t=1652238682;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=N9oPpCxajvjGUrmg0f6gckutPEOOPZaEku255Vyx78E=;
-        b=ctkko5zKqXKRqBvkI7AzNbCPvjk+mTf48++bYM8Vcq12dt+8H2aFcWCV2RRm0dO0MO8OB8
-        Ba3SyHMRE06mHqGuEi54JOaGxRgkuyMtv6h+EXp/ar9SvCbnAIfMlnyYueJ9jdGUKnfPKe
-        s3kYwBI2w4ZRgaXnU6KOHUMVmTVg09M=
+        bh=8UHed0uiQg7plMIS+d8Hr/ojdF24QkSbiog6M6TLs1U=;
+        b=gnnizCg1quxOzlHtzeLqGl0Sze8T7KWis2CGpHRM6kBbVTfG4LZYN8pexQWnSjQ5FP8acs
+        PYMS/zpRaeE4pP/ZWDRExv0v1tbxT+qGew/WOAapbTGo/H4cqYJPy8VIUFMJAGJRe32XWn
+        zM0jfZ40CAm485b9ybWd/ObltE7aI4U=
 Content-Disposition: inline
-In-Reply-To: <52a9f35b-458b-44c4-7fc8-d05c8db0c73f-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+In-Reply-To: <CALvZod5aqZjUE8BBQZxwHDBuSWOSEAOqW4_xE22Am0sGZZs4sw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: CGEL <cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, William Kucharski <william.kucharski-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Peter Xu <peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Yang Yang <yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 
-On Wed, May 04, 2022 at 12:00:18PM +0300, Vasily Averin wrote:
-> On 5/3/22 00:22, Michal Koutn=FD wrote:
-> > When struct mem_cgroup charging was introduced, there was a similar
-> > discussion [1].
->=20
-> Thank you, I'm missed this patch, it was very interesting and useful.
-> I would note though, that OpenVZ and LXC have another usecase:
-> we have separate and independent systemd instances inside OS containers.
-> So container's cgroups are created not in host's root memcg but=20
-> inside accountable container's root memcg. =20
->=20
-> > I can see following aspects here:
-> > 1) absolute size of kernfs_objects,
-> > 2) practical difference between a) and b),
-> > 3) consistency with memcg,
-> > 4) v1 vs v2 behavior.
-> ...
-> > How do these reasonings align with your original intention of net
-> > devices accounting? (Are the creators of net devices inside the
-> > container?)
->=20
-> It is possible to create netdevice in one namespace/container=20
-> and then move them to another one, and this possibility is widely used.
-> With my patch memory allocated by these devices will be not accounted
-> to new memcg, however I do not think it is a problem.
-> My patches protect the host mostly from misuse, when someone creates
-> a huge number of nedevices inside a container.
->=20
-> >> Do you think it is incorrect and new kernfs node should be accounted
-> >> to memcg of parent cgroup, as mem_cgroup_css_alloc()-> mem_cgroup_allo=
-c() does?
-> >=20
-> > I don't think either variant is incorrect. I'd very much prefer the
-> > consistency with memcg behavior (variant a)) but as I've listed the
-> > arguments above, it seems such a consistency can't be easily justified.
->=20
-> From my point of view it is most important to account allocated memory
-> to any cgroup inside container. Select of proper memcg is a secondary goa=
-l here.
-> Frankly speaking I do not see a big difference between memcg of current p=
-rocess,
-> memcg of newly created child and memcg of its parent.
->=20
-> As far as I understand, Roman chose the parent memcg because it was a spe=
-cial
-> case of creating a new memory group. He temporally changed active memcg
-> in mem_cgroup_css_alloc() and properly accounted all required memcg-speci=
-fic
-> allocations.
+On Tue, May 10, 2022 at 07:47:29PM -0700, Shakeel Butt wrote:
+> On Tue, May 10, 2022 at 7:19 PM CGEL <cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> >
+> [...]
+> > > > >
+> > > > > All controls in cgroup v2 should be hierarchical. This is really
+> > > > > required for a proper delegation semantic.
+> > > > >
+> > > >
+> > > > Could we align to the semantic of /sys/fs/cgroup/memory.swappiness?
+> > > > Some distributions like Ubuntu is still using cgroup v1.
+> > >
+> > > Other than enable flag, how would you handle the defrag flag
+> > > hierarchically? It is much more complicated.
+> >
+> > Refer to memory.swappiness for cgroup, this new interface better be independent.
+> 
+> Let me give my 0.02. I buy the use-case of Admin restricting THPs to
+> low priority jobs but I don't think memory controller is the right
+> place to enforce that policy. Michal gave one way (prctl()) to enforce
+> that policy. Have you explored the BPF way to enforce this policy?
 
-My primary goal was to apply the memory pressure on memory cgroups with a l=
-ot
-of (dying) children cgroups. On a multi-cpu machine a memory cgroup structu=
-re
-is way larger than a page, so a cgroup which looks small can be really large
-if we calculate the amount of memory taken by all children memcg internals.
++1 for bpf
 
-Applying this pressure to another cgroup (e.g. the one which contains syste=
-md)
-doesn't help to reclaim any pages which are pinning the dying cgroups.
-
-For other controllers (maybe blkcg aside, idk) it shouldn't matter, because
-there is no such problem there.
-
-For consistency reasons I'd suggest to charge all *large* allocations
-(e.g. percpu) to the parent cgroup. Small allocations can be ignored.
+I think these THP hints are too implementation-dependent and unstable to become
+a part of cgroup API.
 
 Thanks!
