@@ -1,100 +1,327 @@
-From: Wang Cheng <wanngchenng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] mm/mempolicy: fix uninit-value in mpol_rebind_policy()
-Date: Thu, 12 May 2022 20:34:28 +0800
-Message-ID: <20220512123428.fq3wofedp6oiotd4@ppc.localdomain>
+From: Nicolas Dufresne <nicolas-dDhyB4GVkw9AFePFGvp55w@public.gmane.org>
+Subject: Re: [PATCH v7 0/6] Proposal for a GPU cgroup controller
+Date: Thu, 12 May 2022 09:09:59 -0400
+Message-ID: <81026ef07c1ce20f8673b75b17bab79a2b39c548.camel@ndufresne.ca>
+References: <20220510235653.933868-1-tjmercier@google.com>
+         <3365cd1d750e84fedc8e75d646a77ffd85619d35.camel@ndufresne.ca>
+         <CABdmKX3ZV6-u-oLvW_wWavAMBfrsZ=C_rCgK_Uz4VjxcRvRFew@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition;
-        bh=yQ5WC+qcQWn5/mQktyQ4optwmHzpiPFv8x+qVdD6+j8=;
-        b=nEtYBtR0RP200nt2NTfIFNPaHyXnOsWGHzp9bm7b6ycK/2hhsrwxnHCX0QWasV/LPq
-         QUbVu4Ylnd5FdLc4hkvamnC6zKkY1XFu21kltQv3rRySkga5epOVe5zRVSaiG349p1ok
-         vDvii4rC9Sr8FMOnGiNJt4bvHQyqQAPSxQIJ4ua5i3vBm1JaeZdV4pVbfCp714ZOJAhA
-         bge3VVDrkGabUdjqKhBlGsiLQwgjWBz7Z6rYlkAfNjKiYqRTqiStuF+8LJN9bwNlPRVb
-         8esE+scWFh4J1fhe/y8wtZAUpFXnC1tvh+AFHA67DGl7UsVnWivZtgGM+Z347v9bNb/C
-         OLTg==
-Content-Disposition: inline
+        d=ndufresne-ca.20210112.gappssmtp.com; s=20210112;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :content-transfer-encoding:user-agent:mime-version;
+        bh=RBA5iYSHu9+0TYIYrBGNppT49jXTmNkB4+A2Po1Nus8=;
+        b=3eBFlCCHPRxkzPZ0s8KZjMicvMtmgL+oe/KrY5MKDSXcjQwLbcXkaduM7++YpUA55d
+         auo6swNXasvTsK3hhnOsCxf7T2SHW9FzAMBSKTJe/ufAs5+Cx85VNXf2xt48DwLkz14l
+         Gg7HSyQjgfSgnfEBrgiK8uGWHf0rWcv+UCOWgyHiOyT4JTKwbJZVaSr509src58ZzFSD
+         7NJB9D5MBw+fHof1VNKLRvVEgiUFBf4MvCs6oVrfokAyCWOQx9XKF03oRjBw0ZFadjap
+         VXC2Glu3iKcmppInO6+yumJld1Kco9x2F2fGdOXjV6B+9FYZ+/e0bFv1flHl1gi4nr19
+         0Xjw==
+In-Reply-To: <CABdmKX3ZV6-u-oLvW_wWavAMBfrsZ=C_rCgK_Uz4VjxcRvRFew-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Arve =?ISO-8859-1?Q?Hj=F8nnev=E5g?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hridya Valsaraju <hridya-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Christian =?ISO-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Benjamin Gaignard <benjamin.gaignard-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>, Liam Mark <lmark-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Laura Abbott <labbott-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Brian Starkey <Brian.Starkey-5wv7dgnIgG8@public.gmane.org>, John Stultz <john.stultz@linaro>
 
-mpol_set_nodemask()(mm/mempolicy.c) does not set up nodemask when
-pol->mode is MPOL_LOCAL. Check pol->mode before access
-pol->w.cpuset_mems_allowed in mpol_rebind_policy()(mm/mempolicy.c).
+Le mercredi 11 mai 2022 =C3=A0 13:31 -0700, T.J. Mercier a =C3=A9crit=C2=A0=
+:
+> On Wed, May 11, 2022 at 6:21 AM Nicolas Dufresne <nicolas-dDhyB4GVkw9AFePFGvp55w@public.gmane.org> w=
+rote:
+> >=20
+> > Hi,
+> >=20
+> > Le mardi 10 mai 2022 =C3=A0 23:56 +0000, T.J. Mercier a =C3=A9crit :
+> > > This patch series revisits the proposal for a GPU cgroup controller t=
+o
+> > > track and limit memory allocations by various device/allocator
+> > > subsystems. The patch series also contains a simple prototype to
+> > > illustrate how Android intends to implement DMA-BUF allocator
+> > > attribution using the GPU cgroup controller. The prototype does not
+> > > include resource limit enforcements.
+> >=20
+> > I'm sorry, since I'm not in-depth technically involve. But from reading=
+ the
+> > topic I don't understand the bound this creates between DMABuf Heaps an=
+d GPU. Is
+> > this an attempt to really track the DMABuf allocated by userland, or ju=
+st
+> > something for GPU ? What about V4L2 devices ? Any way this can be clari=
+fied,
+> > specially what would other subsystem needs to have cgroup DMABuf alloca=
+tion
+> > controller support ?
+> >=20
+> Hi Nicolas,
+>=20
+> The link between dmabufs, dmabuf heaps, and "GPU memory" is maybe
+> somewhat of an Androidism. However this change aims to be usable for
+> tracking all GPU related allocations. It's just that this initial
+> series only adds support for tracking dmabufs allocated from dmabuf
+> heaps.
+>=20
+> In Android most graphics buffers are dma buffers allocated from a
+> dmabuf heap, so that is why these dmabuf heap allocations are being
+> tracked under the GPU cgroup. Other dmabuf exporters like V4L2 might
+> also want to track their buffers, but would probably want to do so
+> under a bucket name of something like "v4l2". Same goes for GEM
+> dmabufs. The naming scheme for this is still yet to be decided. It
+> would be cool to be able to attribute memory at the driver level, or
+> even different types of memory at the driver level, but I imagine
+> there is a point of diminishing returns for fine-grained
+> naming/bucketing.
+>=20
+> So far, I haven't tried to create a strict definition of what is and
+> is not "GPU memory" for the purpose of this accounting, so I don't
+> think we should be restricted to tracking just dmabufs. I don't see
+> why this couldn't be anything a driver wants to consider as GPU memory
+> as long as it is named/bucketed appropriately, such as both on-package
+> graphics card memory use and CPU memory dedicated for graphics use
+> like for host/device transfers.
+>=20
+> Is that helpful?
 
-BUG: KMSAN: uninit-value in mpol_rebind_policy mm/mempolicy.c:352 [inline]
-BUG: KMSAN: uninit-value in mpol_rebind_task+0x2ac/0x2c0 mm/mempolicy.c:368
- mpol_rebind_policy mm/mempolicy.c:352 [inline]
- mpol_rebind_task+0x2ac/0x2c0 mm/mempolicy.c:368
- cpuset_change_task_nodemask kernel/cgroup/cpuset.c:1711 [inline]
- cpuset_attach+0x787/0x15e0 kernel/cgroup/cpuset.c:2278
- cgroup_migrate_execute+0x1023/0x1d20 kernel/cgroup/cgroup.c:2515
- cgroup_migrate kernel/cgroup/cgroup.c:2771 [inline]
- cgroup_attach_task+0x540/0x8b0 kernel/cgroup/cgroup.c:2804
- __cgroup1_procs_write+0x5cc/0x7a0 kernel/cgroup/cgroup-v1.c:520
- cgroup1_tasks_write+0x94/0xb0 kernel/cgroup/cgroup-v1.c:539
- cgroup_file_write+0x4c2/0x9e0 kernel/cgroup/cgroup.c:3852
- kernfs_fop_write_iter+0x66a/0x9f0 fs/kernfs/file.c:296
- call_write_iter include/linux/fs.h:2162 [inline]
- new_sync_write fs/read_write.c:503 [inline]
- vfs_write+0x1318/0x2030 fs/read_write.c:590
- ksys_write+0x28b/0x510 fs/read_write.c:643
- __do_sys_write fs/read_write.c:655 [inline]
- __se_sys_write fs/read_write.c:652 [inline]
- __x64_sys_write+0xdb/0x120 fs/read_write.c:652
- do_syscall_x64 arch/x86/entry/common.c:51 [inline]
- do_syscall_64+0x54/0xd0 arch/x86/entry/common.c:82
- entry_SYSCALL_64_after_hwframe+0x44/0xae
+I'm actually happy I've asked this question, wasn't silly after all. I thin=
+k the
+problem here is a naming issue. What you really are monitor is "video memor=
+y",
+which consist of a memory segment allocated to store data used to render im=
+ages
+(its not always images of course, GPU an VPU have specialized buffers for t=
+heir
+purpose).
 
-Uninit was created at:
- slab_post_alloc_hook mm/slab.h:524 [inline]
- slab_alloc_node mm/slub.c:3251 [inline]
- slab_alloc mm/slub.c:3259 [inline]
- kmem_cache_alloc+0x902/0x11c0 mm/slub.c:3264
- mpol_new mm/mempolicy.c:293 [inline]
- do_set_mempolicy+0x421/0xb70 mm/mempolicy.c:853
- kernel_set_mempolicy mm/mempolicy.c:1504 [inline]
- __do_sys_set_mempolicy mm/mempolicy.c:1510 [inline]
- __se_sys_set_mempolicy+0x44c/0xb60 mm/mempolicy.c:1507
- __x64_sys_set_mempolicy+0xd8/0x110 mm/mempolicy.c:1507
- do_syscall_x64 arch/x86/entry/common.c:51 [inline]
- do_syscall_64+0x54/0xd0 arch/x86/entry/common.c:82
- entry_SYSCALL_64_after_hwframe+0x44/0xae
+Whether this should be split between what is used specifically by the GPU
+drivers, the display drivers, the VPU (CODEC and pre/post-processor) or cam=
+era
+drivers is something that should be discussed. But in the current approach,=
+ you
+really meant Video memory as a superset of the above. Personally, I think
+generically (to de-Andronized your work), en-globing all video memory is
+sufficient. What I fail to understand is how you will manage to distinguish=
+ed
+DMABuf Heap allocation (which are used outside of Android btw), from Video
+allocation or other type of usage. I'm sure non-video usage will exist in t=
+he
+future (think of machine learning, compute, other high bandwidth streaming
+thingy ...)
 
-KMSAN: uninit-value in mpol_rebind_task (2)
-https://syzkaller.appspot.com/bug?id=d6eb90f952c2a5de9ea718a1b873c55cb13b59dc
-
-Reported-and-tested-by: syzbot+217f792c92599518a2ab-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
-Signed-off-by: Wang Cheng <wanngchenng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
-The uninit-value is pol->w.cpuset_mems_allowed in
-mpol_rebind_policy().
-
-While syzkaller reproducer runs, I notice pol->mode is 4(MPOL_LOCAL) in
-    mpol_set_nodemask()
-  do_set_mempolicy()(mm/mempolicy.c)
-that `nodemask` in `pol` is not initialized, which will be accessed in
-mpol_rebind_policy().
-
- mm/mempolicy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/mm/mempolicy.c b/mm/mempolicy.c
-index 10e9c87260ed..18b74f02da71 100644
---- a/mm/mempolicy.c
-+++ b/mm/mempolicy.c
-@@ -347,7 +347,7 @@ static void mpol_rebind_preferred(struct mempolicy *pol,
-  */
- static void mpol_rebind_policy(struct mempolicy *pol, const nodemask_t *newmask)
- {
--	if (!pol)
-+	if (!pol || pol->mode == MPOL_LOCAL)
- 		return;
- 	if (!mpol_store_user_nodemask(pol) &&
- 	    nodes_equal(pol->w.cpuset_mems_allowed, *newmask))
--- 
-2.30.2
+>=20
+> Best,
+> T.J.
+>=20
+> > >=20
+> > > Changelog:
+> > > v7:
+> > > Hide gpucg and gpucg_bucket struct definitions per Michal Koutn=C3=BD=
+.
+> > > This means gpucg_register_bucket now returns an internally allocated
+> > > struct gpucg_bucket.
+> > >=20
+> > > Move all public function documentation to the cgroup_gpu.h header.
+> > >=20
+> > > Remove comment in documentation about duplicate name rejection which
+> > > is not relevant to cgroups users per Michal Koutn=C3=BD.
+> > >=20
+> > > v6:
+> > > Move documentation into cgroup-v2.rst per Tejun Heo.
+> > >=20
+> > > Rename BINDER_FD{A}_FLAG_SENDER_NO_NEED ->
+> > > BINDER_FD{A}_FLAG_XFER_CHARGE per Carlos Llamas.
+> > >=20
+> > > Return error on transfer failure per Carlos Llamas.
+> > >=20
+> > > v5:
+> > > Rebase on top of v5.18-rc3
+> > >=20
+> > > Drop the global GPU cgroup "total" (sum of all device totals) portion
+> > > of the design since there is no currently known use for this per
+> > > Tejun Heo.
+> > >=20
+> > > Fix commit message which still contained the old name for
+> > > dma_buf_transfer_charge per Michal Koutn=C3=BD.
+> > >=20
+> > > Remove all GPU cgroup code except what's necessary to support charge =
+transfer
+> > > from dma_buf. Previously charging was done in export, but for non-And=
+roid
+> > > graphics use-cases this is not ideal since there may be a delay betwe=
+en
+> > > allocation and export, during which time there is no accounting.
+> > >=20
+> > > Merge dmabuf: Use the GPU cgroup charge/uncharge APIs patch into
+> > > dmabuf: heaps: export system_heap buffers with GPU cgroup charging as=
+ a
+> > > result of above.
+> > >=20
+> > > Put the charge and uncharge code in the same file (system_heap_alloca=
+te,
+> > > system_heap_dma_buf_release) instead of splitting them between the he=
+ap and
+> > > the dma_buf_release. This avoids asymmetric management of the gpucg c=
+harges.
+> > >=20
+> > > Modify the dma_buf_transfer_charge API to accept a task_struct instea=
+d
+> > > of a gpucg. This avoids requiring the caller to manage the refcount
+> > > of the gpucg upon failure and confusing ownership transfer logic.
+> > >=20
+> > > Support all strings for gpucg_register_bucket instead of just string
+> > > literals.
+> > >=20
+> > > Enforce globally unique gpucg_bucket names.
+> > >=20
+> > > Constrain gpucg_bucket name lengths to 64 bytes.
+> > >=20
+> > > Append "-heap" to gpucg_bucket names from dmabuf-heaps.
+> > >=20
+> > > Drop patch 7 from the series, which changed the types of
+> > > binder_transaction_data's sender_pid and sender_euid fields. This was
+> > > done in another commit here:
+> > > https://lore.kernel.org/all/20220210021129.3386083-4-masahiroy@kernel=
+.org/
+> > >=20
+> > > Rename:
+> > >   gpucg_try_charge -> gpucg_charge
+> > >   find_cg_rpool_locked -> cg_rpool_find_locked
+> > >   init_cg_rpool -> cg_rpool_init
+> > >   get_cg_rpool_locked -> cg_rpool_get_locked
+> > >   "gpu cgroup controller" -> "GPU controller"
+> > >   gpucg_device -> gpucg_bucket
+> > >   usage -> size
+> > >=20
+> > > Tests:
+> > >   Support both binder_fd_array_object and binder_fd_object. This is
+> > >   necessary because new versions of Android will use binder_fd_object
+> > >   instead of binder_fd_array_object, and we need to support both.
+> > >=20
+> > >   Tests for both binder_fd_array_object and binder_fd_object.
+> > >=20
+> > >   For binder_utils return error codes instead of
+> > >   struct binder{fs}_ctx.
+> > >=20
+> > >   Use ifdef __ANDROID__ to choose platform-dependent temp path instea=
+d
+> > >   of a runtime fallback.
+> > >=20
+> > >   Ensure binderfs_mntpt ends with a trailing '/' character instead of
+> > >   prepending it where used.
+> > >=20
+> > > v4:
+> > > Skip test if not run as root per Shuah Khan
+> > >=20
+> > > Add better test logging for abnormal child termination per Shuah Khan
+> > >=20
+> > > Adjust ordering of charge/uncharge during transfer to avoid potential=
+ly
+> > > hitting cgroup limit per Michal Koutn=C3=BD
+> > >=20
+> > > Adjust gpucg_try_charge critical section for charge transfer function=
+ality
+> > >=20
+> > > Fix uninitialized return code error for dmabuf_try_charge error case
+> > >=20
+> > > v3:
+> > > Remove Upstreaming Plan from gpu-cgroup.rst per John Stultz
+> > >=20
+> > > Use more common dual author commit message format per John Stultz
+> > >=20
+> > > Remove android from binder changes title per Todd Kjos
+> > >=20
+> > > Add a kselftest for this new behavior per Greg Kroah-Hartman
+> > >=20
+> > > Include details on behavior for all combinations of kernel/userspace
+> > > versions in changelog (thanks Suren Baghdasaryan) per Greg Kroah-Hart=
+man.
+> > >=20
+> > > Fix pid and uid types in binder UAPI header
+> > >=20
+> > > v2:
+> > > See the previous revision of this change submitted by Hridya Valsaraj=
+u
+> > > at: https://lore.kernel.org/all/20220115010622.3185921-1-hridya@googl=
+e.com/
+> > >=20
+> > > Move dma-buf cgroup charge transfer from a dma_buf_op defined by ever=
+y
+> > > heap to a single dma-buf function for all heaps per Daniel Vetter and
+> > > Christian K=C3=B6nig. Pointers to struct gpucg and struct gpucg_devic=
+e
+> > > tracking the current associations were added to the dma_buf struct to
+> > > achieve this.
+> > >=20
+> > > Fix incorrect Kconfig help section indentation per Randy Dunlap.
+> > >=20
+> > > History of the GPU cgroup controller
+> > > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > > The GPU/DRM cgroup controller came into being when a consensus[1]
+> > > was reached that the resources it tracked were unsuitable to be integ=
+rated
+> > > into memcg. Originally, the proposed controller was specific to the D=
+RM
+> > > subsystem and was intended to track GEM buffers and GPU-specific
+> > > resources[2]. In order to help establish a unified memory accounting =
+model
+> > > for all GPU and all related subsystems, Daniel Vetter put forth a
+> > > suggestion to move it out of the DRM subsystem so that it can be used=
+ by
+> > > other DMA-BUF exporters as well[3]. This RFC proposes an interface th=
+at
+> > > does the same.
+> > >=20
+> > > [1]: https://patchwork.kernel.org/project/dri-devel/cover/20190501140=
+438.9506-1-brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/#22624705
+> > > [2]: https://lore.kernel.org/amd-gfx/20210126214626.16260-1-brian.wel=
+ty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+> > > [3]: https://lore.kernel.org/amd-gfx/YCVOl8%2F87bqRSQei-dv86pmgwkMD5giXZK7PFsA@public.gmane.org=
+local/
+> > >=20
+> > > Hridya Valsaraju (3):
+> > >   gpu: rfc: Proposal for a GPU cgroup controller
+> > >   cgroup: gpu: Add a cgroup controller for allocator attribution of G=
+PU
+> > >     memory
+> > >   binder: Add flags to relinquish ownership of fds
+> > >=20
+> > > T.J. Mercier (3):
+> > >   dmabuf: heaps: export system_heap buffers with GPU cgroup charging
+> > >   dmabuf: Add gpu cgroup charge transfer function
+> > >   selftests: Add binder cgroup gpu memory transfer tests
+> > >=20
+> > >  Documentation/admin-guide/cgroup-v2.rst       |  23 +
+> > >  drivers/android/binder.c                      |  31 +-
+> > >  drivers/dma-buf/dma-buf.c                     |  80 ++-
+> > >  drivers/dma-buf/dma-heap.c                    |  38 ++
+> > >  drivers/dma-buf/heaps/system_heap.c           |  28 +-
+> > >  include/linux/cgroup_gpu.h                    | 146 +++++
+> > >  include/linux/cgroup_subsys.h                 |   4 +
+> > >  include/linux/dma-buf.h                       |  49 +-
+> > >  include/linux/dma-heap.h                      |  15 +
+> > >  include/uapi/linux/android/binder.h           |  23 +-
+> > >  init/Kconfig                                  |   7 +
+> > >  kernel/cgroup/Makefile                        |   1 +
+> > >  kernel/cgroup/gpu.c                           | 390 +++++++++++++
+> > >  .../selftests/drivers/android/binder/Makefile |   8 +
+> > >  .../drivers/android/binder/binder_util.c      | 250 +++++++++
+> > >  .../drivers/android/binder/binder_util.h      |  32 ++
+> > >  .../selftests/drivers/android/binder/config   |   4 +
+> > >  .../binder/test_dmabuf_cgroup_transfer.c      | 526 ++++++++++++++++=
+++
+> > >  18 files changed, 1632 insertions(+), 23 deletions(-)
+> > >  create mode 100644 include/linux/cgroup_gpu.h
+> > >  create mode 100644 kernel/cgroup/gpu.c
+> > >  create mode 100644 tools/testing/selftests/drivers/android/binder/Ma=
+kefile
+> > >  create mode 100644 tools/testing/selftests/drivers/android/binder/bi=
+nder_util.c
+> > >  create mode 100644 tools/testing/selftests/drivers/android/binder/bi=
+nder_util.h
+> > >  create mode 100644 tools/testing/selftests/drivers/android/binder/co=
+nfig
+> > >  create mode 100644 tools/testing/selftests/drivers/android/binder/te=
+st_dmabuf_cgroup_transfer.c
+> > >=20
+> >=20
 
