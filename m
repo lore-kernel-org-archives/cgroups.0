@@ -1,190 +1,38 @@
-From: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 1/6] Documentation: filesystems: proc: update meminfo
- section
-Date: Thu, 12 May 2022 10:55:45 +0200
-Message-ID: <2f7b7320-6899-93a0-420c-523d53363f58@redhat.com>
-References: <20220510152847.230957-1-hannes@cmpxchg.org>
- <20220510152847.230957-2-hannes@cmpxchg.org>
- <7a6f8520-a496-e3c3-1fd9-8a30b7a12b14@redhat.com>
- <YnwFraZlVWQoCjz3@cmpxchg.org>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v2] mm/memcontrol: Export memcg->watermark via sysfs for
+ v2 memcg
+Date: Thu, 12 May 2022 11:11:13 +0200
+Message-ID: <20220512091113.GB5536@blackbody.suse.cz>
+References: <20220507050916.GA13577@us192.sjc.aristanetworks.com>
+ <20220511174953.GC31592@blackbody.suse.cz>
+ <CAPD3tpG_mDq+zpKnFTKgWCuW9_wCfsHMu2ndzOEBsLaqZp-KWA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1652345749;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1652346675; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=7g2+Ytw7LOFNSmUdcgJm+KVblwr69gQPARUIhiHhirk=;
-        b=IP0C/b0E/A4p0GrMFgLQFZNH7sFak+398IXAZLB1QB8AG7BdqIXsHdyl2e+g3x4j7Drcf1
-        t5OV3PdjItMxzQrQgBNP4UFY6nvlMqsINfdjJ2fYYx3Zrk0IQAvPnQ9uYCiYotHn/z7k7m
-        h+s134T9UjhnvoRiqU2lM2qNJRb35ps=
-Content-Language: en-US
-In-Reply-To: <YnwFraZlVWQoCjz3-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        bh=fZGQ/vOR7gCkfyiu8i5HUwuHnaGqSWUWPuuLMrnW1vc=;
+        b=LDxw38MEZfmzD+EtDUv1t93Y8YoJWLOHk+Eu4JFrfa9EGfepnpJ9EJHfZ0A65xQkqiJaN2
+        26TaOHuYxBoiGZPGYK7fdj4HeNMiFiSeP1xJ5yQx4DebxKyQ67/5EhHpigDizkgnhx2NWi
+        Oo7tRoCFfRpQG+GClWS1D5LXPsbUI30=
+Content-Disposition: inline
+In-Reply-To: <CAPD3tpG_mDq+zpKnFTKgWCuW9_wCfsHMu2ndzOEBsLaqZp-KWA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On 11.05.22 20:51, Johannes Weiner wrote:
-> On Wed, May 11, 2022 at 07:11:06PM +0200, David Hildenbrand wrote:
->> On 10.05.22 17:28, Johannes Weiner wrote:
->>> Add new entries. Minor corrections and cleanups.
->>>
->>> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
->>> ---
->>>  Documentation/filesystems/proc.rst | 155 ++++++++++++++++++-----------
->>>  1 file changed, 99 insertions(+), 56 deletions(-)
->>>
->>> diff --git a/Documentation/filesystems/proc.rst b/Documentation/filesystems/proc.rst
->>> index 061744c436d9..736ed384750c 100644
->>> --- a/Documentation/filesystems/proc.rst
->>> +++ b/Documentation/filesystems/proc.rst
->>> @@ -942,56 +942,71 @@ can be substantial.  In many cases there are other means to find out
->>>  additional memory using subsystem specific interfaces, for instance
->>>  /proc/net/sockstat for TCP memory allocations.
->>>  
->>> -The following is from a 16GB PIII, which has highmem enabled.
->>> -You may not have all of these fields.
->>> +Example output. You may not have all of these fields.
->>>  
->>>  ::
->>>  
->>>      > cat /proc/meminfo
->>>  
->>> -    MemTotal:     16344972 kB
->>> -    MemFree:      13634064 kB
->>> -    MemAvailable: 14836172 kB
->>> -    Buffers:          3656 kB
->>> -    Cached:        1195708 kB
->>> -    SwapCached:          0 kB
->>> -    Active:         891636 kB
->>> -    Inactive:      1077224 kB
->>> -    HighTotal:    15597528 kB
->>> -    HighFree:     13629632 kB
->>> -    LowTotal:       747444 kB
->>> -    LowFree:          4432 kB
->>> -    SwapTotal:           0 kB
->>> -    SwapFree:            0 kB
->>> -    Dirty:             968 kB
->>> -    Writeback:           0 kB
->>> -    AnonPages:      861800 kB
->>> -    Mapped:         280372 kB
->>> -    Shmem:             644 kB
->>> -    KReclaimable:   168048 kB
->>> -    Slab:           284364 kB
->>> -    SReclaimable:   159856 kB
->>> -    SUnreclaim:     124508 kB
->>> -    PageTables:      24448 kB
->>> -    NFS_Unstable:        0 kB
->>> -    Bounce:              0 kB
->>> -    WritebackTmp:        0 kB
->>> -    CommitLimit:   7669796 kB
->>> -    Committed_AS:   100056 kB
->>> -    VmallocTotal:   112216 kB
->>> -    VmallocUsed:       428 kB
->>> -    VmallocChunk:   111088 kB
->>> -    Percpu:          62080 kB
->>> -    HardwareCorrupted:   0 kB
->>> -    AnonHugePages:   49152 kB
->>> -    ShmemHugePages:      0 kB
->>> -    ShmemPmdMapped:      0 kB
->>> +    MemTotal:       32858820 kB
->>> +    MemFree:        21001236 kB
->>> +    MemAvailable:   27214312 kB
->>> +    Buffers:          581092 kB
->>> +    Cached:          5587612 kB
->>> +    SwapCached:            0 kB
->>> +    Active:          3237152 kB
->>> +    Inactive:        7586256 kB
->>> +    Active(anon):      94064 kB
->>> +    Inactive(anon):  4570616 kB
->>> +    Active(file):    3143088 kB
->>> +    Inactive(file):  3015640 kB
->>> +    Unevictable:           0 kB
->>> +    Mlocked:               0 kB
->>> +    SwapTotal:             0 kB
->>> +    SwapFree:              0 kB
->>> +    Dirty:                12 kB
->>> +    Writeback:             0 kB
->>> +    AnonPages:       4654780 kB
->>> +    Mapped:           266244 kB
->>> +    Shmem:              9976 kB
->>> +    KReclaimable:     517708 kB
->>> +    Slab:             660044 kB
->>> +    SReclaimable:     517708 kB
->>> +    SUnreclaim:       142336 kB
->>> +    KernelStack:       11168 kB
->>> +    PageTables:        20540 kB
->>> +    NFS_Unstable:          0 kB
->>> +    Bounce:                0 kB
->>> +    WritebackTmp:          0 kB
->>> +    CommitLimit:    16429408 kB
->>> +    Committed_AS:    7715148 kB
->>> +    VmallocTotal:   34359738367 kB
->>> +    VmallocUsed:       40444 kB
->>> +    VmallocChunk:          0 kB
->>> +    Percpu:            29312 kB
->>> +    HardwareCorrupted:     0 kB
->>> +    AnonHugePages:   4149248 kB
->>> +    ShmemHugePages:        0 kB
->>> +    ShmemPmdMapped:        0 kB
->>> +    FileHugePages:         0 kB
->>> +    FilePmdMapped:         0 kB
->>> +    CmaTotal:              0 kB
->>> +    CmaFree:               0 kB
->>> +    HugePages_Total:       0
->>> +    HugePages_Free:        0
->>> +    HugePages_Rsvd:        0
->>> +    HugePages_Surp:        0
->>> +    Hugepagesize:       2048 kB
->>> +    Hugetlb:               0 kB
->>> +    DirectMap4k:      401152 kB
->>> +    DirectMap2M:    10008576 kB
->>> +    DirectMap1G:    24117248 kB
->>>  
->>>  MemTotal
->>>                Total usable RAM (i.e. physical RAM minus a few reserved
->>>                bits and the kernel binary code)
->>>  MemFree
->>> -              The sum of LowFree+HighFree
->>> +              Total free RAM. On highmem systems, the sum of LowFree+HighFree
->>>  MemAvailable
->>>                An estimate of how much memory is available for starting new
->>>                applications, without swapping. Calculated from MemFree,
->>> @@ -1005,8 +1020,9 @@ Buffers
->>>                Relatively temporary storage for raw disk blocks
->>>                shouldn't get tremendously large (20MB or so)
->>>  Cached
->>> -              in-memory cache for files read from the disk (the
->>> -              pagecache).  Doesn't include SwapCached
->>> +              In-memory cache for files read from the disk (the
->>> +              pagecache) as well as tmpfs & shmem.
->>> +              Doesn't include SwapCached.
->>>  SwapCached
->>>                Memory that once was swapped out, is swapped back in but
->>>                still also is in the swapfile (if memory is needed it
->>> @@ -1018,6 +1034,11 @@ Active
->>>  Inactive
->>>                Memory which has been less recently used.  It is more
->>>                eligible to be reclaimed for other purposes
->>> +Unevictable
->>> +              Memory that cannot be reclaimed, such as mlocked pages,
->>> +              ramfs backing pages, secret memfd pages etc.
->>
->>
->> A little imprecise, because this only includes memory to be mapped into
->> user space. For example, all kernel allocations are unevictable but not
->> accounted here.
-> 
-> True. How about the below?
+On Thu, May 12, 2022 at 08:18:01AM +0530, Ganesan Rajagopal <rganesan-nzgTgzXrdUbQT0dZR+AlfA@public.gmane.org> wrote:
+> Good point. The patch has already been picked up for mm-unstable.
 
-Sounds good, thanks!
+Oh, I didn't notice that.
 
+> I don't know what's the process in this situation. Should I post a
+> "[PATCH v3]" with an updated commit message?
 
--- 
-Thanks,
+Or you can send a fixup for folding? (I see this is something new,
+you better ask Andrew.)
 
-David / dhildenb
-
+Michal
