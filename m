@@ -1,56 +1,69 @@
 From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2 0/5] Fix bugs in memcontroller cgroup tests
-Date: Thu, 12 May 2022 19:04:10 +0200
-Message-ID: <20220512170410.GA16096@blackbody.suse.cz>
+Subject: Re: [PATCH v2 2/5] cgroup: Account for memory_recursiveprot in
+ test_memcg_low()
+Date: Thu, 12 May 2022 19:27:38 +0200
+Message-ID: <20220512172738.GB16096@blackbody.suse.cz>
 References: <20220423155619.3669555-1-void@manifault.com>
+ <20220423155619.3669555-3-void@manifault.com>
+ <20220427140928.GD9823@blackbody.suse.cz>
+ <20220429010333.5rt2jwpiumnbuapf@dev0025.ash9.facebook.com>
+ <20220429092620.GA23621@blackbody.suse.cz>
+ <20220506164015.fsdsuv226nhllos5@dev0025.ash9.facebook.com>
+ <Ynkum8DeJIAtGi9y@cmpxchg.org>
+ <20220509174424.e43e695ffe0f7333c187fba8@linux-foundation.org>
+ <20220510174341.GC24172@blackbody.suse.cz>
+ <Ynv4AdjeVjptnjrH@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1652375052; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1652376459; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=8x6aPJt6yqRe+xxwaduylXqRn+TAS3mKV8QmNRMu74M=;
-        b=oqAeYgjoS/Yzrg0FlOaRvqUONZMeshLiVKHa5kE0tg7n3W/Qd8TjfD2+9mXN1PtCJP58R8
-        wnlHvNSmzK+5ejL8Fn0anZd7UdrYBDHqSDVzVTUq6+y9ZXzNhqW3be11YgM8I/tx3NwAfM
-        R0sJIrUtOa7NJDVEeM6pKGJS33DF4rc=
+        bh=7XEGm/1PGoEXcO1HFP5KFYVz2HoDo+VVY6EzV48qjEY=;
+        b=FzNR/9sgSrYP2DPIDbJYhi2A7TQZTkeEClVE8X88trBQ+zDeTp6YXcGexdIzHN9WVt1CXT
+        6ppZ2fr+wNOvNGpQiGz6QiiimHTY0fyVoPFyBeCsw0Wxl9Pe77+R+JdNfKLcpjL+emZ331
+        gZhmVXUA0C5FWdFhgV4XQ8ieop+pvys=
 Content-Disposition: inline
-In-Reply-To: <20220423155619.3669555-1-void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
+In-Reply-To: <Ynv4AdjeVjptnjrH-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Richard Palethorpe <rpalethorpe-IBi9RG/b67k@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
 
-Hello.
+On Wed, May 11, 2022 at 01:53:05PM -0400, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+> Can you indeed elaborate on the problem you see with low events?
 
-On Sat, Apr 23, 2022 at 08:56:15AM -0700, David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org> wrote:
-> tools/testing/selftests/cgroup/test_memcontrol.c contains a set of
-> testcases which validate expected behavior of the cgroup memory controller.
-> Roman Gushchin recently sent out a patchset that fixed a few issues in the
-> test.
+My mistake. I realized I was testing on a system without
+memory_recursiveprot enabled. Therefore I saw no events in children with
+memory.low=0.
 
-Link here
-https://lore.kernel.org/r/20220415000133.3955987-1-roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org/.
+However, it also means that my previous evaluation of the "simple" fix
+(dropping the SWAP_CLUSTER_MAX rounding) was incorrect and it actually
+doesn't resolve the problem of two differently active siblings I posted
+earlier.
 
-> This patchset continues that effort by fixing a few more issues that
-> were causing non-deterministic failures in the suite.
+> So your proposed patch looks like the right thing to do to me. And I
+> would ack it, but please do explain your concerns around low event
+> reporting after it.
 
-Are the Roman's patches merged anywhere? (I ran into some issues when I
-was rebasing your (David's) series on top of master.) I'd like to put
-all sensible patches in one series or stack on existing branch (if
-there's any).
+I retract it (at least for now), it doesn't really help. It can be seen
+(after application) [1] that once (low) protected memory is opened for
+reclaim, the sibling proportions change suddenly (neither sibling is
+protected during sc->memcg_low_reclaim, however, the formerly protected
+suddenly provides good supply of reclaimable pages).
 
-For possible v3 of this series, I did:
-  - dropped the patch that allows non-zero memory.events:low for a sibling with
-    memory.low=0 when mounted with memory_recursiveprot (the case needs more
-    discussion),
-  - added few more cleanups, convenience for debugging,
-  - fixed comments in the first patch.
+OTOH, without memory_recursiveprot [2], the elow growth of the victim
+sibling is absent and situation stabilizes with only partial reclaim
+from the (explicitly) protected sibling. 
 
-Pushed here [1] before properly sending the v3 for discussion.
+In both variants (recursive/non-recursive) the parent ends up with same
+amount of unreclaimed memory, however, the gradual tranfer of elow with
+the recursive protection is undesired. (I'm only thinking how to solve
+it simply.)
 
-Thanks,
 Michal
 
-[1] https://github.com/Werkov/linux/commits/cgroup-ml/memory.low-overreclaim-var2
+[1] https://bugzilla.suse.com/attachment.cgi?id=858869
+[2] https://bugzilla.suse.com/attachment.cgi?id=858870
 
