@@ -1,67 +1,55 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [PATCH 4/4] selftests: memcg: Remove protection from top level memcg
-Date: Fri, 13 May 2022 19:18:11 +0200
-Message-ID: <20220513171811.730-5-mkoutny@suse.com>
-References: <20220512174452.tr34tuh4k5jm6qjs@dev0025.ash9.facebook.com>
- <20220513171811.730-1-mkoutny@suse.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 6/6] zswap: memcg accounting
+Date: Fri, 13 May 2022 10:23:36 -0700
+Message-ID: <CALvZod6kBZZFfD6Y5p_=9TMJr8P-vU_77NTq048wGUDr0wTv0Q@mail.gmail.com>
+References: <20220510152847.230957-1-hannes@cmpxchg.org> <20220510152847.230957-7-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1652462321; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=nGOjxaCmozTaID0zJr5Qv3xqJGJFYW6IddaRszUZ5Io=;
-        b=dcwHbrpOZZGq4sZL0dOj2zRX5fkU64ob6AlrrVT/bt7LHf5Ile5wwbwVsc9cDSFohUKRz+
-        QnaJy5RMBF3fbRdRRhS5l7TwtqiF+ZnIknwF4efi0G1mBDRXrrVDKWJ4EEViBOvx778RsR
-        0zwUeiqRJIGqFgegSEOmB1OTPOda+vo=
-In-Reply-To: <20220513171811.730-1-mkoutny-IBi9RG/b67k@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=pUiCnPMeV2tewEXDSR1Opfl8CW/W1nTXt/fBcyuE7po=;
+        b=hcbrT8LB9KtUyOFhJcjNGDoACadQCvR45e8T6zhTyidWst7gm9QCPlPUMus2qyKZO5
+         F5DqklOOcurOuJJoDyNyaahuz9kll92/JgnSl7AlqgPH+K3Sn2fBXIsuvf7m/+R6yAVS
+         fsGK3TwUuxHbSqM+peiMHJozwxnh0TRDv3ZGQTeyAIlOMdMVBvwteTZ4PytPmR9t47Gg
+         pqGrxwTsmpv7IbPbGbuf/rmrhjr8qRe8wpa4F75swNWUD2SfEYFj+qQV2DV/gexKRIvo
+         8snEpImCqQT57ffaUneyHTR7IkLcLcdzbaRzu3MoseaxEL7zq3AKDZum93Mv0C+hXL9+
+         x1Jw==
+In-Reply-To: <20220510152847.230957-7-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Richard Palethorpe <rpalethorpe-l3A5Bk7waGM@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>
 
-VGhlIHJlY2xhaW0gaXMgdHJpZ2dlcmVkIGJ5IG1lbW9yeSBsaW1pdCBpbiBhIHN1YnRyZWUsIHRo
-ZXJlZm9yZSB0aGUKdGVzdGNhc2UgZG9lcyBub3QgbmVlZCBjb25maWd1cmVkIHByb3RlY3Rpb24g
-YWdhaW5zdCBleHRlcm5hbCByZWNsYWltLgoKQWxzbywgY29ycmVjdC9kZWR1cGxpY2F0ZSByZXNw
-ZWN0aXZlIGNvbW1lbnRzCgpTaWduZWQtb2ZmLWJ5OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueS1J
-Qmk5UkcvYjY3a0BwdWJsaWMuZ21hbmUub3JnPgotLS0KIHRvb2xzL3Rlc3Rpbmcvc2VsZnRlc3Rz
-L2Nncm91cC90ZXN0X21lbWNvbnRyb2wuYyB8IDEyICsrKystLS0tLS0tLQogMSBmaWxlIGNoYW5n
-ZWQsIDQgaW5zZXJ0aW9ucygrKSwgOCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS90b29scy90
-ZXN0aW5nL3NlbGZ0ZXN0cy9jZ3JvdXAvdGVzdF9tZW1jb250cm9sLmMgYi90b29scy90ZXN0aW5n
-L3NlbGZ0ZXN0cy9jZ3JvdXAvdGVzdF9tZW1jb250cm9sLmMKaW5kZXggOWZmYWNmMDI0YmJkLi45
-ZDM3MGFhZmQ3OTkgMTAwNjQ0Ci0tLSBhL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC90
-ZXN0X21lbWNvbnRyb2wuYworKysgYi90b29scy90ZXN0aW5nL3NlbGZ0ZXN0cy9jZ3JvdXAvdGVz
-dF9tZW1jb250cm9sLmMKQEAgLTI0Nyw3ICsyNDcsNyBAQCBzdGF0aWMgaW50IGNnX3Rlc3RfcHJv
-Y19raWxsZWQoY29uc3QgY2hhciAqY2dyb3VwKQogCiAvKgogICogRmlyc3QsIHRoaXMgdGVzdCBj
-cmVhdGVzIHRoZSBmb2xsb3dpbmcgaGllcmFyY2h5OgotICogQSAgICAgICBtZW1vcnkubWluID0g
-NTBNLCAgbWVtb3J5Lm1heCA9IDIwME0KKyAqIEEgICAgICAgbWVtb3J5Lm1pbiA9IDAsICAgIG1l
-bW9yeS5tYXggPSAyMDBNCiAgKiBBL0IgICAgIG1lbW9yeS5taW4gPSA1ME0sICBtZW1vcnkuY3Vy
-cmVudCA9IDUwTQogICogQS9CL0MgICBtZW1vcnkubWluID0gNzVNLCAgbWVtb3J5LmN1cnJlbnQg
-PSA1ME0KICAqIEEvQi9EICAgbWVtb3J5Lm1pbiA9IDI1TSwgIG1lbW9yeS5jdXJyZW50ID0gNTBN
-CkBAIC0yNTcsNyArMjU3LDcgQEAgc3RhdGljIGludCBjZ190ZXN0X3Byb2Nfa2lsbGVkKGNvbnN0
-IGNoYXIgKmNncm91cCkKICAqIFVzYWdlcyBhcmUgcGFnZWNhY2hlLCBidXQgdGhlIHRlc3Qga2Vl
-cHMgYSBydW5uaW5nCiAgKiBwcm9jZXNzIGluIGV2ZXJ5IGxlYWYgY2dyb3VwLgogICogVGhlbiBp
-dCBjcmVhdGVzIEEvRyBhbmQgY3JlYXRlcyBhIHNpZ25pZmljYW50Ci0gKiBtZW1vcnkgcHJlc3N1
-cmUgaW4gaXQuCisgKiBtZW1vcnkgcHJlc3N1cmUgaW4gQS4KICAqCiAgKiBBL0IgICAgbWVtb3J5
-LmN1cnJlbnQgfj0gNTBNCiAgKiBBL0IvQyAgbWVtb3J5LmN1cnJlbnQgfj0gMjlNCkBAIC0zMzUs
-OCArMzM1LDYgQEAgc3RhdGljIGludCB0ZXN0X21lbWNnX21pbihjb25zdCBjaGFyICpyb290KQog
-CQkJICAgICAgKHZvaWQgKikobG9uZylmZCk7CiAJfQogCi0JaWYgKGNnX3dyaXRlKHBhcmVudFsw
-XSwgIm1lbW9yeS5taW4iLCAiNTBNIikpCi0JCWdvdG8gY2xlYW51cDsKIAlpZiAoY2dfd3JpdGUo
-cGFyZW50WzFdLCAibWVtb3J5Lm1pbiIsICI1ME0iKSkKIAkJZ290byBjbGVhbnVwOwogCWlmIChj
-Z193cml0ZShjaGlsZHJlblswXSwgIm1lbW9yeS5taW4iLCAiNzVNIikpCkBAIC00MDQsOCArNDAy
-LDggQEAgc3RhdGljIGludCB0ZXN0X21lbWNnX21pbihjb25zdCBjaGFyICpyb290KQogCiAvKgog
-ICogRmlyc3QsIHRoaXMgdGVzdCBjcmVhdGVzIHRoZSBmb2xsb3dpbmcgaGllcmFyY2h5OgotICog
-QSAgICAgICBtZW1vcnkubG93ID0gNTBNLCAgbWVtb3J5Lm1heCA9IDIwME0KLSAqIEEvQiAgICAg
-bWVtb3J5LmxvdyA9IDUwTSwgIG1lbW9yeS5jdXJyZW50ID0gNTBNCisgKiBBICAgICAgIG1lbW9y
-eS5sb3cgPSAwLCAgICBtZW1vcnkubWF4ID0gMjAwTQorICogQS9CICAgICBtZW1vcnkubG93ID0g
-NTBNLCAgbWVtb3J5LmN1cnJlbnQgPSAuLi4KICAqIEEvQi9DICAgbWVtb3J5LmxvdyA9IDc1TSwg
-IG1lbW9yeS5jdXJyZW50ID0gNTBNCiAgKiBBL0IvRCAgIG1lbW9yeS5sb3cgPSAyNU0sICBtZW1v
-cnkuY3VycmVudCA9IDUwTQogICogQS9CL0UgICBtZW1vcnkubG93ID0gMCwgICAgbWVtb3J5LmN1
-cnJlbnQgPSA1ME0KQEAgLTQ5MCw4ICs0ODgsNiBAQCBzdGF0aWMgaW50IHRlc3RfbWVtY2dfbG93
-KGNvbnN0IGNoYXIgKnJvb3QpCiAJCQlnb3RvIGNsZWFudXA7CiAJfQogCi0JaWYgKGNnX3dyaXRl
-KHBhcmVudFswXSwgIm1lbW9yeS5sb3ciLCAiNTBNIikpCi0JCWdvdG8gY2xlYW51cDsKIAlpZiAo
-Y2dfd3JpdGUocGFyZW50WzFdLCAibWVtb3J5LmxvdyIsICI1ME0iKSkKIAkJZ290byBjbGVhbnVw
-OwogCWlmIChjZ193cml0ZShjaGlsZHJlblswXSwgIm1lbW9yeS5sb3ciLCAiNzVNIikpCi0tIAoy
-LjM1LjMKCg==
+On Tue, May 10, 2022 at 8:29 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+>
+[...]
+> +void obj_cgroup_charge_zswap(struct obj_cgroup *objcg, size_t size)
+> +{
+> +       struct mem_cgroup *memcg;
+> +
+> +       VM_WARN_ON_ONCE(!(current->flags & PF_MEMALLOC));
+> +
+> +       /* PF_MEMALLOC context, charging must succeed */
+)
+Instead of these warnings and comment why not just explicitly use
+memalloc_noreclaim_[save|restore]() ?
+
+> +       if (obj_cgroup_charge(objcg, GFP_KERNEL, size))
+
+Can we please make this specific charging an opt-in feature or at
+least provide a way to opt-out? This will impact users/providers where
+swap is used transparently (in terms of memory usage). Also do you
+want this change for v1 users as well?
+
+> +               VM_WARN_ON_ONCE(1);
+> +
+> +       rcu_read_lock();
+> +       memcg = obj_cgroup_memcg(objcg);
+> +       mod_memcg_state(memcg, MEMCG_ZSWAP_B, size);
+> +       mod_memcg_state(memcg, MEMCG_ZSWAPPED, 1);
+> +       rcu_read_unlock();
+> +}
+> +
