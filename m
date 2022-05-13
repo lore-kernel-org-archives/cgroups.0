@@ -1,102 +1,115 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH 0/4] memcg: accounting for objects allocated by mkdir
- cgroup
-Date: Fri, 13 May 2022 10:49:35 -0700
-Message-ID: <Yn6aL3cO7VdrmHHp@carbon>
-References: <Ynv7+VG+T2y9rpdk@carbon>
- <1c14dce9-1981-2690-0e35-58e2d9fbc0da@openvz.org>
+From: Khazhy Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RESEND][RFC PATCH] blkcg: rewind seq_file if no stats
+Date: Fri, 13 May 2022 11:06:33 -0700
+Message-ID: <CACGdZYJAm4kwXB_76qT6PZmPO66Kt2NFSQ0+KNT=S+Tgu6SmoA@mail.gmail.com>
+References: <CACGdZYLMW2KHVebfyJZVn9G=15N+Jt4+8oF5gq3wdDTOcXbk9A@mail.gmail.com>
+ <20220513174030.1307720-1-khazhy@google.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="0000000000008d1ccf05dee889f0"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1652464181;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=B0+ajyKCVT2rz3AxxcmXTaNoUIUvS+gueEimpFPDfFg=;
-        b=I85v06/ZEvJcNeiDuoilbejPX0TNHUuErn8RttBrVH5JjU+zsoh88HKy0szjsX39Yi1RsZ
-        In7uhy6gUa1Ho85cugaXKEqwDU+8pfzqbBwhpoRhZrG1XMndLyDa1pMav2wpAm/OLxZQgc
-        4JdsAOF2NqBN+3cgllWzaU+NIwsQX+o=
-Content-Disposition: inline
-In-Reply-To: <1c14dce9-1981-2690-0e35-58e2d9fbc0da-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=x66QwRyx/G2X+Jxf4ThvGnqN48/nVl3hjipu63fde4w=;
+        b=XqM+vpyY9r4AAWTpV+4iYZHWtt7AKnr+CDupzxRWw04SwxRfCffI8It0vmCnVDscl1
+         do1mt3vE014VZzuJLbmG9uZzsFqKrgQMrpFe2LIxYmMy/Tq2E2Br3VjfLy37Dw1kdPIi
+         O3jOiut4GBCep6eWT0tZ9bAvw0b0MpVFH0dC4yR3N9R7SNCvZF2Otp7CQoqVwUCqn7NE
+         8jlOLQyxtT7LaiwAuqElclCGnNwA58P0gQTfGYJ+z3fWszZ48tsi80Xr22caHaWY6pQA
+         FCVGstCSF22buREetVqlrY3LkwNLfg9237x3McNeznnB2hqrY1UZuu8krp9XWV2NZdp1
+         L92w==
+In-Reply-To: <20220513174030.1307720-1-khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, May 13, 2022 at 06:51:30PM +0300, Vasily Averin wrote:
-> Below is tracing results of mkdir /sys/fs/cgroup/vvs.test on 
-> 4cpu VM with Fedora and self-complied upstream kernel. The calculations
-> are not precise, it depends on kernel config options, number of cpus,
-> enabled controllers, ignores possible page allocations etc.
-> However this is enough to clarify the general situation:
-> - Total sum of accounted memory is ~60Kb.
-> - Accounted only 2 huge percpu allocation marked '=', ~18Kb.
->   (and can be 0 without memory controller)
-> - kernfs nodes and iattrs are among the main memory consumers.
->    they are marked '+' to be accounted.
-> - cgroup_mkdir always allocates 4Kb,
->    so I think it should be accounted first too.
-> - mem_cgroup_css_alloc allocations consumes 10K,
->    it's enough to be accounted, especially for VMs with 1-2 CPUs
-> - Almost all other allocations are quite small and can be ignored.
->   Exceptions are percpu allocations in alloc_fair_sched_group(),
->    this can consume a significant amount of memory on nodes
->    with multiple processors.
-> - kernfs nodes consumes ~6Kb memory inside simple_xattr_set() 
->    and simple_xattr_alloc(). This is quite high numbers,
->    but is not critical, and I think we can ignore it at the moment.
-> - If all proposed memory will be accounted it gives us ~47Kb, 
->    or ~75% of all allocated memory.
-> 
-> number	bytes	$1*$2	sum	note	call_site
-> of	alloc
-> allocs
-> ------------------------------------------------------------
-> 1       14448   14448   14448   =       percpu_alloc_percpu:
-> 1       8192    8192    22640   +       (mem_cgroup_css_alloc+0x54)
-> 49      128     6272    28912   +       (__kernfs_new_node+0x4e)
-> 49      96      4704    33616   ?       (simple_xattr_alloc+0x2c)
-> 49      88      4312    37928   +       (__kernfs_iattrs+0x56)
-> 1       4096    4096    42024   +       (cgroup_mkdir+0xc7)
-> 1       3840    3840    45864   =       percpu_alloc_percpu:
-> 4       512     2048    47912   +       (alloc_fair_sched_group+0x166)
-> 4       512     2048    49960   +       (alloc_fair_sched_group+0x139)
-> 1       2048    2048    52008   +       (mem_cgroup_css_alloc+0x109)
-> 49      32      1568    53576   ?       (simple_xattr_set+0x5b)
-> 2       584     1168    54744		(radix_tree_node_alloc.constprop.0+0x8d)
-> 1       1024    1024    55768           (cpuset_css_alloc+0x30)
-> 1       1024    1024    56792           (alloc_shrinker_info+0x79)
-> 1       768     768     57560           percpu_alloc_percpu:
-> 1       640     640     58200           (sched_create_group+0x1c)
-> 33      16      528     58728           (__kernfs_new_node+0x31)
-> 1       512     512     59240           (pids_css_alloc+0x1b)
-> 1       512     512     59752           (blkcg_css_alloc+0x39)
-> 9       48      432     60184           percpu_alloc_percpu:
-> 13      32      416     60600           (__kernfs_new_node+0x31)
-> 1       384     384     60984           percpu_alloc_percpu:
-> 1       256     256     61240           (perf_cgroup_css_alloc+0x1c)
-> 1       192     192     61432           percpu_alloc_percpu:
-> 1       64      64      61496           (mem_cgroup_css_alloc+0x363)
-> 1       32      32      61528           (ioprio_alloc_cpd+0x39)
-> 1       32      32      61560           (ioc_cpd_alloc+0x39)
-> 1       32      32      61592           (blkcg_css_alloc+0x6b)
-> 1       32      32      61624           (alloc_fair_sched_group+0x52)
-> 1       32      32      61656           (alloc_fair_sched_group+0x2e)
-> 3       8       24      61680           (__kernfs_new_node+0x31)
-> 3       8       24      61704           (alloc_cpumask_var_node+0x1b)
-> 1       24      24      61728           percpu_alloc_percpu:
-> 
-> This patch-set enables accounting for required resources.
-> I would like to discuss the patches with cgroup developers and maintainers,
-> then I'm going re-send approved patches to subsystem maintainers.
+--0000000000008d1ccf05dee889f0
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Vasily!
+On Fri, May 13, 2022 at 10:40 AM Khazhismel Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> +void seq_restore(struct seq_file *m, int count)
+(Yes, this and elsewhere should be size_t to match m->count)
+> +{
+> +       if (WARN_ON_ONCE(count > m->count || count > m->size))
+> +               return;
+> +       m->count = count;
 
-Thank you for the analysis and for the series. It looks really good to me.
+--0000000000008d1ccf05dee889f0
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-Please, feel free to add
-Reviewed-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-for the whole series.
-
-Thanks!
+MIIPmwYJKoZIhvcNAQcCoIIPjDCCD4gCAQExDzANBglghkgBZQMEAgEFADALBgkqhkiG9w0BBwGg
+ggz1MIIEtjCCA56gAwIBAgIQeAMYYHb81ngUVR0WyMTzqzANBgkqhkiG9w0BAQsFADBMMSAwHgYD
+VQQLExdHbG9iYWxTaWduIFJvb3QgQ0EgLSBSMzETMBEGA1UEChMKR2xvYmFsU2lnbjETMBEGA1UE
+AxMKR2xvYmFsU2lnbjAeFw0yMDA3MjgwMDAwMDBaFw0yOTAzMTgwMDAwMDBaMFQxCzAJBgNVBAYT
+AkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSowKAYDVQQDEyFHbG9iYWxTaWduIEF0bGFz
+IFIzIFNNSU1FIENBIDIwMjAwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCvLe9xPU9W
+dpiHLAvX7kFnaFZPuJLey7LYaMO8P/xSngB9IN73mVc7YiLov12Fekdtn5kL8PjmDBEvTYmWsuQS
+6VBo3vdlqqXZ0M9eMkjcKqijrmDRleudEoPDzTumwQ18VB/3I+vbN039HIaRQ5x+NHGiPHVfk6Rx
+c6KAbYceyeqqfuJEcq23vhTdium/Bf5hHqYUhuJwnBQ+dAUcFndUKMJrth6lHeoifkbw2bv81zxJ
+I9cvIy516+oUekqiSFGfzAqByv41OrgLV4fLGCDH3yRh1tj7EtV3l2TngqtrDLUs5R+sWIItPa/4
+AJXB1Q3nGNl2tNjVpcSn0uJ7aFPbAgMBAAGjggGKMIIBhjAOBgNVHQ8BAf8EBAMCAYYwHQYDVR0l
+BBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFHzM
+CmjXouseLHIb0c1dlW+N+/JjMB8GA1UdIwQYMBaAFI/wS3+oLkUkrk1Q+mOai97i3Ru8MHsGCCsG
+AQUFBwEBBG8wbTAuBggrBgEFBQcwAYYiaHR0cDovL29jc3AyLmdsb2JhbHNpZ24uY29tL3Jvb3Ry
+MzA7BggrBgEFBQcwAoYvaHR0cDovL3NlY3VyZS5nbG9iYWxzaWduLmNvbS9jYWNlcnQvcm9vdC1y
+My5jcnQwNgYDVR0fBC8wLTAroCmgJ4YlaHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9yb290LXIz
+LmNybDBMBgNVHSAERTBDMEEGCSsGAQQBoDIBKDA0MDIGCCsGAQUFBwIBFiZodHRwczovL3d3dy5n
+bG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzANBgkqhkiG9w0BAQsFAAOCAQEANyYcO+9JZYyqQt41
+TMwvFWAw3vLoLOQIfIn48/yea/ekOcParTb0mbhsvVSZ6sGn+txYAZb33wIb1f4wK4xQ7+RUYBfI
+TuTPL7olF9hDpojC2F6Eu8nuEf1XD9qNI8zFd4kfjg4rb+AME0L81WaCL/WhP2kDCnRU4jm6TryB
+CHhZqtxkIvXGPGHjwJJazJBnX5NayIce4fGuUEJ7HkuCthVZ3Rws0UyHSAXesT/0tXATND4mNr1X
+El6adiSQy619ybVERnRi5aDe1PTwE+qNiotEEaeujz1a/+yYaaTY+k+qJcVxi7tbyQ0hi0UB3myM
+A/z2HmGEwO8hx7hDjKmKbDCCA18wggJHoAMCAQICCwQAAAAAASFYUwiiMA0GCSqGSIb3DQEBCwUA
+MEwxIDAeBgNVBAsTF0dsb2JhbFNpZ24gUm9vdCBDQSAtIFIzMRMwEQYDVQQKEwpHbG9iYWxTaWdu
+MRMwEQYDVQQDEwpHbG9iYWxTaWduMB4XDTA5MDMxODEwMDAwMFoXDTI5MDMxODEwMDAwMFowTDEg
+MB4GA1UECxMXR2xvYmFsU2lnbiBSb290IENBIC0gUjMxEzARBgNVBAoTCkdsb2JhbFNpZ24xEzAR
+BgNVBAMTCkdsb2JhbFNpZ24wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDMJXaQeQZ4
+Ihb1wIO2hMoonv0FdhHFrYhy/EYCQ8eyip0EXyTLLkvhYIJG4VKrDIFHcGzdZNHr9SyjD4I9DCuu
+l9e2FIYQebs7E4B3jAjhSdJqYi8fXvqWaN+JJ5U4nwbXPsnLJlkNc96wyOkmDoMVxu9bi9IEYMpJ
+pij2aTv2y8gokeWdimFXN6x0FNx04Druci8unPvQu7/1PQDhBjPogiuuU6Y6FnOM3UEOIDrAtKeh
+6bJPkC4yYOlXy7kEkmho5TgmYHWyn3f/kRTvriBJ/K1AFUjRAjFhGV64l++td7dkmnq/X8ET75ti
++w1s4FRpFqkD2m7pg5NxdsZphYIXAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8E
+BTADAQH/MB0GA1UdDgQWBBSP8Et/qC5FJK5NUPpjmove4t0bvDANBgkqhkiG9w0BAQsFAAOCAQEA
+S0DbwFCq/sgM7/eWVEVJu5YACUGssxOGhigHM8pr5nS5ugAtrqQK0/Xx8Q+Kv3NnSoPHRHt44K9u
+bG8DKY4zOUXDjuS5V2yq/BKW7FPGLeQkbLmUY/vcU2hnVj6DuM81IcPJaP7O2sJTqsyQiunwXUaM
+ld16WCgaLx3ezQA3QY/tRG3XUyiXfvNnBB4V14qWtNPeTCekTBtzc3b0F5nCH3oO4y0IrQocLP88
+q1UOD5F+NuvDV0m+4S4tfGCLw0FREyOdzvcya5QBqJnnLDMfOjsl0oZAzjsshnjJYS8Uuu7bVW/f
+hO4FCU29KNhyztNiUGUe65KXgzHZs7XKR1g/XzCCBNQwggO8oAMCAQICEAFEftjde/YEIFcjUXqh
+cBUwDQYJKoZIhvcNAQELBQAwVDELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
+c2ExKjAoBgNVBAMTIUdsb2JhbFNpZ24gQXRsYXMgUjMgU01JTUUgQ0EgMjAyMDAeFw0yMjAzMTUw
+MzQ4MTFaFw0yMjA5MTEwMzQ4MTFaMCIxIDAeBgkqhkiG9w0BCQEWEWtoYXpoeUBnb29nbGUuY29t
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnSc4QiMo3U8X7waRXSjbdBPbktNNtBqh
+S/5u+fj/ZKSgI2yE4sLMwA/+mKwg/7sa7w5AfZHezcsNdoPtSg+Fdps/FlA7XruMWcjotJZkl0XU
+Kx8oRkC5IzIs4yCPbKjJjPnLLB6kscJHeFsONw1dB1LD/I/mXWBMVULRshygEklce7NMMBEgMELQ
+HA8prVkASBCQcTBI9b1/dCaMkqs1pbI1S+jMQDPTVqJ6yHssJtwELHTH1ObZwi2Cx3q60b0sXYS0
+18OjY3VYaZUXTOSFP5PN/OmbGt2smYKKCLujb0wJm06bFotBaJhVw5xdMAfCD+2cPvmYXDCF+7ng
+AYBCcQIDAQABo4IB0jCCAc4wHAYDVR0RBBUwE4ERa2hhemh5QGdvb2dsZS5jb20wDgYDVR0PAQH/
+BAQDAgWgMB0GA1UdJQQWMBQGCCsGAQUFBwMEBggrBgEFBQcDAjAdBgNVHQ4EFgQU8bNUGSaYlhLY
+h3dPtFviTyG11HYwTAYDVR0gBEUwQzBBBgkrBgEEAaAyASgwNDAyBggrBgEFBQcCARYmaHR0cHM6
+Ly93d3cuZ2xvYmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wDAYDVR0TAQH/BAIwADCBmgYIKwYBBQUH
+AQEEgY0wgYowPgYIKwYBBQUHMAGGMmh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2NhL2dzYXRs
+YXNyM3NtaW1lY2EyMDIwMEgGCCsGAQUFBzAChjxodHRwOi8vc2VjdXJlLmdsb2JhbHNpZ24uY29t
+L2NhY2VydC9nc2F0bGFzcjNzbWltZWNhMjAyMC5jcnQwHwYDVR0jBBgwFoAUfMwKaNei6x4schvR
+zV2Vb4378mMwRgYDVR0fBD8wPTA7oDmgN4Y1aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9jYS9n
+c2F0bGFzcjNzbWltZWNhMjAyMC5jcmwwDQYJKoZIhvcNAQELBQADggEBAE0ANr7NUOqEcZce4KYP
+SjzlrshSC8sgJ8dKDDbe35PL86vDuMIrytVjiV10p/YUofun9GeHBY6r5kTyh4be5FgftiiNtWzn
+U1W5cxLYMT1hKYxXxnM2sWMQGFl4TkxxbRoVZa3ou/NxFdAZeiQSwGnzk5oIDTBZQc8q3wMa1svm
+A5Rd4MVaIUt+hyk6seAldN6k4/O34O1l2V6D+/BwagyzLWvOeMEM9hClVF+F6a20yy4dcDsprFZZ
+Sk9JzUy9F6FM7L1wT2ndjTNDja4Y2tixf31KuisZLGKmDZsW/fXF1GgWDaM0DbYJwtE3kHylWnMk
+CN4PfYgIa15C5A9lXhExggJqMIICZgIBATBoMFQxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i
+YWxTaWduIG52LXNhMSowKAYDVQQDEyFHbG9iYWxTaWduIEF0bGFzIFIzIFNNSU1FIENBIDIwMjAC
+EAFEftjde/YEIFcjUXqhcBUwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIBoOLZS/
+wLUixiZ06eOojFIVPl5zuHue3WyR5PbSC06QMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIyMDUxMzE4MDY0NVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCVIpxkVlm3Bw2DBD8dQ8S2/WGh
+4gwmhTJ72vF0m/CjOWWwB772p6VpjNOj439230F0eR8R7nnH45ArXh8oOq4UKnaQQIstMyKkNZ4s
+0zBkEq2wsNJAzZlaSwOqGR3fNjJNgEJC9IRf21IWfnuhmCnsLZPa+kZCBPsJuCn5FH3ZCa5naRrg
+2OORPTNYgFzP9PL7zsxUUnf9qz+za7rPXqx+uya/UXn3BMNdbmOs8FLu+1srbX7Ua3gDjB327+P/
+TH1MIAjfWUW42lJN2rbUMUe4cBPM+wTYDhf+Zc4ft9BY4e1wH7LpXfiZPemcUM6Xih5eZX0J5MRp
+PnLuBQq6HD05
+--0000000000008d1ccf05dee889f0--
