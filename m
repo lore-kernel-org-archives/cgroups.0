@@ -1,57 +1,60 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
- page table uses.
-Date: Fri, 13 May 2022 10:13:54 -0700
-Message-ID: <CALvZod6nERq4j=L0V+pc-rd5+QKi4yb_23tWV-1MF53xL5KE6Q@mail.gmail.com>
-References: <20220429201131.3397875-1-yosryahmed@google.com>
- <20220429201131.3397875-2-yosryahmed@google.com> <87ilqoi77b.wl-maz@kernel.org>
- <CAJD7tkY7JF25XXUFq2mGroetMkfo-2zGOaQC94pjZE3D42+oaw@mail.gmail.com>
- <Yn2TGJ4vZ/fst+CY@cmpxchg.org> <Yn2YYl98Vhh/UL0w@google.com>
- <Yn5+OtZSSUZZgTQj@cmpxchg.org> <Yn6DeEGLyR4Q0cDp@google.com>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH 1/4] selftests: memcg: Fix compilation
+Date: Fri, 13 May 2022 19:18:08 +0200
+Message-ID: <20220513171811.730-2-mkoutny@suse.com>
+References: <20220512174452.tr34tuh4k5jm6qjs@dev0025.ash9.facebook.com>
+ <20220513171811.730-1-mkoutny@suse.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=VM6L7CzHZq+DP15ACyDCNeBcnTiw96jhTORnn16Mcn8=;
-        b=m7gQomUnSLOq+9pE4q9ffHGKLb3L3GE/tyqnZaMpqmJHNyG5wt5m5mpVnrt/R5fltk
-         yK5RyYuw70QdsT3xpjionXDVduKVwIkENV/Mv5F0EHktzxJsXpmHkKAWfcOwy5gVtQvt
-         Jb9aF197MUvc/8VfJWEKOA0A5W6r7Y5jyFAxdXtd+z7v8GihBIgqkMzUgDgmRLDEQBOl
-         8CqLPCu3zlaWk59USw4+jqNDxNbSsUsyKPMu7PWzekJIARr0BRZnv82P4+e07sbtFdHd
-         l7nGCtA297XhzYezBsDN16APQINq+JlpmHHYdQbrAp93SyhwC2tFFlzq6Ax51hV8P071
-         YexA==
-In-Reply-To: <Yn6DeEGLyR4Q0cDp-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1652462320; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=KUNLA0b9x+opMHbbbhr08H0E2VJuSYLLBACnTDB2Dic=;
+        b=jb9MD5Dx2uj8Ra4tPKcdtm21RdiH59On2nRWt3KLR5yIMokq5InGJ0Me7K1WdoDvZBC2ZY
+        zWsgYYllnjV6ltlOF3IV5MCvYdvHCVSb7KTJC8uLvviBasGsuJrQ1NRwKajHsCRlyGf4z0
+        rPOe2JadH7U6cfMsJOUbH0R9cxIDwUE=
+In-Reply-To: <20220513171811.730-1-mkoutny-IBi9RG/b67k@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XQ@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Richard Palethorpe <rpalethorpe-l3A5Bk7waGM@public.gmane.org>
 
-On Fri, May 13, 2022 at 9:12 AM Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-[...]
->
-> It was mostly an honest question, I too am trying to understand what userspace
-> wants to do with this information.  I was/am also trying to understand the benefits
-> of doing the tracking through page_state and not a dedicated KVM stat.  E.g. KVM
-> already has specific stats for the number of leaf pages mapped into a VM, why not
-> do the same for non-leaf pages?
-
-Let me answer why a more general stat is useful and the potential
-userspace reaction:
-
-For a memory type which is significant enough, it is useful to expose
-it in the general interfaces, so that the general data/stat collection
-infra can collect them instead of having workload dependent stat
-collectors. In addition, not necessarily that stat has to have a
-userspace reaction in an online fashion. We do collect stats for
-offline analysis which greatly influence the priority order of
-optimization workitems.
-
-Next the question is do we really need a separate stat item
-(secondary_pagetable instead of just plain pagetable) exposed in the
-stable API? To me secondary_pagetable is general (not kvm specific)
-enough and can be significant, so having a separate dedicated stat
-should be ok. Though I am ok with lump it with pagetable stat for now
-but we do want it to be accounted somewhere.
+VGhpcyBmaXhlcyBtaXMtYXBwbGllZCBjaGFuZ2VzIGZyb20gY29tbWl0IDcyYjFlMDNhYTcyNSAo
+ImNncm91cDoKYWNjb3VudCBmb3IgbWVtb3J5X2xvY2FsZXZlbnRzIGluIHRlc3RfbWVtY2dfb29t
+X2dyb3VwX2xlYWZfZXZlbnRzKCkiKS4KClNpZ25lZC1vZmYtYnk6IE1pY2hhbCBLb3V0bsO9IDxt
+a291dG55LUlCaTlSRy9iNjdrQHB1YmxpYy5nbWFuZS5vcmc+Ci0tLQogLi4uL3NlbGZ0ZXN0cy9j
+Z3JvdXAvdGVzdF9tZW1jb250cm9sLmMgICAgICAgIHwgMjUgKysrKysrKysrKystLS0tLS0tLQog
+MSBmaWxlIGNoYW5nZWQsIDE0IGluc2VydGlvbnMoKyksIDExIGRlbGV0aW9ucygtKQoKZGlmZiAt
+LWdpdCBhL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC90ZXN0X21lbWNvbnRyb2wuYyBi
+L3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC90ZXN0X21lbWNvbnRyb2wuYwppbmRleCA2
+YWI5NDMxN2M4N2IuLjQ5NThiNDIyMDFhOSAxMDA2NDQKLS0tIGEvdG9vbHMvdGVzdGluZy9zZWxm
+dGVzdHMvY2dyb3VwL3Rlc3RfbWVtY29udHJvbC5jCisrKyBiL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRl
+c3RzL2Nncm91cC90ZXN0X21lbWNvbnRyb2wuYwpAQCAtMTI0MSw3ICsxMjQxLDE2IEBAIHN0YXRp
+YyBpbnQgdGVzdF9tZW1jZ19vb21fZ3JvdXBfbGVhZl9ldmVudHMoY29uc3QgY2hhciAqcm9vdCkK
+IAlpZiAoY2dfcmVhZF9rZXlfbG9uZyhjaGlsZCwgIm1lbW9yeS5ldmVudHMiLCAib29tX2tpbGwg
+IikgPD0gMCkKIAkJZ290byBjbGVhbnVwOwogCi0JaWYgKGNnX3JlYWRfa2V5X2xvbmcocGFyZW50
+LCAibWVtb3J5LmV2ZW50cyIsICJvb21fa2lsbCAiKSA8PSAwKQorCXBhcmVudF9vb21fZXZlbnRz
+ID0gY2dfcmVhZF9rZXlfbG9uZygKKwkJCXBhcmVudCwgIm1lbW9yeS5ldmVudHMiLCAib29tX2tp
+bGwgIik7CisJLyoKKwkgKiBJZiBtZW1vcnlfbG9jYWxldmVudHMgaXMgbm90IGVuYWJsZWQgKHRo
+ZSBkZWZhdWx0KSwgdGhlIHBhcmVudCBzaG91bGQKKwkgKiBjb3VudCBPT00gZXZlbnRzIGluIGl0
+cyBjaGlsZHJlbiBncm91cHMuIE90aGVyd2lzZSwgaXQgc2hvdWxkIG5vdAorCSAqIGhhdmUgb2Jz
+ZXJ2ZWQgYW55IGV2ZW50cy4KKwkgKi8KKwlpZiAoaGFzX2xvY2FsZXZlbnRzICYmIHBhcmVudF9v
+b21fZXZlbnRzICE9IDApCisJCWdvdG8gY2xlYW51cDsKKwllbHNlIGlmICghaGFzX2xvY2FsZXZl
+bnRzICYmIHBhcmVudF9vb21fZXZlbnRzIDw9IDApCiAJCWdvdG8gY2xlYW51cDsKIAogCXJldCA9
+IEtTRlRfUEFTUzsKQEAgLTEzNDksMjAgKzEzNTgsMTQgQEAgc3RhdGljIGludCB0ZXN0X21lbWNn
+X29vbV9ncm91cF9zY29yZV9ldmVudHMoY29uc3QgY2hhciAqcm9vdCkKIAlpZiAoIWNnX3J1biht
+ZW1jZywgYWxsb2NfYW5vbiwgKHZvaWQgKilNQigxMDApKSkKIAkJZ290byBjbGVhbnVwOwogCi0J
+cGFyZW50X29vbV9ldmVudHMgPSBjZ19yZWFkX2tleV9sb25nKAotCQkJcGFyZW50LCAibWVtb3J5
+LmV2ZW50cyIsICJvb21fa2lsbCAiKTsKLQkvKgotCSAqIElmIG1lbW9yeV9sb2NhbGV2ZW50cyBp
+cyBub3QgZW5hYmxlZCAodGhlIGRlZmF1bHQpLCB0aGUgcGFyZW50IHNob3VsZAotCSAqIGNvdW50
+IE9PTSBldmVudHMgaW4gaXRzIGNoaWxkcmVuIGdyb3Vwcy4gT3RoZXJ3aXNlLCBpdCBzaG91bGQg
+bm90Ci0JICogaGF2ZSBvYnNlcnZlZCBhbnkgZXZlbnRzLgotCSAqLwotCWlmICgoaGFzX2xvY2Fs
+ZXZlbnRzICYmIHBhcmVudF9vb21fZXZlbnRzID09IDApIHx8Ci0JICAgICBwYXJlbnRfb29tX2V2
+ZW50cyA+IDApCi0JCXJldCA9IEtTRlRfUEFTUzsKKwlpZiAoY2dfcmVhZF9rZXlfbG9uZyhtZW1j
+ZywgIm1lbW9yeS5ldmVudHMiLCAib29tX2tpbGwgIikgIT0gMykKKwkJRkFJTChjbGVhbnVwKTsK
+IAogCWlmIChraWxsKHNhZmVfcGlkLCBTSUdLSUxMKSkKIAkJZ290byBjbGVhbnVwOwogCisJcmV0
+ID0gS1NGVF9QQVNTOworCiBjbGVhbnVwOgogCWlmIChtZW1jZykKIAkJY2dfZGVzdHJveShtZW1j
+Zyk7Ci0tIAoyLjM1LjMKCg==
