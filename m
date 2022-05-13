@@ -1,7 +1,7 @@
 From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 2/4] memcg: enable accounting for kernfs nodes and iattrs
-Date: Fri, 13 May 2022 18:51:55 +0300
-Message-ID: <22ccf325-6aa5-9b55-4729-d03f34125650@openvz.org>
+Subject: [PATCH 3/4] memcg: enable accounting for struct cgroup
+Date: Fri, 13 May 2022 18:52:12 +0300
+Message-ID: <a17be77f-dc3b-d69a-16e2-f7309959c525@openvz.org>
 References: <Ynv7+VG+T2y9rpdk@carbon>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -10,13 +10,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=openvz-org.20210112.gappssmtp.com; s=20210112;
         h=message-id:date:mime-version:user-agent:from:subject:to:cc
          :references:content-language:in-reply-to:content-transfer-encoding;
-        bh=xdLDfq+CWT8JDkKJCr5lOfzn0f1CBOYqpqvcgd4oF3I=;
-        b=AOt8diTFiicIrXp0RywXesaFiBTVFqNQpRUmgcob7AdT1m4qVHyAT/nPjfEfourXYu
-         VFFaL/IDpLxzjUSSTYCu5hMuf+OKjYOe/HamJ6cYFtndD5F80Cxs9vngm1uigjcBc6YV
-         McmK5Boa/eUKkqJaZzTZaqNWHiI/9NzMTpCfl0yHN9zl8kJEZnuUvwE/hiAx8v0cXZ7k
-         xQyr4Lsk69dMvKMPJu61svF+KqC73U4AGIa8cXKDNGEkykKhh2PtQC0YkehHHGgigu32
-         U5z6wawLGwA5a18ezUpeVzwNCtOjC6Wxio0XMepLaQpfoVKBQVIkqv61BTkxIPek6ifk
-         u0lg==
+        bh=EoRCzFgdqymU94vAV2iJ0vqJH+w1nYNzWrX56BJFK5A=;
+        b=PQ1JGa4uyb8yMkUdsAm4Nt9mj9ncphlDfrDvRbPZYFDeH2DUMyZv3Nlv4C2VVX83CM
+         2gEOM/vV0TlfADwx2QvGxXWHr9C/RM/onavTakiX8tERXNg9OdVBey51Na0iQnlbbstt
+         AoEaInLDNa2zgzydNcT5Sdn/QuQ5Qfdd6ibSZqOTOBpF+lKkDe0TwZp/wBz1z5HcLO5c
+         8zgAjxrQyB052eIvSU4BbLlZySBZrPpr932JWX+fT5bxyXWGAXGu9nx7mcdq6IqCF+VQ
+         TTBR8HK8sInoUF0IAVdMjhfQ9x5pXUm7gMllPun0H9v7ux2hEofCG7my4kvmA6sKYKGc
+         5EhQ==
 Content-Language: en-US
 In-Reply-To: <Ynv7+VG+T2y9rpdk@carbon>
 List-ID: <cgroups.vger.kernel.org>
@@ -24,47 +24,31 @@ Content-Type: text/plain; charset="us-ascii"
 To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-kernfs nodes are quite small kernel objects, however there are few
-scenarios where it consumes significant piece of all allocated memory:
+Creating each new cgroup allocates 4Kb for struct cgroup. This is the
+largest memory allocation in this scenario and is epecially important
+for small VMs with 1-2 CPUs.
 
-1) creating a new netdevice allocates ~50Kb of memory, where ~10Kb
-   was allocated for 80+ kernfs nodes.
-
-2) cgroupv2 mkdir allocates ~60Kb of memory, ~10Kb of them are kernfs
-   structures.
-
-3) Shakeel Butt reports that Google has workloads which create 100s
-   of subcontainers and they have observed high system overhead
-   without memcg accounting of kernfs.
-
-It makes sense to enable accounting for kernfs objects, otherwise its
-misuse inside memcg-limited can lead to global memory shortage,
-OOM and random kills of host processes.
+Accounting of this memory helps to avoid misuse inside memcg-limited
+containers.
 
 Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 ---
- fs/kernfs/mount.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ kernel/cgroup/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
-index cfa79715fc1a..40e896c7c86b 100644
---- a/fs/kernfs/mount.c
-+++ b/fs/kernfs/mount.c
-@@ -391,10 +391,12 @@ void __init kernfs_init(void)
- {
- 	kernfs_node_cache = kmem_cache_create("kernfs_node_cache",
- 					      sizeof(struct kernfs_node),
--					      0, SLAB_PANIC, NULL);
-+					      0, SLAB_PANIC | SLAB_ACCOUNT,
-+					      NULL);
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index adb820e98f24..7595127c5b3a 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -5353,7 +5353,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
  
- 	/* Creates slab cache for kernfs inode attributes */
- 	kernfs_iattrs_cache  = kmem_cache_create("kernfs_iattrs_cache",
- 					      sizeof(struct kernfs_iattrs),
--					      0, SLAB_PANIC, NULL);
-+					      0, SLAB_PANIC | SLAB_ACCOUNT,
-+					      NULL);
- }
+ 	/* allocate the cgroup and its ID, 0 is reserved for the root */
+ 	cgrp = kzalloc(struct_size(cgrp, ancestor_ids, (level + 1)),
+-		       GFP_KERNEL);
++		       GFP_KERNEL_ACCOUNT);
+ 	if (!cgrp)
+ 		return ERR_PTR(-ENOMEM);
+ 
 -- 
 2.31.1
 
