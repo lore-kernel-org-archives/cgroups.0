@@ -1,107 +1,75 @@
-From: Sean Christopherson <seanjc@google.com>
-Subject: Re: [PATCH v4 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
- page table uses.
-Date: Fri, 13 May 2022 16:12:40 +0000
-Message-ID: <Yn6DeEGLyR4Q0cDp@google.com>
-References: <20220429201131.3397875-1-yosryahmed@google.com>
- <20220429201131.3397875-2-yosryahmed@google.com>
- <87ilqoi77b.wl-maz@kernel.org>
- <CAJD7tkY7JF25XXUFq2mGroetMkfo-2zGOaQC94pjZE3D42+oaw@mail.gmail.com>
- <Yn2TGJ4vZ/fst+CY@cmpxchg.org> <Yn2YYl98Vhh/UL0w@google.com>
- <Yn5+OtZSSUZZgTQj@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v7 0/6] Proposal for a GPU cgroup controller
+Date: Fri, 13 May 2022 06:13:25 -1000
+Message-ID: <Yn6DpUsoSz1/15Kc@slm.duckdns.org>
+References: <20220510235653.933868-1-tjmercier@google.com>
+ <3365cd1d750e84fedc8e75d646a77ffd85619d35.camel@ndufresne.ca>
+ <CABdmKX3ZV6-u-oLvW_wWavAMBfrsZ=C_rCgK_Uz4VjxcRvRFew@mail.gmail.com>
+ <81026ef07c1ce20f8673b75b17bab79a2b39c548.camel@ndufresne.ca>
+ <CABdmKX2LxZ6zZR=fhXfnuWCB2BR+gzDd1-t1DD2A2XP24wvuGQ@mail.gmail.com>
 Mime-Version: 1.0
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=n4Ua5qSAHgvrptVTXpgV4jY28Fp/1ApPJcGYkkazweE=;
+        b=dh+CcTt4AjCORsqV1ZODlBqFq+OvMka9auOOZykOuG9GwHD05RDvn63lEcsItiN2eH
+         nH+MkFBQ8v1tdeWUMN4BRvaW+7Q1uwmQiOctS5wPsQLKRk5Ykt9si+fUFSf6n/at1dmY
+         4JOHexwRERxmPXQVd5EWv4mWhFA3BXiW4pCX0ZdVzHtYoUWHmurH8uIA0uBpYInyofFZ
+         pNEuW8xEgDqjAmuzWH27jn+y85YMNek74F2xgDatREWDoXEvBkL4SnO/axBiM7vQgUS4
+         gbWP9yrJI2fCACw+ngKTCewWFxR85tswkrdeT3TpOZ3UiGjOL9rgao5yscsrH/9y3/bl
+         VBAw==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CABdmKX2LxZ6zZR=fhXfnuWCB2BR+gzDd1-t1DD2A2XP24wvuGQ@mail.gmail.com>
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <kvmarm-bounces@lists.cs.columbia.edu>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20210112;
- h=date:from:to:cc:subject:message-id:references:mime-version
- :content-disposition:in-reply-to;
- bh=z141h5DooZE4FL3AcX+0cKxHlZQWL6e7O/2bq4FL5UY=;
- b=pMpyJUjUuK/7b/oFgsoqZPGJMcOKB+7c5car+thP1abZdX0Ernmov9vuFLaqKMGXn2
- rG8JUhF6WgH7lMygF4hmuRIwFoCrADaFG0pDWTQKNWoL6WLM69N4kM4KtTQkkoALHWrD
- mAeJQipbT6/IL+OPcmvLrWT3xFgMFLNWJ+O6dFPVj4sg1KmNHaULMm56Trm/hh8TOipy
- uhaRQ/7aUedXdd9J0nEfOtBBAWb0ZPzn5j4jRptmc960+ldd4gTqKw70bR33LbaLOe4i
- OR/28/FZmY9vcAYQkNkQbiAC8Sl0bxsa6t+sHaEyvc1goNVOfOnpsfXq5AH2VoYmLRhW
- N/PQ==
-Content-Disposition: inline
-In-Reply-To: <Yn5+OtZSSUZZgTQj@cmpxchg.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.cs.columbia.edu/mailman/options/kvmarm>,
- <mailto:kvmarm-request@lists.cs.columbia.edu?subject=unsubscribe>
-List-Archive: <https://lists.cs.columbia.edu/pipermail/kvmarm>
-List-Post: <mailto:kvmarm@lists.cs.columbia.edu>
-List-Help: <mailto:kvmarm-request@lists.cs.columbia.edu?subject=help>
-List-Subscribe: <https://lists.cs.columbia.edu/mailman/listinfo/kvmarm>,
- <mailto:kvmarm-request@lists.cs.columbia.edu?subject=subscribe>
-Errors-To: kvmarm-bounces@lists.cs.columbia.edu
-Sender: kvmarm-bounces@lists.cs.columbia.edu
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Wanpeng Li <wanpengli@tencent.com>, kvm@vger.kernel.org, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Yosry Ahmed <yosryahmed@google.com>, Linux-MM <linux-mm@kvack.org>, Zefan Li <lizefan.x@bytedance.com>, kvmarm@lists.cs.columbia.edu, Marc Zyngier <maz@kernel.org>, Joerg Roedel <joro@8bytes.org>, Shakeel Butt <shakeelb@google.com>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-arm-kernel@lists.infradead.org, Jim Mattson <jmattson@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>
+To: "T.J. Mercier" <tjmercier@google.com>
+Cc: Nicolas Dufresne <nicolas@ndufresne.ca>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arve =?iso-8859-1?B?SGr4bm5lduVn?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@collabora.com>, Liam Mark <lmark@codeaurora.org>, Laura Abbott <labbott@redhat.com>, Brian Starkey <Brian.Starkey@arm.com>, John
 
-On Fri, May 13, 2022, Johannes Weiner wrote:
-> On Thu, May 12, 2022 at 11:29:38PM +0000, Sean Christopherson wrote:
-> > On Thu, May 12, 2022, Johannes Weiner wrote:
-> > > On Mon, May 02, 2022 at 11:46:26AM -0700, Yosry Ahmed wrote:
-> > > > On Mon, May 2, 2022 at 3:01 AM Marc Zyngier <maz@kernel.org> wrote:
-> > > > > What do you plan to do for IOMMU page tables? After all, they serve
-> > > > > the exact same purpose, and I'd expect these to be handled the same
-> > > > > way (i.e. why is this KVM specific?).
-> > > > 
-> > > > The reason this was named NR_SECONDARY_PAGTABLE instead of
-> > > > NR_KVM_PAGETABLE is exactly that. To leave room to incrementally
-> > > > account other types of secondary page tables to this stat. It is just
-> > > > that we are currently interested in the KVM MMU usage.
-> > > 
-> > > Do you actually care at the supervisor level that this memory is used
-> > > for guest page tables?
-> > 
-> > Hmm, yes?  KVM does have a decent number of large-ish allocations that aren't
-> > for page tables, but except for page tables, the number/size of those allocations
-> > scales linearly with either the number of vCPUs or the amount of memory assigned
-> > to the VM (with no room for improvement barring KVM changes).
-> > 
-> > Off the top of my head, KVM's secondary page tables are the only allocations that
-> > don't scale linearly, especially when nested virtualization is in use.
-> 
-> Thanks, that's useful information.
-> 
-> Are these other allocations accounted somewhere? If not, are they
-> potential containment holes that will need fixing eventually?
+Hello,
 
-All allocations that are tied to specific VM/vCPU are tagged GFP_KERNEL_ACCOUNT,
-so we should be good on that front.
- 
-> > > It seems to me you primarily care that it is reported *somewhere*
-> > > (hence the piggybacking off of NR_PAGETABLE at first). And whether
-> > > it's page tables or iommu tables or whatever else allocated for the
-> > > purpose of virtualization, it doesn't make much of a difference to the
-> > > host/cgroup that is tracking it, right?
-> > > 
-> > > (The proximity to nr_pagetable could also be confusing. A high page
-> > > table count can be a hint to userspace to enable THP. It seems
-> > > actionable in a different way than a high number of kvm page tables or
-> > > iommu page tables.)
-> > 
-> > I don't know about iommu page tables, but on the KVM side a high count can also
-> > be a good signal that enabling THP would be beneficial.
-> 
-> Well, maybe.
-> 
-> It might help, but ultimately it's the process that's in control in
-> all cases: it's unmovable kernel memory allocated to manage virtual
-> address space inside the task.
-> 
-> So I'm still a bit at a loss whether these things should all be lumped
-> in together or kept separately. meminfo and memory.stat are permanent
-> ABI, so we should try to establish in advance whether the new itme is
-> really a first-class consumer or part of something bigger.
-> 
-> The patch initially piggybacked on NR_PAGETABLE. I found an email of
-> you asking why it couldn't be a separate item, but it didn't provide a
-> reasoning for that decision. Could you share your thoughts on that?
+On Thu, May 12, 2022 at 08:43:52PM -0700, T.J. Mercier wrote:
+> > I'm actually happy I've asked this question, wasn't silly after all. I think the
+> > problem here is a naming issue. What you really are monitor is "video memory",
+> > which consist of a memory segment allocated to store data used to render images
+> > (its not always images of course, GPU an VPU have specialized buffers for their
+> > purpose).
+> >
+> > Whether this should be split between what is used specifically by the GPU
+> > drivers, the display drivers, the VPU (CODEC and pre/post-processor) or camera
+> > drivers is something that should be discussed. But in the current approach, you
+> > really meant Video memory as a superset of the above. Personally, I think
+> > generically (to de-Andronized your work), en-globing all video memory is
+> > sufficient. What I fail to understand is how you will manage to distinguished
+> > DMABuf Heap allocation (which are used outside of Android btw), from Video
+> > allocation or other type of usage. I'm sure non-video usage will exist in the
+> > future (think of machine learning, compute, other high bandwidth streaming
+> > thingy ...)
+> >
+> Ok thank you for pointing out the naming issue. The naming is a
+> consequence of the initial use case, but I guess it's too specific.
+> What I want out of this change is that android can track dmabufs that
+> come out of heaps, and drm can track gpu memory. But other drivers
+> could track different resources under different names. Imagine this
+> were called a buffer cgroup controller instead of a GPU cgroup
+> controller. Then the use component ("video memory") isn't tied up with
+> the name of the controller, but it's up to the name of the bucket the
+> resource is tracked under. I think this meets the needs of the two use
+> cases I'm aware of now, while leaving the door open to other future
+> needs. Really the controller is just enabling abstract named buckets
+> for tracking and eventually limiting a type of resource.
 
-It was mostly an honest question, I too am trying to understand what userspace
-wants to do with this information.  I was/am also trying to understand the benefits
-of doing the tracking through page_state and not a dedicated KVM stat.  E.g. KVM
-already has specific stats for the number of leaf pages mapped into a VM, why not
-do the same for non-leaf pages?
+So, there hasn't been whole lot of discussion w/ other GPU folks and what
+comes up still seems to indicate that we're still long way away from having
+a meaningful gpu controller. For your use case, would it make sense to just
+add dmabuf as a key to the misc controller? I'm not sure it makes sense to
+push "gpu controller" forward if there's no conceptual consensus around what
+resources are.
+
+Thanks.
+
+-- 
+tejun
