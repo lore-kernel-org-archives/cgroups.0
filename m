@@ -1,112 +1,83 @@
-From: Khazhismel Kumykov <khazhy@google.com>
-Subject: [RESEND][RFC PATCH] blkcg: rewind seq_file if no stats
-Date: Fri, 13 May 2022 10:40:30 -0700
-Message-ID: <20220513174030.1307720-1-khazhy@google.com>
-References: <CACGdZYLMW2KHVebfyJZVn9G=15N+Jt4+8oF5gq3wdDTOcXbk9A@mail.gmail.com>
+From: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
+Subject: Re: [PATCH 1/4] selftests: memcg: Fix compilation
+Date: Fri, 13 May 2022 10:40:40 -0700
+Message-ID: <20220513174040.x5fgcla3q3cqkeck@dev0025.ash9.facebook.com>
+References: <20220512174452.tr34tuh4k5jm6qjs@dev0025.ash9.facebook.com>
+ <20220513171811.730-1-mkoutny@suse.com>
+ <20220513171811.730-2-mkoutny@suse.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=/x54ivsu0L8dQHsfXj5X8iP56Kte1TfUkHVw0Dl1VHM=;
-        b=qKV2F/o+1EleqLXGs3rBHm8b6aBfYoNPf/knsl2Sb1SacsaCDUg95ck9Gx6JtESbuB
-         bWOP/I/kWCUgv6TttHk+/rePIlVtKrycnPaVy0m0p8e5HUVdlb/N+J+ZYQPgSLRhcVA7
-         palQF7MXJL9T433RCaLIjovMH6OYlC1Zf8EWRKAuy6QWAKJmpLrihJkQlgVDTFVvgcpF
-         +rvUr1e6PjJHC3AjQBRda2cLpTN8KcZ8+tRav42P62w74xQUOuBPHSRZaacW3Q9GuCim
-         STL68JEuK71bfcDTHpyKs+/hjsN3E1JNNCXlgr82AAc1Vi5PV5yIDED0zKWD3VgrW87o
-         I+9g==
-In-Reply-To: <CACGdZYLMW2KHVebfyJZVn9G=15N+Jt4+8oF5gq3wdDTOcXbk9A@mail.gmail.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20220513171811.730-2-mkoutny-IBi9RG/b67k@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@lst.de>
-Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Khazhismel Kumykov <khazhy@google.com>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Richard Palethorpe <rpalethorpe-l3A5Bk7waGM@public.gmane.org>
 
-Restores the previous behavior of only displaying devices for which we
-have statistics (and removes the current, broken, behavior of printing
-devname with no newline if no statistics)
+On Fri, May 13, 2022 at 07:18:08PM +0200, Michal Koutn=FD wrote:
+> This fixes mis-applied changes from commit 72b1e03aa725 ("cgroup:
+> account for memory_localevents in test_memcg_oom_group_leaf_events()").
+>=20
+> Signed-off-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
+> ---
+>  .../selftests/cgroup/test_memcontrol.c        | 25 +++++++++++--------
+>  1 file changed, 14 insertions(+), 11 deletions(-)
+>=20
+> diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/tes=
+ting/selftests/cgroup/test_memcontrol.c
+> index 6ab94317c87b..4958b42201a9 100644
+> --- a/tools/testing/selftests/cgroup/test_memcontrol.c
+> +++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+> @@ -1241,7 +1241,16 @@ static int test_memcg_oom_group_leaf_events(const =
+char *root)
+>  	if (cg_read_key_long(child, "memory.events", "oom_kill ") <=3D 0)
+>  		goto cleanup;
+> =20
+> -	if (cg_read_key_long(parent, "memory.events", "oom_kill ") <=3D 0)
+> +	parent_oom_events =3D cg_read_key_long(
+> +			parent, "memory.events", "oom_kill ");
+> +	/*
+> +	 * If memory_localevents is not enabled (the default), the parent should
+> +	 * count OOM events in its children groups. Otherwise, it should not
+> +	 * have observed any events.
+> +	 */
+> +	if (has_localevents && parent_oom_events !=3D 0)
+> +		goto cleanup;
+> +	else if (!has_localevents && parent_oom_events <=3D 0)
+>  		goto cleanup;
+> =20
+>  	ret =3D KSFT_PASS;
+> @@ -1349,20 +1358,14 @@ static int test_memcg_oom_group_score_events(cons=
+t char *root)
+>  	if (!cg_run(memcg, alloc_anon, (void *)MB(100)))
+>  		goto cleanup;
+> =20
+> -	parent_oom_events =3D cg_read_key_long(
+> -			parent, "memory.events", "oom_kill ");
+> -	/*
+> -	 * If memory_localevents is not enabled (the default), the parent should
+> -	 * count OOM events in its children groups. Otherwise, it should not
+> -	 * have observed any events.
+> -	 */
+> -	if ((has_localevents && parent_oom_events =3D=3D 0) ||
+> -	     parent_oom_events > 0)
+> -		ret =3D KSFT_PASS;
+> +	if (cg_read_key_long(memcg, "memory.events", "oom_kill ") !=3D 3)
+> +		FAIL(cleanup);
+> =20
+>  	if (kill(safe_pid, SIGKILL))
+>  		goto cleanup;
+> =20
+> +	ret =3D KSFT_PASS;
+> +
+>  cleanup:
+>  	if (memcg)
+>  		cg_destroy(memcg);
+> --=20
+> 2.35.3
+>=20
 
-In lieu of get_seq_buf + seq_commit, provide a way to "undo" writes if
-we use seq_printf
+Thanks for the fix, Michal.
 
-Fixes: 252c651a4c85 ("blk-cgroup: stop using seq_get_buf")
-
-Signed-off-by: Khazhismel Kumykov <khazhy@google.com>
----
- block/blk-cgroup.c       |  5 +++++
- fs/seq_file.c            | 14 ++++++++++++++
- include/linux/seq_file.h |  2 ++
- 3 files changed, 21 insertions(+)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 8dfe62786cd5..50043a742c48 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -909,6 +909,7 @@ static void blkcg_print_one_stat(struct blkcg_gq *blkg, struct seq_file *s)
- 	const char *dname;
- 	unsigned seq;
- 	int i;
-+	int scookie;
- 
- 	if (!blkg->online)
- 		return;
-@@ -917,6 +918,8 @@ static void blkcg_print_one_stat(struct blkcg_gq *blkg, struct seq_file *s)
- 	if (!dname)
- 		return;
- 
-+	scookie = seq_checkpoint(s);
-+
- 	seq_printf(s, "%s ", dname);
- 
- 	do {
-@@ -956,6 +959,8 @@ static void blkcg_print_one_stat(struct blkcg_gq *blkg, struct seq_file *s)
- 
- 	if (has_stats)
- 		seq_printf(s, "\n");
-+	else
-+		seq_restore(s, scookie);
- }
- 
- static int blkcg_print_stat(struct seq_file *sf, void *v)
-diff --git a/fs/seq_file.c b/fs/seq_file.c
-index 7ab8a58c29b6..c3ec6b57334e 100644
---- a/fs/seq_file.c
-+++ b/fs/seq_file.c
-@@ -408,6 +408,20 @@ void seq_printf(struct seq_file *m, const char *f, ...)
- }
- EXPORT_SYMBOL(seq_printf);
- 
-+int seq_checkpoint(struct seq_file *m)
-+{
-+	return m->count;
-+}
-+EXPORT_SYMBOL(seq_checkpoint);
-+
-+void seq_restore(struct seq_file *m, int count)
-+{
-+	if (WARN_ON_ONCE(count > m->count || count > m->size))
-+		return;
-+	m->count = count;
-+}
-+EXPORT_SYMBOL(seq_restore);
-+
- #ifdef CONFIG_BINARY_PRINTF
- void seq_bprintf(struct seq_file *m, const char *f, const u32 *binary)
- {
-diff --git a/include/linux/seq_file.h b/include/linux/seq_file.h
-index 60820ab511d2..d3a05f7c2750 100644
---- a/include/linux/seq_file.h
-+++ b/include/linux/seq_file.h
-@@ -117,6 +117,8 @@ __printf(2, 0)
- void seq_vprintf(struct seq_file *m, const char *fmt, va_list args);
- __printf(2, 3)
- void seq_printf(struct seq_file *m, const char *fmt, ...);
-+int seq_checkpoint(struct seq_file *m);
-+void seq_restore(struct seq_file *m, int count);
- void seq_putc(struct seq_file *m, char c);
- void seq_puts(struct seq_file *m, const char *s);
- void seq_put_decimal_ull_width(struct seq_file *m, const char *delimiter,
--- 
-2.36.0.550.gb090851708-goog
-
+Reviewed-by: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
