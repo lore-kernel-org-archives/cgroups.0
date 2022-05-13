@@ -1,88 +1,91 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2 6/6] zswap: memcg accounting
-Date: Fri, 13 May 2022 17:14:26 +0200
-Message-ID: <20220513151426.GC16096@blackbody.suse.cz>
-References: <20220510152847.230957-1-hannes@cmpxchg.org>
- <20220510152847.230957-7-hannes@cmpxchg.org>
- <20220511173218.GB31592@blackbody.suse.cz>
- <YnwJUL90fuoHs3YW@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v4 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
+ page table uses.
+Date: Fri, 13 May 2022 11:50:18 -0400
+Message-ID: <Yn5+OtZSSUZZgTQj@cmpxchg.org>
+References: <20220429201131.3397875-1-yosryahmed@google.com>
+ <20220429201131.3397875-2-yosryahmed@google.com>
+ <87ilqoi77b.wl-maz@kernel.org>
+ <CAJD7tkY7JF25XXUFq2mGroetMkfo-2zGOaQC94pjZE3D42+oaw@mail.gmail.com>
+ <Yn2TGJ4vZ/fst+CY@cmpxchg.org>
+ <Yn2YYl98Vhh/UL0w@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1652454868; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=nyTU5ErQmQ0NdqPj7xjplU/5OPBXUdJ8mJObumbOOaE=;
-        b=A6yJ4U9KldExWhFuocfsPhkK8P9HeRgSb8fmB2eY9z7Sp7ko3TqOhgQnKM+TJjvYGD/z3+
-        2Je6BK2N+LYUAG7wici8UElgk0u8iqwoqsJtw8+x2adxjqmD0U06Eg+UegyuFNXj9dyMKC
-        etWrpypIyhItSwwSEGkVmpbAI6xPQ5M=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Kye4TfWEBKeNkvsN1Z8PpM0cIuVevPyfJP2pQ+b2OJ0=;
+        b=ZZ/JJCRDz3yE4ILSty048bcbPErmsDUK3HlgCxPZevGvO0s7lKzzyxYdFDw1dJf9ph
+         MIp+dwz/aXhjTfmLJaPj/lFR5KENnPsRIaVfRdKCuXnMx6qMaG0uPs9glvL+IiheyQV+
+         I8N0k1bffzWgc5Xm+tBeTXdy8CbQJfgCaMsHgTm1sfLVt/+VGnsbnrEpzH2RKA967Lgp
+         i0c6ZYtdpmtmfZZuTg2GnWU+ABJlGS07aIDJN1CLeOQkEF/JyGUWyE+RbOazEYEr/CaR
+         3SpCLEHRQ4pi9gjxDfMWcHE6xNgzt5GERI+gy2A1oDXWEszhLZUV5HDLMnSPDj/P5+Pq
+         xL0Q==
 Content-Disposition: inline
-In-Reply-To: <YnwJUL90fuoHs3YW-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <Yn2YYl98Vhh/UL0w-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, kvmarm-FPEHb7Xf0XXUo1n7N8X6Ug@public.gmane.org
 
-On Wed, May 11, 2022 at 03:06:56PM -0400, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> Correct. After which the uncompressed page is reclaimed and uncharged.
-> So the zswapout process will reduce the charge bottom line.
+On Thu, May 12, 2022 at 11:29:38PM +0000, Sean Christopherson wrote:
+> On Thu, May 12, 2022, Johannes Weiner wrote:
+> > On Mon, May 02, 2022 at 11:46:26AM -0700, Yosry Ahmed wrote:
+> > > On Mon, May 2, 2022 at 3:01 AM Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > > > What do you plan to do for IOMMU page tables? After all, they serve
+> > > > the exact same purpose, and I'd expect these to be handled the same
+> > > > way (i.e. why is this KVM specific?).
+> > > 
+> > > The reason this was named NR_SECONDARY_PAGTABLE instead of
+> > > NR_KVM_PAGETABLE is exactly that. To leave room to incrementally
+> > > account other types of secondary page tables to this stat. It is just
+> > > that we are currently interested in the KVM MMU usage.
+> > 
+> > Do you actually care at the supervisor level that this memory is used
+> > for guest page tables?
+> 
+> Hmm, yes?  KVM does have a decent number of large-ish allocations that aren't
+> for page tables, but except for page tables, the number/size of those allocations
+> scales linearly with either the number of vCPUs or the amount of memory assigned
+> to the VM (with no room for improvement barring KVM changes).
+> 
+> Off the top of my head, KVM's secondary page tables are the only allocations that
+> don't scale linearly, especially when nested virtualization is in use.
 
-A zswap object falling under memory.current was my first thinking, I was
-confused why it's exported as a separate counter memory.zswap.current
-(which IMO suggests disjoint counting) and it doubles a
-memory.stat:zswap entry.
+Thanks, that's useful information.
 
-Is the separate memory.zswap.current good for anything? (Except maybe
-avoiding global rstat flush on memory.stat read but that'd be an
-undesired precendent.)
+Are these other allocations accounted somewhere? If not, are they
+potential containment holes that will need fixing eventually?
 
-(Ad the eventually reduced footprint, the transitional excursion above
-memcg's (or ancestor's) limit should be limited by number of parallel
-reclaims running (each one at most a page, right?), so it doesn't seem
-necessary to tackle (now).)
+> > It seems to me you primarily care that it is reported *somewhere*
+> > (hence the piggybacking off of NR_PAGETABLE at first). And whether
+> > it's page tables or iommu tables or whatever else allocated for the
+> > purpose of virtualization, it doesn't make much of a difference to the
+> > host/cgroup that is tracking it, right?
+> > 
+> > (The proximity to nr_pagetable could also be confusing. A high page
+> > table count can be a hint to userspace to enable THP. It seems
+> > actionable in a different way than a high number of kvm page tables or
+> > iommu page tables.)
+> 
+> I don't know about iommu page tables, but on the KVM side a high count can also
+> be a good signal that enabling THP would be beneficial.
 
-> memory.zswap.* are there to configure zswap policy, within the
-> boundaries of available memory - it's by definition a subset.
+Well, maybe.
 
-I see how the .max works when equal to 0 or "max". The intermediate
-values are more difficult to reason about.
-Also, I can see that on the global level, zswap is configured relatively
-(/sys/module/zswap/parameters/max_pool_percent).
-You wrote that the actual configured value is workload specific, would
-it be simpler to have also relative zswap limit per memcg?
+It might help, but ultimately it's the process that's in control in
+all cases: it's unmovable kernel memory allocated to manage virtual
+address space inside the task.
 
-(Relative wrt memory.max, it'd be rather just a convenience with this
-simple ratio, however, it'd correspond to the top level limit. OTOH, the
-relatives would have counter-intuitive hierarchical behavior. I don't
-mean this should be changed, rather wondering why this variant was
-chosen.)
+So I'm still a bit at a loss whether these things should all be lumped
+in together or kept separately. meminfo and memory.stat are permanent
+ABI, so we should try to establish in advance whether the new itme is
+really a first-class consumer or part of something bigger.
 
+The patch initially piggybacked on NR_PAGETABLE. I found an email of
+you asking why it couldn't be a separate item, but it didn't provide a
+reasoning for that decision. Could you share your thoughts on that?
 
-> +bool obj_cgroup_may_zswap(struct obj_cgroup *objcg)
-> +{
-> +     struct mem_cgroup *memcg, *original_memcg;
-> +     bool ret = true;
-> +
-> +     original_memcg = get_mem_cgroup_from_objcg(objcg);
-> +     for (memcg = original_memcg; memcg != root_mem_cgroup;
-> +          memcg = parent_mem_cgroup(memcg)) {
-> +             unsigned long max = READ_ONCE(memcg->zswap_max);
-> +             unsigned long pages;
-> +
-> +             if (max == PAGE_COUNTER_MAX)
-> +                     continue;
-> +             if (max == 0) {
-> +                     ret = false;
-> +                     break;
-> +             }
-> +
-> +             cgroup_rstat_flush(memcg->css.cgroup);
-
-Here, I think it'd be better not to bypass mem_cgroup_flush_stats() (the
-mechanism is approximate and you traverse all ancestors anyway), i.e.
-mem_cgroup_flush_stats() before the loop instead of this.
-
-Thanks,
-Michal
-
+Thanks
