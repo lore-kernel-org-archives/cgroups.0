@@ -1,141 +1,282 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [RFC PATCH bpf-next v2 3/7] libbpf: Add support for rstat flush progs
-Date: Sun, 15 May 2022 02:35:00 +0000
-Message-ID: <20220515023504.1823463-4-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [RFC PATCH bpf-next v2 5/7] bpf: Introduce cgroup iter
+Date: Sun, 15 May 2022 02:35:02 +0000
+Message-ID: <20220515023504.1823463-6-yosryahmed@google.com>
 References: <20220515023504.1823463-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=+WjPdyMxAdY9z5Dvu+MUV583iy9AH2h8aY84f8u+NlQ=;
-        b=drK5May8XtsY9ItuFqGUPfYPZSwPFC2vfWpY3F0n+trY0R+YgtulCP7PaD0tTJYX87
-         /AQzQdehzBXCX/m9XBVR+UEuQM1EiQOLyBQFDJn4AEtc6yk4IHGVD6xEuPAit6b3utLc
-         pexcE8FmNCBHJ3vKjD3Wuv4qRyCvS8bOd9hQ3GKXf6M92KdyaHgvs6OqDSt/PCZsV7zJ
-         6k2Y0w02FfG3VXu16UcaUq+7hUYRzXqUDru05kCE3TYBetyhT54RS2zi6TSof9r0Hzxu
-         PS3sd/eymY2do0BX/aNeXkVD9XqdOm59MkVD8or9jMJzISh5c1W9Xkbe0G/miCcx/pVQ
-         EnQw==
-In-Reply-To: <20220515023504.1823463-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        bh=mivptsETNqNDdcSME2iU77WtyhUxYujtfDC8wYBwYo8=;
+        b=rMya0QjL40CIpu8Uv/ByKWJyDrwJG5QrMXKxZNnicY5ZklKuCvsXB5oQ2U+Z5FoVPS
+         NNID7KJ++02OQhQGC/O7udgQAt+/sF5cjRYPZqcf8Mj7qgc9httTO8QX5l1pGxivwgop
+         eXCz8XpLdo0k56s/4Xp2sMxYTBtxDAeEU1Lt4gvtI33dWiQaKbR2O99nlVMoQRoVY7s7
+         BBXZvaQSBFuYR6uMsX3D3mTwWX1M9QSzWMCbRG5fP5THFSoKblyRNfBoPrTCL9dO8hF1
+         PEq0BiUdinr0dtZQK4V8fQBCrsCqIWbguGR/Jzq4tqE9PEOy01Xl8+B35dPbm6xq8IrW
+         +B9w==
+In-Reply-To: <20220515023504.1823463-1-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>
+Cc: Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
 
-Add support to attach RSTAT_FLUSH programs.
+From: Hao Luo <haoluo@google.com>
 
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Introduce a new type of iter prog: cgroup. Unlike other bpf_iter, this
+iter doesn't iterate a set of kernel objects. Instead, it is supposed to
+be parameterized by a cgroup id and prints only that cgroup. So one
+needs to specify a target cgroup id when attaching this iter. The target
+cgroup's state can be read out via a link of this iter.
+
+Signed-off-by: Hao Luo <haoluo@google.com>
+Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
 ---
- tools/lib/bpf/bpf.c      |  1 -
- tools/lib/bpf/libbpf.c   | 40 ++++++++++++++++++++++++++++++++++++++++
- tools/lib/bpf/libbpf.h   |  3 +++
- tools/lib/bpf/libbpf.map |  1 +
- 4 files changed, 44 insertions(+), 1 deletion(-)
+ include/linux/bpf.h            |   2 +
+ include/uapi/linux/bpf.h       |   6 ++
+ kernel/bpf/Makefile            |   2 +-
+ kernel/bpf/cgroup_iter.c       | 148 +++++++++++++++++++++++++++++++++
+ tools/include/uapi/linux/bpf.h |   6 ++
+ 5 files changed, 163 insertions(+), 1 deletion(-)
+ create mode 100644 kernel/bpf/cgroup_iter.c
 
-diff --git a/tools/lib/bpf/bpf.c b/tools/lib/bpf/bpf.c
-index 5660268e103f..9e3cb0d1eb99 100644
---- a/tools/lib/bpf/bpf.c
-+++ b/tools/lib/bpf/bpf.c
-@@ -870,7 +870,6 @@ int bpf_link_create(int prog_fd, int target_fd,
- 		attr.link_create.tracing.cookie = OPTS_GET(opts, tracing.cookie, 0);
- 		if (!OPTS_ZEROED(opts, tracing))
- 			return libbpf_err(-EINVAL);
--		break;
- 	default:
- 		if (!OPTS_ZEROED(opts, flags))
- 			return libbpf_err(-EINVAL);
-diff --git a/tools/lib/bpf/libbpf.c b/tools/lib/bpf/libbpf.c
-index 4867a930628b..b7fc64ebf8dd 100644
---- a/tools/lib/bpf/libbpf.c
-+++ b/tools/lib/bpf/libbpf.c
-@@ -8998,6 +8998,7 @@ static int attach_trace(const struct bpf_program *prog, long cookie, struct bpf_
- static int attach_kprobe_multi(const struct bpf_program *prog, long cookie, struct bpf_link **link);
- static int attach_lsm(const struct bpf_program *prog, long cookie, struct bpf_link **link);
- static int attach_iter(const struct bpf_program *prog, long cookie, struct bpf_link **link);
-+static int attach_rstat(const struct bpf_program *prog, long cookie, struct bpf_link **link);
+diff --git a/include/linux/bpf.h b/include/linux/bpf.h
+index ca908a731cb4..45076c581f24 100644
+--- a/include/linux/bpf.h
++++ b/include/linux/bpf.h
+@@ -44,6 +44,7 @@ struct kobject;
+ struct mem_cgroup;
+ struct module;
+ struct bpf_func_state;
++struct cgroup;
  
- static const struct bpf_sec_def section_defs[] = {
- 	SEC_DEF("socket",		SOCKET_FILTER, 0, SEC_NONE | SEC_SLOPPY_PFX),
-@@ -9078,6 +9079,7 @@ static const struct bpf_sec_def section_defs[] = {
- 	SEC_DEF("cgroup/setsockopt",	CGROUP_SOCKOPT, BPF_CGROUP_SETSOCKOPT, SEC_ATTACHABLE | SEC_SLOPPY_PFX),
- 	SEC_DEF("struct_ops+",		STRUCT_OPS, 0, SEC_NONE),
- 	SEC_DEF("sk_lookup",		SK_LOOKUP, BPF_SK_LOOKUP, SEC_ATTACHABLE | SEC_SLOPPY_PFX),
-+	SEC_DEF("rstat/flush",		RSTAT_FLUSH, 0, SEC_NONE, attach_rstat),
+ extern struct idr btf_idr;
+ extern spinlock_t btf_idr_lock;
+@@ -1579,6 +1580,7 @@ int bpf_obj_get_user(const char __user *pathname, int flags);
+ 
+ struct bpf_iter_aux_info {
+ 	struct bpf_map *map;
++	struct cgroup *cgroup;
  };
  
- static size_t custom_sec_def_cnt;
-@@ -11784,6 +11786,44 @@ static int attach_iter(const struct bpf_program *prog, long cookie, struct bpf_l
- 	return libbpf_get_error(*link);
- }
+ typedef int (*bpf_iter_attach_target_t)(struct bpf_prog *prog,
+diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
+index 022522174286..9a93b72bf39c 100644
+--- a/include/uapi/linux/bpf.h
++++ b/include/uapi/linux/bpf.h
+@@ -91,6 +91,9 @@ union bpf_iter_link_info {
+ 	struct {
+ 		__u32	map_fd;
+ 	} map;
++	struct {
++		__u64	cgroup_id;
++	} cgroup;
+ };
  
-+struct bpf_link *bpf_program__attach_rstat(const struct bpf_program *prog)
+ /* BPF syscall commands, see bpf(2) man-page for more details. */
+@@ -5986,6 +5989,9 @@ struct bpf_link_info {
+ 				struct {
+ 					__u32 map_id;
+ 				} map;
++				struct {
++					__u64 cgroup_id;
++				} cgroup;
+ 			};
+ 		} iter;
+ 		struct  {
+diff --git a/kernel/bpf/Makefile b/kernel/bpf/Makefile
+index 0487133b799f..f2a6fd0633d6 100644
+--- a/kernel/bpf/Makefile
++++ b/kernel/bpf/Makefile
+@@ -37,7 +37,7 @@ obj-${CONFIG_BPF_LSM} += bpf_lsm.o
+ endif
+ obj-$(CONFIG_BPF_PRELOAD) += preload/
+ ifeq ($(CONFIG_CGROUPS),y)
+-obj-$(CONFIG_BPF_SYSCALL) += rstat.o
++obj-$(CONFIG_BPF_SYSCALL) += rstat.o cgroup_iter.o
+ endif
+ 
+ obj-$(CONFIG_BPF_SYSCALL) += relo_core.o
+diff --git a/kernel/bpf/cgroup_iter.c b/kernel/bpf/cgroup_iter.c
+new file mode 100644
+index 000000000000..86bdfe135d24
+--- /dev/null
++++ b/kernel/bpf/cgroup_iter.c
+@@ -0,0 +1,148 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/* Copyright (c) 2022 Google */
++#include <linux/bpf.h>
++#include <linux/btf_ids.h>
++#include <linux/cgroup.h>
++#include <linux/kernel.h>
++#include <linux/seq_file.h>
++
++struct bpf_iter__cgroup {
++	__bpf_md_ptr(struct bpf_iter_meta *, meta);
++	__bpf_md_ptr(struct cgroup *, cgroup);
++};
++
++static void *cgroup_iter_seq_start(struct seq_file *seq, loff_t *pos)
 +{
-+	struct bpf_link *link = NULL;
-+	char errmsg[STRERR_BUFSIZE];
-+	int err, prog_fd, link_fd;
++	/* Only one session is supported. */
++	if (*pos > 0)
++		return NULL;
 +
-+	prog_fd = bpf_program__fd(prog);
-+	if (prog_fd < 0) {
-+		pr_warn("prog '%s': can't attach before loaded\n", prog->name);
-+		return libbpf_err_ptr(-EINVAL);
-+	}
++	if (*pos == 0)
++		++*pos;
 +
-+	link = calloc(1, sizeof(*link));
-+	if (!link)
-+		return libbpf_err_ptr(-ENOMEM);
-+	link->detach = &bpf_link__detach_fd;
-+
-+	/* rstat flushers are currently the only supported rstat programs */
-+	link_fd = bpf_link_create(prog_fd, 0, BPF_RSTAT_FLUSH, NULL);
-+	if (link_fd < 0) {
-+		err = -errno;
-+		pr_warn("prog '%s': failed to attach: %s\n",
-+			prog->name, libbpf_strerror_r(err, errmsg,
-+						      sizeof(errmsg)));
-+		free(link);
-+		return libbpf_err_ptr(err);
-+	}
-+
-+	link->fd = link_fd;
-+	return link;
++	return *(struct cgroup **)seq->private;
 +}
 +
-+static int attach_rstat(const struct bpf_program *prog, long cookie, struct bpf_link **link)
++static void *cgroup_iter_seq_next(struct seq_file *seq, void *v, loff_t *pos)
 +{
-+	*link = bpf_program__attach_rstat(prog);
-+	return libbpf_get_error(*link);
++	++*pos;
++	return NULL;
 +}
 +
- struct bpf_link *bpf_program__attach(const struct bpf_program *prog)
- {
- 	struct bpf_link *link = NULL;
-diff --git a/tools/lib/bpf/libbpf.h b/tools/lib/bpf/libbpf.h
-index 21984dcd6dbe..f8b6827d5550 100644
---- a/tools/lib/bpf/libbpf.h
-+++ b/tools/lib/bpf/libbpf.h
-@@ -662,6 +662,9 @@ LIBBPF_API struct bpf_link *
- bpf_program__attach_iter(const struct bpf_program *prog,
- 			 const struct bpf_iter_attach_opts *opts);
- 
-+LIBBPF_API struct bpf_link *
-+bpf_program__attach_rstat(const struct bpf_program *prog);
++static int cgroup_iter_seq_show(struct seq_file *seq, void *v)
++{
++	struct bpf_iter__cgroup ctx;
++	struct bpf_iter_meta meta;
++	struct bpf_prog *prog;
++	int ret = 0;
 +
- /*
-  * Libbpf allows callers to adjust BPF programs before being loaded
-  * into kernel. One program in an object file can be transformed into
-diff --git a/tools/lib/bpf/libbpf.map b/tools/lib/bpf/libbpf.map
-index 008da8db1d94..f945c6265cb5 100644
---- a/tools/lib/bpf/libbpf.map
-+++ b/tools/lib/bpf/libbpf.map
-@@ -449,6 +449,7 @@ LIBBPF_0.8.0 {
- 		bpf_program__attach_kprobe_multi_opts;
- 		bpf_program__attach_trace_opts;
- 		bpf_program__attach_usdt;
-+		bpf_program__attach_rstat;
- 		bpf_program__set_insns;
- 		libbpf_register_prog_handler;
- 		libbpf_unregister_prog_handler;
++	ctx.meta = &meta;
++	ctx.cgroup = v;
++	meta.seq = seq;
++	prog = bpf_iter_get_info(&meta, false);
++	if (prog)
++		ret = bpf_iter_run_prog(prog, &ctx);
++
++	return ret;
++}
++
++static void cgroup_iter_seq_stop(struct seq_file *seq, void *v)
++{
++}
++
++static const struct seq_operations cgroup_iter_seq_ops = {
++	.start  = cgroup_iter_seq_start,
++	.next   = cgroup_iter_seq_next,
++	.stop   = cgroup_iter_seq_stop,
++	.show   = cgroup_iter_seq_show,
++};
++
++BTF_ID_LIST_SINGLE(bpf_cgroup_btf_id, struct, cgroup)
++
++static int cgroup_iter_seq_init(void *priv_data, struct bpf_iter_aux_info *aux)
++{
++	*(struct cgroup **)priv_data = aux->cgroup;
++	return 0;
++}
++
++static const struct bpf_iter_seq_info cgroup_iter_seq_info = {
++	.seq_ops                = &cgroup_iter_seq_ops,
++	.init_seq_private       = cgroup_iter_seq_init,
++	.seq_priv_size          = sizeof(struct cgroup *),
++};
++
++static int bpf_iter_attach_cgroup(struct bpf_prog *prog,
++				  union bpf_iter_link_info *linfo,
++				  struct bpf_iter_aux_info *aux)
++{
++	struct cgroup *cgroup;
++
++	cgroup = cgroup_get_from_id(linfo->cgroup.cgroup_id);
++	if (!cgroup)
++		return -EBUSY;
++
++	aux->cgroup = cgroup;
++	return 0;
++}
++
++static void bpf_iter_detach_cgroup(struct bpf_iter_aux_info *aux)
++{
++	if (aux->cgroup)
++		cgroup_put(aux->cgroup);
++}
++
++static void bpf_iter_cgroup_show_fdinfo(const struct bpf_iter_aux_info *aux,
++					struct seq_file *seq)
++{
++	char *buf;
++
++	seq_printf(seq, "cgroup_id:\t%llu\n", cgroup_id(aux->cgroup));
++
++	buf = kmalloc(PATH_MAX, GFP_KERNEL);
++	if (!buf) {
++		seq_puts(seq, "cgroup_path:\n");
++		return;
++	}
++
++	/* If cgroup_path_ns() fails, buf will be an empty string, cgroup_path
++	 * will print nothing.
++	 *
++	 * Cgroup_path is the path in the calliing process's cgroup namespace.
++	 */
++	cgroup_path_ns(aux->cgroup, buf, sizeof(buf),
++		       current->nsproxy->cgroup_ns);
++	seq_printf(seq, "cgroup_path:\t%s\n", buf);
++	kfree(buf);
++}
++
++static int bpf_iter_cgroup_fill_link_info(const struct bpf_iter_aux_info *aux,
++					  struct bpf_link_info *info)
++{
++	info->iter.cgroup.cgroup_id = cgroup_id(aux->cgroup);
++	return 0;
++}
++
++DEFINE_BPF_ITER_FUNC(cgroup, struct bpf_iter_meta *meta,
++		     struct cgroup *cgroup)
++
++static struct bpf_iter_reg bpf_cgroup_reg_info = {
++	.target			= "cgroup",
++	.attach_target		= bpf_iter_attach_cgroup,
++	.detach_target		= bpf_iter_detach_cgroup,
++	.show_fdinfo		= bpf_iter_cgroup_show_fdinfo,
++	.fill_link_info		= bpf_iter_cgroup_fill_link_info,
++	.ctx_arg_info_size	= 1,
++	.ctx_arg_info		= {
++		{ offsetof(struct bpf_iter__cgroup, cgroup),
++		  PTR_TO_BTF_ID },
++	},
++	.seq_info		= &cgroup_iter_seq_info,
++};
++
++static int __init bpf_cgroup_iter_init(void)
++{
++	bpf_cgroup_reg_info.ctx_arg_info[0].btf_id = bpf_cgroup_btf_id[0];
++	return bpf_iter_reg_target(&bpf_cgroup_reg_info);
++}
++
++late_initcall(bpf_cgroup_iter_init);
+diff --git a/tools/include/uapi/linux/bpf.h b/tools/include/uapi/linux/bpf.h
+index 022522174286..9a93b72bf39c 100644
+--- a/tools/include/uapi/linux/bpf.h
++++ b/tools/include/uapi/linux/bpf.h
+@@ -91,6 +91,9 @@ union bpf_iter_link_info {
+ 	struct {
+ 		__u32	map_fd;
+ 	} map;
++	struct {
++		__u64	cgroup_id;
++	} cgroup;
+ };
+ 
+ /* BPF syscall commands, see bpf(2) man-page for more details. */
+@@ -5986,6 +5989,9 @@ struct bpf_link_info {
+ 				struct {
+ 					__u32 map_id;
+ 				} map;
++				struct {
++					__u64 cgroup_id;
++				} cgroup;
+ 			};
+ 		} iter;
+ 		struct  {
 -- 
 2.36.0.550.gb090851708-goog
 
