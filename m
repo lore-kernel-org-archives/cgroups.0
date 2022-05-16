@@ -1,83 +1,65 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2 6/6] zswap: memcg accounting
-Date: Mon, 16 May 2022 16:34:59 +0200
-Message-ID: <20220516143459.GA17557@blackbody.suse.cz>
-References: <20220510152847.230957-1-hannes@cmpxchg.org>
- <20220510152847.230957-7-hannes@cmpxchg.org>
- <20220511173218.GB31592@blackbody.suse.cz>
- <YnwJUL90fuoHs3YW@cmpxchg.org>
- <20220513151426.GC16096@blackbody.suse.cz>
- <Yn6QfdouzkcrygTR@cmpxchg.org>
+From: bh1scw@gmail.com
+Subject: [PATCH] blk-cgroup: Remove unnecessary rcu_read_lock/unlock()
+Date: Tue, 17 May 2022 01:39:30 +0800
+Message-ID: <20220516173930.159535-1-bh1scw@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1652711700; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=W7ceyTjxid5l9ZGGTqZ+wt/EPfbFdKSX+/F4lyNdDKg=;
-        b=g3iVVHUtSyQWBN3Y59HjcBDj1p/IZFTO1o2s8CWmnszg6wBpymi4LOQIZAcNlK/seWQfW5
-        OTdSKo9VL5YnbQyO5U7Jfrl+JZ6OG/lh8V2pkehTwaRN9l9VeiSd8KtqESYl+sNjIGZ0wr
-        /r1jDJWacCJhVoSdrQMTgwD1CqqpyIo=
-Content-Disposition: inline
-In-Reply-To: <Yn6QfdouzkcrygTR-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=4QlC2UOYMPKKudwLjLWBF40eX+oeG8Yvuxzp6LWYy94=;
+        b=lN5q6KoGnMVKq8KOjsovYc0Ea9Rz2wCpQaF48i5eMxFhf3pMQhJODDGAvdMNRqWL2n
+         1kuhXkOG7R5wJOM/NAWz7J4UIEiIRaBQzILAI5v2Su+zwhL0GL/t0lZWPP9pPWi9X5w1
+         TRmLsarTXjfHK8MzG/jFj58z06sJ6O70HdWHKxHpNJMABQaWzn4ySx0XB977Cqy6L+Ms
+         68LQaNkjgqCJaydfqryJPKMsb++N4qxHLOKJWhJR9AvA7TVZ0iSC6ytp/1cGqiViasIS
+         jDUUNTS1nVh0xyNxGTDlH8awrM/IWxq4zVYrTKv/Qp1yO7yesfSIN0YJWuUzfIiCwqMP
+         08PA==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: tj@kernel.org, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com, Fanjun Kong <bh1scw@gmail.com>
 
-On Fri, May 13, 2022 at 01:08:13PM -0400, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> Right, it's accounted as a subset rather than fully disjointed. But it
-> is a limitable counter of its own, so I exported it as such, with a
-> current and a max knob. This is comparable to the kmem counter in v1.
+From: Fanjun Kong <bh1scw@gmail.com>
 
-That counter and limit didn't turn out well. I liked the analogy to
-writeback (and dirty limit) better.
+spin_lock_irq/spin_unlock_irq contains preempt_disable/enable().
+Which can serve as RCU read-side critical region, so remove
+rcu_read_lock/unlock().
 
-> From an API POV it would be quite strange to have max for a counter
-> that has no current. Likewise it would be strange for a major memory
-> consumer to be missing from memory.stat.
+Signed-off-by: Fanjun Kong <bh1scw@gmail.com>
+---
+ block/blk-cgroup.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-My understanding would be to have all memory.stat entries as you
-propose, no extra .current counter and the .max knob for zswap
-configuration.
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index a91f8ae18b49..7bdc16a36560 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -1283,14 +1283,13 @@ int blkcg_init_queue(struct request_queue *q)
+ 	preloaded = !radix_tree_preload(GFP_KERNEL);
+ 
+ 	/* Make sure the root blkg exists. */
+-	rcu_read_lock();
++	/* spin_lock_irq can serve as RCU read-side critical section. */
+ 	spin_lock_irq(&q->queue_lock);
+ 	blkg = blkg_create(&blkcg_root, q, new_blkg);
+ 	if (IS_ERR(blkg))
+ 		goto err_unlock;
+ 	q->root_blkg = blkg;
+ 	spin_unlock_irq(&q->queue_lock);
+-	rcu_read_unlock();
+ 
+ 	if (preloaded)
+ 		radix_tree_preload_end();
+@@ -1316,7 +1315,6 @@ int blkcg_init_queue(struct request_queue *q)
+ 	return ret;
+ err_unlock:
+ 	spin_unlock_irq(&q->queue_lock);
+-	rcu_read_unlock();
+ 	if (preloaded)
+ 		radix_tree_preload_end();
+ 	return PTR_ERR(blkg);
+-- 
+2.36.0
 
-> It needs to be configured to the workload's access frequency curve,
-> which can be done with trial-and-error (reasonable balance between
-> zswpins and pswpins) or in a more targeted manner using tools such as
-> page_idle, damon etc.
-> [...]
-> Because for load tuning, bytes make much more sense. That's how you
-> measure the workingset, so a percentage is an awkward indirection. At
-> the cgroup level, it makes even less sense: all memcg tunables are in
-> bytes, it would be quite weird to introduce a "max" that is 0-100. Add
-> the confusion of how percentages would propagate down the hierarchy...
-
-Thanks for the explanation. I guess there's no simple tranformation of
-in-kernel available information that'd allow a more semantic
-configuration of this value. The rather crude absolute value requires
-(but also simply allows) some calibration or responsive tuning.
-
-> I don't traverse all ancestors, I bail on disabled groups and skip
-> unlimited ones.
-
-I admit I missed that.
-
-> Flushing unnecessary groups with a ratelimit doesn't sound like an
-> improvement to me.
-
-Then I'm only concerned about a situation when there's a single deep
-memcg that undergoes both workingset_refault() and zswap querying.
-The latter (bare call to cgroup_rstat_flush()) won't reset
-stats_flush_threshold, so the former (or the async flush more likely)
-would attempt a flush too. The flush work (on the leaf memcg) would be
-done twice even though it may be within the tolerance of cumulated
-error the second time.
-
-This is a thing that might require attention in the future (depending on
-some data how it actually performs). I see how the current approach is
-justified.
-
-
-Regards,
-Michal
