@@ -1,65 +1,42 @@
-From: bh1scw@gmail.com
-Subject: [PATCH] blk-cgroup: Remove unnecessary rcu_read_lock/unlock()
-Date: Tue, 17 May 2022 01:39:30 +0800
-Message-ID: <20220516173930.159535-1-bh1scw@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] blk-cgroup: Remove unnecessary rcu_read_lock/unlock()
+Date: Mon, 16 May 2022 08:42:37 -1000
+Message-ID: <YoKbHXZq5Knzl7LM@slm.duckdns.org>
+References: <20220516173930.159535-1-bh1scw@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=4QlC2UOYMPKKudwLjLWBF40eX+oeG8Yvuxzp6LWYy94=;
-        b=lN5q6KoGnMVKq8KOjsovYc0Ea9Rz2wCpQaF48i5eMxFhf3pMQhJODDGAvdMNRqWL2n
-         1kuhXkOG7R5wJOM/NAWz7J4UIEiIRaBQzILAI5v2Su+zwhL0GL/t0lZWPP9pPWi9X5w1
-         TRmLsarTXjfHK8MzG/jFj58z06sJ6O70HdWHKxHpNJMABQaWzn4ySx0XB977Cqy6L+Ms
-         68LQaNkjgqCJaydfqryJPKMsb++N4qxHLOKJWhJR9AvA7TVZ0iSC6ytp/1cGqiViasIS
-         jDUUNTS1nVh0xyNxGTDlH8awrM/IWxq4zVYrTKv/Qp1yO7yesfSIN0YJWuUzfIiCwqMP
-         08PA==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Zfv6htmGomNEyvT4/mYlApRKn0/2gUiM5SY4HLzky7k=;
+        b=GplBN0T/LVrKP/XISTvqaoVFkSl2pbtPN40wsW6anFajOkK7UTiSW3WGv0fnjcQtge
+         50XorcIu8S0HDAV9BOZSwbaYiFQnVa5Z/HJ1NMUKSbyNIe5ItCma/u68lCrb+4UPAjFl
+         y9wPtaO5MeIIIbzcyH4iAFLA09Qk2UWDtvuvZp027Alp0lHKdAw4kemili37K0stSiR2
+         3d3352oB8pz/xXGjl4nFotNKezCb2+3/0ixz3zvuZft6aUqidrU/wRDgsiQJKAT/hW5x
+         SRJkPGOsErEga1DSBQxzxT8bqsq8MC+l6DEqr1rI0j+d9R8R0kCwBDDMHHWJOhhaxM9F
+         Y7CQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20220516173930.159535-1-bh1scw-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com, Fanjun Kong <bh1scw@gmail.com>
+Content-Transfer-Encoding: 7bit
+To: bh1scw-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-From: Fanjun Kong <bh1scw@gmail.com>
+On Tue, May 17, 2022 at 01:39:30AM +0800, bh1scw-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org wrote:
+> From: Fanjun Kong <bh1scw-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> 
+> spin_lock_irq/spin_unlock_irq contains preempt_disable/enable().
+> Which can serve as RCU read-side critical region, so remove
+> rcu_read_lock/unlock().
+> 
+> Signed-off-by: Fanjun Kong <bh1scw-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-spin_lock_irq/spin_unlock_irq contains preempt_disable/enable().
-Which can serve as RCU read-side critical region, so remove
-rcu_read_lock/unlock().
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Signed-off-by: Fanjun Kong <bh1scw@gmail.com>
----
- block/blk-cgroup.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Thanks.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index a91f8ae18b49..7bdc16a36560 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1283,14 +1283,13 @@ int blkcg_init_queue(struct request_queue *q)
- 	preloaded = !radix_tree_preload(GFP_KERNEL);
- 
- 	/* Make sure the root blkg exists. */
--	rcu_read_lock();
-+	/* spin_lock_irq can serve as RCU read-side critical section. */
- 	spin_lock_irq(&q->queue_lock);
- 	blkg = blkg_create(&blkcg_root, q, new_blkg);
- 	if (IS_ERR(blkg))
- 		goto err_unlock;
- 	q->root_blkg = blkg;
- 	spin_unlock_irq(&q->queue_lock);
--	rcu_read_unlock();
- 
- 	if (preloaded)
- 		radix_tree_preload_end();
-@@ -1316,7 +1315,6 @@ int blkcg_init_queue(struct request_queue *q)
- 	return ret;
- err_unlock:
- 	spin_unlock_irq(&q->queue_lock);
--	rcu_read_unlock();
- 	if (preloaded)
- 		radix_tree_preload_end();
- 	return PTR_ERR(blkg);
 -- 
-2.36.0
-
+tejun
