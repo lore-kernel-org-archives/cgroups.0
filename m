@@ -1,29 +1,27 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: Issue with 252c651a4c85 ("blk-cgroup: stop using seq_get_buf")
-Date: Tue, 17 May 2022 08:11:52 +0200
-Message-ID: <20220517061152.GA4789@lst.de>
-References: <CACGdZYK3iLc8u+YuyteaWqLRCHUJvR10Gem6MFyx36wP4Z2y2Q@mail.gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [RESEND][RFC PATCH] blkcg: rewind seq_file if no stats
+Date: Tue, 17 May 2022 08:12:38 +0200
+Message-ID: <20220517061238.GB4789@lst.de>
+References: <CACGdZYLMW2KHVebfyJZVn9G=15N+Jt4+8oF5gq3wdDTOcXbk9A@mail.gmail.com> <20220513174030.1307720-1-khazhy@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CACGdZYK3iLc8u+YuyteaWqLRCHUJvR10Gem6MFyx36wP4Z2y2Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20220513174030.1307720-1-khazhy@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Khazhy Kumykov <khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, w.bumiller-YTcQvvOqK21BDgjK7y7TUQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Khazhismel Kumykov <khazhy@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Thu, May 12, 2022 at 03:42:54PM -0700, Khazhy Kumykov wrote:
-> I can see in the latest tip, if we have devices with no statistics,
-> we'll print the maj:min and then nothing else, which can end up
-> looking weird, (e.g. like below.) I see that in older kernels, we
-> avoided printing the device name at all if there were no stats, and it
-> looks like this behavior was silently broken by 252c651a4c85
-> ("blk-cgroup: stop using seq_get_buf"), where before we prepared the
-> whole line then decided at the end whether to commit it or not.
+On Fri, May 13, 2022 at 10:40:30AM -0700, Khazhismel Kumykov wrote:
+> Restores the previous behavior of only displaying devices for which we
+> have statistics (and removes the current, broken, behavior of printing
+> devname with no newline if no statistics)
 > 
-> I do see a patch "blk-cgroup: always terminate io.stat lines" that
-> addresses this by just unconditionally printing the newline (though it
-> looks like that patch never landed).
+> In lieu of get_seq_buf + seq_commit, provide a way to "undo" writes if
+> we use seq_printf
 
-It should really go in, I just sent a ping for it.
+I have to say I much prefer the simpler fix from Wolfgang.  But
+if we want to go down this route it needs to split into a patch
+for the seq_file infrastruture and a separate one for the blk-cgroup
+code.
