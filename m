@@ -1,48 +1,46 @@
-From: Xiu Jianfeng <xiujianfeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next] cgroup: Make cgroup_debug static
-Date: Tue, 17 May 2022 19:25:23 +0800
-Message-ID: <20220517112523.243386-1-xiujianfeng@huawei.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v3] blk-cgroup: always terminate io.stat lines
+Date: Tue, 17 May 2022 06:12:04 -0600
+Message-ID: <165278952418.12941.4325264956300231225.b4-ty@kernel.dk>
+References: <20220111083159.42340-1-w.bumiller@proxmox.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:in-reply-to:references:subject:message-id:date
+         :mime-version:content-transfer-encoding;
+        bh=bESFS7Lce2ivS8jPv+1Tsk70w8y9oJwx0ecowrteEFU=;
+        b=Y/MfMz7lk/eOpLKlFlTXgPsjibZmZaA2PbI2ucwBhDPfX/hEp9tUApYImhcgzuuYOF
+         FOt0+nc+MCLbeqbOXV3FgGF3xcRDDx1sxrxkzBONsxm444eMwKGqx9Wj7nayWIJL9beT
+         2QbsV6YhW75anjz5V+Xj6lKrjs26H0gANnVDdG960Z/4Y/C8knzq0Y9I2vc/PpdEnMeZ
+         Er8qwMap1HyKGi9GB839aP0LGjuJNKfmJ+iP10ioCUykBwDlM0Dhj848G3NO13ISNqHw
+         FbbnrNHoZK1jN2MLWHhJf/T5K2MCHbpv7+Up7vjLRjEbLdk+KUvjpfSqkW4LP1W0oWmi
+         saGA==
+In-Reply-To: <20220111083159.42340-1-w.bumiller@proxmox.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: w.bumiller@proxmox.com, linux-block@vger.kernel.org
+Cc: tj@kernel.org, Christoph Hellwig <hch@lst.de>, t.lamprecht@proxmox.com, cgroups@vger.kernel.org
 
-Make cgroup_debug static since it's only used in cgroup.c
+On Tue, 11 Jan 2022 09:31:59 +0100, Wolfgang Bumiller wrote:
+> With the removal of seq_get_buf in blkcg_print_one_stat, we
+> cannot make adding the newline conditional on there being
+> relevant stats because the name was already written out
+> unconditionally.
+> Otherwise we may end up with multiple device names in one
+> line which is confusing and doesn't follow the nested-keyed
+> file format.
+> 
+> [...]
 
-Signed-off-by: Xiu Jianfeng <xiujianfeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cgroup-internal.h | 1 -
- kernel/cgroup/cgroup.c          | 2 +-
- 2 files changed, 1 insertion(+), 2 deletions(-)
+Applied, thanks!
 
-diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-index 6e36e854b512..5da09c74228d 100644
---- a/kernel/cgroup/cgroup-internal.h
-+++ b/kernel/cgroup/cgroup-internal.h
-@@ -12,7 +12,6 @@
- #define TRACE_CGROUP_PATH_LEN 1024
- extern spinlock_t trace_cgroup_path_lock;
- extern char trace_cgroup_path[TRACE_CGROUP_PATH_LEN];
--extern bool cgroup_debug;
- extern void __init enable_debug_cgroup(void);
- 
- /*
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index adb820e98f24..a97fd051430b 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -96,7 +96,7 @@ EXPORT_SYMBOL_GPL(css_set_lock);
- 
- DEFINE_SPINLOCK(trace_cgroup_path_lock);
- char trace_cgroup_path[TRACE_CGROUP_PATH_LEN];
--bool cgroup_debug __read_mostly;
-+static bool cgroup_debug __read_mostly;
- 
- /*
-  * Protects cgroup_idr and css_idr so that IDs can be released without
+[1/1] blk-cgroup: always terminate io.stat lines
+      commit: 3607849df47822151b05df440759e2dc70160755
+
+Best regards,
 -- 
-2.17.1
+Jens Axboe
+
 
