@@ -1,51 +1,155 @@
-From: Shida Zhang <starzhangzsd-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v2] cgroup: remove the superfluous judgment
-Date: Wed, 18 May 2022 09:36:47 +0800
-Message-ID: <20220518013647.1749568-1-zhangshida@kylinos.cn>
+From: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -next] blk-throttle: delay the setting of 'BIO_THROTTLED'
+ to when throttle is done
+Date: Wed, 18 May 2022 12:07:12 +0800
+Message-ID: <YoRw8J1Y/bzxVsSR@T590>
+References: <20220517134909.2910251-1-yukuai3@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=xx6rePJGi7UaKhXkXrJAOBEtEBFBD4Xp8h1aCNNQ5pk=;
-        b=UQsNDu+K3TL0RoWiqYU8aJzPlG4KoKs+NqzgTjzA9gmgB35p+OeNfvgvxiT+Otn5ux
-         jI5s5WqirBU7Jhbz2L+2B+EJXfZ2e4Cs3jAZ/A0cQMHaqEnA96dxbK2nCn7UlGNwaamT
-         vImHt36Kj+bSNIwtjD+WJcqbXUskciCiPM1BbywHDZQvN8JxmTzU2MFyqB3E1OqyDLPZ
-         vO8A3/HfT0FQ0B2vxv1qWYmZKph3LyIe5s/jDZcMgrwyx4sty97N81e32k6rigUqWKIh
-         CeBuaUr31rQy/LHnS/aJHG3hlw7k5cwRtGBd4X70mYiDYzbWzv3/zupNOkklKPlQW7CU
-         Cu/w==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1652846847;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Z9yRM9cvhik+MrOqst9aIIa+hZTiZ1DUmhjVomIZNlk=;
+        b=MZ/QXUl/05H1cwH12HOssyBN2WBhVyXbjPHCcG6GWsjuZtmuSMdrA30w0zMETt7ZrcPHBh
+        A6LJdP3TeLBE0A+Sa+g8JDgpbq9+xjfENFSQU/OMNDOQnVbbxVQfvfrWFht5TLkmE/8pt7
+        Pd/6bjPmAPsl1HR6qdG2eShAqFJEOLQ=
+Content-Disposition: inline
+In-Reply-To: <20220517134909.2910251-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: zhangshida-UOlijcLmZ/InDS1+zs4M5A@public.gmane.org, starzhangzsd-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Remove the superfluous judgment since the function is
-never called for a root cgroup, as suggested by Tejun.
+On Tue, May 17, 2022 at 09:49:09PM +0800, Yu Kuai wrote:
+> commit 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
+> introduce a new problem, for example:
+> 
+> [root@localhost ~]# echo "8:0 1024" > /sys/fs/cgroup/blkio/blkio.throttle.write_bps_device
+> [root@localhost ~]# echo $$ > /sys/fs/cgroup/blkio/cgroup.procs
+> [root@localhost ~]# dd if=/dev/zero of=/dev/sda bs=10k count=1 oflag=direct &
+> [1] 620
+> [root@localhost ~]# dd if=/dev/zero of=/dev/sda bs=10k count=1 oflag=direct &
+> [2] 626
+> [root@localhost ~]# 1+0 records in
+> 1+0 records out
+> 10240 bytes (10 kB, 10 KiB) copied, 10.0038 s, 1.0 kB/s1+0 records in
+> 1+0 records out
+> 
+> 10240 bytes (10 kB, 10 KiB) copied, 9.23076 s, 1.1 kB/s
+> -> the second bio is issued after 10s instead of 20s.
+> 
+> This is because if some bios are already queued, current bio is queued
+> directly and the flag 'BIO_THROTTLED' is set. And later, when former
+> bios are dispatched, this bio will be dispatched without waiting at all,
+> this is due to tg_with_in_bps_limit() will return 0 if the flag is set.
+> 
+> Instead of setting the flag when bio starts throttle, delay to when
+> throttle is done to fix the problem.
+> 
+> Fixes: 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
+> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> ---
+>  block/blk-throttle.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+> index 447e1b8722f7..f952f2d942ff 100644
+> --- a/block/blk-throttle.c
+> +++ b/block/blk-throttle.c
+> @@ -811,7 +811,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+>  	unsigned int bio_size = throtl_bio_data_size(bio);
+>  
+>  	/* no need to throttle if this bio's bytes have been accounted */
+> -	if (bps_limit == U64_MAX || bio_flagged(bio, BIO_THROTTLED)) {
+> +	if (bps_limit == U64_MAX) {
 
-Suggested-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Signed-off-by: Shida Zhang <zhangshida-UOlijcLmZ/InDS1+zs4M5A@public.gmane.org>
----
- Changes from v1:
- - Just remove the superfluous judgment instead.
+This way may double account bio size for re-entered split bio.
 
- kernel/cgroup/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index adb820e98f24..7d8a463c461b 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -5685,7 +5685,7 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 	css_clear_dir(&cgrp->self);
- 	kernfs_remove(cgrp->kn);
+>  		if (wait)
+>  			*wait = 0;
+>  		return true;
+> @@ -1226,8 +1226,10 @@ static void blk_throtl_dispatch_work_fn(struct work_struct *work)
+>  
+>  	spin_lock_irq(&q->queue_lock);
+>  	for (rw = READ; rw <= WRITE; rw++)
+> -		while ((bio = throtl_pop_queued(&td_sq->queued[rw], NULL)))
+> +		while ((bio = throtl_pop_queued(&td_sq->queued[rw], NULL))) {
+> +			bio_set_flag(bio, BIO_THROTTLED);
+>  			bio_list_add(&bio_list_on_stack, bio);
+> +		}
+>  	spin_unlock_irq(&q->queue_lock);
+>  
+>  	if (!bio_list_empty(&bio_list_on_stack)) {
+> @@ -2134,7 +2136,8 @@ bool __blk_throtl_bio(struct bio *bio)
+>  			}
+>  			break;
+>  		}
+> -
+> +		/* this bio will be issued directly */
+> +		bio_set_flag(bio, BIO_THROTTLED);
+>  		/* within limits, let's charge and dispatch directly */
+>  		throtl_charge_bio(tg, bio);
+
+Marking BIO_THROTTLED before throtle_charge_bio() causes the bio
+bytes not be charged.
+
+Another simple way is to compensate for previous extra bytes accounting,
+something like the following patch:
+
+
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 139b2d7a99e2..44773d2ba257 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -810,8 +810,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+ 	unsigned int bio_size = throtl_bio_data_size(bio);
  
--	if (parent && cgroup_is_threaded(cgrp))
-+	if (cgroup_is_threaded(cgrp))
- 		parent->nr_threaded_children--;
+-	/* no need to throttle if this bio's bytes have been accounted */
+-	if (bps_limit == U64_MAX || bio_flagged(bio, BIO_THROTTLED)) {
++	if (bps_limit == U64_MAX) {
+ 		if (wait)
+ 			*wait = 0;
+ 		return true;
+@@ -921,10 +920,8 @@ static void throtl_charge_bio(struct throtl_grp *tg, struct bio *bio)
+ 	unsigned int bio_size = throtl_bio_data_size(bio);
  
- 	spin_lock_irq(&css_set_lock);
--- 
-2.25.1
+ 	/* Charge the bio to the group */
+-	if (!bio_flagged(bio, BIO_THROTTLED)) {
+-		tg->bytes_disp[rw] += bio_size;
+-		tg->last_bytes_disp[rw] += bio_size;
+-	}
++	tg->bytes_disp[rw] += bio_size;
++	tg->last_bytes_disp[rw] += bio_size;
+ 
+ 	tg->io_disp[rw]++;
+ 	tg->last_io_disp[rw]++;
+@@ -2125,6 +2122,20 @@ bool __blk_throtl_bio(struct bio *bio)
+ 		if (sq->nr_queued[rw])
+ 			break;
+ 
++		/*
++		 * re-entered bio has accounted bytes already, so try to
++		 * compensate previous over-accounting. However, if new
++		 * slice is started, just forget it
++		 */
++		if (bio_flagged(bio, BIO_THROTTLED)) {
++			unsigned int bio_size = throtl_bio_data_size(bio);
++
++			if (tg->bytes_disp[rw] >= bio_size)
++				tg->bytes_disp[rw] -= bio_size;
++			if (tg->last_bytes_disp[rw] - bio_size)
++				tg->last_bytes_disp[rw] -= bio_size;
++		}
++
+ 		/* if above limits, break to queue */
+ 		if (!tg_may_dispatch(tg, bio, NULL)) {
+ 			tg->last_low_overflow_time[rw] = jiffies;
+
+Thanks,
+Ming
 
