@@ -1,41 +1,114 @@
-From: Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+From: Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH] Revert "mm/vmscan: never demote for memcg reclaim"
-Date: Wed, 18 May 2022 12:51:10 -0700
-Message-ID: <afd96793-549d-94eb-607c-6a785788397a@intel.com>
+Date: Wed, 18 May 2022 13:42:35 -0700
+Message-ID: <CAHbLzko400euGGZt-=q9AgSKpv0PAbgKvc7OJ7nOJCX3gQz2oQ@mail.gmail.com>
 References: <20220518190911.82400-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1652903473; x=1684439473;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=qI2hRvQWGqLlvCgm5r1r2wIsZFcii9ZgTyxajRKplqk=;
-  b=HnF17rcebY7JhrTHtbMkV9gZnCRCyOeotFWbV5UC1PS6FO46q9AjRe0E
-   ARodhDmCNdA5Ukt8xz95d6R9qcZPBK6Uedg7eoWuNywTnG/TdhJjpTADH
-   XzomDAaau/qzQPMhtbIwwW+xgGYgQJ+WjcJQGDp7GCHovG5D3P5TPGpFO
-   mJSEE80YzLz3ZNDtAN4EUIIfzR0vcRUGCS++qiBOLtFOYV2yuqULXI9R+
-   0vcwOQW+iVJqB35YCmg+nAp2eNVptCfTe4+RQnHciFPPJ5sIkeEbzU1n4
-   xDKoMyVTkge5FNb6uHZiZG+bM7t9LGXJqp+uSdGQnABoFHqHtCuCe0aRt
-   g==;
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=6HxZzpngw/etNChNibsDXhKswEW/6aIadFsBJdrJJo4=;
+        b=awWcNKqjy2oRaHWNaqLwLD6wKR1D/z59/WTk7SitzgIT2rrcSjEAzKnmIANUYPI594
+         Za9zLKSXvw9xDbb6WAqjfnsaqa+LcQ85oop4z3ut4hYBrcONqxF0sv1J7v9CRmQAgFwS
+         JPhO4DcmtuiP+C8flQBkc7mV9fcXvo5etKLQ23hS9bAof2A9TG7qkYj4gGtRwoaYvbhi
+         qnQSQ41jmnAtz4N2LC6bnhJSxOh4NBimWb3ryXPExRgj4MHexjRknJtWD35Pdw6VfcIA
+         JwZ/xcXEkCG2cEPoyKjmIaBjOMiXjmim/5dVWzOCqBtKv2aKMnyA4ctLcHfI3Su9ySpC
+         JLQQ==
 In-Reply-To: <20220518190911.82400-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>, Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-On 5/18/22 12:09, Johannes Weiner wrote:
+On Wed, May 18, 2022 at 12:09 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+>
+> This reverts commit 3a235693d3930e1276c8d9cc0ca5807ef292cf0a.
+>
+> Its premise was that cgroup reclaim cares about freeing memory inside
+> the cgroup, and demotion just moves them around within the cgroup
+> limit. Hence, pages from toptier nodes should be reclaimed directly.
+
+Yes, exactly.
+
+>
 > However, with NUMA balancing now doing tier promotions, demotion is
 > part of the page aging process. Global reclaim demotes the coldest
 > toptier pages to secondary memory, where their life continues and from
 > which they have a chance to get promoted back. Essentially, tiered
 > memory systems have an LRU order that spans multiple nodes.
+>
+> When cgroup reclaims pages coming off the toptier directly, there can
+> be colder pages on lower tier nodes that were demoted by global
+> reclaim. This is an aging inversion, not unlike if cgroups were to
+> reclaim directly from the active lists while there are inactive pages.
 
-Thanks for the detailed explanation.  Ultimately, this was just intended
-as an optimization to make cgroup reclaim more efficient.  But, I agree
-that ordering correctness should trump efficiency.
+Thanks for pointing this out, makes sense to me.
 
-Acked-by: Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+>
+> Proactive reclaim is another factor. The goal of that it is to offload
+> colder pages from expensive RAM to cheaper storage. When lower tier
+> memory is available as an intermediate layer, we want offloading to
+> take advantage of it instead of bypassing to storage.
+>
+> Revert the patch so that cgroups respect the LRU order spanning the
+> memory hierarchy.
+>
+> Of note is a specific undercommit scenario, where all cgroup limits in
+> the system add up to <= available toptier memory. In that case,
+> shuffling pages out to lower tiers first to reclaim them from there is
+> inefficient. This is something could be optimized/short-circuited
+> later on (although care must be taken not to accidentally recreate the
+> aging inversion). Let's ensure correctness first.
 
+Some side effects we might keep an eye with this revert:
+  - Limit reclaim may experience longer latency since it has to do
+demotion + reclaim to uncharge enough memory
+  - Higher max usage due to the force charge from migration (of course
+other migrations, i.e. NUMA fault, could have similar effect, but
+anyway one more contributing factor)
+
+They may not be noticeable hopefully, but I tend to agree that keeping
+aging correct may be more important.
+
+Reviewed-by: Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> Cc: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Cc: Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+> Cc: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+> Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> ---
+>  mm/vmscan.c | 9 ++-------
+>  1 file changed, 2 insertions(+), 7 deletions(-)
+>
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index c6918fff06e1..7a4090712177 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -528,13 +528,8 @@ static bool can_demote(int nid, struct scan_control *sc)
+>  {
+>         if (!numa_demotion_enabled)
+>                 return false;
+> -       if (sc) {
+> -               if (sc->no_demotion)
+> -                       return false;
+> -               /* It is pointless to do demotion in memcg reclaim */
+> -               if (cgroup_reclaim(sc))
+> -                       return false;
+> -       }
+> +       if (sc && sc->no_demotion)
+> +               return false;
+>         if (next_demotion_node(nid) == NUMA_NO_NODE)
+>                 return false;
+>
+> --
+> 2.36.1
+>
+>
