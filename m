@@ -1,113 +1,40 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH -next v2 1/2] blk-throttle: fix that io throttle can only
- work for single bio
-Date: Wed, 18 May 2022 17:50:56 +0800
-Message-ID: <YoTBgJhhA14r61ZX@T590>
-References: <20220518072751.1188163-1-yukuai3@huawei.com>
- <20220518072751.1188163-2-yukuai3@huawei.com>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH 0/4] memcontrol selftests fixups
+Date: Wed, 18 May 2022 17:40:33 +0200
+Message-ID: <20220518154037.18819-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1652867472;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=pupdpoaT7DKq0S5N7tQSpmk4iGUsYQRiyblwUNHccVQ=;
-        b=LjuT9q5TL8XFVJIArbB/N1PIEjuQmhkW+TbYSa19ADULtIsDGq/cKl9E1nAlF4QBjCuMU7
-        yPEbYzf6ecNbKXFp/nRiXWCdiOzlIktP6kpztX2vG/HfU6J+ZmpjqBEa5OKfXo/yZtJrjn
-        fNdI3hIsQN+uW9uV/fF8RS3pVuaxOj8=
-Content-Disposition: inline
-In-Reply-To: <20220518072751.1188163-2-yukuai3@huawei.com>
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1652888447; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=lUuJK4eL9+OrReBYOWwXyTY//4zqDis40btPse6/uis=;
+        b=FI5Sy3NWkxOrgF+oYW8rHSuu2CTrRYidOfq7exPfxbLF4Qkrsd1N8W/xnoeEyD2pIq03Iy
+        75Y0dEF6IU3IyPEy/u1XmdxrAQybITgPqa3eVA2Lle1Xs6B5mJzje0n5/56J+/t1UioIh1
+        oIKfIkBBwT/U06IqQASwRYrKecBO6jQ=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai3@huawei.com>
-Cc: tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="macroman"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Palethorpe <rpalethorpe-l3A5Bk7waGM@public.gmane.org>
 
-On Wed, May 18, 2022 at 03:27:50PM +0800, Yu Kuai wrote:
-> commit 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
-> introduce a new problem, for example:
-> 
-> [root@localhost ~]# echo "8:0 1024" > /sys/fs/cgroup/blkio/blkio.throttle.write_bps_device
-> [root@localhost ~]# echo $$ > /sys/fs/cgroup/blkio/cgroup.procs
-> [root@localhost ~]# dd if=/dev/zero of=/dev/sda bs=10k count=1 oflag=direct &
-> [1] 620
-> [root@localhost ~]# dd if=/dev/zero of=/dev/sda bs=10k count=1 oflag=direct &
-> [2] 626
-> [root@localhost ~]# 1+0 records in
-> 1+0 records out
-> 10240 bytes (10 kB, 10 KiB) copied, 10.0038 s, 1.0 kB/s1+0 records in
-> 1+0 records out
-> 
-> 10240 bytes (10 kB, 10 KiB) copied, 9.23076 s, 1.1 kB/s
-> -> the second bio is issued after 10s instead of 20s.
-> 
-> This is because if some bios are already queued, current bio is queued
-> directly and the flag 'BIO_THROTTLED' is set. And later, when former
-> bios are dispatched, this bio will be dispatched without waiting at all,
-> this is due to tg_with_in_bps_limit() return 0 for this bio.
-> 
-> In order to fix the problem, don't skip flaged bio in
-> tg_with_in_bps_limit(), and for the problem that split bio can be
-> double accounted, compensate the over-accounting in __blk_throtl_bio().
-> 
-> Fixes: 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  block/blk-throttle.c | 24 ++++++++++++++++++------
->  1 file changed, 18 insertions(+), 6 deletions(-)
-> 
-> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-> index 447e1b8722f7..6f69859eae23 100644
-> --- a/block/blk-throttle.c
-> +++ b/block/blk-throttle.c
-> @@ -811,7 +811,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
->  	unsigned int bio_size = throtl_bio_data_size(bio);
->  
->  	/* no need to throttle if this bio's bytes have been accounted */
-> -	if (bps_limit == U64_MAX || bio_flagged(bio, BIO_THROTTLED)) {
-> +	if (bps_limit == U64_MAX) {
->  		if (wait)
->  			*wait = 0;
->  		return true;
-> @@ -921,11 +921,8 @@ static void throtl_charge_bio(struct throtl_grp *tg, struct bio *bio)
->  	unsigned int bio_size = throtl_bio_data_size(bio);
->  
->  	/* Charge the bio to the group */
-> -	if (!bio_flagged(bio, BIO_THROTTLED)) {
-> -		tg->bytes_disp[rw] += bio_size;
-> -		tg->last_bytes_disp[rw] += bio_size;
-> -	}
-> -
-> +	tg->bytes_disp[rw] += bio_size;
-> +	tg->last_bytes_disp[rw] += bio_size;
->  	tg->io_disp[rw]++;
->  	tg->last_io_disp[rw]++;
->  
-> @@ -2121,6 +2118,21 @@ bool __blk_throtl_bio(struct bio *bio)
->  			tg->last_low_overflow_time[rw] = jiffies;
->  		throtl_downgrade_check(tg);
->  		throtl_upgrade_check(tg);
-> +
-> +		/*
-> +		 * re-entered bio has accounted bytes already, so try to
-> +		 * compensate previous over-accounting. However, if new
-> +		 * slice is started, just forget it.
-> +		 */
-> +		if (bio_flagged(bio, BIO_THROTTLED)) {
-> +			unsigned int bio_size = throtl_bio_data_size(bio);
-> +
-> +			if (tg->bytes_disp[rw] >= bio_size)
-> +				tg->bytes_disp[rw] -= bio_size;
-> +			if (tg->last_bytes_disp[rw] > bio_size)
-> +				tg->last_bytes_disp[rw] -= bio_size;
-
-The above check should be:
-			if (tg->last_bytes_disp[rw] >= bio_size)
-
-Otherwise, this patch looks fine for me.
-
-
-Thanks,
-Ming
-
+SGVsbG8uCgpJJ20ganVzdCBmbHVzaGluZyB0aGUgc2ltcGxlIHBhdGNoZXMgdG8gbWFrZSBtZW1j
+b250cm9sIHNlbGZ0ZXN0cyBjaGVjayB0aGUKZXZlbnRzIGJlaGF2aW9yIHdlIGhhZCBjb25zZW5z
+dXMgYWJvdXQgKHRlc3RfbWVtY2dfbG93IGZhaWxzKS4gKEkndmUgZHJvcHBlZCB0bwpnb3RvIG1h
+Y3JvcyBmb3Igbm93LikKCih0ZXN0X21lbWNnX3JlY2xhaW0sIHRlc3RfbWVtY2dfc3dhcF9tYXgg
+ZmFpbCBmb3IgbWUgbm93IGJ1dCBpdCdzIHByZXNlbnQKZXZlbiBiZWZvcmUgdGhlIHJlZmFjdG9y
+aW5nLikKClRoZSBvbmx5IGJpZ2dlciBjaGFuZ2UgaXMgYWRqdXN0bWVudCBvZiB0aGUgcHJvdGVj
+dGVkIHZhbHVlcyB0byBtYWtlIHRlc3RzCnN1Y2NlZWQgd2l0aCB0aGUgZ2l2ZW4gdG9sZXJhbmNl
+LgoKSXQncyBiYXNlZCBvbiBtbS1zdGFibGUgWzFdIGNvbW1pdCBlMjQwYWM1MmY3ZGEuIEFGQUlD
+LCB0aGUgZml4dXAgYW5kIHBhcnRpYWwKcmV2ZXJ0cyBtYXkgYmUgZm9sZGVkIGludG8gcmVzcGVj
+dGl2ZSBjb21taXRzLgpMZXQgbWUga25vdyBpZiBpdCBzaG91bGQgYmUgKHJlKWJhc2VkIG9uIHNv
+bWV0aGluZyBlbHNlLgoKVGhhbmtzLApNaWNoYWwKClsxXSBodHRwczovL2dpdC5rZXJuZWwub3Jn
+L3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9ha3BtL21tLmdpdC9sb2cvdG9vbHMvdGVzdGluZy9z
+ZWxmdGVzdHMvY2dyb3VwP2g9bW0tc3RhYmxlCgpNaWNoYWwgS291dG7DvSAoNCk6CiAgc2VsZnRl
+c3RzOiBtZW1jZzogRml4IGNvbXBpbGF0aW9uCiAgc2VsZnRlc3RzOiBtZW1jZzogRXhwZWN0IG5v
+IGxvdyBldmVudHMgaW4gdW5wcm90ZWN0ZWQgc2libGluZwogIHNlbGZ0ZXN0czogbWVtY2c6IEFk
+anVzdCBleHBlY3RlZCByZWNsYWltIHZhbHVlcyBvZiBwcm90ZWN0ZWQgY2dyb3VwcwogIHNlbGZ0
+ZXN0czogbWVtY2c6IFJlbW92ZSBwcm90ZWN0aW9uIGZyb20gdG9wIGxldmVsIG1lbWNnCgogLi4u
+L3NlbGZ0ZXN0cy9jZ3JvdXAvdGVzdF9tZW1jb250cm9sLmMgICAgICAgIHwgNTkgKysrKysrKysr
+LS0tLS0tLS0tLQogMSBmaWxlIGNoYW5nZWQsIDI5IGluc2VydGlvbnMoKyksIDMwIGRlbGV0aW9u
+cygtKQoKLS0gCjIuMzUuMwoK
