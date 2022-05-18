@@ -1,66 +1,55 @@
-From: Tadeusz Struk <tadeusz.struk@linaro.org>
-Subject: Re: [PATCH] cgroup: don't queue css_release_work if one already
- pending
-Date: Wed, 18 May 2022 09:48:21 -0700
-Message-ID: <317701e1-20a7-206f-92cd-cd36d436eee2@linaro.org>
-References: <20220412192459.227740-1-tadeusz.struk@linaro.org>
- <20220414164409.GA5404@blackbody.suse.cz> <YmHwOAdGY2Lwl+M3@slm.duckdns.org>
- <20220422100400.GA29552@blackbody.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH -next] cgroup: Make cgroup_debug static
+Date: Wed, 18 May 2022 06:57:13 -1000
+Message-ID: <YoUlaTQrEf+NxINS@slm.duckdns.org>
+References: <20220517112523.243386-1-xiujianfeng@huawei.com>
+ <YoPWJZ+RJmlvBLwV@slm.duckdns.org>
+ <c099059c-2953-232d-3d53-e8863c221cb0@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <bpf-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=a/nioQD6LDBjjZNelJ71Lr4Cech0R4yZAq15sbuZJCc=;
-        b=jeUGHyeLcHxjHkIIKYZBSEirqL6+qcT+SwaKdSDH0eEuWJX91z8H+/NwOyFm6Q/3sg
-         L9XrfogqRU3oI6TnKgiJeHgrGw/oGUbpLfVj3kV+oLdnjWkaqqa+CybKP/FbOvy6F6IL
-         rluB6UJhiQou1qwfVR+KdqqKcIz4w0sEumbGOiWOpSUME/YbUFIDrk//wtIR8X9N1Jm4
-         NoDF8h/+RCgyROH58JFUlONkcnXtlIgRGqgWS0Jr9Wt4GrykPJjgvLd1ygMncVXda1mG
-         rfViXBsfd8QYhpJJ3lk8Is4meGwXFAnxnTZ0OKw7eHzYV0K2t1q7aYsfC3i03hntXNgU
-         GTGg==
-Content-Language: en-US
-In-Reply-To: <20220422100400.GA29552@blackbody.suse.cz>
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=12ObYYrf99f0yLEIMoJi0RP8wJdhcsztzbMI93JYaGg=;
+        b=fJuwr+79VK40EWiLDG7rqWOctqpq6NcDBduZ3aXuqdASFa6Lj98Yc312Y03+qRCODk
+         6UQy0HrgZTAejHxAh+UOFjyZ/2CGbXNYAPpBBlCqJf/596yD53ifCnhcJWeyvqTR1jWn
+         StEH1xtvTb4qIomCptdjFPb3uHvzEfFHpPeAhK/H8nHOw+r0ReqkF4YQYkrNfAyx0mMz
+         /gh/6CpYiO0DC3/99Q7xkRa/pT+GO7sbeXBXM9WdlbVzviKDCA9BJCWHe32m7ZIHVbgE
+         4TIuVjndwOW00mw7ya+C+VmsVltd2TM61fvflm1FuS44n9tvhU2RqZZHHkNG5zfOG1rC
+         a98g==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <c099059c-2953-232d-3d53-e8863c221cb0-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Christian Brauner <brauner@kernel.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, netdev@vger.kernel.org, bpf@vger.kernel.org, stable@vger.kernel.org, linux-kernel@vger.kernel.org, syzbot+e42ae441c3b10acf9e9d@syzkaller.appspotmail.com
+Content-Type: text/plain; charset="utf-8"
+To: xiujianfeng <xiujianfeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 4/22/22 04:05, Michal Koutn=C3=BD wrote:
-> On Thu, Apr 21, 2022 at 02:00:56PM -1000, Tejun Heo <tj@kernel.org> wrote:
->> If this is the case, we need to hold an extra reference to be put by the
->> css_killed_work_fn(), right?
->=20
-> I looked into it a bit more lately and found that there already is such
-> a fuse in kill_css() [1].
->=20
-> At the same type syzbots stack trace demonstrates the fuse is
-> ineffective
->=20
->> css_release+0xae/0xc0 kernel/cgroup/cgroup.c:5146                    (**)
->> percpu_ref_put_many include/linux/percpu-refcount.h:322 [inline]
->> percpu_ref_put include/linux/percpu-refcount.h:338 [inline]
->> percpu_ref_call_confirm_rcu lib/percpu-refcount.c:162 [inline]        (*)
->> percpu_ref_switch_to_atomic_rcu+0x5a2/0x5b0 lib/percpu-refcount.c:199
->> rcu_do_batch+0x4f8/0xbc0 kernel/rcu/tree.c:2485
->> rcu_core+0x59b/0xe30 kernel/rcu/tree.c:2722
->> rcu_core_si+0x9/0x10 kernel/rcu/tree.c:2735
->> __do_softirq+0x27e/0x596 kernel/softirq.c:305
->=20
-> (*) this calls css_killed_ref_fn confirm_switch
-> (**) zero references after confirmed kill?
->=20
-> So, I was also looking at the possible race with css_free_rwork_fn()
-> (from failed css_create()) but that would likely emit a warning from
-> __percpu_ref_exit().
->=20
-> So, I still think there's something fishy (so far possible only via
-> artificial ENOMEM injection) that needs an explanation...
+On Wed, May 18, 2022 at 02:48:36PM +0800, xiujianfeng wrote:
+> 
+> 在 2022/5/18 1:06, Tejun Heo 写道:
+> > On Tue, May 17, 2022 at 07:25:23PM +0800, Xiu Jianfeng wrote:
+> > > Make cgroup_debug static since it's only used in cgroup.c
+> > > 
+> > > Signed-off-by: Xiu Jianfeng <xiujianfeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> > The only thing it does is gating CFTYPE_DEBUG which isn't used anymore.
+> > Can you remove both CFTYPE_DEBUG and cgroup_debug() instead?
+> 
+> It's ok to me, but I found CFTYPE_DEBUG is still used in cpuset subsys,
+> 
+>   .name = "cpus.subpartitions",
+>   .seq_show = cpuset_common_seq_show,
+>   .private = FILE_SUBPARTS_CPULIST,
+>   .flags = CFTYPE_DEBUG,
+> 
+> if remove CFTYPE_DEBUG and cgroup_debug,  cpus.subpartitions will be showed
+> by default,  is this ok?
 
-I can't reliably reproduce this issue on neither mainline nor v5.10, where
-syzbot originally found it. It still triggers for syzbot though.
+Ah, I missed that. You're right. Lemme apply the original path.
 
---=20
-Thanks,
-Tadeusz
+Thanks.
+
+-- 
+tejun
