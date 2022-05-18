@@ -1,62 +1,317 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 2/4] selftests: memcg: Expect no low events in
- unprotected sibling
-Date: Wed, 18 May 2022 17:54:44 +0200
-Message-ID: <20220518155444.GB22503@blackbody.suse.cz>
-References: <20220512174452.tr34tuh4k5jm6qjs@dev0025.ash9.facebook.com>
- <20220513171811.730-1-mkoutny@suse.com>
- <20220513171811.730-3-mkoutny@suse.com>
- <Yn6pWPodGPlz+D8G@carbon>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH v2 5/5] selftests: memcg: Factor out common parts of memory.{low,min} tests
+Date: Wed, 18 May 2022 18:18:59 +0200
+Message-ID: <20220518161859.21565-6-mkoutny@suse.com>
+References: <20220518161859.21565-1-mkoutny@suse.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1652889286; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1652890753; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=fT6DJGA2cOSTPqSQ5kMo5BIA56bUH+3rlEL1RMSElmw=;
-        b=aWoZP/8KOjx9GL8rIoYGs6MZgz48DGxy4SoNyCoki2pVbuV9gffBgLWkZpR5smgYoFlh0h
-        hD3/PDiDEcNjj4m7KDuM6QwX/pIbSn0SH8uV6l7rVl8wbLYKF1Hl/E+/6/2W1k561Cwvqv
-        fWdHnKJVpUyT5CPfddB82CRcJiWz+nA=
-Content-Disposition: inline
-In-Reply-To: <Yn6pWPodGPlz+D8G@carbon>
+        bh=MgDcGy2HGZHoFIxp9YRQq/LcvV4yVV/hIqOQDLhYAM0=;
+        b=ezfRN2AIIGjl/CefJvBF7rwajbzilhILeOycFOxvDvIufHeNNtOY9guxyG2loFT2LBwMqy
+        7Ps8hJkPdxQ2eX8TSKkzlJHLAd+8rH0KgL8dIgIh3CKWAnvWUnvHAmbUFF12o1FN7yJT5j
+        9k5j+9as1w/HQBMiXZ7WK0eWzZrij9s=
+In-Reply-To: <20220518161859.21565-1-mkoutny-IBi9RG/b67k@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Richard Palethorpe <rpalethorpe-l3A5Bk7waGM@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Palethorpe <rpalethorpe-l3A5Bk7waGM@public.gmane.org>
 
-Hi.
+The memory protection test setup and runtime is almost equal for
+memory.low and memory.min cases.
+It makes modification of the common parts prone to mistakes, since the
+protections are similar not only in setup but also in principle, factor
+the common part out.
 
-On Fri, May 13, 2022 at 11:54:16AM -0700, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
-> Hm, what are our plans here? Are we going to fix it soon-ish, or there
-> is still no agreement on how to proceed?
+Past exceptions between the tests:
+- missing memory.min is fine (kept),
+- test_memcg_low protected orphaned pagecache (adapted like
+  test_memcg_min and we keep the processes of protected memory running).
 
-Here are some of my ideas in random order so far and comments:
+The evaluation in two tests is different (OOM of allocator vs low events
+of protégés), this is kept different.
 
-0) mask memory.events:low
--> not a real fix
+Signed-off-by: Michal Koutný <mkoutny-IBi9RG/b67k@public.gmane.org>
+---
+ .../selftests/cgroup/test_memcontrol.c        | 199 ++++--------------
+ 1 file changed, 36 insertions(+), 163 deletions(-)
 
-1) don't do SWAP_CLUSTER_MAX roundup
--> won't solve sudden lift of protection
-
-2) instead of SWAP_CLUSTER_MAX over-reclaim, do same under-reclaim
--> same problem as 1)
-
-3) update children_low_usage transactionally (after reclaim round is done)
-- ???
-
-4) don't recursively distribute residual protection in the same reclaim round
-- ???
-
-5) iterate siblings from highest to lowest protection 
-- not a solution
-
-6) assign only >SWAP_CLUSTER_MAX of residuum
-- need more info
-
-I'm discouraged by possible complexity of 3) or 4), while 6) is what I'd
-like to look more into.
-
-HTH,
-Michal
+diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+index 63c6a683a8c1..c3d0d5f7b19c 100644
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c
++++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -190,13 +190,6 @@ static int test_memcg_current(const char *root)
+ 	return ret;
+ }
+ 
+-static int alloc_pagecache_50M(const char *cgroup, void *arg)
+-{
+-	int fd = (long)arg;
+-
+-	return alloc_pagecache(fd, MB(50));
+-}
+-
+ static int alloc_pagecache_50M_noexit(const char *cgroup, void *arg)
+ {
+ 	int fd = (long)arg;
+@@ -254,7 +247,9 @@ static int cg_test_proc_killed(const char *cgroup)
+  * A/B/E   memory.min = 0,    memory.current = 50M
+  * A/B/F   memory.min = 500M, memory.current = 0
+  *
+- * Usages are pagecache, but the test keeps a running
++ * (or memory.low if we test soft protection)
++ *
++ * Usages are pagecache and the test keeps a running
+  * process in every leaf cgroup.
+  * Then it creates A/G and creates a significant
+  * memory pressure in A.
+@@ -268,15 +263,16 @@ static int cg_test_proc_killed(const char *cgroup)
+  * (for origin of the numbers, see model in memcg_protection.m.)
+  *
+  * After that it tries to allocate more than there is
+- * unprotected memory in A available, and checks
+- * checks that memory.min protects pagecache even
+- * in this case.
++ * unprotected memory in A available, and checks that:
++ * a) memory.min protects pagecache even in this case,
++ * b) memory.low allows reclaiming page cache with low events.
+  */
+-static int test_memcg_min(const char *root)
++static int test_memcg_protection(const char *root, bool min)
+ {
+-	int ret = KSFT_FAIL;
++	int ret = KSFT_FAIL, rc;
+ 	char *parent[3] = {NULL};
+ 	char *children[4] = {NULL};
++	const char *attribute = min ? "memory.min" : "memory.low";
+ 	long c[4];
+ 	int i, attempts;
+ 	int fd;
+@@ -300,8 +296,10 @@ static int test_memcg_min(const char *root)
+ 	if (cg_create(parent[0]))
+ 		goto cleanup;
+ 
+-	if (cg_read_long(parent[0], "memory.min")) {
+-		ret = KSFT_SKIP;
++	if (cg_read_long(parent[0], attribute)) {
++		/* No memory.min on older kernels is fine */
++		if (min)
++			ret = KSFT_SKIP;
+ 		goto cleanup;
+ 	}
+ 
+@@ -338,15 +336,15 @@ static int test_memcg_min(const char *root)
+ 			      (void *)(long)fd);
+ 	}
+ 
+-	if (cg_write(parent[1], "memory.min", "50M"))
++	if (cg_write(parent[1],   attribute, "50M"))
+ 		goto cleanup;
+-	if (cg_write(children[0], "memory.min", "75M"))
++	if (cg_write(children[0], attribute, "75M"))
+ 		goto cleanup;
+-	if (cg_write(children[1], "memory.min", "25M"))
++	if (cg_write(children[1], attribute, "25M"))
+ 		goto cleanup;
+-	if (cg_write(children[2], "memory.min", "0"))
++	if (cg_write(children[2], attribute, "0"))
+ 		goto cleanup;
+-	if (cg_write(children[3], "memory.min", "500M"))
++	if (cg_write(children[3], attribute, "500M"))
+ 		goto cleanup;
+ 
+ 	attempts = 0;
+@@ -375,161 +373,26 @@ static int test_memcg_min(const char *root)
+ 	if (c[3] != 0)
+ 		goto cleanup;
+ 
+-	if (!cg_run(parent[2], alloc_anon, (void *)MB(170)))
+-		goto cleanup;
+-
+-	if (!values_close(cg_read_long(parent[1], "memory.current"), MB(50), 3))
+-		goto cleanup;
+-
+-	ret = KSFT_PASS;
+-
+-cleanup:
+-	for (i = ARRAY_SIZE(children) - 1; i >= 0; i--) {
+-		if (!children[i])
+-			continue;
+-
+-		cg_destroy(children[i]);
+-		free(children[i]);
+-	}
+-
+-	for (i = ARRAY_SIZE(parent) - 1; i >= 0; i--) {
+-		if (!parent[i])
+-			continue;
+-
+-		cg_destroy(parent[i]);
+-		free(parent[i]);
+-	}
+-	close(fd);
+-	return ret;
+-}
+-
+-/*
+- * First, this test creates the following hierarchy:
+- * A       memory.low = 0,    memory.max = 200M
+- * A/B     memory.low = 50M
+- * A/B/C   memory.low = 75M,  memory.current = 50M
+- * A/B/D   memory.low = 25M,  memory.current = 50M
+- * A/B/E   memory.low = 0,    memory.current = 50M
+- * A/B/F   memory.low = 500M, memory.current = 0
+- *
+- * Usages are pagecache.
+- * Then it creates A/G an creates a significant
+- * memory pressure in it.
+- *
+- * Then it checks actual memory usages and expects that:
+- * A/B    memory.current ~= 50M
+- * A/B/C  memory.current ~= 29M
+- * A/B/D  memory.current ~= 21M
+- * A/B/E  memory.current ~= 0
+- * A/B/F  memory.current  = 0
+- * (for origin of the numbers, see model in memcg_protection.m.)
+- *
+- * After that it tries to allocate more than there is
+- * unprotected memory in A available,
+- * and checks low and oom events in memory.events.
+- */
+-static int test_memcg_low(const char *root)
+-{
+-	int ret = KSFT_FAIL;
+-	char *parent[3] = {NULL};
+-	char *children[4] = {NULL};
+-	long low, oom;
+-	long c[4];
+-	int i;
+-	int fd;
+-
+-	fd = get_temp_fd();
+-	if (fd < 0)
+-		goto cleanup;
+-
+-	parent[0] = cg_name(root, "memcg_test_0");
+-	if (!parent[0])
+-		goto cleanup;
+-
+-	parent[1] = cg_name(parent[0], "memcg_test_1");
+-	if (!parent[1])
+-		goto cleanup;
+-
+-	parent[2] = cg_name(parent[0], "memcg_test_2");
+-	if (!parent[2])
+-		goto cleanup;
+-
+-	if (cg_create(parent[0]))
+-		goto cleanup;
+-
+-	if (cg_read_long(parent[0], "memory.low"))
+-		goto cleanup;
+-
+-	if (cg_write(parent[0], "cgroup.subtree_control", "+memory"))
++	rc = cg_run(parent[2], alloc_anon, (void *)MB(170));
++	if (min && !rc)
+ 		goto cleanup;
+-
+-	if (cg_write(parent[0], "memory.max", "200M"))
+-		goto cleanup;
+-
+-	if (cg_write(parent[0], "memory.swap.max", "0"))
+-		goto cleanup;
+-
+-	if (cg_create(parent[1]))
+-		goto cleanup;
+-
+-	if (cg_write(parent[1], "cgroup.subtree_control", "+memory"))
+-		goto cleanup;
+-
+-	if (cg_create(parent[2]))
++	else if (!min && rc) {
++		fprintf(stderr,
++			"memory.low prevents from allocating anon memory\n");
+ 		goto cleanup;
+-
+-	for (i = 0; i < ARRAY_SIZE(children); i++) {
+-		children[i] = cg_name_indexed(parent[1], "child_memcg", i);
+-		if (!children[i])
+-			goto cleanup;
+-
+-		if (cg_create(children[i]))
+-			goto cleanup;
+-
+-		if (i > 2)
+-			continue;
+-
+-		if (cg_run(children[i], alloc_pagecache_50M, (void *)(long)fd))
+-			goto cleanup;
+ 	}
+ 
+-	if (cg_write(parent[1], "memory.low", "50M"))
+-		goto cleanup;
+-	if (cg_write(children[0], "memory.low", "75M"))
+-		goto cleanup;
+-	if (cg_write(children[1], "memory.low", "25M"))
+-		goto cleanup;
+-	if (cg_write(children[2], "memory.low", "0"))
+-		goto cleanup;
+-	if (cg_write(children[3], "memory.low", "500M"))
+-		goto cleanup;
+-
+-	if (cg_run(parent[2], alloc_anon, (void *)MB(148)))
+-		goto cleanup;
+-
+ 	if (!values_close(cg_read_long(parent[1], "memory.current"), MB(50), 3))
+ 		goto cleanup;
+ 
+-	for (i = 0; i < ARRAY_SIZE(children); i++)
+-		c[i] = cg_read_long(children[i], "memory.current");
+-
+-	if (!values_close(c[0], MB(29), 10))
+-		goto cleanup;
+-
+-	if (!values_close(c[1], MB(21), 10))
+-		goto cleanup;
+-
+-	if (c[3] != 0)
+-		goto cleanup;
+-
+-	if (cg_run(parent[2], alloc_anon, (void *)MB(166))) {
+-		fprintf(stderr,
+-			"memory.low prevents from allocating anon memory\n");
++	if (min) {
++		ret = KSFT_PASS;
+ 		goto cleanup;
+ 	}
+ 
+ 	for (i = 0; i < ARRAY_SIZE(children); i++) {
+ 		int no_low_events_index = 1;
++		long low, oom;
+ 
+ 		oom = cg_read_key_long(children[i], "memory.events", "oom ");
+ 		low = cg_read_key_long(children[i], "memory.events", "low ");
+@@ -565,6 +428,16 @@ static int test_memcg_low(const char *root)
+ 	return ret;
+ }
+ 
++static int test_memcg_min(const char *root)
++{
++	return test_memcg_protection(root, true);
++}
++
++static int test_memcg_low(const char *root)
++{
++	return test_memcg_protection(root, false);
++}
++
+ static int alloc_pagecache_max_30M(const char *cgroup, void *arg)
+ {
+ 	size_t size = MB(50);
+-- 
+2.35.3
 
