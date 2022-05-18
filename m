@@ -1,65 +1,120 @@
 From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH] mm/mempolicy: fix uninit-value in mpol_rebind_policy()
-Date: Tue, 17 May 2022 17:08:17 -0700
-Message-ID: <20220517170817.94ca21558bbe035ae06bf6fa@linux-foundation.org>
-References: <20220512123428.fq3wofedp6oiotd4@ppc.localdomain>
-        <20220516094726.b5rrsjg7rvei2od5@ppc.localdomain>
+Subject: Re: [PATCH 4/4] selftests: memcg: Remove protection from top level
+ memcg
+Date: Tue, 17 May 2022 17:24:43 -0700
+Message-ID: <20220517172443.3e524a8319c693ab24c5f22e@linux-foundation.org>
+References: <20220512174452.tr34tuh4k5jm6qjs@dev0025.ash9.facebook.com>
+        <20220513171811.730-1-mkoutny@suse.com>
+        <20220513171811.730-5-mkoutny@suse.com>
+        <Yn6qrHHS935ppX98@carbon>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1652832498;
-        bh=dGo2DK/jcDFeW9OzAZX7pYd8dKE594MPgxl0d5vf08o=;
+        s=korg; t=1652833484;
+        bh=IqdtSbJNm+VCuGfNAw8HzsuQPLkmpT4BhAuMLtG+vDI=;
         h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=PuAzQ1xUkMYyjYcicOstd9P9trgynYqqBU+B/c2c5XLaLyMpG8ZFb7oTGcEHuLm28
-         PoiyLQqVLCv4fnNH7dDRn/aAktE47o9fUzo2OtiJyKNlMCgfG01RkCwloZu+jdbZ8T
-         kAcGMpVpaQVVKEem6L1nUmerTDe80ZYkF+mRm8Rw=
-In-Reply-To: <20220516094726.b5rrsjg7rvei2od5-EN706goElQQmYvmMESoHnA@public.gmane.org>
+        b=vhDZhQ93mCmb4YxS1mh5DEHHIcUSZbxx4FRPaLVghQFUuACIEem5vS0qa46A1JKZi
+         a14rGVLnWHkOEKmkq1nnAYQENCzmQKAD9lqyHEfMWXg14bN0oFYkUAJ9VmLHZsK/zL
+         mNWuy+13jtxf2UCabEYHHbwSU7jhlcDty3FRiM1w=
+In-Reply-To: <Yn6qrHHS935ppX98@carbon>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Wang Cheng <wanngchenng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, syzbot+ad1b8c404f0959c4bfcc-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: Michal =?ISO-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Richard Palethorpe <rpalethorpe-l3A5Bk7waGM@public.gmane.org>
 
-On Mon, 16 May 2022 17:47:26 +0800 Wang Cheng <wanngchenng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+On Fri, 13 May 2022 11:59:56 -0700 Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org=
+> wrote:
 
-> 
-> ...
->
-> This patch seems to fix below bug too.
-> KMSAN: uninit-value in mpol_rebind_mm (2)
-> https://syzkaller.appspot.com/bug?id=f2fecd0d7013f54ec4162f60743a2b28df40926b
-> 
-> The uninit-value is pol->w.cpuset_mems_allowed in mpol_rebind_policy().
-> When syzkaller reproducer runs to the beginning of mpol_new(),
-> 
-> 	    mpol_new() mm/mempolicy.c
-> 	  do_mbind() mm/mempolicy.c
-> 	kernel_mbind() mm/mempolicy.c
-> 
-> `mode` is 1(MPOL_PREFERRED), nodes_empty(*nodes) is `true` and `flags`
-> is 0. Then
-> 
-> 	mode = MPOL_LOCAL;
-> 	...
-> 	policy->mode = mode;
-> 	policy->flags = flags;
-> 
-> will be executed. So in mpol_set_nodemask(),
-> 
-> 	    mpol_set_nodemask() mm/mempolicy.c
-> 	  do_mbind()
-> 	kernel_mbind()
-> 
-> pol->mode is 4(MPOL_LOCAL), that `nodemask` in `pol` is not initialized,
-> which will be accessed in mpol_rebind_policy().
+> On Fri, May 13, 2022 at 07:18:11PM +0200, Michal Koutny wrote:
+> > The reclaim is triggered by memory limit in a subtree, therefore the
+> > testcase does not need configured protection against external reclaim.
+> >=20
+> > Also, correct/deduplicate respective comments
+> >=20
+> > Signed-off-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
+> > ---
+> >  tools/testing/selftests/cgroup/test_memcontrol.c | 12 ++++--------
+> >  1 file changed, 4 insertions(+), 8 deletions(-)
+> >=20
+> > diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/t=
+esting/selftests/cgroup/test_memcontrol.c
+> > index 9ffacf024bbd..9d370aafd799 100644
+> > --- a/tools/testing/selftests/cgroup/test_memcontrol.c
+> > +++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+> > @@ -247,7 +247,7 @@ static int cg_test_proc_killed(const char *cgroup)
+> > =20
+> >  /*
+> >   * First, this test creates the following hierarchy:
+> > - * A       memory.min =3D 50M,  memory.max =3D 200M
+> > + * A       memory.min =3D 0,    memory.max =3D 200M
+> >   * A/B     memory.min =3D 50M,  memory.current =3D 50M
+> >   * A/B/C   memory.min =3D 75M,  memory.current =3D 50M
+> >   * A/B/D   memory.min =3D 25M,  memory.current =3D 50M
+> > @@ -257,7 +257,7 @@ static int cg_test_proc_killed(const char *cgroup)
+> >   * Usages are pagecache, but the test keeps a running
+> >   * process in every leaf cgroup.
+> >   * Then it creates A/G and creates a significant
+> > - * memory pressure in it.
+> > + * memory pressure in A.
+> >   *
+> >   * A/B    memory.current ~=3D 50M
+> >   * A/B/C  memory.current ~=3D 29M
+> > @@ -335,8 +335,6 @@ static int test_memcg_min(const char *root)
+> >  			      (void *)(long)fd);
+> >  	}
+> > =20
+> > -	if (cg_write(parent[0], "memory.min", "50M"))
+> > -		goto cleanup;
+> >  	if (cg_write(parent[1], "memory.min", "50M"))
+> >  		goto cleanup;
+> >  	if (cg_write(children[0], "memory.min", "75M"))
+> > @@ -404,8 +402,8 @@ static int test_memcg_min(const char *root)
+> > =20
+> >  /*
+> >   * First, this test creates the following hierarchy:
+> > - * A       memory.low =3D 50M,  memory.max =3D 200M
+> > - * A/B     memory.low =3D 50M,  memory.current =3D 50M
+> > + * A       memory.low =3D 0,    memory.max =3D 200M
+> > + * A/B     memory.low =3D 50M,  memory.current =3D ...
+>=20
+> Can you, please, just remove "memory.current =3D ...", it's not
+> because obvious what "..." means here.
+>=20
 
-Thanks, I added the above to the changelog and I plan to import the
-result into mm-stable later this week.
+You mean this?
 
-> IIUC, "#syz fix: mm/mempolicy: fix uninit-value in mpol_rebind_policy()"
-> could be sent to syzbot+ad1b8c404f0959c4bfcc-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
-> to attach the fixing commit to the bug. WDYT?
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c~selftests-memcg-remo=
+ve-protection-from-top-level-memcg-fix
++++ a/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -403,15 +403,14 @@ cleanup:
+ /*
+  * First, this test creates the following hierarchy:
+  * A       memory.low =3D 0,    memory.max =3D 200M
+- * A/B     memory.low =3D 50M,  memory.current =3D ...
++ * A/B     memory.low =3D 50M
+  * A/B/C   memory.low =3D 75M,  memory.current =3D 50M
+  * A/B/D   memory.low =3D 25M,  memory.current =3D 50M
+  * A/B/E   memory.low =3D 0,    memory.current =3D 50M
+  * A/B/F   memory.low =3D 500M, memory.current =3D 0
+  *
+  * Usages are pagecache.
+- * Then it creates A/G an creates a significant
+- * memory pressure in it.
++ * Then it creates A/G and creates significant memory pressure in it.
+  *
+  * Then it checks actual memory usages and expects that:
+  * A/B    memory.current ~=3D 50M
+_
 
-Could be.  The "syz fix" isn't a thing I've paid much attention to. 
-I'll start doing so ;)
+(includes gratuitous comment cleanup)
+
+I assume your comment in
+https://lkml.kernel.org/r/Yn6pBPq+lAXm9NG8@carbon can be addressed in a
+later patch.
+
+I'm not sure what to amke of https://lkml.kernel.org/r/Yn6pWPodGPlz+D8G@car=
+bon
+
+Do we feel this series needs more work before merging it up?
 
