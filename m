@@ -1,119 +1,175 @@
-From: CGEL <cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] mm/memcg: support control THP behaviour in cgroup
-Date: Wed, 18 May 2022 05:58:39 +0000
-Message-ID: <62848b11.1c69fb81.6ce50.2091@mx.google.com>
-References: <20220505033814.103256-1-xu.xin16@zte.com.cn>
- <YnUlntNFR4zeD+qa@dhcp22.suse.cz>
- <6275d3e7.1c69fb81.1d62.4504@mx.google.com>
- <YnjmPAToTR0C5o8x@dhcp22.suse.cz>
- <6278fa75.1c69fb81.9c598.f794@mx.google.com>
- <Ynj/l+pyFJxKfcbQ@dhcp22.suse.cz>
- <6279c354.1c69fb81.7f6c1.15e0@mx.google.com>
- <Yno3pNQOn1lAMPnu@dhcp22.suse.cz>
- <627a5214.1c69fb81.1b7fb.47be@mx.google.com>
- <YnpqYte2jLdcBiPg@dhcp22.suse.cz>
+From: "yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH -next] blk-throttle: delay the setting of 'BIO_THROTTLED'
+ to when throttle is done
+Date: Wed, 18 May 2022 14:30:07 +0800
+Message-ID: <73e8bdef-0f80-d255-e4f2-170813a12f5f@huawei.com>
+References: <20220517134909.2910251-1-yukuai3@huawei.com>
+ <YoRw8J1Y/bzxVsSR@T590>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:from:to:cc:subject:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=Wvwoi2ieX1SAY39tBWj8LHG37asi931JP8mrlpfaKk4=;
-        b=IYRMNrIiumsSaflitKrY0i7FLS+lQCNLzOzrzfpuDPHl8qKTyR2SruC/IiZPaWASLU
-         h1814XYKS6hk+GXI8YmOfUnZZvmtntVApJKWkygY16itKnRQP2mlCzMkvZBUWHpeFhdf
-         vxsTjQ/hFRdQmWf81TAcvUVbgUIqwgYy/P2macO/GgTqyvjwUq6j6rEzicfyDezBeCJh
-         jalDG8dek+x5k4G1i6fjll8rsPu9bLOuh5MuDAsCSNI+H91QXyUx22iqd8m24ddtm7p9
-         SQvgRYreW4YjQ3RNg+uvIuLy6RceXkwr/A5qYIInoXTV+YQHxzPC4L5WS8ySQpgc+F6R
-         R5yg==
-Content-Disposition: inline
-In-Reply-To: <YnpqYte2jLdcBiPg-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <YoRw8J1Y/bzxVsSR@T590>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, william.kucharski-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yang Yang <yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Ming Lei <ming.lei@redhat.com>
+Cc: tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-On Tue, May 10, 2022 at 03:36:34PM +0200, Michal Hocko wrote:
-> On Tue 10-05-22 11:52:51, CGEL wrote:
-> > On Tue, May 10, 2022 at 12:00:04PM +0200, Michal Hocko wrote:
-> > > On Tue 10-05-22 01:43:38, CGEL wrote:
-> > > > On Mon, May 09, 2022 at 01:48:39PM +0200, Michal Hocko wrote:
-> > > > > On Mon 09-05-22 11:26:43, CGEL wrote:
-> > > > > > On Mon, May 09, 2022 at 12:00:28PM +0200, Michal Hocko wrote:
-> > > > > > > On Sat 07-05-22 02:05:25, CGEL wrote:
-> > > > > > > [...]
-> > > > > > > > If there are many containers to run on one host, and some of them have high
-> > > > > > > > performance requirements, administrator could turn on thp for them:
-> > > > > > > > # docker run -it --thp-enabled=always
-> > > > > > > > Then all the processes in those containers will always use thp.
-> > > > > > > > While other containers turn off thp by:
-> > > > > > > > # docker run -it --thp-enabled=never
-> > > > > > > 
-> > > > > > > I do not know. The THP config space is already too confusing and complex
-> > > > > > > and this just adds on top. E.g. is the behavior of the knob
-> > > > > > > hierarchical? What is the policy if parent memcg says madivise while
-> > > > > > > child says always? How does the per-application configuration aligns
-> > > > > > > with all that (e.g. memcg policy madivise but application says never via
-> > > > > > > prctl while still uses some madvised - e.g. via library).
-> > > > > > >
-> > > > > > 
-> > > > > > The cgroup THP behavior is align to host and totally independent just likes
-> > > > > > /sys/fs/cgroup/memory.swappiness. That means if one cgroup config 'always'
-> > > > > > for thp, it has no matter with host or other cgroup. This make it simple for
-> > > > > > user to understand or control.
-> > > > > 
-> > > > > All controls in cgroup v2 should be hierarchical. This is really
-> > > > > required for a proper delegation semantic.
-> > > > >
-> > > > 
-> > > > Could we align to the semantic of /sys/fs/cgroup/memory.swappiness?
-> > > > Some distributions like Ubuntu is still using cgroup v1.
-> > > 
-> > > cgroup v1 interface is mostly frozen. All new features are added to the
-> > > v2 interface.
-> > >
-> > 
-> > So what about we add this interface to cgroup v2?
-> 
-> Can you come up with a sane hierarchical behavior?
-> 
-> [...]
-> > > > For micro-service architecture, the application in one container is not a
-> > > > set of loosely tight processes, it's aim at provide one certain service,
-> > > > so different containers means different service, and different service
-> > > > has different QoS demand. 
-> > > 
-> > > OK, if they are tightly coupled you could apply the same THP policy by
-> > > an existing prctl interface. Why is that not feasible. As you are noting
-> > > below...
-> > > 
-> > > >     5.containers usually managed by compose software, which treats container as
-> > > > base management unit;
-> > > 
-> > > ..so the compose software can easily start up the workload by using prctl
-> > > to disable THP for whatever workloads it is not suitable for.
-> > 
-> > prctl(PR_SET_THP_DISABLE..) can not be elegance to support the semantic we
-> > need. If only some containers needs THP, other containers and host do not need
-> > THP. We must set host THP to always first, and call prctl() to close THP for
-> > host tasks and other containers one by one,
-> 
-> It might not be the most elegant solution but it should work.
-> Maintaining user interfaces for ever has some cost and the THP
-> configuration space is quite large already. So I would rather not add
-> more complication in unless that is absolutely necessary.
->
+=D4=DA 2022/05/18 12:07, Ming Lei =D0=B4=B5=C0:
+> On Tue, May 17, 2022 at 09:49:09PM +0800, Yu Kuai wrote:
+>> commit 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
+>> introduce a new problem, for example:
+>>
+>> [root@localhost ~]# echo "8:0 1024" > /sys/fs/cgroup/blkio/blkio.throttl=
+e.write_bps_device
+>> [root@localhost ~]# echo $$ > /sys/fs/cgroup/blkio/cgroup.procs
+>> [root@localhost ~]# dd if=3D/dev/zero of=3D/dev/sda bs=3D10k count=3D1 o=
+flag=3Ddirect &
+>> [1] 620
+>> [root@localhost ~]# dd if=3D/dev/zero of=3D/dev/sda bs=3D10k count=3D1 o=
+flag=3Ddirect &
+>> [2] 626
+>> [root@localhost ~]# 1+0 records in
+>> 1+0 records out
+>> 10240 bytes (10 kB, 10 KiB) copied, 10.0038 s, 1.0 kB/s1+0 records in
+>> 1+0 records out
+>>
+>> 10240 bytes (10 kB, 10 KiB) copied, 9.23076 s, 1.1 kB/s
+>> -> the second bio is issued after 10s instead of 20s.
+>>
+>> This is because if some bios are already queued, current bio is queued
+>> directly and the flag 'BIO_THROTTLED' is set. And later, when former
+>> bios are dispatched, this bio will be dispatched without waiting at all,
+>> this is due to tg_with_in_bps_limit() will return 0 if the flag is set.
+>>
+>> Instead of setting the flag when bio starts throttle, delay to when
+>> throttle is done to fix the problem.
+>>
+>> Fixes: 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> ---
+>>   block/blk-throttle.c | 10 ++++++----
+>>   1 file changed, 6 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+>> index 447e1b8722f7..f952f2d942ff 100644
+>> --- a/block/blk-throttle.c
+>> +++ b/block/blk-throttle.c
+>> @@ -811,7 +811,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *=
+tg, struct bio *bio,
+>>   	unsigned int bio_size =3D throtl_bio_data_size(bio);
+>>  =20
+>>   	/* no need to throttle if this bio's bytes have been accounted */
+>> -	if (bps_limit =3D=3D U64_MAX || bio_flagged(bio, BIO_THROTTLED)) {
+>> +	if (bps_limit =3D=3D U64_MAX) {
+>=20
+> This way may double account bio size for re-entered split bio.
+Hi, Ming
 
-By the way, should we let prctl() support PR_SET_THP_ALWAYS? Just likes
-PR_TASK_PERF_EVENTS_DISABLE and PR_TASK_PERF_EVENTS_ENABLE. This would
-make it simpler to let certain process use THP while others not use.
+Yes, you are right, I forgot that...
+>=20
+>=20
+>>   		if (wait)
+>>   			*wait =3D 0;
+>>   		return true;
+>> @@ -1226,8 +1226,10 @@ static void blk_throtl_dispatch_work_fn(struct wo=
+rk_struct *work)
+>>  =20
+>>   	spin_lock_irq(&q->queue_lock);
+>>   	for (rw =3D READ; rw <=3D WRITE; rw++)
+>> -		while ((bio =3D throtl_pop_queued(&td_sq->queued[rw], NULL)))
+>> +		while ((bio =3D throtl_pop_queued(&td_sq->queued[rw], NULL))) {
+>> +			bio_set_flag(bio, BIO_THROTTLED);
+>>   			bio_list_add(&bio_list_on_stack, bio);
+>> +		}
+>>   	spin_unlock_irq(&q->queue_lock);
+>>  =20
+>>   	if (!bio_list_empty(&bio_list_on_stack)) {
+>> @@ -2134,7 +2136,8 @@ bool __blk_throtl_bio(struct bio *bio)
+>>   			}
+>>   			break;
+>>   		}
+>> -
+>> +		/* this bio will be issued directly */
+>> +		bio_set_flag(bio, BIO_THROTTLED);
+>>   		/* within limits, let's charge and dispatch directly */
+>>   		throtl_charge_bio(tg, bio);
+>=20
+> Marking BIO_THROTTLED before throtle_charge_bio() causes the bio
+> bytes not be charged.
+Yes, thanks for spotting this.
+>=20
+> Another simple way is to compensate for previous extra bytes accounting,
+> something like the following patch:
+>=20
+>=20
+> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+> index 139b2d7a99e2..44773d2ba257 100644
+> --- a/block/blk-throttle.c
+> +++ b/block/blk-throttle.c
+> @@ -810,8 +810,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *t=
+g, struct bio *bio,
+>   	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+>   	unsigned int bio_size =3D throtl_bio_data_size(bio);
+>  =20
+> -	/* no need to throttle if this bio's bytes have been accounted */
+> -	if (bps_limit =3D=3D U64_MAX || bio_flagged(bio, BIO_THROTTLED)) {
+> +	if (bps_limit =3D=3D U64_MAX) {
+>   		if (wait)
+>   			*wait =3D 0;
+>   		return true;
+> @@ -921,10 +920,8 @@ static void throtl_charge_bio(struct throtl_grp *tg,=
+ struct bio *bio)
+>   	unsigned int bio_size =3D throtl_bio_data_size(bio);
+>  =20
+>   	/* Charge the bio to the group */
+> -	if (!bio_flagged(bio, BIO_THROTTLED)) {
+> -		tg->bytes_disp[rw] +=3D bio_size;
+> -		tg->last_bytes_disp[rw] +=3D bio_size;
+> -	}
+> +	tg->bytes_disp[rw] +=3D bio_size;
+> +	tg->last_bytes_disp[rw] +=3D bio_size;
+>  =20
+>   	tg->io_disp[rw]++;
+>   	tg->last_io_disp[rw]++;
+> @@ -2125,6 +2122,20 @@ bool __blk_throtl_bio(struct bio *bio)
+>   		if (sq->nr_queued[rw])
+>   			break;
+>  =20
+> +		/*
+> +		 * re-entered bio has accounted bytes already, so try to
+> +		 * compensate previous over-accounting. However, if new
+> +		 * slice is started, just forget it
+> +		 */
+> +		if (bio_flagged(bio, BIO_THROTTLED)) {
+> +			unsigned int bio_size =3D throtl_bio_data_size(bio);
+> +
+> +			if (tg->bytes_disp[rw] >=3D bio_size)
+> +				tg->bytes_disp[rw] -=3D bio_size;
+> +			if (tg->last_bytes_disp[rw] - bio_size)
+> +				tg->last_bytes_disp[rw] -=3D bio_size;
+> +		}
+> +
+If new slice is not started, then this should fix the problem.
+ From what I can see, other than tg_conf_updated, new silce can start if
+there are still bio throttled:
 
-> > in this process some tasks that start before we call prctl() may
-> > already use THP with no need.
-> 
-> As long as all those processes have a common ancestor I do not see how
-> that would be possible.
-> 
-> -- 
-> Michal Hocko
-> SUSE Labs
+tg_may_dispatch
+  if (!(tg->service_queue.nr_queued[rw]))
+   throtl_start_new_slice
+
+Thus I think the change is ok. For the case in tg_conf_updated, I'll
+remove the throtl_start_new_slice() to fix a hung problem. I'll add this
+patch with this one in next version.
+
+Thanks,
+Kuai
+
+>   		/* if above limits, break to queue */
+>   		if (!tg_may_dispatch(tg, bio, NULL)) {
+>   			tg->last_low_overflow_time[rw] =3D jiffies;
+>=20
+> Thanks,
+> Ming
+>=20
+> .
+>=20
