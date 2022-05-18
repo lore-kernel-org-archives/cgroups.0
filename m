@@ -1,71 +1,65 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v2 6/6] zswap: memcg accounting
-Date: Tue, 17 May 2022 16:52:16 -0700
-Message-ID: <20220517165216.7acd8434f8b25606836e21e6@linux-foundation.org>
-References: <20220510152847.230957-1-hannes@cmpxchg.org>
-        <20220510152847.230957-7-hannes@cmpxchg.org>
-        <20220511173218.GB31592@blackbody.suse.cz>
-        <YnwJUL90fuoHs3YW@cmpxchg.org>
-        <20220513151426.GC16096@blackbody.suse.cz>
-        <Yn6QfdouzkcrygTR@cmpxchg.org>
-        <20220516143459.GA17557@blackbody.suse.cz>
-        <YoKtgaxOAMBVKiCf@cmpxchg.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH] mm/mempolicy: fix uninit-value in mpol_rebind_policy()
+Date: Tue, 17 May 2022 17:08:17 -0700
+Message-ID: <20220517170817.94ca21558bbe035ae06bf6fa@linux-foundation.org>
+References: <20220512123428.fq3wofedp6oiotd4@ppc.localdomain>
+        <20220516094726.b5rrsjg7rvei2od5@ppc.localdomain>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1652831537;
-        bh=pEz6dre40UCCubkWjCpmYmIXIWT0QJP+YHG6iJ3oqAE=;
+        s=korg; t=1652832498;
+        bh=dGo2DK/jcDFeW9OzAZX7pYd8dKE594MPgxl0d5vf08o=;
         h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=tsprR4zmK/oALRYBT6vfLxQ1klcvHAWxPcTURMr4US/hz7Uw0voe1Rd7mrChl8sdH
-         2miTXW+EY7qU+TEI2unOpAlcbme0xr2QXB48zpwSoZaqLZ+c/nu+dY2yTH5iNx0vo8
-         yhD8XhZUkOY2U6dkpIa/o/EV1/RwxLY79S8QzLW0=
-In-Reply-To: <YoKtgaxOAMBVKiCf@cmpxchg.org>
+        b=PuAzQ1xUkMYyjYcicOstd9P9trgynYqqBU+B/c2c5XLaLyMpG8ZFb7oTGcEHuLm28
+         PoiyLQqVLCv4fnNH7dDRn/aAktE47o9fUzo2OtiJyKNlMCgfG01RkCwloZu+jdbZ8T
+         kAcGMpVpaQVVKEem6L1nUmerTDe80ZYkF+mRm8Rw=
+In-Reply-To: <20220516094726.b5rrsjg7rvei2od5-EN706goElQQmYvmMESoHnA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal =?ISO-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Seth Jennings <sjenning@redhat.com>, Dan Streetman <ddstreet@ieee.org>, Minchan Kim <minchan@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Wang Cheng <wanngchenng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, syzbot+ad1b8c404f0959c4bfcc-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
 
-On Mon, 16 May 2022 16:01:05 -0400 Johannes Weiner <hannes@cmpxchg.org> wrote:
+On Mon, 16 May 2022 17:47:26 +0800 Wang Cheng <wanngchenng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
 
-> > > Flushing unnecessary groups with a ratelimit doesn't sound like an
-> > > improvement to me.
-> > 
-> > Then I'm only concerned about a situation when there's a single deep
-> > memcg that undergoes both workingset_refault() and zswap querying.
-> > The latter (bare call to cgroup_rstat_flush()) won't reset
-> > stats_flush_threshold, so the former (or the async flush more likely)
-> > would attempt a flush too. The flush work (on the leaf memcg) would be
-> > done twice even though it may be within the tolerance of cumulated
-> > error the second time.
-> > 
-> > This is a thing that might require attention in the future (depending on
-> > some data how it actually performs). I see how the current approach is
-> > justified.
 > 
-> Yes, we can optimize it should the need arise. So far it's been fine.
+> ...
+>
+> This patch seems to fix below bug too.
+> KMSAN: uninit-value in mpol_rebind_mm (2)
+> https://syzkaller.appspot.com/bug?id=f2fecd0d7013f54ec4162f60743a2b28df40926b
 > 
-> Thanks for your thoughts, Michal.
+> The uninit-value is pol->w.cpuset_mems_allowed in mpol_rebind_policy().
+> When syzkaller reproducer runs to the beginning of mpol_new(),
+> 
+> 	    mpol_new() mm/mempolicy.c
+> 	  do_mbind() mm/mempolicy.c
+> 	kernel_mbind() mm/mempolicy.c
+> 
+> `mode` is 1(MPOL_PREFERRED), nodes_empty(*nodes) is `true` and `flags`
+> is 0. Then
+> 
+> 	mode = MPOL_LOCAL;
+> 	...
+> 	policy->mode = mode;
+> 	policy->flags = flags;
+> 
+> will be executed. So in mpol_set_nodemask(),
+> 
+> 	    mpol_set_nodemask() mm/mempolicy.c
+> 	  do_mbind()
+> 	kernel_mbind()
+> 
+> pol->mode is 4(MPOL_LOCAL), that `nodemask` in `pol` is not initialized,
+> which will be accessed in mpol_rebind_policy().
 
-Me too.
+Thanks, I added the above to the changelog and I plan to import the
+result into mm-stable later this week.
 
-I think everything is settled here so I plan to import this series into
-mm-stable in a couple of days.
+> IIUC, "#syz fix: mm/mempolicy: fix uninit-value in mpol_rebind_policy()"
+> could be sent to syzbot+ad1b8c404f0959c4bfcc-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
+> to attach the fixing commit to the bug. WDYT?
 
-at
-https://git.kernel.org/pub/scm/linux/kernel/git/akpm/25-new.git/tree/patches/
-
- documentation-filesystems-proc-update-meminfo-section.patch
- documentation-filesystems-proc-update-meminfo-section-fix.patch
- documentation-filesystems-proc-update-meminfo-section-fix-2.patch
- mm-kconfig-move-swap-and-slab-config-options-to-the-mm-section.patch
- mm-kconfig-group-swap-slab-hotplug-and-thp-options-into-submenus.patch
- mm-kconfig-group-swap-slab-hotplug-and-thp-options-into-submenus-fix.patch
- mm-kconfig-group-swap-slab-hotplug-and-thp-options-into-submenus-fix-fix.patch
- mm-kconfig-simplify-zswap-configuration.patch
- mm-zswap-add-basic-meminfo-and-vmstat-coverage.patch
- zswap-memcg-accounting.patch
- zswap-memcg-accounting-fix.patch
- zswap-memcg-accounting-fix-2.patch
-
+Could be.  The "syz fix" isn't a thing I've paid much attention to. 
+I'll start doing so ;)
 
