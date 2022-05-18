@@ -1,63 +1,62 @@
-From: kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH -next v2 2/2] blk-throttle: fix io hung due to
- configuration updates
-Date: Wed, 18 May 2022 23:52:40 +0800
-Message-ID: <202205182347.tMOOqyfL-lkp@intel.com>
-References: <20220518072751.1188163-3-yukuai3@huawei.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 2/4] selftests: memcg: Expect no low events in
+ unprotected sibling
+Date: Wed, 18 May 2022 17:54:44 +0200
+Message-ID: <20220518155444.GB22503@blackbody.suse.cz>
+References: <20220512174452.tr34tuh4k5jm6qjs@dev0025.ash9.facebook.com>
+ <20220513171811.730-1-mkoutny@suse.com>
+ <20220513171811.730-3-mkoutny@suse.com>
+ <Yn6pWPodGPlz+D8G@carbon>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1652889223; x=1684425223;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=LUhPeqjotO22QnvrKw6uAmvTIAIIFtxOBffN4kFBcJk=;
-  b=PSqmKRK63MeJcbJWIT0401dHmGFwTnRMMR825mAW8S/lqQm6mNAINJ0I
-   r9ckH318i7jG6E9BEl6s7td3mYtTK+K29x+eGcDDYd8ygm+3YgEaJvsX7
-   fgnQup0X+TrbqWlQ7HpxIpkgYdD8idEwpN6fiKfS+4+i7MGjPBhibEjLd
-   1FKhpIWRjoh/46yamk3Wre38OTdwLRZli++Kc22MrkB4v9ZW/TkSvLUDc
-   1tS4SrBA4cQzKBgHz37ByrhbbiNj5urbnFzOyHI3OdXnVjOO7mJ6Cb9OA
-   Dt3cNoTOanLBQ07i9ElMxyovsvdFtyC+VQvtO0/X9X+rN9rzJkEN0l9ez
-   Q==;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1652889286; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=fT6DJGA2cOSTPqSQ5kMo5BIA56bUH+3rlEL1RMSElmw=;
+        b=aWoZP/8KOjx9GL8rIoYGs6MZgz48DGxy4SoNyCoki2pVbuV9gffBgLWkZpR5smgYoFlh0h
+        hD3/PDiDEcNjj4m7KDuM6QwX/pIbSn0SH8uV6l7rVl8wbLYKF1Hl/E+/6/2W1k561Cwvqv
+        fWdHnKJVpUyT5CPfddB82CRcJiWz+nA=
 Content-Disposition: inline
-In-Reply-To: <20220518072751.1188163-3-yukuai3@huawei.com>
+In-Reply-To: <Yn6pWPodGPlz+D8G@carbon>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, axboe@kernel.dk, ming.lei@redhat.com
-Cc: kbuild-all@lists.01.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Richard Palethorpe <rpalethorpe-l3A5Bk7waGM@public.gmane.org>
 
-Hi Yu,
+Hi.
 
-Thank you for the patch! Yet something to improve:
+On Fri, May 13, 2022 at 11:54:16AM -0700, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
+> Hm, what are our plans here? Are we going to fix it soon-ish, or there
+> is still no agreement on how to proceed?
 
-[auto build test ERROR on next-20220517]
+Here are some of my ideas in random order so far and comments:
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/bugfix-for-blk-throttle/20220518-151713
-base:    47c1c54d1bcd0a69a56b49473bc20f17b70e5242
-config: m68k-allyesconfig (https://download.01.org/0day-ci/archive/20220518/202205182347.tMOOqyfL-lkp@intel.com/config)
-compiler: m68k-linux-gcc (GCC) 11.3.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/f8345dbaf4ed491742aab29834aff66b4930c087
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Yu-Kuai/bugfix-for-blk-throttle/20220518-151713
-        git checkout f8345dbaf4ed491742aab29834aff66b4930c087
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash
+0) mask memory.events:low
+-> not a real fix
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
+1) don't do SWAP_CLUSTER_MAX roundup
+-> won't solve sudden lift of protection
 
-All errors (new ones prefixed by >>):
+2) instead of SWAP_CLUSTER_MAX over-reclaim, do same under-reclaim
+-> same problem as 1)
 
-   m68k-linux-ld: block/blk-throttle.o: in function `tg_conf_updated':
->> blk-throttle.c:(.text+0x25bc): undefined reference to `__udivdi3'
->> m68k-linux-ld: blk-throttle.c:(.text+0x2626): undefined reference to `__udivdi3'
-   `.exit.text' referenced in section `.data' of sound/soc/codecs/tlv320adc3xxx.o: defined in discarded section `.exit.text' of sound/soc/codecs/tlv320adc3xxx.o
+3) update children_low_usage transactionally (after reclaim round is done)
+- ???
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+4) don't recursively distribute residual protection in the same reclaim round
+- ???
+
+5) iterate siblings from highest to lowest protection 
+- not a solution
+
+6) assign only >SWAP_CLUSTER_MAX of residuum
+- need more info
+
+I'm discouraged by possible complexity of 3) or 4), while 6) is what I'd
+like to look more into.
+
+HTH,
+Michal
+
