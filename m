@@ -1,68 +1,66 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 0/4] memcontrol selftests fixups
-Date: Wed, 18 May 2022 18:27:15 +0200
-Message-ID: <20220518162715.GD16096@blackbody.suse.cz>
-References: <20220518154037.18819-1-mkoutny@suse.com>
+From: Tadeusz Struk <tadeusz.struk@linaro.org>
+Subject: Re: [PATCH] cgroup: don't queue css_release_work if one already
+ pending
+Date: Wed, 18 May 2022 09:48:21 -0700
+Message-ID: <317701e1-20a7-206f-92cd-cd36d436eee2@linaro.org>
+References: <20220412192459.227740-1-tadeusz.struk@linaro.org>
+ <20220414164409.GA5404@blackbody.suse.cz> <YmHwOAdGY2Lwl+M3@slm.duckdns.org>
+ <20220422100400.GA29552@blackbody.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1652891237; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=XLTN/Tyn39JkGpccdAmra/lF39sYZV7UHDSVbCDu1pc=;
-        b=nQNr7q5XIBVXWZ116vtSd5c5aic11kH5TURBVUDGlRg9dy5U/qjciTyPzRdccf2D75d6Yy
-        P4inQtN7tVXPlNqL+yMiXOpRZ3JbQ+14erX3eLjbG4AQUJ8nSsTGZzK3AjI15fLP66/+pf
-        pAhAb8TN+XNUM4L8TtuQXguOtzQ1cNA=
-Content-Disposition: inline
-In-Reply-To: <20220518154037.18819-1-mkoutny-IBi9RG/b67k@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=a/nioQD6LDBjjZNelJ71Lr4Cech0R4yZAq15sbuZJCc=;
+        b=jeUGHyeLcHxjHkIIKYZBSEirqL6+qcT+SwaKdSDH0eEuWJX91z8H+/NwOyFm6Q/3sg
+         L9XrfogqRU3oI6TnKgiJeHgrGw/oGUbpLfVj3kV+oLdnjWkaqqa+CybKP/FbOvy6F6IL
+         rluB6UJhiQou1qwfVR+KdqqKcIz4w0sEumbGOiWOpSUME/YbUFIDrk//wtIR8X9N1Jm4
+         NoDF8h/+RCgyROH58JFUlONkcnXtlIgRGqgWS0Jr9Wt4GrykPJjgvLd1ygMncVXda1mG
+         rfViXBsfd8QYhpJJ3lk8Is4meGwXFAnxnTZ0OKw7eHzYV0K2t1q7aYsfC3i03hntXNgU
+         GTGg==
+Content-Language: en-US
+In-Reply-To: <20220422100400.GA29552@blackbody.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Palethorpe <rpalethorpe-l3A5Bk7waGM@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Christian Brauner <brauner@kernel.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, netdev@vger.kernel.org, bpf@vger.kernel.org, stable@vger.kernel.org, linux-kernel@vger.kernel.org, syzbot+e42ae441c3b10acf9e9d@syzkaller.appspotmail.com
 
-Apologies for spam due to botched sending.
-Please disregard this (old) series.
-The replacement should come in
+On 4/22/22 04:05, Michal Koutn=C3=BD wrote:
+> On Thu, Apr 21, 2022 at 02:00:56PM -1000, Tejun Heo <tj@kernel.org> wrote:
+>> If this is the case, we need to hold an extra reference to be put by the
+>> css_killed_work_fn(), right?
+>=20
+> I looked into it a bit more lately and found that there already is such
+> a fuse in kill_css() [1].
+>=20
+> At the same type syzbots stack trace demonstrates the fuse is
+> ineffective
+>=20
+>> css_release+0xae/0xc0 kernel/cgroup/cgroup.c:5146                    (**)
+>> percpu_ref_put_many include/linux/percpu-refcount.h:322 [inline]
+>> percpu_ref_put include/linux/percpu-refcount.h:338 [inline]
+>> percpu_ref_call_confirm_rcu lib/percpu-refcount.c:162 [inline]        (*)
+>> percpu_ref_switch_to_atomic_rcu+0x5a2/0x5b0 lib/percpu-refcount.c:199
+>> rcu_do_batch+0x4f8/0xbc0 kernel/rcu/tree.c:2485
+>> rcu_core+0x59b/0xe30 kernel/rcu/tree.c:2722
+>> rcu_core_si+0x9/0x10 kernel/rcu/tree.c:2735
+>> __do_softirq+0x27e/0x596 kernel/softirq.c:305
+>=20
+> (*) this calls css_killed_ref_fn confirm_switch
+> (**) zero references after confirmed kill?
+>=20
+> So, I was also looking at the possible race with css_free_rwork_fn()
+> (from failed css_create()) but that would likely emit a warning from
+> __percpu_ref_exit().
+>=20
+> So, I still think there's something fishy (so far possible only via
+> artificial ENOMEM injection) that needs an explanation...
 
-https://lore.kernel.org/r/20220518161859.21565-1-mkoutny-IBi9RG/b67k@public.gmane.org
+I can't reliably reproduce this issue on neither mainline nor v5.10, where
+syzbot originally found it. It still triggers for syzbot though.
 
-(That one is also not 100% correct, it's missing a Subject: therefore
-may not be pass through some filters.)
-
-The 1st patch of that v2 series is at
-https://lore.kernel.org/r/20220518161859.21565-2-mkoutny-IBi9RG/b67k@public.gmane.org/
-
-And I copy the cover letter here to be sure (and not to spam even more).
-
----->----
-Subject: [PATCH v2 0/5] memcontrol selftests fixups
-
-Hello.
-
-I'm just flushing the patches to make memcontrol selftests check the
-events behavior we had consensus about (test_memcg_low fails).
-
-(test_memcg_reclaim, test_memcg_swap_max fail for me now but it's present
-even before the refactoring.)
-
-The two bigger changes are:
-- adjustment of the protected values to make tests succeed with the given
-  tolerance,
-- both test_memcg_low and test_memcg_min check protection of memory in
-  populated cgroups (actually as per Documentation/admin-guide/cgroup-v2.rst
-  memory.min should not apply to empty cgroups, which is not the case
-  currently. Therefore I unified tests with the populated case in order to to
-  bring more broken tests).
-
-
+--=20
 Thanks,
-Michal
-
-Changes from v1 (https://lore.kernel.org/r/20220513171811.730-1-mkoutny-IBi9RG/b67k@public.gmane.org/)
-- fixed mis-rebase in compilation fix patch,
-- added review, ack tags from v1,
-- applied feedback from v1 (Octave script in git tree),
-- added one more patch extracting common parts,
-- rebased on mm-stable bbe832b9db2e.
-----<----
+Tadeusz
