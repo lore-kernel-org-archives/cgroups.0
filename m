@@ -1,62 +1,119 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH] blk-cgroup: Remove unnecessary rcu_read_lock/unlock()
-Date: Wed, 18 May 2022 16:31:53 -0600
-Message-ID: <de6b0f81-67e1-b167-a618-193c2303f149@kernel.dk>
-References: <20220516173930.159535-1-bh1scw@gmail.com>
- <CGME20220518192850eucas1p1458c00d4917c5ed39f2c37c9eb30cd46@eucas1p1.samsung.com>
- <46253c48-81cb-0787-20ad-9133afdd9e21@samsung.com>
- <1dad86bb-ae31-5bf8-5810-9e81c68be8ff@kernel.dk>
+From: Vaibhav Jain <vaibhav@linux.ibm.com>
+Subject: [PATCH] memcg: provide reclaim stats via 'memory.reclaim'
+Date: Thu, 19 May 2022 04:08:15 +0530
+Message-ID: <20220518223815.809858-1-vaibhav@linux.ibm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language
-         :from:to:cc:references:in-reply-to:content-transfer-encoding;
-        bh=thG3qSgnZW+qUMLaaxOPkQALuH6P7RbZ23MHltmMGlE=;
-        b=AQkqPj3D0tdfs64sN8mLJd9diiGRGQDbqzoTBkPKxEszGHSW23pLd3DZLq1t7J1BaH
-         N9Dc9tw3fZhqvdD7K5lreOPHKrd45AK941vaNu1U6kmB0u/LHeGMLIh4oh/lBCmsuM/R
-         nT++BAX42jIVpVd2Cbc0IDNOSqTH4QxG9Nid9TMDGCoIPhTqZxONNkMk58Jq/wMtOPZn
-         FR121zdv/+aGTq1DPhIOuVGzvj3hKtit/Buc/d9k5941ePSeMzytuGUKs98ffe6KJ8yI
-         O4tYIxZQsAbIvPWbv/KXPvXLRccYsR4v+/q7YR/qrq7ooDJjsiO24fAzsrF642GuT1FQ
-         Z4rg==
-Content-Language: en-US
-In-Reply-To: <1dad86bb-ae31-5bf8-5810-9e81c68be8ff-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : content-transfer-encoding : mime-version; s=pp1;
+ bh=cWTccgEFni0SxdgeQnDGBy9L1Zho1qh6R/OThU17sl8=;
+ b=ZOZcebrJGbgwHxCcYecMtKnjvK4wLXM9H04DjFyVCjX3ux0bJgJlOKB7ZnmbAu2cnL0b
+ pHTobF0gikeR9oo+GUGFJh7ytrxzP8nKyyd2VO1bdD5bi/ggvsiEZkqBjrr8+3oAyswW
+ g6nooA2efPDT45R51URRzKY7JaU944KOYKDjpKIYifat4B6N7zdDCUrtS/gopBvGtt+A
+ rae5DRO4L7qh/wSJf0DzfJwHYuEQSL8HhK0MiGIYWszZHXi4fwaCovtM8xBlu7nxICTV
+ L9U7BDa+reXdgayM4Kjf/qgkmEDXemte+07rre1yQ4UIfTRmOK9/2lghvaYbyUHR3Kzj sw== 
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Marek Szyprowski <m.szyprowski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, bh1scw-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+To: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Cc: Vaibhav Jain <vaibhav@linux.ibm.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>, Shakeel Butt <shakeelb@google.com>, Yosry Ahmed <yosryahmed@google.com>
 
-On 5/18/22 4:29 PM, Jens Axboe wrote:
-> On 5/18/22 1:28 PM, Marek Szyprowski wrote:
->> On 16.05.2022 19:39, bh1scw-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org wrote:
->>> From: Fanjun Kong <bh1scw-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->>>
->>> spin_lock_irq/spin_unlock_irq contains preempt_disable/enable().
->>> Which can serve as RCU read-side critical region, so remove
->>> rcu_read_lock/unlock().
->>>
->>> Signed-off-by: Fanjun Kong <bh1scw-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->>
->> This patch landed in today's linux next-20220518 as commit 77c570a1ea85 
->> ("blk-cgroup: Remove unnecessary rcu_read_lock/unlock()").
->>
->> Unfortunately it triggers the following warning on ARM64 based Raspberry 
->> Pi 4B board:>
->> ------------[ cut here ]------------
->> WARNING: CPU: 0 PID: 1 at block/blk-cgroup.c:301 blkg_create+0x398/0x4e0
-> 
-> Should this use rcu_read_lock_any_held() rather than
-> rcu_read_lock_held()?
+[1] Provides a way for user-space to trigger proactive reclaim by introducing
+a write-only memcg file 'memory.reclaim'. However reclaim stats like number
+of pages scanned and reclaimed is still not directly available to the
+user-space.
 
-I think the better alternative is just to delete the WARN_ON(), we have
-a:
+This patch proposes to extend [1] to make the memcg file 'memory.reclaim'
+readable which returns the number of pages scanned / reclaimed during the
+reclaim process from 'struct vmpressure' associated with each memcg. This should
+let user-space asses how successful proactive reclaim triggered from memcg
+'memory.reclaim' was ?
 
-lockdep_assert_held(&q->queue_lock);
+With the patch following command flow is expected:
 
-right after it. Since the queue_lock is IRQ disabling, having two checks
-serves no purpose. I'll kill the line.
+ # echo "1M" > memory.reclaim
 
+ # cat memory.reclaim
+   scanned 76
+   reclaimed 32
+
+[1]:  https://lore.kernel.org/r/20220425190040.2475377-1-yosryahmed@google.com
+
+Cc: Shakeel Butt <shakeelb@google.com>
+Cc: Yosry Ahmed <yosryahmed@google.com>
+Signed-off-by: Vaibhav Jain <vaibhav@linux.ibm.com>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 15 ++++++++++++---
+ mm/memcontrol.c                         | 14 ++++++++++++++
+ 2 files changed, 26 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 27ebef2485a3..44610165261d 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1209,18 +1209,27 @@ PAGE_SIZE multiple when read back.
+ 	utility is limited to providing the final safety net.
+ 
+   memory.reclaim
+-	A write-only nested-keyed file which exists for all cgroups.
++	A nested-keyed file which exists for all cgroups.
+ 
+-	This is a simple interface to trigger memory reclaim in the
+-	target cgroup.
++	This is a simple interface to trigger memory reclaim and retrieve
++	reclaim stats in the target cgroup.
+ 
+ 	This file accepts a single key, the number of bytes to reclaim.
+ 	No nested keys are currently supported.
+ 
++	Reading the file returns number of pages scanned and number of
++	pages reclaimed from the memcg. This information fetched from
++	vmpressure info associated with each cgroup.
++
+ 	Example::
+ 
+ 	  echo "1G" > memory.reclaim
+ 
++	  cat memory.reclaim
++
++	  scanned 78
++	  reclaimed 30
++
+ 	The interface can be later extended with nested keys to
+ 	configure the reclaim behavior. For example, specify the
+ 	type of memory to reclaim from (anon, file, ..).
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2e2bfbed4717..9e43580a8726 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6423,6 +6423,19 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
+ 	return nbytes;
+ }
+ 
++static int memory_reclaim_show(struct seq_file *m, void *v)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
++	struct vmpressure *vmpr = memcg_to_vmpressure(memcg);
++
++	spin_lock(&vmpr->sr_lock);
++	seq_printf(m, "scanned %lu\nreclaimed %lu\n",
++		   vmpr->scanned, vmpr->reclaimed);
++	spin_unlock(&vmpr->sr_lock);
++
++	return 0;
++}
++
+ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+ 			      size_t nbytes, loff_t off)
+ {
+@@ -6525,6 +6538,7 @@ static struct cftype memory_files[] = {
+ 		.name = "reclaim",
+ 		.flags = CFTYPE_NS_DELEGATABLE,
+ 		.write = memory_reclaim,
++		.seq_show  = memory_reclaim_show,
+ 	},
+ 	{ }	/* terminate */
+ };
 -- 
-Jens Axboe
+2.35.1
 
