@@ -1,43 +1,80 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2 6/6] zswap: memcg accounting
-Date: Wed, 18 May 2022 10:23:26 +0200
-Message-ID: <20220518082326.GH17557@blackbody.suse.cz>
-References: <20220510152847.230957-1-hannes@cmpxchg.org>
- <20220510152847.230957-7-hannes@cmpxchg.org>
- <20220511173218.GB31592@blackbody.suse.cz>
- <YnwJUL90fuoHs3YW@cmpxchg.org>
- <20220513151426.GC16096@blackbody.suse.cz>
- <Yn6QfdouzkcrygTR@cmpxchg.org>
- <20220516143459.GA17557@blackbody.suse.cz>
- <YoKtgaxOAMBVKiCf@cmpxchg.org>
- <20220517165216.7acd8434f8b25606836e21e6@linux-foundation.org>
+From: Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm/mempolicy: fix uninit-value in mpol_rebind_policy()
+Date: Wed, 18 May 2022 10:52:51 +0200
+Message-ID: <CACT4Y+ZkDJmoaT5ks8cmhzaNhhgaLYAhvzx+5q3yzKQEW1LZ5A@mail.gmail.com>
+References: <20220512123428.fq3wofedp6oiotd4@ppc.localdomain>
+ <20220516094726.b5rrsjg7rvei2od5@ppc.localdomain> <20220517170817.94ca21558bbe035ae06bf6fa@linux-foundation.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1652862207; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=FJND1+favEk/cOgY0turwQ+6cBnWq+nsb19SAKTVPUA=;
-        b=t/o5epZYvxiBIQDzueYrPOwwiW1warWt2xq1/43b4Mj1nJfRwe5l+xKZd0iZfTWfO74CG4
-        7P318fbQMXRSCtWT9vlEpfhiCbavhA1HuRdRPC5UIYPhedEviCDhQ6jGCzMuYHoBDrdKt5
-        No7H2oBTBt/Q01S/kFrhKyw7lnHceNo=
-Content-Disposition: inline
-In-Reply-To: <20220517165216.7acd8434f8b25606836e21e6-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=fBjJyFH8sXSyFWd7Z+l2eetv8x/giv4M4DnMxkIMcdI=;
+        b=cezYN/54uwp401iZm2wviNOMyJq8YW8GnuhGTcKzr+80Ubn4/x8YgkkbPeybNJyGty
+         Eom5EzKnHoSX8rrNyy9vABq5+8UKzIydpFBz12hOxCsUWtVcv/3nsoeXQC6oWUafmAPi
+         0NQTOh1yzdwZHiEqmRECvR+1WuzibquI82nOC+PglVuN6eXSyLGUVlUfQwiqeE7bwekp
+         XCjd3Lo3K3MPS8VcDUjfSCyq5yqHhNx1LnfDaojed4nLf1EykDrmNNyqv+66NULYaSss
+         wYDAE/PgoYcq9hRgQd7fhs4xgwCYlJAqHb0alSfNKSWuSyEWSJrgJzcf+oVs1WFDAMEU
+         stKA==
+In-Reply-To: <20220517170817.94ca21558bbe035ae06bf6fa-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Cc: Wang Cheng <wanngchenng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, syzbot+ad1b8c404f0959c4bfcc-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
 
-On Tue, May 17, 2022 at 04:52:16PM -0700, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
-> On Mon, 16 May 2022 16:01:05 -0400 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> > Thanks for your thoughts, Michal.
+On Wed, 18 May 2022 at 02:08, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
+>
+> On Mon, 16 May 2022 17:47:26 +0800 Wang Cheng <wanngchenng-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>
+> >
+> > ...
+> >
+> > This patch seems to fix below bug too.
+> > KMSAN: uninit-value in mpol_rebind_mm (2)
+> > https://syzkaller.appspot.com/bug?id=f2fecd0d7013f54ec4162f60743a2b28df40926b
+> >
+> > The uninit-value is pol->w.cpuset_mems_allowed in mpol_rebind_policy().
+> > When syzkaller reproducer runs to the beginning of mpol_new(),
+> >
+> >           mpol_new() mm/mempolicy.c
+> >         do_mbind() mm/mempolicy.c
+> >       kernel_mbind() mm/mempolicy.c
+> >
+> > `mode` is 1(MPOL_PREFERRED), nodes_empty(*nodes) is `true` and `flags`
+> > is 0. Then
+> >
+> >       mode = MPOL_LOCAL;
+> >       ...
+> >       policy->mode = mode;
+> >       policy->flags = flags;
+> >
+> > will be executed. So in mpol_set_nodemask(),
+> >
+> >           mpol_set_nodemask() mm/mempolicy.c
+> >         do_mbind()
+> >       kernel_mbind()
+> >
+> > pol->mode is 4(MPOL_LOCAL), that `nodemask` in `pol` is not initialized,
+> > which will be accessed in mpol_rebind_policy().
+>
+> Thanks, I added the above to the changelog and I plan to import the
+> result into mm-stable later this week.
+>
+> > IIUC, "#syz fix: mm/mempolicy: fix uninit-value in mpol_rebind_policy()"
+> > could be sent to syzbot+ad1b8c404f0959c4bfcc-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
+> > to attach the fixing commit to the bug. WDYT?
+>
+> Could be.  The "syz fix" isn't a thing I've paid much attention to.
+> I'll start doing so ;)
 
-You're welcome. The change is well-reasoned...
+Yes, we can send:
 
-> I think everything is settled here so I plan to import this series into
-> mm-stable in a couple of days.
+#syz fix: mm/mempolicy: fix uninit-value in mpol_rebind_policy()
 
-...and makes sense with the listed fixups.
+to syzbot+ad1b8c404f0959c4bfcc-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
+and now it should be reflected at:
+https://syzkaller.appspot.com/bug?extid=ad1b8c404f0959c4bfcc
 
-Michal
+and the bug will be closed when the fix is merged everywhere.
