@@ -1,73 +1,52 @@
-From: "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH -next 7/8] block, bfq: cleanup
- bfq_bfqq_update_budg_for_activation()
-Date: Thu, 19 May 2022 21:21:25 +0800
-Message-ID: <6de25fae-7d36-c31c-a045-4f1668ef4ee5@huawei.com>
-References: <20220514090522.1669270-1-yukuai3@huawei.com>
- <20220514090522.1669270-8-yukuai3@huawei.com>
- <20220519111856.wvk4oetm7odnkg3w@quack3.lan>
+From: Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC] Add swappiness argument to memory.reclaim
+Date: Thu, 19 May 2022 08:29:32 -0700
+Message-ID: <CAAPL-u-e=yZT7_N2oVNhpPnM=1Fg=JhCF-0xoMoFZfq8Kgw3zQ@mail.gmail.com>
+References: <CAJD7tkbDpyoODveCsnaqBBMZEkDvshXJmNdbk51yKSNgD7aGdg@mail.gmail.com>
+ <YoNHJwyjR7NJ5kG7@dhcp22.suse.cz> <CAJD7tkYnBjuwQDzdeo6irHY=so-E8z=Kc_kZe52anMOmRL+8yA@mail.gmail.com>
+ <YoQAVeGj19YpSMDb@cmpxchg.org> <CAAPL-u8pZ_p+SQZnr=8UV37yiQpWRZny7g9p6YES0wa+g_kMJw@mail.gmail.com>
+ <YoYFKdqayKRw2npp@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20220519111856.wvk4oetm7odnkg3w@quack3.lan>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=TTppzXqGXGzezJ0VNR/10YUamTL+Jpn/a+OS4nEwUs0=;
+        b=aJRufbeVPWWTg6xesgVQ92jTkUBXkj4204NtsTRRuXhSDjPb8Xkpo0bNaK4046hFnv
+         mLKgwhvsh9GAmI2LFDkeF6HnSFJOYseaJ+p8tes7OyljSbloK0G+33o31Bpt84fkfCb4
+         J38wGhcIGfbVqDVaOHU/qKlZO1PRo09oJVwe8Kq8Gjr8j7VY4qHpf1GeZdyugHi00mzw
+         aPj5qp0lnQNuRwPUHk0H544OPn69tIDaGuwVRtFJw5cVWxmIclVYYJ1OVG+xA+X0wkh6
+         EFpAbJrZNyvmy90Vgh11onsTrIn9w5C0EYbSgXGfpC4kZqk73crIwyt6vZPv3EiDdghA
+         AwgQ==
+In-Reply-To: <YoYFKdqayKRw2npp-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Jan Kara <jack@suse.cz>
-Cc: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-=D4=DA 2022/05/19 19:18, Jan Kara =D0=B4=B5=C0:
-> On Sat 14-05-22 17:05:21, Yu Kuai wrote:
->> It will only be called from bfq_bfqq_handle_idle_busy_switch() in
->> specific code branch, there is no need to precaculate
->> 'bfqq_wants_to_preempt' each time bfq_bfqq_handle_idle_busy_switch()
->> is caleld.
->>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->=20
-> Please see below:
->=20
->> @@ -1816,14 +1807,6 @@ static void bfq_bfqq_handle_idle_busy_switch(stru=
-ct bfq_data *bfqd,
->>   		  (bfqq->bic || RQ_BIC(rq)->stably_merged) &&
->>   		   (*interactive || soft_rt)));
->>  =20
->> -	/*
->> -	 * Using the last flag, update budget and check whether bfqq
->> -	 * may want to preempt the in-service queue.
->> -	 */
->> -	bfqq_wants_to_preempt =3D
->> -		bfq_bfqq_update_budg_for_activation(bfqd, bfqq,
->> -						    arrived_in_time);
->> -
->>   	/*
->>   	 * If bfqq happened to be activated in a burst, but has been
->>   	 * idle for much more than an interactive queue, then we
-> ...
->> @@ -1918,7 +1900,7 @@ static void bfq_bfqq_handle_idle_busy_switch(struc=
-t bfq_data *bfqd,
->>   	 * (2) this switch of bfqq to busy changes the scenario.
->>   	 */
->>   	if (bfqd->in_service_queue &&
->> -	    ((bfqq_wants_to_preempt &&
->> +	    ((bfq_bfqq_update_budg_for_activation(bfqd, bfqq) &&
->>   	      bfqq->wr_coeff >=3D bfqd->in_service_queue->wr_coeff) ||
->>   	     bfq_bfqq_higher_class_or_weight(bfqq, bfqd->in_service_queue) ||
->>   	     !bfq_better_to_idle(bfqd->in_service_queue)) &&
->=20
-> So these changes are actually wrong because
-> bfq_bfqq_update_budg_for_activation() relies on
-> bfq_bfqq_non_blocking_wait_rq() but bfq_add_bfqq_busy() clears that. And
-> bfq_add_bfqq_busy() is called between the place where
-> bfq_bfqq_update_budg_for_activation() was called previously and now so yo=
-ur
-> patch breaks this logic.
+On Thu, May 19, 2022 at 1:51 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+>
+> On Wed 18-05-22 22:44:13, Wei Xu wrote:
+> > On Tue, May 17, 2022 at 1:06 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+> [...]
+> > > But I don't think an anon/file bias will capture this coefficient?
+> >
+> > It essentially provides the userspace proactive reclaimer an ability
+> > to define its own reclaim policy by adding an argument to specify
+> > which type of pages to reclaim via memory.reclaim.
+>
+> I am not sure the swappiness is really a proper interface for that.
+> Historically this tunable has changed behavior several times and the
+> reclaim algorithm is free to ignore it completely in many cases. If you
+> want to build a userspace reclaim policy, then it really has to have a
+> predictable and stable behavior. That would mean that the semantic would
+> have to be much stronger than the global vm_swappiness.
 
-Hi,
+I agree. As what I replied to Roman's comments earlier, it is cleaner
+to just specify the type of pages to reclaim.
 
-You are right, thanks for the explanation, I'll remove this patch and
-the next patch in next version.
-
-Kuai
->=20
-> 								Honza
->=20
+> --
+> Michal Hocko
+> SUSE Labs
