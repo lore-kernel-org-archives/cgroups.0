@@ -1,71 +1,64 @@
-From: Vaibhav Jain <vaibhav@linux.ibm.com>
-Subject: Re: [PATCH] memcg: provide reclaim stats via 'memory.reclaim'
-Date: Thu, 19 May 2022 15:26:52 +0530
-Message-ID: <8735h5hml7.fsf@vajain21.in.ibm.com>
-References: <20220518223815.809858-1-vaibhav@linux.ibm.com>
- <xr937d6ic5qk.fsf@gthelen2.svl.corp.google.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH -next v3 2/2] blk-throttle: fix io hung due to
+ configuration updates
+Date: Thu, 19 May 2022 11:58:58 +0200
+Message-ID: <20220519095857.GE16096@blackbody.suse.cz>
+References: <20220519085811.879097-1-yukuai3@huawei.com>
+ <20220519085811.879097-3-yukuai3@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : in-reply-to : references : date : message-id : mime-version :
- content-type; s=pp1; bh=cKPPLtUhn1Zdq9Oika82pAtq/kD+uaRcTWRlgTUcvuE=;
- b=ZpDHUadAU6pwtWhT2zKhV4nm6iGq0zAoMYSHrl73AwJTteBFxmJJYaILbI9rtcLcWqBU
- bIAl6pQAVHsaKYFmRmwUu9fE7CP0+GSveQRjj39PiBoxvCR1+0YgwHNZYmTD1OrmOzu5
- O2bNplUCc/SwPgB9ggkYMmrICTV+wBkadCYbWkQYDDxHnq7qqWwY4AMOITe+Xd6PXgOZ
- dglAMLKOzl+eiR9Yhkl6ElvIDu5EZNIRK53EpzHNSsEi3roZHlWTIHE1itLeFHlP8k32
- 7KyPMKAc0asMSl2i8NUw3UlZa0z9aBgClpna8ftcc8bIQhbJwshLs7nrlHqz7dmgSjsN 5A== 
-In-Reply-To: <xr937d6ic5qk.fsf@gthelen2.svl.corp.google.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1652954339; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=YTfOEdTrcSkHCDKW1HmDDhAr0GIpenrsTa4Zvo2nZXs=;
+        b=Uge4kVfE8iAskH/Kgfm2XliUWZI+z+sI8QNcO3VqjfBIDPPPNJecp1RBb0z51bf5tQdJOj
+        cB5OjDtenTeVB0k65w8BU1MfFd4YKSyPSnTRI+e/QlYPm8nB6IOJ1oQC60ygwIXuZCVWFC
+        a/7QdRwGQwht8HNG4U3RJ0l9wQda4R4=
+Content-Disposition: inline
+In-Reply-To: <20220519085811.879097-3-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Greg Thelen <gthelen@google.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>, Shakeel Butt <shakeelb@google.com>, Yosry Ahmed <yosryahmed@google.com>
+To: Yu Kuai <yukuai3@huawei.com>
+Cc: tj@kernel.org, axboe@kernel.dk, ming.lei@redhat.com, geert@linux-m68k.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-Hi,
+Hello Kuayi.
 
-Thanks for looking into this patch,
+On Thu, May 19, 2022 at 04:58:11PM +0800, Yu Kuai <yukuai3@huawei.com> wrote:
+> If new configuration is submitted while a bio is throttled, then new
+> waiting time is recaculated regardless that the bio might aready wait
+> for some time:
+> 
+> tg_conf_updated
+>  throtl_start_new_slice
+>   tg_update_disptime
+>   throtl_schedule_next_dispatch
+> 
+> Then io hung can be triggered by always submmiting new configuration
+> before the throttled bio is dispatched.
 
-Greg Thelen <gthelen@google.com> writes:
+O.K.
 
-> Vaibhav Jain <vaibhav@linux.ibm.com> wrote:
->
->> [1] Provides a way for user-space to trigger proactive reclaim by introducing
->> a write-only memcg file 'memory.reclaim'. However reclaim stats like number
->> of pages scanned and reclaimed is still not directly available to the
->> user-space.
->>
->> This patch proposes to extend [1] to make the memcg file 'memory.reclaim'
->> readable which returns the number of pages scanned / reclaimed during the
->> reclaim process from 'struct vmpressure' associated with each memcg. This should
->> let user-space asses how successful proactive reclaim triggered from memcg
->> 'memory.reclaim' was ?
->>
->> With the patch following command flow is expected:
->>
->>  # echo "1M" > memory.reclaim
->>
->>  # cat memory.reclaim
->>    scanned 76
->>    reclaimed 32
->
-> I certainly appreciate the ability for shell scripts to demonstrate
-> cgroup operations with textual interfaces, but such interface seem like
-> they are optimized for ease of use by developers.
->
-Agree that directly exposing nr_scanned/reclaimed might not be a useful
-for users and certainly looks like a dev interface
+> -	/*
+> -	 * We're already holding queue_lock and know @tg is valid.  Let's
+> -	 * apply the new config directly.
+> -	 *
+> -	 * Restart the slices for both READ and WRITES. It might happen
+> -	 * that a group's limit are dropped suddenly and we don't want to
+> -	 * account recently dispatched IO with new low rate.
+> -	 */
+> -	throtl_start_new_slice(tg, READ);
+> -	throtl_start_new_slice(tg, WRITE);
+> +	throtl_update_slice(tg, old_limits);
 
-> I wonder if for runtime production use an ioctl or netlink interface has
-> been considered for cgroup? I don't think there are any yet, but such
-> approaches seem like a more straightforward ways to get nontrivial
-> input/outputs from a single call (e.g. like this proposal). And they
-> have the benefit of not requiring ascii serialization/parsing overhead.
+throtl_start_new_slice zeroes *_disp fields.
+If for instance, new config allowed only 0.5 throughput, the *_disp
+fields would be scaled to 0.5.
+How that change helps (better) the previously throttled bio to be dispatched?
 
-I think to a large degree eBPF and existing static tracepoints in vmscan
-can provide access to these metrics as Shakeel Bhat pointed to earlier.
+(Is it because you omit update of slice_{start,end}?)
 
-<snip>
+Thanks,
+Michal
 
--- 
-Cheers
-~ Vaibhav
