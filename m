@@ -1,74 +1,55 @@
-From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -next v2 2/2] blk-throttle: fix io hung due to
- configuration updates
-Date: Thu, 19 May 2022 11:01:19 +0800
-Message-ID: <3d6878f4-1902-633d-0af2-276831364a4f@huawei.com>
-References: <20220518072751.1188163-3-yukuai3@huawei.com>
- <202205182347.tMOOqyfL-lkp@intel.com>
- <84fe296e-6e56-3ca9-73a8-357beb675c6e@huawei.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH] memcg: provide reclaim stats via 'memory.reclaim'
+Date: Thu, 19 May 2022 05:08:35 +0000
+Message-ID: <20220519050835.ebpiukexgiys6t57@google.com>
+References: <20220518223815.809858-1-vaibhav@linux.ibm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <84fe296e-6e56-3ca9-73a8-357beb675c6e-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=ssVw9Fz9ZtI8VSN2PnnCy16Ie6cjZqhXq7jkPcwK+VI=;
+        b=p1NA6cOyXSw5ouGNdhysoNKwpC+u544fyrDYu0KRc2c2e3ge13jLIY2R6C9yI7FNxq
+         lvhOpidQwLWrlHfaI75+qsSfVYwYmwzwxfCSsYuVmW20p+OGVFMJ11n4krPvP+4y4yQ3
+         ArzvvSz0qUdPdAjWkkkdSdgrgz6lcxZrq3hcwLXfVX1xbuRBis2dKkf871l1prfl+BVv
+         o7GhGIaYR4wz+MT62Ioh36TOJ/bKjcTPUZdj+8zF3R3erlBHaKgbD6RpGxh8SAEJFC1I
+         DBj+/pEpHKZXlI9DEH4YqWzNp7m8KXD40ml1jejz/hE/UOXcup3+tYdHpbBarswgdd+m
+         TrBw==
+In-Reply-To: <20220518223815.809858-1-vaibhav@linux.ibm.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Vaibhav Jain <vaibhav@linux.ibm.com>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>, Yosry Ahmed <yosryahmed@google.com>
 
-在 2022/05/19 10:11, yukuai (C) 写道:
+On Thu, May 19, 2022 at 04:08:15AM +0530, Vaibhav Jain wrote:
+> [1] Provides a way for user-space to trigger proactive reclaim by introducing
+> a write-only memcg file 'memory.reclaim'. However reclaim stats like number
+> of pages scanned and reclaimed is still not directly available to the
+> user-space.
 > 
+> This patch proposes to extend [1] to make the memcg file 'memory.reclaim'
+> readable which returns the number of pages scanned / reclaimed during the
+> reclaim process from 'struct vmpressure' associated with each memcg. This should
+> let user-space asses how successful proactive reclaim triggered from memcg
+> 'memory.reclaim' was ?
 > 
-> 在 2022/05/18 23:52, kernel test robot 写道:
->> Hi Yu,
->>
->> Thank you for the patch! Yet something to improve:
->>
->> [auto build test ERROR on next-20220517]
->>
->> url:    
->> https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/bugfix-for-blk-throttle/20220518-151713 
->>
->> base:    47c1c54d1bcd0a69a56b49473bc20f17b70e5242
->> config: m68k-allyesconfig 
->> (https://download.01.org/0day-ci/archive/20220518/202205182347.tMOOqyfL-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config) 
->>
->> compiler: m68k-linux-gcc (GCC) 11.3.0
->> reproduce (this is a W=1 build):
->>          wget 
->> https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross 
->> -O ~/bin/make.cross
->>          chmod +x ~/bin/make.cross
->>          # 
->> https://github.com/intel-lab-lkp/linux/commit/f8345dbaf4ed491742aab29834aff66b4930c087 
->>
->>          git remote add linux-review 
->> https://github.com/intel-lab-lkp/linux
->>          git fetch --no-tags linux-review 
->> Yu-Kuai/bugfix-for-blk-throttle/20220518-151713
->>          git checkout f8345dbaf4ed491742aab29834aff66b4930c087
->>          # save the config file
->>          mkdir build_dir && cp config build_dir/.config
->>          COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 
->> make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash
->>
->> If you fix the issue, kindly add following tag as appropriate
->> Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
->>
->> All errors (new ones prefixed by >>):
->>
->>     m68k-linux-ld: block/blk-throttle.o: in function `tg_conf_updated':
->>>> blk-throttle.c:(.text+0x25bc): undefined reference to `__udivdi3'
->>>> m68k-linux-ld: blk-throttle.c:(.text+0x2626): undefined reference to 
->>>> `__udivdi3'
-> Hi,
+> With the patch following command flow is expected:
 > 
-> I'm confused here, the only place that I can relate to this:
+>  # echo "1M" > memory.reclaim
 > 
->      return dispatched * new_limit / old_limit;
+>  # cat memory.reclaim
+>    scanned 76
+>    reclaimed 32
 > 
-I understand it now. I'm doing (u64 / u64), I should use div64_u64
-> However, I don't understand yet why this is problematic...
->>     `.exit.text' referenced in section `.data' of 
->> sound/soc/codecs/tlv320adc3xxx.o: defined in discarded section 
->> `.exit.text' of sound/soc/codecs/tlv320adc3xxx.o
->>
+
+Yosry already mentioned the race issue with the implementation and I
+would prefer we don't create any new dependency on vmpressure which I
+think we should deprecate.
+
+Anyways my question is how are you planning to use these metrics i.e.
+scanned & reclaimed? I wonder if the data you are interested in can be
+extracted without a stable interface. Have you tried BPF way to get
+these metrics? We already have a tracepoint in vmscan tracing the
+scanned and reclaimed. 
