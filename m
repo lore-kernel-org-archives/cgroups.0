@@ -1,100 +1,33 @@
-From: "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: [PATCH -next v3 2/2] blk-throttle: fix io hung due to
- configuration updates
-Date: Thu, 19 May 2022 20:14:28 +0800
-Message-ID: <a8953189-af42-0225-3031-daf61347524a@huawei.com>
-References: <20220519085811.879097-1-yukuai3@huawei.com>
- <20220519085811.879097-3-yukuai3@huawei.com>
- <20220519095857.GE16096@blackbody.suse.cz>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v2] cgroup: remove the superfluous judgment
+Date: Thu, 19 May 2022 14:33:53 +0200
+Message-ID: <20220519123353.GF16096@blackbody.suse.cz>
+References: <20220518013647.1749568-1-zhangshida@kylinos.cn>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20220519095857.GE16096@blackbody.suse.cz>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1652963635; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=DUkWJZld5VluRI22uW9l8XCJNukHzEbwh8pHQV1m64o=;
+        b=ilFTuOmSs8usXtJOYAHg0dTo3pKq3irYc+DYgWtk7Ec18he1Qz+Vf2mp8P9oJTyqCCQA4V
+        0Q4FGLqAVvemfhBkAC9PgK4oH/uN/S+Y7ML4mQQZyiy6t10biz5l55zL6atKB/Fk4m7O5X
+        uZ35ZbFFrxrV4Asfjf6W4T6pVw3I8Lo=
+Content-Disposition: inline
+In-Reply-To: <20220518013647.1749568-1-zhangshida-UOlijcLmZ/InDS1+zs4M5A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
-Cc: tj@kernel.org, axboe@kernel.dk, ming.lei@redhat.com, geert@linux-m68k.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="iso-8859-1"
+To: Shida Zhang <starzhangzsd-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, zhangshida-UOlijcLmZ/InDS1+zs4M5A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-在 2022/05/19 17:58, Michal Koutný 写道:
-> Hello Kuayi.
-> 
-> On Thu, May 19, 2022 at 04:58:11PM +0800, Yu Kuai <yukuai3@huawei.com> wrote:
->> If new configuration is submitted while a bio is throttled, then new
->> waiting time is recaculated regardless that the bio might aready wait
->> for some time:
->>
->> tg_conf_updated
->>   throtl_start_new_slice
->>    tg_update_disptime
->>    throtl_schedule_next_dispatch
->>
->> Then io hung can be triggered by always submmiting new configuration
->> before the throttled bio is dispatched.
-> 
-> O.K.
-> 
->> -	/*
->> -	 * We're already holding queue_lock and know @tg is valid.  Let's
->> -	 * apply the new config directly.
->> -	 *
->> -	 * Restart the slices for both READ and WRITES. It might happen
->> -	 * that a group's limit are dropped suddenly and we don't want to
->> -	 * account recently dispatched IO with new low rate.
->> -	 */
->> -	throtl_start_new_slice(tg, READ);
->> -	throtl_start_new_slice(tg, WRITE);
->> +	throtl_update_slice(tg, old_limits);
-> 
-> throtl_start_new_slice zeroes *_disp fields.
-Hi,
+On Wed, May 18, 2022 at 09:36:47AM +0800, Shida Zhang <starzhangzsd-Re5JQEe=
+Qqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>  kernel/cgroup/cgroup.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-The problem is not just zeroes *_disp fields, in fact, the real problem
-is that 'slice_start' is reset to jiffies.
+Reviewed-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
 
-> If for instance, new config allowed only 0.5 throughput, the *_disp
-> fields would be scaled to 0.5.
-> How that change helps (better) the previously throttled bio to be dispatched?
-> 
-tg_with_in_bps_limit() is caculating 'wait' based on 'slice_start'and
-'bytes_disp':
-
-tg_with_in_bps_limit:
-  jiffy_elapsed_rnd = jiffies - tg->slice_start[rw];
-  tmp = bps_limit * jiffy_elapsed_rnd;
-  do_div(tmp, HZ);
-  bytes_allowed = tmp; -> how many bytes are allowed in this slice,
-		         incluing dispatched.
-  if (tg->bytes_disp[rw] + bio_size <= bytes_allowed)
-   *wait = 0 -> no need to wait if this bio is within limit
-
-  extra_bytes = tg->bytes_disp[rw] + bio_size - bytes_allowed;
-  -> extra_bytes is based on 'bytes_disp'
-
-For example:
-
-1) bps_limit is 2k, we issue two io, (1k and 9k)
-2) the first io(1k) will be dispatched, bytes_disp = 1k, slice_start = 0
-    the second io(9k) is waiting for (9 - (2 - 1)) / 2 = 4 s
-3) after 3 s, we update bps_limit to 1k, then new waiting is caculated:
-
-without this patch:  bytes_disp = 0, slict_start =3:
-bytes_allowed = 1k
-extra_bytes = 9k - 1k = 8k
-wait = 8s
-
-whth this patch: bytes_disp = 0.5k, slice_start =  0,
-bytes_allowed = 1k * 3 + 1k = 4k
-extra_bytes =  0.5k + 9k - 4k = 5.5k
-wait = 5.5s
-
-I hope I can expliain it clearly...
-
-Thanks,
-Kuai
-> (Is it because you omit update of slice_{start,end}?)
-> 
-> Thanks,
-> Michal
-> 
-> .
-> 
+(Note to self, css_clear_dir() on root cgroup is not needed thanks to
+kernfs_destroy_root()->kernfs_remove().)
