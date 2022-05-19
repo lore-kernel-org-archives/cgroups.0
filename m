@@ -1,36 +1,118 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 3/4] memcg: enable accounting for struct cgroup
-Date: Thu, 19 May 2022 18:53:25 +0200
-Message-ID: <20220519165325.GA2434@blackbody.suse.cz>
-References: <Ynv7+VG+T2y9rpdk@carbon>
- <a17be77f-dc3b-d69a-16e2-f7309959c525@openvz.org>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [PATCH] memcg: provide reclaim stats via 'memory.reclaim'
+Date: Thu, 19 May 2022 11:22:49 -0700
+Message-ID: <CAJD7tkb+MESXcx4P5VfJqWfdQRbDD+FJ1o5vUtvomqJ-T9BGcw@mail.gmail.com>
+References: <20220518223815.809858-1-vaibhav@linux.ibm.com>
+ <CAJD7tkZSgRs6T60Gv4dZR5xBemxgCB_2s8hz8zB0F_nakN5aTQ@mail.gmail.com> <878rqxhpn1.fsf@vajain21.in.ibm.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1652979207; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=6frXTBgzGRsjQpEWOm3xYp6acz/9cACY818c3GjmbTE=;
-        b=aU4Zz5L96bfOjnVSWwfUl/ZOl+pAHsxcqe088kJSSjOLa4Lo/g4x6rXHcEeW56lZA8rXfn
-        Zd72o8ccBgsUKXmWVf+tFT7ICCA3Xn7X1C1Dh3B73jS5NH59GNa1+Osny2pwZrHT6DYSl8
-        I73RnhMuNCm9ZcgAXED12k4VMQysZuA=
-Content-Disposition: inline
-In-Reply-To: <a17be77f-dc3b-d69a-16e2-f7309959c525-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=69aaD4QPBI9GdAKDBus5t7k/zTxSvsdipve2TR2Ob64=;
+        b=GkrWqpjb2yzPqkTVz9B3AF1h6LM7P8OXxi4jhC4daSBHKirsPkAj/SnhCBRObr6hEA
+         WiRe4Wva0Ozk3jVncq2kBHskGsms1JYwqHmXoWzPjEPybLXpd46qdKbASSPGfdxi63vy
+         LJQH7E7ZG4EQo1NMjCDQ0C21BbsohR5OpwSvd5tXaRitjNYoejlK5W2ozBG9NWI+9HsO
+         5EE6MfloqEZZ2bWuw2IDjRbqk6NiHnUWnmQgkFaiD6UyO98KHexuzXwqXY6gYRjB37Lv
+         EhtgEtqHenGlbGslS2t3DXNV3YJTqWgMMvu0VwKxEOxEdNtIkE+6JtzxqyJGaKb+J7tA
+         hXMA==
+In-Reply-To: <878rqxhpn1.fsf@vajain21.in.ibm.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vaibhav Jain <vaibhav@linux.ibm.com>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>, Shakeel Butt <shakeelb@google.com>
 
-On Fri, May 13, 2022 at 06:52:12PM +0300, Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
-> Creating each new cgroup allocates 4Kb for struct cgroup. This is the
-> largest memory allocation in this scenario and is epecially important
-> for small VMs with 1-2 CPUs.
+On Thu, May 19, 2022 at 1:51 AM Vaibhav Jain <vaibhav@linux.ibm.com> wrote:
+>
+> Hi,
+>
+> Thanks for looking into this patch,
+>
+> Yosry Ahmed <yosryahmed@google.com> writes:
+>
+> > On Wed, May 18, 2022 at 3:38 PM Vaibhav Jain <vaibhav@linux.ibm.com> wrote:
+> >>
+> >> [1] Provides a way for user-space to trigger proactive reclaim by introducing
+> >> a write-only memcg file 'memory.reclaim'. However reclaim stats like number
+> >> of pages scanned and reclaimed is still not directly available to the
+> >> user-space.
+> >>
+> >> This patch proposes to extend [1] to make the memcg file 'memory.reclaim'
+> >> readable which returns the number of pages scanned / reclaimed during the
+> >> reclaim process from 'struct vmpressure' associated with each memcg. This should
+> >> let user-space asses how successful proactive reclaim triggered from memcg
+> >> 'memory.reclaim' was ?
+> >
+> > Isn't this a racy read? struct vmpressure can be changed between the
+> > write and read by other reclaim operations, right?
+> Read/write of vmpr stats is always done in context of vmpr->sr_lock
+> which is also the case for this patch. So not sure how the read is racy
+> ?.
 
-What do you mean by this argument?
+I didn't mean that you can read the value while it is being changed. I
+meant that between writing to memory.reclaim and reading from it,
+another reclaim operation could modify memcg vmpressure. A sequence
+like this:
+1) Write to memory.reclaim
+2) Kernel coincidentally runs reclaim on that memcg
+3) Read from memory.reclaim
 
-(On bigger irons, the percpu components becomes dominant, e.g. struct
-cgroup_rstat_cpu.)
+The result would be that you are reading the stats of another reclaim
+operation, not the one invoked by writing to memory.reclaim.
 
-Thanks,
-Michal
+>
+> >
+> > I was actually planning to send a patch that does not updated
+> > vmpressure for user-controller reclaim, similar to how PSI is handled.
+> >
+> Ok, not sure if I am inferring correctly as to how how that would be
+> useful. Can you please provide some more context.
+
+IIUC vmpressure is used as an indicator for memory pressure. In my
+opinion it makes sense if vmpressure is not changed on reclaim
+operations directly invoked by the user, as they are not directly
+related to whether the system is under memory pressure or not. PSI is
+handled in a similar way. See e22c6ed90aa9 ("mm: memcontrol: don't
+count limit-setting reclaim as
+memory pressure").
+
+>
+> The primary motivation for this patch was to expose the vmpressure stats
+> to user space that are available with cgroup-v1 but not with cgroup-v2
+> AFAIK
+
+If the main goal is exposing vmpressure, regardless of proactive
+reclaim, this is something else. AFAIK vmpressure is not popular
+anymore and PSI is the more recent/better indicator.
+
+>
+> > The interface currently returns -EBUSY if the entire amount was not
+> > reclaimed, so isn't this enough to figure out if it was successful or
+> > not?
+> Userspace may very well want to know the amount of memory that was
+> partially reclaimed even though write to "memory.reclaim" returned
+> '-EBUSY'. This feedback can be useful info for implementing a retry
+> loop.
+>
+> > If not, we can store the scanned / reclaim counts of the last
+> > memory.reclaim invocation for the sole purpose of memory.reclaim
+> > reads.
+> Sure sounds reasonable to me.
+>
+> > Maybe it is actually more intuitive to users to just read the
+> > amount of memory read? In a format that is similar to the one written?
+> >
+> > i.e
+> > echo "10M" > memory.reclaim
+> > cat memory.reclaim
+> > 9M
+> >
+> Agree, I will address that in v2.
+>
+> <snip>
+>
+> --
+> Cheers
+> ~ Vaibhav
