@@ -1,129 +1,106 @@
-From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -next v2 2/2] blk-throttle: fix io hung due to
- configuration updates
-Date: Thu, 19 May 2022 15:06:38 +0800
-Message-ID: <20bc6370-999b-ed3c-4b8f-19b2cdba5965@huawei.com>
-References: <20220518072751.1188163-3-yukuai3@huawei.com>
- <202205182347.tMOOqyfL-lkp@intel.com>
- <84fe296e-6e56-3ca9-73a8-357beb675c6e@huawei.com>
- <3d6878f4-1902-633d-0af2-276831364a4f@huawei.com>
- <CAMuHMdV6NysKKh+HZ-cgHh+=SVcydmxO6ic82+t3ySTgfkoEOg@mail.gmail.com>
+From: "ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] Revert "mm/vmscan: never demote for memcg reclaim"
+Date: Thu, 19 May 2022 15:42:31 +0800
+Message-ID: <ee1408cb15dbd2e979fe637e2ab91644f6190d0e.camel@intel.com>
+References: <20220518190911.82400-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAMuHMdV6NysKKh+HZ-cgHh+=SVcydmxO6ic82+t3ySTgfkoEOg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1652946158; x=1684482158;
+  h=message-id:subject:from:to:cc:date:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=2Ojw62lZylIf6juVQUL8OPlwJ0l8Bpb1S6O2GhP47Ls=;
+  b=LE8/RwUyIr7sU+GGUAvpxQKw4TxUKRY+CGm+NTtSxa2Z9+gvNoazLCt+
+   VmBMvDuSJhqbH1R71K1VRtHq9U4oFxf8aJ2frI9sLfjFW9SmW80MBKXoj
+   SA6M2icuYkHL70lmt0FvQz/BBYWA2qnxKli9gnL9uTXehO99KQ4c4LOJD
+   SF8gRz5R18Ep/HYJEBcSzb/riVXUGJHtXLZve80J0/194N+K/BjhX/mf+
+   C/xSyQDQrwhAOy35RyWE2XfLFrMJSOjbFgmFbUwMKp2IQ2T0xbrs54mHD
+   Q/oDlc+xcE5vEtHbrhlX/r79kW7etXtAHCCDWCp4ak9BjX1qxLVfJji8g
+   w==;
+In-Reply-To: <20220518190911.82400-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Cc: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+
+On Wed, 2022-05-18 at 15:09 -0400, Johannes Weiner wrote:
+> This reverts commit 3a235693d3930e1276c8d9cc0ca5807ef292cf0a.
+> 
+> Its premise was that cgroup reclaim cares about freeing memory inside
+> the cgroup, and demotion just moves them around within the cgroup
+> limit. Hence, pages from toptier nodes should be reclaimed directly.
+> 
+> However, with NUMA balancing now doing tier promotions, demotion is
+> part of the page aging process. Global reclaim demotes the coldest
+> toptier pages to secondary memory, where their life continues and from
+> which they have a chance to get promoted back. Essentially, tiered
+> memory systems have an LRU order that spans multiple nodes.
+> 
+> When cgroup reclaims pages coming off the toptier directly, there can
+> be colder pages on lower tier nodes that were demoted by global
+> reclaim. This is an aging inversion, not unlike if cgroups were to
+> reclaim directly from the active lists while there are inactive pages.
+> 
+> Proactive reclaim is another factor. The goal of that it is to offload
+> colder pages from expensive RAM to cheaper storage. When lower tier
+> memory is available as an intermediate layer, we want offloading to
+> take advantage of it instead of bypassing to storage.
+> 
+> Revert the patch so that cgroups respect the LRU order spanning the
+> memory hierarchy.
+> 
+> Of note is a specific undercommit scenario, where all cgroup limits in
+> the system add up to <= available toptier memory. In that case,
+> shuffling pages out to lower tiers first to reclaim them from there is
+> inefficient. This is something could be optimized/short-circuited
+> later on (although care must be taken not to accidentally recreate the
+> aging inversion). Let's ensure correctness first.
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> Cc: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Cc: Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+> Cc: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+> Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+
+Reviewed-by: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+
+This is also required by Tim's DRAM partition among cgroups in tiered
+sytstem.
+
+Best Regards,
+Huang, Ying
+
+> ---
+>  mm/vmscan.c | 9 ++-------
+>  1 file changed, 2 insertions(+), 7 deletions(-)
+> 
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index c6918fff06e1..7a4090712177 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -528,13 +528,8 @@ static bool can_demote(int nid, struct scan_control *sc)
+>  {
+>  	if (!numa_demotion_enabled)
+>  		return false;
+> -	if (sc) {
+> -		if (sc->no_demotion)
+> -			return false;
+> -		/* It is pointless to do demotion in memcg reclaim */
+> -		if (cgroup_reclaim(sc))
+> -			return false;
+> -	}
+> +	if (sc && sc->no_demotion)
+> +		return false;
+>  	if (next_demotion_node(nid) == NUMA_NO_NODE)
+>  		return false;
+>  
+> 
+> 
+> 
 
 
-
-在 2022/05/19 15:01, Geert Uytterhoeven 写道:
-> Hi Yukuai,
-> 
-> On Thu, May 19, 2022 at 5:25 AM yukuai (C) <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->> 在 2022/05/19 10:11, yukuai (C) 写道:
->>> 在 2022/05/18 23:52, kernel test robot 写道:
->>>> Thank you for the patch! Yet something to improve:
->>>>
->>>> [auto build test ERROR on next-20220517]
->>>>
->>>> url:
->>>> https://github.com/intel-lab-lkp/linux/commits/Yu-Kuai/bugfix-for-blk-throttle/20220518-151713
->>>>
->>>> base:    47c1c54d1bcd0a69a56b49473bc20f17b70e5242
->>>> config: m68k-allyesconfig
->>>> (https://download.01.org/0day-ci/archive/20220518/202205182347.tMOOqyfL-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
->>>>
->>>> compiler: m68k-linux-gcc (GCC) 11.3.0
->>>> reproduce (this is a W=1 build):
->>>>           wget
->>>> https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross
->>>> -O ~/bin/make.cross
->>>>           chmod +x ~/bin/make.cross
->>>>           #
->>>> https://github.com/intel-lab-lkp/linux/commit/f8345dbaf4ed491742aab29834aff66b4930c087
->>>>
->>>>           git remote add linux-review
->>>> https://github.com/intel-lab-lkp/linux
->>>>           git fetch --no-tags linux-review
->>>> Yu-Kuai/bugfix-for-blk-throttle/20220518-151713
->>>>           git checkout f8345dbaf4ed491742aab29834aff66b4930c087
->>>>           # save the config file
->>>>           mkdir build_dir && cp config build_dir/.config
->>>>           COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0
->>>> make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash
->>>>
->>>> If you fix the issue, kindly add following tag as appropriate
->>>> Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
->>>>
->>>> All errors (new ones prefixed by >>):
->>>>
->>>>      m68k-linux-ld: block/blk-throttle.o: in function `tg_conf_updated':
->>>>>> blk-throttle.c:(.text+0x25bc): undefined reference to `__udivdi3'
->>>>>> m68k-linux-ld: blk-throttle.c:(.text+0x2626): undefined reference to
->>>>>> `__udivdi3'
->>> Hi,
->>>
->>> I'm confused here, the only place that I can relate to this:
->>>
->>>       return dispatched * new_limit / old_limit;
->>>
->>> However, I don't understand yet why this is problematic...
->>>>      `.exit.text' referenced in section `.data' of
->>>> sound/soc/codecs/tlv320adc3xxx.o: defined in discarded section
->>>> `.exit.text' of sound/soc/codecs/tlv320adc3xxx.o
->>
->> + static u64 throtl_update_bytes_disp(u64 dispatched, u64 new_limit,
->> +                                    u64 old_limit)
->> + {
->> +        if (new_limit == old_limit)
->> +                return dispatched;
->> +
->> +        if (new_limit == U64_MAX)
->> +                return 0;
->> +
->> +        return dispatched * new_limit / old_limit;
->>
->> I understand it now. I'm doing (u64 / u64), I should use div64_u64
-> 
-> Better, use mul_u64_u64_div_u64(), as "dispatched * new_limit"
-> may overflow?
-Hi,
-
-It's right that it  can overflow, I'll handle such case in next version.
-> 
->> + }
->> +
->> + static u32 throtl_update_io_disp(u32 dispatched, u32 new_limit, u32 old_limit)
->> + {
->> +        if (new_limit == old_limit)
->> +                return dispatched;
->> +
->> +        if (new_limit == UINT_MAX)
->> +                return 0;
->> +
->> +        return dispatched * new_limit / old_limit;
-> 
-> This is the same as above, but now operating on u32s instead of u64s.
-> Likewise, can the multiplication overflow?
-same as above.
-
-Thanks,
-Kuai
-> 
->> + }
-> 
-> Gr{oetje,eeting}s,
-> 
->                          Geert
-> 
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org
-> 
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                  -- Linus Torvalds
-> .
-> 
