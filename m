@@ -1,64 +1,62 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH -next v3 2/2] blk-throttle: fix io hung due to
- configuration updates
-Date: Thu, 19 May 2022 11:58:58 +0200
-Message-ID: <20220519095857.GE16096@blackbody.suse.cz>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH -next v3 1/2] blk-throttle: fix that io throttle can only
+ work for single bio
+Date: Thu, 19 May 2022 18:42:41 +0800
+Message-ID: <YoYfIWlQ6ckWJOP0@T590>
 References: <20220519085811.879097-1-yukuai3@huawei.com>
- <20220519085811.879097-3-yukuai3@huawei.com>
+ <20220519085811.879097-2-yukuai3@huawei.com>
 Mime-Version: 1.0
 Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1652954339; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1652956976;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=YTfOEdTrcSkHCDKW1HmDDhAr0GIpenrsTa4Zvo2nZXs=;
-        b=Uge4kVfE8iAskH/Kgfm2XliUWZI+z+sI8QNcO3VqjfBIDPPPNJecp1RBb0z51bf5tQdJOj
-        cB5OjDtenTeVB0k65w8BU1MfFd4YKSyPSnTRI+e/QlYPm8nB6IOJ1oQC60ygwIXuZCVWFC
-        a/7QdRwGQwht8HNG4U3RJ0l9wQda4R4=
+        bh=kvMeEsiv+LVL0/x98g8vYJ8UrLJ8yrZkVIlvlaQ/zNw=;
+        b=M3nLtp7fz3MDK2B1lltioVWjI/5VHoTA/yBhWCmfBuCb4nbfVklxaoP6bzNAJqRNQhKXfF
+        AN8793dqu7SPTXr6liNBEFdNBtZV0zWxX2w39kp5t1Q3F1hKwcZAxENiCdGzYxAeYPAVl7
+        EhTvJUWrzeZ5ykPoMSKYObCKtaqf+4A=
 Content-Disposition: inline
-In-Reply-To: <20220519085811.879097-3-yukuai3@huawei.com>
+In-Reply-To: <20220519085811.879097-2-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Yu Kuai <yukuai3@huawei.com>
-Cc: tj@kernel.org, axboe@kernel.dk, ming.lei@redhat.com, geert@linux-m68k.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Cc: tj@kernel.org, axboe@kernel.dk, geert@linux-m68k.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-Hello Kuayi.
-
-On Thu, May 19, 2022 at 04:58:11PM +0800, Yu Kuai <yukuai3@huawei.com> wrote:
-> If new configuration is submitted while a bio is throttled, then new
-> waiting time is recaculated regardless that the bio might aready wait
-> for some time:
+On Thu, May 19, 2022 at 04:58:10PM +0800, Yu Kuai wrote:
+> commit 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
+> introduce a new problem, for example:
 > 
-> tg_conf_updated
->  throtl_start_new_slice
->   tg_update_disptime
->   throtl_schedule_next_dispatch
+> [root@localhost ~]# echo "8:0 1024" > /sys/fs/cgroup/blkio/blkio.throttle.write_bps_device
+> [root@localhost ~]# echo $$ > /sys/fs/cgroup/blkio/cgroup.procs
+> [root@localhost ~]# dd if=/dev/zero of=/dev/sda bs=10k count=1 oflag=direct &
+> [1] 620
+> [root@localhost ~]# dd if=/dev/zero of=/dev/sda bs=10k count=1 oflag=direct &
+> [2] 626
+> [root@localhost ~]# 1+0 records in
+> 1+0 records out
+> 10240 bytes (10 kB, 10 KiB) copied, 10.0038 s, 1.0 kB/s1+0 records in
+> 1+0 records out
 > 
-> Then io hung can be triggered by always submmiting new configuration
-> before the throttled bio is dispatched.
+> 10240 bytes (10 kB, 10 KiB) copied, 9.23076 s, 1.1 kB/s
+> -> the second bio is issued after 10s instead of 20s.
+> 
+> This is because if some bios are already queued, current bio is queued
+> directly and the flag 'BIO_THROTTLED' is set. And later, when former
+> bios are dispatched, this bio will be dispatched without waiting at all,
+> this is due to tg_with_in_bps_limit() return 0 for this bio.
+> 
+> In order to fix the problem, don't skip flaged bio in
+> tg_with_in_bps_limit(), and for the problem that split bio can be
+> double accounted, compensate the over-accounting in __blk_throtl_bio().
+> 
+> Fixes: 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
 
-O.K.
-
-> -	/*
-> -	 * We're already holding queue_lock and know @tg is valid.  Let's
-> -	 * apply the new config directly.
-> -	 *
-> -	 * Restart the slices for both READ and WRITES. It might happen
-> -	 * that a group's limit are dropped suddenly and we don't want to
-> -	 * account recently dispatched IO with new low rate.
-> -	 */
-> -	throtl_start_new_slice(tg, READ);
-> -	throtl_start_new_slice(tg, WRITE);
-> +	throtl_update_slice(tg, old_limits);
-
-throtl_start_new_slice zeroes *_disp fields.
-If for instance, new config allowed only 0.5 throughput, the *_disp
-fields would be scaled to 0.5.
-How that change helps (better) the previously throttled bio to be dispatched?
-
-(Is it because you omit update of slice_{start,end}?)
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
 
 Thanks,
-Michal
+Ming
 
