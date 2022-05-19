@@ -1,118 +1,53 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH] memcg: provide reclaim stats via 'memory.reclaim'
-Date: Thu, 19 May 2022 11:22:49 -0700
-Message-ID: <CAJD7tkb+MESXcx4P5VfJqWfdQRbDD+FJ1o5vUtvomqJ-T9BGcw@mail.gmail.com>
-References: <20220518223815.809858-1-vaibhav@linux.ibm.com>
- <CAJD7tkZSgRs6T60Gv4dZR5xBemxgCB_2s8hz8zB0F_nakN5aTQ@mail.gmail.com> <878rqxhpn1.fsf@vajain21.in.ibm.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC] Add swappiness argument to memory.reclaim
+Date: Thu, 19 May 2022 11:24:46 -0700
+Message-ID: <CAJD7tkYwvtuU9vnwzewFDtvKtg=2BiVMGa1i0qRCa7-=NG6yPg@mail.gmail.com>
+References: <CAJD7tkbDpyoODveCsnaqBBMZEkDvshXJmNdbk51yKSNgD7aGdg@mail.gmail.com>
+ <YoNHJwyjR7NJ5kG7@dhcp22.suse.cz> <CAJD7tkYnBjuwQDzdeo6irHY=so-E8z=Kc_kZe52anMOmRL+8yA@mail.gmail.com>
+ <YoQAVeGj19YpSMDb@cmpxchg.org> <CAAPL-u8pZ_p+SQZnr=8UV37yiQpWRZny7g9p6YES0wa+g_kMJw@mail.gmail.com>
+ <YoYFKdqayKRw2npp@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=69aaD4QPBI9GdAKDBus5t7k/zTxSvsdipve2TR2Ob64=;
-        b=GkrWqpjb2yzPqkTVz9B3AF1h6LM7P8OXxi4jhC4daSBHKirsPkAj/SnhCBRObr6hEA
-         WiRe4Wva0Ozk3jVncq2kBHskGsms1JYwqHmXoWzPjEPybLXpd46qdKbASSPGfdxi63vy
-         LJQH7E7ZG4EQo1NMjCDQ0C21BbsohR5OpwSvd5tXaRitjNYoejlK5W2ozBG9NWI+9HsO
-         5EE6MfloqEZZ2bWuw2IDjRbqk6NiHnUWnmQgkFaiD6UyO98KHexuzXwqXY6gYRjB37Lv
-         EhtgEtqHenGlbGslS2t3DXNV3YJTqWgMMvu0VwKxEOxEdNtIkE+6JtzxqyJGaKb+J7tA
-         hXMA==
-In-Reply-To: <878rqxhpn1.fsf@vajain21.in.ibm.com>
+        bh=CX4W+bGFQtjopHaRz1grkqNNRwJqfo8+CP9Ln5Qv0BI=;
+        b=i4PyrMtkcgGixTlkUSsQqhbDDpwMivPfCTE3sFBvx33wKc5ZVPhd4MJiuGlinz3o0a
+         JJ/0W5wMh06DoDbheCitqY2+PNpKrFWysvgo/4GE7X7EHEocqxttah93EoHfiWvG3IsF
+         MvVcgCGHcdM6gickuEP/50CG5SmyjJg4mJlXy01hvPHg/sI5OMr2fDIt6sicDaxMRE5p
+         QKOobWw2wmJ69028sakpU81K1oL+rh3nzvGM1vPOJEgaL8VRbayUBgKUhTRGkwTavWcM
+         bjdlrRUdMTSYJaMBTudbEsRYiWwIXuIKwyrMYtIrDRPiQuwpdHkyWkkwedKAAW2WgpXu
+         VcPw==
+In-Reply-To: <YoYFKdqayKRw2npp-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vaibhav Jain <vaibhav@linux.ibm.com>
-Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>, Shakeel Butt <shakeelb@google.com>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Thu, May 19, 2022 at 1:51 AM Vaibhav Jain <vaibhav@linux.ibm.com> wrote:
+On Thu, May 19, 2022 at 1:51 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
 >
-> Hi,
->
-> Thanks for looking into this patch,
->
-> Yosry Ahmed <yosryahmed@google.com> writes:
->
-> > On Wed, May 18, 2022 at 3:38 PM Vaibhav Jain <vaibhav@linux.ibm.com> wrote:
-> >>
-> >> [1] Provides a way for user-space to trigger proactive reclaim by introducing
-> >> a write-only memcg file 'memory.reclaim'. However reclaim stats like number
-> >> of pages scanned and reclaimed is still not directly available to the
-> >> user-space.
-> >>
-> >> This patch proposes to extend [1] to make the memcg file 'memory.reclaim'
-> >> readable which returns the number of pages scanned / reclaimed during the
-> >> reclaim process from 'struct vmpressure' associated with each memcg. This should
-> >> let user-space asses how successful proactive reclaim triggered from memcg
-> >> 'memory.reclaim' was ?
+> On Wed 18-05-22 22:44:13, Wei Xu wrote:
+> > On Tue, May 17, 2022 at 1:06 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+> [...]
+> > > But I don't think an anon/file bias will capture this coefficient?
 > >
-> > Isn't this a racy read? struct vmpressure can be changed between the
-> > write and read by other reclaim operations, right?
-> Read/write of vmpr stats is always done in context of vmpr->sr_lock
-> which is also the case for this patch. So not sure how the read is racy
-> ?.
-
-I didn't mean that you can read the value while it is being changed. I
-meant that between writing to memory.reclaim and reading from it,
-another reclaim operation could modify memcg vmpressure. A sequence
-like this:
-1) Write to memory.reclaim
-2) Kernel coincidentally runs reclaim on that memcg
-3) Read from memory.reclaim
-
-The result would be that you are reading the stats of another reclaim
-operation, not the one invoked by writing to memory.reclaim.
-
+> > It essentially provides the userspace proactive reclaimer an ability
+> > to define its own reclaim policy by adding an argument to specify
+> > which type of pages to reclaim via memory.reclaim.
 >
-> >
-> > I was actually planning to send a patch that does not updated
-> > vmpressure for user-controller reclaim, similar to how PSI is handled.
-> >
-> Ok, not sure if I am inferring correctly as to how how that would be
-> useful. Can you please provide some more context.
+> I am not sure the swappiness is really a proper interface for that.
+> Historically this tunable has changed behavior several times and the
+> reclaim algorithm is free to ignore it completely in many cases. If you
+> want to build a userspace reclaim policy, then it really has to have a
+> predictable and stable behavior. That would mean that the semantic would
+> have to be much stronger than the global vm_swappiness.
 
-IIUC vmpressure is used as an indicator for memory pressure. In my
-opinion it makes sense if vmpressure is not changed on reclaim
-operations directly invoked by the user, as they are not directly
-related to whether the system is under memory pressure or not. PSI is
-handled in a similar way. See e22c6ed90aa9 ("mm: memcontrol: don't
-count limit-setting reclaim as
-memory pressure").
+Agreed as well. I will work on an interface similar to what Roman
+suggested (type=file/anon/slab).
+Thanks everyone for participating in this discussion!
 
->
-> The primary motivation for this patch was to expose the vmpressure stats
-> to user space that are available with cgroup-v1 but not with cgroup-v2
-> AFAIK
-
-If the main goal is exposing vmpressure, regardless of proactive
-reclaim, this is something else. AFAIK vmpressure is not popular
-anymore and PSI is the more recent/better indicator.
-
->
-> > The interface currently returns -EBUSY if the entire amount was not
-> > reclaimed, so isn't this enough to figure out if it was successful or
-> > not?
-> Userspace may very well want to know the amount of memory that was
-> partially reclaimed even though write to "memory.reclaim" returned
-> '-EBUSY'. This feedback can be useful info for implementing a retry
-> loop.
->
-> > If not, we can store the scanned / reclaim counts of the last
-> > memory.reclaim invocation for the sole purpose of memory.reclaim
-> > reads.
-> Sure sounds reasonable to me.
->
-> > Maybe it is actually more intuitive to users to just read the
-> > amount of memory read? In a format that is similar to the one written?
-> >
-> > i.e
-> > echo "10M" > memory.reclaim
-> > cat memory.reclaim
-> > 9M
-> >
-> Agree, I will address that in v2.
->
-> <snip>
->
 > --
-> Cheers
-> ~ Vaibhav
+> Michal Hocko
+> SUSE Labs
