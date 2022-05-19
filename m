@@ -1,33 +1,73 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2] cgroup: remove the superfluous judgment
-Date: Thu, 19 May 2022 14:33:53 +0200
-Message-ID: <20220519123353.GF16096@blackbody.suse.cz>
-References: <20220518013647.1749568-1-zhangshida@kylinos.cn>
+From: "yukuai (C)" <yukuai3@huawei.com>
+Subject: Re: [PATCH -next 7/8] block, bfq: cleanup
+ bfq_bfqq_update_budg_for_activation()
+Date: Thu, 19 May 2022 21:21:25 +0800
+Message-ID: <6de25fae-7d36-c31c-a045-4f1668ef4ee5@huawei.com>
+References: <20220514090522.1669270-1-yukuai3@huawei.com>
+ <20220514090522.1669270-8-yukuai3@huawei.com>
+ <20220519111856.wvk4oetm7odnkg3w@quack3.lan>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1652963635; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=DUkWJZld5VluRI22uW9l8XCJNukHzEbwh8pHQV1m64o=;
-        b=ilFTuOmSs8usXtJOYAHg0dTo3pKq3irYc+DYgWtk7Ec18he1Qz+Vf2mp8P9oJTyqCCQA4V
-        0Q4FGLqAVvemfhBkAC9PgK4oH/uN/S+Y7ML4mQQZyiy6t10biz5l55zL6atKB/Fk4m7O5X
-        uZ35ZbFFrxrV4Asfjf6W4T6pVw3I8Lo=
-Content-Disposition: inline
-In-Reply-To: <20220518013647.1749568-1-zhangshida-UOlijcLmZ/InDS1+zs4M5A@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20220519111856.wvk4oetm7odnkg3w@quack3.lan>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Shida Zhang <starzhangzsd-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, zhangshida-UOlijcLmZ/InDS1+zs4M5A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Jan Kara <jack@suse.cz>
+Cc: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-On Wed, May 18, 2022 at 09:36:47AM +0800, Shida Zhang <starzhangzsd-Re5JQEe=
-Qqe8AvxtiuMwx3w@public.gmane.org> wrote:
->  kernel/cgroup/cgroup.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+=D4=DA 2022/05/19 19:18, Jan Kara =D0=B4=B5=C0:
+> On Sat 14-05-22 17:05:21, Yu Kuai wrote:
+>> It will only be called from bfq_bfqq_handle_idle_busy_switch() in
+>> specific code branch, there is no need to precaculate
+>> 'bfqq_wants_to_preempt' each time bfq_bfqq_handle_idle_busy_switch()
+>> is caleld.
+>>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>=20
+> Please see below:
+>=20
+>> @@ -1816,14 +1807,6 @@ static void bfq_bfqq_handle_idle_busy_switch(stru=
+ct bfq_data *bfqd,
+>>   		  (bfqq->bic || RQ_BIC(rq)->stably_merged) &&
+>>   		   (*interactive || soft_rt)));
+>>  =20
+>> -	/*
+>> -	 * Using the last flag, update budget and check whether bfqq
+>> -	 * may want to preempt the in-service queue.
+>> -	 */
+>> -	bfqq_wants_to_preempt =3D
+>> -		bfq_bfqq_update_budg_for_activation(bfqd, bfqq,
+>> -						    arrived_in_time);
+>> -
+>>   	/*
+>>   	 * If bfqq happened to be activated in a burst, but has been
+>>   	 * idle for much more than an interactive queue, then we
+> ...
+>> @@ -1918,7 +1900,7 @@ static void bfq_bfqq_handle_idle_busy_switch(struc=
+t bfq_data *bfqd,
+>>   	 * (2) this switch of bfqq to busy changes the scenario.
+>>   	 */
+>>   	if (bfqd->in_service_queue &&
+>> -	    ((bfqq_wants_to_preempt &&
+>> +	    ((bfq_bfqq_update_budg_for_activation(bfqd, bfqq) &&
+>>   	      bfqq->wr_coeff >=3D bfqd->in_service_queue->wr_coeff) ||
+>>   	     bfq_bfqq_higher_class_or_weight(bfqq, bfqd->in_service_queue) ||
+>>   	     !bfq_better_to_idle(bfqd->in_service_queue)) &&
+>=20
+> So these changes are actually wrong because
+> bfq_bfqq_update_budg_for_activation() relies on
+> bfq_bfqq_non_blocking_wait_rq() but bfq_add_bfqq_busy() clears that. And
+> bfq_add_bfqq_busy() is called between the place where
+> bfq_bfqq_update_budg_for_activation() was called previously and now so yo=
+ur
+> patch breaks this logic.
 
-Reviewed-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
+Hi,
 
-(Note to self, css_clear_dir() on root cgroup is not needed thanks to
-kernfs_destroy_root()->kernfs_remove().)
+You are right, thanks for the explanation, I'll remove this patch and
+the next patch in next version.
+
+Kuai
+>=20
+> 								Honza
+>=20
