@@ -1,184 +1,87 @@
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next v3 2/2] blk-throttle: fix io hung due to configuration updates
-Date: Thu, 19 May 2022 16:58:11 +0800
-Message-ID: <20220519085811.879097-3-yukuai3@huawei.com>
-References: <20220519085811.879097-1-yukuai3@huawei.com>
+From: Vaibhav Jain <vaibhav@linux.ibm.com>
+Subject: Re: [PATCH] memcg: provide reclaim stats via 'memory.reclaim'
+Date: Thu, 19 May 2022 14:20:58 +0530
+Message-ID: <878rqxhpn1.fsf@vajain21.in.ibm.com>
+References: <20220518223815.809858-1-vaibhav@linux.ibm.com>
+ <CAJD7tkZSgRs6T60Gv4dZR5xBemxgCB_2s8hz8zB0F_nakN5aTQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220519085811.879097-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : in-reply-to : references : date : message-id : mime-version :
+ content-type; s=pp1; bh=socf21ni5+/NQUYujP3bagP571P0CjAgkZfi4zqTir0=;
+ b=rOOUDQo6Z5DXAI+f5cS5iGTGJzMRZyIRzmWkNu71yV7sKQxRXsWTSEcyeyxcYNydQ4b5
+ XbwjLz1qisOMWuvioTimZXTepinPvHY9rzzO2sH8ZfkB8pecgk7eh4r1IxxVHBeRgNHz
+ OOuOSzQJOEVpj2cp7j3EbX2hD8hTmdnWlgT6dYAExBKmxdRTuZ4yiNIf48B8Ovhbslch
+ eZtu7VDXImH7JjzzlX9EsfVgqRx5xzoeqskeAoYC4BW47TIebBulVTczHk5DRO06d/eT
+ cRNpeczwkdGwpkpFEEQbAxq13FBds9Fa9/spo7XenH4fp4GPeAOlBsc4dTmkPy8iyLy2 ug== 
+In-Reply-To: <CAJD7tkZSgRs6T60Gv4dZR5xBemxgCB_2s8hz8zB0F_nakN5aTQ@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>, Shakeel Butt <shakeelb@google.com>
 
-If new configuration is submitted while a bio is throttled, then new
-waiting time is recaculated regardless that the bio might aready wait
-for some time:
+Hi,
 
-tg_conf_updated
- throtl_start_new_slice
-  tg_update_disptime
-  throtl_schedule_next_dispatch
+Thanks for looking into this patch,
 
-Then io hung can be triggered by always submmiting new configuration
-before the throttled bio is dispatched.
+Yosry Ahmed <yosryahmed@google.com> writes:
 
-Fix the problem by respecting the time that throttled bio aready waited.
-In order to do that, instead of start new slice in tg_conf_updated(),
-just update 'bytes_disp' and 'io_disp' based on the new configuration.
+> On Wed, May 18, 2022 at 3:38 PM Vaibhav Jain <vaibhav@linux.ibm.com> wrote:
+>>
+>> [1] Provides a way for user-space to trigger proactive reclaim by introducing
+>> a write-only memcg file 'memory.reclaim'. However reclaim stats like number
+>> of pages scanned and reclaimed is still not directly available to the
+>> user-space.
+>>
+>> This patch proposes to extend [1] to make the memcg file 'memory.reclaim'
+>> readable which returns the number of pages scanned / reclaimed during the
+>> reclaim process from 'struct vmpressure' associated with each memcg. This should
+>> let user-space asses how successful proactive reclaim triggered from memcg
+>> 'memory.reclaim' was ?
+>
+> Isn't this a racy read? struct vmpressure can be changed between the
+> write and read by other reclaim operations, right?
+Read/write of vmpr stats is always done in context of vmpr->sr_lock
+which is also the case for this patch. So not sure how the read is racy
+?.
 
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- block/blk-throttle.c | 80 +++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 67 insertions(+), 13 deletions(-)
+>
+> I was actually planning to send a patch that does not updated
+> vmpressure for user-controller reclaim, similar to how PSI is handled.
+>
+Ok, not sure if I am inferring correctly as to how how that would be
+useful. Can you please provide some more context.
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 0c37be08ff28..aca63148bb83 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -1271,7 +1271,58 @@ static int tg_print_conf_uint(struct seq_file *sf, void *v)
- 	return 0;
- }
- 
--static void tg_conf_updated(struct throtl_grp *tg, bool global)
-+static u64 throtl_update_bytes_disp(u64 dispatched, u64 new_limit,
-+				    u64 old_limit)
-+{
-+	if (new_limit == old_limit)
-+		return dispatched;
-+
-+	if (!dispatched)
-+		return 0;
-+
-+	/*
-+	 * In the case that multiply will overflow, just return 0. It will only
-+	 * let bios to be dispatched earlier.
-+	 */
-+	if (div64_u64(U64_MAX, dispatched) < new_limit)
-+		return 0;
-+
-+	dispatched *= new_limit;
-+	return div64_u64(dispatched, old_limit);
-+}
-+
-+static u32 throtl_update_io_disp(u32 dispatched, u32 new_limit, u32 old_limit)
-+{
-+	if (new_limit == old_limit)
-+		return dispatched;
-+
-+	if (!dispatched)
-+		return 0;
-+
-+	/*
-+	 * In the case that multiply will overflow, just return 0. It will only
-+	 * let bios to be dispatched earlier.
-+	 */
-+	if (UINT_MAX / dispatched < new_limit)
-+		return 0;
-+
-+	dispatched *= new_limit;
-+	return dispatched / old_limit;
-+}
-+
-+static void throtl_update_slice(struct throtl_grp *tg, u64 *old_limits)
-+{
-+	tg->bytes_disp[READ] = throtl_update_bytes_disp(tg->bytes_disp[READ],
-+			tg_bps_limit(tg, READ), old_limits[0]);
-+	tg->bytes_disp[WRITE] = throtl_update_bytes_disp(tg->bytes_disp[WRITE],
-+			tg_bps_limit(tg, WRITE), old_limits[1]);
-+	tg->io_disp[READ] = throtl_update_io_disp(tg->io_disp[READ],
-+			tg_iops_limit(tg, READ), (u32)old_limits[2]);
-+	tg->io_disp[WRITE] = throtl_update_io_disp(tg->io_disp[WRITE],
-+			tg_iops_limit(tg, WRITE), (u32)old_limits[3]);
-+}
-+
-+static void tg_conf_updated(struct throtl_grp *tg, u64 *old_limits, bool global)
- {
- 	struct throtl_service_queue *sq = &tg->service_queue;
- 	struct cgroup_subsys_state *pos_css;
-@@ -1310,16 +1361,7 @@ static void tg_conf_updated(struct throtl_grp *tg, bool global)
- 				parent_tg->latency_target);
- 	}
- 
--	/*
--	 * We're already holding queue_lock and know @tg is valid.  Let's
--	 * apply the new config directly.
--	 *
--	 * Restart the slices for both READ and WRITES. It might happen
--	 * that a group's limit are dropped suddenly and we don't want to
--	 * account recently dispatched IO with new low rate.
--	 */
--	throtl_start_new_slice(tg, READ);
--	throtl_start_new_slice(tg, WRITE);
-+	throtl_update_slice(tg, old_limits);
- 
- 	if (tg->flags & THROTL_TG_PENDING) {
- 		tg_update_disptime(tg);
-@@ -1327,6 +1369,14 @@ static void tg_conf_updated(struct throtl_grp *tg, bool global)
- 	}
- }
- 
-+static void tg_get_limits(struct throtl_grp *tg, u64 *limits)
-+{
-+	limits[0] = tg_bps_limit(tg, READ);
-+	limits[1] = tg_bps_limit(tg, WRITE);
-+	limits[2] = tg_iops_limit(tg, READ);
-+	limits[3] = tg_iops_limit(tg, WRITE);
-+}
-+
- static ssize_t tg_set_conf(struct kernfs_open_file *of,
- 			   char *buf, size_t nbytes, loff_t off, bool is_u64)
- {
-@@ -1335,6 +1385,7 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
- 	struct throtl_grp *tg;
- 	int ret;
- 	u64 v;
-+	u64 old_limits[4];
- 
- 	ret = blkg_conf_prep(blkcg, &blkcg_policy_throtl, buf, &ctx);
- 	if (ret)
-@@ -1347,13 +1398,14 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
- 		v = U64_MAX;
- 
- 	tg = blkg_to_tg(ctx.blkg);
-+	tg_get_limits(tg, old_limits);
- 
- 	if (is_u64)
- 		*(u64 *)((void *)tg + of_cft(of)->private) = v;
- 	else
- 		*(unsigned int *)((void *)tg + of_cft(of)->private) = v;
- 
--	tg_conf_updated(tg, false);
-+	tg_conf_updated(tg, old_limits, false);
- 	ret = 0;
- out_finish:
- 	blkg_conf_finish(&ctx);
-@@ -1523,6 +1575,7 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
- 	struct blkg_conf_ctx ctx;
- 	struct throtl_grp *tg;
- 	u64 v[4];
-+	u64 old_limits[4];
- 	unsigned long idle_time;
- 	unsigned long latency_time;
- 	int ret;
-@@ -1533,6 +1586,7 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
- 		return ret;
- 
- 	tg = blkg_to_tg(ctx.blkg);
-+	tg_get_limits(tg, old_limits);
- 
- 	v[0] = tg->bps_conf[READ][index];
- 	v[1] = tg->bps_conf[WRITE][index];
-@@ -1624,7 +1678,7 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
- 			tg->td->limit_index = LIMIT_LOW;
- 	} else
- 		tg->td->limit_index = LIMIT_MAX;
--	tg_conf_updated(tg, index == LIMIT_LOW &&
-+	tg_conf_updated(tg, old_limits, index == LIMIT_LOW &&
- 		tg->td->limit_valid[LIMIT_LOW]);
- 	ret = 0;
- out_finish:
+The primary motivation for this patch was to expose the vmpressure stats
+to user space that are available with cgroup-v1 but not with cgroup-v2
+AFAIK
+
+> The interface currently returns -EBUSY if the entire amount was not
+> reclaimed, so isn't this enough to figure out if it was successful or
+> not?
+Userspace may very well want to know the amount of memory that was
+partially reclaimed even though write to "memory.reclaim" returned
+'-EBUSY'. This feedback can be useful info for implementing a retry
+loop.
+
+> If not, we can store the scanned / reclaim counts of the last
+> memory.reclaim invocation for the sole purpose of memory.reclaim
+> reads.
+Sure sounds reasonable to me.
+
+> Maybe it is actually more intuitive to users to just read the
+> amount of memory read? In a format that is similar to the one written?
+>
+> i.e
+> echo "10M" > memory.reclaim
+> cat memory.reclaim
+> 9M
+>
+Agree, I will address that in v2.
+
+<snip>
+
 -- 
-2.31.1
-
+Cheers
+~ Vaibhav
