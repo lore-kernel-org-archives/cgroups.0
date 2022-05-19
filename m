@@ -1,106 +1,133 @@
-From: "ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] Revert "mm/vmscan: never demote for memcg reclaim"
-Date: Thu, 19 May 2022 15:42:31 +0800
-Message-ID: <ee1408cb15dbd2e979fe637e2ab91644f6190d0e.camel@intel.com>
-References: <20220518190911.82400-1-hannes@cmpxchg.org>
+From: Greg Thelen <gthelen@google.com>
+Subject: Re: [PATCH] memcg: provide reclaim stats via 'memory.reclaim'
+Date: Thu, 19 May 2022 00:59:47 -0700
+Message-ID: <xr937d6ic5qk.fsf@gthelen2.svl.corp.google.com>
+References: <20220518223815.809858-1-vaibhav@linux.ibm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1652946158; x=1684482158;
-  h=message-id:subject:from:to:cc:date:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=2Ojw62lZylIf6juVQUL8OPlwJ0l8Bpb1S6O2GhP47Ls=;
-  b=LE8/RwUyIr7sU+GGUAvpxQKw4TxUKRY+CGm+NTtSxa2Z9+gvNoazLCt+
-   VmBMvDuSJhqbH1R71K1VRtHq9U4oFxf8aJ2frI9sLfjFW9SmW80MBKXoj
-   SA6M2icuYkHL70lmt0FvQz/BBYWA2qnxKli9gnL9uTXehO99KQ4c4LOJD
-   SF8gRz5R18Ep/HYJEBcSzb/riVXUGJHtXLZve80J0/194N+K/BjhX/mf+
-   C/xSyQDQrwhAOy35RyWE2XfLFrMJSOjbFgmFbUwMKp2IQ2T0xbrs54mHD
-   Q/oDlc+xcE5vEtHbrhlX/r79kW7etXtAHCCDWCp4ak9BjX1qxLVfJji8g
-   w==;
-In-Reply-To: <20220518190911.82400-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=5ASte9vGYV8NmyufWXTtDt+wnTToG5G7bVCsDgy4Kpg=;
+        b=gwTVGnSBCH1OItkK8408hxAE3H+3MOivih34m7SBHEGT0+6hAZOMLNPptS8SIvLmuk
+         dn2y46gEkcFMT6rDddZ+v7a37E4u+yB8m9HWh7XNQNIo8o+qpgOH/q9QPz/KwdaFOIVV
+         Nq6tzQ02jiflJjryDeixn4W/tNmMMnumKiTZ36ZxRroI3RPCmJHaY4M7pNq/lV3jccpO
+         rZPjU/9DuAsZ2bqhz0zyrw8D0P4kaiQK7kHNRTbeHzkIcduFAaVBVEqNoXOd8BJqnfd4
+         NYrOoQgzKjbdFMCsMqLS1DyP1f9llOtIzlwbiTSrOq7EO3K9qk7QpbKFIsyOkuDu1TuB
+         Mt5A==
+In-Reply-To: <20220518223815.809858-1-vaibhav@linux.ibm.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vaibhav Jain <vaibhav@linux.ibm.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Cc: Vaibhav Jain <vaibhav@linux.ibm.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>, Shakeel Butt <shakeelb@google.com>, Yosry Ahmed <yosryahmed@google.com>
 
-On Wed, 2022-05-18 at 15:09 -0400, Johannes Weiner wrote:
-> This reverts commit 3a235693d3930e1276c8d9cc0ca5807ef292cf0a.
-> 
-> Its premise was that cgroup reclaim cares about freeing memory inside
-> the cgroup, and demotion just moves them around within the cgroup
-> limit. Hence, pages from toptier nodes should be reclaimed directly.
-> 
-> However, with NUMA balancing now doing tier promotions, demotion is
-> part of the page aging process. Global reclaim demotes the coldest
-> toptier pages to secondary memory, where their life continues and from
-> which they have a chance to get promoted back. Essentially, tiered
-> memory systems have an LRU order that spans multiple nodes.
-> 
-> When cgroup reclaims pages coming off the toptier directly, there can
-> be colder pages on lower tier nodes that were demoted by global
-> reclaim. This is an aging inversion, not unlike if cgroups were to
-> reclaim directly from the active lists while there are inactive pages.
-> 
-> Proactive reclaim is another factor. The goal of that it is to offload
-> colder pages from expensive RAM to cheaper storage. When lower tier
-> memory is available as an intermediate layer, we want offloading to
-> take advantage of it instead of bypassing to storage.
-> 
-> Revert the patch so that cgroups respect the LRU order spanning the
-> memory hierarchy.
-> 
-> Of note is a specific undercommit scenario, where all cgroup limits in
-> the system add up to <= available toptier memory. In that case,
-> shuffling pages out to lower tiers first to reclaim them from there is
-> inefficient. This is something could be optimized/short-circuited
-> later on (although care must be taken not to accidentally recreate the
-> aging inversion). Let's ensure correctness first.
-> 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-> Cc: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Cc: Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> Cc: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-> Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Vaibhav Jain <vaibhav@linux.ibm.com> wrote:
 
-Reviewed-by: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> [1] Provides a way for user-space to trigger proactive reclaim by introducing
+> a write-only memcg file 'memory.reclaim'. However reclaim stats like number
+> of pages scanned and reclaimed is still not directly available to the
+> user-space.
+>
+> This patch proposes to extend [1] to make the memcg file 'memory.reclaim'
+> readable which returns the number of pages scanned / reclaimed during the
+> reclaim process from 'struct vmpressure' associated with each memcg. This should
+> let user-space asses how successful proactive reclaim triggered from memcg
+> 'memory.reclaim' was ?
+>
+> With the patch following command flow is expected:
+>
+>  # echo "1M" > memory.reclaim
+>
+>  # cat memory.reclaim
+>    scanned 76
+>    reclaimed 32
 
-This is also required by Tim's DRAM partition among cgroups in tiered
-sytstem.
+I certainly appreciate the ability for shell scripts to demonstrate
+cgroup operations with textual interfaces, but such interface seem like
+they are optimized for ease of use by developers.
 
-Best Regards,
-Huang, Ying
+I wonder if for runtime production use an ioctl or netlink interface has
+been considered for cgroup? I don't think there are any yet, but such
+approaches seem like a more straightforward ways to get nontrivial
+input/outputs from a single call (e.g. like this proposal). And they
+have the benefit of not requiring ascii serialization/parsing overhead.
 
+> [1]:  https://lore.kernel.org/r/20220425190040.2475377-1-yosryahmed@google.com
+>
+> Cc: Shakeel Butt <shakeelb@google.com>
+> Cc: Yosry Ahmed <yosryahmed@google.com>
+> Signed-off-by: Vaibhav Jain <vaibhav@linux.ibm.com>
 > ---
->  mm/vmscan.c | 9 ++-------
->  1 file changed, 2 insertions(+), 7 deletions(-)
-> 
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index c6918fff06e1..7a4090712177 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -528,13 +528,8 @@ static bool can_demote(int nid, struct scan_control *sc)
->  {
->  	if (!numa_demotion_enabled)
->  		return false;
-> -	if (sc) {
-> -		if (sc->no_demotion)
-> -			return false;
-> -		/* It is pointless to do demotion in memcg reclaim */
-> -		if (cgroup_reclaim(sc))
-> -			return false;
-> -	}
-> +	if (sc && sc->no_demotion)
-> +		return false;
->  	if (next_demotion_node(nid) == NUMA_NO_NODE)
->  		return false;
->  
-> 
-> 
-> 
-
-
+>  Documentation/admin-guide/cgroup-v2.rst | 15 ++++++++++++---
+>  mm/memcontrol.c                         | 14 ++++++++++++++
+>  2 files changed, 26 insertions(+), 3 deletions(-)
+>
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 27ebef2485a3..44610165261d 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1209,18 +1209,27 @@ PAGE_SIZE multiple when read back.
+>  	utility is limited to providing the final safety net.
+>  
+>    memory.reclaim
+> -	A write-only nested-keyed file which exists for all cgroups.
+> +	A nested-keyed file which exists for all cgroups.
+>  
+> -	This is a simple interface to trigger memory reclaim in the
+> -	target cgroup.
+> +	This is a simple interface to trigger memory reclaim and retrieve
+> +	reclaim stats in the target cgroup.
+>  
+>  	This file accepts a single key, the number of bytes to reclaim.
+>  	No nested keys are currently supported.
+>  
+> +	Reading the file returns number of pages scanned and number of
+> +	pages reclaimed from the memcg. This information fetched from
+> +	vmpressure info associated with each cgroup.
+> +
+>  	Example::
+>  
+>  	  echo "1G" > memory.reclaim
+>  
+> +	  cat memory.reclaim
+> +
+> +	  scanned 78
+> +	  reclaimed 30
+> +
+>  	The interface can be later extended with nested keys to
+>  	configure the reclaim behavior. For example, specify the
+>  	type of memory to reclaim from (anon, file, ..).
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 2e2bfbed4717..9e43580a8726 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -6423,6 +6423,19 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
+>  	return nbytes;
+>  }
+>  
+> +static int memory_reclaim_show(struct seq_file *m, void *v)
+> +{
+> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+> +	struct vmpressure *vmpr = memcg_to_vmpressure(memcg);
+> +
+> +	spin_lock(&vmpr->sr_lock);
+> +	seq_printf(m, "scanned %lu\nreclaimed %lu\n",
+> +		   vmpr->scanned, vmpr->reclaimed);
+> +	spin_unlock(&vmpr->sr_lock);
+> +
+> +	return 0;
+> +}
+> +
+>  static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+>  			      size_t nbytes, loff_t off)
+>  {
+> @@ -6525,6 +6538,7 @@ static struct cftype memory_files[] = {
+>  		.name = "reclaim",
+>  		.flags = CFTYPE_NS_DELEGATABLE,
+>  		.write = memory_reclaim,
+> +		.seq_show  = memory_reclaim_show,
+>  	},
+>  	{ }	/* terminate */
+>  };
