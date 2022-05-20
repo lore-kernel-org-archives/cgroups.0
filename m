@@ -1,89 +1,112 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v4 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
- page table uses.
-Date: Fri, 20 May 2022 10:39:40 -0400
-Message-ID: <YoeoLJNQTam5fJSu@cmpxchg.org>
-References: <20220429201131.3397875-1-yosryahmed@google.com>
- <20220429201131.3397875-2-yosryahmed@google.com>
- <87ilqoi77b.wl-maz@kernel.org>
- <CAJD7tkY7JF25XXUFq2mGroetMkfo-2zGOaQC94pjZE3D42+oaw@mail.gmail.com>
- <Yn2TGJ4vZ/fst+CY@cmpxchg.org>
- <Yn2YYl98Vhh/UL0w@google.com>
- <Yn5+OtZSSUZZgTQj@cmpxchg.org>
- <Yn6DeEGLyR4Q0cDp@google.com>
- <CALvZod6nERq4j=L0V+pc-rd5+QKi4yb_23tWV-1MF53xL5KE6Q@mail.gmail.com>
- <CAJD7tka-5+XRkthNV4qCg8woPCpjcwynQoRBame-3GP1L8y+WQ@mail.gmail.com>
+From: Yonghong Song <yhs@fb.com>
+Subject: Re: [PATCH bpf-next v1 2/5] cgroup: bpf: add cgroup_rstat_updated()
+ and cgroup_rstat_flush() kfuncs
+Date: Fri, 20 May 2022 08:14:50 -0700
+Message-ID: <fa3b35a6-5c3c-42a1-23f0-a8143b4eaa57@fb.com>
+References: <20220520012133.1217211-1-yosryahmed@google.com>
+ <20220520012133.1217211-3-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=TTmi/1xkgT1AjVxJzskAr+COf/0zmPlsvxgfjW6STHE=;
-        b=Gxvhl+k8BBXk02rLhNHh59M59iKaZySmrURL5ViwDbexkz4AQDcT1PrTxGRwwIA9b6
-         /1f2ADWNgafFMzN43IhcFiyinqNnehHn/mS0YJbtMR6z731PyisnndoOkG4QNw19YD3d
-         5k+xSboSMaMN7QvahZpDuaMGQOESeBd5F4Bx3mh8jgB1uyY3ssyoK0Xq2S2xeP72/K83
-         PKpXip7h0Y+PpB3dm95FI4ngwmEccKM7+EXoqGyFtJ1eCsv33X6U8TW4FvS5JNrN09KR
-         w9b5Y7kbJX4XTJASFVGfGrpW2a4CWNMPykU0xVE8Gyft/WvrlN09/Biji8rIPx+RUWjW
-         tCtA==
-Content-Disposition: inline
-In-Reply-To: <CAJD7tka-5+XRkthNV4qCg8woPCpjcwynQoRBame-3GP1L8y+WQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=facebook;
+ bh=dKI6dQu6wjTQjbRSozjt86cO6m+HuXIEEDaxEzrfdXE=;
+ b=cEVdlanj8BCrlSJjXp/hdlknzURoKuEYi5hR/wOvfV//37i57MyLWD6iwdIXRh2xiOS7
+ d5fLd2EYENREr21SDkQMsIP6cX/+el7uklp4nqPe1f1L3P0yrUNTJkKZeKEy96Z1oD8c
+ lgEbo1blFr+2IMn3PKUqv+kYwGFsrrlYHnM= 
+Content-Language: en-US
+In-Reply-To: <20220520012133.1217211-3-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM9gwCICpdfJQ@public.gmane.org
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>
+Cc: Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org
 
-On Thu, May 19, 2022 at 06:56:54PM -0700, Yosry Ahmed wrote:
-> On Fri, May 13, 2022 at 10:14 AM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >
-> > On Fri, May 13, 2022 at 9:12 AM Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> > >
-> > [...]
-> > >
-> > > It was mostly an honest question, I too am trying to understand what userspace
-> > > wants to do with this information.  I was/am also trying to understand the benefits
-> > > of doing the tracking through page_state and not a dedicated KVM stat.  E.g. KVM
-> > > already has specific stats for the number of leaf pages mapped into a VM, why not
-> > > do the same for non-leaf pages?
-> >
-> > Let me answer why a more general stat is useful and the potential
-> > userspace reaction:
-> >
-> > For a memory type which is significant enough, it is useful to expose
-> > it in the general interfaces, so that the general data/stat collection
-> > infra can collect them instead of having workload dependent stat
-> > collectors. In addition, not necessarily that stat has to have a
-> > userspace reaction in an online fashion. We do collect stats for
-> > offline analysis which greatly influence the priority order of
-> > optimization workitems.
-> >
-> > Next the question is do we really need a separate stat item
-> > (secondary_pagetable instead of just plain pagetable) exposed in the
-> > stable API? To me secondary_pagetable is general (not kvm specific)
-> > enough and can be significant, so having a separate dedicated stat
-> > should be ok. Though I am ok with lump it with pagetable stat for now
-> > but we do want it to be accounted somewhere.
+
+
+On 5/19/22 6:21 PM, Yosry Ahmed wrote:
+> Add cgroup_rstat_updated() and cgroup_rstat_flush() kfuncs to bpf
+> tracing programs. bpf programs that make use of rstat can use these
+> functions to inform rstat when they update stats for a cgroup, and when
+> they need to flush the stats.
 > 
-> Any thoughts on this? Johannes?
+> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+> ---
+>   kernel/cgroup/rstat.c | 35 ++++++++++++++++++++++++++++++++++-
+>   1 file changed, 34 insertions(+), 1 deletion(-)
+> 
+> diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+> index e7a88d2600bd..a16a851bc0a1 100644
+> --- a/kernel/cgroup/rstat.c
+> +++ b/kernel/cgroup/rstat.c
+> @@ -3,6 +3,11 @@
+>   
+>   #include <linux/sched/cputime.h>
+>   
+> +#include <linux/bpf.h>
+> +#include <linux/btf.h>
+> +#include <linux/btf_ids.h>
+> +
+> +
+>   static DEFINE_SPINLOCK(cgroup_rstat_lock);
+>   static DEFINE_PER_CPU(raw_spinlock_t, cgroup_rstat_cpu_lock);
+>   
+> @@ -141,7 +146,12 @@ static struct cgroup *cgroup_rstat_cpu_pop_updated(struct cgroup *pos,
+>   	return pos;
+>   }
+>   
+> -/* A hook for bpf stat collectors to attach to and flush their stats */
+> +/*
+> + * A hook for bpf stat collectors to attach to and flush their stats.
+> + * Together with providing bpf kfuncs for cgroup_rstat_updated() and
+> + * cgroup_rstat_flush(), this enables a complete workflow where bpf progs that
+> + * collect cgroup stats can integrate with rstat for efficient flushing.
+> + */
+>   __weak noinline void bpf_rstat_flush(struct cgroup *cgrp,
+>   				     struct cgroup *parent, int cpu)
+>   {
+> @@ -476,3 +486,26 @@ void cgroup_base_stat_cputime_show(struct seq_file *seq)
+>   		   "system_usec %llu\n",
+>   		   usage, utime, stime);
+>   }
+> +
+> +/* Add bpf kfuncs for cgroup_rstat_updated() and cgroup_rstat_flush() */
+> +BTF_SET_START(bpf_rstat_check_kfunc_ids)
+> +BTF_ID(func, cgroup_rstat_updated)
+> +BTF_ID(func, cgroup_rstat_flush)
+> +BTF_SET_END(bpf_rstat_check_kfunc_ids)
+> +
+> +BTF_SET_START(bpf_rstat_sleepable_kfunc_ids)
+> +BTF_ID(func, cgroup_rstat_flush)
+> +BTF_SET_END(bpf_rstat_sleepable_kfunc_ids)
+> +
+> +static const struct btf_kfunc_id_set bpf_rstat_kfunc_set = {
+> +	.owner		= THIS_MODULE,
+> +	.check_set	= &bpf_rstat_check_kfunc_ids,
+> +	.sleepable_set	= &bpf_rstat_sleepable_kfunc_ids,
 
-I agree that this memory should show up in vmstat/memory.stat in some
-form or another.
+There is a compilation error here:
 
-The arguments on whether this should be part of NR_PAGETABLE or a
-separate entry seem a bit vague to me. I was hoping somebody more
-familiar with KVM could provide a better picture of memory consumption
-in that area.
+kernel/cgroup/rstat.c:503:3: error: ‘const struct btf_kfunc_id_set’ has 
+no member named ‘sleepable_set’; did you mean ‘release_set’?
+     503 |  .sleepable_set = &bpf_rstat_sleepable_kfunc_ids,
+         |   ^~~~~~~~~~~~~
+         |   release_set
+   kernel/cgroup/rstat.c:503:19: warning: excess elements in struct 
+initializer
+     503 |  .sleepable_set = &bpf_rstat_sleepable_kfunc_ids,
+         |                   ^
+   kernel/cgroup/rstat.c:503:19: note: (near initialization for 
+‘bpf_rstat_kfunc_set’)
+   make[3]: *** [scripts/Makefile.build:288: kernel/cgroup/rstat.o] Error 1
 
-Sean had mentioned that these allocations already get tracked through
-GFP_KERNEL_ACCOUNT. That's good, but if they are significant enough to
-track, they should be represented in memory.stat in some form. Sean
-also pointed out though that those allocations tend to scale rather
-differently than the page tables, so it probably makes sense to keep
-those two things separate at least.
+Please fix.
 
-Any thoughts on putting shadow page tables and iommu page tables into
-the existing NR_PAGETABLE item? If not, what are the cons?
-
-And creating (maybe later) a separate NR_VIRT for the other
-GPF_KERNEL_ACCOUNT allocations in kvm?
+> +};
+> +
+> +static int __init bpf_rstat_kfunc_init(void)
+> +{
+> +	return register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACING,
+> +					 &bpf_rstat_kfunc_set);
+> +}
+> +late_initcall(bpf_rstat_kfunc_init);
