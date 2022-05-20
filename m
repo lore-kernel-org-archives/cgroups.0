@@ -1,68 +1,121 @@
-From: "T.J. Mercier" <tjmercier@google.com>
-Subject: Re: [PATCH v7 0/6] Proposal for a GPU cgroup controller
-Date: Fri, 20 May 2022 09:25:38 -0700
-Message-ID: <CABdmKX2Ok023rN1drQgXVZLKUO_DVYrzmEamCgMMu6BPO67yhQ@mail.gmail.com>
-References: <20220510235653.933868-1-tjmercier@google.com> <3365cd1d750e84fedc8e75d646a77ffd85619d35.camel@ndufresne.ca>
- <CABdmKX3ZV6-u-oLvW_wWavAMBfrsZ=C_rCgK_Uz4VjxcRvRFew@mail.gmail.com>
- <81026ef07c1ce20f8673b75b17bab79a2b39c548.camel@ndufresne.ca>
- <CABdmKX2LxZ6zZR=fhXfnuWCB2BR+gzDd1-t1DD2A2XP24wvuGQ@mail.gmail.com>
- <Yn6DpUsoSz1/15Kc@slm.duckdns.org> <CABdmKX1xvm87WMEDkMc9Aye46E4zv1-scenwgaRxHesrOCsaYg@mail.gmail.com>
- <YodHjYlMx1XGtM2+@slm.duckdns.org>
+From: Yonghong Song <yhs@fb.com>
+Subject: Re: [PATCH bpf-next v1 3/5] bpf: Introduce cgroup iter
+Date: Fri, 20 May 2022 09:29:43 -0700
+Message-ID: <73fd9853-5dab-8b59-24a0-74c0a6cae88e@fb.com>
+References: <20220520012133.1217211-1-yosryahmed@google.com>
+ <20220520012133.1217211-4-yosryahmed@google.com>
+ <YodGI73xq8aIBrNM@slm.duckdns.org>
+ <CAJD7tkbvMcMWESMcWi6TtdCKLr6keBNGgZTnqcHZvBrPa1qWPw@mail.gmail.com>
+ <YodNLpxut+Zddnre@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=FUaa/CsIoXFhGcqQomBYha0KA+E1xpoSdaSoOErgusY=;
-        b=sCdCdZqIB2fM6C3/IMxJnyMHv4TxKGmIAEibbdWMh6FRbyWFI9mTEtryWRZ/NF+hj8
-         +Hx7jY6REjkdGsBVNwZIlsBAmuMkblQlokQialFoP0r3E+mVoJ7qGv/cmH27SzZH0S3E
-         6LoxOjAbQe+XtYP+GErjofpGVizVrpa3tPrxVs+yqbwCv/s6FVcSIgxyZOKq/Unt6sfK
-         WQdH0KeBkcXcGDUDuTf8vX6Et8/Yi9aMTfXHIESge8rquWo4PxOSekV4zJTp0tvovfMW
-         u6nTEG2KKtXD08jklErYVdrtfiimeio1bUddW1+xIx6fvJXFqqsrZgzOoeJe1LhQ/lrW
-         jHfA==
-In-Reply-To: <YodHjYlMx1XGtM2+@slm.duckdns.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Nicolas Dufresne <nicolas@ndufresne.ca>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@collabora.com>, Liam Mark <lmark@codeaurora.org>, Laura Abbott <labbott@redhat.com>, Brian Starkey <Brian.Starkey@arm.com>, John
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=facebook;
+ bh=fGsFNDkNpkR6u/tuKX6mNBPRx9n46xT/nZMY0JZx3HE=;
+ b=lHu7coBS/AJOnzW88jaIAct8BD0AW9O6nfHUuSnAooLwH4jc+9zGJtF1FsJUOLeH1PA5
+ uLfKhGeakcZd9ZVnZMN+3yRf0rBRlCSLw/2wnHSfVwNBaGU8ht5+ZaziCGGXDokam7hn
+ mEehEMRHz3jtJ4UjDqqK7gmooGYIIKRE/b8= 
+Content-Language: en-US
+In-Reply-To: <YodNLpxut+Zddnre@slm.duckdns.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj@kernel.org>, Yosry Ahmed <yosryahmed@google.com>
+Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@vger.kernel.org>, bpf <bpf@vger.kernel.org>, Cgroups <cgroups@vg>
 
-On Fri, May 20, 2022 at 12:47 AM Tejun Heo <tj@kernel.org> wrote:
->
+
+
+On 5/20/22 1:11 AM, Tejun Heo wrote:
 > Hello,
->
-> On Tue, May 17, 2022 at 04:30:29PM -0700, T.J. Mercier wrote:
-> > Thanks for your suggestion. This almost works. "dmabuf" as a key could
-> > work, but I'd actually like to account for each heap. Since heaps can
-> > be dynamically added, I can't accommodate every potential heap name by
-> > hardcoding registrations in the misc controller.
->
-> On its own, that's a pretty weak reason to be adding a separate gpu
-> controller especially given that it doesn't really seem to be one with
-> proper abstractions for gpu resources. We don't want to keep adding random
-> keys to misc controller but can definitely add limited flexibility. What
-> kind of keys do you need?
->
-Well the dmabuf-from-heaps component of this is the initial use case.
-I was envisioning we'd have additional keys as discussed here:
-https://lore.kernel.org/lkml/20220328035951.1817417-1-tjmercier@google.com/T/#m82e5fe9d8674bb60160701e52dae4356fea2ddfa
-So we'd end up with a well-defined core set of keys like "system", and
-then drivers would be free to use their own keys for their own unique
-purposes which could be complementary or orthogonal to the core set.
-Yesterday I was talking with someone who is interested in limiting gpu
-cores and bus IDs in addition to gpu memory. How to define core keys
-is the part where it looks like there's trouble.
+> 
+> On Fri, May 20, 2022 at 12:58:52AM -0700, Yosry Ahmed wrote:
+>> On Fri, May 20, 2022 at 12:41 AM Tejun Heo <tj@kernel.org> wrote:
+>>>
+>>> On Fri, May 20, 2022 at 01:21:31AM +0000, Yosry Ahmed wrote:
+>>>> From: Hao Luo <haoluo@google.com>
+>>>>
+>>>> Introduce a new type of iter prog: cgroup. Unlike other bpf_iter, this
+>>>> iter doesn't iterate a set of kernel objects. Instead, it is supposed to
+>>>> be parameterized by a cgroup id and prints only that cgroup. So one
+>>>> needs to specify a target cgroup id when attaching this iter. The target
+>>>> cgroup's state can be read out via a link of this iter.
+>>>>
+>>>> Signed-off-by: Hao Luo <haoluo@google.com>
+>>>> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+>>>
+>>> This could be me not understanding why it's structured this way but it keeps
+>>> bothering me that this is adding a cgroup iterator which doesn't iterate
+>>> cgroups. If all that's needed is extracting information from a specific
+>>> cgroup, why does this need to be an iterator? e.g. why can't I use
+>>> BPF_PROG_TEST_RUN which looks up the cgroup with the provided ID, flushes
+>>> rstat, retrieves whatever information necessary and returns that as the
+>>> result?
+>>
+>> I will let Hao and Yonghong reply here as they have a lot more
+>> context, and they had previous discussions about cgroup_iter. I just
+>> want to say that exposing the stats in a file is extremely convenient
+>> for userspace apps. It becomes very similar to reading stats from
+>> cgroupfs. It also makes migrating cgroup stats that we have
+>> implemented in the kernel to BPF a lot easier.
+> 
+> So, if it were upto me, I'd rather direct energy towards making retrieving
+> information through TEST_RUN_PROG easier rather than clinging to making
+> kernel output text. I get that text interface is familiar but it kinda
+> sucks in many ways.
+> 
+>> AFAIK there are also discussions about using overlayfs to have links
+>> to the bpffs files in cgroupfs, which makes it even better. So I would
+>> really prefer keeping the approach we have here of reading stats
+>> through a file from userspace. As for how we go about this (and why a
+>> cgroup iterator doesn't iterate cgroups) I will leave this for Hao and
+>> Yonghong to explain the rationale behind it. Ideally we can keep the
+>> same functionality under a more descriptive name/type.
+> 
+> My answer would be the same here. You guys seem dead set on making the
+> kernel emulate cgroup1. I'm not gonna explicitly block that but would
+> strongly suggest having a longer term view.
+> 
+> If you *must* do the iterator, can you at least make it a proper iterator
+> which supports seeking? AFAICS there's nothing fundamentally preventing bpf
+> iterators from supporting seeking. Or is it that you need something which is
+> pinned to a cgroup so that you can emulate the directory structure?
 
-For my use case it would be sufficient to have current and maximum
-values for an arbitrary number of keys - one per heap. So the only
-part missing from the misc controller (for my use case) is the ability
-to register a new key at runtime as heaps are added. Instead of
-keeping track of resources with enum misc_res_type, requesting a
-resource handle/ID from the misc controller at runtime is what I think
-would be required instead.
+The current bpf_iter for cgroup is for the google use case
+per previous discussion. But I think a generic cgroup bpf iterator
+should help as well.
 
+Maybe you can have a bpf program signature like below:
+
+int BPF_PROG(dump_vmscan, struct bpf_iter_meta *meta, struct cgroup 
+*cgrp, struct cgroup *parent_cgrp)
+
+parent_cgrp is NULL when cgrp is the root cgroup.
+
+I would like the bpf program should send the following information to
+user space:
+    <parent cgroup dir name> <current cgroup dir name>
+    <various stats interested by the user>
+
+This way, user space can easily construct the cgroup hierarchy stat like
+                            cpu   mem   cpu pressure   mem pressure ...
+    cgroup1                 ...
+       child1               ...
+         grandchild1        ...
+       child2               ...
+    cgroup 2                ...
+       child 3              ...
+         ...                ...
+
+the bpf iterator can have additional parameter like
+cgroup_id = ... to only call bpf program once with that
+cgroup_id if specified.
+
+The kernel part of cgroup_iter can call cgroup_rstat_flush()
+before calling cgroup_iter bpf program.
+
+WDYT?
+
+> 
 > Thanks.
->
-> --
-> tejun
+> 
