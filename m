@@ -1,61 +1,79 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH v4 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
- page table uses.
-Date: Thu, 19 May 2022 18:56:54 -0700
-Message-ID: <CAJD7tka-5+XRkthNV4qCg8woPCpjcwynQoRBame-3GP1L8y+WQ@mail.gmail.com>
-References: <20220429201131.3397875-1-yosryahmed@google.com>
- <20220429201131.3397875-2-yosryahmed@google.com> <87ilqoi77b.wl-maz@kernel.org>
- <CAJD7tkY7JF25XXUFq2mGroetMkfo-2zGOaQC94pjZE3D42+oaw@mail.gmail.com>
- <Yn2TGJ4vZ/fst+CY@cmpxchg.org> <Yn2YYl98Vhh/UL0w@google.com>
- <Yn5+OtZSSUZZgTQj@cmpxchg.org> <Yn6DeEGLyR4Q0cDp@google.com> <CALvZod6nERq4j=L0V+pc-rd5+QKi4yb_23tWV-1MF53xL5KE6Q@mail.gmail.com>
+From: Vaibhav Jain <vaibhav@linux.ibm.com>
+Subject: Re: [PATCH] memcg: provide reclaim stats via 'memory.reclaim'
+Date: Fri, 20 May 2022 10:45:43 +0530
+Message-ID: <87zgjcg4xs.fsf@vajain21.in.ibm.com>
+References: <20220518223815.809858-1-vaibhav@linux.ibm.com>
+ <YoYj4sLJfGke5IGT@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <kvm-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=h/NS3+bOivmdn/Z8oAqTayRG5MjC4lANEwiPrpSX5IA=;
-        b=lC1A71c86K3b210P5MINYKI+0nEPTtRGK3LeWj2Npew4lX9mJGgrpWWegiuNtMwlJO
-         P1IlUwgqu95jwD3J+mnRGelGqXz+HoaJ7VCJk9hhvvF66jPz+hrvF0dmKSe2LLL2Vgq/
-         rwXqca2l71+mfz5tl8pRhTv4LCsg9QGocKsxdwCfWXbGVabJpfgNFG9+rBVSpj/uhude
-         6hLQ+JpxChsTxgZBARTq2zFr80q+S2jttKKsRPO0P7o9moE/Iyx8K/oNzwHCGA7J5UxE
-         CJjZ0hW/O6s0vTeoubWTNpA5gAfGug3OjBmx35+8T9dkzXFSpzM7/kEn0mCCEAR9GuP4
-         zRlQ==
-In-Reply-To: <CALvZod6nERq4j=L0V+pc-rd5+QKi4yb_23tWV-1MF53xL5KE6Q@mail.gmail.com>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : in-reply-to : references : date : message-id : mime-version :
+ content-type; s=pp1; bh=JJh4foNOJwG8ay+rF9OREYoAAGUcy1t9u8UYkcLppDI=;
+ b=ELKkv1yz+L8SWhSgdtOrbEXtZvOD+cENx24BoptdFKJngLJFqAFk4gTXTNJ6tG6EB0yF
+ JiGrfsBf6gJRSVo7Sb1bkQ6AA1pAL/oR4vJgpke7pfbmhCC/IKyTRKSr4Q4nMWe/kgav
+ AIkMzmFjMhAr3rpEbF+raurSOIPtWvkV5AvXlTlmSrLKtmWPUDLhr87OYLEou6LuhXqq
+ A5ltkwBf131kfTnPReceOVT54PMoIJCJQejCoP6dewY4M8lJ8otOYiRATJaw/68W5uz+
+ RUDj2K+tBQMdhkp8xdt8a93uCsBYzSc48p+lnt+bei2JmuVKNjFB8+u5c0Q3PngIdWYK ng== 
+In-Reply-To: <YoYj4sLJfGke5IGT@dhcp22.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Sean Christopherson <seanjc@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Marc Zyngier <maz@kernel.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, James Morse <james.morse@arm.com>, Alexandru Elisei <alexandru.elisei@arm.com>, Suzuki K Poulose <suzuki.poulose@arm.com>, Paolo Bonzini <pbonzini@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Wanpeng Li <wanpengli@tencent.com>, Jim Mattson <jmattson@google.com>, Joerg Roedel <joro@8bytes.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Oliver Upton <oupton@google.com>, Cgroups <cgroups@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infrad
+To: Michal Hocko <mhocko@suse.com>
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>, Shakeel Butt <shakeelb@google.com>, Yosry Ahmed <yosryahmed@google.com>
 
-On Fri, May 13, 2022 at 10:14 AM Shakeel Butt <shakeelb@google.com> wrote:
->
-> On Fri, May 13, 2022 at 9:12 AM Sean Christopherson <seanjc@google.com> wrote:
-> >
-> [...]
-> >
-> > It was mostly an honest question, I too am trying to understand what userspace
-> > wants to do with this information.  I was/am also trying to understand the benefits
-> > of doing the tracking through page_state and not a dedicated KVM stat.  E.g. KVM
-> > already has specific stats for the number of leaf pages mapped into a VM, why not
-> > do the same for non-leaf pages?
->
-> Let me answer why a more general stat is useful and the potential
-> userspace reaction:
->
-> For a memory type which is significant enough, it is useful to expose
-> it in the general interfaces, so that the general data/stat collection
-> infra can collect them instead of having workload dependent stat
-> collectors. In addition, not necessarily that stat has to have a
-> userspace reaction in an online fashion. We do collect stats for
-> offline analysis which greatly influence the priority order of
-> optimization workitems.
->
-> Next the question is do we really need a separate stat item
-> (secondary_pagetable instead of just plain pagetable) exposed in the
-> stable API? To me secondary_pagetable is general (not kvm specific)
-> enough and can be significant, so having a separate dedicated stat
-> should be ok. Though I am ok with lump it with pagetable stat for now
-> but we do want it to be accounted somewhere.
 
-Any thoughts on this? Johannes?
+Thanks for looking into this patch Michal,
+
+Michal Hocko <mhocko@suse.com> writes:
+
+> On Thu 19-05-22 04:08:15, Vaibhav Jain wrote:
+>> [1] Provides a way for user-space to trigger proactive reclaim by introducing
+>> a write-only memcg file 'memory.reclaim'. However reclaim stats like number
+>> of pages scanned and reclaimed is still not directly available to the
+>> user-space.
+>> 
+>> This patch proposes to extend [1] to make the memcg file 'memory.reclaim'
+>> readable which returns the number of pages scanned / reclaimed during the
+>> reclaim process from 'struct vmpressure' associated with each memcg. This should
+>> let user-space asses how successful proactive reclaim triggered from memcg
+>> 'memory.reclaim' was ?
+>> 
+>> With the patch following command flow is expected:
+>> 
+>>  # echo "1M" > memory.reclaim
+>> 
+>>  # cat memory.reclaim
+>>    scanned 76
+>>    reclaimed 32
+>
+> Why cannot you use memory.stat? Sure it would require to iterate over
+> the reclaimed hierarchy but the information about scanned and reclaimed
+> pages as well as other potentially useful stats is there.
+
+Agree that "memory.stat" is more suitable for scanned/reclaimed stats as
+it already is exposing bunch of other stats.
+
+The discussion on this patch however seems to have split into two parts:
+
+1. Is it a good idea to expose nr_scanned/nr_reclaimed to users-space
+and if yes how ?
+
+IMHO, I think it will be better to expose this info via 'memory.stat' as it
+can be useful insight into the reclaim efficiency  and vmpressure.
+
+
+2. Will it be useful to provide feedback to userspace when it writes to
+'memory.reclaim' on how much memory has been reclaimed ?
+
+IMHO, this will be a useful feeback to userspace to better adjust future
+proactive reclaim requests via 'memory.reclaim'
+
+
+-- 
+> Michal Hocko
+> SUSE Labs
+>
+
+-- 
+Cheers
+~ Vaibhav
