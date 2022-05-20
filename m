@@ -1,8 +1,8 @@
 From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/4] memcg: enable accounting for large allocations in mem_cgroup_css_alloc
-Date: Fri, 20 May 2022 01:07:07 +0000
-Message-ID: <20220520010707.77z5blxpbsddwmyo@google.com>
-References: <Ynv7+VG+T2y9rpdk@carbon> <212f1b74-7d4e-29f2-9e92-2a1820beff61@openvz.org>
+Subject: Re: [PATCH 2/4] memcg: enable accounting for kernfs nodes and iattrs
+Date: Fri, 20 May 2022 01:12:33 +0000
+Message-ID: <20220520011233.fxbqxcljfcrjk44n@google.com>
+References: <Ynv7+VG+T2y9rpdk@carbon> <22ccf325-6aa5-9b55-4729-d03f34125650@openvz.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -10,51 +10,40 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=G6gtvqYNjnVwht1zFDxId2+CvU+SMvS0Nm0E4p7o9cM=;
-        b=Gq0rw+MrvLWVPrWEBXryZB1jQV/V1G9kqtZ5HVH9URkE6LQh50hBnHJMNqkGngRE1B
-         OKQFxrvMTob/C1c6Prc225WuKjE8WCTLx3fHin7rlnzNSeIOtlGLTu74nl6iciYuNa6V
-         wKGClUZev9JgvVbePXUNUNBu7Uz1/J49jE9sWsl47yg7HwP0TiOqv882QwVKD+FEXZY5
-         VRHfGsaPeQ8uLVWv02vR138ZcXZ+G+eh5CxwWdQnlEieVAYcg1VZgbsIj+VW85zoNOBM
-         wo1vIABj/7CfTuXAAnloVwGNjfYF36gl6mrEArXq+HVLQCpFYG1ejzHnmXk3KpUV9HEj
-         Th3w==
-In-Reply-To: <212f1b74-7d4e-29f2-9e92-2a1820beff61-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+        bh=tRp9XwLCJd757nd6S6xrPEWJRWBLPfMUrN42v2RElFU=;
+        b=kLj1335gWXNqN3m0x4aikHu59YFs4w9jVsakDkYazDHkv7NdPPTHMDWcCBbO3/UU6H
+         C4koYXf/EG3VCj89YpQGoAsQcqkjWiUI4krLBCoyZ0vffn/xz7p+GjRLzkI0Djr3cUR7
+         icY3wNQnvbaXZORjv/+6eb+8c/8U5ZM0Sd2cE2skWOCrjurR8T/B9QDmAf8S1w48L3bR
+         87Z4HB468t+jYhTBRp28yYN2j311pzzKaC5m+TmiItPYKSuvb9j5Zd5tiOdshLhQ5Ts2
+         I54OjEYN9vXGiN83EaXLux5pHpSMsc31hiSPBrS5buR9BD8XZhC4mZXKH3ayBQ0DRmHS
+         IVJQ==
+In-Reply-To: <22ccf325-6aa5-9b55-4729-d03f34125650-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
 To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, May 13, 2022 at 06:51:41PM +0300, Vasily Averin wrote:
-> cgroup mkdir can be misused inside memcg limited container. It can allocate
-> a lot of host memory without memcg accounting, cause global memory shortage
-> and force OOM to kill random host process.
+On Fri, May 13, 2022 at 06:51:55PM +0300, Vasily Averin wrote:
+> kernfs nodes are quite small kernel objects, however there are few
+> scenarios where it consumes significant piece of all allocated memory:
 > 
-> Below [1] is result of mkdir /sys/fs/cgroup/test tracing on VM with 4 cpus
+> 1) creating a new netdevice allocates ~50Kb of memory, where ~10Kb
+>    was allocated for 80+ kernfs nodes.
 > 
-> number	bytes	$1*$2	sum	note	call_site
-> of	alloc
-> allocs
-> ------------------------------------------------------------
-> 1       14448   14448   14448   =       percpu_alloc_percpu:
-> 1       8192    8192    22640           (mem_cgroup_css_alloc+0x54)
-> 49      128     6272    28912           (__kernfs_new_node+0x4e)
-> 49      96      4704    33616           (simple_xattr_alloc+0x2c)
-> 49      88      4312    37928           (__kernfs_iattrs+0x56)
-> 1       4096    4096    42024           (cgroup_mkdir+0xc7)
-> 1       3840    3840    45864   =       percpu_alloc_percpu:
-> 4       512     2048    47912           (alloc_fair_sched_group+0x166)
-> 4       512     2048    49960           (alloc_fair_sched_group+0x139)
-> 1       2048    2048    52008           (mem_cgroup_css_alloc+0x109)
-> 	[smaller objects skipped]
-> ---
-> Total			61728
+> 2) cgroupv2 mkdir allocates ~60Kb of memory, ~10Kb of them are kernfs
+>    structures.
 > 
-> '=' --  accounted allocations
+> 3) Shakeel Butt reports that Google has workloads which create 100s
+>    of subcontainers and they have observed high system overhead
+>    without memcg accounting of kernfs.
 > 
-> This patch enabled accounting for one of the main memory hogs in this
-> experiment: allocation which are called inside mem_cgroup_css_alloc()
+> It makes sense to enable accounting for kernfs objects, otherwise its
+> misuse inside memcg-limited can lead to global memory shortage,
+> OOM and random kills of host processes.
 > 
 > Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-> Link: [1] https://lore.kernel.org/all/1aa4cd22-fcb6-0e8d-a1c6-23661d618864-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org/
-> 
 
 Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+
+You can keep the ack if you decide to include simple_xattr_alloc() in
+following version or different patch.
