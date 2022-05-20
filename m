@@ -1,50 +1,49 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH bpf-next v1 3/5] bpf: Introduce cgroup iter
-Date: Thu, 19 May 2022 21:41:23 -1000
-Message-ID: <YodGI73xq8aIBrNM@slm.duckdns.org>
-References: <20220520012133.1217211-1-yosryahmed@google.com>
- <20220520012133.1217211-4-yosryahmed@google.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v7 0/6] Proposal for a GPU cgroup controller
+Date: Thu, 19 May 2022 21:47:25 -1000
+Message-ID: <YodHjYlMx1XGtM2+@slm.duckdns.org>
+References: <20220510235653.933868-1-tjmercier@google.com>
+ <3365cd1d750e84fedc8e75d646a77ffd85619d35.camel@ndufresne.ca>
+ <CABdmKX3ZV6-u-oLvW_wWavAMBfrsZ=C_rCgK_Uz4VjxcRvRFew@mail.gmail.com>
+ <81026ef07c1ce20f8673b75b17bab79a2b39c548.camel@ndufresne.ca>
+ <CABdmKX2LxZ6zZR=fhXfnuWCB2BR+gzDd1-t1DD2A2XP24wvuGQ@mail.gmail.com>
+ <Yn6DpUsoSz1/15Kc@slm.duckdns.org>
+ <CABdmKX1xvm87WMEDkMc9Aye46E4zv1-scenwgaRxHesrOCsaYg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-media-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=RCiECH/4G+z+xrwvKHneVVOuojV/v569kz7/GW36BxA=;
-        b=Y8SCxfyRjKdY8qHJ3D4MDAZ5k3+J3h3mX8JWQ+xBHcE8p3iO9tZ9IBCP5gj32yCPE8
-         Clg7iXRfHY0fEx7/ycD4AG4FtmgatsPL53gSb+rNQffMPMQq+aeV4Sbw4RVVJmZxhQu5
-         1Owu29+6Z4Ha2goDPmiWf/TyIsNFhmhYVbYH7RxaWBMA5P/4SIoTBrXueUvhjNT2k8gW
-         qMY/Y2kIMoC31//gOwbZ8QeLasI0I4hDPGUIGRVFoiiH89bdBuFbnhXt6lkosObFJ4yq
-         U0xBnKJpnSaRD0o1i1A5o7yqYLZpXQXDF2twY3a2B97ob6Hz5ulQIqFmU41wGVN+9V3E
-         0inA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=56ihVfI55g+5kWoCWi0j9KBKpP7u+QiASGOdishgsYU=;
+        b=fI4qwgrFQO4hVvdc3SUyQ8Cdgd+sywkDfLxoX5FB2E66Rov05yQTZSVOzP7gpoXEQF
+         0elvCO46fIFZh0PGVYSb0zBP9E8rthiYU1kAunjlGADxZHVDIzKAD9lkoRKg2HXJ1W5y
+         hXlwhv/t9DEN5z9vOFJjkOJHZlgbiKv1kt3tICg8ZW4m3WO5jv6iWCSmP7K1aB7qLYm4
+         VMIP2whsDbn6dmzkcOergoPPDPGfcjXLPaXh/y5sNGVVKXZAO8zLhLtKDQfFcopimuD1
+         iFzKXGu0GYsL7i2AAdYko6ymJb3ROx8/6svDCApNBiO36LmQDMIJe2JZDgJ2TmbOdK9q
+         Eg8A==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20220520012133.1217211-4-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CABdmKX1xvm87WMEDkMc9Aye46E4zv1-scenwgaRxHesrOCsaYg@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "T.J. Mercier" <tjmercier@google.com>
+Cc: Nicolas Dufresne <nicolas@ndufresne.ca>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arve =?iso-8859-1?B?SGr4bm5lduVn?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@collabora.com>, Liam Mark <lmark@codeaurora.org>, Laura Abbott <labbott@redhat.com>, Brian Starkey <Brian.Starkey@arm.com>, John
 
-On Fri, May 20, 2022 at 01:21:31AM +0000, Yosry Ahmed wrote:
-> From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> 
-> Introduce a new type of iter prog: cgroup. Unlike other bpf_iter, this
-> iter doesn't iterate a set of kernel objects. Instead, it is supposed to
-> be parameterized by a cgroup id and prints only that cgroup. So one
-> needs to specify a target cgroup id when attaching this iter. The target
-> cgroup's state can be read out via a link of this iter.
-> 
-> Signed-off-by: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Hello,
 
-This could be me not understanding why it's structured this way but it keeps
-bothering me that this is adding a cgroup iterator which doesn't iterate
-cgroups. If all that's needed is extracting information from a specific
-cgroup, why does this need to be an iterator? e.g. why can't I use
-BPF_PROG_TEST_RUN which looks up the cgroup with the provided ID, flushes
-rstat, retrieves whatever information necessary and returns that as the
-result?
+On Tue, May 17, 2022 at 04:30:29PM -0700, T.J. Mercier wrote:
+> Thanks for your suggestion. This almost works. "dmabuf" as a key could
+> work, but I'd actually like to account for each heap. Since heaps can
+> be dynamically added, I can't accommodate every potential heap name by
+> hardcoding registrations in the misc controller.
+
+On its own, that's a pretty weak reason to be adding a separate gpu
+controller especially given that it doesn't really seem to be one with
+proper abstractions for gpu resources. We don't want to keep adding random
+keys to misc controller but can definitely add limited flexibility. What
+kind of keys do you need?
 
 Thanks.
 
