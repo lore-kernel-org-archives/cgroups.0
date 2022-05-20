@@ -1,110 +1,100 @@
-From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: Hao Luo <haoluo@google.com>
 Subject: Re: [PATCH bpf-next v1 3/5] bpf: Introduce cgroup iter
-Date: Fri, 20 May 2022 10:30:30 -0700
-Message-ID: <CA+khW7iN_=9yg6r9wSX5T3biWgUyAZ6quUUjsVp=hXBY9meJ9Q@mail.gmail.com>
+Date: Fri, 20 May 2022 12:42:54 -0700
+Message-ID: <CA+khW7gjWVKrwCgDD-4ZdCf5CMcA4-YL0bLm6aWM74+qNQ4c0A@mail.gmail.com>
 References: <20220520012133.1217211-1-yosryahmed@google.com>
  <20220520012133.1217211-4-yosryahmed@google.com> <YodGI73xq8aIBrNM@slm.duckdns.org>
- <CAJD7tkbvMcMWESMcWi6TtdCKLr6keBNGgZTnqcHZvBrPa1qWPw@mail.gmail.com> <YodNLpxut+Zddnre@slm.duckdns.org>
+ <CAJD7tkbvMcMWESMcWi6TtdCKLr6keBNGgZTnqcHZvBrPa1qWPw@mail.gmail.com>
+ <YodNLpxut+Zddnre@slm.duckdns.org> <73fd9853-5dab-8b59-24a0-74c0a6cae88e@fb.com>
+ <YofFli6UCX4J5YnU@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=CPavKVkR8bELd7v5gex0nX0RA6A8QGn+WltRM5Og+4g=;
-        b=MSLFYCHCp/SZxn9cm5CoWu+3FpwqYMeTrBILRT4T9npnAg/BaxF/9YpOt/8BpfCeIi
-         QNFKHiQ8wH5t6TjjD362O2oxnfrihMLlQiPFrrUH+NDukCfPWUuGOvL3+zuu3fi7AGdj
-         qgdT4/2uMNS7DYiZi6YKk9IXmhduvHlRP/0woJyAJMNWtD0YS0jrjWL0wPpxdQM3uspA
-         vJgbRI25KoLUFPhjSaZoBEnuSQDq+i0ze73pH1kri1TDLTflSDd6UyZwXBxmu5eVfBh6
-         UxiMZ9l7YRjsNMFPzIyBLQzKMTq6kkJMswyxyU98m9mX63TaYJcYhQG5GnSYZ1S/bTgH
-         STSA==
-In-Reply-To: <YodNLpxut+Zddnre-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+        bh=0lG+wkpvvM5BrA6qMbE7wBMotbPnzZWg8Zgz+BedKu0=;
+        b=MxqMb1bfrueYp5btVTDjnT2tZ4EudnH7IxjI0/g/SP5vEIe/U2NL9ob1BaPa8WrAAR
+         gHX32C1grdPWfQAeZ3t3XutIipxcrCttxt0pbHMynNAuNxoaHJpIUkpJOWdoL+jti5/w
+         j2Sz1Ry4bwwp1I09ZXwTrH30sJNUvlsXzNlOJJSHSXHiJ+4F5FE6Bz19mWJUzsgA0AzW
+         wag0FmlobomPxKN5cV2/IVZDBNTgvni6AX5t0CfhwObdRYjhIsOOQj+NeZy9qA8qqayf
+         jVACJxUx6T2C5Dy7ncHo4iQwQCSGKzdywRmM2t8gw67xFH5l+VlMZ0sqGJELpxpWIyd5
+         +t5w==
+In-Reply-To: <YofFli6UCX4J5YnU@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Networking <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <bpf@v>
+To: Tejun Heo <tj@kernel.org>
+Cc: Yonghong Song <yhs@fb.com>, Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@vger.kernel.org>, bpf <bpf@v>
 
-Hi Tejun,
+Hi Tejun and Yonghong,
 
-On Fri, May 20, 2022 at 1:11 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-> Hello,
->
-> On Fri, May 20, 2022 at 12:58:52AM -0700, Yosry Ahmed wrote:
-> > On Fri, May 20, 2022 at 12:41 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> > >
-> > > On Fri, May 20, 2022 at 01:21:31AM +0000, Yosry Ahmed wrote:
-> > > > From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > > >
-> > > > Introduce a new type of iter prog: cgroup. Unlike other bpf_iter, this
-> > > > iter doesn't iterate a set of kernel objects. Instead, it is supposed to
-> > > > be parameterized by a cgroup id and prints only that cgroup. So one
-> > > > needs to specify a target cgroup id when attaching this iter. The target
-> > > > cgroup's state can be read out via a link of this iter.
-> > > >
-> > > > Signed-off-by: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > > > Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > >
-> > > This could be me not understanding why it's structured this way but it keeps
-> > > bothering me that this is adding a cgroup iterator which doesn't iterate
-> > > cgroups. If all that's needed is extracting information from a specific
-> > > cgroup, why does this need to be an iterator? e.g. why can't I use
-> > > BPF_PROG_TEST_RUN which looks up the cgroup with the provided ID, flushes
-> > > rstat, retrieves whatever information necessary and returns that as the
-> > > result?
+On Fri, May 20, 2022 at 9:45 AM Tejun Heo <tj@kernel.org> wrote:
+> On Fri, May 20, 2022 at 09:29:43AM -0700, Yonghong Song wrote:
+> > Maybe you can have a bpf program signature like below:
 > >
-> > I will let Hao and Yonghong reply here as they have a lot more
-> > context, and they had previous discussions about cgroup_iter. I just
-> > want to say that exposing the stats in a file is extremely convenient
-> > for userspace apps. It becomes very similar to reading stats from
-> > cgroupfs. It also makes migrating cgroup stats that we have
-> > implemented in the kernel to BPF a lot easier.
+> > int BPF_PROG(dump_vmscan, struct bpf_iter_meta *meta, struct cgroup *cgrp,
+> > struct cgroup *parent_cgrp)
+> >
+> > parent_cgrp is NULL when cgrp is the root cgroup.
+> >
+> > I would like the bpf program should send the following information to
+> > user space:
+> >    <parent cgroup dir name> <current cgroup dir name>
 >
-> So, if it were upto me, I'd rather direct energy towards making retrieving
-> information through TEST_RUN_PROG easier rather than clinging to making
-> kernel output text. I get that text interface is familiar but it kinda
-> sucks in many ways.
->
-
-Tejun, could you explain more about the downside of text interfaces
-and why TEST_RUN_PROG would address the problems in text output? From
-the discussion we had last time, I understand that your concern was
-the unstable interface if we introduce bpf files in cgroupfs, so we
-are moving toward replicating the directory structure in bpffs. But I
-am not sure about the issue of text format output
-
-> > AFAIK there are also discussions about using overlayfs to have links
-> > to the bpffs files in cgroupfs, which makes it even better. So I would
-> > really prefer keeping the approach we have here of reading stats
-> > through a file from userspace. As for how we go about this (and why a
-> > cgroup iterator doesn't iterate cgroups) I will leave this for Hao and
-> > Yonghong to explain the rationale behind it. Ideally we can keep the
-> > same functionality under a more descriptive name/type.
->
-> My answer would be the same here. You guys seem dead set on making the
-> kernel emulate cgroup1. I'm not gonna explicitly block that but would
-> strongly suggest having a longer term view.
+> I don't think parent cgroup dir name would be sufficient to reconstruct the
+> path given that multiple cgroups in different subtrees can have the same
+> name. For live cgroups, userspace can find the path from id (or ino) without
+> traversing anything by constructing the fhandle, open it open_by_handle_at()
+> and then reading /proc/self/fd/$FD symlink -
+> https://lkml.org/lkml/2020/12/2/1126. This isn't available for dead cgroups
+> but I'm not sure how much that'd matter given that they aren't visible from
+> userspace anyway.
 >
 
-The reason why Yosry and I are still pushing toward this direction is
-that our user space applications rely heavily on extracting
-information from text output for cgroups. Please understand that
-migrating them from the traditional model to a new model is a bigger
-pain. But I agree that if we have a better, concrete solution (for
-example, maybe TEST_RUN_PROG) to convince them and help them migrate,
-I really would love to contribute and work on it.
+Sending cgroup id is better than cgroup dir name, also because IIUC
+the path obtained from cgroup id depends on the namespace of the
+userspace process. So if the dump file may be potentially read by
+processes within a container, it's better to have the output
+namespaced IMO.
 
-> If you *must* do the iterator, can you at least make it a proper iterator
-> which supports seeking? AFAICS there's nothing fundamentally preventing bpf
-> iterators from supporting seeking. Or is it that you need something which is
-> pinned to a cgroup so that you can emulate the directory structure?
+> >    <various stats interested by the user>
+> >
+> > This way, user space can easily construct the cgroup hierarchy stat like
+> >                            cpu   mem   cpu pressure   mem pressure ...
+> >    cgroup1                 ...
+> >       child1               ...
+> >         grandchild1        ...
+> >       child2               ...
+> >    cgroup 2                ...
+> >       child 3              ...
+> >         ...                ...
+> >
+> > the bpf iterator can have additional parameter like
+> > cgroup_id = ... to only call bpf program once with that
+> > cgroup_id if specified.
+
+Yep, this should work. We just need to make the cgroup_id parameter
+optional. If it is specified when creating bpf_iter_link, we print for
+that cgroup only. If it is not specified, we iterate over all cgroups.
+If I understand correctly, sounds doable.
+
+> > The kernel part of cgroup_iter can call cgroup_rstat_flush()
+> > before calling cgroup_iter bpf program.
+
+Sounds good to me as well. But my knowledge on rstat_flush is limited.
+Yosry can give this a try.
+
+>
+> Would it work to just pass in @cgrp and provide a group of helpers so that
+> the program can do whatever it wanna do including looking up the full path
+> and passing that to userspace?
 >
 
-Yonghong may comment on adding seek for bpf_iter. I would love to
-contribute if we are in need of that. Right now, we don't have a use
-case that needs seek for bpf_iter, I think. My thought: for cgroups,
-we can seek using cgroup id. Maybe, not all kernel objects are
-indexable, so seeking doesn't apply there?
+My understanding is, yes, doable. If we need the full path information
+of a cgroup, helpers or kfuncs are needed.
 
-Hao
+The userspace needs to specify the identity of the cgroup, when
+creating bpf_iter. This identity could be cgroup id or fd. This
+identity needs to be converted to cgroup object somewhere before
+passing into bpf program to use.
