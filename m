@@ -1,68 +1,152 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH -next v3 2/2] blk-throttle: fix io hung due to
- configuration updates
-Date: Fri, 20 May 2022 06:20:36 -1000
-Message-ID: <Yoe/1BRYzSRI0JBd@slm.duckdns.org>
-References: <20220519085811.879097-1-yukuai3@huawei.com>
- <20220519085811.879097-3-yukuai3@huawei.com>
- <20220519095857.GE16096@blackbody.suse.cz>
- <a8953189-af42-0225-3031-daf61347524a@huawei.com>
- <20220519161026.GG16096@blackbody.suse.cz>
- <73464ca6-9412-cc55-d9c0-f2e8a10f0607@huawei.com>
- <fe3c03f7-9b52-7948-075d-cbdf431363e1@huawei.com>
- <20220520160305.GA17335@blackbody.suse.cz>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [PATCH bpf-next v1 2/5] cgroup: bpf: add cgroup_rstat_updated()
+ and cgroup_rstat_flush() kfuncs
+Date: Fri, 20 May 2022 09:20:07 -0700
+Message-ID: <CAJD7tkZq_GE-nR3UUwXJ+iE9WCDv9HN2MtT8as4bg2NKcNc3xQ@mail.gmail.com>
+References: <20220520012133.1217211-1-yosryahmed@google.com>
+ <20220520012133.1217211-3-yosryahmed@google.com> <fa3b35a6-5c3c-42a1-23f0-a8143b4eaa57@fb.com>
+ <CAJD7tkanipJ7-9H_L6KMUjpD2qS29-YCrnMXw+8BAKfbOk5P9Q@mail.gmail.com> <eca39189-9258-b1cc-0a1d-a0d7e6027861@fb.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=MtVzH3UoF12u8L33efNjqLpTUDtaXmlgKBbTF3gWD9k=;
-        b=Dsgg7TZ96W0GRuErppdSf6T4FUWmmZNPMnNO7I+8rmFZ9Wab7KpPZAoYQSzGSPzlhT
-         mb0X1UQ+25OgdIChFrz6rVnxb9d+U0p/aU6V3lmCC6hn6/QqDqNfx/FpekIj9bjlmOA9
-         PFlhK+DZQ8ibN3OaS6/ADJbQOEZiqGuikFY6jTpZYOIj4L9I/e6OWdc0LKeqEgAhkzMe
-         SMiDElqSqUx15bpFQWKQWFSqe+RLP/2OfKdcecnWuwQhOtE/eTNHqm8spfzC1msqPQrZ
-         98s9aR05kcj3vJPjsNqGYraDEGpKWwTldO41pcmFmGFbDG+wsboA+O9roKh5t/tN4SY5
-         K2cA==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <20220520160305.GA17335@blackbody.suse.cz>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=GarL2Kn/zNIJwCptfjfJ4swfJzGY6bIsUnYiG/oxiuI=;
+        b=TtgVg9kR94FReHMcINrx3ZC/s6A7a4psy4/9RGzmCb8xCqRJZPWW8LNcgsK1sWrGU5
+         ho2BYDZmtkjRspH22M5aAr+RU9dkyIOmWM4MwgpfWKF/iGU0tz/r5P67ilQptFsP60xT
+         Q3gKb4yQ1eQudnLBQXSua2hijgHXcJ97MVbOBBeKTXZ3SHjyElxW0IrGEgvIles1NlSY
+         zYVejH5s8+UGST9GpZVVizOO2UpSavsx1LEFhvf99w/sp5+VrNr/M6yaapC2S09Vbn0u
+         YALTWwv9FeqDgRBHzzPava+DO/9LNGzsLNp0LCHcsRE5JDGH6JkMH01Az6bZ7IeMUK6f
+         0OUg==
+In-Reply-To: <eca39189-9258-b1cc-0a1d-a0d7e6027861@fb.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: "yukuai (C)" <yukuai3@huawei.com>, axboe@kernel.dk, ming.lei@redhat.com, geert@linux-m68k.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="utf-8"
+To: Yonghong Song <yhs@fb.com>
+Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@vger.kernel.org>, bpf <bpf@vger.kernel.org>
 
-Hello,
+On Fri, May 20, 2022 at 9:16 AM Yonghong Song <yhs@fb.com> wrote:
+>
+>
+>
+> On 5/20/22 9:08 AM, Yosry Ahmed wrote:
+> > On Fri, May 20, 2022 at 8:15 AM Yonghong Song <yhs@fb.com> wrote:
+> >>
+> >>
+> >>
+> >> On 5/19/22 6:21 PM, Yosry Ahmed wrote:
+> >>> Add cgroup_rstat_updated() and cgroup_rstat_flush() kfuncs to bpf
+> >>> tracing programs. bpf programs that make use of rstat can use these
+> >>> functions to inform rstat when they update stats for a cgroup, and wh=
+en
+> >>> they need to flush the stats.
+> >>>
+> >>> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+> >>> ---
+> >>>    kernel/cgroup/rstat.c | 35 ++++++++++++++++++++++++++++++++++-
+> >>>    1 file changed, 34 insertions(+), 1 deletion(-)
+> >>>
+> >>> diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+> >>> index e7a88d2600bd..a16a851bc0a1 100644
+> >>> --- a/kernel/cgroup/rstat.c
+> >>> +++ b/kernel/cgroup/rstat.c
+> >>> @@ -3,6 +3,11 @@
+> >>>
+> >>>    #include <linux/sched/cputime.h>
+> >>>
+> >>> +#include <linux/bpf.h>
+> >>> +#include <linux/btf.h>
+> >>> +#include <linux/btf_ids.h>
+> >>> +
+> >>> +
+> >>>    static DEFINE_SPINLOCK(cgroup_rstat_lock);
+> >>>    static DEFINE_PER_CPU(raw_spinlock_t, cgroup_rstat_cpu_lock);
+> >>>
+> >>> @@ -141,7 +146,12 @@ static struct cgroup *cgroup_rstat_cpu_pop_updat=
+ed(struct cgroup *pos,
+> >>>        return pos;
+> >>>    }
+> >>>
+> >>> -/* A hook for bpf stat collectors to attach to and flush their stats=
+ */
+> >>> +/*
+> >>> + * A hook for bpf stat collectors to attach to and flush their stats=
+.
+> >>> + * Together with providing bpf kfuncs for cgroup_rstat_updated() and
+> >>> + * cgroup_rstat_flush(), this enables a complete workflow where bpf =
+progs that
+> >>> + * collect cgroup stats can integrate with rstat for efficient flush=
+ing.
+> >>> + */
+> >>>    __weak noinline void bpf_rstat_flush(struct cgroup *cgrp,
+> >>>                                     struct cgroup *parent, int cpu)
+> >>>    {
+> >>> @@ -476,3 +486,26 @@ void cgroup_base_stat_cputime_show(struct seq_fi=
+le *seq)
+> >>>                   "system_usec %llu\n",
+> >>>                   usage, utime, stime);
+> >>>    }
+> >>> +
+> >>> +/* Add bpf kfuncs for cgroup_rstat_updated() and cgroup_rstat_flush(=
+) */
+> >>> +BTF_SET_START(bpf_rstat_check_kfunc_ids)
+> >>> +BTF_ID(func, cgroup_rstat_updated)
+> >>> +BTF_ID(func, cgroup_rstat_flush)
+> >>> +BTF_SET_END(bpf_rstat_check_kfunc_ids)
+> >>> +
+> >>> +BTF_SET_START(bpf_rstat_sleepable_kfunc_ids)
+> >>> +BTF_ID(func, cgroup_rstat_flush)
+> >>> +BTF_SET_END(bpf_rstat_sleepable_kfunc_ids)
+> >>> +
+> >>> +static const struct btf_kfunc_id_set bpf_rstat_kfunc_set =3D {
+> >>> +     .owner          =3D THIS_MODULE,
+> >>> +     .check_set      =3D &bpf_rstat_check_kfunc_ids,
+> >>> +     .sleepable_set  =3D &bpf_rstat_sleepable_kfunc_ids,
+> >>
+> >> There is a compilation error here:
+> >>
+> >> kernel/cgroup/rstat.c:503:3: error: =E2=80=98const struct btf_kfunc_id=
+_set=E2=80=99 has
+> >> no member named =E2=80=98sleepable_set=E2=80=99; did you mean =E2=80=
+=98release_set=E2=80=99?
+> >>       503 |  .sleepable_set =3D &bpf_rstat_sleepable_kfunc_ids,
+> >>           |   ^~~~~~~~~~~~~
+> >>           |   release_set
+> >>     kernel/cgroup/rstat.c:503:19: warning: excess elements in struct
+> >> initializer
+> >>       503 |  .sleepable_set =3D &bpf_rstat_sleepable_kfunc_ids,
+> >>           |                   ^
+> >>     kernel/cgroup/rstat.c:503:19: note: (near initialization for
+> >> =E2=80=98bpf_rstat_kfunc_set=E2=80=99)
+> >>     make[3]: *** [scripts/Makefile.build:288: kernel/cgroup/rstat.o] E=
+rror 1
+> >>
+> >> Please fix.
+> >
+> > This patch series is rebased on top of 2 patches in the mailing list:
+> > - bpf/btf: also allow kfunc in tracing and syscall programs
+> > - btf: Add a new kfunc set which allows to mark a function to be
+> >    sleepable
+> >
+> > I specified this in the cover letter, do I need to do something else
+> > in this situation? Re-send the patches as part of my series?
+>
+> At least put a link in the cover letter for the above two patches?
+> This way, people can easily find them to double check.
 
-On Fri, May 20, 2022 at 06:03:05PM +0200, Michal Koutn=FD wrote:
-> > Then io hung can be triggered by always submmiting new configuration
-> > before the throttled bio is dispatched.
->=20
-> How big is this a problem actually? Is it only shooting oneself in the leg
-> or can there be a user who's privileged enough to modify throttling
-> configuration yet not privileged enough to justify the hung's
-> consequences (like some global FS locks).
+Right. Will do this in the next version. Sorry for the inconvenience.
 
-So, the problem in itself is of the self-inflicted type and I'd prefer to
-ignore it. Unfortunately, the kernel doesn't have the kind of isolation
-where stalling out some aribtrary tasks is generally safe, especially not
-blk-throtl as it doesn't handle bio_issue_as_root() and thus can have a
-pretty severe priority inversions where IOs which can block system-wide
-operations (e.g. memory reclaim) get trapped in a random cgroup.
-
-Even ignoring that, the kernel in general assumes some forward progress from
-everybody and when a part stalls it's relatively easy to spread to the rest
-of the system, sometimes gradually, sometimes suddenly - e.g. if the stalled
-IO was being performed while holding the mmap_sem, which isn't rare, then
-anything which tries to read its proc cmdline will hang behind it.
-
-So, we wanna avoid a situation where a non-priviledged user can cause
-indefinite UNINTERRUPTIBLE sleeps to prevent local DoS attacks. I mean,
-preventing local attacks is almost never fool proof but we don't want to
-make it too easy at least.
-
-Thanks.
-
---=20
-tejun
+>
+> >
+> >
+> >
+> >>
+> >>> +};
+> >>> +
+> >>> +static int __init bpf_rstat_kfunc_init(void)
+> >>> +{
+> >>> +     return register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACING,
+> >>> +                                      &bpf_rstat_kfunc_set);
+> >>> +}
+> >>> +late_initcall(bpf_rstat_kfunc_init);
