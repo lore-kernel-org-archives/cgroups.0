@@ -1,53 +1,60 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC] Add swappiness argument to memory.reclaim
-Date: Thu, 19 May 2022 11:24:46 -0700
-Message-ID: <CAJD7tkYwvtuU9vnwzewFDtvKtg=2BiVMGa1i0qRCa7-=NG6yPg@mail.gmail.com>
-References: <CAJD7tkbDpyoODveCsnaqBBMZEkDvshXJmNdbk51yKSNgD7aGdg@mail.gmail.com>
- <YoNHJwyjR7NJ5kG7@dhcp22.suse.cz> <CAJD7tkYnBjuwQDzdeo6irHY=so-E8z=Kc_kZe52anMOmRL+8yA@mail.gmail.com>
- <YoQAVeGj19YpSMDb@cmpxchg.org> <CAAPL-u8pZ_p+SQZnr=8UV37yiQpWRZny7g9p6YES0wa+g_kMJw@mail.gmail.com>
- <YoYFKdqayKRw2npp@dhcp22.suse.cz>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/4] memcg: enable accounting for large allocations in mem_cgroup_css_alloc
+Date: Fri, 20 May 2022 01:07:07 +0000
+Message-ID: <20220520010707.77z5blxpbsddwmyo@google.com>
+References: <Ynv7+VG+T2y9rpdk@carbon> <212f1b74-7d4e-29f2-9e92-2a1820beff61@openvz.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=CX4W+bGFQtjopHaRz1grkqNNRwJqfo8+CP9Ln5Qv0BI=;
-        b=i4PyrMtkcgGixTlkUSsQqhbDDpwMivPfCTE3sFBvx33wKc5ZVPhd4MJiuGlinz3o0a
-         JJ/0W5wMh06DoDbheCitqY2+PNpKrFWysvgo/4GE7X7EHEocqxttah93EoHfiWvG3IsF
-         MvVcgCGHcdM6gickuEP/50CG5SmyjJg4mJlXy01hvPHg/sI5OMr2fDIt6sicDaxMRE5p
-         QKOobWw2wmJ69028sakpU81K1oL+rh3nzvGM1vPOJEgaL8VRbayUBgKUhTRGkwTavWcM
-         bjdlrRUdMTSYJaMBTudbEsRYiWwIXuIKwyrMYtIrDRPiQuwpdHkyWkkwedKAAW2WgpXu
-         VcPw==
-In-Reply-To: <YoYFKdqayKRw2npp-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+        bh=G6gtvqYNjnVwht1zFDxId2+CvU+SMvS0Nm0E4p7o9cM=;
+        b=Gq0rw+MrvLWVPrWEBXryZB1jQV/V1G9kqtZ5HVH9URkE6LQh50hBnHJMNqkGngRE1B
+         OKQFxrvMTob/C1c6Prc225WuKjE8WCTLx3fHin7rlnzNSeIOtlGLTu74nl6iciYuNa6V
+         wKGClUZev9JgvVbePXUNUNBu7Uz1/J49jE9sWsl47yg7HwP0TiOqv882QwVKD+FEXZY5
+         VRHfGsaPeQ8uLVWv02vR138ZcXZ+G+eh5CxwWdQnlEieVAYcg1VZgbsIj+VW85zoNOBM
+         wo1vIABj/7CfTuXAAnloVwGNjfYF36gl6mrEArXq+HVLQCpFYG1ejzHnmXk3KpUV9HEj
+         Th3w==
+In-Reply-To: <212f1b74-7d4e-29f2-9e92-2a1820beff61-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, May 19, 2022 at 1:51 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
->
-> On Wed 18-05-22 22:44:13, Wei Xu wrote:
-> > On Tue, May 17, 2022 at 1:06 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> [...]
-> > > But I don't think an anon/file bias will capture this coefficient?
-> >
-> > It essentially provides the userspace proactive reclaimer an ability
-> > to define its own reclaim policy by adding an argument to specify
-> > which type of pages to reclaim via memory.reclaim.
->
-> I am not sure the swappiness is really a proper interface for that.
-> Historically this tunable has changed behavior several times and the
-> reclaim algorithm is free to ignore it completely in many cases. If you
-> want to build a userspace reclaim policy, then it really has to have a
-> predictable and stable behavior. That would mean that the semantic would
-> have to be much stronger than the global vm_swappiness.
+On Fri, May 13, 2022 at 06:51:41PM +0300, Vasily Averin wrote:
+> cgroup mkdir can be misused inside memcg limited container. It can allocate
+> a lot of host memory without memcg accounting, cause global memory shortage
+> and force OOM to kill random host process.
+> 
+> Below [1] is result of mkdir /sys/fs/cgroup/test tracing on VM with 4 cpus
+> 
+> number	bytes	$1*$2	sum	note	call_site
+> of	alloc
+> allocs
+> ------------------------------------------------------------
+> 1       14448   14448   14448   =       percpu_alloc_percpu:
+> 1       8192    8192    22640           (mem_cgroup_css_alloc+0x54)
+> 49      128     6272    28912           (__kernfs_new_node+0x4e)
+> 49      96      4704    33616           (simple_xattr_alloc+0x2c)
+> 49      88      4312    37928           (__kernfs_iattrs+0x56)
+> 1       4096    4096    42024           (cgroup_mkdir+0xc7)
+> 1       3840    3840    45864   =       percpu_alloc_percpu:
+> 4       512     2048    47912           (alloc_fair_sched_group+0x166)
+> 4       512     2048    49960           (alloc_fair_sched_group+0x139)
+> 1       2048    2048    52008           (mem_cgroup_css_alloc+0x109)
+> 	[smaller objects skipped]
+> ---
+> Total			61728
+> 
+> '=' --  accounted allocations
+> 
+> This patch enabled accounting for one of the main memory hogs in this
+> experiment: allocation which are called inside mem_cgroup_css_alloc()
+> 
+> Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+> Link: [1] https://lore.kernel.org/all/1aa4cd22-fcb6-0e8d-a1c6-23661d618864-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org/
+> 
 
-Agreed as well. I will work on an interface similar to what Roman
-suggested (type=file/anon/slab).
-Thanks everyone for participating in this discussion!
-
-> --
-> Michal Hocko
-> SUSE Labs
+Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
