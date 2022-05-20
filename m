@@ -1,84 +1,44 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH bpf-next v1 3/5] bpf: Introduce cgroup iter
-Date: Fri, 20 May 2022 06:45:10 -1000
-Message-ID: <YofFli6UCX4J5YnU@slm.duckdns.org>
-References: <20220520012133.1217211-1-yosryahmed@google.com>
- <20220520012133.1217211-4-yosryahmed@google.com>
- <YodGI73xq8aIBrNM@slm.duckdns.org>
- <CAJD7tkbvMcMWESMcWi6TtdCKLr6keBNGgZTnqcHZvBrPa1qWPw@mail.gmail.com>
- <YodNLpxut+Zddnre@slm.duckdns.org>
- <73fd9853-5dab-8b59-24a0-74c0a6cae88e@fb.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v11 0/8] cgroup/cpuset: cpu partition code enhancements
+Date: Fri, 20 May 2022 12:46:52 -0400
+Message-ID: <75d31caf-2d26-9fcc-13fb-e8be2f2ad8e5@redhat.com>
+References: <20220510153413.400020-1-longman@redhat.com>
+ <Yoe7FOkZpUwwTTQW@linutronix.de>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=u22Vdb8ad4QsGUpvqDD4jw8opLANlipXffF4J28OkDw=;
-        b=alC71XCAjWLZ2L+MKQYDKx3KTDbWUY+ds3nxi6wLqgO7s9wjvHmeS0X4mp5EnSoUUl
-         5azRlTmtfw/UqAiUwhI5sZANOPrUEC/QVcgidBJjdj4vzvuMoqNBW3nF9tMw2moyZlgN
-         8wyQDt0+i8Ada0za5PsJuWKfV+qMDHHHk2GretQeRaKoVLkVf0wFl6lveJrSxek6tugV
-         CGXMeMWuv7bzSJ5ekUqL6IxWkCb1TWH3HxYnZOseiU6svnyorwth8UX8rb5PIV8m9KMA
-         KOP4TMl/Nnd2YqrNvrxDocxEl3yX1fsJgCEhZhQWU9/MAB/jhNnUTNVoxy08eGE2Tu0V
-         r/5A==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <73fd9853-5dab-8b59-24a0-74c0a6cae88e-b10kYP2dOMg@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>
-Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Networking <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1653065218;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ojbIKgxOqxnHAzNXDbRdq8vthjOu4oruqFZ3uDQUp9g=;
+        b=bd6BnebELhQpRnejDmUjRhKVg+DYcDGmhN7ZXazytbUslFm0egTO0TFWk+UTx+ehEb8blU
+        wDQ6Sws4oTAnpANk0gqwb+/jD0IXthItYR6N5r5FAJ1Xy7HO37eZjuW+a6TCCe/1g2XOk3
+        gF/hNdndywYKurFqO0YtCQQjncFVS7A=
+Content-Language: en-US
+In-Reply-To: <Yoe7FOkZpUwwTTQW@linutronix.de>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
 
-Hello, Yonghong.
+On 5/20/22 12:00, Sebastian Andrzej Siewior wrote:
+> On 2022-05-10 11:34:05 [-0400], Waiman Long wrote:
+>> v11:
+>>   - Fix incorrect spacing in patch 7 and include documentation suggestions
+>>     by Michal.
+>>   - Move partition_is_populated() check to the last one in list of
+>>     conditions to be checked.
+> If I follow this correctly, then this is the latest version of the
+> isolcpus= replacement with cgroup's cpusets, correct?
+>
+> Sebastian
 
-On Fri, May 20, 2022 at 09:29:43AM -0700, Yonghong Song wrote:
-> Maybe you can have a bpf program signature like below:
-> 
-> int BPF_PROG(dump_vmscan, struct bpf_iter_meta *meta, struct cgroup *cgrp,
-> struct cgroup *parent_cgrp)
-> 
-> parent_cgrp is NULL when cgrp is the root cgroup.
-> 
-> I would like the bpf program should send the following information to
-> user space:
->    <parent cgroup dir name> <current cgroup dir name>
+It is just the beginning, there is still a lot of work to do before 
+isolcpus= can be completely replaced.
 
-I don't think parent cgroup dir name would be sufficient to reconstruct the
-path given that multiple cgroups in different subtrees can have the same
-name. For live cgroups, userspace can find the path from id (or ino) without
-traversing anything by constructing the fhandle, open it open_by_handle_at()
-and then reading /proc/self/fd/$FD symlink -
-https://lkml.org/lkml/2020/12/2/1126. This isn't available for dead cgroups
-but I'm not sure how much that'd matter given that they aren't visible from
-userspace anyway.
+Cheers,
+Longman
 
->    <various stats interested by the user>
-> 
-> This way, user space can easily construct the cgroup hierarchy stat like
->                            cpu   mem   cpu pressure   mem pressure ...
->    cgroup1                 ...
->       child1               ...
->         grandchild1        ...
->       child2               ...
->    cgroup 2                ...
->       child 3              ...
->         ...                ...
-> 
-> the bpf iterator can have additional parameter like
-> cgroup_id = ... to only call bpf program once with that
-> cgroup_id if specified.
-> 
-> The kernel part of cgroup_iter can call cgroup_rstat_flush()
-> before calling cgroup_iter bpf program.
-> 
-> WDYT?
-
-Would it work to just pass in @cgrp and provide a group of helpers so that
-the program can do whatever it wanna do including looking up the full path
-and passing that to userspace?
-
-Thanks.
-
--- 
-tejun
