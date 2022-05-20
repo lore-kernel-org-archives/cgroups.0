@@ -1,152 +1,68 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH bpf-next v1 2/5] cgroup: bpf: add cgroup_rstat_updated()
- and cgroup_rstat_flush() kfuncs
-Date: Fri, 20 May 2022 09:20:07 -0700
-Message-ID: <CAJD7tkZq_GE-nR3UUwXJ+iE9WCDv9HN2MtT8as4bg2NKcNc3xQ@mail.gmail.com>
-References: <20220520012133.1217211-1-yosryahmed@google.com>
- <20220520012133.1217211-3-yosryahmed@google.com> <fa3b35a6-5c3c-42a1-23f0-a8143b4eaa57@fb.com>
- <CAJD7tkanipJ7-9H_L6KMUjpD2qS29-YCrnMXw+8BAKfbOk5P9Q@mail.gmail.com> <eca39189-9258-b1cc-0a1d-a0d7e6027861@fb.com>
+From: "T.J. Mercier" <tjmercier@google.com>
+Subject: Re: [PATCH v7 0/6] Proposal for a GPU cgroup controller
+Date: Fri, 20 May 2022 09:25:38 -0700
+Message-ID: <CABdmKX2Ok023rN1drQgXVZLKUO_DVYrzmEamCgMMu6BPO67yhQ@mail.gmail.com>
+References: <20220510235653.933868-1-tjmercier@google.com> <3365cd1d750e84fedc8e75d646a77ffd85619d35.camel@ndufresne.ca>
+ <CABdmKX3ZV6-u-oLvW_wWavAMBfrsZ=C_rCgK_Uz4VjxcRvRFew@mail.gmail.com>
+ <81026ef07c1ce20f8673b75b17bab79a2b39c548.camel@ndufresne.ca>
+ <CABdmKX2LxZ6zZR=fhXfnuWCB2BR+gzDd1-t1DD2A2XP24wvuGQ@mail.gmail.com>
+ <Yn6DpUsoSz1/15Kc@slm.duckdns.org> <CABdmKX1xvm87WMEDkMc9Aye46E4zv1-scenwgaRxHesrOCsaYg@mail.gmail.com>
+ <YodHjYlMx1XGtM2+@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=GarL2Kn/zNIJwCptfjfJ4swfJzGY6bIsUnYiG/oxiuI=;
-        b=TtgVg9kR94FReHMcINrx3ZC/s6A7a4psy4/9RGzmCb8xCqRJZPWW8LNcgsK1sWrGU5
-         ho2BYDZmtkjRspH22M5aAr+RU9dkyIOmWM4MwgpfWKF/iGU0tz/r5P67ilQptFsP60xT
-         Q3gKb4yQ1eQudnLBQXSua2hijgHXcJ97MVbOBBeKTXZ3SHjyElxW0IrGEgvIles1NlSY
-         zYVejH5s8+UGST9GpZVVizOO2UpSavsx1LEFhvf99w/sp5+VrNr/M6yaapC2S09Vbn0u
-         YALTWwv9FeqDgRBHzzPava+DO/9LNGzsLNp0LCHcsRE5JDGH6JkMH01Az6bZ7IeMUK6f
-         0OUg==
-In-Reply-To: <eca39189-9258-b1cc-0a1d-a0d7e6027861@fb.com>
+         :cc;
+        bh=FUaa/CsIoXFhGcqQomBYha0KA+E1xpoSdaSoOErgusY=;
+        b=sCdCdZqIB2fM6C3/IMxJnyMHv4TxKGmIAEibbdWMh6FRbyWFI9mTEtryWRZ/NF+hj8
+         +Hx7jY6REjkdGsBVNwZIlsBAmuMkblQlokQialFoP0r3E+mVoJ7qGv/cmH27SzZH0S3E
+         6LoxOjAbQe+XtYP+GErjofpGVizVrpa3tPrxVs+yqbwCv/s6FVcSIgxyZOKq/Unt6sfK
+         WQdH0KeBkcXcGDUDuTf8vX6Et8/Yi9aMTfXHIESge8rquWo4PxOSekV4zJTp0tvovfMW
+         u6nTEG2KKtXD08jklErYVdrtfiimeio1bUddW1+xIx6fvJXFqqsrZgzOoeJe1LhQ/lrW
+         jHfA==
+In-Reply-To: <YodHjYlMx1XGtM2+@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Yonghong Song <yhs@fb.com>
-Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@vger.kernel.org>, bpf <bpf@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Nicolas Dufresne <nicolas@ndufresne.ca>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@collabora.com>, Liam Mark <lmark@codeaurora.org>, Laura Abbott <labbott@redhat.com>, Brian Starkey <Brian.Starkey@arm.com>, John
 
-On Fri, May 20, 2022 at 9:16 AM Yonghong Song <yhs@fb.com> wrote:
+On Fri, May 20, 2022 at 12:47 AM Tejun Heo <tj@kernel.org> wrote:
 >
+> Hello,
 >
+> On Tue, May 17, 2022 at 04:30:29PM -0700, T.J. Mercier wrote:
+> > Thanks for your suggestion. This almost works. "dmabuf" as a key could
+> > work, but I'd actually like to account for each heap. Since heaps can
+> > be dynamically added, I can't accommodate every potential heap name by
+> > hardcoding registrations in the misc controller.
 >
-> On 5/20/22 9:08 AM, Yosry Ahmed wrote:
-> > On Fri, May 20, 2022 at 8:15 AM Yonghong Song <yhs@fb.com> wrote:
-> >>
-> >>
-> >>
-> >> On 5/19/22 6:21 PM, Yosry Ahmed wrote:
-> >>> Add cgroup_rstat_updated() and cgroup_rstat_flush() kfuncs to bpf
-> >>> tracing programs. bpf programs that make use of rstat can use these
-> >>> functions to inform rstat when they update stats for a cgroup, and wh=
-en
-> >>> they need to flush the stats.
-> >>>
-> >>> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> >>> ---
-> >>>    kernel/cgroup/rstat.c | 35 ++++++++++++++++++++++++++++++++++-
-> >>>    1 file changed, 34 insertions(+), 1 deletion(-)
-> >>>
-> >>> diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-> >>> index e7a88d2600bd..a16a851bc0a1 100644
-> >>> --- a/kernel/cgroup/rstat.c
-> >>> +++ b/kernel/cgroup/rstat.c
-> >>> @@ -3,6 +3,11 @@
-> >>>
-> >>>    #include <linux/sched/cputime.h>
-> >>>
-> >>> +#include <linux/bpf.h>
-> >>> +#include <linux/btf.h>
-> >>> +#include <linux/btf_ids.h>
-> >>> +
-> >>> +
-> >>>    static DEFINE_SPINLOCK(cgroup_rstat_lock);
-> >>>    static DEFINE_PER_CPU(raw_spinlock_t, cgroup_rstat_cpu_lock);
-> >>>
-> >>> @@ -141,7 +146,12 @@ static struct cgroup *cgroup_rstat_cpu_pop_updat=
-ed(struct cgroup *pos,
-> >>>        return pos;
-> >>>    }
-> >>>
-> >>> -/* A hook for bpf stat collectors to attach to and flush their stats=
- */
-> >>> +/*
-> >>> + * A hook for bpf stat collectors to attach to and flush their stats=
-.
-> >>> + * Together with providing bpf kfuncs for cgroup_rstat_updated() and
-> >>> + * cgroup_rstat_flush(), this enables a complete workflow where bpf =
-progs that
-> >>> + * collect cgroup stats can integrate with rstat for efficient flush=
-ing.
-> >>> + */
-> >>>    __weak noinline void bpf_rstat_flush(struct cgroup *cgrp,
-> >>>                                     struct cgroup *parent, int cpu)
-> >>>    {
-> >>> @@ -476,3 +486,26 @@ void cgroup_base_stat_cputime_show(struct seq_fi=
-le *seq)
-> >>>                   "system_usec %llu\n",
-> >>>                   usage, utime, stime);
-> >>>    }
-> >>> +
-> >>> +/* Add bpf kfuncs for cgroup_rstat_updated() and cgroup_rstat_flush(=
-) */
-> >>> +BTF_SET_START(bpf_rstat_check_kfunc_ids)
-> >>> +BTF_ID(func, cgroup_rstat_updated)
-> >>> +BTF_ID(func, cgroup_rstat_flush)
-> >>> +BTF_SET_END(bpf_rstat_check_kfunc_ids)
-> >>> +
-> >>> +BTF_SET_START(bpf_rstat_sleepable_kfunc_ids)
-> >>> +BTF_ID(func, cgroup_rstat_flush)
-> >>> +BTF_SET_END(bpf_rstat_sleepable_kfunc_ids)
-> >>> +
-> >>> +static const struct btf_kfunc_id_set bpf_rstat_kfunc_set =3D {
-> >>> +     .owner          =3D THIS_MODULE,
-> >>> +     .check_set      =3D &bpf_rstat_check_kfunc_ids,
-> >>> +     .sleepable_set  =3D &bpf_rstat_sleepable_kfunc_ids,
-> >>
-> >> There is a compilation error here:
-> >>
-> >> kernel/cgroup/rstat.c:503:3: error: =E2=80=98const struct btf_kfunc_id=
-_set=E2=80=99 has
-> >> no member named =E2=80=98sleepable_set=E2=80=99; did you mean =E2=80=
-=98release_set=E2=80=99?
-> >>       503 |  .sleepable_set =3D &bpf_rstat_sleepable_kfunc_ids,
-> >>           |   ^~~~~~~~~~~~~
-> >>           |   release_set
-> >>     kernel/cgroup/rstat.c:503:19: warning: excess elements in struct
-> >> initializer
-> >>       503 |  .sleepable_set =3D &bpf_rstat_sleepable_kfunc_ids,
-> >>           |                   ^
-> >>     kernel/cgroup/rstat.c:503:19: note: (near initialization for
-> >> =E2=80=98bpf_rstat_kfunc_set=E2=80=99)
-> >>     make[3]: *** [scripts/Makefile.build:288: kernel/cgroup/rstat.o] E=
-rror 1
-> >>
-> >> Please fix.
-> >
-> > This patch series is rebased on top of 2 patches in the mailing list:
-> > - bpf/btf: also allow kfunc in tracing and syscall programs
-> > - btf: Add a new kfunc set which allows to mark a function to be
-> >    sleepable
-> >
-> > I specified this in the cover letter, do I need to do something else
-> > in this situation? Re-send the patches as part of my series?
+> On its own, that's a pretty weak reason to be adding a separate gpu
+> controller especially given that it doesn't really seem to be one with
+> proper abstractions for gpu resources. We don't want to keep adding random
+> keys to misc controller but can definitely add limited flexibility. What
+> kind of keys do you need?
 >
-> At least put a link in the cover letter for the above two patches?
-> This way, people can easily find them to double check.
+Well the dmabuf-from-heaps component of this is the initial use case.
+I was envisioning we'd have additional keys as discussed here:
+https://lore.kernel.org/lkml/20220328035951.1817417-1-tjmercier@google.com/T/#m82e5fe9d8674bb60160701e52dae4356fea2ddfa
+So we'd end up with a well-defined core set of keys like "system", and
+then drivers would be free to use their own keys for their own unique
+purposes which could be complementary or orthogonal to the core set.
+Yesterday I was talking with someone who is interested in limiting gpu
+cores and bus IDs in addition to gpu memory. How to define core keys
+is the part where it looks like there's trouble.
 
-Right. Will do this in the next version. Sorry for the inconvenience.
+For my use case it would be sufficient to have current and maximum
+values for an arbitrary number of keys - one per heap. So the only
+part missing from the misc controller (for my use case) is the ability
+to register a new key at runtime as heaps are added. Instead of
+keeping track of resources with enum misc_res_type, requesting a
+resource handle/ID from the misc controller at runtime is what I think
+would be required instead.
 
+> Thanks.
 >
-> >
-> >
-> >
-> >>
-> >>> +};
-> >>> +
-> >>> +static int __init bpf_rstat_kfunc_init(void)
-> >>> +{
-> >>> +     return register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACING,
-> >>> +                                      &bpf_rstat_kfunc_set);
-> >>> +}
-> >>> +late_initcall(bpf_rstat_kfunc_init);
+> --
+> tejun
