@@ -1,44 +1,78 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v11 0/8] cgroup/cpuset: cpu partition code enhancements
-Date: Fri, 20 May 2022 12:46:52 -0400
-Message-ID: <75d31caf-2d26-9fcc-13fb-e8be2f2ad8e5@redhat.com>
-References: <20220510153413.400020-1-longman@redhat.com>
- <Yoe7FOkZpUwwTTQW@linutronix.de>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1653065218;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ojbIKgxOqxnHAzNXDbRdq8vthjOu4oruqFZ3uDQUp9g=;
-        b=bd6BnebELhQpRnejDmUjRhKVg+DYcDGmhN7ZXazytbUslFm0egTO0TFWk+UTx+ehEb8blU
-        wDQ6Sws4oTAnpANk0gqwb+/jD0IXthItYR6N5r5FAJ1Xy7HO37eZjuW+a6TCCe/1g2XOk3
-        gF/hNdndywYKurFqO0YtCQQjncFVS7A=
-Content-Language: en-US
-In-Reply-To: <Yoe7FOkZpUwwTTQW@linutronix.de>
+From: shisiyuan <shisiyuan19870131@gmail.com>
+Subject: [PATCH] cgroup: Return if dst_cgrp equals to src_cgrp
+Date: Sat, 21 May 2022 01:02:00 +0800
+Message-ID: <1653066120-21262-1-git-send-email-shisiyuan@xiaomi.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id;
+        bh=o1byCpdVQiUFM7RT5J0ZZS8QAIMgCRWQMbEspomVBfk=;
+        b=nWUHNztiOOoUrsK+bcjZbH1T/aOSc5WBrgXM3LFXHuiNEWY/GAAuPkB8kcHQihNJZp
+         o342F+m3+6/+5yGNwbS/DDkAQZ1Owt/aUdH4RGMbMgVR4uW2VrLv8X/+zeltewpsD1YS
+         Y96YZEMWY7nqrZ/HCSenS/ploHDKuDPUIL9L9M0B3FCRe643CGAk2bc1bGRMZ+mWJ97U
+         +amIFLkc/XaEbb/O9DHmfsKe5wJeV3yyG2ZrjffZKbo8P/yxIhzpH0OxsGQFuVrqE50K
+         VdjHqHijuIonv7Fy0C/rKErW42y2hE3ul7mzN7qEcfIHRgInZVg/gRQ2IAiH88yUcjYQ
+         fj/g==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: 
+Cc: shisiyuan <shisiyuan@xiaomi.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 5/20/22 12:00, Sebastian Andrzej Siewior wrote:
-> On 2022-05-10 11:34:05 [-0400], Waiman Long wrote:
->> v11:
->>   - Fix incorrect spacing in patch 7 and include documentation suggestions
->>     by Michal.
->>   - Move partition_is_populated() check to the last one in list of
->>     conditions to be checked.
-> If I follow this correctly, then this is the latest version of the
-> isolcpus= replacement with cgroup's cpusets, correct?
->
-> Sebastian
+In function cgroup_migrate_add_src(), if dst_cgrp
+equals to src_cgroup which the tasks link, dont
+go on migrating tasks to another css_set.
+This can save the cost of unnecessary migration.
 
-It is just the beginning, there is still a lot of work to do before 
-isolcpus= can be completely replaced.
+Signed-off-by: shisiyuan <shisiyuan@xiaomi.com>
+---
+ kernel/cgroup/cgroup.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-Cheers,
-Longman
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 6139460..97d7f68 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -2634,6 +2634,9 @@ void cgroup_migrate_add_src(struct css_set *src_cset,
+ 
+ 	src_cgrp = cset_cgroup_from_root(src_cset, dst_cgrp->root);
+ 
++	if (src_cgrp == dst_cgrp)
++		return;
++
+ 	if (!list_empty(&src_cset->mg_preload_node))
+ 		return;
+ 
+@@ -2780,6 +2783,9 @@ int cgroup_attach_task(struct cgroup *dst_cgrp, struct task_struct *leader,
+ 	rcu_read_unlock();
+ 	spin_unlock_irq(&css_set_lock);
+ 
++	if (list_empty(&mgctx.preloaded_src_csets))
++		return ret;
++
+ 	/* prepare dst csets and commit */
+ 	ret = cgroup_migrate_prepare_dst(&mgctx);
+ 	if (!ret)
+@@ -2927,7 +2933,7 @@ static int cgroup_update_dfl_csses(struct cgroup *cgrp)
+ 	struct cgroup_subsys_state *d_css;
+ 	struct cgroup *dsct;
+ 	struct css_set *src_cset;
+-	int ret;
++	int ret = 0;
+ 
+ 	lockdep_assert_held(&cgroup_mutex);
+ 
+@@ -2943,6 +2949,9 @@ static int cgroup_update_dfl_csses(struct cgroup *cgrp)
+ 	}
+ 	spin_unlock_irq(&css_set_lock);
+ 
++	if (list_empty(&mgctx.preloaded_src_csets))
++		goto out_finish;
++
+ 	/* NULL dst indicates self on default hierarchy */
+ 	ret = cgroup_migrate_prepare_dst(&mgctx);
+ 	if (ret)
+-- 
+2.7.4
 
