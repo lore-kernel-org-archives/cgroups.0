@@ -1,51 +1,42 @@
-From: Yosry Ahmed <yosryahmed@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH bpf-next v1 3/5] bpf: Introduce cgroup iter
-Date: Fri, 20 May 2022 15:36:46 -0700
-Message-ID: <CAJD7tkaa946SOBDksCzPto+7SzF+fDM=KMMOUMj2Ru+MBq5TEA@mail.gmail.com>
+Date: Fri, 20 May 2022 12:57:20 -1000
+Message-ID: <Yogc0Kb5ZVDaQ0oU@slm.duckdns.org>
 References: <20220520012133.1217211-1-yosryahmed@google.com>
- <20220520012133.1217211-4-yosryahmed@google.com> <YodGI73xq8aIBrNM@slm.duckdns.org>
+ <20220520012133.1217211-4-yosryahmed@google.com>
+ <YodGI73xq8aIBrNM@slm.duckdns.org>
  <CAJD7tkbvMcMWESMcWi6TtdCKLr6keBNGgZTnqcHZvBrPa1qWPw@mail.gmail.com>
- <YodNLpxut+Zddnre@slm.duckdns.org> <73fd9853-5dab-8b59-24a0-74c0a6cae88e@fb.com>
- <YofFli6UCX4J5YnU@slm.duckdns.org> <CA+khW7gjWVKrwCgDD-4ZdCf5CMcA4-YL0bLm6aWM74+qNQ4c0A@mail.gmail.com>
- <CAJD7tkaJQjfSy+YARFRkqQ8m7OGJHO9v91mSk-cFeo9Z5UVJKg@mail.gmail.com> <20220520221919.jnqgv52k4ajlgzcl@MBP-98dd607d3435.dhcp.thefacebook.com>
+ <YodNLpxut+Zddnre@slm.duckdns.org>
+ <73fd9853-5dab-8b59-24a0-74c0a6cae88e@fb.com>
+ <YofFli6UCX4J5YnU@slm.duckdns.org>
+ <CA+khW7gjWVKrwCgDD-4ZdCf5CMcA4-YL0bLm6aWM74+qNQ4c0A@mail.gmail.com>
+ <CAJD7tkaJQjfSy+YARFRkqQ8m7OGJHO9v91mSk-cFeo9Z5UVJKg@mail.gmail.com>
+ <20220520221919.jnqgv52k4ajlgzcl@MBP-98dd607d3435.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=rjHRlb1I3VbpwM5vlx4HP72yEGIAgQZNiDcXaK4IrWE=;
-        b=CqWaIRBYO4RMPakxBtGQr0gF0h+doHGHgL6p8/uY/2bT1FSn5s8z8EPF3lDt9rHVYn
-         5itjBBvHeFp2Vo1o45+HjsRWft6V3cBTf5aRQI4gxDIoCJ+CfcA90Ir0c7oNRAloniK1
-         1YxLAnp74KeRbPRxZxm8rr9oSTbEUR5wTuxgh1Kc4peUuKD2q70w//S4s5rdx9mdkq8z
-         lEHEdSjqR540R7Ak9Rtm+TwYGHdLqdEiAK1p52r+Zl82Ri960sciviRPXFw93JTz39Dp
-         zZpJ44VH6SOPhSaFZAGCztGyQ/4jt7oyJpC4KD463XIDqi89CL5o476rYfInHk4PdGNz
-         MWRQ==
-In-Reply-To: <20220520221919.jnqgv52k4ajlgzcl@MBP-98dd607d3435.dhcp.thefacebook.com>
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=r7Opvf9nRKqDGanqTkuAv5bdGKe48qHrMle6WOzLLy4=;
+        b=iXgcDMaOaeCEyfvPGiDLf+JCC1kzNqqtGmkx+d+d6UQJ076JtKpP6CF7i2x5rzP5Aw
+         UIPYy2I3NpQN5LvyUZB7XvDI65W0Fu29aXupm9j0Zk1h2ZjmGr6WCXjlfh9PTPNzzalM
+         gOt+D5nzzQci6Xgm5jUaL0idRC96bgpY9f4aO4wWr4MHP9eX6ozcVTwTQDkSMhTHcFfE
+         I6Bfxg6//tmrDvAGeYgnbQtmjvdGldw9LgjSE1kuwJOwm5KQN2YaH7qKNueHRPBUGHz4
+         ZE1otEiFCGKKdXivVJI0fWpjry+B1CzGY3DLdHD5+YWNf1DE+Z3JCtVunAuebaZGUfvF
+         smHQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20220520221919.jnqgv52k4ajlgzcl-X1x1UtSlSMLFI8N7WmjKSuzkJ6j1vHJkzR5nVSMtm21iLUuM0BA3LQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Cc: Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Yonghong Song <yhs@fb.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@v>
+To: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Networking
 
-On Fri, May 20, 2022 at 3:19 PM Alexei Starovoitov
-<alexei.starovoitov@gmail.com> wrote:
->
-> On Fri, May 20, 2022 at 02:18:42PM -0700, Yosry Ahmed wrote:
-> > >
-> > > The userspace needs to specify the identity of the cgroup, when
-> > > creating bpf_iter. This identity could be cgroup id or fd. This
-> > > identity needs to be converted to cgroup object somewhere before
-> > > passing into bpf program to use.
-> >
-> >
-> > Let's sum up the discussion here, I feel like we are losing track of
-> > the main problem. IIUC the main concern is that cgroup_iter is not
-> > effectively an iterator, it rather dumps information for one cgroup. I
-> > like the suggestion to make it iterate cgroups by default, and an
-> > optional cgroup_id parameter to make it only "iterate" this one
-> > cgroup.
->
+Hello,
+
+On Fri, May 20, 2022 at 03:19:19PM -0700, Alexei Starovoitov wrote:
 > We have bpf_map iterator that walks all bpf maps.
 > When map iterator is parametrized with map_fd the iterator walks
 > all elements of that map.
@@ -59,15 +50,9 @@ On Fri, May 20, 2022 at 3:19 PM Alexei Starovoitov
 > the order of iteration css_for_each_descendant_pre vs _post.
 > wdyt?
 
-So basically extend the current patch so that cgroup_id (or cgroup_fd)
-is optional, and it specifies where the iteration starts. If not
-provided, then we start at root. For our use case where we want the
-iterator to only be invoked for one cgroup we make it return 1 to stop
-after the first iteration.
+Sounds perfectly reasonable to me.
 
-I assume an order parameter is also needed to specify "pre" for our
-use case to make sure we are starting iteration at the top cgroup (the
-one whose cgroup_id is the parameter of the iterator).
+Thanks.
 
-Is my understanding correct? If yes, then this sounds very good. It is
-generic enough, actually iterates cgroups, and works for our use case.
+-- 
+tejun
