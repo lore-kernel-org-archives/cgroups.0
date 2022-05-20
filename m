@@ -1,88 +1,61 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH bpf-next v1 3/5] bpf: Introduce cgroup iter
-Date: Thu, 19 May 2022 22:11:26 -1000
-Message-ID: <YodNLpxut+Zddnre@slm.duckdns.org>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH bpf-next v1 2/5] cgroup: bpf: add cgroup_rstat_updated()
+ and cgroup_rstat_flush() kfuncs
+Date: Fri, 20 May 2022 02:13:03 -0700
+Message-ID: <CAJD7tkYDLc9irHLFROcYSg1shwCw+Stt5HTS08FW3ceQ5b8vqQ@mail.gmail.com>
 References: <20220520012133.1217211-1-yosryahmed@google.com>
- <20220520012133.1217211-4-yosryahmed@google.com>
- <YodGI73xq8aIBrNM@slm.duckdns.org>
- <CAJD7tkbvMcMWESMcWi6TtdCKLr6keBNGgZTnqcHZvBrPa1qWPw@mail.gmail.com>
+ <20220520012133.1217211-3-yosryahmed@google.com> <YodCPWqZodr7Shnj@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=XsDbXLkM/SD1gIqolJSdHpOWgyWe8lXWJA+Qz0s6McE=;
-        b=eg8vz0xPF3x92KYNdkg2qpQTecRdTZDTj8Ub+NAl8OeO1ep1lDeLuB5jO2uc44xHth
-         xpwlne//yPNs9kG4mTLlIEPZJmrhO/MS0PuUrLv7y6aPdrWiymowlgpfaiOaFW3+hc5n
-         3Lgy4Sza/h7jiHNbKvwxlSkJ5ooWCHBYeqfqJwSO9n6kPjKtXTjF4jvUN9d+dom2vbw0
-         0mcz7iJK85ZnCQUCNimQ6pRDzmRb1zZHbgZ7+B3tpFRHgg+ttjx0FayzwJHeNUCmMcZt
-         LWwWfyDllBEwk0ddMgg7PJkSbV62gDDLHYEqIrLEHPSU2/F2u8QGvFEYxcwCv7WtQH6M
-         dPYw==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <CAJD7tkbvMcMWESMcWi6TtdCKLr6keBNGgZTnqcHZvBrPa1qWPw@mail.gmail.com>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=jKOS1vGID3J/FbD4HTDSZ/zk/t5PNErFudLDsYqbEjw=;
+        b=eDW10/xIZg8sKzudeh/BQlWYLaGFZPTtoK3i1FcF+DsZPu/Efolmt5EniRfWlxNt0U
+         1E5gvYAaXaVKbbbLyyZb2ZO39bU4ZOxFU3e2Ym62AKSjgXikXJhtQhGwqCVuFX44ejAd
+         J4UmnsgvvSAb7eGxKalw2dogjSyRPfi6njZRCzVXqWmzyEB6jXIs94KOiRVbBqj4aLEk
+         0MiGWxbyjTLm5IQQ6Y0UeFAN1GaH6hBiKI6NxT3uwI8kst31koBe3moFLywILByhvGqB
+         8oED5ZAcd0gKNKtzQw4OvyR4foQ+7pqiTGoq0HEA/+WCZ+AwzGkTtA08XRS7ALuhVWrP
+         LaiQ==
+In-Reply-To: <YodCPWqZodr7Shnj-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@vger.kernel.org>, bpf <bpf@vger.kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Networking <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello,
-
-On Fri, May 20, 2022 at 12:58:52AM -0700, Yosry Ahmed wrote:
-> On Fri, May 20, 2022 at 12:41 AM Tejun Heo <tj@kernel.org> wrote:
+On Fri, May 20, 2022 at 12:24 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+> On Fri, May 20, 2022 at 01:21:30AM +0000, Yosry Ahmed wrote:
+> > Add cgroup_rstat_updated() and cgroup_rstat_flush() kfuncs to bpf
+> > tracing programs. bpf programs that make use of rstat can use these
+> > functions to inform rstat when they update stats for a cgroup, and when
+> > they need to flush the stats.
 > >
-> > On Fri, May 20, 2022 at 01:21:31AM +0000, Yosry Ahmed wrote:
-> > > From: Hao Luo <haoluo@google.com>
-> > >
-> > > Introduce a new type of iter prog: cgroup. Unlike other bpf_iter, this
-> > > iter doesn't iterate a set of kernel objects. Instead, it is supposed to
-> > > be parameterized by a cgroup id and prints only that cgroup. So one
-> > > needs to specify a target cgroup id when attaching this iter. The target
-> > > cgroup's state can be read out via a link of this iter.
-> > >
-> > > Signed-off-by: Hao Luo <haoluo@google.com>
-> > > Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> >
-> > This could be me not understanding why it's structured this way but it keeps
-> > bothering me that this is adding a cgroup iterator which doesn't iterate
-> > cgroups. If all that's needed is extracting information from a specific
-> > cgroup, why does this need to be an iterator? e.g. why can't I use
-> > BPF_PROG_TEST_RUN which looks up the cgroup with the provided ID, flushes
-> > rstat, retrieves whatever information necessary and returns that as the
-> > result?
-> 
-> I will let Hao and Yonghong reply here as they have a lot more
-> context, and they had previous discussions about cgroup_iter. I just
-> want to say that exposing the stats in a file is extremely convenient
-> for userspace apps. It becomes very similar to reading stats from
-> cgroupfs. It also makes migrating cgroup stats that we have
-> implemented in the kernel to BPF a lot easier.
+> > Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>
+> Do patch 1 and 2 need to be separate? Also, can you explain and comment why
+> it's __weak?
 
-So, if it were upto me, I'd rather direct energy towards making retrieving
-information through TEST_RUN_PROG easier rather than clinging to making
-kernel output text. I get that text interface is familiar but it kinda
-sucks in many ways.
+I will squash them in the next version.
 
-> AFAIK there are also discussions about using overlayfs to have links
-> to the bpffs files in cgroupfs, which makes it even better. So I would
-> really prefer keeping the approach we have here of reading stats
-> through a file from userspace. As for how we go about this (and why a
-> cgroup iterator doesn't iterate cgroups) I will leave this for Hao and
-> Yonghong to explain the rationale behind it. Ideally we can keep the
-> same functionality under a more descriptive name/type.
+As for the declaration, I took the __weak annotation from Alexei's
+reply to the previous version. I thought it had something to do with
+how fentry progs attach to functions with BTF and all.
+When I try the same code with a static noinline declaration instead,
+fentry attachment fails to find the BTF type ID of bpf_rstat_flush.
+When I try it with just noinline (without __weak), the fentry program
+attaches, but is never invoked. I tried looking at the attach code but
+I couldn't figure out why this happens.
 
-My answer would be the same here. You guys seem dead set on making the
-kernel emulate cgroup1. I'm not gonna explicitly block that but would
-strongly suggest having a longer term view.
+In retrospect, I should have given this more thought. It would be
+great if Alexei could shed some light on this.
 
-If you *must* do the iterator, can you at least make it a proper iterator
-which supports seeking? AFAICS there's nothing fundamentally preventing bpf
-iterators from supporting seeking. Or is it that you need something which is
-pinned to a cgroup so that you can emulate the directory structure?
+>
+> Thanks.
 
-Thanks.
 
--- 
-tejun
+>
+> --
+> tejun
