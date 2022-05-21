@@ -1,52 +1,33 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH -next v5 0/3] support concurrent sync io for bfq on a
- specail occasion
-Date: Sat, 21 May 2022 06:21:28 -0600
-Message-ID: <d5a90a08-1ac6-587a-e900-0436bd45543a@kernel.dk>
-References: <20220428120837.3737765-1-yukuai3@huawei.com>
- <d50df657-d859-79cf-c292-412eaa383d2c@huawei.com>
- <61b67d5e-829c-8130-7bda-81615d654829@huawei.com>
- <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
+From: Muhammad Usama Anjum <usama.anjum-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
+Subject: Re: [PATCH v2 1/5] selftests: memcg: Fix compilation
+Date: Sat, 21 May 2022 19:11:01 +0500
+Message-ID: <5242b7ab-d6b6-55d4-c211-ec27293be795@collabora.com>
+References: <20220518161859.21565-1-mkoutny@suse.com>
+ <20220518161859.21565-2-mkoutny@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=gfHmtlCQtYvyaOp3BTWx/NwfcevCZ/dQvENt+OCB6OU=;
-        b=i1Z7sKvKg/r7Fu90Re3JGKGo4OH8g8Rh6cF/OLtxysHA/ntRqQvqKVSVq2oF1hT6L4
-         cNnY4wBcAg9kqs771D/Xc0PAxFm6ZZUDIHEvQjJlLqiY3ZTF1MkvntDJylyJoP3yjEBy
-         aEgkl0OIh0MepffoSk4c1rEgxTlrxXHO0w8y7AoWrX0RPPOstSM83S7ponJCoxe2/3Fk
-         cwTavtZmoY0/bOt2sJHHNhlb66apetZalZEVahMDSTFRMRHJpK3IFC3Iowh6/6VEjb2O
-         U9kKXX8EL0eVtbcvNrYJg2Z3WKlp5dK6tZVXG5aOLhqu829Yw3YQXHKun68AuCwVTcgC
-         vCTw==
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+        s=mail; t=1653142268;
+        bh=RDsDMjrHSRLHyJKnvADs831SvV0UdrfBeeTlvj8a10A=;
+        h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
+        b=gEIIZW9x52qLWyJAJicELkBZ/pVegfBArBv1xXiTVsC4HCzRLC1XXaWVd75WtBwtE
+         28l2Qg/rQMHz7tSmEadoaq0lJGVgkJZZ3d0LutBOEuwX1FujikjEguKbjHuU2XVoX2
+         1ZgZvvVaZMZI4sWLrm1iEi+g99YJb6qzve7plDCT+Ppga9Bdy/O1N+rfUTMWenvg2Z
+         gG4lgrMoKwTAEP1o7InyvQi/muAeAxKrVgEHJWAuk+/2V7Q54i/r7m/bLji+OY7aNV
+         Aq9+K4ABKOjBGWHileB2ERmD7Y/XqHVHmWcGWs5KwNyWFtfEcIHS4J/y1HB9ayyk79
+         lDkqcP/S2R9yg==
 Content-Language: en-US
-In-Reply-To: <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
+In-Reply-To: <20220518161859.21565-2-mkoutny-IBi9RG/b67k@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: "yukuai (C)" <yukuai3@huawei.com>, paolo.valente@linaro.org
-Cc: jack@suse.cz, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="iso-8859-1"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: usama.anjum-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Palethorpe <rpalethorpe-l3A5Bk7waGM@public.gmane.org>
 
-On 5/21/22 1:22 AM, yukuai (C) wrote:
-> 在 2022/05/14 17:29, yukuai (C) 写道:
->> 在 2022/05/05 9:00, yukuai (C) 写道:
->>> Hi, Paolo
->>>
->>> Can you take a look at this patchset? It has been quite a long time
->>> since we spotted this problem...
->>>
->>
->> friendly ping ...
-> friendly ping ...
+On 5/18/22 9:18 PM, Michal Koutn=C3=BD wrote:
+> This fixes mis-applied changes from commit 72b1e03aa725 ("cgroup:
+> account for memory_localevents in test_memcg_oom_group_leaf_events()").
+Shouldn't the Fixes tag be added here and in 2/5 patch?
 
-I can't speak for Paolo, but I've mentioned before that the majority
-of your messages end up in my spam. That's still the case, in fact
-I just marked maybe 10 of them as not spam.
-
-You really need to get this issued sorted out, or you will continue
-to have patches ignore because folks may simply not see them.
-
--- 
-Jens Axboe
-
+--=20
+Muhammad Usama Anjum
