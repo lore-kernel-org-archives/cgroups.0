@@ -1,63 +1,157 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH -next v2 5/6] block, bfq: cleanup bfq_activate_requeue_entity()
-Date: Sat, 21 May 2022 15:35:22 +0800
-Message-ID: <20220521073523.3118246-6-yukuai3@huawei.com>
-References: <20220521073523.3118246-1-yukuai3@huawei.com>
+From: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -next v5 0/3] support concurrent sync io for bfq on a
+ specail occasion
+Date: Sat, 21 May 2022 15:22:34 +0800
+Message-ID: <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
+References: <20220428120837.3737765-1-yukuai3@huawei.com>
+ <d50df657-d859-79cf-c292-412eaa383d2c@huawei.com>
+ <61b67d5e-829c-8130-7bda-81615d654829@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20220521073523.3118246-1-yukuai3@huawei.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <61b67d5e-829c-8130-7bda-81615d654829-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: jack@suse.cz, axboe@kernel.dk, paolo.valente@linaro.org
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Just make the code a litter cleaner by removing the unnecessary
-variable 'sd'.
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- block/bfq-wf2q.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
-
-diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index 15b97687493a..da189c732376 100644
---- a/block/bfq-wf2q.c
-+++ b/block/bfq-wf2q.c
-@@ -1085,12 +1085,12 @@ static void __bfq_requeue_entity(struct bfq_entity *entity)
- }
- 
- static void __bfq_activate_requeue_entity(struct bfq_entity *entity,
--					  struct bfq_sched_data *sd,
- 					  bool non_blocking_wait_rq)
- {
- 	struct bfq_service_tree *st = bfq_entity_service_tree(entity);
- 
--	if (sd->in_service_entity == entity || entity->tree == &st->active)
-+	if (entity->sched_data->in_service_entity == entity ||
-+	    entity->tree == &st->active)
- 		 /*
- 		  * in service or already queued on the active tree,
- 		  * requeue or reposition
-@@ -1122,14 +1122,10 @@ static void bfq_activate_requeue_entity(struct bfq_entity *entity,
- 					bool non_blocking_wait_rq,
- 					bool requeue, bool expiration)
- {
--	struct bfq_sched_data *sd;
--
- 	for_each_entity(entity) {
--		sd = entity->sched_data;
--		__bfq_activate_requeue_entity(entity, sd, non_blocking_wait_rq);
--
--		if (!bfq_update_next_in_service(sd, entity, expiration) &&
--		    !requeue)
-+		__bfq_activate_requeue_entity(entity, non_blocking_wait_rq);
-+		if (!bfq_update_next_in_service(entity->sched_data, entity,
-+						expiration) && !requeue)
- 			break;
- 	}
- }
--- 
-2.31.1
-
+在 2022/05/14 17:29, yukuai (C) 写道:
+> 在 2022/05/05 9:00, yukuai (C) 写道:
+>> Hi, Paolo
+>>
+>> Can you take a look at this patchset? It has been quite a long time
+>> since we spotted this problem...
+>>
+> 
+> friendly ping ...
+friendly ping ...
+>> Thanks,
+>> Kuai
+>>
+>> 在 2022/04/28 20:08, Yu Kuai 写道:
+>>> Changes in v5:
+>>>   - rename bfq_add_busy_queues() to bfq_inc_busy_queues() in patch 1
+>>>   - fix wrong definition in patch 1
+>>>   - fix spelling mistake in patch 2: leaset -> least
+>>>   - update comments in patch 3
+>>>   - add reviewed-by tag in patch 2,3
+>>>
+>>> Changes in v4:
+>>>   - split bfq_update_busy_queues() to bfq_add/dec_busy_queues(),
+>>>     suggested by Jan Kara.
+>>>   - remove unused 'in_groups_with_pending_reqs',
+>>>
+>>> Changes in v3:
+>>>   - remove the cleanup patch that is irrelevant now(I'll post it
+>>>     separately).
+>>>   - instead of hacking wr queues and using weights tree 
+>>> insertion/removal,
+>>>     using bfq_add/del_bfqq_busy() to count the number of groups
+>>>     (suggested by Jan Kara).
+>>>
+>>> Changes in v2:
+>>>   - Use a different approch to count root group, which is much simple.
+>>>
+>>> Currently, bfq can't handle sync io concurrently as long as they
+>>> are not issued from root group. This is because
+>>> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
+>>> bfq_asymmetric_scenario().
+>>>
+>>> The way that bfqg is counted into 'num_groups_with_pending_reqs':
+>>>
+>>> Before this patchset:
+>>>   1) root group will never be counted.
+>>>   2) Count if bfqg or it's child bfqgs have pending requests.
+>>>   3) Don't count if bfqg and it's child bfqgs complete all the requests.
+>>>
+>>> After this patchset:
+>>>   1) root group is counted.
+>>>   2) Count if bfqg have at least one bfqq that is marked busy.
+>>>   3) Don't count if bfqg doesn't have any busy bfqqs.
+>>>
+>>> The main reason to use busy state of bfqq instead of 'pending requests'
+>>> is that bfqq can stay busy after dispatching the last request if idling
+>>> is needed for service guarantees.
+>>>
+>>> With the above changes, concurrent sync io can be supported if only
+>>> one group is activated.
+>>>
+>>> fio test script(startdelay is used to avoid queue merging):
+>>> [global]
+>>> filename=/dev/nvme0n1
+>>> allow_mounted_write=0
+>>> ioengine=psync
+>>> direct=1
+>>> ioscheduler=bfq
+>>> offset_increment=10g
+>>> group_reporting
+>>> rw=randwrite
+>>> bs=4k
+>>>
+>>> [test1]
+>>> numjobs=1
+>>>
+>>> [test2]
+>>> startdelay=1
+>>> numjobs=1
+>>>
+>>> [test3]
+>>> startdelay=2
+>>> numjobs=1
+>>>
+>>> [test4]
+>>> startdelay=3
+>>> numjobs=1
+>>>
+>>> [test5]
+>>> startdelay=4
+>>> numjobs=1
+>>>
+>>> [test6]
+>>> startdelay=5
+>>> numjobs=1
+>>>
+>>> [test7]
+>>> startdelay=6
+>>> numjobs=1
+>>>
+>>> [test8]
+>>> startdelay=7
+>>> numjobs=1
+>>>
+>>> test result:
+>>> running fio on root cgroup
+>>> v5.18-rc1:       550 Mib/s
+>>> v5.18-rc1-patched: 550 Mib/s
+>>>
+>>> running fio on non-root cgroup
+>>> v5.18-rc1:       349 Mib/s
+>>> v5.18-rc1-patched: 550 Mib/s
+>>>
+>>> Note that I also test null_blk with "irqmode=2
+>>> completion_nsec=100000000(100ms) hw_queue_depth=1", and tests show
+>>> that service guarantees are still preserved.
+>>>
+>>> Previous versions:
+>>> RFC: 
+>>> https://lore.kernel.org/all/20211127101132.486806-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+>>> v1: 
+>>> https://lore.kernel.org/all/20220305091205.4188398-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+>>> v2: 
+>>> https://lore.kernel.org/all/20220416093753.3054696-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+>>> v3: 
+>>> https://lore.kernel.org/all/20220427124722.48465-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+>>> v4: 
+>>> https://lore.kernel.org/all/20220428111907.3635820-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+>>>
+>>> Yu Kuai (3):
+>>>    block, bfq: record how many queues are busy in bfq_group
+>>>    block, bfq: refactor the counting of 'num_groups_with_pending_reqs'
+>>>    block, bfq: do not idle if only one group is activated
+>>>
+>>>   block/bfq-cgroup.c  |  1 +
+>>>   block/bfq-iosched.c | 48 +++-----------------------------------
+>>>   block/bfq-iosched.h | 57 +++++++--------------------------------------
+>>>   block/bfq-wf2q.c    | 35 +++++++++++++++++-----------
+>>>   4 files changed, 35 insertions(+), 106 deletions(-)
+>>>
