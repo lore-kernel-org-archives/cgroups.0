@@ -1,23 +1,23 @@
 From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH mm v2 5/9] memcg: enable accounting for percpu allocation
- of struct psi_group_cpu
-Date: Sat, 21 May 2022 14:34:57 -0700
-Message-ID: <CALvZod4883iOgYMnHmM4F3NP-KE5c6hrOWDWnvU-hp6rkWX3Tg@mail.gmail.com>
-References: <Yn6aL3cO7VdrmHHp@carbon> <16f17021-61a3-c6f4-f60c-1acd3a0b66b9@openvz.org>
+Subject: Re: [PATCH mm v2 6/9] memcg: enable accounting for percpu allocation
+ of struct cgroup_rstat_cpu
+Date: Sat, 21 May 2022 14:35:51 -0700
+Message-ID: <CALvZod6qeh_rNVVpZ5N8RMauhvxjQ=wLJUpK-QBCa9AXDNqi_g@mail.gmail.com>
+References: <Yn6aL3cO7VdrmHHp@carbon> <c0d01d6e-530c-9be3-1c9b-67a7f8ea09be@openvz.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=6FG27lBVQnY3sW1qr+3lTil/aSlsNAs4hsByJ/IiO+o=;
-        b=Q2lvXkm8Au5J0g4yU1+wo2VFEu1ry0wpBSOZ7q+73S3WN4WezFtKZucJH875SDJTi6
-         T5CXHETsQ2vlwmEZwXkIkGCnryL/12ZawPU6er9ftMQG9FPc/08GSb9/eZaBPQRBUJbZ
-         Y32iam+NDnJ+IiJ3hkEuTBmE7FDIZc56kkBnrjqlsfO7NvJlbWa4NFZguZNgD5FsFh1c
-         mSVAiXFqmfidCM7uzGhGxNB/iS+2oy2Rtwvh8qD5LFJoNubN6jZL4wGZhx8GYsuQnvHO
-         enKb9QYI2eavJgYcBkkLsdGKB7Ye9LQMK3cGfh3YtLn/VCwihXZY0odav5rkygqfw98E
-         1dFQ==
-In-Reply-To: <16f17021-61a3-c6f4-f60c-1acd3a0b66b9-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+        bh=Ovbs7SznoJE1sVxkoT4HN7MF5cA4tFBx5ooIOKpQ5rI=;
+        b=HtMT4pCc5uH63EO6XlkrHpLrHOUT2F/DcCheEuURYYK0r2GEGrJzb/3oD1DgUHGgbS
+         DTZvc7agujFsGc8vMopNkC6FjfuUA9MJkZ1FHzoiTFJd0SVGVTNnT9W5ykihOzFgtLAr
+         S0EWv4ixlw92AThV7s6hF6xrQQfmjkH1fSqJgR9tQztQtG03xBmGq0UWxi5Sdtkykpri
+         hadLh08mZRRFMRw+n0UWus3QJC6eVtN5cCmJjI/1F727JI4G0yv5iVqGWpauiYPRlPlx
+         kfbkguPiTMODEoDYwaJS3f5Na9KWMUkMa3aNy8bN+imxqdX4Zat5tfu6XlyOAvSHZtLF
+         apBw==
+In-Reply-To: <c0d01d6e-530c-9be3-1c9b-67a7f8ea09be-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -26,9 +26,9 @@ Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kern
 
 On Sat, May 21, 2022 at 9:38 AM Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
 >
-> struct pci_group_cpu is percpu allocated for each new cgroup and can
-> consume a significant portion of all allocated memory on nodes with
-> a large number of CPUs.
+> struct cgroup_rstat_cpu is percpu allocated for each new cgroup and
+> can consume a significant portion of all allocated memory on nodes
+> with a large number of CPUs.
 >
 > Common part of the cgroup creation:
 > Allocs  Alloc   $1*$2   Sum     Allocation
