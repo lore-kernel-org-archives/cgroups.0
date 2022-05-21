@@ -1,79 +1,52 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH bpf-next v1 2/5] cgroup: bpf: add cgroup_rstat_updated()
- and cgroup_rstat_flush() kfuncs
-Date: Sat, 21 May 2022 19:47:07 +0800
-Message-ID: <202205211913.wPnVDaPm-lkp@intel.com>
-References: <20220520012133.1217211-3-yosryahmed@google.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH -next v5 0/3] support concurrent sync io for bfq on a
+ specail occasion
+Date: Sat, 21 May 2022 06:21:28 -0600
+Message-ID: <d5a90a08-1ac6-587a-e900-0436bd45543a@kernel.dk>
+References: <20220428120837.3737765-1-yukuai3@huawei.com>
+ <d50df657-d859-79cf-c292-412eaa383d2c@huawei.com>
+ <61b67d5e-829c-8130-7bda-81615d654829@huawei.com>
+ <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1653133663; x=1684669663;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=5JYbmecEfaojoV0o0RHmSf31Bg5PL/dcrqKwNqVLbR8=;
-  b=fogFnyJFdEebJI8H2OgOkFQ0UFIgy9W9qeo3iOSn7/qZMC3EcdI9Qume
-   fBjLgY2Y1XR335zRJtHM3Mb/hf1iWAl+TJKU7S5SrtJU2wDuQHVHQ5RDB
-   bHxVOxJYqY3pm3w2U4PnKocYRT9ocdHE/ym2PfbSA6LjRmARdGp9G97WJ
-   E7zjZvY8mvVRtXunU5xMketKTN5feacevLQGopS3CvrK4sfJWk7SrgNYk
-   kqaG3lUuiG/100eEAOoRRsAuhL2POkpHA2WQVqfkbvbvCcNNEa11hHO2E
-   G2ka7Hho339v/ORoJVIXnhHrrS+BtbQ+36H+d+ai5bZcSOIxOMuyNj5Py
-   Q==;
-Content-Disposition: inline
-In-Reply-To: <20220520012133.1217211-3-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=gfHmtlCQtYvyaOp3BTWx/NwfcevCZ/dQvENt+OCB6OU=;
+        b=i1Z7sKvKg/r7Fu90Re3JGKGo4OH8g8Rh6cF/OLtxysHA/ntRqQvqKVSVq2oF1hT6L4
+         cNnY4wBcAg9kqs771D/Xc0PAxFm6ZZUDIHEvQjJlLqiY3ZTF1MkvntDJylyJoP3yjEBy
+         aEgkl0OIh0MepffoSk4c1rEgxTlrxXHO0w8y7AoWrX0RPPOstSM83S7ponJCoxe2/3Fk
+         cwTavtZmoY0/bOt2sJHHNhlb66apetZalZEVahMDSTFRMRHJpK3IFC3Iowh6/6VEjb2O
+         U9kKXX8EL0eVtbcvNrYJg2Z3WKlp5dK6tZVXG5aOLhqu829Yw3YQXHKun68AuCwVTcgC
+         vCTw==
+Content-Language: en-US
+In-Reply-To: <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <skhan-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: "yukuai (C)" <yukuai3@huawei.com>, paolo.valente@linaro.org
+Cc: jack@suse.cz, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-Hi Yosry,
+On 5/21/22 1:22 AM, yukuai (C) wrote:
+> 在 2022/05/14 17:29, yukuai (C) 写道:
+>> 在 2022/05/05 9:00, yukuai (C) 写道:
+>>> Hi, Paolo
+>>>
+>>> Can you take a look at this patchset? It has been quite a long time
+>>> since we spotted this problem...
+>>>
+>>
+>> friendly ping ...
+> friendly ping ...
 
-Thank you for the patch! Perhaps something to improve:
+I can't speak for Paolo, but I've mentioned before that the majority
+of your messages end up in my spam. That's still the case, in fact
+I just marked maybe 10 of them as not spam.
 
-[auto build test WARNING on bpf-next/master]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Yosry-Ahmed/bpf-rstat-cgroup-hierarchical-stats/20220520-093041
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git master
-config: um-i386_defconfig (https://download.01.org/0day-ci/archive/20220521/202205211913.wPnVDaPm-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
-compiler: gcc-11 (Debian 11.3.0-1) 11.3.0
-reproduce (this is a W=1 build):
-        # https://github.com/intel-lab-lkp/linux/commit/203797424b1159b12702cea9d9a20acc24ea92e0
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Yosry-Ahmed/bpf-rstat-cgroup-hierarchical-stats/20220520-093041
-        git checkout 203797424b1159b12702cea9d9a20acc24ea92e0
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        make W=1 O=build_dir ARCH=um SUBARCH=i386 SHELL=/bin/bash kernel/cgroup/
-
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-
-All warnings (new ones prefixed by >>):
-
-   kernel/cgroup/rstat.c:155:22: warning: no previous prototype for 'bpf_rstat_flush' [-Wmissing-prototypes]
-     155 | __weak noinline void bpf_rstat_flush(struct cgroup *cgrp,
-         |                      ^~~~~~~~~~~~~~~
-   kernel/cgroup/rstat.c:503:10: error: 'const struct btf_kfunc_id_set' has no member named 'sleepable_set'; did you mean 'release_set'?
-     503 |         .sleepable_set  = &bpf_rstat_sleepable_kfunc_ids,
-         |          ^~~~~~~~~~~~~
-         |          release_set
->> kernel/cgroup/rstat.c:503:27: warning: excess elements in struct initializer
-     503 |         .sleepable_set  = &bpf_rstat_sleepable_kfunc_ids,
-         |                           ^
-   kernel/cgroup/rstat.c:503:27: note: (near initialization for 'bpf_rstat_kfunc_set')
-
-
-vim +503 kernel/cgroup/rstat.c
-
-   499	
-   500	static const struct btf_kfunc_id_set bpf_rstat_kfunc_set = {
-   501		.owner		= THIS_MODULE,
-   502		.check_set	= &bpf_rstat_check_kfunc_ids,
- > 503		.sleepable_set	= &bpf_rstat_sleepable_kfunc_ids,
-   504	};
-   505	
+You really need to get this issued sorted out, or you will continue
+to have patches ignore because folks may simply not see them.
 
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Jens Axboe
+
