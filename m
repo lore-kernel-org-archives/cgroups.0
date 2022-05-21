@@ -1,49 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH bpf-next v1 3/5] bpf: Introduce cgroup iter
-Date: Fri, 20 May 2022 18:53:39 -1000
-Message-ID: <YohwU2sXYbKvvcWS@slm.duckdns.org>
-References: <20220520012133.1217211-4-yosryahmed@google.com>
- <YodGI73xq8aIBrNM@slm.duckdns.org>
- <CAJD7tkbvMcMWESMcWi6TtdCKLr6keBNGgZTnqcHZvBrPa1qWPw@mail.gmail.com>
- <YodNLpxut+Zddnre@slm.duckdns.org>
- <73fd9853-5dab-8b59-24a0-74c0a6cae88e@fb.com>
- <YofFli6UCX4J5YnU@slm.duckdns.org>
- <CA+khW7gjWVKrwCgDD-4ZdCf5CMcA4-YL0bLm6aWM74+qNQ4c0A@mail.gmail.com>
- <CA+khW7iDDkO3h5WQixEA=nUL-tBmCTh7fMAf3iwNy98UfM-k9g@mail.gmail.com>
- <4cbdd3e9-c6fe-d796-5560-cd09c9220868@fb.com>
- <CA+khW7hGcrvihbb1CV4c4o6yO_3Ju3oU4_04G_A+TKh0vLHY3w@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH -next v3 2/2] blk-throttle: fix io hung due to
+ configuration updates
+Date: Fri, 20 May 2022 19:00:15 -1000
+Message-ID: <Yohx305S2bkSemQx@slm.duckdns.org>
+References: <20220519085811.879097-1-yukuai3@huawei.com>
+ <20220519085811.879097-3-yukuai3@huawei.com>
+ <20220519095857.GE16096@blackbody.suse.cz>
+ <a8953189-af42-0225-3031-daf61347524a@huawei.com>
+ <20220519161026.GG16096@blackbody.suse.cz>
+ <73464ca6-9412-cc55-d9c0-f2e8a10f0607@huawei.com>
+ <fe3c03f7-9b52-7948-075d-cbdf431363e1@huawei.com>
+ <20220520160305.GA17335@blackbody.suse.cz>
+ <Yoe/1BRYzSRI0JBd@slm.duckdns.org>
+ <97be6af0-ea94-f4ee-5ab2-02b6fc02cbff@huawei.com>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=102aBn0JR3M/WwS/swzSPfkILVklTAZC91XPQIvJBTg=;
-        b=PWGRyF2fNaOh4KaYB/zeiEKUH4gVVH4H7/ifcFFhuRWNsHCrDxe8YmmVCugYL2ge9K
-         zejnWxqg72zkAp6mdOfbgk1JYA8QaLe+5ci+P6t3IhXcw6uEjCOsGtRFT9guS4M3lMlp
-         8hQZX+oEqT2++YZAZOpGw6ZYfCsXmlin7UO1ccUEzS15hfEQuG/9ir0nBZpYFgwd9uUe
-         iyWJlGzS8v047mIOfI13H2TS+nNFXUNqB9/aimVaQG7r1j4+cEfcoE06h4FmGaNRC0xx
-         ktOjxgUqAfaAK+m1pHith2BbIi28SgkRUtd/OEYblqICMdjcyzdCDP2f7mVsDhktTthj
-         NiBw==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=TT52cKU8Oo9pvmq53QQ/gpy/l4ehF6WUmfOqY1Ifb5w=;
+        b=Ri4Q2yDK9UddopX/efZVecxLBB/qzjAX8bOizIYqnYBz/IVPnAqRxKzwm1vJ0T8X0+
+         nuqli3W/XU2w+3+GIA1ghzD5MCISZJd+atg1PhfSHFZW8V7M+vLgShlWqqVmmArVHAAj
+         zffrOtgFX9Rqj5/HifljRxmrvGxNRZ4O1kzoXZZs4f9WN5Ykt4MQYUKi7LteHzVVgHyW
+         bpJ7xFRb4wFhtzMY02KmxQhyr0XbS9Y1JJhNAkx9exmbRdG/+E4chTBnMvnwAbkQWjFw
+         0NmE6kHrDNabzqwLUR32uOHW5Rv+xwsWUiIYDkEz1PtdnS4d6hk0vr0HXy7biSD13qSm
+         FTBQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CA+khW7hGcrvihbb1CV4c4o6yO_3Ju3oU4_04G_A+TKh0vLHY3w@mail.gmail.com>
+In-Reply-To: <97be6af0-ea94-f4ee-5ab2-02b6fc02cbff-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hao Luo <haoluo@google.com>
-Cc: Yonghong Song <yhs@fb.com>, Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@vger.kernel.org>, bpf <bpf@v>
+To: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Fri, May 20, 2022 at 07:43:12PM -0700, Hao Luo wrote:
-> Yes, passing a cgroup_id as the seek() syscall parameter was what I meant.
+On Sat, May 21, 2022 at 11:51:11AM +0800, yukuai (C) wrote:
+> It's right the problem is self-inflicted. However, I do think with
+> Michal's suggestion, how throttled bios are handled while new config is
+> submitted really make sense from the functional poinit of view.
 > 
-> Tejun previously requested us to support seek() for a proper iterator.
-> Since Alexei has a nice solution that all of us have ack'ed, I am not
-> sure whether we still want to add seek() for bpf_iter as Tejun asked.
-> I guess not.
+> Do you think the solution is OK?
 
-Yeah, I meant seeking with the ID but it's better to follow the same
-convention as other iterators.
+I haven't followed the details but anything which isn't overly complex and
+doesn't produce extra budget or eat into existing one on config change is
+fine by me.
 
 Thanks.
 
