@@ -1,43 +1,138 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH -next v2 0/6] multiple cleanup patches for bfq
-Date: Sat, 21 May 2022 15:35:17 +0800
-Message-ID: <20220521073523.3118246-1-yukuai3@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH -next v2 1/6] block, bfq: cleanup bfq_weights_tree add/remove apis
+Date: Sat, 21 May 2022 15:35:18 +0800
+Message-ID: <20220521073523.3118246-2-yukuai3@huawei.com>
+References: <20220521073523.3118246-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20220521073523.3118246-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: jack@suse.cz, axboe@kernel.dk, paolo.valente@linaro.org
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+To: jack-AlSwsSmVLrQ@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Changes in v2:
- - add missing blank line in patch 1.
- - remove patch 7,8, since they are wrong.
- - add reviewed-by tag
+They already pass 'bfqd' as the first parameter, there is no need to
+pass 'bfqd->queue_weights_tree' as another parameter.
 
-There are no functional changes in this patchset, just some places
-that I think can be improved during code review.
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+---
+ block/bfq-iosched.c | 13 +++++++------
+ block/bfq-iosched.h | 10 +++-------
+ block/bfq-wf2q.c    | 16 +++++-----------
+ 3 files changed, 15 insertions(+), 24 deletions(-)
 
-This patchset is rebased based on this patchset:
-https://lore.kernel.org/all/20220428120837.3737765-1-yukuai3@huawei.com/
-
-Previous version:
-v1: https://lore.kernel.org/all/20220514090522.1669270-1-yukuai3@huawei.com/
-
-Yu Kuai (6):
-  block, bfq: cleanup bfq_weights_tree add/remove apis
-  block, bfq: cleanup __bfq_weights_tree_remove()
-  block, bfq: factor out code to update 'active_entities'
-  block, bfq: don't declare 'bfqd' as type 'void *' in bfq_group
-  block, bfq: cleanup bfq_activate_requeue_entity()
-  block, bfq: remove dead code for updating 'rq_in_driver'
-
- block/bfq-cgroup.c  |  2 +-
- block/bfq-iosched.c | 38 +++----------------
- block/bfq-iosched.h | 11 ++----
- block/bfq-wf2q.c    | 91 ++++++++++++++++++++-------------------------
- 4 files changed, 51 insertions(+), 91 deletions(-)
-
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index d32b8340510a..c408c5a79d97 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -870,9 +870,9 @@ static bool bfq_asymmetric_scenario(struct bfq_data *bfqd,
+  * In most scenarios, the rate at which nodes are created/destroyed
+  * should be low too.
+  */
+-void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+-			  struct rb_root_cached *root)
++void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq)
+ {
++	struct rb_root_cached *root = &bfqd->queue_weights_tree;
+ 	struct bfq_entity *entity = &bfqq->entity;
+ 	struct rb_node **new = &(root->rb_root.rb_node), *parent = NULL;
+ 	bool leftmost = true;
+@@ -945,12 +945,14 @@ void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+  * about overhead.
+  */
+ void __bfq_weights_tree_remove(struct bfq_data *bfqd,
+-			       struct bfq_queue *bfqq,
+-			       struct rb_root_cached *root)
++			       struct bfq_queue *bfqq)
+ {
++	struct rb_root_cached *root;
++
+ 	if (!bfqq->weight_counter)
+ 		return;
+ 
++	root = &bfqd->queue_weights_tree;
+ 	bfqq->weight_counter->num_active--;
+ 	if (bfqq->weight_counter->num_active > 0)
+ 		goto reset_entity_pointer;
+@@ -970,8 +972,7 @@ void __bfq_weights_tree_remove(struct bfq_data *bfqd,
+ void bfq_weights_tree_remove(struct bfq_data *bfqd,
+ 			     struct bfq_queue *bfqq)
+ {
+-	__bfq_weights_tree_remove(bfqd, bfqq,
+-				  &bfqd->queue_weights_tree);
++	__bfq_weights_tree_remove(bfqd, bfqq);
+ }
+ 
+ /*
+diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+index c3bd8ab169e0..0a3415abb994 100644
+--- a/block/bfq-iosched.h
++++ b/block/bfq-iosched.h
+@@ -932,13 +932,9 @@ struct bfq_queue *bic_to_bfqq(struct bfq_io_cq *bic, bool is_sync);
+ void bic_set_bfqq(struct bfq_io_cq *bic, struct bfq_queue *bfqq, bool is_sync);
+ struct bfq_data *bic_to_bfqd(struct bfq_io_cq *bic);
+ void bfq_pos_tree_add_move(struct bfq_data *bfqd, struct bfq_queue *bfqq);
+-void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+-			  struct rb_root_cached *root);
+-void __bfq_weights_tree_remove(struct bfq_data *bfqd,
+-			       struct bfq_queue *bfqq,
+-			       struct rb_root_cached *root);
+-void bfq_weights_tree_remove(struct bfq_data *bfqd,
+-			     struct bfq_queue *bfqq);
++void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq);
++void __bfq_weights_tree_remove(struct bfq_data *bfqd, struct bfq_queue *bfqq);
++void bfq_weights_tree_remove(struct bfq_data *bfqd, struct bfq_queue *bfqq);
+ void bfq_bfqq_expire(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+ 		     bool compensate, enum bfqq_expiration reason);
+ void bfq_put_queue(struct bfq_queue *bfqq);
+diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+index 42464e6ff40c..ccd227fed1c3 100644
+--- a/block/bfq-wf2q.c
++++ b/block/bfq-wf2q.c
+@@ -727,7 +727,6 @@ __bfq_entity_update_weight_prio(struct bfq_service_tree *old_st,
+ 		struct bfq_queue *bfqq = bfq_entity_to_bfqq(entity);
+ 		unsigned int prev_weight, new_weight;
+ 		struct bfq_data *bfqd = NULL;
+-		struct rb_root_cached *root;
+ #ifdef CONFIG_BFQ_GROUP_IOSCHED
+ 		struct bfq_sched_data *sd;
+ 		struct bfq_group *bfqg;
+@@ -790,19 +789,15 @@ __bfq_entity_update_weight_prio(struct bfq_service_tree *old_st,
+ 		 * queue, remove the entity from its old weight counter (if
+ 		 * there is a counter associated with the entity).
+ 		 */
+-		if (prev_weight != new_weight && bfqq) {
+-			root = &bfqd->queue_weights_tree;
+-			__bfq_weights_tree_remove(bfqd, bfqq, root);
+-		}
++		if (prev_weight != new_weight && bfqq)
++			__bfq_weights_tree_remove(bfqd, bfqq);
+ 		entity->weight = new_weight;
+ 		/*
+ 		 * Add the entity, if it is not a weight-raised queue,
+ 		 * to the counter associated with its new weight.
+ 		 */
+-		if (prev_weight != new_weight && bfqq && bfqq->wr_coeff == 1) {
+-			/* If we get here, root has been initialized. */
+-			bfq_weights_tree_add(bfqd, bfqq, root);
+-		}
++		if (prev_weight != new_weight && bfqq && bfqq->wr_coeff == 1)
++			bfq_weights_tree_add(bfqd, bfqq);
+ 
+ 		new_st->wsum += entity->weight;
+ 
+@@ -1695,8 +1690,7 @@ void bfq_add_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq)
+ 
+ 	if (!bfqq->dispatched)
+ 		if (bfqq->wr_coeff == 1)
+-			bfq_weights_tree_add(bfqd, bfqq,
+-					     &bfqd->queue_weights_tree);
++			bfq_weights_tree_add(bfqd, bfqq);
+ 
+ 	if (bfqq->wr_coeff > 1)
+ 		bfqd->wr_busy_queues++;
 -- 
 2.31.1
 
