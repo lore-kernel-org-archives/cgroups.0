@@ -1,83 +1,52 @@
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next v2 2/6] block, bfq: cleanup __bfq_weights_tree_remove()
-Date: Sat, 21 May 2022 15:35:19 +0800
-Message-ID: <20220521073523.3118246-3-yukuai3@huawei.com>
+From: Yu Kuai <yukuai3@huawei.com>
+Subject: [PATCH -next v2 6/6] block, bfq: remove dead code for updating 'rq_in_driver'
+Date: Sat, 21 May 2022 15:35:23 +0800
+Message-ID: <20220521073523.3118246-7-yukuai3@huawei.com>
 References: <20220521073523.3118246-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220521073523.3118246-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20220521073523.3118246-1-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: jack-AlSwsSmVLrQ@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: jack@suse.cz, axboe@kernel.dk, paolo.valente@linaro.org
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
 
-It's the same with bfq_weights_tree_remove() now.
+Such code are not even compiled since they are inside marco "#if 0".
 
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- block/bfq-iosched.c | 13 +------------
- block/bfq-iosched.h |  1 -
- block/bfq-wf2q.c    |  2 +-
- 3 files changed, 2 insertions(+), 14 deletions(-)
+ block/bfq-iosched.c | 16 ----------------
+ 1 file changed, 16 deletions(-)
 
 diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index c408c5a79d97..c0bc463d236c 100644
+index c0bc463d236c..be75bd9835f5 100644
 --- a/block/bfq-iosched.c
 +++ b/block/bfq-iosched.c
-@@ -944,8 +944,7 @@ void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq)
-  * See the comments to the function bfq_weights_tree_add() for considerations
-  * about overhead.
-  */
--void __bfq_weights_tree_remove(struct bfq_data *bfqd,
--			       struct bfq_queue *bfqq)
-+void bfq_weights_tree_remove(struct bfq_data *bfqd, struct bfq_queue *bfqq)
- {
- 	struct rb_root_cached *root;
- 
-@@ -965,16 +964,6 @@ void __bfq_weights_tree_remove(struct bfq_data *bfqd,
- 	bfq_put_queue(bfqq);
+@@ -2323,22 +2323,6 @@ static sector_t get_sdist(sector_t last_pos, struct request *rq)
+ 	return 0;
  }
  
--/*
-- * Invoke __bfq_weights_tree_remove on bfqq and decrement the number
-- * of active groups for each queue's inactive parent entity.
-- */
--void bfq_weights_tree_remove(struct bfq_data *bfqd,
--			     struct bfq_queue *bfqq)
+-#if 0 /* Still not clear if we can do without next two functions */
+-static void bfq_activate_request(struct request_queue *q, struct request *rq)
 -{
--	__bfq_weights_tree_remove(bfqd, bfqq);
+-	struct bfq_data *bfqd = q->elevator->elevator_data;
+-
+-	bfqd->rq_in_driver++;
 -}
 -
- /*
-  * Return expired entry, or NULL to just start from scratch in rbtree.
-  */
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 0a3415abb994..bc54b9824b1e 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -933,7 +933,6 @@ void bic_set_bfqq(struct bfq_io_cq *bic, struct bfq_queue *bfqq, bool is_sync);
- struct bfq_data *bic_to_bfqd(struct bfq_io_cq *bic);
- void bfq_pos_tree_add_move(struct bfq_data *bfqd, struct bfq_queue *bfqq);
- void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq);
--void __bfq_weights_tree_remove(struct bfq_data *bfqd, struct bfq_queue *bfqq);
- void bfq_weights_tree_remove(struct bfq_data *bfqd, struct bfq_queue *bfqq);
- void bfq_bfqq_expire(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 		     bool compensate, enum bfqq_expiration reason);
-diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index ccd227fed1c3..2f3fb45a32c3 100644
---- a/block/bfq-wf2q.c
-+++ b/block/bfq-wf2q.c
-@@ -790,7 +790,7 @@ __bfq_entity_update_weight_prio(struct bfq_service_tree *old_st,
- 		 * there is a counter associated with the entity).
- 		 */
- 		if (prev_weight != new_weight && bfqq)
--			__bfq_weights_tree_remove(bfqd, bfqq);
-+			bfq_weights_tree_remove(bfqd, bfqq);
- 		entity->weight = new_weight;
- 		/*
- 		 * Add the entity, if it is not a weight-raised queue,
+-static void bfq_deactivate_request(struct request_queue *q, struct request *rq)
+-{
+-	struct bfq_data *bfqd = q->elevator->elevator_data;
+-
+-	bfqd->rq_in_driver--;
+-}
+-#endif
+-
+ static void bfq_remove_request(struct request_queue *q,
+ 			       struct request *rq)
+ {
 -- 
 2.31.1
 
