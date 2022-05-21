@@ -1,91 +1,102 @@
-From: Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH bpf-next v1 3/5] bpf: Introduce cgroup iter
-Date: Fri, 20 May 2022 17:52:24 -0700
-Message-ID: <b181f363-f66b-d74f-2251-c49877ac4b18@fb.com>
-References: <20220520012133.1217211-1-yosryahmed@google.com>
- <20220520012133.1217211-4-yosryahmed@google.com>
- <YodGI73xq8aIBrNM@slm.duckdns.org>
- <CAJD7tkbvMcMWESMcWi6TtdCKLr6keBNGgZTnqcHZvBrPa1qWPw@mail.gmail.com>
- <YodNLpxut+Zddnre@slm.duckdns.org>
- <73fd9853-5dab-8b59-24a0-74c0a6cae88e@fb.com>
- <YofFli6UCX4J5YnU@slm.duckdns.org>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH 3/4] memcg: enable accounting for struct cgroup
+Date: Fri, 20 May 2022 17:55:40 -0700
+Message-ID: <Yog4jCygrYPtPXg5@carbon>
+References: <Ynv7+VG+T2y9rpdk@carbon>
+ <a17be77f-dc3b-d69a-16e2-f7309959c525@openvz.org>
+ <20220519165325.GA2434@blackbody.suse.cz>
+ <740dfcb1-5c5f-6a40-0f71-65f277f976d6@openvz.org>
+ <d28233ee-bccb-7bc3-c2ec-461fd7f95e6a@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=facebook;
- bh=RTeQWk2uEdnNz7G7Y/KJAeI2aPGMBpJrhLcIXKIx3Ls=;
- b=eUH/+QawHUtXDPUm8GIZeDcQUDGSa1FnL1qbfWGD+Xx/ssVlT3rklTD2uCY4rYiaCczh
- GMXcuTQ1Ad0I7Wf5ryWMLBUoO0tgUdxXZzxEK+xjDXnOp1VBe+rz4tE7wCuzygsRbTJe
- ObiUjybOiXXi/EurPhtFDVEVnTyh+cl3bps= 
-Content-Language: en-US
-In-Reply-To: <YofFli6UCX4J5YnU-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1653094547;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=j1Ic3mvDcYYQoaAM4Rtpe+PbHlC8Anf6qFpf3CmzxYQ=;
+        b=Jjxd1bc+QrIggNSu2l7tf8IPCa1bRlt3WS5aeT268REna6NQ17GRbKKQPSyDhaVU5KuBra
+        TcOl+XDU3h6qALxunUSdmvjO3JqONsYr0wgZotdDpYjyoB3jKE9sAAx62c5K+PT/Tn3lA6
+        rbtlUnfktOIkoI+kh59UVVpEItAQx0I=
+Content-Disposition: inline
+In-Reply-To: <d28233ee-bccb-7bc3-c2ec-461fd7f95e6a-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Networking <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+On Fri, May 20, 2022 at 11:16:32PM +0300, Vasily Averin wrote:
+> On 5/20/22 10:24, Vasily Averin wrote:
+> > On 5/19/22 19:53, Michal Koutn=FD wrote:
+> >> On Fri, May 13, 2022 at 06:52:12PM +0300, Vasily Averin <vvs-GEFAQzZX7=
+r8dnm+yROfE0A@public.gmane.org> wrote:
+> >>> Creating each new cgroup allocates 4Kb for struct cgroup. This is the
+> >>> largest memory allocation in this scenario and is epecially important
+> >>> for small VMs with 1-2 CPUs.
+> >>
+> >> What do you mean by this argument?
+> >>
+> >> (On bigger irons, the percpu components becomes dominant, e.g. struct
+> >> cgroup_rstat_cpu.)
+> >=20
+> > Michal, Shakeel,
+> > thank you very much for your feedback, it helps me understand how to im=
+prove
+> > the methodology of my accounting analyze.
+> > I considered the general case and looked for places of maximum memory a=
+llocations.
+> > Now I think it would be better to split all called allocations into:
+> > - common part, called for any cgroup type (i.e. cgroup_mkdir and cgroup=
+_create),
+> > - per-cgroup parts,
+> > and focus on 2 corner cases: for single CPU VMs and for "big irons".
+> > It helps to clarify which allocations are accounting-important and whic=
+h ones
+> > can be safely ignored.
+> >=20
+> > So right now I'm going to redo the calculations and hope it doesn't tak=
+e long.
+>=20
+> common part: 	~11Kb	+  318 bytes percpu
+> memcg: 		~17Kb	+ 4692 bytes percpu
+> cpu:		~2.5Kb	+ 1036 bytes percpu
+> cpuset:		~3Kb	+   12 bytes percpu
+> blkcg:		~3Kb	+   12 bytes percpu
+> pid:		~1.5Kb	+   12 bytes percpu	=09
+> perf:		 ~320b	+   60 bytes percpu
+> -------------------------------------------
+> total:		~38Kb	+ 6142 bytes percpu
+> currently accounted:	  4668 bytes percpu
+>=20
+> Results:
+> a) I'll add accounting for cgroup_rstat_cpu and psi_group_cpu,
+> they are called in common part and consumes 288 bytes percpu.
+> b) It makes sense to add accounting for simple_xattr(), as Michal recomme=
+nd,
+>  especially because it can grow over 4kb
+> c) it looks like the rest of the allocations can be ignored
+>=20
+> Details are below
+> ('=3D' -- already accounted, '+' -- to be accounted, '~' -- see KERNFS, '=
+?' -- perhaps later )
+>=20
+> common part:
+> 16  ~   352     5632    5632    KERNFS (*)
+> 1   +   4096    4096    9728    (cgroup_mkdir+0xe4)
+> 1       584     584     10312   (radix_tree_node_alloc.constprop.0+0x89)
+> 1       192     192     10504   (__d_alloc+0x29)
+> 2       72      144     10648   (avc_alloc_node+0x27)
+> 2       64      128     10776   (percpu_ref_init+0x6a)
+> 1       64      64      10840   (memcg_list_lru_alloc+0x21a)
+>=20
+> 1   +   192     192     192     call_site=3Dpsi_cgroup_alloc+0x1e
+> 1   +   96      96      288     call_site=3Dcgroup_rstat_init+0x5f
+> 2       12      24      312     call_site=3Dpercpu_ref_init+0x23
+> 1       6       6       318     call_site=3D__percpu_counter_init+0x22
 
+I'm curios, how do you generate these data?
+Just an idea: it could be a nice tool, placed somewhere in tools/cgroup/...
 
-On 5/20/22 9:45 AM, Tejun Heo wrote:
-> Hello, Yonghong.
-> 
-> On Fri, May 20, 2022 at 09:29:43AM -0700, Yonghong Song wrote:
->> Maybe you can have a bpf program signature like below:
->>
->> int BPF_PROG(dump_vmscan, struct bpf_iter_meta *meta, struct cgroup *cgrp,
->> struct cgroup *parent_cgrp)
->>
->> parent_cgrp is NULL when cgrp is the root cgroup.
->>
->> I would like the bpf program should send the following information to
->> user space:
->>     <parent cgroup dir name> <current cgroup dir name>
-> 
-> I don't think parent cgroup dir name would be sufficient to reconstruct the
-> path given that multiple cgroups in different subtrees can have the same
-> name. For live cgroups, userspace can find the path from id (or ino) without
-> traversing anything by constructing the fhandle, open it open_by_handle_at()
-> and then reading /proc/self/fd/$FD symlink -
-> https://lkml.org/lkml/2020/12/2/1126. This isn't available for dead cgroups
-> but I'm not sure how much that'd matter given that they aren't visible from
-> userspace anyway.
-
-passing id/ino to user space and then get directory name in userspace
-should work just fine.
-
-> 
->>     <various stats interested by the user>
->>
->> This way, user space can easily construct the cgroup hierarchy stat like
->>                             cpu   mem   cpu pressure   mem pressure ...
->>     cgroup1                 ...
->>        child1               ...
->>          grandchild1        ...
->>        child2               ...
->>     cgroup 2                ...
->>        child 3              ...
->>          ...                ...
->>
->> the bpf iterator can have additional parameter like
->> cgroup_id = ... to only call bpf program once with that
->> cgroup_id if specified.
->>
->> The kernel part of cgroup_iter can call cgroup_rstat_flush()
->> before calling cgroup_iter bpf program.
->>
->> WDYT?
-> 
-> Would it work to just pass in @cgrp and provide a group of helpers so that
-> the program can do whatever it wanna do including looking up the full path
-> and passing that to userspace?
-
-I am not super familiar with cgroup internals, I guess with cgroup + 
-helpers to retrieve stats, or directly expose stats data structure
-to bpf program. Either one is okay to me as long as we can get
-desired results.
-
-> 
-> Thanks.
-> 
+Thanks!
