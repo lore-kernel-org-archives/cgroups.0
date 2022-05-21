@@ -1,138 +1,135 @@
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next v2 1/6] block, bfq: cleanup bfq_weights_tree add/remove apis
-Date: Sat, 21 May 2022 15:35:18 +0800
-Message-ID: <20220521073523.3118246-2-yukuai3@huawei.com>
+From: Yu Kuai <yukuai3@huawei.com>
+Subject: [PATCH -next v2 3/6] block, bfq: factor out code to update 'active_entities'
+Date: Sat, 21 May 2022 15:35:20 +0800
+Message-ID: <20220521073523.3118246-4-yukuai3@huawei.com>
 References: <20220521073523.3118246-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220521073523.3118246-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20220521073523.3118246-1-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: jack-AlSwsSmVLrQ@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: jack@suse.cz, axboe@kernel.dk, paolo.valente@linaro.org
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
 
-They already pass 'bfqd' as the first parameter, there is no need to
-pass 'bfqd->queue_weights_tree' as another parameter.
+Current code is a bit ugly and hard to read.
 
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- block/bfq-iosched.c | 13 +++++++------
- block/bfq-iosched.h | 10 +++-------
- block/bfq-wf2q.c    | 16 +++++-----------
- 3 files changed, 15 insertions(+), 24 deletions(-)
+ block/bfq-wf2q.c | 61 +++++++++++++++++++++++++-----------------------
+ 1 file changed, 32 insertions(+), 29 deletions(-)
 
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index d32b8340510a..c408c5a79d97 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -870,9 +870,9 @@ static bool bfq_asymmetric_scenario(struct bfq_data *bfqd,
-  * In most scenarios, the rate at which nodes are created/destroyed
-  * should be low too.
-  */
--void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq,
--			  struct rb_root_cached *root)
-+void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq)
- {
-+	struct rb_root_cached *root = &bfqd->queue_weights_tree;
- 	struct bfq_entity *entity = &bfqq->entity;
- 	struct rb_node **new = &(root->rb_root.rb_node), *parent = NULL;
- 	bool leftmost = true;
-@@ -945,12 +945,14 @@ void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq,
-  * about overhead.
-  */
- void __bfq_weights_tree_remove(struct bfq_data *bfqd,
--			       struct bfq_queue *bfqq,
--			       struct rb_root_cached *root)
-+			       struct bfq_queue *bfqq)
- {
-+	struct rb_root_cached *root;
-+
- 	if (!bfqq->weight_counter)
- 		return;
- 
-+	root = &bfqd->queue_weights_tree;
- 	bfqq->weight_counter->num_active--;
- 	if (bfqq->weight_counter->num_active > 0)
- 		goto reset_entity_pointer;
-@@ -970,8 +972,7 @@ void __bfq_weights_tree_remove(struct bfq_data *bfqd,
- void bfq_weights_tree_remove(struct bfq_data *bfqd,
- 			     struct bfq_queue *bfqq)
- {
--	__bfq_weights_tree_remove(bfqd, bfqq,
--				  &bfqd->queue_weights_tree);
-+	__bfq_weights_tree_remove(bfqd, bfqq);
- }
- 
- /*
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index c3bd8ab169e0..0a3415abb994 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -932,13 +932,9 @@ struct bfq_queue *bic_to_bfqq(struct bfq_io_cq *bic, bool is_sync);
- void bic_set_bfqq(struct bfq_io_cq *bic, struct bfq_queue *bfqq, bool is_sync);
- struct bfq_data *bic_to_bfqd(struct bfq_io_cq *bic);
- void bfq_pos_tree_add_move(struct bfq_data *bfqd, struct bfq_queue *bfqq);
--void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq,
--			  struct rb_root_cached *root);
--void __bfq_weights_tree_remove(struct bfq_data *bfqd,
--			       struct bfq_queue *bfqq,
--			       struct rb_root_cached *root);
--void bfq_weights_tree_remove(struct bfq_data *bfqd,
--			     struct bfq_queue *bfqq);
-+void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq);
-+void __bfq_weights_tree_remove(struct bfq_data *bfqd, struct bfq_queue *bfqq);
-+void bfq_weights_tree_remove(struct bfq_data *bfqd, struct bfq_queue *bfqq);
- void bfq_bfqq_expire(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 		     bool compensate, enum bfqq_expiration reason);
- void bfq_put_queue(struct bfq_queue *bfqq);
 diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index 42464e6ff40c..ccd227fed1c3 100644
+index 2f3fb45a32c3..c58568a4b009 100644
 --- a/block/bfq-wf2q.c
 +++ b/block/bfq-wf2q.c
-@@ -727,7 +727,6 @@ __bfq_entity_update_weight_prio(struct bfq_service_tree *old_st,
- 		struct bfq_queue *bfqq = bfq_entity_to_bfqq(entity);
- 		unsigned int prev_weight, new_weight;
- 		struct bfq_data *bfqd = NULL;
--		struct rb_root_cached *root;
- #ifdef CONFIG_BFQ_GROUP_IOSCHED
- 		struct bfq_sched_data *sd;
- 		struct bfq_group *bfqg;
-@@ -790,19 +789,15 @@ __bfq_entity_update_weight_prio(struct bfq_service_tree *old_st,
- 		 * queue, remove the entity from its old weight counter (if
- 		 * there is a counter associated with the entity).
- 		 */
--		if (prev_weight != new_weight && bfqq) {
--			root = &bfqd->queue_weights_tree;
--			__bfq_weights_tree_remove(bfqd, bfqq, root);
--		}
-+		if (prev_weight != new_weight && bfqq)
-+			__bfq_weights_tree_remove(bfqd, bfqq);
- 		entity->weight = new_weight;
- 		/*
- 		 * Add the entity, if it is not a weight-raised queue,
- 		 * to the counter associated with its new weight.
- 		 */
--		if (prev_weight != new_weight && bfqq && bfqq->wr_coeff == 1) {
--			/* If we get here, root has been initialized. */
--			bfq_weights_tree_add(bfqd, bfqq, root);
--		}
-+		if (prev_weight != new_weight && bfqq && bfqq->wr_coeff == 1)
-+			bfq_weights_tree_add(bfqd, bfqq);
+@@ -230,6 +230,26 @@ static void bfq_dec_busy_queues(struct bfq_queue *bfqq)
+ 		bfqq->bfqd->num_groups_with_busy_queues--;
+ }
  
- 		new_st->wsum += entity->weight;
++static void bfq_inc_active_entities(struct bfq_entity *entity)
++{
++	struct bfq_sched_data *sd = entity->sched_data;
++	struct bfq_group *bfqg = container_of(sd, struct bfq_group, sched_data);
++	struct bfq_data *bfqd = (struct bfq_data *)bfqg->bfqd;
++
++	if (bfqg != bfqd->root_group)
++		bfqg->active_entities++;
++}
++
++static void bfq_dec_active_entities(struct bfq_entity *entity)
++{
++	struct bfq_sched_data *sd = entity->sched_data;
++	struct bfq_group *bfqg = container_of(sd, struct bfq_group, sched_data);
++	struct bfq_data *bfqd = (struct bfq_data *)bfqg->bfqd;
++
++	if (bfqg != bfqd->root_group)
++		bfqg->active_entities--;
++}
++
+ #else /* CONFIG_BFQ_GROUP_IOSCHED */
  
-@@ -1695,8 +1690,7 @@ void bfq_add_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq)
+ static bool bfq_update_parent_budget(struct bfq_entity *next_in_service)
+@@ -250,6 +270,14 @@ static void bfq_dec_busy_queues(struct bfq_queue *bfqq)
+ {
+ }
  
- 	if (!bfqq->dispatched)
- 		if (bfqq->wr_coeff == 1)
--			bfq_weights_tree_add(bfqd, bfqq,
--					     &bfqd->queue_weights_tree);
-+			bfq_weights_tree_add(bfqd, bfqq);
++static void bfq_inc_active_entities(struct bfq_entity *entity)
++{
++}
++
++static void bfq_dec_active_entities(struct bfq_entity *entity)
++{
++}
++
+ #endif /* CONFIG_BFQ_GROUP_IOSCHED */
  
- 	if (bfqq->wr_coeff > 1)
- 		bfqd->wr_busy_queues++;
+ /*
+@@ -476,11 +504,6 @@ static void bfq_active_insert(struct bfq_service_tree *st,
+ {
+ 	struct bfq_queue *bfqq = bfq_entity_to_bfqq(entity);
+ 	struct rb_node *node = &entity->rb_node;
+-#ifdef CONFIG_BFQ_GROUP_IOSCHED
+-	struct bfq_sched_data *sd = NULL;
+-	struct bfq_group *bfqg = NULL;
+-	struct bfq_data *bfqd = NULL;
+-#endif
+ 
+ 	bfq_insert(&st->active, entity);
+ 
+@@ -491,17 +514,10 @@ static void bfq_active_insert(struct bfq_service_tree *st,
+ 
+ 	bfq_update_active_tree(node);
+ 
+-#ifdef CONFIG_BFQ_GROUP_IOSCHED
+-	sd = entity->sched_data;
+-	bfqg = container_of(sd, struct bfq_group, sched_data);
+-	bfqd = (struct bfq_data *)bfqg->bfqd;
+-#endif
+ 	if (bfqq)
+ 		list_add(&bfqq->bfqq_list, &bfqq->bfqd->active_list);
+-#ifdef CONFIG_BFQ_GROUP_IOSCHED
+-	if (bfqg != bfqd->root_group)
+-		bfqg->active_entities++;
+-#endif
++
++	bfq_inc_active_entities(entity);
+ }
+ 
+ /**
+@@ -578,29 +594,16 @@ static void bfq_active_extract(struct bfq_service_tree *st,
+ {
+ 	struct bfq_queue *bfqq = bfq_entity_to_bfqq(entity);
+ 	struct rb_node *node;
+-#ifdef CONFIG_BFQ_GROUP_IOSCHED
+-	struct bfq_sched_data *sd = NULL;
+-	struct bfq_group *bfqg = NULL;
+-	struct bfq_data *bfqd = NULL;
+-#endif
+ 
+ 	node = bfq_find_deepest(&entity->rb_node);
+ 	bfq_extract(&st->active, entity);
+ 
+ 	if (node)
+ 		bfq_update_active_tree(node);
+-
+-#ifdef CONFIG_BFQ_GROUP_IOSCHED
+-	sd = entity->sched_data;
+-	bfqg = container_of(sd, struct bfq_group, sched_data);
+-	bfqd = (struct bfq_data *)bfqg->bfqd;
+-#endif
+ 	if (bfqq)
+ 		list_del(&bfqq->bfqq_list);
+-#ifdef CONFIG_BFQ_GROUP_IOSCHED
+-	if (bfqg != bfqd->root_group)
+-		bfqg->active_entities--;
+-#endif
++
++	bfq_dec_active_entities(entity);
+ }
+ 
+ /**
 -- 
 2.31.1
 
