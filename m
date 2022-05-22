@@ -1,35 +1,35 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-5.19] BUILD SUCCESS
- b154a017c92011d8f71ce804583e5f9c3d90bb9a
-Date: Sun, 22 May 2022 11:37:59 +0800
-Message-ID: <6289b017.0wpYGXsFcoY57SCk%lkp@intel.com>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 8a4f243bd5cfd2885c52eaf0075732d4ee77d78d
+Date: Sun, 22 May 2022 12:58:15 +0800
+Message-ID: <6289c2e7.2tRkCtYcEnbcIPuP%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1653190741; x=1684726741;
+  t=1653195544; x=1684731544;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=dRZu2bgfr4jOw23MukwAF8tRG9FZp6QMgKTPDwMIAp4=;
-  b=ElfNH+OfTP4z40jR7cfcWPEqEpXFGXZR4CDNU6YArs484UHNimw9zzvL
-   uwCFurWXwQ97VqmCX781yCsJB6Bryu0CwJy3iuXoOb806nbXTLasVNBG5
-   9U5d8CGvl6FzSXlTLrIxjqot80eZ47R/oZ0ODCvmhbv5IRkeVHiNACczI
-   5svRA4lQMrrtgBE1uijGYwIlkD3QROn8PmmBHl4ibMY7gw/7aLWlpxKh8
-   4YK+LvknXv1hycKy/pW2HliiQU1vpgk8WzkpY74oybwy9mW27JCWsLWlF
-   JHHTy/KQhKwHxeqydGtVDl5dPPsZaSXgr+dXY8TuVZfwjNu8xh63OTvYu
-   g==;
+  bh=gCpE/vDgK/48XntIMTSTiF0hjaq4Crt0+GzRRr6Pr7A=;
+  b=i2jcgfEVUZUcuqY0USrxDhy+K3H2rUdg+c0H+uefV/AGt4I3mjxhNRVU
+   4JlJRrP5TqcY3J5YMZSi508kPPOn686PN7L4EuFP3Y2cHPl6wtytMx9cR
+   LfQmc1tl7hFdsI4JLmOmzkKIQEZpXmZnZoU63gqCxv9P965oSi5uZxEk2
+   ugIbKlbkYxpvZaWbg6nVD6fedg4IsCDFi2K5sej+n7fTX1vXAv8Yw8Bw+
+   eYicbQiyfC4eWcx1DKgP2P4KZJjZmMfvSIYv68QC9zsMvnCszoJRE4HFR
+   Vq9rSQuKudde4u0b9ioWhnavso0al93bVOFrd9fVmAqpWzSe7MZ6bMHuQ
+   w==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.19
-branch HEAD: b154a017c92011d8f71ce804583e5f9c3d90bb9a  cgroup: remove the superfluous judgment
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 8a4f243bd5cfd2885c52eaf0075732d4ee77d78d  Merge branch 'for-5.19' into for-next
 
-elapsed time: 2599m
+elapsed time: 2678m
 
-configs tested: 248
+configs tested: 247
 configs skipped: 4
 
 The following configs have been built successfully.
@@ -47,6 +47,10 @@ arc                                 defconfig
 powerpc                     asp8347_defconfig
 m68k                            mac_defconfig
 ia64                            zx1_defconfig
+arm                       imx_v6_v7_defconfig
+arm                           imxrt_defconfig
+parisc                           alldefconfig
+mips                     loongson1b_defconfig
 ia64                      gensparse_defconfig
 arm                            pleb_defconfig
 sh                            titan_defconfig
@@ -96,7 +100,6 @@ arm                      jornada720_defconfig
 powerpc                        cell_defconfig
 sh                                  defconfig
 powerpc                    klondike_defconfig
-arm                       imx_v6_v7_defconfig
 sh                           se7206_defconfig
 powerpc                         wii_defconfig
 mips                        bcm47xx_defconfig
@@ -156,7 +159,6 @@ powerpc                       holly_defconfig
 arc                          axs101_defconfig
 powerpc                     rainier_defconfig
 powerpc                      mgcoge_defconfig
-mips                     loongson1b_defconfig
 arc                         haps_hs_defconfig
 sh                               allmodconfig
 m68k                           sun3_defconfig
@@ -199,19 +201,16 @@ powerpc                          allmodconfig
 x86_64                        randconfig-a006
 x86_64                        randconfig-a004
 x86_64                        randconfig-a002
-i386                          randconfig-a001
-i386                          randconfig-a003
-i386                          randconfig-a005
 x86_64                        randconfig-a011
 x86_64                        randconfig-a013
 x86_64                        randconfig-a015
 i386                          randconfig-a012
 i386                          randconfig-a014
 i386                          randconfig-a016
-arc                  randconfig-r043-20220519
 arc                  randconfig-r043-20220522
 s390                 randconfig-r044-20220522
 riscv                randconfig-r042-20220522
+arc                  randconfig-r043-20220519
 riscv                               defconfig
 riscv                    nommu_virt_defconfig
 riscv                          rv32_defconfig
