@@ -1,68 +1,51 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH -next v5 0/3] support concurrent sync io for bfq on a
- specail occasion
-Date: Sun, 22 May 2022 19:24:37 -0600
-Message-ID: <b32ed748-a141-862c-ed35-debb474962ed@kernel.dk>
-References: <20220428120837.3737765-1-yukuai3@huawei.com>
- <d50df657-d859-79cf-c292-412eaa383d2c@huawei.com>
- <61b67d5e-829c-8130-7bda-81615d654829@huawei.com>
- <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
- <d5a90a08-1ac6-587a-e900-0436bd45543a@kernel.dk>
- <55919e29-1f22-e8aa-f3d2-08c57d9e1c22@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH -next v4 2/4] blk-throttle: prevent overflow while calculating wait time
+Date: Mon, 23 May 2022 16:26:31 +0800
+Message-ID: <20220523082633.2324980-3-yukuai3@huawei.com>
+References: <20220523082633.2324980-1-yukuai3@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=oximGdL85AdyYM4EyrHBMR8JY42eOGAKAouksms98f0=;
-        b=pxJ2UZmJRrY2NLXz4OLAZ67pT7PJyixhai/tBlwrwNUjBRr2Udq+056WLiclqUMvTB
-         4wcC8pgS+GP0WO+CZHJMuYGwNxuusVHJFZiD7vp9f8RQ/myi6BbozzuhsWIBOopwlrL/
-         kWN6Qlngaz8YJjX+3Qe5O1hpgPiR7WpgMJpewWQIplVVcjOxnX+QXsMGe3StX+4ZQpZF
-         4s7aK6xqj7cPwtpRBin3N0DduqOlwrwLGhDAXaIblyfx5wSap5mPaGLJoMjrYt4qz3aU
-         VkmLiY+dEYPkpbAFKIlrO5EhGWlNWrOC74rEqzgx3wQPO5mjKBV46fHwvHeL73yt89bu
-         YLCw==
-Content-Language: en-US
-In-Reply-To: <55919e29-1f22-e8aa-f3d2-08c57d9e1c22-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20220523082633.2324980-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
-Cc: jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On 5/22/22 7:10 PM, yukuai (C) wrote:
-> ? 2022/05/21 20:21, Jens Axboe ??:
->> On 5/21/22 1:22 AM, yukuai (C) wrote:
->>> ? 2022/05/14 17:29, yukuai (C) ??:
->>>> ? 2022/05/05 9:00, yukuai (C) ??:
->>>>> Hi, Paolo
->>>>>
->>>>> Can you take a look at this patchset? It has been quite a long time
->>>>> since we spotted this problem...
->>>>>
->>>>
->>>> friendly ping ...
->>> friendly ping ...
->>
->> I can't speak for Paolo, but I've mentioned before that the majority
->> of your messages end up in my spam. That's still the case, in fact
->> I just marked maybe 10 of them as not spam.
->>
->> You really need to get this issued sorted out, or you will continue
->> to have patches ignore because folks may simply not see them.
->>
-> Hi,
-> 
-> Thanks for your notice.
-> 
-> Is it just me or do you see someone else's messages from *huawei.com
-> end up in spam? I tried to seek help from our IT support, however, they
-> didn't find anything unusual...
+in tg_with_in_bps_limit(), 'bps_limit * jiffy_elapsed_rnd' might
+overflow, handle the case by calling mul_u64_u64_div_u64() instead.
 
-Not sure, I think it's just you. It may be the name as well "yukuai (C)"
-probably makes gmail think it's not a real name? Or maybe it's the
-yukuai3 in the email? Pure speculation on my side.
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ block/blk-throttle.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 0c37be08ff28..7e0c31e920dd 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -806,7 +806,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 				 u64 bps_limit, unsigned long *wait)
+ {
+ 	bool rw = bio_data_dir(bio);
+-	u64 bytes_allowed, extra_bytes, tmp;
++	u64 bytes_allowed, extra_bytes;
+ 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+ 	unsigned int bio_size = throtl_bio_data_size(bio);
+ 
+@@ -824,10 +824,8 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 		jiffy_elapsed_rnd = tg->td->throtl_slice;
+ 
+ 	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
+-
+-	tmp = bps_limit * jiffy_elapsed_rnd;
+-	do_div(tmp, HZ);
+-	bytes_allowed = tmp;
++	bytes_allowed = mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed_rnd,
++					    (u64)HZ);
+ 
+ 	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
+ 		if (wait)
 -- 
-Jens Axboe
+2.31.1
 
