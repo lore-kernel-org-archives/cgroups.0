@@ -1,83 +1,66 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup changes for v5.19-rc1
-Date: Mon, 23 May 2022 13:44:51 -1000
-Message-ID: <Yowcc/ZOBIIs2JtZ@slm.duckdns.org>
+From: Andrii Nakryiko <andrii.nakryiko@gmail.com>
+Subject: Re: [PATCH bpf-next v1 3/5] bpf: Introduce cgroup iter
+Date: Mon, 23 May 2022 16:58:21 -0700
+Message-ID: <CAEf4BzbaHeyaHK1sChPMF=L4aQsaBGNtU+R3veqCOFz0A+svEA@mail.gmail.com>
+References: <20220520012133.1217211-1-yosryahmed@google.com>
+ <20220520012133.1217211-4-yosryahmed@google.com> <YodGI73xq8aIBrNM@slm.duckdns.org>
+ <CAJD7tkbvMcMWESMcWi6TtdCKLr6keBNGgZTnqcHZvBrPa1qWPw@mail.gmail.com>
+ <YodNLpxut+Zddnre@slm.duckdns.org> <73fd9853-5dab-8b59-24a0-74c0a6cae88e@fb.com>
+ <YofFli6UCX4J5YnU@slm.duckdns.org> <CA+khW7gjWVKrwCgDD-4ZdCf5CMcA4-YL0bLm6aWM74+qNQ4c0A@mail.gmail.com>
+ <CAJD7tkaJQjfSy+YARFRkqQ8m7OGJHO9v91mSk-cFeo9Z5UVJKg@mail.gmail.com>
+ <20220520221919.jnqgv52k4ajlgzcl@MBP-98dd607d3435.dhcp.thefacebook.com>
+ <Yogc0Kb5ZVDaQ0oU@slm.duckdns.org> <5b301151-0a65-df43-3a3a-6d57e10cfc2d@fb.com>
+ <CA+khW7gGrwTrDsfWp7wj=QaCg01FNj381a1QLs1ThsjAkW85eQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=pDcZJaTRyOHg9w4kEsRf2ua14bTPNjwhSlPe2z4tQPk=;
-        b=CTemy5RVJvKRYgzwSyQkolRT2ww2JNpWblhiywZ240VM/rYlcYZWwuLZ2mgYm9ZBbt
-         sUFV3gAtRxEeJWf4zH8Mff7XREsuIkAVugVgRP9sU2XeiQ1ZTlbCFIx+pGRYO6UmiFfX
-         tHgGHdOcKBcGrbB7aR6DKnckb6aLNlr0VtikD8owymd3x/JF0yIp5VlE9Tin0HvOvTrD
-         IkgZfIyUXN4pthTV3uhJiU6PexhFvvaKLR7jfIsEintpD/feIYaVwxVZ833D8fHbR7zU
-         cvqE8ayRigy0aL8qo9cfJLMT9/DJl8dOjiWXhN9Bb1AEGT7waxhBSR5XX+uZvzBUE+3Q
-         VXXA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=M2mIELVIK9I45bOrNaHoPQeyzkFn9jybEus0u38+96s=;
+        b=VnHsSTwMUvjWYssSawwJ5pEcHjByONf8kYvt/w+HAsB3Hf7IGHDWS7Y6jAhIIJxgVO
+         uoGHf8AFlhnmaVzAx0LDqsXEYOMIdGPPaWZdOMXF2ti7VVCbzwWoI2o+2zpOlp7ZeH3J
+         MG1TDy/haiNsWsXjjsgMr33/RadE8QOFl81bmI+r2cxjuo9+SGSEhVv1HObsiUTkmyqb
+         LI1Tbohh27CSgCiIQUxZpaBNMPAvQn0IJ6akPOEMssVnm8VnXOVQ8JTz2zkzPUhvWMN1
+         g3mXFAPZy5hecxQph9G377xJS3izBXLE4OarMwRfQIzugPfNcTNsD/CykzREfCaaYKOp
+         I/DQ==
+In-Reply-To: <CA+khW7gGrwTrDsfWp7wj=QaCg01FNj381a1QLs1ThsjAkW85eQ@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hao Luo <haoluo@google.com>
+Cc: Yonghong Song <yhs@fb.com>, Tejun Heo <tj@kernel.org>, Alexei Starovoitov <alexei.starovoitov@gmail.com>, Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux
 
-Hello, Linus.
+On Fri, May 20, 2022 at 7:35 PM Hao Luo <haoluo@google.com> wrote:
+>
+> On Fri, May 20, 2022 at 5:59 PM Yonghong Song <yhs@fb.com> wrote:
+> > On 5/20/22 3:57 PM, Tejun Heo wrote:
+> > > Hello,
+> > >
+> > > On Fri, May 20, 2022 at 03:19:19PM -0700, Alexei Starovoitov wrote:
+> > >> We have bpf_map iterator that walks all bpf maps.
+> > >> When map iterator is parametrized with map_fd the iterator walks
+> > >> all elements of that map.
+> > >> cgroup iterator should have similar semantics.
+> > >> When non-parameterized it will walk all cgroups and their descendent
+> > >> depth first way. I believe that's what Yonghong is proposing.
+> > >> When parametrized it will start from that particular cgroup and
+> > >> walk all descendant of that cgroup only.
+> > >> The bpf prog can stop the iteration right away with ret 1.
+> > >> Maybe we can add two parameters. One -> cgroup_fd to use and another ->
+> > >> the order of iteration css_for_each_descendant_pre vs _post.
+> > >> wdyt?
+> > >
+> > > Sounds perfectly reasonable to me.
+> >
+> > This works for me too. Thanks!
+> >
+>
+> This sounds good to me. Thanks. Let's try to do it in the next iteration.
 
-Nothing too interesting. It adds cpu controller selftests and there are a
-couple code cleanup patches.
-
-Thanks.
-
-The following changes since commit 281b9d9a4b02229b602a14f7540206b0fbe4134f:
-
-  Merge branch 'akpm' (patches from Andrew) (2022-04-22 10:10:43 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.19
-
-for you to fetch changes up to b154a017c92011d8f71ce804583e5f9c3d90bb9a:
-
-  cgroup: remove the superfluous judgment (2022-05-19 21:49:45 -1000)
-
-----------------------------------------------------------------
-David Vernet (9):
-      cgroup: Add new test_cpu.c test suite in cgroup selftests
-      cgroup: Add test_cpucg_stats() testcase to cgroup cpu selftests
-      cgroup: Add test_cpucg_weight_overprovisioned() testcase
-      cgroup: Add test_cpucg_weight_underprovisioned() testcase
-      cgroup: Adding test_cpucg_nested_weight_overprovisioned() testcase
-      cgroup: Add test_cpucg_nested_weight_underprovisioned() testcase
-      cgroup: Add test_cpucg_max() testcase
-      cgroup: Add test_cpucg_max_nested() testcase
-      cgroup: Add config file to cgroup selftest suite
-
-Phil Auld (1):
-      kselftest/cgroup: fix test_stress.sh to use OUTPUT dir
-
-Shida Zhang (1):
-      cgroup: remove the superfluous judgment
-
-Waiman Long (1):
-      kseltest/cgroup: Make test_stress.sh work if run interactively
-
-Xiu Jianfeng (1):
-      cgroup: Make cgroup_debug static
-
- kernel/cgroup/cgroup-internal.h               |   1 -
- kernel/cgroup/cgroup.c                        |   4 +-
- tools/testing/selftests/cgroup/.gitignore     |   1 +
- tools/testing/selftests/cgroup/Makefile       |   2 +
- tools/testing/selftests/cgroup/cgroup_util.c  |  12 +
- tools/testing/selftests/cgroup/cgroup_util.h  |   4 +
- tools/testing/selftests/cgroup/config         |   8 +
- tools/testing/selftests/cgroup/test_cpu.c     | 726 ++++++++++++++++++++++++++
- tools/testing/selftests/cgroup/test_stress.sh |   2 +-
- 9 files changed, 756 insertions(+), 4 deletions(-)
- create mode 100644 tools/testing/selftests/cgroup/config
- create mode 100644 tools/testing/selftests/cgroup/test_cpu.c
-
--- 
-tejun
+Can we, in addition to descendant_pre and descendant_post walk
+algorithms also add the one that does ascendants walk (i.e., start
+from specified cgroup and walk up to the root cgroup)? I don't have
+specific example, but it seems natural to include it for "cgroup
+iterator" in general. Hopefully it won't add much code to the
+implementation.
