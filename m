@@ -1,82 +1,101 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH -next v5 0/3] support concurrent sync io for bfq on a
- specail occasion
-Date: Mon, 23 May 2022 10:59:02 +0200
-Message-ID: <20220523085902.wmxoebyq3crerecr@quack3.lan>
-References: <20220428120837.3737765-1-yukuai3@huawei.com>
- <d50df657-d859-79cf-c292-412eaa383d2c@huawei.com>
- <61b67d5e-829c-8130-7bda-81615d654829@huawei.com>
- <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
- <d5a90a08-1ac6-587a-e900-0436bd45543a@kernel.dk>
- <55919e29-1f22-e8aa-f3d2-08c57d9e1c22@huawei.com>
+From: Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH] memcg: enable accounting in keyctl subsys
+Date: Mon, 23 May 2022 12:45:09 +0300
+Message-ID: <0017e4c6-84d8-6d62-2ceb-4851771fec18@linux.dev>
+References: <1626682667-10771-1-git-send-email-nglaive@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1653296344; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1653299111;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=h1QuB3M+BmdTEHvDbJ/48/qLXP8QUk8L4+wxn4b3JqE=;
-        b=rZ+SQ9qfiHZw+b4x1x93KOH97ACbM8txlwl7+4DjUI1B9uu2F8p5huYe0KZJV6PhmLenGI
-        /9pILZIIIJWcMF+BCk6vdTMDMbhQXj+VC8y9+To+2Rs2io0FF/X5sHXKShFqjUWZFpvWD2
-        2Qan9NrxdGvwUwV47jUecy4SyZZwch4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1653296344;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=h1QuB3M+BmdTEHvDbJ/48/qLXP8QUk8L4+wxn4b3JqE=;
-        b=UTh5pzrrDqKQxilv/HUuRQHZel4jue/bNpbW5iFLK+uFLL6KEgaRovHb4Cq7L/5LXVPIgN
-        uIHOwEt7pP/JwFAw==
-Content-Disposition: inline
-In-Reply-To: <55919e29-1f22-e8aa-f3d2-08c57d9e1c22@huawei.com>
+        bh=xzDfkTjQhONMEpUiGwdClhq7wMW8hJhptzcebkFZ4fY=;
+        b=qLAwUHyTcw9VMr5IKzQkJNQnD7g3cOF1I0/lcg+Ubkym4eB3uU7axJHz49oSAZnaiPgA+b
+        Uw9iWxqe+j7HqWmLUfV53wy9gtYcXiJEtqk5Jxz/HsTUFhiEm7iPESan/3LMykPpzM6TF8
+        hVBVciGAVMnToa0pGS8fJs37cGknwAA=
+Content-Language: en-US
+In-Reply-To: <1626682667-10771-1-git-send-email-nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: "yukuai (C)" <yukuai3@huawei.com>
-Cc: Jens Axboe <axboe@kernel.dk>, paolo.valente@linaro.org, jack@suse.cz, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+To: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, shenwenbo-Y5EWUtBUdg4nDS1+zs4M5A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
 
-On Mon 23-05-22 09:10:38, yukuai (C) wrote:
-> 在 2022/05/21 20:21, Jens Axboe 写道:
-> > On 5/21/22 1:22 AM, yukuai (C) wrote:
-> > > 在 2022/05/14 17:29, yukuai (C) 写道:
-> > > > 在 2022/05/05 9:00, yukuai (C) 写道:
-> > > > > Hi, Paolo
-> > > > > 
-> > > > > Can you take a look at this patchset? It has been quite a long time
-> > > > > since we spotted this problem...
-> > > > > 
-> > > > 
-> > > > friendly ping ...
-> > > friendly ping ...
-> > 
-> > I can't speak for Paolo, but I've mentioned before that the majority
-> > of your messages end up in my spam. That's still the case, in fact
-> > I just marked maybe 10 of them as not spam.
-> > 
-> > You really need to get this issued sorted out, or you will continue
-> > to have patches ignore because folks may simply not see them.
-> > 
-> Hi,
+On 7/19/21 11:17, Yutian Yang wrote:
+> This patch enables accounting for key objects and auth record objects.
+> Allocation of the objects are triggerable by syscalls from userspace.
 > 
-> Thanks for your notice.
+> We have written a PoC to show that the missing-charging objects lead to
+> breaking memcg limits. The PoC program takes around 2.2GB unaccounted
+> memory, while it is charged for only 24MB memory usage. We evaluate the
+> PoC on QEMU x86_64 v5.2.90 + Linux kernel v5.10.19 + Debian buster. All
+> the limitations including ulimits and sysctl variables are set as default.
+> Specifically, we set kernel.keys.maxbytes = 20000 and 
+> kernel.keys.maxkeys = 200.
 > 
-> Is it just me or do you see someone else's messages from *huawei.com
-> end up in spam? I tried to seek help from our IT support, however, they
-> didn't find anything unusual...
+> /*------------------------- POC code ----------------------------*/
+[skipped]
+> /*-------------------------- end --------------------------------*/
 
-So actually I have noticed that a lot of (valid) email from huawei.com (not
-just you) ends up in the spam mailbox. For me direct messages usually pass
-(likely matching SPF records for originating mail server save the email
-from going to spam) but messages going through mailing lists are flagged as
-spam because the emails are missing valid DKIM signature but huawei.com
-DMARC config says there should be DKIM signature (even direct messages are
-missing DKIM so this does not seem as a mailing list configuration issue).
-So this seems as some misconfiguration of the mails on huawei.com side
-(likely missing DKIM signing of outgoing email).
+I experimented with "keyctl request2 user debug: X:Y Z" inside the container
+and found that the problem is still relevant and the proposed patch solves it
+correctly.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+I didn't find any complaints about this patch, could someone explain why
+it wasn't applied? If no one objects, I'd like to push it.
+
+> Signed-off-by: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Reviewed-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+
+Thank you,
+	Vasily Averin
+
+PS. Should I perhaps resend it?
+
+> ---
+>  security/keys/key.c              | 4 ++--
+>  security/keys/request_key_auth.c | 4 ++--
+>  2 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/security/keys/key.c b/security/keys/key.c
+> index e282c6179..925d85c2e 100644
+> --- a/security/keys/key.c
+> +++ b/security/keys/key.c
+> @@ -279,7 +279,7 @@ struct key *key_alloc(struct key_type *type, const char *desc,
+>  		goto no_memory_2;
+>  
+>  	key->index_key.desc_len = desclen;
+> -	key->index_key.description = kmemdup(desc, desclen + 1, GFP_KERNEL);
+> +	key->index_key.description = kmemdup(desc, desclen + 1, GFP_KERNEL_ACCOUNT);
+>  	if (!key->index_key.description)
+>  		goto no_memory_3;
+>  	key->index_key.type = type;
+> @@ -1198,7 +1198,7 @@ void __init key_init(void)
+>  {
+>  	/* allocate a slab in which we can store keys */
+>  	key_jar = kmem_cache_create("key_jar", sizeof(struct key),
+> -			0, SLAB_HWCACHE_ALIGN|SLAB_PANIC, NULL);
+> +			0, SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_ACCOUNT, NULL);
+>  
+>  	/* add the special key types */
+>  	list_add_tail(&key_type_keyring.link, &key_types_list);
+> diff --git a/security/keys/request_key_auth.c b/security/keys/request_key_auth.c
+> index 41e973500..ed50a100a 100644
+> --- a/security/keys/request_key_auth.c
+> +++ b/security/keys/request_key_auth.c
+> @@ -171,10 +171,10 @@ struct key *request_key_auth_new(struct key *target, const char *op,
+>  	kenter("%d,", target->serial);
+>  
+>  	/* allocate a auth record */
+> -	rka = kzalloc(sizeof(*rka), GFP_KERNEL);
+> +	rka = kzalloc(sizeof(*rka), GFP_KERNEL_ACCOUNT);
+>  	if (!rka)
+>  		goto error;
+> -	rka->callout_info = kmemdup(callout_info, callout_len, GFP_KERNEL);
+> +	rka->callout_info = kmemdup(callout_info, callout_len, GFP_KERNEL_ACCOUNT);
+>  	if (!rka->callout_info)
+>  		goto error_free_rka;
+>  	rka->callout_len = callout_len;
+
