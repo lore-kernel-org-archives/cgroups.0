@@ -1,102 +1,61 @@
 From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH -next v4 3/4] blk-throttle: factor out code to calculate ios/bytes_allowed
-Date: Mon, 23 May 2022 16:26:32 +0800
-Message-ID: <20220523082633.2324980-4-yukuai3@huawei.com>
-References: <20220523082633.2324980-1-yukuai3@huawei.com>
+Subject: Re: [PATCH -next v5 0/3] support concurrent sync io for bfq on a
+ specail occasion
+Date: Mon, 23 May 2022 16:18:18 +0800
+Message-ID: <1172d00f-0843-1d7c-721f-fdb60a0945cb@huawei.com>
+References: <20220428120837.3737765-1-yukuai3@huawei.com>
+ <d50df657-d859-79cf-c292-412eaa383d2c@huawei.com>
+ <61b67d5e-829c-8130-7bda-81615d654829@huawei.com>
+ <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
+ <d5a90a08-1ac6-587a-e900-0436bd45543a@kernel.dk>
+ <55919e29-1f22-e8aa-f3d2-08c57d9e1c22@huawei.com>
+ <b32ed748-a141-862c-ed35-debb474962ed@kernel.dk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20220523082633.2324980-1-yukuai3@huawei.com>
+In-Reply-To: <b32ed748-a141-862c-ed35-debb474962ed@kernel.dk>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, mkoutny@suse.com, axboe@kernel.dk, ming.lei@redhat.com
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Jens Axboe <axboe@kernel.dk>, paolo.valente@linaro.org
+Cc: jack@suse.cz, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-No functional changes, new apis will be used in later patches to handle
-throttled bios while updating config.
+在 2022/05/23 9:24, Jens Axboe 写道:
+> On 5/22/22 7:10 PM, yukuai (C) wrote:
+>> ? 2022/05/21 20:21, Jens Axboe ??:
+>>> On 5/21/22 1:22 AM, yukuai (C) wrote:
+>>>> ? 2022/05/14 17:29, yukuai (C) ??:
+>>>>> ? 2022/05/05 9:00, yukuai (C) ??:
+>>>>>> Hi, Paolo
+>>>>>>
+>>>>>> Can you take a look at this patchset? It has been quite a long time
+>>>>>> since we spotted this problem...
+>>>>>>
+>>>>>
+>>>>> friendly ping ...
+>>>> friendly ping ...
+>>>
+>>> I can't speak for Paolo, but I've mentioned before that the majority
+>>> of your messages end up in my spam. That's still the case, in fact
+>>> I just marked maybe 10 of them as not spam.
+>>>
+>>> You really need to get this issued sorted out, or you will continue
+>>> to have patches ignore because folks may simply not see them.
+>>>
+>> Hi,
+>>
+>> Thanks for your notice.
+>>
+>> Is it just me or do you see someone else's messages from *huawei.com
+>> end up in spam? I tried to seek help from our IT support, however, they
+>> didn't find anything unusual...
+> 
+> Not sure, I think it's just you. It may be the name as well "yukuai (C)"
+Hi, Jens
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- block/blk-throttle.c | 48 +++++++++++++++++++++++++++-----------------
- 1 file changed, 30 insertions(+), 18 deletions(-)
+I just change this default name "yukuai (C)" to "Yu Kuai", can you
+please have a check if following emails still go to spam?
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 7e0c31e920dd..ded0d30ef49e 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -754,25 +754,12 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
- 		   tg->slice_start[rw], tg->slice_end[rw], jiffies);
- }
- 
--static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
--				  u32 iops_limit, unsigned long *wait)
-+static unsigned int calculate_io_allowed(u32 iops_limit,
-+					 unsigned long jiffy_elapsed_rnd)
- {
--	bool rw = bio_data_dir(bio);
- 	unsigned int io_allowed;
--	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
- 	u64 tmp;
- 
--	if (iops_limit == UINT_MAX) {
--		if (wait)
--			*wait = 0;
--		return true;
--	}
--
--	jiffy_elapsed = jiffies - tg->slice_start[rw];
--
--	/* Round up to the next throttle slice, wait time must be nonzero */
--	jiffy_elapsed_rnd = roundup(jiffy_elapsed + 1, tg->td->throtl_slice);
--
- 	/*
- 	 * jiffy_elapsed_rnd should not be a big value as minimum iops can be
- 	 * 1 then at max jiffy elapsed should be equivalent of 1 second as we
-@@ -788,6 +775,33 @@ static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
- 	else
- 		io_allowed = tmp;
- 
-+	return io_allowed;
-+}
-+
-+static u64 calculate_bytes_allowed(u64 bps_limit,
-+				   unsigned long jiffy_elapsed_rnd)
-+{
-+	return mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed_rnd, (u64)HZ);
-+}
-+
-+static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
-+				  u32 iops_limit, unsigned long *wait)
-+{
-+	bool rw = bio_data_dir(bio);
-+	unsigned int io_allowed;
-+	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
-+
-+	if (iops_limit == UINT_MAX) {
-+		if (wait)
-+			*wait = 0;
-+		return true;
-+	}
-+
-+	jiffy_elapsed = jiffies - tg->slice_start[rw];
-+
-+	/* Round up to the next throttle slice, wait time must be nonzero */
-+	jiffy_elapsed_rnd = roundup(jiffy_elapsed + 1, tg->td->throtl_slice);
-+	io_allowed = calculate_io_allowed(iops_limit, jiffy_elapsed_rnd);
- 	if (tg->io_disp[rw] + 1 <= io_allowed) {
- 		if (wait)
- 			*wait = 0;
-@@ -824,9 +838,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 		jiffy_elapsed_rnd = tg->td->throtl_slice;
- 
- 	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
--	bytes_allowed = mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed_rnd,
--					    (u64)HZ);
--
-+	bytes_allowed = calculate_bytes_allowed(bps_limit, jiffy_elapsed_rnd);
- 	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
- 		if (wait)
- 			*wait = 0;
--- 
-2.31.1
-
+https://lore.kernel.org/all/20220523082633.2324980-1-yukuai3@huawei.com/
+> probably makes gmail think it's not a real name? Or maybe it's the
+> yukuai3 in the email? Pure speculation on my side.
+> 
