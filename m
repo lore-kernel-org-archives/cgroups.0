@@ -1,101 +1,78 @@
-From: Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH] memcg: enable accounting in keyctl subsys
-Date: Mon, 23 May 2022 12:45:09 +0300
-Message-ID: <0017e4c6-84d8-6d62-2ceb-4851771fec18@linux.dev>
-References: <1626682667-10771-1-git-send-email-nglaive@gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH -next v5 0/3] support concurrent sync io for bfq on a
+ specail occasion
+Date: Mon, 23 May 2022 06:36:03 -0600
+Message-ID: <dfd2ac0b-74da-85f4-ff66-2eb307578d93@kernel.dk>
+References: <20220428120837.3737765-1-yukuai3@huawei.com>
+ <d50df657-d859-79cf-c292-412eaa383d2c@huawei.com>
+ <61b67d5e-829c-8130-7bda-81615d654829@huawei.com>
+ <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
+ <d5a90a08-1ac6-587a-e900-0436bd45543a@kernel.dk>
+ <55919e29-1f22-e8aa-f3d2-08c57d9e1c22@huawei.com>
+ <b32ed748-a141-862c-ed35-debb474962ed@kernel.dk>
+ <1172d00f-0843-1d7c-721f-fdb60a0945cb@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1653299111;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=xzDfkTjQhONMEpUiGwdClhq7wMW8hJhptzcebkFZ4fY=;
-        b=qLAwUHyTcw9VMr5IKzQkJNQnD7g3cOF1I0/lcg+Ubkym4eB3uU7axJHz49oSAZnaiPgA+b
-        Uw9iWxqe+j7HqWmLUfV53wy9gtYcXiJEtqk5Jxz/HsTUFhiEm7iPESan/3LMykPpzM6TF8
-        hVBVciGAVMnToa0pGS8fJs37cGknwAA=
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=INkfgsb8DgkgWmtKMANQ1Vo1QXhIfhnDd/K2kDPrH3Q=;
+        b=1fhqz3+apWfJ+ZsEhTE6mAVaEw1c/7DNg5ozDW0PFTFoPjcNQOq1PewkdDlvrMsykq
+         zYigUM7hOavb8VqDpEuzNufWasevbXmlT6JhI1F/KHvLNxI23r+ANzri4beDnNmNEL13
+         ODquPR328ZY4b40JXwFPQTOnTnwYkbGYWED9ZOV5MeVDmCJrfQPqUoJFL7W7Y48MHVtx
+         BnpWrbGRb4TRH9+dWCJo8TrBOSVnWQ+NMpzcn0l3qKbGeVKPKOffJedFeiBSm8MDr5s6
+         IuVdKGNPEhNpBRS154C67LLzdc0nq4Z/9VZCWPjPwJ9aAKXm0EQahgtm9sGMSkF1DvIm
+         VMnQ==
 Content-Language: en-US
-In-Reply-To: <1626682667-10771-1-git-send-email-nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <1172d00f-0843-1d7c-721f-fdb60a0945cb@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, shenwenbo-Y5EWUtBUdg4nDS1+zs4M5A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: Yu Kuai <yukuai3@huawei.com>, paolo.valente@linaro.org
+Cc: jack@suse.cz, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-On 7/19/21 11:17, Yutian Yang wrote:
-> This patch enables accounting for key objects and auth record objects.
-> Allocation of the objects are triggerable by syscalls from userspace.
+On 5/23/22 2:18 AM, Yu Kuai wrote:
+> ? 2022/05/23 9:24, Jens Axboe ??:
+>> On 5/22/22 7:10 PM, yukuai (C) wrote:
+>>> ? 2022/05/21 20:21, Jens Axboe ??:
+>>>> On 5/21/22 1:22 AM, yukuai (C) wrote:
+>>>>> ? 2022/05/14 17:29, yukuai (C) ??:
+>>>>>> ? 2022/05/05 9:00, yukuai (C) ??:
+>>>>>>> Hi, Paolo
+>>>>>>>
+>>>>>>> Can you take a look at this patchset? It has been quite a long time
+>>>>>>> since we spotted this problem...
+>>>>>>>
+>>>>>>
+>>>>>> friendly ping ...
+>>>>> friendly ping ...
+>>>>
+>>>> I can't speak for Paolo, but I've mentioned before that the majority
+>>>> of your messages end up in my spam. That's still the case, in fact
+>>>> I just marked maybe 10 of them as not spam.
+>>>>
+>>>> You really need to get this issued sorted out, or you will continue
+>>>> to have patches ignore because folks may simply not see them.
+>>>>
+>>> Hi,
+>>>
+>>> Thanks for your notice.
+>>>
+>>> Is it just me or do you see someone else's messages from *huawei.com
+>>> end up in spam? I tried to seek help from our IT support, however, they
+>>> didn't find anything unusual...
+>>
+>> Not sure, I think it's just you. It may be the name as well "yukuai (C)"
+> Hi, Jens
 > 
-> We have written a PoC to show that the missing-charging objects lead to
-> breaking memcg limits. The PoC program takes around 2.2GB unaccounted
-> memory, while it is charged for only 24MB memory usage. We evaluate the
-> PoC on QEMU x86_64 v5.2.90 + Linux kernel v5.10.19 + Debian buster. All
-> the limitations including ulimits and sysctl variables are set as default.
-> Specifically, we set kernel.keys.maxbytes = 20000 and 
-> kernel.keys.maxkeys = 200.
+> I just change this default name "yukuai (C)" to "Yu Kuai", can you
+> please have a check if following emails still go to spam?
 > 
-> /*------------------------- POC code ----------------------------*/
-[skipped]
-> /*-------------------------- end --------------------------------*/
+> https://lore.kernel.org/all/20220523082633.2324980-1-yukuai3@huawei.com/
 
-I experimented with "keyctl request2 user debug: X:Y Z" inside the container
-and found that the problem is still relevant and the proposed patch solves it
-correctly.
+These did not go into spam, were delivered just fine.
 
-I didn't find any complaints about this patch, could someone explain why
-it wasn't applied? If no one objects, I'd like to push it.
-
-> Signed-off-by: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Reviewed-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-
-Thank you,
-	Vasily Averin
-
-PS. Should I perhaps resend it?
-
-> ---
->  security/keys/key.c              | 4 ++--
->  security/keys/request_key_auth.c | 4 ++--
->  2 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/security/keys/key.c b/security/keys/key.c
-> index e282c6179..925d85c2e 100644
-> --- a/security/keys/key.c
-> +++ b/security/keys/key.c
-> @@ -279,7 +279,7 @@ struct key *key_alloc(struct key_type *type, const char *desc,
->  		goto no_memory_2;
->  
->  	key->index_key.desc_len = desclen;
-> -	key->index_key.description = kmemdup(desc, desclen + 1, GFP_KERNEL);
-> +	key->index_key.description = kmemdup(desc, desclen + 1, GFP_KERNEL_ACCOUNT);
->  	if (!key->index_key.description)
->  		goto no_memory_3;
->  	key->index_key.type = type;
-> @@ -1198,7 +1198,7 @@ void __init key_init(void)
->  {
->  	/* allocate a slab in which we can store keys */
->  	key_jar = kmem_cache_create("key_jar", sizeof(struct key),
-> -			0, SLAB_HWCACHE_ALIGN|SLAB_PANIC, NULL);
-> +			0, SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_ACCOUNT, NULL);
->  
->  	/* add the special key types */
->  	list_add_tail(&key_type_keyring.link, &key_types_list);
-> diff --git a/security/keys/request_key_auth.c b/security/keys/request_key_auth.c
-> index 41e973500..ed50a100a 100644
-> --- a/security/keys/request_key_auth.c
-> +++ b/security/keys/request_key_auth.c
-> @@ -171,10 +171,10 @@ struct key *request_key_auth_new(struct key *target, const char *op,
->  	kenter("%d,", target->serial);
->  
->  	/* allocate a auth record */
-> -	rka = kzalloc(sizeof(*rka), GFP_KERNEL);
-> +	rka = kzalloc(sizeof(*rka), GFP_KERNEL_ACCOUNT);
->  	if (!rka)
->  		goto error;
-> -	rka->callout_info = kmemdup(callout_info, callout_len, GFP_KERNEL);
-> +	rka->callout_info = kmemdup(callout_info, callout_len, GFP_KERNEL_ACCOUNT);
->  	if (!rka->callout_info)
->  		goto error_free_rka;
->  	rka->callout_len = callout_len;
+-- 
+Jens Axboe
 
