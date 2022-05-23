@@ -1,105 +1,114 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH -next v5 0/3] support concurrent sync io for bfq on a
- specail occasion
-Date: Mon, 23 May 2022 17:25:16 +0200
-Message-ID: <20220523152516.7sr247i3bzwhr44w@quack3.lan>
-References: <20220428120837.3737765-1-yukuai3@huawei.com>
- <d50df657-d859-79cf-c292-412eaa383d2c@huawei.com>
- <61b67d5e-829c-8130-7bda-81615d654829@huawei.com>
- <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
- <d5a90a08-1ac6-587a-e900-0436bd45543a@kernel.dk>
- <55919e29-1f22-e8aa-f3d2-08c57d9e1c22@huawei.com>
- <20220523085902.wmxoebyq3crerecr@quack3.lan>
- <25f6703e-9e10-75d9-a893-6df1e6b75254@kernel.dk>
+From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH] Revert "mm/vmscan: never demote for memcg reclaim"
+Date: Mon, 23 May 2022 11:59:57 -0700
+Message-ID: <3d6d559e9a23dc2dc79cf453fd64488a4a45cc1b.camel@linux.intel.com>
+References: <20220518190911.82400-1-hannes@cmpxchg.org>
+         <ee1408cb15dbd2e979fe637e2ab91644f6190d0e.camel@intel.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1653319518; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ny3U7T9TPhDthVWzP+Xlh6KkiteRPaSckBn6MYhTDIU=;
-        b=mKN9NwBTUIN9be1aZZzF4LcEKRx8m2Wykw27cuNyAUv73E3U9F/40UzXtB8W4/QKjV+zgd
-        zBMGoVIdmznYx+bO/lmkrpn3sGP8x2Km7Ob71s7HL1aE70G+sjbwLjsIZwnDPIk6OQXEHX
-        a9s/i7kRTNUk/o1voCK0VEHuTZUf4aQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1653319518;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ny3U7T9TPhDthVWzP+Xlh6KkiteRPaSckBn6MYhTDIU=;
-        b=izmLbHLPWF4IU0EhHRLxiFpAoMulTKzNYz9PT/LAHestmYQguQTawM64+qCRl1XhxW2WQE
-        I3K35XnPK4ngMoAg==
-Content-Disposition: inline
-In-Reply-To: <25f6703e-9e10-75d9-a893-6df1e6b75254@kernel.dk>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1653332399; x=1684868399;
+  h=message-id:subject:from:to:cc:date:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=NFWQ8Vo8BSVG/1PeY8TJCl1o40zJKtLANlhbW40DMqw=;
+  b=j2XRB2r2esDM94H2dph0KnwiPmAtHlrriT/EZz1eC5T6vEcWRPKSv/cC
+   9HzvHQLwZ6eWl+FiaqSpYDpB4tdLlyKVi1qhVPj01deaZwLp5ogGmg1hF
+   PBFQF7kiIsG76rEfqKjYmQK4m5NbRDwz/PYj4ThTMrsKV+zz/K4/QAFAF
+   jDvjeGppF98iLY/gahKhEQ3nWzzW0UUR+U0PR3/XQutZ3Yoi4TV+FTINr
+   cbINWyGXfTbfla7GNXR9xhCIrGND0rbR/VnNfc/WZC8coQMUKaKlwRalJ
+   alN+tYHhNZBWPiYCdI/1FNIUEDzTJgcbnHka+64c3V87DvxXhJG2n5Jaf
+   Q==;
+In-Reply-To: <ee1408cb15dbd2e979fe637e2ab91644f6190d0e.camel-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "yukuai (C)" <yukuai3@huawei.com>
-Cc: Jan Kara <jack@suse.cz>, "yukuai (C)" <yukuai3@huawei.com>, paolo.valente@linaro.org, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, Jens Axboe <axboe@kernel.dk>
+To: "ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-On Mon 23-05-22 06:36:58, Jens Axboe wrote:
-> On 5/23/22 2:59 AM, Jan Kara wrote:
-> > On Mon 23-05-22 09:10:38, yukuai (C) wrote:
-> >> ? 2022/05/21 20:21, Jens Axboe ??:
-> >>> On 5/21/22 1:22 AM, yukuai (C) wrote:
-> >>>> ? 2022/05/14 17:29, yukuai (C) ??:
-> >>>>> ? 2022/05/05 9:00, yukuai (C) ??:
-> >>>>>> Hi, Paolo
-> >>>>>>
-> >>>>>> Can you take a look at this patchset? It has been quite a long time
-> >>>>>> since we spotted this problem...
-> >>>>>>
-> >>>>>
-> >>>>> friendly ping ...
-> >>>> friendly ping ...
-> >>>
-> >>> I can't speak for Paolo, but I've mentioned before that the majority
-> >>> of your messages end up in my spam. That's still the case, in fact
-> >>> I just marked maybe 10 of them as not spam.
-> >>>
-> >>> You really need to get this issued sorted out, or you will continue
-> >>> to have patches ignore because folks may simply not see them.
-> >>>
-> >> Hi,
-> >>
-> >> Thanks for your notice.
-> >>
-> >> Is it just me or do you see someone else's messages from *huawei.com
-> >> end up in spam? I tried to seek help from our IT support, however, they
-> >> didn't find anything unusual...
+On Thu, 2022-05-19 at 15:42 +0800, ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org wrote:
+> On Wed, 2022-05-18 at 15:09 -0400, Johannes Weiner wrote:
+> > This reverts commit 3a235693d3930e1276c8d9cc0ca5807ef292cf0a.
 > > 
-> > So actually I have noticed that a lot of (valid) email from huawei.com (not
-> > just you) ends up in the spam mailbox. For me direct messages usually pass
-> > (likely matching SPF records for originating mail server save the email
-> > from going to spam) but messages going through mailing lists are flagged as
-> > spam because the emails are missing valid DKIM signature but huawei.com
-> > DMARC config says there should be DKIM signature (even direct messages are
-> > missing DKIM so this does not seem as a mailing list configuration issue).
-> > So this seems as some misconfiguration of the mails on huawei.com side
-> > (likely missing DKIM signing of outgoing email).
+> > Its premise was that cgroup reclaim cares about freeing memory inside
+> > the cgroup, and demotion just moves them around within the cgroup
+> > limit. Hence, pages from toptier nodes should be reclaimed directly.
+> > 
+> > However, with NUMA balancing now doing tier promotions, demotion is
+> > part of the page aging process. Global reclaim demotes the coldest
+> > toptier pages to secondary memory, where their life continues and from
+> > which they have a chance to get promoted back. Essentially, tiered
+> > memory systems have an LRU order that spans multiple nodes.
+> > 
+> > When cgroup reclaims pages coming off the toptier directly, there can
+> > be colder pages on lower tier nodes that were demoted by global
+> > reclaim. This is an aging inversion, not unlike if cgroups were to
+> > reclaim directly from the active lists while there are inactive pages.
+> > 
+> > Proactive reclaim is another factor. The goal of that it is to offload
+> > colder pages from expensive RAM to cheaper storage. When lower tier
+> > memory is available as an intermediate layer, we want offloading to
+> > take advantage of it instead of bypassing to storage.
+> > 
+> > Revert the patch so that cgroups respect the LRU order spanning the
+> > memory hierarchy.
+> > 
+> > Of note is a specific undercommit scenario, where all cgroup limits in
+> > the system add up to <= available toptier memory. In that case,
+> > shuffling pages out to lower tiers first to reclaim them from there is
+> > inefficient. This is something could be optimized/short-circuited
+> > later on (although care must be taken not to accidentally recreate the
+> > aging inversion). Let's ensure correctness first.
+> > 
+> > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> > Cc: Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> > Cc: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> > Cc: Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+> > Cc: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> > Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+> > Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 > 
-> SPF/DKIM was indeed a problem earlier for yukaui patches, but I don't
-> see that anymore. Maybe it's still an issue for some emails, from them
-> or Huawei in general?
+> Reviewed-by: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> 
+> This is also required by Tim's DRAM partition among cgroups in tiered
+> sytstem.
 
-Hum, for me all emails from Huawei I've received even today fail the DKIM
-check. After some more digging there is interesting inconsistency in DMARC
-configuration for huawei.com domain. There is DMARC record for huawei.com
-like:
+Yes, while testing cgroup demotion, I also have to revert
+the commit in question.
+ 
+Acked-by: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> 
+> Best Regards,
+> Huang, Ying
+> 
+> > ---
+> >  mm/vmscan.c | 9 ++-------
+> >  1 file changed, 2 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/mm/vmscan.c b/mm/vmscan.c
+> > index c6918fff06e1..7a4090712177 100644
+> > --- a/mm/vmscan.c
+> > +++ b/mm/vmscan.c
+> > @@ -528,13 +528,8 @@ static bool can_demote(int nid, struct scan_control *sc)
+> >  {
+> >  	if (!numa_demotion_enabled)
+> >  		return false;
+> > -	if (sc) {
+> > -		if (sc->no_demotion)
+> > -			return false;
+> > -		/* It is pointless to do demotion in memcg reclaim */
+> > -		if (cgroup_reclaim(sc))
+> > -			return false;
+> > -	}
+> > +	if (sc && sc->no_demotion)
+> > +		return false;
+> >  	if (next_demotion_node(nid) == NUMA_NO_NODE)
+> >  		return false;
+> >  
+> > 
+> > 
+> > 
+> 
+> 
 
-huawei.com.		600	IN	TXT	"v=DMARC1;p=none;rua=mailto:dmarc@edm.huawei.com"
-
-which means no DKIM is required but _dmarc.huawei.com has:
-
-_dmarc.huawei.com.	600	IN	TXT	"v=DMARC1;p=quarantine;ruf=mailto:dmarc@huawei.com;rua=mailto:dmarc@huawei.com"
-
-which says that DKIM is required. I guess this inconsistency may be the
-reason why there are problems with DKIM validation for senders from
-huawei.com. Yu Kuai, can you perhaps take this to your IT support to fix
-this? Either make sure huawei.com emails get properly signed with DKIM or
-remove the 'quarantine' record from _dmarc.huawei.com. Thanks!
-
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
