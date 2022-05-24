@@ -1,59 +1,50 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v4 01/11] mm: memcontrol: prepare objcg API for non-kmem
- usage
-Date: Tue, 24 May 2022 15:01:25 -0400
-Message-ID: <Yo0rhX2LFNPTv47b@cmpxchg.org>
-References: <20220524060551.80037-1-songmuchun@bytedance.com>
- <20220524060551.80037-2-songmuchun@bytedance.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [PATCH] memcg: provide reclaim stats via 'memory.reclaim'
+Date: Tue, 24 May 2022 12:01:01 -0700
+Message-ID: <CAJD7tkZxvmnrrjc4yAe5mC+SL-MZqMkn21yjetiLYyq0B=AhtA@mail.gmail.com>
+References: <20220518223815.809858-1-vaibhav@linux.ibm.com>
+ <YoYj4sLJfGke5IGT@dhcp22.suse.cz> <87zgjcg4xs.fsf@vajain21.in.ibm.com>
+ <YodDaFVeU33bu7yQ@dhcp22.suse.cz> <CAJD7tkYwv2LDZeV2F5pxuniw7LCNjBapDCm3WuRhzwTH-jN3PA@mail.gmail.com>
+ <YozFZI2euSjWPgDb@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=N1NyblKLcbohBQoY7VD4CeyW8jWo8CQASjSrNPOY/Yo=;
-        b=5jbLkbR/uOOEGcHuRkQuqxaY6Whn0WWZJI73E9T6SlozE5nWJfDFv28tOhdw2Irpoo
-         ynu/oD5zPSoRnvOuieUuisexDncUJ9EhvY4IxA0FYIs846o/GA08BcTErhQHfklV/qf0
-         jg0IcxxINtvlr2Bxdr4w1FKtN4Hr/+eb58jqrlcI8O9fldRZrzN4qtR3yJ5NQHkSSx87
-         QVBY1FH1zFqA1zpBb6JeXcIx3cjBFrwrFWuWBTy1j0DS5ZAGQwmItNhPF5kCU5Dw8Pmf
-         843ZDy7B/DAg+XUmHuEO5HppBvbMLLsifaMMzS6+fo5EuIPCFt1xQwZG7gG/nNEj74ye
-         IG2w==
-Content-Disposition: inline
-In-Reply-To: <20220524060551.80037-2-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=zPoBKVvC2etY1rrj+YwE9RcWhQO3Aeb8jFG7VSlxgGE=;
+        b=eShZOTIUQ93TOWjEzr249Q2WlZgXfVBXRXVkiPqqzxHc3weu9dWI5q3Ho56xWalhYm
+         DNCo2rp9rMlgNBrK8z0XY/wW3LtOYML1vS+M+JPqvzdBIyhIp4u0EN07gBXsnOV6nri8
+         362c3np7lTLklsZKcOFMwfRRupNLAPynTYIAwR6xjCdZj/A/gIhF1Qfk1QwtUz1zpdDg
+         OwP1XDrZlsnRRXavqft/ReWGqQnEA11Wn1yavd6amKib47Nc170P/orJbWp9qtErNk/7
+         CisGNh6vWRjQoZRymrDq8S4Qa8rADzUXLl566tiu679wuf5A6NCGy//TjeVsXiZq3cdx
+         FakQ==
+In-Reply-To: <YozFZI2euSjWPgDb@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@suse.com>, Vaibhav Jain <vaibhav@linux.ibm.com>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>, Shakeel Butt <shakeelb@google.com>, David Rientjes <rientjes@google.com>
 
-On Tue, May 24, 2022 at 02:05:41PM +0800, Muchun Song wrote:
-> Pagecache pages are charged at the allocation time and holding a
-> reference to the original memory cgroup until being reclaimed.
-> Depending on the memory pressure, specific patterns of the page
-> sharing between different cgroups and the cgroup creation and
-> destruction rates, a large number of dying memory cgroups can be
-> pinned by pagecache pages. It makes the page reclaim less efficient
-> and wastes memory.
-> 
-> We can convert LRU pages and most other raw memcg pins to the objcg
-> direction to fix this problem, and then the page->memcg will always
-> point to an object cgroup pointer.
-> 
-> Therefore, the infrastructure of objcg no longer only serves
-> CONFIG_MEMCG_KMEM. In this patch, we move the infrastructure of the
-> objcg out of the scope of the CONFIG_MEMCG_KMEM so that the LRU pages
-> can reuse it to charge pages.
-> 
-> We know that the LRU pages are not accounted at the root level. But
-> the page->memcg_data points to the root_mem_cgroup. So the
-> page->memcg_data of the LRU pages always points to a valid pointer.
-> But the root_mem_cgroup dose not have an object cgroup. If we use
-> obj_cgroup APIs to charge the LRU pages, we should set the
-> page->memcg_data to a root object cgroup. So we also allocate an
-> object cgroup for the root_mem_cgroup.
-> 
-> Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+On Tue, May 24, 2022 at 4:45 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
+>
+> On Mon, May 23, 2022 at 03:50:34PM -0700, Yosry Ahmed wrote:
+> > I think it might be useful to have a dedicated entry in memory.stat
+> > for proactively reclaimed memory. A case where this would be useful is
+> > tuning and evaluating userspace proactive reclaimers. For instance, if
+> > a userspace agent is asking the kernel to reclaim 100M, but it could
+> > only reclaim 10M, then most probably the proactive reclaimer is not
+> > using a good methodology to figure out how much memory do we need to
+> > reclaim.
+> >
+> > IMO this is more useful, and a superset of just reading the last
+> > reclaim request status through memory.reclaim (read stat before and
+> > after).
+>
+> +1
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+It might also be useful to have a breakdown of this by memory type:
+file, anon, or shrinkers.
 
-Looks good to me. Also gets rid of some use_hierarchy cruft.
+It would also fit in nicely with a potential type=file/anon/shrinker
+argument to memory.reclaim. Thoughts on this?
