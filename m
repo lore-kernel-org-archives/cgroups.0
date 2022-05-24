@@ -1,7 +1,7 @@
 From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH v4 01/11] mm: memcontrol: prepare objcg API for non-kmem usage
-Date: Tue, 24 May 2022 14:05:41 +0800
-Message-ID: <20220524060551.80037-2-songmuchun@bytedance.com>
+Subject: [PATCH v4 02/11] mm: memcontrol: introduce compact_folio_lruvec_lock_irqsave
+Date: Tue, 24 May 2022 14:05:42 +0800
+Message-ID: <20220524060551.80037-3-songmuchun@bytedance.com>
 References: <20220524060551.80037-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,258 +10,109 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Snuh9kH4iZm3sviSaP28BB2r1eDnnNjUUortMndKLbU=;
-        b=0PirmXF7o8ixOp2Gap1kFE0YZXnIJC6frN43iRyf5aoypM1dWTfeQieGP0WOA+VK2C
-         fBNRoSeyGbR0xXtit0xqBhE2UQCsFHRLLbFEajJk1QEqetMQH6u8LN1TAr/6cFwWAVHP
-         tZW3tMMIO8LaVtAFpQqIV2kLiC1sLhYqsswdewCSRp9NyRlqKn17NU9wpnfSXDWSYFRj
-         8YMhndotc/k5AE9hW9d3ihLS1YqG0hkZNwwwkfv9b7X9eVDkdPRKe9R2lt76FzM4FSJI
-         n7his0xOGjmqBmYNm80AG01800cKPXywYJBosOpj36gQ3cTpW/CaSwiOjXz8wjYEBzKt
-         obSg==
+        bh=YQmbzG/x1UDz5U0yQVXExNL9W+QNwv5yyDN0QDopwLM=;
+        b=SbFCQ3vJYsGUAEX8nyldT87US7H/Zi6r40ReQrz8S1DFmwuWGEoV2ZsawlDNV2F+b9
+         cBbWPLt6WyLG/WEs6j6or7s/bkrS5fhQCtCJYspYV7YbDoGUD1Kpw7Cz19/bYZvOSmvn
+         C7kr1O/qam5v/KZxRh4lh9qzOJtWk0NaaM5tm7fJrsj7KBzxuKuwY074AEzpGvXjXhRa
+         OSdKGe9kRdi5MZEOyUCYPsJ6eblgDNZpMXrb7JA12Yd9Uc5u620Py3qTO2xYaCVNavdX
+         iwklkT8fllKtpNXMNWn4waK8JwI1CM/uTxteV3N+Nq25H+HgDd0owN20+UIAf1N6TPfK
+         7S+Q==
 In-Reply-To: <20220524060551.80037-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-Pagecache pages are charged at the allocation time and holding a
-reference to the original memory cgroup until being reclaimed.
-Depending on the memory pressure, specific patterns of the page
-sharing between different cgroups and the cgroup creation and
-destruction rates, a large number of dying memory cgroups can be
-pinned by pagecache pages. It makes the page reclaim less efficient
-and wastes memory.
+If we reuse the objcg APIs to charge LRU pages, the folio_memcg()
+can be changed when the LRU pages reparented. In this case, we need
+to acquire the new lruvec lock.
 
-We can convert LRU pages and most other raw memcg pins to the objcg
-direction to fix this problem, and then the page->memcg will always
-point to an object cgroup pointer.
+    lruvec = folio_lruvec(folio);
 
-Therefore, the infrastructure of objcg no longer only serves
-CONFIG_MEMCG_KMEM. In this patch, we move the infrastructure of the
-objcg out of the scope of the CONFIG_MEMCG_KMEM so that the LRU pages
-can reuse it to charge pages.
+    // The page is reparented.
 
-We know that the LRU pages are not accounted at the root level. But
-the page->memcg_data points to the root_mem_cgroup. So the
-page->memcg_data of the LRU pages always points to a valid pointer.
-But the root_mem_cgroup dose not have an object cgroup. If we use
-obj_cgroup APIs to charge the LRU pages, we should set the
-page->memcg_data to a root object cgroup. So we also allocate an
-object cgroup for the root_mem_cgroup.
+    compact_lock_irqsave(&lruvec->lru_lock, &flags, cc);
+
+    // Acquired the wrong lruvec lock and need to retry.
+
+But compact_lock_irqsave() only take lruvec lock as the parameter,
+we cannot aware this change. If it can take the page as parameter
+to acquire the lruvec lock. When the page memcg is changed, we can
+use the folio_memcg() detect whether we need to reacquire the new
+lruvec lock. So compact_lock_irqsave() is not suitable for us.
+Similar to folio_lruvec_lock_irqsave(), introduce
+compact_folio_lruvec_lock_irqsave() to acquire the lruvec lock in
+the compaction routine.
 
 Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 ---
- include/linux/memcontrol.h |  5 ++--
- mm/memcontrol.c            | 60 +++++++++++++++++++++++++---------------------
- 2 files changed, 35 insertions(+), 30 deletions(-)
+ mm/compaction.c | 31 +++++++++++++++++++++++++++----
+ 1 file changed, 27 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 89b14729d59f..ff1c1dd7e762 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -315,10 +315,10 @@ struct mem_cgroup {
- 
- #ifdef CONFIG_MEMCG_KMEM
- 	int kmemcg_id;
-+#endif
- 	struct obj_cgroup __rcu *objcg;
- 	/* list of inherited objcgs, protected by objcg_lock */
- 	struct list_head objcg_list;
--#endif
- 
- 	MEMCG_PADDING(_pad2_);
- 
-@@ -851,8 +851,7 @@ static inline struct mem_cgroup *lruvec_memcg(struct lruvec *lruvec)
-  * parent_mem_cgroup - find the accounting parent of a memcg
-  * @memcg: memcg whose parent to find
-  *
-- * Returns the parent memcg, or NULL if this is the root or the memory
-- * controller is in legacy no-hierarchy mode.
-+ * Returns the parent memcg, or NULL if this is the root.
-  */
- static inline struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *memcg)
- {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 598fece89e2b..6de0d3e53eb1 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -254,9 +254,9 @@ struct mem_cgroup *vmpressure_to_memcg(struct vmpressure *vmpr)
- 	return container_of(vmpr, struct mem_cgroup, vmpressure);
+diff --git a/mm/compaction.c b/mm/compaction.c
+index fe915db6149b..817098817302 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -509,6 +509,29 @@ static bool compact_lock_irqsave(spinlock_t *lock, unsigned long *flags,
+ 	return true;
  }
  
--#ifdef CONFIG_MEMCG_KMEM
- static DEFINE_SPINLOCK(objcg_lock);
- 
-+#ifdef CONFIG_MEMCG_KMEM
- bool mem_cgroup_kmem_disabled(void)
- {
- 	return cgroup_memory_nokmem;
-@@ -265,12 +265,10 @@ bool mem_cgroup_kmem_disabled(void)
- static void obj_cgroup_uncharge_pages(struct obj_cgroup *objcg,
- 				      unsigned int nr_pages);
- 
--static void obj_cgroup_release(struct percpu_ref *ref)
-+static void obj_cgroup_release_bytes(struct obj_cgroup *objcg)
- {
--	struct obj_cgroup *objcg = container_of(ref, struct obj_cgroup, refcnt);
- 	unsigned int nr_bytes;
- 	unsigned int nr_pages;
--	unsigned long flags;
- 
- 	/*
- 	 * At this point all allocated objects are freed, and
-@@ -284,9 +282,9 @@ static void obj_cgroup_release(struct percpu_ref *ref)
- 	 * 3) CPU1: a process from another memcg is allocating something,
- 	 *          the stock if flushed,
- 	 *          objcg->nr_charged_bytes = PAGE_SIZE - 92
--	 * 5) CPU0: we do release this object,
-+	 * 4) CPU0: we do release this object,
- 	 *          92 bytes are added to stock->nr_bytes
--	 * 6) CPU0: stock is flushed,
-+	 * 5) CPU0: stock is flushed,
- 	 *          92 bytes are added to objcg->nr_charged_bytes
- 	 *
- 	 * In the result, nr_charged_bytes == PAGE_SIZE.
-@@ -298,6 +296,19 @@ static void obj_cgroup_release(struct percpu_ref *ref)
- 
- 	if (nr_pages)
- 		obj_cgroup_uncharge_pages(objcg, nr_pages);
-+}
-+#else
-+static inline void obj_cgroup_release_bytes(struct obj_cgroup *objcg)
++static struct lruvec *
++compact_folio_lruvec_lock_irqsave(struct folio *folio, unsigned long *flags,
++				  struct compact_control *cc)
 +{
++	struct lruvec *lruvec;
++
++	lruvec = folio_lruvec(folio);
++
++	/* Track if the lock is contended in async mode */
++	if (cc->mode == MIGRATE_ASYNC && !cc->contended) {
++		if (spin_trylock_irqsave(&lruvec->lru_lock, *flags))
++			goto out;
++
++		cc->contended = true;
++	}
++
++	spin_lock_irqsave(&lruvec->lru_lock, *flags);
++out:
++	lruvec_memcg_debug(lruvec, folio);
++
++	return lruvec;
 +}
-+#endif
 +
-+static void obj_cgroup_release(struct percpu_ref *ref)
-+{
-+	struct obj_cgroup *objcg = container_of(ref, struct obj_cgroup, refcnt);
-+	unsigned long flags;
-+
-+	obj_cgroup_release_bytes(objcg);
- 
- 	spin_lock_irqsave(&objcg_lock, flags);
- 	list_del(&objcg->list);
-@@ -326,10 +337,10 @@ static struct obj_cgroup *obj_cgroup_alloc(void)
- 	return objcg;
- }
- 
--static void memcg_reparent_objcgs(struct mem_cgroup *memcg,
--				  struct mem_cgroup *parent)
-+static void memcg_reparent_objcgs(struct mem_cgroup *memcg)
- {
- 	struct obj_cgroup *objcg, *iter;
-+	struct mem_cgroup *parent = parent_mem_cgroup(memcg);
- 
- 	objcg = rcu_replace_pointer(memcg->objcg, NULL, true);
- 
-@@ -348,6 +359,7 @@ static void memcg_reparent_objcgs(struct mem_cgroup *memcg,
- 	percpu_ref_kill(&objcg->refcnt);
- }
- 
-+#ifdef CONFIG_MEMCG_KMEM
  /*
-  * A lot of the calls to the cache allocation functions are expected to be
-  * inlined by the compiler. Since the calls to memcg_slab_pre_alloc_hook() are
-@@ -3589,21 +3601,12 @@ static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
- #ifdef CONFIG_MEMCG_KMEM
- static int memcg_online_kmem(struct mem_cgroup *memcg)
- {
--	struct obj_cgroup *objcg;
+  * Compaction requires the taking of some coarse locks that are potentially
+  * very heavily contended. The lock should be periodically unlocked to avoid
+@@ -844,6 +867,7 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
+ 
+ 	/* Time to isolate some pages for migration */
+ 	for (; low_pfn < end_pfn; low_pfn++) {
++		struct folio *folio;
+ 
+ 		if (skip_on_failure && low_pfn >= next_skip_pfn) {
+ 			/*
+@@ -1065,18 +1089,17 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
+ 		if (!TestClearPageLRU(page))
+ 			goto isolate_fail_put;
+ 
+-		lruvec = folio_lruvec(page_folio(page));
++		folio = page_folio(page);
++		lruvec = folio_lruvec(folio);
+ 
+ 		/* If we already hold the lock, we can skip some rechecking */
+ 		if (lruvec != locked) {
+ 			if (locked)
+ 				unlock_page_lruvec_irqrestore(locked, flags);
+ 
+-			compact_lock_irqsave(&lruvec->lru_lock, &flags, cc);
++			lruvec = compact_folio_lruvec_lock_irqsave(folio, &flags, cc);
+ 			locked = lruvec;
+ 
+-			lruvec_memcg_debug(lruvec, page_folio(page));
 -
- 	if (cgroup_memory_nokmem)
- 		return 0;
- 
- 	if (unlikely(mem_cgroup_is_root(memcg)))
- 		return 0;
- 
--	objcg = obj_cgroup_alloc();
--	if (!objcg)
--		return -ENOMEM;
--
--	objcg->memcg = memcg;
--	rcu_assign_pointer(memcg->objcg, objcg);
--
- 	static_branch_enable(&memcg_kmem_enabled_key);
- 
- 	memcg->kmemcg_id = memcg->id.id;
-@@ -3613,27 +3616,19 @@ static int memcg_online_kmem(struct mem_cgroup *memcg)
- 
- static void memcg_offline_kmem(struct mem_cgroup *memcg)
- {
--	struct mem_cgroup *parent;
--
- 	if (cgroup_memory_nokmem)
- 		return;
- 
- 	if (unlikely(mem_cgroup_is_root(memcg)))
- 		return;
- 
--	parent = parent_mem_cgroup(memcg);
--	if (!parent)
--		parent = root_mem_cgroup;
--
--	memcg_reparent_objcgs(memcg, parent);
--
- 	/*
- 	 * After we have finished memcg_reparent_objcgs(), all list_lrus
- 	 * corresponding to this cgroup are guaranteed to remain empty.
- 	 * The ordering is imposed by list_lru_node->lock taken by
- 	 * memcg_reparent_list_lrus().
- 	 */
--	memcg_reparent_list_lrus(memcg, parent);
-+	memcg_reparent_list_lrus(memcg, parent_mem_cgroup(memcg));
- }
- #else
- static int memcg_online_kmem(struct mem_cgroup *memcg)
-@@ -5116,8 +5111,8 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
- 	memcg->socket_pressure = jiffies;
- #ifdef CONFIG_MEMCG_KMEM
- 	memcg->kmemcg_id = -1;
--	INIT_LIST_HEAD(&memcg->objcg_list);
- #endif
-+	INIT_LIST_HEAD(&memcg->objcg_list);
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	INIT_LIST_HEAD(&memcg->cgwb_list);
- 	for (i = 0; i < MEMCG_CGWB_FRN_CNT; i++)
-@@ -5179,6 +5174,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
- static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-+	struct obj_cgroup *objcg;
- 
- 	if (memcg_online_kmem(memcg))
- 		goto remove_id;
-@@ -5191,6 +5187,13 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	if (alloc_shrinker_info(memcg))
- 		goto offline_kmem;
- 
-+	objcg = obj_cgroup_alloc();
-+	if (!objcg)
-+		goto free_shrinker;
-+
-+	objcg->memcg = memcg;
-+	rcu_assign_pointer(memcg->objcg, objcg);
-+
- 	/* Online state pins memcg ID, memcg ID pins CSS */
- 	refcount_set(&memcg->id.ref, 1);
- 	css_get(css);
-@@ -5199,6 +5202,8 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 		queue_delayed_work(system_unbound_wq, &stats_flush_dwork,
- 				   2UL*HZ);
- 	return 0;
-+free_shrinker:
-+	free_shrinker_info(memcg);
- offline_kmem:
- 	memcg_offline_kmem(memcg);
- remove_id:
-@@ -5226,6 +5231,7 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
- 	page_counter_set_min(&memcg->memory, 0);
- 	page_counter_set_low(&memcg->memory, 0);
- 
-+	memcg_reparent_objcgs(memcg);
- 	memcg_offline_kmem(memcg);
- 	reparent_shrinker_deferred(memcg);
- 	wb_memcg_offline(memcg);
+ 			/* Try get exclusive access under lock */
+ 			if (!skip_updated) {
+ 				skip_updated = true;
 -- 
 2.11.0
 
