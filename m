@@ -1,86 +1,54 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: add the mempolicy interface for cgroup
- v2.
-Date: Tue, 24 May 2022 23:12:35 +0800
-Message-ID: <202205242316.8f8rvh3s-lkp@intel.com>
-References: <20220524103638.473-1-hezhongkun.hzk@bytedance.com>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH v3 0/5] memcontrol selftests fixups
+Date: Tue, 24 May 2022 18:29:50 +0200
+Message-ID: <20220524162955.8635-1-mkoutny@suse.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1653405195; x=1684941195;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=jg1seA0b2qfEGPEhi40Q5NR3xfGQVSWmwk8f0MnVPS0=;
-  b=fWEieP5FkcOTC1z3dnEqaPpQ/DrBTX8Sjw9munMn9tZ6CInfHFh/mWfT
-   yVUaLJLNvYPZAKc4ZuB5GIYXj6IhnJNqoOpkSgJ6f4M34dxkYy1bOqyH6
-   VVg+OOa+hR4Nt9/yHyOjF9tND67QWS2mQUm+F0e0zDg8vguy97FM3vSxY
-   zAD0Xao1eEFH8jRuU6ZKqOpwSTMGc2/bkoqToWiNiD8W4FfOs6Rt3L0PC
-   v0a/x2J32/NXuFkMXhVGITKE8smkzS/gMu01vTeLa4ROxlNDDaDEgLVEy
-   rynZxaAcUrOAIeLxTM+Oqp9qcE/KxotdvRB9CbFNtyqeXXAXoVRGVTm4p
-   Q==;
-Content-Disposition: inline
-In-Reply-To: <20220524103638.473-1-hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1653409811; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=0aOp5yJI56RJ+SoECoGbDOaEZ7yLii4c891MVbbA4to=;
+        b=vWivk4oDuWVezANW9v3pF+X1FQpt89ke1A10GKiVNLMUJ+jKgPPHySGQopTrxU0imeKFLr
+        k+1ZR6j/nCl9XEAgMYfAPpUpabKowr0uyuLmMwXw0sARrEEeOtbpG4gcmjsoNanvdpJ34L
+        3mSGJgG0AgCIjZnsfZVZLvG7LV9vDyg=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: hezhongkun <hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org
-Cc: llvm-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Hezhongkun <hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Content-Type: text/plain; charset="macroman"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Palethorpe <rpalethorpe-l3A5Bk7waGM@public.gmane.org>, Muhammad Usama Anjum <usama.anjum-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
 
-Hi hezhongkun,
-
-Thank you for the patch! Perhaps something to improve:
-
-[auto build test WARNING on linus/master]
-[also build test WARNING on v5.18 next-20220524]
-[cannot apply to akpm-mm/mm-everything]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/hezhongkun/mm-memcontrol-add-the-mempolicy-interface-for-cgroup-v2/20220524-183922
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git 143a6252e1b8ab424b4b293512a97cca7295c182
-config: x86_64-randconfig-a014 (https://download.01.org/0day-ci/archive/20220524/202205242316.8f8rvh3s-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
-compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 10c9ecce9f6096e18222a331c5e7d085bd813f75)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/6adb0a02c27c8811bee9783451ee25155baf490e
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review hezhongkun/mm-memcontrol-add-the-mempolicy-interface-for-cgroup-v2/20220524-183922
-        git checkout 6adb0a02c27c8811bee9783451ee25155baf490e
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash
-
-If you fix the issue, kindly add following tag where applicable
-Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-
-All warnings (new ones prefixed by >>):
-
->> mm/mempolicy.c:179:19: warning: no previous prototype for function 'get_cgrp_or_task_policy' [-Wmissing-prototypes]
-   struct mempolicy *get_cgrp_or_task_policy(struct task_struct *p)
-                     ^
-   mm/mempolicy.c:179:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
-   struct mempolicy *get_cgrp_or_task_policy(struct task_struct *p)
-   ^
-   static 
-   1 warning generated.
-
-
-vim +/get_cgrp_or_task_policy +179 mm/mempolicy.c
-
-   178	
- > 179	struct mempolicy *get_cgrp_or_task_policy(struct task_struct *p)
-   180	{
-   181		struct mempolicy *pol;
-   182		struct mem_cgroup *memcg = mem_cgroup_from_task(p);
-   183	
-   184		pol = (memcg && memcg->mempolicy) ? memcg->mempolicy : get_task_policy(p);
-   185		return pol;
-   186	}
-   187	
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+SGVsbG8uCgpJJ20ganVzdCBmbHVzaGluZyB0aGUgcGF0Y2hlcyB0byBtYWtlIG1lbWNvbnRyb2wg
+c2VsZnRlc3RzIGNoZWNrIHRoZQpldmVudHMgYmVoYXZpb3Igd2UgaGFkIGNvbnNlbnN1cyBhYm91
+dCAodGVzdF9tZW1jZ19sb3cgZmFpbHMpLgoKKHRlc3RfbWVtY2dfcmVjbGFpbSwgdGVzdF9tZW1j
+Z19zd2FwX21heCBmYWlsIGZvciBtZSBub3cgYnV0IGl0J3MgcHJlc2VudApldmVuIGJlZm9yZSB0
+aGUgcmVmYWN0b3JpbmcuKQoKVGhlIHR3byBiaWdnZXIgY2hhbmdlcyBhcmU6Ci0gYWRqdXN0bWVu
+dCBvZiB0aGUgcHJvdGVjdGVkIHZhbHVlcyB0byBtYWtlIHRlc3RzIHN1Y2NlZWQgd2l0aCB0aGUg
+Z2l2ZW4KICB0b2xlcmFuY2UsCi0gYm90aCB0ZXN0X21lbWNnX2xvdyBhbmQgdGVzdF9tZW1jZ19t
+aW4gY2hlY2sgcHJvdGVjdGlvbiBvZiBtZW1vcnkgaW4KICBwb3B1bGF0ZWQgY2dyb3VwcyAoYWN0
+dWFsbHkgYXMgcGVyIERvY3VtZW50YXRpb24vYWRtaW4tZ3VpZGUvY2dyb3VwLXYyLnJzdAogIG1l
+bW9yeS5taW4gc2hvdWxkIG5vdCBhcHBseSB0byBlbXB0eSBjZ3JvdXBzLCB3aGljaCBpcyBub3Qg
+dGhlIGNhc2UKICBjdXJyZW50bHkuIFRoZXJlZm9yZSBJIHVuaWZpZWQgdGVzdHMgd2l0aCB0aGUg
+cG9wdWxhdGVkIGNhc2UgaW4gb3JkZXIgdG8gdG8KICBicmluZyBtb3JlIGJyb2tlbiB0ZXN0cyku
+CgpUaGFua3MsCk1pY2hhbAoKQ2hhbmdlcyBmcm9tIHYyIChodHRwczovL2xvcmUua2VybmVsLm9y
+Zy9yLzIwMjIwNTE4MTYxODU5LjIxNTY1LTItbWtvdXRueS1JQmk5UkcvYjY3a0BwdWJsaWMuZ21h
+bmUub3JnLykKLSByZWJhc2VkIG9uIG1tLXN0YWJsZSAwMmUzNGZmZjE5NWQzYTVmNjdjYmI1NTM3
+OTVkYzEwOWEzN2QxZGNmCi0gY29sbGVjdGVkIGFja2VkLWJ5cwotIHByb3BlciBGaXhlczogdGFn
+CgpDaGFuZ2VzIGZyb20gdjEgKGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL3IvMjAyMjA1MTMxNzE4
+MTEuNzMwLTEtbWtvdXRueS1JQmk5UkcvYjY3a0BwdWJsaWMuZ21hbmUub3JnLykKLSBmaXhlZCBt
+aXMtcmViYXNlIGluIGNvbXBpbGF0aW9uIGZpeCBwYXRjaCwKLSBhZGRlZCByZXZpZXcsIGFjayB0
+YWdzIGZyb20gdjEsCi0gYXBwbGllZCBmZWVkYmFjayBmcm9tIHYxIChPY3RhdmUgc2NyaXB0IGlu
+IGdpdCB0cmVlKSwKLSBhZGRlZCBvbmUgbW9yZSBwYXRjaCBleHRyYWN0aW5nIGNvbW1vbiBwYXJ0
+cywKLSByZWJhc2VkIG9uIG1tLXN0YWJsZSBiYmU4MzJiOWRiMmUuCgpNaWNoYWwgS291dG7DvSAo
+NSk6CiAgc2VsZnRlc3RzOiBtZW1jZzogRml4IGNvbXBpbGF0aW9uCiAgc2VsZnRlc3RzOiBtZW1j
+ZzogRXhwZWN0IG5vIGxvdyBldmVudHMgaW4gdW5wcm90ZWN0ZWQgc2libGluZwogIHNlbGZ0ZXN0
+czogbWVtY2c6IEFkanVzdCBleHBlY3RlZCByZWNsYWltIHZhbHVlcyBvZiBwcm90ZWN0ZWQgY2dy
+b3VwcwogIHNlbGZ0ZXN0czogbWVtY2c6IFJlbW92ZSBwcm90ZWN0aW9uIGZyb20gdG9wIGxldmVs
+IG1lbWNnCiAgc2VsZnRlc3RzOiBtZW1jZzogRmFjdG9yIG91dCBjb21tb24gcGFydHMgb2YgbWVt
+b3J5Lntsb3csbWlufSB0ZXN0cwoKIE1BSU5UQUlORVJTICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICB8ICAgMSArCiAuLi4vc2VsZnRlc3RzL2Nncm91cC9tZW1jZ19wcm90ZWN0aW9u
+Lm0gICAgICAgfCAgODkgKysrKysrKwogLi4uL3NlbGZ0ZXN0cy9jZ3JvdXAvdGVzdF9tZW1jb250
+cm9sLmMgICAgICAgIHwgMjQ3ICsrKysrLS0tLS0tLS0tLS0tLQogMyBmaWxlcyBjaGFuZ2VkLCAx
+NTIgaW5zZXJ0aW9ucygrKSwgMTg1IGRlbGV0aW9ucygtKQogY3JlYXRlIG1vZGUgMTAwNjQ0IHRv
+b2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC9tZW1jZ19wcm90ZWN0aW9uLm0KCi0tIAoyLjM1
+LjMKCg==
