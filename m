@@ -1,41 +1,97 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [External] Re: [PATCH] mm: memcontrol: add the mempolicy
- interface for cgroup v2.
-Date: Tue, 24 May 2022 14:04:33 +0200
-Message-ID: <YozJ0SNOjO3m4ehp@dhcp22.suse.cz>
-References: <20220524103638.473-1-hezhongkun.hzk@bytedance.com>
- <Yoy3wDh0cvziWGHJ@dhcp22.suse.cz>
- <CACSyD1N4VeWBOzZwBogDW-wBbLvF54VrZ1Z+p9NFiXY+etuDJA@mail.gmail.com>
+From: kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH v4 09/11] mm: memcontrol: use obj_cgroup APIs to charge
+ the LRU pages
+Date: Tue, 24 May 2022 20:29:49 +0800
+Message-ID: <202205242030.FAaW4e04-lkp@intel.com>
+References: <20220524060551.80037-10-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1653393874; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Kt6lRreumMR82QxTIV2F0todF1CGcv8SrAK54H/AV8A=;
-        b=W1eYCUa3Gc34WBARqY6Z4kLP1JcTMqeIR8a203LcNCcnfhIJGZXU4XvcbMblM5ifce7hs9
-        l3qlXUc7EIsXHl2hRqLmWHxad74fKSX1lTrYgtR6v5CXB0yaCAo8dzWKeLQbCrKBaLnlp6
-        Kptviaf5cYuvAYHoxvGS5a0rFRrmUoE=
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1653395435; x=1684931435;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=QesgYJtIYpO+DLyYwVVFn+Dd5yDLs1Cg8cnWq0AHJy4=;
+  b=kl5jbeps4TByGf8RdP2CJ+dJ/DRSjyJxwo/WnD0oUMhD06Tz7kYk6rH7
+   utcIX7hL2IzzZJnIjicpIsf9LMmQ/XtCX0b5Z4vI9cupi1XYVCURK1oVX
+   RszUpatFvTyvakpFwxxTYIrj8XvjPdzw3EMWHwN5HG7sR7Uha12V6Ia9N
+   LAfZ6APXv5ofNPWk//xYzrcT0xh2/D0WZaL2XuilTiHtJj4NVKMbMoWvd
+   /rMQHHBk2qrQQB7HK7HbN/foznqQX35dXAS/iJYdGXgw5tNbzOtoD7jJh
+   0STGK8WpNO1b4hFj2L5ACAMgTbfHYevOWz3e/qf4aBDTp1XZLkymIZKTV
+   A==;
 Content-Disposition: inline
-In-Reply-To: <CACSyD1N4VeWBOzZwBogDW-wBbLvF54VrZ1Z+p9NFiXY+etuDJA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20220524060551.80037-10-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?utf-8?B?6LS65Lit5Z2k?= <hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Muchun Song <songmuchun@bytedance.com>, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com
+Cc: kbuild-all@lists.01.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, duanxiongchun@bytedance.com, longman@redhat.com, Muchun Song <songmuchun@bytedance.com>
 
-On Tue 24-05-22 19:46:38, 贺中坤 wrote:
-> Hi Michal, thanks for your reply.
-> mempolicy has two functions, which nodes to choose and how to use these
-> nodes. cpuset can only decide the first one，it equal to 'bind' mempolicy.
-> If cgroups support mempolicy, we can continue to develop more policy
-> types. For example, allocate memory according to node weight, etc.
-> We would like to have more precise control over memory allocation in NUMA
-> server.
+Hi Muchun,
 
-Why cputset controller cannot be extended instead?
+Thank you for the patch! Yet something to improve:
+
+[auto build test ERROR on 4b0986a3613c92f4ec1bdc7f60ec66fea135991f]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Muchun-Song/Use-obj_cgroup-APIs-to-charge-the-LRU-pages/20220524-143056
+base:   4b0986a3613c92f4ec1bdc7f60ec66fea135991f
+config: x86_64-randconfig-m001 (https://download.01.org/0day-ci/archive/20220524/202205242030.FAaW4e04-lkp@intel.com/config)
+compiler: gcc-11 (Debian 11.3.0-1) 11.3.0
+reproduce (this is a W=1 build):
+        # https://github.com/intel-lab-lkp/linux/commit/bec0ae12106e0cf12dd4e0e21eb0754b99be0ba2
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Muchun-Song/Use-obj_cgroup-APIs-to-charge-the-LRU-pages/20220524-143056
+        git checkout bec0ae12106e0cf12dd4e0e21eb0754b99be0ba2
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        make W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+   mm/memcontrol.c: In function 'charge_memcg':
+>> mm/memcontrol.c:6826:17: error: implicit declaration of function '__get_obj_cgroup_from_memcg'; did you mean 'get_mem_cgroup_from_mm'? [-Werror=implicit-function-declaration]
+    6826 |         objcg = __get_obj_cgroup_from_memcg(memcg);
+         |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+         |                 get_mem_cgroup_from_mm
+   mm/memcontrol.c:6826:15: warning: assignment to 'struct obj_cgroup *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+    6826 |         objcg = __get_obj_cgroup_from_memcg(memcg);
+         |               ^
+   cc1: some warnings being treated as errors
+
+
+vim +6826 mm/memcontrol.c
+
+  6818	
+  6819	static int charge_memcg(struct folio *folio, struct mem_cgroup *memcg,
+  6820				gfp_t gfp)
+  6821	{
+  6822		struct obj_cgroup *objcg;
+  6823		long nr_pages = folio_nr_pages(folio);
+  6824		int ret = 0;
+  6825	
+> 6826		objcg = __get_obj_cgroup_from_memcg(memcg);
+  6827		/* Do not account at the root objcg level. */
+  6828		if (!obj_cgroup_is_root(objcg))
+  6829			ret = try_charge(memcg, gfp, nr_pages);
+  6830		if (ret)
+  6831			goto out;
+  6832	
+  6833		obj_cgroup_get(objcg);
+  6834		commit_charge(folio, objcg);
+  6835	
+  6836		local_irq_disable();
+  6837		mem_cgroup_charge_statistics(memcg, nr_pages);
+  6838		memcg_check_events(memcg, folio_nid(folio));
+  6839		local_irq_enable();
+  6840	out:
+  6841		obj_cgroup_put(objcg);
+  6842		return ret;
+  6843	}
+  6844	
 
 -- 
-Michal Hocko
-SUSE Labs
+0-DAY CI Kernel Test Service
+https://01.org/lkp
