@@ -1,163 +1,98 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 04/11] mm: vmscan: rework move_pages_to_lru()
-Date: Tue, 24 May 2022 15:52:22 -0400
-Message-ID: <78de6197-7de6-9fe7-9567-1321c06c6e9b@redhat.com>
-References: <20220524060551.80037-1-songmuchun@bytedance.com>
- <20220524060551.80037-5-songmuchun@bytedance.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v4 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
+ page table uses.
+Date: Tue, 24 May 2022 15:31:52 -0700
+Message-ID: <CAJD7tkYjcmwBeUx-=MTQeUf78uqFDvfpy7OuKy4OvoS7HiVO1Q@mail.gmail.com>
+References: <20220429201131.3397875-1-yosryahmed@google.com>
+ <20220429201131.3397875-2-yosryahmed@google.com> <87ilqoi77b.wl-maz@kernel.org>
+ <CAJD7tkY7JF25XXUFq2mGroetMkfo-2zGOaQC94pjZE3D42+oaw@mail.gmail.com>
+ <Yn2TGJ4vZ/fst+CY@cmpxchg.org> <Yn2YYl98Vhh/UL0w@google.com>
+ <Yn5+OtZSSUZZgTQj@cmpxchg.org> <Yn6DeEGLyR4Q0cDp@google.com>
+ <CALvZod6nERq4j=L0V+pc-rd5+QKi4yb_23tWV-1MF53xL5KE6Q@mail.gmail.com>
+ <CAJD7tka-5+XRkthNV4qCg8woPCpjcwynQoRBame-3GP1L8y+WQ@mail.gmail.com> <YoeoLJNQTam5fJSu@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1653421947;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=vsoL5BUtwGtn8srjaBAKLRmvlrQ5HvOClw2yb5AYOdQ=;
-        b=UBrCsITgFApKa9lSS0hQz0i47swfTVDu5GcxRNYGStigCl6ZTpnmSx1OfqlQFsUD0GDdQi
-        Vg1k0jFsrpZBUYRSWE89o55M8lWYacdCnj9cM0IQ8yeZIexOEjsh/CAFwQsYLtUvtTN26n
-        9z5WiC38cZ3lPr8v2pjiFzyL6pvyrAE=
-Content-Language: en-US
-In-Reply-To: <20220524060551.80037-5-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=/hjeyXIou+bR7sgCBUUS9KBiw7ITkpAtyGQPK8WkjHQ=;
+        b=E47CS0uk7HJ3B0+amVIKreQyHTGL6Id/MNM0NxjP7X6opvCgl1WcdBa5SnwKc3EDWw
+         V2RSBPZ5PBv0+cdx0NAoNLXYDyjDup9mou8/UiOBU++4DVMVZrHzrWd+ZVhZFW2K8uMW
+         p9b4jxU7DGV0i8n8hpbveKXjRPZjF7JZfelsg33lCxe6KvbM/3Kw2gy36RExYeMQcSnp
+         QyMMPOr6T3TA59Xk7ew90wKydoDBGM28Fu7tgOmM6JcjUpxvmSbhb9njgSwtUUkrwV/Z
+         SDvlO42njKkIejaVhIiCDGW4sF9Mf28i9mQR4sp9xyvJ2C1xtsrbm5Tfz8hGqHkzJQq/
+         IEHg==
+In-Reply-To: <YoeoLJNQTam5fJSu-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM9gwCICpdfJQ@public.gmane.org
 
-On 5/24/22 02:05, Muchun Song wrote:
-> In the later patch, we will reparent the LRU pages. The pages moved to
-> appropriate LRU list can be reparented during the process of the
-> move_pages_to_lru(). So holding a lruvec lock by the caller is wrong, we
-> should use the more general interface of folio_lruvec_relock_irq() to
-> acquire the correct lruvec lock.
+On Fri, May 20, 2022 at 7:39 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 >
-> Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> ---
->   mm/vmscan.c | 49 +++++++++++++++++++++++++------------------------
->   1 file changed, 25 insertions(+), 24 deletions(-)
+> On Thu, May 19, 2022 at 06:56:54PM -0700, Yosry Ahmed wrote:
+> > On Fri, May 13, 2022 at 10:14 AM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> > >
+> > > On Fri, May 13, 2022 at 9:12 AM Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> > > >
+> > > [...]
+> > > >
+> > > > It was mostly an honest question, I too am trying to understand what userspace
+> > > > wants to do with this information.  I was/am also trying to understand the benefits
+> > > > of doing the tracking through page_state and not a dedicated KVM stat.  E.g. KVM
+> > > > already has specific stats for the number of leaf pages mapped into a VM, why not
+> > > > do the same for non-leaf pages?
+> > >
+> > > Let me answer why a more general stat is useful and the potential
+> > > userspace reaction:
+> > >
+> > > For a memory type which is significant enough, it is useful to expose
+> > > it in the general interfaces, so that the general data/stat collection
+> > > infra can collect them instead of having workload dependent stat
+> > > collectors. In addition, not necessarily that stat has to have a
+> > > userspace reaction in an online fashion. We do collect stats for
+> > > offline analysis which greatly influence the priority order of
+> > > optimization workitems.
+> > >
+> > > Next the question is do we really need a separate stat item
+> > > (secondary_pagetable instead of just plain pagetable) exposed in the
+> > > stable API? To me secondary_pagetable is general (not kvm specific)
+> > > enough and can be significant, so having a separate dedicated stat
+> > > should be ok. Though I am ok with lump it with pagetable stat for now
+> > > but we do want it to be accounted somewhere.
+> >
+> > Any thoughts on this? Johannes?
 >
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 1678802e03e7..761d5e0dd78d 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -2230,23 +2230,28 @@ static int too_many_isolated(struct pglist_data *pgdat, int file,
->    * move_pages_to_lru() moves pages from private @list to appropriate LRU list.
->    * On return, @list is reused as a list of pages to be freed by the caller.
->    *
-> - * Returns the number of pages moved to the given lruvec.
-> + * Returns the number of pages moved to the appropriate LRU list.
-> + *
-> + * Note: The caller must not hold any lruvec lock.
->    */
-> -static unsigned int move_pages_to_lru(struct lruvec *lruvec,
-> -				      struct list_head *list)
-> +static unsigned int move_pages_to_lru(struct list_head *list)
->   {
-> -	int nr_pages, nr_moved = 0;
-> +	int nr_moved = 0;
-> +	struct lruvec *lruvec = NULL;
->   	LIST_HEAD(pages_to_free);
-> -	struct page *page;
->   
->   	while (!list_empty(list)) {
-> -		page = lru_to_page(list);
-> +		int nr_pages;
-> +		struct folio *folio = lru_to_folio(list);
-> +		struct page *page = &folio->page;
-> +
-> +		lruvec = folio_lruvec_relock_irq(folio, lruvec);
->   		VM_BUG_ON_PAGE(PageLRU(page), page);
->   		list_del(&page->lru);
->   		if (unlikely(!page_evictable(page))) {
-> -			spin_unlock_irq(&lruvec->lru_lock);
-> +			unlock_page_lruvec_irq(lruvec);
->   			putback_lru_page(page);
-> -			spin_lock_irq(&lruvec->lru_lock);
-> +			lruvec = NULL;
->   			continue;
->   		}
->   
-> @@ -2267,20 +2272,16 @@ static unsigned int move_pages_to_lru(struct lruvec *lruvec,
->   			__clear_page_lru_flags(page);
->   
->   			if (unlikely(PageCompound(page))) {
-> -				spin_unlock_irq(&lruvec->lru_lock);
-> +				unlock_page_lruvec_irq(lruvec);
->   				destroy_compound_page(page);
-> -				spin_lock_irq(&lruvec->lru_lock);
-> +				lruvec = NULL;
->   			} else
->   				list_add(&page->lru, &pages_to_free);
->   
->   			continue;
->   		}
->   
-> -		/*
-> -		 * All pages were isolated from the same lruvec (and isolation
-> -		 * inhibits memcg migration).
-> -		 */
-> -		VM_BUG_ON_PAGE(!folio_matches_lruvec(page_folio(page), lruvec), page);
-> +		VM_BUG_ON_PAGE(!folio_matches_lruvec(folio, lruvec), page);
->   		add_page_to_lru_list(page, lruvec);
->   		nr_pages = thp_nr_pages(page);
->   		nr_moved += nr_pages;
-> @@ -2288,6 +2289,8 @@ static unsigned int move_pages_to_lru(struct lruvec *lruvec,
->   			workingset_age_nonresident(lruvec, nr_pages);
->   	}
->   
-> +	if (lruvec)
-> +		unlock_page_lruvec_irq(lruvec);
->   	/*
->   	 * To save our caller's stack, now use input list for pages to free.
->   	 */
-> @@ -2359,16 +2362,16 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
->   
->   	nr_reclaimed = shrink_page_list(&page_list, pgdat, sc, &stat, false);
->   
-> -	spin_lock_irq(&lruvec->lru_lock);
-> -	move_pages_to_lru(lruvec, &page_list);
-> +	move_pages_to_lru(&page_list);
->   
-> +	local_irq_disable();
->   	__mod_node_page_state(pgdat, NR_ISOLATED_ANON + file, -nr_taken);
->   	item = current_is_kswapd() ? PGSTEAL_KSWAPD : PGSTEAL_DIRECT;
->   	if (!cgroup_reclaim(sc))
->   		__count_vm_events(item, nr_reclaimed);
->   	__count_memcg_events(lruvec_memcg(lruvec), item, nr_reclaimed);
->   	__count_vm_events(PGSTEAL_ANON + file, nr_reclaimed);
-> -	spin_unlock_irq(&lruvec->lru_lock);
-> +	local_irq_enable();
->   
->   	lru_note_cost(lruvec, file, stat.nr_pageout);
->   	mem_cgroup_uncharge_list(&page_list);
-> @@ -2498,18 +2501,16 @@ static void shrink_active_list(unsigned long nr_to_scan,
->   	/*
->   	 * Move pages back to the lru list.
->   	 */
-> -	spin_lock_irq(&lruvec->lru_lock);
-> -
-> -	nr_activate = move_pages_to_lru(lruvec, &l_active);
-> -	nr_deactivate = move_pages_to_lru(lruvec, &l_inactive);
-> +	nr_activate = move_pages_to_lru(&l_active);
-> +	nr_deactivate = move_pages_to_lru(&l_inactive);
->   	/* Keep all free pages in l_active list */
->   	list_splice(&l_inactive, &l_active);
->   
-> +	local_irq_disable();
->   	__count_vm_events(PGDEACTIVATE, nr_deactivate);
->   	__count_memcg_events(lruvec_memcg(lruvec), PGDEACTIVATE, nr_deactivate);
-> -
->   	__mod_node_page_state(pgdat, NR_ISOLATED_ANON + file, -nr_taken);
-> -	spin_unlock_irq(&lruvec->lru_lock);
-> +	local_irq_enable();
->   
->   	mem_cgroup_uncharge_list(&l_active);
->   	free_unref_page_list(&l_active);
+> I agree that this memory should show up in vmstat/memory.stat in some
+> form or another.
+>
+> The arguments on whether this should be part of NR_PAGETABLE or a
+> separate entry seem a bit vague to me. I was hoping somebody more
+> familiar with KVM could provide a better picture of memory consumption
+> in that area.
+>
+> Sean had mentioned that these allocations already get tracked through
+> GFP_KERNEL_ACCOUNT. That's good, but if they are significant enough to
+> track, they should be represented in memory.stat in some form. Sean
+> also pointed out though that those allocations tend to scale rather
+> differently than the page tables, so it probably makes sense to keep
+> those two things separate at least.
+>
+> Any thoughts on putting shadow page tables and iommu page tables into
+> the existing NR_PAGETABLE item? If not, what are the cons?
+>
+> And creating (maybe later) a separate NR_VIRT for the other
+> GPF_KERNEL_ACCOUNT allocations in kvm?
 
-Note that the RT engineers will likely change the 
-local_irq_disable()/local_irq_enable() to 
-local_lock_irq()/local_unlock_irq().
+I agree with Sean that a NR_VIRT stat would be inaccurate by omission,
+unless we account for all KVM allocations under this stat. This might
+be an unnecessary burden according to what Sean said, as most other
+allocations scale linearly with the number of vCPUs or the memory
+assigned to the VM.
 
-Cheers,
-Longman
-
+I don't have enough context to say whether we should piggyback KVM MMU
+pages to the existing NR_PAGETABLE item, but from a high level it
+seems like it would be more helpful if they are a separate stat.
+Anyway, I am willing to go with whatever Sean thinks is best.
