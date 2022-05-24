@@ -1,81 +1,99 @@
-From: Hao Luo <haoluo@google.com>
-Subject: Re: [PATCH bpf-next v1 3/5] bpf: Introduce cgroup iter
-Date: Mon, 23 May 2022 17:53:00 -0700
-Message-ID: <CA+khW7h-fgo+X=OUxAWDe2sPMyWDXUmp574Kq_J884j9whoBfw@mail.gmail.com>
-References: <20220520012133.1217211-1-yosryahmed@google.com>
- <20220520012133.1217211-4-yosryahmed@google.com> <YodGI73xq8aIBrNM@slm.duckdns.org>
- <CAJD7tkbvMcMWESMcWi6TtdCKLr6keBNGgZTnqcHZvBrPa1qWPw@mail.gmail.com>
- <YodNLpxut+Zddnre@slm.duckdns.org> <73fd9853-5dab-8b59-24a0-74c0a6cae88e@fb.com>
- <YofFli6UCX4J5YnU@slm.duckdns.org> <CA+khW7gjWVKrwCgDD-4ZdCf5CMcA4-YL0bLm6aWM74+qNQ4c0A@mail.gmail.com>
- <CAJD7tkaJQjfSy+YARFRkqQ8m7OGJHO9v91mSk-cFeo9Z5UVJKg@mail.gmail.com>
- <20220520221919.jnqgv52k4ajlgzcl@MBP-98dd607d3435.dhcp.thefacebook.com>
- <Yogc0Kb5ZVDaQ0oU@slm.duckdns.org> <5b301151-0a65-df43-3a3a-6d57e10cfc2d@fb.com>
- <CA+khW7gGrwTrDsfWp7wj=QaCg01FNj381a1QLs1ThsjAkW85eQ@mail.gmail.com> <CAEf4BzbaHeyaHK1sChPMF=L4aQsaBGNtU+R3veqCOFz0A+svEA@mail.gmail.com>
+From: Yu Kuai <yukuai3@huawei.com>
+Subject: Re: [PATCH -next v5 0/3] support concurrent sync io for bfq on a
+ specail occasion
+Date: Tue, 24 May 2022 09:13:40 +0800
+Message-ID: <13ad158e-7859-ca61-209e-7d1fe99d0bdb@huawei.com>
+References: <20220428120837.3737765-1-yukuai3@huawei.com>
+ <d50df657-d859-79cf-c292-412eaa383d2c@huawei.com>
+ <61b67d5e-829c-8130-7bda-81615d654829@huawei.com>
+ <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
+ <d5a90a08-1ac6-587a-e900-0436bd45543a@kernel.dk>
+ <55919e29-1f22-e8aa-f3d2-08c57d9e1c22@huawei.com>
+ <20220523085902.wmxoebyq3crerecr@quack3.lan>
+ <25f6703e-9e10-75d9-a893-6df1e6b75254@kernel.dk>
+ <20220523152516.7sr247i3bzwhr44w@quack3.lan>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=x4jbl/h/9IkQPtvCa68VGCFyvxT/KOdRev2otsqHtfM=;
-        b=CLD8VfehPsBJZKAJX5SPjbU2o9Q0pXOcAnEDp/JCvbkisTN6aYTXXFyQR9tQD56GBx
-         aRURvpzT0qMlj0TBitxFWqDDvCT7U90MMnkPOH7LbK07zbOfHREkSn8Li4gc75TrIKyc
-         4uuiItRFMVlt6QQAOggQDGe1AiKerD3SvjRiu1ENyYtAh/rfWdUH/ZJsQT2ThcD8PAv6
-         MpBn3JnnKsqLEd+RT++NjvLR95c5HM9CWQ14xRsasQpZu9B/Kr/L3k4fd7DFsj3y950S
-         k2CC+P/CT3/lw9ZSnEFMFi9WjEGj+g0wqyyOnP98XBItvA/gQpr2iamhbFL0JA0bVPw5
-         pL+g==
-In-Reply-To: <CAEf4BzbaHeyaHK1sChPMF=L4aQsaBGNtU+R3veqCOFz0A+svEA@mail.gmail.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20220523152516.7sr247i3bzwhr44w@quack3.lan>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrii Nakryiko <andrii.nakryiko@gmail.com>
-Cc: Yonghong Song <yhs@fb.com>, Tejun Heo <tj@kernel.org>, Alexei Starovoitov <alexei.starovoitov@gmail.com>, Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Jan Kara <jack@suse.cz>
+Cc: paolo.valente@linaro.org, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, Jens Axboe <axboe@kernel.dk>
 
-On Mon, May 23, 2022 at 4:58 PM Andrii Nakryiko
-<andrii.nakryiko@gmail.com> wrote:
->
-> On Fri, May 20, 2022 at 7:35 PM Hao Luo <haoluo@google.com> wrote:
-> >
-> > On Fri, May 20, 2022 at 5:59 PM Yonghong Song <yhs@fb.com> wrote:
-> > > On 5/20/22 3:57 PM, Tejun Heo wrote:
-> > > > Hello,
-> > > >
-> > > > On Fri, May 20, 2022 at 03:19:19PM -0700, Alexei Starovoitov wrote:
-> > > >> We have bpf_map iterator that walks all bpf maps.
-> > > >> When map iterator is parametrized with map_fd the iterator walks
-> > > >> all elements of that map.
-> > > >> cgroup iterator should have similar semantics.
-> > > >> When non-parameterized it will walk all cgroups and their descendent
-> > > >> depth first way. I believe that's what Yonghong is proposing.
-> > > >> When parametrized it will start from that particular cgroup and
-> > > >> walk all descendant of that cgroup only.
-> > > >> The bpf prog can stop the iteration right away with ret 1.
-> > > >> Maybe we can add two parameters. One -> cgroup_fd to use and another ->
-> > > >> the order of iteration css_for_each_descendant_pre vs _post.
-> > > >> wdyt?
-> > > >
-> > > > Sounds perfectly reasonable to me.
-> > >
-> > > This works for me too. Thanks!
-> > >
-> >
-> > This sounds good to me. Thanks. Let's try to do it in the next iteration.
->
-> Can we, in addition to descendant_pre and descendant_post walk
-> algorithms also add the one that does ascendants walk (i.e., start
-> from specified cgroup and walk up to the root cgroup)? I don't have
-> specific example, but it seems natural to include it for "cgroup
-> iterator" in general. Hopefully it won't add much code to the
-> implementation.
+=D4=DA 2022/05/23 23:25, Jan Kara =D0=B4=B5=C0:
+> On Mon 23-05-22 06:36:58, Jens Axboe wrote:
+>> On 5/23/22 2:59 AM, Jan Kara wrote:
+>>> On Mon 23-05-22 09:10:38, yukuai (C) wrote:
+>>>> ? 2022/05/21 20:21, Jens Axboe ??:
+>>>>> On 5/21/22 1:22 AM, yukuai (C) wrote:
+>>>>>> ? 2022/05/14 17:29, yukuai (C) ??:
+>>>>>>> ? 2022/05/05 9:00, yukuai (C) ??:
+>>>>>>>> Hi, Paolo
+>>>>>>>>
+>>>>>>>> Can you take a look at this patchset? It has been quite a long time
+>>>>>>>> since we spotted this problem...
+>>>>>>>>
+>>>>>>>
+>>>>>>> friendly ping ...
+>>>>>> friendly ping ...
+>>>>>
+>>>>> I can't speak for Paolo, but I've mentioned before that the majority
+>>>>> of your messages end up in my spam. That's still the case, in fact
+>>>>> I just marked maybe 10 of them as not spam.
+>>>>>
+>>>>> You really need to get this issued sorted out, or you will continue
+>>>>> to have patches ignore because folks may simply not see them.
+>>>>>
+>>>> Hi,
+>>>>
+>>>> Thanks for your notice.
+>>>>
+>>>> Is it just me or do you see someone else's messages from *huawei.com
+>>>> end up in spam? I tried to seek help from our IT support, however, they
+>>>> didn't find anything unusual...
+>>>
+>>> So actually I have noticed that a lot of (valid) email from huawei.com =
+(not
+>>> just you) ends up in the spam mailbox. For me direct messages usually p=
+ass
+>>> (likely matching SPF records for originating mail server save the email
+>>> from going to spam) but messages going through mailing lists are flagge=
+d as
+>>> spam because the emails are missing valid DKIM signature but huawei.com
+>>> DMARC config says there should be DKIM signature (even direct messages =
+are
+>>> missing DKIM so this does not seem as a mailing list configuration issu=
+e).
+>>> So this seems as some misconfiguration of the mails on huawei.com side
+>>> (likely missing DKIM signing of outgoing email).
+>>
+>> SPF/DKIM was indeed a problem earlier for yukaui patches, but I don't
+>> see that anymore. Maybe it's still an issue for some emails, from them
+>> or Huawei in general?
+>=20
+> Hum, for me all emails from Huawei I've received even today fail the DKIM
+> check. After some more digging there is interesting inconsistency in DMARC
+> configuration for huawei.com domain. There is DMARC record for huawei.com
+> like:
+>=20
+> huawei.com.		600	IN	TXT	"v=3DDMARC1;p=3Dnone;rua=3Dmailto:dmarc@edm.huawe=
+i.com"
+>=20
+> which means no DKIM is required but _dmarc.huawei.com has:
+>=20
+> _dmarc.huawei.com.	600	IN	TXT	"v=3DDMARC1;p=3Dquarantine;ruf=3Dmailto:dma=
+rc@huawei.com;rua=3Dmailto:dmarc@huawei.com"
+>=20
+> which says that DKIM is required. I guess this inconsistency may be the
+> reason why there are problems with DKIM validation for senders from
+> huawei.com. Yu Kuai, can you perhaps take this to your IT support to fix
+> this? Either make sure huawei.com emails get properly signed with DKIM or
+> remove the 'quarantine' record from _dmarc.huawei.com. Thanks!
+Of course, I'll try to contact our IT support.
 
-Yep. Sounds reasonable and doable. It's just adding a flag to specify
-traversal order, like:
-
-{
-  WALK_DESCENDANT_PRE,
-  WALK_DESCENDANT_POST,
-  WALK_PARENT_UP,
-};
-
-In bpf_iter's seq_next(), change the algorithm to yield the parent of
-the current cgroup.
+Thanks,
+Kuai
+>=20
+> 								Honza
+>=20
