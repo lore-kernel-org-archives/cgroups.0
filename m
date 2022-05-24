@@ -1,108 +1,41 @@
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -next v4 4/4] blk-throttle: fix io hung due to config
- updates
-Date: Tue, 24 May 2022 19:47:49 +0800
-Message-ID: <9b3712a1-1f6d-9c9a-4133-a058fe3b111c@huawei.com>
-References: <20220523082633.2324980-1-yukuai3@huawei.com>
- <20220523082633.2324980-5-yukuai3@huawei.com>
- <20220524095936.GB2434@blackbody.suse.cz>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [External] Re: [PATCH] mm: memcontrol: add the mempolicy
+ interface for cgroup v2.
+Date: Tue, 24 May 2022 14:04:33 +0200
+Message-ID: <YozJ0SNOjO3m4ehp@dhcp22.suse.cz>
+References: <20220524103638.473-1-hezhongkun.hzk@bytedance.com>
+ <Yoy3wDh0cvziWGHJ@dhcp22.suse.cz>
+ <CACSyD1N4VeWBOzZwBogDW-wBbLvF54VrZ1Z+p9NFiXY+etuDJA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220524095936.GB2434-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1653393874; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Kt6lRreumMR82QxTIV2F0todF1CGcv8SrAK54H/AV8A=;
+        b=W1eYCUa3Gc34WBARqY6Z4kLP1JcTMqeIR8a203LcNCcnfhIJGZXU4XvcbMblM5ifce7hs9
+        l3qlXUc7EIsXHl2hRqLmWHxad74fKSX1lTrYgtR6v5CXB0yaCAo8dzWKeLQbCrKBaLnlp6
+        Kptviaf5cYuvAYHoxvGS5a0rFRrmUoE=
+Content-Disposition: inline
+In-Reply-To: <CACSyD1N4VeWBOzZwBogDW-wBbLvF54VrZ1Z+p9NFiXY+etuDJA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: =?utf-8?B?6LS65Lit5Z2k?= <hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-在 2022/05/24 17:59, Michal Koutný 写道:
-> On Mon, May 23, 2022 at 04:26:33PM +0800, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->> Fix the problem by respecting the time that throttled bio aready waited.
->> In order to do that, add new fields to record how many bytes/io already
->> waited, and use it to calculate wait time for throttled bio under new
->> configuration.
-> 
-> This new approach is correctly conserving the bandwidth upon changes.
-> (Looking and BPS paths.)
-> 
->>
->> Some simple test:
->> 1)
->> cd /sys/fs/cgroup/blkio/
->> echo $$ > cgroup.procs
->> echo "8:0 2048" > blkio.throttle.write_bps_device
->> {
->>          sleep 3
->>          echo "8:0 1024" > blkio.throttle.write_bps_device
->> } &
->> sleep 1
->> dd if=/dev/zero of=/dev/sda bs=8k count=1 oflag=direct
->>
->> 2)
->> cd /sys/fs/cgroup/blkio/
->> echo $$ > cgroup.procs
->> echo "8:0 1024" > blkio.throttle.write_bps_device
->> {
->>          sleep 5
->>          echo "8:0 2048" > blkio.throttle.write_bps_device
->> } &
->> sleep 1
->> dd if=/dev/zero of=/dev/sda bs=8k count=1 oflag=direct
->>
-> 
-> It's interesting that you're getting these numbers (w/patch)
-> 
->> test results: io finish time
->> 	before this patch	with this patch
->> 1)	10s			6s
->> 2)	8s			6s
-> 
-> wait := (disp + bio - Δt*l_old) / l_new
-> 
-> 1)
-> wait = (0k + 8k - 3s*2k/s) / 1k/s = 2s -> i.e. 5s absolute
-> 
-> 2)
-> wait = (0k + 8k - 5s*1k/s) / 2k/s = 2.5s -> i.e. 6.5s absolute
-> 
-> Are you numbers noisy+rounded or do I still mis anything?
-Hi, Michal
+On Tue 24-05-22 19:46:38, 贺中坤 wrote:
+> Hi Michal, thanks for your reply.
+> mempolicy has two functions, which nodes to choose and how to use these
+> nodes. cpuset can only decide the first one，it equal to 'bind' mempolicy.
+> If cgroups support mempolicy, we can continue to develop more policy
+> types. For example, allocate memory according to node weight, etc.
+> We would like to have more precise control over memory allocation in NUMA
+> server.
 
-The way of your caculation is right, however, it seems like you missed
-that io is dispatched after 1s:
+Why cputset controller cannot be extended instead?
 
-sleep 1  -> here
-dd if=/dev/zero of=/dev/sda bs=8k count=1 oflag=direct
-> 
-> (Also isn't it worth having this more permanent in tools/testing/selftest?)
-> 
->> +static void tg_update_skipped(struct throtl_grp *tg)
->> +{
->> +	if (tg->service_queue.nr_queued[READ])
->> +		__tg_update_skipped(tg, READ);
->> +	if (tg->service_queue.nr_queued[WRITE])
->> +		__tg_update_skipped(tg, WRITE);
-> 
-> On one hand, the callers of tg_update_skipped() know whether R/W limit
-> is changed, so only the respective variant could be called.
-> On the other hand, this conditions look implied by tg->flags &
-> THROTL_TG_PENDING.
-> (Just noting, it's likely still not possibly to pass the skipped value
-> only via stack.)
-> 
-> 
->> @@ -115,6 +115,10 @@ struct throtl_grp {
->>   	uint64_t bytes_disp[2];
->>   	/* Number of bio's dispatched in current slice */
->>   	unsigned int io_disp[2];
->> +	/* Number of bytes will be skipped in current slice */
->> +	uint64_t bytes_skipped[2];
->> +	/* Number of bio's will be skipped in current slice */
->> +	unsigned int io_skipped[2];
-> 
-> Please add a comment these fields exists to facilitate config updates
-> (the bytes to be skipped is sort of obvious from the name :-).
-Ok, will do that in next iteration.
-
-Thanks,
-Kuai
+-- 
+Michal Hocko
+SUSE Labs
