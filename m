@@ -1,65 +1,58 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [PATCH v3 4/5] selftests: memcg: Remove protection from top level memcg
-Date: Tue, 24 May 2022 18:29:54 +0200
-Message-ID: <20220524162955.8635-5-mkoutny@suse.com>
-References: <20220524162955.8635-1-mkoutny@suse.com>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: Re: [PATCH v11 0/8] cgroup/cpuset: cpu partition code enhancements
+Date: Tue, 24 May 2022 18:48:10 +0200
+Message-ID: <Yo0MSnl/xowWz4PQ@linutronix.de>
+References: <20220510153413.400020-1-longman@redhat.com>
+ <Yoe7FOkZpUwwTTQW@linutronix.de>
+ <75d31caf-2d26-9fcc-13fb-e8be2f2ad8e5@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1653409812; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1653410891;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=6/28T1m86MB9ujlmLJb4eXjaHRV5vnP9lMxKKAV2s7M=;
-        b=vMBWmf3N5rE2fTHBk4VnwarSBhJt3hyhYylDzlH2PRkMyihqTjMkaxfWkWEm9omCF2d7+N
-        F4Wdv78zuDLvKFX2zcyhMnXZ3x0giump/GY+KsnYMHc1W15lPEb9OuoCnAEH6DkT9hrTll
-        5D5Vr23Nb08SWTG8MT+Q5S4RbDV6EOE=
-In-Reply-To: <20220524162955.8635-1-mkoutny-IBi9RG/b67k@public.gmane.org>
+        bh=+n2TeC63xBP9JcIIeIV1gUKizH+Y+lAFAohJMPfDSoc=;
+        b=pWWP3msM6ICsdl2XG/L1Kk7BT7Kz8igPK9fm7BhaTk22EkNfv16BnjJoAQyz+zJeXVOELR
+        apWDvp6IEgg7o0TFbKkX5MNz5iZejRxEhNuIxQYYyLkwTnIqFbU9+durOHCp/L+oAsdG8O
+        OgI+/DmVASIjQzfRI4+Dj3/Uqc4zlxef5mz6JJpESBbbChHqhkhinOEcHq+9dS0tUW0E/V
+        lR2X7/rzDxyj/BNc6FET/4tbz92+bDkY50fLTcuQ0RnlD6d1j2r9NTH0qbtzOz4JjvKkAH
+        IiFjEvCplzzhF/dI1GRxCVyRGxNOUVKnPX4oF0trW5jZ/VK8ofUIEAGO98ID/A==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1653410891;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=+n2TeC63xBP9JcIIeIV1gUKizH+Y+lAFAohJMPfDSoc=;
+        b=7xRUXMgXMXv57nfU9kviAhVtxJ+a+EKZYQEc+3ccFWHfLVgToQy8lChbsT6TPS6uSYfdmk
+        eKW1UWc6HbKj6VCA==
+Content-Disposition: inline
+In-Reply-To: <75d31caf-2d26-9fcc-13fb-e8be2f2ad8e5@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Palethorpe <rpalethorpe-l3A5Bk7waGM@public.gmane.org>, Muhammad Usama Anjum <usama.anjum-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
 
-VGhlIHJlY2xhaW0gaXMgdHJpZ2dlcmVkIGJ5IG1lbW9yeSBsaW1pdCBpbiBhIHN1YnRyZWUsIHRo
-ZXJlZm9yZSB0aGUKdGVzdGNhc2UgZG9lcyBub3QgbmVlZCBjb25maWd1cmVkIHByb3RlY3Rpb24g
-YWdhaW5zdCBleHRlcm5hbCByZWNsYWltLgoKQWxzbywgY29ycmVjdCByZXNwZWN0aXZlIGNvbW1l
-bnRzCgpTaWduZWQtb2ZmLWJ5OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueS1JQmk5UkcvYjY3a0Bw
-dWJsaWMuZ21hbmUub3JnPgpBY2tlZC1ieTogUm9tYW4gR3VzaGNoaW4gPHJvbWFuLmd1c2hjaGlu
-LWZ4VVZYZnRJRkRueUcxekVPYlh0ZkFAcHVibGljLmdtYW5lLm9yZz4KLS0tCiB0b29scy90ZXN0
-aW5nL3NlbGZ0ZXN0cy9jZ3JvdXAvdGVzdF9tZW1jb250cm9sLmMgfCAxMCArKystLS0tLS0tCiAx
-IGZpbGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCA3IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdp
-dCBhL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC90ZXN0X21lbWNvbnRyb2wuYyBiL3Rv
-b2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC90ZXN0X21lbWNvbnRyb2wuYwppbmRleCBkYzJj
-N2Q2ZTM1NzIuLjYzYzZhNjgzYThjMSAxMDA2NDQKLS0tIGEvdG9vbHMvdGVzdGluZy9zZWxmdGVz
-dHMvY2dyb3VwL3Rlc3RfbWVtY29udHJvbC5jCisrKyBiL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3Rz
-L2Nncm91cC90ZXN0X21lbWNvbnRyb2wuYwpAQCAtMjQ3LDcgKzI0Nyw3IEBAIHN0YXRpYyBpbnQg
-Y2dfdGVzdF9wcm9jX2tpbGxlZChjb25zdCBjaGFyICpjZ3JvdXApCiAKIC8qCiAgKiBGaXJzdCwg
-dGhpcyB0ZXN0IGNyZWF0ZXMgdGhlIGZvbGxvd2luZyBoaWVyYXJjaHk6Ci0gKiBBICAgICAgIG1l
-bW9yeS5taW4gPSA1ME0sICBtZW1vcnkubWF4ID0gMjAwTQorICogQSAgICAgICBtZW1vcnkubWlu
-ID0gMCwgICAgbWVtb3J5Lm1heCA9IDIwME0KICAqIEEvQiAgICAgbWVtb3J5Lm1pbiA9IDUwTQog
-ICogQS9CL0MgICBtZW1vcnkubWluID0gNzVNLCAgbWVtb3J5LmN1cnJlbnQgPSA1ME0KICAqIEEv
-Qi9EICAgbWVtb3J5Lm1pbiA9IDI1TSwgIG1lbW9yeS5jdXJyZW50ID0gNTBNCkBAIC0yNTcsNyAr
-MjU3LDcgQEAgc3RhdGljIGludCBjZ190ZXN0X3Byb2Nfa2lsbGVkKGNvbnN0IGNoYXIgKmNncm91
-cCkKICAqIFVzYWdlcyBhcmUgcGFnZWNhY2hlLCBidXQgdGhlIHRlc3Qga2VlcHMgYSBydW5uaW5n
-CiAgKiBwcm9jZXNzIGluIGV2ZXJ5IGxlYWYgY2dyb3VwLgogICogVGhlbiBpdCBjcmVhdGVzIEEv
-RyBhbmQgY3JlYXRlcyBhIHNpZ25pZmljYW50Ci0gKiBtZW1vcnkgcHJlc3N1cmUgaW4gaXQuCisg
-KiBtZW1vcnkgcHJlc3N1cmUgaW4gQS4KICAqCiAgKiBUaGVuIGl0IGNoZWNrcyBhY3R1YWwgbWVt
-b3J5IHVzYWdlcyBhbmQgZXhwZWN0cyB0aGF0OgogICogQS9CICAgIG1lbW9yeS5jdXJyZW50IH49
-IDUwTQpAQCAtMzM4LDggKzMzOCw2IEBAIHN0YXRpYyBpbnQgdGVzdF9tZW1jZ19taW4oY29uc3Qg
-Y2hhciAqcm9vdCkKIAkJCSAgICAgICh2b2lkICopKGxvbmcpZmQpOwogCX0KIAotCWlmIChjZ193
-cml0ZShwYXJlbnRbMF0sICJtZW1vcnkubWluIiwgIjUwTSIpKQotCQlnb3RvIGNsZWFudXA7CiAJ
-aWYgKGNnX3dyaXRlKHBhcmVudFsxXSwgIm1lbW9yeS5taW4iLCAiNTBNIikpCiAJCWdvdG8gY2xl
-YW51cDsKIAlpZiAoY2dfd3JpdGUoY2hpbGRyZW5bMF0sICJtZW1vcnkubWluIiwgIjc1TSIpKQpA
-QCAtNDA3LDcgKzQwNSw3IEBAIHN0YXRpYyBpbnQgdGVzdF9tZW1jZ19taW4oY29uc3QgY2hhciAq
-cm9vdCkKIAogLyoKICAqIEZpcnN0LCB0aGlzIHRlc3QgY3JlYXRlcyB0aGUgZm9sbG93aW5nIGhp
-ZXJhcmNoeToKLSAqIEEgICAgICAgbWVtb3J5LmxvdyA9IDUwTSwgIG1lbW9yeS5tYXggPSAyMDBN
-CisgKiBBICAgICAgIG1lbW9yeS5sb3cgPSAwLCAgICBtZW1vcnkubWF4ID0gMjAwTQogICogQS9C
-ICAgICBtZW1vcnkubG93ID0gNTBNCiAgKiBBL0IvQyAgIG1lbW9yeS5sb3cgPSA3NU0sICBtZW1v
-cnkuY3VycmVudCA9IDUwTQogICogQS9CL0QgICBtZW1vcnkubG93ID0gMjVNLCAgbWVtb3J5LmN1
-cnJlbnQgPSA1ME0KQEAgLTQ5NSw4ICs0OTMsNiBAQCBzdGF0aWMgaW50IHRlc3RfbWVtY2dfbG93
-KGNvbnN0IGNoYXIgKnJvb3QpCiAJCQlnb3RvIGNsZWFudXA7CiAJfQogCi0JaWYgKGNnX3dyaXRl
-KHBhcmVudFswXSwgIm1lbW9yeS5sb3ciLCAiNTBNIikpCi0JCWdvdG8gY2xlYW51cDsKIAlpZiAo
-Y2dfd3JpdGUocGFyZW50WzFdLCAibWVtb3J5LmxvdyIsICI1ME0iKSkKIAkJZ290byBjbGVhbnVw
-OwogCWlmIChjZ193cml0ZShjaGlsZHJlblswXSwgIm1lbW9yeS5sb3ciLCAiNzVNIikpCi0tIAoy
-LjM1LjMKCg==
+On 2022-05-20 12:46:52 [-0400], Waiman Long wrote:
+> On 5/20/22 12:00, Sebastian Andrzej Siewior wrote:
+> > On 2022-05-10 11:34:05 [-0400], Waiman Long wrote:
+> > > v11:
+> > >   - Fix incorrect spacing in patch 7 and include documentation suggestions
+> > >     by Michal.
+> > >   - Move partition_is_populated() check to the last one in list of
+> > >     conditions to be checked.
+> > If I follow this correctly, then this is the latest version of the
+> > isolcpus= replacement with cgroup's cpusets, correct?
+> > 
+> > Sebastian
+> 
+> It is just the beginning, there is still a lot of work to do before
+> isolcpus= can be completely replaced.
+
+Okay. Thanks.
+
+> Cheers,
+> Longman
+
+Sebastian
