@@ -1,58 +1,99 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: Re: [PATCH v11 0/8] cgroup/cpuset: cpu partition code enhancements
-Date: Tue, 24 May 2022 18:48:10 +0200
-Message-ID: <Yo0MSnl/xowWz4PQ@linutronix.de>
-References: <20220510153413.400020-1-longman@redhat.com>
- <Yoe7FOkZpUwwTTQW@linutronix.de>
- <75d31caf-2d26-9fcc-13fb-e8be2f2ad8e5@redhat.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v4 09/11] mm: memcontrol: use obj_cgroup APIs to charge
+ the LRU pages
+Date: Wed, 25 May 2022 02:16:47 +0800
+Message-ID: <202205250202.1JanYiVZ-lkp@intel.com>
+References: <20220524060551.80037-10-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1653410891;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=+n2TeC63xBP9JcIIeIV1gUKizH+Y+lAFAohJMPfDSoc=;
-        b=pWWP3msM6ICsdl2XG/L1Kk7BT7Kz8igPK9fm7BhaTk22EkNfv16BnjJoAQyz+zJeXVOELR
-        apWDvp6IEgg7o0TFbKkX5MNz5iZejRxEhNuIxQYYyLkwTnIqFbU9+durOHCp/L+oAsdG8O
-        OgI+/DmVASIjQzfRI4+Dj3/Uqc4zlxef5mz6JJpESBbbChHqhkhinOEcHq+9dS0tUW0E/V
-        lR2X7/rzDxyj/BNc6FET/4tbz92+bDkY50fLTcuQ0RnlD6d1j2r9NTH0qbtzOz4JjvKkAH
-        IiFjEvCplzzhF/dI1GRxCVyRGxNOUVKnPX4oF0trW5jZ/VK8ofUIEAGO98ID/A==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1653410891;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=+n2TeC63xBP9JcIIeIV1gUKizH+Y+lAFAohJMPfDSoc=;
-        b=7xRUXMgXMXv57nfU9kviAhVtxJ+a+EKZYQEc+3ccFWHfLVgToQy8lChbsT6TPS6uSYfdmk
-        eKW1UWc6HbKj6VCA==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1653416229; x=1684952229;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=EBnyAxgG8VMP5VnxxAr+i+RhOOaMEQkB+M7uuFYWkuc=;
+  b=bI/9uEXkSQB7nCmz0HB7w68HgI0v5c8Uw4yDv5r+u40H9Dkn/cbbjYBW
+   PkUboddFrO5oRJZ0GQNCE9G6l64gPQYHCEturdBtI2fM7km57LmskExVf
+   W3IhrAAgw6Wchslegj5KqeiRL3FauVEpdQ/wPvv/tNuxB/vNDpqAYMyGB
+   Og3wyLNSztW5qvRNXt0CqIkDWi6nUppW1OAlhR+FZ9PcEwDBM2mrweO21
+   U19BlAc7DTjgJsB9VQwkytm8Gg9/83J74DQ+l9t4CHBbBilB4c1PcGR+e
+   fper/iAKB53C9FWCU/xKA25cksBfeZItW5STEe/VX9aMZdhkuL2SLAppa
+   g==;
 Content-Disposition: inline
-In-Reply-To: <75d31caf-2d26-9fcc-13fb-e8be2f2ad8e5@redhat.com>
+In-Reply-To: <20220524060551.80037-10-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Cc: llvm-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-On 2022-05-20 12:46:52 [-0400], Waiman Long wrote:
-> On 5/20/22 12:00, Sebastian Andrzej Siewior wrote:
-> > On 2022-05-10 11:34:05 [-0400], Waiman Long wrote:
-> > > v11:
-> > >   - Fix incorrect spacing in patch 7 and include documentation suggestions
-> > >     by Michal.
-> > >   - Move partition_is_populated() check to the last one in list of
-> > >     conditions to be checked.
-> > If I follow this correctly, then this is the latest version of the
-> > isolcpus= replacement with cgroup's cpusets, correct?
-> > 
-> > Sebastian
-> 
-> It is just the beginning, there is still a lot of work to do before
-> isolcpus= can be completely replaced.
+Hi Muchun,
 
-Okay. Thanks.
+Thank you for the patch! Yet something to improve:
 
-> Cheers,
-> Longman
+[auto build test ERROR on 4b0986a3613c92f4ec1bdc7f60ec66fea135991f]
 
-Sebastian
+url:    https://github.com/intel-lab-lkp/linux/commits/Muchun-Song/Use-obj_cgroup-APIs-to-charge-the-LRU-pages/20220524-143056
+base:   4b0986a3613c92f4ec1bdc7f60ec66fea135991f
+config: arm64-buildonly-randconfig-r005-20220524 (https://download.01.org/0day-ci/archive/20220525/202205250202.1JanYiVZ-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 10c9ecce9f6096e18222a331c5e7d085bd813f75)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # install arm64 cross compiling tool for clang build
+        # apt-get install binutils-aarch64-linux-gnu
+        # https://github.com/intel-lab-lkp/linux/commit/bec0ae12106e0cf12dd4e0e21eb0754b99be0ba2
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Muchun-Song/Use-obj_cgroup-APIs-to-charge-the-LRU-pages/20220524-143056
+        git checkout bec0ae12106e0cf12dd4e0e21eb0754b99be0ba2
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=arm64 SHELL=/bin/bash
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+
+All error/warnings (new ones prefixed by >>):
+
+>> mm/memcontrol.c:6826:10: error: call to undeclared function '__get_obj_cgroup_from_memcg'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+           objcg = __get_obj_cgroup_from_memcg(memcg);
+                   ^
+>> mm/memcontrol.c:6826:8: warning: incompatible integer to pointer conversion assigning to 'struct obj_cgroup *' from 'int' [-Wint-conversion]
+           objcg = __get_obj_cgroup_from_memcg(memcg);
+                 ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   1 warning and 1 error generated.
+
+
+vim +/__get_obj_cgroup_from_memcg +6826 mm/memcontrol.c
+
+  6818	
+  6819	static int charge_memcg(struct folio *folio, struct mem_cgroup *memcg,
+  6820				gfp_t gfp)
+  6821	{
+  6822		struct obj_cgroup *objcg;
+  6823		long nr_pages = folio_nr_pages(folio);
+  6824		int ret = 0;
+  6825	
+> 6826		objcg = __get_obj_cgroup_from_memcg(memcg);
+  6827		/* Do not account at the root objcg level. */
+  6828		if (!obj_cgroup_is_root(objcg))
+  6829			ret = try_charge(memcg, gfp, nr_pages);
+  6830		if (ret)
+  6831			goto out;
+  6832	
+  6833		obj_cgroup_get(objcg);
+  6834		commit_charge(folio, objcg);
+  6835	
+  6836		local_irq_disable();
+  6837		mem_cgroup_charge_statistics(memcg, nr_pages);
+  6838		memcg_check_events(memcg, folio_nid(folio));
+  6839		local_irq_enable();
+  6840	out:
+  6841		obj_cgroup_put(objcg);
+  6842		return ret;
+  6843	}
+  6844	
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
