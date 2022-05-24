@@ -1,43 +1,44 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: add the mempolicy interface for cgroup
- v2.
-Date: Tue, 24 May 2022 12:47:28 +0200
-Message-ID: <Yoy3wDh0cvziWGHJ@dhcp22.suse.cz>
-References: <20220524103638.473-1-hezhongkun.hzk@bytedance.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] memcg: provide reclaim stats via 'memory.reclaim'
+Date: Tue, 24 May 2022 07:45:40 -0400
+Message-ID: <YozFZI2euSjWPgDb@cmpxchg.org>
+References: <20220518223815.809858-1-vaibhav@linux.ibm.com>
+ <YoYj4sLJfGke5IGT@dhcp22.suse.cz>
+ <87zgjcg4xs.fsf@vajain21.in.ibm.com>
+ <YodDaFVeU33bu7yQ@dhcp22.suse.cz>
+ <CAJD7tkYwv2LDZeV2F5pxuniw7LCNjBapDCm3WuRhzwTH-jN3PA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1653389249; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=a/JkmIrb3U0V/yu8PhyV+N8XrbjKAUo7AoBVKzx+G8o=;
-        b=Rb3brHeSayt8ozGawjFpwJcpvr999BpR3pDQSkTLuEcz3hN1uVvTRiwpyoqnj5WBbqdbfP
-        /TQRnq2orPaNUKVKgZnKJ3ryV4w0E7kHBeTVB+jZF4GkIEu7LsnZuQ7uoEYsdoPSKyWcFL
-        gpRbufrymhC1QhjhY7nO7Vta82G2XVw=
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=CR09yeXsFtoUOg9OMladANfYR85/7BwnLnQK+uR1N0Y=;
+        b=fvqp9+cdKj6LUnqaiDF1ifg3kW67yhA7mfjWX6ZFH2sG5F8ll4k55tNdNMuoB1M4to
+         Z1AV36+WHxVDjTPLY6bzHrbo5yJXPiJYOceulRYWs7upkmVU3JGKtI50rd0LWM/Pmo91
+         Z65P8xlljk+pDOkEJB58JvWaTZZdZ5QPbzT38ZFoJGHl/G+l2Jz7Limq9k4aafPrTBoO
+         VQeW7Q/M2I8PndKg6WFmKst0Pc3oRyJmlwI0SCBvP/h9UWXS8S2mRljTo/QRrsFQH+/T
+         7FlXtbCY5LpzOlJWW9Vrj3DkOYOFXiz3oUu1znM50xY05BDXckQpGZUkOI6gWeA7kRD+
+         P8Aw==
 Content-Disposition: inline
-In-Reply-To: <20220524103638.473-1-hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+In-Reply-To: <CAJD7tkYwv2LDZeV2F5pxuniw7LCNjBapDCm3WuRhzwTH-jN3PA@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: hezhongkun <hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Michal Hocko <mhocko@suse.com>, Vaibhav Jain <vaibhav@linux.ibm.com>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>, Shakeel Butt <shakeelb@google.com>
 
-On Tue 24-05-22 18:36:38, hezhongkun wrote:
-> From: Hezhongkun <hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+On Mon, May 23, 2022 at 03:50:34PM -0700, Yosry Ahmed wrote:
+> I think it might be useful to have a dedicated entry in memory.stat
+> for proactively reclaimed memory. A case where this would be useful is
+> tuning and evaluating userspace proactive reclaimers. For instance, if
+> a userspace agent is asking the kernel to reclaim 100M, but it could
+> only reclaim 10M, then most probably the proactive reclaimer is not
+> using a good methodology to figure out how much memory do we need to
+> reclaim.
 > 
-> Mempolicy is difficult to use because it is set in-process
-> via a system call. We want to make it easier to use mempolicy
-> in cgroups, so that we can control low-priority cgroups to
-> allocate memory in specified nodes. So this patch want to
-> adds the mempolicy interface.
-> 
-> the mempolicy priority of memcgroup is higher than the priority
-> of task. The order of getting the policy is,
-> memcgroup->policy,task->policy or vma policy, default policy.
-> memcgroup's policy is owned by itself, so descendants will
-> not inherit it.
+> IMO this is more useful, and a superset of just reading the last
+> reclaim request status through memory.reclaim (read stat before and
+> after).
 
-Why cannot you use cpuset cgroup?
--- 
-Michal Hocko
-SUSE Labs
++1
