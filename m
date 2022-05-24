@@ -1,145 +1,317 @@
 From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [PATCH v3 3/5] selftests: memcg: Adjust expected reclaim values of protected cgroups
-Date: Tue, 24 May 2022 18:29:53 +0200
-Message-ID: <20220524162955.8635-4-mkoutny@suse.com>
+Subject: [PATCH v3 5/5] selftests: memcg: Factor out common parts of memory.{low,min} tests
+Date: Tue, 24 May 2022 18:29:55 +0200
+Message-ID: <20220524162955.8635-6-mkoutny@suse.com>
 References: <20220524162955.8635-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
         t=1653409812; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=cKGPq8DHXqg/BZ9ns1f1cijK/RIhvP5mmTqwN+55vJM=;
-        b=upk6bhIpVgvgmf1jc5G7adYVQk/rourSCXADr/xzTtlbA7qOhme6DOmKo3Giz2dCNiLei7
-        f4xFy2a7VfBpzgKAckbkMOHPHxH3osGXxvSHtpqcmai2/BNTH/L/gXIRVaKtgxrS/WDBwP
-        YftErBMsTf2PXgeNoxVxwrpLmg8Jd2c=
+        bh=MgDcGy2HGZHoFIxp9YRQq/LcvV4yVV/hIqOQDLhYAM0=;
+        b=DcXBLRLY4+IqwLQZE1RhqsdHYUCEHY4OS0dpn9adsiqAitjNteZLOMDWQ/cfdIqdC0ufc2
+        X4CVWFT9k6UFqNNN0RO981wnpgn2yiQ08hFCUlQcw/qd53f9ZklcPYwv4XbrA4im19ex0x
+        ThkX6fB0GdaLr/YhNRhMC0M3p3rdVmw=
 In-Reply-To: <20220524162955.8635-1-mkoutny-IBi9RG/b67k@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
+Content-Type: text/plain; charset="utf-8"
 To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Palethorpe <rpalethorpe-l3A5Bk7waGM@public.gmane.org>, Muhammad Usama Anjum <usama.anjum-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
 
-VGhlIG51bWJlcnMgYXJlIG5vdCBlYXN5IHRvIGRlcml2ZSBpbiBhIGNsb3NlZCBmb3JtIChjZXJ0
-YWlubHkgbWVyZQpwcm90ZWN0aW9ucyByYXRpb3MgZG8gbm90IGFwcGx5KSwgdGhlcmVmb3JlIHVz
-ZSBhIHNpbXVsYXRpb24gdG8gb2J0YWluCmV4cGVjdGVkIG51bWJlcnMuCgpTaWduZWQtb2ZmLWJ5
-OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueS1JQmk5UkcvYjY3a0BwdWJsaWMuZ21hbmUub3JnPgpB
-Y2tlZC1ieTogUm9tYW4gR3VzaGNoaW4gPHJvbWFuLmd1c2hjaGluLWZ4VVZYZnRJRkRueUcxekVP
-Ylh0ZkFAcHVibGljLmdtYW5lLm9yZz4KLS0tCiBNQUlOVEFJTkVSUyAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgfCAgMSArCiAuLi4vc2VsZnRlc3RzL2Nncm91cC9tZW1jZ19wcm90
-ZWN0aW9uLm0gICAgICAgfCA4OSArKysrKysrKysrKysrKysrKysrCiAuLi4vc2VsZnRlc3RzL2Nn
-cm91cC90ZXN0X21lbWNvbnRyb2wuYyAgICAgICAgfCAyOSArKystLS0KIDMgZmlsZXMgY2hhbmdl
-ZCwgMTA3IGluc2VydGlvbnMoKyksIDEyIGRlbGV0aW9ucygtKQogY3JlYXRlIG1vZGUgMTAwNjQ0
-IHRvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC9tZW1jZ19wcm90ZWN0aW9uLm0KCmRpZmYg
-LS1naXQgYS9NQUlOVEFJTkVSUyBiL01BSU5UQUlORVJTCmluZGV4IDc4YzU3MDQ2ZmE5My4uYjI4
-YjZhZWI4NjM2IDEwMDY0NAotLS0gYS9NQUlOVEFJTkVSUworKysgYi9NQUlOVEFJTkVSUwpAQCAt
-NTAyOSw2ICs1MDI5LDcgQEAgTDoJbGludXgtbW0tQnczMU1hWktLczNZdGp2eVc2eURzZ0BwdWJs
-aWMuZ21hbmUub3JnCiBTOglNYWludGFpbmVkCiBGOgltbS9tZW1jb250cm9sLmMKIEY6CW1tL3N3
-YXBfY2dyb3VwLmMKK0Y6CXRvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC9tZW1jZ19wcm90
-ZWN0aW9uLm0KIEY6CXRvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC90ZXN0X2ttZW0uYwog
-RjoJdG9vbHMvdGVzdGluZy9zZWxmdGVzdHMvY2dyb3VwL3Rlc3RfbWVtY29udHJvbC5jCiAKZGlm
-ZiAtLWdpdCBhL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC9tZW1jZ19wcm90ZWN0aW9u
-Lm0gYi90b29scy90ZXN0aW5nL3NlbGZ0ZXN0cy9jZ3JvdXAvbWVtY2dfcHJvdGVjdGlvbi5tCm5l
-dyBmaWxlIG1vZGUgMTAwNjQ0CmluZGV4IDAwMDAwMDAwMDAwMC4uMDUxZGFhMzQ3N2I2Ci0tLSAv
-ZGV2L251bGwKKysrIGIvdG9vbHMvdGVzdGluZy9zZWxmdGVzdHMvY2dyb3VwL21lbWNnX3Byb3Rl
-Y3Rpb24ubQpAQCAtMCwwICsxLDg5IEBACislIFNQRFgtTGljZW5zZS1JZGVudGlmaWVyOiBHUEwt
-Mi4wCislCislIHJ1biBhczogb2N0YXZlLWNsaSBtZW1jZ19wcm90ZWN0aW9uLm0KKyUKKyUgVGhp
-cyBzY3JpcHQgc2ltdWxhdGVzIHJlY2xhaW0gcHJvdGVjdGlvbiBiZWhhdmlvciBvbiBhIHNpbmds
-ZSBsZXZlbCBvZiBtZW1jZworJSBoaWVyYXJjaHkgdG8gaWxsdXN0cmF0ZSBob3cgb3ZlcmNvbW1p
-dHRlZCBwcm90ZWN0aW9uIHNwcmVhZHMgYW1vbmcgc2libGluZ3MKKyUgKGFzIGl0IGRlcGVuZHMg
-YWxzbyBvbiB0aGVpciBjdXJyZW50IGNvbnN1bXB0aW9uKS4KKyUKKyUgU2ltdWxhdGlvbiBhc3N1
-bWVzIHNpYmxpbmdzIGNvbnN1bWVkIHRoZSBpbml0aWFsIGFtb3VudCBvZiBtZW1vcnkgKHcvb3V0
-CislIHJlY2xhaW0pIGFuZCB0aGVuIHRoZSByZWNsYWltIHN0YXJ0cywgYWxsIG1lbW9yeSBpcyBy
-ZWNsYWltYWJsZSwgaS5lLiB0cmVhdGVkCislIHNhbWUuIEl0IHNpbXVsYXRlcyBvbmx5IG5vbi1s
-b3cgcmVjbGFpbSBhbmQgYXNzdW1lcyBhbGwgbWVtb3J5Lm1pbiA9IDAuCislCislIElucHV0IGNv
-bmZpZ3VyYXRpb25zCislIC0tLS0tLS0tLS0tLS0tLS0tLS0tCislIEUgbnVtYmVyCXBhcmVudCBl
-ZmZlY3RpdmUgcHJvdGVjdGlvbgorJSBuIHZlY3Rvcglub21pbmFsIHByb3RlY3Rpb24gb2Ygc2li
-bGluZ3Mgc2V0IGF0IHRoZSBnaXZlbiBsZXZlbCAobWVtb3J5LmxvdykKKyUgYyB2ZWN0b3IJY3Vy
-cmVudCBjb25zdW1wdGlvbiAtLCwtIChtZW1vcnkuY3VycmVudCkKKworJSBleGFtcGxlIGZyb20g
-dGVzdGNhc2UgKHZhbHVlcyBpbiBHQikKK0UgPSA1MCAvIDEwMjQ7CituID0gWzc1IDI1IDAgNTAw
-IF0gLyAxMDI0OworYyA9IFs1MCA1MCA1MCAwXSAvIDEwMjQ7CisKKyUgUmVjbGFpbSBwYXJhbWV0
-ZXJzCislIC0tLS0tLS0tLS0tLS0tLS0tLQorCislIE1pbmltYWwgcmVjbGFpbSBhbW91bnQgKEdC
-KQorY2x1c3RlciA9IDMyKjQgLyAyKioyMDsKKworJSBSZWNsYWltIGNvZWZmaWNpZW50ICh0aGlu
-ayBhcyAwLjVec2MtPnByaW9yaXR5KQorYWxwaGEgPSAuMQorCislIFNpbXVsYXRpb24gcGFyYW1l
-dGVycworJSAtLS0tLS0tLS0tLS0tLS0tLS0tLS0KK2Vwc2lsb24gPSAxZS03OwordGltZW91dCA9
-IDEwMDA7CisKKyUgU2ltdWxhdGlvbiBsb29wCislIC0tLS0tLS0tLS0tLS0tLQorCitjaCA9IFtd
-OworZWggPSBbXTsKK3JoID0gW107CisKK2ZvciB0ID0gMTp0aW1lb3V0CisgICAgICAgICUgbG93
-X3VzYWdlCisgICAgICAgIHUgPSBtaW4oYywgbik7CisgICAgICAgIHNpYmxpbmdzID0gc3VtKHUp
-OworCisgICAgICAgICUgZWZmZWN0aXZlX3Byb3RlY3Rpb24oKQorICAgICAgICBwcm90ZWN0ZWQg
-PSBtaW4obiwgYyk7ICAgICAgICAgICAgICAgICUgc3RhcnQgd2l0aCBub21pbmFsCisgICAgICAg
-IGUgPSBwcm90ZWN0ZWQgKiBtaW4oMSwgRSAvIHNpYmxpbmdzKTsgJSBub3JtYWxpemUgb3ZlcmNv
-bW1pdAorCisgICAgICAgICUgcmVjdXJzaXZlIHByb3RlY3Rpb24KKyAgICAgICAgdW5jbGFpbWVk
-ID0gbWF4KDAsIEUgLSBzaWJsaW5ncyk7CisgICAgICAgIHBhcmVudF9vdmVydXNlID0gc3VtKGMp
-IC0gc2libGluZ3M7CisgICAgICAgIGlmICh1bmNsYWltZWQgPiAwICYmIHBhcmVudF9vdmVydXNl
-ID4gMCkKKyAgICAgICAgICAgICAgICBvdmVydXNlID0gbWF4KDAsIGMgLSBwcm90ZWN0ZWQpOwor
-ICAgICAgICAgICAgICAgIGUgKz0gdW5jbGFpbWVkICogKG92ZXJ1c2UgLyBwYXJlbnRfb3ZlcnVz
-ZSk7CisgICAgICAgIGVuZGlmCisKKyAgICAgICAgJSBnZXRfc2Nhbl9jb3VudCgpCisgICAgICAg
-IHIgPSBhbHBoYSAqIGM7ICAgICAgICAgICAgICUgYXNzdW1lIGFsbCBtZW1vcnkgaXMgaW4gYSBz
-aW5nbGUgTFJVIGxpc3QKKworICAgICAgICAlIGNvbW1pdCAxYmM2M2ZiMTI3MmIgKCJtbSwgbWVt
-Y2c6IG1ha2Ugc2NhbiBhZ2dyZXNzaW9uIGFsd2F5cyBleGNsdWRlIHByb3RlY3Rpb24iKQorICAg
-ICAgICBzeiA9IG1heChlLCBjKTsKKyAgICAgICAgciAuKj0gKDEgLSAoZStlcHNpbG9uKSAuLyAo
-c3orZXBzaWxvbikpOworCisgICAgICAgICUgdW5jb21tZW50IHRvIGRlYnVnIHByaW50cworICAg
-ICAgICAlIGUsIGMsIHIKKworICAgICAgICAlIG5vdGhpbmcgdG8gcmVjbGFpbSwgcmVhY2hlZCBl
-cXVpbGlicml1bQorICAgICAgICBpZiBtYXgocikgPCBlcHNpbG9uCisgICAgICAgICAgICAgICAg
-YnJlYWs7CisgICAgICAgIGVuZGlmCisKKyAgICAgICAgJSBTV0FQX0NMVVNURVJfTUFYIHJvdW5k
-dXAKKyAgICAgICAgciA9IG1heChyLCAociA+IGVwc2lsb24pIC4qIGNsdXN0ZXIpOworICAgICAg
-ICAlIFhYWCBoZXJlIEkgZG8gcGFyYWxsZWwgcmVjbGFpbSBvZiBhbGwgc2libGluZ3MKKyAgICAg
-ICAgJSBpbiByZWFsaXR5IHJlY2xhaW0gaXMgc2VyaWFsaXplZCBhbmQgZWFjaCBzaWJsaW5nIHJl
-Y2FsY3VsYXRlcyBvd24gcmVzaWR1YWwKKyAgICAgICAgYyA9IG1heChjIC0gciwgMCk7CisKKyAg
-ICAgICAgY2ggPSBbY2ggOyBjXTsKKyAgICAgICAgZWggPSBbZWggOyBlXTsKKyAgICAgICAgcmgg
-PSBbcmggOyByXTsKK2VuZGZvcgorCit0CitjLCBlCmRpZmYgLS1naXQgYS90b29scy90ZXN0aW5n
-L3NlbGZ0ZXN0cy9jZ3JvdXAvdGVzdF9tZW1jb250cm9sLmMgYi90b29scy90ZXN0aW5nL3NlbGZ0
-ZXN0cy9jZ3JvdXAvdGVzdF9tZW1jb250cm9sLmMKaW5kZXggNDkyNDQyNTYzOWIwLi5kYzJjN2Q2
-ZTM1NzIgMTAwNjQ0Ci0tLSBhL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC90ZXN0X21l
-bWNvbnRyb2wuYworKysgYi90b29scy90ZXN0aW5nL3NlbGZ0ZXN0cy9jZ3JvdXAvdGVzdF9tZW1j
-b250cm9sLmMKQEAgLTI0OCw3ICsyNDgsNyBAQCBzdGF0aWMgaW50IGNnX3Rlc3RfcHJvY19raWxs
-ZWQoY29uc3QgY2hhciAqY2dyb3VwKQogLyoKICAqIEZpcnN0LCB0aGlzIHRlc3QgY3JlYXRlcyB0
-aGUgZm9sbG93aW5nIGhpZXJhcmNoeToKICAqIEEgICAgICAgbWVtb3J5Lm1pbiA9IDUwTSwgIG1l
-bW9yeS5tYXggPSAyMDBNCi0gKiBBL0IgICAgIG1lbW9yeS5taW4gPSA1ME0sICBtZW1vcnkuY3Vy
-cmVudCA9IDUwTQorICogQS9CICAgICBtZW1vcnkubWluID0gNTBNCiAgKiBBL0IvQyAgIG1lbW9y
-eS5taW4gPSA3NU0sICBtZW1vcnkuY3VycmVudCA9IDUwTQogICogQS9CL0QgICBtZW1vcnkubWlu
-ID0gMjVNLCAgbWVtb3J5LmN1cnJlbnQgPSA1ME0KICAqIEEvQi9FICAgbWVtb3J5Lm1pbiA9IDAs
-ICAgIG1lbW9yeS5jdXJyZW50ID0gNTBNCkBAIC0yNTksMTAgKzI1OSwxMyBAQCBzdGF0aWMgaW50
-IGNnX3Rlc3RfcHJvY19raWxsZWQoY29uc3QgY2hhciAqY2dyb3VwKQogICogVGhlbiBpdCBjcmVh
-dGVzIEEvRyBhbmQgY3JlYXRlcyBhIHNpZ25pZmljYW50CiAgKiBtZW1vcnkgcHJlc3N1cmUgaW4g
-aXQuCiAgKgorICogVGhlbiBpdCBjaGVja3MgYWN0dWFsIG1lbW9yeSB1c2FnZXMgYW5kIGV4cGVj
-dHMgdGhhdDoKICAqIEEvQiAgICBtZW1vcnkuY3VycmVudCB+PSA1ME0KLSAqIEEvQi9DICBtZW1v
-cnkuY3VycmVudCB+PSAzM00KLSAqIEEvQi9EICBtZW1vcnkuY3VycmVudCB+PSAxN00KLSAqIEEv
-Qi9GICBtZW1vcnkuY3VycmVudCB+PSAwCisgKiBBL0IvQyAgbWVtb3J5LmN1cnJlbnQgfj0gMjlN
-CisgKiBBL0IvRCAgbWVtb3J5LmN1cnJlbnQgfj0gMjFNCisgKiBBL0IvRSAgbWVtb3J5LmN1cnJl
-bnQgfj0gMAorICogQS9CL0YgIG1lbW9yeS5jdXJyZW50ICA9IDAKKyAqIChmb3Igb3JpZ2luIG9m
-IHRoZSBudW1iZXJzLCBzZWUgbW9kZWwgaW4gbWVtY2dfcHJvdGVjdGlvbi5tLikKICAqCiAgKiBB
-ZnRlciB0aGF0IGl0IHRyaWVzIHRvIGFsbG9jYXRlIG1vcmUgdGhhbiB0aGVyZSBpcwogICogdW5w
-cm90ZWN0ZWQgbWVtb3J5IGluIEEgYXZhaWxhYmxlLCBhbmQgY2hlY2tzCkBAIC0zNjUsMTAgKzM2
-OCwxMCBAQCBzdGF0aWMgaW50IHRlc3RfbWVtY2dfbWluKGNvbnN0IGNoYXIgKnJvb3QpCiAJZm9y
-IChpID0gMDsgaSA8IEFSUkFZX1NJWkUoY2hpbGRyZW4pOyBpKyspCiAJCWNbaV0gPSBjZ19yZWFk
-X2xvbmcoY2hpbGRyZW5baV0sICJtZW1vcnkuY3VycmVudCIpOwogCi0JaWYgKCF2YWx1ZXNfY2xv
-c2UoY1swXSwgTUIoMzMpLCAxMCkpCisJaWYgKCF2YWx1ZXNfY2xvc2UoY1swXSwgTUIoMjkpLCAx
-MCkpCiAJCWdvdG8gY2xlYW51cDsKIAotCWlmICghdmFsdWVzX2Nsb3NlKGNbMV0sIE1CKDE3KSwg
-MTApKQorCWlmICghdmFsdWVzX2Nsb3NlKGNbMV0sIE1CKDIxKSwgMTApKQogCQlnb3RvIGNsZWFu
-dXA7CiAKIAlpZiAoY1szXSAhPSAwKQpAQCAtNDA1LDcgKzQwOCw3IEBAIHN0YXRpYyBpbnQgdGVz
-dF9tZW1jZ19taW4oY29uc3QgY2hhciAqcm9vdCkKIC8qCiAgKiBGaXJzdCwgdGhpcyB0ZXN0IGNy
-ZWF0ZXMgdGhlIGZvbGxvd2luZyBoaWVyYXJjaHk6CiAgKiBBICAgICAgIG1lbW9yeS5sb3cgPSA1
-ME0sICBtZW1vcnkubWF4ID0gMjAwTQotICogQS9CICAgICBtZW1vcnkubG93ID0gNTBNLCAgbWVt
-b3J5LmN1cnJlbnQgPSA1ME0KKyAqIEEvQiAgICAgbWVtb3J5LmxvdyA9IDUwTQogICogQS9CL0Mg
-ICBtZW1vcnkubG93ID0gNzVNLCAgbWVtb3J5LmN1cnJlbnQgPSA1ME0KICAqIEEvQi9EICAgbWVt
-b3J5LmxvdyA9IDI1TSwgIG1lbW9yeS5jdXJyZW50ID0gNTBNCiAgKiBBL0IvRSAgIG1lbW9yeS5s
-b3cgPSAwLCAgICBtZW1vcnkuY3VycmVudCA9IDUwTQpAQCAtNDE3LDkgKzQyMCwxMSBAQCBzdGF0
-aWMgaW50IHRlc3RfbWVtY2dfbWluKGNvbnN0IGNoYXIgKnJvb3QpCiAgKgogICogVGhlbiBpdCBj
-aGVja3MgYWN0dWFsIG1lbW9yeSB1c2FnZXMgYW5kIGV4cGVjdHMgdGhhdDoKICAqIEEvQiAgICBt
-ZW1vcnkuY3VycmVudCB+PSA1ME0KLSAqIEEvQi8gICBtZW1vcnkuY3VycmVudCB+PSAzM00KLSAq
-IEEvQi9EICBtZW1vcnkuY3VycmVudCB+PSAxN00KLSAqIEEvQi9GICBtZW1vcnkuY3VycmVudCB+
-PSAwCisgKiBBL0IvQyAgbWVtb3J5LmN1cnJlbnQgfj0gMjlNCisgKiBBL0IvRCAgbWVtb3J5LmN1
-cnJlbnQgfj0gMjFNCisgKiBBL0IvRSAgbWVtb3J5LmN1cnJlbnQgfj0gMAorICogQS9CL0YgIG1l
-bW9yeS5jdXJyZW50ICA9IDAKKyAqIChmb3Igb3JpZ2luIG9mIHRoZSBudW1iZXJzLCBzZWUgbW9k
-ZWwgaW4gbWVtY2dfcHJvdGVjdGlvbi5tLikKICAqCiAgKiBBZnRlciB0aGF0IGl0IHRyaWVzIHRv
-IGFsbG9jYXRlIG1vcmUgdGhhbiB0aGVyZSBpcwogICogdW5wcm90ZWN0ZWQgbWVtb3J5IGluIEEg
-YXZhaWxhYmxlLApAQCAtNTEyLDEwICs1MTcsMTAgQEAgc3RhdGljIGludCB0ZXN0X21lbWNnX2xv
-dyhjb25zdCBjaGFyICpyb290KQogCWZvciAoaSA9IDA7IGkgPCBBUlJBWV9TSVpFKGNoaWxkcmVu
-KTsgaSsrKQogCQljW2ldID0gY2dfcmVhZF9sb25nKGNoaWxkcmVuW2ldLCAibWVtb3J5LmN1cnJl
-bnQiKTsKIAotCWlmICghdmFsdWVzX2Nsb3NlKGNbMF0sIE1CKDMzKSwgMTApKQorCWlmICghdmFs
-dWVzX2Nsb3NlKGNbMF0sIE1CKDI5KSwgMTApKQogCQlnb3RvIGNsZWFudXA7CiAKLQlpZiAoIXZh
-bHVlc19jbG9zZShjWzFdLCBNQigxNyksIDEwKSkKKwlpZiAoIXZhbHVlc19jbG9zZShjWzFdLCBN
-QigyMSksIDEwKSkKIAkJZ290byBjbGVhbnVwOwogCiAJaWYgKGNbM10gIT0gMCkKLS0gCjIuMzUu
-MwoK
+The memory protection test setup and runtime is almost equal for
+memory.low and memory.min cases.
+It makes modification of the common parts prone to mistakes, since the
+protections are similar not only in setup but also in principle, factor
+the common part out.
+
+Past exceptions between the tests:
+- missing memory.min is fine (kept),
+- test_memcg_low protected orphaned pagecache (adapted like
+  test_memcg_min and we keep the processes of protected memory running).
+
+The evaluation in two tests is different (OOM of allocator vs low events
+of protégés), this is kept different.
+
+Signed-off-by: Michal Koutný <mkoutny-IBi9RG/b67k@public.gmane.org>
+---
+ .../selftests/cgroup/test_memcontrol.c        | 199 ++++--------------
+ 1 file changed, 36 insertions(+), 163 deletions(-)
+
+diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+index 63c6a683a8c1..c3d0d5f7b19c 100644
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c
++++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -190,13 +190,6 @@ static int test_memcg_current(const char *root)
+ 	return ret;
+ }
+ 
+-static int alloc_pagecache_50M(const char *cgroup, void *arg)
+-{
+-	int fd = (long)arg;
+-
+-	return alloc_pagecache(fd, MB(50));
+-}
+-
+ static int alloc_pagecache_50M_noexit(const char *cgroup, void *arg)
+ {
+ 	int fd = (long)arg;
+@@ -254,7 +247,9 @@ static int cg_test_proc_killed(const char *cgroup)
+  * A/B/E   memory.min = 0,    memory.current = 50M
+  * A/B/F   memory.min = 500M, memory.current = 0
+  *
+- * Usages are pagecache, but the test keeps a running
++ * (or memory.low if we test soft protection)
++ *
++ * Usages are pagecache and the test keeps a running
+  * process in every leaf cgroup.
+  * Then it creates A/G and creates a significant
+  * memory pressure in A.
+@@ -268,15 +263,16 @@ static int cg_test_proc_killed(const char *cgroup)
+  * (for origin of the numbers, see model in memcg_protection.m.)
+  *
+  * After that it tries to allocate more than there is
+- * unprotected memory in A available, and checks
+- * checks that memory.min protects pagecache even
+- * in this case.
++ * unprotected memory in A available, and checks that:
++ * a) memory.min protects pagecache even in this case,
++ * b) memory.low allows reclaiming page cache with low events.
+  */
+-static int test_memcg_min(const char *root)
++static int test_memcg_protection(const char *root, bool min)
+ {
+-	int ret = KSFT_FAIL;
++	int ret = KSFT_FAIL, rc;
+ 	char *parent[3] = {NULL};
+ 	char *children[4] = {NULL};
++	const char *attribute = min ? "memory.min" : "memory.low";
+ 	long c[4];
+ 	int i, attempts;
+ 	int fd;
+@@ -300,8 +296,10 @@ static int test_memcg_min(const char *root)
+ 	if (cg_create(parent[0]))
+ 		goto cleanup;
+ 
+-	if (cg_read_long(parent[0], "memory.min")) {
+-		ret = KSFT_SKIP;
++	if (cg_read_long(parent[0], attribute)) {
++		/* No memory.min on older kernels is fine */
++		if (min)
++			ret = KSFT_SKIP;
+ 		goto cleanup;
+ 	}
+ 
+@@ -338,15 +336,15 @@ static int test_memcg_min(const char *root)
+ 			      (void *)(long)fd);
+ 	}
+ 
+-	if (cg_write(parent[1], "memory.min", "50M"))
++	if (cg_write(parent[1],   attribute, "50M"))
+ 		goto cleanup;
+-	if (cg_write(children[0], "memory.min", "75M"))
++	if (cg_write(children[0], attribute, "75M"))
+ 		goto cleanup;
+-	if (cg_write(children[1], "memory.min", "25M"))
++	if (cg_write(children[1], attribute, "25M"))
+ 		goto cleanup;
+-	if (cg_write(children[2], "memory.min", "0"))
++	if (cg_write(children[2], attribute, "0"))
+ 		goto cleanup;
+-	if (cg_write(children[3], "memory.min", "500M"))
++	if (cg_write(children[3], attribute, "500M"))
+ 		goto cleanup;
+ 
+ 	attempts = 0;
+@@ -375,161 +373,26 @@ static int test_memcg_min(const char *root)
+ 	if (c[3] != 0)
+ 		goto cleanup;
+ 
+-	if (!cg_run(parent[2], alloc_anon, (void *)MB(170)))
+-		goto cleanup;
+-
+-	if (!values_close(cg_read_long(parent[1], "memory.current"), MB(50), 3))
+-		goto cleanup;
+-
+-	ret = KSFT_PASS;
+-
+-cleanup:
+-	for (i = ARRAY_SIZE(children) - 1; i >= 0; i--) {
+-		if (!children[i])
+-			continue;
+-
+-		cg_destroy(children[i]);
+-		free(children[i]);
+-	}
+-
+-	for (i = ARRAY_SIZE(parent) - 1; i >= 0; i--) {
+-		if (!parent[i])
+-			continue;
+-
+-		cg_destroy(parent[i]);
+-		free(parent[i]);
+-	}
+-	close(fd);
+-	return ret;
+-}
+-
+-/*
+- * First, this test creates the following hierarchy:
+- * A       memory.low = 0,    memory.max = 200M
+- * A/B     memory.low = 50M
+- * A/B/C   memory.low = 75M,  memory.current = 50M
+- * A/B/D   memory.low = 25M,  memory.current = 50M
+- * A/B/E   memory.low = 0,    memory.current = 50M
+- * A/B/F   memory.low = 500M, memory.current = 0
+- *
+- * Usages are pagecache.
+- * Then it creates A/G an creates a significant
+- * memory pressure in it.
+- *
+- * Then it checks actual memory usages and expects that:
+- * A/B    memory.current ~= 50M
+- * A/B/C  memory.current ~= 29M
+- * A/B/D  memory.current ~= 21M
+- * A/B/E  memory.current ~= 0
+- * A/B/F  memory.current  = 0
+- * (for origin of the numbers, see model in memcg_protection.m.)
+- *
+- * After that it tries to allocate more than there is
+- * unprotected memory in A available,
+- * and checks low and oom events in memory.events.
+- */
+-static int test_memcg_low(const char *root)
+-{
+-	int ret = KSFT_FAIL;
+-	char *parent[3] = {NULL};
+-	char *children[4] = {NULL};
+-	long low, oom;
+-	long c[4];
+-	int i;
+-	int fd;
+-
+-	fd = get_temp_fd();
+-	if (fd < 0)
+-		goto cleanup;
+-
+-	parent[0] = cg_name(root, "memcg_test_0");
+-	if (!parent[0])
+-		goto cleanup;
+-
+-	parent[1] = cg_name(parent[0], "memcg_test_1");
+-	if (!parent[1])
+-		goto cleanup;
+-
+-	parent[2] = cg_name(parent[0], "memcg_test_2");
+-	if (!parent[2])
+-		goto cleanup;
+-
+-	if (cg_create(parent[0]))
+-		goto cleanup;
+-
+-	if (cg_read_long(parent[0], "memory.low"))
+-		goto cleanup;
+-
+-	if (cg_write(parent[0], "cgroup.subtree_control", "+memory"))
++	rc = cg_run(parent[2], alloc_anon, (void *)MB(170));
++	if (min && !rc)
+ 		goto cleanup;
+-
+-	if (cg_write(parent[0], "memory.max", "200M"))
+-		goto cleanup;
+-
+-	if (cg_write(parent[0], "memory.swap.max", "0"))
+-		goto cleanup;
+-
+-	if (cg_create(parent[1]))
+-		goto cleanup;
+-
+-	if (cg_write(parent[1], "cgroup.subtree_control", "+memory"))
+-		goto cleanup;
+-
+-	if (cg_create(parent[2]))
++	else if (!min && rc) {
++		fprintf(stderr,
++			"memory.low prevents from allocating anon memory\n");
+ 		goto cleanup;
+-
+-	for (i = 0; i < ARRAY_SIZE(children); i++) {
+-		children[i] = cg_name_indexed(parent[1], "child_memcg", i);
+-		if (!children[i])
+-			goto cleanup;
+-
+-		if (cg_create(children[i]))
+-			goto cleanup;
+-
+-		if (i > 2)
+-			continue;
+-
+-		if (cg_run(children[i], alloc_pagecache_50M, (void *)(long)fd))
+-			goto cleanup;
+ 	}
+ 
+-	if (cg_write(parent[1], "memory.low", "50M"))
+-		goto cleanup;
+-	if (cg_write(children[0], "memory.low", "75M"))
+-		goto cleanup;
+-	if (cg_write(children[1], "memory.low", "25M"))
+-		goto cleanup;
+-	if (cg_write(children[2], "memory.low", "0"))
+-		goto cleanup;
+-	if (cg_write(children[3], "memory.low", "500M"))
+-		goto cleanup;
+-
+-	if (cg_run(parent[2], alloc_anon, (void *)MB(148)))
+-		goto cleanup;
+-
+ 	if (!values_close(cg_read_long(parent[1], "memory.current"), MB(50), 3))
+ 		goto cleanup;
+ 
+-	for (i = 0; i < ARRAY_SIZE(children); i++)
+-		c[i] = cg_read_long(children[i], "memory.current");
+-
+-	if (!values_close(c[0], MB(29), 10))
+-		goto cleanup;
+-
+-	if (!values_close(c[1], MB(21), 10))
+-		goto cleanup;
+-
+-	if (c[3] != 0)
+-		goto cleanup;
+-
+-	if (cg_run(parent[2], alloc_anon, (void *)MB(166))) {
+-		fprintf(stderr,
+-			"memory.low prevents from allocating anon memory\n");
++	if (min) {
++		ret = KSFT_PASS;
+ 		goto cleanup;
+ 	}
+ 
+ 	for (i = 0; i < ARRAY_SIZE(children); i++) {
+ 		int no_low_events_index = 1;
++		long low, oom;
+ 
+ 		oom = cg_read_key_long(children[i], "memory.events", "oom ");
+ 		low = cg_read_key_long(children[i], "memory.events", "low ");
+@@ -565,6 +428,16 @@ static int test_memcg_low(const char *root)
+ 	return ret;
+ }
+ 
++static int test_memcg_min(const char *root)
++{
++	return test_memcg_protection(root, true);
++}
++
++static int test_memcg_low(const char *root)
++{
++	return test_memcg_protection(root, false);
++}
++
+ static int alloc_pagecache_max_30M(const char *cgroup, void *arg)
+ {
+ 	size_t size = MB(50);
+-- 
+2.35.3
+
