@@ -1,99 +1,82 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v4 03/11] mm: memcontrol: make lruvec lock safe when LRU
- pages are reparented
-Date: Tue, 24 May 2022 15:27:20 -0400
-Message-ID: <Yo0xmKOkBkhRy+bq@cmpxchg.org>
+Subject: Re: [PATCH v4 04/11] mm: vmscan: rework move_pages_to_lru()
+Date: Tue, 24 May 2022 15:38:50 -0400
+Message-ID: <Yo00Svsy/N8cJVmf@cmpxchg.org>
 References: <20220524060551.80037-1-songmuchun@bytedance.com>
- <20220524060551.80037-4-songmuchun@bytedance.com>
+ <20220524060551.80037-5-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=iHC/s/wKwgFf20BDbmEN0QqnLll5khAsu3zMTLCS7uM=;
-        b=UOC+0QNjQ3eKtHdh787nVfBuk5iczhXDMucSuwob+bzfFcNtAZ+/MFwi7vgLF+FeJP
-         11/fIC8zmH9vY/GeNbcQ712AygNw9xkKvd6SDfeEPD3F6qaP1f8fEn7ZrlDOU4WGI5Ff
-         z5pdg9OTxMI4cL/Ehl8ERiSnZ/igYnqO4lPvjTIbs0efPcmei6QsIaloTvfDsyoKW6fd
-         LNxBy8sftRPoA3ZDAK0onSKD2/ifzv8crV+QgtDtMb2OK3gGaWEOmwQa8F5ZbYREzYva
-         japzLzS7tfBh0n+gxMVTf/NTZ6c9AVBsngN53dvoa7sL8jl3O++5lxB+FRm3VpLY+CKu
-         gC3w==
+        bh=OnMNwdiDuKNvcNvHgJhe6ilL5BSVkcDVAFFW/UQvNfs=;
+        b=pSUp9QP4W736sqLANtAdsbjcRxz7NxrgIsEjTxS91pMbK6MTlMhrm614GZKG+ZIZbh
+         iy9WT5WKW0//Z4XyhuoEObIzJK7/VSRFbhHydJajpTdSneWWzCXiZ+Qd92OzgcqAjq/B
+         DgRjbCbFqtxfsgTgZLqSu5BOxuSvCQVg1SrGaDKURpJhCRAhkJm+k7oixIVzT3lJdFlx
+         oTz3WPP00s/i7i+MIM5I+ZU01FbelOHQX9riGe2P9gCaRTQ0imjJ4ZWrUAmXI6xOYg56
+         w43gFLQ9qfZxe34KG9XEHzI7kFN5BbtFfjsEea8+I/OaP6R5fmeQM7sMVnflF1nol3iw
+         cwcA==
 Content-Disposition: inline
-In-Reply-To: <20220524060551.80037-4-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+In-Reply-To: <20220524060551.80037-5-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Tue, May 24, 2022 at 02:05:43PM +0800, Muchun Song wrote:
-> The diagram below shows how to make the folio lruvec lock safe when LRU
-> pages are reparented.
-> 
-> folio_lruvec_lock(folio)
->     retry:
-> 	lruvec = folio_lruvec(folio);
-> 
->         // The folio is reparented at this time.
->         spin_lock(&lruvec->lru_lock);
-> 
->         if (unlikely(lruvec_memcg(lruvec) != folio_memcg(folio)))
->             // Acquired the wrong lruvec lock and need to retry.
->             // Because this folio is on the parent memcg lruvec list.
->             goto retry;
-> 
->         // If we reach here, it means that folio_memcg(folio) is stable.
-> 
-> memcg_reparent_objcgs(memcg)
->     // lruvec belongs to memcg and lruvec_parent belongs to parent memcg.
->     spin_lock(&lruvec->lru_lock);
->     spin_lock(&lruvec_parent->lru_lock);
-> 
->     // Move all the pages from the lruvec list to the parent lruvec list.
-> 
->     spin_unlock(&lruvec_parent->lru_lock);
->     spin_unlock(&lruvec->lru_lock);
-> 
-> After we acquire the lruvec lock, we need to check whether the folio is
-> reparented. If so, we need to reacquire the new lruvec lock. On the
-> routine of the LRU pages reparenting, we will also acquire the lruvec
-> lock (will be implemented in the later patch). So folio_memcg() cannot
-> be changed when we hold the lruvec lock.
-> 
-> Since lruvec_memcg(lruvec) is always equal to folio_memcg(folio) after
-> we hold the lruvec lock, lruvec_memcg_debug() check is pointless. So
-> remove it.
-> 
-> This is a preparation for reparenting the LRU pages.
+On Tue, May 24, 2022 at 02:05:44PM +0800, Muchun Song wrote:
+> In the later patch, we will reparent the LRU pages. The pages moved to
+> appropriate LRU list can be reparented during the process of the
+> move_pages_to_lru(). So holding a lruvec lock by the caller is wrong, we
+> should use the more general interface of folio_lruvec_relock_irq() to
+> acquire the correct lruvec lock.
 > 
 > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-
-This looks good to me. Just one question:
-
-> @@ -1230,10 +1213,23 @@ void lruvec_memcg_debug(struct lruvec *lruvec, struct folio *folio)
+> ---
+>  mm/vmscan.c | 49 +++++++++++++++++++++++++------------------------
+>  1 file changed, 25 insertions(+), 24 deletions(-)
+> 
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 1678802e03e7..761d5e0dd78d 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -2230,23 +2230,28 @@ static int too_many_isolated(struct pglist_data *pgdat, int file,
+>   * move_pages_to_lru() moves pages from private @list to appropriate LRU list.
+>   * On return, @list is reused as a list of pages to be freed by the caller.
+>   *
+> - * Returns the number of pages moved to the given lruvec.
+> + * Returns the number of pages moved to the appropriate LRU list.
+> + *
+> + * Note: The caller must not hold any lruvec lock.
 >   */
->  struct lruvec *folio_lruvec_lock(struct folio *folio)
+> -static unsigned int move_pages_to_lru(struct lruvec *lruvec,
+> -				      struct list_head *list)
+> +static unsigned int move_pages_to_lru(struct list_head *list)
 >  {
-> -	struct lruvec *lruvec = folio_lruvec(folio);
-> +	struct lruvec *lruvec;
+> -	int nr_pages, nr_moved = 0;
+> +	int nr_moved = 0;
+> +	struct lruvec *lruvec = NULL;
+>  	LIST_HEAD(pages_to_free);
+> -	struct page *page;
 >  
-> +	rcu_read_lock();
-> +retry:
-> +	lruvec = folio_lruvec(folio);
->  	spin_lock(&lruvec->lru_lock);
-> -	lruvec_memcg_debug(lruvec, folio);
+>  	while (!list_empty(list)) {
+> -		page = lru_to_page(list);
+> +		int nr_pages;
+> +		struct folio *folio = lru_to_folio(list);
+> +		struct page *page = &folio->page;
 > +
-> +	if (unlikely(lruvec_memcg(lruvec) != folio_memcg(folio))) {
-> +		spin_unlock(&lruvec->lru_lock);
-> +		goto retry;
-> +	}
-> +
-> +	/*
-> +	 * Preemption is disabled in the internal of spin_lock, which can serve
-> +	 * as RCU read-side critical sections.
-> +	 */
-> +	rcu_read_unlock();
+> +		lruvec = folio_lruvec_relock_irq(folio, lruvec);
+>  		VM_BUG_ON_PAGE(PageLRU(page), page);
+>  		list_del(&page->lru);
+>  		if (unlikely(!page_evictable(page))) {
+> -			spin_unlock_irq(&lruvec->lru_lock);
+> +			unlock_page_lruvec_irq(lruvec);
 
-The code looks right to me, but I don't understand the comment: why do
-we care that the rcu read-side continues? With the lru_lock held,
-reparenting is on hold and the lruvec cannot be rcu-freed anyway, no?
+Better to stick with the opencoded unlock. It matches a bit better
+with the locking function, compared to locking folio and unlocking
+page...
+
+Aside from that, this looks good:
+
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
