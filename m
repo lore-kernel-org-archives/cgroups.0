@@ -1,43 +1,45 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH mm v2 9/9] memcg: enable accounting for percpu allocation
- of struct rt_rq
-Date: Tue, 24 May 2022 18:31:44 -0700
-Message-ID: <Yo2HAGmySUVABVkt@carbon>
-References: <Yn6aL3cO7VdrmHHp@carbon>
- <d7094aa2-1cd0-835c-9fb7-d76003c47dad@openvz.org>
+From: Roman Gushchin <roman.gushchin@linux.dev>
+Subject: Re: [PATCH v3 5/5] selftests: memcg: Factor out common parts of
+ memory.{low,min} tests
+Date: Tue, 24 May 2022 19:26:05 -0700
+Message-ID: <Yo2TvWr/0Y6s9SE2@carbon>
+References: <20220524162955.8635-1-mkoutny@suse.com>
+ <20220524162955.8635-6-mkoutny@suse.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1653442310;
+        t=1653445571;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=vkgpgq0MLg/tjJXAvXd1NI0cnHVkERy6akx7DcAkEY8=;
-        b=IckRGymn51W5KSkNLGKDTL/8V3vl12R//mkoxvsoP3gyy98tW7DHo1FA4F0p1ga9sRz5TD
-        6FYxnT9//JecprFOB8jLgzbj00ug3+uTTxnUvnTh6E7aRsBziP72fgAqvxAnQoepov4Cae
-        Dv4kVvVHCn1BGd7fheY1UI98MFBbRYM=
+        bh=eXx4F9wUjqDqnxItlogKlV+6bSU2C37UciSDkRX2OcU=;
+        b=cltERvpd9/BsbbrUHUBYK9fauukniigpOChcjUlKIHJPRgAc6yjyz3akEdweV6Xi4OJZyj
+        xwcrNb/oUv0hkOCAg+rPrlPKRX6J+lb11T+AN+CraLePT67cbn9CIDG/2th4mL0KM4KPah
+        4gjfewLE7dCTdZVEzTWN+toba5BPeQ0=
 Content-Disposition: inline
-In-Reply-To: <d7094aa2-1cd0-835c-9fb7-d76003c47dad-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+In-Reply-To: <20220524162955.8635-6-mkoutny@suse.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, Richard Palethorpe <rpalethorpe@suse.de>, Muhammad Usama Anjum <usama.anjum@collabora.com>
 
-On Sat, May 21, 2022 at 07:39:03PM +0300, Vasily Averin wrote:
-> If enabled in config, alloc_rt_sched_group() is called for each new
-> cpu cgroup and allocates a huge (~1700 bytes) percpu struct rt_rq.
-> This significantly exceeds the size of the percpu allocation in the
-> common part of cgroup creation.
-> 
-> Memory allocated during new cpu cgroup creation
-> (with enabled RT_GROUP_SCHED):
-> common part:    ~11Kb   +   318 bytes percpu
-> cpu cgroup:     ~2.5Kb  + ~2800 bytes percpu
-> 
-> Accounting for this memory helps to avoid misuse inside memcg-limited
-> contianers.
-> 
-> Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+On Tue, May 24, 2022 at 06:29:55PM +0200, Michal Koutny wrote:
+> The memory protection test setup and runtime is almost equal for
+> memory.low and memory.min cases.
+> It makes modification of the common parts prone to mistakes, since the
+> protections are similar not only in setup but also in principle, factor
+> the common part out.
+>=20
+> Past exceptions between the tests:
+> - missing memory.min is fine (kept),
+> - test_memcg_low protected orphaned pagecache (adapted like
+>   test_memcg_min and we keep the processes of protected memory running).
+>=20
+> The evaluation in two tests is different (OOM of allocator vs low events
+> of prot=E9g=E9s), this is kept different.
+>=20
+> Signed-off-by: Michal Koutn=FD <mkoutny@suse.com>
 
-Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
