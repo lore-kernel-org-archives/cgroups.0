@@ -1,63 +1,42 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH] memcg: provide reclaim stats via 'memory.reclaim'
-Date: Wed, 25 May 2022 13:31:42 -0700
-Message-ID: <CAJD7tkb7DRK_9wtiSFPiV6zsZGYYxs_JGECODtP+pta4k4MaiA@mail.gmail.com>
-References: <20220518223815.809858-1-vaibhav@linux.ibm.com>
- <YoYj4sLJfGke5IGT@dhcp22.suse.cz> <87zgjcg4xs.fsf@vajain21.in.ibm.com>
- <YodDaFVeU33bu7yQ@dhcp22.suse.cz> <CAJD7tkYwv2LDZeV2F5pxuniw7LCNjBapDCm3WuRhzwTH-jN3PA@mail.gmail.com>
- <YozFZI2euSjWPgDb@cmpxchg.org> <CAJD7tkZxvmnrrjc4yAe5mC+SL-MZqMkn21yjetiLYyq0B=AhtA@mail.gmail.com>
- <Yo3v5k8UBNHF6QRi@dhcp22.suse.cz>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH] cgroup: Return if dst_cgrp equals to src_cgrp
+Date: Thu, 26 May 2022 00:51:46 +0200
+Message-ID: <Yo6zAi+Y/uXLYUI7@blackbook>
+References: <1653066120-21262-1-git-send-email-shisiyuan@xiaomi.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=A0dEd4NUNMrTRFFSR3+OfkYzmb9W3Zxpow0f09EOgls=;
-        b=s5IkQauZnOLISvCoz7A9uhGFFCaH1f6gh+yufCmj+HN/vMS6luKtssU9qd7rvuHP09
-         HhINtg7TpvcOmZm1ouHcVkjKk6zEEeNeWY6nO4yudTi3fchpTd2jAQqb7M+Nqsts4Yl7
-         iU8Hbk1kY75EEpSOU6r93DqrrMnxdh+0P0FaPzPHtty0hvs+DnUoYHaN0FJ8JZvzSoqy
-         3Q8c8fxts4s9EzUn+2U1k5GK3ykGZ9PNN1dkeb+A9fBG9SRLbEsFSjaOXJdyhkQ5EpFr
-         5OFDAMcBoiBF7XQQZ+WFPEM44Gcr2BZC20P7JgeRPoHbwD64VcWUoQXv3RdTO+wXTsYy
-         iKYA==
-In-Reply-To: <Yo3v5k8UBNHF6QRi@dhcp22.suse.cz>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1653519112; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=QP07LDyVTEoT20uTedwg+UGDjLkX645oy3+oI/k9KRs=;
+        b=Un5rEjXdkXJRg/7BDQ4WUW/5PsCCqQ5kj5pJaQp7Co5y558JEvVWkwTggBiPxw9IsU/Jgz
+        VkB5iahLfTOZjyEDs8pggBJHpKHHjfSOlosX/O9wN7Tobvg5sArOIb3hJ9uVgCoKf2SLP6
+        rx7GDfcaa0DgZ9PwdWMgZNWZGf5fT90=
+Content-Disposition: inline
+In-Reply-To: <1653066120-21262-1-git-send-email-shisiyuan@xiaomi.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vaibhav Jain <vaibhav@linux.ibm.com>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>, Shakeel Butt <shakeelb@google.com>, David Rientjes <rientjes@google.com>
+To: shisiyuan19870131@gmail.com
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, May 25, 2022 at 1:59 AM Michal Hocko <mhocko@suse.com> wrote:
->
-> On Tue 24-05-22 12:01:01, Yosry Ahmed wrote:
-> > On Tue, May 24, 2022 at 4:45 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
-> > >
-> > > On Mon, May 23, 2022 at 03:50:34PM -0700, Yosry Ahmed wrote:
-> > > > I think it might be useful to have a dedicated entry in memory.stat
-> > > > for proactively reclaimed memory. A case where this would be useful is
-> > > > tuning and evaluating userspace proactive reclaimers. For instance, if
-> > > > a userspace agent is asking the kernel to reclaim 100M, but it could
-> > > > only reclaim 10M, then most probably the proactive reclaimer is not
-> > > > using a good methodology to figure out how much memory do we need to
-> > > > reclaim.
-> > > >
-> > > > IMO this is more useful, and a superset of just reading the last
-> > > > reclaim request status through memory.reclaim (read stat before and
-> > > > after).
-> > >
-> > > +1
-> >
-> > It might also be useful to have a breakdown of this by memory type:
-> > file, anon, or shrinkers.
-> >
-> > It would also fit in nicely with a potential type=file/anon/shrinker
-> > argument to memory.reclaim. Thoughts on this?
->
-> Can we start simple and see what real usecases actually will need?
+Hello.
 
-Agreed. Let's start with a single proactively reclaimed memory stat
-and then add subcategories if/when needed.
+On Sat, May 21, 2022 at 01:02:00AM +0800, shisiyuan <shisiyuan19870131@gmail.com> wrote:
+> In function cgroup_migrate_add_src(), if dst_cgrp
+> equals to src_cgroup which the tasks link, dont
+> go on migrating tasks to another css_set.
 
-> --
-> Michal Hocko
-> SUSE Labs
+Do you have an example which operations lead to this situation?
+
+> This can save the cost of unnecessary migration.
+
+How much are the savings visible?
+
+(Note, I suspect the shortcut on `src_cgrp == dst_cgrp` might not be
+always correct when called from cgroup_update_dfl_csses() but not 100%
+sure now.)
+
+Thanks,
+Michal
