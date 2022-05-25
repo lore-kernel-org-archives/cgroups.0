@@ -1,57 +1,95 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] memcg: provide reclaim stats via 'memory.reclaim'
-Date: Wed, 25 May 2022 10:59:18 +0200
-Message-ID: <Yo3v5k8UBNHF6QRi@dhcp22.suse.cz>
-References: <20220518223815.809858-1-vaibhav@linux.ibm.com>
- <YoYj4sLJfGke5IGT@dhcp22.suse.cz>
- <87zgjcg4xs.fsf@vajain21.in.ibm.com>
- <YodDaFVeU33bu7yQ@dhcp22.suse.cz>
- <CAJD7tkYwv2LDZeV2F5pxuniw7LCNjBapDCm3WuRhzwTH-jN3PA@mail.gmail.com>
- <YozFZI2euSjWPgDb@cmpxchg.org>
- <CAJD7tkZxvmnrrjc4yAe5mC+SL-MZqMkn21yjetiLYyq0B=AhtA@mail.gmail.com>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [PATCH v4 02/11] mm: memcontrol: introduce
+ compact_folio_lruvec_lock_irqsave
+Date: Wed, 25 May 2022 17:38:41 +0800
+Message-ID: <Yo35ITjnDUrvLpfC@FVFYT0MHHV2J.googleapis.com>
+References: <20220524060551.80037-1-songmuchun@bytedance.com>
+ <20220524060551.80037-3-songmuchun@bytedance.com>
+ <Yo0wj9OAPptmUoWM@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1653469159; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=AdJCYZHOyhpjXySt6nTPMBOK5Q7ap+5mhsb0yD0IbJk=;
-        b=aiV6xLIl8yHWP30wU/K3GtbE85ZdBM0U1BgBzJcKlHVA+4+eXIlhgfUdcIjT7dEY9LCayY
-        qdR0ughVWk+eDMKIj1MpdBpoaBSWF8+Uz2ja25zdBKLZBcBtbHqJdJEWm2SbGqjXX7AsZz
-        UMe64oVsol7td+qJimhHkcqUGFKpgnI=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Sl7ih2YcYfsKEJm1KeaU131K5lwzTZba3+OLLF53Vww=;
+        b=Rn2pap2S0KViSmWOIIHDkjxdgyfSovtzuKxNe2Ls2oS3VWSeEsTOBJ7CaNAkB8SxJo
+         gCC717pKh8MadpjyqV8DcX8KykwT4iGOgd66to1uZTIxylcRuPrzke0u5sn2RHbXhCM0
+         yy/02qaaTXJyJlqE/KyvV9jXXe7H6GdcX9qcNV9ovWcGxqfw5acK3KAh3EAPjtm9fxZv
+         4WtI49bHN3Y/EV44y9ND2e4WUKF1EQxQX381CosCpZiOhaw6JWbF++Cxnv3sQRKq7Stq
+         KlHpR4b8Ab1tvHM2RpmS3ctwg2v9j3oYfsnU8Bu+djUNashMDbSsk/LuKGGz7vylEvab
+         LwMA==
 Content-Disposition: inline
-In-Reply-To: <CAJD7tkZxvmnrrjc4yAe5mC+SL-MZqMkn21yjetiLYyq0B=AhtA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <Yo0wj9OAPptmUoWM-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vaibhav Jain <vaibhav-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Aneesh Kumar K . V" <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Tue 24-05-22 12:01:01, Yosry Ahmed wrote:
-> On Tue, May 24, 2022 at 4:45 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> >
-> > On Mon, May 23, 2022 at 03:50:34PM -0700, Yosry Ahmed wrote:
-> > > I think it might be useful to have a dedicated entry in memory.stat
-> > > for proactively reclaimed memory. A case where this would be useful is
-> > > tuning and evaluating userspace proactive reclaimers. For instance, if
-> > > a userspace agent is asking the kernel to reclaim 100M, but it could
-> > > only reclaim 10M, then most probably the proactive reclaimer is not
-> > > using a good methodology to figure out how much memory do we need to
-> > > reclaim.
-> > >
-> > > IMO this is more useful, and a superset of just reading the last
-> > > reclaim request status through memory.reclaim (read stat before and
-> > > after).
-> >
-> > +1
+On Tue, May 24, 2022 at 03:22:55PM -0400, Johannes Weiner wrote:
+> On Tue, May 24, 2022 at 02:05:42PM +0800, Muchun Song wrote:
+> > If we reuse the objcg APIs to charge LRU pages, the folio_memcg()
+> > can be changed when the LRU pages reparented. In this case, we need
+> > to acquire the new lruvec lock.
+> > 
+> >     lruvec = folio_lruvec(folio);
+> > 
+> >     // The page is reparented.
+> > 
+> >     compact_lock_irqsave(&lruvec->lru_lock, &flags, cc);
+> > 
+> >     // Acquired the wrong lruvec lock and need to retry.
+> > 
+> > But compact_lock_irqsave() only take lruvec lock as the parameter,
+> > we cannot aware this change. If it can take the page as parameter
+> > to acquire the lruvec lock. When the page memcg is changed, we can
+> > use the folio_memcg() detect whether we need to reacquire the new
+> > lruvec lock. So compact_lock_irqsave() is not suitable for us.
+> > Similar to folio_lruvec_lock_irqsave(), introduce
+> > compact_folio_lruvec_lock_irqsave() to acquire the lruvec lock in
+> > the compaction routine.
+> > 
+> > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 > 
-> It might also be useful to have a breakdown of this by memory type:
-> file, anon, or shrinkers.
+> This looks generally good to me.
 > 
-> It would also fit in nicely with a potential type=file/anon/shrinker
-> argument to memory.reclaim. Thoughts on this?
+> It did raise the question how deferencing lruvec is safe before the
+> lock is acquired when reparenting can race. The answer is in the next
+> patch when you add the rcu_read_lock(). Since the patches aren't big,
+> it would probably be better to merge them.
+>
 
-Can we start simple and see what real usecases actually will need? 
--- 
-Michal Hocko
-SUSE Labs
+Will do in v5.
+ 
+> > @@ -509,6 +509,29 @@ static bool compact_lock_irqsave(spinlock_t *lock, unsigned long *flags,
+> >  	return true;
+> >  }
+> >  
+> > +static struct lruvec *
+> > +compact_folio_lruvec_lock_irqsave(struct folio *folio, unsigned long *flags,
+> > +				  struct compact_control *cc)
+> > +{
+> > +	struct lruvec *lruvec;
+> > +
+> > +	lruvec = folio_lruvec(folio);
+> > +
+> > +	/* Track if the lock is contended in async mode */
+> > +	if (cc->mode == MIGRATE_ASYNC && !cc->contended) {
+> > +		if (spin_trylock_irqsave(&lruvec->lru_lock, *flags))
+> > +			goto out;
+> > +
+> > +		cc->contended = true;
+> > +	}
+> > +
+> > +	spin_lock_irqsave(&lruvec->lru_lock, *flags);
+> 
+> Can you implement this on top of the existing one?
+> 
+> 	lruvec = folio_lruvec(folio);
+> 	compact_lock_irqsave(&lruvec->lru_lock, flags);
+> 	lruvec_memcg_debug(lruvec, folio);
+> 	return lruvec;
+> 
+
+I'll do a try. Thanks for your suggestions.
