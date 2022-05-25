@@ -1,106 +1,108 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [PATCH 2/2] cgroup: Use separate work structs on css release path
-Date: Wed, 25 May 2022 17:15:17 +0200
-Message-ID: <20220525151517.8430-3-mkoutny@suse.com>
-References: <20220525151517.8430-1-mkoutny@suse.com>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [PATCH v4 03/11] mm: memcontrol: make lruvec lock safe when LRU
+ pages are reparented
+Date: Wed, 25 May 2022 23:38:30 +0800
+Message-ID: <Yo5NdncOsqL0xP8Q@FVFYT0MHHV2J.googleapis.com>
+References: <20220524060551.80037-1-songmuchun@bytedance.com>
+ <20220524060551.80037-4-songmuchun@bytedance.com>
+ <Yo0xmKOkBkhRy+bq@cmpxchg.org>
+ <Yo38mlkMBFz2h+yP@FVFYT0MHHV2J.googleapis.com>
+ <Yo4hVw7B+bUlMzLX@cmpxchg.org>
+ <Yo4pPw+IHPBZvZUv@FVFYT0MHHV2J.googleapis.com>
+ <Yo5B1tLcYPUoaACS@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1653491727; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=U46sVGA1KUZXQikRUajt78EcsqZuBl8M4p/DB6/tVgE=;
-        b=C4m3v6uP9vSwVlZGU1QI7oR1B8lKsARQbrKwIPAyVOq4Zywe1QM7r5RuFo4rfrcFeB+oK1
-        b92ZdIszTgbTgGCVvszf0KkL5V95soSXeZgur3d/X49AtEvhF0Zdo8b9fGPd7hUeCITXTy
-        +71UMub165Q2Vn/W590QZNe0rh21SWI=
-In-Reply-To: <20220525151517.8430-1-mkoutny-IBi9RG/b67k@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=XfUA65d3SdbF2oQUu55YnSpsWlaG2pXPKVSvY3AeaaY=;
+        b=HdWmnFghAeH4LB9aqAeQKPfx4YaL1PQAnvmeL63qjEhQAsAKGPbUoWiw805DbWMH7w
+         XoiBlH8sgL6Qd92qTjABYEtmtm8Cg+0qLN6NFvKknvRaO+mJDJqgzHyWB8HEZuWXscrH
+         Xz1wzE6LmtCY4J5IB9STw0NM5YtUlc4+LnGaMH+uaVJ+9hl2W1D75vtJW+gstoCx0AkA
+         d24A8qRFz6/7+LHkWFIXmI8WCtXovRtftQ/wkbSch57kOh30B0HA6YIDAZKaOqrc/HGo
+         AI0GxMStontX+lP5N4q0iFkpJeCCyO1oQ5OEx/TB6KuwVerlzTV7dTM9Yp0K4fMtVoKp
+         48LA==
+Content-Disposition: inline
+In-Reply-To: <Yo5B1tLcYPUoaACS-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Bui Quang Minh <minhquangbui99-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tadeusz Struk <tadeusz.struk-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-VGhlIGNncm91cF9zdWJzeXNfc3RhdGUgb2YgY2dyb3VwIHN1YnN5c3RlbXMgKG5vdCBjZ3JvdXAt
-PnNlbGYpIHVzZSBib3RoCmtpbGwgYW5kIHJlbGVhc2UgY2FsbGJhY2tzIG9uIHRoZWlyIHJlbGVh
-c2UgcGF0aCAoc2VlIGNvbW1lbnQgZm9yCmNzc19mcmVlX3J3b3JrX2ZuKCkpLgoKV2hlbiB0aGUg
-bGFzdCByZWZlcmVuY2UgaXMgYWxzbyB0aGUgYmFzZSByZWZlcmVuY2UsIHdlIHJ1biBpbnRvIGlz
-c3Vlcwp3aGVuIGFjdGl2ZSB3b3JrX3N0cnVjdCAoMSkgaXMgcmUtaW5pdGlhbGl6ZWQgZnJvbSBj
-c3NfcmVsZWFzZSAoMikuCgovLyByZWY9MTogb25seSBiYXNlIHJlZmVyZW5jZQpraWxsX2Nzcygp
-CiAgY3NzX2dldCgpIC8vIGZ1c2UsIHJlZis9MSA9PSAyCiAgcGVyY3B1X3JlZl9raWxsX2FuZF9j
-b25maXJtCiAgICAvLyByZWYgLT0gMSA9PSAxOiBraWxsIGJhc2UgcmVmZXJlbmNlcwogIFt2aWEg
-cmN1XQogIGNzc19raWxsZWRfcmVmX2ZuID09IHJlZmNudC5jb25maXJtX3N3aXRjaAogICAgcXVl
-dWVfd29yayhjc3MtPmRlc3Ryb3lfd29yaykgICAgICAgICAgICAgICAoMSkKICAgIFt2aWEgY3Nz
-LT5kZXN0cm95X3dvcmtdCiAgICBjc3Nfa2lsbGVkX3dvcmtfZm4gPT0gd3EuZnVuYwogICAgICBv
-ZmZsaW5lX2NzcygpIC8vIG5lZWRzIGZ1c2UKICAgICAgY3NzX3B1dCAvLyByZWYgLT0gMSA9PSAw
-OiBkZS1mdXNlLCB3YXMgbGFzdAogICAgICAgIC4uLgogICAgICAgIHBlcmNwdV9yZWZfcHV0X21h
-bnkKICAgICAgICAgICBjc3NfcmVsZWFzZQogICAgICAgICAgICAgcXVldWVfd29yayhjc3MtPmRl
-c3Ryb3lfd29yaykgICAgICAoMikKICAgICAgICAgICAgIFt2aWEgY3NzLT5kZXN0cm95X3dvcmtd
-CiAgICAgICAgICAgICBjc3NfcmVsZWFzZV93b3JrX2ZuID09IHdxLmZ1bmMKCkRlc3BpdGUgd2Ug
-dGFrZSBhIGZ1c2UgcmVmZXJlbmNlIGluIGNzc19raWxsZWRfd29ya19mbigpIGl0IHNlcnZlcwpm
-b3IgcGlubmluZyB0aGUgY3NzIHVudGlsIG9ubHkgYWZ0ZXIgb2ZmbGluZV9jc3MoKS4KCldlIGNv
-dWxkIGNoZWNrIGluc2lkZSBjc3NfcmVsZWFzZSB3aGV0aGVyIGRlc3Ryb3lfd29yayBpcyBhY3Rp
-dmUKKFdPUktfU1RSVUNUX1BFTkRJTkdfQklUKSBhbmQgZGFpc3ktY2hhaW4gY3NzX3JlbGVhc2Vf
-d29ya19mbiBmcm9tCmNzc19yZWxlYXNlKCkuIEluIG9yZGVyIHRvIGF2b2lkIGNsYXNoZXMgd2l0
-aCB2YXJpb3VzIHN0YWdlcyBvZiB0aGUgd29yawppdGVtIHByb2Nlc3NpbmcsIHdlIGp1c3Qgc3Bl
-bmQgc29tZSBzcGFjZSBpbiBjc3MgKG15IGNvbmZpZydzIGNzcyBncm93cwp0byAyMzJCICsgMzJC
-KSBhbmQgY3JlYXRlIGEgc2VwYXJhdGUgd29yayBlbnRyeSBmb3IgZWFjaCB1c2VyLgoKUmVwb3J0
-ZWQtYnk6IHN5emJvdCtlNDJhZTQ0MWMzYjEwYWNmOWU5ZC1QbDVQYnYrR1A3UDQ2NmlwVFRJdm5j
-MjNXb2NsbkJDZkFMOGJZcmpNTWQ4QHB1YmxpYy5nbWFuZS5vcmcKUmVwb3J0ZWQtYnk6IFRhZGV1
-c3ogU3RydWsgPHRhZGV1c3ouc3RydWstUVNFajVGWVFobTRkbm0reVJPZkUwQUBwdWJsaWMuZ21h
-bmUub3JnPgpMaW5rOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9yLzIwMjIwNDEyMTkyNDU5LjIy
-Nzc0MC0xLXRhZGV1c3ouc3RydWstUVNFajVGWVFobTRkbm0reVJPZkUwQUBwdWJsaWMuZ21hbmUu
-b3JnLwpTaWduZWQtb2ZmLWJ5OiBUYWRldXN6IFN0cnVrIDx0YWRldXN6LnN0cnVrLVFTRWo1RllR
-aG00ZG5tK3lST2ZFMEFAcHVibGljLmdtYW5lLm9yZz4KU2lnbmVkLW9mZi1ieTogTWljaGFsIEtv
-dXRuw70gPG1rb3V0bnktSUJpOVJHL2I2N2tAcHVibGljLmdtYW5lLm9yZz4KLS0tCiBpbmNsdWRl
-L2xpbnV4L2Nncm91cC1kZWZzLmggfCAgNSArKystLQoga2VybmVsL2Nncm91cC9jZ3JvdXAuYyAg
-ICAgIHwgMTQgKysrKysrKy0tLS0tLS0KIDIgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygr
-KSwgOSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L2Nncm91cC1kZWZz
-LmggYi9pbmNsdWRlL2xpbnV4L2Nncm91cC1kZWZzLmgKaW5kZXggMWJmY2ZiMWFmMzUyLi4xNmI5
-OWFhMDQzMDUgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvY2dyb3VwLWRlZnMuaAorKysgYi9p
-bmNsdWRlL2xpbnV4L2Nncm91cC1kZWZzLmgKQEAgLTE3OCw4ICsxNzgsOSBAQCBzdHJ1Y3QgY2dy
-b3VwX3N1YnN5c19zdGF0ZSB7CiAJICovCiAJYXRvbWljX3Qgb25saW5lX2NudDsKIAotCS8qIHBl
-cmNwdV9yZWYga2lsbGluZyBhbmQgUkNVIHJlbGVhc2UgKi8KLQlzdHJ1Y3Qgd29ya19zdHJ1Y3Qg
-ZGVzdHJveV93b3JrOworCS8qIHBlcmNwdV9yZWYga2lsbGluZywgY3NzIHJlbGVhc2UsIGFuZCBS
-Q1UgcmVsZWFzZSB3b3JrIHN0cnVjdHMgKi8KKwlzdHJ1Y3Qgd29ya19zdHJ1Y3Qga2lsbGVkX3Jl
-Zl93b3JrOworCXN0cnVjdCB3b3JrX3N0cnVjdCByZWxlYXNlX3dvcms7CiAJc3RydWN0IHJjdV93
-b3JrIGRlc3Ryb3lfcndvcms7CiAKIAkvKgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9jZ3Jv
-dXAuYyBiL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMKaW5kZXggYTViMGQ1ZDU0ZmJjLi4zM2IzYTQ0
-MzkxZDcgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMKKysrIGIva2VybmVsL2Nn
-cm91cC9jZ3JvdXAuYwpAQCAtNTEwMiw3ICs1MTAyLDcgQEAgc3RhdGljIHN0cnVjdCBjZnR5cGUg
-Y2dyb3VwX2Jhc2VfZmlsZXNbXSA9IHsKICAqICAgIGNzc19mcmVlX3dvcmtfZm4oKS4KICAqCiAg
-KiBJdCBpcyBhY3R1YWxseSBoYWlyaWVyIGJlY2F1c2UgYm90aCBzdGVwIDIgYW5kIDQgcmVxdWly
-ZSBwcm9jZXNzIGNvbnRleHQKLSAqIGFuZCB0aHVzIGludm9sdmUgcHVudGluZyB0byBjc3MtPmRl
-c3Ryb3lfd29yayBhZGRpbmcgdHdvIGFkZGl0aW9uYWwKKyAqIGFuZCB0aHVzIGludm9sdmUgcHVu
-dGluZyB0byBjc3MtPnJlbGVhc2Vfd29yayBhZGRpbmcgdHdvIGFkZGl0aW9uYWwKICAqIHN0ZXBz
-IHRvIHRoZSBhbHJlYWR5IGNvbXBsZXggc2VxdWVuY2UuCiAgKi8KIHN0YXRpYyB2b2lkIGNzc19m
-cmVlX3J3b3JrX2ZuKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykKQEAgLTUxNTcsNyArNTE1Nyw3
-IEBAIHN0YXRpYyB2b2lkIGNzc19mcmVlX3J3b3JrX2ZuKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29y
-aykKIHN0YXRpYyB2b2lkIGNzc19yZWxlYXNlX3dvcmtfZm4oc3RydWN0IHdvcmtfc3RydWN0ICp3
-b3JrKQogewogCXN0cnVjdCBjZ3JvdXBfc3Vic3lzX3N0YXRlICpjc3MgPQotCQljb250YWluZXJf
-b2Yod29yaywgc3RydWN0IGNncm91cF9zdWJzeXNfc3RhdGUsIGRlc3Ryb3lfd29yayk7CisJCWNv
-bnRhaW5lcl9vZih3b3JrLCBzdHJ1Y3QgY2dyb3VwX3N1YnN5c19zdGF0ZSwgcmVsZWFzZV93b3Jr
-KTsKIAlzdHJ1Y3QgY2dyb3VwX3N1YnN5cyAqc3MgPSBjc3MtPnNzOwogCXN0cnVjdCBjZ3JvdXAg
-KmNncnAgPSBjc3MtPmNncm91cDsKIApAQCAtNTIxMyw4ICs1MjEzLDggQEAgc3RhdGljIHZvaWQg
-Y3NzX3JlbGVhc2Uoc3RydWN0IHBlcmNwdV9yZWYgKnJlZikKIAlzdHJ1Y3QgY2dyb3VwX3N1YnN5
-c19zdGF0ZSAqY3NzID0KIAkJY29udGFpbmVyX29mKHJlZiwgc3RydWN0IGNncm91cF9zdWJzeXNf
-c3RhdGUsIHJlZmNudCk7CiAKLQlJTklUX1dPUksoJmNzcy0+ZGVzdHJveV93b3JrLCBjc3NfcmVs
-ZWFzZV93b3JrX2ZuKTsKLQlxdWV1ZV93b3JrKGNncm91cF9kZXN0cm95X3dxLCAmY3NzLT5kZXN0
-cm95X3dvcmspOworCUlOSVRfV09SSygmY3NzLT5yZWxlYXNlX3dvcmssIGNzc19yZWxlYXNlX3dv
-cmtfZm4pOworCXF1ZXVlX3dvcmsoY2dyb3VwX2Rlc3Ryb3lfd3EsICZjc3MtPnJlbGVhc2Vfd29y
-ayk7CiB9CiAKIHN0YXRpYyB2b2lkIGluaXRfYW5kX2xpbmtfY3NzKHN0cnVjdCBjZ3JvdXBfc3Vi
-c3lzX3N0YXRlICpjc3MsCkBAIC01NTQ5LDcgKzU1NDksNyBAQCBpbnQgY2dyb3VwX21rZGlyKHN0
-cnVjdCBrZXJuZnNfbm9kZSAqcGFyZW50X2tuLCBjb25zdCBjaGFyICpuYW1lLCB1bW9kZV90IG1v
-ZGUpCiBzdGF0aWMgdm9pZCBjc3Nfa2lsbGVkX3dvcmtfZm4oc3RydWN0IHdvcmtfc3RydWN0ICp3
-b3JrKQogewogCXN0cnVjdCBjZ3JvdXBfc3Vic3lzX3N0YXRlICpjc3MgPQotCQljb250YWluZXJf
-b2Yod29yaywgc3RydWN0IGNncm91cF9zdWJzeXNfc3RhdGUsIGRlc3Ryb3lfd29yayk7CisJCWNv
-bnRhaW5lcl9vZih3b3JrLCBzdHJ1Y3QgY2dyb3VwX3N1YnN5c19zdGF0ZSwga2lsbGVkX3JlZl93
-b3JrKTsKIAogCW11dGV4X2xvY2soJmNncm91cF9tdXRleCk7CiAKQEAgLTU1NzAsOCArNTU3MCw4
-IEBAIHN0YXRpYyB2b2lkIGNzc19raWxsZWRfcmVmX2ZuKHN0cnVjdCBwZXJjcHVfcmVmICpyZWYp
-CiAJCWNvbnRhaW5lcl9vZihyZWYsIHN0cnVjdCBjZ3JvdXBfc3Vic3lzX3N0YXRlLCByZWZjbnQp
-OwogCiAJaWYgKGF0b21pY19kZWNfYW5kX3Rlc3QoJmNzcy0+b25saW5lX2NudCkpIHsKLQkJSU5J
-VF9XT1JLKCZjc3MtPmRlc3Ryb3lfd29yaywgY3NzX2tpbGxlZF93b3JrX2ZuKTsKLQkJcXVldWVf
-d29yayhjZ3JvdXBfZGVzdHJveV93cSwgJmNzcy0+ZGVzdHJveV93b3JrKTsKKwkJSU5JVF9XT1JL
-KCZjc3MtPmtpbGxlZF9yZWZfd29yaywgY3NzX2tpbGxlZF93b3JrX2ZuKTsKKwkJcXVldWVfd29y
-ayhjZ3JvdXBfZGVzdHJveV93cSwgJmNzcy0+a2lsbGVkX3JlZl93b3JrKTsKIAl9CiB9CiAKLS0g
-CjIuMzUuMwoK
+On Wed, May 25, 2022 at 10:48:54AM -0400, Johannes Weiner wrote:
+> On Wed, May 25, 2022 at 09:03:59PM +0800, Muchun Song wrote:
+> > On Wed, May 25, 2022 at 08:30:15AM -0400, Johannes Weiner wrote:
+> > > On Wed, May 25, 2022 at 05:53:30PM +0800, Muchun Song wrote:
+> > > > On Tue, May 24, 2022 at 03:27:20PM -0400, Johannes Weiner wrote:
+> > > > > On Tue, May 24, 2022 at 02:05:43PM +0800, Muchun Song wrote:
+> > > > > > @@ -1230,10 +1213,23 @@ void lruvec_memcg_debug(struct lruvec *lruvec, struct folio *folio)
+> > > > > >   */
+> > > > > >  struct lruvec *folio_lruvec_lock(struct folio *folio)
+> > > > > >  {
+> > > > > > -	struct lruvec *lruvec = folio_lruvec(folio);
+> > > > > > +	struct lruvec *lruvec;
+> > > > > >  
+> > > > > > +	rcu_read_lock();
+> > > > > > +retry:
+> > > > > > +	lruvec = folio_lruvec(folio);
+> > > > > >  	spin_lock(&lruvec->lru_lock);
+> > > > > > -	lruvec_memcg_debug(lruvec, folio);
+> > > > > > +
+> > > > > > +	if (unlikely(lruvec_memcg(lruvec) != folio_memcg(folio))) {
+> > > > > > +		spin_unlock(&lruvec->lru_lock);
+> > > > > > +		goto retry;
+> > > > > > +	}
+> > > > > > +
+> > > > > > +	/*
+> > > > > > +	 * Preemption is disabled in the internal of spin_lock, which can serve
+> > > > > > +	 * as RCU read-side critical sections.
+> > > > > > +	 */
+> > > > > > +	rcu_read_unlock();
+> > > > > 
+> > > > > The code looks right to me, but I don't understand the comment: why do
+> > > > > we care that the rcu read-side continues? With the lru_lock held,
+> > > > > reparenting is on hold and the lruvec cannot be rcu-freed anyway, no?
+> > > > >
+> > > > 
+> > > > Right. We could hold rcu read lock until end of reparting.  So you mean
+> > > > we do rcu_read_unlock in folio_lruvec_lock()?
+> > > 
+> > > The comment seems to suggest that disabling preemption is what keeps
+> > > the lruvec alive. But it's the lru_lock that keeps it alive. The
+> > > cgroup destruction path tries to take the lru_lock long before it even
+> > > gets to synchronize_rcu(). Once you hold the lru_lock, having an
+> > > implied read-side critical section as well doesn't seem to matter.
+> > >
+> > 
+> > Well, I thought that spinlocks have implicit read-side critical sections
+> > because it disables preemption (I learned from the comments above
+> > synchronize_rcu() that says interrupts, preemption, or softirqs have been
+> > disabled also serve as RCU read-side critical sections).  So I have a
+> > question: is it still true in a PREEMPT_RT kernel (I am not familiar with
+> > this)?
+> 
+> Yes, but you're missing my point.
+> 
+> > > Should the comment be deleted?
+> > 
+> > I think we could remove the comments. If the above question is false, seems
+> > like we should continue holding rcu read lock.
+> 
+> It's true.
+>
+
+Thanks for your answer.
+
+> But assume it's false for a second. Why would you need to continue
+> holding it? What would it protect? The lruvec would be pinned by the
+> spinlock even if it DIDN'T imply an RCU lock, right?
+> 
+> So I don't understand the point of the comment. If the implied RCU
+> lock is protecting something not covered by the bare spinlock itself,
+> it should be added to the comment. Otherwise, the comment should go.
+>
+
+Got it. Thanks for your nice explanation. I'll remove
+the comment here.
