@@ -1,99 +1,207 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH v4 03/11] mm: memcontrol: make lruvec lock safe when LRU
  pages are reparented
-Date: Wed, 25 May 2022 10:48:54 -0400
-Message-ID: <Yo5B1tLcYPUoaACS@cmpxchg.org>
+Date: Wed, 25 May 2022 10:59:58 -0400
+Message-ID: <0728780f-08e7-3d09-e859-aeec92a81550@redhat.com>
 References: <20220524060551.80037-1-songmuchun@bytedance.com>
  <20220524060551.80037-4-songmuchun@bytedance.com>
- <Yo0xmKOkBkhRy+bq@cmpxchg.org>
- <Yo38mlkMBFz2h+yP@FVFYT0MHHV2J.googleapis.com>
- <Yo4hVw7B+bUlMzLX@cmpxchg.org>
- <Yo4pPw+IHPBZvZUv@FVFYT0MHHV2J.googleapis.com>
+ <f55976e6-d209-32c2-504d-f73a9b504511@redhat.com>
+ <Yo4C6T56O7EBADbX@FVFYT0MHHV2J.googleapis.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=EC3qSzV90yIEpJPSb9gAka294lEXNvP+jK/k6V2VkwY=;
-        b=sP6nIiJRj1gRoaVX7vHfBXwVVy5eYYU++U485svk6SpXKrAg619n1A96DqCaV5FkTy
-         w5w3iKKMFkLE4auXFj/aXfZJ5LPy5up3GbiHdOpKNiIE2VFqSozTMNo8Z5JrGnlrPSxr
-         FGBkY22R8Ok4K4xbXLOtAw+5WpvMIZnnDRImsKSd8fZ6krbHAwyGN5O/1zXBg7t2iiKd
-         6QUp7DCaIcUgitzRn19UEloMeMIf222lzADnzLtWyvg1k1G6/IvzHz7fDWDjcRMCUJh4
-         XmmmhpgKWvFtDkJT7EDuBJkZ21628wMOPAE7wtEyiNB5/GOfFuje3Xy9mAPkwzShrjmb
-         xE+g==
-Content-Disposition: inline
-In-Reply-To: <Yo4pPw+IHPBZvZUv-t1y1lxtqHnkkxugUQmjJ3WroNbXEc4rFQQ4Iyu8u01E@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1653490801;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=v7iWdvSl9xApudroXhJn9FrDy1CICqE653ZASePdCf0=;
+        b=DQq2I0jUtfq2aBeDMSDTay5B1iXlSC76tbOOpGGd/s226nVV5YbpFjVRjG1Hg5W/ekDq9F
+        VjZhJ52ctE1wJCI76fgMvWgKj7atgLzHBxEalaFlVoQcsiT/IuW1AQX0yQ/Fel6SlF5FeS
+        Nl2IoyRQ7gLnZVIQxTA+X9qgezyUKbs=
+Content-Language: en-US
+In-Reply-To: <Yo4C6T56O7EBADbX-t1y1lxtqHnkkxugUQmjJ3WroNbXEc4rFQQ4Iyu8u01E@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-On Wed, May 25, 2022 at 09:03:59PM +0800, Muchun Song wrote:
-> On Wed, May 25, 2022 at 08:30:15AM -0400, Johannes Weiner wrote:
-> > On Wed, May 25, 2022 at 05:53:30PM +0800, Muchun Song wrote:
-> > > On Tue, May 24, 2022 at 03:27:20PM -0400, Johannes Weiner wrote:
-> > > > On Tue, May 24, 2022 at 02:05:43PM +0800, Muchun Song wrote:
-> > > > > @@ -1230,10 +1213,23 @@ void lruvec_memcg_debug(struct lruvec *lruvec, struct folio *folio)
-> > > > >   */
-> > > > >  struct lruvec *folio_lruvec_lock(struct folio *folio)
-> > > > >  {
-> > > > > -	struct lruvec *lruvec = folio_lruvec(folio);
-> > > > > +	struct lruvec *lruvec;
-> > > > >  
-> > > > > +	rcu_read_lock();
-> > > > > +retry:
-> > > > > +	lruvec = folio_lruvec(folio);
-> > > > >  	spin_lock(&lruvec->lru_lock);
-> > > > > -	lruvec_memcg_debug(lruvec, folio);
-> > > > > +
-> > > > > +	if (unlikely(lruvec_memcg(lruvec) != folio_memcg(folio))) {
-> > > > > +		spin_unlock(&lruvec->lru_lock);
-> > > > > +		goto retry;
-> > > > > +	}
-> > > > > +
-> > > > > +	/*
-> > > > > +	 * Preemption is disabled in the internal of spin_lock, which can serve
-> > > > > +	 * as RCU read-side critical sections.
-> > > > > +	 */
-> > > > > +	rcu_read_unlock();
-> > > > 
-> > > > The code looks right to me, but I don't understand the comment: why do
-> > > > we care that the rcu read-side continues? With the lru_lock held,
-> > > > reparenting is on hold and the lruvec cannot be rcu-freed anyway, no?
-> > > >
-> > > 
-> > > Right. We could hold rcu read lock until end of reparting.  So you mean
-> > > we do rcu_read_unlock in folio_lruvec_lock()?
-> > 
-> > The comment seems to suggest that disabling preemption is what keeps
-> > the lruvec alive. But it's the lru_lock that keeps it alive. The
-> > cgroup destruction path tries to take the lru_lock long before it even
-> > gets to synchronize_rcu(). Once you hold the lru_lock, having an
-> > implied read-side critical section as well doesn't seem to matter.
-> >
-> 
-> Well, I thought that spinlocks have implicit read-side critical sections
-> because it disables preemption (I learned from the comments above
-> synchronize_rcu() that says interrupts, preemption, or softirqs have been
-> disabled also serve as RCU read-side critical sections).  So I have a
-> question: is it still true in a PREEMPT_RT kernel (I am not familiar with
-> this)?
+On 5/25/22 06:20, Muchun Song wrote:
+> On Tue, May 24, 2022 at 03:23:11PM -0400, Waiman Long wrote:
+>> On 5/24/22 02:05, Muchun Song wrote:
+>>> The diagram below shows how to make the folio lruvec lock safe when LRU
+>>> pages are reparented.
+>>>
+>>> folio_lruvec_lock(folio)
+>>>       retry:
+>>> 	lruvec = folio_lruvec(folio);
+>>>
+>>>           // The folio is reparented at this time.
+>>>           spin_lock(&lruvec->lru_lock);
+>>>
+>>>           if (unlikely(lruvec_memcg(lruvec) != folio_memcg(folio)))
+>>>               // Acquired the wrong lruvec lock and need to retry.
+>>>               // Because this folio is on the parent memcg lruvec list.
+>>>               goto retry;
+>>>
+>>>           // If we reach here, it means that folio_memcg(folio) is stable.
+>>>
+>>> memcg_reparent_objcgs(memcg)
+>>>       // lruvec belongs to memcg and lruvec_parent belongs to parent memcg.
+>>>       spin_lock(&lruvec->lru_lock);
+>>>       spin_lock(&lruvec_parent->lru_lock);
+>>>
+>>>       // Move all the pages from the lruvec list to the parent lruvec list.
+>>>
+>>>       spin_unlock(&lruvec_parent->lru_lock);
+>>>       spin_unlock(&lruvec->lru_lock);
+>>>
+>>> After we acquire the lruvec lock, we need to check whether the folio is
+>>> reparented. If so, we need to reacquire the new lruvec lock. On the
+>>> routine of the LRU pages reparenting, we will also acquire the lruvec
+>>> lock (will be implemented in the later patch). So folio_memcg() cannot
+>>> be changed when we hold the lruvec lock.
+>>>
+>>> Since lruvec_memcg(lruvec) is always equal to folio_memcg(folio) after
+>>> we hold the lruvec lock, lruvec_memcg_debug() check is pointless. So
+>>> remove it.
+>>>
+>>> This is a preparation for reparenting the LRU pages.
+>>>
+>>> Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+>>> ---
+>>>    include/linux/memcontrol.h | 18 +++-----------
+>>>    mm/compaction.c            | 10 +++++++-
+>>>    mm/memcontrol.c            | 62 +++++++++++++++++++++++++++++-----------------
+>>>    mm/swap.c                  |  4 +++
+>>>    4 files changed, 55 insertions(+), 39 deletions(-)
+>>>
+>>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+>>> index ff1c1dd7e762..4042e4d21fe2 100644
+>>> --- a/include/linux/memcontrol.h
+>>> +++ b/include/linux/memcontrol.h
+>>> @@ -752,7 +752,9 @@ static inline struct lruvec *mem_cgroup_lruvec(struct mem_cgroup *memcg,
+>>>     * folio_lruvec - return lruvec for isolating/putting an LRU folio
+>>>     * @folio: Pointer to the folio.
+>>>     *
+>>> - * This function relies on folio->mem_cgroup being stable.
+>>> + * The lruvec can be changed to its parent lruvec when the page reparented.
+>>> + * The caller need to recheck if it cares about this changes (just like
+>>> + * folio_lruvec_lock() does).
+>>>     */
+>>>    static inline struct lruvec *folio_lruvec(struct folio *folio)
+>>>    {
+>>> @@ -771,15 +773,6 @@ struct lruvec *folio_lruvec_lock_irq(struct folio *folio);
+>>>    struct lruvec *folio_lruvec_lock_irqsave(struct folio *folio,
+>>>    						unsigned long *flags);
+>>> -#ifdef CONFIG_DEBUG_VM
+>>> -void lruvec_memcg_debug(struct lruvec *lruvec, struct folio *folio);
+>>> -#else
+>>> -static inline
+>>> -void lruvec_memcg_debug(struct lruvec *lruvec, struct folio *folio)
+>>> -{
+>>> -}
+>>> -#endif
+>>> -
+>>>    static inline
+>>>    struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *css){
+>>>    	return css ? container_of(css, struct mem_cgroup, css) : NULL;
+>>> @@ -1240,11 +1233,6 @@ static inline struct lruvec *folio_lruvec(struct folio *folio)
+>>>    	return &pgdat->__lruvec;
+>>>    }
+>>> -static inline
+>>> -void lruvec_memcg_debug(struct lruvec *lruvec, struct folio *folio)
+>>> -{
+>>> -}
+>>> -
+>>>    static inline struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *memcg)
+>>>    {
+>>>    	return NULL;
+>>> diff --git a/mm/compaction.c b/mm/compaction.c
+>>> index 817098817302..1692b17db781 100644
+>>> --- a/mm/compaction.c
+>>> +++ b/mm/compaction.c
+>>> @@ -515,6 +515,8 @@ compact_folio_lruvec_lock_irqsave(struct folio *folio, unsigned long *flags,
+>>>    {
+>>>    	struct lruvec *lruvec;
+>>> +	rcu_read_lock();
+>>> +retry:
+>>>    	lruvec = folio_lruvec(folio);
+>>>    	/* Track if the lock is contended in async mode */
+>>> @@ -527,7 +529,13 @@ compact_folio_lruvec_lock_irqsave(struct folio *folio, unsigned long *flags,
+>>>    	spin_lock_irqsave(&lruvec->lru_lock, *flags);
+>>>    out:
+>>> -	lruvec_memcg_debug(lruvec, folio);
+>>> +	if (unlikely(lruvec_memcg(lruvec) != folio_memcg(folio))) {
+>>> +		spin_unlock_irqrestore(&lruvec->lru_lock, *flags);
+>>> +		goto retry;
+>>> +	}
+>>> +
+>>> +	/* See the comments in folio_lruvec_lock(). */
+>>> +	rcu_read_unlock();
+>>>    	return lruvec;
+>>>    }
+>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>>> index 6de0d3e53eb1..b38a77f6696f 100644
+>>> --- a/mm/memcontrol.c
+>>> +++ b/mm/memcontrol.c
+>>> @@ -1199,23 +1199,6 @@ int mem_cgroup_scan_tasks(struct mem_cgroup *memcg,
+>>>    	return ret;
+>>>    }
+>>> -#ifdef CONFIG_DEBUG_VM
+>>> -void lruvec_memcg_debug(struct lruvec *lruvec, struct folio *folio)
+>>> -{
+>>> -	struct mem_cgroup *memcg;
+>>> -
+>>> -	if (mem_cgroup_disabled())
+>>> -		return;
+>>> -
+>>> -	memcg = folio_memcg(folio);
+>>> -
+>>> -	if (!memcg)
+>>> -		VM_BUG_ON_FOLIO(lruvec_memcg(lruvec) != root_mem_cgroup, folio);
+>>> -	else
+>>> -		VM_BUG_ON_FOLIO(lruvec_memcg(lruvec) != memcg, folio);
+>>> -}
+>>> -#endif
+>>> -
+>>>    /**
+>>>     * folio_lruvec_lock - Lock the lruvec for a folio.
+>>>     * @folio: Pointer to the folio.
+>>> @@ -1230,10 +1213,23 @@ void lruvec_memcg_debug(struct lruvec *lruvec, struct folio *folio)
+>>>     */
+>>>    struct lruvec *folio_lruvec_lock(struct folio *folio)
+>>>    {
+>>> -	struct lruvec *lruvec = folio_lruvec(folio);
+>>> +	struct lruvec *lruvec;
+>>> +	rcu_read_lock();
+>>> +retry:
+>>> +	lruvec = folio_lruvec(folio);
+>>>    	spin_lock(&lruvec->lru_lock);
+>>> -	lruvec_memcg_debug(lruvec, folio);
+>>> +
+>>> +	if (unlikely(lruvec_memcg(lruvec) != folio_memcg(folio))) {
+>>> +		spin_unlock(&lruvec->lru_lock);
+>>> +		goto retry;
+>>> +	}
+>>> +
+>>> +	/*
+>>> +	 * Preemption is disabled in the internal of spin_lock, which can serve
+>>> +	 * as RCU read-side critical sections.
+>>> +	 */
+>> What is the point of this comment as preemption is not disabled for
+>> PREEMPT_RT kernel?
+>>
+> I'm not familar with PREEMPT_RT kernel. At least you are right,
+> preemption is not disabled in this case, I think I should drop
+> this assumption.
 
-Yes, but you're missing my point.
+Preemption is not disabled for PREEMPT_RT kernel but task migration to 
+another cpu is disabled. So access to per-cpu variables are safe. RCU 
+seems to have a special mode for PREEMPT_RT kernel but I am not familiar 
+with the detail.
 
-> > Should the comment be deleted?
-> 
-> I think we could remove the comments. If the above question is false, seems
-> like we should continue holding rcu read lock.
+Cheers,
+Longman
 
-It's true.
-
-But assume it's false for a second. Why would you need to continue
-holding it? What would it protect? The lruvec would be pinned by the
-spinlock even if it DIDN'T imply an RCU lock, right?
-
-So I don't understand the point of the comment. If the implied RCU
-lock is protecting something not covered by the bare spinlock itself,
-it should be added to the comment. Otherwise, the comment should go.
