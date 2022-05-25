@@ -1,98 +1,54 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
- page table uses.
-Date: Tue, 24 May 2022 15:31:52 -0700
-Message-ID: <CAJD7tkYjcmwBeUx-=MTQeUf78uqFDvfpy7OuKy4OvoS7HiVO1Q@mail.gmail.com>
-References: <20220429201131.3397875-1-yosryahmed@google.com>
- <20220429201131.3397875-2-yosryahmed@google.com> <87ilqoi77b.wl-maz@kernel.org>
- <CAJD7tkY7JF25XXUFq2mGroetMkfo-2zGOaQC94pjZE3D42+oaw@mail.gmail.com>
- <Yn2TGJ4vZ/fst+CY@cmpxchg.org> <Yn2YYl98Vhh/UL0w@google.com>
- <Yn5+OtZSSUZZgTQj@cmpxchg.org> <Yn6DeEGLyR4Q0cDp@google.com>
- <CALvZod6nERq4j=L0V+pc-rd5+QKi4yb_23tWV-1MF53xL5KE6Q@mail.gmail.com>
- <CAJD7tka-5+XRkthNV4qCg8woPCpjcwynQoRBame-3GP1L8y+WQ@mail.gmail.com> <YoeoLJNQTam5fJSu@cmpxchg.org>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH mm v2 5/9] memcg: enable accounting for percpu allocation
+ of struct psi_group_cpu
+Date: Tue, 24 May 2022 18:30:43 -0700
+Message-ID: <Yo2Gw8b09efUWimi@carbon>
+References: <Yn6aL3cO7VdrmHHp@carbon>
+ <16f17021-61a3-c6f4-f60c-1acd3a0b66b9@openvz.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=/hjeyXIou+bR7sgCBUUS9KBiw7ITkpAtyGQPK8WkjHQ=;
-        b=E47CS0uk7HJ3B0+amVIKreQyHTGL6Id/MNM0NxjP7X6opvCgl1WcdBa5SnwKc3EDWw
-         V2RSBPZ5PBv0+cdx0NAoNLXYDyjDup9mou8/UiOBU++4DVMVZrHzrWd+ZVhZFW2K8uMW
-         p9b4jxU7DGV0i8n8hpbveKXjRPZjF7JZfelsg33lCxe6KvbM/3Kw2gy36RExYeMQcSnp
-         QyMMPOr6T3TA59Xk7ew90wKydoDBGM28Fu7tgOmM6JcjUpxvmSbhb9njgSwtUUkrwV/Z
-         SDvlO42njKkIejaVhIiCDGW4sF9Mf28i9mQR4sp9xyvJ2C1xtsrbm5Tfz8hGqHkzJQq/
-         IEHg==
-In-Reply-To: <YoeoLJNQTam5fJSu-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1653442249;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=BqHyQcO/EPCHDY1xe0+4wActLlHOlU2jbcY6btA4FPI=;
+        b=IqC3gfAEusYUngfhPDQZyN41hUHpicr6FUJlsvV9XN4K1/O31k7g3yqgW6376yJbiURLyW
+        20n5GAtkF2694sJcddZ7ypbG6LGvwlQK2WiFktmvfV+7xQdG77X9Z7kjg5F/Re/LmpS5+Q
+        s23gJXYBOL5RQRc5tIVrC07aijyGkHk=
+Content-Disposition: inline
+In-Reply-To: <16f17021-61a3-c6f4-f60c-1acd3a0b66b9-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM9gwCICpdfJQ@public.gmane.org
+To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, May 20, 2022 at 7:39 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> On Thu, May 19, 2022 at 06:56:54PM -0700, Yosry Ahmed wrote:
-> > On Fri, May 13, 2022 at 10:14 AM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> > >
-> > > On Fri, May 13, 2022 at 9:12 AM Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> > > >
-> > > [...]
-> > > >
-> > > > It was mostly an honest question, I too am trying to understand what userspace
-> > > > wants to do with this information.  I was/am also trying to understand the benefits
-> > > > of doing the tracking through page_state and not a dedicated KVM stat.  E.g. KVM
-> > > > already has specific stats for the number of leaf pages mapped into a VM, why not
-> > > > do the same for non-leaf pages?
-> > >
-> > > Let me answer why a more general stat is useful and the potential
-> > > userspace reaction:
-> > >
-> > > For a memory type which is significant enough, it is useful to expose
-> > > it in the general interfaces, so that the general data/stat collection
-> > > infra can collect them instead of having workload dependent stat
-> > > collectors. In addition, not necessarily that stat has to have a
-> > > userspace reaction in an online fashion. We do collect stats for
-> > > offline analysis which greatly influence the priority order of
-> > > optimization workitems.
-> > >
-> > > Next the question is do we really need a separate stat item
-> > > (secondary_pagetable instead of just plain pagetable) exposed in the
-> > > stable API? To me secondary_pagetable is general (not kvm specific)
-> > > enough and can be significant, so having a separate dedicated stat
-> > > should be ok. Though I am ok with lump it with pagetable stat for now
-> > > but we do want it to be accounted somewhere.
-> >
-> > Any thoughts on this? Johannes?
->
-> I agree that this memory should show up in vmstat/memory.stat in some
-> form or another.
->
-> The arguments on whether this should be part of NR_PAGETABLE or a
-> separate entry seem a bit vague to me. I was hoping somebody more
-> familiar with KVM could provide a better picture of memory consumption
-> in that area.
->
-> Sean had mentioned that these allocations already get tracked through
-> GFP_KERNEL_ACCOUNT. That's good, but if they are significant enough to
-> track, they should be represented in memory.stat in some form. Sean
-> also pointed out though that those allocations tend to scale rather
-> differently than the page tables, so it probably makes sense to keep
-> those two things separate at least.
->
-> Any thoughts on putting shadow page tables and iommu page tables into
-> the existing NR_PAGETABLE item? If not, what are the cons?
->
-> And creating (maybe later) a separate NR_VIRT for the other
-> GPF_KERNEL_ACCOUNT allocations in kvm?
+On Sat, May 21, 2022 at 07:38:21PM +0300, Vasily Averin wrote:
+> struct pci_group_cpu is percpu allocated for each new cgroup and can
+> consume a significant portion of all allocated memory on nodes with
+> a large number of CPUs.
+> 
+> Common part of the cgroup creation:
+> Allocs  Alloc   $1*$2   Sum     Allocation
+> number  size
+> --------------------------------------------
+> 16  ~   352     5632    5632    KERNFS
+> 1   +   4096    4096    9728    (cgroup_mkdir+0xe4)
+> 1       584     584     10312   (radix_tree_node_alloc.constprop.0+0x89)
+> 1       192     192     10504   (__d_alloc+0x29)
+> 2       72      144     10648   (avc_alloc_node+0x27)
+> 2       64      128     10776   (percpu_ref_init+0x6a)
+> 1       64      64      10840   (memcg_list_lru_alloc+0x21a)
+> percpu:
+> 1   +   192     192     192     call_site=psi_cgroup_alloc+0x1e
+> 1   +   96      96      288     call_site=cgroup_rstat_init+0x5f
+> 2       12      24      312     call_site=percpu_ref_init+0x23
+> 1       6       6       318     call_site=__percpu_counter_init+0x22
+> 
+>  '+' -- to be accounted,
+>  '~' -- partially accounted
+> 
+> Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 
-I agree with Sean that a NR_VIRT stat would be inaccurate by omission,
-unless we account for all KVM allocations under this stat. This might
-be an unnecessary burden according to what Sean said, as most other
-allocations scale linearly with the number of vCPUs or the memory
-assigned to the VM.
-
-I don't have enough context to say whether we should piggyback KVM MMU
-pages to the existing NR_PAGETABLE item, but from a high level it
-seems like it would be more helpful if they are a separate stat.
-Anyway, I am willing to go with whatever Sean thinks is best.
+Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
