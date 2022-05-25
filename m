@@ -1,49 +1,131 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v4 01/11] mm: memcontrol: prepare objcg API for non-kmem
- usage
-Date: Wed, 25 May 2022 08:37:58 -0400
-Message-ID: <Yo4jJjBksFVeJHxA@cmpxchg.org>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [PATCH v4 03/11] mm: memcontrol: make lruvec lock safe when LRU
+ pages are reparented
+Date: Wed, 25 May 2022 21:03:59 +0800
+Message-ID: <Yo4pPw+IHPBZvZUv@FVFYT0MHHV2J.googleapis.com>
 References: <20220524060551.80037-1-songmuchun@bytedance.com>
- <20220524060551.80037-2-songmuchun@bytedance.com>
- <Yo2WKADtPy2rekRh@carbon>
- <Yo3hXe8bF3boWx5C@FVFYT0MHHV2J.usts.net>
+ <20220524060551.80037-4-songmuchun@bytedance.com>
+ <Yo0xmKOkBkhRy+bq@cmpxchg.org>
+ <Yo38mlkMBFz2h+yP@FVFYT0MHHV2J.googleapis.com>
+ <Yo4hVw7B+bUlMzLX@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=6TZc5omLz/Jq7pdQu2KMjXRAJ+8quAYgmF0qQ6A24hk=;
-        b=QY59JJr7TItWYVE8/m9ruAVMHFqijACLGhysmIiQ0darsQg/VQAoJB8gF2m9BF41wz
-         /Rd0O1W076eZNqnGHu+DAxpqOcIiVcSLvKUEJhqY5OvDGbpFy0ESGC/p0jK+bP/sZRHW
-         YNyl6oYfbkJuFFI6vKpdAcbbhDbc+4NhyBATsREKtv7w8AFx45S9N8cPppNXnNRlDe2Y
-         ne1zDiEaRvCpbvIraoD3UJZCi+i5D7sCQ1Fx97kmRCaKSd2nKy8uX0l6sSmwKWrK8mEJ
-         OJtY07A4EPFFeowbysgfs+AsI1e7SZbI3MrQiHJ9fZAJee4hJExZh8khNM6L17ZOG7ue
-         zwdw==
+        bh=ZwBT4g14vYXymE6X+0Ue3RPk57uheIJlCkFHpAJ6pRk=;
+        b=ZidvWTWQLhs+qxK+czFWiUM2yn05AKjy33y9lcAXvSJqpWLzIj1uMe9jxplyskdO3I
+         5QRSBT/MJanWvJ7tylrvEqtFCJYb9VZsMpscxiot4GDbirdqvsmm2ArflQ894D2CjJqf
+         XdATAsTOsEMMmq06GT0jDJ1C9MYCztghh/capKTccvYcJcoHtRhy4UmdTl7GUsblwRYm
+         NnCEUyS+8i6ozvjD380Wke39KNyXUs14HB2/iXbngP6IcEo6QaGpB33D2GcsVIXgx6wl
+         dlhevHqjO8CcPqo6R+KwbdSG79xYWpXYADNv35I0JXli2cHDSH0yMDPEHc8ikpGfoXX2
+         fyjw==
 Content-Disposition: inline
-In-Reply-To: <Yo3hXe8bF3boWx5C-t1y1lxtqHnnw2QbUemf3bixXY32XiHfO@public.gmane.org>
+In-Reply-To: <Yo4hVw7B+bUlMzLX-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On Wed, May 25, 2022 at 03:57:17PM +0800, Muchun Song wrote:
-> On Tue, May 24, 2022 at 07:36:24PM -0700, Roman Gushchin wrote:
-> > On Tue, May 24, 2022 at 02:05:41PM +0800, Muchun Song wrote:
-> > > -	memcg_reparent_list_lrus(memcg, parent);
-> > > +	memcg_reparent_list_lrus(memcg, parent_mem_cgroup(memcg));
-> > We effectively dropped this:
-> > 	if (!parent)
-> > 		parent = root_mem_cgroup;
-> > Is it safe? (assuming v1 non-hierarchical mode, it's usually when all
-> > is getting complicated)
+On Wed, May 25, 2022 at 08:30:15AM -0400, Johannes Weiner wrote:
+> On Wed, May 25, 2022 at 05:53:30PM +0800, Muchun Song wrote:
+> > On Tue, May 24, 2022 at 03:27:20PM -0400, Johannes Weiner wrote:
+> > > On Tue, May 24, 2022 at 02:05:43PM +0800, Muchun Song wrote:
+> > > > The diagram below shows how to make the folio lruvec lock safe when LRU
+> > > > pages are reparented.
+> > > > 
+> > > > folio_lruvec_lock(folio)
+> > > >     retry:
+> > > > 	lruvec = folio_lruvec(folio);
+> > > > 
+> > > >         // The folio is reparented at this time.
+> > > >         spin_lock(&lruvec->lru_lock);
+> > > > 
+> > > >         if (unlikely(lruvec_memcg(lruvec) != folio_memcg(folio)))
+> > > >             // Acquired the wrong lruvec lock and need to retry.
+> > > >             // Because this folio is on the parent memcg lruvec list.
+> > > >             goto retry;
+> > > > 
+> > > >         // If we reach here, it means that folio_memcg(folio) is stable.
+> > > > 
+> > > > memcg_reparent_objcgs(memcg)
+> > > >     // lruvec belongs to memcg and lruvec_parent belongs to parent memcg.
+> > > >     spin_lock(&lruvec->lru_lock);
+> > > >     spin_lock(&lruvec_parent->lru_lock);
+> > > > 
+> > > >     // Move all the pages from the lruvec list to the parent lruvec list.
+> > > > 
+> > > >     spin_unlock(&lruvec_parent->lru_lock);
+> > > >     spin_unlock(&lruvec->lru_lock);
+> > > > 
+> > > > After we acquire the lruvec lock, we need to check whether the folio is
+> > > > reparented. If so, we need to reacquire the new lruvec lock. On the
+> > > > routine of the LRU pages reparenting, we will also acquire the lruvec
+> > > > lock (will be implemented in the later patch). So folio_memcg() cannot
+> > > > be changed when we hold the lruvec lock.
+> > > > 
+> > > > Since lruvec_memcg(lruvec) is always equal to folio_memcg(folio) after
+> > > > we hold the lruvec lock, lruvec_memcg_debug() check is pointless. So
+> > > > remove it.
+> > > > 
+> > > > This is a preparation for reparenting the LRU pages.
+> > > > 
+> > > > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> > > 
+> > > This looks good to me. Just one question:
+> > > 
+> > > > @@ -1230,10 +1213,23 @@ void lruvec_memcg_debug(struct lruvec *lruvec, struct folio *folio)
+> > > >   */
+> > > >  struct lruvec *folio_lruvec_lock(struct folio *folio)
+> > > >  {
+> > > > -	struct lruvec *lruvec = folio_lruvec(folio);
+> > > > +	struct lruvec *lruvec;
+> > > >  
+> > > > +	rcu_read_lock();
+> > > > +retry:
+> > > > +	lruvec = folio_lruvec(folio);
+> > > >  	spin_lock(&lruvec->lru_lock);
+> > > > -	lruvec_memcg_debug(lruvec, folio);
+> > > > +
+> > > > +	if (unlikely(lruvec_memcg(lruvec) != folio_memcg(folio))) {
+> > > > +		spin_unlock(&lruvec->lru_lock);
+> > > > +		goto retry;
+> > > > +	}
+> > > > +
+> > > > +	/*
+> > > > +	 * Preemption is disabled in the internal of spin_lock, which can serve
+> > > > +	 * as RCU read-side critical sections.
+> > > > +	 */
+> > > > +	rcu_read_unlock();
+> > > 
+> > > The code looks right to me, but I don't understand the comment: why do
+> > > we care that the rcu read-side continues? With the lru_lock held,
+> > > reparenting is on hold and the lruvec cannot be rcu-freed anyway, no?
+> > >
+> > 
+> > Right. We could hold rcu read lock until end of reparting.  So you mean
+> > we do rcu_read_unlock in folio_lruvec_lock()?
+> 
+> The comment seems to suggest that disabling preemption is what keeps
+> the lruvec alive. But it's the lru_lock that keeps it alive. The
+> cgroup destruction path tries to take the lru_lock long before it even
+> gets to synchronize_rcu(). Once you hold the lru_lock, having an
+> implied read-side critical section as well doesn't seem to matter.
+>
 
-Yes, it's correct. But it's a quiet, incidental cleanup, so I can see
-why it's confusing. It might be better to split the dead code removal
-into a separate patch - with the following in the changelog ;):
+Well, I thought that spinlocks have implicit read-side critical sections
+because it disables preemption (I learned from the comments above
+synchronize_rcu() that says interrupts, preemption, or softirqs have been
+disabled also serve as RCU read-side critical sections).  So I have a
+question: is it still true in a PREEMPT_RT kernel (I am not familiar with
+this)?
 
-> Since no-hierarchy mode is deprecated after commit bef8620cd8e0
-> ("mm: memcg: deprecate the non-hierarchical mode"), so
-> parent_mem_cgroup() cannot return a NULL except root memcg,
-> however, root memcg will not be offline, so it is safe. Right?
+> Should the comment be deleted?
+>
+
+I think we could remove the comments. If the above question is false, seems
+like we should continue holding rcu read lock.
+
+Thanks.
