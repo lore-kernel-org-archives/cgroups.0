@@ -1,85 +1,79 @@
-From: Sean Christopherson <seanjc@google.com>
-Subject: Re: [PATCH v4 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
- page table uses.
-Date: Thu, 26 May 2022 00:38:52 +0000
-Message-ID: <Yo7MHA2aUaprvgl8@google.com>
-References: <CAJD7tkY7JF25XXUFq2mGroetMkfo-2zGOaQC94pjZE3D42+oaw@mail.gmail.com>
- <Yn2TGJ4vZ/fst+CY@cmpxchg.org>
- <Yn2YYl98Vhh/UL0w@google.com>
- <Yn5+OtZSSUZZgTQj@cmpxchg.org>
- <Yn6DeEGLyR4Q0cDp@google.com>
- <CALvZod6nERq4j=L0V+pc-rd5+QKi4yb_23tWV-1MF53xL5KE6Q@mail.gmail.com>
- <CAJD7tka-5+XRkthNV4qCg8woPCpjcwynQoRBame-3GP1L8y+WQ@mail.gmail.com>
- <YoeoLJNQTam5fJSu@cmpxchg.org>
- <CAJD7tkYjcmwBeUx-=MTQeUf78uqFDvfpy7OuKy4OvoS7HiVO1Q@mail.gmail.com>
- <Yo4Ze+DZrLqn0PeU@cmpxchg.org>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 2/2] cgroup: Use separate work structs on css release path
+Date: Thu, 26 May 2022 11:56:34 +0200
+Message-ID: <Yo7KfEOz92kS2z5Y@blackbook>
+References: <20220525151517.8430-1-mkoutny@suse.com>
+ <20220525151517.8430-3-mkoutny@suse.com>
+ <20220525161455.GA16134@blackbody.suse.cz>
 Mime-Version: 1.0
-Return-path: <kvm-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=7P8MdhBUHeNYERj02eaiVlo3+1akuXNgpyLjujYYpb0=;
-        b=nGnImQMrxcKuAMPfn2cnaf9VK34koPZI6BdWd8L/dvJkOmKEczFMWc8Yx7hsQFZeVL
-         9KLxd0tBqQk1/z15iyaTJQGyj+rpJcqO/oigF6/cI0x8g+X/Xo/VBfVgAonu8k6z7tAw
-         rX3SONGBqur0M8KowUWh/wmc3aYT+yOgmGgvthbF1GbnQhkOPFYSCTfv0l7sg5kj2jls
-         D/lYOdddeRohuY3mRJGYNVA5mDFRmRi5K+xU9HMyUH4O1+TPylZTZEwi6U0ynqv/r7ZQ
-         PEcsEwLY3XMn7/TlPZPqXhp0uzspbOfW5miRUT3ck3ZbCGUmofEeJzc2ijyz7b5LJr0L
-         9x9Q==
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1653558995; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=OFhmgixX5LOgkqqC8+umKFYLrjndJW5kicXnZWzhHcM=;
+        b=IFtKrgBpUSxaIqVCvIEJxuP0+8BajYar9PUK+it7szWAOhxuqgh3gsI50vxQ5v2+PAk+v5
+        HmhTw77kSpoGw0/3EJ8WyMbDUAVjADlDKKvwZcwDnjw6FA5moc+3dGsd+gFfKPR7xHm1RT
+        FKNfMRfPE3vE2jk8xlz9H4AnRMv+oTs=
 Content-Disposition: inline
-In-Reply-To: <Yo4Ze+DZrLqn0PeU@cmpxchg.org>
+In-Reply-To: <20220525161455.GA16134-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Yosry Ahmed <yosryahmed@google.com>, Shakeel Butt <shakeelb@google.com>, Marc Zyngier <maz@kernel.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, James Morse <james.morse@arm.com>, Alexandru Elisei <alexandru.elisei@arm.com>, Suzuki K Poulose <suzuki.poulose@arm.com>, Paolo Bonzini <pbonzini@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Wanpeng Li <wanpengli@tencent.com>, Jim Mattson <jmattson@google.com>, Joerg Roedel <joro@8bytes.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Oliver Upton <oupton@google.com>, Cgroups <cgroups@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.or
+Content-Type: text/plain; charset="iso-8859-1"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Bui Quang Minh <minhquangbui99-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tadeusz Struk <tadeusz.struk-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
-On Wed, May 25, 2022, Johannes Weiner wrote:
-> On Tue, May 24, 2022 at 03:31:52PM -0700, Yosry Ahmed wrote:
-> > I don't have enough context to say whether we should piggyback KVM MMU
-> > pages to the existing NR_PAGETABLE item, but from a high level it
-> > seems like it would be more helpful if they are a separate stat.
-> > Anyway, I am willing to go with whatever Sean thinks is best.
-> 
-> Somebody should work this out and put it into a changelog. It's
-> permanent ABI.
+On Wed, May 25, 2022 at 06:14:55PM +0200, Michal Koutn=FD <mkoutny-IBi9RG/b=
+67k@public.gmane.org> wrote:
+> But the above is not correct. I've looked at the stack trace [1] and the
+> offending percpu_ref_put_many is called from an RCU callback
+> percpu_ref_switch_to_atomic_rcu(), so I can't actually see why it drops
+> to zero there...
 
-After a lot of waffling, my vote is to add a dedicated NR_SECONDARY_PAGETABLE.
+The link [1] should have been [1].
+After some more thought, the following is possible sequencing of
+involved functions.
 
-It's somewhat redundant from a KVM perspective, as NR_SECONDARY_PAGETABLE will
-scale with KVM's per-VM pages_{4k,2m,1g} stats unless the guest is doing something
-bizarre, e.g. accessing only 4kb chunks of 2mb pages so that KVM is forced to
-allocate a large number of page tables even though the guest isn't accessing that
-much memory.
+// ref=3DA: initial state
+kill_css()
+  css_get // ref+=3DF =3D=3D A+F: fuse
+  percpu_ref_kill_and_confirm
+    __percpu_ref_switch_to_atomic
+      percpu_ref_get
+        // ref +=3D 1 =3D=3D A+F+1: atomic mode, self-protection
+    percpu_ref_put
+      // ref -=3D 1 =3D=3D A+F: kill the base reference
+  [via rcu]
+  percpu_ref_switch_to_atomic_rcu
+    percpu_ref_call_confirm_rcu
+      css_killed_ref_fn =3D=3D refcnt.confirm_switch
+        queue_work(css->destroy_work)        (1)
+                                                     [via css->destroy_work]
+                                                     css_killed_work_fn =3D=
+=3D wq.func
+                                                       offline_css() // nee=
+ds fuse
+                                                       css_put // ref -=3D =
+F =3D=3D A: de-fuse
+      percpu_ref_put
+        // ref -=3D 1 =3D=3D A-1: remove self-protection
+        css_release                                   // A <=3D 1 -> 2nd qu=
+eue_work explodes!
+          queue_work(css->destroy_work)      (2)
+          [via css->destroy_work]
+          css_release_work_fn =3D=3D wq.func
 
-But, someone would need to either understand how KVM works to make that connection,
-or know (or be told) to go look at KVM's stats if they're running VMs to better
-decipher the stats.
+Another CPU would have to dispatch and run the css_killed_work_fn
+callback in parallel to percpu_ref_switch_to_atomic_rcu. It's a more
+correct explanation, however, its likelihood does seem very low. Perhaps
+some debug prints of percpu_ref_data.data in percpu_ref_call_confirm_rcu
+could shed more light onto this [2].
 
-And even in the little bit of time I played with this, I found having
-nr_page_table_pages side-by-side with nr_secondary_page_table_pages to be very
-informative.  E.g. when backing a VM with THP versus HugeTLB,
-nr_secondary_page_table_pages is roughly the same, but nr_page_table_pages is an
-order of a magnitude higher with THP.  I'm guessing the THP behavior is due to
-something triggering DoubleMap, but now I want to find out why that's happening.
+HTH,
+Michal
 
-So while I'm pretty sure a clever user could glean the same info by cross-referencing
-NR_PAGETABLE stats with KVM stats, I think having NR_SECONDARY_PAGETABLE will at the
-very least prove to be helpful for understanding tradeoffs between VM backing types,
-and likely even steer folks towards potential optimizations.
-
-Baseline:
-  # grep page_table /proc/vmstat 
-  nr_page_table_pages 2830
-  nr_secondary_page_table_pages 0
-
-THP:
-  # grep page_table /proc/vmstat 
-  nr_page_table_pages 7584
-  nr_secondary_page_table_pages 140
-
-HugeTLB:
-  # grep page_table /proc/vmstat
-  nr_page_table_pages 3153
-  nr_secondary_page_table_pages 153
+[1] https://syzkaller.appspot.com/text?tag=3DCrashReport&x=3D162b5781f00000
+[2] I tried notifying syzbot about [3] moments ago.
+[3] https://github.com/Werkov/linux/tree/cgroup-ml/css-lifecycle-syzbot
 
