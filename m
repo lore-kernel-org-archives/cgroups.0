@@ -1,62 +1,130 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Return if dst_cgrp equals to src_cgrp
-Date: Thu, 26 May 2022 13:22:28 +0200
-Message-ID: <20220526112228.GG11007@blackbody.suse.cz>
-References: <1653066120-21262-1-git-send-email-shisiyuan@xiaomi.com>
- <Yo6zAi+Y/uXLYUI7@blackbook>
- <CAC=y0ud7oPtFqj=dqBSicoWwoN0knAwA6svidiYjbFn9BJMR3w@mail.gmail.com>
+From: Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] psi: dont alloc memory for psi by default
+Date: Thu, 26 May 2022 20:26:56 +0800
+Message-ID: <20220526122656.256274-1-chenwandun@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1653564149; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Hv0r7+P52bHUfxGCUQuHehbuy065ANoliNcm3V+0PFI=;
-        b=utAQl6liQ+JUOSurMy22DRK/WHQEwUNAJPY0hO3x8ST/3ghDSYABv66ADrFm/rLcXGZbwL
-        id0nrWLqSv+f/Re52lXyOhtxCSs1Tk51+U/rLpTMsbvmdpGjUFczTfQusPkTjTLUvbjwp2
-        1JUNuLjIcjQLoyETNXg5L8Htt00NnlQ=
-Content-Disposition: inline
-In-Reply-To: <CAC=y0ud7oPtFqj=dqBSicoWwoN0knAwA6svidiYjbFn9BJMR3w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?utf-8?B?5Y+y5oCd6L+c?= <shisiyuan19870131-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, May 26, 2022 at 12:40:17PM +0800, 史思远 <shisiyuan19870131-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> echo 1413 >  /dev/cpuset/foreground/cgroup.procs
-> echo 1413 >  /dev/cpuset/foreground/cgroup.procs
-> echo 1413 >  /dev/cpuset/foreground/cgroup.procs
+Memory about struct psi_group is allocated by default for
+each cgroup even if psi_disabled is true, in this case, these
+allocated memory is waste, so alloc memory for struct psi_group
+only when psi_disabled is false.
 
-Thank you.
+Signed-off-by: Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ include/linux/cgroup-defs.h |  2 +-
+ include/linux/cgroup.h      |  2 +-
+ kernel/cgroup/cgroup.c      |  8 ++++----
+ kernel/sched/psi.c          | 19 +++++++++++++------
+ 4 files changed, 19 insertions(+), 12 deletions(-)
 
-> In this situation, since the second echo, dst_cgrp equals to src_cgrp(both
-> cgroups are the 'foreground' cpuset).
-> cgroup1_procs_write（）-> __cgroup1_procs_write()
-> -> cgrp = cgroup_kn_lock_live()
-> -> task = cgroup_procs_write_start(buf...)
-> -> cgroup_attach_task(cgrp, task, threadgroup);
->   -> 1) cgroup_migrate_add_src(task_css_set(task), dst_cgrp, &mgctx);  //
-> detect the (src_cgrp == dst_cgrp), don't need to continue the following
-> migration flow.
->   -> 2) cgroup_migrate_prepare_dst(&mgctx)
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 1bfcfb1af352..672de25e3ec8 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -475,7 +475,7 @@ struct cgroup {
+ 	struct work_struct release_agent_work;
+ 
+ 	/* used to track pressure stalls */
+-	struct psi_group psi;
++	struct psi_group *psi;
+ 
+ 	/* used to store eBPF programs */
+ 	struct cgroup_bpf bpf;
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 0d1ada8968d7..ed53bfe7c46c 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -674,7 +674,7 @@ static inline void pr_cont_cgroup_path(struct cgroup *cgrp)
+ 
+ static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
+ {
+-	return &cgrp->psi;
++	return cgrp->psi;
+ }
+ 
+ bool cgroup_psi_enabled(void);
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 1779ccddb734..90a654cb8a1e 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -3609,21 +3609,21 @@ static int cpu_stat_show(struct seq_file *seq, void *v)
+ static int cgroup_io_pressure_show(struct seq_file *seq, void *v)
+ {
+ 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+-	struct psi_group *psi = cgroup_ino(cgrp) == 1 ? &psi_system : &cgrp->psi;
++	struct psi_group *psi = cgroup_ino(cgrp) == 1 ? &psi_system : cgrp->psi;
+ 
+ 	return psi_show(seq, psi, PSI_IO);
+ }
+ static int cgroup_memory_pressure_show(struct seq_file *seq, void *v)
+ {
+ 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+-	struct psi_group *psi = cgroup_ino(cgrp) == 1 ? &psi_system : &cgrp->psi;
++	struct psi_group *psi = cgroup_ino(cgrp) == 1 ? &psi_system : cgrp->psi;
+ 
+ 	return psi_show(seq, psi, PSI_MEM);
+ }
+ static int cgroup_cpu_pressure_show(struct seq_file *seq, void *v)
+ {
+ 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+-	struct psi_group *psi = cgroup_ino(cgrp) == 1 ? &psi_system : &cgrp->psi;
++	struct psi_group *psi = cgroup_ino(cgrp) == 1 ? &psi_system : cgrp->psi;
+ 
+ 	return psi_show(seq, psi, PSI_CPU);
+ }
+@@ -3649,7 +3649,7 @@ static ssize_t cgroup_pressure_write(struct kernfs_open_file *of, char *buf,
+ 		return -EBUSY;
+ 	}
+ 
+-	psi = cgroup_ino(cgrp) == 1 ? &psi_system : &cgrp->psi;
++	psi = cgroup_ino(cgrp) == 1 ? &psi_system : cgrp->psi;
+ 	new = psi_trigger_create(psi, buf, nbytes, res);
+ 	if (IS_ERR(new)) {
+ 		cgroup_put(cgrp);
+diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+index a337f3e35997..ec66b40bdd40 100644
+--- a/kernel/sched/psi.c
++++ b/kernel/sched/psi.c
+@@ -957,10 +957,16 @@ int psi_cgroup_alloc(struct cgroup *cgroup)
+ 	if (static_branch_likely(&psi_disabled))
+ 		return 0;
+ 
+-	cgroup->psi.pcpu = alloc_percpu(struct psi_group_cpu);
+-	if (!cgroup->psi.pcpu)
++	cgroup->psi = kmalloc(sizeof(struct psi_group), GFP_KERNEL);
++	if (!cgroup->psi)
+ 		return -ENOMEM;
+-	group_init(&cgroup->psi);
++
++	cgroup->psi->pcpu = alloc_percpu(struct psi_group_cpu);
++	if (!cgroup->psi->pcpu) {
++		kfree(cgroup->psi);
++		return -ENOMEM;
++	}
++	group_init(cgroup->psi);
+ 	return 0;
+ }
+ 
+@@ -969,10 +975,11 @@ void psi_cgroup_free(struct cgroup *cgroup)
+ 	if (static_branch_likely(&psi_disabled))
+ 		return;
+ 
+-	cancel_delayed_work_sync(&cgroup->psi.avgs_work);
+-	free_percpu(cgroup->psi.pcpu);
++	cancel_delayed_work_sync(&cgroup->psi->avgs_work);
++	free_percpu(cgroup->psi->pcpu);
+ 	/* All triggers must be removed by now */
+-	WARN_ONCE(cgroup->psi.poll_states, "psi: trigger leak\n");
++	WARN_ONCE(cgroup->psi->poll_states, "psi: trigger leak\n");
++	kfree(cgroup->psi);
+ }
+ 
+ /**
+-- 
+2.25.1
 
-Here, I'd like to let you know about [1]
-
->   -> 3) cgroup_migrate(leader, threadgroup, &mgctx)
->   -> 4) cgroup_migrate_finish(&mgctx) // cleanup
-> -> cgroup_procs_write_finish();  // cleanup
-
-
-> >> The main purpose for this patch is to handle the situation above, and
-> just noticed that cgroup_update_dfl_csses() also
-> calls cgroup_migrate_add_src(). So I assume it's a similar situation. We
-> can discuss more about it.
-
-So I think the patch doesn't save that much and identical css_set is
-better condition to check on (covers cgroup_update_dfl_csses too).
-
-Michal
-
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/cgroup/cgroup.c?h=v5.18#n2710
