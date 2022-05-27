@@ -1,41 +1,64 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: wait for css offline when rmdir
-Date: Thu, 26 May 2022 22:48:39 -1000
-Message-ID: <YpCQZ5RRnxwh7fmK@slm.duckdns.org>
-References: <1653619158-27607-1-git-send-email-zhanghongchen@loongson.cn>
+From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] XArray: handle XA_FLAGS_ACCOUNT in xas_split_alloc
+Date: Fri, 27 May 2022 14:22:19 +0300
+Message-ID: <d4e81087-d057-4edb-5df0-47d99a1c72d9@openvz.org>
+References: <348dc099-737d-94ba-55ad-2db285084c73@openvz.org>
+ <YpAnqqY/c3Y5ZkPG@casper.infradead.org>
+ <CALvZod7iyO5Ti5xhzq36UjDFNAmfEyPk1MQv_t4kUHKuPCeNng@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=F/TuFldqNWvbTR7kMknQ2sKjIOSGzhXUVTHp1Dts3Bw=;
-        b=Waerq1Kg5SvqcLdZ91WgRWzCShy7ZEJw5Th3INevO7MYiKqxU166flLRKYb6F3n2WE
-         +/jhiCUpHLjXscO+mQm+qzYfcQ6QVGscfz94TDWbs+505PMsEP+VLtuM0nmfmnKsORsx
-         e2rNwgY0TNH0ff4YJnyjGYKYCKLwXdHus/fT3gypmPcIAeRq3baIiEb27H10uQWXYWfr
-         86WDeESm08ae9QxBJNHTwBk5pwNcblO1VibwZ1AnB5yigJm8+lsU84fszGAC0X4wtRRI
-         3kHnhOT13M7HHIjATivsUNe1oExErxDO5MThHSnlAo+zQhu7ZP6+XxwioyoBbQaf/HJZ
-         NFhw==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1653619158-27607-1-git-send-email-zhanghongchen-cXZgJK919ebM1kAEIRd3EQ@public.gmane.org>
+        d=openvz-org.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=M9FMFJI/J357AWjNf6HATXScadCdwguWFNkt78waWBM=;
+        b=jszfjOQNBQQfrZfE+0swQ56OEuaHDyAFud8w34hVHZ4i2a96xQYsNynHMPG3M9WCuc
+         XVSVrO8jxlh9H2s8cH8A7faJbQvBhS7XPpObKbIpBzA2dQc7yoFGid5yp9+BkT8BucBc
+         TuHu3H4LtY/YvjxlrO+mUNrIUZGauALFsbTdiZta86lN+HJkhNQGwe6TXURRyUzOLo8U
+         CRpuBgSEgKdvndEVNZktniGlwUIvnAEBCsvi+FYDPJ99aHMt24PNfTpDJlbKx8PVXj2V
+         P9eOIDmmFVYy14CeIGoIS5f+dABhHFLXdMXDC3+LSEHgZjk0YUnk6QVpcB1Y2T7kHDxF
+         74rA==
+Content-Language: en-US
+In-Reply-To: <CALvZod7iyO5Ti5xhzq36UjDFNAmfEyPk1MQv_t4kUHKuPCeNng-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Hongchen Zhang <zhanghongchen-cXZgJK919ebM1kAEIRd3EQ@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 
-On Fri, May 27, 2022 at 10:39:18AM +0800, Hongchen Zhang wrote:
-> when remove a cgroup dir, make sure all the csses associated which
-> the cgroup are all offlined,so that we will be sure that the resources
-> allocated by the csses are all freed when rmdir exit successfully.
-
-Offlining doesn't guarantee that resources are freed and there's no definite
-time limit on how long it'd take to free all resources. e.g. for memcg, if
-there isn't sufficient memory pressure, its page cache can remain
-indefinitely. Is there something practical you're trying to achieve?
-
-Thanks.
-
--- 
-tejun
+T24gNS8yNy8yMiAwNDo0MCwgU2hha2VlbCBCdXR0IHdyb3RlOgo+IE9uIFRodSwgTWF5IDI2LCAy
+MDIyIGF0IDY6MjEgUE0gTWF0dGhldyBXaWxjb3ggPHdpbGx5LXdFR0NpS0hlMkxxV1ZmZUF3QTd4
+SFFAcHVibGljLmdtYW5lLm9yZz4gd3JvdGU6Cj4+Cj4+IE9uIFdlZCwgTWF5IDI1LCAyMDIyIGF0
+IDExOjI2OjM3QU0gKzAzMDAsIFZhc2lseSBBdmVyaW4gd3JvdGU6Cj4+PiBDb21taXQgN2I3ODU2
+NDVlOGYxICgibW06IGZpeCBwYWdlIGNhY2hlIGNvbnZlcmdlbmNlIHJlZ3Jlc3Npb24iKQo+Pj4g
+YWRkZWQgc3VwcG9ydCBvZiBuZXcgWEFfRkxBR1NfQUNDT1VOVCBmbGFnIGludG8gYWxsIFhhcnJh
+eSBhbGxvY2F0aW9uCj4+PiBmdW5jdGlvbnMuIExhdGVyIGNvbW1pdCA4ZmM3NTY0M2M1ZTEgKCJY
+QXJyYXk6IGFkZCB4YXNfc3BsaXQiKQo+Pj4gaW50cm9kdWNlZCB4YXNfc3BsaXRfYWxsb2MoKSBi
+dXQgbWlzc2VkIGFib3V0IFhBX0ZMQUdTX0FDQ09VTlQKPj4+IHByb2Nlc3NpbmcuCj4+Cj4+IFRo
+YW5rcywgVmFzaWx5Lgo+Pgo+PiBKb2hhbm5lcywgU2hha2VlbCwgaXMgdGhpcyByaWdodD8gIEkg
+ZG9uJ3QgZnVsbHkgdW5kZXJzdGFuZCB0aGUgYWNjb3VudGluZwo+PiBzdHVmZi4KPj4KPiAKPiBJ
+ZiBjYWxsZWQgZnJvbSBfX2ZpbGVtYXBfYWRkX2ZvbGlvKCkgdGhlbiB0aGlzIGlzIGNvcnJlY3Qu
+Cj4gCj4gSG93ZXZlciBmcm9tIHNwbGl0X2h1Z2VfcGFnZV90b19saXN0KCksIHdlIGNhbiBub3Qg
+dXNlIHRoZSBtZW1jZyBmcm9tCj4gY3VycmVudCBhcyB0aGF0IGNvZGVwYXRoIGlzIGNhbGxlZCBm
+cm9tIHJlY2xhaW0gd2hpY2ggY2FuIGJlIHRyaWdnZXJlZAo+IGJ5IHByb2Nlc3NlcyBvZiBvdGhl
+ciBtZW1jZ3MuCkJ0dywgU2hha2VlbCwgSm9oYW5uZXMsCkkgd291bGQgbGlrZSB0byB1bmRlcnN0
+YW5kLCB3aGVuIFhhcnJheSBzaG91bGQgdXNlIFhBX0ZMQUdTX0FDQ09VTlQgPwoKRnJvbSBteSBw
+b2ludCBvZiB2aWV3LCB0aGlzIHNob3VsZCBiZSB1c2VsZXNzOgphKSBpZiBYYXJyYXkgc3RvcmVz
+IHNvbWUgaW5kZXggKGlkcj8pIC0gaGlzIG1lbW9yeSBpcyBxdWl0ZSBzbWFsbCwKYW5kIGhpcyBh
+Y2NvdW50aW5nIGNhbiBiZSBpZ25vcmVkLgpiKSBpZiBYYXJyYXkgc3RvcmVzIHNvbWUgYWNjb3Vu
+dGVkIC0gdGhlIHNpemUgb2YgdGhlIGNvcnJlc3BvbmRpbmcgWGFycmF5CmluZnJhc3RydWN0dXJl
+IGlzIHVzdWFsbHkgc2lnbmlmaWNhbnRseSBzbWFsbGVyIHRoYW4gdGhlIHNpemUgb2YgdGhlIHN0
+b3JlZCBvYmplY3QsCnPQviBoaXMgYWNjb3VudGluZyBjYW4gYmUgc2tpcHBlZCB0b28uCmMpIGlm
+IFhhcnJheSBzdG9yZXMgc29tZSBub24tYWNjb3VudGVkIG9iamVjdHMgLSBpdCBtYWtlcyBubyBz
+ZW5zZSB0byBhY2NvdW50IApjb3JyZXNwb25kaW5nIFhhcnJheSBpbmZyYXN0cnVjdHVyZS4gSW4g
+Y2FzZSBvZiBuZWNlc3NhcnkgaXQgbWFrZXMgbXVjaCBtb3JlIHNlbnNlCnRvIGVuYWJsZSBhY2Nv
+dW50aW5nIGZvciBzdG9yZWQgb2JqZWN0cyAoYW5kIHJldHVybiB0byBjYXNlIGIpLgoKQW0gSSBt
+aXNzZWQgc29tZXRoaW5nIGltcG9ydGFudCBwZXJoYXBzPwoKSSBsb29rZWQgZm9yIHRoZSBkZXNj
+cmlwdGlvbiBvZiA3Yjc4NTY0NWU4ZjEsIGJ1dCBvIGJlIGhvbmVzdCBJJ20gc3RpbGwgbm90IHN1
+cmUKdGhhdCBJIHVuZGVyc3RhbmQgY29ycmVjdGx5IHdoeSBYQV9GTEFHU19BQ0NPVU5UIGZsYWcg
+c29sdmVkIHRoZSBkZXNjcmliZWQgcHJvYmxlbS4KCkNvdWxkIHlvdSBwbGVhc2UgZXhwbGFpbiB0
+aGlzIGluIG1vcmUgZGV0YWlscz8KCldhcyBpdCBiZWNhdXNlIHRoZSBub24tYWNjb3VudGVkIFhh
+cnJheSBrZXB0IGEgcmVmZXJlbmNlIHRvIHRoZSBzdG9yZWQgb2JqZWN0CmFuZCB0aHVzIHByZXZl
+bnRzIGl0IGZyb20gYmVpbmcgcmVjbGFpbWVkPwoKSWYgc28sIHdhcyBpdCBzb21lIHNwZWNpYWwg
+Y2FzZSwgb3Igc2hvdWxkIGl0IGFmZmVjdCBhbGwgc3VjaCBjYXNlcywKYW5kIG15IGIpIHN0YXRl
+bWVudCBhYm92ZSBpcyBub3QgY29ycmVjdD8KClRoYW5rIHlvdSwKCVZhc2lseSBBdmVyaW4K
