@@ -1,64 +1,91 @@
-From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] XArray: handle XA_FLAGS_ACCOUNT in xas_split_alloc
-Date: Fri, 27 May 2022 14:22:19 +0300
-Message-ID: <d4e81087-d057-4edb-5df0-47d99a1c72d9@openvz.org>
-References: <348dc099-737d-94ba-55ad-2db285084c73@openvz.org>
- <YpAnqqY/c3Y5ZkPG@casper.infradead.org>
- <CALvZod7iyO5Ti5xhzq36UjDFNAmfEyPk1MQv_t4kUHKuPCeNng@mail.gmail.com>
+From: Tadeusz Struk <tadeusz.struk-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/2] cgroup: Use separate work structs on css release path
+Date: Fri, 27 May 2022 09:39:20 -0700
+Message-ID: <904ef8af-13a5-e566-b760-74519f70fa62@linaro.org>
+References: <20220525151517.8430-1-mkoutny@suse.com>
+ <20220525151517.8430-3-mkoutny@suse.com>
+ <20220525161455.GA16134@blackbody.suse.cz> <Yo7KfEOz92kS2z5Y@blackbook>
+ <Yo/DtjEU/kYr190u@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=openvz-org.20210112.gappssmtp.com; s=20210112;
+        d=linaro.org; s=google;
         h=message-id:date:mime-version:user-agent:subject:content-language:to
          :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=M9FMFJI/J357AWjNf6HATXScadCdwguWFNkt78waWBM=;
-        b=jszfjOQNBQQfrZfE+0swQ56OEuaHDyAFud8w34hVHZ4i2a96xQYsNynHMPG3M9WCuc
-         XVSVrO8jxlh9H2s8cH8A7faJbQvBhS7XPpObKbIpBzA2dQc7yoFGid5yp9+BkT8BucBc
-         TuHu3H4LtY/YvjxlrO+mUNrIUZGauALFsbTdiZta86lN+HJkhNQGwe6TXURRyUzOLo8U
-         CRpuBgSEgKdvndEVNZktniGlwUIvnAEBCsvi+FYDPJ99aHMt24PNfTpDJlbKx8PVXj2V
-         P9eOIDmmFVYy14CeIGoIS5f+dABhHFLXdMXDC3+LSEHgZjk0YUnk6QVpcB1Y2T7kHDxF
-         74rA==
+        bh=jeA4ER8KbBHKcyc+TaHYMfBnKpuDxMWJ6quO+9dHOWE=;
+        b=NSLHsjgjrWqwX/1FYyNqbRe5eG4yejZ3h0d0GNRHAthad8+JrxNe0WwprdS58sHjLG
+         +DFIEYNpeUJHV1+de7IN6+6hqCPJvHZpAzT/KyT4Uzzs40+wPILx3PmuZDo3ZE7laNTS
+         cwg6C2WrHXDx3w7d9mw/XHohR5XWW2bqpm59bOC9y2hMyncS06X7fS/n/NsOeOA+Auc9
+         yWGy/DpZq9uCpNRVlldmo3BHO8pSLPlvYA2RE6DnbPWcNLlS8+5yHlyGWpFiLVxCzD0r
+         PuYmyh6SzT4L9DJ+6NrhKH9xQH8MHTACWPpile6TcTNUhr0PsJUw3REwgEWUWiHDp7J3
+         0CGA==
 Content-Language: en-US
-In-Reply-To: <CALvZod7iyO5Ti5xhzq36UjDFNAmfEyPk1MQv_t4kUHKuPCeNng-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <Yo/DtjEU/kYr190u-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Bui Quang Minh <minhquangbui99-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-T24gNS8yNy8yMiAwNDo0MCwgU2hha2VlbCBCdXR0IHdyb3RlOgo+IE9uIFRodSwgTWF5IDI2LCAy
-MDIyIGF0IDY6MjEgUE0gTWF0dGhldyBXaWxjb3ggPHdpbGx5LXdFR0NpS0hlMkxxV1ZmZUF3QTd4
-SFFAcHVibGljLmdtYW5lLm9yZz4gd3JvdGU6Cj4+Cj4+IE9uIFdlZCwgTWF5IDI1LCAyMDIyIGF0
-IDExOjI2OjM3QU0gKzAzMDAsIFZhc2lseSBBdmVyaW4gd3JvdGU6Cj4+PiBDb21taXQgN2I3ODU2
-NDVlOGYxICgibW06IGZpeCBwYWdlIGNhY2hlIGNvbnZlcmdlbmNlIHJlZ3Jlc3Npb24iKQo+Pj4g
-YWRkZWQgc3VwcG9ydCBvZiBuZXcgWEFfRkxBR1NfQUNDT1VOVCBmbGFnIGludG8gYWxsIFhhcnJh
-eSBhbGxvY2F0aW9uCj4+PiBmdW5jdGlvbnMuIExhdGVyIGNvbW1pdCA4ZmM3NTY0M2M1ZTEgKCJY
-QXJyYXk6IGFkZCB4YXNfc3BsaXQiKQo+Pj4gaW50cm9kdWNlZCB4YXNfc3BsaXRfYWxsb2MoKSBi
-dXQgbWlzc2VkIGFib3V0IFhBX0ZMQUdTX0FDQ09VTlQKPj4+IHByb2Nlc3NpbmcuCj4+Cj4+IFRo
-YW5rcywgVmFzaWx5Lgo+Pgo+PiBKb2hhbm5lcywgU2hha2VlbCwgaXMgdGhpcyByaWdodD8gIEkg
-ZG9uJ3QgZnVsbHkgdW5kZXJzdGFuZCB0aGUgYWNjb3VudGluZwo+PiBzdHVmZi4KPj4KPiAKPiBJ
-ZiBjYWxsZWQgZnJvbSBfX2ZpbGVtYXBfYWRkX2ZvbGlvKCkgdGhlbiB0aGlzIGlzIGNvcnJlY3Qu
-Cj4gCj4gSG93ZXZlciBmcm9tIHNwbGl0X2h1Z2VfcGFnZV90b19saXN0KCksIHdlIGNhbiBub3Qg
-dXNlIHRoZSBtZW1jZyBmcm9tCj4gY3VycmVudCBhcyB0aGF0IGNvZGVwYXRoIGlzIGNhbGxlZCBm
-cm9tIHJlY2xhaW0gd2hpY2ggY2FuIGJlIHRyaWdnZXJlZAo+IGJ5IHByb2Nlc3NlcyBvZiBvdGhl
-ciBtZW1jZ3MuCkJ0dywgU2hha2VlbCwgSm9oYW5uZXMsCkkgd291bGQgbGlrZSB0byB1bmRlcnN0
-YW5kLCB3aGVuIFhhcnJheSBzaG91bGQgdXNlIFhBX0ZMQUdTX0FDQ09VTlQgPwoKRnJvbSBteSBw
-b2ludCBvZiB2aWV3LCB0aGlzIHNob3VsZCBiZSB1c2VsZXNzOgphKSBpZiBYYXJyYXkgc3RvcmVz
-IHNvbWUgaW5kZXggKGlkcj8pIC0gaGlzIG1lbW9yeSBpcyBxdWl0ZSBzbWFsbCwKYW5kIGhpcyBh
-Y2NvdW50aW5nIGNhbiBiZSBpZ25vcmVkLgpiKSBpZiBYYXJyYXkgc3RvcmVzIHNvbWUgYWNjb3Vu
-dGVkIC0gdGhlIHNpemUgb2YgdGhlIGNvcnJlc3BvbmRpbmcgWGFycmF5CmluZnJhc3RydWN0dXJl
-IGlzIHVzdWFsbHkgc2lnbmlmaWNhbnRseSBzbWFsbGVyIHRoYW4gdGhlIHNpemUgb2YgdGhlIHN0
-b3JlZCBvYmplY3QsCnPQviBoaXMgYWNjb3VudGluZyBjYW4gYmUgc2tpcHBlZCB0b28uCmMpIGlm
-IFhhcnJheSBzdG9yZXMgc29tZSBub24tYWNjb3VudGVkIG9iamVjdHMgLSBpdCBtYWtlcyBubyBz
-ZW5zZSB0byBhY2NvdW50IApjb3JyZXNwb25kaW5nIFhhcnJheSBpbmZyYXN0cnVjdHVyZS4gSW4g
-Y2FzZSBvZiBuZWNlc3NhcnkgaXQgbWFrZXMgbXVjaCBtb3JlIHNlbnNlCnRvIGVuYWJsZSBhY2Nv
-dW50aW5nIGZvciBzdG9yZWQgb2JqZWN0cyAoYW5kIHJldHVybiB0byBjYXNlIGIpLgoKQW0gSSBt
-aXNzZWQgc29tZXRoaW5nIGltcG9ydGFudCBwZXJoYXBzPwoKSSBsb29rZWQgZm9yIHRoZSBkZXNj
-cmlwdGlvbiBvZiA3Yjc4NTY0NWU4ZjEsIGJ1dCBvIGJlIGhvbmVzdCBJJ20gc3RpbGwgbm90IHN1
-cmUKdGhhdCBJIHVuZGVyc3RhbmQgY29ycmVjdGx5IHdoeSBYQV9GTEFHU19BQ0NPVU5UIGZsYWcg
-c29sdmVkIHRoZSBkZXNjcmliZWQgcHJvYmxlbS4KCkNvdWxkIHlvdSBwbGVhc2UgZXhwbGFpbiB0
-aGlzIGluIG1vcmUgZGV0YWlscz8KCldhcyBpdCBiZWNhdXNlIHRoZSBub24tYWNjb3VudGVkIFhh
-cnJheSBrZXB0IGEgcmVmZXJlbmNlIHRvIHRoZSBzdG9yZWQgb2JqZWN0CmFuZCB0aHVzIHByZXZl
-bnRzIGl0IGZyb20gYmVpbmcgcmVjbGFpbWVkPwoKSWYgc28sIHdhcyBpdCBzb21lIHNwZWNpYWwg
-Y2FzZSwgb3Igc2hvdWxkIGl0IGFmZmVjdCBhbGwgc3VjaCBjYXNlcywKYW5kIG15IGIpIHN0YXRl
-bWVudCBhYm92ZSBpcyBub3QgY29ycmVjdD8KClRoYW5rIHlvdSwKCVZhc2lseSBBdmVyaW4K
+On 5/26/22 11:15, Tejun Heo wrote:
+> Hello, Michal.
+>=20
+> On Thu, May 26, 2022 at 11:56:34AM +0200, Michal Koutn=C3=BD wrote:
+>> // ref=3DA: initial state
+>> kill_css()
+>>    css_get // ref+=3DF =3D=3D A+F: fuse
+>>    percpu_ref_kill_and_confirm
+>>      __percpu_ref_switch_to_atomic
+>>        percpu_ref_get
+>>          // ref +=3D 1 =3D=3D A+F+1: atomic mode, self-protection
+>>      percpu_ref_put
+>>        // ref -=3D 1 =3D=3D A+F: kill the base reference
+>>    [via rcu]
+>>    percpu_ref_switch_to_atomic_rcu
+>>      percpu_ref_call_confirm_rcu
+>>        css_killed_ref_fn =3D=3D refcnt.confirm_switch
+>>          queue_work(css->destroy_work)        (1)
+>>                                                       [via css->destroy_=
+work]
+>>                                                       css_killed_work_fn=
+ =3D=3D wq.func
+>>                                                         offline_css() //=
+ needs fuse
+>>                                                         css_put // ref -=
+=3D F =3D=3D A: de-fuse
+>>        percpu_ref_put
+>>          // ref -=3D 1 =3D=3D A-1: remove self-protection
+>>          css_release                                   // A <=3D 1 -> 2n=
+d queue_work explodes!
+>=20
+> I'm not sure I'm following it but it's perfectly fine to re-use the work
+> item at this point. The work item actually can be re-cycled from the very
+> beginning of the work function. The only thing we need to make sure is th=
+at
+> we don't css_put() prematurely to avoid it being freed while we're using =
+it.
+>=20
+> For the sharing to be a problem, we should be queueing the release work i=
+tem
+> while the destroy instance is still pending, and if that is the case, it
+> doesn't really matter whether we use two separate work items or not. We're
+> already broken and would just be shifting the problem to explode elsewher=
+e.
+>=20
+> The only possibility that I can think of is that somehow we're ending up
+> with an extra css_put() somewhere thus triggering the release path
+> prematurely. If that's the case, we'll prolly need to trace get/puts to f=
+ind
+> out who's causing the ref imbalance.
+
+Hi Michal,
+As far as I can see we are trying to test the same thing suggested by Tejun.
+I just sent a test request to try this:
+https://github.com/tstruk/linux/commit/master
+
+Let me know if you have any more tests to run and I will hold off until
+you are done.
+
+--=20
+Thanks,
+Tadeusz
