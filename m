@@ -1,102 +1,178 @@
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next v5 3/8] blk-throttle: factor out code to calculate ios/bytes_allowed
-Date: Sat, 28 May 2022 14:43:25 +0800
-Message-ID: <20220528064330.3471000-4-yukuai3@huawei.com>
-References: <20220528064330.3471000-1-yukuai3@huawei.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220528064330.3471000-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Paolo Valente <paolo.valente@linaro.org>
+Subject: Re: [PATCH -next v6 0/3] support concurrent sync io for bfq on a
+ specail occasion
+Date: Sat, 28 May 2022 10:18:05 +0200
+Message-ID: <09387792-EBE6-41CC-89F8-A857ECDE4634@linaro.org>
+References: <20220523131818.2798712-1-yukuai3@huawei.com>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=1CT1M4q9x/F1LvMuC7ejZ75BshMSN5GVHe0OC5UIK3I=;
+        b=IqkEfDGcjR6ZSjvTXzpfjz9jvMRNgTDZTCwKII1/mNVN+pHuwaUKb7HOs3ttYIZ5Oq
+         IkI81WvAgM5OSkNCQK1HsOpC4BbqRksGW6/3KOrN56OzxW0igQM41STGSZintMntb238
+         ZTKLHecIdPgDAR4JjqyHESC6A/8c3yx4DypzZIwRpvjiz/OfmU4JrRzuJ2Illq8Lwuln
+         ve+mlvLfGGU4qp1/cZMTppci1++lbF9IQfzMwVyB1Mph0k+RTA3FAb74FHM0QycneFcL
+         x30PVXifOXuM259SLbBuQeH+sTz8uwOrk5koVuclcSLYNWyZ0AL4CMt45Mr6T0neIw4L
+         /eOA==
+In-Reply-To: <20220523131818.2798712-1-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Yu Kuai <yukuai3@huawei.com>
+Cc: Jan Kara <jack@suse.cz>, tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-No functional changes, new apis will be used in later patches to
-calculate wait time for throttled bios while updating config.
 
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- block/blk-throttle.c | 48 +++++++++++++++++++++++++++-----------------
- 1 file changed, 30 insertions(+), 18 deletions(-)
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index a89c62bef2fb..d67b20ce4d63 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -754,25 +754,12 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
- 		   tg->slice_start[rw], tg->slice_end[rw], jiffies);
- }
- 
--static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
--				  u32 iops_limit, unsigned long *wait)
-+static unsigned int calculate_io_allowed(u32 iops_limit,
-+					 unsigned long jiffy_elapsed_rnd)
- {
--	bool rw = bio_data_dir(bio);
- 	unsigned int io_allowed;
--	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
- 	u64 tmp;
- 
--	if (iops_limit == UINT_MAX) {
--		if (wait)
--			*wait = 0;
--		return true;
--	}
--
--	jiffy_elapsed = jiffies - tg->slice_start[rw];
--
--	/* Round up to the next throttle slice, wait time must be nonzero */
--	jiffy_elapsed_rnd = roundup(jiffy_elapsed + 1, tg->td->throtl_slice);
--
- 	/*
- 	 * jiffy_elapsed_rnd should not be a big value as minimum iops can be
- 	 * 1 then at max jiffy elapsed should be equivalent of 1 second as we
-@@ -788,6 +775,33 @@ static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
- 	else
- 		io_allowed = tmp;
- 
-+	return io_allowed;
-+}
-+
-+static u64 calculate_bytes_allowed(u64 bps_limit,
-+				   unsigned long jiffy_elapsed_rnd)
-+{
-+	return mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed_rnd, (u64)HZ);
-+}
-+
-+static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
-+				  u32 iops_limit, unsigned long *wait)
-+{
-+	bool rw = bio_data_dir(bio);
-+	unsigned int io_allowed;
-+	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
-+
-+	if (iops_limit == UINT_MAX) {
-+		if (wait)
-+			*wait = 0;
-+		return true;
-+	}
-+
-+	jiffy_elapsed = jiffies - tg->slice_start[rw];
-+
-+	/* Round up to the next throttle slice, wait time must be nonzero */
-+	jiffy_elapsed_rnd = roundup(jiffy_elapsed + 1, tg->td->throtl_slice);
-+	io_allowed = calculate_io_allowed(iops_limit, jiffy_elapsed_rnd);
- 	if (tg->io_disp[rw] + 1 <= io_allowed) {
- 		if (wait)
- 			*wait = 0;
-@@ -824,9 +838,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 		jiffy_elapsed_rnd = tg->td->throtl_slice;
- 
- 	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
--	bytes_allowed = mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed_rnd,
--					    (u64)HZ);
--
-+	bytes_allowed = calculate_bytes_allowed(bps_limit, jiffy_elapsed_rnd);
- 	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
- 		if (wait)
- 			*wait = 0;
--- 
-2.31.1
+> Il giorno 23 mag 2022, alle ore 15:18, Yu Kuai <yukuai3@huawei.com> ha =
+scritto:
+>=20
+> Resend these patches just in case v5 end up in spam (for Paolo).
+
+Thank you for resending, I do think I lost some email before.
+
+Paolo
+
+> Changes in v6:
+> - add reviewed-by tag for patch 1
+>=20
+> Changes in v5:
+> - rename bfq_add_busy_queues() to bfq_inc_busy_queues() in patch 1
+> - fix wrong definition in patch 1
+> - fix spelling mistake in patch 2: leaset -> least
+> - update comments in patch 3
+> - add reviewed-by tag in patch 2,3
+>=20
+> Changes in v4:
+> - split bfq_update_busy_queues() to bfq_add/dec_busy_queues(),
+>   suggested by Jan Kara.
+> - remove unused 'in_groups_with_pending_reqs',
+>=20
+> Changes in v3:
+> - remove the cleanup patch that is irrelevant now(I'll post it
+>   separately).
+> - instead of hacking wr queues and using weights tree =
+insertion/removal,
+>   using bfq_add/del_bfqq_busy() to count the number of groups
+>   (suggested by Jan Kara).
+>=20
+> Changes in v2:
+> - Use a different approch to count root group, which is much simple.
+>=20
+> Currently, bfq can't handle sync io concurrently as long as they
+> are not issued from root group. This is because
+> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
+> bfq_asymmetric_scenario().
+>=20
+> The way that bfqg is counted into 'num_groups_with_pending_reqs':
+>=20
+> Before this patchset:
+> 1) root group will never be counted.
+> 2) Count if bfqg or it's child bfqgs have pending requests.
+> 3) Don't count if bfqg and it's child bfqgs complete all the requests.
+>=20
+> After this patchset:
+> 1) root group is counted.
+> 2) Count if bfqg have at least one bfqq that is marked busy.
+> 3) Don't count if bfqg doesn't have any busy bfqqs.
+>=20
+> The main reason to use busy state of bfqq instead of 'pending =
+requests'
+> is that bfqq can stay busy after dispatching the last request if =
+idling
+> is needed for service guarantees.
+>=20
+> With the above changes, concurrent sync io can be supported if only
+> one group is activated.
+>=20
+> fio test script(startdelay is used to avoid queue merging):
+> [global]
+> filename=3D/dev/nvme0n1
+> allow_mounted_write=3D0
+> ioengine=3Dpsync
+> direct=3D1
+> ioscheduler=3Dbfq
+> offset_increment=3D10g
+> group_reporting
+> rw=3Drandwrite
+> bs=3D4k
+>=20
+> [test1]
+> numjobs=3D1
+>=20
+> [test2]
+> startdelay=3D1
+> numjobs=3D1
+>=20
+> [test3]
+> startdelay=3D2
+> numjobs=3D1
+>=20
+> [test4]
+> startdelay=3D3
+> numjobs=3D1
+>=20
+> [test5]
+> startdelay=3D4
+> numjobs=3D1
+>=20
+> [test6]
+> startdelay=3D5
+> numjobs=3D1
+>=20
+> [test7]
+> startdelay=3D6
+> numjobs=3D1
+>=20
+> [test8]
+> startdelay=3D7
+> numjobs=3D1
+>=20
+> test result:
+> running fio on root cgroup
+> v5.18-rc1:	   550 Mib/s
+> v5.18-rc1-patched: 550 Mib/s
+>=20
+> running fio on non-root cgroup
+> v5.18-rc1:	   349 Mib/s
+> v5.18-rc1-patched: 550 Mib/s
+>=20
+> Note that I also test null_blk with "irqmode=3D2
+> completion_nsec=3D100000000(100ms) hw_queue_depth=3D1", and tests show
+> that service guarantees are still preserved.
+>=20
+> Follow-up cleanup:
+> =
+https://lore.kernel.org/all/20220521073523.3118246-1-yukuai3@huawei.com/
+>=20
+> Previous versions:
+> RFC: =
+https://lore.kernel.org/all/20211127101132.486806-1-yukuai3@huawei.com/
+> v1: =
+https://lore.kernel.org/all/20220305091205.4188398-1-yukuai3@huawei.com/
+> v2: =
+https://lore.kernel.org/all/20220416093753.3054696-1-yukuai3@huawei.com/
+> v3: =
+https://lore.kernel.org/all/20220427124722.48465-1-yukuai3@huawei.com/
+> v4: =
+https://lore.kernel.org/all/20220428111907.3635820-1-yukuai3@huawei.com/
+> v5: =
+https://lore.kernel.org/all/20220428120837.3737765-1-yukuai3@huawei.com/
+>=20
+> Yu Kuai (3):
+>  block, bfq: record how many queues are busy in bfq_group
+>  block, bfq: refactor the counting of 'num_groups_with_pending_reqs'
+>  block, bfq: do not idle if only one group is activated
+>=20
+> block/bfq-cgroup.c  |  1 +
+> block/bfq-iosched.c | 48 +++-----------------------------------
+> block/bfq-iosched.h | 57 +++++++--------------------------------------
+> block/bfq-wf2q.c    | 35 +++++++++++++++++-----------
+> 4 files changed, 35 insertions(+), 106 deletions(-)
+>=20
+> --=20
+> 2.31.1
+>=20
 
