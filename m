@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next v3 3/6] block, bfq: factor out code to update 'active_entities'
-Date: Sat, 28 May 2022 17:59:55 +0800
-Message-ID: <20220528095958.270455-4-yukuai3@huawei.com>
+Subject: [PATCH -next v3 5/6] block, bfq: cleanup bfq_activate_requeue_entity()
+Date: Sat, 28 May 2022 17:59:57 +0800
+Message-ID: <20220528095958.270455-6-yukuai3@huawei.com>
 References: <20220528095958.270455-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
@@ -12,124 +12,52 @@ Content-Type: text/plain; charset="us-ascii"
 To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Current code is a bit ugly and hard to read.
+Just make the code a litter cleaner by removing the unnecessary
+variable 'sd'.
 
 Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
 ---
- block/bfq-wf2q.c | 61 +++++++++++++++++++++++++-----------------------
- 1 file changed, 32 insertions(+), 29 deletions(-)
+ block/bfq-wf2q.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
 diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index 44905ed5175d..643e57ee3e64 100644
+index 26ab9ba6e5a3..117d38ab0b30 100644
 --- a/block/bfq-wf2q.c
 +++ b/block/bfq-wf2q.c
-@@ -232,6 +232,26 @@ static void bfq_dec_busy_queues(struct bfq_queue *bfqq)
- 		bfqq->bfqd->num_groups_with_busy_queues--;
+@@ -1089,12 +1089,12 @@ static void __bfq_requeue_entity(struct bfq_entity *entity)
  }
  
-+static void bfq_inc_active_entities(struct bfq_entity *entity)
-+{
-+	struct bfq_sched_data *sd = entity->sched_data;
-+	struct bfq_group *bfqg = container_of(sd, struct bfq_group, sched_data);
-+	struct bfq_data *bfqd = (struct bfq_data *)bfqg->bfqd;
-+
-+	if (bfqg != bfqd->root_group)
-+		bfqg->active_entities++;
-+}
-+
-+static void bfq_dec_active_entities(struct bfq_entity *entity)
-+{
-+	struct bfq_sched_data *sd = entity->sched_data;
-+	struct bfq_group *bfqg = container_of(sd, struct bfq_group, sched_data);
-+	struct bfq_data *bfqd = (struct bfq_data *)bfqg->bfqd;
-+
-+	if (bfqg != bfqd->root_group)
-+		bfqg->active_entities--;
-+}
-+
- #else /* CONFIG_BFQ_GROUP_IOSCHED */
- 
- static bool bfq_update_parent_budget(struct bfq_entity *next_in_service)
-@@ -254,6 +274,14 @@ static void bfq_dec_busy_queues(struct bfq_queue *bfqq)
- 	bfqq->bfqd->busy_queues[bfqq->ioprio_class - 1]--;
- }
- 
-+static void bfq_inc_active_entities(struct bfq_entity *entity)
-+{
-+}
-+
-+static void bfq_dec_active_entities(struct bfq_entity *entity)
-+{
-+}
-+
- #endif /* CONFIG_BFQ_GROUP_IOSCHED */
- 
- /*
-@@ -480,11 +508,6 @@ static void bfq_active_insert(struct bfq_service_tree *st,
+ static void __bfq_activate_requeue_entity(struct bfq_entity *entity,
+-					  struct bfq_sched_data *sd,
+ 					  bool non_blocking_wait_rq)
  {
- 	struct bfq_queue *bfqq = bfq_entity_to_bfqq(entity);
- 	struct rb_node *node = &entity->rb_node;
--#ifdef CONFIG_BFQ_GROUP_IOSCHED
--	struct bfq_sched_data *sd = NULL;
--	struct bfq_group *bfqg = NULL;
--	struct bfq_data *bfqd = NULL;
--#endif
+ 	struct bfq_service_tree *st = bfq_entity_service_tree(entity);
  
- 	bfq_insert(&st->active, entity);
- 
-@@ -495,17 +518,10 @@ static void bfq_active_insert(struct bfq_service_tree *st,
- 
- 	bfq_update_active_tree(node);
- 
--#ifdef CONFIG_BFQ_GROUP_IOSCHED
--	sd = entity->sched_data;
--	bfqg = container_of(sd, struct bfq_group, sched_data);
--	bfqd = (struct bfq_data *)bfqg->bfqd;
--#endif
- 	if (bfqq)
- 		list_add(&bfqq->bfqq_list, &bfqq->bfqd->active_list);
--#ifdef CONFIG_BFQ_GROUP_IOSCHED
--	if (bfqg != bfqd->root_group)
--		bfqg->active_entities++;
--#endif
-+
-+	bfq_inc_active_entities(entity);
- }
- 
- /**
-@@ -582,29 +598,16 @@ static void bfq_active_extract(struct bfq_service_tree *st,
+-	if (sd->in_service_entity == entity || entity->tree == &st->active)
++	if (entity->sched_data->in_service_entity == entity ||
++	    entity->tree == &st->active)
+ 		 /*
+ 		  * in service or already queued on the active tree,
+ 		  * requeue or reposition
+@@ -1126,14 +1126,10 @@ static void bfq_activate_requeue_entity(struct bfq_entity *entity,
+ 					bool non_blocking_wait_rq,
+ 					bool requeue, bool expiration)
  {
- 	struct bfq_queue *bfqq = bfq_entity_to_bfqq(entity);
- 	struct rb_node *node;
--#ifdef CONFIG_BFQ_GROUP_IOSCHED
--	struct bfq_sched_data *sd = NULL;
--	struct bfq_group *bfqg = NULL;
--	struct bfq_data *bfqd = NULL;
--#endif
- 
- 	node = bfq_find_deepest(&entity->rb_node);
- 	bfq_extract(&st->active, entity);
- 
- 	if (node)
- 		bfq_update_active_tree(node);
+-	struct bfq_sched_data *sd;
 -
--#ifdef CONFIG_BFQ_GROUP_IOSCHED
--	sd = entity->sched_data;
--	bfqg = container_of(sd, struct bfq_group, sched_data);
--	bfqd = (struct bfq_data *)bfqg->bfqd;
--#endif
- 	if (bfqq)
- 		list_del(&bfqq->bfqq_list);
--#ifdef CONFIG_BFQ_GROUP_IOSCHED
--	if (bfqg != bfqd->root_group)
--		bfqg->active_entities--;
--#endif
-+
-+	bfq_dec_active_entities(entity);
+ 	for_each_entity(entity) {
+-		sd = entity->sched_data;
+-		__bfq_activate_requeue_entity(entity, sd, non_blocking_wait_rq);
+-
+-		if (!bfq_update_next_in_service(sd, entity, expiration) &&
+-		    !requeue)
++		__bfq_activate_requeue_entity(entity, non_blocking_wait_rq);
++		if (!bfq_update_next_in_service(entity->sched_data, entity,
++						expiration) && !requeue)
+ 			break;
+ 	}
  }
- 
- /**
 -- 
 2.31.1
 
