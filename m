@@ -1,80 +1,68 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCH -next v6 3/3] block, bfq: do not idle if only one group is
- activated
-Date: Sat, 28 May 2022 10:30:34 +0200
-Message-ID: <27B0AE8B-C134-4BA1-B84F-39C659CB2B10@linaro.org>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -next v6 1/3] block, bfq: record how many queues are busy
+ in bfq_group
+Date: Sat, 28 May 2022 16:37:07 +0800
+Message-ID: <7628f927-7131-5e7f-33d9-6029dada57fe@huawei.com>
 References: <20220523131818.2798712-1-yukuai3@huawei.com>
- <20220523131818.2798712-4-yukuai3@huawei.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+ <20220523131818.2798712-2-yukuai3@huawei.com>
+ <8D29A46A-4B8A-4F05-BCE3-D9D0F0D2DD5A@linaro.org>
+Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=T+Hu8XQTes5+zOjXdhH2PIcfNeRm97dI8R0g/lN+Yd8=;
-        b=cMsKLp9xx6caXX4fhNUQ1GIDgeMWcvOHB+BQYZV7KhH/sIQHowtAJJduwzZeMn/ayn
-         NEyO4PCwKkMmopMy3OFYPJNGueAYgpi2TmgwoPuj7gr2ImFZupuKBykH5Y0wahgVwpwC
-         UmEXmyzWlGNdEHsP7SHKUDULFII5IHCW2u3onGKGbELBlPMnDfEMv2O4iKAFVh66XNyC
-         6qUWZxzmeOFsQ2R1foQjeTlNZPR7YXsFJ3WfkLJ7m9blxV0nng9m8EykO4xde1SnExTZ
-         juWKXm2I6HADHKXH0h/Fy0Rt5PA6d7CYbUtH2rOgnt0gFj3U+hJiV1J5T9NCzPzWPn9W
-         kK7w==
-In-Reply-To: <20220523131818.2798712-4-yukuai3@huawei.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <8D29A46A-4B8A-4F05-BCE3-D9D0F0D2DD5A-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Yu Kuai <yukuai3@huawei.com>
-Cc: Jan Kara <jack@suse.cz>, tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-
-
-> Il giorno 23 mag 2022, alle ore 15:18, Yu Kuai <yukuai3@huawei.com> ha =
-scritto:
+=D4=DA 2022/05/28 16:18, Paolo Valente =D0=B4=B5=C0:
 >=20
-> Now that root group is counted into 'num_groups_with_busy_queues',
-> 'num_groups_with_busy_queues > 0' is always true in
-> bfq_asymmetric_scenario(). Thus change the condition to '> 1'.
->=20
-> On the other hand, this change can enable concurrent sync io if only
-> one group is activated.
 
-This is ok.  Yet, if the mistakes I found in the other two patches are
-actual errors, I wonder how these changes made it to pass your tests.
+>> /*
+>> @@ -1660,6 +1678,7 @@ void bfq_del_bfqq_busy(struct bfq_data *bfqd, stru=
+ct bfq_queue *bfqq,
+>> 	bfq_clear_bfqq_busy(bfqq);
+>>
+>> 	bfqd->busy_queues[bfqq->ioprio_class - 1]--;
+>> +	bfq_inc_busy_queues(bfqq);
+>>
+>=20
+> Why do you increment the number of busy queues for the group on a
+> del_bfqq_busy, instead of an add_bfqq_busy?
+Hi, Paolo
+
+You'are right, here should be bfq_dec_busy_queues()...
+>=20
+> Besides, the name of the function bfq_inc_busy_queues does not mention
+> the target of the update, namely the group.  This creates a little
+> confusion at a first sight, as one sees this function invoked right
+> after the update of a field with the same name: bfqd->busy_queues.
+Ok, that make sense, I'll move the update of 'bfqd->busy_queues' into
+the new api as well.
 
 Thanks,
-Paolo
-
+Kuai
 >=20
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> Reviewed-by: Jan Kara <jack@suse.cz>
-> ---
-> block/bfq-iosched.c | 4 ++--
-> 1 file changed, 2 insertions(+), 2 deletions(-)
+>> 	if (bfqq->wr_coeff > 1)
+>> 		bfqd->wr_busy_queues--;
+>> @@ -1683,6 +1702,7 @@ void bfq_add_bfqq_busy(struct bfq_data *bfqd, stru=
+ct bfq_queue *bfqq)
+>>
+>> 	bfq_mark_bfqq_busy(bfqq);
+>> 	bfqd->busy_queues[bfqq->ioprio_class - 1]++;
+>> +	bfq_dec_busy_queues(bfqq);
 >=20
-> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-> index 609b4e894684..142e1ca4600f 100644
-> --- a/block/bfq-iosched.c
-> +++ b/block/bfq-iosched.c
-> @@ -812,7 +812,7 @@ bfq_pos_tree_add_move(struct bfq_data *bfqd, =
-struct bfq_queue *bfqq)
->  * much easier to maintain the needed state:
->  * 1) all active queues have the same weight,
->  * 2) all active queues belong to the same I/O-priority class,
-> - * 3) there are no active groups.
-> + * 3) there are one active group at most.
->  * In particular, the last condition is always true if hierarchical
->  * support or the cgroups interface are not enabled, thus no state
->  * needs to be maintained in this case.
-> @@ -844,7 +844,7 @@ static bool bfq_asymmetric_scenario(struct =
-bfq_data *bfqd,
+> Same pair of comments as above.
 >=20
-> 	return varied_queue_weights || multiple_classes_busy
-> #ifdef CONFIG_BFQ_GROUP_IOSCHED
-> -	       || bfqd->num_groups_with_busy_queues > 0
-> +	       || bfqd->num_groups_with_busy_queues > 1
-> #endif
-> 		;
-> }
-> --=20
-> 2.31.1
+> Thanks,
+> Paolo
 >=20
-
+>>
+>> 	if (!bfqq->dispatched)
+>> 		if (bfqq->wr_coeff =3D=3D 1)
+>> --=20
+>> 2.31.1
+>>
+>=20
+> .
+>=20
