@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH -next v5 8/8] blk-throttle: clean up flag 'THROTL_TG_PENDING'
-Date: Sat, 28 May 2022 14:43:30 +0800
-Message-ID: <20220528064330.3471000-9-yukuai3@huawei.com>
+Subject: [PATCH -next v5 7/8] blk-throttle: cleanup tg_update_disptime()
+Date: Sat, 28 May 2022 14:43:29 +0800
+Message-ID: <20220528064330.3471000-8-yukuai3@huawei.com>
 References: <20220528064330.3471000-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
@@ -12,88 +12,51 @@ Content-Type: text/plain; charset="us-ascii"
 To: tj@kernel.org, mkoutny@suse.com, axboe@kernel.dk, ming.lei@redhat.com
 Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
 
-All related operations are inside 'queue_lock', there is no need to use
-the flag, we only need to make sure throtl_enqueue_tg() is called when
-the first bio is throttled, and throtl_dequeue_tg() is called when the
-last throttled bio is dispatched.
+th_update_disptime() only need to adjust postion for 'tg' in
+'parent_sq', there is no need to call throtl_enqueue/dequeue_tg().
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- block/blk-throttle.c | 22 ++++++++--------------
- block/blk-throttle.h |  7 +++----
- 2 files changed, 11 insertions(+), 18 deletions(-)
+ block/blk-throttle.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 297ce54ceaa3..fe7f01c61ba8 100644
+index e6ae86d284b9..297ce54ceaa3 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -561,23 +561,16 @@ static void tg_service_queue_add(struct throtl_grp *tg)
- 
- static void throtl_enqueue_tg(struct throtl_grp *tg)
+@@ -520,7 +520,6 @@ static void throtl_rb_erase(struct rb_node *n,
  {
--	if (!(tg->flags & THROTL_TG_PENDING)) {
--		tg_service_queue_add(tg);
--		tg->flags |= THROTL_TG_PENDING;
--		tg->service_queue.parent_sq->nr_pending++;
--	}
-+	tg_service_queue_add(tg);
-+	tg->service_queue.parent_sq->nr_pending++;
+ 	rb_erase_cached(n, &parent_sq->pending_tree);
+ 	RB_CLEAR_NODE(n);
+-	--parent_sq->nr_pending;
  }
  
+ static void update_min_dispatch_time(struct throtl_service_queue *parent_sq)
+@@ -572,7 +571,11 @@ static void throtl_enqueue_tg(struct throtl_grp *tg)
  static void throtl_dequeue_tg(struct throtl_grp *tg)
  {
--	if (tg->flags & THROTL_TG_PENDING) {
--		struct throtl_service_queue *parent_sq =
--			tg->service_queue.parent_sq;
-+	struct throtl_service_queue *parent_sq = tg->service_queue.parent_sq;
- 
--		throtl_rb_erase(&tg->rb_node, parent_sq);
--		--parent_sq->nr_pending;
--		tg->flags &= ~THROTL_TG_PENDING;
--	}
-+	throtl_rb_erase(&tg->rb_node, parent_sq);
-+	--parent_sq->nr_pending;
- }
- 
- /* Call with queue lock held */
-@@ -1015,8 +1008,9 @@ static void throtl_add_bio_tg(struct bio *bio, struct throtl_qnode *qn,
- 
- 	throtl_qnode_add_bio(bio, qn, &sq->queued[rw]);
- 
-+	if (!sq->nr_queued[READ] && !sq->nr_queued[WRITE])
-+		throtl_enqueue_tg(tg);
- 	sq->nr_queued[rw]++;
--	throtl_enqueue_tg(tg);
- }
- 
- static void tg_update_disptime(struct throtl_grp *tg)
-@@ -1371,7 +1365,7 @@ static void tg_conf_updated(struct throtl_grp *tg, bool global)
- 	throtl_start_new_slice(tg, READ, false);
- 	throtl_start_new_slice(tg, WRITE, false);
- 
--	if (tg->flags & THROTL_TG_PENDING) {
-+	if (sq->nr_queued[READ] || sq->nr_queued[WRITE]) {
- 		tg_update_disptime(tg);
- 		throtl_schedule_next_dispatch(sq->parent_sq, true);
+ 	if (tg->flags & THROTL_TG_PENDING) {
+-		throtl_rb_erase(&tg->rb_node, tg->service_queue.parent_sq);
++		struct throtl_service_queue *parent_sq =
++			tg->service_queue.parent_sq;
++
++		throtl_rb_erase(&tg->rb_node, parent_sq);
++		--parent_sq->nr_pending;
+ 		tg->flags &= ~THROTL_TG_PENDING;
  	}
-diff --git a/block/blk-throttle.h b/block/blk-throttle.h
-index b8178e6b4d30..f68b95999f83 100644
---- a/block/blk-throttle.h
-+++ b/block/blk-throttle.h
-@@ -53,10 +53,9 @@ struct throtl_service_queue {
- };
+ }
+@@ -1034,9 +1037,9 @@ static void tg_update_disptime(struct throtl_grp *tg)
+ 	disptime = jiffies + min_wait;
  
- enum tg_state_flags {
--	THROTL_TG_PENDING	= 1 << 0,	/* on parent's pending tree */
--	THROTL_TG_WAS_EMPTY	= 1 << 1,	/* bio_lists[] became non-empty */
--	THROTL_TG_HAS_IOPS_LIMIT = 1 << 2,	/* tg has iops limit */
--	THROTL_TG_CANCELING	= 1 << 3,	/* starts to cancel bio */
-+	THROTL_TG_WAS_EMPTY	= 1 << 0,	/* bio_lists[] became non-empty */
-+	THROTL_TG_HAS_IOPS_LIMIT = 1 << 1,	/* tg has iops limit */
-+	THROTL_TG_CANCELING	= 1 << 2,	/* starts to cancel bio */
- };
+ 	/* Update dispatch time */
+-	throtl_dequeue_tg(tg);
++	throtl_rb_erase(&tg->rb_node, tg->service_queue.parent_sq);
+ 	tg->disptime = disptime;
+-	throtl_enqueue_tg(tg);
++	tg_service_queue_add(tg);
  
- enum {
+ 	/* see throtl_add_bio_tg() */
+ 	tg->flags &= ~THROTL_TG_WAS_EMPTY;
 -- 
 2.31.1
 
