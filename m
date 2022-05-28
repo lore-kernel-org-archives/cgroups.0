@@ -1,138 +1,83 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH -next v3 1/6] block, bfq: cleanup bfq_weights_tree add/remove apis
-Date: Sat, 28 May 2022 17:59:53 +0800
-Message-ID: <20220528095958.270455-2-yukuai3@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH -next v3 2/6] block, bfq: cleanup __bfq_weights_tree_remove()
+Date: Sat, 28 May 2022 17:59:54 +0800
+Message-ID: <20220528095958.270455-3-yukuai3@huawei.com>
 References: <20220528095958.270455-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20220528095958.270455-1-yukuai3@huawei.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20220528095958.270455-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-They already pass 'bfqd' as the first parameter, there is no need to
-pass 'bfqd->queue_weights_tree' as another parameter.
+It's the same with bfq_weights_tree_remove() now.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
 ---
- block/bfq-iosched.c | 13 +++++++------
- block/bfq-iosched.h | 10 +++-------
- block/bfq-wf2q.c    | 16 +++++-----------
- 3 files changed, 15 insertions(+), 24 deletions(-)
+ block/bfq-iosched.c | 13 +------------
+ block/bfq-iosched.h |  1 -
+ block/bfq-wf2q.c    |  2 +-
+ 3 files changed, 2 insertions(+), 14 deletions(-)
 
 diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index ffbc2d1593af..2315cfbe46e7 100644
+index 2315cfbe46e7..8c7020f8cdf2 100644
 --- a/block/bfq-iosched.c
 +++ b/block/bfq-iosched.c
-@@ -870,9 +870,9 @@ static bool bfq_asymmetric_scenario(struct bfq_data *bfqd,
-  * In most scenarios, the rate at which nodes are created/destroyed
-  * should be low too.
-  */
--void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq,
--			  struct rb_root_cached *root)
-+void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq)
- {
-+	struct rb_root_cached *root = &bfqd->queue_weights_tree;
- 	struct bfq_entity *entity = &bfqq->entity;
- 	struct rb_node **new = &(root->rb_root.rb_node), *parent = NULL;
- 	bool leftmost = true;
-@@ -945,12 +945,14 @@ void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+@@ -944,8 +944,7 @@ void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq)
+  * See the comments to the function bfq_weights_tree_add() for considerations
   * about overhead.
   */
- void __bfq_weights_tree_remove(struct bfq_data *bfqd,
--			       struct bfq_queue *bfqq,
--			       struct rb_root_cached *root)
-+			       struct bfq_queue *bfqq)
+-void __bfq_weights_tree_remove(struct bfq_data *bfqd,
+-			       struct bfq_queue *bfqq)
++void bfq_weights_tree_remove(struct bfq_data *bfqd, struct bfq_queue *bfqq)
  {
-+	struct rb_root_cached *root;
-+
- 	if (!bfqq->weight_counter)
- 		return;
+ 	struct rb_root_cached *root;
  
-+	root = &bfqd->queue_weights_tree;
- 	bfqq->weight_counter->num_active--;
- 	if (bfqq->weight_counter->num_active > 0)
- 		goto reset_entity_pointer;
-@@ -970,8 +972,7 @@ void __bfq_weights_tree_remove(struct bfq_data *bfqd,
- void bfq_weights_tree_remove(struct bfq_data *bfqd,
- 			     struct bfq_queue *bfqq)
- {
--	__bfq_weights_tree_remove(bfqd, bfqq,
--				  &bfqd->queue_weights_tree);
-+	__bfq_weights_tree_remove(bfqd, bfqq);
+@@ -965,16 +964,6 @@ void __bfq_weights_tree_remove(struct bfq_data *bfqd,
+ 	bfq_put_queue(bfqq);
  }
  
+-/*
+- * Invoke __bfq_weights_tree_remove on bfqq and decrement the number
+- * of active groups for each queue's inactive parent entity.
+- */
+-void bfq_weights_tree_remove(struct bfq_data *bfqd,
+-			     struct bfq_queue *bfqq)
+-{
+-	__bfq_weights_tree_remove(bfqd, bfqq);
+-}
+-
  /*
+  * Return expired entry, or NULL to just start from scratch in rbtree.
+  */
 diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 6c6cd984d769..50c554134196 100644
+index 50c554134196..ecca2c0570ea 100644
 --- a/block/bfq-iosched.h
 +++ b/block/bfq-iosched.h
-@@ -933,13 +933,9 @@ struct bfq_queue *bic_to_bfqq(struct bfq_io_cq *bic, bool is_sync);
- void bic_set_bfqq(struct bfq_io_cq *bic, struct bfq_queue *bfqq, bool is_sync);
+@@ -934,7 +934,6 @@ void bic_set_bfqq(struct bfq_io_cq *bic, struct bfq_queue *bfqq, bool is_sync);
  struct bfq_data *bic_to_bfqd(struct bfq_io_cq *bic);
  void bfq_pos_tree_add_move(struct bfq_data *bfqd, struct bfq_queue *bfqq);
--void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq,
--			  struct rb_root_cached *root);
--void __bfq_weights_tree_remove(struct bfq_data *bfqd,
--			       struct bfq_queue *bfqq,
--			       struct rb_root_cached *root);
--void bfq_weights_tree_remove(struct bfq_data *bfqd,
--			     struct bfq_queue *bfqq);
-+void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq);
-+void __bfq_weights_tree_remove(struct bfq_data *bfqd, struct bfq_queue *bfqq);
-+void bfq_weights_tree_remove(struct bfq_data *bfqd, struct bfq_queue *bfqq);
+ void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq);
+-void __bfq_weights_tree_remove(struct bfq_data *bfqd, struct bfq_queue *bfqq);
+ void bfq_weights_tree_remove(struct bfq_data *bfqd, struct bfq_queue *bfqq);
  void bfq_bfqq_expire(struct bfq_data *bfqd, struct bfq_queue *bfqq,
  		     bool compensate, enum bfqq_expiration reason);
- void bfq_put_queue(struct bfq_queue *bfqq);
 diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index 48ca7922035c..03949c20494d 100644
+index 03949c20494d..44905ed5175d 100644
 --- a/block/bfq-wf2q.c
 +++ b/block/bfq-wf2q.c
-@@ -731,7 +731,6 @@ __bfq_entity_update_weight_prio(struct bfq_service_tree *old_st,
- 		struct bfq_queue *bfqq = bfq_entity_to_bfqq(entity);
- 		unsigned int prev_weight, new_weight;
- 		struct bfq_data *bfqd = NULL;
--		struct rb_root_cached *root;
- #ifdef CONFIG_BFQ_GROUP_IOSCHED
- 		struct bfq_sched_data *sd;
- 		struct bfq_group *bfqg;
-@@ -794,19 +793,15 @@ __bfq_entity_update_weight_prio(struct bfq_service_tree *old_st,
- 		 * queue, remove the entity from its old weight counter (if
+@@ -794,7 +794,7 @@ __bfq_entity_update_weight_prio(struct bfq_service_tree *old_st,
  		 * there is a counter associated with the entity).
  		 */
--		if (prev_weight != new_weight && bfqq) {
--			root = &bfqd->queue_weights_tree;
--			__bfq_weights_tree_remove(bfqd, bfqq, root);
--		}
-+		if (prev_weight != new_weight && bfqq)
-+			__bfq_weights_tree_remove(bfqd, bfqq);
+ 		if (prev_weight != new_weight && bfqq)
+-			__bfq_weights_tree_remove(bfqd, bfqq);
++			bfq_weights_tree_remove(bfqd, bfqq);
  		entity->weight = new_weight;
  		/*
  		 * Add the entity, if it is not a weight-raised queue,
- 		 * to the counter associated with its new weight.
- 		 */
--		if (prev_weight != new_weight && bfqq && bfqq->wr_coeff == 1) {
--			/* If we get here, root has been initialized. */
--			bfq_weights_tree_add(bfqd, bfqq, root);
--		}
-+		if (prev_weight != new_weight && bfqq && bfqq->wr_coeff == 1)
-+			bfq_weights_tree_add(bfqd, bfqq);
- 
- 		new_st->wsum += entity->weight;
- 
-@@ -1697,8 +1692,7 @@ void bfq_add_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq)
- 
- 	if (!bfqq->dispatched)
- 		if (bfqq->wr_coeff == 1)
--			bfq_weights_tree_add(bfqd, bfqq,
--					     &bfqd->queue_weights_tree);
-+			bfq_weights_tree_add(bfqd, bfqq);
- 
- 	if (bfqq->wr_coeff > 1)
- 		bfqd->wr_busy_queues++;
 -- 
 2.31.1
 
