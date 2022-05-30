@@ -1,117 +1,59 @@
-From: Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH] memcg: enable accounting in keyctl subsys
-Date: Mon, 30 May 2022 12:38:28 +0300
-Message-ID: <ca0ba233-ed09-5dce-5f38-2e05b1114610@linux.dev>
-References: <1626682667-10771-1-git-send-email-nglaive@gmail.com>
- <0017e4c6-84d8-6d62-2ceb-4851771fec18@linux.dev>
- <YovnzLqXqEHY6SAC@kernel.org>
+From: Vasily Averin <vvs@openvz.org>
+Subject: [PATCH mm v3 3/9] memcg: enable accounting for kernfs iattrs
+Date: Mon, 30 May 2022 14:26:08 +0300
+Message-ID: <8bb350bb-4109-0065-d95d-bb6777e4391e@openvz.org>
+References: <06505918-3b8a-0ad5-5951-89ecb510138e@openvz.org>
+ <cover.1653899364.git.vvs@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1653903513;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=0tAu1yDybljG9v6H3XFTvFlglCilUlg/TAc4Sssj5FY=;
-        b=nb/TIC8Z25okb0Miptwsm4FaawVL2rNW/B9T1O0x0tFfmsH0CSEdbsxRXUnG4LxdbB3pyf
-        SNmmhDVwMyuNGJIHhLB1libYq6Iwt1Oh8nSnW35aQjnDPVOFrt2pJJXWwXJOqFinxElI7Q
-        G/JjfHmMV0OVdoZhyoIdK9HzHvergAo=
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=openvz-org.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:from:subject:to:cc
+         :references:content-language:in-reply-to:content-transfer-encoding;
+        bh=buhJIxm8AqBO3bD99fC3A2PxIb9sSGllubXvwSLnjxI=;
+        b=VleSeEOpRENeXIkb3VS63vsilwSdU8qMSP4avGdnDh5rwRnYa2jz2RVYenqeO3pM0E
+         DHnSyyUm/QZ5EmzHYl3Jb+ZfcIpTLRDZmxkC/M0yZtrJnPBT7FMzovaP80spNmx1AGfC
+         YeM+BMD+j8eeiwA3YZgXNeSwjCueUasrWx79lcZTTgD3by9/hKVr+WE8TfaHyDrWDjY7
+         fvLW1OqA44WVwKYAS5KnteFlnEFDxA/qb7HSBCHdOyxAeCZJXY07V5g1Ad8JgbV1T1LH
+         9yVcRSF1uk10P9ADPpKBifUv+jJk3ErpO+yVNp/RCuMrSeI9wAh2n2OFB9aEnkWJPam2
+         Yg4A==
 Content-Language: en-US
-In-Reply-To: <YovnzLqXqEHY6SAC-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <cover.1653899364.git.vvs@openvz.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, shenwenbo-Y5EWUtBUdg4nDS1+zs4M5A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="macroman"
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: kernel@openvz.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <roman.gushchin@linux.dev>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@suse.com>, Muchun Song <songmuchun@bytedance.com>, cgroups@vger.kernel.org
 
-Dear Andrew,
-could you please pick up this patch too?
-
-Thank you,
-	Vasily Averin
-
-On 5/23/22 23:00, Jarkko Sakkinen wrote:
-> On Mon, May 23, 2022 at 12:45:09PM +0300, Vasily Averin wrote:
->> On 7/19/21 11:17, Yutian Yang wrote:
->>> This patch enables accounting for key objects and auth record objects.
->>> Allocation of the objects are triggerable by syscalls from userspace.
->>>
->>> We have written a PoC to show that the missing-charging objects lead to
->>> breaking memcg limits. The PoC program takes around 2.2GB unaccounted
->>> memory, while it is charged for only 24MB memory usage. We evaluate the
->>> PoC on QEMU x86_64 v5.2.90 + Linux kernel v5.10.19 + Debian buster. All
->>> the limitations including ulimits and sysctl variables are set as default.
->>> Specifically, we set kernel.keys.maxbytes = 20000 and 
->>> kernel.keys.maxkeys = 200.
->>>
->>> /*------------------------- POC code ----------------------------*/
->> [skipped]
->>> /*-------------------------- end --------------------------------*/
->>
->> I experimented with "keyctl request2 user debug: X:Y Z" inside the container
->> and found that the problem is still relevant and the proposed patch solves it
->> correctly.
->>
->> I didn't find any complaints about this patch, could someone explain why
->> it wasn't applied? If no one objects, I'd like to push it.
->>
->>> Signed-off-by: Yutian Yang <nglaive-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> Reviewed-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
->>
->> Thank you,
->> 	Vasily Averin
->>
->> PS. Should I perhaps resend it?
->>
->>> ---
->>>  security/keys/key.c              | 4 ++--
->>>  security/keys/request_key_auth.c | 4 ++--
->>>  2 files changed, 4 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/security/keys/key.c b/security/keys/key.c
->>> index e282c6179..925d85c2e 100644
->>> --- a/security/keys/key.c
->>> +++ b/security/keys/key.c
->>> @@ -279,7 +279,7 @@ struct key *key_alloc(struct key_type *type, const char *desc,
->>>  		goto no_memory_2;
->>>  
->>>  	key->index_key.desc_len = desclen;
->>> -	key->index_key.description = kmemdup(desc, desclen + 1, GFP_KERNEL);
->>> +	key->index_key.description = kmemdup(desc, desclen + 1, GFP_KERNEL_ACCOUNT);
->>>  	if (!key->index_key.description)
->>>  		goto no_memory_3;
->>>  	key->index_key.type = type;
->>> @@ -1198,7 +1198,7 @@ void __init key_init(void)
->>>  {
->>>  	/* allocate a slab in which we can store keys */
->>>  	key_jar = kmem_cache_create("key_jar", sizeof(struct key),
->>> -			0, SLAB_HWCACHE_ALIGN|SLAB_PANIC, NULL);
->>> +			0, SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_ACCOUNT, NULL);
->>>  
->>>  	/* add the special key types */
->>>  	list_add_tail(&key_type_keyring.link, &key_types_list);
->>> diff --git a/security/keys/request_key_auth.c b/security/keys/request_key_auth.c
->>> index 41e973500..ed50a100a 100644
->>> --- a/security/keys/request_key_auth.c
->>> +++ b/security/keys/request_key_auth.c
->>> @@ -171,10 +171,10 @@ struct key *request_key_auth_new(struct key *target, const char *op,
->>>  	kenter("%d,", target->serial);
->>>  
->>>  	/* allocate a auth record */
->>> -	rka = kzalloc(sizeof(*rka), GFP_KERNEL);
->>> +	rka = kzalloc(sizeof(*rka), GFP_KERNEL_ACCOUNT);
->>>  	if (!rka)
->>>  		goto error;
->>> -	rka->callout_info = kmemdup(callout_info, callout_len, GFP_KERNEL);
->>> +	rka->callout_info = kmemdup(callout_info, callout_len, GFP_KERNEL_ACCOUNT);
->>>  	if (!rka->callout_info)
->>>  		goto error_free_rka;
->>>  	rka->callout_len = callout_len;
->>
-> 
-> 
-> Acked-by: Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> 
-> BR, Jarkko
-
+a2VybmZzIG5vZGVzIGFyZSBxdWl0ZSBzbWFsbCBrZXJuZWwgb2JqZWN0cywgaG93ZXZlciB0aGVy
+ZSBhcmUgZmV3CnNjZW5hcmlvcyB3aGVyZSBpdCBjb25zdW1lcyBzaWduaWZpY2FudCBwaWVjZSBv
+ZiBhbGwgYWxsb2NhdGVkIG1lbW9yeToKCjEpIGNyZWF0aW5nIGEgbmV3IG5ldGRldmljZSBhbGxv
+Y2F0ZXMgfjUwS2Igb2YgbWVtb3J5LCB3aGVyZSB+MTBLYgogICB3YXMgYWxsb2NhdGVkIGZvciA4
+MCsga2VybmZzIG5vZGVzLgoKMikgY2dyb3VwdjIgbWtkaXIgYWxsb2NhdGVzIH42MEtiIG9mIG1l
+bW9yeSwgfjEwS2Igb2YgdGhlbSBhcmUga2VybmZzCiAgIHN0cnVjdHVyZXMuCgozKSBTaGFrZWVs
+IEJ1dHQgcmVwb3J0cyB0aGF0IEdvb2dsZSBoYXMgd29ya2xvYWRzIHdoaWNoIGNyZWF0ZSAxMDBz
+CiAgIG9mIHN1YmNvbnRhaW5lcnMgYW5kIHRoZXkgaGF2ZSBvYnNlcnZlZCBoaWdoIHN5c3RlbSBv
+dmVyaGVhZAogICB3aXRob3V0IG1lbWNnIGFjY291bnRpbmcgb2Yga2VybmZzLgoKVXN1YWxseSBu
+ZXcga2VybmZzIG5vZGUgY3JlYXRlcyBmZXcgb3RoZXIgb2JqZWN0czoKCkFsbG9jcyAgQWxsb2Mg
+ICAgQWxsb2NhdGlvbgpudW1iZXIgIHNpemUKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0KMSAgICsgIDEyOCAgICAgIChfX2tlcm5mc19uZXdfbm9kZSsweDRkKSAg
+ICAgICAga2VybmZzIG5vZGUKMSAgICsgICA4OCAgICAgIChfX2tlcm5mc19pYXR0cnMrMHg1Nykg
+ICAgICAgICAga2VybmZzIGlhdHRycwoxICAgKyAgIDk2ICAgICAgKHNpbXBsZV94YXR0cl9hbGxv
+YysweDI4KSAgICAgICBzaW1wbGVfeGF0dHIsIGNhbiBncm93IG92ZXIgNEtiCjEgICAgICAgMzIg
+ICAgICAoc2ltcGxlX3hhdHRyX3NldCsweDU5KQoxICAgICAgIDggICAgICAgKF9fa2VybmZzX25l
+d19ub2RlKzB4MzApCgonKycgLS0gdG8gYmUgYWNjb3VudGVkCgpUaGlzIHBhdGNoIGVuYWJsZXMg
+YWNjb3VudGluZyBmb3Iga2VybmZzX2lhdHRyc19jYWNoZSBzbGFiIGNhY2hlCgpTaWduZWQtb2Zm
+LWJ5OiBWYXNpbHkgQXZlcmluIDx2dnNAb3BlbnZ6Lm9yZz4KUmV2aWV3ZWQtYnk6IFJvbWFuIEd1
+c2hjaGluIDxyb21hbi5ndXNoY2hpbkBsaW51eC5kZXY+ClJldmlld2VkLWJ5OiBNaWNoYWwgS291
+dG7DvSA8bWtvdXRueUBzdXNlLmNvbT4KQWNrZWQtYnk6IFNoYWtlZWwgQnV0dCA8c2hha2VlbGJA
+Z29vZ2xlLmNvbT4KUmV2aWV3ZWQtYnk6IE11Y2h1biBTb25nIDxzb25nbXVjaHVuQGJ5dGVkYW5j
+ZS5jb20+Ci0tLQogZnMva2VybmZzL21vdW50LmMgfCAzICsrLQogMSBmaWxlIGNoYW5nZWQsIDIg
+aW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQoKZGlmZiAtLWdpdCBhL2ZzL2tlcm5mcy9tb3Vu
+dC5jIGIvZnMva2VybmZzL21vdW50LmMKaW5kZXggM2FjNDE5MWIxYzQwLi40MGU4OTZjN2M4NmIg
+MTAwNjQ0Ci0tLSBhL2ZzL2tlcm5mcy9tb3VudC5jCisrKyBiL2ZzL2tlcm5mcy9tb3VudC5jCkBA
+IC0zOTcsNSArMzk3LDYgQEAgdm9pZCBfX2luaXQga2VybmZzX2luaXQodm9pZCkKIAkvKiBDcmVh
+dGVzIHNsYWIgY2FjaGUgZm9yIGtlcm5mcyBpbm9kZSBhdHRyaWJ1dGVzICovCiAJa2VybmZzX2lh
+dHRyc19jYWNoZSAgPSBrbWVtX2NhY2hlX2NyZWF0ZSgia2VybmZzX2lhdHRyc19jYWNoZSIsCiAJ
+CQkJCSAgICAgIHNpemVvZihzdHJ1Y3Qga2VybmZzX2lhdHRycyksCi0JCQkJCSAgICAgIDAsIFNM
+QUJfUEFOSUMsIE5VTEwpOworCQkJCQkgICAgICAwLCBTTEFCX1BBTklDIHwgU0xBQl9BQ0NPVU5U
+LAorCQkJCQkgICAgICBOVUxMKTsKIH0KLS0gCjIuMzYuMQoK
