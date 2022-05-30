@@ -1,261 +1,248 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH v5 06/11] mm: thp: make split queue lock safe when LRU pages are reparented
-Date: Mon, 30 May 2022 15:49:14 +0800
-Message-ID: <20220530074919.46352-7-songmuchun@bytedance.com>
+From: Muchun Song <songmuchun@bytedance.com>
+Subject: [PATCH v5 03/11] mm: memcontrol: prepare objcg API for non-kmem usage
+Date: Mon, 30 May 2022 15:49:11 +0800
+Message-ID: <20220530074919.46352-4-songmuchun@bytedance.com>
 References: <20220530074919.46352-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=eS8SvDpHTohQF4EqjCM+H0xOhguiTqKM+7kzLSkVHtI=;
-        b=oNhG52LEbWnwUNpy9jfaU81Vmv8ckOaaRIy4hKuoyyvIBdiOMJxTEWcGRybCQOMK5r
-         1nbQzFTPEPVCro2sxvSjWsUavxLKR22/Vo74emZiaBVIF/iJD8jAEiNC81BATOLEP2wz
-         uJwI0vDomMYwIeB/05ckx17wN19YDVO478ZSuECDlAjahoZU3sRO3V323bucTt2LLBi+
-         ewE7brA8zxbX4o8fE2qB5WNe7IHqWMNZCQb2LoiWm73zsJHIu3/3xrWRhdsRekwZg4cn
-         pfuCP172Gkj6OLI5/cntWLEfw/+yK55lf6NthD9yyA02aiW2I/FMkWTYgQRZgiqE7qAE
-         Kglw==
-In-Reply-To: <20220530074919.46352-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+        bh=+KuhHyD4PJmicRh1rvovvsjVwRIDUdFowoJNCrBTN7Y=;
+        b=ZLgUMfaZ+tA2Ajunkij0CRf9vFf1S0Q7PwqPVEhETJxVNROl04VLPpk0byiKakWPCp
+         zSXMSILlxQjjexSRsmvwcKH2AeyrBT+VOKLyeWRzGc3lf/bUJtHyuMX+A4A0WoWkP95V
+         INrPgOVrmW7S//LKWv/KgnN/1UDC261OwdlqpdWnh6tntEcn7qWrjD2a56zpuDiErFiC
+         1bO96DreZfqvWZZpRT3L+u77shEQMswa3q4Q53U4IF/TqbaWnY7lFO3DgAIofyDerGod
+         aou4OYxYjrcMyaBBnHgBRa65b7trXpppLtdzw7Hm5ZzswNvScITVQ/sLLu2vPq/Fmgp6
+         nzTQ==
+In-Reply-To: <20220530074919.46352-1-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, akpm@linux-foundation.org
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, duanxiongchun@bytedance.com, longman@redhat.com, Muchun Song <songmuchun@bytedance.com>
 
-Similar to the lruvec lock, we use the same approach to make the split
-queue lock safe when LRU pages are reparented.
+Pagecache pages are charged at the allocation time and holding a
+reference to the original memory cgroup until being reclaimed.
+Depending on the memory pressure, specific patterns of the page
+sharing between different cgroups and the cgroup creation and
+destruction rates, a large number of dying memory cgroups can be
+pinned by pagecache pages. It makes the page reclaim less efficient
+and wastes memory.
 
-Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+We can convert LRU pages and most other raw memcg pins to the objcg
+direction to fix this problem, and then the page->memcg will always
+point to an object cgroup pointer.
+
+Therefore, the infrastructure of objcg no longer only serves
+CONFIG_MEMCG_KMEM. In this patch, we move the infrastructure of the
+objcg out of the scope of the CONFIG_MEMCG_KMEM so that the LRU pages
+can reuse it to charge pages.
+
+We know that the LRU pages are not accounted at the root level. But
+the page->memcg_data points to the root_mem_cgroup. So the
+page->memcg_data of the LRU pages always points to a valid pointer.
+But the root_mem_cgroup dose not have an object cgroup. If we use
+obj_cgroup APIs to charge the LRU pages, we should set the
+page->memcg_data to a root object cgroup. So we also allocate an
+object cgroup for the root_mem_cgroup.
+
+Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- include/linux/memcontrol.h |  10 ++++
- mm/huge_memory.c           | 116 +++++++++++++++++++++++++++++++++++----------
- 2 files changed, 100 insertions(+), 26 deletions(-)
+ include/linux/memcontrol.h |  2 +-
+ mm/memcontrol.c            | 56 +++++++++++++++++++++++++++-------------------
+ 2 files changed, 34 insertions(+), 24 deletions(-)
 
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index e390aaa46776..56227603dcb8 100644
+index 6d7f97cc3fd4..27f3171f42a1 100644
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -1650,6 +1650,11 @@ int alloc_shrinker_info(struct mem_cgroup *memcg);
- void free_shrinker_info(struct mem_cgroup *memcg);
- void set_shrinker_bit(struct mem_cgroup *memcg, int nid, int shrinker_id);
- void reparent_shrinker_deferred(struct mem_cgroup *memcg);
-+
-+static inline int shrinker_id(struct shrinker *shrinker)
-+{
-+	return shrinker->id;
-+}
- #else
- #define mem_cgroup_sockets_enabled 0
- static inline void mem_cgroup_sk_alloc(struct sock *sk) { };
-@@ -1663,6 +1668,11 @@ static inline void set_shrinker_bit(struct mem_cgroup *memcg,
- 				    int nid, int shrinker_id)
- {
- }
-+
-+static inline int shrinker_id(struct shrinker *shrinker)
-+{
-+	return -1;
-+}
- #endif
+@@ -315,10 +315,10 @@ struct mem_cgroup {
  
  #ifdef CONFIG_MEMCG_KMEM
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index b17b9d25d045..d3411dc291ab 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -503,25 +503,90 @@ pmd_t maybe_pmd_mkwrite(pmd_t pmd, struct vm_area_struct *vma)
- }
- 
- #ifdef CONFIG_MEMCG
--static inline struct deferred_split *get_deferred_split_queue(struct page *page)
-+static inline struct mem_cgroup *folio_split_queue_memcg(struct folio *folio,
-+		struct deferred_split *queue)
- {
--	struct mem_cgroup *memcg = page_memcg(compound_head(page));
--	struct pglist_data *pgdat = NODE_DATA(page_to_nid(page));
-+	if (mem_cgroup_disabled())
-+		return NULL;
-+	if (&NODE_DATA(folio_nid(folio))->deferred_split_queue == queue)
-+		return NULL;
-+	return container_of(queue, struct mem_cgroup, deferred_split_queue);
-+}
- 
--	if (memcg)
--		return &memcg->deferred_split_queue;
--	else
--		return &pgdat->deferred_split_queue;
-+static inline struct deferred_split *folio_memcg_split_queue(struct folio *folio)
-+{
-+	struct mem_cgroup *memcg = folio_memcg(folio);
-+
-+	return memcg ? &memcg->deferred_split_queue : NULL;
- }
- #else
--static inline struct deferred_split *get_deferred_split_queue(struct page *page)
-+static inline struct mem_cgroup *folio_split_queue_memcg(struct folio *folio,
-+		struct deferred_split *queue)
- {
--	struct pglist_data *pgdat = NODE_DATA(page_to_nid(page));
-+	return NULL;
-+}
- 
--	return &pgdat->deferred_split_queue;
-+static inline struct deferred_split *folio_memcg_split_queue(struct folio *folio)
-+{
-+	return NULL;
- }
- #endif
- 
-+static struct deferred_split *folio_split_queue(struct folio *folio)
-+{
-+	struct deferred_split *queue = folio_memcg_split_queue(folio);
-+
-+	return queue ? : &NODE_DATA(folio_nid(folio))->deferred_split_queue;
-+}
-+
-+static struct deferred_split *folio_split_queue_lock(struct folio *folio)
-+{
-+	struct deferred_split *queue;
-+
-+	rcu_read_lock();
-+retry:
-+	queue = folio_split_queue(folio);
-+	spin_lock(&queue->split_queue_lock);
-+
-+	if (unlikely(folio_split_queue_memcg(folio, queue) != folio_memcg(folio))) {
-+		spin_unlock(&queue->split_queue_lock);
-+		goto retry;
-+	}
-+	rcu_read_unlock();
-+
-+	return queue;
-+}
-+
-+static struct deferred_split *
-+folio_split_queue_lock_irqsave(struct folio *folio, unsigned long *flags)
-+{
-+	struct deferred_split *queue;
-+
-+	rcu_read_lock();
-+retry:
-+	queue = folio_split_queue(folio);
-+	spin_lock_irqsave(&queue->split_queue_lock, *flags);
-+
-+	if (unlikely(folio_split_queue_memcg(folio, queue) != folio_memcg(folio))) {
-+		spin_unlock_irqrestore(&queue->split_queue_lock, *flags);
-+		goto retry;
-+	}
-+	rcu_read_unlock();
-+
-+	return queue;
-+}
-+
-+static inline void split_queue_unlock(struct deferred_split *queue)
-+{
-+	spin_unlock(&queue->split_queue_lock);
-+}
-+
-+static inline void split_queue_unlock_irqrestore(struct deferred_split *queue,
-+						 unsigned long flags)
-+{
-+	spin_unlock_irqrestore(&queue->split_queue_lock, flags);
-+}
-+
- void prep_transhuge_page(struct page *page)
- {
- 	/*
-@@ -2489,7 +2554,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
- {
- 	struct folio *folio = page_folio(page);
- 	struct page *head = &folio->page;
--	struct deferred_split *ds_queue = get_deferred_split_queue(head);
-+	struct deferred_split *ds_queue;
- 	XA_STATE(xas, &head->mapping->i_pages, head->index);
- 	struct anon_vma *anon_vma = NULL;
- 	struct address_space *mapping = NULL;
-@@ -2581,13 +2646,13 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
- 	}
- 
- 	/* Prevent deferred_split_scan() touching ->_refcount */
--	spin_lock(&ds_queue->split_queue_lock);
-+	ds_queue = folio_split_queue_lock(folio);
- 	if (page_ref_freeze(head, 1 + extra_pins)) {
- 		if (!list_empty(page_deferred_list(head))) {
- 			ds_queue->split_queue_len--;
- 			list_del(page_deferred_list(head));
- 		}
--		spin_unlock(&ds_queue->split_queue_lock);
-+		split_queue_unlock(ds_queue);
- 		if (mapping) {
- 			int nr = thp_nr_pages(head);
- 
-@@ -2605,7 +2670,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
- 		__split_huge_page(page, list, end);
- 		ret = 0;
- 	} else {
--		spin_unlock(&ds_queue->split_queue_lock);
-+		split_queue_unlock(ds_queue);
- fail:
- 		if (mapping)
- 			xas_unlock(&xas);
-@@ -2630,25 +2695,23 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
- 
- void free_transhuge_page(struct page *page)
- {
--	struct deferred_split *ds_queue = get_deferred_split_queue(page);
-+	struct deferred_split *ds_queue;
- 	unsigned long flags;
- 
--	spin_lock_irqsave(&ds_queue->split_queue_lock, flags);
-+	ds_queue = folio_split_queue_lock_irqsave(page_folio(page), &flags);
- 	if (!list_empty(page_deferred_list(page))) {
- 		ds_queue->split_queue_len--;
- 		list_del(page_deferred_list(page));
- 	}
--	spin_unlock_irqrestore(&ds_queue->split_queue_lock, flags);
-+	split_queue_unlock_irqrestore(ds_queue, flags);
- 	free_compound_page(page);
- }
- 
- void deferred_split_huge_page(struct page *page)
- {
--	struct deferred_split *ds_queue = get_deferred_split_queue(page);
--#ifdef CONFIG_MEMCG
--	struct mem_cgroup *memcg = page_memcg(compound_head(page));
+ 	int kmemcg_id;
++#endif
+ 	struct obj_cgroup __rcu *objcg;
+ 	/* list of inherited objcgs, protected by objcg_lock */
+ 	struct list_head objcg_list;
 -#endif
-+	struct deferred_split *ds_queue;
- 	unsigned long flags;
-+	struct folio *folio = page_folio(page);
  
- 	VM_BUG_ON_PAGE(!PageTransHuge(page), page);
+ 	MEMCG_PADDING(_pad2_);
  
-@@ -2665,18 +2728,19 @@ void deferred_split_huge_page(struct page *page)
- 	if (PageSwapCache(page))
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 13da256ff2e4..739a1d58ce97 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -254,9 +254,9 @@ struct mem_cgroup *vmpressure_to_memcg(struct vmpressure *vmpr)
+ 	return container_of(vmpr, struct mem_cgroup, vmpressure);
+ }
+ 
+-#ifdef CONFIG_MEMCG_KMEM
+ static DEFINE_SPINLOCK(objcg_lock);
+ 
++#ifdef CONFIG_MEMCG_KMEM
+ bool mem_cgroup_kmem_disabled(void)
+ {
+ 	return cgroup_memory_nokmem;
+@@ -265,12 +265,10 @@ bool mem_cgroup_kmem_disabled(void)
+ static void obj_cgroup_uncharge_pages(struct obj_cgroup *objcg,
+ 				      unsigned int nr_pages);
+ 
+-static void obj_cgroup_release(struct percpu_ref *ref)
++static void obj_cgroup_release_bytes(struct obj_cgroup *objcg)
+ {
+-	struct obj_cgroup *objcg = container_of(ref, struct obj_cgroup, refcnt);
+ 	unsigned int nr_bytes;
+ 	unsigned int nr_pages;
+-	unsigned long flags;
+ 
+ 	/*
+ 	 * At this point all allocated objects are freed, and
+@@ -284,9 +282,9 @@ static void obj_cgroup_release(struct percpu_ref *ref)
+ 	 * 3) CPU1: a process from another memcg is allocating something,
+ 	 *          the stock if flushed,
+ 	 *          objcg->nr_charged_bytes = PAGE_SIZE - 92
+-	 * 5) CPU0: we do release this object,
++	 * 4) CPU0: we do release this object,
+ 	 *          92 bytes are added to stock->nr_bytes
+-	 * 6) CPU0: stock is flushed,
++	 * 5) CPU0: stock is flushed,
+ 	 *          92 bytes are added to objcg->nr_charged_bytes
+ 	 *
+ 	 * In the result, nr_charged_bytes == PAGE_SIZE.
+@@ -298,6 +296,19 @@ static void obj_cgroup_release(struct percpu_ref *ref)
+ 
+ 	if (nr_pages)
+ 		obj_cgroup_uncharge_pages(objcg, nr_pages);
++}
++#else
++static inline void obj_cgroup_release_bytes(struct obj_cgroup *objcg)
++{
++}
++#endif
++
++static void obj_cgroup_release(struct percpu_ref *ref)
++{
++	struct obj_cgroup *objcg = container_of(ref, struct obj_cgroup, refcnt);
++	unsigned long flags;
++
++	obj_cgroup_release_bytes(objcg);
+ 
+ 	spin_lock_irqsave(&objcg_lock, flags);
+ 	list_del(&objcg->list);
+@@ -326,10 +337,10 @@ static struct obj_cgroup *obj_cgroup_alloc(void)
+ 	return objcg;
+ }
+ 
+-static void memcg_reparent_objcgs(struct mem_cgroup *memcg,
+-				  struct mem_cgroup *parent)
++static void memcg_reparent_objcgs(struct mem_cgroup *memcg)
+ {
+ 	struct obj_cgroup *objcg, *iter;
++	struct mem_cgroup *parent = parent_mem_cgroup(memcg);
+ 
+ 	objcg = rcu_replace_pointer(memcg->objcg, NULL, true);
+ 
+@@ -348,6 +359,7 @@ static void memcg_reparent_objcgs(struct mem_cgroup *memcg,
+ 	percpu_ref_kill(&objcg->refcnt);
+ }
+ 
++#ifdef CONFIG_MEMCG_KMEM
+ /*
+  * A lot of the calls to the cache allocation functions are expected to be
+  * inlined by the compiler. Since the calls to memcg_slab_pre_alloc_hook() are
+@@ -3589,21 +3601,12 @@ static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
+ #ifdef CONFIG_MEMCG_KMEM
+ static int memcg_online_kmem(struct mem_cgroup *memcg)
+ {
+-	struct obj_cgroup *objcg;
+-
+ 	if (cgroup_memory_nokmem)
+ 		return 0;
+ 
+ 	if (unlikely(mem_cgroup_is_root(memcg)))
+ 		return 0;
+ 
+-	objcg = obj_cgroup_alloc();
+-	if (!objcg)
+-		return -ENOMEM;
+-
+-	objcg->memcg = memcg;
+-	rcu_assign_pointer(memcg->objcg, objcg);
+-
+ 	static_branch_enable(&memcg_kmem_enabled_key);
+ 
+ 	memcg->kmemcg_id = memcg->id.id;
+@@ -3613,17 +3616,13 @@ static int memcg_online_kmem(struct mem_cgroup *memcg)
+ 
+ static void memcg_offline_kmem(struct mem_cgroup *memcg)
+ {
+-	struct mem_cgroup *parent;
+-
+ 	if (cgroup_memory_nokmem)
  		return;
  
--	spin_lock_irqsave(&ds_queue->split_queue_lock, flags);
-+	ds_queue = folio_split_queue_lock_irqsave(folio, &flags);
- 	if (list_empty(page_deferred_list(page))) {
-+		struct mem_cgroup *memcg;
-+
-+		memcg = folio_split_queue_memcg(folio, ds_queue);
- 		count_vm_event(THP_DEFERRED_SPLIT_PAGE);
- 		list_add_tail(page_deferred_list(page), &ds_queue->split_queue);
- 		ds_queue->split_queue_len++;
--#ifdef CONFIG_MEMCG
- 		if (memcg)
- 			set_shrinker_bit(memcg, page_to_nid(page),
--					 deferred_split_shrinker.id);
--#endif
-+					 shrinker_id(&deferred_split_shrinker));
- 	}
--	spin_unlock_irqrestore(&ds_queue->split_queue_lock, flags);
-+	split_queue_unlock_irqrestore(ds_queue, flags);
- }
+ 	if (unlikely(mem_cgroup_is_root(memcg)))
+ 		return;
  
- static unsigned long deferred_split_count(struct shrinker *shrink,
+-	parent = parent_mem_cgroup(memcg);
+-	memcg_reparent_objcgs(memcg, parent);
+-	memcg_reparent_list_lrus(memcg, parent);
++	memcg_reparent_list_lrus(memcg, parent_mem_cgroup(memcg));
+ }
+ #else
+ static int memcg_online_kmem(struct mem_cgroup *memcg)
+@@ -5106,8 +5105,8 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
+ 	memcg->socket_pressure = jiffies;
+ #ifdef CONFIG_MEMCG_KMEM
+ 	memcg->kmemcg_id = -1;
+-	INIT_LIST_HEAD(&memcg->objcg_list);
+ #endif
++	INIT_LIST_HEAD(&memcg->objcg_list);
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 	INIT_LIST_HEAD(&memcg->cgwb_list);
+ 	for (i = 0; i < MEMCG_CGWB_FRN_CNT; i++)
+@@ -5169,6 +5168,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
++	struct obj_cgroup *objcg;
+ 
+ 	if (memcg_online_kmem(memcg))
+ 		goto remove_id;
+@@ -5181,6 +5181,13 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
+ 	if (alloc_shrinker_info(memcg))
+ 		goto offline_kmem;
+ 
++	objcg = obj_cgroup_alloc();
++	if (!objcg)
++		goto free_shrinker;
++
++	objcg->memcg = memcg;
++	rcu_assign_pointer(memcg->objcg, objcg);
++
+ 	/* Online state pins memcg ID, memcg ID pins CSS */
+ 	refcount_set(&memcg->id.ref, 1);
+ 	css_get(css);
+@@ -5189,6 +5196,8 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
+ 		queue_delayed_work(system_unbound_wq, &stats_flush_dwork,
+ 				   2UL*HZ);
+ 	return 0;
++free_shrinker:
++	free_shrinker_info(memcg);
+ offline_kmem:
+ 	memcg_offline_kmem(memcg);
+ remove_id:
+@@ -5216,6 +5225,7 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+ 	page_counter_set_min(&memcg->memory, 0);
+ 	page_counter_set_low(&memcg->memory, 0);
+ 
++	memcg_reparent_objcgs(memcg);
+ 	memcg_offline_kmem(memcg);
+ 	reparent_shrinker_deferred(memcg);
+ 	wb_memcg_offline(memcg);
 -- 
 2.11.0
 
