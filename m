@@ -1,28 +1,28 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 5.18 139/159] blk-throttle: Set BIO_THROTTLED when bio has been throttled
-Date: Mon, 30 May 2022 09:24:04 -0400
-Message-ID: <20220530132425.1929512-139-sashal@kernel.org>
-References: <20220530132425.1929512-1-sashal@kernel.org>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.17 117/135] blk-throttle: Set BIO_THROTTLED when bio has been throttled
+Date: Mon, 30 May 2022 09:31:15 -0400
+Message-ID: <20220530133133.1931716-117-sashal@kernel.org>
+References: <20220530133133.1931716-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1653917443;
-        bh=ycLUjmMHzdDC3CERFJqNRWnivcnpn9dj7vhSjrVVdc4=;
+        s=k20201202; t=1653917852;
+        bh=aD2bwhTaBdhLJlZgj84uncUpqKZ/Ttho7VUAKt9ILjo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Cq+7Rb9JtmSMIkrtrAFXWWmuEEDMNHvsPdHLhTlOEydjewe2/keC4hkVE2lBvIGEj
-         ahiA1tG+rR9rf81dgFvK1yOw7V+19aeVukVhU1+YMp0brqjHrL0VSeralgYBOUO5KT
-         OowMeXRGcqdRKDbEaGwDqBBcgP052+eHfAKUmpIQQCPdvFxg75Fn/oy3z3tV/N9d56
-         yBsd7wrb3+WIvKXOiZOloNu3Vv33IhFYEUDQiFqHfv+FWTVXjRupCxTXBoz0PYrorN
-         sUY9zwn+JXpSZ10eQtqXS0AqHAfxJonw4JQrD73QxV45rtOgCIBV61kiJIFABKYNXg
-         p66WBMq+pTzzg==
-In-Reply-To: <20220530132425.1929512-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        b=S/L2dHskkKGX7y268KAv8rESvV+Vh96rX75hx8QJYrYpq34esQjD2k7JBJzAU7PBo
+         uN6jkiOvBZtJBllws3EGL8ZCu+qOGMAqVN1FNHUxcvV+tgSW4skOQrGepWAnssrB4D
+         Jyq2X8dXYshGhrJDmkSsbpir8qj4r7PJGZR+urKlbwBFtSthr1AWu06fzY0sOHQ27P
+         Ucnf5p/6QUVLcKVZBk9DnRcCZiD/l2xfQOiJTSbwilUhdBIgxhyFFlDmx5x3Q6+h3/
+         xiZvsxD80Uvs2Omzj4FcmH0epxN/1QiZTVthjJRa43Ijpi28BO87OHQnhU2Yt8w4O0
+         COeT/eFyRddxQ==
+In-Reply-To: <20220530133133.1931716-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Laibin Qiu <qiulaibin-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Laibin Qiu <qiulaibin@huawei.com>, Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, tj@kernel.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org
 
-From: Laibin Qiu <qiulaibin-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Laibin Qiu <qiulaibin@huawei.com>
 
 [ Upstream commit 5a011f889b4832aa80c2a872a5aade5c48d2756f ]
 
@@ -111,20 +111,20 @@ Freed by task 0:
 
 Fix this by move BIO_THROTTLED set into the queue_lock.
 
-Signed-off-by: Laibin Qiu <qiulaibin-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Link: https://lore.kernel.org/r/20220301123919.2381579-1-qiulaibin-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Laibin Qiu <qiulaibin@huawei.com>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Link: https://lore.kernel.org/r/20220301123919.2381579-1-qiulaibin@huawei.com
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
  block/blk-throttle.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 469c483719be..5c5f2741a95f 100644
+index 87769b337fc5..e1b253775a56 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -2189,13 +2189,14 @@ bool __blk_throtl_bio(struct bio *bio)
+@@ -2167,13 +2167,14 @@ bool __blk_throtl_bio(struct bio *bio)
  	}
  
  out_unlock:
