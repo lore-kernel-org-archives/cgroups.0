@@ -1,60 +1,76 @@
 From: Vasily Averin <vvs@openvz.org>
-Subject: [PATCH mm v3 2/9] memcg: enable accounting for kernfs nodes
-Date: Mon, 30 May 2022 14:26:00 +0300
-Message-ID: <aeb2adf8-04ad-2f7a-dc03-c1bf0f71450a@openvz.org>
+Subject: [PATCH mm v3 6/9] memcg: enable accounting for percpu allocation of
+ struct cgroup_rstat_cpu
+Date: Mon, 30 May 2022 14:26:36 +0300
+Message-ID: <2fbede88-6ef7-4ce7-b3a3-ec349bc2cc06@openvz.org>
 References: <06505918-3b8a-0ad5-5951-89ecb510138e@openvz.org>
  <cover.1653899364.git.vvs@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=openvz-org.20210112.gappssmtp.com; s=20210112;
         h=message-id:date:mime-version:user-agent:from:subject:to:cc
          :references:content-language:in-reply-to:content-transfer-encoding;
-        bh=gx5BulmdWVt1E6J23Q6sWTUkZpDqVLFQzvPT6hFPLlw=;
-        b=HI2S3D2LaM+CpJncitps90D3zTHWFeNVbRo1proDv/epa86UIsO3B+emCKjHD05m4E
-         qaz6ChKh6pu6uXKvY4S+1hqcRalF7rqVye6N2mRkVsZBcCOfpslnrDjEWUzDp+5aaXyk
-         tX2/q17/WDl//b5r1mGa7Tq3zVSZPou91Tp/ZcFweUHcJ2JUTj+EhVRNwd5zDCtSX0FG
-         7cSJ76MxlShzeRJ6K2QGxobnEb8yF6DKMGiaLkKYKeKo38m8hCPfsMYL2Hm+58LsRZDB
-         drNrbEsCzPbVlFCfAbrszHoJLFdt1COVb1PrGklTomSfK6+fAnL5CpYezD9s7NiYDo8P
-         IWbQ==
+        bh=lq150UndXxHEWEhIvsqNd7aCUGl0NaprSMERTMCukMc=;
+        b=yL39YrAU3i/NoAsVN95rMmJdSBldmOz1PwlQ73jfMuWdBXrupcnQd2G2xM7mDHLOTw
+         5cG1/LbM9ELIeheHf4QRIj9qoEGrwWMMYtTwVRLQaMrZRY2GTI6OHsCLJntYiy66xJLY
+         dcyIU7JJNYbu0N8ONgoWHtdXARu59CTqL/J5y5kDSzriAP6IQIHw/6y+net9f403FUOP
+         Aes5Xixs/Zs3CgFNNxQ0wi8z2ztQjubVeeh91mEi5dPW+K70JTAiWKmInlePnVUr/5IK
+         DTGNdcEdAZiKlmqMNwtccV54snA1/n0921UB4g/zMC0+ndU8bwXFam+o5cqi5VihlEFc
+         srgA==
 Content-Language: en-US
 In-Reply-To: <cover.1653899364.git.vvs@openvz.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
+Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: kernel@openvz.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <roman.gushchin@linux.dev>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@suse.com>, Muchun Song <songmuchun@bytedance.com>, cgroups@vger.kernel.org
 
-a2VybmZzIG5vZGVzIGFyZSBxdWl0ZSBzbWFsbCBrZXJuZWwgb2JqZWN0cywgaG93ZXZlciB0aGVy
-ZSBhcmUgZmV3CnNjZW5hcmlvcyB3aGVyZSBpdCBjb25zdW1lcyBzaWduaWZpY2FudCBwaWVjZSBv
-ZiBhbGwgYWxsb2NhdGVkIG1lbW9yeToKCjEpIGNyZWF0aW5nIGEgbmV3IG5ldGRldmljZSBhbGxv
-Y2F0ZXMgfjUwS2Igb2YgbWVtb3J5LCB3aGVyZSB+MTBLYgogICB3YXMgYWxsb2NhdGVkIGZvciA4
-MCsga2VybmZzIG5vZGVzLgoKMikgY2dyb3VwdjIgbWtkaXIgYWxsb2NhdGVzIH42MEtiIG9mIG1l
-bW9yeSwgfjEwS2Igb2YgdGhlbSBhcmUga2VybmZzCiAgIHN0cnVjdHVyZXMuCgozKSBTaGFrZWVs
-IEJ1dHQgcmVwb3J0cyB0aGF0IEdvb2dsZSBoYXMgd29ya2xvYWRzIHdoaWNoIGNyZWF0ZSAxMDBz
-CiAgIG9mIHN1YmNvbnRhaW5lcnMgYW5kIHRoZXkgaGF2ZSBvYnNlcnZlZCBoaWdoIHN5c3RlbSBv
-dmVyaGVhZAogICB3aXRob3V0IG1lbWNnIGFjY291bnRpbmcgb2Yga2VybmZzLgoKVXN1YWxseSBu
-ZXcga2VybmZzIG5vZGUgY3JlYXRlcyBmZXcgb3RoZXIgb2JqZWN0czoKCkFsbG9jcyAgQWxsb2Mg
-ICBBbGxvY2F0aW9uCm51bWJlciAgc2l6ZQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLQoxICAgKyAgMTI4ICAgICAgKF9fa2VybmZzX25ld19ub2RlKzB4NGQpCWtl
-cm5mcyBub2RlCjEgICArICAgODggICAgICAoX19rZXJuZnNfaWF0dHJzKzB4NTcpCQlrZXJuZnMg
-aWF0dHJzCjEgICArICAgOTYgICAgICAoc2ltcGxlX3hhdHRyX2FsbG9jKzB4MjgpCXNpbXBsZV94
-YXR0ciwgY2FuIGdyb3cgb3ZlciA0S2IKMSAgICAgICAzMiAgICAgIChzaW1wbGVfeGF0dHJfc2V0
-KzB4NTkpCjEgICAgICAgOCAgICAgICAoX19rZXJuZnNfbmV3X25vZGUrMHgzMCkKCicrJyAtLSB0
-byBiZSBhY2NvdW50ZWQKClRoaXMgcGF0Y2ggZW5hYmxlcyBhY2NvdW50aW5nIGZvciBrZXJuZnMg
-bm9kZXMgc2xhYiBjYWNoZS4KClNpZ25lZC1vZmYtYnk6IFZhc2lseSBBdmVyaW4gPHZ2c0BvcGVu
-dnoub3JnPgpSZXZpZXdlZC1ieTogUm9tYW4gR3VzaGNoaW4gPHJvbWFuLmd1c2hjaGluQGxpbnV4
-LmRldj4KUmV2aWV3ZWQtYnk6IE1pY2hhbCBLb3V0bsO9IDxta291dG55QHN1c2UuY29tPgpBY2tl
-ZC1ieTogU2hha2VlbCBCdXR0IDxzaGFrZWVsYkBnb29nbGUuY29tPgpSZXZpZXdlZC1ieTogTXVj
-aHVuIFNvbmcgPHNvbmdtdWNodW5AYnl0ZWRhbmNlLmNvbT4KLS0tCiBmcy9rZXJuZnMvbW91bnQu
-YyB8IDMgKystCiAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0p
-CgpkaWZmIC0tZ2l0IGEvZnMva2VybmZzL21vdW50LmMgYi9mcy9rZXJuZnMvbW91bnQuYwppbmRl
-eCBjZmE3OTcxNWZjMWEuLjNhYzQxOTFiMWM0MCAxMDA2NDQKLS0tIGEvZnMva2VybmZzL21vdW50
-LmMKKysrIGIvZnMva2VybmZzL21vdW50LmMKQEAgLTM5MSw3ICszOTEsOCBAQCB2b2lkIF9faW5p
-dCBrZXJuZnNfaW5pdCh2b2lkKQogewogCWtlcm5mc19ub2RlX2NhY2hlID0ga21lbV9jYWNoZV9j
-cmVhdGUoImtlcm5mc19ub2RlX2NhY2hlIiwKIAkJCQkJICAgICAgc2l6ZW9mKHN0cnVjdCBrZXJu
-ZnNfbm9kZSksCi0JCQkJCSAgICAgIDAsIFNMQUJfUEFOSUMsIE5VTEwpOworCQkJCQkgICAgICAw
-LCBTTEFCX1BBTklDIHwgU0xBQl9BQ0NPVU5ULAorCQkJCQkgICAgICBOVUxMKTsKIAogCS8qIENy
-ZWF0ZXMgc2xhYiBjYWNoZSBmb3Iga2VybmZzIGlub2RlIGF0dHJpYnV0ZXMgKi8KIAlrZXJuZnNf
-aWF0dHJzX2NhY2hlICA9IGttZW1fY2FjaGVfY3JlYXRlKCJrZXJuZnNfaWF0dHJzX2NhY2hlIiwK
-LS0gCjIuMzYuMQoK
+struct cgroup_rstat_cpu is percpu allocated for each new cgroup and
+can consume a significant portion of all allocated memory on nodes
+with a large number of CPUs.
+
+Common part of the cgroup creation:
+Allocs  Alloc   $1*$2   Sum	Allocation
+number  size
+--------------------------------------------
+16  ~   352     5632    5632    KERNFS
+1   +   4096    4096    9728    (cgroup_mkdir+0xe4)
+1       584     584     10312   (radix_tree_node_alloc.constprop.0+0x89)
+1       192     192     10504   (__d_alloc+0x29)
+2       72      144     10648   (avc_alloc_node+0x27)
+2       64      128     10776   (percpu_ref_init+0x6a)
+1       64      64      10840   (memcg_list_lru_alloc+0x21a)
+percpu:
+1   +   192     192     192     call_site=psi_cgroup_alloc+0x1e
+1   +   96      96      288     call_site=cgroup_rstat_init+0x5f
+2       12      24      312     call_site=percpu_ref_init+0x23
+1       6       6       318     call_site=__percpu_counter_init+0x22
+
+ '+' -- to be accounted,
+ '~' -- partially accounted
+
+Signed-off-by: Vasily Averin <vvs@openvz.org>
+Acked-by: Shakeel Butt <shakeelb@google.com>
+Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
+---
+ kernel/cgroup/rstat.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index 24b5c2ab5598..2904b185b01b 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -257,7 +257,8 @@ int cgroup_rstat_init(struct cgroup *cgrp)
+ 
+ 	/* the root cgrp has rstat_cpu preallocated */
+ 	if (!cgrp->rstat_cpu) {
+-		cgrp->rstat_cpu = alloc_percpu(struct cgroup_rstat_cpu);
++		cgrp->rstat_cpu = alloc_percpu_gfp(struct cgroup_rstat_cpu,
++						   GFP_KERNEL_ACCOUNT);
+ 		if (!cgrp->rstat_cpu)
+ 			return -ENOMEM;
+ 	}
+-- 
+2.36.1
+
