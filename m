@@ -1,76 +1,108 @@
-From: Vasily Averin <vvs@openvz.org>
-Subject: [PATCH mm v3 6/9] memcg: enable accounting for percpu allocation of
- struct cgroup_rstat_cpu
-Date: Mon, 30 May 2022 14:26:36 +0300
-Message-ID: <2fbede88-6ef7-4ce7-b3a3-ec349bc2cc06@openvz.org>
+From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH mm v3 0/9] memcg: accounting for objects allocated by mkdir
+ cgroup
+Date: Mon, 30 May 2022 14:25:45 +0300
+Message-ID: <3e1d6eab-57c7-ba3d-67e1-c45aa0dfa2ab@openvz.org>
 References: <06505918-3b8a-0ad5-5951-89ecb510138e@openvz.org>
- <cover.1653899364.git.vvs@openvz.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=openvz-org.20210112.gappssmtp.com; s=20210112;
         h=message-id:date:mime-version:user-agent:from:subject:to:cc
          :references:content-language:in-reply-to:content-transfer-encoding;
-        bh=lq150UndXxHEWEhIvsqNd7aCUGl0NaprSMERTMCukMc=;
-        b=yL39YrAU3i/NoAsVN95rMmJdSBldmOz1PwlQ73jfMuWdBXrupcnQd2G2xM7mDHLOTw
-         5cG1/LbM9ELIeheHf4QRIj9qoEGrwWMMYtTwVRLQaMrZRY2GTI6OHsCLJntYiy66xJLY
-         dcyIU7JJNYbu0N8ONgoWHtdXARu59CTqL/J5y5kDSzriAP6IQIHw/6y+net9f403FUOP
-         Aes5Xixs/Zs3CgFNNxQ0wi8z2ztQjubVeeh91mEi5dPW+K70JTAiWKmInlePnVUr/5IK
-         DTGNdcEdAZiKlmqMNwtccV54snA1/n0921UB4g/zMC0+ndU8bwXFam+o5cqi5VihlEFc
-         srgA==
+        bh=IK1h75QrK4dLAeCcHF6vHO4eDXNyXwLtZQJf9O+8m78=;
+        b=XPNvq5NbB2kQePetWgiJpCVF9J44XxrjS/Fy/stHVxJC8lmeUymcBCUm67p4d1i4cZ
+         qnXlnY6v2ktg2Yxt9sZ7Qb5LQooZmoGKsQkH4KxqykKI/mPw6t3xpTHDkwkG0hWfB4mS
+         6P7rjpWQ/xXC3Uj/qVEsuI/XpPeotY6Mon2SrfSTES1WWK2jh5LcRYYuBCaW3sA28sqB
+         /7wJCIyZKMIn86gR9iZ0rN0ZrA2wz5667OJEMKgDBsFCR5bK6mo5YOtmADsqmMBbeoZ0
+         X9zJe7NDh4yO3uILPz/BLIkNy0JCVPgedXFPhYxZ51dXuoXgH1/QHI+8g9nl2zeyeQco
+         88hQ==
 Content-Language: en-US
-In-Reply-To: <cover.1653899364.git.vvs@openvz.org>
+In-Reply-To: <06505918-3b8a-0ad5-5951-89ecb510138e-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: kernel@openvz.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <roman.gushchin@linux.dev>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@suse.com>, Muchun Song <songmuchun@bytedance.com>, cgroups@vger.kernel.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-struct cgroup_rstat_cpu is percpu allocated for each new cgroup and
-can consume a significant portion of all allocated memory on nodes
-with a large number of CPUs.
+Below is tracing results of mkdir /sys/fs/cgroup/vvs.test on 
+4cpu VM with Fedora and self-complied upstream kernel. The calculations
+are not precise, it depends on kernel config options, number of cpus,
+enabled controllers, ignores possible page allocations etc.
+However this is enough to clarify the general situation.
+All allocations are splited into:
+- common part, always called for each cgroup type
+- per-cgroup allocations
 
-Common part of the cgroup creation:
-Allocs  Alloc   $1*$2   Sum	Allocation
-number  size
---------------------------------------------
-16  ~   352     5632    5632    KERNFS
-1   +   4096    4096    9728    (cgroup_mkdir+0xe4)
-1       584     584     10312   (radix_tree_node_alloc.constprop.0+0x89)
-1       192     192     10504   (__d_alloc+0x29)
-2       72      144     10648   (avc_alloc_node+0x27)
-2       64      128     10776   (percpu_ref_init+0x6a)
-1       64      64      10840   (memcg_list_lru_alloc+0x21a)
-percpu:
-1   +   192     192     192     call_site=psi_cgroup_alloc+0x1e
-1   +   96      96      288     call_site=cgroup_rstat_init+0x5f
-2       12      24      312     call_site=percpu_ref_init+0x23
-1       6       6       318     call_site=__percpu_counter_init+0x22
+In each group we consider 2 corner cases:
+- usual allocations, important for 1-2 CPU nodes/Vms
+- percpu allocations, important for 'big irons'
 
- '+' -- to be accounted,
- '~' -- partially accounted
+common part: 	~11Kb	+  318 bytes percpu
+memcg: 		~17Kb	+ 4692 bytes percpu
+cpu:		~2.5Kb	+ 1036 bytes percpu
+cpuset:		~3Kb	+   12 bytes percpu
+blkcg:		~3Kb	+   12 bytes percpu
+pid:		~1.5Kb	+   12 bytes percpu		
+perf:		 ~320b	+   60 bytes percpu
+-------------------------------------------
+total:		~38Kb	+ 6142 bytes percpu
+currently accounted:	  4668 bytes percpu
 
-Signed-off-by: Vasily Averin <vvs@openvz.org>
-Acked-by: Shakeel Butt <shakeelb@google.com>
-Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
----
- kernel/cgroup/rstat.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+- it's important to account usual allocations called
+in common part, because almost all of cgroup-specific allocations
+are small. One exception here is memory cgroup, it allocates a few
+huge objects that should be accounted.
+- Percpu allocation called in common part, in memcg and cpu cgroups
+should be accounted, rest ones are small an can be ignored.
+- KERNFS objects are allocated both in common part and in most of
+cgroups 
 
-diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-index 24b5c2ab5598..2904b185b01b 100644
---- a/kernel/cgroup/rstat.c
-+++ b/kernel/cgroup/rstat.c
-@@ -257,7 +257,8 @@ int cgroup_rstat_init(struct cgroup *cgrp)
- 
- 	/* the root cgrp has rstat_cpu preallocated */
- 	if (!cgrp->rstat_cpu) {
--		cgrp->rstat_cpu = alloc_percpu(struct cgroup_rstat_cpu);
-+		cgrp->rstat_cpu = alloc_percpu_gfp(struct cgroup_rstat_cpu,
-+						   GFP_KERNEL_ACCOUNT);
- 		if (!cgrp->rstat_cpu)
- 			return -ENOMEM;
- 	}
+Details can be found here:
+https://lore.kernel.org/all/d28233ee-bccb-7bc3-c2ec-461fd7f95e6a-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org/
+
+I checked other cgroups types was found that they all can be ignored.
+Additionally I found allocation of struct rt_rq called in cpu cgroup 
+if CONFIG_RT_GROUP_SCHED was enabled, it allocates huge (~1700 bytes)
+percpu structure and should be accounted too.
+
+
+v3:
+ 1) re-based to current upstream (v5.18-11267-gb00ed48bb0a7)
+ 2) fixed few typos
+ 3) added received approvals
+
+v2:
+ 1) re-split to simplify possible bisect, re-ordered
+ 2) added accounting for percpu psi_group_cpu and cgroup_rstat_cpu,
+     allocated in common part
+ 3) added accounting for percpu allocation of struct rt_rq
+     (actual if CONFIG_RT_GROUP_SCHED is enabled)
+ 4) improved patches descriptions 
+
+
+Vasily Averin (9):
+  memcg: enable accounting for struct cgroup
+  memcg: enable accounting for kernfs nodes
+  memcg: enable accounting for kernfs iattrs
+  memcg: enable accounting for struct simple_xattr
+  memcg: enable accounting for percpu allocation of struct psi_group_cpu
+  memcg: enable accounting for percpu allocation of struct
+    cgroup_rstat_cpu
+  memcg: enable accounting for large allocations in mem_cgroup_css_alloc
+  memcg: enable accounting for allocations in alloc_fair_sched_group
+  memcg: enable accounting for perpu allocation of struct rt_rq
+
+ fs/kernfs/mount.c      | 6 ++++--
+ fs/xattr.c             | 2 +-
+ kernel/cgroup/cgroup.c | 2 +-
+ kernel/cgroup/rstat.c  | 3 ++-
+ kernel/sched/fair.c    | 4 ++--
+ kernel/sched/psi.c     | 3 ++-
+ kernel/sched/rt.c      | 2 +-
+ mm/memcontrol.c        | 4 ++--
+ 8 files changed, 15 insertions(+), 11 deletions(-)
+
 -- 
 2.36.1
 
