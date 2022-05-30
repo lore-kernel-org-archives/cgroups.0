@@ -1,52 +1,39 @@
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next v3 6/6] block, bfq: remove dead code for updating 'rq_in_driver'
-Date: Sat, 28 May 2022 17:59:58 +0800
-Message-ID: <20220528095958.270455-7-yukuai3@huawei.com>
-References: <20220528095958.270455-1-yukuai3@huawei.com>
+From: Hongchen Zhang <zhanghongchen@loongson.cn>
+Subject: Re: [PATCH] cgroup: wait for css offline when rmdir
+Date: Mon, 30 May 2022 09:53:51 +0800
+Message-ID: <e74e03f1-cb54-b158-a085-2965fd088d1d@loongson.cn>
+References: <1653619158-27607-1-git-send-email-zhanghongchen@loongson.cn>
+ <YpCQZ5RRnxwh7fmK@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220528095958.270455-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <YpCQZ5RRnxwh7fmK@slm.duckdns.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Such code are not even compiled since they are inside marco "#if 0".
+On 2022/5/27 下午4:48, Tejun Heo wrote:
+> On Fri, May 27, 2022 at 10:39:18AM +0800, Hongchen Zhang wrote:
+>> when remove a cgroup dir, make sure all the csses associated which
+>> the cgroup are all offlined,so that we will be sure that the resources
+>> allocated by the csses are all freed when rmdir exit successfully.
+> 
+> Offlining doesn't guarantee that resources are freed and there's no definite
+> time limit on how long it'd take to free all resources. e.g. for memcg, if
+> there isn't sufficient memory pressure, its page cache can remain
+> indefinitely. Is there something practical you're trying to achieve?
+> 
+> Thanks.
+> 
+Hi Tejun,
+   When I test the LTP's memcg_test_3 testcase at 8 Node server,I get 
+the -ENOMEM error,which caused by no avaliable idr found in mem_cgroup_idr.
+the reason is the use of idr in mem_cgroup_idr is too fast than the 
+free.In the specific case,the idr is used and freed cyclically,so when 
+we rmdir one cgroup dir, we can synchronize the idr free through wating 
+for the memcg css offlined,and then we can use it the next cycle.
 
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
----
- block/bfq-iosched.c | 16 ----------------
- 1 file changed, 16 deletions(-)
-
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 8c7020f8cdf2..79e6a60d61d8 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -2321,22 +2321,6 @@ static sector_t get_sdist(sector_t last_pos, struct request *rq)
- 	return 0;
- }
- 
--#if 0 /* Still not clear if we can do without next two functions */
--static void bfq_activate_request(struct request_queue *q, struct request *rq)
--{
--	struct bfq_data *bfqd = q->elevator->elevator_data;
--
--	bfqd->rq_in_driver++;
--}
--
--static void bfq_deactivate_request(struct request_queue *q, struct request *rq)
--{
--	struct bfq_data *bfqd = q->elevator->elevator_data;
--
--	bfqd->rq_in_driver--;
--}
--#endif
--
- static void bfq_remove_request(struct request_queue *q,
- 			       struct request *rq)
- {
--- 
-2.31.1
+Thanks.
 
