@@ -1,64 +1,76 @@
-From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH mm v3 9/9] memcg: enable accounting for perpu allocation of
- struct rt_rq
-Date: Mon, 30 May 2022 14:27:07 +0300
-Message-ID: <a1fcdab2-a208-0fad-3f4e-233317ab828f@openvz.org>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH mm v3 0/9] memcg: accounting for objects allocated by
+ mkdir cgroup
+Date: Mon, 30 May 2022 13:55:42 +0200
+Message-ID: <YpSwvii5etfnOYC9@dhcp22.suse.cz>
 References: <06505918-3b8a-0ad5-5951-89ecb510138e@openvz.org>
- <cover.1653899364.git.vvs@openvz.org>
+ <3e1d6eab-57c7-ba3d-67e1-c45aa0dfa2ab@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=openvz-org.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:from:subject:to:cc
-         :references:content-language:in-reply-to:content-transfer-encoding;
-        bh=ZH9yvId2NMAw4oN1iqMKqU61/DZ/rIDZexlE6dKv8SU=;
-        b=qSiaNr2ftUqSRvmOy75IJeNCKAVgq/jO6yIuIwj9lTeotjFVJ4+oMFaIk5uft9Qvbs
-         l+4EitDawXs9/hDAY1ZW4DMfHukqi6UArXkOO1Fsh++NpRhYgntK5BVNeajvyod0xNbd
-         /yEKhndXFUITINHf3AsuCHklX308rL2W0TxU0lyGgS31a7Um1/qC8RkNmyIWqmdjEZqv
-         sBD3tvK7pX9DrDUQh/vJKdquM5bFHwtxZMMOdowmUVGdozFLqM96xAnlkIXWMx6XY71P
-         q0W2yFeBw4MsVyY5vKggC//seES0ntiWnGoRO7EkwhlnsldeBMzNk5fW75QX3HKgwNYo
-         7OeQ==
-Content-Language: en-US
-In-Reply-To: <cover.1653899364.git.vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1653911743; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=K5eN5/cePnHED6LIz60pf/vSdydS33X2AATbO9NoXNo=;
+        b=EcpslcQfWh6nAGTYnwJ3a24s1aWzIfX8p6opHBvq34+UJVRbdsJ4azT+ozFRxQ0cW9KcZG
+        YX1NbUCM5sG8Z00Y2NhK4zhIybN+kYYJVh3fBzoeUIkmJ0Rr1CCkET+Ovj/PeBYyDjBpcI
+        2zpZpWLlE2hsSiciEG+XJ53o4kSBQyU=
+Content-Disposition: inline
+In-Reply-To: <3e1d6eab-57c7-ba3d-67e1-c45aa0dfa2ab-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-If enabled in config, alloc_rt_sched_group() is called for each new
-cpu cgroup and allocates a huge (~1700 bytes) percpu struct rt_rq.
-This significantly exceeds the size of the percpu allocation in the
-common part of cgroup creation.
+On Mon 30-05-22 14:25:45, Vasily Averin wrote:
+> Below is tracing results of mkdir /sys/fs/cgroup/vvs.test on 
+> 4cpu VM with Fedora and self-complied upstream kernel. The calculations
+> are not precise, it depends on kernel config options, number of cpus,
+> enabled controllers, ignores possible page allocations etc.
+> However this is enough to clarify the general situation.
+> All allocations are splited into:
+> - common part, always called for each cgroup type
+> - per-cgroup allocations
+> 
+> In each group we consider 2 corner cases:
+> - usual allocations, important for 1-2 CPU nodes/Vms
+> - percpu allocations, important for 'big irons'
+> 
+> common part: 	~11Kb	+  318 bytes percpu
+> memcg: 		~17Kb	+ 4692 bytes percpu
+> cpu:		~2.5Kb	+ 1036 bytes percpu
+> cpuset:		~3Kb	+   12 bytes percpu
+> blkcg:		~3Kb	+   12 bytes percpu
+> pid:		~1.5Kb	+   12 bytes percpu		
+> perf:		 ~320b	+   60 bytes percpu
+> -------------------------------------------
+> total:		~38Kb	+ 6142 bytes percpu
+> currently accounted:	  4668 bytes percpu
+> 
+> - it's important to account usual allocations called
+> in common part, because almost all of cgroup-specific allocations
+> are small. One exception here is memory cgroup, it allocates a few
+> huge objects that should be accounted.
+> - Percpu allocation called in common part, in memcg and cpu cgroups
+> should be accounted, rest ones are small an can be ignored.
+> - KERNFS objects are allocated both in common part and in most of
+> cgroups 
+> 
+> Details can be found here:
+> https://lore.kernel.org/all/d28233ee-bccb-7bc3-c2ec-461fd7f95e6a-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org/
+> 
+> I checked other cgroups types was found that they all can be ignored.
+> Additionally I found allocation of struct rt_rq called in cpu cgroup 
+> if CONFIG_RT_GROUP_SCHED was enabled, it allocates huge (~1700 bytes)
+> percpu structure and should be accounted too.
 
-Memory allocated during new cpu cgroup creation
-(with enabled RT_GROUP_SCHED):
-common part:    ~11Kb   +   318 bytes percpu
-cpu cgroup:     ~2.5Kb  + ~2800 bytes percpu
+One thing that the changelog is missing is an explanation why do we need
+to account those objects. Users are usually not empowered to create
+cgroups arbitrarily. Or at least they shouldn't because we can expect
+more problems to happen.
 
-Accounting for this memory helps to avoid misuse inside memcg-limited
-containers.
-
-Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
----
- kernel/sched/rt.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
-index 8c9ed9664840..44a8fc096e33 100644
---- a/kernel/sched/rt.c
-+++ b/kernel/sched/rt.c
-@@ -256,7 +256,7 @@ int alloc_rt_sched_group(struct task_group *tg, struct task_group *parent)
- 
- 	for_each_possible_cpu(i) {
- 		rt_rq = kzalloc_node(sizeof(struct rt_rq),
--				     GFP_KERNEL, cpu_to_node(i));
-+				     GFP_KERNEL_ACCOUNT, cpu_to_node(i));
- 		if (!rt_rq)
- 			goto err;
- 
+Could you clarify this please?
 -- 
-2.36.1
-
+Michal Hocko
+SUSE Labs
