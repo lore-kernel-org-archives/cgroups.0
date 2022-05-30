@@ -1,54 +1,64 @@
-From: Vasily Averin <vvs@openvz.org>
-Subject: [PATCH mm v3 8/9] memcg: enable accounting for allocations in
- alloc_fair_sched_group
-Date: Mon, 30 May 2022 14:26:59 +0300
-Message-ID: <ea77f3ea-3832-83e8-b33d-6df40b01ee67@openvz.org>
+From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH mm v3 9/9] memcg: enable accounting for perpu allocation of
+ struct rt_rq
+Date: Mon, 30 May 2022 14:27:07 +0300
+Message-ID: <a1fcdab2-a208-0fad-3f4e-233317ab828f@openvz.org>
 References: <06505918-3b8a-0ad5-5951-89ecb510138e@openvz.org>
  <cover.1653899364.git.vvs@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=openvz-org.20210112.gappssmtp.com; s=20210112;
         h=message-id:date:mime-version:user-agent:from:subject:to:cc
          :references:content-language:in-reply-to:content-transfer-encoding;
-        bh=1bz2HF6EsnuVkI8ZLNySbZ6/e4i0Dqd56vDd6/MtYsM=;
-        b=MJH7jgZ0nByKKabpLoAPA5HN9v21BI0dbjoYKv7JTJsZIG9t7CYmKL10/W6A4CAJjz
-         YjoRkjjkc7rnBG4iIl52t8YBffLXDTaOk0FPU+R/iUFJxypPSriGxh9W/Yp0Xb2YBS3n
-         u8rGfnyQ69D7OdxyAxhEqBpRbcEOZtgatuzFi1ROaPTtGWFVuQ8Ynlz3uO4xDFqo8r4l
-         WK/pDR4j7nZ8vJmIiytexPw++UZNwa2TUENNay2Qdqs1hgi/d47tM/IS92zI/+yxh40n
-         /qegCkoMk0oOX1fRJCG8CUX8qr6p2SS7H4vuyz1TCOxloqJz6bEygG1OkLqHyZ3QIEiK
-         J+yA==
+        bh=ZH9yvId2NMAw4oN1iqMKqU61/DZ/rIDZexlE6dKv8SU=;
+        b=qSiaNr2ftUqSRvmOy75IJeNCKAVgq/jO6yIuIwj9lTeotjFVJ4+oMFaIk5uft9Qvbs
+         l+4EitDawXs9/hDAY1ZW4DMfHukqi6UArXkOO1Fsh++NpRhYgntK5BVNeajvyod0xNbd
+         /yEKhndXFUITINHf3AsuCHklX308rL2W0TxU0lyGgS31a7Um1/qC8RkNmyIWqmdjEZqv
+         sBD3tvK7pX9DrDUQh/vJKdquM5bFHwtxZMMOdowmUVGdozFLqM96xAnlkIXWMx6XY71P
+         q0W2yFeBw4MsVyY5vKggC//seES0ntiWnGoRO7EkwhlnsldeBMzNk5fW75QX3HKgwNYo
+         7OeQ==
 Content-Language: en-US
-In-Reply-To: <cover.1653899364.git.vvs@openvz.org>
+In-Reply-To: <cover.1653899364.git.vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: kernel@openvz.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <roman.gushchin@linux.dev>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@suse.com>, Muchun Song <songmuchun@bytedance.com>, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Q3JlYXRpbmcgb2YgZWFjaCBuZXcgY3B1IGNncm91cCBhbGxvY2F0ZXMgdHdvIDUxMi1ieXRlcyBr
-ZXJuZWwgb2JqZWN0cwpwZXIgQ1BVLiBUaGlzIGlzIGVzcGVjaWFsbHkgaW1wb3J0YW50IGZvciBj
-Z3JvdXBzIHNoYXJlZCBwYXJlbnQgbWVtb3J5CmNncm91cC4gSW4gdGhpcyBzY2VuYXJpbywgb24g
-bm9kZXMgd2l0aCBtdWx0aXBsZSBwcm9jZXNzb3JzLCB0aGVzZQphbGxvY2F0aW9ucyBiZWNvbWUg
-b25lIG9mIHRoZSBtYWluIG1lbW9yeSBjb25zdW1lcnMuCgpNZW1vcnkgYWxsb2NhdGVkIGR1cmlu
-ZyBuZXcgY3B1IGNncm91cCBjcmVhdGlvbjoKY29tbW9uIHBhcnQ6IAl+MTFLYgkrICAzMTggYnl0
-ZXMgcGVyY3B1CmNwdSBjZ3JvdXA6CX4yLjVLYgkrIDEwMzYgYnl0ZXMgcGVyY3B1CgpBY2NvdW50
-aW5nIGZvciB0aGlzIG1lbW9yeSBoZWxwcyB0byBhdm9pZCBtaXN1c2UgaW5zaWRlIG1lbWNnLWxp
-bWl0ZWQKY29udGlhbmVycy4KClNpZ25lZC1vZmYtYnk6IFZhc2lseSBBdmVyaW4gPHZ2c0BvcGVu
-dnoub3JnPgpSZXZpZXdlZC1ieTogUm9tYW4gR3VzaGNoaW4gPHJvbWFuLmd1c2hjaGluQGxpbnV4
-LmRldj4KUmV2aWV3ZWQtYnk6IE1pY2hhbCBLb3V0bsO9IDxta291dG55QHN1c2UuY29tPgpBY2tl
-ZC1ieTogU2hha2VlbCBCdXR0IDxzaGFrZWVsYkBnb29nbGUuY29tPgpSZXZpZXdlZC1ieTogTXVj
-aHVuIFNvbmcgPHNvbmdtdWNodW5AYnl0ZWRhbmNlLmNvbT4KLS0tCiBrZXJuZWwvc2NoZWQvZmFp
-ci5jIHwgNCArKy0tCiAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9u
-cygtKQoKZGlmZiAtLWdpdCBhL2tlcm5lbC9zY2hlZC9mYWlyLmMgYi9rZXJuZWwvc2NoZWQvZmFp
-ci5jCmluZGV4IDhjNWI3NGY2NmJkMy4uZjRmYzM5ZDVhYTRiIDEwMDY0NAotLS0gYS9rZXJuZWwv
-c2NoZWQvZmFpci5jCisrKyBiL2tlcm5lbC9zY2hlZC9mYWlyLmMKQEAgLTExNDk5LDEyICsxMTQ5
-OSwxMiBAQCBpbnQgYWxsb2NfZmFpcl9zY2hlZF9ncm91cChzdHJ1Y3QgdGFza19ncm91cCAqdGcs
-IHN0cnVjdCB0YXNrX2dyb3VwICpwYXJlbnQpCiAKIAlmb3JfZWFjaF9wb3NzaWJsZV9jcHUoaSkg
-ewogCQljZnNfcnEgPSBremFsbG9jX25vZGUoc2l6ZW9mKHN0cnVjdCBjZnNfcnEpLAotCQkJCSAg
-ICAgIEdGUF9LRVJORUwsIGNwdV90b19ub2RlKGkpKTsKKwkJCQkgICAgICBHRlBfS0VSTkVMX0FD
-Q09VTlQsIGNwdV90b19ub2RlKGkpKTsKIAkJaWYgKCFjZnNfcnEpCiAJCQlnb3RvIGVycjsKIAog
-CQlzZSA9IGt6YWxsb2Nfbm9kZShzaXplb2Yoc3RydWN0IHNjaGVkX2VudGl0eV9zdGF0cyksCi0J
-CQkJICBHRlBfS0VSTkVMLCBjcHVfdG9fbm9kZShpKSk7CisJCQkJICBHRlBfS0VSTkVMX0FDQ09V
-TlQsIGNwdV90b19ub2RlKGkpKTsKIAkJaWYgKCFzZSkKIAkJCWdvdG8gZXJyX2ZyZWVfcnE7CiAK
-LS0gCjIuMzYuMQoK
+If enabled in config, alloc_rt_sched_group() is called for each new
+cpu cgroup and allocates a huge (~1700 bytes) percpu struct rt_rq.
+This significantly exceeds the size of the percpu allocation in the
+common part of cgroup creation.
+
+Memory allocated during new cpu cgroup creation
+(with enabled RT_GROUP_SCHED):
+common part:    ~11Kb   +   318 bytes percpu
+cpu cgroup:     ~2.5Kb  + ~2800 bytes percpu
+
+Accounting for this memory helps to avoid misuse inside memcg-limited
+containers.
+
+Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+---
+ kernel/sched/rt.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
+index 8c9ed9664840..44a8fc096e33 100644
+--- a/kernel/sched/rt.c
++++ b/kernel/sched/rt.c
+@@ -256,7 +256,7 @@ int alloc_rt_sched_group(struct task_group *tg, struct task_group *parent)
+ 
+ 	for_each_possible_cpu(i) {
+ 		rt_rq = kzalloc_node(sizeof(struct rt_rq),
+-				     GFP_KERNEL, cpu_to_node(i));
++				     GFP_KERNEL_ACCOUNT, cpu_to_node(i));
+ 		if (!rt_rq)
+ 			goto err;
+ 
+-- 
+2.36.1
+
