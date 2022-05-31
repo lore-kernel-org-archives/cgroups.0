@@ -1,36 +1,48 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v5 00/11] Use obj_cgroup APIs to charge the LRU pages
-Date: Mon, 30 May 2022 14:17:11 -0700
-Message-ID: <20220530141711.6cf70dcf200e28aa40407f6e@linux-foundation.org>
-References: <20220530074919.46352-1-songmuchun@bytedance.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: wait for css offline when rmdir
+Date: Mon, 30 May 2022 15:01:21 -1000
+Message-ID: <YpVo4XiIDu68w40Z@slm.duckdns.org>
+References: <1653619158-27607-1-git-send-email-zhanghongchen@loongson.cn>
+ <YpCQZ5RRnxwh7fmK@slm.duckdns.org>
+ <e74e03f1-cb54-b158-a085-2965fd088d1d@loongson.cn>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1653945432;
-        bh=aXsj1AN3iBU3BXc0wD+tbUHvcr/SpDhRS0i5ip2Fcl8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=q3B/aOrqXsxw/hc5+6ZVsej/3uJqaMiGaW+7fR+NImiQeu4ORuUaQQE8mOE9NDECH
-         lxW5h+8c7Rqvbtz53LzjdCSZ9LK4CMcNT8D5zIlUOxI2ybjChjYcFYfpFtbYpQYSJn
-         Gyi9yVtiJxVuHdQBYMqy4NfacbOFu1m7vQ/NURxw=
-In-Reply-To: <20220530074919.46352-1-songmuchun@bytedance.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=NJogN3IYLaA0/PYlQIBsunkdnH4gONu4lSZ4HSWPFBg=;
+        b=BXpzd1eUKcwVwUU83YwPDVhBhh3yJZK6vwP+l6BQ0eANXd4G4rGkMYGwVNG58g81TR
+         FRdBloytdVM9FuHTRCYWZxUFPIB+TwxM8AKv+L2jeO/7ul/Hn3QGFAwc/WKRILeAUZcH
+         pRIJUfCJCAzkXBvoWF1EMIwKRQEYNfCCsKCLiZHjLyKgU7eEYXodFIsGN/kDgQ7fVmdJ
+         4nrdNE7+rMKUSz9p0uajY72fJ0pD9laF02Sq+4yCUL0VoaTaVOHqHh4S72+Py6RwzTFp
+         EsQynD1EBpGZpOHXo2jLWQI70kH5AFlZkJjb6gOisOmAySgftbphAzvyC5JqgI2j78Rb
+         R4FA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <e74e03f1-cb54-b158-a085-2965fd088d1d-cXZgJK919ebM1kAEIRd3EQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Muchun Song <songmuchun@bytedance.com>
-Cc: hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, duanxiongchun@bytedance.com, longman@redhat.com
+Content-Transfer-Encoding: 7bit
+To: Hongchen Zhang <zhanghongchen-cXZgJK919ebM1kAEIRd3EQ@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, 30 May 2022 15:49:08 +0800 Muchun Song <songmuchun@bytedance.com> wrote:
+Hello,
 
-> This version is rebased on v5.18.
+On Mon, May 30, 2022 at 09:53:51AM +0800, Hongchen Zhang wrote:
+>   When I test the LTP's memcg_test_3 testcase at 8 Node server,I get the
+> -ENOMEM error,which caused by no avaliable idr found in mem_cgroup_idr.
+> the reason is the use of idr in mem_cgroup_idr is too fast than the free.In
+> the specific case,the idr is used and freed cyclically,so when we rmdir one
+> cgroup dir, we can synchronize the idr free through wating for the memcg css
+> offlined,and then we can use it the next cycle.
 
-Not a great choice of base, really.  mm-stable or mm-unstable or
-linux-next or even linus-of-the-day are all much more up to date.
+This is a micro benchmark specific problem and it doesn't make sense to
+change the overall behavior for this as the suggested change is neither
+desirable or logical. Maybe you can just incur the delay only after idr
+allocation fails and then retry?
 
-Although the memcg reviewer tags are pretty thin, I was going to give
-it a run.  But after fixing a bunch of conflicts I got about halfway
-through then gave up on a big snarl in get_obj_cgroup_from_current().
+Thanks.
 
-> RFC v1: https://lore.kernel.org/all/20210330101531.82752-1-songmuchun@bytedance.com/
-
-Surprising, that was over a year ago.  Why has is taken so long?
-
+-- 
+tejun
