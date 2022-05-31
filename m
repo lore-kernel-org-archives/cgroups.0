@@ -1,122 +1,104 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH mm v3 0/9] memcg: accounting for objects allocated by
- mkdir cgroup
-Date: Tue, 31 May 2022 09:16:47 +0200
-Message-ID: <YpXA35F33hvrxNLf@dhcp22.suse.cz>
-References: <06505918-3b8a-0ad5-5951-89ecb510138e@openvz.org>
- <3e1d6eab-57c7-ba3d-67e1-c45aa0dfa2ab@openvz.org>
- <YpSwvii5etfnOYC9@dhcp22.suse.cz>
- <ef9f7516-853d-ffe4-9a7a-5e87556bdbbe@openvz.org>
- <YpTTL3Ys35kgYyAW@dhcp22.suse.cz>
- <3a1d8554-755f-7976-1e00-a0e7fb62c86e@openvz.org>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [PATCH v5 00/11] Use obj_cgroup APIs to charge the LRU pages
+Date: Tue, 31 May 2022 15:29:27 +0800
+Message-ID: <YpXD12Qa51/5EUdy@FVFYT0MHHV2J.usts.net>
+References: <20220530074919.46352-1-songmuchun@bytedance.com>
+ <1ecec7cb-035c-a4aa-3918-1a00ba48c6f9@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1653981410; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=8JRzXAFyBJ83o3cQYXfJAjgf/18XPkXFhsvvS1XfXo8=;
-        b=LoroXGjQaGygCf+ii5RaT5Q6MKzPcDtkhbE5h0W3gOfcb/7CQvzVuGFV/fknsIsXESUz2X
-        Eq5mSiyZmpaIS0fl79wzRLZ7o2tmFDJCW3MTNZONWSCfx9BQdH2fGTHP02Kcs+dcmpJE/S
-        oCqKSXqNAAlLDjO78RW+1p4mEJh29eU=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=ynHr+f3HdbTV3fIx5fiKz75mjaU0slPzyjQUZFWsNNE=;
+        b=3BSBjnH3ZVmWwEIVHzHXEhghdgZpFnAo+yvYtAzpgRfIXkbyBVhTXgf5d/xjNpaQHS
+         sz0UFZvQzv5e5HRgAt9iGDSpGTZx9tTCiezIhnMbEdJOAJ7K+A0IMSH0rp5jdGF1tm8K
+         EIrFKWV2qoxlzowMCVlAVqGHTETYK99rGlF5k+vSuVBHe/TdQ3E8MnxKfl9JfYEjOtJH
+         gnrlRHJsGlcnnMfhwsuKx9xFyDr/GEvdyf13nvjHmdiDKABo1mgxQFAJZxSAAZaNhZhd
+         NeqvDimuZDLbss4uGUDTImQXiGHwgXTn0NpL9vNjO1nvo7gCeAaXNnUrMKHbLulytSh2
+         JmIg==
 Content-Disposition: inline
-In-Reply-To: <3a1d8554-755f-7976-1e00-a0e7fb62c86e-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+In-Reply-To: <1ecec7cb-035c-a4aa-3918-1a00ba48c6f9-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-On Mon 30-05-22 22:58:30, Vasily Averin wrote:
-> On 5/30/22 17:22, Michal Hocko wrote:
-> > On Mon 30-05-22 16:09:00, Vasily Averin wrote:
-> >> On 5/30/22 14:55, Michal Hocko wrote:
-> >>> On Mon 30-05-22 14:25:45, Vasily Averin wrote:
-> >>>> Below is tracing results of mkdir /sys/fs/cgroup/vvs.test on 
-> >>>> 4cpu VM with Fedora and self-complied upstream kernel. The calculations
-> >>>> are not precise, it depends on kernel config options, number of cpus,
-> >>>> enabled controllers, ignores possible page allocations etc.
-> >>>> However this is enough to clarify the general situation.
-> >>>> All allocations are splited into:
-> >>>> - common part, always called for each cgroup type
-> >>>> - per-cgroup allocations
-> >>>>
-> >>>> In each group we consider 2 corner cases:
-> >>>> - usual allocations, important for 1-2 CPU nodes/Vms
-> >>>> - percpu allocations, important for 'big irons'
-> >>>>
-> >>>> common part: 	~11Kb	+  318 bytes percpu
-> >>>> memcg: 		~17Kb	+ 4692 bytes percpu
-> >>>> cpu:		~2.5Kb	+ 1036 bytes percpu
-> >>>> cpuset:		~3Kb	+   12 bytes percpu
-> >>>> blkcg:		~3Kb	+   12 bytes percpu
-> >>>> pid:		~1.5Kb	+   12 bytes percpu		
-> >>>> perf:		 ~320b	+   60 bytes percpu
-> >>>> -------------------------------------------
-> >>>> total:		~38Kb	+ 6142 bytes percpu
-> >>>> currently accounted:	  4668 bytes percpu
-> >>>>
-> >>>> - it's important to account usual allocations called
-> >>>> in common part, because almost all of cgroup-specific allocations
-> >>>> are small. One exception here is memory cgroup, it allocates a few
-> >>>> huge objects that should be accounted.
-> >>>> - Percpu allocation called in common part, in memcg and cpu cgroups
-> >>>> should be accounted, rest ones are small an can be ignored.
-> >>>> - KERNFS objects are allocated both in common part and in most of
-> >>>> cgroups 
-> >>>>
-> >>>> Details can be found here:
-> >>>> https://lore.kernel.org/all/d28233ee-bccb-7bc3-c2ec-461fd7f95e6a-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org/
-> >>>>
-> >>>> I checked other cgroups types was found that they all can be ignored.
-> >>>> Additionally I found allocation of struct rt_rq called in cpu cgroup 
-> >>>> if CONFIG_RT_GROUP_SCHED was enabled, it allocates huge (~1700 bytes)
-> >>>> percpu structure and should be accounted too.
-> >>>
-> >>> One thing that the changelog is missing is an explanation why do we need
-> >>> to account those objects. Users are usually not empowered to create
-> >>> cgroups arbitrarily. Or at least they shouldn't because we can expect
-> >>> more problems to happen.
-> >>>
-> >>> Could you clarify this please?
-> >>
-> >> The problem is actual for OS-level containers: LXC or OpenVz.
-> >> They are widely used for hosting and allow to run containers
-> >> by untrusted end-users. Root inside such containers is able
-> >> to create groups inside own container and consume host memory
-> >> without its proper accounting.
+On Mon, May 30, 2022 at 10:41:30PM -0400, Waiman Long wrote:
+> On 5/30/22 03:49, Muchun Song wrote:
+> > This version is rebased on v5.18.
 > > 
-> > Is the unaccounted memory really the biggest problem here?
-> > IIRC having really huge cgroup trees can hurt quite some controllers.
-> > E.g. how does the cpu controller deal with too many or too deep
-> > hierarchies?
+> > Since the following patchsets applied. All the kernel memory are charged
+> > with the new APIs of obj_cgroup.
+> > 
+> > 	[v17,00/19] The new cgroup slab memory controller [1]
+> > 	[v5,0/7] Use obj_cgroup APIs to charge kmem pages [2]
+> > 
+> > But user memory allocations (LRU pages) pinning memcgs for a long time -
+> > it exists at a larger scale and is causing recurring problems in the real
+> > world: page cache doesn't get reclaimed for a long time, or is used by the
+> > second, third, fourth, ... instance of the same job that was restarted into
+> > a new cgroup every time. Unreclaimable dying cgroups pile up, waste memory,
+> > and make page reclaim very inefficient.
+> > 
+> > We can convert LRU pages and most other raw memcg pins to the objcg direction
+> > to fix this problem, and then the LRU pages will not pin the memcgs.
+> > 
+> > This patchset aims to make the LRU pages to drop the reference to memory
+> > cgroup by using the APIs of obj_cgroup. Finally, we can see that the number
+> > of the dying cgroups will not increase if we run the following test script.
+> > 
+> > ```bash
+> > #!/bin/bash
+> > 
+> > dd if=/dev/zero of=temp bs=4096 count=1
+> > cat /proc/cgroups | grep memory
+> > 
+> > for i in {0..2000}
+> > do
+> > 	mkdir /sys/fs/cgroup/memory/test$i
+> > 	echo $$ > /sys/fs/cgroup/memory/test$i/cgroup.procs
+> > 	cat temp >> log
+> > 	echo $$ > /sys/fs/cgroup/memory/cgroup.procs
+> > 	rmdir /sys/fs/cgroup/memory/test$i
+> > done
+> > 
+> > cat /proc/cgroups | grep memory
+> > 
+> > rm -f temp log
+> > ```
+> > 
+> > [1] https://lore.kernel.org/linux-mm/20200623015846.1141975-1-guro-b10kYP2dOMg@public.gmane.org/
+> > [2] https://lore.kernel.org/linux-mm/20210319163821.20704-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> > 
+> > v4: https://lore.kernel.org/all/20220524060551.80037-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> > v3: https://lore.kernel.org/all/20220216115132.52602-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> > v2: https://lore.kernel.org/all/20210916134748.67712-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> > v1: https://lore.kernel.org/all/20210814052519.86679-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> > RFC v4: https://lore.kernel.org/all/20210527093336.14895-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> > RFC v3: https://lore.kernel.org/all/20210421070059.69361-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> > RFC v2: https://lore.kernel.org/all/20210409122959.82264-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> > RFC v1: https://lore.kernel.org/all/20210330101531.82752-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> > 
+> > v5:
+> >   - Lots of improvements from Johannes, Roman and Waiman.
+> >   - Fix lockdep warning reported by kernel test robot.
+> >   - Add two new patches to do code cleanup.
+> >   - Collect Acked-by and Reviewed-by from Johannes and Roman.
+> >   - I didn't replace local_irq_disable/enable() to local_lock/unlock_irq() since
+> >     local_lock/unlock_irq() takes an parameter, it needs more thinking to transform
+> >     it to local_lock.  It could be an improvement in the future.
 > 
-> Could you please describe it in more details?
-> Maybe it was passed me by, maybe I messed or forgot something,
-> however I cannot remember any other practical cgroup-related issues.
-> 
-> Maybe deep hierarchies does not work well.
-> however, I have not heard that the internal configuration of cgroup
-> can affect the upper level too.
+> My comment about local_lock/unlock is just a note that
+> local_irq_disable/enable() have to be eventually replaced. However, we need
+> to think carefully where to put the newly added local_lock. It is perfectly
+> fine to keep it as is and leave the conversion as a future follow-up.
+>
 
-My first thought was any controller with a fixed math constrains like
-cpu controller. But I have to admit that I haven't really checked
-whether imprecision can accumulate and propagate outside of the
-hierarchy.
+Totally agree.
+ 
+> Thank you very much for your work on this patchset.
+>
 
-Another concern I would have is a id space depletion. At least memory
-controller depends on idr ids which have a space that is rather limited
-#define MEM_CGROUP_ID_MAX       USHRT_MAX
-
-Also the runtime overhead would increase with a large number of cgroups.
-Take a global memory reclaim as an example. All the cgroups have to be
-iterated. This will have an impact outside of the said hierarchy. One
-could argue that limiting untrusted top level cgroups would be a certain
-mitigation but I can imagine this could get very non trivial easily.
-
-Anyway, let me just be explicit. I am not against these patches. In fact
-I cannot really judge their overhead. But right now I am not really sure
-they are going to help much against untrusted users.
--- 
-Michal Hocko
-SUSE Labs
+Thanks.
