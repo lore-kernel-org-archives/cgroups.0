@@ -1,8 +1,8 @@
-From: Yu Kuai <yukuai3@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH -next v7 2/3] block, bfq: refactor the counting of
  'num_groups_with_pending_reqs'
-Date: Tue, 31 May 2022 17:24:05 +0800
-Message-ID: <8ffa050c-1254-0974-1457-4ce4cb39dcb4@huawei.com>
+Date: Tue, 31 May 2022 17:33:25 +0800
+Message-ID: <756631ee-6a85-303c-aca1-d60aaf477d0d@huawei.com>
 References: <20220528095020.186970-1-yukuai3@huawei.com>
  <20220528095020.186970-3-yukuai3@huawei.com>
  <0D9355CE-F85B-4B1A-AEC3-F63DFC4B3A54@linaro.org>
@@ -13,26 +13,26 @@ References: <20220528095020.186970-1-yukuai3@huawei.com>
  <81214347-3806-4F54-B60F-3E5A1A5EC84D@unimore.it>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <81214347-3806-4F54-B60F-3E5A1A5EC84D@unimore.it>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <81214347-3806-4F54-B60F-3E5A1A5EC84D-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Paolo Valente <paolo.valente@unimore.it>
-Cc: Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, yi.zhang@huawei.com
+To: Paolo Valente <paolo.valente-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
 在 2022/05/31 17:19, Paolo Valente 写道:
 > 
 > 
->> Il giorno 31 mag 2022, alle ore 11:06, Yu Kuai <yukuai3@huawei.com> ha scritto:
+>> Il giorno 31 mag 2022, alle ore 11:06, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> ha scritto:
 >>
 >> 在 2022/05/31 16:36, Paolo VALENTE 写道:
->>>> Il giorno 30 mag 2022, alle ore 10:40, Yu Kuai <yukuai3@huawei.com> ha scritto:
+>>>> Il giorno 30 mag 2022, alle ore 10:40, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> ha scritto:
 >>>>
 >>>> 在 2022/05/30 16:34, Yu Kuai 写道:
 >>>>> 在 2022/05/30 16:10, Paolo Valente 写道:
 >>>>>>
 >>>>>>
->>>>>>> Il giorno 28 mag 2022, alle ore 11:50, Yu Kuai <yukuai3@huawei.com> ha scritto:
+>>>>>>> Il giorno 28 mag 2022, alle ore 11:50, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> ha scritto:
 >>>>>>>
 >>>>>>> Currently, bfq can't handle sync io concurrently as long as they
 >>>>>>> are not issued from root group. This is because
@@ -113,19 +113,16 @@ Cc: Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.
 > It returns true only is the scenario is symmetric.  Not counting bfqqs
 > with in-flight requests makes an asymmetric scenario be considered
 > wrongly symmetric.  See function bfq_asymmetric_scenario().
-Hi,
 
-Yes, with this patchset, If there are more than one bfqg that is
-activatied(contain busy bfqq), bfq_asymmetric_scenario() will return
-true:
+Hi, Paolo
 
-bfq_asymmetric_scenario()
-  	return varied_queue_weights || multiple_classes_busy
-  #ifdef CONFIG_BFQ_GROUP_IOSCHED
-	       || bfqd->num_groups_with_busy_queues > 1
-  #endif
+Do you mean this gap?
 
- From what I see, bfqd->num_groups_with_busy_queues > 1 is always true...
+1. io1 is issued from bfqq1(from bfqg1)
+2. bfqq1 dispatched this io, it's busy is cleared
+3. *before io1 is completed*, io2 is issued from bfqq2(bfqg2)
+4. with this patchset, while dispatching io2 from bfqq2, the scenario
+should be symmetric while it's considered wrongly asymmetric.
 > 
 > Paolo
 > 
