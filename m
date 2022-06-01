@@ -1,64 +1,49 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v2 1/2] blk-cgroup: Correctly free percpu iostat_cpu in blkg on error exit
-Date: Wed,  1 Jun 2022 12:53:23 -0400
-Message-ID: <20220601165324.60892-1-longman@redhat.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v5 03/11] mm: memcontrol: prepare objcg API for non-kmem
+ usage
+Date: Wed, 1 Jun 2022 19:34:34 +0200
+Message-ID: <20220601173434.GB16134@blackbody.suse.cz>
+References: <20220530074919.46352-1-songmuchun@bytedance.com>
+ <20220530074919.46352-4-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1654102420;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=nFWeyQp+SrczfCg3mcRu+wFEKALhsOXDeSMtjftZhiE=;
-        b=Xs1ebKPaO2+Xj+LeTibRrTI/FbdHs9naJy6oMYh/jhIMwzbuiAK/glrkU0OlVrJeuudqfI
-        LCEFRnvVvDXPXx+f0pyZDaYxqX9J8R58aRsuROx3dXzgWpEf8a1arUFMbojXqzyWvdB070
-        3OKm4s86b6xWARBthi93HMoKiSQHCog=
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1654104875; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=yPxZyhx2htcqKKisRfas+7IPl/BgzIKaMSj2ZzajJIg=;
+        b=Zb2LaSt9f1Tc76mutvDU037fDI5D321olqGbDaNXnmynn+N2s6atIKSkK5Y2IX9UxSE2Xj
+        1xKdHDQHvzWDIBFqgn0YeqVhdD0GzVvG+BaTKCOSscjDcYv+6zWjtFhum+K2+kA6Dx5v7N
+        8q+6TE1IKVeTz+g8OKmulMU9YQaPyVg=
+Content-Disposition: inline
+In-Reply-To: <20220530074919.46352-4-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Waiman Long <longman@redhat.com>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Commit f73316482977 ("blk-cgroup: reimplement basic IO stats using cgroup
-rstat") changes block cgroup IO stats to use the rstat APIs. It added
-a new percpu iostat_cpu field into blkg. The blkg_alloc() was modified
-to allocate the new percpu iostat_cpu but didn't free it when an error
-happened. Fix this by freeing the percpu iostat_cpu on error exit.
+Hello.
 
-Fixes: f73316482977 ("blk-cgroup: reimplement basic IO stats using cgroup rstat")
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- block/blk-cgroup.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+On Mon, May 30, 2022 at 03:49:11PM +0800, Muchun Song <songmuchun-EC8Uxl6Np=
+ydl57MIdRCFDg@public.gmane.org> wrote:
+> So we also allocate an object cgroup for the root_mem_cgroup.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 40161a3f68d0..acd9b0aa8dc8 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -219,11 +219,11 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 		return NULL;
- 
- 	if (percpu_ref_init(&blkg->refcnt, blkg_release, 0, gfp_mask))
--		goto err_free;
-+		goto err_free_blkg;
- 
- 	blkg->iostat_cpu = alloc_percpu_gfp(struct blkg_iostat_set, gfp_mask);
- 	if (!blkg->iostat_cpu)
--		goto err_free;
-+		goto err_free_blkg;
- 
- 	if (!blk_get_queue(q))
- 		goto err_free;
-@@ -259,6 +259,9 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 	return blkg;
- 
- err_free:
-+	free_percpu(blkg->iostat_cpu);
-+
-+err_free_blkg:
- 	blkg_free(blkg);
- 	return NULL;
- }
--- 
-2.31.1
+This change made me wary that this patch also kmem charging in the
+root_mem_cgroup. Fortunately, get_obj_cgroup_from_current won't return
+this objcg so all is fine.
 
+> +}
+> +#else
+> +static inline void obj_cgroup_release_bytes(struct obj_cgroup *objcg)
+> +{
+> +}
+> +#endif
+
+This empty body is for !CONFIG_MEMCG_KMEM, however, the subsequent use for =
+LRU
+pages makes no use of these, so it's warranted.
+
+Altogether, I find this correct, hence
+Reviewed-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
