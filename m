@@ -1,54 +1,145 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v2 2/2] blk-cgroup: Optimize blkcg_rstat_flush()
-Date: Wed, 1 Jun 2022 17:32:11 -0400
-Message-ID: <6734ae25-27eb-0024-8524-ab8885a5fae0@redhat.com>
-References: <20220601165324.60892-1-longman@redhat.com>
- <20220601165324.60892-2-longman@redhat.com>
- <YpemVpvaPomwH7mt@slm.duckdns.org>
- <ca091a5c-4ae1-e973-403e-4086d4527102@redhat.com>
- <YpexWFptr/l2Y0rU@slm.duckdns.org>
- <bca31669-7107-ebe4-7fbf-2449940a5cc8@redhat.com>
- <c26f153c-304c-e109-6626-bb8b79a2e2ad@redhat.com>
- <YpfaC+wB5Th4tLDY@slm.duckdns.org>
+From: Tadeusz Struk <tadeusz.struk-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/2] cgroup: Use separate work structs on css release path
+Date: Wed, 1 Jun 2022 16:13:32 -0700
+Message-ID: <0babd7df-bdef-9edc-3682-1144bc0c2d2b@linaro.org>
+References: <20220525151517.8430-1-mkoutny@suse.com>
+ <20220525151517.8430-3-mkoutny@suse.com>
+ <20220525161455.GA16134@blackbody.suse.cz> <Yo7KfEOz92kS2z5Y@blackbook>
+ <Yo/DtjEU/kYr190u@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1654119136;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Kydqna2S/fNnNfFhR9vYtc6J6licD3U6v9tlZqx3JCg=;
-        b=a+efBeisOk2PtK/1YBzjumzGv5OCY7WfaKoc7B/7JOEEInZzfBZZ4idk7e2iaDH3Fx7qFR
-        JPaUhfKw6b307CvJpacPnHlYemEPC7YfuNglOEJp7zsSkmPhg72vQquzs1yYhhI28bL9c7
-        E2gzpIJzRmTx5vTxT1Sx7S5QX1VpVoM=
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=message-id:date:mime-version:user-agent:content-language:to:cc
+         :references:from:subject:in-reply-to:content-transfer-encoding;
+        bh=avJEEUv9TwoQxp5JDkd8KBVEKkaG/hcczSaXXKCQTHE=;
+        b=h6rYPumu3aj7CwpyNNPdUBXXKfiKD8gGz3B045bl8MP0WngMSGl8ix8vfn1QpNRDcP
+         Ac1tUfpAbNsIYSozT3egxW8Gs72wfXxjoR414paoffvEDq2yomjCnROY+FnfRXriMFaV
+         3zqE0L/mXRymN13gHNbzn+4Qlhh5f+QVP9Ab2rKwsxos1HFwstgJUYtfWX1v/n1IMSP4
+         9utIf6WHEWywo8eukE6uJOVedlTD0LRCllXWYs5bDUzrmQp3o0xF7rL2ZXa2P24qXL6Y
+         OML1E941w/IBG/gK3vrnI/Cz/RhLiGAHokjs3WJfpVO92zUZ1NMNxQEzlRL8X1+pvuww
+         Z/Mg==
 Content-Language: en-US
-In-Reply-To: <YpfaC+wB5Th4tLDY@slm.duckdns.org>
+In-Reply-To: <Yo/DtjEU/kYr190u-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>
+Content-Type: text/plain; charset="iso-8859-9"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Bui Quang Minh <minhquangbui99-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+On 5/26/22 11:15, Tejun Heo wrote:
+> Hello, Michal.
+>=20
+> On Thu, May 26, 2022 at 11:56:34AM +0200, Michal Koutn=C3=BD wrote:
+>> // ref=3DA: initial state
+>> kill_css()
+>>    css_get // ref+=3DF =3D=3D A+F: fuse
+>>    percpu_ref_kill_and_confirm
+>>      __percpu_ref_switch_to_atomic
+>>        percpu_ref_get
+>>          // ref +=3D 1 =3D=3D A+F+1: atomic mode, self-protection
+>>      percpu_ref_put
+>>        // ref -=3D 1 =3D=3D A+F: kill the base reference
+>>    [via rcu]
+>>    percpu_ref_switch_to_atomic_rcu
+>>      percpu_ref_call_confirm_rcu
+>>        css_killed_ref_fn =3D=3D refcnt.confirm_switch
+>>          queue_work(css->destroy_work)        (1)
+>>                                                       [via css->destroy_=
+work]
+>>                                                       css_killed_work_fn=
+ =3D=3D wq.func
+>>                                                         offline_css() //=
+ needs fuse
+>>                                                         css_put // ref -=
+=3D F =3D=3D A: de-fuse
+>>        percpu_ref_put
+>>          // ref -=3D 1 =3D=3D A-1: remove self-protection
+>>          css_release                                   // A <=3D 1 -> 2n=
+d queue_work explodes!
+>=20
+> I'm not sure I'm following it but it's perfectly fine to re-use the work
+> item at this point. The work item actually can be re-cycled from the very
+> beginning of the work function. The only thing we need to make sure is th=
+at
+> we don't css_put() prematurely to avoid it being freed while we're using =
+it.
+
+Yes, it is ok to reuse a work struct, but it's not ok to have the same
+work struct enqueued twice on the same WQ when list debug is enabled.
+That's why we are getting this "BUG: corrupted list.."
+
+> For the sharing to be a problem, we should be queueing the release work i=
+tem
+> while the destroy instance is still pending, and if that is the case, it
+> doesn't really matter whether we use two separate work items or not. We're
+> already broken and would just be shifting the problem to explode elsewher=
+e.
+>=20
+> The only possibility that I can think of is that somehow we're ending up
+> with an extra css_put() somewhere thus triggering the release path
+> prematurely. If that's the case, we'll prolly need to trace get/puts to f=
+ind
+> out who's causing the ref imbalance.
+
+That's right. Michal was on the right track for the kill_css() part.
+What I think is going on is that once css_create() fails then
+cgroup_subtree_control_write() ends up calling first kill_css() and
+then css_put() on the same css, I think it's &cgrp->self of the kernfs_node.
+The each_live_descendant_post() also iterates on the root.
+Here is the call flow (sorry for long lines):
+
+cgroup_subtree_control_write(of)->cgroup_apply_control(cgrp)->cgroup_apply_=
+control_enable(cgrp)->css_create() <- fails here and returns error
+   |
+   |-> cgroup_finalize_control(cgrp)->cgroup_apply_control_disable(cgrp)->e=
+ach_live_descendant_post(cgrp)->kill_css()->percpu_ref_kill_and_confirm(&cs=
+s->refcnt, css_killed_ref_fn) <- this triggers css_killed_ref_fn() to be ca=
+lled
+   |
+   |  css_killed_ref_fn() <- first css->destroy_work enqueue
+   |    |
+   |    |->  INIT_WORK(&css->destroy_work, css_killed_work_fn); queue_work(=
+cgroup_destroy_wq, &css->destroy_work);
+   |
+   |
+   |-> goto out_unlock;
+   |     |
+   |     |-> cgroup_kn_unlock(kernfs_node)->cgroup_put(cgrp)->css_put(&cgrp=
+->self)->percpu_ref_put(&css->refcnt) <- this triggers css_release() to be =
+called
+   |
+   |
+      css_release(percpu_ref) <- second css->destroy_work enqueue
+        |
+        |->  INIT_WORK(&css->destroy_work, css_release_work_fn); queue_work=
+(cgroup_destroy_wq, &css->destroy_work) <- and it fails here with BUG: corr=
+upted list in insert_work; list_add corruption.
 
 
-On 6/1/22 17:28, Tejun Heo wrote:
-> On Wed, Jun 01, 2022 at 05:25:53PM -0400, Waiman Long wrote:
->> I think the best way to protect against blkg destruction is to get a percpu
->> reference when put into lockless list and put it back when removed.
->>
->> BTW, when I ran a test that continuously create and destroy containers, the
->> total number of blkcg's kept on increasing. There are some freeing of
->> blkcg's but no freeing of blkg's at all. Maybe we have a similar dying
->> blkcg's problem here. I will take a further look at that when I have time.
-> They get pinned by per-cgroup writebacks which gets pinned by lingering page
-> cache and other remaining accounted memory areas, so I think they can hang
-> around if there's no memory pressure. But, yeah, it'd be great to verify
-> that they actually go away under memory pressure.
->
-> Thanks.
->
-Thanks for the explanation. It makes sense to me.
+What seems to work for me as the simplest fix is to prevent enqueuing a dyi=
+ng
+css in css_release() as below. Please let me know if that makes sense to yo=
+u.
 
-Cheers,
-Longman
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 1779ccddb734..5618211487cc 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -5210,8 +5210,10 @@ static void css_release(struct percpu_ref *ref)
+  	struct cgroup_subsys_state *css =3D
+  		container_of(ref, struct cgroup_subsys_state, refcnt);
+ =20
+-	INIT_WORK(&css->destroy_work, css_release_work_fn);
+-	queue_work(cgroup_destroy_wq, &css->destroy_work);
++	if (!(css->flags & CSS_DYING)) {
++		INIT_WORK(&css->destroy_work, css_release_work_fn);
++		queue_work(cgroup_destroy_wq, &css->destroy_work);
++	}
+  }
+ =20
+  static void init_and_link_css(struct cgroup_subsys_state *css,
 
+--=20
+Thanks,
+Tadeusz
