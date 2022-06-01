@@ -1,135 +1,113 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH -next v8 1/4] block, bfq: support to track if bfqq has
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH -next v8 2/4] block, bfq: record how many queues have
  pending requests
-Date: Wed, 1 Jun 2022 10:31:54 +0200
-Message-ID: <20220601083154.5ip7r6w7kjb3bof2@quack3.lan>
+Date: Wed, 1 Jun 2022 10:35:29 +0200
+Message-ID: <20220601083529.oz26s6jefxz6fnyg@quack3.lan>
 References: <20220531140858.3324294-1-yukuai3@huawei.com>
- <20220531140858.3324294-2-yukuai3@huawei.com>
+ <20220531140858.3324294-3-yukuai3@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1654072318; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1654072530; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=N+sBqa5KqKk9l80H2r4a0EQswvDm6hf4uMYYGP+soqU=;
-        b=UxNmGl10x6Mtb4IZHTscIz8gWRW6HgF7JeSkIFA3/SMZ5MwO0itfPzFfdXeKigeq6uDjFv
-        4bN0nY9B+vKQGrWWuPqxBwF5Z497j6B5lQghIy91xnE+J+DE61r32CWreN75yDmIIi/rxx
-        YqGgm/bp0Nehl08MPwXkSt/rXYKsbtM=
+        bh=ZgDe2eXlhB42LN+QI5BZWIRc4kyPQuFvdb59+D3ByMQ=;
+        b=bV70JBnMBSgY94pQahRNjPumE6SgHGja6J+fLoGZJ9eClDYKyM6NQvJD0tf0hovyu6n+BB
+        /ivw96PkjmnPwGablQxiwPnrsd/LeMcmKhvDePXVtA+PSK+pqm1YExM+ZtznQ7+cyGiBB+
+        U2JqupjlBJ3c+xiH9bgd5t4wukBQxCk=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1654072318;
+        s=susede2_ed25519; t=1654072530;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=N+sBqa5KqKk9l80H2r4a0EQswvDm6hf4uMYYGP+soqU=;
-        b=Vs/bVFe2dUMiW8BMd3aoA58GmzvJhI2Br3qV3wc/S6BZRK+F80A/62NZGf4xz6rrZK0LnZ
-        x5Ym+gWftWBAPUBA==
+        bh=ZgDe2eXlhB42LN+QI5BZWIRc4kyPQuFvdb59+D3ByMQ=;
+        b=rHP/WFvK2JmjuczkrX0+8NAVEE++a9lq4iv8fPBYMTFjHZdt9JXZydlvUU34LsCarDNPTm
+        2y9AXdwb/V2MZaCA==
 Content-Disposition: inline
-In-Reply-To: <20220531140858.3324294-2-yukuai3@huawei.com>
+In-Reply-To: <20220531140858.3324294-3-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai3@huawei.com>
-Cc: paolo.valente@linaro.org, jack@suse.cz, axboe@kernel.dk, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+To: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Tue 31-05-22 22:08:55, Yu Kuai wrote:
-> If entity belongs to bfqq, then entity->in_groups_with_pending_reqs
-> is not used currently. This patch use it to track if bfqq has pending
-> requests through callers of weights_tree insertion and removal.
+On Tue 31-05-22 22:08:56, Yu Kuai wrote:
+> Prepare to refactor the counting of 'num_groups_with_pending_reqs'.
 > 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> Add a counter in bfq_group, and update it while tracking if bfqq have
+> pending requests.
+> 
+> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Looks good. Feel free to add:
-
-Reviewed-by: Jan Kara <jack@suse.cz>
+Looks good, except I think that we also need to update the counters
+'num_groups_with_pending_reqs' in bfq_move_bfqq()?
 
 								Honza
 
 > ---
->  block/bfq-iosched.c |  1 +
+>  block/bfq-cgroup.c  |  1 +
 >  block/bfq-iosched.h |  1 +
->  block/bfq-wf2q.c    | 24 ++++++++++++++++++++++--
->  3 files changed, 24 insertions(+), 2 deletions(-)
+>  block/bfq-wf2q.c    | 12 ++++++++++--
+>  3 files changed, 12 insertions(+), 2 deletions(-)
 > 
-> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-> index 0d46cb728bbf..0ec21018daba 100644
-> --- a/block/bfq-iosched.c
-> +++ b/block/bfq-iosched.c
-> @@ -6263,6 +6263,7 @@ static void bfq_completed_request(struct bfq_queue *bfqq, struct bfq_data *bfqd)
->  		 */
->  		bfqq->budget_timeout = jiffies;
->  
-> +		bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
->  		bfq_weights_tree_remove(bfqd, bfqq);
->  	}
->  
+> diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+> index 09574af83566..0954a258a107 100644
+> --- a/block/bfq-cgroup.c
+> +++ b/block/bfq-cgroup.c
+> @@ -557,6 +557,7 @@ static void bfq_pd_init(struct blkg_policy_data *pd)
+>  				   */
+>  	bfqg->bfqd = bfqd;
+>  	bfqg->active_entities = 0;
+> +	bfqg->num_queues_with_pending_reqs = 0;
+>  	bfqg->online = true;
+>  	bfqg->rq_pos_tree = RB_ROOT;
+>  }
 > diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-> index ca8177d7bf7c..3b9b1a0e7c1c 100644
+> index 3b9b1a0e7c1c..a5f7c0c1a3b3 100644
 > --- a/block/bfq-iosched.h
 > +++ b/block/bfq-iosched.h
-> @@ -1080,6 +1080,7 @@ void bfq_requeue_bfqq(struct bfq_data *bfqd, struct bfq_queue *bfqq,
->  void bfq_del_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq,
->  		       bool expiration);
->  void bfq_add_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq);
-> +void bfq_del_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq);
+> @@ -943,6 +943,7 @@ struct bfq_group {
+>  	struct bfq_entity *my_entity;
 >  
->  /* --------------- end of interface of B-WF2Q+ ---------------- */
+>  	int active_entities;
+> +	int num_queues_with_pending_reqs;
+>  
+>  	struct rb_root rq_pos_tree;
 >  
 > diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-> index f8eb340381cf..12d20f26ad69 100644
+> index 12d20f26ad69..b533e17e9f0c 100644
 > --- a/block/bfq-wf2q.c
 > +++ b/block/bfq-wf2q.c
-> @@ -1647,6 +1647,22 @@ void bfq_requeue_bfqq(struct bfq_data *bfqd, struct bfq_queue *bfqq,
->  				    bfqq == bfqd->in_service_queue, expiration);
+> @@ -1651,16 +1651,24 @@ static void bfq_add_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
+>  {
+>  	struct bfq_entity *entity = &bfqq->entity;
+>  
+> -	if (!entity->in_groups_with_pending_reqs)
+> +	if (!entity->in_groups_with_pending_reqs) {
+>  		entity->in_groups_with_pending_reqs = true;
+> +#ifdef CONFIG_BFQ_GROUP_IOSCHED
+> +		bfqq_group(bfqq)->num_queues_with_pending_reqs++;
+> +#endif
+> +	}
 >  }
 >  
-> +static void bfq_add_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
-> +{
-> +	struct bfq_entity *entity = &bfqq->entity;
-> +
-> +	if (!entity->in_groups_with_pending_reqs)
-> +		entity->in_groups_with_pending_reqs = true;
-> +}
-> +
-> +void bfq_del_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
-> +{
-> +	struct bfq_entity *entity = &bfqq->entity;
-> +
-> +	if (entity->in_groups_with_pending_reqs)
-> +		entity->in_groups_with_pending_reqs = false;
-> +}
-> +
->  /*
->   * Called when the bfqq no longer has requests pending, remove it from
->   * the service tree. As a special case, it can be invoked during an
-> @@ -1668,8 +1684,10 @@ void bfq_del_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+>  void bfq_del_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
+>  {
+>  	struct bfq_entity *entity = &bfqq->entity;
 >  
->  	bfq_deactivate_bfqq(bfqd, bfqq, true, expiration);
->  
-> -	if (!bfqq->dispatched)
-> +	if (!bfqq->dispatched) {
-> +		bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
->  		bfq_weights_tree_remove(bfqd, bfqq);
+> -	if (entity->in_groups_with_pending_reqs)
+> +	if (entity->in_groups_with_pending_reqs) {
+>  		entity->in_groups_with_pending_reqs = false;
+> +#ifdef CONFIG_BFQ_GROUP_IOSCHED
+> +		bfqq_group(bfqq)->num_queues_with_pending_reqs--;
+> +#endif
 > +	}
 >  }
 >  
 >  /*
-> @@ -1684,10 +1702,12 @@ void bfq_add_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq)
->  	bfq_mark_bfqq_busy(bfqq);
->  	bfqd->busy_queues[bfqq->ioprio_class - 1]++;
->  
-> -	if (!bfqq->dispatched)
-> +	if (!bfqq->dispatched) {
-> +		bfq_add_bfqq_in_groups_with_pending_reqs(bfqq);
->  		if (bfqq->wr_coeff == 1)
->  			bfq_weights_tree_add(bfqd, bfqq,
->  					     &bfqd->queue_weights_tree);
-> +	}
->  
->  	if (bfqq->wr_coeff > 1)
->  		bfqd->wr_busy_queues++;
 > -- 
 > 2.31.1
 > 
 -- 
-Jan Kara <jack@suse.com>
+Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
 SUSE Labs, CR
