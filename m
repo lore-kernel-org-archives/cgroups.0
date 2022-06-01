@@ -1,109 +1,135 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH -next v5 0/3] support concurrent sync io for bfq on a
- specail occasion
-Date: Wed, 1 Jun 2022 00:16:11 -0600
-Message-ID: <03b3a6bc-586a-2b45-a60c-5ab81076bf13@kernel.dk>
-References: <20220428120837.3737765-1-yukuai3@huawei.com>
- <d50df657-d859-79cf-c292-412eaa383d2c@huawei.com>
- <61b67d5e-829c-8130-7bda-81615d654829@huawei.com>
- <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
- <d5a90a08-1ac6-587a-e900-0436bd45543a@kernel.dk>
- <55919e29-1f22-e8aa-f3d2-08c57d9e1c22@huawei.com>
- <20220523085902.wmxoebyq3crerecr@quack3.lan>
- <25f6703e-9e10-75d9-a893-6df1e6b75254@kernel.dk>
- <20220523152516.7sr247i3bzwhr44w@quack3.lan>
- <13ad158e-7859-ca61-209e-7d1fe99d0bdb@huawei.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH -next v8 1/4] block, bfq: support to track if bfqq has
+ pending requests
+Date: Wed, 1 Jun 2022 10:31:54 +0200
+Message-ID: <20220601083154.5ip7r6w7kjb3bof2@quack3.lan>
+References: <20220531140858.3324294-1-yukuai3@huawei.com>
+ <20220531140858.3324294-2-yukuai3@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=vUroyxhPDzujIL+srQrQJbzj1rBmcTjbEH4aNuHu6u8=;
-        b=QDJd+JMtSbictp3JXuSTnUcFtrUT8VgQ8R4hk/9xlsI/xQieNS7UamrA41uiFJDkE0
-         XgXgIUC97MDtbIyS67TN33hdGqO8YaB+srytVD+PJ14E7d7vsrFEhpMTzqWyXGrzVlFm
-         kDRVuH3aEqSRdWf/O74FOrdH7KOZfsmBdqoh5qFApkyER06xLe6zCZiQ8H9iQe2zY55u
-         eyn6hIdNB1JF2C6qhvvOjwehBoCsMjCLsgLH3zNYlhWCw8WVu/pKywVfU8cKQu2miYWf
-         vIx2rrFhgSljAMJPD5g2A07ERmaAmjazqSRuhq2OHA3MjJTsglOO8+RMT4T1VMeObNF6
-         ZyJQ==
-Content-Language: en-US
-In-Reply-To: <13ad158e-7859-ca61-209e-7d1fe99d0bdb-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1654072318; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=N+sBqa5KqKk9l80H2r4a0EQswvDm6hf4uMYYGP+soqU=;
+        b=UxNmGl10x6Mtb4IZHTscIz8gWRW6HgF7JeSkIFA3/SMZ5MwO0itfPzFfdXeKigeq6uDjFv
+        4bN0nY9B+vKQGrWWuPqxBwF5Z497j6B5lQghIy91xnE+J+DE61r32CWreN75yDmIIi/rxx
+        YqGgm/bp0Nehl08MPwXkSt/rXYKsbtM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1654072318;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=N+sBqa5KqKk9l80H2r4a0EQswvDm6hf4uMYYGP+soqU=;
+        b=Vs/bVFe2dUMiW8BMd3aoA58GmzvJhI2Br3qV3wc/S6BZRK+F80A/62NZGf4xz6rrZK0LnZ
+        x5Ym+gWftWBAPUBA==
+Content-Disposition: inline
+In-Reply-To: <20220531140858.3324294-2-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai3@huawei.com>
+Cc: paolo.valente@linaro.org, jack@suse.cz, axboe@kernel.dk, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-On 5/23/22 7:13 PM, Yu Kuai wrote:
-> ? 2022/05/23 23:25, Jan Kara ??:
->> On Mon 23-05-22 06:36:58, Jens Axboe wrote:
->>> On 5/23/22 2:59 AM, Jan Kara wrote:
->>>> On Mon 23-05-22 09:10:38, yukuai (C) wrote:
->>>>> ? 2022/05/21 20:21, Jens Axboe ??:
->>>>>> On 5/21/22 1:22 AM, yukuai (C) wrote:
->>>>>>> ? 2022/05/14 17:29, yukuai (C) ??:
->>>>>>>> ? 2022/05/05 9:00, yukuai (C) ??:
->>>>>>>>> Hi, Paolo
->>>>>>>>>
->>>>>>>>> Can you take a look at this patchset? It has been quite a long time
->>>>>>>>> since we spotted this problem...
->>>>>>>>>
->>>>>>>>
->>>>>>>> friendly ping ...
->>>>>>> friendly ping ...
->>>>>>
->>>>>> I can't speak for Paolo, but I've mentioned before that the majority
->>>>>> of your messages end up in my spam. That's still the case, in fact
->>>>>> I just marked maybe 10 of them as not spam.
->>>>>>
->>>>>> You really need to get this issued sorted out, or you will continue
->>>>>> to have patches ignore because folks may simply not see them.
->>>>>>
->>>>> Hi,
->>>>>
->>>>> Thanks for your notice.
->>>>>
->>>>> Is it just me or do you see someone else's messages from *huawei.com
->>>>> end up in spam? I tried to seek help from our IT support, however, they
->>>>> didn't find anything unusual...
->>>>
->>>> So actually I have noticed that a lot of (valid) email from huawei.com (not
->>>> just you) ends up in the spam mailbox. For me direct messages usually pass
->>>> (likely matching SPF records for originating mail server save the email
->>>> from going to spam) but messages going through mailing lists are flagged as
->>>> spam because the emails are missing valid DKIM signature but huawei.com
->>>> DMARC config says there should be DKIM signature (even direct messages are
->>>> missing DKIM so this does not seem as a mailing list configuration issue).
->>>> So this seems as some misconfiguration of the mails on huawei.com side
->>>> (likely missing DKIM signing of outgoing email).
->>>
->>> SPF/DKIM was indeed a problem earlier for yukaui patches, but I don't
->>> see that anymore. Maybe it's still an issue for some emails, from them
->>> or Huawei in general?
->>
->> Hum, for me all emails from Huawei I've received even today fail the DKIM
->> check. After some more digging there is interesting inconsistency in DMARC
->> configuration for huawei.com domain. There is DMARC record for huawei.com
->> like:
->>
->> huawei.com.        600    IN    TXT    "v=DMARC1;p=none;rua=mailto:dmarc-8cQ/FyLJEfGM2ScGVVA7yQ@public.gmane.org"
->>
->> which means no DKIM is required but _dmarc.huawei.com has:
->>
->> _dmarc.huawei.com.    600    IN    TXT    "v=DMARC1;p=quarantine;ruf=mailto:dmarc-hv44wF8Li93QT0dZR+AlfA@public.gmane.org;rua=mailto:dmarc-hv44wF8Li93QT0dZR+AlfA@public.gmane.org"
->>
->> which says that DKIM is required. I guess this inconsistency may be the
->> reason why there are problems with DKIM validation for senders from
->> huawei.com. Yu Kuai, can you perhaps take this to your IT support to fix
->> this? Either make sure huawei.com emails get properly signed with DKIM or
->> remove the 'quarantine' record from _dmarc.huawei.com. Thanks!
-> Of course, I'll try to contact our IT support.
+On Tue 31-05-22 22:08:55, Yu Kuai wrote:
+> If entity belongs to bfqq, then entity->in_groups_with_pending_reqs
+> is not used currently. This patch use it to track if bfqq has pending
+> requests through callers of weights_tree insertion and removal.
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-I second that, pretty much every email has been going into spam since, I
-guess you just had a few lucky ones. Looks like Jan is right, it's a
-server side configuration error that's causing this, and it's still
-happening
+Looks good. Feel free to add:
 
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+								Honza
+
+> ---
+>  block/bfq-iosched.c |  1 +
+>  block/bfq-iosched.h |  1 +
+>  block/bfq-wf2q.c    | 24 ++++++++++++++++++++++--
+>  3 files changed, 24 insertions(+), 2 deletions(-)
+> 
+> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+> index 0d46cb728bbf..0ec21018daba 100644
+> --- a/block/bfq-iosched.c
+> +++ b/block/bfq-iosched.c
+> @@ -6263,6 +6263,7 @@ static void bfq_completed_request(struct bfq_queue *bfqq, struct bfq_data *bfqd)
+>  		 */
+>  		bfqq->budget_timeout = jiffies;
+>  
+> +		bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
+>  		bfq_weights_tree_remove(bfqd, bfqq);
+>  	}
+>  
+> diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+> index ca8177d7bf7c..3b9b1a0e7c1c 100644
+> --- a/block/bfq-iosched.h
+> +++ b/block/bfq-iosched.h
+> @@ -1080,6 +1080,7 @@ void bfq_requeue_bfqq(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+>  void bfq_del_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+>  		       bool expiration);
+>  void bfq_add_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq);
+> +void bfq_del_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq);
+>  
+>  /* --------------- end of interface of B-WF2Q+ ---------------- */
+>  
+> diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+> index f8eb340381cf..12d20f26ad69 100644
+> --- a/block/bfq-wf2q.c
+> +++ b/block/bfq-wf2q.c
+> @@ -1647,6 +1647,22 @@ void bfq_requeue_bfqq(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+>  				    bfqq == bfqd->in_service_queue, expiration);
+>  }
+>  
+> +static void bfq_add_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
+> +{
+> +	struct bfq_entity *entity = &bfqq->entity;
+> +
+> +	if (!entity->in_groups_with_pending_reqs)
+> +		entity->in_groups_with_pending_reqs = true;
+> +}
+> +
+> +void bfq_del_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
+> +{
+> +	struct bfq_entity *entity = &bfqq->entity;
+> +
+> +	if (entity->in_groups_with_pending_reqs)
+> +		entity->in_groups_with_pending_reqs = false;
+> +}
+> +
+>  /*
+>   * Called when the bfqq no longer has requests pending, remove it from
+>   * the service tree. As a special case, it can be invoked during an
+> @@ -1668,8 +1684,10 @@ void bfq_del_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+>  
+>  	bfq_deactivate_bfqq(bfqd, bfqq, true, expiration);
+>  
+> -	if (!bfqq->dispatched)
+> +	if (!bfqq->dispatched) {
+> +		bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
+>  		bfq_weights_tree_remove(bfqd, bfqq);
+> +	}
+>  }
+>  
+>  /*
+> @@ -1684,10 +1702,12 @@ void bfq_add_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq)
+>  	bfq_mark_bfqq_busy(bfqq);
+>  	bfqd->busy_queues[bfqq->ioprio_class - 1]++;
+>  
+> -	if (!bfqq->dispatched)
+> +	if (!bfqq->dispatched) {
+> +		bfq_add_bfqq_in_groups_with_pending_reqs(bfqq);
+>  		if (bfqq->wr_coeff == 1)
+>  			bfq_weights_tree_add(bfqd, bfqq,
+>  					     &bfqd->queue_weights_tree);
+> +	}
+>  
+>  	if (bfqq->wr_coeff > 1)
+>  		bfqd->wr_busy_queues++;
+> -- 
+> 2.31.1
+> 
 -- 
-Jens Axboe
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
