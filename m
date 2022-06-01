@@ -1,53 +1,116 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v5 09/11] mm: memcontrol: use obj_cgroup APIs to charge
- the LRU pages
-Date: Wed, 1 Jun 2022 19:34:38 +0200
-Message-ID: <20220601173438.GC2434@blackbody.suse.cz>
-References: <20220530074919.46352-1-songmuchun@bytedance.com>
- <20220530074919.46352-10-songmuchun@bytedance.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 2/2] blk-cgroup: Optimize blkcg_rstat_flush()
+Date: Wed, 1 Jun 2022 07:48:06 -1000
+Message-ID: <YpemVpvaPomwH7mt@slm.duckdns.org>
+References: <20220601165324.60892-1-longman@redhat.com>
+ <20220601165324.60892-2-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1654104880; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=GjM3NNyZi+mdyAAgbPoVYQ4gLBCkOnK/73Cw9/lkEMA=;
-        b=fMgAUfgOUjfloaDS4p8wAJAzvluuJQWZvnxiAi6ShSWltsPq3megQImODM+d9HSmLxJwFW
-        MPWNEw2VE8jdwfgtsn50e1wTFaVQCwr62zTR8vifW9Q6K6zdvBem445A38lxWHjrF3MLUd
-        99BaPGC4eSxt1lgF0sZWfxXLV2fja2o=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=i0RZ8l73WFDDzM6Aj8EMNY9HnT718p+wPtqJImpAAXg=;
+        b=S3qixs5BU1PZ015xxJdsdLuFlKjPKLu5LQhK9EbUs3wNr7hohaemHdXqaFP38FJxhS
+         NOdL63FvglE0nVP/ytYaAQ8/SI+xisMk8kKFHjOr3Ms4MaIECDFfFugdb/7zdQw4gIfu
+         z4jL2kM1LV6bt8zgoBPQ90Y2K7oI8ROA5R7kA49kP+DzTSQyhU/yk5JoliBZbvJUGjj0
+         QXmS7mjQGFEewCudnT6f/JBAKstnLrbMznCYT9p4iZQKD35NI/VAH+GllJr6xxbwAkXh
+         fZW4CRltCagOkCaM9d1YSvrCzLQisoFLpHHzeI/j9BQ32TzG4soMEMqy2Gf1po7c/nvH
+         RDXQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20220530074919.46352-10-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+In-Reply-To: <20220601165324.60892-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hello Muchun.
+Hello,
 
-On Mon, May 30, 2022 at 03:49:17PM +0800, Muchun Song <songmuchun-EC8Uxl6Np=
-ydl57MIdRCFDg@public.gmane.org> wrote:
-> +static inline bool obj_cgroup_is_root(struct obj_cgroup *objcg)
+On Wed, Jun 01, 2022 at 12:53:24PM -0400, Waiman Long wrote:
+> +static struct llist_node llist_last;	/* Last sentinel node of llist */
+
+Can you please add comment explaining why we need the special sentinel and
+empty helper?
+
+> +static inline bool blkcg_llist_empty(struct llist_head *lhead)
 > +{
-> +	return objcg =3D=3D root_obj_cgroup;
+> +	return lhead->first == &llist_last;
 > +}
+> +
+> +static inline void init_blkcg_llists(struct blkcg *blkcg)
+> +{
+> +	int cpu;
+> +
+> +	for_each_possible_cpu(cpu)
+> +		per_cpu_ptr(blkcg->lhead, cpu)->first = &llist_last;
+> +}
+> +
+> +static inline struct llist_node *
+> +fetch_delete_blkcg_llist(struct llist_head *lhead)
+> +{
+> +	return xchg(&lhead->first, &llist_last);
+> +}
+> +
+> +/*
+> + * The retrieved blkg_iostat_set is immediately marked as not in the
+> + * lockless list by clearing its node->next pointer. It could be put
+> + * back into the list by a parallel update before the iostat's are
+> + * finally flushed. So being in the list doesn't always mean it has new
+> + * iostat's to be flushed.
+> + */
 
-Admittedly, this predicate alone caught my eye, why it did not also
-check root_mem_cgroup->objcg_list.
-However, deeper look reveals it's purpose is to avoid missing uncharges
-of pages that were charged in non-root memcg and later re-associated
-upwards after reparenting.
-So it's like obj_cgroup_root_origin() (I'm not suggesting a rename, just
-illustrating the understanding).
+Isn't the above true for any sort of mechanism which tracking pending state?
+You gotta clear the pending state before consuming so that you don't miss
+the events which happen while data is being consumed.
 
-get_obj_cgroup_from_current() gains some complexity but it still holds
-that in root memcg neither kernel objects nor LRU pages are charged.
-At the same time, reparented kernel objects or LRU pages are properly
-uncharged.
+> +#define blkcg_llist_for_each_entry_safe(pos, node, nxt)			\
+> +	for (; (node != &llist_last) &&					\
+> +	       (pos = llist_entry(node, struct blkg_iostat_set, lnode),	\
+> +		nxt = node->next, node->next = NULL, true);		\
+> +		node = nxt)
+> +
+>  /**
+>   * blkcg_css - find the current css
+>   *
+...
+> @@ -852,17 +888,26 @@ static void blkg_iostat_sub(struct blkg_iostat *dst, struct blkg_iostat *src)
+>  static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
+>  {
+>  	struct blkcg *blkcg = css_to_blkcg(css);
+> -	struct blkcg_gq *blkg;
+> +	struct llist_head *lhead = per_cpu_ptr(blkcg->lhead, cpu);
+> +	struct llist_node *lnode, *lnext;
+> +	struct blkg_iostat_set *bisc;
+>  
+>  	/* Root-level stats are sourced from system-wide IO stats */
+>  	if (!cgroup_parent(css->cgroup))
+>  		return;
+>  
+> -	rcu_read_lock();
+> +	if (blkcg_llist_empty(lhead))
+> +		return;
+>  
+> -	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
+> +	lnode = fetch_delete_blkcg_llist(lhead);
+> +
+> +	/*
+> +	 * No RCU protection is needed as it is assumed that blkg_iostat_set's
+> +	 * in the percpu lockless list won't go away until the flush is done.
+> +	 */
 
-These parts are=20
-Reviewed-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
+Can you please elaborate on why this is safe?
 
-(I did not look into the locking guarantees with the new API though.)
+> +	blkcg_llist_for_each_entry_safe(bisc, lnode, lnext) {
+> +		struct blkcg_gq *blkg = bisc->blkg;
+>  		struct blkcg_gq *parent = blkg->parent;
+> -		struct blkg_iostat_set *bisc = per_cpu_ptr(blkg->iostat_cpu, cpu);
+>  		struct blkg_iostat cur, delta;
+>  		unsigned long flags;
+>  		unsigned int seq;
 
+Overall, looks fantastic to me. Thanks a lot for working on it.
+
+-- 
+tejun
