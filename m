@@ -1,145 +1,83 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH -next v9 2/4] block, bfq: record how many queues have
- pending requests
-Date: Wed, 1 Jun 2022 15:18:06 +0200
-Message-ID: <20220601131806.gs3txjgvhhbn5ign@quack3.lan>
-References: <20220601114340.949953-1-yukuai3@huawei.com>
- <20220601114340.949953-3-yukuai3@huawei.com>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH mm v3 0/9] memcg: accounting for objects allocated by
+ mkdir cgroup
+Date: Wed, 1 Jun 2022 07:22:05 -0700
+Message-ID: <Ypd2DW7id4M3KJJW@carbon>
+References: <3e1d6eab-57c7-ba3d-67e1-c45aa0dfa2ab@openvz.org>
+ <YpSwvii5etfnOYC9@dhcp22.suse.cz>
+ <ef9f7516-853d-ffe4-9a7a-5e87556bdbbe@openvz.org>
+ <YpTTL3Ys35kgYyAW@dhcp22.suse.cz>
+ <3a1d8554-755f-7976-1e00-a0e7fb62c86e@openvz.org>
+ <YpXA35F33hvrxNLf@dhcp22.suse.cz>
+ <118bcb39-1281-0d1d-b163-3f6bcc99c3e2@openvz.org>
+ <20220601091543.GA21320@blackbody.suse.cz>
+ <YpcyKdZkdkwUOzuy@dhcp22.suse.cz>
+ <YpdkHrbT/xkdx+Qb@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1654089492; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1654093333;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=XlDIaOdMh++5TaTNkEqP7Z+0BP2y4tj9ghae6D/SYZ4=;
-        b=gJ8P+L0egLun2U4orfffIleneGyLzcb0nvFFjoIh9nX10gj0nf00pmZSEv7YCtWpP+fP8X
-        OBT5DAF02ElKH6ruRtP0Xb8moMWhZARCbVHKNqDeGHN9gOa50OaJ1r5ZZIApuzRIhvjsHK
-        X1blH5INrkMj3wfNgfME6dveXH5usdI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1654089492;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=XlDIaOdMh++5TaTNkEqP7Z+0BP2y4tj9ghae6D/SYZ4=;
-        b=vbc5jBV9j8HjUhgDLh7LRZCB2EFp6umMm1CuQgzSicrmsinShWGcQ0bcPnTa+JPEuYBwgE
-        rWIVMANGhGgQjIAg==
+        bh=7dTK8lZD+GRn5W6XhroTWtrQIr3FWONSOpLntw7o9P8=;
+        b=NUkC82D4ypjqicXuOoWVCuRX+YRDU1QRJrivMJisaz2muYJDPR914lptcXqx2oVqxcfwc3
+        c1xEX6QGnV9xKfvdvIs10qjbmQ7rRL8g6itonmvlcVeG1PWh7/qnyL4C3/JkNBDTa8y+rb
+        YUBb0WPjtf+QZOOqvtdwNWwTCxdsFdA=
 Content-Disposition: inline
-In-Reply-To: <20220601114340.949953-3-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <YpdkHrbT/xkdx+Qb-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed 01-06-22 19:43:38, Yu Kuai wrote:
-> Prepare to refactor the counting of 'num_groups_with_pending_reqs'.
+On Wed, Jun 01, 2022 at 03:05:34PM +0200, Michal Hocko wrote:
+> On Wed 01-06-22 11:32:26, Michal Hocko wrote:
+> > On Wed 01-06-22 11:15:43, Michal Koutny wrote:
+> > > On Wed, Jun 01, 2022 at 06:43:27AM +0300, Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
+> > > > CT-901 /# cat /sys/fs/cgroup/memory/cgroup.subgroups_limit 
+> > > > 512
+> > > > CT-901 /# echo 3333 > /sys/fs/cgroup/memory/cgroup.subgroups_limit 
+> > > > -bash: echo: write error: Operation not permitted
+> > > > CT-901 /# echo 333 > /sys/fs/cgroup/memory/cgroup.subgroups_limit 
+> > > > -bash: echo: write error: Operation not permitted
+> > > > 
+> > > > I doubt this way can be accepted in upstream, however for OpenVz
+> > > > something like this it is mandatory because it much better
+> > > > than nothing.
+> > > 
+> > > Is this customization of yours something like cgroup.max.descendants on
+> > > the unified (v2) hierarchy? (Just curious.)
+> > > 
+> > > (It can be made inaccessible from within the subtree either with cgroup
+> > > ns or good old FS permissions.)
+> > 
+> > So we already do have a limit to prevent somebody from running away with
+> > the number of cgroups. Nice!
+
+Yes, we do!
+
+> > I was not aware of that and I guess this
+> > looks like the right thing to do. So do we need more control and
+> > accounting that this?
 > 
-> Add a counter in bfq_group, update it while tracking if bfqq have pending
-> requests and when bfq_bfqq_move() is called.
+> I have checked the actual implementation and noticed that cgroups are
+> uncharged when offlined (rmdir-ed) which means that an adversary could
+> still trick the limit and runaway while still consuming resources.
 > 
-> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Roman, I guess the reason for this implementation was to avoid limit to
+> trigger on setups with memcgs which can take quite some time to die?
+> Would it make sense to make the implementation more strict to really act
+> as gate against potential cgroups count runways?
 
-Looks good. Feel free to add:
+The reasoning was that in many cases a user can't do much about dying cgroups,
+so it's not clear how they should/would handle getting -EAGAIN on creating a
+new cgroup (retrying will not help, obviously). Live cgroups can be easily
+deleted, dying cgroups - not always.
 
-Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-
-								Honza
-
-
-> ---
->  block/bfq-cgroup.c  | 10 ++++++++++
->  block/bfq-iosched.h |  1 +
->  block/bfq-wf2q.c    | 12 ++++++++++--
->  3 files changed, 21 insertions(+), 2 deletions(-)
-> 
-> diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-> index 09574af83566..88c0c320ddf3 100644
-> --- a/block/bfq-cgroup.c
-> +++ b/block/bfq-cgroup.c
-> @@ -557,6 +557,7 @@ static void bfq_pd_init(struct blkg_policy_data *pd)
->  				   */
->  	bfqg->bfqd = bfqd;
->  	bfqg->active_entities = 0;
-> +	bfqg->num_queues_with_pending_reqs = 0;
->  	bfqg->online = true;
->  	bfqg->rq_pos_tree = RB_ROOT;
->  }
-> @@ -646,6 +647,7 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
->  {
->  	struct bfq_entity *entity = &bfqq->entity;
->  	struct bfq_group *old_parent = bfqq_group(bfqq);
-> +	bool has_pending_reqs = false;
->  
->  	/*
->  	 * No point to move bfqq to the same group, which can happen when
-> @@ -666,6 +668,11 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
->  	 */
->  	bfqq->ref++;
->  
-> +	if (entity->in_groups_with_pending_reqs) {
-> +		has_pending_reqs = true;
-> +		bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
-> +	}
-> +
->  	/* If bfqq is empty, then bfq_bfqq_expire also invokes
->  	 * bfq_del_bfqq_busy, thereby removing bfqq and its entity
->  	 * from data structures related to current group. Otherwise we
-> @@ -693,6 +700,9 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
->  	/* pin down bfqg and its associated blkg  */
->  	bfqg_and_blkg_get(bfqg);
->  
-> +	if (has_pending_reqs)
-> +		bfq_add_bfqq_in_groups_with_pending_reqs(bfqq);
-> +
->  	if (bfq_bfqq_busy(bfqq)) {
->  		if (unlikely(!bfqd->nonrot_with_queueing))
->  			bfq_pos_tree_add_move(bfqd, bfqq);
-> diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-> index 69c7d15417e5..de2446a9b7ab 100644
-> --- a/block/bfq-iosched.h
-> +++ b/block/bfq-iosched.h
-> @@ -943,6 +943,7 @@ struct bfq_group {
->  	struct bfq_entity *my_entity;
->  
->  	int active_entities;
-> +	int num_queues_with_pending_reqs;
->  
->  	struct rb_root rq_pos_tree;
->  
-> diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-> index 5704a0315cf2..6f36f3fe5cc8 100644
-> --- a/block/bfq-wf2q.c
-> +++ b/block/bfq-wf2q.c
-> @@ -1651,16 +1651,24 @@ void bfq_add_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
->  {
->  	struct bfq_entity *entity = &bfqq->entity;
->  
-> -	if (!entity->in_groups_with_pending_reqs)
-> +	if (!entity->in_groups_with_pending_reqs) {
->  		entity->in_groups_with_pending_reqs = true;
-> +#ifdef CONFIG_BFQ_GROUP_IOSCHED
-> +		bfqq_group(bfqq)->num_queues_with_pending_reqs++;
-> +#endif
-> +	}
->  }
->  
->  void bfq_del_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
->  {
->  	struct bfq_entity *entity = &bfqq->entity;
->  
-> -	if (entity->in_groups_with_pending_reqs)
-> +	if (entity->in_groups_with_pending_reqs) {
->  		entity->in_groups_with_pending_reqs = false;
-> +#ifdef CONFIG_BFQ_GROUP_IOSCHED
-> +		bfqq_group(bfqq)->num_queues_with_pending_reqs--;
-> +#endif
-> +	}
->  }
->  
->  /*
-> -- 
-> 2.31.1
-> 
--- 
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-SUSE Labs, CR
+I'm not sure about switching the semantics. I'd wait till Muchun's lru page
+reparenting will be landed (could be within 1-2 releases, I guess) and then we
+can check whether the whole problem is mostly gone. Honestly, I think we might
+need to fix few another things, but it might be not that hard (in comparison
+to what we already did).
