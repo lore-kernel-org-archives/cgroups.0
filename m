@@ -1,68 +1,92 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v5 1/3] blk-cgroup: Correctly free percpu iostat_cpu in blkg on error exit
-Date: Thu,  2 Jun 2022 09:35:41 -0400
-Message-ID: <20220602133543.128088-2-longman@redhat.com>
-References: <20220601211824.89626-1-longman@redhat.com>
+From: Tadeusz Struk <tadeusz.struk-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/2] cgroup: Use separate work structs on css release path
+Date: Thu, 2 Jun 2022 07:28:11 -0700
+Message-ID: <1e4fe5c8-4bac-087b-ae32-6fa2fa5b44f6@linaro.org>
+References: <Yo/DtjEU/kYr190u@slm.duckdns.org>
+ <0babd7df-bdef-9edc-3682-1144bc0c2d2b@linaro.org>
+ <Ypf0VnKUMiuRgZqT@slm.duckdns.org>
+ <1fb4d8d7-ccc0-b020-715e-38c2dfd94c23@linaro.org>
+ <Ypf5jpI7dSmpi4W0@slm.duckdns.org>
+ <c3bd8e63-7204-f86d-8efa-254db71185fc@linaro.org>
+ <Ypf/MpwzByOrSp6A@slm.duckdns.org>
+ <416dc60a-f0e5-7d05-1613-3cd0ca415768@linaro.org>
+ <YpgEY/lJbLidLOhc@slm.duckdns.org>
+ <0fd1c3fd-fa86-dbed-f3f0-74c91b1efa11@linaro.org>
+ <20220602114705.GB21320@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1654176958;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=YXLuT1Yk9DAXTYl5NoX/oMeS35ik4rQo8uu3jun7bK8=;
-        b=KHk8Q0w88jKlWb3n+xQS225haxcacaJ8aBPgvh4NmJKIPPUB1tIQhWpmDmDbnmAGzg4B68
-        yW1QClx/IA8DbkKaBxR9UslDK0e9kXSaXdCzbgW3IWS/TFEJvS5dODtYQDEvfgB7iupY2E
-        AX61bzFZnqPbitOdkUIOBbfNchcjEx0=
-In-Reply-To: <20220601211824.89626-1-longman@redhat.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=message-id:date:mime-version:user-agent:content-language:to:cc
+         :references:from:subject:in-reply-to:content-transfer-encoding;
+        bh=L4Gxk4Bv5TfkgMZFmRZVdKI/nfnxSbVJuJD+KEhCTwA=;
+        b=vznR9E/huPyrIZXpXnkqdLBfuApJkQscKlKcZknXDqfZ/UzpBujU19WWiJ4F6oTRe2
+         lR7uP5EHAzxXwKjHa6B5RqiR9qnOaBkPs/hQSA9fnvdrxoQ3mFlfPq0VrvKG3gS6OE8R
+         plY2qTLcDyWkxvE1BNieB15nFdOsnxMIE+Z3bRp/rMWZr/XzOq6qPJcP4JcL5r7v8+Rb
+         AuEZVAjpLmZiBKWgqlash0NfkGGjUBMR+u0O48hccdnAFA9NmfkAD3b9WxtR17/cgOAz
+         DCZGvSeh7xnKG8Wnji3N5tPQM53K3hXQH89J3bXgB0U78Q5roB6xZZQCZ+Ql/XFJLHXu
+         pSWw==
+Content-Language: en-US
+In-Reply-To: <20220602114705.GB21320-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Waiman Long <longman@redhat.com>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Bui Quang Minh <minhquangbui99-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Commit f73316482977 ("blk-cgroup: reimplement basic IO stats using cgroup
-rstat") changes block cgroup IO stats to use the rstat APIs. It added
-a new percpu iostat_cpu field into blkg. The blkg_alloc() was modified
-to allocate the new percpu iostat_cpu but didn't free it when an error
-happened. Fix this by freeing the percpu iostat_cpu on error exit.
+On 6/2/22 04:47, Michal Koutn=C3=BD wrote:
+> On Wed, Jun 01, 2022 at 05:40:51PM -0700, Tadeusz Struk<tadeusz.struk-QSE=
+j5FYQhm4dnm+yROfE0A@public.gmane.org>  wrote:
+>> css_killed_ref_fn() will be called regardless of the value of refcnt (vi=
+a percpu_ref_kill_and_confirm())
+>> and it will only enqueue the css_killed_work_fn() to be called later.
+>> Then css_put()->css_release() will be called before the css_killed_work_=
+fn() will even
+>> get a chance to run, and it will also*only*  enqueue css_release_work_fn=
+() to be called later.
+>> The problem happens on the second enqueue. So there need to be something=
+ in place that
+>> will make sure that css_killed_work_fn() is done before css_release() ca=
+n enqueue
+>> the second job.
+> IIUC, here you describe the same scenario I broke down at [1].
 
-Fixes: f73316482977 ("blk-cgroup: reimplement basic IO stats using cgroup rstat")
-Signed-off-by: Waiman Long <longman@redhat.com>
-Acked-by: Tejun Heo <tj@kernel.org>
----
- block/blk-cgroup.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Right, except the last css_put(), which I think is called from cgroup_kn_un=
+lock()
+See below.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 40161a3f68d0..acd9b0aa8dc8 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -219,11 +219,11 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 		return NULL;
- 
- 	if (percpu_ref_init(&blkg->refcnt, blkg_release, 0, gfp_mask))
--		goto err_free;
-+		goto err_free_blkg;
- 
- 	blkg->iostat_cpu = alloc_percpu_gfp(struct blkg_iostat_set, gfp_mask);
- 	if (!blkg->iostat_cpu)
--		goto err_free;
-+		goto err_free_blkg;
- 
- 	if (!blk_get_queue(q))
- 		goto err_free;
-@@ -259,6 +259,9 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 	return blkg;
- 
- err_free:
-+	free_percpu(blkg->iostat_cpu);
-+
-+err_free_blkg:
- 	blkg_free(blkg);
- 	return NULL;
- }
--- 
-2.31.1
+>> Does it sound right?
+> I added a parameter A there (that is sum of base and percpu references
+> before kill_css()).
+> I thought it fails because A =3D=3D 1 (i.e. killing the base reference),
+> however, that seems an unlikely situation (because cgroup code uses a
+> "fuse" reference to pin css for offline_css()).
+>=20
+> So the remaining option (at least I find it more likely now) is that
+> A =3D=3D 0 (A < 0 would trigger the warning in
+> percpu_ref_switch_to_atomic_rcu()), aka the ref imbalance. I hope we can
+> get to the bottom of this with detailed enough tracing of gets/puts.
+>=20
+> Splitting the work struct is condradictive to the existing approach with
+> the "fuse" reference.
+>=20
+> (BTW you also wrote On Wed, Jun 01, 2022 at 05:00:44PM -0700, Tadeusz Str=
+uk<tadeusz.struk-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>  wrote:
+>> The fact the css_release() is called (via cgroup_kn_unlock()) just after
+>> kill_css() causes the css->destroy_work to be enqueued twice on the same=
+ WQ
+>> (cgroup_destroy_wq), just with different function. This results in the
+>> BUG: corrupted list in insert_work issue.
+> Where do you see a critical css_release called from cgroup_kn_unlock()?
+> I always observed the css_release() being called via
+> percpu_ref_call_confirm_rcu() (in the original and subsequent syzbot
 
+it goes like this:
+cgroup_kn_unlock(kn)->cgroup_put(cgrp)->css_put(&cgrp->self), which
+brings the refcnt to zero and triggers css_release().
+I think what's missing is something that will serialize the kill
+and release paths. I will try to put something together today.
+
+--=20
+Thanks,
+Tadeusz
