@@ -1,82 +1,68 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v5 2/3] blk-cgroup: Return -ENOMEM directly in blkcg_css_alloc() error path
-Date: Thu,  2 Jun 2022 09:35:42 -0400
-Message-ID: <20220602133543.128088-3-longman@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH v5 1/3] blk-cgroup: Correctly free percpu iostat_cpu in blkg on error exit
+Date: Thu,  2 Jun 2022 09:35:41 -0400
+Message-ID: <20220602133543.128088-2-longman@redhat.com>
 References: <20220601211824.89626-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1654176956;
+        s=mimecast20190719; t=1654176958;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=nIFIquhWxRW8zi5j5Mk86JmeILvcLaTEEhtXEaVuk6Y=;
-        b=NRlfiKmLt790STaLwm29z5ceYJieJ2R+lvwu1polF39QbGM/yIntolBkr31d5ncOcFU4FM
-        qqkAnLStA+qi03bAKOyORE7idI75NE0eKbSc+GOUv5FczYNCcYkMgUibiuPcsMwYUTrd0i
-        k2N5aB4fX+dKHjVCUQh9BCCEjY8hf+I=
-In-Reply-To: <20220601211824.89626-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=YXLuT1Yk9DAXTYl5NoX/oMeS35ik4rQo8uu3jun7bK8=;
+        b=KHk8Q0w88jKlWb3n+xQS225haxcacaJ8aBPgvh4NmJKIPPUB1tIQhWpmDmDbnmAGzg4B68
+        yW1QClx/IA8DbkKaBxR9UslDK0e9kXSaXdCzbgW3IWS/TFEJvS5dODtYQDEvfgB7iupY2E
+        AX61bzFZnqPbitOdkUIOBbfNchcjEx0=
+In-Reply-To: <20220601211824.89626-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Waiman Long <longman@redhat.com>
 
-For blkcg_css_alloc(), the only error that will be returned is -ENOMEM.
-Simplify error handling code by returning this error directly instead
-of setting an intermediate "ret" variable.
+Commit f73316482977 ("blk-cgroup: reimplement basic IO stats using cgroup
+rstat") changes block cgroup IO stats to use the rstat APIs. It added
+a new percpu iostat_cpu field into blkg. The blkg_alloc() was modified
+to allocate the new percpu iostat_cpu but didn't free it when an error
+happened. Fix this by freeing the percpu iostat_cpu on error exit.
 
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Fixes: f73316482977 ("blk-cgroup: reimplement basic IO stats using cgroup rstat")
+Signed-off-by: Waiman Long <longman@redhat.com>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-cgroup.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ block/blk-cgroup.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index acd9b0aa8dc8..9021f75fc752 100644
+index 40161a3f68d0..acd9b0aa8dc8 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -1177,7 +1177,6 @@ static struct cgroup_subsys_state *
- blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- {
- 	struct blkcg *blkcg;
--	struct cgroup_subsys_state *ret;
- 	int i;
+@@ -219,11 +219,11 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
+ 		return NULL;
  
- 	mutex_lock(&blkcg_pol_mutex);
-@@ -1186,10 +1185,8 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 		blkcg = &blkcg_root;
- 	} else {
- 		blkcg = kzalloc(sizeof(*blkcg), GFP_KERNEL);
--		if (!blkcg) {
--			ret = ERR_PTR(-ENOMEM);
-+		if (!blkcg)
- 			goto unlock;
--		}
- 	}
+ 	if (percpu_ref_init(&blkg->refcnt, blkg_release, 0, gfp_mask))
+-		goto err_free;
++		goto err_free_blkg;
  
- 	for (i = 0; i < BLKCG_MAX_POLS ; i++) {
-@@ -1206,10 +1203,9 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 			continue;
+ 	blkg->iostat_cpu = alloc_percpu_gfp(struct blkg_iostat_set, gfp_mask);
+ 	if (!blkg->iostat_cpu)
+-		goto err_free;
++		goto err_free_blkg;
  
- 		cpd = pol->cpd_alloc_fn(GFP_KERNEL);
--		if (!cpd) {
--			ret = ERR_PTR(-ENOMEM);
-+		if (!cpd)
- 			goto free_pd_blkcg;
--		}
+ 	if (!blk_get_queue(q))
+ 		goto err_free;
+@@ -259,6 +259,9 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
+ 	return blkg;
+ 
+ err_free:
++	free_percpu(blkg->iostat_cpu);
 +
- 		blkcg->cpd[i] = cpd;
- 		cpd->blkcg = blkcg;
- 		cpd->plid = i;
-@@ -1238,7 +1234,7 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 		kfree(blkcg);
- unlock:
- 	mutex_unlock(&blkcg_pol_mutex);
--	return ret;
-+	return ERR_PTR(-ENOMEM);
++err_free_blkg:
+ 	blkg_free(blkg);
+ 	return NULL;
  }
- 
- static int blkcg_css_online(struct cgroup_subsys_state *css)
 -- 
 2.31.1
 
