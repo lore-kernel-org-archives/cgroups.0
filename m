@@ -1,57 +1,42 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v6 0/3] blk-cgroup: Optimize blkcg_rstat_flush()
-Date: Thu,  2 Jun 2022 15:20:17 -0400
-Message-ID: <20220602192020.166940-1-longman@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v6 2/3] blk-cgroup: Return -ENOMEM directly in
+ blkcg_css_alloc() error path
+Date: Thu, 2 Jun 2022 10:39:16 -1000
+Message-ID: <Ypkf9N0sIZdzizL1@slm.duckdns.org>
+References: <20220602192020.166940-1-longman@redhat.com>
+ <20220602192020.166940-3-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1654197647;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=sUxMFBKWaF9vGh8gLEcG6jV1Ek/oQgsX0FVxKot2COA=;
-        b=W/ezvFq0h7i/L/uv/u5qGwgOwwGMX9OkHr/gDQ/uIUiOrnf3bRaN7ThhT8MiLhN0HMHPMk
-        Uaxlj3FtnpLPsqyTykEDWnXQXMOP3xJjFXbjPwLcvrih+WM/q5uUk5eeh7R/SjQ1GgkAQ3
-        qYVBOxMVG0C/jhWkbsxU1MjzBJahtYk=
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=NYkACjksTq7D5aqYKY+rKmNd5ashkIfCvgLNEkSUbY4=;
+        b=VOoyvWVAcqaU05NT1mJw6gqT2XZyQl9VZosdCL3rWV7Sfb31CIedlhghvwKlyCTlgM
+         4EmYtZsp0oDGXH7Sfq9OUYqx6T57oS/fqxkS6XU+BF9VG8iMEagWxwaCBeV59dwks9Ne
+         +sxGEJ/V+morFEZXMOgoH98Qnf5I3+3Konysn2VkKRxS8dwpQN7ZIORUzMQmYcIcn/mO
+         fHc7VZN2++Hb/wqYaHVxLILDutZdZurupx6x2KAVR1NzmA/9ttj5Ao0OePBo66dbNrpW
+         B6sbZXTu632SvtkE+Y9GLIw2dJcS8mZ9L9eOGSedtmCMHTljAxs32Md+vZk2pkQZlFLS
+         S/zQ==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20220602192020.166940-3-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>
 
- v6:
-  - Add a missing free_percpu() into blkcg_css_free() in patch 3.
-  - Integrating the documentation patch 4 back into patch 3.
+On Thu, Jun 02, 2022 at 03:20:19PM -0400, Waiman Long wrote:
+> For blkcg_css_alloc(), the only error that will be returned is -ENOMEM.
+> Simplify error handling code by returning this error directly instead
+> of setting an intermediate "ret" variable.
+> 
+> Signed-off-by: Waiman Long <longman@redhat.com>
 
- v5:
-  - Add a new patch 2 to eliminate the use of intermediate "ret"
-    variable in blkcg_css_alloc() to fix compilation warning reported
-    by kernel test robot.
+Acked-by: Tejun Heo <tj@kernel.org>
 
- v4:
-  - Update comment and eliminate "inline" keywords as suggested by TJ.
-
- v3:
-  - Update comments in patch 2.
-  - Put rcu_read_lock/unlock() in blkcg_rstat_flush().
-  - Use READ_ONCE/WRITE_ONCE() to access lnode->next to reduce data
-    races.
-  - Get a blkg reference when putting into the lockless list and put it
-    back when removed.
- 
-This patch series improves blkcg_rstat_flush() performance by eliminating
-unnecessary blkg enumeration and flush operations for those blkg's and
-blkg_iostat_set's that haven't been updated since the last flush.
-
-Waiman Long (3):
-  blk-cgroup: Correctly free percpu iostat_cpu in blkg on error exit
-  blk-cgroup: Return -ENOMEM directly in blkcg_css_alloc() error path
-  blk-cgroup: Optimize blkcg_rstat_flush()
-
- block/blk-cgroup.c | 119 +++++++++++++++++++++++++++++++++++++++------
- block/blk-cgroup.h |   9 ++++
- 2 files changed, 112 insertions(+), 16 deletions(-)
+Thanks.
 
 -- 
-2.31.1
-
+tejun
