@@ -1,56 +1,65 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [PATCH v5 03/11] mm: memcontrol: prepare objcg API for non-kmem
- usage
-Date: Thu, 2 Jun 2022 18:48:41 +0800
-Message-ID: <YpiVibVoQizVDzOO@FVFYT0MHHV2J.googleapis.com>
-References: <20220530074919.46352-1-songmuchun@bytedance.com>
- <20220530074919.46352-4-songmuchun@bytedance.com>
- <20220601173434.GB16134@blackbody.suse.cz>
- <YpexCpVBW76GCN2X@carbon>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -next v5 0/8] bugfix and cleanup for blk-throttle
+Date: Thu, 2 Jun 2022 19:14:36 +0800
+Message-ID: <244865d4-e7e7-432f-8e9c-248ab900d283@huawei.com>
+References: <20220528064330.3471000-1-yukuai3@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=mFpX60Bpgj1CZ/r9BaiZqjht5lWPMONlADO9gEwg/QM=;
-        b=SwX3dVy3jXK2i5Z7uMI0MgELLNVc2oWbF7lRdRfsT9EqfOJ3hICdbNbgMYcXkoVooC
-         MlgCxTXNf14Vl4M1M0BwPslA6dKzAvnrC5y8gpZ8KnUTdXkrj4uIpoCzfUwXG4KImXXC
-         NzUsT2IT1TEgI1ZrOK8up2DZ0I7c9OpMbD2tFlQgWa/9mr9adaLsjb4YApgZvWlBZWa1
-         A6XaWRRCvcyCJT3zVWP4dYdYmYDcvN6KarzhSqkqS9tDFBh/KH4E3wEXilxg55OSCP8l
-         cHTB6ytf08StwYuny4TYXUFaKL5qINmBT6/7EIo1wJYpEKwD8VEP0w7/zSs/Q5iCESf/
-         uTTQ==
-Content-Disposition: inline
-In-Reply-To: <YpexCpVBW76GCN2X@carbon>
+In-Reply-To: <20220528064330.3471000-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Wed, Jun 01, 2022 at 11:33:46AM -0700, Roman Gushchin wrote:
-> On Wed, Jun 01, 2022 at 07:34:34PM +0200, Michal Koutny wrote:
-> > Hello.
-> > 
-> > On Mon, May 30, 2022 at 03:49:11PM +0800, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
-> > > So we also allocate an object cgroup for the root_mem_cgroup.
-> > 
-> > This change made me wary that this patch also kmem charging in the
-> > root_mem_cgroup. Fortunately, get_obj_cgroup_from_current won't return
-> > this objcg so all is fine.
-> 
-> Yes, I had the same experience here :)
->
+=D4=DA 2022/05/28 14:43, Yu Kuai =D0=B4=B5=C0:
+> Changes in v5:
+>   - add comments in patch 4
+>   - clear bytes/io_skipped in throtl_start_new_slice_with_credit() in
+>   patch 4
+>   - and cleanup patches 5-8
+> Changes in v4:
+>   - add reviewed-by tag for patch 1
+>   - add patch 2,3
+>   - use a different way to fix io hung in patch 4
+> Changes in v3:
+>   - fix a check in patch 1
+>   - fix link err in patch 2 on 32-bit platform
+>   - handle overflow in patch 2
+> Changes in v2:
+>   - use a new solution suggested by Ming
+>   - change the title of patch 1
+>   - add patch 2
+>=20
+> Patch 1 fix that blk-throttle can't work if multiple bios are throttle,
+> Patch 2 fix overflow while calculating wait time
+> Patch 3,4 fix io hung due to configuration updates.
+> Patch 5-8 are cleanup patches, there are no functional changes, just
+> some places that I think can be optimized during code review.
 
-Sorry for the confusing.
- 
-> Overall I feel like the handling of the root memcg and objcg are begging
-> for a cleanup, but it's really far from being trivial.
-> 
-> Maybe starting with documenting how it works now is a good idea...
-> 
-
-You mean add more comments into the commit log to explain the
-usage of root memcg and root objcg?
-
-Thanks.
+friendly ping ...
+>=20
+> Previous version:
+> v1: https://lore.kernel.org/all/20220517134909.2910251-1-yukuai3-hv44wF8L=
+i93QT0dZR+AlfA@public.gmane.org/
+> v2: https://lore.kernel.org/all/20220518072751.1188163-1-yukuai3-hv44wF8L=
+i93QT0dZR+AlfA@public.gmane.org/
+> v3: https://lore.kernel.org/all/20220519085811.879097-1-yukuai3-hv44wF8Li=
+93QT0dZR+AlfA@public.gmane.org/
+> v4: https://lore.kernel.org/all/20220523082633.2324980-1-yukuai3-hv44wF8L=
+i93QT0dZR+AlfA@public.gmane.org/
+>=20
+> Yu Kuai (8):
+>    blk-throttle: fix that io throttle can only work for single bio
+>    blk-throttle: prevent overflow while calculating wait time
+>    blk-throttle: factor out code to calculate ios/bytes_allowed
+>    blk-throttle: fix io hung due to config updates
+>    blk-throttle: use 'READ/WRITE' instead of '0/1'
+>    blk-throttle: calling throtl_dequeue/enqueue_tg in pairs
+>    blk-throttle: cleanup tg_update_disptime()
+>    blk-throttle: clean up flag 'THROTL_TG_PENDING'
+>=20
+>   block/blk-throttle.c | 158 +++++++++++++++++++++++++++++--------------
+>   block/blk-throttle.h |  16 +++--
+>   2 files changed, 120 insertions(+), 54 deletions(-)
+>=20
