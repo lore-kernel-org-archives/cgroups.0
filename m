@@ -1,186 +1,156 @@
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -next v7 2/3] block, bfq: refactor the counting of
- 'num_groups_with_pending_reqs'
-Date: Thu, 2 Jun 2022 09:05:41 +0800
-Message-ID: <15f765c1-9399-7fff-6019-10f90fc45095@huawei.com>
-References: <20220528095020.186970-1-yukuai3@huawei.com>
- <20220528095020.186970-3-yukuai3@huawei.com>
- <0D9355CE-F85B-4B1A-AEC3-F63DFC4B3A54@linaro.org>
- <b9a4ea60-28e5-b7aa-0154-ad7481eafbd3@huawei.com>
- <efe01dd1-0f99-dadf-956d-b0e80e1e602c@huawei.com>
- <1803FD7E-9FB1-4A1E-BD6D-D6657006589A@unimore.it>
- <a0d8452c-e421-45d3-b012-5355207fc0e1@huawei.com>
- <81214347-3806-4F54-B60F-3E5A1A5EC84D@unimore.it>
- <756631ee-6a85-303c-aca1-d60aaf477d0d@huawei.com>
- <20220531100101.pdnrpkxbapur5gsk@quack3.lan>
- <CB1A8F13-76DB-4469-A5CA-D0AD17975E38@unimore.it>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 2/2] blk-cgroup: Optimize blkcg_rstat_flush()
+Date: Thu, 2 Jun 2022 09:52:55 +0800
+Message-ID: <202206020948.yBhTYYDS-lkp@intel.com>
+References: <20220601165324.60892-2-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CB1A8F13-76DB-4469-A5CA-D0AD17975E38-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1654134815; x=1685670815;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=1IXtlOaSA6Lu6LSh/sdcVQX9N0TOTnw/7092N1Jsl5w=;
+  b=TTPGjlPwYmglc/HPqBf9VLuxiYqirQVNZQ4ijqUKvN47ni5YkCuWllcC
+   anty21jwipDrQZmM8l7ysFBVb8XzuCZt0RiR3tcVYr/vZiTDO5cOMfv9+
+   pSUVxPDkShqxLRfMKu+Elv9Ibuh+wgxbF3m6RzVLLsQv0WxuJzncVHaFz
+   M2mPL2XP3muez1087FtlKHJQ4mZzDkqBOAdNASnyNJKXB2IxhKsEfAg5Z
+   pFdSfcODha/4Z060P7XFP3hWOlmYMuH8WPqot8S3MHJhUCr5hbxplBLYB
+   SdVKdDu0/2rEW0mM4V94JnPpoN5dKhNmi65yW18K8K6QAih3l3DI2GjcV
+   g==;
+Content-Disposition: inline
+In-Reply-To: <20220601165324.60892-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Paolo Valente <paolo.valente-rcYM44yAMweonA0d6jMUrA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: llvm-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-在 2022/05/31 20:57, Paolo Valente 写道:
-> 
-> 
->> Il giorno 31 mag 2022, alle ore 12:01, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org> ha scritto:
->>
->> On Tue 31-05-22 17:33:25, Yu Kuai wrote:
->>> 在 2022/05/31 17:19, Paolo Valente 写道:
->>>>> Il giorno 31 mag 2022, alle ore 11:06, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> ha scritto:
->>>>>
->>>>> 在 2022/05/31 16:36, Paolo VALENTE 写道:
->>>>>>> Il giorno 30 mag 2022, alle ore 10:40, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> ha scritto:
->>>>>>>
->>>>>>> 在 2022/05/30 16:34, Yu Kuai 写道:
->>>>>>>> 在 2022/05/30 16:10, Paolo Valente 写道:
->>>>>>>>>
->>>>>>>>>
->>>>>>>>>> Il giorno 28 mag 2022, alle ore 11:50, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> ha scritto:
->>>>>>>>>>
->>>>>>>>>> Currently, bfq can't handle sync io concurrently as long as they
->>>>>>>>>> are not issued from root group. This is because
->>>>>>>>>> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
->>>>>>>>>> bfq_asymmetric_scenario().
->>>>>>>>>>
->>>>>>>>>> The way that bfqg is counted into 'num_groups_with_pending_reqs':
->>>>>>>>>>
->>>>>>>>>> Before this patch:
->>>>>>>>>> 1) root group will never be counted.
->>>>>>>>>> 2) Count if bfqg or it's child bfqgs have pending requests.
->>>>>>>>>> 3) Don't count if bfqg and it's child bfqgs complete all the requests.
->>>>>>>>>>
->>>>>>>>>> After this patch:
->>>>>>>>>> 1) root group is counted.
->>>>>>>>>> 2) Count if bfqg have at least one bfqq that is marked busy.
->>>>>>>>>> 3) Don't count if bfqg doesn't have any busy bfqqs.
->>>>>>>>>
->>>>>>>>> Unfortunately, I see a last problem here. I see a double change:
->>>>>>>>> (1) a bfqg is now counted only as a function of the state of its child
->>>>>>>>>       queues, and not of also its child bfqgs
->>>>>>>>> (2) the state considered for counting a bfqg moves from having pending
->>>>>>>>>       requests to having busy queues
->>>>>>>>>
->>>>>>>>> I'm ok with with (1), which is a good catch (you are lady explained
->>>>>>>>> the idea to me some time ago IIRC).
->>>>>>>>>
->>>>>>>>> Yet I fear that (2) is not ok.  A bfqq can become non busy even if it
->>>>>>>>> still has in-flight I/O, i.e.  I/O being served in the drive.  The
->>>>>>>>> weight of such a bfqq must still be considered in the weights_tree,
->>>>>>>>> and the group containing such a queue must still be counted when
->>>>>>>>> checking whether the scenario is asymmetric.  Otherwise service
->>>>>>>>> guarantees are broken.  The reason is that, if a scenario is deemed as
->>>>>>>>> symmetric because in-flight I/O is not taken into account, then idling
->>>>>>>>> will not be performed to protect some bfqq, and in-flight I/O may
->>>>>>>>> steal bandwidth to that bfqq in an uncontrolled way.
->>>>>>>> Hi, Paolo
->>>>>>>> Thanks for your explanation.
->>>>>>>> My orginal thoughts was using weights_tree insertion/removal, however,
->>>>>>>> Jan convinced me that using bfq_add/del_bfqq_busy() is ok.
->>>>>>>>  From what I see, when bfqq dispatch the last request,
->>>>>>>> bfq_del_bfqq_busy() will not be called from __bfq_bfqq_expire() if
->>>>>>>> idling is needed, and it will delayed to when such bfqq get scheduled as
->>>>>>>> in-service queue again. Which means the weight of such bfqq should still
->>>>>>>> be considered in the weights_tree.
->>>>>>>> I also run some tests on null_blk with "irqmode=2
->>>>>>>> completion_nsec=100000000(100ms) hw_queue_depth=1", and tests show
->>>>>>>> that service guarantees are still preserved on slow device.
->>>>>>>> Do you this is strong enough to cover your concern?
->>>>>> Unfortunately it is not.  Your very argument is what made be believe
->>>>>> that considering busy queues was enough, in the first place.  But, as
->>>>>> I found out, the problem is caused by the queues that do not enjoy
->>>>>> idling.  With your patch (as well as in my initial version) they are
->>>>>> not counted when they remain without requests queued.  And this makes
->>>>>> asymmetric scenarios be considered erroneously as symmetric.  The
->>>>>> consequence is that idling gets switched off when it had to be kept
->>>>>> on, and control on bandwidth is lost for the victim in-service queues.
->>>>>
->>>>> Hi，Paolo
->>>>>
->>>>> Thanks for your explanation, are you thinking that if bfqq doesn't enjoy
->>>>> idling, then such bfqq will clear busy after dispatching the last
->>>>> request?
->>>>>
->>>>> Please kindly correct me if I'm wrong in the following process:
->>>>>
->>>>> If there are more than one bfqg that is activatied, then bfqqs that are
->>>>> not enjoying idle are still left busy after dispatching the last
->>>>> request.
->>>>>
->>>>> details in __bfq_bfqq_expire:
->>>>>
->>>>>         if (RB_EMPTY_ROOT(&bfqq->sort_list) &&
->>>>>         ┊   !(reason == BFQQE_PREEMPTED &&
->>>>>         ┊     idling_needed_for_service_guarantees(bfqd, bfqq))) {
->>>>> -> idling_needed_for_service_guarantees will always return true,
->>>>
->>>> It returns true only is the scenario is symmetric.  Not counting bfqqs
->>>> with in-flight requests makes an asymmetric scenario be considered
->>>> wrongly symmetric.  See function bfq_asymmetric_scenario().
->>>
->>> Hi, Paolo
->>>
->>> Do you mean this gap?
->>>
->>> 1. io1 is issued from bfqq1(from bfqg1)
->>> 2. bfqq1 dispatched this io, it's busy is cleared
->>> 3. *before io1 is completed*, io2 is issued from bfqq2(bfqg2)
->>
->> Yes. So as far as I understand Paolo is concerned about this scenario.
->>
->>> 4. with this patchset, while dispatching io2 from bfqq2, the scenario
->>> should be symmetric while it's considered wrongly asymmetric.
->>
->> But with this patchset, we will consider this scenario symmetric because at
->> any point in time there is only one busy bfqq. Before, we considered this
->> scenario asymmetric because two different bfq groups have bfqq in their
->> weights_tree. So before this patchset
->> idling_needed_for_service_guarantees() returned true, after this patchset
->> the function returns false so we won't idle anymore and Paolo argues that
->> bfqq1 does not get adequate protection from bfqq2 as a result.
->>
->> I agree with Paolo this seems possible. The fix is relatively simple though
->> - instead of changing how weights_tree is used for weight raised queues as
->> you did originally, I'd move the accounting of groups with pending requests
->> to bfq_add/del_bfqq_busy() and bfq_completed_request().
->>
-> 
-> Why don't we use simply the existing logic? I mean, as for the changes made by this patch, we could simply turn the loop:
-> 
-> void bfq_weights_tree_remove(struct bfq_data *bfqd,
-> 			     struct bfq_queue *bfqq)
-> {
-> 	...
-> 	for_each_entity(entity) {
-> 		struct bfq_sched_data *sd = entity->my_sched_data;
-> 
-> 		...
-> 		if (entity->in_groups_with_pending_reqs) {
-> 			entity->in_groups_with_pending_reqs = false;
-> 			bfqd->num_groups_with_pending_reqs--;
-> 		}
-> 	}
-> 	...
-> }
-> 
-> into a single:
-> 
-> 	bfqd->num_groups_with_pending_reqs--;
-> 
-> so that only the parent group is concerned.
-> 
-> Thanks,
-> Paolo
+Hi Waiman,
 
-Hi, Paolo
+I love your patch! Perhaps something to improve:
 
-Can you please take a look if this patchset(v9) delivered to you? There
-are still some problems with out mail server...
+[auto build test WARNING on axboe-block/for-next]
+[also build test WARNING on linus/master next-20220601]
+[cannot apply to v5.18]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-https://patchwork.kernel.org/project/linux-block/cover/20220601114340.949953-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+url:    https://github.com/intel-lab-lkp/linux/commits/Waiman-Long/blk-cgroup-Correctly-free-percpu-iostat_cpu-in-blkg-on-error-exit/20220602-005557
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
+config: x86_64-randconfig-a005 (https://download.01.org/0day-ci/archive/20220602/202206020948.yBhTYYDS-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project c825abd6b0198fb088d9752f556a70705bc99dfd)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/7f5ef1493e681454e71c11b2547638b94665a78f
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Waiman-Long/blk-cgroup-Correctly-free-percpu-iostat_cpu-in-blkg-on-error-exit/20220602-005557
+        git checkout 7f5ef1493e681454e71c11b2547638b94665a78f
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash
 
-Thanks,
-Kuai
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+
+All warnings (new ones prefixed by >>):
+
+>> block/blk-cgroup.c:1239:6: warning: variable 'ret' is used uninitialized whenever 'if' condition is true [-Wsometimes-uninitialized]
+           if (!blkcg->lhead)
+               ^~~~~~~~~~~~~
+   block/blk-cgroup.c:1290:9: note: uninitialized use occurs here
+           return ret;
+                  ^~~
+   block/blk-cgroup.c:1239:2: note: remove the 'if' if its condition is always false
+           if (!blkcg->lhead)
+           ^~~~~~~~~~~~~~~~~~
+   block/blk-cgroup.c:1223:33: note: initialize the variable 'ret' to silence this warning
+           struct cgroup_subsys_state *ret;
+                                          ^
+                                           = NULL
+   1 warning generated.
+
+
+vim +1239 block/blk-cgroup.c
+
+  1218	
+  1219	static struct cgroup_subsys_state *
+  1220	blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
+  1221	{
+  1222		struct blkcg *blkcg;
+  1223		struct cgroup_subsys_state *ret;
+  1224		int i;
+  1225	
+  1226		mutex_lock(&blkcg_pol_mutex);
+  1227	
+  1228		if (!parent_css) {
+  1229			blkcg = &blkcg_root;
+  1230		} else {
+  1231			blkcg = kzalloc(sizeof(*blkcg), GFP_KERNEL);
+  1232			if (!blkcg) {
+  1233				ret = ERR_PTR(-ENOMEM);
+  1234				goto unlock;
+  1235			}
+  1236		}
+  1237	
+  1238		blkcg->lhead = alloc_percpu_gfp(struct llist_head, GFP_KERNEL);
+> 1239		if (!blkcg->lhead)
+  1240			goto free_blkcg;
+  1241		init_blkcg_llists(blkcg);
+  1242	
+  1243		for (i = 0; i < BLKCG_MAX_POLS ; i++) {
+  1244			struct blkcg_policy *pol = blkcg_policy[i];
+  1245			struct blkcg_policy_data *cpd;
+  1246	
+  1247			/*
+  1248			 * If the policy hasn't been attached yet, wait for it
+  1249			 * to be attached before doing anything else. Otherwise,
+  1250			 * check if the policy requires any specific per-cgroup
+  1251			 * data: if it does, allocate and initialize it.
+  1252			 */
+  1253			if (!pol || !pol->cpd_alloc_fn)
+  1254				continue;
+  1255	
+  1256			cpd = pol->cpd_alloc_fn(GFP_KERNEL);
+  1257			if (!cpd) {
+  1258				ret = ERR_PTR(-ENOMEM);
+  1259				goto free_pd_blkcg;
+  1260			}
+  1261			blkcg->cpd[i] = cpd;
+  1262			cpd->blkcg = blkcg;
+  1263			cpd->plid = i;
+  1264			if (pol->cpd_init_fn)
+  1265				pol->cpd_init_fn(cpd);
+  1266		}
+  1267	
+  1268		spin_lock_init(&blkcg->lock);
+  1269		refcount_set(&blkcg->online_pin, 1);
+  1270		INIT_RADIX_TREE(&blkcg->blkg_tree, GFP_NOWAIT | __GFP_NOWARN);
+  1271		INIT_HLIST_HEAD(&blkcg->blkg_list);
+  1272	#ifdef CONFIG_CGROUP_WRITEBACK
+  1273		INIT_LIST_HEAD(&blkcg->cgwb_list);
+  1274	#endif
+  1275		list_add_tail(&blkcg->all_blkcgs_node, &all_blkcgs);
+  1276	
+  1277		mutex_unlock(&blkcg_pol_mutex);
+  1278		return &blkcg->css;
+  1279	
+  1280	free_pd_blkcg:
+  1281		for (i--; i >= 0; i--)
+  1282			if (blkcg->cpd[i])
+  1283				blkcg_policy[i]->cpd_free_fn(blkcg->cpd[i]);
+  1284		free_percpu(blkcg->lhead);
+  1285	free_blkcg:
+  1286		if (blkcg != &blkcg_root)
+  1287			kfree(blkcg);
+  1288	unlock:
+  1289		mutex_unlock(&blkcg_pol_mutex);
+  1290		return ret;
+  1291	}
+  1292	
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
