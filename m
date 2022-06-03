@@ -1,63 +1,147 @@
-From: Tadeusz Struk <tadeusz.struk@linaro.org>
-Subject: Re: [PATCH v2] cgroup: serialize css kill and release paths
-Date: Fri, 3 Jun 2022 11:17:23 -0700
-Message-ID: <0c37c2b9-a89a-54d7-9fd3-f035f6816aa8@linaro.org>
-References: <20220603173455.441537-1-tadeusz.struk@linaro.org>
- <20220603181321.443716-1-tadeusz.struk@linaro.org>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [PATCH bpf-next v1 0/5] bpf: rstat: cgroup hierarchical stats
+Date: Fri, 3 Jun 2022 12:47:19 -0700
+Message-ID: <CAJD7tkbp9Tw4oGtxsnHQB+5VZHMFa4J0qvJGRyj3VuuQ4UPF=g@mail.gmail.com>
+References: <20220520012133.1217211-1-yosryahmed@google.com> <20220603162247.GC16134@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=Az2acnj16/aXPRCs4OX6YtuTWRNeGltXq9+PbmTT2go=;
-        b=P+Blsdx7NzfX+tc3SEE3y7hR4zxwbKm4W2XIzjhNeSBoA+J3idLz4PKuU0Rgg4bqeT
-         8lBP2muYp3hJexMlCEEKRnfjA8kkU7Ktpm+ktqsZzLj/Bps9oNU5lakmUmkSzZZvJbIw
-         0qVv48vpCqMPKK6//GckvorWP4FKNyXfKRdKBPD2dx7i7608+Pyv7jcbzu4PhcIU7dL9
-         jJ9Mhm1GemcsDHTmQh64GVr7Yiv0UXLF3ltn2JxNuZClpwltYgmNH6Wk0P7s3/watLWM
-         9ucceQ8xk1cXq4I+OjOirraMAlWREjNJ1kYf8gOJHA86ZxrD0DrXqxCLe5WOy7pXbakk
-         CQsA==
-Content-Language: en-US
-In-Reply-To: <20220603181321.443716-1-tadeusz.struk@linaro.org>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=hf1EFIN8wN+xApR8nEDafV6Gk+3OhHAa3jEidZPGbZc=;
+        b=aJaJKzikO5eDUXLYlMQkk6J6ILhL4sZRwmdyNqH6PYP4ohOC3rv2SReqmGB+rPOMht
+         UOTzIp/VT5biwIqC4/FBcLg7lAVXWRiWICMvTdYhef17p6hAvhgAInRBrZtQmSNe9CJH
+         ercSOALRJYh6tZ9fKPlywKZ2m+om0hNFSS/+/hncGejPHNHrEGJzr9ECZomqL6Pfxamm
+         omnr65p7WOu7Up/+h/xzezS5g4dCBQjCyfIZbaTeUmErBqsIuS2BdhnsxTi962FailTo
+         Ijf7seLLuPuA5VJch61OS5Fol22qULKemAVREwRoiQ0L/Oo225JKSi8kRW/U+CjUCa8B
+         TiRg==
+In-Reply-To: <20220603162247.GC16134@blackbody.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: Michal Koutny <mkoutny@suse.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Christian Brauner <brauner@kernel.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, cgroups@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, stable@vger.kernel.org, linux-kernel@vger.kernel.org, syzbot+e42ae441c3b10acf9e9d@syzkaller.appspotmail.com
+Content-Type: text/plain; charset="macroman"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@vger.kernel.org>
 
-On 6/3/22 11:13, Tadeusz Struk wrote:
-> Syzbot found a corrupted list bug scenario that can be triggered from
-> cgroup_subtree_control_write(cgrp). The reproduces writes to
-> cgroup.subtree_control file, which invokes:
-> cgroup_apply_control_enable()->css_create()->css_populate_dir(), which
-> then fails with a fault injected -ENOMEM.
-> In such scenario the css_killed_work_fn will be en-queued via
-> cgroup_apply_control_disable(cgrp)->kill_css(css), and bail out to
-> cgroup_kn_unlock(). Then cgroup_kn_unlock() will call:
-> cgroup_put(cgrp)->css_put(&cgrp->self), which will try to enqueue
-> css_release_work_fn for the same css instance, causing a list_add
-> corruption bug, as can be seen in the syzkaller report [1].
-> 
-> Fix this by synchronizing the css ref_kill and css_release jobs.
-> css_release() function will check if the css_killed_work_fn() has been
-> scheduled for the css and only en-queue the css_release_work_fn()
-> if css_killed_work_fn wasn't already en-queued. Otherwise css_release() will
-> set the CSS_REL_LATER flag for that css. This will cause the
-> css_release_work_fn() work to be executed after css_killed_work_fn() is finished.
-> 
-> Two scc flags have been introduced to implement this serialization mechanizm:
-> 
->   * CSS_KILL_ENQED, which will be set when css_killed_work_fn() is en-queued, and
->   * CSS_REL_LATER, which, if set, will cause the css_release_work_fn() to be
->     scheduled after the css_killed_work_fn is finished.
-> 
-> There is also a new lock, which will protect the integrity of the css flags.
-> 
-> [1] https://syzkaller.appspot.com/bug?id=e26e54d6eac9d9fb50b221ec3e4627b327465dbd
+On Fri, Jun 3, 2022 at 9:22 AM Michal Koutn=C3=BD <mkoutny@suse.com> wrote:
+>
+> Hello Yosry et al.
+>
+> This is an interesting piece of work, I'll add some questions and
+> comments.
+>
+> On Fri, May 20, 2022 at 01:21:28AM +0000, Yosry Ahmed <yosryahmed@google.=
+com> wrote:
+> > This patch series allows for using bpf to collect hierarchical cgroup
+> > stats efficiently by integrating with the rstat framework. The rstat
+> > framework provides an efficient way to collect cgroup stats and
+> > propagate them through the cgroup hierarchy.
+>
+> About the efficiency. Do you have any numbers or examples?
+> IIUC the idea is to utilize the cgroup's rstat subgraph of full tree
+> when flushing.
+> I was looking at your selftest example and the measuring hooks call
+> cgroup_rstat_updated() and they also allocate an entry bpf_map[cg_id].
+> The flush callback then looks up the cg_id for cgroups in the rstat
+> subgraph.
+> (I'm not familiar with bpf_map implementation or performance but I
+> imagine, you're potentially one step away from erasing bpf_map[cg_id] in
+> the flush callback.)
+> It seems to me that you're building a parallel structure (inside
+> bpf_map(s)) with similar purpose to the rstat subgraph.
+>
+> So I wonder whether there remains any benefit of coupling this with
+> rstat?
 
-This also fixes a similar, cgroup related list corrupt issue:
-https://syzkaller.appspot.com/bug?id=3c7ff113ccb695e839b859da3fc481c36eb1cfd5
+Hi Michal,
 
--- 
-Thanks,
-Tadeusz
+Thanks for taking a look at this!
+
+The bpf_map[cg_id] is not a similar structure to the rstat flush
+subgraph. This is where the stats are stored. These are long running
+numbers for (virtually) all cgroups on the system, they do not get
+allocated every time we call cgroup_rstat_updated(), only the first
+time. They are actually not erased at all in the whole selftest
+(except when the map is deleted at the end). In a production
+environment, we might have "setup" and "destroy" bpf programs that run
+when cgroups are created/destroyed, and allocate/delete these map
+entries then, to avoid the overhead in the first stat update/flush if
+necessary.
+
+The only reason I didn't do this in the demo selftest is because it
+was complex/long enough as-is, and for the purposes of showcasing and
+testing it seemed enough to allocate entries on demand on the first
+stat update. I can add a comment about this in the selftest if you
+think it's not obvious.
+
+In short, think of these bpf maps as equivalents to "struct
+memcg_vmstats" and "struct memcg_vmstats_percpu" in the memory
+controller. They are just containers to store the stats in, they do
+not have any subgraph structure and they have no use beyond storing
+percpu and total stats.
+
+I run small microbenchmarks that are not worth posting, they compared
+the latency of bpf stats collection vs. in-kernel code that adds stats
+to struct memcg_vmstats[_percpu] and flushes them accordingly, the
+difference was marginal. If the map lookups are deemed expensive and a
+bottleneck in the future, I have some ideas about improving that. We
+can rewrite the cgroup storage map to use the generic bpf local
+storage code, and have it be accessible from all programs by a cgroup
+key (like task_storage for e.g.) rather than only programs attached to
+that cgroup. However, this discussion is a tangent here.
+
+>
+>
+> Also, I'd expect the custom-processed data are useful in the
+> structured form (within bpf_maps) but then there's the cgroup iter thing
+> that takes available data and "flattens" them into text files.
+> I see this was discussed in subthreads already so it's not necessary to
+> return to it. IIUC you somehow intend to provide the custom info via the
+> text files. If that's true, I'd include that in the next cover message
+> (the purpose of the iterator).
+
+The main reason for this is to provide data in a similar fashion to
+cgroupfs, in text file per-cgroup. I will include this clearly in the
+next cover message. You can always not use the cgroup_iter and access
+the data directly from bpf maps.
+
+>
+>
+> > * The second patch adds cgroup_rstat_updated() and cgorup_rstat_flush()
+> > kfuncs, to allow bpf stat collectors and readers to communicate with rs=
+tat.
+>
+> kfunc means that it can be just called from any BPF program?
+> (I'm thinking of an unprivileged user who issues cgroup_rstat_updated()
+> deep down in the hierarchy repeatedly just to "spam" the rstat subgraph
+> (which slows down flushers above). Arguably, this can be done already
+> e.g. by causing certain MM events, so I'd like to just clarify if this
+> can be a new source of such arbitrary updates.)
+
+AFAIK loading bpf programs requires a privileged user, so someone has
+to approve such a program. Am I missing something?
+
+>
+> > * The third patch is actually v2 of a previously submitted patch [1]
+> > by Hao Luo. We agreed that it fits better as a part of this series. It
+> > introduces cgroup_iter programs that can dump stats for cgroups to
+> > userspace.
+> > v1 - > v2:
+> > - Getting the cgroup's reference at the time at attaching, instead of
+> >   at the time when iterating. (Yonghong) (context [1])
+>
+> I noticed you take the reference to cgroup, that's fine.
+> But the demo program also accesses via RCU pointers
+> (memory_subsys_enabled():cgroup->subsys).
+> Again, my BPF ignorance here, does the iterator framework somehow take
+> care of RCU locks?
+
+bpf_iter_run_prog() is used to run bpf iterator programs, and it grabs
+rcu read lock before doing so. So AFAICT we are good on that front.
+
+Thanks a lot for this great discussion!
+
+>
+>
+> Thanks,
+> Michal
