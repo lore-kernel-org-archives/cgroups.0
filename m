@@ -1,71 +1,76 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH bpf-next v1 5/5] bpf: add a selftest for cgroup
- hierarchical stats collection
-Date: Fri, 3 Jun 2022 12:52:27 -0700
-Message-ID: <CAJD7tkYwU5dW9Oof+pC81R9Bi-F=-EuiXpTn+HDeqbhTOTCcuw@mail.gmail.com>
-References: <20220520012133.1217211-1-yosryahmed@google.com>
- <20220520012133.1217211-6-yosryahmed@google.com> <20220603162339.GA25043@blackbody.suse.cz>
+From: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v6 1/3] blk-cgroup: Correctly free percpu iostat_cpu in
+ blkg on error exit
+Date: Sat, 4 Jun 2022 10:08:48 +0800
+Message-ID: <Ypq+sPnh6J14PvIZ@T590>
+References: <20220602192020.166940-1-longman@redhat.com>
+ <20220602192020.166940-2-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=75r9OCRaKxDbstDb8Q6rmHNx4VG7/Ol3FIsxmmQpCKE=;
-        b=OFS10OD5jepWzQUQgDwqO+/YoB6ZmGdD0wKjnuqRWMntCfyc/zl6FJU7+8IfeQ28pE
-         xXfqBHZknnzrk9L1ttKK0MWceb5jWsOOQGLBa0wl39d8rGlcGwBUk2ZanvmgXNAtJyZr
-         60Sf9V22ufhliS6cH9dvm+s6oX7B+irq5RWBwlaMWJ4Xko5YT9bz2OEzwuwSJ7i+fw0Z
-         HR7HtVHJFw3Nj/n/X/vSCH6u1nQYW0Y81pb2f61wqTFPRYwQMCGNLv7vUeDBbRKT3Ig5
-         +QjBWVhxJyQFtQQtDtDUdoy97HliJNHK5A1yPoWyiD/mzBH/EmKmZkHNRagT44RS6jjS
-         ZZEw==
-In-Reply-To: <20220603162339.GA25043@blackbody.suse.cz>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1654308539;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Wz/tZ37kUmFWQ6HkHJXHebNCC4sxDl8GdAywmW5KYk4=;
+        b=SpoAaKQoX+B91ClagWDPNP/91degqU/dkisaqEVEXC4yRxO+SeK6ReIt0uK90+mpqh48Gu
+        pMX8r6BraWgv4h6sbbwr4oBGF1hJqizYDyHjE1AHhZ/3nqFprBTMBa0FQzuUG+ss/xIlc3
+        3OsyoMqTqjkynDy34XT5BjtysTG8s40=
+Content-Disposition: inline
+In-Reply-To: <20220602192020.166940-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Thanks for taking a look at this!
+On Thu, Jun 02, 2022 at 03:20:18PM -0400, Waiman Long wrote:
+> Commit f73316482977 ("blk-cgroup: reimplement basic IO stats using cgroup
+> rstat") changes block cgroup IO stats to use the rstat APIs. It added
+> a new percpu iostat_cpu field into blkg. The blkg_alloc() was modified
+> to allocate the new percpu iostat_cpu but didn't free it when an error
+> happened. Fix this by freeing the percpu iostat_cpu on error exit.
+> 
+> Fixes: f73316482977 ("blk-cgroup: reimplement basic IO stats using cgroup rstat")
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> ---
+>  block/blk-cgroup.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+> index 40161a3f68d0..acd9b0aa8dc8 100644
+> --- a/block/blk-cgroup.c
+> +++ b/block/blk-cgroup.c
+> @@ -219,11 +219,11 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
+>  		return NULL;
+>  
+>  	if (percpu_ref_init(&blkg->refcnt, blkg_release, 0, gfp_mask))
+> -		goto err_free;
+> +		goto err_free_blkg;
+>  
+>  	blkg->iostat_cpu = alloc_percpu_gfp(struct blkg_iostat_set, gfp_mask);
+>  	if (!blkg->iostat_cpu)
+> -		goto err_free;
+> +		goto err_free_blkg;
+>  
+>  	if (!blk_get_queue(q))
+>  		goto err_free;
+> @@ -259,6 +259,9 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
+>  	return blkg;
+>  
+>  err_free:
+> +	free_percpu(blkg->iostat_cpu);
+> +
+> +err_free_blkg:
+>  	blkg_free(blkg);
 
-On Fri, Jun 3, 2022 at 9:23 AM Michal Koutn=C3=BD <mkoutny@suse.com> wrote:
->
-> On Fri, May 20, 2022 at 01:21:33AM +0000, Yosry Ahmed <yosryahmed@google.=
-com> wrote:
-> > +#define CGROUP_PATH(p, n) {.name =3D #n, .path =3D #p"/"#n}
-> > +
-> > +static struct {
-> > +     const char *name, *path;
->
-> Please unify the order of path and name with the macro (slightly
-> confusing ;-).
+Hi Waiman,
 
-Totally agree, will do.
+But blkg_free() frees blkg->iostat_cpu via blkg_free_workfn(), so I am
+confused where the leak is in failure path?
 
->
-> > +SEC("tp_btf/mm_vmscan_memcg_reclaim_end")
-> > +int BPF_PROG(vmscan_end, struct lruvec *lruvec, struct scan_control *s=
-c)
-> > +{
-> > [...]
-> > +     struct cgroup *cgrp =3D task_memcg(current);
-> > [...]
-> > +     /* cgrp may not have memory controller enabled */
-> > +     if (!cgrp)
-> > +             return 0;
->
-> Yes, the controller may not be enabled (for a cgroup).
-> Just noting that the task_memcg() implementation will fall back to
-> root_mem_cgroup in such a case (or nearest ancestor), you may want to
-> use cgroup_ss_mask() for proper detection.
 
-Good catch. I get confused between cgrp->subsys and
-task->cgroups->subsys sometimes because of different fallback
-behavior. IIUC cgrp->subsys should have NULL if the memory controller
-is not enabled (no nearest ancestor fallback), and hence I can use
-memory_subsys_enabled() that I defined just above task_memcg() to test
-for this (I have no idea why I am not already using it here). Is my
-understanding correct?
+Thanks
+Ming
 
->
-> Regards,
-> Michal
