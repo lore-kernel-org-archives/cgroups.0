@@ -1,95 +1,105 @@
 From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH bpf-next v1 0/5] bpf: rstat: cgroup hierarchical stats
-Date: Mon, 6 Jun 2022 13:00:30 -0700
-Message-ID: <CAJD7tkbOFHW+Z48CbpsG3O8wvh0GYjChDgNhoiVJ=_LZsND8wQ@mail.gmail.com>
-References: <20220520012133.1217211-1-yosryahmed@google.com>
- <20220603162247.GC16134@blackbody.suse.cz> <CAJD7tkbp9Tw4oGtxsnHQB+5VZHMFa4J0qvJGRyj3VuuQ4UPF=g@mail.gmail.com>
- <20220606123209.GE6928@blackbody.suse.cz> <CAJD7tkZeNhyEL4WtkEMOUeLsLX4x4roMuNCocEhz5yHm7=h4vw@mail.gmail.com>
- <20220606195454.byivqaarp6ra7dpc@apollo.legion>
+Subject: [PATCH v5 0/4] KVM: mm: count KVM mmu usage in memory stats
+Date: Mon,  6 Jun 2022 22:20:54 +0000
+Message-ID: <20220606222058.86688-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <kvm-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=W5TqJYafwftJ1q16jDwsapCbeMrbhqufuDDjVq8Z1/0=;
-        b=dRai72lfgPZVIbcYWbUJgQZW62213vXNScspB3WEJ8uXaErK7Wm69WAfoUX4ybfir5
-         hGG+oasznTALQNkRvzo4k3jjOa5QWG4Q7qaLY2vlMOL0HIQvV8DB/wJc4HPztmZJKHQg
-         bgjw9FszVQUdeqkBcBCL7z1i3oUV4vGRLv7xGkQN+5dXsdh9YvZWGM8+UsJL45omX6bt
-         OJMtAV9tYU83SJwh93SuVYmMkYMj96481RHZ/H7H9FNMPH5GSpI9UOCOvRo+0FZqUHkj
-         DF/AA5b1zGXOO1kcS9aRFg/N6xzK0ao4g3Ic4hAsHSIMDrNE5Gmm9zTqm4+LahveQS/A
-         nL+w==
-In-Reply-To: <20220606195454.byivqaarp6ra7dpc@apollo.legion>
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=IJS83ZKmvay92IEqxRhRKAGkk5kusGJyLJThB250L6U=;
+        b=OBqMy3wK2eu42u4CbtznTgnyseS6gsaJLr5FDK08zli4P+8VmL18aLuhw+bSnMdM7k
+         iFz03jncbwfAA7r/AGTwPC55fSnuiaen+bze1yfaaUyFA+CNkxQfCc05giglU0XkUEVo
+         t0wTaD5v0fh6UuTsvLua6zwa4GLFp9MUBqwGr5TCmjvLaGNwvrJnSC+2h7QKCddI9v2O
+         1AvKbLWw/YHC21qUQMpix/9u1/qvIqsCc78g0RrjeITNLQzJr0ZmEpnbP1xHYGLnKYVq
+         HF3gC2h07Gg4ZKzkzeDiB+DLw++z+7xHgEUcgkjKGWNrPJUIIGcun4GT14NaNl+uGKgC
+         0Sxg==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: Kumar Kartikeya Dwivedi <memxor@gmail.com>
-Cc: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vge>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Marc Zyngier <maz@kernel.org>, James Morse <james.morse@arm.com>, Alexandru Elisei <alexandru.elisei@arm.com>, Suzuki K Poulose <suzuki.poulose@arm.com>, Paolo Bonzini <pbonzini@redhat.com>, Sean Christopherson <seanjc@google.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Wanpeng Li <wanpengli@tencent.com>, Jim Mattson <jmattson@google.com>, Joerg Roedel <joro@8bytes.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Oliver Upton <oupton@google.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, kvmarm@lists.cs.columbia.edu, kvm@vger.kernel.org, linux-mm@kvack.org, Yosry Ahmed <yosryahmed@google.com>
 
-On Mon, Jun 6, 2022 at 12:55 PM Kumar Kartikeya Dwivedi
-<memxor@gmail.com> wrote:
->
-> On Tue, Jun 07, 2022 at 01:02:04AM IST, Yosry Ahmed wrote:
-> > On Mon, Jun 6, 2022 at 5:32 AM Michal Koutn=C3=BD <mkoutny@suse.com> wr=
-ote:
-> > >
-> > > On Fri, Jun 03, 2022 at 12:47:19PM -0700, Yosry Ahmed <yosryahmed@goo=
-gle.com> wrote:
-> > > > In short, think of these bpf maps as equivalents to "struct
-> > > > memcg_vmstats" and "struct memcg_vmstats_percpu" in the memory
-> > > > controller. They are just containers to store the stats in, they do
-> > > > not have any subgraph structure and they have no use beyond storing
-> > > > percpu and total stats.
-> > >
-> > > Thanks for the explanation.
-> > >
-> > > > I run small microbenchmarks that are not worth posting, they compar=
-ed
-> > > > the latency of bpf stats collection vs. in-kernel code that adds st=
-ats
-> > > > to struct memcg_vmstats[_percpu] and flushes them accordingly, the
-> > > > difference was marginal.
-> > >
-> > > OK, that's a reasonable comparison.
-> > >
-> > > > The main reason for this is to provide data in a similar fashion to
-> > > > cgroupfs, in text file per-cgroup. I will include this clearly in t=
-he
-> > > > next cover message.
-> > >
-> > > Thanks, it'd be great to have that use-case captured there.
-> > >
-> > > > AFAIK loading bpf programs requires a privileged user, so someone h=
-as
-> > > > to approve such a program. Am I missing something?
-> > >
-> > > A sysctl unprivileged_bpf_disabled somehow stuck in my head. But as I
-> > > wrote, this adds a way how to call cgroup_rstat_updated() directly, i=
-t's
-> > > not reserved for privilged users anyhow.
-> >
-> > I am not sure if kfuncs have different privilege requirements or if
-> > there is a way to mark a kfunc as privileged. Maybe someone with more
-> > bpf knowledge can help here. But I assume if unprivileged_bpf_disabled
-> > is not set then there is a certain amount of risk/trust that you are
-> > taking anyway?
-> >
->
-> It requires CAP_BPF or CAP_SYS_ADMIN, see verifier.c:add_subprog_or_kfunc=
-.
+We keep track of several kernel memory stats (total kernel memory, page
+tables, stack, vmalloc, etc) on multiple levels (global, per-node,
+per-memcg, etc). These stats give insights to users to how much memory
+is used by the kernel and for what purposes.
 
-Thanks for the clarification!
+Currently, memory used by kvm mmu is not accounted in any of those
+kernel memory stats. This patch series accounts the memory pages
+used by KVM for page tables in those stats in a new
+NR_SECONDARY_PAGETABLE stat. This stat can be later extended to account
+for other types of secondary pages tables (e.g. iommu page tables).
 
->
-> > >
-> > > > bpf_iter_run_prog() is used to run bpf iterator programs, and it gr=
-abs
-> > > > rcu read lock before doing so. So AFAICT we are good on that front.
-> > >
-> > > Thanks for the clarification.
-> > >
-> > >
-> > > Michal
->
-> --
-> Kartikeya
+KVM has a decent number of large allocations that aren't for page
+tables, but for most of them, the number/size of those allocations
+scales linearly with either the number of vCPUs or the amount of memory
+assigned to the VM. KVM's secondary page table allocations do not scale
+linearly, especially when nested virtualization is in use.
+
+From a KVM perspective, NR_SECONDARY_PAGETABLE will scale with KVM's
+per-VM pages_{4k,2m,1g} stats unless the guest is doing something
+bizarre (e.g. accessing only 4kb chunks of 2mb pages so that KVM is
+forced to allocate a large number of page tables even though the guest
+isn't accessing that much memory). However, someone would need to either
+understand how KVM works to make that connection, or know (or be told) to
+go look at KVM's stats if they're running VMs to better decipher the stats.
+
+Also, having NR_PAGETABLE side-by-side with NR_SECONDARY_PAGETABLE is
+informative. For example, when backing a VM with THP vs. HugeTLB,
+NR_SECONDARY_PAGETABLE is roughly the same, but NR_PAGETABLE is an order
+of magnitude higher with THP. So having this stat will at the very least
+prove to be useful for understanding tradeoffs between VM backing types,
+and likely even steer folks towards potential optimizations.
+
+---
+
+Chnages in V5:
+- Updated cover letter to explain more the rationale behind the change
+  (Thanks to contributions by Sean Christopherson).
+- Removed extraneous + in arm64 patch (Oliver Upton, Marc Zyngier).
+- Shortened secondary_pagetables to sec_pagetables (Shakeel Butt).
+- Removed dependency on other patchsets (applies to queue branch).
+
+Changes in V4:
+- Changed accounting hooks in arm64 to only account s2 page tables and
+  refactored them to a much cleaner form, based on recommendations from
+  Oliver Upton and Marc Zyngier.
+- Dropped patches for mips and riscv. I am not interested in those archs
+  anyway and don't have the resources to test them. I posted them for
+  completeness but it doesn't seem like anyone was interested.
+
+Changes in V3:
+- Added NR_SECONDARY_PAGETABLE instead of piggybacking on NR_PAGETABLE
+  stats.
+
+Changes in V2:
+- Added accounting stats for other archs than x86.
+- Changed locations in the code where x86 KVM page table stats were
+  accounted based on suggestions from Sean Christopherson.
+
+---
+
+Yosry Ahmed (4):
+  mm: add NR_SECONDARY_PAGETABLE to count secondary page table uses.
+  KVM: mmu: add a helper to account memory used by KVM MMU.
+  KVM: x86/mmu: count KVM mmu usage in secondary pagetable stats.
+  KVM: arm64/mmu: count KVM s2 mmu usage in secondary pagetable stats
+
+ Documentation/admin-guide/cgroup-v2.rst |  5 ++++
+ Documentation/filesystems/proc.rst      |  4 +++
+ arch/arm64/kvm/mmu.c                    | 35 ++++++++++++++++++++++---
+ arch/x86/kvm/mmu/mmu.c                  | 16 +++++++++--
+ arch/x86/kvm/mmu/tdp_mmu.c              | 12 +++++++++
+ drivers/base/node.c                     |  2 ++
+ fs/proc/meminfo.c                       |  2 ++
+ include/linux/kvm_host.h                |  9 +++++++
+ include/linux/mmzone.h                  |  1 +
+ mm/memcontrol.c                         |  1 +
+ mm/page_alloc.c                         |  6 ++++-
+ mm/vmstat.c                             |  1 +
+ 12 files changed, 87 insertions(+), 7 deletions(-)
+
+-- 
+2.36.1.255.ge46751e96f-goog
+
