@@ -1,57 +1,115 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v5 2/4] KVM: mmu: add a helper to account memory used by KVM MMU.
-Date: Mon,  6 Jun 2022 22:20:56 +0000
-Message-ID: <20220606222058.86688-3-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [PATCH v5 3/4] KVM: x86/mmu: count KVM mmu usage in secondary
+ pagetable stats.
+Date: Mon,  6 Jun 2022 22:20:57 +0000
+Message-ID: <20220606222058.86688-4-yosryahmed@google.com>
 References: <20220606222058.86688-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <kvm-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=ZKvJKacIZPpFbnd53bS1EL2rZ1vkQiMgyn6fonmD758=;
-        b=Zr9Q8V4nfUck7UMPiqqnChLoKCpFiU004y5VHpcxyH5mWHlhwIzYxUURvWJBq4dUhI
-         PEflFN4+yWiPedkxFNguL6KLVrX7tdllycYtTzVDtLTM5fSldbL5YGtSdvQhicV/VqNC
-         W9LyO1FZ89oe3glk7cppYh1QOUL7GWHvzV40mkYxY6Ot8nmOdZ1BmyJNi7r9lWo5/W5N
-         bMn6eQ26xiiSsDdv1sGuFTHXiFY4OC6CrIrPysYNh3IdjDsmHyydvK25MNicujeQ5HDt
-         CqB1bPPFGYC0qLNs/TbMrK22nRwsnULJfjNvc7HFOqj+269yjI72P9tp9IKYvoEk/5A9
-         jikw==
-In-Reply-To: <20220606222058.86688-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        bh=kdA0hdnNlf5Ah+Sdfhrh5/pyHUvKpC5h3K4X0vH9N64=;
+        b=Jy0Nvp6l/SeDINdaapKCgsH604PDzAKJu+q61zsdbqS0WgfTf6DKA9ui8w9NOeKXLB
+         zV3rFx+mWBMFRAgLdnWnjF2l6fpisaOBqhX3AirSHdup3DSyot579H9rHLD+o6fbmQRk
+         FaJKa3uBvvWb/ywHl+G68ob0ojkfCd4KvuSoq0n86mSq7L/FcuboeRh8rpDp78eY8qcZ
+         n6nIYlYmcBUcV7QgzCTmqorAtcvEHjNETFQ+4fEEAn2BTJknB6ddaSu7THbAsyUBl7f8
+         BE7FECym3Mw5OpxGAbMCVb195W/C84+VufxOQUotNgydoUbVy0Ws+K0ug9KPgynMKrtc
+         1W+g==
+In-Reply-To: <20220606222058.86688-1-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, kvmarm-FPEHb7Xf0XXUo1n7N8X6UoWGPAHP3yOg@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Marc Zyngier <maz@kernel.org>, James Morse <james.morse@arm.com>, Alexandru Elisei <alexandru.elisei@arm.com>, Suzuki K Poulose <suzuki.poulose@arm.com>, Paolo Bonzini <pbonzini@redhat.com>, Sean Christopherson <seanjc@google.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Wanpeng Li <wanpengli@tencent.com>, Jim Mattson <jmattson@google.com>, Joerg Roedel <joro@8bytes.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Oliver Upton <oupton@google.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, kvmarm@lists.cs.columbia.edu, kvm@vger.kernel.org, linux-mm@kvack.org, Yosry Ahmed <yosryahmed@google.com>
 
-Add a helper to account pages used by KVM for page tables in secondary
-pagetable stats. This function will be used by subsequent patches in
-different archs.
+Count the pages used by KVM mmu on x86 for in secondary pagetable stats.
 
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
 ---
- include/linux/kvm_host.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ arch/x86/kvm/mmu/mmu.c     | 16 ++++++++++++++--
+ arch/x86/kvm/mmu/tdp_mmu.c | 12 ++++++++++++
+ 2 files changed, 26 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/kvm_host.h b/include/linux/kvm_host.h
-index 883e86ec8e8c4..645585f3a4bed 100644
---- a/include/linux/kvm_host.h
-+++ b/include/linux/kvm_host.h
-@@ -2246,6 +2246,15 @@ static inline void kvm_handle_signal_exit(struct kvm_vcpu *vcpu)
+diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+index efe5a3dca1e09..4090d228e1756 100644
+--- a/arch/x86/kvm/mmu/mmu.c
++++ b/arch/x86/kvm/mmu/mmu.c
+@@ -1652,6 +1652,18 @@ static inline void kvm_mod_used_mmu_pages(struct kvm *kvm, long nr)
+ 	percpu_counter_add(&kvm_total_used_mmu_pages, nr);
  }
- #endif /* CONFIG_KVM_XFER_TO_GUEST_WORK */
  
-+/*
-+ * If nr > 1, we assume virt is the address of the first page of a block of
-+ * pages that were allocated together (i.e accounted together).
-+ */
-+static inline void kvm_account_pgtable_pages(void *virt, int nr)
++static void kvm_account_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
 +{
-+	mod_lruvec_page_state(virt_to_page(virt), NR_SECONDARY_PAGETABLE, nr);
++	kvm_mod_used_mmu_pages(kvm, +1);
++	kvm_account_pgtable_pages((void *)sp->spt, +1);
 +}
 +
- /*
-  * This defines how many reserved entries we want to keep before we
-  * kick the vcpu to the userspace to avoid dirty ring full.  This
++static void kvm_unaccount_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
++{
++	kvm_mod_used_mmu_pages(kvm, -1);
++	kvm_account_pgtable_pages((void *)sp->spt, -1);
++}
++
+ static void kvm_mmu_free_page(struct kvm_mmu_page *sp)
+ {
+ 	MMU_WARN_ON(!is_empty_shadow_page(sp->spt));
+@@ -1707,7 +1719,7 @@ static struct kvm_mmu_page *kvm_mmu_alloc_page(struct kvm_vcpu *vcpu, int direct
+ 	 */
+ 	sp->mmu_valid_gen = vcpu->kvm->arch.mmu_valid_gen;
+ 	list_add(&sp->link, &vcpu->kvm->arch.active_mmu_pages);
+-	kvm_mod_used_mmu_pages(vcpu->kvm, +1);
++	kvm_account_mmu_page(vcpu->kvm, sp);
+ 	return sp;
+ }
+ 
+@@ -2336,7 +2348,7 @@ static bool __kvm_mmu_prepare_zap_page(struct kvm *kvm,
+ 			list_add(&sp->link, invalid_list);
+ 		else
+ 			list_move(&sp->link, invalid_list);
+-		kvm_mod_used_mmu_pages(kvm, -1);
++		kvm_unaccount_mmu_page(kvm, sp);
+ 	} else {
+ 		/*
+ 		 * Remove the active root from the active page list, the root
+diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
+index 841feaa48be5e..0b70d1a1a3534 100644
+--- a/arch/x86/kvm/mmu/tdp_mmu.c
++++ b/arch/x86/kvm/mmu/tdp_mmu.c
+@@ -372,6 +372,16 @@ static void handle_changed_spte_dirty_log(struct kvm *kvm, int as_id, gfn_t gfn,
+ 	}
+ }
+ 
++static void tdp_account_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
++{
++	kvm_account_pgtable_pages((void *)sp->spt, +1);
++}
++
++static void tdp_unaccount_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
++{
++	kvm_account_pgtable_pages((void *)sp->spt, -1);
++}
++
+ /**
+  * tdp_mmu_unlink_sp() - Remove a shadow page from the list of used pages
+  *
+@@ -384,6 +394,7 @@ static void handle_changed_spte_dirty_log(struct kvm *kvm, int as_id, gfn_t gfn,
+ static void tdp_mmu_unlink_sp(struct kvm *kvm, struct kvm_mmu_page *sp,
+ 			      bool shared)
+ {
++	tdp_unaccount_mmu_page(kvm, sp);
+ 	if (shared)
+ 		spin_lock(&kvm->arch.tdp_mmu_pages_lock);
+ 	else
+@@ -1146,6 +1157,7 @@ static int tdp_mmu_link_sp(struct kvm *kvm, struct tdp_iter *iter,
+ 	if (account_nx)
+ 		account_huge_nx_page(kvm, sp);
+ 	spin_unlock(&kvm->arch.tdp_mmu_pages_lock);
++	tdp_account_mmu_page(kvm, sp);
+ 
+ 	return 0;
+ }
 -- 
 2.36.1.255.ge46751e96f-goog
 
