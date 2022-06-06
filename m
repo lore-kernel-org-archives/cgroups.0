@@ -1,39 +1,40 @@
-From: Vasily Averin <vvs@openvz.org>
+From: Qian Cai <quic_qiancai-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
 Subject: Re: [PATCH memcg v6] net: set proper memcg for net_init hooks
  allocations
-Date: Mon, 6 Jun 2022 20:37:26 +0300
-Message-ID: <0e714a5a-d2ed-9b44-fdbe-04b5595165da@openvz.org>
+Date: Mon, 6 Jun 2022 14:43:38 -0400
+Message-ID: <Yp5K2iupKdVdQXUc@qian>
 References: <6b362c6e-9c80-4344-9430-b831f9871a3c@openvz.org>
- <f9394752-e272-9bf9-645f-a18c56d1c4ec@openvz.org> <Yp4F6n2Ie32re7Ed@qian>
+ <f9394752-e272-9bf9-645f-a18c56d1c4ec@openvz.org>
+ <Yp4F6n2Ie32re7Ed@qian>
+ <0e714a5a-d2ed-9b44-fdbe-04b5595165da@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=openvz-org.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=JrUCHDV/B4VsIskumMgOVA+zun0SZZfvJ9SUQK9Ped0=;
-        b=hpch6RMMl19NjgUugT4b8eX/vUbvGeMyguIjW1q7ywrR/Nhc6fDnsHDWFxHhMX64Z6
-         OdF4ERrF6B4Sip2D/a2woNKQeucy71ArF21CwisItz4umAXm60/4ZxyfHi0dT5fMj1vH
-         YpcNVAqkKO0D9/Nf99PxbgIl+KHzfZuYdROKocmQFjZvsJlwy953ZFB+SZaDRy12nEp/
-         E2rIXrQoD7AsDpdjLSANTi8R11+9R7VLnlHe2pX/4sI4BypamWK7DkKGK40Tku7WBEkH
-         wmGJhQnYPcITS9wRYIbNMAwK+VCsl8lrCUcCYtCIFlC2PId8EXyc8WiUB56KToN7m58T
-         Gc4A==
-Content-Language: en-US
-In-Reply-To: <Yp4F6n2Ie32re7Ed@qian>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Qian Cai <quic_qiancai@quicinc.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, kernel@openvz.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <roman.gushchin@linux.dev>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@suse.com>, Florian Westphal <fw@strlen.de>, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Eric Dumazet <edumazet@google.com>, cgroups@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1654541023; x=1686077023;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=zBGk5qIFMqfmDlZW092e3SVIsz61LPw9vTaFM7k3klM=;
+  b=orIbPEgg2DQ6ZywvWiICzRipAfzZvFmhWlFY1h686HxZICe0IxqzQxKa
+   1l6aWalGQ65yCRbXnglPxVEZfP9OCw7TwY9KYQdRikzNsIhMxHLq967+F
+   yuVbg9bvVRgsEvnJYatEMGVHbKYhWjuKeJkz2G+XY+Qqqb6wQDrL+iB2f
+   s=;
+Content-Disposition: inline
+In-Reply-To: <0e714a5a-d2ed-9b44-fdbe-04b5595165da-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 6/6/22 16:49, Qian Cai wrote:
-> This triggers a few boot warnings like those.
+On Mon, Jun 06, 2022 at 08:37:26PM +0300, Vasily Averin wrote:
+> On 6/6/22 16:49, Qian Cai wrote:
+> > This triggers a few boot warnings like those.
+> > 
+> >  virt_to_phys used for non-linear address: ffffd8efe2d2fe00 (init_net)
+> >  WARNING: CPU: 87 PID: 3170 at arch/arm64/mm/physaddr.c:12 __virt_to_phys
 > 
->  virt_to_phys used for non-linear address: ffffd8efe2d2fe00 (init_net)
->  WARNING: CPU: 87 PID: 3170 at arch/arm64/mm/physaddr.c:12 __virt_to_phys
+> Thank you for reporting the problem,
+> Could you please provide me your config file via private email?
 
-Thank you for reporting the problem,
-Could you please provide me your config file via private email?
-
-Thank you,
-	Vasily Averin
+$ make ARCH=arm64 defconfig debug.config
