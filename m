@@ -1,50 +1,41 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH bpf-next v1 5/5] bpf: add a selftest for cgroup
- hierarchical stats collection
-Date: Mon, 6 Jun 2022 14:32:22 +0200
-Message-ID: <20220606123222.GA4377@blackbody.suse.cz>
-References: <20220520012133.1217211-1-yosryahmed@google.com>
- <20220520012133.1217211-6-yosryahmed@google.com>
- <20220603162339.GA25043@blackbody.suse.cz>
- <CAJD7tkYwU5dW9Oof+pC81R9Bi-F=-EuiXpTn+HDeqbhTOTCcuw@mail.gmail.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH v2] cgroup: serialize css kill and release paths
+Date: Mon, 6 Jun 2022 14:39:10 +0200
+Message-ID: <20220606123910.GF6928@blackbody.suse.cz>
+References: <20220603173455.441537-1-tadeusz.struk@linaro.org>
+ <20220603181321.443716-1-tadeusz.struk@linaro.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1654518744; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1654519151; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=9PH08cMIB+cEkHAUwWnoV2Rdrv9uIuIlFs1vAUeLjT8=;
-        b=kkcGeuhVE5Zp7oPO/179KJdiOaqFznXyMnLXtvm36fYBU0bVl0mvNwBtpbRJl9dfr/+RiE
-        6+V2g6bvqx/sqvTs8KJxLuwtOPyRCN+64wkDcfUBnK2Kl4cuUe61yYbnAbyigE+nfD07VX
-        PxiKWoJJKcspi04Ocy896GgXS5pzquw=
+        bh=S16O+A6T24T23c0/paG1pu0dx4tXfDlUNTS+nP+cphE=;
+        b=U+4ZaQnCAkAGLVYgMbcQ8yOw2leTw/G6XgP0SWYOPzpKwuYpVOOYoLHknUOva5iMzb3EtS
+        M85t36oJc92vhEOXG3fj8bROYoQennKsr8Ma34tiOlPA+RSMR/AT8JPnwEBnkHxlfSl30o
+        ULznUdIGJrExqifnQZHozgX7CxQbDEI=
 Content-Disposition: inline
-In-Reply-To: <CAJD7tkYwU5dW9Oof+pC81R9Bi-F=-EuiXpTn+HDeqbhTOTCcuw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20220603181321.443716-1-tadeusz.struk@linaro.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Networking <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tadeusz Struk <tadeusz.struk@linaro.org>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Christian Brauner <brauner@kernel.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, cgroups@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, stable@vger.kernel.org, linux-kernel@vger.kernel.org, syzbot+e42ae441c3b10acf9e9d@syzkaller.appspotmail.com
 
-On Fri, Jun 03, 2022 at 12:52:27PM -0700, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> Good catch. I get confused between cgrp->subsys and
-> task->cgroups->subsys sometimes because of different fallback
-> behavior. IIUC cgrp->subsys should have NULL if the memory controller
-> is not enabled (no nearest ancestor fallback), and hence I can use
-> memory_subsys_enabled() that I defined just above task_memcg() to test
-> for this (I have no idea why I am not already using it here). Is my
-> understanding correct?
+Hello.
 
-You're correct, css_set (task->cgroups) has a css (memcg) always defined
-(be it root only (or even a css from v1 hierarchy but that should not
-relevant here)). A particular cgroup can have the css set to NULL.
+On Fri, Jun 03, 2022 at 11:13:21AM -0700, Tadeusz Struk <tadeusz.struk@linaro.org> wrote:
+> In such scenario the css_killed_work_fn will be en-queued via
+> cgroup_apply_control_disable(cgrp)->kill_css(css), and bail out to
+> cgroup_kn_unlock(). Then cgroup_kn_unlock() will call:
+> cgroup_put(cgrp)->css_put(&cgrp->self), which will try to enqueue
+> css_release_work_fn for the same css instance, causing a list_add
+> corruption bug, as can be seen in the syzkaller report [1].
 
-When I think about your stats collecting example now, task_memcg() looks
-more suitable to achieve proper hierarchical counting in the end (IOW
-you'd lose info from tasks who don't reside in memcg-enabled leaf).
+This hypothesis doesn't add up to me (I am sorry).
 
-(It's just that task_memcg won't return NULL. Unless the kernel is
-compiled without memcg support completely, which makes me think how do
-the config-dependent values propagate to BPF programs?)
+The kill_css(css) would be a css associated with a subsys (css.ss !=
+NULL) whereas css_put(&cgrp->self) is a different css just for the
+cgroup (css.ss == NULL).
 
-Thanks,
 Michal
