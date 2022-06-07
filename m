@@ -1,108 +1,113 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v5 4/4] KVM: arm64/mmu: count KVM s2 mmu usage in secondary
- pagetable stats
-Date: Mon,  6 Jun 2022 22:20:58 +0000
-Message-ID: <20220606222058.86688-5-yosryahmed@google.com>
-References: <20220606222058.86688-1-yosryahmed@google.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -next v5 0/3] support concurrent sync io for bfq on a
+ specail occasion
+Date: Tue, 7 Jun 2022 11:10:27 +0800
+Message-ID: <21cd1c49-838a-7f03-ab13-9a4f2ac65979@huawei.com>
+References: <20220428120837.3737765-1-yukuai3@huawei.com>
+ <d50df657-d859-79cf-c292-412eaa383d2c@huawei.com>
+ <61b67d5e-829c-8130-7bda-81615d654829@huawei.com>
+ <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
+ <d5a90a08-1ac6-587a-e900-0436bd45543a@kernel.dk>
+ <55919e29-1f22-e8aa-f3d2-08c57d9e1c22@huawei.com>
+ <20220523085902.wmxoebyq3crerecr@quack3.lan>
+ <25f6703e-9e10-75d9-a893-6df1e6b75254@kernel.dk>
+ <20220523152516.7sr247i3bzwhr44w@quack3.lan>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=lCj5vf6+ANqLHv3122ZbLr+VtIsIBzbS/r0LeVNVl3w=;
-        b=fhNqTQhqkFux/ukIEgHzIyWXf7nWgidEa7EZyE6ojT7eSM39dn6EJghTF0Wz+po+G8
-         NrXJEpS7gJdVDOJob5aQvoGsOmcx+ynWrkIQ6mokqSgyj8IvYWY1o4fPwhteMr1UyxnN
-         +cNHE3z/DMTyLaXYmsi6tOorj2M77FxEsSXaEjz/7pr793GUJ9HhGSRtQN77II9Kyt1x
-         VCEb+fRiffbhSZD7SWq09vE6VbwZtBwVsEFs3id87zkSeTVMGB608xT5Z3874uG8vwE8
-         TehuFGa8lHQuFkXATbjbgXalldhf4GeMOqL5oJbujtgTwTrXOyonxqdb6ZfbN2/Hk4qK
-         UzxA==
-In-Reply-To: <20220606222058.86688-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20220523152516.7sr247i3bzwhr44w-/1kMjMImKQN+urZeOPWqwQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, kvmarm-FPEHb7Xf0XXUo1n7N8X6UoWGPAHP3yOg@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 
-Count the pages used by KVM in arm64 for stage2 mmu in secondary pagetable
-stats.
 
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- arch/arm64/kvm/mmu.c | 36 ++++++++++++++++++++++++++++++++----
- 1 file changed, 32 insertions(+), 4 deletions(-)
 
-diff --git a/arch/arm64/kvm/mmu.c b/arch/arm64/kvm/mmu.c
-index f5651a05b6a85..80bc92601fd96 100644
---- a/arch/arm64/kvm/mmu.c
-+++ b/arch/arm64/kvm/mmu.c
-@@ -92,9 +92,13 @@ static bool kvm_is_device_pfn(unsigned long pfn)
- static void *stage2_memcache_zalloc_page(void *arg)
- {
- 	struct kvm_mmu_memory_cache *mc = arg;
-+	void *virt;
- 
- 	/* Allocated with __GFP_ZERO, so no need to zero */
--	return kvm_mmu_memory_cache_alloc(mc);
-+	virt = kvm_mmu_memory_cache_alloc(mc);
-+	if (virt)
-+		kvm_account_pgtable_pages(virt, 1);
-+	return virt;
- }
- 
- static void *kvm_host_zalloc_pages_exact(size_t size)
-@@ -102,6 +106,21 @@ static void *kvm_host_zalloc_pages_exact(size_t size)
- 	return alloc_pages_exact(size, GFP_KERNEL_ACCOUNT | __GFP_ZERO);
- }
- 
-+static void *kvm_s2_zalloc_pages_exact(size_t size)
-+{
-+	void *virt = kvm_host_zalloc_pages_exact(size);
-+
-+	if (virt)
-+		kvm_account_pgtable_pages(virt, (size >> PAGE_SHIFT));
-+	return virt;
-+}
-+
-+static void kvm_s2_free_pages_exact(void *virt, size_t size)
-+{
-+	kvm_account_pgtable_pages(virt, -(size >> PAGE_SHIFT));
-+	free_pages_exact(virt, size);
-+}
-+
- static void kvm_host_get_page(void *addr)
- {
- 	get_page(virt_to_page(addr));
-@@ -112,6 +131,15 @@ static void kvm_host_put_page(void *addr)
- 	put_page(virt_to_page(addr));
- }
- 
-+static void kvm_s2_put_page(void *addr)
-+{
-+	struct page *p = virt_to_page(addr);
-+	/* Dropping last refcount, the page will be freed */
-+	if (page_count(p) == 1)
-+		kvm_account_pgtable_pages(addr, -1);
-+	put_page(p);
-+}
-+
- static int kvm_host_page_count(void *addr)
- {
- 	return page_count(virt_to_page(addr));
-@@ -625,10 +653,10 @@ static int get_user_mapping_size(struct kvm *kvm, u64 addr)
- 
- static struct kvm_pgtable_mm_ops kvm_s2_mm_ops = {
- 	.zalloc_page		= stage2_memcache_zalloc_page,
--	.zalloc_pages_exact	= kvm_host_zalloc_pages_exact,
--	.free_pages_exact	= free_pages_exact,
-+	.zalloc_pages_exact	= kvm_s2_zalloc_pages_exact,
-+	.free_pages_exact	= kvm_s2_free_pages_exact,
- 	.get_page		= kvm_host_get_page,
--	.put_page		= kvm_host_put_page,
-+	.put_page		= kvm_s2_put_page,
- 	.page_count		= kvm_host_page_count,
- 	.phys_to_virt		= kvm_host_va,
- 	.virt_to_phys		= kvm_host_pa,
--- 
-2.36.1.255.ge46751e96f-goog
+=D4=DA 2022/05/23 23:25, Jan Kara =D0=B4=B5=C0:
+> On Mon 23-05-22 06:36:58, Jens Axboe wrote:
+>> On 5/23/22 2:59 AM, Jan Kara wrote:
+>>> On Mon 23-05-22 09:10:38, yukuai (C) wrote:
+>>>> ? 2022/05/21 20:21, Jens Axboe ??:
+>>>>> On 5/21/22 1:22 AM, yukuai (C) wrote:
+>>>>>> ? 2022/05/14 17:29, yukuai (C) ??:
+>>>>>>> ? 2022/05/05 9:00, yukuai (C) ??:
+>>>>>>>> Hi, Paolo
+>>>>>>>>
+>>>>>>>> Can you take a look at this patchset? It has been quite a long time
+>>>>>>>> since we spotted this problem...
+>>>>>>>>
+>>>>>>>
+>>>>>>> friendly ping ...
+>>>>>> friendly ping ...
+>>>>>
+>>>>> I can't speak for Paolo, but I've mentioned before that the majority
+>>>>> of your messages end up in my spam. That's still the case, in fact
+>>>>> I just marked maybe 10 of them as not spam.
+>>>>>
+>>>>> You really need to get this issued sorted out, or you will continue
+>>>>> to have patches ignore because folks may simply not see them.
+>>>>>
+>>>> Hi,
+>>>>
+>>>> Thanks for your notice.
+>>>>
+>>>> Is it just me or do you see someone else's messages from *huawei.com
+>>>> end up in spam? I tried to seek help from our IT support, however, they
+>>>> didn't find anything unusual...
+>>>
+>>> So actually I have noticed that a lot of (valid) email from huawei.com =
+(not
+>>> just you) ends up in the spam mailbox. For me direct messages usually p=
+ass
+>>> (likely matching SPF records for originating mail server save the email
+>>> from going to spam) but messages going through mailing lists are flagge=
+d as
+>>> spam because the emails are missing valid DKIM signature but huawei.com
+>>> DMARC config says there should be DKIM signature (even direct messages =
+are
+>>> missing DKIM so this does not seem as a mailing list configuration issu=
+e).
+>>> So this seems as some misconfiguration of the mails on huawei.com side
+>>> (likely missing DKIM signing of outgoing email).
+>>
+>> SPF/DKIM was indeed a problem earlier for yukaui patches, but I don't
+>> see that anymore. Maybe it's still an issue for some emails, from them
+>> or Huawei in general?
+>=20
+> Hum, for me all emails from Huawei I've received even today fail the DKIM
+> check. After some more digging there is interesting inconsistency in DMARC
+> configuration for huawei.com domain. There is DMARC record for huawei.com
+> like:
+>=20
+> huawei.com.		600	IN	TXT	"v=3DDMARC1;p=3Dnone;rua=3Dmailto:dmarc-8cQ/FyLJE=
+fGM2ScGVVA7yQ@public.gmane.org"
+>=20
+> which means no DKIM is required but _dmarc.huawei.com has:
+>=20
+> _dmarc.huawei.com.	600	IN	TXT	"v=3DDMARC1;p=3Dquarantine;ruf=3Dmailto:dma=
+rc-hv44wF8Li93QT0dZR+AlfA@public.gmane.org;rua=3Dmailto:dmarc-hv44wF8Li93QT=
+0dZR+AlfA@public.gmane.org"
+>=20
+> which says that DKIM is required. I guess this inconsistency may be the
+> reason why there are problems with DKIM validation for senders from
+> huawei.com. Yu Kuai, can you perhaps take this to your IT support to fix
+> this? Either make sure huawei.com emails get properly signed with DKIM or
+> remove the 'quarantine' record from _dmarc.huawei.com. Thanks!
+>=20
+> 								Honza
+>=20
+Hi, Jan and Jens
 
+I just got response from our IT support:
+
+'fo' is not set in our dmarc configuration(default is 0), which means
+SPF and DKIM verify both failed so that emails will end up in spam.
+
+It right that DKIM verify is failed because there is no signed key,
+however, our IT support are curious how SPF verify faild.
+
+Can you guys please take a look at ip address of sender? So our IT
+support can take a look if they miss it from SPF records.
+
+Thanks,
+Kuai
