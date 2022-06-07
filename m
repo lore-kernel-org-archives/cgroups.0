@@ -1,41 +1,68 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] psi: dont alloc memory for psi by default
-Date: Tue, 7 Jun 2022 07:12:22 -1000
-Message-ID: <Yp+G9o2wuJNfLuLk@slm.duckdns.org>
-References: <20220526122656.256274-1-chenwandun@huawei.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [PATCH bpf-next v1 5/5] bpf: add a selftest for cgroup
+ hierarchical stats collection
+Date: Tue, 7 Jun 2022 10:43:35 -0700
+Message-ID: <CAJD7tkYa3u52c77cnRxZ6D_4u5fkDG545r5a9SdK3Ys9Uuorig@mail.gmail.com>
+References: <20220520012133.1217211-1-yosryahmed@google.com>
+ <20220520012133.1217211-6-yosryahmed@google.com> <20220603162339.GA25043@blackbody.suse.cz>
+ <CAJD7tkYwU5dW9Oof+pC81R9Bi-F=-EuiXpTn+HDeqbhTOTCcuw@mail.gmail.com>
+ <20220606123222.GA4377@blackbody.suse.cz> <CAJD7tkbi7Gnnf4NiUt-J61G7185NsRcySvP6qOQsFKMou7qZJg@mail.gmail.com>
+ <20220607121237.GC31717@blackbody.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=KLGsBB+R+Y7B7KHGHWSxqZCFvRmylkKZbWB3sA14MH0=;
-        b=oLvveGNDVWzqyzP67UJA4WVF9pRh7nH3lgY7otES74HwEqlpsHB2KuZ73+XbuTnCG3
-         NQ0W4JcSrDbByxyqCSz5HcmIxSIhE+/6k4jTxOnoHZrf5frvi3VWiE5cnv68GWllEDaE
-         /JaT35fAp+rhmFa9SnKCYlXe4HyWRnYlwAoFSrPib4PZQidKpNLVZPjfdQTwbGOjPGyg
-         U/4wWGgbim+Dw47QFdLJHfYaWe2OgndP8vp9NbX00eP+SEdbgFn94eB7wuARP8te7BEE
-         ihq3Cw1VCttarncMGtOKyi9Uw7SONKrvAQegMoFP7XAopWPALVkixmmK2h9s/hzVkgsw
-         AWpA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20220526122656.256274-1-chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=Avvoh8CnIiqiG7pt5w+f0B0Z6X7OPhtWirg6KypOnRk=;
+        b=VJgCpuVqKSXl0XX58PrPxmWGKDkQdIE6BEthpBh1qGGSHXZS3+YISNnwTYkYarnho9
+         MvxMYs2TMqZiGshTbPZ0zIzK1VVVXZpVgaziJrABATtPimx965adbeB6GqOUlTuNnyhz
+         NPWJKmZexcPAKl4rzq3JtNd9/PXX0JeVvORheEEpbcyms/Ra+vjsuG5Kqeil6AQzy6/V
+         KHCGQPlibPQzrK3H2wed7BEJ3UlHPtrRePVo21DyyddSbOjiJ+ttt3X/L876GbyiyvAw
+         UJZAGIQaLuw88L2APyzR3tLX+5EFi65VfUbyfbBKfXfwkl++cELNNBZ8yhYU7i7NZ9fd
+         954g==
+In-Reply-To: <20220607121237.GC31717@blackbody.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Stanislav Fomichev <sdf@google.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@vger.kernel.org>
 
-On Thu, May 26, 2022 at 08:26:56PM +0800, Chen Wandun wrote:
-> Memory about struct psi_group is allocated by default for
-> each cgroup even if psi_disabled is true, in this case, these
-> allocated memory is waste, so alloc memory for struct psi_group
-> only when psi_disabled is false.
-> 
-> Signed-off-by: Chen Wandun <chenwandun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+On Tue, Jun 7, 2022 at 5:12 AM Michal Koutn=C3=BD <mkoutny@suse.com> wrote:
+>
+> On Mon, Jun 06, 2022 at 12:41:06PM -0700, Yosry Ahmed <yosryahmed@google.=
+com> wrote:
+> > I don't know if there is a standard way to handle this, but I think
+> > you should know the configs of your kernel when you are loading a bpf
+> > program?
+>
+> Isn't this one of purposes of BTF? (I don't know, I'm genuinely asking.)
+>
+> > If the CONFIG_CGROUPS=3D1 but CONFIG_MEMCG=3D0 I think everything will
+> > work normally except that task_memcg() will always return NULL so no
+> > stats will be collected, which makes sense.
+>
+> I was not able to track down what is the include chain to
+> tools/testing/selftests/bpf/progs/cgroup_vmscan.c, i.e. how is the enum
+> value memory_cgrp_id defined.
 
-Applied to cgroup/for-5.20.
+memory_cgrp_id is defined in "vmlinux.h" (generated from BTF) which is
+included through "bpf_iter.h". If the kernel is not compiled with
+CONFIG_MEMCG then this enum value will not be defined and the bpf prog
+should not compile.
 
-Thanks.
-
--- 
-tejun
+>
+> (A custom kernel module build requires target kernel's header files, I
+> could understand that compiling a BPF program requires them likewise and
+> that's how this could work.
+> Although, it goes against my undestanding of the CO-RE principle.)
+>
+> > There will be some overhead to running bpf programs that will always
+> > do nothing, but I would argue that it's the userspace's fault here for
+> > loading bpf programs on a non-compatible kernel.
+>
+> Yeah, running an empty program is non-issue in my eyes, I was rather
+> considering whether the program uses proper offsets.
+>
+> Michal
+>
