@@ -1,48 +1,147 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH memcg v6] net: set proper memcg for net_init hooks allocations
-Date: Mon, 6 Jun 2022 22:58:45 -0700
-Message-ID: <CALvZod7+tpgKSQpMAgNKDtcsimcSjoh4rbKmUsy3G=QcRHci+Q@mail.gmail.com>
-References: <6b362c6e-9c80-4344-9430-b831f9871a3c@openvz.org>
- <f9394752-e272-9bf9-645f-a18c56d1c4ec@openvz.org> <Yp4F6n2Ie32re7Ed@qian> <360a2672-65a7-4ad4-c8b8-cc4c1f0c02cd@openvz.org>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH -next v5 0/3] support concurrent sync io for bfq on a
+ specail occasion
+Date: Tue, 7 Jun 2022 11:54:30 +0200
+Message-ID: <20220607095430.kac5jgzm2gvd7x3c@quack3.lan>
+References: <20220428120837.3737765-1-yukuai3@huawei.com>
+ <d50df657-d859-79cf-c292-412eaa383d2c@huawei.com>
+ <61b67d5e-829c-8130-7bda-81615d654829@huawei.com>
+ <81411289-e13c-20f5-df63-c059babca57a@huawei.com>
+ <d5a90a08-1ac6-587a-e900-0436bd45543a@kernel.dk>
+ <55919e29-1f22-e8aa-f3d2-08c57d9e1c22@huawei.com>
+ <20220523085902.wmxoebyq3crerecr@quack3.lan>
+ <25f6703e-9e10-75d9-a893-6df1e6b75254@kernel.dk>
+ <20220523152516.7sr247i3bzwhr44w@quack3.lan>
+ <21cd1c49-838a-7f03-ab13-9a4f2ac65979@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=vhyeByqESMejGx5K1JZDwSGtodZB7YcNJdkA/XZ0nhs=;
-        b=kJEPNwOx4uW/m0EmGEFbJCpF8utS8wjUtlPoQt/S+v3DQr6KNVz4SgD0N03AKsEJcX
-         SO2IryPIeU/NYudxkDqQlve5MgWVNEd/UXTv4cQqyk1Xzg3ZqII+PMM+EuXOg1NIjJ4V
-         jN7s5HxeykfvrWLOjcbQLVgsfbgmfTztwpMbAhaLNSeYFu4K1h3uX8J4o9hWA8ieYllK
-         xdufyQ5KNBtOtIG80GB/m9OHwp8pxjZMmYG+HQsZiZNpZO5SvgjTSYceofuW/EpV1qLZ
-         d8zB/sQ5OLtm52akYLt52jq1fouG4Dac89ykzUVvMKJVmu9w6rMtBvbq8X3+G+NZYOLg
-         Jf+g==
-In-Reply-To: <360a2672-65a7-4ad4-c8b8-cc4c1f0c02cd-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1654595671; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=O8/KOd5RYhzrnOAPVQE4xuS4q6J8PzmLXIB3TWqGbFM=;
+        b=NEs8zRvIERoG5fRYWA54xWuP8i8LaG63Rfdtf7qBjO8A1VSxWCBA4alfAHU+0qAbOEd3Ot
+        CP787/d5R1NJYGi7vECKxq1ljc9ewslFTPeXoBzR2njoZyq0yiImPH4QQU5w7AgxuQkRuF
+        kuh2D6lbIpsx3S5au3aTxAsXgEFkuaI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1654595671;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=O8/KOd5RYhzrnOAPVQE4xuS4q6J8PzmLXIB3TWqGbFM=;
+        b=P38gmVGqg0HxMFB2/Ayh0jQtyPMu11PbOdDqv8hxy5f/eOFUB92Wkk7OCbTpHNoNHLhnXE
+        1992k22RkQ7QlPCA==
+Content-Disposition: inline
+In-Reply-To: <21cd1c49-838a-7f03-ab13-9a4f2ac65979-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Qian Cai <quic_qiancai-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 
-On Mon, Jun 6, 2022 at 11:45 AM Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
->
-[...]
->
-> As far as I understand this report means that 'init_net' have incorrect
-> virtual address on arm64.
+On Tue 07-06-22 11:10:27, Yu Kuai wrote:
+> 在 2022/05/23 23:25, Jan Kara 写道:
+> > Hum, for me all emails from Huawei I've received even today fail the DKIM
+> > check. After some more digging there is interesting inconsistency in DMARC
+> > configuration for huawei.com domain. There is DMARC record for huawei.com
+> > like:
+> > 
+> > huawei.com.		600	IN	TXT	"v=DMARC1;p=none;rua=mailto:dmarc-8cQ/FyLJEfGM2ScGVVA7yQ@public.gmane.org"
+> > 
+> > which means no DKIM is required but _dmarc.huawei.com has:
+> > 
+> > _dmarc.huawei.com.	600	IN	TXT	"v=DMARC1;p=quarantine;ruf=mailto:dmarc-hv44wF8Li93QT0dZR+AlfA@public.gmane.org;rua=mailto:dmarc-hv44wF8Li93QT0dZR+AlfA@public.gmane.org"
+> > 
+> > which says that DKIM is required. I guess this inconsistency may be the
+> > reason why there are problems with DKIM validation for senders from
+> > huawei.com. Yu Kuai, can you perhaps take this to your IT support to fix
+> > this? Either make sure huawei.com emails get properly signed with DKIM or
+> > remove the 'quarantine' record from _dmarc.huawei.com. Thanks!
+> > 
+> > 								Honza
+> > 
+> Hi, Jan and Jens
+> 
+> I just got response from our IT support:
+> 
+> 'fo' is not set in our dmarc configuration(default is 0), which means
+> SPF and DKIM verify both failed so that emails will end up in spam.
+> 
+> It right that DKIM verify is failed because there is no signed key,
+> however, our IT support are curious how SPF verify faild.
+> 
+> Can you guys please take a look at ip address of sender? So our IT
+> support can take a look if they miss it from SPF records.
 
-So, the two call stacks tell the addresses belong to the kernel
-modules (nfnetlink and nf_tables) whose underlying memory is allocated
-through vmalloc and virt_to_page() does not work on vmalloc()
-addresses.
+So SPF is what makes me receive direct emails from you. For example on this
+email I can see:
 
->
-> Roman, Shakeel, I need your help
->
-> Should we perhaps verify kaddr via virt_addr_valid() before using virt_to_page()
-> If so, where it should be checked?
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com
+        [185.176.79.56])
+        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128
+        bits))
+        (No client certificate requested)
+        by smtp-in2.suse.de (Postfix) with ESMTPS id 4LHFjN2L0dzZfj
+        for <jack-AlSwsSmVLrQ@public.gmane.org>; Tue,  7 Jun 2022 03:10:32 +0000 (UTC)
+...
+Authentication-Results: smtp-in2.suse.de;
+        dkim=none;
+        dmarc=pass (policy=quarantine) header.from=huawei.com;
+        spf=pass (smtp-in2.suse.de: domain of yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org designates
+        185.176.79.56 as permitted sender) smtp.mailfrom=yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-I think virt_addr_valid() check in mem_cgroup_from_obj() should work
-but I think it is expensive on the arm64 platform. The cheaper and a
-bit hacky way to avoid such addresses is to directly use
-is_vmalloc_addr() directly.
+So indeed frasgout.his.huawei.com is correct outgoing server which makes
+smtp-in2.suse.de believe the email despite missing DKIM signature. But the
+problem starts when you send email to a mailing list. Let me take for
+example your email from June 2 with Message-ID
+<20220602082129.2805890-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, subject "[PATCH -next]
+mm/filemap: fix that first page is not mark accessed in filemap_read()".
+There the mailing list server forwards the email so we have:
+
+Received: from smtp-in2.suse.de ([192.168.254.78])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        by dovecot-director2.suse.de with LMTPS
+        id 8MC5NfVvmGIPLwAApTUePA
+        (envelope-from <linux-fsdevel-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>)
+        for <jack-j1pC+zEt+uWoYr4blSSd5g@public.gmane.org>; Thu, 02 Jun 2022 08:08:21 +0000
+Received: from out1.vger.email (out1.vger.email [IPv6:2620:137:e000::1:20])
+        by smtp-in2.suse.de (Postfix) with ESMTP id 4LDJYK5bf0zZg5
+        for <jack-AlSwsSmVLrQ@public.gmane.org>; Thu,  2 Jun 2022 08:08:21 +0000 (UTC)
+Received: (majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org) by vger.kernel.org via listexpand
+        id S232063AbiFBIIM (ORCPT <rfc822;jack-AlSwsSmVLrQ@public.gmane.org>);
+        Thu, 2 Jun 2022 04:08:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56178 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by
+        vger.kernel.org
+        with ESMTP id S232062AbiFBIIL (ORCPT
+        <rfc822;linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>);
+        Thu, 2 Jun 2022 04:08:11 -0400
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id
+        75DDB25FE;
+        Thu,  2 Jun 2022 01:08:08 -0700 (PDT)
+
+and thus smtp-in2.suse.de complains:
+
+Authentication-Results: smtp-in2.suse.de;
+        dkim=none;
+        dmarc=fail reason="SPF not aligned (relaxed), No valid DKIM"
+        header.from=huawei.com (policy=quarantine);
+        spf=pass (smtp-in2.suse.de: domain of
+        linux-fsdevel-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org designates 2620:137:e000::1:20 as
+        permitted sender) smtp.mailfrom=linux-fsdevel-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+
+Because now we've got email with "From" header from huawei.com domain from
+a vger mail server which was forwarding it. So SPF has no chance to match
+(in fact SPF did pass for the Return-Path header which points to
+vger.kernel.org but DMARC defines that if "From" and "Return-Path" do not
+match, additional validation is needed - this is the "SPF not aligned
+(relaxed)" message above). And missing DKIM (the additional validation
+method) sends the email to spam.
+
+								Honza
+-- 
+Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+SUSE Labs, CR
