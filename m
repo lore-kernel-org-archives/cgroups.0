@@ -1,172 +1,63 @@
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -next v9 0/4] support concurrent sync io for bfq on a
- specail occasion
-Date: Wed, 8 Jun 2022 20:27:39 +0800
-Message-ID: <3e2aea7f-a6a9-04aa-e22f-5d08b5686116@huawei.com>
-References: <20220601114340.949953-1-yukuai3@huawei.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] cgroup: handle cset multiidentity issue when migration
+Date: Wed, 8 Jun 2022 15:51:10 +0200
+Message-ID: <20220608135110.GA19399@blackbody.suse.cz>
+References: <1654187688-27411-1-git-send-email-shisiyuan@xiaomi.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220601114340.949953-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1654696271; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=EdG9PlC0R8OmQU19nk71zBCMMuRv8NZuw8mGqBcI480=;
+        b=K2HoctTtt/KhX6+mXecsJdmxEuLMLk9zl0bFw6P8GQqwSvXX6slsZPsrN89QwI/uB+DzRk
+        2rc7JqmJgkntQCiSgzz+t+cOxr+UxCJIiMua+TwkAugUiSC+51i12hZ9WImmy5T6lsX3QU
+        4J2vUnC1M74rqwRGtY9bdo+zosQvGM8=
+Content-Disposition: inline
+In-Reply-To: <1654187688-27411-1-git-send-email-shisiyuan-95E7rUnPDLLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: shisiyuan <shisiyuan19870131-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shisiyuan <shisiyuan-95E7rUnPDLLQT0dZR+AlfA@public.gmane.org>
 
-=D4=DA 2022/06/01 19:43, Yu Kuai =D0=B4=B5=C0:
+Hello.
 
-Hi, Paolo
+On Fri, Jun 03, 2022 at 12:34:48AM +0800, shisiyuan <shisiyuan19870131-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> Bug code flow:
+> cset X's initial refcount is 1.
+> 1. cgroup_attach_task()
+> 2. [For thread1]
+>    cgroup_migrate_add_src()
+>    [For thread2]
+>    cgroup_migrate_add_src()
+>      cset X is thread2's src_cset , ref->2,
+>      and its mg_preload_node is added to
+>      mgctx->preloaded_src_csets.
+> 3. cgroup_migrate_prepare_dst()
+>    [For thread1]
+>    find_css_set()
+>      cset X is thread1's dst_cset, ref->3
+>    put_css_set()
+>      ref->2 because cset X's mg_preload_node is not
+>      empty(already in mgctx->preloaded_src_csets).
+>    [For thread2]
+>    find_css_cset()
+>      cset X is also thread2's dst_cset, ref->3
+>      then drop src_cset, ref->1
+> [cgroup_free] ref->0
+> 4. cgroup_migrate_execute
+>    [For thread1]
+>    ref -> 0xc0000000(UAF)
 
-Since there is no response from you, I assum that you didn't receive
-these emails(probably end up in your spam). I'll try to resend them
-soon.
+I'm trying to understand when this happens.
+You migrate a process with two threads while one of them exits?
+
+This should be properly synchronized with cgroup_threadgroup_rwsem, so I
+don't understand where does the [cgroup_free] between 3. and 4. come
+from.
+
+Do you have a reproducer for this?
 
 Thanks,
-Kuai
-> Changes in v9:
->   - also update how many bfqqs have pending_reqs bfq_bfqq_move().
->   - fix one language in patch 4
->   - Add reviewed-tag for patch 1,3,4
->=20
-> Changes in v8:
->   - Instead of using whether bfqq is busy, using whether bfqq has pending
->   requests. As Paolo pointed out the former way is problematic.
->=20
-> Changes in v7:
->   - fix mismatch bfq_inc/del_busy_queues() and bfqq_add/del_bfqq_busy(),
->   also retest this patchset on v5.18 to make sure functionality is
->   correct.
->   - move the updating of 'bfqd->busy_queues' into new apis
->=20
-> Changes in v6:
->   - add reviewed-by tag for patch 1
->=20
-> Changes in v5:
->   - rename bfq_add_busy_queues() to bfq_inc_busy_queues() in patch 1
->   - fix wrong definition in patch 1
->   - fix spelling mistake in patch 2: leaset -> least
->   - update comments in patch 3
->   - add reviewed-by tag in patch 2,3
->=20
-> Changes in v4:
->   - split bfq_update_busy_queues() to bfq_add/dec_busy_queues(),
->     suggested by Jan Kara.
->   - remove unused 'in_groups_with_pending_reqs',
->=20
-> Changes in v3:
->   - remove the cleanup patch that is irrelevant now(I'll post it
->     separately).
->   - instead of hacking wr queues and using weights tree insertion/removal,
->     using bfq_add/del_bfqq_busy() to count the number of groups
->     (suggested by Jan Kara).
->=20
-> Changes in v2:
->   - Use a different approch to count root group, which is much simple.
->=20
-> Currently, bfq can't handle sync io concurrently as long as they
-> are not issued from root group. This is because
-> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
-> bfq_asymmetric_scenario().
->=20
-> The way that bfqg is counted into 'num_groups_with_pending_reqs':
->=20
-> Before this patchset:
->   1) root group will never be counted.
->   2) Count if bfqg or it's child bfqgs have pending requests.
->   3) Don't count if bfqg and it's child bfqgs complete all the requests.
->=20
-> After this patchset:
->   1) root group is counted.
->   2) Count if bfqg has pending requests.
->   3) Don't count if bfqg complete all the requests.
->=20
-> With the above changes, concurrent sync io can be supported if only
-> one group is activated.
->=20
-> fio test script(startdelay is used to avoid queue merging):
-> [global]
-> filename=3D/dev/sda
-> allow_mounted_write=3D0
-> ioengine=3Dpsync
-> direct=3D1
-> ioscheduler=3Dbfq
-> offset_increment=3D10g
-> group_reporting
-> rw=3Drandwrite
-> bs=3D4k
->=20
-> [test1]
-> numjobs=3D1
->=20
-> [test2]
-> startdelay=3D1
-> numjobs=3D1
->=20
-> [test3]
-> startdelay=3D2
-> numjobs=3D1
->=20
-> [test4]
-> startdelay=3D3
-> numjobs=3D1
->=20
-> [test5]
-> startdelay=3D4
-> numjobs=3D1
->=20
-> [test6]
-> startdelay=3D5
-> numjobs=3D1
->=20
-> [test7]
-> startdelay=3D6
-> numjobs=3D1
->=20
-> [test8]
-> startdelay=3D7
-> numjobs=3D1
->=20
-> test result:
-> running fio on root cgroup
-> v5.18:	   112 Mib/s
-> v5.18-patched: 112 Mib/s
->=20
-> running fio on non-root cgroup
-> v5.18:	   51.2 Mib/s
-> v5.18-patched: 112 Mib/s
->=20
-> Note that I also test null_blk with "irqmode=3D2
-> completion_nsec=3D100000000(100ms) hw_queue_depth=3D1", and tests show
-> that service guarantees are still preserved.
->=20
-> Previous versions:
-> RFC: https://lore.kernel.org/all/20211127101132.486806-1-yukuai3-hv44wF8L=
-i93QT0dZR+AlfA@public.gmane.org/
-> v1: https://lore.kernel.org/all/20220305091205.4188398-1-yukuai3-hv44wF8L=
-i93QT0dZR+AlfA@public.gmane.org/
-> v2: https://lore.kernel.org/all/20220416093753.3054696-1-yukuai3-hv44wF8L=
-i93QT0dZR+AlfA@public.gmane.org/
-> v3: https://lore.kernel.org/all/20220427124722.48465-1-yukuai3-hv44wF8Li9=
-3QT0dZR+AlfA@public.gmane.org/
-> v4: https://lore.kernel.org/all/20220428111907.3635820-1-yukuai3-hv44wF8L=
-i93QT0dZR+AlfA@public.gmane.org/
-> v5: https://lore.kernel.org/all/20220428120837.3737765-1-yukuai3-hv44wF8L=
-i93QT0dZR+AlfA@public.gmane.org/
-> v6: https://lore.kernel.org/all/20220523131818.2798712-1-yukuai3-hv44wF8L=
-i93QT0dZR+AlfA@public.gmane.org/
-> v7: https://lore.kernel.org/all/20220528095020.186970-1-yukuai3-hv44wF8Li=
-93QT0dZR+AlfA@public.gmane.org/
->=20
->=20
-> Yu Kuai (4):
->    block, bfq: support to track if bfqq has pending requests
->    block, bfq: record how many queues have pending requests
->    block, bfq: refactor the counting of 'num_groups_with_pending_reqs'
->    block, bfq: do not idle if only one group is activated
->=20
->   block/bfq-cgroup.c  | 10 ++++++++++
->   block/bfq-iosched.c | 47 +++------------------------------------------
->   block/bfq-iosched.h | 21 +++++++++++---------
->   block/bfq-wf2q.c    | 47 ++++++++++++++++++++++++++++++---------------
->   4 files changed, 57 insertions(+), 68 deletions(-)
->=20
+Michal
