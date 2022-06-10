@@ -1,115 +1,48 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH -next v10 2/4] block, bfq: record how many queues have pending requests
-Date: Fri, 10 Jun 2022 10:16:59 +0800
-Message-ID: <20220610021701.2347602-3-yukuai3@huawei.com>
-References: <20220610021701.2347602-1-yukuai3@huawei.com>
+From: cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Subject: [PATCH] mm: memcontrol: reference to tools/cgroup/memcg_slabinfo.py
+Date: Fri, 10 Jun 2022 02:44:52 +0000
+Message-ID: <20220610024451.744135-1-yang.yang29@zte.com.cn>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20220610021701.2347602-1-yukuai3@huawei.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=wD58Q0nVdN+lpK7XOvbDvW4lZ7h1rqEWk+skYGgOvJ0=;
+        b=Y6A0K30lWxEicLPPmjfvigg4Z03uPa39KfSU4jwd5vx9b6x5HxdPlyyVwybkBiEqAQ
+         Q15JzwoiSLcUKwmQqfQZLOkbHx/bvsG8q4SQ8dnhpsKngiFuu+nYfYjMZ833CCyEKYQ3
+         ztpR4i6TcGQUIE04Cq3wSu0pyDOglJGCx/URJroH+yN+0OWdOj7YUB99S07kecNm+T+g
+         4bllY4ycfzaVRA7UJyChYPED0DNusFEaXz4h1vP61YO/M9cxKQvuTojmGDS6I4WOlYll
+         qgjVIfP0PHaKlStMD0rk8R34u2rMEgjY54g2rkFPYv5zx6TbRkXI1gbkW6+ipw/bPz4t
+         NhOw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: paolo.valente@linaro.org, jack@suse.cz, cgroups@vger.kernel.org, linux-block@vger.kernel.org
-Cc: tj@kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+To: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yang Yang <yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 
-Prepare to refactor the counting of 'num_groups_with_pending_reqs'.
+From: Yang Yang <yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 
-Add a counter in bfq_group, update it while tracking if bfqq have pending
-requests and when bfq_bfqq_move() is called.
+There is no slabinfo.py in tools/cgroup, but has memcg_slabinfo.py instead.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Yang Yang <yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 ---
- block/bfq-cgroup.c  | 10 ++++++++++
- block/bfq-iosched.h |  1 +
- block/bfq-wf2q.c    | 12 ++++++++++--
- 3 files changed, 21 insertions(+), 2 deletions(-)
+ mm/memcontrol.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 09574af83566..88c0c320ddf3 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -557,6 +557,7 @@ static void bfq_pd_init(struct blkg_policy_data *pd)
- 				   */
- 	bfqg->bfqd = bfqd;
- 	bfqg->active_entities = 0;
-+	bfqg->num_queues_with_pending_reqs = 0;
- 	bfqg->online = true;
- 	bfqg->rq_pos_tree = RB_ROOT;
- }
-@@ -646,6 +647,7 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index dfbc84313745..ca714699a8e9 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4820,7 +4820,7 @@ static int mem_cgroup_slab_show(struct seq_file *m, void *p)
  {
- 	struct bfq_entity *entity = &bfqq->entity;
- 	struct bfq_group *old_parent = bfqq_group(bfqq);
-+	bool has_pending_reqs = false;
- 
  	/*
- 	 * No point to move bfqq to the same group, which can happen when
-@@ -666,6 +668,11 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+ 	 * Deprecated.
+-	 * Please, take a look at tools/cgroup/slabinfo.py .
++	 * Please, take a look at tools/cgroup/memcg_slabinfo.py .
  	 */
- 	bfqq->ref++;
- 
-+	if (entity->in_groups_with_pending_reqs) {
-+		has_pending_reqs = true;
-+		bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
-+	}
-+
- 	/* If bfqq is empty, then bfq_bfqq_expire also invokes
- 	 * bfq_del_bfqq_busy, thereby removing bfqq and its entity
- 	 * from data structures related to current group. Otherwise we
-@@ -693,6 +700,9 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 	/* pin down bfqg and its associated blkg  */
- 	bfqg_and_blkg_get(bfqg);
- 
-+	if (has_pending_reqs)
-+		bfq_add_bfqq_in_groups_with_pending_reqs(bfqq);
-+
- 	if (bfq_bfqq_busy(bfqq)) {
- 		if (unlikely(!bfqd->nonrot_with_queueing))
- 			bfq_pos_tree_add_move(bfqd, bfqq);
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 69c7d15417e5..de2446a9b7ab 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -943,6 +943,7 @@ struct bfq_group {
- 	struct bfq_entity *my_entity;
- 
- 	int active_entities;
-+	int num_queues_with_pending_reqs;
- 
- 	struct rb_root rq_pos_tree;
- 
-diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index 5704a0315cf2..6f36f3fe5cc8 100644
---- a/block/bfq-wf2q.c
-+++ b/block/bfq-wf2q.c
-@@ -1651,16 +1651,24 @@ void bfq_add_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
- {
- 	struct bfq_entity *entity = &bfqq->entity;
- 
--	if (!entity->in_groups_with_pending_reqs)
-+	if (!entity->in_groups_with_pending_reqs) {
- 		entity->in_groups_with_pending_reqs = true;
-+#ifdef CONFIG_BFQ_GROUP_IOSCHED
-+		bfqq_group(bfqq)->num_queues_with_pending_reqs++;
-+#endif
-+	}
+ 	return 0;
  }
- 
- void bfq_del_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
- {
- 	struct bfq_entity *entity = &bfqq->entity;
- 
--	if (entity->in_groups_with_pending_reqs)
-+	if (entity->in_groups_with_pending_reqs) {
- 		entity->in_groups_with_pending_reqs = false;
-+#ifdef CONFIG_BFQ_GROUP_IOSCHED
-+		bfqq_group(bfqq)->num_queues_with_pending_reqs--;
-+#endif
-+	}
- }
- 
- /*
 -- 
-2.31.1
+2.25.1
 
