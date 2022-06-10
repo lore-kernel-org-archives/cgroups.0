@@ -1,56 +1,53 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: [PATCH bpf-next v2 1/8] cgroup: enable cgroup_get_from_file() on cgroup1
-Date: Fri, 10 Jun 2022 19:44:28 +0000
-Message-ID: <20220610194435.2268290-2-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH bpf-next v2 2/8] cgroup: Add cgroup_put() in !CONFIG_CGROUPS case
+Date: Fri, 10 Jun 2022 19:44:29 +0000
+Message-ID: <20220610194435.2268290-3-yosryahmed@google.com>
 References: <20220610194435.2268290-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=M8/ooGDXsUIPk2mNJ2l2OjGkicZ3p1bfFAHZWM/Ly3A=;
-        b=GsYyQ0tB9bXQvXH2rfH1JcR8TEHmOvJ6SarwER+CY1co37p00ocODWPY6ALAvi7cC/
-         BhRL3SNdxxNtunT13h/LwWckSxL/x3PAnQlMiII3OjHHuxFjm/UiaqGQxGXDWeFua/FG
-         Y41TkbjTNQZBdWmKWYSTYgE2O7pEhXg8S5aHcheB5zWS3P42tcPr1sfBsttz0m6u2hUS
-         k57s9rBU2kRz1kN/xSirNBOIuFSqSk7cJ2Iomhw1Sciw7oQjyaJUK3RsSElxoEdJENaN
-         Lak88pvz9+Eaj9JoaT6P2JaZC4ShxM85fhVOaqcNPgOPT2GVKO2t8qNWcDUt1V4NiF6D
-         Kovg==
-In-Reply-To: <20220610194435.2268290-1-yosryahmed@google.com>
+        bh=BoKrpJKf0NJs+gRVFUxqhFbhSmPUCp4fm3z5hnvOZp8=;
+        b=AwMbVnbr5q4cAXvZEcfd1LqfchA948H9iCk6EgWRZCrU9JhEVm5ktf2o6ZcthFHxtp
+         fJR2NLnd0CP1ZVB3DUwvjogVI2lGFx+c1jhyCuYfDxaBpbmiyoNPt/4toEyzPoI8aG2L
+         l7EJEOOgOdJokfnVs39pZpvlN/bMYVF8zi3c8INe95INBFA4jl4lIxoLgkCtuPsoV8/a
+         1XXWK4i4F34ceL4ZDMye01r9T5dL4OyM1vSa6CjC9wbd/gsB2aegqtszm1WaBXpeIDBW
+         OkwEXnjpF+TFyYLJeSn6Le2Zl5Qm8eGCj8UZgJcfVmdvtpSuHd21o5lvW7PAjhTT2Zlu
+         rkqw==
+In-Reply-To: <20220610194435.2268290-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>
-Cc: Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
+To: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-cgroup_get_from_file() currently fails with -EBADF if called on cgroup
-v1. However, the current implementation works on cgroup v1 as well, so
-the restriction is unnecessary.
+From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-This enabled cgroup_get_from_fd() to work on cgroup v1, which would be
-the only thing stopping bpf cgroup_iter from supporting cgroup v1.
+There is already a cgroup_get_from_id() in the !CONFIG_CGROUPS case,
+let's have a matching cgroup_put() in !CONFIG_CGROUPS too.
 
-Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+Signed-off-by: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup/cgroup.c | 5 -----
- 1 file changed, 5 deletions(-)
+ include/linux/cgroup.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 1779ccddb734d..9943fcb1e574d 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -6090,11 +6090,6 @@ static struct cgroup *cgroup_get_from_file(struct file *f)
- 		return ERR_CAST(css);
- 
- 	cgrp = css->cgroup;
--	if (!cgroup_on_dfl(cgrp)) {
--		cgroup_put(cgrp);
--		return ERR_PTR(-EBADF);
--	}
--
- 	return cgrp;
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 0d1ada8968d75..7485a2f939119 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -757,6 +757,9 @@ static inline struct cgroup *cgroup_get_from_id(u64 id)
+ {
+ 	return NULL;
  }
++
++static inline void cgroup_put(struct cgroup *cgrp)
++{}
+ #endif /* !CONFIG_CGROUPS */
  
+ #ifdef CONFIG_CGROUPS
 -- 
 2.36.1.476.g0c4daa206d-goog
 
