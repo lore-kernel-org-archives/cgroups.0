@@ -1,58 +1,281 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH v5 03/11] mm: memcontrol: prepare objcg API for non-kmem
- usage
-Date: Fri, 10 Jun 2022 16:13:30 -0700
-Message-ID: <YqPQGrtp9v0Ly9SG@carbon>
-References: <20220530074919.46352-1-songmuchun@bytedance.com>
- <20220530074919.46352-4-songmuchun@bytedance.com>
+From: kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH bpf-next v2 4/8] bpf: Introduce cgroup iter
+Date: Sat, 11 Jun 2022 14:23:39 +0800
+Message-ID: <202206111453.xWWh2wMK-lkp@intel.com>
+References: <20220610194435.2268290-5-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1654902820;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=TrSEiM07rzBXOnvoC0Ky3MYG75s35r1Z3atOF4M4Vgo=;
-        b=AMOxHK6N2JOosdOfl0+XPzd/eYTQapToCZY4I1JYebewZncs47nQy7E5QzcCHFfBbNnr1d
-        ZZ43ny9GLnosRlHAAJIxP9VYN6T0mUCdJ2T5H+/4VrFnQApaZzyHxS7RtXV/3nGaJue2Wn
-        YZOOFxIk562TyU5GacNnmu6acEjlYkk=
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1654928650; x=1686464650;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=nq1Y7M1o0QIJ3J1LnJ2FgHo85YT5uJzjeELR5R/ykZg=;
+  b=dh7Mqce11fUD3PKJEfigVbnDcvLx/mCXDS9GfeHOohCe82VLbrrY4r2e
+   z5jvDC7MMbmFjrFPK5nO/sAGbWe9Xkwe6iqqqAHaMuj8JGZCqDKIeWtZS
+   t4VbjWX/RROgh1HDZGwWn2fMcopgTPJU0ILGhsF7620oCXdnX4xVV/BML
+   LC4PI/kLYOV4QQABIvXuzSNuFK9KYJONHiwKgeNBL3u4WijCZZDCm6xAp
+   CxCuzDiCOEeBuyq0nmay5w3aa/ITqVXyw50uCMtMRLG6frpRoQ3zl2XlI
+   1TkUQTqdEEub+LqRgLZXWfw8CDaB8HlTxcHBoUPnZwFisMUTsMOGwOly6
+   Q==;
 Content-Disposition: inline
-In-Reply-To: <20220530074919.46352-4-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+In-Reply-To: <20220610194435.2268290-5-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <skhan@linuxfoundation.org>, Michal Hocko <mhocko@kernel.org>
+Cc: kbuild-all@lists.01.org, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
 
-On Mon, May 30, 2022 at 03:49:11PM +0800, Muchun Song wrote:
-> Pagecache pages are charged at the allocation time and holding a
-> reference to the original memory cgroup until being reclaimed.
-> Depending on the memory pressure, specific patterns of the page
-> sharing between different cgroups and the cgroup creation and
-> destruction rates, a large number of dying memory cgroups can be
-> pinned by pagecache pages. It makes the page reclaim less efficient
-> and wastes memory.
-> 
-> We can convert LRU pages and most other raw memcg pins to the objcg
-> direction to fix this problem, and then the page->memcg will always
-> point to an object cgroup pointer.
-> 
-> Therefore, the infrastructure of objcg no longer only serves
-> CONFIG_MEMCG_KMEM. In this patch, we move the infrastructure of the
-> objcg out of the scope of the CONFIG_MEMCG_KMEM so that the LRU pages
-> can reuse it to charge pages.
-> 
-> We know that the LRU pages are not accounted at the root level. But
-> the page->memcg_data points to the root_mem_cgroup. So the
-> page->memcg_data of the LRU pages always points to a valid pointer.
-> But the root_mem_cgroup dose not have an object cgroup. If we use
-> obj_cgroup APIs to charge the LRU pages, we should set the
-> page->memcg_data to a root object cgroup. So we also allocate an
-> object cgroup for the root_mem_cgroup.
-> 
-> Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Hi Yosry,
 
-LGTM
+Thank you for the patch! Perhaps something to improve:
 
-Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+[auto build test WARNING on bpf-next/master]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Yosry-Ahmed/bpf-rstat-cgroup-hierarchical-stats/20220611-034720
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git master
+config: m68k-defconfig (https://download.01.org/0day-ci/archive/20220611/202206111453.xWWh2wMK-lkp@intel.com/config)
+compiler: m68k-linux-gcc (GCC) 11.3.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/619857fd1ec4f351376ffcaaec20acc9aae9486f
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Yosry-Ahmed/bpf-rstat-cgroup-hierarchical-stats/20220611-034720
+        git checkout 619857fd1ec4f351376ffcaaec20acc9aae9486f
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.3.0 make.cross W=1 O=build_dir ARCH=m68k SHELL=/bin/bash kernel/bpf/ kernel/cgroup/
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp@intel.com>
+
+All warnings (new ones prefixed by >>):
+
+   In file included from kernel/bpf/cgroup_iter.c:9:
+   kernel/bpf/../cgroup/cgroup-internal.h:78:41: error: field 'iter' has incomplete type
+      78 |                 struct css_task_iter    iter;
+         |                                         ^~~~
+   kernel/bpf/../cgroup/cgroup-internal.h: In function 'cgroup_is_dead':
+   kernel/bpf/../cgroup/cgroup-internal.h:188:22: error: invalid use of undefined type 'const struct cgroup'
+     188 |         return !(cgrp->self.flags & CSS_ONLINE);
+         |                      ^~
+   kernel/bpf/../cgroup/cgroup-internal.h:188:37: error: 'CSS_ONLINE' undeclared (first use in this function); did you mean 'N_ONLINE'?
+     188 |         return !(cgrp->self.flags & CSS_ONLINE);
+         |                                     ^~~~~~~~~~
+         |                                     N_ONLINE
+   kernel/bpf/../cgroup/cgroup-internal.h:188:37: note: each undeclared identifier is reported only once for each function it appears in
+   kernel/bpf/../cgroup/cgroup-internal.h: In function 'notify_on_release':
+   kernel/bpf/../cgroup/cgroup-internal.h:193:25: error: 'CGRP_NOTIFY_ON_RELEASE' undeclared (first use in this function)
+     193 |         return test_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
+         |                         ^~~~~~~~~~~~~~~~~~~~~~
+   kernel/bpf/../cgroup/cgroup-internal.h:193:54: error: invalid use of undefined type 'const struct cgroup'
+     193 |         return test_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
+         |                                                      ^~
+   kernel/bpf/../cgroup/cgroup-internal.h: In function 'put_css_set':
+   kernel/bpf/../cgroup/cgroup-internal.h:207:39: error: invalid use of undefined type 'struct css_set'
+     207 |         if (refcount_dec_not_one(&cset->refcount))
+         |                                       ^~
+   kernel/bpf/../cgroup/cgroup-internal.h: In function 'get_css_set':
+   kernel/bpf/../cgroup/cgroup-internal.h:220:27: error: invalid use of undefined type 'struct css_set'
+     220 |         refcount_inc(&cset->refcount);
+         |                           ^~
+   kernel/bpf/../cgroup/cgroup-internal.h: At top level:
+   kernel/bpf/../cgroup/cgroup-internal.h:284:22: error: array type has incomplete element type 'struct cftype'
+     284 | extern struct cftype cgroup1_base_files[];
+         |                      ^~~~~~~~~~~~~~~~~~
+   kernel/bpf/cgroup_iter.c: In function 'cgroup_iter_seq_start':
+   kernel/bpf/cgroup_iter.c:55:24: error: implicit declaration of function 'css_next_descendant_pre' [-Werror=implicit-function-declaration]
+      55 |                 return css_next_descendant_pre(NULL, p->start_css);
+         |                        ^~~~~~~~~~~~~~~~~~~~~~~
+>> kernel/bpf/cgroup_iter.c:55:24: warning: returning 'int' from a function with return type 'void *' makes pointer from integer without a cast [-Wint-conversion]
+      55 |                 return css_next_descendant_pre(NULL, p->start_css);
+         |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   kernel/bpf/cgroup_iter.c:57:24: error: implicit declaration of function 'css_next_descendant_post' [-Werror=implicit-function-declaration]
+      57 |                 return css_next_descendant_post(NULL, p->start_css);
+         |                        ^~~~~~~~~~~~~~~~~~~~~~~~
+   kernel/bpf/cgroup_iter.c:57:24: warning: returning 'int' from a function with return type 'void *' makes pointer from integer without a cast [-Wint-conversion]
+      57 |                 return css_next_descendant_post(NULL, p->start_css);
+         |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   kernel/bpf/cgroup_iter.c: In function 'cgroup_iter_seq_next':
+   kernel/bpf/cgroup_iter.c:83:24: warning: returning 'int' from a function with return type 'void *' makes pointer from integer without a cast [-Wint-conversion]
+      83 |                 return css_next_descendant_pre(curr, p->start_css);
+         |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   kernel/bpf/cgroup_iter.c:85:24: warning: returning 'int' from a function with return type 'void *' makes pointer from integer without a cast [-Wint-conversion]
+      85 |                 return css_next_descendant_post(curr, p->start_css);
+         |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   kernel/bpf/cgroup_iter.c:87:28: error: invalid use of undefined type 'struct cgroup_subsys_state'
+      87 |                 return curr->parent;
+         |                            ^~
+   kernel/bpf/cgroup_iter.c: In function '__cgroup_iter_seq_show':
+   kernel/bpf/cgroup_iter.c:100:38: error: invalid use of undefined type 'struct cgroup_subsys_state'
+     100 |         if (css && cgroup_is_dead(css->cgroup))
+         |                                      ^~
+   kernel/bpf/cgroup_iter.c:104:31: error: invalid use of undefined type 'struct cgroup_subsys_state'
+     104 |         ctx.cgroup = css ? css->cgroup : NULL;
+         |                               ^~
+   kernel/bpf/cgroup_iter.c: In function 'cgroup_iter_seq_init':
+   kernel/bpf/cgroup_iter.c:137:29: error: invalid use of undefined type 'struct cgroup'
+     137 |         p->start_css = &cgrp->self;
+         |                             ^~
+   kernel/bpf/cgroup_iter.c: In function 'bpf_iter_attach_cgroup':
+   kernel/bpf/cgroup_iter.c:157:24: error: implicit declaration of function 'cgroup_get_from_fd'; did you mean 'cgroup_get_from_id'? [-Werror=implicit-function-declaration]
+     157 |                 cgrp = cgroup_get_from_fd(fd);
+         |                        ^~~~~~~~~~~~~~~~~~
+         |                        cgroup_get_from_id
+>> kernel/bpf/cgroup_iter.c:157:22: warning: assignment to 'struct cgroup *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+     157 |                 cgrp = cgroup_get_from_fd(fd);
+         |                      ^
+   kernel/bpf/cgroup_iter.c:159:24: error: implicit declaration of function 'cgroup_get_from_path'; did you mean 'cgroup_get_from_id'? [-Werror=implicit-function-declaration]
+     159 |                 cgrp = cgroup_get_from_path("/");
+         |                        ^~~~~~~~~~~~~~~~~~~~
+         |                        cgroup_get_from_id
+   kernel/bpf/cgroup_iter.c:159:22: warning: assignment to 'struct cgroup *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+     159 |                 cgrp = cgroup_get_from_path("/");
+         |                      ^
+   kernel/bpf/cgroup_iter.c: In function 'bpf_iter_cgroup_show_fdinfo':
+   kernel/bpf/cgroup_iter.c:190:9: error: implicit declaration of function 'cgroup_path_ns'; did you mean 'cgroup_parent'? [-Werror=implicit-function-declaration]
+     190 |         cgroup_path_ns(aux->cgroup.start, buf, PATH_MAX,
+         |         ^~~~~~~~~~~~~~
+         |         cgroup_parent
+   kernel/bpf/cgroup_iter.c: In function 'cgroup_iter_seq_next':
+   kernel/bpf/cgroup_iter.c:88:1: error: control reaches end of non-void function [-Werror=return-type]
+      88 | }
+         | ^
+   cc1: some warnings being treated as errors
+
+
+vim +55 kernel/bpf/cgroup_iter.c
+
+    41	
+    42	static void *cgroup_iter_seq_start(struct seq_file *seq, loff_t *pos)
+    43	{
+    44		struct cgroup_iter_priv *p = seq->private;
+    45	
+    46		mutex_lock(&cgroup_mutex);
+    47	
+    48		/* support only one session */
+    49		if (*pos > 0)
+    50			return NULL;
+    51	
+    52		++*pos;
+    53		p->terminate = false;
+    54		if (p->order == BPF_ITER_CGROUP_PRE)
+  > 55			return css_next_descendant_pre(NULL, p->start_css);
+    56		else if (p->order == BPF_ITER_CGROUP_POST)
+    57			return css_next_descendant_post(NULL, p->start_css);
+    58		else /* BPF_ITER_CGROUP_PARENT_UP */
+    59			return p->start_css;
+    60	}
+    61	
+    62	static int __cgroup_iter_seq_show(struct seq_file *seq,
+    63					  struct cgroup_subsys_state *css, int in_stop);
+    64	
+    65	static void cgroup_iter_seq_stop(struct seq_file *seq, void *v)
+    66	{
+    67		/* pass NULL to the prog for post-processing */
+    68		if (!v)
+    69			__cgroup_iter_seq_show(seq, NULL, true);
+    70		mutex_unlock(&cgroup_mutex);
+    71	}
+    72	
+    73	static void *cgroup_iter_seq_next(struct seq_file *seq, void *v, loff_t *pos)
+    74	{
+    75		struct cgroup_subsys_state *curr = (struct cgroup_subsys_state *)v;
+    76		struct cgroup_iter_priv *p = seq->private;
+    77	
+    78		++*pos;
+    79		if (p->terminate)
+    80			return NULL;
+    81	
+    82		if (p->order == BPF_ITER_CGROUP_PRE)
+    83			return css_next_descendant_pre(curr, p->start_css);
+    84		else if (p->order == BPF_ITER_CGROUP_POST)
+    85			return css_next_descendant_post(curr, p->start_css);
+    86		else
+    87			return curr->parent;
+    88	}
+    89	
+    90	static int __cgroup_iter_seq_show(struct seq_file *seq,
+    91					  struct cgroup_subsys_state *css, int in_stop)
+    92	{
+    93		struct cgroup_iter_priv *p = seq->private;
+    94		struct bpf_iter__cgroup ctx;
+    95		struct bpf_iter_meta meta;
+    96		struct bpf_prog *prog;
+    97		int ret = 0;
+    98	
+    99		/* cgroup is dead, skip this element */
+   100		if (css && cgroup_is_dead(css->cgroup))
+   101			return 0;
+   102	
+   103		ctx.meta = &meta;
+   104		ctx.cgroup = css ? css->cgroup : NULL;
+   105		meta.seq = seq;
+   106		prog = bpf_iter_get_info(&meta, in_stop);
+   107		if (prog)
+   108			ret = bpf_iter_run_prog(prog, &ctx);
+   109	
+   110		/* if prog returns > 0, terminate after this element. */
+   111		if (ret != 0)
+   112			p->terminate = true;
+   113	
+   114		return 0;
+   115	}
+   116	
+   117	static int cgroup_iter_seq_show(struct seq_file *seq, void *v)
+   118	{
+   119		return __cgroup_iter_seq_show(seq, (struct cgroup_subsys_state *)v,
+   120					      false);
+   121	}
+   122	
+   123	static const struct seq_operations cgroup_iter_seq_ops = {
+   124		.start  = cgroup_iter_seq_start,
+   125		.next   = cgroup_iter_seq_next,
+   126		.stop   = cgroup_iter_seq_stop,
+   127		.show   = cgroup_iter_seq_show,
+   128	};
+   129	
+   130	BTF_ID_LIST_SINGLE(bpf_cgroup_btf_id, struct, cgroup)
+   131	
+   132	static int cgroup_iter_seq_init(void *priv, struct bpf_iter_aux_info *aux)
+   133	{
+   134		struct cgroup_iter_priv *p = (struct cgroup_iter_priv *)priv;
+   135		struct cgroup *cgrp = aux->cgroup.start;
+   136	
+   137		p->start_css = &cgrp->self;
+   138		p->terminate = false;
+   139		p->order = aux->cgroup.order;
+   140		return 0;
+   141	}
+   142	
+   143	static const struct bpf_iter_seq_info cgroup_iter_seq_info = {
+   144		.seq_ops                = &cgroup_iter_seq_ops,
+   145		.init_seq_private       = cgroup_iter_seq_init,
+   146		.seq_priv_size          = sizeof(struct cgroup_iter_priv),
+   147	};
+   148	
+   149	static int bpf_iter_attach_cgroup(struct bpf_prog *prog,
+   150					  union bpf_iter_link_info *linfo,
+   151					  struct bpf_iter_aux_info *aux)
+   152	{
+   153		int fd = linfo->cgroup.cgroup_fd;
+   154		struct cgroup *cgrp;
+   155	
+   156		if (fd)
+ > 157			cgrp = cgroup_get_from_fd(fd);
+   158		else /* walk the entire hierarchy by default. */
+   159			cgrp = cgroup_get_from_path("/");
+   160	
+   161		if (IS_ERR(cgrp))
+   162			return PTR_ERR(cgrp);
+   163	
+   164		aux->cgroup.start = cgrp;
+   165		aux->cgroup.order = linfo->cgroup.traversal_order;
+   166		return 0;
+   167	}
+   168	
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
