@@ -1,123 +1,63 @@
 From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH mm v4 0/9] memcg: accounting for objects allocated by mkdir
- cgroup
-Date: Mon, 13 Jun 2022 08:34:32 +0300
-Message-ID: <4e685057-b07d-745d-fdaa-1a6a5a681060@openvz.org>
+Subject: [PATCH mm v4 1/9] memcg: enable accounting for struct cgroup
+Date: Mon, 13 Jun 2022 08:34:42 +0300
+Message-ID: <4c393a46-f6cf-ce8a-7771-81cbbc9ca278@openvz.org>
 References: <3e1d6eab-57c7-ba3d-67e1-c45aa0dfa2ab@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=openvz-org.20210112.gappssmtp.com; s=20210112;
         h=message-id:date:mime-version:user-agent:from:subject:to:cc
          :references:content-language:in-reply-to:content-transfer-encoding;
-        bh=RTfZfeDWSN9OZfR7Sv1ydjBOr9B3JdsI1X9ofrvtdxQ=;
-        b=bWa4lC6WVgrmLNdVVYMdTBcNm6a37vG8B+DS8jzdCwMcANuwtYv2akgfv285oN78T2
-         hGpMT+t/LTTVWpKQnVj0/aM+JgR5Oh5UyiTAKL2+NhTokEU6RX7MOnZ1JqaP6Qqly3Oi
-         RWPyrXa0GwAdQQOS9/WV9nnhUOMaVi16RHFGXrIBxHCjBbb2YAkHTmraXFOmXYTEHNA4
-         tp7Wbni7gfyRw0y7l/9Wbu+zCozeGy9fQ28Q7pz1XTQbq6w1stc6kRO0Y3maWPmE8ax/
-         ftgTMltKXboV+qctvSYXMHSXpAckaHfR4UYMMhnsCOTnwHbekGj/wOzwXhUHZM81/YGW
-         l+iA==
+        bh=vVFg1kFJ1ZrAuYqNU+G4M2YG4vffoF6tfug6s1kVYgc=;
+        b=Tu0ulCRi9G/dXEAfgaijmX0Oo+JHLmSXnmrJ+MEuxOIvzY3vhXf0LacSOeN87REMdt
+         0EqL9howlhfqHTYOCyGIVa5yxvuBcSAQ+J5glfRzw1ieygNZvfqcNJp/hQEadqGHIoBk
+         cVwK70e7kA/PCPZ5d4ZK0wPzt33x/rXcNf75GLCkQJ4/9yah+076fyA0Mwtpd4DFVtTE
+         OEe7Av8QYdWetO9Jfkjje1xVuCyvJXcNowOmDKUgUK2/xylEl0nTMyJoPhlRkQlkUliw
+         H6ZJSkmEBCbS2XIUcoiGJCr8kg+4ug0gZ3OfnLNzV6l/B7ci7LgBuBznFgJr3hgP3NQw
+         hYDA==
 Content-Language: en-US
 In-Reply-To: <3e1d6eab-57c7-ba3d-67e1-c45aa0dfa2ab-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="macroman"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-In some cases, creating a cgroup allocates a noticeable amount of memory.
-This operation can be executed from inside memory-limited container,
-but currently this memory is not accounted to memcg and can be misused.
-This allow container to exceed the assigned memory limit and avoid
-memcg OOM. Moreover, in case of global memory shortage on the host,
-the OOM-killer may not find a real memory eater and start killing
-random processes on the host.
-
-This is especially important for OpenVZ and LXC used on hosting,
-where containers are used by untrusted end users.
-
-Below is tracing results of mkdir /sys/fs/cgroup/vvs.test on 
-4cpu VM with Fedora and self-complied upstream kernel. The calculations
-are not precise, it depends on kernel config options, number of cpus,
-enabled controllers, ignores possible page allocations etc.
-However this is enough to clarify the general situation.
-All allocations are splitted into:
-- common part, always called for each cgroup type
-- per-cgroup allocations
-
-In each group we consider 2 corner cases:
-- usual allocations, important for 1-2 CPU nodes/Vms
-- percpu allocations, important for 'big irons'
-
-common part: 	~11Kb	+  318 bytes percpu
-memcg: 		~17Kb	+ 4692 bytes percpu
-cpu:		~2.5Kb	+ 1036 bytes percpu
-cpuset:		~3Kb	+   12 bytes percpu
-blkcg:		~3Kb	+   12 bytes percpu
-pid:		~1.5Kb	+   12 bytes percpu		
-perf:		 ~320b	+   60 bytes percpu
--------------------------------------------
-total:		~38Kb	+ 6142 bytes percpu
-currently accounted:	  4668 bytes percpu
-
-- it's important to account usual allocations called
-in common part, because almost all of cgroup-specific allocations
-are small. One exception here is memory cgroup, it allocates a few
-huge objects that should be accounted.
-- Percpu allocation called in common part, in memcg and cpu cgroups
-should be accounted, rest ones are small an can be ignored.
-- KERNFS objects are allocated both in common part and in most of
-cgroups 
-
-Details can be found here:
-https://lore.kernel.org/all/d28233ee-bccb-7bc3-c2ec-461fd7f95e6a-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org/
-
-I checked other cgroups types was found that they all can be ignored.
-Additionally I found allocation of struct rt_rq called in cpu cgroup 
-if CONFIG_RT_GROUP_SCHED was enabled, it allocates huge (~1700 bytes)
-percpu structure and should be accounted too.
-
-v4:
- 1) re-based to linux-next (next-20220610)
-   now psi_group is not a part of struct cgroup and is allocated on demand
- 2) added received approval from Muchun Song
- 3) improved cover letter description according to akpm@ request
-
-v3:
- 1) re-based to current upstream (v5.18-11267-gb00ed48bb0a7)
- 2) fixed few typos
- 3) added received approvals
-
-v2:
- 1) re-split to simplify possible bisect, re-ordered
- 2) added accounting for percpu psi_group_cpu and cgroup_rstat_cpu,
-     allocated in common part
- 3) added accounting for percpu allocation of struct rt_rq
-     (actual if CONFIG_RT_GROUP_SCHED is enabled)
- 4) improved patches descriptions 
-
-Vasily Averin (9):
-  memcg: enable accounting for struct cgroup
-  memcg: enable accounting for kernfs nodes
-  memcg: enable accounting for kernfs iattrs
-  memcg: enable accounting for struct simple_xattr
-  memcg: enable accounting for percpu allocation of struct psi_group_cpu
-  memcg: enable accounting for percpu allocation of struct
-    cgroup_rstat_cpu
-  memcg: enable accounting for large allocations in mem_cgroup_css_alloc
-  memcg: enable accounting for allocations in alloc_fair_sched_group
-  memcg: enable accounting for perpu allocation of struct rt_rq
-
- fs/kernfs/mount.c      | 6 ++++--
- fs/xattr.c             | 2 +-
- kernel/cgroup/cgroup.c | 2 +-
- kernel/cgroup/rstat.c  | 3 ++-
- kernel/sched/fair.c    | 4 ++--
- kernel/sched/psi.c     | 5 +++--
- kernel/sched/rt.c      | 2 +-
- mm/memcontrol.c        | 4 ++--
- 8 files changed, 16 insertions(+), 12 deletions(-)
-
--- 
-2.36.1
-
+Q3JlYXRpbmcgZWFjaCBuZXcgY2dyb3VwIGFsbG9jYXRlcyA0S2IgZm9yIHN0cnVjdCBjZ3JvdXAu
+IFRoaXMgaXMgdGhlCmxhcmdlc3QgbWVtb3J5IGFsbG9jYXRpb24gaW4gdGhpcyBzY2VuYXJpbyBh
+bmQgaXMgZXBlY2lhbGx5IGltcG9ydGFudApmb3Igc21hbGwgVk1zIHdpdGggMS0yIENQVXMuCgpD
+b21tb24gcGFydCBvZiB0aGUgY2dyb3VwIGNyZWF0aW9uOgpBbGxvY3MgIEFsbG9jICAgJDEqJDIg
+ICBTdW0gICAgIEFsbG9jYXRpb24KbnVtYmVyICBzaXplCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tCjE2ICB+ICAgMzUyICAgICA1NjMyICAgIDU2MzIgICAgS0VS
+TkZTCjEgICArICAgNDA5NiAgICA0MDk2ICAgIDk3MjggICAgKGNncm91cF9ta2RpcisweGU0KQox
+ICAgICAgIDU4NCAgICAgNTg0ICAgICAxMDMxMiAgIChyYWRpeF90cmVlX25vZGVfYWxsb2MuY29u
+c3Rwcm9wLjArMHg4OSkKMSAgICAgICAxOTIgICAgIDE5MiAgICAgMTA1MDQgICAoX19kX2FsbG9j
+KzB4MjkpCjIgICAgICAgNzIgICAgICAxNDQgICAgIDEwNjQ4ICAgKGF2Y19hbGxvY19ub2RlKzB4
+MjcpCjIgICAgICAgNjQgICAgICAxMjggICAgIDEwNzc2ICAgKHBlcmNwdV9yZWZfaW5pdCsweDZh
+KQoxICAgICAgIDY0ICAgICAgNjQgICAgICAxMDg0MCAgIChtZW1jZ19saXN0X2xydV9hbGxvYysw
+eDIxYSkKcGVyY3B1OgoxICAgKyAgIDE5MiAgICAgMTkyICAgICAxOTIgICAgIGNhbGxfc2l0ZT1w
+c2lfY2dyb3VwX2FsbG9jKzB4MWUKMSAgICsgICA5NiAgICAgIDk2ICAgICAgMjg4ICAgICBjYWxs
+X3NpdGU9Y2dyb3VwX3JzdGF0X2luaXQrMHg1ZgoyICAgICAgIDEyICAgICAgMjQgICAgICAzMTIg
+ICAgIGNhbGxfc2l0ZT1wZXJjcHVfcmVmX2luaXQrMHgyMwoxICAgICAgIDYgICAgICAgNiAgICAg
+ICAzMTggICAgIGNhbGxfc2l0ZT1fX3BlcmNwdV9jb3VudGVyX2luaXQrMHgyMgoKICcrJyAtLSB0
+byBiZSBhY2NvdW50ZWQsCiAnficgLS0gcGFydGlhbGx5IGFjY291bnRlZAoKQWNjb3VudGluZyBv
+ZiB0aGlzIG1lbW9yeSBoZWxwcyB0byBhdm9pZCBtaXN1c2UgaW5zaWRlIG1lbWNnLWxpbWl0ZWQK
+Y29udGFpbmVycy4KClNpZ25lZC1vZmYtYnk6IFZhc2lseSBBdmVyaW4gPHZ2cy1HRUZBUXpaWDdy
+OGRubSt5Uk9mRTBBQHB1YmxpYy5nbWFuZS5vcmc+ClJldmlld2VkLWJ5OiBSb21hbiBHdXNoY2hp
+biA8cm9tYW4uZ3VzaGNoaW4tZnhVVlhmdElGRG55RzF6RU9iWHRmQUBwdWJsaWMuZ21hbmUub3Jn
+PgpSZXZpZXdlZC1ieTogTWljaGFsIEtvdXRuw70gPG1rb3V0bnktSUJpOVJHL2I2N2tAcHVibGlj
+LmdtYW5lLm9yZz4KQWNrZWQtYnk6IFNoYWtlZWwgQnV0dCA8c2hha2VlbGItaHBJcXNENEFLbGZR
+VDBkWlIrQWxmQUBwdWJsaWMuZ21hbmUub3JnPgpSZXZpZXdlZC1ieTogTXVjaHVuIFNvbmcgPHNv
+bmdtdWNodW4tRUM4VXhsNk5weWRsNTdNSWRSQ0ZEZ0BwdWJsaWMuZ21hbmUub3JnPgotLS0KIGtl
+cm5lbC9jZ3JvdXAvY2dyb3VwLmMgfCAyICstCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24o
+KyksIDEgZGVsZXRpb24oLSkKCmRpZmYgLS1naXQgYS9rZXJuZWwvY2dyb3VwL2Nncm91cC5jIGIv
+a2VybmVsL2Nncm91cC9jZ3JvdXAuYwppbmRleCA5MGE2NTRjYjhhMWUuLjlhZGY0YWQ0YjYyMyAx
+MDA2NDQKLS0tIGEva2VybmVsL2Nncm91cC9jZ3JvdXAuYworKysgYi9rZXJuZWwvY2dyb3VwL2Nn
+cm91cC5jCkBAIC01MzUzLDcgKzUzNTMsNyBAQCBzdGF0aWMgc3RydWN0IGNncm91cCAqY2dyb3Vw
+X2NyZWF0ZShzdHJ1Y3QgY2dyb3VwICpwYXJlbnQsIGNvbnN0IGNoYXIgKm5hbWUsCiAKIAkvKiBh
+bGxvY2F0ZSB0aGUgY2dyb3VwIGFuZCBpdHMgSUQsIDAgaXMgcmVzZXJ2ZWQgZm9yIHRoZSByb290
+ICovCiAJY2dycCA9IGt6YWxsb2Moc3RydWN0X3NpemUoY2dycCwgYW5jZXN0b3JfaWRzLCAobGV2
+ZWwgKyAxKSksCi0JCSAgICAgICBHRlBfS0VSTkVMKTsKKwkJICAgICAgIEdGUF9LRVJORUxfQUND
+T1VOVCk7CiAJaWYgKCFjZ3JwKQogCQlyZXR1cm4gRVJSX1BUUigtRU5PTUVNKTsKIAotLSAKMi4z
+Ni4xCgo=
