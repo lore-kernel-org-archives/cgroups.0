@@ -1,201 +1,123 @@
-From: "Huang, Shaoqin" <shaoqin.huang@intel.com>
-Subject: Re: [PATCH v5 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
- page table uses.
-Date: Mon, 13 Jun 2022 11:18:14 +0800
-Message-ID: <bdfea446-623c-d423-673f-496b3725ec2c@intel.com>
-References: <20220606222058.86688-1-yosryahmed@google.com>
- <20220606222058.86688-2-yosryahmed@google.com>
+From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH mm v4 0/9] memcg: accounting for objects allocated by mkdir
+ cgroup
+Date: Mon, 13 Jun 2022 08:34:32 +0300
+Message-ID: <4e685057-b07d-745d-fdaa-1a6a5a681060@openvz.org>
+References: <3e1d6eab-57c7-ba3d-67e1-c45aa0dfa2ab@openvz.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <kvm-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1655090317; x=1686626317;
-  h=message-id:date:subject:to:cc:references:from:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=vc2NDR4Vbc0GZDQNzB67W1qeI0BuVtdQtSGTUmSxqfw=;
-  b=F8Dx3iBfucBbhNPavTBSdlzhEzUSLGfMLjFBh9yDczSUphtvnMAvN6NU
-   Y2MRq+8eVI5/TwFvXqxThG1f0eqynfAPoerRkRdin+XJkTRW1dRjHQVxz
-   ECFnP5iQ72H0AGdtIKxhTfUwS65t6MVVxtQIgD0sK4oIwaRMWtlA/xLE4
-   lBUKYdsij7jtgO3oMm1/lIZkLC/5HHZBa+PFbY2nNK/RNdHeWASg3FMO9
-   Qh8vLJ1vt39+Nh41d5NrPFiZPCAFs2zdWsKD67dSnuFEL0SRf8NeBK5ns
-   4WRxORcHL9r2LzC66Dvq5GzU9uqrxPlgHBJi/lEfbrjvlErwQZwFbW8hS
-   w==;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=openvz-org.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:from:subject:to:cc
+         :references:content-language:in-reply-to:content-transfer-encoding;
+        bh=RTfZfeDWSN9OZfR7Sv1ydjBOr9B3JdsI1X9ofrvtdxQ=;
+        b=bWa4lC6WVgrmLNdVVYMdTBcNm6a37vG8B+DS8jzdCwMcANuwtYv2akgfv285oN78T2
+         hGpMT+t/LTTVWpKQnVj0/aM+JgR5Oh5UyiTAKL2+NhTokEU6RX7MOnZ1JqaP6Qqly3Oi
+         RWPyrXa0GwAdQQOS9/WV9nnhUOMaVi16RHFGXrIBxHCjBbb2YAkHTmraXFOmXYTEHNA4
+         tp7Wbni7gfyRw0y7l/9Wbu+zCozeGy9fQ28Q7pz1XTQbq6w1stc6kRO0Y3maWPmE8ax/
+         ftgTMltKXboV+qctvSYXMHSXpAckaHfR4UYMMhnsCOTnwHbekGj/wOzwXhUHZM81/YGW
+         l+iA==
 Content-Language: en-US
-In-Reply-To: <20220606222058.86688-2-yosryahmed@google.com>
+In-Reply-To: <3e1d6eab-57c7-ba3d-67e1-c45aa0dfa2ab-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Yosry Ahmed <yosryahmed@google.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Marc Zyngier <maz@kernel.org>, James Morse <james.morse@arm.com>, Alexandru Elisei <alexandru.elisei@arm.com>, Suzuki K Poulose <suzuki.poulose@arm.com>, Paolo Bonzini <pbonzini@redhat.com>, Sean Christopherson <seanjc@google.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Wanpeng Li <wanpengli@tencent.com>, Jim Mattson <jmattson@google.com>, Joerg Roedel <joro@8bytes.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Oliver Upton <oupton@google.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, kvmarm@lists.cs.columbia.edu, kvm@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="us-ascii"
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+In some cases, creating a cgroup allocates a noticeable amount of memory.
+This operation can be executed from inside memory-limited container,
+but currently this memory is not accounted to memcg and can be misused.
+This allow container to exceed the assigned memory limit and avoid
+memcg OOM. Moreover, in case of global memory shortage on the host,
+the OOM-killer may not find a real memory eater and start killing
+random processes on the host.
 
+This is especially important for OpenVZ and LXC used on hosting,
+where containers are used by untrusted end users.
 
-On 6/7/2022 6:20 AM, Yosry Ahmed wrote:
-> Add NR_SECONDARY_PAGETABLE stat to count secondary page table uses, e.g.
-> KVM mmu. This provides more insights on the kernel memory used
-> by a workload.
-> 
-> This stat will be used by subsequent patches to count KVM mmu
-> memory usage.
-> 
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> ---
->   Documentation/admin-guide/cgroup-v2.rst | 5 +++++
->   Documentation/filesystems/proc.rst      | 4 ++++
->   drivers/base/node.c                     | 2 ++
->   fs/proc/meminfo.c                       | 2 ++
->   include/linux/mmzone.h                  | 1 +
->   mm/memcontrol.c                         | 1 +
->   mm/page_alloc.c                         | 6 +++++-
->   mm/vmstat.c                             | 1 +
->   8 files changed, 21 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index 69d7a6983f781..307a284b99189 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -1312,6 +1312,11 @@ PAGE_SIZE multiple when read back.
->   	  pagetables
->                   Amount of memory allocated for page tables.
->   
-> +	  sec_pagetables
-> +		Amount of memory allocated for secondary page tables,
-> +		this currently includes KVM mmu allocations on x86
-> +		and arm64.
-> +
->   	  percpu (npn)
->   		Amount of memory used for storing per-cpu kernel
->   		data structures.
-> diff --git a/Documentation/filesystems/proc.rst b/Documentation/filesystems/proc.rst
-> index 061744c436d99..894d6317f3bdc 100644
-> --- a/Documentation/filesystems/proc.rst
-> +++ b/Documentation/filesystems/proc.rst
-> @@ -973,6 +973,7 @@ You may not have all of these fields.
->       SReclaimable:   159856 kB
->       SUnreclaim:     124508 kB
->       PageTables:      24448 kB
-> +    SecPageTables:	 0 kB
->       NFS_Unstable:        0 kB
->       Bounce:              0 kB
->       WritebackTmp:        0 kB
-> @@ -1067,6 +1068,9 @@ SUnreclaim
->   PageTables
->                 amount of memory dedicated to the lowest level of page
->                 tables.
-> +SecPageTables
-> +	      amount of memory dedicated to secondary page tables, this
-> +	      currently includes KVM mmu allocations on x86 and arm64.
+Below is tracing results of mkdir /sys/fs/cgroup/vvs.test on 
+4cpu VM with Fedora and self-complied upstream kernel. The calculations
+are not precise, it depends on kernel config options, number of cpus,
+enabled controllers, ignores possible page allocations etc.
+However this is enough to clarify the general situation.
+All allocations are splitted into:
+- common part, always called for each cgroup type
+- per-cgroup allocations
 
-Just a notice. This patch in the latest 5.19.0-rc2+ have a conflict in 
-Documentation/filesystems/proc.rst file. But that's not a problem.
+In each group we consider 2 corner cases:
+- usual allocations, important for 1-2 CPU nodes/Vms
+- percpu allocations, important for 'big irons'
 
->   NFS_Unstable
->                 Always zero. Previous counted pages which had been written to
->                 the server, but has not been committed to stable storage.
-> diff --git a/drivers/base/node.c b/drivers/base/node.c
-> index ec8bb24a5a227..9fe716832546f 100644
-> --- a/drivers/base/node.c
-> +++ b/drivers/base/node.c
-> @@ -433,6 +433,7 @@ static ssize_t node_read_meminfo(struct device *dev,
->   			     "Node %d ShadowCallStack:%8lu kB\n"
->   #endif
->   			     "Node %d PageTables:     %8lu kB\n"
-> +			     "Node %d SecPageTables:  %8lu kB\n"
->   			     "Node %d NFS_Unstable:   %8lu kB\n"
->   			     "Node %d Bounce:         %8lu kB\n"
->   			     "Node %d WritebackTmp:   %8lu kB\n"
-> @@ -459,6 +460,7 @@ static ssize_t node_read_meminfo(struct device *dev,
->   			     nid, node_page_state(pgdat, NR_KERNEL_SCS_KB),
->   #endif
->   			     nid, K(node_page_state(pgdat, NR_PAGETABLE)),
-> +			     nid, K(node_page_state(pgdat, NR_SECONDARY_PAGETABLE)),
->   			     nid, 0UL,
->   			     nid, K(sum_zone_node_page_state(nid, NR_BOUNCE)),
->   			     nid, K(node_page_state(pgdat, NR_WRITEBACK_TEMP)),
-> diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
-> index 6fa761c9cc78e..fad29024eb2e0 100644
-> --- a/fs/proc/meminfo.c
-> +++ b/fs/proc/meminfo.c
-> @@ -108,6 +108,8 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
->   #endif
->   	show_val_kb(m, "PageTables:     ",
->   		    global_node_page_state(NR_PAGETABLE));
-> +	show_val_kb(m, "SecPageTables:	",
-> +		    global_node_page_state(NR_SECONDARY_PAGETABLE));
->   
->   	show_val_kb(m, "NFS_Unstable:   ", 0);
->   	show_val_kb(m, "Bounce:         ",
-> diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-> index 46ffab808f037..81d109e6c623a 100644
-> --- a/include/linux/mmzone.h
-> +++ b/include/linux/mmzone.h
-> @@ -219,6 +219,7 @@ enum node_stat_item {
->   	NR_KERNEL_SCS_KB,	/* measured in KiB */
->   #endif
->   	NR_PAGETABLE,		/* used for pagetables */
-> +	NR_SECONDARY_PAGETABLE, /* secondary pagetables, e.g. kvm shadow pagetables */
->   #ifdef CONFIG_SWAP
->   	NR_SWAPCACHE,
->   #endif
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 598fece89e2b7..ee1c3d464857c 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1398,6 +1398,7 @@ static const struct memory_stat memory_stats[] = {
->   	{ "kernel",			MEMCG_KMEM			},
->   	{ "kernel_stack",		NR_KERNEL_STACK_KB		},
->   	{ "pagetables",			NR_PAGETABLE			},
-> +	{ "sec_pagetables",		NR_SECONDARY_PAGETABLE		},
->   	{ "percpu",			MEMCG_PERCPU_B			},
->   	{ "sock",			MEMCG_SOCK			},
->   	{ "vmalloc",			MEMCG_VMALLOC			},
-> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-> index 0e42038382c12..29a7e9cd28c74 100644
-> --- a/mm/page_alloc.c
-> +++ b/mm/page_alloc.c
-> @@ -5932,7 +5932,8 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
->   		" active_file:%lu inactive_file:%lu isolated_file:%lu\n"
->   		" unevictable:%lu dirty:%lu writeback:%lu\n"
->   		" slab_reclaimable:%lu slab_unreclaimable:%lu\n"
-> -		" mapped:%lu shmem:%lu pagetables:%lu bounce:%lu\n"
-> +		" mapped:%lu shmem:%lu pagetables:%lu\n"
-> +		" sec_pagetables:%lu bounce:%lu\n"
->   		" kernel_misc_reclaimable:%lu\n"
->   		" free:%lu free_pcp:%lu free_cma:%lu\n",
->   		global_node_page_state(NR_ACTIVE_ANON),
-> @@ -5949,6 +5950,7 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
->   		global_node_page_state(NR_FILE_MAPPED),
->   		global_node_page_state(NR_SHMEM),
->   		global_node_page_state(NR_PAGETABLE),
-> +		global_node_page_state(NR_SECONDARY_PAGETABLE),
->   		global_zone_page_state(NR_BOUNCE),
->   		global_node_page_state(NR_KERNEL_MISC_RECLAIMABLE),
->   		global_zone_page_state(NR_FREE_PAGES),
-> @@ -5982,6 +5984,7 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
->   			" shadow_call_stack:%lukB"
->   #endif
->   			" pagetables:%lukB"
-> +			" sec_pagetables:%lukB"
->   			" all_unreclaimable? %s"
->   			"\n",
->   			pgdat->node_id,
-> @@ -6007,6 +6010,7 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
->   			node_page_state(pgdat, NR_KERNEL_SCS_KB),
->   #endif
->   			K(node_page_state(pgdat, NR_PAGETABLE)),
-> +			K(node_page_state(pgdat, NR_SECONDARY_PAGETABLE)),
->   			pgdat->kswapd_failures >= MAX_RECLAIM_RETRIES ?
->   				"yes" : "no");
->   	}
-> diff --git a/mm/vmstat.c b/mm/vmstat.c
-> index b75b1a64b54cb..06eb52fe5be94 100644
-> --- a/mm/vmstat.c
-> +++ b/mm/vmstat.c
-> @@ -1240,6 +1240,7 @@ const char * const vmstat_text[] = {
->   	"nr_shadow_call_stack",
->   #endif
->   	"nr_page_table_pages",
-> +	"nr_sec_page_table_pages",
->   #ifdef CONFIG_SWAP
->   	"nr_swapcached",
->   #endif
+common part: 	~11Kb	+  318 bytes percpu
+memcg: 		~17Kb	+ 4692 bytes percpu
+cpu:		~2.5Kb	+ 1036 bytes percpu
+cpuset:		~3Kb	+   12 bytes percpu
+blkcg:		~3Kb	+   12 bytes percpu
+pid:		~1.5Kb	+   12 bytes percpu		
+perf:		 ~320b	+   60 bytes percpu
+-------------------------------------------
+total:		~38Kb	+ 6142 bytes percpu
+currently accounted:	  4668 bytes percpu
+
+- it's important to account usual allocations called
+in common part, because almost all of cgroup-specific allocations
+are small. One exception here is memory cgroup, it allocates a few
+huge objects that should be accounted.
+- Percpu allocation called in common part, in memcg and cpu cgroups
+should be accounted, rest ones are small an can be ignored.
+- KERNFS objects are allocated both in common part and in most of
+cgroups 
+
+Details can be found here:
+https://lore.kernel.org/all/d28233ee-bccb-7bc3-c2ec-461fd7f95e6a-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org/
+
+I checked other cgroups types was found that they all can be ignored.
+Additionally I found allocation of struct rt_rq called in cpu cgroup 
+if CONFIG_RT_GROUP_SCHED was enabled, it allocates huge (~1700 bytes)
+percpu structure and should be accounted too.
+
+v4:
+ 1) re-based to linux-next (next-20220610)
+   now psi_group is not a part of struct cgroup and is allocated on demand
+ 2) added received approval from Muchun Song
+ 3) improved cover letter description according to akpm@ request
+
+v3:
+ 1) re-based to current upstream (v5.18-11267-gb00ed48bb0a7)
+ 2) fixed few typos
+ 3) added received approvals
+
+v2:
+ 1) re-split to simplify possible bisect, re-ordered
+ 2) added accounting for percpu psi_group_cpu and cgroup_rstat_cpu,
+     allocated in common part
+ 3) added accounting for percpu allocation of struct rt_rq
+     (actual if CONFIG_RT_GROUP_SCHED is enabled)
+ 4) improved patches descriptions 
+
+Vasily Averin (9):
+  memcg: enable accounting for struct cgroup
+  memcg: enable accounting for kernfs nodes
+  memcg: enable accounting for kernfs iattrs
+  memcg: enable accounting for struct simple_xattr
+  memcg: enable accounting for percpu allocation of struct psi_group_cpu
+  memcg: enable accounting for percpu allocation of struct
+    cgroup_rstat_cpu
+  memcg: enable accounting for large allocations in mem_cgroup_css_alloc
+  memcg: enable accounting for allocations in alloc_fair_sched_group
+  memcg: enable accounting for perpu allocation of struct rt_rq
+
+ fs/kernfs/mount.c      | 6 ++++--
+ fs/xattr.c             | 2 +-
+ kernel/cgroup/cgroup.c | 2 +-
+ kernel/cgroup/rstat.c  | 3 ++-
+ kernel/sched/fair.c    | 4 ++--
+ kernel/sched/psi.c     | 5 +++--
+ kernel/sched/rt.c      | 2 +-
+ mm/memcontrol.c        | 4 ++--
+ 8 files changed, 16 insertions(+), 12 deletions(-)
+
+-- 
+2.36.1
+
