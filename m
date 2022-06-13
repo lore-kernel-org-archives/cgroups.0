@@ -1,73 +1,182 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v11 7/8] cgroup/cpuset: Update description of
- cpuset.cpus.partition in cgroup-v2.rst
-Date: Mon, 13 Jun 2022 16:24:52 +0200
-Message-ID: <20220613142452.GB6910@blackbody.suse.cz>
-References: <20220510153413.400020-1-longman@redhat.com>
- <20220510153413.400020-8-longman@redhat.com>
- <YqYnQ4U4t6j/3UaL@slm.duckdns.org>
- <404171dc-0da3-21f2-5003-9718f875e967@redhat.com>
- <YqarMyNo9oHxhZFh@slm.duckdns.org>
+From: Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
+Subject: Re: Use after free in cgroup_migrate_execute
+Date: Mon, 13 Jun 2022 20:55:10 +0530
+Message-ID: <9a93cf2d-0efe-5a46-dcd5-7dcd8f173188@quicinc.com>
+References: <549de740-1356-7ad2-3ee5-c52bc355fd99@quicinc.com>
+ <Yh+RGIJ0f3nrqIiN@slm.duckdns.org>
+ <8d21e655-4ce9-c7b3-2010-e484161bdbe9@quicinc.com>
+ <20220516203417.GY1790663@paulmck-ThinkPad-P17-Gen-1>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="1UWUbFP1cBYEclgG"
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1655130294; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=0QxbXQTWScLBHdZkYfR8jKfBuUw2/vlOoxDD3FnCzX0=;
-        b=CMvjzQmOEJZmJ+aCXYUtYR6cV2a6B/yT0U+mHCBSEypUkXGJFDyWBPHB0Z7IkXFKBXiRob
-        WaN/MSCTSa5yUU5jEZUlmEXKUyG+tp45OcGy7/VDzJHcTwEDmzJg2g6ueidLXSqAt3+sjI
-        8jYUsq6TWTWCGAp7ockBvOyJRSK4p7w=
-Content-Disposition: inline
-In-Reply-To: <YqarMyNo9oHxhZFh-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1655133918; x=1686669918;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=JW5UhPtRio+kyHQHU3wSuyJ4WK2TuQSRGooTeTBrTds=;
+  b=e8MN8zX/BGgmSmE4mHUDI3ZCRVpWxgtIETXpYERpAQ/Jl/gc/WIHh/69
+   QnmHjH/d4txcbQruy0Q7b1T5JSZk2iKY7vd3oqyA0kgB9lf5uuQdIHvmm
+   ArffxEDtxjKUmD3ou9LaSaKhmrY0lrp7PNCPh9sZTzo182IRrDc3POrpD
+   g=;
+Content-Language: en-US
+In-Reply-To: <20220516203417.GY1790663@paulmck-ThinkPad-P17-Gen-1>
 List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shisiyuan <shisiyuan19870131-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
++shisiyuan <shisiyuan19870131-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+Hi Tejun/Paul,
 
 
---1UWUbFP1cBYEclgG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Following patch is trying to fix the problem, which i reported earlier 
+in this thread.
 
-On Sun, Jun 12, 2022 at 05:12:51PM -1000, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Hello,
->=20
-> On Sun, Jun 12, 2022 at 11:02:38PM -0400, Waiman Long wrote:
-> > That is the behavior enforced by setting the CPU_EXCLUSIVE bit in cgrou=
-p v1.
-> > I haven't explicitly change it to make it different in cgroup v2. The m=
-ajor
-> > reason is that I don't want change to one cpuset to affect a sibling
-> > partition as it may make the code more complicate to validate if a part=
-ition
-> > is valid.
->=20
-> If at all possible, I'd really like to avoid situations where a parent ca=
-n't
-> withdraw resources due to something that a descendant does.
+https://lore.kernel.org/lkml/1654187688-27411-1-git-send-email-shisiyuan-95E7rUnPDLLQT0dZR+AlfA@public.gmane.org/#t
 
-My understanding of the discussed paragraph is that the changes are only
-disallowed only among siblings on one level (due to exclusivity rule,
-checked in validate_change()). A change in parent won't affect
-(non)exclusivity of (valid) children so it's simply allowed.
 
-So the docs (and implementation by a quick look) is sensible.
+So, here is the issue.
 
-Michal
+Userspace want to migrate one group task from one CSS to another CSS.
 
---1UWUbFP1cBYEclgG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+Two process(P1, P2) which belongs to same process group but having
+different cset C1 and C2 respectively. But here, finally P1, P2 need
+to get migrated to C2 css.
 
------BEGIN PGP SIGNATURE-----
+1.
 
-iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCYqdIsgAKCRAkDQmsBEOq
-uQsKAQCuQgJeY8pngbeck33qpmT/9IqMQLfNBYRRLLM9dlUPbgEAw+wDMnZ9MjQW
-KY6lhKrvUT5CEfFIjAzZay9tJBO/BAU=
-=JcWM
------END PGP SIGNATURE-----
+For P1,
+cgroup_migrate_add_src<-cgroup_attach_task<-__cgroup1_procs_write<-cgroup1_procs_write<-cgroup_file_write<-kernfs_fop_write_iter<-vfs_writ
 
---1UWUbFP1cBYEclgG--
+It takes reference of src cset(c1) and add itself to mgctx 
+preloaded_src_cset list.
+list_add_tail(&src_cset->mg_preload_node, &mgctx->preloaded_src_csets);
+
+2.For P2, Since P2 is already there in C2 and finally it has to go to C2 
+css only. It takes reference of src_cset(C2) and add itself to 
+           mgctx->preloaded_src_csets);
+
+cgroup_migrate_add_src<-cgroup_attach_task<-__cgroup1_procs_write<-cgroup1_procs_write<-cgroup_file_write<-kernfs_fop_write_iter<-vfs_writ
+
+3. Now in a scenario while iterating through list preloaded_src_csets in 
+cgroup_migrate_prepare_dst(),
+
+We got dst_cset(C2) for a given src_cset (C1) for process P1 and since 
+they are not equal. And here comes the main action, P1 will observe 
+dst_cset->mg_preload_node (C2) as non empty and it is due 
+src_cset->mg_preload_node(P2/C2) added itself to mgctx->preloaded_src_csets
+both are same address and same cset P1 will mistakenly drop reference
+to dst_cset and makes the dest cset(C2) reference out of order. In next 
+iteration for p2, both src and destination cset are same so, it drop 
+their references respectively.
+
+4. Now, there comes a window there is no RCU lock and below path runs 
+put reference on the task P2 and that eventually put reference on 
+css(C2) and it get freed up as it reference broken due to extra mistaken
+put_css_set in step 3.
+
+rcuop/1-28    [005] 308947.813116: bprint: 
+put_css_set_locked: cset:refzero:put_css_set_locked: 
+0xffffff87f3e92800x: ref 0, Callers: 
+(put_css_set<-__put_task_struct<-delayed_put_task_struct<-rcu_do_batch<-nocb_cb_wait<-rcu_nocb_cb_kthread<-kthread)
+
+5. As the migration was going on, Now we hit two warnings b2b and a 
+later BUG_ON which is shared in initial mail of this thread.
+
+Let me know, if i am unable to explain any of the steps clearly.
+
+
+
+-Mukesh
+
+
+On 5/17/2022 2:04 AM, Paul E. McKenney wrote:
+> On Mon, May 16, 2022 at 08:24:44PM +0530, Mukesh Ojha wrote:
+>> +@paulmc
+>>
+>> It would be difficult to reproduce this with clean kernel.
+>>
+>> However, i have put trace_printk on the cset object and found that task
+>> reference is dropped from rcu_do_batch() as below and later trying to get
+>> same cset reference resulted in the warning and later BUG_ON().
+>>
+>> rcuop/0-16    [002]   255.430731: bprint:
+>> put_css_set_locked:cset:refzero:put_css_set_locked:cset:0xffffff80274eb800:
+>>
+>> Callers (cgroup_free<-delayed_put_task_struct<-rcu_do_batch<-nocb_cb_wait<-rcu_nocb_cb_kthread<-kthread<-ret_from_fork)
+>>
+>> PERFD-SERVER-1387  [002]   255.432631: bprint: get_css_set: get_css_set:
+>> 0xffffff80274eb800: Callers:(cgroup_migrate_execute<-cgroup_attach_task<-__cgroup1_procs_write<-cgroup1_procs_write<-cgroup_file_write<-kernfs_fop_write_iter<-vfs_write)
+>>
+>> PERFD-SERVER-1387  [002]   255.456360: bprint: get_css_set: get_css_set:
+>> 0xffffff80274eb800: Callers:(cgroup_migrate_execute<-cgroup_attach_task<-__cgroup1_procs_write<-cgroup1_procs_write<-cgroup_file_write<-kernfs_fop_write_iter<-vfs_write)
+> 
+> If you can make this happen on small systems, you might try building with
+> CONFIG_RCU_STRICT_GRACE_PERIOD=y, which will make RCU grace periods finish
+> more quickly, possibly increasing the probability of hitting this problem.
+> 
+> 							Thanx, Paul
+> 
+>> Thanks,
+>> -Mukesh
+>>
+>> On 3/2/2022 9:15 PM, Tejun Heo wrote:
+>>> On Wed, Mar 02, 2022 at 08:42:32PM +0530, Mukesh Ojha wrote:
+>>>> Hi ,
+>>>>
+>>>> We are facing one issue like below in cgroup .
+>>>> Not able to find which race could lead to this.
+>>>> Any idea, would be helpful.
+>>>>
+>>>> [136233.086904][ T1457] ------------[ cut here ]------------
+>>>> *[136233.086912][ T1457] refcount_t: addition on 0; use-after-free.*
+>>>> [136233.086943][ T1457] WARNING: CPU: 4 PID: 1457 at lib/refcount.c:25
+>>>> cgroup_migrate_execute+0x188/0x528
+>>>> [136233.087527][ T1457] CPU: 4 PID: 1457 Comm: PERFD-SERVER Tainted: G
+>>>> S      WC O      5.10.66 #1
+>>>> [136233.087532][ T1457] pstate: 62400085 (nZCv daIf +PAN -UAO +TCO BTYPE=--)
+>>>> [136233.087536][ T1457] pc : cgroup_migrate_execute+0x188/0x528
+>>>> [136233.087539][ T1457] lr : cgroup_migrate_execute+0x188/0x528
+>>>> [136233.087541][ T1457] sp : ffffffc01ff23a60
+>>>> [136233.087543][ T1457] x29: ffffffc01ff23a60 x28: 00000000c0000000
+>>>> [136233.087547][ T1457] x27: ffffffffffffeaa8 x26: ffffff88cbc55668
+>>>> [136233.087551][ T1457] x25: ffffff878424d458 x24: ffffff891fdd5e00
+>>>> [136233.087557][ T1457] x23: ffffff88cbc55600 x22: ffffff8784d673d8
+>>>> [136233.087565][ T1457] x21: ffffff88cbc55758 x20: ffffffc01ff23b20
+>>>> [136233.087572][ T1457] x19: ffffffc01ff23b00 x18: ffffffc019475068
+>>>> [136233.087580][ T1457] x17: 0000000000000000 x16: 0000000000162ba8
+>>>> [136233.087587][ T1457] x15: 0000000000000004 x14: 000000000000407f
+>>>> [136233.087594][ T1457] x13: ffffff8ae5d48be8 x12: 00000000ffffffff
+>>>> [136233.087602][ T1457] x11: ffffff8785a79f98 x10: 0000000000000002
+>>>> [136233.087609][ T1457] x9 : 759287265d79e000 x8 : 759287265d79e000
+>>>> [136233.087616][ T1457] x7 : 206e6f206e6f6974 x6 : ffffffd7616121b4
+>>>> [136233.087623][ T1457] x5 : ffffffffffffffff x4 : 0000000000000000
+>>>> [136233.087629][ T1457] x3 : ffffffd7635ce996 x2 : 0000000000000000
+>>>> [136233.087633][ T1457] x1 : ffffffd7635ce996 x0 : 000000000000002a
+>>>> [136233.087636][ T1457] Call trace:
+>>>> [136233.087640][ T1457]  cgroup_migrate_execute+0x188/0x528
+>>>> [136233.087643][ T1457]  cgroup_migrate+0xb4/0xe4
+>>>> [136233.087646][ T1457]  cgroup_attach_task+0x128/0x20c
+>>>> [136233.087650][ T1457]  __cgroup1_procs_write+0x1d8/0x290
+>>>> [136233.087653][ T1457]  cgroup1_procs_write+0x18/0x28
+>>>> [136233.087656][ T1457]  cgroup_file_write+0xa4/0x544
+>>>> [136233.087661][ T1457]  kernfs_fop_write_iter+0x1b0/0x2f8
+>>>> [136233.087665][ T1457]  vfs_write+0x300/0x37c
+>>>> [136233.087668][ T1457]  ksys_write+0x84/0x12c
+>>>> [136233.087672][ T1457]  __arm64_sys_write+0x20/0x30
+>>>> [136233.087676][ T1457]  el0_svc_common+0xdc/0x294
+>>>> [136233.087681][ T1457]  el0_svc+0x38/0x9c
+>>>> [136233.087684][ T1457]  el0_sync_handler+0x8c/0xf0
+>>>> [136233.087688][ T1457]  el0_sync+0x1b4/0x1c0
+>>>> [136233.087690][ T1457] ---[ end trace 9e592742965258ba ]---
+>>>> [136233.087693][ T1457] ------------[ cut here ]------------
+>>>> *[136233.087695][ T1457] refcount_t: saturated; leaking memory.*
+>>>
+>>> Looks like the target css_set ref underglowed but you have five taint flags
+>>> set and this isn't even the first warning message. Any chance you can
+>>> reproduce this in a cleaner environment?
+>>>
+>>> Thanks.
+>>>
