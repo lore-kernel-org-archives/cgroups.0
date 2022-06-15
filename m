@@ -1,76 +1,77 @@
-From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH mm v6] mm/tracing: add 'accounted' entry into output of
- allocation tracepoints
-Date: Wed, 15 Jun 2022 11:41:48 +0200
-Message-ID: <9a4a9afe-bbe1-4cb3-713b-f1e4e6d2a049@suse.cz>
-References: <c1676616-1405-5bcb-af02-c1e9cc83dace@openvz.org>
- <c418ed25-65fe-f623-fbf8-1676528859ed@openvz.org>
+From: "T.J. Mercier" <tjmercier@google.com>
+Subject: Re: [PATCH v7 0/6] Proposal for a GPU cgroup controller
+Date: Wed, 15 Jun 2022 10:31:21 -0700
+Message-ID: <CABdmKX0WV8VWgeafVGJ++nJ4xsJD7Wpz=3KX=BW1du=huttfvw@mail.gmail.com>
+References: <20220510235653.933868-1-tjmercier@google.com> <3365cd1d750e84fedc8e75d646a77ffd85619d35.camel@ndufresne.ca>
+ <CABdmKX3ZV6-u-oLvW_wWavAMBfrsZ=C_rCgK_Uz4VjxcRvRFew@mail.gmail.com>
+ <81026ef07c1ce20f8673b75b17bab79a2b39c548.camel@ndufresne.ca>
+ <CABdmKX2LxZ6zZR=fhXfnuWCB2BR+gzDd1-t1DD2A2XP24wvuGQ@mail.gmail.com>
+ <Yn6DpUsoSz1/15Kc@slm.duckdns.org> <CABdmKX1xvm87WMEDkMc9Aye46E4zv1-scenwgaRxHesrOCsaYg@mail.gmail.com>
+ <YodHjYlMx1XGtM2+@slm.duckdns.org> <CABdmKX2Ok023rN1drQgXVZLKUO_DVYrzmEamCgMMu6BPO67yhQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1655286108; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=6f7LmKgyp4C8f+DMh1UfRQSRSKDECQlQXNjM/3tlkyo=;
-        b=rPB+1CRTKgd1xPx+KfMeX7FH++oXL054wTxWh/VeuqEnfRgUvdFyCoe1i9QT9dZHb7dN6+
-        SEfh9+QHmzs6BFs0HZFap5dhkOAXUqM/Ow7idrU6Y7xzs5Hd7xFvHEWCN+1HyzTxHbrLPF
-        8eDixoxZXMqwKeUHQaWnpB6468MAj8U=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1655286108;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=6f7LmKgyp4C8f+DMh1UfRQSRSKDECQlQXNjM/3tlkyo=;
-        b=ZSz1y2A0+YrDzowCa3edbEWx/AQMWCa3u9CIIgE0Er5JfKqm+Hk5k6lZYIMcbnYtrImkfG
-        ebyR0VSchAMrRNDQ==
-Content-Language: en-US
-In-Reply-To: <c418ed25-65fe-f623-fbf8-1676528859ed-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Return-path: <linux-media-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=w3YUx2QLwqjC4yt6Na4HDX+YOsTdcO8b9CpzZpDW+SU=;
+        b=SumGg4ML2+ipUmc7XA+lq9lEeAMN0G+c1nkIb8xlQdeSVIXK7p8gchHLt4JMr6H2DB
+         oay1lq5P2vRcbJXDcviUhEXtOuH0wnMLPDb9TSVPWMFmqsCzv/3C5/PS3UIUNxLhWLFF
+         stiOnXVgBnI1zKc+m2gV4bh+ZP9jm2By0atDyoqFmq9V6owXGPdCIBexAyREiyN/lqWP
+         sE0WUW66Z3ial6A4UoLjgKhJjd15EU91IEkibIDuhAx6QDoDtHXsAnahe4K9HdlDUCRk
+         bV02tDWRCArcwrkIhFBPyvdeAp0V7KDoiMmXTmMmQR0oyvjc0mW2aORSBPxsiKFydKXZ
+         joRQ==
+In-Reply-To: <CABdmKX2Ok023rN1drQgXVZLKUO_DVYrzmEamCgMMu6BPO67yhQ@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Nicolas Dufresne <nicolas@ndufresne.ca>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Hridya Valsaraju <hridya@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Benjamin Gaignard <benjamin.gaignard@collabora.com>, Liam Mark <lmark@codeaurora.org>, Laura Abbott <labbott@redhat.com>, Brian Starkey <Brian.Starkey@arm.com>, John
 
-On 6/3/22 05:21, Vasily Averin wrote:
-> Slab caches marked with SLAB_ACCOUNT force accounting for every
-> allocation from this cache even if __GFP_ACCOUNT flag is not passed.
-> Unfortunately, at the moment this flag is not visible in ftrace output,
-> and this makes it difficult to analyze the accounted allocations.
-> 
-> This patch adds boolean "accounted" entry into trace output,
-> and set it to 'true' for calls used __GFP_ACCOUNT flag and
-> for allocations from caches marked with SLAB_ACCOUNT.
-> Set it to 'false' if accounting is disabled in configs.
-> 
-> Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-> Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-> Acked-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> Reviewed-by: Hyeonggon Yoo <42.hyeyoo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+On Fri, May 20, 2022 at 9:25 AM T.J. Mercier <tjmercier@google.com> wrote:
+>
+> On Fri, May 20, 2022 at 12:47 AM Tejun Heo <tj@kernel.org> wrote:
+> >
+> > Hello,
+> >
+> > On Tue, May 17, 2022 at 04:30:29PM -0700, T.J. Mercier wrote:
+> > > Thanks for your suggestion. This almost works. "dmabuf" as a key could
+> > > work, but I'd actually like to account for each heap. Since heaps can
+> > > be dynamically added, I can't accommodate every potential heap name by
+> > > hardcoding registrations in the misc controller.
+> >
+> > On its own, that's a pretty weak reason to be adding a separate gpu
+> > controller especially given that it doesn't really seem to be one with
+> > proper abstractions for gpu resources. We don't want to keep adding random
+> > keys to misc controller but can definitely add limited flexibility. What
+> > kind of keys do you need?
+> >
+> Well the dmabuf-from-heaps component of this is the initial use case.
+> I was envisioning we'd have additional keys as discussed here:
+> https://lore.kernel.org/lkml/20220328035951.1817417-1-tjmercier@google.com/T/#m82e5fe9d8674bb60160701e52dae4356fea2ddfa
+> So we'd end up with a well-defined core set of keys like "system", and
+> then drivers would be free to use their own keys for their own unique
+> purposes which could be complementary or orthogonal to the core set.
+> Yesterday I was talking with someone who is interested in limiting gpu
+> cores and bus IDs in addition to gpu memory. How to define core keys
+> is the part where it looks like there's trouble.
+>
+> For my use case it would be sufficient to have current and maximum
+> values for an arbitrary number of keys - one per heap. So the only
+> part missing from the misc controller (for my use case) is the ability
+> to register a new key at runtime as heaps are added. Instead of
+> keeping track of resources with enum misc_res_type, requesting a
+> resource handle/ID from the misc controller at runtime is what I think
+> would be required instead.
+>
+Quick update: I'm going to make an attempt to modify the misc
+controller to support a limited amount of dynamic resource
+registration/tracking in place of the new controller in this series.
 
-Thanks, added to slab/for-5.20/tracing
+Thanks everyone for the feedback.
+-T.J.
 
-> 
-> ---
-> v6:
->  1) subject changed from "tracing:" to "mm/tracing:"
->  2) set flag to 'false' if accounting is disabled in configs
-
-Looks like you forgot the kmem_alloc_node variant, fixed up locally:
-
---- a/include/trace/events/kmem.h
-+++ b/include/trace/events/kmem.h
-@@ -94,8 +94,9 @@ DECLARE_EVENT_CLASS(kmem_alloc_node,
-                __entry->bytes_alloc    = bytes_alloc;
-                __entry->gfp_flags      = (__force unsigned long)gfp_flags;
-                __entry->node           = node;
--               __entry->accounted      = (gfp_flags & __GFP_ACCOUNT) ||
--                                         (s && s->flags & SLAB_ACCOUNT);
-+               __entry->accounted      = IS_ENABLED(CONFIG_MEMCG_KMEM) ?
-+                                         ((gfp_flags & __GFP_ACCOUNT) ||
-+                                         (s && s->flags & SLAB_ACCOUNT)) : false;
-        ),
- 
-        TP_printk("call_site=%pS ptr=%p bytes_req=%zu bytes_alloc=%zu gfp_flags=%s node=%d accounted=%s",
+> > Thanks.
+> >
+> > --
+> > tejun
