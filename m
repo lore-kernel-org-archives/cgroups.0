@@ -1,33 +1,33 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-5.20] BUILD SUCCESS
- e210a89f5b07680fe21d21e846e6817346c5ba3b
-Date: Fri, 17 Jun 2022 16:19:19 +0800
-Message-ID: <62ac3907.GC+sHff7oqkxRvOc%lkp@intel.com>
+Subject: [tj-cgroup:for-5.19-fixes] BUILD SUCCESS
+ 07fd5b6cdf3cc30bfde8fe0f644771688be04447
+Date: Fri, 17 Jun 2022 16:20:52 +0800
+Message-ID: <62ac3964.mjRmX4XtFuAU1uIC%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1655453975; x=1686989975;
+  t=1655454219; x=1686990219;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=6YnytWROV/tIU1qZhTUioFW3IhwzXL1cUBSQEM/9204=;
-  b=mVjfBt6tL2kGVsgSnU21sLcZBH9OiXydX7TNG1G49WLfEzgpTvOnvzz8
-   CN7FMrNwdra6k3Mol52nlPUQR9cUmPVleHupPEHKiqIE+sgZKp8FZRH+7
-   9eVQrb4v671TEsmlctXAcuSseYgAPWVezgT1pKBWJhfwPgDspI9REft31
-   qKO9L5rUgGcOHAtB2ftHlJggB9DAemDD6WXlTjD0YsKWzckG/tHjTEpdB
-   ZAyMmXlRu+YVaAdDDjSlJl4sY2fMuLSBFf/O/WfhbeaH4r8E8hMbvqrbD
-   tfrcAkMI2TkArj2v+XMYrGMo3/BcXeSvi8BU4iz8A8QFZv5g2zEhJDbv3
-   Q==;
+  bh=1nKhBqaXv6pHZaToFXbguuc+qcJ6rvaEiPUOu6pY+sA=;
+  b=JgIphfMArfFgsIiSTvvlMBGonIupAozXIoQB4oCLY8oPa7F7plBY18Gk
+   AsGjeo///AKDXyot+BXHjFs+w2e6wa5b5CRiudN9d7QWwnSwlu76MZkoo
+   hcugsNlw+aHDriz55ER99iKjkL6r63Eepn6AJf+45D5xS/Cg77K3Je+Dt
+   QNQAkFuizc0KeGAhd4m5AKR/5ldAY2BAWBw6rQfSIUBZ5XVEft96QHtS7
+   6HeuthFDZzmV3sQqe9wbdcuin96b8RUgh/xPuzFXQrtIIlcmM0kqADHoX
+   BLqkvfQ6Au1aYcf/95vsbM5lhh9CVBRvoToeE1W7Di4oSwXe3LIT5L8r8
+   A==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.20
-branch HEAD: e210a89f5b07680fe21d21e846e6817346c5ba3b  cgroup.c: add helper __cset_cgroup_from_root to cleanup duplicated codes
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.19-fixes
+branch HEAD: 07fd5b6cdf3cc30bfde8fe0f644771688be04447  cgroup: Use separate src/dst nodes when preloading css_sets for migration
 
-elapsed time: 728m
+elapsed time: 729m
 
 configs tested: 120
 configs skipped: 3
