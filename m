@@ -1,8 +1,8 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 507c8695c65aeea1e9ff67a76961c201dbd8e124
-Date: Fri, 17 Jun 2022 16:18:33 +0800
-Message-ID: <62ac38d9.r/v9dlnOBzwcCRLV%lkp@intel.com>
+Subject: [tj-cgroup:for-5.20] BUILD SUCCESS
+ e210a89f5b07680fe21d21e846e6817346c5ba3b
+Date: Fri, 17 Jun 2022 16:19:19 +0800
+Message-ID: <62ac3907.GC+sHff7oqkxRvOc%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,23 +11,23 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   t=1655453975; x=1686989975;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=QkbnNOkfJjk6SPCmmGAqBMkFQDl4YtJg+u0+29qGYYc=;
-  b=KkuOnLzZtJaCtJJ6Hf9jc9Qk/JVHkz1Qh7+e2wWK6TqL2kKULfmC5VGO
-   NX+pun5gBasWxmomalOG6z/wU/S6TbzPGqLGJcJgV7wSzPY/bxU8+WCme
-   kA7NRaV7p+FE/gqHNo60tI3hD/Vfkky7EpAAdGJmy/gyiPyOf49PzT39O
-   j8/OJCF98NSKTHMQYl4u/08d/6PQsVfTEiROm0aCaLTMzPeUuKIpWrKzB
-   52Gnc0cZYZewq2tw/FXkXUAbCKKb6Y8G0zVcEhnE1TwfPG5E/WcjlRI6o
-   FFgq4fMbrzJDUS7BdNnMIHU0uJYfJiIAe+DPQkU1wRLIdAGZaflv7F4e/
-   A==;
+  bh=6YnytWROV/tIU1qZhTUioFW3IhwzXL1cUBSQEM/9204=;
+  b=mVjfBt6tL2kGVsgSnU21sLcZBH9OiXydX7TNG1G49WLfEzgpTvOnvzz8
+   CN7FMrNwdra6k3Mol52nlPUQR9cUmPVleHupPEHKiqIE+sgZKp8FZRH+7
+   9eVQrb4v671TEsmlctXAcuSseYgAPWVezgT1pKBWJhfwPgDspI9REft31
+   qKO9L5rUgGcOHAtB2ftHlJggB9DAemDD6WXlTjD0YsKWzckG/tHjTEpdB
+   ZAyMmXlRu+YVaAdDDjSlJl4sY2fMuLSBFf/O/WfhbeaH4r8E8hMbvqrbD
+   tfrcAkMI2TkArj2v+XMYrGMo3/BcXeSvi8BU4iz8A8QFZv5g2zEhJDbv3
+   Q==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 507c8695c65aeea1e9ff67a76961c201dbd8e124  Merge branch 'for-5.19-fixes' into for-next
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.20
+branch HEAD: e210a89f5b07680fe21d21e846e6817346c5ba3b  cgroup.c: add helper __cset_cgroup_from_root to cleanup duplicated codes
 
-elapsed time: 726m
+elapsed time: 728m
 
 configs tested: 120
 configs skipped: 3
