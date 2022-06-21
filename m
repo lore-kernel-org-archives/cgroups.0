@@ -1,123 +1,116 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH v6 00/11] Use obj_cgroup APIs to charge the LRU pages
-Date: Tue, 21 Jun 2022 20:56:47 +0800
-Message-ID: <20220621125658.64935-1-songmuchun@bytedance.com>
+From: Muchun Song <songmuchun@bytedance.com>
+Subject: [PATCH v6 01/11] mm: memcontrol: remove dead code and comments
+Date: Tue, 21 Jun 2022 20:56:48 +0800
+Message-ID: <20220621125658.64935-2-songmuchun@bytedance.com>
+References: <20220621125658.64935-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=zBbBzk5qNVWvdANVbcpsxhRISEYlb3XpSAVuXts7Xh4=;
-        b=6MoJL7uhwVZV1hnFe7vkgxTK88ZUcybzyABVvpzKz95L1WzNjJHhh8UeaZQwTFlIB9
-         gjQDQllwWuHYWUzGW1XlH+MA1mw1JFDKyaFWyy5qoWTXxL2NENkl0g04VVD3HnE3Lh7C
-         JjEC+a25WrPJtQtXRG1Q4lquerDcPkaFMEF4ECPFdhTaAJGBjqL7iGxS6p5lH5gnu679
-         VU6t95ibSvKGXommF2zRro/qr/SIJ+frLgB7BLGSARKV1swHUXGnQkzmi38oD+gDyaLl
-         arZkpqbNvbX+/lr1icurCA3SpGJq0w6vIatDK2YKUNlBisrRy9CVW+jCGI4ouFIoSb5Y
-         18fA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=EillBei8kFa/6bw4XJ6MyIzznZyI10pUVH5tAnTdeuw=;
+        b=Jv9GaHJN86Q1C8Y+YpP2HCf9JPFImIvPmz0BU9q0OZd0+4E84aO4jvX7w2JJE8HLii
+         xXvy2BsIyrtipyPfO3JiQ1L4gabF6BNM/uSE7D/v4vl5Vc36NMI2yEg+YZ5KSpNsGptU
+         HO2lidk6QI25ifAr3ya3fadEcyz9Zbz8Qo1Yg9d9O1CQjjvVGXgpg23fllv4PPkdtuY7
+         rKxObA5Q8AuofZlnIdgY5syfjw3uLfKsvjs7i/wXGnHIM/h1h8t1/P4ZXW1c8yFLligG
+         siardVDC/TnIZX7H68y5GKiYC9yQyG4FPJP7v8L66B47QZvSC5zmsPVyqmAM4Ajp6REh
+         K7Pw==
+In-Reply-To: <20220621125658.64935-1-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: akpm@linux-foundation.org, hannes@cmpxchg.org, longman@redhat.com, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com
+Cc: cgroups@vger.kernel.org, duanxiongchun@bytedance.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Muchun Song <songmuchun@bytedance.com>
 
-VGhpcyB2ZXJzaW9uIGlzIHJlYmFzZWQgb24gbW0tdW5zdGFibGUuIEhvcGVmdWxseSwgQW5kcmV3
-IGNhbiBnZXQgdGhpcyBzZXJpZXMKaW50byBtbS11bnN0YWJsZSB3aGljaCB3aWxsIGhlbHAgdG8g
-ZGV0ZXJtaW5lIHdoZXRoZXIgdGhlcmUgaXMgYSBwcm9ibGVtIG9yCmRlZ3JhZGF0aW9uLiBJIGFt
-IGFsc28gZG9pbmcgc29tZSBiZW5jaG1hcmsgdGVzdHMgaW4gcGFyYWxsZWwuCgpTaW5jZSB0aGUg
-Zm9sbG93aW5nIHBhdGNoc2V0cyBhcHBsaWVkLiBBbGwgdGhlIGtlcm5lbCBtZW1vcnkgYXJlIGNo
-YXJnZWQKd2l0aCB0aGUgbmV3IEFQSXMgb2Ygb2JqX2Nncm91cC4KCgljb21taXQgZjJmZTdiMDlh
-NTJiICgibW06IG1lbWNnL3NsYWI6IGNoYXJnZSBpbmRpdmlkdWFsIHNsYWIgb2JqZWN0cyBpbnN0
-ZWFkIG9mIHBhZ2VzIikKCWNvbW1pdCBiNGUwYjY4ZmJkOWQgKCJtbTogbWVtY29udHJvbDogdXNl
-IG9ial9jZ3JvdXAgQVBJcyB0byBjaGFyZ2Uga21lbSBwYWdlcyIpCgpCdXQgdXNlciBtZW1vcnkg
-YWxsb2NhdGlvbnMgKExSVSBwYWdlcykgcGlubmluZyBtZW1jZ3MgZm9yIGEgbG9uZyB0aW1lIC0K
-aXQgZXhpc3RzIGF0IGEgbGFyZ2VyIHNjYWxlIGFuZCBpcyBjYXVzaW5nIHJlY3VycmluZyBwcm9i
-bGVtcyBpbiB0aGUgcmVhbAp3b3JsZDogcGFnZSBjYWNoZSBkb2Vzbid0IGdldCByZWNsYWltZWQg
-Zm9yIGEgbG9uZyB0aW1lLCBvciBpcyB1c2VkIGJ5IHRoZQpzZWNvbmQsIHRoaXJkLCBmb3VydGgs
-IC4uLiBpbnN0YW5jZSBvZiB0aGUgc2FtZSBqb2IgdGhhdCB3YXMgcmVzdGFydGVkIGludG8KYSBu
-ZXcgY2dyb3VwIGV2ZXJ5IHRpbWUuIFVucmVjbGFpbWFibGUgZHlpbmcgY2dyb3VwcyBwaWxlIHVw
-LCB3YXN0ZSBtZW1vcnksCmFuZCBtYWtlIHBhZ2UgcmVjbGFpbSB2ZXJ5IGluZWZmaWNpZW50LgoK
-V2UgY2FuIGNvbnZlcnQgTFJVIHBhZ2VzIGFuZCBtb3N0IG90aGVyIHJhdyBtZW1jZyBwaW5zIHRv
-IHRoZSBvYmpjZyBkaXJlY3Rpb24KdG8gZml4IHRoaXMgcHJvYmxlbSwgYW5kIHRoZW4gdGhlIExS
-VSBwYWdlcyB3aWxsIG5vdCBwaW4gdGhlIG1lbWNncy4KClRoaXMgcGF0Y2hzZXQgYWltcyB0byBt
-YWtlIHRoZSBMUlUgcGFnZXMgdG8gZHJvcCB0aGUgcmVmZXJlbmNlIHRvIG1lbW9yeQpjZ3JvdXAg
-YnkgdXNpbmcgdGhlIEFQSXMgb2Ygb2JqX2Nncm91cC4gRmluYWxseSwgd2UgY2FuIHNlZSB0aGF0
-IHRoZSBudW1iZXIKb2YgdGhlIGR5aW5nIGNncm91cHMgd2lsbCBub3QgaW5jcmVhc2UgaWYgd2Ug
-cnVuIHRoZSBmb2xsb3dpbmcgdGVzdCBzY3JpcHQuCgpgYGBiYXNoCiMhL2Jpbi9iYXNoCgpkZCBp
-Zj0vZGV2L3plcm8gb2Y9dGVtcCBicz00MDk2IGNvdW50PTEKY2F0IC9wcm9jL2Nncm91cHMgfCBn
-cmVwIG1lbW9yeQoKZm9yIGkgaW4gezAuLjIwMDB9CmRvCglta2RpciAvc3lzL2ZzL2Nncm91cC9t
-ZW1vcnkvdGVzdCRpCgllY2hvICQkID4gL3N5cy9mcy9jZ3JvdXAvbWVtb3J5L3Rlc3QkaS9jZ3Jv
-dXAucHJvY3MKCWNhdCB0ZW1wID4+IGxvZwoJZWNobyAkJCA+IC9zeXMvZnMvY2dyb3VwL21lbW9y
-eS9jZ3JvdXAucHJvY3MKCXJtZGlyIC9zeXMvZnMvY2dyb3VwL21lbW9yeS90ZXN0JGkKZG9uZQoK
-Y2F0IC9wcm9jL2Nncm91cHMgfCBncmVwIG1lbW9yeQoKcm0gLWYgdGVtcCBsb2cKYGBgCgp2NTog
-aHR0cHM6Ly9sb3JlLmtlcm5lbC5vcmcvYWxsLzIwMjIwNTMwMDc0OTE5LjQ2MzUyLTEtc29uZ211
-Y2h1bi1FQzhVeGw2TnB5ZGw1N01JZFJDRkRnQHB1YmxpYy5nbWFuZS5vcmcvCnY0OiBodHRwczov
-L2xvcmUua2VybmVsLm9yZy9hbGwvMjAyMjA1MjQwNjA1NTEuODAwMzctMS1zb25nbXVjaHVuLUVD
-OFV4bDZOcHlkbDU3TUlkUkNGRGdAcHVibGljLmdtYW5lLm9yZy8KdjM6IGh0dHBzOi8vbG9yZS5r
-ZXJuZWwub3JnL2FsbC8yMDIyMDIxNjExNTEzMi41MjYwMi0xLXNvbmdtdWNodW4tRUM4VXhsNk5w
-eWRsNTdNSWRSQ0ZEZ0BwdWJsaWMuZ21hbmUub3JnLwp2MjogaHR0cHM6Ly9sb3JlLmtlcm5lbC5v
-cmcvYWxsLzIwMjEwOTE2MTM0NzQ4LjY3NzEyLTEtc29uZ211Y2h1bi1FQzhVeGw2TnB5ZGw1N01J
-ZFJDRkRnQHB1YmxpYy5nbWFuZS5vcmcvCnYxOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwv
-MjAyMTA4MTQwNTI1MTkuODY2NzktMS1zb25nbXVjaHVuLUVDOFV4bDZOcHlkbDU3TUlkUkNGRGdA
-cHVibGljLmdtYW5lLm9yZy8KUkZDIHY0OiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAy
-MTA1MjcwOTMzMzYuMTQ4OTUtMS1zb25nbXVjaHVuLUVDOFV4bDZOcHlkbDU3TUlkUkNGRGdAcHVi
-bGljLmdtYW5lLm9yZy8KUkZDIHYzOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyMTA0
-MjEwNzAwNTkuNjkzNjEtMS1zb25nbXVjaHVuLUVDOFV4bDZOcHlkbDU3TUlkUkNGRGdAcHVibGlj
-LmdtYW5lLm9yZy8KUkZDIHYyOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyMTA0MDkx
-MjI5NTkuODIyNjQtMS1zb25nbXVjaHVuLUVDOFV4bDZOcHlkbDU3TUlkUkNGRGdAcHVibGljLmdt
-YW5lLm9yZy8KUkZDIHYxOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyMTAzMzAxMDE1
-MzEuODI3NTItMS1zb25nbXVjaHVuLUVDOFV4bDZOcHlkbDU3TUlkUkNGRGdAcHVibGljLmdtYW5l
-Lm9yZy8KCnY2OgogLSBDb2xsZWN0IEFja2VkLWJ5IGFuZCBSZXZpZXdlZC1ieSBmcm9tIFJvbWFu
-IGFuZCBNaWNoYWwgS291dG7DvS4gVGhhbmtzLgogLSBSZWJhc2UgdG8gbW0tdW5zdGFibGUuCgp2
-NToKIC0gTG90cyBvZiBpbXByb3ZlbWVudHMgZnJvbSBKb2hhbm5lcywgUm9tYW4gYW5kIFdhaW1h
-bi4KIC0gRml4IGxvY2tkZXAgd2FybmluZyByZXBvcnRlZCBieSBrZXJuZWwgdGVzdCByb2JvdC4K
-IC0gQWRkIHR3byBuZXcgcGF0Y2hlcyB0byBkbyBjb2RlIGNsZWFudXAuCiAtIENvbGxlY3QgQWNr
-ZWQtYnkgYW5kIFJldmlld2VkLWJ5IGZyb20gSm9oYW5uZXMgYW5kIFJvbWFuLgogLSBJIGRpZG4n
-dCByZXBsYWNlIGxvY2FsX2lycV9kaXNhYmxlL2VuYWJsZSgpIHRvIGxvY2FsX2xvY2svdW5sb2Nr
-X2lycSgpIHNpbmNlCiAgIGxvY2FsX2xvY2svdW5sb2NrX2lycSgpIHRha2VzIGFuIHBhcmFtZXRl
-ciwgaXQgbmVlZHMgbW9yZSB0aGlua2luZyB0byB0cmFuc2Zvcm0KICAgaXQgdG8gbG9jYWxfbG9j
-ay4gIEl0IGNvdWxkIGJlIGFuIGltcHJvdmVtZW50IGluIHRoZSBmdXR1cmUuCgp2NDoKIC0gUmVz
-ZW5kIGFuZCByZWJhc2VkIG9uIHY1LjE4LgoKdjM6CiAtIFJlbW92ZWQgdGhlIEFja2VkLWJ5IHRh
-Z3MgZnJvbSBSb21hbiBzaW5jZSB0aGlzIHZlcnNpb24gaXMgYmFzZWQgb24KICAgdGhlIGZvbGlv
-IHJlbGV2YW50LgoKdjI6CiAtIFJlbmFtZSBvYmpfY2dyb3VwX3JlbGVhc2Vfa21lbSgpIHRvIG9i
-al9jZ3JvdXBfcmVsZWFzZV9ieXRlcygpIGFuZCB0aGUKICAgZGVwZW5kZW5jaWVzIG9mIENPTkZJ
-R19NRU1DR19LTUVNIChzdWdnZXN0ZWQgYnkgUm9tYW4sIFRoYW5rcykuCiAtIFJlYmFzZSB0byBs
-aW51eCA1LjE1LXJjMS4KIC0gQWRkIGEgbmV3IHBhY3RoIHRvIGNsZWFudXAgbWVtX2Nncm91cF9r
-bWVtX2Rpc2FibGVkKCkuCgp2MToKIC0gRHJvcCBSRkMgdGFnLgogLSBSZWJhc2UgdG8gbGludXgg
-bmV4dC0yMDIxMDgxMS4KClJGQyB2NDoKIC0gQ29sbGVjdCBBY2tlZC1ieSBmcm9tIFJvbWFuLgog
-LSBSZWJhc2UgdG8gbGludXggbmV4dC0yMDIxMDUyNS4KIC0gUmVuYW1lIG9ial9jZ3JvdXBfcmVs
-ZWFzZV91bmNoYXJnZSgpIHRvIG9ial9jZ3JvdXBfcmVsZWFzZV9rbWVtKCkuCiAtIENoYW5nZSB0
-aGUgcGF0Y2ggMSB0aXRsZSB0byAicHJlcGFyZSBvYmpjZyBBUEkgZm9yIG5vbi1rbWVtIHVzYWdl
-Ii4KIC0gQ29udmVydCByZXBhcmVudF9vcHNfaGVhZCB0byBhbiBhcnJheSBpbiBwYXRjaCA4LgoK
-VGhhbmtzIGZvciBSb21hbidzIHJldmlldyBhbmQgc3VnZ2VzdGlvbnMuCgpSRkMgdjM6CiAtIERy
-b3AgdGhlIGNvZGUgY2xlYW51cCBhbmQgc2ltcGxpZmljYXRpb24gcGF0Y2hlcy4gR2F0aGVyIHRo
-b3NlIHBhdGNoZXMKICAgaW50byBhIHNlcGFyYXRlIHNlcmllc1sxXS4KIC0gUmV3b3JrIHBhdGNo
-ICMxIHN1Z2dlc3RlZCBieSBKb2hhbm5lcy4KClJGQyB2MjoKIC0gQ29sbGVjdCBBY2tlZC1ieSB0
-YWdzIGJ5IEpvaGFubmVzLiBUaGFua3MuCiAtIFJld29yayBscnV2ZWNfaG9sZHNfcGFnZV9scnVf
-bG9jaygpIHN1Z2dlc3RlZCBieSBKb2hhbm5lcy4gVGhhbmtzLgogLSBGaXggbW92ZV9wYWdlc190
-b19scnUoKS4KCk11Y2h1biBTb25nICgxMSk6CiAgbW06IG1lbWNvbnRyb2w6IHJlbW92ZSBkZWFk
-IGNvZGUgYW5kIGNvbW1lbnRzCiAgbW06IHJlbmFtZSB1bmxvY2tfcGFnZV9scnV2ZWN7X2lycSwg
-X2lycXJlc3RvcmV9IHRvCiAgICBscnV2ZWNfdW5sb2Nre19pcnEsIF9pcnFyZXN0b3JlfQogIG1t
-OiBtZW1jb250cm9sOiBwcmVwYXJlIG9iamNnIEFQSSBmb3Igbm9uLWttZW0gdXNhZ2UKICBtbTog
-bWVtY29udHJvbDogbWFrZSBscnV2ZWMgbG9jayBzYWZlIHdoZW4gTFJVIHBhZ2VzIGFyZSByZXBh
-cmVudGVkCiAgbW06IHZtc2NhbjogcmV3b3JrIG1vdmVfcGFnZXNfdG9fbHJ1KCkKICBtbTogdGhw
-OiBtYWtlIHNwbGl0IHF1ZXVlIGxvY2sgc2FmZSB3aGVuIExSVSBwYWdlcyBhcmUgcmVwYXJlbnRl
-ZAogIG1tOiBtZW1jb250cm9sOiBtYWtlIGFsbCB0aGUgY2FsbGVycyBvZiB7Zm9saW8scGFnZX1f
-bWVtY2coKSBzYWZlCiAgbW06IG1lbWNvbnRyb2w6IGludHJvZHVjZSBtZW1jZ19yZXBhcmVudF9v
-cHMKICBtbTogbWVtY29udHJvbDogdXNlIG9ial9jZ3JvdXAgQVBJcyB0byBjaGFyZ2UgdGhlIExS
-VSBwYWdlcwogIG1tOiBscnU6IGFkZCBWTV9XQVJOX09OX09OQ0VfRk9MSU8gdG8gbHJ1IG1haW50
-ZW5hbmNlIGZ1bmN0aW9uCiAgbW06IGxydTogdXNlIGxydXZlYyBsb2NrIHRvIHNlcmlhbGl6ZSBt
-ZW1jZyBjaGFuZ2VzCgogZnMvYnVmZmVyLmMgICAgICAgICAgICAgICAgICAgICAgfCAgIDQgKy0K
-IGZzL2ZzLXdyaXRlYmFjay5jICAgICAgICAgICAgICAgIHwgIDIzICstCiBpbmNsdWRlL2xpbnV4
-L21lbWNvbnRyb2wuaCAgICAgICB8IDIxOCArKysrKysrKystLS0tLS0KIGluY2x1ZGUvbGludXgv
-bW1faW5saW5lLmggICAgICAgIHwgICA2ICsKIGluY2x1ZGUvdHJhY2UvZXZlbnRzL3dyaXRlYmFj
-ay5oIHwgICA1ICsKIG1tL2NvbXBhY3Rpb24uYyAgICAgICAgICAgICAgICAgIHwgIDM5ICsrLQog
-bW0vaHVnZV9tZW1vcnkuYyAgICAgICAgICAgICAgICAgfCAxNTMgKysrKysrKystLQogbW0vbWVt
-Y29udHJvbC5jICAgICAgICAgICAgICAgICAgfCA1ODQgKysrKysrKysrKysrKysrKysrKysrKysr
-KysrLS0tLS0tLS0tLS0tCiBtbS9taWdyYXRlLmMgICAgICAgICAgICAgICAgICAgICB8ICAgNCAr
-CiBtbS9tbG9jay5jICAgICAgICAgICAgICAgICAgICAgICB8ICAgMiArLQogbW0vcGFnZV9pby5j
-ICAgICAgICAgICAgICAgICAgICAgfCAgIDUgKy0KIG1tL3N3YXAuYyAgICAgICAgICAgICAgICAg
-ICAgICAgIHwgIDQ5ICsrLS0KIG1tL3Ztc2Nhbi5jICAgICAgICAgICAgICAgICAgICAgIHwgIDY2
-ICsrLS0tCiAxMyBmaWxlcyBjaGFuZ2VkLCA3NzYgaW5zZXJ0aW9ucygrKSwgMzgyIGRlbGV0aW9u
-cygtKQoKCmJhc2UtY29tbWl0OiA4ODJiZTFlZDZiMWI1MDczZmM4ODU1MjE4MWI5OWJkMmI5YzAw
-MzFmCi0tIAoyLjExLjAKCg==
+Since no-hierarchy mode is deprecated after
+
+  commit bef8620cd8e0 ("mm: memcg: deprecate the non-hierarchical mode")
+
+so parent_mem_cgroup() cannot return a NULL except root memcg, however, root
+memcg cannot be offline, so it is safe to drop the check of returned value
+of parent_mem_cgroup().  Remove those dead code.
+
+The comments in memcg_offline_kmem() above memcg_reparent_list_lrus() are
+out of date since
+
+  commit 5abc1e37afa0 ("mm: list_lru: allocate list_lru_one only when needed")
+
+There is no ordering requirement between memcg_reparent_list_lrus() and
+memcg_reparent_objcgs(), so remove those outdated comments.
+
+Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
+---
+ include/linux/memcontrol.h |  3 +--
+ mm/memcontrol.c            | 12 ------------
+ mm/vmscan.c                |  6 +-----
+ 3 files changed, 2 insertions(+), 19 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 4d31ce55b1c0..318d8880d62a 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -866,8 +866,7 @@ static inline struct mem_cgroup *lruvec_memcg(struct lruvec *lruvec)
+  * parent_mem_cgroup - find the accounting parent of a memcg
+  * @memcg: memcg whose parent to find
+  *
+- * Returns the parent memcg, or NULL if this is the root or the memory
+- * controller is in legacy no-hierarchy mode.
++ * Returns the parent memcg, or NULL if this is the root.
+  */
+ static inline struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *memcg)
+ {
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 163492b9efa9..fc706d6fc265 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3684,17 +3684,7 @@ static void memcg_offline_kmem(struct mem_cgroup *memcg)
+ 		return;
+ 
+ 	parent = parent_mem_cgroup(memcg);
+-	if (!parent)
+-		parent = root_mem_cgroup;
+-
+ 	memcg_reparent_objcgs(memcg, parent);
+-
+-	/*
+-	 * After we have finished memcg_reparent_objcgs(), all list_lrus
+-	 * corresponding to this cgroup are guaranteed to remain empty.
+-	 * The ordering is imposed by list_lru_node->lock taken by
+-	 * memcg_reparent_list_lrus().
+-	 */
+ 	memcg_reparent_list_lrus(memcg, parent);
+ }
+ #else
+@@ -7195,8 +7185,6 @@ static struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg)
+ 			break;
+ 		}
+ 		memcg = parent_mem_cgroup(memcg);
+-		if (!memcg)
+-			memcg = root_mem_cgroup;
+ 	}
+ 	return memcg;
+ }
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 88fce64cfa96..b68b0216424d 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -409,13 +409,9 @@ void reparent_shrinker_deferred(struct mem_cgroup *memcg)
+ {
+ 	int i, nid;
+ 	long nr;
+-	struct mem_cgroup *parent;
++	struct mem_cgroup *parent = parent_mem_cgroup(memcg);
+ 	struct shrinker_info *child_info, *parent_info;
+ 
+-	parent = parent_mem_cgroup(memcg);
+-	if (!parent)
+-		parent = root_mem_cgroup;
+-
+ 	/* Prevent from concurrent shrinker_info expand */
+ 	down_read(&shrinker_rwsem);
+ 	for_each_node(nid) {
+-- 
+2.11.0
+
