@@ -1,247 +1,157 @@
 From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH v6 11/11] mm: lru: use lruvec lock to serialize memcg changes
-Date: Tue, 21 Jun 2022 20:56:58 +0800
-Message-ID: <20220621125658.64935-12-songmuchun@bytedance.com>
+Subject: [PATCH v6 03/11] mm: memcontrol: prepare objcg API for non-kmem usage
+Date: Tue, 21 Jun 2022 20:56:50 +0800
+Message-ID: <20220621125658.64935-4-songmuchun@bytedance.com>
 References: <20220621125658.64935-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=FXYyMqCuMn8N8AtiePCadIk2ihaRxjS8+sCa4dkDZyY=;
-        b=ID4gt1H5XAXZc2WTCkcM4F1wzX1sAe3JOWtacCk0iQKQ+aLMZXAoV2LeDm9V/qhVXx
-         6tpAVEejJhQBmJjVUK+nIaNyniVWz7hJGtPgx1OZl1uOfj2pujAFTcbGChoVU9DBG1kQ
-         iSr/YRd45uGdFIuCRF+nZy0GIGBavXDFzjNLsbIp/9bZz+yRlZan+nvKfKhVHEPvjiD5
-         P/VKwyJbbrvB0eRUS26CEwFTb/hg3CWoix8AAXQYFzZU3v7OZBDBODtMEhL6UOydPlDK
-         QPnx0hfY8bRXub0eY6AxeQXF/rpFM66dPqaBxFcGtr4OkljZGqrs6ATOyrSkIf9U3exr
-         0w8A==
+        bh=6Y6NgpPc42NYBvW73tDuppRYStJt3qQWgJd6fl6Oef4=;
+        b=uF9OogsqG1RyhL7U+jblJtPj5YWhZ4AiZjE+EQ8j0xRHnV/O89W7gU9jS5UW7Ou5bk
+         ZD/BJsWxtuzMf2V5MCtrrLDGRQKEb68PPNjcqskQI1e8ES4jEzP5uvODBovx4ljRpfFm
+         URbzN150jWgQm4hYBvEsrmj8rhGXLX85rM84Iu+JLS+u0dihChhDk+5OZJPSxxf/Oqad
+         VeEhlbrM6KTndZCc9GE36AjtfHdnyNwn4fq45ma+q1Ua0zo9M43j5cWF8tG4wN4FA4LC
+         nFGonUPSl7pV6F76pm3vWS+XdEQak09XaD2SO1sRKIBVG64sz0Zi2lGZomsjaCGKNCBu
+         NHFA==
 In-Reply-To: <20220621125658.64935-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="macroman"
 To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 
-As described by commit fc574c23558c ("mm/swap.c: serialize memcg
-changes in pagevec_lru_move_fn"), TestClearPageLRU() aims to
-serialize mem_cgroup_move_account() during pagevec_lru_move_fn().
-Now folio_lruvec_lock*() has the ability to detect whether page
-memcg has been changed. So we can use lruvec lock to serialize
-mem_cgroup_move_account() during pagevec_lru_move_fn(). This
-change is a partial revert of the commit fc574c23558c ("mm/swap.c:
-serialize memcg changes in pagevec_lru_move_fn").
-
-And pagevec_lru_move_fn() is more hot compare with
-mem_cgroup_move_account(), removing an atomic operation would be
-an optimization. Also this change would not dirty cacheline for a
-page which isn't on the LRU.
-
-Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
----
- mm/memcontrol.c | 34 ++++++++++++++++++++++++++++++++++
- mm/swap.c       | 32 +++++++++++++++-----------------
- mm/vmscan.c     | 16 +++++++---------
- 3 files changed, 56 insertions(+), 26 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 803dbdf5f233..85adc43c5a25 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1330,10 +1330,39 @@ struct lruvec *folio_lruvec_lock(struct folio *folio)
- 	lruvec = folio_lruvec(folio);
- 	spin_lock(&lruvec->lru_lock);
- 
-+	/*
-+	 * The memcg of the page can be changed by any the following routines:
-+	 *
-+	 * 1) mem_cgroup_move_account() or
-+	 * 2) memcg_reparent_objcgs()
-+	 *
-+	 * The possible bad scenario would like:
-+	 *
-+	 * CPU0:                CPU1:                CPU2:
-+	 * lruvec = folio_lruvec()
-+	 *
-+	 *                      if (!isolate_lru_page())
-+	 *                              mem_cgroup_move_account()
-+	 *
-+	 *                                           memcg_reparent_objcgs()
-+	 *
-+	 * spin_lock(&lruvec->lru_lock)
-+	 *                ^^^^^^
-+	 *              wrong lock
-+	 *
-+	 * Either CPU1 or CPU2 can change page memcg, so we need to check
-+	 * whether page memcg is changed, if so, we should reacquire the
-+	 * new lruvec lock.
-+	 */
- 	if (unlikely(lruvec_memcg(lruvec) != folio_memcg(folio))) {
- 		spin_unlock(&lruvec->lru_lock);
- 		goto retry;
- 	}
-+
-+	/*
-+	 * When we reach here, it means that the folio_memcg(folio) is
-+	 * stable.
-+	 */
- 	rcu_read_unlock();
- 
- 	return lruvec;
-@@ -1361,6 +1390,7 @@ struct lruvec *folio_lruvec_lock_irq(struct folio *folio)
- 	lruvec = folio_lruvec(folio);
- 	spin_lock_irq(&lruvec->lru_lock);
- 
-+	/* See the comments in folio_lruvec_lock(). */
- 	if (unlikely(lruvec_memcg(lruvec) != folio_memcg(folio))) {
- 		spin_unlock_irq(&lruvec->lru_lock);
- 		goto retry;
-@@ -1394,6 +1424,7 @@ struct lruvec *folio_lruvec_lock_irqsave(struct folio *folio,
- 	lruvec = folio_lruvec(folio);
- 	spin_lock_irqsave(&lruvec->lru_lock, *flags);
- 
-+	/* See the comments in folio_lruvec_lock(). */
- 	if (unlikely(lruvec_memcg(lruvec) != folio_memcg(folio))) {
- 		spin_unlock_irqrestore(&lruvec->lru_lock, *flags);
- 		goto retry;
-@@ -5809,7 +5840,10 @@ static int mem_cgroup_move_account(struct page *page,
- 	obj_cgroup_put(rcu_dereference(from->objcg));
- 	rcu_read_unlock();
- 
-+	/* See the comments in folio_lruvec_lock(). */
-+	spin_lock(&from_vec->lru_lock);
- 	folio->memcg_data = (unsigned long)rcu_access_pointer(to->objcg);
-+	spin_unlock(&from_vec->lru_lock);
- 
- 	__folio_memcg_unlock(from);
- 
-diff --git a/mm/swap.c b/mm/swap.c
-index 987dcbd93ffa..0fc59409e27d 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -196,6 +196,7 @@ static void lru_add_fn(struct lruvec *lruvec, struct folio *folio)
- 
- 	VM_BUG_ON_FOLIO(folio_test_lru(folio), folio);
- 
-+	folio_set_lru(folio);
- 	/*
- 	 * Is an smp_mb__after_atomic() still required here, before
- 	 * folio_evictable() tests the mlocked flag, to rule out the possibility
-@@ -238,14 +239,8 @@ static void folio_batch_move_lru(struct folio_batch *fbatch, move_fn_t move_fn)
- 	for (i = 0; i < folio_batch_count(fbatch); i++) {
- 		struct folio *folio = fbatch->folios[i];
- 
--		/* block memcg migration while the folio moves between lru */
--		if (move_fn != lru_add_fn && !folio_test_clear_lru(folio))
--			continue;
--
- 		lruvec = folio_lruvec_relock_irqsave(folio, lruvec, &flags);
- 		move_fn(lruvec, folio);
--
--		folio_set_lru(folio);
- 	}
- 
- 	if (lruvec)
-@@ -265,7 +260,7 @@ static void folio_batch_add_and_move(struct folio_batch *fbatch,
- 
- static void lru_move_tail_fn(struct lruvec *lruvec, struct folio *folio)
- {
--	if (!folio_test_unevictable(folio)) {
-+	if (folio_test_lru(folio) && !folio_test_unevictable(folio)) {
- 		lruvec_del_folio(lruvec, folio);
- 		folio_clear_active(folio);
- 		lruvec_add_folio_tail(lruvec, folio);
-@@ -348,7 +343,8 @@ void lru_note_cost_folio(struct folio *folio)
- 
- static void folio_activate_fn(struct lruvec *lruvec, struct folio *folio)
- {
--	if (!folio_test_active(folio) && !folio_test_unevictable(folio)) {
-+	if (folio_test_lru(folio) && !folio_test_active(folio) &&
-+	    !folio_test_unevictable(folio)) {
- 		long nr_pages = folio_nr_pages(folio);
- 
- 		lruvec_del_folio(lruvec, folio);
-@@ -394,12 +390,9 @@ static void folio_activate(struct folio *folio)
- {
- 	struct lruvec *lruvec;
- 
--	if (folio_test_clear_lru(folio)) {
--		lruvec = folio_lruvec_lock_irq(folio);
--		folio_activate_fn(lruvec, folio);
--		lruvec_unlock_irq(lruvec);
--		folio_set_lru(folio);
--	}
-+	lruvec = folio_lruvec_lock_irq(folio);
-+	folio_activate_fn(lruvec, folio);
-+	lruvec_unlock_irq(lruvec);
- }
- #endif
- 
-@@ -542,6 +535,9 @@ static void lru_deactivate_file_fn(struct lruvec *lruvec, struct folio *folio)
- 	bool active = folio_test_active(folio);
- 	long nr_pages = folio_nr_pages(folio);
- 
-+	if (!folio_test_lru(folio))
-+		return;
-+
- 	if (folio_test_unevictable(folio))
- 		return;
- 
-@@ -580,7 +576,8 @@ static void lru_deactivate_file_fn(struct lruvec *lruvec, struct folio *folio)
- 
- static void lru_deactivate_fn(struct lruvec *lruvec, struct folio *folio)
- {
--	if (folio_test_active(folio) && !folio_test_unevictable(folio)) {
-+	if (folio_test_lru(folio) && folio_test_active(folio) &&
-+	    !folio_test_unevictable(folio)) {
- 		long nr_pages = folio_nr_pages(folio);
- 
- 		lruvec_del_folio(lruvec, folio);
-@@ -596,8 +593,9 @@ static void lru_deactivate_fn(struct lruvec *lruvec, struct folio *folio)
- 
- static void lru_lazyfree_fn(struct lruvec *lruvec, struct folio *folio)
- {
--	if (folio_test_anon(folio) && folio_test_swapbacked(folio) &&
--	    !folio_test_swapcache(folio) && !folio_test_unevictable(folio)) {
-+	if (folio_test_lru(folio) && folio_test_anon(folio) &&
-+	    folio_test_swapbacked(folio) && !folio_test_swapcache(folio) &&
-+	    !folio_test_unevictable(folio)) {
- 		long nr_pages = folio_nr_pages(folio);
- 
- 		lruvec_del_folio(lruvec, folio);
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 51b1607c81e4..11e1f6fc5898 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -4864,21 +4864,19 @@ void check_move_unevictable_pages(struct pagevec *pvec)
- 		if (PageTransTail(page))
- 			continue;
- 
--		nr_pages = thp_nr_pages(page);
-+		nr_pages = folio_nr_pages(folio);
- 		pgscanned += nr_pages;
- 
--		/* block memcg migration during page moving between lru */
--		if (!TestClearPageLRU(page))
-+		lruvec = folio_lruvec_relock_irq(folio, lruvec);
-+		if (!folio_test_lru(folio) || !folio_test_unevictable(folio))
- 			continue;
- 
--		lruvec = folio_lruvec_relock_irq(folio, lruvec);
--		if (page_evictable(page) && PageUnevictable(page)) {
--			del_page_from_lru_list(page, lruvec);
--			ClearPageUnevictable(page);
--			add_page_to_lru_list(page, lruvec);
-+		if (folio_evictable(folio)) {
-+			lruvec_del_folio(lruvec, folio);
-+			folio_clear_unevictable(folio);
-+			lruvec_add_folio(lruvec, folio);
- 			pgrescued += nr_pages;
- 		}
--		SetPageLRU(page);
- 	}
- 
- 	if (lruvec) {
--- 
-2.11.0
-
+UGFnZWNhY2hlIHBhZ2VzIGFyZSBjaGFyZ2VkIGF0IHRoZSBhbGxvY2F0aW9uIHRpbWUgYW5kIGhv
+bGRpbmcgYQpyZWZlcmVuY2UgdG8gdGhlIG9yaWdpbmFsIG1lbW9yeSBjZ3JvdXAgdW50aWwgYmVp
+bmcgcmVjbGFpbWVkLgpEZXBlbmRpbmcgb24gdGhlIG1lbW9yeSBwcmVzc3VyZSwgc3BlY2lmaWMg
+cGF0dGVybnMgb2YgdGhlIHBhZ2UKc2hhcmluZyBiZXR3ZWVuIGRpZmZlcmVudCBjZ3JvdXBzIGFu
+ZCB0aGUgY2dyb3VwIGNyZWF0aW9uIGFuZApkZXN0cnVjdGlvbiByYXRlcywgYSBsYXJnZSBudW1i
+ZXIgb2YgZHlpbmcgbWVtb3J5IGNncm91cHMgY2FuIGJlCnBpbm5lZCBieSBwYWdlY2FjaGUgcGFn
+ZXMuIEl0IG1ha2VzIHRoZSBwYWdlIHJlY2xhaW0gbGVzcyBlZmZpY2llbnQKYW5kIHdhc3RlcyBt
+ZW1vcnkuCgpXZSBjYW4gY29udmVydCBMUlUgcGFnZXMgYW5kIG1vc3Qgb3RoZXIgcmF3IG1lbWNn
+IHBpbnMgdG8gdGhlIG9iamNnCmRpcmVjdGlvbiB0byBmaXggdGhpcyBwcm9ibGVtLCBhbmQgdGhl
+biB0aGUgcGFnZS0+bWVtY2cgd2lsbCBhbHdheXMKcG9pbnQgdG8gYW4gb2JqZWN0IGNncm91cCBw
+b2ludGVyLgoKVGhlcmVmb3JlLCB0aGUgaW5mcmFzdHJ1Y3R1cmUgb2Ygb2JqY2cgbm8gbG9uZ2Vy
+IG9ubHkgc2VydmVzCkNPTkZJR19NRU1DR19LTUVNLiBJbiB0aGlzIHBhdGNoLCB3ZSBtb3ZlIHRo
+ZSBpbmZyYXN0cnVjdHVyZSBvZiB0aGUKb2JqY2cgb3V0IG9mIHRoZSBzY29wZSBvZiB0aGUgQ09O
+RklHX01FTUNHX0tNRU0gc28gdGhhdCB0aGUgTFJVIHBhZ2VzCmNhbiByZXVzZSBpdCB0byBjaGFy
+Z2UgcGFnZXMuCgpXZSBrbm93IHRoYXQgdGhlIExSVSBwYWdlcyBhcmUgbm90IGFjY291bnRlZCBh
+dCB0aGUgcm9vdCBsZXZlbC4gQnV0CnRoZSBwYWdlLT5tZW1jZ19kYXRhIHBvaW50cyB0byB0aGUg
+cm9vdF9tZW1fY2dyb3VwLiBTbyB0aGUKcGFnZS0+bWVtY2dfZGF0YSBvZiB0aGUgTFJVIHBhZ2Vz
+IGFsd2F5cyBwb2ludHMgdG8gYSB2YWxpZCBwb2ludGVyLgpCdXQgdGhlIHJvb3RfbWVtX2Nncm91
+cCBkb3NlIG5vdCBoYXZlIGFuIG9iamVjdCBjZ3JvdXAuIElmIHdlIHVzZQpvYmpfY2dyb3VwIEFQ
+SXMgdG8gY2hhcmdlIHRoZSBMUlUgcGFnZXMsIHdlIHNob3VsZCBzZXQgdGhlCnBhZ2UtPm1lbWNn
+X2RhdGEgdG8gYSByb290IG9iamVjdCBjZ3JvdXAuIFNvIHdlIGFsc28gYWxsb2NhdGUgYW4Kb2Jq
+ZWN0IGNncm91cCBmb3IgdGhlIHJvb3RfbWVtX2Nncm91cC4KClNpZ25lZC1vZmYtYnk6IE11Y2h1
+biBTb25nIDxzb25nbXVjaHVuLUVDOFV4bDZOcHlkbDU3TUlkUkNGRGdAcHVibGljLmdtYW5lLm9y
+Zz4KQWNrZWQtYnk6IEpvaGFubmVzIFdlaW5lciA8aGFubmVzLWRydVVndmwwTENOQWZ1Z1JwQzZ1
+NndAcHVibGljLmdtYW5lLm9yZz4KUmV2aWV3ZWQtYnk6IE1pY2hhbCBLb3V0bsO9IDxta291dG55
+LUlCaTlSRy9iNjdrQHB1YmxpYy5nbWFuZS5vcmc+CkFja2VkLWJ5OiBSb21hbiBHdXNoY2hpbiA8
+cm9tYW4uZ3VzaGNoaW4tZnhVVlhmdElGRG55RzF6RU9iWHRmQUBwdWJsaWMuZ21hbmUub3JnPgot
+LS0KIGluY2x1ZGUvbGludXgvbWVtY29udHJvbC5oIHwgIDIgKy0KIG1tL21lbWNvbnRyb2wuYyAg
+ICAgICAgICAgIHwgNTYgKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0t
+LS0tLQogMiBmaWxlcyBjaGFuZ2VkLCAzNCBpbnNlcnRpb25zKCspLCAyNCBkZWxldGlvbnMoLSkK
+CmRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L21lbWNvbnRyb2wuaCBiL2luY2x1ZGUvbGludXgv
+bWVtY29udHJvbC5oCmluZGV4IGQwYzBkYTdjYWZiNy4uMTExZWRhNmZmMWNlIDEwMDY0NAotLS0g
+YS9pbmNsdWRlL2xpbnV4L21lbWNvbnRyb2wuaAorKysgYi9pbmNsdWRlL2xpbnV4L21lbWNvbnRy
+b2wuaApAQCAtMzIxLDEwICszMjEsMTAgQEAgc3RydWN0IG1lbV9jZ3JvdXAgewogCiAjaWZkZWYg
+Q09ORklHX01FTUNHX0tNRU0KIAlpbnQga21lbWNnX2lkOworI2VuZGlmCiAJc3RydWN0IG9ial9j
+Z3JvdXAgX19yY3UgKm9iamNnOwogCS8qIGxpc3Qgb2YgaW5oZXJpdGVkIG9iamNncywgcHJvdGVj
+dGVkIGJ5IG9iamNnX2xvY2sgKi8KIAlzdHJ1Y3QgbGlzdF9oZWFkIG9iamNnX2xpc3Q7Ci0jZW5k
+aWYKIAogCU1FTUNHX1BBRERJTkcoX3BhZDJfKTsKIApkaWZmIC0tZ2l0IGEvbW0vbWVtY29udHJv
+bC5jIGIvbW0vbWVtY29udHJvbC5jCmluZGV4IGZjNzA2ZDZmYzI2NS4uM2M0ODk2NTFkMzEyIDEw
+MDY0NAotLS0gYS9tbS9tZW1jb250cm9sLmMKKysrIGIvbW0vbWVtY29udHJvbC5jCkBAIC0yNTIs
+OSArMjUyLDkgQEAgc3RydWN0IG1lbV9jZ3JvdXAgKnZtcHJlc3N1cmVfdG9fbWVtY2coc3RydWN0
+IHZtcHJlc3N1cmUgKnZtcHIpCiAJcmV0dXJuIGNvbnRhaW5lcl9vZih2bXByLCBzdHJ1Y3QgbWVt
+X2Nncm91cCwgdm1wcmVzc3VyZSk7CiB9CiAKLSNpZmRlZiBDT05GSUdfTUVNQ0dfS01FTQogc3Rh
+dGljIERFRklORV9TUElOTE9DSyhvYmpjZ19sb2NrKTsKIAorI2lmZGVmIENPTkZJR19NRU1DR19L
+TUVNCiBib29sIG1lbV9jZ3JvdXBfa21lbV9kaXNhYmxlZCh2b2lkKQogewogCXJldHVybiBjZ3Jv
+dXBfbWVtb3J5X25va21lbTsKQEAgLTI2MywxMiArMjYzLDEwIEBAIGJvb2wgbWVtX2Nncm91cF9r
+bWVtX2Rpc2FibGVkKHZvaWQpCiBzdGF0aWMgdm9pZCBvYmpfY2dyb3VwX3VuY2hhcmdlX3BhZ2Vz
+KHN0cnVjdCBvYmpfY2dyb3VwICpvYmpjZywKIAkJCQkgICAgICB1bnNpZ25lZCBpbnQgbnJfcGFn
+ZXMpOwogCi1zdGF0aWMgdm9pZCBvYmpfY2dyb3VwX3JlbGVhc2Uoc3RydWN0IHBlcmNwdV9yZWYg
+KnJlZikKK3N0YXRpYyB2b2lkIG9ial9jZ3JvdXBfcmVsZWFzZV9ieXRlcyhzdHJ1Y3Qgb2JqX2Nn
+cm91cCAqb2JqY2cpCiB7Ci0Jc3RydWN0IG9ial9jZ3JvdXAgKm9iamNnID0gY29udGFpbmVyX29m
+KHJlZiwgc3RydWN0IG9ial9jZ3JvdXAsIHJlZmNudCk7CiAJdW5zaWduZWQgaW50IG5yX2J5dGVz
+OwogCXVuc2lnbmVkIGludCBucl9wYWdlczsKLQl1bnNpZ25lZCBsb25nIGZsYWdzOwogCiAJLyoK
+IAkgKiBBdCB0aGlzIHBvaW50IGFsbCBhbGxvY2F0ZWQgb2JqZWN0cyBhcmUgZnJlZWQsIGFuZApA
+QCAtMjgyLDkgKzI4MCw5IEBAIHN0YXRpYyB2b2lkIG9ial9jZ3JvdXBfcmVsZWFzZShzdHJ1Y3Qg
+cGVyY3B1X3JlZiAqcmVmKQogCSAqIDMpIENQVTE6IGEgcHJvY2VzcyBmcm9tIGFub3RoZXIgbWVt
+Y2cgaXMgYWxsb2NhdGluZyBzb21ldGhpbmcsCiAJICogICAgICAgICAgdGhlIHN0b2NrIGlmIGZs
+dXNoZWQsCiAJICogICAgICAgICAgb2JqY2ctPm5yX2NoYXJnZWRfYnl0ZXMgPSBQQUdFX1NJWkUg
+LSA5MgotCSAqIDUpIENQVTA6IHdlIGRvIHJlbGVhc2UgdGhpcyBvYmplY3QsCisJICogNCkgQ1BV
+MDogd2UgZG8gcmVsZWFzZSB0aGlzIG9iamVjdCwKIAkgKiAgICAgICAgICA5MiBieXRlcyBhcmUg
+YWRkZWQgdG8gc3RvY2stPm5yX2J5dGVzCi0JICogNikgQ1BVMDogc3RvY2sgaXMgZmx1c2hlZCwK
+KwkgKiA1KSBDUFUwOiBzdG9jayBpcyBmbHVzaGVkLAogCSAqICAgICAgICAgIDkyIGJ5dGVzIGFy
+ZSBhZGRlZCB0byBvYmpjZy0+bnJfY2hhcmdlZF9ieXRlcwogCSAqCiAJICogSW4gdGhlIHJlc3Vs
+dCwgbnJfY2hhcmdlZF9ieXRlcyA9PSBQQUdFX1NJWkUuCkBAIC0yOTYsNiArMjk0LDE5IEBAIHN0
+YXRpYyB2b2lkIG9ial9jZ3JvdXBfcmVsZWFzZShzdHJ1Y3QgcGVyY3B1X3JlZiAqcmVmKQogCiAJ
+aWYgKG5yX3BhZ2VzKQogCQlvYmpfY2dyb3VwX3VuY2hhcmdlX3BhZ2VzKG9iamNnLCBucl9wYWdl
+cyk7Cit9CisjZWxzZQorc3RhdGljIGlubGluZSB2b2lkIG9ial9jZ3JvdXBfcmVsZWFzZV9ieXRl
+cyhzdHJ1Y3Qgb2JqX2Nncm91cCAqb2JqY2cpCit7Cit9CisjZW5kaWYKKworc3RhdGljIHZvaWQg
+b2JqX2Nncm91cF9yZWxlYXNlKHN0cnVjdCBwZXJjcHVfcmVmICpyZWYpCit7CisJc3RydWN0IG9i
+al9jZ3JvdXAgKm9iamNnID0gY29udGFpbmVyX29mKHJlZiwgc3RydWN0IG9ial9jZ3JvdXAsIHJl
+ZmNudCk7CisJdW5zaWduZWQgbG9uZyBmbGFnczsKKworCW9ial9jZ3JvdXBfcmVsZWFzZV9ieXRl
+cyhvYmpjZyk7CiAKIAlzcGluX2xvY2tfaXJxc2F2ZSgmb2JqY2dfbG9jaywgZmxhZ3MpOwogCWxp
+c3RfZGVsKCZvYmpjZy0+bGlzdCk7CkBAIC0zMjQsMTAgKzMzNSwxMCBAQCBzdGF0aWMgc3RydWN0
+IG9ial9jZ3JvdXAgKm9ial9jZ3JvdXBfYWxsb2Modm9pZCkKIAlyZXR1cm4gb2JqY2c7CiB9CiAK
+LXN0YXRpYyB2b2lkIG1lbWNnX3JlcGFyZW50X29iamNncyhzdHJ1Y3QgbWVtX2Nncm91cCAqbWVt
+Y2csCi0JCQkJICBzdHJ1Y3QgbWVtX2Nncm91cCAqcGFyZW50KQorc3RhdGljIHZvaWQgbWVtY2df
+cmVwYXJlbnRfb2JqY2dzKHN0cnVjdCBtZW1fY2dyb3VwICptZW1jZykKIHsKIAlzdHJ1Y3Qgb2Jq
+X2Nncm91cCAqb2JqY2csICppdGVyOworCXN0cnVjdCBtZW1fY2dyb3VwICpwYXJlbnQgPSBwYXJl
+bnRfbWVtX2Nncm91cChtZW1jZyk7CiAKIAlvYmpjZyA9IHJjdV9yZXBsYWNlX3BvaW50ZXIobWVt
+Y2ctPm9iamNnLCBOVUxMLCB0cnVlKTsKIApAQCAtMzQ2LDYgKzM1Nyw3IEBAIHN0YXRpYyB2b2lk
+IG1lbWNnX3JlcGFyZW50X29iamNncyhzdHJ1Y3QgbWVtX2Nncm91cCAqbWVtY2csCiAJcGVyY3B1
+X3JlZl9raWxsKCZvYmpjZy0+cmVmY250KTsKIH0KIAorI2lmZGVmIENPTkZJR19NRU1DR19LTUVN
+CiAvKgogICogQSBsb3Qgb2YgdGhlIGNhbGxzIHRvIHRoZSBjYWNoZSBhbGxvY2F0aW9uIGZ1bmN0
+aW9ucyBhcmUgZXhwZWN0ZWQgdG8gYmUKICAqIGlubGluZWQgYnkgdGhlIGNvbXBpbGVyLiBTaW5j
+ZSB0aGUgY2FsbHMgdG8gbWVtY2dfc2xhYl9wcmVfYWxsb2NfaG9vaygpIGFyZQpAQCAtMzY1MSwy
+MSArMzY2MywxMiBAQCBzdGF0aWMgdTY0IG1lbV9jZ3JvdXBfcmVhZF91NjQoc3RydWN0IGNncm91
+cF9zdWJzeXNfc3RhdGUgKmNzcywKICNpZmRlZiBDT05GSUdfTUVNQ0dfS01FTQogc3RhdGljIGlu
+dCBtZW1jZ19vbmxpbmVfa21lbShzdHJ1Y3QgbWVtX2Nncm91cCAqbWVtY2cpCiB7Ci0Jc3RydWN0
+IG9ial9jZ3JvdXAgKm9iamNnOwotCiAJaWYgKGNncm91cF9tZW1vcnlfbm9rbWVtKQogCQlyZXR1
+cm4gMDsKIAogCWlmICh1bmxpa2VseShtZW1fY2dyb3VwX2lzX3Jvb3QobWVtY2cpKSkKIAkJcmV0
+dXJuIDA7CiAKLQlvYmpjZyA9IG9ial9jZ3JvdXBfYWxsb2MoKTsKLQlpZiAoIW9iamNnKQotCQly
+ZXR1cm4gLUVOT01FTTsKLQotCW9iamNnLT5tZW1jZyA9IG1lbWNnOwotCXJjdV9hc3NpZ25fcG9p
+bnRlcihtZW1jZy0+b2JqY2csIG9iamNnKTsKLQogCXN0YXRpY19icmFuY2hfZW5hYmxlKCZtZW1j
+Z19rbWVtX2VuYWJsZWRfa2V5KTsKIAogCW1lbWNnLT5rbWVtY2dfaWQgPSBtZW1jZy0+aWQuaWQ7
+CkBAIC0zNjc1LDE3ICszNjc4LDEzIEBAIHN0YXRpYyBpbnQgbWVtY2dfb25saW5lX2ttZW0oc3Ry
+dWN0IG1lbV9jZ3JvdXAgKm1lbWNnKQogCiBzdGF0aWMgdm9pZCBtZW1jZ19vZmZsaW5lX2ttZW0o
+c3RydWN0IG1lbV9jZ3JvdXAgKm1lbWNnKQogewotCXN0cnVjdCBtZW1fY2dyb3VwICpwYXJlbnQ7
+Ci0KIAlpZiAoY2dyb3VwX21lbW9yeV9ub2ttZW0pCiAJCXJldHVybjsKIAogCWlmICh1bmxpa2Vs
+eShtZW1fY2dyb3VwX2lzX3Jvb3QobWVtY2cpKSkKIAkJcmV0dXJuOwogCi0JcGFyZW50ID0gcGFy
+ZW50X21lbV9jZ3JvdXAobWVtY2cpOwotCW1lbWNnX3JlcGFyZW50X29iamNncyhtZW1jZywgcGFy
+ZW50KTsKLQltZW1jZ19yZXBhcmVudF9saXN0X2xydXMobWVtY2csIHBhcmVudCk7CisJbWVtY2df
+cmVwYXJlbnRfbGlzdF9scnVzKG1lbWNnLCBwYXJlbnRfbWVtX2Nncm91cChtZW1jZykpOwogfQog
+I2Vsc2UKIHN0YXRpYyBpbnQgbWVtY2dfb25saW5lX2ttZW0oc3RydWN0IG1lbV9jZ3JvdXAgKm1l
+bWNnKQpAQCAtNTE5MCw4ICs1MTg5LDggQEAgc3RhdGljIHN0cnVjdCBtZW1fY2dyb3VwICptZW1f
+Y2dyb3VwX2FsbG9jKHZvaWQpCiAJbWVtY2ctPnNvY2tldF9wcmVzc3VyZSA9IGppZmZpZXM7CiAj
+aWZkZWYgQ09ORklHX01FTUNHX0tNRU0KIAltZW1jZy0+a21lbWNnX2lkID0gLTE7Ci0JSU5JVF9M
+SVNUX0hFQUQoJm1lbWNnLT5vYmpjZ19saXN0KTsKICNlbmRpZgorCUlOSVRfTElTVF9IRUFEKCZt
+ZW1jZy0+b2JqY2dfbGlzdCk7CiAjaWZkZWYgQ09ORklHX0NHUk9VUF9XUklURUJBQ0sKIAlJTklU
+X0xJU1RfSEVBRCgmbWVtY2ctPmNnd2JfbGlzdCk7CiAJZm9yIChpID0gMDsgaSA8IE1FTUNHX0NH
+V0JfRlJOX0NOVDsgaSsrKQpAQCAtNTI1Niw2ICs1MjU1LDcgQEAgbWVtX2Nncm91cF9jc3NfYWxs
+b2Moc3RydWN0IGNncm91cF9zdWJzeXNfc3RhdGUgKnBhcmVudF9jc3MpCiBzdGF0aWMgaW50IG1l
+bV9jZ3JvdXBfY3NzX29ubGluZShzdHJ1Y3QgY2dyb3VwX3N1YnN5c19zdGF0ZSAqY3NzKQogewog
+CXN0cnVjdCBtZW1fY2dyb3VwICptZW1jZyA9IG1lbV9jZ3JvdXBfZnJvbV9jc3MoY3NzKTsKKwlz
+dHJ1Y3Qgb2JqX2Nncm91cCAqb2JqY2c7CiAKIAlpZiAobWVtY2dfb25saW5lX2ttZW0obWVtY2cp
+KQogCQlnb3RvIHJlbW92ZV9pZDsKQEAgLTUyNjgsNiArNTI2OCwxMyBAQCBzdGF0aWMgaW50IG1l
+bV9jZ3JvdXBfY3NzX29ubGluZShzdHJ1Y3QgY2dyb3VwX3N1YnN5c19zdGF0ZSAqY3NzKQogCWlm
+IChhbGxvY19zaHJpbmtlcl9pbmZvKG1lbWNnKSkKIAkJZ290byBvZmZsaW5lX2ttZW07CiAKKwlv
+YmpjZyA9IG9ial9jZ3JvdXBfYWxsb2MoKTsKKwlpZiAoIW9iamNnKQorCQlnb3RvIGZyZWVfc2hy
+aW5rZXI7CisKKwlvYmpjZy0+bWVtY2cgPSBtZW1jZzsKKwlyY3VfYXNzaWduX3BvaW50ZXIobWVt
+Y2ctPm9iamNnLCBvYmpjZyk7CisKIAkvKiBPbmxpbmUgc3RhdGUgcGlucyBtZW1jZyBJRCwgbWVt
+Y2cgSUQgcGlucyBDU1MgKi8KIAlyZWZjb3VudF9zZXQoJm1lbWNnLT5pZC5yZWYsIDEpOwogCWNz
+c19nZXQoY3NzKTsKQEAgLTUyNzYsNiArNTI4Myw4IEBAIHN0YXRpYyBpbnQgbWVtX2Nncm91cF9j
+c3Nfb25saW5lKHN0cnVjdCBjZ3JvdXBfc3Vic3lzX3N0YXRlICpjc3MpCiAJCXF1ZXVlX2RlbGF5
+ZWRfd29yayhzeXN0ZW1fdW5ib3VuZF93cSwgJnN0YXRzX2ZsdXNoX2R3b3JrLAogCQkJCSAgIDJV
+TCpIWik7CiAJcmV0dXJuIDA7CitmcmVlX3Nocmlua2VyOgorCWZyZWVfc2hyaW5rZXJfaW5mbyht
+ZW1jZyk7CiBvZmZsaW5lX2ttZW06CiAJbWVtY2dfb2ZmbGluZV9rbWVtKG1lbWNnKTsKIHJlbW92
+ZV9pZDoKQEAgLTUzMDMsNiArNTMxMiw3IEBAIHN0YXRpYyB2b2lkIG1lbV9jZ3JvdXBfY3NzX29m
+ZmxpbmUoc3RydWN0IGNncm91cF9zdWJzeXNfc3RhdGUgKmNzcykKIAlwYWdlX2NvdW50ZXJfc2V0
+X21pbigmbWVtY2ctPm1lbW9yeSwgMCk7CiAJcGFnZV9jb3VudGVyX3NldF9sb3coJm1lbWNnLT5t
+ZW1vcnksIDApOwogCisJbWVtY2dfcmVwYXJlbnRfb2JqY2dzKG1lbWNnKTsKIAltZW1jZ19vZmZs
+aW5lX2ttZW0obWVtY2cpOwogCXJlcGFyZW50X3Nocmlua2VyX2RlZmVycmVkKG1lbWNnKTsKIAl3
+Yl9tZW1jZ19vZmZsaW5lKG1lbWNnKTsKLS0gCjIuMTEuMAoK
