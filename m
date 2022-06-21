@@ -1,139 +1,123 @@
-From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH] sched: RT bandwidth interface for cgroup unified hierarchy
-Date: Tue, 21 Jun 2022 20:35:42 +0800
-Message-ID: <20220621123542.1444-1-zhouchengming@bytedance.com>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: [PATCH v6 00/11] Use obj_cgroup APIs to charge the LRU pages
+Date: Tue, 21 Jun 2022 20:56:47 +0800
+Message-ID: <20220621125658.64935-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=EjlDmuV/uOVKT3BSmFT2nXl++EN3szZ0zzti8E6q644=;
-        b=3VQV7AhNbEPddrWLGOd8BC8ju9GERSEC+GjCVKfDY9DBIs9bLhRYp56IQtNtupvHvR
-         64ceScHBlOiAtQdDXzQQipdPSMZnVn2/nmHovXnkbOKdICbg2ocSBdXZ0BJ2eaPERXJQ
-         wqhLg5735a5oxSmK1XYnFFJT74fh3JEOncfmiKZ7ndvZlvRFvAZ+lvbernA9KKUwLDpd
-         HB5LZjcihcSITR+WCOys22YdE7q1rFUfkvIB0LVvZYegrHu8c7jxYG4riYiqjXw4G0LN
-         /JyQ1d4BButexZoooYeeoeUxc/IxHY6c01RJs0VwViNEdkvTEZZpjx86+zB6dz4aN++J
-         KuqA==
+        bh=zBbBzk5qNVWvdANVbcpsxhRISEYlb3XpSAVuXts7Xh4=;
+        b=6MoJL7uhwVZV1hnFe7vkgxTK88ZUcybzyABVvpzKz95L1WzNjJHhh8UeaZQwTFlIB9
+         gjQDQllwWuHYWUzGW1XlH+MA1mw1JFDKyaFWyy5qoWTXxL2NENkl0g04VVD3HnE3Lh7C
+         JjEC+a25WrPJtQtXRG1Q4lquerDcPkaFMEF4ECPFdhTaAJGBjqL7iGxS6p5lH5gnu679
+         VU6t95ibSvKGXommF2zRro/qr/SIJ+frLgB7BLGSARKV1swHUXGnQkzmi38oD+gDyaLl
+         arZkpqbNvbX+/lr1icurCA3SpGJq0w6vIatDK2YKUNlBisrRy9CVW+jCGI4ouFIoSb5Y
+         18fA==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Content-Type: text/plain; charset="macroman"
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-We need to run RT threads in cgroup unified hierarchy, but we can't
-since the default rt_bandwidth.rt_runtime of non-root task_group is 0
-and we haven't interface to update it.
-
-This patch add RT bandwidth interface "cpu.max.rt" and update the
-documentation accordingly.
-
-Signed-off-by: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
----
- Documentation/admin-guide/cgroup-v2.rst | 13 +++++++++++
- kernel/sched/core.c                     | 31 +++++++++++++++++++++++++
- kernel/sched/rt.c                       |  2 +-
- kernel/sched/sched.h                    |  1 +
- 4 files changed, 46 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 176298f2f4de..3d2949e16e04 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1055,6 +1055,19 @@ All time durations are in microseconds.
- 
- 	The burst in the range [0, $MAX].
- 
-+  cpu.max.rt
-+	A read-write two value file which exists on all cgroups when
-+	CONFIG_RT_GROUP_SCHED enabled, to control CPU bandwidth for
-+	RT threads in the task group.
-+
-+	The maximum bandwidth limit.  It's in the following format::
-+
-+	  $MAX $PERIOD
-+
-+	which indicates that RT threads in the group may consume upto
-+	$MAX in each $PERIOD duration.  "max" for $MAX indicates no
-+	limit.  If only one number is written, $MAX is updated.
-+
-   cpu.pressure
- 	A read-write nested-keyed file.
- 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index daadedc78fd9..c16f8cc5de08 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -11047,6 +11047,30 @@ static ssize_t cpu_max_write(struct kernfs_open_file *of,
- }
- #endif
- 
-+#ifdef CONFIG_RT_GROUP_SCHED
-+static int cpu_max_rt_show(struct seq_file *sf, void *v)
-+{
-+	struct task_group *tg = css_tg(seq_css(sf));
-+
-+	cpu_period_quota_print(sf, sched_group_rt_period(tg), sched_group_rt_runtime(tg));
-+	return 0;
-+}
-+
-+static ssize_t cpu_max_rt_write(struct kernfs_open_file *of,
-+				char *buf, size_t nbytes, loff_t off)
-+{
-+	struct task_group *tg = css_tg(of_css(of));
-+	u64 period = sched_group_rt_period(tg);
-+	u64 runtime;
-+	int ret;
-+
-+	ret = cpu_period_quota_parse(buf, &period, &runtime);
-+	if (!ret)
-+		ret = tg_set_rt_bandwidth(tg, period, runtime);
-+	return ret ?: nbytes;
-+}
-+#endif
-+
- static struct cftype cpu_files[] = {
- #ifdef CONFIG_FAIR_GROUP_SCHED
- 	{
-@@ -11082,6 +11106,13 @@ static struct cftype cpu_files[] = {
- 		.write_u64 = cpu_cfs_burst_write_u64,
- 	},
- #endif
-+#ifdef CONFIG_RT_GROUP_SCHED
-+	{
-+		.name = "max.rt",
-+		.seq_show = cpu_max_rt_show,
-+		.write = cpu_max_rt_write,
-+	},
-+#endif
- #ifdef CONFIG_UCLAMP_TASK_GROUP
- 	{
- 		.name = "uclamp.min",
-diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
-index 8c9ed9664840..319ce586446f 100644
---- a/kernel/sched/rt.c
-+++ b/kernel/sched/rt.c
-@@ -2819,7 +2819,7 @@ static int __rt_schedulable(struct task_group *tg, u64 period, u64 runtime)
- 	return ret;
- }
- 
--static int tg_set_rt_bandwidth(struct task_group *tg,
-+int tg_set_rt_bandwidth(struct task_group *tg,
- 		u64 rt_period, u64 rt_runtime)
- {
- 	int i, err = 0;
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 7b19a72408b1..317480d535b0 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -486,6 +486,7 @@ extern int alloc_rt_sched_group(struct task_group *tg, struct task_group *parent
- extern void init_tg_rt_entry(struct task_group *tg, struct rt_rq *rt_rq,
- 		struct sched_rt_entity *rt_se, int cpu,
- 		struct sched_rt_entity *parent);
-+extern int tg_set_rt_bandwidth(struct task_group *tg, u64 rt_period, u64 rt_runtime);
- extern int sched_group_set_rt_runtime(struct task_group *tg, long rt_runtime_us);
- extern int sched_group_set_rt_period(struct task_group *tg, u64 rt_period_us);
- extern long sched_group_rt_runtime(struct task_group *tg);
--- 
-2.36.1
-
+VGhpcyB2ZXJzaW9uIGlzIHJlYmFzZWQgb24gbW0tdW5zdGFibGUuIEhvcGVmdWxseSwgQW5kcmV3
+IGNhbiBnZXQgdGhpcyBzZXJpZXMKaW50byBtbS11bnN0YWJsZSB3aGljaCB3aWxsIGhlbHAgdG8g
+ZGV0ZXJtaW5lIHdoZXRoZXIgdGhlcmUgaXMgYSBwcm9ibGVtIG9yCmRlZ3JhZGF0aW9uLiBJIGFt
+IGFsc28gZG9pbmcgc29tZSBiZW5jaG1hcmsgdGVzdHMgaW4gcGFyYWxsZWwuCgpTaW5jZSB0aGUg
+Zm9sbG93aW5nIHBhdGNoc2V0cyBhcHBsaWVkLiBBbGwgdGhlIGtlcm5lbCBtZW1vcnkgYXJlIGNo
+YXJnZWQKd2l0aCB0aGUgbmV3IEFQSXMgb2Ygb2JqX2Nncm91cC4KCgljb21taXQgZjJmZTdiMDlh
+NTJiICgibW06IG1lbWNnL3NsYWI6IGNoYXJnZSBpbmRpdmlkdWFsIHNsYWIgb2JqZWN0cyBpbnN0
+ZWFkIG9mIHBhZ2VzIikKCWNvbW1pdCBiNGUwYjY4ZmJkOWQgKCJtbTogbWVtY29udHJvbDogdXNl
+IG9ial9jZ3JvdXAgQVBJcyB0byBjaGFyZ2Uga21lbSBwYWdlcyIpCgpCdXQgdXNlciBtZW1vcnkg
+YWxsb2NhdGlvbnMgKExSVSBwYWdlcykgcGlubmluZyBtZW1jZ3MgZm9yIGEgbG9uZyB0aW1lIC0K
+aXQgZXhpc3RzIGF0IGEgbGFyZ2VyIHNjYWxlIGFuZCBpcyBjYXVzaW5nIHJlY3VycmluZyBwcm9i
+bGVtcyBpbiB0aGUgcmVhbAp3b3JsZDogcGFnZSBjYWNoZSBkb2Vzbid0IGdldCByZWNsYWltZWQg
+Zm9yIGEgbG9uZyB0aW1lLCBvciBpcyB1c2VkIGJ5IHRoZQpzZWNvbmQsIHRoaXJkLCBmb3VydGgs
+IC4uLiBpbnN0YW5jZSBvZiB0aGUgc2FtZSBqb2IgdGhhdCB3YXMgcmVzdGFydGVkIGludG8KYSBu
+ZXcgY2dyb3VwIGV2ZXJ5IHRpbWUuIFVucmVjbGFpbWFibGUgZHlpbmcgY2dyb3VwcyBwaWxlIHVw
+LCB3YXN0ZSBtZW1vcnksCmFuZCBtYWtlIHBhZ2UgcmVjbGFpbSB2ZXJ5IGluZWZmaWNpZW50LgoK
+V2UgY2FuIGNvbnZlcnQgTFJVIHBhZ2VzIGFuZCBtb3N0IG90aGVyIHJhdyBtZW1jZyBwaW5zIHRv
+IHRoZSBvYmpjZyBkaXJlY3Rpb24KdG8gZml4IHRoaXMgcHJvYmxlbSwgYW5kIHRoZW4gdGhlIExS
+VSBwYWdlcyB3aWxsIG5vdCBwaW4gdGhlIG1lbWNncy4KClRoaXMgcGF0Y2hzZXQgYWltcyB0byBt
+YWtlIHRoZSBMUlUgcGFnZXMgdG8gZHJvcCB0aGUgcmVmZXJlbmNlIHRvIG1lbW9yeQpjZ3JvdXAg
+YnkgdXNpbmcgdGhlIEFQSXMgb2Ygb2JqX2Nncm91cC4gRmluYWxseSwgd2UgY2FuIHNlZSB0aGF0
+IHRoZSBudW1iZXIKb2YgdGhlIGR5aW5nIGNncm91cHMgd2lsbCBub3QgaW5jcmVhc2UgaWYgd2Ug
+cnVuIHRoZSBmb2xsb3dpbmcgdGVzdCBzY3JpcHQuCgpgYGBiYXNoCiMhL2Jpbi9iYXNoCgpkZCBp
+Zj0vZGV2L3plcm8gb2Y9dGVtcCBicz00MDk2IGNvdW50PTEKY2F0IC9wcm9jL2Nncm91cHMgfCBn
+cmVwIG1lbW9yeQoKZm9yIGkgaW4gezAuLjIwMDB9CmRvCglta2RpciAvc3lzL2ZzL2Nncm91cC9t
+ZW1vcnkvdGVzdCRpCgllY2hvICQkID4gL3N5cy9mcy9jZ3JvdXAvbWVtb3J5L3Rlc3QkaS9jZ3Jv
+dXAucHJvY3MKCWNhdCB0ZW1wID4+IGxvZwoJZWNobyAkJCA+IC9zeXMvZnMvY2dyb3VwL21lbW9y
+eS9jZ3JvdXAucHJvY3MKCXJtZGlyIC9zeXMvZnMvY2dyb3VwL21lbW9yeS90ZXN0JGkKZG9uZQoK
+Y2F0IC9wcm9jL2Nncm91cHMgfCBncmVwIG1lbW9yeQoKcm0gLWYgdGVtcCBsb2cKYGBgCgp2NTog
+aHR0cHM6Ly9sb3JlLmtlcm5lbC5vcmcvYWxsLzIwMjIwNTMwMDc0OTE5LjQ2MzUyLTEtc29uZ211
+Y2h1bi1FQzhVeGw2TnB5ZGw1N01JZFJDRkRnQHB1YmxpYy5nbWFuZS5vcmcvCnY0OiBodHRwczov
+L2xvcmUua2VybmVsLm9yZy9hbGwvMjAyMjA1MjQwNjA1NTEuODAwMzctMS1zb25nbXVjaHVuLUVD
+OFV4bDZOcHlkbDU3TUlkUkNGRGdAcHVibGljLmdtYW5lLm9yZy8KdjM6IGh0dHBzOi8vbG9yZS5r
+ZXJuZWwub3JnL2FsbC8yMDIyMDIxNjExNTEzMi41MjYwMi0xLXNvbmdtdWNodW4tRUM4VXhsNk5w
+eWRsNTdNSWRSQ0ZEZ0BwdWJsaWMuZ21hbmUub3JnLwp2MjogaHR0cHM6Ly9sb3JlLmtlcm5lbC5v
+cmcvYWxsLzIwMjEwOTE2MTM0NzQ4LjY3NzEyLTEtc29uZ211Y2h1bi1FQzhVeGw2TnB5ZGw1N01J
+ZFJDRkRnQHB1YmxpYy5nbWFuZS5vcmcvCnYxOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwv
+MjAyMTA4MTQwNTI1MTkuODY2NzktMS1zb25nbXVjaHVuLUVDOFV4bDZOcHlkbDU3TUlkUkNGRGdA
+cHVibGljLmdtYW5lLm9yZy8KUkZDIHY0OiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAy
+MTA1MjcwOTMzMzYuMTQ4OTUtMS1zb25nbXVjaHVuLUVDOFV4bDZOcHlkbDU3TUlkUkNGRGdAcHVi
+bGljLmdtYW5lLm9yZy8KUkZDIHYzOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyMTA0
+MjEwNzAwNTkuNjkzNjEtMS1zb25nbXVjaHVuLUVDOFV4bDZOcHlkbDU3TUlkUkNGRGdAcHVibGlj
+LmdtYW5lLm9yZy8KUkZDIHYyOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyMTA0MDkx
+MjI5NTkuODIyNjQtMS1zb25nbXVjaHVuLUVDOFV4bDZOcHlkbDU3TUlkUkNGRGdAcHVibGljLmdt
+YW5lLm9yZy8KUkZDIHYxOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyMTAzMzAxMDE1
+MzEuODI3NTItMS1zb25nbXVjaHVuLUVDOFV4bDZOcHlkbDU3TUlkUkNGRGdAcHVibGljLmdtYW5l
+Lm9yZy8KCnY2OgogLSBDb2xsZWN0IEFja2VkLWJ5IGFuZCBSZXZpZXdlZC1ieSBmcm9tIFJvbWFu
+IGFuZCBNaWNoYWwgS291dG7DvS4gVGhhbmtzLgogLSBSZWJhc2UgdG8gbW0tdW5zdGFibGUuCgp2
+NToKIC0gTG90cyBvZiBpbXByb3ZlbWVudHMgZnJvbSBKb2hhbm5lcywgUm9tYW4gYW5kIFdhaW1h
+bi4KIC0gRml4IGxvY2tkZXAgd2FybmluZyByZXBvcnRlZCBieSBrZXJuZWwgdGVzdCByb2JvdC4K
+IC0gQWRkIHR3byBuZXcgcGF0Y2hlcyB0byBkbyBjb2RlIGNsZWFudXAuCiAtIENvbGxlY3QgQWNr
+ZWQtYnkgYW5kIFJldmlld2VkLWJ5IGZyb20gSm9oYW5uZXMgYW5kIFJvbWFuLgogLSBJIGRpZG4n
+dCByZXBsYWNlIGxvY2FsX2lycV9kaXNhYmxlL2VuYWJsZSgpIHRvIGxvY2FsX2xvY2svdW5sb2Nr
+X2lycSgpIHNpbmNlCiAgIGxvY2FsX2xvY2svdW5sb2NrX2lycSgpIHRha2VzIGFuIHBhcmFtZXRl
+ciwgaXQgbmVlZHMgbW9yZSB0aGlua2luZyB0byB0cmFuc2Zvcm0KICAgaXQgdG8gbG9jYWxfbG9j
+ay4gIEl0IGNvdWxkIGJlIGFuIGltcHJvdmVtZW50IGluIHRoZSBmdXR1cmUuCgp2NDoKIC0gUmVz
+ZW5kIGFuZCByZWJhc2VkIG9uIHY1LjE4LgoKdjM6CiAtIFJlbW92ZWQgdGhlIEFja2VkLWJ5IHRh
+Z3MgZnJvbSBSb21hbiBzaW5jZSB0aGlzIHZlcnNpb24gaXMgYmFzZWQgb24KICAgdGhlIGZvbGlv
+IHJlbGV2YW50LgoKdjI6CiAtIFJlbmFtZSBvYmpfY2dyb3VwX3JlbGVhc2Vfa21lbSgpIHRvIG9i
+al9jZ3JvdXBfcmVsZWFzZV9ieXRlcygpIGFuZCB0aGUKICAgZGVwZW5kZW5jaWVzIG9mIENPTkZJ
+R19NRU1DR19LTUVNIChzdWdnZXN0ZWQgYnkgUm9tYW4sIFRoYW5rcykuCiAtIFJlYmFzZSB0byBs
+aW51eCA1LjE1LXJjMS4KIC0gQWRkIGEgbmV3IHBhY3RoIHRvIGNsZWFudXAgbWVtX2Nncm91cF9r
+bWVtX2Rpc2FibGVkKCkuCgp2MToKIC0gRHJvcCBSRkMgdGFnLgogLSBSZWJhc2UgdG8gbGludXgg
+bmV4dC0yMDIxMDgxMS4KClJGQyB2NDoKIC0gQ29sbGVjdCBBY2tlZC1ieSBmcm9tIFJvbWFuLgog
+LSBSZWJhc2UgdG8gbGludXggbmV4dC0yMDIxMDUyNS4KIC0gUmVuYW1lIG9ial9jZ3JvdXBfcmVs
+ZWFzZV91bmNoYXJnZSgpIHRvIG9ial9jZ3JvdXBfcmVsZWFzZV9rbWVtKCkuCiAtIENoYW5nZSB0
+aGUgcGF0Y2ggMSB0aXRsZSB0byAicHJlcGFyZSBvYmpjZyBBUEkgZm9yIG5vbi1rbWVtIHVzYWdl
+Ii4KIC0gQ29udmVydCByZXBhcmVudF9vcHNfaGVhZCB0byBhbiBhcnJheSBpbiBwYXRjaCA4LgoK
+VGhhbmtzIGZvciBSb21hbidzIHJldmlldyBhbmQgc3VnZ2VzdGlvbnMuCgpSRkMgdjM6CiAtIERy
+b3AgdGhlIGNvZGUgY2xlYW51cCBhbmQgc2ltcGxpZmljYXRpb24gcGF0Y2hlcy4gR2F0aGVyIHRo
+b3NlIHBhdGNoZXMKICAgaW50byBhIHNlcGFyYXRlIHNlcmllc1sxXS4KIC0gUmV3b3JrIHBhdGNo
+ICMxIHN1Z2dlc3RlZCBieSBKb2hhbm5lcy4KClJGQyB2MjoKIC0gQ29sbGVjdCBBY2tlZC1ieSB0
+YWdzIGJ5IEpvaGFubmVzLiBUaGFua3MuCiAtIFJld29yayBscnV2ZWNfaG9sZHNfcGFnZV9scnVf
+bG9jaygpIHN1Z2dlc3RlZCBieSBKb2hhbm5lcy4gVGhhbmtzLgogLSBGaXggbW92ZV9wYWdlc190
+b19scnUoKS4KCk11Y2h1biBTb25nICgxMSk6CiAgbW06IG1lbWNvbnRyb2w6IHJlbW92ZSBkZWFk
+IGNvZGUgYW5kIGNvbW1lbnRzCiAgbW06IHJlbmFtZSB1bmxvY2tfcGFnZV9scnV2ZWN7X2lycSwg
+X2lycXJlc3RvcmV9IHRvCiAgICBscnV2ZWNfdW5sb2Nre19pcnEsIF9pcnFyZXN0b3JlfQogIG1t
+OiBtZW1jb250cm9sOiBwcmVwYXJlIG9iamNnIEFQSSBmb3Igbm9uLWttZW0gdXNhZ2UKICBtbTog
+bWVtY29udHJvbDogbWFrZSBscnV2ZWMgbG9jayBzYWZlIHdoZW4gTFJVIHBhZ2VzIGFyZSByZXBh
+cmVudGVkCiAgbW06IHZtc2NhbjogcmV3b3JrIG1vdmVfcGFnZXNfdG9fbHJ1KCkKICBtbTogdGhw
+OiBtYWtlIHNwbGl0IHF1ZXVlIGxvY2sgc2FmZSB3aGVuIExSVSBwYWdlcyBhcmUgcmVwYXJlbnRl
+ZAogIG1tOiBtZW1jb250cm9sOiBtYWtlIGFsbCB0aGUgY2FsbGVycyBvZiB7Zm9saW8scGFnZX1f
+bWVtY2coKSBzYWZlCiAgbW06IG1lbWNvbnRyb2w6IGludHJvZHVjZSBtZW1jZ19yZXBhcmVudF9v
+cHMKICBtbTogbWVtY29udHJvbDogdXNlIG9ial9jZ3JvdXAgQVBJcyB0byBjaGFyZ2UgdGhlIExS
+VSBwYWdlcwogIG1tOiBscnU6IGFkZCBWTV9XQVJOX09OX09OQ0VfRk9MSU8gdG8gbHJ1IG1haW50
+ZW5hbmNlIGZ1bmN0aW9uCiAgbW06IGxydTogdXNlIGxydXZlYyBsb2NrIHRvIHNlcmlhbGl6ZSBt
+ZW1jZyBjaGFuZ2VzCgogZnMvYnVmZmVyLmMgICAgICAgICAgICAgICAgICAgICAgfCAgIDQgKy0K
+IGZzL2ZzLXdyaXRlYmFjay5jICAgICAgICAgICAgICAgIHwgIDIzICstCiBpbmNsdWRlL2xpbnV4
+L21lbWNvbnRyb2wuaCAgICAgICB8IDIxOCArKysrKysrKystLS0tLS0KIGluY2x1ZGUvbGludXgv
+bW1faW5saW5lLmggICAgICAgIHwgICA2ICsKIGluY2x1ZGUvdHJhY2UvZXZlbnRzL3dyaXRlYmFj
+ay5oIHwgICA1ICsKIG1tL2NvbXBhY3Rpb24uYyAgICAgICAgICAgICAgICAgIHwgIDM5ICsrLQog
+bW0vaHVnZV9tZW1vcnkuYyAgICAgICAgICAgICAgICAgfCAxNTMgKysrKysrKystLQogbW0vbWVt
+Y29udHJvbC5jICAgICAgICAgICAgICAgICAgfCA1ODQgKysrKysrKysrKysrKysrKysrKysrKysr
+KysrLS0tLS0tLS0tLS0tCiBtbS9taWdyYXRlLmMgICAgICAgICAgICAgICAgICAgICB8ICAgNCAr
+CiBtbS9tbG9jay5jICAgICAgICAgICAgICAgICAgICAgICB8ICAgMiArLQogbW0vcGFnZV9pby5j
+ICAgICAgICAgICAgICAgICAgICAgfCAgIDUgKy0KIG1tL3N3YXAuYyAgICAgICAgICAgICAgICAg
+ICAgICAgIHwgIDQ5ICsrLS0KIG1tL3Ztc2Nhbi5jICAgICAgICAgICAgICAgICAgICAgIHwgIDY2
+ICsrLS0tCiAxMyBmaWxlcyBjaGFuZ2VkLCA3NzYgaW5zZXJ0aW9ucygrKSwgMzgyIGRlbGV0aW9u
+cygtKQoKCmJhc2UtY29tbWl0OiA4ODJiZTFlZDZiMWI1MDczZmM4ODU1MjE4MWI5OWJkMmI5YzAw
+MzFmCi0tIAoyLjExLjAKCg==
