@@ -1,51 +1,42 @@
 From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH -next v5 3/8] blk-throttle: factor out code to calculate
- ios/bytes_allowed
-Date: Wed, 22 Jun 2022 19:27:06 +0200
-Message-ID: <20220622172706.GA28777@blackbody.suse.cz>
-References: <20220528064330.3471000-1-yukuai3@huawei.com>
- <20220528064330.3471000-4-yukuai3@huawei.com>
+Subject: Re: [PATCH v2] sched: RT bandwidth interface for cgroup unified
+ hierarchy
+Date: Wed, 22 Jun 2022 19:39:29 +0200
+Message-ID: <20220622173929.GA669@blackbody.suse.cz>
+References: <20220622015557.7497-1-zhouchengming@bytedance.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="wRRV7LY7NUeQGEoC"
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1655918828; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1655919571; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=25UMif2KJVLcBXrmfApxtfUU35dfSSw3fpcCICtxyW8=;
-        b=VvwAIGoDz+l1mAkHZ7Ci8GmQbbrSdA4ZL7MGpC7pXWaXvzYecJ0zZa3bjiNVxhWwXxQPOi
-        c1ahBZimSpktVbRlaNbZivz7OeL07LjMauFEFAtU+9izL/QdsVNVvawoLRT1F257ZjbKfn
-        ADVQi1piODXNJyF1VM1Ev4FipKeeVEk=
+        bh=qjLsn3chRmVR7wBslFm7Nmwci+bvj1b1+qTpUK32rXQ=;
+        b=iGD8LGlhBV+ijnTy+c24IKvp3gS6t3Xd7fZf0W5mhS4jcdaQdBdVobDGrLTSUQYAXoEATz
+        JokCZyEMcnVxZEGqwjaMlMEyZdB0kDdegEDn9d5unKiSxSMx7nn9t4BUaYxsUPslHkd98r
+        aF5iZpfXyd/FBxVY1CTQo6j408qFIqM=
 Content-Disposition: inline
-In-Reply-To: <20220528064330.3471000-4-yukuai3@huawei.com>
+In-Reply-To: <20220622015557.7497-1-zhouchengming@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
-To: Yu Kuai <yukuai3@huawei.com>
-Cc: tj@kernel.org, axboe@kernel.dk, ming.lei@redhat.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Chengming Zhou <zhouchengming@bytedance.com>
+Cc: rdunlap@infradead.org, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Hello Chengming.
 
---wRRV7LY7NUeQGEoC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On Wed, Jun 22, 2022 at 09:55:57AM +0800, Chengming Zhou <zhouchengming@bytedance.com> wrote:
+> We need to run RT threads in cgroup unified hierarchy, but we can't
+> since the default rt_bandwidth.rt_runtime of non-root task_group is 0
+> and we haven't interface to update it.
 
-On Sat, May 28, 2022 at 02:43:25PM +0800, Yu Kuai <yukuai3@huawei.com> wrote:
-> +static u64 calculate_bytes_allowed(u64 bps_limit,
-> +				   unsigned long jiffy_elapsed_rnd)
+Do you really want to make use of group RT schedulling
+(CONFIG_RT_GROUP_SCHED) or just be able to run RT threads in the unified
+hieararchy with cpu controller enabled?
 
-Just noticed with all series applied this argument needn't be called
-_rnd. (It's a nit.)
+Those are two different use cases, the former is more complex and it's a
+reason why v2 doesn't expose the RT attributes (yet).
+The latter is typically achieved by unsetting CONFIG_RT_GROUP_SCHED (and
+relying on the global rt_runtime limit).
 
-
---wRRV7LY7NUeQGEoC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCYrNQ5QAKCRAkDQmsBEOq
-uRC5AQC2JzZNZsl22etM1LtHU6Wno1hgy9s1Fj5YailfIQfTJwD/c6sCNnhojsjQ
-PCgMBZaodtkg4p+8C/tt1eXOMBvsGgo=
-=UiWF
------END PGP SIGNATURE-----
-
---wRRV7LY7NUeQGEoC--
+Thanks,
+Michal
