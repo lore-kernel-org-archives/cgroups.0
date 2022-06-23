@@ -1,73 +1,32 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH] mm: vmpressure: don't count userspace-induced reclaim as
- memory pressure
-Date: Thu, 23 Jun 2022 11:42:59 +0200
-Message-ID: <YrQ1o3CeaZWhm+h4@dhcp22.suse.cz>
-References: <20220623000530.1194226-1-yosryahmed@google.com>
- <YrQe5A+FXnbgOR1f@dhcp22.suse.cz>
- <CAJD7tkanavKpKrQr8-jA8pukgD7OY4eOwJRZufJ2NoThD12G+Q@mail.gmail.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -next v5 3/8] blk-throttle: factor out code to calculate
+ ios/bytes_allowed
+Date: Thu, 23 Jun 2022 20:03:52 +0800
+Message-ID: <21aabcb3-9801-f159-103c-9e1c35983237@huawei.com>
+References: <20220528064330.3471000-1-yukuai3@huawei.com>
+ <20220528064330.3471000-4-yukuai3@huawei.com>
+ <20220622172706.GA28777@blackbody.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1655977380; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=gdZnnoaTG6/in9QGnqYjtzbMQOKcr+nleBeI2IghgO4=;
-        b=Mc1wVFGem2YqPRd3+41ems0z57Z3EKWvAnCwaelIpAwCzRZuErwv2/w0XdR8RnVV//v9i8
-        f65xaqkG/QIE5wKkFV63Q/Gwa0D814VvV89jo49Eug7zMf2u6J2sZWF3Em7jrfQOx3LLRK
-        jF3fUJJak1Mx/E0qkmfSDiIiXFVDCtY=
-Content-Disposition: inline
-In-Reply-To: <CAJD7tkanavKpKrQr8-jA8pukgD7OY4eOwJRZufJ2NoThD12G+Q@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20220622172706.GA28777-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <willy@infradead.org>, Vlastimil Babka <vbabka@suse.cz>, David Hildenbrand <david@redhat.com>, Miaohe Lin <linmiaohe@huawei.com>, NeilBrown <neilb@suse.de>, Alistair Popple <apopple@nvidia.com>, Suren Baghdasaryan <surenb@google.com>, Peter Xu <peterx@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Thu 23-06-22 01:35:59, Yosry Ahmed wrote:
-> On Thu, Jun 23, 2022 at 1:05 AM Michal Hocko <mhocko@suse.com> wrote:
-> >
-> > On Thu 23-06-22 00:05:30, Yosry Ahmed wrote:
-> > > Commit e22c6ed90aa9 ("mm: memcontrol: don't count limit-setting reclaim
-> > > as memory pressure") made sure that memory reclaim that is induced by
-> > > userspace (limit-setting, proactive reclaim, ..) is not counted as
-> > > memory pressure for the purposes of psi.
-> > >
-> > > Instead of counting psi inside try_to_free_mem_cgroup_pages(), callers
-> > > from try_charge() and reclaim_high() wrap the call to
-> > > try_to_free_mem_cgroup_pages() with psi handlers.
-> > >
-> > > However, vmpressure is still counted in these cases where reclaim is
-> > > directly induced by userspace. This patch makes sure vmpressure is not
-> > > counted in those operations, in the same way as psi. Since vmpressure
-> > > calls need to happen deeper within the reclaim path, the same approach
-> > > could not be followed. Hence, a new "controlled" flag is added to struct
-> > > scan_control to flag a reclaim operation that is controlled by
-> > > userspace. This flag is set by limit-setting and proactive reclaim
-> > > operations, and is used to count vmpressure correctly.
-> > >
-> > > To prevent future divergence of psi and vmpressure, commit e22c6ed90aa9
-> > > ("mm: memcontrol: don't count limit-setting reclaim as memory pressure")
-> > > is effectively reverted and the same flag is used to control psi as
-> > > well.
-> >
-> > Why do we need to add this is a legacy interface now? Are there any
-> > pre-existing users who realized this is bugging them? Please be more
-> > specific about the usecase.
-> 
-> Sorry if I wasn't clear enough. Unfortunately we still have userspace
-> workloads at Google that use vmpressure notifications.
-> 
-> In our internal version of memory.reclaim that we recently upstreamed,
-> we do not account vmpressure during proactive reclaim (similar to how
-> psi is handled upstream). We want to make sure this behavior also
-> exists in the upstream version so that consolidating them does not
-> break our users who rely on vmpressure and will start seeing increased
-> pressure due to proactive reclaim.
+Hi，
 
-These are good reasons to have this patch in your tree. But why is this
-patch benefitial for the upstream kernel? It clearly adds some code and
-some special casing which will add a maintenance overhead.
--- 
-Michal Hocko
-SUSE Labs
+在 2022/06/23 1:27, Michal Koutný 写道:
+> On Sat, May 28, 2022 at 02:43:25PM +0800, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+>> +static u64 calculate_bytes_allowed(u64 bps_limit,
+>> +				   unsigned long jiffy_elapsed_rnd)
+> 
+> Just noticed with all series applied this argument needn't be called
+> _rnd. (It's a nit.)
+> 
+
+Yes, you're right. I'll change that in next version.
+
+Thanks,
+Kuai
