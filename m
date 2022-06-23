@@ -1,135 +1,69 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: Re: [PATCH -next v5 4/8] blk-throttle: fix io hung due to config
- updates
-Date: Thu, 23 Jun 2022 20:27:11 +0800
-Message-ID: <f5165488-2461-8946-593f-14154e404850@huawei.com>
-References: <20220528064330.3471000-1-yukuai3@huawei.com>
- <20220528064330.3471000-5-yukuai3@huawei.com>
- <20220622172621.GA28246@blackbody.suse.cz>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [RFC PATCH] cpuset: Allow setscheduler regardless of manipulated task
+Date: Thu, 23 Jun 2022 14:49:44 +0200
+Message-ID: <20220623124944.2753-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20220622172621.GA28246@blackbody.suse.cz>
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1655988592; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=BpiM3WaUUrILmHdp2lQvwMWVmqbs3l954A33quMGSGc=;
+        b=tGaK1rJF5yQLBwU3wsJb/DC1CovTKZR2kv5oNn202GvQV1fxqwnUFJ0eR8tYrObFN1JUdO
+        uCFcgVAWjs44/9iBd/5Mbp/9p+7CGwocTSCrYzm9a+iXnGQsZ1wdwoGbo+crUxA+hVZ1wy
+        3YI6OfhQFBSg/Ex3HSzeIT2cfHNU8Fg=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
-Cc: tj@kernel.org, axboe@kernel.dk, ming.lei@redhat.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="macroman"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hi,
-
-在 2022/06/23 1:26, Michal Koutný 写道:
-> (Apologies for taking so long before answering.)
-> 
-> On Sat, May 28, 2022 at 02:43:26PM +0800, Yu Kuai <yukuai3@huawei.com> wrote:
->> Some simple test:
->> 1)
->> cd /sys/fs/cgroup/blkio/
->> echo $$ > cgroup.procs
->> echo "8:0 2048" > blkio.throttle.write_bps_device
->> {
->>          sleep 2
->>          echo "8:0 1024" > blkio.throttle.write_bps_device
->> } &
->> dd if=/dev/zero of=/dev/sda bs=8k count=1 oflag=direct
->>
->> 2)
->> cd /sys/fs/cgroup/blkio/
->> echo $$ > cgroup.procs
->> echo "8:0 1024" > blkio.throttle.write_bps_device
->> {
->>          sleep 4
->>          echo "8:0 2048" > blkio.throttle.write_bps_device
->> } &
->> dd if=/dev/zero of=/dev/sda bs=8k count=1 oflag=direct
->>
->> test results: io finish time
->> 	before this patch	with this patch
->> 1)	10s			6s
->> 2)	8s			6s
-> 
-> I agree these are consistent and correct times.
-> 
-> And the new implementation won't make it worse (in terms of delaying a
-> bio) than configuring minimal limits from the beginning, AFACT.
-> 
->> @@ -801,7 +836,8 @@ static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
->>   
->>   	/* Round up to the next throttle slice, wait time must be nonzero */
->>   	jiffy_elapsed_rnd = roundup(jiffy_elapsed + 1, tg->td->throtl_slice);
->> -	io_allowed = calculate_io_allowed(iops_limit, jiffy_elapsed_rnd);
->> +	io_allowed = calculate_io_allowed(iops_limit, jiffy_elapsed_rnd) +
->> +		     tg->io_skipped[rw];
->>   	if (tg->io_disp[rw] + 1 <= io_allowed) {
->>   		if (wait)
->>   			*wait = 0;
->> @@ -838,7 +874,8 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
->>   		jiffy_elapsed_rnd = tg->td->throtl_slice;
->>   
->>   	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
->> -	bytes_allowed = calculate_bytes_allowed(bps_limit, jiffy_elapsed_rnd);
->> +	bytes_allowed = calculate_bytes_allowed(bps_limit, jiffy_elapsed_rnd) +
->> +			tg->bytes_skipped[rw];
->>   	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
->>   		if (wait)
->>   			*wait = 0;
->>
-> 
-> Here we may allow to dispatch a bio above current slice's
-> calculate_bytes_allowed() if bytes_skipped is already >0.
-
-Hi, I don't expect that to happen. For example, if a bio is still
-throttled, then old slice is keeped with proper 'bytes_skipped',
-then new wait time is caculated based on (bio_size - bytes_skipped).
-
-After the bio is dispatched(I assum that other bios can't preempt),
-if new slice is started, then 'bytes_skipped' is cleared, there should
-be no problem; If old slice is extended, note that we only wait
-for 'bio_size - bytes_skipped' bytes, while 'bio_size' bytes is added
-to 'tg->bytes_disp'. I think this will make sure new bio won't be
-dispatched above slice.
-
-What do you think?
-> 
-> bytes_disp + bio_size <= calculate_bytes_allowed() + bytes_skipped
-> 
-> Then on the next update
-> 
->> [shuffle]
->> +static void __tg_update_skipped(struct throtl_grp *tg, bool rw)
->> +{
->> +	unsigned long jiffy_elapsed = jiffies - tg->slice_start[rw];
->> +	u64 bps_limit = tg_bps_limit(tg, rw);
->> +	u32 iops_limit = tg_iops_limit(tg, rw);
->> +
->> +	if (bps_limit != U64_MAX)
->> +		tg->bytes_skipped[rw] +=
->> +			calculate_bytes_allowed(bps_limit, jiffy_elapsed) -
->> +			tg->bytes_disp[rw];
->> +	if (iops_limit != UINT_MAX)
->> +		tg->io_skipped[rw] +=
->> +			calculate_io_allowed(iops_limit, jiffy_elapsed) -
->> +			tg->io_disp[rw];
->> +}
-> 
-> the difference(s) here could be negative. bytes_skipped should be
-> reduced to account for the additionally dispatched bio.
-> This is all unsigned so negative numbers underflow, however, we add them
-> again to the unsigned, so thanks to modular arithmetics the result is
-> correctly updated bytes_skipped.
-> 
-> Maybe add a comment about this (unsigned) intention?
-
-Of course I can do that.
-> 
-> (But can this happen? The discussed bio would have to outrun another bio
-> (the one which defined the current slice_end) but since blk-throttle
-> uses queues (FIFO) everywhere this shouldn't really happen. But it's
-> good to know this works as intended.)
-I can also mention that in comment.
-> 
-> This patch can have
-> Reviewed-by: Michal Koutný <mkoutny@suse.com>
-> 
-
-Thanks for the review!
-Kuai
+V2hlbiB3ZSBtaWdyYXRlIGEgdGFzayBiZXR3ZWVuIHR3byBjZ3JvdXBzLCBvbmUgb2YgdGhlIGNo
+ZWNrcyBpcyBhCnZlcmlmaWNhdGlvbiB0aGF0IHdlIGNhbiBtb2RpZnkgdGFzaydzIHNjaGVkdWxl
+ciBzZXR0aW5ncwooY2FwX3Rhc2tfc2V0c2NoZWR1bGVyKCkpLgoKQW4gaW1wbGljaXQgbWlncmF0
+aW9uIG9jY3VycyBhbHNvIHdoZW4gZW5hYmxpbmcgYSBjb250cm9sbGVyIG9uIHRoZQp1bmlmaWVk
+IGhpZXJhcmNoeSAodGhpbmsgb2YgcGFyZW50IHRvIGNoaWxkIG1pZ3JhdGlvbikuIFRoZQphZm9y
+ZW1lbnRpb25lZCBjaGVjayBtYXkgYmUgcHJvYmxlbWF0aWMgaWYgdGhlIGNhbGxlciBvZiB0aGUg
+bWlncmF0aW9uCihlbmFibGluZyBhIGNvbnRyb2xsZXIpIGhhcyBubyBwZXJtaXNzaW9ucyBvdmVy
+IG1pZ3JhdGVkIHRhc2tzLgpGb3IgaW5zdGFuY2UsIHVzZXIncyBjZ3JvdXAgdGhhdCBlbmRzIHVw
+IHJ1bm5pbmcgYSBwcm9jZXNzIG9mIGEKZGlmZmVyZW50IHVzZXIuIEFsdGhvdWdoIGNncm91cCBw
+ZXJtaXNzaW9ucyBhcmUgY29uZmlndXJlZCBmYXZvcmFibHksCnRoZSBlbmFibGVtZW50IGZhaWxz
+IGR1ZSB0byB0aGUgZm9yZWlnbiBwcm9jZXNzIFsxXS4KCkNoYW5nZSB0aGUgYmVoYXZpb3IgYnkg
+cmVsYXhpbmcgdGhlIHBlcm1pc3Npb25zIGNoZWNrIG9uIHRoZSB1bmlmaWVkCmhpZXJhcmNoeSAo
+b3IgaW4gdjIgbW9kZSkuIFRoaXMgaXMgaW4gYWNjb3JkYW5jZSB3aXRoIHVuaWZpZWQgaGllcmFy
+Y2h5CmF0dGFjaG1lbnQgYmVoYXZpb3Igd2hlbiBwZXJtaXNzaW9ucyBvZiB0aGUgc291cmNlIHRv
+IHRhcmdldCBjZ3JvdXBzIGFyZQpkZWNpc2l2ZSB3aGVyZWFzIHRoZSBtaWdyYXRlZCB0YXNrIGlz
+IG9wYXF1ZSAoZm9yIGNvbnRyYXN0LCBzZWUgbW9yZQpyZXN0cmljdGl2ZSBjaGVjayBpbiBfX2Nn
+cm91cDFfcHJvY3Nfd3JpdGUoKSkuCgpbMV0gaHR0cHM6Ly9naXRodWIuY29tL3N5c3RlbWQvc3lz
+dGVtZC9pc3N1ZXMvMTgyOTMjaXNzdWVjb21tZW50LTgzMTIwNTY0OQoKUmVhc29ucyBmb3IgUkZD
+OgoKMSkgVGhlIHVuaWZpZWQgaGllcmFyY2h5IGF0dGFjaG1lbnQgYmVoYXZpb3IgLS0gaXMgdGhh
+dCB0aGUKICAgcmlnaHQvY29uc2VudGVkIG1vZGVsIHRoYXQgbWlncmF0ZWQgb2JqZWN0cyBkb24n
+dCBtYXR0ZXI/CgoyKSBJZiAxKSBpcyB0cnVlLCBoYXZlIEkgbWlzc2VkIGFueSBkYW5nZXIgaW4g
+YWxsb3dpbmcgY3B1c2V0J2luZyBhCiAgIHBvc3NpYmx5IHByaXZpbGVnZWQgcHJvY2Vzc2VzPwoK
+Mi4yKSBjcHVzZXQgbWF5IGJlIGluIHYyIG1vZGUgZXZlbiBvbiB2MSBoaWVyYXJjaHkgd2l0aCBk
+aWZmZXJlbnQKICAgbWlncmF0aW9uIGNvbnRyb2wgcnVsZXMgKGJ1dCBjaGVja2luZyBtaWdyYXRl
+ZSdzIGNyZWRzIGluIHYxCiAgIGVsaW1pbmF0ZXMgZWZmZWN0IG9mIHRoaXMgcGF0Y2gpLgoKMykg
+QWx0ZXJuYXRpdmUgYXBwcm9hY2ggd291bGQgYmUgdG8gYWxsb3cgY3B1c2V0IG1pZ3JhdGlvbnMg
+b25seSB3aGVuCiAgIG5vdGhpbmcgZWZmZWN0aXZlbHkgY2hhbmdlcyAod2hpY2ggaXMgdGhlIGNh
+c2UgZm9yIHBhcmVudC0+Y2hpbGQKICAgbWlncmF0aW9uIHVwb24gY29udHJvbGxlciBlbmFibGVt
+ZW50KS4KCjQpIFRoaXMgaXMganVzdCBpZGVhIGRyYWZ0LCBub3QgdGVzdGVkIGluIHRoZSByZWFs
+IGNhc2UuCgpUaGFua3MuCgpTaWduZWQtb2ZmLWJ5OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueS1J
+Qmk5UkcvYjY3a0BwdWJsaWMuZ21hbmUub3JnPgotLS0KIGtlcm5lbC9jZ3JvdXAvY3B1c2V0LmMg
+fCA3ICsrKysrKy0KIDEgZmlsZSBjaGFuZ2VkLCA2IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24o
+LSkKCmRpZmYgLS1naXQgYS9rZXJuZWwvY2dyb3VwL2NwdXNldC5jIGIva2VybmVsL2Nncm91cC9j
+cHVzZXQuYwppbmRleCA3MWE0MTg4NThhNWUuLmRiZTc4NTc3ZGU1YiAxMDA2NDQKLS0tIGEva2Vy
+bmVsL2Nncm91cC9jcHVzZXQuYworKysgYi9rZXJuZWwvY2dyb3VwL2NwdXNldC5jCkBAIC0yMjMy
+LDcgKzIyMzIsOSBAQCBzdGF0aWMgaW50IGNwdXNldF9jYW5fYXR0YWNoKHN0cnVjdCBjZ3JvdXBf
+dGFza3NldCAqdHNldCkKIAogCXBlcmNwdV9kb3duX3dyaXRlKCZjcHVzZXRfcndzZW0pOwogCi0J
+LyogYWxsb3cgbW92aW5nIHRhc2tzIGludG8gYW4gZW1wdHkgY3B1c2V0IGlmIG9uIGRlZmF1bHQg
+aGllcmFyY2h5ICovCisJLyogYWxsb3cgbW92aW5nIHRhc2tzIGludG8gYW4gZW1wdHkgY3B1c2V0
+IGlmIG9uIGRlZmF1bHQgaGllcmFyY2h5LAorCSAqIGFsc28gYnlwYXNzIHBlcm1pc3Npb24gY2hl
+Y2sgKGFjY2VzcyBpcyBjb250cm9sbGVkIHZpYSBjZ3JvdXAocykKKwkgKiBvd25lciBpbiBjZ3Jv
+dXBfcHJvY3Nfd3JpdGVfcGVybWlzc2lvbigpKSAqLwogCXJldCA9IC1FTk9TUEM7CiAJaWYgKCFp
+c19pbl92Ml9tb2RlKCkgJiYKIAkgICAgKGNwdW1hc2tfZW1wdHkoY3MtPmNwdXNfYWxsb3dlZCkg
+fHwgbm9kZXNfZW1wdHkoY3MtPm1lbXNfYWxsb3dlZCkpKQpAQCAtMjI0Miw2ICsyMjQ0LDkgQEAg
+c3RhdGljIGludCBjcHVzZXRfY2FuX2F0dGFjaChzdHJ1Y3QgY2dyb3VwX3Rhc2tzZXQgKnRzZXQp
+CiAJCXJldCA9IHRhc2tfY2FuX2F0dGFjaCh0YXNrLCBjcy0+Y3B1c19hbGxvd2VkKTsKIAkJaWYg
+KHJldCkKIAkJCWdvdG8gb3V0X3VubG9jazsKKworCQlpZiAoaXNfaW5fdjJfbW9kZSgpKQorCQkJ
+Y29udGludWU7CiAJCXJldCA9IHNlY3VyaXR5X3Rhc2tfc2V0c2NoZWR1bGVyKHRhc2spOwogCQlp
+ZiAocmV0KQogCQkJZ290byBvdXRfdW5sb2NrOwotLSAKMi4zNS4zCgo=
