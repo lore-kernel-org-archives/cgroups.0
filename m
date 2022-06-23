@@ -1,132 +1,252 @@
-From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH mm v5 0/9] memcg: accounting for objects allocated by
- mkdir, cgroup
-Date: Thu, 23 Jun 2022 18:03:31 +0300
-Message-ID: <c516033f-a9e4-3485-26d9-a68afa694c1d@openvz.org>
-References: <4e685057-b07d-745d-fdaa-1a6a5a681060@openvz.org>
- <0fe836b4-5c0f-0e32-d511-db816d359748@openvz.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH -next v10 3/4] block, bfq: refactor the counting of
+ 'num_groups_with_pending_reqs'
+Date: Thu, 23 Jun 2022 17:32:59 +0200
+Message-ID: <27F2DF19-7CC6-42C5-8CEB-43583EB4AE46@linaro.org>
+References: <20220610021701.2347602-1-yukuai3@huawei.com>
+ <20220610021701.2347602-4-yukuai3@huawei.com>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=openvz-org.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language
-         :from:to:cc:references:in-reply-to:content-transfer-encoding;
-        bh=4H3ceOwo0QWDBTksiBY1nTfnYze/Q04xjv0/hjoR1QE=;
-        b=jAZaSHl/WL950DRTIHi6bVKfTCkAeNlBKZFbqzBO3gOEk7LKaX32kIlX07WpEZCiz0
-         8G+aI1JqTLmysh+J300moZbLIcNCv++WFB0ojr1jQsBUBMcSFVHWLZWJz7XghvqcPpSm
-         iNov6Zi/0JW8qHxs8svvnsceLLskWXq9yZlKEMKeMWxdAblWG1UKyzunLZqOjNIZaUxi
-         KLnxlf2Te8z+3XiuCJloWU7WTwQmHw8F0mIwM/4Qf9tghtbT9kcOWc2ILKATdGpxsGVN
-         MbxUrDuXfxc63NXnh0g98qScyfobiftrceqVId/NAayYbGtGgVwH6cWIzYNd2RgAbg9g
-         eGIA==
-Content-Language: en-US
-In-Reply-To: <0fe836b4-5c0f-0e32-d511-db816d359748-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+        d=linaro.org; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=T+jpYYOmmAX0tTKDun9RBpmd7SAR9bivQfLucksvyjg=;
+        b=qpbQec73keboHodaP5ziYd1RpAKQqcvoAXsEGV85lzoEhwbJVc+8syz7um4I/eSFwj
+         +NKnV+I/yjQxjihPuFbbBVB6I4VQNahSOkTUqxSzfBCsHDq6LcpWV0AmkMQ39mR2o6G9
+         6oVsbtMZVy8rzLpPCyRUvYjzZkkjU1dzqyGvnsb+E9q1fBegaF4ii3uJMHQLYPpd+zjc
+         3EU024R4KYr2VByEKn+oD14NdJYLSHOEwR7/YVwAkLqMyf+sLzKZjanEI2ID2UbMD76T
+         xnI7ygGgW+dZClKFdVBeecCzS/CLoyqGi9XsSsy+CwFTfIRwrCgFVZcJRuWWsO13Xo1W
+         D/Cg==
+In-Reply-To: <20220610021701.2347602-4-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Dear Michal,
-do you still have any concerns about this patch set?
+Sorry for the delay.
 
-Thank you,
-	Vasily Averin
+> Il giorno 10 giu 2022, alle ore 04:17, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> ha =
+scritto:
+>=20
+> Currently, bfq can't handle sync io concurrently as long as they
+> are not issued from root group. This is because
+> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
+> bfq_asymmetric_scenario().
+>=20
+> The way that bfqg is counted into 'num_groups_with_pending_reqs':
+>=20
+> Before this patch:
+> 1) root group will never be counted.
+> 2) Count if bfqg or it's child bfqgs have pending requests.
+> 3) Don't count if bfqg and it's child bfqgs complete all the requests.
+>=20
+> After this patch:
+> 1) root group is counted.
+> 2) Count if bfqg have pending requests.
+> 3) Don't count if bfqg complete all the requests.
+>=20
+> With this change, the occasion that only one group is activated can be
+> detected, and next patch will support concurrent sync io in the
+> occasion.
+>=20
+> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+> ---
+> block/bfq-iosched.c | 42 ------------------------------------------
+> block/bfq-iosched.h | 18 +++++++++---------
+> block/bfq-wf2q.c    | 19 ++++---------------
+> 3 files changed, 13 insertions(+), 66 deletions(-)
+>=20
+> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+> index 0ec21018daba..03b04892440c 100644
+> --- a/block/bfq-iosched.c
+> +++ b/block/bfq-iosched.c
+> @@ -970,48 +970,6 @@ void __bfq_weights_tree_remove(struct bfq_data =
+*bfqd,
+> void bfq_weights_tree_remove(struct bfq_data *bfqd,
+> 			     struct bfq_queue *bfqq)
+> {
+> -	struct bfq_entity *entity =3D bfqq->entity.parent;
+> -
+> -	for_each_entity(entity) {
+> -		struct bfq_sched_data *sd =3D entity->my_sched_data;
+> -
+> -		if (sd->next_in_service || sd->in_service_entity) {
+> -			/*
+> -			 * entity is still active, because either
+> -			 * next_in_service or in_service_entity is not
+> -			 * NULL (see the comments on the definition of
+> -			 * next_in_service for details on why
+> -			 * in_service_entity must be checked too).
+> -			 *
+> -			 * As a consequence, its parent entities are
+> -			 * active as well, and thus this loop must
+> -			 * stop here.
+> -			 */
+> -			break;
+> -		}
+> -
+> -		/*
+> -		 * The decrement of num_groups_with_pending_reqs is
+> -		 * not performed immediately upon the deactivation of
+> -		 * entity, but it is delayed to when it also happens
+> -		 * that the first leaf descendant bfqq of entity gets
+> -		 * all its pending requests completed. The following
+> -		 * instructions perform this delayed decrement, if
+> -		 * needed. See the comments on
+> -		 * num_groups_with_pending_reqs for details.
+> -		 */
+> -		if (entity->in_groups_with_pending_reqs) {
+> -			entity->in_groups_with_pending_reqs =3D false;
+> -			bfqd->num_groups_with_pending_reqs--;
+> -		}
+> -	}
 
-On 6/23/22 17:50, Vasily Averin wrote:
-> In some cases, creating a cgroup allocates a noticeable amount of memory.
-> This operation can be executed from inside memory-limited container,
-> but currently this memory is not accounted to memcg and can be misused.
-> This allow container to exceed the assigned memory limit and avoid
-> memcg OOM. Moreover, in case of global memory shortage on the host,
-> the OOM-killer may not find a real memory eater and start killing
-> random processes on the host.
-> 
-> This is especially important for OpenVZ and LXC used on hosting,
-> where containers are used by untrusted end users.
-> 
-> Below is tracing results of mkdir /sys/fs/cgroup/vvs.test on 
-> 4cpu VM with Fedora and self-complied upstream kernel. The calculations
-> are not precise, it depends on kernel config options, number of cpus,
-> enabled controllers, ignores possible page allocations etc.
-> However this is enough to clarify the general situation.
-> All allocations are splitted into:
-> - common part, always called for each cgroup type
-> - per-cgroup allocations
-> 
-> In each group we consider 2 corner cases:
-> - usual allocations, important for 1-2 CPU nodes/Vms
-> - percpu allocations, important for 'big irons'
-> 
-> common part: 	~11Kb	+  318 bytes percpu
-> memcg: 		~17Kb	+ 4692 bytes percpu
-> cpu:		~2.5Kb	+ 1036 bytes percpu
-> cpuset:		~3Kb	+   12 bytes percpu
-> blkcg:		~3Kb	+   12 bytes percpu
-> pid:		~1.5Kb	+   12 bytes percpu		
-> perf:		 ~320b	+   60 bytes percpu
-> -------------------------------------------
-> total:		~38Kb	+ 6142 bytes percpu
-> currently accounted:	  4668 bytes percpu
-> 
-> - it's important to account usual allocations called
-> in common part, because almost all of cgroup-specific allocations
-> are small. One exception here is memory cgroup, it allocates a few
-> huge objects that should be accounted.
-> - Percpu allocation called in common part, in memcg and cpu cgroups
-> should be accounted, rest ones are small an can be ignored.
-> - KERNFS objects are allocated both in common part and in most of
-> cgroups 
-> 
-> Details can be found here:
-> https://lore.kernel.org/all/d28233ee-bccb-7bc3-c2ec-461fd7f95e6a-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org/
-> 
-> I checked other cgroups types was found that they all can be ignored.
-> Additionally I found allocation of struct rt_rq called in cpu cgroup 
-> if CONFIG_RT_GROUP_SCHED was enabled, it allocates huge (~1700 bytes)
-> percpu structure and should be accounted too.
-> 
-> v5:
->  1) re-based to linux-mm (mm-everything-2022-06-22-20-36)
-> 
-> v4:
->  1) re-based to linux-next (next-20220610)
->    now psi_group is not a part of struct cgroup and is allocated on demand
->  2) added received approval from Muchun Song
->  3) improved cover letter description according to akpm@ request
-> 
-> v3:
->  1) re-based to current upstream (v5.18-11267-gb00ed48bb0a7)
->  2) fixed few typos
->  3) added received approvals
-> 
-> v2:
->  1) re-split to simplify possible bisect, re-ordered
->  2) added accounting for percpu psi_group_cpu and cgroup_rstat_cpu,
->      allocated in common part
->  3) added accounting for percpu allocation of struct rt_rq
->      (actual if CONFIG_RT_GROUP_SCHED is enabled)
->  4) improved patches descriptions 
-> 
-> Vasily Averin (9):
->   memcg: enable accounting for struct cgroup
->   memcg: enable accounting for kernfs nodes
->   memcg: enable accounting for kernfs iattrs
->   memcg: enable accounting for struct simple_xattr
->   memcg: enable accounting for percpu allocation of struct psi_group_cpu
->   memcg: enable accounting for percpu allocation of struct
->     cgroup_rstat_cpu
->   memcg: enable accounting for large allocations in mem_cgroup_css_alloc
->   memcg: enable accounting for allocations in alloc_fair_sched_group
->   memcg: enable accounting for perpu allocation of struct rt_rq
-> 
->  fs/kernfs/mount.c      | 6 ++++--
->  fs/xattr.c             | 2 +-
->  kernel/cgroup/cgroup.c | 2 +-
->  kernel/cgroup/rstat.c  | 3 ++-
->  kernel/sched/fair.c    | 4 ++--
->  kernel/sched/psi.c     | 2 +-
->  kernel/sched/rt.c      | 2 +-
->  mm/memcontrol.c        | 4 ++--
->  8 files changed, 14 insertions(+), 11 deletions(-)
-> 
+With this part removed, I'm missing how you handle the following
+sequence of events:
+1.  a queue Q becomes non busy but still has dispatched requests, so
+it must not be removed from the counter of queues with pending reqs
+yet
+2.  the last request of Q is completed with Q being still idle (non
+busy).  At this point Q must be removed from the counter.  It seems to
+me that this case is not handled any longer
+
+Additional comment: if your changes do not cpus the problem above,
+then this function only invokes __bfq_weights_tree_remove.  So what's
+the point in keeping this function)
+
+> -
+> -	/*
+> -	 * Next function is invoked last, because it causes bfqq to be
+> -	 * freed if the following holds: bfqq is not in service and
+> -	 * has no dispatched request. DO NOT use bfqq after the next
+> -	 * function invocation.
+> -	 */
+
+I would really love it if you leave this comment.  I added it after
+suffering a lot for a nasty UAF.  Of course the first sentence may
+need to be adjusted if the code that precedes it is to be removed.
+
+Thanks,
+Paolo
+
+
+> 	__bfq_weights_tree_remove(bfqd, bfqq,
+> 				  &bfqd->queue_weights_tree);
+> }
+> diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+> index de2446a9b7ab..f0fce94583e4 100644
+> --- a/block/bfq-iosched.h
+> +++ b/block/bfq-iosched.h
+> @@ -496,27 +496,27 @@ struct bfq_data {
+> 	struct rb_root_cached queue_weights_tree;
+>=20
+> 	/*
+> -	 * Number of groups with at least one descendant process that
+> +	 * Number of groups with at least one process that
+> 	 * has at least one request waiting for completion. Note that
+> 	 * this accounts for also requests already dispatched, but not
+> 	 * yet completed. Therefore this number of groups may differ
+> 	 * (be larger) than the number of active groups, as a group is
+> 	 * considered active only if its corresponding entity has
+> -	 * descendant queues with at least one request queued. This
+> +	 * queues with at least one request queued. This
+> 	 * number is used to decide whether a scenario is symmetric.
+> 	 * For a detailed explanation see comments on the computation
+> 	 * of the variable asymmetric_scenario in the function
+> 	 * bfq_better_to_idle().
+> 	 *
+> 	 * However, it is hard to compute this number exactly, for
+> -	 * groups with multiple descendant processes. Consider a group
+> -	 * that is inactive, i.e., that has no descendant process with
+> +	 * groups with multiple processes. Consider a group
+> +	 * that is inactive, i.e., that has no process with
+> 	 * pending I/O inside BFQ queues. Then suppose that
+> 	 * num_groups_with_pending_reqs is still accounting for this
+> -	 * group, because the group has descendant processes with some
+> +	 * group, because the group has processes with some
+> 	 * I/O request still in flight. num_groups_with_pending_reqs
+> 	 * should be decremented when the in-flight request of the
+> -	 * last descendant process is finally completed (assuming that
+> +	 * last process is finally completed (assuming that
+> 	 * nothing else has changed for the group in the meantime, in
+> 	 * terms of composition of the group and active/inactive state =
+of child
+> 	 * groups and processes). To accomplish this, an additional
+> @@ -525,7 +525,7 @@ struct bfq_data {
+> 	 * we resort to the following tradeoff between simplicity and
+> 	 * accuracy: for an inactive group that is still counted in
+> 	 * num_groups_with_pending_reqs, we decrement
+> -	 * num_groups_with_pending_reqs when the first descendant
+> +	 * num_groups_with_pending_reqs when the first
+> 	 * process of the group remains with no request waiting for
+> 	 * completion.
+> 	 *
+> @@ -533,12 +533,12 @@ struct bfq_data {
+> 	 * carefulness: to avoid multiple decrements, we flag a group,
+> 	 * more precisely an entity representing a group, as still
+> 	 * counted in num_groups_with_pending_reqs when it becomes
+> -	 * inactive. Then, when the first descendant queue of the
+> +	 * inactive. Then, when the first queue of the
+> 	 * entity remains with no request waiting for completion,
+> 	 * num_groups_with_pending_reqs is decremented, and this flag
+> 	 * is reset. After this flag is reset for the entity,
+> 	 * num_groups_with_pending_reqs won't be decremented any
+> -	 * longer in case a new descendant queue of the entity remains
+> +	 * longer in case a new queue of the entity remains
+> 	 * with no request waiting for completion.
+> 	 */
+> 	unsigned int num_groups_with_pending_reqs;
+> diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+> index 6f36f3fe5cc8..9c2842bedf97 100644
+> --- a/block/bfq-wf2q.c
+> +++ b/block/bfq-wf2q.c
+> @@ -984,19 +984,6 @@ static void __bfq_activate_entity(struct =
+bfq_entity *entity,
+> 		entity->on_st_or_in_serv =3D true;
+> 	}
+>=20
+> -#ifdef CONFIG_BFQ_GROUP_IOSCHED
+> -	if (!bfq_entity_to_bfqq(entity)) { /* bfq_group */
+> -		struct bfq_group *bfqg =3D
+> -			container_of(entity, struct bfq_group, entity);
+> -		struct bfq_data *bfqd =3D bfqg->bfqd;
+> -
+> -		if (!entity->in_groups_with_pending_reqs) {
+> -			entity->in_groups_with_pending_reqs =3D true;
+> -			bfqd->num_groups_with_pending_reqs++;
+> -		}
+> -	}
+> -#endif
+> -
+> 	bfq_update_fin_time_enqueue(entity, st, backshifted);
+> }
+>=20
+> @@ -1654,7 +1641,8 @@ void =
+bfq_add_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
+> 	if (!entity->in_groups_with_pending_reqs) {
+> 		entity->in_groups_with_pending_reqs =3D true;
+> #ifdef CONFIG_BFQ_GROUP_IOSCHED
+> -		bfqq_group(bfqq)->num_queues_with_pending_reqs++;
+> +		if (!(bfqq_group(bfqq)->num_queues_with_pending_reqs++))
+> +			bfqq->bfqd->num_groups_with_pending_reqs++;
+> #endif
+> 	}
+> }
+> @@ -1666,7 +1654,8 @@ void =
+bfq_del_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
+> 	if (entity->in_groups_with_pending_reqs) {
+> 		entity->in_groups_with_pending_reqs =3D false;
+> #ifdef CONFIG_BFQ_GROUP_IOSCHED
+> -		bfqq_group(bfqq)->num_queues_with_pending_reqs--;
+> +		if (!(--bfqq_group(bfqq)->num_queues_with_pending_reqs))
+> +			bfqq->bfqd->num_groups_with_pending_reqs--;
+> #endif
+> 	}
+> }
+> --=20
+> 2.31.1
+>=20
 
