@@ -1,8 +1,8 @@
 From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH mm v5 5/9] memcg: enable accounting for percpu allocation of
- struct psi_group_cpu
-Date: Thu, 23 Jun 2022 17:51:29 +0300
-Message-ID: <b837e43e-f05c-9ae7-a582-c6d2d5907ea5@openvz.org>
+Subject: [PATCH mm v5 6/9] memcg: enable accounting for percpu allocation of
+ struct cgroup_rstat_cpu
+Date: Thu, 23 Jun 2022 17:51:37 +0300
+Message-ID: <9c7957f8-ba89-4c9a-bd61-d86bca18a546@openvz.org>
 References: <4e685057-b07d-745d-fdaa-1a6a5a681060@openvz.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -11,13 +11,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=openvz-org.20210112.gappssmtp.com; s=20210112;
         h=message-id:date:mime-version:user-agent:from:subject:to:cc
          :references:content-language:in-reply-to:content-transfer-encoding;
-        bh=waMbR4Vj3d2Yx3tC82MaoYQ2maUSxBJAR+0Iakz5FDI=;
-        b=YNvr4xo3AtwQzeXJO0a0Zs/pJf/cfhwOyUbueOMf0dW7rfYbzeNXzzeTckjXHZagnx
-         IL85gF0d8dj8iu8D/NKKFFpKBqeU48c+utRpVkVyvj5DixZAKXeknlRq8N2LyZGOTi+R
-         hGN8BepYHBGzguV4vsrHooHWcagsJSb29bCFzzGcw2QHmp3PiwCLs5lRYky96HtSBt7M
-         EA4L0Sp+aBwKz/fZyvAIqFUTbxk9l9Tji0K20GNE67AGI98/zeiTxuFXgKawjUa1NN+o
-         2Sces7CzSgUk2DMCdi7DOn11celMtSmNASSbOpBFHfM4AG9IAqxKziAlLGfROZMJkciM
-         MZ7A==
+        bh=fYBLg0GorDblKEye4tioxlFuzZ/2NCtjLKl9KE3W8YI=;
+        b=ilILMVAcvthPkldn+Fa+LkoIG/WSsFH8M7YG6eZI6EykQ+3oB7c4PdbWYXjZqjJ+43
+         FWPcHN93ez+UtYY/3FGn60gVrWz2wmHIsFXq/TFUle1S2965DVGnZ+G7T88vtlrYFmp+
+         yXP01mugIN86XV+s+rNzVqBycfic42Rq5VXNV9DBPQH+yuwZrrP0STBifVHqjRAjGW7J
+         uYweDn2FveDwN4KUNlAFLo/+FqPrpfOFrs2q/44dDgBdmYC7a4GXjqZwPQuqOjaHf6cx
+         cJOheLE1U00l7XXoRAwkq1Qbu9NV/7vftEsfDxwdNHKeI9Z/sKkWD5mRMqV1KP3cgxL5
+         p0uQ==
 Content-Language: en-US
 In-Reply-To: <4e685057-b07d-745d-fdaa-1a6a5a681060-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
@@ -25,12 +25,12 @@ Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-struct pci_group_cpu is percpu allocated for each new cgroup and can
-consume a significant portion of all allocated memory on nodes with
-a large number of CPUs.
+struct cgroup_rstat_cpu is percpu allocated for each new cgroup and
+can consume a significant portion of all allocated memory on nodes
+with a large number of CPUs.
 
 Common part of the cgroup creation:
-Allocs  Alloc   $1*$2   Sum     Allocation
+Allocs  Alloc   $1*$2   Sum	Allocation
 number  size
 --------------------------------------------
 16  ~   352     5632    5632    KERNFS
@@ -51,25 +51,26 @@ percpu:
 
 Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Acked-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 ---
- kernel/sched/psi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ kernel/cgroup/rstat.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
-index a337f3e35997..0da10159d3d9 100644
---- a/kernel/sched/psi.c
-+++ b/kernel/sched/psi.c
-@@ -957,7 +957,7 @@ int psi_cgroup_alloc(struct cgroup *cgroup)
- 	if (static_branch_likely(&psi_disabled))
- 		return 0;
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index 24b5c2ab5598..2904b185b01b 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -257,7 +257,8 @@ int cgroup_rstat_init(struct cgroup *cgrp)
  
--	cgroup->psi.pcpu = alloc_percpu(struct psi_group_cpu);
-+	cgroup->psi.pcpu = alloc_percpu_gfp(struct psi_group_cpu, GFP_KERNEL_ACCOUNT);
- 	if (!cgroup->psi.pcpu)
- 		return -ENOMEM;
- 	group_init(&cgroup->psi);
+ 	/* the root cgrp has rstat_cpu preallocated */
+ 	if (!cgrp->rstat_cpu) {
+-		cgrp->rstat_cpu = alloc_percpu(struct cgroup_rstat_cpu);
++		cgrp->rstat_cpu = alloc_percpu_gfp(struct cgroup_rstat_cpu,
++						   GFP_KERNEL_ACCOUNT);
+ 		if (!cgrp->rstat_cpu)
+ 			return -ENOMEM;
+ 	}
 -- 
 2.36.1
 
