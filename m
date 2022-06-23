@@ -1,69 +1,126 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [RFC PATCH] cpuset: Allow setscheduler regardless of manipulated task
-Date: Thu, 23 Jun 2022 14:49:44 +0200
-Message-ID: <20220623124944.2753-1-mkoutny@suse.com>
+From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH mm v5 0/9] memcg: accounting for objects allocated by mkdir,
+ cgroup
+Date: Thu, 23 Jun 2022 17:50:41 +0300
+Message-ID: <0fe836b4-5c0f-0e32-d511-db816d359748@openvz.org>
+References: <4e685057-b07d-745d-fdaa-1a6a5a681060@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1655988592; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=BpiM3WaUUrILmHdp2lQvwMWVmqbs3l954A33quMGSGc=;
-        b=tGaK1rJF5yQLBwU3wsJb/DC1CovTKZR2kv5oNn202GvQV1fxqwnUFJ0eR8tYrObFN1JUdO
-        uCFcgVAWjs44/9iBd/5Mbp/9p+7CGwocTSCrYzm9a+iXnGQsZ1wdwoGbo+crUxA+hVZ1wy
-        3YI6OfhQFBSg/Ex3HSzeIT2cfHNU8Fg=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=openvz-org.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:from:subject:to:cc
+         :references:content-language:in-reply-to:content-transfer-encoding;
+        bh=1bcYs/tPp9DPi/Wqk7L+riaRA+D466h+ZJY4pfI0O2g=;
+        b=2nVn4C1yCEydX2fk5EcrBIpk/CFe9RFSZALX8zPrL8etewPDITPil7xcCntvZB6Fay
+         4zuaF9OVJOb8XEZmGQ1AZnzIrVQbR5weeT2K8jCyk8Uv4UysqcWsURbgqc2IqPni0YoM
+         qqdAQo5VH8ThIirYGZTjVUKR2Le7kvoAwMNsewNWCjWTtpGMJEgMdrh5JIBpsB/YqJnG
+         zttFzE0lgyM/J0O6GKeoTA7sXcWcCcBADmcMO2nyOpFCFOPOonnxG3zBV9GwSV/qwNO+
+         g11zvxGlf7osZ3ONy1Ws9tsJLBwTTCv/+Pweo6JUzGspIvt8VX4SCpE75HrTIM+skuEr
+         iofA==
+Content-Language: en-US
+In-Reply-To: <4e685057-b07d-745d-fdaa-1a6a5a681060-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-V2hlbiB3ZSBtaWdyYXRlIGEgdGFzayBiZXR3ZWVuIHR3byBjZ3JvdXBzLCBvbmUgb2YgdGhlIGNo
-ZWNrcyBpcyBhCnZlcmlmaWNhdGlvbiB0aGF0IHdlIGNhbiBtb2RpZnkgdGFzaydzIHNjaGVkdWxl
-ciBzZXR0aW5ncwooY2FwX3Rhc2tfc2V0c2NoZWR1bGVyKCkpLgoKQW4gaW1wbGljaXQgbWlncmF0
-aW9uIG9jY3VycyBhbHNvIHdoZW4gZW5hYmxpbmcgYSBjb250cm9sbGVyIG9uIHRoZQp1bmlmaWVk
-IGhpZXJhcmNoeSAodGhpbmsgb2YgcGFyZW50IHRvIGNoaWxkIG1pZ3JhdGlvbikuIFRoZQphZm9y
-ZW1lbnRpb25lZCBjaGVjayBtYXkgYmUgcHJvYmxlbWF0aWMgaWYgdGhlIGNhbGxlciBvZiB0aGUg
-bWlncmF0aW9uCihlbmFibGluZyBhIGNvbnRyb2xsZXIpIGhhcyBubyBwZXJtaXNzaW9ucyBvdmVy
-IG1pZ3JhdGVkIHRhc2tzLgpGb3IgaW5zdGFuY2UsIHVzZXIncyBjZ3JvdXAgdGhhdCBlbmRzIHVw
-IHJ1bm5pbmcgYSBwcm9jZXNzIG9mIGEKZGlmZmVyZW50IHVzZXIuIEFsdGhvdWdoIGNncm91cCBw
-ZXJtaXNzaW9ucyBhcmUgY29uZmlndXJlZCBmYXZvcmFibHksCnRoZSBlbmFibGVtZW50IGZhaWxz
-IGR1ZSB0byB0aGUgZm9yZWlnbiBwcm9jZXNzIFsxXS4KCkNoYW5nZSB0aGUgYmVoYXZpb3IgYnkg
-cmVsYXhpbmcgdGhlIHBlcm1pc3Npb25zIGNoZWNrIG9uIHRoZSB1bmlmaWVkCmhpZXJhcmNoeSAo
-b3IgaW4gdjIgbW9kZSkuIFRoaXMgaXMgaW4gYWNjb3JkYW5jZSB3aXRoIHVuaWZpZWQgaGllcmFy
-Y2h5CmF0dGFjaG1lbnQgYmVoYXZpb3Igd2hlbiBwZXJtaXNzaW9ucyBvZiB0aGUgc291cmNlIHRv
-IHRhcmdldCBjZ3JvdXBzIGFyZQpkZWNpc2l2ZSB3aGVyZWFzIHRoZSBtaWdyYXRlZCB0YXNrIGlz
-IG9wYXF1ZSAoZm9yIGNvbnRyYXN0LCBzZWUgbW9yZQpyZXN0cmljdGl2ZSBjaGVjayBpbiBfX2Nn
-cm91cDFfcHJvY3Nfd3JpdGUoKSkuCgpbMV0gaHR0cHM6Ly9naXRodWIuY29tL3N5c3RlbWQvc3lz
-dGVtZC9pc3N1ZXMvMTgyOTMjaXNzdWVjb21tZW50LTgzMTIwNTY0OQoKUmVhc29ucyBmb3IgUkZD
-OgoKMSkgVGhlIHVuaWZpZWQgaGllcmFyY2h5IGF0dGFjaG1lbnQgYmVoYXZpb3IgLS0gaXMgdGhh
-dCB0aGUKICAgcmlnaHQvY29uc2VudGVkIG1vZGVsIHRoYXQgbWlncmF0ZWQgb2JqZWN0cyBkb24n
-dCBtYXR0ZXI/CgoyKSBJZiAxKSBpcyB0cnVlLCBoYXZlIEkgbWlzc2VkIGFueSBkYW5nZXIgaW4g
-YWxsb3dpbmcgY3B1c2V0J2luZyBhCiAgIHBvc3NpYmx5IHByaXZpbGVnZWQgcHJvY2Vzc2VzPwoK
-Mi4yKSBjcHVzZXQgbWF5IGJlIGluIHYyIG1vZGUgZXZlbiBvbiB2MSBoaWVyYXJjaHkgd2l0aCBk
-aWZmZXJlbnQKICAgbWlncmF0aW9uIGNvbnRyb2wgcnVsZXMgKGJ1dCBjaGVja2luZyBtaWdyYXRl
-ZSdzIGNyZWRzIGluIHYxCiAgIGVsaW1pbmF0ZXMgZWZmZWN0IG9mIHRoaXMgcGF0Y2gpLgoKMykg
-QWx0ZXJuYXRpdmUgYXBwcm9hY2ggd291bGQgYmUgdG8gYWxsb3cgY3B1c2V0IG1pZ3JhdGlvbnMg
-b25seSB3aGVuCiAgIG5vdGhpbmcgZWZmZWN0aXZlbHkgY2hhbmdlcyAod2hpY2ggaXMgdGhlIGNh
-c2UgZm9yIHBhcmVudC0+Y2hpbGQKICAgbWlncmF0aW9uIHVwb24gY29udHJvbGxlciBlbmFibGVt
-ZW50KS4KCjQpIFRoaXMgaXMganVzdCBpZGVhIGRyYWZ0LCBub3QgdGVzdGVkIGluIHRoZSByZWFs
-IGNhc2UuCgpUaGFua3MuCgpTaWduZWQtb2ZmLWJ5OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueS1J
-Qmk5UkcvYjY3a0BwdWJsaWMuZ21hbmUub3JnPgotLS0KIGtlcm5lbC9jZ3JvdXAvY3B1c2V0LmMg
-fCA3ICsrKysrKy0KIDEgZmlsZSBjaGFuZ2VkLCA2IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24o
-LSkKCmRpZmYgLS1naXQgYS9rZXJuZWwvY2dyb3VwL2NwdXNldC5jIGIva2VybmVsL2Nncm91cC9j
-cHVzZXQuYwppbmRleCA3MWE0MTg4NThhNWUuLmRiZTc4NTc3ZGU1YiAxMDA2NDQKLS0tIGEva2Vy
-bmVsL2Nncm91cC9jcHVzZXQuYworKysgYi9rZXJuZWwvY2dyb3VwL2NwdXNldC5jCkBAIC0yMjMy
-LDcgKzIyMzIsOSBAQCBzdGF0aWMgaW50IGNwdXNldF9jYW5fYXR0YWNoKHN0cnVjdCBjZ3JvdXBf
-dGFza3NldCAqdHNldCkKIAogCXBlcmNwdV9kb3duX3dyaXRlKCZjcHVzZXRfcndzZW0pOwogCi0J
-LyogYWxsb3cgbW92aW5nIHRhc2tzIGludG8gYW4gZW1wdHkgY3B1c2V0IGlmIG9uIGRlZmF1bHQg
-aGllcmFyY2h5ICovCisJLyogYWxsb3cgbW92aW5nIHRhc2tzIGludG8gYW4gZW1wdHkgY3B1c2V0
-IGlmIG9uIGRlZmF1bHQgaGllcmFyY2h5LAorCSAqIGFsc28gYnlwYXNzIHBlcm1pc3Npb24gY2hl
-Y2sgKGFjY2VzcyBpcyBjb250cm9sbGVkIHZpYSBjZ3JvdXAocykKKwkgKiBvd25lciBpbiBjZ3Jv
-dXBfcHJvY3Nfd3JpdGVfcGVybWlzc2lvbigpKSAqLwogCXJldCA9IC1FTk9TUEM7CiAJaWYgKCFp
-c19pbl92Ml9tb2RlKCkgJiYKIAkgICAgKGNwdW1hc2tfZW1wdHkoY3MtPmNwdXNfYWxsb3dlZCkg
-fHwgbm9kZXNfZW1wdHkoY3MtPm1lbXNfYWxsb3dlZCkpKQpAQCAtMjI0Miw2ICsyMjQ0LDkgQEAg
-c3RhdGljIGludCBjcHVzZXRfY2FuX2F0dGFjaChzdHJ1Y3QgY2dyb3VwX3Rhc2tzZXQgKnRzZXQp
-CiAJCXJldCA9IHRhc2tfY2FuX2F0dGFjaCh0YXNrLCBjcy0+Y3B1c19hbGxvd2VkKTsKIAkJaWYg
-KHJldCkKIAkJCWdvdG8gb3V0X3VubG9jazsKKworCQlpZiAoaXNfaW5fdjJfbW9kZSgpKQorCQkJ
-Y29udGludWU7CiAJCXJldCA9IHNlY3VyaXR5X3Rhc2tfc2V0c2NoZWR1bGVyKHRhc2spOwogCQlp
-ZiAocmV0KQogCQkJZ290byBvdXRfdW5sb2NrOwotLSAKMi4zNS4zCgo=
+In some cases, creating a cgroup allocates a noticeable amount of memory.
+This operation can be executed from inside memory-limited container,
+but currently this memory is not accounted to memcg and can be misused.
+This allow container to exceed the assigned memory limit and avoid
+memcg OOM. Moreover, in case of global memory shortage on the host,
+the OOM-killer may not find a real memory eater and start killing
+random processes on the host.
+
+This is especially important for OpenVZ and LXC used on hosting,
+where containers are used by untrusted end users.
+
+Below is tracing results of mkdir /sys/fs/cgroup/vvs.test on 
+4cpu VM with Fedora and self-complied upstream kernel. The calculations
+are not precise, it depends on kernel config options, number of cpus,
+enabled controllers, ignores possible page allocations etc.
+However this is enough to clarify the general situation.
+All allocations are splitted into:
+- common part, always called for each cgroup type
+- per-cgroup allocations
+
+In each group we consider 2 corner cases:
+- usual allocations, important for 1-2 CPU nodes/Vms
+- percpu allocations, important for 'big irons'
+
+common part: 	~11Kb	+  318 bytes percpu
+memcg: 		~17Kb	+ 4692 bytes percpu
+cpu:		~2.5Kb	+ 1036 bytes percpu
+cpuset:		~3Kb	+   12 bytes percpu
+blkcg:		~3Kb	+   12 bytes percpu
+pid:		~1.5Kb	+   12 bytes percpu		
+perf:		 ~320b	+   60 bytes percpu
+-------------------------------------------
+total:		~38Kb	+ 6142 bytes percpu
+currently accounted:	  4668 bytes percpu
+
+- it's important to account usual allocations called
+in common part, because almost all of cgroup-specific allocations
+are small. One exception here is memory cgroup, it allocates a few
+huge objects that should be accounted.
+- Percpu allocation called in common part, in memcg and cpu cgroups
+should be accounted, rest ones are small an can be ignored.
+- KERNFS objects are allocated both in common part and in most of
+cgroups 
+
+Details can be found here:
+https://lore.kernel.org/all/d28233ee-bccb-7bc3-c2ec-461fd7f95e6a-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org/
+
+I checked other cgroups types was found that they all can be ignored.
+Additionally I found allocation of struct rt_rq called in cpu cgroup 
+if CONFIG_RT_GROUP_SCHED was enabled, it allocates huge (~1700 bytes)
+percpu structure and should be accounted too.
+
+v5:
+ 1) re-based to linux-mm (mm-everything-2022-06-22-20-36)
+
+v4:
+ 1) re-based to linux-next (next-20220610)
+   now psi_group is not a part of struct cgroup and is allocated on demand
+ 2) added received approval from Muchun Song
+ 3) improved cover letter description according to akpm@ request
+
+v3:
+ 1) re-based to current upstream (v5.18-11267-gb00ed48bb0a7)
+ 2) fixed few typos
+ 3) added received approvals
+
+v2:
+ 1) re-split to simplify possible bisect, re-ordered
+ 2) added accounting for percpu psi_group_cpu and cgroup_rstat_cpu,
+     allocated in common part
+ 3) added accounting for percpu allocation of struct rt_rq
+     (actual if CONFIG_RT_GROUP_SCHED is enabled)
+ 4) improved patches descriptions 
+
+Vasily Averin (9):
+  memcg: enable accounting for struct cgroup
+  memcg: enable accounting for kernfs nodes
+  memcg: enable accounting for kernfs iattrs
+  memcg: enable accounting for struct simple_xattr
+  memcg: enable accounting for percpu allocation of struct psi_group_cpu
+  memcg: enable accounting for percpu allocation of struct
+    cgroup_rstat_cpu
+  memcg: enable accounting for large allocations in mem_cgroup_css_alloc
+  memcg: enable accounting for allocations in alloc_fair_sched_group
+  memcg: enable accounting for perpu allocation of struct rt_rq
+
+ fs/kernfs/mount.c      | 6 ++++--
+ fs/xattr.c             | 2 +-
+ kernel/cgroup/cgroup.c | 2 +-
+ kernel/cgroup/rstat.c  | 3 ++-
+ kernel/sched/fair.c    | 4 ++--
+ kernel/sched/psi.c     | 2 +-
+ kernel/sched/rt.c      | 2 +-
+ mm/memcontrol.c        | 4 ++--
+ 8 files changed, 14 insertions(+), 11 deletions(-)
+
+-- 
+2.36.1
+
