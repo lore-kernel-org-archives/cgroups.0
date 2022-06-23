@@ -1,93 +1,76 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm: vmpressure: don't count userspace-induced reclaim as
- memory pressure
-Date: Thu, 23 Jun 2022 10:26:11 -0700
-Message-ID: <CAJD7tkZNEtzJMDsLMHuNHkxFfurS37UuK=zFcPCkOkWfN-dbJQ@mail.gmail.com>
-References: <20220623000530.1194226-1-yosryahmed@google.com>
- <YrQe5A+FXnbgOR1f@dhcp22.suse.cz> <CAJD7tkanavKpKrQr8-jA8pukgD7OY4eOwJRZufJ2NoThD12G+Q@mail.gmail.com>
- <YrQ1o3CeaZWhm+h4@dhcp22.suse.cz> <CAJD7tkadsLOV7GMFAm+naX4Y1WpZ-4=NkAhAMxNw60iaRPWx=w@mail.gmail.com>
- <YrSWruhPlJV1X9kp@dhcp22.suse.cz> <CALvZod6eLa1X1FJ2Qi6FXhFA-qBCP4mN2SB31MSgjj+g8hKo6Q@mail.gmail.com>
- <YrSdFy3qYdG+rGR6@dhcp22.suse.cz>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH] cpuset: Allow setscheduler regardless of manipulated
+ task
+Date: Thu, 23 Jun 2022 14:44:33 -0400
+Message-ID: <ab4bcd51-83c5-ae21-ddf6-607a31a7d6ac@redhat.com>
+References: <20220623124944.2753-1-mkoutny@suse.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=7TDx1GAcTZr/mKBq1FDoJ+WDlWvqn8HIrUeDOsFdpYQ=;
-        b=ligNsGWDaeaYYd/G23On/R6o4SOm7zU5YC8HoZNU95O944imBcwrspvEgFwN/jGZhy
-         BsqxtmSbvZWbeBbv+nhfMCexAkXOJe09iXp5EF8jD89itp1j+SwO0SyJqwT+axErD/Gb
-         RLoYBG7mmML1wacS5w7d+BkAOcQFmQvKA/pXN1LSgzFGqLrJ4uawFe8Xc42ASPtIkwoj
-         q/6hAWrCjPXdsSiMhicJLxhTYSpzYoslUad6fyTGV1PSr25ZDlw/QK7ERDUClaOKrabX
-         8w8zveECT9r55DBweEavza7Ov5K5Z06nVub55c0/iBZGS/2SSDgVQZKOHdoAbnjZ1yMl
-         AZdA==
-In-Reply-To: <YrSdFy3qYdG+rGR6-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1656009876;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=636D/XRoEUnQhXwCEpL4spRdQ6LF5SX4zYskRSw7REM=;
+        b=hAzvUZIYHyGmd07z5d08FoOvxSt8zGGMAd1kR38kJOsKDXMRNH+8dWBvel4IZ9VD6/ifmB
+        ydazkQQ2n/DK7X5B/PtXm6nLNaYXbubTsydCF5MIK7Q8gXOEzC1S9pnmyuiQbXdjLB/4Qx
+        xmn7eCupplV+ukHF+Ua++N78TGB6AgY=
+Content-Language: en-US
+In-Reply-To: <20220623124944.2753-1-mkoutny-IBi9RG/b67k@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Xu <peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Thu, Jun 23, 2022 at 10:04 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+On 6/23/22 08:49, Michal Koutn=C3=BD wrote:
+> When we migrate a task between two cgroups, one of the checks is a
+> verification that we can modify task's scheduler settings
+> (cap_task_setscheduler()).
 >
-> On Thu 23-06-22 09:42:43, Shakeel Butt wrote:
-> > On Thu, Jun 23, 2022 at 9:37 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > >
-> > > On Thu 23-06-22 09:22:35, Yosry Ahmed wrote:
-> > > > On Thu, Jun 23, 2022 at 2:43 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > > > >
-> > > > > On Thu 23-06-22 01:35:59, Yosry Ahmed wrote:
-> > > [...]
-> > > > > > In our internal version of memory.reclaim that we recently upstreamed,
-> > > > > > we do not account vmpressure during proactive reclaim (similar to how
-> > > > > > psi is handled upstream). We want to make sure this behavior also
-> > > > > > exists in the upstream version so that consolidating them does not
-> > > > > > break our users who rely on vmpressure and will start seeing increased
-> > > > > > pressure due to proactive reclaim.
-> > > > >
-> > > > > These are good reasons to have this patch in your tree. But why is this
-> > > > > patch benefitial for the upstream kernel? It clearly adds some code and
-> > > > > some special casing which will add a maintenance overhead.
-> > > >
-> > > > It is not just Google, any existing vmpressure users will start seeing
-> > > > false pressure notifications with memory.reclaim. The main goal of the
-> > > > patch is to make sure memory.reclaim does not break pre-existing users
-> > > > of vmpressure, and doing it in a way that is consistent with psi makes
-> > > > sense.
-> > >
-> > > memory.reclaim is v2 only feature which doesn't have vmpressure
-> > > interface. So I do not see how pre-existing users of the upstream kernel
-> > > can see any breakage.
-> > >
-> >
-> > Please note that vmpressure is still being used in v2 by the
-> > networking layer (see mem_cgroup_under_socket_pressure()) for
-> > detecting memory pressure.
+> An implicit migration occurs also when enabling a controller on the
+> unified hierarchy (think of parent to child migration). The
+> aforementioned check may be problematic if the caller of the migration
+> (enabling a controller) has no permissions over migrated tasks.
+> For instance, user's cgroup that ends up running a process of a
+> different user. Although cgroup permissions are configured favorably,
+> the enablement fails due to the foreign process [1].
 >
-> I have missed this. It is hidden quite good. I thought that v2 is
-> completely vmpressure free. I have to admit that the effect of
-> mem_cgroup_under_socket_pressure is not really clear to me. Not to
-> mention whether it should or shouldn't be triggered for the user
-> triggered memory reclaim. So this would really need some explanation.
+> Change the behavior by relaxing the permissions check on the unified
+> hierarchy (or in v2 mode). This is in accordance with unified hierarchy
+> attachment behavior when permissions of the source to target cgroups are
+> decisive whereas the migrated task is opaque (for contrast, see more
+> restrictive check in __cgroup1_procs_write()).
+>
+> [1] https://github.com/systemd/systemd/issues/18293#issuecomment-831205649
+>
+> Reasons for RFC:
+>
+> 1) The unified hierarchy attachment behavior -- is that the
+>     right/consented model that migrated objects don't matter?
+>
+> 2) If 1) is true, have I missed any danger in allowing cpuset'ing a
+>     possibly privileged processes?
+That could be an issue.
 
-vmpressure was tied into socket pressure by 8e8ae645249b ("mm:
-memcontrol: hook up vmpressure to socket pressure"). A quick look at
-the commit log and the code suggests that this is used all over the
-socket and tcp code to throttles the memory consumption of the
-networking layer if we are under pressure.
+> 2.2) cpuset may be in v2 mode even on v1 hierarchy with different
+>     migration control rules (but checking migratee's creds in v1
+>     eliminates effect of this patch).
+>
+> 3) Alternative approach would be to allow cpuset migrations only when
+>     nothing effectively changes (which is the case for parent->child
+>     migration upon controller enablement).
+What do you mean by nothing effectively changes?
+>
+> 4) This is just idea draft, not tested in the real case.
 
-However, for proactive reclaim like memory.reclaim, the target is to
-probe the memcg for cold memory. Reclaiming such memory should not
-have a visible effect on the workload performance. I don't think that
-any network throttling side effects are correct here.
+Since the check is done on a taskset level, if only one of the tasks in=20
+the taskset fails, the whole taskset fails. Maybe we should consider an=20
+option for task based migration. So all the tasks that can be migrated=20
+will be migrated and the rests will be left behind in the original=20
+cpuset. Just a thought.
 
->
-> > Though IMO we should deprecate vmpressure altogether.
->
-> Yes it should be really limited to v1. But as I've said the effect on
-> mem_cgroup_under_socket_pressure is not really clear to me. It really
-> seems the v2 support has been introduced deliberately.
->
-> --
-> Michal Hocko
-> SUSE Labs
+Cheers,
+Longman
+
