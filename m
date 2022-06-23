@@ -1,76 +1,69 @@
 From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH mm v5 6/9] memcg: enable accounting for percpu allocation of
- struct cgroup_rstat_cpu
-Date: Thu, 23 Jun 2022 17:51:37 +0300
-Message-ID: <9c7957f8-ba89-4c9a-bd61-d86bca18a546@openvz.org>
+Subject: [PATCH mm v5 7/9] memcg: enable accounting for large allocations in
+ mem_cgroup_css_alloc
+Date: Thu, 23 Jun 2022 17:51:46 +0300
+Message-ID: <045740af-d2a0-a81d-cbb6-153649705087@openvz.org>
 References: <4e685057-b07d-745d-fdaa-1a6a5a681060@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=openvz-org.20210112.gappssmtp.com; s=20210112;
         h=message-id:date:mime-version:user-agent:from:subject:to:cc
          :references:content-language:in-reply-to:content-transfer-encoding;
-        bh=fYBLg0GorDblKEye4tioxlFuzZ/2NCtjLKl9KE3W8YI=;
-        b=ilILMVAcvthPkldn+Fa+LkoIG/WSsFH8M7YG6eZI6EykQ+3oB7c4PdbWYXjZqjJ+43
-         FWPcHN93ez+UtYY/3FGn60gVrWz2wmHIsFXq/TFUle1S2965DVGnZ+G7T88vtlrYFmp+
-         yXP01mugIN86XV+s+rNzVqBycfic42Rq5VXNV9DBPQH+yuwZrrP0STBifVHqjRAjGW7J
-         uYweDn2FveDwN4KUNlAFLo/+FqPrpfOFrs2q/44dDgBdmYC7a4GXjqZwPQuqOjaHf6cx
-         cJOheLE1U00l7XXoRAwkq1Qbu9NV/7vftEsfDxwdNHKeI9Z/sKkWD5mRMqV1KP3cgxL5
-         p0uQ==
+        bh=RJ0ABL9uCwvFv63ZyK8hl1S+g8awXPTVNvHTVH+sSkA=;
+        b=VgAQKKEsiHE7SoRPkk1oRDOCQig2wAGOd4W/o+dF2VxecW1m7m7A8NKaTdjY6rAajT
+         mVPbyprusIoCKB4TPm6SHYIe3KpCqQ4pzIY7CbdHfGyr5ORXzNRmj2PRvHPzPDQPueHn
+         Z76hXIZzwuiGUftMNpZoKoWS9xthi1G7AC/Ew2GNKdBfQqhZ3MUsCmNqCVzvGpl9wzfU
+         sa/0UyQ27uVR+L11DOohImUdZ4+okomUQIW1WXxaGaYIvE/q5N8bZW/ooU71RpIi+Eo/
+         iAM0GC4i5D9/nVN8TJEWbT3QYi7fwJCEyg7P3n9TS/6boGeH0zIjxQU8xKVtxvk7K9A7
+         5rYw==
 Content-Language: en-US
 In-Reply-To: <4e685057-b07d-745d-fdaa-1a6a5a681060-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="macroman"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-struct cgroup_rstat_cpu is percpu allocated for each new cgroup and
-can consume a significant portion of all allocated memory on nodes
-with a large number of CPUs.
-
-Common part of the cgroup creation:
-Allocs  Alloc   $1*$2   Sum	Allocation
-number  size
---------------------------------------------
-16  ~   352     5632    5632    KERNFS
-1   +   4096    4096    9728    (cgroup_mkdir+0xe4)
-1       584     584     10312   (radix_tree_node_alloc.constprop.0+0x89)
-1       192     192     10504   (__d_alloc+0x29)
-2       72      144     10648   (avc_alloc_node+0x27)
-2       64      128     10776   (percpu_ref_init+0x6a)
-1       64      64      10840   (memcg_list_lru_alloc+0x21a)
-percpu:
-1   +   192     192     192     call_site=psi_cgroup_alloc+0x1e
-1   +   96      96      288     call_site=cgroup_rstat_init+0x5f
-2       12      24      312     call_site=percpu_ref_init+0x23
-1       6       6       318     call_site=__percpu_counter_init+0x22
-
- '+' -- to be accounted,
- '~' -- partially accounted
-
-Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Acked-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
----
- kernel/cgroup/rstat.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-index 24b5c2ab5598..2904b185b01b 100644
---- a/kernel/cgroup/rstat.c
-+++ b/kernel/cgroup/rstat.c
-@@ -257,7 +257,8 @@ int cgroup_rstat_init(struct cgroup *cgrp)
- 
- 	/* the root cgrp has rstat_cpu preallocated */
- 	if (!cgrp->rstat_cpu) {
--		cgrp->rstat_cpu = alloc_percpu(struct cgroup_rstat_cpu);
-+		cgrp->rstat_cpu = alloc_percpu_gfp(struct cgroup_rstat_cpu,
-+						   GFP_KERNEL_ACCOUNT);
- 		if (!cgrp->rstat_cpu)
- 			return -ENOMEM;
- 	}
--- 
-2.36.1
-
+Q3JlYXRpb24gb2YgZWFjaCBtZW1vcnkgY2dyb3VwIGFsbG9jYXRlcyBmZXcgaHVnZSBvYmplY3Rz
+IGluCm1lbV9jZ3JvdXBfY3NzX2FsbG9jKCkuIEl0cyBzaXplIGV4Y2VlZHMgdGhlIHNpemUgb2Yg
+bWVtb3J5CmFjY291bnRlZCBpbiBjb21tb24gcGFydCBvZiBjZ3JvdXAgY3JlYXRpb246Cgpjb21t
+b24gcGFydDogCX4xMUtiCSsgIDMxOCBieXRlcyBwZXJjcHUKbWVtY2c6IAkJfjE3S2IJKyA0Njky
+IGJ5dGVzIHBlcmNwdQoKbWVtb3J5OgotLS0tLS0KQWxsb2NzICBBbGxvYyAgICQxKiQyICAgU3Vt
+ICAgICBBbGxvY2F0aW9uCm51bWJlciAgc2l6ZQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLQoxICAgKyAgIDgxOTIgICAgODE5MiAgICA4MTkyICAgIChtZW1fY2dy
+b3VwX2Nzc19hbGxvYysweDRhKSA8TkIKMTQgIH4gICAzNTIgICAgIDQ5MjggICAgMTMxMjAgICBL
+RVJORlMKMSAgICsgICAyMDQ4ICAgIDIwNDggICAgMTUxNjggICAobWVtX2Nncm91cF9jc3NfYWxs
+b2MrMHhkZCkgPE5CCjEgICAgICAgMTAyNCAgICAxMDI0ICAgIDE2MTkyICAgKGFsbG9jX3Nocmlu
+a2VyX2luZm8rMHg3OSkKMSAgICAgICA1ODQgICAgIDU4NCAgICAgMTY3NzYgICAocmFkaXhfdHJl
+ZV9ub2RlX2FsbG9jLmNvbnN0cHJvcC4wKzB4ODkpCjIgICAgICAgNjQgICAgICAxMjggICAgIDE2
+OTA0ICAgKHBlcmNwdV9yZWZfaW5pdCsweDZhKQoxICAgICAgIDY0ICAgICAgNjQgICAgICAxNjk2
+OCAgIChtZW1fY2dyb3VwX2Nzc19vbmxpbmUrMHgzMikKCjEgICA9ICAgMzY4NCAgICAzNjg0ICAg
+IDM2ODQgICAgY2FsbF9zaXRlPW1lbV9jZ3JvdXBfY3NzX2FsbG9jKzB4OWUKMSAgID0gICA5ODQg
+ICAgIDk4NCAgICAgNDY2OCAgICBjYWxsX3NpdGU9bWVtX2Nncm91cF9jc3NfYWxsb2MrMHhmZAoy
+ICAgICAgIDEyICAgICAgMjQgICAgICA0NjkyICAgIGNhbGxfc2l0ZT1wZXJjcHVfcmVmX2luaXQr
+MHgyMwoKICAgICAnPScgLS0gYWxyZWFkeSBhY2NvdW50ZWQsCiAgICAgJysnIC0tIHRvIGJlIGFj
+Y291bnRlZCwKICAgICAnficgLS0gcGFydGlhbGx5IGFjY291bnRlZAoKQWNjb3VudGluZyBmb3Ig
+dGhpcyBtZW1vcnkgaGVscHMgdG8gYXZvaWQgbWlzdXNlIGluc2lkZSBtZW1jZy1saW1pdGVkCmNv
+bnRpYW5lcnMuCgpTaWduZWQtb2ZmLWJ5OiBWYXNpbHkgQXZlcmluIDx2dnMtR0VGQVF6Wlg3cjhk
+bm0reVJPZkUwQUBwdWJsaWMuZ21hbmUub3JnPgpSZXZpZXdlZC1ieTogUm9tYW4gR3VzaGNoaW4g
+PHJvbWFuLmd1c2hjaGluLWZ4VVZYZnRJRkRueUcxekVPYlh0ZkFAcHVibGljLmdtYW5lLm9yZz4K
+UmV2aWV3ZWQtYnk6IE1pY2hhbCBLb3V0bsO9IDxta291dG55LUlCaTlSRy9iNjdrQHB1YmxpYy5n
+bWFuZS5vcmc+CkFja2VkLWJ5OiBTaGFrZWVsIEJ1dHQgPHNoYWtlZWxiLWhwSXFzRDRBS2xmUVQw
+ZFpSK0FsZkFAcHVibGljLmdtYW5lLm9yZz4KUmV2aWV3ZWQtYnk6IE11Y2h1biBTb25nIDxzb25n
+bXVjaHVuLUVDOFV4bDZOcHlkbDU3TUlkUkNGRGdAcHVibGljLmdtYW5lLm9yZz4KLS0tCiBtbS9t
+ZW1jb250cm9sLmMgfCA0ICsrLS0KIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDIg
+ZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvbW0vbWVtY29udHJvbC5jIGIvbW0vbWVtY29udHJv
+bC5jCmluZGV4IDg1YWRjNDNjNWEyNS4uMjc1ZDBjODQ3ZjA1IDEwMDY0NAotLS0gYS9tbS9tZW1j
+b250cm9sLmMKKysrIGIvbW0vbWVtY29udHJvbC5jCkBAIC01MjU3LDcgKzUyNTcsNyBAQCBzdGF0
+aWMgaW50IGFsbG9jX21lbV9jZ3JvdXBfcGVyX25vZGVfaW5mbyhzdHJ1Y3QgbWVtX2Nncm91cCAq
+bWVtY2csIGludCBub2RlKQogewogCXN0cnVjdCBtZW1fY2dyb3VwX3Blcl9ub2RlICpwbjsKIAot
+CXBuID0ga3phbGxvY19ub2RlKHNpemVvZigqcG4pLCBHRlBfS0VSTkVMLCBub2RlKTsKKwlwbiA9
+IGt6YWxsb2Nfbm9kZShzaXplb2YoKnBuKSwgR0ZQX0tFUk5FTF9BQ0NPVU5ULCBub2RlKTsKIAlp
+ZiAoIXBuKQogCQlyZXR1cm4gMTsKIApAQCAtNTMwOSw3ICs1MzA5LDcgQEAgc3RhdGljIHN0cnVj
+dCBtZW1fY2dyb3VwICptZW1fY2dyb3VwX2FsbG9jKHZvaWQpCiAJaW50IF9fbWF5YmVfdW51c2Vk
+IGk7CiAJbG9uZyBlcnJvciA9IC1FTk9NRU07CiAKLQltZW1jZyA9IGt6YWxsb2Moc3RydWN0X3Np
+emUobWVtY2csIG5vZGVpbmZvLCBucl9ub2RlX2lkcyksIEdGUF9LRVJORUwpOworCW1lbWNnID0g
+a3phbGxvYyhzdHJ1Y3Rfc2l6ZShtZW1jZywgbm9kZWluZm8sIG5yX25vZGVfaWRzKSwgR0ZQX0tF
+Uk5FTF9BQ0NPVU5UKTsKIAlpZiAoIW1lbWNnKQogCQlyZXR1cm4gRVJSX1BUUihlcnJvcik7CiAK
+LS0gCjIuMzYuMQoK
