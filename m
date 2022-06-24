@@ -1,272 +1,76 @@
-From: Yu Kuai <yukuai3@huawei.com>
-Subject: Re: [PATCH -next v10 3/4] block, bfq: refactor the counting of
- 'num_groups_with_pending_reqs'
-Date: Fri, 24 Jun 2022 09:26:38 +0800
-Message-ID: <48edcfc1-030d-f78e-ee88-2a9a8cc467ac@huawei.com>
-References: <20220610021701.2347602-1-yukuai3@huawei.com>
- <20220610021701.2347602-4-yukuai3@huawei.com>
- <27F2DF19-7CC6-42C5-8CEB-43583EB4AE46@linaro.org>
+From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH mm v5 0/9] memcg: accounting for objects allocated by
+ mkdir, cgroup
+Date: Fri, 24 Jun 2022 13:40:14 +0300
+Message-ID: <0f8146e3-5865-b7e6-6728-5baada375cf2@openvz.org>
+References: <4e685057-b07d-745d-fdaa-1a6a5a681060@openvz.org>
+ <0fe836b4-5c0f-0e32-d511-db816d359748@openvz.org>
+ <c516033f-a9e4-3485-26d9-a68afa694c1d@openvz.org>
+ <YrSP25ebDmXE+kPS@dhcp22.suse.cz>
+ <CALvZod4WsmrpfZtfnP4AmvtnkvBRngXXGyhM6+aQzkdfjsinAQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <27F2DF19-7CC6-42C5-8CEB-43583EB4AE46@linaro.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=openvz-org.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=AJmnLzRfv3CKjpAFSm8w5uUX4zkxlzpS9NJDok/nCk8=;
+        b=7HedpVdtZRLHDg268+oLo/eUh38UD497b1xuP0kyTrOApUY9ey+kT8c0TnmBPY+t9U
+         mL3HMOpxmxQIYWukMfePC89vZe9yHBTYZIR98SC8JnF5PNc4ICv87ZpVlu0TxWY8d45R
+         d9z0Mgc5yU0iDhbJBhLbs8Baz9W25uKdFESjuRdahXy0c+L74oYBwxW/vkQdtCl/Zp2b
+         o7Ofb3Rb/6lKL6zcj87m09gmw0mAbgTtb4y8Hd8FQfwViCQZAfDmOdf8Vt7L2w/ctbFt
+         osjhl7TXYXzxDD/VddKOpv5+aF5y9/2rtyKZkQcDfn86chNYao3fOf/kYoH3POPiDcmI
+         cuLQ==
+Content-Language: en-US
+In-Reply-To: <CALvZod4WsmrpfZtfnP4AmvtnkvBRngXXGyhM6+aQzkdfjsinAQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Paolo Valente <paolo.valente@linaro.org>
-Cc: Jan Kara <jack@suse.cz>, cgroups@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-=D4=DA 2022/06/23 23:32, Paolo Valente =D0=B4=B5=C0:
-> Sorry for the delay.
->=20
->> Il giorno 10 giu 2022, alle ore 04:17, Yu Kuai <yukuai3@huawei.com> ha s=
-critto:
+On 6/23/22 19:55, Shakeel Butt wrote:
+> On Thu, Jun 23, 2022 at 9:07 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
 >>
->> Currently, bfq can't handle sync io concurrently as long as they
->> are not issued from root group. This is because
->> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
->> bfq_asymmetric_scenario().
+>> On Thu 23-06-22 18:03:31, Vasily Averin wrote:
+>>> Dear Michal,
+>>> do you still have any concerns about this patch set?
 >>
->> The way that bfqg is counted into 'num_groups_with_pending_reqs':
->>
->> Before this patch:
->> 1) root group will never be counted.
->> 2) Count if bfqg or it's child bfqgs have pending requests.
->> 3) Don't count if bfqg and it's child bfqgs complete all the requests.
->>
->> After this patch:
->> 1) root group is counted.
->> 2) Count if bfqg have pending requests.
->> 3) Don't count if bfqg complete all the requests.
->>
->> With this change, the occasion that only one group is activated can be
->> detected, and next patch will support concurrent sync io in the
->> occasion.
->>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> Reviewed-by: Jan Kara <jack@suse.cz>
->> ---
->> block/bfq-iosched.c | 42 ------------------------------------------
->> block/bfq-iosched.h | 18 +++++++++---------
->> block/bfq-wf2q.c    | 19 ++++---------------
->> 3 files changed, 13 insertions(+), 66 deletions(-)
->>
->> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
->> index 0ec21018daba..03b04892440c 100644
->> --- a/block/bfq-iosched.c
->> +++ b/block/bfq-iosched.c
->> @@ -970,48 +970,6 @@ void __bfq_weights_tree_remove(struct bfq_data *bfq=
-d,
->> void bfq_weights_tree_remove(struct bfq_data *bfqd,
->> 			     struct bfq_queue *bfqq)
->> {
->> -	struct bfq_entity *entity =3D bfqq->entity.parent;
->> -
->> -	for_each_entity(entity) {
->> -		struct bfq_sched_data *sd =3D entity->my_sched_data;
->> -
->> -		if (sd->next_in_service || sd->in_service_entity) {
->> -			/*
->> -			 * entity is still active, because either
->> -			 * next_in_service or in_service_entity is not
->> -			 * NULL (see the comments on the definition of
->> -			 * next_in_service for details on why
->> -			 * in_service_entity must be checked too).
->> -			 *
->> -			 * As a consequence, its parent entities are
->> -			 * active as well, and thus this loop must
->> -			 * stop here.
->> -			 */
->> -			break;
->> -		}
->> -
->> -		/*
->> -		 * The decrement of num_groups_with_pending_reqs is
->> -		 * not performed immediately upon the deactivation of
->> -		 * entity, but it is delayed to when it also happens
->> -		 * that the first leaf descendant bfqq of entity gets
->> -		 * all its pending requests completed. The following
->> -		 * instructions perform this delayed decrement, if
->> -		 * needed. See the comments on
->> -		 * num_groups_with_pending_reqs for details.
->> -		 */
->> -		if (entity->in_groups_with_pending_reqs) {
->> -			entity->in_groups_with_pending_reqs =3D false;
->> -			bfqd->num_groups_with_pending_reqs--;
->> -		}
->> -	}
->=20
-> With this part removed, I'm missing how you handle the following
-> sequence of events:
-> 1.  a queue Q becomes non busy but still has dispatched requests, so
-> it must not be removed from the counter of queues with pending reqs
-> yet
-> 2.  the last request of Q is completed with Q being still idle (non
-> busy).  At this point Q must be removed from the counter.  It seems to
-> me that this case is not handled any longer
->=20
-Hi, Paolo
+>> Yes, I do not think we have concluded this to be really necessary. IIRC
+>> Roman would like to see lingering cgroups addressed in not-so-distant
+>> future (http://lkml.kernel.org/r/Ypd2DW7id4M3KJJW@carbon) and we already
+>> have a limit for the number of cgroups in the tree. So why should we
+>> chase after allocations that correspond the cgroups and somehow try to
+>> cap their number via the memory consumption. This looks like something
+>> that will get out of sync eventually and it also doesn't seem like the
+>> best control to me (comparing to an explicit limit to prevent runaways).
+>> --
+> 
+> Let me give a counter argument to that. On a system running multiple
+> workloads, how can the admin come up with a sensible limit for the
+> number of cgroups? There will definitely be jobs that require much
+> more number of sub-cgroups. Asking the admins to dynamically tune
+> another tuneable is just asking for more complications. At the end all
+> the users would just set it to max.
+> 
+> I would recommend to see the commit ac7b79fd190b ("inotify, memcg:
+> account inotify instances to kmemcg") where there is already a sysctl
+> (inotify/max_user_instances) to limit the number of instances but
+> there was no sensible way to set that limit on a multi-tenant system.
 
-1) At first, patch 1 support to track if bfqq has pending requests, it's
-done by setting the flag 'entity->in_groups_with_pending_reqs' when the
-first request is inserted to bfqq, and it's cleared when the last
-request is completed.
+I've found that MEM_CGROUP_ID_MAX limits memory cgroups only. Other types
+of cgroups do not have similar restrictions. Yes, we can set some per-container 
+limit for all cgroups, but to me it looks like workaround while
+proper memory accounting looks like real solution.
 
-2) Then, patch 2 add a counter in bfqg: how many bfqqs have pending
-requests, which is updated while tracking if bfqq has pending requests.
+Btw could you please explain why memory cgroups have MEM_CGROUP_ID_MAX limit
+Why it is required at all and why it was set to USHRT_MAX? I believe that
+in the future it may be really reachable:
 
-3) Finally, patch 3 tracks 'num_groups_with_pending_reqs' based on the
-new counter in patch 2:
-  - if the counter(how many bfqqs have pending requests) increased from 0
-    to 0, increase 'num_groups_with_pending_reqs'.
-  - if the counter is decreased from 1 to 0, decrease
-    'num_groups_with_pending_reqs'
+Let's set up per-container cgroup limit to some small numbers, 
+for example to 512 as OpenVz doing right now. On real node with 300
+containers we can easily get 100*300 = 30000 cgroups, and consume ~3Gb memory, 
+without any misuse. I think it is too much to ignore its accounting.
 
-> Additional comment: if your changes do not cpus the problem above,
-> then this function only invokes __bfq_weights_tree_remove.  So what's
-> the point in keeping this function)
-
-If this patchset is applied, there are following cleanup patches to
-remove this function.
-
-multiple cleanup patches for bfq:
-https://lore.kernel.org/all/20220528095958.270455-1-yukuai3@huawei.com/
->=20
->> -
->> -	/*
->> -	 * Next function is invoked last, because it causes bfqq to be
->> -	 * freed if the following holds: bfqq is not in service and
->> -	 * has no dispatched request. DO NOT use bfqq after the next
->> -	 * function invocation.
->> -	 */
->=20
-> I would really love it if you leave this comment.  I added it after
-> suffering a lot for a nasty UAF.  Of course the first sentence may
-> need to be adjusted if the code that precedes it is to be removed.
->=20
-
-Same as above, if this patch is applied, this function will be gone.
-
-Thanks,
-Kuai
-> Thanks,
-> Paolo
->=20
->=20
->> 	__bfq_weights_tree_remove(bfqd, bfqq,
->> 				  &bfqd->queue_weights_tree);
->> }
->> diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
->> index de2446a9b7ab..f0fce94583e4 100644
->> --- a/block/bfq-iosched.h
->> +++ b/block/bfq-iosched.h
->> @@ -496,27 +496,27 @@ struct bfq_data {
->> 	struct rb_root_cached queue_weights_tree;
->>
->> 	/*
->> -	 * Number of groups with at least one descendant process that
->> +	 * Number of groups with at least one process that
->> 	 * has at least one request waiting for completion. Note that
->> 	 * this accounts for also requests already dispatched, but not
->> 	 * yet completed. Therefore this number of groups may differ
->> 	 * (be larger) than the number of active groups, as a group is
->> 	 * considered active only if its corresponding entity has
->> -	 * descendant queues with at least one request queued. This
->> +	 * queues with at least one request queued. This
->> 	 * number is used to decide whether a scenario is symmetric.
->> 	 * For a detailed explanation see comments on the computation
->> 	 * of the variable asymmetric_scenario in the function
->> 	 * bfq_better_to_idle().
->> 	 *
->> 	 * However, it is hard to compute this number exactly, for
->> -	 * groups with multiple descendant processes. Consider a group
->> -	 * that is inactive, i.e., that has no descendant process with
->> +	 * groups with multiple processes. Consider a group
->> +	 * that is inactive, i.e., that has no process with
->> 	 * pending I/O inside BFQ queues. Then suppose that
->> 	 * num_groups_with_pending_reqs is still accounting for this
->> -	 * group, because the group has descendant processes with some
->> +	 * group, because the group has processes with some
->> 	 * I/O request still in flight. num_groups_with_pending_reqs
->> 	 * should be decremented when the in-flight request of the
->> -	 * last descendant process is finally completed (assuming that
->> +	 * last process is finally completed (assuming that
->> 	 * nothing else has changed for the group in the meantime, in
->> 	 * terms of composition of the group and active/inactive state of child
->> 	 * groups and processes). To accomplish this, an additional
->> @@ -525,7 +525,7 @@ struct bfq_data {
->> 	 * we resort to the following tradeoff between simplicity and
->> 	 * accuracy: for an inactive group that is still counted in
->> 	 * num_groups_with_pending_reqs, we decrement
->> -	 * num_groups_with_pending_reqs when the first descendant
->> +	 * num_groups_with_pending_reqs when the first
->> 	 * process of the group remains with no request waiting for
->> 	 * completion.
->> 	 *
->> @@ -533,12 +533,12 @@ struct bfq_data {
->> 	 * carefulness: to avoid multiple decrements, we flag a group,
->> 	 * more precisely an entity representing a group, as still
->> 	 * counted in num_groups_with_pending_reqs when it becomes
->> -	 * inactive. Then, when the first descendant queue of the
->> +	 * inactive. Then, when the first queue of the
->> 	 * entity remains with no request waiting for completion,
->> 	 * num_groups_with_pending_reqs is decremented, and this flag
->> 	 * is reset. After this flag is reset for the entity,
->> 	 * num_groups_with_pending_reqs won't be decremented any
->> -	 * longer in case a new descendant queue of the entity remains
->> +	 * longer in case a new queue of the entity remains
->> 	 * with no request waiting for completion.
->> 	 */
->> 	unsigned int num_groups_with_pending_reqs;
->> diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
->> index 6f36f3fe5cc8..9c2842bedf97 100644
->> --- a/block/bfq-wf2q.c
->> +++ b/block/bfq-wf2q.c
->> @@ -984,19 +984,6 @@ static void __bfq_activate_entity(struct bfq_entity=
- *entity,
->> 		entity->on_st_or_in_serv =3D true;
->> 	}
->>
->> -#ifdef CONFIG_BFQ_GROUP_IOSCHED
->> -	if (!bfq_entity_to_bfqq(entity)) { /* bfq_group */
->> -		struct bfq_group *bfqg =3D
->> -			container_of(entity, struct bfq_group, entity);
->> -		struct bfq_data *bfqd =3D bfqg->bfqd;
->> -
->> -		if (!entity->in_groups_with_pending_reqs) {
->> -			entity->in_groups_with_pending_reqs =3D true;
->> -			bfqd->num_groups_with_pending_reqs++;
->> -		}
->> -	}
->> -#endif
->> -
->> 	bfq_update_fin_time_enqueue(entity, st, backshifted);
->> }
->>
->> @@ -1654,7 +1641,8 @@ void bfq_add_bfqq_in_groups_with_pending_reqs(stru=
-ct bfq_queue *bfqq)
->> 	if (!entity->in_groups_with_pending_reqs) {
->> 		entity->in_groups_with_pending_reqs =3D true;
->> #ifdef CONFIG_BFQ_GROUP_IOSCHED
->> -		bfqq_group(bfqq)->num_queues_with_pending_reqs++;
->> +		if (!(bfqq_group(bfqq)->num_queues_with_pending_reqs++))
->> +			bfqq->bfqd->num_groups_with_pending_reqs++;
->> #endif
->> 	}
->> }
->> @@ -1666,7 +1654,8 @@ void bfq_del_bfqq_in_groups_with_pending_reqs(stru=
-ct bfq_queue *bfqq)
->> 	if (entity->in_groups_with_pending_reqs) {
->> 		entity->in_groups_with_pending_reqs =3D false;
->> #ifdef CONFIG_BFQ_GROUP_IOSCHED
->> -		bfqq_group(bfqq)->num_queues_with_pending_reqs--;
->> +		if (!(--bfqq_group(bfqq)->num_queues_with_pending_reqs))
->> +			bfqq->bfqd->num_groups_with_pending_reqs--;
->> #endif
->> 	}
->> }
->> --=20
->> 2.31.1
->>
->=20
-> .
->=20
+Thank you,
+	Vasily Averin
