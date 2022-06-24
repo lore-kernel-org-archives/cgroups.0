@@ -1,70 +1,56 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [RFC PATCH] cpuset: Allow setscheduler regardless of manipulated
- task
-Date: Fri, 24 Jun 2022 14:43:16 +0200
-Message-ID: <20220624124316.GH16004@blackbody.suse.cz>
-References: <20220623124944.2753-1-mkoutny@suse.com>
- <ab4bcd51-83c5-ae21-ddf6-607a31a7d6ac@redhat.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH mm v5 0/9] memcg: accounting for objects allocated by
+ mkdir, cgroup
+Date: Fri, 24 Jun 2022 15:59:51 +0200
+Message-ID: <YrXDV7uPpmDigh3G@dhcp22.suse.cz>
+References: <4e685057-b07d-745d-fdaa-1a6a5a681060@openvz.org>
+ <0fe836b4-5c0f-0e32-d511-db816d359748@openvz.org>
+ <c516033f-a9e4-3485-26d9-a68afa694c1d@openvz.org>
+ <YrSP25ebDmXE+kPS@dhcp22.suse.cz>
+ <CALvZod4WsmrpfZtfnP4AmvtnkvBRngXXGyhM6+aQzkdfjsinAQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="GpGaEY17fSl8rd50"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1656074597; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1656079192; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=kbkT57a8V0dJcSqQrodxix/sir4fcRh67YaToWJTvHE=;
-        b=ewI827+xmnQCyHqvi4SVwM8YXQrqPa90AuyZGpIe+rcogw9aqIprFe4iT597bsxYtmTnLS
-        lVxPFb+CFLEQ9X3VNbp8J6uEM9ImjVdqKEa2F62aHcwBq4D7y+CiH0OcFpgi7ODhP0jixN
-        fBsgE0c7lgpa9TwQZQzFyjALrQp1LWc=
+        bh=2w1L23+IbYV6NN1uakoMnM4Ln36dQ8vdC1Lu+6qgUGE=;
+        b=rnrxBaL9L5/alzpeiarh24yjJKETzL+5hZn/bNLXr9qnxJB4OputXmn+PQbI6yJrMHOWC1
+        J8yvQ3ooToFm+hyLDaXikq8rdGG9IAS8LNLT4TBOD3hSKY7HkpjmYw/nq2f526Yd+3cdoU
+        Pm/WnARFLWJ2zx0fP4apGU2OaGlE1oA=
 Content-Disposition: inline
-In-Reply-To: <ab4bcd51-83c5-ae21-ddf6-607a31a7d6ac-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CALvZod4WsmrpfZtfnP4AmvtnkvBRngXXGyhM6+aQzkdfjsinAQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
+On Thu 23-06-22 09:55:33, Shakeel Butt wrote:
+> On Thu, Jun 23, 2022 at 9:07 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> >
+> > On Thu 23-06-22 18:03:31, Vasily Averin wrote:
+> > > Dear Michal,
+> > > do you still have any concerns about this patch set?
+> >
+> > Yes, I do not think we have concluded this to be really necessary. IIRC
+> > Roman would like to see lingering cgroups addressed in not-so-distant
+> > future (http://lkml.kernel.org/r/Ypd2DW7id4M3KJJW@carbon) and we already
+> > have a limit for the number of cgroups in the tree. So why should we
+> > chase after allocations that correspond the cgroups and somehow try to
+> > cap their number via the memory consumption. This looks like something
+> > that will get out of sync eventually and it also doesn't seem like the
+> > best control to me (comparing to an explicit limit to prevent runaways).
+> > --
+> 
+> Let me give a counter argument to that. On a system running multiple
+> workloads, how can the admin come up with a sensible limit for the
+> number of cgroups?
 
---GpGaEY17fSl8rd50
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Thu, Jun 23, 2022 at 02:44:33PM -0400, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> That could be an issue.
-
-The way how I understand here is that the privileged process isn't part
-of contrained workload (if it were then, it can modify cpuset itself)
-like debugging or tracing a code within a container entered by the
-admin. The bypass could not be used to setscheduler (via migration) of
-an arbitrary process.
-
-> What do you mean by nothing effectively changes?
-
-It's a freshly created child (after cpuset_css_online()), so it inherits
-parent's attributes, so the migration from the parent to this child
-doesn't affect CPU affinity etc.
-
-> Since the check is done on a taskset level, if only one of the tasks in the
-> taskset fails, the whole taskset fails. Maybe we should consider an option
-> for task based migration. So all the tasks that can be migrated will be
-> migrated and the rests will be left behind in the original cpuset.
-
-Hm, I haven't thought about that. That might be in theory possible for
-threaded controllers (like cpuset) but I imagine it'd a bit messy, in
-particular for these implicit migrations upon controller enablement.
-
-Thanks,
-Michal
-
---GpGaEY17fSl8rd50
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCYrWxYgAKCRAkDQmsBEOq
-uSK7AQDxSD0tP0e4c1MlmPs3gy70GRGHcWnbPa9H+VtXGrwCtgEA3seoFthswxlF
-BlkMXOCW5rIUwjXRGQ/9u+FKiUXulg8=
-=Q3D5
------END PGP SIGNATURE-----
-
---GpGaEY17fSl8rd50--
+How is that any easier through memory consumption? Something that might
+change between kernel versions? Is it even possible to prevent from id
+depletion by the memory consumption? Any medium sized memcg can easily
+consume all the ids AFAICS.
+-- 
+Michal Hocko
+SUSE Labs
