@@ -1,59 +1,70 @@
 From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH mm v5 0/9] memcg: accounting for objects allocated by
- mkdir, cgroup
-Date: Fri, 24 Jun 2022 14:26:10 +0200
-Message-ID: <20220624122610.GG16004@blackbody.suse.cz>
-References: <4e685057-b07d-745d-fdaa-1a6a5a681060@openvz.org>
- <0fe836b4-5c0f-0e32-d511-db816d359748@openvz.org>
- <c516033f-a9e4-3485-26d9-a68afa694c1d@openvz.org>
- <YrSP25ebDmXE+kPS@dhcp22.suse.cz>
- <CALvZod4WsmrpfZtfnP4AmvtnkvBRngXXGyhM6+aQzkdfjsinAQ@mail.gmail.com>
- <0f8146e3-5865-b7e6-6728-5baada375cf2@openvz.org>
+Subject: Re: [RFC PATCH] cpuset: Allow setscheduler regardless of manipulated
+ task
+Date: Fri, 24 Jun 2022 14:43:16 +0200
+Message-ID: <20220624124316.GH16004@blackbody.suse.cz>
+References: <20220623124944.2753-1-mkoutny@suse.com>
+ <ab4bcd51-83c5-ae21-ddf6-607a31a7d6ac@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="HG+GLK89HZ1zG0kk"
+        protocol="application/pgp-signature"; boundary="GpGaEY17fSl8rd50"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1656073571; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1656074597; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=+3cWh7Nkfv7QaM5e4ajRtU4xW3swpukjf7WrfRWPE6E=;
-        b=mrYLsPoEEQjRnhUtwsgNCoXCtrKNyvFVbXRqAwPxnnjWRxGMXjfszLzHbhAFKwx+uBW8CZ
-        yuxjkWUMBCdNt+cgyQoLNqirpOBMsxu9PydMYcuN5QwltNVl12wnAOqK/fInVpSJGV7Mty
-        XPJvhw0hfSqQTdSlEe9+UkTfFT9IMi4=
+        bh=kbkT57a8V0dJcSqQrodxix/sir4fcRh67YaToWJTvHE=;
+        b=ewI827+xmnQCyHqvi4SVwM8YXQrqPa90AuyZGpIe+rcogw9aqIprFe4iT597bsxYtmTnLS
+        lVxPFb+CFLEQ9X3VNbp8J6uEM9ImjVdqKEa2F62aHcwBq4D7y+CiH0OcFpgi7ODhP0jixN
+        fBsgE0c7lgpa9TwQZQzFyjALrQp1LWc=
 Content-Disposition: inline
-In-Reply-To: <0f8146e3-5865-b7e6-6728-5baada375cf2-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+In-Reply-To: <ab4bcd51-83c5-ae21-ddf6-607a31a7d6ac-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
 
---HG+GLK89HZ1zG0kk
+--GpGaEY17fSl8rd50
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
-On Fri, Jun 24, 2022 at 01:40:14PM +0300, Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org> wrote:
-> Btw could you please explain why memory cgroups have MEM_CGROUP_ID_MAX limit
-> Why it is required at all and why it was set to USHRT_MAX? I believe that
-> in the future it may be really reachable:
+On Thu, Jun 23, 2022 at 02:44:33PM -0400, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> That could be an issue.
 
-IIRC, one reason is 2B * nr_swap_pages of memory overhead (in
-swap_cgroup_swapon()) that's ~0.05% of swap space occupied additionally
-in RAM (fortunately swap needn't cover whole RAM).
+The way how I understand here is that the privileged process isn't part
+of contrained workload (if it were then, it can modify cpuset itself)
+like debugging or tracing a code within a container entered by the
+admin. The bypass could not be used to setscheduler (via migration) of
+an arbitrary process.
 
-HTH,
+> What do you mean by nothing effectively changes?
+
+It's a freshly created child (after cpuset_css_online()), so it inherits
+parent's attributes, so the migration from the parent to this child
+doesn't affect CPU affinity etc.
+
+> Since the check is done on a taskset level, if only one of the tasks in the
+> taskset fails, the whole taskset fails. Maybe we should consider an option
+> for task based migration. So all the tasks that can be migrated will be
+> migrated and the rests will be left behind in the original cpuset.
+
+Hm, I haven't thought about that. That might be in theory possible for
+threaded controllers (like cpuset) but I imagine it'd a bit messy, in
+particular for these implicit migrations upon controller enablement.
+
+Thanks,
 Michal
 
---HG+GLK89HZ1zG0kk
+--GpGaEY17fSl8rd50
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCYrWtXgAKCRAkDQmsBEOq
-uTryAQCHh6ZZYDD+j5lciUOhDxLFMQ15T9S7Ty/OmIhNzCcXwwD/YhFGF7ylqaSv
-BYyT9akQtqnK5O1l1tmp4Hp0oIkmMAs=
-=mx99
+iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCYrWxYgAKCRAkDQmsBEOq
+uSK7AQDxSD0tP0e4c1MlmPs3gy70GRGHcWnbPa9H+VtXGrwCtgEA3seoFthswxlF
+BlkMXOCW5rIUwjXRGQ/9u+FKiUXulg8=
+=Q3D5
 -----END PGP SIGNATURE-----
 
---HG+GLK89HZ1zG0kk--
+--GpGaEY17fSl8rd50--
