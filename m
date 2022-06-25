@@ -1,35 +1,46 @@
-From: syzbot <syzbot+ec972d37869318fc3ffb-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
-Subject: Re: [syzbot] WARNING in folio_lruvec_lock_irqsave
-Date: Fri, 24 Jun 2022 23:00:09 -0700
-Message-ID: <0000000000003ad3d705e23f66ae@google.com>
-References: <0000000000004b03c805e2099bf0@google.com>
+From: Xiang Yang <xiangyang3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH -next] mm/memcontrol.c: replace cgroup_memory_nokmem with mem_cgroup_kmem_disabled()
+Date: Sat, 25 Jun 2022 14:18:44 +0800
+Message-ID: <20220625061844.226764-1-xiangyang3@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <0000000000004b03c805e2099bf0-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xiangyang3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-syzbot has bisected this issue to:
+mem_cgroup_kmem_disabled() checks whether the kmem accounting is off.
+Therefore, replace cgroup_memory_nokmem with mem_cgroup_kmem_disabled(),
+which is the same work in percpu.c and slab_common.c.
 
-commit cca700a8e695fbe4a647e3a509ac513f05d5740a
-Author: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Date:   Tue Jun 21 12:56:58 2022 +0000
+Signed-off-by: Xiang Yang <xiangyang3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-    mm: lru: use lruvec lock to serialize memcg changes
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 85adc43c5a25..4672c9ddd188 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3815,7 +3815,7 @@ static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
+ #ifdef CONFIG_MEMCG_KMEM
+ static int memcg_online_kmem(struct mem_cgroup *memcg)
+ {
+-	if (cgroup_memory_nokmem)
++	if (mem_cgroup_kmem_disabled())
+ 		return 0;
+ 
+ 	if (unlikely(mem_cgroup_is_root(memcg)))
+@@ -3830,7 +3830,7 @@ static int memcg_online_kmem(struct mem_cgroup *memcg)
+ 
+ static void memcg_offline_kmem(struct mem_cgroup *memcg)
+ {
+-	if (cgroup_memory_nokmem)
++	if (mem_cgroup_kmem_disabled())
+ 		return;
+ 
+ 	if (unlikely(mem_cgroup_is_root(memcg)))
+-- 
+2.22.0
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=15abaf18080000
-start commit:   ac0ba5454ca8 Add linux-next specific files for 20220622
-git tree:       linux-next
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=17abaf18080000
-console output: https://syzkaller.appspot.com/x/log.txt?x=13abaf18080000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=12809dacb9e7c5e0
-dashboard link: https://syzkaller.appspot.com/bug?extid=ec972d37869318fc3ffb
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=12d0f470080000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1145df0ff00000
-
-Reported-by: syzbot+ec972d37869318fc3ffb-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
-Fixes: cca700a8e695 ("mm: lru: use lruvec lock to serialize memcg changes")
-
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
