@@ -1,47 +1,37 @@
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH -next v5 4/8] blk-throttle: fix io hung due to config
- updates
-Date: Sat, 25 Jun 2022 16:36:34 +0800
-Message-ID: <75b3cdcc-1aa3-7259-4900-f09a2a081716@huawei.com>
-References: <20220528064330.3471000-1-yukuai3@huawei.com>
- <20220528064330.3471000-5-yukuai3@huawei.com>
- <20220622172621.GA28246@blackbody.suse.cz>
- <f5165488-2461-8946-593f-14154e404850@huawei.com>
- <20220623162620.GB16004@blackbody.suse.cz>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [PATCH -next] mm/memcontrol.c: replace cgroup_memory_nokmem with
+ mem_cgroup_kmem_disabled()
+Date: Sat, 25 Jun 2022 16:58:38 +0800
+Message-ID: <YrbOPktTSb00DvYw@FVFYT0MHHV2J.usts.net>
+References: <20220625061844.226764-1-xiangyang3@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220623162620.GB16004-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=yBLfi92gAlfWDayXHgzw4YwyIEMK5sbZZcp3v3R4WvY=;
+        b=vWECR4lLdOmckfTvOtrYhFODIrM4aq0XBkbDVkccpRjJ3+cMeUvXRYavTTP+yfUnbX
+         w6+J8m/kcwHkSZzmeu90jyJ4IHHBP0StpdY3RIXtbqNihYBxZAT27XARGx07UqgXeU3y
+         01EYfl9HNI/lphnYRGJjUaO46ig2ViHWHtRFePaayXwsyi8aoJCj72pwSANRc1WThHL1
+         tmtUkNuzPsKLzhrXfUX7uXSPKmb3opDWoWCq8GFZe3XYLVPj4P86uCXjA1fiZoOMC3kA
+         g8mg9T5IRuUlgBoPJ7tT/uIOH458e1rOQLqTqaGGZ9RSmZ07ahQTQbgL0xbfqf4bvYR8
+         FB5A==
+Content-Disposition: inline
+In-Reply-To: <20220625061844.226764-1-xiangyang3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Xiang Yang <xiangyang3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-在 2022/06/24 0:26, Michal Koutný 写道:
-> On Thu, Jun 23, 2022 at 08:27:11PM +0800, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->>> Here we may allow to dispatch a bio above current slice's
->>> calculate_bytes_allowed() if bytes_skipped is already >0.
->>
->> Hi, I don't expect that to happen. For example, if a bio is still
->> throttled, then old slice is keeped with proper 'bytes_skipped',
->> then new wait time is caculated based on (bio_size - bytes_skipped).
->>
->> After the bio is dispatched(I assum that other bios can't preempt),
+On Sat, Jun 25, 2022 at 02:18:44PM +0800, Xiang Yang wrote:
+> mem_cgroup_kmem_disabled() checks whether the kmem accounting is off.
+> Therefore, replace cgroup_memory_nokmem with mem_cgroup_kmem_disabled(),
+> which is the same work in percpu.c and slab_common.c.
 > 
-> With this assumptions it adds up as you write. I believe we're in
-> agreement.
-> 
-> It's the same assumption I made below (FIFO everywhere, i.e. no
-> reordering). So the discussed difference shouldn't really be negative
-> (and if the assumption didn't hold, so the modular arithmetic yields
-> corerct bytes_skipped value).
-Yes, nice that we're in aggreement.
+> Signed-off-by: Xiang Yang <xiangyang3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-I'll wait to see if Tejun has any suggestions.
+Reviewed-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-Thanks,
-Kuai
-> 
-> Michal
-> .
-> 
+Thanks.
