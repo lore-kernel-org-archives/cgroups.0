@@ -1,63 +1,60 @@
-From: Souptick Joarder <jrdr.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH -next] mm/memcontrol.c: replace cgroup_memory_nokmem with mem_cgroup_kmem_disabled()
-Date: Mon, 27 Jun 2022 06:35:28 +0530
-Message-ID: <CAFqt6zYd2GVv4kb4tWVVen-pq4ynN=q8jbE+AWmsjfeD8SJmqg@mail.gmail.com>
-References: <20220625061844.226764-1-xiangyang3@huawei.com>
+From: Vasily Averin <vvs@openvz.org>
+Subject: [PATCH mm v2] memcg: notify about global mem_cgroup_id space
+ depletion
+Date: Mon, 27 Jun 2022 05:11:26 +0300
+Message-ID: <97bed1fd-f230-c2ea-1cb6-8230825a9a64@openvz.org>
+References: <Yre8tNUY8vBrO0yl@castle>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=bEDEWM/uIediVqxTgHJ1ffqjVVrgXA7HPhbIDVnGRjA=;
-        b=N0kobSzdTz1T5pZSU48sBPPO1LDhIsX6IU8x3mwYeyaf9BsgbSveanERApsoUkF6e3
-         2wR3FtV9u/Fx6PCJX7oe/R/5ul4XjCJrnIh3GJEMSR88iF6j3rkjiJoncM+02Z4fLOYB
-         v+QcK249wDse+JdkMxAOzb0lLtvlrlJv/8Qf4iY4B9Vy302menS+GWt0kexRSOQj4bvN
-         HUv0frlzdNtwdCCnJ+gIESQUF0ZynlonbAkkqOFNPPg8MyUnxKZzVb7n/S0KvPajOWF/
-         tX63CdA8mNYxHFVjGEh9J+rrhsvA3T0EEJ27F1MI8qmjVWMWIIw9zeNB4yqYo2mo52SV
-         b3mA==
-In-Reply-To: <20220625061844.226764-1-xiangyang3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        d=openvz-org.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:from:subject:to:cc
+         :references:content-language:in-reply-to:content-transfer-encoding;
+        bh=l3AbRcb3euHIPSR9NMXHx/86nFq6XgvCj4Y708407TI=;
+        b=o0XCv7KUDJSIdcVmSBhxbsYa0J3ql98Deo9ytYEOPzqH2Urm67Hxxy/ZP677pKTbHk
+         82l3qp7hq5PQ1I8LcLBh8+vZ8vDsJC8q8JLAe2NBc20Uthc2x6PcfJhlWyV3DxTcVnmc
+         64k1BjpS8AJUbQwqwUyYI4fxkEHSVynTciRK8xJPzQ9VdIK39/QBsTdVys7zbzA2LK0f
+         CQYF2r0f7qDjBNvbsmCDdcsSZ6WoBh/wO7A1IpCtgz0kABXJ7sDvre6cV8caASu1Vt0+
+         gq0Q7T8+9emWYjCddt6d4CynBSRyRqh4ANhQwOux3JrZy6nwA02R6X568g4eF/B/sT6E
+         igtQ==
+Content-Language: en-US
+In-Reply-To: <Yre8tNUY8vBrO0yl@castle>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Xiang Yang <xiangyang3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Shakeel Butt <shakeelb@google.com>, Roman Gushchin <roman.gushchin@linux.dev>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Michal Hocko <mhocko@suse.com>
+Cc: kernel@openvz.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Vlastimil Babka <vbabka@suse.cz>, Muchun Song <songmuchun@bytedance.com>, cgroups@vger.kernel.org
 
-On Sat, Jun 25, 2022 at 11:51 AM Xiang Yang <xiangyang3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->
-> mem_cgroup_kmem_disabled() checks whether the kmem accounting is off.
-> Therefore, replace cgroup_memory_nokmem with mem_cgroup_kmem_disabled(),
-> which is the same work in percpu.c and slab_common.c.
->
-> Signed-off-by: Xiang Yang <xiangyang3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Acked-by: Souptick Joarder (HPE) <jrdr.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
->  mm/memcontrol.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 85adc43c5a25..4672c9ddd188 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3815,7 +3815,7 @@ static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
->  #ifdef CONFIG_MEMCG_KMEM
->  static int memcg_online_kmem(struct mem_cgroup *memcg)
->  {
-> -       if (cgroup_memory_nokmem)
-> +       if (mem_cgroup_kmem_disabled())
->                 return 0;
->
->         if (unlikely(mem_cgroup_is_root(memcg)))
-> @@ -3830,7 +3830,7 @@ static int memcg_online_kmem(struct mem_cgroup *memcg)
->
->  static void memcg_offline_kmem(struct mem_cgroup *memcg)
->  {
-> -       if (cgroup_memory_nokmem)
-> +       if (mem_cgroup_kmem_disabled())
->                 return;
->
->         if (unlikely(mem_cgroup_is_root(memcg)))
-> --
-> 2.22.0
->
->
+Currently, the host owner is not informed about the exhaustion of the
+global mem_cgroup_id space. When this happens, systemd cannot start a
+new service and receives a unique -ENOSPC error code.
+However, this can happen inside this container, persist in the log file
+of the local container, and may not be noticed by the host owner if he
+did not try to start any new services.
+
+Signed-off-by: Vasily Averin <vvs@openvz.org>
+---
+v2: Roman Gushchin pointed that idr_alloc() should return unique -ENOSPC
+    if no free IDs could be found, but can also return -ENOMEM.
+    Therefore error code check was added before message output and
+    patch descriprion was adopted.
+---
+ mm/memcontrol.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d4c606a06bcd..ffc6b5d6b95e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5317,6 +5317,8 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
+ 				 1, MEM_CGROUP_ID_MAX + 1, GFP_KERNEL);
+ 	if (memcg->id.id < 0) {
+ 		error = memcg->id.id;
++		if (error == -ENOSPC)
++			pr_notice_ratelimited("mem_cgroup_id space is exhausted\n");
+ 		goto fail;
+ 	}
+ 
+-- 
+2.36.1
+
