@@ -1,65 +1,56 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm: vmpressure: don't count userspace-induced reclaim as
- memory pressure
-Date: Mon, 27 Jun 2022 14:31:27 +0200
-Message-ID: <YrmjH2FZF7iNn8da@dhcp22.suse.cz>
-References: <YrQ1o3CeaZWhm+h4@dhcp22.suse.cz>
- <CAJD7tkadsLOV7GMFAm+naX4Y1WpZ-4=NkAhAMxNw60iaRPWx=w@mail.gmail.com>
- <YrSWruhPlJV1X9kp@dhcp22.suse.cz>
- <CALvZod6eLa1X1FJ2Qi6FXhFA-qBCP4mN2SB31MSgjj+g8hKo6Q@mail.gmail.com>
- <YrSdFy3qYdG+rGR6@dhcp22.suse.cz>
- <CAJD7tkZNEtzJMDsLMHuNHkxFfurS37UuK=zFcPCkOkWfN-dbJQ@mail.gmail.com>
- <YrlpcdgF1HzA7bHS@dhcp22.suse.cz>
- <CAJD7tkYVy2uNwaPiiJdPKT5P_O-9WgxD68iFJ6vw=TLJcQV3Ag@mail.gmail.com>
- <Yrl2T632Vfv8QGPn@dhcp22.suse.cz>
- <CAJD7tkZzwzHq7Q7KKUdVSdO4LWTPkrGprp0Q-ze_SWhUd_mTMw@mail.gmail.com>
+From: Sean Christopherson <seanjc@google.com>
+Subject: Re: [PATCH v5 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
+ page table uses.
+Date: Mon, 27 Jun 2022 16:07:32 +0000
+Message-ID: <YrnVxM/5KjVhkOnn@google.com>
+References: <20220606222058.86688-1-yosryahmed@google.com>
+ <20220606222058.86688-2-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1656333088; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=H2x18KoFRy5eal2D3ylc2+U1rybp7813ga/wOUoNe6s=;
-        b=MN+FbeFBztRg1vQn/aZS6WgzpJcvWE6GlhrAy1Bn2uYz6Fgk3nG1G2IBxSamszzE041LHN
-        FYiV/4Oov7dyHxK7Ap2HTWMY4KowzOrjMf2zZGO5NgGZfnmfaD9ie3tBC7hiO/8eBkBjto
-        EEejyW10KiaUFmPLEkSEZ9i8fEwxLpw=
-Content-Disposition: inline
-In-Reply-To: <CAJD7tkZzwzHq7Q7KKUdVSdO4LWTPkrGprp0Q-ze_SWhUd_mTMw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Xu <peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Return-path: <kvmarm-bounces@lists.cs.columbia.edu>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20210112;
+ h=date:from:to:cc:subject:message-id:references:mime-version
+ :content-disposition:in-reply-to;
+ bh=l0pibN8bjG0PnvfGdr94sagjrAjKQlwTKx4ke7hg5TE=;
+ b=KXpJaULYCMOBvM0KZ+Y0QmYKcs5GsOT3UDoT12OxOmZTuofXiRwwGm/WgJTM1heXoI
+ t1dv3k342OQnZ9iooXjd608cniWLl0qlDw2/EFrZO3JITiMUniSnoS9vRpsVYcQj8vN/
+ I7nko6H+yxfXlWmj6BpVmIQCvWqpF55RTmiG3dExwV8krl6JWA8dxuz7o3cuKUtlCKLL
+ AUH1GrHaKcLi0AxNkq1Q0RlPIztx9SDq4ccjZXK7Aa2jkpBZXbRVUSJ+/fIBfJxIB9bo
+ wqHrvEDbll+Qw87/iH2rzRcMOLCQ34VpKyfcZXoB0fUgM3GYU80A2xB80LHN6E80KQa1
+ 5riQ==
+Content-Disposition: inline
+In-Reply-To: <20220606222058.86688-2-yosryahmed@google.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.cs.columbia.edu/mailman/options/kvmarm>,
+ <mailto:kvmarm-request@lists.cs.columbia.edu?subject=unsubscribe>
+List-Archive: <https://lists.cs.columbia.edu/pipermail/kvmarm>
+List-Post: <mailto:kvmarm@lists.cs.columbia.edu>
+List-Help: <mailto:kvmarm-request@lists.cs.columbia.edu?subject=help>
+List-Subscribe: <https://lists.cs.columbia.edu/mailman/listinfo/kvmarm>,
+ <mailto:kvmarm-request@lists.cs.columbia.edu?subject=subscribe>
+Errors-To: kvmarm-bounces@lists.cs.columbia.edu
+Sender: kvmarm-bounces@lists.cs.columbia.edu
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Wanpeng Li <wanpengli@tencent.com>, kvm@vger.kernel.org, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, Zefan Li <lizefan.x@bytedance.com>, kvmarm@lists.cs.columbia.edu, Marc Zyngier <maz@kernel.org>, Joerg Roedel <joro@8bytes.org>, Shakeel Butt <shakeelb@google.com>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-arm-kernel@lists.infradead.org, Jim Mattson <jmattson@google.com>, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>
 
-On Mon 27-06-22 02:39:49, Yosry Ahmed wrote:
-[...]
-> (a) Do not count vmpressure for mem_cgroup_resize_max() and
-> mem_cgroup_force_empty() in v1.
+On Mon, Jun 06, 2022, Yosry Ahmed wrote:
+> Add NR_SECONDARY_PAGETABLE stat to count secondary page table uses, e.g.
+> KVM mmu. This provides more insights on the kernel memory used
+> by a workload.
 
-yes, unless you have a very good reason to change that. E.g. this has
-been buggy and we have finally understood that. But I do not see any
-indications so far.
+Please provide more justification for NR_SECONDARY_PAGETABLE in the changelog.
+Specially, answer the questions that were asked in the previous version:
 
-> (b) Do not count vmpressure (consequently,
-> mem_cgroup_under_socket_pressure()) in v2 where psi is not counted
-> (writing to memory.max, memory.high, and memory.reclaim).
+  1. Why not piggyback NR_PAGETABLE?
+  2. Why a "generic" NR_SECONDARY_PAGETABLE instead of NR_VIRT_PAGETABLE?
 
-I can see clear arguments for memory.reclaim opt out for vmpressure
-because we have established that this is not a measure to express a
-memory pressure on the cgroup.
+It doesn't have to be super long, but provide enough info so that reviewers and
+future readers don't need to go spelunking to understand the motivation for the
+new counter type.
 
-Max/High are less clear to me, TBH. I do understand reasoning for PSI
-exclusion because considering the calling process to be stalled and
-non-productive is misleading. It just does its work so in a way it is
-a productive time in the end. For the vmpressure, which measures how
-hard/easy it is to reclaim memory why this should special for this
-particular reclaim?
+And it's probably worth an explicit Link to Marc's question that prompted the long
+discussion in the previous version, that way if someone does want the gory details
+they have a link readily available.
 
-Again, an explanation of the effect on the socket pressure could give a
-better picture. Say that I somebody reduces the limit (hard/high) and it
-takes quite some effort to shrink the consumption down. Should the
-networking layer react to that in any way or should it wait for the
-active allocation during that process to find that out?
--- 
-Michal Hocko
-SUSE Labs
+Link: https://lore.kernel.org/all/87ilqoi77b.wl-maz@kernel.org
