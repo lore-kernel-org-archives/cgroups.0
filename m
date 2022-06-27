@@ -1,95 +1,73 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm: vmpressure: don't count userspace-induced reclaim as
- memory pressure
-Date: Mon, 27 Jun 2022 10:03:53 -0700
-Message-ID: <CAJD7tkYemNQqu_O2nYG3cqxPWGELvc6Lh5i+KKNCtv6cgSPmdA@mail.gmail.com>
-References: <YrQ1o3CeaZWhm+h4@dhcp22.suse.cz> <CAJD7tkadsLOV7GMFAm+naX4Y1WpZ-4=NkAhAMxNw60iaRPWx=w@mail.gmail.com>
- <YrSWruhPlJV1X9kp@dhcp22.suse.cz> <CALvZod6eLa1X1FJ2Qi6FXhFA-qBCP4mN2SB31MSgjj+g8hKo6Q@mail.gmail.com>
- <YrSdFy3qYdG+rGR6@dhcp22.suse.cz> <CAJD7tkZNEtzJMDsLMHuNHkxFfurS37UuK=zFcPCkOkWfN-dbJQ@mail.gmail.com>
- <YrlpcdgF1HzA7bHS@dhcp22.suse.cz> <CAJD7tkYVy2uNwaPiiJdPKT5P_O-9WgxD68iFJ6vw=TLJcQV3Ag@mail.gmail.com>
- <Yrl2T632Vfv8QGPn@dhcp22.suse.cz> <CAJD7tkZzwzHq7Q7KKUdVSdO4LWTPkrGprp0Q-ze_SWhUd_mTMw@mail.gmail.com>
- <YrmjH2FZF7iNn8da@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v11 7/8] cgroup/cpuset: Update description of
+ cpuset.cpus.partition in cgroup-v2.rst
+Date: Tue, 28 Jun 2022 04:10:29 +0900
+Message-ID: <YroApRMPV/6zO5I8@mtj.duckdns.org>
+References: <20220510153413.400020-1-longman@redhat.com>
+ <20220510153413.400020-8-longman@redhat.com>
+ <YqYnQ4U4t6j/3UaL@slm.duckdns.org>
+ <404171dc-0da3-21f2-5003-9718f875e967@redhat.com>
+ <YqarMyNo9oHxhZFh@slm.duckdns.org>
+ <20220613142452.GB6910@blackbody.suse.cz>
+ <YqdzuSQuAeiPXQvy@slm.duckdns.org>
+ <20220613175548.GB21665@blackbody.suse.cz>
+ <Yqd7WMFj6AEyV3Cy@slm.duckdns.org>
+ <20220614115345.GA6771@blackbody.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=/ZvfkO3IFf3n/ZVC71sBF9P6CPQM5ABge97UmMt98ps=;
-        b=MjiW4IZIKNvnRLaZM4hrpDs4I/vEqDj5/3xOzyG/gv8hlURBfdXynnwR5LA4UVW70b
-         o6v1EJHUzimguE8TQT2qD+Ab522RK1leX7GKKUj72qeBt/3gTwNZo3T7zB5s5GAWR77C
-         kmZiLNM8c8QVC160v7Ww9LlRpm1EKOj9ecAo/uAQCARN/f/mgZjude7rkreOk0yXGga4
-         Yc2oi4K5OYLJIn0wx5Z3wx0IbtNw5aTVQ4dxcBthCiW5NNtCuEvfM0Mj9ZlgHR8TiiCA
-         U8V6ZkaLIF2+CvNbXCBVwy7P4laWgV05N1TKs+pMvPm7BtkXpcmeznV712/+QiAYbgHU
-         HMwQ==
-In-Reply-To: <YrmjH2FZF7iNn8da-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=/TJYBcpsxpHM1dgljke9KHv7g4SupUF3o95Sw1aZ2ck=;
+        b=IUrCqExbfNSEqdj1+aclN5lVCX6iP7eBPxz3UnA29I42X7w8qUJC0d2QFa6lECfvHS
+         lTMdErf6FACs1/hyp38L86tGz+o787pLf2VIheb7iIKAGcJlc9+ImxpPc6dZHKPr2Lnd
+         297Swn9MhvVXOe5pLyL9hyobmlUtJUylIgtVuWFNUy7M/cvy0Ei9a+7/6RNLP/vuaWpm
+         qPXLfyJ7VkpxIpiy0dSvQGEwS2wO1IikzptCMphwHEF+yGlRha2BCj6vVKJloizO0jzV
+         wtWURRXun0tZKmoLu2aju0/0SznVwcWbO33ww6x17xU68Xd6vEBZdnna3JSmuqObPHbN
+         196g==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20220614115345.GA6771-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Xu <peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Jun 27, 2022 at 5:31 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
->
-> On Mon 27-06-22 02:39:49, Yosry Ahmed wrote:
-> [...]
-> > (a) Do not count vmpressure for mem_cgroup_resize_max() and
-> > mem_cgroup_force_empty() in v1.
->
-> yes, unless you have a very good reason to change that. E.g. this has
-> been buggy and we have finally understood that. But I do not see any
-> indications so far.
+Hello,
 
-I don't have any bug reports. It makes sense that users do not expect
-vmpressure notifications when they resize the limits below the current
-usage, because it should be expected that reclaim will happen so
-receiving notifications here is redundant, and may be incorrectly
-perceived by a different user space thread as being under memory
-pressure. But I get your point that what the user sees as memory
-pressure or not could be different, and is probably already defined by
-the current behavior anyway, whether it makes sense or not.
+On Tue, Jun 14, 2022 at 01:53:45PM +0200, Michal Koutn=FD wrote:
+> On Mon, Jun 13, 2022 at 08:00:56AM -1000, Tejun Heo <tj-DgEjT+Ai2ygdnm+yR=
+OfE0A@public.gmane.org> wrote:
+> > Yeah, I don't know why this part is different from any other errors tha=
+t the
+> > parent can make.
+>=20
+> It's different because a write to parent's cpuset.cpus is independent of
+> whether cpuset.cpus of its children are exclusive or not.
+> In an extreme case the children may be non-exclusive
+>=20
+>     parent	cpuset.cpus=3D0-3 //   valid partition
+>     `- child_1	cpuset.cpus=3D0-1	// invalid partition
+>     `- child_2	cpuset.cpus=3D1-2 // invalid partition
+>=20
+> but the parent can still be a valid partition (thanks to cpu no. 3 in
+> the example above).
+>=20
+> Do I miss anything?
 
-I can also see some userspace applications depending on this behavior
-in some way, either by handling that limit resize notification in a
-certain way or deliberately dropping it. Either way, making this
-change could throw them off. I don't expect any userspace applications
-to crash of course (because there are cases where they won't receive
-notifications, e.g. scanned < vmpressure_win), but perhaps it's not
-worth even risk misguiding them.
+What I'm trying to say is that cpuset.cpus of child_1 and child_2 are
+owned by the parent, so a feature which blocks siblings from
+intersecting each other doesn't make whole lot of sense because all
+those files are under the control of the parent who would have the
+power to enable or disable the restrition anyway.
 
-So I agree that just because it doesn't make sense or is inconsistent
-with other definitions of behavior then we can make a visible change
-for userspace. I will drop the v1 changes in the next version anyway.
+The partition mode file is owned by the parent too, right? So, all
+these are to be configured by the same entity and the errors can be
+reported the same way, no?
 
-Thanks!
+Thanks.
 
->
-> > (b) Do not count vmpressure (consequently,
-> > mem_cgroup_under_socket_pressure()) in v2 where psi is not counted
-> > (writing to memory.max, memory.high, and memory.reclaim).
->
-> I can see clear arguments for memory.reclaim opt out for vmpressure
-> because we have established that this is not a measure to express a
-> memory pressure on the cgroup.
->
-> Max/High are less clear to me, TBH. I do understand reasoning for PSI
-> exclusion because considering the calling process to be stalled and
-> non-productive is misleading. It just does its work so in a way it is
-> a productive time in the end. For the vmpressure, which measures how
-> hard/easy it is to reclaim memory why this should special for this
-> particular reclaim?
->
-> Again, an explanation of the effect on the socket pressure could give a
-> better picture. Say that I somebody reduces the limit (hard/high) and it
-> takes quite some effort to shrink the consumption down. Should the
-> networking layer react to that in any way or should it wait for the
-> active allocation during that process to find that out?
-
-I am out of my depth here. Any answer on my side would be purely
-speculation at this point. Shakeel, can you help us here or tag some
-networking people?
-Thanks!
-
-> --
-> Michal Hocko
-> SUSE Labs
+--=20
+tejun
