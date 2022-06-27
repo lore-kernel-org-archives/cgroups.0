@@ -1,96 +1,59 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm: vmpressure: don't count userspace-induced reclaim as
- memory pressure
-Date: Mon, 27 Jun 2022 10:25:21 +0200
-Message-ID: <YrlpcdgF1HzA7bHS@dhcp22.suse.cz>
-References: <20220623000530.1194226-1-yosryahmed@google.com>
- <YrQe5A+FXnbgOR1f@dhcp22.suse.cz>
- <CAJD7tkanavKpKrQr8-jA8pukgD7OY4eOwJRZufJ2NoThD12G+Q@mail.gmail.com>
- <YrQ1o3CeaZWhm+h4@dhcp22.suse.cz>
- <CAJD7tkadsLOV7GMFAm+naX4Y1WpZ-4=NkAhAMxNw60iaRPWx=w@mail.gmail.com>
- <YrSWruhPlJV1X9kp@dhcp22.suse.cz>
- <CALvZod6eLa1X1FJ2Qi6FXhFA-qBCP4mN2SB31MSgjj+g8hKo6Q@mail.gmail.com>
- <YrSdFy3qYdG+rGR6@dhcp22.suse.cz>
- <CAJD7tkZNEtzJMDsLMHuNHkxFfurS37UuK=zFcPCkOkWfN-dbJQ@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [Question] The system may be stuck if there is a cpu cgroup
+ cpu.cfs_quato_us is very low
+Date: Mon, 27 Jun 2022 17:32:06 +0900
+Message-ID: <YrlrBmF3oOfS3+fq@mtj.duckdns.org>
+References: <5987be34-b527-4ff5-a17d-5f6f0dc94d6d@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1656318322; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=RdjZ81SzFUwlHNc7CnTKQAx6FQYkKfx1logzGP6DqeY=;
-        b=rQn3PD59u/64iGg/OHUj9gw4KyNHEJJhftM7xBja/rSOmM8ZC6tWBdaQollFZlPepOguh2
-        Mpv08kDiPaqVBYCA1o1BqfyhFONXhDb0HHGiObc2jGV4xOxMEcYIFP2F5RxWEZRIp2Hv7d
-        s+u4et2mc6Wp4MixE9TzMgQ89j8F1zk=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=szaOjwym60f/8LOXYqQ6hITRb/YVPZeOicD4V048pqo=;
+        b=NJafOd4qjIKqtOlocUHdmBBRJMZTiIDE9Gy+KP+BfbC2M2gFw1riyA4lEBuE/dAWix
+         WhPNkbovuagZbKm0nCuWosFUIsHnS9h/OpK2eCNetrkuNknRM/DvtwyF/voZgdmOMYBV
+         wVmEcUjC2IzelVFnbDfH6uj/hrEK2lANiE7wxTkS+2R/C801GBOeMZttPJXx24mKNx+h
+         domxFmIBXvWRVrN+OlIQgm+jRLZn1quwrObi1sECH07N1mCqNXEQ1QoKgHQ4NoC4CKnG
+         ZDEAQp69z2lDMPLiVFfvnL6g/xd6NjDKSB7WJE1xfF3WqXeJjCeNUIZTF+aSdhdG5b7Y
+         QLBQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CAJD7tkZNEtzJMDsLMHuNHkxFfurS37UuK=zFcPCkOkWfN-dbJQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <5987be34-b527-4ff5-a17d-5f6f0dc94d6d-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Xu <peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Zhang Qiao <zhangqiao22-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, mgorman-l3A5Bk7waGM@public.gmane.org
 
-On Thu 23-06-22 10:26:11, Yosry Ahmed wrote:
-> On Thu, Jun 23, 2022 at 10:04 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> >
-> > On Thu 23-06-22 09:42:43, Shakeel Butt wrote:
-> > > On Thu, Jun 23, 2022 at 9:37 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > > >
-> > > > On Thu 23-06-22 09:22:35, Yosry Ahmed wrote:
-> > > > > On Thu, Jun 23, 2022 at 2:43 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > > > > >
-> > > > > > On Thu 23-06-22 01:35:59, Yosry Ahmed wrote:
-> > > > [...]
-> > > > > > > In our internal version of memory.reclaim that we recently upstreamed,
-> > > > > > > we do not account vmpressure during proactive reclaim (similar to how
-> > > > > > > psi is handled upstream). We want to make sure this behavior also
-> > > > > > > exists in the upstream version so that consolidating them does not
-> > > > > > > break our users who rely on vmpressure and will start seeing increased
-> > > > > > > pressure due to proactive reclaim.
-> > > > > >
-> > > > > > These are good reasons to have this patch in your tree. But why is this
-> > > > > > patch benefitial for the upstream kernel? It clearly adds some code and
-> > > > > > some special casing which will add a maintenance overhead.
-> > > > >
-> > > > > It is not just Google, any existing vmpressure users will start seeing
-> > > > > false pressure notifications with memory.reclaim. The main goal of the
-> > > > > patch is to make sure memory.reclaim does not break pre-existing users
-> > > > > of vmpressure, and doing it in a way that is consistent with psi makes
-> > > > > sense.
-> > > >
-> > > > memory.reclaim is v2 only feature which doesn't have vmpressure
-> > > > interface. So I do not see how pre-existing users of the upstream kernel
-> > > > can see any breakage.
-> > > >
-> > >
-> > > Please note that vmpressure is still being used in v2 by the
-> > > networking layer (see mem_cgroup_under_socket_pressure()) for
-> > > detecting memory pressure.
-> >
-> > I have missed this. It is hidden quite good. I thought that v2 is
-> > completely vmpressure free. I have to admit that the effect of
-> > mem_cgroup_under_socket_pressure is not really clear to me. Not to
-> > mention whether it should or shouldn't be triggered for the user
-> > triggered memory reclaim. So this would really need some explanation.
-> 
-> vmpressure was tied into socket pressure by 8e8ae645249b ("mm:
-> memcontrol: hook up vmpressure to socket pressure"). A quick look at
-> the commit log and the code suggests that this is used all over the
-> socket and tcp code to throttles the memory consumption of the
-> networking layer if we are under pressure.
-> 
-> However, for proactive reclaim like memory.reclaim, the target is to
-> probe the memcg for cold memory. Reclaiming such memory should not
-> have a visible effect on the workload performance. I don't think that
-> any network throttling side effects are correct here.
+Hello,
 
-Please describe the user visible effects of this change. IIUC this is
-changing the vmpressure semantic for pre-existing users (v1 when setting
-the hard limit for example) and it really should be explained why
-this is good for them after those years. I do not see any actual bug
-being described explicitly so please make sure this is all properly
-documented.
+On Mon, Jun 27, 2022 at 02:50:25PM +0800, Zhang Qiao wrote:
+> Becuase the task cgroup's cpu.cfs_quota_us is very small and
+> test_fork's load is very heavy, the test_fork may be throttled long
+> time, therefore, the cgroup_threadgroup_rw_sem read lock is held for
+> a long time, other processes will get stuck waiting for the lock:
+
+Yeah, this is a known problem and can happen with other locks too. The
+solution prolly is only throttling while in or when about to return to
+userspace. There is one really important and wide-spread assumption in
+the kernel:
+
+  If things get blocked on some shared resource, whatever is holding
+  the resource ends up using more of the system to exit the critical
+  section faster and thus unblocks others ASAP. IOW, things running in
+  kernel are work-conserving.
+
+The cpu bw controller gives the userspace a rather easy way to break
+this assumption and thus is rather fundamentally broken. This is
+basically the same problem we had with the old cgroup freezer
+implementation which trapped threads in random locations in the
+kernel.
+
+So, right now, it's rather broken and can easily be used as an dos
+attack vector.
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
