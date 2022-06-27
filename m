@@ -1,328 +1,95 @@
 From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v6 00/11] Use obj_cgroup APIs to charge the LRU pages
-Date: Mon, 27 Jun 2022 09:49:37 -0700
-Message-ID: <CAJD7tkagWJv-w9QuFyLzMo9H7WbbJKOpifsVBviVc_gdTdppDg@mail.gmail.com>
-References: <20220621125658.64935-1-songmuchun@bytedance.com>
- <CAJD7tkbeTtkMcVri9vzKHATjxAVZfC_vPNfApJiyRxY53c8pZQ@mail.gmail.com>
- <YrlYG0ecJyzFTVVz@FVFYT0MHHV2J.usts.net> <CAJD7tkbubDhpJV81qkXqRE5-yvvcjKrtPnZnECenafz+to=3_Q@mail.gmail.com>
- <e96f0885-16dc-3d2a-7220-2ff5e7a37737@redhat.com>
+Subject: Re: [PATCH] mm: vmpressure: don't count userspace-induced reclaim as
+ memory pressure
+Date: Mon, 27 Jun 2022 10:03:53 -0700
+Message-ID: <CAJD7tkYemNQqu_O2nYG3cqxPWGELvc6Lh5i+KKNCtv6cgSPmdA@mail.gmail.com>
+References: <YrQ1o3CeaZWhm+h4@dhcp22.suse.cz> <CAJD7tkadsLOV7GMFAm+naX4Y1WpZ-4=NkAhAMxNw60iaRPWx=w@mail.gmail.com>
+ <YrSWruhPlJV1X9kp@dhcp22.suse.cz> <CALvZod6eLa1X1FJ2Qi6FXhFA-qBCP4mN2SB31MSgjj+g8hKo6Q@mail.gmail.com>
+ <YrSdFy3qYdG+rGR6@dhcp22.suse.cz> <CAJD7tkZNEtzJMDsLMHuNHkxFfurS37UuK=zFcPCkOkWfN-dbJQ@mail.gmail.com>
+ <YrlpcdgF1HzA7bHS@dhcp22.suse.cz> <CAJD7tkYVy2uNwaPiiJdPKT5P_O-9WgxD68iFJ6vw=TLJcQV3Ag@mail.gmail.com>
+ <Yrl2T632Vfv8QGPn@dhcp22.suse.cz> <CAJD7tkZzwzHq7Q7KKUdVSdO4LWTPkrGprp0Q-ze_SWhUd_mTMw@mail.gmail.com>
+ <YrmjH2FZF7iNn8da@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=7lh6jekjoU7steMEEbic1vB+TfTl965/L+qBUDwhr+o=;
-        b=aeao3b/FpYSvzkDncuVufkgfWg7QOuc7ntkfv03yDHE4NpqHKd+LgXZeDxt2cW22f1
-         EDG48O/VtVxPcm3oeXROeJ3Zt2flX/BqlxXlO5uUu08ZtXxHM/92JFGYKMS1txXBHp2l
-         q/6AqcVYexr2GB1mi8L0NH4Hxjog+GtVcjzff3ammbn3itajBsmdibExyHCafICZ6IL4
-         LOpUGIXFk3N9VJdBqD7y6+1flUjAizsrnJQZ6Mx7LlnirxVPzHK3dIFU1HpXXM5HQyYl
-         nDH8GiF6uwVR13Q4dF6zdtzfRoTLim9nGQUyGlpwe7rJhCQsurVd+uh5YmGjX4KvMrNO
-         dsWQ==
-In-Reply-To: <e96f0885-16dc-3d2a-7220-2ff5e7a37737-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+         :cc;
+        bh=/ZvfkO3IFf3n/ZVC71sBF9P6CPQM5ABge97UmMt98ps=;
+        b=MjiW4IZIKNvnRLaZM4hrpDs4I/vEqDj5/3xOzyG/gv8hlURBfdXynnwR5LA4UVW70b
+         o6v1EJHUzimguE8TQT2qD+Ab522RK1leX7GKKUj72qeBt/3gTwNZo3T7zB5s5GAWR77C
+         kmZiLNM8c8QVC160v7Ww9LlRpm1EKOj9ecAo/uAQCARN/f/mgZjude7rkreOk0yXGga4
+         Yc2oi4K5OYLJIn0wx5Z3wx0IbtNw5aTVQ4dxcBthCiW5NNtCuEvfM0Mj9ZlgHR8TiiCA
+         U8V6ZkaLIF2+CvNbXCBVwy7P4laWgV05N1TKs+pMvPm7BtkXpcmeznV712/+QiAYbgHU
+         HMwQ==
+In-Reply-To: <YrmjH2FZF7iNn8da-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?UTF-8?Q?Mika_Penttil=C3=A4?= <mpenttil-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Xu <peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Mon, Jun 27, 2022 at 3:43 AM Mika Penttil=C3=A4 <mpenttil-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wr=
-ote:
+On Mon, Jun 27, 2022 at 5:31 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
 >
+> On Mon 27-06-22 02:39:49, Yosry Ahmed wrote:
+> [...]
+> > (a) Do not count vmpressure for mem_cgroup_resize_max() and
+> > mem_cgroup_force_empty() in v1.
 >
->
-> On 27.6.2022 11.05, Yosry Ahmed wrote:
-> > On Mon, Jun 27, 2022 at 12:11 AM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>=
- wrote:
-> >>
-> >> On Sun, Jun 26, 2022 at 03:32:02AM -0700, Yosry Ahmed wrote:
-> >>> On Tue, Jun 21, 2022 at 5:57 AM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org=
-> wrote:
-> >>>>
-> >>>> This version is rebased on mm-unstable. Hopefully, Andrew can get th=
-is series
-> >>>> into mm-unstable which will help to determine whether there is a pro=
-blem or
-> >>>> degradation. I am also doing some benchmark tests in parallel.
-> >>>>
-> >>>> Since the following patchsets applied. All the kernel memory are cha=
-rged
-> >>>> with the new APIs of obj_cgroup.
-> >>>>
-> >>>>          commit f2fe7b09a52b ("mm: memcg/slab: charge individual sla=
-b objects instead of pages")
-> >>>>          commit b4e0b68fbd9d ("mm: memcontrol: use obj_cgroup APIs t=
-o charge kmem pages")
-> >>>>
-> >>>> But user memory allocations (LRU pages) pinning memcgs for a long ti=
-me -
-> >>>> it exists at a larger scale and is causing recurring problems in the=
- real
-> >>>> world: page cache doesn't get reclaimed for a long time, or is used =
-by the
-> >>>> second, third, fourth, ... instance of the same job that was restart=
-ed into
-> >>>> a new cgroup every time. Unreclaimable dying cgroups pile up, waste =
-memory,
-> >>>> and make page reclaim very inefficient.
-> >>>>
-> >>>> We can convert LRU pages and most other raw memcg pins to the objcg =
-direction
-> >>>> to fix this problem, and then the LRU pages will not pin the memcgs.
-> >>>>
-> >>>> This patchset aims to make the LRU pages to drop the reference to me=
-mory
-> >>>> cgroup by using the APIs of obj_cgroup. Finally, we can see that the=
- number
-> >>>> of the dying cgroups will not increase if we run the following test =
-script.
-> >>>
-> >>> This is amazing work!
-> >>>
-> >>> Sorry if I came late, I didn't follow the threads of previous version=
-s
-> >>> so this might be redundant, I just have a couple of questions.
-> >>>
-> >>> a) If LRU pages keep getting parented until they reach root_mem_cgrou=
-p
-> >>> (assuming they can), aren't these pages effectively unaccounted at
-> >>> this point or leaked? Is there protection against this?
-> >>>
-> >>
-> >> In this case, those pages are accounted in root memcg level. Unfortuna=
-tely,
-> >> there is no mechanism now to transfer a page's memcg from one to anoth=
-er.
-> >>
-> >>> b) Since moving charged pages between memcgs is now becoming easier b=
-y
-> >>> using the APIs of obj_cgroup, I wonder if this opens the door for
-> >>> future work to transfer charges to memcgs that are actually using
-> >>> reparented resources. For example, let's say cgroup A reads a few
-> >>> pages into page cache, and then they are no longer used by cgroup A.
-> >>> cgroup B, however, is using the same pages that are currently charged
-> >>> to cgroup A, so it keeps taxing cgroup A for its use. When cgroup A
-> >>> dies, and these pages are reparented to A's parent, can we possibly
-> >>> mark these reparented pages (maybe in the page tables somewhere) so
-> >>> that next time they get accessed we recharge them to B instead
-> >>> (possibly asynchronously)?
-> >>> I don't have much experience about page tables but I am pretty sure
-> >>> they are loaded so maybe there is no room in PTEs for something like
-> >>> this, but I have always wondered about what we can do for this case
-> >>> where a cgroup is consistently using memory charged to another cgroup=
-.
-> >>> Maybe when this memory is reparented is a good point in time to decid=
-e
-> >>> to recharge appropriately. It would also fix the reparenty leak to
-> >>> root problem (if it even exists).
-> >>>
-> >>
-> >>  From my point of view, this is going to be an improvement to the memc=
-g
-> >> subsystem in the future.  IIUC, most reparented pages are page cache
-> >> pages without be mapped to users. So page tables are not a suitable
-> >> place to record this information. However, we already have this inform=
-ation
-> >> in struct obj_cgroup and struct mem_cgroup. If a page's obj_cgroup is =
-not
-> >> equal to the page's obj_cgroup->memcg->objcg, it means this page have
-> >> been reparented. I am thinking if a place where a page is mapped (prob=
-ably
-> >> page fault patch) or page (cache) is written (usually vfs write path)
-> >> is suitable to transfer page's memcg from one to another. But need mor=
-e
-> >
-> > Very good point about unmapped pages, I missed this. Page tables will
-> > do us no good here. Such a change would indeed require careful thought
-> > because (like you mentioned) there are multiple points in time where
-> > it might be suitable to consider recharging the page (e.g. when the
-> > page is mapped). This could be an incremental change though. Right now
-> > we have no recharging at all, so maybe we can gradually add recharging
-> > to suitable paths.
-> >
-> >> thinking, e.g. How to decide if a reparented page needs to be transfer=
-red?
-> >
-> > Maybe if (page's obj_cgroup->memcg =3D=3D root_mem_cgroup) OR (memcg of
-> > current is not a descendant of page's obj_cgroup->memcg) is a good
-> > place to start?
-> >
-> > My rationale is that if the page is charged to root_mem_cgroup through
-> > reparenting and a process in a memcg is using it then this is probably
-> > an accounting leak. If a page is charged to a memcg A through
-> > reparenting and is used by a memcg B in a different subtree, then
-> > probably memcg B is getting away with using the page for free while A
-> > is being taxed. If B is a descendant of A, it is still getting away
-> > with using the page unaccounted, but at least it makes no difference
-> > for A.
-> >
-> > One could argue that we might as well recharge a reparented page
-> > anyway if the process is cheap (or done asynchronously), and the paths
-> > where we do recharging are not very common.
-> >
-> > All of this might be moot, I am just thinking out loud. In any way
-> > this would be future work and not part of this work.
-> >
->
->
-> I think you have to uncharge at the reparented parent to keep balances
-> right (because parent is hierarchically charged thru page_counter). And
-> maybe recharge after that if appropriate.
->
+> yes, unless you have a very good reason to change that. E.g. this has
+> been buggy and we have finally understood that. But I do not see any
+> indications so far.
 
-Yeah when I say "recharge" I mean transferring the accounting from one
-memcg to another. I think every page should end up accounted to one
-memcg afterall. Thanks for pointing that out.
+I don't have any bug reports. It makes sense that users do not expect
+vmpressure notifications when they resize the limits below the current
+usage, because it should be expected that reclaim will happen so
+receiving notifications here is redundant, and may be incorrectly
+perceived by a different user space thread as being under memory
+pressure. But I get your point that what the user sees as memory
+pressure or not could be different, and is probably already defined by
+the current behavior anyway, whether it makes sense or not.
+
+I can also see some userspace applications depending on this behavior
+in some way, either by handling that limit resize notification in a
+certain way or deliberately dropping it. Either way, making this
+change could throw them off. I don't expect any userspace applications
+to crash of course (because there are cases where they won't receive
+notifications, e.g. scanned < vmpressure_win), but perhaps it's not
+worth even risk misguiding them.
+
+So I agree that just because it doesn't make sense or is inconsistent
+with other definitions of behavior then we can make a visible change
+for userspace. I will drop the v1 changes in the next version anyway.
+
+Thanks!
 
 >
+> > (b) Do not count vmpressure (consequently,
+> > mem_cgroup_under_socket_pressure()) in v2 where psi is not counted
+> > (writing to memory.max, memory.high, and memory.reclaim).
 >
+> I can see clear arguments for memory.reclaim opt out for vmpressure
+> because we have established that this is not a measure to express a
+> memory pressure on the cgroup.
 >
-> >
-> >> If we need more information to make this decision, where to store thos=
-e
-> >> information? This is my primary thoughts on this question.
-> >
-> >>
-> >> Thanks.
-> >>
-> >>> Thanks again for this work and please excuse my ignorance if any part
-> >>> of what I said doesn't make sense :)
-> >>>
-> >>>>
-> >>>> ```bash
-> >>>> #!/bin/bash
-> >>>>
-> >>>> dd if=3D/dev/zero of=3Dtemp bs=3D4096 count=3D1
-> >>>> cat /proc/cgroups | grep memory
-> >>>>
-> >>>> for i in {0..2000}
-> >>>> do
-> >>>>          mkdir /sys/fs/cgroup/memory/test$i
-> >>>>          echo $$ > /sys/fs/cgroup/memory/test$i/cgroup.procs
-> >>>>          cat temp >> log
-> >>>>          echo $$ > /sys/fs/cgroup/memory/cgroup.procs
-> >>>>          rmdir /sys/fs/cgroup/memory/test$i
-> >>>> done
-> >>>>
-> >>>> cat /proc/cgroups | grep memory
-> >>>>
-> >>>> rm -f temp log
-> >>>> ```
-> >>>>
-> >>>> v5: https://lore.kernel.org/all/20220530074919.46352-1-songmuchun@by=
-tedance.com/
-> >>>> v4: https://lore.kernel.org/all/20220524060551.80037-1-songmuchun@by=
-tedance.com/
-> >>>> v3: https://lore.kernel.org/all/20220216115132.52602-1-songmuchun@by=
-tedance.com/
-> >>>> v2: https://lore.kernel.org/all/20210916134748.67712-1-songmuchun@by=
-tedance.com/
-> >>>> v1: https://lore.kernel.org/all/20210814052519.86679-1-songmuchun@by=
-tedance.com/
-> >>>> RFC v4: https://lore.kernel.org/all/20210527093336.14895-1-songmuchu=
-n@bytedance.com/
-> >>>> RFC v3: https://lore.kernel.org/all/20210421070059.69361-1-songmuchu=
-n@bytedance.com/
-> >>>> RFC v2: https://lore.kernel.org/all/20210409122959.82264-1-songmuchu=
-n@bytedance.com/
-> >>>> RFC v1: https://lore.kernel.org/all/20210330101531.82752-1-songmuchu=
-n@bytedance.com/
-> >>>>
-> >>>> v6:
-> >>>>   - Collect Acked-by and Reviewed-by from Roman and Michal Koutn=C3=
-=BD. Thanks.
-> >>>>   - Rebase to mm-unstable.
-> >>>>
-> >>>> v5:
-> >>>>   - Lots of improvements from Johannes, Roman and Waiman.
-> >>>>   - Fix lockdep warning reported by kernel test robot.
-> >>>>   - Add two new patches to do code cleanup.
-> >>>>   - Collect Acked-by and Reviewed-by from Johannes and Roman.
-> >>>>   - I didn't replace local_irq_disable/enable() to local_lock/unlock=
-_irq() since
-> >>>>     local_lock/unlock_irq() takes an parameter, it needs more thinki=
-ng to transform
-> >>>>     it to local_lock.  It could be an improvement in the future.
-> >>>>
-> >>>> v4:
-> >>>>   - Resend and rebased on v5.18.
-> >>>>
-> >>>> v3:
-> >>>>   - Removed the Acked-by tags from Roman since this version is based=
- on
-> >>>>     the folio relevant.
-> >>>>
-> >>>> v2:
-> >>>>   - Rename obj_cgroup_release_kmem() to obj_cgroup_release_bytes() a=
-nd the
-> >>>>     dependencies of CONFIG_MEMCG_KMEM (suggested by Roman, Thanks).
-> >>>>   - Rebase to linux 5.15-rc1.
-> >>>>   - Add a new pacth to cleanup mem_cgroup_kmem_disabled().
-> >>>>
-> >>>> v1:
-> >>>>   - Drop RFC tag.
-> >>>>   - Rebase to linux next-20210811.
-> >>>>
-> >>>> RFC v4:
-> >>>>   - Collect Acked-by from Roman.
-> >>>>   - Rebase to linux next-20210525.
-> >>>>   - Rename obj_cgroup_release_uncharge() to obj_cgroup_release_kmem(=
-).
-> >>>>   - Change the patch 1 title to "prepare objcg API for non-kmem usag=
-e".
-> >>>>   - Convert reparent_ops_head to an array in patch 8.
-> >>>>
-> >>>> Thanks for Roman's review and suggestions.
-> >>>>
-> >>>> RFC v3:
-> >>>>   - Drop the code cleanup and simplification patches. Gather those p=
-atches
-> >>>>     into a separate series[1].
-> >>>>   - Rework patch #1 suggested by Johannes.
-> >>>>
-> >>>> RFC v2:
-> >>>>   - Collect Acked-by tags by Johannes. Thanks.
-> >>>>   - Rework lruvec_holds_page_lru_lock() suggested by Johannes. Thank=
-s.
-> >>>>   - Fix move_pages_to_lru().
-> >>>>
-> >>>> Muchun Song (11):
-> >>>>    mm: memcontrol: remove dead code and comments
-> >>>>    mm: rename unlock_page_lruvec{_irq, _irqrestore} to
-> >>>>      lruvec_unlock{_irq, _irqrestore}
-> >>>>    mm: memcontrol: prepare objcg API for non-kmem usage
-> >>>>    mm: memcontrol: make lruvec lock safe when LRU pages are reparent=
-ed
-> >>>>    mm: vmscan: rework move_pages_to_lru()
-> >>>>    mm: thp: make split queue lock safe when LRU pages are reparented
-> >>>>    mm: memcontrol: make all the callers of {folio,page}_memcg() safe
-> >>>>    mm: memcontrol: introduce memcg_reparent_ops
-> >>>>    mm: memcontrol: use obj_cgroup APIs to charge the LRU pages
-> >>>>    mm: lru: add VM_WARN_ON_ONCE_FOLIO to lru maintenance function
-> >>>>    mm: lru: use lruvec lock to serialize memcg changes
-> >>>>
-> >>>>   fs/buffer.c                      |   4 +-
-> >>>>   fs/fs-writeback.c                |  23 +-
-> >>>>   include/linux/memcontrol.h       | 218 +++++++++------
-> >>>>   include/linux/mm_inline.h        |   6 +
-> >>>>   include/trace/events/writeback.h |   5 +
-> >>>>   mm/compaction.c                  |  39 ++-
-> >>>>   mm/huge_memory.c                 | 153 ++++++++--
-> >>>>   mm/memcontrol.c                  | 584 +++++++++++++++++++++++++++=
-------------
-> >>>>   mm/migrate.c                     |   4 +
-> >>>>   mm/mlock.c                       |   2 +-
-> >>>>   mm/page_io.c                     |   5 +-
-> >>>>   mm/swap.c                        |  49 ++--
-> >>>>   mm/vmscan.c                      |  66 ++---
-> >>>>   13 files changed, 776 insertions(+), 382 deletions(-)
-> >>>>
-> >>>>
-> >>>> base-commit: 882be1ed6b1b5073fc88552181b99bd2b9c0031f
-> >>>> --
-> >>>> 2.11.0
-> >>>>
-> >>>>
-> >>>
-> >
+> Max/High are less clear to me, TBH. I do understand reasoning for PSI
+> exclusion because considering the calling process to be stalled and
+> non-productive is misleading. It just does its work so in a way it is
+> a productive time in the end. For the vmpressure, which measures how
+> hard/easy it is to reclaim memory why this should special for this
+> particular reclaim?
 >
+> Again, an explanation of the effect on the socket pressure could give a
+> better picture. Say that I somebody reduces the limit (hard/high) and it
+> takes quite some effort to shrink the consumption down. Should the
+> networking layer react to that in any way or should it wait for the
+> active allocation during that process to find that out?
+
+I am out of my depth here. Any answer on my side would be purely
+speculation at this point. Shakeel, can you help us here or tag some
+networking people?
+Thanks!
+
+> --
+> Michal Hocko
+> SUSE Labs
