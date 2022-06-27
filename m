@@ -1,93 +1,248 @@
-From: Zhang Qiao <zhangqiao22-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [Question] The system may be stuck if there is a cpu cgroup
- cpu.cfs_quato_us is very low
-Date: Mon, 27 Jun 2022 14:50:25 +0800
-Message-ID: <5987be34-b527-4ff5-a17d-5f6f0dc94d6d@huawei.com>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [PATCH v6 00/11] Use obj_cgroup APIs to charge the LRU pages
+Date: Mon, 27 Jun 2022 15:11:23 +0800
+Message-ID: <YrlYG0ecJyzFTVVz@FVFYT0MHHV2J.usts.net>
+References: <20220621125658.64935-1-songmuchun@bytedance.com>
+ <CAJD7tkbeTtkMcVri9vzKHATjxAVZfC_vPNfApJiyRxY53c8pZQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=VC489kzuovEEc/JjK52uB+SecoHVH3Iyul2HAGQcsXI=;
+        b=MrgQd+okioRjqEakwYkl/vGrE/9AD5FYiASLWkCeHI6dkeoj9XCZ+HQzTzbvVkbTR4
+         ASazfaHLrS9V50zrP62vKDublFCYk9Nd99+46kKmaKAY8aaTtSZzxdXExmpkXMztl40e
+         WiGVkNKjJHW+BbrzwFom8wrXVKgUF7Ujq+bdmgPfyQ+55WZMqCns8+MJZohi5tGzlpHy
+         OK2E63vKT6AEePSSr2sRm6nCc65KregTWWqhlAAqqXInbPg5oasfydYn2VU3/w21yxy1
+         Jjzzv2DBfcuprwAHygueRAO8wKm8CjUGbJmwR02qCV4BdK898U57O1fQoOPmGmRdb/fj
+         36Rw==
+Content-Disposition: inline
+In-Reply-To: <CAJD7tkbeTtkMcVri9vzKHATjxAVZfC_vPNfApJiyRxY53c8pZQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, mgorman-l3A5Bk7waGM@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-Hi all,
+On Sun, Jun 26, 2022 at 03:32:02AM -0700, Yosry Ahmed wrote:
+> On Tue, Jun 21, 2022 at 5:57 AM Muchun Song <songmuchun-EC8Uxl6Npydl57MId=
+RCFDg@public.gmane.org> wrote:
+> >
+> > This version is rebased on mm-unstable. Hopefully, Andrew can get this =
+series
+> > into mm-unstable which will help to determine whether there is a proble=
+m or
+> > degradation. I am also doing some benchmark tests in parallel.
+> >
+> > Since the following patchsets applied. All the kernel memory are charged
+> > with the new APIs of obj_cgroup.
+> >
+> >         commit f2fe7b09a52b ("mm: memcg/slab: charge individual slab ob=
+jects instead of pages")
+> >         commit b4e0b68fbd9d ("mm: memcontrol: use obj_cgroup APIs to ch=
+arge kmem pages")
+> >
+> > But user memory allocations (LRU pages) pinning memcgs for a long time -
+> > it exists at a larger scale and is causing recurring problems in the re=
+al
+> > world: page cache doesn't get reclaimed for a long time, or is used by =
+the
+> > second, third, fourth, ... instance of the same job that was restarted =
+into
+> > a new cgroup every time. Unreclaimable dying cgroups pile up, waste mem=
+ory,
+> > and make page reclaim very inefficient.
+> >
+> > We can convert LRU pages and most other raw memcg pins to the objcg dir=
+ection
+> > to fix this problem, and then the LRU pages will not pin the memcgs.
+> >
+> > This patchset aims to make the LRU pages to drop the reference to memory
+> > cgroup by using the APIs of obj_cgroup. Finally, we can see that the nu=
+mber
+> > of the dying cgroups will not increase if we run the following test scr=
+ipt.
+>=20
+> This is amazing work!
+>=20
+> Sorry if I came late, I didn't follow the threads of previous versions
+> so this might be redundant, I just have a couple of questions.
+>=20
+> a) If LRU pages keep getting parented until they reach root_mem_cgroup
+> (assuming they can), aren't these pages effectively unaccounted at
+> this point or leaked? Is there protection against this?
+>
 
-I'm working on debuging a problem.
-The testcase does follew operations:
-1) create a test task cgroup, set cpu.cfs_quota_us=2000,cpu.cfs_period_us=100000.
-2) run 20 test_fork[1] test process in the test task cgroup.
-3) create 100 new containers:
-   for i in {1..100}; do docker run -itd  --health-cmd="ls" --health-interval=1s ubuntu:latest  bash; done
+In this case, those pages are accounted in root memcg level. Unfortunately,
+there is no mechanism now to transfer a page's memcg from one to another.
+=20
+> b) Since moving charged pages between memcgs is now becoming easier by
+> using the APIs of obj_cgroup, I wonder if this opens the door for
+> future work to transfer charges to memcgs that are actually using
+> reparented resources. For example, let's say cgroup A reads a few
+> pages into page cache, and then they are no longer used by cgroup A.
+> cgroup B, however, is using the same pages that are currently charged
+> to cgroup A, so it keeps taxing cgroup A for its use. When cgroup A
+> dies, and these pages are reparented to A's parent, can we possibly
+> mark these reparented pages (maybe in the page tables somewhere) so
+> that next time they get accessed we recharge them to B instead
+> (possibly asynchronously)?
+> I don't have much experience about page tables but I am pretty sure
+> they are loaded so maybe there is no room in PTEs for something like
+> this, but I have always wondered about what we can do for this case
+> where a cgroup is consistently using memory charged to another cgroup.
+> Maybe when this memory is reparented is a good point in time to decide
+> to recharge appropriately. It would also fix the reparenty leak to
+> root problem (if it even exists).
+>=20
 
-These operations are expected to succeed and 100 containers create success. however, when creating containers,
-the system will get stuck and create container failed.
+From my point of view, this is going to be an improvement to the memcg
+subsystem in the future.  IIUC, most reparented pages are page cache
+pages without be mapped to users. So page tables are not a suitable
+place to record this information. However, we already have this information
+in struct obj_cgroup and struct mem_cgroup. If a page's obj_cgroup is not
+equal to the page's obj_cgroup->memcg->objcg, it means this page have
+been reparented. I am thinking if a place where a page is mapped (probably
+page fault patch) or page (cache) is written (usually vfs write path)
+is suitable to transfer page's memcg from one to another. But need more
+thinking, e.g. How to decide if a reparented page needs to be transferred?
+If we need more information to make this decision, where to store those
+information? This is my primary thoughts on this question.
 
-After debug this, I found the test_fork process frequently sleep in freezer_fork()->mutex_lock()->might_sleep()
-with taking the cgroup_threadgroup_rw_sem lock, as follow:
+Thanks.
 
-copy_process():
-	cgroup_can_fork()			---> lock cgroup_threadgroup_rw_sem
-	sched_cgroup_fork();
-	  ->task_fork_fair(){
-	      ->update_curr(){
-		  ->__account_cfs_rq_runtime() {
-			resched_curr();		---> the quota is used up, and set flag TIF_NEED_RESCHED to current
-		   }
-	cgroup_post_fork();   		
-	  ->feezer_fork()
-	      ->mutex_lock() {	
-		  ->might_sleep()  		---> schedule() and the current task will be throttled long time.
-
-	  ->cgroup_css_set_put_fork()    	---> unlock cgroup_threadgroup_rw_sem
-
-
-Becuase the task cgroup's cpu.cfs_quota_us is very small and test_fork's load is very heavy, the test_fork
-may be throttled long time, therefore, the cgroup_threadgroup_rw_sem read lock is held for a long time, other
-processes will get stuck waiting for the lock:
-
-1) a task fork child, will wait at copy_process()->cgroup_can_fork();
-
-2) a task exiting will wait at exit_signals();
-
-3) a task write cgroup.procs file will wait at cgroup_file_write()->__cgroup1_procs_write();
-...
-
-even the whole system will get stuck.
-
-Anyone know how to slove this? Except for changing the cpu.cfs_quota_us.
-
-
-[1] test_fork.c
-
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/wait.h>
-
-int main(int argc, char **argv)
-{
-    pid_t pid;
-    int count = 20;
-
-    while(1) {
-        for (int i = 0; i < count; i++) {
-            if ((pid = fork()) <0) {
-                printf("fork error");
-                return 1;
-            } else if (pid ==0) {
-                exit(0);
-            }
-        }
-
-        for (int i = 0; i < count; i++) {
-            wait(NULL);
-        }
-	sleep(1);
-    }
-    return 0;
-}
-
-Thanks a lot.
--Qiao
--
+> Thanks again for this work and please excuse my ignorance if any part
+> of what I said doesn't make sense :)
+>=20
+> >
+> > ```bash
+> > #!/bin/bash
+> >
+> > dd if=3D/dev/zero of=3Dtemp bs=3D4096 count=3D1
+> > cat /proc/cgroups | grep memory
+> >
+> > for i in {0..2000}
+> > do
+> >         mkdir /sys/fs/cgroup/memory/test$i
+> >         echo $$ > /sys/fs/cgroup/memory/test$i/cgroup.procs
+> >         cat temp >> log
+> >         echo $$ > /sys/fs/cgroup/memory/cgroup.procs
+> >         rmdir /sys/fs/cgroup/memory/test$i
+> > done
+> >
+> > cat /proc/cgroups | grep memory
+> >
+> > rm -f temp log
+> > ```
+> >
+> > v5: https://lore.kernel.org/all/20220530074919.46352-1-songmuchun-EC8Ux=
+l6Npydl57MIdRCFDg@public.gmane.org/
+> > v4: https://lore.kernel.org/all/20220524060551.80037-1-songmuchun-EC8Ux=
+l6Npydl57MIdRCFDg@public.gmane.org/
+> > v3: https://lore.kernel.org/all/20220216115132.52602-1-songmuchun-EC8Ux=
+l6Npydl57MIdRCFDg@public.gmane.org/
+> > v2: https://lore.kernel.org/all/20210916134748.67712-1-songmuchun-EC8Ux=
+l6Npydl57MIdRCFDg@public.gmane.org/
+> > v1: https://lore.kernel.org/all/20210814052519.86679-1-songmuchun-EC8Ux=
+l6Npydl57MIdRCFDg@public.gmane.org/
+> > RFC v4: https://lore.kernel.org/all/20210527093336.14895-1-songmuchun-E=
+C8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> > RFC v3: https://lore.kernel.org/all/20210421070059.69361-1-songmuchun-E=
+C8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> > RFC v2: https://lore.kernel.org/all/20210409122959.82264-1-songmuchun-E=
+C8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> > RFC v1: https://lore.kernel.org/all/20210330101531.82752-1-songmuchun-E=
+C8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> >
+> > v6:
+> >  - Collect Acked-by and Reviewed-by from Roman and Michal Koutn=FD. Tha=
+nks.
+> >  - Rebase to mm-unstable.
+> >
+> > v5:
+> >  - Lots of improvements from Johannes, Roman and Waiman.
+> >  - Fix lockdep warning reported by kernel test robot.
+> >  - Add two new patches to do code cleanup.
+> >  - Collect Acked-by and Reviewed-by from Johannes and Roman.
+> >  - I didn't replace local_irq_disable/enable() to local_lock/unlock_irq=
+() since
+> >    local_lock/unlock_irq() takes an parameter, it needs more thinking t=
+o transform
+> >    it to local_lock.  It could be an improvement in the future.
+> >
+> > v4:
+> >  - Resend and rebased on v5.18.
+> >
+> > v3:
+> >  - Removed the Acked-by tags from Roman since this version is based on
+> >    the folio relevant.
+> >
+> > v2:
+> >  - Rename obj_cgroup_release_kmem() to obj_cgroup_release_bytes() and t=
+he
+> >    dependencies of CONFIG_MEMCG_KMEM (suggested by Roman, Thanks).
+> >  - Rebase to linux 5.15-rc1.
+> >  - Add a new pacth to cleanup mem_cgroup_kmem_disabled().
+> >
+> > v1:
+> >  - Drop RFC tag.
+> >  - Rebase to linux next-20210811.
+> >
+> > RFC v4:
+> >  - Collect Acked-by from Roman.
+> >  - Rebase to linux next-20210525.
+> >  - Rename obj_cgroup_release_uncharge() to obj_cgroup_release_kmem().
+> >  - Change the patch 1 title to "prepare objcg API for non-kmem usage".
+> >  - Convert reparent_ops_head to an array in patch 8.
+> >
+> > Thanks for Roman's review and suggestions.
+> >
+> > RFC v3:
+> >  - Drop the code cleanup and simplification patches. Gather those patch=
+es
+> >    into a separate series[1].
+> >  - Rework patch #1 suggested by Johannes.
+> >
+> > RFC v2:
+> >  - Collect Acked-by tags by Johannes. Thanks.
+> >  - Rework lruvec_holds_page_lru_lock() suggested by Johannes. Thanks.
+> >  - Fix move_pages_to_lru().
+> >
+> > Muchun Song (11):
+> >   mm: memcontrol: remove dead code and comments
+> >   mm: rename unlock_page_lruvec{_irq, _irqrestore} to
+> >     lruvec_unlock{_irq, _irqrestore}
+> >   mm: memcontrol: prepare objcg API for non-kmem usage
+> >   mm: memcontrol: make lruvec lock safe when LRU pages are reparented
+> >   mm: vmscan: rework move_pages_to_lru()
+> >   mm: thp: make split queue lock safe when LRU pages are reparented
+> >   mm: memcontrol: make all the callers of {folio,page}_memcg() safe
+> >   mm: memcontrol: introduce memcg_reparent_ops
+> >   mm: memcontrol: use obj_cgroup APIs to charge the LRU pages
+> >   mm: lru: add VM_WARN_ON_ONCE_FOLIO to lru maintenance function
+> >   mm: lru: use lruvec lock to serialize memcg changes
+> >
+> >  fs/buffer.c                      |   4 +-
+> >  fs/fs-writeback.c                |  23 +-
+> >  include/linux/memcontrol.h       | 218 +++++++++------
+> >  include/linux/mm_inline.h        |   6 +
+> >  include/trace/events/writeback.h |   5 +
+> >  mm/compaction.c                  |  39 ++-
+> >  mm/huge_memory.c                 | 153 ++++++++--
+> >  mm/memcontrol.c                  | 584 +++++++++++++++++++++++++++----=
+--------
+> >  mm/migrate.c                     |   4 +
+> >  mm/mlock.c                       |   2 +-
+> >  mm/page_io.c                     |   5 +-
+> >  mm/swap.c                        |  49 ++--
+> >  mm/vmscan.c                      |  66 ++---
+> >  13 files changed, 776 insertions(+), 382 deletions(-)
+> >
+> >
+> > base-commit: 882be1ed6b1b5073fc88552181b99bd2b9c0031f
+> > --
+> > 2.11.0
+> >
+> >
+>=20
