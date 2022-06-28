@@ -1,12 +1,10 @@
 From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH mm v2] memcg: notify about global mem_cgroup_id space
- depletion
-Date: Tue, 28 Jun 2022 06:43:02 +0300
-Message-ID: <e93596ef-d4eb-5fcb-744c-9ef99cb5a69e@openvz.org>
-References: <Yre8tNUY8vBrO0yl@castle>
- <97bed1fd-f230-c2ea-1cb6-8230825a9a64@openvz.org>
- <CAMZfGtWQEFmyuDngPfg59D-+b9sf58m9qhGoVPSQ_jAGmgT+sg@mail.gmail.com>
- <f3e4059c-69ea-eccd-a22f-9f6c6780f33a@openvz.org> <YrpVP6rpYGFsl3jj@castle>
+Subject: Re: [PATCH cgroup] cgroup: set the correct return code if hierarchy
+ limits are reached
+Date: Tue, 28 Jun 2022 06:59:06 +0300
+Message-ID: <17916824-ba97-68ba-8166-9402d5f4440c@openvz.org>
+References: <186d5b5b-a082-3814-9963-bf57dfe08511@openvz.org>
+ <d8a9e9c6-856e-1502-95ac-abf9700ff568@openvz.org> <YrpO9CUDt8hpUprr@castle>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -14,68 +12,51 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=openvz-org.20210112.gappssmtp.com; s=20210112;
         h=message-id:date:mime-version:user-agent:subject:content-language:to
          :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=wqQTvy4npFnWvHaeytKvLIfMhrlsDZms9Ty/8zJvQjs=;
-        b=64xD/V4SyUPW+r9Dv8phb4pTH4m0bCeeUz5aipfYF7c5UGDNkGiFBmg+C6z8y1Hrbr
-         du+px0oVBuZ+uX02mYW+Dl6Jh+fxDHKqQXmWUZuXy2ryeQYSYs8FrRD+CZO8wraGqO5n
-         7IySqR1dCXsHmRt7gxHDWXK3RhgffiSFFMrHh/x+6cKqmtYcFZ4ratxoXAJe3J9S4wnr
-         yJEqZci8S9QMvNexA/TvkWJANj800nAn8LlQs7d/hAYl3U4FjbLBZajINip30oMR4JsW
-         Lrf9MYDoTwmpGxE+th98A5tqW14W5oXwHrcqbD9TIoMuyiaK7dCFbUpHU7GEMPWMjVpZ
-         vStQ==
+        bh=MFS2x9pNQLwXGwuNgzQ1iIUHTuj+zHNF+6//GrDccok=;
+        b=mxbVmJ++2Cc5/l/lqWx9Fs7t2Zg7/rpqevzlWyOhXZcy9grpe35G9l9ySScKLev9uU
+         Dz4LDLeUYcVPDUSNls7Ymx0CeJl3DwKUSThgh4DQBTI8XLC2NylaXNKQahTJuNrrhUjh
+         aREqf+FUffagdLwymwDwlWSSZTJY8wZ/FbaTDj6Cjw5imW4HlIy0AFuvLVetwmwNEHvp
+         qh5Lj5ek3pFqkm0PtNrDLngV8a5QKRAFrMwMy8CK7R61VAE541rKqNoB9E4tl9f5IEsO
+         KlC6BIKb6Pz11uDudiW1HiZtesTcxv+lpD+FqTR2LY+0s3ApEMvSGfdZXdhf8T98XTo0
+         pVEw==
 Content-Language: en-US
-In-Reply-To: <YrpVP6rpYGFsl3jj@castle>
+In-Reply-To: <YrpO9CUDt8hpUprr@castle>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 6/28/22 04:11, Roman Gushchin wrote:
-> On Mon, Jun 27, 2022 at 09:49:18AM +0300, Vasily Averin wrote:
->> On 6/27/22 06:23, Muchun Song wrote:
->>> If the caller can know -ENOSPC is returned by mkdir(), then I
->>> think the user (perhaps systemd) is the best place to throw out the
->>> error message instead of in the kernel log. Right?
+On 6/28/22 03:44, Roman Gushchin wrote:
+> On Mon, Jun 27, 2022 at 05:12:55AM +0300, Vasily Averin wrote:
+>> When cgroup_mkdir reaches the limits of the cgroup hierarchy, it should
+>> not return -EAGAIN, but instead react similarly to reaching the global
+>> limit.
 >>
->> Such an incident may occur inside the container.
->> OpenVZ nodes can host 300-400 containers, and the host admin cannot
->> monitor guest logs. the dmesg message is necessary to inform the host
->> owner that the global limit has been reached, otherwise he can
->> continue to believe that there are no problems on the node.
+>> Signed-off-by: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+>> ---
+>>  kernel/cgroup/cgroup.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+>> index 1be0f81fe8e1..243239553ea3 100644
+>> --- a/kernel/cgroup/cgroup.c
+>> +++ b/kernel/cgroup/cgroup.c
+>> @@ -5495,7 +5495,7 @@ int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name, umode_t mode)
+>>  		return -ENODEV;
+>>  
+>>  	if (!cgroup_check_hierarchy_limits(parent)) {
+>> -		ret = -EAGAIN;
+>> +		ret = -ENOSPC;
 > 
-> Why this is happening? It's hard to believe someone really needs that
-> many cgroups. Is this when somebody fails to delete old cgroups?
+> I'd not argue whether ENOSPC is better or worse here, but I don't think we need
+> to change it now. It's been in this state for a long time and is a part of ABI.
+> EAGAIN is pretty unique as a mkdir() result, so systemd can handle it well.
 
-I do not have direct claims that some node really reached this limit,
-however I saw crashdumps with 30000+ cgroups.
+I would agree with you, however in my opinion EAGAIN is used to restart an
+interrupted system call. Thus, I worry its return can loop the user space without
+any chance of continuation.
 
-Theoretically OpenVz/LXC nodes can host up to several thousand containers
-per node. Practically production nodes with 300-400 containers are a
-common thing. I assume that each container can easily use up to 100-200
-memory cgroups, and I think this is normal consumption.
-
-Therefore, I believe that 64K limit is quite achievable in real life.
-Primary goal of my patch is to confirm this theory.
-
-> I wanted to say that it's better to introduce a memcg event, but then
-> I realized it's probably not worth the wasted space. Is this a common
-> scenario?
-> 
-> I think a better approach will be to add a cgroup event (displayed via
-> cgroup.events) about reaching the maximum limit of cgroups. E.g.
-> cgroups.events::max_nr_reached. Then you can set cgroup.max.descendants
-> to some value below memcg_id space size. It's more work, but IMO it's
-> a better way to communicate this event. As a bonus, you can easily
-> get an idea which cgroup depletes the limit.
-
-For my goal (i.e. just to confirm that 64K limit was reached) this
-functionality is too complicated. This confirmation is important because
-it should push us to increase the global limit.
-
-However, I think your idea is great, In perspective it helps both OpenVZ
-and LXC and possibly Shakeel to understand the real memcg using and set
-the proper limit for containers. 
-
-I'm going to prepare such patches, however I'm not sure I'll have enough
-time for this task in the near future.
+However, maybe I'm confusing something?
 
 Thank you,
 	Vasily Averin
