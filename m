@@ -1,51 +1,29 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH cgroup] cgroup: set the correct return code if hierarchy
- limits are reached
-Date: Tue, 28 Jun 2022 18:22:33 +0900
-Message-ID: <YrrIWe/nn5hoVyu9@mtj.duckdns.org>
-References: <186d5b5b-a082-3814-9963-bf57dfe08511@openvz.org>
- <d8a9e9c6-856e-1502-95ac-abf9700ff568@openvz.org>
- <YrpO9CUDt8hpUprr@castle>
- <17916824-ba97-68ba-8166-9402d5f4440c@openvz.org>
- <20220628091648.GA12249@blackbody.suse.cz>
+From: "taoyi.ty" <escape-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Question about disallowing rename(2) in cgroup v2
+Date: Tue, 28 Jun 2022 21:09:48 +0800
+Message-ID: <1c9d5118-25fa-e791-8aed-b1430cf23d36@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=/RPscv3+8g8rx4jXo23oMEeXPiuNo7BXGYwm+0AjXxs=;
-        b=To1tuJ6ezfSPRvfvYleOSb9lKKOhueWfZvhziXTEgCM9PUQE9mQ/xhT/GQKDwAx3+K
-         VCwO+26BUmVeT7tjCm709OpoNluVA5TQnQMiEBOnZWK6u0h7/2MQKkzXLs/QTBPtLd+t
-         uaEv/5/AD3aMBX+7rY78FIuqtsaMYfGOxtLmBiFL7mE3st9gwwEYdkaho0GnDCcCS+C6
-         4iEp8WxQDcPWTMDrt/QPMRtV+Nsnq3jb5UHhTTcpJedWllF567kplSbpUcwnVLjnZnAa
-         /5C8nTucMrmiuELtf9puqfjdHfigFReLoMkmJ6zo4PcDCEvdsypTDDGCHRq1camco5J+
-         ++lg==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <20220628091648.GA12249@blackbody.suse.cz>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: Vasily Averin <vvs@openvz.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Michal Hocko <mhocko@suse.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, kernel@openvz.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Vlastimil Babka <vbabka@suse.cz>, Muchun Song <songmuchun@bytedance.com>, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format="flowed"
+To: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jun 28, 2022 at 11:16:48AM +0200, Michal Koutn=FD wrote:
-> The mkdir(2) manpage doesn't list EAGAIN at all. ENOSPC makes better
-> sense here. (And I suspect the dependency on this particular value won't
-> be very wide spread.)
+hi all,
 
-Given how we use these system calls as triggers for random kernel
-operations, I don't think adhering to posix standard is necessary or
-possible. Using an error code which isn't listed in the man page isn't
-particularly high in the list of discrepancies.
+I found that rename(2) can be used in cgroup v1 but is disallowed in=20
+cgroup v2, what's the reason for this design?
 
-Again, I'm not against changing it but I'd like to see better
-rationales. On one side, we have "it's been this way for a long time
-and there's nothing particularly broken about it". I'm not sure the
-arguments we have for the other side is strong enough yet.
+rename(2) is critical when managing a cgroup pool in userspace, which=20
+uses rename to reuse cgroup rather than mkdir to create a new one=EF=BC=8Ct=
+his=20
+can improve the performance of container concurrent startup, because=20
+renaming cgroup is much more lightweight compared with creating cgroup.
 
-Thanks.
+For new features in cgroup v2, I switch to cgroup v2 and meet this=20
+problem, I think renaming cgroup in v2 is similar to v1 and realizing it=20
+is not a hard problem, so I send this mail to learn the initial design.
 
---=20
-tejun
+Thanks,
+-escape
