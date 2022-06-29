@@ -1,25 +1,25 @@
 From: Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>
 Subject: Re: [PATCH bpf-next v2 8/8] bpf: add a selftest for cgroup
  hierarchical stats collection
-Date: Tue, 28 Jun 2022 23:17:16 -0700
-Message-ID: <5a28a1c7-0420-ca93-0b92-fd54e726ed8c@fb.com>
+Date: Tue, 28 Jun 2022 23:26:51 -0700
+Message-ID: <59376285-21bc-ff12-3d64-3ea7257becb2@fb.com>
 References: <20220610194435.2268290-1-yosryahmed@google.com>
  <20220610194435.2268290-9-yosryahmed@google.com>
  <00df1932-38fe-c6f8-49d0-3a44affb1268@fb.com>
  <CAJD7tkaNnx6ebFrMxWgkJbtx=Qoe+cEwnjtWeY5=EAaVktrenw@mail.gmail.com>
- <CAJD7tkZ3AEPEUD9V-5nxUgmS5SLc6qp50ZyrRoAQgdzPM=a-Hg@mail.gmail.com>
+ <CAJD7tkbOztCEWgMzoCOdD+g3whMMQWW2e0gwo9p0tVK=3hqmcw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
  subject : to : cc : references : from : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=facebook;
- bh=Ooy3Gc5a2eb+IgnWx6/fKAomiRpDs+e4kGIE6Z8bdDw=;
- b=oK2f9j4QxapxxrAyy/2x+l+PUgUlvw4nlLqT0jhx6DSXNk43eNC9ch8GOIO9RTe+J/qo
- JWVXdEeEXJECFbEYPwTCzDCzj1uUCDHW+tcqMqt0JMgKKIBKKTiHVStWnmm1Fv61CTBU
- Qozr4BEo2Djbt8wwmmSLdQcLxAPD9b3ZClI= 
+ bh=A/sEaSIpioHKs2Bbfr4HKimR0DcmMDLF9iK8j7qY+eY=;
+ b=Ww9LpyYmmYKTi3My2zLD3ESJKjaAoFOU+865EhcOpMfUMhvJ9TqikzC+9esTiFbjyjg+
+ 3AKzhzja8+V0SoSek+6/4TBRbYvb5y1re2wbSVFgWbqLDn0K7Vdk+JG9h5uR8+w1LW6d
+ 2pgyLQ9DBakkNts+kLe3HfIUaDQ02WBAsXo= 
 Content-Language: en-US
-In-Reply-To: <CAJD7tkZ3AEPEUD9V-5nxUgmS5SLc6qp50ZyrRoAQgdzPM=a-Hg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <CAJD7tkbOztCEWgMzoCOdD+g3whMMQWW2e0gwo9p0tVK=3hqmcw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
@@ -27,7 +27,7 @@ Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Bor
 
 
 
-On 6/28/22 12:14 AM, Yosry Ahmed wrote:
+On 6/28/22 12:43 AM, Yosry Ahmed wrote:
 > On Mon, Jun 27, 2022 at 11:47 PM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 >>
 >> On Mon, Jun 27, 2022 at 11:14 PM Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org> wrote:
@@ -109,37 +109,84 @@ On 6/28/22 12:14 AM, Yosry Ahmed wrote:
 >> something outside the setup done by the test that can cause the test
 >> to fail.
 >>
+>>>
+>>> Also an existing test also failed.
+>>>
+>>> btf_dump_data:PASS:find type id 0 nsec
+>>>
+>>>
+>>> btf_dump_data:PASS:failed/unexpected type_sz 0 nsec
+>>>
+>>>
+>>> btf_dump_data:FAIL:ensure expected/actual match unexpected ensure
+>>> expected/actual match: actual '(union bpf_iter_link_info){.map =
+>>> (struct){.map_fd = (__u32)1,},.cgroup '
+>>> test_btf_dump_struct_data:PASS:find struct sk_buff 0 nsec
+>>>
+>>
+>> Yeah I see what happened there. bpf_iter_link_info was changed by the
+>> patch that introduced cgroup_iter, and this specific union is used by
+>> the test to test the "union with nested struct" btf dumping. I will
+>> add a patch in the next version that updates the btf_dump_data test
+>> accordingly. Thanks.
+>>
 > 
-> I can't reproduce the failure on my machine. It seems like for some
-> reason reclaim is not invoked in one of the test cgroups which results
-> in the expected stats not being there. I have a few suspicions as to
-> what might cause this but I am not sure.
+> So I actually tried the attached diff to updated the expected dump of
+> bpf_iter_link_info in this test, but the test still failed:
 > 
-> If you have the capacity, do you mind re-running the test with the
-> attached diff1.patch? (and maybe diff2.patch if that fails, this will
-> cause OOMs in the test cgroup, you might see some process killed
-> warnings).
+> btf_dump_data:FAIL:ensure expected/actual match unexpected ensure
+> expected/actual match: actual '(union bpf_iter_link_info){.map =
+> (struct){.map_fd = (__u32)1,},.cgroup = (struct){.cgroup_fd =
+> (__u32)1,},}'  != expected '(union bpf_iter_link_info){.map =
+> (struct){.map_fd = (__u32)1,},.cgroup = (struct){.cgroup_fd =
+> (__u32)1,.traversal_order = (__u32)1},}'
+> 
+> It seems to me that the actual output in this case is not right, it is
+> missing traversal_order. Did we accidentally find a bug in btf dumping
+> of unions with nested structs, or am I missing something here?
 
-The patch doesn't help. Still failed.
-
-get_cgroup_vmscan_delay:PASS:cgroup_id 0 nsec
-get_cgroup_vmscan_delay:FAIL:vmscan_reading unexpected vmscan_reading: 
-actual 0 <= expected 0
-check_vmscan_stats:FAIL:child1_vmscan unexpected child1_vmscan: actual 
-676612 != expected 339142
-check_vmscan_stats:FAIL:child2_vmscan unexpected child2_vmscan: actual 
--1 != expected -2
-check_vmscan_stats:FAIL:test_vmscan unexpected test_vmscan: actual 
-676612 != expected 676611
-check_vmscan_stats:FAIL:root_vmscan unexpected root_vmscan: actual 0 < 
-expected 676612
-destroy_progs:PASS:remove cgroup_iter pin 0 nsec
-destroy_progs:PASS:remove cgroup_iter pin 0 nsec
-
+Probably there is an issue in btf_dump_data() function in
+tools/lib/bpf/btf_dump.c. Could you take a look at it?
 
 > Thanks!
 > 
-> 
 >>>
->>> Also an existing test also failed.
+>>> test_btf_dump_struct_data:PASS:unexpected return value dumping sk_buff 0
+>>> nsec
+>>>
+>>> btf_dump_data:PASS:verify prefix match 0 nsec
+>>>
+>>>
+>>> btf_dump_data:PASS:find type id 0 nsec
+>>>
+>>>
+>>> btf_dump_data:PASS:failed to return -E2BIG 0 nsec
+>>>
+>>>
+>>> btf_dump_data:PASS:ensure expected/actual match 0 nsec
+>>>
+>>>
+>>> btf_dump_data:PASS:verify prefix match 0 nsec
+>>>
+>>>
+>>> btf_dump_data:PASS:find type id 0 nsec
+>>>
+>>>
+>>> btf_dump_data:PASS:failed to return -E2BIG 0 nsec
+>>>
+>>>
+>>> btf_dump_data:PASS:ensure expected/actual match 0 nsec
+>>>
+>>>
+>>> #21/14   btf_dump/btf_dump: struct_data:FAIL
+>>>
+>>> please take a look.
+>>>
+>>>> ---
+>>>>    .../prog_tests/cgroup_hierarchical_stats.c    | 351 ++++++++++++++++++
+>>>>    .../bpf/progs/cgroup_hierarchical_stats.c     | 234 ++++++++++++
+>>>>    2 files changed, 585 insertions(+)
+>>>>    create mode 100644 tools/testing/selftests/bpf/prog_tests/cgroup_hierarchical_stats.c
+>>>>    create mode 100644 tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
+>>>>
 [...]
