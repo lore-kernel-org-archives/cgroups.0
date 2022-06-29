@@ -1,81 +1,145 @@
-From: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup] cgroup: set the correct return code if hierarchy
- limits are reached
-Date: Wed, 29 Jun 2022 09:13:02 +0300
-Message-ID: <525a3eea-8431-64ad-e464-5503f3297722@openvz.org>
-References: <186d5b5b-a082-3814-9963-bf57dfe08511@openvz.org>
- <d8a9e9c6-856e-1502-95ac-abf9700ff568@openvz.org> <YrpO9CUDt8hpUprr@castle>
- <17916824-ba97-68ba-8166-9402d5f4440c@openvz.org>
- <20220628091648.GA12249@blackbody.suse.cz> <YrrIWe/nn5hoVyu9@mtj.duckdns.org>
+From: Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH bpf-next v2 8/8] bpf: add a selftest for cgroup
+ hierarchical stats collection
+Date: Tue, 28 Jun 2022 23:17:16 -0700
+Message-ID: <5a28a1c7-0420-ca93-0b92-fd54e726ed8c@fb.com>
+References: <20220610194435.2268290-1-yosryahmed@google.com>
+ <20220610194435.2268290-9-yosryahmed@google.com>
+ <00df1932-38fe-c6f8-49d0-3a44affb1268@fb.com>
+ <CAJD7tkaNnx6ebFrMxWgkJbtx=Qoe+cEwnjtWeY5=EAaVktrenw@mail.gmail.com>
+ <CAJD7tkZ3AEPEUD9V-5nxUgmS5SLc6qp50ZyrRoAQgdzPM=a-Hg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=openvz-org.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=tXBEMcYdLbL7j0CBnFEQrI7j8CDRw/szwLk4z5HVwIU=;
-        b=6xIoLTbTENo5N5hHKjhjfiPk6YpVnyqcLFcwoVzvW3j8d4aWTu8RxffBad1YuW22ZQ
-         B7JUZzvMlY3hMEVofUyVtHBYlj7NYSiQSjSmRtHMHwYaGzHsaqvwDqH4SBVu0eg2wt1p
-         09spkd8NH3luZDqG7H3iAwgS+g1MUQ3GRFz+F1gyrPFJjm6z7aaVcn7gc2MOrFB/p6kF
-         JajynDxOhztcu9FGmfWos5JDk1HGKQ0g4bqDoY+ExizDNO0aXZPzeg0b1uGZ74fHWMX+
-         +J+20MEXlTNZIPQhPd4BwwqzofH2gf1h83iJVr7esOJIGCDxJ6fleBsVho2LMH/DFy0V
-         agWA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=facebook;
+ bh=Ooy3Gc5a2eb+IgnWx6/fKAomiRpDs+e4kGIE6Z8bdDw=;
+ b=oK2f9j4QxapxxrAyy/2x+l+PUgUlvw4nlLqT0jhx6DSXNk43eNC9ch8GOIO9RTe+J/qo
+ JWVXdEeEXJECFbEYPwTCzDCzj1uUCDHW+tcqMqt0JMgKKIBKKTiHVStWnmm1Fv61CTBU
+ Qozr4BEo2Djbt8wwmmSLdQcLxAPD9b3ZClI= 
 Content-Language: en-US
-In-Reply-To: <YrrIWe/nn5hoVyu9-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <CAJD7tkZ3AEPEUD9V-5nxUgmS5SLc6qp50ZyrRoAQgdzPM=a-Hg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Networking <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 6/28/22 12:22, Tejun Heo wrote:
-> On Tue, Jun 28, 2022 at 11:16:48AM +0200, Michal Koutn=C3=BD wrote:
->> The mkdir(2) manpage doesn't list EAGAIN at all. ENOSPC makes better
->> sense here. (And I suspect the dependency on this particular value won't
->> be very wide spread.)
->=20
-> Given how we use these system calls as triggers for random kernel
-> operations, I don't think adhering to posix standard is necessary or
-> possible. Using an error code which isn't listed in the man page isn't
-> particularly high in the list of discrepancies.
->=20
-> Again, I'm not against changing it but I'd like to see better
-> rationales. On one side, we have "it's been this way for a long time
-> and there's nothing particularly broken about it". I'm not sure the
-> arguments we have for the other side is strong enough yet.
 
-I would like to recall this patch.
 
-I experimented on fedora36 node with LXC and centos stream 9 container.
-and I did not noticed any critical systemd troubles with original -EAGAIN.
-When cgroup's limit is reached systemd cannot start new services,=20
-for example lxc-attach generates following output:
+On 6/28/22 12:14 AM, Yosry Ahmed wrote:
+> On Mon, Jun 27, 2022 at 11:47 PM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>>
+>> On Mon, Jun 27, 2022 at 11:14 PM Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org> wrote:
+>>>
+>>>
+>>>
+>>> On 6/10/22 12:44 PM, Yosry Ahmed wrote:
+>>>> Add a selftest that tests the whole workflow for collecting,
+>>>> aggregating (flushing), and displaying cgroup hierarchical stats.
+>>>>
+>>>> TL;DR:
+>>>> - Whenever reclaim happens, vmscan_start and vmscan_end update
+>>>>     per-cgroup percpu readings, and tell rstat which (cgroup, cpu) pairs
+>>>>     have updates.
+>>>> - When userspace tries to read the stats, vmscan_dump calls rstat to flush
+>>>>     the stats, and outputs the stats in text format to userspace (similar
+>>>>     to cgroupfs stats).
+>>>> - rstat calls vmscan_flush once for every (cgroup, cpu) pair that has
+>>>>     updates, vmscan_flush aggregates cpu readings and propagates updates
+>>>>     to parents.
+>>>>
+>>>> Detailed explanation:
+>>>> - The test loads tracing bpf programs, vmscan_start and vmscan_end, to
+>>>>     measure the latency of cgroup reclaim. Per-cgroup ratings are stored in
+>>>>     percpu maps for efficiency. When a cgroup reading is updated on a cpu,
+>>>>     cgroup_rstat_updated(cgroup, cpu) is called to add the cgroup to the
+>>>>     rstat updated tree on that cpu.
+>>>>
+>>>> - A cgroup_iter program, vmscan_dump, is loaded and pinned to a file, for
+>>>>     each cgroup. Reading this file invokes the program, which calls
+>>>>     cgroup_rstat_flush(cgroup) to ask rstat to propagate the updates for all
+>>>>     cpus and cgroups that have updates in this cgroup's subtree. Afterwards,
+>>>>     the stats are exposed to the user. vmscan_dump returns 1 to terminate
+>>>>     iteration early, so that we only expose stats for one cgroup per read.
+>>>>
+>>>> - An ftrace program, vmscan_flush, is also loaded and attached to
+>>>>     bpf_rstat_flush. When rstat flushing is ongoing, vmscan_flush is invoked
+>>>>     once for each (cgroup, cpu) pair that has updates. cgroups are popped
+>>>>     from the rstat tree in a bottom-up fashion, so calls will always be
+>>>>     made for cgroups that have updates before their parents. The program
+>>>>     aggregates percpu readings to a total per-cgroup reading, and also
+>>>>     propagates them to the parent cgroup. After rstat flushing is over, all
+>>>>     cgroups will have correct updated hierarchical readings (including all
+>>>>     cpus and all their descendants).
+>>>>
+>>>> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>>>
+>>> There are a selftest failure with test:
+>>>
+>>> get_cgroup_vmscan_delay:PASS:output format 0 nsec
+>>> get_cgroup_vmscan_delay:PASS:cgroup_id 0 nsec
+>>> get_cgroup_vmscan_delay:PASS:vmscan_reading 0 nsec
+>>> get_cgroup_vmscan_delay:PASS:read cgroup_iter 0 nsec
+>>> get_cgroup_vmscan_delay:PASS:output format 0 nsec
+>>> get_cgroup_vmscan_delay:PASS:cgroup_id 0 nsec
+>>> get_cgroup_vmscan_delay:FAIL:vmscan_reading unexpected vmscan_reading:
+>>> actual 0 <= expected 0
+>>> check_vmscan_stats:FAIL:child1_vmscan unexpected child1_vmscan: actual
+>>> 781874 != expected 382092
+>>> check_vmscan_stats:FAIL:child2_vmscan unexpected child2_vmscan: actual
+>>> -1 != expected -2
+>>> check_vmscan_stats:FAIL:test_vmscan unexpected test_vmscan: actual
+>>> 781874 != expected 781873
+>>> check_vmscan_stats:FAIL:root_vmscan unexpected root_vmscan: actual 0 <
+>>> expected 781874
+>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
+>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
+>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
+>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
+>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
+>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
+>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
+>>> destroy_progs:PASS:remove cgroup_iter root pin 0 nsec
+>>> cleanup_bpffs:PASS:rmdir /sys/fs/bpf/vmscan/ 0 nsec
+>>> #33      cgroup_hierarchical_stats:FAIL
+>>>
+>>
+>> The test is passing on my setup. I am trying to figure out if there is
+>> something outside the setup done by the test that can cause the test
+>> to fail.
+>>
+> 
+> I can't reproduce the failure on my machine. It seems like for some
+> reason reclaim is not invoked in one of the test cgroups which results
+> in the expected stats not being there. I have a few suspicions as to
+> what might cause this but I am not sure.
+> 
+> If you have the capacity, do you mind re-running the test with the
+> attached diff1.patch? (and maybe diff2.patch if that fails, this will
+> cause OOMs in the test cgroup, you might see some process killed
+> warnings).
 
-[root@fc34-vvs ~]# lxc-attach c9s
-lxc-attach: c9s: cgroups/cgfsng.c: cgroup_attach_leaf: 2084 Resource tempor=
-arily unavailable - Failed to create leaf cgroup ".lxc"
-lxc-attach: c9s: cgroups/cgfsng.c: __cgroup_attach_many: 3517 Resource temp=
-orarily unavailable - Failed to attach to cgroup fd 11
-lxc-attach: c9s: attach.c: lxc_attach: 1679 Resource temporarily unavailabl=
-e - Failed to attach cgroup
-lxc-attach: c9s: attach.c: do_attach: 1237 No data available - Failed to re=
-ceive lsm label fd
-lxc-attach: c9s: attach.c: do_attach: 1375 Failed to attach to container
+The patch doesn't help. Still failed.
 
-I did not found any loop in userspace caused by EAGAIN.
-Messages looks unclear, however situation with the patched kernel is not mu=
-ch better:
+get_cgroup_vmscan_delay:PASS:cgroup_id 0 nsec
+get_cgroup_vmscan_delay:FAIL:vmscan_reading unexpected vmscan_reading: 
+actual 0 <= expected 0
+check_vmscan_stats:FAIL:child1_vmscan unexpected child1_vmscan: actual 
+676612 != expected 339142
+check_vmscan_stats:FAIL:child2_vmscan unexpected child2_vmscan: actual 
+-1 != expected -2
+check_vmscan_stats:FAIL:test_vmscan unexpected test_vmscan: actual 
+676612 != expected 676611
+check_vmscan_stats:FAIL:root_vmscan unexpected root_vmscan: actual 0 < 
+expected 676612
+destroy_progs:PASS:remove cgroup_iter pin 0 nsec
+destroy_progs:PASS:remove cgroup_iter pin 0 nsec
 
-[root@fc34-vvs ~]# lxc-attach c9s
-lxc-attach: c9s: cgroups/cgfsng.c: cgroup_attach_leaf: 2084 No space left o=
-n device - Failed to create leaf cgroup ".lxc"
-lxc-attach: c9s: cgroups/cgfsng.c: __cgroup_attach_many: 3517 No space left=
- on device - Failed to attach to cgroup fd 11
-lxc-attach: c9s: attach.c: lxc_attach: 1679 No space left on device - Faile=
-d to attach cgroup
-lxc-attach: c9s: attach.c: do_attach: 1237 No data available - Failed to re=
-ceive lsm label fd
-lxc-attach: c9s: attach.c: do_attach: 1375 Failed to attach to container
 
-Thank you,
-	Vasily Averin
+> Thanks!
+> 
+> 
+>>>
+>>> Also an existing test also failed.
+[...]
