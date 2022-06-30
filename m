@@ -1,104 +1,85 @@
-From: Jing-Ting Wu <jing-ting.wu@mediatek.com>
-Subject: [Bug] race condition at rebind_subsystems()
-Date: Thu, 30 Jun 2022 18:52:10 +0800
-Message-ID: <1978e209e71905d89651e61abd07285912d412a1.camel@mediatek.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH v11 7/8] cgroup/cpuset: Update description of
+ cpuset.cpus.partition in cgroup-v2.rst
+Date: Thu, 30 Jun 2022 16:32:11 +0200
+Message-ID: <20220630143211.GA22105@blackbody.suse.cz>
+References: <20220510153413.400020-8-longman@redhat.com>
+ <YqYnQ4U4t6j/3UaL@slm.duckdns.org>
+ <404171dc-0da3-21f2-5003-9718f875e967@redhat.com>
+ <YqarMyNo9oHxhZFh@slm.duckdns.org>
+ <20220613142452.GB6910@blackbody.suse.cz>
+ <YqdzuSQuAeiPXQvy@slm.duckdns.org>
+ <20220613175548.GB21665@blackbody.suse.cz>
+ <Yqd7WMFj6AEyV3Cy@slm.duckdns.org>
+ <20220614115345.GA6771@blackbody.suse.cz>
+ <YroApRMPV/6zO5I8@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1656599532; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=r+2jSverPOfqGEKU6YL54SGkmzqRewq0zi4aTwuQWVg=;
+        b=NQJFxWMbAHm7LziJAaX0qwJ3jblN0hLNNfEOc+ukjrHuS04pTcAJtGu2PvLSHHm2baWcLi
+        6d6yoEW/ti0PFPza/gAw0Pv8kuPVwzG0Cqo/igYQU3BYxnCm+v4Hr+jEtN7Hz8DTdG0u0/
+        9iFRnVdTN7We1cfra567KIbMx3damAM=
+Content-Disposition: inline
+In-Reply-To: <YroApRMPV/6zO5I8@mtj.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Matthias Brugger <matthias.bgg@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Shakeel Butt <shakeelb@google.com>, wsd_upstream@mediatek.com, lixiong.liu@mediatek.com, wenju.xu@mediatek.com, jonathan.jmchen@mediatek.com
+Content-Type: text/plain; charset="iso-8859-1"
+To: Tejun Heo <tj@kernel.org>
+Cc: Waiman Long <longman@redhat.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>
 
-Hi Johannes
+On Tue, Jun 28, 2022 at 04:10:29AM +0900, Tejun Heo <tj@kernel.org> wrote:
+> What I'm trying to say is that cpuset.cpus of child_1 and child_2 are
+> owned by the parent,
 
+Cf
 
+On Mon, Jun 13, 2022 at 08:00:56AM -1000, Tejun Heo <tj@kernel.org> wrote:
+> On Mon, Jun 13, 2022 at 07:55:49PM +0200, Michal Koutn=FD wrote:
+> > I don't think child_*/cpuset.cpus must be owned by root.
+>=20
+> I meant the parent.
 
-We find the KE(kernel exception) happened when test the reboot test
-case in T SW version with kernel-5.15.
-The issue is unable to handle kernel paging request at virtual address.
+I'm slightly confused.
 
-Root cause:
-The rebind_subsystems() is no lock held when move css object from A
-list to B list,then let B's head be treated as css node at
-list_for_each_entry_rcu().
-Use the wrong css to get css->ss->css_rstat_flush should get a wrong
-address.
+> so a feature which blocks siblings from intersecting each other
+> doesn't make whole lot of sense because all those files are under the
+> control of the parent who would have the power to enable or disable
+> the restrition anyway.
 
-The call stack as following:
-kthread
--> worker_thread
--> process_one_work
--> flush_memcg_stats_dwork
--> __mem_cgroup_flush_stats
--> cgroup_rstat_flush_irqsafe
--> cgroup_rstat_flush_locked
+file				owner
+parent/				user (mkdir)
+`- cpuset.cpus			root
+`- cpuset.cpus.partition	root	(P)
+`- child_1/			user
+  ` cpuset.cpus			user	(*)
+`- child_2/			user
+  ` cpuset.cpus			user	(*)
 
-Detail:
-static void cgroup_rstat_flush_locked(struct cgroup *cgrp, bool
-may_sleep)
-{
-...
-   rcu_read_lock();
-   list_for_each_entry_rcu(css, &pos->rstat_css_list,
-                             rstat_css_node)
-        css->ss->css_rstat_flush(css, cpu);
-   rcu_read_unlock();
-...
-}
+The writes to child cpuset.cpus may/may not invalidate parent's (P)
+partition validity (whether a cpu is left to it to host possible tasks).
+child_1 vs child_2 overlap affects only whether the children cgroups are
+a valid partition.
 
-Because the content of css->ss is not a function address,
-once the css_rstat_flush is called, kernel exception will happen.
-When the issue happened, the list of pos->rstat_css_list at group A is
-empty.
-There must be racing conditions.
+I think you mean: writes to children cpuset.cpus should be allowed,
+possible exclusivity violation should be reported in
+parent/cpuset.cpus.partition.
 
-From reviewing code, we find rebind_subsystems() is no lock held when
-move css object to other list.
+What I thought was OK: prevent (fail) writes to children cpuset.cpus
+that'd violate the exclusivity (or would take the last cpu from parent
+if it's necessary to host a task).
+IMO, it's similar to failed writes to parent/cgroup.subtree_control in a
+delegated subtree if the parent still has some tasks (that'd violate
+internal node constraint).
 
-int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask)
-{
-...
-   if (ss->css_rstat_flush) {
-         list_del_rcu(&css->rstat_css_node);
-         list_add_rcu(&css->rstat_css_node,
-                      &dcgrp->rstat_css_list);
-   }
-...
-}
+What I think might still be OK: allow writes to children cpuset.cpus
+that violate exclusivity and report that in children's
+cpuset.cpus.partition. Writes that'd take last cpu from parent should
+still fail (similar to the failing subtree_control writes above).
 
-If we held a css object from A group list, at same time this css object
-was moved to B group list.
-Because current pos is in B’s list, link list was link the pos->next to
-B’s head, so the pos->member will never equal A’s head, then the B’s
-head(cgroup_root->cgroup->rstat_css_list) will be treated as css
-node(css->rstat_css_node).
-list_for_each_entry_rcu() use the container_of() to get css address,
-and it treated the address of [cgroup_root->cgroup->rstat_css_list -
-rstat_css_node] to be a css address.
-cgroup_rstat_flush_locked() use the wrong css address to do css->ss-
->css_rstat_flush, then the wrong function address will be jump.
-
-#define list_for_each_entry_rcu(pos, head, member,
-cond...)             \
-   for (__list_check_rcu(dummy, ## cond, 0), \
-     pos = list_entry_rcu((head)->next, typeof(*pos), member); \
-        &pos->member != (head);                                \
-        pos = list_entry_rcu(pos->member.next, typeof(*pos), member))
-
-
-We look the patch of move css object from A list to B list is merged by
-following link:
-
-https://android.googlesource.com/kernel/common/+/a7df69b81aac5bdeb5c5aef9addd680ce22feebf%5E%21/#F0
-
-
-Do you have any suggestion for this issue?
-Thank you.
-
-
-
-Best Regards,
-Jing-Ting Wu
-
-
+Hope that clarifies,
+Michal
