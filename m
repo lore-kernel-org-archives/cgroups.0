@@ -1,65 +1,71 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup] cgroup: set the correct return code if hierarchy
- limits are reached
-Date: Thu, 30 Jun 2022 04:25:57 +0900
-Message-ID: <YrynRcW4/B2nl/kK@mtj.duckdns.org>
-References: <186d5b5b-a082-3814-9963-bf57dfe08511@openvz.org>
- <d8a9e9c6-856e-1502-95ac-abf9700ff568@openvz.org>
- <YrpO9CUDt8hpUprr@castle>
- <17916824-ba97-68ba-8166-9402d5f4440c@openvz.org>
- <20220628091648.GA12249@blackbody.suse.cz>
- <YrrIWe/nn5hoVyu9@mtj.duckdns.org>
- <525a3eea-8431-64ad-e464-5503f3297722@openvz.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm: vmpressure: don't count userspace-induced reclaim as
+ memory pressure
+Date: Wed, 29 Jun 2022 18:07:00 -0700
+Message-ID: <CALvZod68WdrXEmBpOkadhB5GPYmCXaDZzXH=yyGOCAjFRn4NDQ@mail.gmail.com>
+References: <YrQ1o3CeaZWhm+h4@dhcp22.suse.cz> <CAJD7tkadsLOV7GMFAm+naX4Y1WpZ-4=NkAhAMxNw60iaRPWx=w@mail.gmail.com>
+ <YrSWruhPlJV1X9kp@dhcp22.suse.cz> <CALvZod6eLa1X1FJ2Qi6FXhFA-qBCP4mN2SB31MSgjj+g8hKo6Q@mail.gmail.com>
+ <YrSdFy3qYdG+rGR6@dhcp22.suse.cz> <CAJD7tkZNEtzJMDsLMHuNHkxFfurS37UuK=zFcPCkOkWfN-dbJQ@mail.gmail.com>
+ <YrlpcdgF1HzA7bHS@dhcp22.suse.cz> <CAJD7tkYVy2uNwaPiiJdPKT5P_O-9WgxD68iFJ6vw=TLJcQV3Ag@mail.gmail.com>
+ <Yrl2T632Vfv8QGPn@dhcp22.suse.cz> <CAJD7tkZzwzHq7Q7KKUdVSdO4LWTPkrGprp0Q-ze_SWhUd_mTMw@mail.gmail.com>
+ <YrmjH2FZF7iNn8da@dhcp22.suse.cz> <CAJD7tkYemNQqu_O2nYG3cqxPWGELvc6Lh5i+KKNCtv6cgSPmdA@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=FOvU7kkY3061/Y6ML2riqvq9E9PyjzheNXe1X2hbYKw=;
-        b=V9dUu8WtJeBE8oGYB7nq+4RFkzp3O7qiE28jpnaaEt3/FzsvCqubr9YdtYM6mODSY8
-         dIUJluVOX75DHnavuyZ+/jgaLm4g8f4cYXnC8EMbWW/f54M1wsTwqtBLsQZzSnDQjQhu
-         4fCs36fLopglf6HJXBUSbNnZPK18HlPzMa/J/sN4owOeqydod23RerxcOZIP5cpVTjWP
-         77ukE+oErNdhKUIj9uRPop6ewX/GaseO3pgjt7dRfQIhgFu9YBcvdOrA0AW4z9yXjnTl
-         +bpTkGSPWzroB99J7apjT2zvpSRe4o81bpRqoo1JMcNLcnp8Ou1XO/++4YqaIB3s0AfA
-         DJ+A==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <525a3eea-8431-64ad-e464-5503f3297722-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=b24zTk0e6let+DmkyD3O6bwmQoOkoTYKCmgGUtQJ0ic=;
+        b=q0wyUYDG3+RW5ZLzjV35nCB9Kyy1ozJ2yhLjTJx+jH+RFiJMIeE/Mtb/vTnUBCJ5Ih
+         uAk1TObOeVDjM4rMjngdp//PkZ3aaqMSuuV5u+clo8zOT2ad+zUv7Vc3Jxclt7ya6cBV
+         6aVVoL4/4XC9uS9ZO8wNheVKyaK0aZdXBw98tU2bw0u1C1G0HG8GkWMuNQRnrapiT7DF
+         hSgxjq9XzbluDoYOQjrZ5RyCsgJ4lTnxn9SDIeoAf/NKvlXgYBqR8IIEPMbFWdduQ0ZF
+         nmKXYcL7awq84bzQ6SoG2zTHSNcdCXlzSgRly8d4lnWuoQFc7oI7/YkEhSFVU48n7iqX
+         2PnQ==
+In-Reply-To: <CAJD7tkYemNQqu_O2nYG3cqxPWGELvc6Lh5i+KKNCtv6cgSPmdA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Xu <peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Wed, Jun 29, 2022 at 09:13:02AM +0300, Vasily Averin wrote:
-> I experimented on fedora36 node with LXC and centos stream 9 container.
-> and I did not noticed any critical systemd troubles with original -EAGAIN.
-> When cgroup's limit is reached systemd cannot start new services, 
-> for example lxc-attach generates following output:
-> 
-> [root@fc34-vvs ~]# lxc-attach c9s
-> lxc-attach: c9s: cgroups/cgfsng.c: cgroup_attach_leaf: 2084 Resource temporarily unavailable - Failed to create leaf cgroup ".lxc"
-> lxc-attach: c9s: cgroups/cgfsng.c: __cgroup_attach_many: 3517 Resource temporarily unavailable - Failed to attach to cgroup fd 11
-> lxc-attach: c9s: attach.c: lxc_attach: 1679 Resource temporarily unavailable - Failed to attach cgroup
-> lxc-attach: c9s: attach.c: do_attach: 1237 No data available - Failed to receive lsm label fd
-> lxc-attach: c9s: attach.c: do_attach: 1375 Failed to attach to container
-> 
-> I did not found any loop in userspace caused by EAGAIN.
-> Messages looks unclear, however situation with the patched kernel is not much better:
-> 
-> [root@fc34-vvs ~]# lxc-attach c9s
-> lxc-attach: c9s: cgroups/cgfsng.c: cgroup_attach_leaf: 2084 No space left on device - Failed to create leaf cgroup ".lxc"
-> lxc-attach: c9s: cgroups/cgfsng.c: __cgroup_attach_many: 3517 No space left on device - Failed to attach to cgroup fd 11
-> lxc-attach: c9s: attach.c: lxc_attach: 1679 No space left on device - Failed to attach cgroup
-> lxc-attach: c9s: attach.c: do_attach: 1237 No data available - Failed to receive lsm label fd
-> lxc-attach: c9s: attach.c: do_attach: 1375 Failed to attach to container
+On Mon, Jun 27, 2022 at 10:04 AM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> On Mon, Jun 27, 2022 at 5:31 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> >
+[...]
+> >
+> > I can see clear arguments for memory.reclaim opt out for vmpressure
+> > because we have established that this is not a measure to express a
+> > memory pressure on the cgroup.
+> >
+> > Max/High are less clear to me, TBH. I do understand reasoning for PSI
+> > exclusion because considering the calling process to be stalled and
+> > non-productive is misleading. It just does its work so in a way it is
+> > a productive time in the end. For the vmpressure, which measures how
+> > hard/easy it is to reclaim memory why this should special for this
+> > particular reclaim?
+> >
+> > Again, an explanation of the effect on the socket pressure could give a
+> > better picture. Say that I somebody reduces the limit (hard/high) and it
+> > takes quite some effort to shrink the consumption down. Should the
+> > networking layer react to that in any way or should it wait for the
+> > active allocation during that process to find that out?
+>
+> I am out of my depth here. Any answer on my side would be purely
+> speculation at this point. Shakeel, can you help us here or tag some
+> networking people?
 
-I'd say "resource temporarily unavailable" is better fitting than "no
-space left on device" and the syscall restart thing isn't handled by
--EAGAIN return value. Grep restart_block for that.
+So, the effect of returning true from mem_cgroup_under_socket_pressure() are:
 
-Thanks.
+1. Reducing send and receive buffers of the current socket.
+2. May drop packets on the rx path.
+3. May throttle current thread on the tx path.
 
--- 
-tejun
+Now regarding the behavior from the reclaim due to reducing max or
+high, I think the kernel should not ignore vmpressure. Please note
+that unlike PSI which is associated with the current process,
+vmpressure is associated with the target memcg. So, any reclaim on
+that memcg due to real shortage of memory should not be ignored. That
+reclaim can be global reclaim or limit reclaim of ancestor or itself
+or reclaim due to lowering the limit of ancestor or itself.
