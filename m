@@ -1,47 +1,53 @@
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v6 6/8] blk-throttle: calling throtl_dequeue/enqueue_tg in pairs
-Date: Fri,  1 Jul 2022 15:49:21 +0800
-Message-ID: <20220701074923.657426-8-yukuai3@huawei.com>
-References: <20220701074923.657426-1-yukuai3@huawei.com>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: [PATCH RESEND v6 2/8] blk-throttle: prevent overflow while calculating wait time
+Date: Fri,  1 Jul 2022 17:34:35 +0800
+Message-ID: <20220701093441.885741-3-yukuai1@huaweicloud.com>
+References: <20220701093441.885741-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220701074923.657426-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org
+In-Reply-To: <20220701093441.885741-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-It's a litter weird to call throtl_dequeue_tg() unconditionally in
-throtl_select_dispatch(), since it will be called in
-tg_update_disptime() again if some bio is still throttled.
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+
+In tg_with_in_bps_limit(), 'bps_limit * jiffy_elapsed_rnd' might
+overflow. FIx the problem by calling mul_u64_u64_div_u64() instead.
 
 Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-throttle.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ block/blk-throttle.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index e690dc1c1cde..ab30efedff4e 100644
+index 5c1d1c4d8188..a89c62bef2fb 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -1151,13 +1151,13 @@ static int throtl_select_dispatch(struct throtl_service_queue *parent_sq)
- 		if (time_before(jiffies, tg->disptime))
- 			break;
+@@ -806,7 +806,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 				 u64 bps_limit, unsigned long *wait)
+ {
+ 	bool rw = bio_data_dir(bio);
+-	u64 bytes_allowed, extra_bytes, tmp;
++	u64 bytes_allowed, extra_bytes;
+ 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+ 	unsigned int bio_size = throtl_bio_data_size(bio);
  
--		throtl_dequeue_tg(tg);
+@@ -824,10 +824,8 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 		jiffy_elapsed_rnd = tg->td->throtl_slice;
+ 
+ 	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
 -
- 		nr_disp += throtl_dispatch_tg(tg);
+-	tmp = bps_limit * jiffy_elapsed_rnd;
+-	do_div(tmp, HZ);
+-	bytes_allowed = tmp;
++	bytes_allowed = mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed_rnd,
++					    (u64)HZ);
  
- 		sq = &tg->service_queue;
- 		if (sq->nr_queued[READ] || sq->nr_queued[WRITE])
- 			tg_update_disptime(tg);
-+		else
-+			throtl_dequeue_tg(tg);
- 
- 		if (nr_disp >= THROTL_QUANTUM)
- 			break;
+ 	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
+ 		if (wait)
 -- 
 2.31.1
 
