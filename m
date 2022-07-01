@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai3@huawei.com>
-Subject: [PATCH v6 7/8] blk-throttle: cleanup tg_update_disptime()
-Date: Fri,  1 Jul 2022 15:49:22 +0800
-Message-ID: <20220701074923.657426-9-yukuai3@huawei.com>
+Subject: [PATCH v6 2/8] blk-throttle: prevent overflow while calculating wait time
+Date: Fri,  1 Jul 2022 15:49:17 +0800
+Message-ID: <20220701074923.657426-4-yukuai3@huawei.com>
 References: <20220701074923.657426-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -13,51 +13,40 @@ Content-Type: text/plain; charset="us-ascii"
 To: tj@kernel.org, mkoutny@suse.com, axboe@kernel.dk, ming.lei@redhat.com
 Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
 
-th_update_disptime() only need to adjust postion for 'tg' in
-'parent_sq', there is no need to call throtl_enqueue/dequeue_tg().
+In tg_with_in_bps_limit(), 'bps_limit * jiffy_elapsed_rnd' might
+overflow. FIx the problem by calling mul_u64_u64_div_u64() instead.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- block/blk-throttle.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ block/blk-throttle.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index ab30efedff4e..473f0b651ef0 100644
+index 5c1d1c4d8188..a89c62bef2fb 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -520,7 +520,6 @@ static void throtl_rb_erase(struct rb_node *n,
+@@ -806,7 +806,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 				 u64 bps_limit, unsigned long *wait)
  {
- 	rb_erase_cached(n, &parent_sq->pending_tree);
- 	RB_CLEAR_NODE(n);
--	--parent_sq->nr_pending;
- }
+ 	bool rw = bio_data_dir(bio);
+-	u64 bytes_allowed, extra_bytes, tmp;
++	u64 bytes_allowed, extra_bytes;
+ 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+ 	unsigned int bio_size = throtl_bio_data_size(bio);
  
- static void update_min_dispatch_time(struct throtl_service_queue *parent_sq)
-@@ -572,7 +571,11 @@ static void throtl_enqueue_tg(struct throtl_grp *tg)
- static void throtl_dequeue_tg(struct throtl_grp *tg)
- {
- 	if (tg->flags & THROTL_TG_PENDING) {
--		throtl_rb_erase(&tg->rb_node, tg->service_queue.parent_sq);
-+		struct throtl_service_queue *parent_sq =
-+			tg->service_queue.parent_sq;
-+
-+		throtl_rb_erase(&tg->rb_node, parent_sq);
-+		--parent_sq->nr_pending;
- 		tg->flags &= ~THROTL_TG_PENDING;
- 	}
- }
-@@ -1040,9 +1043,9 @@ static void tg_update_disptime(struct throtl_grp *tg)
- 	disptime = jiffies + min_wait;
+@@ -824,10 +824,8 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 		jiffy_elapsed_rnd = tg->td->throtl_slice;
  
- 	/* Update dispatch time */
--	throtl_dequeue_tg(tg);
-+	throtl_rb_erase(&tg->rb_node, tg->service_queue.parent_sq);
- 	tg->disptime = disptime;
--	throtl_enqueue_tg(tg);
-+	tg_service_queue_add(tg);
+ 	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
+-
+-	tmp = bps_limit * jiffy_elapsed_rnd;
+-	do_div(tmp, HZ);
+-	bytes_allowed = tmp;
++	bytes_allowed = mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed_rnd,
++					    (u64)HZ);
  
- 	/* see throtl_add_bio_tg() */
- 	tg->flags &= ~THROTL_TG_WAS_EMPTY;
+ 	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
+ 		if (wait)
 -- 
 2.31.1
 
