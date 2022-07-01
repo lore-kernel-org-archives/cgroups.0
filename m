@@ -1,61 +1,70 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH mm v5 0/9] memcg: accounting for objects allocated by
- mkdir, cgroup
-Date: Fri, 1 Jul 2022 13:03:47 +0200
-Message-ID: <Yr7Ukyy0vhBjebo4@dhcp22.suse.cz>
-References: <4e685057-b07d-745d-fdaa-1a6a5a681060@openvz.org>
- <0fe836b4-5c0f-0e32-d511-db816d359748@openvz.org>
- <c516033f-a9e4-3485-26d9-a68afa694c1d@openvz.org>
- <YrSP25ebDmXE+kPS@dhcp22.suse.cz>
- <CALvZod4WsmrpfZtfnP4AmvtnkvBRngXXGyhM6+aQzkdfjsinAQ@mail.gmail.com>
- <YrXDV7uPpmDigh3G@dhcp22.suse.cz>
- <CALvZod6U8DvMUcuUNfpQRwfkevQB7=nP4ZLA2gWGNf_JGdyARQ@mail.gmail.com>
+From: Benjamin Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [Question] The system may be stuck if there is a cpu cgroup
+ cpu.cfs_quato_us is very low
+Date: Fri, 01 Jul 2022 13:08:21 -0700
+Message-ID: <xm26czeoioju.fsf@google.com>
+References: <5987be34-b527-4ff5-a17d-5f6f0dc94d6d@huawei.com>
+        <YrlrBmF3oOfS3+fq@mtj.duckdns.org>
+        <f0f55f89-14db-de29-c182-32539f8d4e4d@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1656673431; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=EQQ0uDHhygYXehLqsJhyCr+6to0zpT4yOYb+B/7ePOc=;
-        b=WWJPQ2EXAZR1zW9+IVv5suuOU1NIHYrBg7iDSfv1oLM8W8yVOIyB5PnitFb/O8WjrQ65cw
-        Rz3zvj+Qg7utK8xqKR8INSt6F2FnWqIzRi9ByD9vyq9spx9KQ6lUiOWwAHhO7EBzxT6J0J
-        rcITBGmSTcrqyllxoSdrgRADn4cis5g=
-Content-Disposition: inline
-In-Reply-To: <CALvZod6U8DvMUcuUNfpQRwfkevQB7=nP4ZLA2gWGNf_JGdyARQ@mail.gmail.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=from:to:cc:subject:references:date:in-reply-to:message-id
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=PSFngJKHrho0FhjB6XnRsy4TL/BbcPjIjM6hLwlPgJM=;
+        b=KJN2es13TaWWapgFPPSZUr0HDQneLNPJI+FpW3g3pKbHwyoLr5ukOqQ6PfvGZyYsU6
+         YVE0xVKLE5FZWNKxeqTTW+m7OM/XFUX1SlvFAOjo0BJ8/aHXDgD48rsY8qDd2KLt88Db
+         ff7QI/rSlge0DvRdZBvMUsEeZ8SfK0/0omobRfhDo7MsVfXGQ4x5kDHFAE5hag/K4G/G
+         PrQjSWop/84u7Wap/121fKfSYZCcbZ5NdvrlGhCvdqfjRSJmJzIu2frxoQU9qoIoWOYX
+         H8eoFH4xEkWhBA7aOf5/hVkTmA+sZ86c5LnrhhRjqUta5cLGNt2r9DsFTDCsAKiyk02a
+         u0/w==
+In-Reply-To: <f0f55f89-14db-de29-c182-32539f8d4e4d-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> (Zhang Qiao's
+        message of "Fri, 1 Jul 2022 15:34:41 +0800")
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Vasily Averin <vvs@openvz.org>, kernel@openvz.org, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Vlastimil Babka <vbabka@suse.cz>, Muchun Song <songmuchun@bytedance.com>, Cgroups <cgroups@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: Zhang Qiao <zhangqiao22-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, mgorman-l3A5Bk7waGM@public.gmane.org
 
-On Mon 27-06-22 09:37:14, Shakeel Butt wrote:
-> On Fri, Jun 24, 2022 at 6:59 AM Michal Hocko <mhocko@suse.com> wrote:
-[...]
-> > Is it even possible to prevent from id
-> > depletion by the memory consumption? Any medium sized memcg can easily
-> > consume all the ids AFAICS.
-> 
-> Though the patch series is pitched as protection against OOMs, I think
-> it is beneficial irrespective. Protection against an adversarial actor
-> should not be the aim here. IMO this patch series improves the memory
-> association to the actual user which is better than unattributed
-> memory treated as system overhead.
+Zhang Qiao <zhangqiao22-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> writes:
 
-Considering the amount of memory and "normal" cgroup usage (I guess we
-can agree that delegated subtrees do not count their cgroups in
-thousands) is this really something that is worth bothering with?
+> Hi, tejun
+>
+> Thanks for your reply.
+>
+> =E5=9C=A8 2022/6/27 16:32, Tejun Heo =E5=86=99=E9=81=93:
+>> Hello,
+>>=20
+>> On Mon, Jun 27, 2022 at 02:50:25PM +0800, Zhang Qiao wrote:
+>>> Becuase the task cgroup's cpu.cfs_quota_us is very small and
+>>> test_fork's load is very heavy, the test_fork may be throttled long
+>>> time, therefore, the cgroup_threadgroup_rw_sem read lock is held for
+>>> a long time, other processes will get stuck waiting for the lock:
+>>=20
+>> Yeah, this is a known problem and can happen with other locks too. The
+>> solution prolly is only throttling while in or when about to return to
+>> userspace. There is one really important and wide-spread assumption in
+>> the kernel:
+>>=20
+>>   If things get blocked on some shared resource, whatever is holding
+>>   the resource ends up using more of the system to exit the critical
+>>   section faster and thus unblocks others ASAP. IOW, things running in
+>>   kernel are work-conserving.
+>>=20
+>> The cpu bw controller gives the userspace a rather easy way to break
+>> this assumption and thus is rather fundamentally broken. This is
+>> basically the same problem we had with the old cgroup freezer
+>> implementation which trapped threads in random locations in the
+>> kernel.
+>>=20
+>
+> so, if we want to completely slove this problem, is the best way to
+> change the cfs bw controller throttle mechanism? for example, throttle
+> tasks in a safe location.
 
-I mean, these patches are really small and not really disruptive so I do
-not really see any problem with them. Except that they clearly add a
-maintenance overhead. Not directly with the memory they track but any
-future cgroup/memcg metadata related objects would need to be tracked as
-well and I am worried this will get quickly out of sync. So we will have
-a half assed solution in place that doesn't really help any containment
-nor it provides a good and robust consumption tracking.
-
-All that being said I find these changes rather without a great value or
-use.
-
--- 
-Michal Hocko
-SUSE Labs
+Yes, fixing (kernel) priority inversion due to CFS_BANDWIDTH requires a
+serious reworking of how it works, because it would need to dequeue
+tasks individually rather than doing the entire cfs_rq at a time (and
+would require some effort to avoid pinging every throttling task to get
+it into the kernel).
