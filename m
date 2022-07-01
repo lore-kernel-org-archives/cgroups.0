@@ -1,64 +1,61 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH RESEND v6 7/8] blk-throttle: cleanup tg_update_disptime()
-Date: Fri,  1 Jul 2022 17:34:40 +0800
-Message-ID: <20220701093441.885741-8-yukuai1@huaweicloud.com>
-References: <20220701093441.885741-1-yukuai1@huaweicloud.com>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH mm v5 0/9] memcg: accounting for objects allocated by
+ mkdir, cgroup
+Date: Fri, 1 Jul 2022 13:03:47 +0200
+Message-ID: <Yr7Ukyy0vhBjebo4@dhcp22.suse.cz>
+References: <4e685057-b07d-745d-fdaa-1a6a5a681060@openvz.org>
+ <0fe836b4-5c0f-0e32-d511-db816d359748@openvz.org>
+ <c516033f-a9e4-3485-26d9-a68afa694c1d@openvz.org>
+ <YrSP25ebDmXE+kPS@dhcp22.suse.cz>
+ <CALvZod4WsmrpfZtfnP4AmvtnkvBRngXXGyhM6+aQzkdfjsinAQ@mail.gmail.com>
+ <YrXDV7uPpmDigh3G@dhcp22.suse.cz>
+ <CALvZod6U8DvMUcuUNfpQRwfkevQB7=nP4ZLA2gWGNf_JGdyARQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20220701093441.885741-1-yukuai1@huaweicloud.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1656673431; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=EQQ0uDHhygYXehLqsJhyCr+6to0zpT4yOYb+B/7ePOc=;
+        b=WWJPQ2EXAZR1zW9+IVv5suuOU1NIHYrBg7iDSfv1oLM8W8yVOIyB5PnitFb/O8WjrQ65cw
+        Rz3zvj+Qg7utK8xqKR8INSt6F2FnWqIzRi9ByD9vyq9spx9KQ6lUiOWwAHhO7EBzxT6J0J
+        rcITBGmSTcrqyllxoSdrgRADn4cis5g=
+Content-Disposition: inline
+In-Reply-To: <CALvZod6U8DvMUcuUNfpQRwfkevQB7=nP4ZLA2gWGNf_JGdyARQ@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, mkoutny@suse.com, axboe@kernel.dk, ming.lei@redhat.com
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Vasily Averin <vvs@openvz.org>, kernel@openvz.org, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Vlastimil Babka <vbabka@suse.cz>, Muchun Song <songmuchun@bytedance.com>, Cgroups <cgroups@vger.kernel.org>
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Mon 27-06-22 09:37:14, Shakeel Butt wrote:
+> On Fri, Jun 24, 2022 at 6:59 AM Michal Hocko <mhocko@suse.com> wrote:
+[...]
+> > Is it even possible to prevent from id
+> > depletion by the memory consumption? Any medium sized memcg can easily
+> > consume all the ids AFAICS.
+> 
+> Though the patch series is pitched as protection against OOMs, I think
+> it is beneficial irrespective. Protection against an adversarial actor
+> should not be the aim here. IMO this patch series improves the memory
+> association to the actual user which is better than unattributed
+> memory treated as system overhead.
 
-th_update_disptime() only need to adjust postion for 'tg' in
-'parent_sq', there is no need to call throtl_enqueue/dequeue_tg().
+Considering the amount of memory and "normal" cgroup usage (I guess we
+can agree that delegated subtrees do not count their cgroups in
+thousands) is this really something that is worth bothering with?
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- block/blk-throttle.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+I mean, these patches are really small and not really disruptive so I do
+not really see any problem with them. Except that they clearly add a
+maintenance overhead. Not directly with the memory they track but any
+future cgroup/memcg metadata related objects would need to be tracked as
+well and I am worried this will get quickly out of sync. So we will have
+a half assed solution in place that doesn't really help any containment
+nor it provides a good and robust consumption tracking.
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index ab30efedff4e..473f0b651ef0 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -520,7 +520,6 @@ static void throtl_rb_erase(struct rb_node *n,
- {
- 	rb_erase_cached(n, &parent_sq->pending_tree);
- 	RB_CLEAR_NODE(n);
--	--parent_sq->nr_pending;
- }
- 
- static void update_min_dispatch_time(struct throtl_service_queue *parent_sq)
-@@ -572,7 +571,11 @@ static void throtl_enqueue_tg(struct throtl_grp *tg)
- static void throtl_dequeue_tg(struct throtl_grp *tg)
- {
- 	if (tg->flags & THROTL_TG_PENDING) {
--		throtl_rb_erase(&tg->rb_node, tg->service_queue.parent_sq);
-+		struct throtl_service_queue *parent_sq =
-+			tg->service_queue.parent_sq;
-+
-+		throtl_rb_erase(&tg->rb_node, parent_sq);
-+		--parent_sq->nr_pending;
- 		tg->flags &= ~THROTL_TG_PENDING;
- 	}
- }
-@@ -1040,9 +1043,9 @@ static void tg_update_disptime(struct throtl_grp *tg)
- 	disptime = jiffies + min_wait;
- 
- 	/* Update dispatch time */
--	throtl_dequeue_tg(tg);
-+	throtl_rb_erase(&tg->rb_node, tg->service_queue.parent_sq);
- 	tg->disptime = disptime;
--	throtl_enqueue_tg(tg);
-+	tg_service_queue_add(tg);
- 
- 	/* see throtl_add_bio_tg() */
- 	tg->flags &= ~THROTL_TG_WAS_EMPTY;
+All that being said I find these changes rather without a great value or
+use.
+
 -- 
-2.31.1
-
+Michal Hocko
+SUSE Labs
