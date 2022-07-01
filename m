@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH RESEND v6 1/8] blk-throttle: fix that io throttle can only work for single bio
-Date: Fri,  1 Jul 2022 17:34:34 +0800
-Message-ID: <20220701093441.885741-2-yukuai1@huaweicloud.com>
+Subject: [PATCH RESEND v6 5/8] blk-throttle: use 'READ/WRITE' instead of '0/1'
+Date: Fri,  1 Jul 2022 17:34:38 +0800
+Message-ID: <20220701093441.885741-6-yukuai1@huaweicloud.com>
 References: <20220701093441.885741-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,86 +14,37 @@ Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kern
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-commit 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
-introduce a new problem, for example:
+Make the code easier to read, like everywhere else.
 
-Test scripts:
-cd /sys/fs/cgroup/blkio/
-echo "8:0 1024" > blkio.throttle.write_bps_device
-echo $$ > cgroup.procs
-dd if=/dev/zero of=/dev/sda bs=10k count=1 oflag=direct &
-dd if=/dev/zero of=/dev/sda bs=10k count=1 oflag=direct &
-
-Test result:
-10240 bytes (10 kB, 10 KiB) copied, 10.0134 s, 1.0 kB/s
-10240 bytes (10 kB, 10 KiB) copied, 10.0135 s, 1.0 kB/s
-
-The problem is that the second bio is finished after 10s instead of 20s.
-This is because if some bios are already queued, current bio is queued
-directly and the flag 'BIO_THROTTLED' is set. And later, when former
-bios are dispatched, this bio will be dispatched without waiting at all,
-this is due to tg_with_in_bps_limit() return 0 for this bio.
-
-In order to fix the problem, don't skip flaged bio in
-tg_with_in_bps_limit(), and for the problem that split bio can be
-double accounted, compensate the over-accounting in __blk_throtl_bio().
-
-Fixes: 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-throttle.c | 24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
+ block/blk-throttle.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 139b2d7a99e2..5c1d1c4d8188 100644
+index 7b09b48577ba..e690dc1c1cde 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -811,7 +811,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 	unsigned int bio_size = throtl_bio_data_size(bio);
+@@ -329,8 +329,8 @@ static struct bio *throtl_pop_queued(struct list_head *queued,
+ /* init a service_queue, assumes the caller zeroed it */
+ static void throtl_service_queue_init(struct throtl_service_queue *sq)
+ {
+-	INIT_LIST_HEAD(&sq->queued[0]);
+-	INIT_LIST_HEAD(&sq->queued[1]);
++	INIT_LIST_HEAD(&sq->queued[READ]);
++	INIT_LIST_HEAD(&sq->queued[WRITE]);
+ 	sq->pending_tree = RB_ROOT_CACHED;
+ 	timer_setup(&sq->pending_timer, throtl_pending_timer_fn, 0);
+ }
+@@ -1156,7 +1156,7 @@ static int throtl_select_dispatch(struct throtl_service_queue *parent_sq)
+ 		nr_disp += throtl_dispatch_tg(tg);
  
- 	/* no need to throttle if this bio's bytes have been accounted */
--	if (bps_limit == U64_MAX || bio_flagged(bio, BIO_THROTTLED)) {
-+	if (bps_limit == U64_MAX) {
- 		if (wait)
- 			*wait = 0;
- 		return true;
-@@ -921,11 +921,8 @@ static void throtl_charge_bio(struct throtl_grp *tg, struct bio *bio)
- 	unsigned int bio_size = throtl_bio_data_size(bio);
+ 		sq = &tg->service_queue;
+-		if (sq->nr_queued[0] || sq->nr_queued[1])
++		if (sq->nr_queued[READ] || sq->nr_queued[WRITE])
+ 			tg_update_disptime(tg);
  
- 	/* Charge the bio to the group */
--	if (!bio_flagged(bio, BIO_THROTTLED)) {
--		tg->bytes_disp[rw] += bio_size;
--		tg->last_bytes_disp[rw] += bio_size;
--	}
--
-+	tg->bytes_disp[rw] += bio_size;
-+	tg->last_bytes_disp[rw] += bio_size;
- 	tg->io_disp[rw]++;
- 	tg->last_io_disp[rw]++;
- 
-@@ -2121,6 +2118,21 @@ bool __blk_throtl_bio(struct bio *bio)
- 			tg->last_low_overflow_time[rw] = jiffies;
- 		throtl_downgrade_check(tg);
- 		throtl_upgrade_check(tg);
-+
-+		/*
-+		 * re-entered bio has accounted bytes already, so try to
-+		 * compensate previous over-accounting. However, if new
-+		 * slice is started, just forget it.
-+		 */
-+		if (bio_flagged(bio, BIO_THROTTLED)) {
-+			unsigned int bio_size = throtl_bio_data_size(bio);
-+
-+			if (tg->bytes_disp[rw] >= bio_size)
-+				tg->bytes_disp[rw] -= bio_size;
-+			if (tg->last_bytes_disp[rw] >= bio_size)
-+				tg->last_bytes_disp[rw] -= bio_size;
-+		}
-+
- 		/* throtl is FIFO - if bios are already queued, should queue */
- 		if (sq->nr_queued[rw])
- 			break;
+ 		if (nr_disp >= THROTL_QUANTUM)
 -- 
 2.31.1
 
