@@ -1,135 +1,101 @@
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH RESEND v6 4/8] blk-throttle: fix io hung due to config updates
-Date: Fri,  1 Jul 2022 17:34:37 +0800
-Message-ID: <20220701093441.885741-5-yukuai1@huaweicloud.com>
+Subject: [PATCH RESEND v6 8/8] blk-throttle: clean up flag 'THROTL_TG_PENDING'
+Date: Fri,  1 Jul 2022 17:34:41 +0800
+Message-ID: <20220701093441.885741-9-yukuai1@huaweicloud.com>
 References: <20220701093441.885741-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20220701093441.885741-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
+Content-Type: text/plain; charset="us-ascii"
 To: tj@kernel.org, mkoutny@suse.com, axboe@kernel.dk, ming.lei@redhat.com
 Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
 
-RnJvbTogWXUgS3VhaSA8eXVrdWFpM0BodWF3ZWkuY29tPgoKSWYgbmV3IGNvbmZpZ3VyYXRpb24g
-aXMgc3VibWl0dGVkIHdoaWxlIGEgYmlvIGlzIHRocm90dGxlZCwgdGhlbiBuZXcKd2FpdGluZyB0
-aW1lIGlzIHJlY2FsY3VsYXRlZCByZWdhcmRsZXNzIHRoYXQgdGhlIGJpbyBtaWdodCBhcmVhZHkg
-d2FpdApmb3Igc29tZSB0aW1lOgoKdGdfY29uZl91cGRhdGVkCiB0aHJvdGxfc3RhcnRfbmV3X3Ns
-aWNlCiAgdGdfdXBkYXRlX2Rpc3B0aW1lCiAgdGhyb3RsX3NjaGVkdWxlX25leHRfZGlzcGF0Y2gK
-ClRoZW4gaW8gaHVuZyBjYW4gYmUgdHJpZ2dlcmVkIGJ5IGFsd2F5cyBzdWJtbWl0aW5nIG5ldyBj
-b25maWd1cmF0aW9uCmJlZm9yZSB0aGUgdGhyb3R0bGVkIGJpbyBpcyBkaXNwYXRjaGVkLgoKRml4
-IHRoZSBwcm9ibGVtIGJ5IHJlc3BlY3RpbmcgdGhlIHRpbWUgdGhhdCB0aHJvdHRsZWQgYmlvIGFy
-ZWFkeSB3YWl0ZWQuCkluIG9yZGVyIHRvIGRvIHRoYXQsIGFkZCBuZXcgZmllbGRzIHRvIHJlY29y
-ZCBob3cgbWFueSBieXRlcy9pbyBhbHJlYWR5CndhaXRlZCwgYW5kIHVzZSBpdCB0byBjYWxjdWxh
-dGUgd2FpdCB0aW1lIGZvciB0aHJvdHRsZWQgYmlvIHVuZGVyIG5ldwpjb25maWd1cmF0aW9uLgoK
-U29tZSBzaW1wbGUgdGVzdDoKMSkKY2QgL3N5cy9mcy9jZ3JvdXAvYmxraW8vCmVjaG8gJCQgPiBj
-Z3JvdXAucHJvY3MKZWNobyAiODowIDIwNDgiID4gYmxraW8udGhyb3R0bGUud3JpdGVfYnBzX2Rl
-dmljZQp7CiAgICAgICAgc2xlZXAgMgogICAgICAgIGVjaG8gIjg6MCAxMDI0IiA+IGJsa2lvLnRo
-cm90dGxlLndyaXRlX2Jwc19kZXZpY2UKfSAmCmRkIGlmPS9kZXYvemVybyBvZj0vZGV2L3NkYSBi
-cz04ayBjb3VudD0xIG9mbGFnPWRpcmVjdAoKMikKY2QgL3N5cy9mcy9jZ3JvdXAvYmxraW8vCmVj
-aG8gJCQgPiBjZ3JvdXAucHJvY3MKZWNobyAiODowIDEwMjQiID4gYmxraW8udGhyb3R0bGUud3Jp
-dGVfYnBzX2RldmljZQp7CiAgICAgICAgc2xlZXAgNAogICAgICAgIGVjaG8gIjg6MCAyMDQ4IiA+
-IGJsa2lvLnRocm90dGxlLndyaXRlX2Jwc19kZXZpY2UKfSAmCmRkIGlmPS9kZXYvemVybyBvZj0v
-ZGV2L3NkYSBicz04ayBjb3VudD0xIG9mbGFnPWRpcmVjdAoKdGVzdCByZXN1bHRzOiBpbyBmaW5p
-c2ggdGltZQoJYmVmb3JlIHRoaXMgcGF0Y2gJd2l0aCB0aGlzIHBhdGNoCjEpCTEwcwkJCTZzCjIp
-CThzCQkJNnMKClNpZ25lZC1vZmYtYnk6IFl1IEt1YWkgPHl1a3VhaTNAaHVhd2VpLmNvbT4KUmV2
-aWV3ZWQtYnk6IE1pY2hhbCBLb3V0bsO9IDxta291dG55QHN1c2UuY29tPgotLS0KIGJsb2NrL2Js
-ay10aHJvdHRsZS5jIHwgNTggKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-LS0tLS0KIGJsb2NrL2Jsay10aHJvdHRsZS5oIHwgIDkgKysrKysrKwogMiBmaWxlcyBjaGFuZ2Vk
-LCA2MSBpbnNlcnRpb25zKCspLCA2IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2Jsb2NrL2Js
-ay10aHJvdHRsZS5jIGIvYmxvY2svYmxrLXRocm90dGxlLmMKaW5kZXggODYxMmEwNzEzMDVlLi43
-YjA5YjQ4NTc3YmEgMTAwNjQ0Ci0tLSBhL2Jsb2NrL2Jsay10aHJvdHRsZS5jCisrKyBiL2Jsb2Nr
-L2Jsay10aHJvdHRsZS5jCkBAIC02MzksNiArNjM5LDggQEAgc3RhdGljIGlubGluZSB2b2lkIHRo
-cm90bF9zdGFydF9uZXdfc2xpY2Vfd2l0aF9jcmVkaXQoc3RydWN0IHRocm90bF9ncnAgKnRnLAog
-ewogCXRnLT5ieXRlc19kaXNwW3J3XSA9IDA7CiAJdGctPmlvX2Rpc3BbcnddID0gMDsKKwl0Zy0+
-Ynl0ZXNfc2tpcHBlZFtyd10gPSAwOworCXRnLT5pb19za2lwcGVkW3J3XSA9IDA7CiAKIAkvKgog
-CSAqIFByZXZpb3VzIHNsaWNlIGhhcyBleHBpcmVkLiBXZSBtdXN0IGhhdmUgdHJpbW1lZCBpdCBh
-ZnRlciBsYXN0CkBAIC02NTYsMTIgKzY1OCwxNyBAQCBzdGF0aWMgaW5saW5lIHZvaWQgdGhyb3Rs
-X3N0YXJ0X25ld19zbGljZV93aXRoX2NyZWRpdChzdHJ1Y3QgdGhyb3RsX2dycCAqdGcsCiAJCSAg
-IHRnLT5zbGljZV9lbmRbcnddLCBqaWZmaWVzKTsKIH0KIAotc3RhdGljIGlubGluZSB2b2lkIHRo
-cm90bF9zdGFydF9uZXdfc2xpY2Uoc3RydWN0IHRocm90bF9ncnAgKnRnLCBib29sIHJ3KQorc3Rh
-dGljIGlubGluZSB2b2lkIHRocm90bF9zdGFydF9uZXdfc2xpY2Uoc3RydWN0IHRocm90bF9ncnAg
-KnRnLCBib29sIHJ3LAorCQkJCQkgIGJvb2wgY2xlYXJfc2tpcHBlZCkKIHsKIAl0Zy0+Ynl0ZXNf
-ZGlzcFtyd10gPSAwOwogCXRnLT5pb19kaXNwW3J3XSA9IDA7CiAJdGctPnNsaWNlX3N0YXJ0W3J3
-XSA9IGppZmZpZXM7CiAJdGctPnNsaWNlX2VuZFtyd10gPSBqaWZmaWVzICsgdGctPnRkLT50aHJv
-dGxfc2xpY2U7CisJaWYgKGNsZWFyX3NraXBwZWQpIHsKKwkJdGctPmJ5dGVzX3NraXBwZWRbcndd
-ID0gMDsKKwkJdGctPmlvX3NraXBwZWRbcnddID0gMDsKKwl9CiAKIAl0aHJvdGxfbG9nKCZ0Zy0+
-c2VydmljZV9xdWV1ZSwKIAkJICAgIlslY10gbmV3IHNsaWNlIHN0YXJ0PSVsdSBlbmQ9JWx1IGpp
-ZmZpZXM9JWx1IiwKQEAgLTc4Myw2ICs3OTAsNDEgQEAgc3RhdGljIHU2NCBjYWxjdWxhdGVfYnl0
-ZXNfYWxsb3dlZCh1NjQgYnBzX2xpbWl0LCB1bnNpZ25lZCBsb25nIGppZmZ5X2VsYXBzZWQpCiAJ
-cmV0dXJuIG11bF91NjRfdTY0X2Rpdl91NjQoYnBzX2xpbWl0LCAodTY0KWppZmZ5X2VsYXBzZWQs
-ICh1NjQpSFopOwogfQogCitzdGF0aWMgdm9pZCBfX3RnX3VwZGF0ZV9za2lwcGVkKHN0cnVjdCB0
-aHJvdGxfZ3JwICp0ZywgYm9vbCBydykKK3sKKwl1bnNpZ25lZCBsb25nIGppZmZ5X2VsYXBzZWQg
-PSBqaWZmaWVzIC0gdGctPnNsaWNlX3N0YXJ0W3J3XTsKKwl1NjQgYnBzX2xpbWl0ID0gdGdfYnBz
-X2xpbWl0KHRnLCBydyk7CisJdTMyIGlvcHNfbGltaXQgPSB0Z19pb3BzX2xpbWl0KHRnLCBydyk7
-CisKKwkvKgorCSAqIEZvbGxvd2luZyBjYWxjdWxhdGlvbiB3b24ndCBvdmVyZmxvdyBhcyBsb25n
-IGFzIGJpb3MgdGhhdCBhcmUKKwkgKiBkaXNwYXRjaGVkIGxhdGVyIHdvbid0IHByZWVtcHQgYWxy
-ZWFkeSB0aHJvdHRsZWQgYmlvcy4gRXZlbiBpZiBzdWNoCisJICogb3ZlcmZsb3cgZG8gaGFwcGVu
-LCB0aGVyZSBzaG91bGQgYmUgbm8gcHJvYmxlbSBiZWNhdXNlIHdlIGFyZSB1c2luZworCSAqIHVu
-c2lnbmVkIGhlcmUsIGFuZCBieXRlc19za2lwcGVkL2lvX3NraXBwZWQgd2lsbCBiZSB1cGRhdGVk
-CisJICogY29ycmVjdGx5LgorCSAqLworCWlmIChicHNfbGltaXQgIT0gVTY0X01BWCkKKwkJdGct
-PmJ5dGVzX3NraXBwZWRbcnddICs9CisJCQljYWxjdWxhdGVfYnl0ZXNfYWxsb3dlZChicHNfbGlt
-aXQsIGppZmZ5X2VsYXBzZWQpIC0KKwkJCXRnLT5ieXRlc19kaXNwW3J3XTsKKwlpZiAoaW9wc19s
-aW1pdCAhPSBVSU5UX01BWCkKKwkJdGctPmlvX3NraXBwZWRbcnddICs9CisJCQljYWxjdWxhdGVf
-aW9fYWxsb3dlZChpb3BzX2xpbWl0LCBqaWZmeV9lbGFwc2VkKSAtCisJCQl0Zy0+aW9fZGlzcFty
-d107Cit9CisKK3N0YXRpYyB2b2lkIHRnX3VwZGF0ZV9za2lwcGVkKHN0cnVjdCB0aHJvdGxfZ3Jw
-ICp0ZykKK3sKKwlpZiAodGctPnNlcnZpY2VfcXVldWUubnJfcXVldWVkW1JFQURdKQorCQlfX3Rn
-X3VwZGF0ZV9za2lwcGVkKHRnLCBSRUFEKTsKKwlpZiAodGctPnNlcnZpY2VfcXVldWUubnJfcXVl
-dWVkW1dSSVRFXSkKKwkJX190Z191cGRhdGVfc2tpcHBlZCh0ZywgV1JJVEUpOworCisJdGhyb3Rs
-X2xvZygmdGctPnNlcnZpY2VfcXVldWUsICIlczogJWxsdSAlbGx1ICV1ICV1XG4iLCBfX2Z1bmNf
-XywKKwkJICAgdGctPmJ5dGVzX3NraXBwZWRbUkVBRF0sIHRnLT5ieXRlc19za2lwcGVkW1dSSVRF
-XSwKKwkJICAgdGctPmlvX3NraXBwZWRbUkVBRF0sIHRnLT5pb19za2lwcGVkW1dSSVRFXSk7Cit9
-CisKIHN0YXRpYyBib29sIHRnX3dpdGhfaW5faW9wc19saW1pdChzdHJ1Y3QgdGhyb3RsX2dycCAq
-dGcsIHN0cnVjdCBiaW8gKmJpbywKIAkJCQkgIHUzMiBpb3BzX2xpbWl0LCB1bnNpZ25lZCBsb25n
-ICp3YWl0KQogewpAQCAtODAwLDcgKzg0Miw4IEBAIHN0YXRpYyBib29sIHRnX3dpdGhfaW5faW9w
-c19saW1pdChzdHJ1Y3QgdGhyb3RsX2dycCAqdGcsIHN0cnVjdCBiaW8gKmJpbywKIAogCS8qIFJv
-dW5kIHVwIHRvIHRoZSBuZXh0IHRocm90dGxlIHNsaWNlLCB3YWl0IHRpbWUgbXVzdCBiZSBub256
-ZXJvICovCiAJamlmZnlfZWxhcHNlZF9ybmQgPSByb3VuZHVwKGppZmZ5X2VsYXBzZWQgKyAxLCB0
-Zy0+dGQtPnRocm90bF9zbGljZSk7Ci0JaW9fYWxsb3dlZCA9IGNhbGN1bGF0ZV9pb19hbGxvd2Vk
-KGlvcHNfbGltaXQsIGppZmZ5X2VsYXBzZWRfcm5kKTsKKwlpb19hbGxvd2VkID0gY2FsY3VsYXRl
-X2lvX2FsbG93ZWQoaW9wc19saW1pdCwgamlmZnlfZWxhcHNlZF9ybmQpICsKKwkJICAgICB0Zy0+
-aW9fc2tpcHBlZFtyd107CiAJaWYgKHRnLT5pb19kaXNwW3J3XSArIDEgPD0gaW9fYWxsb3dlZCkg
-ewogCQlpZiAod2FpdCkKIAkJCSp3YWl0ID0gMDsKQEAgLTgzNyw3ICs4ODAsOCBAQCBzdGF0aWMg
-Ym9vbCB0Z193aXRoX2luX2Jwc19saW1pdChzdHJ1Y3QgdGhyb3RsX2dycCAqdGcsIHN0cnVjdCBi
-aW8gKmJpbywKIAkJamlmZnlfZWxhcHNlZF9ybmQgPSB0Zy0+dGQtPnRocm90bF9zbGljZTsKIAog
-CWppZmZ5X2VsYXBzZWRfcm5kID0gcm91bmR1cChqaWZmeV9lbGFwc2VkX3JuZCwgdGctPnRkLT50
-aHJvdGxfc2xpY2UpOwotCWJ5dGVzX2FsbG93ZWQgPSBjYWxjdWxhdGVfYnl0ZXNfYWxsb3dlZChi
-cHNfbGltaXQsIGppZmZ5X2VsYXBzZWRfcm5kKTsKKwlieXRlc19hbGxvd2VkID0gY2FsY3VsYXRl
-X2J5dGVzX2FsbG93ZWQoYnBzX2xpbWl0LCBqaWZmeV9lbGFwc2VkX3JuZCkgKworCQkJdGctPmJ5
-dGVzX3NraXBwZWRbcnddOwogCWlmICh0Zy0+Ynl0ZXNfZGlzcFtyd10gKyBiaW9fc2l6ZSA8PSBi
-eXRlc19hbGxvd2VkKSB7CiAJCWlmICh3YWl0KQogCQkJKndhaXQgPSAwOwpAQCAtODk4LDcgKzk0
-Miw3IEBAIHN0YXRpYyBib29sIHRnX21heV9kaXNwYXRjaChzdHJ1Y3QgdGhyb3RsX2dycCAqdGcs
-IHN0cnVjdCBiaW8gKmJpbywKIAkgKiBzbGljZSBhbmQgaXQgc2hvdWxkIGJlIGV4dGVuZGVkIGlu
-c3RlYWQuCiAJICovCiAJaWYgKHRocm90bF9zbGljZV91c2VkKHRnLCBydykgJiYgISh0Zy0+c2Vy
-dmljZV9xdWV1ZS5ucl9xdWV1ZWRbcnddKSkKLQkJdGhyb3RsX3N0YXJ0X25ld19zbGljZSh0Zywg
-cncpOworCQl0aHJvdGxfc3RhcnRfbmV3X3NsaWNlKHRnLCBydywgdHJ1ZSk7CiAJZWxzZSB7CiAJ
-CWlmICh0aW1lX2JlZm9yZSh0Zy0+c2xpY2VfZW5kW3J3XSwKIAkJICAgIGppZmZpZXMgKyB0Zy0+
-dGQtPnRocm90bF9zbGljZSkpCkBAIC0xMzI3LDggKzEzNzEsOCBAQCBzdGF0aWMgdm9pZCB0Z19j
-b25mX3VwZGF0ZWQoc3RydWN0IHRocm90bF9ncnAgKnRnLCBib29sIGdsb2JhbCkKIAkgKiB0aGF0
-IGEgZ3JvdXAncyBsaW1pdCBhcmUgZHJvcHBlZCBzdWRkZW5seSBhbmQgd2UgZG9uJ3Qgd2FudCB0
-bwogCSAqIGFjY291bnQgcmVjZW50bHkgZGlzcGF0Y2hlZCBJTyB3aXRoIG5ldyBsb3cgcmF0ZS4K
-IAkgKi8KLQl0aHJvdGxfc3RhcnRfbmV3X3NsaWNlKHRnLCBSRUFEKTsKLQl0aHJvdGxfc3RhcnRf
-bmV3X3NsaWNlKHRnLCBXUklURSk7CisJdGhyb3RsX3N0YXJ0X25ld19zbGljZSh0ZywgUkVBRCwg
-ZmFsc2UpOworCXRocm90bF9zdGFydF9uZXdfc2xpY2UodGcsIFdSSVRFLCBmYWxzZSk7CiAKIAlp
-ZiAodGctPmZsYWdzICYgVEhST1RMX1RHX1BFTkRJTkcpIHsKIAkJdGdfdXBkYXRlX2Rpc3B0aW1l
-KHRnKTsKQEAgLTEzNTYsNiArMTQwMCw3IEBAIHN0YXRpYyBzc2l6ZV90IHRnX3NldF9jb25mKHN0
-cnVjdCBrZXJuZnNfb3Blbl9maWxlICpvZiwKIAkJdiA9IFU2NF9NQVg7CiAKIAl0ZyA9IGJsa2df
-dG9fdGcoY3R4LmJsa2cpOworCXRnX3VwZGF0ZV9za2lwcGVkKHRnKTsKIAogCWlmIChpc191NjQp
-CiAJCSoodTY0ICopKCh2b2lkICopdGcgKyBvZl9jZnQob2YpLT5wcml2YXRlKSA9IHY7CkBAIC0x
-NTQyLDYgKzE1ODcsNyBAQCBzdGF0aWMgc3NpemVfdCB0Z19zZXRfbGltaXQoc3RydWN0IGtlcm5m
-c19vcGVuX2ZpbGUgKm9mLAogCQlyZXR1cm4gcmV0OwogCiAJdGcgPSBibGtnX3RvX3RnKGN0eC5i
-bGtnKTsKKwl0Z191cGRhdGVfc2tpcHBlZCh0Zyk7CiAKIAl2WzBdID0gdGctPmJwc19jb25mW1JF
-QURdW2luZGV4XTsKIAl2WzFdID0gdGctPmJwc19jb25mW1dSSVRFXVtpbmRleF07CmRpZmYgLS1n
-aXQgYS9ibG9jay9ibGstdGhyb3R0bGUuaCBiL2Jsb2NrL2Jsay10aHJvdHRsZS5oCmluZGV4IGMx
-YjYwMjk5NjEyNy4uMzcxZDYyNGFmODQ1IDEwMDY0NAotLS0gYS9ibG9jay9ibGstdGhyb3R0bGUu
-aAorKysgYi9ibG9jay9ibGstdGhyb3R0bGUuaApAQCAtMTE1LDYgKzExNSwxNSBAQCBzdHJ1Y3Qg
-dGhyb3RsX2dycCB7CiAJdWludDY0X3QgYnl0ZXNfZGlzcFsyXTsKIAkvKiBOdW1iZXIgb2YgYmlv
-J3MgZGlzcGF0Y2hlZCBpbiBjdXJyZW50IHNsaWNlICovCiAJdW5zaWduZWQgaW50IGlvX2Rpc3Bb
-Ml07CisJLyoKKwkgKiBUaGUgZm9sbG93aW5nIHR3byBmaWVsZHMgYXJlIHVzZWQgdG8gY2FsY3Vs
-YXRlIG5ldyB3YWl0IHRpbWUgZm9yCisJICogdGhyb3R0bGVkIGJpbyB3aGVuIG5ldyBjb25maWd1
-cmF0aW9uIGlzIHN1Ym1taXRlZC4KKwkgKgorCSAqIE51bWJlciBvZiBieXRlcyB3aWxsIGJlIHNr
-aXBwZWQgaW4gY3VycmVudCBzbGljZQorCSAqLworCXVpbnQ2NF90IGJ5dGVzX3NraXBwZWRbMl07
-CisJLyogTnVtYmVyIG9mIGJpbyB3aWxsIGJlIHNraXBwZWQgaW4gY3VycmVudCBzbGljZSAqLwor
-CXVuc2lnbmVkIGludCBpb19za2lwcGVkWzJdOwogCiAJdW5zaWduZWQgbG9uZyBsYXN0X2xvd19v
-dmVyZmxvd190aW1lWzJdOwogCi0tIAoyLjMxLjEKCg==
+From: Yu Kuai <yukuai3@huawei.com>
+
+All related operations are inside 'queue_lock', there is no need to use
+the flag, we only need to make sure throtl_enqueue_tg() is called when
+the first bio is throttled, and throtl_dequeue_tg() is called when the
+last throttled bio is dispatched.
+
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ block/blk-throttle.c | 22 ++++++++--------------
+ block/blk-throttle.h |  7 +++----
+ 2 files changed, 11 insertions(+), 18 deletions(-)
+
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 473f0b651ef0..29e9f7f6573c 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -561,23 +561,16 @@ static void tg_service_queue_add(struct throtl_grp *tg)
+ 
+ static void throtl_enqueue_tg(struct throtl_grp *tg)
+ {
+-	if (!(tg->flags & THROTL_TG_PENDING)) {
+-		tg_service_queue_add(tg);
+-		tg->flags |= THROTL_TG_PENDING;
+-		tg->service_queue.parent_sq->nr_pending++;
+-	}
++	tg_service_queue_add(tg);
++	tg->service_queue.parent_sq->nr_pending++;
+ }
+ 
+ static void throtl_dequeue_tg(struct throtl_grp *tg)
+ {
+-	if (tg->flags & THROTL_TG_PENDING) {
+-		struct throtl_service_queue *parent_sq =
+-			tg->service_queue.parent_sq;
++	struct throtl_service_queue *parent_sq = tg->service_queue.parent_sq;
+ 
+-		throtl_rb_erase(&tg->rb_node, parent_sq);
+-		--parent_sq->nr_pending;
+-		tg->flags &= ~THROTL_TG_PENDING;
+-	}
++	throtl_rb_erase(&tg->rb_node, parent_sq);
++	--parent_sq->nr_pending;
+ }
+ 
+ /* Call with queue lock held */
+@@ -1021,8 +1014,9 @@ static void throtl_add_bio_tg(struct bio *bio, struct throtl_qnode *qn,
+ 
+ 	throtl_qnode_add_bio(bio, qn, &sq->queued[rw]);
+ 
++	if (!sq->nr_queued[READ] && !sq->nr_queued[WRITE])
++		throtl_enqueue_tg(tg);
+ 	sq->nr_queued[rw]++;
+-	throtl_enqueue_tg(tg);
+ }
+ 
+ static void tg_update_disptime(struct throtl_grp *tg)
+@@ -1377,7 +1371,7 @@ static void tg_conf_updated(struct throtl_grp *tg, bool global)
+ 	throtl_start_new_slice(tg, READ, false);
+ 	throtl_start_new_slice(tg, WRITE, false);
+ 
+-	if (tg->flags & THROTL_TG_PENDING) {
++	if (sq->nr_queued[READ] || sq->nr_queued[WRITE]) {
+ 		tg_update_disptime(tg);
+ 		throtl_schedule_next_dispatch(sq->parent_sq, true);
+ 	}
+diff --git a/block/blk-throttle.h b/block/blk-throttle.h
+index 371d624af845..fba48afbcff3 100644
+--- a/block/blk-throttle.h
++++ b/block/blk-throttle.h
+@@ -53,10 +53,9 @@ struct throtl_service_queue {
+ };
+ 
+ enum tg_state_flags {
+-	THROTL_TG_PENDING	= 1 << 0,	/* on parent's pending tree */
+-	THROTL_TG_WAS_EMPTY	= 1 << 1,	/* bio_lists[] became non-empty */
+-	THROTL_TG_HAS_IOPS_LIMIT = 1 << 2,	/* tg has iops limit */
+-	THROTL_TG_CANCELING	= 1 << 3,	/* starts to cancel bio */
++	THROTL_TG_WAS_EMPTY	= 1 << 0,	/* bio_lists[] became non-empty */
++	THROTL_TG_HAS_IOPS_LIMIT = 1 << 1,	/* tg has iops limit */
++	THROTL_TG_CANCELING	= 1 << 2,	/* starts to cancel bio */
+ };
+ 
+ enum {
+-- 
+2.31.1
+
