@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH RESEND v6 8/8] blk-throttle: clean up flag 'THROTL_TG_PENDING'
-Date: Fri,  1 Jul 2022 17:34:41 +0800
-Message-ID: <20220701093441.885741-9-yukuai1@huaweicloud.com>
+Subject: [PATCH RESEND v6 3/8] blk-throttle: factor out code to calculate ios/bytes_allowed
+Date: Fri,  1 Jul 2022 17:34:36 +0800
+Message-ID: <20220701093441.885741-4-yukuai1@huaweicloud.com>
 References: <20220701093441.885741-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,88 +14,100 @@ Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kern
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-All related operations are inside 'queue_lock', there is no need to use
-the flag, we only need to make sure throtl_enqueue_tg() is called when
-the first bio is throttled, and throtl_dequeue_tg() is called when the
-last throttled bio is dispatched.
+No functional changes, new apis will be used in later patches to
+calculate wait time for throttled bios while updating config.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- block/blk-throttle.c | 22 ++++++++--------------
- block/blk-throttle.h |  7 +++----
- 2 files changed, 11 insertions(+), 18 deletions(-)
+ block/blk-throttle.c | 51 +++++++++++++++++++++++++++-----------------
+ 1 file changed, 31 insertions(+), 20 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 473f0b651ef0..29e9f7f6573c 100644
+index a89c62bef2fb..8612a071305e 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -561,23 +561,16 @@ static void tg_service_queue_add(struct throtl_grp *tg)
+@@ -754,33 +754,20 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
+ 		   tg->slice_start[rw], tg->slice_end[rw], jiffies);
+ }
  
- static void throtl_enqueue_tg(struct throtl_grp *tg)
+-static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
+-				  u32 iops_limit, unsigned long *wait)
++static unsigned int calculate_io_allowed(u32 iops_limit,
++					 unsigned long jiffy_elapsed)
  {
--	if (!(tg->flags & THROTL_TG_PENDING)) {
--		tg_service_queue_add(tg);
--		tg->flags |= THROTL_TG_PENDING;
--		tg->service_queue.parent_sq->nr_pending++;
+-	bool rw = bio_data_dir(bio);
+ 	unsigned int io_allowed;
+-	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+ 	u64 tmp;
+ 
+-	if (iops_limit == UINT_MAX) {
+-		if (wait)
+-			*wait = 0;
+-		return true;
 -	}
-+	tg_service_queue_add(tg);
-+	tg->service_queue.parent_sq->nr_pending++;
- }
+-
+-	jiffy_elapsed = jiffies - tg->slice_start[rw];
+-
+-	/* Round up to the next throttle slice, wait time must be nonzero */
+-	jiffy_elapsed_rnd = roundup(jiffy_elapsed + 1, tg->td->throtl_slice);
+-
+ 	/*
+-	 * jiffy_elapsed_rnd should not be a big value as minimum iops can be
++	 * jiffy_elapsed should not be a big value as minimum iops can be
+ 	 * 1 then at max jiffy elapsed should be equivalent of 1 second as we
+ 	 * will allow dispatch after 1 second and after that slice should
+ 	 * have been trimmed.
+ 	 */
  
- static void throtl_dequeue_tg(struct throtl_grp *tg)
- {
--	if (tg->flags & THROTL_TG_PENDING) {
--		struct throtl_service_queue *parent_sq =
--			tg->service_queue.parent_sq;
-+	struct throtl_service_queue *parent_sq = tg->service_queue.parent_sq;
+-	tmp = (u64)iops_limit * jiffy_elapsed_rnd;
++	tmp = (u64)iops_limit * jiffy_elapsed;
+ 	do_div(tmp, HZ);
  
--		throtl_rb_erase(&tg->rb_node, parent_sq);
--		--parent_sq->nr_pending;
--		tg->flags &= ~THROTL_TG_PENDING;
--	}
-+	throtl_rb_erase(&tg->rb_node, parent_sq);
-+	--parent_sq->nr_pending;
- }
+ 	if (tmp > UINT_MAX)
+@@ -788,6 +775,32 @@ static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
+ 	else
+ 		io_allowed = tmp;
  
- /* Call with queue lock held */
-@@ -1021,8 +1014,9 @@ static void throtl_add_bio_tg(struct bio *bio, struct throtl_qnode *qn,
++	return io_allowed;
++}
++
++static u64 calculate_bytes_allowed(u64 bps_limit, unsigned long jiffy_elapsed)
++{
++	return mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed, (u64)HZ);
++}
++
++static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
++				  u32 iops_limit, unsigned long *wait)
++{
++	bool rw = bio_data_dir(bio);
++	unsigned int io_allowed;
++	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
++
++	if (iops_limit == UINT_MAX) {
++		if (wait)
++			*wait = 0;
++		return true;
++	}
++
++	jiffy_elapsed = jiffies - tg->slice_start[rw];
++
++	/* Round up to the next throttle slice, wait time must be nonzero */
++	jiffy_elapsed_rnd = roundup(jiffy_elapsed + 1, tg->td->throtl_slice);
++	io_allowed = calculate_io_allowed(iops_limit, jiffy_elapsed_rnd);
+ 	if (tg->io_disp[rw] + 1 <= io_allowed) {
+ 		if (wait)
+ 			*wait = 0;
+@@ -824,9 +837,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 		jiffy_elapsed_rnd = tg->td->throtl_slice;
  
- 	throtl_qnode_add_bio(bio, qn, &sq->queued[rw]);
- 
-+	if (!sq->nr_queued[READ] && !sq->nr_queued[WRITE])
-+		throtl_enqueue_tg(tg);
- 	sq->nr_queued[rw]++;
--	throtl_enqueue_tg(tg);
- }
- 
- static void tg_update_disptime(struct throtl_grp *tg)
-@@ -1377,7 +1371,7 @@ static void tg_conf_updated(struct throtl_grp *tg, bool global)
- 	throtl_start_new_slice(tg, READ, false);
- 	throtl_start_new_slice(tg, WRITE, false);
- 
--	if (tg->flags & THROTL_TG_PENDING) {
-+	if (sq->nr_queued[READ] || sq->nr_queued[WRITE]) {
- 		tg_update_disptime(tg);
- 		throtl_schedule_next_dispatch(sq->parent_sq, true);
- 	}
-diff --git a/block/blk-throttle.h b/block/blk-throttle.h
-index 371d624af845..fba48afbcff3 100644
---- a/block/blk-throttle.h
-+++ b/block/blk-throttle.h
-@@ -53,10 +53,9 @@ struct throtl_service_queue {
- };
- 
- enum tg_state_flags {
--	THROTL_TG_PENDING	= 1 << 0,	/* on parent's pending tree */
--	THROTL_TG_WAS_EMPTY	= 1 << 1,	/* bio_lists[] became non-empty */
--	THROTL_TG_HAS_IOPS_LIMIT = 1 << 2,	/* tg has iops limit */
--	THROTL_TG_CANCELING	= 1 << 3,	/* starts to cancel bio */
-+	THROTL_TG_WAS_EMPTY	= 1 << 0,	/* bio_lists[] became non-empty */
-+	THROTL_TG_HAS_IOPS_LIMIT = 1 << 1,	/* tg has iops limit */
-+	THROTL_TG_CANCELING	= 1 << 2,	/* starts to cancel bio */
- };
- 
- enum {
+ 	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
+-	bytes_allowed = mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed_rnd,
+-					    (u64)HZ);
+-
++	bytes_allowed = calculate_bytes_allowed(bps_limit, jiffy_elapsed_rnd);
+ 	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
+ 		if (wait)
+ 			*wait = 0;
 -- 
 2.31.1
 
