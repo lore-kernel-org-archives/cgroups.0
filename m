@@ -1,252 +1,86 @@
-From: Yonghong Song <yhs@fb.com>
-Subject: Re: [PATCH bpf-next v2 8/8] bpf: add a selftest for cgroup
- hierarchical stats collection
-Date: Fri, 1 Jul 2022 17:55:10 -0700
-Message-ID: <d144ca6b-7f25-f3fa-def7-6c63a6dfc1aa@fb.com>
-References: <20220610194435.2268290-1-yosryahmed@google.com>
- <20220610194435.2268290-9-yosryahmed@google.com>
- <00df1932-38fe-c6f8-49d0-3a44affb1268@fb.com>
- <CAJD7tkaNnx6ebFrMxWgkJbtx=Qoe+cEwnjtWeY5=EAaVktrenw@mail.gmail.com>
- <CAJD7tkZ3AEPEUD9V-5nxUgmS5SLc6qp50ZyrRoAQgdzPM=a-Hg@mail.gmail.com>
- <CAJD7tkarwnbcqR1DUN-iJmt0k_njwBfDMd=P8ket8DfEfRRYjw@mail.gmail.com>
- <6dc9d46b-f1df-fb1d-8efd-580b7a6a7a6e@fb.com>
- <CAJD7tkYsAyFguCOFCKYCaGyaqipCrTE1Q0ecvnrpY1fwG4j=Pg@mail.gmail.com>
+From: Roman Gushchin <roman.gushchin@linux.dev>
+Subject: [PATCH] mm: memcontrol: do not miss MEMCG_MAX events for enforced allocations
+Date: Fri,  1 Jul 2022 20:35:21 -0700
+Message-ID: <20220702033521.64630-1-roman.gushchin@linux.dev>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=facebook;
- bh=Nf+sC10BxO/4n9+I8Wtyh+SF0datPkG1O5cpmLbL6dg=;
- b=g2RguzOL57uORzo96cn0DbGgq1djEzfDpTvnToKO0+Muix/Xjqqc9HpOLx9Ii48fUJFm
- SjBpds2MA49cTJ0p+tq8g9sBxsbNbE7gETf2rrDUd6ZfKuMetpmRW3EkhMKay2E0vr4J
- 55zqz3AJ8FEJNRt1Y17cSb6S+rYf/T2MGx4= 
-Content-Language: en-US
-In-Reply-To: <CAJD7tkYsAyFguCOFCKYCaGyaqipCrTE1Q0ecvnrpY1fwG4j=Pg@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1656732927;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=5sJ9uAjGXNyMkD0Jws/tWJBNd8knl6wtG6bq/f3YA7w=;
+        b=sN8WCsmhKE0KUzCtuUtNjLT4uIP1cnh0sTirAyamJQmyquM0V+MwIleKB6UgonvFvXJ5vb
+        RDMTVlTI0VPdjJnoYpUPGnl0prK2MNe9fEzyVUAY8oSVt0YAAKW9L5g0shONzuv5aqN7Ir
+        726K4nIwztR3n+CltroepxVNRkuXoYw=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Networking <netdev@vger.kernel.org>, bpf <bpf@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Roman Gushchin <roman.gushchin@linux.dev>, Yafang Shao <laoar.shao@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
 
+Yafang Shao reported an issue related to the accounting of bpf
+memory: if a bpf map is charged indirectly for memory consumed
+from an interrupt context and allocations are enforced, MEMCG_MAX
+events are not raised.
 
+It's not/less of an issue in a generic case because consequent
+allocations from a process context will trigger the reclaim and
+MEMCG_MAX events. However a bpf map can belong to a dying/abandoned
+memory cgroup, so it might never happen. So the cgroup can
+significantly exceed the memory.max limit without even triggering
+MEMCG_MAX events.
 
-On 6/29/22 1:04 AM, Yosry Ahmed wrote:
-> On Tue, Jun 28, 2022 at 11:48 PM Yonghong Song <yhs@fb.com> wrote:
->>
->>
->>
->> On 6/28/22 5:09 PM, Yosry Ahmed wrote:
->>> On Tue, Jun 28, 2022 at 12:14 AM Yosry Ahmed <yosryahmed@google.com> wrote:
->>>>
->>>> On Mon, Jun 27, 2022 at 11:47 PM Yosry Ahmed <yosryahmed@google.com> wrote:
->>>>>
->>>>> On Mon, Jun 27, 2022 at 11:14 PM Yonghong Song <yhs@fb.com> wrote:
->>>>>>
->>>>>>
->>>>>>
->>>>>> On 6/10/22 12:44 PM, Yosry Ahmed wrote:
->>>>>>> Add a selftest that tests the whole workflow for collecting,
->>>>>>> aggregating (flushing), and displaying cgroup hierarchical stats.
->>>>>>>
->>>>>>> TL;DR:
->>>>>>> - Whenever reclaim happens, vmscan_start and vmscan_end update
->>>>>>>      per-cgroup percpu readings, and tell rstat which (cgroup, cpu) pairs
->>>>>>>      have updates.
->>>>>>> - When userspace tries to read the stats, vmscan_dump calls rstat to flush
->>>>>>>      the stats, and outputs the stats in text format to userspace (similar
->>>>>>>      to cgroupfs stats).
->>>>>>> - rstat calls vmscan_flush once for every (cgroup, cpu) pair that has
->>>>>>>      updates, vmscan_flush aggregates cpu readings and propagates updates
->>>>>>>      to parents.
->>>>>>>
->>>>>>> Detailed explanation:
->>>>>>> - The test loads tracing bpf programs, vmscan_start and vmscan_end, to
->>>>>>>      measure the latency of cgroup reclaim. Per-cgroup ratings are stored in
->>>>>>>      percpu maps for efficiency. When a cgroup reading is updated on a cpu,
->>>>>>>      cgroup_rstat_updated(cgroup, cpu) is called to add the cgroup to the
->>>>>>>      rstat updated tree on that cpu.
->>>>>>>
->>>>>>> - A cgroup_iter program, vmscan_dump, is loaded and pinned to a file, for
->>>>>>>      each cgroup. Reading this file invokes the program, which calls
->>>>>>>      cgroup_rstat_flush(cgroup) to ask rstat to propagate the updates for all
->>>>>>>      cpus and cgroups that have updates in this cgroup's subtree. Afterwards,
->>>>>>>      the stats are exposed to the user. vmscan_dump returns 1 to terminate
->>>>>>>      iteration early, so that we only expose stats for one cgroup per read.
->>>>>>>
->>>>>>> - An ftrace program, vmscan_flush, is also loaded and attached to
->>>>>>>      bpf_rstat_flush. When rstat flushing is ongoing, vmscan_flush is invoked
->>>>>>>      once for each (cgroup, cpu) pair that has updates. cgroups are popped
->>>>>>>      from the rstat tree in a bottom-up fashion, so calls will always be
->>>>>>>      made for cgroups that have updates before their parents. The program
->>>>>>>      aggregates percpu readings to a total per-cgroup reading, and also
->>>>>>>      propagates them to the parent cgroup. After rstat flushing is over, all
->>>>>>>      cgroups will have correct updated hierarchical readings (including all
->>>>>>>      cpus and all their descendants).
->>>>>>>
->>>>>>> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
->>>>>>
->>>>>> There are a selftest failure with test:
->>>>>>
->>>>>> get_cgroup_vmscan_delay:PASS:output format 0 nsec
->>>>>> get_cgroup_vmscan_delay:PASS:cgroup_id 0 nsec
->>>>>> get_cgroup_vmscan_delay:PASS:vmscan_reading 0 nsec
->>>>>> get_cgroup_vmscan_delay:PASS:read cgroup_iter 0 nsec
->>>>>> get_cgroup_vmscan_delay:PASS:output format 0 nsec
->>>>>> get_cgroup_vmscan_delay:PASS:cgroup_id 0 nsec
->>>>>> get_cgroup_vmscan_delay:FAIL:vmscan_reading unexpected vmscan_reading:
->>>>>> actual 0 <= expected 0
->>>>>> check_vmscan_stats:FAIL:child1_vmscan unexpected child1_vmscan: actual
->>>>>> 781874 != expected 382092
->>>>>> check_vmscan_stats:FAIL:child2_vmscan unexpected child2_vmscan: actual
->>>>>> -1 != expected -2
->>>>>> check_vmscan_stats:FAIL:test_vmscan unexpected test_vmscan: actual
->>>>>> 781874 != expected 781873
->>>>>> check_vmscan_stats:FAIL:root_vmscan unexpected root_vmscan: actual 0 <
->>>>>> expected 781874
->>>>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
->>>>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
->>>>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
->>>>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
->>>>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
->>>>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
->>>>>> destroy_progs:PASS:remove cgroup_iter pin 0 nsec
->>>>>> destroy_progs:PASS:remove cgroup_iter root pin 0 nsec
->>>>>> cleanup_bpffs:PASS:rmdir /sys/fs/bpf/vmscan/ 0 nsec
->>>>>> #33      cgroup_hierarchical_stats:FAIL
->>>>>>
->>>>>
->>>>> The test is passing on my setup. I am trying to figure out if there is
->>>>> something outside the setup done by the test that can cause the test
->>>>> to fail.
->>>>>
->>>>
->>>> I can't reproduce the failure on my machine. It seems like for some
->>>> reason reclaim is not invoked in one of the test cgroups which results
->>>> in the expected stats not being there. I have a few suspicions as to
->>>> what might cause this but I am not sure.
->>>>
->>>> If you have the capacity, do you mind re-running the test with the
->>>> attached diff1.patch? (and maybe diff2.patch if that fails, this will
->>>> cause OOMs in the test cgroup, you might see some process killed
->>>> warnings).
->>>> Thanks!
->>>>
->>>
->>> In addition to that, it looks like one of the cgroups has a "0" stat
->>> which shouldn't happen unless one of the map update/lookup operations
->>> failed, which should log something using bpf_printk. I need to
->>> reproduce the test failure to investigate this properly. Did you
->>> observe this failure on your machine or in CI? Any instructions on how
->>> to reproduce or system setup?
->>
->> I got "0" as well.
->>
->> get_cgroup_vmscan_delay:FAIL:vmscan_reading unexpected vmscan_reading:
->> actual 0 <= expected 0
->> check_vmscan_stats:FAIL:child1_vmscan unexpected child1_vmscan: actual
->> 676612 != expected 339142
->> check_vmscan_stats:FAIL:child2_vmscan unexpected child2_vmscan: actual
->> -1 != expected -2
->> check_vmscan_stats:FAIL:test_vmscan unexpected test_vmscan: actual
->> 676612 != expected 676611
->> check_vmscan_stats:FAIL:root_vmscan unexpected root_vmscan: actual 0 <
->> expected 676612
->>
->> I don't have special config. I am running on qemu vm, similar to
->> ci environment but may have a slightly different config.
->>
->> The CI for this patch set won't work since the sleepable kfunc support
->> patch is not available. Once you have that patch, bpf CI should be able
->> to compile the patch set and run the tests.
->>
-> 
-> I will include this patch in the next version anyway, but I am trying
-> to find out why this selftest is failing for you before I send it out.
-> I am trying to reproduce the problem but no luck so far.
+Fix this by making sure that we never enforce allocations without
+raising a MEMCG_MAX event.
 
-I debugged this a little bit and found that this two programs
+Reported-by: Yafang Shao <laoar.shao@gmail.com>
+Signed-off-by: Roman Gushchin <roman.gushchin@linux.dev>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Shakeel Butt <shakeelb@google.com>
+Cc: Muchun Song <songmuchun@bytedance.com>
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: bpf@vger.kernel.org
+---
+ mm/memcontrol.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-SEC("tp_btf/mm_vmscan_memcg_reclaim_begin")
-int BPF_PROG(vmscan_start, struct lruvec *lruvec, struct scan_control *sc)
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 655c09393ad5..eb383695659a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2577,6 +2577,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	bool passed_oom = false;
+ 	bool may_swap = true;
+ 	bool drained = false;
++	bool raised_max_event = false;
+ 	unsigned long pflags;
+ 
+ retry:
+@@ -2616,6 +2617,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 		goto nomem;
+ 
+ 	memcg_memory_event(mem_over_limit, MEMCG_MAX);
++	raised_max_event = true;
+ 
+ 	psi_memstall_enter(&pflags);
+ 	nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
+@@ -2682,6 +2684,13 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (!(gfp_mask & (__GFP_NOFAIL | __GFP_HIGH)))
+ 		return -ENOMEM;
+ force:
++	/*
++	 * If the allocation has to be enforced, don't forget to raise
++	 * a MEMCG_MAX event.
++	 */
++	if (!raised_max_event)
++		memcg_memory_event(mem_over_limit, MEMCG_MAX);
++
+ 	/*
+ 	 * The allocation either can't fail or will lead to more memory
+ 	 * being freed very soon.  Allow memory usage go over the limit
+-- 
+2.36.1
 
-and
-
-SEC("tp_btf/mm_vmscan_memcg_reclaim_end")
-int BPF_PROG(vmscan_end, struct lruvec *lruvec, struct scan_control *sc)
-
-are not triggered.
-
-I do have CONFIG_MEMCG enabled in my config file:
-...
-CONFIG_MEMCG=y
-CONFIG_MEMCG_SWAP=y
-CONFIG_MEMCG_KMEM=y
-...
-
-Maybe when cgroup_rstat_flush() is called, some code path won't trigger
-mm_vmscan_memcg_reclaim_begin/end()?
-
-> 
->>>
->>>>
->>>>>>
->>>>>> Also an existing test also failed.
->>>>>>
->>>>>> btf_dump_data:PASS:find type id 0 nsec
->>>>>>
->>>>>>
->>>>>> btf_dump_data:PASS:failed/unexpected type_sz 0 nsec
->>>>>>
->>>>>>
->>>>>> btf_dump_data:FAIL:ensure expected/actual match unexpected ensure
->>>>>> expected/actual match: actual '(union bpf_iter_link_info){.map =
->>>>>> (struct){.map_fd = (__u32)1,},.cgroup '
->>>>>> test_btf_dump_struct_data:PASS:find struct sk_buff 0 nsec
->>>>>>
->>>>>
->>>>> Yeah I see what happened there. bpf_iter_link_info was changed by the
->>>>> patch that introduced cgroup_iter, and this specific union is used by
->>>>> the test to test the "union with nested struct" btf dumping. I will
->>>>> add a patch in the next version that updates the btf_dump_data test
->>>>> accordingly. Thanks.
->>>>>
->>>>>>
->>>>>> test_btf_dump_struct_data:PASS:unexpected return value dumping sk_buff 0
->>>>>> nsec
->>>>>>
->>>>>> btf_dump_data:PASS:verify prefix match 0 nsec
->>>>>>
->>>>>>
->>>>>> btf_dump_data:PASS:find type id 0 nsec
->>>>>>
->>>>>>
->>>>>> btf_dump_data:PASS:failed to return -E2BIG 0 nsec
->>>>>>
->>>>>>
->>>>>> btf_dump_data:PASS:ensure expected/actual match 0 nsec
->>>>>>
->>>>>>
->>>>>> btf_dump_data:PASS:verify prefix match 0 nsec
->>>>>>
->>>>>>
->>>>>> btf_dump_data:PASS:find type id 0 nsec
->>>>>>
->>>>>>
->>>>>> btf_dump_data:PASS:failed to return -E2BIG 0 nsec
->>>>>>
->>>>>>
->>>>>> btf_dump_data:PASS:ensure expected/actual match 0 nsec
->>>>>>
->>>>>>
->>>>>> #21/14   btf_dump/btf_dump: struct_data:FAIL
->>>>>>
->>>>>> please take a look.
->>>>>>
->>>>>>> ---
->>>>>>>     .../prog_tests/cgroup_hierarchical_stats.c    | 351 ++++++++++++++++++
->>>>>>>     .../bpf/progs/cgroup_hierarchical_stats.c     | 234 ++++++++++++
->>>>>>>     2 files changed, 585 insertions(+)
->>>>>>>     create mode 100644 tools/testing/selftests/bpf/prog_tests/cgroup_hierarchical_stats.c
->>>>>>>     create mode 100644 tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
->>>>>>>
->> [...]
