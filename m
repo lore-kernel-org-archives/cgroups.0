@@ -1,62 +1,53 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: do not miss MEMCG_MAX events for
- enforced allocations
-Date: Sun, 3 Jul 2022 15:50:59 -0700
-Message-ID: <YsIdU0xJeQWR2DwL@castle>
-References: <20220702033521.64630-1-roman.gushchin@linux.dev>
- <CALvZod7TGhWtcRD6HeEx90T2+Rod-yamq9i+WbEQUKwNFTi-1A@mail.gmail.com>
- <YsBmoqEBCa7ra7w2@castle>
- <CALvZod6zCHKyjd8Ewr02xcHRWrxR_82my6mmTgsRp3HceqsBcg@mail.gmail.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH v6 00/11] Use obj_cgroup APIs to charge the LRU pages
+Date: Sun, 3 Jul 2022 16:23:40 -0700
+Message-ID: <20220703162340.cb90924355dacbb7437ab595@linux-foundation.org>
+References: <20220621125658.64935-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1656888664;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=x1aMEnERkcYXRuDziS0Zc8C87mC49RuzSVJcPFqy0W4=;
-        b=NdeXq3Q0aH+DxBKSCS1GbadzG/ojBzsDFkJu1dEehs/A4VIcHKeDcfyrAAnIt+xW787Q2Y
-        llJrgKxTG0lCaWhR1V20IxPimKLEoF19Q8mA27pxNl262HKIDQydxfIJM2PNiE+uDGrGfC
-        m9H4YfvK0CIGGgqwrCL8m/lvsv4A7zw=
-Content-Disposition: inline
-In-Reply-To: <CALvZod6zCHKyjd8Ewr02xcHRWrxR_82my6mmTgsRp3HceqsBcg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1656890621;
+        bh=EDIwVumbRS+j2biW/LWEapjenLtWMcKX8aj62iSrHFs=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=UGoty1uxOxulUsQC/avpz8A7yZpRuf7BdzfbceCmcdN+XaD+urZDeSlb6tyAxPZfO
+         K+dIpKI3tvnIYwdfDirzlucGlozflAtVanLk5BUjPWntuAOYGjHdgLNk2BtL9kDtrk
+         IJ+i8dgF7XEGChVK7VyVarTJ4q9rqmJJCYvnN130=
+In-Reply-To: <20220621125658.64935-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Sat, Jul 02, 2022 at 10:36:28PM -0700, Shakeel Butt wrote:
-> On Sat, Jul 2, 2022 at 8:39 AM Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
-> >
-> > On Fri, Jul 01, 2022 at 10:50:40PM -0700, Shakeel Butt wrote:
-> > > On Fri, Jul 1, 2022 at 8:35 PM Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
-> > > >
-> > > > Yafang Shao reported an issue related to the accounting of bpf
-> > > > memory: if a bpf map is charged indirectly for memory consumed
-> > > > from an interrupt context and allocations are enforced, MEMCG_MAX
-> > > > events are not raised.
-> > > >
-> > > > It's not/less of an issue in a generic case because consequent
-> > > > allocations from a process context will trigger the reclaim and
-> > > > MEMCG_MAX events. However a bpf map can belong to a dying/abandoned
-> > > > memory cgroup, so it might never happen.
-> > >
-> > > The patch looks good but the above sentence is confusing. What might
-> > > never happen? Reclaim or MAX event on dying memcg?
-> >
-> > Direct reclaim and MAX events. I agree it might be not clear without
-> > looking into the code. How about something like this?
-> >
-> > "It's not/less of an issue in a generic case because consequent
-> > allocations from a process context will trigger the direct reclaim
-> > and MEMCG_MAX events will be raised. However a bpf map can belong
-> > to a dying/abandoned memory cgroup, so there will be no allocations
-> > from a process context and no MEMCG_MAX events will be triggered."
-> >
-> 
-> SGTM and you can add:
-> 
-> Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+On Tue, 21 Jun 2022 20:56:47 +0800 Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
 
-Thank you!
+> This version is rebased on mm-unstable. Hopefully, Andrew can get this series
+> into mm-unstable which will help to determine whether there is a problem or
+> degradation. I am also doing some benchmark tests in parallel.
+> 
+> Since the following patchsets applied. All the kernel memory are charged
+> with the new APIs of obj_cgroup.
+> 
+> 	commit f2fe7b09a52b ("mm: memcg/slab: charge individual slab objects instead of pages")
+> 	commit b4e0b68fbd9d ("mm: memcontrol: use obj_cgroup APIs to charge kmem pages")
+> 
+> But user memory allocations (LRU pages) pinning memcgs for a long time -
+> it exists at a larger scale and is causing recurring problems in the real
+> world: page cache doesn't get reclaimed for a long time, or is used by the
+> second, third, fourth, ... instance of the same job that was restarted into
+> a new cgroup every time. Unreclaimable dying cgroups pile up, waste memory,
+> and make page reclaim very inefficient.
+> 
+> We can convert LRU pages and most other raw memcg pins to the objcg direction
+> to fix this problem, and then the LRU pages will not pin the memcgs.
+> 
+> This patchset aims to make the LRU pages to drop the reference to memory
+> cgroup by using the APIs of obj_cgroup. Finally, we can see that the number
+> of the dying cgroups will not increase if we run the following test script.
+> 
+> ...
+>
+
+I don't have reviewer or acker tags on a couple of these, but there is
+still time - I plan to push this series into mm-stable around July 8.
+
