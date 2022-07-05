@@ -1,63 +1,61 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: do not miss MEMCG_MAX events for
- enforced allocations
-Date: Mon, 4 Jul 2022 17:30:25 +0200
-Message-ID: <YsMHkXJ0vAPG0lyM@dhcp22.suse.cz>
-References: <20220702033521.64630-1-roman.gushchin@linux.dev>
- <CALvZod7TGhWtcRD6HeEx90T2+Rod-yamq9i+WbEQUKwNFTi-1A@mail.gmail.com>
- <YsBmoqEBCa7ra7w2@castle>
- <YsMCMveSdiYX/2eH@dhcp22.suse.cz>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH -next v5 4/8] blk-throttle: fix io hung due to config
+ updates
+Date: Tue, 5 Jul 2022 19:42:44 +0800
+Message-ID: <2b3d9f87-a5e2-75e0-b6bc-b8588ffec8cd@huaweicloud.com>
+References: <20220528064330.3471000-1-yukuai3@huawei.com>
+ <20220528064330.3471000-5-yukuai3@huawei.com>
+ <20220622172621.GA28246@blackbody.suse.cz>
+ <f5165488-2461-8946-593f-14154e404850@huawei.com>
+ <20220623162620.GB16004@blackbody.suse.cz>
+ <75b3cdcc-1aa3-7259-4900-f09a2a081716@huawei.com>
+ <7e14a11b-225e-13c4-35ff-762eafd20b70@kernel.dk>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1656948627; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=xk1ZJHt34COGC3XZeX8tbvvR/9JIJI9lBw/zzga5fSI=;
-        b=f+AtvND0b4DcCf1ZJTPx9fh7p+06SMADxTw+PpX8t9fPp2q3CNp9yeELUPQxtbfQlpFHvN
-        bYZofWkx9tcbzLG+z3RN0jQlWt8y8rAB89NjJBtn0VsDjWOi1AhLCTEdE/JCqBdqrgAdOn
-        1HNrkuKTAEV67s2/juGSbWMGvc/B84c=
-Content-Disposition: inline
-In-Reply-To: <YsMCMveSdiYX/2eH-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <7e14a11b-225e-13c4-35ff-762eafd20b70-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Mon 04-07-22 17:07:32, Michal Hocko wrote:
-> On Sat 02-07-22 08:39:14, Roman Gushchin wrote:
-> > On Fri, Jul 01, 2022 at 10:50:40PM -0700, Shakeel Butt wrote:
-> > > On Fri, Jul 1, 2022 at 8:35 PM Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
-> > > >
-> > > > Yafang Shao reported an issue related to the accounting of bpf
-> > > > memory: if a bpf map is charged indirectly for memory consumed
-> > > > from an interrupt context and allocations are enforced, MEMCG_MAX
-> > > > events are not raised.
-> > > >
-> > > > It's not/less of an issue in a generic case because consequent
-> > > > allocations from a process context will trigger the reclaim and
-> > > > MEMCG_MAX events. However a bpf map can belong to a dying/abandoned
-> > > > memory cgroup, so it might never happen.
-> > > 
-> > > The patch looks good but the above sentence is confusing. What might
-> > > never happen? Reclaim or MAX event on dying memcg?
-> > 
-> > Direct reclaim and MAX events. I agree it might be not clear without
-> > looking into the code. How about something like this?
-> > 
-> > "It's not/less of an issue in a generic case because consequent
-> > allocations from a process context will trigger the direct reclaim
-> > and MEMCG_MAX events will be raised. However a bpf map can belong
-> > to a dying/abandoned memory cgroup, so there will be no allocations
-> > from a process context and no MEMCG_MAX events will be triggered."
+在 2022/06/26 0:41, Jens Axboe 写道:
+> On 6/25/22 2:36 AM, Yu Kuai wrote:
+>> ? 2022/06/24 0:26, Michal Koutn? ??:
+>>> On Thu, Jun 23, 2022 at 08:27:11PM +0800, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+>>>>> Here we may allow to dispatch a bio above current slice's
+>>>>> calculate_bytes_allowed() if bytes_skipped is already >0.
+>>>>
+>>>> Hi, I don't expect that to happen. For example, if a bio is still
+>>>> throttled, then old slice is keeped with proper 'bytes_skipped',
+>>>> then new wait time is caculated based on (bio_size - bytes_skipped).
+>>>>
+>>>> After the bio is dispatched(I assum that other bios can't preempt),
+>>>
+>>> With this assumptions it adds up as you write. I believe we're in
+>>> agreement.
+>>>
+>>> It's the same assumption I made below (FIFO everywhere, i.e. no
+>>> reordering). So the discussed difference shouldn't really be negative
+>>> (and if the assumption didn't hold, so the modular arithmetic yields
+>>> corerct bytes_skipped value).
+>> Yes, nice that we're in aggreement.
+>>
+>> I'll wait to see if Tejun has any suggestions.
 > 
-> Could you expand little bit more on the situation? Can those charges to
-> offline memcg happen indefinetely? How can it ever go away then? Also is
-> this something that we actually want to encourage?
+> I flushed more emails from spam again. Please stop using the buggy
+> huawei address until this gets resolved, your patches are getting lost
+> left and right and I don't have time to go hunting for emails.
+> 
 
-One more question. Mostly out of curiosity. How is userspace actually
-acting on those events? Are watchers still active on those dead memcgs?
--- 
-Michal Hocko
-SUSE Labs
+Hi, Jens
+
+Can you please take a look if this patchset is ok?
+
+https://lore.kernel.org/all/20220701093441.885741-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org/
+
+This is sent by huaweicloud.com（DMARC record is empty).
+
+Thanks,
+Kuai
+
