@@ -1,76 +1,91 @@
-From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Yafang Shao <laoar.shao@gmail.com>
 Subject: Re: [PATCH] mm: memcontrol: do not miss MEMCG_MAX events for enforced allocations
-Date: Wed, 6 Jul 2022 10:40:48 +0800
-Message-ID: <CALOAHbBrctf_wOiAxUvXD0JSjgEV46YdDQh9QnUK0XZ+Jsapnw@mail.gmail.com>
+Date: Wed, 6 Jul 2022 10:46:48 +0800
+Message-ID: <CALOAHbAb9DT6ihyxTm-4FCUiqiAzRSUHJw9erc+JTKVT9p8tow@mail.gmail.com>
 References: <20220702033521.64630-1-roman.gushchin@linux.dev>
  <CALvZod7TGhWtcRD6HeEx90T2+Rod-yamq9i+WbEQUKwNFTi-1A@mail.gmail.com>
- <YsBmoqEBCa7ra7w2@castle> <YsMCMveSdiYX/2eH@dhcp22.suse.cz>
- <YsMHkXJ0vAPG0lyM@dhcp22.suse.cz> <YsSkaiL00Jk45zNd@castle>
+ <YsBmoqEBCa7ra7w2@castle> <YsMCMveSdiYX/2eH@dhcp22.suse.cz> <YsSj6rZmUkR8amT2@castle>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=MlZR8uPETmlGuwXZgUVOik+H9LRiX+UHdzorFOkInsI=;
-        b=Z5PXWmnGlzUEIH57fT5kT06fxp4S2kHBR0FcR1vhjDY/b8jBSwpUxSitj+VNjxGiQM
-         yrlv9mAvDoIQ0pSB38Vq/T4EqqasWVzb1Ra8npLC1uF/tyy5d+GOq0EsucwhZsUueAYE
-         +DiDHRiqkl+CJS2YFipFg7uo1i63XZ2/3cWXYcfPoTV0vdpwWjS0aKAmN+iqzLrTO7NJ
-         d0AhrXLjYsZ4Hwniqc8vJVsR/UBPsk+ogUMx/APjOWdzTp02dKS0C/5or4Y4C/la4XS6
-         PeuNYoYF/VTJu9W47CUmkEhjyn4XSIqxS4gGza3/RiAxYD8XvlmOwpLwKlzu65KgnF1B
-         6QmA==
-In-Reply-To: <YsSkaiL00Jk45zNd@castle>
+        bh=S9Mt83UidD28OhlwNN6+a26gUoMj9OoZPvbz6iZ0AlM=;
+        b=Joe9DE7EU8kAGqBqAjOwKqrgE3mMBW8IwAllrOhLeyDETeCVuORC1apyRnd7dLCGrl
+         U3+990DpayvNdMoY8AGZwxLc5Ytcj5vdoXRJKDuTSvbjRKGnmPkWrJOFLtTiRw+O3OV+
+         RJ4a+gpZThw1uxY2N8l5b8BLrHxg6GkWdwX8Q/7Wjs8Z+RnbEo9hDrTbDdY2Msj10Ltp
+         5xwWp47snGla1a2BRqRZJo9vgpw74Zv4xbn+1mkcyi0I7KLp6OypLhk7PKVTZmrH0hKu
+         G09XhV6yVb3UncTpN64P5U5RAUaj3Tst+PatNnGJB7oQExE0ot1FVzSGY6SrsGGYrwJq
+         TAZw==
+In-Reply-To: <YsSj6rZmUkR8amT2@castle>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Roman Gushchin <roman.gushchin@linux.dev>
+Cc: Michal Hocko <mhocko@suse.com>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Muchun Song <songmuchun@bytedance.com>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, bpf <bpf@vger.kernel.org>
 
-On Wed, Jul 6, 2022 at 4:52 AM Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
+On Wed, Jul 6, 2022 at 4:49 AM Roman Gushchin <roman.gushchin@linux.dev> wrote:
 >
-> On Mon, Jul 04, 2022 at 05:30:25PM +0200, Michal Hocko wrote:
-> > On Mon 04-07-22 17:07:32, Michal Hocko wrote:
-> > > On Sat 02-07-22 08:39:14, Roman Gushchin wrote:
-> > > > On Fri, Jul 01, 2022 at 10:50:40PM -0700, Shakeel Butt wrote:
-> > > > > On Fri, Jul 1, 2022 at 8:35 PM Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
-> > > > > >
-> > > > > > Yafang Shao reported an issue related to the accounting of bpf
-> > > > > > memory: if a bpf map is charged indirectly for memory consumed
-> > > > > > from an interrupt context and allocations are enforced, MEMCG_MAX
-> > > > > > events are not raised.
-> > > > > >
-> > > > > > It's not/less of an issue in a generic case because consequent
-> > > > > > allocations from a process context will trigger the reclaim and
-> > > > > > MEMCG_MAX events. However a bpf map can belong to a dying/abandoned
-> > > > > > memory cgroup, so it might never happen.
+> On Mon, Jul 04, 2022 at 05:07:30PM +0200, Michal Hocko wrote:
+> > On Sat 02-07-22 08:39:14, Roman Gushchin wrote:
+> > > On Fri, Jul 01, 2022 at 10:50:40PM -0700, Shakeel Butt wrote:
+> > > > On Fri, Jul 1, 2022 at 8:35 PM Roman Gushchin <roman.gushchin@linux.dev> wrote:
 > > > > >
-> > > > > The patch looks good but the above sentence is confusing. What might
-> > > > > never happen? Reclaim or MAX event on dying memcg?
+> > > > > Yafang Shao reported an issue related to the accounting of bpf
+> > > > > memory: if a bpf map is charged indirectly for memory consumed
+> > > > > from an interrupt context and allocations are enforced, MEMCG_MAX
+> > > > > events are not raised.
+> > > > >
+> > > > > It's not/less of an issue in a generic case because consequent
+> > > > > allocations from a process context will trigger the reclaim and
+> > > > > MEMCG_MAX events. However a bpf map can belong to a dying/abandoned
+> > > > > memory cgroup, so it might never happen.
 > > > >
-> > > > Direct reclaim and MAX events. I agree it might be not clear without
-> > > > looking into the code. How about something like this?
-> > > >
-> > > > "It's not/less of an issue in a generic case because consequent
-> > > > allocations from a process context will trigger the direct reclaim
-> > > > and MEMCG_MAX events will be raised. However a bpf map can belong
-> > > > to a dying/abandoned memory cgroup, so there will be no allocations
-> > > > from a process context and no MEMCG_MAX events will be triggered."
+> > > > The patch looks good but the above sentence is confusing. What might
+> > > > never happen? Reclaim or MAX event on dying memcg?
 > > >
-> > > Could you expand little bit more on the situation? Can those charges to
-> > > offline memcg happen indefinetely? How can it ever go away then? Also is
-> > > this something that we actually want to encourage?
+> > > Direct reclaim and MAX events. I agree it might be not clear without
+> > > looking into the code. How about something like this?
+> > >
+> > > "It's not/less of an issue in a generic case because consequent
+> > > allocations from a process context will trigger the direct reclaim
+> > > and MEMCG_MAX events will be raised. However a bpf map can belong
+> > > to a dying/abandoned memory cgroup, so there will be no allocations
+> > > from a process context and no MEMCG_MAX events will be triggered."
 > >
-> > One more question. Mostly out of curiosity. How is userspace actually
-> > acting on those events? Are watchers still active on those dead memcgs?
+> > Could you expand little bit more on the situation? Can those charges to
+> > offline memcg happen indefinetely?
 >
-> Idk, the whole problem was reported by Yafang, so he probably has a better
-> answer. But in general events are recursive and the cgroup doesn't have
-> to be dying, it can be simple abandoned.
+> Yes.
+>
+> > How can it ever go away then?
+>
+> Bpf map should be deleted by a user first.
 >
 
-Regarding the pinned bpf programs, it can run without a user agent.
-That means the cgroup may not be dead, but just not populated.
-(But in our case, the cgroup will be deleted after the user agent exits.)
+It can't apply to pinned bpf maps, because the user expects the bpf
+maps to continue working after the user agent exits.
+
+> > Also is this something that we actually want to encourage?
+>
+> Not really. We can implement reparenting (probably objcg-based), I think it's
+> a good idea in general. I can take a look, but can't promise it will be fast.
+>
+> In thory we can't forbid deleting cgroups with associated bpf maps, but I don't
+> thinks it's a good idea.
+>
+
+Agreed. It is not a good idea.
+
+> > In other words shouldn't those remote charges be redirected when the
+> > target memcg is offline?
+>
+> Reparenting is the best answer I have.
+>
+
+At the cost of increasing the complexity of deployment, that may not
+be a good idea neither.
 
 -- 
 Regards
