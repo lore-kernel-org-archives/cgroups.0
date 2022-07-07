@@ -1,81 +1,73 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: do not miss MEMCG_MAX events for
- enforced allocations
-Date: Thu, 7 Jul 2022 09:47:16 +0200
-Message-ID: <YsaPhF1KQFe+ses0@dhcp22.suse.cz>
-References: <20220702033521.64630-1-roman.gushchin@linux.dev>
- <CALvZod7TGhWtcRD6HeEx90T2+Rod-yamq9i+WbEQUKwNFTi-1A@mail.gmail.com>
- <YsBmoqEBCa7ra7w2@castle>
- <YsMCMveSdiYX/2eH@dhcp22.suse.cz>
- <YsMHkXJ0vAPG0lyM@dhcp22.suse.cz>
- <YsSkaiL00Jk45zNd@castle>
- <CALOAHbBrctf_wOiAxUvXD0JSjgEV46YdDQh9QnUK0XZ+Jsapnw@mail.gmail.com>
+From: Sean Christopherson <seanjc@google.com>
+Subject: Re: [PATCH v6 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
+ page table uses.
+Date: Thu, 7 Jul 2022 20:59:41 +0000
+Message-ID: <YsdJPeVOqlj4cf2a@google.com>
+References: <20220628220938.3657876-1-yosryahmed@google.com>
+ <20220628220938.3657876-2-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1657180036; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=CEd2Na7ZICW0cPoFXBq3xNRf0e9K1vxcQxK9+w/pQcI=;
-        b=hCVarrs4y/FY6SmlaBkGnrAWX3Sk5hubEwYhKsTJb62VdDHL+aJngsV0bEiPEOfhy/YYhV
-        oBReVvZuCQeBjWbP7T6ZvocSNnsTZzkkRNq3CQvD4pqTp/MXqTc9q9Xe7CHeSDWm44VhDR
-        5aGIVC7go5KC9Z14yDAq0U1DJsFK+E4=
+Return-path: <kvm-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=A5MhBcXf8LVQ9gbV4fE8wcZW4gjzBdDH9411SgBm9nA=;
+        b=JZQC6m6xR5sT0Jada7pN2ctPDZoVBgPNmsmVFV9xaOD0K1VcjdaDGI+Dbb9m6z+j0M
+         HQZao2MwdnxdUCyFyWlgXqE0vhn5k0x3cFJEqeUSkVEsaLaami6rP5dYbVbdIFtecFK0
+         bszrtlQ/BBq6HtrtoG8nU1E+PvhE0lLr6U7Movo+h1ZN1VwhTvdz1ZHCpBxehT1XrGLp
+         ldw665ro4GytFHnalr0o9hUTUOKVZe4kPdeCD4oNOEE/cifAyBR7BH7HyjVvjpbMGLv/
+         wuBFBMUf1JFMK20mDchKuifuX9NzhPRD+zMlfMD3Uo00M9pihW0RWuo1fPBLXJlg8Qnc
+         EHBQ==
 Content-Disposition: inline
-In-Reply-To: <CALOAHbBrctf_wOiAxUvXD0JSjgEV46YdDQh9QnUK0XZ+Jsapnw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20220628220938.3657876-2-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Marc Zyngier <maz@kernel.org>, James Morse <james.morse@arm.com>, Alexandru Elisei <alexandru.elisei@arm.com>, Suzuki K Poulose <suzuki.poulose@arm.com>, Paolo Bonzini <pbonzini@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Wanpeng Li <wanpengli@tencent.com>, Jim Mattson <jmattson@google.com>, Joerg Roedel <joro@8bytes.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Oliver Upton <oupton@google.com>, Huang@google.com, Shaoqin <shaoqin.huang@intel.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infr
 
-On Wed 06-07-22 10:40:48, Yafang Shao wrote:
-> On Wed, Jul 6, 2022 at 4:52 AM Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
-> >
-> > On Mon, Jul 04, 2022 at 05:30:25PM +0200, Michal Hocko wrote:
-> > > On Mon 04-07-22 17:07:32, Michal Hocko wrote:
-> > > > On Sat 02-07-22 08:39:14, Roman Gushchin wrote:
-> > > > > On Fri, Jul 01, 2022 at 10:50:40PM -0700, Shakeel Butt wrote:
-> > > > > > On Fri, Jul 1, 2022 at 8:35 PM Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
-> > > > > > >
-> > > > > > > Yafang Shao reported an issue related to the accounting of bpf
-> > > > > > > memory: if a bpf map is charged indirectly for memory consumed
-> > > > > > > from an interrupt context and allocations are enforced, MEMCG_MAX
-> > > > > > > events are not raised.
-> > > > > > >
-> > > > > > > It's not/less of an issue in a generic case because consequent
-> > > > > > > allocations from a process context will trigger the reclaim and
-> > > > > > > MEMCG_MAX events. However a bpf map can belong to a dying/abandoned
-> > > > > > > memory cgroup, so it might never happen.
-> > > > > >
-> > > > > > The patch looks good but the above sentence is confusing. What might
-> > > > > > never happen? Reclaim or MAX event on dying memcg?
-> > > > >
-> > > > > Direct reclaim and MAX events. I agree it might be not clear without
-> > > > > looking into the code. How about something like this?
-> > > > >
-> > > > > "It's not/less of an issue in a generic case because consequent
-> > > > > allocations from a process context will trigger the direct reclaim
-> > > > > and MEMCG_MAX events will be raised. However a bpf map can belong
-> > > > > to a dying/abandoned memory cgroup, so there will be no allocations
-> > > > > from a process context and no MEMCG_MAX events will be triggered."
-> > > >
-> > > > Could you expand little bit more on the situation? Can those charges to
-> > > > offline memcg happen indefinetely? How can it ever go away then? Also is
-> > > > this something that we actually want to encourage?
-> > >
-> > > One more question. Mostly out of curiosity. How is userspace actually
-> > > acting on those events? Are watchers still active on those dead memcgs?
-> >
-> > Idk, the whole problem was reported by Yafang, so he probably has a better
-> > answer. But in general events are recursive and the cgroup doesn't have
-> > to be dying, it can be simple abandoned.
-> >
+On Tue, Jun 28, 2022, Yosry Ahmed wrote:
+> We keep track of several kernel memory stats (total kernel memory, page
+> tables, stack, vmalloc, etc) on multiple levels (global, per-node,
+> per-memcg, etc). These stats give insights to users to how much memory
+> is used by the kernel and for what purposes.
 > 
-> Regarding the pinned bpf programs, it can run without a user agent.
-> That means the cgroup may not be dead, but just not populated.
-> (But in our case, the cgroup will be deleted after the user agent exits.)
+> Currently, memory used by kvm mmu is not accounted in any of those
 
-OK, that makes sense.
--- 
-Michal Hocko
-SUSE Labs
+Nit, capitalize KVM (mainly to be consistent).
+
+> @@ -1085,6 +1086,9 @@ KernelStack
+>                Memory consumed by the kernel stacks of all tasks
+>  PageTables
+>                Memory consumed by userspace page tables
+> +SecPageTables
+> +              Memory consumed by secondary page tables, this currently
+> +	      currently includes KVM mmu allocations on x86 and arm64.
+
+Nit, this line has a tab instead of eight spaces.  Not sure if it actually matters,
+there are plenty of tabs elsewhere in the file, but all the entries in this block
+use only spaces.
+
+> diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+> index aab70355d64f3..13190d298c986 100644
+> --- a/include/linux/mmzone.h
+> +++ b/include/linux/mmzone.h
+> @@ -216,6 +216,7 @@ enum node_stat_item {
+>  	NR_KERNEL_SCS_KB,	/* measured in KiB */
+>  #endif
+>  	NR_PAGETABLE,		/* used for pagetables */
+> +	NR_SECONDARY_PAGETABLE, /* secondary pagetables, e.g. kvm shadow pagetables */
+
+Nit, s/kvm/KVM, and drop the "shadow", which might be misinterpreted as saying KVM
+pagetables are only accounted when KVM is using shadow paging.  KVM's usage of "shadow"
+is messy, so I totally understand why you included it, but in this case it's unnecessary
+and potentially confusing.
+
+And finally, something that's not a nit.  Should this be wrapped with CONFIG_KVM
+(using IS_ENABLED() because KVM can be built as a module)?  That could be removed
+if another non-KVM secondary MMU user comes along, but until then, #ifdeffery for
+stats the depend on a single feature seems to be the status quo for this code.
+
+>  #ifdef CONFIG_SWAP
+>  	NR_SWAPCACHE,
+>  #endif
