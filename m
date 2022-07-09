@@ -1,377 +1,214 @@
 From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v6 00/11] Use obj_cgroup APIs to charge the LRU pages
-Date: Fri, 8 Jul 2022 02:26:08 -0700
-Message-ID: <CAJD7tkazvC+kZgGaV3idapQp-zPFaWBxoHwnrqTFoodHZGQcPA@mail.gmail.com>
-References: <20220621125658.64935-1-songmuchun@bytedance.com>
- <CAJD7tkbeTtkMcVri9vzKHATjxAVZfC_vPNfApJiyRxY53c8pZQ@mail.gmail.com>
- <YrlYG0ecJyzFTVVz@FVFYT0MHHV2J.usts.net> <CAJD7tkbk-E+Skkj3xxELuGFHet940DovKi0z8NxPqePzXa-Wug@mail.gmail.com>
- <YsfUIpM5NlWZhUDT@FVFYT0MHHV2J.usts.net>
+Subject: [PATCH bpf-next v3 0/8] bpf: rstat: cgroup hierarchical stats
+Date: Sat,  9 Jul 2022 00:04:31 +0000
+Message-ID: <20220709000439.243271-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=AeiG7MtIhqF5ZJ1NoSuPiAsmZ/3x52blj6FUG78VSnk=;
-        b=bFVzx/HIb9bSQE2twHQXz5krOHp4HU6nL50Aa0J/SaINwM2kgdrHRmLlyxupHCbH4i
-         09HK6fORd6MpzbBw1pw4h3umh/TlPeiLJjq177PBwg7x0t5kroii/oAhBtSdouwXQf0n
-         zwlATxP8H5LIRsKs4wh6f7ac/f/CCNlBMs59HF6ntQvWRiqd3fCYN3SoH6bXZDd+Pmkn
-         NJd50ltKGP8+sc7FTGiacQrR3nuCCoPHx8M7lVlaHIOyY7PJd3Bh7D+KpoHL4JO12T5k
-         Ii0TXf0XAqOcn6fiGDl8SY8T7yNl3RL8CpuB+bbBVFgZBKcrtn3ftUDaYyedq0JtGZhL
-         HbSA==
-In-Reply-To: <YsfUIpM5NlWZhUDT-t1y1lxtqHnnw2QbUemf3bixXY32XiHfO@public.gmane.org>
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=HdWpX77+MF9xQ6/QsCAb26Y3cSwjCazeARYstERxxp8=;
+        b=c8nDPxyekc1kZMkn/5QMcfPObZeIlCFyv+zxyjjPRxXd/7kkoFLhxc/JCpN4crPvkt
+         J9LZ/p/TS41WmQuMzQEPLbD9Pi7C0D3d+pFs2juLvk/lQbtefWsqu8xv+UamdgslpXvs
+         a1g9dygHhH25xVuDO9dMMQCs8a2eQ0J5/i/vkM464AZ5kK605FtPxqhQuBaQsS7Ly3cP
+         kwS1qUJsPBw0nDu+ULP8xdgttiZcylEzCWfqSWCj14118YVczwj8y3AyNYtxwx9437K9
+         HjWJT4b3yDDfDUA18+MGf5iDyx2bKDbxD0rkZma25w4xvxd5mYFNHZUoYNGIGmQaruAL
+         8BtA==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Thu, Jul 7, 2022 at 11:52 PM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrot=
-e:
->
-> On Thu, Jul 07, 2022 at 03:14:26PM -0700, Yosry Ahmed wrote:
-> > On Mon, Jun 27, 2022 at 12:11 AM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>=
- wrote:
-> > >
-> > > On Sun, Jun 26, 2022 at 03:32:02AM -0700, Yosry Ahmed wrote:
-> > > > On Tue, Jun 21, 2022 at 5:57 AM Muchun Song <songmuchun@bytedance.c=
-om> wrote:
-> > > > >
-> > > > > This version is rebased on mm-unstable. Hopefully, Andrew can get=
- this series
-> > > > > into mm-unstable which will help to determine whether there is a =
-problem or
-> > > > > degradation. I am also doing some benchmark tests in parallel.
-> > > > >
-> > > > > Since the following patchsets applied. All the kernel memory are =
-charged
-> > > > > with the new APIs of obj_cgroup.
-> > > > >
-> > > > >         commit f2fe7b09a52b ("mm: memcg/slab: charge individual s=
-lab objects instead of pages")
-> > > > >         commit b4e0b68fbd9d ("mm: memcontrol: use obj_cgroup APIs=
- to charge kmem pages")
-> > > > >
-> > > > > But user memory allocations (LRU pages) pinning memcgs for a long=
- time -
-> > > > > it exists at a larger scale and is causing recurring problems in =
-the real
-> > > > > world: page cache doesn't get reclaimed for a long time, or is us=
-ed by the
-> > > > > second, third, fourth, ... instance of the same job that was rest=
-arted into
-> > > > > a new cgroup every time. Unreclaimable dying cgroups pile up, was=
-te memory,
-> > > > > and make page reclaim very inefficient.
-> > > > >
-> > > > > We can convert LRU pages and most other raw memcg pins to the obj=
-cg direction
-> > > > > to fix this problem, and then the LRU pages will not pin the memc=
-gs.
-> > > > >
-> > > > > This patchset aims to make the LRU pages to drop the reference to=
- memory
-> > > > > cgroup by using the APIs of obj_cgroup. Finally, we can see that =
-the number
-> > > > > of the dying cgroups will not increase if we run the following te=
-st script.
-> > > >
-> > > > This is amazing work!
-> > > >
-> > > > Sorry if I came late, I didn't follow the threads of previous versi=
-ons
-> > > > so this might be redundant, I just have a couple of questions.
-> > > >
-> > > > a) If LRU pages keep getting parented until they reach root_mem_cgr=
-oup
-> > > > (assuming they can), aren't these pages effectively unaccounted at
-> > > > this point or leaked? Is there protection against this?
-> > > >
-> > >
-> > > In this case, those pages are accounted in root memcg level. Unfortun=
-ately,
-> > > there is no mechanism now to transfer a page's memcg from one to anot=
-her.
-> > >
-> >
-> > Hey Muchun,
-> >
-> > Quick question regarding the behavior of this change on cgroup v1 (I
-> > know .. I know .. sorry):
-> >
-> > When a memcg dies, its LRU pages are reparented, but what happens to
-> > the charge? IIUC we don't do anything because the pages are already
-> > hierarchically charged to the parent. Is this correct?
-> >
->
-> Correct.
->
-> > In cgroup v1, we have non-hierarchical stats as well, so I am trying
-> > to understand if the reparented memory will appear in the
-> > non-hierarchical stats of the parent (my understanding is that the
-> > will not). I am also particularly interested in the charging behavior
-> > of pages that get reparented to root_mem_cgroup.
-> >
->
-> I didn't change any memory stats when reparenting.
->
-> > The main reason I am asking is that (hierarchical_usage -
-> > non-hierarchical_usage - children_hierarchical_usage) is *roughly*
-> > something that we use, especially at the root level, to estimate
-> > zombie memory usage. I am trying to see if this change will break such
-> > calculations. Thanks!
-> >
->
-> So I think your calculations will still be correct. If you have
-> any unexpected result, please let me know. Thanks.
+s patch series allows for using bpf to collect hierarchical cgroup
+stats efficiently by integrating with the rstat framework. The rstat
+framework provides an efficient way to collect cgroup stats percpu and
+propagate them through the cgroup hierarchy.
 
-I have been looking at the code and the patchset and I think there
-might be a problem with the stats, at least for cgroup v1. Lets say we
-have a parent memcg P, which has a child memcg C. When processes in
-memcg C allocate memory the stats (e.g. NR_ANON_MAPPED) are updated
-for C (non-hierarchical per-cpu counters, memcg->vmstats_percpu), and
-for P (aggregated stats, memcg->vmstats).
+The stats are exposed to userspace in textual form by reading files in
+bpffs, similar to cgroupfs stats by using a cgroup_iter program.
+cgroup_iter is a type of bpf_iter. It walks over cgroups in three modes:
+- walking a cgroup's descendants in pre-order.
+- walking a cgroup's descendants in post-order.
+- walking a cgroup's ancestors.
 
-When memcg C is offlined, its pages are reparented to memcg P, so far
-P->vmstats (hierarchical) still have those pages, and
-P->vmstats_percpu (non-hierarchical) don't. So far so good.
+When attaching cgroup_iter, one needs to set a cgroup to the iter_link
+created from attaching. This cgroup is passed as a file descriptor and
+serves as the starting point of the walk.
 
-Now those reparented pages get uncharged, but their memcg is P now, so
-they get subtracted from P's *non-hierarchical* stats (and eventually
-hierarchical stats as well). So now P->vmstats (hierarchical)
-decreases, which is correct, but P->vmstats_percpu (non-hierarchical)
-also decreases, which is wrong, as those stats were never added to
-P->vmstats_percpu to begin with.
+One can also terminate the walk early by returning 1 from the iter
+program.
 
-From a cgroup v2 perspective *maybe* everything continues to work, but
-this breaks cgroup v1 non-hierarchical stats. In fact, if the
-reparented memory exceeds the original non-hierarchical memory in P,
-we can underflow those stats  because we are subtracting stats that
-were never added in the first place.
+Note that because walking cgroup hierarchy holds cgroup_mutex, the iter
+program is called with cgroup_mutex held.
 
-Please let me know if I am misunderstanding something and there is
-actually no problem with the non-hierarchical stats (you can stop
-reading here if this is all in my head and there's actually no
-problem).
+** Background on rstat for stats collection **
+(I am using a subscriber analogy that is not commonly used)
 
-Off the top of my mind we can handle stats modifications of reparented
-memory separately. We should not updated local per-cpu counters, maybe
-we should rather update memcg->vmstat.state_pending directly so that
-the changes appear as if they come from a child memcg. Two problems
-come with such an approach:
+The rstat framework maintains a tree of cgroups that have updates and
+which cpus have updates. A subscriber to the rstat framework maintains
+their own stats. The framework is used to tell the subscriber when
+and what to flush, for the most efficient stats propagation. The
+workflow is as follows:
 
-1) memcg->vmstat.state_pending is shared between cpus, and so far is
-only modified by mem_cgroup_css_rstat_flush() in locked context. A
-solution would be to add reparented state to
-memcg->vmstat.state_percpu instead and treat it like
-memcg->vmstat.state_pending in mem_cgroup_css_rstat_flush(). Keep in
-mind that this adds a tiny bit of memory overhead (roughly 8
-bytes*num_cpus for each memcg).
+- When a subscriber updates a cgroup on a cpu, it informs the rstat
+  framework by calling cgroup_rstat_updated(cgrp, cpu).
 
-2) Identifying that we are updating stats of reparented memory. This
-should be easy if we have a pointer to the page to compare page->objcg
-with page->objcg->memcg->objcg, but AFAICT the memcg stats are updated
-in __mod_memcg_state() and __mod_memcg_lruvec_state(), and we have no
-idea in each of these what page(s) is the stats update associated
-with. They are called from many different places, it would be
-troublesome to pass such information down from all call sites. I have
-nothing off the top of my head to fix this problem except passing the
-necessary info through all code paths to __mod_memcg_state() and
-__mod_memcg_lruvec_state(), which is far from ideal.
+- When a subscriber wants to read some stats for a cgroup, it asks
+  the rstat framework to initiate a stats flush (propagation) by calling
+  cgroup_rstat_flush(cgrp).
 
-Again, I am sorry if these discussions are late, I didn't have time to
-look at previous versions of this patchset.
+- When the rstat framework initiates a flush, it makes callbacks to
+  subscribers to aggregate stats on cpus that have updates, and
+  propagate updates to their parent.
 
->
-> > > > b) Since moving charged pages between memcgs is now becoming easier=
- by
-> > > > using the APIs of obj_cgroup, I wonder if this opens the door for
-> > > > future work to transfer charges to memcgs that are actually using
-> > > > reparented resources. For example, let's say cgroup A reads a few
-> > > > pages into page cache, and then they are no longer used by cgroup A=
-.
-> > > > cgroup B, however, is using the same pages that are currently charg=
-ed
-> > > > to cgroup A, so it keeps taxing cgroup A for its use. When cgroup A
-> > > > dies, and these pages are reparented to A's parent, can we possibly
-> > > > mark these reparented pages (maybe in the page tables somewhere) so
-> > > > that next time they get accessed we recharge them to B instead
-> > > > (possibly asynchronously)?
-> > > > I don't have much experience about page tables but I am pretty sure
-> > > > they are loaded so maybe there is no room in PTEs for something lik=
-e
-> > > > this, but I have always wondered about what we can do for this case
-> > > > where a cgroup is consistently using memory charged to another cgro=
-up.
-> > > > Maybe when this memory is reparented is a good point in time to dec=
-ide
-> > > > to recharge appropriately. It would also fix the reparenty leak to
-> > > > root problem (if it even exists).
-> > > >
-> > >
-> > > From my point of view, this is going to be an improvement to the memc=
-g
-> > > subsystem in the future.  IIUC, most reparented pages are page cache
-> > > pages without be mapped to users. So page tables are not a suitable
-> > > place to record this information. However, we already have this infor=
-mation
-> > > in struct obj_cgroup and struct mem_cgroup. If a page's obj_cgroup is=
- not
-> > > equal to the page's obj_cgroup->memcg->objcg, it means this page have
-> > > been reparented. I am thinking if a place where a page is mapped (pro=
-bably
-> > > page fault patch) or page (cache) is written (usually vfs write path)
-> > > is suitable to transfer page's memcg from one to another. But need mo=
-re
-> > > thinking, e.g. How to decide if a reparented page needs to be transfe=
-rred?
-> > > If we need more information to make this decision, where to store tho=
-se
-> > > information? This is my primary thoughts on this question.
-> > >
-> > > Thanks.
-> > >
-> > > > Thanks again for this work and please excuse my ignorance if any pa=
-rt
-> > > > of what I said doesn't make sense :)
-> > > >
-> > > > >
-> > > > > ```bash
-> > > > > #!/bin/bash
-> > > > >
-> > > > > dd if=3D/dev/zero of=3Dtemp bs=3D4096 count=3D1
-> > > > > cat /proc/cgroups | grep memory
-> > > > >
-> > > > > for i in {0..2000}
-> > > > > do
-> > > > >         mkdir /sys/fs/cgroup/memory/test$i
-> > > > >         echo $$ > /sys/fs/cgroup/memory/test$i/cgroup.procs
-> > > > >         cat temp >> log
-> > > > >         echo $$ > /sys/fs/cgroup/memory/cgroup.procs
-> > > > >         rmdir /sys/fs/cgroup/memory/test$i
-> > > > > done
-> > > > >
-> > > > > cat /proc/cgroups | grep memory
-> > > > >
-> > > > > rm -f temp log
-> > > > > ```
-> > > > >
-> > > > > v5: https://lore.kernel.org/all/20220530074919.46352-1-songmuchun=
-@bytedance.com/
-> > > > > v4: https://lore.kernel.org/all/20220524060551.80037-1-songmuchun=
-@bytedance.com/
-> > > > > v3: https://lore.kernel.org/all/20220216115132.52602-1-songmuchun=
-@bytedance.com/
-> > > > > v2: https://lore.kernel.org/all/20210916134748.67712-1-songmuchun=
-@bytedance.com/
-> > > > > v1: https://lore.kernel.org/all/20210814052519.86679-1-songmuchun=
-@bytedance.com/
-> > > > > RFC v4: https://lore.kernel.org/all/20210527093336.14895-1-songmu=
-chun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
-> > > > > RFC v3: https://lore.kernel.org/all/20210421070059.69361-1-songmu=
-chun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
-> > > > > RFC v2: https://lore.kernel.org/all/20210409122959.82264-1-songmu=
-chun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
-> > > > > RFC v1: https://lore.kernel.org/all/20210330101531.82752-1-songmu=
-chun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
-> > > > >
-> > > > > v6:
-> > > > >  - Collect Acked-by and Reviewed-by from Roman and Michal Koutn=
-=C3=BD. Thanks.
-> > > > >  - Rebase to mm-unstable.
-> > > > >
-> > > > > v5:
-> > > > >  - Lots of improvements from Johannes, Roman and Waiman.
-> > > > >  - Fix lockdep warning reported by kernel test robot.
-> > > > >  - Add two new patches to do code cleanup.
-> > > > >  - Collect Acked-by and Reviewed-by from Johannes and Roman.
-> > > > >  - I didn't replace local_irq_disable/enable() to local_lock/unlo=
-ck_irq() since
-> > > > >    local_lock/unlock_irq() takes an parameter, it needs more thin=
-king to transform
-> > > > >    it to local_lock.  It could be an improvement in the future.
-> > > > >
-> > > > > v4:
-> > > > >  - Resend and rebased on v5.18.
-> > > > >
-> > > > > v3:
-> > > > >  - Removed the Acked-by tags from Roman since this version is bas=
-ed on
-> > > > >    the folio relevant.
-> > > > >
-> > > > > v2:
-> > > > >  - Rename obj_cgroup_release_kmem() to obj_cgroup_release_bytes()=
- and the
-> > > > >    dependencies of CONFIG_MEMCG_KMEM (suggested by Roman, Thanks)=
-.
-> > > > >  - Rebase to linux 5.15-rc1.
-> > > > >  - Add a new pacth to cleanup mem_cgroup_kmem_disabled().
-> > > > >
-> > > > > v1:
-> > > > >  - Drop RFC tag.
-> > > > >  - Rebase to linux next-20210811.
-> > > > >
-> > > > > RFC v4:
-> > > > >  - Collect Acked-by from Roman.
-> > > > >  - Rebase to linux next-20210525.
-> > > > >  - Rename obj_cgroup_release_uncharge() to obj_cgroup_release_kme=
-m().
-> > > > >  - Change the patch 1 title to "prepare objcg API for non-kmem us=
-age".
-> > > > >  - Convert reparent_ops_head to an array in patch 8.
-> > > > >
-> > > > > Thanks for Roman's review and suggestions.
-> > > > >
-> > > > > RFC v3:
-> > > > >  - Drop the code cleanup and simplification patches. Gather those=
- patches
-> > > > >    into a separate series[1].
-> > > > >  - Rework patch #1 suggested by Johannes.
-> > > > >
-> > > > > RFC v2:
-> > > > >  - Collect Acked-by tags by Johannes. Thanks.
-> > > > >  - Rework lruvec_holds_page_lru_lock() suggested by Johannes. Tha=
-nks.
-> > > > >  - Fix move_pages_to_lru().
-> > > > >
-> > > > > Muchun Song (11):
-> > > > >   mm: memcontrol: remove dead code and comments
-> > > > >   mm: rename unlock_page_lruvec{_irq, _irqrestore} to
-> > > > >     lruvec_unlock{_irq, _irqrestore}
-> > > > >   mm: memcontrol: prepare objcg API for non-kmem usage
-> > > > >   mm: memcontrol: make lruvec lock safe when LRU pages are repare=
-nted
-> > > > >   mm: vmscan: rework move_pages_to_lru()
-> > > > >   mm: thp: make split queue lock safe when LRU pages are reparent=
-ed
-> > > > >   mm: memcontrol: make all the callers of {folio,page}_memcg() sa=
-fe
-> > > > >   mm: memcontrol: introduce memcg_reparent_ops
-> > > > >   mm: memcontrol: use obj_cgroup APIs to charge the LRU pages
-> > > > >   mm: lru: add VM_WARN_ON_ONCE_FOLIO to lru maintenance function
-> > > > >   mm: lru: use lruvec lock to serialize memcg changes
-> > > > >
-> > > > >  fs/buffer.c                      |   4 +-
-> > > > >  fs/fs-writeback.c                |  23 +-
-> > > > >  include/linux/memcontrol.h       | 218 +++++++++------
-> > > > >  include/linux/mm_inline.h        |   6 +
-> > > > >  include/trace/events/writeback.h |   5 +
-> > > > >  mm/compaction.c                  |  39 ++-
-> > > > >  mm/huge_memory.c                 | 153 ++++++++--
-> > > > >  mm/memcontrol.c                  | 584 +++++++++++++++++++++++++=
-++------------
-> > > > >  mm/migrate.c                     |   4 +
-> > > > >  mm/mlock.c                       |   2 +-
-> > > > >  mm/page_io.c                     |   5 +-
-> > > > >  mm/swap.c                        |  49 ++--
-> > > > >  mm/vmscan.c                      |  66 ++---
-> > > > >  13 files changed, 776 insertions(+), 382 deletions(-)
-> > > > >
-> > > > >
-> > > > > base-commit: 882be1ed6b1b5073fc88552181b99bd2b9c0031f
-> > > > > --
-> > > > > 2.11.0
-> > > > >
-> > > > >
-> > > >
-> >
+Currently, the main subscribers to the rstat framework are cgroup
+subsystems (e.g. memory, block). This patch series allow bpf programs to
+become subscribers as well.
+
+This patch series includes a resend of a patch from the mailing list by
+Benjamin Tissoires to support sleepable kfuncs [1].
+
+Patches in this series are organized as follows:
+* Patch 1 is the resend of the sleepable kfuncs patch [1].
+* Patch 2 enables the use of cgroup_get_from_file() in cgroup1.
+  This is useful because it enables cgroup_iter to work with cgroup1, and
+  allows the entire stat collection workflow to be cgroup1-compatible.
+* Patches 3-5 introduce cgroup_iter prog, and a selftest.
+* Patches 6-8 allow bpf programs to integrate with rstat by adding the
+  necessary hook points and kfunc. A comprehensive selftest that
+  demonstrates the entire workflow for using bpf and rstat to
+  efficiently collect and output cgroup stats is added.
+
+---
+Changelog:
+
+v2 -> v3:
+- cgroup_iter:
+  * Added conditional compilation of cgroup_iter.c in kernel/bpf/Makefile
+    (kernel test) and dropped the !CONFIG_CGROUP patch.
+  * Added validation of traversal_order when attaching (Yonghong).
+  * Fixed previous wording "two modes" to "three modes" (Yonghong).
+  * Fixed the btf_dump selftest broken by this patch (Yonghong).
+  * Fixed ctx_arg_info[0] to use "PTR_TO_BTF_ID_OR_NULL" instead of
+    "PTR_TO_BTF_ID", because the "cgroup" pointer passed to iter prog can
+     be null.
+- Use __diag_push to eliminate __weak noinline warning in
+  bpf_rstat_flush().
+- cgroup_hierarchical_stats selftest:
+  * Added write_cgroup_file_parent() helper.
+  * Added error handling for failed map updates.
+  * Added null check for cgroup in vmscan_flush.
+  * Fixed the signature of vmscan_[start/end].
+  * Correctly return error code when attaching trace programs fail.
+  * Make sure all links are destroyed correctly and not leaking in
+    cgroup_hierarchical_stats selftest.
+  * Use memory.reclaim instead of memory.high as a more reliable way to
+    invoke reclaim.
+  * Eliminated sleeps, the test now runs faster.
+
+v1 -> v2:
+- Redesign of cgroup_iter from v1, based on Alexei's idea [2]:
+  * supports walking cgroup subtree.
+  * supports walking ancestors of a cgroup. (Andrii)
+  * supports terminating the walk early.
+  * uses fd instead of cgroup_id as parameter for iter_link. Using fd is
+    a convention in bpf.
+  * gets cgroup's ref at attach time and deref at detach.
+  * brought back cgroup1 support for cgroup_iter.
+- Squashed the patches adding the rstat flush hook points and kfuncs
+  (Tejun).
+- Added a comment explaining why bpf_rstat_flush() needs to be weak
+  (Tejun).
+- Updated the final selftest with the new cgroup_iter design.
+- Changed CHECKs in the selftest with ASSERTs (Yonghong, Andrii).
+- Removed empty line at the end of the selftest (Yonghong).
+- Renamed test files to cgroup_hierarchical_stats.c.
+- Reordered CGROUP_PATH params order to match struct declaration
+  in the selftest (Michal).
+- Removed memory_subsys_enabled() and made sure memcg controller
+  enablement checks make sense and are documented (Michal).
+
+RFC v2 -> v1:
+- Instead of introducing a new program type for rstat flushing, add an
+  empty hook point, bpf_rstat_flush(), and use fentry bpf programs to
+  attach to it and flush bpf stats.
+- Instead of using helpers, use kfuncs for rstat functions.
+- These changes simplify the patchset greatly, with minimal changes to
+  uapi.
+
+RFC v1 -> RFC v2:
+- Instead of rstat flush programs attach to subsystems, they now attach
+  to rstat (global flushers, not per-subsystem), based on discussions
+  with Tejun. The first patch is entirely rewritten.
+- Pass cgroup pointers to rstat flushers instead of cgroup ids. This is
+  much more flexibility and less likely to need a uapi update later.
+- rstat helpers are now only defined if CGROUP_CONFIG.
+- Most of the code is now only defined if CGROUP_CONFIG and
+  CONFIG_BPF_SYSCALL.
+- Move rstat helper protos from bpf_base_func_proto() to
+  tracing_prog_func_proto().
+- rstat helpers argument (cgroup pointer) is now ARG_PTR_TO_BTF_ID, not
+  ARG_ANYTHING.
+- Rewrote the selftest to use the cgroup helpers.
+- Dropped bpf_map_lookup_percpu_elem (already added by Feng).
+- Dropped patch to support cgroup v1 for cgroup_iter.
+- Dropped patch to define some cgroup_put() when !CONFIG_CGROUP. The
+  code that calls it is no longer compiled when !CONFIG_CGROUP.
+
+cgroup_iter was originally introduced in a different patch series[3].
+Hao and I agreed that it fits better as part of this series.
+RFC v1 of this patch series had the following changes from [3]:
+- Getting the cgroup's reference at the time at attaching, instead of
+  at the time when iterating. (Yonghong)
+- Remove .init_seq_private and .fini_seq_private callbacks for
+  cgroup_iter. They are not needed now. (Yonghong)
+
+[1] https://lore.kernel.org/bpf/20220421140740.459558-5-benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
+[2] https://lore.kernel.org/bpf/20220520221919.jnqgv52k4ajlgzcl-X1x1UtSlSMLFI8N7WmjKSuzkJ6j1vHJkzR5nVSMtm21iLUuM0BA3LQ@public.gmane.org/
+[3] https://lore.kernel.org/lkml/20220225234339.2386398-9-haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+---
+
+Benjamin Tissoires (1):
+  btf: Add a new kfunc set which allows to mark a function to be
+    sleepable
+
+Hao Luo (3):
+  bpf, iter: Fix the condition on p when calling stop.
+  bpf: Introduce cgroup iter
+  selftests/bpf: Test cgroup_iter.
+
+Yosry Ahmed (4):
+  cgroup: enable cgroup_get_from_file() on cgroup1
+  cgroup: bpf: enable bpf programs to integrate with rstat
+  selftests/bpf: extend cgroup helpers
+  bpf: add a selftest for cgroup hierarchical stats collection
+
+ include/linux/bpf.h                           |   8 +
+ include/linux/btf.h                           |   2 +
+ include/uapi/linux/bpf.h                      |  21 +
+ kernel/bpf/Makefile                           |   3 +
+ kernel/bpf/bpf_iter.c                         |   5 +
+ kernel/bpf/btf.c                              |  13 +-
+ kernel/bpf/cgroup_iter.c                      | 242 ++++++++++++
+ kernel/cgroup/cgroup.c                        |   5 -
+ kernel/cgroup/rstat.c                         |  54 +++
+ tools/include/uapi/linux/bpf.h                |  21 +
+ tools/testing/selftests/bpf/cgroup_helpers.c  | 201 ++++++++--
+ tools/testing/selftests/bpf/cgroup_helpers.h  |  19 +-
+ .../selftests/bpf/prog_tests/btf_dump.c       |   4 +-
+ .../prog_tests/cgroup_hierarchical_stats.c    | 362 ++++++++++++++++++
+ .../selftests/bpf/prog_tests/cgroup_iter.c    | 190 +++++++++
+ tools/testing/selftests/bpf/progs/bpf_iter.h  |   7 +
+ .../bpf/progs/cgroup_hierarchical_stats.c     | 235 ++++++++++++
+ .../testing/selftests/bpf/progs/cgroup_iter.c |  39 ++
+ 18 files changed, 1375 insertions(+), 56 deletions(-)
+ create mode 100644 kernel/bpf/cgroup_iter.c
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/cgroup_hierarchical_stats.c
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/cgroup_iter.c
+ create mode 100644 tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
+ create mode 100644 tools/testing/selftests/bpf/progs/cgroup_iter.c
+
+-- 
+2.37.0.rc0.161.g10f37bed90-goog
+
