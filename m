@@ -1,103 +1,56 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH bpf-next v3 1/8] btf: Add a new kfunc set which allows to mark
- a function to be sleepable
-Date: Sat,  9 Jul 2022 00:04:32 +0000
-Message-ID: <20220709000439.243271-2-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [PATCH bpf-next v3 2/8] cgroup: enable cgroup_get_from_file() on cgroup1
+Date: Sat,  9 Jul 2022 00:04:33 +0000
+Message-ID: <20220709000439.243271-3-yosryahmed@google.com>
 References: <20220709000439.243271-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=Q9FL6WxsRkjxyh1yae/tVcFdnxYyUSpDQ2F41fjmbF0=;
-        b=jUf7c6YoaaMSoKC3BzGDRElpUL1MBXHu3HTb8RdVhRCb9f/DnJoiC27UnqjXk14m1j
-         xF7v2kw5Cz/bksp7MeouwdKTi8UkpOmRc/cA63UZIx9TllIDKOdpntym4huATJVKYqn4
-         jZlNKh/X2D5woBeHtNXySysNlP1TXkXH7jDkoKE4zbNeeBqk0Cl1bG1X9Ym3K+O6922n
-         N9I7HCRQXgbGzPhOFD/mlfV8zr+Sjelb03+XNmOuOE8qi9/6SxPY0ekAoUW5oT1DEZRb
-         2XaW7xzSPNKyvjceTCKRZX8NwBd7EKXFkqYf486Zt8eZxCmhBFlTJpVm90EduvckS8xT
-         ZJsw==
-In-Reply-To: <20220709000439.243271-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        bh=IqjL6yZGTqZ3Qe1XCgaEl6Fvh17NMPAOr7heTy9DUWI=;
+        b=sgi3aVUrpzBWfebO0eixVS0qfo5Xt0wVCPW7ELzk3n4yMTtTrcclhOKlRVXJ1RmLUA
+         9YQfDzxLvHW4dQVosJREPn4Niv6/YVO4lwQctTJkGW4lHPxXY4SKXvJGucNbaX6IfLUz
+         t6rDR5WEeCcw/g318JGwbL+CqPH6ReaRv2xTNI0j2QM8BBWS8W5TzaKTO3uPfcFtiI6h
+         /K+AEn9xXXbg6EmwFKHBaSMOy8kDnkOIICWxXn0oTE0kCLUHjB20+RRazYIHIGQukycM
+         xeHWcswZban+jsAKB71K7reqzFvxxfU55QTsB6Mjr/uVx78vP6CIOkmnjlDiACm4XIvU
+         slnA==
+In-Reply-To: <20220709000439.243271-1-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>, KP Singh <kpsingh@kernel.org>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, John Fastabend <john.fastabend@gmail.com>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
 
-From: Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+cgroup_get_from_file() currently fails with -EBADF if called on cgroup
+v1. However, the current implementation works on cgroup v1 as well, so
+the restriction is unnecessary.
 
-This allows to declare a kfunc as sleepable and prevents its use in
-a non sleepable program.
+This enabled cgroup_get_from_fd() to work on cgroup v1, which would be
+the only thing stopping bpf cgroup_iter from supporting cgroup v1.
 
-Signed-off-by: Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
 ---
- include/linux/btf.h |  2 ++
- kernel/bpf/btf.c    | 13 +++++++++++--
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ kernel/cgroup/cgroup.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/include/linux/btf.h b/include/linux/btf.h
-index 1bfed7fa04287..6e7517573d9e4 100644
---- a/include/linux/btf.h
-+++ b/include/linux/btf.h
-@@ -18,6 +18,7 @@ enum btf_kfunc_type {
- 	BTF_KFUNC_TYPE_RELEASE,
- 	BTF_KFUNC_TYPE_RET_NULL,
- 	BTF_KFUNC_TYPE_KPTR_ACQUIRE,
-+	BTF_KFUNC_TYPE_SLEEPABLE,
- 	BTF_KFUNC_TYPE_MAX,
- };
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 1779ccddb734d..9943fcb1e574d 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -6090,11 +6090,6 @@ static struct cgroup *cgroup_get_from_file(struct file *f)
+ 		return ERR_CAST(css);
  
-@@ -37,6 +38,7 @@ struct btf_kfunc_id_set {
- 			struct btf_id_set *release_set;
- 			struct btf_id_set *ret_null_set;
- 			struct btf_id_set *kptr_acquire_set;
-+			struct btf_id_set *sleepable_set;
- 		};
- 		struct btf_id_set *sets[BTF_KFUNC_TYPE_MAX];
- 	};
-diff --git a/kernel/bpf/btf.c b/kernel/bpf/btf.c
-index 4f2408a4df08b..2a4b4e50b6fb7 100644
---- a/kernel/bpf/btf.c
-+++ b/kernel/bpf/btf.c
-@@ -6172,7 +6172,7 @@ static int btf_check_func_arg_match(struct bpf_verifier_env *env,
- 	struct bpf_verifier_log *log = &env->log;
- 	u32 i, nargs, ref_id, ref_obj_id = 0;
- 	bool is_kfunc = btf_is_kernel(btf);
--	bool rel = false, kptr_get = false;
-+	bool rel = false, kptr_get = false, sleepable = false;
- 	const char *func_name, *ref_tname;
- 	const struct btf_type *t, *ref_t;
- 	const struct btf_param *args;
-@@ -6203,11 +6203,13 @@ static int btf_check_func_arg_match(struct bpf_verifier_env *env,
- 	}
- 
- 	if (is_kfunc) {
--		/* Only kfunc can be release func */
-+		/* Only kfunc can be release, kptr acquire, or sleepable func */
- 		rel = btf_kfunc_id_set_contains(btf, resolve_prog_type(env->prog),
- 						BTF_KFUNC_TYPE_RELEASE, func_id);
- 		kptr_get = btf_kfunc_id_set_contains(btf, resolve_prog_type(env->prog),
- 						     BTF_KFUNC_TYPE_KPTR_ACQUIRE, func_id);
-+		sleepable = btf_kfunc_id_set_contains(btf, resolve_prog_type(env->prog),
-+						      BTF_KFUNC_TYPE_SLEEPABLE, func_id);
- 	}
- 
- 	/* check that BTF function arguments match actual types that the
-@@ -6405,6 +6407,13 @@ static int btf_check_func_arg_match(struct bpf_verifier_env *env,
- 			func_name);
- 		return -EINVAL;
- 	}
-+
-+	if (sleepable && !env->prog->aux->sleepable) {
-+		bpf_log(log, "kernel function %s is sleepable but the program is not\n",
-+			func_name);
-+		return -EINVAL;
-+	}
-+
- 	/* returns argument register number > 0 in case of reference release kfunc */
- 	return rel ? ref_regno : 0;
+ 	cgrp = css->cgroup;
+-	if (!cgroup_on_dfl(cgrp)) {
+-		cgroup_put(cgrp);
+-		return ERR_PTR(-EBADF);
+-	}
+-
+ 	return cgrp;
  }
+ 
 -- 
 2.37.0.rc0.161.g10f37bed90-goog
 
