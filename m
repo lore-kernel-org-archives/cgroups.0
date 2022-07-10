@@ -1,7 +1,7 @@
-From: Yu Kuai <yukuai3@huawei.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
 Subject: Re: [PATCH RESEND v6 0/8] bugfix and cleanup for blk-throttle
-Date: Sun, 10 Jul 2022 10:39:36 +0800
-Message-ID: <a146b8ff-4287-44b7-00b2-74681963ac49@huawei.com>
+Date: Sun, 10 Jul 2022 10:40:48 +0800
+Message-ID: <e1d6b26d-2eae-7b78-277a-0bb737dc9c4b@huaweicloud.com>
 References: <20220701093441.885741-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
@@ -47,7 +47,7 @@ Hi!
 > Patch 3,4 fix io hung due to configuration updates.
 > Patch 5-8 are cleanup patches, there are no functional changes, just
 > some places that I think can be optimized during code review.
-
+>=20
 Jens and Michal,
 
 Can you receive this patchset normally(not end up in spam)?
@@ -60,7 +60,6 @@ patches as well.
 
 Thansk,
 Kuai
->=20
 > Previous version:
 > v1: https://lore.kernel.org/all/20220517134909.2910251-1-yukuai3@huawei.c=
 om/
@@ -87,3 +86,4 @@ om/
 >   block/blk-throttle.h |  16 +++--
 >   2 files changed, 128 insertions(+), 56 deletions(-)
 >=20
+
