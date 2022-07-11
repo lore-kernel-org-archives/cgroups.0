@@ -1,79 +1,106 @@
-From: Yonghong Song <yhs@fb.com>
-Subject: Re: [PATCH bpf-next v3 8/8] bpf: add a selftest for cgroup
- hierarchical stats collection
-Date: Sun, 10 Jul 2022 23:19:15 -0700
-Message-ID: <e2f8fcd8-9219-1119-86ca-69714789d494@fb.com>
-References: <20220709000439.243271-1-yosryahmed@google.com>
- <20220709000439.243271-9-yosryahmed@google.com>
- <b4936952-2fe7-656c-2d0d-69044265392a@fb.com>
- <9c6a0ba3-2730-eb56-0f96-e5d236e46660@fb.com>
- <CA+khW7gu73pRFi73BR20OCJhzrs8-kHfTYYR38+MJUpt6wqXoA@mail.gmail.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH mm v5 0/9] memcg: accounting for objects allocated by
+ mkdir, cgroup
+Date: Mon, 11 Jul 2022 18:24:32 +0200
+Message-ID: <YsxOwEI7HOqdkRpz@dhcp22.suse.cz>
+References: <4e685057-b07d-745d-fdaa-1a6a5a681060@openvz.org>
+ <0fe836b4-5c0f-0e32-d511-db816d359748@openvz.org>
+ <c516033f-a9e4-3485-26d9-a68afa694c1d@openvz.org>
+ <YrSP25ebDmXE+kPS@dhcp22.suse.cz>
+ <CALvZod4WsmrpfZtfnP4AmvtnkvBRngXXGyhM6+aQzkdfjsinAQ@mail.gmail.com>
+ <YrXDV7uPpmDigh3G@dhcp22.suse.cz>
+ <CALvZod6U8DvMUcuUNfpQRwfkevQB7=nP4ZLA2gWGNf_JGdyARQ@mail.gmail.com>
+ <Yr7Ukyy0vhBjebo4@dhcp22.suse.cz>
+ <1a64fc6a-a33d-03f4-ec12-980e42148061@openvz.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=facebook;
- bh=/2CzFFGY+NVtPqliEGTSNXCW5y36LnhPjwBxsSWxrjA=;
- b=BlC5jA+GHY3LTQSzcxuzOAK8mwcADtfS1lKgMXj6mDNsFLvSnNYQIy6grPysGGzxf4AU
- x3ou+vQOy2SuOtNF2I3fAxzWB9ixLe45jfX2yetGVeIJo/ep7l21EGeLcT5NFRCaqP1/
- 35Y2Ux0zd81Lwfebjas8nbfgseWjSfAHe6M= 
-Content-Language: en-US
-In-Reply-To: <CA+khW7gu73pRFi73BR20OCJhzrs8-kHfTYYR38+MJUpt6wqXoA@mail.gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1657556676; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=M+ZIKuMBKYf6iILzZp439lcSa19VN5bgrLR+ASf2Bx0=;
+        b=TnIjaLMox+kOMiA7MSs9PGijGwpUTPR1Gp3apVzCIokhbYQ/jpXYrxi56aGQM93pgcazcV
+        /fXxuL0Y8zRKuKpKzJVNuCn2/hUNZ3eSeR1pVnORgSH48LLn8wR6r1zBEi2S8rOeQAe8yr
+        +9TNNW9znECSwf3bVawntAU3+i4U8l0=
+Content-Disposition: inline
+In-Reply-To: <1a64fc6a-a33d-03f4-ec12-980e42148061-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Hao Luo <haoluo@google.com>
-Cc: Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>, KP Singh <kpsingh@kernel.org>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, John Fastabend <john.fastabend@gmail.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-
-
-On 7/10/22 11:01 PM, Hao Luo wrote:
-> On Sun, Jul 10, 2022 at 5:51 PM Yonghong Song <yhs@fb.com> wrote:
->>
->>
->>
->> On 7/10/22 5:26 PM, Yonghong Song wrote:
-> [...]
->>
->> BTW, CI also reported the test failure.
->> https://github.com/kernel-patches/bpf/pull/3284
->>
->> For example, with gcc built kernel,
->> https://github.com/kernel-patches/bpf/runs/7272407890?check_suite_focus=true
->>
->> The error:
->>
->>     get_cgroup_vmscan_delay:PASS:cgroup_id 0 nsec
->>     get_cgroup_vmscan_delay:PASS:vmscan_reading 0 nsec
->>     check_vmscan_stats:FAIL:child1_vmscan unexpected child1_vmscan:
->> actual 28390910 != expected 28390909
->>     check_vmscan_stats:FAIL:child2_vmscan unexpected child2_vmscan:
->> actual 0 != expected -2
->>     check_vmscan_stats:PASS:test_vmscan 0 nsec
->>     check_vmscan_stats:PASS:root_vmscan 0 nsec
->>
+On Sun 10-07-22 21:53:34, Vasily Averin wrote:
+> On 7/1/22 14:03, Michal Hocko wrote:
+> > On Mon 27-06-22 09:37:14, Shakeel Butt wrote:
+> >> On Fri, Jun 24, 2022 at 6:59 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> > [...]
+> >>> Is it even possible to prevent from id
+> >>> depletion by the memory consumption? Any medium sized memcg can easily
+> >>> consume all the ids AFAICS.
+> >>
+> >> Though the patch series is pitched as protection against OOMs, I think
+> >> it is beneficial irrespective. Protection against an adversarial actor
+> >> should not be the aim here. IMO this patch series improves the memory
+> >> association to the actual user which is better than unattributed
+> >> memory treated as system overhead.
+> > 
+> > Considering the amount of memory and "normal" cgroup usage (I guess we
+> > can agree that delegated subtrees do not count their cgroups in
+> > thousands) is this really something that is worth bothering with?
+> > 
+> > I mean, these patches are really small and not really disruptive so I do
+> > not really see any problem with them. Except that they clearly add a
+> > maintenance overhead. Not directly with the memory they track but any
+> > future cgroup/memcg metadata related objects would need to be tracked as
+> > well and I am worried this will get quickly out of sync. So we will have
+> > a half assed solution in place that doesn't really help any containment
+> > nor it provides a good and robust consumption tracking.
+> > 
+> > All that being said I find these changes rather without a great value or
+> > use.
 > 
-> Yonghong,
+> Dear Michal,
+> I sill have 2 questions:
+> 1) if you do not want to account any memory allocated for cgroup objects,
+> should you perhaps revert commit 3e38e0aaca9e "mm: memcg: charge memcg percpu
+> memory to the parent cgroup". Is it an exception perhaps?
+> (in fact I hope you will not revert this patch, I just would like to know 
+> your explanations about this accounting)
+
+Well, I have to say I was not a great fan of this patch when it was
+proposed but I didn't really have strong arguments against it to nack
+it. It was simple enough, rather self contained in few places. Just to
+give you an insight into my thinking here. Your patchseries is also not
+something I would nack (nor I have done that). I am not super fan of it
+either. I voiced against it because it just hit my internal thrashold of
+how many different places are patched without any systemic approach. If
+we consider that it doesn't really help with the initial intention to
+protect against adversaries then what is the point of all the churn?
+
+Others might think differently and if you can get acks by other
+maintainers then I won't stand in the way. I have voiced my concerns and
+I hope my thinking is clear now.
+
+> 2) my patch set includes kernfs accounting required for proper netdevices accounting
 > 
-> I noticed that the test only failed on test_progs-no_alu32, not
-> test_progs. test_progs passed. I believe Yosry and I have only tested
-
-In my case, both test_progs and test_progs-no_alu32 failed the test.
-I think the reason for the failure is the same.
-
-> on test_progs. I tried building and running the no_alu32 version, but
-> so far, not able to run test_progs-no_alu32. Whenever I ran
-> test_progs-no_alu32, it exits without any message. Do you have any
-> clue what could be wrong?
-
-It works fine in my environment. test_progs should be very similar to
-test_progs-no_alu32. The only difference is bpf programs with different
-insn set. Some tests may not run with test_progs-no_alu32, e.g., newer
-atomic insn tests.
-
-I have no idea why test_progs-no_alu32 won't work for you, I guess you 
-may need to debug it a little bit.
-
+> Allocs  Alloc   Allocation
+> number  size
+> --------------------------------------------
+> 1   +  128      (__kernfs_new_node+0x4d)	kernfs node
+> 1   +   88      (__kernfs_iattrs+0x57)		kernfs iattrs
+> 1   +   96      (simple_xattr_alloc+0x28)	simple_xattr, can grow over 4Kb
+> 1       32      (simple_xattr_set+0x59)
+> 1       8       (__kernfs_new_node+0x30)
 > 
->>>
-> [...]
+>  2/9] memcg: enable accounting for kernfs nodes
+>  3/9] memcg: enable accounting for kernfs iattrs
+>  4/9] memcg: enable accounting for struct simple_xattr
+> 
+> What do you think about them? Should I resend them as a new separate patch set?
+
+kernfs is not really my area so I cannot really comment on those.
+
+-- 
+Michal Hocko
+SUSE Labs
