@@ -1,21 +1,22 @@
 From: Yonghong Song <yhs@fb.com>
-Subject: Re: [PATCH bpf-next v3 4/8] bpf: Introduce cgroup iter
-Date: Sun, 10 Jul 2022 17:19:08 -0700
-Message-ID: <370cb480-a427-4d93-37d9-3c6acd73b967@fb.com>
+Subject: Re: [PATCH bpf-next v3 8/8] bpf: add a selftest for cgroup
+ hierarchical stats collection
+Date: Sun, 10 Jul 2022 17:26:21 -0700
+Message-ID: <b4936952-2fe7-656c-2d0d-69044265392a@fb.com>
 References: <20220709000439.243271-1-yosryahmed@google.com>
- <20220709000439.243271-5-yosryahmed@google.com>
+ <20220709000439.243271-9-yosryahmed@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
  subject : to : cc : references : from : in-reply-to : content-type :
  content-transfer-encoding : mime-version; s=facebook;
- bh=j1XbpZ2NXx0trmsHga7A+Re2q/7pxdhGga75Sk5iUJ4=;
- b=qiYkp7JNfsGGk/+ctFrzIqEIg5Psg/krCCYLAvRlpQ4IMHTH6GasZ/wE3x29bYYH/Y9Z
- Nra0jerS/8qQq0XNp+TGmDA8TtC6N/rZfRSWUlHhxiK0P2v7mcdJdhhvW5fdOql0bEUQ
- /c33i24pOvpzphg7/dpAIrkS1J6cz4bshhg= 
+ bh=EkN9iriu+fXbAw0wzR7p193DQT76V+ccrcAkUG9xQoU=;
+ b=IaJLfb3HSE+C+mvuNJoB7sIivzrhdqSKNa48SW2wFHLUkgXpOWAzF4B/vizC0f+GhjBd
+ rb5UkreBknZFvciW3hG+ZlhRyf71bysX4CTqUajv5CZYbWSCCxaINyl5Tovzsiy2lyU6
+ ITN7UukjWCNjT56mwKZuQHbN8WpZUx9l77k= 
 Content-Language: en-US
-In-Reply-To: <20220709000439.243271-5-yosryahmed@google.com>
+In-Reply-To: <20220709000439.243271-9-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>
@@ -24,314 +25,140 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal 
 
 
 On 7/8/22 5:04 PM, Yosry Ahmed wrote:
-> From: Hao Luo <haoluo@google.com>
+> Add a selftest that tests the whole workflow for collecting,
+> aggregating (flushing), and displaying cgroup hierarchical stats.
 > 
-> Cgroup_iter is a type of bpf_iter. It walks over cgroups in three modes:
+> TL;DR:
+> - Userspace program creates a cgroup hierarchy and induces memcg reclaim
+>    in parts of it.
+> - Whenever reclaim happens, vmscan_start and vmscan_end update
+>    per-cgroup percpu readings, and tell rstat which (cgroup, cpu) pairs
+>    have updates.
+> - When userspace tries to read the stats, vmscan_dump calls rstat to flush
+>    the stats, and outputs the stats in text format to userspace (similar
+>    to cgroupfs stats).
+> - rstat calls vmscan_flush once for every (cgroup, cpu) pair that has
+>    updates, vmscan_flush aggregates cpu readings and propagates updates
+>    to parents.
+> - Userspace program makes sure the stats are aggregated and read
+>    correctly.
 > 
->   - walking a cgroup's descendants in pre-order.
->   - walking a cgroup's descendants in post-order.
->   - walking a cgroup's ancestors.
+> Detailed explanation:
+> - The test loads tracing bpf programs, vmscan_start and vmscan_end, to
+>    measure the latency of cgroup reclaim. Per-cgroup readings are stored in
+>    percpu maps for efficiency. When a cgroup reading is updated on a cpu,
+>    cgroup_rstat_updated(cgroup, cpu) is called to add the cgroup to the
+>    rstat updated tree on that cpu.
 > 
-> When attaching cgroup_iter, one can set a cgroup to the iter_link
-> created from attaching. This cgroup is passed as a file descriptor and
-> serves as the starting point of the walk. If no cgroup is specified,
-> the starting point will be the root cgroup.
+> - A cgroup_iter program, vmscan_dump, is loaded and pinned to a file, for
+>    each cgroup. Reading this file invokes the program, which calls
+>    cgroup_rstat_flush(cgroup) to ask rstat to propagate the updates for all
+>    cpus and cgroups that have updates in this cgroup's subtree. Afterwards,
+>    the stats are exposed to the user. vmscan_dump returns 1 to terminate
+>    iteration early, so that we only expose stats for one cgroup per read.
 > 
-> For walking descendants, one can specify the order: either pre-order or
-> post-order. For walking ancestors, the walk starts at the specified
-> cgroup and ends at the root.
+> - An ftrace program, vmscan_flush, is also loaded and attached to
+>    bpf_rstat_flush. When rstat flushing is ongoing, vmscan_flush is invoked
+>    once for each (cgroup, cpu) pair that has updates. cgroups are popped
+>    from the rstat tree in a bottom-up fashion, so calls will always be
+>    made for cgroups that have updates before their parents. The program
+>    aggregates percpu readings to a total per-cgroup reading, and also
+>    propagates them to the parent cgroup. After rstat flushing is over, all
+>    cgroups will have correct updated hierarchical readings (including all
+>    cpus and all their descendants).
 > 
-> One can also terminate the walk early by returning 1 from the iter
-> program.
+> - Finally, the test creates a cgroup hierarchy and induces memcg reclaim
+>    in parts of it, and makes sure that the stats collection, aggregation,
+>    and reading workflow works as expected.
 > 
-> Note that because walking cgroup hierarchy holds cgroup_mutex, the iter
-> program is called with cgroup_mutex held.
-> 
-> Signed-off-by: Hao Luo <haoluo@google.com>
 > Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> Acked-by: Yonghong Song <yhs@fb.com>
 > ---
->   include/linux/bpf.h                           |   8 +
->   include/uapi/linux/bpf.h                      |  21 ++
->   kernel/bpf/Makefile                           |   3 +
->   kernel/bpf/cgroup_iter.c                      | 242 ++++++++++++++++++
->   tools/include/uapi/linux/bpf.h                |  21 ++
->   .../selftests/bpf/prog_tests/btf_dump.c       |   4 +-
->   6 files changed, 297 insertions(+), 2 deletions(-)
->   create mode 100644 kernel/bpf/cgroup_iter.c
+>   .../prog_tests/cgroup_hierarchical_stats.c    | 362 ++++++++++++++++++
+>   .../bpf/progs/cgroup_hierarchical_stats.c     | 235 ++++++++++++
+>   2 files changed, 597 insertions(+)
+>   create mode 100644 tools/testing/selftests/bpf/prog_tests/cgroup_hierarchical_stats.c
+>   create mode 100644 tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
 > 
-> diff --git a/include/linux/bpf.h b/include/linux/bpf.h
-> index 2b21f2a3452ff..5de9de06e2551 100644
-> --- a/include/linux/bpf.h
-> +++ b/include/linux/bpf.h
-> @@ -47,6 +47,7 @@ struct kobject;
->   struct mem_cgroup;
->   struct module;
->   struct bpf_func_state;
-> +struct cgroup;
->   
->   extern struct idr btf_idr;
->   extern spinlock_t btf_idr_lock;
-> @@ -1714,7 +1715,14 @@ int bpf_obj_get_user(const char __user *pathname, int flags);
->   	int __init bpf_iter_ ## target(args) { return 0; }
->   
->   struct bpf_iter_aux_info {
-> +	/* for map_elem iter */
->   	struct bpf_map *map;
+[...]
 > +
-> +	/* for cgroup iter */
-> +	struct {
-> +		struct cgroup *start; /* starting cgroup */
-> +		int order;
-> +	} cgroup;
->   };
->   
->   typedef int (*bpf_iter_attach_target_t)(struct bpf_prog *prog,
-> diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
-> index 379e68fb866fc..6f5979e221927 100644
-> --- a/include/uapi/linux/bpf.h
-> +++ b/include/uapi/linux/bpf.h
-> @@ -87,10 +87,27 @@ struct bpf_cgroup_storage_key {
->   	__u32	attach_type;		/* program attach type (enum bpf_attach_type) */
->   };
->   
-> +enum bpf_iter_cgroup_traversal_order {
-> +	BPF_ITER_CGROUP_PRE = 0,	/* pre-order traversal */
-> +	BPF_ITER_CGROUP_POST,		/* post-order traversal */
-> +	BPF_ITER_CGROUP_PARENT_UP,	/* traversal of ancestors up to the root */
-> +};
-> +
->   union bpf_iter_link_info {
->   	struct {
->   		__u32	map_fd;
->   	} map;
-> +
-> +	/* cgroup_iter walks either the live descendants of a cgroup subtree, or the ancestors
-> +	 * of a given cgroup.
-> +	 */
-> +	struct {
-> +		/* Cgroup file descriptor. This is root of the subtree if for walking the
-> +		 * descendants; this is the starting cgroup if for walking the ancestors.
-
-Adding comment that cgroup_fd 0 means starting from root cgroup?
-Also, if I understand correctly, cgroup v1 is also supported here, 
-right? If this is the case, for cgroup v1 which root cgroup will be
-used for cgroup_fd? It would be good to clarify here too.
-
-> +		 */
-> +		__u32	cgroup_fd;
-> +		__u32	traversal_order;
-> +	} cgroup;
->   };
->   
->   /* BPF syscall commands, see bpf(2) man-page for more details. */
-> @@ -6134,6 +6151,10 @@ struct bpf_link_info {
->   				struct {
->   					__u32 map_id;
->   				} map;
-> +				struct {
-> +					__u32 traversal_order;
-> +					__aligned_u64 cgroup_id;
-> +				} cgroup;
-
-We actually has a problem here although I don't have a solution yet.
-
-Without this patch, for bpf_link_info structure, the output of pahole,
-
-                 struct { 
- 
-
-                         __u64              target_name 
-__attribute__((__aligned__(8))); /*     0     8 */ 
-
-                         __u32              target_name_len;      /* 
-  8     4 */ 
-
-                         union { 
- 
-
-                                 struct { 
- 
-
-                                         __u32 map_id;            /* 
-12     4 */ 
-
-                                 } map;                           /* 
-12     4 */
-                         };                                       /* 
-12     4 */
-                         union {
-                                 struct {
-                                         __u32      map_id; 
-   /*     0     4 */
-                                 } map; 
-   /*     0     4 */
-                         };
-
-                 } iter;
-
-You can see map_id has the offset 12 from the beginning of 'iter' structure.
-
-With this patch,
-
-                 struct {
-                         __u64              target_name 
-__attribute__((__aligned__(8))); /*     0     8 */
-                         __u32              target_name_len;      /* 
-  8     4 */
-
-                         /* XXX 4 bytes hole, try to pack */
-
-                         union {
-                                 struct {
-                                         __u32 map_id;            /* 
-16     4 */
-                                 } map;                           /* 
-16     4 */
-                                 struct {
-                                         __u32 traversal_order;   /* 
-16     4 */
-
-                                         /* XXX 4 bytes hole, try to pack */
-
-                                         __u64 cgroup_id;         /* 
-24     8 */
-                                 } cgroup;                        /* 
-16    16 */
-                         };                                       /* 
-16    16 */
-                         union {
-                                 struct {
-                                         __u32      map_id; 
-   /*     0     4 */
-                                 } map; 
-   /*     0     4 */
-                                 struct {
-                                         __u32      traversal_order; 
-   /*     0     4 */
-
-                                         /* XXX 4 bytes hole, try to pack */
-
-                                         __u64      cgroup_id; 
-   /*     8     8 */
-                                 } cgroup; 
-   /*     0    16 */
-                         };
-
-                 } iter;
-
-There is a 4 byte hole after member 'target_name_len'. So map_id will
-have a offset 16 from the start of structure 'iter'.
-
-
-This will break uapi. We probably won't be able to change the existing
-uapi with adding a ':32' after member 'target_name_len'. I don't have
-a good solution yet, but any suggestion is welcome.
-
-Also, for '__aligned_u64 cgroup_id', '__u64 cgroup_id' is enough.
-'__aligned_u64' mostly used for pointers.
-
-
->   			};
->   		} iter;
->   		struct  {
-> diff --git a/kernel/bpf/Makefile b/kernel/bpf/Makefile
-> index 057ba8e01e70f..00e05b69a4df1 100644
-> --- a/kernel/bpf/Makefile
-> +++ b/kernel/bpf/Makefile
-> @@ -24,6 +24,9 @@ endif
->   ifeq ($(CONFIG_PERF_EVENTS),y)
->   obj-$(CONFIG_BPF_SYSCALL) += stackmap.o
->   endif
-> +ifeq ($(CONFIG_CGROUPS),y)
-> +obj-$(CONFIG_BPF_SYSCALL) += cgroup_iter.o
-> +endif
->   obj-$(CONFIG_CGROUP_BPF) += cgroup.o
->   ifeq ($(CONFIG_INET),y)
->   obj-$(CONFIG_BPF_SYSCALL) += reuseport_array.o
-> diff --git a/kernel/bpf/cgroup_iter.c b/kernel/bpf/cgroup_iter.c
-> new file mode 100644
-> index 0000000000000..8f50b326016e6
-> --- /dev/null
-> +++ b/kernel/bpf/cgroup_iter.c
-> @@ -0,0 +1,242 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +/* Copyright (c) 2022 Google */
-> +#include <linux/bpf.h>
-> +#include <linux/btf_ids.h>
-> +#include <linux/cgroup.h>
-> +#include <linux/kernel.h>
-> +#include <linux/seq_file.h>
-> +
-> +#include "../cgroup/cgroup-internal.h"  /* cgroup_mutex and cgroup_is_dead */
-> +
-> +/* cgroup_iter provides three modes of traversal to the cgroup hierarchy.
-> + *
-> + *  1. Walk the descendants of a cgroup in pre-order.
-> + *  2. Walk the descendants of a cgroup in post-order.
-> + *  2. Walk the ancestors of a cgroup.
-> + *
-> + * For walking descendants, cgroup_iter can walk in either pre-order or
-> + * post-order. For walking ancestors, the iter walks up from a cgroup to
-> + * the root.
-> + *
-> + * The iter program can terminate the walk early by returning 1. Walk
-> + * continues if prog returns 0.
-> + *
-> + * The prog can check (seq->num == 0) to determine whether this is
-> + * the first element. The prog may also be passed a NULL cgroup,
-> + * which means the walk has completed and the prog has a chance to
-> + * do post-processing, such as outputing an epilogue.
-> + *
-> + * Note: the iter_prog is called with cgroup_mutex held.
-> + */
-> +
-> +struct bpf_iter__cgroup {
-> +	__bpf_md_ptr(struct bpf_iter_meta *, meta);
-> +	__bpf_md_ptr(struct cgroup *, cgroup);
-> +};
-> +
-> +struct cgroup_iter_priv {
-> +	struct cgroup_subsys_state *start_css;
-> +	bool terminate;
-> +	int order;
-> +};
-> +
-> +static void *cgroup_iter_seq_start(struct seq_file *seq, loff_t *pos)
+> +static unsigned long long get_cgroup_vmscan_delay(unsigned long long cgroup_id,
+> +						  const char *file_name)
 > +{
-> +	struct cgroup_iter_priv *p = seq->private;
+> +	char buf[128], path[128];
+> +	unsigned long long vmscan = 0, id = 0;
+> +	int err;
 > +
-> +	mutex_lock(&cgroup_mutex);
+> +	/* For every cgroup, read the file generated by cgroup_iter */
+> +	snprintf(path, 128, "%s%s", BPFFS_VMSCAN, file_name);
+> +	err = read_from_file(path, buf, 128);
+> +	if (!ASSERT_OK(err, "read cgroup_iter"))
+> +		return 0;
 > +
-> +	/* support only one session */
-> +	if (*pos > 0)
-> +		return NULL;
-
-This might be okay. But want to check what is
-the practical upper limit for cgroups in a system
-and whether we may miss some cgroups. If this
-happens, it will be a surprise to the user.
-
+> +	/* Check the output file formatting */
+> +	ASSERT_EQ(sscanf(buf, "cg_id: %llu, total_vmscan_delay: %llu\n",
+> +			 &id, &vmscan), 2, "output format");
 > +
-> +	++*pos;
-> +	p->terminate = false;
-> +	if (p->order == BPF_ITER_CGROUP_PRE)
-> +		return css_next_descendant_pre(NULL, p->start_css);
-> +	else if (p->order == BPF_ITER_CGROUP_POST)
-> +		return css_next_descendant_post(NULL, p->start_css);
-> +	else /* BPF_ITER_CGROUP_PARENT_UP */
-> +		return p->start_css;
+> +	/* Check that the cgroup_id is displayed correctly */
+> +	ASSERT_EQ(id, cgroup_id, "cgroup_id");
+> +	/* Check that the vmscan reading is non-zero */
+> +	ASSERT_GT(vmscan, 0, "vmscan_reading");
+> +	return vmscan;
 > +}
 > +
-> +static int __cgroup_iter_seq_show(struct seq_file *seq,
-> +				  struct cgroup_subsys_state *css, int in_stop);
-> +
-> +static void cgroup_iter_seq_stop(struct seq_file *seq, void *v)
+> +static void check_vmscan_stats(void)
 > +{
-> +	/* pass NULL to the prog for post-processing */
-> +	if (!v)
-> +		__cgroup_iter_seq_show(seq, NULL, true);
-> +	mutex_unlock(&cgroup_mutex);
+> +	int i;
+> +	unsigned long long vmscan_readings[N_CGROUPS], vmscan_root;
+> +
+> +	for (i = 0; i < N_CGROUPS; i++)
+> +		vmscan_readings[i] = get_cgroup_vmscan_delay(cgroups[i].id,
+> +							     cgroups[i].name);
+> +
+> +	/* Read stats for root too */
+> +	vmscan_root = get_cgroup_vmscan_delay(CG_ROOT_ID, CG_ROOT_NAME);
+> +
+> +	/* Check that child1 == child1_1 + child1_2 */
+> +	ASSERT_EQ(vmscan_readings[1], vmscan_readings[3] + vmscan_readings[4],
+> +		  "child1_vmscan");
+> +	/* Check that child2 == child2_1 + child2_2 */
+> +	ASSERT_EQ(vmscan_readings[2], vmscan_readings[5] + vmscan_readings[6],
+> +		  "child2_vmscan");
+> +	/* Check that test == child1 + child2 */
+> +	ASSERT_EQ(vmscan_readings[0], vmscan_readings[1] + vmscan_readings[2],
+> +		  "test_vmscan");
+> +	/* Check that root >= test */
+> +	ASSERT_GE(vmscan_root, vmscan_readings[1], "root_vmscan");
+
+I still get a test failure with
+
+get_cgroup_vmscan_delay:PASS:cgroup_id 0 nsec
+get_cgroup_vmscan_delay:FAIL:vmscan_reading unexpected vmscan_reading: 
+actual 0 <= expected 0
+check_vmscan_stats:FAIL:child1_vmscan unexpected child1_vmscan: actual 0 
+!= expected -2
+check_vmscan_stats:FAIL:child2_vmscan unexpected child2_vmscan: actual 0 
+!= expected -2
+check_vmscan_stats:PASS:test_vmscan 0 nsec
+check_vmscan_stats:PASS:root_vmscan 0 nsec
+
+I added 'dump_stack()' in function try_to_free_mem_cgroup_pages()
+and run this test (#33) and didn't get any stacktrace.
+But I do get stacktraces due to other operations like
+         try_to_free_mem_cgroup_pages+0x1fd [kernel]
+         try_to_free_mem_cgroup_pages+0x1fd [kernel]
+         memory_reclaim_write+0x88 [kernel]
+         cgroup_file_write+0x88 [kernel]
+         kernfs_fop_write_iter+0xd0 [kernel]
+         vfs_write+0x2c4 [kernel]
+         __x64_sys_write+0x60 [kernel]
+         do_syscall_64+0x2d [kernel]
+         entry_SYSCALL_64_after_hwframe+0x44 [kernel]
+
+If you can show me the stacktrace about how 
+try_to_free_mem_cgroup_pages() is triggered in your setup, I can
+help debug this problem in my environment.
+
 > +}
 > +
+> +static int setup_cgroup_iter(struct cgroup_hierarchical_stats *obj, int cgroup_fd,
 [...]
