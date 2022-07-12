@@ -1,229 +1,276 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH bpf-next v3 8/8] bpf: add a selftest for cgroup
- hierarchical stats collection
-Date: Mon, 11 Jul 2022 20:55:31 -0700
-Message-ID: <CAJD7tkZUfNqD8z6Cv7vi1TxpwKTXhDn_yweDHnRr++9iJs+=ew@mail.gmail.com>
-References: <20220709000439.243271-1-yosryahmed@google.com>
- <20220709000439.243271-9-yosryahmed@google.com> <b4936952-2fe7-656c-2d0d-69044265392a@fb.com>
- <9c6a0ba3-2730-eb56-0f96-e5d236e46660@fb.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: Re: [PATCH -next v10 3/4] block, bfq: refactor the counting of
+ 'num_groups_with_pending_reqs'
+Date: Tue, 12 Jul 2022 21:30:33 +0800
+Message-ID: <abdbb5db-e280-62f8-0670-536fcb8ec4d9@huaweicloud.com>
+References: <20220610021701.2347602-1-yukuai3@huawei.com>
+ <20220610021701.2347602-4-yukuai3@huawei.com>
+ <27F2DF19-7CC6-42C5-8CEB-43583EB4AE46@linaro.org>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=DtZHEZADB3JECY47Yo409VrgFsGXjY17lsaTSbiRvl0=;
-        b=mFHOW9FavN+1RbEA0qtYGYDT3GOeLmIbC9FfKIEFWgFL0rMhHfGt1syJts7NBkTf16
-         tm9M2Glr9e/Ux/yRWXN/PUZuQrAXYk+Nd1qvH9xf0vzV8P3K1jVUHSmnmopz91cFC2RF
-         gXhtOv3ll5MHfypnm+FYriDHMPyPFZYOnKjKLkLZ1RSoWME9VKX9QLMGgF9Uk4gm//c8
-         TSCwPrlvCkyaASxFm7rpBZQdDbmxE/buFLLCMzHv4TYTNfUXjJL5pMViBIlwm4EuScsl
-         EMHctYmT+oAXDoPwLC+BhycPGkroUnIyKKbUXEk7gExXzpEb5n8uyjGaJY36arV0l+PV
-         1dzA==
-In-Reply-To: <9c6a0ba3-2730-eb56-0f96-e5d236e46660@fb.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <27F2DF19-7CC6-42C5-8CEB-43583EB4AE46@linaro.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yonghong Song <yhs@fb.com>
-Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Hao Luo <haoluo@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>, KP Singh <kpsingh@kernel.org>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, John Fastabend <john.fastabend@gmail.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>, Linux
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Paolo Valente <paolo.valente@linaro.org>
+Cc: Jan Kara <jack@suse.cz>, cgroups@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
 
-On Sun, Jul 10, 2022 at 5:51 PM Yonghong Song <yhs@fb.com> wrote:
->
->
->
-> On 7/10/22 5:26 PM, Yonghong Song wrote:
-> >
-> >
-> > On 7/8/22 5:04 PM, Yosry Ahmed wrote:
-> >> Add a selftest that tests the whole workflow for collecting,
-> >> aggregating (flushing), and displaying cgroup hierarchical stats.
-> >>
-> >> TL;DR:
-> >> - Userspace program creates a cgroup hierarchy and induces memcg reclaim
-> >>    in parts of it.
-> >> - Whenever reclaim happens, vmscan_start and vmscan_end update
-> >>    per-cgroup percpu readings, and tell rstat which (cgroup, cpu) pairs
-> >>    have updates.
-> >> - When userspace tries to read the stats, vmscan_dump calls rstat to
-> >> flush
-> >>    the stats, and outputs the stats in text format to userspace (similar
-> >>    to cgroupfs stats).
-> >> - rstat calls vmscan_flush once for every (cgroup, cpu) pair that has
-> >>    updates, vmscan_flush aggregates cpu readings and propagates updates
-> >>    to parents.
-> >> - Userspace program makes sure the stats are aggregated and read
-> >>    correctly.
-> >>
-> >> Detailed explanation:
-> >> - The test loads tracing bpf programs, vmscan_start and vmscan_end, to
-> >>    measure the latency of cgroup reclaim. Per-cgroup readings are
-> >> stored in
-> >>    percpu maps for efficiency. When a cgroup reading is updated on a cpu,
-> >>    cgroup_rstat_updated(cgroup, cpu) is called to add the cgroup to the
-> >>    rstat updated tree on that cpu.
-> >>
-> >> - A cgroup_iter program, vmscan_dump, is loaded and pinned to a file, for
-> >>    each cgroup. Reading this file invokes the program, which calls
-> >>    cgroup_rstat_flush(cgroup) to ask rstat to propagate the updates
-> >> for all
-> >>    cpus and cgroups that have updates in this cgroup's subtree.
-> >> Afterwards,
-> >>    the stats are exposed to the user. vmscan_dump returns 1 to terminate
-> >>    iteration early, so that we only expose stats for one cgroup per read.
-> >>
-> >> - An ftrace program, vmscan_flush, is also loaded and attached to
-> >>    bpf_rstat_flush. When rstat flushing is ongoing, vmscan_flush is
-> >> invoked
-> >>    once for each (cgroup, cpu) pair that has updates. cgroups are popped
-> >>    from the rstat tree in a bottom-up fashion, so calls will always be
-> >>    made for cgroups that have updates before their parents. The program
-> >>    aggregates percpu readings to a total per-cgroup reading, and also
-> >>    propagates them to the parent cgroup. After rstat flushing is over,
-> >> all
-> >>    cgroups will have correct updated hierarchical readings (including all
-> >>    cpus and all their descendants).
-> >>
-> >> - Finally, the test creates a cgroup hierarchy and induces memcg reclaim
-> >>    in parts of it, and makes sure that the stats collection, aggregation,
-> >>    and reading workflow works as expected.
-> >>
-> >> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> >> ---
-> >>   .../prog_tests/cgroup_hierarchical_stats.c    | 362 ++++++++++++++++++
-> >>   .../bpf/progs/cgroup_hierarchical_stats.c     | 235 ++++++++++++
-> >>   2 files changed, 597 insertions(+)
-> >>   create mode 100644
-> >> tools/testing/selftests/bpf/prog_tests/cgroup_hierarchical_stats.c
-> >>   create mode 100644
-> >> tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
-> >>
-> > [...]
-> >> +
-> >> +static unsigned long long get_cgroup_vmscan_delay(unsigned long long
-> >> cgroup_id,
-> >> +                          const char *file_name)
-> >> +{
-> >> +    char buf[128], path[128];
-> >> +    unsigned long long vmscan = 0, id = 0;
-> >> +    int err;
-> >> +
-> >> +    /* For every cgroup, read the file generated by cgroup_iter */
-> >> +    snprintf(path, 128, "%s%s", BPFFS_VMSCAN, file_name);
-> >> +    err = read_from_file(path, buf, 128);
-> >> +    if (!ASSERT_OK(err, "read cgroup_iter"))
-> >> +        return 0;
-> >> +
-> >> +    /* Check the output file formatting */
-> >> +    ASSERT_EQ(sscanf(buf, "cg_id: %llu, total_vmscan_delay: %llu\n",
-> >> +             &id, &vmscan), 2, "output format");
-> >> +
-> >> +    /* Check that the cgroup_id is displayed correctly */
-> >> +    ASSERT_EQ(id, cgroup_id, "cgroup_id");
-> >> +    /* Check that the vmscan reading is non-zero */
-> >> +    ASSERT_GT(vmscan, 0, "vmscan_reading");
-> >> +    return vmscan;
-> >> +}
-> >> +
-> >> +static void check_vmscan_stats(void)
-> >> +{
-> >> +    int i;
-> >> +    unsigned long long vmscan_readings[N_CGROUPS], vmscan_root;
-> >> +
-> >> +    for (i = 0; i < N_CGROUPS; i++)
-> >> +        vmscan_readings[i] = get_cgroup_vmscan_delay(cgroups[i].id,
-> >> +                                 cgroups[i].name);
-> >> +
-> >> +    /* Read stats for root too */
-> >> +    vmscan_root = get_cgroup_vmscan_delay(CG_ROOT_ID, CG_ROOT_NAME);
-> >> +
-> >> +    /* Check that child1 == child1_1 + child1_2 */
-> >> +    ASSERT_EQ(vmscan_readings[1], vmscan_readings[3] +
-> >> vmscan_readings[4],
-> >> +          "child1_vmscan");
-> >> +    /* Check that child2 == child2_1 + child2_2 */
-> >> +    ASSERT_EQ(vmscan_readings[2], vmscan_readings[5] +
-> >> vmscan_readings[6],
-> >> +          "child2_vmscan");
-> >> +    /* Check that test == child1 + child2 */
-> >> +    ASSERT_EQ(vmscan_readings[0], vmscan_readings[1] +
-> >> vmscan_readings[2],
-> >> +          "test_vmscan");
-> >> +    /* Check that root >= test */
-> >> +    ASSERT_GE(vmscan_root, vmscan_readings[1], "root_vmscan");
-> >
-> > I still get a test failure with
-> >
-> > get_cgroup_vmscan_delay:PASS:cgroup_id 0 nsec
-> > get_cgroup_vmscan_delay:FAIL:vmscan_reading unexpected vmscan_reading:
-> > actual 0 <= expected 0
-> > check_vmscan_stats:FAIL:child1_vmscan unexpected child1_vmscan: actual 0
-> > != expected -2
-> > check_vmscan_stats:FAIL:child2_vmscan unexpected child2_vmscan: actual 0
-> > != expected -2
-> > check_vmscan_stats:PASS:test_vmscan 0 nsec
-> > check_vmscan_stats:PASS:root_vmscan 0 nsec
-> >
-> > I added 'dump_stack()' in function try_to_free_mem_cgroup_pages()
-> > and run this test (#33) and didn't get any stacktrace.
-> > But I do get stacktraces due to other operations like
-> >          try_to_free_mem_cgroup_pages+0x1fd [kernel]
-> >          try_to_free_mem_cgroup_pages+0x1fd [kernel]
-> >          memory_reclaim_write+0x88 [kernel]
-> >          cgroup_file_write+0x88 [kernel]
-> >          kernfs_fop_write_iter+0xd0 [kernel]
-> >          vfs_write+0x2c4 [kernel]
-> >          __x64_sys_write+0x60 [kernel]
-> >          do_syscall_64+0x2d [kernel]
-> >          entry_SYSCALL_64_after_hwframe+0x44 [kernel]
-> >
-> > If you can show me the stacktrace about how
-> > try_to_free_mem_cgroup_pages() is triggered in your setup, I can
-> > help debug this problem in my environment.
->
-> BTW, CI also reported the test failure.
-> https://github.com/kernel-patches/bpf/pull/3284
->
-> For example, with gcc built kernel,
-> https://github.com/kernel-patches/bpf/runs/7272407890?check_suite_focus=true
->
-> The error:
->
->    get_cgroup_vmscan_delay:PASS:cgroup_id 0 nsec
->    get_cgroup_vmscan_delay:PASS:vmscan_reading 0 nsec
->    check_vmscan_stats:FAIL:child1_vmscan unexpected child1_vmscan:
-> actual 28390910 != expected 28390909
->    check_vmscan_stats:FAIL:child2_vmscan unexpected child2_vmscan:
-> actual 0 != expected -2
->    check_vmscan_stats:PASS:test_vmscan 0 nsec
->    check_vmscan_stats:PASS:root_vmscan 0 nsec
->
+Hi!
 
-Hey Yonghong,
+I'm copying my reply with new mail address, because Paolo seems
+didn't receive my reply.
 
-Thanks for helping us debug this failure. I can reproduce the CI
-failure in my enviornment, but this failure is actually different from
-the failure in your environment. In your environment it looks like no
-stats are gathered for all cgroups (either no reclaim happening or bpf
-progs not being run). In the CI and in my environment, only one cgroup
-observes this behavior.
+=D4=DA 2022/06/23 23:32, Paolo Valente =D0=B4=B5=C0:
+> Sorry for the delay.
+>=20
+>> Il giorno 10 giu 2022, alle ore 04:17, Yu Kuai <yukuai3@huawei.com> ha s=
+critto:
+>>
+>> Currently, bfq can't handle sync io concurrently as long as they
+>> are not issued from root group. This is because
+>> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
+>> bfq_asymmetric_scenario().
+>>
+>> The way that bfqg is counted into 'num_groups_with_pending_reqs':
+>>
+>> Before this patch:
+>> 1) root group will never be counted.
+>> 2) Count if bfqg or it's child bfqgs have pending requests.
+>> 3) Don't count if bfqg and it's child bfqgs complete all the requests.
+>>
+>> After this patch:
+>> 1) root group is counted.
+>> 2) Count if bfqg have pending requests.
+>> 3) Don't count if bfqg complete all the requests.
+>>
+>> With this change, the occasion that only one group is activated can be
+>> detected, and next patch will support concurrent sync io in the
+>> occasion.
+>>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> Reviewed-by: Jan Kara <jack@suse.cz>
+>> ---
+>> block/bfq-iosched.c | 42 ------------------------------------------
+>> block/bfq-iosched.h | 18 +++++++++---------
+>> block/bfq-wf2q.c    | 19 ++++---------------
+>> 3 files changed, 13 insertions(+), 66 deletions(-)
+>>
+>> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+>> index 0ec21018daba..03b04892440c 100644
+>> --- a/block/bfq-iosched.c
+>> +++ b/block/bfq-iosched.c
+>> @@ -970,48 +970,6 @@ void __bfq_weights_tree_remove(struct bfq_data *bfq=
+d,
+>> void bfq_weights_tree_remove(struct bfq_data *bfqd,
+>> 			     struct bfq_queue *bfqq)
+>> {
+>> -	struct bfq_entity *entity =3D bfqq->entity.parent;
+>> -
+>> -	for_each_entity(entity) {
+>> -		struct bfq_sched_data *sd =3D entity->my_sched_data;
+>> -
+>> -		if (sd->next_in_service || sd->in_service_entity) {
+>> -			/*
+>> -			 * entity is still active, because either
+>> -			 * next_in_service or in_service_entity is not
+>> -			 * NULL (see the comments on the definition of
+>> -			 * next_in_service for details on why
+>> -			 * in_service_entity must be checked too).
+>> -			 *
+>> -			 * As a consequence, its parent entities are
+>> -			 * active as well, and thus this loop must
+>> -			 * stop here.
+>> -			 */
+>> -			break;
+>> -		}
+>> -
+>> -		/*
+>> -		 * The decrement of num_groups_with_pending_reqs is
+>> -		 * not performed immediately upon the deactivation of
+>> -		 * entity, but it is delayed to when it also happens
+>> -		 * that the first leaf descendant bfqq of entity gets
+>> -		 * all its pending requests completed. The following
+>> -		 * instructions perform this delayed decrement, if
+>> -		 * needed. See the comments on
+>> -		 * num_groups_with_pending_reqs for details.
+>> -		 */
+>> -		if (entity->in_groups_with_pending_reqs) {
+>> -			entity->in_groups_with_pending_reqs =3D false;
+>> -			bfqd->num_groups_with_pending_reqs--;
+>> -		}
+>> -	}
+>=20
+> With this part removed, I'm missing how you handle the following
+> sequence of events:
+> 1.  a queue Q becomes non busy but still has dispatched requests, so
+> it must not be removed from the counter of queues with pending reqs
+> yet
+> 2.  the last request of Q is completed with Q being still idle (non
+> busy).  At this point Q must be removed from the counter.  It seems to
+> me that this case is not handled any longer
+>=20
+Hi, Paolo
 
-The thing is, I was able to reproduce the problem only when I ran all
-test_progs. When I run the selftest alone (test_progs -t
-cgroup_hierarchical_stats), it consistently passes, which is
-interesting.
+1) At first, patch 1 support to track if bfqq has pending requests, it's
+done by setting the flag 'entity->in_groups_with_pending_reqs' when the
+first request is inserted to bfqq, and it's cleared when the last
+request is completed(based on weights_tree insertion and removal).
 
-Anyway, one failure at a time :) I am working on debugging the CI
-failure (that occurs only when all tests are run), then we'll see if
-fixing that fixes the problem in our environment as well.
+2) Then, patch 2 add a counter in bfqg: how many bfqqs have pending
+requests, which is updated while tracking if bfqq has pending requests.
 
-If you have any pointers about why a test would consistently pass
-alone and consistently fail with others that would be good. Otherwise,
-I will keep you updated with any findings I reach.
+3) Finally, patch 3 tracks 'num_groups_with_pending_reqs' based on the
+new counter in patch 2:
+  - if the counter(how many bfqqs have pending requests) increased from 0
+    to 1, increase 'num_groups_with_pending_reqs'.
+  - if the counter is decreased from 1 to 0, decrease
+    'num_groups_with_pending_reqs'
 
-Thanks again!
+> Additional comment: if your changes do not cpus the problem above,
+> then this function only invokes __bfq_weights_tree_remove.  So what's
+> the point in keeping this function)
+>=20
+If this patchset is applied, there are following cleanup patches to
+remove this function.
 
-> >
-> >> +}
-> >> +
-> >> +static int setup_cgroup_iter(struct cgroup_hierarchical_stats *obj,
-> >> int cgroup_fd,
-> > [...]
+multiple cleanup patches for bfq:
+https://lore.kernel.org/all/20220528095958.270455-1-yukuai3@huawei.com/
+>> -
+>> -	/*
+>> -	 * Next function is invoked last, because it causes bfqq to be
+>> -	 * freed if the following holds: bfqq is not in service and
+>> -	 * has no dispatched request. DO NOT use bfqq after the next
+>> -	 * function invocation.
+>> -	 */
+>=20
+> I would really love it if you leave this comment.  I added it after
+> suffering a lot for a nasty UAF.  Of course the first sentence may
+> need to be adjusted if the code that precedes it is to be removed.
+>=20
+Same as above, if this patch is applied, this function will be gone.
+
+Thanks,
+Kuai
+> Thanks,
+> Paolo
+>=20
+>=20
+>> 	__bfq_weights_tree_remove(bfqd, bfqq,
+>> 				  &bfqd->queue_weights_tree);
+>> }
+>> diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+>> index de2446a9b7ab..f0fce94583e4 100644
+>> --- a/block/bfq-iosched.h
+>> +++ b/block/bfq-iosched.h
+>> @@ -496,27 +496,27 @@ struct bfq_data {
+>> 	struct rb_root_cached queue_weights_tree;
+>>
+>> 	/*
+>> -	 * Number of groups with at least one descendant process that
+>> +	 * Number of groups with at least one process that
+>> 	 * has at least one request waiting for completion. Note that
+>> 	 * this accounts for also requests already dispatched, but not
+>> 	 * yet completed. Therefore this number of groups may differ
+>> 	 * (be larger) than the number of active groups, as a group is
+>> 	 * considered active only if its corresponding entity has
+>> -	 * descendant queues with at least one request queued. This
+>> +	 * queues with at least one request queued. This
+>> 	 * number is used to decide whether a scenario is symmetric.
+>> 	 * For a detailed explanation see comments on the computation
+>> 	 * of the variable asymmetric_scenario in the function
+>> 	 * bfq_better_to_idle().
+>> 	 *
+>> 	 * However, it is hard to compute this number exactly, for
+>> -	 * groups with multiple descendant processes. Consider a group
+>> -	 * that is inactive, i.e., that has no descendant process with
+>> +	 * groups with multiple processes. Consider a group
+>> +	 * that is inactive, i.e., that has no process with
+>> 	 * pending I/O inside BFQ queues. Then suppose that
+>> 	 * num_groups_with_pending_reqs is still accounting for this
+>> -	 * group, because the group has descendant processes with some
+>> +	 * group, because the group has processes with some
+>> 	 * I/O request still in flight. num_groups_with_pending_reqs
+>> 	 * should be decremented when the in-flight request of the
+>> -	 * last descendant process is finally completed (assuming that
+>> +	 * last process is finally completed (assuming that
+>> 	 * nothing else has changed for the group in the meantime, in
+>> 	 * terms of composition of the group and active/inactive state of child
+>> 	 * groups and processes). To accomplish this, an additional
+>> @@ -525,7 +525,7 @@ struct bfq_data {
+>> 	 * we resort to the following tradeoff between simplicity and
+>> 	 * accuracy: for an inactive group that is still counted in
+>> 	 * num_groups_with_pending_reqs, we decrement
+>> -	 * num_groups_with_pending_reqs when the first descendant
+>> +	 * num_groups_with_pending_reqs when the first
+>> 	 * process of the group remains with no request waiting for
+>> 	 * completion.
+>> 	 *
+>> @@ -533,12 +533,12 @@ struct bfq_data {
+>> 	 * carefulness: to avoid multiple decrements, we flag a group,
+>> 	 * more precisely an entity representing a group, as still
+>> 	 * counted in num_groups_with_pending_reqs when it becomes
+>> -	 * inactive. Then, when the first descendant queue of the
+>> +	 * inactive. Then, when the first queue of the
+>> 	 * entity remains with no request waiting for completion,
+>> 	 * num_groups_with_pending_reqs is decremented, and this flag
+>> 	 * is reset. After this flag is reset for the entity,
+>> 	 * num_groups_with_pending_reqs won't be decremented any
+>> -	 * longer in case a new descendant queue of the entity remains
+>> +	 * longer in case a new queue of the entity remains
+>> 	 * with no request waiting for completion.
+>> 	 */
+>> 	unsigned int num_groups_with_pending_reqs;
+>> diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+>> index 6f36f3fe5cc8..9c2842bedf97 100644
+>> --- a/block/bfq-wf2q.c
+>> +++ b/block/bfq-wf2q.c
+>> @@ -984,19 +984,6 @@ static void __bfq_activate_entity(struct bfq_entity=
+ *entity,
+>> 		entity->on_st_or_in_serv =3D true;
+>> 	}
+>>
+>> -#ifdef CONFIG_BFQ_GROUP_IOSCHED
+>> -	if (!bfq_entity_to_bfqq(entity)) { /* bfq_group */
+>> -		struct bfq_group *bfqg =3D
+>> -			container_of(entity, struct bfq_group, entity);
+>> -		struct bfq_data *bfqd =3D bfqg->bfqd;
+>> -
+>> -		if (!entity->in_groups_with_pending_reqs) {
+>> -			entity->in_groups_with_pending_reqs =3D true;
+>> -			bfqd->num_groups_with_pending_reqs++;
+>> -		}
+>> -	}
+>> -#endif
+>> -
+>> 	bfq_update_fin_time_enqueue(entity, st, backshifted);
+>> }
+>>
+>> @@ -1654,7 +1641,8 @@ void bfq_add_bfqq_in_groups_with_pending_reqs(stru=
+ct bfq_queue *bfqq)
+>> 	if (!entity->in_groups_with_pending_reqs) {
+>> 		entity->in_groups_with_pending_reqs =3D true;
+>> #ifdef CONFIG_BFQ_GROUP_IOSCHED
+>> -		bfqq_group(bfqq)->num_queues_with_pending_reqs++;
+>> +		if (!(bfqq_group(bfqq)->num_queues_with_pending_reqs++))
+>> +			bfqq->bfqd->num_groups_with_pending_reqs++;
+>> #endif
+>> 	}
+>> }
+>> @@ -1666,7 +1654,8 @@ void bfq_del_bfqq_in_groups_with_pending_reqs(stru=
+ct bfq_queue *bfqq)
+>> 	if (entity->in_groups_with_pending_reqs) {
+>> 		entity->in_groups_with_pending_reqs =3D false;
+>> #ifdef CONFIG_BFQ_GROUP_IOSCHED
+>> -		bfqq_group(bfqq)->num_queues_with_pending_reqs--;
+>> +		if (!(--bfqq_group(bfqq)->num_queues_with_pending_reqs))
+>> +			bfqq->bfqd->num_groups_with_pending_reqs--;
+>> #endif
+>> 	}
+>> }
+>> --=20
+>> 2.31.1
+>>
+>=20
+> .
+>=20
+
