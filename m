@@ -1,174 +1,88 @@
-From: Hao Luo <haoluo@google.com>
-Subject: Re: [PATCH bpf-next v3 4/8] bpf: Introduce cgroup iter
-Date: Mon, 11 Jul 2022 17:42:14 -0700
-Message-ID: <CA+khW7gmVmXMg4YP4fxTtgqNyAr4mQqnXbP=z0nUeQ8=hfGC3g@mail.gmail.com>
+From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH bpf-next v3 8/8] bpf: add a selftest for cgroup
+ hierarchical stats collection
+Date: Mon, 11 Jul 2022 17:44:10 -0700
+Message-ID: <CA+khW7iE=qQTCMGteBysz509eSufc2EGu7T7A2ODMT1TZDsgug@mail.gmail.com>
 References: <20220709000439.243271-1-yosryahmed@google.com>
- <20220709000439.243271-5-yosryahmed@google.com> <370cb480-a427-4d93-37d9-3c6acd73b967@fb.com>
- <a6d048b8-d017-ea7e-36f0-1c4f88fc4399@fb.com>
+ <20220709000439.243271-9-yosryahmed@google.com> <b4936952-2fe7-656c-2d0d-69044265392a@fb.com>
+ <9c6a0ba3-2730-eb56-0f96-e5d236e46660@fb.com> <CA+khW7gu73pRFi73BR20OCJhzrs8-kHfTYYR38+MJUpt6wqXoA@mail.gmail.com>
+ <e2f8fcd8-9219-1119-86ca-69714789d494@fb.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=68mkDNBCkeJpX+q116C9yWsW5XjBLSxGi+xt71TSQ28=;
-        b=pXcUEGlIhOHDWFHvDN9rRDLyJeDZML22bbC8eiEGLCy/l4q3ub47IwesxJKljkqfb8
-         nHo/r/cp9kyG8mZVZTNOAx4hzS3GaEjcvicCDoe02fE9FolqPAKFuY8Yz4hOx4lEEI+B
-         vs5VuZWfB+WFXaL8jLSq4cjzTVtlNJI1bco7XI+5d7o+6Nrc35e3zlx/La0iy33o4aQB
-         s4CD0WymQMmITSwJOIiWAIaFjB08hdaj5K8yBVWYxR1oYSeGBMLeY66fr2CPeR5SUtQz
-         FqjKBS1ff2f/3D3pFF/1j0RLdvML2qQgm8bFuhL1eit5NdIkvBO5vNiChDWEJL0ialM5
-         ooNA==
-In-Reply-To: <a6d048b8-d017-ea7e-36f0-1c4f88fc4399@fb.com>
+        bh=bGTGuYa2fBktqF6ANS0pW/MRRXdihHucX+zpCB0BRDY=;
+        b=YwfcYXk+tBGkgAD3HXPtacLw/NXJE4IHNS8mmUc5VhFYxm5hRuUexGwuzoMx7kF9Y5
+         qE+cjG2m+mxPSQY8BfNUdmZb+6qgMoRUpUbOgsU/j4PzA0py9L0yQW1UP5hkqQIXCzas
+         h9ZFY5+0K8rVQ8HBcODnA4HMnTYqBj4tqH+WMv2E04k8XMPD0CJG2vyVsg/sSayAB1ZO
+         4FXj1p1zHQXIFVo73u3QBcewEQQrP5+2/uy6sM93i8G8AqkEux/9LNB5XxZopCzN9EUR
+         NoL9uA4jmsf+por4SZA2GMvGF8eQBFWHgqGynpeMPShrW3SbFfgl4wfCjWAKjydi887h
+         fHDA==
+In-Reply-To: <e2f8fcd8-9219-1119-86ca-69714789d494-b10kYP2dOMg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yonghong Song <yhs@fb.com>
-Cc: Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>, KP Singh <kpsingh@kernel.org>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, John Fastabend <john.fastabend@gmail.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>
+To: Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>
+Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Jul 11, 2022 at 4:20 PM Yonghong Song <yhs@fb.com> wrote:
+On Sun, Jul 10, 2022 at 11:19 PM Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org> wrote:
 >
-> On 7/10/22 5:19 PM, Yonghong Song wrote:
-> >
-> >
-[...]
-> >> +
-> >>   union bpf_iter_link_info {
-> >>       struct {
-> >>           __u32    map_fd;
-> >>       } map;
-> >> +
-> >> +    /* cgroup_iter walks either the live descendants of a cgroup
-> >> subtree, or the ancestors
-> >> +     * of a given cgroup.
-> >> +     */
-> >> +    struct {
-> >> +        /* Cgroup file descriptor. This is root of the subtree if for
-> >> walking the
-> >> +         * descendants; this is the starting cgroup if for walking
-> >> the ancestors.
-> >
-> > Adding comment that cgroup_fd 0 means starting from root cgroup?
-
-Sure.
-
-> > Also, if I understand correctly, cgroup v1 is also supported here,
-> > right? If this is the case, for cgroup v1 which root cgroup will be
-> > used for cgroup_fd? It would be good to clarify here too.
-> >
-
-IMO, the case of cgroup_fd = 0 combined with cgroup v1 should return
-errors. It's an invalid case. If anyone wants to use cgroup_iter on
-cgroup v1 hierarchy, they could explicitly open the subsystems' root
-directory and pass the fd. With that said, Yosry and I will test and
-confirm the behavior in this situation and clarify in the comment.
-Thanks for pointing this out.
-
-> >> +         */
-> >> +        __u32    cgroup_fd;
-> >> +        __u32    traversal_order;
-> >> +    } cgroup;
-> >>   };
-> >>   /* BPF syscall commands, see bpf(2) man-page for more details. */
-> >> @@ -6134,6 +6151,10 @@ struct bpf_link_info {
-> >>                   struct {
-> >>                       __u32 map_id;
-> >>                   } map;
-> >> +                struct {
-> >> +                    __u32 traversal_order;
-> >> +                    __aligned_u64 cgroup_id;
-> >> +                } cgroup;
-> >
-> > We actually has a problem here although I don't have a solution yet.
-> >
-[...]
-> >
-> > There is a 4 byte hole after member 'target_name_len'. So map_id will
-> > have a offset 16 from the start of structure 'iter'.
-> >
-> >
-> > This will break uapi. We probably won't be able to change the existing
-> > uapi with adding a ':32' after member 'target_name_len'. I don't have
-> > a good solution yet, but any suggestion is welcome.
-> >
-> > Also, for '__aligned_u64 cgroup_id', '__u64 cgroup_id' is enough.
-> > '__aligned_u64' mostly used for pointers.
 >
-> Briefly discussed with Alexei, the following structure iter definition
-> should work. Later on, if we need to addition fields for other iter's,
-> for a single __u32, the field can be added to either the first or the
-> second union. If fields are more than __u32, they can be placed
-> in the second union.
 >
->                  struct {
->                          __aligned_u64 target_name; /* in/out:
-> target_name buffer ptr */
->                          __u32 target_name_len;     /* in/out:
-> target_name buffer len */
->                          union {
->                                  struct {
->                                          __u32 map_id;
->                                  } map;
->                          };
->                          union {
->                                  struct {
->                                          __u64 cgroup_id;
->                                          __u32 traversal_order;
->                                  } cgroup;
->                          };
->                  } iter;
+> On 7/10/22 11:01 PM, Hao Luo wrote:
+> > On Sun, Jul 10, 2022 at 5:51 PM Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org> wrote:
+> >>
+> >>
+> >>
+> >> On 7/10/22 5:26 PM, Yonghong Song wrote:
+> > [...]
+> >>
+> >> BTW, CI also reported the test failure.
+> >> https://github.com/kernel-patches/bpf/pull/3284
+> >>
+> >> For example, with gcc built kernel,
+> >> https://github.com/kernel-patches/bpf/runs/7272407890?check_suite_focus=true
+> >>
+> >> The error:
+> >>
+> >>     get_cgroup_vmscan_delay:PASS:cgroup_id 0 nsec
+> >>     get_cgroup_vmscan_delay:PASS:vmscan_reading 0 nsec
+> >>     check_vmscan_stats:FAIL:child1_vmscan unexpected child1_vmscan:
+> >> actual 28390910 != expected 28390909
+> >>     check_vmscan_stats:FAIL:child2_vmscan unexpected child2_vmscan:
+> >> actual 0 != expected -2
+> >>     check_vmscan_stats:PASS:test_vmscan 0 nsec
+> >>     check_vmscan_stats:PASS:root_vmscan 0 nsec
+> >>
+> >
+> > Yonghong,
+> >
+> > I noticed that the test only failed on test_progs-no_alu32, not
+> > test_progs. test_progs passed. I believe Yosry and I have only tested
+>
+> In my case, both test_progs and test_progs-no_alu32 failed the test.
+> I think the reason for the failure is the same.
+>
+> > on test_progs. I tried building and running the no_alu32 version, but
+> > so far, not able to run test_progs-no_alu32. Whenever I ran
+> > test_progs-no_alu32, it exits without any message. Do you have any
+> > clue what could be wrong?
+>
+> It works fine in my environment. test_progs should be very similar to
+> test_progs-no_alu32. The only difference is bpf programs with different
+> insn set. Some tests may not run with test_progs-no_alu32, e.g., newer
+> atomic insn tests.
+>
+> I have no idea why test_progs-no_alu32 won't work for you, I guess you
+> may need to debug it a little bit.
 >
 
-Thanks Yonghong for seeking the solution here. The solution looks
-good. I'm going to put your heads-up as comments there. One thing I'd
-like to confirm, when we query bpf_link_info for cgroup iter, do we
-also need to zero those fields for map_elem?
+Yonghong, I reproduced the failure using vmtest.sh now. Yosry and I
+are debugging it. Once we have any result, we will report back. Thanks
+for taking a look.
 
->
 > >
-> >
-> >>               };
-> >>           } iter;
-> >>           struct  {
-[...]
-> >> +
-> >> +static void *cgroup_iter_seq_start(struct seq_file *seq, loff_t *pos)
-> >> +{
-> >> +    struct cgroup_iter_priv *p = seq->private;
-> >> +
-> >> +    mutex_lock(&cgroup_mutex);
-> >> +
-> >> +    /* support only one session */
-> >> +    if (*pos > 0)
-> >> +        return NULL;
-> >
-> > This might be okay. But want to check what is
-> > the practical upper limit for cgroups in a system
-> > and whether we may miss some cgroups. If this
-> > happens, it will be a surprise to the user.
-> >
-
-Ok. What's the max number of items supported in a single session?
-
-> >> +
-> >> +    ++*pos;
-> >> +    p->terminate = false;
-> >> +    if (p->order == BPF_ITER_CGROUP_PRE)
-> >> +        return css_next_descendant_pre(NULL, p->start_css);
-> >> +    else if (p->order == BPF_ITER_CGROUP_POST)
-> >> +        return css_next_descendant_post(NULL, p->start_css);
-> >> +    else /* BPF_ITER_CGROUP_PARENT_UP */
-> >> +        return p->start_css;
-> >> +}
-> >> +
-> >> +static int __cgroup_iter_seq_show(struct seq_file *seq,
-> >> +                  struct cgroup_subsys_state *css, int in_stop);
-> >> +
-> >> +static void cgroup_iter_seq_stop(struct seq_file *seq, void *v)
-> >> +{
-> >> +    /* pass NULL to the prog for post-processing */
-> >> +    if (!v)
-> >> +        __cgroup_iter_seq_show(seq, NULL, true);
-> >> +    mutex_unlock(&cgroup_mutex);
-> >> +}
-> >> +
+> >>>
 > > [...]
