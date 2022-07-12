@@ -1,276 +1,109 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: Re: [PATCH -next v10 3/4] block, bfq: refactor the counting of
- 'num_groups_with_pending_reqs'
-Date: Tue, 12 Jul 2022 21:30:33 +0800
-Message-ID: <abdbb5db-e280-62f8-0670-536fcb8ec4d9@huaweicloud.com>
-References: <20220610021701.2347602-1-yukuai3@huawei.com>
- <20220610021701.2347602-4-yukuai3@huawei.com>
- <27F2DF19-7CC6-42C5-8CEB-43583EB4AE46@linaro.org>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [PATCH v3] mm: vmpressure: don't count proactive reclaim in vmpressure
+Date: Tue, 12 Jul 2022 15:51:54 -0700
+Message-ID: <CAJD7tkbvPX+jMHOF6TbhBYvX-3nZ+k4-7NEKX5cudBS7ZuSNdQ@mail.gmail.com>
+References: <20220630083044.997474-1-yosryahmed@google.com>
+ <20220701160947.e4902e5b0484ed084db5d41f@linux-foundation.org> <CAJD7tkZ7haRwRgE5723Sfqr4WzeoATy-3SUROgAZpinyxsMt2Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <27F2DF19-7CC6-42C5-8CEB-43583EB4AE46@linaro.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=htaxsmbLkerK/WzSwDGnn60xtZCz4ZbFlZTWngCZmEo=;
+        b=PJvAiv/DmAKyikrJij5JE66g75DNqz4DHzNmHd/JdP5z0zk7MZqnCrSzDvKAn/vIHL
+         /D1NSeoCJVH6odh+Uj/o+s5cBf7HLPhJcKRVVRRPWXogWz+S1pndViMAUC1Zvw5ESZAP
+         a4uDkbnnM/6ytDcaYwsBLjwLxeO9Rih93Gr+RXKEKTPt1wqx/q0JXbde46/8Bpzm1NLV
+         78Bw7c0NvdCwXjhEsfKVunNKJ9ihm2+YXJqQWj5UFZzKq30VoqbtCJCBYX34Eh3+yLHx
+         tX5KytQJPfANtkoIvguy1zTKRUksrSmQqW7JiP3kjvDh4jRUVC8MV/aTs5+JNNpJOxnR
+         3ZKw==
+In-Reply-To: <CAJD7tkZ7haRwRgE5723Sfqr4WzeoATy-3SUROgAZpinyxsMt2Q@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Paolo Valente <paolo.valente@linaro.org>
-Cc: Jan Kara <jack@suse.cz>, cgroups@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Matthew Wilcox <willy@infradead.org>, Vlastimil Babka <vbabka@suse.cz>, David Hildenbrand <david@redhat.com>, Miaohe Lin <linmiaohe@huawei.com>, NeilBrown <neilb@suse.de>, Alistair Popple <apopple@nvidia.com>, Suren Baghdasaryan <surenb@google.com>, Peter Xu <peterx@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>
 
-Hi!
+On Wed, Jul 6, 2022 at 1:19 PM Yosry Ahmed <yosryahmed@google.com> wrote:
+>
+> On Fri, Jul 1, 2022 at 4:09 PM Andrew Morton <akpm@linux-foundation.org> wrote:
+> >
+> > On Thu, 30 Jun 2022 08:30:44 +0000 Yosry Ahmed <yosryahmed@google.com> wrote:
+> >
+> > > vmpressure is used in cgroup v1 to notify userspace of reclaim
+> > > efficiency events, and is also used in both cgroup v1 and v2 as a signal
+> > > for memory pressure for networking, see
+> > > mem_cgroup_under_socket_pressure().
+> > >
+> > > Proactive reclaim intends to probe memcgs for cold memory, without
+> > > affecting their performance. Hence, reclaim caused by writing to
+> > > memory.reclaim should not trigger vmpressure.
+> > >
+> > > ...
+> > >
+> > > --- a/mm/memcontrol.c
+> > > +++ b/mm/memcontrol.c
+> > > @@ -2319,6 +2319,7 @@ static unsigned long reclaim_high(struct mem_cgroup *memcg,
+> > >                                 gfp_t gfp_mask)
+> > >  {
+> > >       unsigned long nr_reclaimed = 0;
+> > > +     unsigned int reclaim_options = MEMCG_RECLAIM_MAY_SWAP;
+> > >
+> > >       do {
+> > >               unsigned long pflags;
+> > > @@ -2331,7 +2332,8 @@ static unsigned long reclaim_high(struct mem_cgroup *memcg,
+> > >
+> > >               psi_memstall_enter(&pflags);
+> > >               nr_reclaimed += try_to_free_mem_cgroup_pages(memcg, nr_pages,
+> > > -                                                          gfp_mask, true);
+> > > +                                                          gfp_mask,
+> > > +                                                          reclaim_options);
+> >
+> > It's a bit irksome to create all these unneeded local variables.  Why
+> > not simply add the constant arg to the try_to_free_mem_cgroup_pages()
+> > call?
+> >
+>
+> I was trying to improve readability by trying to have consistent
+> reclaim_options local variable passed into
+> try_to_free_mem_cgroup_pages(), and also to avoid nested line-wrapping
+> in cases where reclaim_options = MEMCG_RECLAIM_MAY_SWAP |
+> MEMCG_RECLAIM_PROACTIVE (like in memory_reclaim()). Since you found it
+> irksome, I obviously failed :)
+>
+> Will remove the local variables where possible and send a v4. Thanks
+> for taking a look!
+>
+> > >               psi_memstall_leave(&pflags);
+> > >       } while ((memcg = parent_mem_cgroup(memcg)) &&
+> > >                !mem_cgroup_is_root(memcg));
+> > > @@ -2576,7 +2578,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> > >       struct page_counter *counter;
+> > >       unsigned long nr_reclaimed;
+> > >       bool passed_oom = false;
+> > > -     bool may_swap = true;
+> > > +     unsigned int reclaim_options = MEMCG_RECLAIM_MAY_SWAP;
+> > >       bool drained = false;
+> > >       unsigned long pflags;
+> > >
+> > > @@ -2593,7 +2595,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> > >               mem_over_limit = mem_cgroup_from_counter(counter, memory);
+> > >       } else {
+> > >               mem_over_limit = mem_cgroup_from_counter(counter, memsw);
+> > > -             may_swap = false;
+> > > +             reclaim_options &= ~MEMCG_RECLAIM_MAY_SWAP;
+> >
+> >         reclaim_options = 0
+> >
+> > would be clearer?
+> >
+>
+> I feel like the current code is more clear to the reader and
+> future-proof. If we can't swap, we want to remove the MAY_SWAP flag,
+> we don't want to remove all existing flags. In this case it's the
+> same, but maybe in the future it won't be and someone will miss
+> updating this line. Anyway, I don't have a strong opinion, let me know
+> what you prefer for v4.
 
-I'm copying my reply with new mail address, because Paolo seems
-didn't receive my reply.
 
-=D4=DA 2022/06/23 23:32, Paolo Valente =D0=B4=B5=C0:
-> Sorry for the delay.
->=20
->> Il giorno 10 giu 2022, alle ore 04:17, Yu Kuai <yukuai3@huawei.com> ha s=
-critto:
->>
->> Currently, bfq can't handle sync io concurrently as long as they
->> are not issued from root group. This is because
->> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
->> bfq_asymmetric_scenario().
->>
->> The way that bfqg is counted into 'num_groups_with_pending_reqs':
->>
->> Before this patch:
->> 1) root group will never be counted.
->> 2) Count if bfqg or it's child bfqgs have pending requests.
->> 3) Don't count if bfqg and it's child bfqgs complete all the requests.
->>
->> After this patch:
->> 1) root group is counted.
->> 2) Count if bfqg have pending requests.
->> 3) Don't count if bfqg complete all the requests.
->>
->> With this change, the occasion that only one group is activated can be
->> detected, and next patch will support concurrent sync io in the
->> occasion.
->>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> Reviewed-by: Jan Kara <jack@suse.cz>
->> ---
->> block/bfq-iosched.c | 42 ------------------------------------------
->> block/bfq-iosched.h | 18 +++++++++---------
->> block/bfq-wf2q.c    | 19 ++++---------------
->> 3 files changed, 13 insertions(+), 66 deletions(-)
->>
->> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
->> index 0ec21018daba..03b04892440c 100644
->> --- a/block/bfq-iosched.c
->> +++ b/block/bfq-iosched.c
->> @@ -970,48 +970,6 @@ void __bfq_weights_tree_remove(struct bfq_data *bfq=
-d,
->> void bfq_weights_tree_remove(struct bfq_data *bfqd,
->> 			     struct bfq_queue *bfqq)
->> {
->> -	struct bfq_entity *entity =3D bfqq->entity.parent;
->> -
->> -	for_each_entity(entity) {
->> -		struct bfq_sched_data *sd =3D entity->my_sched_data;
->> -
->> -		if (sd->next_in_service || sd->in_service_entity) {
->> -			/*
->> -			 * entity is still active, because either
->> -			 * next_in_service or in_service_entity is not
->> -			 * NULL (see the comments on the definition of
->> -			 * next_in_service for details on why
->> -			 * in_service_entity must be checked too).
->> -			 *
->> -			 * As a consequence, its parent entities are
->> -			 * active as well, and thus this loop must
->> -			 * stop here.
->> -			 */
->> -			break;
->> -		}
->> -
->> -		/*
->> -		 * The decrement of num_groups_with_pending_reqs is
->> -		 * not performed immediately upon the deactivation of
->> -		 * entity, but it is delayed to when it also happens
->> -		 * that the first leaf descendant bfqq of entity gets
->> -		 * all its pending requests completed. The following
->> -		 * instructions perform this delayed decrement, if
->> -		 * needed. See the comments on
->> -		 * num_groups_with_pending_reqs for details.
->> -		 */
->> -		if (entity->in_groups_with_pending_reqs) {
->> -			entity->in_groups_with_pending_reqs =3D false;
->> -			bfqd->num_groups_with_pending_reqs--;
->> -		}
->> -	}
->=20
-> With this part removed, I'm missing how you handle the following
-> sequence of events:
-> 1.  a queue Q becomes non busy but still has dispatched requests, so
-> it must not be removed from the counter of queues with pending reqs
-> yet
-> 2.  the last request of Q is completed with Q being still idle (non
-> busy).  At this point Q must be removed from the counter.  It seems to
-> me that this case is not handled any longer
->=20
-Hi, Paolo
-
-1) At first, patch 1 support to track if bfqq has pending requests, it's
-done by setting the flag 'entity->in_groups_with_pending_reqs' when the
-first request is inserted to bfqq, and it's cleared when the last
-request is completed(based on weights_tree insertion and removal).
-
-2) Then, patch 2 add a counter in bfqg: how many bfqqs have pending
-requests, which is updated while tracking if bfqq has pending requests.
-
-3) Finally, patch 3 tracks 'num_groups_with_pending_reqs' based on the
-new counter in patch 2:
-  - if the counter(how many bfqqs have pending requests) increased from 0
-    to 1, increase 'num_groups_with_pending_reqs'.
-  - if the counter is decreased from 1 to 0, decrease
-    'num_groups_with_pending_reqs'
-
-> Additional comment: if your changes do not cpus the problem above,
-> then this function only invokes __bfq_weights_tree_remove.  So what's
-> the point in keeping this function)
->=20
-If this patchset is applied, there are following cleanup patches to
-remove this function.
-
-multiple cleanup patches for bfq:
-https://lore.kernel.org/all/20220528095958.270455-1-yukuai3@huawei.com/
->> -
->> -	/*
->> -	 * Next function is invoked last, because it causes bfqq to be
->> -	 * freed if the following holds: bfqq is not in service and
->> -	 * has no dispatched request. DO NOT use bfqq after the next
->> -	 * function invocation.
->> -	 */
->=20
-> I would really love it if you leave this comment.  I added it after
-> suffering a lot for a nasty UAF.  Of course the first sentence may
-> need to be adjusted if the code that precedes it is to be removed.
->=20
-Same as above, if this patch is applied, this function will be gone.
-
-Thanks,
-Kuai
-> Thanks,
-> Paolo
->=20
->=20
->> 	__bfq_weights_tree_remove(bfqd, bfqq,
->> 				  &bfqd->queue_weights_tree);
->> }
->> diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
->> index de2446a9b7ab..f0fce94583e4 100644
->> --- a/block/bfq-iosched.h
->> +++ b/block/bfq-iosched.h
->> @@ -496,27 +496,27 @@ struct bfq_data {
->> 	struct rb_root_cached queue_weights_tree;
->>
->> 	/*
->> -	 * Number of groups with at least one descendant process that
->> +	 * Number of groups with at least one process that
->> 	 * has at least one request waiting for completion. Note that
->> 	 * this accounts for also requests already dispatched, but not
->> 	 * yet completed. Therefore this number of groups may differ
->> 	 * (be larger) than the number of active groups, as a group is
->> 	 * considered active only if its corresponding entity has
->> -	 * descendant queues with at least one request queued. This
->> +	 * queues with at least one request queued. This
->> 	 * number is used to decide whether a scenario is symmetric.
->> 	 * For a detailed explanation see comments on the computation
->> 	 * of the variable asymmetric_scenario in the function
->> 	 * bfq_better_to_idle().
->> 	 *
->> 	 * However, it is hard to compute this number exactly, for
->> -	 * groups with multiple descendant processes. Consider a group
->> -	 * that is inactive, i.e., that has no descendant process with
->> +	 * groups with multiple processes. Consider a group
->> +	 * that is inactive, i.e., that has no process with
->> 	 * pending I/O inside BFQ queues. Then suppose that
->> 	 * num_groups_with_pending_reqs is still accounting for this
->> -	 * group, because the group has descendant processes with some
->> +	 * group, because the group has processes with some
->> 	 * I/O request still in flight. num_groups_with_pending_reqs
->> 	 * should be decremented when the in-flight request of the
->> -	 * last descendant process is finally completed (assuming that
->> +	 * last process is finally completed (assuming that
->> 	 * nothing else has changed for the group in the meantime, in
->> 	 * terms of composition of the group and active/inactive state of child
->> 	 * groups and processes). To accomplish this, an additional
->> @@ -525,7 +525,7 @@ struct bfq_data {
->> 	 * we resort to the following tradeoff between simplicity and
->> 	 * accuracy: for an inactive group that is still counted in
->> 	 * num_groups_with_pending_reqs, we decrement
->> -	 * num_groups_with_pending_reqs when the first descendant
->> +	 * num_groups_with_pending_reqs when the first
->> 	 * process of the group remains with no request waiting for
->> 	 * completion.
->> 	 *
->> @@ -533,12 +533,12 @@ struct bfq_data {
->> 	 * carefulness: to avoid multiple decrements, we flag a group,
->> 	 * more precisely an entity representing a group, as still
->> 	 * counted in num_groups_with_pending_reqs when it becomes
->> -	 * inactive. Then, when the first descendant queue of the
->> +	 * inactive. Then, when the first queue of the
->> 	 * entity remains with no request waiting for completion,
->> 	 * num_groups_with_pending_reqs is decremented, and this flag
->> 	 * is reset. After this flag is reset for the entity,
->> 	 * num_groups_with_pending_reqs won't be decremented any
->> -	 * longer in case a new descendant queue of the entity remains
->> +	 * longer in case a new queue of the entity remains
->> 	 * with no request waiting for completion.
->> 	 */
->> 	unsigned int num_groups_with_pending_reqs;
->> diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
->> index 6f36f3fe5cc8..9c2842bedf97 100644
->> --- a/block/bfq-wf2q.c
->> +++ b/block/bfq-wf2q.c
->> @@ -984,19 +984,6 @@ static void __bfq_activate_entity(struct bfq_entity=
- *entity,
->> 		entity->on_st_or_in_serv =3D true;
->> 	}
->>
->> -#ifdef CONFIG_BFQ_GROUP_IOSCHED
->> -	if (!bfq_entity_to_bfqq(entity)) { /* bfq_group */
->> -		struct bfq_group *bfqg =3D
->> -			container_of(entity, struct bfq_group, entity);
->> -		struct bfq_data *bfqd =3D bfqg->bfqd;
->> -
->> -		if (!entity->in_groups_with_pending_reqs) {
->> -			entity->in_groups_with_pending_reqs =3D true;
->> -			bfqd->num_groups_with_pending_reqs++;
->> -		}
->> -	}
->> -#endif
->> -
->> 	bfq_update_fin_time_enqueue(entity, st, backshifted);
->> }
->>
->> @@ -1654,7 +1641,8 @@ void bfq_add_bfqq_in_groups_with_pending_reqs(stru=
-ct bfq_queue *bfqq)
->> 	if (!entity->in_groups_with_pending_reqs) {
->> 		entity->in_groups_with_pending_reqs =3D true;
->> #ifdef CONFIG_BFQ_GROUP_IOSCHED
->> -		bfqq_group(bfqq)->num_queues_with_pending_reqs++;
->> +		if (!(bfqq_group(bfqq)->num_queues_with_pending_reqs++))
->> +			bfqq->bfqd->num_groups_with_pending_reqs++;
->> #endif
->> 	}
->> }
->> @@ -1666,7 +1654,8 @@ void bfq_del_bfqq_in_groups_with_pending_reqs(stru=
-ct bfq_queue *bfqq)
->> 	if (entity->in_groups_with_pending_reqs) {
->> 		entity->in_groups_with_pending_reqs =3D false;
->> #ifdef CONFIG_BFQ_GROUP_IOSCHED
->> -		bfqq_group(bfqq)->num_queues_with_pending_reqs--;
->> +		if (!(--bfqq_group(bfqq)->num_queues_with_pending_reqs))
->> +			bfqq->bfqd->num_groups_with_pending_reqs--;
->> #endif
->> 	}
->> }
->> --=20
->> 2.31.1
->>
->=20
-> .
->=20
-
+Andrew, any preferences on this before I send v4?
