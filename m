@@ -1,73 +1,65 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH v6 2/4] KVM: mmu: add a helper to account memory used by
- KVM MMU.
-Date: Tue, 12 Jul 2022 16:03:37 -0700
-Message-ID: <CAJD7tkZ-r7O1AD8kAUgoY0Y2RNQkBpbtmtKpq68xN4PO=fzPnw@mail.gmail.com>
+From: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v6 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
+ page table uses.
+Date: Tue, 12 Jul 2022 23:05:53 +0000
+Message-ID: <Ys3+UTTC4Qgbm7pQ@google.com>
 References: <20220628220938.3657876-1-yosryahmed@google.com>
- <20220628220938.3657876-3-yosryahmed@google.com> <YsdLVBtl16mx3+Ot@google.com>
+ <20220628220938.3657876-2-yosryahmed@google.com>
+ <YsdJPeVOqlj4cf2a@google.com>
+ <CAJD7tkYE+pZdk=-psEP_Rq_1CmDjY7Go+s1LXm-ctryWvUdgLA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <kvm-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=0kilpuaWkkH1jWKZwcnpv75y3bBAyVMGJWLT8pq7Zew=;
-        b=ZBE5KGyRMkxibp5iaQK1l2yLFQs3jMAWpu5gwk0mkKX4ubei8nAy3KENVxr6zAoHjv
-         GxxAukLzTPcow4xb39vYwDGdcaSRPa60fmvrQz7t5M+INg1M5ckPSC915vA9q2vN94AD
-         /SGqziGRgsU+lRLMnfhy3E5QN+LwNKSm54tmpu0mNnq5YnUHuf05goqCVAxNqaaAiN6B
-         kCkPthpHgFI7wBZw9z3V/ubta+xmhbhQHRM/O5EcP+46woLYQpwn+fg2Dj/B6KQdkz8q
-         cxYdjJT7Re3j22yGvnr+ktEYQOKJ6wkxisMXfv/a2tIwVaodgTZvM0zkiXaKA3U/CSDX
-         wuPw==
-In-Reply-To: <YsdLVBtl16mx3+Ot@google.com>
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=xf3o/FVcDrWTjqM4SU9OE71B6I+xuW/GFj0iZmpmQbg=;
+        b=Z6IZzY9s3jOmwMJHCnOHfcd/X/fC5gga+f0/GnThBBONKEbR0I2NH1Ty6iOIdsZmZK
+         aNZ+3HOLhzAiz/Mid2qzpPjGI4JFUuI7nGA4w+vhGU8t1Ok9afcoe/Jc3y3eYW+ViOab
+         rveEgyZkqCy1hZZW8DMIBAUqyENo2A5JOeC+C7DZWne1sV1Bng0215Kup44rqee7ljzP
+         3+jP61rUQdp8Ls05woP3XU1jDYEQHcMan6eZ/rjuZCWJI/jS6HIryjgTfUh27QyF+0Qr
+         HwRYJrJFek+4g2OqMsbQb+YRG+J8VOZMzWxz6CtFgnDzWRb8c+R5L/pvuutOzNOqXTJT
+         5rDQ==
+Content-Disposition: inline
+In-Reply-To: <CAJD7tkYE+pZdk=-psEP_Rq_1CmDjY7Go+s1LXm-ctryWvUdgLA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sean Christopherson <seanjc@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Marc Zyngier <maz@kernel.org>, James Morse <james.morse@arm.com>, Alexandru Elisei <alexandru.elisei@arm.com>, Suzuki K Poulose <suzuki.poulose@arm.com>, Paolo Bonzini <pbonzini@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Wanpeng Li <wanpengli@tencent.com>, Jim Mattson <jmattson@google.com>, Joerg Roedel <joro@8bytes.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Oliver Upton <oupton@google.com>, Huang@google.com, Shaoqin <shaoqin.huang@intel.com>, Cgroups <cgroups@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel>
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Huang-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Shaoqin <shaoqin.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel>
 
-On Thu, Jul 7, 2022 at 2:08 PM Sean Christopherson <seanjc@google.com> wrote:
->
-> On Tue, Jun 28, 2022, Yosry Ahmed wrote:
-> > Add a helper to account pages used by KVM for page tables in memory
-> > secondary pagetable stats. This function will be used by subsequent
-> > patches in different archs.
+On Tue, Jul 12, 2022, Yosry Ahmed wrote:
+> Thanks for taking another look at this!
+> 
+> On Thu, Jul 7, 2022 at 1:59 PM Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 > >
-> > Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> > ---
-> >  include/linux/kvm_host.h | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
+> > On Tue, Jun 28, 2022, Yosry Ahmed wrote:
+> > > diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+> > > index aab70355d64f3..13190d298c986 100644
+> > > --- a/include/linux/mmzone.h
+> > > +++ b/include/linux/mmzone.h
+> > > @@ -216,6 +216,7 @@ enum node_stat_item {
+> > >       NR_KERNEL_SCS_KB,       /* measured in KiB */
+> > >  #endif
+> > >       NR_PAGETABLE,           /* used for pagetables */
+> > > +     NR_SECONDARY_PAGETABLE, /* secondary pagetables, e.g. kvm shadow pagetables */
 > >
-> > diff --git a/include/linux/kvm_host.h b/include/linux/kvm_host.h
-> > index 3b40f8d68fbb1..032821d77e920 100644
-> > --- a/include/linux/kvm_host.h
-> > +++ b/include/linux/kvm_host.h
-> > @@ -2241,6 +2241,16 @@ static inline void kvm_handle_signal_exit(struct kvm_vcpu *vcpu)
-> >  }
-> >  #endif /* CONFIG_KVM_XFER_TO_GUEST_WORK */
+> > Nit, s/kvm/KVM, and drop the "shadow", which might be misinterpreted as saying KVM
+> > pagetables are only accounted when KVM is using shadow paging.  KVM's usage of "shadow"
+> > is messy, so I totally understand why you included it, but in this case it's unnecessary
+> > and potentially confusing.
 > >
-> > +/*
-> > + * If more than one page is being (un)accounted, @virt must be the address of
-> > + * the first page of a block of pages what were allocated together (i.e
-> > + * accounted together).
->
-> Sorry for the belated thoughts...
->
-> If you spin a v7, can you add a note to call out that mod_lruvec_page_state() is
-> itself thread-safe?  Caught my eye because the TDP MMU usage happens while holding
-> mmu_lock for read.
->
+> > And finally, something that's not a nit.  Should this be wrapped with CONFIG_KVM
+> > (using IS_ENABLED() because KVM can be built as a module)?  That could be removed
+> > if another non-KVM secondary MMU user comes along, but until then, #ifdeffery for
+> > stats the depend on a single feature seems to be the status quo for this code.
+> >
+> 
+> I will #ifdef the stat, but I will emphasize in the docs that is
+> currently *only* used for KVM so that it makes sense if users without
+> KVM don't see the stat at all. I will also remove the stat from
+> show_free_areas() in mm/page_alloc.c as it seems like none of the
+> #ifdefed stats show up there.
 
-Sure! I will send a v7 anyway to address the comments on patch 1. Thanks!
-
-> > + */
-> > +static inline void kvm_account_pgtable_pages(void *virt, int nr)
-> > +{
-> > +     mod_lruvec_page_state(virt_to_page(virt), NR_SECONDARY_PAGETABLE, nr);
-> > +}
-> > +
-> >  /*
-> >   * This defines how many reserved entries we want to keep before we
-> >   * kick the vcpu to the userspace to avoid dirty ring full.  This
-> > --
-> > 2.37.0.rc0.161.g10f37bed90-goog
-> >
+It's might be worth getting someone from mm/ to weigh in before going through the
+trouble, my suggestion/question is based purely on the existing code.
