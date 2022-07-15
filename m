@@ -1,54 +1,51 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: Question about disallowing rename(2) in cgroup v2
-Date: Fri, 15 Jul 2022 14:45:38 +0200
-Message-ID: <20220715124538.GB8646@blackbody.suse.cz>
-References: <1c9d5118-25fa-e791-8aed-b1430cf23d36@linux.alibaba.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [Bug] race condition at rebind_subsystems()
+Date: Fri, 15 Jul 2022 06:47:59 -1000
+Message-ID: <YtGaP+e35DZYSQf0@slm.duckdns.org>
+References: <1978e209e71905d89651e61abd07285912d412a1.camel@mediatek.com>
+ <20220715115938.GA8646@blackbody.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1657889139; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=gZa4+jMpT3rkbUbFtzmtQFirgHMD5Uw1UtC1qekP12c=;
-        b=H/DS2GYvkohsGsKHCbE2JLE/fFca54l4n/YuYnlwfn7LbkXkOfRLUSOVMtiWaF2+M2ap9p
-        PGgCQW4eGeRbY0Rr2U62vWbmYtwaXYpW2IqdNxA55FmUBpznKKthHc0YqBcd3QNHaOs/e/
-        wZgU2xHoStzDXp+AVK8+/kgt3ZgDup4=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=UwC5anEg0yjsg9Rw8IcHiu3GinY8BZcocAU9uCH0MCI=;
+        b=kRPX1ruM5CjMlu1wj9auhM8ser8wATC3gVJCAiI2vCbhcBXZUWMyDTYhDsEN/2ow6z
+         C7+1TvQrQD+ErLtFG/kwIDtsu18cPtzxGuZpGEVGPFYl3nQyigz+bLUFOvO8aqhIeQJW
+         4FSZJpcLxa1UNYvKt0avG7GV9ldTRpmJsArPWoQDpxzmoAeCe0mKq4oRFAnuTUE8JlYj
+         ZBKcF2ZN1n8f1akV2/h1+4YiqKiFPWla4bdyW3gCXvq3GTO0h7JXURDp3MXRfzNjWyoz
+         2UzQFer9HHCToT+r6naorvjdplG/zjIyDzUKHeaM8cEww4he+LQ0Q2IQqBilO84FpZme
+         AYiQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1c9d5118-25fa-e791-8aed-b1430cf23d36-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+In-Reply-To: <20220715115938.GA8646-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: "taoyi.ty" <escape-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Jing-Ting Wu <jing-ting.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, lixiong.liu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, wenju.xu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, jonathan.jmchen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org
 
-Hi Escape.
+(resending, I messed up the message header, sorry)
 
-On Tue, Jun 28, 2022 at 09:09:48PM +0800, "taoyi.ty" <escape-KPsoFbNs7GizrG=
-E5bRqYAgC/G2K4zDHf@public.gmane.org> wrote:
-> I found that rename(2) can be used in cgroup v1 but is disallowed in cgro=
-up
-> v2, what's the reason for this design?
+Hello,
 
-There's some info in the commit 6db8e85c5c1f89cd0183b76dab027c81009f129f.
+On Fri, Jul 15, 2022 at 01:59:38PM +0200, Michal Koutn=FD wrote:
+> The css->rstat_css_node should not be modified if there are possible RCU
+> readers elsewhere.
+> One way to fix this would be to insert synchronize_rcu() after
+> list_del_rcu() and before list_add_rcu().
+> (A further alternative (I've heard about) would be to utilize 'nulls'
+> RCU lists [1] to make the move between lists detectable.)
+>=20
+> But as I'm looking at it from distance, it may be simpler and sufficient
+> to just take cgroup_rstat_lock around the list migration (the nesting
+> under cgroup_mutex that's held with rebind_subsystems() is fine).
 
-> rename(2) is critical when managing a cgroup pool in userspace, which uses
-> rename to reuse cgroup rather than mkdir to create a new one=EF=BC=8C
+synchronize_rcu() prolly is the better fit here given how that list_node's
+usage, but yeah, great find.
 
-Strictly speaking, it's not critical if you decouple your job and cgroup
-naming scheme (i.e. use the cgroup with the old name).
+Thanks.
 
-> this can improve the performance of container concurrent startup,
-> because renaming cgroup is much more lightweight compared with
-> creating cgroup.
-
-Do you have some numbers for this?
-You can save work with not rmdir/mkdir'ing but you mention
-concurrent startup specifically. And you still need to (re)setup
-the cgroups after reuse and that also isn't parallelizable (at least you
-need to (re)populate each reused cgroup, which is mostly under one
-lock). (Even cgroup1_rename() has an exclusive section under
-cgroup_mutex but it looks relatively simply.)
-
-
-Michal
+--=20
+tejun
