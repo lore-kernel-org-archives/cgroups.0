@@ -1,116 +1,60 @@
-From: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] selftests: memcg: uninitialized variable in
- test_memcg_reclaim()
-Date: Tue, 19 Jul 2022 12:46:10 +0300
-Message-ID: <YtZ9Yu6HSQ2sT+O/@kili>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [Bug] race condition at rebind_subsystems()
+Date: Tue, 19 Jul 2022 15:35:12 +0200
+Message-ID: <20220719133512.GD897@blackbody.suse.cz>
+References: <1978e209e71905d89651e61abd07285912d412a1.camel@mediatek.com>
+ <20220715115938.GA8646@blackbody.suse.cz>
+ <YtGaP+e35DZYSQf0@slm.duckdns.org>
+ <d8f0bc5e2fb6ed259f9334c83279b4c011283c41.camel@mediatek.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : content-type : mime-version; s=corp-2022-7-12;
- bh=tYhTDaiKvaCpdj5IormPKDV/QN7a5o8gORfTDx4gHiA=;
- b=wTBV7qcz62YZV8EyYrUyp8M3I2XtLVKsLylPCEF8jlj5Ted5M+46GV6jayTGW2z2nqIz
- aFGt+v20AHpxCTP2Ok+Z+kBJTaLC4ZA5NQ8hqKDQbAy4Aow1K1HD0ayde9KX4aiSj1J1
- k7dmpjxDzo3GBNX7zAORNmZlyKMydSxtkG9QJkDpC/nhmmNZkPCaFrrezCJUhffQcqUE
- YLc0jNnb12LSOptHhi7+R6WY6HcZhMBiNPDle31jk1BF8irKD/ikXStvvuFpVY1SOs6o
- UIjxtmfOQuL4ktfY90OWCXX6yfkrQJ1i5jOzyeNdOp5iaypmRQ41fMNG7hAEkLx8fi1c RA== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tYhTDaiKvaCpdj5IormPKDV/QN7a5o8gORfTDx4gHiA=;
- b=hLBXK37Deydb06HR5uTiyNGbyLNFRhGauxxMSXS8Sx5llEVVVr8+RoGtdkMsiCHaVnU7vt7PnduzhHZS+8K5cGPyVRNje+Cgw7Kz2N+Q4xyKe8wdh1f/UZ6/zZeJJVQFqUbJvYDTMxnukg0LD9h2WctRs1JWLmOq+8rTL74c/H8=
-Content-Disposition: inline
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane-mx.org@lists.infradead.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=lists.infradead.org; s=bombadil.20210309; h=Sender:
+	Content-Transfer-Encoding:Content-Type:List-Subscribe:List-Help:List-Post:
+	List-Archive:List-Unsubscribe:List-Id:In-Reply-To:MIME-Version:References:
+	Message-ID:Subject:Cc:To:From:Date:Reply-To:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	List-Owner; bh=NcWyiLSSUtWiT6QYkEaCFiw6z8iTfe7BuCTgI38McPA=; b=pbGPS4VcjPaGmI
+	/IGl9u4KJWHJ7Qt7mE6D3qakRt9sj3h5iWjxaM1rjslL+u9YnQiy3uBadpBKyE53iC6ui9oyqOovW
+	NsTWGSWBj+M9tSl5g1s5bLyo3SFGfxFtQQAEtAuZPD7Xp0ieIIoW8dR3EjubBFhS1dJm8d5CArxD1
+	mjqTCdbcFf0Qb6m3y1BDru8+ZErugezycmOv8tXbhtf97+OA6VaCEbEadYCWJ/NIYqsiZFVK55Ce+
+	l0PhRZzTBRk1khwVD+DPuDu+VfSvLq6zCQ9TbdCbvPRh73zl1eo0Fjm0z6qKLj/W2GTlfvcB/5c/0
+	RNNs7i5GnCVNRc+2GjyQ==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1658237713; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=dQkGZ2bUCaXoPh/D/Jj4IPkCDd93zpdb0jFOJ4x+L1k=;
+	b=RXpYSGlmRcef3l7YiwRFdAApPwXNCGsn0BDGq8RMYOlXFurF0+ck6ho6rGcVbsWtc/fUP6
+	De4sOP94LDSs7rGW7/DXiKXGZ3iMCVaCS8xrKMTqCvGXTFpvP8npNoI8fDTvetmmD0jubo
+	mc2b6WY+Bg2Qby9yeLCG9cnhEe+PPKo=
+Content-Disposition: inline
+In-Reply-To: <d8f0bc5e2fb6ed259f9334c83279b4c011283c41.camel@mediatek.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane-mx.org@lists.infradead.org
+To: Jing-Ting Wu <jing-ting.wu@mediatek.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Matthias Brugger <matthias.bgg@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Shakeel Butt <shakeelb@google.com>, wsd_upstream@mediatek.com, lixiong.liu@mediatek.com, wenju.xu@mediatek.com, jonathan.jmchen@mediatek.com
 
-The "fd" is used on the clean up path without ever being initialized.
+On Mon, Jul 18, 2022 at 03:44:21PM +0800, Jing-Ting Wu <jing-ting.wu@mediatek.com> wrote:
+> Accroding your description, is the following patch corrent?
 
-Fixes: eae3cb2e87ff ("selftests: cgroup: add a selftest for memory.reclaim")
-Signed-off-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
----
-I kind of went over kill on fixing this as if it were real code which
-matters.  :P
+Yes, this is what I meant (i.e. grace period before invalidating the
+removed rstat_css_node).
 
- .../selftests/cgroup/test_memcontrol.c        | 23 +++++++++++--------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+> If the patch is correct, we will add this patch to our stability test.
+> And we will continue to observe whether the problem is solved.
 
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index 8833359556f3..08681699c2f9 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -658,18 +658,18 @@ static int test_memcg_reclaim(const char *root)
- 
- 	memcg = cg_name(root, "memcg_test");
- 	if (!memcg)
--		goto cleanup;
-+		return KSFT_FAIL;
- 
- 	if (cg_create(memcg))
--		goto cleanup;
-+		goto free_memcg;
- 
- 	current = cg_read_long(memcg, "memory.current");
- 	if (current != 0)
--		goto cleanup;
-+		goto destroy_memcg;
- 
- 	fd = get_temp_fd();
- 	if (fd < 0)
--		goto cleanup;
-+		goto destroy_memcg;
- 
- 	cg_run_nowait(memcg, alloc_pagecache_50M_noexit, (void *)(long)fd);
- 
-@@ -697,7 +697,7 @@ static int test_memcg_reclaim(const char *root)
- 			fprintf(stderr,
- 				"failed to allocate %ld for memcg reclaim test\n",
- 				expected_usage);
--			goto cleanup;
-+			goto close;
- 		}
- 	}
- 
-@@ -717,7 +717,7 @@ static int test_memcg_reclaim(const char *root)
- 		 * not reclaim the full amount.
- 		 */
- 		if (to_reclaim <= 0)
--			goto cleanup;
-+			goto close;
- 
- 
- 		snprintf(buf, sizeof(buf), "%ld", to_reclaim);
-@@ -729,7 +729,7 @@ static int test_memcg_reclaim(const char *root)
- 			 */
- 			current = cg_read_long(memcg, "memory.current");
- 			if (!values_close(current, MB(30), 3) && current > MB(30))
--				goto cleanup;
-+				goto close;
- 			break;
- 		}
- 
-@@ -738,14 +738,17 @@ static int test_memcg_reclaim(const char *root)
- 			continue;
- 
- 		/* We got an unexpected error or ran out of retries. */
--		goto cleanup;
-+		goto close;
- 	}
- 
- 	ret = KSFT_PASS;
--cleanup:
-+
-+close:
-+	close(fd);
-+destroy_memcg:
- 	cg_destroy(memcg);
-+free_memcg:
- 	free(memcg);
--	close(fd);
- 
- 	return ret;
- }
--- 
-2.35.1
+It'd be great to have such confirmation.
 
+Thanks,
+Michal
