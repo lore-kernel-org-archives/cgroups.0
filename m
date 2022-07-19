@@ -1,75 +1,116 @@
-From: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [PATCH] block: don't allow the same type rq_qos add more than
- once
-Date: Tue, 19 Jul 2022 15:50:32 +0800
-Message-ID: <5b02a27a-72a1-501f-b06e-8963ebb34916@bytedance.com>
-References: <20220718083646.67601-1-hanjinke.666@bytedance.com>
- <CAMZfGtVLkO6T-0n7fMBTvR84Ji8GhTO5==u9v+8f+dRkJhFHMA@mail.gmail.com>
+From: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] selftests: memcg: uninitialized variable in
+ test_memcg_reclaim()
+Date: Tue, 19 Jul 2022 12:46:10 +0300
+Message-ID: <YtZ9Yu6HSQ2sT+O/@kili>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : content-type : mime-version; s=corp-2022-7-12;
+ bh=tYhTDaiKvaCpdj5IormPKDV/QN7a5o8gORfTDx4gHiA=;
+ b=wTBV7qcz62YZV8EyYrUyp8M3I2XtLVKsLylPCEF8jlj5Ted5M+46GV6jayTGW2z2nqIz
+ aFGt+v20AHpxCTP2Ok+Z+kBJTaLC4ZA5NQ8hqKDQbAy4Aow1K1HD0ayde9KX4aiSj1J1
+ k7dmpjxDzo3GBNX7zAORNmZlyKMydSxtkG9QJkDpC/nhmmNZkPCaFrrezCJUhffQcqUE
+ YLc0jNnb12LSOptHhi7+R6WY6HcZhMBiNPDle31jk1BF8irKD/ikXStvvuFpVY1SOs6o
+ UIjxtmfOQuL4ktfY90OWCXX6yfkrQJ1i5jOzyeNdOp5iaypmRQ41fMNG7hAEkLx8fi1c RA== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:to:cc:references
-         :from:in-reply-to:content-transfer-encoding;
-        bh=PBjfaUdPj5evCqbgk7mF2+xOQYrjkKK5SCgiEZ6AFog=;
-        b=4lwX7lH7voEKXllRjuXXIWuahCwdYq00XCmdkwgwHW+uSezLtuOHvA8XUQvxDoInJo
-         1rmAKASBIbnytTQnjyuqU6+YQmfiHYm+FNy5r8SL6eqKkqOSjt8TdQ9HDs24ToNKISF7
-         NmzKbGCE574fdSkm8oq0ADc0E6cNKtmh8dMY4gSahs3KzV0JkdP+5mj9Ujy7g+eXqiRa
-         DTHm/ZV38rwMpVczuRD2ZMVyFTKBU+QTGiDi9ughNhOqUYWISMwj5zIFuHCHGtONvmfw
-         FBvWAuvhWsrWY2AGdlrf3FfN522CyVSidLNB5LAhdlvnuE1ikmd5g5h3ISqwRGAEopQC
-         5Xlg==
-In-Reply-To: <CAMZfGtVLkO6T-0n7fMBTvR84Ji8GhTO5==u9v+8f+dRkJhFHMA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tYhTDaiKvaCpdj5IormPKDV/QN7a5o8gORfTDx4gHiA=;
+ b=hLBXK37Deydb06HR5uTiyNGbyLNFRhGauxxMSXS8Sx5llEVVVr8+RoGtdkMsiCHaVnU7vt7PnduzhHZS+8K5cGPyVRNje+Cgw7Kz2N+Q4xyKe8wdh1f/UZ6/zZeJJVQFqUbJvYDTMxnukg0LD9h2WctRs1JWLmOq+8rTL74c/H8=
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "open list:BLOCK LAYER" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Thanks for your review. I have saw this review just after the send of 
-patch v2
+The "fd" is used on the clean up path without ever being initialized.
 
-在 2022/7/19 下午2:53, Muchun Song 写道:
-> On Mon, Jul 18, 2022 at 4:37 PM Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
->>
->> From: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
->>
->> In our test of iocost, we encounttered some list add/del corrutions of
->> inner_walk list in ioc_timer_fn.
->> The resean can be descripted as follow:
->>
->> cpu 0                                           cpu 1
->> ioc_qos_write                                   ioc_qos_write
->>
->> ioc = q_to_ioc(bdev_get_queue(bdev));
->> if (!ioc) {
->>          ioc = kzalloc();                        ioc = q_to_ioc(bdev_get_queue(bdev));
->>                                                          if (!ioc) {
->>                                                                  ioc = kzalloc();
->>                                                                  ...
->>                                                                  rq_qos_add(q, rqos);
->>                                                           }
->>          ...
->>          rq_qos_add(q, rqos);
->>          ...
->> }
->>
->> When the io.cost.qos file is written by two cpu concurrently, rq_qos may
->> be added to one disk twice. In that case, there will be two iocs enabled
->> and running on one disk. They own different iocgs on their active list.
->> In the ioc_timer_fn function, because of the iocgs from two ioc have the
->> same root iocg, the root iocg's walk_list may be overwritten by each
->> other and this lead to list add/del corrutions in building or destorying
->> the inner_walk list.
->>
->> And so far, the blk-rq-qos framework works in case that one instance for
->> one type rq_qos per queue by default. This patch make this explicit and
->> also fix the crash above.
->>
->> Signed-off-by: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> 
-> The change LGTM. Maybe it is better to add a Fixes tag here so that
-> others can easily know what Linux versions should be backported.
-> 
-> Reviewed-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> 
-> Thanks.
+Fixes: eae3cb2e87ff ("selftests: cgroup: add a selftest for memory.reclaim")
+Signed-off-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+---
+I kind of went over kill on fixing this as if it were real code which
+matters.  :P
+
+ .../selftests/cgroup/test_memcontrol.c        | 23 +++++++++++--------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
+
+diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+index 8833359556f3..08681699c2f9 100644
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c
++++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -658,18 +658,18 @@ static int test_memcg_reclaim(const char *root)
+ 
+ 	memcg = cg_name(root, "memcg_test");
+ 	if (!memcg)
+-		goto cleanup;
++		return KSFT_FAIL;
+ 
+ 	if (cg_create(memcg))
+-		goto cleanup;
++		goto free_memcg;
+ 
+ 	current = cg_read_long(memcg, "memory.current");
+ 	if (current != 0)
+-		goto cleanup;
++		goto destroy_memcg;
+ 
+ 	fd = get_temp_fd();
+ 	if (fd < 0)
+-		goto cleanup;
++		goto destroy_memcg;
+ 
+ 	cg_run_nowait(memcg, alloc_pagecache_50M_noexit, (void *)(long)fd);
+ 
+@@ -697,7 +697,7 @@ static int test_memcg_reclaim(const char *root)
+ 			fprintf(stderr,
+ 				"failed to allocate %ld for memcg reclaim test\n",
+ 				expected_usage);
+-			goto cleanup;
++			goto close;
+ 		}
+ 	}
+ 
+@@ -717,7 +717,7 @@ static int test_memcg_reclaim(const char *root)
+ 		 * not reclaim the full amount.
+ 		 */
+ 		if (to_reclaim <= 0)
+-			goto cleanup;
++			goto close;
+ 
+ 
+ 		snprintf(buf, sizeof(buf), "%ld", to_reclaim);
+@@ -729,7 +729,7 @@ static int test_memcg_reclaim(const char *root)
+ 			 */
+ 			current = cg_read_long(memcg, "memory.current");
+ 			if (!values_close(current, MB(30), 3) && current > MB(30))
+-				goto cleanup;
++				goto close;
+ 			break;
+ 		}
+ 
+@@ -738,14 +738,17 @@ static int test_memcg_reclaim(const char *root)
+ 			continue;
+ 
+ 		/* We got an unexpected error or ran out of retries. */
+-		goto cleanup;
++		goto close;
+ 	}
+ 
+ 	ret = KSFT_PASS;
+-cleanup:
++
++close:
++	close(fd);
++destroy_memcg:
+ 	cg_destroy(memcg);
++free_memcg:
+ 	free(memcg);
+-	close(fd);
+ 
+ 	return ret;
+ }
+-- 
+2.35.1
+
