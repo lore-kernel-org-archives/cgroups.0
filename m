@@ -1,60 +1,71 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [Bug] race condition at rebind_subsystems()
-Date: Tue, 19 Jul 2022 15:35:12 +0200
-Message-ID: <20220719133512.GD897@blackbody.suse.cz>
-References: <1978e209e71905d89651e61abd07285912d412a1.camel@mediatek.com>
- <20220715115938.GA8646@blackbody.suse.cz>
- <YtGaP+e35DZYSQf0@slm.duckdns.org>
- <d8f0bc5e2fb6ed259f9334c83279b4c011283c41.camel@mediatek.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2] block: don't allow the same type rq_qos add more than
+ once
+Date: Tue, 19 Jul 2022 05:50:16 -1000
+Message-ID: <YtbSuMqmrwGmAZti@slm.duckdns.org>
+References: <20220719070258.25721-1-hanjinke.666@bytedance.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=1KmDVlh31ZPGT/1gu3CgqryQOvMMNoshEj5LmQLClLE=;
+        b=CF2Yl7/YP6QIiN+4C38UCBemOvDUzg7jlB4d1bqOkoD5yqqrJB+CRjWnNPHNlMgnu+
+         sEHUhgCfdAlKwXHI/PmOSb1YvCYyiwG1O6dWPjunb+ExP0lN64xjqmEH93/2nrrD5XZ6
+         N+pHWdcCKLfvI1mDWoLpIASJOORCjdgYfVpZzvo7/4exGllQykD5IexOfM+o02tkzLE/
+         OIbRgvakahk0q70n3fYO/zz2Vsjd2Q23JtRKHT4gS24Xmo874q9vUSkafxEMuQ5UgR+1
+         arPPp2PTOhN9BEo3i3LBk+xEy81ckUNH3Ck74QxAUAykiY5kjrK2ZIud4cL7Q9iNvME6
+         yyYQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20220719070258.25721-1-hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane-mx.org@lists.infradead.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=lists.infradead.org; s=bombadil.20210309; h=Sender:
-	Content-Transfer-Encoding:Content-Type:List-Subscribe:List-Help:List-Post:
-	List-Archive:List-Unsubscribe:List-Id:In-Reply-To:MIME-Version:References:
-	Message-ID:Subject:Cc:To:From:Date:Reply-To:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	List-Owner; bh=NcWyiLSSUtWiT6QYkEaCFiw6z8iTfe7BuCTgI38McPA=; b=pbGPS4VcjPaGmI
-	/IGl9u4KJWHJ7Qt7mE6D3qakRt9sj3h5iWjxaM1rjslL+u9YnQiy3uBadpBKyE53iC6ui9oyqOovW
-	NsTWGSWBj+M9tSl5g1s5bLyo3SFGfxFtQQAEtAuZPD7Xp0ieIIoW8dR3EjubBFhS1dJm8d5CArxD1
-	mjqTCdbcFf0Qb6m3y1BDru8+ZErugezycmOv8tXbhtf97+OA6VaCEbEadYCWJ/NIYqsiZFVK55Ce+
-	l0PhRZzTBRk1khwVD+DPuDu+VfSvLq6zCQ9TbdCbvPRh73zl1eo0Fjm0z6qKLj/W2GTlfvcB/5c/0
-	RNNs7i5GnCVNRc+2GjyQ==;
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1658237713; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=dQkGZ2bUCaXoPh/D/Jj4IPkCDd93zpdb0jFOJ4x+L1k=;
-	b=RXpYSGlmRcef3l7YiwRFdAApPwXNCGsn0BDGq8RMYOlXFurF0+ck6ho6rGcVbsWtc/fUP6
-	De4sOP94LDSs7rGW7/DXiKXGZ3iMCVaCS8xrKMTqCvGXTFpvP8npNoI8fDTvetmmD0jubo
-	mc2b6WY+Bg2Qby9yeLCG9cnhEe+PPKo=
-Content-Disposition: inline
-In-Reply-To: <d8f0bc5e2fb6ed259f9334c83279b4c011283c41.camel@mediatek.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane-mx.org@lists.infradead.org
-To: Jing-Ting Wu <jing-ting.wu@mediatek.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Matthias Brugger <matthias.bgg@gmail.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Shakeel Butt <shakeelb@google.com>, wsd_upstream@mediatek.com, lixiong.liu@mediatek.com, wenju.xu@mediatek.com, jonathan.jmchen@mediatek.com
+To: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Jul 18, 2022 at 03:44:21PM +0800, Jing-Ting Wu <jing-ting.wu@mediatek.com> wrote:
-> Accroding your description, is the following patch corrent?
+On Tue, Jul 19, 2022 at 03:02:58PM +0800, Jinke Han wrote:
+> From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> 
+> In our test of iocost, we encounttered some list add/del corrutions of
+> inner_walk list in ioc_timer_fn.
+> 
+> The reason can be descripted as follow:
+> cpu 0						cpu 1
+> ioc_qos_write					ioc_qos_write
+> 
+> ioc = q_to_ioc(bdev_get_queue(bdev));
+> if (!ioc) {
+>         ioc = kzalloc();			ioc = q_to_ioc(bdev_get_queue(bdev));
+> 						if (!ioc) {
+> 							ioc = kzalloc();
+> 							...
+> 							rq_qos_add(q, rqos);
+> 						}
+>         ...
+>         rq_qos_add(q, rqos);
+>         ...
+> }
+> 
+> When the io.cost.qos file is written by two cpu concurrently, rq_qos may
+> be added to one disk twice. In that case, there will be two iocs enabled
+> and running on one disk. They own different iocgs on their active list.
+> In the ioc_timer_fn function, because of the iocgs from two ioc have the
+> same root iocg, the root iocg's walk_list may be overwritten by each
+> other and this lead to list add/del corrutions in building or destorying
+> the inner_walk list.
+> 
+> And so far, the blk-rq-qos framework works in case that one instance for
+> one type rq_qos per queue by default. This patch make this explicit and
+> also fix the crash above.
+> 
+> Signed-off-by: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-Yes, this is what I meant (i.e. grace period before invalidating the
-removed rstat_css_node).
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-> If the patch is correct, we will add this patch to our stability test.
-> And we will continue to observe whether the problem is solved.
+Thanks.
 
-It'd be great to have such confirmation.
-
-Thanks,
-Michal
+-- 
+tejun
