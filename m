@@ -1,82 +1,180 @@
-From: Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
-Subject: Re: Query regarding deadlock involving cgroup_threadgroup_rwsem and
- cpu_hotplug_lock
-Date: Wed, 20 Jul 2022 16:36:50 +0530
-Message-ID: <ba48eac5-8ef7-251b-11fe-8163bb7a2d54@quicinc.com>
-References: <8245b710-8acb-d8e6-7045-99a5f71dad4e@oracle.com>
- <26d0e4cc-be0e-2c12-6174-dfbb1edb1ed6@oracle.com>
- <bbc01477-231b-3dbb-3e09-9338f5413f06@oracle.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: Re: [PATCH -next v10 3/4] block, bfq: refactor the counting of
+ 'num_groups_with_pending_reqs'
+Date: Wed, 20 Jul 2022 19:38:06 +0800
+Message-ID: <9b2d667f-6636-9347-08a1-8bd0aa2346f2@huaweicloud.com>
+References: <20220610021701.2347602-1-yukuai3@huawei.com>
+ <20220610021701.2347602-4-yukuai3@huawei.com>
+ <27F2DF19-7CC6-42C5-8CEB-43583EB4AE46@linaro.org>
+ <abdbb5db-e280-62f8-0670-536fcb8ec4d9@huaweicloud.com>
+ <C2CF100A-9A7C-4300-9A70-1295BC939C66@unimore.it>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=JcRQ/JJIJYdaGNo5/D/uE9T7bJDc1bBfzcURm9UInaw=;
- b=QdgteWWsOK/ZlKJNQEqbZVRyUHnZm6rELySDq4Iht7yAnS9OLTJPgj0CXLta5QgQYsDB
- WKX1jYmD9G3CkrqUM/mfciSRA2nWXn81O5SHWj6i+s3jL82sbm2d7T63lGDEtEFJ6asU
- 9OPmV6qQqc4+qkgdvDt13Ca4OlxhYdBnSmtmFx/V7QF6EPVfBMVxXBHdu/nORKMTWIFU
- s2TRytIprl6JQ62FiwxNbahyMCuJQvyNkQNWIzvDI0/a3OjAK2ZCUW4dCDsUn0Aq8ead
- +oXOSNrhHdMyf1JGOe6wzfjlQCw9TBy+IjR4/uw3LTcmbuwLzweA9OpiMsjSgWAzilc3 oA== 
-Content-Language: en-US
-In-Reply-To: <bbc01477-231b-3dbb-3e09-9338f5413f06-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <C2CF100A-9A7C-4300-9A70-1295BC939C66@unimore.it>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Imran Khan <imran.f.khan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, steven.price-5wv7dgnIgG8@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Paolo VALENTE <paolo.valente@unimore.it>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Jan Kara <jack@suse.cz>, cgroups@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, yi.zhang@huawei.com
 
-Hi,
+Hi
 
-On 7/20/2022 8:57 AM, Imran Khan wrote:
-> Hello everyone,
+在 2022/07/20 19:24, Paolo VALENTE 写道:
 > 
-> I am seeing a deadlock between cgroup_threadgroup_rwsem and cpu_hotplug_lock in
-> 5.4 kernel.
 > 
-> Due to some missing drivers I don't have this test setup for latest upstream
-> kernel but looking at the code the issue seems to be present in the latest
-> kernel as well. If needed I can provide stack traces and other relevant info
-> from the vmcore that I have got from 5.4 setup.
+>> Il giorno 12 lug 2022, alle ore 15:30, Yu Kuai 
+>> <yukuai1@huaweicloud.com <mailto:yukuai1@huaweicloud.com>> ha scritto:
+>>
+>> Hi!
+>>
+>> I'm copying my reply with new mail address, because Paolo seems
+>> didn't receive my reply.
+>>
+>> 在 2022/06/23 23:32, Paolo Valente 写道:
+>>> Sorry for the delay.
+>>>> Il giorno 10 giu 2022, alle ore 04:17, Yu Kuai <yukuai3@huawei.com 
+>>>> <mailto:yukuai3@huawei.com>> ha scritto:
+>>>>
+>>>> Currently, bfq can't handle sync io concurrently as long as they
+>>>> are not issued from root group. This is because
+>>>> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
+>>>> bfq_asymmetric_scenario().
+>>>>
+>>>> The way that bfqg is counted into 'num_groups_with_pending_reqs':
+>>>>
+>>>> Before this patch:
+>>>> 1) root group will never be counted.
+>>>> 2) Count if bfqg or it's child bfqgs have pending requests.
+>>>> 3) Don't count if bfqg and it's child bfqgs complete all the requests.
+>>>>
+>>>> After this patch:
+>>>> 1) root group is counted.
+>>>> 2) Count if bfqg have pending requests.
+>>>> 3) Don't count if bfqg complete all the requests.
+>>>>
+>>>> With this change, the occasion that only one group is activated can be
+>>>> detected, and next patch will support concurrent sync io in the
+>>>> occasion.
+>>>>
+>>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com <mailto:yukuai3@huawei.com>>
+>>>> Reviewed-by: Jan Kara <jack@suse.cz <mailto:jack@suse.cz>>
+>>>> ---
+>>>> block/bfq-iosched.c | 42 ------------------------------------------
+>>>> block/bfq-iosched.h | 18 +++++++++---------
+>>>> block/bfq-wf2q.c    | 19 ++++---------------
+>>>> 3 files changed, 13 insertions(+), 66 deletions(-)
+>>>>
+>>>> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+>>>> index 0ec21018daba..03b04892440c 100644
+>>>> --- a/block/bfq-iosched.c
+>>>> +++ b/block/bfq-iosched.c
+>>>> @@ -970,48 +970,6 @@ void __bfq_weights_tree_remove(struct bfq_data 
+>>>> *bfqd,
+>>>> void bfq_weights_tree_remove(struct bfq_data *bfqd,
+>>>>     struct bfq_queue *bfqq)
+>>>> {
+>>>> -struct bfq_entity *entity = bfqq->entity.parent;
+>>>> -
+>>>> -for_each_entity(entity) {
+>>>> -struct bfq_sched_data *sd = entity->my_sched_data;
+>>>> -
+>>>> -if (sd->next_in_service || sd->in_service_entity) {
+>>>> -/*
+>>>> -* entity is still active, because either
+>>>> -* next_in_service or in_service_entity is not
+>>>> -* NULL (see the comments on the definition of
+>>>> -* next_in_service for details on why
+>>>> -* in_service_entity must be checked too).
+>>>> -*
+>>>> -* As a consequence, its parent entities are
+>>>> -* active as well, and thus this loop must
+>>>> -* stop here.
+>>>> -*/
+>>>> -break;
+>>>> -}
+>>>> -
+>>>> -/*
+>>>> -* The decrement of num_groups_with_pending_reqs is
+>>>> -* not performed immediately upon the deactivation of
+>>>> -* entity, but it is delayed to when it also happens
+>>>> -* that the first leaf descendant bfqq of entity gets
+>>>> -* all its pending requests completed. The following
+>>>> -* instructions perform this delayed decrement, if
+>>>> -* needed. See the comments on
+>>>> -* num_groups_with_pending_reqs for details.
+>>>> -*/
+>>>> -if (entity->in_groups_with_pending_reqs) {
+>>>> -entity->in_groups_with_pending_reqs = false;
+>>>> -bfqd->num_groups_with_pending_reqs--;
+>>>> -}
+>>>> -}
+>>> With this part removed, I'm missing how you handle the following
+>>> sequence of events:
+>>> 1.  a queue Q becomes non busy but still has dispatched requests, so
+>>> it must not be removed from the counter of queues with pending reqs
+>>> yet
+>>> 2.  the last request of Q is completed with Q being still idle (non
+>>> busy).  At this point Q must be removed from the counter.  It seems to
+>>> me that this case is not handled any longer
+>> Hi, Paolo
+>>
+>> 1) At first, patch 1 support to track if bfqq has pending requests, it's
+>> done by setting the flag 'entity->in_groups_with_pending_reqs' when the
+>> first request is inserted to bfqq, and it's cleared when the last
+>> request is completed(based on weights_tree insertion and removal).
+>>
 > 
-> The description of the problem is as follows (I am using 5.19-rc7 as reference
-> below):
+> In patch 1 I don't see the flag cleared for the request-completion event :(
 > 
-> __cgroup_procs_write acquires cgroup_threadgroup_rwsem via
-> cgroup_procs_write_start and then invokes cgroup_attach_task. Now
-> cgroup_attach_task can invoke following call chain:
+> The piece of code involved is this:
 > 
-> cgroup_attach_task --> cgroup_migrate --> cgroup_migrate_execute --> cpuset_attach
+> static void bfq_completed_request(struct bfq_queue *bfqq, struct 
+> bfq_data *bfqd)
+> {
+> u64 now_ns;
+> u32 delta_us;
 > 
-> Here cpuset_attach tries to take cpu_hotplug_lock.
+> bfq_update_hw_tag(bfqd);
 > 
-> But by this time if some other context
+> bfqd->rq_in_driver[bfqq->actuator_idx]--;
+> bfqd->tot_rq_in_driver--;
+> bfqq->dispatched--;
 > 
-> 1. is already in the middle of cpu hotplug and has acquired cpu_hotplug_lock in
-> _cpu_up but
-> 2. has not yet reached CPUHP_ONLINE state and
-> 3. one of the intermediate hotplug states (in my case CPUHP_AP_ONLINE_DYN ) has
-> a callback which involves creation of a thread (or invocation of copy_process
-> via some other path) the invoked copy_process will get blocked on
-> cgroup_threadgroup_rwsem in following call chain:
+> if (!bfqq->dispatched && !bfq_bfqq_busy(bfqq)) {
+> /*
+> * Set budget_timeout (which we overload to store the
+> * time at which the queue remains with no backlog and
+> * no outstanding request; used by the weight-raising
+> * mechanism).
+> */
+> bfqq->budget_timeout = jiffies;
 > 
->     copy_process --> cgroup_can_fork --> cgroup_css_set_fork -->
-> cgroup_threadgroup_change_begin
+> bfq_weights_tree_remove(bfqd, bfqq);
+> }
+> ...
+> 
+> Am I missing something?
 
-Similar discussion is at [1], not sure on the conclusion.
+I add a new api bfq_del_bfqq_in_groups_with_pending_reqs() in patch 1
+to clear the flag, and it's called both from bfq_del_bfqq_busy() and
+bfq_completed_request(). I think you may miss the later:
 
-[1]
-https://lore.kernel.org/lkml/20220705123705.764-1-xuewen.yan-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org/
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index 0d46cb728bbf..0ec21018daba 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -6263,6 +6263,7 @@ static void bfq_completed_request(struct bfq_queue 
+*bfqq, struct bfq_data *bfqd)
+  		 */
+  		bfqq->budget_timeout = jiffies;
 
--Mukesh
++		bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
+  		bfq_weights_tree_remove(bfqd, bfqq);
+  	}
 
-> 
-> 
-> I am looking for suggestions to fix this deadlock.
-> 
-> Or if I am missing something in the above analysis and the above mention
-> scenario can't happen in latest upstream kernel, then please let me know as that
-> would help me in back porting relevant changes to 5.4 kernel because the issue
-> definitely exists in 5.4 kernel.
+Thanks,
+Kuai
 > 
 > Thanks,
-> -- Imran
+> Paolo
+
