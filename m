@@ -1,47 +1,55 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH v4] block: don't allow the same type rq_qos add more than once
-Date: Wed, 20 Jul 2022 06:46:46 -0600
-Message-ID: <165832120656.248441.6551351074316660910.b4-ty@kernel.dk>
-References: <20220719165313.51887-1-hanjinke.666@bytedance.com> <20220720093616.70584-1-hanjinke.666@bytedance.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] selftests: memcg: uninitialized variable in test_memcg_reclaim()
+Date: Wed, 20 Jul 2022 10:35:29 -0700
+Message-ID: <CAJD7tkYV60TkgfL2NF2HspJ_j+MB4CuqKNzugrAZ9jtfhicmog@mail.gmail.com>
+References: <YtZ9Yu6HSQ2sT+O/@kili> <CAJD7tkYCSY1C_iif4dxF9O3dAgZV4u8o9DFGsqeTyaq_FTT+mQ@mail.gmail.com>
+ <20220720092918.GD2316@kadam>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:in-reply-to:references:subject:message-id:date
-         :mime-version:content-transfer-encoding;
-        bh=sEGQ7L1KrUZZSjc5lTCBdg4P620qJO0ftLSgZHwILC8=;
-        b=rwUDwbnnw3bPn47kNfg7ezqzV/LZChu0a3v2CN0AynDdb4B+/tvtYW8/uAOhGtObcZ
-         jdMz1+jCJ13tg2VyNFIzZPhKJMc7Ob2J0tf6XGCs9xkgJA/nrmYYJUXRUHBi0tUDuQmj
-         v79GFiy1F8xNZ7qkRqvQzBaOyUzpSCbt2HEHzsViyqik+g6/sisTG7KHot3xgK9bWkbA
-         SJQ83R0YkKJ6jYgdD1HuOk/8/NmH1MmCioP9T8sQD3DJRieSUOW7MGmgP6Ej+rLEdg//
-         DEOGINokGsTjCA7yDSww75D/W4A1AhfCxEmU4SbMXhlSs0PN5n/iF3nOL2lr+c/vdHve
-         w/oQ==
-In-Reply-To: <20220720093616.70584-1-hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=02lsKOmjymw0+voRSiZssITm3QnQDwCZm++EAm96eVk=;
+        b=AXz4zLK1VM061H4lcJHGjYLvRNfx+YUTCIfw8oq3KgqGXfJomypHgHt+ZjUVjSpkw7
+         ygfdWOTJN6EKqQPYnyG97Yc9pSYo4apVrs685dRj2Lis1r313+yLrAE4zAnyES49TN3Q
+         lNcDBCtRLJFxz8TyiWl0yMv1RoxKjDusQIC6P579ng+zMKgK2gaZPeAdN3puFuuwlnS7
+         HKHcJLtVxhvMvaIqoeeHrzwsR8KA6ih1ZB56OPQc98CikP+vqXQgFD/VuEH63RuvK/sa
+         8WBl+IeOZ4d3hEpU00LbcHvGxvYwKYjFAuzwqdsEXJFfTblyeJv0cGW13ou6DV33hOXv
+         Sw4g==
+In-Reply-To: <20220720092918.GD2316@kadam>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, 20 Jul 2022 17:36:16 +0800, Jinke Han wrote:
-> From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> 
-> In our test of iocost, we encountered some list add/del corruptions of
-> inner_walk list in ioc_timer_fn.
-> 
-> The reason can be described as follow:
-> cpu 0						cpu 1
-> ioc_qos_write					ioc_qos_write
-> 
-> [...]
+On Wed, Jul 20, 2022 at 2:29 AM Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> On Tue, Jul 19, 2022 at 10:27:36AM -0700, Yosry Ahmed wrote:
+> >
+> > Nit: keep the cleanup_* naming for labels to make it obvious and to be
+> > consistent with the rest of the file (e.g. cleanup_free,
+> > cleanup_memcg, cleanup_file/cleanup_all). See
+> > test_memcg_subtree_control().
+> >
+> > I would honestly have one label to cleanup the memcg. Calling
+> > cg_destroy() on a non-existent memcg should be fine. rmdir() will just
+> > fail silently. All other tests do this and it's easier to read when we
+> > have fewer return paths. My advice would be cleanup_file and
+> > cleanup_memcg labels.
+>
+> One error label handling is very bug prone.  You always end up freeing
+> things which have not been initialized/allocated.  Or dereferencing
+> pointers which are NULL.  Or, since most kernel functions clean up
+> after themselves, you end up double freeing things.
 
-Applied, thanks!
+I am not suggesting a single cleanup label, I said "one label to
+cleanup the memcg", which is separate from cleaning up the file.
+Basically just merging the destroy_memcg and free_memcg labels to be
+consistent with other tests. I don't feel strongly about this anyway
+:)
 
-[1/1] block: don't allow the same type rq_qos add more than once
-      commit: 14a6e2eb7df5c7897c15b109cba29ab0c4a791b6
-
-Best regards,
--- 
-Jens Axboe
-
-
+>
+> regards,
+> dan carpenter
