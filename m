@@ -1,75 +1,279 @@
-From: Imran Khan <imran.f.khan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Query regarding deadlock involving cgroup_threadgroup_rwsem and
- cpu_hotplug_lock
-Date: Wed, 20 Jul 2022 13:27:28 +1000
-Message-ID: <bbc01477-231b-3dbb-3e09-9338f5413f06@oracle.com>
-References: <8245b710-8acb-d8e6-7045-99a5f71dad4e@oracle.com>
- <26d0e4cc-be0e-2c12-6174-dfbb1edb1ed6@oracle.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v4] mm: vmpressure: don't count proactive reclaim in
+ vmpressure
+Date: Wed, 20 Jul 2022 11:24:10 +0200
+Message-ID: <YtfJug77XJ9BPA8L@dhcp22.suse.cz>
+References: <20220714064918.2576464-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : from : to : cc : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2022-7-12;
- bh=4YBNVusGpdz5SOEFgMufVD6zRMtqYM3KOMIqUWpMezs=;
- b=VpCPbJ2qrcYudrNeddVS03dNwZQ0z187TlYeN6Fnblc66xEu8SvYHgNNV712r33PQoLD
- Sg+YREDqQamy1h9Af6cU21u7qQdRceY6Qb5TgTdP/2STnHbumXbL/e8F3IQqzt8RSY0E
- ZFxd0hRh+0U8L76tZ0gLUUconqdNMou2P3of8GmCf5pw28Y05VWjuPeHF41u6oBMvmia
- NufXSyIpWZk7XDy1czBU0wLS+oqoiFj0FR7U8ZbBvZiFQRHDqdkhiSQA6prodotNm27A
- EVV0M5W/D6A4FJWLqZealfkIMTeulqKGD1qXPQJuGBVeBNCOS/t428rbyLOMGVVX6dv/ KQ== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4YBNVusGpdz5SOEFgMufVD6zRMtqYM3KOMIqUWpMezs=;
- b=He2Bg/Wm09aHwihLBcCFUcENiwhBfJMhUK7EQwDB+PGBb0JNhquWkXrCrpgkRkkNQGhLcLgoGfWImLrg5ixINlz5LuAtv1Bi7XWInkMp4MrfPXsx0cnPwvJqkQJW5dAGuOurQjIecteFPQj22AioQYvOljc30466hz3Y04/JyRc=
-Content-Language: en-US
-In-Reply-To: <26d0e4cc-be0e-2c12-6174-dfbb1edb1ed6-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1658309051; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Su3HLAuy7lHq0rdQpeNwNVroUq7F2bc2C0CpI11UKgk=;
+        b=IPBQ63dpffvjumpNL7egBgA3pT4P2hB9jwBDQAA7O/J1ymTnxLQyb8tCHIn6jUxaFK/lJ3
+        LPFdMoZicNGvesr364u2snSh9MsfW0jm4pGacRFCIbfvfHvGfwObCpq7qIXdV1gTh322FP
+        1kmnMo1qYUR23pCiqDF4i+hlT8BaKDg=
+Content-Disposition: inline
+In-Reply-To: <20220714064918.2576464-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, steven.price-5wv7dgnIgG8@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Xu <peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Hello everyone,
+On Thu 14-07-22 06:49:18, Yosry Ahmed wrote:
+> vmpressure is used in cgroup v1 to notify userspace of reclaim
+> efficiency events, and is also used in both cgroup v1 and v2 as a signal
+> for memory pressure for networking, see
+> mem_cgroup_under_socket_pressure().
+> 
+> Proactive reclaim intends to probe memcgs for cold memory, without
+> affecting their performance. Hence, reclaim caused by writing to
+> memory.reclaim should not trigger vmpressure.
 
-I am seeing a deadlock between cgroup_threadgroup_rwsem and cpu_hotplug_lock in
-5.4 kernel.
+I am not against the change but this is rather vague statement. Please
+be more specific. You are not really explaining what kind of side effect
+this does and why that is really desirable. Sure pro-active reclaim can
+be used to probe for a cold memory but it can also be used to balance
+the memory consumption or other potential usecases.
 
-Due to some missing drivers I don't have this test setup for latest upstream
-kernel but looking at the code the issue seems to be present in the latest
-kernel as well. If needed I can provide stack traces and other relevant info
-from the vmcore that I have got from 5.4 setup.
+I think what we are missing here is
+- explain that this doesn't have any effect on existing users of
+  vmpressure user interface because that is cgroup v1 and memory.reclaim
+  is v2 feature. This is a trivial statement but quite useful for future
+  readers of this commit
+- explain the effect on the networking layer and typical usecases
+  memory.reclaim is used for currently and ideally document that.
+- how are we going to deal with users who would really want to use
+  memory.reclaim interface as a replacement for existing hard/high
+  memory reclaim? Is that even something that the interface is intended
+  for?
 
-The description of the problem is as follows (I am using 5.19-rc7 as reference
-below):
+> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-__cgroup_procs_write acquires cgroup_threadgroup_rwsem via
-cgroup_procs_write_start and then invokes cgroup_attach_task. Now
-cgroup_attach_task can invoke following call chain:
+The patch itself looks good to me.
 
-cgroup_attach_task --> cgroup_migrate --> cgroup_migrate_execute --> cpuset_attach
+> ---
+> Changes in v4:
+> - Removed unneeded reclaim_options local variables (Andrew).
+> 
+> Changes in v3:
+> - Limited the vmpressure change to memory.reclaim, dropped psi changes,
+>   updated changelog to reflect new behavior (Michal, Shakeel)
+> 
+> Changes in v2:
+> - Removed unnecessary initializations to zero (Andrew).
+> - Separate declarations and initializations when it causes line wrapping
+>   (Andrew).
+> 
+> ---
+>  include/linux/swap.h |  5 ++++-
+>  mm/memcontrol.c      | 24 ++++++++++++++----------
+>  mm/vmscan.c          | 27 +++++++++++++++++----------
+>  3 files changed, 35 insertions(+), 21 deletions(-)
+> 
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index 0c0fed1b348f..f6e9eaa2339f 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -411,10 +411,13 @@ extern void lru_cache_add_inactive_or_unevictable(struct page *page,
+>  extern unsigned long zone_reclaimable_pages(struct zone *zone);
+>  extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+>  					gfp_t gfp_mask, nodemask_t *mask);
+> +
+> +#define MEMCG_RECLAIM_MAY_SWAP (1 << 1)
+> +#define MEMCG_RECLAIM_PROACTIVE (1 << 2)
+>  extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+>  						  unsigned long nr_pages,
+>  						  gfp_t gfp_mask,
+> -						  bool may_swap);
+> +						  unsigned int reclaim_options);
+>  extern unsigned long mem_cgroup_shrink_node(struct mem_cgroup *mem,
+>  						gfp_t gfp_mask, bool noswap,
+>  						pg_data_t *pgdat,
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index a550042d88c3..b668224142c7 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2331,7 +2331,8 @@ static unsigned long reclaim_high(struct mem_cgroup *memcg,
+>  
+>  		psi_memstall_enter(&pflags);
+>  		nr_reclaimed += try_to_free_mem_cgroup_pages(memcg, nr_pages,
+> -							     gfp_mask, true);
+> +							gfp_mask,
+> +							MEMCG_RECLAIM_MAY_SWAP);
+>  		psi_memstall_leave(&pflags);
+>  	} while ((memcg = parent_mem_cgroup(memcg)) &&
+>  		 !mem_cgroup_is_root(memcg));
+> @@ -2576,7 +2577,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	struct page_counter *counter;
+>  	unsigned long nr_reclaimed;
+>  	bool passed_oom = false;
+> -	bool may_swap = true;
+> +	unsigned int reclaim_options = MEMCG_RECLAIM_MAY_SWAP;
+>  	bool drained = false;
+>  	unsigned long pflags;
+>  
+> @@ -2593,7 +2594,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  		mem_over_limit = mem_cgroup_from_counter(counter, memory);
+>  	} else {
+>  		mem_over_limit = mem_cgroup_from_counter(counter, memsw);
+> -		may_swap = false;
+> +		reclaim_options &= ~MEMCG_RECLAIM_MAY_SWAP;
+>  	}
+>  
+>  	if (batch > nr_pages) {
+> @@ -2620,7 +2621,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  
+>  	psi_memstall_enter(&pflags);
+>  	nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
+> -						    gfp_mask, may_swap);
+> +						    gfp_mask, reclaim_options);
+>  	psi_memstall_leave(&pflags);
+>  
+>  	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
+> @@ -3402,8 +3403,8 @@ static int mem_cgroup_resize_max(struct mem_cgroup *memcg,
+>  			continue;
+>  		}
+>  
+> -		if (!try_to_free_mem_cgroup_pages(memcg, 1,
+> -					GFP_KERNEL, !memsw)) {
+> +		if (!try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL,
+> +					memsw ? 0 : MEMCG_RECLAIM_MAY_SWAP)) {
+>  			ret = -EBUSY;
+>  			break;
+>  		}
+> @@ -3513,7 +3514,8 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
+>  		if (signal_pending(current))
+>  			return -EINTR;
+>  
+> -		if (!try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, true))
+> +		if (!try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL,
+> +						  MEMCG_RECLAIM_MAY_SWAP))
+>  			nr_retries--;
+>  	}
+>  
+> @@ -6248,7 +6250,7 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
+>  		}
+>  
+>  		reclaimed = try_to_free_mem_cgroup_pages(memcg, nr_pages - high,
+> -							 GFP_KERNEL, true);
+> +					GFP_KERNEL, MEMCG_RECLAIM_MAY_SWAP);
+>  
+>  		if (!reclaimed && !nr_retries--)
+>  			break;
+> @@ -6297,7 +6299,7 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
+>  
+>  		if (nr_reclaims) {
+>  			if (!try_to_free_mem_cgroup_pages(memcg, nr_pages - max,
+> -							  GFP_KERNEL, true))
+> +					GFP_KERNEL, MEMCG_RECLAIM_MAY_SWAP))
+>  				nr_reclaims--;
+>  			continue;
+>  		}
+> @@ -6426,6 +6428,7 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+>  	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+>  	unsigned int nr_retries = MAX_RECLAIM_RETRIES;
+>  	unsigned long nr_to_reclaim, nr_reclaimed = 0;
+> +	unsigned int reclaim_options;
+>  	int err;
+>  
+>  	buf = strstrip(buf);
+> @@ -6433,6 +6436,7 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+>  	if (err)
+>  		return err;
+>  
+> +	reclaim_options	= MEMCG_RECLAIM_MAY_SWAP | MEMCG_RECLAIM_PROACTIVE;
+>  	while (nr_reclaimed < nr_to_reclaim) {
+>  		unsigned long reclaimed;
+>  
+> @@ -6449,7 +6453,7 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+>  
+>  		reclaimed = try_to_free_mem_cgroup_pages(memcg,
+>  						nr_to_reclaim - nr_reclaimed,
+> -						GFP_KERNEL, true);
+> +						GFP_KERNEL, reclaim_options);
+>  
+>  		if (!reclaimed && !nr_retries--)
+>  			return -EAGAIN;
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index f7d9a683e3a7..0969e6408a53 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -102,6 +102,9 @@ struct scan_control {
+>  	/* Can pages be swapped as part of reclaim? */
+>  	unsigned int may_swap:1;
+>  
+> +	/* Proactive reclaim invoked by userspace through memory.reclaim */
+> +	unsigned int proactive:1;
+> +
+>  	/*
+>  	 * Cgroup memory below memory.low is protected as long as we
+>  	 * don't threaten to OOM. If any cgroup is reclaimed at
+> @@ -3125,9 +3128,10 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
+>  			    sc->priority);
+>  
+>  		/* Record the group's reclaim efficiency */
+> -		vmpressure(sc->gfp_mask, memcg, false,
+> -			   sc->nr_scanned - scanned,
+> -			   sc->nr_reclaimed - reclaimed);
+> +		if (!sc->proactive)
+> +			vmpressure(sc->gfp_mask, memcg, false,
+> +				   sc->nr_scanned - scanned,
+> +				   sc->nr_reclaimed - reclaimed);
+>  
+>  	} while ((memcg = mem_cgroup_iter(target_memcg, memcg, NULL)));
+>  }
+> @@ -3250,9 +3254,10 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+>  	}
+>  
+>  	/* Record the subtree's reclaim efficiency */
+> -	vmpressure(sc->gfp_mask, sc->target_mem_cgroup, true,
+> -		   sc->nr_scanned - nr_scanned,
+> -		   sc->nr_reclaimed - nr_reclaimed);
+> +	if (!sc->proactive)
+> +		vmpressure(sc->gfp_mask, sc->target_mem_cgroup, true,
+> +			   sc->nr_scanned - nr_scanned,
+> +			   sc->nr_reclaimed - nr_reclaimed);
+>  
+>  	if (sc->nr_reclaimed - nr_reclaimed)
+>  		reclaimable = true;
+> @@ -3534,8 +3539,9 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+>  		__count_zid_vm_events(ALLOCSTALL, sc->reclaim_idx, 1);
+>  
+>  	do {
+> -		vmpressure_prio(sc->gfp_mask, sc->target_mem_cgroup,
+> -				sc->priority);
+> +		if (!sc->proactive)
+> +			vmpressure_prio(sc->gfp_mask, sc->target_mem_cgroup,
+> +					sc->priority);
+>  		sc->nr_scanned = 0;
+>  		shrink_zones(zonelist, sc);
+>  
+> @@ -3825,7 +3831,7 @@ unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
+>  unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+>  					   unsigned long nr_pages,
+>  					   gfp_t gfp_mask,
+> -					   bool may_swap)
+> +					   unsigned int reclaim_options)
+>  {
+>  	unsigned long nr_reclaimed;
+>  	unsigned int noreclaim_flag;
+> @@ -3838,7 +3844,8 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+>  		.priority = DEF_PRIORITY,
+>  		.may_writepage = !laptop_mode,
+>  		.may_unmap = 1,
+> -		.may_swap = may_swap,
+> +		.may_swap = !!(reclaim_options & MEMCG_RECLAIM_MAY_SWAP),
+> +		.proactive = !!(reclaim_options & MEMCG_RECLAIM_PROACTIVE),
+>  	};
+>  	/*
+>  	 * Traverse the ZONELIST_FALLBACK zonelist of the current node to put
+> -- 
+> 2.37.0.144.g8ac04bfd2-goog
 
-Here cpuset_attach tries to take cpu_hotplug_lock.
-
-But by this time if some other context
-
-1. is already in the middle of cpu hotplug and has acquired cpu_hotplug_lock in
-_cpu_up but
-2. has not yet reached CPUHP_ONLINE state and
-3. one of the intermediate hotplug states (in my case CPUHP_AP_ONLINE_DYN ) has
-a callback which involves creation of a thread (or invocation of copy_process
-via some other path) the invoked copy_process will get blocked on
-cgroup_threadgroup_rwsem in following call chain:
-
-   copy_process --> cgroup_can_fork --> cgroup_css_set_fork -->
-cgroup_threadgroup_change_begin
-
-
-I am looking for suggestions to fix this deadlock.
-
-Or if I am missing something in the above analysis and the above mention
-scenario can't happen in latest upstream kernel, then please let me know as that
-would help me in back porting relevant changes to 5.4 kernel because the issue
-definitely exists in 5.4 kernel.
-
-Thanks,
--- Imran
+-- 
+Michal Hocko
+SUSE Labs
