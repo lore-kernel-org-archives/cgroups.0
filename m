@@ -1,96 +1,103 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: Re: [PATCH RESEND v6 0/8] bugfix and cleanup for blk-throttle
-Date: Wed, 20 Jul 2022 19:45:31 +0800
-Message-ID: <b0dbbdbd-d8cb-babe-5013-208dcb451646@huaweicloud.com>
-References: <20220701093441.885741-1-yukuai1@huaweicloud.com>
- <e1d6b26d-2eae-7b78-277a-0bb737dc9c4b@huaweicloud.com>
+From: Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
+Subject: Re: Query regarding deadlock involving cgroup_threadgroup_rwsem and
+ cpu_hotplug_lock
+Date: Wed, 20 Jul 2022 17:31:51 +0530
+Message-ID: <224b19f3-912d-b858-7af4-185b8e55bc66@quicinc.com>
+References: <8245b710-8acb-d8e6-7045-99a5f71dad4e@oracle.com>
+ <26d0e4cc-be0e-2c12-6174-dfbb1edb1ed6@oracle.com>
+ <bbc01477-231b-3dbb-3e09-9338f5413f06@oracle.com>
+ <ba48eac5-8ef7-251b-11fe-8163bb7a2d54@quicinc.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e1d6b26d-2eae-7b78-277a-0bb737dc9c4b@huaweicloud.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : from : to : cc : references : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=PounAutb3kLS4hWLQOwWstVt1Gn/0IZTeXgbAgcBKLU=;
+ b=OhZNbju618cRfiZf7Eyko8mruqAG2W2TCSBDQiXAkINfmhpxzeQliRmkQyV/kZIjmWLG
+ LzLAUrEVAgn8NK5k826QKAFr7spN01LkN9eCPlejYs+qRldvQFjqtHu4lPCmXhfc1Cep
+ 857O1djV0+Xj13rnAjGYUG0kG5E4vvT1wjyv+dwpAmj3V1Rv8Lwf4jHZ2nUhB7eQ9Ivy
+ CrgLdIEtEU/AUiUlg/U1NlqP577UGnOCMlBRKm9WkAaEhq9JlwvnD7y3myufxuLaAmcX
+ Ra9SYA0ssy+T5KYZXHLA1VwHUGBJ7+dj14aO6mzhNS0Jhe6okjRgxhaSJPTYGmt5Fz4M Yg== 
+Content-Language: en-US
+In-Reply-To: <ba48eac5-8ef7-251b-11fe-8163bb7a2d54-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Yu Kuai <yukuai1@huaweicloud.com>, tj@kernel.org, mkoutny@suse.com, axboe@kernel.dk, ming.lei@redhat.com
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+To: Imran Khan <imran.f.khan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, steven.price-5wv7dgnIgG8@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-在 2022/07/10 10:40, Yu Kuai 写道:
-> Hi!
-> 
-> 在 2022/07/01 17:34, Yu Kuai 写道:
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> Resend v5 by a new mail address(huaweicloud.com) because old
->> address(huawei.com)has some problem that emails can end up in spam.
->> Please let me know if anyone still see this patchset end up in spam.
->>
->> Changes in v6:
->>   - rename parameter in patch 3
->>   - add comments and reviewed tag for patch 4
->> Changes in v5:
->>   - add comments in patch 4
->>   - clear bytes/io_skipped in throtl_start_new_slice_with_credit() in
->>   patch 4
->>   - and cleanup patches 5-8
->> Changes in v4:
->>   - add reviewed-by tag for patch 1
->>   - add patch 2,3
->>   - use a different way to fix io hung in patch 4
->> Changes in v3:
->>   - fix a check in patch 1
->>   - fix link err in patch 2 on 32-bit platform
->>   - handle overflow in patch 2
->> Changes in v2:
->>   - use a new solution suggested by Ming
->>   - change the title of patch 1
->>   - add patch 2
->>
->> Patch 1 fix that blk-throttle can't work if multiple bios are throttle,
->> Patch 2 fix overflow while calculating wait time
->> Patch 3,4 fix io hung due to configuration updates.
->> Patch 5-8 are cleanup patches, there are no functional changes, just
->> some places that I think can be optimized during code review.
->>
-> Jens and Michal,
-> 
-> Can you receive this patchset normally(not end up in spam)?
-> 
-> If so, Tejun, can you take a look? This patchset do fix some problems in
-> blk-throttle.
+Looks like these patches are the fixes.
 
-friendly ping ...
-> 
-> BTW, Michal and Ming, it'll be great if you can take a look at other
-> patches as well.
-> 
-> Thansk,
-> Kuai
->> Previous version:
->> v1: 
->> https://lore.kernel.org/all/20220517134909.2910251-1-yukuai3@huawei.com/
->> v2: 
->> https://lore.kernel.org/all/20220518072751.1188163-1-yukuai3@huawei.com/
->> v3: 
->> https://lore.kernel.org/all/20220519085811.879097-1-yukuai3@huawei.com/
->> v4: 
->> https://lore.kernel.org/all/20220523082633.2324980-1-yukuai3@huawei.com/
->> v5: 
->> https://lore.kernel.org/all/20220528064330.3471000-1-yukuai3@huawei.com/
->>
->> Yu Kuai (8):
->>    blk-throttle: fix that io throttle can only work for single bio
->>    blk-throttle: prevent overflow while calculating wait time
->>    blk-throttle: factor out code to calculate ios/bytes_allowed
->>    blk-throttle: fix io hung due to config updates
->>    blk-throttle: use 'READ/WRITE' instead of '0/1'
->>    blk-throttle: calling throtl_dequeue/enqueue_tg in pairs
->>    blk-throttle: cleanup tg_update_disptime()
->>    blk-throttle: clean up flag 'THROTL_TG_PENDING'
->>
->>   block/blk-throttle.c | 168 +++++++++++++++++++++++++++++--------------
->>   block/blk-throttle.h |  16 +++--
->>   2 files changed, 128 insertions(+), 56 deletions(-)
->>
-> 
-> .
-> 
+https://lore.kernel.org/all/YtDvN0wJ6CKaEPN8-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org/#r
 
+Would let Tejun confirm this .
+
+-Mukesh
+
+On 7/20/2022 4:36 PM, Mukesh Ojha wrote:
+> Hi,
+> 
+> On 7/20/2022 8:57 AM, Imran Khan wrote:
+>> Hello everyone,
+>>
+>> I am seeing a deadlock between cgroup_threadgroup_rwsem and 
+>> cpu_hotplug_lock in
+>> 5.4 kernel.
+>>
+>> Due to some missing drivers I don't have this test setup for latest 
+>> upstream
+>> kernel but looking at the code the issue seems to be present in the 
+>> latest
+>> kernel as well. If needed I can provide stack traces and other 
+>> relevant info
+>> from the vmcore that I have got from 5.4 setup.
+>>
+>> The description of the problem is as follows (I am using 5.19-rc7 as 
+>> reference
+>> below):
+>>
+>> __cgroup_procs_write acquires cgroup_threadgroup_rwsem via
+>> cgroup_procs_write_start and then invokes cgroup_attach_task. Now
+>> cgroup_attach_task can invoke following call chain:
+>>
+>> cgroup_attach_task --> cgroup_migrate --> cgroup_migrate_execute --> 
+>> cpuset_attach
+>>
+>> Here cpuset_attach tries to take cpu_hotplug_lock.
+>>
+>> But by this time if some other context
+>>
+>> 1. is already in the middle of cpu hotplug and has acquired 
+>> cpu_hotplug_lock in
+>> _cpu_up but
+>> 2. has not yet reached CPUHP_ONLINE state and
+>> 3. one of the intermediate hotplug states (in my case 
+>> CPUHP_AP_ONLINE_DYN ) has
+>> a callback which involves creation of a thread (or invocation of 
+>> copy_process
+>> via some other path) the invoked copy_process will get blocked on
+>> cgroup_threadgroup_rwsem in following call chain:
+>>
+>>     copy_process --> cgroup_can_fork --> cgroup_css_set_fork -->
+>> cgroup_threadgroup_change_begin
+> 
+> Similar discussion is at [1], not sure on the conclusion.
+> 
+> [1]
+> https://lore.kernel.org/lkml/20220705123705.764-1-xuewen.yan-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org/
+> 
+> -Mukesh
+> 
+>>
+>>
+>> I am looking for suggestions to fix this deadlock.
+>>
+>> Or if I am missing something in the above analysis and the above mention
+>> scenario can't happen in latest upstream kernel, then please let me 
+>> know as that
+>> would help me in back porting relevant changes to 5.4 kernel because 
+>> the issue
+>> definitely exists in 5.4 kernel.
+>>
+>> Thanks,
+>> -- Imran
