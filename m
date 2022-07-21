@@ -1,98 +1,107 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4] mm: vmpressure: don't count proactive reclaim in vmpressure
-Date: Thu, 21 Jul 2022 08:58:06 -0700
-Message-ID: <CAJD7tkZVcQ6xzdnGPS0kQAP=+Q=yZwVT_ZrLaEsAgkLi_DAMtQ@mail.gmail.com>
-References: <20220714064918.2576464-1-yosryahmed@google.com>
- <YtfJug77XJ9BPA8L@dhcp22.suse.cz> <CALvZod7X3PsM2+ZrWXwb75FNBBjaBGJpjd+WVmzr5hStROvW+g@mail.gmail.com>
- <CAJD7tkYBm+L_-GTLDux0ZsJ6=kw-zzHjs6vgKUtmeZhcxLwqiw@mail.gmail.com> <Ytk8EBBEi4EubvPn@dhcp22.suse.cz>
+From: Yonghong Song <yhs@fb.com>
+Subject: Re: [PATCH bpf-next v3 4/8] bpf: Introduce cgroup iter
+Date: Thu, 21 Jul 2022 09:15:07 -0700
+Message-ID: <3f3ffe0e-d2ac-c868-a1bf-cdf1b58fd666@fb.com>
+References: <20220709000439.243271-1-yosryahmed@google.com>
+ <20220709000439.243271-5-yosryahmed@google.com>
+ <370cb480-a427-4d93-37d9-3c6acd73b967@fb.com>
+ <a6d048b8-d017-ea7e-36f0-1c4f88fc4399@fb.com>
+ <CA+khW7gmVmXMg4YP4fxTtgqNyAr4mQqnXbP=z0nUeQ8=hfGC3g@mail.gmail.com>
+ <2a26b45d-6fab-b2a2-786e-5cb4572219ea@fb.com>
+ <CA+khW7jp+0AadVagqCcV8ELNRphP47vJ6=jGyuMJGnTtYynF+Q@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=swGACW5Jh2L0fPaTYT636BPQVQeKVon43dJ9BYyWHwk=;
-        b=r+w+mxLV3pDF7H2PvRP1rSgfVNzPHjXRHDyW0bx0FSpYp1xxdfqRoM2olAqDztXFE2
-         PrymskSXxb/ztAY1MquHjtG0OPZHvYVoOyAxVVJizv2kBU3Q4X1K7qkH/BbNu30JXFtU
-         jhWBX1Jy7Ww9lAN0MpXsAQhFSo5xgPmW7AAMUve3/2zmUkNLIZbDLkbOVMwQ42/Zvgxm
-         Ti1H7+z6K/40JPEy9H0KmJ3GQHMbwo2S5TK+RhZh2SpFcwkIZHoA/HDnKg2724iqIleF
-         GGmYpUbMNf8YGpByjFYxAiFmsiC7KoY1DCuYjnD3rpRD2ICk4RJIeYEkxerGu8ODGLx2
-         Oc0Q==
-In-Reply-To: <Ytk8EBBEi4EubvPn-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Xu <peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=facebook;
+ bh=crSb/D02EAQWHXrlytNzRppEIZpLQ9Wq6QrTmuyMV7E=;
+ b=NEroBHJmLjtzx4Hg3GhEPr30JqAwADRkCR7JGoBbtekGEavxZaaYxYSSUdOJ3Ybj3FA9
+ bAV1WaHre7iqoJpEbfgeVEt751oBuyExhqfpUv7Qot/l9BF8Y6cGedVqgvg94AGX4GrU
+ 8p/biAsBsUAAwmk1GvRnud4EWRUJEi4U0jc= 
+Content-Language: en-US
+In-Reply-To: <CA+khW7jp+0AadVagqCcV8ELNRphP47vJ6=jGyuMJGnTtYynF+Q@mail.gmail.com>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Hao Luo <haoluo@google.com>
+Cc: Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>, KP Singh <kpsingh@kernel.org>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, John Fastabend <john.fastabend@gmail.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>
 
-On Thu, Jul 21, 2022 at 4:44 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
->
-> On Wed 20-07-22 11:02:56, Yosry Ahmed wrote:
-> > On Wed, Jul 20, 2022 at 10:50 AM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> > >
-> > > On Wed, Jul 20, 2022 at 2:24 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > > >
-> > > [...]
-> > > >
-> > > > I think what we are missing here is
-> > > > - explain that this doesn't have any effect on existing users of
-> > > >   vmpressure user interface because that is cgroup v1 and memory.reclaim
-> > > >   is v2 feature. This is a trivial statement but quite useful for future
-> > > >   readers of this commit
-> > > > - explain the effect on the networking layer and typical usecases
-> > > >   memory.reclaim is used for currently and ideally document that.
-> > >
-> > > I agree with the above two points (Yosry, please address those) but
-> > > the following third point is orthogonal and we don't really need to
-> > > have an answer for this patch to be accepted.
-> > >
-> >
-> > That's great feedback, thanks Michal and Shakeel!
-> >
-> > How do you feel about the following commit message instead? Does it
-> > address your concerns?:
-> >
-> > memory.reclaim is a cgroup v2 interface that allows users to
-> > proactively reclaim memory from a memcg, without real memory pressure.
-> > Reclaim operations invoke vmpressure, which is used in cgroup v1 to
-> > notify userspace of reclaim efficiency, and used in both v1 and v2 as
-> > a signal for a memcg being under memory pressure for networking (see
-> > mem_cgroup_under_socket_pressure()). For the former, vmpressure
-> > notifications in v1 are not affected by this change since
-> > memory.reclaim is a v2 feature.
-> >
-> > For the latter, the effects of the vmpressure signal (according to
-> > Shakeel [1]) are as follows:
-> > 1. Reducing send and receive buffers of the current socket.
-> > 2. May drop packets on the rx path.
-> > 3. May throttle current thread on the tx path.
-> >
-> > Since proactive reclaim is invoked directly by userspace, not by
-> > memory pressure, it makes sense not to throttle networking. Hence,
-> > this change makes sure that proactive reclaim caused by memory.reclaim
-> > does not trigger vmpressure.
->
-> OK, looks much better. Please also add a note to the documentation about
-> this side effect.
 
-I don't want to add something to the documentation about throttling
-networking because it seems like these are implementation details that
-we may change in the future. I don't know if we can document this
-behavior today and then change it later.
 
-How about we document a more generic statement in memory.reclaim
-documentation, like:
+On 7/20/22 5:40 PM, Hao Luo wrote:
+> On Mon, Jul 11, 2022 at 8:45 PM Yonghong Song <yhs@fb.com> wrote:
+>>
+>> On 7/11/22 5:42 PM, Hao Luo wrote:
+> [...]
+>>>>>> +
+>>>>>> +static void *cgroup_iter_seq_start(struct seq_file *seq, loff_t *pos)
+>>>>>> +{
+>>>>>> +    struct cgroup_iter_priv *p = seq->private;
+>>>>>> +
+>>>>>> +    mutex_lock(&cgroup_mutex);
+>>>>>> +
+>>>>>> +    /* support only one session */
+>>>>>> +    if (*pos > 0)
+>>>>>> +        return NULL;
+>>>>>
+>>>>> This might be okay. But want to check what is
+>>>>> the practical upper limit for cgroups in a system
+>>>>> and whether we may miss some cgroups. If this
+>>>>> happens, it will be a surprise to the user.
+>>>>>
+>>>
+>>> Ok. What's the max number of items supported in a single session?
+>>
+>> The max number of items (cgroups) in a single session is determined
+>> by kernel_buffer_size which equals to 8 * PAGE_SIZE. So it really
+>> depends on how much data bpf program intends to send to user space.
+>> If each bpf program run intends to send 64B to user space, e.g., for
+>> cpu, memory, cpu pressure, mem pressure, io pressure, read rate, write
+>> rate, read/write rate. Then each session can support 512 cgroups.
+>>
+> 
+> Hi Yonghong,
+> 
+> Sorry about the late reply. It's possible that the number of cgroup
+> can be large, 1000+, in our production environment. But that may not
+> be common. Would it be good to leave handling large number of cgroups
+> as follow up for this patch? If it turns out to be a problem, to
+> alleviate it, we could:
+> 
+> 1. tell users to write program to skip a certain uninteresting cgroups.
+> 2. support requesting large kernel_buffer_size for bpf_iter, maybe as
+> a new bpf_iter flag.
 
-"With reactive reclaim operations triggered by the kernel, the kernel
-may take further actions to alleviate memory pressure (such as
-throttling networking memory consumption). For proactive reclaim
-operations triggered by this interface, the kernel may choose to skip
-such actions as reclaim is not an indication of memory pressure."
+Currently if we intend to support multiple read() for cgroup_iter,
+the following is a very inefficient approach:
 
-Does this make sense to you?
+in seq_file private data structure, remember the last cgroup visited
+and for the second read() syscall, do the traversal again (but not 
+calling bpf program) until the last cgroup and proceed from there.
+This is inefficient and probably works. But if the last cgroup is
+gone from the hierarchy, that the above approach won't work. One
+possibility is to rememobe the last two cgroups. If the last cgroup
+is gone, check the 'next' cgroup based on the one before the last
+cgroup. If both are gone, we return NULL.
 
->
-> Thanks!
-> --
-> Michal Hocko
-> SUSE Labs
+But in any case, if there are additional cgroups not visited,
+in the second read(), we should not return NULL which indicates
+done with all cgroups. We may return EOPNOTSUPP to indicate there
+are missing cgroups due to not supported.
+
+Once users see EOPNOTSUPP which indicates there are missing
+cgroups, they can do more filtering in bpf program to avoid
+large data volume to user space.
+
+To provide a way to truely visit *all* cgroups,
+we can either use bpf_iter link_create->flags
+to increase the buffer size as your suggested in the above so
+user can try to allocate more kernel buffer size. Or implement
+proper second read() traversal which I don't have a good idea
+how to do it efficiently.
+> 
+> Hao
+> 
+>>>
+> [...]
+>>>>> [...]
