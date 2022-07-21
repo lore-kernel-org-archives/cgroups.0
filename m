@@ -1,76 +1,86 @@
-From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH bpf-next v3 4/8] bpf: Introduce cgroup iter
-Date: Wed, 20 Jul 2022 17:40:53 -0700
-Message-ID: <CA+khW7jp+0AadVagqCcV8ELNRphP47vJ6=jGyuMJGnTtYynF+Q@mail.gmail.com>
-References: <20220709000439.243271-1-yosryahmed@google.com>
- <20220709000439.243271-5-yosryahmed@google.com> <370cb480-a427-4d93-37d9-3c6acd73b967@fb.com>
- <a6d048b8-d017-ea7e-36f0-1c4f88fc4399@fb.com> <CA+khW7gmVmXMg4YP4fxTtgqNyAr4mQqnXbP=z0nUeQ8=hfGC3g@mail.gmail.com>
- <2a26b45d-6fab-b2a2-786e-5cb4572219ea@fb.com>
+From: Chengming Zhou <zhouchengming@bytedance.com>
+Subject: [PATCH 0/9] sched/psi: some optimization and extension
+Date: Thu, 21 Jul 2022 12:04:30 +0800
+Message-ID: <20220721040439.2651-1-zhouchengming@bytedance.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=NLPMp1+Mt0L/+E6R8JU+BLoZczUGaly/ZIP7N/DIUjk=;
-        b=c/VUBK2QvK2vfwdHRofaHZt9HYM7EXslS5s2wi+6Jwim5NYju5JdGCOAHrTetv5xzX
-         P6KxFVcy1D5RFcg/Lvl97dO+5pxv0GXUlzN44Cy5TuZ/gA81BWqp9haTPUM6xx64N0bs
-         SHW6Vm0sBminmKxtKqvJupkRFTQNNDwJV4AcYgtn0fbG/utFhqyLDZJA1eq3+H7nQ+j7
-         BJsTZb0EboDNRuH2YyK6pgTy5VpPPpWotY6gCwtNSxHpU8gv/rBsdETPlA3GXuCsgPb9
-         76rbDja4enOdfJIlMTAQPtwAl4IndOKluUlnQfdcLMztE4Dp/VpnhnLxp0iOhX56xuDc
-         ggBg==
-In-Reply-To: <2a26b45d-6fab-b2a2-786e-5cb4572219ea-b10kYP2dOMg@public.gmane.org>
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=nlT8dJ+SuEpxWbwnTjcmhPJvri3/6RijHoI8W5wIpvE=;
+        b=H9ztJ4r8ShB6bSUSZJFMPYUxMNR8vvrsj1vt/lH9VHmmw3uBP3eIA2PcKWgSk5Q1wl
+         K+NcysZKOjHUbek7EISv8xVcQMPs1sTGj0HW5Mfd629xhyR5bdeMHK63uPa4P2L57oRK
+         6WRaAi3FgUrKi1UIeYRSKabGyZ6TMQgKrXM4l13lAGR8uJx+QHl866OES1by3VoRC9ru
+         H5964XviIHKzcr7Dvga63vKjgndZr+u73X1sTIUnWg55XCH3s9pI7mpxugcuy8bS6bnY
+         YBlNIFVCvfxb09i/hJX0Po+LEWPjkjU+RGGh8/5HLywFC3w4wf7/4dARlKHJlXwqtQFN
+         jVsw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>
-Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: hannes@cmpxchg.org, surenb@google.com, mingo@redhat.com, peterz@infradead.org, tj@kernel.org, corbet@lwn.net, akpm@linux-foundation.org, rdunlap@infradead.org
+Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com, cgroups@vger.kernel.org, Chengming Zhou <zhouchengming@bytedance.com>
 
-On Mon, Jul 11, 2022 at 8:45 PM Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org> wrote:
->
-> On 7/11/22 5:42 PM, Hao Luo wrote:
-[...]
-> >>>> +
-> >>>> +static void *cgroup_iter_seq_start(struct seq_file *seq, loff_t *pos)
-> >>>> +{
-> >>>> +    struct cgroup_iter_priv *p = seq->private;
-> >>>> +
-> >>>> +    mutex_lock(&cgroup_mutex);
-> >>>> +
-> >>>> +    /* support only one session */
-> >>>> +    if (*pos > 0)
-> >>>> +        return NULL;
-> >>>
-> >>> This might be okay. But want to check what is
-> >>> the practical upper limit for cgroups in a system
-> >>> and whether we may miss some cgroups. If this
-> >>> happens, it will be a surprise to the user.
-> >>>
-> >
-> > Ok. What's the max number of items supported in a single session?
->
-> The max number of items (cgroups) in a single session is determined
-> by kernel_buffer_size which equals to 8 * PAGE_SIZE. So it really
-> depends on how much data bpf program intends to send to user space.
-> If each bpf program run intends to send 64B to user space, e.g., for
-> cpu, memory, cpu pressure, mem pressure, io pressure, read rate, write
-> rate, read/write rate. Then each session can support 512 cgroups.
->
+Hi all,
 
-Hi Yonghong,
+This patch series are some optimization and extension for PSI.
 
-Sorry about the late reply. It's possible that the number of cgroup
-can be large, 1000+, in our production environment. But that may not
-be common. Would it be good to leave handling large number of cgroups
-as follow up for this patch? If it turns out to be a problem, to
-alleviate it, we could:
+patch 1/9 fix periodic aggregation shut off problem introduced by earlier
+commit 4117cebf1a9f ("psi: Optimize task switch inside shared cgroups").
 
-1. tell users to write program to skip a certain uninteresting cgroups.
-2. support requesting large kernel_buffer_size for bpf_iter, maybe as
-a new bpf_iter flag.
+patch 2/9 optimize task switch inside shared cgroups when in_memstall status
+of prev task and next task are different.
 
-Hao
+patch 3-4 optimize and simplify PSI status tracking by don't change task
+psi_flags when migrate CPU/cgroup.
 
-> >
-[...]
-> >>> [...]
+patch 7-8 introduce new kernel cmdline parameter "psi_inner_cgroup=" to
+configure whether or not to track PSI stall information for inner cgroups.
+
+patch 9/9 introduce new PSI resource PSI_IRQ to track IRQ/SOFTIRQ pressure
+stall information when CONFIG_IRQ_TIME_ACCOUNTING.
+
+Performance test on Intel Xeon Platinum with 3 levels of cgroup, in which
+run mmtests config-scheduler-perfpipe:
+
+                                  tip                    tip                    tip                patched                patched                patched                patched
+                               default   cgroup_disable=pressure  IRQ_TIME_ACCOUNTING              default      psi_inner_cgroup=off             PSI_IRQ    PSI_IRQ + psi_inner_cgroup=off
+Min       Time        9.89 (   0.00%)        8.99 (   9.12%)       10.04 (  -1.53%)        9.63 (   2.58%)        9.27 (   6.22%)       10.09 (  -2.04%)        9.45 (   4.41%)
+1st-qrtle Time       10.01 (   0.00%)        9.15 (   8.66%)       10.16 (  -1.45%)        9.72 (   2.89%)        9.35 (   6.61%)       10.20 (  -1.81%)        9.54 (   4.77%)
+2nd-qrtle Time       10.07 (   0.00%)        9.25 (   8.12%)       10.19 (  -1.21%)        9.79 (   2.73%)        9.38 (   6.78%)       10.24 (  -1.75%)        9.59 (   4.68%)
+3rd-qrtle Time       10.14 (   0.00%)        9.30 (   8.32%)       10.23 (  -0.88%)        9.84 (   3.00%)        9.44 (   6.92%)       10.27 (  -1.21%)        9.62 (   5.18%)
+Max-1     Time        9.89 (   0.00%)        8.99 (   9.12%)       10.04 (  -1.53%)        9.63 (   2.58%)        9.27 (   6.22%)       10.09 (  -2.04%)        9.45 (   4.41%)
+Max-5     Time        9.89 (   0.00%)        8.99 (   9.12%)       10.04 (  -1.53%)        9.63 (   2.58%)        9.27 (   6.22%)       10.09 (  -2.04%)        9.45 (   4.41%)
+Max-10    Time        9.92 (   0.00%)        9.09 (   8.33%)       10.11 (  -1.97%)        9.67 (   2.51%)        9.29 (   6.29%)       10.15 (  -2.30%)        9.48 (   4.46%)
+Max-90    Time       10.20 (   0.00%)        9.33 (   8.53%)       10.33 (  -1.24%)        9.87 (   3.29%)        9.49 (   6.99%)       10.29 (  -0.85%)        9.66 (   5.32%)
+Max-95    Time       10.23 (   0.00%)        9.34 (   8.70%)       10.37 (  -1.39%)        9.94 (   2.83%)        9.53 (   6.88%)       10.30 (  -0.65%)        9.67 (   5.51%)
+Max-99    Time       10.23 (   0.00%)        9.37 (   8.43%)       10.40 (  -1.63%)        9.99 (   2.41%)        9.76 (   4.57%)       10.31 (  -0.74%)        9.69 (   5.25%)
+Max       Time       10.34 (   0.00%)        9.46 (   8.50%)       10.43 (  -0.83%)       17.04 ( -64.80%)        9.79 (   5.36%)       10.32 (   0.20%)        9.71 (   6.07%)
+Amean     Time       10.08 (   0.00%)        9.23 *   8.39%*       10.21 *  -1.33%*       10.03 (   0.47%)        9.41 *   6.59%*       10.23 *  -1.53%*        9.59 *   4.87%*
+
+Thanks!
+
+Chengming Zhou (9):
+  sched/psi: fix periodic aggregation shut off
+  sched/psi: optimize task switch inside shared cgroups again
+  sched/psi: move private helpers to sched/stats.h
+  sched/psi: don't change task psi_flags when migrate CPU/group
+  sched/psi: don't create cgroup PSI files when psi_disabled
+  sched/psi: save percpu memory when !psi_cgroups_enabled
+  sched/psi: cache parent psi_group to speed up groups iterate
+  sched/psi: add kernel cmdline parameter psi_inner_cgroup
+  sched/psi: add PSI_IRQ to track IRQ/SOFTIRQ pressure
+
+ .../admin-guide/kernel-parameters.txt         |  11 +
+ include/linux/psi.h                           |   5 +-
+ include/linux/psi_types.h                     |   9 +-
+ include/linux/sched.h                         |   3 -
+ kernel/cgroup/cgroup.c                        |  30 +++
+ kernel/sched/core.c                           |   2 +
+ kernel/sched/psi.c                            | 194 +++++++++++++-----
+ kernel/sched/stats.h                          |  71 ++++---
+ 8 files changed, 232 insertions(+), 93 deletions(-)
+
+-- 
+2.36.1
+
