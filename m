@@ -1,46 +1,76 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: Query regarding deadlock involving cgroup_threadgroup_rwsem and
- cpu_hotplug_lock
-Date: Wed, 20 Jul 2022 08:05:03 -1000
-Message-ID: <YthDz4BnfYHce1od@slm.duckdns.org>
-References: <8245b710-8acb-d8e6-7045-99a5f71dad4e@oracle.com>
- <26d0e4cc-be0e-2c12-6174-dfbb1edb1ed6@oracle.com>
- <bbc01477-231b-3dbb-3e09-9338f5413f06@oracle.com>
- <ba48eac5-8ef7-251b-11fe-8163bb7a2d54@quicinc.com>
- <224b19f3-912d-b858-7af4-185b8e55bc66@quicinc.com>
+From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH bpf-next v3 4/8] bpf: Introduce cgroup iter
+Date: Wed, 20 Jul 2022 17:40:53 -0700
+Message-ID: <CA+khW7jp+0AadVagqCcV8ELNRphP47vJ6=jGyuMJGnTtYynF+Q@mail.gmail.com>
+References: <20220709000439.243271-1-yosryahmed@google.com>
+ <20220709000439.243271-5-yosryahmed@google.com> <370cb480-a427-4d93-37d9-3c6acd73b967@fb.com>
+ <a6d048b8-d017-ea7e-36f0-1c4f88fc4399@fb.com> <CA+khW7gmVmXMg4YP4fxTtgqNyAr4mQqnXbP=z0nUeQ8=hfGC3g@mail.gmail.com>
+ <2a26b45d-6fab-b2a2-786e-5cb4572219ea@fb.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=YWTDneNY8P5vWW2QTCkwFAjSMu7YWo8lKAMC6oCSaaQ=;
-        b=oOtz9PsBinTflz88HKUTWrJh15Cle1xn8l7q18DcwWR4RAQQoC1u4AiUoWdbGWqesa
-         62bNh9C6BftUhOKODBoCr/KkXyz9BeZkLIw7iOlBiHkRUzEkts542clfCFazWIHo4cq0
-         eDo8cdN3gyi3x8DSn8uwPy8crW/bairzY9qvpP1bGcHdIRL3aZDrk1yg6qvDA0Fj3JXp
-         d+kdlb5JmQ5RnOGq+xgkxrpa3j8vmneroyZgjaE1LRiW+aaunRjbo4eu6y4pcpz/qLkD
-         KzylACtgOLbHjyysmtuUB5LfKCwwCQRhvLzvpaL/68Yzm7dnzisw3BClyDoYi0lcYzLa
-         MPag==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <224b19f3-912d-b858-7af4-185b8e55bc66-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=NLPMp1+Mt0L/+E6R8JU+BLoZczUGaly/ZIP7N/DIUjk=;
+        b=c/VUBK2QvK2vfwdHRofaHZt9HYM7EXslS5s2wi+6Jwim5NYju5JdGCOAHrTetv5xzX
+         P6KxFVcy1D5RFcg/Lvl97dO+5pxv0GXUlzN44Cy5TuZ/gA81BWqp9haTPUM6xx64N0bs
+         SHW6Vm0sBminmKxtKqvJupkRFTQNNDwJV4AcYgtn0fbG/utFhqyLDZJA1eq3+H7nQ+j7
+         BJsTZb0EboDNRuH2YyK6pgTy5VpPPpWotY6gCwtNSxHpU8gv/rBsdETPlA3GXuCsgPb9
+         76rbDja4enOdfJIlMTAQPtwAl4IndOKluUlnQfdcLMztE4Dp/VpnhnLxp0iOhX56xuDc
+         ggBg==
+In-Reply-To: <2a26b45d-6fab-b2a2-786e-5cb4572219ea-b10kYP2dOMg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
-Cc: Imran Khan <imran.f.khan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, steven.price-5wv7dgnIgG8@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>
+Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Jul 20, 2022 at 05:31:51PM +0530, Mukesh Ojha wrote:
-> Looks like these patches are the fixes.
-> 
-> https://lore.kernel.org/all/YtDvN0wJ6CKaEPN8-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org/#r
-> 
-> Would let Tejun confirm this .
+On Mon, Jul 11, 2022 at 8:45 PM Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org> wrote:
+>
+> On 7/11/22 5:42 PM, Hao Luo wrote:
+[...]
+> >>>> +
+> >>>> +static void *cgroup_iter_seq_start(struct seq_file *seq, loff_t *pos)
+> >>>> +{
+> >>>> +    struct cgroup_iter_priv *p = seq->private;
+> >>>> +
+> >>>> +    mutex_lock(&cgroup_mutex);
+> >>>> +
+> >>>> +    /* support only one session */
+> >>>> +    if (*pos > 0)
+> >>>> +        return NULL;
+> >>>
+> >>> This might be okay. But want to check what is
+> >>> the practical upper limit for cgroups in a system
+> >>> and whether we may miss some cgroups. If this
+> >>> happens, it will be a surprise to the user.
+> >>>
+> >
+> > Ok. What's the max number of items supported in a single session?
+>
+> The max number of items (cgroups) in a single session is determined
+> by kernel_buffer_size which equals to 8 * PAGE_SIZE. So it really
+> depends on how much data bpf program intends to send to user space.
+> If each bpf program run intends to send 64B to user space, e.g., for
+> cpu, memory, cpu pressure, mem pressure, io pressure, read rate, write
+> rate, read/write rate. Then each session can support 512 cgroups.
+>
 
-Yeah, looks like the same issue. I'll write up a patch later this week /
-early next unless someone beats me to it.
+Hi Yonghong,
 
-Thanks.
+Sorry about the late reply. It's possible that the number of cgroup
+can be large, 1000+, in our production environment. But that may not
+be common. Would it be good to leave handling large number of cgroups
+as follow up for this patch? If it turns out to be a problem, to
+alleviate it, we could:
 
--- 
-tejun
+1. tell users to write program to skip a certain uninteresting cgroups.
+2. support requesting large kernel_buffer_size for bpf_iter, maybe as
+a new bpf_iter flag.
+
+Hao
+
+> >
+[...]
+> >>> [...]
