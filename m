@@ -1,45 +1,213 @@
-From: Jing-Ting Wu <jing-ting.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: Re: [Bug] race condition at rebind_subsystems()
-Date: Thu, 21 Jul 2022 14:46:03 +0800
-Message-ID: <98d738ec5d7d32441f6e62278fff32201fd948de.camel@mediatek.com>
-References: <1978e209e71905d89651e61abd07285912d412a1.camel@mediatek.com>
-         <20220715115938.GA8646@blackbody.suse.cz>
-         <YtGaP+e35DZYSQf0@slm.duckdns.org>
-         <d8f0bc5e2fb6ed259f9334c83279b4c011283c41.camel@mediatek.com>
-         <20220719133512.GD897@blackbody.suse.cz>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 9/9] sched/psi: add PSI_IRQ to track IRQ/SOFTIRQ pressure
+Date: Thu, 21 Jul 2022 18:00:47 +0800
+Message-ID: <202207211726.ilPYe7AO-lkp@intel.com>
+References: <20220721040439.2651-10-zhouchengming@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220719133512.GD897-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1658397711; x=1689933711;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=eoOdGtjiTIMMoeNULnhdrwS2hhQVIqIHFybGaWhmn4E=;
+  b=RHcko4dMHi8j5zQdiXEh7nP3Ruu8gIzpPZBIi7REr8NjZiP3EP5iq1qw
+   1z8OdqYj2EHyKWHVEQejyOHEkWM+zbEf29YbjXwkdvpTR/mF3QCS+4TYa
+   2bfSzFXNroH2oJqjnza1XjqgWyeILsn+5H2zhcAfVV74l0SLh8B/l3hIU
+   BI81fldOHU8PFW9Yw4MIbLqj4JBDeG/X4RggwneZ/0Y4gW49XpKlCrcyX
+   n0xyRKgYCoSRwBu1l2kP2ENLJC8whWUJAbqSNZe8/gif3iDqcEKqZovit
+   VLzIIhcjXo4FbYQiL7VRCGIzkliSq/GWW4STnf4V8j4wje4/LfPtxXjU9
+   Q==;
+Content-Disposition: inline
+In-Reply-To: <20220721040439.2651-10-zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?ISO-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, lixiong.liu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, wenju.xu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, jonathan.jmchen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Cc: kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-On Tue, 2022-07-19 at 15:35 +0200, Michal Koutn=C3=BD wrote:
-> On Mon, Jul 18, 2022 at 03:44:21PM +0800, Jing-Ting Wu <
-> jing-ting.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org> wrote:
-> > Accroding your description, is the following patch corrent?
->=20
-> Yes, this is what I meant (i.e. grace period before invalidating the
-> removed rstat_css_node).
->=20
-> > If the patch is correct, we will add this patch to our stability
-> > test.
-> > And we will continue to observe whether the problem is solved.
->=20
-> It'd be great to have such confirmation.
+Hi Chengming,
 
-Thanks for confirm the patch.
-We already add patch to our stability test.
-We will reply mail if we have any update.
+Thank you for the patch! Perhaps something to improve:
 
->=20
-> Thanks,
-> Michal
+[auto build test WARNING on tip/sched/core]
+[also build test WARNING on akpm-mm/mm-everything linus/master v5.19-rc7]
+[cannot apply to tj-cgroup/for-next next-20220720]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Chengming-Zhou/sched-psi-some-optimization-and-extension/20220721-120833
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git 401e4963bf45c800e3e9ea0d3a0289d738005fd4
+config: riscv-randconfig-s032-20220718 (https://download.01.org/0day-ci/archive/20220721/202207211726.ilPYe7AO-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
+compiler: riscv64-linux-gcc (GCC) 12.1.0
+reproduce:
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # apt-get install sparse
+        # sparse version: v0.6.4-39-gce1a6720-dirty
+        # https://github.com/intel-lab-lkp/linux/commit/d14f2a9ff31fefc5b28a16addaa832dc80d84189
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Chengming-Zhou/sched-psi-some-optimization-and-extension/20220721-120833
+        git checkout d14f2a9ff31fefc5b28a16addaa832dc80d84189
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-12.1.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=riscv SHELL=/bin/bash kernel/sched/
+
+If you fix the issue, kindly add following tag where applicable
+Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
 
+sparse warnings: (new ones prefixed by >>)
+>> kernel/sched/core.c:711:31: sparse: sparse: incorrect type in argument 1 (different address spaces) @@     expected struct task_struct *task @@     got struct task_struct [noderef] __rcu *curr @@
+   kernel/sched/core.c:711:31: sparse:     expected struct task_struct *task
+   kernel/sched/core.c:711:31: sparse:     got struct task_struct [noderef] __rcu *curr
+   kernel/sched/core.c:1028:38: sparse: sparse: incorrect type in initializer (different address spaces) @@     expected struct task_struct *curr @@     got struct task_struct [noderef] __rcu *curr @@
+   kernel/sched/core.c:1028:38: sparse:     expected struct task_struct *curr
+   kernel/sched/core.c:1028:38: sparse:     got struct task_struct [noderef] __rcu *curr
+   kernel/sched/core.c:2192:33: sparse: sparse: incorrect type in argument 1 (different address spaces) @@     expected struct task_struct *p @@     got struct task_struct [noderef] __rcu *curr @@
+   kernel/sched/core.c:2192:33: sparse:     expected struct task_struct *p
+   kernel/sched/core.c:2192:33: sparse:     got struct task_struct [noderef] __rcu *curr
+   kernel/sched/core.c:2192:68: sparse: sparse: incorrect type in argument 1 (different address spaces) @@     expected struct task_struct *tsk @@     got struct task_struct [noderef] __rcu *curr @@
+   kernel/sched/core.c:2192:68: sparse:     expected struct task_struct *tsk
+   kernel/sched/core.c:2192:68: sparse:     got struct task_struct [noderef] __rcu *curr
+   kernel/sched/core.c:3592:17: sparse: sparse: incorrect type in assignment (different address spaces) @@     expected struct sched_domain *[assigned] sd @@     got struct sched_domain [noderef] __rcu *parent @@
+   kernel/sched/core.c:3592:17: sparse:     expected struct sched_domain *[assigned] sd
+   kernel/sched/core.c:3592:17: sparse:     got struct sched_domain [noderef] __rcu *parent
+   kernel/sched/core.c:3789:28: sparse: sparse: incorrect type in argument 1 (different address spaces) @@     expected struct task_struct const *p @@     got struct task_struct [noderef] __rcu *curr @@
+   kernel/sched/core.c:3789:28: sparse:     expected struct task_struct const *p
+   kernel/sched/core.c:3789:28: sparse:     got struct task_struct [noderef] __rcu *curr
+   kernel/sched/core.c:9089:43: sparse: sparse: incorrect type in initializer (different address spaces) @@     expected struct task_struct *push_task @@     got struct task_struct [noderef] __rcu *curr @@
+   kernel/sched/core.c:9089:43: sparse:     expected struct task_struct *push_task
+   kernel/sched/core.c:9089:43: sparse:     got struct task_struct [noderef] __rcu *curr
+   kernel/sched/core.c:5376:38: sparse: sparse: incorrect type in initializer (different address spaces) @@     expected struct task_struct *curr @@     got struct task_struct [noderef] __rcu *curr @@
+   kernel/sched/core.c:5376:38: sparse:     expected struct task_struct *curr
+   kernel/sched/core.c:5376:38: sparse:     got struct task_struct [noderef] __rcu *curr
+   kernel/sched/core.c:6322:14: sparse: sparse: incorrect type in assignment (different address spaces) @@     expected struct task_struct *prev @@     got struct task_struct [noderef] __rcu *curr @@
+   kernel/sched/core.c:6322:14: sparse:     expected struct task_struct *prev
+   kernel/sched/core.c:6322:14: sparse:     got struct task_struct [noderef] __rcu *curr
+   kernel/sched/core.c:6848:17: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/core.c:6848:17: sparse:    struct task_struct *
+   kernel/sched/core.c:6848:17: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/core.c:7064:22: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/core.c:7064:22: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/core.c:7064:22: sparse:    struct task_struct *
+   kernel/sched/core.c:11121:25: sparse: sparse: incorrect type in argument 1 (different address spaces) @@     expected struct task_struct *p @@     got struct task_struct [noderef] __rcu *curr @@
+   kernel/sched/core.c:11121:25: sparse:     expected struct task_struct *p
+   kernel/sched/core.c:11121:25: sparse:     got struct task_struct [noderef] __rcu *curr
+   kernel/sched/core.c:537:6: sparse: sparse: context imbalance in 'raw_spin_rq_lock_nested' - wrong count at exit
+   kernel/sched/core.c:562:6: sparse: sparse: context imbalance in 'raw_spin_rq_trylock' - wrong count at exit
+   kernel/sched/core.c:586:6: sparse: sparse: context imbalance in 'raw_spin_rq_unlock' - unexpected unlock
+   kernel/sched/core.c: note: in included file:
+   kernel/sched/sched.h:1580:9: sparse: sparse: context imbalance in '__task_rq_lock' - wrong count at exit
+   kernel/sched/sched.h:1580:9: sparse: sparse: context imbalance in 'task_rq_lock' - wrong count at exit
+   kernel/sched/core.c: note: in included file:
+   kernel/sched/pelt.h:97:13: sparse: sparse: incorrect type in argument 1 (different address spaces) @@     expected struct task_struct const *p @@     got struct task_struct [noderef] __rcu *curr @@
+   kernel/sched/pelt.h:97:13: sparse:     expected struct task_struct const *p
+   kernel/sched/pelt.h:97:13: sparse:     got struct task_struct [noderef] __rcu *curr
+   kernel/sched/core.c:2183:33: sparse: sparse: dereference of noderef expression
+   kernel/sched/core.c:2184:19: sparse: sparse: dereference of noderef expression
+   kernel/sched/core.c:2185:18: sparse: sparse: dereference of noderef expression
+   kernel/sched/core.c: note: in included file:
+   kernel/sched/sched.h:2053:25: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/sched.h:2053:25: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/sched.h:2053:25: sparse:    struct task_struct *
+   kernel/sched/sched.h:2210:9: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct *
+   kernel/sched/core.c:2158:38: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/core.c:2158:38: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/core.c:2158:38: sparse:    struct task_struct const *
+   kernel/sched/sched.h:2053:25: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/sched.h:2053:25: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/sched.h:2053:25: sparse:    struct task_struct *
+   kernel/sched/sched.h:2210:9: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct *
+   kernel/sched/sched.h:2210:9: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct *
+   kernel/sched/sched.h:2053:25: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/sched.h:2053:25: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/sched.h:2053:25: sparse:    struct task_struct *
+   kernel/sched/sched.h:2210:9: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct *
+   kernel/sched/sched.h:2053:25: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/sched.h:2053:25: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/sched.h:2053:25: sparse:    struct task_struct *
+   kernel/sched/sched.h:2210:9: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct *
+   kernel/sched/sched.h:2053:25: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/sched.h:2053:25: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/sched.h:2053:25: sparse:    struct task_struct *
+   kernel/sched/sched.h:2210:9: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct *
+   kernel/sched/sched.h:2053:25: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/sched.h:2053:25: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/sched.h:2053:25: sparse:    struct task_struct *
+   kernel/sched/sched.h:2210:9: sparse: sparse: incompatible types in comparison expression (different address spaces):
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct [noderef] __rcu *
+   kernel/sched/sched.h:2210:9: sparse:    struct task_struct *
 
-Best regards,
-Jing-Ting Wu
+vim +711 kernel/sched/core.c
 
+   675	
+   676	/*
+   677	 * RQ-clock updating methods:
+   678	 */
+   679	
+   680	static void update_rq_clock_task(struct rq *rq, s64 delta)
+   681	{
+   682	/*
+   683	 * In theory, the compile should just see 0 here, and optimize out the call
+   684	 * to sched_rt_avg_update. But I don't trust it...
+   685	 */
+   686		s64 __maybe_unused steal = 0, irq_delta = 0;
+   687	
+   688	#ifdef CONFIG_IRQ_TIME_ACCOUNTING
+   689		irq_delta = irq_time_read(cpu_of(rq)) - rq->prev_irq_time;
+   690	
+   691		/*
+   692		 * Since irq_time is only updated on {soft,}irq_exit, we might run into
+   693		 * this case when a previous update_rq_clock() happened inside a
+   694		 * {soft,}irq region.
+   695		 *
+   696		 * When this happens, we stop ->clock_task and only update the
+   697		 * prev_irq_time stamp to account for the part that fit, so that a next
+   698		 * update will consume the rest. This ensures ->clock_task is
+   699		 * monotonic.
+   700		 *
+   701		 * It does however cause some slight miss-attribution of {soft,}irq
+   702		 * time, a more accurate solution would be to update the irq_time using
+   703		 * the current rq->clock timestamp, except that would require using
+   704		 * atomic ops.
+   705		 */
+   706		if (irq_delta > delta)
+   707			irq_delta = delta;
+   708	
+   709		rq->prev_irq_time += irq_delta;
+   710		delta -= irq_delta;
+ > 711		psi_account_irqtime(rq->curr, irq_delta);
+   712	#endif
+   713	#ifdef CONFIG_PARAVIRT_TIME_ACCOUNTING
+   714		if (static_key_false((&paravirt_steal_rq_enabled))) {
+   715			steal = paravirt_steal_clock(cpu_of(rq));
+   716			steal -= rq->prev_steal_time_rq;
+   717	
+   718			if (unlikely(steal > delta))
+   719				steal = delta;
+   720	
+   721			rq->prev_steal_time_rq += steal;
+   722			delta -= steal;
+   723		}
+   724	#endif
+   725	
+   726		rq->clock_task += delta;
+   727	
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
