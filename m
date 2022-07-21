@@ -1,296 +1,175 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v5] mm: vmpressure: don't count proactive reclaim in vmpressure
-Date: Thu, 21 Jul 2022 10:35:25 -0700
-Message-ID: <CAJD7tkZVZn4uUNXWSf+ABioUs53xX5VrLTpSPbboJtCJ8ie6_Q@mail.gmail.com>
-References: <20220721173015.2643248-1-yosryahmed@google.com>
+From: Yonghong Song <yhs@fb.com>
+Subject: Re: [PATCH bpf-next v3 4/8] bpf: Introduce cgroup iter
+Date: Thu, 21 Jul 2022 11:15:34 -0700
+Message-ID: <6935de9f-49da-7703-55ae-241a8b838c6c@fb.com>
+References: <20220709000439.243271-1-yosryahmed@google.com>
+ <20220709000439.243271-5-yosryahmed@google.com>
+ <370cb480-a427-4d93-37d9-3c6acd73b967@fb.com>
+ <a6d048b8-d017-ea7e-36f0-1c4f88fc4399@fb.com>
+ <CA+khW7gmVmXMg4YP4fxTtgqNyAr4mQqnXbP=z0nUeQ8=hfGC3g@mail.gmail.com>
+ <2a26b45d-6fab-b2a2-786e-5cb4572219ea@fb.com>
+ <CA+khW7jp+0AadVagqCcV8ELNRphP47vJ6=jGyuMJGnTtYynF+Q@mail.gmail.com>
+ <3f3ffe0e-d2ac-c868-a1bf-cdf1b58fd666@fb.com>
+ <CA+khW7ihQmjwGuVPCEuZ5EXMiMWWaxiAatmjpo1xiaWokUNRGw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Na83GLwCB/Ikgx6Noh8+XTgmPbAsH902ujNlPIOcVGs=;
-        b=r6ULngRB+8GAmdqDStkLE+KPIQ6jRlyj1kHUWzOqRLikp+af39s+28HNFK6dDMQg/I
-         72xDl5Bprlr2S5ykroIVvAuow8pQjxyb1N8Xnbnoqr8Fpjq7vfWA511d0YjOMV9MHJ3j
-         /SfIzlIk9Ut0A44FaVSQiBcOV1XHYaSCRC/MBdCR5sWHhBRzhCV1pntykTCz4jlEP8Zq
-         n5X4JZ2T+l1/ZgalOKP5WmV9OV6hjUAuNhaarPzktnwEFjevhyQL1f9CUwiMX1U9Qm20
-         w3LZ4D0CJ0xiE+OL0KE7lDX56XRVyswCLv5FyLNQDukLh1E/MELykLGtETtwyIaW9bwI
-         LxvQ==
-In-Reply-To: <20220721173015.2643248-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Xu <peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=facebook;
+ bh=yenDaMJACw314ACpk5AfWcDFiqjGF+wzXyECwIp9jlo=;
+ b=O9wpPQ3l+Dd0dqVVwJTULXVV/o4UVHB1l9kcH1pYv7kQHURM25po6pwDb+wUuYEzqYMG
+ oXOkE/CrSLfVLnnTqJIxLr3upeamFuWfN71pb7CLCe/uTPmJKNgryp3D6i1NqQaGcf7+
+ 3hucQD319Vi7STrXzEfk60PyeoZOMcalxFc= 
+Content-Language: en-US
+In-Reply-To: <CA+khW7ihQmjwGuVPCEuZ5EXMiMWWaxiAatmjpo1xiaWokUNRGw@mail.gmail.com>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Hao Luo <haoluo@google.com>
+Cc: Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>, KP Singh <kpsingh@kernel.org>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, John Fastabend <john.fastabend@gmail.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>
 
-Ugh I forgot the changelog and Shakeel's Ack. Sorry Andrew.
 
-On Thu, Jul 21, 2022 at 10:30 AM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> memory.reclaim is a cgroup v2 interface that allows users to
-> proactively reclaim memory from a memcg, without real memory pressure.
-> Reclaim operations invoke vmpressure, which is used:
-> (a) To notify userspace of reclaim efficiency in cgroup v1, and
-> (b) As a signal for a memcg being under memory pressure for networking
-> (see mem_cgroup_under_socket_pressure()).
->
-> For (a), vmpressure notifications in v1 are not affected by this change
-> since memory.reclaim is a v2 feature.
->
-> For (b), the effects of the vmpressure signal (according to Shakeel [1])
-> are as follows:
-> 1. Reducing send and receive buffers of the current socket.
-> 2. May drop packets on the rx path.
-> 3. May throttle current thread on the tx path.
->
-> Since proactive reclaim is invoked directly by userspace, not by
-> memory pressure, it makes sense not to throttle networking. Hence,
-> this change makes sure that proactive reclaim caused by memory.reclaim
-> does not trigger vmpressure.
->
-> [1] https://lore.kernel.org/lkml/CALvZod68WdrXEmBpOkadhB5GPYmCXaDZzXH=yyGOCAjFRn4NDQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
->
-> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
 
-Changes in v5:
-- Rewrote commit log and added documentation of this (Michal).
+On 7/21/22 10:21 AM, Hao Luo wrote:
+> On Thu, Jul 21, 2022 at 9:15 AM Yonghong Song <yhs@fb.com> wrote:
+>>
+>>
+>>
+>> On 7/20/22 5:40 PM, Hao Luo wrote:
+>>> On Mon, Jul 11, 2022 at 8:45 PM Yonghong Song <yhs@fb.com> wrote:
+>>>>
+>>>> On 7/11/22 5:42 PM, Hao Luo wrote:
+>>> [...]
+>>>>>>>> +
+>>>>>>>> +static void *cgroup_iter_seq_start(struct seq_file *seq, loff_t *pos)
+>>>>>>>> +{
+>>>>>>>> +    struct cgroup_iter_priv *p = seq->private;
+>>>>>>>> +
+>>>>>>>> +    mutex_lock(&cgroup_mutex);
+>>>>>>>> +
+>>>>>>>> +    /* support only one session */
+>>>>>>>> +    if (*pos > 0)
+>>>>>>>> +        return NULL;
+>>>>>>>
+>>>>>>> This might be okay. But want to check what is
+>>>>>>> the practical upper limit for cgroups in a system
+>>>>>>> and whether we may miss some cgroups. If this
+>>>>>>> happens, it will be a surprise to the user.
+>>>>>>>
+>>>>>
+>>>>> Ok. What's the max number of items supported in a single session?
+>>>>
+>>>> The max number of items (cgroups) in a single session is determined
+>>>> by kernel_buffer_size which equals to 8 * PAGE_SIZE. So it really
+>>>> depends on how much data bpf program intends to send to user space.
+>>>> If each bpf program run intends to send 64B to user space, e.g., for
+>>>> cpu, memory, cpu pressure, mem pressure, io pressure, read rate, write
+>>>> rate, read/write rate. Then each session can support 512 cgroups.
+>>>>
+>>>
+>>> Hi Yonghong,
+>>>
+>>> Sorry about the late reply. It's possible that the number of cgroup
+>>> can be large, 1000+, in our production environment. But that may not
+>>> be common. Would it be good to leave handling large number of cgroups
+>>> as follow up for this patch? If it turns out to be a problem, to
+>>> alleviate it, we could:
+>>>
+>>> 1. tell users to write program to skip a certain uninteresting cgroups.
+>>> 2. support requesting large kernel_buffer_size for bpf_iter, maybe as
+>>> a new bpf_iter flag.
+>>
+>> Currently if we intend to support multiple read() for cgroup_iter,
+>> the following is a very inefficient approach:
+>>
+>> in seq_file private data structure, remember the last cgroup visited
+>> and for the second read() syscall, do the traversal again (but not
+>> calling bpf program) until the last cgroup and proceed from there.
+>> This is inefficient and probably works. But if the last cgroup is
+>> gone from the hierarchy, that the above approach won't work. One
+>> possibility is to remember the last two cgroups. If the last cgroup
+>> is gone, check the 'next' cgroup based on the one before the last
+>> cgroup. If both are gone, we return NULL.
+>>
+> 
+> I suspect in reality, just remembering the last cgroup (or two
+> cgroups) may not be sufficient. First, I don't want to hold
+> cgroup_mutex across multiple sessions. I assume it's also not safe to
+> release cgroup_mutex in the middle of walking cgroup hierarchy.
+> Supporting multiple read() can be nasty for cgroup_iter.
 
-Changes in v4:
-- Removed unneeded reclaim_options local variables (Andrew).
+Right, holding cgroup_mutex across sessions is not bad idea
+and I didn't recommend it either.
 
-Changes in v3:
-- Limited the vmpressure change to memory.reclaim, dropped psi changes,
-  updated changelog to reflect new behavior (Michal, Shakeel)
+I am aware of remembering last (one or two) cgroups are not
+100% reliable. All other iters have similar issues w.r.t.
+across multiple sessions. But the idea is to find a
+*reasonable* start for the second and later session.
+For example, for task related iter, the previous session
+last tid can be remember and the next session starts
+with next tid after last tid based on idr. Some old
+processes might be gone, but we got a reasonable
+approximation. But cgroup is different, holding
+the cgroup pointer with an additional reference
+across sessions is not good. but holding cgroup
+id requires to traverse the cgroup hierarchy
+again and this is not efficient. Maybe other people
+has a better idea how to do this.
 
-Changes in v2:
-- Removed unnecessary initializations to zero (Andrew).
-- Separate declarations and initializations when it causes line wrapping
-  (Andrew).
+> 
+>> But in any case, if there are additional cgroups not visited,
+>> in the second read(), we should not return NULL which indicates
+>> done with all cgroups. We may return EOPNOTSUPP to indicate there
+>> are missing cgroups due to not supported.
+>>
+>> Once users see EOPNOTSUPP which indicates there are missing
+>> cgroups, they can do more filtering in bpf program to avoid
+>> large data volume to user space.
+>>
+> 
+> Makes sense. Yonghong, one question to confirm, if the first read()
+> overflows, does the user still get partial data?
 
-> ---
->  Documentation/admin-guide/cgroup-v2.rst |  7 +++++++
->  include/linux/swap.h                    |  5 ++++-
->  mm/memcontrol.c                         | 24 +++++++++++++---------
->  mm/vmscan.c                             | 27 ++++++++++++++++---------
->  4 files changed, 42 insertions(+), 21 deletions(-)
->
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index 176298f2f4de..72847462c66d 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -1229,6 +1229,13 @@ PAGE_SIZE multiple when read back.
->         the target cgroup. If less bytes are reclaimed than the
->         specified amount, -EAGAIN is returned.
->
-> +       Please note that the proactive reclaim (triggered by this
-> +       interface) is not meant to indicate memory pressure on the
-> +       memory cgroup. Therefore socket memory balancing triggered by
-> +       the memory reclaim normally is not exercised in this case.
-> +       This means that the networking layer will not adapt based on
-> +       reclaim induced by memory.reclaim.
-> +
->    memory.peak
->         A read-only single value file which exists on non-root
->         cgroups.
-> diff --git a/include/linux/swap.h b/include/linux/swap.h
-> index 0c0fed1b348f..f6e9eaa2339f 100644
-> --- a/include/linux/swap.h
-> +++ b/include/linux/swap.h
-> @@ -411,10 +411,13 @@ extern void lru_cache_add_inactive_or_unevictable(struct page *page,
->  extern unsigned long zone_reclaimable_pages(struct zone *zone);
->  extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
->                                         gfp_t gfp_mask, nodemask_t *mask);
-> +
-> +#define MEMCG_RECLAIM_MAY_SWAP (1 << 1)
-> +#define MEMCG_RECLAIM_PROACTIVE (1 << 2)
->  extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
->                                                   unsigned long nr_pages,
->                                                   gfp_t gfp_mask,
-> -                                                 bool may_swap);
-> +                                                 unsigned int reclaim_options);
->  extern unsigned long mem_cgroup_shrink_node(struct mem_cgroup *mem,
->                                                 gfp_t gfp_mask, bool noswap,
->                                                 pg_data_t *pgdat,
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index a550042d88c3..b668224142c7 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2331,7 +2331,8 @@ static unsigned long reclaim_high(struct mem_cgroup *memcg,
->
->                 psi_memstall_enter(&pflags);
->                 nr_reclaimed += try_to_free_mem_cgroup_pages(memcg, nr_pages,
-> -                                                            gfp_mask, true);
-> +                                                       gfp_mask,
-> +                                                       MEMCG_RECLAIM_MAY_SWAP);
->                 psi_memstall_leave(&pflags);
->         } while ((memcg = parent_mem_cgroup(memcg)) &&
->                  !mem_cgroup_is_root(memcg));
-> @@ -2576,7 +2577,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
->         struct page_counter *counter;
->         unsigned long nr_reclaimed;
->         bool passed_oom = false;
-> -       bool may_swap = true;
-> +       unsigned int reclaim_options = MEMCG_RECLAIM_MAY_SWAP;
->         bool drained = false;
->         unsigned long pflags;
->
-> @@ -2593,7 +2594,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
->                 mem_over_limit = mem_cgroup_from_counter(counter, memory);
->         } else {
->                 mem_over_limit = mem_cgroup_from_counter(counter, memsw);
-> -               may_swap = false;
-> +               reclaim_options &= ~MEMCG_RECLAIM_MAY_SWAP;
->         }
->
->         if (batch > nr_pages) {
-> @@ -2620,7 +2621,7 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
->
->         psi_memstall_enter(&pflags);
->         nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
-> -                                                   gfp_mask, may_swap);
-> +                                                   gfp_mask, reclaim_options);
->         psi_memstall_leave(&pflags);
->
->         if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
-> @@ -3402,8 +3403,8 @@ static int mem_cgroup_resize_max(struct mem_cgroup *memcg,
->                         continue;
->                 }
->
-> -               if (!try_to_free_mem_cgroup_pages(memcg, 1,
-> -                                       GFP_KERNEL, !memsw)) {
-> +               if (!try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL,
-> +                                       memsw ? 0 : MEMCG_RECLAIM_MAY_SWAP)) {
->                         ret = -EBUSY;
->                         break;
->                 }
-> @@ -3513,7 +3514,8 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
->                 if (signal_pending(current))
->                         return -EINTR;
->
-> -               if (!try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL, true))
-> +               if (!try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL,
-> +                                                 MEMCG_RECLAIM_MAY_SWAP))
->                         nr_retries--;
->         }
->
-> @@ -6248,7 +6250,7 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
->                 }
->
->                 reclaimed = try_to_free_mem_cgroup_pages(memcg, nr_pages - high,
-> -                                                        GFP_KERNEL, true);
-> +                                       GFP_KERNEL, MEMCG_RECLAIM_MAY_SWAP);
->
->                 if (!reclaimed && !nr_retries--)
->                         break;
-> @@ -6297,7 +6299,7 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
->
->                 if (nr_reclaims) {
->                         if (!try_to_free_mem_cgroup_pages(memcg, nr_pages - max,
-> -                                                         GFP_KERNEL, true))
-> +                                       GFP_KERNEL, MEMCG_RECLAIM_MAY_SWAP))
->                                 nr_reclaims--;
->                         continue;
->                 }
-> @@ -6426,6 +6428,7 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
->         struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
->         unsigned int nr_retries = MAX_RECLAIM_RETRIES;
->         unsigned long nr_to_reclaim, nr_reclaimed = 0;
-> +       unsigned int reclaim_options;
->         int err;
->
->         buf = strstrip(buf);
-> @@ -6433,6 +6436,7 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
->         if (err)
->                 return err;
->
-> +       reclaim_options = MEMCG_RECLAIM_MAY_SWAP | MEMCG_RECLAIM_PROACTIVE;
->         while (nr_reclaimed < nr_to_reclaim) {
->                 unsigned long reclaimed;
->
-> @@ -6449,7 +6453,7 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
->
->                 reclaimed = try_to_free_mem_cgroup_pages(memcg,
->                                                 nr_to_reclaim - nr_reclaimed,
-> -                                               GFP_KERNEL, true);
-> +                                               GFP_KERNEL, reclaim_options);
->
->                 if (!reclaimed && !nr_retries--)
->                         return -EAGAIN;
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index f7d9a683e3a7..0969e6408a53 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -102,6 +102,9 @@ struct scan_control {
->         /* Can pages be swapped as part of reclaim? */
->         unsigned int may_swap:1;
->
-> +       /* Proactive reclaim invoked by userspace through memory.reclaim */
-> +       unsigned int proactive:1;
-> +
->         /*
->          * Cgroup memory below memory.low is protected as long as we
->          * don't threaten to OOM. If any cgroup is reclaimed at
-> @@ -3125,9 +3128,10 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
->                             sc->priority);
->
->                 /* Record the group's reclaim efficiency */
-> -               vmpressure(sc->gfp_mask, memcg, false,
-> -                          sc->nr_scanned - scanned,
-> -                          sc->nr_reclaimed - reclaimed);
-> +               if (!sc->proactive)
-> +                       vmpressure(sc->gfp_mask, memcg, false,
-> +                                  sc->nr_scanned - scanned,
-> +                                  sc->nr_reclaimed - reclaimed);
->
->         } while ((memcg = mem_cgroup_iter(target_memcg, memcg, NULL)));
->  }
-> @@ -3250,9 +3254,10 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
->         }
->
->         /* Record the subtree's reclaim efficiency */
-> -       vmpressure(sc->gfp_mask, sc->target_mem_cgroup, true,
-> -                  sc->nr_scanned - nr_scanned,
-> -                  sc->nr_reclaimed - nr_reclaimed);
-> +       if (!sc->proactive)
-> +               vmpressure(sc->gfp_mask, sc->target_mem_cgroup, true,
-> +                          sc->nr_scanned - nr_scanned,
-> +                          sc->nr_reclaimed - nr_reclaimed);
->
->         if (sc->nr_reclaimed - nr_reclaimed)
->                 reclaimable = true;
-> @@ -3534,8 +3539,9 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
->                 __count_zid_vm_events(ALLOCSTALL, sc->reclaim_idx, 1);
->
->         do {
-> -               vmpressure_prio(sc->gfp_mask, sc->target_mem_cgroup,
-> -                               sc->priority);
-> +               if (!sc->proactive)
-> +                       vmpressure_prio(sc->gfp_mask, sc->target_mem_cgroup,
-> +                                       sc->priority);
->                 sc->nr_scanned = 0;
->                 shrink_zones(zonelist, sc);
->
-> @@ -3825,7 +3831,7 @@ unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
->  unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
->                                            unsigned long nr_pages,
->                                            gfp_t gfp_mask,
-> -                                          bool may_swap)
-> +                                          unsigned int reclaim_options)
->  {
->         unsigned long nr_reclaimed;
->         unsigned int noreclaim_flag;
-> @@ -3838,7 +3844,8 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
->                 .priority = DEF_PRIORITY,
->                 .may_writepage = !laptop_mode,
->                 .may_unmap = 1,
-> -               .may_swap = may_swap,
-> +               .may_swap = !!(reclaim_options & MEMCG_RECLAIM_MAY_SWAP),
-> +               .proactive = !!(reclaim_options & MEMCG_RECLAIM_PROACTIVE),
->         };
->         /*
->          * Traverse the ZONELIST_FALLBACK zonelist of the current node to put
-> --
-> 2.37.1.359.gd136c6c3e2-goog
->
+Yes, the first read() and subsequent read()'s will be okay
+until user space receives all 8KB data where 8KB is the
+kernel buffer size. For example, if user provides 1KB buffer
+size, the first 8 read() syscalls will return proper data
+to user space.
+
+After that, read() should return
+EOPNOTSUPP instead of return 0 where '0' indicates
+no more data.
+
+
+> 
+> I'll change the return code to EOPNOTSUPP in v4 of this patchset.
+> 
+>> To provide a way to truely visit *all* cgroups,
+>> we can either use bpf_iter link_create->flags
+>> to increase the buffer size as your suggested in the above so
+>> user can try to allocate more kernel buffer size. Or implement
+>> proper second read() traversal which I don't have a good idea
+>> how to do it efficiently.
+> 
+> I will try the buffer size increase first. Looks more doable. Do you
+> mind putting this support as a follow-up?
+
+If we cannot finalize the solution to completely support
+arbitrary user output for cgroup_iter, we need to support
+EOPNOTSUPP so user knows it should adjust the bpf program
+to have less data to user space through seq_file. For example,
+they can put data into mmap-ed array map. Please explain
+such a limitation and how to workaround this in commit
+message clearly.
+
+So yes, to support buffer size increase through link_create
+flags or to support a better way to start iteration after 8KB
+user data can be a followup.
+
+> 
+>>>
+>>> Hao
+>>>
+>>>>>
+>>> [...]
+>>>>>>> [...]
