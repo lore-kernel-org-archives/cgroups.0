@@ -1,281 +1,139 @@
-From: Hao Luo <haoluo@google.com>
-Subject: Re: [PATCH bpf-next v5 4/8] bpf: Introduce cgroup iter
-Date: Fri, 22 Jul 2022 13:33:56 -0700
-Message-ID: <CA+khW7g2kriOb7on0u_UpGpS2A0bftrQowTB0+AJ=S7rpLKaZA@mail.gmail.com>
-References: <20220722174829.3422466-1-yosryahmed@google.com>
- <20220722174829.3422466-5-yosryahmed@google.com> <CAP01T76p7CCj2i4X7PmZiG3G3-Bfx_ygnO0Eg+DnfwLHQiEPbA@mail.gmail.com>
+From: Mingwei Zhang <mizhang-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v4 3/4] KVM: x86/mmu: count KVM mmu usage in secondary
+ pagetable stats.
+Date: Fri, 22 Jul 2022 20:58:59 +0000
+Message-ID: <YtsPk5+hZNMEwT0c@google.com>
+References: <20220429201131.3397875-1-yosryahmed@google.com>
+ <20220429201131.3397875-4-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=hvLylXowG1GfsIqTvKwqcLz1Ag0GJexcuXjizvpMPq8=;
-        b=bxfj665HUGlRJcOgFw5+3Bv2bh+GceeopwN+vbcm37JdCSFUaWy1x4UMJGTDSERv4S
-         /C2HYm1/xkwiZHr93Xmg5SRk13tGZJJt0HBYuU42gZUcfbcUUFDDI+4o0Ghx3Q3w9Kpk
-         7yXNiMyZg6iCRSWSFJ9aOqLpl2D/fb4p+pGN+UnhZKkmIukvjB7SyvzrUjUnqglqBEcr
-         pRIMnFGeSLexUCfqk4YczJgzzlZ/1nE1z//77NMYFmgWFVEA4DtgArVdD2Lx9prg4Gph
-         ECjKs9TO6Uq88zXQDhCK6kQZnZrp0zwzcc4btWq7WV+WD023aYbHSdaNeylAPuxy1zdw
-         JfbA==
-In-Reply-To: <CAP01T76p7CCj2i4X7PmZiG3G3-Bfx_ygnO0Eg+DnfwLHQiEPbA@mail.gmail.com>
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=sRtc60bVHDuSQyy9YfLGbb/EZRQBkQQyTX+neLttrJI=;
+        b=VT9WZjGGoaYO6wyINeAk1IALZT19I8nvGaJlOLvSTsMGMXO2aI48bLngF7CtjZAvoY
+         Nk4dj0ETYHZSQT86zOPNHYg7GeO54xGWEIJhFv/C0BrBO+t5mqhus74Y4xbk+8fyul8M
+         HfArgcswQSvdoHC84nrbwn2mXJxz+9qFiCBQ69YkVOPUHk9BdnilnJfVEOdrt3RS3CJ4
+         +mBwVu+wySOMJ/nQcZ/3u7v3umsb304sjJE7eni7WKU27HJWuFzI6grkrasDGOuFewyR
+         5YIPM89seaz3zWvRqyMCiwRGPEmx5/kbjcwH21G8dckWuQ/kFANi+7LycZSgyao947dV
+         do6A==
+Content-Disposition: inline
+In-Reply-To: <20220429201131.3397875-4-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kumar Kartikeya Dwivedi <memxor@gmail.com>
-Cc: Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>, KP Singh <kpsingh@kernel.org>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, John Fastabend <john.fastabend@gmail.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 
-On Fri, Jul 22, 2022 at 11:36 AM Kumar Kartikeya Dwivedi
-<memxor@gmail.com> wrote:
->
-> On Fri, 22 Jul 2022 at 19:52, Yosry Ahmed <yosryahmed@google.com> wrote:
-> >
-> > From: Hao Luo <haoluo@google.com>
-> >
-> > Cgroup_iter is a type of bpf_iter. It walks over cgroups in three modes:
-> >
-> >  - walking a cgroup's descendants in pre-order.
-> >  - walking a cgroup's descendants in post-order.
-> >  - walking a cgroup's ancestors.
-> >
-> > When attaching cgroup_iter, one can set a cgroup to the iter_link
-> > created from attaching. This cgroup is passed as a file descriptor and
-> > serves as the starting point of the walk. If no cgroup is specified,
-> > the starting point will be the root cgroup.
-> >
-> > For walking descendants, one can specify the order: either pre-order or
-> > post-order. For walking ancestors, the walk starts at the specified
-> > cgroup and ends at the root.
-> >
-> > One can also terminate the walk early by returning 1 from the iter
-> > program.
-> >
-> > Note that because walking cgroup hierarchy holds cgroup_mutex, the iter
-> > program is called with cgroup_mutex held.
-> >
-> > Currently only one session is supported, which means, depending on the
-> > volume of data bpf program intends to send to user space, the number
-> > of cgroups that can be walked is limited. For example, given the current
-> > buffer size is 8 * PAGE_SIZE, if the program sends 64B data for each
-> > cgroup, the total number of cgroups that can be walked is 512. This is
-> > a limitation of cgroup_iter. If the output data is larger than the
-> > buffer size, the second read() will signal EOPNOTSUPP. In order to work
-> > around, the user may have to update their program to reduce the volume
-> > of data sent to output. For example, skip some uninteresting cgroups.
-> > In future, we may extend bpf_iter flags to allow customizing buffer
-> > size.
-> >
-> > Signed-off-by: Hao Luo <haoluo@google.com>
-> > Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> > Acked-by: Yonghong Song <yhs@fb.com>
-> > ---
-> >  include/linux/bpf.h                           |   8 +
-> >  include/uapi/linux/bpf.h                      |  30 +++
-> >  kernel/bpf/Makefile                           |   3 +
-> >  kernel/bpf/cgroup_iter.c                      | 252 ++++++++++++++++++
-> >  tools/include/uapi/linux/bpf.h                |  30 +++
-> >  .../selftests/bpf/prog_tests/btf_dump.c       |   4 +-
-> >  6 files changed, 325 insertions(+), 2 deletions(-)
-> >  create mode 100644 kernel/bpf/cgroup_iter.c
-> >
-> > diff --git a/include/linux/bpf.h b/include/linux/bpf.h
-> > index a97751d845c9..9061618fe929 100644
-> > --- a/include/linux/bpf.h
-> > +++ b/include/linux/bpf.h
-> > @@ -47,6 +47,7 @@ struct kobject;
-> >  struct mem_cgroup;
-> >  struct module;
-> >  struct bpf_func_state;
-> > +struct cgroup;
-> >
-> >  extern struct idr btf_idr;
-> >  extern spinlock_t btf_idr_lock;
-> > @@ -1717,7 +1718,14 @@ int bpf_obj_get_user(const char __user *pathname, int flags);
-> >         int __init bpf_iter_ ## target(args) { return 0; }
-> >
-> >  struct bpf_iter_aux_info {
-> > +       /* for map_elem iter */
-> >         struct bpf_map *map;
-> > +
-> > +       /* for cgroup iter */
-> > +       struct {
-> > +               struct cgroup *start; /* starting cgroup */
-> > +               int order;
-> > +       } cgroup;
-> >  };
-> >
-> >  typedef int (*bpf_iter_attach_target_t)(struct bpf_prog *prog,
-> > diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
-> > index ffcbf79a556b..fe50c2489350 100644
-> > --- a/include/uapi/linux/bpf.h
-> > +++ b/include/uapi/linux/bpf.h
-> > @@ -87,10 +87,30 @@ struct bpf_cgroup_storage_key {
-> >         __u32   attach_type;            /* program attach type (enum bpf_attach_type) */
-> >  };
-> >
-> > +enum bpf_iter_cgroup_traversal_order {
-> > +       BPF_ITER_CGROUP_PRE = 0,        /* pre-order traversal */
-> > +       BPF_ITER_CGROUP_POST,           /* post-order traversal */
-> > +       BPF_ITER_CGROUP_PARENT_UP,      /* traversal of ancestors up to the root */
-> > +};
-> > +
-> >  union bpf_iter_link_info {
-> >         struct {
-> >                 __u32   map_fd;
-> >         } map;
-> > +
-> > +       /* cgroup_iter walks either the live descendants of a cgroup subtree, or the
-> > +        * ancestors of a given cgroup.
-> > +        */
-> > +       struct {
-> > +               /* Cgroup file descriptor. This is root of the subtree if walking
-> > +                * descendants; it's the starting cgroup if walking the ancestors.
-> > +                * If it is left 0, the traversal starts from the default cgroup v2
-> > +                * root. For walking v1 hierarchy, one should always explicitly
-> > +                * specify the cgroup_fd.
-> > +                */
-> > +               __u32   cgroup_fd;
-> > +               __u32   traversal_order;
-> > +       } cgroup;
-> >  };
-> >
-> >  /* BPF syscall commands, see bpf(2) man-page for more details. */
-> > @@ -6136,6 +6156,16 @@ struct bpf_link_info {
-> >                                         __u32 map_id;
-> >                                 } map;
-> >                         };
-> > +                       union {
-> > +                               struct {
-> > +                                       __u64 cgroup_id;
-> > +                                       __u32 traversal_order;
-> > +                               } cgroup;
-> > +                       };
-> > +                       /* For new iters, if the first field is larger than __u32,
-> > +                        * the struct should be added in the second union. Otherwise,
-> > +                        * it will create holes before map_id, breaking uapi.
-> > +                        */
-> >                 } iter;
-> >                 struct  {
-> >                         __u32 netns_ino;
-> > diff --git a/kernel/bpf/Makefile b/kernel/bpf/Makefile
-> > index 057ba8e01e70..00e05b69a4df 100644
-> > --- a/kernel/bpf/Makefile
-> > +++ b/kernel/bpf/Makefile
-> > @@ -24,6 +24,9 @@ endif
-> >  ifeq ($(CONFIG_PERF_EVENTS),y)
-> >  obj-$(CONFIG_BPF_SYSCALL) += stackmap.o
-> >  endif
-> > +ifeq ($(CONFIG_CGROUPS),y)
-> > +obj-$(CONFIG_BPF_SYSCALL) += cgroup_iter.o
-> > +endif
-> >  obj-$(CONFIG_CGROUP_BPF) += cgroup.o
-> >  ifeq ($(CONFIG_INET),y)
-> >  obj-$(CONFIG_BPF_SYSCALL) += reuseport_array.o
-> > diff --git a/kernel/bpf/cgroup_iter.c b/kernel/bpf/cgroup_iter.c
-> > new file mode 100644
-> > index 000000000000..1027faed0b8b
-> > --- /dev/null
-> > +++ b/kernel/bpf/cgroup_iter.c
-> > @@ -0,0 +1,252 @@
-> > +// SPDX-License-Identifier: GPL-2.0-only
-> > +/* Copyright (c) 2022 Google */
-> > +#include <linux/bpf.h>
-> > +#include <linux/btf_ids.h>
-> > +#include <linux/cgroup.h>
-> > +#include <linux/kernel.h>
-> > +#include <linux/seq_file.h>
-> > +
-> > +#include "../cgroup/cgroup-internal.h"  /* cgroup_mutex and cgroup_is_dead */
-> > +
-> > +/* cgroup_iter provides three modes of traversal to the cgroup hierarchy.
-> > + *
-> > + *  1. Walk the descendants of a cgroup in pre-order.
-> > + *  2. Walk the descendants of a cgroup in post-order.
-> > + *  2. Walk the ancestors of a cgroup.
-> > + *
-> > + * For walking descendants, cgroup_iter can walk in either pre-order or
-> > + * post-order. For walking ancestors, the iter walks up from a cgroup to
-> > + * the root.
-> > + *
-> > + * The iter program can terminate the walk early by returning 1. Walk
-> > + * continues if prog returns 0.
-> > + *
-> > + * The prog can check (seq->num == 0) to determine whether this is
-> > + * the first element. The prog may also be passed a NULL cgroup,
-> > + * which means the walk has completed and the prog has a chance to
-> > + * do post-processing, such as outputing an epilogue.
-> > + *
-> > + * Note: the iter_prog is called with cgroup_mutex held.
-> > + *
-> > + * Currently only one session is supported, which means, depending on the
-> > + * volume of data bpf program intends to send to user space, the number
-> > + * of cgroups that can be walked is limited. For example, given the current
-> > + * buffer size is 8 * PAGE_SIZE, if the program sends 64B data for each
-> > + * cgroup, the total number of cgroups that can be walked is 512. This is
-> > + * a limitation of cgroup_iter. If the output data is larger than the
-> > + * buffer size, the second read() will signal EOPNOTSUPP. In order to work
-> > + * around, the user may have to update their program to reduce the volume
-> > + * of data sent to output. For example, skip some uninteresting cgroups.
-> > + */
-> > +
-> > +struct bpf_iter__cgroup {
-> > +       __bpf_md_ptr(struct bpf_iter_meta *, meta);
-> > +       __bpf_md_ptr(struct cgroup *, cgroup);
-> > +};
-> > +
-> > +struct cgroup_iter_priv {
-> > +       struct cgroup_subsys_state *start_css;
-> > +       bool terminate;
-> > +       int order;
-> > +};
-> > +
-> > +static void *cgroup_iter_seq_start(struct seq_file *seq, loff_t *pos)
-> > +{
-> > +       struct cgroup_iter_priv *p = seq->private;
-> > +
-> > +       mutex_lock(&cgroup_mutex);
-> > +
-> > +       /* cgroup_iter doesn't support read across multiple sessions. */
-> > +       if (*pos > 0)
-> > +               return ERR_PTR(-EOPNOTSUPP);
-> > +
-> > +       ++*pos;
-> > +       p->terminate = false;
-> > +       if (p->order == BPF_ITER_CGROUP_PRE)
-> > +               return css_next_descendant_pre(NULL, p->start_css);
-> > +       else if (p->order == BPF_ITER_CGROUP_POST)
-> > +               return css_next_descendant_post(NULL, p->start_css);
-> > +       else /* BPF_ITER_CGROUP_PARENT_UP */
-> > +               return p->start_css;
-> > +}
-> > +
-> > +static int __cgroup_iter_seq_show(struct seq_file *seq,
-> > +                                 struct cgroup_subsys_state *css, int in_stop);
-> > +
-> > +static void cgroup_iter_seq_stop(struct seq_file *seq, void *v)
-> > +{
-> > +       /* pass NULL to the prog for post-processing */
-> > +       if (!v)
-> > +               __cgroup_iter_seq_show(seq, NULL, true);
-> > +       mutex_unlock(&cgroup_mutex);
->
-> I'm just curious, but would it be a good optimization (maybe in a
-> follow up) to move this mutex_unlock before the check on v? That
-> allows you to store/buffer some info you want to print as a compressed
-> struct in a map, then write the full text to the seq_file outside the
-> cgroup_mutex lock in the post-processing invocation.
->
-> It probably also allows you to walk the whole hierarchy, if one
-> doesn't want to run into seq_file buffer limit (or it can decide what
-> to print within the limit in the post processing invocation), or it
-> can use some out of band way (ringbuf, hashmap, etc.) to send the data
-> to userspace. But all of this can happen without holding cgroup_mutex
-> lock.
+On Fri, Apr 29, 2022, Yosry Ahmed wrote:
+> Count the pages used by KVM mmu on x86 for in secondary pagetable stats.
+> 
+> For the legacy mmu, accounting pagetable stats is combined KVM's
+> existing for mmu pages in newly introduced kvm_[un]account_mmu_page()
+> helpers.
+> 
+> For tdp mmu, introduce new tdp_[un]account_mmu_page() helpers. That
+> combines accounting pagetable stats with the tdp_mmu_pages counter
+> accounting.
+> 
+> tdp_mmu_pages counter introduced in this series [1]. This patch was
+> rebased on top of the first two patches in that series.
+> 
+> [1]https://lore.kernel.org/lkml/20220401063636.2414200-1-mizhang-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+> 
+> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
 
-Thanks Kumar.
+It looks like there are two metrics for mmu in x86: one for shadow mmu
+and the other for TDP mmu. Is there any plan to merge them together?
 
-It sounds like an idea, but the key thing is not about moving
-cgroup_mutex unlock before the check IMHO. The user can achieve
-compression using the current infra. Compression could actually be
-done in the bpf program. user can define and output binary content and
-implement a userspace library to parse/decompress when reading out the
-data.
+>  arch/x86/kvm/mmu/mmu.c     | 16 ++++++++++++++--
+>  arch/x86/kvm/mmu/tdp_mmu.c | 16 ++++++++++++++--
+>  2 files changed, 28 insertions(+), 4 deletions(-)
+> 
+> diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
+> index 78d8e1d8fb99..e5b0e826445d 100644
+> --- a/arch/x86/kvm/mmu/mmu.c
+> +++ b/arch/x86/kvm/mmu/mmu.c
+> @@ -1679,6 +1679,18 @@ static inline void kvm_mod_used_mmu_pages(struct kvm *kvm, long nr)
+>  	percpu_counter_add(&kvm_total_used_mmu_pages, nr);
+>  }
+>  
+> +static void kvm_account_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
+> +{
+> +	kvm_mod_used_mmu_pages(kvm, +1);
+> +	kvm_account_pgtable_pages((void *)sp->spt, +1);
+> +}
+> +
+> +static void kvm_unaccount_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
+> +{
+> +	kvm_mod_used_mmu_pages(kvm, -1);
+> +	kvm_account_pgtable_pages((void *)sp->spt, -1);
+> +}
+> +
+>  static void kvm_mmu_free_page(struct kvm_mmu_page *sp)
+>  {
+>  	MMU_WARN_ON(!is_empty_shadow_page(sp->spt));
+> @@ -1734,7 +1746,7 @@ static struct kvm_mmu_page *kvm_mmu_alloc_page(struct kvm_vcpu *vcpu, int direct
+>  	 */
+>  	sp->mmu_valid_gen = vcpu->kvm->arch.mmu_valid_gen;
+>  	list_add(&sp->link, &vcpu->kvm->arch.active_mmu_pages);
+> -	kvm_mod_used_mmu_pages(vcpu->kvm, +1);
+> +	kvm_account_mmu_page(vcpu->kvm, sp);
+>  	return sp;
+>  }
+>  
+> @@ -2363,7 +2375,7 @@ static bool __kvm_mmu_prepare_zap_page(struct kvm *kvm,
+>  			list_add(&sp->link, invalid_list);
+>  		else
+>  			list_move(&sp->link, invalid_list);
+> -		kvm_mod_used_mmu_pages(kvm, -1);
+> +		kvm_unaccount_mmu_page(kvm, sp);
+>  	} else {
+>  		/*
+>  		 * Remove the active root from the active page list, the root
+> diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
+> index 3456277ade18..6295c4da5dee 100644
+> --- a/arch/x86/kvm/mmu/tdp_mmu.c
+> +++ b/arch/x86/kvm/mmu/tdp_mmu.c
+> @@ -371,6 +371,18 @@ static void handle_changed_spte_dirty_log(struct kvm *kvm, int as_id, gfn_t gfn,
+>  	}
+>  }
+>  
+> +static void tdp_account_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
+> +{
+> +	atomic64_inc(&kvm->arch.tdp_mmu_pages);
+> +	kvm_account_pgtable_pages((void *)sp->spt, +1);
+> +}
+> +
+> +static void tdp_unaccount_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
+> +{
+> +	atomic64_dec(&kvm->arch.tdp_mmu_pages);
+> +	kvm_account_pgtable_pages((void *)sp->spt, -1);
+> +}
+> +
+>  /**
+>   * tdp_mmu_unlink_sp() - Remove a shadow page from the list of used pages
+>   *
+> @@ -383,7 +395,7 @@ static void handle_changed_spte_dirty_log(struct kvm *kvm, int as_id, gfn_t gfn,
+>  static void tdp_mmu_unlink_sp(struct kvm *kvm, struct kvm_mmu_page *sp,
+>  			      bool shared)
+>  {
+> -	atomic64_dec(&kvm->arch.tdp_mmu_pages);
+> +	tdp_unaccount_mmu_page(kvm, sp);
+>  
+>  	if (!sp->lpage_disallowed)
+>  		return;
+> @@ -1121,7 +1133,7 @@ static int tdp_mmu_link_sp(struct kvm *kvm, struct tdp_iter *iter,
+>  		tdp_mmu_set_spte(kvm, iter, spte);
+>  	}
+>  
+> -	atomic64_inc(&kvm->arch.tdp_mmu_pages);
+> +	tdp_account_mmu_page(kvm, sp);
+>  
+>  	return 0;
+>  }
+> -- 
+> 2.36.0.464.gb9c8b46e94-goog
+> 
