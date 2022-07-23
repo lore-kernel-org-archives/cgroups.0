@@ -1,139 +1,35 @@
-From: Mingwei Zhang <mizhang-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 3/4] KVM: x86/mmu: count KVM mmu usage in secondary
- pagetable stats.
-Date: Fri, 22 Jul 2022 20:58:59 +0000
-Message-ID: <YtsPk5+hZNMEwT0c@google.com>
-References: <20220429201131.3397875-1-yosryahmed@google.com>
- <20220429201131.3397875-4-yosryahmed@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 3/3 cgroup/for-5.20] cgroup: Make !percpu
+ threadgroup_rwsem operations optional
+Date: Fri, 22 Jul 2022 19:12:07 -1000
+Message-ID: <YtuDJ7DijEEy3PfS@slm.duckdns.org>
+References: <YtDvN0wJ6CKaEPN8@slm.duckdns.org>
+ <YtDvU4jRPSsarcNp@slm.duckdns.org>
+ <YtDvl7Qjc5zI3e/b@slm.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=sRtc60bVHDuSQyy9YfLGbb/EZRQBkQQyTX+neLttrJI=;
-        b=VT9WZjGGoaYO6wyINeAk1IALZT19I8nvGaJlOLvSTsMGMXO2aI48bLngF7CtjZAvoY
-         Nk4dj0ETYHZSQT86zOPNHYg7GeO54xGWEIJhFv/C0BrBO+t5mqhus74Y4xbk+8fyul8M
-         HfArgcswQSvdoHC84nrbwn2mXJxz+9qFiCBQ69YkVOPUHk9BdnilnJfVEOdrt3RS3CJ4
-         +mBwVu+wySOMJ/nQcZ/3u7v3umsb304sjJE7eni7WKU27HJWuFzI6grkrasDGOuFewyR
-         5YIPM89seaz3zWvRqyMCiwRGPEmx5/kbjcwH21G8dckWuQ/kFANi+7LycZSgyao947dV
-         do6A==
+        bh=vQfcrjLQfJsHyJARxdU3O2zsQqRoNOwqh6fsHaYV9SA=;
+        b=WD63DTaXf4JL2gAONMBONT0m5CXaWi5ga05M8g23sp9GgXRD4ohr4/mB9b5nyuKjVU
+         9/voD4gn+EsXbKbNZ9GixOR/zzQw0i6b5CMeeEHM8bAn90lsiBxnK58nTttW8U88/q4T
+         SUZE+IuFRbR7XlLpa5KAySMiHGQhNdY661OhQBnNTvwTDTet2/o3eP0gZPU+IIEXVbOx
+         hGTnippenOJiJkAdOJfN30E26pDGRdb1MrfndfSDxMyA4TpSa1EFcO5l46SQCLFZB9we
+         kOFpvKQVAMzQykhPDydAvQ8yE2P9Uzpajju0qpp0fI1qOphFUzXGaeqA+XSQyw1z9B2w
+         EbcA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20220429201131.3397875-4-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <YtDvl7Qjc5zI3e/b@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Apr 29, 2022, Yosry Ahmed wrote:
-> Count the pages used by KVM mmu on x86 for in secondary pagetable stats.
-> 
-> For the legacy mmu, accounting pagetable stats is combined KVM's
-> existing for mmu pages in newly introduced kvm_[un]account_mmu_page()
-> helpers.
-> 
-> For tdp mmu, introduce new tdp_[un]account_mmu_page() helpers. That
-> combines accounting pagetable stats with the tdp_mmu_pages counter
-> accounting.
-> 
-> tdp_mmu_pages counter introduced in this series [1]. This patch was
-> rebased on top of the first two patches in that series.
-> 
-> [1]https://lore.kernel.org/lkml/20220401063636.2414200-1-mizhang-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
-> 
-> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
+Applying 1-3 to cgroup/for-5.20.
 
-It looks like there are two metrics for mmu in x86: one for shadow mmu
-and the other for TDP mmu. Is there any plan to merge them together?
+Thanks.
 
->  arch/x86/kvm/mmu/mmu.c     | 16 ++++++++++++++--
->  arch/x86/kvm/mmu/tdp_mmu.c | 16 ++++++++++++++--
->  2 files changed, 28 insertions(+), 4 deletions(-)
-> 
-> diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
-> index 78d8e1d8fb99..e5b0e826445d 100644
-> --- a/arch/x86/kvm/mmu/mmu.c
-> +++ b/arch/x86/kvm/mmu/mmu.c
-> @@ -1679,6 +1679,18 @@ static inline void kvm_mod_used_mmu_pages(struct kvm *kvm, long nr)
->  	percpu_counter_add(&kvm_total_used_mmu_pages, nr);
->  }
->  
-> +static void kvm_account_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
-> +{
-> +	kvm_mod_used_mmu_pages(kvm, +1);
-> +	kvm_account_pgtable_pages((void *)sp->spt, +1);
-> +}
-> +
-> +static void kvm_unaccount_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
-> +{
-> +	kvm_mod_used_mmu_pages(kvm, -1);
-> +	kvm_account_pgtable_pages((void *)sp->spt, -1);
-> +}
-> +
->  static void kvm_mmu_free_page(struct kvm_mmu_page *sp)
->  {
->  	MMU_WARN_ON(!is_empty_shadow_page(sp->spt));
-> @@ -1734,7 +1746,7 @@ static struct kvm_mmu_page *kvm_mmu_alloc_page(struct kvm_vcpu *vcpu, int direct
->  	 */
->  	sp->mmu_valid_gen = vcpu->kvm->arch.mmu_valid_gen;
->  	list_add(&sp->link, &vcpu->kvm->arch.active_mmu_pages);
-> -	kvm_mod_used_mmu_pages(vcpu->kvm, +1);
-> +	kvm_account_mmu_page(vcpu->kvm, sp);
->  	return sp;
->  }
->  
-> @@ -2363,7 +2375,7 @@ static bool __kvm_mmu_prepare_zap_page(struct kvm *kvm,
->  			list_add(&sp->link, invalid_list);
->  		else
->  			list_move(&sp->link, invalid_list);
-> -		kvm_mod_used_mmu_pages(kvm, -1);
-> +		kvm_unaccount_mmu_page(kvm, sp);
->  	} else {
->  		/*
->  		 * Remove the active root from the active page list, the root
-> diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
-> index 3456277ade18..6295c4da5dee 100644
-> --- a/arch/x86/kvm/mmu/tdp_mmu.c
-> +++ b/arch/x86/kvm/mmu/tdp_mmu.c
-> @@ -371,6 +371,18 @@ static void handle_changed_spte_dirty_log(struct kvm *kvm, int as_id, gfn_t gfn,
->  	}
->  }
->  
-> +static void tdp_account_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
-> +{
-> +	atomic64_inc(&kvm->arch.tdp_mmu_pages);
-> +	kvm_account_pgtable_pages((void *)sp->spt, +1);
-> +}
-> +
-> +static void tdp_unaccount_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
-> +{
-> +	atomic64_dec(&kvm->arch.tdp_mmu_pages);
-> +	kvm_account_pgtable_pages((void *)sp->spt, -1);
-> +}
-> +
->  /**
->   * tdp_mmu_unlink_sp() - Remove a shadow page from the list of used pages
->   *
-> @@ -383,7 +395,7 @@ static void handle_changed_spte_dirty_log(struct kvm *kvm, int as_id, gfn_t gfn,
->  static void tdp_mmu_unlink_sp(struct kvm *kvm, struct kvm_mmu_page *sp,
->  			      bool shared)
->  {
-> -	atomic64_dec(&kvm->arch.tdp_mmu_pages);
-> +	tdp_unaccount_mmu_page(kvm, sp);
->  
->  	if (!sp->lpage_disallowed)
->  		return;
-> @@ -1121,7 +1133,7 @@ static int tdp_mmu_link_sp(struct kvm *kvm, struct tdp_iter *iter,
->  		tdp_mmu_set_spte(kvm, iter, spte);
->  	}
->  
-> -	atomic64_inc(&kvm->arch.tdp_mmu_pages);
-> +	tdp_account_mmu_page(kvm, sp);
->  
->  	return 0;
->  }
-> -- 
-> 2.36.0.464.gb9c8b46e94-goog
-> 
+-- 
+tejun
