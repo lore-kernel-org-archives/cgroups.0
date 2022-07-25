@@ -1,119 +1,57 @@
-From: Oleg Nesterov <onestero-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH RESEND 3/3 cgroup/for-5.20] cgroup: Make !percpu
  threadgroup_rwsem operations optional
-Date: Mon, 25 Jul 2022 14:12:09 +0200
-Message-ID: <20220725121208.GB28662@redhat.com>
+Date: Mon, 25 Jul 2022 16:16:49 +0200
+Message-ID: <20220725141649.ou7tsntv4xnqtbmc@wittgenstein>
 References: <YtDvN0wJ6CKaEPN8@slm.duckdns.org>
  <YtDvU4jRPSsarcNp@slm.duckdns.org>
  <YtDvl7Qjc5zI3e/b@slm.duckdns.org>
  <YtwFjPnCtw8ySnuv@slm.duckdns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1658751134;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=uoeyod5zDB0ZJ1Q5JYhvmo5sNmJuhZfqcU+zHvGMHKo=;
-        b=Nm9vqG6ljZFhyyrF4H4YRTdIVewd4hbLlIuXFi5IH39WTTR1pANzHjZPN1OSvLkEb3R1Ir
-        le3sno7y7t0JrAGLUKs99evjRCKJY9zlwEzGtfUMxlWlZ8DM1jsmSLNpwty+4VFosrECSf
-        YsdjJ2SkfeNjJCH0Oqafb9V9npDVVbw=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1658758614;
+        bh=p9/gFb1902RLnmreUeNFAHcbKgrOvbu9N0D0jG7+uBE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=AkOKY3UMzdkfecaitmz6IXmVhF5eNwiBrQE/mS4uiWu2IL70SzLVLCisC10ETcVtI
+         enMoVGVUa76JLUafYZ7b+snwHVt6YHktjb+0COvfAyK44Jc/bmBGa0ivJ5KLrmz4jY
+         RuCK5I8BIFEWanDSM1IHJImxMAj3y5K+Z1ulenmactWnPMMG2huJGlONVz0agoXahA
+         /KtXIk8smhLeMBRh2brDlTf56bx9iirwtnFhOOkLn/Crgy7zEFiAxUXXQuzv62r3z3
+         mJRjANXJft/74cvd9pymtRgZBano2iJxOsLU02p72Ymcsgjc3Bewp86Gs2F1WP+dEi
+         m2LhCzQRgnEOQ==
 Content-Disposition: inline
 In-Reply-To: <YtwFjPnCtw8ySnuv-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="macroman"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 07/23, Tejun Heo wrote:
->
-> +void cgroup_favor_dynmods(struct cgroup_root *root, bool favor)
-> +{
-> +	bool favoring = root->flags & CGRP_ROOT_FAVOR_DYNMODS;
-> +
-> +	/* see the comment above CGRP_ROOT_FAVOR_DYNMODS definition */
-> +	if (favor && !favoring) {
-> +		rcu_sync_enter(&cgroup_threadgroup_rwsem.rss);
-> +		root->flags |= CGRP_ROOT_FAVOR_DYNMODS;
-> +	} else if (!favor && favoring) {
-> +		rcu_sync_exit(&cgroup_threadgroup_rwsem.rss);
-> +		root->flags &= ~CGRP_ROOT_FAVOR_DYNMODS;
-> +	}
-> +}
-
-I see no problems in this patch. But just for record, we do not need
-synchronize_rcu() in the "favor && !favoring" case, so we cab probably
-do something like
-
-	--- a/kernel/rcu/sync.c
-	+++ b/kernel/rcu/sync.c
-	@@ -118,7 +118,7 @@ static void rcu_sync_func(struct rcu_head *rhp)
-	  * optimize away the grace-period wait via a state machine implemented
-	  * by rcu_sync_enter(), rcu_sync_exit(), and rcu_sync_func().
-	  */
-	-void rcu_sync_enter(struct rcu_sync *rsp)
-	+void __rcu_sync_enter(struct rcu_sync *rsp, bool wait)
-	 {
-		int gp_state;
-	 
-	@@ -146,13 +146,20 @@ void rcu_sync_enter(struct rcu_sync *rsp)
-			 * See the comment above, this simply does the "synchronous"
-			 * call_rcu(rcu_sync_func) which does GP_ENTER -> GP_PASSED.
-			 */
-	-		synchronize_rcu();
-	-		rcu_sync_func(&rsp->cb_head);
-	-		/* Not really needed, wait_event() would see GP_PASSED. */
-	-		return;
-	+		if (wait) {
-	+			synchronize_rcu();
-	+			rcu_sync_func(&rsp->cb_head);
-	+		} else {
-	+			rcu_sync_call(rsp);
-	+		}
-	+	} else if (wait) {
-	+		wait_event(rsp->gp_wait, READ_ONCE(rsp->gp_state) >= GP_PASSED);
-		}
-	+}
-	 
-	-	wait_event(rsp->gp_wait, READ_ONCE(rsp->gp_state) >= GP_PASSED);
-	+void rcu_sync_enter(struct rcu_sync *rsp)
-	+{
-	+	__rcu_sync_enter(rsp, true);
-	 }
-	 
-	 /**
-
-later.
-
-__rcu_sync_enter(rsp, false) works just like rcu_sync_enter_start() but it can
-be safely called at any moment.
-
-And can't resist, off-topic question... Say, cgroup_attach_task_all() does
-
-	mutex_lock(&cgroup_mutex);
-	percpu_down_write(&cgroup_threadgroup_rwsem);
-
-and this means that synchronize_rcu() can be called with cgroup_mutex held.
-Perhaps it makes sense to change this code to do
-
-	rcu_sync_enter(&cgroup_threadgroup_rwsem.rss);
-	mutex_lock(&cgroup_mutex);
-	percpu_down_write(&cgroup_threadgroup_rwsem);
-	...
-	percpu_up_write(&cgroup_threadgroup_rwsem);
-	mutex_unlock(&cgroup_mutex);
-	rcu_sync_exit(&cgroup_threadgroup_rwsem.rss);
-
-? Just curious.
-
-> -	/*
-> -	 * The latency of the synchronize_rcu() is too high for cgroups,
-> -	 * avoid it at the cost of forcing all readers into the slow path.
-> -	 */
-> -	rcu_sync_enter_start(&cgroup_threadgroup_rwsem.rss);
-
-Note that it doesn't have other users, probably you can kill it.
-
-Oleg.
-
+T24gU2F0LCBKdWwgMjMsIDIwMjIgYXQgMDQ6Mjg6MjhBTSAtMTAwMCwgVGVqdW4gSGVvIHdyb3Rl
+Ogo+IDM5NDJhOWJkN2I1OCAoImxvY2tpbmcsIHJjdSwgY2dyb3VwOiBBdm9pZCBzeW5jaHJvbml6
+ZV9zY2hlZCgpIGluCj4gX19jZ3JvdXBfcHJvY3Nfd3JpdGUoKSIpIGRpc2FibGVkIHBlcmNwdSBv
+cGVyYXRpb25zIG9uIHRocmVhZGdyb3VwX3J3c2VtCj4gYmVjYXVzZSB0aGUgaW1waWxlZCBzeW5j
+aHJvbml6ZV9yY3UoKSBvbiB3cml0ZSBsb2NraW5nIHdhcyBwdXNoaW5nIHVwIHRoZQo+IGxhdGVu
+Y2llcyB0b28gbXVjaCBmb3IgYW5kcm9pZCB3aGljaCBjb25zdGFudGx5IG1vdmVzIHByb2Nlc3Nl
+cyBiZXR3ZWVuCj4gY2dyb3Vwcy4KPiAKPiBUaGlzIG1ha2VzIHRoZSBob3R0ZXIgcGF0aHMgLSBm
+b3JrIGFuZCBleGl0IC0gc2xvd2VyIGFzIHRoZXkncmUgYWx3YXlzCj4gZm9yY2VkIGludG8gdGhl
+IHNsb3cgcGF0aC4gVGhlcmUgaXMgbm8gcmVhc29uIHRvIGZvcmNlIHRoaXMgb24gZXZlcnlvbmUK
+PiBlc3BlY2lhbGx5IGdpdmVuIHRoYXQgbW9yZSBjb21tb24gc3RhdGljIHVzYWdlIHBhdHRlcm4g
+Y2FuIG5vdyBjb21wbGV0ZWx5Cj4gYXZvaWQgd3JpdGUtbG9ja2luZyB0aGUgcndzZW0uIFdyaXRl
+LWxvY2tpbmcgaXMgZWxpZGVkIHdoZW4gdHVybmluZyBvbiBhbmQKPiBvZmYgY29udHJvbGxlcnMg
+b24gZW1wdHkgc3ViLXRyZWVzIGFuZCBDTE9ORV9JTlRPX0NHUk9VUCBlbmFibGVzIHNlZWRpbmcg
+YQo+IGNncm91cCB3aXRob3V0IGdyYWJiaW5nIHRoZSByd3NlbS4KPiAKPiBSZXN0b3JlIHRoZSBk
+ZWZhdWx0IHBlcmNwdSBvcGVyYXRpb25zIGFuZCBpbnRyb2R1Y2UgdGhlIG1vdW50IG9wdGlvbgo+
+ICJmYXZvcmR5bm1vZHMiIGFuZCBjb25maWcgb3B0aW9uIENHUk9VUF9GQVZPUl9EWU5NT0RTIGZv
+ciB1c2VycyB3aG8gbmVlZAo+IGxvd2VyIGxhdGVuY2llcyBmb3IgdGhlIGR5bmFtaWMgb3BlcmF0
+aW9ucy4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBUZWp1biBIZW8gPHRqLURnRWpUK0FpMnlnZG5tK3lS
+T2ZFMEFAcHVibGljLmdtYW5lLm9yZz4KPiBDYzogQ2hyaXN0aWFuIEJyYXVuZXIgPGJyYXVuZXIt
+RGdFalQrQWkyeWdkbm0reVJPZkUwQUBwdWJsaWMuZ21hbmUub3JnPgo+IENjOiBNaWNoYWwgS291
+dG7DvSA8bWtvdXRueS1JQmk5UkcvYjY3a0BwdWJsaWMuZ21hbmUub3JnPgo+IENjOiBQZXRlciBa
+aWpsc3RyYSA8cGV0ZXJ6LXdFR0NpS0hlMkxxV1ZmZUF3QTd4SFFAcHVibGljLmdtYW5lLm9yZz4K
+PiBDYzogSm9obiBTdHVsdHogPGpvaG4uc3R1bHR6LVFTRWo1RllRaG00ZG5tK3lST2ZFMEFAcHVi
+bGljLmdtYW5lLm9yZz4KPiBDYzogRG1pdHJ5IFNobWlkdCA8ZGltaXRyeXNoLWhwSXFzRDRBS2xm
+UVQwZFpSK0FsZkFAcHVibGljLmdtYW5lLm9yZz4KPiBDYzogT2xlZyBOZXN0ZXJvdiA8b2xlZy1I
+K3dYYUh4ZjdhTFFUMGRaUitBbGZBQHB1YmxpYy5nbWFuZS5vcmc+Cj4gLS0tCgpTZWVtcyBzYW5l
+LApBY2tlZC1ieTogQ2hyaXN0aWFuIEJyYXVuZXIgKE1pY3Jvc29mdCkgPGJyYXVuZXItRGdFalQr
+QWkyeWdkbm0reVJPZkUwQUBwdWJsaWMuZ21hbmUub3JnPgo=
