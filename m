@@ -1,55 +1,209 @@
-From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH 8/9] sched/psi: add kernel cmdline
- parameter psi_inner_cgroup
-Date: Tue, 26 Jul 2022 21:38:18 +0800
-Message-ID: <a2bd997b-fc81-ca1c-3d65-99fbd34cfba7@bytedance.com>
+From: Chengming Zhou <zhouchengming@bytedance.com>
+Subject: Re: [External] Re: [PATCH 9/9] sched/psi: add PSI_IRQ to track
+ IRQ/SOFTIRQ pressure
+Date: Tue, 26 Jul 2022 21:55:52 +0800
+Message-ID: <1fa5ebfa-b441-f42c-b721-544458b93cd0@bytedance.com>
 References: <20220721040439.2651-1-zhouchengming@bytedance.com>
- <20220721040439.2651-9-zhouchengming@bytedance.com>
- <Yt7KQc0nnOypB2b2@cmpxchg.org>
+ <20220721040439.2651-10-zhouchengming@bytedance.com>
+ <Yt7gOhbqYzIKyhfv@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
         h=message-id:date:mime-version:user-agent:subject:content-language:to
          :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=tmctZBFguTrS1b7yrub84YkQuENPO2e8gipTSbzISyU=;
-        b=fmzUdvxIgopv0HByWJp3GWf71zq/2KhCxgsN7JSU50LfrTaG85+Izym6Tk8RjqUPns
-         7y9QLsMx6dZ0PN/ksMUXgLHVdtm9xer5hIMN2AA760oK2BYKVCmjXEt0VTP8UO4wL4ER
-         jpUqUvJqt3XBCs9UUjuBd6lR4T6WE0rgM2zD7qH1B7rNnwfKbwnstYSn3Vg1e2QK4XBP
-         odPJhd1ETh9sbQm+nRuVeGJ/zPMUdLwL5O3KhETlMrBsxHTf1vEzUgqPBXLE9aEPXStx
-         IA6EKzZinS/QP0aFF246XBW0oeybrj69iPq/6mKd8R6ZMUhJe0P3dn4iyjmrLshA4OxB
-         Y56g==
+        bh=tIOWG9s1e92ioNrCIhQiWnhjfykkKqEOovZ30+o7rsY=;
+        b=z34578kv4QOUyL7TvZFzZpPA4AYzA6Gu2O5I8HXV4tntB7q/NM4+Bv8UgrT0NoxnCi
+         Wk7E+VLDegKGumqa7x9ETTh7OoqaEcwJIOsnkabVesBS94Z9AqePzXmoiZb/lZt4d8vo
+         lctw/epQkSukMGXL4Qd1pHG5fSyR5/r8OO34EoZPfnRpF9iGCstcJQnnoF3ZrzLrzv8/
+         ytgE508NcxPz4KF8OigDa5QfQtbqDeKPPSxkjw/hw2wvxTERH+6blZaunmuEKHxboZfZ
+         8Gkcu2YvLz2iMglP3GD70i0sS/lAeJ5paWVpcUl7+BDFUZOHJ6ZXs30Dw04tvvyWF1Ik
+         6WUQ==
 Content-Language: en-US
-In-Reply-To: <Yt7KQc0nnOypB2b2-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <Yt7gOhbqYzIKyhfv@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: surenb@google.com, mingo@redhat.com, peterz@infradead.org, tj@kernel.org, corbet@lwn.net, akpm@linux-foundation.org, rdunlap@infradead.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com, cgroups@vger.kernel.org
 
-On 2022/7/26 00:52, Johannes Weiner wrote:
-> On Thu, Jul 21, 2022 at 12:04:38PM +0800, Chengming Zhou wrote:
->> PSI accounts stalls for each cgroup separately and aggregates it
->> at each level of the hierarchy. This may case non-negligible overhead
->> for some workloads when under deep level of the hierarchy.
+On 2022/7/26 02:26, Johannes Weiner wrote:
+> On Thu, Jul 21, 2022 at 12:04:39PM +0800, Chengming Zhou wrote:
+>> Now PSI already tracked workload pressure stall information for
+>> CPU, memory and IO. Apart from these, IRQ/SOFTIRQ could have
+>> obvious impact on some workload productivity, such as web service
+>> workload.
 >>
->> commit 3958e2d0c34e ("cgroup: make per-cgroup pressure stall tracking configurable")
->> make PSI to skip per-cgroup stall accounting, only account system-wide
->> to avoid this each level overhead.
+>> When CONFIG_IRQ_TIME_ACCOUNTING, we can get IRQ/SOFTIRQ delta time
+>> from update_rq_clock_task(), in which we can record that delta
+>> to CPU curr task's cgroups as PSI_IRQ_FULL status.
 >>
->> For our use case, we also want leaf cgroup PSI accounted for userspace
->> adjustment on that cgroup, apart from only system-wide management.
+>> Note we don't use PSI_IRQ_SOME since IRQ/SOFTIRQ always happen in
+>> the current task on the CPU, make nothing productive could run
+>> even if it were runnable, so we only use PSI_IRQ_FULL.
 > 
-> I hear the overhead argument. But skipping accounting in intermediate
-> levels is a bit odd and unprecedented in the cgroup interface. Once we
-> do this, it's conceivable people would like to do the same thing for
-> other stats and accounting, like for instance memory.stat.
+> That sounds reasonable.
+> 
+>> For performance impact consideration, this is enabled by default when
+>> CONFIG_IRQ_TIME_ACCOUNTING, but can be disabled by kernel cmdline
+>> parameter "psi_irq=".
+> 
+> If there isn't a concrete usecase already, let's not add another
+> commandline parameter for now.
 
-Right, it's a bit odd... We don't use PSI stats in intermediate levels
-in our use case, but don't know what other use scenarios are. If they are
-useful for other people, this patch can be dropped.
-
-Thanks.
+Ok, will remove it.
 
 > 
-> Tejun, what are your thoughts on this?
+>> @@ -63,9 +64,11 @@ enum psi_states {
+>>  	PSI_MEM_FULL,
+>>  	PSI_CPU_SOME,
+>>  	PSI_CPU_FULL,
+>> +	PSI_IRQ_SOME,
+>> +	PSI_IRQ_FULL,
+>>  	/* Only per-CPU, to weigh the CPU in the global average: */
+>>  	PSI_NONIDLE,
+>> -	NR_PSI_STATES = 7,
+>> +	NR_PSI_STATES = 9,
+>>  };
+> 
+> Unfortunately, this grows the psi state touched by the scheduler into
+> a second cacheline. :( Please reclaim space first.
+
+Thank you for pointing this out!
+
+> 
+> I think we can remove the NR_CPU task count, which frees up one
+> u32. Something like the below diff should work (untested!)
+> 
+> And you should be able to remove PSI_IRQ_SOME, since it's not used
+> anyway. Then we'd be good to go.
+
+Very good solution for this, I will test it later.
+
+Thanks!
+
+> 
+> diff --git a/include/linux/psi_types.h b/include/linux/psi_types.h
+> index c7fe7c089718..31dc76e2d8ea 100644
+> --- a/include/linux/psi_types.h
+> +++ b/include/linux/psi_types.h
+> @@ -15,13 +15,6 @@ enum psi_task_count {
+>  	NR_IOWAIT,
+>  	NR_MEMSTALL,
+>  	NR_RUNNING,
+> -	/*
+> -	 * This can't have values other than 0 or 1 and could be
+> -	 * implemented as a bit flag. But for now we still have room
+> -	 * in the first cacheline of psi_group_cpu, and this way we
+> -	 * don't have to special case any state tracking for it.
+> -	 */
+> -	NR_ONCPU,
+>  	/*
+>  	 * For IO and CPU stalls the presence of running/oncpu tasks
+>  	 * in the domain means a partial rather than a full stall.
+> @@ -39,9 +32,11 @@ enum psi_task_count {
+>  #define TSK_IOWAIT	(1 << NR_IOWAIT)
+>  #define TSK_MEMSTALL	(1 << NR_MEMSTALL)
+>  #define TSK_RUNNING	(1 << NR_RUNNING)
+> -#define TSK_ONCPU	(1 << NR_ONCPU)
+>  #define TSK_MEMSTALL_RUNNING	(1 << NR_MEMSTALL_RUNNING)
+>  
+> +/* Only one task can be scheduled, no corresponding task count */
+> +#define TSK_ONCPU	(1 << NR_PSI_TASK_COUNTS)
+> +
+>  /* Resources that workloads could be stalled on */
+>  enum psi_res {
+>  	PSI_IO,
+> diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+> index a4fa3aadfcba..232e1dbfad46 100644
+> --- a/kernel/sched/psi.c
+> +++ b/kernel/sched/psi.c
+> @@ -215,7 +215,7 @@ void __init psi_init(void)
+>  	group_init(&psi_system);
+>  }
+>  
+> -static bool test_state(unsigned int *tasks, enum psi_states state)
+> +static bool test_state(unsigned int *tasks, enum psi_states state, bool oncpu)
+>  {
+>  	switch (state) {
+>  	case PSI_IO_SOME:
+> @@ -228,9 +228,9 @@ static bool test_state(unsigned int *tasks, enum psi_states state)
+>  		return unlikely(tasks[NR_MEMSTALL] &&
+>  			tasks[NR_RUNNING] == tasks[NR_MEMSTALL_RUNNING]);
+>  	case PSI_CPU_SOME:
+> -		return unlikely(tasks[NR_RUNNING] > tasks[NR_ONCPU]);
+> +		return unlikely(tasks[NR_RUNNING] > oncpu);
+>  	case PSI_CPU_FULL:
+> -		return unlikely(tasks[NR_RUNNING] && !tasks[NR_ONCPU]);
+> +		return unlikely(tasks[NR_RUNNING] && !oncpu);
+>  	case PSI_NONIDLE:
+>  		return tasks[NR_IOWAIT] || tasks[NR_MEMSTALL] ||
+>  			tasks[NR_RUNNING];
+> @@ -692,9 +692,9 @@ static void psi_group_change(struct psi_group *group, int cpu,
+>  			     bool wake_clock)
+>  {
+>  	struct psi_group_cpu *groupc;
+> -	u32 state_mask = 0;
+>  	unsigned int t, m;
+>  	enum psi_states s;
+> +	u32 state_mask;
+>  
+>  	groupc = per_cpu_ptr(group->pcpu, cpu);
+>  
+> @@ -710,6 +710,26 @@ static void psi_group_change(struct psi_group *group, int cpu,
+>  
+>  	record_times(groupc, now);
+>  
+> +	/*
+> +	 * Start with TSK_ONCPU, which doesn't have a corresponding
+> +	 * task count - it's just a boolean flag directly encoded in
+> +	 * the state mask. Clear, set, or carry the current state if
+> +	 * no changes are requested.
+> +	 */
+> +	if (clear & TSK_ONCPU) {
+> +		state_mask = 0;
+> +		clear &= ~TSK_ONCPU;
+> +	} else if (set & TSK_ONCPU) {
+> +		state_mask = TSK_ONCPU;
+> +		set &= ~TSK_ONCPU;
+> +	} else {
+> +		state_mask = groupc->state_mask & TSK_ONCPU;
+> +	}
+> +
+> +	/*
+> +	 * The rest of the state mask is calculated based on the task
+> +	 * counts. Update those first, then construct the mask.
+> +	 */
+>  	for (t = 0, m = clear; m; m &= ~(1 << t), t++) {
+>  		if (!(m & (1 << t)))
+>  			continue;
+> @@ -729,9 +749,8 @@ static void psi_group_change(struct psi_group *group, int cpu,
+>  		if (set & (1 << t))
+>  			groupc->tasks[t]++;
+>  
+> -	/* Calculate state mask representing active states */
+>  	for (s = 0; s < NR_PSI_STATES; s++) {
+> -		if (test_state(groupc->tasks, s))
+> +		if (test_state(groupc->tasks, s, state_mask & TSK_ONCPU))
+>  			state_mask |= (1 << s);
+>  	}
+>  
+> @@ -743,7 +762,7 @@ static void psi_group_change(struct psi_group *group, int cpu,
+>  	 * task in a cgroup is in_memstall, the corresponding groupc
+>  	 * on that cpu is in PSI_MEM_FULL state.
+>  	 */
+> -	if (unlikely(groupc->tasks[NR_ONCPU] && cpu_curr(cpu)->in_memstall))
+> +	if (unlikely((state_mask & TSK_ONCPU) && cpu_curr(cpu)->in_memstall))
+>  		state_mask |= (1 << PSI_MEM_FULL);
+>  
+>  	groupc->state_mask = state_mask;
+> @@ -847,7 +866,8 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
+>  		iter = NULL;
+>  		while ((group = iterate_groups(next, &iter))) {
+>  			if (identical_state &&
+> -			    per_cpu_ptr(group->pcpu, cpu)->tasks[NR_ONCPU]) {
+> +			    (per_cpu_ptr(group->pcpu, cpu)->state_mask &
+> +			     TSK_ONCPU)) {
+>  				common = group;
+>  				break;
+>  			}
