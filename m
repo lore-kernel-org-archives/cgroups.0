@@ -1,34 +1,83 @@
-From: syzbot <syzbot+3ba0493d523d007b3819@syzkaller.appspotmail.com>
-Subject: Re: [syzbot] INFO: rcu detected stall in net_tx_action
-Date: Tue, 26 Jul 2022 08:50:09 -0700
-Message-ID: <0000000000004bee3605e4b74106@google.com>
-References: <00000000000026864605c611cc51@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH RESEND 3/3 cgroup/for-5.20] cgroup: Make !percpu
+ threadgroup_rwsem operations optional
+Date: Tue, 26 Jul 2022 07:33:22 -1000
+Message-ID: <YuAlYlPTMbuDjINF@slm.duckdns.org>
+References: <YtDvN0wJ6CKaEPN8@slm.duckdns.org>
+ <YtDvU4jRPSsarcNp@slm.duckdns.org>
+ <YtDvl7Qjc5zI3e/b@slm.duckdns.org>
+ <YtwFjPnCtw8ySnuv@slm.duckdns.org>
+ <20220726143257.GA23882@blackbody.suse.cz>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <00000000000026864605c611cc51@google.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=csi8DKhXQqGuLjHDX+zKw1RSlMGZo6HFF9ZyuowCuq4=;
+        b=U/SdxptusQuSzFDIruTYLSWMcIba2U5OWiLGu6pkSYGjb1Nx+wNeOoSNQjBOMkxTKz
+         zXq9A7gaHKIYjoND1POiRg2zHsufOsMWHHkUyfhwXmVE2gDM5PI+lb8bJX77ZshlVSQ3
+         BD/GGKqArAy8NjtbJgFpXv+4ypVe67LSLaNtXmXAf4e07P01qocpHVaitOV1Dt74CRmh
+         5iHsteyTsCkZfWuARYvMkM5T0Z9VWKmGwohbrXhhqpaBWb035bzWnKwrHMieeFGdVRWn
+         nRQLftN8+acOuqZpW5qWFezxRsXd+GHg9ojbmsZZUUqBS684vqgS93NXMfDN0V3j1rTM
+         O2SA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20220726143257.GA23882-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk, cgroups@vger.kernel.org, fweisbec@gmail.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ming.lei@redhat.com, mingo@kernel.org, netdev@vger.kernel.org, syzkaller-bugs@googlegroups.com, tglx@linutronix.de, tj@kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-syzbot suspects this issue was fixed by commit:
+Hello,
 
-commit 0a9a25ca78437b39e691bcc3dc8240455b803d8d
-Author: Ming Lei <ming.lei@redhat.com>
-Date:   Fri Mar 18 13:01:43 2022 +0000
+On Tue, Jul 26, 2022 at 04:32:57PM +0200, Michal Koutn=FD wrote:
+> On Sat, Jul 23, 2022 at 04:28:28AM -1000, Tejun Heo <tj-DgEjT+Ai2ygdnm+yR=
+OfE0A@public.gmane.org> wrote:
+> > This makes the hotter paths - fork and exit - slower as they're always
+> > forced into the slow path. There is no reason to force this on everyone
+> > especially given that more common static usage pattern can now complete=
+ly
+> > avoid write-locking the rwsem. Write-locking is elided when turning on =
+and
+> > off controllers on empty sub-trees and CLONE_INTO_CGROUP enables seedin=
+g a
+> > cgroup without grabbing the rwsem.
+>=20
+> Just a practical note that CLONE_INTO_CGROUP may not be so widespread
+> yet [1][2].
+> But generally, the change makes sense to me.
 
-    block: let blkcg_gq grab request queue's refcnt
+Yeah, I was disappoinetd that it wasn't being used by systemd already. It'd
+be great if the glibc situation can be rectified soon because this is a much
+better interface.
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=1004f05a080000
-start commit:   d6765985a42a Revert "be2net: disable bh with spin_lock in ..
-git tree:       net
-kernel config:  https://syzkaller.appspot.com/x/.config?x=7ca96a2d153c74b0
-dashboard link: https://syzkaller.appspot.com/bug?extid=3ba0493d523d007b3819
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=14c9edc8300000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=172463c8300000
+> > +	CGRP_ROOT_FAVOR_DYNMODS =3D (1 << 4),
+> > +
+> > +	/*
+> >  	 * Enable cpuset controller in v1 cgroup to use v2 behavior.
+> >  	 */
+> > -	CGRP_ROOT_CPUSET_V2_MODE =3D (1 << 4),
+> > +	CGRP_ROOT_CPUSET_V2_MODE =3D (1 << 16),
+> > =20
+> >  	/*
+> >  	 * Enable legacy local memory.events.
+> >  	 */
+> > -	CGRP_ROOT_MEMORY_LOCAL_EVENTS =3D (1 << 5),
+> > +	CGRP_ROOT_MEMORY_LOCAL_EVENTS =3D (1 << 17),
+> > =20
+> >  	/*
+> >  	 * Enable recursive subtree protection
+> >  	 */
+> > -	CGRP_ROOT_MEMORY_RECURSIVE_PROT =3D (1 << 6),
+> > +	CGRP_ROOT_MEMORY_RECURSIVE_PROT =3D (1 << 18),
+>=20
+> Why this new gap in flag bits?
 
-If the result looks correct, please mark the issue as fixed by replying with:
+To distinguish core and per-controller flags.
 
-#syz fix: block: let blkcg_gq grab request queue's refcnt
+Thanks.
 
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+--=20
+tejun
