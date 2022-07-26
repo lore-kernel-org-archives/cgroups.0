@@ -1,105 +1,86 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH RESEND 3/3 cgroup/for-5.20] cgroup: Make !percpu
- threadgroup_rwsem operations optional
-Date: Tue, 26 Jul 2022 13:14:09 -1000
-Message-ID: <YuB1QW6Kce5nkBu6@slm.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/3 cgroup/for-5.20] cgroup: Add "no" prefixed mount
+ options
+Date: Tue, 26 Jul 2022 13:30:40 -1000
+Message-ID: <YuB5ICv3bXsy5Xuh@slm.duckdns.org>
 References: <YtDvN0wJ6CKaEPN8@slm.duckdns.org>
  <YtDvU4jRPSsarcNp@slm.duckdns.org>
- <YtDvl7Qjc5zI3e/b@slm.duckdns.org>
- <YtwFjPnCtw8ySnuv@slm.duckdns.org>
- <20220725121208.GB28662@redhat.com>
+ <20220726143246.GA23794@blackbody.suse.cz>
+ <YuBIACfZDk72yjI3@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc;
-        bh=dENzbJt1guxesUSDXfqIuUH8HSBp0gL0djmYPEroaFo=;
-        b=T4rpXUuAvUynX4msd8KQnGEVJFSRIl5nzM/D3tRhWXKZc4ZJ5DUwfEC9QgGv/5xjXW
-         E6OAd6kkjYfFhdUM30igCr8XSn8lYDFiONlfDj4/9doWZZTUYYHQEFax0ApOkxFlS65z
-         wqNL2mruoIffrmifwfHPILKEt769Nsp3IR0YSnkklSM9ptR2euVO7k2KtnqRz4cax2I1
-         LTIuhLlQcq3TJ4TeDbr9kEK73CSVnQNNBWpbttRTpZP7j0kMtWJ0iii+mbTiJwSsGp4Z
-         L5iscMqS/X8AZMaWDLqzWPsVAPMNdg4ZXBTwTOe49qOCsiwF9J28bxOMs76GMwM7wn2q
-         IVIw==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:sender
+         :from:to:cc;
+        bh=IWWxn3X0jnsR94h+cZ81QPmnOmsG3z0u/cykcxbxqQk=;
+        b=mBWyIaZ3887OTEur8s1YPqKZsGf3UyXWCMl0JX9K3rbdQIfEVIfq7cXTx+hHgeTbZh
+         y+BDnqiaRAskVnICRetNJsy1UwxxhRBSXodYVrU0KQfsBRGBgteG70kVZUzn6S3E+I5w
+         Yj1zjv47GCl2+goVzhJOurXm2jzYz0LE0tYMuknKI5Q0YDf4bR0VCvz5pEwIjsewZ9wN
+         5lmV1e+mi/vZKP2Z3Rjdoprfv+pJQYEkwuFPTr/h8jOYv8Dp7v84HHL9z2sAKqdLNXW5
+         sShwmNi+AOPBVMv9CS8oWE/LuMcWJ6Xbl+roqNA369ALlbqRf6BtaTnbAeQHxwK19vAc
+         ZbDg==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20220725121208.GB28662-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <YuBIACfZDk72yjI3@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Oleg Nesterov <onestero-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, John Stultz <john.stultz@linaro.org>, Dmitry Shmidt <dimitrysh@google.com>, Oleg Nesterov <oleg@redhat.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-Hello, Oleg.
+Hello,
 
-On Mon, Jul 25, 2022 at 02:12:09PM +0200, Oleg Nesterov wrote:
-> I see no problems in this patch. But just for record, we do not need
-> synchronize_rcu() in the "favor && !favoring" case, so we cab probably
-> do something like
-> 
-> 	@@ -146,13 +146,20 @@ void rcu_sync_enter(struct rcu_sync *rsp)
-> 			 * See the comment above, this simply does the "synchronous"
-> 			 * call_rcu(rcu_sync_func) which does GP_ENTER -> GP_PASSED.
-> 			 */
-> 	+		if (wait) {
-> 	+			synchronize_rcu();
-> 	+			rcu_sync_func(&rsp->cb_head);
-> 	+		} else {
-> 	+			rcu_sync_call(rsp);
-> 	+		}
-> 	+	} else if (wait) {
-> 	+		wait_event(rsp->gp_wait, READ_ONCE(rsp->gp_state) >= GP_PASSED);
-...
-> later.
-> 
-> __rcu_sync_enter(rsp, false) works just like rcu_sync_enter_start() but it can
-> be safely called at any moment.
+On Tue, Jul 26, 2022 at 10:01:04AM -1000, Tejun Heo wrote:
+> On Tue, Jul 26, 2022 at 04:32:46PM +0200, Michal Koutn=FD wrote:
+> > On Thu, Jul 14, 2022 at 06:38:43PM -1000, Tejun Heo <tj@kernel.org> wro=
+te:
+> > > We allow modifying these mount options via remount. Let's add "no" pr=
+efixed
+> > > variants so that they can be turned off too.
+> >=20
+> > They can be turned off:
+> >=20
+> > > // on v5.19-rc?
+> > > :~ # grep cg /proc/mounts
+> > > cgroup2 /sys/fs/cgroup cgroup2 rw,nosuid,nodev,noexec,relatime,nsdele=
+gate 0 0
+> > > :~ # mount -t cgroup2 cgroup2 /sys/fs/cgroup/ -oremount
+> > > :~ # grep cg /proc/mounts
+> > > cgroup2 /sys/fs/cgroup cgroup2 rw,relatime 0 0
 
-Yeah, I originally used rcu_sync_enter_start() but quickly found out that it
-can't be reverted reliably. Given how cold the option switching path is, I
-think it's fine to pay an extra synchronize_rcu() there rather than adding
-more complexity to rcu_sync_enter() unless this will be useful somewhere
-else too.
+  root@test ~# grep cgroup /proc/mounts
+  cgroup2 /sys/fs/cgroup cgroup2 rw,nosuid,nodev,noexec,relatime,nsdelegate=
+,memory_recursiveprot 0 0
+  root@test ~# mount -o remount,exec /sys/fs/cgroup
+  root@test ~# grep cgroup /proc/mounts
+  cgroup2 /sys/fs/cgroup cgroup2 rw,nosuid,nodev,relatime,nsdelegate,memory=
+_recursiveprot 0 0
+  root@test ~# mount -o remount /sys/fs/cgroup
+  root@test ~# grep cgroup /proc/mounts
+  cgroup2 /sys/fs/cgroup cgroup2 rw,nosuid,nodev,relatime,nsdelegate,memory=
+_recursiveprot 0 0
+  root@test ~# mount -o remount,nsdelegate,memory_recursiveprot cgroup2 /sy=
+s/fs/cgroup
+  root@test ~# grep cgroup /proc/mounts
+  cgroup2 /sys/fs/cgroup cgroup2 rw,relatime,nsdelegate,memory_recursivepro=
+t 0 0
+  root@test ~# mount -o remount,memory_recursiveprot cgroup2 /sys/fs/cgroup
+  root@test ~# grep cgroup /proc/mounts
+  cgroup2 /sys/fs/cgroup cgroup2 rw,relatime,memory_recursiveprot 0 0
+  root@test ~# mount -o remount cgroup2 /sys/fs/cgroup
+  root@test ~# grep cgroup /proc/mounts
+  cgroup2 /sys/fs/cgroup cgroup2 rw,relatime 0 0
 
-> And can't resist, off-topic question... Say, cgroup_attach_task_all() does
-> 
-> 	mutex_lock(&cgroup_mutex);
-> 	percpu_down_write(&cgroup_threadgroup_rwsem);
-> 
-> and this means that synchronize_rcu() can be called with cgroup_mutex held.
-> Perhaps it makes sense to change this code to do
-> 
-> 	rcu_sync_enter(&cgroup_threadgroup_rwsem.rss);
-> 	mutex_lock(&cgroup_mutex);
-> 	percpu_down_write(&cgroup_threadgroup_rwsem);
-> 	...
-> 	percpu_up_write(&cgroup_threadgroup_rwsem);
-> 	mutex_unlock(&cgroup_mutex);
-> 	rcu_sync_exit(&cgroup_threadgroup_rwsem.rss);
-> 
-> ? Just curious.
+Man, I had no idea that `mount -o remount,$OPTS $MOUNT_POINT` and `mount -o
+remount,$OPTS $SRC $MOUNT_POINT` behave completely differently in how they
+handle existing options. I wonder why other filesystems are implementing
+explicit no prefixed options.
 
-I'm not quite following. Are you saying that if we switching the rwsem into
-slow mode before grabbing the locks, we can avoid inducing latencies on
-other users? Hmm... assuming that I'm understanding you correctly, one
-problem with that approach is that everyone would be doing synchronize_rcu()
-whether they want to change favoring state. In vast majority of cases, users
-won't care about this flag but most users will end up mounting cgroup and do
-the rcu_sync_enter(), so we'd end up adding a grace period wait in most boot
-scenarios. It's not a lot in itself but seems less desriable than making the
-users who want to change the mode pay at the time of changing.
+Anyways, will soon post a patch to remove the no prefixed options.
 
-> > -	/*
-> > -	 * The latency of the synchronize_rcu() is too high for cgroups,
-> > -	 * avoid it at the cost of forcing all readers into the slow path.
-> > -	 */
-> > -	rcu_sync_enter_start(&cgroup_threadgroup_rwsem.rss);
-> 
-> Note that it doesn't have other users, probably you can kill it.
+Thanks for pointing it out.
 
-Ah, nice, will do that.
-
-Thanks.
-
--- 
+--=20
 tejun
