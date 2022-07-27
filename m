@@ -1,60 +1,91 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-5.20] cgroup: remove "no" prefixed mount
- options options
-Date: Wed, 27 Jul 2022 07:55:58 -1000
-Message-ID: <YuF8LrDcd9tpYLnX@slm.duckdns.org>
-References: <YtDvN0wJ6CKaEPN8@slm.duckdns.org>
- <YtDvU4jRPSsarcNp@slm.duckdns.org>
- <20220726143246.GA23794@blackbody.suse.cz>
- <YuBIACfZDk72yjI3@slm.duckdns.org>
- <YuB5ICv3bXsy5Xuh@slm.duckdns.org>
- <YuB9QXapVUy1t8TZ@slm.duckdns.org>
- <20220727092715.GA1569@blackbody.suse.cz>
+Subject: Re: [PATCH RESEND v6 1/8] blk-throttle: fix that io throttle can
+ only work for single bio
+Date: Wed, 27 Jul 2022 08:27:24 -1000
+Message-ID: <YuGDjFkxDSsVrcRw@slm.duckdns.org>
+References: <20220701093441.885741-1-yukuai1@huaweicloud.com>
+ <20220701093441.885741-2-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc;
-        bh=FNJqWOgunTysXo2x6MYgmJbijH0daSpLu5NGEZRQviE=;
-        b=A/u3Wjgc6Pq6XfpcsLe9ZPc/0GNdFxt8A6JJ8VmjPhGMKdLSNN0EOiS3dWtui4azMj
-         jn+/Al0U4PLfPbF/zMf5d86WrI52ysytboMjjFBBeB648qMEb8Aqz+lZbCbQyc57iKpo
-         oKudOAu9TkIAt9p86u7HAMxUvTwWdKk1L1IUsue7nMeXmd15oOllnyTw3zhykckM7Y+U
-         FIJSVm1SxY6FrxyjbHs06eOwTeYNwwU5vX0hJdD170g4TLSKUb2BEfS6OdC0gHLwKLNE
-         qnf4v73uF3y43EfbJUa8wb/VLBO59ynVFHOdiixIpZXo/amlH+T+In2IblGizPkTzNh+
-         MXkQ==
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc;
+        bh=epPjtN4wCIaFRIOaZPdFKvlDUTQEZpKeGhh4HLykvnw=;
+        b=VdemlUi3yoDyBLRyuRAKSV/EqdNPyL80KIWvp5r0gjhfr2t+20gST0YEokL+zm8RIg
+         iUfMskLvEBSnrC+fr0V4fF/4zKbnTbPDECt038Z8tWHKq/vxUIHkR5bBCnKGE1osHK+S
+         Jbaqo8cVOqbSDuYjODlyVe+bMQ5WCiwyaNH7bhuTHpFHU00fLlhK/Wn4TYO+foGqIWLw
+         D/dONyACF7EvEbyI0QbQyqpan3kQ77LaeKlKAgvwEXxLbEiTIzuNwmWbyzr7zWkGSVFK
+         Ssd9IkY/ZDcyuQvTti3OT6Mt+aeOwUyGqoxzmWVWraMzcMBzNkqVEBpi0InPVbwdcCAl
+         Fn7Q==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20220727092715.GA1569-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+In-Reply-To: <20220701093441.885741-2-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, John Stultz <john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dmitry Shmidt <dimitrysh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: mkoutny-IBi9RG/b67k@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Wed, Jul 27, 2022 at 11:27:15AM +0200, Michal Koutn=FD wrote:
-> On Tue, Jul 26, 2022 at 01:48:17PM -1000, Tejun Heo <tj-DgEjT+Ai2ygdnm+yR=
-OfE0A@public.gmane.org> wrote:
-> Thanks.
->=20
-> > While a bit confusing, given that there is a way to turn off the option=
-s,
-> > there's no reason to have the explicit "no" prefixed options. Let's rem=
-ove
-> > them.
->=20
-> This is sensible...
->=20
-> >  Documentation/admin-guide/cgroup-v2.rst |    8 ++++----
-> >  kernel/cgroup/cgroup.c                  |   24 ++++--------------------
-> >  2 files changed, 8 insertions(+), 24 deletions(-)
->=20
-> ...and cleaner.
+Sorry about the long delay.
 
-Alright, applied to cgroup/for-5.20.
+So, the code looks nice but I have a difficult time following the logic.
+
+On Fri, Jul 01, 2022 at 05:34:34PM +0800, Yu Kuai wrote:
+> @@ -811,7 +811,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+>  	unsigned int bio_size = throtl_bio_data_size(bio);
+>  
+>  	/* no need to throttle if this bio's bytes have been accounted */
+> -	if (bps_limit == U64_MAX || bio_flagged(bio, BIO_THROTTLED)) {
+> +	if (bps_limit == U64_MAX) {
+>  		if (wait)
+>  			*wait = 0;
+>  		return true;
+> @@ -921,11 +921,8 @@ static void throtl_charge_bio(struct throtl_grp *tg, struct bio *bio)
+>  	unsigned int bio_size = throtl_bio_data_size(bio);
+>  
+>  	/* Charge the bio to the group */
+> -	if (!bio_flagged(bio, BIO_THROTTLED)) {
+> -		tg->bytes_disp[rw] += bio_size;
+> -		tg->last_bytes_disp[rw] += bio_size;
+> -	}
+> -
+> +	tg->bytes_disp[rw] += bio_size;
+> +	tg->last_bytes_disp[rw] += bio_size;
+>  	tg->io_disp[rw]++;
+>  	tg->last_io_disp[rw]++;
+
+So, we're charging and controlling whether it has already been throttled or
+not.
+
+> @@ -2121,6 +2118,21 @@ bool __blk_throtl_bio(struct bio *bio)
+>  			tg->last_low_overflow_time[rw] = jiffies;
+>  		throtl_downgrade_check(tg);
+>  		throtl_upgrade_check(tg);
+> +
+> +		/*
+> +		 * re-entered bio has accounted bytes already, so try to
+> +		 * compensate previous over-accounting. However, if new
+> +		 * slice is started, just forget it.
+> +		 */
+> +		if (bio_flagged(bio, BIO_THROTTLED)) {
+> +			unsigned int bio_size = throtl_bio_data_size(bio);
+> +
+> +			if (tg->bytes_disp[rw] >= bio_size)
+> +				tg->bytes_disp[rw] -= bio_size;
+> +			if (tg->last_bytes_disp[rw] >= bio_size)
+> +				tg->last_bytes_disp[rw] -= bio_size;
+> +		}
+
+and trying to restore the overaccounting. However, it's not clear why this
+helps with the problem you're describing. The comment should be clearly
+spelling out why it's done this way and how this works.
+
+Also, blk_throttl_bio() doesn't call into __blk_throtl_bio() at all if
+THROTTLED is set and HAS_IOPS_LIMIT is not, so if there are only bw limits,
+we end up accounting these IOs twice?
 
 Thanks.
 
---=20
+-- 
 tejun
