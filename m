@@ -1,97 +1,86 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH 9/9] sched/psi: add PSI_IRQ to track IRQ/SOFTIRQ pressure
-Date: Wed, 27 Jul 2022 18:07:16 +0200
-Message-ID: <YuFitL6KuCfuqujn@worktop.programming.kicks-ass.net>
-References: <20220721040439.2651-1-zhouchengming@bytedance.com>
- <20220721040439.2651-10-zhouchengming@bytedance.com>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [PATCH RESEND 3/3 cgroup/for-5.20] cgroup: Make !percpu
+ threadgroup_rwsem operations optional
+Date: Wed, 27 Jul 2022 19:39:08 +0200
+Message-ID: <20220727173906.GB18822@redhat.com>
+References: <YtDvN0wJ6CKaEPN8@slm.duckdns.org>
+ <YtDvU4jRPSsarcNp@slm.duckdns.org>
+ <YtDvl7Qjc5zI3e/b@slm.duckdns.org>
+ <YtwFjPnCtw8ySnuv@slm.duckdns.org>
+ <20220725121208.GB28662@redhat.com>
+ <YuB1QW6Kce5nkBu6@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=w9r9iD1+VJ1bB5BUofHhTNtVicBr0akZlYlPe4WCSQQ=; b=lvZsnsMXIad6IuUpCnGPnR81q2
-        acnY8KBBOU1hGSV7O0ISRk6vrJNFl/RF2gWT57/zETylrGdz0kZotBUWTPyxYZkRRefybX1Zc3PMM
-        OS/zAgpdVMu6hShabM3s88zg7aZWoAGhmJRap+XqlOdif7iB/6s6HyThVCwY1Gy1xbYX6U4GUSU8y
-        eenB9BdltjQlPKr5ZSxn8CH1RSQ6oHLkErzSEYeYnyVqBG6KbNXc7Ipgay4x4IaYfFa6IXLqENYcI
-        lZ49/7TVmlRFOWE8wJMSRk2EtilZ6o0Sx/tOtqDxsMVt2+LJXmySQ8r5lIDvmsJAuk793m0L+l/Xe
-        Uhd2GcCA==;
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1658943554;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=R5b5gVej4MQa9hZ7l9p+CF9FxGIX65gr66TPXFnDVek=;
+        b=bSz4tKA60k+kphl1rQUIu1Lh1Ef+HRW6vu5ylVOYwsu0I4HVOmhefy96Of3cQ0zXqIYXYv
+        sDn8zikyijlJwC1403jHSBVKUwDF0BMnFwIMwzbV/IIt7+t4wYWVjCJf5WbeFwlS/SZJBX
+        W8Dckuoxt/hlgP1fRBjJb2fxP2UHegA=
 Content-Disposition: inline
-In-Reply-To: <20220721040439.2651-10-zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+In-Reply-To: <YuB1QW6Kce5nkBu6@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Christian Brauner <brauner@kernel.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Peter Zijlstra <peterz@infradead.org>, John Stultz <john.stultz@linaro.org>, Dmitry Shmidt <dimitrysh@google.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Thu, Jul 21, 2022 at 12:04:39PM +0800, Chengming Zhou wrote:
-> diff --git a/include/linux/psi_types.h b/include/linux/psi_types.h
-> index c124f7d186d0..195f123b1cd1 100644
-> --- a/include/linux/psi_types.h
-> +++ b/include/linux/psi_types.h
-> @@ -47,7 +47,8 @@ enum psi_res {
->  	PSI_IO,
->  	PSI_MEM,
->  	PSI_CPU,
-> -	NR_PSI_RESOURCES = 3,
-> +	PSI_IRQ,
-> +	NR_PSI_RESOURCES = 4,
->  };
->  
->  /*
-> @@ -63,9 +64,11 @@ enum psi_states {
->  	PSI_MEM_FULL,
->  	PSI_CPU_SOME,
->  	PSI_CPU_FULL,
-> +	PSI_IRQ_SOME,
-> +	PSI_IRQ_FULL,
->  	/* Only per-CPU, to weigh the CPU in the global average: */
->  	PSI_NONIDLE,
-> -	NR_PSI_STATES = 7,
-> +	NR_PSI_STATES = 9,
->  };
->  
->  enum psi_aggregators {
+Hi Tejun,
 
-$ pahole -EC psi_group_cpu defconfig-build/kernel/sched/build_utility.o
-struct psi_group_cpu {
-        /* typedef seqcount_t */ struct seqcount {
-                unsigned int       sequence;                                             /*     0     4 */
-        } seq __attribute__((__aligned__(64))); /*     0     4 */
-        unsigned int               tasks[5];                                             /*     4    20 */
-        /* typedef u32 -> __u32 */ unsigned int               state_mask;                /*    24     4 */
-        /* typedef u32 -> __u32 */ unsigned int               times[7];                  /*    28    28 */
-        /* typedef u64 -> __u64 */ long long unsigned int     state_start;               /*    56     8 */
-        /* --- cacheline 1 boundary (64 bytes) --- */
-        /* typedef u32 -> __u32 */ unsigned int               times_prev[2][7] __attribute__((__aligned__(64))); /*    64    56 */
+On 07/26, Tejun Heo wrote:
+>
+> > __rcu_sync_enter(rsp, false) works just like rcu_sync_enter_start() but it can
+> > be safely called at any moment.
+>
+> Yeah, I originally used rcu_sync_enter_start() but quickly found out that it
+> can't be reverted reliably. Given how cold the option switching path is, I
+> think it's fine to pay an extra synchronize_rcu() there rather than adding
+> more complexity to rcu_sync_enter() unless this will be useful somewhere
+> else too.
 
-        /* size: 128, cachelines: 2, members: 6 */
-        /* padding: 8 */
-        /* forced alignments: 2 */
-} __attribute__((__aligned__(64)));
+Yes, agreed. As I said, this is just for record, so that I can find this (simple)
+patch on lkml if we have another user of __rcu_sync_enter(rsp, bool wait).
 
+> > And can't resist, off-topic question... Say, cgroup_attach_task_all() does
+> >
+> > 	mutex_lock(&cgroup_mutex);
+> > 	percpu_down_write(&cgroup_threadgroup_rwsem);
+> >
+> > and this means that synchronize_rcu() can be called with cgroup_mutex held.
+> > Perhaps it makes sense to change this code to do
+> >
+> > 	rcu_sync_enter(&cgroup_threadgroup_rwsem.rss);
+> > 	mutex_lock(&cgroup_mutex);
+> > 	percpu_down_write(&cgroup_threadgroup_rwsem);
+> > 	...
+> > 	percpu_up_write(&cgroup_threadgroup_rwsem);
+> > 	mutex_unlock(&cgroup_mutex);
+> > 	rcu_sync_exit(&cgroup_threadgroup_rwsem.rss);
+> >
+> > ? Just curious.
+>
+> I'm not quite following.
 
-$ pahole -EC psi_group_cpu defconfig-build/kernel/sched/build_utility.o
-struct psi_group_cpu {
-        /* typedef seqcount_t */ struct seqcount {
-                unsigned int       sequence;                                             /*     0     4 */
-        } seq __attribute__((__aligned__(64))); /*     0     4 */
-        unsigned int               tasks[5];                                             /*     4    20 */
-        /* typedef u32 -> __u32 */ unsigned int               state_mask;                /*    24     4 */
-        /* typedef u32 -> __u32 */ unsigned int               times[9];                  /*    28    36 */
-        /* --- cacheline 1 boundary (64 bytes) --- */
-        /* typedef u64 -> __u64 */ long long unsigned int     state_start;               /*    64     8 */
+Me too ;)
 
-        /* XXX 56 bytes hole, try to pack */
+> Are you saying that if we switching the rwsem into
+> slow mode before grabbing the locks, we can avoid inducing latencies on
+> other users?
 
-        /* --- cacheline 2 boundary (128 bytes) --- */
-        /* typedef u32 -> __u32 */ unsigned int               times_prev[2][9] __attribute__((__aligned__(64))); /*   128    72 */
+Well yes, in that another mutex_lock(&cgroup_mutex) won't sleep until
+synchronize_rcu() (called under cgroup_mutex) completes.
 
-        /* size: 256, cachelines: 4, members: 6 */
-        /* sum members: 144, holes: 1, sum holes: 56 */
-        /* padding: 56 */
-        /* forced alignments: 2, forced holes: 1, sum forced holes: 56 */
-} __attribute__((__aligned__(64)));
+> Hmm... assuming that I'm understanding you correctly, one
+> problem with that approach is that everyone would be doing synchronize_rcu()
+> whether they want to change favoring state.
 
+Hmm... I didn't mean the changing if favoring state... And in any case,
+this won't cause any additional synchronize_rcu().
 
-So yeah, I think not.
+Nevermind, please forget, this probably makes no sense.
+
+Oleg.
+
