@@ -1,75 +1,44 @@
-From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH bpf-next v5 4/8] bpf: Introduce cgroup iter
-Date: Thu, 28 Jul 2022 10:26:32 -0700
-Message-ID: <CA+khW7gws1+bWQ2zpodVfAP_rtXv=8K3SSMLx4e9Lh4eKgtnmA@mail.gmail.com>
-References: <20220722174829.3422466-1-yosryahmed@google.com>
- <20220722174829.3422466-5-yosryahmed@google.com> <CAP01T76p7CCj2i4X7PmZiG3G3-Bfx_ygnO0Eg+DnfwLHQiEPbA@mail.gmail.com>
- <CA+khW7g2kriOb7on0u_UpGpS2A0bftrQowTB0+AJ=S7rpLKaZA@mail.gmail.com> <639f575e-bc8c-46b9-b21b-bd9fbba835c1@fb.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/2] cgroup: Skip subtree root in
+ cgroup_update_dfl_csses()
+Date: Thu, 28 Jul 2022 07:27:25 -1000
+Message-ID: <YuLG/RzJASE/8uTV@slm.duckdns.org>
+References: <20220728005815.1715522-1-longman@redhat.com>
+ <20220728005815.1715522-2-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=id4JWD15x2b6Sb0RDjkodbSRKI5pJBPMhp/NyAFO6Wg=;
-        b=ZIv6KqB5YatdsGxiUke6mhx2cB60Jg0nC16W2vfPQN0fh/N7+rSg2esvcPFp3oQ0Qo
-         VHjyWTcrZS4B2xIeRUQg3Gp6mFclRSXQTuXEq4EBLT9560pu4oKuV2IcCmrPaN3K57YD
-         fqkWbB62X3m1yLgVGqW29+TyZDcTl05KFRbvNOhw5qm4araf+Og1cnkexpRLSmrnqH+e
-         8dEi+uSiErW4xqdWg5wBrqWGS+eC2RKjvCWmK/k9Lgkgpintww82349+3yFfSGnbrQL3
-         TI8oLqq57xt37hUMYpK9bVuJrreQjyuyOPW6IV+epVfGVfQiPKHIQpUL5j+bEfgLBWYK
-         qA4A==
-In-Reply-To: <639f575e-bc8c-46b9-b21b-bd9fbba835c1-b10kYP2dOMg@public.gmane.org>
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc;
+        bh=VbEpbcnRCKhYT7BZ0HSKVgFvbMAakayClnOZvBHVLDM=;
+        b=i00rVjg3DaYMhQYt2uaTPpDZXUdlQ+KaCLpjoz3IEIhO1KJkqSkwWpy1/U7Uf/F/aD
+         nmFgTkH1TiexdN5J0xFNoxsNwasPcbARyEDdluyAxzkqtOoUZni9gh2nJsVmmZVUf4Xt
+         cV/aq3fSAIIAqz8k9rp+jo+k1XdHNaYlqrx0nfsdz0stk4DaDTrhBl4iyUw7qpidmOac
+         GGvOSFwVaZrE6LDxLSV1yebcuuUAeZ3zPpMZWUBNFispkFDqlVx2Rk5aLw7LNWPr+Tw7
+         ldPZYan//l8svd7n01XrDz4bRjQrKC3gazwQ+N+G9xjNJxI+R0+fooIua330gEkmXpku
+         6JWA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20220728005815.1715522-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>
-Cc: Kumar Kartikeya Dwivedi <memxor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen@google.c>
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jul 27, 2022 at 11:56 PM Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org> wrote:
->
->
->
-> On 7/22/22 1:33 PM, Hao Luo wrote:
-> > On Fri, Jul 22, 2022 at 11:36 AM Kumar Kartikeya Dwivedi
-> > <memxor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> >>
-> >> On Fri, 22 Jul 2022 at 19:52, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-<...>
-> >>> +
-> >>> +static int __cgroup_iter_seq_show(struct seq_file *seq,
-> >>> +                                 struct cgroup_subsys_state *css, int in_stop);
-> >>> +
-> >>> +static void cgroup_iter_seq_stop(struct seq_file *seq, void *v)
-> >>> +{
-> >>> +       /* pass NULL to the prog for post-processing */
-> >>> +       if (!v)
-> >>> +               __cgroup_iter_seq_show(seq, NULL, true);
-> >>> +       mutex_unlock(&cgroup_mutex);
-> >>
-> >> I'm just curious, but would it be a good optimization (maybe in a
-> >> follow up) to move this mutex_unlock before the check on v? That
-> >> allows you to store/buffer some info you want to print as a compressed
-> >> struct in a map, then write the full text to the seq_file outside the
-> >> cgroup_mutex lock in the post-processing invocation.
-> >>
-> >> It probably also allows you to walk the whole hierarchy, if one
-> >> doesn't want to run into seq_file buffer limit (or it can decide what
-> >> to print within the limit in the post processing invocation), or it
-> >> can use some out of band way (ringbuf, hashmap, etc.) to send the data
-> >> to userspace. But all of this can happen without holding cgroup_mutex
-> >> lock.
-> >
-> > Thanks Kumar.
-> >
-> > It sounds like an idea, but the key thing is not about moving
-> > cgroup_mutex unlock before the check IMHO. The user can achieve
-> > compression using the current infra. Compression could actually be
-> > done in the bpf program. user can define and output binary content and
-> > implement a userspace library to parse/decompress when reading out the
-> > data.
->
-> Right mutex_unlock() can be moved to the beginning of the
-> function since the cgroup is not used in
->    __cgroup_iter_seq_show(seq, NULL, true)
+On Wed, Jul 27, 2022 at 08:58:15PM -0400, Waiman Long wrote:
+> The cgroup_update_dfl_csses() function updates css associations when a
+> cgroup's subtree_control file is modified. Any changes made to a cgroup's
+> subtree_control file, however, will only affect its descendants but not
+> the cgroup itself. So there is no point in migrating csses associated
+> with that cgroup. We can skip them instead.
+> 
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Ok. Will do.
+Applied to cgroup/for-5.20.
+
+Thanks.
+
+-- 
+tejun
