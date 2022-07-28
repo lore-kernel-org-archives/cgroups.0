@@ -1,89 +1,77 @@
-From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH bpf-next v5 4/8] bpf: Introduce cgroup iter
-Date: Thu, 28 Jul 2022 10:20:46 -0700
-Message-ID: <CA+khW7gfzoeHVd5coTSWXuYVfqiVMwoSjXkWsP-CeVdmOm0FqA@mail.gmail.com>
-References: <20220722174829.3422466-1-yosryahmed@google.com>
- <20220722174829.3422466-5-yosryahmed@google.com> <YuK+eg3lgwJ2CJnJ@slm.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/2] cgroup/cpuset: Keep current cpus list if cpus
+ affinity was explicitly set
+Date: Thu, 28 Jul 2022 07:23:07 -1000
+Message-ID: <YuLF+xXaCzwWi2BR@slm.duckdns.org>
+References: <20220728005815.1715522-1-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=VW7oYK4RqwqbJsASlxdjRV3NEVCTNvlDrSDTg61QkOg=;
-        b=h8FxtRKKQHF4SZtxhuJuCSHn3CxIjnLxoANRs2Qd79XyLUdqOiqvCZ0nf/TljQOJoz
-         7Uyovrfff5RQt4y3dHNonwXKvY7FZUnDtoRHS7lWjuK8E6idQMKrJMS4QFSzUEZF4m66
-         TzgFuIxGVMtfqQ0hB1NxW5AKLb+TvhCtZrfm9cueT8LxtqQg9su+cN3ghlP+T2lVpLdI
-         ORveshtJMkLA+6KRzWshwGMkPKwKHyh+tpsCEeMexuP4mlBxfIufMDal02TfyaOgJefJ
-         /BB58eusHQOE/4dQDk/11j96eQxmE3KTRG8BmpQQQX33x3W6J0jhBI98b3UHF00rtHXj
-         TKrg==
-In-Reply-To: <YuK+eg3lgwJ2CJnJ-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc;
+        bh=N+EDZeN9hOjgggv+GakuBGOt5cAU+R6TAmQfKefuGy4=;
+        b=Emg3DdK7LSA+NPGtwUNvKOne+VsyeeyNXbQvyE/VGpLz3/txaN1mHFE01gAsuDkCbB
+         2K7lXPS/nzQZA2KQw6vB/AgSjSFuh5/PtFjUpNz/VSASorhlSmLD2FS3h2HbfMkcTDG2
+         fxBFMM8xJyVClKV9xW3aMewFxSDcY7TeKGj4/W3nEqhO62yY+c9uMYLUim1v3S2aZWn2
+         iguQ331j5j8wWHjY9b26yu1dsHepHq14knp9Lp2mh3CssireX5EasKZP+fh+IoToiO9d
+         uOOzEZXLpe1nmRc16BoqGuojFL+81jyLgTuwt2FYlVdkxONSwxluMiO3xqYUjVk9MEFQ
+         +7pQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20220728005815.1715522-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Tejun,
+Hello,
 
-On Thu, Jul 28, 2022 at 9:51 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-> Hello,
->
-> On Fri, Jul 22, 2022 at 05:48:25PM +0000, Yosry Ahmed wrote:
-> > +
-> > +     /* cgroup_iter walks either the live descendants of a cgroup subtree, or the
-> > +      * ancestors of a given cgroup.
-> > +      */
-> > +     struct {
-> > +             /* Cgroup file descriptor. This is root of the subtree if walking
-> > +              * descendants; it's the starting cgroup if walking the ancestors.
-> > +              * If it is left 0, the traversal starts from the default cgroup v2
-> > +              * root. For walking v1 hierarchy, one should always explicitly
-> > +              * specify the cgroup_fd.
-> > +              */
-> > +             __u32   cgroup_fd;
->
-> So, we're identifying the starting point with an fd.
->
-> > +             __u32   traversal_order;
-> > +     } cgroup;
-> >  };
-> >
-> >  /* BPF syscall commands, see bpf(2) man-page for more details. */
-> > @@ -6136,6 +6156,16 @@ struct bpf_link_info {
-> >                                       __u32 map_id;
-> >                               } map;
-> >                       };
-> > +                     union {
-> > +                             struct {
-> > +                                     __u64 cgroup_id;
-> > +                                     __u32 traversal_order;
-> > +                             } cgroup;
->
-> but iterating the IDs. IDs are the better choice for cgroup2 as there's
-> nothing specific to the calling program or the fds it has, but I guess this
-> is because you want to use it for cgroup1, right? Oh well, that's okay I
-> guess.
->
+On Wed, Jul 27, 2022 at 08:58:14PM -0400, Waiman Long wrote:
+> It was found that any change to the current cpuset hierarchy may reset
+> the cpus_allowed list of the tasks in the affected cpusets to the
+> default cpuset value even if those tasks have cpus affinity explicitly
+> set by the users before. That is especially easy to trigger under a
+> cgroup v2 environment where writing "+cpuset" to the root cgroup's
+> cgroup.subtree_control file will reset the cpus affinity of all the
+> processes in the system.
+> 
+> That is especially problematic in a nohz_full environment where the
+> tasks running in the nohz_full CPUs usually have their cpus affinity
+> explicitly set and will behave incorrectly if cpus affinity changes.
+> 
+> Fix this problem by adding a flag in the task structure to indicate that
+> a task has their cpus affinity explicitly set before and make cpuset
+> code not to change their cpus_allowed list unless the user chosen cpu
+> list is no longer a subset of the cpus_allowed list of the cpuset itself.
+> 
+> With that change in place, it was verified that tasks that have its
+> cpus affinity explicitly set will not be affected by changes made to
+> the v2 cgroup.subtree_control files.
 
-Yes, we are identifying the starting point with FD. The cgroup_id here
-is the information reported from kernel to userspace for identifying
-the cgroup.
+I think the underlying cause here is cpuset overwriting the cpumask the user
+configured but that's a longer discussion.
 
-We use FD because it is a convention in BPF. Compatibility of cgroup1
-is a good feature of this convention. My thoughts: It seems that ID
-may be better, for two reasons. First, because ID is stateless, the
-userspace doesn't have to remember closing the FD. Second, using
-different identifications in two directions (userspace specifies
-cgroup using FD, while kernel reports cgroup using ID) introduces a
-little complexity when connecting them together.
+> +/*
+> + * Don't change the cpus_allowed list if cpus affinity has been explicitly
+> + * set before unless the current cpu list is not a subset of the new cpu list.
+> + */
+> +static int cpuset_set_cpus_allowed_ptr(struct task_struct *p,
+> +				       const struct cpumask *new_mask)
+> +{
+> +	if (p->cpus_affinity_set && cpumask_subset(p->cpus_ptr, new_mask))
+> +		return 0;
+> +
+> +	p->cpus_affinity_set = 0;
+> +	return set_cpus_allowed_ptr(p, new_mask);
+> +}
 
-Hao
+I wonder whether the more predictable behavior would be always not resetting
+the cpumask if it's a subset of the new_mask. Also, shouldn't this check
+p->cpus_mask instead of p->cpus_ptr?
 
-> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->
-> Thanks.
->
-> --
-> tejun
+Thanks.
+
+-- 
+tejun
