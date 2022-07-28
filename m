@@ -1,69 +1,47 @@
 From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 1/2] cgroup/cpuset: Keep current cpus list if cpus
- affinity was explicitly set
-Date: Thu, 28 Jul 2022 16:44:20 +0200
-Message-ID: <20220728144420.GA27407@blackbody.suse.cz>
+Subject: Re: [PATCH 2/2] cgroup: Skip subtree root in
+ cgroup_update_dfl_csses()
+Date: Thu, 28 Jul 2022 16:44:26 +0200
+Message-ID: <20220728144426.GA26631@blackbody.suse.cz>
 References: <20220728005815.1715522-1-longman@redhat.com>
+ <20220728005815.1715522-2-longman@redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1659019461; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1659019468; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=DUx+MWMoJx3rj7YLGpNF515BhD3DfyJeCTB/nJKgRCk=;
-        b=MHJHRYEZfylLqaLT6NoEWTI/QBRAymRiDK0CUqh5mdBBeYtTx6qCLSiiiJlKDbXH2CtuML
-        ELg0DUMKWzPeLpTK+ErUV7mFx6fxMZpMc7rnXtt9XGWtBGIt5ltP3AO/QF24jIC/h4u+UH
-        iAHGylfhM2L1Jq106PrL+B58hQ2xPus=
+        bh=gpW4YToHW6w1TJ+JUui+ok8xn0F55KMcQkwdz3YZ6hI=;
+        b=gr1imVX/+jT5GEcGtWZ8FbJVs2S+5goVZ3h54Klc/9rJIqVQc5zm9Io0oEppBZkpPdh/6p
+        vBJUd2+893USnplUtxLe9m9SBOZYRw9hFoC11WwAfTE1LB4fL5sASnD2XsvlwN9GgP2Z6A
+        0x0hKwuBnycqcXIaHuIFbuizv3oUn/I=
 Content-Disposition: inline
-In-Reply-To: <20220728005815.1715522-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20220728005815.1715522-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
 To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello.
+On Wed, Jul 27, 2022 at 08:58:15PM -0400, Waiman Long <longman-H+wXaHxf7aLQ=
+T0dZR+AlfA@public.gmane.org> wrote:
+> The cgroup_update_dfl_csses() function updates css associations when a
+> cgroup's subtree_control file is modified. Any changes made to a cgroup's
+> subtree_control file, however, will only affect its descendants but not
+> the cgroup itself.=20
 
-On Wed, Jul 27, 2022 at 08:58:14PM -0400, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> It was found that any change to the current cpuset hierarchy may reset
-> the cpus_allowed list of the tasks in the affected cpusets to the
-> default cpuset value even if those tasks have cpus affinity explicitly
-> set by the users before.
+I find this correct.
 
-I'm surprised this went so long unnoticed / unreported.
+> So there is no point in migrating csses associated with that cgroup.
+> We can skip them instead.
 
-Could it be users relied on that implicit affinity reset?
+Alone it's not such a big win but it componds with the recent Tejun's
+threadgroup_rwsem elision.
 
-> That is especially easy to trigger under a cgroup v2 environment where
-> writing "+cpuset" to the root cgroup's cgroup.subtree_control file
-> will reset the cpus affinity of all the processes in the system.
+> ---
+>  kernel/cgroup/cgroup.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
 
-This should apply only to tasks that were extracted out of the root
-cgroup, no? (OK, those are all processes practically.)
-
-(Even without your second patch, the scope should be limited because of
-src_cset==dst_cset check in cgroup_migrate_prepare_dst().)
-
-> That is especially problematic in a nohz_full environment where the
-> tasks running in the nohz_full CPUs usually have their cpus affinity
-> explicitly set and will behave incorrectly if cpus affinity changes.
-
-One could also argue that for such processes, cgroup hierarchy should be
-first configured and only then they start and set own affinity.
-
-> Fix this problem by adding a flag in the task structure to indicate that
-> a task has their cpus affinity explicitly set before and make cpuset
-> code not to change their cpus_allowed list unless the user chosen cpu
-> list is no longer a subset of the cpus_allowed list of the cpuset itself.
-
-I'm uneasy with the occasional revert of this flag, i.e. the task who
-set their affinity would sometimes have it overwritten and sometimes
-not (which might have been relied on, especially with writes into
-cpuset.cpus).
-(But I have no better answer than the counter-argument above since
-there's no easier way to detect the implicit migrations.)
-
-Also, is there similar effect with memory binding?
-
-Thanks,
-Michal
+Feel free to have
+Reviewed-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
