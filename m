@@ -1,70 +1,43 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH bpf-next v5 4/8] bpf: Introduce cgroup iter
-Date: Thu, 28 Jul 2022 06:51:06 -1000
-Message-ID: <YuK+eg3lgwJ2CJnJ@slm.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH bpf-next v5 2/8] cgroup: enable cgroup_get_from_file() on
+ cgroup1
+Date: Thu, 28 Jul 2022 06:51:38 -1000
+Message-ID: <YuK+monxlKfeZmQb@slm.duckdns.org>
 References: <20220722174829.3422466-1-yosryahmed@google.com>
- <20220722174829.3422466-5-yosryahmed@google.com>
+ <20220722174829.3422466-3-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc;
-        bh=g2JvEqu4lPB/13fJF7Pbh4plTZKsg+4Z5jgyLFAQt2M=;
-        b=Vde+gVxL9KlBhtfP9xUCLxMLGERnDOtm6qMfUz5TxxyQX2iBoFvmbzpnli5CQPLA+U
-         fflE7YnPv0y9SVveELW2O1oVzGvj8oebdlInFI/DBAp0Z+9MHqxz6DAWcSH+WUb+ddt/
-         awmZOPhtYxRGWWM+b6gc8Y0q42/iKXOdATHyWtMU5oz00Wwmr1mP9eIo6zSEA90eUVnD
-         buCqmiwqL01yysHQy15AatDCFXTlbY+vvyCJy4D/a97t1MZGhnG8N9KuocMStGJe2Y3s
-         L9cpmldbhJlj2y9yg1BzYizbubsK+b/HJzWEeknAdptsFvxXuedLV4dDtPBysJD0v6Tc
-         J0Tw==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=g9oYMpODJJiPiB2rG5r6ze/G4kA+eKDoO8ibYbMUthA=;
+        b=nHorLRBiYzmmSktLnl0atkrBfVHNyyqWryD458vytfEJBaXVXMMcX4m2rfOoLOYOrO
+         7CmpGdfiijs8RUe6Kt411Sd+TehxZvLZPuopvtDJcnxLtxO0mXnuT7djug52tPwPqGRX
+         Ooj8+29eag0pUpvI6EPOcZ8wta+4mRAuOtEeeVDMJ3Mnqalmpm3pFskgMG1ZDFvrHst9
+         9JoL9omKy7Omv3IUkHczcAavUUQRTv+M9WLWQj3LUaGkJ1txxRzw3RRmfaDGEIPs+rmB
+         M7nSG5K3BGew/DWOdRVMVQ7vvHQ55Qt2n8sXLH3nzdvqqjOHnGtwn55e1qCsB9UABkb7
+         Bq6Q==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20220722174829.3422466-5-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20220722174829.3422466-3-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, Hao Luo <haoluo@google.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>, KP Singh <kpsingh@kernel.org>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, John Fastabend <john.fastabend@gmail.com>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>
 
-Hello,
+On Fri, Jul 22, 2022 at 05:48:23PM +0000, Yosry Ahmed wrote:
+> cgroup_get_from_file() currently fails with -EBADF if called on cgroup
+> v1. However, the current implementation works on cgroup v1 as well, so
+> the restriction is unnecessary.
+> 
+> This enabled cgroup_get_from_fd() to work on cgroup v1, which would be
+> the only thing stopping bpf cgroup_iter from supporting cgroup v1.
+> 
+> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
 
-On Fri, Jul 22, 2022 at 05:48:25PM +0000, Yosry Ahmed wrote:
-> +
-> +	/* cgroup_iter walks either the live descendants of a cgroup subtree, or the
-> +	 * ancestors of a given cgroup.
-> +	 */
-> +	struct {
-> +		/* Cgroup file descriptor. This is root of the subtree if walking
-> +		 * descendants; it's the starting cgroup if walking the ancestors.
-> +		 * If it is left 0, the traversal starts from the default cgroup v2
-> +		 * root. For walking v1 hierarchy, one should always explicitly
-> +		 * specify the cgroup_fd.
-> +		 */
-> +		__u32	cgroup_fd;
-
-So, we're identifying the starting point with an fd.
-
-> +		__u32	traversal_order;
-> +	} cgroup;
->  };
->  
->  /* BPF syscall commands, see bpf(2) man-page for more details. */
-> @@ -6136,6 +6156,16 @@ struct bpf_link_info {
->  					__u32 map_id;
->  				} map;
->  			};
-> +			union {
-> +				struct {
-> +					__u64 cgroup_id;
-> +					__u32 traversal_order;
-> +				} cgroup;
-
-but iterating the IDs. IDs are the better choice for cgroup2 as there's
-nothing specific to the calling program or the fds it has, but I guess this
-is because you want to use it for cgroup1, right? Oh well, that's okay I
-guess.
-
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Tejun Heo <tj@kernel.org>
 
 Thanks.
 
