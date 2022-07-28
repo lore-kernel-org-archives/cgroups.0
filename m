@@ -1,47 +1,55 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+From: Waiman Long <longman@redhat.com>
 Subject: Re: [PATCH 2/2] cgroup: Skip subtree root in
  cgroup_update_dfl_csses()
-Date: Thu, 28 Jul 2022 16:44:26 +0200
-Message-ID: <20220728144426.GA26631@blackbody.suse.cz>
+Date: Thu, 28 Jul 2022 10:49:21 -0400
+Message-ID: <8e0a41e6-8d03-b0ad-02b5-04449c49c470@redhat.com>
 References: <20220728005815.1715522-1-longman@redhat.com>
  <20220728005815.1715522-2-longman@redhat.com>
+ <20220728144426.GA26631@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1659019468; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1659019770;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=gpW4YToHW6w1TJ+JUui+ok8xn0F55KMcQkwdz3YZ6hI=;
-        b=gr1imVX/+jT5GEcGtWZ8FbJVs2S+5goVZ3h54Klc/9rJIqVQc5zm9Io0oEppBZkpPdh/6p
-        vBJUd2+893USnplUtxLe9m9SBOZYRw9hFoC11WwAfTE1LB4fL5sASnD2XsvlwN9GgP2Z6A
-        0x0hKwuBnycqcXIaHuIFbuizv3oUn/I=
-Content-Disposition: inline
-In-Reply-To: <20220728005815.1715522-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=Y72epJF5d8qli+9Ce0BVC/x2v9XQ9z23UFNcVj/FJ4A=;
+        b=Fc8wIT1wXK1+SxUbIFbxzulBtkPLyuxLqHjQZLK+z2m4xY7ZV2VLKwaFIaQHZ+IOADuHLV
+        ninCdV7+fLKPvFgpz0BHFBGzuMoSfFjBwfcCvaWqgL071utlAkrTDtBozMnnYOSjWNclVR
+        qHEKerfUyM6taRzCEI4YoTWTLtZFfik=
+Content-Language: en-US
+In-Reply-To: <20220728144426.GA26631@blackbody.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jul 27, 2022 at 08:58:15PM -0400, Waiman Long <longman-H+wXaHxf7aLQ=
-T0dZR+AlfA@public.gmane.org> wrote:
-> The cgroup_update_dfl_csses() function updates css associations when a
-> cgroup's subtree_control file is modified. Any changes made to a cgroup's
-> subtree_control file, however, will only affect its descendants but not
-> the cgroup itself.=20
 
-I find this correct.
+On 7/28/22 10:44, Michal Koutný wrote:
+> On Wed, Jul 27, 2022 at 08:58:15PM -0400, Waiman Long <longman@redhat.com> wrote:
+>> The cgroup_update_dfl_csses() function updates css associations when a
+>> cgroup's subtree_control file is modified. Any changes made to a cgroup's
+>> subtree_control file, however, will only affect its descendants but not
+>> the cgroup itself.
+> I find this correct.
+>
+>> So there is no point in migrating csses associated with that cgroup.
+>> We can skip them instead.
+> Alone it's not such a big win but it componds with the recent Tejun's
+> threadgroup_rwsem elision.
+>
+It is more an optimization patch trying to not waste cpu time doing 
+unnecessary work.
+>> ---
+>>   kernel/cgroup/cgroup.c | 9 +++++++++
+>>   1 file changed, 9 insertions(+)
+> Feel free to have
+> Reviewed-by: Michal Koutný <mkoutny@suse.com>
+>
+Thanks for the review.
 
-> So there is no point in migrating csses associated with that cgroup.
-> We can skip them instead.
+Cheers,
+Longman
 
-Alone it's not such a big win but it componds with the recent Tejun's
-threadgroup_rwsem elision.
-
-> ---
->  kernel/cgroup/cgroup.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
-
-Feel free to have
-Reviewed-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
