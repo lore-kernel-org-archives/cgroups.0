@@ -1,61 +1,54 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/2] cgroup/cpuset: Keep current cpus list if cpus
- affinity was explicitly set
-Date: Thu, 28 Jul 2022 11:39:19 -1000
-Message-ID: <YuMCB86fH2K3NcqM@slm.duckdns.org>
-References: <20220728005815.1715522-1-longman@redhat.com>
- <YuLF+xXaCzwWi2BR@slm.duckdns.org>
- <1ae1cc6c-dca9-4958-6b22-24a5777c5e8d@redhat.com>
- <YuLdX7BYGvo57LNU@slm.duckdns.org>
- <606ed69e-8ad0-45d5-9de7-48739df7f48d@redhat.com>
- <YuL1NijxSEv2xadk@slm.duckdns.org>
- <c470d3f7-f0f8-b8e6-4a95-7b334f0a824b@redhat.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v5] mm: vmpressure: don't count proactive reclaim in
+ vmpressure
+Date: Thu, 28 Jul 2022 14:45:24 -0700 (PDT)
+Message-ID: <539ddf30-160b-848d-5249-770963cba5ab@google.com>
+References: <20220721173015.2643248-1-yosryahmed@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc;
-        bh=0lIhra6yGQrlkyIbM2bnb9XhkYHXW96sQs23+tnYMHU=;
-        b=bMTdPhbS4m1DiyFWNkkBtZa1qNMP0zCUSede5bxmA3r7760mQ3YV3FcYK0DUHenJXn
-         1wA0avWFIn0aX1lTswRj4MICETJAiKoPkD7IIneoaJ9Cr6a+pERInxXKcjPByREiIom7
-         nJKbTeYpyMRnBzxz2TmUMuotGG7kViVgVm9vTC3n7TaalPpopl+QoL2njeOUfEkPIiEP
-         iov33KDjYhfXS+Qb+rXWVtJnPldHSKC1iLQrMuMbJWbMOcAxTf1cDl35Rnotadymwqp9
-         TylyVen9uEcpdDbAqQHCOxFPFze21b0ZJ8us7LrmsVP1+4NzXD5hAQE8ZLJdmROwzBgY
-         m6ZA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <c470d3f7-f0f8-b8e6-4a95-7b334f0a824b-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        d=google.com; s=20210112;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :mime-version;
+        bh=syTibly++ru0N5dyOkn/AFiof+YpFKyPJXjkdOxn6gY=;
+        b=L3hxNosa6HA4NUd9AdAGbBt8zqIgmzSokN+t1MndZ5DH+YwDHtTfwjQ7ysWwnOQu6U
+         egZdf6+7EyjXaFe8p/GKWXn8F0H28Ca6aTuWXhOncQugzVRY7tt/l0KTPDx4j1yBxsWK
+         E49Vyt/Z8IBHE1uHPCIvfiV1tH2r9WVENn9uiVQuLzc8vunUHnqf3qUrNj44eE2rLws6
+         RXyOv6WOCR3tsS0OuyVcYEdEBXqUUFr6v9FxyaOwGAg4Y8XlWcfUYCSq/vk6Y6jhZG/u
+         Mz1IGyYWm+1WWkTEwb3VTI5ZrVMF7ALXOpCZQrvhwaQWGQHwpSFM5L43t3BqBH4+BmTG
+         ymew==
+In-Reply-To: <20220721173015.2643248-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, NeilBrown <neilb-l3A5Bk7waGM@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Xu <peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Hello, Waiman.
+On Thu, 21 Jul 2022, Yosry Ahmed wrote:
 
-On Thu, Jul 28, 2022 at 05:04:19PM -0400, Waiman Long wrote:
-> > So, the patch you proposed is making the code remember one special aspect of
-> > user requested configuration - whether it configured it or not, and trying
-> > to preserve that particular state as cpuset state changes. It addresses the
-> > immediate problem but it is a very partial approach. Let's say a task wanna
-> > be affined to one logical thread of each core and set its mask to 0x5555.
-> > Now, let's say cpuset got enabled and enforced 0xff and affined the task to
-> > 0xff. After a while, the cgroup got more cpus allocated and its cpuset now
-> > has 0xfff. Ideally, what should happen is the task now having the effective
-> > mask of 0x555. In practice, tho, it either would get 0xf55 or 0x55 depending
-> > on which way we decide to misbehave.
+> memory.reclaim is a cgroup v2 interface that allows users to
+> proactively reclaim memory from a memcg, without real memory pressure.
+> Reclaim operations invoke vmpressure, which is used:
+> (a) To notify userspace of reclaim efficiency in cgroup v1, and
+> (b) As a signal for a memcg being under memory pressure for networking
+> (see mem_cgroup_under_socket_pressure()).
 > 
-> OK, I see what you want to accomplish. To fully address this issue, we will
-> need to have a new cpumask variable in the the task structure which will be
-> allocated if sched_setaffinity() is ever called. I can rework my patch to
-> use this approach.
+> For (a), vmpressure notifications in v1 are not affected by this change
+> since memory.reclaim is a v2 feature.
+> 
+> For (b), the effects of the vmpressure signal (according to Shakeel [1])
+> are as follows:
+> 1. Reducing send and receive buffers of the current socket.
+> 2. May drop packets on the rx path.
+> 3. May throttle current thread on the tx path.
+> 
+> Since proactive reclaim is invoked directly by userspace, not by
+> memory pressure, it makes sense not to throttle networking. Hence,
+> this change makes sure that proactive reclaim caused by memory.reclaim
+> does not trigger vmpressure.
+> 
+> [1] https://lore.kernel.org/lkml/CALvZod68WdrXEmBpOkadhB5GPYmCXaDZzXH=yyGOCAjFRn4NDQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
+> 
+> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Yeah, we'd need to track what user requested separately from the currently
-effective cpumask. Let's make sure that the scheduler folks are on board
-before committing to the idea tho. Peter, Ingo, what do you guys think?
-
-Thanks.
-
--- 
-tejun
+Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
