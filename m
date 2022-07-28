@@ -1,81 +1,177 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/2] cgroup/cpuset: Keep current cpus list if cpus
- affinity was explicitly set
-Date: Thu, 28 Jul 2022 13:42:01 -0400
-Message-ID: <d00a8b5b-86c6-2d57-36a5-894ca70f2472@redhat.com>
-References: <20220728005815.1715522-1-longman@redhat.com>
- <20220728144420.GA27407@blackbody.suse.cz>
- <a58852b4-313a-9271-f31d-f79a91ec188b@redhat.com>
- <xhsmhbkt9dvwm.mognet@vschneid.remote.csb>
+From: Yonghong Song <yhs@fb.com>
+Subject: Re: [PATCH bpf-next v5 4/8] bpf: Introduce cgroup iter
+Date: Thu, 28 Jul 2022 11:08:16 -0700
+Message-ID: <1c4bac1c-ba65-5033-6271-6f79e3ca0cb0@fb.com>
+References: <20220722174829.3422466-1-yosryahmed@google.com>
+ <20220722174829.3422466-5-yosryahmed@google.com>
+ <c7ebc0c6-b301-de70-b5ae-1f62d360acb6@fb.com>
+ <CA+khW7hvLgCKVA0kiKhREW-PZ4aOYvkGHoEqKAggEdyY9TRp7Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1659030124;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=osQ+/ROGDL1CS+JW7FUiX/rfJGzXDL7QFiEzVel9WBs=;
-        b=cE2bkkvoUq1SoKGE3tIXDQEXQodF60vzXMiRGi1uCyCSDNaU5RsKcNMiINwDc6McKcARix
-        4/YzFfp4bavTGfDluZx1kysJZBEAU1cauuFNl+V4mY6Fic7eqRfIqOVKBjww6WEg/CNS6z
-        ik+EH+YKEi7vNIYaTszWSeZ74YguN0A=
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=facebook;
+ bh=VrEk5g4ZbmjxSSZPD8gGWHrSc/agOfw98W2dKSrOGvM=;
+ b=NY8HR885Tbx6VCI2QHJI0UUrSDt3WDrQlSSiF0foUYalVwT2JEBD4pbs2knFwn3RcQnZ
+ tk3FhW7jWGFQyi84gj2lzCpxjWjjoxUHZC/V1sR7jBrgzMBsy7389QCatpvXc5/f5s7S
+ 34zn/QJZkMHz76taOB1DnRgaeIZxG7EQJSs= 
 Content-Language: en-US
-In-Reply-To: <xhsmhbkt9dvwm.mognet-lVOlpLwaOlUmbyhZVYo91WPO1xz+ivuR@public.gmane.org>
+In-Reply-To: <CA+khW7hvLgCKVA0kiKhREW-PZ4aOYvkGHoEqKAggEdyY9TRp7Q@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Hao Luo <haoluo@google.com>
+Cc: Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>, KP Singh <kpsingh@kernel.org>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, John Fastabend <john.fastabend@gmail.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel Butt <shakeelb@google.com>
 
-On 7/28/22 12:50, Valentin Schneider wrote:
-> On 28/07/22 10:59, Waiman Long wrote:
->> On 7/28/22 10:44, Michal Koutn=C3=BD wrote:
->>> This should apply only to tasks that were extracted out of the root
->>> cgroup, no? (OK, those are all processes practically.)
->> The reset is done on all cgroups in a particular subtree. In the case of
->> cgroup root, it is all the processes in the system.
-> I've been briefly playing with this, tasks in the cgroup root don't seem
-> affected on my end (QEMU + buildroot + latest tip/sched/core):
->
->    $ mount -t cgroup2 none /sys/fs/cgroup
->    $ /root/loop.sh &
->    $ PID=3D$!
->    $ taskset -pc 2-3 $PID
->    pid 177's current affinity list: 0-3
->    pid 177's new affinity list: 2,3
->    $ echo +cpuset > /sys/fs/cgroup/cgroup.subtree_control
->    $ taskset -pc $PID
->    pid 177's current affinity list: 2,3
->
-> However tasks extracted out as mentioned by Michal definitely are:
->
->    $ mount -t cgroup2 none /sys/fs/cgroup
->    $ /root/loop.sh &
->    $ PID=3D$!
->    $ taskset -pc 2-3 $PID
->    pid 172's current affinity list: 0-3
->    pid 172's new affinity list: 2,3
->    $ mkdir /sys/fs/cgroup/foobar
->    $ echo $PID > /sys/fs/cgroup/foobar/cgroup.procs
->    $ taskset -pc $PID
->    pid 172's current affinity list: 2,3
->    $ echo +cpuset > /sys/fs/cgroup/cgroup.subtree_control
->    $ taskset -pc $PID
->    pid 172's current affinity list: 0-3
->
-> IIUC this is just what happens anytime a task gets migrated to a new
-> cpuset. Initially loop.sh remains attached to the root cpuset, and the ec=
-ho
-> +cpuset migrates it to the /foobar one.
->
-> Does that match what you're seeing?
->
-Yes. echo "+cpuset" to subtree_control means tasks in the child cgroups=20
-will move to new cpusets. Those new cpusets will have the same cpu lists=20
-as the parent unless the cpuset.cpus files are explicitly written to.=20
-This patch will ensure that tasks that have explicitly set their cpu=20
-affinity won't be affected by this change.
 
-Cheers,
-Longman
 
+On 7/28/22 10:25 AM, Hao Luo wrote:
+> On Wed, Jul 27, 2022 at 10:49 PM Yonghong Song <yhs@fb.com> wrote:
+>>
+>>
+>>
+>> On 7/22/22 10:48 AM, Yosry Ahmed wrote:
+>>> From: Hao Luo <haoluo@google.com>
+>>>
+>>> Cgroup_iter is a type of bpf_iter. It walks over cgroups in three modes:
+>>>
+>>>    - walking a cgroup's descendants in pre-order.
+>>>    - walking a cgroup's descendants in post-order.
+>>>    - walking a cgroup's ancestors.
+>>>
+>>> When attaching cgroup_iter, one can set a cgroup to the iter_link
+>>> created from attaching. This cgroup is passed as a file descriptor and
+>>> serves as the starting point of the walk. If no cgroup is specified,
+>>> the starting point will be the root cgroup.
+>>>
+>>> For walking descendants, one can specify the order: either pre-order or
+>>> post-order. For walking ancestors, the walk starts at the specified
+>>> cgroup and ends at the root.
+>>>
+>>> One can also terminate the walk early by returning 1 from the iter
+>>> program.
+>>>
+>>> Note that because walking cgroup hierarchy holds cgroup_mutex, the iter
+>>> program is called with cgroup_mutex held.
+>>>
+>>> Currently only one session is supported, which means, depending on the
+>>> volume of data bpf program intends to send to user space, the number
+>>> of cgroups that can be walked is limited. For example, given the current
+>>> buffer size is 8 * PAGE_SIZE, if the program sends 64B data for each
+>>> cgroup, the total number of cgroups that can be walked is 512. This is
+>>
+>> PAGE_SIZE needs to be 4KB in order to conclude that the total number of
+>> walked cgroups is 512.
+>>
+> 
+> Sure. Will change that.
+> 
+>>> a limitation of cgroup_iter. If the output data is larger than the
+>>> buffer size, the second read() will signal EOPNOTSUPP. In order to work
+>>> around, the user may have to update their program to reduce the volume
+>>> of data sent to output. For example, skip some uninteresting cgroups.
+>>> In future, we may extend bpf_iter flags to allow customizing buffer
+>>> size.
+>>>
+>>> Signed-off-by: Hao Luo <haoluo@google.com>
+>>> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+>>> Acked-by: Yonghong Song <yhs@fb.com>
+>>> ---
+>>>    include/linux/bpf.h                           |   8 +
+>>>    include/uapi/linux/bpf.h                      |  30 +++
+>>>    kernel/bpf/Makefile                           |   3 +
+>>>    kernel/bpf/cgroup_iter.c                      | 252 ++++++++++++++++++
+>>>    tools/include/uapi/linux/bpf.h                |  30 +++
+>>>    .../selftests/bpf/prog_tests/btf_dump.c       |   4 +-
+>>>    6 files changed, 325 insertions(+), 2 deletions(-)
+>>>    create mode 100644 kernel/bpf/cgroup_iter.c
+>>
+>> This patch cannot apply to bpf-next cleanly, so please rebase
+>> and post again.
+>>
+> 
+> Sorry about that. Will do.
+> 
+>>>
+>>> diff --git a/include/linux/bpf.h b/include/linux/bpf.h
+>>> index a97751d845c9..9061618fe929 100644
+>>> --- a/include/linux/bpf.h
+>>> +++ b/include/linux/bpf.h
+>>> @@ -47,6 +47,7 @@ struct kobject;
+>>>    struct mem_cgroup;
+>>>    struct module;
+>>>    struct bpf_func_state;
+>>> +struct cgroup;
+>>>
+>>>    extern struct idr btf_idr;
+>>>    extern spinlock_t btf_idr_lock;
+>>> @@ -1717,7 +1718,14 @@ int bpf_obj_get_user(const char __user *pathname, int flags);
+>>>        int __init bpf_iter_ ## target(args) { return 0; }
+>>>
+>>>    struct bpf_iter_aux_info {
+>>> +     /* for map_elem iter */
+>>>        struct bpf_map *map;
+>>> +
+>>> +     /* for cgroup iter */
+>>> +     struct {
+>>> +             struct cgroup *start; /* starting cgroup */
+>>> +             int order;
+>>> +     } cgroup;
+>>>    };
+>>>
+>>>    typedef int (*bpf_iter_attach_target_t)(struct bpf_prog *prog,
+>>> diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
+>>> index ffcbf79a556b..fe50c2489350 100644
+>>> --- a/include/uapi/linux/bpf.h
+>>> +++ b/include/uapi/linux/bpf.h
+>>> @@ -87,10 +87,30 @@ struct bpf_cgroup_storage_key {
+>>>        __u32   attach_type;            /* program attach type (enum bpf_attach_type) */
+>>>    };
+>>>
+>>> +enum bpf_iter_cgroup_traversal_order {
+>>> +     BPF_ITER_CGROUP_PRE = 0,        /* pre-order traversal */
+>>> +     BPF_ITER_CGROUP_POST,           /* post-order traversal */
+>>> +     BPF_ITER_CGROUP_PARENT_UP,      /* traversal of ancestors up to the root */
+>>> +};
+>>> +
+>>>    union bpf_iter_link_info {
+>>>        struct {
+>>>                __u32   map_fd;
+>>>        } map;
+>>> +
+>>> +     /* cgroup_iter walks either the live descendants of a cgroup subtree, or the
+>>> +      * ancestors of a given cgroup.
+>>> +      */
+>>> +     struct {
+>>> +             /* Cgroup file descriptor. This is root of the subtree if walking
+>>> +              * descendants; it's the starting cgroup if walking the ancestors.
+>>> +              * If it is left 0, the traversal starts from the default cgroup v2
+>>> +              * root. For walking v1 hierarchy, one should always explicitly
+>>> +              * specify the cgroup_fd.
+>>> +              */
+>>
+>> I did see how the above cgroup v1/v2 scenarios are enforced.
+>>
+> 
+> Do you mean _not_ see? Yosry and I experimented a bit. We found even
+
+Ya, I mean 'not see'...
+
+> on systems where v2 is not enabled, cgroup v2 root always exists and
+> can be attached to, and can be iterated on (only trivially). We didn't
+> find a way to tell v1 and v2 apart and deemed a comment to instruct v1
+> users is fine?
+
+So, cgroup_fd = 0, start from cgroup v2 root.
+     cgroup_fd != 0, start from that particular cgroup (cgroup_v1 or v2)
+Okay, since cgroup v2 root is always available and can be iterated,
+I think comments should be okay.
+
+> 
+>>> +             __u32   cgroup_fd;
+>>> +             __u32   traversal_order;
+>>> +     } cgroup;
+>>>    };
+>>>
+>>>    /* BPF syscall commands, see bpf(2) man-page for more details. */
+[...]
