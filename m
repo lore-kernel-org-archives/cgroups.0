@@ -1,41 +1,69 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: Re: [PATCH RESEND v6 8/8] blk-throttle: clean up flag
- 'THROTL_TG_PENDING'
-Date: Thu, 28 Jul 2022 19:03:17 +0800
-Message-ID: <af637e43-1aac-e4bf-7363-b4771cd91a39@huaweicloud.com>
-References: <20220701093441.885741-1-yukuai1@huaweicloud.com>
- <20220701093441.885741-9-yukuai1@huaweicloud.com>
- <YuGHjf9MWjirOWcm@slm.duckdns.org>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 1/2] cgroup/cpuset: Keep current cpus list if cpus
+ affinity was explicitly set
+Date: Thu, 28 Jul 2022 16:44:20 +0200
+Message-ID: <20220728144420.GA27407@blackbody.suse.cz>
+References: <20220728005815.1715522-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <YuGHjf9MWjirOWcm@slm.duckdns.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1659019461; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DUx+MWMoJx3rj7YLGpNF515BhD3DfyJeCTB/nJKgRCk=;
+        b=MHJHRYEZfylLqaLT6NoEWTI/QBRAymRiDK0CUqh5mdBBeYtTx6qCLSiiiJlKDbXH2CtuML
+        ELg0DUMKWzPeLpTK+ErUV7mFx6fxMZpMc7rnXtt9XGWtBGIt5ltP3AO/QF24jIC/h4u+UH
+        iAHGylfhM2L1Jq106PrL+B58hQ2xPus=
+Content-Disposition: inline
+In-Reply-To: <20220728005815.1715522-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Tejun Heo <tj@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: mkoutny@suse.com, axboe@kernel.dk, ming.lei@redhat.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+Hello.
 
+On Wed, Jul 27, 2022 at 08:58:14PM -0400, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> It was found that any change to the current cpuset hierarchy may reset
+> the cpus_allowed list of the tasks in the affected cpusets to the
+> default cpuset value even if those tasks have cpus affinity explicitly
+> set by the users before.
 
-=D4=DA 2022/07/28 2:44, Tejun Heo =D0=B4=B5=C0:
-> On Fri, Jul 01, 2022 at 05:34:41PM +0800, Yu Kuai wrote:
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> All related operations are inside 'queue_lock', there is no need to use
->> the flag, we only need to make sure throtl_enqueue_tg() is called when
->> the first bio is throttled, and throtl_dequeue_tg() is called when the
->> last throttled bio is dispatched.
->=20
-> Ah, okay, so the prev patch was to enable this cleanup. Can you please no=
-te
-> so in the previous patch and also that this doesn't cause any functional
-> changes?
->=20
+I'm surprised this went so long unnoticed / unreported.
 
-Of course, I'll do that in next iteration.
+Could it be users relied on that implicit affinity reset?
+
+> That is especially easy to trigger under a cgroup v2 environment where
+> writing "+cpuset" to the root cgroup's cgroup.subtree_control file
+> will reset the cpus affinity of all the processes in the system.
+
+This should apply only to tasks that were extracted out of the root
+cgroup, no? (OK, those are all processes practically.)
+
+(Even without your second patch, the scope should be limited because of
+src_cset==dst_cset check in cgroup_migrate_prepare_dst().)
+
+> That is especially problematic in a nohz_full environment where the
+> tasks running in the nohz_full CPUs usually have their cpus affinity
+> explicitly set and will behave incorrectly if cpus affinity changes.
+
+One could also argue that for such processes, cgroup hierarchy should be
+first configured and only then they start and set own affinity.
+
+> Fix this problem by adding a flag in the task structure to indicate that
+> a task has their cpus affinity explicitly set before and make cpuset
+> code not to change their cpus_allowed list unless the user chosen cpu
+> list is no longer a subset of the cpus_allowed list of the cpuset itself.
+
+I'm uneasy with the occasional revert of this flag, i.e. the task who
+set their affinity would sometimes have it overwritten and sometimes
+not (which might have been relied on, especially with writes into
+cpuset.cpus).
+(But I have no better answer than the counter-argument above since
+there's no easier way to detect the implicit migrations.)
+
+Also, is there similar effect with memory binding?
 
 Thanks,
-Kuai
-> Thanks.
->=20
-
+Michal
