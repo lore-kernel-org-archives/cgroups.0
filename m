@@ -1,72 +1,89 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RESEND v6 4/8] blk-throttle: fix io hung due to config
- updates
-Date: Thu, 28 Jul 2022 06:55:33 -1000
-Message-ID: <YuK/hXnFA+qu5EMB@slm.duckdns.org>
-References: <20220701093441.885741-1-yukuai1@huaweicloud.com>
- <20220701093441.885741-5-yukuai1@huaweicloud.com>
- <YuGGVxdlOVk/eF2l@slm.duckdns.org>
- <20220728093346.GA2281@blackbody.suse.cz>
- <0bbf3d0c-88c4-8120-3df3-960dda041864@huaweicloud.com>
+From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH bpf-next v5 4/8] bpf: Introduce cgroup iter
+Date: Thu, 28 Jul 2022 10:20:46 -0700
+Message-ID: <CA+khW7gfzoeHVd5coTSWXuYVfqiVMwoSjXkWsP-CeVdmOm0FqA@mail.gmail.com>
+References: <20220722174829.3422466-1-yosryahmed@google.com>
+ <20220722174829.3422466-5-yosryahmed@google.com> <YuK+eg3lgwJ2CJnJ@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc;
-        bh=/v3Gcn+hTL0SOyI/tztq8lNP5D0RrTqazuF4o/1KF3k=;
-        b=KhZWRDXn2xsiTaRpuC25WJC2oEAedK39KKmcClr8IAYxJKLTnKimRaDfLzkdZcQN0O
-         yhKQ1DOrbZYICCUCx7cFxq0fQbI3q/V/4/IcFYnleE9gemq31ZU9e+Vf8sryx0qKVHu0
-         taudKvAkkTIflxzG55p9RIeN1ji5KjqbvTr8wRNt6/ybqVSm9CLEIHsh0B6c3nrqeJkb
-         kz2oJruSwXOeZdvyOieGQotwUPsfmJWgVM38LrcLHIVXo0UQdqgPLqOhyf9ErM1VP0Mq
-         kyD9+JIyR7g/q/CNR7jAn/+uArIZcSFGqY3L0dUPjQBvffcMuHTqB9eMgI79oKVC8wSH
-         /R1Q==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <0bbf3d0c-88c4-8120-3df3-960dda041864@huaweicloud.com>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=VW7oYK4RqwqbJsASlxdjRV3NEVCTNvlDrSDTg61QkOg=;
+        b=h8FxtRKKQHF4SZtxhuJuCSHn3CxIjnLxoANRs2Qd79XyLUdqOiqvCZ0nf/TljQOJoz
+         7Uyovrfff5RQt4y3dHNonwXKvY7FZUnDtoRHS7lWjuK8E6idQMKrJMS4QFSzUEZF4m66
+         TzgFuIxGVMtfqQ0hB1NxW5AKLb+TvhCtZrfm9cueT8LxtqQg9su+cN3ghlP+T2lVpLdI
+         ORveshtJMkLA+6KRzWshwGMkPKwKHyh+tpsCEeMexuP4mlBxfIufMDal02TfyaOgJefJ
+         /BB58eusHQOE/4dQDk/11j96eQxmE3KTRG8BmpQQQX33x3W6J0jhBI98b3UHF00rtHXj
+         TKrg==
+In-Reply-To: <YuK+eg3lgwJ2CJnJ-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, axboe@kernel.dk, ming.lei@redhat.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Thu, Jul 28, 2022 at 06:34:44PM +0800, Yu Kuai wrote:
-> Hi
-> 
-> 在 2022/07/28 17:33, Michal Koutný 写道:
-> > On Wed, Jul 27, 2022 at 08:39:19AM -1000, Tejun Heo <tj@kernel.org> wrote:
-> > > I'm not quiet sure this is correct. What if the limit keeps changing across
-> > > different values? Then we'd be calculating the skipped amount based on the
-> > > last configuration only which would be incorrect.
-> > 
-> > When one change of configuration is correct, then all changes must be
-> > correct by induction. It's sufficient to take into account only the one
-> > old config and the new one.
-> > 
-> > This __tg_update_skipped() calculates bytes_skipped with the limit
-> > before the change and bytes_skipped are used (divided by) the new limit
-> > in tg_with_in_bps_limit().
-> > The accumulation of bytes_skipped across multiple changes (until slice
-> > properly ends) is proportional to how bytes_allowed would grow over
-> > time.
-> > That's why I find this correct (I admit I had to look back into my
-> > notes when this was first discussed).
-> > 
-> > HTH,
-> > Michal
-> > 
-> 
-> Hi, Tejun
-> 
-> Michal already explain it very well, please let me know if you still
-> thinks there are better ways.
+Hi Tejun,
 
-Ah, I see, so it's integrating into the skipped counters across multiple
-updates. I think it can definitely use comments explaining how it's working
-but that looks okay.
+On Thu, Jul 28, 2022 at 9:51 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+> Hello,
+>
+> On Fri, Jul 22, 2022 at 05:48:25PM +0000, Yosry Ahmed wrote:
+> > +
+> > +     /* cgroup_iter walks either the live descendants of a cgroup subtree, or the
+> > +      * ancestors of a given cgroup.
+> > +      */
+> > +     struct {
+> > +             /* Cgroup file descriptor. This is root of the subtree if walking
+> > +              * descendants; it's the starting cgroup if walking the ancestors.
+> > +              * If it is left 0, the traversal starts from the default cgroup v2
+> > +              * root. For walking v1 hierarchy, one should always explicitly
+> > +              * specify the cgroup_fd.
+> > +              */
+> > +             __u32   cgroup_fd;
+>
+> So, we're identifying the starting point with an fd.
+>
+> > +             __u32   traversal_order;
+> > +     } cgroup;
+> >  };
+> >
+> >  /* BPF syscall commands, see bpf(2) man-page for more details. */
+> > @@ -6136,6 +6156,16 @@ struct bpf_link_info {
+> >                                       __u32 map_id;
+> >                               } map;
+> >                       };
+> > +                     union {
+> > +                             struct {
+> > +                                     __u64 cgroup_id;
+> > +                                     __u32 traversal_order;
+> > +                             } cgroup;
+>
+> but iterating the IDs. IDs are the better choice for cgroup2 as there's
+> nothing specific to the calling program or the fds it has, but I guess this
+> is because you want to use it for cgroup1, right? Oh well, that's okay I
+> guess.
+>
 
-Thanks.
+Yes, we are identifying the starting point with FD. The cgroup_id here
+is the information reported from kernel to userspace for identifying
+the cgroup.
 
--- 
-tejun
+We use FD because it is a convention in BPF. Compatibility of cgroup1
+is a good feature of this convention. My thoughts: It seems that ID
+may be better, for two reasons. First, because ID is stateless, the
+userspace doesn't have to remember closing the FD. Second, using
+different identifications in two directions (userspace specifies
+cgroup using FD, while kernel reports cgroup using ID) introduces a
+little complexity when connecting them together.
+
+Hao
+
+> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>
+> Thanks.
+>
+> --
+> tejun
