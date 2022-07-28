@@ -1,42 +1,45 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2] cgroup: Skip subtree root in
- cgroup_update_dfl_csses()
-Date: Thu, 28 Jul 2022 07:27:25 -1000
-Message-ID: <YuLG/RzJASE/8uTV@slm.duckdns.org>
-References: <20220728005815.1715522-1-longman@redhat.com>
- <20220728005815.1715522-2-longman@redhat.com>
+Subject: Re: [PATCH bpf-next v5 4/8] bpf: Introduce cgroup iter
+Date: Thu, 28 Jul 2022 07:35:14 -1000
+Message-ID: <YuLI0jh8Csq0mErM@slm.duckdns.org>
+References: <20220722174829.3422466-1-yosryahmed@google.com>
+ <20220722174829.3422466-5-yosryahmed@google.com>
+ <YuK+eg3lgwJ2CJnJ@slm.duckdns.org>
+ <CA+khW7gfzoeHVd5coTSWXuYVfqiVMwoSjXkWsP-CeVdmOm0FqA@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc;
-        bh=VbEpbcnRCKhYT7BZ0HSKVgFvbMAakayClnOZvBHVLDM=;
-        b=i00rVjg3DaYMhQYt2uaTPpDZXUdlQ+KaCLpjoz3IEIhO1KJkqSkwWpy1/U7Uf/F/aD
-         nmFgTkH1TiexdN5J0xFNoxsNwasPcbARyEDdluyAxzkqtOoUZni9gh2nJsVmmZVUf4Xt
-         cV/aq3fSAIIAqz8k9rp+jo+k1XdHNaYlqrx0nfsdz0stk4DaDTrhBl4iyUw7qpidmOac
-         GGvOSFwVaZrE6LDxLSV1yebcuuUAeZ3zPpMZWUBNFispkFDqlVx2Rk5aLw7LNWPr+Tw7
-         ldPZYan//l8svd7n01XrDz4bRjQrKC3gazwQ+N+G9xjNJxI+R0+fooIua330gEkmXpku
-         6JWA==
+        bh=QspELtFwrGd992ER4IywagKhOwPAd04XFlDr4WU6NiI=;
+        b=mr2y8Nixp9iQYiaPkk1ld3aAvfXUbpKTeQ15WW56UqOrHJT7F6ygOyrLj1DDaCkTiT
+         Btb3DBlO0KaSYzChaNk/QE5FisTCujb6TIsaKo4sDfHWGqDOXRI4z6wzpsc71giBkXAE
+         UhjaXLzeSQ2FYrOgzCYkyCnkLpH0GqfV6Nyk/MXzhQHa6peGkiIqaB74rxQlVlC4CRMH
+         0m98YNTpKu9tGdkZ38JBZ7DKi8bs2oCmbjDgzVxUBHk1Hvy75bihPcG4YlLTiseIQnl8
+         KKQA0QK0h3Dm+kDcrY67cJ6p/LBOkjXG3TRzWjzbNxxOvxuxKDD6/OsYCaLaW7q16zWD
+         FPqg==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20220728005815.1715522-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CA+khW7gfzoeHVd5coTSWXuYVfqiVMwoSjXkWsP-CeVdmOm0FqA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Jul 27, 2022 at 08:58:15PM -0400, Waiman Long wrote:
-> The cgroup_update_dfl_csses() function updates css associations when a
-> cgroup's subtree_control file is modified. Any changes made to a cgroup's
-> subtree_control file, however, will only affect its descendants but not
-> the cgroup itself. So there is no point in migrating csses associated
-> with that cgroup. We can skip them instead.
-> 
-> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+On Thu, Jul 28, 2022 at 10:20:46AM -0700, Hao Luo wrote:
+...
+> is a good feature of this convention. My thoughts: It seems that ID
+> may be better, for two reasons. First, because ID is stateless, the
+> userspace doesn't have to remember closing the FD. Second, using
+> different identifications in two directions (userspace specifies
+> cgroup using FD, while kernel reports cgroup using ID) introduces a
+> little complexity when connecting them together.
 
-Applied to cgroup/for-5.20.
+Yeah, you can pass the IDs around different processes, print and log them in
+meaningful ways and so on because they're actual IDs, so my preference is
+towards using them for anything new.
 
 Thanks.
 
