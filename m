@@ -1,82 +1,53 @@
-From: Waiman Long <longman@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 1/2] cgroup/cpuset: Keep current cpus list if cpus
  affinity was explicitly set
-Date: Thu, 28 Jul 2022 14:57:28 -0400
-Message-ID: <1ae1cc6c-dca9-4958-6b22-24a5777c5e8d@redhat.com>
+Date: Thu, 28 Jul 2022 09:02:55 -1000
+Message-ID: <YuLdX7BYGvo57LNU@slm.duckdns.org>
 References: <20220728005815.1715522-1-longman@redhat.com>
  <YuLF+xXaCzwWi2BR@slm.duckdns.org>
+ <1ae1cc6c-dca9-4958-6b22-24a5777c5e8d@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1659034655;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fjIYWUhlmn952PQamHyhfurxBgzciXNRkjegJKiOJW4=;
-        b=PcCi3gU55ywwQ9YonL0ILXdb0EOs5LWocH3kKjiDfvUvvLEN02PCPfshU72Ex0TugBiit8
-        2z5bCNICnrybAASirJGMfJahvnq46AQrz059TAN+b50PXecOr+BhqtLn5jWRhQucdGTKUx
-        6N41JdkvgzLpwC4nzOkmujBAFB+53h8=
-Content-Language: en-US
-In-Reply-To: <YuLF+xXaCzwWi2BR@slm.duckdns.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc;
+        bh=PWjIAmKrG0eGARGnUAKYiT1lYkiSHVZ1Sr+4FZSAYxg=;
+        b=ksr0sVCDXJtHVWTGYRs6udLXbSRcNqPqF8cH0ACW6cKjvQVmA5weo37e+Eopue0wU/
+         ZNvMmqCx3FhEnbbDzsNh5oM30sf4voiO5TOuZGgUwgIUWbd8HVNH0EJpf1igfj7nCThO
+         uYXY03CYxCcobHkUVOKBQLudEOxJJhMpvI7tE0Cfkt6zJyV7DkrjtHLIdRAk0meelh7d
+         po6PXn9dUzyB3g83pYcmcs0a9NJiSxXWLJs02p8RIWAiEiW/HLMvB4AtTtJPKxrw7Wj/
+         QEKX3x1t+/Dh2lcam+fpLLLXo+LGfU78S78F4HECzGv9eJMNzRr9L6+EJWY25fFknMmi
+         TaBw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1ae1cc6c-dca9-4958-6b22-24a5777c5e8d-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 7/28/22 13:23, Tejun Heo wrote:
-> Hello,
->
-> On Wed, Jul 27, 2022 at 08:58:14PM -0400, Waiman Long wrote:
->> It was found that any change to the current cpuset hierarchy may reset
->> the cpus_allowed list of the tasks in the affected cpusets to the
->> default cpuset value even if those tasks have cpus affinity explicitly
->> set by the users before. That is especially easy to trigger under a
->> cgroup v2 environment where writing "+cpuset" to the root cgroup's
->> cgroup.subtree_control file will reset the cpus affinity of all the
->> processes in the system.
->>
->> That is especially problematic in a nohz_full environment where the
->> tasks running in the nohz_full CPUs usually have their cpus affinity
->> explicitly set and will behave incorrectly if cpus affinity changes.
->>
->> Fix this problem by adding a flag in the task structure to indicate that
->> a task has their cpus affinity explicitly set before and make cpuset
->> code not to change their cpus_allowed list unless the user chosen cpu
->> list is no longer a subset of the cpus_allowed list of the cpuset itself.
->>
->> With that change in place, it was verified that tasks that have its
->> cpus affinity explicitly set will not be affected by changes made to
->> the v2 cgroup.subtree_control files.
-> I think the underlying cause here is cpuset overwriting the cpumask the user
-> configured but that's a longer discussion.
->
->> +/*
->> + * Don't change the cpus_allowed list if cpus affinity has been explicitly
->> + * set before unless the current cpu list is not a subset of the new cpu list.
->> + */
->> +static int cpuset_set_cpus_allowed_ptr(struct task_struct *p,
->> +				       const struct cpumask *new_mask)
->> +{
->> +	if (p->cpus_affinity_set && cpumask_subset(p->cpus_ptr, new_mask))
->> +		return 0;
->> +
->> +	p->cpus_affinity_set = 0;
->> +	return set_cpus_allowed_ptr(p, new_mask);
->> +}
-> I wonder whether the more predictable behavior would be always not resetting
-> the cpumask if it's a subset of the new_mask.
-There can be a counter argument that if a user found out that there is 
-not enough cpus in a cpuset to meet its performance target, one can 
-always increase the number of cpus in the cpuset. Generalizing this 
-behavior to all the tasks irrespective if they have explicitly set cpus 
-affinity before will disallow this use case.
-> Also, shouldn't this check
-> p->cpus_mask instead of p->cpus_ptr?
+Hello,
 
-You are right. I should have used cpus_mask instead. Will send out a v2.
+On Thu, Jul 28, 2022 at 02:57:28PM -0400, Waiman Long wrote:
+> There can be a counter argument that if a user found out that there is not
+> enough cpus in a cpuset to meet its performance target, one can always
+> increase the number of cpus in the cpuset. Generalizing this behavior to all
+> the tasks irrespective if they have explicitly set cpus affinity before will
+> disallow this use case.
 
-Cheers,
-Longman
+This is nasty. The real solution here is separating out what user requested
+and the mask that cpuset (or cpu hotplug) needs to apply on top. ie.
+remember what the user requested in a separate cpumask and compute the
+intersection into p->cpus_maks whenever something changes and apply
+fallbacks on that final mask. Multiple parties updating the same variable is
+never gonna lead to anything consistent and we're patching up for whatever
+the immediate use case seems to need at the moment. That said, I'm not
+necessarily against patching it up but if you're interested in delving into
+it deeper, that'd be great.
 
+Thanks.
+
+-- 
+tejun
