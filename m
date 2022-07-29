@@ -1,98 +1,273 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/2] cgroup/cpuset: Keep current cpus list if cpus
- affinity was explicitly set
-Date: Fri, 29 Jul 2022 10:50:30 -0400
-Message-ID: <92f68392-12d2-f64a-9bb9-1a3a15f99d02@redhat.com>
-References: <20220728005815.1715522-1-longman@redhat.com>
- <YuLF+xXaCzwWi2BR@slm.duckdns.org>
- <1ae1cc6c-dca9-4958-6b22-24a5777c5e8d@redhat.com>
- <YuLdX7BYGvo57LNU@slm.duckdns.org>
- <606ed69e-8ad0-45d5-9de7-48739df7f48d@redhat.com>
- <YuL1NijxSEv2xadk@slm.duckdns.org>
- <c470d3f7-f0f8-b8e6-4a95-7b334f0a824b@redhat.com>
- <YuMCB86fH2K3NcqM@slm.duckdns.org> <xhsmhy1wcc8dq.mognet@vschneid.remote.csb>
+From: Hao Luo <haoluo@google.com>
+Subject: Re: [PATCH bpf-next v5 8/8] bpf: add a selftest for cgroup
+ hierarchical stats collection
+Date: Fri, 29 Jul 2022 10:36:26 -0700
+Message-ID: <CA+khW7ikSexgprouA6tpbWfsT2fDdgEd7OfXMF4qhDWkxgxf1g@mail.gmail.com>
+References: <20220722174829.3422466-1-yosryahmed@google.com>
+ <20220722174829.3422466-9-yosryahmed@google.com> <CAEf4BzZQwMeJ5xfzEWWRcTf1Hick862x2qSZ3O0DX47Q++2-4w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1659106236;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=3RIbQJyAhz2h/kfb2kZEUdHUrU4dsqj9Ad5P96B1/m8=;
-        b=UOT3QiVql6aDzqNS9wZeMGwhe7bC2ghB6NUjUYzMwBRIZ8TpTnzzRHaflAEd/PeRTzxuZq
-        4+JyJhj39i/CfChOKNlEEgAHeL2zAWWtp+GcEyg6Oft9AIr3uWBaFCiK7LegGaZ975cK0S
-        1bpZ4v6lHwbttBLyNeofPiuAJCoe7hg=
-Content-Language: en-US
-In-Reply-To: <xhsmhy1wcc8dq.mognet-lVOlpLwaOlUmbyhZVYo91WPO1xz+ivuR@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=eVMmcjZdpoYkfAfcG11mdG+DM47ViTyLlI/HvC0NVqs=;
+        b=hrGaOCnwS06hYR6y6b1XfcUUnaDFW93EvujdUgaK7Ka1oAslOsoQxI+GrU6NDwkrRm
+         Bm/Oa2nrMa2QlCUPi2rwlMhDvM8LHxk5y1toex4ln/EOra9ZW1TWaPfT1p6nfAKF7wcZ
+         IX8ksKXqVjWZSFtHzQsp2hpzy/rIRcdeCVIS5QR14U5wN7UB7U+RZZNnXplmxBT6VUeP
+         Pa/gyCFzbAhxsgL3w5kZQndZItJQAj/WT20YCzfZhILOuqdyL1iLoHIq/vN2o1DWFIp5
+         Qa6OP91GDqftH6j4Ker359n7z+m5ajtPmTPun+GXwGgSaQSpMyuCsG36Xyoo/lchRbqW
+         BBhA==
+In-Reply-To: <CAEf4BzZQwMeJ5xfzEWWRcTf1Hick862x2qSZ3O0DX47Q++2-4w@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrii Nakryiko <andrii.nakryiko@gmail.com>
+Cc: Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>, KP Singh <kpsingh@kernel.org>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, John Fastabend <john.fastabend@gmail.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel
 
-On 7/29/22 10:15, Valentin Schneider wrote:
-> On 28/07/22 11:39, Tejun Heo wrote:
->> Hello, Waiman.
->>
->> On Thu, Jul 28, 2022 at 05:04:19PM -0400, Waiman Long wrote:
->>>> So, the patch you proposed is making the code remember one special aspect of
->>>> user requested configuration - whether it configured it or not, and trying
->>>> to preserve that particular state as cpuset state changes. It addresses the
->>>> immediate problem but it is a very partial approach. Let's say a task wanna
->>>> be affined to one logical thread of each core and set its mask to 0x5555.
->>>> Now, let's say cpuset got enabled and enforced 0xff and affined the task to
->>>> 0xff. After a while, the cgroup got more cpus allocated and its cpuset now
->>>> has 0xfff. Ideally, what should happen is the task now having the effective
->>>> mask of 0x555. In practice, tho, it either would get 0xf55 or 0x55 depending
->>>> on which way we decide to misbehave.
->>> OK, I see what you want to accomplish. To fully address this issue, we will
->>> need to have a new cpumask variable in the the task structure which will be
->>> allocated if sched_setaffinity() is ever called. I can rework my patch to
->>> use this approach.
->> Yeah, we'd need to track what user requested separately from the currently
->> effective cpumask. Let's make sure that the scheduler folks are on board
->> before committing to the idea tho. Peter, Ingo, what do you guys think?
->>
-> FWIW on a runtime overhead side of things I think it'll be OK as that
-> should be just an extra mask copy  in sched_setaffinity() and a subset
-> check / cpumask_and() in set_cpus_allowed_ptr(). The policy side is a bit
-> less clear (when, if ever, do we clear the user-defined mask? Will it keep
-> haunting us even after moving a task to a disjoint cpuset partition?).
+Hi Andrii,
 
-The runtime overhead should be minimal. It is the behavioral side that 
-we should be careful about. It is a change in existing behavior and we 
-don't want to cause surprise to the users. Currently, a task that set 
-its cpu affinity explicitly will have its affinity reset whenever there 
-is any change to the cpuset it belongs to or a hotplug event touch any 
-cpu in the current cpuset. The new behavior we are proposing here is 
-that it will try its best to keep the cpu affinity that the user 
-requested within the constraint of the current cpuset as well as the cpu 
-hotplug state.
+Thanks for taking a look.
 
-
+On Thu, Jul 28, 2022 at 3:40 PM Andrii Nakryiko
+<andrii.nakryiko@gmail.com> wrote:
 >
-> There's also if/how that new mask should be exposed, because attaching a
-> task to a cpuset will now yield a not-necessarily-obvious affinity -
-> e.g. in the thread affinity example above, if the initial affinity setting
-> was done ages ago by some system tool, IMO the user needs a way to be able
-> to expect/understand the result of 0x555 rather than 0xfff.
-
-Users can use sched_getaffinity(2) to retrieve the current cpu affinity. 
-It is up to users to set another one if they don't like the current one. 
-I don't think we need to return what the previous requested cpu affinity 
-is. They are suppose to know that or they can set their own if they 
-don't like it. \
-
-Cheers,
-Longman
-
+> On Fri, Jul 22, 2022 at 10:49 AM Yosry Ahmed <yosryahmed@google.com> wrote:
+> >
+[...]
+> > +
+> > +#define CGROUP_PATH(p, n) {.path = #p"/"#n, .name = #n}
+> > +
+> > +static struct {
+> > +       const char *path, *name;
+> > +       unsigned long long id;
+> > +       int fd;
+> > +} cgroups[] = {
+> > +       CGROUP_PATH(/, test),
+> > +       CGROUP_PATH(/test, child1),
+> > +       CGROUP_PATH(/test, child2),
+> > +       CGROUP_PATH(/test/child1, child1_1),
+> > +       CGROUP_PATH(/test/child1, child1_2),
+> > +       CGROUP_PATH(/test/child2, child2_1),
+> > +       CGROUP_PATH(/test/child2, child2_2),
 >
-> While I'm saying this, I don't think anything exposes p->user_cpus_ptr, but
-> then again that one is for "special" hardware...
+> nit: why are these arguments not explicit string literals?...
+> CGROUP_PATH("/test/child1", "child1_1") explicitly shows that those
+> values are used as strings
 >
->> Thanks.
->>
->> --
->> tejun
 
+No particular reason I think. String literals are good. Will fix in v6.
+
+> > +};
+> > +
+> > +#define N_CGROUPS ARRAY_SIZE(cgroups)
+> > +#define N_NON_LEAF_CGROUPS 3
+> > +
+> > +int root_cgroup_fd;
+> > +bool mounted_bpffs;
+> > +
+>
+> static?
+>
+
+Yeah, we were careless about 'static' or 'inline'. I am going to go
+over the code and mark functions/vars 'static' properly.
+
+> > +static int read_from_file(const char *path, char *buf, size_t size)
+> > +{
+> > +       int fd, len;
+> > +
+> > +       fd = open(path, O_RDONLY);
+> > +       if (fd < 0) {
+> > +               log_err("Open %s", path);
+> > +               return 1;
+> > +       }
+> > +       len = read(fd, buf, size);
+> > +       if (len < 0)
+> > +               log_err("Read %s", path);
+> > +       else
+> > +               buf[len] = 0;
+> > +       close(fd);
+> > +       return len < 0;
+> > +}
+> > +
+>
+> [...]
+>
+> > +       /* Also dump stats for root */
+> > +       err = setup_cgroup_iter(obj, root_cgroup_fd, CG_ROOT_NAME);
+> > +       if (!ASSERT_OK(err, "setup_cgroup_iter"))
+> > +               return err;
+> > +
+> > +       /* Attach rstat flusher */
+> > +       link = bpf_program__attach(obj->progs.vmscan_flush);
+> > +       if (!ASSERT_OK_PTR(link, "attach rstat"))
+> > +               return libbpf_get_error(link);
+>
+> this is dangerous, because ASSERT_OK_PTR might overwrite errno by the
+> time we get to libbpf_get_error() call. link is NULL and
+> libbpf_get_error() extracts error from errno. It's best to just return
+> fixed error code here, or otherwise you'd need to remember err before
+> ASSERT_OK_PTR() call.
+>
+
+Ack. We can just return a fixed error code here. Thanks.
+
+> > +       obj->links.vmscan_flush = link;
+> > +
+> > +       /* Attach tracing programs that will calculate vmscan delays */
+> > +       link = bpf_program__attach(obj->progs.vmscan_start);
+> > +       if (!ASSERT_OK_PTR(obj, "attach raw_tracepoint"))
+> > +               return libbpf_get_error(link);
+> > +       obj->links.vmscan_start = link;
+> > +
+> > +       link = bpf_program__attach(obj->progs.vmscan_end);
+> > +       if (!ASSERT_OK_PTR(obj, "attach raw_tracepoint"))
+> > +               return libbpf_get_error(link);
+> > +       obj->links.vmscan_end = link;
+> > +
+> > +       *skel = obj;
+> > +       return 0;
+> > +}
+> > +
+> > +void destroy_progs(struct cgroup_hierarchical_stats *skel)
+>
+> static?
+>
+
+Ack.
+
+> > +{
+> > +       char path[128];
+> > +       int i;
+> > +
+> > +       for (i = 0; i < N_CGROUPS; i++) {
+> > +               /* Delete files in bpffs that cgroup_iters are pinned in */
+> > +               snprintf(path, 128, "%s%s", BPFFS_VMSCAN,
+> > +                        cgroups[i].name);
+> > +               ASSERT_OK(remove(path), "remove cgroup_iter pin");
+> > +       }
+> > +
+> > +       /* Delete root file in bpffs */
+> > +       snprintf(path, 128, "%s%s", BPFFS_VMSCAN, CG_ROOT_NAME);
+> > +       ASSERT_OK(remove(path), "remove cgroup_iter root pin");
+> > +       cgroup_hierarchical_stats__destroy(skel);
+> > +}
+> > +
+> > +void test_cgroup_hierarchical_stats(void)
+> > +{
+> > +       struct cgroup_hierarchical_stats *skel = NULL;
+> > +
+> > +       if (setup_hierarchy())
+> > +               goto hierarchy_cleanup;
+> > +       if (setup_progs(&skel))
+> > +               goto cleanup;
+> > +       if (induce_vmscan())
+> > +               goto cleanup;
+> > +       check_vmscan_stats();
+> > +cleanup:
+> > +       destroy_progs(skel);
+> > +hierarchy_cleanup:
+> > +       destroy_hierarchy();
+> > +}
+> > diff --git a/tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c b/tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
+> > new file mode 100644
+> > index 000000000000..85a65a72482e
+> > --- /dev/null
+> > +++ b/tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
+> > @@ -0,0 +1,239 @@
+> > +// SPDX-License-Identifier: GPL-2.0-only
+> > +/*
+> > + * Functions to manage eBPF programs attached to cgroup subsystems
+> > + *
+> > + * Copyright 2022 Google LLC.
+> > + */
+> > +#include "vmlinux.h"
+> > +#include <bpf/bpf_helpers.h>
+> > +#include <bpf/bpf_tracing.h>
+> > +
+> > +char _license[] SEC("license") = "GPL";
+> > +
+> > +/*
+> > + * Start times are stored per-task, not per-cgroup, as multiple tasks in one
+> > + * cgroup can perform reclain concurrently.
+>
+> typo: reclaim?
+>
+
+Ack. Will fix.
+
+> > + */
+> > +struct {
+> > +       __uint(type, BPF_MAP_TYPE_TASK_STORAGE);
+> > +       __uint(map_flags, BPF_F_NO_PREALLOC);
+> > +       __type(key, int);
+> > +       __type(value, __u64);
+> > +} vmscan_start_time SEC(".maps");
+> > +
+>
+> [...]
+>
+> > +static inline int create_vmscan_percpu_elem(__u64 cg_id, __u64 state)
+> > +{
+> > +       struct vmscan_percpu pcpu_init = {.state = state, .prev = 0};
+> > +       int err;
+> > +
+> > +       err = bpf_map_update_elem(&pcpu_cgroup_vmscan_elapsed, &cg_id,
+> > +                                 &pcpu_init, BPF_NOEXIST);
+> > +       if (err) {
+> > +               bpf_printk("failed to create pcpu entry for cgroup %llu: %d\n"
+> > +                          , cg_id, err);
+> > +               return 1;
+> > +       }
+> > +       return 0;
+> > +}
+> > +
+> > +static inline int create_vmscan_elem(__u64 cg_id, __u64 state, __u64 pending)
+>
+> all those inlines above are not necessary, they don't have to be
+> actually inlined, right?
+>
+
+No. They don't have to. Will fix this.
+
+> > +{
+> > +       struct vmscan init = {.state = state, .pending = pending};
+> > +       int err;
+> > +
+> > +       err = bpf_map_update_elem(&cgroup_vmscan_elapsed, &cg_id,
+> > +                                 &init, BPF_NOEXIST);
+> > +       if (err) {
+> > +               bpf_printk("failed to create entry for cgroup %llu: %d\n"
+> > +                          , cg_id, err);
+> > +               return 1;
+> > +       }
+> > +       return 0;
+> > +}
+> > +
+> > +SEC("tp_btf/mm_vmscan_memcg_reclaim_begin")
+> > +int BPF_PROG(vmscan_start, int order, gfp_t gfp_flags)
+> > +{
+> > +       struct task_struct *task = bpf_get_current_task_btf();
+> > +       __u64 *start_time_ptr;
+> > +
+> > +       start_time_ptr = bpf_task_storage_get(&vmscan_start_time, task, 0,
+> > +                                         BPF_LOCAL_STORAGE_GET_F_CREATE);
+> > +       if (!start_time_ptr) {
+> > +               bpf_printk("error retrieving storage\n");
+>
+> does user-space part read these trace_printk messages? If not, let's
+> remove them from the test
+>
+
+No. I will remove them in v6.
+
+> > +               return 0;
+> > +       }
+> > +
+> > +       *start_time_ptr = bpf_ktime_get_ns();
+> > +       return 0;
+> > +}
+> > +
+>
+> [...]
