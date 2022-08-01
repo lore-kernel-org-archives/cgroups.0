@@ -1,79 +1,88 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup changes for v5.20-rc1
-Date: Mon, 1 Aug 2022 07:05:59 -1000
-Message-ID: <YugH95n04DM6yRta@slm.duckdns.org>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 1/2] sched: Use user_cpus_ptr for saving user provided
+ cpumask in sched_setaffinity()
+Date: Mon, 1 Aug 2022 13:15:25 -0400
+Message-ID: <8b5a5be9-9976-a737-952f-67a7960f175f@redhat.com>
+References: <20220801154124.2011987-1-longman@redhat.com>
+ <20220801154124.2011987-2-longman@redhat.com>
+ <20220801164545.GA26471@willie-the-truck>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :sender:from:to:cc;
-        bh=/GdX+TR/Dtbf4gZ83aEvjO8naUsD3U4cGz+frlvpnOI=;
-        b=o49/EjuQpvSTcPsbZwuHWglxkwKdt473C3AZnhHy9r95Q0aLNcUJsXd7JMPC1RZLDB
-         UThRymlZAgKSpv7WLErK8CBS11UOIaaKAUnZ32jfIfULDBS9ODMUNx7BZdTY2zF0Kmzm
-         tE399kMtdOorrioGu8LSAJLHUPlcKNrtz1VDKC0nPSLULkKrGHCLoM5vO35C1eeED3Rw
-         PeS8Ex5Xzfz1Quw2pmDzulr5CJ6vs8LucMdBAfQvwUwe9XE00Wohi+Dxm0W7VM60P3J5
-         lsvT7HDn7Ow3XiGODf4hEGrNtCMGA6wqThEn+fli4G0eMV5qHv4obY0Gd1PVZBj2rjfo
-         GQdg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1659374128;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=NOv05Z1eCYkz6FAAiCtapLpNeaLhy0ndExjrSMpbgjQ=;
+        b=U4ZNiI5bleQW58uubwxLGYnJh6BSJJAiUMUkaFFgKZPSewAxi3Rk0jOTwjtIg+vHch2ikA
+        lEv2wq9gO71fb/Z2jIUQzPNWIbr7EQUCmm6R5sXA6OHGZZaZGU/19HaFdDLxQdpUDhFCiT
+        pa6fzPA78M9UPnvKGNUroqEhgh9ulc0=
+Content-Language: en-US
+In-Reply-To: <20220801164545.GA26471@willie-the-truck>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The following changes since commit e71e60cd74df9386c3f684c54888f2367050b831:
+On 8/1/22 12:45, Will Deacon wrote:
+> On Mon, Aug 01, 2022 at 11:41:23AM -0400, Waiman Long wrote:
+>> The user_cpus_ptr field is added by commit b90ca8badbd1 ("sched:
+>> Introduce task_struct::user_cpus_ptr to track requested affinity"). It
+>> is currently used only by arm64 arch due to possible asymmetric cpu
+>> setup. This patch extends its usage to save user provided cpumask when
+>> sched_setaffinity() is called for all arches.
+>>
+>> To preserve the existing arm64 use case, a new cpus_affinity_set flag is
+>> added to differentiate if user_cpus_ptr is set up by sched_setaffinity()
+>> or by force_compatible_cpus_allowed_ptr(). user_cpus_ptr
+>> set by sched_setaffinity() has priority and won't be
+>> overwritten by force_compatible_cpus_allowed_ptr() or
+>> relax_compatible_cpus_allowed_ptr().
+>>
+>> As a call to sched_setaffinity() will no longer clear user_cpus_ptr
+>> but set it instead, the SCA_USER flag is no longer necessary and can
+>> be removed.
+>>
+>> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>> ---
+>>   include/linux/sched.h |  1 +
+>>   kernel/sched/core.c   | 71 +++++++++++++++++++++++++++++++------------
+>>   kernel/sched/sched.h  |  1 -
+>>   3 files changed, 52 insertions(+), 21 deletions(-)
+>>
+>> diff --git a/include/linux/sched.h b/include/linux/sched.h
+>> index c46f3a63b758..60ae022fa842 100644
+>> --- a/include/linux/sched.h
+>> +++ b/include/linux/sched.h
+>> @@ -815,6 +815,7 @@ struct task_struct {
+>>   
+>>   	unsigned int			policy;
+>>   	int				nr_cpus_allowed;
+>> +	int				cpus_affinity_set;
+>>   	const cpumask_t			*cpus_ptr;
+>>   	cpumask_t			*user_cpus_ptr;
+>>   	cpumask_t			cpus_mask;
+>> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+>> index da0bf6fe9ecd..7757828c7422 100644
+>> --- a/kernel/sched/core.c
+>> +++ b/kernel/sched/core.c
+>> @@ -2607,6 +2607,7 @@ int dup_user_cpus_ptr(struct task_struct *dst, struct task_struct *src,
+>>   		return -ENOMEM;
+>>   
+>>   	cpumask_copy(dst->user_cpus_ptr, src->user_cpus_ptr);
+>> +	dst->cpus_affinity_set = src->cpus_affinity_set;
+> I haven't been through this thorougly, but it looks a bit suspicious to me
+> to inherit this field directly across fork(). If a 64-bit task with this
+> flag set forks and then exec's a 32-bit program, arm64 will be in trouble if
+> we're not able to override the affinity forcefully.
 
-  Merge tag 'dma-mapping-5.19-2022-06-06' of git://git.infradead.org/users/hch/dma-mapping (2022-06-06 17:56:18 -0700)
+I believe you can still override the affinity. What is in user_cpus_ptr 
+is not the actual affinity which is in cpus_mask. It is just what the 
+users desire. Its value has be masked off by the current cpuset as well 
+as what is allowed in task_cpu_possible_mask().
 
-are available in the Git repository at:
+Cheers,
+Longman
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-5.20
-
-for you to fetch changes up to 265792d0dede9259f0ca56bb3efcc23eceee7d01:
-
-  cgroup: Skip subtree root in cgroup_update_dfl_csses() (2022-07-28 07:26:30 -1000)
-
-----------------------------------------------------------------
-Several core optimizations:
-
-* threadgroup_rwsem write locking is skipped when configuring controllers in
-  empty subtrees. Combined with CLONE_INTO_CGROUP, this allows the common
-  static usage pattern to not grab threadgroup_rwsem at all (glibc still
-  doesn't seem ready for CLONE_INTO_CGROUP unfortunately).
-
-* threadgroup_rwsem used to be put into non-percpu mode by default due to
-  latency concerns in specific use cases. There's no reason for everyone
-  else to pay for it. Make the behavior optional.
-
-* psi no longer allocates memory when disabled.
-
-along with some code cleanups.
-
-----------------------------------------------------------------
-Chen Wandun (1):
-      psi: dont alloc memory for psi by default
-
-Lin Feng (2):
-      cgroup.c: add helper __cset_cgroup_from_root to cleanup duplicated codes
-      cgroup.c: remove redundant check for mixable cgroup in cgroup_migrate_vet_dst
-
-Tejun Heo (4):
-      cgroup: Elide write-locking threadgroup_rwsem when updating csses on an empty subtree
-      cgroup: Add "no" prefixed mount options
-      cgroup: Make !percpu threadgroup_rwsem operations optional
-      cgroup: remove "no" prefixed mount options
-
-Waiman Long (1):
-      cgroup: Skip subtree root in cgroup_update_dfl_csses()
-
- Documentation/admin-guide/cgroup-v2.rst |   8 ++
- include/linux/cgroup-defs.h             |  21 ++++-
- include/linux/cgroup.h                  |   2 +-
- init/Kconfig                            |  10 +++
- kernel/cgroup/cgroup-internal.h         |   1 +
- kernel/cgroup/cgroup-v1.c               |  17 +++-
- kernel/cgroup/cgroup.c                  | 136 ++++++++++++++++++++------------
- kernel/sched/psi.c                      |  19 +++--
- 8 files changed, 151 insertions(+), 63 deletions(-)
