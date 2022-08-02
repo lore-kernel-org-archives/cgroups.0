@@ -1,72 +1,122 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH v7 0/9] bugfix and cleanup for blk-throttle
-Date: Tue,  2 Aug 2022 22:04:06 +0800
-Message-ID: <20220802140415.2960284-1-yukuai1@huaweicloud.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: [PATCH v7 1/9] blk-throttle: fix that io throttle can only work for single bio
+Date: Tue,  2 Aug 2022 22:04:07 +0800
+Message-ID: <20220802140415.2960284-2-yukuai1@huaweicloud.com>
+References: <20220802140415.2960284-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20220802140415.2960284-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: tj@kernel.org, mkoutny@suse.com, axboe@kernel.dk, ming.lei@redhat.com
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
 
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Yu Kuai <yukuai3@huawei.com>
 
-Changes in v7:
- - add patch 5 to improve handling of re-entered bio for bps limit
- - as suggested by Tejun, add some comments
- - sdd some Acked tag by Tejun
-Changes in v6:
- - rename parameter in patch 3
- - add comments and reviewed tag for patch 4
-Changes in v5:
- - add comments in patch 4
- - clear bytes/io_skipped in throtl_start_new_slice_with_credit() in
- patch 4
- - and cleanup patches 5-8
-Changes in v4:
- - add reviewed-by tag for patch 1
- - add patch 2,3
- - use a different way to fix io hung in patch 4
-Changes in v3:
- - fix a check in patch 1
- - fix link err in patch 2 on 32-bit platform
- - handle overflow in patch 2
-Changes in v2:
- - use a new solution suggested by Ming
- - change the title of patch 1
- - add patch 2
+Test scripts:
+cd /sys/fs/cgroup/blkio/
+echo "8:0 1024" > blkio.throttle.write_bps_device
+echo $$ > cgroup.procs
+dd if=/dev/zero of=/dev/sda bs=10k count=1 oflag=direct &
+dd if=/dev/zero of=/dev/sda bs=10k count=1 oflag=direct &
 
-Patch 1 fix that blk-throttle can't work if multiple bios are throttle.
-Patch 2 fix overflow while calculating wait time.
-Patch 3,4 fix io hung due to configuration updates.
-Patch 5 improve handling of re-entered bio for bps limit.
-Patch 6-9 are cleanup patches, there are no functional changes, just
-some places that I think can be optimized during code review.
+Test result:
+10240 bytes (10 kB, 10 KiB) copied, 10.0134 s, 1.0 kB/s
+10240 bytes (10 kB, 10 KiB) copied, 10.0135 s, 1.0 kB/s
 
-Previous version:
-v1: https://lore.kernel.org/all/20220517134909.2910251-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-v2: https://lore.kernel.org/all/20220518072751.1188163-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-v3: https://lore.kernel.org/all/20220519085811.879097-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-v4: https://lore.kernel.org/all/20220523082633.2324980-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-v5: https://lore.kernel.org/all/20220528064330.3471000-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-v6: https://lore.kernel.org/all/20220701093441.885741-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org/
+The problem is that the second bio is finished after 10s instead of 20s.
 
-Yu Kuai (9):
-  blk-throttle: fix that io throttle can only work for single bio
-  blk-throttle: prevent overflow while calculating wait time
-  blk-throttle: factor out code to calculate ios/bytes_allowed
-  blk-throttle: fix io hung due to configuration updates
-  blk-throttle: improve handling of re-entered bio for bps limit
-  blk-throttle: use 'READ/WRITE' instead of '0/1'
-  blk-throttle: calling throtl_dequeue/enqueue_tg in pairs
-  blk-throttle: cleanup tg_update_disptime()
-  blk-throttle: clean up flag 'THROTL_TG_PENDING'
+Root cause:
+1) second bio will be flaged:
 
- block/blk-throttle.c | 175 ++++++++++++++++++++++++++++++-------------
- block/blk-throttle.h |  20 ++++-
- 2 files changed, 139 insertions(+), 56 deletions(-)
+__blk_throtl_bio
+ while (true) {
+  ...
+  if (sq->nr_queued[rw]) -> some bio is throttled already
+   break
+ };
+ bio_set_flag(bio, BIO_THROTTLED); -> flag the bio
 
+2) flaged bio will be dispatched without waiting:
+
+throtl_dispatch_tg
+ tg_may_dispatch
+  tg_with_in_bps_limit
+   if (bps_limit == U64_MAX || bio_flagged(bio, BIO_THROTTLED))
+    *wait = 0; -> wait time is zero
+    return true;
+
+commit 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
+support to count splited bios for iops limit, thus it adds flaged bio
+checking in tg_with_in_bps_limit() so that splited bios will only count
+once for bps limit, however, it introduce a new problem that io throttle
+won't work if multiple bios are throttled.
+
+In order to fix the problem, at first, don't skip flaged bio in
+tg_with_in_bps_limit(), however, this will break that splited bios should
+only count once for bps limit. And this patch tries to avoid
+over-accounting by decrementing it first in __blk_throtl_bio(), and
+then counting it again while dispatching it.
+
+Fixes: 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-throttle.c | 26 ++++++++++++++++++++------
+ 1 file changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 9f5fe62afff9..2957e2c643f4 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -811,7 +811,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 	unsigned int bio_size = throtl_bio_data_size(bio);
+ 
+ 	/* no need to throttle if this bio's bytes have been accounted */
+-	if (bps_limit == U64_MAX || bio_flagged(bio, BIO_THROTTLED)) {
++	if (bps_limit == U64_MAX) {
+ 		if (wait)
+ 			*wait = 0;
+ 		return true;
+@@ -921,11 +921,8 @@ static void throtl_charge_bio(struct throtl_grp *tg, struct bio *bio)
+ 	unsigned int bio_size = throtl_bio_data_size(bio);
+ 
+ 	/* Charge the bio to the group */
+-	if (!bio_flagged(bio, BIO_THROTTLED)) {
+-		tg->bytes_disp[rw] += bio_size;
+-		tg->last_bytes_disp[rw] += bio_size;
+-	}
+-
++	tg->bytes_disp[rw] += bio_size;
++	tg->last_bytes_disp[rw] += bio_size;
+ 	tg->io_disp[rw]++;
+ 	tg->last_io_disp[rw]++;
+ 
+@@ -2121,6 +2118,23 @@ bool __blk_throtl_bio(struct bio *bio)
+ 			tg->last_low_overflow_time[rw] = jiffies;
+ 		throtl_downgrade_check(tg);
+ 		throtl_upgrade_check(tg);
++
++		/*
++		 * Splited bios can be re-entered because iops limit should be
++		 * counted again, however, bps limit should not. Since bps limit
++		 * will be counted again while dispatching it, compensate the
++		 * over-accounting here. Noted that compensation can fail if
++		 * new slice is started.
++		 */
++		if (bio_flagged(bio, BIO_THROTTLED)) {
++			unsigned int bio_size = throtl_bio_data_size(bio);
++
++			if (tg->bytes_disp[rw] >= bio_size)
++				tg->bytes_disp[rw] -= bio_size;
++			if (tg->last_bytes_disp[rw] >= bio_size)
++				tg->last_bytes_disp[rw] -= bio_size;
++		}
++
+ 		/* throtl is FIFO - if bios are already queued, should queue */
+ 		if (sq->nr_queued[rw])
+ 			break;
 -- 
 2.31.1
 
