@@ -1,162 +1,55 @@
-From: Hao Luo <haoluo@google.com>
-Subject: Re: [PATCH bpf-next v5 4/8] bpf: Introduce cgroup iter
-Date: Wed, 3 Aug 2022 17:29:53 -0700
-Message-ID: <CA+khW7ggTFp8je0zwo83uGN8pKZXy+D07y+tPRRAXmY+e3pm-g@mail.gmail.com>
-References: <20220722174829.3422466-1-yosryahmed@google.com>
- <20220722174829.3422466-5-yosryahmed@google.com> <CAEf4BzbD38XFVxMy5crO-=+Xg7U3Vc_fB4Ntug4BEbmdLpvuDQ@mail.gmail.com>
- <CA+khW7jftQikVsc8moM6rNRqBerUHDM6WRDjb33exdbogDc7aQ@mail.gmail.com>
- <CAEf4BzYDqaTQr-S8TuLkysQ+FhT+6qMS0z=Sp_7+-wk84_4h6Q@mail.gmail.com>
- <CA+khW7jDD9p80xnZj0Z3m5oFHjb2u___NAiJkbyRgD5FKopGhg@mail.gmail.com> <CAEf4BzZhy49KLe5VG4aXZtWBExADskgA__MzhC+6k3DVgU5o5w@mail.gmail.com>
+From: Chengming Zhou <zhouchengming@bytedance.com>
+Subject: Re: [PATCH 8/9] sched/psi: add kernel cmdline parameter
+ psi_inner_cgroup
+Date: Thu, 4 Aug 2022 10:02:12 +0800
+Message-ID: <94ddcd31-e168-06ed-c0f9-2ea25b802d60@bytedance.com>
+References: <20220721040439.2651-1-zhouchengming@bytedance.com>
+ <20220721040439.2651-9-zhouchengming@bytedance.com>
+ <Yt7KQc0nnOypB2b2@cmpxchg.org> <YuAqWprKd6NsWs7C@slm.duckdns.org>
+ <5a3410d6-428d-9ad1-3e5a-01ca805ceeeb@bytedance.com>
+ <Yuq3Q6Y9dRnjjcPt@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=m6XkC9SsYbws11fU/lKUsxSKL8HIjijhC5ukFJOVAg0=;
-        b=lxEIIB2x2iibG4PBjXLIXWtMcmcGyMl4ihpwyUY7PqULj9eFbsANj8sp9BO+MIUc8m
-         zgNMHvRyeehg1eLXEKH5zHrm09x2KfCSBSu6bQ61eEnE7/U8ZFIDtE1DBHsg89oyx8Xi
-         TzUM3+OD77maP7r32Y/hBG7zSRhgSIYYBeLg9HrW+kyLW+hNXP7nZNBWp/2n1zhfso8F
-         1xMgQDUNo4e32+zlSmzj1CyN7BCj/a/ucsdHY4YiGVIc5X0eHj8/l1dm4sVUjbwNn/g1
-         bdg8VkTe1CITpGeKNCaNEXdPGxxj/gQnFejEErFBpDXIlSYDeEqCFDviYLvbd692DIio
-         Hz4Q==
-In-Reply-To: <CAEf4BzZhy49KLe5VG4aXZtWBExADskgA__MzhC+6k3DVgU5o5w@mail.gmail.com>
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=message-id:date:mime-version:user-agent:subject:to:cc:references
+         :content-language:from:in-reply-to:content-transfer-encoding;
+        bh=R8a2uTZpErjV8ZoEO/x1ZNaBxjx4vHWCt7mF0miAi5E=;
+        b=zZ1UG92HUINfBQ0MPaLPPVMGISoqyJK/vD/6sOBUj8XoURNF1lfjGeUqvP9Fd0Q0n4
+         S4tnowzf3rtmuMxZufeXmYMk6Idx/JgCkX3Plw150oX75qK9rOWR5ykDKz/sz3+WUMmV
+         qoFAxG0rCEOoKhTUc12aJo6XYNciiUvXjIJdrE1WLpbsMhASFxIFg9i+mVCKLFfEdRf4
+         79VgYyrQKQ1IuJT+owA5Geif2IltJJU2FgCCZb8FX9DuLUrLQiPPMA3fiLeIhVfrDhS6
+         lgBpNEPmcHiEORwN/t+xhP9fHEMu5jG2DSGj5k1P7NT0ZHbum9gVw4Knz8LQVXLxleRM
+         DJyg==
+Content-Language: en-US
+In-Reply-To: <Yuq3Q6Y9dRnjjcPt@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrii Nakryiko <andrii.nakryiko@gmail.com>
-Cc: Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>, KP Singh <kpsingh@kernel.org>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, John Fastabend <john.fastabend@gmail.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel
+To: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, surenb@google.com, mingo@redhat.com, peterz@infradead.org, corbet@lwn.net, akpm@linux-foundation.org, rdunlap@infradead.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com, cgroups@vger.kernel.org
 
-On Wed, Aug 3, 2022 at 1:40 PM Andrii Nakryiko
-<andrii.nakryiko@gmail.com> wrote:
->
-> On Wed, Aug 3, 2022 at 1:30 PM Hao Luo <haoluo@google.com> wrote:
-> >
-> > On Tue, Aug 2, 2022 at 3:50 PM Andrii Nakryiko
-> > <andrii.nakryiko@gmail.com> wrote:
-> > >
-> > > On Tue, Aug 2, 2022 at 3:27 PM Hao Luo <haoluo@google.com> wrote:
-> > > >
-> > > > On Mon, Aug 1, 2022 at 8:43 PM Andrii Nakryiko
-> > > > <andrii.nakryiko@gmail.com> wrote:
-> > > > >
-> > > > > On Fri, Jul 22, 2022 at 10:48 AM Yosry Ahmed <yosryahmed@google.com> wrote:
-[...]
-> > > > > > +};
-> > > > > > +
-> > > > > >  union bpf_iter_link_info {
-> > > > > >         struct {
-> > > > > >                 __u32   map_fd;
-> > > > > >         } map;
-> > > > > > +
-> > > > > > +       /* cgroup_iter walks either the live descendants of a cgroup subtree, or the
-> > > > > > +        * ancestors of a given cgroup.
-> > > > > > +        */
-> > > > > > +       struct {
-> > > > > > +               /* Cgroup file descriptor. This is root of the subtree if walking
-> > > > > > +                * descendants; it's the starting cgroup if walking the ancestors.
-> > > > > > +                * If it is left 0, the traversal starts from the default cgroup v2
-> > > > > > +                * root. For walking v1 hierarchy, one should always explicitly
-> > > > > > +                * specify the cgroup_fd.
-> > > > > > +                */
-> > > > > > +               __u32   cgroup_fd;
-> > > > >
-> > > > > Now, similar to what I argued in regard of pidfd vs pid, I think the
-> > > > > same applied to cgroup_fd vs cgroup_id. Why can't we support both?
-> > > > > cgroup_fd has some benefits, but cgroup_id is nice due to simplicity
-> > > > > and not having to open/close/keep extra FDs (which can add up if we
-> > > > > want to periodically query something about a large set of cgroups).
-> > > > > Please see my arguments from [0] above.
-> > > > >
-> > > > > Thoughts?
-> > > > >
-> > > >
-> > > > We can support both, it's a good idea IMO. But what exactly is the
-> > > > interface going to look like? Can you be more specific about that?
-> > > > Below is something I tried based on your description.
-> > > >
-> > > > @@ -91,6 +91,18 @@ union bpf_iter_link_info {
-> > > >         struct {
-> > > >                 __u32   map_fd;
-> > > >         } map;
-> > > > +       struct {
-> > > > +               /* PRE/POST/UP/SELF */
-> > > > +               __u32 order;
-> > > > +               struct {
-> > > > +                       __u32 cgroup_fd;
-> > > > +                       __u64 cgroup_id;
-> > > > +               } cgroup;
-> > > > +               struct {
-> > > > +                       __u32 pid_fd;
-> > > > +                       __u64 pid;
-> > > > +               } task;
-> > > > +       };
-> > > >  };
-> > > >
-> > >
-> > > So I wouldn't combine task and cgroup definition together, let's keep
-> > > them independent.
-> > >
-> > > then for cgroup we can do something like:
-> > >
-> > > struct {
-> > >     __u32 order;
-> > >     __u32 cgroup_fd; /* cgroup_fd ^ cgroup_id, exactly one can be non-zero */
-> > >     __u32 cgroup_id;
-> > > } cgroup
-> > >
-> > > Similar idea with task, but it's a bit more complicated because there
-> > > we have target that can be pid, pidfd, or cgroup (cgroup_fd and
-> > > cgroup_id). I haven't put much thought into the best representation,
-> > > though.
-> > >
-> >
-> > The cgroup part sounds good to me. For the full picture, how about
-> > this? I'm just trying  a prototype, hoping that it can help people to
-> > get a clear picture.
-> >
-> > union bpf_iter_link_info {
-> >           struct {
-> >                   __u32   map_fd;
-> >           } map;
-> >           struct {
-> >                   __u32   order; /* PRE/POST/UP/SELF */
-> >                   __u32   cgroup_fd;
-> >                   __u64   cgroup_id;
-> >           } cgroup;
->
-> lgtm
->
-> >           struct {
-> >                   __u32   pid;
-> >                   __u32   pid_fd;
-> >                   __u64   cgroup_id;
-> >                   __u32   cgroup_fd;
-> >                   __u32   mode; /* SELF or others */
->
-> I'd move mode to be first. I'm undecided on using 4 separate fields
-> for pid/pid_fd/cgroup_{id,fd} vs a single union (or just generic "u64
-> target"  and then mode can define how we should treat target --
-> whether it's pid, pid_fd, cgroup ID or FD. I'm fine either way, I
-> think. But for cgroup case not having to duplicate PRE/POST/UP/SELF
-> for cgroup id and then for cgroup fd seems like a win. So separate
-> fields might be better. It's also pretty extendable. And I'm
-> personally not worried about using few more bytes in bpf_attr for
-> disjoin fields like this.
->
+On 2022/8/4 01:58, Tejun Heo wrote:
+> Hello,
+> 
+> On Wed, Aug 03, 2022 at 08:17:22PM +0800, Chengming Zhou wrote:
+>>> Assuming the above isn't wrong, if we can figure out how we can re-enable
+>>> it, which is more difficult as the counters need to be resynchronized with
+>>> the current state, that'd be ideal. Then, we can just allow each cgroup to
+>>> enable / disable PSI reporting dynamically as they see fit.
+>>
+>> This method is more fine-grained but more difficult like you said above.
+>> I think it may meet most needs to disable PSI stats in intermediate cgroups?
+> 
+> So, I'm not necessarily against implementing something easier but we at
+> least wanna get the interface right, so that if we decide to do the full
+> thing later we can easily expand on the existing interface. ie. let's please
+> not be too hacky. I don't think it'd be that difficult to implement
+> per-cgroup disable-only operation that we can later expand to allow
+> re-enabling, right?
 
-Sounds good. Thanks for clarification. Using separate fields looks
-good to me. Since we settled on the cgroup part, I will apply update
-in cgroup_iter v7.
+Agree, the interface is important, per-cgroup disable-only operation maybe easier
+to implement. I will look into this more.
 
+Thanks!
 
-> >           } task;
-> > };
-> >
-> > > > > > +               __u32   traversal_order;
-> > > > > > +       } cgroup;
-> > > > > >  };
-> > > > > >
-> > > > > >  /* BPF syscall commands, see bpf(2) man-page for more details. */
-> > > > >
-> > > > > [...]
