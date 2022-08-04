@@ -1,217 +1,147 @@
-From: Andrii Nakryiko <andrii.nakryiko@gmail.com>
-Subject: Re: [PATCH bpf-next v5 4/8] bpf: Introduce cgroup iter
-Date: Wed, 3 Aug 2022 13:39:57 -0700
-Message-ID: <CAEf4BzZhy49KLe5VG4aXZtWBExADskgA__MzhC+6k3DVgU5o5w@mail.gmail.com>
-References: <20220722174829.3422466-1-yosryahmed@google.com>
- <20220722174829.3422466-5-yosryahmed@google.com> <CAEf4BzbD38XFVxMy5crO-=+Xg7U3Vc_fB4Ntug4BEbmdLpvuDQ@mail.gmail.com>
- <CA+khW7jftQikVsc8moM6rNRqBerUHDM6WRDjb33exdbogDc7aQ@mail.gmail.com>
- <CAEf4BzYDqaTQr-S8TuLkysQ+FhT+6qMS0z=Sp_7+-wk84_4h6Q@mail.gmail.com> <CA+khW7jDD9p80xnZj0Z3m5oFHjb2u___NAiJkbyRgD5FKopGhg@mail.gmail.com>
+From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH bpf-next v6 4/8] bpf: Introduce cgroup iter
+Date: Wed, 3 Aug 2022 17:18:25 -0700
+Message-ID: <CA+khW7hSFU2YL+jNw2F2qsuYEW0E6r8kJkg1BoBukAqR_sk+6Q@mail.gmail.com>
+References: <20220801175407.2647869-1-haoluo@google.com> <20220801175407.2647869-5-haoluo@google.com>
+ <c018a834-e834-270c-24b1-2c726b38b729@fb.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=oTShiEMH5RY05sBENmlaVH8MISobFaNytMdpGKM2vSw=;
-        b=FjF1KOeYq38Pcb3ngMcfM2yVepWlFrI452L2vdlfv82H/rMHawFN+TeLV82AiPqpmF
-         i3+M+41m/q8UWxvj+Dgmi2KsInvlosC6gW6mWOypwb6KS0SP6yeocY7q94D58TudvyX8
-         VjO/oG0+PEGuAgaabM6WBEXd5TQaq0umtmCG8Y1e6eHG0fw3Xv0P6renLP3R3wheqvN9
-         UMFwBml9r/0ILe/m22Y90oq8idkSNL8+pl6zIcG436NQYPyHW9H9qh8nOe1bWmWr7n93
-         LeO4WA/Liz+hgcFQhevLveG5m2UDiSGVCk08ItVP2fU0AvF/0thBj1DmdGEA8gMUthIb
-         PncQ==
-In-Reply-To: <CA+khW7jDD9p80xnZj0Z3m5oFHjb2u___NAiJkbyRgD5FKopGhg@mail.gmail.com>
+        d=google.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=3To6LMVxoqoKzRmQbA8Jez/sB+9ti+KFrFIpcpqC5DU=;
+        b=jaFMYrAr15hi7try/jB5s91PiWR8kMLB484AM76aPEsChXhIBD+lTzzNWQs7YTYffC
+         63bFlVKk/ZG9whwY4EzkRsgp56VkFoRTAi46PNFdqCIVS5abYmdTkqyYEfi6IXTHpx52
+         NzZEmvnFruMTy2bQtwEpsrjGHOS+HJw3v24rafEiQbLO2WCtUWMg1dTnDoa/wPK7bpPA
+         ZDpkYHp29JtKjxj0PdUJYC1hknjlPP/1LBYX8EFh+xET+Qa4YK4rmKgX3RZdhGdwntmC
+         Dog0Dn1Z1X7nq0Ponu0M/n1lUbjjAv/lXEId6u+zqwop41RL4jilX4EHM1/wUWqYwks2
+         lHug==
+In-Reply-To: <c018a834-e834-270c-24b1-2c726b38b729-b10kYP2dOMg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hao Luo <haoluo@google.com>
-Cc: Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, Michal Hocko <mhocko@kernel.org>, KP Singh <kpsingh@kernel.org>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, John Fastabend <john.fastabend@gmail.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Greg Thelen <gthelen@google.com>, Shakeel
+To: Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Koutny <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yosry Ahmed <yosryahme>
 
-On Wed, Aug 3, 2022 at 1:30 PM Hao Luo <haoluo@google.com> wrote:
+On Wed, Aug 3, 2022 at 12:44 AM Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org> wrote:
 >
-> On Tue, Aug 2, 2022 at 3:50 PM Andrii Nakryiko
-> <andrii.nakryiko@gmail.com> wrote:
+>
+>
+> On 8/1/22 10:54 AM, Hao Luo wrote:
+> > Cgroup_iter is a type of bpf_iter. It walks over cgroups in three modes:
 > >
-> > On Tue, Aug 2, 2022 at 3:27 PM Hao Luo <haoluo@google.com> wrote:
-> > >
-> > > Hi Andrii,
-> > >
-> > > On Mon, Aug 1, 2022 at 8:43 PM Andrii Nakryiko
-> > > <andrii.nakryiko@gmail.com> wrote:
-> > > >
-> > > > On Fri, Jul 22, 2022 at 10:48 AM Yosry Ahmed <yosryahmed@google.com> wrote:
+> >   - walking a cgroup's descendants in pre-order.
+> >   - walking a cgroup's descendants in post-order.
+> >   - walking a cgroup's ancestors.
+> >
+> > When attaching cgroup_iter, one can set a cgroup to the iter_link
+> > created from attaching. This cgroup is passed as a file descriptor and
+> > serves as the starting point of the walk. If no cgroup is specified,
+> > the starting point will be the root cgroup.
+> >
+> > For walking descendants, one can specify the order: either pre-order or
+> > post-order. For walking ancestors, the walk starts at the specified
+> > cgroup and ends at the root.
+> >
+> > One can also terminate the walk early by returning 1 from the iter
+> > program.
+> >
+> > Note that because walking cgroup hierarchy holds cgroup_mutex, the iter
+> > program is called with cgroup_mutex held.
+> >
+> > Currently only one session is supported, which means, depending on the
+> > volume of data bpf program intends to send to user space, the number
+> > of cgroups that can be walked is limited. For example, given the current
+> > buffer size is 8 * PAGE_SIZE, if the program sends 64B data for each
+> > cgroup, assuming PAGE_SIZE is 4kb, the total number of cgroups that can
+> > be walked is 512. This is a limitation of cgroup_iter. If the output
+> > data is larger than the buffer size, the second read() will signal
+> > EOPNOTSUPP. In order to work around, the user may have to update their
+>
+> 'the second read() will signal EOPNOTSUPP' is not true. for bpf_iter,
+> we have user buffer from read() syscall and kernel buffer. The above
+> buffer size like 8 * PAGE_SIZE refers to the kernel buffer size.
+>
+> If read() syscall buffer size is less than kernel buffer size,
+> the second read() will not signal EOPNOTSUPP. So to make it precise,
+> we can say
+>    If the output data is larger than the kernel buffer size, after
+>    all data in the kernel buffer is consumed by user space, the
+>    subsequent read() syscall will signal EOPNOTSUPP.
+>
+
+Thanks Yonghong. Will update.
+
+> > program to reduce the volume of data sent to output. For example, skip
+> > some uninteresting cgroups. In future, we may extend bpf_iter flags to
+> > allow customizing buffer size.
+> >
+> > Acked-by: Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>
+> > Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > Signed-off-by: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > ---
+[...]
+> > + *
+> > + * Currently only one session is supported, which means, depending on the
+> > + * volume of data bpf program intends to send to user space, the number
+> > + * of cgroups that can be walked is limited. For example, given the current
+> > + * buffer size is 8 * PAGE_SIZE, if the program sends 64B data for each
+> > + * cgroup, assuming PAGE_SIZE is 4kb, the total number of cgroups that can
+> > + * be walked is 512. This is a limitation of cgroup_iter. If the output data
+> > + * is larger than the buffer size, the second read() will signal EOPNOTSUPP.
+> > + * In order to work around, the user may have to update their program to
+>
+> same here as above for better description.
+>
+
+SG. Will update.
+
+> > + * reduce the volume of data sent to output. For example, skip some
+> > + * uninteresting cgroups.
+> > + */
+> > +
+> > +struct bpf_iter__cgroup {
+> > +     __bpf_md_ptr(struct bpf_iter_meta *, meta);
+> > +     __bpf_md_ptr(struct cgroup *, cgroup);
+> > +};
+> > +
+> > +struct cgroup_iter_priv {
+> > +     struct cgroup_subsys_state *start_css;
+> > +     bool visited_all;
+> > +     bool terminate;
+> > +     int order;
+> > +};
+> > +
+> > +static void *cgroup_iter_seq_start(struct seq_file *seq, loff_t *pos)
+> > +{
+> > +     struct cgroup_iter_priv *p = seq->private;
+> > +
+> > +     mutex_lock(&cgroup_mutex);
+> > +
+> > +     /* cgroup_iter doesn't support read across multiple sessions. */
+> > +     if (*pos > 0) {
+> > +             if (p->visited_all)
+> > +                     return NULL;
+>
+> This looks good. thanks!
+>
+> > +
+> > +             /* Haven't visited all, but because cgroup_mutex has dropped,
+> > +              * return -EOPNOTSUPP to indicate incomplete iteration.
+> > +              */
+> > +             return ERR_PTR(-EOPNOTSUPP);
+> > +     }
+> > +
+> > +     ++*pos;
+> > +     p->terminate = false;
+> > +     p->visited_all = false;
+> > +     if (p->order == BPF_ITER_CGROUP_PRE)
+> > +             return css_next_descendant_pre(NULL, p->start_css);
+> > +     else if (p->order == BPF_ITER_CGROUP_POST)
+> > +             return css_next_descendant_post(NULL, p->start_css);
+> > +     else /* BPF_ITER_CGROUP_PARENT_UP */
+> > +             return p->start_css;
+> > +}
+> > +
 > [...]
-> > > > >
-> > > > > +enum bpf_iter_cgroup_traversal_order {
-> > > > > +       BPF_ITER_CGROUP_PRE = 0,        /* pre-order traversal */
-> > > > > +       BPF_ITER_CGROUP_POST,           /* post-order traversal */
-> > > > > +       BPF_ITER_CGROUP_PARENT_UP,      /* traversal of ancestors up to the root */
-> > > >
-> > > > I've just put up my arguments why it's a good idea to also support a
-> > > > "trivial" mode of only traversing specified cgroup and no descendants
-> > > > or parents. Please see [0].
-> > >
-> > > cc Kui-Feng in this thread.
-> > >
-> > > Yeah, I think it's a good idea. It's useful when we only want to show
-> > > a single object, which can be common. Going further, I think we may
-> > > want to restructure bpf_iter to optimize for this case.
-> > >
-> > > > I think the same applies here, especially
-> > > > considering that it seems like a good idea to support
-> > > > task/task_vma/task_files iteration within a cgroup.
-> > >
-> > > I have reservations on these use cases. I don't see immediate use of
-> > > iterating vma or files within a cgroup. Tasks within a cgroup? Maybe.
-> > > :)
-> > >
-> >
-> > iter/task was what I had in mind in the first place. But I can also
-> > imagine tools utilizing iter/task_files for each process within a
-> > cgroup, so given iter/{task, task_file, task_vma} share the same UAPI
-> > and internals, I don't see why we'd restrict this to only iter/task.
->
-> No problem. I was hoping we don't over-design the interface. IMHO keep
-> it simple stupid. :)
->
-> >
-> [...]
-> > >
-> > > [1] https://lwn.net/Articles/902405/
-> > >
-> > > >
-> > > > Some more naming nits. I find BPF_ITER_CGROUP_PRE and
-> > > > BPF_ITER_CGROUP_POST a bit confusing. Even internally in kernel we
-> > > > have css_next_descendant_pre/css_next_descendant_post, so why not
-> > > > reflect the fact that we are going to iterate descendants:
-> > > > BPF_ITER_CGROUP_DESCENDANTS_{PRE,POST}. And now that we use
-> > > > "descendants" terminology, PARENT_UP should be ANCESTORS. ANCESTORS_UP
-> > > > probably is fine, but seems a bit redundant (unless we consider a
-> > > > somewhat weird ANCESTORS_DOWN, where we find the furthest parent and
-> > > > then descend through preceding parents until we reach specified
-> > > > cgroup; seems a bit exotic).
-> > > >
-> > >
-> > > BPF_ITER_CGROUP_DESCENDANTS_PRE is too verbose. If there is a
-> > > possibility of merging rbtree and supporting walk order of rbtree
-> > > iter, maybe the name here could be general, like
-> > > BPF_ITER_DESCENDANTS_PRE, which seems better.
-> >
-> > it's not like you'll be typing this hundreds of type, so verboseness
-> > doesn't seem to be too problematic, but sure, BPF_ITER_DESCENDANTS_PRE
-> > is fine with me
-> >
-> > >
-> > > >   [0] https://lore.kernel.org/bpf/f92e20e9961963e20766e290ee6668edd4bacf06.camel@fb.com/T/#m5ce50632aa550dd87a99241efb168cbcde1ee98f
-> > > >
-> > > > > +};
-> > > > > +
-> > > > >  union bpf_iter_link_info {
-> > > > >         struct {
-> > > > >                 __u32   map_fd;
-> > > > >         } map;
-> > > > > +
-> > > > > +       /* cgroup_iter walks either the live descendants of a cgroup subtree, or the
-> > > > > +        * ancestors of a given cgroup.
-> > > > > +        */
-> > > > > +       struct {
-> > > > > +               /* Cgroup file descriptor. This is root of the subtree if walking
-> > > > > +                * descendants; it's the starting cgroup if walking the ancestors.
-> > > > > +                * If it is left 0, the traversal starts from the default cgroup v2
-> > > > > +                * root. For walking v1 hierarchy, one should always explicitly
-> > > > > +                * specify the cgroup_fd.
-> > > > > +                */
-> > > > > +               __u32   cgroup_fd;
-> > > >
-> > > > Now, similar to what I argued in regard of pidfd vs pid, I think the
-> > > > same applied to cgroup_fd vs cgroup_id. Why can't we support both?
-> > > > cgroup_fd has some benefits, but cgroup_id is nice due to simplicity
-> > > > and not having to open/close/keep extra FDs (which can add up if we
-> > > > want to periodically query something about a large set of cgroups).
-> > > > Please see my arguments from [0] above.
-> > > >
-> > > > Thoughts?
-> > > >
-> > >
-> > > We can support both, it's a good idea IMO. But what exactly is the
-> > > interface going to look like? Can you be more specific about that?
-> > > Below is something I tried based on your description.
-> > >
-> > > @@ -91,6 +91,18 @@ union bpf_iter_link_info {
-> > >         struct {
-> > >                 __u32   map_fd;
-> > >         } map;
-> > > +       struct {
-> > > +               /* PRE/POST/UP/SELF */
-> > > +               __u32 order;
-> > > +               struct {
-> > > +                       __u32 cgroup_fd;
-> > > +                       __u64 cgroup_id;
-> > > +               } cgroup;
-> > > +               struct {
-> > > +                       __u32 pid_fd;
-> > > +                       __u64 pid;
-> > > +               } task;
-> > > +       };
-> > >  };
-> > >
-> >
-> > So I wouldn't combine task and cgroup definition together, let's keep
-> > them independent.
-> >
-> > then for cgroup we can do something like:
-> >
-> > struct {
-> >     __u32 order;
-> >     __u32 cgroup_fd; /* cgroup_fd ^ cgroup_id, exactly one can be non-zero */
-> >     __u32 cgroup_id;
-> > } cgroup
-> >
-> > Similar idea with task, but it's a bit more complicated because there
-> > we have target that can be pid, pidfd, or cgroup (cgroup_fd and
-> > cgroup_id). I haven't put much thought into the best representation,
-> > though.
-> >
->
-> The cgroup part sounds good to me. For the full picture, how about
-> this? I'm just trying  a prototype, hoping that it can help people to
-> get a clear picture.
->
-> union bpf_iter_link_info {
->           struct {
->                   __u32   map_fd;
->           } map;
->           struct {
->                   __u32   order; /* PRE/POST/UP/SELF */
->                   __u32   cgroup_fd;
->                   __u64   cgroup_id;
->           } cgroup;
-
-lgtm
-
->           struct {
->                   __u32   pid;
->                   __u32   pid_fd;
->                   __u64   cgroup_id;
->                   __u32   cgroup_fd;
->                   __u32   mode; /* SELF or others */
-
-I'd move mode to be first. I'm undecided on using 4 separate fields
-for pid/pid_fd/cgroup_{id,fd} vs a single union (or just generic "u64
-target"  and then mode can define how we should treat target --
-whether it's pid, pid_fd, cgroup ID or FD. I'm fine either way, I
-think. But for cgroup case not having to duplicate PRE/POST/UP/SELF
-for cgroup id and then for cgroup fd seems like a win. So separate
-fields might be better. It's also pretty extendable. And I'm
-personally not worried about using few more bytes in bpf_attr for
-disjoin fields like this.
-
->           } task;
-> };
->
-> > > > > +               __u32   traversal_order;
-> > > > > +       } cgroup;
-> > > > >  };
-> > > > >
-> > > > >  /* BPF syscall commands, see bpf(2) man-page for more details. */
-> > > >
-> > > > [...]
