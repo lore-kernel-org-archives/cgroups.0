@@ -1,86 +1,123 @@
-From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH v2 00/10] sched/psi: some optimization and extension
-Date: Mon,  8 Aug 2022 19:03:31 +0800
-Message-ID: <20220808110341.15799-1-zhouchengming@bytedance.com>
+From: Chengming Zhou <zhouchengming@bytedance.com>
+Subject: [PATCH v2 01/10] sched/psi: fix periodic aggregation shut off
+Date: Mon,  8 Aug 2022 19:03:32 +0800
+Message-ID: <20220808110341.15799-2-zhouchengming@bytedance.com>
+References: <20220808110341.15799-1-zhouchengming@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=ZuKaLhLa5tbyftaj2zqrE8vh2E3RCbHj+YPIfBePDGE=;
-        b=JAQoR2JLXXcFnQ+8VpKRcSa7MZKg44EUwQQjW+f+SUR7Y8Few/TDsJ9Ogq4yvpQkwW
-         8+B3YBQuZUiDJnBaB5UNAWggMNoZ5zgoDgeNyV5SWJhDp7xaX+a3KRoq2sdt5+pGHiJj
-         J2lXpcXgMUPbB1AC9mG57fI+Sxg38YAQJhb1DOd5BCeB9F7C40I8dXP1YsPOmieLh+oC
-         TSHR6XDNtwsjfy9f8dKalMpr+LlGpfkvb+jfGp7y1I7JyLeohHqLtXJ1fuyNgJ5n8XZR
-         wOvzJ5RUbwKdSolOiqm1o2NHdMgOAtOgCOcdsIUM5E6c85XAzgaTHhj3kM8MH6J13fKI
-         xeRA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=CFgIL4xu1jYaeQ3o92prjVPs2tt3tKhzJurHXG1zK+o=;
+        b=mCn/FUv8vJn3gM6TWAH7m0EZ0zSqeK/a3/8rhqv+87kOgowTq51ILVa8RPtQ4CJ4e0
+         +oAxuhaBJwC6Y2w9xm0tcIArMne+5pSc3BOXm1Kg+AK2J+YdoVwEKs3dMBp/6CaIXs8G
+         maC4pXIGM8GFtTPqdn7//qVcjblHL0NBdkagTz45mlfa2Nwgxuzz3OEwUV42DGUkL7hc
+         Hw1CZoPTI0jN3JI6hnb5qsK2orPYPLWKu7k15zZ2B3cIgymfdVNnTuyIvE33uxvqGbTH
+         YN7JCpiRk/a9kv5LE3JcRzAmAzR42UgfSRuAqWxbRWhD5g9y/yPfY5rfh3m4nAZLP6Tl
+         ub5A==
+In-Reply-To: <20220808110341.15799-1-zhouchengming@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: hannes@cmpxchg.org, tj@kernel.org, corbet@lwn.net, surenb@google.com, mingo@redhat.com, peterz@infradead.org, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com, Chengming Zhou <zhouchengming@bytedance.com>
 
-Hi all,
+We don't want to wake periodic aggregation work back up if the
+task change is the aggregation worker itself going to sleep, or
+we'll ping-pong forever.
 
-This patch series are some optimization and extension for PSI, based on
-the tip/sched/core branch.
+Previously, we would use psi_task_change() in psi_dequeue() when
+task going to sleep, so this check was put in psi_task_change().
 
-patch 1/10 fix periodic aggregation shut off problem introduced by earlier
-commit 4117cebf1a9f ("psi: Optimize task switch inside shared cgroups").
+But commit 4117cebf1a9f ("psi: Optimize task switch inside shared cgroups")
+defer task sleep handling to psi_task_switch(), won't go through
+psi_task_change() anymore.
 
-patch 2/10 optimize task switch inside shared cgroups when in_memstall status
-of prev task and next task are different.
+So this patch move this check to psi_task_switch().
 
-patch 3-4 optimize and simplify PSI status tracking by don't change task
-psi_flags when migrate CPU/cgroup.
+Fixes: 4117cebf1a9f ("psi: Optimize task switch inside shared cgroups")
+Signed-off-by: Chengming Zhou <zhouchengming@bytedance.com>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ kernel/sched/psi.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-patch 7/10 remove NR_ONCPU task accounting to save 4 bytes in the first
-cacheline to be used by the following patch 8/10, which introduce new
-PSI resource PSI_IRQ to track IRQ/SOFTIRQ pressure stall information.
-
-patch 9/10 introduce a per-cgroup interface "cgroup.psi" to disable
-or re-enable PSI stats accounting in the cgroup level.
-
-patch 10/10 cache parent psi_group in struct psi_group to speed up
-the hot iteration path.
-
-Thanks!
-
-Changes in v2:
- - Add Acked-by tags from Johannes Weiner. Thanks for review!
- - Fix periodic aggregation wakeup for common ancestors in
-   psi_task_switch().
- - Add patch 7/10 from Johannes Weiner, which remove NR_ONCPU
-   task accounting to save 4 bytes in the first cacheline.
- - Remove "psi_irq=" kernel cmdline parameter in last version.
- - Add per-cgroup interface "cgroup.psi" to disable/re-enable
-   PSI stats accounting in the cgroup level.
-
-Chengming Zhou (9):
-  sched/psi: fix periodic aggregation shut off
-  sched/psi: optimize task switch inside shared cgroups again
-  sched/psi: move private helpers to sched/stats.h
-  sched/psi: don't change task psi_flags when migrate CPU/group
-  sched/psi: don't create cgroup PSI files when psi_disabled
-  sched/psi: save percpu memory when !psi_cgroups_enabled
-  sched/psi: add PSI_IRQ to track IRQ/SOFTIRQ pressure
-  sched/psi: per-cgroup PSI stats disable/re-enable interface
-  sched/psi: cache parent psi_group to speed up groups iterate
-
-Johannes Weiner (1):
-  sched/psi: remove NR_ONCPU task accounting
-
- Documentation/admin-guide/cgroup-v2.rst |  13 ++
- include/linux/psi.h                     |   6 +-
- include/linux/psi_types.h               |  25 +--
- include/linux/sched.h                   |   3 -
- kernel/cgroup/cgroup.c                  |  73 +++++++
- kernel/sched/core.c                     |   2 +
- kernel/sched/psi.c                      | 247 +++++++++++++++++-------
- kernel/sched/stats.h                    |  60 +++---
- 8 files changed, 313 insertions(+), 116 deletions(-)
-
+diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+index a337f3e35997..115a7e52fa23 100644
+--- a/kernel/sched/psi.c
++++ b/kernel/sched/psi.c
+@@ -800,7 +800,6 @@ void psi_task_change(struct task_struct *task, int clear, int set)
+ {
+ 	int cpu = task_cpu(task);
+ 	struct psi_group *group;
+-	bool wake_clock = true;
+ 	void *iter = NULL;
+ 	u64 now;
+ 
+@@ -810,19 +809,9 @@ void psi_task_change(struct task_struct *task, int clear, int set)
+ 	psi_flags_change(task, clear, set);
+ 
+ 	now = cpu_clock(cpu);
+-	/*
+-	 * Periodic aggregation shuts off if there is a period of no
+-	 * task changes, so we wake it back up if necessary. However,
+-	 * don't do this if the task change is the aggregation worker
+-	 * itself going to sleep, or we'll ping-pong forever.
+-	 */
+-	if (unlikely((clear & TSK_RUNNING) &&
+-		     (task->flags & PF_WQ_WORKER) &&
+-		     wq_worker_last_func(task) == psi_avgs_work))
+-		wake_clock = false;
+ 
+ 	while ((group = iterate_groups(task, &iter)))
+-		psi_group_change(group, cpu, clear, set, now, wake_clock);
++		psi_group_change(group, cpu, clear, set, now, true);
+ }
+ 
+ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
+@@ -858,6 +847,7 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
+ 
+ 	if (prev->pid) {
+ 		int clear = TSK_ONCPU, set = 0;
++		bool wake_clock = true;
+ 
+ 		/*
+ 		 * When we're going to sleep, psi_dequeue() lets us
+@@ -871,13 +861,23 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
+ 				clear |= TSK_MEMSTALL_RUNNING;
+ 			if (prev->in_iowait)
+ 				set |= TSK_IOWAIT;
++
++			/*
++			 * Periodic aggregation shuts off if there is a period of no
++			 * task changes, so we wake it back up if necessary. However,
++			 * don't do this if the task change is the aggregation worker
++			 * itself going to sleep, or we'll ping-pong forever.
++			 */
++			if (unlikely((prev->flags & PF_WQ_WORKER) &&
++				     wq_worker_last_func(prev) == psi_avgs_work))
++				wake_clock = false;
+ 		}
+ 
+ 		psi_flags_change(prev, clear, set);
+ 
+ 		iter = NULL;
+ 		while ((group = iterate_groups(prev, &iter)) && group != common)
+-			psi_group_change(group, cpu, clear, set, now, true);
++			psi_group_change(group, cpu, clear, set, now, wake_clock);
+ 
+ 		/*
+ 		 * TSK_ONCPU is handled up to the common ancestor. If we're tasked
+@@ -886,7 +886,7 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
+ 		if (sleep) {
+ 			clear &= ~TSK_ONCPU;
+ 			for (; group; group = iterate_groups(prev, &iter))
+-				psi_group_change(group, cpu, clear, set, now, true);
++				psi_group_change(group, cpu, clear, set, now, wake_clock);
+ 		}
+ 	}
+ }
 -- 
 2.36.1
 
