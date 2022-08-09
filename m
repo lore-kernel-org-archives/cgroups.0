@@ -1,79 +1,265 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v6 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
- page table uses.
-Date: Mon, 8 Aug 2022 13:06:15 -0700
-Message-ID: <CAJD7tkbc+E7f+ENRazf0SO7C3gR2bHiN4B0F1oPn8Pa6juAVfg@mail.gmail.com>
-References: <20220628220938.3657876-1-yosryahmed@google.com>
- <20220628220938.3657876-2-yosryahmed@google.com> <YsdJPeVOqlj4cf2a@google.com>
- <CAJD7tkYE+pZdk=-psEP_Rq_1CmDjY7Go+s1LXm-ctryWvUdgLA@mail.gmail.com>
- <Ys3+UTTC4Qgbm7pQ@google.com> <CAJD7tkY91oiDWTj5FY2Upc5vabsjLk+CBMNzAepXLUdF_GS11w@mail.gmail.com>
+From: Andrii Nakryiko <andrii.nakryiko-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH bpf-next v7 4/8] bpf: Introduce cgroup iter
+Date: Mon, 8 Aug 2022 17:18:49 -0700
+Message-ID: <CAEf4BzZHf89Ds8nQWFCH00fKs9-9GkJ0d+Hrp-LkMCDUP_td0A@mail.gmail.com>
+References: <20220805214821.1058337-1-haoluo@google.com> <20220805214821.1058337-5-haoluo@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=0j4dwLC8wxMrSAowWiy7rSpW5tCFJnoA4YLc0AuNUGg=;
-        b=gld9078CrBQZkkr4yLFP8JyPjvlRn+4NpBrX7b60hIKWn28bkVbenIdUCbRuLNTTV0
-         1L/39r5DQ4UKsm46WbkBiD46ElgQhpGCrV3dL2IjRNVKWzoh4RcLMsGeUceFQUKOwfSS
-         lKuidI5W5eLJW4bvDU6NCAaZbpFulFWfNzi8pT0hS8wUhPwdVnzf53hNGbSb8efC0kW5
-         rAbRal6FivNDSIIFBYuhcY/SU+U3x4tV9f7yNkVkf0A8JI0x7IsYbZ2z7W64UW/k7roj
-         9D+5xVc9ZcwERLaDE3Stw31kBjsL/lFxJJhjsNTXENCu2Y/ZofRg5BFreVtm2omGqwjq
-         /cdA==
-In-Reply-To: <CAJD7tkY91oiDWTj5FY2Upc5vabsjLk+CBMNzAepXLUdF_GS11w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=TlM9leardc/lh2LAQcB7vPGtKrRV8tCxZE6tCV2q/hQ=;
+        b=VsnzieyrIyNJZZwyHN0jtoFOIpZfLyZFOi1lYn8touGkiYf4w+JAgrG1eWHpD+jrdV
+         R07dDJfmhqLjearJ1lyl7LCZ4hvDoJVr7A8Si1D3+OaiMyN5aW86ZJQr9IHkMMFzfsbr
+         rmi+xmz2pgROi8oYv5koHymujX9oIuhcHFdQwMnkTK17Yim9kH33pkjbHAB6R0ELQzKI
+         2Ysm8bKSs9lyCPp53i/WovGrjs+rjovSnVBoD85i54YkRBFtDw7ba0YuILGnLjlfVsO2
+         2wPNEirmmM815pBen/hQC7Gj7RgUYxcNdu1+BP5BLfoSy0nISGaoIUqqnkNt7F2NUzCD
+         6sKg==
+In-Reply-To: <20220805214821.1058337-5-haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Huang-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Shaoqin <shaoqin.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel>
+To: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Benjamin Tissoires <benjamin.tissoires-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Koutny <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Jul 18, 2022 at 11:26 AM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+On Fri, Aug 5, 2022 at 2:49 PM Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 >
-> On Tue, Jul 12, 2022 at 4:06 PM Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >
-> > On Tue, Jul 12, 2022, Yosry Ahmed wrote:
-> > > Thanks for taking another look at this!
-> > >
-> > > On Thu, Jul 7, 2022 at 1:59 PM Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> > > >
-> > > > On Tue, Jun 28, 2022, Yosry Ahmed wrote:
-> > > > > diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-> > > > > index aab70355d64f3..13190d298c986 100644
-> > > > > --- a/include/linux/mmzone.h
-> > > > > +++ b/include/linux/mmzone.h
-> > > > > @@ -216,6 +216,7 @@ enum node_stat_item {
-> > > > >       NR_KERNEL_SCS_KB,       /* measured in KiB */
-> > > > >  #endif
-> > > > >       NR_PAGETABLE,           /* used for pagetables */
-> > > > > +     NR_SECONDARY_PAGETABLE, /* secondary pagetables, e.g. kvm shadow pagetables */
-> > > >
-> > > > Nit, s/kvm/KVM, and drop the "shadow", which might be misinterpreted as saying KVM
-> > > > pagetables are only accounted when KVM is using shadow paging.  KVM's usage of "shadow"
-> > > > is messy, so I totally understand why you included it, but in this case it's unnecessary
-> > > > and potentially confusing.
-> > > >
-> > > > And finally, something that's not a nit.  Should this be wrapped with CONFIG_KVM
-> > > > (using IS_ENABLED() because KVM can be built as a module)?  That could be removed
-> > > > if another non-KVM secondary MMU user comes along, but until then, #ifdeffery for
-> > > > stats the depend on a single feature seems to be the status quo for this code.
-> > > >
-> > >
-> > > I will #ifdef the stat, but I will emphasize in the docs that is
-> > > currently *only* used for KVM so that it makes sense if users without
-> > > KVM don't see the stat at all. I will also remove the stat from
-> > > show_free_areas() in mm/page_alloc.c as it seems like none of the
-> > > #ifdefed stats show up there.
-> >
-> > It's might be worth getting someone from mm/ to weigh in before going through the
-> > trouble, my suggestion/question is based purely on the existing code.
+> Cgroup_iter is a type of bpf_iter. It walks over cgroups in four modes:
 >
-> Any mm folks with an opinion about this?
+>  - walking a cgroup's descendants in pre-order.
+>  - walking a cgroup's descendants in post-order.
+>  - walking a cgroup's ancestors.
+>  - process only the given cgroup.
 >
-> Any preference on whether we should wrap NR_SECONDARY_PAGETABLE stats
-> with #ifdef CONFIG_KVM for now as it is currently the only source for
-> this stat?
+> When attaching cgroup_iter, one can set a cgroup to the iter_link
+> created from attaching. This cgroup is passed as a file descriptor
+> or cgroup id and serves as the starting point of the walk. If no
+> cgroup is specified, the starting point will be the root cgroup v2.
+>
+> For walking descendants, one can specify the order: either pre-order or
+> post-order. For walking ancestors, the walk starts at the specified
+> cgroup and ends at the root.
+>
+> One can also terminate the walk early by returning 1 from the iter
+> program.
+>
+> Note that because walking cgroup hierarchy holds cgroup_mutex, the iter
+> program is called with cgroup_mutex held.
+>
+> Currently only one session is supported, which means, depending on the
+> volume of data bpf program intends to send to user space, the number
+> of cgroups that can be walked is limited. For example, given the current
+> buffer size is 8 * PAGE_SIZE, if the program sends 64B data for each
+> cgroup, assuming PAGE_SIZE is 4kb, the total number of cgroups that can
+> be walked is 512. This is a limitation of cgroup_iter. If the output
+> data is larger than the kernel buffer size, after all data in the
+> kernel buffer is consumed by user space, the subsequent read() syscall
+> will signal EOPNOTSUPP. In order to work around, the user may have to
+> update their program to reduce the volume of data sent to output. For
+> example, skip some uninteresting cgroups. In future, we may extend
+> bpf_iter flags to allow customizing buffer size.
+>
+> Acked-by: Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>
+> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Signed-off-by: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  include/linux/bpf.h                           |   8 +
+>  include/uapi/linux/bpf.h                      |  38 +++
+>  kernel/bpf/Makefile                           |   3 +
+>  kernel/bpf/cgroup_iter.c                      | 286 ++++++++++++++++++
+>  tools/include/uapi/linux/bpf.h                |  38 +++
+>  .../selftests/bpf/prog_tests/btf_dump.c       |   4 +-
+>  6 files changed, 375 insertions(+), 2 deletions(-)
+>  create mode 100644 kernel/bpf/cgroup_iter.c
+>
+> diff --git a/include/linux/bpf.h b/include/linux/bpf.h
+> index 20c26aed7896..09b5c2167424 100644
+> --- a/include/linux/bpf.h
+> +++ b/include/linux/bpf.h
+> @@ -48,6 +48,7 @@ struct mem_cgroup;
+>  struct module;
+>  struct bpf_func_state;
+>  struct ftrace_ops;
+> +struct cgroup;
+>
+>  extern struct idr btf_idr;
+>  extern spinlock_t btf_idr_lock;
+> @@ -1730,7 +1731,14 @@ int bpf_obj_get_user(const char __user *pathname, int flags);
+>         int __init bpf_iter_ ## target(args) { return 0; }
+>
+>  struct bpf_iter_aux_info {
+> +       /* for map_elem iter */
+>         struct bpf_map *map;
+> +
+> +       /* for cgroup iter */
+> +       struct {
+> +               struct cgroup *start; /* starting cgroup */
+> +               int order;
+> +       } cgroup;
+>  };
+>
+>  typedef int (*bpf_iter_attach_target_t)(struct bpf_prog *prog,
+> diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
+> index 59a217ca2dfd..4d758b2e70d6 100644
+> --- a/include/uapi/linux/bpf.h
+> +++ b/include/uapi/linux/bpf.h
+> @@ -87,10 +87,37 @@ struct bpf_cgroup_storage_key {
+>         __u32   attach_type;            /* program attach type (enum bpf_attach_type) */
+>  };
+>
+> +enum bpf_iter_order {
+> +       BPF_ITER_ORDER_DEFAULT = 0,     /* default order. */
 
-Any input here?
+why is this default order necessary? It just adds confusion (I had to
+look up source code to know what is default order). I might have
+missed some discussion, so if there is some very good reason, then
+please document this in commit message. But I'd rather not do some
+magical default order instead. We can set 0 to mean invalid and error
+out, or just do SELF as the very first value (and if user forgot to
+specify more fancy mode, they hopefully will quickly discover this in
+their testing).
 
-Johannes, you have been involved in discussions in earlier versions of
-this series, any thoughts here?
+> +       BPF_ITER_SELF,                  /* process only a single object. */
+> +       BPF_ITER_DESCENDANTS_PRE,       /* walk descendants in pre-order. */
+> +       BPF_ITER_DESCENDANTS_POST,      /* walk descendants in post-order. */
+> +       BPF_ITER_ANCESTORS_UP,          /* walk ancestors upward. */
+> +};
+> +
+
+This is a somewhat pedantic nit, so feel free to ignore completely,
+but don't DESCENDANTS_{PRE,POST} and ANCESTORS_UP also include "self"?
+As it is right now, BPF_ITER_SELF name might be read as implying that
+DESCENDANTS and ANCESTORS order don't include self. So I don't know,
+maybe BPF_ITER_SELF_ONLY would be a bit clearer?
+
+
+>  union bpf_iter_link_info {
+>         struct {
+>                 __u32   map_fd;
+>         } map;
+> +       struct {
+> +               /* Valid values include:
+> +                *  - BPF_ITER_ORDER_DEFAULT
+> +                *  - BPF_ITER_SELF
+> +                *  - BPF_ITER_DESCENDANTS_PRE
+> +                *  - BPF_ITER_DESCENDANTS_POST
+> +                *  - BPF_ITER_ANCESTORS_UP
+> +                * for cgroup_iter, DEFAULT is equivalent to DESCENDANTS_PRE.
+> +                */
+> +               __u32   order;
+> +
+> +               /* At most one of cgroup_fd and cgroup_id can be non-zero. If
+> +                * both are zero, the walk starts from the default cgroup v2
+> +                * root. For walking v1 hierarchy, one should always explicitly
+> +                * specify cgroup_fd.
+> +                */
+> +               __u32   cgroup_fd;
+> +               __u64   cgroup_id;
+> +       } cgroup;
+>  };
+>
+>  /* BPF syscall commands, see bpf(2) man-page for more details. */
+> @@ -6134,11 +6161,22 @@ struct bpf_link_info {
+>                 struct {
+>                         __aligned_u64 target_name; /* in/out: target_name buffer ptr */
+>                         __u32 target_name_len;     /* in/out: target_name buffer len */
+> +
+> +                       /* If the iter specific field is 32 bits, it can be put
+> +                        * in the first or second union. Otherwise it should be
+> +                        * put in the second union.
+> +                        */
+>                         union {
+>                                 struct {
+>                                         __u32 map_id;
+>                                 } map;
+>                         };
+> +                       union {
+> +                               struct {
+> +                                       __u64 cgroup_id;
+> +                                       __u32 order;
+> +                               } cgroup;
+> +                       };
+>                 } iter;
+
+But other than above, I like how UAPI looks like, thanks!
+
+[...]
+
+> + *
+> + * For walking descendants, cgroup_iter can walk in either pre-order or
+> + * post-order. For walking ancestors, the iter walks up from a cgroup to
+> + * the root.
+> + *
+> + * The iter program can terminate the walk early by returning 1. Walk
+> + * continues if prog returns 0.
+> + *
+> + * The prog can check (seq->num == 0) to determine whether this is
+> + * the first element. The prog may also be passed a NULL cgroup,
+> + * which means the walk has completed and the prog has a chance to
+> + * do post-processing, such as outputing an epilogue.
+
+typo: outputting
+
+> + *
+> + * Note: the iter_prog is called with cgroup_mutex held.
+> + *
+> + * Currently only one session is supported, which means, depending on the
+> + * volume of data bpf program intends to send to user space, the number
+> + * of cgroups that can be walked is limited. For example, given the current
+> + * buffer size is 8 * PAGE_SIZE, if the program sends 64B data for each
+> + * cgroup, assuming PAGE_SIZE is 4kb, the total number of cgroups that can
+> + * be walked is 512. This is a limitation of cgroup_iter. If the output data
+> + * is larger than the kernel buffer size, after all data in the kernel buffer
+> + * is consumed by user space, the subsequent read() syscall will signal
+> + * EOPNOTSUPP. In order to work around, the user may have to update their
+> + * program to reduce the volume of data sent to output. For example, skip
+> + * some uninteresting cgroups.
+> + */
+> +
+
+[...]
+
+> +
+> +static void bpf_iter_cgroup_show_fdinfo(const struct bpf_iter_aux_info *aux,
+> +                                       struct seq_file *seq)
+> +{
+> +       char *buf;
+> +
+> +       buf = kzalloc(PATH_MAX, GFP_KERNEL);
+> +       if (!buf) {
+> +               seq_puts(seq, "cgroup_path:\t<unknown>\n");
+> +               goto show_order;
+> +       }
+> +
+> +       /* If cgroup_path_ns() fails, buf will be an empty string, cgroup_path
+> +        * will print nothing.
+> +        *
+> +        * Path is in the calling process's cgroup namespace.
+> +        */
+> +       cgroup_path_ns(aux->cgroup.start, buf, PATH_MAX,
+> +                      current->nsproxy->cgroup_ns);
+> +       seq_printf(seq, "cgroup_path:\t%s\n", buf);
+> +       kfree(buf);
+> +
+> +show_order:
+> +       if (aux->cgroup.order == BPF_ITER_DESCENDANTS_PRE)
+> +               seq_puts(seq, "order: pre\n");
+> +       else if (aux->cgroup.order == BPF_ITER_DESCENDANTS_POST)
+> +               seq_puts(seq, "order: post\n");
+> +       else if (aux->cgroup.order == BPF_ITER_ANCESTORS_UP)
+> +               seq_puts(seq, "order: up\n");
+> +       else /* BPF_ITER_SELF */
+> +               seq_puts(seq, "order: self\n");
+
+should we output "descendants_pre", "descendants_post", "ancestors_up"
+and "self" to match enum names more uniformly? We had similar
+discussion when Daniel Mueller was doing some clean up in bpftool and
+public's opinion was that uniform and consistent mapping between
+kernel enum and it's string representation is more valuable than
+shortness of the string.
+
+> +}
+> +
+
+[...]
