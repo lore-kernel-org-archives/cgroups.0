@@ -1,54 +1,50 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH v2 09/10] sched/psi: per-cgroup PSI stats
  disable/re-enable interface
-Date: Wed, 10 Aug 2022 11:25:07 -0400
-Message-ID: <YvPN07UlaPFAdlet@cmpxchg.org>
+Date: Wed, 10 Aug 2022 07:27:12 -1000
+Message-ID: <YvPqcJh5Ffv4Yga9@slm.duckdns.org>
 References: <20220808110341.15799-1-zhouchengming@bytedance.com>
  <20220808110341.15799-10-zhouchengming@bytedance.com>
  <YvKd6dezPM6UxfD/@slm.duckdns.org>
  <fcd0bd39-3049-a279-23e6-a6c02b4680a7@bytedance.com>
  <b89155d3-9315-fefc-408b-4cf538360a1c@bytedance.com>
+ <YvPN07UlaPFAdlet@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc;
-        bh=XKSHwFSFM1Cfz7cdR5obhEJYaVPc+IY05aklvSLeQmw=;
-        b=e25AVASdPskhVxulzpOYgaM3vGiYCxw8t0zkJEcYGUk7Fx/Mq8TE82UTUMm1fMJjVJ
-         +eQqkzIQtuQ3Xt94VFmavIu2BAbiC/+oGnTH5+DCvd3jY+Tqabjep1pmpm/SXb8nex/A
-         /j6SqUkQQs2pAQbRfRMOyQOcuQgo77JpaJjLIvmv7AVsaBadJL1snWWmn0oQ7Z9bDpLN
-         K9GiCya8kI8O2Ly2d26O96W/pja52lx6vvKnqSoq5WH1mypXZrvJnWZ9g3p3L8ZdIPTU
-         YYXBaxvP1uUq0TSvFpBrEt3YPzMVQjZZ5RhrUlBB9wTSOKi3mTgDWCYXz8j3nkwzOy+f
-         g1JA==
+         :subject:cc:to:from:date:sender:from:to:cc;
+        bh=lPqOojcmdOAU79rFEpjfZKvBUO43nFGE73fllT7UubM=;
+        b=eyIMIlC3NT7t/M/JASfHlCFAM/ZU0pftD5lYftV9y52nfgtwB67ojBpqf2XsOJyPSE
+         myoOkkToXgt6K3WrTFoFZsHIpdtUfS60IWEMULjtaEAE+TjV+RuhH4obNjaaAnckuTC6
+         BA8od9MxEGi7eaZv3+xOdXOZnJG8xOpM61nKy+o20Apn56jqN9sCRN20JqYq4Pv+iw65
+         HK2ViXVajAEPsYsQna5Rtt5YlPAEu3ZDWGIAtarHArRoEI4B1VFOHV8Y8a57Fcozd92H
+         RiqaFV32hD0ryvy5JOdno8MAxtJFWUmXq0AKTETBfUdepAD+T8BmAmE4OsqE3afLYwij
+         OsGQ==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <b89155d3-9315-fefc-408b-4cf538360a1c@bytedance.com>
+In-Reply-To: <YvPN07UlaPFAdlet@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Chengming Zhou <zhouchengming@bytedance.com>
-Cc: Tejun Heo <tj@kernel.org>, corbet@lwn.net, surenb@google.com, mingo@redhat.com, peterz@infradead.org, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Chengming Zhou <zhouchengming@bytedance.com>, corbet@lwn.net, surenb@google.com, mingo@redhat.com, peterz@infradead.org, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com
 
-On Wed, Aug 10, 2022 at 09:30:59AM +0800, Chengming Zhou wrote:
-> On 2022/8/10 08:39, Chengming Zhou wrote:
-> > On 2022/8/10 01:48, Tejun Heo wrote:
-> >> Hello,
-> >>
-> >> On Mon, Aug 08, 2022 at 07:03:40PM +0800, Chengming Zhou wrote:
-> >>> So this patch introduce a per-cgroup PSI stats disable/re-enable
-> >>> interface "cgroup.psi", which is a read-write single value file that
-> >>> allowed values are "0" and "1", the defaults is "1" so per-cgroup
-> >>> PSI stats is enabled by default.
-> >>
-> >> Given that the knobs are named {cpu|memory|io}.pressure, I wonder whether
-> >> "cgroup.psi" is the best name. Also, it doesn't convey that it's the
-> >> enable/disable knob. I think it needs a better name.
-> > 
-> > Yes, "cgroup.psi" is not good. What abort "pressure.enable" or "cgroup.psi_enable"?
+Hello,
+
+On Wed, Aug 10, 2022 at 11:25:07AM -0400, Johannes Weiner wrote:
+> How about just cgroup.pressure? Too ambiguous?
 > 
-> Doesn't look good either, what do you think of "cgroup.pressure.enable"?
+> cgroup.pressure.enable sounds good to me too. Or, because it's
+> default-enabled and that likely won't change, cgroup.pressure.disable.
 
-How about just cgroup.pressure? Too ambiguous?
+.disable sounds more logical but I like .enable better for some reason. As
+for just cgroup.pressure, yeah, maybe? The conundrum is that the prettiness
+order is the exact reverse of the logical order. So, I'm okay with any of
+the three.
 
-cgroup.pressure.enable sounds good to me too. Or, because it's
-default-enabled and that likely won't change, cgroup.pressure.disable.
+Thanks.
+
+-- 
+tejun
