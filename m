@@ -1,71 +1,249 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC PATCH] cgroup: use root_mem_cgroup as css when current is
- not enabled
-Date: Fri, 12 Aug 2022 09:06:14 -1000
-Message-ID: <YvakpukeF9d35Bc8@slm.duckdns.org>
-References: <1660298966-11493-1-git-send-email-zhaoyang.huang@unisoc.com>
+From: Hao Luo <haoluo@google.com>
+Subject: [PATCH bpf-next v8 0/5] bpf: rstat: cgroup hierarchical stats
+Date: Fri, 12 Aug 2022 13:27:57 -0700
+Message-ID: <20220812202802.3774257-1-haoluo@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc;
-        bh=K5kHnejuEt7Pt9e4fwYPne3BNnxtsVlr6ROsJLvAIa0=;
-        b=Qar1VMGJIJ0ygpP/aVRz6hN912vPbq1cxrcogPE79/v7qrHH5Fpt6e7GL1LNHUsgLf
-         Ym3uNok4Eaib+wurgKcpDQ8KTxPK3A34Q+SsBzqhBL0rRqNzX5O+7snQNLrMDnCvof23
-         Oq4jREnkRCQ67jemY3M/fdd8l7mh4iRBb1njKQBNzdg3Vf1xEm1Lr3HWX0Wkw7Zr2lcu
-         yCFl2/gf5DdFkdIUuRsgBe/EY3u/1ca77S5GxMST03y2J8TXCXJAEnNsQ3aT8C7PJd7k
-         NKWMKAf6i1iem+kaaWl5e8m7DJkzjoNYDpc6YMRSRgWTSgg3AUf3XoT+/RhCH4B7D42x
-         RwPQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1660298966-11493-1-git-send-email-zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+        d=google.com; s=20210112;
+        h=cc:to:from:subject:mime-version:message-id:date:from:to:cc;
+        bh=y7zyZQpyvwcyrgKQBb7tjr8haOvA6ugjNFKM7h72Cu0=;
+        b=VRTWj8gcht5FdlW2h03vk6MO0i/KKxVvSc+OhyeQUvNmJATUkS3Zo4C3LALOS70zUH
+         +0FHI/IfeBuTVuU7GXnsA3J9XpPwsdqh1iS1aqE94dK38AEC+E2TKWFEiyallg5k97Ig
+         AUp2N9cC/qAaIKMQ0x5C5wcAQtGwxfWt5AS+EFoNNUZUJDthc1QuQxzysJ5v4cI2lAM6
+         SiQVPx6QJKF9y+tQ5r9TQ1qz0EscJiZ5Wrbz3Q1k0oGfXqtDNnlx7ymDJmXDR6UfBvch
+         Juu0QKLeWDfFAJZ2mKG4PHYXfSOV/X6n4z45a7Vn6IayOHgqSzteyYQ2yhoZy7ZlCmS4
+         6Wcg==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: linux-kernel@vger.kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org
+Cc: Alexei Starovoitov <ast@kernel.org>, Andrii Nakryiko <andrii@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, Yonghong Song <yhs@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, KP Singh <kpsingh@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, John Fastabend <john.fastabend@gmail.com>, Michal Koutny <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Shakeel Butt <shakeelb@google.com>, Yosry Ahmed <yosryahmed@google.com>, Hao Luo <haoluo@google.com>
 
-On Fri, Aug 12, 2022 at 06:09:26PM +0800, zhaoyang.huang wrote:
-> From: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
-> 
-> Memory charged on group B abserved on belowing v2 hierarchy where we just would
-> like to only have group E's memory be controlled and B's descendants compete freely
-> for memory. This should be the consequences of unified hierarchy. Solve this by
-> have the cgroup without valid memory css alloced use root_mem_cgroup instead of
-> its ancestor's.
-> 
->  A(subtree_control = memory) - B(subtree_control = NULL) - C()
->                                                          \ D()
-> 			     - E(subtree_control = memory) - F()
-> 							   \ G()
-> 
-> Signed-off-by: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
-> ---
->  kernel/cgroup/cgroup.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index 1779ccd..b29b3f6 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -533,6 +533,14 @@ static struct cgroup_subsys_state *cgroup_e_css_by_mask(struct cgroup *cgrp,
->  	 * can't test the csses directly.  Test ss_mask.
->  	 */
->  	while (!(cgroup_ss_mask(cgrp) & (1 << ss->id))) {
-> +		/*
-> +		 * charging to the parent cgroup which hasn't distribute
-> +		 * memory control to its descendants doesn't make sense
-> +		 * especially on cgroup v2, where the parent could be configured
-> +		 * to use memory controller as its sibling want to use it
-> +		 */
-> +		if (memory_cgrp_id == ss->id)
-> +			return &root_mem_cgroup->css;
+This patch series allows for using bpf to collect hierarchical cgroup
+stats efficiently by integrating with the rstat framework. The rstat
+framework provides an efficient way to collect cgroup stats percpu and
+propagate them through the cgroup hierarchy.
 
-This is gonna be a hard nack. A given cgroup always encompasses all the
-resources consumed in its self-including subtree.
+The stats are exposed to userspace in textual form by reading files in
+bpffs, similar to cgroupfs stats by using a cgroup_iter program.
+cgroup_iter is a type of bpf_iter. It walks over cgroups in four modes:
+- walking a cgroup's descendants in pre-order.
+- walking a cgroup's descendants in post-order.
+- walking a cgroup's ancestors.
+- process only a single object.
 
-Thanks.
+When attaching cgroup_iter, one needs to set a cgroup to the iter_link
+created from attaching. This cgroup can be passed either as a file
+descriptor or a cgroup id. That cgroup serves as the starting point of
+the walk.
+
+One can also terminate the walk early by returning 1 from the iter
+program.
+
+Note that because walking cgroup hierarchy holds cgroup_mutex, the iter
+program is called with cgroup_mutex held.
+
+** Background on rstat for stats collection **
+(I am using a subscriber analogy that is not commonly used)
+
+The rstat framework maintains a tree of cgroups that have updates and
+which cpus have updates. A subscriber to the rstat framework maintains
+their own stats. The framework is used to tell the subscriber when
+and what to flush, for the most efficient stats propagation. The
+workflow is as follows:
+
+- When a subscriber updates a cgroup on a cpu, it informs the rstat
+  framework by calling cgroup_rstat_updated(cgrp, cpu).
+
+- When a subscriber wants to read some stats for a cgroup, it asks
+  the rstat framework to initiate a stats flush (propagation) by calling
+  cgroup_rstat_flush(cgrp).
+
+- When the rstat framework initiates a flush, it makes callbacks to
+  subscribers to aggregate stats on cpus that have updates, and
+  propagate updates to their parent.
+
+Currently, the main subscribers to the rstat framework are cgroup
+subsystems (e.g. memory, block). This patch series allow bpf programs to
+become subscribers as well.
+
+Patches in this series are organized as follows:
+* Patches 1-2 introduce cgroup_iter prog, and a selftest.
+* Patches 3-5 allow bpf programs to integrate with rstat by adding the
+  necessary hook points and kfunc. A comprehensive selftest that
+  demonstrates the entire workflow for using bpf and rstat to
+  efficiently collect and output cgroup stats is added.
+
+---
+Changelog:
+v7 -> v8:
+- Removed the confusing BPF_ITER_DEFAULT (Andrii)
+- s/SELF/SELF_ONLY/g
+- Fixed typo (e.g. outputing) (Andrii)
+- Use "descendants_pre", "descendants_post" etc. instead of "pre",
+  "post" (Andrii)
+
+v6 -> v7:
+- Updated commit/comments in cgroup_iter for read() behavior (Yonghong)
+- Extracted BPF_ITER_SELF and other options out of cgroup_iter, so
+  that they can be used in other iters. Also renamed them. (Andrii)
+- Supports both cgroup_fd and cgroup_id when specifying target cgroup.
+  (Andrii)
+- Avoided using macro for formatting expected output in cgroup_iter
+  selftest. (Andrii)
+- Applied 'static' on all vars and functions in cgroup_iter selftest.
+  (Andrii)
+- Fixed broken buf reading in cgroup_iter selftest. (Andrii)
+- Switched to use bpf_link__destroy() unconditionally. (Andrii)
+- Removed 'volatile' for non-const global vars in selftests. (Andrii)
+- Started using bpf_core_enum_value() to get memory_cgrp_id. (Andrii)
+
+v5 -> v6:
+- Rebased on bpf-next
+- Tidy up cgroup_hierarchical_stats test (Andrii)
+  * 'static' and 'inline'
+  * avoid using libbpf_get_error()
+  * string literals of cgroup paths.
+- Rename patch 8/8 to 'selftests/bpf' (Yonghong)
+- Fix cgroup_iter comments (e.g. PAGE_SIZE and uapi) (Yonghong)
+- Make sure further read() returns OK after previous read() finished
+  properly (Yonghong)
+- Release cgroup_mutex before the last call of show() (Kumar)
+
+v4 -> v5:
+- Rebased on top of new kfunc flags infrastructure, updated patch 1 and
+  patch 6 accordingly.
+- Added docs for sleepable kfuncs.
+
+v3 -> v4:
+- cgroup_iter:
+  * reorder fields in bpf_link_info to avoid break uapi (Yonghong)
+  * comment the behavior when cgroup_fd=0 (Yonghong)
+  * comment on the limit of number of cgroups supported by cgroup_iter.
+    (Yonghong)
+- cgroup_hierarchical_stats selftest:
+  * Do not return -1 if stats are not found (causes overflow in userspace).
+  * Check if child process failed to join cgroup.
+  * Make buf and path arrays in get_cgroup_vmscan_delay() static.
+  * Increase the test map sizes to accomodate cgroups that are not
+    created by the test.
+
+v2 -> v3:
+- cgroup_iter:
+  * Added conditional compilation of cgroup_iter.c in kernel/bpf/Makefile
+    (kernel test) and dropped the !CONFIG_CGROUP patch.
+  * Added validation of traversal_order when attaching (Yonghong).
+  * Fixed previous wording "two modes" to "three modes" (Yonghong).
+  * Fixed the btf_dump selftest broken by this patch (Yonghong).
+  * Fixed ctx_arg_info[0] to use "PTR_TO_BTF_ID_OR_NULL" instead of
+    "PTR_TO_BTF_ID", because the "cgroup" pointer passed to iter prog can
+     be null.
+- Use __diag_push to eliminate __weak noinline warning in
+  bpf_rstat_flush().
+- cgroup_hierarchical_stats selftest:
+  * Added write_cgroup_file_parent() helper.
+  * Added error handling for failed map updates.
+  * Added null check for cgroup in vmscan_flush.
+  * Fixed the signature of vmscan_[start/end].
+  * Correctly return error code when attaching trace programs fail.
+  * Make sure all links are destroyed correctly and not leaking in
+    cgroup_hierarchical_stats selftest.
+  * Use memory.reclaim instead of memory.high as a more reliable way to
+    invoke reclaim.
+  * Eliminated sleeps, the test now runs faster.
+
+v1 -> v2:
+- Redesign of cgroup_iter from v1, based on Alexei's idea [1]:
+  * supports walking cgroup subtree.
+  * supports walking ancestors of a cgroup. (Andrii)
+  * supports terminating the walk early.
+  * uses fd instead of cgroup_id as parameter for iter_link. Using fd is
+    a convention in bpf.
+  * gets cgroup's ref at attach time and deref at detach.
+  * brought back cgroup1 support for cgroup_iter.
+- Squashed the patches adding the rstat flush hook points and kfuncs
+  (Tejun).
+- Added a comment explaining why bpf_rstat_flush() needs to be weak
+  (Tejun).
+- Updated the final selftest with the new cgroup_iter design.
+- Changed CHECKs in the selftest with ASSERTs (Yonghong, Andrii).
+- Removed empty line at the end of the selftest (Yonghong).
+- Renamed test files to cgroup_hierarchical_stats.c.
+- Reordered CGROUP_PATH params order to match struct declaration
+  in the selftest (Michal).
+- Removed memory_subsys_enabled() and made sure memcg controller
+  enablement checks make sense and are documented (Michal).
+
+
+RFC v2 -> v1:
+- Instead of introducing a new program type for rstat flushing, add an
+  empty hook point, bpf_rstat_flush(), and use fentry bpf programs to
+  attach to it and flush bpf stats.
+- Instead of using helpers, use kfuncs for rstat functions.
+- These changes simplify the patchset greatly, with minimal changes to
+  uapi.
+
+RFC v1 -> RFC v2:
+- Instead of rstat flush programs attach to subsystems, they now attach
+  to rstat (global flushers, not per-subsystem), based on discussions
+  with Tejun. The first patch is entirely rewritten.
+- Pass cgroup pointers to rstat flushers instead of cgroup ids. This is
+  much more flexibility and less likely to need a uapi update later.
+- rstat helpers are now only defined if CGROUP_CONFIG.
+- Most of the code is now only defined if CGROUP_CONFIG and
+  CONFIG_BPF_SYSCALL.
+- Move rstat helper protos from bpf_base_func_proto() to
+  tracing_prog_func_proto().
+- rstat helpers argument (cgroup pointer) is now ARG_PTR_TO_BTF_ID, not
+  ARG_ANYTHING.
+- Rewrote the selftest to use the cgroup helpers.
+- Dropped bpf_map_lookup_percpu_elem (already added by Feng).
+- Dropped patch to support cgroup v1 for cgroup_iter.
+- Dropped patch to define some cgroup_put() when !CONFIG_CGROUP. The
+  code that calls it is no longer compiled when !CONFIG_CGROUP.
+
+cgroup_iter was originally introduced in a different patch series[2].
+Hao and I agreed that it fits better as part of this series.
+RFC v1 of this patch series had the following changes from [2]:
+- Getting the cgroup's reference at the time at attaching, instead of
+  at the time when iterating. (Yonghong)
+- Remove .init_seq_private and .fini_seq_private callbacks for
+  cgroup_iter. They are not needed now. (Yonghong)
+
+[1] https://lore.kernel.org/bpf/20220520221919.jnqgv52k4ajlgzcl@MBP-98dd607d3435.dhcp.thefacebook.com/
+[2] https://lore.kernel.org/lkml/20220225234339.2386398-9-haoluo@google.com/
+
+Hao Luo (2):
+  bpf: Introduce cgroup iter
+  selftests/bpf: Test cgroup_iter.
+
+Yosry Ahmed (3):
+  cgroup: bpf: enable bpf programs to integrate with rstat
+  selftests/bpf: extend cgroup helpers
+  selftests/bpf: add a selftest for cgroup hierarchical stats collection
+
+ include/linux/bpf.h                           |   8 +
+ include/uapi/linux/bpf.h                      |  35 ++
+ kernel/bpf/Makefile                           |   3 +
+ kernel/bpf/cgroup_iter.c                      | 283 ++++++++++++++
+ kernel/cgroup/rstat.c                         |  48 +++
+ tools/include/uapi/linux/bpf.h                |  35 ++
+ tools/testing/selftests/bpf/cgroup_helpers.c  | 202 ++++++++--
+ tools/testing/selftests/bpf/cgroup_helpers.h  |  19 +-
+ .../selftests/bpf/prog_tests/btf_dump.c       |   4 +-
+ .../prog_tests/cgroup_hierarchical_stats.c    | 358 ++++++++++++++++++
+ .../selftests/bpf/prog_tests/cgroup_iter.c    | 224 +++++++++++
+ tools/testing/selftests/bpf/progs/bpf_iter.h  |   7 +
+ .../bpf/progs/cgroup_hierarchical_stats.c     | 226 +++++++++++
+ .../testing/selftests/bpf/progs/cgroup_iter.c |  39 ++
+ 14 files changed, 1442 insertions(+), 49 deletions(-)
+ create mode 100644 kernel/bpf/cgroup_iter.c
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/cgroup_hierarchical_stats.c
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/cgroup_iter.c
+ create mode 100644 tools/testing/selftests/bpf/progs/cgroup_hierarchical_stats.c
+ create mode 100644 tools/testing/selftests/bpf/progs/cgroup_iter.c
 
 -- 
-tejun
+2.37.1.595.g718a3a8f04-goog
+
