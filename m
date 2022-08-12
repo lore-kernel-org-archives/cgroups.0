@@ -1,88 +1,71 @@
-From: Chengming Zhou <zhouchengming@bytedance.com>
-Subject: Re: [PATCH v2 09/10] sched/psi: per-cgroup PSI stats
- disable/re-enable interface
-Date: Fri, 12 Aug 2022 20:36:17 +0800
-Message-ID: <5ce118b3-bf3b-d9a4-004c-a5a355984b0f@bytedance.com>
-References: <20220808110341.15799-1-zhouchengming@bytedance.com>
- <20220808110341.15799-10-zhouchengming@bytedance.com>
- <YvYoFNDMdg6mdFbU@blackbook>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC PATCH] cgroup: use root_mem_cgroup as css when current is
+ not enabled
+Date: Fri, 12 Aug 2022 09:06:14 -1000
+Message-ID: <YvakpukeF9d35Bc8@slm.duckdns.org>
+References: <1660298966-11493-1-git-send-email-zhaoyang.huang@unisoc.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc;
-        bh=O6llZjz916kr3/4GBc6iVNzZiFC/Zr060/Yj38d12js=;
-        b=YGjUxVC/qz3HPVaxeDzBzYHlVqNLt6RJ5F9ItloKWXzWnnI9/MmOEAmhzytYYUehWb
-         h7EpbFp8PpGO37viHcMFJCWEe0/kEcA35jUP92VQwxw2mcovAC1Y46LAKi2zQj1mHA1I
-         IvSaDmF6rimwod4kWDowrskOK8Tr4pFsc/7ZRNhHs2SZskf15TaNEI+S0GBTmPRjdCPy
-         8Vw8vrI/tJ2QSCzyjLl00Om78JuIB1piwLplcb95f5WAnMjDA9HJc0G1emJ1mQwdUgcC
-         tot3J+MTymr9NutitLYM3WhGJgQqWoKVZSErRKMOa2KIQlNpChqxExgN4dmJcmknkAjA
-         T4Zw==
-Content-Language: en-US
-In-Reply-To: <YvYoFNDMdg6mdFbU@blackbook>
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc;
+        bh=K5kHnejuEt7Pt9e4fwYPne3BNnxtsVlr6ROsJLvAIa0=;
+        b=Qar1VMGJIJ0ygpP/aVRz6hN912vPbq1cxrcogPE79/v7qrHH5Fpt6e7GL1LNHUsgLf
+         Ym3uNok4Eaib+wurgKcpDQ8KTxPK3A34Q+SsBzqhBL0rRqNzX5O+7snQNLrMDnCvof23
+         Oq4jREnkRCQ67jemY3M/fdd8l7mh4iRBb1njKQBNzdg3Vf1xEm1Lr3HWX0Wkw7Zr2lcu
+         yCFl2/gf5DdFkdIUuRsgBe/EY3u/1ca77S5GxMST03y2J8TXCXJAEnNsQ3aT8C7PJd7k
+         NKWMKAf6i1iem+kaaWl5e8m7DJkzjoNYDpc6YMRSRgWTSgg3AUf3XoT+/RhCH4B7D42x
+         RwPQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1660298966-11493-1-git-send-email-zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
-Cc: hannes@cmpxchg.org, tj@kernel.org, corbet@lwn.net, surenb@google.com, mingo@redhat.com, peterz@infradead.org, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-On 2022/8/12 18:14, Michal Koutn=C3=BD wrote:
-> Hello Chengming.
->=20
-> On Mon, Aug 08, 2022 at 07:03:40PM +0800, Chengming Zhou <zhouchengming@b=
-ytedance.com> wrote:
->> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/adm=
-in-guide/cgroup-v2.rst
->> index dd84e34bc051..ade40506ab80 100644
->> --- a/Documentation/admin-guide/cgroup-v2.rst
->> +++ b/Documentation/admin-guide/cgroup-v2.rst
->> @@ -968,6 +968,13 @@ All cgroup core files are prefixed with "cgroup."
->>  	killing cgroups is a process directed operation, i.e. it affects
->>  	the whole thread-group.
->> =20
->> +  cgroup.psi
->> +	A read-write single value file that allowed values are "0" and "1".
->> +	The default is "1".
->> +
->> +	Writing "0" to the file will disable the cgroup PSI stats accounting.
->> +	Writing "1" to the file will re-enable the cgroup PSI stats accounting.
->> +
->=20
-> I'd suggest explaining here explicitely, this control attribute is not
-> hierarchical (i.e. PSI accounting in a cgroup does not affect accounting
-> in descendants and doesn't need pass enablement via ancestors from
-> root). And the purpose that it "saves" cycles (where).
+On Fri, Aug 12, 2022 at 06:09:26PM +0800, zhaoyang.huang wrote:
+> From: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+> 
+> Memory charged on group B abserved on belowing v2 hierarchy where we just would
+> like to only have group E's memory be controlled and B's descendants compete freely
+> for memory. This should be the consequences of unified hierarchy. Solve this by
+> have the cgroup without valid memory css alloced use root_mem_cgroup instead of
+> its ancestor's.
+> 
+>  A(subtree_control = memory) - B(subtree_control = NULL) - C()
+>                                                          \ D()
+> 			     - E(subtree_control = memory) - F()
+> 							   \ G()
+> 
+> Signed-off-by: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+> ---
+>  kernel/cgroup/cgroup.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> index 1779ccd..b29b3f6 100644
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -533,6 +533,14 @@ static struct cgroup_subsys_state *cgroup_e_css_by_mask(struct cgroup *cgrp,
+>  	 * can't test the csses directly.  Test ss_mask.
+>  	 */
+>  	while (!(cgroup_ss_mask(cgrp) & (1 << ss->id))) {
+> +		/*
+> +		 * charging to the parent cgroup which hasn't distribute
+> +		 * memory control to its descendants doesn't make sense
+> +		 * especially on cgroup v2, where the parent could be configured
+> +		 * to use memory controller as its sibling want to use it
+> +		 */
+> +		if (memory_cgrp_id == ss->id)
+> +			return &root_mem_cgroup->css;
 
-Thanks for the suggestion and explanation!
+This is gonna be a hard nack. A given cgroup always encompasses all the
+resources consumed in its self-including subtree.
 
-Could you help take a look if there is anything to improve?
+Thanks.
 
-
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -968,6 +968,23 @@ All cgroup core files are prefixed with "cgroup."
-        killing cgroups is a process directed operation, i.e. it affects
-        the whole thread-group.
-
-+  cgroup.pressure
-+       A read-write single value file that allowed values are "0" and "1".
-+       The default is "1".
-+
-+       Writing "0" to the file will disable the cgroup PSI accounting.
-+       Writing "1" to the file will re-enable the cgroup PSI accounting.
-+
-+       This control attribute is not hierarchical, so disable or enable PSI
-+       accounting in a cgroup does not affect PSI accounting in descendants
-+       and doesn't need pass enablement via ancestors from root.
-+
-+       The reason this control attribute exists is that PSI accounts stall=
-s for
-+       each cgroup separately and aggregates it at each level of the hiera=
-rchy.
-+       This may cause non-negligible overhead for some workloads when under
-+       deep level of the hierarchy, in which case this control attribute c=
-an
-+       be used to disable PSI accounting in the cgroups.
-+
+-- 
+tejun
