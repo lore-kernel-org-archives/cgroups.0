@@ -1,74 +1,78 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH v7 0/9] bugfix and cleanup for blk-throttle
-Date: Sat, 13 Aug 2022 13:59:44 +0800
-Message-ID: <7030d59d-f840-c24c-0ac6-a802d0ff0243@huaweicloud.com>
-References: <20220802140415.2960284-1-yukuai1@huaweicloud.com>
+From: Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC PATCH] cgroup: use root_mem_cgroup as css when current is
+ not enabled
+Date: Sun, 14 Aug 2022 14:40:27 +0800
+Message-ID: <CAGWkznG6n=+v7hUKR8Rmg8VEF=BTDegk8bh6aHfvOU5TbmeXDw@mail.gmail.com>
+References: <1660298966-11493-1-git-send-email-zhaoyang.huang@unisoc.com> <YvakpukeF9d35Bc8@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220802140415.2960284-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=CyJTphL+dowqwNK5AT5s9+PYVQShCGuXR38KvvcrDos=;
+        b=hZuibKQ9GQ9lGafTbNrZ/rqY5/f4iR4IcFkTOOnLVcHcUj20yfLbNJHsYggQvhj7lN
+         AN8BEd6N+U5YgKf6cFdJ97dpd24jyuDjA5kE3StIoK31ylf8x2kd9H6I9qC0gGk/3D9G
+         M20ziGdUbisOzqTRF6AQZ7p+eBB3URegkCa7JH9/dJhIZgWfW9kcdYE21Hd3jxJ8iecH
+         VIYzpBpecpV8cxDGrOjhuBcMS35KOhfAsuWqVoeUvdJMGKDNihimNHyjHAcEbgy0apXM
+         Xx+nPGAZaepLiZPx23NIZa+eIvjQ/zst9wK+hYTMwqNAFZxAmkH6WjLKU3oDB+aTpgKE
+         xU0A==
+In-Reply-To: <YvakpukeF9d35Bc8-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ke Wang <ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-在 2022/08/02 22:04, Yu Kuai 写道:
-> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> 
-> Changes in v7:
->   - add patch 5 to improve handling of re-entered bio for bps limit
->   - as suggested by Tejun, add some comments
->   - sdd some Acked tag by Tejun
-> Changes in v6:
->   - rename parameter in patch 3
->   - add comments and reviewed tag for patch 4
-> Changes in v5:
->   - add comments in patch 4
->   - clear bytes/io_skipped in throtl_start_new_slice_with_credit() in
->   patch 4
->   - and cleanup patches 5-8
-> Changes in v4:
->   - add reviewed-by tag for patch 1
->   - add patch 2,3
->   - use a different way to fix io hung in patch 4
-> Changes in v3:
->   - fix a check in patch 1
->   - fix link err in patch 2 on 32-bit platform
->   - handle overflow in patch 2
-> Changes in v2:
->   - use a new solution suggested by Ming
->   - change the title of patch 1
->   - add patch 2
-> 
-> Patch 1 fix that blk-throttle can't work if multiple bios are throttle.
-> Patch 2 fix overflow while calculating wait time.
-> Patch 3,4 fix io hung due to configuration updates.
-> Patch 5 improve handling of re-entered bio for bps limit.
-> Patch 6-9 are cleanup patches, there are no functional changes, just
-> some places that I think can be optimized during code review.
-> 
-friendly ping ...
-> Previous version:
-> v1: https://lore.kernel.org/all/20220517134909.2910251-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-> v2: https://lore.kernel.org/all/20220518072751.1188163-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-> v3: https://lore.kernel.org/all/20220519085811.879097-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-> v4: https://lore.kernel.org/all/20220523082633.2324980-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-> v5: https://lore.kernel.org/all/20220528064330.3471000-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-> v6: https://lore.kernel.org/all/20220701093441.885741-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org/
-> 
-> Yu Kuai (9):
->    blk-throttle: fix that io throttle can only work for single bio
->    blk-throttle: prevent overflow while calculating wait time
->    blk-throttle: factor out code to calculate ios/bytes_allowed
->    blk-throttle: fix io hung due to configuration updates
->    blk-throttle: improve handling of re-entered bio for bps limit
->    blk-throttle: use 'READ/WRITE' instead of '0/1'
->    blk-throttle: calling throtl_dequeue/enqueue_tg in pairs
->    blk-throttle: cleanup tg_update_disptime()
->    blk-throttle: clean up flag 'THROTL_TG_PENDING'
-> 
->   block/blk-throttle.c | 175 ++++++++++++++++++++++++++++++-------------
->   block/blk-throttle.h |  20 ++++-
->   2 files changed, 139 insertions(+), 56 deletions(-)
-> 
-
+On Sat, Aug 13, 2022 at 3:06 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+> On Fri, Aug 12, 2022 at 06:09:26PM +0800, zhaoyang.huang wrote:
+> > From: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+> >
+> > Memory charged on group B abserved on belowing v2 hierarchy where we just would
+> > like to only have group E's memory be controlled and B's descendants compete freely
+> > for memory. This should be the consequences of unified hierarchy. Solve this by
+> > have the cgroup without valid memory css alloced use root_mem_cgroup instead of
+> > its ancestor's.
+> >
+> >  A(subtree_control = memory) - B(subtree_control = NULL) - C()
+> >                                                          \ D()
+> >                            - E(subtree_control = memory) - F()
+> >                                                          \ G()
+> >
+> > Signed-off-by: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+> > ---
+> >  kernel/cgroup/cgroup.c | 8 ++++++++
+> >  1 file changed, 8 insertions(+)
+> >
+> > diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> > index 1779ccd..b29b3f6 100644
+> > --- a/kernel/cgroup/cgroup.c
+> > +++ b/kernel/cgroup/cgroup.c
+> > @@ -533,6 +533,14 @@ static struct cgroup_subsys_state *cgroup_e_css_by_mask(struct cgroup *cgrp,
+> >        * can't test the csses directly.  Test ss_mask.
+> >        */
+> >       while (!(cgroup_ss_mask(cgrp) & (1 << ss->id))) {
+> > +             /*
+> > +              * charging to the parent cgroup which hasn't distribute
+> > +              * memory control to its descendants doesn't make sense
+> > +              * especially on cgroup v2, where the parent could be configured
+> > +              * to use memory controller as its sibling want to use it
+> > +              */
+> > +             if (memory_cgrp_id == ss->id)
+> > +                     return &root_mem_cgroup->css;
+>
+> This is gonna be a hard nack. A given cgroup always encompasses all the
+> resources consumed in its self-including subtree.
+>
+> Thanks.
+IMHO, I would like to say if it makes more sense as "A given cgroup
+always encompasses all the resources consumed in its ENABLED
+self-including subtree." Otherwise, how should I couple with the
+scenarios I raised in the commit message which I prefer parts of the
+subtrees compete for "memory" while others are free for it. The free
+here is not only without "min/low/high watermarks" but also not
+charged to their own LRU.
+>
+> --
+> tejun
