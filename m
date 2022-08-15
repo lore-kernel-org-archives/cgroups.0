@@ -1,62 +1,49 @@
-From: "Li,Liguang" <liliguang-h1bp6feCCZcAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] mm: correctly charge compressed memory to its memcg
-Date: Mon, 15 Aug 2022 02:52:14 +0000
-Message-ID: <1704B09B-F758-47DF-BDDE-FEA9AB227E12@baidu.com>
-References: <20220811081913.102770-1-liliguang@baidu.com>
- <YvWa9MOQWBICInjO@P9FQF9L96D.corp.robot.car>
- <CALvZod4nnn8BHYqAM4xtcR0Ddo2-Wr8uKm9h_CHWUaXw7g_DCg@mail.gmail.com>
- <CAJD7tkbrCNDMkE8dJDWHiTfi=nJJzrZwepaWb3YioRHMrSEuQA@mail.gmail.com>
+From: cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Subject: [PATCH linux-next] mm: memcontrol: Fix typos in comment Fix a spelling mistake in comment.
+Date: Mon, 15 Aug 2022 06:12:08 +0000
+Message-ID: <20220815061208.65945-1-xu.panda@zte.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAJD7tkbrCNDMkE8dJDWHiTfi=nJJzrZwepaWb3YioRHMrSEuQA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: zh-CN
-Content-ID: <E9DF19C5E2CF144CA8782FE45BE74849-z7JfP6tgrtWF0eGG/nQocdBPR1lH4CV8@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc;
+        bh=LhcqDlXGfJ5WZ4pq+69nFl1/2lUamAyvk5tX89/bbLw=;
+        b=josV6bMQDWFEsYVQ1ffi3TcLPOFdBK8SdUPeL+Mzpqlr0xOsCTcflSe+QLaSP8mng6
+         iD1HHHxy8U6X5F4Z2LTEPDVNESg9hF/49w3fjQyV+I/CkMU3w4Ry77cG4LYOz4+CkWW6
+         Y/R6z/fWx+cPV6AJ/wHyT7MvGyEBoEBDUuSihr9+apX0A+EYUN8m9sDoRnoiEV/dNTbn
+         rr73ULJMhxR/cXPDfwg9swGYD2aMr1kZrtbNwk91Z532o/n1tBu549Ja/tIZsgNMC42b
+         Pw+F8OY4F85MwvDW1iMF3jfwDCGbzn/iZ83FzK3zEZelye6ugWfcWjh4fcMGvmrLDrzG
+         SdHQ==
 List-ID: <cgroups.vger.kernel.org>
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xupanda <xu.panda-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>, Zeal Robot <zealic-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 
-5ZyoIDIwMjIvOC8xMyDkuIrljYg4OjQ077yM4oCcWW9zcnkgQWhtZWTigJ08eW9zcnlhaG1lZEBn
-b29nbGUuY29tPiDlhpnlhaU6DQoNCj4gT24gRnJpLCBBdWcgMTIsIDIwMjIgYXQgMjo1NiBQTSBT
-aGFrZWVsIEJ1dHQgPHNoYWtlZWxiQGdvb2dsZS5jb20+IHdyb3RlOg0KPiA+DQo+ID4gK0FuZHJl
-dyAmIGxpbnV4LW1tDQo+ID4NCj4gPiBPbiBUaHUsIEF1ZyAxMSwgMjAyMiBhdCA1OjEyIFBNIFJv
-bWFuIEd1c2hjaGluIDxyb21hbi5ndXNoY2hpbkBsaW51eC5kZXY+IHdyb3RlOg0KPiA+ID4NCj4g
-PiA+IE9uIFRodSwgQXVnIDExLCAyMDIyIGF0IDA0OjE5OjEzUE0gKzA4MDAsIGxpbGlndWFuZyB3
-cm90ZToNCj4gPiA+ID4gRnJvbTogTGkgTGlndWFuZyA8bGlsaWd1YW5nQGJhaWR1LmNvbT4NCj4g
-PiA+ID4NCj4gPiA+ID4gS3N3YXBkIHdpbGwgcmVjbGFpbSBtZW1vcnkgd2hlbiBtZW1vcnkgcHJl
-c3N1cmUgaXMgaGlnaCwgdGhlDQo+ID4gPiA+IGFubm9ueW1vdXMgbWVtb3J5IHdpbGwgYmUgY29t
-cHJlc3NlZCBhbmQgc3RvcmVkIGluIHRoZSB6cG9vbA0KPiA+ID4gPiBpZiB6c3dhcCBpcyBlbmFi
-bGVkLiBUaGUgbWVtY2dfa21lbV9ieXBhc3MoKSBpbg0KPiA+ID4gPiBnZXRfb2JqX2Nncm91cF9m
-cm9tX3BhZ2UoKSB3aWxsIGJ5cGFzcyB0aGUga2VybmVsIHRocmVhZCBhbmQNCj4gPiA+ID4gY2F1
-c2UgdGhlIGNvbXByZXNzZWQgbWVtb3J5IG5vdCBjaGFyZ2VkIHRvIGl0cyBtZW1vcnkgY2dyb3Vw
-Lg0KPiA+ID4gPg0KPiA+ID4gPiBSZW1vdmUgdGhlIG1lbWNnX2ttZW1fYnlwYXNzKCkgYW5kIHBy
-b3Blcmx5IGNoYXJnZSBjb21wcmVzc2VkDQo+ID4gPiA+IG1lbW9yeSB0byBpdHMgY29ycmVzcG9u
-ZGluZyBtZW1vcnkgY2dyb3VwLg0KPiA+ID4gPg0KPiA+ID4gPiBTaWduZWQtb2ZmLWJ5OiBMaSBM
-aWd1YW5nIDxsaWxpZ3VhbmdAYmFpZHUuY29tPg0KPiA+ID4gPiAtLS0NCj4gPiA+ID4gIG1tL21l
-bWNvbnRyb2wuYyB8IDIgKy0NCj4gPiA+ID4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigr
-KSwgMSBkZWxldGlvbigtKQ0KPiA+ID4gPg0KPiA+ID4gPiBkaWZmIC0tZ2l0IGEvbW0vbWVtY29u
-dHJvbC5jIGIvbW0vbWVtY29udHJvbC5jDQo+ID4gPiA+IGluZGV4IGI2OTk3OWM5Y2VkNS4uNmE5
-NWVhN2M1ZWU3IDEwMDY0NA0KPiA+ID4gPiAtLS0gYS9tbS9tZW1jb250cm9sLmMNCj4gPiA+ID4g
-KysrIGIvbW0vbWVtY29udHJvbC5jDQo+ID4gPiA+IEBAIC0yOTcxLDcgKzI5NzEsNyBAQCBzdHJ1
-Y3Qgb2JqX2Nncm91cCAqZ2V0X29ial9jZ3JvdXBfZnJvbV9wYWdlKHN0cnVjdCBwYWdlICpwYWdl
-KQ0KPiA+ID4gPiAgew0KPiA+ID4gPiAgICAgICBzdHJ1Y3Qgb2JqX2Nncm91cCAqb2JqY2c7DQo+
-ID4gPiA+DQo+ID4gPiA+IC0gICAgIGlmICghbWVtY2dfa21lbV9lbmFibGVkKCkgfHwgbWVtY2df
-a21lbV9ieXBhc3MoKSkNCj4gPiA+ID4gKyAgICAgaWYgKCFtZW1jZ19rbWVtX2VuYWJsZWQoKSkN
-Cj4NCj4NCj4gV29uJ3QgdGhlIG1lbWNnX2ttZW1fZW5hYmxlZCgpIGNoZWNrIGFsc28gY2F1c2Ug
-YSBwcm9ibGVtIGluIHRoYXQgc2FtZQ0KPiBzY2VuYXJpbyAoZS5nLiBpZiBDT05GSUdfTUVNQ0df
-S01FTT1uKT8gb3IgYW0gSSBtaXNzaW5nIHNvbWV0aGluZw0KPiBoZXJlPw0KPg0KDQpQbGVhc2Ug
-bm90ZXMgdGhhdCB0aGUgcmV0dXJuIHZhbHVlIGlzIGEgcG9pbnRlciB0byBvYmpfY2dyb3VwLCBu
-b3QgbWVtY2cuDQpJZiBDT05GSUdfTUVNQ0dfS01FTT1uIG9yIG1lbWNnIGttZW0gY2hhcmdlIGlz
-IGRpc2FibGVkLCB0aGUgTlVMTCBuZWVkIA0KdG8gYmUgcmV0dXJuZWQuDQoNCj4gPg0KPiA+ID4g
-PiAgICAgICAgICAgICAgIHJldHVybiBOVUxMOw0KPiA+ID4gPg0KPiA+ID4gPiAgICAgICBpZiAo
-UGFnZU1lbWNnS21lbShwYWdlKSkgew0KPiA+ID4gPiAtLQ0KPiA+ID4gPiAyLjMyLjAgKEFwcGxl
-IEdpdC0xMzIpDQo+ID4gPiA+DQo+ID4gPg0KPiA+ID4gSGkgTGkhDQo+ID4gPg0KPiA+ID4gVGhl
-IGZpeCBsb29rcyBnb29kIHRvIG1lISBBcyB3ZSBnZXQgb2JqY2cgcG9pbnRlciBmcm9tIGEgcGFn
-ZSBhbmQgbm90IGZyb20NCj4gPiA+IHRoZSBjdXJyZW50IHRhc2ssIG1lbWNnX2ttZW1fYnlwYXNz
-KCkgZG9lc24ndCBtYWtlcyBtdWNoIHNlbnNlLg0KPiA+ID4NCj4gPiA+IEFja2VkLWJ5OiBSb21h
-biBHdXNoY2hpbiA8cm9tYW4uZ3VzaGNoaW5AbGludXguZGV2Pg0KPiA+ID4NCj4gPiA+IFByb2Jh
-Ymx5LCB3ZSBuZWVkIHRvIGFkZA0KPiA+ID4gRml4ZXM6IGY0ODQwY2NmY2EyNSAoInpzd2FwOiBt
-ZW1jZyBhY2NvdW50aW5nIikNCj4gPiA+DQo+ID4gPiBUaGFuayB5b3UhDQo+ID4NCj4gPiBZb3Ug
-Y2FuIGFkZDoNCj4gPg0KPiA+IEFja2VkLWJ5OiBTaGFrZWVsIEJ1dHQgPHNoYWtlZWxiQGdvb2ds
-ZS5jb20+DQo+ID4NCg0K
+From: xupanda <xu.panda-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+
+Reported-by: Zeal Robot <zealic-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+Signed-off-by: xupanda <xu.panda-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+Thanks-to: Yang Yang <yang.yang29-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
+
+---
+ mm/memcontrol.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b69979c9ced5..4dddd8be320a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1143,7 +1143,7 @@ static void invalidate_reclaim_iterators(struct mem_cgroup *dead_memcg)
+ 	} while ((memcg = parent_mem_cgroup(memcg)));
+ 
+ 	/*
+-	 * When cgruop1 non-hierarchy mode is used,
++	 * When cgroup1 non-hierarchy mode is used,
+ 	 * parent_mem_cgroup() does not walk all the way up to the
+ 	 * cgroup root (root_mem_cgroup). So we have to handle
+ 	 * dead_memcg from cgroup root separately.
+-- 
+2.25.1
+
