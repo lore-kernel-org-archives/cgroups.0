@@ -1,100 +1,74 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH v6 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
- page table uses.
-Date: Mon, 15 Aug 2022 02:18:20 -0700
-Message-ID: <CAJD7tkY5SfdhC7-4B7QuJGUVj_Ts+xwCP5FUZ-Lvg=fd1p_xAQ@mail.gmail.com>
-References: <20220628220938.3657876-1-yosryahmed@google.com>
- <20220628220938.3657876-2-yosryahmed@google.com> <YsdJPeVOqlj4cf2a@google.com>
- <CAJD7tkYE+pZdk=-psEP_Rq_1CmDjY7Go+s1LXm-ctryWvUdgLA@mail.gmail.com>
- <Ys3+UTTC4Qgbm7pQ@google.com>
- <CAJD7tkY91oiDWTj5FY2Upc5vabsjLk+CBMNzAepXLUdF_GS11w@mail.gmail.com>
- <CAJD7tkbc+E7f+ENRazf0SO7C3gR2bHiN4B0F1oPn8Pa6juAVfg@mail.gmail.com>
+From: Xuewen Yan <xuewen.yan94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: Query regarding deadlock involving cgroup_threadgroup_rwsem and cpu_hotplug_lock
+Date: Mon, 15 Aug 2022 17:25:52 +0800
+Message-ID: <CAB8ipk90LxNNbq5OKamd-ArkqhEZjxS1fFZJXtnbQwGzyyJ3wQ@mail.gmail.com>
+References: <8245b710-8acb-d8e6-7045-99a5f71dad4e@oracle.com>
+ <26d0e4cc-be0e-2c12-6174-dfbb1edb1ed6@oracle.com> <bbc01477-231b-3dbb-3e09-9338f5413f06@oracle.com>
+ <ba48eac5-8ef7-251b-11fe-8163bb7a2d54@quicinc.com> <224b19f3-912d-b858-7af4-185b8e55bc66@quicinc.com>
+ <YthDz4BnfYHce1od@slm.duckdns.org> <YuGTBLkFerUboctl@slm.duckdns.org>
+ <dc0cff0e-b744-9d5d-e727-70d1c31b2a74@quicinc.com> <20220815090556.GB27407@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <kvmarm-bounces@lists.cs.columbia.edu>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20210112;
- h=cc:to:subject:message-id:date:from:in-reply-to:references
- :mime-version:from:to:cc;
- bh=OOL4Y5kIDK4GpzcnTvXTZTdG7FAR6zzCfj7Cij1BefI=;
- b=CT2aSa6BZY94dkNNot3yaqnr3j9O7orSKuwxILRsqvRnd8WvEpXenBNae1eQ3He/Vr
- 3AhSFAuhYY2hqrnn0IDDF0KHetLNrj4QcIGdxSVAjSYmODvxB/brvk0Zl7qi20uhok1U
- L8Vaasnomd+kIjC2rkJJhN7AU6emb3HjWMmp7U1Vlx8usn0ap0gN9exTvoztmuHkK+uZ
- bbG7qHXipz8305jwg9NNwjHODD3YuBTXoLQlVrnf796/Ss23Cy7QGESwKPeZDSbvamLV
- pmcUj/wRO29vXhL6WEKTuroMzefWNmVuDRvkPNn4jz3RLjyIYBjxzVAIO2YyineAt7Js
- iEhA==
-In-Reply-To: <CAJD7tkbc+E7f+ENRazf0SO7C3gR2bHiN4B0F1oPn8Pa6juAVfg@mail.gmail.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.cs.columbia.edu/mailman/options/kvmarm>,
- <mailto:kvmarm-request@lists.cs.columbia.edu?subject=unsubscribe>
-List-Archive: <https://lists.cs.columbia.edu/pipermail/kvmarm>
-List-Post: <mailto:kvmarm@lists.cs.columbia.edu>
-List-Help: <mailto:kvmarm-request@lists.cs.columbia.edu?subject=help>
-List-Subscribe: <https://lists.cs.columbia.edu/mailman/listinfo/kvmarm>,
- <mailto:kvmarm-request@lists.cs.columbia.edu?subject=subscribe>
-Errors-To: kvmarm-bounces@lists.cs.columbia.edu
-Sender: kvmarm-bounces@lists.cs.columbia.edu
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Wanpeng Li <wanpengli@tencent.com>, kvm@vger.kernel.org, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Shaoqin <shaoqin.huang@intel.com>, Linux-MM <linux-mm@kvack.org>, Zefan Li <lizefan.x@bytedance.com>, kvmarm@lists.cs.columbia.edu, Marc Zyngier <maz@kernel.org>, Joerg Roedel <joro@8bytes.org>, Shakeel Butt <shakeelb@google.com>, Cgroups <cgroups@vger.kernel.org>, linux-arm-kernel@lists.infradead.org, Jim Mattson <jmattson@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc;
+        bh=m64dCm5y6abMgyqwAQFCPVcLqHA6yb02EbRC6+noQbw=;
+        b=nnmZdSGgeYdNQlt7klf2KWrMATSS13t2yHEkVMt+x0DICtLrR28QtzNdoDTRaEmPom
+         z+Gs8Dqq57cX383CEv81ElNXe4hwEdFC/yx/espCw2xpTQameFuDpE7JbCuTbWB+Kbol
+         yO27DHFvxupX+VcmZM86sl6boJZeqggbNf4o8YzZtEaZQeYGSShIxAUkWIBfNtoTsM9T
+         Cr27BqXZo98/XfG56V1Yvc/jztezBrzouNmTZvHA/wtgonY4MU0pci1t+I+tRr3mf5HO
+         sdAx6MpIxbc1GK37dE/4nGERixFc6AjZOLsoU/8XHkj2Yc63r6S/c5WZxknVrcBXx/3D
+         7pig==
+In-Reply-To: <20220815090556.GB27407-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="macroman"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Imran Khan <imran.f.khan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, steven.price-5wv7dgnIgG8@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zhao Gongyi <zhaogongyi-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Zhang Qiao <zhangqiao22-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Mon, Aug 8, 2022 at 1:06 PM Yosry Ahmed <yosryahmed@google.com> wrote:
->
-> On Mon, Jul 18, 2022 at 11:26 AM Yosry Ahmed <yosryahmed@google.com> wrote:
-> >
-> > On Tue, Jul 12, 2022 at 4:06 PM Sean Christopherson <seanjc@google.com> wrote:
-> > >
-> > > On Tue, Jul 12, 2022, Yosry Ahmed wrote:
-> > > > Thanks for taking another look at this!
-> > > >
-> > > > On Thu, Jul 7, 2022 at 1:59 PM Sean Christopherson <seanjc@google.com> wrote:
-> > > > >
-> > > > > On Tue, Jun 28, 2022, Yosry Ahmed wrote:
-> > > > > > diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-> > > > > > index aab70355d64f3..13190d298c986 100644
-> > > > > > --- a/include/linux/mmzone.h
-> > > > > > +++ b/include/linux/mmzone.h
-> > > > > > @@ -216,6 +216,7 @@ enum node_stat_item {
-> > > > > >       NR_KERNEL_SCS_KB,       /* measured in KiB */
-> > > > > >  #endif
-> > > > > >       NR_PAGETABLE,           /* used for pagetables */
-> > > > > > +     NR_SECONDARY_PAGETABLE, /* secondary pagetables, e.g. kvm shadow pagetables */
-> > > > >
-> > > > > Nit, s/kvm/KVM, and drop the "shadow", which might be misinterpreted as saying KVM
-> > > > > pagetables are only accounted when KVM is using shadow paging.  KVM's usage of "shadow"
-> > > > > is messy, so I totally understand why you included it, but in this case it's unnecessary
-> > > > > and potentially confusing.
-> > > > >
-> > > > > And finally, something that's not a nit.  Should this be wrapped with CONFIG_KVM
-> > > > > (using IS_ENABLED() because KVM can be built as a module)?  That could be removed
-> > > > > if another non-KVM secondary MMU user comes along, but until then, #ifdeffery for
-> > > > > stats the depend on a single feature seems to be the status quo for this code.
-> > > > >
-> > > >
-> > > > I will #ifdef the stat, but I will emphasize in the docs that is
-> > > > currently *only* used for KVM so that it makes sense if users without
-> > > > KVM don't see the stat at all. I will also remove the stat from
-> > > > show_free_areas() in mm/page_alloc.c as it seems like none of the
-> > > > #ifdefed stats show up there.
-> > >
-> > > It's might be worth getting someone from mm/ to weigh in before going through the
-> > > trouble, my suggestion/question is based purely on the existing code.
-> >
-> > Any mm folks with an opinion about this?
-> >
-> > Any preference on whether we should wrap NR_SECONDARY_PAGETABLE stats
-> > with #ifdef CONFIG_KVM for now as it is currently the only source for
-> > this stat?
->
-> Any input here?
->
-> Johannes, you have been involved in discussions in earlier versions of
-> this series, any thoughts here?
+Hi Michal
 
-Andrew, do you have an opinion on this? If not, I will send a v7 with
-the nits discussed with Sean. I think otherwise this series has
-sufficient ACKs.
+On Mon, Aug 15, 2022 at 5:06 PM Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org> wrote=
+:
+>
+> +Cc: Zhao Gongyi <zhaogongyi-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Zhang Qiao <zhangqiao22@huawei.=
+com>
+>
+> On Fri, Aug 12, 2022 at 03:57:00PM +0530, Mukesh Ojha <quic_mojha@quicinc=
+.com> wrote:
+> > The original patch of yours [1]  and the revert of [2] is fixing the is=
+sue
+> > and it is also confirmed here [3].
+> > Can we get proper fix merge on your tree?
+> >
+> > [1] https://lore.kernel.org/lkml/YuGbYCfAG81mZBnN-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org/
+> >
+> > [2]
+> > https://lore.kernel.org/all/20220121101210.84926-1-zhangqiao22@huawei.c=
+om/
+>
+> The revert + Tejun's patch looks fine wrt the problem of the reverted
+> patch (just moves cpus_read_lock to upper callers).
 
-Would this be merged through the mm tree or kvm tree? This was based
-on the kvm/queue branch but I think I can rebase it on top of
-mm-unstable, I think all dependencies that this would have added in
-kvm/queue would have been fanned to mm by now.
+Your means is that the problem should be fixed by [1]+[2]'s revert ?
+I just tested the case which reverted the [2]. Need I test with [1] and [2]=
+?
+
+Thanks!
+
+>
+> I'd just suggest a comment that'd explicitly document also the lock
+> order that we stick to, IIUC, it should be:
+>
+>         cpu_hotplug_lock // cpus_read_lock
+>         cgroup_threadgroup_rwsem
+>         cpuset_rwsem
+>
+> Michal
+>
+> >
+> > [3] https://lore.kernel.org/lkml/CAB8ipk-72V-bYRfL-VcSRSyXTeQqkBVj+1d5M=
+HSVV5CTar9a0Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
+> >
+> > -Mukesh
