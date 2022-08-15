@@ -1,91 +1,62 @@
-From: Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH] cgroup: use root_mem_cgroup as css when current is
- not enabled
-Date: Mon, 15 Aug 2022 09:38:31 +0800
-Message-ID: <CAGWkznHa9WTV2oK=HB1OVEdKeMZ1V2omDDiNrRdyBdyYd=q5Fg@mail.gmail.com>
-References: <1660298966-11493-1-git-send-email-zhaoyang.huang@unisoc.com>
- <YvakpukeF9d35Bc8@slm.duckdns.org> <CAGWkznG6n=+v7hUKR8Rmg8VEF=BTDegk8bh6aHfvOU5TbmeXDw@mail.gmail.com>
+From: "Li,Liguang" <liliguang-h1bp6feCCZcAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] mm: correctly charge compressed memory to its memcg
+Date: Mon, 15 Aug 2022 02:52:14 +0000
+Message-ID: <1704B09B-F758-47DF-BDDE-FEA9AB227E12@baidu.com>
+References: <20220811081913.102770-1-liliguang@baidu.com>
+ <YvWa9MOQWBICInjO@P9FQF9L96D.corp.robot.car>
+ <CALvZod4nnn8BHYqAM4xtcR0Ddo2-Wr8uKm9h_CHWUaXw7g_DCg@mail.gmail.com>
+ <CAJD7tkbrCNDMkE8dJDWHiTfi=nJJzrZwepaWb3YioRHMrSEuQA@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=9aHT3s6PlkBrj5LRNetpZGsGEba9IDfVY1EAjlwcsW8=;
-        b=pHO53OmNqii0/moX83i0+1sWFE6GT8/ScD9wvNikftUHCiM8G3IJbxKfBuT8ijqPDQ
-         mjapnViqPOQI6PEe57J5EnZGFqSIChf0AW9v4hruwkBUvLm6kUgRTgWzDo6PFDiR48Lc
-         h79XsbgD6ShEbfi0eszwno9VRLJPwk/CfwIuz6v4Ob76M/L4SW+am00vNGp/G6i1Mcu4
-         Kdqsiemvzf7jpHYQofFMJX6ACxnrEK7xN1pfU8EGUqgonHB3GXJURJdvd/L6/ZB2c5sp
-         raj2jPJjKtyttOVlQDgQ7joBVbhEFCIE0xoUW4xuujRLAeZHxT8ikYd9iTEM95dheU+X
-         mrvg==
-In-Reply-To: <CAGWkznG6n=+v7hUKR8Rmg8VEF=BTDegk8bh6aHfvOU5TbmeXDw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <CAJD7tkbrCNDMkE8dJDWHiTfi=nJJzrZwepaWb3YioRHMrSEuQA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: zh-CN
+Content-ID: <E9DF19C5E2CF144CA8782FE45BE74849-z7JfP6tgrtWF0eGG/nQocdBPR1lH4CV8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ke Wang <ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 
-On Sun, Aug 14, 2022 at 2:40 PM Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-> On Sat, Aug 13, 2022 at 3:06 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> >
-> > On Fri, Aug 12, 2022 at 06:09:26PM +0800, zhaoyang.huang wrote:
-> > > From: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
-> > >
-> > > Memory charged on group B abserved on belowing v2 hierarchy where we just would
-> > > like to only have group E's memory be controlled and B's descendants compete freely
-> > > for memory. This should be the consequences of unified hierarchy. Solve this by
-> > > have the cgroup without valid memory css alloced use root_mem_cgroup instead of
-> > > its ancestor's.
-> > >
-> > >  A(subtree_control = memory) - B(subtree_control = NULL) - C()
-> > >                                                          \ D()
-> > >                            - E(subtree_control = memory) - F()
-> > >                                                          \ G()
-> > >
-> > > Signed-off-by: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
-> > > ---
-> > >  kernel/cgroup/cgroup.c | 8 ++++++++
-> > >  1 file changed, 8 insertions(+)
-> > >
-> > > diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> > > index 1779ccd..b29b3f6 100644
-> > > --- a/kernel/cgroup/cgroup.c
-> > > +++ b/kernel/cgroup/cgroup.c
-> > > @@ -533,6 +533,14 @@ static struct cgroup_subsys_state *cgroup_e_css_by_mask(struct cgroup *cgrp,
-> > >        * can't test the csses directly.  Test ss_mask.
-> > >        */
-> > >       while (!(cgroup_ss_mask(cgrp) & (1 << ss->id))) {
-> > > +             /*
-> > > +              * charging to the parent cgroup which hasn't distribute
-> > > +              * memory control to its descendants doesn't make sense
-> > > +              * especially on cgroup v2, where the parent could be configured
-> > > +              * to use memory controller as its sibling want to use it
-> > > +              */
-> > > +             if (memory_cgrp_id == ss->id)
-> > > +                     return &root_mem_cgroup->css;
-> >
-> > This is gonna be a hard nack. A given cgroup always encompasses all the
-> > resources consumed in its self-including subtree.
-> >
-> > Thanks.
-> IMHO, I would like to say if it makes more sense as "A given cgroup
-> always encompasses all the resources consumed in its ENABLED
-> self-including subtree." Otherwise, how should I couple with the
-> scenarios I raised in the commit message which I prefer parts of the
-> subtrees compete for "memory" while others are free for it. The free
-> here is not only without "min/low/high watermarks" but also not
-> charged to their own LRU.
-I would like to state more why these make sense. Memory cgroup is a
-little bit different to other cgroups, that is, memcg will have real
-physical resources attached, say pages. From perspective of memory
-reclaiming, it is odd to find that pages under free memcgs are charged
-to separate LRUs but without any management(no watermark control) and
-perhaps affect workingset mechanism by LRU reason. Furthermore, v2
-should grant the groups with the right to reject the subsys which
-introduced by sibling enable, which could be deemed as v2's
-inconvenient. The memcg could also apply subtree_control to enroll all
-memory back whenever it want.
-> >
-> > --
-> > tejun
+5ZyoIDIwMjIvOC8xMyDkuIrljYg4OjQ077yM4oCcWW9zcnkgQWhtZWTigJ08eW9zcnlhaG1lZEBn
+b29nbGUuY29tPiDlhpnlhaU6DQoNCj4gT24gRnJpLCBBdWcgMTIsIDIwMjIgYXQgMjo1NiBQTSBT
+aGFrZWVsIEJ1dHQgPHNoYWtlZWxiQGdvb2dsZS5jb20+IHdyb3RlOg0KPiA+DQo+ID4gK0FuZHJl
+dyAmIGxpbnV4LW1tDQo+ID4NCj4gPiBPbiBUaHUsIEF1ZyAxMSwgMjAyMiBhdCA1OjEyIFBNIFJv
+bWFuIEd1c2hjaGluIDxyb21hbi5ndXNoY2hpbkBsaW51eC5kZXY+IHdyb3RlOg0KPiA+ID4NCj4g
+PiA+IE9uIFRodSwgQXVnIDExLCAyMDIyIGF0IDA0OjE5OjEzUE0gKzA4MDAsIGxpbGlndWFuZyB3
+cm90ZToNCj4gPiA+ID4gRnJvbTogTGkgTGlndWFuZyA8bGlsaWd1YW5nQGJhaWR1LmNvbT4NCj4g
+PiA+ID4NCj4gPiA+ID4gS3N3YXBkIHdpbGwgcmVjbGFpbSBtZW1vcnkgd2hlbiBtZW1vcnkgcHJl
+c3N1cmUgaXMgaGlnaCwgdGhlDQo+ID4gPiA+IGFubm9ueW1vdXMgbWVtb3J5IHdpbGwgYmUgY29t
+cHJlc3NlZCBhbmQgc3RvcmVkIGluIHRoZSB6cG9vbA0KPiA+ID4gPiBpZiB6c3dhcCBpcyBlbmFi
+bGVkLiBUaGUgbWVtY2dfa21lbV9ieXBhc3MoKSBpbg0KPiA+ID4gPiBnZXRfb2JqX2Nncm91cF9m
+cm9tX3BhZ2UoKSB3aWxsIGJ5cGFzcyB0aGUga2VybmVsIHRocmVhZCBhbmQNCj4gPiA+ID4gY2F1
+c2UgdGhlIGNvbXByZXNzZWQgbWVtb3J5IG5vdCBjaGFyZ2VkIHRvIGl0cyBtZW1vcnkgY2dyb3Vw
+Lg0KPiA+ID4gPg0KPiA+ID4gPiBSZW1vdmUgdGhlIG1lbWNnX2ttZW1fYnlwYXNzKCkgYW5kIHBy
+b3Blcmx5IGNoYXJnZSBjb21wcmVzc2VkDQo+ID4gPiA+IG1lbW9yeSB0byBpdHMgY29ycmVzcG9u
+ZGluZyBtZW1vcnkgY2dyb3VwLg0KPiA+ID4gPg0KPiA+ID4gPiBTaWduZWQtb2ZmLWJ5OiBMaSBM
+aWd1YW5nIDxsaWxpZ3VhbmdAYmFpZHUuY29tPg0KPiA+ID4gPiAtLS0NCj4gPiA+ID4gIG1tL21l
+bWNvbnRyb2wuYyB8IDIgKy0NCj4gPiA+ID4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigr
+KSwgMSBkZWxldGlvbigtKQ0KPiA+ID4gPg0KPiA+ID4gPiBkaWZmIC0tZ2l0IGEvbW0vbWVtY29u
+dHJvbC5jIGIvbW0vbWVtY29udHJvbC5jDQo+ID4gPiA+IGluZGV4IGI2OTk3OWM5Y2VkNS4uNmE5
+NWVhN2M1ZWU3IDEwMDY0NA0KPiA+ID4gPiAtLS0gYS9tbS9tZW1jb250cm9sLmMNCj4gPiA+ID4g
+KysrIGIvbW0vbWVtY29udHJvbC5jDQo+ID4gPiA+IEBAIC0yOTcxLDcgKzI5NzEsNyBAQCBzdHJ1
+Y3Qgb2JqX2Nncm91cCAqZ2V0X29ial9jZ3JvdXBfZnJvbV9wYWdlKHN0cnVjdCBwYWdlICpwYWdl
+KQ0KPiA+ID4gPiAgew0KPiA+ID4gPiAgICAgICBzdHJ1Y3Qgb2JqX2Nncm91cCAqb2JqY2c7DQo+
+ID4gPiA+DQo+ID4gPiA+IC0gICAgIGlmICghbWVtY2dfa21lbV9lbmFibGVkKCkgfHwgbWVtY2df
+a21lbV9ieXBhc3MoKSkNCj4gPiA+ID4gKyAgICAgaWYgKCFtZW1jZ19rbWVtX2VuYWJsZWQoKSkN
+Cj4NCj4NCj4gV29uJ3QgdGhlIG1lbWNnX2ttZW1fZW5hYmxlZCgpIGNoZWNrIGFsc28gY2F1c2Ug
+YSBwcm9ibGVtIGluIHRoYXQgc2FtZQ0KPiBzY2VuYXJpbyAoZS5nLiBpZiBDT05GSUdfTUVNQ0df
+S01FTT1uKT8gb3IgYW0gSSBtaXNzaW5nIHNvbWV0aGluZw0KPiBoZXJlPw0KPg0KDQpQbGVhc2Ug
+bm90ZXMgdGhhdCB0aGUgcmV0dXJuIHZhbHVlIGlzIGEgcG9pbnRlciB0byBvYmpfY2dyb3VwLCBu
+b3QgbWVtY2cuDQpJZiBDT05GSUdfTUVNQ0dfS01FTT1uIG9yIG1lbWNnIGttZW0gY2hhcmdlIGlz
+IGRpc2FibGVkLCB0aGUgTlVMTCBuZWVkIA0KdG8gYmUgcmV0dXJuZWQuDQoNCj4gPg0KPiA+ID4g
+PiAgICAgICAgICAgICAgIHJldHVybiBOVUxMOw0KPiA+ID4gPg0KPiA+ID4gPiAgICAgICBpZiAo
+UGFnZU1lbWNnS21lbShwYWdlKSkgew0KPiA+ID4gPiAtLQ0KPiA+ID4gPiAyLjMyLjAgKEFwcGxl
+IEdpdC0xMzIpDQo+ID4gPiA+DQo+ID4gPg0KPiA+ID4gSGkgTGkhDQo+ID4gPg0KPiA+ID4gVGhl
+IGZpeCBsb29rcyBnb29kIHRvIG1lISBBcyB3ZSBnZXQgb2JqY2cgcG9pbnRlciBmcm9tIGEgcGFn
+ZSBhbmQgbm90IGZyb20NCj4gPiA+IHRoZSBjdXJyZW50IHRhc2ssIG1lbWNnX2ttZW1fYnlwYXNz
+KCkgZG9lc24ndCBtYWtlcyBtdWNoIHNlbnNlLg0KPiA+ID4NCj4gPiA+IEFja2VkLWJ5OiBSb21h
+biBHdXNoY2hpbiA8cm9tYW4uZ3VzaGNoaW5AbGludXguZGV2Pg0KPiA+ID4NCj4gPiA+IFByb2Jh
+Ymx5LCB3ZSBuZWVkIHRvIGFkZA0KPiA+ID4gRml4ZXM6IGY0ODQwY2NmY2EyNSAoInpzd2FwOiBt
+ZW1jZyBhY2NvdW50aW5nIikNCj4gPiA+DQo+ID4gPiBUaGFuayB5b3UhDQo+ID4NCj4gPiBZb3Ug
+Y2FuIGFkZDoNCj4gPg0KPiA+IEFja2VkLWJ5OiBTaGFrZWVsIEJ1dHQgPHNoYWtlZWxiQGdvb2ds
+ZS5jb20+DQo+ID4NCg0K
