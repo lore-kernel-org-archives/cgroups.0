@@ -1,103 +1,100 @@
-From: Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH] cgroup: use root_mem_cgroup as css when current is
- not enabled
-Date: Mon, 15 Aug 2022 17:17:03 +0800
-Message-ID: <CAGWkznEQ_njmNt8usr-DyaiYDAHJE-niC2QxoXPQkDqY7v_Mqg@mail.gmail.com>
-References: <1660298966-11493-1-git-send-email-zhaoyang.huang@unisoc.com>
- <YvakpukeF9d35Bc8@slm.duckdns.org> <CAGWkznG6n=+v7hUKR8Rmg8VEF=BTDegk8bh6aHfvOU5TbmeXDw@mail.gmail.com>
- <CAGWkznHa9WTV2oK=HB1OVEdKeMZ1V2omDDiNrRdyBdyYd=q5Fg@mail.gmail.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [PATCH v6 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
+ page table uses.
+Date: Mon, 15 Aug 2022 02:18:20 -0700
+Message-ID: <CAJD7tkY5SfdhC7-4B7QuJGUVj_Ts+xwCP5FUZ-Lvg=fd1p_xAQ@mail.gmail.com>
+References: <20220628220938.3657876-1-yosryahmed@google.com>
+ <20220628220938.3657876-2-yosryahmed@google.com> <YsdJPeVOqlj4cf2a@google.com>
+ <CAJD7tkYE+pZdk=-psEP_Rq_1CmDjY7Go+s1LXm-ctryWvUdgLA@mail.gmail.com>
+ <Ys3+UTTC4Qgbm7pQ@google.com>
+ <CAJD7tkY91oiDWTj5FY2Upc5vabsjLk+CBMNzAepXLUdF_GS11w@mail.gmail.com>
+ <CAJD7tkbc+E7f+ENRazf0SO7C3gR2bHiN4B0F1oPn8Pa6juAVfg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=eiqkvF+xYiNF2DpRXQeLPgqIYFAmFLS0V8w6NeOkAps=;
-        b=nLzwUzH1mFhYYOp7STOZsHfn7f2SW3Gl6xJ8vP+9vPX2YAZB2C6OlzaSKAeYnmAQv1
-         1PdjeD/WpfSf7CrTfALpgrSOS4Z5IcOcuc/ZJTLrj+ypqyWlP8AusY08hpNwC6czmjy0
-         zc3VJeNGhdWq/xRoIuGB7Kygb2vskfasVGLXx0rbvEwJgKMLskTKjBNlQ388bRI6Mpcf
-         RvjU2kUboC2pvVZnkXL00TmNZnpEmLvxb59g9DI9T5v/teeX3DQaOM+ybyPGLI1qOL7l
-         Ys5Ddw4/L4rYxBm9Vvmxcq23T86HxaW/lYWcHNVjV0cjAhfpCGgmjCbWXyayuOFE9Om/
-         oqWw==
-In-Reply-To: <CAGWkznHa9WTV2oK=HB1OVEdKeMZ1V2omDDiNrRdyBdyYd=q5Fg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ke Wang <ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <kvmarm-bounces@lists.cs.columbia.edu>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20210112;
+ h=cc:to:subject:message-id:date:from:in-reply-to:references
+ :mime-version:from:to:cc;
+ bh=OOL4Y5kIDK4GpzcnTvXTZTdG7FAR6zzCfj7Cij1BefI=;
+ b=CT2aSa6BZY94dkNNot3yaqnr3j9O7orSKuwxILRsqvRnd8WvEpXenBNae1eQ3He/Vr
+ 3AhSFAuhYY2hqrnn0IDDF0KHetLNrj4QcIGdxSVAjSYmODvxB/brvk0Zl7qi20uhok1U
+ L8Vaasnomd+kIjC2rkJJhN7AU6emb3HjWMmp7U1Vlx8usn0ap0gN9exTvoztmuHkK+uZ
+ bbG7qHXipz8305jwg9NNwjHODD3YuBTXoLQlVrnf796/Ss23Cy7QGESwKPeZDSbvamLV
+ pmcUj/wRO29vXhL6WEKTuroMzefWNmVuDRvkPNn4jz3RLjyIYBjxzVAIO2YyineAt7Js
+ iEhA==
+In-Reply-To: <CAJD7tkbc+E7f+ENRazf0SO7C3gR2bHiN4B0F1oPn8Pa6juAVfg@mail.gmail.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.cs.columbia.edu/mailman/options/kvmarm>,
+ <mailto:kvmarm-request@lists.cs.columbia.edu?subject=unsubscribe>
+List-Archive: <https://lists.cs.columbia.edu/pipermail/kvmarm>
+List-Post: <mailto:kvmarm@lists.cs.columbia.edu>
+List-Help: <mailto:kvmarm-request@lists.cs.columbia.edu?subject=help>
+List-Subscribe: <https://lists.cs.columbia.edu/mailman/listinfo/kvmarm>,
+ <mailto:kvmarm-request@lists.cs.columbia.edu?subject=subscribe>
+Errors-To: kvmarm-bounces@lists.cs.columbia.edu
+Sender: kvmarm-bounces@lists.cs.columbia.edu
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Wanpeng Li <wanpengli@tencent.com>, kvm@vger.kernel.org, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Shaoqin <shaoqin.huang@intel.com>, Linux-MM <linux-mm@kvack.org>, Zefan Li <lizefan.x@bytedance.com>, kvmarm@lists.cs.columbia.edu, Marc Zyngier <maz@kernel.org>, Joerg Roedel <joro@8bytes.org>, Shakeel Butt <shakeelb@google.com>, Cgroups <cgroups@vger.kernel.org>, linux-arm-kernel@lists.infradead.org, Jim Mattson <jmattson@google.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Paolo Bonzini <pbonzini@redhat.com>, Vitaly Kuznetsov <vkuznets@redhat.com>
 
-On Mon, Aug 15, 2022 at 9:38 AM Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+On Mon, Aug 8, 2022 at 1:06 PM Yosry Ahmed <yosryahmed@google.com> wrote:
 >
-> On Sun, Aug 14, 2022 at 2:40 PM Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> On Mon, Jul 18, 2022 at 11:26 AM Yosry Ahmed <yosryahmed@google.com> wrote:
 > >
-> > On Sat, Aug 13, 2022 at 3:06 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > On Tue, Jul 12, 2022 at 4:06 PM Sean Christopherson <seanjc@google.com> wrote:
 > > >
-> > > On Fri, Aug 12, 2022 at 06:09:26PM +0800, zhaoyang.huang wrote:
-> > > > From: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+> > > On Tue, Jul 12, 2022, Yosry Ahmed wrote:
+> > > > Thanks for taking another look at this!
 > > > >
-> > > > Memory charged on group B abserved on belowing v2 hierarchy where we just would
-> > > > like to only have group E's memory be controlled and B's descendants compete freely
-> > > > for memory. This should be the consequences of unified hierarchy. Solve this by
-> > > > have the cgroup without valid memory css alloced use root_mem_cgroup instead of
-> > > > its ancestor's.
+> > > > On Thu, Jul 7, 2022 at 1:59 PM Sean Christopherson <seanjc@google.com> wrote:
+> > > > >
+> > > > > On Tue, Jun 28, 2022, Yosry Ahmed wrote:
+> > > > > > diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+> > > > > > index aab70355d64f3..13190d298c986 100644
+> > > > > > --- a/include/linux/mmzone.h
+> > > > > > +++ b/include/linux/mmzone.h
+> > > > > > @@ -216,6 +216,7 @@ enum node_stat_item {
+> > > > > >       NR_KERNEL_SCS_KB,       /* measured in KiB */
+> > > > > >  #endif
+> > > > > >       NR_PAGETABLE,           /* used for pagetables */
+> > > > > > +     NR_SECONDARY_PAGETABLE, /* secondary pagetables, e.g. kvm shadow pagetables */
+> > > > >
+> > > > > Nit, s/kvm/KVM, and drop the "shadow", which might be misinterpreted as saying KVM
+> > > > > pagetables are only accounted when KVM is using shadow paging.  KVM's usage of "shadow"
+> > > > > is messy, so I totally understand why you included it, but in this case it's unnecessary
+> > > > > and potentially confusing.
+> > > > >
+> > > > > And finally, something that's not a nit.  Should this be wrapped with CONFIG_KVM
+> > > > > (using IS_ENABLED() because KVM can be built as a module)?  That could be removed
+> > > > > if another non-KVM secondary MMU user comes along, but until then, #ifdeffery for
+> > > > > stats the depend on a single feature seems to be the status quo for this code.
+> > > > >
 > > > >
-> > > >  A(subtree_control = memory) - B(subtree_control = NULL) - C()
-> > > >                                                          \ D()
-> > > >                            - E(subtree_control = memory) - F()
-> > > >                                                          \ G()
-> > > >
-> > > > Signed-off-by: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
-> > > > ---
-> > > >  kernel/cgroup/cgroup.c | 8 ++++++++
-> > > >  1 file changed, 8 insertions(+)
-> > > >
-> > > > diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> > > > index 1779ccd..b29b3f6 100644
-> > > > --- a/kernel/cgroup/cgroup.c
-> > > > +++ b/kernel/cgroup/cgroup.c
-> > > > @@ -533,6 +533,14 @@ static struct cgroup_subsys_state *cgroup_e_css_by_mask(struct cgroup *cgrp,
-> > > >        * can't test the csses directly.  Test ss_mask.
-> > > >        */
-> > > >       while (!(cgroup_ss_mask(cgrp) & (1 << ss->id))) {
-> > > > +             /*
-> > > > +              * charging to the parent cgroup which hasn't distribute
-> > > > +              * memory control to its descendants doesn't make sense
-> > > > +              * especially on cgroup v2, where the parent could be configured
-> > > > +              * to use memory controller as its sibling want to use it
-> > > > +              */
-> > > > +             if (memory_cgrp_id == ss->id)
-> > > > +                     return &root_mem_cgroup->css;
+> > > > I will #ifdef the stat, but I will emphasize in the docs that is
+> > > > currently *only* used for KVM so that it makes sense if users without
+> > > > KVM don't see the stat at all. I will also remove the stat from
+> > > > show_free_areas() in mm/page_alloc.c as it seems like none of the
+> > > > #ifdefed stats show up there.
 > > >
-> > > This is gonna be a hard nack. A given cgroup always encompasses all the
-> > > resources consumed in its self-including subtree.
-> > >
-> > > Thanks.
-> > IMHO, I would like to say if it makes more sense as "A given cgroup
-> > always encompasses all the resources consumed in its ENABLED
-> > self-including subtree." Otherwise, how should I couple with the
-> > scenarios I raised in the commit message which I prefer parts of the
-> > subtrees compete for "memory" while others are free for it. The free
-> > here is not only without "min/low/high watermarks" but also not
-> > charged to their own LRU.
-> I would like to state more why these make sense. Memory cgroup is a
-> little bit different to other cgroups, that is, memcg will have real
-> physical resources attached, say pages. From perspective of memory
-> reclaiming, it is odd to find that pages under free memcgs are charged
-> to separate LRUs but without any management(no watermark control) and
-> perhaps affect workingset mechanism by LRU reason. Furthermore, v2
-> should grant the groups with the right to reject the subsys which
-> introduced by sibling enable, which could be deemed as v2's
-> inconvenient. The memcg could also apply subtree_control to enroll all
-> memory back whenever it want.
-As suggested by zefan, raise the practical scenario here to make more
-sense. The issue is observed in android system where per-app cgroup is
-demanded by freezer subsys and part of them require memory control.
-Under this scenario, less efficient memory reclaim is observed when
-comparing with no memory control. It is believed that multi LRU
-scanning introduces some of the overhead. Furthermore, page thrashing
-is also heavier than global LRU which could be the consequences of
-partial failure of WORKINGSET mechanism as LRU is too short to protect
-the active pages.
-> > >
-> > > --
-> > > tejun
+> > > It's might be worth getting someone from mm/ to weigh in before going through the
+> > > trouble, my suggestion/question is based purely on the existing code.
+> >
+> > Any mm folks with an opinion about this?
+> >
+> > Any preference on whether we should wrap NR_SECONDARY_PAGETABLE stats
+> > with #ifdef CONFIG_KVM for now as it is currently the only source for
+> > this stat?
+>
+> Any input here?
+>
+> Johannes, you have been involved in discussions in earlier versions of
+> this series, any thoughts here?
+
+Andrew, do you have an opinion on this? If not, I will send a v7 with
+the nits discussed with Sean. I think otherwise this series has
+sufficient ACKs.
+
+Would this be merged through the mm tree or kvm tree? This was based
+on the kvm/queue branch but I think I can rebase it on top of
+mm-unstable, I think all dependencies that this would have added in
+kvm/queue would have been fanned to mm by now.
