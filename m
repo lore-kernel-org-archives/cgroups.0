@@ -1,60 +1,59 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH v3 2/3] sched: Provide copy_user_cpus_mask() to copy out
- user mask
-Date: Mon, 15 Aug 2022 10:58:51 +0200
-Message-ID: <YvoKy6OdJIkNXbtq@worktop.programming.kicks-ass.net>
-References: <20220812203929.364341-1-longman@redhat.com>
- <20220812203929.364341-3-longman@redhat.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: Query regarding deadlock involving cgroup_threadgroup_rwsem and
+ cpu_hotplug_lock
+Date: Mon, 15 Aug 2022 11:05:56 +0200
+Message-ID: <20220815090556.GB27407@blackbody.suse.cz>
+References: <8245b710-8acb-d8e6-7045-99a5f71dad4e@oracle.com>
+ <26d0e4cc-be0e-2c12-6174-dfbb1edb1ed6@oracle.com>
+ <bbc01477-231b-3dbb-3e09-9338f5413f06@oracle.com>
+ <ba48eac5-8ef7-251b-11fe-8163bb7a2d54@quicinc.com>
+ <224b19f3-912d-b858-7af4-185b8e55bc66@quicinc.com>
+ <YthDz4BnfYHce1od@slm.duckdns.org>
+ <YuGTBLkFerUboctl@slm.duckdns.org>
+ <dc0cff0e-b744-9d5d-e727-70d1c31b2a74@quicinc.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=X1Kk26FPg2jYHPvOS2s86o6tg2NoWayeOGSNjQIPE58=; b=rrsHTcvocEIu0njvXEnAoUncHw
-        AS8nABWuqLfAfD9VJMaEUGdsPEJ6kYvuCMWpfsWtcOVdcgS0yDq2so/auNex1lo3b1l6EBiz2H7h5
-        NRkFPzXHaXQvqlbKU5ttS02AFmeez9M8vGC1NNAV0wFw0S4T3yJdCPkBjDsW2KQfslXbjE/NEqssj
-        f9cq4h6K4C70MeFyHRLsAX+QmnXpXTHZi7RP1qjvmoqokKDoIZbCmo/IK3DvgtjQ0IK5zuO60R3rS
-        7U9oklNwG/wZSAIno6+HiHbYyQZ1M8VkmMjRq/p84b3nPW99Z97XtmaKhTucauSBDxImFJUpG0LrD
-        VM5HOJpA==;
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1660554357; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=wmyLVShEDIO9zR9fd/Zd6KIwqvJ7WmFq3Q+f4veJxx4=;
+        b=Hr7FJApvmpacg+qsEsJ9ov0c/tj4crcwwKaC5VvYz8JZ5R2TTE2h7cECeD9EJfzdYfYWAc
+        cN6spABRKoxVA3aiXtRq3fSz0vQiAI+DH1UU/0eoeqEB7IGt1oHlgnYia5D4+XmpkvfT97
+        uWu7YDaPLs1jhiKEkKAQrGk8nHMwqEU=
 Content-Disposition: inline
-In-Reply-To: <20220812203929.364341-3-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <dc0cff0e-b744-9d5d-e727-70d1c31b2a74@quicinc.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Mukesh Ojha <quic_mojha@quicinc.com>
+Cc: Tejun Heo <tj@kernel.org>, Imran Khan <imran.f.khan@oracle.com>, lizefan.x@bytedance.com, hannes@cmpxchg.org, tglx@linutronix.de, steven.price@arm.com, peterz@infradead.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Zhao Gongyi <zhaogongyi@huawei.com>, Zhang Qiao <zhangqiao22@huawei.com>
 
-On Fri, Aug 12, 2022 at 04:39:28PM -0400, Waiman Long wrote:
-> Since accessing the content of the user_cpus_ptr requires lock protection
-> to ensure its validity, provide a helper function copy_user_cpus_mask()
-> to facilitate its reading.
++Cc: Zhao Gongyi <zhaogongyi@huawei.com>, Zhang Qiao <zhangqiao22@huawei.com>
 
-Sure, but this is atrocious.
+On Fri, Aug 12, 2022 at 03:57:00PM +0530, Mukesh Ojha <quic_mojha@quicinc.com> wrote:
+> The original patch of yours [1]  and the revert of [2] is fixing the issue
+> and it is also confirmed here [3].
+> Can we get proper fix merge on your tree?
+> 
+> [1] https://lore.kernel.org/lkml/YuGbYCfAG81mZBnN@slm.duckdns.org/
+> 
+> [2]
+> https://lore.kernel.org/all/20220121101210.84926-1-zhangqiao22@huawei.com/
 
-> --- a/kernel/sched/core.c
-> +++ b/kernel/sched/core.c
-> @@ -2619,6 +2619,24 @@ void release_user_cpus_ptr(struct task_struct *p)
->  	kfree(clear_user_cpus_ptr(p));
->  }
->  
-> +/*
-> + * Return the copied mask pointer or NULL if user mask not available.
-> + */
-> +struct cpumask *copy_user_cpus_mask(struct task_struct *p,
-> +				    struct cpumask *user_mask)
-> +{
-> +	struct rq_flags rf;
-> +	struct rq *rq = task_rq_lock(p, &rf);
-> +	struct cpumask *mask = NULL;
-> +
-> +	if (p->user_cpus_ptr) {
-> +		cpumask_copy(user_mask, p->user_cpus_ptr);
-> +		mask = user_mask;
-> +	}
-> +	task_rq_unlock(rq, p, &rf);
-> +	return mask;
-> +}
+The revert + Tejun's patch looks fine wrt the problem of the reverted
+patch (just moves cpus_read_lock to upper callers).
 
-For reading the mask you only need one of those locks, and I would
-suggest p->pi_lock is much less contended than rq->lock.
+I'd just suggest a comment that'd explicitly document also the lock
+order that we stick to, IIUC, it should be:
+
+	cpu_hotplug_lock // cpus_read_lock
+	cgroup_threadgroup_rwsem
+	cpuset_rwsem
+
+Michal
+
+> 
+> [3] https://lore.kernel.org/lkml/CAB8ipk-72V-bYRfL-VcSRSyXTeQqkBVj+1d5MHSVV5CTar9a0Q@mail.gmail.com/
+> 
+> -Mukesh
