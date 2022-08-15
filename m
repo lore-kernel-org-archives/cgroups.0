@@ -1,86 +1,48 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v3 1/3] sched: Use user_cpus_ptr for saving user provided
- cpumask in sched_setaffinity()
-Date: Mon, 15 Aug 2022 11:23:21 -0400
-Message-ID: <64276639-c6bc-f2ab-8e3b-0c2a36fbe0ad@redhat.com>
-References: <20220812203929.364341-1-longman@redhat.com>
- <20220812203929.364341-2-longman@redhat.com>
- <YvoKa3tbOaszsp1y@worktop.programming.kicks-ass.net>
- <401bae73-3063-e0ab-c288-2c6e3be75fc5@redhat.com>
- <YvpXbofPloXkHWdq@worktop.programming.kicks-ass.net>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH] mm: correctly charge compressed memory to its memcg
+Date: Mon, 15 Aug 2022 11:31:41 -0400
+Message-ID: <Yvpm3cubIRAqUUJn@cmpxchg.org>
+References: <20220811081913.102770-1-liliguang@baidu.com>
+ <YvWa9MOQWBICInjO@P9FQF9L96D.corp.robot.car>
+ <CALvZod4nnn8BHYqAM4xtcR0Ddo2-Wr8uKm9h_CHWUaXw7g_DCg@mail.gmail.com>
+ <CAJD7tkbrCNDMkE8dJDWHiTfi=nJJzrZwepaWb3YioRHMrSEuQA@mail.gmail.com>
+ <1704B09B-F758-47DF-BDDE-FEA9AB227E12@baidu.com>
+ <CAJD7tkaW7qtaNpc3UHuQAcJAjdjzjmWZCqCMafT-nUES+2QtYg@mail.gmail.com>
+ <E0E6FD3B-242B-4187-B4B4-9D4496A5B19A@baidu.com>
+ <CAJD7tkYdJrakJGp8XMt49ixZJuf=qpGm=vSxH6G_GWeenk35dQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1660577006;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=KTWFb/xozwZ/9TO1t27BpD9rjZxXL2g2toO6qXFlfc4=;
-        b=I8m1tZpKFzzFrjeCoW2mMZIoNquvyNrsOYS7j97ZkayidiUksD2mZQTkPo7MGP7dgLjufw
-        YDNWKubfGvG5qWTFexb5NhhzA0csBbQWp2S9tC2y/IovkYix4wbOhkF9fWFkuXK7BO9hjC
-        6ozawpOYRDAi+Q83dMdXcH8oMwjTZn8=
-Content-Language: en-US
-In-Reply-To: <YvpXbofPloXkHWdq@worktop.programming.kicks-ass.net>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc;
+        bh=kjUsObjVqN3I7az1Kd4dUP6iOhCJ8WK+mdTv5P8AJTs=;
+        b=5n/GrNy90njXPlXWQ0a//HP28qQhjYUJxn2CFByPOJoPlz69BGXOZuwsZ57nudHS/R
+         vhRQGQw3CC3uHiMNAXJd1MZaUOrEvy1ao4QxZBeUJdDndotInc7d5xoBJyXvy0bQRFtE
+         1jGG6iWk9zcJFlQ2wi3uRuVbIGZYDAGksif1hgos5Y9EmfW9NSXSdoALeyofn6nqitMu
+         Hb/7E/Pr58V2/Rw5XwylbtyMBCElScJ8X8A9cBwaXjsf79rl4bMyZDFzAd9AS5o88bEw
+         Dyx/B+A0zVWp7p0Xtc6ZxxP3t9Z/zXIsFVablL5iCvmSC6voJlbj48Q4+f7TKV0slZwD
+         eX3A==
+Content-Disposition: inline
+In-Reply-To: <CAJD7tkYdJrakJGp8XMt49ixZJuf=qpGm=vSxH6G_GWeenk35dQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Will Deacon <will@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: "Li,Liguang" <liliguang-h1bp6feCCZcAvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 
-On 8/15/22 10:25, Peter Zijlstra wrote:
-> On Mon, Aug 15, 2022 at 09:52:27AM -0400, Waiman Long wrote:
->> On 8/15/22 04:57, Peter Zijlstra wrote:
->>> On Fri, Aug 12, 2022 at 04:39:27PM -0400, Waiman Long wrote:
->>>> The user_cpus_ptr field is added by commit b90ca8badbd1 ("sched:
->>>> Introduce task_struct::user_cpus_ptr to track requested affinity"). It
->>>> is currently used only by arm64 arch due to possible asymmetric cpu
->>>> setup. This patch extends its usage to save user provided cpumask when
->>>> sched_setaffinity() is called for all arches.
->>>>
->>>> To preserve the existing arm64 use case, a new cpus_affinity_set flag is
->>>> added to differentiate if user_cpus_ptr is set up by sched_setaffinity()
->>>> or by force_compatible_cpus_allowed_ptr(). user_cpus_ptr
->>>> set by sched_setaffinity() has priority and won't be
->>>> overwritten by force_compatible_cpus_allowed_ptr() or
->>>> relax_compatible_cpus_allowed_ptr().
->>> What why ?! The only possible case where
->>> restrict_cpus_allowed_ptr() will now need that weird new state is when
->>> the affinity has never been set before, in that case cpus_ptr should be
->>> possible_mask.
->> Since I don't have a full history for this particular patch series that add
->> user_cpus_ptr, I am hesitant to change the current behavior for arm64
->> systems. However, given the statement that user_cpus_ptr is for tracking
->> "requested affinity" which I assume is when user applications call
->> sched_setaffinity(). It does make sense we may not really need this if
->> sched_setaffinity() is never called.
-> So it comes from the asymmetric arm stuff, where only little cores can
-> still run arm32 code. This means that on those machines, 32bit code
-> needs to be contrained so a subset of CPUs.
->
-> A direct consequence of that was that if you have any 32bit program in
-> your process hierarchy, you loose the big cores from you affinity mask.
->
-> For some reason that wasn't popular..  Hence the save/restore of cpumasks.
+On Mon, Aug 15, 2022 at 06:46:46AM -0700, Yosry Ahmed wrote:
+> Yeah I understand this much, what I don't understand is why we charge
+> the zswap memory through objcg (thus tying it to memcg kmem charging)
+> rather than directly through memcg.
 
-I am aware of that part of the patch series.
+The charged quantities are smaller than a page, so we have to use the
+byte interface.
 
+The byte interface (objcg) was written for slab originally, hence the
+link to the kmem option. But note that CONFIG_MEMCG_KMEM is no longer
+a user-visible option, and for all intents and purposes a fixed part
+of CONFIG_MEMCG.
 
->>> Please just make a single consistent rule and don't make weird corner
->>> cases like this.
->> I will take a closer look to try to simplify the rule here.
-> I think something like:
->
-> 	mask = p->user_cpus_ptr;
-> 	if (!mask)
-> 		mask = &init_task.cpus_mask;
->
-> 	// impose cpuset masks
->
-> should 'just-work'.
-
-I think that should work in relax_compatible_cpus_allowed_ptr().
-
-Thanks,
-Longman
-
+(There is the SLOB quirk. But I'm not sure anybody uses slob, let
+alone slob + memcg.)
