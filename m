@@ -1,152 +1,34 @@
-From: Andrii Nakryiko <andrii.nakryiko@gmail.com>
-Subject: Re: [PATCH bpf-next v8 1/5] bpf: Introduce cgroup iter
-Date: Mon, 15 Aug 2022 21:17:09 -0700
-Message-ID: <CAEf4BzbuD+vLzxVkXpiX=yKu2WbHLrekrZS8hx2TWU04m0h-kA@mail.gmail.com>
-References: <20220812202802.3774257-1-haoluo@google.com> <20220812202802.3774257-2-haoluo@google.com>
+From: syzbot <syzbot+e42ae441c3b10acf9e9d@syzkaller.appspotmail.com>
+Subject: Re: BUG: corrupted list in insert_work
+Date: Mon, 15 Aug 2022 22:58:08 -0700
+Message-ID: <000000000000c518d505e6556ed8@google.com>
+References: <000000000000aaac8505dc135b07@google.com>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=j/gGIYHVvGXD1yDEp46mElKYaYYPTYLmXjRKXScf7hY=;
-        b=VNUa8f0PEtm55xS3sXA1K8l77VMtcbnvYrI2gLVUGAt4pR2iZK0FqWrxO6A/c7VLog
-         mPNy+vUcwyoF/j7hNHJ9J9dyAsVHZMf1qa+C3oXPOuR3Yv8QEK2pYWex27VgW3f326n8
-         52LdK4pl/jK14F/2eJo/SjdWz1uhtNFgJtmm/wD3YTHUcI+nJmAZ4jLw4rsfAcMrcYry
-         L1DZ40JETewL88nD23C6xxL2BaXI5MMBf5bzOGLi9tSxfEKSU/yB2ZTdZ0RR7RdUTqYQ
-         I5kiXHvQXwmqzdq5ol9LFZnqxaIHntzerAsgcSoLDk3/ikf96lr5DrHI1DV2RTAUUNVA
-         tWyA==
-In-Reply-To: <20220812202802.3774257-2-haoluo@google.com>
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <000000000000aaac8505dc135b07@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hao Luo <haoluo@google.com>
-Cc: linux-kernel@vger.kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>, Andrii Nakryiko <andrii@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, Yonghong Song <yhs@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, KP Singh <kpsingh@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, John Fastabend <john.fastabend@gmail.com>, Michal Koutny <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Shakeel Butt <shakeelb@google.com>, Yosry Ahmed <yosryahmed@google.com>
+To: andrii@kernel.org, ast@kernel.org, bpf@vger.kernel.org, brauner@kernel.org, cgroups@vger.kernel.org, daniel@iogearbox.net, dvyukov@google.com, hannes@cmpxchg.org, hdanton@sina.com, john.fastabend@gmail.com, kafai@fb.com, kpsingh@kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, lizefan.x@bytedance.com, lkp@intel.com, lkp@lists.01.org, mkoutny@suse.com, netdev@vger.kernel.org, oliver.sang@intel.com, songliubraving@fb.com, stable@vger.kernel.org, syzkaller-android-bugs@googlegroups.com, syzkaller-bugs@googlegroups.com, tadeusz.struk@linaro.org, tj@kernel.org, yhs@fb.com
 
-On Fri, Aug 12, 2022 at 1:28 PM Hao Luo <haoluo@google.com> wrote:
->
-> Cgroup_iter is a type of bpf_iter. It walks over cgroups in four modes:
->
->  - walking a cgroup's descendants in pre-order.
->  - walking a cgroup's descendants in post-order.
->  - walking a cgroup's ancestors.
->  - process only the given cgroup.
->
-> When attaching cgroup_iter, one can set a cgroup to the iter_link
-> created from attaching. This cgroup is passed as a file descriptor
-> or cgroup id and serves as the starting point of the walk. If no
-> cgroup is specified, the starting point will be the root cgroup v2.
->
-> For walking descendants, one can specify the order: either pre-order or
-> post-order. For walking ancestors, the walk starts at the specified
-> cgroup and ends at the root.
->
-> One can also terminate the walk early by returning 1 from the iter
-> program.
->
-> Note that because walking cgroup hierarchy holds cgroup_mutex, the iter
-> program is called with cgroup_mutex held.
->
-> Currently only one session is supported, which means, depending on the
-> volume of data bpf program intends to send to user space, the number
-> of cgroups that can be walked is limited. For example, given the current
-> buffer size is 8 * PAGE_SIZE, if the program sends 64B data for each
-> cgroup, assuming PAGE_SIZE is 4kb, the total number of cgroups that can
-> be walked is 512. This is a limitation of cgroup_iter. If the output
-> data is larger than the kernel buffer size, after all data in the
-> kernel buffer is consumed by user space, the subsequent read() syscall
-> will signal EOPNOTSUPP. In order to work around, the user may have to
-> update their program to reduce the volume of data sent to output. For
-> example, skip some uninteresting cgroups. In future, we may extend
-> bpf_iter flags to allow customizing buffer size.
->
-> Acked-by: Yonghong Song <yhs@fb.com>
-> Acked-by: Tejun Heo <tj@kernel.org>
-> Signed-off-by: Hao Luo <haoluo@google.com>
-> ---
->  include/linux/bpf.h                           |   8 +
->  include/uapi/linux/bpf.h                      |  35 +++
->  kernel/bpf/Makefile                           |   3 +
->  kernel/bpf/cgroup_iter.c                      | 283 ++++++++++++++++++
->  tools/include/uapi/linux/bpf.h                |  35 +++
->  .../selftests/bpf/prog_tests/btf_dump.c       |   4 +-
->  6 files changed, 366 insertions(+), 2 deletions(-)
->  create mode 100644 kernel/bpf/cgroup_iter.c
->
-> diff --git a/include/linux/bpf.h b/include/linux/bpf.h
-> index a627a02cf8ab..ecb8c61178a1 100644
-> --- a/include/linux/bpf.h
-> +++ b/include/linux/bpf.h
-> @@ -48,6 +48,7 @@ struct mem_cgroup;
->  struct module;
->  struct bpf_func_state;
->  struct ftrace_ops;
-> +struct cgroup;
->
->  extern struct idr btf_idr;
->  extern spinlock_t btf_idr_lock;
-> @@ -1730,7 +1731,14 @@ int bpf_obj_get_user(const char __user *pathname, int flags);
->         int __init bpf_iter_ ## target(args) { return 0; }
->
->  struct bpf_iter_aux_info {
-> +       /* for map_elem iter */
->         struct bpf_map *map;
-> +
-> +       /* for cgroup iter */
-> +       struct {
-> +               struct cgroup *start; /* starting cgroup */
-> +               int order;
+syzbot suspects this issue was fixed by commit:
 
-why not using enum as a type here?
+commit d007f49ab789bee8ed76021830b49745d5feaf61
+Author: Al Viro <viro@zeniv.linux.org.uk>
+Date:   Wed May 18 06:13:40 2022 +0000
 
-> +       } cgroup;
->  };
->
->  typedef int (*bpf_iter_attach_target_t)(struct bpf_prog *prog,
-> diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
-> index 7d1e2794d83e..bc3c901b9f70 100644
-> --- a/include/uapi/linux/bpf.h
-> +++ b/include/uapi/linux/bpf.h
-> @@ -87,10 +87,34 @@ struct bpf_cgroup_storage_key {
->         __u32   attach_type;            /* program attach type (enum bpf_attach_type) */
->  };
->
-> +enum bpf_iter_order {
-> +       BPF_ITER_DESCENDANTS_PRE = 0,   /* walk descendants in pre-order. */
-> +       BPF_ITER_DESCENDANTS_POST,      /* walk descendants in post-order. */
-> +       BPF_ITER_ANCESTORS_UP,          /* walk ancestors upward. */
-> +       BPF_ITER_SELF_ONLY,             /* process only a single object. */
-> +};
-> +
->  union bpf_iter_link_info {
->         struct {
->                 __u32   map_fd;
->         } map;
-> +       struct {
-> +               /* Users must specify order using one of the following values:
-> +                *  - BPF_ITER_DESCENDANTS_PRE
-> +                *  - BPF_ITER_DESCENDANTS_POST
-> +                *  - BPF_ITER_ANCESTORS_UP
-> +                *  - BPF_ITER_SELF_ONLY
-> +                */
-> +               __u32   order;
+    percpu_ref_init(): clean ->percpu_count_ref on failure
 
-same, we just declared the UAPI enum above, why not specify that this
-is that enum here?
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=10c66b6b080000
+start commit:   ebc9fb07d294 ANDROID: random: fix CRC issues with the merge
+git tree:       android12-5.10-lts
+kernel config:  https://syzkaller.appspot.com/x/.config?x=32c952ff4a8ff8c1
+dashboard link: https://syzkaller.appspot.com/bug?extid=e42ae441c3b10acf9e9d
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=172a9074080000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=10456caa080000
 
-> +
-> +               /* At most one of cgroup_fd and cgroup_id can be non-zero. If
-> +                * both are zero, the walk starts from the default cgroup v2
-> +                * root. For walking v1 hierarchy, one should always explicitly
-> +                * specify cgroup_fd.
-> +                */
-> +               __u32   cgroup_fd;
-> +               __u64   cgroup_id;
+If the result looks correct, please mark the issue as fixed by replying with:
 
-for my own education, does root cgroup has cgroup_id == 0?
+#syz fix: percpu_ref_init(): clean ->percpu_count_ref on failure
 
-> +       } cgroup;
->  };
->
-
-[...]
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
