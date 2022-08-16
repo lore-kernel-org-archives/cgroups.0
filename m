@@ -1,80 +1,271 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 2/3] sched: Provide copy_user_cpus_mask() to copy out user mask
-Date: Tue, 16 Aug 2022 11:11:18 -0400
-Message-ID: <20220816151119.29534-3-longman@redhat.com>
-References: <20220816151119.29534-1-longman@redhat.com>
+From: Andrii Nakryiko <andrii.nakryiko@gmail.com>
+Subject: Re: [PATCH bpf-next v7 4/8] bpf: Introduce cgroup iter
+Date: Tue, 16 Aug 2022 10:17:22 -0700
+Message-ID: <CAEf4BzZ+a2uDo_t6kGBziqdz--m2gh2_EUwkGLDtMd65uwxUjA@mail.gmail.com>
+References: <20220805214821.1058337-1-haoluo@google.com> <20220805214821.1058337-5-haoluo@google.com>
+ <CAEf4BzZHf89Ds8nQWFCH00fKs9-9GkJ0d+Hrp-LkMCDUP_td0A@mail.gmail.com>
+ <CA+khW7hUVOkHBO3dhRze2_VKZuxD-LuNQdO3nHUkLCYmuuR6eg@mail.gmail.com>
+ <20220809162325.hwgvys5n3rivuz7a@MacBook-Pro-3.local.dhcp.thefacebook.com>
+ <CA+khW7j0kzP+W_Qgsim52J+HeR27XJcyMk73Hq93tsmNzT7q6w@mail.gmail.com>
+ <CA+khW7j1Ni_PfvsGisUpUgFtgg=f_qEUVd1VUmocn6L3=kndhw@mail.gmail.com>
+ <CAJD7tkY6ihK9PkaAwrdRr-3QyiVFf8h4WkLXx73zYwNUjS_7pw@mail.gmail.com>
+ <CAEf4BzZTrsBOPpCTFouoWZJG9yXkz8LZgLQrqDREAY-XdGb7ew@mail.gmail.com> <CA+khW7gR7XWaXLHtVYE3c3HTYTNmo5gp7mETAxTg=O9-URwu0w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1660662698;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=wtQ3T2SnjxmANB9ZOMVYpxJhFmJErNinRxxSjh7HxJA=;
-        b=aWDUtQWEp/CvjO6j0e0piWFBdhaAWMmGNxvMcUjugMsq2mveXwGU2snrtJWe5/IuHlOFSI
-        O91phw6HX8cez68HSYFxeH3cLx/ilBmaSYoiBLRAxfffnuTcGKeAovSGY+rUVUmMN1somp
-        u7IZnDOvsYlB1NZUfvgA/UAl4zeb4f4=
-In-Reply-To: <20220816151119.29534-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=qCKT8Kp82VBae6tQ5nWkFmOoIIWChRRksp3CktntE1Q=;
+        b=feWjpEUkHkIjmSBBe86Sj45zewULsrgSLGEPpn/u1CkpcVIjgXhDxB74uM7Ial2soh
+         K7/ecs3/ZIxPdHkQvEf+C8TzDzLXod9yCJRlVr3IiQVc4QY+hRIY4WBLfDhp4TbwOb0j
+         LtyYR9fHmg6+sVt5nvYzwpOyBa3bS8cj4rXPHMe+SFpVU8/Zb0S3MZ7HtVRGtwYQ0gcI
+         Dajk2flJ7k3FEYXITRph2PNzmav+RVG2CiS5y/kwNBK+hGu78mnRgwazTH5dpPkkiUQk
+         XYZpk791Y9KY0WeQsJbX23ijSE9fRLEvKowlUEDkW2IvzdkybG5wyR+awyjxOJZrN3Pe
+         GUFQ==
+In-Reply-To: <CA+khW7gR7XWaXLHtVYE3c3HTYTNmo5gp7mETAxTg=O9-URwu0w@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Hao Luo <haoluo@google.com>
+Cc: Yosry Ahmed <yosryahmed@google.com>, Alexei Starovoitov <alexei.starovoitov@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, bpf <bpf@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Networking <netdev@vger.kernel.org>, Alexei Starovoitov <ast@kernel.org>, Andrii Nakryiko <andrii@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, Yonghong Song <yhs@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, KP Singh <kpsingh@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Benjamin Tissoires <benjamin.tissoires@redhat.com>, John Fastabend <john.fastabend@gmail.com>, Michal Koutny <mkoutny@suse.com>, Roman
 
-Since accessing the content of the user_cpus_ptr requires lock protection
-to ensure its validity, provide a helper function copy_user_cpus_mask()
-to facilitate its reading.
+On Mon, Aug 15, 2022 at 11:52 PM Hao Luo <haoluo@google.com> wrote:
+>
+> On Mon, Aug 15, 2022 at 9:13 PM Andrii Nakryiko
+> <andrii.nakryiko@gmail.com> wrote:
+> >
+> > On Thu, Aug 11, 2022 at 7:10 AM Yosry Ahmed <yosryahmed@google.com> wrote:
+> > >
+> > > On Wed, Aug 10, 2022 at 8:10 PM Hao Luo <haoluo@google.com> wrote:
+> > > >
+> > > > On Tue, Aug 9, 2022 at 11:38 AM Hao Luo <haoluo@google.com> wrote:
+> > > > >
+> > > > > On Tue, Aug 9, 2022 at 9:23 AM Alexei Starovoitov
+> > > > > <alexei.starovoitov@gmail.com> wrote:
+> > > > > >
+> > > > > > On Mon, Aug 08, 2022 at 05:56:57PM -0700, Hao Luo wrote:
+> > > > > > > On Mon, Aug 8, 2022 at 5:19 PM Andrii Nakryiko
+> > > > > > > <andrii.nakryiko@gmail.com> wrote:
+> > > > > > > >
+> > > > > > > > On Fri, Aug 5, 2022 at 2:49 PM Hao Luo <haoluo@google.com> wrote:
+> > > > > > > > >
+> > > > > > > > > Cgroup_iter is a type of bpf_iter. It walks over cgroups in four modes:
+> > > > > > > > >
+> > > > > > > > >  - walking a cgroup's descendants in pre-order.
+> > > > > > > > >  - walking a cgroup's descendants in post-order.
+> > > > > > > > >  - walking a cgroup's ancestors.
+> > > > > > > > >  - process only the given cgroup.
+> > > > > > > > >
+> > > > > [...]
+> > > > > > > > > diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
+> > > > > > > > > index 59a217ca2dfd..4d758b2e70d6 100644
+> > > > > > > > > --- a/include/uapi/linux/bpf.h
+> > > > > > > > > +++ b/include/uapi/linux/bpf.h
+> > > > > > > > > @@ -87,10 +87,37 @@ struct bpf_cgroup_storage_key {
+> > > > > > > > >         __u32   attach_type;            /* program attach type (enum bpf_attach_type) */
+> > > > > > > > >  };
+> > > > > > > > >
+> > > > > > > > > +enum bpf_iter_order {
+> > > > > > > > > +       BPF_ITER_ORDER_DEFAULT = 0,     /* default order. */
+> > > > > > > >
+> > > > > > > > why is this default order necessary? It just adds confusion (I had to
+> > > > > > > > look up source code to know what is default order). I might have
+> > > > > > > > missed some discussion, so if there is some very good reason, then
+> > > > > > > > please document this in commit message. But I'd rather not do some
+> > > > > > > > magical default order instead. We can set 0 to mean invalid and error
+> > > > > > > > out, or just do SELF as the very first value (and if user forgot to
+> > > > > > > > specify more fancy mode, they hopefully will quickly discover this in
+> > > > > > > > their testing).
+> > > > > > > >
+> > > > > > >
+> > > > > > > PRE/POST/UP are tree-specific orders. SELF applies on all iters and
+> > > > > > > yields only a single object. How does task_iter express a non-self
+> > > > > > > order? By non-self, I mean something like "I don't care about the
+> > > > > > > order, just scan _all_ the objects". And this "don't care" order, IMO,
+> > > > > > > may be the common case. I don't think everyone cares about walking
+> > > > > > > order for tasks. The DEFAULT is intentionally put at the first value,
+> > > > > > > so that if users don't care about order, they don't have to specify
+> > > > > > > this field.
+> > > > > > >
+> > > > > > > If that sounds valid, maybe using "UNSPEC" instead of "DEFAULT" is better?
+> > > > > >
+> > > > > > I agree with Andrii.
+> > > > > > This:
+> > > > > > +       if (order == BPF_ITER_ORDER_DEFAULT)
+> > > > > > +               order = BPF_ITER_DESCENDANTS_PRE;
+> > > > > >
+> > > > > > looks like an arbitrary choice.
+> > > > > > imo
+> > > > > > BPF_ITER_DESCENDANTS_PRE = 0,
+> > > > > > would have been more obvious. No need to dig into definition of "default".
+> > > > > >
+> > > > > > UNSPEC = 0
+> > > > > > is fine too if we want user to always be conscious about the order
+> > > > > > and the kernel will error if that field is not initialized.
+> > > > > > That would be my preference, since it will match the rest of uapi/bpf.h
+> > > > > >
+> > > > >
+> > > > > Sounds good. In the next version, will use
+> > > > >
+> > > > > enum bpf_iter_order {
+> > > > >         BPF_ITER_ORDER_UNSPEC = 0,
+> > > > >         BPF_ITER_SELF_ONLY,             /* process only a single object. */
+> > > > >         BPF_ITER_DESCENDANTS_PRE,       /* walk descendants in pre-order. */
+> > > > >         BPF_ITER_DESCENDANTS_POST,      /* walk descendants in post-order. */
+> > > > >         BPF_ITER_ANCESTORS_UP,          /* walk ancestors upward. */
+> > > > > };
+> > > > >
+> > > >
+> > > > Sigh, I find that having UNSPEC=0 and erroring out when seeing UNSPEC
+> > > > doesn't work. Basically, if we have a non-iter prog and a cgroup_iter
+> > > > prog written in the same source file, I can't use
+> > > > bpf_object__attach_skeleton to attach them. Because the default
+> > > > prog_attach_fn for iter initializes `order` to 0 (that is, UNSPEC),
+> > > > which is going to be rejected by the kernel. In order to make
+> > > > bpf_object__attach_skeleton work on cgroup_iter, I think I need to use
+> > > > the following
+> > > >
+> > > > enum bpf_iter_order {
+> >
+> > so first of all, this can't be called "bpf_iter_order" as it doesn't
+> > apply to BPF iterators in general. I think this should be called
+> > bpf_iter_cgroup_order (or maybe bpf_cgroup_iter_order) and if/when we
+> > add ability to iterate tasks within cgroups then we'll just reuse enum
+> > bpf_iter_cgroup_order as an extra parameter for task iterator.
+> >
+> > And with that future case in mind I do think that we should have 0
+> > being "UNSPEC" case.
+> >
+>
+> Ok.
+>
+> > > >         BPF_ITER_DESCENDANTS_PRE,       /* walk descendants in pre-order. */
+> > > >         BPF_ITER_DESCENDANTS_POST,      /* walk descendants in post-order. */
+> > > >         BPF_ITER_ANCESTORS_UP,          /* walk ancestors upward. */
+> > > >         BPF_ITER_SELF_ONLY,             /* process only a single object. */
+> > > > };
+> > > >
+> > > > So that when calling bpf_object__attach_skeleton() on cgroup_iter, a
+> > > > link can be generated and the generated link defaults to pre-order
+> > > > walk on the whole hierarchy. Is there a better solution?
+> > > >
+> >
+> > I was actually surprised that we specify these additional parameters
+> > at attach (LINK_CREATE) time, and not at bpf_iter_create() call time.
+> > It seems more appropriate to allow to specify such runtime parameters
+> > very late, when we create a specific instance of seq_file. But I guess
+> > this was done because one of the initial motivations for iterators was
+> > to be pinned in BPFFS and read as a file, so it was more convenient to
+> > store such parameters upfront at link creation time to keep
+> > BPF_OBJ_PIN simpler. I guess it makes sense, worst case you'll need to
+> > create multiple bpf_link files, one for each cgroup hierarchy you'd
+> > like to query with the same single BPF program.
+> >
+>
+> Right. That was the design from the beginning.
+>
+> > But I digress.
+> >
+> > As for not being able to auto-attach cgroup iterator. I think that's
+> > sort of expected and is in line with not being able to auto-attach
+> > cgroup programs, as you need cgroup FD at runtime. So even if you had
+> > some reasonable default order, you still would need to specify target
+> > cgroup (either through FD or ID).
+> >
+> > So... either don't do skeleton auto-attach,
+>
+> This is not okay IMHO. It would be very inconvenient to use.
+>
+> > or let's teach libbpf code
+> > to not auto-attach some iter types?
+> >
+>
+> I'm thinking of two options:
+>
+> 1. Maybe we could add libbpf APIs for disabling auto-attach just like
+> prog autoload. Like:
+>
+> bpf_program__set_auto_attach()
+> bpf_program__get_auto_attach(...)
 
-Suggested-by: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- include/linux/sched.h |  1 +
- kernel/sched/core.c   | 19 +++++++++++++++++++
- 2 files changed, 20 insertions(+)
+Indeed, to give more flexibility we can also add
+bpf_program__set_autoattach() and bpf_program__autoattach() (note no
+underscore and no get prefix, to be consistent with autocreate and
+autoload getters and setters). It's a pretty simple change, please
+send a separate patch for this (soon-ish would be great to make it
+into final 1.0).
+>
+> 2. In auto-attach, if the program's link is already set, attach will
+> be skipped. So, we could just manually attach, which specifies the
+> order, and set the link in skeleton. This way, no change in libbpf is
+> needed. Does this sound good to you?
+>
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index e7b2f8a5c711..f2b0340c094e 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1830,6 +1830,7 @@ extern int task_can_attach(struct task_struct *p, const struct cpumask *cs_effec
- extern void do_set_cpus_allowed(struct task_struct *p, const struct cpumask *new_mask);
- extern int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask);
- extern int dup_user_cpus_ptr(struct task_struct *dst, struct task_struct *src, int node);
-+extern struct cpumask *copy_user_cpus_mask(struct task_struct *p, struct cpumask *user_mask);
- extern void release_user_cpus_ptr(struct task_struct *p);
- extern int dl_task_check_affinity(struct task_struct *p, const struct cpumask *mask);
- extern void force_compatible_cpus_allowed_ptr(struct task_struct *p);
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 9353641efdca..ee0fa1635163 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -2618,6 +2618,25 @@ void release_user_cpus_ptr(struct task_struct *p)
- 	kfree(clear_user_cpus_ptr(p));
- }
- 
-+/*
-+ * Return the copied mask pointer or NULL if user mask not available.
-+ * Acquiring pi_lock for read access protection.
-+ */
-+struct cpumask *copy_user_cpus_mask(struct task_struct *p,
-+				    struct cpumask *user_mask)
-+{
-+	struct cpumask *mask = NULL;
-+	unsigned long flags;
-+
-+	raw_spin_lock_irqsave(&p->pi_lock, flags);
-+	if (p->user_cpus_ptr) {
-+		cpumask_copy(user_mask, p->user_cpus_ptr);
-+		mask = user_mask;
-+	}
-+	raw_spin_unlock_irqrestore(&p->pi_lock, flags);
-+	return mask;
-+}
-+
- /*
-  * This function is wildly self concurrent; here be dragons.
-  *
--- 
-2.31.1
+Yes, this is one other way and is fully supported. Might be a bit less
+convenient than set_autoattach in some cases, so set_autoattach still
+makes sense, IMO.
 
+> > Alternatively, we could teach libbpf to parse some sort of cgroup
+> > iterator spec, like:
+> >
+> > SEC("iter/cgroup:/path/to/cgroup:descendants_pre")
+> >
+> > But this approach won't work for a bunch of other parameterized
+> > iterators (e.g., task iter, or map elem iter), so I'm hesitant about
+> > adding this to libbpf as a generic functionality.
+> >
+>
+> Agree. Let's explore other options first.
+>
+> > >
+> > > I think this can be handled by userspace? We can attach the
+> > > cgroup_iter separately first (and maybe we will need to set prog->link
+> > > as well) so that bpf_object__attach_skeleton() doesn't try to attach
+> > > it? I am following this pattern in the selftest in the final patch,
+> > > although I think I might be missing setting prog->link, so I am
+> > > wondering why there are no issues in that selftest which has the same
+> > > scenario that you are talking about.
+> > >
+> > > I think such a pattern will need to be used anyway if the users need
+> > > to set any non-default arguments for the cgroup_iter prog (like the
+> > > selftest), right? The only case we are discussing here is the case
+> > > where the user wants to attach the cgroup_iter with all default
+> > > options (in which case the default order will fail).
+> > > I agree that it might be inconvenient if the default/uninitialized
+> > > options don't work for cgroup_iter, but Alexei pointed out that this
+> > > matches other bpf uapis.
+> > >
+> > > My concern is that in the future we try to reuse enum bpf_iter_order
+> > > to set ordering for other iterators, and then the
+> > > default/uninitialized value (BPF_ITER_DESCENDANTS_PRE) doesn't make
+> > > sense for that iterator (e.g. not a tree). In this case, the same
+> > > problem that we are avoiding for cgroup_iter here will show up for
+> > > that iterator, and we can't easily change it at this point because
+> > > it's uapi.
+> >
+> > Yep, valid concern, I agree.
+> >
+>
+> Andrii, other than auto-attach, do you have any concern for the rest
+> of this patchset?
+
+Well, I mostly was looking at UAPIs, didn't check iteration logic
+itself. But plenty of others did and I trust they did a good job at
+that. So no, no other concerns.
+
+>
+> > >
+> > >
+> > > > > and explicitly list the values acceptable by cgroup_iter, error out if
+> > > > > UNSPEC is detected.
+> > > > >
+> > > > > Also, following Andrii's comments, will change BPF_ITER_SELF to
+> > > > > BPF_ITER_SELF_ONLY, which does seem a little bit explicit in
+> > > > > comparison.
+> > > > >
+> > > > > > I applied the first 3 patches to ease respin.
+> > > > >
+> > > > > Thanks! This helps!
+> > > > >
+> > > > > > Thanks!
