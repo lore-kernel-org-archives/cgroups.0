@@ -1,66 +1,105 @@
 From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 0/3] sched, cgroup/cpuset: Keep user set cpus affinity
-Date: Tue, 16 Aug 2022 11:11:16 -0400
-Message-ID: <20220816151119.29534-1-longman@redhat.com>
+Subject: [PATCH v4 3/3] cgroup/cpuset: Keep user set cpus affinity
+Date: Tue, 16 Aug 2022 11:11:19 -0400
+Message-ID: <20220816151119.29534-4-longman@redhat.com>
+References: <20220816151119.29534-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1660662698;
+        s=mimecast20190719; t=1660662699;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=jEYRKj1nlSqtCrHOWIArTdrELJ6+dwpREnZJE+d8OE8=;
-        b=NlhGKQg5Fnfz2cejt3KVKddjp9zO/GJ3dOkfIY9H+biFvjT6LRyU/x7L3rzD0aUQsxQwgV
-        3PwFjJqaPPRwI6hg7qBu5j8BK+lp4s99H1BR9NCYRmMa87pSISXqjAtDZVTkeFdFOeRNR+
-        HHIDldqEF2KXr0TTTBVuCQpZtefUF84=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=8DDEyD7Oc6PgrEZHkHqv7mnoGrf2YiFnazEzhrXs74I=;
+        b=NnS3U9/P5PFbNZWmmSnI42ItC2B3hNfJRkg44LxlqNo2VDSnLtrXfg3xClm6wODe97qK5t
+        /ptEbLV7lX+XHaArIln7GQwueNX5Jcc5qyT1znfCdF9qYzEHrMZ53bb6gXseMtWPKSddkm
+        B2V4Z/9/ExdPVdIRk4PgdVh7/VnQW9E=
+In-Reply-To: <20220816151119.29534-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-v4:
- - Update patch 1 to make sched_setaffinity() the only function to
-   update user_cpus_ptr to make the logic simpler and
-   easier to understand. restrict_cpus_allowed_ptr() and
-   relax_compatible_cpus_allowed_ptr() will just use it if present.
+It was found that any change to the current cpuset hierarchy may reset
+the cpumask of the tasks in the affected cpusets to the default cpuset
+value even if those tasks have cpus affinity explicitly set by the users
+before. That is especially easy to trigger under a cgroup v2 environment
+where writing "+cpuset" to the root cgroup's cgroup.subtree_control
+file will reset the cpus affinity of all the processes in the system.
 
-v3:
- - Attach a new patch 2 to introduce a copy_user_cpus_mask() to copy
-   out user masks with lock protection & use it in patch 3.
+That is problematic in a nohz_full environment where the tasks running
+in the nohz_full CPUs usually have their cpus affinity explicitly set
+and will behave incorrectly if cpus affinity changes.
 
-v2:
- - Rework the v1 patch by extending the semantics of user_cpus_ptr to
-   store user set cpus affinity and keeping to it as much as possible.
+Fix this problem by looking at user_cpus_ptr which will be set if
+cpus affinity have been explicitly set before and use it to restrcit
+the given cpumask unless there is no overlap. In that case, it will
+fallback to the given one.
 
-The user_cpus_ptr field is added by commit b90ca8badbd1 ("sched:
-Introduce task_struct::user_cpus_ptr to track requested affinity")
-which uses it narrowly to allow keeping cpus affinity intact with
-asymmetric cpu setup.
+With that change in place, it was verified that tasks that have its
+cpus affinity explicitly set will not be affected by changes made to
+the v2 cgroup.subtree_control files.
 
-This patchset extends user_cpus_ptr to store user set cpus affinity via
-sched_setaffinity() API. With that information avaiable, it will enable
-cpuset to keep cpus afinity as close to what the user wants as possible
-within the cpu list constraint of the current cpuset. Otherwise some
-change to the cpuset hierarchy may reset the cpumask of the tasks in
-the affected cpusets to the default cpuset value even if those tasks
-have cpus affinity explicitly set by the users before.
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cpuset.c | 28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
 
-It also means that once sched_setaffinity() is called, user_cpus_ptr
-will remain allocated until the task exits.
-
-Waiman Long (3):
-  sched: Use user_cpus_ptr for saving user provided cpumask in
-    sched_setaffinity()
-  sched: Provide copy_user_cpus_mask() to copy out user mask
-  cgroup/cpuset: Keep user set cpus affinity
-
- include/linux/sched.h  |   1 +
- kernel/cgroup/cpuset.c |  28 +++++++++-
- kernel/sched/core.c    | 119 ++++++++++++++++++++++++-----------------
- kernel/sched/sched.h   |   1 -
- 4 files changed, 98 insertions(+), 51 deletions(-)
-
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 58aadfda9b8b..cabfac540fd8 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -704,6 +704,30 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+ 	return ret;
+ }
+ 
++/*
++ * Preserve user provided cpumask (if set) as much as possible unless there
++ * is no overlap with the given mask.
++ */
++static int cpuset_set_cpus_allowed_ptr(struct task_struct *p,
++				       const struct cpumask *mask)
++{
++	if (p->user_cpus_ptr) {
++		cpumask_var_t new_mask;
++
++		if (alloc_cpumask_var(&new_mask, GFP_KERNEL) &&
++		    copy_user_cpus_mask(p, new_mask) &&
++		    cpumask_and(new_mask, new_mask, mask)) {
++			int ret = set_cpus_allowed_ptr(p, new_mask);
++
++			free_cpumask_var(new_mask);
++			return ret;
++		}
++		free_cpumask_var(new_mask);
++	}
++
++	return set_cpus_allowed_ptr(p, mask);
++}
++
+ #ifdef CONFIG_SMP
+ /*
+  * Helper routine for generate_sched_domains().
+@@ -1130,7 +1154,7 @@ static void update_tasks_cpumask(struct cpuset *cs)
+ 
+ 	css_task_iter_start(&cs->css, 0, &it);
+ 	while ((task = css_task_iter_next(&it)))
+-		set_cpus_allowed_ptr(task, cs->effective_cpus);
++		cpuset_set_cpus_allowed_ptr(task, cs->effective_cpus);
+ 	css_task_iter_end(&it);
+ }
+ 
+@@ -2303,7 +2327,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
+ 		 * can_attach beforehand should guarantee that this doesn't
+ 		 * fail.  TODO: have a better way to handle failure here
+ 		 */
+-		WARN_ON_ONCE(set_cpus_allowed_ptr(task, cpus_attach));
++		WARN_ON_ONCE(cpuset_set_cpus_allowed_ptr(task, cpus_attach));
+ 
+ 		cpuset_change_task_nodemask(task, &cpuset_attach_nodemask_to);
+ 		cpuset_update_task_spread_flag(cs, task);
 -- 
 2.31.1
 
