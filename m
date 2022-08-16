@@ -1,80 +1,124 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v5 2/3] sched: Provide copy_user_cpus_mask() to copy out user mask
-Date: Tue, 16 Aug 2022 15:27:33 -0400
-Message-ID: <20220816192734.67115-3-longman@redhat.com>
-References: <20220816192734.67115-1-longman@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v7 1/9] blk-throttle: fix that io throttle can only work
+ for single bio
+Date: Tue, 16 Aug 2022 09:37:31 -1000
+Message-ID: <Yvvx+/d2+OMROUOe@slm.duckdns.org>
+References: <20220802140415.2960284-1-yukuai1@huaweicloud.com>
+ <20220802140415.2960284-2-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1660678072;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zrkR6gNIt4tudGoTdGvYpSQ89WyxuEjYmnoEsRj/ibE=;
-        b=QKWQlt81ifSvXkX1nv0jnHe1yJUw+JZiW9KyEfw0vtdvsbucUbBIn2oC4MImUXp1WOq8UQ
-        662TdfuDw3sVjJE0+HHqPzwBVdCxhXbaYjuNWt2TJQJ7TlZPciXNwVlZOxIVh94uIMoJsH
-        slzZRgbM4WbvTET/l/RCJLqEjgZJ0/A=
-In-Reply-To: <20220816192734.67115-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc;
+        bh=l9EfUPaDR5fFqr7tvdGkZgxoolNNscld0M245NvUy6E=;
+        b=nLp/aBgVt6VuoaORbTZKRwiuvBImcBAxXyGu2K+SxaOMk8qEYRA8xkNY3sj70X1RDT
+         zeOOFAq4s20bplLlj+c1ruWj+YW3QsXioDyQ7USvt9SV7SSnIZY32mS7JY5J4qkkoujz
+         MK5NVG81SXWZT8hbQ35Z58bLNbv6+zJujodwgSHgIqQ2rJ3uo23d2MFALWygo2WeoKPD
+         kT1vzc3g9I3YfET7baxKhGGlpekI8gPTtfNNSRlBcxLjzXiYRHJ4COGSQNlMoovNZIzT
+         lGKCU3ZLSBmTCfZPyMy+iofWEtJAxg1cMeU1QUcGbGComtJTA3/fWvaAh2aSPgeiLkbE
+         NlIg==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20220802140415.2960284-2-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: mkoutny@suse.com, axboe@kernel.dk, ming.lei@redhat.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
 
-Since accessing the content of the user_cpus_ptr requires lock protection
-to ensure its validity, provide a helper function copy_user_cpus_mask()
-to facilitate its reading.
+On Tue, Aug 02, 2022 at 10:04:07PM +0800, Yu Kuai wrote:
+...
+> commit 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
+> support to count splited bios for iops limit, thus it adds flaged bio
+                                                             ^
+                                                             flagged
 
-Suggested-by: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- include/linux/sched.h |  1 +
- kernel/sched/core.c   | 19 +++++++++++++++++++
- 2 files changed, 20 insertions(+)
+> checking in tg_with_in_bps_limit() so that splited bios will only count
+                                             ^
+                                             split
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index e7b2f8a5c711..f2b0340c094e 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1830,6 +1830,7 @@ extern int task_can_attach(struct task_struct *p, const struct cpumask *cs_effec
- extern void do_set_cpus_allowed(struct task_struct *p, const struct cpumask *new_mask);
- extern int set_cpus_allowed_ptr(struct task_struct *p, const struct cpumask *new_mask);
- extern int dup_user_cpus_ptr(struct task_struct *dst, struct task_struct *src, int node);
-+extern struct cpumask *copy_user_cpus_mask(struct task_struct *p, struct cpumask *user_mask);
- extern void release_user_cpus_ptr(struct task_struct *p);
- extern int dl_task_check_affinity(struct task_struct *p, const struct cpumask *mask);
- extern void force_compatible_cpus_allowed_ptr(struct task_struct *p);
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 03053eebb22e..a0987784913e 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -2618,6 +2618,25 @@ void release_user_cpus_ptr(struct task_struct *p)
- 	kfree(clear_user_cpus_ptr(p));
- }
- 
-+/*
-+ * Return the copied mask pointer or NULL if user mask not available.
-+ * Acquiring pi_lock for read access protection.
-+ */
-+struct cpumask *copy_user_cpus_mask(struct task_struct *p,
-+				    struct cpumask *user_mask)
-+{
-+	struct cpumask *mask = NULL;
-+	unsigned long flags;
-+
-+	raw_spin_lock_irqsave(&p->pi_lock, flags);
-+	if (p->user_cpus_ptr) {
-+		cpumask_copy(user_mask, p->user_cpus_ptr);
-+		mask = user_mask;
-+	}
-+	raw_spin_unlock_irqrestore(&p->pi_lock, flags);
-+	return mask;
-+}
-+
- /*
-  * This function is wildly self concurrent; here be dragons.
-  *
+> once for bps limit, however, it introduce a new problem that io throttle
+> won't work if multiple bios are throttled.
+> 
+> In order to fix the problem, at first, don't skip flaged bio in
+> tg_with_in_bps_limit(), however, this will break that splited bios should
+> only count once for bps limit. And this patch tries to avoid
+> over-accounting by decrementing it first in __blk_throtl_bio(), and
+> then counting it again while dispatching it.
+> 
+> Fixes: 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> Reviewed-by: Ming Lei <ming.lei@redhat.com>
+
+Please cc stable w/ version tag.
+
+> ---
+>  block/blk-throttle.c | 26 ++++++++++++++++++++------
+>  1 file changed, 20 insertions(+), 6 deletions(-)
+> 
+> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+> index 9f5fe62afff9..2957e2c643f4 100644
+> --- a/block/blk-throttle.c
+> +++ b/block/blk-throttle.c
+> @@ -811,7 +811,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+>  	unsigned int bio_size = throtl_bio_data_size(bio);
+>  
+>  	/* no need to throttle if this bio's bytes have been accounted */
+> -	if (bps_limit == U64_MAX || bio_flagged(bio, BIO_THROTTLED)) {
+> +	if (bps_limit == U64_MAX) {
+>  		if (wait)
+>  			*wait = 0;
+>  		return true;
+> @@ -921,11 +921,8 @@ static void throtl_charge_bio(struct throtl_grp *tg, struct bio *bio)
+>  	unsigned int bio_size = throtl_bio_data_size(bio);
+>  
+>  	/* Charge the bio to the group */
+> -	if (!bio_flagged(bio, BIO_THROTTLED)) {
+> -		tg->bytes_disp[rw] += bio_size;
+> -		tg->last_bytes_disp[rw] += bio_size;
+> -	}
+> -
+> +	tg->bytes_disp[rw] += bio_size;
+> +	tg->last_bytes_disp[rw] += bio_size;
+>  	tg->io_disp[rw]++;
+>  	tg->last_io_disp[rw]++;
+>  
+> @@ -2121,6 +2118,23 @@ bool __blk_throtl_bio(struct bio *bio)
+>  			tg->last_low_overflow_time[rw] = jiffies;
+>  		throtl_downgrade_check(tg);
+>  		throtl_upgrade_check(tg);
+> +
+> +		/*
+> +		 * Splited bios can be re-entered because iops limit should be
+                   ^                ^^^^^^^^^^^^^
+                   Split            re-enter
+
+> +		 * counted again, however, bps limit should not. Since bps limit
+> +		 * will be counted again while dispatching it, compensate the
+> +		 * over-accounting here. Noted that compensation can fail if
+> +		 * new slice is started.
+
+I can't really follow the comment. Please improve the explanation.
+
+> +		 */
+> +		if (bio_flagged(bio, BIO_THROTTLED)) {
+> +			unsigned int bio_size = throtl_bio_data_size(bio);
+> +
+> +			if (tg->bytes_disp[rw] >= bio_size)
+> +				tg->bytes_disp[rw] -= bio_size;
+> +			if (tg->last_bytes_disp[rw] >= bio_size)
+> +				tg->last_bytes_disp[rw] -= bio_size;
+> +		}
+
+So, as a fix for the immediate problem, I guess this might do but this feels
+really fragile. How can we be certain that re-entering only happens because
+of splitting? What if future core development changes that? It seems to be
+solving the problem in the wrong place. Shouldn't we flag the bio indicating
+that it's split when we're splitting the bio so that we only limit them for
+iops in the first place?
+
+Thanks.
+
 -- 
-2.31.1
-
+tejun
