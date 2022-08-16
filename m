@@ -1,153 +1,185 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-6.1] BUILD SUCCESS
- 7f203bc89eb66d6afde7eae91347fc0352090cc3
-Date: Tue, 16 Aug 2022 20:05:11 +0800
-Message-ID: <62fb87f7.ev0O+WhLKQuzdHyI%lkp@intel.com>
+From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [PATCH v2 09/10] sched/psi: per-cgroup PSI stats
+ disable/re-enable interface
+Date: Tue, 16 Aug 2022 21:06:21 +0800
+Message-ID: <904851a7-7b01-8689-3ec1-2a61f8244841@bytedance.com>
+References: <20220808110341.15799-1-zhouchengming@bytedance.com>
+ <20220808110341.15799-10-zhouchengming@bytedance.com>
+ <YvprI6ZL8dVWGyBO@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1660651556; x=1692187556;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=Ao5tAKMATYIlCAWYSMy9a0wQ8v63GMU1EE+8N7QQoHo=;
-  b=awaxVp/PO2EGYn3LJ5ixSwN9GWSnWaD4pXIFJ+TrFiKNGWEA5iDKFCZu
-   a208v8Vd5dYmAt0AXJSJuN7a2J2jaKGnsr2QEnTZpds/7Fu90EjY2GRN2
-   I3o7ATIwZNPXqO8gKKD0H8mWpgWhNgqycMds1l+r9WU8Y75N4vnclecdm
-   GbdnNV3MSminRVq2TymBpF/WZRvNW1y4NYdpXLp8E88DG08obucnBKcSA
-   OKYMX00hLqBdQDRHV27AWOUXDGxy2uU7619kUX9QV4C4QvmWLIvpVP/Ou
-   2SSbZtkTGsycyOg8p+BAnYtfdRgEpFesPW6tTDUonLPtNAkZetEmpM359
-   g==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc;
+        bh=+6Yo80pVz7R1wbuugd0h39oHv4cQk8t0dTgRXP4VwBI=;
+        b=Bm1NhmX8UPNf1PtLuZHAgWfhESmLqjvmDF7oLG7Sjrob5ZBRioBQbZD8IbmfhUAuPy
+         26Pg0XP9e55a3u5kuQ5ryXTN1eqIwUYiGNTjeFnhmdbLM55bc0FxevMk8+WBBXcBYJT5
+         CC+fEv2AnVaO1iGODXOqJPnAoaTxd2O8NqgXkv2mZ6mBh9kYG0x+9EMHXgGOCIk3qAR1
+         n1LKoZW0wxTfg0Fcd1tVZGBrJarWd6ATeB6MjzrMVXM8Uq9zR3Tc0GPRV7NUamgreV0Y
+         sIsQn/MuuGInwkkJosYPYxp8cPCoQUm4kieEJnct/L+ITnY3CRyDKA7UUzqyiZWg54Tf
+         3LGA==
+Content-Language: en-US
+In-Reply-To: <YvprI6ZL8dVWGyBO-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.1
-branch HEAD: 7f203bc89eb66d6afde7eae91347fc0352090cc3  cgroup: Replace cgroup->ancestor_ids[] with ->ancestors[]
+On 2022/8/15 23:49, Johannes Weiner wrote:
+> On Mon, Aug 08, 2022 at 07:03:40PM +0800, Chengming Zhou wrote:
+>> +static ssize_t cgroup_psi_write(struct kernfs_open_file *of,
+>> +				char *buf, size_t nbytes, loff_t off)
+>> +{
+>> +	ssize_t ret;
+>> +	int enable;
+>> +	struct cgroup *cgrp;
+>> +	struct psi_group *psi;
+>> +
+>> +	ret = kstrtoint(strstrip(buf), 0, &enable);
+>> +	if (ret)
+>> +		return ret;
+>> +
+>> +	if (enable < 0 || enable > 1)
+>> +		return -ERANGE;
+>> +
+>> +	cgrp = cgroup_kn_lock_live(of->kn, false);
+>> +	if (!cgrp)
+>> +		return -ENOENT;
+>> +
+>> +	psi = cgroup_ino(cgrp) == 1 ? &psi_system : &cgrp->psi;
+>> +	psi_cgroup_enable(psi, enable);
+> 
+> I think it should also add/remove the pressure files when enabling and
+> disabling the aggregation, since their contents would be stale and
+> misleading.
+> 
+> Take a look at cgroup_add_dfl_cftypes() and cgroup_rm_cftypes()
 
-elapsed time: 728m
+Ok, I will look.
 
-configs tested: 108
-configs skipped: 3
+> 
+>> @@ -5115,6 +5152,12 @@ static struct cftype cgroup_base_files[] = {
+>>  		.release = cgroup_pressure_release,
+>>  	},
+>>  #endif
+>> +	{
+>> +		.name = "cgroup.psi",
+>> +		.flags = CFTYPE_PRESSURE,
+>> +		.seq_show = cgroup_psi_show,
+>> +		.write = cgroup_psi_write,
+>> +	},
+>>  #endif /* CONFIG_PSI */
+>>  	{ }	/* terminate */
+>>  };
+>> diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+>> index 58f8092c938f..9df1686ee02d 100644
+>> --- a/kernel/sched/psi.c
+>> +++ b/kernel/sched/psi.c
+>> @@ -181,6 +181,7 @@ static void group_init(struct psi_group *group)
+>>  {
+>>  	int cpu;
+>>  
+>> +	group->enabled = true;
+>>  	for_each_possible_cpu(cpu)
+>>  		seqcount_init(&per_cpu_ptr(group->pcpu, cpu)->seq);
+>>  	group->avg_last_update = sched_clock();
+>> @@ -700,17 +701,16 @@ static void psi_group_change(struct psi_group *group, int cpu,
+>>  	groupc = per_cpu_ptr(group->pcpu, cpu);
+>>  
+>>  	/*
+>> -	 * First we assess the aggregate resource states this CPU's
+>> -	 * tasks have been in since the last change, and account any
+>> -	 * SOME and FULL time these may have resulted in.
+>> -	 *
+>> -	 * Then we update the task counts according to the state
+>> +	 * First we update the task counts according to the state
+>>  	 * change requested through the @clear and @set bits.
+>> +	 *
+>> +	 * Then if the cgroup PSI stats accounting enabled, we
+>> +	 * assess the aggregate resource states this CPU's tasks
+>> +	 * have been in since the last change, and account any
+>> +	 * SOME and FULL time these may have resulted in.
+>>  	 */
+>>  	write_seqcount_begin(&groupc->seq);
+>>  
+>> -	record_times(groupc, now);
+>> -
+>>  	/*
+>>  	 * Start with TSK_ONCPU, which doesn't have a corresponding
+>>  	 * task count - it's just a boolean flag directly encoded in
+>> @@ -750,6 +750,14 @@ static void psi_group_change(struct psi_group *group, int cpu,
+>>  		if (set & (1 << t))
+>>  			groupc->tasks[t]++;
+>>  
+>> +	if (!group->enabled) {
+>> +		if (groupc->state_mask & (1 << PSI_NONIDLE))
+>> +			record_times(groupc, now);
+> 
+> Why record the nonidle time? It's only used for aggregation, which is
+> stopped as well.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+I'm considering of this situation: disable at t2 and re-enable at t3
 
-gcc tested configs:
-um                             i386_defconfig
-um                           x86_64_defconfig
-arm64                            allyesconfig
-arm                                 defconfig
-arm                              allyesconfig
-csky                              allnoconfig
-alpha                             allnoconfig
-arc                               allnoconfig
-riscv                             allnoconfig
-x86_64                              defconfig
-x86_64                           allyesconfig
-x86_64                               rhel-8.3
-xtensa                  nommu_kc705_defconfig
-riscv                    nommu_k210_defconfig
-x86_64               randconfig-a006-20220815
-x86_64               randconfig-a003-20220815
-x86_64               randconfig-a005-20220815
-x86_64               randconfig-a004-20220815
-x86_64               randconfig-a001-20220815
-x86_64               randconfig-a002-20220815
-i386                 randconfig-a001-20220815
-i386                 randconfig-a005-20220815
-i386                 randconfig-a004-20220815
-i386                 randconfig-a006-20220815
-i386                 randconfig-a003-20220815
-i386                 randconfig-a002-20220815
-s390                       zfcpdump_defconfig
-powerpc                 mpc8540_ads_defconfig
-x86_64                           rhel-8.3-kvm
-x86_64                          rhel-8.3-func
-x86_64                           rhel-8.3-syz
-x86_64                    rhel-8.3-kselftests
-x86_64                         rhel-8.3-kunit
-sh                            hp6xx_defconfig
-powerpc                   currituck_defconfig
-powerpc                           allnoconfig
-mips                             allyesconfig
-powerpc                          allmodconfig
-sh                               allmodconfig
-m68k                             allyesconfig
-m68k                             allmodconfig
-arc                              allyesconfig
-alpha                            allyesconfig
-i386                             allyesconfig
-i386                                defconfig
-powerpc              randconfig-c003-20220815
-i386                 randconfig-c001-20220815
-powerpc                     redwood_defconfig
-powerpc                     sequoia_defconfig
-ia64                      gensparse_defconfig
-arm                           corgi_defconfig
-sh                        sh7785lcr_defconfig
-arm                      integrator_defconfig
-sh                            shmin_defconfig
-xtensa                              defconfig
-arm                         at91_dt_defconfig
-m68k                        m5307c3_defconfig
-m68k                            q40_defconfig
-arm                         s3c6400_defconfig
-powerpc                      makalu_defconfig
-arc                            hsdk_defconfig
-powerpc                    klondike_defconfig
-loongarch                           defconfig
-loongarch                         allnoconfig
-xtensa                         virt_defconfig
-powerpc                       eiger_defconfig
-arm                          iop32x_defconfig
-riscv                    nommu_virt_defconfig
-riscv                          rv32_defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-m68k                       m5208evb_defconfig
-m68k                         amcore_defconfig
-arc                           tb10x_defconfig
-i386                          debian-10.3-kvm
-i386                        debian-10.3-kunit
-i386                         debian-10.3-func
-arm                      footbridge_defconfig
-powerpc                     stx_gp3_defconfig
-nios2                               defconfig
-arm                         vf610m4_defconfig
+state1(t1) --> state2(t2) --> state3(t3)
 
-clang tested configs:
-i386                 randconfig-a011-20220815
-i386                 randconfig-a012-20220815
-i386                 randconfig-a014-20220815
-i386                 randconfig-a016-20220815
-i386                 randconfig-a015-20220815
-i386                 randconfig-a013-20220815
-riscv                randconfig-r042-20220815
-s390                 randconfig-r044-20220815
-hexagon              randconfig-r045-20220815
-hexagon              randconfig-r041-20220815
-x86_64               randconfig-a011-20220815
-x86_64               randconfig-a016-20220815
-x86_64               randconfig-a013-20220815
-x86_64               randconfig-a015-20220815
-x86_64               randconfig-a014-20220815
-x86_64               randconfig-a012-20220815
-arm                        multi_v5_defconfig
-x86_64               randconfig-k001-20220815
-powerpc                          g5_defconfig
-powerpc                          allmodconfig
-powerpc                 mpc836x_mds_defconfig
-arm                       mainstone_defconfig
-arm                       aspeed_g4_defconfig
-powerpc                 mpc832x_rdb_defconfig
-x86_64                        randconfig-a005
-x86_64                        randconfig-a003
-x86_64                        randconfig-a001
-arm                       versatile_defconfig
+If aggregator has get_recent_times() in [t1, t2], groupc->times_prev[aggregator]
+will include that delta of (t - t1).
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Then re-enable at t3, the delta of (t3-t1) is discarded, may make that aggregator
+see times < groupc->times_prev[aggregator] ?
+
+Maybe I missed something, not sure whether this is a problem.
+
+
+> 
+>> @@ -1088,6 +1097,23 @@ void cgroup_move_task(struct task_struct *task, struct css_set *to)
+>>  
+>>  	task_rq_unlock(rq, task, &rf);
+>>  }
+>> +
+>> +void psi_cgroup_enable(struct psi_group *group, bool enable)
+>> +{
+>> +	struct psi_group_cpu *groupc;
+>> +	int cpu;
+>> +	u64 now;
+>> +
+>> +	if (group->enabled == enable)
+>> +		return;
+>> +	group->enabled = enable;
+>> +
+>> +	for_each_possible_cpu(cpu) {
+>> +		groupc = per_cpu_ptr(group->pcpu, cpu);
+>> +		now = cpu_clock(cpu);
+>> +		psi_group_change(group, cpu, 0, 0, now, true);
+> 
+> This loop deserves a comment, IMO.
+
+I add some comments as below, could you help take a look?
+
++
++void psi_cgroup_enable(struct psi_group *group, bool enable)
++{
++       int cpu;
++       u64 now;
++
++       if (group->enabled == enable)
++               return;
++       group->enabled = enable;
++
++       /*
++        * We use psi_group_change() to disable or re-enable the
++        * record_times(), test_state() loop and averaging worker
++        * in each psi_group_cpu of the psi_group, use .clear = 0
++        * and .set = 0 here since no task status really changed.
++        */
++       for_each_possible_cpu(cpu) {
++               now = cpu_clock(cpu);
++               psi_group_change(group, cpu, 0, 0, now, true);
++       }
++}
+
+Thanks!
+
