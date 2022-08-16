@@ -1,44 +1,51 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v7 9/9] blk-throttle: clean up flag 'THROTL_TG_PENDING'
-Date: Tue, 16 Aug 2022 10:14:10 -1000
-Message-ID: <Yvv6kk/RD5LT+3dk@slm.duckdns.org>
-References: <20220802140415.2960284-1-yukuai1@huaweicloud.com>
- <20220802140415.2960284-10-yukuai1@huaweicloud.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v5 3/3] cgroup/cpuset: Keep user set cpus affinity
+Date: Tue, 16 Aug 2022 10:15:36 -1000
+Message-ID: <Yvv66EWygCwHUCqy@slm.duckdns.org>
+References: <20220816192734.67115-1-longman@redhat.com>
+ <20220816192734.67115-4-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc;
-        bh=On1R2Y8AoucYEJFBb7wUMfr4hWcYeJkV168ieP6Z2g4=;
-        b=KCSRHVGOwuHJOs5RySQuX1ydgSX8WoQhwhNOSug+NPzjoTuHqcmpa9cH3RYLlUCMVT
-         +uh87JahRJ4IuLXxnNILjXvjGSyG5KWEd+O4+tB0Nz+Ufx4YOtRwO6+nd7/lmF6SCpyT
-         Q4oYoaelxxzQ4prHEyPmUK9joLJGMgVdmZZhssaZRscUjX9kxZABaACsWyI7ptN8wR+4
-         BpIb4NHASyZdMM1tn9EgkSCQFJv+XuPW04lPWOUw4gZBgzVEPJX3E8jETyiYb1PF0Fkd
-         1zf8OJ2VXIblEtXnpZKTxAKUbnqDt5f7CvSROs/RIvvbEw240Qe2bnbz80aOm5OrGfi/
-         xh3A==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=zU1X1POINU9AFqquPUG2+wIDvwycYABzLVLgeZNxxE0=;
+        b=e3Ei/n53VysaXj/X8x6hxVU3orxvP+NRLitVxM6miL6Z2bplRXrj59msWPDEv+TpZ0
+         2yl6HS2NFS2NRG56vvkbWtxmHmtoPAWCYx2/I5NaQT20scQ8a/Du/5ipfD0JHD6EIThU
+         b5LAgm7F2nRktClrucEeVGHdY2V48Ab3VWlkIfVCOAAmrL8c9PA/2N6l5fzSwQoWHrd0
+         jGWz1XJ3OIkjLF1qqX1ue8vcvlPz1ljf5KX7n4xKC1MTXYaIpmO7xyf0jq93o0CqGe3M
+         w1I3TKlJyXv9XsUfC+G6xivbZCl63jTICYtJVH8CizE3buHBcH3s8XiMU7BN16NA5zap
+         pq8w==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20220802140415.2960284-10-yukuai1@huaweicloud.com>
+In-Reply-To: <20220816192734.67115-4-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: mkoutny@suse.com, axboe@kernel.dk, ming.lei@redhat.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Tue, Aug 02, 2022 at 10:04:15PM +0800, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> All related operations are inside 'queue_lock', there is no need to use
-> the flag, we only need to make sure throtl_enqueue_tg() is called when
-> the first bio is throttled, and throtl_dequeue_tg() is called when the
-> last throttled bio is dispatched. There are no functional changes in
-> this patch.
+On Tue, Aug 16, 2022 at 03:27:34PM -0400, Waiman Long wrote:
+> +static int cpuset_set_cpus_allowed_ptr(struct task_struct *p,
+> +				       const struct cpumask *mask)
+> +{
+> +	cpumask_var_t new_mask;
+> +	int ret;
+> +
+> +	if (!READ_ONCE(p->user_cpus_ptr)) {
+> +		ret = set_cpus_allowed_ptr(p, mask);
+> +		/*
+> +		 * If user_cpus_ptr becomes set now, we are racing with
+> +		 * a concurrent sched_setaffinity(). So use the newly
+> +		 * set user_cpus_ptr and retry again.
+> +		 *
+> +		 * TODO: We cannot detect change in the cpumask pointed to
+> +		 * by user_cpus_ptr. We will have to add a sequence number
+> +		 * if such a race needs to be addressed.
+> +		 */
 
-I don't know whether this is better or not. It's minutely less lines of code
-but also makes the code a bit more fragile. I'm ambivalent. At any rate,
-please move these trivial patches to the head of the series or post them
-separately.
+This is too ugly and obviously broken. Let's please do it properly.
 
 Thanks.
 
