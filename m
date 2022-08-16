@@ -1,33 +1,33 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-6.0-fixes] BUILD SUCCESS
- d7ae5818c3fa3007dee13f9d99832e7f26b8bc44
-Date: Tue, 16 Aug 2022 20:01:54 +0800
-Message-ID: <62fb8732.vB4nOrDPMW+idgiE%lkp@intel.com>
+Subject: [tj-cgroup:for-6.1] BUILD SUCCESS
+ 7f203bc89eb66d6afde7eae91347fc0352090cc3
+Date: Tue, 16 Aug 2022 20:05:11 +0800
+Message-ID: <62fb87f7.ev0O+WhLKQuzdHyI%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1660651376; x=1692187376;
+  t=1660651556; x=1692187556;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=LSxnJcAMCsYnsaO3SVOY/nADDqSF9Jr94eINho5GFQc=;
-  b=Q6KPbhTtd/QHD8W2XdHWums8FyJjLTUTxqG/cGYd+yrrNQmm15Eu7CdE
-   2+qVYbMN1a8kwqCWkfk9Q2ckAG9CZVwRCUU/5FM3HnymhidqGOSJdmvB0
-   OzJatApQKyETsPcmuLXmT3c3YjhPFzOq5JK2cu/cW5UqamwT5vNAlD8WB
-   9D2WMRsfxF4gaiu59gYvgVGgaim4G2V7ddbt5Yqt6HCu6k6qUNFfawKXL
-   BCGbQLp851BHqAaM092KW68yRrhRdpSp0LBEn2eYBL/YKbf8G0+xVf7co
-   1kOVvTj6xgC9YP8N6cCwrLorhkLxRwG7dp6SW8+u5KJLRb6CC7/Y8KLhA
-   w==;
+  bh=Ao5tAKMATYIlCAWYSMy9a0wQ8v63GMU1EE+8N7QQoHo=;
+  b=awaxVp/PO2EGYn3LJ5ixSwN9GWSnWaD4pXIFJ+TrFiKNGWEA5iDKFCZu
+   a208v8Vd5dYmAt0AXJSJuN7a2J2jaKGnsr2QEnTZpds/7Fu90EjY2GRN2
+   I3o7ATIwZNPXqO8gKKD0H8mWpgWhNgqycMds1l+r9WU8Y75N4vnclecdm
+   GbdnNV3MSminRVq2TymBpF/WZRvNW1y4NYdpXLp8E88DG08obucnBKcSA
+   OKYMX00hLqBdQDRHV27AWOUXDGxy2uU7619kUX9QV4C4QvmWLIvpVP/Ou
+   2SSbZtkTGsycyOg8p+BAnYtfdRgEpFesPW6tTDUonLPtNAkZetEmpM359
+   g==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.0-fixes
-branch HEAD: d7ae5818c3fa3007dee13f9d99832e7f26b8bc44  sched/psi: Remove redundant cgroup_psi() when !CONFIG_CGROUPS
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.1
+branch HEAD: 7f203bc89eb66d6afde7eae91347fc0352090cc3  cgroup: Replace cgroup->ancestor_ids[] with ->ancestors[]
 
-elapsed time: 725m
+elapsed time: 728m
 
 configs tested: 108
 configs skipped: 3
@@ -36,8 +36,8 @@ The following configs have been built successfully.
 More configs may be tested in the coming days.
 
 gcc tested configs:
-um                           x86_64_defconfig
 um                             i386_defconfig
+um                           x86_64_defconfig
 arm64                            allyesconfig
 arm                                 defconfig
 arm                              allyesconfig
