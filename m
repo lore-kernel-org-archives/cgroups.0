@@ -1,41 +1,41 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v7 5/9] blk-throttle: improve handling of re-entered bio
- for bps limit
-Date: Tue, 16 Aug 2022 10:02:24 -1000
-Message-ID: <Yvv30FjQMcLnC+aB@slm.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v7 6/9] blk-throttle: use 'READ/WRITE' instead of '0/1'
+Date: Tue, 16 Aug 2022 10:03:16 -1000
+Message-ID: <Yvv4BOx92l20VqD1@slm.duckdns.org>
 References: <20220802140415.2960284-1-yukuai1@huaweicloud.com>
- <20220802140415.2960284-6-yukuai1@huaweicloud.com>
+ <20220802140415.2960284-7-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc;
-        bh=O9E2tV5Eqs8B8X15RAsfJgS9BzNTXZL8afuu3Y2YeCQ=;
-        b=VdvdhuNgrENNkEhNdbQw5mkcYIDKMm6VZZaymqscCs3nYQeDbAeEYrugm2EjVWv7JE
-         0G3Wwz8I348ukIAY2KsK0JBYB29l4gr8tFHK8cgpCxz8mzj1YrrVaqF+8SU+J3JL5D6d
-         uxKSrGLmjm4m139pZoUo+RJD2jQQGrz0AC6hfZH4KVrKWXkIaC6Pnu3OwEYlg52ZddEF
-         ZwFUmMmE9Glr6kwNxSqJPx1WbYNnzzE8sDSMZRjMWoT9vCRsYQvfa4VoTtsdsrzKvEoe
-         dHLUE0doTB27/OExjwPqW8rFoQ0aBxOOJH4Xdo3RIV6jI5krIPgjDC8C6Ly5DQ7O91Nn
-         EQmw==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=iu5TF+HIlWiXRw5i84jKcV9q+7psfaQE0MbUzyZYC7E=;
+        b=O3oVKSvWFx+BJ+PtWLrwXiOht9Qt4PcjXLTlznB0lOSM1vPpC8l/Hf/u8Qp1CLrLzX
+         g4roEEdbTsG4xNqJtyg6mHgyjUMegIeqRw3SK5BhxUd8LoNPbuKU/Iki8KPxjCI8yb7D
+         l3xAVlPRkgATEu7i0iRii3EsRrgZFNGxjZAfg6YSx5Pg8nET3PtYtHsvHxYAZ/TQ185k
+         H7K+VFmZLr3JPlNSY7uW8aBF7L9uxpWzf4eaAcP3SAYjeTCIxXEQlQCT5LA1raTx8M3w
+         fmbC1dqRezdDDbarDLCZ7mvNwUOqEFVcw/6l4v14+b15vnnGpOK9X2OpRhKM9QhR1Prp
+         WVUw==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20220802140415.2960284-6-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+In-Reply-To: <20220802140415.2960284-7-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Cc: mkoutny-IBi9RG/b67k@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: mkoutny@suse.com, axboe@kernel.dk, ming.lei@redhat.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
 
-On Tue, Aug 02, 2022 at 10:04:11PM +0800, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+On Tue, Aug 02, 2022 at 10:04:12PM +0800, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
 > 
-> Currently, if new slice is started while bio is re-entered, such bio
-> will count multiple times for bps limit. Since 'bytes_skipped'
-> represents how many bytes will be skipped while dispatching bios, which
-> can handle that case, increasing it instead of decreasing 'bytes_disp'.
+> Make the code easier to read, like everywhere else.
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> Acked-by: Tejun Heo <tj@kernel.org>
 
-The same thing. I think we're working around the problem in the wrong place.
+Let's float trivial acked patches to the front so that they can applied
+without waiting for the rest of the series.
 
 Thanks.
 
