@@ -1,28 +1,51 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH -next 0/3] bfq simple cleanups
-Date: Tue, 16 Aug 2022 09:56:28 +0800
-Message-ID: <20220816015631.1323948-1-yukuai1@huaweicloud.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: [PATCH -next 2/3] block, bfq: remove useless checking in bfq_put_queue()
+Date: Tue, 16 Aug 2022 09:56:30 +0800
+Message-ID: <20220816015631.1323948-3-yukuai1@huaweicloud.com>
+References: <20220816015631.1323948-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20220816015631.1323948-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: jack-AlSwsSmVLrQ@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: jack@suse.cz, axboe@kernel.dk, paolo.valente@linaro.org
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
 
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Yu Kuai <yukuai3@huawei.com>
 
-Yu Kuai (3):
-  block: bfq: remove unused functions
-  block, bfq: remove useless checking in bfq_put_queue()
-  block, bfq: remove useless parameter for bfq_add/del_bfqq_busy()
+'bfqq->bfqd' is ensured to set in bfq_init_queue(), and it will never
+change afterwards.
 
- block/bfq-cgroup.c  |  5 -----
- block/bfq-iosched.c | 14 ++++++--------
- block/bfq-iosched.h | 18 ++++++++++--------
- block/bfq-wf2q.c    |  9 ++++++---
- 4 files changed, 22 insertions(+), 24 deletions(-)
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ block/bfq-iosched.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index c740b41fe0a4..f39067389b2b 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -5255,9 +5255,7 @@ void bfq_put_queue(struct bfq_queue *bfqq)
+ 	struct hlist_node *n;
+ 	struct bfq_group *bfqg = bfqq_group(bfqq);
+ 
+-	if (bfqq->bfqd)
+-		bfq_log_bfqq(bfqq->bfqd, bfqq, "put_queue: %p %d",
+-			     bfqq, bfqq->ref);
++	bfq_log_bfqq(bfqq->bfqd, bfqq, "put_queue: %p %d", bfqq, bfqq->ref);
+ 
+ 	bfqq->ref--;
+ 	if (bfqq->ref)
+@@ -5321,7 +5319,7 @@ void bfq_put_queue(struct bfq_queue *bfqq)
+ 		hlist_del_init(&item->woken_list_node);
+ 	}
+ 
+-	if (bfqq->bfqd && bfqq->bfqd->last_completed_rq_bfqq == bfqq)
++	if (bfqq->bfqd->last_completed_rq_bfqq == bfqq)
+ 		bfqq->bfqd->last_completed_rq_bfqq = NULL;
+ 
+ 	kmem_cache_free(bfq_pool, bfqq);
 -- 
 2.31.1
 
