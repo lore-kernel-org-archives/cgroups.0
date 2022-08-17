@@ -1,73 +1,110 @@
-From: Chengming Zhou <zhouchengming@bytedance.com>
-Subject: Re: [PATCH v2 00/10] sched/psi: some optimization and extension
-Date: Wed, 17 Aug 2022 23:19:18 +0800
-Message-ID: <42c6d11d-d68a-e869-375e-550c495be5bb@bytedance.com>
-References: <20220808110341.15799-1-zhouchengming@bytedance.com>
- <20220815132514.GB22640@blackbody.suse.cz>
- <08ec9c4f-80b2-f731-aa8b-fb4e852ece25@bytedance.com>
+From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Subject: [PATCH 6/9] mm/memcontrol: Replace the PREEMPT_RT conditionals
+Date: Wed, 17 Aug 2022 18:27:00 +0200
+Message-ID: <20220817162703.728679-7-bigeasy@linutronix.de>
+References: <20220817162703.728679-1-bigeasy@linutronix.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc;
-        bh=2Dzsz0z2prfhgcbdQayKeKRlLfrKQM5D6pSVBtZ7THM=;
-        b=GCmgVkz+4yjg/OIcr2ND13CCDmdSh+WHCUT6HE9iMQmhjE4cFo3stnG1YrZoN7u2jA
-         X50ubaDBe2N1zPHvWHi9l/NTCLsojyti+EbEBmECP0yxN9mvcFwnCZX6U5UqWeZGV4vd
-         UCp9Jj4DkuFnJ2uB+xOIyniJjwYfbdnuS0eTVMFLTlWm6kt96GEZeZSsspDqrubXzuck
-         DUXXm+Jxw/p/0xP9Atph6ZbCIOrc4E7iEKFavcTiP8r0rI29yFs4MdI82C1dJhvpqOGK
-         /2v7aN9fekT9Dl2kwXvNX5ouI+kmQ6XKxIBpmWB8XiS2dvIP6Annb8vwO7R2MwF9gMdK
-         ncag==
-Content-Language: en-US
-In-Reply-To: <08ec9c4f-80b2-f731-aa8b-fb4e852ece25@bytedance.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1660753657;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=icKYkzOEkU10wqYj/AO1hlieqfsCO6opQIYue93MICc=;
+        b=WUwxVW+uGIaO0szg7BxOu1wCzapAwDdXZYNPFf3kiI2xBtu8Es480fO/5T71TMYiQKTjL2
+        Y5lWxIQqJ7x7BoSnhKaFZCzRhG7+8yHeQ5/tmMMThFpP2L1agJ4szHQY5JVMPUakod0IbE
+        yIc6Gl3i758gJbuMjFnB7KmeyFMZ5xJ0mfQb/Ikck/iVjEeodnOdRlmZ/pr1p0eX5sgM4R
+        M4paCBlURfexAPIOmkPU+fjGxjbUG3Dnqp+YkiX1A4mHylwtylhelH9PtNbQGgVaw0NytL
+        acYvZri+GlxU9tb6ucjTkjxdrXJYjietaE0V6tqA4Eq9vmaflVkD4q9k8U95TQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1660753657;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=icKYkzOEkU10wqYj/AO1hlieqfsCO6opQIYue93MICc=;
+        b=500tFezzQJcGWrboXp6CHY0SHvmE+zDVA//pAXoHOs0Jh0IxU+Aa1gSbSy/Lv6WZU3qbC3
+        94vz4DsO75E0UxCQ==
+In-Reply-To: <20220817162703.728679-1-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
-Cc: hannes@cmpxchg.org, tj@kernel.org, corbet@lwn.net, surenb@google.com, mingo@redhat.com, peterz@infradead.org, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com
+Content-Type: text/plain; charset="us-ascii"
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
-On 2022/8/16 22:01, Chengming Zhou wrote:
-> On 2022/8/15 21:25, Michal Koutn=C3=BD wrote:
->> On Mon, Aug 08, 2022 at 07:03:31PM +0800, Chengming Zhou <zhouchengming@=
-bytedance.com> wrote:
->>> This patch series are some optimization and extension for PSI,
->>
->> BTW do you have some numbers/example how much these modifications save
->> when aggregated together?
->>
+From: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
-Sorry about delay...
+Use VM_WARN_ON_IRQS_ENABLED() and preempt_disable/enable_nested() to
+replace the CONFIG_PREEMPT_RT #ifdeffery.
 
-Performance test using mmtests/config-scheduler-perfpipe in /user.slice/use=
-r-0.slice/session-4.scope
+Signed-off-by: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+---
+ mm/memcontrol.c | 19 ++++++-------------
+ 1 file changed, 6 insertions(+), 13 deletions(-)
 
-                                 next                patched       patched/=
-only-leaf
-Min       Time        8.82 (   0.00%)        8.49 (   3.74%)        8.00 ( =
-  9.32%)
-1st-qrtle Time        8.90 (   0.00%)        8.58 (   3.63%)        8.05 ( =
-  9.58%)
-2nd-qrtle Time        8.94 (   0.00%)        8.61 (   3.65%)        8.09 ( =
-  9.50%)
-3rd-qrtle Time        8.99 (   0.00%)        8.65 (   3.75%)        8.15 ( =
-  9.35%)
-Max-1     Time        8.82 (   0.00%)        8.49 (   3.74%)        8.00 ( =
-  9.32%)
-Max-5     Time        8.82 (   0.00%)        8.49 (   3.74%)        8.00 ( =
-  9.32%)
-Max-10    Time        8.84 (   0.00%)        8.55 (   3.20%)        8.04 ( =
-  9.05%)
-Max-90    Time        9.04 (   0.00%)        8.67 (   4.10%)        8.18 ( =
-  9.51%)
-Max-95    Time        9.04 (   0.00%)        8.68 (   4.03%)        8.20 ( =
-  9.26%)
-Max-99    Time        9.07 (   0.00%)        8.73 (   3.82%)        8.25 ( =
-  9.11%)
-Max       Time        9.12 (   0.00%)        8.89 (   2.54%)        8.27 ( =
-  9.29%)
-Amean     Time        8.95 (   0.00%)        8.62 *   3.67%*        8.11 * =
-  9.43%*
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b69979c9ced5c..d35b6fa560f0a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -597,25 +597,18 @@ static u64 flush_next_time;
+  */
+ static void memcg_stats_lock(void)
+ {
+-#ifdef CONFIG_PREEMPT_RT
+-      preempt_disable();
+-#else
+-      VM_BUG_ON(!irqs_disabled());
+-#endif
++	preempt_disable_nested();
++	VM_WARN_ON_IRQS_ENABLED();
+ }
+=20
+ static void __memcg_stats_lock(void)
+ {
+-#ifdef CONFIG_PREEMPT_RT
+-      preempt_disable();
+-#endif
++	preempt_disable_nested();
+ }
+=20
+ static void memcg_stats_unlock(void)
+ {
+-#ifdef CONFIG_PREEMPT_RT
+-      preempt_enable();
+-#endif
++	preempt_enable_nested();
+ }
+=20
+ static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
+@@ -715,7 +708,7 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, en=
+um node_stat_item idx,
+ 	 * interrupt context while other caller need to have disabled interrupt.
+ 	 */
+ 	__memcg_stats_lock();
+-	if (IS_ENABLED(CONFIG_DEBUG_VM) && !IS_ENABLED(CONFIG_PREEMPT_RT)) {
++	if (IS_ENABLED(CONFIG_DEBUG_VM)) {
+ 		switch (idx) {
+ 		case NR_ANON_MAPPED:
+ 		case NR_FILE_MAPPED:
+@@ -725,7 +718,7 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, en=
+um node_stat_item idx,
+ 			WARN_ON_ONCE(!in_task());
+ 			break;
+ 		default:
+-			WARN_ON_ONCE(!irqs_disabled());
++			VM_WARN_ON_IRQS_ENABLED();
+ 		}
+ 	}
+=20
+--=20
+2.37.2
 
-
-Thanks!
