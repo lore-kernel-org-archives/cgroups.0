@@ -1,67 +1,61 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v7 1/9] blk-throttle: fix that io throttle can only work
- for single bio
-Date: Wed, 17 Aug 2022 07:50:36 -1000
-Message-ID: <Yv0qbDR+cxKeZ3nD@slm.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v7 4/9] blk-throttle: fix io hung due to configuration
+ updates
+Date: Wed, 17 Aug 2022 07:52:45 -1000
+Message-ID: <Yv0q7T5Eg6MzOIuU@slm.duckdns.org>
 References: <20220802140415.2960284-1-yukuai1@huaweicloud.com>
- <20220802140415.2960284-2-yukuai1@huaweicloud.com>
- <Yvvx+/d2+OMROUOe@slm.duckdns.org>
- <712e0f29-94ba-d3d3-ce21-cba4d6092008@huaweicloud.com>
+ <20220802140415.2960284-5-yukuai1@huaweicloud.com>
+ <Yvv3jcycOguuEbA3@slm.duckdns.org>
+ <215b4842-c09f-d622-7127-c8b1d9ce3aa9@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc;
-        bh=pY3XHrB+Wi3bKxfBpJp50GFS99FF73DUvD5Y05CzuoI=;
-        b=IHO0SHseMzeS46BS8DB8qYHNx/9K9Po2jDjannSsFW2u2SxIKIlUWdtLYliYqIwuAL
-         RSHh9vvEhqVGPqkSk96CH9Z26mDMkYksVRag3woPYyGSI+AWvc/XeeEFsznYNqhTWPjx
-         G01h0D/sR6Mz1fDC0eIZM4N4oID0PT/CS75Rg0jXj+Bjl8W8J6ymnhozLu9BdIVnZkKN
-         tBZzWaKRxMnu22tL6TNYFspubTCbaM1VaVMEqhw4pw6LNCKtq6x4kaL7MP3PTw72htYo
-         Y6XS0hjYg6M/LBS/V4fMQ56/tQdgJPS3WiGpXVgPZDFn4EAsjB0kXxKt8UAK0mQ5uxlk
-         12PQ==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=OSADlFbIj2e9HqyRVtp14PL1Xr6rNvJVCrKar0E+Zk8=;
+        b=Zo40/TjPDHiWeNSjJknVi5F5cx4JHD2EGWguUAk4iAmlDsu/4A7LpbnUsr/85DnZrg
+         cNVsm3cOlYXqTW8jVChsuOr7xhFKyi+9lk2ZNwU09JWHWHIb/oKc0DoVmlV0NZvYUHnm
+         Qymufs9T4X3vDGdiuoeLG0Bo/vBqVPBJ607NDNvmv90r2CrohZAKj2yfXaB39sDXC7q4
+         YKNIfKMkeu/DQx5fq4gB+ou1zizz/7DxAYUADn+38nUmQvvl1SZx7VJCseh6RNsRoYY+
+         jr0SD74JXBFmuez17lcEPwJZTwYvN4rq++uouH/sBEsaA0sYYyZ7xD7gAIhOAm89OD7w
+         hoYw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <712e0f29-94ba-d3d3-ce21-cba4d6092008@huaweicloud.com>
+In-Reply-To: <215b4842-c09f-d622-7127-c8b1d9ce3aa9-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: mkoutny@suse.com, axboe@kernel.dk, ming.lei@redhat.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: mkoutny-IBi9RG/b67k@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Hello,
-
-On Wed, Aug 17, 2022 at 09:13:38AM +0800, Yu Kuai wrote:
-> > So, as a fix for the immediate problem, I guess this might do but this feels
-> > really fragile. How can we be certain that re-entering only happens because
-> > of splitting? What if future core development changes that? It seems to be
-> > solving the problem in the wrong place. Shouldn't we flag the bio indicating
-> > that it's split when we're splitting the bio so that we only limit them for
-> > iops in the first place?
->
-> Splited bio is tracked in __bio_clone:
-
-As the word is used in commit messages and comments, the past perfect form
-of the verb "split" is "split". It looks like "splitted" is used in rare
-cases but dictionary says it's an archaic form.
-
-> if (bio_flagged(bio_src, BIO_THROTTLED))
-> 	bio_set_flag(bio, BIO_THROTTLED);
+On Wed, Aug 17, 2022 at 09:30:30AM +0800, Yu Kuai wrote:
+> > Would it be easier if the fields were signed? It's fragile and odd to
+> > explain "these are unsigned but if they underflow they behave just like
+> > signed when added" when they can just be signed. Also, I have a hard time
+> > understand what "preempt" means above.
 > 
-> And currenty, the iops limit and bps limit are treated differently,
-> however there are only one flag 'BIO_THROTTLED' and they can't be
-> distinguished.
-> 
-> Perhaps I can use two flags, for example BIO_IOPS_THROTTLED and
-> BIO_BPS_THROTTLED, this way only iops limit can be handled and bps
-> limit can be skipped for splited bio.
-> 
-> What do you think?
+> I think preempt shound never happen based on current FIFO
+> implementation, perhaps
 
-I think the code would be a lot more intuitive and less fragile if we used
-two flags but the bits in the bi_flags field are a scarce resource
-unfortunately. Even then, I think the right thing to do here is using two
-flags.
+Can you elaborate what "preempt" is?
+
+> > > +	if (bps_limit != U64_MAX)
+> > > +		tg->bytes_skipped[rw] +=
+> > > +			calculate_bytes_allowed(bps_limit, jiffy_elapsed) -
+> > > +			tg->bytes_disp[rw];
+> > > +	if (iops_limit != UINT_MAX)
+> > > +		tg->io_skipped[rw] +=
+> > > +			calculate_io_allowed(iops_limit, jiffy_elapsed) -
+> > > +			tg->io_disp[rw];
+> > 
+> > So, this is calculating the budgets to carry over. Can we name them
+> > accordingly? I don't know what "skipped" means.
+> 
+> Yeah, thanks for you advice, art of naming is a little hard for me...
+> How do you think about these name: extended_bytes/io_budget?
+
+How about carryover_{ios|bytes}?
 
 Thanks.
 
