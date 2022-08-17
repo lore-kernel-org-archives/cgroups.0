@@ -1,93 +1,39 @@
-From: Andrew Morton <akpm@linux-foundation.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Subject: Re: [PATCH v6 1/4] mm: add NR_SECONDARY_PAGETABLE to count
  secondary page table uses.
-Date: Wed, 17 Aug 2022 10:24:08 -0700
-Message-ID: <20220817102408.7b048f198a736f053ced2862@linux-foundation.org>
+Date: Wed, 17 Aug 2022 10:25:00 -0700
+Message-ID: <20220817102500.440c6d0a3fce296fdf91bea6@linux-foundation.org>
 References: <20220628220938.3657876-1-yosryahmed@google.com>
         <20220628220938.3657876-2-yosryahmed@google.com>
+        <YsdJPeVOqlj4cf2a@google.com>
+        <CAJD7tkYE+pZdk=-psEP_Rq_1CmDjY7Go+s1LXm-ctryWvUdgLA@mail.gmail.com>
+        <Ys3+UTTC4Qgbm7pQ@google.com>
+        <CAJD7tkY91oiDWTj5FY2Upc5vabsjLk+CBMNzAepXLUdF_GS11w@mail.gmail.com>
+        <CAJD7tkbc+E7f+ENRazf0SO7C3gR2bHiN4B0F1oPn8Pa6juAVfg@mail.gmail.com>
+        <Yvpir0nWuTsXz322@cmpxchg.org>
+        <CAJD7tkYJcsSvCUCkNgcWvi2Xoa3GDZk81p5GUptZzkOkrhrTWQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <kvm-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1660757050;
-        bh=h7rloNmTPwUDXGSYX5u3jVl/NrdFIyTwfIZuYDpyc+s=;
+        s=korg; t=1660757102;
+        bh=ZTD0yTCE3YoAij/5K0t2/ZUlwJCWY5Buw6REabl/WR8=;
         h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=SCu1HHR6yDn0wowMIHnbsEbhjw3fO1TLcBcRSyKUXhWF/dl/GDPzQvg9LYQvU2YWP
-         jBgUTXdC1VHSy6asKtLxxa4w4uLsVNSoZ57fahkuaNnkeeBRwR6GmBa/lfF6BHegwJ
-         BaN4hOiavyPxE2PiZVXnb/b8vqfCGE1FVzDXR9rk=
-In-Reply-To: <20220628220938.3657876-2-yosryahmed@google.com>
+        b=SC2J5w+BXqr7lkuRfY2QM2puWBjyj5GOP6h+wLPgx64dkkM+tCRVdWsIQbGiRCiIP
+         HS1DIM/JFDsLiNWXImyXnJAEql4l81hy1lSRe9YMugF7RDL9vmprjJPiL2ngIQK74F
+         NEO2ZMkx/eaYaCUlkqbMXLYhbvkPgc997CnqKEYY=
+In-Reply-To: <CAJD7tkYJcsSvCUCkNgcWvi2Xoa3GDZk81p5GUptZzkOkrhrTWQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Marc Zyngier <maz@kernel.org>, James Morse <james.morse@arm.com>, Alexandru Elisei <alexandru.elisei@arm.com>, Suzuki K Poulose <suzuki.poulose@arm.com>, Paolo Bonzini <pbonzini@redhat.com>, Sean Christopherson <seanjc@google.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Wanpeng Li <wanpengli@tencent.com>, Jim Mattson <jmattson@google.com>, Joerg Roedel <joro@8bytes.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Oliver Upton <oupton@google.com>, Huang@google.com, Shaoqin <shaoqin.huang@intel.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infrad
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Huang-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Shaoqin <shaoqin.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel@v>
 
-On Tue, 28 Jun 2022 22:09:35 +0000 Yosry Ahmed <yosryahmed@google.com> wrote:
+On Mon, 15 Aug 2022 08:39:23 -0700 Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 
-> We keep track of several kernel memory stats (total kernel memory, page
-> tables, stack, vmalloc, etc) on multiple levels (global, per-node,
-> per-memcg, etc). These stats give insights to users to how much memory
-> is used by the kernel and for what purposes.
-> 
-> Currently, memory used by kvm mmu is not accounted in any of those
-> kernel memory stats. This patch series accounts the memory pages
-> used by KVM for page tables in those stats in a new
-> NR_SECONDARY_PAGETABLE stat. This stat can be later extended to account
-> for other types of secondary pages tables (e.g. iommu page tables).
-> 
-> KVM has a decent number of large allocations that aren't for page
-> tables, but for most of them, the number/size of those allocations
-> scales linearly with either the number of vCPUs or the amount of memory
-> assigned to the VM. KVM's secondary page table allocations do not scale
-> linearly, especially when nested virtualization is in use.
-> 
-> >From a KVM perspective, NR_SECONDARY_PAGETABLE will scale with KVM's
-> per-VM pages_{4k,2m,1g} stats unless the guest is doing something
-> bizarre (e.g. accessing only 4kb chunks of 2mb pages so that KVM is
-> forced to allocate a large number of page tables even though the guest
-> isn't accessing that much memory). However, someone would need to either
-> understand how KVM works to make that connection, or know (or be told) to
-> go look at KVM's stats if they're running VMs to better decipher the stats.
-> 
-> Furthermore, having NR_PAGETABLE side-by-side with NR_SECONDARY_PAGETABLE
-> is informative. For example, when backing a VM with THP vs. HugeTLB,
-> NR_SECONDARY_PAGETABLE is roughly the same, but NR_PAGETABLE is an order
-> of magnitude higher with THP. So having this stat will at the very least
-> prove to be useful for understanding tradeoffs between VM backing types,
-> and likely even steer folks towards potential optimizations.
-> 
-> The original discussion with more details about the rationale:
-> https://lore.kernel.org/all/87ilqoi77b.wl-maz@kernel.org
-> 
-> This stat will be used by subsequent patches to count KVM mmu
-> memory usage.
+> Thanks a lot, Johannes! I haven't ifdeffed it yet so I'll send a v7
+> with a few nits and collect ACKs. Andrew, would you prefer me to
+> rebase on top of mm-unstable? Or will this go in through the kvm tree?
+> (currently it's based on an old-ish kvm/queue).
 
-Nits and triviata:
-
-> --- a/Documentation/filesystems/proc.rst
-> +++ b/Documentation/filesystems/proc.rst
-> @@ -977,6 +977,7 @@ Example output. You may not have all of these fields.
->      SUnreclaim:       142336 kB
->      KernelStack:       11168 kB
->      PageTables:        20540 kB
-> +    SecPageTables:         0 kB
->      NFS_Unstable:          0 kB
->      Bounce:                0 kB
->      WritebackTmp:          0 kB
-> @@ -1085,6 +1086,9 @@ KernelStack
->                Memory consumed by the kernel stacks of all tasks
->  PageTables
->                Memory consumed by userspace page tables
-> +SecPageTables
-> +              Memory consumed by secondary page tables, this currently
-> +	      currently includes KVM mmu allocations on x86 and arm64.
-
-Something happened to the whitespace there.
-
-> +			     "Node %d SecPageTables:  %8lu kB\n"
-> ...
-> +			     nid, K(node_page_state(pgdat, NR_SECONDARY_PAGETABLE)),
-
-The use of "sec" in the user-facing changes and "secondary" in the
-programmer-facing changes is irksome.  Can we be consistent?  I'd
-prefer "secondary" throughout.
-
+Through KVM is OK by me, assuming there'll be ongoing work which is
+dependent on this.
