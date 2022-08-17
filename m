@@ -1,173 +1,85 @@
-From: Peter Zijlstra <peterz@infradead.org>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Subject: Re: [PATCH v5 1/3] sched: Use user_cpus_ptr for saving user provided
  cpumask in sched_setaffinity()
-Date: Wed, 17 Aug 2022 10:41:55 +0200
-Message-ID: <Yvyp02LLIQQPs5d6@worktop.programming.kicks-ass.net>
+Date: Wed, 17 Aug 2022 10:46:28 +0200
+Message-ID: <Yvyq5GBtU+XxLSaP@worktop.programming.kicks-ass.net>
 References: <20220816192734.67115-1-longman@redhat.com>
  <20220816192734.67115-2-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=yYgdD4rk7WaTZnaGm+LJxzeI5X81LuPS6wWmTiHsp/k=; b=SMNBHb93eh1hbbMFyUTr7ac5Ri
-        rOPXm/wf5T9cyHmqLa9jbFWhVzbp1lHew9sjI6yKlENZnMjxhZkmR6OmzxNO/FN3FAwOpAYs/7CEN
-        jpuJzw7W5Pa6zWzqSjQr91FDSMV2W+EWl3dDk7bgnUNTKZqqBB2jYa7COlsf26CrgQNySnztCbpyN
-        cWKwwiSEGiQC/JqLu4b/g2xknOFSqJXuSzHEk0IiW+fGLqIDz+E9yfK7YqP48IBnTLOV4jsSfUb29
-        ww/qA/jpiKWEm04i3usK/Lrv19e6utZ2OYLHt9e3ui2XBh7Y0FSLj1l2xy3jPDXxayd3Ww6rQPOaB
-        R9xrmlmg==;
+        bh=CKeCiigKMtOdgr4YLuQq0s6tHiN60WT8O1gsyf1py6Y=; b=OYd1O3mEkB+wAABrc+5g7lt0dm
+        S+0AdbaoEm8UtVjwn+dC5BXqtsgv3oynpOR8By0PJCSCNJvzHZ5h940eGMSrNDeKiEukda2HZhArL
+        ze3zylI40u7KNiWAI161EbKzjOYT0kuCvfTd2aaVvxaqn91cFB5B9L4+bW7iNVxkAZ6pBlDDJG7I0
+        WV2+66RpxVyfHz/+acnMp4WoS0kV8qnsyhZ9vmZ4GQW4Wr4OL+jvPu8pWPu7/h/67pKyamyymVBSq
+        zvqfZCQIW6HxCFZQ3/Ma9XqACtBoXlNb43JuULRrCn6X3bXUU+6OTceIBiTR5FJQSz1Wl77gPBJi2
+        vtQYWo9Q==;
 Content-Disposition: inline
-In-Reply-To: <20220816192734.67115-2-longman@redhat.com>
+In-Reply-To: <20220816192734.67115-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Will Deacon <will@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
 On Tue, Aug 16, 2022 at 03:27:32PM -0400, Waiman Long wrote:
-> @@ -2981,25 +2969,21 @@ static int restrict_cpus_allowed_ptr(struct task_struct *p,
->  		goto err_unlock;
->  	}
->  
-> -	if (!cpumask_and(new_mask, &p->cpus_mask, subset_mask)) {
-> +
-> +	if (p->user_cpus_ptr)
-> +		not_empty = cpumask_and(new_mask, p->user_cpus_ptr, subset_mask);
-> +	else
-> +		not_empty = cpumask_and(new_mask, cpu_online_mask, subset_mask);
-> +
-> +	if (!not_empty) {
->  		err = -EINVAL;
->  		goto err_unlock;
->  	}
->  
-> -	/*
-> -	 * We're about to butcher the task affinity, so keep track of what
-> -	 * the user asked for in case we're able to restore it later on.
-> -	 */
-> -	if (user_mask) {
-> -		cpumask_copy(user_mask, p->cpus_ptr);
-> -		p->user_cpus_ptr = user_mask;
-> -	}
-> -
->  	return __set_cpus_allowed_ptr_locked(p, new_mask, 0, rq, &rf);
->  
->  err_unlock:
->  	task_rq_unlock(rq, p, &rf);
-> -	kfree(user_mask);
->  	return err;
->  }
->  
-> @@ -3049,34 +3033,27 @@ void force_compatible_cpus_allowed_ptr(struct task_struct *p)
->  }
+> @@ -8079,10 +8056,11 @@ int dl_task_check_affinity(struct task_struct *p, const struct cpumask *mask)
+>  #endif
 >  
 >  static int
-> -__sched_setaffinity(struct task_struct *p, const struct cpumask *mask);
-> +__sched_setaffinity(struct task_struct *p, const struct cpumask *mask, bool save_mask);
->  
->  /*
->   * Restore the affinity of a task @p which was previously restricted by a
-> - * call to force_compatible_cpus_allowed_ptr(). This will clear (and free)
-> - * @p->user_cpus_ptr.
-> + * call to force_compatible_cpus_allowed_ptr().
->   *
->   * It is the caller's responsibility to serialise this with any calls to
->   * force_compatible_cpus_allowed_ptr(@p).
->   */
->  void relax_compatible_cpus_allowed_ptr(struct task_struct *p)
+> -__sched_setaffinity(struct task_struct *p, const struct cpumask *mask)
+> +__sched_setaffinity(struct task_struct *p, const struct cpumask *mask, bool save_mask)
 >  {
-> -	struct cpumask *user_mask = p->user_cpus_ptr;
-> -	unsigned long flags;
-> +	const struct cpumask *user_mask = p->user_cpus_ptr;
+>  	int retval;
+>  	cpumask_var_t cpus_allowed, new_mask;
+> +	struct cpumask *user_mask = NULL;
+>  
+>  	if (!alloc_cpumask_var(&cpus_allowed, GFP_KERNEL))
+>  		return -ENOMEM;
+
+Please move that retval down so the variable declarations are properly
+ordered again.
+
+> @@ -8098,8 +8076,33 @@ __sched_setaffinity(struct task_struct *p, const struct cpumask *mask)
+>  	retval = dl_task_check_affinity(p, new_mask);
+>  	if (retval)
+>  		goto out_free_new_mask;
 > +
-> +	if (!user_mask)
-> +		user_mask = cpu_online_mask;
->  
->  	/*
-> -	 * Try to restore the old affinity mask. If this fails, then
-> -	 * we free the mask explicitly to avoid it being inherited across
-> -	 * a subsequent fork().
-> +	 * Try to restore the old affinity mask with __sched_setaffinity().
-> +	 * Cpuset masking will be done there too.
->  	 */
-> -	if (!user_mask || !__sched_setaffinity(p, user_mask))
-> -		return;
-> -
-> -	raw_spin_lock_irqsave(&p->pi_lock, flags);
-> -	user_mask = clear_user_cpus_ptr(p);
-> -	raw_spin_unlock_irqrestore(&p->pi_lock, flags);
-> -
-> -	kfree(user_mask);
-> +	__sched_setaffinity(p, user_mask, false);
->  }
->  
->  void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
+> +	/*
+> +	 * Save the user requested mask into user_cpus_ptr if save_mask set.
+> +	 * pi_lock is used for protecting user_cpus_ptr.
+> +	 */
+> +	if (save_mask && !p->user_cpus_ptr) {
+> +		user_mask = kmalloc(cpumask_size(), GFP_KERNEL);
+> +
+> +		if (!user_mask) {
+> +			retval = -ENOMEM;
+> +			goto out_free_new_mask;
+> +		}
+> +	}
+> +	if (save_mask) {
+> +		unsigned long flags;
+> +
+> +		raw_spin_lock_irqsave(&p->pi_lock, flags);
+> +		if (!p->user_cpus_ptr) {
+> +			p->user_cpus_ptr = user_mask;
+> +			user_mask = NULL;
+> +		}
+> +
+> +		cpumask_copy(p->user_cpus_ptr, mask);
+> +		raw_spin_unlock_irqrestore(&p->pi_lock, flags);
+> +	}
 
+How about:
 
-Would it not be simpler to write it something like so?
+	if (save_mask) {
+		if (!p->user_cpus_ptr) {
+			...
+		}
+		...
+	}
 
----
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 03053eebb22e..cdae4d50a588 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -2955,7 +2955,6 @@ static int restrict_cpus_allowed_ptr(struct task_struct *p,
- 	struct rq_flags rf;
- 	struct rq *rq;
- 	int err;
--	bool not_empty;
- 
- 	rq = task_rq_lock(p, &rf);
- 
-@@ -2969,13 +2968,7 @@ static int restrict_cpus_allowed_ptr(struct task_struct *p,
- 		goto err_unlock;
- 	}
- 
--
--	if (p->user_cpus_ptr)
--		not_empty = cpumask_and(new_mask, p->user_cpus_ptr, subset_mask);
--	else
--		not_empty = cpumask_and(new_mask, cpu_online_mask, subset_mask);
--
--	if (!not_empty) {
-+	if (!cpumask_and(new_mask, task_user_cpus(p), subset_mask)) {
- 		err = -EINVAL;
- 		goto err_unlock;
- 	}
-@@ -3044,16 +3037,11 @@ __sched_setaffinity(struct task_struct *p, const struct cpumask *mask, bool save
-  */
- void relax_compatible_cpus_allowed_ptr(struct task_struct *p)
- {
--	const struct cpumask *user_mask = p->user_cpus_ptr;
--
--	if (!user_mask)
--		user_mask = cpu_online_mask;
--
- 	/*
- 	 * Try to restore the old affinity mask with __sched_setaffinity().
- 	 * Cpuset masking will be done there too.
- 	 */
--	__sched_setaffinity(p, user_mask, false);
-+	__sched_setaffinity(p, task_user_cpus(p), false);
- }
- 
- void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 15eefcd65faa..426e9b64b587 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -1881,6 +1881,13 @@ static inline void dirty_sched_domain_sysctl(int cpu)
- #endif
- 
- extern int sched_update_scaling(void);
-+
-+static inline const struct cpumask *task_user_cpus(struct task_struct *p)
-+{
-+	if (!p->user_cpus_ptr)
-+		return cpus_possible_mask; /* &init_task.cpus_mask */
-+	return p->user_cpus_ptr;
-+}
- #endif /* CONFIG_SMP */
- 
- #include "stats.h"
+?
