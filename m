@@ -1,110 +1,117 @@
-From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: [PATCH 6/9] mm/memcontrol: Replace the PREEMPT_RT conditionals
-Date: Wed, 17 Aug 2022 18:27:00 +0200
-Message-ID: <20220817162703.728679-7-bigeasy@linutronix.de>
-References: <20220817162703.728679-1-bigeasy@linutronix.de>
+From: =?UTF-8?Q?Gra=C5=BEvydas_Ignotas?= <notasas-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: UDP rx packet loss in a cgroup with a memory limit
+Date: Wed, 17 Aug 2022 19:50:13 +0300
+Message-ID: <CANOLnOPeOi0gxYwd5+ybdv5w=RZEh5JakJPE9xgrSL1cecZHbw@mail.gmail.com>
+References: <CANOLnON11vzvVdyJfW+QJ36siWR4-s=HJ2aRKpRy7CP=aRPoSw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1660753657;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=icKYkzOEkU10wqYj/AO1hlieqfsCO6opQIYue93MICc=;
-        b=WUwxVW+uGIaO0szg7BxOu1wCzapAwDdXZYNPFf3kiI2xBtu8Es480fO/5T71TMYiQKTjL2
-        Y5lWxIQqJ7x7BoSnhKaFZCzRhG7+8yHeQ5/tmMMThFpP2L1agJ4szHQY5JVMPUakod0IbE
-        yIc6Gl3i758gJbuMjFnB7KmeyFMZ5xJ0mfQb/Ikck/iVjEeodnOdRlmZ/pr1p0eX5sgM4R
-        M4paCBlURfexAPIOmkPU+fjGxjbUG3Dnqp+YkiX1A4mHylwtylhelH9PtNbQGgVaw0NytL
-        acYvZri+GlxU9tb6ucjTkjxdrXJYjietaE0V6tqA4Eq9vmaflVkD4q9k8U95TQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1660753657;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=icKYkzOEkU10wqYj/AO1hlieqfsCO6opQIYue93MICc=;
-        b=500tFezzQJcGWrboXp6CHY0SHvmE+zDVA//pAXoHOs0Jh0IxU+Aa1gSbSy/Lv6WZU3qbC3
-        94vz4DsO75E0UxCQ==
-In-Reply-To: <20220817162703.728679-1-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc;
+        bh=ZzWIdft1LnhkRbZTFfhN1f7gdRwWYlGR0s/Ag8XFV2k=;
+        b=DeqC758FI7bRuS5XrOE1k7OVYHsd0L1EtiY14Q6VteXbHP6NAzcSVjte/26VPrlGNd
+         XZFDx3F/M+oNmg45xAMqyr3W+G1cul21ZpkuA2+7Ls5hQRWcq5FIyL6edMnp62aPSGvU
+         Vo6b0zgAsZVAcm3H+lVmHpJaQwKrL1/3Wxnk+kvUNE8HFK6YGIftHu2qcLtEpyWV866O
+         gwTkC/ULGLMwyUa0ri41udQjRtZ80oMaIV1Q18HOAp8Yk8HEEAy0NDNMfs/1y5g4QT3s
+         yA0uFCnKvjmkl/xnOUSJXGWcXEsP+Nz3Z5LCSRTi8hjz4OxqaDBDhyvqQ5aTVXs/pf1Z
+         nOiw==
+In-Reply-To: <CANOLnON11vzvVdyJfW+QJ36siWR4-s=HJ2aRKpRy7CP=aRPoSw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-From: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+On Tue, Aug 16, 2022 at 9:52 PM Gra=C5=BEvydas Ignotas <notasas-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> =
+wrote:
+> Basically, when there is git activity in the container with a memory
+> limit, other processes in the same container start to suffer (very)
+> occasional network issues (mostly DNS lookup failures).
 
-Use VM_WARN_ON_IRQS_ENABLED() and preempt_disable/enable_nested() to
-replace the CONFIG_PREEMPT_RT #ifdeffery.
+ok I've traced this and it's failing in try_charge_memcg(), which
+doesn't seem to be trying too hard because it's called from irq
+context.
 
-Signed-off-by: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
----
- mm/memcontrol.c | 19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
+Here is the backtrace:
+ <IRQ>
+ ? fib_validate_source+0xb4/0x100
+ ? ip_route_input_slow+0xa11/0xb70
+ mem_cgroup_charge_skmem+0x4b/0xf0
+ __sk_mem_raise_allocated+0x17f/0x3e0
+ __udp_enqueue_schedule_skb+0x220/0x270
+ udp_queue_rcv_one_skb+0x330/0x5e0
+ udp_unicast_rcv_skb+0x75/0x90
+ __udp4_lib_rcv+0x1ba/0xca0
+ ? ip_rcv_finish_core.constprop.0+0x63/0x490
+ ip_protocol_deliver_rcu+0xd6/0x230
+ ip_local_deliver_finish+0x73/0xa0
+ __netif_receive_skb_one_core+0x8b/0xa0
+ process_backlog+0x8e/0x120
+ __napi_poll+0x2c/0x160
+ net_rx_action+0x2a2/0x360
+ ? rebalance_domains+0xeb/0x3b0
+ __do_softirq+0xeb/0x2eb
+ __irq_exit_rcu+0xb9/0x110
+ sysvec_apic_timer_interrupt+0xa2/0xd0
+ </IRQ>
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b69979c9ced5c..d35b6fa560f0a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -597,25 +597,18 @@ static u64 flush_next_time;
-  */
- static void memcg_stats_lock(void)
- {
--#ifdef CONFIG_PREEMPT_RT
--      preempt_disable();
--#else
--      VM_BUG_ON(!irqs_disabled());
--#endif
-+	preempt_disable_nested();
-+	VM_WARN_ON_IRQS_ENABLED();
- }
-=20
- static void __memcg_stats_lock(void)
- {
--#ifdef CONFIG_PREEMPT_RT
--      preempt_disable();
--#endif
-+	preempt_disable_nested();
- }
-=20
- static void memcg_stats_unlock(void)
- {
--#ifdef CONFIG_PREEMPT_RT
--      preempt_enable();
--#endif
-+	preempt_enable_nested();
- }
-=20
- static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
-@@ -715,7 +708,7 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, en=
-um node_stat_item idx,
- 	 * interrupt context while other caller need to have disabled interrupt.
- 	 */
- 	__memcg_stats_lock();
--	if (IS_ENABLED(CONFIG_DEBUG_VM) && !IS_ENABLED(CONFIG_PREEMPT_RT)) {
-+	if (IS_ENABLED(CONFIG_DEBUG_VM)) {
- 		switch (idx) {
- 		case NR_ANON_MAPPED:
- 		case NR_FILE_MAPPED:
-@@ -725,7 +718,7 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, en=
-um node_stat_item idx,
- 			WARN_ON_ONCE(!in_task());
- 			break;
- 		default:
--			WARN_ON_ONCE(!irqs_disabled());
-+			VM_WARN_ON_IRQS_ENABLED();
- 		}
- 	}
-=20
---=20
-2.37.2
+Calling mem_cgroup_print_oom_meminfo() in such a case reveals:
 
+memory: usage 7812476kB, limit 7812500kB, failcnt 775198
+swap: usage 0kB, limit 0kB, failcnt 0
+Memory cgroup stats for
+/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-podb8f4f0e9_fb9=
+5_4f2d_8443_e6a78f235c9a.slice/docker-9e7cad93b2e0774d49148474989b41fe6d67a=
+5985d059d08d9d64495f1539a81.scope:
+anon 348016640
+file 7502163968
+kernel 146997248
+kernel_stack 327680
+pagetables 2224128
+percpu 0
+sock 4096
+vmalloc 0
+shmem 0
+zswap 0
+zswapped 0
+file_mapped 112041984
+file_dirty 1181028352
+file_writeback 2686976
+swapcached 0
+anon_thp 44040192
+file_thp 0
+shmem_thp 0
+inactive_anon 350756864
+active_anon 36864
+inactive_file 3614003200
+active_file 3888070656
+unevictable 0
+slab_reclaimable 143692600
+slab_unreclaimable 545120
+slab 144237720
+workingset_refault_anon 0
+workingset_refault_file 2318
+workingset_activate_anon 0
+workingset_activate_file 2318
+workingset_restore_anon 0
+workingset_restore_file 0
+workingset_nodereclaim 0
+pgfault 334152
+pgmajfault 1238
+pgrefill 3400
+pgscan 819608
+pgsteal 791005
+pgactivate 949122
+pgdeactivate 1694
+pglazyfree 0
+pglazyfreed 0
+zswpin 0
+zswpout 0
+thp_fault_alloc 709
+thp_collapse_alloc 0
+
+So it basically renders UDP inoperable because of disk cache. I hope
+this is not the intended behavior. Naturally booting with
+cgroup.memory=3Dnosocket solves this issue.
+
+Gra=C5=BEvydas
