@@ -1,48 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH bpf-next v2 00/12] bpf: Introduce selectable memcg for
- bpf map
-Date: Thu, 18 Aug 2022 12:33:02 -1000
-Message-ID: <Yv6+HlEzpNy8y5kT@slm.duckdns.org>
-References: <20220818143118.17733-1-laoar.shao@gmail.com>
- <Yv67MRQLPreR9GU5@slm.duckdns.org>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] sched, cpuset: Fix dl_cpu_busy() panic due to empty
+ cs->cpus_allowed
+Date: Fri, 19 Aug 2022 01:35:59 +0200
+Message-ID: <Yv7M3/L9SarNI56c@blackbook>
+References: <20220803015451.2219567-1-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc;
-        bh=YHQ4Wh5SK0V1LEg6WvbUjjafnUpUy0D2IL3Ade8VZXw=;
-        b=Xa18u0tB7HMzsnmKGxkVoZCzL7kLgnVNbrEM/pnut+g3QuGlZU8T82rRYMT+uH7JX8
-         mJ2vZoVMfZ7DeQ3N/hRq0QVoE0dHnDCC6jHkB69qMIcAnfLOTXLgyZGlTOdJ4eKUvXXw
-         4flHnx5l6ko15DdAn6q2TkKoxgnP4dUxXLL/EG6Sv5XUar7vSGs83fHEjEds6EMZiGtz
-         OUBPUoY96/cACPNVbxTxEcH679zbytL6ggf+FUTfKgSAuhsuxedQglqb7+rqBqR9FhJ4
-         LY0s3HpL/nWX/J45KMRDwAi5O0M0gueWwTXP3KDbK6EUtSzFPD5Sdz9+niAgDzYC3gNx
-         7x8Q==
-Sender: Tejun Heo <htejun@gmail.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1660865760; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=H6/rgO9HvIpeNmrFhx/uSlbjwCoyaLrdacgDNOTFngc=;
+        b=crwVJ8RpWCeHQxaFPbR63Suq6jo0KM/vc6yg567EIKjjInbysUmmLeMFIRidgKPPqHU4WZ
+        UFGXIP+90Xi2cmKHe24plOJCTyRQyUCWcJI7h4tSC9Zae5AMpNX1TUA2VfcZgTl99Giiav
+        C8ojR0N4WunTALT68TBda/cee4kyMmE=
 Content-Disposition: inline
-In-Reply-To: <Yv67MRQLPreR9GU5@slm.duckdns.org>
+In-Reply-To: <20220803015451.2219567-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yafang Shao <laoar.shao@gmail.com>
-Cc: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, sdf@google.com, haoluo@google.com, jolsa@kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, songmuchun@bytedance.com, akpm@linux-foundation.org, lizefan.x@bytedance.com, cgroups@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Aug 18, 2022 at 12:20:33PM -1000, Tejun Heo wrote:
-> We have the exact same problem for any resources which span multiple
-> instances of a service including page cache, tmpfs instances and any other
-> thing which can persist longer than procss life time. My current opinion is
+On Tue, Aug 02, 2022 at 09:54:51PM -0400, Waiman Long <longman-H+wXaHxf7aLQ=
+T0dZR+AlfA@public.gmane.org> wrote:
+> Fixes: 7f51412a415d ("sched/deadline: Fix bandwidth check/update when mig=
+rating tasks between exclusive cpusets")
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.o=
+rg>
+> ---
+>  include/linux/sched.h  | 2 +-
+>  kernel/cgroup/cpuset.c | 2 +-
+>  kernel/sched/core.c    | 8 +++++---
+>  3 files changed, 7 insertions(+), 5 deletions(-)
 
-To expand a bit more on this point, once we start including page cache and
-tmpfs, we now get entangled with memory reclaim which then brings in IO and
-not-yet-but-eventually CPU usage. Once you start splitting the tree like
-you're suggesting here, all those will break down and now we have to worry
-about how to split resource accounting and control for the same entities
-across two split branches of the tree, which doesn't really make any sense.
-
-So, we *really* don't wanna paint ourselves into that kind of a corner. This
-is a dead-end. Please ditch it.
-
-Thanks.
-
--- 
-tejun
+Good catch,
+Reviewed-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
