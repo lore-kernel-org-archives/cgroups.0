@@ -1,271 +1,47 @@
-From: Yafang Shao <laoar.shao@gmail.com>
-Subject: [PATCH bpf-next v2 12/12] bpf: Introduce selectable memcg for bpf map
-Date: Thu, 18 Aug 2022 14:31:18 +0000
-Message-ID: <20220818143118.17733-13-laoar.shao@gmail.com>
-References: <20220818143118.17733-1-laoar.shao@gmail.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v5 1/3] sched: Use user_cpus_ptr for saving user provided
+ cpumask in sched_setaffinity()
+Date: Thu, 18 Aug 2022 07:37:51 -0700
+Message-ID: <58f4533b-6d0e-dc5f-2b8c-986212598125@redhat.com>
+References: <20220816192734.67115-1-longman@redhat.com>
+ <20220816192734.67115-2-longman@redhat.com>
+ <YvymwlTkdsVDtmRB@worktop.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=64R3bxHMvv5+V0T/PDUTVz1Uk0VIs+H8eHbhqMNvmEQ=;
-        b=EX8ou0RTkSODLqaqCgCGl9TJKOPxlpSZvuMeBQIXCinFHIrXw9t+gJjdaOl1mdSXVT
-         FIAy96Vr2dV3mTuOnnHpKPLUiP9iI2Of1ABEgqlQg49YBMVR4yPV9qLCh5X0Fcn9hc+9
-         cl543oOVxhHqJyYddxl+ATvDR2FjVNUBymnWUayB/yeDtZtpbqdoWXZWgoZnRR5/ceUg
-         l6ajY8CycQHl70bSisAS55nOgS1iLAsM/DWjfN8EiJj9GAYQvLcJsjEZooxZ0KR84cQc
-         iu8CpiidQdVIJI3fOVPgpk6h2wy/3yjI4rkfhJA0KVBw+Y93nYe/m5zCOQRx7Ahtz1Xs
-         jhVA==
-In-Reply-To: <20220818143118.17733-1-laoar.shao@gmail.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1660833478;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=55iMMmbwkaAqw4I8aj14bQmLqWfqTrm37aZFBETpBEc=;
+        b=AXd06DJeCPoJ9Hwe1ARARheouGZU2j2KpSU3nHI2dajStUEwPoNf1ENqXQxPBA05Pko7ye
+        GiACcwVfz/LjyRFe9JuTw5lKnp/e8hUGLMVZZboaF4e29tK0B1chAnmjCoWk1BXXd3H/B5
+        NaqNAHScpANeeKO3PMR+9jRcrPejDk0=
+Content-Language: en-US
+In-Reply-To: <YvymwlTkdsVDtmRB-IIpfhp3q70z/8w/KjCw3T+5/BudmfyzbbVWyRVo5IupeoWH0uzbU5w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, sdf@google.com, haoluo@google.com, jolsa@kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, songmuchun@bytedance.com, akpm@linux-foundation.org, tj@kernel.org, lizefan.x@bytedance.com
-Cc: cgroups@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, linux-mm@kvack.org, Yafang Shao <laoar.shao@gmail.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-A new bpf attr memcg_fd is introduced for map creation. The map creation
-path in libbpf is changed consequently to set this attr.
+On 8/17/22 04:28, Peter Zijlstra wrote:
+> On Tue, Aug 16, 2022 at 03:27:32PM -0400, Waiman Long wrote:
+>
+>> This will be some changes in behavior for arm64 systems with asymmetric
+>> CPUs in some corner cases. For instance, if sched_setaffinity()
+>> has never been called and there is a cpuset change before
+>> relax_compatible_cpus_allowed_ptr() is called, its subsequent call will
+>> follow what the cpuset allows but not what the previous cpu affinity
+>> setting allows.
+> That's arguably a correctness fix, no? That is, the save/restore should
+> not have been allowed to revert to an earlier cpuset state.
 
-A new member memcg_fd is introduced into bpf attr of BPF_MAP_CREATE
-command, which is the fd of an opened cgroup directory. In this cgroup,
-the memory subsystem must be enabled. The valid memcg_fd must be a postive
-number, that means it can't be zero(a valid return value of open(2)). Once
-the kernel get the memory cgroup from this fd, it will set this memcg into
-bpf map, then all the subsequent memory allocation of this map will be
-charged to the memcg. The map creation paths in libbpf are also changed
-consequently.
+Yes, it is a correctness fix in a sense. I just want to highlight that 
+there will be some slight changes in behavior in some corner cases for 
+the arm64 arch.
 
-The usage of this new member as follows,
-	struct bpf_map_create_opts map_opts = {
-		.sz = sizeof(map_opts),
-	};
-	int memcg_fd, map_fd, old_fd;
-	int key, value;
-
-	memcg_fd = open("/sys/fs/cgroup/memory/bpf", O_DIRECTORY);
-	if (memcg_fd < 0) {
-		perror("memcg dir open");
-		return -1;
-	}
-
-	/* 0 is a invalid fd */
-	if (memcg_fd == 0) {
-		old_fd = memcg_fd;
-		memcg_fd = fcntl(memcg_fd, F_DUPFD_CLOEXEC, 3);
-		close(old_fd);
-		if (memcg_fd < 0) {
-			perror("fcntl");
-			return -1;
-		}
-	}
-
-	map_opts.memcg_fd = memcg_fd;
-	map_fd = bpf_map_create(BPF_MAP_TYPE_HASH, "map_for_memcg",
-				sizeof(key), sizeof(value),
-				1024, &map_opts);
-	if (map_fd <= 0) {
-		close(memcg_fd);
-		perror("map create");
-		return -1;
-	}
-
-Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
----
- include/uapi/linux/bpf.h       |  1 +
- kernel/bpf/syscall.c           | 45 ++++++++++++++++++++++++++++++++----------
- tools/include/uapi/linux/bpf.h |  1 +
- tools/lib/bpf/bpf.c            |  3 ++-
- tools/lib/bpf/bpf.h            |  3 ++-
- tools/lib/bpf/gen_loader.c     |  2 +-
- tools/lib/bpf/libbpf.c         |  2 ++
- tools/lib/bpf/skel_internal.h  |  2 +-
- 8 files changed, 45 insertions(+), 14 deletions(-)
-
-diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
-index 7d1e279..048b692 100644
---- a/include/uapi/linux/bpf.h
-+++ b/include/uapi/linux/bpf.h
-@@ -1300,6 +1300,7 @@ struct bpf_stack_build_id {
- 		 * to using 5 hash functions).
- 		 */
- 		__u64	map_extra;
-+		__u32	memcg_fd;	/* selectable memcg */
- 	};
- 
- 	struct { /* anonymous struct used by BPF_MAP_*_ELEM commands */
-diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
-index 5f5cade4..fd1f67c 100644
---- a/kernel/bpf/syscall.c
-+++ b/kernel/bpf/syscall.c
-@@ -294,14 +294,33 @@ static int bpf_map_copy_value(struct bpf_map *map, void *key, void *value,
- }
- 
- #ifdef CONFIG_MEMCG_KMEM
--static void bpf_map_save_memcg(struct bpf_map *map)
-+static int bpf_map_save_memcg(struct bpf_map *map, u32 memcg_fd)
- {
--	/* Currently if a map is created by a process belonging to the root
--	 * memory cgroup, get_obj_cgroup_from_current() will return NULL.
--	 * So we have to check map->objcg for being NULL each time it's
--	 * being used.
--	 */
--	map->objcg = get_obj_cgroup_from_current();
-+	struct obj_cgroup *objcg;
-+	struct cgroup *cgrp;
-+
-+	if (memcg_fd) {
-+		cgrp = cgroup_get_from_fd(memcg_fd);
-+		if (IS_ERR(cgrp))
-+			return -EINVAL;
-+
-+		objcg = get_obj_cgroup_from_cgroup(cgrp);
-+		if (IS_ERR(objcg)) {
-+			cgroup_put(cgrp);
-+			return PTR_ERR(objcg);
-+		}
-+		cgroup_put(cgrp);
-+	} else {
-+		/* Currently if a map is created by a process belonging to the root
-+		 * memory cgroup, get_obj_cgroup_from_current() will return NULL.
-+		 * So we have to check map->objcg for being NULL each time it's
-+		 * being used.
-+		 */
-+		objcg = get_obj_cgroup_from_current();
-+	}
-+
-+	map->objcg = objcg;
-+	return 0;
- }
- 
- static void bpf_map_release_memcg(struct bpf_map *map)
-@@ -311,8 +330,9 @@ static void bpf_map_release_memcg(struct bpf_map *map)
- }
- 
- #else
--static void bpf_map_save_memcg(struct bpf_map *map)
-+static int bpf_map_save_memcg(struct bpf_map *map, u32 memcg_fd)
- {
-+	return 0;
- }
- 
- static void bpf_map_release_memcg(struct bpf_map *map)
-@@ -405,7 +425,12 @@ static u32 bpf_map_flags_retain_permanent(u32 flags)
- 
- int bpf_map_init_from_attr(struct bpf_map *map, union bpf_attr *attr)
- {
--	bpf_map_save_memcg(map);
-+	int err;
-+
-+	err = bpf_map_save_memcg(map, attr->memcg_fd);
-+	if (err)
-+		return err;
-+
- 	map->map_type = attr->map_type;
- 	map->key_size = attr->key_size;
- 	map->value_size = attr->value_size;
-@@ -1091,7 +1116,7 @@ static int map_check_btf(struct bpf_map *map, const struct btf *btf,
- 	return ret;
- }
- 
--#define BPF_MAP_CREATE_LAST_FIELD map_extra
-+#define BPF_MAP_CREATE_LAST_FIELD memcg_fd
- /* called via syscall */
- static int map_create(union bpf_attr *attr)
- {
-diff --git a/tools/include/uapi/linux/bpf.h b/tools/include/uapi/linux/bpf.h
-index e174ad2..1e9efe7 100644
---- a/tools/include/uapi/linux/bpf.h
-+++ b/tools/include/uapi/linux/bpf.h
-@@ -1300,6 +1300,7 @@ struct bpf_stack_build_id {
- 		 * to using 5 hash functions).
- 		 */
- 		__u64	map_extra;
-+		__u32	memcg_fd;	/* selectable memcg */
- 	};
- 
- 	struct { /* anonymous struct used by BPF_MAP_*_ELEM commands */
-diff --git a/tools/lib/bpf/bpf.c b/tools/lib/bpf/bpf.c
-index 6a96e66..6517553 100644
---- a/tools/lib/bpf/bpf.c
-+++ b/tools/lib/bpf/bpf.c
-@@ -171,7 +171,7 @@ int bpf_map_create(enum bpf_map_type map_type,
- 		   __u32 max_entries,
- 		   const struct bpf_map_create_opts *opts)
- {
--	const size_t attr_sz = offsetofend(union bpf_attr, map_extra);
-+	const size_t attr_sz = offsetofend(union bpf_attr, memcg_fd);
- 	union bpf_attr attr;
- 	int fd;
- 
-@@ -199,6 +199,7 @@ int bpf_map_create(enum bpf_map_type map_type,
- 	attr.map_extra = OPTS_GET(opts, map_extra, 0);
- 	attr.numa_node = OPTS_GET(opts, numa_node, 0);
- 	attr.map_ifindex = OPTS_GET(opts, map_ifindex, 0);
-+	attr.memcg_fd = OPTS_GET(opts, memcg_fd, 0);
- 
- 	fd = sys_bpf_fd(BPF_MAP_CREATE, &attr, attr_sz);
- 	return libbpf_err_errno(fd);
-diff --git a/tools/lib/bpf/bpf.h b/tools/lib/bpf/bpf.h
-index 9c50bea..dd0d929 100644
---- a/tools/lib/bpf/bpf.h
-+++ b/tools/lib/bpf/bpf.h
-@@ -51,8 +51,9 @@ struct bpf_map_create_opts {
- 
- 	__u32 numa_node;
- 	__u32 map_ifindex;
-+	__u32 memcg_fd;
- };
--#define bpf_map_create_opts__last_field map_ifindex
-+#define bpf_map_create_opts__last_field memcg_fd
- 
- LIBBPF_API int bpf_map_create(enum bpf_map_type map_type,
- 			      const char *map_name,
-diff --git a/tools/lib/bpf/gen_loader.c b/tools/lib/bpf/gen_loader.c
-index 23f5c46..f35b014 100644
---- a/tools/lib/bpf/gen_loader.c
-+++ b/tools/lib/bpf/gen_loader.c
-@@ -451,7 +451,7 @@ void bpf_gen__map_create(struct bpf_gen *gen,
- 			 __u32 key_size, __u32 value_size, __u32 max_entries,
- 			 struct bpf_map_create_opts *map_attr, int map_idx)
- {
--	int attr_size = offsetofend(union bpf_attr, map_extra);
-+	int attr_size = offsetofend(union bpf_attr, memcg_fd);
- 	bool close_inner_map_fd = false;
- 	int map_create_attr, idx;
- 	union bpf_attr attr;
-diff --git a/tools/lib/bpf/libbpf.c b/tools/lib/bpf/libbpf.c
-index 3f01f5c..ad7aa39 100644
---- a/tools/lib/bpf/libbpf.c
-+++ b/tools/lib/bpf/libbpf.c
-@@ -511,6 +511,7 @@ struct bpf_map {
- 	bool reused;
- 	bool autocreate;
- 	__u64 map_extra;
-+	__u32 memcg_fd;
- };
- 
- enum extern_type {
-@@ -4936,6 +4937,7 @@ static int bpf_object__create_map(struct bpf_object *obj, struct bpf_map *map, b
- 	create_attr.map_flags = def->map_flags;
- 	create_attr.numa_node = map->numa_node;
- 	create_attr.map_extra = map->map_extra;
-+	create_attr.memcg_fd = map->memcg_fd;
- 
- 	if (bpf_map__is_struct_ops(map))
- 		create_attr.btf_vmlinux_value_type_id = map->btf_vmlinux_value_type_id;
-diff --git a/tools/lib/bpf/skel_internal.h b/tools/lib/bpf/skel_internal.h
-index bd6f450..83403cc 100644
---- a/tools/lib/bpf/skel_internal.h
-+++ b/tools/lib/bpf/skel_internal.h
-@@ -222,7 +222,7 @@ static inline int skel_map_create(enum bpf_map_type map_type,
- 				  __u32 value_size,
- 				  __u32 max_entries)
- {
--	const size_t attr_sz = offsetofend(union bpf_attr, map_extra);
-+	const size_t attr_sz = offsetofend(union bpf_attr, memcg_fd);
- 	union bpf_attr attr;
- 
- 	memset(&attr, 0, attr_sz);
--- 
-1.8.3.1
+Cheers,
+Longman
 
