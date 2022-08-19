@@ -1,69 +1,131 @@
-From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH bpf-next v2 00/12] bpf: Introduce selectable memcg for bpf map
-Date: Fri, 19 Aug 2022 09:09:25 +0800
-Message-ID: <CALOAHbDcrj1ifFsNMHBEih5-SXY2rWViig4rQHi9N07JY6CjXA@mail.gmail.com>
-References: <20220818143118.17733-1-laoar.shao@gmail.com> <Yv67MRQLPreR9GU5@slm.duckdns.org>
- <Yv6+HlEzpNy8y5kT@slm.duckdns.org>
+From: Yafang Shao <laoar.shao@gmail.com>
+Subject: Re: [PATCH bpf-next v2 10/12] mm, memcg: Add new helper get_obj_cgroup_from_cgroup
+Date: Fri, 19 Aug 2022 09:21:11 +0800
+Message-ID: <CALOAHbARXHavqaVoSh-nL9DKLiHPvCdmWOZRMMYyeVwTgLrYug@mail.gmail.com>
+References: <20220818143118.17733-1-laoar.shao@gmail.com> <20220818143118.17733-11-laoar.shao@gmail.com>
+ <CALvZod5GMSiGv9OEhwJfSdXi9B=O-4Nq011pPjNEGf_vDTzhfg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc;
-        bh=a+4YJ1LhJSNyK/sLr7JdvqPtNEtaZ4Z5AzpDGJs51kw=;
-        b=h+9pelx8eiiyd0IkVd1BlXhfKkkVTdikoxVEKKTeMkhxIYLKe9yfAYzjs4f1ZmtKrU
-         AoIO1SoacdD8rFz8JbEeRcVXK+nyPNnmo9MuTYvBPQi0wq1e2UIUwVL+wNpCpTvqPBvw
-         6HiikZi3QWNvcmRMnTEuua2YNoKu0s2gQqiqh+E/IH+HSL8s7GbQtAnN9kQPx1uZxF/n
-         g/1vQg5vuVOfW/XT0wbQtQ148FtewpbQ3dV/NKwl+wU0yzni5gqS2EpN1SuhoQAUNx6v
-         sBY81kKYi4HXys1m7OQpV6+gybAhuqRD1NmMJZ9kgHuwLGW/vdVmmBGbEw4Wk5QYRd6p
-         uoMA==
-In-Reply-To: <Yv6+HlEzpNy8y5kT-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+        bh=x+WlY4BSKVFKBcgHLYvbuY4NBBdZIkpvhjCiWa6AJbU=;
+        b=N90AWt3Kudge/Xp8O33r141kO5yVImla6A9uZyKqvZPOMvytwEj/oktBy1IoB9eFl3
+         VBIq/P1WeQRqWDOxOYfCJmiPO4GFp3SL2IFEhjQztwiURDCcWrdRgxPYF9xZFmBMYPmz
+         d55S+BnqKMFHdz8Q58f9IOFjUADp5CjiLVCGapRXEOjF3qoc8DwldBJ1lAtbD6kvIknB
+         ElUHGCzzeVNdp8dga4j4nit27hiVv6OA340TyNRAbm9+K1DCarcbA+0M85jBT2IRFn0x
+         V4Ad7YqriucrHuTaTGRzby26Rg8iyFBqqz7FlmJI8VQuw2LYVXpZMoh92iPqJFFZjzm0
+         VBNA==
+In-Reply-To: <CALvZod5GMSiGv9OEhwJfSdXi9B=O-4Nq011pPjNEGf_vDTzhfg@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, john fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@google.com>, Hao Luo <haoluo@google.com>, jolsa@kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Cgroups <cgroups@vger.kernel.org>, netdev <netdev@vger.kernel.org>, bpf <bpf@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
 
-On Fri, Aug 19, 2022 at 6:33 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+On Fri, Aug 19, 2022 at 4:38 AM Shakeel Butt <shakeelb@google.com> wrote:
 >
-> On Thu, Aug 18, 2022 at 12:20:33PM -1000, Tejun Heo wrote:
-> > We have the exact same problem for any resources which span multiple
-> > instances of a service including page cache, tmpfs instances and any other
-> > thing which can persist longer than procss life time. My current opinion is
+> On Thu, Aug 18, 2022 at 7:32 AM Yafang Shao <laoar.shao@gmail.com> wrote:
+> >
+> > We want to open a cgroup directory and pass the fd into kernel, and then
+> > in the kernel we can charge the allocated memory into the open cgroup if it
+> > has valid memory subsystem. In the bpf subsystem, the opened cgroup will
+> > be store as a struct obj_cgroup pointer, so a new helper
+> > get_obj_cgroup_from_cgroup() is introduced.
+> >
+> > It also add a comment on why the helper  __get_obj_cgroup_from_memcg()
+> > must be protected by rcu read lock.
+> >
+> > Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
+> > ---
+> >  include/linux/memcontrol.h |  1 +
+> >  mm/memcontrol.c            | 47 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  2 files changed, 48 insertions(+)
+> >
+> > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> > index 2f0a611..901a921 100644
+> > --- a/include/linux/memcontrol.h
+> > +++ b/include/linux/memcontrol.h
+> > @@ -1713,6 +1713,7 @@ static inline void set_shrinker_bit(struct mem_cgroup *memcg,
+> >  int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order);
+> >  void __memcg_kmem_uncharge_page(struct page *page, int order);
+> >
+> > +struct obj_cgroup *get_obj_cgroup_from_cgroup(struct cgroup *cgrp);
+> >  struct obj_cgroup *get_obj_cgroup_from_current(void);
+> >  struct obj_cgroup *get_obj_cgroup_from_page(struct page *page);
+> >
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 618c366..0409cc4 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -2895,6 +2895,14 @@ struct mem_cgroup *mem_cgroup_from_obj(void *p)
+> >         return page_memcg_check(folio_page(folio, 0));
+> >  }
+> >
+> > +/*
+> > + * Pls. note that the memg->objcg can be freed after it is deferenced,
+> > + * that can happen when the memcg is changed from online to offline.
+> > + * So this helper must be protected by read rcu lock.
+> > + *
+> > + * After obj_cgroup_tryget(), it is safe to use the objcg outside of the rcu
+> > + * read-side critical section.
+> > + */
 >
-> To expand a bit more on this point, once we start including page cache and
-> tmpfs, we now get entangled with memory reclaim which then brings in IO and
-> not-yet-but-eventually CPU usage.
-
-Introduce-a-new-layer vs introduce-a-new-cgroup, which one is more overhead?
-
-> Once you start splitting the tree like
-> you're suggesting here, all those will break down and now we have to worry
-> about how to split resource accounting and control for the same entities
-> across two split branches of the tree, which doesn't really make any sense.
+> The comment is too verbose. My suggestion would be to add
+> WARN_ON_ONCE(!rcu_read_lock_held()) in the function and if you want to
+> add a comment, just say that the caller should have a reference on
+> memcg.
 >
 
-The k8s has already been broken thanks to the memcg accounting on  bpf memory.
-If you ignored it, I paste it below.
-[0]"1. The memory usage is not consistent between the first generation and
-new generations."
+Sure, I will change it.
 
-This issue will persist even if you introduce a new layer.
-
-> So, we *really* don't wanna paint ourselves into that kind of a corner. This
-> is a dead-end. Please ditch it.
+> >  static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
+> >  {
+> >         struct obj_cgroup *objcg = NULL;
+> > @@ -2908,6 +2916,45 @@ static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
+> >         return objcg;
+> >  }
+> >
+> > +static struct obj_cgroup *get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
+> > +{
+> > +       struct obj_cgroup *objcg;
+> > +
+> > +       if (memcg_kmem_bypass())
+> > +               return NULL;
+> > +
+> > +       rcu_read_lock();
+> > +       objcg = __get_obj_cgroup_from_memcg(memcg);
+> > +       rcu_read_unlock();
+> > +       return objcg;
+> > +}
+> > +
+> > +struct obj_cgroup *get_obj_cgroup_from_cgroup(struct cgroup *cgrp)
+>
+> Since this function is exposed to other files, it would be nice to
+> have a comment similar to get_mem_cgroup_from_mm() for this function.
+> I know other get_obj_cgroup variants do not have such a comment yet
+> but let's start with this.
 >
 
-It makes non-sensen to ditch it.
-Because, the hierarchy I described in the commit log is *one* use case
-of the selectable memcg, but not *the only one* use case of it. If you
-dislike that hierarchy, I will remove it to avoid misleading you.
+Sure, I will add it.
 
-Even if you introduce a new layer, you still need the selectable memcg.
-For example, to avoid the issue I described in [0],  you still need to
-charge to the parent cgroup instead of the current cgroup.
+> > +{
+> > +       struct cgroup_subsys_state *css;
+> > +       struct mem_cgroup *memcg;
+> > +       struct obj_cgroup *objcg;
+> > +
+> > +       rcu_read_lock();
+> > +       css = rcu_dereference(cgrp->subsys[memory_cgrp_id]);
+> > +       if (!css || !css_tryget_online(css)) {
+>
+> Any reason to use css_tryget_online() instead of css_tryget()?
 
-That's why I described in the commit log that the selectable memcg is flexible.
+Because in this case, the cgroup is from an opened cgroup dir, which
+should be online.
+But considering this is a generic helper, which may be used by others,
+it would be more reasonable to use css_tryget().
+I will change it.
 
 -- 
 Regards
