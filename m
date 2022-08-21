@@ -1,51 +1,81 @@
-From: "Chris Murphy" <lists-zXQU9YWDTqjmlV4oE/1sFAC/G2K4zDHf@public.gmane.org>
-Subject: oomd with 6.0-rc1 has ridiculously high memory pressure stats wit
-Date: Fri, 19 Aug 2022 22:51:27 -0400
-Message-ID: <d0df567c-1f6a-418d-8db7-3f777bd109c8@www.fastmail.com>
+From: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] cgroup: cleanup the format of /proc/cgroups
+Date: Sun, 21 Aug 2022 15:34:46 +0800
+Message-ID: <20220821073446.92669-1-feng.tang@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        colorremedies.com; h=cc:content-type:date:date:from:from
-        :in-reply-to:message-id:mime-version:reply-to:sender:subject
-        :subject:to:to; s=fm2; t=1660963908; x=1660967508; bh=CySVD2aXxm
-        hI+TuehF6fV37tTPOWww490mlaiYMjGoQ=; b=MrQ4H/yqRLgd4uB4MJG3Bm2A/v
-        80UcBetvHM95cQC0BWqLIaSFaUaUy68q0hpHlO/dyXYUI0lhJAXgneJGibYnFFa+
-        oKQ5GS693Ksr9CeFLI4Xi4DW3a+CAcnc1ddRTQGMB9yFurUluAm47UjfcIeaHUD1
-        HElFhvxoBHMtpaU8dflueA1DhSjUPlYIm9hQqHOfZQH8XPoJO8wxmJkKgGt8vTfz
-        yIcWAmOEQmywwl05GFizYBuhmJ0SFa8SKIBbJ7lCc7y6ItLHaNohe1VxMjiIoj6M
-        MqdF0cJqyp8BQAPcLLwrRFhjkH5923I8dnWGlofUV/ybyUs7OOn3ydr3jUGQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:date:date:feedback-id
-        :feedback-id:from:from:in-reply-to:message-id:mime-version
-        :reply-to:sender:subject:subject:to:to:x-me-proxy:x-me-proxy
-        :x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1660963908; x=
-        1660967508; bh=CySVD2aXxmhI+TuehF6fV37tTPOWww490mlaiYMjGoQ=; b=0
-        SiUMNo4dXrPnteHYqVhOgZeN9vtAJ56CaIxKFW0YRxFDg0FsqkkCSb5VP8YNE2q6
-        EQllrv5cC3zoNkS6kKW3hBUFVmQVxA6eKkhOmGE3URI3gToBNxpHhWS5xp+NN9on
-        Yr1WkRfubBaSGU/C2qEhXnXjg5NLk6qTzLp+orDtuMMwVMj4kUaQF1YEuId+ZPgv
-        vAyhmnpm8MT56er9sDfhPWbC2a6OOYwvxzZ/vX+5BRctswKTgyFyRushEq9Tf5vV
-        TPWu+fwGCChbR4IK4RNGVYWLpVSH33JPussbXekbigpafVI3vVF5ay866juyWe2w
-        Ri6Z5jrV8LmVLdMaNtU4Q==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1661067254; x=1692603254;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=O6fFd+1PtGhiYQl5WIAchCwfjiLwvujhPK8p2OjYqOA=;
+  b=JcBA/w0JJFA9GNjqoSoSSPhfuwEOuK+3rv+/R3SK62TD2Q2b222EBSKx
+   I27sBSgL0jExB/TdosDM5ZytELE//XMOozdTs9ni6/keqyh7JBywojTCq
+   amPsa1c5MBHdZBjcehb3kV0DsSogzHkCrbUaC5DfnuwP6n5qtwePTVrK0
+   3AGA3GJMdhqbt2VuKzUSBLxx2LVQLFtJ2Yb696MH+zIiMh5TE6uLhrII7
+   +qdZWResLRxVUkZh5x5IxLifOLbJ7Yt6ZbN9Xng2tBLGO3o+lmQbBvRU/
+   iYxqnLUEx1yjlv90XiY0Jgg1bD9DMWVQ1JMZCUbR4aEOFUm57dc63ecib
+   A==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Hi,
+Currrent /proc/cgroup output is like:
 
-Tracking a downstream bug in Fedora Rawhide testing, where 6.0-rc1 has landed, and we're seeing various GNOME components getting kllled off by systemd-oomd, with the stats showing suspiciously high values:
+  #subsys_name	hierarchy	num_cgroups	enabled
+  cpuset	6	1	1
+  cpu	4	7	1
+  cpuacct	4	7	1
+  blkio	8	7	1
+  memory	9	7	1
+  ...
 
-https://bugzilla.redhat.com/show_bug.cgi?id=2119518
+Add some indentation to make it more readable without any functional
+change:
 
-e.g.
+  #subsys_name         hierarchy        num_cgroups      enabled
+  cpuset               8                1                1
+  cpu                  4                7                1
+  cpuacct              4                7                1
+  blkio                2                7                1
+  memory               5                7                1
+  ...
 
-Killed /user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org/session.slice/org.gnome.Shell-r28gBBs99rhXz5zEmyOJwQ@public.gmane.org due to memory pressure for /user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org being 27925460729.27% > 50.00% for > 20s with reclaim activity
+Signed-off-by: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+---
+ kernel/cgroup/cgroup-v1.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-I'm not seeing evidence of high memory pressure in /proc/pressure though, whereas oomd is reporting really high memory pressure and absolute time for it that makes no sense at all:
-
->>Sep 09 03:01:05 fedora systemd-oomd[604]:                 Pressure: Avg10: 1255260529528.42 Avg60: 325612.68 Avg300: 757127258245.62 Total: 2month 4w 2d 8h 15min 12s
-
-It's been up for about 2 minutes at this point, not 3 months.
-
-Thanks,
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 2ade21b54dc4..e370ce3afdad 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -670,14 +670,20 @@ int proc_cgroupstats_show(struct seq_file *m, void *v)
+ 	struct cgroup_subsys *ss;
+ 	int i;
+ 
+-	seq_puts(m, "#subsys_name\thierarchy\tnum_cgroups\tenabled\n");
++	seq_printf(m, "%-20s %-16s %-16s %-16s\n",
++			"#subsys_name",
++			"hierarchy",
++			"num_cgroups",
++			"enabled"
++			);
++
+ 	/*
+ 	 * Grab the subsystems state racily. No need to add avenue to
+ 	 * cgroup_mutex contention.
+ 	 */
+ 
+ 	for_each_subsys(ss, i)
+-		seq_printf(m, "%s\t%d\t%d\t%d\n",
++		seq_printf(m, "%-20s %-16d %-16d %-16d\n",
+ 			   ss->legacy_name, ss->root->hierarchy_id,
+ 			   atomic_read(&ss->root->nr_cgrps),
+ 			   cgroup_ssid_enabled(i));
+-- 
+2.27.0
 
