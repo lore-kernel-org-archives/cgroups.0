@@ -1,59 +1,54 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH 3/3] memcg: increase MEMCG_CHARGE_BATCH to 64
-Date: Mon, 22 Aug 2022 08:09:01 -0700
-Message-ID: <CALvZod5YGVSTvsg25P6goqyGEY21eVnahsXcs2BGsp6OXxLwsg@mail.gmail.com>
-References: <20220822001737.4120417-1-shakeelb@google.com> <20220822001737.4120417-4-shakeelb@google.com>
- <YwNe3HBxzF+fWb2n@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 2/3] mm: page_counter: rearrange struct page_counter
+ fields
+Date: Mon, 22 Aug 2022 17:15:07 +0200
+Message-ID: <YwOde3qFvne7Umld@dhcp22.suse.cz>
+References: <20220822001737.4120417-1-shakeelb@google.com>
+ <20220822001737.4120417-3-shakeelb@google.com>
+ <YwNZD4YlRkvQCWFi@dhcp22.suse.cz>
+ <CALvZod5pw_7hnH44hdC3rDGQxQB2XATrViNNGosG3FnUoWo-4A@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=DL+gliCYJUBpfOq1j0gfe9XybjmiohhXfC5HxYReYKQ=;
-        b=Wy9VrLR+iXIOs02vfJHYtL6p0NbydFm1yZdXSv/BbjuFOkMtSTPP5CovxJ8349YqKj
-         G3MVhdA4OpFY8unEsaSt6zl96K01EATVtDmzrpuZf7ttwrRaJShdhZDkiI3ve+qZNaMO
-         LaMlsEqTM0HnQfbQJ+Ybp1cnhMyLAgbc8INMpkq7KkujbvLbZ3V3a+NkCsxtQtac3dFk
-         vdsSPaw69M8DRRGlUlj8oR/cctPuyyB4P3GQXi7AhcJrZf2VSCnqZnoHSJmlaPfCsIHj
-         Joq2WkpjnyjHGnaNIuUdQt4Q0lg3lljWYfXsxd0kZCxPo/shZ5oEicOIck6uwGYGrqs4
-         U2ZA==
-In-Reply-To: <YwNe3HBxzF+fWb2n@dhcp22.suse.cz>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1661181308; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Ko/ZbbYlRZVDcCBDACh47r5MpCi7V/QJtzGfx/uTT4o=;
+        b=AXWrARvl88HySuV2IvKZojEAAxu+6WFr21jizwVhd03l87uhLlzEhtWF1q5t+tYCKFoU1r
+        zhU9Xf5P/O2u82zIGY3fhc2PPA5D+bx5XJNxv1WYALMnAhhLQVdq10YN3QdYT/wpkS5CBR
+        HnhzLzMG9IccwSBFROGrZYIj9DWOx1g=
+Content-Disposition: inline
+In-Reply-To: <CALvZod5pw_7hnH44hdC3rDGQxQB2XATrViNNGosG3FnUoWo-4A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <songmuchun@bytedance.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Eric Dumazet <edumazet@google.com>, Soheil Hassas Yeganeh <soheil@google.com>, Feng Tang <feng.tang@intel.com>, Oliver Sang <oliver.sang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, lkp@lists.01.org, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, netdev <netdev@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Oliver Sang <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, lkp-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Mon, Aug 22, 2022 at 3:47 AM Michal Hocko <mhocko@suse.com> wrote:
->
+On Mon 22-08-22 08:06:14, Shakeel Butt wrote:
 [...]
->
-> > To evaluate the impact of this optimization, on a 72 CPUs machine, we
-> > ran the following workload in a three level of cgroup hierarchy with top
-> > level having min and low setup appropriately. More specifically
-> > memory.min equal to size of netperf binary and memory.low double of
-> > that.
->
-> a similar feedback to the test case description as with other patches.
+> > >  struct page_counter {
+> > > +     /*
+> > > +      * Make sure 'usage' does not share cacheline with any other field. The
+> > > +      * memcg->memory.usage is a hot member of struct mem_cgroup.
+> > > +      */
+> > > +     PC_PADDING(_pad1_);
+> >
+> > Why don't you simply require alignment for the structure?
+> 
+> I don't just want the alignment of the structure. I want different
+> fields of this structure to not share the cache line. More
+> specifically the 'high' and 'usage' fields. With this change the usage
+> will be its own cache line, the read-most fields will be on separate
+> cache line and the fields which sometimes get updated on charge path
+> based on some condition will be a different cache line from the
+> previous two.
 
-What more info should I add to the description? Why did I set up min
-and low or something else?
+I do not follow. If you make an explicit requirement for the structure
+alignement then the first field in the structure will be guarantied to
+have that alignement and you achieve the rest to be in the other cache
+line by adding padding behind that.
 
-> >
-> >  $ netserver -6
-> >  # 36 instances of netperf with following params
-> >  $ netperf -6 -H ::1 -l 60 -t TCP_SENDFILE -- -m 10K
-> >
-> > Results (average throughput of netperf):
-> > Without (6.0-rc1)       10482.7 Mbps
-> > With patch              17064.7 Mbps (62.7% improvement)
-> >
-> > With the patch, the throughput improved by 62.7%.
-> >
-> > Signed-off-by: Shakeel Butt <shakeelb@google.com>
-> > Reported-by: kernel test robot <oliver.sang@intel.com>
->
-> Anyway
-> Acked-by: Michal Hocko <mhocko@suse.com>
-
-Thanks
+-- 
+Michal Hocko
+SUSE Labs
