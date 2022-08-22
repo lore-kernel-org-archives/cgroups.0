@@ -1,89 +1,59 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH v7 1/9] blk-throttle: fix that io throttle can only work
- for single bio
-Date: Mon, 22 Aug 2022 11:06:44 +0800
-Message-ID: <b1791e41-4945-a0d8-8067-3841ce10fddd@huaweicloud.com>
-References: <20220802140415.2960284-1-yukuai1@huaweicloud.com>
- <20220802140415.2960284-2-yukuai1@huaweicloud.com>
- <Yvvx+/d2+OMROUOe@slm.duckdns.org>
- <712e0f29-94ba-d3d3-ce21-cba4d6092008@huaweicloud.com>
- <Yv0qbDR+cxKeZ3nD@slm.duckdns.org>
- <83c8b253-2ebb-5af6-8ce1-6dc3b84cf182@huaweicloud.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH 2/3] mm: page_counter: rearrange struct page_counter fields
+Date: Sun, 21 Aug 2022 21:55:28 -0700
+Message-ID: <CALvZod4r5_vcL4ZcSpR_DdLc_2sppnPTv1DXmFchCULWLu3Riw@mail.gmail.com>
+References: <20220822001737.4120417-1-shakeelb@google.com> <20220822001737.4120417-3-shakeelb@google.com>
+ <CACSApvYU5gfbDv9dyaypu1oOPB58eT1inX9EX6gV5b2q3+qr6Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <83c8b253-2ebb-5af6-8ce1-6dc3b84cf182-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=UQyYzuIqErSYNpXSPcyyYCDze0E5q1hH3djW+ifHVA0=;
+        b=sQogaDyt/YhpygyRGgMyaHCv0VOamZixo/4B/ibABXtfYnQfnh2zY0PJ9hcXiuWrwc
+         V7pZWCjvjMAhQ491/pnuGeBUUob3BVAPIMq/UWvptHivoFEinydielWpJZ6z/8ZBRi4g
+         XXqzXmysjNpz0hcoAzui5KmdedanBMXjjxZ7VLG4hKRRlp60VXFFTApNlYaepatOociJ
+         XNaou/BWfXRcEG4pA915J3VIvSGIScoB8vTFABeGU7U4lEaKyPexlf7eHNiEhLoudZ15
+         SUaQU0pEZcUyPg6f1y9pvpdNqao8WSeAfTRz1HCkEfaaxvAvmd0AvlTziqGVJDO9P90X
+         S+7w==
+In-Reply-To: <CACSApvYU5gfbDv9dyaypu1oOPB58eT1inX9EX6gV5b2q3+qr6Q@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: mkoutny-IBi9RG/b67k@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Soheil Hassas Yeganeh <soheil@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <songmuchun@bytedance.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Eric Dumazet <edumazet@google.com>, Feng Tang <feng.tang@intel.com>, Oliver Sang <oliver.sang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, lkp@lists.01.org, Cgroups <cgroups@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, netdev <netdev@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Hi,
+On Sun, Aug 21, 2022 at 5:24 PM Soheil Hassas Yeganeh <soheil@google.com> wrote:
+>
+> On Sun, Aug 21, 2022 at 8:18 PM Shakeel Butt <shakeelb@google.com> wrote:
+> >
+> > With memcg v2 enabled, memcg->memory.usage is a very hot member for
+> > the workloads doing memcg charging on multiple CPUs concurrently.
+> > Particularly the network intensive workloads. In addition, there is a
+> > false cache sharing between memory.usage and memory.high on the charge
+> > path. This patch moves the usage into a separate cacheline and move all
+> > the read most fields into separate cacheline.
+> >
+> > To evaluate the impact of this optimization, on a 72 CPUs machine, we
+> > ran the following workload in a three level of cgroup hierarchy with top
+> > level having min and low setup appropriately. More specifically
+> > memory.min equal to size of netperf binary and memory.low double of
+> > that.
+> >
+> >  $ netserver -6
+> >  # 36 instances of netperf with following params
+> >  $ netperf -6 -H ::1 -l 60 -t TCP_SENDFILE -- -m 10K
+> >
+> > Results (average throughput of netperf):
+> > Without (6.0-rc1)       10482.7 Mbps
+> > With patch              12413.7 Mbps (18.4% improvement)
+> >
+> > With the patch, the throughput improved by 18.4%.
+>
+> Shakeel, for my understanding: is this on top of the gains from the
+> previous patch?
+>
 
-在 2022/08/18 9:23, Yu Kuai 写道:
-> Hi, Tejun!
-> 
-> 在 2022/08/18 1:50, Tejun Heo 写道:
->> Hello,
->>
->> On Wed, Aug 17, 2022 at 09:13:38AM +0800, Yu Kuai wrote:
->>>> So, as a fix for the immediate problem, I guess this might do but 
->>>> this feels
->>>> really fragile. How can we be certain that re-entering only happens 
->>>> because
->>>> of splitting? What if future core development changes that? It seems 
->>>> to be
->>>> solving the problem in the wrong place. Shouldn't we flag the bio 
->>>> indicating
->>>> that it's split when we're splitting the bio so that we only limit 
->>>> them for
->>>> iops in the first place?
->>>
->>> Splited bio is tracked in __bio_clone:
->>
->> As the word is used in commit messages and comments, the past perfect 
->> form
->> of the verb "split" is "split". It looks like "splitted" is used in rare
->> cases but dictionary says it's an archaic form.
-> 
-> Ok, thanks for pointing it out, I'll change that in next iteration.
->>
->>> if (bio_flagged(bio_src, BIO_THROTTLED))
->>>     bio_set_flag(bio, BIO_THROTTLED);
-
-While implementing the new method, I found that there seems to be a
-misunderstanding here, the code seems to try to add flag to split bio
-so that it won't be throttled again for bps limit, however:
-
-1) for blk throttle, split bio is issued directly and will never be
-throttled again, while orignal bio will go through throttle path again.
-2) if cloned bio is directed to a new disk, the flag is cleared anyway.
->>>
->>> And currenty, the iops limit and bps limit are treated differently,
->>> however there are only one flag 'BIO_THROTTLED' and they can't be
->>> distinguished.
->>>
->>> Perhaps I can use two flags, for example BIO_IOPS_THROTTLED and
->>> BIO_BPS_THROTTLED, this way only iops limit can be handled and bps
->>> limit can be skipped for splited bio.
->>>
->>> What do you think?
->>
->> I think the code would be a lot more intuitive and less fragile if we 
->> used
->> two flags but the bits in the bi_flags field are a scarce resource
->> unfortunately. Even then, I think the right thing to do here is using two
->> flags.
-> 
-> Yes, the field 'bio->bi_flags' is unsigned short, and there are only two
-> bits left. I'll use the new sulution which will acquire a new bit.
-> 
-> Thanks,
-> Kuai
->>
->> Thanks.
->>
-> 
-> .
-> 
-
+No, this is independent of the previous patch. The cover letter has
+the numbers for all three optimizations applied together.
