@@ -1,108 +1,91 @@
-From: Gabriel Ryan <gabe@cs.columbia.edu>
-Subject: Re: data-race in cgroup_get_tree / proc_cgroup_show
-Date: Mon, 22 Aug 2022 13:04:58 -0400
-Message-ID: <CALbthtdFY+GHTzGH9OujzqpOtWZAqsU3MAsjv5OpwZUW6gVa7A@mail.gmail.com>
-References: <CAEHB249jcoG=sMGLUgqw3Yf+SjZ7ZkUfF_M+WcyQGCAe77o2kA@mail.gmail.com>
- <20220819072256.fn7ctciefy4fc4cu@wittgenstein>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH 1/3] mm: page_counter: remove unneeded atomic ops for
+ low/min
+Date: Mon, 22 Aug 2022 11:23:56 -0700
+Message-ID: <YwPJvGL6ZhgrYTeK@P9FQF9L96D>
+References: <20220822001737.4120417-1-shakeelb@google.com>
+ <20220822001737.4120417-2-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=mime-version :
- references : in-reply-to : from : date : message-id : subject : to : cc :
- content-type : content-transfer-encoding; s=pps01;
- bh=KCj0FjEs6uK4eYbvPTyi5BPv9COVt9zzyk1syStqmCs=;
- b=eW6EC4v92GOJMN5FH/DJOZIdw52yNRNjSYe0hi/goVuUP3vI/cnLd9kHPrilJCYUEsD/
- k3Ym+hcyfl3Gpn4BRHxZUIYoKXzKfA1ApHjE2PB1i0/QQTNIDaqPdKn2xtrQnEpLQ0ue
- hRXuAI2Nx4MsYklE3uy/R/plKWJ6jdWZMvxcBpbCpdULWeuemFxQxI0CU3yXg22T/yvJ
- Qnryt3obcVzoLlXbAzAvtQ2N4YfQTbRVsIZtFRSJLFyjlkKKYxSsNEP1cw0FHrOKuDIJ
- nHMaWiRbtnWTD72Jtk2Mp9SEBcgK+ajkOAQA+ar8LLibIe5s14FIMDnGVlZ2HQfygcVL xA== 
-In-Reply-To: <20220819072256.fn7ctciefy4fc4cu@wittgenstein>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1661192642;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=bQzUYJbzeSJVtDIpGsHXApQTdq+ArDiyBUiXh9dJl9c=;
+        b=ko5CwHMhDHobyMV2JTCqgpMz2+52hcGSQVRXn7bUUUSzOzmxP9AFk+/mRkwC+S5zY6MqdX
+        F2q4LAhYZbvIHrC86yIgvLfaWvRCGsb0n0M91E3H2sYMBQDtjW1gtraZ1MHGzTdRTZPXQf
+        PJRtOi3CP/lPjq5dDiL0j6nSDxN5b2s=
+Content-Disposition: inline
+In-Reply-To: <20220822001737.4120417-2-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christian Brauner <brauner@kernel.org>
-Cc: Abhishek Shah <abhishek.shah@columbia.edu>, linux-kernel@vger.kernel.org, andrii@kernel.org, ast@kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, daniel@iogearbox.net, hannes@cmpxchg.org, john.fastabend@gmail.com, kafai@fb.com, kpsingh@kernel.org, lizefan.x@bytedance.com, netdev@vger.kernel.org, songliubraving@fb.com, tj@kernel.org, yhs@fb.com
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Oliver Sang <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, lkp-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Christian,
+On Mon, Aug 22, 2022 at 12:17:35AM +0000, Shakeel Butt wrote:
+> For cgroups using low or min protections, the function
+> propagate_protected_usage() was doing an atomic xchg() operation
+> irrespectively. It only needs to do that operation if the new value of
+> protection is different from older one. This patch does that.
+> 
+> To evaluate the impact of this optimization, on a 72 CPUs machine, we
+> ran the following workload in a three level of cgroup hierarchy with top
+> level having min and low setup appropriately. More specifically
+> memory.min equal to size of netperf binary and memory.low double of
+> that.
+> 
+>  $ netserver -6
+>  # 36 instances of netperf with following params
+>  $ netperf -6 -H ::1 -l 60 -t TCP_SENDFILE -- -m 10K
+> 
+> Results (average throughput of netperf):
+> Without (6.0-rc1)	10482.7 Mbps
+> With patch		14542.5 Mbps (38.7% improvement)
+> 
+> With the patch, the throughput improved by 38.7%
 
-We ran a quick test and confirm your suggestion would eliminate the
-data race alert we observed. If the data race is benign (and it
-appears to be), using WRITE_ONCE(cgrp_dfl_visible, true) instead of
-cmpxchg in cgroup_get_tree() would probably also be ok.
+Nice savings!
 
-Best,
+> 
+> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Reported-by: kernel test robot <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> ---
+>  mm/page_counter.c | 13 ++++++-------
+>  1 file changed, 6 insertions(+), 7 deletions(-)
+> 
+> diff --git a/mm/page_counter.c b/mm/page_counter.c
+> index eb156ff5d603..47711aa28161 100644
+> --- a/mm/page_counter.c
+> +++ b/mm/page_counter.c
+> @@ -17,24 +17,23 @@ static void propagate_protected_usage(struct page_counter *c,
+>  				      unsigned long usage)
+>  {
+>  	unsigned long protected, old_protected;
+> -	unsigned long low, min;
+>  	long delta;
+>  
+>  	if (!c->parent)
+>  		return;
+>  
+> -	min = READ_ONCE(c->min);
+> -	if (min || atomic_long_read(&c->min_usage)) {
+> -		protected = min(usage, min);
+> +	protected = min(usage, READ_ONCE(c->min));
+> +	old_protected = atomic_long_read(&c->min_usage);
+> +	if (protected != old_protected) {
+>  		old_protected = atomic_long_xchg(&c->min_usage, protected);
+>  		delta = protected - old_protected;
+>  		if (delta)
+>  			atomic_long_add(delta, &c->parent->children_min_usage);
 
-Gabe
+What if there is a concurrent update of c->min_usage? Then the patched version
+can miss an update. I can't imagine a case when it will lead to bad consequences,
+so probably it's ok. But not super obvious.
+I think the way to think of it is that a missed update will be fixed by the next
+one, so it's ok to run some time with old numbers.
 
-On Fri, Aug 19, 2022 at 3:23 AM Christian Brauner <brauner@kernel.org> wrot=
-e:
->
-> On Thu, Aug 18, 2022 at 07:24:00PM -0400, Abhishek Shah wrote:
-> > Hi all,
-> >
-> > We found the following data race involving the *cgrp_dfl_visible *varia=
-ble.
-> > We think it has security implications as the racing variable controls t=
-he
-> > contents used in /proc/<pid>/cgroup which has been used in prior work
-> > <https://urldefense.proofpoint.com/v2/url?u=3Dhttps-3A__www.cyberark.co=
-m_resources_threat-2Dresearch-2Dblog_the-2Dstrange-2Dcase-2Dof-2Dhow-2Dwe-2=
-Descaped-2Dthe-2Ddocker-2Ddefault-2Dcontainer&d=3DDwIBaQ&c=3D009klHSCxuh5AI=
-1vNQzSO0KGjl4nbi2Q0M1QLJX9BeE&r=3DEyAJYRJu01oaAhhVVY3o8zKgZvacDAXd_PNRtaqAC=
-Co&m=3DoB43wXi5itVN6tAAOVg5q3rzeXp6QVvxICYqYL6p0wnMMhRB_HrHCwwt0dYa5x44&s=
-=3D78sLv2vexAVEQwQPx_CuCJ90is9f3iixNbmbCp0Agpo&e=3D  >
-> > in container escapes. Please let us know what you think. Thanks!
->
-> One straightforward fix might be to use
-> cmpxchg(&cgrp_dfl_visible, false, true) in cgroup_get_tree()
-> and READ_ONCE(cgrp_dfl_visible) in proc_cgroup_show() or sm like that.
-> I'm not sure this is an issue though but might still be nice to fix it.
->
-> >
-> > *-----------------------------Report-----------------------------------=
----*
-> > *write* to 0xffffffff881d0344 of 1 bytes by task 6542 on cpu 0:
-> >  cgroup_get_tree+0x30/0x1c0 kernel/cgroup/cgroup.c:2153
-> >  vfs_get_tree+0x53/0x1b0 fs/super.c:1497
-> >  do_new_mount+0x208/0x6a0 fs/namespace.c:3040
-> >  path_mount+0x4a0/0xbd0 fs/namespace.c:3370
-> >  do_mount fs/namespace.c:3383 [inline]
-> >  __do_sys_mount fs/namespace.c:3591 [inline]
-> >  __se_sys_mount+0x215/0x2d0 fs/namespace.c:3568
-> >  __x64_sys_mount+0x67/0x80 fs/namespace.c:3568
-> >  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
-> >  do_syscall_64+0x3d/0x90 arch/x86/entry/common.c:80
-> >  entry_SYSCALL_64_after_hwframe+0x44/0xae
-> >
-> > *read* to 0xffffffff881d0344 of 1 bytes by task 6541 on cpu 1:
-> >  proc_cgroup_show+0x1ec/0x4e0 kernel/cgroup/cgroup.c:6017
-> >  proc_single_show+0x96/0x120 fs/proc/base.c:777
-> >  seq_read_iter+0x2d2/0x8e0 fs/seq_file.c:230
-> >  seq_read+0x1c9/0x210 fs/seq_file.c:162
-> >  vfs_read+0x1b5/0x6e0 fs/read_write.c:480
-> >  ksys_read+0xde/0x190 fs/read_write.c:620
-> >  __do_sys_read fs/read_write.c:630 [inline]
-> >  __se_sys_read fs/read_write.c:628 [inline]
-> >  __x64_sys_read+0x43/0x50 fs/read_write.c:628
-> >  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
-> >  do_syscall_64+0x3d/0x90 arch/x86/entry/common.c:80
-> >  entry_SYSCALL_64_after_hwframe+0x44/0xae
-> >
-> > Reported by Kernel Concurrency Sanitizer on:
-> > CPU: 1 PID: 6541 Comm: syz-executor2-n Not tainted 5.18.0-rc5+ #107
-> > Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1
-> > 04/01/2014
-> >
-> >
-> > *Reproducing Inputs*
-> > Input CPU 0:
-> > r0 =3D fsopen(&(0x7f0000000000)=3D'cgroup2\x00', 0x0)
-> > fsconfig$FSCONFIG_CMD_CREATE(r0, 0x6, 0x0, 0x0, 0x0)
-> > fsmount(r0, 0x0, 0x83)
-> >
-> > Input CPU 1:
-> > r0 =3D syz_open_procfs(0x0, &(0x7f0000000040)=3D'cgroup\x00')
-> > read$eventfd(r0, &(0x7f0000000080), 0x8)
+Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 
---=20
-Gabriel Ryan
-PhD Candidate at Columbia University
+Thanks!
