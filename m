@@ -1,198 +1,108 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [RFD RESEND] cgroup: Persistent memory usage tracking
-Date: Mon, 22 Aug 2022 09:12:25 -0700
-Message-ID: <CALvZod6EHB74L2kJz7=gv3ev3+UTbBX3a1AsRgF2rgesjXCx3w@mail.gmail.com>
-References: <20220818143118.17733-1-laoar.shao@gmail.com> <Yv67MRQLPreR9GU5@slm.duckdns.org>
- <Yv6+HlEzpNy8y5kT@slm.duckdns.org> <CALOAHbDcrj1ifFsNMHBEih5-SXY2rWViig4rQHi9N07JY6CjXA@mail.gmail.com>
- <Yv/DK+AGlMeBGkF1@slm.duckdns.org> <CALOAHbCvUxQn5Zkp2FJ+eL1VgjeRSq1xQhzdiY87C1Cbib-nig@mail.gmail.com>
- <YwNold0GMOappUxc@slm.duckdns.org>
+From: Gabriel Ryan <gabe@cs.columbia.edu>
+Subject: Re: data-race in cgroup_get_tree / proc_cgroup_show
+Date: Mon, 22 Aug 2022 13:04:58 -0400
+Message-ID: <CALbthtdFY+GHTzGH9OujzqpOtWZAqsU3MAsjv5OpwZUW6gVa7A@mail.gmail.com>
+References: <CAEHB249jcoG=sMGLUgqw3Yf+SjZ7ZkUfF_M+WcyQGCAe77o2kA@mail.gmail.com>
+ <20220819072256.fn7ctciefy4fc4cu@wittgenstein>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=7BuvMVyleR3Hw8mkAELF9i7HfPKnfLamJfP4eJKjBTI=;
-        b=ZtGfm781LiOy0zfGugOT2dFYFP8nCYjMngUuJ7i43OurHzkaxNOOp48ZZ5Ic7V9ea7
-         96CJQmAYiGjoSdQ/OW7s6NZVSvpFZkwG8ooJftJJQUudaffxgCUJmDVVyMWSj0GHdtAz
-         0xdv5P8CWQ+8cnaRjWZIPKPAGoXwsKu8I7vz8/rQcsDEtiifrBvJp87PfaAOa0ByiFNI
-         /HoUTLj0gUoD/xrKelAJev5/wgXe+l8rCYLAJGS7XdvJ4n5ENREjWDMqEcmbFla824ds
-         oyqdZt7x4ZxO7+9MkkiPRbX2va9gqg4hR/e5RHohZSmOcYkglmAcXjzSUAagTWYCGm/Y
-         12Jg==
-In-Reply-To: <YwNold0GMOappUxc@slm.duckdns.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=columbia.edu; h=mime-version :
+ references : in-reply-to : from : date : message-id : subject : to : cc :
+ content-type : content-transfer-encoding; s=pps01;
+ bh=KCj0FjEs6uK4eYbvPTyi5BPv9COVt9zzyk1syStqmCs=;
+ b=eW6EC4v92GOJMN5FH/DJOZIdw52yNRNjSYe0hi/goVuUP3vI/cnLd9kHPrilJCYUEsD/
+ k3Ym+hcyfl3Gpn4BRHxZUIYoKXzKfA1ApHjE2PB1i0/QQTNIDaqPdKn2xtrQnEpLQ0ue
+ hRXuAI2Nx4MsYklE3uy/R/plKWJ6jdWZMvxcBpbCpdULWeuemFxQxI0CU3yXg22T/yvJ
+ Qnryt3obcVzoLlXbAzAvtQ2N4YfQTbRVsIZtFRSJLFyjlkKKYxSsNEP1cw0FHrOKuDIJ
+ nHMaWiRbtnWTD72Jtk2Mp9SEBcgK+ajkOAQA+ar8LLibIe5s14FIMDnGVlZ2HQfygcVL xA== 
+In-Reply-To: <20220819072256.fn7ctciefy4fc4cu@wittgenstein>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>, Mina Almasry <almasrymina@google.com>
-Cc: Yafang Shao <laoar.shao@gmail.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, john fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@google.com>, Hao Luo <haoluo@google.com>, jolsa@kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Zefan Li <lizefan.x@bytedance.com>, Cgroups <cgroups@vger.kernel.org>, netdev <netdev@vger.kernel.org>, bpf <bpf@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
+To: Christian Brauner <brauner@kernel.org>
+Cc: Abhishek Shah <abhishek.shah@columbia.edu>, linux-kernel@vger.kernel.org, andrii@kernel.org, ast@kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, daniel@iogearbox.net, hannes@cmpxchg.org, john.fastabend@gmail.com, kafai@fb.com, kpsingh@kernel.org, lizefan.x@bytedance.com, netdev@vger.kernel.org, songliubraving@fb.com, tj@kernel.org, yhs@fb.com
 
-Ccing Mina.
+Hi Christian,
 
-On Mon, Aug 22, 2022 at 4:29 AM Tejun Heo <tj@kernel.org> wrote:
+We ran a quick test and confirm your suggestion would eliminate the
+data race alert we observed. If the data race is benign (and it
+appears to be), using WRITE_ONCE(cgrp_dfl_visible, true) instead of
+cmpxchg in cgroup_get_tree() would probably also be ok.
+
+Best,
+
+Gabe
+
+On Fri, Aug 19, 2022 at 3:23 AM Christian Brauner <brauner@kernel.org> wrot=
+e:
 >
-> (Sorry, this is a resend. I messed up the header in the first posting.)
+> On Thu, Aug 18, 2022 at 07:24:00PM -0400, Abhishek Shah wrote:
+> > Hi all,
+> >
+> > We found the following data race involving the *cgrp_dfl_visible *varia=
+ble.
+> > We think it has security implications as the racing variable controls t=
+he
+> > contents used in /proc/<pid>/cgroup which has been used in prior work
+> > <https://urldefense.proofpoint.com/v2/url?u=3Dhttps-3A__www.cyberark.co=
+m_resources_threat-2Dresearch-2Dblog_the-2Dstrange-2Dcase-2Dof-2Dhow-2Dwe-2=
+Descaped-2Dthe-2Ddocker-2Ddefault-2Dcontainer&d=3DDwIBaQ&c=3D009klHSCxuh5AI=
+1vNQzSO0KGjl4nbi2Q0M1QLJX9BeE&r=3DEyAJYRJu01oaAhhVVY3o8zKgZvacDAXd_PNRtaqAC=
+Co&m=3DoB43wXi5itVN6tAAOVg5q3rzeXp6QVvxICYqYL6p0wnMMhRB_HrHCwwt0dYa5x44&s=
+=3D78sLv2vexAVEQwQPx_CuCJ90is9f3iixNbmbCp0Agpo&e=3D  >
+> > in container escapes. Please let us know what you think. Thanks!
 >
-> Hello,
+> One straightforward fix might be to use
+> cmpxchg(&cgrp_dfl_visible, false, true) in cgroup_get_tree()
+> and READ_ONCE(cgrp_dfl_visible) in proc_cgroup_show() or sm like that.
+> I'm not sure this is an issue though but might still be nice to fix it.
 >
-> This thread started on a bpf-specific memory tracking change proposal and
-> went south, but a lot of people who would be interested are already cc'd, so
-> I'm hijacking it to discuss what to do w/ persistent memory usage tracking.
->
-> Cc'ing Mina and Yosry who were involved in the discussions on the similar
-> problem re. tmpfs, Dan Schatzberg who has a lot more prod knowledge and
-> experience than me, and Lennart for his thoughts from systemd side.
->
-> The root problem is that there are resources (almost solely memory
-> currently) that outlive a given instance of a, to use systemd-lingo,
-> service. Page cache is the most common case.
->
-> Let's say there's system.slice/hello.service. When it runs for the first
-> time, page cache backing its binary will be charged to hello.service.
-> However, when it restarts after e.g. a config change, when the initial
-> hello.service cgroup gets destroyed, we reparent the page cache charges to
-> the parent system.slice and when the second instance starts, its binary will
-> stay charged to system.slice. Over time, some may get reclaimed and
-> refaulted into the new hello.service but that's not guaranteed and most hot
-> pages likely won't.
->
-> The same problem exists for any memory which is not freed synchronously when
-> the current instance exits. While this isn't a problem for many cases, it's
-> not difficult to imagine situations where the amount of memory which ends up
-> getting pushed to the parent is significant, even clear majority, with big
-> page cache footprint, persistent tmpfs instances and so on, creating issues
-> with accounting accuracy and thus control.
->
-> I think there are two broad issues to discuss here:
->
-> [1] Can this be solved by layering the instance cgroups under persistent
->     entity cgroup?
->
-> So, instead of systemd.slice/hello.service, the application runs inside
-> something like systemd.slice/hello.service/hello.service.instance and the
-> service-level cgroup hello.service is not destroyed as long as it is
-> something worth tracking on the system.
->
-> The benefits are
->
-> a. While requiring changing how userland organizes cgroup hiearchy, it is a
->    straight-forward extension of the current architecture and doesn't
->    require any conceptual or structural changes. All the accounting and
->    control schemes work exactly the same as before. The only difference is
->    that we now have a persistent entity representing each service as we want
->    to track their persistent resource usages.
->
-> b. Per-instance tracking and control is optional. To me, it seems that the
->    persistent resource usages would be more meaningful than per-instance and
->    tracking down to the persistent usages shouldn't add noticeable runtime
->    overheads while keeping per-instance process management niceties and
->    allowing use cases to opt-in for per-instance resource tracking and
->    control as needed.
->
-> The complications are:
->
-> a. It requires changing cgroup hierarchy in a very visible way.
->
-> b. What should be the lifetime rules for persistent cgroups? Do we keep them
->    around forever or maybe they can be created on the first use and kept
->    around until the service is removed from the system? When the persistent
->    cgroup is removed, do we need to make sure that the remaining resource
->    usages are low enough? Note that this problem exists for any approach
->    that tries to track persistent usages no matter how it's done.
->
-> c. Do we need to worry about nesting overhead? Given that there's no reason
->    to enable controllers w/o persisten states for the instance level and the
->    nesting overhead is pretty low for memcg, this doesn't seem like a
->    problem to me. If this becomes a problem, we just need to fix it.
->
-> A couple alternatives discussed are:
->
-> a. Userspace keeps reusing the same cgroup for different instances of the
->    same service. This simplifies some aspects while making others more
->    complicated. e.g. Determining the current instance's CPU or IO usages now
->    require the monitoring software remembering what they were when this
->    instance started and calculating the deltas. Also, if some use cases want
->    to distinguish persistent vs. instance usages (more on this later), this
->    isn't gonna work. That said, this definitely is attractive in that it
->    miminizes overt user visible changes.
->
-> b. Memory is disassociated rather than just reparented on cgroup destruction
->    and get re-charged to the next first user. This is attractive in that it
->    doesn't require any userspace changes; however, I'm not sure how this
->    would work for non-pageable memory usages such as bpf maps. How would we
->    detect the next first usage?
->
->
-> [2] Whether and how to solve first and second+ instance charge differences.
->
-> If we take the layering approach, the first instance will get charged for
-> all memory that it uses while the second+ instances likely won't get charged
-> for a lot of persistent usages. I don't think there is a consensus on
-> whether this needs to be solved and I don't have enough context to form a
-> strong opinion. memcg folks are a lot better equipped to make this decision.
->
-> Assuming this needs to be solved, here's a braindump to be taken with a big
-> pinch of salt:
->
-> I have a bit of difficult time imagining a perfect solution given that
-> whether a given page cache page is persistent or not would be really
-> difficult to know (or maybe all page cache is persistent by default while
-> anon is not). However, the problem still seems worthwhile to consider for
-> big ticket items such as persistent tmpfs mounts and huge bpf maps as they
-> can easily make the differences really big.
->
-> If we want to solve this problem, here are options that I can think of:
->
-> a. Let userspace put the charges where they belong using the current
->    mechanisms. ie. Create persistent entities in the persistent parent
->    cgroup while there's no current instance.
->
->    Pro: It won't require any major kernel or interface changes. There still
->    need to be some tweaking such as allowing tmpfs pages to be always
->    charged to the cgroup which created the instance (maybe as long as it's
->    an ancestor of the faulting cgroup?) but nothing too invasive.
->
->    Con: It may not be flexible enough.
->
-> b. Let userspace specify which cgroup to charge for some of constructs like
->    tmpfs and bpf maps. The key problems with this approach are
->
->    1. How to grant/deny what can be charged where. We must ensure that a
->       descendant can't move charges up or across the tree without the
->       ancestors allowing it.
->
->    2. How to specify the cgroup to charge. While specifying the target
->       cgroup directly might seem like an obvious solution, it has a couple
->       rather serious problems. First, if the descendant is inside a cgroup
->       namespace, it might be able to see the target cgroup at all. Second,
->       it's an interface which is likely to cause misunderstandings on how it
->       can be used. It's too broad an interface.
->
->    One solution that I can think of is leveraging the resource domain
->    concept which is currently only used for threaded cgroups. All memory
->    usages of threaded cgroups are charged to their resource domain cgroup
->    which hosts the processes for those threads. The persistent usages have a
->    similar pattern, so maybe the service level cgroup can declare that it's
->    the encompassing resource domain and the instance cgroup can say whether
->    it's gonna charge e.g. the tmpfs instance to its own or the encompassing
->    resource domain.
->
->    This has the benefit that the user only needs to indicate its intention
->    without worrying about how cgroups are composed and what their IDs are.
->    It just indicates whether the given resource is persistent and if the
->    cgroup hierarchy is set up for that, it gets charged that way and if not
->    it can be just charged to itself.
->
->    This is a shower thought but, if we allow nesting such domains (and maybe
->    name them), we can use it for shared resources too so that co-services
->    are put inside a shared slice and shared resources are pushed to the
->    slice level.
->
-> This became pretty long. I obviously have a pretty strong bias towards
-> solving this within the current basic architecture but other than that most
-> of these decisions are best made by memcg folks. We can hopefully build some
-> consensus on the issue.
->
-> Thanks.
->
-> --
-> tejun
+> >
+> > *-----------------------------Report-----------------------------------=
+---*
+> > *write* to 0xffffffff881d0344 of 1 bytes by task 6542 on cpu 0:
+> >  cgroup_get_tree+0x30/0x1c0 kernel/cgroup/cgroup.c:2153
+> >  vfs_get_tree+0x53/0x1b0 fs/super.c:1497
+> >  do_new_mount+0x208/0x6a0 fs/namespace.c:3040
+> >  path_mount+0x4a0/0xbd0 fs/namespace.c:3370
+> >  do_mount fs/namespace.c:3383 [inline]
+> >  __do_sys_mount fs/namespace.c:3591 [inline]
+> >  __se_sys_mount+0x215/0x2d0 fs/namespace.c:3568
+> >  __x64_sys_mount+0x67/0x80 fs/namespace.c:3568
+> >  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+> >  do_syscall_64+0x3d/0x90 arch/x86/entry/common.c:80
+> >  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> >
+> > *read* to 0xffffffff881d0344 of 1 bytes by task 6541 on cpu 1:
+> >  proc_cgroup_show+0x1ec/0x4e0 kernel/cgroup/cgroup.c:6017
+> >  proc_single_show+0x96/0x120 fs/proc/base.c:777
+> >  seq_read_iter+0x2d2/0x8e0 fs/seq_file.c:230
+> >  seq_read+0x1c9/0x210 fs/seq_file.c:162
+> >  vfs_read+0x1b5/0x6e0 fs/read_write.c:480
+> >  ksys_read+0xde/0x190 fs/read_write.c:620
+> >  __do_sys_read fs/read_write.c:630 [inline]
+> >  __se_sys_read fs/read_write.c:628 [inline]
+> >  __x64_sys_read+0x43/0x50 fs/read_write.c:628
+> >  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+> >  do_syscall_64+0x3d/0x90 arch/x86/entry/common.c:80
+> >  entry_SYSCALL_64_after_hwframe+0x44/0xae
+> >
+> > Reported by Kernel Concurrency Sanitizer on:
+> > CPU: 1 PID: 6541 Comm: syz-executor2-n Not tainted 5.18.0-rc5+ #107
+> > Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1
+> > 04/01/2014
+> >
+> >
+> > *Reproducing Inputs*
+> > Input CPU 0:
+> > r0 =3D fsopen(&(0x7f0000000000)=3D'cgroup2\x00', 0x0)
+> > fsconfig$FSCONFIG_CMD_CREATE(r0, 0x6, 0x0, 0x0, 0x0)
+> > fsmount(r0, 0x0, 0x83)
+> >
+> > Input CPU 1:
+> > r0 =3D syz_open_procfs(0x0, &(0x7f0000000040)=3D'cgroup\x00')
+> > read$eventfd(r0, &(0x7f0000000080), 0x8)
+
+--=20
+Gabriel Ryan
+PhD Candidate at Columbia University
