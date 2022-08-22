@@ -1,198 +1,80 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [RFD RESEND] cgroup: Persistent memory usage tracking
-Date: Mon, 22 Aug 2022 01:29:25 -1000
-Message-ID: <YwNold0GMOappUxc@slm.duckdns.org>
-References: <20220818143118.17733-1-laoar.shao@gmail.com>
- <Yv67MRQLPreR9GU5@slm.duckdns.org>
- <Yv6+HlEzpNy8y5kT@slm.duckdns.org>
- <CALOAHbDcrj1ifFsNMHBEih5-SXY2rWViig4rQHi9N07JY6CjXA@mail.gmail.com>
- <Yv/DK+AGlMeBGkF1@slm.duckdns.org>
- <CALOAHbCvUxQn5Zkp2FJ+eL1VgjeRSq1xQhzdiY87C1Cbib-nig@mail.gmail.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [RFC PATCH] memcg: use root_mem_cgroup when css is inherited
+Date: Mon, 22 Aug 2022 13:31:47 +0200
+Message-ID: <YwNpI1ydy0yDnBH0@dhcp22.suse.cz>
+References: <1660908562-17409-1-git-send-email-zhaoyang.huang@unisoc.com>
+ <Yv+6YjaGAv52yvq9@slm.duckdns.org>
+ <CALvZod7QdLSMdBoD2WztL72qS8kJe7F79JuCH6t19rRcw6Pn1w@mail.gmail.com>
+ <Yv/EArPDTcCrGqJh@slm.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc;
-        bh=OvbrjWH0ZIokBhPMUv+n85WJlYuSvCgvMb6EiRBkQkk=;
-        b=aE+aeUMWK6ZS53keSjCPtcn0SIjQcjrmfsuB2oEtCB9l2eh4sOcUyLeAJlRCKpjxvb
-         3PZIJvtvfmxXK9HLeZKC6LlbMduzhJ1VVYDgooECOmPln0+fKQLcWhFPipYfCF4GAJN5
-         ArQvepWkn89m8vqmL9UJd/ds0TthMSLn/b8twxg35rrqtOWXx4aUaRM+4IrK2ToTG3Q7
-         bjOVp4d4VPynQc+G0ox1s3b86CjnNXgCBQyNSZrIPXmOYXk2oApd87lBhW1MlXflZKlI
-         bJ/7Eoq6qMYEnfjdKTf0JkSHhOOOvURqO1NhY/VOxqR/W9z8K4zR/HE1iu0eSulZhgM5
-         OMGw==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1661167908; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=rN68WvWnS9a0ZMxHp34QNuXswa4YZncIEkckzvz7TD4=;
+        b=mwVzMNZp9O0hzvXg5oLi/niUhvKZEJ6VJ7/HIZrF/IKfgXAeDVGD2ApZ1ifROdoG4KgHvh
+        15oWw7JTG8NPmMALApOqNXx/LT5CmM6ffvqjjZHh0UxqXY27mjzw653QQw6luzzniOFIQW
+        DvHDdd/h+uUNsbz4qEuqBefHaHUApAY=
 Content-Disposition: inline
-In-Reply-To: <CALOAHbCvUxQn5Zkp2FJ+eL1VgjeRSq1xQhzdiY87C1Cbib-nig-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <Yv/EArPDTcCrGqJh-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, john fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-(Sorry, this is a resend. I messed up the header in the first posting.)
+On Fri 19-08-22 07:10:26, Tejun Heo wrote:
+> On Fri, Aug 19, 2022 at 10:08:59AM -0700, Shakeel Butt wrote:
+> > On Fri, Aug 19, 2022 at 9:29 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > >
+> > > On Fri, Aug 19, 2022 at 07:29:22PM +0800, zhaoyang.huang wrote:
+> > > > From: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+> > > >
+> > > > It is observed in android system where per-app cgroup is demanded by freezer
+> > > > subsys and part of groups require memory control. The hierarchy could be simplized
+> > > > as bellowing where memory charged on group B abserved while we only want have
+> > > > group E's memory be controlled and B's descendants compete freely for memory.
+> > > > This should be the consequences of unified hierarchy.
+> > > > Under this scenario, less efficient memory reclaim is observed when comparing
+> > > > with no memory control. It is believed that multi LRU scanning introduces some
+> > > > of the overhead. Furthermore, page thrashing is also heavier than global LRU
+> > > > which could be the consequences of partial failure of WORKINGSET mechanism as
+> > > > LRU is too short to protect the active pages.
+> > > >
+> > > > A(subtree_control = memory) - B(subtree_control = NULL) - C()
+> > > >                                                       \ D()
+> > > >                           - E(subtree_control = memory) - F()
+> > > >                                                         \ G()
+> > > >
+> > > > Signed-off-by: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+> > >
+> > > Just in case it wasn't clear.
+> > >
+> > > Nacked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > >
+> > > Thanks.
+> > >
+> > 
+> > Was there a previous discussion on this? The commit message is unreadable.
+> 
+> http://lkml.kernel.org/r/1660298966-11493-1-git-send-email-zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org
 
-Hello,
+Even that discussion doesn't really explain the real underlying problem.
+There are statements about inefficiency and trashing without any further
+details or clarifications.
 
-This thread started on a bpf-specific memory tracking change proposal and
-went south, but a lot of people who would be interested are already cc'd, so
-I'm hijacking it to discuss what to do w/ persistent memory usage tracking.
-
-Cc'ing Mina and Yosry who were involved in the discussions on the similar
-problem re. tmpfs, Dan Schatzberg who has a lot more prod knowledge and
-experience than me, and Lennart for his thoughts from systemd side.
-
-The root problem is that there are resources (almost solely memory
-currently) that outlive a given instance of a, to use systemd-lingo,
-service. Page cache is the most common case.
-
-Let's say there's system.slice/hello.service. When it runs for the first
-time, page cache backing its binary will be charged to hello.service.
-However, when it restarts after e.g. a config change, when the initial
-hello.service cgroup gets destroyed, we reparent the page cache charges to
-the parent system.slice and when the second instance starts, its binary will
-stay charged to system.slice. Over time, some may get reclaimed and
-refaulted into the new hello.service but that's not guaranteed and most hot
-pages likely won't.
-
-The same problem exists for any memory which is not freed synchronously when
-the current instance exits. While this isn't a problem for many cases, it's
-not difficult to imagine situations where the amount of memory which ends up
-getting pushed to the parent is significant, even clear majority, with big
-page cache footprint, persistent tmpfs instances and so on, creating issues
-with accounting accuracy and thus control.
-
-I think there are two broad issues to discuss here:
-
-[1] Can this be solved by layering the instance cgroups under persistent
-    entity cgroup?
-
-So, instead of systemd.slice/hello.service, the application runs inside
-something like systemd.slice/hello.service/hello.service.instance and the
-service-level cgroup hello.service is not destroyed as long as it is
-something worth tracking on the system.
-
-The benefits are
-
-a. While requiring changing how userland organizes cgroup hiearchy, it is a
-   straight-forward extension of the current architecture and doesn't
-   require any conceptual or structural changes. All the accounting and
-   control schemes work exactly the same as before. The only difference is
-   that we now have a persistent entity representing each service as we want
-   to track their persistent resource usages.
-
-b. Per-instance tracking and control is optional. To me, it seems that the
-   persistent resource usages would be more meaningful than per-instance and
-   tracking down to the persistent usages shouldn't add noticeable runtime
-   overheads while keeping per-instance process management niceties and
-   allowing use cases to opt-in for per-instance resource tracking and
-   control as needed.
-
-The complications are:
-
-a. It requires changing cgroup hierarchy in a very visible way.
-
-b. What should be the lifetime rules for persistent cgroups? Do we keep them
-   around forever or maybe they can be created on the first use and kept
-   around until the service is removed from the system? When the persistent
-   cgroup is removed, do we need to make sure that the remaining resource
-   usages are low enough? Note that this problem exists for any approach
-   that tries to track persistent usages no matter how it's done.
-
-c. Do we need to worry about nesting overhead? Given that there's no reason
-   to enable controllers w/o persisten states for the instance level and the
-   nesting overhead is pretty low for memcg, this doesn't seem like a
-   problem to me. If this becomes a problem, we just need to fix it.
-
-A couple alternatives discussed are:
-
-a. Userspace keeps reusing the same cgroup for different instances of the
-   same service. This simplifies some aspects while making others more
-   complicated. e.g. Determining the current instance's CPU or IO usages now
-   require the monitoring software remembering what they were when this
-   instance started and calculating the deltas. Also, if some use cases want
-   to distinguish persistent vs. instance usages (more on this later), this
-   isn't gonna work. That said, this definitely is attractive in that it
-   miminizes overt user visible changes.
-
-b. Memory is disassociated rather than just reparented on cgroup destruction
-   and get re-charged to the next first user. This is attractive in that it
-   doesn't require any userspace changes; however, I'm not sure how this
-   would work for non-pageable memory usages such as bpf maps. How would we
-   detect the next first usage?
-
-
-[2] Whether and how to solve first and second+ instance charge differences.
-
-If we take the layering approach, the first instance will get charged for
-all memory that it uses while the second+ instances likely won't get charged
-for a lot of persistent usages. I don't think there is a consensus on
-whether this needs to be solved and I don't have enough context to form a
-strong opinion. memcg folks are a lot better equipped to make this decision.
-
-Assuming this needs to be solved, here's a braindump to be taken with a big
-pinch of salt:
-
-I have a bit of difficult time imagining a perfect solution given that
-whether a given page cache page is persistent or not would be really
-difficult to know (or maybe all page cache is persistent by default while
-anon is not). However, the problem still seems worthwhile to consider for
-big ticket items such as persistent tmpfs mounts and huge bpf maps as they
-can easily make the differences really big.
-
-If we want to solve this problem, here are options that I can think of:
-
-a. Let userspace put the charges where they belong using the current
-   mechanisms. ie. Create persistent entities in the persistent parent
-   cgroup while there's no current instance.
-
-   Pro: It won't require any major kernel or interface changes. There still
-   need to be some tweaking such as allowing tmpfs pages to be always
-   charged to the cgroup which created the instance (maybe as long as it's
-   an ancestor of the faulting cgroup?) but nothing too invasive.
-
-   Con: It may not be flexible enough.
-
-b. Let userspace specify which cgroup to charge for some of constructs like
-   tmpfs and bpf maps. The key problems with this approach are
-
-   1. How to grant/deny what can be charged where. We must ensure that a
-      descendant can't move charges up or across the tree without the
-      ancestors allowing it.
-
-   2. How to specify the cgroup to charge. While specifying the target
-      cgroup directly might seem like an obvious solution, it has a couple
-      rather serious problems. First, if the descendant is inside a cgroup
-      namespace, it might be able to see the target cgroup at all. Second,
-      it's an interface which is likely to cause misunderstandings on how it
-      can be used. It's too broad an interface.
-
-   One solution that I can think of is leveraging the resource domain
-   concept which is currently only used for threaded cgroups. All memory
-   usages of threaded cgroups are charged to their resource domain cgroup
-   which hosts the processes for those threads. The persistent usages have a
-   similar pattern, so maybe the service level cgroup can declare that it's
-   the encompassing resource domain and the instance cgroup can say whether
-   it's gonna charge e.g. the tmpfs instance to its own or the encompassing
-   resource domain.
-
-   This has the benefit that the user only needs to indicate its intention
-   without worrying about how cgroups are composed and what their IDs are.
-   It just indicates whether the given resource is persistent and if the
-   cgroup hierarchy is set up for that, it gets charged that way and if not
-   it can be just charged to itself.
-
-   This is a shower thought but, if we allow nesting such domains (and maybe
-   name them), we can use it for shared resources too so that co-services
-   are put inside a shared slice and shared resources are pushed to the
-   slice level.
-
-This became pretty long. I obviously have a pretty strong bias towards
-solving this within the current basic architecture but other than that most
-of these decisions are best made by memcg folks. We can hopefully build some
-consensus on the issue.
-
-Thanks.
-
+My very vague understanding is that the Android system would like to
+freeze specific applications and for that it requires each application
+to live in its own cgroup. This clashes with a requirement to age and
+reclaim memory on a different granularity (aka no per process reclaim).
+So in fact something that cgroup v1 would achieve by having 2
+hierarchies, one for the freezer which would have a dedicated cgroup for
+each application and the other for the memory controller where tasks are
+grouped by a different criteria. This would rule out that a global (or
+any external memory pressure) reclaim would age LRUs that contain a mix
+bag of application pages rather than iterate over per-application LRUs.
+Is that understanding correct?
 -- 
-tejun
+Michal Hocko
+SUSE Labs
