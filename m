@@ -1,68 +1,59 @@
 From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH 2/3] mm: page_counter: rearrange struct page_counter
- fields
-Date: Mon, 22 Aug 2022 11:27:46 -0700
-Message-ID: <YwPKojTHxV4PFoKn@P9FQF9L96D>
+Subject: Re: [PATCH 3/3] memcg: increase MEMCG_CHARGE_BATCH to 64
+Date: Mon, 22 Aug 2022 11:37:30 -0700
+Message-ID: <YwPM6o1+pZ2kRyy3@P9FQF9L96D>
 References: <20220822001737.4120417-1-shakeelb@google.com>
- <20220822001737.4120417-3-shakeelb@google.com>
- <YwNZD4YlRkvQCWFi@dhcp22.suse.cz>
- <CALvZod5pw_7hnH44hdC3rDGQxQB2XATrViNNGosG3FnUoWo-4A@mail.gmail.com>
- <YwOde3qFvne7Umld@dhcp22.suse.cz>
- <CALvZod4whYX+0ZuCGgyKuG-Q_9d0g7N_x+=WXOeB_1TM=3Q7vg@mail.gmail.com>
+ <20220822001737.4120417-4-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1661192870;
+        t=1661193456;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=859bRFvYP0PwP1RQEaN1BuNqPudeM49yRCMP2gzbo/M=;
-        b=mCGQi+2b3AdYVcCk9kc+RYKSR5DNMp8IBmyH6G+E69Cq3b2l19KvwGFIuMAQgaZ1ip974E
-        Gfuml2lG4ZQJmNqdc9vHZ1ompfYFjZdFzV0Xj/H73RUciXDYNcSERvs7e3WDbYpIjcVsB1
-        T0npKZERgo9FQlUXzHgUKV2CBE3OL1Y=
+        bh=3icLRlffoR+2bh6AZBpCk9+vi7OPaMiHjmut8kzqVHM=;
+        b=HbWlYxX1EJmz75AZbYDPBp74453btzjOhTRWKtlJOGuc1jQO24pHe/hVo32YJuG3ao8+iO
+        ZKgUv+hqXTU6VWEGEungqgWleeZt4YEED0xXWrB3WsujuUR2ZsuOFwGTRy18nWJVgzW3fD
+        YRJ16tZfmzfWWnGq3Ow3YE7Ru4ZjXyg=
 Content-Disposition: inline
-In-Reply-To: <CALvZod4whYX+0ZuCGgyKuG-Q_9d0g7N_x+=WXOeB_1TM=3Q7vg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20220822001737.4120417-4-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Oliver Sang <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, lkp-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Oliver Sang <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, lkp-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Aug 22, 2022 at 09:04:59AM -0700, Shakeel Butt wrote:
-> On Mon, Aug 22, 2022 at 8:15 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> >
-> > On Mon 22-08-22 08:06:14, Shakeel Butt wrote:
-> > [...]
-> > > > >  struct page_counter {
-> > > > > +     /*
-> > > > > +      * Make sure 'usage' does not share cacheline with any other field. The
-> > > > > +      * memcg->memory.usage is a hot member of struct mem_cgroup.
-> > > > > +      */
-> > > > > +     PC_PADDING(_pad1_);
-> > > >
-> > > > Why don't you simply require alignment for the structure?
-> > >
-> > > I don't just want the alignment of the structure. I want different
-> > > fields of this structure to not share the cache line. More
-> > > specifically the 'high' and 'usage' fields. With this change the usage
-> > > will be its own cache line, the read-most fields will be on separate
-> > > cache line and the fields which sometimes get updated on charge path
-> > > based on some condition will be a different cache line from the
-> > > previous two.
-> >
-> > I do not follow. If you make an explicit requirement for the structure
-> > alignement then the first field in the structure will be guarantied to
-> > have that alignement and you achieve the rest to be in the other cache
-> > line by adding padding behind that.
+On Mon, Aug 22, 2022 at 12:17:37AM +0000, Shakeel Butt wrote:
+> For several years, MEMCG_CHARGE_BATCH was kept at 32 but with bigger
+> machines and the network intensive workloads requiring througput in
+> Gbps, 32 is too small and makes the memcg charging path a bottleneck.
+> For now, increase it to 64 for easy acceptance to 6.0. We will need to
+> revisit this in future for ever increasing demand of higher performance.
 > 
-> Oh, you were talking explicitly about _pad1_, yes, we can remove it
-> and make the struct cache align. I will do it in the next version.
+> Please note that the memcg charge path drain the per-cpu memcg charge
+> stock, so there should not be any oom behavior change.
+> 
+> To evaluate the impact of this optimization, on a 72 CPUs machine, we
+> ran the following workload in a three level of cgroup hierarchy with top
+> level having min and low setup appropriately. More specifically
+> memory.min equal to size of netperf binary and memory.low double of
+> that.
+> 
+>  $ netserver -6
+>  # 36 instances of netperf with following params
+>  $ netperf -6 -H ::1 -l 60 -t TCP_SENDFILE -- -m 10K
+> 
+> Results (average throughput of netperf):
+> Without (6.0-rc1)       10482.7 Mbps
+> With patch              17064.7 Mbps (62.7% improvement)
+> 
+> With the patch, the throughput improved by 62.7%.
 
-Yes, please, it caught my eyes too.
-With this change:
+This is pretty significant!
+
 Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 
-Also, can you, please, include the numbers on the additional memory overhead?
-I think it still worth it, just think we need to include them for a record.
+I wonder only if we want to make it configurable (Idk a sysctl or maybe
+a config option) and close the topic.
 
 Thanks!
