@@ -1,32 +1,34 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/3] mm: page_counter: remove unneeded atomic ops for low/min
-Date: Mon, 22 Aug 2022 00:17:35 +0000
-Message-ID: <20220822001737.4120417-2-shakeelb@google.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH 2/3] mm: page_counter: rearrange struct page_counter fields
+Date: Mon, 22 Aug 2022 00:17:36 +0000
+Message-ID: <20220822001737.4120417-3-shakeelb@google.com>
 References: <20220822001737.4120417-1-shakeelb@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=cc:to:from:subject:references:mime-version:message-id:in-reply-to
          :date:from:to:cc;
-        bh=PKFRaxD4qQqEIFqu3chPSEEEaimoA7SPNFa30ZMS/uU=;
-        b=HizZvrBQiCe/lTGkboVezrNH98vpHv6pPqN3AxEJH/hFrU99YqU4n2tDb7vx0BDvjD
-         bQrrXzlJxZNS5VEi+6ur1985jYp1mqaVxFam9zQg29fgy4j8FDwrvk2EWIEw9zZcLyy8
-         ZrbSnLWlxJzAlcK4inCb0YBuOPVU8Pf6wgn3U0AS+YKBi3N8fLf+SDkLifHnsuVpXtE9
-         VW+MgYxWYsl4FT5vPrWtjoQKUyoGIDwGhmbfEnhOfVukKNjsvqjWPYthJA+lrTU4JyRJ
-         Sj3VMg2YYPUcwhLJDwgqi0QQBI7r5yYyU5d+lRAwuifJcVjqGV647qwS/PzhpquTv4FZ
-         z7vQ==
-In-Reply-To: <20220822001737.4120417-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        bh=V/ZZIFSPKFcCAZIO5J88CNRgR4nImf4CDqSEwHgZtc8=;
+        b=VRt8PiD5az0Dl+WRznAYAHoEFU2MambiOUqw9hJIF1ucU60TS0sVFR1bUuaJD8nPng
+         xGG21VhjqfptsMV9A8m6NtDIcNUxnu3moTzE7NDuS0132TTFDbZUQdoq7PUgYhDiEc88
+         VWXGevOtBTC071FhOwLWbdC2RbpbtXjJBP30qVmnMrkSyaRORF9MkIgIOE44YT8fPxhx
+         MXMroQq5cbkgX/PlRdMgvF1WbQYDo+Czb0BC6hLgVyoEUZLM+nIZRg1Iz+BkUSiS19+u
+         NDrsfq1Tm8UcqdVd/B6tTxgxOaUMNvPwSrhSYvXv0b64wiY5pKs+NN5viMa0qiHMezJn
+         gzSQ==
+In-Reply-To: <20220822001737.4120417-1-shakeelb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Oliver Sang <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, lkp-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <songmuchun@bytedance.com>
+Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Eric Dumazet <edumazet@google.com>, Soheil Hassas Yeganeh <soheil@google.com>, Feng Tang <feng.tang@intel.com>, Oliver Sang <oliver.sang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, lkp@lists.01.org, cgroups@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
 
-For cgroups using low or min protections, the function
-propagate_protected_usage() was doing an atomic xchg() operation
-irrespectively. It only needs to do that operation if the new value of
-protection is different from older one. This patch does that.
+With memcg v2 enabled, memcg->memory.usage is a very hot member for
+the workloads doing memcg charging on multiple CPUs concurrently.
+Particularly the network intensive workloads. In addition, there is a
+false cache sharing between memory.usage and memory.high on the charge
+path. This patch moves the usage into a separate cacheline and move all
+the read most fields into separate cacheline.
 
 To evaluate the impact of this optimization, on a 72 CPUs machine, we
 ran the following workload in a three level of cgroup hierarchy with top
@@ -40,51 +42,82 @@ that.
 
 Results (average throughput of netperf):
 Without (6.0-rc1)	10482.7 Mbps
-With patch		14542.5 Mbps (38.7% improvement)
+With patch		12413.7 Mbps (18.4% improvement)
 
-With the patch, the throughput improved by 38.7%
+With the patch, the throughput improved by 18.4%.
 
-Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Reported-by: kernel test robot <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+One side-effect of this patch is the increase in the size of struct
+mem_cgroup. However for the performance improvement, this additional
+size is worth it. In addition there are opportunities to reduce the size
+of struct mem_cgroup like deprecation of kmem and tcpmem page counters
+and better packing.
+
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
+Reported-by: kernel test robot <oliver.sang@intel.com>
 ---
- mm/page_counter.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+ include/linux/page_counter.h | 34 +++++++++++++++++++++++-----------
+ 1 file changed, 23 insertions(+), 11 deletions(-)
 
-diff --git a/mm/page_counter.c b/mm/page_counter.c
-index eb156ff5d603..47711aa28161 100644
---- a/mm/page_counter.c
-+++ b/mm/page_counter.c
-@@ -17,24 +17,23 @@ static void propagate_protected_usage(struct page_counter *c,
- 				      unsigned long usage)
- {
- 	unsigned long protected, old_protected;
--	unsigned long low, min;
- 	long delta;
+diff --git a/include/linux/page_counter.h b/include/linux/page_counter.h
+index 679591301994..8ce99bde645f 100644
+--- a/include/linux/page_counter.h
++++ b/include/linux/page_counter.h
+@@ -3,15 +3,27 @@
+ #define _LINUX_PAGE_COUNTER_H
  
- 	if (!c->parent)
- 		return;
+ #include <linux/atomic.h>
++#include <linux/cache.h>
+ #include <linux/kernel.h>
+ #include <asm/page.h>
  
--	min = READ_ONCE(c->min);
--	if (min || atomic_long_read(&c->min_usage)) {
--		protected = min(usage, min);
-+	protected = min(usage, READ_ONCE(c->min));
-+	old_protected = atomic_long_read(&c->min_usage);
-+	if (protected != old_protected) {
- 		old_protected = atomic_long_xchg(&c->min_usage, protected);
- 		delta = protected - old_protected;
- 		if (delta)
- 			atomic_long_add(delta, &c->parent->children_min_usage);
- 	}
++#if defined(CONFIG_SMP)
++struct pc_padding {
++	char x[0];
++} ____cacheline_internodealigned_in_smp;
++#define PC_PADDING(name)	struct pc_padding name
++#else
++#define PC_PADDING(name)
++#endif
++
+ struct page_counter {
++	/*
++	 * Make sure 'usage' does not share cacheline with any other field. The
++	 * memcg->memory.usage is a hot member of struct mem_cgroup.
++	 */
++	PC_PADDING(_pad1_);
+ 	atomic_long_t usage;
+-	unsigned long min;
+-	unsigned long low;
+-	unsigned long high;
+-	unsigned long max;
++	PC_PADDING(_pad2_);
  
--	low = READ_ONCE(c->low);
--	if (low || atomic_long_read(&c->low_usage)) {
--		protected = min(usage, low);
-+	protected = min(usage, READ_ONCE(c->low));
-+	old_protected = atomic_long_read(&c->low_usage);
-+	if (protected != old_protected) {
- 		old_protected = atomic_long_xchg(&c->low_usage, protected);
- 		delta = protected - old_protected;
- 		if (delta)
+ 	/* effective memory.min and memory.min usage tracking */
+ 	unsigned long emin;
+@@ -23,16 +35,16 @@ struct page_counter {
+ 	atomic_long_t low_usage;
+ 	atomic_long_t children_low_usage;
+ 
+-	/* legacy */
+ 	unsigned long watermark;
+ 	unsigned long failcnt;
+ 
+-	/*
+-	 * 'parent' is placed here to be far from 'usage' to reduce
+-	 * cache false sharing, as 'usage' is written mostly while
+-	 * parent is frequently read for cgroup's hierarchical
+-	 * counting nature.
+-	 */
++	/* Keep all the read most fields in a separete cacheline. */
++	PC_PADDING(_pad3_);
++
++	unsigned long min;
++	unsigned long low;
++	unsigned long high;
++	unsigned long max;
+ 	struct page_counter *parent;
+ };
+ 
 -- 
 2.37.1.595.g718a3a8f04-goog
 
