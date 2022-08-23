@@ -1,8 +1,8 @@
 From: Yosry Ahmed <yosryahmed@google.com>
-Subject: [PATCH v7 3/4] KVM: x86/mmu: count KVM mmu usage in secondary
- pagetable stats.
-Date: Tue, 23 Aug 2022 00:46:38 +0000
-Message-ID: <20220823004639.2387269-4-yosryahmed@google.com>
+Subject: [PATCH v7 4/4] KVM: arm64/mmu: count KVM s2 mmu usage in secondary
+ pagetable stats
+Date: Tue, 23 Aug 2022 00:46:39 +0000
+Message-ID: <20220823004639.2387269-5-yosryahmed@google.com>
 References: <20220823004639.2387269-1-yosryahmed@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -11,13 +11,13 @@ Return-path: <kvmarm-bounces@lists.cs.columbia.edu>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20210112;
  h=cc:to:from:subject:references:mime-version:message-id:in-reply-to
  :date:from:to:cc;
- bh=EkLRIi4h0Nka6IiKfSdPW+K8F+Olc1nYU6DQetBSKaQ=;
- b=MF5ReNPAwURHrNEDfeKCk+7IaZ9Gmt39gi9bYrinX/Ip0s0YD3aZDdn4PpiGJ1pZU8
- FoPm++7XgrvgTqT2111fxtgAXSmookyffVeQGq0LHtOdu1H+679O6wSUeUaz+uLXJ+r1
- AyA4jySXIN+jNxqamKM/C4/GMtwPiRd4rZf2eQVxjgKSXU2E2hNs8VnJBiOmahSF5YYX
- uOEylJcHlFgo+qDjtmiT1nbmHt4Wls5XZmDouDNWz/vlK4yru3xi3WEr7Dgv5Lgsw2DB
- VvhDfd90eUPxTTSNVqXb6x7NHlkMTeM74jhAUmX+s40jj7Ng9ENUqX0vVeuVOxz2l5gX
- Hqew==
+ bh=5niTR1/vKfTFRgtx85YXkvJ6CCfCYM2aDePdp0OgEpE=;
+ b=G8TGuUcHSEHIGStRwECqzrlZj0Y0NjCpx35ggoYoz2hySK3lBHVk/kHKixSi+zm9uf
+ MMELcNyl/ILyCYybMJq3NgCRXdRooTSjLTqNE95ShBUqpEYWDlVGs9X6/eOvD2uHKBnc
+ 1eOI6YdZW4CxnGDRVcfeukqj4Xq9UqrleMaIH6cnwLzBFm7Qf6vybqxxIvdJhNGOz+8C
+ ihIqjvUkmeFHqLEqwJwD6UUnIrpd44ZFrMCykfwoRHmerknP9Og/MaOQQe6IQxIqTCT6
+ M1HQPImVz1VcOhPzbblEqC4V49TpD0sAlHRGMGN/Ld5paJbwvTceb1Scd7ZEwI7OxFFk
+ 7weg==
 In-Reply-To: <20220823004639.2387269-1-yosryahmed@google.com>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.cs.columbia.edu/mailman/options/kvmarm>,
@@ -32,95 +32,88 @@ Sender: kvmarm-bounces@lists.cs.columbia.edu
 To: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Marc Zyngier <maz@kernel.org>, James Morse <james.morse@arm.com>, Alexandru Elisei <alexandru.elisei@arm.com>, Suzuki K Poulose <suzuki.poulose@arm.com>, Paolo Bonzini <pbonzini@redhat.com>, Sean Christopherson <seanjc@google.com>, Vitaly Kuznetsov <vkuznets@redhat.com>, Wanpeng Li <wanpengli@tencent.com>, Jim Mattson <jmattson@google.com>, Joerg Roedel <joro@8bytes.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Oliver Upton <oupton@google.com>
 Cc: Yosry Ahmed <yosryahmed@google.com>, kvm@vger.kernel.org, linux-kernel@vger.kernel.org, Huang@google.com, Shaoqin <shaoqin.huang@intel.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, kvmarm@lists.cs.columbia.edu, linux-arm-kernel@lists.infradead.org
 
-Count the pages used by KVM mmu on x86 in memory stats under secondary
-pagetable stats (e.g. "SecPageTables" in /proc/meminfo) to give better
-visibility into the memory consumption of KVM mmu in a similar way to
-how normal user page tables are accounted.
+Count the pages used by KVM in arm64 for stage2 mmu in memory stats
+under secondary pagetable stats (e.g. "SecPageTables" in /proc/meminfo)
+to give better visibility into the memory consumption of KVM mmu in a
+similar way to how normal user page tables are accounted.
 
 Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-Reviewed-by: Sean Christopherson <seanjc@google.com>
+Reviewed-by: Oliver Upton <oliver.upton@linux.dev>
+Reviewed-by: Marc Zyngier <maz@kernel.org>
 ---
- arch/x86/kvm/mmu/mmu.c     | 16 ++++++++++++++--
- arch/x86/kvm/mmu/tdp_mmu.c | 12 ++++++++++++
- 2 files changed, 26 insertions(+), 2 deletions(-)
+ arch/arm64/kvm/mmu.c | 36 ++++++++++++++++++++++++++++++++----
+ 1 file changed, 32 insertions(+), 4 deletions(-)
 
-diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
-index e418ef3ecfcb..4d38e4eba772 100644
---- a/arch/x86/kvm/mmu/mmu.c
-+++ b/arch/x86/kvm/mmu/mmu.c
-@@ -1665,6 +1665,18 @@ static inline void kvm_mod_used_mmu_pages(struct kvm *kvm, long nr)
- 	percpu_counter_add(&kvm_total_used_mmu_pages, nr);
- }
- 
-+static void kvm_account_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
-+{
-+	kvm_mod_used_mmu_pages(kvm, +1);
-+	kvm_account_pgtable_pages((void *)sp->spt, +1);
-+}
-+
-+static void kvm_unaccount_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
-+{
-+	kvm_mod_used_mmu_pages(kvm, -1);
-+	kvm_account_pgtable_pages((void *)sp->spt, -1);
-+}
-+
- static void kvm_mmu_free_shadow_page(struct kvm_mmu_page *sp)
+diff --git a/arch/arm64/kvm/mmu.c b/arch/arm64/kvm/mmu.c
+index c9a13e487187..34c5feed9dc1 100644
+--- a/arch/arm64/kvm/mmu.c
++++ b/arch/arm64/kvm/mmu.c
+@@ -92,9 +92,13 @@ static bool kvm_is_device_pfn(unsigned long pfn)
+ static void *stage2_memcache_zalloc_page(void *arg)
  {
- 	MMU_WARN_ON(!is_empty_shadow_page(sp->spt));
-@@ -2122,7 +2134,7 @@ static struct kvm_mmu_page *kvm_mmu_alloc_shadow_page(struct kvm *kvm,
- 	 */
- 	sp->mmu_valid_gen = kvm->arch.mmu_valid_gen;
- 	list_add(&sp->link, &kvm->arch.active_mmu_pages);
--	kvm_mod_used_mmu_pages(kvm, +1);
-+	kvm_account_mmu_page(kvm, sp);
+ 	struct kvm_mmu_memory_cache *mc = arg;
++	void *virt;
  
- 	sp->gfn = gfn;
- 	sp->role = role;
-@@ -2456,7 +2468,7 @@ static bool __kvm_mmu_prepare_zap_page(struct kvm *kvm,
- 			list_add(&sp->link, invalid_list);
- 		else
- 			list_move(&sp->link, invalid_list);
--		kvm_mod_used_mmu_pages(kvm, -1);
-+		kvm_unaccount_mmu_page(kvm, sp);
- 	} else {
- 		/*
- 		 * Remove the active root from the active page list, the root
-diff --git a/arch/x86/kvm/mmu/tdp_mmu.c b/arch/x86/kvm/mmu/tdp_mmu.c
-index bf2ccf9debca..672f0432d777 100644
---- a/arch/x86/kvm/mmu/tdp_mmu.c
-+++ b/arch/x86/kvm/mmu/tdp_mmu.c
-@@ -372,6 +372,16 @@ static void handle_changed_spte_dirty_log(struct kvm *kvm, int as_id, gfn_t gfn,
- 	}
+ 	/* Allocated with __GFP_ZERO, so no need to zero */
+-	return kvm_mmu_memory_cache_alloc(mc);
++	virt = kvm_mmu_memory_cache_alloc(mc);
++	if (virt)
++		kvm_account_pgtable_pages(virt, 1);
++	return virt;
  }
  
-+static void tdp_account_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
+ static void *kvm_host_zalloc_pages_exact(size_t size)
+@@ -102,6 +106,21 @@ static void *kvm_host_zalloc_pages_exact(size_t size)
+ 	return alloc_pages_exact(size, GFP_KERNEL_ACCOUNT | __GFP_ZERO);
+ }
+ 
++static void *kvm_s2_zalloc_pages_exact(size_t size)
 +{
-+	kvm_account_pgtable_pages((void *)sp->spt, +1);
++	void *virt = kvm_host_zalloc_pages_exact(size);
++
++	if (virt)
++		kvm_account_pgtable_pages(virt, (size >> PAGE_SHIFT));
++	return virt;
 +}
 +
-+static void tdp_unaccount_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
++static void kvm_s2_free_pages_exact(void *virt, size_t size)
 +{
-+	kvm_account_pgtable_pages((void *)sp->spt, -1);
++	kvm_account_pgtable_pages(virt, -(size >> PAGE_SHIFT));
++	free_pages_exact(virt, size);
 +}
 +
- /**
-  * tdp_mmu_unlink_sp() - Remove a shadow page from the list of used pages
-  *
-@@ -384,6 +394,7 @@ static void handle_changed_spte_dirty_log(struct kvm *kvm, int as_id, gfn_t gfn,
- static void tdp_mmu_unlink_sp(struct kvm *kvm, struct kvm_mmu_page *sp,
- 			      bool shared)
+ static void kvm_host_get_page(void *addr)
  {
-+	tdp_unaccount_mmu_page(kvm, sp);
- 	if (shared)
- 		spin_lock(&kvm->arch.tdp_mmu_pages_lock);
- 	else
-@@ -1132,6 +1143,7 @@ static int tdp_mmu_link_sp(struct kvm *kvm, struct tdp_iter *iter,
- 	if (account_nx)
- 		account_huge_nx_page(kvm, sp);
- 	spin_unlock(&kvm->arch.tdp_mmu_pages_lock);
-+	tdp_account_mmu_page(kvm, sp);
- 
- 	return 0;
+ 	get_page(virt_to_page(addr));
+@@ -112,6 +131,15 @@ static void kvm_host_put_page(void *addr)
+ 	put_page(virt_to_page(addr));
  }
+ 
++static void kvm_s2_put_page(void *addr)
++{
++	struct page *p = virt_to_page(addr);
++	/* Dropping last refcount, the page will be freed */
++	if (page_count(p) == 1)
++		kvm_account_pgtable_pages(addr, -1);
++	put_page(p);
++}
++
+ static int kvm_host_page_count(void *addr)
+ {
+ 	return page_count(virt_to_page(addr));
+@@ -625,10 +653,10 @@ static int get_user_mapping_size(struct kvm *kvm, u64 addr)
+ 
+ static struct kvm_pgtable_mm_ops kvm_s2_mm_ops = {
+ 	.zalloc_page		= stage2_memcache_zalloc_page,
+-	.zalloc_pages_exact	= kvm_host_zalloc_pages_exact,
+-	.free_pages_exact	= free_pages_exact,
++	.zalloc_pages_exact	= kvm_s2_zalloc_pages_exact,
++	.free_pages_exact	= kvm_s2_free_pages_exact,
+ 	.get_page		= kvm_host_get_page,
+-	.put_page		= kvm_host_put_page,
++	.put_page		= kvm_s2_put_page,
+ 	.page_count		= kvm_host_page_count,
+ 	.phys_to_virt		= kvm_host_va,
+ 	.virt_to_phys		= kvm_host_pa,
 -- 
 2.37.1.595.g718a3a8f04-goog
