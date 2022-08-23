@@ -1,71 +1,57 @@
 From: "Chris Murphy" <lists-zXQU9YWDTqjmlV4oE/1sFAC/G2K4zDHf@public.gmane.org>
 Subject: Re: oomd with 6.0-rc1 has ridiculously high memory pressure stats wit
-Date: Tue, 23 Aug 2022 14:39:37 -0400
-Message-ID: <9412f39b-9ec1-4542-944c-19577a358b97@www.fastmail.com>
+Date: Tue, 23 Aug 2022 14:59:29 -0400
+Message-ID: <0a6105f9-012a-4b75-b741-6549d7e169d8@www.fastmail.com>
 References: <d0df567c-1f6a-418d-8db7-3f777bd109c8@www.fastmail.com>
  <YwUcGvE/rhHEZ+KO@slm.duckdns.org>
+ <9412f39b-9ec1-4542-944c-19577a358b97@www.fastmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         colorremedies.com; h=cc:cc:content-type:date:date:from:from
         :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:sender:subject:subject:to:to; s=fm2; t=1661280051; x=
-        1661283651; bh=qvny2MgkE8/C3PWUD0tDtZJxNolLM559Kqa+QIqtMUA=; b=K
-        7w6Xowcj/wsqu3/e8ZORXa7EepCuFIrI8RdqNPyhFAeFj2KPChPOHkSv+nQEbjZS
-        kWlmyF6JVr8dLUD9EuNBTJ6yuC2tRZjPWO/dGJnDE33cx6LUCchdzpIt/T8sUdUh
-        0czgjEHEaGBB50ylU1/Hg7ZQs7S3LKEXTILGoSUBA7pND+Ve/XOR4xZ1pjieRizs
-        a1PLAnVq3DFuTqayxSBLcjSesDccXfoqJ5HkhvxMeVy04rzdN2tWXkMc6iP2eHJx
-        Yg9VXGxmci2zSaxF1+b3RUiWLLRRi6L9+gZJC9C8i7fuSpsaCZ7sr4Ifch8/Qyy9
-        Oks++rIrYzJwtMANGK+RA==
+        :reply-to:sender:subject:subject:to:to; s=fm2; t=1661281199; x=
+        1661284799; bh=GABU8m9X+3Sbt6EutiL3q4wNZa+NudfPpXTG5PFEDEc=; b=J
+        VxHbywQ9/0IUpy/f8GElZtPuzY9EYW15iOTJfUdQWjX5cVXQvukm+on0M6GHaTB5
+        dEtTbUtHg3NQlJffPC4At51olMDDZPSRMy/iJVJPGyxd9QonI1ca89oSFLa3UP7v
+        nQWAy6puroP6HRzmzoy5V7ocWVlvV4vNKDyWAbAgE0jB2ZsZ+Q9Ue4a4Ma37XMZc
+        DCumZrd9sYwbJNttHCUJIgww6N1DHJEsSR2qlB8lpVqQocay/3aPSxlv2R0Se0cB
+        RVj6PYiGuF4rv/Uhmh2zDNH4saxT7Z+y6u6+I+srEy+2BPk4el1DtFMjjmgfEttC
+        Qm2pobhaYl1tvjvvOqeiQ==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:cc:content-type:date:date:feedback-id
         :feedback-id:from:from:in-reply-to:in-reply-to:message-id
         :mime-version:references:reply-to:sender:subject:subject:to:to
         :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm1; t=1661280051; x=1661283651; bh=qvny2MgkE8/C3PWUD0tDtZJxNolL
-        M559Kqa+QIqtMUA=; b=TLEmUb3YwzgEamXl3Z8ym66biGkJJLOkC466v7hdLvzm
-        /fQ1q6rlVmBmVIFhmbt13bOLk3Z4bWnub8SRrWEaAWTvlUVeMFCuISVCMmEqIfOT
-        7Ixbb43rRBiarFhkPYQCVewFp4b8Z8OkBxBjKl9/Irs5O8fqRJ+R6c629j8ufxVc
-        bxArl9pGQN3T31choEzxZKg80aTNOYu+FHb0RlgzGleu8QrQLPSihxEQN+gue8Vj
-        xpmn/qdG0OTgfMb20M3NnUYi/uTH8omNewZuzuW4+5/x2jgZzthxrObldPqRxGDK
-        w7QbO6vOfpwqmD+KlMwjZfmbLopIDJnbifZRgJiD1g==
-In-Reply-To: <YwUcGvE/rhHEZ+KO-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+        fm1; t=1661281199; x=1661284799; bh=GABU8m9X+3Sbt6EutiL3q4wNZa+N
+        udfPpXTG5PFEDEc=; b=HAHCAfOxbY2zG0WsV+9hm5E7/FudcY2xPH/uSXt1lwNZ
+        Sja+MyN0CPATm0q/YPvWkRaqiCKYXeJVgbRDX281R4FvdWGDwADhgSfjVNwwWviZ
+        W+DS7lRA6f5JlM4rQtIH90U4YMSyLm0NECNFqUfP4ivYUUh74Ymy8jn2NluQ4zSd
+        Vgu+Xz89XhNEwgCEB2mGKoGGt/8eyDBFPE1LKpyPmANEr0SpdIKIX46+al1XilSJ
+        zuc9RtYZ5eBo+N/0OSNXBW+M4zWSW6siSihocAP32yGEG5vPMs1P7LYtdk5Rdr4I
+        1+aghiS/Jqo05cfTtaUZu9PnwpMTnippAs7CE/d6Og==
+In-Reply-To: <9412f39b-9ec1-4542-944c-19577a358b97-jFIJ+Wc5/Vo7lZ9V/NTDHw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Another example,  with 6.0-rc2:
+Same VM but a different boot:
+
+Excerpts:
+
+/sys/fs/cgroup/user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org/session.slice/gvfs-goa-volume-monitor.service/io.pressure:some avg10=3031575.41 avg60=56713935870.67 avg300=624837039080.83 total=18446621498826359
+/sys/fs/cgroup/user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org/session.slice/gvfs-goa-volume-monitor.service/io.pressure:full avg10=3031575.41 avg60=56713935870.80 avg300=624837039080.99 total=16045481047390973
+
+None of that seems possible.
+
+io is also affected:
+
+/sys/fs/cgroup/user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org/session.slice/org.gnome.SettingsDaemon.Smartcard.service/io.pressure:full avg10=0.00 avg60=0.13 avg300=626490311370.87 total=16045481047397307
 
 # oomctl
-Dry Run: no
-Swap Used Limit: 90.00%
-Default Memory Pressure Limit: 60.00%
-Default Memory Pressure Duration: 20s
-System Context:
-        Memory: Used: 1.7G Total: 3.8G
-        Swap: Used: 0B Total: 3.8G
-Swap Monitored CGroups:
-        Path: /
-                Swap Usage: (see System Context)
-Memory Pressure Monitored CGroups:
-        Path: /user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org
-                Memory Pressure Limit: 50.00%
-                Pressure: Avg10: 0.00 Avg60: 0.00 Avg300: 0.10 Total: 140y 3month 18h 24min 20s
-                Current Memory Usage: 1.5G
-                Memory Min: 250.0M
-                Memory Low: 0B
-                Pgscan: 0
-                Last Pgscan: 0
-# cat /sys/fs/cgroup/user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org/memory.pressure
-some avg10=0.00 avg60=0.00 avg300=0.18 total=8367757640799118
-full avg10=0.00 avg60=0.00 avg300=0.07 total=4426019660641432
-
 # grep -R . /sys/fs/cgroup/user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org/
-https://drive.google.com/file/d/1Ro6rKnEx1CCapmO3rz6SDysjP1Bs4_Re/view?usp=sharing 
+https://drive.google.com/file/d/1JoUxjQ2ribDvn5jmydCWXJdg0daaNScG/view?usp=sharing
 
-Actual uptime is ~10 minutes.
-
--- 
-Chris Murphy
+We're going to try reverting 5f69a6577bc33d8f6d6bbe02bccdeb357b287f56 and see if it helps.
