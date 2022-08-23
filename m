@@ -1,85 +1,31 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: an argument for keeping oom_control in cgroups v2
-Date: Tue, 23 Aug 2022 07:06:01 +0200
-Message-ID: <YwRgOcfagx4FfQcY@dhcp22.suse.cz>
-References: <20220822120402.GA20333@foursquare.net>
- <YwRIDTmZJflhKP2n@slm.duckdns.org>
+From: Jing-Ting Wu <Jing-Ting.Wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH 1/1] cgroup: Fix race condition at rebind_subsystems()
+Date: Tue, 23 Aug 2022 13:09:41 +0800
+Message-ID: <20220823050943.28619-1-Jing-Ting.Wu@mediatek.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1661231162; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=n13NAN9ffJ2MVaULyYx08l67c4Jvz9ioDGiOIBNWoTA=;
-        b=kV4cusk4xw/njZv0QPW2NMdhCsG/V77aYBeqmeW6P1+q8rM2Rd/aGS9Vqwrcub7DJK2QBR
-        DFE0caAsqwYmUCjtoNCTBFiJ80LY25e+Cj0vqwR20ImkMyeEaNymjdOJpkGJ3nrZcvnk4P
-        DCwR71kL2yF8tTBLIclCp4Nn+l3Y/Nw=
-Content-Disposition: inline
-In-Reply-To: <YwRIDTmZJflhKP2n-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=ijokMmJKsT0+CBQ8Gdmv6lUHjb9/6ryw7rMwmSGnkVw=;
+        b=GByrc0r3KGPbaCEiHMyIryxylUl/rH/AF3p/EIBetbHVoteuc28GINy4DQQZhC3G2vtFfGpjEJ+1SbHZR1GNitPZLcOFZVjjvOA0V8hjwNaJS4C1FSSXg/ilHhI1NBN5o83jhC6g0jQfHM9dOU72A7+kJD5dJRLpoxhkAXvsodU=;
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Chris Frey <cdfrey-4/nNOD19pEMY+eTVAdjFZg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Content-Type: text/plain; charset="macroman"
+To: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Jonathan.JMChen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, Lixiong.Liu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, Wenju.Xu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, Jing-Ting Wu <Jing-Ting.Wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 
-On Mon 22-08-22 17:22:53, Tejun Heo wrote:
-> (cc'ing memcg folks for visiblity)
-> 
-> On Mon, Aug 22, 2022 at 08:04:02AM -0400, Chris Frey wrote:
-> > In cgroups v1 we had:
-> > 
-> > 	memory.soft_limit_in_bytes
-> > 	memory.limit_in_bytes
-> > 	memory.memsw.limit_in_bytes
-> > 	memory.oom_control
-> > 
-> > Using these features, we could achieve:
-> > 
-> > 	- cause programs that were memory hungry to suffer performance, but
-> > 	  not stop (soft limit)
-
-There is memory.high with a much more sensible semantic and
-implementation to achieve a similar thing.
-
-> > 	- cause programs to swap before the system actually ran out of memory
-> > 	  (limit)
-
-Not sure what this is supposed to mean.
-
-> > 	- cause programs to be OOM-killed if they used too much swap
-> > 	  (memsw.limit...)
-
-
-There is an explicit swap limit. It is true that the semantic is
-different but do you have an example where you cannot really achieve
-what you need by the swap limit?
-
-> > 
-> > 	- cause programs to halt instead of get killed (oom_control)
-> > 
-> > That last feature is something I haven't seen duplicated in the settings
-> > for cgroups v2.  In terms of handling a truly non-malicious memory hungry
-> > program, it is a feature that has no equal, because the user may require
-> > time to free up memory elsewhere before allocating more to the program,
-> > and he may not want the performance degredation, nor the loss of work,
-> > that comes from the other options.
-
-Yes this functionality is not available in v2 anymore. One reason is
-that the implementation had to be considerably reduced to only block on
-OOM for user space triggered page faults 3812c8c8f395 ("mm: memcg: do
-not trap chargers with full callstack on OOM"). The primary reason is,
-as Tejun indicated, that we cannot simply block a random kernel code
-path and wait for userspace because that is a potential DoS on the rest
-of the system and unrelated workloads which is a trivial breakage of
-workload separation.
-
-This means that many other kernel paths which can cause memcg OOM cannot
-be blocked and so the feature is severly crippled. In order to allow for
-this feature we would essentially need a safe place to wait for the
-userspace for any allocation (charging) kernel path where no locks are
-held yet allocation failure is not observed and that is not feasible.
-
-Hope this helps clarify
--- 
-Michal Hocko
-SUSE Labs
+Um9vdCBjYXVzZToKVGhlIHJlYmluZF9zdWJzeXN0ZW1zKCkgaXMgbm8gbG9jayBoZWxkIHdoZW4g
+bW92ZSBjc3Mgb2JqZWN0IGZyb20gQQpsaXN0IHRvIEIgbGlzdCx0aGVuIGxldCBCJ3MgaGVhZCBi
+ZSB0cmVhdGVkIGFzIGNzcyBub2RlIGF0Cmxpc3RfZm9yX2VhY2hfZW50cnlfcmN1KCkuCgpTb2x1
+dGlvbjoKQWRkIGdyYWNlIHBlcmlvZCBiZWZvcmUgaW52YWxpZGF0aW5nIHRoZSByZW1vdmVkIHJz
+dGF0X2Nzc19ub2RlLgoKU3VnZ2VzdGVkLWJ5OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueS1JQmk5
+UkcvYjY3a0BwdWJsaWMuZ21hbmUub3JnPgpTaWduZWQtb2ZmLWJ5OiBKaW5nLVRpbmcgV3UgPEpp
+bmctVGluZy5XdS1OdVM1THZOVXBjSldrMEh0aWszSi93QHB1YmxpYy5nbWFuZS5vcmc+Ci0tLQog
+a2VybmVsL2Nncm91cC9jZ3JvdXAuYyB8IDEgKwogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9u
+KCspCgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9jZ3JvdXAuYyBiL2tlcm5lbC9jZ3JvdXAv
+Y2dyb3VwLmMKaW5kZXggZmZhY2NkNjM3M2YxLi4wZDBjOTU5OTY2ZWQgMTAwNjQ0Ci0tLSBhL2tl
+cm5lbC9jZ3JvdXAvY2dyb3VwLmMKKysrIGIva2VybmVsL2Nncm91cC9jZ3JvdXAuYwpAQCAtMTgy
+MCw2ICsxODIwLDcgQEAgaW50IHJlYmluZF9zdWJzeXN0ZW1zKHN0cnVjdCBjZ3JvdXBfcm9vdCAq
+ZHN0X3Jvb3QsIHUxNiBzc19tYXNrKQogCiAJCWlmIChzcy0+Y3NzX3JzdGF0X2ZsdXNoKSB7CiAJ
+CQlsaXN0X2RlbF9yY3UoJmNzcy0+cnN0YXRfY3NzX25vZGUpOworCQkJc3luY2hyb25pemVfcmN1
+KCk7CiAJCQlsaXN0X2FkZF9yY3UoJmNzcy0+cnN0YXRfY3NzX25vZGUsCiAJCQkJICAgICAmZGNn
+cnAtPnJzdGF0X2Nzc19saXN0KTsKIAkJfQotLSAKMi4xOC4wCgo=
