@@ -1,91 +1,67 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: an argument for keeping oom_control in cgroups v2
-Date: Tue, 23 Aug 2022 09:10:37 -0700
-Message-ID: <YwT7/VFUTNmjarTh@P9FQF9L96D>
-References: <20220822120402.GA20333@foursquare.net>
- <YwRIDTmZJflhKP2n@slm.duckdns.org>
- <YwRgOcfagx4FfQcY@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 09/10] sched/psi: per-cgroup PSI stats
+ disable/re-enable interface
+Date: Tue, 23 Aug 2022 06:20:20 -1000
+Message-ID: <YwT+RDZyszAQ/Vro@slm.duckdns.org>
+References: <20220808110341.15799-1-zhouchengming@bytedance.com>
+ <20220808110341.15799-10-zhouchengming@bytedance.com>
+ <YvKd6dezPM6UxfD/@slm.duckdns.org>
+ <fcd0bd39-3049-a279-23e6-a6c02b4680a7@bytedance.com>
+ <b89155d3-9315-fefc-408b-4cf538360a1c@bytedance.com>
+ <YvPN07UlaPFAdlet@cmpxchg.org>
+ <20220815132343.GA22640@blackbody.suse.cz>
+ <9d1997a4-9278-07bd-7f57-952306b28b14@bytedance.com>
+ <YwTz32VWuZeLHOHe@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1661271056;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=qlxaZaSbPuFAJAQmo0ckaf7Kb7p2BorSsDJez+m/eoE=;
-        b=J9YnRL0W8M84pc3H0HjPvYnR1NkEHKI4fQ80YSaSPLrwa5jf41S40YOYdw+wD6ywLUcj3e
-        E5cIimTUCD6vkRDK2wYktIeDPJFHHRxxTG36JatJBY/f80tEU7tujUSsr2/UvK7147Fs4w
-        S/OUrXqfNb8X9sfMmjaSY5vw7QV7cB4=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc;
+        bh=MkchlG+vC7eeExntyPywB6o/N2CwihE3Mv9oTg/XCfA=;
+        b=XxzpYtA2pnvxm7jj/aZsB1ovGYgGFFOxiJHjtvxhSaQ2REDVDoCQIjB/GtHH3oVwse
+         NbSR71cHM3UNRFgLwyej9TpI0L9rWYkF3KkrxZ2C2kw/EhuAh1C8pna4IXsnCDF3BF2V
+         8IhM33IU1xrqLpTtcYD8/GGzjVMCaXX2XEfzTFIJp+wjFzbfTmxY37Dv4svHZMG0+KEo
+         aRjhTxwWgpoysJLCODS4LSRitnpLJHVgILVZtGtASuPTh6vMwSzxhp5+JZNm5nJ5IYCo
+         b3Dy8XSRPGHhnsPawF9cGPvUjeBwgKkMqHXYvYuy4cvIN6PNJjDppSYfrn2gz9H3zm6h
+         9Uyg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <YwRgOcfagx4FfQcY-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <YwTz32VWuZeLHOHe-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Chris Frey <cdfrey-4/nNOD19pEMY+eTVAdjFZg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, corbet-T1hC0tSOHrs@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-On Tue, Aug 23, 2022 at 07:06:01AM +0200, Michal Hocko wrote:
-> On Mon 22-08-22 17:22:53, Tejun Heo wrote:
-> > (cc'ing memcg folks for visiblity)
-> > 
-> > On Mon, Aug 22, 2022 at 08:04:02AM -0400, Chris Frey wrote:
-> > > In cgroups v1 we had:
-> > > 
-> > > 	memory.soft_limit_in_bytes
-> > > 	memory.limit_in_bytes
-> > > 	memory.memsw.limit_in_bytes
-> > > 	memory.oom_control
-> > > 
-> > > Using these features, we could achieve:
-> > > 
-> > > 	- cause programs that were memory hungry to suffer performance, but
-> > > 	  not stop (soft limit)
-> 
-> There is memory.high with a much more sensible semantic and
-> implementation to achieve a similar thing.
-> 
-> > > 	- cause programs to swap before the system actually ran out of memory
-> > > 	  (limit)
-> 
-> Not sure what this is supposed to mean.
-> 
-> > > 	- cause programs to be OOM-killed if they used too much swap
-> > > 	  (memsw.limit...)
-> 
-> 
-> There is an explicit swap limit. It is true that the semantic is
-> different but do you have an example where you cannot really achieve
-> what you need by the swap limit?
-> 
-> > > 
-> > > 	- cause programs to halt instead of get killed (oom_control)
-> > > 
-> > > That last feature is something I haven't seen duplicated in the settings
-> > > for cgroups v2.  In terms of handling a truly non-malicious memory hungry
-> > > program, it is a feature that has no equal, because the user may require
-> > > time to free up memory elsewhere before allocating more to the program,
-> > > and he may not want the performance degredation, nor the loss of work,
-> > > that comes from the other options.
-> 
-> Yes this functionality is not available in v2 anymore. One reason is
-> that the implementation had to be considerably reduced to only block on
-> OOM for user space triggered page faults 3812c8c8f395 ("mm: memcg: do
-> not trap chargers with full callstack on OOM"). The primary reason is,
-> as Tejun indicated, that we cannot simply block a random kernel code
-> path and wait for userspace because that is a potential DoS on the rest
-> of the system and unrelated workloads which is a trivial breakage of
-> workload separation.
-> 
-> This means that many other kernel paths which can cause memcg OOM cannot
-> be blocked and so the feature is severly crippled. In order to allow for
-> this feature we would essentially need a safe place to wait for the
-> userspace for any allocation (charging) kernel path where no locks are
-> held yet allocation failure is not observed and that is not feasible.
+Hello,
 
-Btw, it's fairly easy to emulate the oom_control behaviour using cgroups v2:
-a userspace agent can listen to memory.high/max events and use the cgroup v2
-freezer to stop the workload and handle the oom in v1 oom_control style.
-An agent can have a high/real-time priority, so I guess the behavior will be
-actually quite close to the v1 experience. Much safer though.
+On Tue, Aug 23, 2022 at 11:35:59AM -0400, Johannes Weiner wrote:
+> Re 1: I agree. If desired in the future we can make the default
+> configurable. Kconfig, mount option, what have you. cgroup.pressure
+> will work fine as a name regardless of what the default is.
 
-Thanks!
+Given that there's already cgroup_disable=pressure for cases which want it
+fully disabled, I'm not sure we'd need to add more complex disabling
+options. The only difference that'd make is for users who are configuring
+cgroups manually which is pretty rare and it'd create a clear downside of
+increasing confusion as the base assumption becomes dynamic. So, I think the
+current default-on with opting-out is and will be just fine.
+
+> Re 2: Not all consumers of the pressure metrics create trigger. I
+> would argue that few do. So it isn't the best signal to decide on
+> whether aggregation should occur. And yes, it's further complicated by
+> the triggers being written to the very pressure files. If we don't
+> hide them, we have to come up with another way to mark them as stale,
+> lest they confuse the heck out of users. Without breaking format...
+> 
+> So IMO, default-enable, "cgroup.pressure" as a name, and hiding the
+> pressure files should be good for now while allowing to make the
+> default configurable down the line.
+
+Sounds great.
+
+Thanks.
+
+-- 
+tejun
