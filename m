@@ -1,67 +1,69 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: oomd with 6.0-rc1 has ridiculously high memory pressure stats wit
-Date: Tue, 23 Aug 2022 10:12:08 -1000
-Message-ID: <YwU0mLBMuxpZ7Zwq@slm.duckdns.org>
-References: <d0df567c-1f6a-418d-8db7-3f777bd109c8@www.fastmail.com>
- <YwUcGvE/rhHEZ+KO@slm.duckdns.org>
- <9412f39b-9ec1-4542-944c-19577a358b97@www.fastmail.com>
- <0a6105f9-012a-4b75-b741-6549d7e169d8@www.fastmail.com>
+Subject: [GIT PULL] cgroup fixes for v6.0-rc2
+Date: Tue, 23 Aug 2022 13:45:24 -1000
+Message-ID: <YwVmlMzNMS5ym9JI@slm.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc;
-        bh=5P2IYFXnBuqEEpc4CpdxE08u3EYHqSr7NM2nRc/y1Cs=;
-        b=piey8fd81RjOiCoeeNAbIC9004Ti19DiEvR3H3xP2IKRlfMGEiQErifqfbBA4Imq0Q
-         STVuCTaeYOQNB7IKOUYmxIPWKX42dEChsCUUvSIVp10G4WgCmpX+BZ2DWXNpM85E7Mxf
-         bH0VtQ2YJZJfNZ1kHoyOqTOWJToEyXUgJpPhP2NbIoOicyZejil30mCzfHfwg51M+e2n
-         SaWQrRjOUdy+qjYQSu5TP/HNwmGzBwDmKNRRr95C1NOobQZ4miB2kOQR5NjdwsRFf7Sx
-         Bm7SlDajcKzynKbQR9H8fGWH6nPkO/XmlL4iohsSNyg+zBBIH2KO06UWw7F22QKSA5fX
-         fAaQ==
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :sender:from:to:cc;
+        bh=8UO1wGihVQ8kGhkOFqHrGxvl0WX3n5u+/PNd+s9miG4=;
+        b=Kf/bPhzyGLBmL3jMqyoAS1wVdm0HbkKsBxknTWHyipKk1/Nwbsnkjx331Ne0JBRB1Z
+         MyFkyd7yAasunIGco2idYhnfjVqDntfJCO3BbptWb7lwr73JnW0JWysCDFTWWhyY5S8F
+         i1GNQXvdL7Bnu4N2EdVgAcqIZ5dxdWjFgZjcxhjKXfNV8e8DNekkhBetd0pujeqUpQb5
+         vvoILcm3q0qQ2YURqwseBEYFMEae8tjkz5lz5mBi9Y8uW40GIyXMnaUA8Wmbi8FS4lol
+         +oJnVgLBWqO4vHynvSIY/0ACCmssGZHa5Z7aZ6W7b7r3n7Nus07w9e/jYvwIsxPdHCkw
+         d8Iw==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <0a6105f9-012a-4b75-b741-6549d7e169d8-jFIJ+Wc5/Vo7lZ9V/NTDHw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Chris Murphy <lists-zXQU9YWDTqjmlV4oE/1sFAC/G2K4zDHf@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Aug 23, 2022 at 02:59:29PM -0400, Chris Murphy wrote:
-> Same VM but a different boot:
-> 
-> Excerpts:
-> 
-> /sys/fs/cgroup/user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org/session.slice/gvfs-goa-volume-monitor.service/io.pressure:some avg10=3031575.41 avg60=56713935870.67 avg300=624837039080.83 total=18446621498826359
-> /sys/fs/cgroup/user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org/session.slice/gvfs-goa-volume-monitor.service/io.pressure:full avg10=3031575.41 avg60=56713935870.80 avg300=624837039080.99 total=16045481047390973
-> 
-> None of that seems possible.
-> 
-> io is also affected:
-> 
-> /sys/fs/cgroup/user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org/session.slice/org.gnome.SettingsDaemon.Smartcard.service/io.pressure:full avg10=0.00 avg60=0.13 avg300=626490311370.87 total=16045481047397307
-> 
-> # oomctl
-> # grep -R . /sys/fs/cgroup/user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org/
-> https://drive.google.com/file/d/1JoUxjQ2ribDvn5jmydCWXJdg0daaNScG/view?usp=sharing
-> 
-> We're going to try reverting 5f69a6577bc33d8f6d6bbe02bccdeb357b287f56 and see if it helps.
+The following changes since commit 568035b01cfb107af8d2e4bd2fb9aea22cf5b868:
 
-Can you see whether the following helps?
+  Linux 6.0-rc1 (2022-08-14 15:50:18 -0700)
 
-Thanks.
+are available in the Git repository at:
 
-diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
-index ec66b40bdd40..00d62681ea6a 100644
---- a/kernel/sched/psi.c
-+++ b/kernel/sched/psi.c
-@@ -957,7 +957,7 @@ int psi_cgroup_alloc(struct cgroup *cgroup)
- 	if (static_branch_likely(&psi_disabled))
- 		return 0;
- 
--	cgroup->psi = kmalloc(sizeof(struct psi_group), GFP_KERNEL);
-+	cgroup->psi = kzalloc(sizeof(struct psi_group), GFP_KERNEL);
- 	if (!cgroup->psi)
- 		return -ENOMEM;
- 
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.0-rc2-fixes
+
+for you to fetch changes up to 763f4fb76e24959c370cdaa889b2492ba6175580:
+
+  cgroup: Fix race condition at rebind_subsystems() (2022-08-23 08:11:06 -1000)
+
+----------------------------------------------------------------
+cgroup fixes for v6.0-rc2
+
+Contains fixes for the following issues:
+
+* psi data structure was changed to be allocated dynamically but it wasn't
+  being cleared leading to reporting garbage values and triggering spurious
+  oom kills.
+
+* A deadlock involving cpuset and cpu hotplug.
+
+* When a controller is moved across cgroup hierarchies, css->rstat_css_node
+  didn't get RCU drained properly from the previous list.
+
+----------------------------------------------------------------
+Hao Jia (3):
+      sched/psi: Zero the memory of struct psi_group
+      sched/psi: Remove unused parameter nbytes of psi_trigger_create()
+      sched/psi: Remove redundant cgroup_psi() when !CONFIG_CGROUPS
+
+Jing-Ting Wu (1):
+      cgroup: Fix race condition at rebind_subsystems()
+
+Tejun Heo (1):
+      cgroup: Fix threadgroup_rwsem <-> cpus_read_lock() deadlock
+
+ include/linux/cgroup.h |  5 ----
+ include/linux/psi.h    |  2 +-
+ kernel/cgroup/cgroup.c | 80 +++++++++++++++++++++++++++++++++++---------------
+ kernel/cgroup/cpuset.c |  3 +-
+ kernel/sched/psi.c     | 10 ++-----
+ 5 files changed, 61 insertions(+), 39 deletions(-)
