@@ -1,61 +1,49 @@
-From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [PATCH v2 09/10] sched/psi: per-cgroup PSI stats
- disable/re-enable interface
-Date: Tue, 23 Aug 2022 14:18:21 +0800
-Message-ID: <9d1997a4-9278-07bd-7f57-952306b28b14@bytedance.com>
-References: <20220808110341.15799-1-zhouchengming@bytedance.com>
- <20220808110341.15799-10-zhouchengming@bytedance.com>
- <YvKd6dezPM6UxfD/@slm.duckdns.org>
- <fcd0bd39-3049-a279-23e6-a6c02b4680a7@bytedance.com>
- <b89155d3-9315-fefc-408b-4cf538360a1c@bytedance.com>
- <YvPN07UlaPFAdlet@cmpxchg.org> <20220815132343.GA22640@blackbody.suse.cz>
+From: Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [PATCH 1/1] cgroup: Fix race condition at rebind_subsystems()
+Date: Tue, 23 Aug 2022 13:03:58 +0530
+Message-ID: <45e18c45-1c09-863a-65a0-3ae03ba4f859@quicinc.com>
+References: <20220823054148.29346-1-Jing-Ting.Wu@mediatek.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc;
-        bh=3/lhotbB4Uar/lt4peIcoGTYHkX7iv9Q8q1pdoozNu0=;
-        b=HPvGXZlhi0nU7N1qbXgghsfXNeuVWNupf6HJIuUeCRUD+8IoJow9QQ7ZaoAYF9g2+C
-         hnnO0pM7HFbyVhJxv18B1ycqujMTc2vX71070Q9FFIBweuSgou7ZSEJMdRBijO0HA1/v
-         FziVPVgeu9nU3FeEU+XGUMmiPxP6Tqr6OUBx2ErNlGlCivCeGIEakr0+82PSQi4eaz/D
-         l2UYL0w2n9VktS8Ugo3FsCCvW+76y9QaTh8c387K5RFQD/DsfSQpgidjQvcDNGSloG4v
-         naUMJYfoeUsvz0VFr0vC18XrBtpusuu0Zoh2D1f673+pqa0E0rBuJnPgWiIanuG/4h8S
-         2JVg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=3d/ElBXcPYxKWyW49KyvVjAnEwq+qBCx+4YLXDcWY5k=;
+ b=SaDJhOAG/4gQ0onXSxFKM92KFD5cJU3jtNBuWjvn4DFo87n6AM77r46kFw39bsFSQ8ai
+ E9JDHh31e8YzMtCepEro/qOb88neXAtYAFOMXm/0HsZfPRfaVtWc++ztIcqpXiALHp1e
+ 5QS8NFLtCCDILYcwluQnJERkJb5r9pcWJy85KRzM4qTt3JAsnUGdrAZCf+Vz/UZZlRRz
+ sVljtmbkPISxsK+7XtLLznl2zglxSGhhTsoPjtfiBco/CXBoeH2kwA24cM88YK4pfE+J
+ +A1DiBli75rgxkwScHDJiEpNu527ye6an99ivw2sABtOa1iDw+eU7O9AIFPtca+c3+DU 3A== 
 Content-Language: en-US
-In-Reply-To: <20220815132343.GA22640-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+In-Reply-To: <20220823054148.29346-1-Jing-Ting.Wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, corbet-T1hC0tSOHrs@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+Content-Type: text/plain; charset="macroman"; format="flowed"
+To: Jing-Ting Wu <Jing-Ting.Wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Jonathan.JMChen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, Lixiong.Liu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, Wenju.Xu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 
-On 2022/8/15 21:23, Michal Koutn=C3=BD wrote:
-> On Wed, Aug 10, 2022 at 11:25:07AM -0400, Johannes Weiner <hannes-druUgvl=
-0LCNAfugRpC6u6w@public.gmane.org> wrote:
->> cgroup.pressure.enable sounds good to me too. Or, because it's
->> default-enabled and that likely won't change, cgroup.pressure.disable.
->=20
-> Will it not change?
->=20
-> I'd say that user would be interested in particular level or even just
-> level in subtree for PSI, so the opt-out may result in lots of explicit
-> disablements (or even watch for cgroups created and disable PSI there)
-> to get some performance back.
->=20
-> I have two suggestions based on the above:
-> 1) Make the default globally configurable (mount option?)
-> 2) Allow implicit enablement upon trigger creation
->=20
-
-I think suggestion 1) make sense in some use case, like make per-cgroup
-PSI disabled by default using a mount option, then enable using the
-"cgroup.pressure" interface.
-
-But suggestion 2) auto enable upon trigger creation, if we hide the
-{cpu,memory,io}.pressure files when disabled, how can we create trigger?
-
-Want to see what do Johannes and Tejun think about these suggestions?
-
-Thanks.
+CgpPbiA4LzIzLzIwMjIgMTE6MTEgQU0sIEppbmctVGluZyBXdSB3cm90ZToKPiBSb290IGNhdXNl
+Ogo+IFRoZSByZWJpbmRfc3Vic3lzdGVtcygpIGlzIG5vIGxvY2sgaGVsZCB3aGVuIG1vdmUgY3Nz
+IG9iamVjdCBmcm9tIEEKPiBsaXN0IHRvIEIgbGlzdCx0aGVuIGxldCBCJ3MgaGVhZCBiZSB0cmVh
+dGVkIGFzIGNzcyBub2RlIGF0Cj4gbGlzdF9mb3JfZWFjaF9lbnRyeV9yY3UoKS4KPiAKPiBTb2x1
+dGlvbjoKPiBBZGQgZ3JhY2UgcGVyaW9kIGJlZm9yZSBpbnZhbGlkYXRpbmcgdGhlIHJlbW92ZWQg
+cnN0YXRfY3NzX25vZGUuCj4gCj4gUmVwb3J0ZWQtYnk6IEppbmctVGluZyBXdSA8amluZy10aW5n
+Lnd1LU51UzVMdk5VcGNKV2swSHRpazNKL3dAcHVibGljLmdtYW5lLm9yZz4KPiBTdWdnZXN0ZWQt
+Ynk6IE1pY2hhbCBLb3V0bsO9IDxta291dG55LUlCaTlSRy9iNjdrQHB1YmxpYy5nbWFuZS5vcmc+
+Cj4gU2lnbmVkLW9mZi1ieTogSmluZy1UaW5nIFd1IDxqaW5nLXRpbmcud3UtTnVTNUx2TlVwY0pX
+azBIdGlrM0ovd0BwdWJsaWMuZ21hbmUub3JnPgo+IFRlc3RlZC1ieTogSmluZy1UaW5nIFd1IDxq
+aW5nLXRpbmcud3UtTnVTNUx2TlVwY0pXazBIdGlrM0ovd0BwdWJsaWMuZ21hbmUub3JnPgo+IExp
+bms6IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2xpbnV4LWFybS1rZXJuZWwvZDhmMGJjNWUyZmI2
+ZWQyNTlmOTMzNGM4MzI3OWI0YzAxMTI4M2M0MS5jYW1lbC1OdVM1THZOVXBjSldrMEh0aWszSi93
+QHB1YmxpYy5nbWFuZS5vcmcvVC8KPiAtLS0KPiAgIGtlcm5lbC9jZ3JvdXAvY2dyb3VwLmMgfCAx
+ICsKPiAgIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKQo+IAo+IGRpZmYgLS1naXQgYS9r
+ZXJuZWwvY2dyb3VwL2Nncm91cC5jIGIva2VybmVsL2Nncm91cC9jZ3JvdXAuYwo+IGluZGV4IGZm
+YWNjZDYzNzNmMS4uMGQwYzk1OTk2NmVkIDEwMDY0NAo+IC0tLSBhL2tlcm5lbC9jZ3JvdXAvY2dy
+b3VwLmMKPiArKysgYi9rZXJuZWwvY2dyb3VwL2Nncm91cC5jCj4gQEAgLTE4MjAsNiArMTgyMCw3
+IEBAIGludCByZWJpbmRfc3Vic3lzdGVtcyhzdHJ1Y3QgY2dyb3VwX3Jvb3QgKmRzdF9yb290LCB1
+MTYgc3NfbWFzaykKPiAgIAo+ICAgCQlpZiAoc3MtPmNzc19yc3RhdF9mbHVzaCkgewo+ICAgCQkJ
+bGlzdF9kZWxfcmN1KCZjc3MtPnJzdGF0X2Nzc19ub2RlKTsKPiArCQkJc3luY2hyb25pemVfcmN1
+KCk7Cj4gICAJCQlsaXN0X2FkZF9yY3UoJmNzcy0+cnN0YXRfY3NzX25vZGUsCj4gICAJCQkJICAg
+ICAmZGNncnAtPnJzdGF0X2Nzc19saXN0KTsKPiAgIAkJfQoKR29vZCBjYXRjaC4KCkFja2VkLWJ5
+OiBNdWtlc2ggT2poYSA8cXVpY19tb2poYS1qZkpOYTJwMWdIMUJEZ2pLN3k3VFVRQHB1YmxpYy5n
+bWFuZS5vcmc+CgotTXVrZXNoCgo=
