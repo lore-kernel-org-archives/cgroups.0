@@ -1,73 +1,193 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/1] cgroup: Fix race condition at rebind_subsystems()
-Date: Tue, 23 Aug 2022 08:12:12 -1000
-Message-ID: <YwUYfNEVIOyQXP8d@slm.duckdns.org>
-References: <20220823054148.29346-1-Jing-Ting.Wu@mediatek.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFD RESEND] cgroup: Persistent memory usage tracking
+Date: Tue, 23 Aug 2022 07:12:05 -1000
+Message-ID: <YwUKZWXbqzfy0w4o@slm.duckdns.org>
+References: <20220818143118.17733-1-laoar.shao@gmail.com>
+ <Yv67MRQLPreR9GU5@slm.duckdns.org>
+ <Yv6+HlEzpNy8y5kT@slm.duckdns.org>
+ <CALOAHbDcrj1ifFsNMHBEih5-SXY2rWViig4rQHi9N07JY6CjXA@mail.gmail.com>
+ <Yv/DK+AGlMeBGkF1@slm.duckdns.org>
+ <CALOAHbCvUxQn5Zkp2FJ+eL1VgjeRSq1xQhzdiY87C1Cbib-nig@mail.gmail.com>
+ <YwNold0GMOappUxc@slm.duckdns.org>
+ <CALOAHbBTR-07La=-KPehFab0WDY4V6LovXbrhLXOqKDurHD-9g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane-mx.org@lists.infradead.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=lists.infradead.org; s=bombadil.20210309; h=Sender:
-	Content-Transfer-Encoding:Content-Type:List-Subscribe:List-Help:List-Post:
-	List-Archive:List-Unsubscribe:List-Id:In-Reply-To:MIME-Version:References:
-	Message-ID:Subject:Cc:To:From:Date:Reply-To:Content-ID:Content-Description:
-	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-	List-Owner; bh=l0/EScO7kujkYsls11sRO6TFRpnYi8csTbsNB3b3YWQ=; b=SrM8mtdguT0RB9
-	etCutU+oNH3FRu7BRNA1s+eNPlOLw7TekIDRLVrnH16cCMsQ8rmOLUd27j8lbKcNJCMyYowuYRFH9
-	1fMHQ7mdBHhlMlMTYtKel0UbfbbDjNVw3N4sUGwupJODFAdfk56rWP6R2aRKuv1i+hw0qRkX125hG
-	hjp69l1N6h0kAY2Uyi7lkC36I1x3MfwErkPC+0DEk9vE3C+fA3Hy9zpbSOPbtKawJJIDUDppt0KLO
-	A7VhkBaC6G2shpzwezTBCPxVLVO3c6wh9Z55MYtrydYTtVpkWrteWd+e++7q7yLR70epfxFnupD27
-	eFmB3JEtCbvehcs5ZbwA==;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc;
-        bh=w6Y6IjnB/7GXBq23acV5syGhC64cBXwxU4OuyhZd8CQ=;
-        b=IaP7cFBpGcNi3/hhyxFebsnvxJsMy54QTl7EkiYLgJCebOU1/sY6ya+8Jj7s9gc5zJ
-         m96Jd0oUB9ii7t+kjHWa0AYbqnMm5HXw9j51y4fR0GTSjpmruV6mcpR1pH2bNOo7Eh9J
-         1+m93Urk2CcVD+dQQvvEOgbAJqBAErrzKbUqYPqCFKfnC9JQXmYBIYNVyoJZVAbB6LO2
-         5fvVxUuzhxJTX2ZCcqC78LL+jJzs7uc6dP6iwGIMRwK76xIIh3W8VDmSaT8p0QyXPYzZ
-         WxnHrnIHJWsGCnNde81/z4kR2sB4563gvDfugD+mJi4dvRasMOT9T+3eMQq+GiKhQ+Kp
-         xOkA==
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc;
+        bh=0dpf/dFnqvSQXULZAry29j8dtTwD0KWxL5BSj6ts5Eg=;
+        b=jPA0pd6oBq/PlYVNpLQ9tMeqI8Cl/RJ/N4NznoWBcbRKYwoxkVxka1Sk0FPVwrEnYI
+         /GyffhqFtgl2rq2elMxo4z7MCqh06Fg1Altta7JAOjfvoRvA7SSFCSrKDM1wGwV+g8XU
+         bgULlxeBQvY5EcitXG3qWm8yQF8lZEJ5BT9gLQyMylaZSMD4ZeBs+Xe9tix31zKKLisN
+         AqhRdPNbVN3cUBI75KK7sswjahStF79rglUYO1N6liKUCQqGNEf3oLBDGg3z+doG33+x
+         lkAtTf8jByCkCVMtUS46l3gTKafDUPsim16HzhcHYjSk74ngCm35DzpOKaGeL1MWJYWQ
+         WhyA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20220823054148.29346-1-Jing-Ting.Wu@mediatek.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane-mx.org@lists.infradead.org
-To: Jing-Ting Wu <Jing-Ting.Wu@mediatek.com>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Matthias Brugger <matthias.bgg@gmail.com>, Jonathan.JMChen@mediatek.com, Lixiong.Liu@mediatek.com, wsd_upstream@mediatek.com, Wenju.Xu@mediatek.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org
+In-Reply-To: <CALOAHbBTR-07La=-KPehFab0WDY4V6LovXbrhLXOqKDurHD-9g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, john fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Tue, Aug 23, 2022 at 01:41:46PM +0800, Jing-Ting Wu wrote:
-> Root cause:
-> The rebind_subsystems() is no lock held when move css object from A
-> list to B list,then let B's head be treated as css node at
-> list_for_each_entry_rcu().
-> =
+Hello,
 
-> Solution:
-> Add grace period before invalidating the removed rstat_css_node.
-> =
+On Tue, Aug 23, 2022 at 07:08:17PM +0800, Yafang Shao wrote:
+> On Mon, Aug 22, 2022 at 7:29 PM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > [1] Can this be solved by layering the instance cgroups under persistent
+> >     entity cgroup?
+>
+> Below is some background of kubernetes.
+> In kubernetes, a pod is organized as follows,
+> 
+>                pod
+>                |- Container
+>                |- Container
+> 
+> IOW, it is a two-layer unit, or a two-layer instance.
+> The cgroup dir of the pod is named with a UUID assigned by kubernetes-apiserver.
+> Once the old pod is destroyed (that can happen when the user wants to
+> update their service), the new pod will have a different UUID.
+> That said, different instances will have different cgroup dir.
+> 
+> If we want to introduce a  persistent entity cgroup, we have to make
+> it a three-layer unit.
+> 
+>            persistent-entity
+>            |- pod
+>                  |- Container
+>                  |- Container
+> 
+> There will be some issues,
+> 1.  The kuber-apiserver must maintain the persistent-entity on each host.
+>      It needs a great refactor and the compatibility is also a problem
+> per my discussion with kubernetes experts.
 
-> Reported-by: Jing-Ting Wu <jing-ting.wu@mediatek.com>
-> Suggested-by: Michal Koutn=FD <mkoutny@suse.com>
-> Signed-off-by: Jing-Ting Wu <jing-ting.wu@mediatek.com>
-> Tested-by: Jing-Ting Wu <jing-ting.wu@mediatek.com>
-> Link: https://lore.kernel.org/linux-arm-kernel/d8f0bc5e2fb6ed259f9334c832=
-79b4c011283c41.camel@mediatek.com/T/
+This is gonna be true for anybody. The basic strategy here should be
+defining a clear boundary between system agent and applications so that
+individual applications, even when they build their own subhierarchy
+internally, aren't affected by system level hierarchy configuration changes.
+systemd is already like that with clear delegation boundary. Our (fb)
+container management is like that too. So, while this requires some
+reorganization from the agent side, things like this don't create huge
+backward compatbility issues involving applications. I have no idea about
+k8s, so the situation may differ but in the long term at least, it'd be a
+good idea to build in similar conceptual separation even if it stays with
+cgroup1.
 
-Applied to cgroup/for-6.0-fixes w/ stable tag added.
+> 2.  How to do the monitor?
+>      If there's only one pod under this persistent-entity, we can
+> easily get the memory size of  shared resources by:
+>          Sizeof(shared-resources) = Sizeof(persistent-entity) - Sizeof(pod)
+>     But what if it has N pods and N is dynamically changed ?
+
+There should only be one live pod instance inside the pod's persistent
+cgroup, so the calculation doesn't really change.
+
+> 3.  What if it has more than one shared resource?
+>      For example, pod-foo has two shared resources A and B, pod-bar
+> has two shared resources A and C, and another pod has two shared
+> resources B and C.
+>      How to deploy them?
+>      Pls, note that we can introduce multiple-layer persistent-entity,
+> but which one should be the parent ?
+> 
+> So from my perspective, it is almost impossible.
+
+Yeah, this is a different problem and cgroup has never been good at tracking
+resources shared across multiple groups. There is always tension between
+overhead, complexity and accuracy and the tradeoff re. resource sharing has
+almost always been towards the former two.
+
+Naming specific resources and designating them as being shared and
+accounting them commonly somehow does make sense as an approach as we get to
+avoid the biggest headaches (e.g. how to split a page cache page?) and maybe
+it can even be claimed that a lot of use cases which may want cross-group
+sharing can be sufficiently served by such approach.
+
+That said, it still has to be balanced against other factors. For example,
+memory pressure caused by the shared resources should affect all
+participants in the sharing group in terms of both memory and IO, which
+means that they'll have to stay within a nested subtree structure. This does
+restrict overlapping partial sharing that you described above but the goal
+is finding a reasonable tradeoff, so something has to give.
+
+> > b. Memory is disassociated rather than just reparented on cgroup destruction
+> >    and get re-charged to the next first user. This is attractive in that it
+> >    doesn't require any userspace changes; however, I'm not sure how this
+> >    would work for non-pageable memory usages such as bpf maps. How would we
+> >    detect the next first usage?
+> >
+> 
+> JFYI, There is a reuse path for the bpf map, see my previous RFC[1].
+> [1] https://lore.kernel.org/bpf/20220619155032.32515-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org/
+
+I'm not a big fan of explicit recharging. It's too hairy to use requiring
+mixing system level hierarchy configuration knoweldge with in-application
+resource handling. There should be clear isolation between the two. This is
+also what leads to namespace and visibility issues. Ideally, these should be
+handled by structuring the resource hierarchay correctly from the get-go.
+
+...
+> > b. Let userspace specify which cgroup to charge for some of constructs like
+> >    tmpfs and bpf maps. The key problems with this approach are
+> >
+> >    1. How to grant/deny what can be charged where. We must ensure that a
+> >       descendant can't move charges up or across the tree without the
+> >       ancestors allowing it.
+> >
+> 
+> We can add restrictions to check which memcg can be selected
+> (regarding the selectable memcg).
+> But I think it may be too early to do the restrictions, as only the
+> privileged user can set it.
+> It is the sys admin's responsbility to select a proper memcg.
+> That said, the selectable memcg is not going south.
+
+I generally tend towards shaping interfaces more carefully. We can of course
+add a do-whatever-you-want interface and declare that it's for root only but
+even that becomes complicated with things like userns as we're finding out
+in different areas, but again, nothing is free and approaches like that
+often bring more longterm headaches than the problems they solve.
+
+> >    2. How to specify the cgroup to charge. While specifying the target
+> >       cgroup directly might seem like an obvious solution, it has a couple
+> >       rather serious problems. First, if the descendant is inside a cgroup
+> >       namespace, it might be able to see the target cgroup at all.
+> 
+> It is not a problem. Just sharing our practice below.
+> $ docker run -tid --privileged    \
+>                       --mount
+> type=bind,source=/sys/fs/bpf,target=/sys/fs/bpf    \
+>                       --mount
+> type=bind,source=/sys/fs/cgroup/memory/bpf,target=/bpf-memcg    \
+>                       docker-image
+> 
+> The bind-mount can make it work.
+
+Not mount namespace. cgroup namespace which is used to isolate the cgroup
+subtree that's visible to each container. Please take a look at
+cgroup_namespaces(7).
+
+> >  Second,
+> >       it's an interface which is likely to cause misunderstandings on how it
+> >       can be used. It's too broad an interface.
+> >
+> 
+> As I said above, we just need some restrictions or guidance if that is
+> desired now.
+
+I'm really unlikely to go down that path because as I said before I believe
+that that's a road to long term headaches and already creates immediate
+problems in terms of how it'd interact with other resources. No matter what
+approach we may choose, it has to work with the existing resource hierarchy.
+Otherwise, we end up in a situation where we have to split accounting and
+control of other controllers too which makes little sense for non-memory
+controllers (not that it's great for memory in the first place).
 
 Thanks.
 
--- =
-
+-- 
 tejun
