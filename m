@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH 3/4] blk-throttle: cleanup tg_update_disptime()
-Date: Tue, 23 Aug 2022 09:38:09 +0800
-Message-ID: <20220823013810.406075-4-yukuai1@huaweicloud.com>
+Subject: [PATCH 1/4] blk-throttle: use 'READ/WRITE' instead of '0/1'
+Date: Tue, 23 Aug 2022 09:38:07 +0800
+Message-ID: <20220823013810.406075-2-yukuai1@huaweicloud.com>
 References: <20220823013810.406075-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,56 +14,38 @@ Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kern
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-tg_update_disptime() only need to adjust postion for 'tg' in
-'parent_sq', there is no need to call throtl_enqueue/dequeue_tg(),
-since they will set/clear flag THROTL_TG_PENDING and increase/decrease
-nr_pending, which is useless. By the way, clear the flag/decrease
-nr_pending while there are still throttled bios is not good for debugging.
-
-There are no functional changes.
+Make the code easier to read, like everywhere else.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-throttle.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ block/blk-throttle.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 64002435fa43..47142a1dd102 100644
+index 9f5fe62afff9..fe1fa6441105 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -520,7 +520,6 @@ static void throtl_rb_erase(struct rb_node *n,
+@@ -329,8 +329,8 @@ static struct bio *throtl_pop_queued(struct list_head *queued,
+ /* init a service_queue, assumes the caller zeroed it */
+ static void throtl_service_queue_init(struct throtl_service_queue *sq)
  {
- 	rb_erase_cached(n, &parent_sq->pending_tree);
- 	RB_CLEAR_NODE(n);
--	--parent_sq->nr_pending;
+-	INIT_LIST_HEAD(&sq->queued[0]);
+-	INIT_LIST_HEAD(&sq->queued[1]);
++	INIT_LIST_HEAD(&sq->queued[READ]);
++	INIT_LIST_HEAD(&sq->queued[WRITE]);
+ 	sq->pending_tree = RB_ROOT_CACHED;
+ 	timer_setup(&sq->pending_timer, throtl_pending_timer_fn, 0);
  }
+@@ -1106,7 +1106,7 @@ static int throtl_select_dispatch(struct throtl_service_queue *parent_sq)
+ 		nr_disp += throtl_dispatch_tg(tg);
  
- static void update_min_dispatch_time(struct throtl_service_queue *parent_sq)
-@@ -572,7 +571,11 @@ static void throtl_enqueue_tg(struct throtl_grp *tg)
- static void throtl_dequeue_tg(struct throtl_grp *tg)
- {
- 	if (tg->flags & THROTL_TG_PENDING) {
--		throtl_rb_erase(&tg->rb_node, tg->service_queue.parent_sq);
-+		struct throtl_service_queue *parent_sq =
-+			tg->service_queue.parent_sq;
-+
-+		throtl_rb_erase(&tg->rb_node, parent_sq);
-+		--parent_sq->nr_pending;
- 		tg->flags &= ~THROTL_TG_PENDING;
- 	}
- }
-@@ -990,9 +993,9 @@ static void tg_update_disptime(struct throtl_grp *tg)
- 	disptime = jiffies + min_wait;
+ 		sq = &tg->service_queue;
+-		if (sq->nr_queued[0] || sq->nr_queued[1])
++		if (sq->nr_queued[READ] || sq->nr_queued[WRITE])
+ 			tg_update_disptime(tg);
  
- 	/* Update dispatch time */
--	throtl_dequeue_tg(tg);
-+	throtl_rb_erase(&tg->rb_node, tg->service_queue.parent_sq);
- 	tg->disptime = disptime;
--	throtl_enqueue_tg(tg);
-+	tg_service_queue_add(tg);
- 
- 	/* see throtl_add_bio_tg() */
- 	tg->flags &= ~THROTL_TG_WAS_EMPTY;
+ 		if (nr_disp >= THROTL_QUANTUM)
 -- 
 2.31.1
 
