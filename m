@@ -1,85 +1,54 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v8 4/4] blk-throttle: fix io hung due to configuration
- updates
-Date: Tue, 23 Aug 2022 08:08:43 -1000
-Message-ID: <YwUXq9XO4TstKJ66@slm.duckdns.org>
-References: <20220823033130.874230-1-yukuai1@huaweicloud.com>
- <20220823033130.874230-5-yukuai1@huaweicloud.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: oomd with 6.0-rc1 has ridiculously high memory pressure stats wit
+Date: Tue, 23 Aug 2022 08:27:38 -1000
+Message-ID: <YwUcGvE/rhHEZ+KO@slm.duckdns.org>
+References: <d0df567c-1f6a-418d-8db7-3f777bd109c8@www.fastmail.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc;
-        bh=jMrD17BOV98jk73P9NMr/PINIPRYYcJU7k+IUzeRBQA=;
-        b=or9uvjfPOCaGwdBvw+hLIyR+yPC8qv//wqrLKeu8hWnasHqJPxFAr1OVi/nGYJLywp
-         4MoXa1LsfePr3nTkMbdtLI+IIspnZMLsg8bqwRMUUEqBd2ssYPK8QnOpYFK/IpAFeTVk
-         tn64l35YiVkrtVNO4kyUZD+0EXEi91pcE8wAb9ypz3/y5QOVxs3wElkyEk+38AVMafrS
-         ahsKWdGxRWW+g1JQLLufAZfYq1uq8sPr3d8KbcqW3PzONzMmPwvw6LXY3OaevoGU06hM
-         A6tFf73jfJRDoM2yFxjVc5Z3mUccQu0q2RfXya7Mwi/J8iGRgI6XlTWQwMPma1mNzTb9
-         Ubog==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=+WvRv1MoYZ7sQiK7t+GyZ70lGFaAzp9tw2tlccfkvmk=;
+        b=pCNYuN0qV52Vx7RAFA8Tjg3Hz2xw7hy2GFRZk03BroITwWpspQ7kVFl8GnZiNZYwj0
+         6C+RyprsHjGX+lB/VB448WO6TPXxcTCz8IQpmcewZ+5X7hrEH/mw/4vqw4BWqkDc6FwA
+         OnedAe+4BAqfBX66VcLX4VQ3mk0DDHXK62gsv2WXu76Rh1Vxd5BUkHkWob8uVYX3ss+s
+         2KrYSA6S9db5oVTTEotHhuRx3PgK4/XNXr5Jg90SB8QO5BDvINKA1Y6A+8/993IWlez2
+         qeWGAT7VZiCib09D/F47cQay89J7W8T/fmqFCYwj6jSnRGLYHKswyNcMxRfYb/lHcFJu
+         Pqlw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20220823033130.874230-5-yukuai1@huaweicloud.com>
+In-Reply-To: <d0df567c-1f6a-418d-8db7-3f777bd109c8-jFIJ+Wc5/Vo7lZ9V/NTDHw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: axboe@kernel.dk, ming.lei@redhat.com, mkoutny@suse.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+To: Chris Murphy <lists-zXQU9YWDTqjmlV4oE/1sFAC/G2K4zDHf@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Tue, Aug 23, 2022 at 11:31:30AM +0800, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
-> 
-> If new configuration is submitted while a bio is throttled, then new
-> waiting time is recalculated regardless that the bio might already wait
-> for some time:
-> 
-> tg_conf_updated
->  throtl_start_new_slice
->   tg_update_disptime
->   throtl_schedule_next_dispatch
-> 
-> Then io hung can be triggered by always submmiting new configuration
-> before the throttled bio is dispatched.
-> 
-> Fix the problem by respecting the time that throttled bio already waited.
-> In order to do that, add new fields to record how many bytes/io are
-> waited, and use it to calculate wait time for throttled bio under new
-> configuration.
-> 
-> Some simple test:
-> 1)
-> cd /sys/fs/cgroup/blkio/
-> echo $$ > cgroup.procs
-> echo "8:0 2048" > blkio.throttle.write_bps_device
-> {
->         sleep 2
->         echo "8:0 1024" > blkio.throttle.write_bps_device
-> } &
-> dd if=/dev/zero of=/dev/sda bs=8k count=1 oflag=direct
-> 
-> 2)
-> cd /sys/fs/cgroup/blkio/
-> echo $$ > cgroup.procs
-> echo "8:0 1024" > blkio.throttle.write_bps_device
-> {
->         sleep 4
->         echo "8:0 2048" > blkio.throttle.write_bps_device
-> } &
-> dd if=/dev/zero of=/dev/sda bs=8k count=1 oflag=direct
-> 
-> test results: io finish time
-> 	before this patch	with this patch
-> 1)	10s			6s
-> 2)	8s			6s
-> 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+(cc'ing Johannes for visibility)
 
-For 2-4,
-
- Acked-by: Tejun Heo <tj@kernel.org>
-
-Thanks.
+On Fri, Aug 19, 2022 at 10:51:27PM -0400, Chris Murphy wrote:
+> Hi,
+> 
+> Tracking a downstream bug in Fedora Rawhide testing, where 6.0-rc1 has landed, and we're seeing various GNOME components getting kllled off by systemd-oomd, with the stats showing suspiciously high values:
+> 
+> https://bugzilla.redhat.com/show_bug.cgi?id=2119518
+> 
+> e.g.
+> 
+> Killed /user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org/session.slice/org.gnome.Shell-r28gBBs99rhXz5zEmyOJwQ@public.gmane.org due to memory pressure for /user.slice/user-1000.slice/user-HmGangybm7RTDjBF/Jpztg@public.gmane.org being 27925460729.27% > 50.00% for > 20s with reclaim activity
+> 
+> I'm not seeing evidence of high memory pressure in /proc/pressure though, whereas oomd is reporting really high memory pressure and absolute time for it that makes no sense at all:
+> 
+> >>Sep 09 03:01:05 fedora systemd-oomd[604]:                 Pressure: Avg10: 1255260529528.42 Avg60: 325612.68 Avg300: 757127258245.62 Total: 2month 4w 2d 8h 15min 12s
+> 
+> It's been up for about 2 minutes at this point, not 3 months.
+> 
+> Thanks,
+> 
+> 
+> --
+> Chris Murphy Murphy
 
 -- 
 tejun
