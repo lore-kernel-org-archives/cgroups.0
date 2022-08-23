@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH v8 1/4] blk-throttle: fix that io throttle can only work for single bio
-Date: Tue, 23 Aug 2022 11:31:27 +0800
-Message-ID: <20220823033130.874230-2-yukuai1@huaweicloud.com>
+Subject: [PATCH v8 3/4] blk-throttle: factor out code to calculate ios/bytes_allowed
+Date: Tue, 23 Aug 2022 11:31:29 +0800
+Message-ID: <20220823033130.874230-4-yukuai1@huaweicloud.com>
 References: <20220823033130.874230-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,233 +14,127 @@ Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29T
 
 From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Test scripts:
-cd /sys/fs/cgroup/blkio/
-echo "8:0 1024" > blkio.throttle.write_bps_device
-echo $$ > cgroup.procs
-dd if=/dev/zero of=/dev/sda bs=10k count=1 oflag=direct &
-dd if=/dev/zero of=/dev/sda bs=10k count=1 oflag=direct &
+No functional changes, new apis will be used in later patches to
+calculate wait time for throttled bios when new configuration is
+submitted.
 
-Test result:
-10240 bytes (10 kB, 10 KiB) copied, 10.0134 s, 1.0 kB/s
-10240 bytes (10 kB, 10 KiB) copied, 10.0135 s, 1.0 kB/s
+Noted this patch also rename tg_with_in_iops/bps_limit() to
+tg_within_iops/bps_limit().
 
-The problem is that the second bio is finished after 10s instead of 20s.
-
-Root cause:
-1) second bio will be flagged:
-
-__blk_throtl_bio
- while (true) {
-  ...
-  if (sq->nr_queued[rw]) -> some bio is throttled already
-   break
- };
- bio_set_flag(bio, BIO_THROTTLED); -> flag the bio
-
-2) flagged bio will be dispatched without waiting:
-
-throtl_dispatch_tg
- tg_may_dispatch
-  tg_with_in_bps_limit
-   if (bps_limit == U64_MAX || bio_flagged(bio, BIO_THROTTLED))
-    *wait = 0; -> wait time is zero
-    return true;
-
-commit 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
-support to count split bios for iops limit, thus it adds flagged bio
-checking in tg_with_in_bps_limit() so that split bios will only count
-once for bps limit, however, it introduce a new problem that io throttle
-won't work if multiple bios are throttled.
-
-In order to fix the problem, two flags BIO_IOPS/BPS_THROTTLED is used,
-thus iops and bps can be treated separately for split bio:
-
-1) for bps limit, original bio already flagged, nothing need to be done.
-2) for iops limit, original bio already flagged, and the flag should be
-   cleared before resubmitting the original bio.
-
-Noted this patch also remove the code to set flag in __bio_clone(), it's
-introduced in commit 111be8839817 ("block-throttle: avoid double
-charge"), and author thinks split bio can be resubmited and throttled
-again, which is wrong because split bio will continue to dispatch from
-caller.
-
-Fixes: 9f5ede3c01f9 ("block: throttle split bio in case of iops limit")
-Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/bio.c               |  2 --
- block/blk-merge.c         |  7 +++++++
- block/blk-throttle.c      | 23 +++++++++++++----------
- block/blk-throttle.h      |  6 +++---
- include/linux/bio.h       |  6 ++++--
- include/linux/blk_types.h |  6 ++++--
- 6 files changed, 31 insertions(+), 19 deletions(-)
+ block/blk-throttle.c | 59 ++++++++++++++++++++++++++------------------
+ 1 file changed, 35 insertions(+), 24 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 3d3a2678fea2..77e3b764a078 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -760,8 +760,6 @@ EXPORT_SYMBOL(bio_put);
- static int __bio_clone(struct bio *bio, struct bio *bio_src, gfp_t gfp)
- {
- 	bio_set_flag(bio, BIO_CLONED);
--	if (bio_flagged(bio_src, BIO_THROTTLED))
--		bio_set_flag(bio, BIO_THROTTLED);
- 	bio->bi_ioprio = bio_src->bi_ioprio;
- 	bio->bi_iter = bio_src->bi_iter;
- 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index ff04e9290715..10330bb038ca 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -358,6 +358,13 @@ struct bio *__bio_split_to_limits(struct bio *bio, struct queue_limits *lim,
- 		blkcg_bio_issue_init(split);
- 		bio_chain(split, bio);
- 		trace_block_split(split, bio->bi_iter.bi_sector);
-+
-+		/*
-+		 * original bio will be resubmited and throttled again, clear
-+		 * the iops flag so that it can be count again for iops limit.
-+		 */
-+		if (bio_flagged(bio, BIO_IOPS_THROTTLED))
-+			bio_clear_flag(bio, BIO_IOPS_THROTTLED);
- 		submit_bio_noacct(bio);
- 		return split;
- 	}
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index e47506a8ef47..f3c9dcab63e2 100644
+index 773a355d3838..757b620f0f2d 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -762,7 +762,7 @@ static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
- 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+@@ -754,33 +754,20 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
+ 		   tg->slice_start[rw], tg->slice_end[rw], jiffies);
+ }
+ 
+-static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
+-				  u32 iops_limit, unsigned long *wait)
++static unsigned int calculate_io_allowed(u32 iops_limit,
++					 unsigned long jiffy_elapsed)
+ {
+-	bool rw = bio_data_dir(bio);
+ 	unsigned int io_allowed;
+-	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
  	u64 tmp;
  
--	if (iops_limit == UINT_MAX) {
-+	if (iops_limit == UINT_MAX || bio_flagged(bio, BIO_IOPS_THROTTLED)) {
- 		if (wait)
- 			*wait = 0;
- 		return true;
-@@ -811,7 +811,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 	unsigned int bio_size = throtl_bio_data_size(bio);
- 
- 	/* no need to throttle if this bio's bytes have been accounted */
--	if (bps_limit == U64_MAX || bio_flagged(bio, BIO_THROTTLED)) {
-+	if (bps_limit == U64_MAX || bio_flagged(bio, BIO_BPS_THROTTLED)) {
- 		if (wait)
- 			*wait = 0;
- 		return true;
-@@ -921,13 +921,11 @@ static void throtl_charge_bio(struct throtl_grp *tg, struct bio *bio)
- 	unsigned int bio_size = throtl_bio_data_size(bio);
- 
- 	/* Charge the bio to the group */
--	if (!bio_flagged(bio, BIO_THROTTLED)) {
-+	if (!bio_flagged(bio, BIO_BPS_THROTTLED)) {
- 		tg->bytes_disp[rw] += bio_size;
- 		tg->last_bytes_disp[rw] += bio_size;
- 	}
- 
--	tg->io_disp[rw]++;
--	tg->last_io_disp[rw]++;
- 
- 	/*
- 	 * BIO_THROTTLED is used to prevent the same bio to be throttled
-@@ -935,8 +933,10 @@ static void throtl_charge_bio(struct throtl_grp *tg, struct bio *bio)
- 	 * second time when it eventually gets issued.  Set it when a bio
- 	 * is being charged to a tg.
- 	 */
--	if (!bio_flagged(bio, BIO_THROTTLED))
--		bio_set_flag(bio, BIO_THROTTLED);
-+	if (!bio_flagged(bio, BIO_IOPS_THROTTLED)) {
-+		tg->io_disp[rw]++;
-+		tg->last_io_disp[rw]++;
-+	}
- }
- 
- /**
-@@ -1026,6 +1026,8 @@ static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw)
- 	sq->nr_queued[rw]--;
- 
- 	throtl_charge_bio(tg, bio);
-+	bio_set_flag(bio, BIO_BPS_THROTTLED);
-+	bio_set_flag(bio, BIO_IOPS_THROTTLED);
- 
- 	/*
- 	 * If our parent is another tg, we just need to transfer @bio to
-@@ -2159,8 +2161,11 @@ bool __blk_throtl_bio(struct bio *bio)
- 		qn = &tg->qnode_on_parent[rw];
- 		sq = sq->parent_sq;
- 		tg = sq_to_tg(sq);
--		if (!tg)
-+		if (!tg) {
-+			bio_set_flag(bio, BIO_BPS_THROTTLED);
-+			bio_set_flag(bio, BIO_IOPS_THROTTLED);
- 			goto out_unlock;
-+		}
- 	}
- 
- 	/* out-of-limit, queue to @tg */
-@@ -2189,8 +2194,6 @@ bool __blk_throtl_bio(struct bio *bio)
- 	}
- 
- out_unlock:
--	bio_set_flag(bio, BIO_THROTTLED);
+-	if (iops_limit == UINT_MAX || bio_flagged(bio, BIO_IOPS_THROTTLED)) {
+-		if (wait)
+-			*wait = 0;
+-		return true;
+-	}
 -
- #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
- 	if (throttled || !td->track_bio_latency)
- 		bio->bi_issue.value |= BIO_ISSUE_THROTL_SKIP_LATENCY;
-diff --git a/block/blk-throttle.h b/block/blk-throttle.h
-index c1b602996127..45c6f3c1dfe0 100644
---- a/block/blk-throttle.h
-+++ b/block/blk-throttle.h
-@@ -174,9 +174,9 @@ static inline bool blk_throtl_bio(struct bio *bio)
- {
- 	struct throtl_grp *tg = blkg_to_tg(bio->bi_blkg);
+-	jiffy_elapsed = jiffies - tg->slice_start[rw];
+-
+-	/* Round up to the next throttle slice, wait time must be nonzero */
+-	jiffy_elapsed_rnd = roundup(jiffy_elapsed + 1, tg->td->throtl_slice);
+-
+ 	/*
+-	 * jiffy_elapsed_rnd should not be a big value as minimum iops can be
++	 * jiffy_elapsed should not be a big value as minimum iops can be
+ 	 * 1 then at max jiffy elapsed should be equivalent of 1 second as we
+ 	 * will allow dispatch after 1 second and after that slice should
+ 	 * have been trimmed.
+ 	 */
  
--	/* no need to throttle bps any more if the bio has been throttled */
--	if (bio_flagged(bio, BIO_THROTTLED) &&
--	    !(tg->flags & THROTL_TG_HAS_IOPS_LIMIT))
-+	/* no need to throttle any more if the bio has been throttled */
-+	if (bio_flagged(bio, BIO_BPS_THROTTLED) &&
-+	    bio_flagged(bio, BIO_IOPS_THROTTLED))
- 		return false;
+-	tmp = (u64)iops_limit * jiffy_elapsed_rnd;
++	tmp = (u64)iops_limit * jiffy_elapsed;
+ 	do_div(tmp, HZ);
  
- 	if (!tg->has_rules[bio_data_dir(bio)])
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index ca22b06700a9..8ab014af163d 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -508,8 +508,10 @@ static inline void bio_clone_blkg_association(struct bio *dst,
- static inline void bio_set_dev(struct bio *bio, struct block_device *bdev)
- {
- 	bio_clear_flag(bio, BIO_REMAPPED);
--	if (bio->bi_bdev != bdev)
--		bio_clear_flag(bio, BIO_THROTTLED);
-+	if (bio->bi_bdev != bdev) {
-+		bio_clear_flag(bio, BIO_BPS_THROTTLED);
-+		bio_clear_flag(bio, BIO_IOPS_THROTTLED);
+ 	if (tmp > UINT_MAX)
+@@ -788,6 +775,32 @@ static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
+ 	else
+ 		io_allowed = tmp;
+ 
++	return io_allowed;
++}
++
++static u64 calculate_bytes_allowed(u64 bps_limit, unsigned long jiffy_elapsed)
++{
++	return mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed, (u64)HZ);
++}
++
++static bool tg_within_iops_limit(struct throtl_grp *tg, struct bio *bio,
++				 u32 iops_limit, unsigned long *wait)
++{
++	bool rw = bio_data_dir(bio);
++	unsigned int io_allowed;
++	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
++
++	if (iops_limit == UINT_MAX || bio_flagged(bio, BIO_IOPS_THROTTLED)) {
++		if (wait)
++			*wait = 0;
++		return true;
 +	}
- 	bio->bi_bdev = bdev;
- 	bio_associate_blkg(bio);
++
++	jiffy_elapsed = jiffies - tg->slice_start[rw];
++
++	/* Round up to the next throttle slice, wait time must be nonzero */
++	jiffy_elapsed_rnd = roundup(jiffy_elapsed + 1, tg->td->throtl_slice);
++	io_allowed = calculate_io_allowed(iops_limit, jiffy_elapsed_rnd);
+ 	if (tg->io_disp[rw] + 1 <= io_allowed) {
+ 		if (wait)
+ 			*wait = 0;
+@@ -802,8 +815,8 @@ static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
+ 	return false;
  }
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 1ef99790f6ed..d37cdafa2a07 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -325,8 +325,10 @@ enum {
- 	BIO_QUIET,		/* Make BIO Quiet */
- 	BIO_CHAIN,		/* chained bio, ->bi_remaining in effect */
- 	BIO_REFFED,		/* bio has elevated ->bi_cnt */
--	BIO_THROTTLED,		/* This bio has already been subjected to
--				 * throttling rules. Don't do it again. */
-+	BIO_BPS_THROTTLED,	/* This bio has already been subjected to
-+				 * bps throttling rules. Don't do it again. */
-+	BIO_IOPS_THROTTLED,	/* This bio has already been subjected to
-+				 * iops throttling rules. Don't do it again. */
- 	BIO_TRACE_COMPLETION,	/* bio_endio() should trace the final completion
- 				 * of this bio. */
- 	BIO_CGROUP_ACCT,	/* has been accounted to a cgroup */
+ 
+-static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+-				 u64 bps_limit, unsigned long *wait)
++static bool tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
++				u64 bps_limit, unsigned long *wait)
+ {
+ 	bool rw = bio_data_dir(bio);
+ 	u64 bytes_allowed, extra_bytes;
+@@ -824,9 +837,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 		jiffy_elapsed_rnd = tg->td->throtl_slice;
+ 
+ 	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
+-	bytes_allowed = mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed_rnd,
+-					    (u64)HZ);
+-
++	bytes_allowed = calculate_bytes_allowed(bps_limit, jiffy_elapsed_rnd);
+ 	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
+ 		if (wait)
+ 			*wait = 0;
+@@ -895,8 +906,8 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
+ 				jiffies + tg->td->throtl_slice);
+ 	}
+ 
+-	if (tg_with_in_bps_limit(tg, bio, bps_limit, &bps_wait) &&
+-	    tg_with_in_iops_limit(tg, bio, iops_limit, &iops_wait)) {
++	if (tg_within_bps_limit(tg, bio, bps_limit, &bps_wait) &&
++	    tg_within_iops_limit(tg, bio, iops_limit, &iops_wait)) {
+ 		if (wait)
+ 			*wait = 0;
+ 		return true;
 -- 
 2.31.1
 
