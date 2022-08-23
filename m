@@ -1,94 +1,115 @@
-From: Zhaoyang Huang <huangzhaoyang@gmail.com>
-Subject: Re: [RFC PATCH] memcg: use root_mem_cgroup when css is inherited
-Date: Tue, 23 Aug 2022 10:31:57 +0800
-Message-ID: <CAGWkznEB+R0YBaBFBL7dPqs8R=qKC6+ixTWEGCYy2PaczXkaPA@mail.gmail.com>
-References: <1660908562-17409-1-git-send-email-zhaoyang.huang@unisoc.com>
- <Yv+6YjaGAv52yvq9@slm.duckdns.org> <CALvZod7QdLSMdBoD2WztL72qS8kJe7F79JuCH6t19rRcw6Pn1w@mail.gmail.com>
- <Yv/EArPDTcCrGqJh@slm.duckdns.org> <YwNpI1ydy0yDnBH0@dhcp22.suse.cz>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [RFD RESEND] cgroup: Persistent memory usage tracking
+Date: Mon, 22 Aug 2022 20:01:41 -0700
+Message-ID: <YwRDFe+K837tKGED@P9FQF9L96D>
+References: <20220818143118.17733-1-laoar.shao@gmail.com>
+ <Yv67MRQLPreR9GU5@slm.duckdns.org>
+ <Yv6+HlEzpNy8y5kT@slm.duckdns.org>
+ <CALOAHbDcrj1ifFsNMHBEih5-SXY2rWViig4rQHi9N07JY6CjXA@mail.gmail.com>
+ <Yv/DK+AGlMeBGkF1@slm.duckdns.org>
+ <CALOAHbCvUxQn5Zkp2FJ+eL1VgjeRSq1xQhzdiY87C1Cbib-nig@mail.gmail.com>
+ <YwNold0GMOappUxc@slm.duckdns.org>
+ <CAHS8izNvEpX3Lv7eFn-vu=4ZT96Djk2dU-VU+zOueZaZZbnWNw@mail.gmail.com>
+ <YwPy9hervVxfuuYE@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=azDpKc6FmKTWyiu0fmvIHIHwLpZTiSK1Vlo7KGhRPTI=;
-        b=mOKeqhKYQhMwTLb/MJ8y4BKHtrVT0tL2CLpCqVd982RWh8CKypL1YXMQXH9RXkOYQr
-         svAS8E3tjh/3TZXskHT6eiLzVii7BtFjyyzENE09sgcCl7PJOTZQWNQD8oFDmCLcPXxa
-         R/SMm/X+qEvkdwTnfYLBoFOyLKxMa7H4tewBNQKxpr2iMRa4oHMf6GfZsxsD05kpWw6K
-         L/savuxwWhzpBfzVfVKYEpe6LpvurZbJQkwKDJE7yHE72w3Ud+yG4pGeBHqQHKtM7eGC
-         4y4R1fkzSDJznz1sFG8M7pcRZw1BIJ/Zv3f9VGj0uvD2h7jmIDOaTWdLm9GEI9Yyev0m
-         4fOA==
-In-Reply-To: <YwNpI1ydy0yDnBH0@dhcp22.suse.cz>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1661223711;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Dv94wdcOO0xhOXBTXmDpJmi7ih1YwEJglayhdPRmD3k=;
+        b=Q/s0dQ+GuuAtGebBkJtXV90obc+1Z2wPGeW1NDPwJ7o/ZeFkub5Hgp4xeS/eR5MTQnxkHC
+        9wZfI6JWVaySsx55Vt2v0Jqil9tD47K9d1QDkDgJ4Z2P5ahCSvPDf892RPulMt4lRMFWv2
+        d4hF54n1m03uq1he43PTBbtWh54SEtQ=
+Content-Disposition: inline
+In-Reply-To: <YwPy9hervVxfuuYE-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.com>, Suren Baghdasaryan <surenb@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Shakeel Butt <shakeelb@google.com>, "zhaoyang.huang" <zhaoyang.huang@unisoc.com>, Johannes Weiner <hannes@cmpxchg.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Ke Wang <ke.wang@unisoc.com>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <songmuchun@bytedance.com>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, john fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <lin>
 
-On Mon, Aug 22, 2022 at 7:31 PM Michal Hocko <mhocko@suse.com> wrote:
->
-> On Fri 19-08-22 07:10:26, Tejun Heo wrote:
-> > On Fri, Aug 19, 2022 at 10:08:59AM -0700, Shakeel Butt wrote:
-> > > On Fri, Aug 19, 2022 at 9:29 AM Tejun Heo <tj@kernel.org> wrote:
-> > > >
-> > > > On Fri, Aug 19, 2022 at 07:29:22PM +0800, zhaoyang.huang wrote:
-> > > > > From: Zhaoyang Huang <zhaoyang.huang@unisoc.com>
-> > > > >
-> > > > > It is observed in android system where per-app cgroup is demanded by freezer
-> > > > > subsys and part of groups require memory control. The hierarchy could be simplized
-> > > > > as bellowing where memory charged on group B abserved while we only want have
-> > > > > group E's memory be controlled and B's descendants compete freely for memory.
-> > > > > This should be the consequences of unified hierarchy.
-> > > > > Under this scenario, less efficient memory reclaim is observed when comparing
-> > > > > with no memory control. It is believed that multi LRU scanning introduces some
-> > > > > of the overhead. Furthermore, page thrashing is also heavier than global LRU
-> > > > > which could be the consequences of partial failure of WORKINGSET mechanism as
-> > > > > LRU is too short to protect the active pages.
-> > > > >
-> > > > > A(subtree_control = memory) - B(subtree_control = NULL) - C()
-> > > > >                                                       \ D()
-> > > > >                           - E(subtree_control = memory) - F()
-> > > > >                                                         \ G()
-> > > > >
-> > > > > Signed-off-by: Zhaoyang Huang <zhaoyang.huang@unisoc.com>
-> > > >
-> > > > Just in case it wasn't clear.
-> > > >
-> > > > Nacked-by: Tejun Heo <tj@kernel.org>
-> > > >
-> > > > Thanks.
-> > > >
+On Mon, Aug 22, 2022 at 05:19:50PM -0400, Johannes Weiner wrote:
+> On Mon, Aug 22, 2022 at 12:02:48PM -0700, Mina Almasry wrote:
+> > On Mon, Aug 22, 2022 at 4:29 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > > b. Let userspace specify which cgroup to charge for some of constructs like
+> > >    tmpfs and bpf maps. The key problems with this approach are
 > > >
-> > > Was there a previous discussion on this? The commit message is unreadable.
-> >
-> > http://lkml.kernel.org/r/1660298966-11493-1-git-send-email-zhaoyang.huang@unisoc.com
->
-> Even that discussion doesn't really explain the real underlying problem.
-> There are statements about inefficiency and trashing without any further
-> details or clarifications.
-I would like to quote the comments from google side for more details
-which can also be observed from different vendors.
-"Also be advised that when you enable memcg v2 you will be using
-per-app memcg configuration which implies noticeable overhead because
-every app will have its own group. For example pagefault path will
-regress by about 15%. And obviously there will be some memory overhead
-as well. That's the reason we don't enable them in Android by
-default."
->
-> My very vague understanding is that the Android system would like to
-> freeze specific applications and for that it requires each application
-> to live in its own cgroup. This clashes with a requirement to age and
-> reclaim memory on a different granularity (aka no per process reclaim).
-> So in fact something that cgroup v1 would achieve by having 2
-> hierarchies, one for the freezer which would have a dedicated cgroup for
-> each application and the other for the memory controller where tasks are
-> grouped by a different criteria. This would rule out that a global (or
-> any external memory pressure) reclaim would age LRUs that contain a mix
-> bag of application pages rather than iterate over per-application LRUs.
-> Is that understanding correct?
-Correct, this is just our confusion. Besides, we believe that charge
-the pages to implicit memory enabled parent control group doesn't make
-sense as the memory cannot be managed at all.
-> --
-> Michal Hocko
-> SUSE Labs
+> > >    1. How to grant/deny what can be charged where. We must ensure that a
+> > >       descendant can't move charges up or across the tree without the
+> > >       ancestors allowing it.
+> > >
+> > >    2. How to specify the cgroup to charge. While specifying the target
+> > >       cgroup directly might seem like an obvious solution, it has a couple
+> > >       rather serious problems. First, if the descendant is inside a cgroup
+> > >       namespace, it might be able to see the target cgroup at all. Second,
+> > >       it's an interface which is likely to cause misunderstandings on how it
+> > >       can be used. It's too broad an interface.
+> > >
+> > 
+> > This is pretty much the solution I sent out for review about a year
+> > ago and yes, it suffers from the issues you've brought up:
+> > https://lore.kernel.org/linux-mm/20211120045011.3074840-1-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+> > 
+> > 
+> > >    One solution that I can think of is leveraging the resource domain
+> > >    concept which is currently only used for threaded cgroups. All memory
+> > >    usages of threaded cgroups are charged to their resource domain cgroup
+> > >    which hosts the processes for those threads. The persistent usages have a
+> > >    similar pattern, so maybe the service level cgroup can declare that it's
+> > >    the encompassing resource domain and the instance cgroup can say whether
+> > >    it's gonna charge e.g. the tmpfs instance to its own or the encompassing
+> > >    resource domain.
+> > >
+> > 
+> > I think this sounds excellent and addresses our use cases. Basically
+> > the tmpfs/bpf memory would get charged to the encompassing resource
+> > domain cgroup rather than the instance cgroup, making the memory usage
+> > of the first and second+ instances consistent and predictable.
+> > 
+> > Would love to hear from other memcg folks what they would think of
+> > such an approach. I would also love to hear what kind of interface you
+> > have in mind. Perhaps a cgroup tunable that says whether it's going to
+> > charge the tmpfs/bpf instance to itself or to the encompassing
+> > resource domain?
+> 
+> I like this too. It makes shared charging predictable, with a coherent
+> resource hierarchy (congruent OOM, CPU, IO domains), and without the
+> need for cgroup paths in tmpfs mounts or similar.
+> 
+> As far as who is declaring what goes, though: if the instance groups
+> can declare arbitrary files/objects persistent or shared, they'd be
+> able to abuse this and sneak private memory past local limits and
+> burden the wider persistent/shared domain with it.
+> 
+> I'm thinking it might make more sense for the service level to declare
+> which objects are persistent and shared across instances.
+
+I like this idea.
+
+> 
+> If that's the case, we may not need a two-component interface. Just
+> the ability for an intermediate cgroup to say: "This object's future
+> memory is to be charged to me, not the instantiating cgroup."
+> 
+> Can we require a process in the intermediate cgroup to set up the file
+> or object, and use madvise/fadvise to say "charge me", before any
+> instances are launched?
+
+We need to think how to make this interface convenient to use.
+First, these persistent resources are likely created by some agent software,
+not the main workload. So the requirement to call madvise() from the
+actual cgroup might be not easily achievable.
+
+So _maybe_ something like writing a fd into cgroup.memory.resources.
+
+Second, it would be really useful to export the current configuration
+to userspace. E.g. a user should be able to query to which cgroup the given
+bpf map "belongs" and which bpf maps belong to the given cgroups. Otherwise
+it will create a problem for userspace programs which manage cgroups
+(e.g. systemd): they should be able to restore the current configuration
+from the kernel state, without "remembering" what has been configured
+before.
+
+Thanks!
