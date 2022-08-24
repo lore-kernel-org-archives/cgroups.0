@@ -1,94 +1,67 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [RFC PATCH] memcg: use root_mem_cgroup when css is inherited
-Date: Wed, 24 Aug 2022 12:27:00 +0200
-Message-ID: <YwX89JCQCKMMYdG9@dhcp22.suse.cz>
-References: <YwNpI1ydy0yDnBH0@dhcp22.suse.cz>
- <CAGWkznEB+R0YBaBFBL7dPqs8R=qKC6+ixTWEGCYy2PaczXkaPA@mail.gmail.com>
- <YwRjyx6wFLk8WTDe@dhcp22.suse.cz>
- <CAGWkznGaYTv4u4kOo-rupfyWzDNJXNKTchwP6dbUK-=UXWm47w@mail.gmail.com>
- <YwSQ4APOu/H7lYGL@dhcp22.suse.cz>
- <CAGWkznGd6mgareABseMKY5p0f1=5dkfVkj=NS7_B6OkXBYSwyw@mail.gmail.com>
- <YwS/S9Sd1OWnT81Q@dhcp22.suse.cz>
- <CAGWkznGYLyF+njUB0gFF3JVdThnK9JaNsqxXYFhbdSwEQpCxvA@mail.gmail.com>
- <YwXYVjRpXQjQMsxr@dhcp22.suse.cz>
- <CAGWkznEqX3DwHW_owiK+HuuQ-HsUYK4vKmLhSxgzGn20Vzid2A@mail.gmail.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v3 07/10] sched/psi: add PSI_IRQ to track IRQ/SOFTIRQ
+ pressure
+Date: Wed, 24 Aug 2022 06:46:02 -0400
+Message-ID: <YwYBasgyIU0iQgL3@cmpxchg.org>
+References: <20220824081829.33748-1-zhouchengming@bytedance.com>
+ <20220824081829.33748-8-zhouchengming@bytedance.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1661336821; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=svip1HnOF9D7Fl9aKofEvyk0pEgENUVlEuB1mZtboTA=;
-        b=BSwbM9o5a63Dsl3aydVUid7PDlzXWhAjXTXwpvHPRto/Y+Z4jx+DSo3SpxBtt/QERnMVCr
-        Bsy6tdYVt8qrRFwuly1qta1c5/YJ/QwiiPW6MwVlDOnVjadS+2kc3loarhh3eYS9c9OEfd
-        Ry2BcmegFWJQ3RRPza792trSufbhx4o=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc;
+        bh=Aj++Fk/W1JhvrURKcMUAUKoprlyW7CHD6tgqm6w3ip8=;
+        b=6Iyv3/J5KocnAeNqHO+9drc0u5aILR13sqA6Kvkg5zjYCKXLwJp7Cu69hxIFDTViq+
+         HZYQlApQOCAUdvrC9loeA0eKBfIGGnditmSzzpOZ90vXY1TuDg3lsp31JoFuqP0/wSxU
+         XSX4NHtEDrxhXz5fAmvszL3QwtVPl4/KNvLyXFAGbl+mLr5I/5wj2uzT7zmP6iMEYfIJ
+         9vo0CLZE+RH2KthBtZt8o0SxWYfNCTmfSjT2pcY6uS8qAGOOCRMdyXDM/SlcpnzLMib+
+         au4RGN94O395cioi2TT229XLk3Lnw/U/OjFCbsyXY5/YzL0Dm8dJTgMarbwsOWWBdf1o
+         S4BA==
 Content-Disposition: inline
-In-Reply-To: <CAGWkznEqX3DwHW_owiK+HuuQ-HsUYK4vKmLhSxgzGn20Vzid2A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20220824081829.33748-8-zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ke Wang <ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed 24-08-22 17:34:42, Zhaoyang Huang wrote:
-> On Wed, Aug 24, 2022 at 3:50 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> >
-> > On Wed 24-08-22 10:23:14, Zhaoyang Huang wrote:
-> > > On Tue, Aug 23, 2022 at 7:51 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > [...]
-> > > > One way to achieve that would be shaping the hierarchy the following way
-> > > >             root
-> > > >         /         \
-> > > > no_memcg[1]      memcg[2]
-> > > > ||||||||         |||||
-> > > > app_cgroups     app_cgroups
-> > > >
-> > > > with
-> > > > no_memcg.subtree_control = ""
-> > > > memcg.subtree_control = memory
-> > > >
-> > > > no?
-> > > According to my understanding, No as there will be no no_memcg. All
-> > > children groups under root would have its cgroup.controllers = memory
-> > > as long as root has memory enabled.
-> >
-> > Correct
-> >
-> > > Under this circumstance, all
-> > > descendants group under 'no_memcg' will charge memory to its parent
-> > > group.
-> >
-> > Correct. And why is that a problem? I thought you main concern was a per
-> > application LRUs. With the above configuration all app_cgroups which do
-> > not require an explicit memory control will share the same (no_memcg)
-> > LRU and they will be aged together.
-> I can't agree since this indicates the processes want memory free
-> depending on a specific hierarchy which could have been determined by
-> other subsys.
+On Wed, Aug 24, 2022 at 04:18:26PM +0800, Chengming Zhou wrote:
+> @@ -903,6 +903,36 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
+>  	}
+>  }
+>  
+> +#ifdef CONFIG_IRQ_TIME_ACCOUNTING
+> +void psi_account_irqtime(struct task_struct *task, u32 delta)
+> +{
+> +	int cpu = task_cpu(task);
+> +	void *iter = NULL;
+> +	struct psi_group *group;
+> +	struct psi_group_cpu *groupc;
+> +	u64 now;
+> +
+> +	if (!task->pid)
+> +		return;
+> +
+> +	now = cpu_clock(cpu);
+> +
+> +	while ((group = iterate_groups(task, &iter))) {
+> +		groupc = per_cpu_ptr(group->pcpu, cpu);
+> +
+> +		write_seqcount_begin(&groupc->seq);
+> +
+> +		record_times(groupc, now);
+> +		groupc->times[PSI_IRQ_FULL] += delta;
+> +
+> +		write_seqcount_end(&groupc->seq);
+> +
+> +		if (group->poll_states & (1 << PSI_IRQ_FULL))
+> +			psi_schedule_poll_work(group, 1);
+> +	}
 
-I really fail to understand your requirements.
+Shouldn't this kick avgs_work too? If the CPU is otherwise idle,
+times[PSI_IRQ_FULL] would overflow after two missed averaging runs.
 
-> IMHO, charging the pages which out of explicitly memory
-> enabled group to root could solve all of the above constraints with no
-> harm.
-
-This would break the hierarchical property of the controller. So a
-strong no no. Consider the following example
-
-       root
-	|
-	A
-controllers="memory"
-memory.max = 1G
-subtree_control=""
-|      |      |
-A1     A2     A3
-
-althought A1,2,3 do not have their memory controller enabled explicitly
-they are still constrained by the A memcg limit. If you just charge to
-the root because it doesn't have memory controller enabled explicitly
-then you just evade that constrain. I hope you understand why that is a
-problem.
--- 
-Michal Hocko
-SUSE Labs
+avgs_work should probably also self-perpetuate when PSI_IRQ_FULL is in
+changed_states. (Looking at that code, I think it can be simplified:
+delete nonidle and do `if (changed_states) schedule_delayed_work()`.)
