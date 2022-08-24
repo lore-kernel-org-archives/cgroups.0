@@ -1,167 +1,44 @@
-From: Hao Luo <haoluo@google.com>
-Subject: Re: [PATCH bpf-next v8 1/5] bpf: Introduce cgroup iter
-Date: Tue, 23 Aug 2022 17:23:08 -0700
-Message-ID: <CA+khW7gnAM0+dre+kF4z4-DB2FhemsZRBFKsjXVvVH5U6O4EPw@mail.gmail.com>
-References: <20220812202802.3774257-1-haoluo@google.com> <20220812202802.3774257-2-haoluo@google.com>
- <CAEf4BzbuD+vLzxVkXpiX=yKu2WbHLrekrZS8hx2TWU04m0h-kA@mail.gmail.com>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH v8 1/4] blk-throttle: fix that io throttle can only work
+ for single bio
+Date: Wed, 24 Aug 2022 09:15:32 +0800
+Message-ID: <73c72914-e27d-b261-e040-2dd31e8a6b9f@huaweicloud.com>
+References: <20220823033130.874230-1-yukuai1@huaweicloud.com>
+ <20220823033130.874230-2-yukuai1@huaweicloud.com>
+ <YwUXTL+8E/sPcEUB@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=nOzcA3rS/YzoTQm3mufkwndpYmIoKltWyuaOARH3bwA=;
-        b=CqnNoNuKzKtmwalCFcLeGz1LmHJ73g0Dse/GMHn4DR7qOKXYreU2u8N2oH0ODaRuWC
-         gx9lddxHfhEUOekQk/OZvVZKF+SArj56AxbRrrfq0xpMYiiDQiyq6ZdiktbLLwjnLmGN
-         UcOoJFOnyzOXDNoj0++moct4tSDn5oaT8ZFn1nl7O8ZdrPb7uEMSp0Z0X5YmNtI760Dc
-         QZT0wWvUJr7ov67GUePvmiTqC0KbtFLJZLkXo3uAJifPVycLCQngLSG6KvKaakGjs9Nf
-         Pf6rdT9KB0MnpC+HC8qnYOdDkM8SAn98eScFjM4KZFnKv59X+TFTlt/B3IbcqsZkESae
-         UYxQ==
-In-Reply-To: <CAEf4BzbuD+vLzxVkXpiX=yKu2WbHLrekrZS8hx2TWU04m0h-kA@mail.gmail.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <YwUXTL+8E/sPcEUB-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrii Nakryiko <andrii.nakryiko@gmail.com>
-Cc: linux-kernel@vger.kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>, Andrii Nakryiko <andrii@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, Yonghong Song <yhs@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, KP Singh <kpsingh@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, John Fastabend <john.fastabend@gmail.com>, Michal Koutny <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.com>, Shakeel Butt <shakeelb@google.com>, Yosry Ahmed <yosryahmed@google.com>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Mon, Aug 15, 2022 at 9:17 PM Andrii Nakryiko
-<andrii.nakryiko@gmail.com> wrote:
->
-> On Fri, Aug 12, 2022 at 1:28 PM Hao Luo <haoluo@google.com> wrote:
-> >
-> > Cgroup_iter is a type of bpf_iter. It walks over cgroups in four modes:
-> >
-> >  - walking a cgroup's descendants in pre-order.
-> >  - walking a cgroup's descendants in post-order.
-> >  - walking a cgroup's ancestors.
-> >  - process only the given cgroup.
-> >
-> > When attaching cgroup_iter, one can set a cgroup to the iter_link
-> > created from attaching. This cgroup is passed as a file descriptor
-> > or cgroup id and serves as the starting point of the walk. If no
-> > cgroup is specified, the starting point will be the root cgroup v2.
-> >
-> > For walking descendants, one can specify the order: either pre-order or
-> > post-order. For walking ancestors, the walk starts at the specified
-> > cgroup and ends at the root.
-> >
-> > One can also terminate the walk early by returning 1 from the iter
-> > program.
-> >
-> > Note that because walking cgroup hierarchy holds cgroup_mutex, the iter
-> > program is called with cgroup_mutex held.
-> >
-> > Currently only one session is supported, which means, depending on the
-> > volume of data bpf program intends to send to user space, the number
-> > of cgroups that can be walked is limited. For example, given the current
-> > buffer size is 8 * PAGE_SIZE, if the program sends 64B data for each
-> > cgroup, assuming PAGE_SIZE is 4kb, the total number of cgroups that can
-> > be walked is 512. This is a limitation of cgroup_iter. If the output
-> > data is larger than the kernel buffer size, after all data in the
-> > kernel buffer is consumed by user space, the subsequent read() syscall
-> > will signal EOPNOTSUPP. In order to work around, the user may have to
-> > update their program to reduce the volume of data sent to output. For
-> > example, skip some uninteresting cgroups. In future, we may extend
-> > bpf_iter flags to allow customizing buffer size.
-> >
-> > Acked-by: Yonghong Song <yhs@fb.com>
-> > Acked-by: Tejun Heo <tj@kernel.org>
-> > Signed-off-by: Hao Luo <haoluo@google.com>
-> > ---
-> >  include/linux/bpf.h                           |   8 +
-> >  include/uapi/linux/bpf.h                      |  35 +++
-> >  kernel/bpf/Makefile                           |   3 +
-> >  kernel/bpf/cgroup_iter.c                      | 283 ++++++++++++++++++
-> >  tools/include/uapi/linux/bpf.h                |  35 +++
-> >  .../selftests/bpf/prog_tests/btf_dump.c       |   4 +-
-> >  6 files changed, 366 insertions(+), 2 deletions(-)
-> >  create mode 100644 kernel/bpf/cgroup_iter.c
-> >
-> > diff --git a/include/linux/bpf.h b/include/linux/bpf.h
-> > index a627a02cf8ab..ecb8c61178a1 100644
-> > --- a/include/linux/bpf.h
-> > +++ b/include/linux/bpf.h
-> > @@ -48,6 +48,7 @@ struct mem_cgroup;
-> >  struct module;
-> >  struct bpf_func_state;
-> >  struct ftrace_ops;
-> > +struct cgroup;
-> >
-> >  extern struct idr btf_idr;
-> >  extern spinlock_t btf_idr_lock;
-> > @@ -1730,7 +1731,14 @@ int bpf_obj_get_user(const char __user *pathname, int flags);
-> >         int __init bpf_iter_ ## target(args) { return 0; }
-> >
-> >  struct bpf_iter_aux_info {
-> > +       /* for map_elem iter */
-> >         struct bpf_map *map;
-> > +
-> > +       /* for cgroup iter */
-> > +       struct {
-> > +               struct cgroup *start; /* starting cgroup */
-> > +               int order;
->
-> why not using enum as a type here?
->
+Hi, Tejun
 
-Sorry Andrii, I missed your reply.
+=D4=DA 2022/08/24 2:07, Tejun Heo =D0=B4=B5=C0:
+> Hello,
+>=20
+> Should have asked you earlier but with the BIO_THROTTLED flag setting from
+> clone removed, with single BIO_THROTTLED flag, does the fix still require
+> bytes subtraction? If we can do single flag and we don't need the bytes
+> subtraction, might as well just stay with single flag?
 
-No special reasons. Will use enum in the next version.
+Do you mean 'compensate the over-accounting' for bytes subtraction? If
+so, yes, it's not required.
 
-> > +       } cgroup;
-> >  };
-> >
-> >  typedef int (*bpf_iter_attach_target_t)(struct bpf_prog *prog,
-> > diff --git a/include/uapi/linux/bpf.h b/include/uapi/linux/bpf.h
-> > index 7d1e2794d83e..bc3c901b9f70 100644
-> > --- a/include/uapi/linux/bpf.h
-> > +++ b/include/uapi/linux/bpf.h
-> > @@ -87,10 +87,34 @@ struct bpf_cgroup_storage_key {
-> >         __u32   attach_type;            /* program attach type (enum bpf_attach_type) */
-> >  };
-> >
-> > +enum bpf_iter_order {
-> > +       BPF_ITER_DESCENDANTS_PRE = 0,   /* walk descendants in pre-order. */
-> > +       BPF_ITER_DESCENDANTS_POST,      /* walk descendants in post-order. */
-> > +       BPF_ITER_ANCESTORS_UP,          /* walk ancestors upward. */
-> > +       BPF_ITER_SELF_ONLY,             /* process only a single object. */
-> > +};
-> > +
-> >  union bpf_iter_link_info {
-> >         struct {
-> >                 __u32   map_fd;
-> >         } map;
-> > +       struct {
-> > +               /* Users must specify order using one of the following values:
-> > +                *  - BPF_ITER_DESCENDANTS_PRE
-> > +                *  - BPF_ITER_DESCENDANTS_POST
-> > +                *  - BPF_ITER_ANCESTORS_UP
-> > +                *  - BPF_ITER_SELF_ONLY
-> > +                */
-> > +               __u32   order;
->
-> same, we just declared the UAPI enum above, why not specify that this
-> is that enum here?
->
+This patch actually set two flags when bio is throttled and
+dispatched, and only iops flag is cleared after the original bio is
+split. If only one flag can be used, the way that I come up with is
+that let iops limit become default, which means bio is always counted
+for iops limit each time blk_throtl_bio() is called. I'm not quite
+sure yet if iops limit can be counted excessively this way in some
+special scenario...
 
-Will use enum.
+Thanks,
+Kuai
+>=20
+> Thanks.
+>=20
 
-> > +
-> > +               /* At most one of cgroup_fd and cgroup_id can be non-zero. If
-> > +                * both are zero, the walk starts from the default cgroup v2
-> > +                * root. For walking v1 hierarchy, one should always explicitly
-> > +                * specify cgroup_fd.
-> > +                */
-> > +               __u32   cgroup_fd;
-> > +               __u64   cgroup_id;
->
-> for my own education, does root cgroup has cgroup_id == 0?
->
-
-Yeah, unfortunately, the root cgroup has cgroup_id == 1. :(
-
-> > +       } cgroup;
-> >  };
-> >
->
-> [...]
