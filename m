@@ -1,191 +1,141 @@
-From: Chengming Zhou <zhouchengming@bytedance.com>
-Subject: Re: [PATCH v3 09/10] sched/psi: cache parent psi_group to speed up
- groups iterate
-Date: Wed, 24 Aug 2022 18:48:20 +0800
-Message-ID: <c3e9c6ce-fded-8736-1261-7cd0e98edced@bytedance.com>
+From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [PATCH v3 10/10] sched/psi: per-cgroup PSI accounting
+ disable/re-enable interface
+Date: Wed, 24 Aug 2022 18:55:01 +0800
+Message-ID: <2207ff74-a5ca-8324-0e10-717f235ca161@bytedance.com>
 References: <20220824081829.33748-1-zhouchengming@bytedance.com>
- <20220824081829.33748-10-zhouchengming@bytedance.com>
- <YwX7CeeRDDAhV3UH@cmpxchg.org>
+ <20220824081829.33748-11-zhouchengming@bytedance.com>
+ <YwX2jC2UQ/zeY2E8@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc;
-        bh=thSzRW4aWni7cQ3cLMCpXQQdcNuVFeBQihn5wBZ1w4Y=;
-        b=QyJwad6uBlx7EONkiwSQtU4C7ogMIXSM6RBdTUMtbA/aPQEB9EtM6HaSOGkglKqE2H
-         4STb9aTrlkFFu/WK6ZlEFiu35fXmkVlO7XK9twUpzjhHlTBJTJtGo10n1ylFKSz9LJgr
-         nJyUqtTEm19jj0n1bosKsbU+W8ATWCGmCJEZiBudnD1xsrRlUzRMiiXODXcnT3SAUJls
-         Kr23S2td6KubebWec7dlWiTrGJL9AiU/pBZwfH5D2CMi+XMTq2ZAeB/tDDGBzQ0lMn/E
-         HvafMRvKKhaSmPKSQRXTefAywsKaKU+6oQrtg9DJvEvKigpaPw1Wd9dd31Sqe6slhKuG
-         YyQA==
+        bh=qenSJNlQcmsHihiPBle2MpvTNh+6JGq1GdYHK+MFsEo=;
+        b=GdRPGMdKwlwOOyGiW0JubXH8Id59RVjZ6fEvJvwKqZeGUc3Uw0cL3gGNUkAECdJ4iF
+         cV5Y+HE1wv3dg9mnGAi3NQaJJWU0/IAm//QEz1Gi7jez37RK/zmPQ8Ix5FR9WMlEuggJ
+         5rYMIkn+e1k4NwcNOTvO5VH+j0U+GrUlW+6p64aheNFqUum88lVa0K0+ztGNdzq2hsBQ
+         Tj+t4+HcEYdnL+l4MhW6HfIM8CJpUb3eWM3CxmNli57BCMVr11I/nQop7TIrQFLBymM3
+         tnG2f7gcm2PQq8s00QuV8t5T+aNI112Txm0bPRm1gadrO3IH1udUL0qqDhTMELUeZgGh
+         vz6g==
 Content-Language: en-US
-In-Reply-To: <YwX7CeeRDDAhV3UH@cmpxchg.org>
+In-Reply-To: <YwX2jC2UQ/zeY2E8-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: tj@kernel.org, mkoutny@suse.com, surenb@google.com, gregkh@linuxfoundation.org, corbet@lwn.net, mingo@redhat.com, peterz@infradead.org, songmuchun@bytedance.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2022/8/24 18:18, Johannes Weiner wrote:
+On 2022/8/24 17:59, Johannes Weiner wrote:
 > Hi Chengming,
 > 
-> This looks generally good to me, but I have one comment:
+> Thanks for incorporating all the feedback. I have a few nitpicks
+> below, but with those considered, please add:
 > 
-> On Wed, Aug 24, 2022 at 04:18:28PM +0800, Chengming Zhou wrote:
->> @@ -772,30 +772,18 @@ static void psi_group_change(struct psi_group *group, int cpu,
->>  		schedule_delayed_work(&group->avgs_work, PSI_FREQ);
->>  }
->>  
->> -static struct psi_group *iterate_groups(struct task_struct *task, void **iter)
->> +static inline struct psi_group *task_psi_group(struct task_struct *task)
->>  {
->> -	if (*iter == &psi_system)
->> -		return NULL;
->> -
->>  #ifdef CONFIG_CGROUPS
->> -	if (static_branch_likely(&psi_cgroups_enabled)) {
->> -		struct cgroup *cgroup = NULL;
->> -
->> -		if (!*iter)
->> -			cgroup = task->cgroups->dfl_cgrp;
->> -		else
->> -			cgroup = cgroup_parent(*iter);
->> -
->> -		if (cgroup && cgroup_parent(cgroup)) {
->> -			*iter = cgroup;
->> -			return cgroup_psi(cgroup);
->> -		}
->> -	}
->> +	if (static_branch_likely(&psi_cgroups_enabled))
->> +		return cgroup_psi(task_dfl_cgroup(task));
+> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> 
+> On Wed, Aug 24, 2022 at 04:18:29PM +0800, Chengming Zhou wrote:
+>> @@ -5171,12 +5220,19 @@ static struct cftype cgroup_base_files[] = {
+>>  	{
+>>  		.name = "irq.pressure",
+>>  		.flags = CFTYPE_PRESSURE,
+>> +		.file_offset = offsetof(struct cgroup, psi_files[PSI_IRQ]),
+>>  		.seq_show = cgroup_irq_pressure_show,
+>>  		.write = cgroup_irq_pressure_write,
+>>  		.poll = cgroup_pressure_poll,
+>>  		.release = cgroup_pressure_release,
+>>  	},
 >>  #endif
->> -	*iter = &psi_system;
->>  	return &psi_system;
+>> +	{
+>> +		.name = "cgroup.pressure",
+>> +		.flags = CFTYPE_PRESSURE,
+>> +		.seq_show = cgroup_psi_show,
+>> +		.write = cgroup_psi_write,
+> 
+> To match the naming convention, these should be called
+> cgroup_pressure_show() and cgroup_pressure_write().
+
+Hello,
+
+I forgot to change the names, will do.
+
+> 
+>> @@ -745,6 +745,14 @@ static void psi_group_change(struct psi_group *group, int cpu,
+>>  		if (set & (1 << t))
+>>  			groupc->tasks[t]++;
+>>  
+>> +	if (!group->enabled) {
+>> +		if (groupc->state_mask & (1 << PSI_NONIDLE))
+>> +			record_times(groupc, now);
+> 
+> Thanks for the explanation in the other thread, it made sense. But can
+> you please add a comment to document it? Something like:
+> 
+> 	/*
+> 	 * On the first group change after disabling PSI, conclude
+> 	 * the current state and flush its time. This is unlikely
+> 	 * to matter to the user, but aggregation (get_recent_times)
+> 	 * may have already incorporated the live state into times_prev;
+> 	 * avoid a delta sample underflow when PSI is later re-enabled.
+> 	 */
+> 
+> An unlikely() would also make sense on that branch.
+
+The comment is very helpful, unlikely() is also very good point,
+will add in the next version.
+
+> 
+>> @@ -1081,6 +1092,40 @@ void cgroup_move_task(struct task_struct *task, struct css_set *to)
+>>  
+>>  	task_rq_unlock(rq, task, &rf);
 >>  }
->>  
->> +#define for_each_psi_group(group) \
->> +	for (; group; group = group->parent)
+>> +
+>> +void psi_cgroup_enabled_sync(struct psi_group *group)
+>> +{
+>> +	int cpu;
+>> +
+>> +	/*
+>> +	 * After we disable psi_group->enabled, we don't actually
+>> +	 * stop percpu tasks accounting in each psi_group_cpu,
+>> +	 * instead only stop test_state() loop, record_times()
+>> +	 * and averaging worker, see psi_group_change() for details.
+>> +	 *
+>> +	 * When disable cgroup PSI, this function has nothing to sync
+>> +	 * since cgroup pressure files are hidden and percpu psi_group_cpu
+>> +	 * would see !psi_group->enabled and only do task accounting.
+>> +	 *
+>> +	 * When re-enable cgroup PSI, this function use psi_group_change()
+>> +	 * to get correct state mask from test_state() loop on tasks[],
+>> +	 * and restart groupc->state_start from now, use .clear = .set = 0
+>> +	 * here since no task status really changed.
+>> +	 */
+>> +	if (!group->enabled)
+>> +		return;
 > 
-> It would be better to open-code this. It's hiding that it's walking
-> ancestors, and the name and single parameter suggest it's walking some
-> global list - not that the parameter is iterator AND starting point.
+> Thanks for adding the comment, that's helpful.
 > 
-> This makes for particularly obscure code in the discontiguous loops in
-> psi_task_switch():
-> 
-> 	group = task_psi_group(task);
-> 	for_each_psi_group(group)
-> 		if (group == common)
-> 			break;
-> 	/* This looks like a second full loop: */
-> 	for_each_psi_group(group)
-> 		...
-> 
+> I think the function would be a tad clearer and self-documenting if
+> you called it psi_cgroup_restart(), and only call it on enabling.
 
-Good point, it's not clear as open-code, I will change these in next version.
+Ok, it's better, will do.
 
-Thanks!
+Thanks for your review!
 
-
->>  static void psi_flags_change(struct task_struct *task, int clear, int set)
->>  {
->>  	if (((task->psi_flags & set) ||
->> @@ -815,7 +803,6 @@ void psi_task_change(struct task_struct *task, int clear, int set)
->>  {
->>  	int cpu = task_cpu(task);
->>  	struct psi_group *group;
->> -	void *iter = NULL;
->>  	u64 now;
->>  
->>  	if (!task->pid)
->> @@ -825,7 +812,8 @@ void psi_task_change(struct task_struct *task, int clear, int set)
->>  
->>  	now = cpu_clock(cpu);
->>  
->> -	while ((group = iterate_groups(task, &iter)))
->> +	group = task_psi_group(task);
->> +	for_each_psi_group(group)
->>  		psi_group_change(group, cpu, clear, set, now, true);
 > 
-> task_psi_group() is never NULL, so this should be a do-while loop:
+>> +	for_each_possible_cpu(cpu) {
+>> +		struct rq *rq = cpu_rq(cpu);
+>> +		struct rq_flags rf;
+>> +		u64 now;
+>> +
+>> +		rq_lock_irq(rq, &rf);
+>> +		now = cpu_clock(cpu);
+>> +		psi_group_change(group, cpu, 0, 0, now, true);
+>> +		rq_unlock_irq(rq, &rf);
+>> +	}
+>> +}
+>>  #endif /* CONFIG_CGROUPS */
 > 
-> 	group = task_psi_group(task);
-> 	do {
-> 		psi_group_change(group, cpu, clear, set, now, true);
-> 	} while ((group = group->parent));
-> 
->> @@ -834,7 +822,6 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
->>  {
->>  	struct psi_group *group, *common = NULL;
->>  	int cpu = task_cpu(prev);
->> -	void *iter;
->>  	u64 now = cpu_clock(cpu);
->>  
->>  	if (next->pid) {
->> @@ -845,8 +832,8 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
->>  		 * we reach the first common ancestor. Iterate @next's
->>  		 * ancestors only until we encounter @prev's ONCPU.
->>  		 */
->> -		iter = NULL;
->> -		while ((group = iterate_groups(next, &iter))) {
->> +		group = task_psi_group(next);
->> +		for_each_psi_group(group) {
-> 
-> Ditto.
-> 
->>  			if (per_cpu_ptr(group->pcpu, cpu)->state_mask &
->>  			    PSI_ONCPU) {
->>  				common = group;
->> @@ -887,9 +874,12 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
->>  
->>  		psi_flags_change(prev, clear, set);
->>  
->> -		iter = NULL;
->> -		while ((group = iterate_groups(prev, &iter)) && group != common)
->> +		group = task_psi_group(prev);
->> +		for_each_psi_group(group) {
->> +			if (group == common)
->> +				break;
-> 
-> Ditto.
-> 
->>  			psi_group_change(group, cpu, clear, set, now, wake_clock);
->> +		}
->>  
->>  		/*
->>  		 * TSK_ONCPU is handled up to the common ancestor. If we're tasked
->> @@ -897,7 +887,7 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
->>  		 */
->>  		if (sleep || unlikely(prev->in_memstall != next->in_memstall)) {
->>  			clear &= ~TSK_ONCPU;
->> -			for (; group; group = iterate_groups(prev, &iter))
->> +			for_each_psi_group(group)
->>  				psi_group_change(group, cpu, clear, set, now, wake_clock);
-> 
-> This can stay as is, group may already be NULL here.
-> 
->> @@ -907,7 +897,6 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
->>  void psi_account_irqtime(struct task_struct *task, u32 delta)
->>  {
->>  	int cpu = task_cpu(task);
->> -	void *iter = NULL;
->>  	struct psi_group *group;
->>  	struct psi_group_cpu *groupc;
->>  	u64 now;
->> @@ -917,7 +906,8 @@ void psi_account_irqtime(struct task_struct *task, u32 delta)
->>  
->>  	now = cpu_clock(cpu);
->>  
->> -	while ((group = iterate_groups(task, &iter))) {
->> +	group = task_psi_group(task);
->> +	for_each_psi_group(group) {
->>  		groupc = per_cpu_ptr(group->pcpu, cpu);
-> 
-> do-while again.
-> 
-> With that,
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> 
-> Thanks!
+> Thanks,
+> Johannes
