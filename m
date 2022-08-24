@@ -1,35 +1,35 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-6.0-fixes] BUILD SUCCESS
- 763f4fb76e24959c370cdaa889b2492ba6175580
-Date: Thu, 25 Aug 2022 02:40:37 +0800
-Message-ID: <630670a5.s/4w3lZrlXHmGHdx%lkp@intel.com>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ b48dc0e02bb6f7c284e86f25802b38b4ff838d49
+Date: Thu, 25 Aug 2022 02:40:34 +0800
+Message-ID: <630670a2.KWUSeiZpkdHMXstd%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1661366493; x=1692902493;
+  t=1661366498; x=1692902498;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=oIPySqj+sHYhRiBTiZzz0o+5rieiD04KIZEhKsO6xzE=;
-  b=MgDyTDb52XLYEl7V0hT9aZWSkikEnM0fNo912EyPcgHwW1txBt8fvgV/
-   mro0ABZ2+u/Cf0OHRNsXhRnER7F1rHA8aCUeMEPvQ8nq32meaBLxA25e5
-   LJUdTB+4xptUh1826RrqgHakpbY/s3FVHXOKvHcJYnQF6O+Z9KPrGBszD
-   7U2Z4VDUD6yPzrlDUTb/MmNOJOPvxvTUZ2xuZTrDpZzmdaTsDDVxz1Voz
-   SqfnpHdNucS0diANGniNpJO8PXQsL4vYw6Mx+XE098Sy25ykD8XDzVDfa
-   yHMH701jKlKGfI1tLs12KV/hnLG/9rntszQ7tSX6CyihPUJmWbJ03qm6q
-   w==;
+  bh=8dupl29EAy0Ka34PVS/a1ZmJiV602Wivmy2eEeo2M5k=;
+  b=RdFAgFZVK2VZVBr07wZvZYc6uvh8UsMBp57xJNzP/fal+AklxkC2l+At
+   uT16RnwH6jjY50cx1kQ7Gcc4LriKG3AKyq3Yg0CjX47uNTLbmUjVczc5k
+   7dYNRF+3u1+Otz8jLZh/hRAoU0GCEa2cjuvwUlvxQ34IwpdhOhnBoj+Ci
+   zvOpSIvgxUg+hIPm9qUAyfULtd+NXs53DJD92mnZfy+YqA0FHRc9pnoFp
+   Eccv/Eh9Dl/4+VwL6HPmNkOjXG5cQel4dLChK7OZDO/UQGq55Hi4mJ4TM
+   b2cWQPQcEEjx3u7O7bvHWljnp1+82GM6xUNN6qMtvVWdVDZ7lEM9ASDmK
+   A==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.0-fixes
-branch HEAD: 763f4fb76e24959c370cdaa889b2492ba6175580  cgroup: Fix race condition at rebind_subsystems()
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: b48dc0e02bb6f7c284e86f25802b38b4ff838d49  Merge branch 'for-6.0-fixes' into for-next
 
 elapsed time: 1445m
 
-configs tested: 149
+configs tested: 146
 configs skipped: 4
 
 The following configs have been built successfully.
@@ -55,19 +55,19 @@ m68k                             allyesconfig
 m68k                             allmodconfig
 arc                              allyesconfig
 alpha                            allyesconfig
-sh                           se7724_defconfig
-arm                         lubbock_defconfig
-powerpc                   currituck_defconfig
 i386                          debian-10.3-kvm
 i386                        debian-10.3-kunit
 i386                         debian-10.3-func
+sh                           se7724_defconfig
+arm                         lubbock_defconfig
+powerpc                   currituck_defconfig
 i386                          randconfig-c001
+i386                             allyesconfig
+i386                                defconfig
 m68k                        m5272c3_defconfig
 m68k                          atari_defconfig
 sh                          sdk7786_defconfig
 powerpc                    klondike_defconfig
-i386                             allyesconfig
-i386                                defconfig
 s390                                defconfig
 s390                             allmodconfig
 arc                                 defconfig
@@ -145,13 +145,10 @@ arm                        shmobile_defconfig
 ia64                          tiger_defconfig
 mips                      loongson3_defconfig
 arm                             rpc_defconfig
-ia64                             allmodconfig
 x86_64                        randconfig-a011
 x86_64                        randconfig-a013
 x86_64                        randconfig-a015
-arm                            lart_defconfig
-m68k                       m5249evb_defconfig
-sh                             espt_defconfig
+ia64                             allmodconfig
 
 clang tested configs:
 hexagon              randconfig-r045-20220823
