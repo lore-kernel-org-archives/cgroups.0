@@ -1,76 +1,193 @@
-From: Ryan Roberts <ryan.roberts-5wv7dgnIgG8@public.gmane.org>
-Subject: Re: [PATCH v7 1/4] mm: add NR_SECONDARY_PAGETABLE to count secondary
- page table uses.
-Date: Wed, 24 Aug 2022 18:40:13 +0100
-Message-ID: <69b50235-b77d-5310-2cc6-040f936b8864@arm.com>
-References: <20220823004639.2387269-1-yosryahmed@google.com>
- <20220823004639.2387269-2-yosryahmed@google.com>
- <5ac13c91-0e42-533b-42d0-c78573c7aef3@arm.com>
- <CAJD7tkbn7mFvf0oiUKPZtu92GtuMht-s5iPBRfEuUfTxXC_j8Q@mail.gmail.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-6.0-fixes] BUILD SUCCESS
+ 763f4fb76e24959c370cdaa889b2492ba6175580
+Date: Thu, 25 Aug 2022 02:40:37 +0800
+Message-ID: <630670a5.s/4w3lZrlXHmGHdx%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=armh.onmicrosoft.com;
- s=selector2-armh-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+bM3NU/bL0nZHlk4kwrx+1jlhPFQOsK2oGf5febQz9M=;
- b=E8K3tfgYR16XXoMvgyl8eGf1mu6pJ2Vz9SP6C7nWdksjoSj7j732oqSL2Vj4CEU+rU+th9Ur/xboM3IftsX6vKHQKzNHZixk97Ndw3fPO+DBSRHe3gDhYXjaTWStxU+gZKMfmN51iZwyFrd8RetdBk7zmPObkn3sX7IDczlzJLM=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=armh.onmicrosoft.com;
- s=selector2-armh-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+bM3NU/bL0nZHlk4kwrx+1jlhPFQOsK2oGf5febQz9M=;
- b=E8K3tfgYR16XXoMvgyl8eGf1mu6pJ2Vz9SP6C7nWdksjoSj7j732oqSL2Vj4CEU+rU+th9Ur/xboM3IftsX6vKHQKzNHZixk97Ndw3fPO+DBSRHe3gDhYXjaTWStxU+gZKMfmN51iZwyFrd8RetdBk7zmPObkn3sX7IDczlzJLM=
-Content-Language: en-US
-In-Reply-To: <CAJD7tkbn7mFvf0oiUKPZtu92GtuMht-s5iPBRfEuUfTxXC_j8Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1661366493; x=1692902493;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=oIPySqj+sHYhRiBTiZzz0o+5rieiD04KIZEhKsO6xzE=;
+  b=MgDyTDb52XLYEl7V0hT9aZWSkikEnM0fNo912EyPcgHwW1txBt8fvgV/
+   mro0ABZ2+u/Cf0OHRNsXhRnER7F1rHA8aCUeMEPvQ8nq32meaBLxA25e5
+   LJUdTB+4xptUh1826RrqgHakpbY/s3FVHXOKvHcJYnQF6O+Z9KPrGBszD
+   7U2Z4VDUD6yPzrlDUTb/MmNOJOPvxvTUZ2xuZTrDpZzmdaTsDDVxz1Voz
+   SqfnpHdNucS0diANGniNpJO8PXQsL4vYw6Mx+XE098Sy25ykD8XDzVDfa
+   yHMH701jKlKGfI1tLs12KV/hnLG/9rntszQ7tSX6CyihPUJmWbJ03qm6q
+   w==;
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Huang@g
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 24/08/2022 18:25, Yosry Ahmed wrote:
-> On Wed, Aug 24, 2022 at 6:42 AM Ryan Roberts <ryan.roberts-5wv7dgnIgG8@public.gmane.org> wrote:
->>
->>> diff --git a/Documentation/filesystems/proc.rst b/Documentation/filesystems/proc.rst
->>> index e7aafc82be99..898c99eae8e4 100644
->>> --- a/Documentation/filesystems/proc.rst
->>> +++ b/Documentation/filesystems/proc.rst
->>> @@ -982,6 +982,7 @@ Example output. You may not have all of these fields.
->>>        SUnreclaim:       142336 kB
->>>        KernelStack:       11168 kB
->>>        PageTables:        20540 kB
->>> +    SecPageTables:         0 kB
->>>        NFS_Unstable:          0 kB
->>>        Bounce:                0 kB
->>>        WritebackTmp:          0 kB
->>> @@ -1090,6 +1091,9 @@ KernelStack
->>>                  Memory consumed by the kernel stacks of all tasks
->>>    PageTables
->>>                  Memory consumed by userspace page tables
->>> +SecPageTables
->>> +              Memory consumed by secondary page tables, this currently
->>> +              currently includes KVM mmu allocations on x86 and arm64.
->>
->> nit: I think you have a typo here: "currently currently".
-> 
-> Sorry I missed this, thanks for catching it. The below diff fixes it
-> (let me know if I need to send v8 for this, hopefully not).
-> 
-> diff --git a/Documentation/filesystems/proc.rst
-> b/Documentation/filesystems/proc.rst
-> index 898c99eae8e4..0b3778ec12e1 100644
-> --- a/Documentation/filesystems/proc.rst
-> +++ b/Documentation/filesystems/proc.rst
-> @@ -1093,7 +1093,7 @@ PageTables
->                 Memory consumed by userspace page tables
->   SecPageTables
->                 Memory consumed by secondary page tables, this currently
-> -              currently includes KVM mmu allocations on x86 and arm64.
-> +              includes KVM mmu allocations on x86 and arm64.
->   NFS_Unstable
->                 Always zero. Previous counted pages which had been written to
->                 the server, but has not been committed to stable storage.
-> 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.0-fixes
+branch HEAD: 763f4fb76e24959c370cdaa889b2492ba6175580  cgroup: Fix race condition at rebind_subsystems()
 
-Looks good to me!
+elapsed time: 1445m
 
+configs tested: 149
+configs skipped: 4
 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                              defconfig
+x86_64                           allyesconfig
+x86_64                               rhel-8.3
+csky                              allnoconfig
+alpha                             allnoconfig
+arc                               allnoconfig
+riscv                             allnoconfig
+loongarch                           defconfig
+loongarch                         allnoconfig
+powerpc                           allnoconfig
+mips                             allyesconfig
+powerpc                          allmodconfig
+sh                               allmodconfig
+m68k                             allyesconfig
+m68k                             allmodconfig
+arc                              allyesconfig
+alpha                            allyesconfig
+sh                           se7724_defconfig
+arm                         lubbock_defconfig
+powerpc                   currituck_defconfig
+i386                          debian-10.3-kvm
+i386                        debian-10.3-kunit
+i386                         debian-10.3-func
+i386                          randconfig-c001
+m68k                        m5272c3_defconfig
+m68k                          atari_defconfig
+sh                          sdk7786_defconfig
+powerpc                    klondike_defconfig
+i386                             allyesconfig
+i386                                defconfig
+s390                                defconfig
+s390                             allmodconfig
+arc                                 defconfig
+alpha                               defconfig
+s390                             allyesconfig
+x86_64                        randconfig-a006
+x86_64                        randconfig-a004
+x86_64                        randconfig-a002
+arm                       omap2plus_defconfig
+arc                          axs101_defconfig
+arc                         haps_hs_defconfig
+powerpc                          allyesconfig
+riscv                               defconfig
+riscv                            allmodconfig
+riscv                            allyesconfig
+x86_64                           rhel-8.3-kvm
+x86_64                          rhel-8.3-func
+x86_64                           rhel-8.3-syz
+x86_64                    rhel-8.3-kselftests
+x86_64                         rhel-8.3-kunit
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+riscv                    nommu_k210_defconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+sh                        sh7763rdp_defconfig
+m68k                          multi_defconfig
+arc                      axs103_smp_defconfig
+m68k                            mac_defconfig
+i386                          randconfig-a012
+i386                          randconfig-a014
+i386                          randconfig-a016
+nios2                            allyesconfig
+nios2                               defconfig
+parisc                              defconfig
+parisc64                            defconfig
+parisc                           allyesconfig
+arm64                            allyesconfig
+arm                                 defconfig
+arm                              allyesconfig
+arm                            hisi_defconfig
+um                                  defconfig
+sh                     sh7710voipgw_defconfig
+parisc64                         alldefconfig
+sh                          kfr2r09_defconfig
+xtensa                          iss_defconfig
+arm                           h5000_defconfig
+ia64                                defconfig
+sparc                               defconfig
+xtensa                           allyesconfig
+csky                                defconfig
+sparc                            allyesconfig
+x86_64                                  kexec
+arc                        nsim_700_defconfig
+sh                   sh7770_generic_defconfig
+arm                          gemini_defconfig
+ia64                         bigsur_defconfig
+parisc                           alldefconfig
+powerpc                     tqm8555_defconfig
+arm64                               defconfig
+arm                              allmodconfig
+m68k                                defconfig
+mips                             allmodconfig
+sparc                             allnoconfig
+microblaze                          defconfig
+m68k                        mvme16x_defconfig
+m68k                            q40_defconfig
+ia64                        generic_defconfig
+sh                             shx3_defconfig
+arc                     nsimosci_hs_defconfig
+powerpc                      tqm8xx_defconfig
+m68k                        stmark2_defconfig
+m68k                         apollo_defconfig
+arm                        shmobile_defconfig
+ia64                          tiger_defconfig
+mips                      loongson3_defconfig
+arm                             rpc_defconfig
+ia64                             allmodconfig
+x86_64                        randconfig-a011
+x86_64                        randconfig-a013
+x86_64                        randconfig-a015
+arm                            lart_defconfig
+m68k                       m5249evb_defconfig
+sh                             espt_defconfig
+
+clang tested configs:
+hexagon              randconfig-r045-20220823
+riscv                randconfig-r042-20220823
+hexagon              randconfig-r041-20220823
+s390                 randconfig-r044-20220823
+x86_64                        randconfig-a012
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+i386                          randconfig-a002
+i386                          randconfig-a006
+i386                          randconfig-a004
+x86_64                        randconfig-k001
+mips                     loongson1c_defconfig
+powerpc                     ppa8548_defconfig
+powerpc                  mpc866_ads_defconfig
+x86_64                        randconfig-a005
+x86_64                        randconfig-a003
+x86_64                        randconfig-a001
+arm                            mmp2_defconfig
+powerpc                     powernv_defconfig
+hexagon              randconfig-r045-20220824
+hexagon              randconfig-r041-20220824
+i386                          randconfig-a011
+i386                          randconfig-a013
+i386                          randconfig-a015
+mips                     cu1000-neo_defconfig
+powerpc                    gamecube_defconfig
+mips                        omega2p_defconfig
+powerpc                 xes_mpc85xx_defconfig
+arm                        neponset_defconfig
+powerpc                 mpc832x_rdb_defconfig
+powerpc                          g5_defconfig
+mips                     decstation_defconfig
+mips                           ci20_defconfig
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
