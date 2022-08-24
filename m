@@ -1,135 +1,120 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [RFC PATCH] memcg: use root_mem_cgroup when css is inherited
-Date: Wed, 24 Aug 2022 09:59:24 +0200
-Message-ID: <YwXaXHRhy51xH4rk@dhcp22.suse.cz>
-References: <CALvZod7QdLSMdBoD2WztL72qS8kJe7F79JuCH6t19rRcw6Pn1w@mail.gmail.com>
- <Yv/EArPDTcCrGqJh@slm.duckdns.org>
- <YwNpI1ydy0yDnBH0@dhcp22.suse.cz>
- <CAGWkznEB+R0YBaBFBL7dPqs8R=qKC6+ixTWEGCYy2PaczXkaPA@mail.gmail.com>
- <YwRjyx6wFLk8WTDe@dhcp22.suse.cz>
- <CAGWkznGaYTv4u4kOo-rupfyWzDNJXNKTchwP6dbUK-=UXWm47w@mail.gmail.com>
- <YwSQ4APOu/H7lYGL@dhcp22.suse.cz>
- <CAGWkznGd6mgareABseMKY5p0f1=5dkfVkj=NS7_B6OkXBYSwyw@mail.gmail.com>
- <YwS/S9Sd1OWnT81Q@dhcp22.suse.cz>
- <CAJuCfpH+T9+eOVYDfOv9yNSfAvq=pJtMp4ZaoYaM7iMY9XkaUw@mail.gmail.com>
+From: Chengming Zhou <zhouchengming@bytedance.com>
+Subject: [PATCH v3 00/10] sched/psi: some optimization and extension
+Date: Wed, 24 Aug 2022 16:18:19 +0800
+Message-ID: <20220824081829.33748-1-zhouchengming@bytedance.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1661327964; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=V++k96zrKA+x4VrYQcjFRU0h85hnHFbQNXixpGjkrsQ=;
-        b=IqZinnwQdu40DfoRGPFhFDObyG6y9HuBHOxzDQz57qkA5Ptk+105F7+HjvDaP6nShBO1X8
-        78rRkHWteb/XdLdQX3NVO23OP1069frkqE96ClKy5FpdehLuOfo3Bh6L/ioROo3k8bQ/iz
-        9IWCjnsbujxefljz69XX4KKm/cME1x0=
-Content-Disposition: inline
-In-Reply-To: <CAJuCfpH+T9+eOVYDfOv9yNSfAvq=pJtMp4ZaoYaM7iMY9XkaUw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc;
+        bh=sIwNmqerjqaiTdP/9SuVUBFcXcyvJnbToq4VHqojaB8=;
+        b=Om+ippFq5VDjfampfj8skRptXpd8NK2EmMp93WkO1WFM2P+9cmvM50W9OIQ8PYKZ3Z
+         V7YaOExX88F5cnsKw+Yx6nnJ1spX+YL2qWPVeXJyCeECldNQm/Yy9dajP8ZBfunV0mZT
+         VKAK8TXVEQs6Bso6BAxV40s72baz1S0t1fRI77xf4iTajYadAHra4Z6LEo6mexc/KEVH
+         TZ7EcwSaIQtHsiCvDWxTC6jHbBxc8LbvGRrhqGsgCDqPIHrTyUhZpFm2DX48W6DSAFxL
+         NsRG6zAsn4cyfoRZjvWKOHogMQwNFHla7+6OrD+EXHdzhEuSDeoOqq+igUU8PuC2KTTV
+         SmgA==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ke Wang <ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com, surenb@google.com
+Cc: gregkh@linuxfoundation.org, corbet@lwn.net, mingo@redhat.com, peterz@infradead.org, songmuchun@bytedance.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Chengming Zhou <zhouchengming@bytedance.com>
 
-On Tue 23-08-22 09:21:16, Suren Baghdasaryan wrote:
-> On Tue, Aug 23, 2022 at 4:51 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> >
-> > On Tue 23-08-22 17:20:59, Zhaoyang Huang wrote:
-> > > On Tue, Aug 23, 2022 at 4:33 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > > >
-> > > > On Tue 23-08-22 14:03:04, Zhaoyang Huang wrote:
-> > > > > On Tue, Aug 23, 2022 at 1:21 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > > > > >
-> > > > > > On Tue 23-08-22 10:31:57, Zhaoyang Huang wrote:
-> > > > [...]
-> > > > > > > I would like to quote the comments from google side for more details
-> > > > > > > which can also be observed from different vendors.
-> > > > > > > "Also be advised that when you enable memcg v2 you will be using
-> > > > > > > per-app memcg configuration which implies noticeable overhead because
-> > > > > > > every app will have its own group. For example pagefault path will
-> > > > > > > regress by about 15%. And obviously there will be some memory overhead
-> > > > > > > as well. That's the reason we don't enable them in Android by
-> > > > > > > default."
-> > > > > >
-> > > > > > This should be reported and investigated. Because per-application memcg
-> > > > > > vs. memcg in general shouldn't make much of a difference from the
-> > > > > > performance side. I can see a potential performance impact for no-memcg
-> > > > > > vs. memcg case but even then 15% is quite a lot.
-> > > > > Less efficiency on memory reclaim caused by multi-LRU should be one of
-> > > > > the reason, which has been proved by comparing per-app memcg on/off.
-> > > > > Besides, theoretically workingset could also broken as LRU is too
-> > > > > short to compose workingset.
-> > > >
-> > > > Do you have any data to back these claims? Is this something that could
-> > > > be handled on the configuration level? E.g. by applying low limit
-> > > > protection to keep the workingset in the memory?
-> > > I don't think so. IMO, workingset works when there are pages evicted
-> > > from LRU and then refault which provide refault distance for pages.
-> > > Applying memcg's protection will have all LRU out of evicted which
-> > > make the mechanism fail.
-> >
-> > It is really hard to help you out without any actual data. The idea was
-> > though to use the low limit protection to adaptively configure
-> > respective memcgs to reduce refaults. You already have data about
-> > refaults ready so increasing the limit for often refaulting memcgs would
-> > reduce the trashing.
-> 
-> Sorry for joining late.
-> A couple years ago I tested root-memcg vs per-app memcg configurations
-> on an Android phone. Here is a snapshot from my findings:
-> 
-> Problem
-> =======
-> We see tangible increase in major faults and workingset refaults when
-> transitioning from root-only memory cgroup to per-application cgroups
-> on Android.
-> 
-> Test results
-> ============
-> Results while running memory-demanding workload:
-> root memcg     per-app memcg     delta
-> workingset_refault 1771228 3874281 +118.73%
-> workingset_nodereclaim 4543 13928 +206.58%
-> pgpgin 13319208 20618944 +54.81%
-> pgpgout 1739552 3080664 +77.1%
-> pgpgoutclean 2616571 4805755 +83.67%
-> pswpin 359211 3918716 +990.92%
-> pswpout 1082238 5697463 +426.45%
-> pgfree 28978393 32531010 +12.26%
-> pgactivate 2586562 8731113 +237.56%
-> pgdeactivate 3811074 11670051 +206.21%
-> pgfault 38692510 46096963 +19.14%
-> pgmajfault 441288 4100020 +829.1%
-> pgrefill 4590451 12768165 +178.15%
-> 
-> Results while running application cycle test (20 apps, 20 cycles):
-> root memcg     per-app memcg     delta
-> workingset_refault 10634691 11429223 +7.47%
-> workingset_nodereclaim 37477 59033 +57.52%
-> pgpgin 70662840 69569516 -1.55%
-> pgpgout 2605968 2695596 +3.44%
-> pgpgoutclean 13514955 14980610 +10.84%
-> pswpin 1489851 3780868 +153.77%
-> pswpout 4125547 8050819 +95.15%
-> pgfree 99823083 105104637 +5.29%
-> pgactivate 7685275 11647913 +51.56%
-> pgdeactivate 14193660 21459784 +51.19%
-> pgfault 89173166 100598528 +12.81%
-> pgmajfault 1856172 4227190 +127.74%
-> pgrefill 16643554 23203927 +39.42%
+Hi all,
 
-Thanks! It would be interesting to see per memcg stats as well. Are
-there any outliers? Are there any signs of over-reclaim (more pages
-scanned & reclaimed by both kswapd and direct reclaim?
+This patch series are some optimizations and extensions for PSI.
 
-> Tests were conducted on an Android phone with 4GB RAM.
-> Similar regression was reported a couple years ago here:
-> https://www.spinics.net/lists/linux-mm/msg121665.html
-> 
-> I plan on checking the difference again on newer kernels (likely 5.15)
-> after LPC this September.
+patch 1/10 fix periodic aggregation shut off problem introduced by earlier
+commit 4117cebf1a9f ("psi: Optimize task switch inside shared cgroups").
 
-Thanks, that would be useful!
+patch 2-4 are some misc optimizations, so put them in front of this series.
+
+patch 5/10 optimize task switch inside shared cgroups when in_memstall status
+of prev task and next task are different.
+
+patch 6/10 remove NR_ONCPU task accounting to save 4 bytes in the first
+cacheline to be used by the following patch 7/10, which introduce new
+PSI resource PSI_IRQ to track IRQ/SOFTIRQ pressure stall information.
+
+patch 8-9 cache parent psi_group in struct psi_group to speed up
+the hot iteration path.
+
+patch 10/10 introduce a per-cgroup interface "cgroup.pressure" to disable
+or re-enable PSI in the cgroup level, and we implement hiding and unhiding
+the pressure files per Tejun's suggestion[1], which depends on his work[2].
+
+[1] https://lore.kernel.org/all/YvqjhqJQi2J8RG3X@slm.duckdns.org/
+[2] https://lore.kernel.org/all/20220820000550.367085-1-tj@kernel.org/
+
+Performance test using mmtests/config-scheduler-perfpipe in /user.slice/user-0.slice/session-4.scope
+
+                                 next                patched       patched/only-leaf
+Min       Time        8.82 (   0.00%)        8.49 (   3.74%)        8.00 (   9.32%)
+1st-qrtle Time        8.90 (   0.00%)        8.58 (   3.63%)        8.05 (   9.58%)
+2nd-qrtle Time        8.94 (   0.00%)        8.61 (   3.65%)        8.09 (   9.50%)
+3rd-qrtle Time        8.99 (   0.00%)        8.65 (   3.75%)        8.15 (   9.35%)
+Max-1     Time        8.82 (   0.00%)        8.49 (   3.74%)        8.00 (   9.32%)
+Max-5     Time        8.82 (   0.00%)        8.49 (   3.74%)        8.00 (   9.32%)
+Max-10    Time        8.84 (   0.00%)        8.55 (   3.20%)        8.04 (   9.05%)
+Max-90    Time        9.04 (   0.00%)        8.67 (   4.10%)        8.18 (   9.51%)
+Max-95    Time        9.04 (   0.00%)        8.68 (   4.03%)        8.20 (   9.26%)
+Max-99    Time        9.07 (   0.00%)        8.73 (   3.82%)        8.25 (   9.11%)
+Max       Time        9.12 (   0.00%)        8.89 (   2.54%)        8.27 (   9.29%)
+Amean     Time        8.95 (   0.00%)        8.62 *   3.67%*        8.11 *   9.43%*
+
+Thanks!
+
+Changes in v3:
+ - Rebase on linux-next and reorder patches to put misc optimizations
+   patches in the front of this series.
+ - Drop patch "sched/psi: don't change task psi_flags when migrate CPU/group"
+   since it caused a little performance regression and it's just
+   code refactoring, so drop it.
+ - Don't define PSI_IRQ and PSI_IRQ_FULL when !CONFIG_IRQ_TIME_ACCOUNTING,
+   in which case they are not used.
+ - Add patch 8/10 "sched/psi: consolidate cgroup_psi()" make cgroup_psi()
+   can handle all cgroups including root cgroup, make patch 9/10 simpler.
+ - Rename interface to "cgroup.pressure" and add some explanation
+   per Michal's suggestion.
+ - Hide and unhide pressure files when disable/re-enable cgroup PSI,
+   depends on Tejun's work.
+
+Changes in v2:
+ - Add Acked-by tags from Johannes Weiner. Thanks for review!
+ - Fix periodic aggregation wakeup for common ancestors in
+   psi_task_switch().
+ - Add patch 7/10 from Johannes Weiner, which remove NR_ONCPU
+   task accounting to save 4 bytes in the first cacheline.
+ - Remove "psi_irq=" kernel cmdline parameter in last version.
+ - Add per-cgroup interface "cgroup.psi" to disable/re-enable
+   PSI stats accounting in the cgroup level.
+
+Chengming Zhou (9):
+  sched/psi: fix periodic aggregation shut off
+  sched/psi: don't create cgroup PSI files when psi_disabled
+  sched/psi: save percpu memory when !psi_cgroups_enabled
+  sched/psi: move private helpers to sched/stats.h
+  sched/psi: optimize task switch inside shared cgroups again
+  sched/psi: add PSI_IRQ to track IRQ/SOFTIRQ pressure
+  sched/psi: consolidate cgroup_psi()
+  sched/psi: cache parent psi_group to speed up groups iterate
+  sched/psi: per-cgroup PSI accounting disable/re-enable interface
+
+Johannes Weiner (1):
+  sched/psi: remove NR_ONCPU task accounting
+
+ Documentation/admin-guide/cgroup-v2.rst |  23 +++
+ include/linux/cgroup-defs.h             |   3 +
+ include/linux/cgroup.h                  |   5 -
+ include/linux/psi.h                     |  12 +-
+ include/linux/psi_types.h               |  29 ++-
+ kernel/cgroup/cgroup.c                  |  94 ++++++++-
+ kernel/sched/core.c                     |   1 +
+ kernel/sched/psi.c                      | 256 +++++++++++++++++-------
+ kernel/sched/stats.h                    |   6 +
+ 9 files changed, 338 insertions(+), 91 deletions(-)
 
 -- 
-Michal Hocko
-SUSE Labs
+2.37.2
+
