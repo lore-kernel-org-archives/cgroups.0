@@ -1,82 +1,98 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: [PATCH v2 3/3] memcg: increase MEMCG_CHARGE_BATCH to 64
-Date: Thu, 25 Aug 2022 00:05:06 +0000
-Message-ID: <20220825000506.239406-4-shakeelb@google.com>
-References: <20220825000506.239406-1-shakeelb@google.com>
+From: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RESEND PATCH bpf-next v9 0/5] bpf: rstat: cgroup hierarchical
+Date: Wed, 24 Aug 2022 17:29:43 -0700
+Message-ID: <CAADnVQLT3JE8LtOYrs30mL88PNs+NaSeXgQqAPEAup5LUC+BPQ@mail.gmail.com>
+References: <20220824233117.1312810-1-haoluo@google.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:from:subject:references:mime-version:message-id:in-reply-to
-         :date:from:to:cc;
-        bh=3ANOEI0BBXDszhHsMjNjVkJxW2dSCbobxCznkiQMg0M=;
-        b=M8tSmqMgyZLVy2Ldt7OEwatTGNnYnfDpQ69BuMQNcXOyVDB1zOG1S5rA/96I/PJKxE
-         4+npbWP3pWJ08Qbrxcia+8i6j7Gu69xnnOJNpGf1qEh/CTh6F27WQ4nVQLW4A9J5Lhh9
-         wZHGTsioVx7toZiUJ8cHixmiZOFP7E6zdyNZLONxSLuMdImMycE2Fyt+XuqZ+8IhLHsR
-         C6dFsjW4r02bqFmtyRS3Kq6G3VP5sgtlfNBMT7ztQEx6AL13xu9pwUVXfdMd6YEAnByA
-         YGozttZzHIvY64hF0IBSZ5RbI4tZvRxI5hd9vrRa+K0+Wr8X++i6Jrnvoe/mNBWb+0ko
-         v09Q==
-In-Reply-To: <20220825000506.239406-1-shakeelb@google.com>
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=ciex1M3iqp5s8wXR0fILlM12xeyVcSZQd9Ahu6CFpUY=;
+        b=PnF1b98qcTe7Aisdifeox05zIT2HLoeeBXiQ/PdvRwtGGKzs7ZPZi5t9iltgkrF9lz
+         1MBwCYR6xE3rzUIpCJVD8G0KKuiKvrmj/Hkx110eKCrnVFX9+nqJdWmEHn9epXVW9//o
+         xsLf9VHdrJRxc3KxLLGOKpHYM7vRP2XP7c5kHOahCxdFb1H5fYSxRV7YPkqXWBvu97JC
+         SfRGam+WaqVeGblpnXwbcD6+WZi3legeOsw8Qo3lUsh3XAsh62sLarHqMKR8m7EAaDcE
+         CLI0XxIFxd24NjnH7yFnIYDgN70lK0XiFw19oN84Ng7wwaVJLhfrgDT/weuW8ctzDJpP
+         6Hmg==
+In-Reply-To: <20220824233117.1312810-1-haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <songmuchun@bytedance.com>
-Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Eric Dumazet <edumazet@google.com>, Soheil Hassas Yeganeh <soheil@google.com>, Feng Tang <feng.tang@intel.com>, Oliver Sang <oliver.sang@intel.com>, Andrew Morton <akpm@linux-foundation.org>, lkp@lists.01.org, cgroups@vger.kernel.org, linux-mm@kvack.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
+To: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Koutny <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf@google.>
 
-For several years, MEMCG_CHARGE_BATCH was kept at 32 but with bigger
-machines and the network intensive workloads requiring througput in
-Gbps, 32 is too small and makes the memcg charging path a bottleneck.
-For now, increase it to 64 for easy acceptance to 6.0. We will need to
-revisit this in future for ever increasing demand of higher performance.
+On Wed, Aug 24, 2022 at 4:31 PM Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> This patch series allows for using bpf to collect hierarchical cgroup
+> stats efficiently by integrating with the rstat framework. The rstat
+> framework provides an efficient way to collect cgroup stats percpu and
+> propagate them through the cgroup hierarchy.
+>
+> The stats are exposed to userspace in textual form by reading files in
+> bpffs, similar to cgroupfs stats by using a cgroup_iter program.
+> cgroup_iter is a type of bpf_iter. It walks over cgroups in four modes:
+> - walking a cgroup's descendants in pre-order.
+> - walking a cgroup's descendants in post-order.
+> - walking a cgroup's ancestors.
+> - process only a single object.
+>
+> When attaching cgroup_iter, one needs to set a cgroup to the iter_link
+> created from attaching. This cgroup can be passed either as a file
+> descriptor or a cgroup id. That cgroup serves as the starting point of
+> the walk.
+>
+> One can also terminate the walk early by returning 1 from the iter
+> program.
+>
+> Note that because walking cgroup hierarchy holds cgroup_mutex, the iter
+> program is called with cgroup_mutex held.
+>
+> ** Background on rstat for stats collection **
+> (I am using a subscriber analogy that is not commonly used)
+>
+> The rstat framework maintains a tree of cgroups that have updates and
+> which cpus have updates. A subscriber to the rstat framework maintains
+> their own stats. The framework is used to tell the subscriber when
+> and what to flush, for the most efficient stats propagation. The
+> workflow is as follows:
+>
+> - When a subscriber updates a cgroup on a cpu, it informs the rstat
+>   framework by calling cgroup_rstat_updated(cgrp, cpu).
+>
+> - When a subscriber wants to read some stats for a cgroup, it asks
+>   the rstat framework to initiate a stats flush (propagation) by calling
+>   cgroup_rstat_flush(cgrp).
+>
+> - When the rstat framework initiates a flush, it makes callbacks to
+>   subscribers to aggregate stats on cpus that have updates, and
+>   propagate updates to their parent.
+>
+> Currently, the main subscribers to the rstat framework are cgroup
+> subsystems (e.g. memory, block). This patch series allow bpf programs to
+> become subscribers as well.
+>
+> Patches in this series are organized as follows:
+> * Patches 1-2 introduce cgroup_iter prog, and a selftest.
+> * Patches 3-5 allow bpf programs to integrate with rstat by adding the
+>   necessary hook points and kfunc. A comprehensive selftest that
+>   demonstrates the entire workflow for using bpf and rstat to
+>   efficiently collect and output cgroup stats is added.
+>
+> ---
+> Changelog:
+> v8 -> v9:
+> - Make UNSPEC (an invalid option) as the default order for cgroup_iter.
+> - Use enum for specifying cgroup_iter order, instead of u32.
+> - Add BPF_ITER_RESHCED to cgroup_iter.
+> - Add cgroup_hierarchical_stats to s390x denylist.
 
-Please note that the memcg charge path drain the per-cpu memcg charge
-stock, so there should not be any oom behavior change. Though it does
-have impact on rstat flushing and high limit reclaim backoff.
+What 'RESEND' is for?
+It seems to confuse patchwork and BPF CI.
 
-To evaluate the impact of this optimization, on a 72 CPUs machine, we
-ran the following workload in a three level of cgroup hierarchy.
+The v9 series made it to patchwork...
 
- $ netserver -6
- # 36 instances of netperf with following params
- $ netperf -6 -H ::1 -l 60 -t TCP_SENDFILE -- -m 10K
-
-Results (average throughput of netperf):
-Without (6.0-rc1)       10482.7 Mbps
-With patch              17064.7 Mbps (62.7% improvement)
-
-With the patch, the throughput improved by 62.7%.
-
-Signed-off-by: Shakeel Butt <shakeelb@google.com>
-Reported-by: kernel test robot <oliver.sang@intel.com>
-Acked-by: Soheil Hassas Yeganeh <soheil@google.com>
-Reviewed-by: Feng Tang <feng.tang@intel.com>
-Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
----
-Changes since v1:
-- Updated commit message
-
- include/linux/memcontrol.h | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 4d31ce55b1c0..70ae91188e16 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -354,10 +354,11 @@ struct mem_cgroup {
- };
- 
- /*
-- * size of first charge trial. "32" comes from vmscan.c's magic value.
-- * TODO: maybe necessary to use big numbers in big irons.
-+ * size of first charge trial.
-+ * TODO: maybe necessary to use big numbers in big irons or dynamic based of the
-+ * workload.
-  */
--#define MEMCG_CHARGE_BATCH 32U
-+#define MEMCG_CHARGE_BATCH 64U
- 
- extern struct mem_cgroup *root_mem_cgroup;
- 
--- 
-2.37.1.595.g718a3a8f04-goog
-
+Please just bump the version to v10 next time.
+Don't add things to subject, since automation cannot recognize
+that yet.
