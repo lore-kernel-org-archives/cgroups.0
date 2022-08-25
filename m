@@ -1,62 +1,67 @@
-From: Wolfram Sang <wsa+renesas-jBu1N2QxHDJrcw3mvpCnnVaTQe2KTcn/@public.gmane.org>
-Subject: Re: [PATCH] kernel: move from strlcpy with unused retval to strscpy
-Date: Thu, 25 Aug 2022 14:40:26 +0200
-Message-ID: <YwdtunymYd4VO83D@shikoro>
-References: <20220818210202.8227-1-wsa+renesas@sang-engineering.com>
- <YwdAknZFyKxCXZuL@alley>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v3 10/10] sched/psi: per-cgroup PSI accounting
+ disable/re-enable interface
+Date: Thu, 25 Aug 2022 09:20:43 -0400
+Message-ID: <Ywd3K1+5blotUEtU@cmpxchg.org>
+References: <20220824081829.33748-1-zhouchengming@bytedance.com>
+ <20220824081829.33748-11-zhouchengming@bytedance.com>
+ <YwX2jC2UQ/zeY2E8@cmpxchg.org>
+ <324b1d0f-42e5-8947-68cb-a3d20135f2c6@bytedance.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="QWwBO+hWQkYuUjLm"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=simple; d=sang-engineering.com; h=
-        date:from:to:cc:subject:message-id:references:mime-version
-        :content-type:in-reply-to; s=k1; bh=aZqNW6W08ih6JS2IUvIIZiIqCV3W
-        gHPNwpTFgHstyik=; b=m2WPERIsCK59vBzWco9kmFaJ/EdlAkSDaOmQX21n+pUB
-        hY77VM8gyKz77N60QfRJXv+nVVZTH7hJ2o86ZUFrXv0a3Rr1uHAgMa3by4QVdlVX
-        IyUWRuZwcj0lfbdsiCZB/p6+2IOScAleePiChPOJEQTOOwHUaYYjG8RzipR6m8s=
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc;
+        bh=tGI/HgI5RJ0IOQ7oCC9l+UoRS3M/KBpS5rSBAd3MZgo=;
+        b=whhwMf11JScRmGvZpTzi4pm8aQUE+LI1b+HFpqXieLoJb6OwFEWMMa+Y/SI3hiRfSa
+         JVJvBQuNwEbjYGDBjUlhLzIqA8xnjXhvYDwpro7ItADA2pIOZ4lUne38Gc06R0mw4ydw
+         4UAEy9/ZJ1W3J0CXMP6jJo9Ou6s22HAdt12AOj0xjT5d04mLaOjV30rQy9Mzd1ffVcmr
+         4U6pSbwSpLZQy12eWKyJ/eyJUQn67mpFP0t6UmF6CMmAk9GR1k2VTGeSIfOAfAF0BJ6w
+         MaWFv/K4v+A18UkkelXRxiWWvHCgEqeGL05vBTUHARhmihHnqcnkXCImasUJj5pFMN0c
+         oocg==
 Content-Disposition: inline
-In-Reply-To: <YwdAknZFyKxCXZuL@alley>
+In-Reply-To: <324b1d0f-42e5-8947-68cb-a3d20135f2c6@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
-To: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Alexander Shishkin <alexander.shishkin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Namhyung Kim <namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ser
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Chengming Zhou <zhouchengming@bytedance.com>
+Cc: tj@kernel.org, mkoutny@suse.com, surenb@google.com, gregkh@linuxfoundation.org, corbet@lwn.net, mingo@redhat.com, peterz@infradead.org, songmuchun@bytedance.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Thu, Aug 25, 2022 at 08:28:39PM +0800, Chengming Zhou wrote:
+> On 2022/8/24 17:59, Johannes Weiner wrote:
+> > Hi Chengming,
+> > 
+> > Thanks for incorporating all the feedback. I have a few nitpicks
+> > below, but with those considered, please add:
+> > 
+> > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> > 
+> > On Wed, Aug 24, 2022 at 04:18:29PM +0800, Chengming Zhou wrote:
+> >> @@ -5171,12 +5220,19 @@ static struct cftype cgroup_base_files[] = {
+> >>  	{
+> >>  		.name = "irq.pressure",
+> >>  		.flags = CFTYPE_PRESSURE,
+> >> +		.file_offset = offsetof(struct cgroup, psi_files[PSI_IRQ]),
+> >>  		.seq_show = cgroup_irq_pressure_show,
+> >>  		.write = cgroup_irq_pressure_write,
+> >>  		.poll = cgroup_pressure_poll,
+> >>  		.release = cgroup_pressure_release,
+> >>  	},
+> >>  #endif
+> >> +	{
+> >> +		.name = "cgroup.pressure",
+> >> +		.flags = CFTYPE_PRESSURE,
+> >> +		.seq_show = cgroup_psi_show,
+> >> +		.write = cgroup_psi_write,
+> > 
+> > To match the naming convention, these should be called
+> > cgroup_pressure_show() and cgroup_pressure_write().
+> 
+> I just find cgroup_pressure_write() already exists, so I change the names
+> to cgroup_pressure_enable_show() and cgroup_pressure_enable_write(),
+> since this file name is simplified from "cgroup.pressure.enable".
 
---QWwBO+hWQkYuUjLm
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-
-> > Generated by a coccinelle script.
-^ ^ ^
-
-> You might want to use Coccinelle if a simple sed/awk gets too
-> complicated. See
-
-:)
-
-So, I did a tree wide conversion and let Linus know that I have a branch
-available. He didn't respond, so I assumed that individual patches is
-the way to go.
-
-
---QWwBO+hWQkYuUjLm
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAmMHbbYACgkQFA3kzBSg
-KbZAYw/+NDqOY8g0Yuz+VlyR09k33L8XgacCAPbI3iIT3HWMPSLM5PILZvw4/KmS
-fbEWjJpCFWjSOoZSM5M+vw6MicaUqwjn7UXrJNLIR25RklM/Re8rfgmmo2iqqyb+
-UPAdKt3tapAX5Yb4BQWBRSNxp8+TOl+CiNtdZjec35ESDaSdAd2vDtHE6C6yxP43
-pY3tgKgjIwpI5jqMU/KxOLMCdQHy7TTr63qbeHZcPPpqeBkMMO55rqucIBrx8h26
-WtCE2di3Uzt4ma7Lo+7NJUiYdzvX17U+98XDxm0MxeeQpEstI6qK/zz0NE9pR1pH
-1AmJjRt72JxP0o7ryWvxcnXHOer2j1vEMI05kS8kmMjwCBeQWiV5/KvbxcA6S4dU
-vsUiHJQfJlzpYjjudEV7De6l3zKbrjf/jJQvhv8Poz4AkrFR8kUIGfvV5sRM06wq
-ASybvskRI+M+7BiyJC/KwHjRePkqsHsp/0FqtjOt+Ztejinu9mFc8xPcfqjiPAXx
-bTzqhvtmyUDn+vxJpfmGh59mBzyp3toKatWCH7Xwr6RYBgwBZLTucH6K64XJp7Gz
-4rb2ubLz8PZhLDCmi01R5z9E3nZD1Jpn8XV0/qYyrA+8zFqdV4iZSFKxMjwL+Csd
-LvvbPt0YRE8mmR9zwZqNoSi6xSDIx6KBrtQpUbs2lCw9H5riV50=
-=lWpT
------END PGP SIGNATURE-----
-
---QWwBO+hWQkYuUjLm--
+That makes two outliers instead of one. It's probably better to steal
+cgroup_pressure_write for cgroup.pressure, and rename the currently
+misnamed helper. How about do_pressure_write()? pressure_write()?
