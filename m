@@ -1,54 +1,106 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] mm: page_counter: rearrange struct page_counter
- fields
-Date: Wed, 24 Aug 2022 17:33:30 -0700
-Message-ID: <20220824173330.2a15bcda24d2c3c248bc43c7@linux-foundation.org>
-References: <20220825000506.239406-1-shakeelb@google.com>
-        <20220825000506.239406-3-shakeelb@google.com>
+From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RESEND PATCH bpf-next v9 0/5] bpf: rstat: cgroup hierarchical
+Date: Wed, 24 Aug 2022 17:42:18 -0700
+Message-ID: <CA+khW7gQi+BK7Qy4Khk=Ro72nfNQaR2kNkwZemB9ELnDo4Nk3Q@mail.gmail.com>
+References: <20220824233117.1312810-1-haoluo@google.com> <CAADnVQLT3JE8LtOYrs30mL88PNs+NaSeXgQqAPEAup5LUC+BPQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1661387611;
-        bh=3yxsP6DawL5+lHuusAb977k18cNkRTLfgXocBtYSv1o=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=oGJkgMPUbZFMjG8O/7KdMb+vxZpJH+5niJeB5INpD8x3qYjLkUAwWFAEXr5JNN1eo
-         Zvf29lZuGkCpHP0RE/bBdynwQoc8oxWiELrbP6kyLDky2jSG7ggF/8yGnTB04Gjxo1
-         pMFYLznoGdT4pFmceHv0wgl291f+JjhUcTezFMoo=
-In-Reply-To: <20220825000506.239406-3-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=Wpl+c4YfOpabx/QJ3AnuJKzBxyiE9VbZKz/xHkTKLAk=;
+        b=r7iSTSO5N8EX5GHy2qXheBkYDaCDsoumn505Dy+CVk71CvcADRVPavVRi4XQL41YpW
+         nddUiAQlihuhdYgf94AKk17bP/Lg4DS8ALSrWHJaU/mW2rCqXqPEHTnGcF9m9TMHdXX8
+         4ZdDcMEP7/0zTw+yec8Oo4ycG2RGwygPL66RjvWJ0nF+8FlQ21yYvGdhT+k5HKUjHdOp
+         eRaB7I5AEZq2x2O2rCKYAM4aqUXZ31HsS+FwTsQVkUZOt6S+cZ9sCZRUVTRdDhExxG4l
+         dP0IqFDo49hZ+tPyCYzcAt68UlxzNa6nqGWFhN7Qo8lNrdqTfwr8XombersmaWN+ksBW
+         GsPw==
+In-Reply-To: <CAADnVQLT3JE8LtOYrs30mL88PNs+NaSeXgQqAPEAup5LUC+BPQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, =?ISO-8859-1?Q? Michal_Koutn=FD ?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Oliver Sang <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, lkp-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Koutny <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf@google.>
 
-On Thu, 25 Aug 2022 00:05:05 +0000 Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+On Wed, Aug 24, 2022 at 5:29 PM Alexei Starovoitov
+<alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>
+> On Wed, Aug 24, 2022 at 4:31 PM Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> >
+> > This patch series allows for using bpf to collect hierarchical cgroup
+> > stats efficiently by integrating with the rstat framework. The rstat
+> > framework provides an efficient way to collect cgroup stats percpu and
+> > propagate them through the cgroup hierarchy.
+> >
+> > The stats are exposed to userspace in textual form by reading files in
+> > bpffs, similar to cgroupfs stats by using a cgroup_iter program.
+> > cgroup_iter is a type of bpf_iter. It walks over cgroups in four modes:
+> > - walking a cgroup's descendants in pre-order.
+> > - walking a cgroup's descendants in post-order.
+> > - walking a cgroup's ancestors.
+> > - process only a single object.
+> >
+> > When attaching cgroup_iter, one needs to set a cgroup to the iter_link
+> > created from attaching. This cgroup can be passed either as a file
+> > descriptor or a cgroup id. That cgroup serves as the starting point of
+> > the walk.
+> >
+> > One can also terminate the walk early by returning 1 from the iter
+> > program.
+> >
+> > Note that because walking cgroup hierarchy holds cgroup_mutex, the iter
+> > program is called with cgroup_mutex held.
+> >
+> > ** Background on rstat for stats collection **
+> > (I am using a subscriber analogy that is not commonly used)
+> >
+> > The rstat framework maintains a tree of cgroups that have updates and
+> > which cpus have updates. A subscriber to the rstat framework maintains
+> > their own stats. The framework is used to tell the subscriber when
+> > and what to flush, for the most efficient stats propagation. The
+> > workflow is as follows:
+> >
+> > - When a subscriber updates a cgroup on a cpu, it informs the rstat
+> >   framework by calling cgroup_rstat_updated(cgrp, cpu).
+> >
+> > - When a subscriber wants to read some stats for a cgroup, it asks
+> >   the rstat framework to initiate a stats flush (propagation) by calling
+> >   cgroup_rstat_flush(cgrp).
+> >
+> > - When the rstat framework initiates a flush, it makes callbacks to
+> >   subscribers to aggregate stats on cpus that have updates, and
+> >   propagate updates to their parent.
+> >
+> > Currently, the main subscribers to the rstat framework are cgroup
+> > subsystems (e.g. memory, block). This patch series allow bpf programs to
+> > become subscribers as well.
+> >
+> > Patches in this series are organized as follows:
+> > * Patches 1-2 introduce cgroup_iter prog, and a selftest.
+> > * Patches 3-5 allow bpf programs to integrate with rstat by adding the
+> >   necessary hook points and kfunc. A comprehensive selftest that
+> >   demonstrates the entire workflow for using bpf and rstat to
+> >   efficiently collect and output cgroup stats is added.
+> >
+> > ---
+> > Changelog:
+> > v8 -> v9:
+> > - Make UNSPEC (an invalid option) as the default order for cgroup_iter.
+> > - Use enum for specifying cgroup_iter order, instead of u32.
+> > - Add BPF_ITER_RESHCED to cgroup_iter.
+> > - Add cgroup_hierarchical_stats to s390x denylist.
+>
+> What 'RESEND' is for?
+> It seems to confuse patchwork and BPF CI.
+>
+> The v9 series made it to patchwork...
+>
+> Please just bump the version to v10 next time.
+> Don't add things to subject, since automation cannot recognize
+> that yet.
 
-> With memcg v2 enabled, memcg->memory.usage is a very hot member for
-> the workloads doing memcg charging on multiple CPUs concurrently.
-> Particularly the network intensive workloads. In addition, there is a
-> false cache sharing between memory.usage and memory.high on the charge
-> path. This patch moves the usage into a separate cacheline and move all
-> the read most fields into separate cacheline.
-> 
-> To evaluate the impact of this optimization, on a 72 CPUs machine, we
-> ran the following workload in a three level of cgroup hierarchy.
-> 
->  $ netserver -6
->  # 36 instances of netperf with following params
->  $ netperf -6 -H ::1 -l 60 -t TCP_SENDFILE -- -m 10K
-> 
-> Results (average throughput of netperf):
-> Without (6.0-rc1)	10482.7 Mbps
-> With patch		12413.7 Mbps (18.4% improvement)
-> 
-> With the patch, the throughput improved by 18.4%.
-> 
-> One side-effect of this patch is the increase in the size of struct
-> mem_cgroup. For example with this patch on 64 bit build, the size of
-> struct mem_cgroup increased from 4032 bytes to 4416 bytes. However for
-> the performance improvement, this additional size is worth it. In
-> addition there are opportunities to reduce the size of struct
-> mem_cgroup like deprecation of kmem and tcpmem page counters and
-> better packing.
+Sorry about that. I thought it was RESEND because no content has
+changed. It was just adding an entry in s390 denylist.
 
-Did you evaluate the effects of using a per-cpu counter of some form?
+Are we good now? Or I need to send a v10?
