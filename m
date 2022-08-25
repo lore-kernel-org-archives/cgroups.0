@@ -1,104 +1,60 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [RFC PATCH] memcg: use root_mem_cgroup when css is inherited
-Date: Thu, 25 Aug 2022 10:50:41 +0200
-Message-ID: <Ywc34ci5XUMXOSYA@dhcp22.suse.cz>
-References: <YwSQ4APOu/H7lYGL@dhcp22.suse.cz>
- <CAGWkznGd6mgareABseMKY5p0f1=5dkfVkj=NS7_B6OkXBYSwyw@mail.gmail.com>
- <YwS/S9Sd1OWnT81Q@dhcp22.suse.cz>
- <CAGWkznGYLyF+njUB0gFF3JVdThnK9JaNsqxXYFhbdSwEQpCxvA@mail.gmail.com>
- <YwXYVjRpXQjQMsxr@dhcp22.suse.cz>
- <CAGWkznEqX3DwHW_owiK+HuuQ-HsUYK4vKmLhSxgzGn20Vzid2A@mail.gmail.com>
- <YwX89JCQCKMMYdG9@dhcp22.suse.cz>
- <CAGWkznF+dBjLzAxMMXWYSZ_5q3KA-ou0P7XM7jSYN7JSRp8N0w@mail.gmail.com>
- <YwcZctA2S3Sd0LBN@dhcp22.suse.cz>
- <CAGWkznH5gQXigdLx=fwdL0uqdGx4WE9QP8b8cbWFxr=Rdg-CZQ@mail.gmail.com>
+From: Petr Mladek <pmladek@suse.com>
+Subject: Re: [PATCH] kernel: move from strlcpy with unused retval to strscpy
+Date: Thu, 25 Aug 2022 11:27:46 +0200
+Message-ID: <YwdAknZFyKxCXZuL@alley>
+References: <20220818210202.8227-1-wsa+renesas@sang-engineering.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1661417442; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1661419669; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=zP6YQmZN7163OEbBczeU7FAkSDwVdl5LC3HTPoybyrM=;
-        b=FXgUGZB+osz5E4JAckwNcEMAP2NfQm322eTKa+A9/pgC4y/sgW0XuNYetBenNlNDIxO/fw
-        vWwoqK/wBxIIugpIEItM7OO/MDtdysSicXWJ68yqmO/LCq9pJTk8VfZAR9VnTVJV5y6C7h
-        8JbaOXXlGeGJ4aCK+1vxzqr2MxONwPg=
+        bh=oD2ON5ZEmElLgT4EBxpSWyu1ku5LP4DrXwfA23XWjH4=;
+        b=qknJkW1fP0r2UL8UgzODME4WEr79d6P4xEuqkMLZADrhrnaZvBgIbr/L0faRbdiu6dHJmE
+        tvkb1ptlffg/lhWil1eQZUDjhGa6bN1dyT5LO7aJKLLNCh/XcrNqoiWnPzH6p5mvmmoUDQ
+        3JAdcgDNBV8/4sIoa7uVLdV0TcindVs=
 Content-Disposition: inline
-In-Reply-To: <CAGWkznH5gQXigdLx=fwdL0uqdGx4WE9QP8b8cbWFxr=Rdg-CZQ@mail.gmail.com>
+In-Reply-To: <20220818210202.8227-1-wsa+renesas@sang-engineering.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zhaoyang Huang <huangzhaoyang@gmail.com>
-Cc: Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>, Shakeel Butt <shakeelb@google.com>, "zhaoyang.huang" <zhaoyang.huang@unisoc.com>, Johannes Weiner <hannes@cmpxchg.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Ke Wang <ke.wang@unisoc.com>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <songmuchun@bytedance.com>
+To: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Cc: linux-kernel@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@google.com>, Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Arnaldo Carvalho de Melo <acme@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Alexander Shishkin <alexander.shishkin@linux.intel.com>, Namhyung Kim <namhyung@kernel.org>, Ser
 
-On Thu 25-08-22 16:34:04, Zhaoyang Huang wrote:
-> On Thu, Aug 25, 2022 at 2:40 PM Michal Hocko <mhocko@suse.com> wrote:
-> >
-> > On Thu 25-08-22 08:43:52, Zhaoyang Huang wrote:
-> > > On Wed, Aug 24, 2022 at 6:27 PM Michal Hocko <mhocko@suse.com> wrote:
-> > > >
-> > > > On Wed 24-08-22 17:34:42, Zhaoyang Huang wrote:
-> > [...]
-> > > > > IMHO, charging the pages which out of explicitly memory
-> > > > > enabled group to root could solve all of the above constraints with no
-> > > > > harm.
-> > > >
-> > > > This would break the hierarchical property of the controller. So a
-> > > > strong no no. Consider the following example
-> > > >
-> > > >        root
-> > > >         |
-> > > >         A
-> > > > controllers="memory"
-> > > > memory.max = 1G
-> > > > subtree_control=""
-> > > > |      |      |
-> > > > A1     A2     A3
-> > > >
-> > > > althought A1,2,3 do not have their memory controller enabled explicitly
-> > > > they are still constrained by the A memcg limit. If you just charge to
-> > > > the root because it doesn't have memory controller enabled explicitly
-> > > > then you just evade that constrain. I hope you understand why that is a
-> > > > problem.
-> > > IMO, A1-A3 should be explicitly enabled via echo "+memory" >
-> > > A/subtree_control since memory.max has been set.
-> >
-> > You seem to be missing the point I've triedy to make here. It is not
-> > about how the respective subtree should or shouldn't be configured. It
-> > is about the hierarchical behavior. Configuration at a higher level should be
-> > enforced under subtree no matter how that subtree decides to
-> > enabled/disable controllers. Such subtree might have beeb delegated
-> > and configured differently yet the constrain should be still applied.
-> > See the point?
-> >
-> > What you seem to be proposing is similar to cgroup v1 use_hierarchy
-> > configuration. It has been decided that this is undesirable very early
-> > in the cgroup v2 development because it make delegation impossible
-> > (among other reasons).
-> Ok, I would like to know how AA3 achieve the goal of competing with A1
-> and A2 for cpu but keep memory out of control under current policy?
->         root
->          |
->          A
->  controllers="memory,cpu"
->  memory.max = 1G
->  subtree_control="memory,cpu"
->  |      |            |
->  A1     A2     A3 subtree_control="cpu"
->                       |      |
->                     AA3   AA4 controllers="cpu"
+On Thu 2022-08-18 23:02:01, Wolfram Sang wrote:
+> Follow the advice of the below link and prefer 'strscpy' in this
+> subsystem. Conversion is 1:1 because the return value is not used.
+> Generated by a coccinelle script.
+> 
+> Link: https://lore.kernel.org/r/CAHk-=wgfRnXz0W3D37d01q3JFkr_i_uTL=V6A6G1oUZcprmknw@mail.gmail.com/
+> Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+>
+> ---
+>  kernel/acct.c                         |  2 +-
+>  kernel/bpf/preload/bpf_preload_kern.c |  4 ++--
+>  kernel/cgroup/cgroup-v1.c             |  4 ++--
+>  kernel/events/core.c                  |  6 +++---
+>  kernel/kallsyms.c                     |  4 ++--
+>  kernel/params.c                       |  2 +-
+>  kernel/printk/printk.c                |  2 +-
+>  kernel/relay.c                        |  4 ++--
+>  kernel/time/clocksource.c             |  2 +-
+>  kernel/trace/ftrace.c                 | 18 +++++++++---------
+>  kernel/trace/trace.c                  |  8 ++++----
+>  kernel/trace/trace_events.c           |  2 +-
+>  kernel/trace/trace_events_inject.c    |  4 ++--
+>  kernel/trace/trace_kprobe.c           |  2 +-
+>  kernel/trace/trace_probe.c            |  2 +-
+>  15 files changed, 33 insertions(+), 33 deletions(-)
 
-I cannot really give you configuration you want without understanding
-what you are trying to achieve and why do you need it that way. Really,
-you can construct arbitrary hierarchies and only a very small subset of
-them actually makes sense. So far you have been very terse at your goals
-and intentions but rather demanding on the underlying mechanisms. This
-doesn't really makes the discussion productive.
+This fixes only small part of the kernel code. It would make sense to
+do a tree-wide change using a script.
 
-I hope you have at least understood that hierarchical property of the
-cgroup v2 is a must and it won't change. If you need a help to construct
-hierarchy for your specific workload I would recommend to clearly state
-your final goal and reasoning behind. Maybe you will get a more specific
-help that way. Good luck!
--- 
-Michal Hocko
-SUSE Labs
+Would you mind to create one and send it to Linus?
+
+You might want to use Coccinelle if a simple sed/awk gets too
+complicated. See
+https://www.kernel.org/doc/html/v4.15/dev-tools/coccinelle.html
+
+Best Regards,
+Petr
