@@ -1,79 +1,73 @@
-From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH v4 03/10] sched/psi: save percpu memory when !psi_cgroups_enabled
-Date: Fri, 26 Aug 2022 00:41:04 +0800
-Message-ID: <20220825164111.29534-4-zhouchengming@bytedance.com>
+From: Chengming Zhou <zhouchengming@bytedance.com>
+Subject: [PATCH v4 04/10] sched/psi: move private helpers to sched/stats.h
+Date: Fri, 26 Aug 2022 00:41:05 +0800
+Message-ID: <20220825164111.29534-5-zhouchengming@bytedance.com>
 References: <20220825164111.29534-1-zhouchengming@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc;
-        bh=KFhoipy95bP113xci+lGCwwditMpaEg770tCZfK2FCQ=;
-        b=rnj3VBn/MhfZHnIBhXiPV3dAIiOKhTdG3N9c6tQZbbmST0ZwO/XwgL1cpBP0HCijxa
-         z4TaTH9FWOVs97NqlVz7IVrxwH3vpxw5wTzUUxlt1FRc1a2wE5Nm9IsZDzqqUxs1En42
-         mM5zHiB6x2roWKOP0Z6lROQMejSsqZxUzgEWt5LvTryYKRMi2nh8Q5g/k+HilzMVcD3Q
-         iJ18Ki2jbPVPv1wta/DxdZx+dR4yM+WxjEM5JWnwC90G5YPBii5lykHk6lLfdWu3z79J
-         QwjMMA9Xc7CmeHHpE/bF5hMfKfFKJmCd3t74sAt0L/3Cpbk1Eb6sPm59pnLn0VZ+GJus
-         Y4wg==
-In-Reply-To: <20220825164111.29534-1-zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+        bh=T5Xd8mmYM32aYWsV+JS4zJF3yib8jGf3ov52iW7dkys=;
+        b=a247I2rc5JAOD5ORKb3punvZ2pFvBSqM3A39uthrzLajeyXc85gOrdcNy3BgNnqo8B
+         nUbn0XfHwV6+uojKSFxqqzA5v8Mj4NtnMzq//ATHO0+HsXT8XuREqfHrEeJaFvVAuRXI
+         SABXuO68ZnK0GrKNBamHmmW/ybwjCsXas/hkcvr+sOts7EtnEuJSucGoxilYjU28MitS
+         cHtoAX7xT5ZaltNlcjhiWBgM3fp0ShLjMTvh6695T22SaarIZaqTq9s9kSM5IdCcQqtO
+         eTtx+b2QxFmXP8+m/6F+KizCCfjy/eGiZeJHzGtiBokhXtpmqJdxzwHGH8OcAf06lwzR
+         eRvw==
+In-Reply-To: <20220825164111.29534-1-zhouchengming@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: hannes@cmpxchg.org, tj@kernel.org, mkoutny@suse.com, surenb@google.com
+Cc: mingo@redhat.com, peterz@infradead.org, gregkh@linuxfoundation.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com, Chengming Zhou <zhouchengming@bytedance.com>
 
-We won't use cgroup psi_group when !psi_cgroups_enabled, so don't
-bother to alloc percpu memory and init for it.
+This patch move psi_task_change/psi_task_switch declarations out of
+PSI public header, since they are only needed for implementing the
+PSI stats tracking in sched/stats.h
 
-Also don't need to migrate task PSI stats between cgroups in
-cgroup_move_task().
+psi_task_switch is obvious, psi_task_change can't be public helper
+since it doesn't check psi_disabled static key. And there is no
+any user now, so put it in sched/stats.h too.
 
-Signed-off-by: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Signed-off-by: Chengming Zhou <zhouchengming@bytedance.com>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- kernel/sched/psi.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ include/linux/psi.h  | 4 ----
+ kernel/sched/stats.h | 4 ++++
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
-index 39463dcc16bb..77d53c03a76f 100644
---- a/kernel/sched/psi.c
-+++ b/kernel/sched/psi.c
-@@ -201,6 +201,7 @@ void __init psi_init(void)
- {
- 	if (!psi_enable) {
- 		static_branch_enable(&psi_disabled);
-+		static_branch_disable(&psi_cgroups_enabled);
- 		return;
- 	}
+diff --git a/include/linux/psi.h b/include/linux/psi.h
+index dd74411ac21d..fffd229fbf19 100644
+--- a/include/linux/psi.h
++++ b/include/linux/psi.h
+@@ -18,10 +18,6 @@ extern struct psi_group psi_system;
  
-@@ -950,7 +951,7 @@ void psi_memstall_leave(unsigned long *flags)
- #ifdef CONFIG_CGROUPS
- int psi_cgroup_alloc(struct cgroup *cgroup)
- {
--	if (static_branch_likely(&psi_disabled))
-+	if (!static_branch_likely(&psi_cgroups_enabled))
- 		return 0;
+ void psi_init(void);
  
- 	cgroup->psi = kzalloc(sizeof(struct psi_group), GFP_KERNEL);
-@@ -968,7 +969,7 @@ int psi_cgroup_alloc(struct cgroup *cgroup)
+-void psi_task_change(struct task_struct *task, int clear, int set);
+-void psi_task_switch(struct task_struct *prev, struct task_struct *next,
+-		     bool sleep);
+-
+ void psi_memstall_enter(unsigned long *flags);
+ void psi_memstall_leave(unsigned long *flags);
  
- void psi_cgroup_free(struct cgroup *cgroup)
- {
--	if (static_branch_likely(&psi_disabled))
-+	if (!static_branch_likely(&psi_cgroups_enabled))
- 		return;
+diff --git a/kernel/sched/stats.h b/kernel/sched/stats.h
+index baa839c1ba96..c39b467ece43 100644
+--- a/kernel/sched/stats.h
++++ b/kernel/sched/stats.h
+@@ -107,6 +107,10 @@ __schedstats_from_se(struct sched_entity *se)
+ }
  
- 	cancel_delayed_work_sync(&cgroup->psi->avgs_work);
-@@ -996,7 +997,7 @@ void cgroup_move_task(struct task_struct *task, struct css_set *to)
- 	struct rq_flags rf;
- 	struct rq *rq;
- 
--	if (static_branch_likely(&psi_disabled)) {
-+	if (!static_branch_likely(&psi_cgroups_enabled)) {
- 		/*
- 		 * Lame to do this here, but the scheduler cannot be locked
- 		 * from the outside, so we move cgroups from inside sched/.
+ #ifdef CONFIG_PSI
++void psi_task_change(struct task_struct *task, int clear, int set);
++void psi_task_switch(struct task_struct *prev, struct task_struct *next,
++		     bool sleep);
++
+ /*
+  * PSI tracks state that persists across sleeps, such as iowaits and
+  * memory stalls. As a result, it has to distinguish between sleeps,
 -- 
 2.37.2
 
