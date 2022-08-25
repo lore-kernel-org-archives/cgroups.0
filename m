@@ -1,76 +1,114 @@
 From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [RFC PATCH] memcg: use root_mem_cgroup when css is inherited
-Date: Thu, 25 Aug 2022 08:40:50 +0200
-Message-ID: <YwcZctA2S3Sd0LBN@dhcp22.suse.cz>
-References: <YwRjyx6wFLk8WTDe@dhcp22.suse.cz>
- <CAGWkznGaYTv4u4kOo-rupfyWzDNJXNKTchwP6dbUK-=UXWm47w@mail.gmail.com>
- <YwSQ4APOu/H7lYGL@dhcp22.suse.cz>
- <CAGWkznGd6mgareABseMKY5p0f1=5dkfVkj=NS7_B6OkXBYSwyw@mail.gmail.com>
- <YwS/S9Sd1OWnT81Q@dhcp22.suse.cz>
- <CAGWkznGYLyF+njUB0gFF3JVdThnK9JaNsqxXYFhbdSwEQpCxvA@mail.gmail.com>
- <YwXYVjRpXQjQMsxr@dhcp22.suse.cz>
- <CAGWkznEqX3DwHW_owiK+HuuQ-HsUYK4vKmLhSxgzGn20Vzid2A@mail.gmail.com>
- <YwX89JCQCKMMYdG9@dhcp22.suse.cz>
- <CAGWkznF+dBjLzAxMMXWYSZ_5q3KA-ou0P7XM7jSYN7JSRp8N0w@mail.gmail.com>
+Subject: Re: [PATCH v2 1/3] mm: page_counter: remove unneeded atomic ops for
+ low/min
+Date: Thu, 25 Aug 2022 08:43:46 +0200
+Message-ID: <YwcaIlJUtaYB7cKI@dhcp22.suse.cz>
+References: <20220825000506.239406-1-shakeelb@google.com>
+ <20220825000506.239406-2-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1661409650; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1661409827; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=8tP0U7uO6jkjoWoaVJTMGffTLHsMTAeM7ZO+0Ttzpnc=;
-        b=Rlq2EbXz/KoWktPrNnKN7AIXIeIrydmCssc+ZXhRb8K/2E3gz3XlPnDJOGqi2IIcPcmtAO
-        /gA127K196XnzQb58YhLdftTVYTGJzLNuLnqgaP2dPun3n3mKuze7iKY/qiq73UzJvHzsO
-        XCPRI/PrCt8PtA7mhOsqkjocr6NW3hs=
+        bh=3Qj/G2DClTBDyDxLgwNY63LBJXmgLPhCgE3PiOW9WEs=;
+        b=pkOPSm7KZh7KiGtgBVxVig947gAUgLX0C96Gk0/bANJ02johnIDhHEuQe1pL0Ib271ELms
+        reO9MbRbZCMLkrpO2rT2xDlx/qU4ieZZfpALWCZY4NgAnw3/JYSRHnJSbr8pYoxulznjLs
+        f/m5yaMC6GaXOc1rCK9PXVNnuUvfWqo=
 Content-Disposition: inline
-In-Reply-To: <CAGWkznF+dBjLzAxMMXWYSZ_5q3KA-ou0P7XM7jSYN7JSRp8N0w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20220825000506.239406-2-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ke Wang <ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Oliver Sang <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, lkp-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu 25-08-22 08:43:52, Zhaoyang Huang wrote:
-> On Wed, Aug 24, 2022 at 6:27 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> >
-> > On Wed 24-08-22 17:34:42, Zhaoyang Huang wrote:
-[...]
-> > > IMHO, charging the pages which out of explicitly memory
-> > > enabled group to root could solve all of the above constraints with no
-> > > harm.
-> >
-> > This would break the hierarchical property of the controller. So a
-> > strong no no. Consider the following example
-> >
-> >        root
-> >         |
-> >         A
-> > controllers="memory"
-> > memory.max = 1G
-> > subtree_control=""
-> > |      |      |
-> > A1     A2     A3
-> >
-> > althought A1,2,3 do not have their memory controller enabled explicitly
-> > they are still constrained by the A memcg limit. If you just charge to
-> > the root because it doesn't have memory controller enabled explicitly
-> > then you just evade that constrain. I hope you understand why that is a
-> > problem.
-> IMO, A1-A3 should be explicitly enabled via echo "+memory" >
-> A/subtree_control since memory.max has been set.
+On Thu 25-08-22 00:05:04, Shakeel Butt wrote:
+> For cgroups using low or min protections, the function
+> propagate_protected_usage() was doing an atomic xchg() operation
+> irrespectively. We can optimize out this atomic operation for one
+> specific scenario where the workload is using the protection (i.e.
+> min > 0) and the usage is above the protection (i.e. usage > min).
+> 
+> This scenario is actually very common where the users want a part of
+> their workload to be protected against the external reclaim. Though this
+> optimization does introduce a race when the usage is around the
+> protection and concurrent charges and uncharged trip it over or under
+> the protection. In such cases, we might see lower effective protection
+> but the subsequent charge/uncharge will correct it.
 
-You seem to be missing the point I've triedy to make here. It is not
-about how the respective subtree should or shouldn't be configured. It
-is about the hierarchical behavior. Configuration at a higher level should be
-enforced under subtree no matter how that subtree decides to
-enabled/disable controllers. Such subtree might have beeb delegated
-and configured differently yet the constrain should be still applied.
-See the point?
+Thanks this is much more useful
 
-What you seem to be proposing is similar to cgroup v1 use_hierarchy
-configuration. It has been decided that this is undesirable very early
-in the cgroup v2 development because it make delegation impossible
-(among other reasons).
+> To evaluate the impact of this optimization, on a 72 CPUs machine, we
+> ran the following workload in a three level of cgroup hierarchy with top
+> level having min and low setup appropriately to see if this optimization
+> is effective for the mentioned case.
+> 
+>  $ netserver -6
+>  # 36 instances of netperf with following params
+>  $ netperf -6 -H ::1 -l 60 -t TCP_SENDFILE -- -m 10K
+> 
+> Results (average throughput of netperf):
+> Without (6.0-rc1)	10482.7 Mbps
+> With patch		14542.5 Mbps (38.7% improvement)
+> 
+> With the patch, the throughput improved by 38.7%
+> 
+> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Reported-by: kernel test robot <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Acked-by: Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Reviewed-by: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+
+Thanks!
+
+> ---
+> Changes since v1:
+> - Commit message update with more detail on which scenario is getting
+>   optimized and possible race condition.
+> 
+>  mm/page_counter.c | 13 ++++++-------
+>  1 file changed, 6 insertions(+), 7 deletions(-)
+> 
+> diff --git a/mm/page_counter.c b/mm/page_counter.c
+> index eb156ff5d603..47711aa28161 100644
+> --- a/mm/page_counter.c
+> +++ b/mm/page_counter.c
+> @@ -17,24 +17,23 @@ static void propagate_protected_usage(struct page_counter *c,
+>  				      unsigned long usage)
+>  {
+>  	unsigned long protected, old_protected;
+> -	unsigned long low, min;
+>  	long delta;
+>  
+>  	if (!c->parent)
+>  		return;
+>  
+> -	min = READ_ONCE(c->min);
+> -	if (min || atomic_long_read(&c->min_usage)) {
+> -		protected = min(usage, min);
+> +	protected = min(usage, READ_ONCE(c->min));
+> +	old_protected = atomic_long_read(&c->min_usage);
+> +	if (protected != old_protected) {
+>  		old_protected = atomic_long_xchg(&c->min_usage, protected);
+>  		delta = protected - old_protected;
+>  		if (delta)
+>  			atomic_long_add(delta, &c->parent->children_min_usage);
+>  	}
+>  
+> -	low = READ_ONCE(c->low);
+> -	if (low || atomic_long_read(&c->low_usage)) {
+> -		protected = min(usage, low);
+> +	protected = min(usage, READ_ONCE(c->low));
+> +	old_protected = atomic_long_read(&c->low_usage);
+> +	if (protected != old_protected) {
+>  		old_protected = atomic_long_xchg(&c->low_usage, protected);
+>  		delta = protected - old_protected;
+>  		if (delta)
+> -- 
+> 2.37.1.595.g718a3a8f04-goog
 
 -- 
 Michal Hocko
