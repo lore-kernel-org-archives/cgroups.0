@@ -1,116 +1,68 @@
-From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RESEND PATCH bpf-next v9 0/5] bpf: rstat: cgroup hierarchical
-Date: Wed, 24 Aug 2022 17:48:35 -0700
-Message-ID: <CA+khW7gzV5DyNaAdpYWApVnTe4B=5JFW_EbnmYqRAye4MmdCvw@mail.gmail.com>
-References: <20220824233117.1312810-1-haoluo@google.com> <CAADnVQLT3JE8LtOYrs30mL88PNs+NaSeXgQqAPEAup5LUC+BPQ@mail.gmail.com>
- <CA+khW7gQi+BK7Qy4Khk=Ro72nfNQaR2kNkwZemB9ELnDo4Nk3Q@mail.gmail.com> <CAADnVQKJDoE3Krn4TEwubJ0Us-QA5cE4oyZ3G2g2MiRMDn3=Cw@mail.gmail.com>
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Subject: Re: [RESEND PATCH bpf-next v9 5/5] selftests/bpf: add a selftest for
+ cgroup hierarchical stats collection
+Date: Wed, 24 Aug 2022 19:09:14 -0700
+Message-ID: <CAADnVQKC_USyXe1RyWL+EY0q=x=c88opvPW-rWZ5znGJOq63CQ@mail.gmail.com>
+References: <20220824233117.1312810-1-haoluo@google.com> <20220824233117.1312810-6-haoluo@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
+        d=gmail.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc;
-        bh=q79ck/AetSOthZ6hFpX5t7QfBKfX7F+uUXc0H4h3law=;
-        b=I1ZnPe5OrWyp6LVENTFATmozgLZ7ZkdmjybmuFrk1V4XML5gtlNtieEL2obZoXMgxX
-         nerAmkVQg+eYBWB2U5NJulY/1iBr5Q21ukGu4Hr8K9JSuY+Es3p3unZMzUkvu5l7rwJC
-         xJ+/8z31Gi4kJn+b/JWcy03XRR6tNpcNLoDc1O75HphHnSS01Lk2S3oGcvZVQyMYgrl0
-         sW128SgJU2S0XgP9IrMdPIG9z497lkzKQ3NHZ1nokrc0hYaq3jVlRDf1LRbsxNTKjUpS
-         DkkhpmDCsWUWwc/R3khgTuCovLvcCLxc5dqI5B50DqL740oIgIjgWjcIfsOo1A0UoRIp
-         0NTQ==
-In-Reply-To: <CAADnVQKJDoE3Krn4TEwubJ0Us-QA5cE4oyZ3G2g2MiRMDn3=Cw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        bh=00m4IEZE5ymczAS2BUKtiJ+vi+Xy5c2+SWdERk9o0Uk=;
+        b=XUIvvDE9rb07vRHUIuRXdPojnd2u+LRkrd7NUXqdJbASQ4pc6DJzy1xL27y/fUIJUu
+         DFYkYSy6vJBh0vjTngR/JYHMFgUYkz5ovrKbIfQ8ti/UNB5X0bAuLknVM3I8dqTySI8v
+         aNC6NnXT/bwq7HVDnRjWcviT4NyxzbZ5SyY+msV1T/13fvAiJ/4o5WPyIoHrVBf2AzT+
+         VUj1v3TLgjGH9VKySxCO5hYoVGQ1RgGzPDgWUzMh7irERe68LMD3qrFdvxKsjOfCAyzp
+         YYjSL2ZzkeY/7L/XxhzTJEopLxiUfMRZNunwMvNXZ/v63LwTj8PXPJm/1aESeSwdrVHp
+         LJzg==
+In-Reply-To: <20220824233117.1312810-6-haoluo@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Koutny <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf@google.>
+To: Hao Luo <haoluo@google.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, bpf <bpf@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Alexei Starovoitov <ast@kernel.org>, Andrii Nakryiko <andrii@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, Yonghong Song <yhs@fb.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, KP Singh <kpsingh@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, John Fastabend <john.fastabend@gmail.com>, Jiri Olsa <jolsa@kernel.org>, Michal Koutny <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, David Rientjes <rientjes@google.com>, Stanislav Fomichev <sdf@google.>
 
-On Wed, Aug 24, 2022 at 5:47 PM Alexei Starovoitov
-<alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-> On Wed, Aug 24, 2022 at 5:42 PM Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >
-> > On Wed, Aug 24, 2022 at 5:29 PM Alexei Starovoitov
-> > <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> > >
-> > > On Wed, Aug 24, 2022 at 4:31 PM Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> > > >
-> > > > This patch series allows for using bpf to collect hierarchical cgroup
-> > > > stats efficiently by integrating with the rstat framework. The rstat
-> > > > framework provides an efficient way to collect cgroup stats percpu and
-> > > > propagate them through the cgroup hierarchy.
-> > > >
-> > > > The stats are exposed to userspace in textual form by reading files in
-> > > > bpffs, similar to cgroupfs stats by using a cgroup_iter program.
-> > > > cgroup_iter is a type of bpf_iter. It walks over cgroups in four modes:
-> > > > - walking a cgroup's descendants in pre-order.
-> > > > - walking a cgroup's descendants in post-order.
-> > > > - walking a cgroup's ancestors.
-> > > > - process only a single object.
-> > > >
-> > > > When attaching cgroup_iter, one needs to set a cgroup to the iter_link
-> > > > created from attaching. This cgroup can be passed either as a file
-> > > > descriptor or a cgroup id. That cgroup serves as the starting point of
-> > > > the walk.
-> > > >
-> > > > One can also terminate the walk early by returning 1 from the iter
-> > > > program.
-> > > >
-> > > > Note that because walking cgroup hierarchy holds cgroup_mutex, the iter
-> > > > program is called with cgroup_mutex held.
-> > > >
-> > > > ** Background on rstat for stats collection **
-> > > > (I am using a subscriber analogy that is not commonly used)
-> > > >
-> > > > The rstat framework maintains a tree of cgroups that have updates and
-> > > > which cpus have updates. A subscriber to the rstat framework maintains
-> > > > their own stats. The framework is used to tell the subscriber when
-> > > > and what to flush, for the most efficient stats propagation. The
-> > > > workflow is as follows:
-> > > >
-> > > > - When a subscriber updates a cgroup on a cpu, it informs the rstat
-> > > >   framework by calling cgroup_rstat_updated(cgrp, cpu).
-> > > >
-> > > > - When a subscriber wants to read some stats for a cgroup, it asks
-> > > >   the rstat framework to initiate a stats flush (propagation) by calling
-> > > >   cgroup_rstat_flush(cgrp).
-> > > >
-> > > > - When the rstat framework initiates a flush, it makes callbacks to
-> > > >   subscribers to aggregate stats on cpus that have updates, and
-> > > >   propagate updates to their parent.
-> > > >
-> > > > Currently, the main subscribers to the rstat framework are cgroup
-> > > > subsystems (e.g. memory, block). This patch series allow bpf programs to
-> > > > become subscribers as well.
-> > > >
-> > > > Patches in this series are organized as follows:
-> > > > * Patches 1-2 introduce cgroup_iter prog, and a selftest.
-> > > > * Patches 3-5 allow bpf programs to integrate with rstat by adding the
-> > > >   necessary hook points and kfunc. A comprehensive selftest that
-> > > >   demonstrates the entire workflow for using bpf and rstat to
-> > > >   efficiently collect and output cgroup stats is added.
-> > > >
-> > > > ---
-> > > > Changelog:
-> > > > v8 -> v9:
-> > > > - Make UNSPEC (an invalid option) as the default order for cgroup_iter.
-> > > > - Use enum for specifying cgroup_iter order, instead of u32.
-> > > > - Add BPF_ITER_RESHCED to cgroup_iter.
-> > > > - Add cgroup_hierarchical_stats to s390x denylist.
-> > >
-> > > What 'RESEND' is for?
-> > > It seems to confuse patchwork and BPF CI.
-> > >
-> > > The v9 series made it to patchwork...
-> > >
-> > > Please just bump the version to v10 next time.
-> > > Don't add things to subject, since automation cannot recognize
-> > > that yet.
-> >
-> > Sorry about that. I thought it was RESEND because no content has
-> > changed. It was just adding an entry in s390 denylist.
-> >
-> > Are we good now? Or I need to send a v10?
->
-> No need. Assuming that 'RESEND' version will be green in CI.
+On Wed, Aug 24, 2022 at 4:31 PM Hao Luo <haoluo@google.com> wrote:
+> +
+> +       for (i = 0; i < N_CGROUPS; i++) {
+> +               fd = create_and_get_cgroup(cgroups[i].path);
+> +               if (!ASSERT_GE(fd, 0, "create_and_get_cgroup"))
+> +                       return fd;
+> +
+> +               cgroups[i].fd = fd;
+> +               cgroups[i].id = get_cgroup_id(cgroups[i].path);
+> +
+> +               /*
+> +                * Enable memcg controller for the entire hierarchy.
+> +                * Note that stats are collected for all cgroups in a hierarchy
+> +                * with memcg enabled anyway, but are only exposed for cgroups
+> +                * that have memcg enabled.
+> +                */
+> +               if (i < N_NON_LEAF_CGROUPS) {
+> +                       err = enable_controllers(cgroups[i].path, "memory");
+> +                       if (!ASSERT_OK(err, "enable_controllers"))
+> +                               return err;
+> +               }
+> +       }
 
-Sounds good. I will monitor the CI. :)
+It passes BPF CI, but fails in my setup with:
+
+# ./test_progs -t cgroup_hier -vv
+bpf_testmod.ko is already unloaded.
+Loading bpf_testmod.ko...
+Successfully loaded bpf_testmod.ko.
+setup_bpffs:PASS:mount 0 nsec
+setup_cgroups:PASS:setup_cgroup_environment 0 nsec
+setup_cgroups:PASS:get_root_cgroup 0 nsec
+setup_cgroups:PASS:create_and_get_cgroup 0 nsec
+(cgroup_helpers.c:92: errno: No such file or directory) Enabling
+controller memory:
+/mnt/cgroup-test-work-dir6526//test/cgroup.subtree_control
+setup_cgroups:FAIL:enable_controllers unexpected error: 1 (errno 2)
+cleanup_bpffs:FAIL:rmdir /sys/fs/bpf/vmscan/ unexpected error: -1 (errno 2)
+#36      cgroup_hierarchical_stats:FAIL
+Summary: 0/0 PASSED, 0 SKIPPED, 1 FAILED
+
+How do I debug it?
