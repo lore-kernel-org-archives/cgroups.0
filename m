@@ -1,64 +1,89 @@
-From: Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH v2 3/3] memcg: increase MEMCG_CHARGE_BATCH to 64
-Date: Thu, 25 Aug 2022 16:30:48 +0800
-Message-ID: <4A0F7B38-2701-486D-A847-DCC4B49F8EAF@linux.dev>
-References: <20220825000506.239406-1-shakeelb@google.com>
- <20220825000506.239406-4-shakeelb@google.com>
+From: Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC PATCH] memcg: use root_mem_cgroup when css is inherited
+Date: Thu, 25 Aug 2022 16:34:04 +0800
+Message-ID: <CAGWkznH5gQXigdLx=fwdL0uqdGx4WE9QP8b8cbWFxr=Rdg-CZQ@mail.gmail.com>
+References: <YwRjyx6wFLk8WTDe@dhcp22.suse.cz> <CAGWkznGaYTv4u4kOo-rupfyWzDNJXNKTchwP6dbUK-=UXWm47w@mail.gmail.com>
+ <YwSQ4APOu/H7lYGL@dhcp22.suse.cz> <CAGWkznGd6mgareABseMKY5p0f1=5dkfVkj=NS7_B6OkXBYSwyw@mail.gmail.com>
+ <YwS/S9Sd1OWnT81Q@dhcp22.suse.cz> <CAGWkznGYLyF+njUB0gFF3JVdThnK9JaNsqxXYFhbdSwEQpCxvA@mail.gmail.com>
+ <YwXYVjRpXQjQMsxr@dhcp22.suse.cz> <CAGWkznEqX3DwHW_owiK+HuuQ-HsUYK4vKmLhSxgzGn20Vzid2A@mail.gmail.com>
+ <YwX89JCQCKMMYdG9@dhcp22.suse.cz> <CAGWkznF+dBjLzAxMMXWYSZ_5q3KA-ou0P7XM7jSYN7JSRp8N0w@mail.gmail.com>
+ <YwcZctA2S3Sd0LBN@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1661416263;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=9JreSlxKXQR3ziGAdiDnXffdkc+9SIm7IIEFiG45Z3U=;
-        b=WhXhEqkbiX1TKDvyv9ByY4wFjR+PslXkJm1X1zFtwOHG+RWLsu2KluUQkTqA5aYnhVpRRD
-        lOGVOgpLskeEqjQIYBICwBS3/Kbho1OSJhYob4VUfH5fdlJTDhTBDKIUpUCFvfag6qTigX
-        vPAT6fwpRLN0nC2K/hWDCoI98nmX++Q=
-In-Reply-To: <20220825000506.239406-4-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc;
+        bh=H+0hvgnQryLyRGTLY2PSvbtKINzM1C3o/madftxyfvU=;
+        b=hUs2zEarOFOjldcG3/iN1PjdwMaKcwDVlAxhiVE1FNpVdYCy9CBiFFc0u4vGdOhtTJ
+         Zjf7OoJfwwqcqxxmkppcrILJB9/dXeYYO4zQnglsljh9LY6b31UWtcvuyN2xpMf5+91r
+         pgv+hOaa4lZvxqNvi0bAfaF/LNas8FXjjBy68uXz5htwDQqKbfvUl0XMYV7OiDZ03ZCn
+         kakLDuYy35p7tQLQr19m2+/EHNOYoK521heqvB/5pGDWO0PBTrkmq95thaBW04NEYDOp
+         f6QFGMSBJepxO1H2h7tEoGwlalN8ez1DlEJF24r4AXehRuV/Dwkl0LsnKM+ZSeK+ROZ/
+         lVIA==
+In-Reply-To: <YwcZctA2S3Sd0LBN-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, =?utf-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Oliver Sang <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, lkp-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ke Wang <ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-
-
-> On Aug 25, 2022, at 08:05, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> 
-> For several years, MEMCG_CHARGE_BATCH was kept at 32 but with bigger
-> machines and the network intensive workloads requiring througput in
-> Gbps, 32 is too small and makes the memcg charging path a bottleneck.
-> For now, increase it to 64 for easy acceptance to 6.0. We will need to
-> revisit this in future for ever increasing demand of higher performance.
-> 
-> Please note that the memcg charge path drain the per-cpu memcg charge
-> stock, so there should not be any oom behavior change. Though it does
-> have impact on rstat flushing and high limit reclaim backoff.
-> 
-> To evaluate the impact of this optimization, on a 72 CPUs machine, we
-> ran the following workload in a three level of cgroup hierarchy.
-> 
-> $ netserver -6
-> # 36 instances of netperf with following params
-> $ netperf -6 -H ::1 -l 60 -t TCP_SENDFILE -- -m 10K
-> 
-> Results (average throughput of netperf):
-> Without (6.0-rc1)       10482.7 Mbps
-> With patch              17064.7 Mbps (62.7% improvement)
-> 
-> With the patch, the throughput improved by 62.7%.
-
-This is very impressive.
-
-> 
-> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Reported-by: kernel test robot <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Acked-by: Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Reviewed-by: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-
-Acked-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-
-Thanks.
+On Thu, Aug 25, 2022 at 2:40 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+>
+> On Thu 25-08-22 08:43:52, Zhaoyang Huang wrote:
+> > On Wed, Aug 24, 2022 at 6:27 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> > >
+> > > On Wed 24-08-22 17:34:42, Zhaoyang Huang wrote:
+> [...]
+> > > > IMHO, charging the pages which out of explicitly memory
+> > > > enabled group to root could solve all of the above constraints with no
+> > > > harm.
+> > >
+> > > This would break the hierarchical property of the controller. So a
+> > > strong no no. Consider the following example
+> > >
+> > >        root
+> > >         |
+> > >         A
+> > > controllers="memory"
+> > > memory.max = 1G
+> > > subtree_control=""
+> > > |      |      |
+> > > A1     A2     A3
+> > >
+> > > althought A1,2,3 do not have their memory controller enabled explicitly
+> > > they are still constrained by the A memcg limit. If you just charge to
+> > > the root because it doesn't have memory controller enabled explicitly
+> > > then you just evade that constrain. I hope you understand why that is a
+> > > problem.
+> > IMO, A1-A3 should be explicitly enabled via echo "+memory" >
+> > A/subtree_control since memory.max has been set.
+>
+> You seem to be missing the point I've triedy to make here. It is not
+> about how the respective subtree should or shouldn't be configured. It
+> is about the hierarchical behavior. Configuration at a higher level should be
+> enforced under subtree no matter how that subtree decides to
+> enabled/disable controllers. Such subtree might have beeb delegated
+> and configured differently yet the constrain should be still applied.
+> See the point?
+>
+> What you seem to be proposing is similar to cgroup v1 use_hierarchy
+> configuration. It has been decided that this is undesirable very early
+> in the cgroup v2 development because it make delegation impossible
+> (among other reasons).
+Ok, I would like to know how AA3 achieve the goal of competing with A1
+and A2 for cpu but keep memory out of control under current policy?
+        root
+         |
+         A
+ controllers="memory,cpu"
+ memory.max = 1G
+ subtree_control="memory,cpu"
+ |      |            |
+ A1     A2     A3 subtree_control="cpu"
+                      |      |
+                    AA3   AA4 controllers="cpu"
+>
+> --
+> Michal Hocko
+> SUSE Labs
