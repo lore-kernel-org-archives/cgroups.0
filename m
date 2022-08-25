@@ -1,22 +1,22 @@
 From: patchwork-bot+netdevbpf@kernel.org
-Subject: Re: [RESEND PATCH bpf-next v9 0/5] bpf: rstat: cgroup hierarchical
+Subject: Re: [PATCH bpf-next v9 0/5] bpf: rstat: cgroup hierarchical stats
 Date: Thu, 25 Aug 2022 18:40:16 +0000
-Message-ID: <166145281665.28094.14483828352332763496.git-patchwork-notify@kernel.org>
-References: <20220824233117.1312810-1-haoluo@google.com>
+Message-ID: <166145281660.28094.16612223815048062311.git-patchwork-notify@kernel.org>
+References: <20220824030031.1013441-1-haoluo@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1661452816;
-        bh=oy+NBN9E7Uaxy3eSfIAa1sdIgOULz1blQP0IjoBk3Vg=;
+        bh=pGsnlrzUs9rFUKA1BHRL6k9aWIJQ/q1skMQLzZaS5rQ=;
         h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=FDmdjJgqyelrTfZ0uschjSe0H9q5nw0oYruPp6vBbi97OophCphclgyVWMYbT2aEU
-         4rVZNUdQXuFqyTHfLNaoxJgThH1E6Gqf2tsU4zjR8dwQkCbzxD7NTkVNFTtfx0JsWu
-         nNMDG8nEsgEV0x1hPLMw0NpRrCvZ00tDPvQrh0nQxaBQmMEKbehU8fxd07uQHpktAy
-         Fe4IEDfC/28kHjBhHxEPQITJ8CuJyoZGEmZm60Jc7engXUckPrYawLLDX7UcdI+XSQ
-         5xm77dyPuBVsUT7poQpZnt7e4NdMuGl4xjmYddh791Tyek9pFMh77+jOyS3l9i0IVf
-         0xUx4GZ2isY1w==
-In-Reply-To: <20220824233117.1312810-1-haoluo@google.com>
+        b=vM36CzAGqCstVAofRH9O8k5B6COSFFRc+vCFwFrBdU7R9OnoQVPqY0DkHa5JM9i8L
+         TAUmmFH7jtb/DaN0+YZv+A86P9T8xmlwUyV0crgMZp3EBo85OOs9G6HFpqaCc9wHzW
+         JdgQaq/7atIsuDMOw7T3hD2EobDzYo2LxLm6sf/ZTvbf2UNQ6CaUtiRhRWOcJK+WEf
+         M96F91YU3Rc74GntKdLTgW1DaGTk0oq902MubZkNIfqsCb4p/D2G3wMNn81Icltbj2
+         D86xRDTrAmLpl87DmyfAF/9VDG9/hdWmHmZpvS8ZPAtgF6GDy8dbsU3/XKus39XLq4
+         NCKLF1zTG1Wdg==
+In-Reply-To: <20220824030031.1013441-1-haoluo@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Hao Luo <haoluo@google.com>
@@ -27,7 +27,7 @@ Hello:
 This series was applied to bpf/bpf-next.git (master)
 by Alexei Starovoitov <ast@kernel.org>:
 
-On Wed, 24 Aug 2022 16:31:12 -0700 you wrote:
+On Tue, 23 Aug 2022 20:00:26 -0700 you wrote:
 > This patch series allows for using bpf to collect hierarchical cgroup
 > stats efficiently by integrating with the rstat framework. The rstat
 > framework provides an efficient way to collect cgroup stats percpu and
@@ -44,16 +44,16 @@ On Wed, 24 Aug 2022 16:31:12 -0700 you wrote:
 > [...]
 
 Here is the summary with links:
-  - [RESEND,bpf-next,v9,1/5] bpf: Introduce cgroup iter
+  - [bpf-next,v9,1/5] bpf: Introduce cgroup iter
     https://git.kernel.org/bpf/bpf-next/c/d4ccaf58a847
-  - [RESEND,bpf-next,v9,2/5] selftests/bpf: Test cgroup_iter.
+  - [bpf-next,v9,2/5] selftests/bpf: Test cgroup_iter.
     https://git.kernel.org/bpf/bpf-next/c/fe0dd9d4b740
-  - [RESEND,bpf-next,v9,3/5] cgroup: bpf: enable bpf programs to integrate with rstat
+  - [bpf-next,v9,3/5] cgroup: bpf: enable bpf programs to integrate with rstat
     https://git.kernel.org/bpf/bpf-next/c/a319185be9f5
-  - [RESEND,bpf-next,v9,4/5] selftests/bpf: extend cgroup helpers
+  - [bpf-next,v9,4/5] selftests/bpf: extend cgroup helpers
     https://git.kernel.org/bpf/bpf-next/c/434992bb6037
-  - [RESEND,bpf-next,v9,5/5] selftests/bpf: add a selftest for cgroup hierarchical stats collection
-    https://git.kernel.org/bpf/bpf-next/c/88886309d2e8
+  - [bpf-next,v9,5/5] selftests/bpf: add a selftest for cgroup hierarchical stats collection
+    (no matching commit)
 
 You are awesome, thank you!
 -- 
