@@ -1,113 +1,123 @@
 From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH v4 00/10] sched/psi: some optimizations and extensions
-Date: Fri, 26 Aug 2022 00:41:01 +0800
-Message-ID: <20220825164111.29534-1-zhouchengming@bytedance.com>
+Subject: [PATCH v4 01/10] sched/psi: fix periodic aggregation shut off
+Date: Fri, 26 Aug 2022 00:41:02 +0800
+Message-ID: <20220825164111.29534-2-zhouchengming@bytedance.com>
+References: <20220825164111.29534-1-zhouchengming@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc;
-        bh=OtUK9OLMWdL6AUc3ZfpyXK1kgh1agdbXcj5hc+979G8=;
-        b=xHJiXgBT7PEkZdMevyBPSnrJlZZCDwl6ozciskiNf9lpSMP/BhlEA/uOVlntwEOMoP
-         8AsYSYGjz+lts4hRawuyJ6l6j1hjlPAVOBqnpGUKXbtEw9ZdqEkFmWYzCoRhk5hEVMqd
-         LookuDXfD+8p7qtuCBQ2Us57jbxcmrBlqm9sBNsMnW+PY5fnbQg7FmU8Pv54Ao1pZ+jO
-         Qlv7oV81DA9EYTvqlGNwLjuuhXOAJPyHxTpLFABwb7wAi1ZGz+PtCwoQyKk7qJ6TBCwf
-         YrTIDzukpS+oc/W+qzGWsltS5E3XkCXyR6vIOWTqg9xpCYf+3ygIVs+5KfRLmrQe7Qwx
-         altQ==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc;
+        bh=WejlGClWGOz4bz39sTGrt+zcC+1FgtAJxwc+yuBUn+0=;
+        b=SaF4V56o98RwyKm4Dd9nmZJgCPmnYVFL9biZ4nY7UVTw8PLe9hkPGSpcJ7JhVfqSpo
+         4Wo2DhNt0zt75QS2NiNriICjnCg1VwUFXEob4tUMn/HzRN25XnP5BQ3NdSdTuuTw+yqj
+         KkRjfGpl/qxuQFhWvAkxvrVYfcbhK81Tz5EbiAv2/S7TSUPhu6fOCtNq/S1TWZl1dH9j
+         +xgN+KslrcRgYvGpWPuev08WdqzlH5Ou2+VlEBeDAvirALpBkB1aoKLSDbV+X/cgJXyb
+         iKSkaBMNgF9qnMpkMopBugxFvSY80G2kqQd0XHsNV/yZi5cDYTNgzgo6lsVxvm/BlRvL
+         SBgw==
+In-Reply-To: <20220825164111.29534-1-zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
+Content-Type: text/plain; charset="us-ascii"
 To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-SGkgYWxsLAoKVGhpcyBwYXRjaCBzZXJpZXMgYXJlIHNvbWUgb3B0aW1pemF0aW9ucyBhbmQgZXh0
-ZW5zaW9ucyBmb3IgUFNJLgoKcGF0Y2ggMS8xMCBmaXggcGVyaW9kaWMgYWdncmVnYXRpb24gc2h1
-dCBvZmYgcHJvYmxlbSBpbnRyb2R1Y2VkIGJ5IGVhcmxpZXIKY29tbWl0IDQxMTdjZWJmMWE5ZiAo
-InBzaTogT3B0aW1pemUgdGFzayBzd2l0Y2ggaW5zaWRlIHNoYXJlZCBjZ3JvdXBzIikuCgpwYXRj
-aCAyLTQgYXJlIHNvbWUgbWlzYyBvcHRpbWl6YXRpb25zLCBzbyBwdXQgdGhlbSBpbiBmcm9udCBv
-ZiB0aGlzIHNlcmllcy4KCnBhdGNoIDUvMTAgb3B0aW1pemUgdGFzayBzd2l0Y2ggaW5zaWRlIHNo
-YXJlZCBjZ3JvdXBzIHdoZW4gaW5fbWVtc3RhbGwgc3RhdHVzCm9mIHByZXYgdGFzayBhbmQgbmV4
-dCB0YXNrIGFyZSBkaWZmZXJlbnQuCgpwYXRjaCA2LzEwIHJlbW92ZSBOUl9PTkNQVSB0YXNrIGFj
-Y291bnRpbmcgdG8gc2F2ZSA0IGJ5dGVzIGluIHRoZSBmaXJzdApjYWNoZWxpbmUgdG8gYmUgdXNl
-ZCBieSB0aGUgZm9sbG93aW5nIHBhdGNoIDcvMTAsIHdoaWNoIGludHJvZHVjZSBuZXcKUFNJIHJl
-c291cmNlIFBTSV9JUlEgdG8gdHJhY2sgSVJRL1NPRlRJUlEgcHJlc3N1cmUgc3RhbGwgaW5mb3Jt
-YXRpb24uCgpwYXRjaCA4LTkgY2FjaGUgcGFyZW50IHBzaV9ncm91cCBpbiBzdHJ1Y3QgcHNpX2dy
-b3VwIHRvIHNwZWVkIHVwIHRoZQpob3QgaXRlcmF0aW9uIHBhdGguCgpwYXRjaCAxMC8xMCBpbnRy
-b2R1Y2UgYSBwZXItY2dyb3VwIGludGVyZmFjZSAiY2dyb3VwLnByZXNzdXJlIiB0byBkaXNhYmxl
-Cm9yIHJlLWVuYWJsZSBQU0kgaW4gdGhlIGNncm91cCBsZXZlbCwgYW5kIHdlIGltcGxlbWVudCBo
-aWRpbmcgYW5kIHVuaGlkaW5nCnRoZSBwcmVzc3VyZSBmaWxlcyBwZXIgVGVqdW4ncyBzdWdnZXN0
-aW9uWzFdLCB3aGljaCBkZXBlbmRzIG9uIGhpcyB3b3JrWzJdLgoKWzFdIGh0dHBzOi8vbG9yZS5r
-ZXJuZWwub3JnL2FsbC9ZdnFqaHFKUWkySjhSRzNYLU5pTGZnL3BZRWQxTjBUblp1Q2g4dkFAcHVi
-bGljLmdtYW5lLm9yZy8KWzJdIGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2FsbC8yMDIyMDgyMDAw
-MDU1MC4zNjcwODUtMS10ai1EZ0VqVCtBaTJ5Z2RubSt5Uk9mRTBBQHB1YmxpYy5nbWFuZS5vcmcv
-CgpQZXJmb3JtYW5jZSB0ZXN0IHVzaW5nIG1tdGVzdHMvY29uZmlnLXNjaGVkdWxlci1wZXJmcGlw
-ZSBpbgovdXNlci5zbGljZS91c2VyLTAuc2xpY2Uvc2Vzc2lvbi00LnNjb3BlOgoKICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgbmV4dCAgICAgICAgICAgICAgICBwYXRjaGVkICAgICAg
-IHBhdGNoZWQvb25seS1sZWFmCk1pbiAgICAgICBUaW1lICAgICAgICA4LjgyICggICAwLjAwJSkg
-ICAgICAgIDguNDkgKCAgIDMuNzQlKSAgICAgICAgOC4wMCAoICAgOS4zMiUpCjFzdC1xcnRsZSBU
-aW1lICAgICAgICA4LjkwICggICAwLjAwJSkgICAgICAgIDguNTggKCAgIDMuNjMlKSAgICAgICAg
-OC4wNSAoICAgOS41OCUpCjJuZC1xcnRsZSBUaW1lICAgICAgICA4Ljk0ICggICAwLjAwJSkgICAg
-ICAgIDguNjEgKCAgIDMuNjUlKSAgICAgICAgOC4wOSAoICAgOS41MCUpCjNyZC1xcnRsZSBUaW1l
-ICAgICAgICA4Ljk5ICggICAwLjAwJSkgICAgICAgIDguNjUgKCAgIDMuNzUlKSAgICAgICAgOC4x
-NSAoICAgOS4zNSUpCk1heC0xICAgICBUaW1lICAgICAgICA4LjgyICggICAwLjAwJSkgICAgICAg
-IDguNDkgKCAgIDMuNzQlKSAgICAgICAgOC4wMCAoICAgOS4zMiUpCk1heC01ICAgICBUaW1lICAg
-ICAgICA4LjgyICggICAwLjAwJSkgICAgICAgIDguNDkgKCAgIDMuNzQlKSAgICAgICAgOC4wMCAo
-ICAgOS4zMiUpCk1heC0xMCAgICBUaW1lICAgICAgICA4Ljg0ICggICAwLjAwJSkgICAgICAgIDgu
-NTUgKCAgIDMuMjAlKSAgICAgICAgOC4wNCAoICAgOS4wNSUpCk1heC05MCAgICBUaW1lICAgICAg
-ICA5LjA0ICggICAwLjAwJSkgICAgICAgIDguNjcgKCAgIDQuMTAlKSAgICAgICAgOC4xOCAoICAg
-OS41MSUpCk1heC05NSAgICBUaW1lICAgICAgICA5LjA0ICggICAwLjAwJSkgICAgICAgIDguNjgg
-KCAgIDQuMDMlKSAgICAgICAgOC4yMCAoICAgOS4yNiUpCk1heC05OSAgICBUaW1lICAgICAgICA5
-LjA3ICggICAwLjAwJSkgICAgICAgIDguNzMgKCAgIDMuODIlKSAgICAgICAgOC4yNSAoICAgOS4x
-MSUpCk1heCAgICAgICBUaW1lICAgICAgICA5LjEyICggICAwLjAwJSkgICAgICAgIDguODkgKCAg
-IDIuNTQlKSAgICAgICAgOC4yNyAoICAgOS4yOSUpCkFtZWFuICAgICBUaW1lICAgICAgICA4Ljk1
-ICggICAwLjAwJSkgICAgICAgIDguNjIgKiAgIDMuNjclKiAgICAgICAgOC4xMSAqICAgOS40MyUq
-CgpCaWcgdGhhbmtzIHRvIEpvaGFubmVzIFdlaW5lciwgVGVqdW4gSGVvIGFuZCBNaWNoYWwgS291
-dG7DvSBmb3IgeW91cgpzdWdnZXN0aW9ucyBhbmQgcmV2aWV3IQoKCkNoYW5nZXMgaW4gdjQ6CiAt
-IENvbGxlY3QgQWNrZWQtYnkgdGFncyBmcm9tIEpvaGFubmVzIFdlaW5lci4KIC0gQWRkIG1hbnkg
-Y2xlYXIgY29tbWVudHMgYW5kIGNoYW5nZWxvZ3MgcGVyIEpvaGFubmVzIFdlaW5lci4KIC0gUmVw
-bGFjZSBmb3JfZWFjaF9wc2lfZ3JvdXAoKSB3aXRoIGJldHRlciBvcGVuLWNvZGUuCiAtIENoYW5n
-ZSB0byB1c2UgYmV0dGVyIG5hbWVzIGNncm91cF9wcmVzc3VyZV9zaG93KCkgYW5kCiAgIGNncm91
-cF9wcmVzc3VyZV93cml0ZSgpLgogLSBDaGFuZ2UgdG8gdXNlIGJldHRlciBuYW1lIHBzaV9jZ3Jv
-dXBfcmVzdGFydCgpIGFuZCBvbmx5CiAgIGNhbGwgaXQgb24gZW5hYmxpbmcuCgpDaGFuZ2VzIGlu
-IHYzOgogLSBSZWJhc2Ugb24gbGludXgtbmV4dCBhbmQgcmVvcmRlciBwYXRjaGVzIHRvIHB1dCBt
-aXNjIG9wdGltaXphdGlvbnMKICAgcGF0Y2hlcyBpbiB0aGUgZnJvbnQgb2YgdGhpcyBzZXJpZXMu
-CiAtIERyb3AgcGF0Y2ggInNjaGVkL3BzaTogZG9uJ3QgY2hhbmdlIHRhc2sgcHNpX2ZsYWdzIHdo
-ZW4gbWlncmF0ZSBDUFUvZ3JvdXAiCiAgIHNpbmNlIGl0IGNhdXNlZCBhIGxpdHRsZSBwZXJmb3Jt
-YW5jZSByZWdyZXNzaW9uIGFuZCBpdCdzIGp1c3QKICAgY29kZSByZWZhY3RvcmluZywgc28gZHJv
-cCBpdC4KIC0gRG9uJ3QgZGVmaW5lIFBTSV9JUlEgYW5kIFBTSV9JUlFfRlVMTCB3aGVuICFDT05G
-SUdfSVJRX1RJTUVfQUNDT1VOVElORywKICAgaW4gd2hpY2ggY2FzZSB0aGV5IGFyZSBub3QgdXNl
-ZC4KIC0gQWRkIHBhdGNoIDgvMTAgInNjaGVkL3BzaTogY29uc29saWRhdGUgY2dyb3VwX3BzaSgp
-IiBtYWtlIGNncm91cF9wc2koKQogICBjYW4gaGFuZGxlIGFsbCBjZ3JvdXBzIGluY2x1ZGluZyBy
-b290IGNncm91cCwgbWFrZSBwYXRjaCA5LzEwIHNpbXBsZXIuCiAtIFJlbmFtZSBpbnRlcmZhY2Ug
-dG8gImNncm91cC5wcmVzc3VyZSIgYW5kIGFkZCBzb21lIGV4cGxhbmF0aW9uCiAgIHBlciBNaWNo
-YWwncyBzdWdnZXN0aW9uLgogLSBIaWRlIGFuZCB1bmhpZGUgcHJlc3N1cmUgZmlsZXMgd2hlbiBk
-aXNhYmxlL3JlLWVuYWJsZSBjZ3JvdXAgUFNJLAogICBkZXBlbmRzIG9uIFRlanVuJ3Mgd29yay4K
-CkNoYW5nZXMgaW4gdjI6CiAtIEFkZCBBY2tlZC1ieSB0YWdzIGZyb20gSm9oYW5uZXMgV2VpbmVy
-LiBUaGFua3MgZm9yIHJldmlldyEKIC0gRml4IHBlcmlvZGljIGFnZ3JlZ2F0aW9uIHdha2V1cCBm
-b3IgY29tbW9uIGFuY2VzdG9ycyBpbgogICBwc2lfdGFza19zd2l0Y2goKS4KIC0gQWRkIHBhdGNo
-IDcvMTAgZnJvbSBKb2hhbm5lcyBXZWluZXIsIHdoaWNoIHJlbW92ZSBOUl9PTkNQVQogICB0YXNr
-IGFjY291bnRpbmcgdG8gc2F2ZSA0IGJ5dGVzIGluIHRoZSBmaXJzdCBjYWNoZWxpbmUuCiAtIFJl
-bW92ZSAicHNpX2lycT0iIGtlcm5lbCBjbWRsaW5lIHBhcmFtZXRlciBpbiBsYXN0IHZlcnNpb24u
-CiAtIEFkZCBwZXItY2dyb3VwIGludGVyZmFjZSAiY2dyb3VwLnBzaSIgdG8gZGlzYWJsZS9yZS1l
-bmFibGUKICAgUFNJIHN0YXRzIGFjY291bnRpbmcgaW4gdGhlIGNncm91cCBsZXZlbC4KCgpDaGVu
-Z21pbmcgWmhvdSAoOSk6CiAgc2NoZWQvcHNpOiBmaXggcGVyaW9kaWMgYWdncmVnYXRpb24gc2h1
-dCBvZmYKICBzY2hlZC9wc2k6IGRvbid0IGNyZWF0ZSBjZ3JvdXAgUFNJIGZpbGVzIHdoZW4gcHNp
-X2Rpc2FibGVkCiAgc2NoZWQvcHNpOiBzYXZlIHBlcmNwdSBtZW1vcnkgd2hlbiAhcHNpX2Nncm91
-cHNfZW5hYmxlZAogIHNjaGVkL3BzaTogbW92ZSBwcml2YXRlIGhlbHBlcnMgdG8gc2NoZWQvc3Rh
-dHMuaAogIHNjaGVkL3BzaTogb3B0aW1pemUgdGFzayBzd2l0Y2ggaW5zaWRlIHNoYXJlZCBjZ3Jv
-dXBzIGFnYWluCiAgc2NoZWQvcHNpOiBhZGQgUFNJX0lSUSB0byB0cmFjayBJUlEvU09GVElSUSBw
-cmVzc3VyZQogIHNjaGVkL3BzaTogY29uc29saWRhdGUgY2dyb3VwX3BzaSgpCiAgc2NoZWQvcHNp
-OiBjYWNoZSBwYXJlbnQgcHNpX2dyb3VwIHRvIHNwZWVkIHVwIGdyb3VwcyBpdGVyYXRlCiAgc2No
-ZWQvcHNpOiBwZXItY2dyb3VwIFBTSSBhY2NvdW50aW5nIGRpc2FibGUvcmUtZW5hYmxlIGludGVy
-ZmFjZQoKSm9oYW5uZXMgV2VpbmVyICgxKToKICBzY2hlZC9wc2k6IHJlbW92ZSBOUl9PTkNQVSB0
-YXNrIGFjY291bnRpbmcKCiBEb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nncm91cC12Mi5yc3Qg
-fCAgMjMgKysKIGluY2x1ZGUvbGludXgvY2dyb3VwLWRlZnMuaCAgICAgICAgICAgICB8ICAgMyAr
-CiBpbmNsdWRlL2xpbnV4L2Nncm91cC5oICAgICAgICAgICAgICAgICAgfCAgIDUgLQogaW5jbHVk
-ZS9saW51eC9wc2kuaCAgICAgICAgICAgICAgICAgICAgIHwgIDEyICstCiBpbmNsdWRlL2xpbnV4
-L3BzaV90eXBlcy5oICAgICAgICAgICAgICAgfCAgMjkgKystCiBrZXJuZWwvY2dyb3VwL2Nncm91
-cC5jICAgICAgICAgICAgICAgICAgfCAxMDYgKysrKysrKystCiBrZXJuZWwvc2NoZWQvY29yZS5j
-ICAgICAgICAgICAgICAgICAgICAgfCAgIDEgKwoga2VybmVsL3NjaGVkL3BzaS5jICAgICAgICAg
-ICAgICAgICAgICAgIHwgMjgwICsrKysrKysrKysrKysrKysrLS0tLS0tLQoga2VybmVsL3NjaGVk
-L3N0YXRzLmggICAgICAgICAgICAgICAgICAgIHwgICA2ICsKIDkgZmlsZXMgY2hhbmdlZCwgMzYy
-IGluc2VydGlvbnMoKyksIDEwMyBkZWxldGlvbnMoLSkKCi0tIAoyLjM3LjIKCg==
+We don't want to wake periodic aggregation work back up if the
+task change is the aggregation worker itself going to sleep, or
+we'll ping-pong forever.
+
+Previously, we would use psi_task_change() in psi_dequeue() when
+task going to sleep, so this check was put in psi_task_change().
+
+But commit 4117cebf1a9f ("psi: Optimize task switch inside shared cgroups")
+defer task sleep handling to psi_task_switch(), won't go through
+psi_task_change() anymore.
+
+So this patch move this check to psi_task_switch().
+
+Fixes: 4117cebf1a9f ("psi: Optimize task switch inside shared cgroups")
+Signed-off-by: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ kernel/sched/psi.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+index ecb4b4ff4ce0..39463dcc16bb 100644
+--- a/kernel/sched/psi.c
++++ b/kernel/sched/psi.c
+@@ -796,7 +796,6 @@ void psi_task_change(struct task_struct *task, int clear, int set)
+ {
+ 	int cpu = task_cpu(task);
+ 	struct psi_group *group;
+-	bool wake_clock = true;
+ 	void *iter = NULL;
+ 	u64 now;
+ 
+@@ -806,19 +805,9 @@ void psi_task_change(struct task_struct *task, int clear, int set)
+ 	psi_flags_change(task, clear, set);
+ 
+ 	now = cpu_clock(cpu);
+-	/*
+-	 * Periodic aggregation shuts off if there is a period of no
+-	 * task changes, so we wake it back up if necessary. However,
+-	 * don't do this if the task change is the aggregation worker
+-	 * itself going to sleep, or we'll ping-pong forever.
+-	 */
+-	if (unlikely((clear & TSK_RUNNING) &&
+-		     (task->flags & PF_WQ_WORKER) &&
+-		     wq_worker_last_func(task) == psi_avgs_work))
+-		wake_clock = false;
+ 
+ 	while ((group = iterate_groups(task, &iter)))
+-		psi_group_change(group, cpu, clear, set, now, wake_clock);
++		psi_group_change(group, cpu, clear, set, now, true);
+ }
+ 
+ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
+@@ -854,6 +843,7 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
+ 
+ 	if (prev->pid) {
+ 		int clear = TSK_ONCPU, set = 0;
++		bool wake_clock = true;
+ 
+ 		/*
+ 		 * When we're going to sleep, psi_dequeue() lets us
+@@ -867,13 +857,23 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
+ 				clear |= TSK_MEMSTALL_RUNNING;
+ 			if (prev->in_iowait)
+ 				set |= TSK_IOWAIT;
++
++			/*
++			 * Periodic aggregation shuts off if there is a period of no
++			 * task changes, so we wake it back up if necessary. However,
++			 * don't do this if the task change is the aggregation worker
++			 * itself going to sleep, or we'll ping-pong forever.
++			 */
++			if (unlikely((prev->flags & PF_WQ_WORKER) &&
++				     wq_worker_last_func(prev) == psi_avgs_work))
++				wake_clock = false;
+ 		}
+ 
+ 		psi_flags_change(prev, clear, set);
+ 
+ 		iter = NULL;
+ 		while ((group = iterate_groups(prev, &iter)) && group != common)
+-			psi_group_change(group, cpu, clear, set, now, true);
++			psi_group_change(group, cpu, clear, set, now, wake_clock);
+ 
+ 		/*
+ 		 * TSK_ONCPU is handled up to the common ancestor. If we're tasked
+@@ -882,7 +882,7 @@ void psi_task_switch(struct task_struct *prev, struct task_struct *next,
+ 		if (sleep) {
+ 			clear &= ~TSK_ONCPU;
+ 			for (; group; group = iterate_groups(prev, &iter))
+-				psi_group_change(group, cpu, clear, set, now, true);
++				psi_group_change(group, cpu, clear, set, now, wake_clock);
+ 		}
+ 	}
+ }
+-- 
+2.37.2
+
