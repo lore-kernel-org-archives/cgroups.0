@@ -1,113 +1,113 @@
-From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: [PATCH v2 5/8] mm/memcontrol: Replace the PREEMPT_RT conditionals
-Date: Thu, 25 Aug 2022 18:41:28 +0200
-Message-ID: <20220825164131.402717-6-bigeasy@linutronix.de>
-References: <20220825164131.402717-1-bigeasy@linutronix.de>
+From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: [PATCH v4 00/10] sched/psi: some optimizations and extensions
+Date: Fri, 26 Aug 2022 00:41:01 +0800
+Message-ID: <20220825164111.29534-1-zhouchengming@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1661445701;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=rBDIufscYHVsHmPufaPAl/Vqv2LLB/GPVe+GUwmXUq8=;
-        b=dwt4gAjuVE7mnQU8NsSY1OdNQ0rEZBIOo7TJBp+JnuKFR/KIJGimsOnnoMrAmxV7Ig+JT7
-        O249Q23IW3M+loKcYaWWeCCbHsG9iBRknQ60mgpEXPa4N+Eode7esLr9CsWoLpckIV1KzI
-        ayi8JaUVrbuLHKvfTbkZw3UEWBw409RJLoheWD5IzDo/LyyVLw6mJMQH2W1WsMcD3Dh2VU
-        y0AoX+D8MvMAnXdwKQNdlX2Uq1K1KYhECqVDrC126boDaX4wUq6U9kgnOZqzw/EZZ46Kw8
-        ahdSsDX24EgjlJ4uN9GjqVIcF/W2re4OGiNrAhu80st4X6zaYkG+ENS6mRRj9g==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1661445701;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=rBDIufscYHVsHmPufaPAl/Vqv2LLB/GPVe+GUwmXUq8=;
-        b=/xWS01iGeCi7ocDyLNA4wcA1jGESk+49fcLFDvz6piEFCTHy/Cap5+B9ZdmwZa5+akYuxh
-        YMeWgbw07cXCjbBw==
-In-Reply-To: <20220825164131.402717-1-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc;
+        bh=OtUK9OLMWdL6AUc3ZfpyXK1kgh1agdbXcj5hc+979G8=;
+        b=xHJiXgBT7PEkZdMevyBPSnrJlZZCDwl6ozciskiNf9lpSMP/BhlEA/uOVlntwEOMoP
+         8AsYSYGjz+lts4hRawuyJ6l6j1hjlPAVOBqnpGUKXbtEw9ZdqEkFmWYzCoRhk5hEVMqd
+         LookuDXfD+8p7qtuCBQ2Us57jbxcmrBlqm9sBNsMnW+PY5fnbQg7FmU8Pv54Ao1pZ+jO
+         Qlv7oV81DA9EYTvqlGNwLjuuhXOAJPyHxTpLFABwb7wAi1ZGz+PtCwoQyKk7qJ6TBCwf
+         YrTIDzukpS+oc/W+qzGWsltS5E3XkCXyR6vIOWTqg9xpCYf+3ygIVs+5KfRLmrQe7Qwx
+         altQ==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Content-Type: text/plain; charset="macroman"
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-From: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-
-Use VM_WARN_ON_IRQS_ENABLED() and preempt_disable/enable_nested() to
-replace the CONFIG_PREEMPT_RT #ifdeffery.
-
-Signed-off-by: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Reviewed-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Acked-by: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
----
- mm/memcontrol.c | 19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b69979c9ced5c..d35b6fa560f0a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -597,25 +597,18 @@ static u64 flush_next_time;
-  */
- static void memcg_stats_lock(void)
- {
--#ifdef CONFIG_PREEMPT_RT
--      preempt_disable();
--#else
--      VM_BUG_ON(!irqs_disabled());
--#endif
-+	preempt_disable_nested();
-+	VM_WARN_ON_IRQS_ENABLED();
- }
-=20
- static void __memcg_stats_lock(void)
- {
--#ifdef CONFIG_PREEMPT_RT
--      preempt_disable();
--#endif
-+	preempt_disable_nested();
- }
-=20
- static void memcg_stats_unlock(void)
- {
--#ifdef CONFIG_PREEMPT_RT
--      preempt_enable();
--#endif
-+	preempt_enable_nested();
- }
-=20
- static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
-@@ -715,7 +708,7 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, en=
-um node_stat_item idx,
- 	 * interrupt context while other caller need to have disabled interrupt.
- 	 */
- 	__memcg_stats_lock();
--	if (IS_ENABLED(CONFIG_DEBUG_VM) && !IS_ENABLED(CONFIG_PREEMPT_RT)) {
-+	if (IS_ENABLED(CONFIG_DEBUG_VM)) {
- 		switch (idx) {
- 		case NR_ANON_MAPPED:
- 		case NR_FILE_MAPPED:
-@@ -725,7 +718,7 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, en=
-um node_stat_item idx,
- 			WARN_ON_ONCE(!in_task());
- 			break;
- 		default:
--			WARN_ON_ONCE(!irqs_disabled());
-+			VM_WARN_ON_IRQS_ENABLED();
- 		}
- 	}
-=20
---=20
-2.37.2
-
+SGkgYWxsLAoKVGhpcyBwYXRjaCBzZXJpZXMgYXJlIHNvbWUgb3B0aW1pemF0aW9ucyBhbmQgZXh0
+ZW5zaW9ucyBmb3IgUFNJLgoKcGF0Y2ggMS8xMCBmaXggcGVyaW9kaWMgYWdncmVnYXRpb24gc2h1
+dCBvZmYgcHJvYmxlbSBpbnRyb2R1Y2VkIGJ5IGVhcmxpZXIKY29tbWl0IDQxMTdjZWJmMWE5ZiAo
+InBzaTogT3B0aW1pemUgdGFzayBzd2l0Y2ggaW5zaWRlIHNoYXJlZCBjZ3JvdXBzIikuCgpwYXRj
+aCAyLTQgYXJlIHNvbWUgbWlzYyBvcHRpbWl6YXRpb25zLCBzbyBwdXQgdGhlbSBpbiBmcm9udCBv
+ZiB0aGlzIHNlcmllcy4KCnBhdGNoIDUvMTAgb3B0aW1pemUgdGFzayBzd2l0Y2ggaW5zaWRlIHNo
+YXJlZCBjZ3JvdXBzIHdoZW4gaW5fbWVtc3RhbGwgc3RhdHVzCm9mIHByZXYgdGFzayBhbmQgbmV4
+dCB0YXNrIGFyZSBkaWZmZXJlbnQuCgpwYXRjaCA2LzEwIHJlbW92ZSBOUl9PTkNQVSB0YXNrIGFj
+Y291bnRpbmcgdG8gc2F2ZSA0IGJ5dGVzIGluIHRoZSBmaXJzdApjYWNoZWxpbmUgdG8gYmUgdXNl
+ZCBieSB0aGUgZm9sbG93aW5nIHBhdGNoIDcvMTAsIHdoaWNoIGludHJvZHVjZSBuZXcKUFNJIHJl
+c291cmNlIFBTSV9JUlEgdG8gdHJhY2sgSVJRL1NPRlRJUlEgcHJlc3N1cmUgc3RhbGwgaW5mb3Jt
+YXRpb24uCgpwYXRjaCA4LTkgY2FjaGUgcGFyZW50IHBzaV9ncm91cCBpbiBzdHJ1Y3QgcHNpX2dy
+b3VwIHRvIHNwZWVkIHVwIHRoZQpob3QgaXRlcmF0aW9uIHBhdGguCgpwYXRjaCAxMC8xMCBpbnRy
+b2R1Y2UgYSBwZXItY2dyb3VwIGludGVyZmFjZSAiY2dyb3VwLnByZXNzdXJlIiB0byBkaXNhYmxl
+Cm9yIHJlLWVuYWJsZSBQU0kgaW4gdGhlIGNncm91cCBsZXZlbCwgYW5kIHdlIGltcGxlbWVudCBo
+aWRpbmcgYW5kIHVuaGlkaW5nCnRoZSBwcmVzc3VyZSBmaWxlcyBwZXIgVGVqdW4ncyBzdWdnZXN0
+aW9uWzFdLCB3aGljaCBkZXBlbmRzIG9uIGhpcyB3b3JrWzJdLgoKWzFdIGh0dHBzOi8vbG9yZS5r
+ZXJuZWwub3JnL2FsbC9ZdnFqaHFKUWkySjhSRzNYLU5pTGZnL3BZRWQxTjBUblp1Q2g4dkFAcHVi
+bGljLmdtYW5lLm9yZy8KWzJdIGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2FsbC8yMDIyMDgyMDAw
+MDU1MC4zNjcwODUtMS10ai1EZ0VqVCtBaTJ5Z2RubSt5Uk9mRTBBQHB1YmxpYy5nbWFuZS5vcmcv
+CgpQZXJmb3JtYW5jZSB0ZXN0IHVzaW5nIG1tdGVzdHMvY29uZmlnLXNjaGVkdWxlci1wZXJmcGlw
+ZSBpbgovdXNlci5zbGljZS91c2VyLTAuc2xpY2Uvc2Vzc2lvbi00LnNjb3BlOgoKICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgbmV4dCAgICAgICAgICAgICAgICBwYXRjaGVkICAgICAg
+IHBhdGNoZWQvb25seS1sZWFmCk1pbiAgICAgICBUaW1lICAgICAgICA4LjgyICggICAwLjAwJSkg
+ICAgICAgIDguNDkgKCAgIDMuNzQlKSAgICAgICAgOC4wMCAoICAgOS4zMiUpCjFzdC1xcnRsZSBU
+aW1lICAgICAgICA4LjkwICggICAwLjAwJSkgICAgICAgIDguNTggKCAgIDMuNjMlKSAgICAgICAg
+OC4wNSAoICAgOS41OCUpCjJuZC1xcnRsZSBUaW1lICAgICAgICA4Ljk0ICggICAwLjAwJSkgICAg
+ICAgIDguNjEgKCAgIDMuNjUlKSAgICAgICAgOC4wOSAoICAgOS41MCUpCjNyZC1xcnRsZSBUaW1l
+ICAgICAgICA4Ljk5ICggICAwLjAwJSkgICAgICAgIDguNjUgKCAgIDMuNzUlKSAgICAgICAgOC4x
+NSAoICAgOS4zNSUpCk1heC0xICAgICBUaW1lICAgICAgICA4LjgyICggICAwLjAwJSkgICAgICAg
+IDguNDkgKCAgIDMuNzQlKSAgICAgICAgOC4wMCAoICAgOS4zMiUpCk1heC01ICAgICBUaW1lICAg
+ICAgICA4LjgyICggICAwLjAwJSkgICAgICAgIDguNDkgKCAgIDMuNzQlKSAgICAgICAgOC4wMCAo
+ICAgOS4zMiUpCk1heC0xMCAgICBUaW1lICAgICAgICA4Ljg0ICggICAwLjAwJSkgICAgICAgIDgu
+NTUgKCAgIDMuMjAlKSAgICAgICAgOC4wNCAoICAgOS4wNSUpCk1heC05MCAgICBUaW1lICAgICAg
+ICA5LjA0ICggICAwLjAwJSkgICAgICAgIDguNjcgKCAgIDQuMTAlKSAgICAgICAgOC4xOCAoICAg
+OS41MSUpCk1heC05NSAgICBUaW1lICAgICAgICA5LjA0ICggICAwLjAwJSkgICAgICAgIDguNjgg
+KCAgIDQuMDMlKSAgICAgICAgOC4yMCAoICAgOS4yNiUpCk1heC05OSAgICBUaW1lICAgICAgICA5
+LjA3ICggICAwLjAwJSkgICAgICAgIDguNzMgKCAgIDMuODIlKSAgICAgICAgOC4yNSAoICAgOS4x
+MSUpCk1heCAgICAgICBUaW1lICAgICAgICA5LjEyICggICAwLjAwJSkgICAgICAgIDguODkgKCAg
+IDIuNTQlKSAgICAgICAgOC4yNyAoICAgOS4yOSUpCkFtZWFuICAgICBUaW1lICAgICAgICA4Ljk1
+ICggICAwLjAwJSkgICAgICAgIDguNjIgKiAgIDMuNjclKiAgICAgICAgOC4xMSAqICAgOS40MyUq
+CgpCaWcgdGhhbmtzIHRvIEpvaGFubmVzIFdlaW5lciwgVGVqdW4gSGVvIGFuZCBNaWNoYWwgS291
+dG7DvSBmb3IgeW91cgpzdWdnZXN0aW9ucyBhbmQgcmV2aWV3IQoKCkNoYW5nZXMgaW4gdjQ6CiAt
+IENvbGxlY3QgQWNrZWQtYnkgdGFncyBmcm9tIEpvaGFubmVzIFdlaW5lci4KIC0gQWRkIG1hbnkg
+Y2xlYXIgY29tbWVudHMgYW5kIGNoYW5nZWxvZ3MgcGVyIEpvaGFubmVzIFdlaW5lci4KIC0gUmVw
+bGFjZSBmb3JfZWFjaF9wc2lfZ3JvdXAoKSB3aXRoIGJldHRlciBvcGVuLWNvZGUuCiAtIENoYW5n
+ZSB0byB1c2UgYmV0dGVyIG5hbWVzIGNncm91cF9wcmVzc3VyZV9zaG93KCkgYW5kCiAgIGNncm91
+cF9wcmVzc3VyZV93cml0ZSgpLgogLSBDaGFuZ2UgdG8gdXNlIGJldHRlciBuYW1lIHBzaV9jZ3Jv
+dXBfcmVzdGFydCgpIGFuZCBvbmx5CiAgIGNhbGwgaXQgb24gZW5hYmxpbmcuCgpDaGFuZ2VzIGlu
+IHYzOgogLSBSZWJhc2Ugb24gbGludXgtbmV4dCBhbmQgcmVvcmRlciBwYXRjaGVzIHRvIHB1dCBt
+aXNjIG9wdGltaXphdGlvbnMKICAgcGF0Y2hlcyBpbiB0aGUgZnJvbnQgb2YgdGhpcyBzZXJpZXMu
+CiAtIERyb3AgcGF0Y2ggInNjaGVkL3BzaTogZG9uJ3QgY2hhbmdlIHRhc2sgcHNpX2ZsYWdzIHdo
+ZW4gbWlncmF0ZSBDUFUvZ3JvdXAiCiAgIHNpbmNlIGl0IGNhdXNlZCBhIGxpdHRsZSBwZXJmb3Jt
+YW5jZSByZWdyZXNzaW9uIGFuZCBpdCdzIGp1c3QKICAgY29kZSByZWZhY3RvcmluZywgc28gZHJv
+cCBpdC4KIC0gRG9uJ3QgZGVmaW5lIFBTSV9JUlEgYW5kIFBTSV9JUlFfRlVMTCB3aGVuICFDT05G
+SUdfSVJRX1RJTUVfQUNDT1VOVElORywKICAgaW4gd2hpY2ggY2FzZSB0aGV5IGFyZSBub3QgdXNl
+ZC4KIC0gQWRkIHBhdGNoIDgvMTAgInNjaGVkL3BzaTogY29uc29saWRhdGUgY2dyb3VwX3BzaSgp
+IiBtYWtlIGNncm91cF9wc2koKQogICBjYW4gaGFuZGxlIGFsbCBjZ3JvdXBzIGluY2x1ZGluZyBy
+b290IGNncm91cCwgbWFrZSBwYXRjaCA5LzEwIHNpbXBsZXIuCiAtIFJlbmFtZSBpbnRlcmZhY2Ug
+dG8gImNncm91cC5wcmVzc3VyZSIgYW5kIGFkZCBzb21lIGV4cGxhbmF0aW9uCiAgIHBlciBNaWNo
+YWwncyBzdWdnZXN0aW9uLgogLSBIaWRlIGFuZCB1bmhpZGUgcHJlc3N1cmUgZmlsZXMgd2hlbiBk
+aXNhYmxlL3JlLWVuYWJsZSBjZ3JvdXAgUFNJLAogICBkZXBlbmRzIG9uIFRlanVuJ3Mgd29yay4K
+CkNoYW5nZXMgaW4gdjI6CiAtIEFkZCBBY2tlZC1ieSB0YWdzIGZyb20gSm9oYW5uZXMgV2VpbmVy
+LiBUaGFua3MgZm9yIHJldmlldyEKIC0gRml4IHBlcmlvZGljIGFnZ3JlZ2F0aW9uIHdha2V1cCBm
+b3IgY29tbW9uIGFuY2VzdG9ycyBpbgogICBwc2lfdGFza19zd2l0Y2goKS4KIC0gQWRkIHBhdGNo
+IDcvMTAgZnJvbSBKb2hhbm5lcyBXZWluZXIsIHdoaWNoIHJlbW92ZSBOUl9PTkNQVQogICB0YXNr
+IGFjY291bnRpbmcgdG8gc2F2ZSA0IGJ5dGVzIGluIHRoZSBmaXJzdCBjYWNoZWxpbmUuCiAtIFJl
+bW92ZSAicHNpX2lycT0iIGtlcm5lbCBjbWRsaW5lIHBhcmFtZXRlciBpbiBsYXN0IHZlcnNpb24u
+CiAtIEFkZCBwZXItY2dyb3VwIGludGVyZmFjZSAiY2dyb3VwLnBzaSIgdG8gZGlzYWJsZS9yZS1l
+bmFibGUKICAgUFNJIHN0YXRzIGFjY291bnRpbmcgaW4gdGhlIGNncm91cCBsZXZlbC4KCgpDaGVu
+Z21pbmcgWmhvdSAoOSk6CiAgc2NoZWQvcHNpOiBmaXggcGVyaW9kaWMgYWdncmVnYXRpb24gc2h1
+dCBvZmYKICBzY2hlZC9wc2k6IGRvbid0IGNyZWF0ZSBjZ3JvdXAgUFNJIGZpbGVzIHdoZW4gcHNp
+X2Rpc2FibGVkCiAgc2NoZWQvcHNpOiBzYXZlIHBlcmNwdSBtZW1vcnkgd2hlbiAhcHNpX2Nncm91
+cHNfZW5hYmxlZAogIHNjaGVkL3BzaTogbW92ZSBwcml2YXRlIGhlbHBlcnMgdG8gc2NoZWQvc3Rh
+dHMuaAogIHNjaGVkL3BzaTogb3B0aW1pemUgdGFzayBzd2l0Y2ggaW5zaWRlIHNoYXJlZCBjZ3Jv
+dXBzIGFnYWluCiAgc2NoZWQvcHNpOiBhZGQgUFNJX0lSUSB0byB0cmFjayBJUlEvU09GVElSUSBw
+cmVzc3VyZQogIHNjaGVkL3BzaTogY29uc29saWRhdGUgY2dyb3VwX3BzaSgpCiAgc2NoZWQvcHNp
+OiBjYWNoZSBwYXJlbnQgcHNpX2dyb3VwIHRvIHNwZWVkIHVwIGdyb3VwcyBpdGVyYXRlCiAgc2No
+ZWQvcHNpOiBwZXItY2dyb3VwIFBTSSBhY2NvdW50aW5nIGRpc2FibGUvcmUtZW5hYmxlIGludGVy
+ZmFjZQoKSm9oYW5uZXMgV2VpbmVyICgxKToKICBzY2hlZC9wc2k6IHJlbW92ZSBOUl9PTkNQVSB0
+YXNrIGFjY291bnRpbmcKCiBEb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nncm91cC12Mi5yc3Qg
+fCAgMjMgKysKIGluY2x1ZGUvbGludXgvY2dyb3VwLWRlZnMuaCAgICAgICAgICAgICB8ICAgMyAr
+CiBpbmNsdWRlL2xpbnV4L2Nncm91cC5oICAgICAgICAgICAgICAgICAgfCAgIDUgLQogaW5jbHVk
+ZS9saW51eC9wc2kuaCAgICAgICAgICAgICAgICAgICAgIHwgIDEyICstCiBpbmNsdWRlL2xpbnV4
+L3BzaV90eXBlcy5oICAgICAgICAgICAgICAgfCAgMjkgKystCiBrZXJuZWwvY2dyb3VwL2Nncm91
+cC5jICAgICAgICAgICAgICAgICAgfCAxMDYgKysrKysrKystCiBrZXJuZWwvc2NoZWQvY29yZS5j
+ICAgICAgICAgICAgICAgICAgICAgfCAgIDEgKwoga2VybmVsL3NjaGVkL3BzaS5jICAgICAgICAg
+ICAgICAgICAgICAgIHwgMjgwICsrKysrKysrKysrKysrKysrLS0tLS0tLQoga2VybmVsL3NjaGVk
+L3N0YXRzLmggICAgICAgICAgICAgICAgICAgIHwgICA2ICsKIDkgZmlsZXMgY2hhbmdlZCwgMzYy
+IGluc2VydGlvbnMoKyksIDEwMyBkZWxldGlvbnMoLSkKCi0tIAoyLjM3LjIKCg==
