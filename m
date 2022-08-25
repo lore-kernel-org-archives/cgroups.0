@@ -1,36 +1,48 @@
-From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Subject: Re: [GIT PULL] cgroup fixes #2 for v6.0-rc2
-Date: Thu, 25 Aug 2022 18:10:03 +0000
-Message-ID: <166145100367.12987.17556677305087800210.pr-tracker-bot@kernel.org>
-References: <Ywe0v0YWJSVAs5FT@slm.duckdns.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1661451003;
-        bh=ZVR5xrFNODgOGtlOwF7CVvqTORNDv05nmbMAui53Pbg=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=O2duMY3zJ3OKgTe2104EpV5xWJ4WJCzoV2JvQMI7874wNKC4BQXyPEBiaX0qvVjOg
-         P3xzkUP4HsN++pleDsallKIbUT6QmoYIMo/Wiq4OdK9umcJ+EMer81TRWuOpqc0+i+
-         /xINj/yuafUo6WtLzcI7tJbP97zDg6x7nJX8cCVM5AMKZlSRXJPkzj+WQ/1RGQySPp
-         TzMPbZTSOz0wTXknhzeFJQEHhdX3AhXYKjbHkO9BDi4IcMI/HRauC4cXiH5VmlLKWk
-         o3neU4xnWZHBbeCWoONckHoHVIKa+GArP4J7SB1eJUVvl/tFpB0S7ekhvDpjHglBUR
-         nzlgK2Ks6Z3lA==
-In-Reply-To: <Ywe0v0YWJSVAs5FT-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v8 1/4] blk-throttle: fix that io throttle can only work
+ for single bio
+Date: Thu, 25 Aug 2022 08:15:47 -1000
+Message-ID: <Ywe8Uz4Gy6j/EsUg@slm.duckdns.org>
+References: <20220823033130.874230-1-yukuai1@huaweicloud.com>
+ <20220823033130.874230-2-yukuai1@huaweicloud.com>
+ <YwUXTL+8E/sPcEUB@slm.duckdns.org>
+ <73c72914-e27d-b261-e040-2dd31e8a6b9f@huaweicloud.com>
+Mime-Version: 1.0
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc;
+        bh=fcKBwzQ+3FvK05e8vJPVdEnteLULk8JgW8p1pB9U+CI=;
+        b=TCOluU41yS0PIH//NJHewas8S7wRDMNMpr/FhfdfFjPVI1OJTelfGc75wL+HbxGtYw
+         qytzyT5kAvTVBteRm8wHc5E25sn9+dH9JCzPNsMr73279vyf+7/pTZY6YH276OmkzNjN
+         iElud98mzag7VV76DPmVTZET+w6ftAKVSrX9oEOpnnlvY5iTxNyMKI4FqKd6Y9RJYWRl
+         yaOfDsKM22jhDLZxX6KOXBjRO/hBeN/WZ2ZMFLsqglTyIm+1nSSkbRYv8c/yun9DAJJh
+         WqttI/0IE8EWDAAiiF91zwBeIW4Jhcqjy0lx9ZTekF5fSSuRE8/X8f2u/VN/rGcT4+c2
+         PNfA==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <73c72914-e27d-b261-e040-2dd31e8a6b9f@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: axboe@kernel.dk, ming.lei@redhat.com, mkoutny@suse.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
-The pull request you sent on Thu, 25 Aug 2022 07:43:27 -1000:
+On Wed, Aug 24, 2022 at 09:15:32AM +0800, Yu Kuai wrote:
+> This patch actually set two flags when bio is throttled and
+> dispatched, and only iops flag is cleared after the original bio is
+> split. If only one flag can be used, the way that I come up with is
+> that let iops limit become default, which means bio is always counted
+> for iops limit each time blk_throtl_bio() is called. I'm not quite
+> sure yet if iops limit can be counted excessively this way in some
+> special scenario...
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.0-rc2-fixes-2
+I don't think we have a path where we clone and re-submit other than
+splitting. What do you think about renaming the flag to BIO_BPS_THROTTLED
+and just assuming that IOPS is always applied?
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/3f5c20055a640b3758ece75dcaa6ac974fcae26d
-
-Thank you!
+Thanks.
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+tejun
