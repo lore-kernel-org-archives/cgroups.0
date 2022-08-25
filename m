@@ -1,48 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v8 1/4] blk-throttle: fix that io throttle can only work
- for single bio
-Date: Thu, 25 Aug 2022 08:15:47 -1000
-Message-ID: <Ywe8Uz4Gy6j/EsUg@slm.duckdns.org>
-References: <20220823033130.874230-1-yukuai1@huaweicloud.com>
- <20220823033130.874230-2-yukuai1@huaweicloud.com>
- <YwUXTL+8E/sPcEUB@slm.duckdns.org>
- <73c72914-e27d-b261-e040-2dd31e8a6b9f@huaweicloud.com>
+From: patchwork-bot+netdevbpf@kernel.org
+Subject: Re: [RESEND PATCH bpf-next v9 0/5] bpf: rstat: cgroup hierarchical
+Date: Thu, 25 Aug 2022 18:40:16 +0000
+Message-ID: <166145281665.28094.14483828352332763496.git-patchwork-notify@kernel.org>
+References: <20220824233117.1312810-1-haoluo@google.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc;
-        bh=fcKBwzQ+3FvK05e8vJPVdEnteLULk8JgW8p1pB9U+CI=;
-        b=TCOluU41yS0PIH//NJHewas8S7wRDMNMpr/FhfdfFjPVI1OJTelfGc75wL+HbxGtYw
-         qytzyT5kAvTVBteRm8wHc5E25sn9+dH9JCzPNsMr73279vyf+7/pTZY6YH276OmkzNjN
-         iElud98mzag7VV76DPmVTZET+w6ftAKVSrX9oEOpnnlvY5iTxNyMKI4FqKd6Y9RJYWRl
-         yaOfDsKM22jhDLZxX6KOXBjRO/hBeN/WZ2ZMFLsqglTyIm+1nSSkbRYv8c/yun9DAJJh
-         WqttI/0IE8EWDAAiiF91zwBeIW4Jhcqjy0lx9ZTekF5fSSuRE8/X8f2u/VN/rGcT4+c2
-         PNfA==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <73c72914-e27d-b261-e040-2dd31e8a6b9f@huaweicloud.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1661452816;
+        bh=oy+NBN9E7Uaxy3eSfIAa1sdIgOULz1blQP0IjoBk3Vg=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=FDmdjJgqyelrTfZ0uschjSe0H9q5nw0oYruPp6vBbi97OophCphclgyVWMYbT2aEU
+         4rVZNUdQXuFqyTHfLNaoxJgThH1E6Gqf2tsU4zjR8dwQkCbzxD7NTkVNFTtfx0JsWu
+         nNMDG8nEsgEV0x1hPLMw0NpRrCvZ00tDPvQrh0nQxaBQmMEKbehU8fxd07uQHpktAy
+         Fe4IEDfC/28kHjBhHxEPQITJ8CuJyoZGEmZm60Jc7engXUckPrYawLLDX7UcdI+XSQ
+         5xm77dyPuBVsUT7poQpZnt7e4NdMuGl4xjmYddh791Tyek9pFMh77+jOyS3l9i0IVf
+         0xUx4GZ2isY1w==
+In-Reply-To: <20220824233117.1312810-1-haoluo@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: axboe@kernel.dk, ming.lei@redhat.com, mkoutny@suse.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+To: Hao Luo <haoluo@google.com>
+Cc: linux-kernel@vger.kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, ast@kernel.org, andrii@kernel.org, daniel@iogearbox.net, martin.lau@linux.dev, song@kernel.org, yhs@fb.com, tj@kernel.org, lizefan.x@bytedance.com, kpsingh@kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, john.fastabend@gmail.com, jolsa@kernel.org, mkoutny@suse.com, roman.gushchin@linux.dev, rientjes@google.com, sdf@google.com, shakeelb@google.com, yosryahmed@google.com
 
-On Wed, Aug 24, 2022 at 09:15:32AM +0800, Yu Kuai wrote:
-> This patch actually set two flags when bio is throttled and
-> dispatched, and only iops flag is cleared after the original bio is
-> split. If only one flag can be used, the way that I come up with is
-> that let iops limit become default, which means bio is always counted
-> for iops limit each time blk_throtl_bio() is called. I'm not quite
-> sure yet if iops limit can be counted excessively this way in some
-> special scenario...
+Hello:
 
-I don't think we have a path where we clone and re-submit other than
-splitting. What do you think about renaming the flag to BIO_BPS_THROTTLED
-and just assuming that IOPS is always applied?
+This series was applied to bpf/bpf-next.git (master)
+by Alexei Starovoitov <ast@kernel.org>:
 
-Thanks.
+On Wed, 24 Aug 2022 16:31:12 -0700 you wrote:
+> This patch series allows for using bpf to collect hierarchical cgroup
+> stats efficiently by integrating with the rstat framework. The rstat
+> framework provides an efficient way to collect cgroup stats percpu and
+> propagate them through the cgroup hierarchy.
+> 
+> The stats are exposed to userspace in textual form by reading files in
+> bpffs, similar to cgroupfs stats by using a cgroup_iter program.
+> cgroup_iter is a type of bpf_iter. It walks over cgroups in four modes:
+> - walking a cgroup's descendants in pre-order.
+> - walking a cgroup's descendants in post-order.
+> - walking a cgroup's ancestors.
+> - process only a single object.
+> 
+> [...]
 
+Here is the summary with links:
+  - [RESEND,bpf-next,v9,1/5] bpf: Introduce cgroup iter
+    https://git.kernel.org/bpf/bpf-next/c/d4ccaf58a847
+  - [RESEND,bpf-next,v9,2/5] selftests/bpf: Test cgroup_iter.
+    https://git.kernel.org/bpf/bpf-next/c/fe0dd9d4b740
+  - [RESEND,bpf-next,v9,3/5] cgroup: bpf: enable bpf programs to integrate with rstat
+    https://git.kernel.org/bpf/bpf-next/c/a319185be9f5
+  - [RESEND,bpf-next,v9,4/5] selftests/bpf: extend cgroup helpers
+    https://git.kernel.org/bpf/bpf-next/c/434992bb6037
+  - [RESEND,bpf-next,v9,5/5] selftests/bpf: add a selftest for cgroup hierarchical stats collection
+    https://git.kernel.org/bpf/bpf-next/c/88886309d2e8
+
+You are awesome, thank you!
 -- 
-tejun
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
+
