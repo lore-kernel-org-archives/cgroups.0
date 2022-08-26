@@ -1,53 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/4] Honor cgroup namespace when resolving cgroup id
-Date: Fri, 26 Aug 2022 11:08:04 -1000
-Message-ID: <Ywk2NMwurnBYhU+D@slm.duckdns.org>
-References: <20220826165238.30915-1-mkoutny@suse.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: oomd with 6.0-rc1 has ridiculously high memory pressure stats wit
+Date: Fri, 26 Aug 2022 11:11:23 -1000
+Message-ID: <Ywk2+wKGu9NS/EbE@slm.duckdns.org>
+References: <d0df567c-1f6a-418d-8db7-3f777bd109c8@www.fastmail.com>
+ <YwUcGvE/rhHEZ+KO@slm.duckdns.org>
+ <9412f39b-9ec1-4542-944c-19577a358b97@www.fastmail.com>
+ <0a6105f9-012a-4b75-b741-6549d7e169d8@www.fastmail.com>
+ <YwU0mLBMuxpZ7Zwq@slm.duckdns.org>
+ <f354bbb3-6619-4ab0-b0fb-a0098ffb0205@www.fastmail.com>
+ <a7a96563-fd07-4970-8c25-f0784c83c915@www.fastmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc;
-        bh=EL3E1bRaXeyNPnn48uCzkwQGEAza0WH8uE9MHfXwpc0=;
-        b=i3YwUXBW3Qx0me4zpUqZraIl74Huj1RpfYz7z+IuUhZo8SwtbtnxO3ywnqrwA6VEEO
-         feIkxua5CDvMVasxdksGBqUzDRYIiAaYLbtWBa6D75vAF7h0gmZWeySezUDeC55MqIgB
-         +V0QRRz0uVhmBgWK6PLMhtEq92jODckRFg69kOtFjBRz+s9YXljL56Q0RR9txGsoH8dN
-         Vm3ykAM4wFf+18yQuQC/iMGtcBtggjF7J3u/1UzVCGV54m58fi6wBclz6j2EQvFRJXJy
-         Lb9Mf154iT9BkCEsBWDJVC1DITZuDu6tNCp8A/yYJ16XO/Ht8U4lG2gfcCKY2ZrlluQN
-         mUog==
-Sender: Tejun Heo <htejun@gmail.com>
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc;
+        bh=NpDbARr9FROHsdpoRBEwA2TKj43VTAHXK/2AaJuQG0g=;
+        b=HtOUvCv9/08/l1KV+VqsvseEILn8PnCzF6Cal0b/r8xNG9a2TVjbY2M5FQT1M1dj7L
+         /jdcLjrPz29B+T5L6C8sUgz2u12B6VgF8kxHJUL62iZLT6RnELhDi3l42qNG0thuOjm1
+         DWXhHMo6+xTL07u4I36LWvWWypm2iq68AwT7tgkeB7tul8WfiG9aGIyG25Jr2BMSkFUT
+         lamFyfd1/E+dge2NllS8Z2dqXSygCGJYbYb3jvyGLJb5TFHwwnjOeJ8mgda7zXoqQ373
+         9UOBVfKceRN2tYMyCaXMDka/hCBrwt3frnchZ1wLASopQ5lOxutylvRy9z04zmJj0h0R
+         DXOQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20220826165238.30915-1-mkoutny@suse.com>
+In-Reply-To: <a7a96563-fd07-4970-8c25-f0784c83c915-jFIJ+Wc5/Vo7lZ9V/NTDHw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, bpf@vger.kernel.org, Aditya Kali <adityakali@google.com>, Serge Hallyn <serge.hallyn@canonical.com>, Roman Gushchin <roman.gushchin@linux.dev>, Yonghong Song <yhs@fb.com>, Muneendra Kumar <muneendra.kumar@broadcom.com>, Yosry Ahmed <yosryahmed@google.com>, Hao Luo <haoluo@google.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Chris Murphy <chris-zXQU9YWDTqjmlV4oE/1sFAC/G2K4zDHf@public.gmane.org>
+Cc: Chris Murphy <lists-zXQU9YWDTqjmlV4oE/1sFAC/G2K4zDHf@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Hello,
+On Fri, Aug 26, 2022 at 08:06:15AM -0400, Chris Murphy wrote:
+> Patch has been in Rawhide without any failures, consider it fixed. Thanks!
 
-On Fri, Aug 26, 2022 at 06:52:34PM +0200, Michal Koutn=FD wrote:
-> Cgroup id is becoming a new way for userspace how to refer to cgroups it
-> wants to act upon. As opposed to cgroupfs (paths, opened FDs), the
-> current approach does not reflect limited view by (non-init) cgroup
-> namespaces.
-
-Looking at the code, I'm not quite sure we're actually plugging all holes in
-terms of lookup. I think cgroup_get_from_path() would allow walking up past
-the ns boundary. We aren't using kernfs ns support and I don't see anything
-preventing ..'ing past the boundary.
-
-> This patches don't aim to limit what a user can do (consider an uid=3D0 in
-> mere cgroup namespace) but to provide consistent view within a
-> namespace.
-
-Considering userns and the fact that we try to isolate two separate sub
-hierarchies delegated to the same UID, I think we'd have to tighten down on
-the behaviors so that visiblity scope matches the permission scope.
+Upstream fix is 2b97cf76289a ("Hao Jia <jiahao.os-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>") which was
+already sitting in my queue by the time you reported the problem. -rc3
+should have it fixed. I should have pushed that out earlier. Sorry about
+that.
 
 Thanks.
 
---=20
+-- 
 tejun
