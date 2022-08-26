@@ -1,116 +1,56 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [PATCH 4/4] cgroup/bpf: Honor cgroup NS in cgroup_iter for ancestors
-Date: Fri, 26 Aug 2022 18:52:38 +0200
-Message-ID: <20220826165238.30915-5-mkoutny@suse.com>
-References: <20220826165238.30915-1-mkoutny@suse.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH bpf-next v9 1/5] bpf: Introduce cgroup iter
+Date: Fri, 26 Aug 2022 18:57:59 +0200
+Message-ID: <20220826165759.GA30475@blackbody.suse.cz>
+References: <20220824030031.1013441-1-haoluo@google.com>
+ <20220824030031.1013441-2-haoluo@google.com>
+ <20220825152455.GA29058@blackbody.suse.cz>
+ <CA+khW7hdciswrjhY19uQu0rAurWXbfb4xuOYEZqXETu954=-sA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="45Z9DzgjV8m4Oswq"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1661532779; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1661533081; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=FAT+HbYA8AiuL1IZx0uK6pAdzXLKQU6eTml9pacvrDQ=;
-        b=E2icuEnaJOofHI7HbH7GmPRTqNDQ6cuVu/tzJk/IGT4qxLXxpxiP6CiTWWTXoomAMgmzvF
-        TGmuEwwVED6BQApstrm0xs1lHvruBWuj+5qGkVD0r/BS56ypSf/s5S+2pF7FGbd52LDg+r
-        HE5pByM8aeXv+r7JFPf/t20xJPO8E1A=
-In-Reply-To: <20220826165238.30915-1-mkoutny-IBi9RG/b67k@public.gmane.org>
+        bh=HS6suzfimgcX49bwowySd7vxBltKHbEMB2e3PjKhmGc=;
+        b=bBddGvKpe0UmGgiX8JfudWgFaahhSoOCRX6du44L21ceY7MHbTmViYLYoE+qg7oVuzwHP1
+        HlsCzJVHQG4VZenGr9Oy4eIszlc5mhTuTAXGi5Owkrv89VKeU7g3GvzuGmW5MI3TPCrarA
+        4UEaMwg/izOd061mpJpRyjI0S500beo=
+Content-Disposition: inline
+In-Reply-To: <CA+khW7hdciswrjhY19uQu0rAurWXbfb4xuOYEZqXETu954=-sA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Aditya Kali <adityakali-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge.hallyn-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Muneendra Kumar <muneendra.kumar-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-VGhlIGl0ZXJhdG9yIHdpdGggQlBGX0NHUk9VUF9JVEVSX0FOQ0VTVE9SU19VUCBjYW4gdHJhdmVy
-c2UgdXAgYWNyb3NzIGEKY2dyb3VwIG5hbWVzcGFjZSBsZXZlbCwgd2hpY2ggbWF5IGJlIHN1cnBy
-aXNpbmcgd2l0aGluIGEgbm9uLWluaXQgY2dyb3VwCm5hbWVzcGFjZS4KCkludHJvZHVjZSBhbmQg
-dXNlIGEgbmV3IGNncm91cF9wYXJlbnRfbnMoKSBoZWxwZXIgdGhhdCBzdG9wcyBhY2NvcmRpbmcK
-dG8gY2dyb3VwIG5hbWVzcGFjZSBib3VuZGFyeS4gV2l0aCBCUEZfQ0dST1VQX0lURVJfQU5DRVNU
-T1JTX1VQLiBXZSB1c2UKdGhlIGNncm91cCBuYW1lc3BhY2Ugb2YgdGhlIGl0ZXJhdG9yIGNhbGxl
-ciwgbm90IHRoYXQgb25lIG9mIHRoZSBjcmVhdG9yCihtaWdodCBiZSBkaWZmZXJlbnQsIHRoZSBm
-b3JtZXIgaXMgcmVsZXZhbnQpLgoKRml4ZXM6IGQ0Y2NhZjU4YTg0NyAoImJwZjogSW50cm9kdWNl
-IGNncm91cCBpdGVyIikKU2lnbmVkLW9mZi1ieTogTWljaGFsIEtvdXRuw70gPG1rb3V0bnktSUJp
-OVJHL2I2N2tAcHVibGljLmdtYW5lLm9yZz4KLS0tCiBpbmNsdWRlL2xpbnV4L2Nncm91cC5oICAg
-fCAgMyArKysKIGtlcm5lbC9icGYvY2dyb3VwX2l0ZXIuYyB8ICA5ICsrKysrKy0tLQoga2VybmVs
-L2Nncm91cC9jZ3JvdXAuYyAgIHwgMzIgKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0K
-IDMgZmlsZXMgY2hhbmdlZCwgMzIgaW5zZXJ0aW9ucygrKSwgMTIgZGVsZXRpb25zKC0pCgpkaWZm
-IC0tZ2l0IGEvaW5jbHVkZS9saW51eC9jZ3JvdXAuaCBiL2luY2x1ZGUvbGludXgvY2dyb3VwLmgK
-aW5kZXggYjZhOTUyODM3NGE4Li5iNjNhODBlMDNmYWUgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGlu
-dXgvY2dyb3VwLmgKKysrIGIvaW5jbHVkZS9saW51eC9jZ3JvdXAuaApAQCAtODU4LDYgKzg1OCw5
-IEBAIHN0cnVjdCBjZ3JvdXBfbmFtZXNwYWNlICpjb3B5X2Nncm91cF9ucyh1bnNpZ25lZCBsb25n
-IGZsYWdzLAogaW50IGNncm91cF9wYXRoX25zKHN0cnVjdCBjZ3JvdXAgKmNncnAsIGNoYXIgKmJ1
-Ziwgc2l6ZV90IGJ1ZmxlbiwKIAkJICAgc3RydWN0IGNncm91cF9uYW1lc3BhY2UgKm5zKTsKIAor
-c3RydWN0IGNncm91cCAqY2dyb3VwX3BhcmVudF9ucyhzdHJ1Y3QgY2dyb3VwICpjZ3JwLAorCQkJ
-CXN0cnVjdCBjZ3JvdXBfbmFtZXNwYWNlICpucyk7CisKICNlbHNlIC8qICFDT05GSUdfQ0dST1VQ
-UyAqLwogCiBzdGF0aWMgaW5saW5lIHZvaWQgZnJlZV9jZ3JvdXBfbnMoc3RydWN0IGNncm91cF9u
-YW1lc3BhY2UgKm5zKSB7IH0KZGlmZiAtLWdpdCBhL2tlcm5lbC9icGYvY2dyb3VwX2l0ZXIuYyBi
-L2tlcm5lbC9icGYvY2dyb3VwX2l0ZXIuYwppbmRleCBjNjliY2UyZjQ0MDMuLjA2ZWU0YTBjNTg3
-MCAxMDA2NDQKLS0tIGEva2VybmVsL2JwZi9jZ3JvdXBfaXRlci5jCisrKyBiL2tlcm5lbC9icGYv
-Y2dyb3VwX2l0ZXIuYwpAQCAtMTA0LDYgKzEwNCw3IEBAIHN0YXRpYyB2b2lkICpjZ3JvdXBfaXRl
-cl9zZXFfbmV4dChzdHJ1Y3Qgc2VxX2ZpbGUgKnNlcSwgdm9pZCAqdiwgbG9mZl90ICpwb3MpCiB7
-CiAJc3RydWN0IGNncm91cF9zdWJzeXNfc3RhdGUgKmN1cnIgPSAoc3RydWN0IGNncm91cF9zdWJz
-eXNfc3RhdGUgKil2OwogCXN0cnVjdCBjZ3JvdXBfaXRlcl9wcml2ICpwID0gc2VxLT5wcml2YXRl
-OworCXN0cnVjdCBjZ3JvdXAgKnBhcmVudDsKIAogCSsrKnBvczsKIAlpZiAocC0+dGVybWluYXRl
-KQpAQCAtMTEzLDkgKzExNCwxMSBAQCBzdGF0aWMgdm9pZCAqY2dyb3VwX2l0ZXJfc2VxX25leHQo
-c3RydWN0IHNlcV9maWxlICpzZXEsIHZvaWQgKnYsIGxvZmZfdCAqcG9zKQogCQlyZXR1cm4gY3Nz
-X25leHRfZGVzY2VuZGFudF9wcmUoY3VyciwgcC0+c3RhcnRfY3NzKTsKIAllbHNlIGlmIChwLT5v
-cmRlciA9PSBCUEZfQ0dST1VQX0lURVJfREVTQ0VOREFOVFNfUE9TVCkKIAkJcmV0dXJuIGNzc19u
-ZXh0X2Rlc2NlbmRhbnRfcG9zdChjdXJyLCBwLT5zdGFydF9jc3MpOwotCWVsc2UgaWYgKHAtPm9y
-ZGVyID09IEJQRl9DR1JPVVBfSVRFUl9BTkNFU1RPUlNfVVApCi0JCXJldHVybiBjdXJyLT5wYXJl
-bnQ7Ci0JZWxzZSAgLyogQlBGX0NHUk9VUF9JVEVSX1NFTEZfT05MWSAqLworCWVsc2UgaWYgKHAt
-Pm9yZGVyID09IEJQRl9DR1JPVVBfSVRFUl9BTkNFU1RPUlNfVVApIHsKKwkJcGFyZW50ID0gY2dy
-b3VwX3BhcmVudF9ucyhjdXJyLT5jZ3JvdXAsCisJCQkJCSAgY3VycmVudC0+bnNwcm94eS0+Y2dy
-b3VwX25zKTsKKwkJcmV0dXJuIHBhcmVudCA/ICZwYXJlbnQtPnNlbGYgOiBOVUxMOworCX0gZWxz
-ZSAgLyogQlBGX0NHUk9VUF9JVEVSX1NFTEZfT05MWSAqLwogCQlyZXR1cm4gTlVMTDsKIH0KIApk
-aWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9jZ3JvdXAuYyBiL2tlcm5lbC9jZ3JvdXAvY2dyb3Vw
-LmMKaW5kZXggYzAzNzc3MjYwMzFmLi5kNjBiNWRmYmJiYzkgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9j
-Z3JvdXAvY2dyb3VwLmMKKysrIGIva2VybmVsL2Nncm91cC9jZ3JvdXAuYwpAQCAtMTQxNywxMSAr
-MTQxNywxMSBAQCBzdGF0aWMgaW5saW5lIHN0cnVjdCBjZ3JvdXAgKl9fY3NldF9jZ3JvdXBfZnJv
-bV9yb290KHN0cnVjdCBjc3Nfc2V0ICpjc2V0LAogfQogCiAvKgotICogbG9vayB1cCBjZ3JvdXAg
-YXNzb2NpYXRlZCB3aXRoIGN1cnJlbnQgdGFzaydzIGNncm91cCBuYW1lc3BhY2Ugb24gdGhlCisg
-KiBsb29rIHVwIGNncm91cCBhc3NvY2lhdGVkIHdpdGggZ2l2ZW4gY2dyb3VwIG5hbWVzcGFjZSBv
-biB0aGUKICAqIHNwZWNpZmllZCBoaWVyYXJjaHkKICAqLwotc3RhdGljIHN0cnVjdCBjZ3JvdXAg
-KgotY3VycmVudF9jZ25zX2Nncm91cF9mcm9tX3Jvb3Qoc3RydWN0IGNncm91cF9yb290ICpyb290
-KQorc3RhdGljIHN0cnVjdCBjZ3JvdXAgKmNnbnNfY2dyb3VwX2Zyb21fcm9vdChzdHJ1Y3QgY2dy
-b3VwX3Jvb3QgKnJvb3QsCisJCQkJCSAgICBzdHJ1Y3QgY2dyb3VwX25hbWVzcGFjZSAqbnMpCiB7
-CiAJc3RydWN0IGNncm91cCAqcmVzID0gTlVMTDsKIAlzdHJ1Y3QgY3NzX3NldCAqY3NldDsKQEAg
-LTE0MzAsNyArMTQzMCw3IEBAIGN1cnJlbnRfY2duc19jZ3JvdXBfZnJvbV9yb290KHN0cnVjdCBj
-Z3JvdXBfcm9vdCAqcm9vdCkKIAogCXJjdV9yZWFkX2xvY2soKTsKIAotCWNzZXQgPSBjdXJyZW50
-LT5uc3Byb3h5LT5jZ3JvdXBfbnMtPnJvb3RfY3NldDsKKwljc2V0ID0gbnMtPnJvb3RfY3NldDsK
-IAlyZXMgPSBfX2NzZXRfY2dyb3VwX2Zyb21fcm9vdChjc2V0LCByb290KTsKIAogCXJjdV9yZWFk
-X3VubG9jaygpOwpAQCAtMTg1MiwxNSArMTg1MiwxNSBAQCBpbnQgY2dyb3VwX3Nob3dfcGF0aChz
-dHJ1Y3Qgc2VxX2ZpbGUgKnNmLCBzdHJ1Y3Qga2VybmZzX25vZGUgKmtmX25vZGUsCiAJaW50IGxl
-biA9IDA7CiAJY2hhciAqYnVmID0gTlVMTDsKIAlzdHJ1Y3QgY2dyb3VwX3Jvb3QgKmtmX2Nncm9v
-dCA9IGNncm91cF9yb290X2Zyb21fa2Yoa2Zfcm9vdCk7Ci0Jc3RydWN0IGNncm91cCAqbnNfY2dy
-b3VwOworCXN0cnVjdCBjZ3JvdXAgKnJvb3RfY2dyb3VwOwogCiAJYnVmID0ga21hbGxvYyhQQVRI
-X01BWCwgR0ZQX0tFUk5FTCk7CiAJaWYgKCFidWYpCiAJCXJldHVybiAtRU5PTUVNOwogCiAJc3Bp
-bl9sb2NrX2lycSgmY3NzX3NldF9sb2NrKTsKLQluc19jZ3JvdXAgPSBjdXJyZW50X2NnbnNfY2dy
-b3VwX2Zyb21fcm9vdChrZl9jZ3Jvb3QpOwotCWxlbiA9IGtlcm5mc19wYXRoX2Zyb21fbm9kZShr
-Zl9ub2RlLCBuc19jZ3JvdXAtPmtuLCBidWYsIFBBVEhfTUFYKTsKKwlyb290X2Nncm91cCA9IGNn
-bnNfY2dyb3VwX2Zyb21fcm9vdChrZl9jZ3Jvb3QsIGN1cnJlbnQtPm5zcHJveHktPmNncm91cF9u
-cyk7CisJbGVuID0ga2VybmZzX3BhdGhfZnJvbV9ub2RlKGtmX25vZGUsIHJvb3RfY2dyb3VwLT5r
-biwgYnVmLCBQQVRIX01BWCk7CiAJc3Bpbl91bmxvY2tfaXJxKCZjc3Nfc2V0X2xvY2spOwogCiAJ
-aWYgKGxlbiA+PSBQQVRIX01BWCkKQEAgLTIzMzAsNiArMjMzMCwxOCBAQCBpbnQgY2dyb3VwX3Bh
-dGhfbnMoc3RydWN0IGNncm91cCAqY2dycCwgY2hhciAqYnVmLCBzaXplX3QgYnVmbGVuLAogfQog
-RVhQT1JUX1NZTUJPTF9HUEwoY2dyb3VwX3BhdGhfbnMpOwogCitzdHJ1Y3QgY2dyb3VwICpjZ3Jv
-dXBfcGFyZW50X25zKHN0cnVjdCBjZ3JvdXAgKmNncnAsCisJCQkJICAgc3RydWN0IGNncm91cF9u
-YW1lc3BhY2UgKm5zKQoreworCXN0cnVjdCBjZ3JvdXAgKnJvb3RfY2dycDsKKworCXNwaW5fbG9j
-a19pcnEoJmNzc19zZXRfbG9jayk7CisJcm9vdF9jZ3JwID0gY2duc19jZ3JvdXBfZnJvbV9yb290
-KGNncnAtPnJvb3QsIG5zKTsKKwlzcGluX3VubG9ja19pcnEoJmNzc19zZXRfbG9jayk7CisKKwly
-ZXR1cm4gY2dycCA9PSByb290X2NncnAgPyBOVUxMIDogY2dyb3VwX3BhcmVudChjZ3JwKTsKK30K
-KwogLyoqCiAgKiB0YXNrX2Nncm91cF9wYXRoIC0gY2dyb3VwIHBhdGggb2YgYSB0YXNrIGluIHRo
-ZSBmaXJzdCBjZ3JvdXAgaGllcmFyY2h5CiAgKiBAdGFzazogdGFyZ2V0IHRhc2sKQEAgLTYwMzEs
-NyArNjA0Myw4IEBAIHN0cnVjdCBjZ3JvdXAgKmNncm91cF9nZXRfZnJvbV9pZCh1NjQgaWQpCiAJ
-CWdvdG8gb3V0OwogCiAJc3Bpbl9sb2NrX2lycSgmY3NzX3NldF9sb2NrKTsKLQlyb290X2NncnAg
-PSBjdXJyZW50X2NnbnNfY2dyb3VwX2Zyb21fcm9vdCgmY2dycF9kZmxfcm9vdCk7CisJcm9vdF9j
-Z3JwID0gY2duc19jZ3JvdXBfZnJvbV9yb290KCZjZ3JwX2RmbF9yb290LAorCQkJCQkgIGN1cnJl
-bnQtPm5zcHJveHktPmNncm91cF9ucyk7CiAJc3Bpbl91bmxvY2tfaXJxKCZjc3Nfc2V0X2xvY2sp
-OwogCWlmICghY2dyb3VwX2lzX2Rlc2NlbmRhbnQoY2dycCwgcm9vdF9jZ3JwKSkgewogCQljZ3Jv
-dXBfcHV0KGNncnApOwpAQCAtNjYxMiw3ICs2NjI1LDggQEAgc3RydWN0IGNncm91cCAqY2dyb3Vw
-X2dldF9mcm9tX3BhdGgoY29uc3QgY2hhciAqcGF0aCkKIAlzdHJ1Y3QgY2dyb3VwICpyb290X2Nn
-cnA7CiAKIAlzcGluX2xvY2tfaXJxKCZjc3Nfc2V0X2xvY2spOwotCXJvb3RfY2dycCA9IGN1cnJl
-bnRfY2duc19jZ3JvdXBfZnJvbV9yb290KCZjZ3JwX2RmbF9yb290KTsKKwlyb290X2NncnAgPSBj
-Z25zX2Nncm91cF9mcm9tX3Jvb3QoJmNncnBfZGZsX3Jvb3QsCisJCQkJCSAgY3VycmVudC0+bnNw
-cm94eS0+Y2dyb3VwX25zKTsKIAlrbiA9IGtlcm5mc193YWxrX2FuZF9nZXQocm9vdF9jZ3JwLT5r
-biwgcGF0aCk7CiAJc3Bpbl91bmxvY2tfaXJxKCZjc3Nfc2V0X2xvY2spOwogCWlmICgha24pCi0t
-IAoyLjM3LjAKCg==
+
+--45Z9DzgjV8m4Oswq
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Thu, Aug 25, 2022 at 11:56:11AM -0700, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> Michal, this patch series has merged. Do you need me to send your
+> patch on your behalf, or you want to do it yourself?
+
+I added some more fixups. Continuation at [1].
+
+Thanks,
+Michal
+
+[1] https://lore.kernel.org/r/20220826165238.30915-1-mkoutny-IBi9RG/b67k@public.gmane.org/
+
+
+--45Z9DzgjV8m4Oswq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCYwj7kAAKCRAkDQmsBEOq
+uTtEAP994SXoW7qIIWHKut58dTNgXsZ5qIYJ4bcHfCZDi2Vl0gD/U717nbJsE694
+Hwve+ftlMVPjFoarSc3ohEgcwawK3gs=
+=w1mO
+-----END PGP SIGNATURE-----
+
+--45Z9DzgjV8m4Oswq--
