@@ -1,102 +1,59 @@
-From: Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Use cgroup_attach_{lock,unlock}() from
- cgroup_attach_task_all()
-Date: Fri, 26 Aug 2022 11:22:21 +0530
-Message-ID: <eb00aa4f-3ddf-58bb-6861-216c53ace4ae@quicinc.com>
-References: <5ea67858-cda6-bf8d-565e-d793b608e93c@I-love.SAKURA.ne.jp>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [RFC 2/2] memcg: Adapt cgroup.top into per-memcg
+Date: Fri, 26 Aug 2022 09:38:19 +0200
+Message-ID: <Ywh4a0NBL3QNMGYS@dhcp22.suse.cz>
+References: <20220826011503.103894-1-lujialin4@huawei.com>
+ <20220826011503.103894-3-lujialin4@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=x8RAlz8VkjWw+gib2D59wTgdxtCaBT02JCU19dyRvE0=;
- b=nK5qD9k/1yqqYvOU7U1HDFIlC3k3/FFA4Hy6APcWhO8Zpwf7pRuwcT5hWWpsyVqx9T+X
- 5ZJ+s3cGWZ04TiTK1s6EEoAwf0peTowK/Jc3YExnFNEcS9NHckQ+FtYMSaEWw1Xc9rVR
- 0bbVnZRCO4bXpdqbTabue9ckj3OFNhA3J/guxaibfQlGxmUHL1qZN2I+UvAeV/mu8+Ec
- /kR+k7nbwSv7f6Hkb+/zFZ/sojn448qJmIt11l9xsaeGGOSaAa9qbYjZyWuxZaUhmYzw
- 3LVX3ASSE0HWmBqr1ay69pL5fJvZlsjs3i9rOiMzX1EYyGbzU/xO4MCR8XlQk7MCiqT2 VQ== 
-Content-Language: en-US
-In-Reply-To: <5ea67858-cda6-bf8d-565e-d793b608e93c-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1661499500; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=RtYcNt5XkJRCJhjOhp/OsUYuN7jr0K2tW7LntfrhxP0=;
+        b=I83xBB1b8caTVTsQfISvp8FIA6foX4NceUMAUYAmwPJBwHop0a0Gzweik2JXe457EyMmtN
+        lSClOj6h8yDjeJxxWe7yi6oWSwq5m/lU52xMew9cIuPfHGqSESJsh2j1xWq98TMK759ova
+        nDVuukr7lE2gmxo6ybIB1sxADXm6izM=
+Content-Disposition: inline
+In-Reply-To: <20220826011503.103894-3-lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Xiu Jianfeng <xiujianfeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Hi,
-
-On 8/26/2022 8:18 AM, Tetsuo Handa wrote:
-> No behavior changes; preparing for potential locking changes in future.
+On Fri 26-08-22 09:15:03, Lu Jialin wrote:
+> cgroup.top is able to show resource usage information for each cgroups.
+> Currently only memory usage is monitored ,including usage,anon,file,
+> kmem(Bytes), stats for other resource types would be added as well.
 > 
-> Signed-off-by: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-> ---
->   kernel/cgroup/cgroup-internal.h | 2 ++
->   kernel/cgroup/cgroup-v1.c       | 6 ++----
->   kernel/cgroup/cgroup.c          | 4 ++--
->   3 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-> index 36b740cb3d59..2c7ecca226be 100644
-> --- a/kernel/cgroup/cgroup-internal.h
-> +++ b/kernel/cgroup/cgroup-internal.h
-> @@ -250,6 +250,8 @@ int cgroup_migrate(struct task_struct *leader, bool threadgroup,
->   
->   int cgroup_attach_task(struct cgroup *dst_cgrp, struct task_struct *leader,
->   		       bool threadgroup);
-> +void cgroup_attach_lock(bool lock_threadgroup);
-> +void cgroup_attach_unlock(bool lock_threadgroup);
->   struct task_struct *cgroup_procs_write_start(char *buf, bool threadgroup,
->   					     bool *locked)
->   	__acquires(&cgroup_threadgroup_rwsem);
-> diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-> index ff6a8099eb2a..52bb5a74a23b 100644
-> --- a/kernel/cgroup/cgroup-v1.c
-> +++ b/kernel/cgroup/cgroup-v1.c
-> @@ -59,8 +59,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
->   	int retval = 0;
->   
->   	mutex_lock(&cgroup_mutex);
-> -	cpus_read_lock();
-> -	percpu_down_write(&cgroup_threadgroup_rwsem);
-> +	cgroup_attach_lock(true);
->   	for_each_root(root) {
->   		struct cgroup *from_cgrp;
->   
-> @@ -72,8 +71,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
->   		if (retval)
->   			break;
->   	}
-> -	percpu_up_write(&cgroup_threadgroup_rwsem);
-> -	cpus_read_unlock();
-> +	cgroup_attach_unlock(true);
->   	mutex_unlock(&cgroup_mutex);
->   
->   	return retval;
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index e4bb5d57f4d1..5aee34bcf003 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -2393,7 +2393,7 @@ EXPORT_SYMBOL_GPL(task_cgroup_path);
->    * write-locking cgroup_threadgroup_rwsem. This allows ->attach() to assume that
->    * CPU hotplug is disabled on entry.
->    */
-> -static void cgroup_attach_lock(bool lock_threadgroup)
-> +void cgroup_attach_lock(bool lock_threadgroup)
->   {
->   	cpus_read_lock();
->   	if (lock_threadgroup)
-> @@ -2404,7 +2404,7 @@ static void cgroup_attach_lock(bool lock_threadgroup)
->    * cgroup_attach_unlock - Undo cgroup_attach_lock()
->    * @lock_threadgroup: whether to up_write cgroup_threadgroup_rwsem
->    */
-> -static void cgroup_attach_unlock(bool lock_threadgroup)
-> +void cgroup_attach_unlock(bool lock_threadgroup)
->   {
->   	if (lock_threadgroup)
->   		percpu_up_write(&cgroup_threadgroup_rwsem);
+> Show case:
+> / # mount -t cgroup2 none /sys/fs/cgroup
+> / # cd /sys/fs/cgroup/
+> /sys/fs/cgroup # echo "+memory" > cgroup.subtree_control
+> /sys/fs/cgroup # mkdir test1
+> /sys/fs/cgroup # mkdir test2
+> /sys/fs/cgroup # mkdir test3
+> /sys/fs/cgroup # echo $$ > test2/cgroup.procs
+> /sys/fs/cgroup # cd /test
+> /test # ./memcg_malloc 512000 &
+> /test # ./memcg_malloc 512000 &
+> /test # ./memcg_malloc 512000 &
+> /test # cd /sys/fs/cgroup
+> /sys/fs/cgroup # echo $$ > test1/cgroup.procs
+> /sys/fs/cgroup # cd /test
+> /test # ./memcg_malloc 512000 &
+> /test # cd /sys/fs/cgroup
+> /sys/fs/cgroup # echo $$ > test3/cgroup.procs
+> /sys/fs/cgroup # cat cgroup.top
+> memory top:
+> name            usage           anon            file            kernel
+> test2           1974272         1671168         0               270336
+> test1           700416          569344          0               94208
+> test3           196608          86016           0               86016
 
-LGTM.
-
-Reviewed-by:Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
-
--Mukesh
+This information is already present in memory.stat and can be easily
+post-processed to generate similar output. Why is that insufficient?
+-- 
+Michal Hocko
+SUSE Labs
