@@ -1,44 +1,62 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: Re: [PATCH v8 1/4] blk-throttle: fix that io throttle can only work
- for single bio
-Date: Fri, 26 Aug 2022 09:07:27 +0800
-Message-ID: <de0466d4-f501-da13-c3ee-0798c2761d9f@huaweicloud.com>
-References: <20220823033130.874230-1-yukuai1@huaweicloud.com>
- <20220823033130.874230-2-yukuai1@huaweicloud.com>
- <YwUXTL+8E/sPcEUB@slm.duckdns.org>
- <73c72914-e27d-b261-e040-2dd31e8a6b9f@huaweicloud.com>
- <Ywe8Uz4Gy6j/EsUg@slm.duckdns.org>
+From: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [RFC 0/2] Introduce cgroup.top interface
+Date: Fri, 26 Aug 2022 09:15:01 +0800
+Message-ID: <20220826011503.103894-1-lujialin4@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <Ywe8Uz4Gy6j/EsUg@slm.duckdns.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Tejun Heo <tj@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: axboe@kernel.dk, ming.lei@redhat.com, mkoutny@suse.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Xiu Jianfeng <xiujianfeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Hi, Tejun
+Cgroup is used to organize and manage resource available processes.
+Currently there are no handy tool for gathering reousrce usage
+information for each and every child cgroups, makes it hard to detect
+resource outage and debug resource issues.
 
-=D4=DA 2022/08/26 2:15, Tejun Heo =D0=B4=B5=C0:
-> On Wed, Aug 24, 2022 at 09:15:32AM +0800, Yu Kuai wrote:
->> This patch actually set two flags when bio is throttled and
->> dispatched, and only iops flag is cleared after the original bio is
->> split. If only one flag can be used, the way that I come up with is
->> that let iops limit become default, which means bio is always counted
->> for iops limit each time blk_throtl_bio() is called. I'm not quite
->> sure yet if iops limit can be counted excessively this way in some
->> special scenario...
->=20
-> I don't think we have a path where we clone and re-submit other than
-> splitting. What do you think about renaming the flag to BIO_BPS_THROTTLED
-> and just assuming that IOPS is always applied?
+To overcome this, we present the cgroup.top interface. Just like the
+top command, user is able to easily gather resource usage information
+, allowing user to detect and respond to resource outage in child
+cgroups
 
-Yes, I didn't found such path myself, this way sounds good. I'll send a
-new version soon.
+Show case:
+/ # mount -t cgroup2 none /sys/fs/cgroup
+/ # cd /sys/fs/cgroup/
+/sys/fs/cgroup # echo "+memory" > cgroup.subtree_control
+/sys/fs/cgroup # mkdir test1
+/sys/fs/cgroup # mkdir test2
+/sys/fs/cgroup # mkdir test3
+/sys/fs/cgroup # echo $$ > test2/cgroup.procs
+/sys/fs/cgroup # cd /test
+/test # ./memcg_malloc 512000 &
+/test # ./memcg_malloc 512000 &
+/test # ./memcg_malloc 512000 &
+/test # cd /sys/fs/cgroup
+/sys/fs/cgroup # echo $$ > test1/cgroup.procs
+/sys/fs/cgroup # cd /test
+/test # ./memcg_malloc 512000 &
+/test # cd /sys/fs/cgroup
+/sys/fs/cgroup # echo $$ > test3/cgroup.procs
+/sys/fs/cgroup # cat cgroup.top
+memory top:
+name            usage           anon            file            kernel
+test2           1974272         1671168         0               270336
+test1           700416          569344          0               94208
+test3           196608          86016           0               86016
 
-Thanks,
-Kuai
->=20
-> Thanks.
->=20
+
+Lu Jialin (1):
+  memcg: Adapt cgroup.top into per-memcg
+
+Xiu Jianfeng (1):
+  cgroup: Introduce per-cgroup resource top show interface
+
+ include/linux/cgroup-defs.h |  1 +
+ kernel/cgroup/cgroup.c      | 20 +++++++++
+ mm/memcontrol.c             | 87 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 108 insertions(+)
+
+-- 
+2.17.1
 
