@@ -1,90 +1,166 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v7 3/4] KVM: x86/mmu: count KVM mmu usage in secondary
- pagetable stats.
-Date: Fri, 26 Aug 2022 14:25:32 -0700
-Message-ID: <CAJD7tka4w059gZOJJnZj2zodQ7CGCFzKGbKEtt9cE2XP5GF73A@mail.gmail.com>
-References: <20220823004639.2387269-1-yosryahmed@google.com>
- <20220823004639.2387269-4-yosryahmed@google.com> <Ywkq8HYyTI1eStSO@google.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-6.0-fixes] BUILD SUCCESS
+ 43626dade36fa74d3329046f4ae2d7fdefe401c6
+Date: Sat, 27 Aug 2022 17:58:44 +0800
+Message-ID: <6309ead4.11qVq4/6yiiXTFXB%lkp@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=6UsE1Ljxz5h0xq3FFSdwmgCBOa2/vJlV8vw/uQpbLSQ=;
-        b=SWFjPL7/UKZ4cZdo+JI7Bm2LG8Zc5kFuduxCLX8+HwW0QibBTetn/y2E41mk+x5paO
-         JIzNbPVmE/Ekp/CzgnD2lphM56nu+cGQgvXiZ7OsW7wiDezSmmZwBWSBekAXujhOa0V0
-         A/+blidel2lSXN57C4fj+Mly1CkPB7JfH8fuOLQhwEdLJ5xIgzgdP41dV/v/Oq6fs9v0
-         LJnhM8cgZlGCe5bOOQ2JX0Rjt2uG1lGNw0/ekwO8fuwTjSJ6hE1BnAi1yzYcJ9yAPRpa
-         cvbehGZsoN5xor3oKmd+C683+iy9LUhdk3WtP7wGbPJfzVQ4Bu4/vzWsAhyUKcA6bwn9
-         MK+w==
-In-Reply-To: <Ywkq8HYyTI1eStSO-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1661594330; x=1693130330;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=g+pq9O4tYvwUt4bIztHA7XCzl8kWPhKRSrK65k+vHk4=;
+  b=EnxWvHufeoStfma/gr1h08p3AuA0XPWKjHWxvQw6ane8QUkZalgqqQ2h
+   rcPsxaYSdoKaWC1OlgcPkMni0UphSY3a7APTeOwyOO0FYgnPNJgHNhjpY
+   I+9wuUoKRahEs+zFJlxmb3nfIwMoE3AmpF3WZqBoQwSQ497Wb/WL8SS5C
+   jOTc+nxeNBv40+7PmScc05/dvx4Y5zfvQQeWNi++QnxHKTMA4E79Wo0+T
+   QBkLp8lLTsM1e2gYxIBEWcnjt2KDQZHum5WtWs4CQqSrUJgS4QoJpXZ9F
+   aqLLlZkGCm7Vf2/GSNZDjLv1U/xUev/SbEOwl7Ki73WPj2nPKnm7N22qg
+   A==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Huang-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Shaoqin <shaoqin.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Aug 26, 2022 at 1:20 PM Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> On Tue, Aug 23, 2022, Yosry Ahmed wrote:
-> > Count the pages used by KVM mmu on x86 in memory stats under secondary
-> > pagetable stats (e.g. "SecPageTables" in /proc/meminfo) to give better
-> > visibility into the memory consumption of KVM mmu in a similar way to
-> > how normal user page tables are accounted.
-> >
-> > Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > Reviewed-by: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > ---
-> >  arch/x86/kvm/mmu/mmu.c     | 16 ++++++++++++++--
-> >  arch/x86/kvm/mmu/tdp_mmu.c | 12 ++++++++++++
-> >  2 files changed, 26 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
-> > index e418ef3ecfcb..4d38e4eba772 100644
-> > --- a/arch/x86/kvm/mmu/mmu.c
-> > +++ b/arch/x86/kvm/mmu/mmu.c
-> > @@ -1665,6 +1665,18 @@ static inline void kvm_mod_used_mmu_pages(struct kvm *kvm, long nr)
-> >       percpu_counter_add(&kvm_total_used_mmu_pages, nr);
-> >  }
-> >
-> > +static void kvm_account_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
-> > +{
-> > +     kvm_mod_used_mmu_pages(kvm, +1);
-> > +     kvm_account_pgtable_pages((void *)sp->spt, +1);
-> > +}
-> > +
-> > +static void kvm_unaccount_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
-> > +{
-> > +     kvm_mod_used_mmu_pages(kvm, -1);
-> > +     kvm_account_pgtable_pages((void *)sp->spt, -1);
-> > +}
->
-> Hrm, this is causing build on x86 issues for me.  AFAICT, modpost doesn't detect
-> that this creates a new module dependency on __mod_lruvec_page_state() and so doesn't
-> refresh vmlinux.symvers.
->
->   ERROR: modpost: "__mod_lruvec_page_state" [arch/x86/kvm/kvm.ko] undefined!
->   make[2]: *** [scripts/Makefile.modpost:128: modules-only.symvers] Error 1
->   make[1]: *** [Makefile:1769: modules] Error 2
->   make[1]: *** Waiting for unfinished jobs....
->   Kernel: arch/x86/boot/bzImage is ready  (#128)
->   make[1]: Leaving directory '/usr/local/google/home/seanjc/build/kernel/vm'
->   make: *** [Makefile:222: __sub-make] Error 2
->
-> Both gcc and clang yield the same behavior, so I doubt it's the compiler doing
-> something odd.  Cleaning the build makes the problem go away, but that's a poor
-> band-aid.
->
-> If I squash this with the prior patch that adds kvm_account_pgtable_pages() to
-> kvm_host.h, modpost detects the need to refresh and all is well.
->
-> Given that ARM doesn't support building KVM as a module, i.e. can't run afoul
-> of whatever modpost weirdness I'm hitting, I'm inclined to squash this with the
-> previous patch and punt on the modpost issue so that we can get this merged.
->
-> Any objections?  Or thoughts on what's going wrong?
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.0-fixes
+branch HEAD: 43626dade36fa74d3329046f4ae2d7fdefe401c6  cgroup: Add missing cpus_read_lock() to cgroup_attach_task_all()
 
-I am not familiar at all with modpost so I have no idea what's going
-wrong, but I have no problem with squashing the patches if you think
-this works best.
+elapsed time: 724m
+
+configs tested: 121
+configs skipped: 3
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arc                                 defconfig
+s390                             allmodconfig
+alpha                               defconfig
+loongarch                         allnoconfig
+i386                          randconfig-a012
+i386                          randconfig-a014
+i386                          randconfig-a016
+um                             i386_defconfig
+i386                                defconfig
+um                           x86_64_defconfig
+s390                                defconfig
+powerpc                           allnoconfig
+powerpc                          allmodconfig
+loongarch                           defconfig
+mips                             allyesconfig
+sh                               allmodconfig
+x86_64                              defconfig
+x86_64                        randconfig-a004
+s390                             allyesconfig
+x86_64                        randconfig-a002
+x86_64                          rhel-8.3-func
+x86_64                               rhel-8.3
+x86_64                         rhel-8.3-kunit
+x86_64                           allyesconfig
+x86_64                        randconfig-a013
+x86_64                        randconfig-a011
+x86_64                        randconfig-a006
+arm                                 defconfig
+x86_64                        randconfig-a015
+x86_64                           rhel-8.3-kvm
+x86_64                    rhel-8.3-kselftests
+parisc                              defconfig
+arc                              allyesconfig
+x86_64                           rhel-8.3-syz
+arm                              allyesconfig
+nios2                               defconfig
+alpha                            allyesconfig
+nios2                            allyesconfig
+i386                             allyesconfig
+m68k                             allyesconfig
+arc                  randconfig-r043-20220824
+m68k                             allmodconfig
+arm64                            allyesconfig
+riscv                randconfig-r042-20220824
+s390                 randconfig-r044-20220826
+s390                 randconfig-r044-20220824
+riscv                randconfig-r042-20220826
+i386                          randconfig-a001
+arc                  randconfig-r043-20220826
+i386                          randconfig-a003
+arc                  randconfig-r043-20220825
+i386                          randconfig-a005
+parisc64                            defconfig
+parisc                           allyesconfig
+i386                          debian-10.3-kvm
+i386                        debian-10.3-kunit
+i386                         debian-10.3-func
+csky                              allnoconfig
+alpha                             allnoconfig
+arc                               allnoconfig
+riscv                             allnoconfig
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+riscv                    nommu_k210_defconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+powerpc                          allyesconfig
+riscv                               defconfig
+riscv                            allmodconfig
+riscv                            allyesconfig
+sh                          rsk7203_defconfig
+parisc                generic-32bit_defconfig
+arm                            xcep_defconfig
+openrisc                  or1klitex_defconfig
+ia64                            zx1_defconfig
+i386                          randconfig-c001
+sparc                               defconfig
+xtensa                           allyesconfig
+csky                                defconfig
+sparc                            allyesconfig
+x86_64                                  kexec
+ia64                             allmodconfig
+arm64                               defconfig
+arm                              allmodconfig
+m68k                                defconfig
+ia64                                defconfig
+mips                             allmodconfig
+
+clang tested configs:
+i386                          randconfig-a013
+i386                          randconfig-a011
+i386                          randconfig-a015
+x86_64                        randconfig-a014
+x86_64                        randconfig-a005
+x86_64                        randconfig-a001
+x86_64                        randconfig-a016
+x86_64                        randconfig-a012
+x86_64                        randconfig-a003
+hexagon              randconfig-r041-20220825
+hexagon              randconfig-r045-20220825
+hexagon              randconfig-r041-20220824
+hexagon              randconfig-r045-20220824
+hexagon              randconfig-r045-20220826
+hexagon              randconfig-r041-20220826
+riscv                randconfig-r042-20220825
+s390                 randconfig-r044-20220825
+i386                          randconfig-a002
+i386                          randconfig-a004
+i386                          randconfig-a006
+hexagon              randconfig-r045-20220827
+riscv                randconfig-r042-20220827
+hexagon              randconfig-r041-20220827
+s390                 randconfig-r044-20220827
+powerpc                      obs600_defconfig
+arm                                 defconfig
+arm                         bcm2835_defconfig
+x86_64                        randconfig-k001
+arm                           sama7_defconfig
+riscv                            alldefconfig
+arm                         mv78xx0_defconfig
+hexagon              randconfig-r045-20220823
+riscv                randconfig-r042-20220823
+hexagon              randconfig-r041-20220823
+s390                 randconfig-r044-20220823
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
