@@ -1,60 +1,41 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH 4/4] cgroup/bpf: Honor cgroup NS in cgroup_iter for ancestors
-Date: Mon, 29 Aug 2022 10:30:45 -0700
-Message-ID: <CAJD7tkZySzWgJgp4xbkpSstc_RMN_tJqt83-FFrxv6jASeg8CA@mail.gmail.com>
-References: <20220826165238.30915-1-mkoutny@suse.com> <20220826165238.30915-5-mkoutny@suse.com>
- <CAJD7tkZZ6j6mPfwwFDy_ModYux5447HFP=oPwa6MFA_NYAZ9-g@mail.gmail.com> <20220829125957.GB3579@blackbody.suse.cz>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: cgroups v2 cpuset partition bug
+Date: Mon, 29 Aug 2022 13:48:12 -0400
+Message-ID: <961450c4-6b32-63ba-ff81-2f6184032de9@redhat.com>
+References: <C98773C9-F5ED-4664-BED1-5C03351130D4@gmail.com>
+ <YwT/BNqIdCEyUpFR@slm.duckdns.org>
+ <ef183fe9-8458-8a7f-2b8e-1c38666b6399@redhat.com>
+ <26A2A485-B70C-4361-8368-1A0081570E7C@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc;
-        bh=6dZvHbb8IWueLS4eFstq1vaFfQHUYChceiQvahnGWHU=;
-        b=cqoVFEaZpeJD8EjNsoLJ56vZYmVurORt4hKHbg5R3LIFg2MPYs9W9NyBzZJkO2Oxaf
-         wbD4TpbwyAA2cTNYtWJJ+0bHscp0QXqLghWLQzaihARVQXFbGamD/y+wT7uiaBbIMUNk
-         IVcoC++0s7an6V+WAZu0yKjuQWtiHUBYPm2UNNnR/UE4ORHA6YhRMrm4knhOzp0OGr47
-         bvzrpTWLtfX0Bn0PTH4HHg8r3omAX828OO3edjzOICn6IY4eGH9PQhxQwPDxHAtllPBH
-         ncEYOgWP7jsLmEWXULP94ZnYf+pkVq8pn2BhQh5lYmSlUPV5koIisqeachjraxEBVBaf
-         OmNQ==
-In-Reply-To: <20220829125957.GB3579@blackbody.suse.cz>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1661795296;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=bzl9rW+zoZaXyBEvsOxYc0pEZU0Po7ig757LQObjXSA=;
+        b=YB46fzX1KEyjO4mlNWlZVnsBIAJmjDg7TlGG80NgY4RYfA4nwJa9HGKmrlEB+i92SVbeww
+        bJzFBngReXCwh5YLcvxyZFE0xeg68qXnm5yrCYQzKXlJ555QsfhG+ZX+seKG1Hg68hWZ7u
+        zr5KSeMKlzticIy2LEzBef7tFkD/ZQU=
+Content-Language: en-US
+In-Reply-To: <26A2A485-B70C-4361-8368-1A0081570E7C-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, bpf <bpf@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Aditya Kali <adityakali@google.com>, Serge Hallyn <serge.hallyn@canonical.com>, Roman Gushchin <roman.gushchin@linux.dev>, Yonghong Song <yhs@fb.com>, Muneendra Kumar <muneendra.kumar@broadcom.com>, Hao Luo <haoluo@google.com>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: =?UTF-8?B?TWF4aW0g4oCcTUFYUEFJTuKAnSBNYWthcm92?= <maxpain177-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Aug 29, 2022 at 6:00 AM Michal Koutn=C3=BD <mkoutny@suse.com> wrote=
-:
->
-> On Fri, Aug 26, 2022 at 10:41:37AM -0700, Yosry Ahmed <yosryahmed@google.=
-com> wrote:
-> > I understand that currently cgroup_iter is the only user of this, but
-> > for future use cases, is it safe to assume that cgrp will always be
-> > inside ns? Would it be safer to do something like:
->
-> I preferred the simpler root_cgrp comparison to avoid pointer
-> arithmetics in cgroup_is_descendant. But I also made the assumption of
-> cgrp in ns.
->
-> Thanks, I'll likely adjust cgroup_path_ns to make it more robust for
-> an external cgrp.
->
 
-Great, thanks!
-
+On 8/29/22 13:16, Maxim “MAXPAIN” Makarov wrote:
+> Hi. I used top and htop programs to check what CPU is using, and it's showing that this task is running on CPU 2, so I think it shows the correct CPU that is currently being used.
+> Please note that the containerd process has /system/runtime cgroup, which inherits cpuset from the root cgroup. /system/runtime cgroup doesn't have any cpuset settings. Maybe this is the reason?
+Oh, that could be the reason. Yes, it is probably a bug that other 
+sibling cgroups should also be updated. I will look into that.
 >
-> I'd like to clarify, if a process A in a broad cgroup ns sets up a BPF
-> cgroup iterator, exposes it via bpffs and than a process B in a narrowed
-> cgroup ns (which excludes the origin cgroup) wants to traverse the
-> iterator, should it fail straight ahead (regardless of iter order)?
-> The alternative would be to allow self-dereference but prohibit any
-> iterator moves (regardless of order).
+> I tried to remove the lowlatency group with cpuset.cpus.partition=root and do taskset -cp 4 1079 manually, and it works without any restart.
 >
+> I updated my post on StackExchange and added some new screenshots, so please check it out.
+Thanks,
+Longman
 
-imo it should fail straight ahead, but maybe others (Tejun? Hao?) have
-other opinions here.
-
->
-> Thanks,
-> Michal
