@@ -1,180 +1,72 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 5214a36f9afe3bc1bb393e78934fa3e8f10f5e3d
-Date: Tue, 30 Aug 2022 00:34:42 +0800
-Message-ID: <630ceaa2.R70XOuUPqaApf87v%lkp@intel.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: =?utf-8?B?TWF4aW0g4oCcTUFYUEFJTuKAnSBNYWthcm92?= 
+        <maxpain177-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: cgroups v2 cpuset partition bug
+Date: Mon, 29 Aug 2022 20:16:23 +0300
+Message-ID: <26A2A485-B70C-4361-8368-1A0081570E7C@gmail.com>
+References: <C98773C9-F5ED-4664-BED1-5C03351130D4@gmail.com>
+ <YwT/BNqIdCEyUpFR@slm.duckdns.org>
+ <ef183fe9-8458-8a7f-2b8e-1c38666b6399@redhat.com>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3696.120.41.1.1\))
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1661792348; x=1693328348;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=4xNxUlLRo8RNo/PnbNMC7o9sRxId5J/hCVlHSPShx/o=;
-  b=eZVJQo1QHdnP7fYaMsGwJg+ZMGTScqMVXs2JH7at3725C4VU8X2xtO6v
-   qgpo4Y28xZieejIkkownS5i/Oycd1EDcLYS477cjfns3u/3mkhZQrww9f
-   5HMwTmSvrpkhoJkm/lJMzCwRYgECFunT1eo0sB+/U0y/mJCVyddKVPwz5
-   YT13B78wcZHMAZT7qK8V112gB1aUa1KvYXUz72Fj12H6MT+HEL/cBX5PI
-   w9XWTpqWMCiZLn1T+jXhYW9aGJ1So+9mkIIWGl5wh/Lt0UgFLRnYOirqK
-   SGCX4h8ytYSu7dLKn7w+XE+/DVYW/zIugyWQC4aIETyGLS73KlfD7PfaJ
-   A==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc;
+        bh=X6VmYsgMW8K15KBs3jUfjE+heWPeLcY8CtwqiX8/U7g=;
+        b=M4QGkW3ptdqm71GWxKRUeBll7XiacNWh893RwsJPYgWFWBnh9Zggap/ig8nQavJHpH
+         DCapLVvJudLtUcz0FT33djVjCUi5hWprvjjCm5gk4OnBbhHxmh2tQzzKA+tWFKq0g8Pb
+         /v0iVSe7/FxUMWYlg2inn9QaOdW5M1w0AT/rFg6v4lAoglF3/+s6Zo9hcVg2suMFyOd7
+         IpU+XP2RYOznfsY8w7yYcVnbIaKG+kK1q/K/hOuWLWflbOacLchd7nP02MME8kq8Onix
+         xKxtXEsV+ZeQRNiwyBgwbWJO/Tx5Ggy+XJDwkhUbyWfSTDb2YXeQOT+3D1ASXRYStZRC
+         Yelg==
+In-Reply-To: <ef183fe9-8458-8a7f-2b8e-1c38666b6399-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 5214a36f9afe3bc1bb393e78934fa3e8f10f5e3d  Merge branch 'for-6.1' into for-next
+Hi. I used top and htop programs to check what CPU is using, and it's =
+showing that this task is running on CPU 2, so I think it shows the =
+correct CPU that is currently being used.
+Please note that the containerd process has /system/runtime cgroup, =
+which inherits cpuset from the root cgroup. /system/runtime cgroup =
+doesn't have any cpuset settings. Maybe this is the reason?
 
-elapsed time: 721m
+I tried to remove the lowlatency group with cpuset.cpus.partition=3Droot =
+and do taskset -cp 4 1079 manually, and it works without any restart.
 
-configs tested: 135
-configs skipped: 3
+I updated my post on StackExchange and added some new screenshots, so =
+please check it out.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+> On 29 Aug 2022, at 18:24, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>=20
+> On 8/23/22 12:23, Tejun Heo wrote:
+>> (cc'ing Waiman for visibilty)
+>>=20
+>> On Tue, Aug 23, 2022 at 03:13:30PM +0300, Maxim =E2=80=9CMAXPAIN=E2=80=9D=
+ Makarov wrote:
+>>> Hello. I have no idea where I can ask questions about cgroups v2. I =
+have a problem with cpuset partitions.
+>>> Could you please, check this question?
+>>> =
+https://unix.stackexchange.com/questions/714454/cgroups-v2-cpuset-doesnt-t=
+ake-an-effect-without-process-restart
+>=20
+> When a partition is created, the cpuset code will update the cpu =
+affinity of the tasks in the parent cpuset using update_tasks_cpumask(). =
+This function will set the new cpu affinity for those tasks and move it =
+over to the new cpus. However, if the tasks aren't running at the time, =
+the move may be delayed until those tasks are waken up. The fact the =
+task affinity is correct means that the cpuset code has done the right =
+thing.
+>=20
+> I am not sure what tool do you use to check the task's cpus. I believe =
+the tool may show what cpu the task is previously running on. It does =
+not means the the task will run on that cpu when it is waken up. It is =
+only a bug if the task is running and it is on the wrong cpu.
+>=20
+> Cheers,
+> Longman
+>=20
 
-gcc tested configs:
-i386                        debian-10.3-kunit
-i386                         debian-10.3-func
-um                           x86_64_defconfig
-i386                          debian-10.3-kvm
-um                             i386_defconfig
-loongarch                         allnoconfig
-parisc                           allyesconfig
-loongarch                           defconfig
-parisc                              defconfig
-nios2                               defconfig
-nios2                            allyesconfig
-parisc64                            defconfig
-riscv                             allnoconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-csky                                defconfig
-riscv                    nommu_k210_defconfig
-x86_64               randconfig-a003-20220829
-m68k                             allmodconfig
-arc                              allyesconfig
-arc                                 defconfig
-alpha                            allyesconfig
-alpha                               defconfig
-riscv                    nommu_virt_defconfig
-sparc                               defconfig
-x86_64               randconfig-a004-20220829
-s390                                defconfig
-x86_64               randconfig-a005-20220829
-riscv                          rv32_defconfig
-x86_64                              defconfig
-x86_64               randconfig-a002-20220829
-s390                             allmodconfig
-x86_64               randconfig-a006-20220829
-x86_64                                  kexec
-m68k                             allyesconfig
-sparc                            allyesconfig
-i386                 randconfig-a001-20220829
-xtensa                           allyesconfig
-x86_64               randconfig-a001-20220829
-riscv                randconfig-r042-20220828
-i386                 randconfig-a003-20220829
-arc                               allnoconfig
-x86_64                               rhel-8.3
-powerpc                           allnoconfig
-i386                 randconfig-a002-20220829
-riscv                            allmodconfig
-alpha                             allnoconfig
-i386                                defconfig
-powerpc                          allmodconfig
-i386                 randconfig-a004-20220829
-csky                              allnoconfig
-x86_64                          rhel-8.3-func
-arc                  randconfig-r043-20220829
-arm                                 defconfig
-powerpc                          allyesconfig
-mips                             allyesconfig
-i386                 randconfig-a005-20220829
-x86_64                         rhel-8.3-kunit
-s390                             allyesconfig
-riscv                            allyesconfig
-x86_64                           allyesconfig
-i386                 randconfig-a006-20220829
-i386                          randconfig-a014
-arc                  randconfig-r043-20220828
-riscv                               defconfig
-x86_64                    rhel-8.3-kselftests
-sh                               allmodconfig
-i386                          randconfig-a012
-i386                          randconfig-a016
-s390                 randconfig-r044-20220828
-x86_64                           rhel-8.3-syz
-x86_64                           rhel-8.3-kvm
-i386                          randconfig-c001
-ia64                             allmodconfig
-x86_64                           alldefconfig
-loongarch                        alldefconfig
-sh                           se7780_defconfig
-arm                         lubbock_defconfig
-arc                           tb10x_defconfig
-arm64                            allyesconfig
-arm                           corgi_defconfig
-sh                                  defconfig
-arm                              allyesconfig
-i386                             allyesconfig
-x86_64                        randconfig-a013
-arm                        keystone_defconfig
-sh                           se7724_defconfig
-powerpc                      mgcoge_defconfig
-x86_64                        randconfig-a011
-x86_64                        randconfig-a015
-powerpc                  iss476-smp_defconfig
-xtensa                              defconfig
-arm                              allmodconfig
-arm64                               defconfig
-i386                 randconfig-c001-20220829
-powerpc                     taishan_defconfig
-arm                         axm55xx_defconfig
-microblaze                      mmu_defconfig
-arm                         lpc18xx_defconfig
-powerpc                  storcenter_defconfig
-powerpc                       eiger_defconfig
-arc                 nsimosci_hs_smp_defconfig
-ia64                                defconfig
-sh                           se7722_defconfig
-xtensa                  nommu_kc705_defconfig
-arm                             ezx_defconfig
-arm                            mps2_defconfig
-
-clang tested configs:
-x86_64               randconfig-a011-20220829
-i386                          randconfig-a013
-x86_64               randconfig-a014-20220829
-x86_64               randconfig-a012-20220829
-hexagon              randconfig-r041-20220829
-i386                          randconfig-a011
-riscv                randconfig-r042-20220829
-x86_64               randconfig-a013-20220829
-hexagon              randconfig-r041-20220828
-i386                          randconfig-a015
-s390                 randconfig-r044-20220829
-hexagon              randconfig-r045-20220828
-hexagon              randconfig-r045-20220829
-x86_64               randconfig-a016-20220829
-x86_64               randconfig-a015-20220829
-arm                       versatile_defconfig
-x86_64                        randconfig-a012
-powerpc                     kmeter1_defconfig
-riscv                    nommu_virt_defconfig
-x86_64                        randconfig-a016
-x86_64                        randconfig-a014
-i386                 randconfig-a011-20220829
-i386                 randconfig-a014-20220829
-i386                 randconfig-a013-20220829
-i386                 randconfig-a012-20220829
-i386                 randconfig-a015-20220829
-arm                             mxs_defconfig
-arm                        mvebu_v5_defconfig
-i386                 randconfig-a016-20220829
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
