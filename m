@@ -1,117 +1,50 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 2/2] mm: memcontrol: make cgroup_memory_noswap a static
- key
-Date: Tue, 30 Aug 2022 12:12:20 +0200
-Message-ID: <Yw3ihBZ7J/V37eU0@dhcp22.suse.cz>
-References: <20220830055949.12640-1-ryncsn@gmail.com>
- <20220830055949.12640-3-ryncsn@gmail.com>
- <Yw21uOyEz9lLkI3p@dhcp22.suse.cz>
- <CAMgjq7CM_SX3jLj9yp5hzAr6c3hBtS5nd4Nh4z8bTY8yWx-3KQ@mail.gmail.com>
+From: Elijah Conners <business@elijahpepe.com>
+Subject: [PATCH] iocost_monitor: reorder BlkgIterator
+Date: Tue, 30 Aug 2022 07:38:27 -0700
+Message-ID: <182ef30785e.c6f6f47035469.3423320276766255135@elijahpepe.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1661854341; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=LYvW4/C2mjaJQZlE3mRWOzrMuvS8imMEtRVp0zKjWZI=;
-        b=qsVu4V70wdDHwjBgpKiDN0IlP/BDCuLEwMyjOQLn0UUCVFhXfjfQkoPEbTbScmBED/gl6P
-        bhU/EU/BRe2KUivYSHMfWx7D/0VMg7tkZvJUo10luRxxgtwxj1QUbxotcwmi5ML2RzsZF/
-        j9alAbuMHIT1y5Qy8jCkr4+d0Co14+M=
-Content-Disposition: inline
-In-Reply-To: <CAMgjq7CM_SX3jLj9yp5hzAr6c3hBtS5nd4Nh4z8bTY8yWx-3KQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Kairui Song <ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: axboe <axboe@kernel.dk>
+Cc: linux-block <linux-block@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>, josef <josef@toxicpanda.com>, asmlsilence <asml.silence@gmail.com>, minglei <ming.lei@redhat.com>, bvanassche <bvanassche@acm.org>
 
-On Tue 30-08-22 16:50:38, Kairui Song wrote:
-> Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> 于2022年8月30日周二 15:01写道：
-> >
-> > On Tue 30-08-22 13:59:49, Kairui Song wrote:
-> > > From: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-> > >
-> > > cgroup_memory_noswap is used in many hot path, so make it a static key
-> > > to lower the kernel overhead.
-> > >
-> > > Using 8G of ZRAM as SWAP, benchmark using `perf stat -d -d -d --repeat 100`
-> > > with the following code snip in a non-root cgroup:
-> > >
-> > >    #include <stdio.h>
-> > >    #include <string.h>
-> > >    #include <linux/mman.h>
-> > >    #include <sys/mman.h>
-> > >    #define MB 1024UL * 1024UL
-> > >    int main(int argc, char **argv){
-> > >       void *p = mmap(NULL, 8000 * MB, PROT_READ | PROT_WRITE,
-> > >                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-> > >       memset(p, 0xff, 8000 * MB);
-> > >       madvise(p, 8000 * MB, MADV_PAGEOUT);
-> > >       memset(p, 0xff, 8000 * MB);
-> > >       return 0;
-> > >    }
-> > >
-> > > Before:
-> > >           7,021.43 msec task-clock                #    0.967 CPUs utilized            ( +-  0.03% )
-> > >              4,010      context-switches          #  573.853 /sec                     ( +-  0.01% )
-> > >                  0      cpu-migrations            #    0.000 /sec
-> > >          2,052,057      page-faults               #  293.661 K/sec                    ( +-  0.00% )
-> > >     12,616,546,027      cycles                    #    1.805 GHz                      ( +-  0.06% )  (39.92%)
-> > >        156,823,666      stalled-cycles-frontend   #    1.25% frontend cycles idle     ( +-  0.10% )  (40.25%)
-> > >        310,130,812      stalled-cycles-backend    #    2.47% backend cycles idle      ( +-  4.39% )  (40.73%)
-> > >     18,692,516,591      instructions              #    1.49  insn per cycle
-> > >                                                   #    0.01  stalled cycles per insn  ( +-  0.04% )  (40.75%)
-> > >      4,907,447,976      branches                  #  702.283 M/sec                    ( +-  0.05% )  (40.30%)
-> > >         13,002,578      branch-misses             #    0.26% of all branches          ( +-  0.08% )  (40.48%)
-> > >      7,069,786,296      L1-dcache-loads           #    1.012 G/sec                    ( +-  0.03% )  (40.32%)
-> > >        649,385,847      L1-dcache-load-misses     #    9.13% of all L1-dcache accesses  ( +-  0.07% )  (40.10%)
-> > >      1,485,448,688      L1-icache-loads           #  212.576 M/sec                    ( +-  0.15% )  (39.49%)
-> > >         31,628,457      L1-icache-load-misses     #    2.13% of all L1-icache accesses  ( +-  0.40% )  (39.57%)
-> > >          6,667,311      dTLB-loads                #  954.129 K/sec                    ( +-  0.21% )  (39.50%)
-> > >          5,668,555      dTLB-load-misses          #   86.40% of all dTLB cache accesses  ( +-  0.12% )  (39.03%)
-> > >                765      iTLB-loads                #  109.476 /sec                     ( +- 21.81% )  (39.44%)
-> > >          4,370,351      iTLB-load-misses          # 214320.09% of all iTLB cache accesses  ( +-  1.44% )  (39.86%)
-> > >        149,207,254      L1-dcache-prefetches      #   21.352 M/sec                    ( +-  0.13% )  (40.27%)
-> > >
-> > >            7.25869 +- 0.00203 seconds time elapsed  ( +-  0.03% )
-> > >
-> > > After:
-> > >           6,576.16 msec task-clock                #    0.953 CPUs utilized            ( +-  0.10% )
-> > >              4,020      context-switches          #  605.595 /sec                     ( +-  0.01% )
-> > >                  0      cpu-migrations            #    0.000 /sec
-> > >          2,052,056      page-faults               #  309.133 K/sec                    ( +-  0.00% )
-> > >     11,967,619,180      cycles                    #    1.803 GHz                      ( +-  0.36% )  (38.76%)
-> > >        161,259,240      stalled-cycles-frontend   #    1.38% frontend cycles idle     ( +-  0.27% )  (36.58%)
-> > >        253,605,302      stalled-cycles-backend    #    2.16% backend cycles idle      ( +-  4.45% )  (34.78%)
-> > >     19,328,171,892      instructions              #    1.65  insn per cycle
-> > >                                                   #    0.01  stalled cycles per insn  ( +-  0.10% )  (31.46%)
-> > >      5,213,967,902      branches                  #  785.461 M/sec                    ( +-  0.18% )  (30.68%)
-> > >         12,385,170      branch-misses             #    0.24% of all branches          ( +-  0.26% )  (34.13%)
-> > >      7,271,687,822      L1-dcache-loads           #    1.095 G/sec                    ( +-  0.12% )  (35.29%)
-> > >        649,873,045      L1-dcache-load-misses     #    8.93% of all L1-dcache accesses  ( +-  0.11% )  (41.41%)
-> > >      1,950,037,608      L1-icache-loads           #  293.764 M/sec                    ( +-  0.33% )  (43.11%)
-> > >         31,365,566      L1-icache-load-misses     #    1.62% of all L1-icache accesses  ( +-  0.39% )  (45.89%)
-> > >          6,767,809      dTLB-loads                #    1.020 M/sec                    ( +-  0.47% )  (48.42%)
-> > >          6,339,590      dTLB-load-misses          #   95.43% of all dTLB cache accesses  ( +-  0.50% )  (46.60%)
-> > >                736      iTLB-loads                #  110.875 /sec                     ( +-  1.79% )  (48.60%)
-> > >          4,314,836      iTLB-load-misses          # 518653.73% of all iTLB cache accesses  ( +-  0.63% )  (42.91%)
-> > >        144,950,156      L1-dcache-prefetches      #   21.836 M/sec                    ( +-  0.37% )  (41.39%)
-> > >
-> > >            6.89935 +- 0.00703 seconds time elapsed  ( +-  0.10% )
-> >
-> > Do you happen to have a perf profile before and after to see which of
-> > the paths really benefits from this?
-> 
-> No I don't have a clear profile data about which path benefit the most.
-> The performance benchmark result can be stably reproduced, but perf
-> record & report & diff doesn't seems too helpful, as I can't see a
-> significant change of any single symbols.
+In order to comply with PEP 8, the first parameter of a class should be
+__init__.
 
-This is a good information on its own as it suggests that the overhead
-is spilled over multiple places rather than a single hot spot. Good to
-have in the changelog.
+Signed-off-by: Elijah Conners <business@elijahpepe.com> 
+---
+ tools/cgroup/iocost_monitor.py                |  10 +-
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
--- 
-Michal Hocko
-SUSE Labs
+diff --git a/tools/cgroup/iocost_monitor.py b/tools/cgroup/iocost_monitor.py
+index c4ff907c078b..0dbbc67400fc 100644
+--- a/tools/cgroup/iocost_monitor.py
++++ b/tools/cgroup/iocost_monitor.py
+@@ -61,6 +61,11 @@ autop_names = {
+ }
+
+ class BlkgIterator:
++    def __init__(self, root_blkcg, q_id, include_dying=False):
++        self.include_dying = include_dying
++        self.blkgs = []
++        self.walk(root_blkcg, q_id, '')
++
+     def blkcg_name(blkcg):
+         return blkcg.css.cgroup.kn.name.string_().decode('utf-8')
+
+@@ -82,11 +87,6 @@ class BlkgIterator:
+                                      blkcg.css.children.address_of_(), 'css.sibling'):
+             self.walk(c, q_id, path)
+
+-    def __init__(self, root_blkcg, q_id, include_dying=False):
+-        self.include_dying = include_dying
+-        self.blkgs = []
+-        self.walk(root_blkcg, q_id, '')
+-
+     def __iter__(self):
+         return iter(self.blkgs)
+
+--
+2.25.1
