@@ -1,34 +1,56 @@
-From: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RESEND PATCH bpf-next v9 1/5] bpf: Introduce cgroup iter
-Date: Mon, 29 Aug 2022 11:07:35 -0700
-Message-ID: <CA+khW7h5KAqmhJB+3bCmeqs5EW927XnK1D+GrXqa3RUaxb1wTQ@mail.gmail.com>
-References: <20220824233117.1312810-1-haoluo@google.com> <20220824233117.1312810-2-haoluo@google.com>
- <9edbddb7-4a3b-f8d1-777c-66e5f8efc977@fb.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: cgroups v2 cpuset partition bug
+Date: Mon, 29 Aug 2022 22:19:24 -0400
+Message-ID: <23924a85-1ddc-64c7-68c7-2dbd53eea4ee@redhat.com>
+References: <C98773C9-F5ED-4664-BED1-5C03351130D4@gmail.com>
+ <YwT/BNqIdCEyUpFR@slm.duckdns.org>
+ <ef183fe9-8458-8a7f-2b8e-1c38666b6399@redhat.com>
+ <26A2A485-B70C-4361-8368-1A0081570E7C@gmail.com>
+ <961450c4-6b32-63ba-ff81-2f6184032de9@redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=7rQocjicZEmcxwKtCOFzf24LVnPFDEo/4tWTRLGIYcE=;
-        b=qL0rlGpyTRDVHdnZwy6wQJuIxEKjKUMQsjBj7a45cUf5S7tBgmg1bF5R/f9PiNR0Gn
-         KWmzUDLsZEk79MqhJnyZIZRGIBj5vp4MUALH8RpbD+Ww3cAQo1OpenjDGzmr2p2oQC+i
-         fV8bTXy5/C0GwxuhaUkXKHsUBy7mGZcNC/Aa2SjE+YGMUHyqf7fMt7TKYLMKz3CNYYXS
-         pSxOmPMS5EROBSrSBSm4vbT+wUQAoBGMxub3djMvhplX2nbVFS45/nEhV4wct2EMl9/t
-         Lk4TwfNdzKaBlQeNpeAj8WKQEyYuGVcbrNA+udLLIFWNW5Pc/dlmBmBBGvOEyl1iqYFr
-         Z5kA==
-In-Reply-To: <9edbddb7-4a3b-f8d1-777c-66e5f8efc977-b10kYP2dOMg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1661825966;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=acxiXerhGK/mk1WIiLY7l7lFOnLhh2aPqN8iFAXUUqg=;
+        b=ICmSuLKJXCyiXF+TNE5ioSfGe33YVOIiwzRSKQIdTlRYDyQ+5cUjLe+PIrpNjfq1lry4bR
+        Cl9n3sU1KERUrBHhJ7Nd8VGZQwywGrC/acoAPbpX73saveVP3v1GLLa7IwccbrsNkNlubl
+        bJ1+YumcEVdry65LB6EycExrqQV7R2g=
+Content-Language: en-US
+In-Reply-To: <961450c4-6b32-63ba-ff81-2f6184032de9-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Koutny <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: =?UTF-8?B?TWF4aW0g4oCcTUFYUEFJTuKAnSBNYWthcm92?= <maxpain177-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Aug 25, 2022 at 4:00 PM Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org> wrote:
+On 8/29/22 13:48, Waiman Long wrote:
 >
-> Hao, we missed the bpftool dump part for the above bpf_link_info so
-> a followup is needed.
-> Please take a look at tools/bpf/bpftool/link.c searching 'map_id'
-> for an example.
+> On 8/29/22 13:16, Maxim “MAXPAIN” Makarov wrote:
+>> Hi. I used top and htop programs to check what CPU is using, and it's 
+>> showing that this task is running on CPU 2, so I think it shows the 
+>> correct CPU that is currently being used.
+>> Please note that the containerd process has /system/runtime cgroup, 
+>> which inherits cpuset from the root cgroup. /system/runtime cgroup 
+>> doesn't have any cpuset settings. Maybe this is the reason?
+> Oh, that could be the reason. Yes, it is probably a bug that other 
+> sibling cgroups should also be updated. I will look into that.
+>>
+>> I tried to remove the lowlatency group with 
+>> cpuset.cpus.partition=root and do taskset -cp 4 1079 manually, and it 
+>> works without any restart.
+>>
+>> I updated my post on StackExchange and added some new screenshots, so 
+>> please check it out.
 
-Sure Yonghong. I was on vacation. Will do this today.
+I tried to reproduce it but couldn't so far. Would you mind telling me 
+what kernel version are you using to show this bug? BTW, how do you make 
+htop show the CPU number, the CPU number isn't there by default.  What 
+htop version are you using?
+
+Thanks,
+Longman
+
