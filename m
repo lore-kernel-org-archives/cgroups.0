@@ -1,10 +1,9 @@
 From: Kairui Song <ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/2] mm: memcontrol: remove mem_cgroup_kmem_disabled
-Date: Tue, 30 Aug 2022 15:45:01 +0800
-Message-ID: <CAMgjq7DTSXavytZUraNy0uGu9D+WngBKXMTjoA4Xha1NEUminA@mail.gmail.com>
-References: <20220830055949.12640-1-ryncsn@gmail.com> <20220830055949.12640-2-ryncsn@gmail.com>
- <Yw2x6T3xchjpzX7j@dhcp22.suse.cz> <CAMgjq7A+Ju247rC7+fo9jcZpK8rkd0Ou6e=7qzgL4rV3JWBX5w@mail.gmail.com>
- <Yw24cFGTtOZF7Cgw@dhcp22.suse.cz>
+Subject: Re: [PATCH 2/2] mm: memcontrol: make cgroup_memory_noswap a static key
+Date: Tue, 30 Aug 2022 16:50:38 +0800
+Message-ID: <CAMgjq7CM_SX3jLj9yp5hzAr6c3hBtS5nd4Nh4z8bTY8yWx-3KQ@mail.gmail.com>
+References: <20220830055949.12640-1-ryncsn@gmail.com> <20220830055949.12640-3-ryncsn@gmail.com>
+ <Yw21uOyEz9lLkI3p@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -12,69 +11,144 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc;
-        bh=96IRGBfcr5J9/GRtulzalfsCYmkGXye7ZPp+1XPMemc=;
-        b=ZaLX9vwlsNnUkPUmS7uMrUQJ7sNnSHEUaPBpt/On8HRnJbnSVy/lt90ZvWaMRgor2i
-         Ph/rqPOrHM7aPfcaIlY/XJfjku5scFdKAyvPfDJa9ks7ySKCKEO0BxxGEFjnF39umarH
-         AMMDGE9E6m0WhJbo6qgTLl1DORwnZX2YcomKG8ffyLrZT/NEXUpoVxGH5gUhiyEZGnqO
-         PgRJvnA6bxgbbt2Rwl8MTOpxXAjj8XWtjK+XDpKSlB2qMxtkiIgo/MCR82RisAtQBsxF
-         s+vPiZvoPHE8IFRDP2KxneJsozXta4d922Ya/hudxh32NBklMno0ZG7SB1NjCvkqQjAk
-         2w/g==
-In-Reply-To: <Yw24cFGTtOZF7Cgw-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+        bh=/4NmEBmRVS5u98WkgFxb7busgin0hbl0z7JMDpKPQqI=;
+        b=TMDmeULTGp3zYQ+RirhTSLeIsq6KmqYJ49vvOBhKY5C3ctMXCWGgwqs5tY9u4g6uvF
+         RUiemXktaGoLUnHw9D/UWxWHafa12IPc2pJwqY6ZuN0lhSwS35HQynC/ErGIUeYamtby
+         OuUm4J9bfeXoqofRGmNZ53n3MHhUQcRTzH15b4dlARX8Uv0h3+LDRcPQOlWFvDba5QjU
+         ge73zqtgh6uaaiWwiJ5Qot0luKdab4IVTBuIjUDXi4lTERaT/drddly1BzTKgXLBao3j
+         iPHgiPy86abgz0hCKRFCdQnh72YEpuJSGIeBx85eTPlUau5iHZM8CFE+JVxIr98b20NB
+         besg==
+In-Reply-To: <Yw21uOyEz9lLkI3p-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
 To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> =E4=BA=8E2022=E5=B9=B48=E6=9C=8830=E6=97=A5=
-=E5=91=A8=E4=BA=8C 15:12=E5=86=99=E9=81=93=EF=BC=9A
+=E5=91=A8=E4=BA=8C 15:01=E5=86=99=E9=81=93=EF=BC=9A
 >
-> On Tue 30-08-22 15:06:57, Kairui Song wrote:
-> > Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> =E4=BA=8E2022=E5=B9=B48=E6=9C=8830=E6=97=
-=A5=E5=91=A8=E4=BA=8C 14:45=E5=86=99=E9=81=93=EF=BC=9A
-> > >
-> > > On Tue 30-08-22 13:59:48, Kairui Song wrote:
-> > > > From: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-> > > >
-> > > > There are currently two helpers for checking if cgroup kmem
-> > > > accounting is enabled:
-> > > >
-> > > > - mem_cgroup_kmem_disabled
-> > > > - memcg_kmem_enabled
-> > >
-> > > Yes, this is a bit confusing indeed!
-> > >
-> > > > mem_cgroup_kmem_disabled is a simple helper that returns true if
-> > > > cgroup.memory=3Dnokmem is specified, otherwise returns false.
-> > > >
-> > > > memcg_kmem_enabled is a bit different, it returns true if
-> > > > cgroup.memory=3Dnokmem is not specified and there is at least one
-> > > > non-root cgroup ever created. And once there is any non-root memcg
-> > > > created, it won't go back to return false again.
-> > > >
-> > > > This may help improve performance for some corner use cases where
-> > > > the user enables memory cgroup and kmem accounting globally but nev=
-er
-> > > > create any cgroup.
-> > > >
-> > > > Considering that corner case is rare, especially nowadays cgroup is
-> > > > widely used as a standard way to organize services.
-> > >
-> > > Is it really that rare? Most configurations would use a default setup=
-, so
-> > > both MEMCG enabled and without nokmem on cmd line yet the memory
-> > > controller is not enabled in their setups.
+> On Tue 30-08-22 13:59:49, Kairui Song wrote:
+> > From: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 > >
-> > Actually I don't have too much confidence saying that as well... but
-> > AFAIK, almost all distros will create a few sub cgroup on boot by the
-> > init (eg. openrc, finit, systemd).
+> > cgroup_memory_noswap is used in many hot path, so make it a static key
+> > to lower the kernel overhead.
+> >
+> > Using 8G of ZRAM as SWAP, benchmark using `perf stat -d -d -d --repeat =
+100`
+> > with the following code snip in a non-root cgroup:
+> >
+> >    #include <stdio.h>
+> >    #include <string.h>
+> >    #include <linux/mman.h>
+> >    #include <sys/mman.h>
+> >    #define MB 1024UL * 1024UL
+> >    int main(int argc, char **argv){
+> >       void *p =3D mmap(NULL, 8000 * MB, PROT_READ | PROT_WRITE,
+> >                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+> >       memset(p, 0xff, 8000 * MB);
+> >       madvise(p, 8000 * MB, MADV_PAGEOUT);
+> >       memset(p, 0xff, 8000 * MB);
+> >       return 0;
+> >    }
+> >
+> > Before:
+> >           7,021.43 msec task-clock                #    0.967 CPUs utili=
+zed            ( +-  0.03% )
+> >              4,010      context-switches          #  573.853 /sec      =
+               ( +-  0.01% )
+> >                  0      cpu-migrations            #    0.000 /sec
+> >          2,052,057      page-faults               #  293.661 K/sec     =
+               ( +-  0.00% )
+> >     12,616,546,027      cycles                    #    1.805 GHz       =
+               ( +-  0.06% )  (39.92%)
+> >        156,823,666      stalled-cycles-frontend   #    1.25% frontend c=
+ycles idle     ( +-  0.10% )  (40.25%)
+> >        310,130,812      stalled-cycles-backend    #    2.47% backend cy=
+cles idle      ( +-  4.39% )  (40.73%)
+> >     18,692,516,591      instructions              #    1.49  insn per c=
+ycle
+> >                                                   #    0.01  stalled cy=
+cles per insn  ( +-  0.04% )  (40.75%)
+> >      4,907,447,976      branches                  #  702.283 M/sec     =
+               ( +-  0.05% )  (40.30%)
+> >         13,002,578      branch-misses             #    0.26% of all bra=
+nches          ( +-  0.08% )  (40.48%)
+> >      7,069,786,296      L1-dcache-loads           #    1.012 G/sec     =
+               ( +-  0.03% )  (40.32%)
+> >        649,385,847      L1-dcache-load-misses     #    9.13% of all L1-=
+dcache accesses  ( +-  0.07% )  (40.10%)
+> >      1,485,448,688      L1-icache-loads           #  212.576 M/sec     =
+               ( +-  0.15% )  (39.49%)
+> >         31,628,457      L1-icache-load-misses     #    2.13% of all L1-=
+icache accesses  ( +-  0.40% )  (39.57%)
+> >          6,667,311      dTLB-loads                #  954.129 K/sec     =
+               ( +-  0.21% )  (39.50%)
+> >          5,668,555      dTLB-load-misses          #   86.40% of all dTL=
+B cache accesses  ( +-  0.12% )  (39.03%)
+> >                765      iTLB-loads                #  109.476 /sec      =
+               ( +- 21.81% )  (39.44%)
+> >          4,370,351      iTLB-load-misses          # 214320.09% of all i=
+TLB cache accesses  ( +-  1.44% )  (39.86%)
+> >        149,207,254      L1-dcache-prefetches      #   21.352 M/sec     =
+               ( +-  0.13% )  (40.27%)
+> >
+> >            7.25869 +- 0.00203 seconds time elapsed  ( +-  0.03% )
+> >
+> > After:
+> >           6,576.16 msec task-clock                #    0.953 CPUs utili=
+zed            ( +-  0.10% )
+> >              4,020      context-switches          #  605.595 /sec      =
+               ( +-  0.01% )
+> >                  0      cpu-migrations            #    0.000 /sec
+> >          2,052,056      page-faults               #  309.133 K/sec     =
+               ( +-  0.00% )
+> >     11,967,619,180      cycles                    #    1.803 GHz       =
+               ( +-  0.36% )  (38.76%)
+> >        161,259,240      stalled-cycles-frontend   #    1.38% frontend c=
+ycles idle     ( +-  0.27% )  (36.58%)
+> >        253,605,302      stalled-cycles-backend    #    2.16% backend cy=
+cles idle      ( +-  4.45% )  (34.78%)
+> >     19,328,171,892      instructions              #    1.65  insn per c=
+ycle
+> >                                                   #    0.01  stalled cy=
+cles per insn  ( +-  0.10% )  (31.46%)
+> >      5,213,967,902      branches                  #  785.461 M/sec     =
+               ( +-  0.18% )  (30.68%)
+> >         12,385,170      branch-misses             #    0.24% of all bra=
+nches          ( +-  0.26% )  (34.13%)
+> >      7,271,687,822      L1-dcache-loads           #    1.095 G/sec     =
+               ( +-  0.12% )  (35.29%)
+> >        649,873,045      L1-dcache-load-misses     #    8.93% of all L1-=
+dcache accesses  ( +-  0.11% )  (41.41%)
+> >      1,950,037,608      L1-icache-loads           #  293.764 M/sec     =
+               ( +-  0.33% )  (43.11%)
+> >         31,365,566      L1-icache-load-misses     #    1.62% of all L1-=
+icache accesses  ( +-  0.39% )  (45.89%)
+> >          6,767,809      dTLB-loads                #    1.020 M/sec     =
+               ( +-  0.47% )  (48.42%)
+> >          6,339,590      dTLB-load-misses          #   95.43% of all dTL=
+B cache accesses  ( +-  0.50% )  (46.60%)
+> >                736      iTLB-loads                #  110.875 /sec      =
+               ( +-  1.79% )  (48.60%)
+> >          4,314,836      iTLB-load-misses          # 518653.73% of all i=
+TLB cache accesses  ( +-  0.63% )  (42.91%)
+> >        144,950,156      L1-dcache-prefetches      #   21.836 M/sec     =
+               ( +-  0.37% )  (41.39%)
+> >
+> >            6.89935 +- 0.00703 seconds time elapsed  ( +-  0.10% )
 >
-> Yeah, but do they enable the memory controller as well? Unless I am
-> missing something this will require at least one memcg enabled cgroup to
-> be created.
+> Do you happen to have a perf profile before and after to see which of
+> the paths really benefits from this?
 
-Systemd enable memory controller by default since ver 238 from 2018,
-but I'm not sure about the others.
-Now I think I was wrong about the assumption, will be sure to do more
-homework next time.
+No I don't have a clear profile data about which path benefit the most.
+The performance benchmark result can be stably reproduced, but perf
+record & report & diff doesn't seems too helpful, as I can't see a
+significant change of any single symbols.
 
-And thanks for the review!
+There are quite a few callers of memcg_swap_enabled and
+do_memsw_account (which also calls memcg_swap_enabled), to me, it
+seems multiple pieces of optimization caused an overall improvement.
+And a lower overhead for the branch predictor may also help in
+general.
+
+Any other suggestion about how to collect such data?
