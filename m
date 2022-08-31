@@ -1,99 +1,85 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v7 3/4] KVM: x86/mmu: count KVM mmu usage in secondary
- pagetable stats.
-Date: Tue, 30 Aug 2022 16:48:12 -0700
-Message-ID: <CAJD7tkafp25jfH1cTQksMa-xt6bAu3LKEWT0pCNYqtijhvjRYQ@mail.gmail.com>
-References: <20220823004639.2387269-1-yosryahmed@google.com>
- <20220823004639.2387269-4-yosryahmed@google.com> <Ywkq8HYyTI1eStSO@google.com>
- <Yw6GoWY411PrIRMx@google.com>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH v9 0/4] blk-throttle bugfix
+Date: Wed, 31 Aug 2022 19:31:58 +0800
+Message-ID: <eb7246b4-2cfe-a110-1e45-39f970e5441e@huaweicloud.com>
+References: <20220829022240.3348319-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc;
-        bh=tGVEnlLMpBamjr5zlczXq7fmwaznwoQ3idHABhgUuYM=;
-        b=KO+U0jA43GLZcwdXeyIX5nApqOewvbCN/kEwEioSXyjvoFoRRmxVAcOEse3v+CVhbj
-         jLnHHxVADcF5HhHRpQWGwFrUyrKwk/ndVvQHr5H0dAMUG9zgcyZoOT4OnkbuHncsWNgp
-         IkNnbqP9J0Dxp7txF3JCyMDpfIQ1B2h7kA+vEyRJqPQlMXi0WVQapPgKkZ3OF2ek4sMn
-         p7/0r48ezijpvcOm73x2lrXy/ZNJIVDm0GMPqolOSYldXS2Sms+cdrIs9fxhD8wqcVvN
-         GHItupLX5AYb2kO185XF6k+WC4V1D2cTOf9gvnN9lUQf3v7aPT+RAye8vYV/E7rrdfK6
-         dVeA==
-In-Reply-To: <Yw6GoWY411PrIRMx-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20220829022240.3348319-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Marc Zyngier <maz-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Alexandru Elisei <alexandru.elisei-5wv7dgnIgG8@public.gmane.org>, Suzuki K Poulose <suzuki.poulose-5wv7dgnIgG8@public.gmane.org>, Paolo Bonzini <pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vitaly Kuznetsov <vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Wanpeng Li <wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Jim Mattson <jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Oliver Upton <oupton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Huang-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Shaoqin <shaoqin.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Tue, Aug 30, 2022 at 2:52 PM Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> On Fri, Aug 26, 2022, Sean Christopherson wrote:
-> > On Tue, Aug 23, 2022, Yosry Ahmed wrote:
-> > > Count the pages used by KVM mmu on x86 in memory stats under secondary
-> > > pagetable stats (e.g. "SecPageTables" in /proc/meminfo) to give better
-> > > visibility into the memory consumption of KVM mmu in a similar way to
-> > > how normal user page tables are accounted.
-> > >
-> > > Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > > Reviewed-by: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > > ---
-> > >  arch/x86/kvm/mmu/mmu.c     | 16 ++++++++++++++--
-> > >  arch/x86/kvm/mmu/tdp_mmu.c | 12 ++++++++++++
-> > >  2 files changed, 26 insertions(+), 2 deletions(-)
-> > >
-> > > diff --git a/arch/x86/kvm/mmu/mmu.c b/arch/x86/kvm/mmu/mmu.c
-> > > index e418ef3ecfcb..4d38e4eba772 100644
-> > > --- a/arch/x86/kvm/mmu/mmu.c
-> > > +++ b/arch/x86/kvm/mmu/mmu.c
-> > > @@ -1665,6 +1665,18 @@ static inline void kvm_mod_used_mmu_pages(struct kvm *kvm, long nr)
-> > >     percpu_counter_add(&kvm_total_used_mmu_pages, nr);
-> > >  }
-> > >
-> > > +static void kvm_account_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
-> > > +{
-> > > +   kvm_mod_used_mmu_pages(kvm, +1);
-> > > +   kvm_account_pgtable_pages((void *)sp->spt, +1);
-> > > +}
-> > > +
-> > > +static void kvm_unaccount_mmu_page(struct kvm *kvm, struct kvm_mmu_page *sp)
-> > > +{
-> > > +   kvm_mod_used_mmu_pages(kvm, -1);
-> > > +   kvm_account_pgtable_pages((void *)sp->spt, -1);
-> > > +}
-> >
-> > Hrm, this is causing build on x86 issues for me.  AFAICT, modpost doesn't detect
-> > that this creates a new module dependency on __mod_lruvec_page_state() and so doesn't
-> > refresh vmlinux.symvers.
-> >
-> >   ERROR: modpost: "__mod_lruvec_page_state" [arch/x86/kvm/kvm.ko] undefined!
-> >   make[2]: *** [scripts/Makefile.modpost:128: modules-only.symvers] Error 1
-> >   make[1]: *** [Makefile:1769: modules] Error 2
-> >   make[1]: *** Waiting for unfinished jobs....
-> >   Kernel: arch/x86/boot/bzImage is ready  (#128)
-> >   make[1]: Leaving directory '/usr/local/google/home/seanjc/build/kernel/vm'
-> >   make: *** [Makefile:222: __sub-make] Error 2
-> >
-> > Both gcc and clang yield the same behavior, so I doubt it's the compiler doing
-> > something odd.  Cleaning the build makes the problem go away, but that's a poor
-> > band-aid.
-> >
-> > If I squash this with the prior patch that adds kvm_account_pgtable_pages() to
-> > kvm_host.h, modpost detects the need to refresh and all is well.
-> >
-> > Given that ARM doesn't support building KVM as a module, i.e. can't run afoul
-> > of whatever modpost weirdness I'm hitting, I'm inclined to squash this with the
-> > previous patch and punt on the modpost issue so that we can get this merged.
-> >
-> > Any objections?  Or thoughts on what's going wrong?
->
-> Pushed the series with the squash to branch `for_paolo/6.1` at:
->
+Hi, Jens!
 
-Thanks Sean!
+在 2022/08/29 10:22, Yu Kuai 写道:
+> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> 
+> Changes in v9:
+>   - renaming the flag BIO_THROTTLED to BIO_BPS_THROTTLED, and always
+>   apply iops limit in path 1;
+>   - add tag for patch 4
+> Changes in v8:
+>   - use a new solution in patch 1
+>   - move cleanups to a separate patchset
+>   - rename bytes/io_skipped to carryover_bytes/ios in patch 4
+> Changes in v7:
+>   - add patch 5 to improve handling of re-entered bio for bps limit
+>   - as suggested by Tejun, add some comments
+>   - sdd some Acked tag by Tejun
+> Changes in v6:
+>   - rename parameter in patch 3
+>   - add comments and reviewed tag for patch 4
+> Changes in v5:
+>   - add comments in patch 4
+>   - clear bytes/io_skipped in throtl_start_new_slice_with_credit() in
+>   patch 4
+>   - and cleanup patches 5-8
+> Changes in v4:
+>   - add reviewed-by tag for patch 1
+>   - add patch 2,3
+>   - use a different way to fix io hung in patch 4
+> Changes in v3:
+>   - fix a check in patch 1
+>   - fix link err in patch 2 on 32-bit platform
+>   - handle overflow in patch 2
+> Changes in v2:
+>   - use a new solution suggested by Ming
+>   - change the title of patch 1
+>   - add patch 2
+> 
+> Patch 1 fix that blk-throttle can't work if multiple bios are throttle.
+> Patch 2 fix overflow while calculating wait time.
+> Patch 3,4 fix io hung due to configuration updates.
+> 
+> Previous version:
+> v1: https://lore.kernel.org/all/20220517134909.2910251-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+> v2: https://lore.kernel.org/all/20220518072751.1188163-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+> v3: https://lore.kernel.org/all/20220519085811.879097-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+> v4: https://lore.kernel.org/all/20220523082633.2324980-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+> v5: https://lore.kernel.org/all/20220528064330.3471000-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+> v6: https://lore.kernel.org/all/20220701093441.885741-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org/
+> v7: https://lore.kernel.org/all/20220802140415.2960284-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org/
+> v8: https://lore.kernel.org/all/20220823033130.874230-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org/
+> 
+> Yu Kuai (4):
+>    blk-throttle: fix that io throttle can only work for single bio
+>    blk-throttle: prevent overflow while calculating wait time
+>    blk-throttle: factor out code to calculate ios/bytes_allowed
+>    blk-throttle: fix io hung due to configuration updates
 
->     https://github.com/sean-jc/linux.git
->
-> Unless you hear otherwise, it will make its way to kvm/queue "soon".
->
-> Please yell if there are objections.
+Can you apply this patchset now?
+
+Thanks,
+Kuai
+> 
+>   block/bio.c               |   2 -
+>   block/blk-throttle.c      | 137 +++++++++++++++++++++++++-------------
+>   block/blk-throttle.h      |  11 ++-
+>   include/linux/bio.h       |   2 +-
+>   include/linux/blk_types.h |   2 +-
+>   5 files changed, 104 insertions(+), 50 deletions(-)
+> 
+
