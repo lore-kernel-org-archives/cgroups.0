@@ -1,85 +1,121 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH v9 0/4] blk-throttle bugfix
-Date: Wed, 31 Aug 2022 19:31:58 +0800
-Message-ID: <eb7246b4-2cfe-a110-1e45-39f970e5441e@huaweicloud.com>
-References: <20220829022240.3348319-1-yukuai1@huaweicloud.com>
+From: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: add pids.peak interface for pids controller
+Date: Wed, 31 Aug 2022 15:49:03 -0700
+Message-ID: <20220831224903.454303-1-joshdon@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220829022240.3348319-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date;
+        bh=Ipn4iHe/yg+mxny4c01g7Po8t+R0aRPugnC10Z422Fk=;
+        b=p2AFOEi5vGtb1tUhtbYlZ00F68mil8VLs1Lo6ATVSmPdszXyCTRaayeQPRhLYq+tb4
+         2BU0EHsinRDXn7QQtVcOjaYfomxoAKYknKBD/vtrXVN00hCBJSPaxOJXQWffslTgrkw+
+         9PlpVdZoxZ4xyvUiGv3eo5+6U+maaN+achNbh1vmJDxZuCtb86Zb55Qwz0ZVC8EUh0Xc
+         AFvv8Eb0w/a3rfdHIS9BfzXyfcV9staK9ZdwJxgpBoIm0r+mhmLAXCtvBWpRphL2UbBQ
+         klas0NiDWrY1Qstm9kx09OPX3GwNhdNGfUwlRwXQwp3forhXV6wko2ESn8fqSQ+kA0zN
+         MG1g==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Hi, Jens!
+pids.peak tracks the high watermark of usage for number of pids. This
+helps give a better baseline on which to set pids.max. Polling
+pids.current isn't really feasible, since it would potentially miss
+short-lived spikes.
 
-在 2022/08/29 10:22, Yu Kuai 写道:
-> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> 
-> Changes in v9:
->   - renaming the flag BIO_THROTTLED to BIO_BPS_THROTTLED, and always
->   apply iops limit in path 1;
->   - add tag for patch 4
-> Changes in v8:
->   - use a new solution in patch 1
->   - move cleanups to a separate patchset
->   - rename bytes/io_skipped to carryover_bytes/ios in patch 4
-> Changes in v7:
->   - add patch 5 to improve handling of re-entered bio for bps limit
->   - as suggested by Tejun, add some comments
->   - sdd some Acked tag by Tejun
-> Changes in v6:
->   - rename parameter in patch 3
->   - add comments and reviewed tag for patch 4
-> Changes in v5:
->   - add comments in patch 4
->   - clear bytes/io_skipped in throtl_start_new_slice_with_credit() in
->   patch 4
->   - and cleanup patches 5-8
-> Changes in v4:
->   - add reviewed-by tag for patch 1
->   - add patch 2,3
->   - use a different way to fix io hung in patch 4
-> Changes in v3:
->   - fix a check in patch 1
->   - fix link err in patch 2 on 32-bit platform
->   - handle overflow in patch 2
-> Changes in v2:
->   - use a new solution suggested by Ming
->   - change the title of patch 1
->   - add patch 2
-> 
-> Patch 1 fix that blk-throttle can't work if multiple bios are throttle.
-> Patch 2 fix overflow while calculating wait time.
-> Patch 3,4 fix io hung due to configuration updates.
-> 
-> Previous version:
-> v1: https://lore.kernel.org/all/20220517134909.2910251-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-> v2: https://lore.kernel.org/all/20220518072751.1188163-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-> v3: https://lore.kernel.org/all/20220519085811.879097-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-> v4: https://lore.kernel.org/all/20220523082633.2324980-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-> v5: https://lore.kernel.org/all/20220528064330.3471000-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-> v6: https://lore.kernel.org/all/20220701093441.885741-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org/
-> v7: https://lore.kernel.org/all/20220802140415.2960284-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org/
-> v8: https://lore.kernel.org/all/20220823033130.874230-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org/
-> 
-> Yu Kuai (4):
->    blk-throttle: fix that io throttle can only work for single bio
->    blk-throttle: prevent overflow while calculating wait time
->    blk-throttle: factor out code to calculate ios/bytes_allowed
->    blk-throttle: fix io hung due to configuration updates
+This interface is analogous to memory.peak.
 
-Can you apply this patchset now?
+Signed-off-by: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/pids.c | 37 +++++++++++++++++++++++++++++++++++--
+ 1 file changed, 35 insertions(+), 2 deletions(-)
 
-Thanks,
-Kuai
-> 
->   block/bio.c               |   2 -
->   block/blk-throttle.c      | 137 +++++++++++++++++++++++++-------------
->   block/blk-throttle.h      |  11 ++-
->   include/linux/bio.h       |   2 +-
->   include/linux/blk_types.h |   2 +-
->   5 files changed, 104 insertions(+), 50 deletions(-)
-> 
+diff --git a/kernel/cgroup/pids.c b/kernel/cgroup/pids.c
+index 511af87f685e..7695e60bcb40 100644
+--- a/kernel/cgroup/pids.c
++++ b/kernel/cgroup/pids.c
+@@ -47,6 +47,7 @@ struct pids_cgroup {
+ 	 */
+ 	atomic64_t			counter;
+ 	atomic64_t			limit;
++	int64_t				watermark;
+ 
+ 	/* Handle for "pids.events" */
+ 	struct cgroup_file		events_file;
+@@ -85,6 +86,16 @@ static void pids_css_free(struct cgroup_subsys_state *css)
+ 	kfree(css_pids(css));
+ }
+ 
++static void pids_update_watermark(struct pids_cgroup *p, int64_t nr_pids)
++{
++	/*
++	 * This is racy, but we don't need perfectly accurate tallying of
++	 * the watermark, and this lets us avoid extra atomic overhead.
++	 */
++	if (nr_pids > READ_ONCE(p->watermark))
++		WRITE_ONCE(p->watermark, nr_pids);
++}
++
+ /**
+  * pids_cancel - uncharge the local pid count
+  * @pids: the pid cgroup state
+@@ -128,8 +139,11 @@ static void pids_charge(struct pids_cgroup *pids, int num)
+ {
+ 	struct pids_cgroup *p;
+ 
+-	for (p = pids; parent_pids(p); p = parent_pids(p))
+-		atomic64_add(num, &p->counter);
++	for (p = pids; parent_pids(p); p = parent_pids(p)) {
++		int64_t new = atomic64_add_return(num, &p->counter);
++
++		pids_update_watermark(p, new);
++	}
+ }
+ 
+ /**
+@@ -156,6 +170,12 @@ static int pids_try_charge(struct pids_cgroup *pids, int num)
+ 		 */
+ 		if (new > limit)
+ 			goto revert;
++
++		/*
++		 * Not technically accurate if we go over limit somewhere up
++		 * the hierarchy, but that's tolerable for the watermark.
++		 */
++		pids_update_watermark(p, new);
+ 	}
+ 
+ 	return 0;
+@@ -311,6 +331,14 @@ static s64 pids_current_read(struct cgroup_subsys_state *css,
+ 	return atomic64_read(&pids->counter);
+ }
+ 
++static s64 pids_peak_read(struct cgroup_subsys_state *css,
++			  struct cftype *cft)
++{
++	struct pids_cgroup *pids = css_pids(css);
++
++	return READ_ONCE(pids->watermark);
++}
++
+ static int pids_events_show(struct seq_file *sf, void *v)
+ {
+ 	struct pids_cgroup *pids = css_pids(seq_css(sf));
+@@ -331,6 +359,11 @@ static struct cftype pids_files[] = {
+ 		.read_s64 = pids_current_read,
+ 		.flags = CFTYPE_NOT_ON_ROOT,
+ 	},
++	{
++		.name = "peak",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.read_s64 = pids_peak_read,
++	},
+ 	{
+ 		.name = "events",
+ 		.seq_show = pids_events_show,
+-- 
+2.37.2.672.g94769d06f0-goog
 
