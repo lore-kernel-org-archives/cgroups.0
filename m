@@ -1,85 +1,254 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v12 07/10] cgroup/cpuset: Relocate a code block in validate_change()
-Date: Thu,  1 Sep 2022 16:57:42 -0400
-Message-ID: <20220901205745.323326-8-longman@redhat.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v12 05/10] cgroup/cpuset: Add a new isolated cpus.partition type
+Date: Thu,  1 Sep 2022 16:57:40 -0400
+Message-ID: <20220901205745.323326-6-longman@redhat.com>
 References: <20220901205745.323326-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1662065904;
+        s=mimecast20190719; t=1662065903;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Yjsoi9jMIhi4zCKfFUwtWjEtMVRAwWq9W9IHBrQtpuI=;
-        b=QZQfM2J6FPuYHgUQAC7kjCf2UScmNF2Y9m0Pfmshu9umEttd7oWjapKPosJpnKAUMzOBqS
-        P6rgQUT8G1ouw2jld3kaT1RUtVL+UHzdaSxbXZVnbbiIVMqyt86HB4L0llMWitnQSJHjyf
-        VOErfn9a83NjQd5PKyznVWM+rXsgxt0=
-In-Reply-To: <20220901205745.323326-1-longman@redhat.com>
+        bh=QnU31Nsmclkfh0AaTfrO7QonqM4KLt/sdDNST71bYRQ=;
+        b=NuxXNw1esXngW4UgYEwTOk9SMvC3LyeSM1tBdjQru7iqvAb9cwZc5eNgj1UvgoyInJ0JTm
+        fIqEK7UEL/t2szEUS0jvaXwsg8ex08SW4C95Y3tzb9vDY6YdCLhT/24WpvMS0ZyEz06aKC
+        BZ9DtFjOUneetWcGI7vqu87bFfDRfvU=
+In-Reply-To: <20220901205745.323326-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Waiman Long <longman@redhat.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-This patch moves down the exclusive cpu and memory check in
-validate_change(). There is no functional change.
+Cpuset v1 uses the sched_load_balance control file to determine if load
+balancing should be enabled.  Cpuset v2 gets rid of sched_load_balance
+as its use may require disabling load balancing at cgroup root.
 
-Signed-off-by: Waiman Long <longman@redhat.com>
+For workloads that require very low latency like DPDK, the latency
+jitters caused by periodic load balancing may exceed the desired
+latency limit.
+
+When cpuset v2 is in use, the only way to avoid this latency cost is to
+use the "isolcpus=" kernel boot option to isolate a set of CPUs. After
+the kernel boot, however, there is no way to add or remove CPUs from
+this isolated set. For workloads that are more dynamic in nature, that
+means users have to provision enough CPUs for the worst case situation
+resulting in excess idle CPUs.
+
+To address this issue for cpuset v2, a new cpuset.cpus.partition type
+"isolated" is added which allows the creation of a cpuset partition
+without load balancing. This will allow system administrators to
+dynamically adjust the size of isolated partition to the current need
+of the workload without rebooting the system.
+
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup/cpuset.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+ kernel/cgroup/cpuset.c | 74 +++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 63 insertions(+), 11 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 15fcd2f86108..b0d921d03f62 100644
+index 7f64bb1a7bef..f53ca022549c 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -741,22 +741,6 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+@@ -178,11 +178,15 @@ struct cpuset {
+  *
+  *   0 - member (not a partition root)
+  *   1 - partition root
++ *   2 - partition root without load balancing (isolated)
+  *  -1 - invalid partition root
++ *  -2 - invalid isolated partition root
+  */
+ #define PRS_MEMBER		0
+ #define PRS_ROOT		1
++#define PRS_ISOLATED		2
+ #define PRS_INVALID_ROOT	-1
++#define PRS_INVALID_ISOLATED	-2
  
- 	par = parent_cs(cur);
+ static inline bool is_prs_invalid(int prs_state)
+ {
+@@ -282,7 +286,8 @@ static inline int is_partition_invalid(const struct cpuset *cs)
+  */
+ static inline void make_partition_invalid(struct cpuset *cs)
+ {
+-	cs->partition_root_state = PRS_INVALID_ROOT;
++	if (is_partition_valid(cs))
++		cs->partition_root_state = -cs->partition_root_state;
+ }
  
--	/*
--	 * If either I or some sibling (!= me) is exclusive, we can't
--	 * overlap
--	 */
--	ret = -EINVAL;
--	cpuset_for_each_child(c, css, par) {
--		if ((is_cpu_exclusive(trial) || is_cpu_exclusive(c)) &&
--		    c != cur &&
--		    cpumask_intersects(trial->cpus_allowed, c->cpus_allowed))
--			goto out;
--		if ((is_mem_exclusive(trial) || is_mem_exclusive(c)) &&
--		    c != cur &&
--		    nodes_intersects(trial->mems_allowed, c->mems_allowed))
--			goto out;
--	}
--
+ /*
+@@ -1380,17 +1385,19 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+ 
+ 	if (cmd == partcmd_update) {
+ 		/*
+-		 * Check for possible transition between PRS_ROOT
+-		 * and PRS_INVALID_ROOT.
++		 * Check for possible transition between valid and invalid
++		 * partition root.
+ 		 */
+ 		switch (cs->partition_root_state) {
+ 		case PRS_ROOT:
++		case PRS_ISOLATED:
+ 			if (part_error)
+-				new_prs = PRS_INVALID_ROOT;
++				new_prs = -old_prs;
+ 			break;
+ 		case PRS_INVALID_ROOT:
++		case PRS_INVALID_ISOLATED:
+ 			if (!part_error)
+-				new_prs = PRS_ROOT;
++				new_prs = -old_prs;
+ 			break;
+ 		}
+ 	}
+@@ -1400,7 +1407,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+ 
  	/*
- 	 * Cpusets with tasks - existing or newly being attached - can't
- 	 * be changed to have empty cpus_allowed or mems_allowed.
-@@ -781,6 +765,22 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
- 				       trial->cpus_allowed))
- 		goto out;
+ 	 * Transitioning between invalid to valid or vice versa may require
+-	 * changing CS_CPU_EXCLUSIVE.
++	 * changing CS_CPU_EXCLUSIVE and CS_SCHED_LOAD_BALANCE.
+ 	 */
+ 	if (old_prs != new_prs) {
+ 		if (is_prs_invalid(old_prs) && !is_cpu_exclusive(cs) &&
+@@ -1443,8 +1450,17 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+ 	if (adding || deleting)
+ 		update_tasks_cpumask(parent);
  
 +	/*
-+	 * If either I or some sibling (!= me) is exclusive, we can't
-+	 * overlap
++	 * Set or clear CS_SCHED_LOAD_BALANCE when partcmd_update, if necessary.
++	 * rebuild_sched_domains_locked() may be called.
 +	 */
-+	ret = -EINVAL;
-+	cpuset_for_each_child(c, css, par) {
-+		if ((is_cpu_exclusive(trial) || is_cpu_exclusive(c)) &&
-+		    c != cur &&
-+		    cpumask_intersects(trial->cpus_allowed, c->cpus_allowed))
-+			goto out;
-+		if ((is_mem_exclusive(trial) || is_mem_exclusive(c)) &&
-+		    c != cur &&
-+		    nodes_intersects(trial->mems_allowed, c->mems_allowed))
-+			goto out;
++	if (old_prs != new_prs) {
++		if (old_prs == PRS_ISOLATED)
++			update_flag(CS_SCHED_LOAD_BALANCE, cs, 1);
++		else if (new_prs == PRS_ISOLATED)
++			update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
 +	}
+ 	notify_partition_change(cs, old_prs);
+-
+ 	return 0;
+ }
+ 
+@@ -1519,6 +1535,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+ 		if ((cp != cs) && old_prs) {
+ 			switch (parent->partition_root_state) {
+ 			case PRS_ROOT:
++			case PRS_ISOLATED:
+ 				update_parent = true;
+ 				break;
+ 
+@@ -1528,7 +1545,8 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+ 				 * invalid, child partition roots become
+ 				 * invalid too.
+ 				 */
+-				new_prs = PRS_INVALID_ROOT;
++				if (is_partition_valid(cp))
++					new_prs = -cp->partition_root_state;
+ 				break;
+ 			}
+ 		}
+@@ -2110,6 +2128,7 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ static int update_prstate(struct cpuset *cs, int new_prs)
+ {
+ 	int err = 0, old_prs = cs->partition_root_state;
++	bool sched_domain_rebuilt = false;
+ 	struct cpuset *parent = parent_cs(cs);
+ 	struct tmpmasks tmpmask;
+ 
+@@ -2120,8 +2139,10 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 	 * For a previously invalid partition root, leave it at being
+ 	 * invalid if new_prs is not "member".
+ 	 */
+-	if (new_prs && is_prs_invalid(old_prs))
++	if (new_prs && is_prs_invalid(old_prs)) {
++		cs->partition_root_state = -new_prs;
+ 		return 0;
++	}
+ 
+ 	if (alloc_cpumasks(NULL, &tmpmask))
+ 		return -ENOMEM;
+@@ -2147,6 +2168,22 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 			update_flag(CS_CPU_EXCLUSIVE, cs, 0);
+ 			goto out;
+ 		}
 +
- 	ret = 0;
++		if (new_prs == PRS_ISOLATED) {
++			/*
++			 * Disable the load balance flag should not return an
++			 * error unless the system is running out of memory.
++			 */
++			update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
++			sched_domain_rebuilt = true;
++		}
++	} else if (old_prs && new_prs) {
++		/*
++		 * A change in load balance state only, no change in cpumasks.
++		 */
++		update_flag(CS_SCHED_LOAD_BALANCE, cs, (new_prs != PRS_ISOLATED));
++		sched_domain_rebuilt = true;
++		goto out;	/* Sched domain is rebuilt in update_flag() */
+ 	} else {
+ 		/*
+ 		 * Switching back to member is always allowed even if it
+@@ -2168,6 +2205,12 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 
+ 		/* Turning off CS_CPU_EXCLUSIVE will not return error */
+ 		update_flag(CS_CPU_EXCLUSIVE, cs, 0);
++
++		if (!is_sched_load_balance(cs)) {
++			/* Make sure load balance is on */
++			update_flag(CS_SCHED_LOAD_BALANCE, cs, 1);
++			sched_domain_rebuilt = true;
++		}
+ 	}
+ 
+ 	update_tasks_cpumask(parent);
+@@ -2175,13 +2218,14 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 	if (parent->child_ecpus_count)
+ 		update_sibling_cpumasks(parent, cs, &tmpmask);
+ 
+-	rebuild_sched_domains_locked();
++	if (!sched_domain_rebuilt)
++		rebuild_sched_domains_locked();
  out:
- 	rcu_read_unlock();
+ 	/*
+ 	 * Make partition invalid if an error happen
+ 	 */
+ 	if (err)
+-		new_prs = PRS_INVALID_ROOT;
++		new_prs = -new_prs;
+ 	spin_lock_irq(&callback_lock);
+ 	cs->partition_root_state = new_prs;
+ 	spin_unlock_irq(&callback_lock);
+@@ -2691,12 +2735,18 @@ static int sched_partition_show(struct seq_file *seq, void *v)
+ 	case PRS_ROOT:
+ 		seq_puts(seq, "root\n");
+ 		break;
++	case PRS_ISOLATED:
++		seq_puts(seq, "isolated\n");
++		break;
+ 	case PRS_MEMBER:
+ 		seq_puts(seq, "member\n");
+ 		break;
+ 	case PRS_INVALID_ROOT:
+ 		seq_puts(seq, "root invalid\n");
+ 		break;
++	case PRS_INVALID_ISOLATED:
++		seq_puts(seq, "isolated invalid\n");
++		break;
+ 	}
+ 	return 0;
+ }
+@@ -2717,6 +2767,8 @@ static ssize_t sched_partition_write(struct kernfs_open_file *of, char *buf,
+ 		val = PRS_ROOT;
+ 	else if (!strcmp(buf, "member"))
+ 		val = PRS_MEMBER;
++	else if (!strcmp(buf, "isolated"))
++		val = PRS_ISOLATED;
+ 	else
+ 		return -EINVAL;
+ 
 -- 
 2.31.1
 
