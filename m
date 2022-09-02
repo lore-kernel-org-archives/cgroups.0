@@ -1,133 +1,110 @@
-From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH bpf-next v3 03/13] bpf: Define bpf_map_{get,put}_memcg for !CONFIG_MEMCG_KMEM
-Date: Fri,  2 Sep 2022 02:29:53 +0000
-Message-ID: <20220902023003.47124-4-laoar.shao@gmail.com>
+From: Yafang Shao <laoar.shao@gmail.com>
+Subject: [PATCH bpf-next v3 04/13] bpf: Call bpf_map_init_from_attr() immediately after map creation
+Date: Fri,  2 Sep 2022 02:29:54 +0000
+Message-ID: <20220902023003.47124-5-laoar.shao@gmail.com>
 References: <20220902023003.47124-1-laoar.shao@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=4M2wIpbTEjtveSWIAJbVEhxb96NjEAIn1cqGJw9nWyA=;
-        b=jzt0LFNt/yVYD/3NUXzIBoEoI9rvRu241Gab6qFW2E6IBiyGaWJo2ZbTstkJc00kFU
-         9pZPZRV9AJV3QOLgrCv3w0o+0Zz6uTS264NCkTYPkC1JfBWOvOR9S/q6z3QfpqL91hZc
-         Gw3YnTYgM5ch+cMtv6X6YSKgZFeHqM5lAc0gvuZUP6goEJJhbrHBcgfQHPcp/Hsa0J64
-         +mB9/MkbcbHohZh88cJ3YPci73xopvwgOehe+rNkUxm4HG3wIVKo9q/fsO4eN9/sJLWH
-         7EiEn2lzWBAUsRbZFv3jPcIH8tsIo6MVCShqoy1P8lviU8jjl7rXfdx2Su2uGv7ACgRC
-         t22g==
-In-Reply-To: <20220902023003.47124-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=lQgh1HsLC8Sr1uJR87Ka1cZJSomKx/sCkb/6FvelFCU=;
+        b=GNM1otao9St9RcA3yQ2IOmoal2de7Aanqe1/0mcaal6MCxkxyZmTnCpGD/Cr1ARKSw
+         yVZEPKD3vM/kyoPXf5rqU1fLzWmSHim+pt0OJWmVkiEksLM2022QbUh/BXPbjW8YXsph
+         mhWZQ54ypqiUslBquWro1iXnjY0hHT4KE6fvb661vn6c9dYttYelYz26bQWMzsAjysfu
+         dFACgNLHHgI6EeTssgJAGAx8z9hDLdnvG0lR0JA0X6HhbNmY/qMzZq+bHaQoacm8KA5Q
+         UYGm9M48RoD1SDpE8qT9irswpe4ZvkSgp/ApaWtl/Ozsks59OCMC+wLvx63d0AZdYbvx
+         sJeg==
+In-Reply-To: <20220902023003.47124-1-laoar.shao@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, sdf@google.com, haoluo@google.com, jolsa@kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, songmuchun@bytedance.com, akpm@linux-foundation.org, tj@kernel.org, lizefan.x@bytedance.com
+Cc: cgroups@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, linux-mm@kvack.org, Yafang Shao <laoar.shao@gmail.com>
 
-We can use this helper when CONFIG_MEMCG_KMEM or CONFIG_MEMCG is not set.
-It also moves bpf_map_{get,put}_memcg into include/linux/bpf.h, so
-these two helpers can be used in other source files.
+In order to make all other map related memory allocations been allocated
+after memcg is saved in the map, we should save the memcg immediately
+after map creation. But the map is created in bpf_map_area_alloc(),
+within which we can't get the related bpf_map (except with a pointer
+casting which may be error prone), so we can do it in
+bpf_map_init_from_attr(), which is used by all bpf maps.
 
-Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+bpf_map_init_from_attr() is executed immediately after
+bpf_map_area_alloc() for almost all bpf maps except bpf_struct_ops,
+devmap and hashmap, so this patch changes these three maps.
+
+In the future we will change the return type of bpf_map_init_from_attr()
+from void to int for error cases, so put it immediately after
+bpf_map_area_alloc() will make it eary to handle the error case.
+
+Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
 ---
- include/linux/bpf.h        | 26 ++++++++++++++++++++++++++
- include/linux/memcontrol.h | 10 ++++++++++
- kernel/bpf/syscall.c       | 13 -------------
- 3 files changed, 36 insertions(+), 13 deletions(-)
+ kernel/bpf/bpf_struct_ops.c | 2 +-
+ kernel/bpf/devmap.c         | 5 ++---
+ kernel/bpf/hashtab.c        | 4 ++--
+ 3 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/bpf.h b/include/linux/bpf.h
-index 9c16749..a50d29c 100644
---- a/include/linux/bpf.h
-+++ b/include/linux/bpf.h
-@@ -27,6 +27,7 @@
- #include <linux/bpfptr.h>
- #include <linux/btf.h>
- #include <linux/rcupdate_trace.h>
-+#include <linux/memcontrol.h>
+diff --git a/kernel/bpf/bpf_struct_ops.c b/kernel/bpf/bpf_struct_ops.c
+index 84b2d9d..36f24f8 100644
+--- a/kernel/bpf/bpf_struct_ops.c
++++ b/kernel/bpf/bpf_struct_ops.c
+@@ -624,6 +624,7 @@ static struct bpf_map *bpf_struct_ops_map_alloc(union bpf_attr *attr)
  
- struct bpf_verifier_env;
- struct bpf_verifier_log;
-@@ -2594,4 +2595,29 @@ static inline void bpf_cgroup_atype_get(u32 attach_btf_id, int cgroup_atype) {}
- static inline void bpf_cgroup_atype_put(int cgroup_atype) {}
- #endif /* CONFIG_BPF_LSM */
+ 	st_map->st_ops = st_ops;
+ 	map = &st_map->map;
++	bpf_map_init_from_attr(map, attr);
  
-+#ifdef CONFIG_MEMCG_KMEM
-+static inline struct mem_cgroup *bpf_map_get_memcg(const struct bpf_map *map)
-+{
-+	if (map->objcg)
-+		return get_mem_cgroup_from_objcg(map->objcg);
-+
-+	return root_mem_cgroup;
-+}
-+
-+static inline void bpf_map_put_memcg(struct mem_cgroup *memcg)
-+{
-+	mem_cgroup_put(memcg);
-+}
-+
-+#else
-+static inline struct mem_cgroup *bpf_map_get_memcg(const struct bpf_map *map)
-+{
-+	return root_memcg();
-+}
-+
-+static inline void bpf_map_put_memcg(struct mem_cgroup *memcg)
-+{
-+}
-+#endif
-+
- #endif /* _LINUX_BPF_H */
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 4d31ce5..6040b5c 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -361,6 +361,11 @@ struct mem_cgroup {
+ 	st_map->uvalue = bpf_map_area_alloc(vt->size, NUMA_NO_NODE);
+ 	st_map->links =
+@@ -637,7 +638,6 @@ static struct bpf_map *bpf_struct_ops_map_alloc(union bpf_attr *attr)
  
- extern struct mem_cgroup *root_mem_cgroup;
+ 	mutex_init(&st_map->lock);
+ 	set_vm_flush_reset_perms(st_map->image);
+-	bpf_map_init_from_attr(map, attr);
  
-+static inline struct mem_cgroup *root_memcg(void)
-+{
-+	return root_mem_cgroup;
-+}
-+
- enum page_memcg_data_flags {
- 	/* page->memcg_data is a pointer to an objcgs vector */
- 	MEMCG_DATA_OBJCGS = (1UL << 0),
-@@ -1147,6 +1152,11 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
- #define MEM_CGROUP_ID_SHIFT	0
- #define MEM_CGROUP_ID_MAX	0
- 
-+static inline struct mem_cgroup *root_memcg(void)
-+{
-+	return NULL;
-+}
-+
- static inline struct mem_cgroup *folio_memcg(struct folio *folio)
- {
- 	return NULL;
-diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
-index 7ce024c..eaf1906 100644
---- a/kernel/bpf/syscall.c
-+++ b/kernel/bpf/syscall.c
-@@ -433,19 +433,6 @@ static void bpf_map_release_memcg(struct bpf_map *map)
- 		obj_cgroup_put(map->objcg);
+ 	return map;
  }
+diff --git a/kernel/bpf/devmap.c b/kernel/bpf/devmap.c
+index f9a87dc..20decc7 100644
+--- a/kernel/bpf/devmap.c
++++ b/kernel/bpf/devmap.c
+@@ -127,9 +127,6 @@ static int dev_map_init_map(struct bpf_dtab *dtab, union bpf_attr *attr)
+ 	 */
+ 	attr->map_flags |= BPF_F_RDONLY_PROG;
  
--static struct mem_cgroup *bpf_map_get_memcg(const struct bpf_map *map)
--{
--	if (map->objcg)
--		return get_mem_cgroup_from_objcg(map->objcg);
 -
--	return root_mem_cgroup;
--}
+-	bpf_map_init_from_attr(&dtab->map, attr);
 -
--static void bpf_map_put_memcg(struct mem_cgroup *memcg)
--{
--	mem_cgroup_put(memcg);
--}
+ 	if (attr->map_type == BPF_MAP_TYPE_DEVMAP_HASH) {
+ 		dtab->n_buckets = roundup_pow_of_two(dtab->map.max_entries);
+ 
+@@ -167,6 +164,8 @@ static struct bpf_map *dev_map_alloc(union bpf_attr *attr)
+ 	if (!dtab)
+ 		return ERR_PTR(-ENOMEM);
+ 
++	bpf_map_init_from_attr(&dtab->map, attr);
++
+ 	err = dev_map_init_map(dtab, attr);
+ 	if (err) {
+ 		bpf_map_area_free(dtab);
+diff --git a/kernel/bpf/hashtab.c b/kernel/bpf/hashtab.c
+index eb1263f..fc7242c 100644
+--- a/kernel/bpf/hashtab.c
++++ b/kernel/bpf/hashtab.c
+@@ -508,10 +508,10 @@ static struct bpf_map *htab_map_alloc(union bpf_attr *attr)
+ 	if (!htab)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	lockdep_register_key(&htab->lockdep_key);
 -
- void *bpf_map_kmalloc_node(const struct bpf_map *map, size_t size, gfp_t flags,
- 			   int node)
- {
+ 	bpf_map_init_from_attr(&htab->map, attr);
+ 
++	lockdep_register_key(&htab->lockdep_key);
++
+ 	if (percpu_lru) {
+ 		/* ensure each CPU's lru list has >=1 elements.
+ 		 * since we are at it, make each lru list has the same
 -- 
 1.8.3.1
 
