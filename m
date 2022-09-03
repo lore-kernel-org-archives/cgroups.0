@@ -1,98 +1,149 @@
-From: syzbot <syzbot+66ad6d47392c3113957e-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
-Subject: [syzbot] BUG: unable to handle kernel paging request in mem_cgroup_track_foreign_dirty_slowpath
-Date: Fri, 02 Sep 2022 14:02:31 -0700
-Message-ID: <0000000000005f372b05e7b80c2e@google.com>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: [PATCH] blk-throttle: clean up codes that can't be reached
+Date: Sat,  3 Sep 2022 14:28:26 +0800
+Message-ID: <20220903062826.1099085-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Hello,
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-syzbot found the following issue on:
+While doing code coverage testing while CONFIG_BLK_DEV_THROTTLING_LOW is
+disabled, we found that there are many codes can never be reached.
 
-HEAD commit:    85413d1e802e Merge branch 'for-next/fixes' into for-kernelci
-git tree:       git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux.git for-kernelci
-console output: https://syzkaller.appspot.com/x/log.txt?x=108cec3b080000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=57b9bfeca947ab90
-dashboard link: https://syzkaller.appspot.com/bug?extid=66ad6d47392c3113957e
-compiler:       Debian clang version 13.0.1-++20220126092033+75e33f71c2da-1~exp1~20220126212112.63, GNU ld (GNU Binutils for Debian) 2.35.2
-userspace arch: arm64
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=14a3b1e5080000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=16dead7d080000
+This patch move such codes inside "#ifdef CONFIG_BLK_DEV_THROTTLING_LOW".
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+66ad6d47392c3113957e-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
-
-Unable to handle kernel paging request at virtual address 00000000000012e8
-Mem abort info:
-  ESR = 0x0000000096000006
-  EC = 0x25: DABT (current EL), IL = 32 bits
-  SET = 0, FnV = 0
-  EA = 0, S1PTW = 0
-  FSC = 0x06: level 2 translation fault
-Data abort info:
-  ISV = 0, ISS = 0x00000006
-  CM = 0, WnR = 0
-user pgtable: 4k pages, 48-bit VAs, pgdp=000000011163c000
-[00000000000012e8] pgd=080000011204a003, p4d=080000011204a003, pud=080000011068f003, pmd=0000000000000000
-Internal error: Oops: 96000006 [#1] PREEMPT SMP
-Modules linked in:
-CPU: 1 PID: 926 Comm: syz-executor308 Not tainted 6.0.0-rc3-syzkaller-16800-g85413d1e802e #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 07/22/2022
-pstate: 204000c5 (nzCv daIF +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-pc : mem_cgroup_track_foreign_dirty_slowpath+0x3c/0x1e4 mm/memcontrol.c:4595
-lr : mem_cgroup_track_foreign_dirty_slowpath+0x38/0x1e4 mm/memcontrol.c:4586
-sp : ffff800016c9ba80
-x29: ffff800016c9ba80 x28: ffff0000d12cb500 x27: 0c00000000000001
-x26: 0000000000000001 x25: ffff0000c017b000 x24: 0000000000000100
-x23: ffff80000d379000 x22: 00000001000233ce x21: fffffc0003463000
-x20: ffff0000c3849060 x19: 0000000000000000 x18: 000000000000013a
-x17: ffff80000c04d6bc x16: ffff80000dbb8658 x15: ffff0000d12cb500
-x14: 0000000000000000 x13: 00000000ffffffff x12: ffff0000d12cb500
-x11: ff808000095ecd98 x10: 0000000000000000 x9 : 0000000000000000
-x8 : ffff0000c3849000 x7 : ffff80000856f3a4 x6 : 0000000000000000
-x5 : 0000000000000080 x4 : 0000000000000000 x3 : 0000000000000002
-x2 : 0000000000000010 x1 : ffff80000cb90d29 x0 : 0000000000000001
-Call trace:
- mem_cgroup_track_foreign_dirty_slowpath+0x3c/0x1e4
- mem_cgroup_track_foreign_dirty include/linux/memcontrol.h:1663 [inline]
- folio_account_dirtied+0x430/0x650 mm/page-writeback.c:2575
- __folio_mark_dirty+0xbc/0x180 mm/page-writeback.c:2615
- block_dirty_folio+0x10c/0x1ec fs/buffer.c:640
- folio_mark_dirty+0xbc/0x208 mm/page-writeback.c:2748
- filemap_page_mkwrite+0x26c/0x5dc mm/filemap.c:3418
- do_page_mkwrite+0x74/0x288 mm/memory.c:2971
- wp_page_shared+0x8c/0x4e4 mm/memory.c:3316
- do_wp_page+0x86c/0x110c mm/memory.c:3466
- handle_pte_fault mm/memory.c:4929 [inline]
- __handle_mm_fault mm/memory.c:5053 [inline]
- handle_mm_fault+0x878/0xa40 mm/memory.c:5151
- __do_page_fault arch/arm64/mm/fault.c:502 [inline]
- do_page_fault+0x428/0x79c arch/arm64/mm/fault.c:602
- do_mem_abort+0x54/0x130 arch/arm64/mm/fault.c:818
- el0_da+0x70/0x16c arch/arm64/kernel/entry-common.c:502
- el0t_64_sync_handler+0xcc/0xf0 arch/arm64/kernel/entry-common.c:645
- el0t_64_sync+0x18c/0x190
-Code: aa1503e0 aa1403e1 9400006c f9400288 (f9497669) 
----[ end trace 0000000000000000 ]---
-----------------
-Code disassembly (best guess):
-   0:	aa1503e0 	mov	x0, x21
-   4:	aa1403e1 	mov	x1, x20
-   8:	9400006c 	bl	0x1b8
-   c:	f9400288 	ldr	x8, [x20]
-* 10:	f9497669 	ldr	x9, [x19, #4840] <-- trapping instruction
-
-
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+ block/blk-throttle.c | 90 +++++++++++++++++++++++++++-----------------
+ 1 file changed, 56 insertions(+), 34 deletions(-)
 
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-syzbot can test patches for this issue, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 9f5fe62afff9..667b2958471a 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -1673,6 +1673,40 @@ struct blkcg_policy blkcg_policy_throtl = {
+ 	.pd_free_fn		= throtl_pd_free,
+ };
+ 
++void blk_throtl_cancel_bios(struct request_queue *q)
++{
++	struct cgroup_subsys_state *pos_css;
++	struct blkcg_gq *blkg;
++
++	spin_lock_irq(&q->queue_lock);
++	/*
++	 * queue_lock is held, rcu lock is not needed here technically.
++	 * However, rcu lock is still held to emphasize that following
++	 * path need RCU protection and to prevent warning from lockdep.
++	 */
++	rcu_read_lock();
++	blkg_for_each_descendant_post(blkg, pos_css, q->root_blkg) {
++		struct throtl_grp *tg = blkg_to_tg(blkg);
++		struct throtl_service_queue *sq = &tg->service_queue;
++
++		/*
++		 * Set the flag to make sure throtl_pending_timer_fn() won't
++		 * stop until all throttled bios are dispatched.
++		 */
++		blkg_to_tg(blkg)->flags |= THROTL_TG_CANCELING;
++		/*
++		 * Update disptime after setting the above flag to make sure
++		 * throtl_select_dispatch() won't exit without dispatching.
++		 */
++		tg_update_disptime(tg);
++
++		throtl_schedule_pending_timer(sq, jiffies + 1);
++	}
++	rcu_read_unlock();
++	spin_unlock_irq(&q->queue_lock);
++}
++
++#ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+ static unsigned long __tg_last_low_overflow_time(struct throtl_grp *tg)
+ {
+ 	unsigned long rtime = jiffies, wtime = jiffies;
+@@ -1777,39 +1811,6 @@ static bool throtl_hierarchy_can_upgrade(struct throtl_grp *tg)
+ 	return false;
+ }
+ 
+-void blk_throtl_cancel_bios(struct request_queue *q)
+-{
+-	struct cgroup_subsys_state *pos_css;
+-	struct blkcg_gq *blkg;
+-
+-	spin_lock_irq(&q->queue_lock);
+-	/*
+-	 * queue_lock is held, rcu lock is not needed here technically.
+-	 * However, rcu lock is still held to emphasize that following
+-	 * path need RCU protection and to prevent warning from lockdep.
+-	 */
+-	rcu_read_lock();
+-	blkg_for_each_descendant_post(blkg, pos_css, q->root_blkg) {
+-		struct throtl_grp *tg = blkg_to_tg(blkg);
+-		struct throtl_service_queue *sq = &tg->service_queue;
+-
+-		/*
+-		 * Set the flag to make sure throtl_pending_timer_fn() won't
+-		 * stop until all throttled bios are dispatched.
+-		 */
+-		blkg_to_tg(blkg)->flags |= THROTL_TG_CANCELING;
+-		/*
+-		 * Update disptime after setting the above flag to make sure
+-		 * throtl_select_dispatch() won't exit without dispatching.
+-		 */
+-		tg_update_disptime(tg);
+-
+-		throtl_schedule_pending_timer(sq, jiffies + 1);
+-	}
+-	rcu_read_unlock();
+-	spin_unlock_irq(&q->queue_lock);
+-}
+-
+ static bool throtl_can_upgrade(struct throtl_data *td,
+ 	struct throtl_grp *this_tg)
+ {
+@@ -2005,7 +2006,6 @@ static void blk_throtl_update_idletime(struct throtl_grp *tg)
+ 	tg->checked_last_finish_time = last_finish_time;
+ }
+ 
+-#ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+ static void throtl_update_latency_buckets(struct throtl_data *td)
+ {
+ 	struct avg_latency_bucket avg_latency[2][LATENCY_BUCKET_SIZE];
+@@ -2086,6 +2086,28 @@ static void throtl_update_latency_buckets(struct throtl_data *td)
+ static inline void throtl_update_latency_buckets(struct throtl_data *td)
+ {
+ }
++
++static void blk_throtl_update_idletime(struct throtl_grp *tg)
++{
++}
++
++static void throtl_downgrade_check(struct throtl_grp *tg)
++{
++}
++
++static void throtl_upgrade_check(struct throtl_grp *tg)
++{
++}
++
++static bool throtl_can_upgrade(struct throtl_data *td,
++	struct throtl_grp *this_tg)
++{
++	return false;
++}
++
++static void throtl_upgrade_state(struct throtl_data *td)
++{
++}
+ #endif
+ 
+ bool __blk_throtl_bio(struct bio *bio)
+-- 
+2.31.1
+
