@@ -1,160 +1,78 @@
-From: Bagas Sanjaya <bagasdotme@gmail.com>
-Subject: Re: [PATCH v12 09/10] cgroup/cpuset: Update description of
- cpuset.cpus.partition in cgroup-v2.rst
-Date: Sun, 4 Sep 2022 15:20:27 +0700
-Message-ID: <YxRfy/SaKkJSm5jY@debian.me>
-References: <20220901205745.323326-1-longman@redhat.com>
- <20220901205745.323326-10-longman@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH cgroup/for-6.1] cgroup: Remove data-race around
+ cgrp_dfl_visible
+Date: Sun, 4 Sep 2022 09:23:32 -1000
+Message-ID: <YxT7NASKiuZDx6PT@slm.duckdns.org>
+References: <CAEHB249jcoG=sMGLUgqw3Yf+SjZ7ZkUfF_M+WcyQGCAe77o2kA@mail.gmail.com>
+ <20220819072256.fn7ctciefy4fc4cu@wittgenstein>
+ <CALbthtdFY+GHTzGH9OujzqpOtWZAqsU3MAsjv5OpwZUW6gVa7A@mail.gmail.com>
+ <YwuySgH4j6h2CGvk@slm.duckdns.org>
+ <20220829072741.tsxfgjp75lywzlgn@wittgenstein>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="oIHDfZi7tkZKklmK"
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date;
-        bh=zfiWejN/Bz3YBQupNom1bcY/9klYVsjCN66XEd476z0=;
-        b=SBEuv7blCe057KcuIJdNRyj3g2VOPTQq1llrfLNFf289npI8wf/m4D6m8V6XY3lUXp
-         Re5/g1GMCzHeowzixKLlyMxv657lA13nPeZhWWJ2OC266RIOX72T1P7U1QIAkGITZTkZ
-         OhFiv4GP/cj1MqfFk/e6TYkNwyKqbZZknzVH95RjMeoEs2gWuzEfbEQyCHG1wbtuLJHO
-         pjSg3+fSIKJmTcugr2ndTCmihpEGjkt8TbVpopZ7zzVFWdZ8gYe+YJI8gXqyPjNVYdVK
-         Rz3pc71J6gK/cLFZWzrR+DMSWgYikjoU/F8/eqeKn7KVfwAFofKX6tJeywPhCEF2HQqP
-         7Blw==
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date;
+        bh=t1xTYA4sjuGCh4pw3N6/8X8I4YHHyXAx3KGLnNc3nds=;
+        b=JuQdFQznN6fig6R2GT4wFv4boLIPrh52pkOjt7Lk8nwSgI65990K1hikW1+UWssukE
+         hkoBhQ15kid+XL/9WfgKqmYdxnNhivT42x0Favs9JqSVfbZk7KM6V/nvm87u8L5ENJxK
+         sUnBMp3KajXtvWlKqVkJ2nmon4lFv5WpkK7pP63O25Cz9I3Lhra7fp0atBGfasq85YMU
+         0piwSM/rdcd/050P3aavp1ybATVo4tInhsgWKqxmQjpQ02QhR1ya7lZCMid3kzVbxR0H
+         j6RZa8ATgc8gnLynqW/GwbdGRJVzFBafXFM12/beAvTFdWSb/jM8PqtVC1QNo4dxT1YA
+         tMQg==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20220901205745.323326-10-longman@redhat.com>
+In-Reply-To: <20220829072741.tsxfgjp75lywzlgn@wittgenstein>
 List-ID: <cgroups.vger.kernel.org>
-To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Marcelo Tosatti <mtosatti@redhat.com>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Christian Brauner <brauner@kernel.org>
+Cc: Gabriel Ryan <gabe@cs.columbia.edu>, Abhishek Shah <abhishek.shah@columbia.edu>, linux-kernel@vger.kernel.org, andrii@kernel.org, ast@kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, daniel@iogearbox.net, hannes@cmpxchg.org, john.fastabend@gmail.com, kafai@fb.com, kpsingh@kernel.org, lizefan.x@bytedance.com, netdev@vger.kernel.org, songliubraving@fb.com, yhs@fb.com
 
+From dc79ec1b232ad2c165d381d3dd2626df4ef9b5a4 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Sun, 4 Sep 2022 09:16:19 -1000
 
---oIHDfZi7tkZKklmK
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+There's a seemingly harmless data-race around cgrp_dfl_visible detected by
+kernel concurrency sanitizer. Let's remove it by throwing WRITE/READ_ONCE at
+it.
 
-On Thu, Sep 01, 2022 at 04:57:44PM -0400, Waiman Long wrote:
->  	It accepts only the following input values when written to.
-> =20
->  	  =3D=3D=3D=3D=3D=3D=3D=3D	=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> -	  "root"	a partition root
-> -	  "member"	a non-root member of a partition
-> +	  "member"	Non-root member of a partition
-> +	  "root"	Partition root
-> +	  "isolated"	Partition root without load balancing
->  	  =3D=3D=3D=3D=3D=3D=3D=3D	=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> =20
-><snipped>
-> +	On read, the "cpuset.cpus.partition" file can show the following
-> +	values.
-> +
-> +	  =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D	=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D
-> +	  "member"			Non-root member of a partition
-> +	  "root"			Partition root
-> +	  "isolated"			Partition root without load balancing
-> +	  "root invalid (<reason>)"	Invalid partition root
-> +	  "isolated invalid (<reason>)"	Invalid isolated partition root
-> +	  =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D	=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D
-> +
-
-These tables above produced htmldocs warnings:
-
-Documentation/admin-guide/cgroup-v2.rst:2191: WARNING: Malformed table.
-Text in column margin in table line 4.
-
-=3D=3D=3D=3D=3D=3D=3D=3D      =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-"member"      Non-root member of a partition
-"root"        Partition root
-"isolated"    Partition root without load balancing
-=3D=3D=3D=3D=3D=3D=3D=3D      =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-Documentation/admin-guide/cgroup-v2.rst:2229: WARNING: Malformed table.
-Text in column margin in table line 5.
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D        =
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D
-"member"                      Non-root member of a partition
-"root"                        Partition root
-"isolated"                    Partition root without load balancing
-"root invalid (<reason>)"     Invalid partition root
-"isolated invalid (<reason>)" Invalid isolated partition root
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D        =
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D
-
-I have applied the fixup:
-
----- >8 ----
-
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-=
-guide/cgroup-v2.rst
-index 76b3ea9fd5c560..77b6faecf066cb 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -2185,11 +2185,11 @@ Cpuset Interface Files
-=20
- 	It accepts only the following input values when written to.
-=20
--	  =3D=3D=3D=3D=3D=3D=3D=3D	=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-+	  =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D	=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
- 	  "member"	Non-root member of a partition
- 	  "root"	Partition root
- 	  "isolated"	Partition root without load balancing
--	  =3D=3D=3D=3D=3D=3D=3D=3D	=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-+	  =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D	=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-=20
- 	The root cgroup is always a partition root and its state
- 	cannot be changed.  All other non-root cgroups start out as
-@@ -2222,13 +2222,13 @@ Cpuset Interface Files
- 	On read, the "cpuset.cpus.partition" file can show the following
- 	values.
-=20
--	  =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D	=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D
-+	  =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D	=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
- 	  "member"			Non-root member of a partition
- 	  "root"			Partition root
- 	  "isolated"			Partition root without load balancing
- 	  "root invalid (<reason>)"	Invalid partition root
- 	  "isolated invalid (<reason>)"	Invalid isolated partition root
--	  =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D	=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D
-+	  =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D	=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-=20
- 	In the case of an invalid partition root, a descriptive string on
- 	why the partition is invalid is included within parentheses.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Abhishek Shah <abhishek.shah@columbia.edu>
+Cc: Gabriel Ryan <gabe@cs.columbia.edu>
+Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
+Link: https://lore.kernel.org/netdev/20220819072256.fn7ctciefy4fc4cu@wittgenstein/
+---
+Applied to cgroup/for-6.1.
 
 Thanks.
 
---=20
-An old man doll... just what I always wanted! - Clara
+ kernel/cgroup/cgroup.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
---oIHDfZi7tkZKklmK
-Content-Type: application/pgp-signature; name="signature.asc"
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 0005de2e2ed9..e0b72eb5d283 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -2173,7 +2173,7 @@ static int cgroup_get_tree(struct fs_context *fc)
+ 	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
+ 	int ret;
+ 
+-	cgrp_dfl_visible = true;
++	WRITE_ONCE(cgrp_dfl_visible, true);
+ 	cgroup_get_live(&cgrp_dfl_root.cgrp);
+ 	ctx->root = &cgrp_dfl_root;
+ 
+@@ -6098,7 +6098,7 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
+ 		struct cgroup *cgrp;
+ 		int ssid, count = 0;
+ 
+-		if (root == &cgrp_dfl_root && !cgrp_dfl_visible)
++		if (root == &cgrp_dfl_root && !READ_ONCE(cgrp_dfl_visible))
+ 			continue;
+ 
+ 		seq_printf(m, "%d:", root->hierarchy_id);
+-- 
+2.37.3
 
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCYxRfxAAKCRD2uYlJVVFO
-o3SHAQClBqZgslhw004gM4yBhkfde6wdEJ2nw/MXorNJ8fTClQD+JtUvFXJzGoUu
-rSAT7jqqrPGSs2nO4gsLQKWjeu/V6gQ=
-=Tjsc
------END PGP SIGNATURE-----
-
---oIHDfZi7tkZKklmK--
