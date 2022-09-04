@@ -1,43 +1,129 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v12 00/10] cgroup/cpuset: cpu partition code fixes &
- enhancements
-Date: Sun, 4 Sep 2022 10:48:38 -1000
-Message-ID: <YxUPJqrsWvZoXXhZ@slm.duckdns.org>
-References: <20220901205745.323326-1-longman@redhat.com>
+Subject: [PATCH 1/2 cgroup/for-6.1] cgroup: Improve cftype add/rm error
+ handling
+Date: Sun, 4 Sep 2022 11:09:53 -1000
+Message-ID: <YxUUISLVLEIRBwEY@slm.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date;
-        bh=l3XlvtUxRBxEdbMEdKHUlRAxmIFOa1PhP6QcRf9whvo=;
-        b=CTdZcGNlqVJCtE/o2YQJgHj2u1letdzly71G8AwP+23usqZVUHLIE4Oz3/6KDs4S/k
-         xDVHrwKau2bdDO3p+4GJEE4K7QECOh3FVRneojsgcLqQYwzUA5pvl4Yvan5dpVZbzmnj
-         zEwEP/xpz/w8QJ1Xp4WhhURNX3I5WhNWJivedm5ORPCrVqUmrPIKRy1zFldhV5dNTRoq
-         V23Zef6lxQSydwiS4VjveXx6w3ImkA3qsLIQevMCoDrtHryqAG0gDcf7EhpcC4gyjlsD
-         XzkCRIGAwLFS1oyrxeott3phfyF91tvQ/Ujs2x48XZwLbJcl0iw4nXvv9FP/95crcZo6
-         nckw==
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :sender:from:to:cc:subject:date;
+        bh=RrHh9O6PhzAN31NW2y2ora7UtS8+X9Q/3gVI7YIt4sI=;
+        b=Es/XHRaQSNag8OoZiPCnqwQgmvL8hUgaGZoHJIoW5bYrllYQf7FBUBrF+wy9JBPDMY
+         Z9aCYBRqT/GJ1Prc/KY65W+T+F0dkO7pTVmzJE+wVwfpzr7Gl7MJeEWffwL/bX4PLDWS
+         G+oaZ6izK24lKQEcLKDZwqhiiarpnc9gomBCVJPFia3q7q8Hb/sU9MEmM72Qa6kriNqH
+         IhHC96/q/5HQDZIVTPY4D1NgQjDNUlRSxoseQOUAIDUQ7rldP34ws/nQMLvfojE0tMXr
+         OeOaoliBcxA3VFafiJGY77Bwx+4IBgHMCLkY0I8wX9Yy1vARGzXlcYT00uL6atMMKZIt
+         jUcQ==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20220901205745.323326-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+To: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Thu, Sep 01, 2022 at 04:57:35PM -0400, Waiman Long wrote:
-> v12:
->  - Change patch 1 to enable update_tasks_cpumask() for top_cpuset except
->    for percpu kthreads.
->  - Add 2 more patches to make exclusivity rule violations invalidate the
->    partition and its siblings instead of failing the change to make it
->    consistent with other cpuset changes.
->  - Update documentation and test script accordingly.
+Let's track whether a cftype is currently added or not using a new flag
+__CFTYPE_ADDED so that duplicate operations can be failed safely and
+consistently allow using empty cftypes.
 
-Applied to cgroup/for-6.1 with the doc tables fixed.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+Hello,
 
-Thanks a lot for sticking with it. This looks great.
+If no one objects, imma apply these two cgroup file handling cleanup patches
+to cgroup/for-6.1 in a few days.
 
--- 
-tejun
+Thanks.
+
+ include/linux/cgroup-defs.h |    1 +
+ kernel/cgroup/cgroup.c      |   27 ++++++++++++++++++++-------
+ 2 files changed, 21 insertions(+), 7 deletions(-)
+
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -131,6 +131,7 @@ enum {
+ 	/* internal flags, do not use outside cgroup core proper */
+ 	__CFTYPE_ONLY_ON_DFL	= (1 << 16),	/* only on default hierarchy */
+ 	__CFTYPE_NOT_ON_DFL	= (1 << 17),	/* not on default hierarchy */
++	__CFTYPE_ADDED		= (1 << 18),
+ };
+ 
+ /*
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -4166,19 +4166,26 @@ static void cgroup_exit_cftypes(struct c
+ 		cft->ss = NULL;
+ 
+ 		/* revert flags set by cgroup core while adding @cfts */
+-		cft->flags &= ~(__CFTYPE_ONLY_ON_DFL | __CFTYPE_NOT_ON_DFL);
++		cft->flags &= ~(__CFTYPE_ONLY_ON_DFL | __CFTYPE_NOT_ON_DFL |
++				__CFTYPE_ADDED);
+ 	}
+ }
+ 
+ static int cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ {
+ 	struct cftype *cft;
++	int ret = 0;
+ 
+ 	for (cft = cfts; cft->name[0] != '\0'; cft++) {
+ 		struct kernfs_ops *kf_ops;
+ 
+ 		WARN_ON(cft->ss || cft->kf_ops);
+ 
++		if (cft->flags & __CFTYPE_ADDED) {
++			ret = -EBUSY;
++			break;
++		}
++
+ 		if ((cft->flags & CFTYPE_PRESSURE) && !cgroup_psi_enabled())
+ 			continue;
+ 
+@@ -4194,26 +4201,26 @@ static int cgroup_init_cftypes(struct cg
+ 		if (cft->max_write_len && cft->max_write_len != PAGE_SIZE) {
+ 			kf_ops = kmemdup(kf_ops, sizeof(*kf_ops), GFP_KERNEL);
+ 			if (!kf_ops) {
+-				cgroup_exit_cftypes(cfts);
+-				return -ENOMEM;
++				ret = -ENOMEM;
++				break;
+ 			}
+ 			kf_ops->atomic_write_len = cft->max_write_len;
+ 		}
+ 
+ 		cft->kf_ops = kf_ops;
+ 		cft->ss = ss;
++		cft->flags |= __CFTYPE_ADDED;
+ 	}
+ 
+-	return 0;
++	if (ret)
++		cgroup_exit_cftypes(cfts);
++	return ret;
+ }
+ 
+ static int cgroup_rm_cftypes_locked(struct cftype *cfts)
+ {
+ 	lockdep_assert_held(&cgroup_mutex);
+ 
+-	if (!cfts || !cfts[0].ss)
+-		return -ENOENT;
+-
+ 	list_del(&cfts->node);
+ 	cgroup_apply_cftypes(cfts, false);
+ 	cgroup_exit_cftypes(cfts);
+@@ -4235,6 +4242,12 @@ int cgroup_rm_cftypes(struct cftype *cft
+ {
+ 	int ret;
+ 
++	if (!cfts || cfts[0].name[0] == '\0')
++		return 0;
++
++	if (!(cfts[0].flags & __CFTYPE_ADDED))
++		return -ENOENT;
++
+ 	mutex_lock(&cgroup_mutex);
+ 	ret = cgroup_rm_cftypes_locked(cfts);
+ 	mutex_unlock(&cgroup_mutex);
