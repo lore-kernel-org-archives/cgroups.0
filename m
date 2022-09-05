@@ -1,10 +1,10 @@
 From: Zhongkun He <hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [Phishing Risk] [External] Re: [PATCH] cgroup/cpuset: Add a new
- isolated mems.policy type.
-Date: Mon, 5 Sep 2022 18:30:38 +0800
-Message-ID: <c05bdeac-b354-0ac7-3233-27f8e5cbb38a@bytedance.com>
-References: <20220902063303.1057-1-hezhongkun.hzk@bytedance.com>
- <YxT/liaotbiOod51@slm.duckdns.org>
+Subject: Re: [External] Re: [PATCH] cgroup/cpuset: Add a new isolated
+ mems.policy type.
+Date: Mon, 5 Sep 2022 18:30:55 +0800
+Message-ID: <0e5f380b-9201-0f56-9144-ce8449491fc8@bytedance.com>
+References: <20220904040241.1708-1-hezhongkun.hzk@bytedance.com>
+ <YxWbBYZKDTrkmlOe@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -12,36 +12,33 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
          :user-agent:mime-version:date:message-id:from:to:cc:subject:date;
-        bh=gtvu1sOWJAtKexo39ijvJL1dgptfKWjzICln4Ve7K/4=;
-        b=a0S+cI5o4IcMxp8BPR8AUgnrlaVxXq0POxlWQ7zqp6D+VsbpNz9X/FqxXJq1bb3htf
-         AI2Fb/m2tjO32ImNzN/g9EZ4QJ9uLhJrjyLjP2hyytCMZPkc8ZmSI62u8tKtDVp4r3Q2
-         GB2+9fMem/RLmVYcmRp+VWgr9ZDHiUxkQWmiqNGZJ3o9e07vD2epHCS3LTnx1fojPMmC
-         eU5/E6EcLmpxcqm6BYvWwNyiXy58q/gXG90uLX2JeH9QidVC5y3jLGZ9mVJ8PzCvFKEm
-         1lBq2dvG9QwsH1mvnoxB/sf1hWsIAXXWBmBPgQfe0aaIZ6BYnWlIlh6MLeKtRWLObzI2
-         BQzg==
-In-Reply-To: <YxT/liaotbiOod51-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+        bh=08C+VXVc0IMFZrrErYdVw4bP2ZSZwMhBjMLfYmODNYY=;
+        b=5qJtR8o8q181yaW02Pelm8vTh5nB2r4JcZaAQf0dDH/GMDD0eJ3Idryy96VUutJSOz
+         KQ5J9dfV/XmiSfy5EmB0QFQTPnznNeCLysW/MtuxyOf9or/9pCi7+kTulpJV0lqNPJaQ
+         l+qYtBb67hvNTpaB8DY83GYE8wxcqjjYVCk6I1zxMATw+o/9r/pyKNIOVDLDTLlVpS0N
+         mjwDdQQgRjmDm88FKrmPj0gSJ5pK7bPiwQ+N+4s+ZDrbz3QrdEkhWW4XHITKpitraDVS
+         JxW2ocZ64qsQC7v9cRrVwhvjFX0BsZnzhBr9owyS4NVMexUpNLtQvfy3woNaTPNw5LTq
+         1snw==
+In-Reply-To: <YxWbBYZKDTrkmlOe-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-Hi Tejun, thanks for your reply.
+Hi Michal, thanks for your reply.
 
-We usually use numactl to set the memory policy, but it cannot be 
-changed dynamically. In addition, the mempolicy of cpuset can provide a 
-more convenient interface for management and control panel.
+The current 'mempolicy' is hierarchically independent. The default value 
+of the child is to inherit from the parent. The modification of the 
+child policy will not be restricted by the parent.
 
-Sorry,I don't quite understand the meaning of "don't enforce anything 
-resource related". Does it mean mempolicy, such as "prefer:2" must 
-specify node? Or "cpuset.mems.policy" need to specify a default value?
-(cpuset.mems.policy does not require a default value.)
+Of course, there are other options, such as the child's policy mode must 
+be the same as the parent's. node can be the subset of parent's, but the 
+interleave type will be complicated, that's why hierarchy independence 
+is used. It would be better if you have other suggestions?
 
 Thanks.
 
-
-> Hello,
-> 
-> On Fri, Sep 02, 2022 at 02:33:03PM +0800, hezhongkun wrote:
+> On Sun 04-09-22 12:02:41, hezhongkun wrote:
 >> From: Zhongkun He <hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 >>
 >> Mempolicy is difficult to use because it is set in-process
@@ -59,24 +56,14 @@ Thanks.
 >>
 >> cpuset's policy is owned by itself, but descendants will
 >> get the default mempolicy from parent.
->>
+> 
+> What is the hierarchical behavior of the policy? Say parent has a
+> stronger requirement (say bind) than a child (prefer)?
+>   
 >> How to use the mempolicy interface:
 >> 	echo prefer:2 > /sys/fs/cgroup/zz/cpuset.mems.policy
 >> 	echo bind:1-3 > /sys/fs/cgroup/zz/cpuset.mems.policy
 >>          echo interleave:0,1,2,3 >/sys/fs/cgroup/zz/cpuset.mems.policy
->> Show the policy:
->> 	cat /sys/fs/cgroup/zz/cpuset.mems.policy
->> 		prefer:2
->> 	cat /sys/fs/cgroup/zz/cpuset.mems.policy
->> 		bind:1-3
->> 	cat /sys/fs/cgroup/zz/cpuset.mems.policy
->> 		interleave:0-3
->> Clear the policy:
->> 	echo default > /sys/fs/cgroup/zz/cpuset.mems.policy
 > 
-> So, I'm a fan of adding cgroup functionalities which don't enforce anything
-> resource related. What you're proposing can easily be achieved with userland
-> tooling, right?
-> 
-> Thanks.
-> 
+> Am I just confused or did you really mean to combine all these
+> together?
