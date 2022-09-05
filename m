@@ -1,210 +1,82 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-6.1] BUILD SUCCESS
- a8c52eba880a6e8c07fc2130604f8e386b90b763
-Date: Mon, 05 Sep 2022 17:36:42 +0800
-Message-ID: <6315c32a.iDsFKkdoDHQjUf7r%lkp@intel.com>
+From: Zhongkun He <hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [Phishing Risk] [External] Re: [PATCH] cgroup/cpuset: Add a new
+ isolated mems.policy type.
+Date: Mon, 5 Sep 2022 18:30:38 +0800
+Message-ID: <c05bdeac-b354-0ac7-3233-27f8e5cbb38a@bytedance.com>
+References: <20220902063303.1057-1-hezhongkun.hzk@bytedance.com>
+ <YxT/liaotbiOod51@slm.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1662370636; x=1693906636;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=q6MAvMNFf4RmDnWHKYWm3tbmkFeeRNmSqUr6d6c+B/k=;
-  b=H3du/rlb1x/mN6qtHFlNoOEaNReD6ZBGFobbae2nY0DqU8pSBYVuYKWO
-   yoIFf2U82JoxOGTS21H9BoI5Do+g8IJHD8a+DqxlNUIlzUr7bX1mR7MTb
-   v2PfKOveFRZcM0HhyRRrg8ZFcjzxVeR0cjrwP9lDBUXQKMsFuVCWxCTpM
-   Mpk6TXWIBwX9OrJoMgp97MpZgTH5c7vH5zQXdihqB3ofe2UiYgppjcnXl
-   KR1NDdjuANLlQ/89cQYhaJPN+aOFcWe6uhPfXEE8xYYwHnv+gkh8X/USs
-   cIawBspvpkOjdeMiw2P3W5WQcmv3wxhr+iynpKRQJmGjKufFNcZDkJMiX
-   Q==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date;
+        bh=gtvu1sOWJAtKexo39ijvJL1dgptfKWjzICln4Ve7K/4=;
+        b=a0S+cI5o4IcMxp8BPR8AUgnrlaVxXq0POxlWQ7zqp6D+VsbpNz9X/FqxXJq1bb3htf
+         AI2Fb/m2tjO32ImNzN/g9EZ4QJ9uLhJrjyLjP2hyytCMZPkc8ZmSI62u8tKtDVp4r3Q2
+         GB2+9fMem/RLmVYcmRp+VWgr9ZDHiUxkQWmiqNGZJ3o9e07vD2epHCS3LTnx1fojPMmC
+         eU5/E6EcLmpxcqm6BYvWwNyiXy58q/gXG90uLX2JeH9QidVC5y3jLGZ9mVJ8PzCvFKEm
+         1lBq2dvG9QwsH1mvnoxB/sf1hWsIAXXWBmBPgQfe0aaIZ6BYnWlIlh6MLeKtRWLObzI2
+         BQzg==
+In-Reply-To: <YxT/liaotbiOod51-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.1
-branch HEAD: a8c52eba880a6e8c07fc2130604f8e386b90b763  kselftest/cgroup: Add cpuset v2 partition root state test
+Hi Tejun, thanks for your reply.
 
-elapsed time: 728m
+We usually use numactl to set the memory policy, but it cannot be 
+changed dynamically. In addition, the mempolicy of cpuset can provide a 
+more convenient interface for management and control panel.
 
-configs tested: 166
-configs skipped: 5
+Sorry,I don't quite understand the meaning of "don't enforce anything 
+resource related". Does it mean mempolicy, such as "prefer:2" must 
+specify node? Or "cpuset.mems.policy" need to specify a default value?
+(cpuset.mems.policy does not require a default value.)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Thanks.
 
-gcc tested configs:
-um                             i386_defconfig
-um                           x86_64_defconfig
-i386                 randconfig-a003-20220905
-i386                 randconfig-a004-20220905
-i386                 randconfig-a001-20220905
-i386                 randconfig-a002-20220905
-i386                 randconfig-a005-20220905
-arm                                 defconfig
-i386                 randconfig-a006-20220905
-x86_64               randconfig-a003-20220905
-arc                               allnoconfig
-alpha                             allnoconfig
-x86_64               randconfig-a002-20220905
-csky                              allnoconfig
-riscv                             allnoconfig
-x86_64               randconfig-a004-20220905
-x86_64               randconfig-a005-20220905
-x86_64               randconfig-a001-20220905
-x86_64                    rhel-8.3-kselftests
-x86_64                          rhel-8.3-func
-x86_64               randconfig-a006-20220905
-x86_64                         rhel-8.3-kunit
-powerpc                      makalu_defconfig
-x86_64                           rhel-8.3-kvm
-sh                         microdev_defconfig
-arm64                            allyesconfig
-arc                  randconfig-r043-20220905
-x86_64                           rhel-8.3-syz
-powerpc                          allmodconfig
-m68k                             allmodconfig
-arc                  randconfig-r043-20220904
-openrisc                       virt_defconfig
-x86_64                              defconfig
-sh                               allmodconfig
-mips                             allyesconfig
-powerpc                           allnoconfig
-s390                 randconfig-r044-20220904
-arm                              allyesconfig
-arm                          pxa3xx_defconfig
-x86_64                           allyesconfig
-arm                             ezx_defconfig
-powerpc                      ppc40x_defconfig
-arc                              allyesconfig
-sh                          sdk7786_defconfig
-x86_64                               rhel-8.3
-i386                                defconfig
-alpha                            allyesconfig
-m68k                             allyesconfig
-riscv                randconfig-r042-20220904
-i386                             alldefconfig
-ia64                          tiger_defconfig
-sh                         apsh4a3a_defconfig
-i386                             allyesconfig
-mips                           jazz_defconfig
-arm                        realview_defconfig
-powerpc                mpc7448_hpc2_defconfig
-mips                  maltasmvp_eva_defconfig
-sh                           se7712_defconfig
-powerpc                     ep8248e_defconfig
-powerpc                      ep88xc_defconfig
-sh                   sh7770_generic_defconfig
-sh                   secureedge5410_defconfig
-powerpc                  iss476-smp_defconfig
-mips                         db1xxx_defconfig
-sh                           se7780_defconfig
-xtensa                    xip_kc705_defconfig
-arc                     nsimosci_hs_defconfig
-loongarch                           defconfig
-loongarch                         allnoconfig
-powerpc                          allyesconfig
-riscv                               defconfig
-riscv                            allmodconfig
-riscv                            allyesconfig
-arm                        mvebu_v7_defconfig
-parisc                generic-32bit_defconfig
-arc                          axs101_defconfig
-m68k                             alldefconfig
-arm                           viper_defconfig
-m68k                            q40_defconfig
-sparc64                             defconfig
-powerpc                 mpc837x_mds_defconfig
-powerpc              randconfig-c003-20220904
-i386                          randconfig-c001
-s390                                defconfig
-s390                             allmodconfig
-arc                                 defconfig
-alpha                               defconfig
-s390                             allyesconfig
-sparc                               defconfig
-arm                     eseries_pxa_defconfig
-powerpc                      mgcoge_defconfig
-sh                           se7751_defconfig
-nios2                            allyesconfig
-arm                           corgi_defconfig
-sh                               j2_defconfig
-sh                             espt_defconfig
-sh                 kfr2r09-romimage_defconfig
-m68k                         apollo_defconfig
-powerpc                        warp_defconfig
-riscv                    nommu_k210_defconfig
-arm                       imx_v6_v7_defconfig
-arc                              alldefconfig
-arm                         axm55xx_defconfig
-i386                          debian-10.3-kvm
-i386                        debian-10.3-kunit
-i386                         debian-10.3-func
-i386                 randconfig-c001-20220905
-ia64                             allmodconfig
-arm                        mini2440_defconfig
-m68k                          atari_defconfig
-mips                  decstation_64_defconfig
-riscv                    nommu_virt_defconfig
-riscv                          rv32_defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-m68k                       m5208evb_defconfig
-microblaze                          defconfig
-sh                              ul2_defconfig
-arm                         lpc18xx_defconfig
-powerpc                     pq2fads_defconfig
-powerpc                     asp8347_defconfig
-arm                          pxa910_defconfig
-sh                     magicpanelr2_defconfig
-arm                  randconfig-c002-20220905
-x86_64               randconfig-c001-20220905
-mips                      loongson3_defconfig
-openrisc                 simple_smp_defconfig
-powerpc                    sam440ep_defconfig
-xtensa                  nommu_kc705_defconfig
-arm                            mps2_defconfig
-sh                           se7343_defconfig
-openrisc                    or1ksim_defconfig
 
-clang tested configs:
-i386                 randconfig-a013-20220905
-x86_64               randconfig-a012-20220905
-x86_64               randconfig-a016-20220905
-mips                       rbtx49xx_defconfig
-x86_64               randconfig-a015-20220905
-x86_64               randconfig-a014-20220905
-i386                 randconfig-a012-20220905
-i386                 randconfig-a011-20220905
-arm                        neponset_defconfig
-hexagon              randconfig-r045-20220905
-x86_64               randconfig-a013-20220905
-hexagon              randconfig-r045-20220904
-x86_64               randconfig-a011-20220905
-mips                          malta_defconfig
-hexagon                             defconfig
-i386                 randconfig-a014-20220905
-riscv                randconfig-r042-20220905
-i386                 randconfig-a015-20220905
-hexagon              randconfig-r041-20220904
-i386                 randconfig-a016-20220905
-hexagon              randconfig-r041-20220905
-s390                 randconfig-r044-20220905
-powerpc                        fsp2_defconfig
-arm                              alldefconfig
-x86_64                        randconfig-k001
-powerpc                     akebono_defconfig
-arm                         socfpga_defconfig
-powerpc                   bluestone_defconfig
-powerpc                     tqm5200_defconfig
-arm                            mmp2_defconfig
-mips                   sb1250_swarm_defconfig
-powerpc                      ppc64e_defconfig
-arm                  colibri_pxa270_defconfig
-powerpc                    socrates_defconfig
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+> Hello,
+> 
+> On Fri, Sep 02, 2022 at 02:33:03PM +0800, hezhongkun wrote:
+>> From: Zhongkun He <hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+>>
+>> Mempolicy is difficult to use because it is set in-process
+>> via a system call. We want to make it easier to use mempolicy
+>> in cpuset, and  we can control low-priority cgroups to
+>> allocate memory in specified nodes. So this patch want to
+>> adds the mempolicy interface in cpuset.
+>>
+>> The mempolicy priority of cpuset is lower than the task.
+>> The order of getting the policy is:
+>> 	1) vma mempolicy
+>> 	2) task->mempolicy
+>> 	3) cpuset->mempolicy
+>> 	4) default policy.
+>>
+>> cpuset's policy is owned by itself, but descendants will
+>> get the default mempolicy from parent.
+>>
+>> How to use the mempolicy interface:
+>> 	echo prefer:2 > /sys/fs/cgroup/zz/cpuset.mems.policy
+>> 	echo bind:1-3 > /sys/fs/cgroup/zz/cpuset.mems.policy
+>>          echo interleave:0,1,2,3 >/sys/fs/cgroup/zz/cpuset.mems.policy
+>> Show the policy:
+>> 	cat /sys/fs/cgroup/zz/cpuset.mems.policy
+>> 		prefer:2
+>> 	cat /sys/fs/cgroup/zz/cpuset.mems.policy
+>> 		bind:1-3
+>> 	cat /sys/fs/cgroup/zz/cpuset.mems.policy
+>> 		interleave:0-3
+>> Clear the policy:
+>> 	echo default > /sys/fs/cgroup/zz/cpuset.mems.policy
+> 
+> So, I'm a fan of adding cgroup functionalities which don't enforce anything
+> resource related. What you're proposing can easily be achieved with userland
+> tooling, right?
+> 
+> Thanks.
+> 
