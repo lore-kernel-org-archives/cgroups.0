@@ -1,41 +1,80 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 1/2 cgroup/for-6.1] cgroup: Improve cftype add/rm error
- handling
-Date: Mon, 5 Sep 2022 15:14:35 +0200
-Message-ID: <20220905131435.GA1765@blackbody.suse.cz>
-References: <YxUUISLVLEIRBwEY@slm.duckdns.org>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH] cgroup: Reorganize css_set_lock and kernfs path processing
+Date: Mon,  5 Sep 2022 19:09:44 +0200
+Message-ID: <20220905170944.23071-1-mkoutny@suse.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1662383676; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1662397803; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=odeJqpDcCxpX8r1tp05w8dWsivXfrVnH9KQIlvGGAiY=;
-        b=mH9nstggkl70jXef3R7A+xB5wXtVaBly5uw2TFaShC6zQMLS/K1tV2TfXViaXp7qVa2ajW
-        G+ATz4m570suY1xDlEeBUIQOgXxmRujMPHfQ3ez7mec6d/rcmWBrWyLCyvl1JkhDbt9JkX
-        hmEmwi4tjQ1y8tf+vDDt5bnRd7NeUqY=
-Content-Disposition: inline
-In-Reply-To: <YxUUISLVLEIRBwEY-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+         content-transfer-encoding:content-transfer-encoding;
+        bh=3OBVlzrdocXXXTKTLgX42mUjjVVDDyYNMpF+eKmmtCQ=;
+        b=TI8brioUhcbTj37ERGLmMeQ2UJM6oYa0WDG5ztQJfuPzEBQ12TugPu5sLcrLplpMvQ7eS/
+        Kud9kF71PFFvZndsFipFQv52uLTLbx3TMiCwxg4XR2m3pPmsrHu2tcrH66+Wrp5CFYLIC0
+        uejAfimdJr9AN0+Uw9yU/5qKSRtuBfk=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-Hello.
-
-On Sun, Sep 04, 2022 at 11:09:53AM -1000, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Let's track whether a cftype is currently added or not using a new flag
-> __CFTYPE_ADDED
-
-IIUC, the flag is equal to (cft->ss || cft->kf_ops), particularly the
-information is carried in cfs->kf_ops too.
-
-Is the effect of cgroup_init_cftypes proper setup of cft->kf_ops?
-I.e. isn't it simpler to just check that field (without the new flag)?
-
-(No objection to current form, just asking whether I understand the
-impact.)
-
-Thanks,
-Michal
+VGhlIGNvbW1pdCA3NGU0Yjk1NmViMWMgaW5jb3JyZWN0bHkgd3JhcHBlZCBrZXJuZnNfd2Fsa19h
+bmRfZ2V0CihtaWdodF9zbGVlcCkgdW5kZXIgY3NzX3NldF9sb2NrIChzcGlubG9jaykuIGNzc19z
+ZXRfbG9jayBpcyBuZWVkZWQgYnkKX19jc2V0X2Nncm91cF9mcm9tX3Jvb3QgdG8gZW5zdXJlIHN0
+YWJsZSBjc2V0LT5jZ3JwX2xpbmtzLiBUaGUgcmV0dXJuZWQKY2dyb3VwIG9iamVjdCBpcyBwaW5u
+ZWQgYnkgdGhlIGNzc19zZXQgKCopLgoKQmVjYXVzZSBjdXJyZW50IGNhbm5vdCBzd2l0Y2ggbmFt
+ZXNwYWNlIGFzeW5jaHJvbm91c2x5LCB0aGUgY3NzX3NldCBpcwphbHNvIHBpbm5lZCBieSBuc19w
+cm94eS0+Y2dyb3VwX25zIChyZWdhcmRsZXNzIG9mIGN1cnJlbnQncyBjZ3JvdXAKbWlncmF0aW9u
+KS4KCktlcm5mcyBjb2RlIHRoYXQgdHJhdmVyc2VzIHBhdGhzIHdpdGggcmVsYXRpdmUgcm9vdF9j
+Z3JvdXAgbm90IG5lZWQKY3NzX3NldF9sb2NrLgoKKCopIEV4Y2VwdCBmb3Igcm9vdCBjZ3JvdXBz
+LiBUaGUgZGVmYXVsdCBoaWVyYXJjaHkgcm9vdCAodW5kZXIgd2hpY2gKY2dyb3VwIGlkIGFuZCBw
+YXRoIHJlc29sdXRpb24gb25seSBoYXBwZW5zKSBpcyBldGVybmFsIHNvIGl0J3MgbW9vdC4KY2dy
+b3VwX3Nob3dfcGF0aCAoVkZTIGNhbGxiYWNrKSBpcyBleHBlY3RlZCB0byBiZSBzeW5jaHJvbml6
+ZWQgKCoqKSB3cnQKa2lsbF9zYiAoVkZTIGNhbGxiYWNrKSAobW50X25hbWVzcGFjZS5saXN0IHdp
+dGggbmFtZXNwYWNlX3NlbSkuCigqKikgSWYgbm90LCBpdCdzIHN0aWxsIGFuIGluZGVwZW5kZW50
+IGlzc3VlIGZyb20gdGhpcyBhbmQgdGhlIGZpeGVkIG9uZS4KCkZpeGVzOiA3NGU0Yjk1NmViMWM6
+ICgiY2dyb3VwOiBIb25vciBjYWxsZXIncyBjZ3JvdXAgTlMgd2hlbiByZXNvbHZpbmcgcGF0aCIp
+ClJlcG9ydGVkLWJ5OiBEYW4gQ2FycGVudGVyIDxkYW4uY2FycGVudGVyLVFIY0xadUVHVHN2UVQw
+ZFpSK0FsZkFAcHVibGljLmdtYW5lLm9yZz4KU2lnbmVkLW9mZi1ieTogTWljaGFsIEtvdXRuw70g
+PG1rb3V0bnktSUJpOVJHL2I2N2tAcHVibGljLmdtYW5lLm9yZz4KLS0tCiBrZXJuZWwvY2dyb3Vw
+L2Nncm91cC5jIHwgMTIgKysrKysrKy0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgNyBpbnNlcnRpb25z
+KCspLCA1IGRlbGV0aW9ucygtKQoKSSBjb25zaWRlcmVkIGFkZGluZyBnZXRfY2dyb3VwKCkgaW50
+byBjdXJyZW50X2NnbnNfY2dyb3VwX2Zyb21fcm9vdCB0bwphdm9pZCByZWxpYW5jZSBvbiB0aGUg
+dHJhbnNpdGl2ZSBwaW5uaW5nIHZpYSBjc3Nfc2V0LiAKQWZ0ZXIgcmVhc29uaW5nIGFib3V0IG5v
+IGFzeW5jaHJvbm91cyBOUyBzd2l0Y2ggYW5kIHYxIGhpZWFyY2hpZXMga2lsbF9zYiBpdApkaWRu
+J3Qgc2VlbSB0byBicmluZyB0aGF0IG11Y2ggYmVuZWZpdCAoaXQgZGlkbid0IGNvbXBvc2Ugd2Vs
+bCB3aXRoCkJVR19PTighY2dycCkgbmVpdGhlcikuCgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91
+cC9jZ3JvdXAuYyBiL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMKaW5kZXggZTBiNzJlYjVkMjgzLi44
+Yzk0OTdmMDEzMzIgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMKKysrIGIva2Vy
+bmVsL2Nncm91cC9jZ3JvdXAuYwpAQCAtMTM5MSwxMSArMTM5MSwxNiBAQCBzdGF0aWMgdm9pZCBj
+Z3JvdXBfZGVzdHJveV9yb290KHN0cnVjdCBjZ3JvdXBfcm9vdCAqcm9vdCkKIAljZ3JvdXBfZnJl
+ZV9yb290KHJvb3QpOwogfQogCisvKgorICogUmV0dXJuZWQgY2dyb3VwIGlzIHdpdGhvdXQgcmVm
+Y291bnQgYnV0IGl0J3MgdmFsaWQgYXMgbG9uZyBhcyBjc2V0IHBpbnMgaXQuCisgKi8KIHN0YXRp
+YyBpbmxpbmUgc3RydWN0IGNncm91cCAqX19jc2V0X2Nncm91cF9mcm9tX3Jvb3Qoc3RydWN0IGNz
+c19zZXQgKmNzZXQsCiAJCQkJCSAgICBzdHJ1Y3QgY2dyb3VwX3Jvb3QgKnJvb3QpCiB7CiAJc3Ry
+dWN0IGNncm91cCAqcmVzX2Nncm91cCA9IE5VTEw7CiAKKwlsb2NrZGVwX2Fzc2VydF9oZWxkKCZj
+c3Nfc2V0X2xvY2spOworCiAJaWYgKGNzZXQgPT0gJmluaXRfY3NzX3NldCkgewogCQlyZXNfY2dy
+b3VwID0gJnJvb3QtPmNncnA7CiAJfSBlbHNlIGlmIChyb290ID09ICZjZ3JwX2RmbF9yb290KSB7
+CkBAIC0xNDI2LDggKzE0MzEsNiBAQCBjdXJyZW50X2NnbnNfY2dyb3VwX2Zyb21fcm9vdChzdHJ1
+Y3QgY2dyb3VwX3Jvb3QgKnJvb3QpCiAJc3RydWN0IGNncm91cCAqcmVzID0gTlVMTDsKIAlzdHJ1
+Y3QgY3NzX3NldCAqY3NldDsKIAotCWxvY2tkZXBfYXNzZXJ0X2hlbGQoJmNzc19zZXRfbG9jayk7
+Ci0KIAlyY3VfcmVhZF9sb2NrKCk7CiAKIAljc2V0ID0gY3VycmVudC0+bnNwcm94eS0+Y2dyb3Vw
+X25zLT5yb290X2NzZXQ7CkBAIC0xNDQ2LDcgKzE0NDksNiBAQCBzdGF0aWMgc3RydWN0IGNncm91
+cCAqY3NldF9jZ3JvdXBfZnJvbV9yb290KHN0cnVjdCBjc3Nfc2V0ICpjc2V0LAogCXN0cnVjdCBj
+Z3JvdXAgKnJlcyA9IE5VTEw7CiAKIAlsb2NrZGVwX2Fzc2VydF9oZWxkKCZjZ3JvdXBfbXV0ZXgp
+OwotCWxvY2tkZXBfYXNzZXJ0X2hlbGQoJmNzc19zZXRfbG9jayk7CiAKIAlyZXMgPSBfX2NzZXRf
+Y2dyb3VwX2Zyb21fcm9vdChjc2V0LCByb290KTsKIApAQCAtMTg2MSw4ICsxODYzLDggQEAgaW50
+IGNncm91cF9zaG93X3BhdGgoc3RydWN0IHNlcV9maWxlICpzZiwgc3RydWN0IGtlcm5mc19ub2Rl
+ICprZl9ub2RlLAogCiAJc3Bpbl9sb2NrX2lycSgmY3NzX3NldF9sb2NrKTsKIAluc19jZ3JvdXAg
+PSBjdXJyZW50X2NnbnNfY2dyb3VwX2Zyb21fcm9vdChrZl9jZ3Jvb3QpOwotCWxlbiA9IGtlcm5m
+c19wYXRoX2Zyb21fbm9kZShrZl9ub2RlLCBuc19jZ3JvdXAtPmtuLCBidWYsIFBBVEhfTUFYKTsK
+IAlzcGluX3VubG9ja19pcnEoJmNzc19zZXRfbG9jayk7CisJbGVuID0ga2VybmZzX3BhdGhfZnJv
+bV9ub2RlKGtmX25vZGUsIG5zX2Nncm91cC0+a24sIGJ1ZiwgUEFUSF9NQVgpOwogCiAJaWYgKGxl
+biA+PSBQQVRIX01BWCkKIAkJbGVuID0gLUVSQU5HRTsKQEAgLTY2NDksOCArNjY1MSw4IEBAIHN0
+cnVjdCBjZ3JvdXAgKmNncm91cF9nZXRfZnJvbV9wYXRoKGNvbnN0IGNoYXIgKnBhdGgpCiAKIAlz
+cGluX2xvY2tfaXJxKCZjc3Nfc2V0X2xvY2spOwogCXJvb3RfY2dycCA9IGN1cnJlbnRfY2duc19j
+Z3JvdXBfZnJvbV9yb290KCZjZ3JwX2RmbF9yb290KTsKLQlrbiA9IGtlcm5mc193YWxrX2FuZF9n
+ZXQocm9vdF9jZ3JwLT5rbiwgcGF0aCk7CiAJc3Bpbl91bmxvY2tfaXJxKCZjc3Nfc2V0X2xvY2sp
+OworCWtuID0ga2VybmZzX3dhbGtfYW5kX2dldChyb290X2NncnAtPmtuLCBwYXRoKTsKIAlpZiAo
+IWtuKQogCQlnb3RvIG91dDsKIAoKYmFzZS1jb21taXQ6IGE4YzUyZWJhODgwYTZlOGMwN2ZjMjEz
+MDYwNGY4ZTM4NmI5MGI3NjMKLS0gCjIuMzcuMAoK
