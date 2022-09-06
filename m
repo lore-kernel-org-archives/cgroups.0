@@ -1,39 +1,74 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/2 cgroup/for-6.1] cgroup: Improve cftype add/rm error
- handling
-Date: Tue, 6 Sep 2022 09:39:49 -1000
-Message-ID: <YxeiBUwloEJu0lX9@slm.duckdns.org>
-References: <YxUUISLVLEIRBwEY@slm.duckdns.org>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: BUG: HANG_DETECT waiting for migration_cpu_stop() complete
+Date: Tue, 6 Sep 2022 16:01:06 -0400
+Message-ID: <02b8e7b3-941d-8bb9-cd0e-992738893ba3@redhat.com>
+References: <88b2910181bda955ac46011b695c53f7da39ac47.camel@mediatek.com>
+ <b605c3ec-94ab-a55f-5825-9b370d77ecf3@quicinc.com>
+ <203d4614c1b2a498a240ace287156e9f401d5395.camel@mediatek.com>
+ <YxeR0RoiTdm8sWCJ@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date;
-        bh=nlsO3qydHURiPESopIov6MAWpclh/6/lYNHj0fbMC4I=;
-        b=F95JAOTLsk80DmB2KeBQgUrMKsGMMDbmiSIJ2kqa34nWGZYTBl8qput1L3OvMfrpT/
-         7wYPdbsd+Fi40BVF+9zcjae67Ef+gtoJ7K6An5VoNJVwtUs/3vKY7r9si0wn6Selg86T
-         DBRnMRgfYKDRb/L0N3PFfwW7IpTNqxBruOrLKYXsw2n2fzKSff6w6vJ38x+Sn1Bq3cob
-         GCBx+lymS4kLxe5VAN5g/DsGnOUu6r31+icQfgTovFcAXY0CPRiJqH5TaKIjKZQFi9l4
-         chRU/9Dw9ZWxxkhxSrs/MNuKS8DxxTL3JS7U3VFBaiihZtzSKNCh9C/0AM8DkLmfOYZx
-         vL0Q==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <YxUUISLVLEIRBwEY-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane-mx.org@lists.infradead.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=lists.infradead.org; s=bombadil.20210309; h=Sender:Content-Type:
+	Content-Transfer-Encoding:List-Subscribe:List-Help:List-Post:List-Archive:
+	List-Unsubscribe:List-Id:In-Reply-To:From:References:Cc:To:Subject:
+	MIME-Version:Date:Message-ID:Reply-To:Content-ID:Content-Description:
+	Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+	List-Owner; bh=3EYAXh2z9lItNpM5nRfvk6Y9qAIa9BdVNx4Y1+8vtpU=; b=kTOhVG8zafU8G3
+	TqXYiwTSyDLDYYW51NVM+KeN2IKGRr18DYhiOqePfUya0q2XhASOTd8sBkxYQZ0z5F6rotgxttYkQ
+	ABKNSal26XbjQCt5MLdLiPO78KqPPY5zjI8TTwJFv1G0Y9Z0U9bPwUoZGKAzAUWwjl9D5rVq+72Km
+	dn3cO6VPyHWgkpb085JnYc2HHvTM6kxAkEF1EOg5OakvGGzBXT3RZaMOELuJHM0shEW4eKx9B8vmz
+	9DTPSXhVad+/lc1iH/OZQgC2vnVq/LUFbGsO7xmANhOGz2ME8q6eYmbBnvUnPFZBblN5BYwKmvTnO
+	X7uFPw0HYKbcDlKTKxiA==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1662494474;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=2kt6CEFAueWK0HKI9UIQ8H4IFzaooggSyLPO1T4AFfQ=;
+	b=dVL8SxPSOVrDQ9dbXWZFibqo8ImcRIM/NzedLI2Bi78Gu9gYCm1llHYHmwlsbNbl89V697
+	53vwwS3h7sGwXrFS+tajeFf9gcplvSq1W2kxL1Sk8MuD+OWi+R2IDjImgTpxYEpWEIBj90
+	kmaZRBQmMlCSK+87AHhdGoZM1TzBxQQ=
+Content-Language: en-US
+In-Reply-To: <YxeR0RoiTdm8sWCJ@slm.duckdns.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane-mx.org@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj@kernel.org>, Jing-Ting Wu <jing-ting.wu@mediatek.com>
+Cc: Mukesh Ojha <quic_mojha@quicinc.com>, Peter Zijlstra <peterz@infradead.org>, Valentin Schneider <vschneid@redhat.com>, wsd_upstream@mediatek.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, Jonathan.JMChen@mediatek.com, "chris.redpath@arm.com" <chris.redpath@arm.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Vincent Donnefort <vdonnefort@gmail.com>, Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Christian Brauner <brauner@kernel.org>, cgroups@vger.kernel.org, lixiong.liu@mediatek.com, wenju.xu@mediatek.com
 
-On Sun, Sep 04, 2022 at 11:09:53AM -1000, Tejun Heo wrote:
-> Let's track whether a cftype is currently added or not using a new flag
-> __CFTYPE_ADDED so that duplicate operations can be failed safely and
-> consistently allow using empty cftypes.
+On 9/6/22 14:30, Tejun Heo wrote:
+> Hello,
+>
+> (cc'ing Waiman in case he has a better idea)
+>
+> On Mon, Sep 05, 2022 at 04:22:29PM +0800, Jing-Ting Wu wrote:
+>> https://lore.kernel.org/lkml/YvrWaml3F+x9Dk+T@slm.duckdns.org/ is for
+>> fix cgroup_threadgroup_rwsem <-> cpus_read_lock() deadlock.
+>> But this issue is cgroup_threadgroup_rwsem <-> cpuset_rwsem deadlock.
+> If I'm understanding what you're writing correctly, this isn't a deadlock.
+> The cpuset_hotplug_workfn simply isn't being woken up while holding
+> cpuset_rwsem and others are just waiting for that lock to be released.
 
-Applying 1-2 to cgroup/for-6.1.
+I believe it is probably a bug in the scheduler core code. 
+__set_cpus_allowed_ptr_locked() calls affine_move_task() to move to a 
+random cpu within the new set allowable CPUs. However, if migration is 
+disabled, it shouldn't call affine_move_task() at all. Instead, I would 
+suggest that if the current cpu is within the new allowable cpus, it 
+should just skip doing affine_move_task(). Otherwise, it should fail 
+__set_cpus_allowed_ptr_locked().
 
-Thanks.
+My 2 cents.
 
--- 
-tejun
+Cheers,
+Longman
