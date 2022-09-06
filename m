@@ -1,80 +1,327 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [PATCH] cgroup: Reorganize css_set_lock and kernfs path processing
-Date: Mon,  5 Sep 2022 19:09:44 +0200
-Message-ID: <20220905170944.23071-1-mkoutny@suse.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1662397803; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=3OBVlzrdocXXXTKTLgX42mUjjVVDDyYNMpF+eKmmtCQ=;
-        b=TI8brioUhcbTj37ERGLmMeQ2UJM6oYa0WDG5ztQJfuPzEBQ12TugPu5sLcrLplpMvQ7eS/
-        Kud9kF71PFFvZndsFipFQv52uLTLbx3TMiCwxg4XR2m3pPmsrHu2tcrH66+Wrp5CFYLIC0
-        uejAfimdJr9AN0+Uw9yU/5qKSRtuBfk=
+From: Paolo Valente <paolo.valente@unimore.it>
+Subject: Re: [PATCH -next v10 3/4] block, bfq: refactor the counting of
+ 'num_groups_with_pending_reqs'
+Date: Tue, 6 Sep 2022 11:37:22 +0200
+Message-ID: <F758A356-EE6B-4B7B-95E2-6414616C77E4@unimore.it>
+References: <20220610021701.2347602-1-yukuai3@huawei.com>
+ <20220610021701.2347602-4-yukuai3@huawei.com>
+ <27F2DF19-7CC6-42C5-8CEB-43583EB4AE46@linaro.org>
+ <abdbb5db-e280-62f8-0670-536fcb8ec4d9@huaweicloud.com>
+ <C2CF100A-9A7C-4300-9A70-1295BC939C66@unimore.it>
+ <9b2d667f-6636-9347-08a1-8bd0aa2346f2@huaweicloud.com>
+ <2f94f241-445f-1beb-c4a8-73f6efce5af2@huaweicloud.com>
+ <55A07102-BE55-4606-9E32-64E884064FB9@unimore.it>
+ <5cb0e5bc-feec-86d6-6f60-3c28ee625efd@huaweicloud.com>
+ <D89DCF20-27D8-4F8F-B8B0-FD193FC4F18D@unimore.it>
+ <e6b53794-f93f-92b2-1f45-35ae81a28a5c@huaweicloud.com>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=unimore.it; s=google;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date;
+        bh=8ab4/KXC/VCJGrAM6wTzpCaYMhm/3tELW6Q/pF3d2yg=;
+        b=L3k2+HgNwBNOQ+ow8ojCGK5dmzXXckSbJ+ltZKHL+uHxZCqB3njwCzg4VdkEf9pYyo
+         EHv2NqYduPH+u4g9bR0foiCS+VYuNHJVpX8cgX5XNnWyA4eA9MNFy81mtKNNXVKGyXYu
+         sMK0dhdUQPuxSHK/l42tDAlBU7HRuTmuzbk2g=
+In-Reply-To: <e6b53794-f93f-92b2-1f45-35ae81a28a5c@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Jan Kara <jack@suse.cz>, cgroups@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
-VGhlIGNvbW1pdCA3NGU0Yjk1NmViMWMgaW5jb3JyZWN0bHkgd3JhcHBlZCBrZXJuZnNfd2Fsa19h
-bmRfZ2V0CihtaWdodF9zbGVlcCkgdW5kZXIgY3NzX3NldF9sb2NrIChzcGlubG9jaykuIGNzc19z
-ZXRfbG9jayBpcyBuZWVkZWQgYnkKX19jc2V0X2Nncm91cF9mcm9tX3Jvb3QgdG8gZW5zdXJlIHN0
-YWJsZSBjc2V0LT5jZ3JwX2xpbmtzLiBUaGUgcmV0dXJuZWQKY2dyb3VwIG9iamVjdCBpcyBwaW5u
-ZWQgYnkgdGhlIGNzc19zZXQgKCopLgoKQmVjYXVzZSBjdXJyZW50IGNhbm5vdCBzd2l0Y2ggbmFt
-ZXNwYWNlIGFzeW5jaHJvbm91c2x5LCB0aGUgY3NzX3NldCBpcwphbHNvIHBpbm5lZCBieSBuc19w
-cm94eS0+Y2dyb3VwX25zIChyZWdhcmRsZXNzIG9mIGN1cnJlbnQncyBjZ3JvdXAKbWlncmF0aW9u
-KS4KCktlcm5mcyBjb2RlIHRoYXQgdHJhdmVyc2VzIHBhdGhzIHdpdGggcmVsYXRpdmUgcm9vdF9j
-Z3JvdXAgbm90IG5lZWQKY3NzX3NldF9sb2NrLgoKKCopIEV4Y2VwdCBmb3Igcm9vdCBjZ3JvdXBz
-LiBUaGUgZGVmYXVsdCBoaWVyYXJjaHkgcm9vdCAodW5kZXIgd2hpY2gKY2dyb3VwIGlkIGFuZCBw
-YXRoIHJlc29sdXRpb24gb25seSBoYXBwZW5zKSBpcyBldGVybmFsIHNvIGl0J3MgbW9vdC4KY2dy
-b3VwX3Nob3dfcGF0aCAoVkZTIGNhbGxiYWNrKSBpcyBleHBlY3RlZCB0byBiZSBzeW5jaHJvbml6
-ZWQgKCoqKSB3cnQKa2lsbF9zYiAoVkZTIGNhbGxiYWNrKSAobW50X25hbWVzcGFjZS5saXN0IHdp
-dGggbmFtZXNwYWNlX3NlbSkuCigqKikgSWYgbm90LCBpdCdzIHN0aWxsIGFuIGluZGVwZW5kZW50
-IGlzc3VlIGZyb20gdGhpcyBhbmQgdGhlIGZpeGVkIG9uZS4KCkZpeGVzOiA3NGU0Yjk1NmViMWM6
-ICgiY2dyb3VwOiBIb25vciBjYWxsZXIncyBjZ3JvdXAgTlMgd2hlbiByZXNvbHZpbmcgcGF0aCIp
-ClJlcG9ydGVkLWJ5OiBEYW4gQ2FycGVudGVyIDxkYW4uY2FycGVudGVyLVFIY0xadUVHVHN2UVQw
-ZFpSK0FsZkFAcHVibGljLmdtYW5lLm9yZz4KU2lnbmVkLW9mZi1ieTogTWljaGFsIEtvdXRuw70g
-PG1rb3V0bnktSUJpOVJHL2I2N2tAcHVibGljLmdtYW5lLm9yZz4KLS0tCiBrZXJuZWwvY2dyb3Vw
-L2Nncm91cC5jIHwgMTIgKysrKysrKy0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgNyBpbnNlcnRpb25z
-KCspLCA1IGRlbGV0aW9ucygtKQoKSSBjb25zaWRlcmVkIGFkZGluZyBnZXRfY2dyb3VwKCkgaW50
-byBjdXJyZW50X2NnbnNfY2dyb3VwX2Zyb21fcm9vdCB0bwphdm9pZCByZWxpYW5jZSBvbiB0aGUg
-dHJhbnNpdGl2ZSBwaW5uaW5nIHZpYSBjc3Nfc2V0LiAKQWZ0ZXIgcmVhc29uaW5nIGFib3V0IG5v
-IGFzeW5jaHJvbm91cyBOUyBzd2l0Y2ggYW5kIHYxIGhpZWFyY2hpZXMga2lsbF9zYiBpdApkaWRu
-J3Qgc2VlbSB0byBicmluZyB0aGF0IG11Y2ggYmVuZWZpdCAoaXQgZGlkbid0IGNvbXBvc2Ugd2Vs
-bCB3aXRoCkJVR19PTighY2dycCkgbmVpdGhlcikuCgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91
-cC9jZ3JvdXAuYyBiL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMKaW5kZXggZTBiNzJlYjVkMjgzLi44
-Yzk0OTdmMDEzMzIgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMKKysrIGIva2Vy
-bmVsL2Nncm91cC9jZ3JvdXAuYwpAQCAtMTM5MSwxMSArMTM5MSwxNiBAQCBzdGF0aWMgdm9pZCBj
-Z3JvdXBfZGVzdHJveV9yb290KHN0cnVjdCBjZ3JvdXBfcm9vdCAqcm9vdCkKIAljZ3JvdXBfZnJl
-ZV9yb290KHJvb3QpOwogfQogCisvKgorICogUmV0dXJuZWQgY2dyb3VwIGlzIHdpdGhvdXQgcmVm
-Y291bnQgYnV0IGl0J3MgdmFsaWQgYXMgbG9uZyBhcyBjc2V0IHBpbnMgaXQuCisgKi8KIHN0YXRp
-YyBpbmxpbmUgc3RydWN0IGNncm91cCAqX19jc2V0X2Nncm91cF9mcm9tX3Jvb3Qoc3RydWN0IGNz
-c19zZXQgKmNzZXQsCiAJCQkJCSAgICBzdHJ1Y3QgY2dyb3VwX3Jvb3QgKnJvb3QpCiB7CiAJc3Ry
-dWN0IGNncm91cCAqcmVzX2Nncm91cCA9IE5VTEw7CiAKKwlsb2NrZGVwX2Fzc2VydF9oZWxkKCZj
-c3Nfc2V0X2xvY2spOworCiAJaWYgKGNzZXQgPT0gJmluaXRfY3NzX3NldCkgewogCQlyZXNfY2dy
-b3VwID0gJnJvb3QtPmNncnA7CiAJfSBlbHNlIGlmIChyb290ID09ICZjZ3JwX2RmbF9yb290KSB7
-CkBAIC0xNDI2LDggKzE0MzEsNiBAQCBjdXJyZW50X2NnbnNfY2dyb3VwX2Zyb21fcm9vdChzdHJ1
-Y3QgY2dyb3VwX3Jvb3QgKnJvb3QpCiAJc3RydWN0IGNncm91cCAqcmVzID0gTlVMTDsKIAlzdHJ1
-Y3QgY3NzX3NldCAqY3NldDsKIAotCWxvY2tkZXBfYXNzZXJ0X2hlbGQoJmNzc19zZXRfbG9jayk7
-Ci0KIAlyY3VfcmVhZF9sb2NrKCk7CiAKIAljc2V0ID0gY3VycmVudC0+bnNwcm94eS0+Y2dyb3Vw
-X25zLT5yb290X2NzZXQ7CkBAIC0xNDQ2LDcgKzE0NDksNiBAQCBzdGF0aWMgc3RydWN0IGNncm91
-cCAqY3NldF9jZ3JvdXBfZnJvbV9yb290KHN0cnVjdCBjc3Nfc2V0ICpjc2V0LAogCXN0cnVjdCBj
-Z3JvdXAgKnJlcyA9IE5VTEw7CiAKIAlsb2NrZGVwX2Fzc2VydF9oZWxkKCZjZ3JvdXBfbXV0ZXgp
-OwotCWxvY2tkZXBfYXNzZXJ0X2hlbGQoJmNzc19zZXRfbG9jayk7CiAKIAlyZXMgPSBfX2NzZXRf
-Y2dyb3VwX2Zyb21fcm9vdChjc2V0LCByb290KTsKIApAQCAtMTg2MSw4ICsxODYzLDggQEAgaW50
-IGNncm91cF9zaG93X3BhdGgoc3RydWN0IHNlcV9maWxlICpzZiwgc3RydWN0IGtlcm5mc19ub2Rl
-ICprZl9ub2RlLAogCiAJc3Bpbl9sb2NrX2lycSgmY3NzX3NldF9sb2NrKTsKIAluc19jZ3JvdXAg
-PSBjdXJyZW50X2NnbnNfY2dyb3VwX2Zyb21fcm9vdChrZl9jZ3Jvb3QpOwotCWxlbiA9IGtlcm5m
-c19wYXRoX2Zyb21fbm9kZShrZl9ub2RlLCBuc19jZ3JvdXAtPmtuLCBidWYsIFBBVEhfTUFYKTsK
-IAlzcGluX3VubG9ja19pcnEoJmNzc19zZXRfbG9jayk7CisJbGVuID0ga2VybmZzX3BhdGhfZnJv
-bV9ub2RlKGtmX25vZGUsIG5zX2Nncm91cC0+a24sIGJ1ZiwgUEFUSF9NQVgpOwogCiAJaWYgKGxl
-biA+PSBQQVRIX01BWCkKIAkJbGVuID0gLUVSQU5HRTsKQEAgLTY2NDksOCArNjY1MSw4IEBAIHN0
-cnVjdCBjZ3JvdXAgKmNncm91cF9nZXRfZnJvbV9wYXRoKGNvbnN0IGNoYXIgKnBhdGgpCiAKIAlz
-cGluX2xvY2tfaXJxKCZjc3Nfc2V0X2xvY2spOwogCXJvb3RfY2dycCA9IGN1cnJlbnRfY2duc19j
-Z3JvdXBfZnJvbV9yb290KCZjZ3JwX2RmbF9yb290KTsKLQlrbiA9IGtlcm5mc193YWxrX2FuZF9n
-ZXQocm9vdF9jZ3JwLT5rbiwgcGF0aCk7CiAJc3Bpbl91bmxvY2tfaXJxKCZjc3Nfc2V0X2xvY2sp
-OworCWtuID0ga2VybmZzX3dhbGtfYW5kX2dldChyb290X2NncnAtPmtuLCBwYXRoKTsKIAlpZiAo
-IWtuKQogCQlnb3RvIG91dDsKIAoKYmFzZS1jb21taXQ6IGE4YzUyZWJhODgwYTZlOGMwN2ZjMjEz
-MDYwNGY4ZTM4NmI5MGI3NjMKLS0gCjIuMzcuMAoK
+
+
+> Il giorno 26 ago 2022, alle ore 04:34, Yu Kuai =
+<yukuai1@huaweicloud.com> ha scritto:
+>=20
+> Hi, Paolo!
+>=20
+> =E5=9C=A8 2022/08/25 22:59, Paolo Valente =E5=86=99=E9=81=93:
+>>> Il giorno 11 ago 2022, alle ore 03:19, Yu Kuai =
+<yukuai1@huaweicloud.com <mailto:yukuai1@huaweicloud.com>> ha scritto:
+>>>=20
+>>> Hi, Paolo
+>>>=20
+>>> =E5=9C=A8 2022/08/10 18:49, Paolo Valente =E5=86=99=E9=81=93:
+>>>>> Il giorno 27 lug 2022, alle ore 14:11, Yu Kuai =
+<yukuai1@huaweicloud.com <mailto:yukuai1@huaweicloud.com>> ha scritto:
+>>>>>=20
+>>>>> Hi, Paolo
+>>>>>=20
+>>>> hi
+>>>>> Are you still interested in this patchset?
+>>>>>=20
+>>>> Yes. Sorry for replying very late again.
+>>>> Probably the last fix that you suggest is enough, but I'm a little =
+bit
+>>>> concerned that it may be a little hasty.  In fact, before this fix, =
+we
+>>>> exchanged several messages, and I didn't seem to be very good at
+>>>> convincing you about the need to keep into account also in-service
+>>>> I/O.  So, my question is: are you sure that now you have a
+>>>=20
+>>> I'm confused here, I'm pretty aware that in-service I/O(as said =
+pending
+>>> requests is the patchset) should be counted, as you suggested in v7, =
+are
+>>> you still thinking that the way in this patchset is problematic?
+>>>=20
+>>> I'll try to explain again that how to track is bfqq has pending =
+pending
+>>> requests, please let me know if you still think there are some =
+problems:
+>>>=20
+>>> patch 1 support to track if bfqq has pending requests, it's
+>>> done by setting the flag 'entity->in_groups_with_pending_reqs' when =
+the
+>>> first request is inserted to bfqq, and it's cleared when the last
+>>> request is completed. specifically the flag is set in
+>>> bfq_add_bfqq_busy() when 'bfqq->dispatched' if false, and it's =
+cleared
+>>> both in bfq_completed_request() and bfq_del_bfqq_busy() when
+>>> 'bfqq->diapatched' is false.
+>>>=20
+>> This general description seems correct to me. Have you already sent a =
+new version of your patchset?
+>=20
+> It's glad that we finially on the same page here.
+>=20
+
+Yep. Sorry for my chronicle delay.
+
+> Please take a look at patch 1, which already impelement the above
+> descriptions, it seems to me there is no need to send a new version
+> for now. If you think there are still some other problems, please let
+> me know.
+>=20
+
+Patch 1 seems ok to me. I seem to have only one pending comment on this =
+patch (3/4) instead. Let me paste previous stuff here for your =
+convenience:
+
+>>=20
+>> -	/*
+>> -	 * Next function is invoked last, because it causes bfqq to be
+>> -	 * freed if the following holds: bfqq is not in service and
+>> -	 * has no dispatched request. DO NOT use bfqq after the next
+>> -	 * function invocation.
+>> -	 */
+> I would really love it if you leave this comment.  I added it after
+> suffering a lot for a nasty UAF.  Of course the first sentence may
+> need to be adjusted if the code that precedes it is to be removed.
+> Same as above, if this patch is applied, this function will be gone.
+
+yes, but this comment now must be moved forward.
+
+Looking forward for a new complete version, for a new review.  I'll do
+my best to reply quicker.
+
+Thanks,
+Paolo
+
+
+
+
+
+> Thanks,
+> Kuai
+>> Thanks,
+>> Paolo
+>>> Thanks,
+>>> Kuai
+>>>> clear/complete understanding of this non-trivial matter?
+>>>> Consequently, are we sure that this last fix is most certainly all =
+we
+>>>> need?  Of course, I will check on my own, but if you reassure me on
+>>>> this point, I will feel more confident.
+>>>> Thanks,
+>>>> Paolo
+>>>>> =E5=9C=A8 2022/07/20 19:38, Yu Kuai =E5=86=99=E9=81=93:
+>>>>>> Hi
+>>>>>>=20
+>>>>>> =E5=9C=A8 2022/07/20 19:24, Paolo VALENTE =E5=86=99=E9=81=93:
+>>>>>>>=20
+>>>>>>>=20
+>>>>>>>> Il giorno 12 lug 2022, alle ore 15:30, Yu Kuai =
+<yukuai1@huaweicloud.com <mailto:yukuai1@huaweicloud.com> =
+<mailto:yukuai1@huaweicloud.com>> ha scritto:
+>>>>>>>>=20
+>>>>>>>> Hi!
+>>>>>>>>=20
+>>>>>>>> I'm copying my reply with new mail address, because Paolo seems
+>>>>>>>> didn't receive my reply.
+>>>>>>>>=20
+>>>>>>>> =E5=9C=A8 2022/06/23 23:32, Paolo Valente =E5=86=99=E9=81=93:
+>>>>>>>>> Sorry for the delay.
+>>>>>>>>>> Il giorno 10 giu 2022, alle ore 04:17, Yu Kuai =
+<yukuai3@huawei.com <mailto:yukuai3@huawei.com> =
+<mailto:yukuai3@huawei.com>> ha scritto:
+>>>>>>>>>>=20
+>>>>>>>>>> Currently, bfq can't handle sync io concurrently as long as =
+they
+>>>>>>>>>> are not issued from root group. This is because
+>>>>>>>>>> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
+>>>>>>>>>> bfq_asymmetric_scenario().
+>>>>>>>>>>=20
+>>>>>>>>>> The way that bfqg is counted into =
+'num_groups_with_pending_reqs':
+>>>>>>>>>>=20
+>>>>>>>>>> Before this patch:
+>>>>>>>>>> 1) root group will never be counted.
+>>>>>>>>>> 2) Count if bfqg or it's child bfqgs have pending requests.
+>>>>>>>>>> 3) Don't count if bfqg and it's child bfqgs complete all the =
+requests.
+>>>>>>>>>>=20
+>>>>>>>>>> After this patch:
+>>>>>>>>>> 1) root group is counted.
+>>>>>>>>>> 2) Count if bfqg have pending requests.
+>>>>>>>>>> 3) Don't count if bfqg complete all the requests.
+>>>>>>>>>>=20
+>>>>>>>>>> With this change, the occasion that only one group is =
+activated can be
+>>>>>>>>>> detected, and next patch will support concurrent sync io in =
+the
+>>>>>>>>>> occasion.
+>>>>>>>>>>=20
+>>>>>>>>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com =
+<mailto:yukuai3@huawei.com> <mailto:yukuai3@huawei.com>>
+>>>>>>>>>> Reviewed-by: Jan Kara <jack@suse.cz <mailto:jack@suse.cz> =
+<mailto:jack@suse.cz>>
+>>>>>>>>>> ---
+>>>>>>>>>> block/bfq-iosched.c | 42 =
+------------------------------------------
+>>>>>>>>>> block/bfq-iosched.h | 18 +++++++++---------
+>>>>>>>>>> block/bfq-wf2q.c    | 19 ++++---------------
+>>>>>>>>>> 3 files changed, 13 insertions(+), 66 deletions(-)
+>>>>>>>>>>=20
+>>>>>>>>>> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+>>>>>>>>>> index 0ec21018daba..03b04892440c 100644
+>>>>>>>>>> --- a/block/bfq-iosched.c
+>>>>>>>>>> +++ b/block/bfq-iosched.c
+>>>>>>>>>> @@ -970,48 +970,6 @@ void __bfq_weights_tree_remove(struct =
+bfq_data *bfqd,
+>>>>>>>>>> void bfq_weights_tree_remove(struct bfq_data *bfqd,
+>>>>>>>>>>     struct bfq_queue *bfqq)
+>>>>>>>>>> {
+>>>>>>>>>> -struct bfq_entity *entity =3D bfqq->entity.parent;
+>>>>>>>>>> -
+>>>>>>>>>> -for_each_entity(entity) {
+>>>>>>>>>> -struct bfq_sched_data *sd =3D entity->my_sched_data;
+>>>>>>>>>> -
+>>>>>>>>>> -if (sd->next_in_service || sd->in_service_entity) {
+>>>>>>>>>> -/*
+>>>>>>>>>> -* entity is still active, because either
+>>>>>>>>>> -* next_in_service or in_service_entity is not
+>>>>>>>>>> -* NULL (see the comments on the definition of
+>>>>>>>>>> -* next_in_service for details on why
+>>>>>>>>>> -* in_service_entity must be checked too).
+>>>>>>>>>> -*
+>>>>>>>>>> -* As a consequence, its parent entities are
+>>>>>>>>>> -* active as well, and thus this loop must
+>>>>>>>>>> -* stop here.
+>>>>>>>>>> -*/
+>>>>>>>>>> -break;
+>>>>>>>>>> -}
+>>>>>>>>>> -
+>>>>>>>>>> -/*
+>>>>>>>>>> -* The decrement of num_groups_with_pending_reqs is
+>>>>>>>>>> -* not performed immediately upon the deactivation of
+>>>>>>>>>> -* entity, but it is delayed to when it also happens
+>>>>>>>>>> -* that the first leaf descendant bfqq of entity gets
+>>>>>>>>>> -* all its pending requests completed. The following
+>>>>>>>>>> -* instructions perform this delayed decrement, if
+>>>>>>>>>> -* needed. See the comments on
+>>>>>>>>>> -* num_groups_with_pending_reqs for details.
+>>>>>>>>>> -*/
+>>>>>>>>>> -if (entity->in_groups_with_pending_reqs) {
+>>>>>>>>>> -entity->in_groups_with_pending_reqs =3D false;
+>>>>>>>>>> -bfqd->num_groups_with_pending_reqs--;
+>>>>>>>>>> -}
+>>>>>>>>>> -}
+>>>>>>>>> With this part removed, I'm missing how you handle the =
+following
+>>>>>>>>> sequence of events:
+>>>>>>>>> 1.  a queue Q becomes non busy but still has dispatched =
+requests, so
+>>>>>>>>> it must not be removed from the counter of queues with pending =
+reqs
+>>>>>>>>> yet
+>>>>>>>>> 2.  the last request of Q is completed with Q being still idle =
+(non
+>>>>>>>>> busy).  At this point Q must be removed from the counter.  It =
+seems to
+>>>>>>>>> me that this case is not handled any longer
+>>>>>>>> Hi, Paolo
+>>>>>>>>=20
+>>>>>>>> 1) At first, patch 1 support to track if bfqq has pending =
+requests, it's
+>>>>>>>> done by setting the flag 'entity->in_groups_with_pending_reqs' =
+when the
+>>>>>>>> first request is inserted to bfqq, and it's cleared when the =
+last
+>>>>>>>> request is completed(based on weights_tree insertion and =
+removal).
+>>>>>>>>=20
+>>>>>>>=20
+>>>>>>> In patch 1 I don't see the flag cleared for the =
+request-completion event :(
+>>>>>>>=20
+>>>>>>> The piece of code involved is this:
+>>>>>>>=20
+>>>>>>> static void bfq_completed_request(struct bfq_queue *bfqq, struct =
+bfq_data *bfqd)
+>>>>>>> {
+>>>>>>> u64 now_ns;
+>>>>>>> u32 delta_us;
+>>>>>>>=20
+>>>>>>> bfq_update_hw_tag(bfqd);
+>>>>>>>=20
+>>>>>>> bfqd->rq_in_driver[bfqq->actuator_idx]--;
+>>>>>>> bfqd->tot_rq_in_driver--;
+>>>>>>> bfqq->dispatched--;
+>>>>>>>=20
+>>>>>>> if (!bfqq->dispatched && !bfq_bfqq_busy(bfqq)) {
+>>>>>>> /*
+>>>>>>> * Set budget_timeout (which we overload to store the
+>>>>>>> * time at which the queue remains with no backlog and
+>>>>>>> * no outstanding request; used by the weight-raising
+>>>>>>> * mechanism).
+>>>>>>> */
+>>>>>>> bfqq->budget_timeout =3D jiffies;
+>>>>>>>=20
+>>>>>>> bfq_weights_tree_remove(bfqd, bfqq);
+>>>>>>> }
+>>>>>>> ...
+>>>>>>>=20
+>>>>>>> Am I missing something?
+>>>>>>=20
+>>>>>> I add a new api bfq_del_bfqq_in_groups_with_pending_reqs() in =
+patch 1
+>>>>>> to clear the flag, and it's called both from bfq_del_bfqq_busy() =
+and
+>>>>>> bfq_completed_request(). I think you may miss the later:
+>>>>>>=20
+>>>>>> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+>>>>>> index 0d46cb728bbf..0ec21018daba 100644
+>>>>>> --- a/block/bfq-iosched.c
+>>>>>> +++ b/block/bfq-iosched.c
+>>>>>> @@ -6263,6 +6263,7 @@ static void bfq_completed_request(struct =
+bfq_queue *bfqq, struct bfq_data *bfqd)
+>>>>>>           */
+>>>>>>          bfqq->budget_timeout =3D jiffies;
+>>>>>>=20
+>>>>>> +        bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
+>>>>>>          bfq_weights_tree_remove(bfqd, bfqq);
+>>>>>>      }
+>>>>>>=20
+>>>>>> Thanks,
+>>>>>> Kuai
+>>>>>>>=20
+>>>>>>> Thanks,
+>>>>>>> Paolo
+>>>>>=20
+>>>> .
+>=20
+
