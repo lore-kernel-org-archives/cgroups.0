@@ -1,101 +1,64 @@
-From: Roberto Sassu <roberto.sassu-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH 6/7] selftests/bpf: Ensure fd modes are checked for map iters and destroy links
-Date: Tue,  6 Sep 2022 19:03:00 +0200
-Message-ID: <20220906170301.256206-7-roberto.sassu@huaweicloud.com>
-References: <20220906170301.256206-1-roberto.sassu@huaweicloud.com>
+From: Roberto Sassu <roberto.sassu@huaweicloud.com>
+Subject: [PATCH 0/7] bpf: Add fd modes check for map iter and extend libbpf
+Date: Tue,  6 Sep 2022 19:02:54 +0200
+Message-ID: <20220906170301.256206-1-roberto.sassu@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20220906170301.256206-1-roberto.sassu-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Return-path: <netdev-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mykolal-b10kYP2dOMg@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jakub-lDpJ742SOEtZroRs9YW3xA@public.gmane.org
-Cc: bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, houtao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Roberto Sassu <roberto.sassu-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, martin.lau@linux.dev, song@kernel.org, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, sdf@google.com, haoluo@google.com, jolsa@kernel.org, mykolal@fb.com, shuah@kernel.org, davem@davemloft.net, edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, jakub@cloudflare.com
+Cc: bpf@vger.kernel.org, netdev@vger.kernel.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, houtao1@huawei.com, Roberto Sassu <roberto.sassu@huawei.com>
 
-From: Roberto Sassu <roberto.sassu-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Roberto Sassu <roberto.sassu@huawei.com>
 
-Add an additional check in do_read_map_iter_fd(), to ensure that map
-iterators requiring read-write access to a map cannot be created when they
-receive as input a read-only fd. Do it for array maps, sk storage maps and
-sock maps.
+Add a missing fd modes check in map iterators, potentially causing
+unauthorized map writes by eBPF programs attached to the iterator. Use this
+patch set as an opportunity to start a discussion with the cgroup
+developers about whether a security check is missing or not for their
+iterator.
 
-Allowing that operation could result in a map update operation not
-authorized by LSMs (since they were asked for read-only access).
+Also, extend libbpf with the _opts variant of bpf_*_get_fd_by_id(). Only
+bpf_map_get_fd_by_id_opts() is really useful in this patch set, to ensure
+that the creation of a map iterator fails with a read-only fd.
 
-Finally, destroy the link when it is not supposed to be created.
+Add all variants in this patch set for symmetry with
+bpf_map_get_fd_by_id_opts(), and because all the variants share the same
+opts structure. Also, add all the variants here, to shrink the patch set
+fixing map permissions requested by bpftool, so that the remaining patches
+are only about the latter.
 
-Signed-off-by: Roberto Sassu <roberto.sassu-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- .../selftests/bpf/prog_tests/bpf_iter.c       | 34 +++++++++++++++++--
- 1 file changed, 31 insertions(+), 3 deletions(-)
+Finally, extend the bpf_iter test with the read-only fd check, and test
+each _opts variant of bpf_*_get_fd_by_id().
 
-diff --git a/tools/testing/selftests/bpf/prog_tests/bpf_iter.c b/tools/testing/selftests/bpf/prog_tests/bpf_iter.c
-index e89685bd587c..b2d067d38f47 100644
---- a/tools/testing/selftests/bpf/prog_tests/bpf_iter.c
-+++ b/tools/testing/selftests/bpf/prog_tests/bpf_iter.c
-@@ -72,10 +72,38 @@ static void do_read_map_iter_fd(struct bpf_object_skeleton **skel, struct bpf_pr
- 				struct bpf_map *map)
- {
- 	DECLARE_LIBBPF_OPTS(bpf_iter_attach_opts, opts);
-+	struct bpf_map_info info_m = { 0 };
-+	__u32 info_m_len = sizeof(info_m);
- 	union bpf_iter_link_info linfo;
- 	struct bpf_link *link;
- 	char buf[16] = {};
- 	int iter_fd, len;
-+	int ret, fd;
-+
-+	DECLARE_LIBBPF_OPTS(bpf_get_fd_opts, fd_opts_rdonly,
-+		.open_flags = BPF_F_RDONLY,
-+	);
-+
-+	ret = bpf_obj_get_info_by_fd(bpf_map__fd(map), &info_m, &info_m_len);
-+	if (!ASSERT_OK(ret, "bpf_obj_get_info_by_fd"))
-+		return;
-+
-+	fd = bpf_map_get_fd_by_id_opts(info_m.id, &fd_opts_rdonly);
-+	if (!ASSERT_GE(fd, 0, "bpf_map_get_fd_by_id_opts"))
-+		return;
-+
-+	memset(&linfo, 0, sizeof(linfo));
-+	linfo.map.map_fd = fd;
-+	opts.link_info = &linfo;
-+	opts.link_info_len = sizeof(linfo);
-+	link = bpf_program__attach_iter(prog, &opts);
-+
-+	close(fd);
-+
-+	if (!ASSERT_ERR_PTR(link, "attach_map_iter")) {
-+		bpf_link__destroy(link);
-+		return;
-+	}
- 
- 	memset(&linfo, 0, sizeof(linfo));
- 	linfo.map.map_fd = bpf_map__fd(map);
-@@ -656,12 +684,12 @@ static void test_bpf_hash_map(void)
- 	opts.link_info_len = sizeof(linfo);
- 	link = bpf_program__attach_iter(skel->progs.dump_bpf_hash_map, &opts);
- 	if (!ASSERT_ERR_PTR(link, "attach_iter"))
--		goto out;
-+		goto free_link;
- 
- 	linfo.map.map_fd = bpf_map__fd(skel->maps.hashmap3);
- 	link = bpf_program__attach_iter(skel->progs.dump_bpf_hash_map, &opts);
- 	if (!ASSERT_ERR_PTR(link, "attach_iter"))
--		goto out;
-+		goto free_link;
- 
- 	/* hashmap1 should be good, update map values here */
- 	map_fd = bpf_map__fd(skel->maps.hashmap1);
-@@ -683,7 +711,7 @@ static void test_bpf_hash_map(void)
- 	linfo.map.map_fd = map_fd;
- 	link = bpf_program__attach_iter(skel->progs.sleepable_dummy_dump, &opts);
- 	if (!ASSERT_ERR_PTR(link, "attach_sleepable_prog_to_iter"))
--		goto out;
-+		goto free_link;
- 
- 	linfo.map.map_fd = map_fd;
- 	link = bpf_program__attach_iter(skel->progs.dump_bpf_hash_map, &opts);
+Roberto Sassu (7):
+  bpf: Add missing fd modes check for map iterators
+  libbpf: Define bpf_get_fd_opts and introduce
+    bpf_map_get_fd_by_id_opts()
+  libbpf: Introduce bpf_prog_get_fd_by_id_opts()
+  libbpf: Introduce bpf_btf_get_fd_by_id_opts()
+  libbpf: Introduce bpf_link_get_fd_by_id_opts()
+  selftests/bpf: Ensure fd modes are checked for map iters and destroy
+    links
+  selftests/bpf: Add tests for _opts variants of libbpf
+
+ include/linux/bpf.h                           |   2 +-
+ kernel/bpf/inode.c                            |   2 +-
+ kernel/bpf/map_iter.c                         |   3 +-
+ kernel/bpf/syscall.c                          |   8 +-
+ net/core/bpf_sk_storage.c                     |   3 +-
+ net/core/sock_map.c                           |   3 +-
+ tools/lib/bpf/bpf.c                           |  47 +++++-
+ tools/lib/bpf/bpf.h                           |  16 ++
+ tools/lib/bpf/libbpf.map                      |  10 +-
+ tools/lib/bpf/libbpf_version.h                |   2 +-
+ .../selftests/bpf/prog_tests/bpf_iter.c       |  34 +++-
+ .../bpf/prog_tests/libbpf_get_fd_opts.c       | 145 ++++++++++++++++++
+ .../bpf/progs/test_libbpf_get_fd_opts.c       |  49 ++++++
+ 13 files changed, 309 insertions(+), 15 deletions(-)
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/libbpf_get_fd_opts.c
+ create mode 100644 tools/testing/selftests/bpf/progs/test_libbpf_get_fd_opts.c
+
 -- 
 2.25.1
 
