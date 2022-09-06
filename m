@@ -1,97 +1,101 @@
-From: Roberto Sassu <roberto.sassu@huaweicloud.com>
-Subject: [PATCH 5/7] libbpf: Introduce bpf_link_get_fd_by_id_opts()
-Date: Tue,  6 Sep 2022 19:02:59 +0200
-Message-ID: <20220906170301.256206-6-roberto.sassu@huaweicloud.com>
+From: Roberto Sassu <roberto.sassu-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: [PATCH 6/7] selftests/bpf: Ensure fd modes are checked for map iters and destroy links
+Date: Tue,  6 Sep 2022 19:03:00 +0200
+Message-ID: <20220906170301.256206-7-roberto.sassu@huaweicloud.com>
 References: <20220906170301.256206-1-roberto.sassu@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <bpf-owner@vger.kernel.org>
-In-Reply-To: <20220906170301.256206-1-roberto.sassu@huaweicloud.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20220906170301.256206-1-roberto.sassu-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, martin.lau@linux.dev, song@kernel.org, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, sdf@google.com, haoluo@google.com, jolsa@kernel.org, mykolal@fb.com, shuah@kernel.org, davem@davemloft.net, edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, jakub@cloudflare.com
-Cc: bpf@vger.kernel.org, netdev@vger.kernel.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, houtao1@huawei.com, Roberto Sassu <roberto.sassu@huawei.com>
+To: ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mykolal-b10kYP2dOMg@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jakub-lDpJ742SOEtZroRs9YW3xA@public.gmane.org
+Cc: bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, houtao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Roberto Sassu <roberto.sassu-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-From: Roberto Sassu <roberto.sassu@huawei.com>
+From: Roberto Sassu <roberto.sassu-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Introduce bpf_link_get_fd_by_id_opts(), for symmetry with
-bpf_map_get_fd_by_id_opts(), to let the caller pass the newly introduced
-data structure bpf_get_fd_opts. Keep the existing bpf_link_get_fd_by_id(),
-and call bpf_link_get_fd_by_id_opts() with NULL as opts argument, to
-prevent setting open_flags.
+Add an additional check in do_read_map_iter_fd(), to ensure that map
+iterators requiring read-write access to a map cannot be created when they
+receive as input a read-only fd. Do it for array maps, sk storage maps and
+sock maps.
 
-Currently, the kernel does not support non-zero open_flags for
-bpf_link_get_fd_by_id_opts(), and a call with them will result in an error
-returned by the bpf() system call. The caller should always pass zero
-open_flags.
+Allowing that operation could result in a map update operation not
+authorized by LSMs (since they were asked for read-only access).
 
-Signed-off-by: Roberto Sassu <roberto.sassu@huawei.com>
+Finally, destroy the link when it is not supposed to be created.
+
+Signed-off-by: Roberto Sassu <roberto.sassu-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- tools/lib/bpf/bpf.c      | 12 +++++++++++-
- tools/lib/bpf/bpf.h      |  2 ++
- tools/lib/bpf/libbpf.map |  1 +
- 3 files changed, 14 insertions(+), 1 deletion(-)
+ .../selftests/bpf/prog_tests/bpf_iter.c       | 34 +++++++++++++++++--
+ 1 file changed, 31 insertions(+), 3 deletions(-)
 
-diff --git a/tools/lib/bpf/bpf.c b/tools/lib/bpf/bpf.c
-index f43e8c8afbd3..f3d89a2bdb50 100644
---- a/tools/lib/bpf/bpf.c
-+++ b/tools/lib/bpf/bpf.c
-@@ -1003,19 +1003,29 @@ int bpf_btf_get_fd_by_id(__u32 id)
- 	return bpf_btf_get_fd_by_id_opts(id, NULL);
- }
- 
--int bpf_link_get_fd_by_id(__u32 id)
-+int bpf_link_get_fd_by_id_opts(__u32 id,
-+			       const struct bpf_get_fd_opts *opts)
+diff --git a/tools/testing/selftests/bpf/prog_tests/bpf_iter.c b/tools/testing/selftests/bpf/prog_tests/bpf_iter.c
+index e89685bd587c..b2d067d38f47 100644
+--- a/tools/testing/selftests/bpf/prog_tests/bpf_iter.c
++++ b/tools/testing/selftests/bpf/prog_tests/bpf_iter.c
+@@ -72,10 +72,38 @@ static void do_read_map_iter_fd(struct bpf_object_skeleton **skel, struct bpf_pr
+ 				struct bpf_map *map)
  {
- 	const size_t attr_sz = offsetofend(union bpf_attr, open_flags);
- 	union bpf_attr attr;
- 	int fd;
- 
-+	if (!OPTS_VALID(opts, bpf_get_fd_opts))
-+		return libbpf_err(-EINVAL);
+ 	DECLARE_LIBBPF_OPTS(bpf_iter_attach_opts, opts);
++	struct bpf_map_info info_m = { 0 };
++	__u32 info_m_len = sizeof(info_m);
+ 	union bpf_iter_link_info linfo;
+ 	struct bpf_link *link;
+ 	char buf[16] = {};
+ 	int iter_fd, len;
++	int ret, fd;
 +
- 	memset(&attr, 0, attr_sz);
- 	attr.link_id = id;
-+	attr.open_flags = OPTS_GET(opts, open_flags, 0);
- 
- 	fd = sys_bpf_fd(BPF_LINK_GET_FD_BY_ID, &attr, attr_sz);
- 	return libbpf_err_errno(fd);
- }
- 
-+int bpf_link_get_fd_by_id(__u32 id)
-+{
-+	return bpf_link_get_fd_by_id_opts(id, NULL);
-+}
++	DECLARE_LIBBPF_OPTS(bpf_get_fd_opts, fd_opts_rdonly,
++		.open_flags = BPF_F_RDONLY,
++	);
 +
- int bpf_obj_get_info_by_fd(int bpf_fd, void *info, __u32 *info_len)
- {
- 	const size_t attr_sz = offsetofend(union bpf_attr, info);
-diff --git a/tools/lib/bpf/bpf.h b/tools/lib/bpf/bpf.h
-index 35c0cc6ed71b..04813e5ac309 100644
---- a/tools/lib/bpf/bpf.h
-+++ b/tools/lib/bpf/bpf.h
-@@ -382,6 +382,8 @@ LIBBPF_API int bpf_map_get_fd_by_id(__u32 id);
- LIBBPF_API int bpf_btf_get_fd_by_id_opts(__u32 id,
- 					 const struct bpf_get_fd_opts *opts);
- LIBBPF_API int bpf_btf_get_fd_by_id(__u32 id);
-+LIBBPF_API int bpf_link_get_fd_by_id_opts(__u32 id,
-+					  const struct bpf_get_fd_opts *opts);
- LIBBPF_API int bpf_link_get_fd_by_id(__u32 id);
- LIBBPF_API int bpf_obj_get_info_by_fd(int bpf_fd, void *info, __u32 *info_len);
++	ret = bpf_obj_get_info_by_fd(bpf_map__fd(map), &info_m, &info_m_len);
++	if (!ASSERT_OK(ret, "bpf_obj_get_info_by_fd"))
++		return;
++
++	fd = bpf_map_get_fd_by_id_opts(info_m.id, &fd_opts_rdonly);
++	if (!ASSERT_GE(fd, 0, "bpf_map_get_fd_by_id_opts"))
++		return;
++
++	memset(&linfo, 0, sizeof(linfo));
++	linfo.map.map_fd = fd;
++	opts.link_info = &linfo;
++	opts.link_info_len = sizeof(linfo);
++	link = bpf_program__attach_iter(prog, &opts);
++
++	close(fd);
++
++	if (!ASSERT_ERR_PTR(link, "attach_map_iter")) {
++		bpf_link__destroy(link);
++		return;
++	}
  
-diff --git a/tools/lib/bpf/libbpf.map b/tools/lib/bpf/libbpf.map
-index 7db2d963cb55..e52816e2555a 100644
---- a/tools/lib/bpf/libbpf.map
-+++ b/tools/lib/bpf/libbpf.map
-@@ -372,6 +372,7 @@ LIBBPF_1.0.0 {
- LIBBPF_1.1.0 {
- 	global:
- 		bpf_btf_get_fd_by_id_opts;
-+		bpf_link_get_fd_by_id_opts;
- 		bpf_map_get_fd_by_id_opts;
- 		bpf_prog_get_fd_by_id_opts;
- } LIBBPF_1.0.0;
+ 	memset(&linfo, 0, sizeof(linfo));
+ 	linfo.map.map_fd = bpf_map__fd(map);
+@@ -656,12 +684,12 @@ static void test_bpf_hash_map(void)
+ 	opts.link_info_len = sizeof(linfo);
+ 	link = bpf_program__attach_iter(skel->progs.dump_bpf_hash_map, &opts);
+ 	if (!ASSERT_ERR_PTR(link, "attach_iter"))
+-		goto out;
++		goto free_link;
+ 
+ 	linfo.map.map_fd = bpf_map__fd(skel->maps.hashmap3);
+ 	link = bpf_program__attach_iter(skel->progs.dump_bpf_hash_map, &opts);
+ 	if (!ASSERT_ERR_PTR(link, "attach_iter"))
+-		goto out;
++		goto free_link;
+ 
+ 	/* hashmap1 should be good, update map values here */
+ 	map_fd = bpf_map__fd(skel->maps.hashmap1);
+@@ -683,7 +711,7 @@ static void test_bpf_hash_map(void)
+ 	linfo.map.map_fd = map_fd;
+ 	link = bpf_program__attach_iter(skel->progs.sleepable_dummy_dump, &opts);
+ 	if (!ASSERT_ERR_PTR(link, "attach_sleepable_prog_to_iter"))
+-		goto out;
++		goto free_link;
+ 
+ 	linfo.map.map_fd = map_fd;
+ 	link = bpf_program__attach_iter(skel->progs.dump_bpf_hash_map, &opts);
 -- 
 2.25.1
 
