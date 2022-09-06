@@ -1,60 +1,97 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [Phishing Risk] [External] Re: [PATCH] cgroup/cpuset: Add a new
- isolated mems.policy type.
-Date: Tue, 6 Sep 2022 07:19:21 -1000
-Message-ID: <YxeBGeOaQxvlPLzo@slm.duckdns.org>
-References: <20220902063303.1057-1-hezhongkun.hzk@bytedance.com>
- <YxT/liaotbiOod51@slm.duckdns.org>
- <c05bdeac-b354-0ac7-3233-27f8e5cbb38a@bytedance.com>
+From: Roberto Sassu <roberto.sassu@huaweicloud.com>
+Subject: [PATCH 4/7] libbpf: Introduce bpf_btf_get_fd_by_id_opts()
+Date: Tue,  6 Sep 2022 19:02:58 +0200
+Message-ID: <20220906170301.256206-5-roberto.sassu@huaweicloud.com>
+References: <20220906170301.256206-1-roberto.sassu@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date;
-        bh=DLlnc6RmTg0BKq5WkTFW6Fs5pUb+s+A4h9B4fzKjhrI=;
-        b=csTIT6mI2KzzjqaY8cqY1Odnetkmo9YoZgm1ta/V1CfQXFGHrNl5ID11UWr9EwdqWT
-         ybdIbatthK94dyrnSRNDRzDCley5Yk5BpAeFv0jlVOckHWFPIroZTDp8BT8QYEWrvkct
-         BA4eS1H6rJQxAfoCXt7ExiwOLg+VBwXu131zL1best+97Y5E8nYjpo+rR0a96WS+Wzv7
-         MjQLtS57kFrjmK6AclQeajykuyehhqAxxl6b2xCpvmumWgksYXgKSp//v3sHRcowshtU
-         cRIDx7lZIZpbAiQjffFScK2mWcqYWBLsFSVHgLV9dxsr6wqBZCCZBcPK/KMRw6ofIq1L
-         5hEw==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <c05bdeac-b354-0ac7-3233-27f8e5cbb38a-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <bpf-owner@vger.kernel.org>
+In-Reply-To: <20220906170301.256206-1-roberto.sassu@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Zhongkun He <hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, martin.lau@linux.dev, song@kernel.org, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, sdf@google.com, haoluo@google.com, jolsa@kernel.org, mykolal@fb.com, shuah@kernel.org, davem@davemloft.net, edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, jakub@cloudflare.com
+Cc: bpf@vger.kernel.org, netdev@vger.kernel.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, houtao1@huawei.com, Roberto Sassu <roberto.sassu@huawei.com>
 
-Hello,
+From: Roberto Sassu <roberto.sassu@huawei.com>
 
-On Mon, Sep 05, 2022 at 06:30:38PM +0800, Zhongkun He wrote:
-> We usually use numactl to set the memory policy, but it cannot be changed
-> dynamically. In addition, the mempolicy of cpuset can provide a more
-> convenient interface for management and control panel.
+Introduce bpf_btf_get_fd_by_id_opts(), for symmetry with
+bpf_map_get_fd_by_id_opts(), to let the caller pass the newly introduced
+data structure bpf_get_fd_opts. Keep the existing bpf_btf_get_fd_by_id(),
+and call bpf_btf_get_fd_by_id_opts() with NULL as opts argument, to prevent
+setting open_flags.
 
-But you can write a better tool easily in userspace to do whatever you wanna
-do, right? If you're worried about racing against forks, you can freeze the
-cgroup, iterate all pids applying whatever new policy and then unfreeze. We
-can probably improve the freezer interface so that multiple users don't
-conflict with each other but that shouldn't be too difficult to do and is
-gonna be useful generically.
+Currently, the kernel does not support non-zero open_flags for
+bpf_btf_get_fd_by_id_opts(), and a call with them will result in an error
+returned by the bpf() system call. The caller should always pass zero
+open_flags.
 
-I don't see much point in adding something which can be almost trivially
-implemented in userspace as a built-in kernel feature.
+Signed-off-by: Roberto Sassu <roberto.sassu@huawei.com>
+---
+ tools/lib/bpf/bpf.c      | 12 +++++++++++-
+ tools/lib/bpf/bpf.h      |  2 ++
+ tools/lib/bpf/libbpf.map |  1 +
+ 3 files changed, 14 insertions(+), 1 deletion(-)
 
-> Sorry,I don't quite understand the meaning of "don't enforce anything
-> resource related". Does it mean mempolicy, such as "prefer:2" must specify
-> node? Or "cpuset.mems.policy" need to specify a default value?
-> (cpuset.mems.policy does not require a default value.)
-
-In that there's no real resource being distributed hierarchically like cpu
-cycles or memory capacities. All it's doing is changing attributes for a
-group of processes, which can be done from userspace all the same.
-
-Thanks.
-
+diff --git a/tools/lib/bpf/bpf.c b/tools/lib/bpf/bpf.c
+index 92464c2d1da7..f43e8c8afbd3 100644
+--- a/tools/lib/bpf/bpf.c
++++ b/tools/lib/bpf/bpf.c
+@@ -980,19 +980,29 @@ int bpf_map_get_fd_by_id(__u32 id)
+ 	return bpf_map_get_fd_by_id_opts(id, NULL);
+ }
+ 
+-int bpf_btf_get_fd_by_id(__u32 id)
++int bpf_btf_get_fd_by_id_opts(__u32 id,
++			      const struct bpf_get_fd_opts *opts)
+ {
+ 	const size_t attr_sz = offsetofend(union bpf_attr, open_flags);
+ 	union bpf_attr attr;
+ 	int fd;
+ 
++	if (!OPTS_VALID(opts, bpf_get_fd_opts))
++		return libbpf_err(-EINVAL);
++
+ 	memset(&attr, 0, attr_sz);
+ 	attr.btf_id = id;
++	attr.open_flags = OPTS_GET(opts, open_flags, 0);
+ 
+ 	fd = sys_bpf_fd(BPF_BTF_GET_FD_BY_ID, &attr, attr_sz);
+ 	return libbpf_err_errno(fd);
+ }
+ 
++int bpf_btf_get_fd_by_id(__u32 id)
++{
++	return bpf_btf_get_fd_by_id_opts(id, NULL);
++}
++
+ int bpf_link_get_fd_by_id(__u32 id)
+ {
+ 	const size_t attr_sz = offsetofend(union bpf_attr, open_flags);
+diff --git a/tools/lib/bpf/bpf.h b/tools/lib/bpf/bpf.h
+index 9471c6e05b83..35c0cc6ed71b 100644
+--- a/tools/lib/bpf/bpf.h
++++ b/tools/lib/bpf/bpf.h
+@@ -379,6 +379,8 @@ LIBBPF_API int bpf_prog_get_fd_by_id(__u32 id);
+ LIBBPF_API int bpf_map_get_fd_by_id_opts(__u32 id,
+ 					 const struct bpf_get_fd_opts *opts);
+ LIBBPF_API int bpf_map_get_fd_by_id(__u32 id);
++LIBBPF_API int bpf_btf_get_fd_by_id_opts(__u32 id,
++					 const struct bpf_get_fd_opts *opts);
+ LIBBPF_API int bpf_btf_get_fd_by_id(__u32 id);
+ LIBBPF_API int bpf_link_get_fd_by_id(__u32 id);
+ LIBBPF_API int bpf_obj_get_info_by_fd(int bpf_fd, void *info, __u32 *info_len);
+diff --git a/tools/lib/bpf/libbpf.map b/tools/lib/bpf/libbpf.map
+index 823aee68dc4e..7db2d963cb55 100644
+--- a/tools/lib/bpf/libbpf.map
++++ b/tools/lib/bpf/libbpf.map
+@@ -371,6 +371,7 @@ LIBBPF_1.0.0 {
+ 
+ LIBBPF_1.1.0 {
+ 	global:
++		bpf_btf_get_fd_by_id_opts;
+ 		bpf_map_get_fd_by_id_opts;
+ 		bpf_prog_get_fd_by_id_opts;
+ } LIBBPF_1.0.0;
 -- 
-tejun
+2.25.1
+
