@@ -1,327 +1,101 @@
-From: Paolo Valente <paolo.valente@unimore.it>
-Subject: Re: [PATCH -next v10 3/4] block, bfq: refactor the counting of
- 'num_groups_with_pending_reqs'
-Date: Tue, 6 Sep 2022 11:37:22 +0200
-Message-ID: <F758A356-EE6B-4B7B-95E2-6414616C77E4@unimore.it>
-References: <20220610021701.2347602-1-yukuai3@huawei.com>
- <20220610021701.2347602-4-yukuai3@huawei.com>
- <27F2DF19-7CC6-42C5-8CEB-43583EB4AE46@linaro.org>
- <abdbb5db-e280-62f8-0670-536fcb8ec4d9@huaweicloud.com>
- <C2CF100A-9A7C-4300-9A70-1295BC939C66@unimore.it>
- <9b2d667f-6636-9347-08a1-8bd0aa2346f2@huaweicloud.com>
- <2f94f241-445f-1beb-c4a8-73f6efce5af2@huaweicloud.com>
- <55A07102-BE55-4606-9E32-64E884064FB9@unimore.it>
- <5cb0e5bc-feec-86d6-6f60-3c28ee625efd@huaweicloud.com>
- <D89DCF20-27D8-4F8F-B8B0-FD193FC4F18D@unimore.it>
- <e6b53794-f93f-92b2-1f45-35ae81a28a5c@huaweicloud.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
+From: Zhongkun He <hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [External] Re: [PATCH] cgroup/cpuset: Add a new isolated
+ mems.policy type.
+Date: Tue, 6 Sep 2022 18:37:40 +0800
+Message-ID: <ca5e57fd-4699-2cec-b328-3d6bac43c8ef@bytedance.com>
+References: <20220904040241.1708-1-hezhongkun.hzk@bytedance.com>
+ <YxWbBYZKDTrkmlOe@dhcp22.suse.cz>
+ <0e5f380b-9201-0f56-9144-ce8449491fc8@bytedance.com>
+ <YxXUjvWmZoG9vVNV@dhcp22.suse.cz>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=unimore.it; s=google;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date;
-        bh=8ab4/KXC/VCJGrAM6wTzpCaYMhm/3tELW6Q/pF3d2yg=;
-        b=L3k2+HgNwBNOQ+ow8ojCGK5dmzXXckSbJ+ltZKHL+uHxZCqB3njwCzg4VdkEf9pYyo
-         EHv2NqYduPH+u4g9bR0foiCS+VYuNHJVpX8cgX5XNnWyA4eA9MNFy81mtKNNXVKGyXYu
-         sMK0dhdUQPuxSHK/l42tDAlBU7HRuTmuzbk2g=
-In-Reply-To: <e6b53794-f93f-92b2-1f45-35ae81a28a5c@huaweicloud.com>
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date;
+        bh=Xz8bdPgR7exYL3R9SL9LcFFqWqgFZVil8ZYBWFtqEUU=;
+        b=cA7Hl5ls5U/OscRp4DobHKMQjNA6D5C4jKC+7Av/PRDOkYb+XEGwmPKNz+0wLOS61X
+         fhy0qVVTI5ldKJ0RhCmSDZqq/RQePtu4iAEe6umgDYn0MBNIb9KyPYXriWh+6o/CF8Ev
+         0SP2kzY3jn3Ut7Uwr3OOVvEv5KLxDMgFehbIVflowPFwUBRRMOLtK6Poj76c5WL10QlO
+         UZZU0VV5LbhyEHUDIUhN0ptJM5SMq1MRRmLd4NfX9PAtqxwkwlH2NCOb6SDzLvD0tb4k
+         HBIsZ8wCBCeGVl7izNloEowlXHHdNdvPd5dTbNnKUop2/NhG/cwTOuW0nFYVuh7pSAbQ
+         i+6Q==
+In-Reply-To: <YxXUjvWmZoG9vVNV-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Jan Kara <jack@suse.cz>, cgroups@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+
+> On Mon 05-09-22 18:30:55, Zhongkun He wrote:
+>> Hi Michal, thanks for your reply.
+>>
+>> The current 'mempolicy' is hierarchically independent. The default value of
+>> the child is to inherit from the parent. The modification of the child
+>> policy will not be restricted by the parent.
+> 
+> This breaks cgroup fundamental property of hierarchical enforcement of
+> each property. And as such it is a no go.
+> 
+>> Of course, there are other options, such as the child's policy mode must be
+>> the same as the parent's. node can be the subset of parent's, but the
+>> interleave type will be complicated, that's why hierarchy independence is
+>> used. It would be better if you have other suggestions?
+> 
+> Honestly, I am not really sure cgroup cpusets is a great fit for this
+> usecase. It would be probably better to elaborate some more what are the
+> existing shortcomings and what you would like to achieve. Just stating
+> the syscall is a hard to use interface is not quite clear on its own.
+> 
+> Btw. have you noticed this question?
+> 
+>>> What is the hierarchical behavior of the policy? Say parent has a
+>>> stronger requirement (say bind) than a child (prefer)?
+>>>> How to use the mempolicy interface:
+>>>> 	echo prefer:2 > /sys/fs/cgroup/zz/cpuset.mems.policy
+>>>> 	echo bind:1-3 > /sys/fs/cgroup/zz/cpuset.mems.policy
+>>>>           echo interleave:0,1,2,3 >/sys/fs/cgroup/zz/cpuset.mems.policy
+>>>
+>>> Am I just confused or did you really mean to combine all these
+>>> together?
+>
+
+Hi Michal, thanks for your reply.
+
+ >>Say parent has a stronger requirement (say bind) than a child(prefer)?
+
+Yes, combine all these together. The parent's task will use 'bind', 
+child's use 'prefer'.This is the current implementation, and we can 
+discuss and modify it together if there are other suggestions.
+
+1:Existing shortcomings
+
+In our use case, the application and the control plane are two separate 
+systems. When the application is created, it doesn't know how to use 
+memory, and it doesn't care. The control plane will decide the memory 
+usage policy based on different reasons (the attributes of the 
+application itself, the priority, the remaining resources of the 
+system). Currently, numactl is used to set it at program startup, and 
+the child process will inherit the mempolicy. But we can't dynamically 
+adjust the memory policy, except restart, the memory policy will not change.
+
+2:Our goals
+
+For the above reasons, we want to create a mempolicy at the cgroup 
+level. Usually processes under a cgroup have the same priority and 
+attributes, and we can dynamically adjust the memory allocation strategy 
+according to the remaining resources of the system. For example, a 
+low-priority cgroup uses the 'bind:2-3' policy, and a high-priority 
+cgroup uses bind:0-1. When resources are insufficient, it will be 
+changed to bind:3, bind:0-2 by control plane, etc.Further more, more 
+mempolicy can be extended, such as allocating memory according to node 
+weight, etc.
+
+Thanks.
 
 
 
-> Il giorno 26 ago 2022, alle ore 04:34, Yu Kuai =
-<yukuai1@huaweicloud.com> ha scritto:
->=20
-> Hi, Paolo!
->=20
-> =E5=9C=A8 2022/08/25 22:59, Paolo Valente =E5=86=99=E9=81=93:
->>> Il giorno 11 ago 2022, alle ore 03:19, Yu Kuai =
-<yukuai1@huaweicloud.com <mailto:yukuai1@huaweicloud.com>> ha scritto:
->>>=20
->>> Hi, Paolo
->>>=20
->>> =E5=9C=A8 2022/08/10 18:49, Paolo Valente =E5=86=99=E9=81=93:
->>>>> Il giorno 27 lug 2022, alle ore 14:11, Yu Kuai =
-<yukuai1@huaweicloud.com <mailto:yukuai1@huaweicloud.com>> ha scritto:
->>>>>=20
->>>>> Hi, Paolo
->>>>>=20
->>>> hi
->>>>> Are you still interested in this patchset?
->>>>>=20
->>>> Yes. Sorry for replying very late again.
->>>> Probably the last fix that you suggest is enough, but I'm a little =
-bit
->>>> concerned that it may be a little hasty.  In fact, before this fix, =
-we
->>>> exchanged several messages, and I didn't seem to be very good at
->>>> convincing you about the need to keep into account also in-service
->>>> I/O.  So, my question is: are you sure that now you have a
->>>=20
->>> I'm confused here, I'm pretty aware that in-service I/O(as said =
-pending
->>> requests is the patchset) should be counted, as you suggested in v7, =
-are
->>> you still thinking that the way in this patchset is problematic?
->>>=20
->>> I'll try to explain again that how to track is bfqq has pending =
-pending
->>> requests, please let me know if you still think there are some =
-problems:
->>>=20
->>> patch 1 support to track if bfqq has pending requests, it's
->>> done by setting the flag 'entity->in_groups_with_pending_reqs' when =
-the
->>> first request is inserted to bfqq, and it's cleared when the last
->>> request is completed. specifically the flag is set in
->>> bfq_add_bfqq_busy() when 'bfqq->dispatched' if false, and it's =
-cleared
->>> both in bfq_completed_request() and bfq_del_bfqq_busy() when
->>> 'bfqq->diapatched' is false.
->>>=20
->> This general description seems correct to me. Have you already sent a =
-new version of your patchset?
->=20
-> It's glad that we finially on the same page here.
->=20
-
-Yep. Sorry for my chronicle delay.
-
-> Please take a look at patch 1, which already impelement the above
-> descriptions, it seems to me there is no need to send a new version
-> for now. If you think there are still some other problems, please let
-> me know.
->=20
-
-Patch 1 seems ok to me. I seem to have only one pending comment on this =
-patch (3/4) instead. Let me paste previous stuff here for your =
-convenience:
-
->>=20
->> -	/*
->> -	 * Next function is invoked last, because it causes bfqq to be
->> -	 * freed if the following holds: bfqq is not in service and
->> -	 * has no dispatched request. DO NOT use bfqq after the next
->> -	 * function invocation.
->> -	 */
-> I would really love it if you leave this comment.  I added it after
-> suffering a lot for a nasty UAF.  Of course the first sentence may
-> need to be adjusted if the code that precedes it is to be removed.
-> Same as above, if this patch is applied, this function will be gone.
-
-yes, but this comment now must be moved forward.
-
-Looking forward for a new complete version, for a new review.  I'll do
-my best to reply quicker.
-
-Thanks,
-Paolo
+	
 
 
-
-
-
-> Thanks,
-> Kuai
->> Thanks,
->> Paolo
->>> Thanks,
->>> Kuai
->>>> clear/complete understanding of this non-trivial matter?
->>>> Consequently, are we sure that this last fix is most certainly all =
-we
->>>> need?  Of course, I will check on my own, but if you reassure me on
->>>> this point, I will feel more confident.
->>>> Thanks,
->>>> Paolo
->>>>> =E5=9C=A8 2022/07/20 19:38, Yu Kuai =E5=86=99=E9=81=93:
->>>>>> Hi
->>>>>>=20
->>>>>> =E5=9C=A8 2022/07/20 19:24, Paolo VALENTE =E5=86=99=E9=81=93:
->>>>>>>=20
->>>>>>>=20
->>>>>>>> Il giorno 12 lug 2022, alle ore 15:30, Yu Kuai =
-<yukuai1@huaweicloud.com <mailto:yukuai1@huaweicloud.com> =
-<mailto:yukuai1@huaweicloud.com>> ha scritto:
->>>>>>>>=20
->>>>>>>> Hi!
->>>>>>>>=20
->>>>>>>> I'm copying my reply with new mail address, because Paolo seems
->>>>>>>> didn't receive my reply.
->>>>>>>>=20
->>>>>>>> =E5=9C=A8 2022/06/23 23:32, Paolo Valente =E5=86=99=E9=81=93:
->>>>>>>>> Sorry for the delay.
->>>>>>>>>> Il giorno 10 giu 2022, alle ore 04:17, Yu Kuai =
-<yukuai3@huawei.com <mailto:yukuai3@huawei.com> =
-<mailto:yukuai3@huawei.com>> ha scritto:
->>>>>>>>>>=20
->>>>>>>>>> Currently, bfq can't handle sync io concurrently as long as =
-they
->>>>>>>>>> are not issued from root group. This is because
->>>>>>>>>> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
->>>>>>>>>> bfq_asymmetric_scenario().
->>>>>>>>>>=20
->>>>>>>>>> The way that bfqg is counted into =
-'num_groups_with_pending_reqs':
->>>>>>>>>>=20
->>>>>>>>>> Before this patch:
->>>>>>>>>> 1) root group will never be counted.
->>>>>>>>>> 2) Count if bfqg or it's child bfqgs have pending requests.
->>>>>>>>>> 3) Don't count if bfqg and it's child bfqgs complete all the =
-requests.
->>>>>>>>>>=20
->>>>>>>>>> After this patch:
->>>>>>>>>> 1) root group is counted.
->>>>>>>>>> 2) Count if bfqg have pending requests.
->>>>>>>>>> 3) Don't count if bfqg complete all the requests.
->>>>>>>>>>=20
->>>>>>>>>> With this change, the occasion that only one group is =
-activated can be
->>>>>>>>>> detected, and next patch will support concurrent sync io in =
-the
->>>>>>>>>> occasion.
->>>>>>>>>>=20
->>>>>>>>>> Signed-off-by: Yu Kuai <yukuai3@huawei.com =
-<mailto:yukuai3@huawei.com> <mailto:yukuai3@huawei.com>>
->>>>>>>>>> Reviewed-by: Jan Kara <jack@suse.cz <mailto:jack@suse.cz> =
-<mailto:jack@suse.cz>>
->>>>>>>>>> ---
->>>>>>>>>> block/bfq-iosched.c | 42 =
-------------------------------------------
->>>>>>>>>> block/bfq-iosched.h | 18 +++++++++---------
->>>>>>>>>> block/bfq-wf2q.c    | 19 ++++---------------
->>>>>>>>>> 3 files changed, 13 insertions(+), 66 deletions(-)
->>>>>>>>>>=20
->>>>>>>>>> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
->>>>>>>>>> index 0ec21018daba..03b04892440c 100644
->>>>>>>>>> --- a/block/bfq-iosched.c
->>>>>>>>>> +++ b/block/bfq-iosched.c
->>>>>>>>>> @@ -970,48 +970,6 @@ void __bfq_weights_tree_remove(struct =
-bfq_data *bfqd,
->>>>>>>>>> void bfq_weights_tree_remove(struct bfq_data *bfqd,
->>>>>>>>>>     struct bfq_queue *bfqq)
->>>>>>>>>> {
->>>>>>>>>> -struct bfq_entity *entity =3D bfqq->entity.parent;
->>>>>>>>>> -
->>>>>>>>>> -for_each_entity(entity) {
->>>>>>>>>> -struct bfq_sched_data *sd =3D entity->my_sched_data;
->>>>>>>>>> -
->>>>>>>>>> -if (sd->next_in_service || sd->in_service_entity) {
->>>>>>>>>> -/*
->>>>>>>>>> -* entity is still active, because either
->>>>>>>>>> -* next_in_service or in_service_entity is not
->>>>>>>>>> -* NULL (see the comments on the definition of
->>>>>>>>>> -* next_in_service for details on why
->>>>>>>>>> -* in_service_entity must be checked too).
->>>>>>>>>> -*
->>>>>>>>>> -* As a consequence, its parent entities are
->>>>>>>>>> -* active as well, and thus this loop must
->>>>>>>>>> -* stop here.
->>>>>>>>>> -*/
->>>>>>>>>> -break;
->>>>>>>>>> -}
->>>>>>>>>> -
->>>>>>>>>> -/*
->>>>>>>>>> -* The decrement of num_groups_with_pending_reqs is
->>>>>>>>>> -* not performed immediately upon the deactivation of
->>>>>>>>>> -* entity, but it is delayed to when it also happens
->>>>>>>>>> -* that the first leaf descendant bfqq of entity gets
->>>>>>>>>> -* all its pending requests completed. The following
->>>>>>>>>> -* instructions perform this delayed decrement, if
->>>>>>>>>> -* needed. See the comments on
->>>>>>>>>> -* num_groups_with_pending_reqs for details.
->>>>>>>>>> -*/
->>>>>>>>>> -if (entity->in_groups_with_pending_reqs) {
->>>>>>>>>> -entity->in_groups_with_pending_reqs =3D false;
->>>>>>>>>> -bfqd->num_groups_with_pending_reqs--;
->>>>>>>>>> -}
->>>>>>>>>> -}
->>>>>>>>> With this part removed, I'm missing how you handle the =
-following
->>>>>>>>> sequence of events:
->>>>>>>>> 1.  a queue Q becomes non busy but still has dispatched =
-requests, so
->>>>>>>>> it must not be removed from the counter of queues with pending =
-reqs
->>>>>>>>> yet
->>>>>>>>> 2.  the last request of Q is completed with Q being still idle =
-(non
->>>>>>>>> busy).  At this point Q must be removed from the counter.  It =
-seems to
->>>>>>>>> me that this case is not handled any longer
->>>>>>>> Hi, Paolo
->>>>>>>>=20
->>>>>>>> 1) At first, patch 1 support to track if bfqq has pending =
-requests, it's
->>>>>>>> done by setting the flag 'entity->in_groups_with_pending_reqs' =
-when the
->>>>>>>> first request is inserted to bfqq, and it's cleared when the =
-last
->>>>>>>> request is completed(based on weights_tree insertion and =
-removal).
->>>>>>>>=20
->>>>>>>=20
->>>>>>> In patch 1 I don't see the flag cleared for the =
-request-completion event :(
->>>>>>>=20
->>>>>>> The piece of code involved is this:
->>>>>>>=20
->>>>>>> static void bfq_completed_request(struct bfq_queue *bfqq, struct =
-bfq_data *bfqd)
->>>>>>> {
->>>>>>> u64 now_ns;
->>>>>>> u32 delta_us;
->>>>>>>=20
->>>>>>> bfq_update_hw_tag(bfqd);
->>>>>>>=20
->>>>>>> bfqd->rq_in_driver[bfqq->actuator_idx]--;
->>>>>>> bfqd->tot_rq_in_driver--;
->>>>>>> bfqq->dispatched--;
->>>>>>>=20
->>>>>>> if (!bfqq->dispatched && !bfq_bfqq_busy(bfqq)) {
->>>>>>> /*
->>>>>>> * Set budget_timeout (which we overload to store the
->>>>>>> * time at which the queue remains with no backlog and
->>>>>>> * no outstanding request; used by the weight-raising
->>>>>>> * mechanism).
->>>>>>> */
->>>>>>> bfqq->budget_timeout =3D jiffies;
->>>>>>>=20
->>>>>>> bfq_weights_tree_remove(bfqd, bfqq);
->>>>>>> }
->>>>>>> ...
->>>>>>>=20
->>>>>>> Am I missing something?
->>>>>>=20
->>>>>> I add a new api bfq_del_bfqq_in_groups_with_pending_reqs() in =
-patch 1
->>>>>> to clear the flag, and it's called both from bfq_del_bfqq_busy() =
-and
->>>>>> bfq_completed_request(). I think you may miss the later:
->>>>>>=20
->>>>>> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
->>>>>> index 0d46cb728bbf..0ec21018daba 100644
->>>>>> --- a/block/bfq-iosched.c
->>>>>> +++ b/block/bfq-iosched.c
->>>>>> @@ -6263,6 +6263,7 @@ static void bfq_completed_request(struct =
-bfq_queue *bfqq, struct bfq_data *bfqd)
->>>>>>           */
->>>>>>          bfqq->budget_timeout =3D jiffies;
->>>>>>=20
->>>>>> +        bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
->>>>>>          bfq_weights_tree_remove(bfqd, bfqq);
->>>>>>      }
->>>>>>=20
->>>>>> Thanks,
->>>>>> Kuai
->>>>>>>=20
->>>>>>> Thanks,
->>>>>>> Paolo
->>>>>=20
->>>> .
->=20
 
