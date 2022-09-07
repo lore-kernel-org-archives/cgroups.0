@@ -1,79 +1,57 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: BUG: HANG_DETECT waiting for migration_cpu_stop() complete
-Date: Tue, 6 Sep 2022 17:02:20 -0400
-Message-ID: <879886ba-7d77-11fc-5357-b21e141637ef@redhat.com>
-References: <88b2910181bda955ac46011b695c53f7da39ac47.camel@mediatek.com>
- <b605c3ec-94ab-a55f-5825-9b370d77ecf3@quicinc.com>
- <203d4614c1b2a498a240ace287156e9f401d5395.camel@mediatek.com>
- <YxeR0RoiTdm8sWCJ@slm.duckdns.org>
- <02b8e7b3-941d-8bb9-cd0e-992738893ba3@redhat.com>
- <36a73401-7011-834a-7949-c65a2f66246c@redhat.com>
- <YxeylMvgc/wKcJqk@hirez.programming.kicks-ass.net>
+From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [PATCH v4 00/10] sched/psi: some optimizations and extensions
+Date: Wed, 7 Sep 2022 09:55:06 +0800
+Message-ID: <94fdf793-a568-704e-b6f8-093b8b7fe24a@bytedance.com>
+References: <20220825164111.29534-1-zhouchengming@bytedance.com>
+ <be071d5a-ff2d-d06e-2f89-f2ca247dd19e@bytedance.com>
+ <YxdcfX4Ss/9k8qA9@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1662498145;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=wOjFY7tNKFL7dFNVA6yx/TeGWvfp5wOKn+I8yQQqSS4=;
-        b=Ju1onuYKug+swmkdBSR2v9LEcsyecazwiRANYZ+KIu+KoHu6PWTbDpqtyuxhN05GZ9v+8L
-        13I/ulcBuKPc5Lk+yG/+l8MbFAbHj6oopJ3q/DZ4KhH3wjohejS6VB/V48CeyOpVsCLI9I
-        8gBMWMaF0AY/0KNEyOGFqYstH12kp1M=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date;
+        bh=xyD4Pb2btMZ+ktk/ltP1p8JWsLx2B7oKf49IB7a3hmw=;
+        b=s3UYPk0Ct+f4DGBqXw94s4gfbvQOJzYetBO/7uEBLrzkQYgmjrZFhZYfFuuFVSg4RJ
+         4m242WFFh3Rh9XzSI4nfxcVJsRwB+1dnA9Qn8rjnyUb6L/6oikLS1XP/QoSrMGIgis/j
+         ZqHXIiLsjL+XYncZn0mcNZjCsxMrdMH2G8B1oiPBRtPQBEDzmGSnKfr8RVISEnSq/MGb
+         I51ZIKIWki5K+9nENzI3tP0HMLtrsjlkRDqb01/9P1XEdTBLpytUoIwOVVd1rSrmimzA
+         tkmpu+guejoPlmp2WTMCZSA8o5Ypk51i0GiSJRl9VC4n1fD2MRP4cyewoBbvTe8aDEf9
+         38YQ==
 Content-Language: en-US
-In-Reply-To: <YxeylMvgc/wKcJqk-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+In-Reply-To: <YxdcfX4Ss/9k8qA9-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Type: text/plain; charset="us-ascii"
 To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jing-Ting Wu <jing-ting.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Jonathan.JMChen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, "chris.redpath-5wv7dgnIgG8@public.gmane.org" <chris.redpath-5wv7dgnIgG8@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Vincent Donnefort <vdonnefort-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lixiong.liu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, wenju.xu
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
+On 2022/9/6 22:43, Peter Zijlstra wrote:
+> On Tue, Sep 06, 2022 at 09:13:27PM +0800, Chengming Zhou wrote:
+> 
+> Ah, I see Johannes has acked them all, I missed that.
+> 
+>>> Chengming Zhou (9):
+>>>   sched/psi: fix periodic aggregation shut off
+>>>   sched/psi: don't create cgroup PSI files when psi_disabled
+>>>   sched/psi: save percpu memory when !psi_cgroups_enabled
+>>>   sched/psi: move private helpers to sched/stats.h
+>>>   sched/psi: optimize task switch inside shared cgroups again
+>>>   sched/psi: add PSI_IRQ to track IRQ/SOFTIRQ pressure
+>>>   sched/psi: consolidate cgroup_psi()
+>>>   sched/psi: cache parent psi_group to speed up groups iterate
+>>>   sched/psi: per-cgroup PSI accounting disable/re-enable interface
+>>>
+>>> Johannes Weiner (1):
+>>>   sched/psi: remove NR_ONCPU task accounting
+> 
+> For future reference:
+> 
+>   https://www.kernel.org/doc/html/latest/process/maintainer-tip.html
+> 
+> Note all patches violate 1.2.2 for not starting the patch description
+> with a uppercase letter. I'll go manually fix up this time.
 
-On 9/6/22 16:50, Peter Zijlstra wrote:
-> On Tue, Sep 06, 2022 at 04:40:03PM -0400, Waiman Long wrote:
->
-> I've not followed the earlier stuff due to being unreadable; just
-> reacting to this..
->
->> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
->> index 838623b68031..5d9ea1553ec0 100644
->> --- a/kernel/sched/core.c
->> +++ b/kernel/sched/core.c
->> @@ -2794,9 +2794,9 @@ static int __set_cpus_allowed_ptr_locked(struct
->> task_struct *p,
->>                  if (cpumask_equal(&p->cpus_mask, new_mask))
->>                          goto out;
->>
->> -               if (WARN_ON_ONCE(p == current &&
->> -                                is_migration_disabled(p) &&
->> -                                !cpumask_test_cpu(task_cpu(p), new_mask)))
->> {
->> +               if (is_migration_disabled(p) &&
->> +                   !cpumask_test_cpu(task_cpu(p), new_mask)) {
->> +                       WARN_ON_ONCE(p == current);
->>                          ret = -EBUSY;
->>                          goto out;
->>                  }
->> @@ -2818,7 +2818,11 @@ static int __set_cpus_allowed_ptr_locked(struct
->> task_struct *p,
->>          if (flags & SCA_USER)
->>                  user_mask = clear_user_cpus_ptr(p);
->>
->> -       ret = affine_move_task(rq, p, rf, dest_cpu, flags);
->> +       if (!is_migration_disabled(p) || (flags & SCA_MIGRATE_ENABLE)) {
->> +               ret = affine_move_task(rq, p, rf, dest_cpu, flags);
->> +       } else {
->> +               task_rq_unlock(rq, p, rf);
->> +       }
-> This cannot be right. There might be previous set_cpus_allowed_ptr()
-> callers that are blocked and waiting for the task to land on a valid
-> CPU.
-
-You are probably right. I haven't fully understand all the migration 
-disable code yet. However, if migration is disabled, there are some 
-corner cases we need to handle properly.
-
-Cheers,
-Longman
+Sorry about that, thanks for the reference and your manual fix up!
 
