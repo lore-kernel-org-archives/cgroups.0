@@ -1,33 +1,33 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 538b9e23ed6cc9ae64a7aa79b17317bf16a5d0c1
-Date: Wed, 07 Sep 2022 16:13:09 +0800
-Message-ID: <63185295.tcbxoJHMUFExoKVs%lkp@intel.com>
+Subject: [tj-cgroup:for-6.0-fixes] BUILD SUCCESS
+ a81e18e963ce13ecfa4f0f11b185bc8372f203f8
+Date: Wed, 07 Sep 2022 17:02:09 +0800
+Message-ID: <63185e11.IDnV1xl/sjGGCbYG%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1662538449; x=1694074449;
+  t=1662541391; x=1694077391;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=3TdnOYEVdeUBzMisM085xYKK1KLS+Bb6h4ayASdTCjs=;
-  b=Ux6mOdYQmz7+/tkcex76ktQvJHyPQUGCqyqB+JcyDaCo4JUT63gniIxr
-   e6rlWnA3Tio2eJ+HcTct2LU12WNkXfOYjJQQSwsnEQr2p1nvFOdgtrs8D
-   cl6BHQhVy++/xmpexP6daWRBMuIUnvHZanTdLSAFKYxFt6IfB3rEvMeCW
-   qS/y23fY5FrPBcKztm+LNq9dc+Qofx4p0GO6uPvMXL6D+AbfAX3E8SyIc
-   Kv/pgqBtcTUD49xM9FvAd9sFOYkS53y0Tn/3QFAq6BUNWPVIxYtXBmfa7
-   Jm8i4DL1aU/pai9xlQZNdzG8b4dLyCq6fFp6Cpt8PuUlc1Yt8pM6BKtHD
-   Q==;
+  bh=C5y/vnT/NUzg5fjxihzNiyz5pzYDkhUGKC98I3pIurc=;
+  b=jklAxerdM7SlDNx6aCaIYAKJjJdg2XGQ27ePCuPQlG+dx1uF1IUbG+ry
+   clFiJYEd0yKd0Ohl0+pwloDhHzIzR6zFZQm+DW986sKNh1HRqu8ILdDSC
+   3Plpgir8jF3g1o/f/BD2nhMZD+1AELe+cxGOn7ngVFmAE0t25UWddwS7J
+   HAVkRGgqpAsHnpHwvy4xuTEMbZWsVhhzBoxtViqDjYXi9NmOeqPHkmWbl
+   +3FrOccYAYicyAz215jtdtsScv5Oqlz6Xx6sq2PHO21AxXhiL0E26QGb3
+   kiz6eTw7ZQOX7chSbWfZCak7ejNSYV5kbLhiI1cywYohxIFSwqkz46D24
+   A==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 538b9e23ed6cc9ae64a7aa79b17317bf16a5d0c1  Merge branch 'for-6.0-fixes' into for-next
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.0-fixes
+branch HEAD: a81e18e963ce13ecfa4f0f11b185bc8372f203f8  cpuset: Add Waiman Long as a cpuset maintainer
 
-elapsed time: 868m
+elapsed time: 917m
 
 configs tested: 123
 configs skipped: 2
@@ -36,18 +36,20 @@ The following configs have been built successfully.
 More configs may be tested in the coming days.
 
 gcc tested configs:
-um                             i386_defconfig
 um                           x86_64_defconfig
+um                             i386_defconfig
 i386                             allyesconfig
 i386                                defconfig
 x86_64                              defconfig
 x86_64                           allyesconfig
 x86_64                               rhel-8.3
+arc                              allyesconfig
 x86_64                           rhel-8.3-kvm
 x86_64                          rhel-8.3-func
 x86_64                           rhel-8.3-syz
 x86_64                    rhel-8.3-kselftests
 x86_64                         rhel-8.3-kunit
+alpha                            allyesconfig
 powerpc                           allnoconfig
 mips                             allyesconfig
 powerpc                          allmodconfig
@@ -63,8 +65,6 @@ i386                          randconfig-a014
 i386                          randconfig-a016
 m68k                             allyesconfig
 m68k                             allmodconfig
-arc                              allyesconfig
-alpha                            allyesconfig
 csky                              allnoconfig
 alpha                             allnoconfig
 arc                               allnoconfig
@@ -130,11 +130,11 @@ sh                            titan_defconfig
 sh                     sh7710voipgw_defconfig
 sh                          rsk7264_defconfig
 sh                 kfr2r09-romimage_defconfig
-ia64                             allmodconfig
 nios2                            allyesconfig
 nios2                               defconfig
 parisc                              defconfig
 parisc                           allyesconfig
+ia64                             allmodconfig
 
 clang tested configs:
 hexagon              randconfig-r041-20220906
