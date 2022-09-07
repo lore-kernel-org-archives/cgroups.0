@@ -1,178 +1,133 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 3/3] memcg: reduce size of memcg vmstats structures
-Date: Wed,  7 Sep 2022 04:35:37 +0000
-Message-ID: <20220907043537.3457014-4-shakeelb@google.com>
-References: <20220907043537.3457014-1-shakeelb@google.com>
+From: Roberto Sassu <roberto.sassu-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH 1/7] bpf: Add missing fd modes check for map iterators
+Date: Wed, 07 Sep 2022 10:02:30 +0200
+Message-ID: <02309cfbc1ce47f7de6be8addc2caa315b1fee1b.camel@huaweicloud.com>
+References: <20220906170301.256206-1-roberto.sassu@huaweicloud.com>
+         <20220906170301.256206-2-roberto.sassu@huaweicloud.com>
+         <CAADnVQ+o8zyi_Z+XqCQynmvj04AtEtF9AoOTSeyUx9dvKTXOqg@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date;
-        bh=khSX7Y4iv18onStJMmBrPhwF58VNn8i03Anirden96Q=;
-        b=gemiZCbExV47bKx8wOek1aQ0u8hzbt+EnZzyGvpEX6V3hdl7+FzjhOMQFdg/BAePWs
-         g1Phtex5qyjXcE0CH8qo/myIMYCKBorj4O/lYfXNAuZQE1nIXh6Y/UorToCbyrfqTc08
-         w41m5Q1yfn7rEabS42x1kF04pr4Fz4DhfpdBQ7PAZvq2tOJI4kuvrPxvdDoYGIeFXtU7
-         73wZp+rS4GUGDo8QZ9/BnYm7kUNxwjCsKt+VQJT//oAjo2bR/bpBZ7YFQnfETArjdfst
-         yH5HuLvanOXbdhRwhVJR8If5nQVhIbTM14rXsNmexTs4BoP70k0Ts+2cN/b8E1sehylv
-         kQmg==
-In-Reply-To: <20220907043537.3457014-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CAADnVQ+o8zyi_Z+XqCQynmvj04AtEtF9AoOTSeyUx9dvKTXOqg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mykola Lysenko <mykolal-b10kYP2dOMg@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jakub Sitnicki <jakub-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:KERNEL SELFTEST FRAMEWORK" <linux-kself>
 
-The struct memcg_vmstats and struct memcg_vmstats_percpu contains two
-arrays each for events of size NR_VM_EVENT_ITEMS which can be as large
-as 110. However the memcg v1 only uses 4 of those while memcg v2 uses
-15. The union of both is 17. On a 64 bit system, we are wasting
-approximately ((110 - 17) * 8 * 2) * (nr_cpus + 1) bytes which is
-significant on large machines.
+On Tue, 2022-09-06 at 11:21 -0700, Alexei Starovoitov wrote:
+> On Tue, Sep 6, 2022 at 10:04 AM Roberto Sassu
+> <roberto.sassu-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org> wrote:
+> > From: Roberto Sassu <roberto.sassu-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> > 
+> > Commit 6e71b04a82248 ("bpf: Add file mode configuration into bpf
+> > maps")
+> > added the BPF_F_RDONLY and BPF_F_WRONLY flags, to let user space
+> > specify
+> > whether it will just read or modify a map.
+> > 
+> > Map access control is done in two steps. First, when user space
+> > wants to
+> > obtain a map fd, it provides to the kernel the eBPF-defined flags,
+> > which
+> > are converted into open flags and passed to the security_bpf_map()
+> > security
+> > hook for evaluation by LSMs.
+> > 
+> > Second, if user space successfully obtained an fd, it passes that
+> > fd to the
+> > kernel when it requests a map operation (e.g. lookup or update).
+> > The kernel
+> > first checks if the fd has the modes required to perform the
+> > requested
+> > operation and, if yes, continues the execution and returns the
+> > result to
+> > user space.
+> > 
+> > While the fd modes check was added for map_*_elem() functions, it
+> > is
+> > currently missing for map iterators, added more recently with
+> > commit
+> > a5cbe05a6673 ("bpf: Implement bpf iterator for map elements"). A
+> > map
+> > iterator executes a chosen eBPF program for each key/value pair of
+> > a map
+> > and allows that program to read and/or modify them.
+> > 
+> > Whether a map iterator allows only read or also write depends on
+> > whether
+> > the MEM_RDONLY flag in the ctx_arg_info member of the bpf_iter_reg
+> > structure is set. Also, write needs to be supported at verifier
+> > level (for
+> > example, it is currently not supported for sock maps).
+> > 
+> > Since map iterators obtain a map from a user space fd with
+> > bpf_map_get_with_uref(), add the new req_modes parameter to that
+> > function,
+> > so that map iterators can provide the required fd modes to access a
+> > map. If
+> > the user space fd doesn't include the required modes,
+> > bpf_map_get_with_uref() returns with an error, and the map iterator
+> > will
+> > not be created.
+> > 
+> > If a map iterator marks both the key and value as read-only, it
+> > calls
+> > bpf_map_get_with_uref() with FMODE_CAN_READ as value for req_modes.
+> > If it
+> > also allows write access to either the key or the value, it calls
+> > that
+> > function with FMODE_CAN_READ | FMODE_CAN_WRITE as value for
+> > req_modes,
+> > regardless of whether or not the write is supported by the verifier
+> > (the
+> > write is intentionally allowed).
+> > 
+> > bpf_fd_probe_obj() does not require any fd mode, as the fd is only
+> > used for
+> > the purpose of finding the eBPF object type, for pinning the object
+> > to the
+> > bpffs filesystem.
+> > 
+> > Finally, it is worth to mention that the fd modes check was not
+> > added for
+> > the cgroup iterator, although it registers an attach_target method
+> > like the
+> > other iterators. The reason is that the fd is not the only way for
+> > user
+> > space to reference a cgroup object (also by ID and by path). For
+> > the
+> > protection to be effective, all reference methods need to be
+> > evaluated
+> > consistently. This work is deferred to a separate patch.
+> 
+> I think the current behavior is fine.
+> File permissions don't apply at iterator level or prog level.
 
-This patch reduces the size of the given structures by adding one
-indirection and only stores array of events which are actually used by
-the memcg code. With this patch, the size of memcg_vmstats has reduced
-from 2544 bytes to 1056 bytes while the size of memcg_vmstats_percpu has
-reduced from 2568 bytes to 1080 bytes.
++ Chenbo, linux-security-module
 
-Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 52 ++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 43 insertions(+), 9 deletions(-)
+Well, if you write a security module to prevent writes on a map, and
+user space is able to do it anyway with an iterator, what is the
+purpose of the security module then?
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d0ccc16ed416..a60012be6140 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -671,6 +671,8 @@ static void flush_memcg_stats_dwork(struct work_struct *w)
- 
- /* Subset of vm_event_item to report for memcg event stats */
- static const unsigned int memcg_vm_event_stat[] = {
-+	PGPGIN,
-+	PGPGOUT,
- 	PGSCAN_KSWAPD,
- 	PGSCAN_DIRECT,
- 	PGSTEAL_KSWAPD,
-@@ -692,14 +694,30 @@ static const unsigned int memcg_vm_event_stat[] = {
- #endif
- };
- 
-+#define NR_MEMCG_EVENTS ARRAY_SIZE(memcg_vm_event_stat)
-+static int mem_cgroup_events_index[NR_VM_EVENT_ITEMS] __read_mostly;
-+
-+static void init_memcg_events(void)
-+{
-+	int i;
-+
-+	for (i = 0; i < NR_MEMCG_EVENTS; ++i)
-+		mem_cgroup_events_index[memcg_vm_event_stat[i]] = i + 1;
-+}
-+
-+static inline int memcg_events_index(enum vm_event_item idx)
-+{
-+	return mem_cgroup_events_index[idx] - 1;
-+}
-+
- struct memcg_vmstats_percpu {
- 	/* Local (CPU and cgroup) page state & events */
- 	long			state[MEMCG_NR_STAT];
--	unsigned long		events[NR_VM_EVENT_ITEMS];
-+	unsigned long		events[NR_MEMCG_EVENTS];
- 
- 	/* Delta calculation for lockless upward propagation */
- 	long			state_prev[MEMCG_NR_STAT];
--	unsigned long		events_prev[NR_VM_EVENT_ITEMS];
-+	unsigned long		events_prev[NR_MEMCG_EVENTS];
- 
- 	/* Cgroup1: threshold notifications & softlimit tree updates */
- 	unsigned long		nr_page_events;
-@@ -709,11 +727,11 @@ struct memcg_vmstats_percpu {
- struct memcg_vmstats {
- 	/* Aggregated (CPU and subtree) page state & events */
- 	long			state[MEMCG_NR_STAT];
--	unsigned long		events[NR_VM_EVENT_ITEMS];
-+	unsigned long		events[NR_MEMCG_EVENTS];
- 
- 	/* Pending child counts during tree propagation */
- 	long			state_pending[MEMCG_NR_STAT];
--	unsigned long		events_pending[NR_VM_EVENT_ITEMS];
-+	unsigned long		events_pending[NR_MEMCG_EVENTS];
- };
- 
- unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
-@@ -873,24 +891,34 @@ void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val)
- void __count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
- 			  unsigned long count)
- {
--	if (mem_cgroup_disabled())
-+	int index = memcg_events_index(idx);
-+
-+	if (mem_cgroup_disabled() || index < 0)
- 		return;
- 
- 	memcg_stats_lock();
--	__this_cpu_add(memcg->vmstats_percpu->events[idx], count);
-+	__this_cpu_add(memcg->vmstats_percpu->events[index], count);
- 	memcg_rstat_updated(memcg, count);
- 	memcg_stats_unlock();
- }
- 
- static unsigned long memcg_events(struct mem_cgroup *memcg, int event)
- {
--	return READ_ONCE(memcg->vmstats->events[event]);
-+	int index = memcg_events_index(event);
-+
-+	if (index < 0)
-+		return 0;
-+	return READ_ONCE(memcg->vmstats->events[index]);
- }
- 
- static unsigned long memcg_events_local(struct mem_cgroup *memcg, int event)
- {
- 	long x = 0;
- 	int cpu;
-+	int index = memcg_events_index(event);
-+
-+	if (index < 0)
-+		return 0;
- 
- 	for_each_possible_cpu(cpu)
- 		x += per_cpu(memcg->vmstats_percpu->events[event], cpu);
-@@ -1564,10 +1592,15 @@ static void memory_stat_format(struct mem_cgroup *memcg, char *buf, int bufsize)
- 		       memcg_events(memcg, PGSTEAL_KSWAPD) +
- 		       memcg_events(memcg, PGSTEAL_DIRECT));
- 
--	for (i = 0; i < ARRAY_SIZE(memcg_vm_event_stat); i++)
-+	for (i = 0; i < ARRAY_SIZE(memcg_vm_event_stat); i++) {
-+		if (memcg_vm_event_stat[i] == PGPGIN ||
-+		    memcg_vm_event_stat[i] == PGPGOUT)
-+			continue;
-+
- 		seq_buf_printf(&s, "%s %lu\n",
- 			       vm_event_name(memcg_vm_event_stat[i]),
- 			       memcg_events(memcg, memcg_vm_event_stat[i]));
-+	}
- 
- 	/* The above should easily fit into one page */
- 	WARN_ON_ONCE(seq_buf_has_overflowed(&s));
-@@ -5309,6 +5342,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
- 		page_counter_init(&memcg->kmem, &parent->kmem);
- 		page_counter_init(&memcg->tcpmem, &parent->tcpmem);
- 	} else {
-+		init_memcg_events();
- 		page_counter_init(&memcg->memory, NULL);
- 		page_counter_init(&memcg->swap, NULL);
- 		page_counter_init(&memcg->kmem, NULL);
-@@ -5477,7 +5511,7 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 			parent->vmstats->state_pending[i] += delta;
- 	}
- 
--	for (i = 0; i < NR_VM_EVENT_ITEMS; i++) {
-+	for (i = 0; i < NR_MEMCG_EVENTS; i++) {
- 		delta = memcg->vmstats->events_pending[i];
- 		if (delta)
- 			memcg->vmstats->events_pending[i] = 0;
--- 
-2.37.2.789.g6183377224-goog
+> fmode_can_read/write are for syscall commands only.
+> To be fair we've added them to lookup/delete commands
+> and it was more of a pain to maintain and no confirmed good use.
+
+I think a good use would be requesting the right permission for the
+type of operation that needs to be performed, e.g. read-only permission
+when you have a read-like operation like a lookup or dump.
+
+By always requesting read-write permission, for all operations,
+security modules won't be able to distinguish which operation has to be
+denied to satisfy the policy.
+
+One example of that is that, when there is a security module preventing
+writes on maps (will be that uncommon?), bpftool is not able to show
+the full list of maps because it asks for read-write permission for
+getting the map info.
+
+Freezing the map is not a solution, if you want to allow certain
+subjects to continuously update the protected map at run-time.
+
+Roberto
 
