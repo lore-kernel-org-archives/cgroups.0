@@ -1,156 +1,54 @@
-From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Subject: Re: [PATCH 1/7] bpf: Add missing fd modes check for map iterators
-Date: Wed, 7 Sep 2022 09:02:26 -0700
-Message-ID: <CAADnVQ+cEM5Sb7d9yPA72Mp2zimx7VZ5Si3SPVdAZgsdFGpP1Q@mail.gmail.com>
-References: <20220906170301.256206-1-roberto.sassu@huaweicloud.com>
- <20220906170301.256206-2-roberto.sassu@huaweicloud.com> <CAADnVQ+o8zyi_Z+XqCQynmvj04AtEtF9AoOTSeyUx9dvKTXOqg@mail.gmail.com>
- <02309cfbc1ce47f7de6be8addc2caa315b1fee1b.camel@huaweicloud.com>
+From: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH bpf-next v3 00/13] bpf: Introduce selectable memcg for bpf map
+Date: Wed, 7 Sep 2022 09:13:09 -0700
+Message-ID: <CAADnVQ+ZMCeKZOsb3GL0CnnZW0pxR0oDTUjqDczvbsVAViLs-Q@mail.gmail.com>
+References: <20220902023003.47124-1-laoar.shao@gmail.com> <Yxi8I4fXXSCi6z9T@slm.duckdns.org>
+ <Yxi8i3eP4fDDv2+X@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-security-module-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date;
-        bh=W50vIl8H8okzCAHaiXlJ50UVDkF7Y2icaSoN501LXVk=;
-        b=cSXmBeIU8YEd8KpkA8OIVFcCNyIWOpvxJZ3Z76jqeM1Nfr4CcOUHyr8tnCbWvR/Dd3
-         a+xIS7mQheRBmXzC3OdoGzFj55wYZgGBbG2U68jKwSZMMHE2S3ucY6qgN9hIVp9V3FXA
-         +LjPEjt3YYVTeX7BBNsiwSK2MVLv8QPtTad7Vmwb8R5pwGTDGhzzeWMZFZz76uXc516m
-         My1hyOyYiocDp1zCbWRWNhuqssIcspna7958G/dDtEbmGMHOZOleNsGnpq73KIblz4jP
-         jcsv52FTlrUZ+Kby6kQkkl7xZ0nqxFZs6XI0Mp20FDB37grdSGlo/nJFAMTSzjlf8LuF
-         Zxgw==
-In-Reply-To: <02309cfbc1ce47f7de6be8addc2caa315b1fee1b.camel@huaweicloud.com>
+        bh=CdfonG3Daj+a+DRtXJOAxXJ4mGEklFmGRagUZWD+cvk=;
+        b=Z1rGqY1ffwxgupGWkW6pQ+f5YhPrqQnvr/EKxVoO5zamDhVUf5LFJW6hwj/MoDMCGo
+         rCiXcvnPDuekOgwxJPi7xLOUMAr3g7SVrx3Ijy6giUgCxCU3P+Cy7G1iQu/YtGCS+X09
+         jq4RJykUP1fu4qw2jrQEP4nQpO546ANxS8bWLYiBJyJ/hfR7W41j9LbGe11pSK1HFXfa
+         qvA7OgVXsIBXah6n3P8RTNJzcNSYepd8caKdsjGhuNOJcLoMOnRsTag7aQlQQCeLeGjL
+         rVIKJrbqOqCz0HBcs/YudYF7oXU3fUx3qoEnHjsrRgckkwr9OlrcaW5HMhkj7XH3PibM
+         Ur9Q==
+In-Reply-To: <Yxi8i3eP4fDDv2+X-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roberto Sassu <roberto.sassu@huaweicloud.com>
-Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@google.com>, Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>, Mykola Lysenko <mykolal@fb.com>, Shuah Khan <shuah@kernel.org>, "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Jakub Sitnicki <jakub@cloudflare.com>, bpf <bpf@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, "open list:KERNEL SELFTEST FRAMEWORK" <linux-kself>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Netwo
 
-On Wed, Sep 7, 2022 at 1:03 AM Roberto Sassu
-<roberto.sassu@huaweicloud.com> wrote:
+On Wed, Sep 7, 2022 at 8:45 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
 >
-> On Tue, 2022-09-06 at 11:21 -0700, Alexei Starovoitov wrote:
-> > On Tue, Sep 6, 2022 at 10:04 AM Roberto Sassu
-> > <roberto.sassu@huaweicloud.com> wrote:
-> > > From: Roberto Sassu <roberto.sassu@huawei.com>
-> > >
-> > > Commit 6e71b04a82248 ("bpf: Add file mode configuration into bpf
-> > > maps")
-> > > added the BPF_F_RDONLY and BPF_F_WRONLY flags, to let user space
-> > > specify
-> > > whether it will just read or modify a map.
-> > >
-> > > Map access control is done in two steps. First, when user space
-> > > wants to
-> > > obtain a map fd, it provides to the kernel the eBPF-defined flags,
-> > > which
-> > > are converted into open flags and passed to the security_bpf_map()
-> > > security
-> > > hook for evaluation by LSMs.
-> > >
-> > > Second, if user space successfully obtained an fd, it passes that
-> > > fd to the
-> > > kernel when it requests a map operation (e.g. lookup or update).
-> > > The kernel
-> > > first checks if the fd has the modes required to perform the
-> > > requested
-> > > operation and, if yes, continues the execution and returns the
-> > > result to
-> > > user space.
-> > >
-> > > While the fd modes check was added for map_*_elem() functions, it
-> > > is
-> > > currently missing for map iterators, added more recently with
-> > > commit
-> > > a5cbe05a6673 ("bpf: Implement bpf iterator for map elements"). A
-> > > map
-> > > iterator executes a chosen eBPF program for each key/value pair of
-> > > a map
-> > > and allows that program to read and/or modify them.
-> > >
-> > > Whether a map iterator allows only read or also write depends on
-> > > whether
-> > > the MEM_RDONLY flag in the ctx_arg_info member of the bpf_iter_reg
-> > > structure is set. Also, write needs to be supported at verifier
-> > > level (for
-> > > example, it is currently not supported for sock maps).
-> > >
-> > > Since map iterators obtain a map from a user space fd with
-> > > bpf_map_get_with_uref(), add the new req_modes parameter to that
-> > > function,
-> > > so that map iterators can provide the required fd modes to access a
-> > > map. If
-> > > the user space fd doesn't include the required modes,
-> > > bpf_map_get_with_uref() returns with an error, and the map iterator
-> > > will
-> > > not be created.
-> > >
-> > > If a map iterator marks both the key and value as read-only, it
-> > > calls
-> > > bpf_map_get_with_uref() with FMODE_CAN_READ as value for req_modes.
-> > > If it
-> > > also allows write access to either the key or the value, it calls
-> > > that
-> > > function with FMODE_CAN_READ | FMODE_CAN_WRITE as value for
-> > > req_modes,
-> > > regardless of whether or not the write is supported by the verifier
-> > > (the
-> > > write is intentionally allowed).
-> > >
-> > > bpf_fd_probe_obj() does not require any fd mode, as the fd is only
-> > > used for
-> > > the purpose of finding the eBPF object type, for pinning the object
-> > > to the
-> > > bpffs filesystem.
-> > >
-> > > Finally, it is worth to mention that the fd modes check was not
-> > > added for
-> > > the cgroup iterator, although it registers an attach_target method
-> > > like the
-> > > other iterators. The reason is that the fd is not the only way for
-> > > user
-> > > space to reference a cgroup object (also by ID and by path). For
-> > > the
-> > > protection to be effective, all reference methods need to be
-> > > evaluated
-> > > consistently. This work is deferred to a separate patch.
+> On Wed, Sep 07, 2022 at 05:43:31AM -1000, Tejun Heo wrote:
+> > Hello,
 > >
-> > I think the current behavior is fine.
-> > File permissions don't apply at iterator level or prog level.
+> > On Fri, Sep 02, 2022 at 02:29:50AM +0000, Yafang Shao wrote:
+> > ...
+> > > This patchset tries to resolve the above two issues by introducing a
+> > > selectable memcg to limit the bpf memory. Currently we only allow to
+> > > select its ancestor to avoid breaking the memcg hierarchy further.
+> > > Possible use cases of the selectable memcg as follows,
+> >
+> > As discussed in the following thread, there are clear downsides to an
+> > interface which requires the users to specify the cgroups directly.
+> >
+> >  https://lkml.kernel.org/r/YwNold0GMOappUxc-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org
+> >
+> > So, I don't really think this is an interface we wanna go for. I was hoping
+> > to hear more from memcg folks in the above thread. Maybe ping them in that
+> > thread and continue there?
 >
-> + Chenbo, linux-security-module
->
-> Well, if you write a security module to prevent writes on a map, and
-> user space is able to do it anyway with an iterator, what is the
-> purpose of the security module then?
+> Ah, another thing. If the memcg accounting is breaking things right now, we
+> can easily introduce a memcg disable flag for bpf memory. That should help
+> alleviating the immediate breakage while we figure this out.
 
-sounds like a broken "security module" and nothing else.
-
-> > fmode_can_read/write are for syscall commands only.
-> > To be fair we've added them to lookup/delete commands
-> > and it was more of a pain to maintain and no confirmed good use.
->
-> I think a good use would be requesting the right permission for the
-> type of operation that needs to be performed, e.g. read-only permission
-> when you have a read-like operation like a lookup or dump.
->
-> By always requesting read-write permission, for all operations,
-> security modules won't be able to distinguish which operation has to be
-> denied to satisfy the policy.
->
-> One example of that is that, when there is a security module preventing
-> writes on maps (will be that uncommon?),
-
-lsm that prevents writes into bpf maps? That's a convoluted design.
-You can try to implement such an lsm, but expect lots of challenges.
-
-> bpftool is not able to show
-> the full list of maps because it asks for read-write permission for
-> getting the map info.
-
-completely orthogonal issue.
-
-> Freezing the map is not a solution, if you want to allow certain
-> subjects to continuously update the protected map at run-time.
->
-> Roberto
->
+Hmm. We discussed this option already. We definitely don't want
+to introduce an uapi knob that will allow anyone to skip memcg
+accounting today and in the future.
