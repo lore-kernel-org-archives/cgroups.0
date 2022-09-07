@@ -1,56 +1,47 @@
-From: Roman Gushchin <roman.gushchin@linux.dev>
-Subject: Re: [PATCH bpf-next v3 00/13] bpf: Introduce selectable memcg for
- bpf map
-Date: Wed, 7 Sep 2022 15:28:53 -0700
-Message-ID: <YxkVq4S1Eoa4edjZ@P9FQF9L96D.corp.robot.car>
-References: <20220902023003.47124-1-laoar.shao@gmail.com>
- <Yxi8I4fXXSCi6z9T@slm.duckdns.org>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH 3/3] memcg: reduce size of memcg vmstats structures
+Date: Wed, 7 Sep 2022 16:27:12 -0700
+Message-ID: <Yxko0AxuVO6oiN5M@P9FQF9L96D.corp.robot.car>
+References: <20220907043537.3457014-1-shakeelb@google.com>
+ <20220907043537.3457014-4-shakeelb@google.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1662589753;
+        t=1662593251;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=I1yxj38W9LLCjnCLzWIfLwcTDKqLav/lxTozk1c1g/I=;
-        b=cnV9/bLAglNubg1YwGbWHhR5c6MxCQUpK8c/LmjtAgg0I61ifYF43G6tihLY8hrcN7hlHT
-        khUhhtSDN0Xlgt6WlQAC0Xlj76xzCuUMt1VcEnCtvQRk0/rc8BXjMAMggDJ+qRupn5BGOg
-        +CPlIh3epn0VqimtvaJOVDxfjWsnmVU=
+        bh=TaKcAPnW1Rv+P8V2WVmdtPwTsnlpyaGaJZ+gn5WE91Y=;
+        b=ccqnbVj+QPPasLxHBGE6AFu8Yoq671MiQPkkyRGJgyLs7qpb2LL2u4wMhuPhWCx2es0Ow0
+        vm2SBlmaYjH8gKdhHyNdc9jnyC4Ik2/2sgdVZTnqm7dxc35nofvltU0Mtl84Fx2WLrNhIZ
+        DL6do2sxzUEfuACz0QOFL05zurqThbg=
 Content-Disposition: inline
-In-Reply-To: <Yxi8I4fXXSCi6z9T@slm.duckdns.org>
+In-Reply-To: <20220907043537.3457014-4-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Yafang Shao <laoar.shao@gmail.com>, ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, sdf@google.com, haoluo@google.com, jolsa@kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, shakeelb@google.com, songmuchun@bytedance.com, akpm@linux-foundation.org, lizefan.x@bytedance.com, cgroups@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, linux-mm@kvack.org
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Sep 07, 2022 at 05:43:31AM -1000, Tejun Heo wrote:
-> Hello,
+On Wed, Sep 07, 2022 at 04:35:37AM +0000, Shakeel Butt wrote:
+> The struct memcg_vmstats and struct memcg_vmstats_percpu contains two
+> arrays each for events of size NR_VM_EVENT_ITEMS which can be as large
+> as 110. However the memcg v1 only uses 4 of those while memcg v2 uses
+> 15. The union of both is 17. On a 64 bit system, we are wasting
+> approximately ((110 - 17) * 8 * 2) * (nr_cpus + 1) bytes which is
+> significant on large machines.
 > 
-> On Fri, Sep 02, 2022 at 02:29:50AM +0000, Yafang Shao wrote:
-> ...
-> > This patchset tries to resolve the above two issues by introducing a
-> > selectable memcg to limit the bpf memory. Currently we only allow to
-> > select its ancestor to avoid breaking the memcg hierarchy further. 
-> > Possible use cases of the selectable memcg as follows,
-> 
-> As discussed in the following thread, there are clear downsides to an
-> interface which requires the users to specify the cgroups directly.
-> 
->  https://lkml.kernel.org/r/YwNold0GMOappUxc@slm.duckdns.org
-> 
-> So, I don't really think this is an interface we wanna go for. I was hoping
-> to hear more from memcg folks in the above thread. Maybe ping them in that
-> thread and continue there?
+> This patch reduces the size of the given structures by adding one
+> indirection and only stores array of events which are actually used by
+> the memcg code. With this patch, the size of memcg_vmstats has reduced
+> from 2544 bytes to 1056 bytes while the size of memcg_vmstats_percpu has
+> reduced from 2568 bytes to 1080 bytes.
 
-As I said previously, I don't like it, because it's an attempt to solve a non
-bpf-specific problem in a bpf-specific way.
+This is pretty impressive!
 
-Yes, memory cgroups are not great for accounting of shared resources, it's well
-known. This patchset looks like an attempt to "fix" it specifically for bpf maps
-in a particular cgroup setup. Honestly, I don't think it's worth the added
-complexity. Especially because a similar behaviour can be achieved simple
-by placing the task which creates the map into the desired cgroup.
-Beatiful? Not. Neither is the proposed solution.
+Thank you, Shakeel!
+
+Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+for the series.
 
 Thanks!
