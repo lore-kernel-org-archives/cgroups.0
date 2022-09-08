@@ -1,54 +1,157 @@
-From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH] selftests/cgroup: fix repeated words in comments
-Date: Thu, 8 Sep 2022 06:52:57 -0700
-Message-ID: <5fd375c6-1bad-b937-634b-7efc4391c0e3@infradead.org>
-References: <20220908121107.4814-1-wangjianli@cdjrlc.com>
+From: Roberto Sassu <roberto.sassu-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH 1/7] bpf: Add missing fd modes check for map iterators
+Date: Thu, 08 Sep 2022 15:58:53 +0200
+Message-ID: <8d7a713e500b5e3fce93e4c5c7b8841eb6dd28e4.camel@huaweicloud.com>
+References: <20220906170301.256206-1-roberto.sassu@huaweicloud.com>
+         <20220906170301.256206-2-roberto.sassu@huaweicloud.com>
+         <CAADnVQ+o8zyi_Z+XqCQynmvj04AtEtF9AoOTSeyUx9dvKTXOqg@mail.gmail.com>
+         <02309cfbc1ce47f7de6be8addc2caa315b1fee1b.camel@huaweicloud.com>
+         <CAADnVQ+cEM5Sb7d9yPA72Mp2zimx7VZ5Si3SPVdAZgsdFGpP1Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-        bh=b3NFkfppRZobo8xoKriBYse3KmRxLd7jAty1YkyS81c=; b=i4IM6V+NtVfo3v3I0a4ptJkjZx
-        p/hCMXcKziCml5l/XMWq9v6YoKp/oIXwIpnPcx/qa9LlgwGdqawIgNBV8mClMWgrofoZS98P7McAR
-        CwiN4snfvLE2T8vmeKn8pXyuBE0AjtUbLndfpWQsuLI/gXYu2xv5W7r6Ltq/1xub1QZncbVyG8nCP
-        AWvVbA5ik+jJPx4zxsdGtFoEqDYf/mw8OOD7sogTk06L+QSDltB8x4IpQj6jfnyy5ajhQOyH5QfvJ
-        YqB6u/el6uWKHNwzmhtBhW2bWIXyRP+LaHJcAugfP25CylcXJV6Yv7quRa6ZI+9reX1CYUy/Z9nwQ
-        S8Ki58mg==;
-Content-Language: en-US
-In-Reply-To: <20220908121107.4814-1-wangjianli-zcEOJCtA6GXQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CAADnVQ+cEM5Sb7d9yPA72Mp2zimx7VZ5Si3SPVdAZgsdFGpP1Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: wangjianli <wangjianli-zcEOJCtA6GXQT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mykola Lysenko <mykolal-b10kYP2dOMg@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jakub Sitnicki <jakub-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:KERNEL SELFTEST FRAMEWORK" <linux-kself>
 
-
-
-On 9/8/22 05:11, wangjianli wrote:
-> Delete the redundant word 'in'.
+On Wed, 2022-09-07 at 09:02 -0700, Alexei Starovoitov wrote:
 > 
-> Signed-off-by: wangjianli <wangjianli-zcEOJCtA6GXQT0dZR+AlfA@public.gmane.org>
-> ---
->  tools/testing/selftests/cgroup/test_freezer.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+
+[...]
+
+> > Well, if you write a security module to prevent writes on a map,
+> > and
+> > user space is able to do it anyway with an iterator, what is the
+> > purpose of the security module then?
 > 
-> diff --git a/tools/testing/selftests/cgroup/test_freezer.c b/tools/testing/selftests/cgroup/test_freezer.c
-> index ff519029f6f4..b479434e87b7 100644
-> --- a/tools/testing/selftests/cgroup/test_freezer.c
-> +++ b/tools/testing/selftests/cgroup/test_freezer.c
-> @@ -740,7 +740,7 @@ static int test_cgfreezer_ptraced(const char *root)
->  
->  	/*
->  	 * cg_check_frozen(cgroup, true) will fail here,
-> -	 * because the task in in the TRACEd state.
+> sounds like a broken "security module" and nothing else.
 
-	                    is in
+Ok, if a custom security module does not convince you, let me make a
+small example with SELinux.
 
-> +	 * because the task in the TRACEd state.
->  	 */
->  	if (cg_freeze_wait(cgroup, false))
->  		goto cleanup;
+I created a small map iterator that sets every value of a map to 5:
 
--- 
-~Randy
+SEC("iter/bpf_map_elem")
+int write_bpf_hash_map(struct bpf_iter__bpf_map_elem *ctx)
+{
+	u32 *key = ctx->key;
+	u8 *val = ctx->value;
+
+	if (key == NULL || val == NULL)
+		return 0;
+
+	*val = 5;
+	return 0;
+}
+
+I create and pin a map:
+
+# bpftool map create /sys/fs/bpf/map type array key 4 value 1 entries 1
+name test
+
+Initially, the content of the map looks like:
+
+# bpftool map dump pinned /sys/fs/bpf/map 
+key: 00 00 00 00  value: 00
+Found 1 element
+
+I then created a new SELinux type bpftool_test_t, which has only read
+permission on maps:
+
+# sesearch -A -s bpftool_test_t -t unconfined_t -c bpf
+allow bpftool_test_t unconfined_t:bpf map_read;
+
+So, what I expect is that this type is not able to write to the map.
+
+Indeed, the current bpftool is not able to do it:
+
+# strace -f -etrace=bpf runcon -t bpftool_test_t bpftool iter pin
+writer.o /sys/fs/bpf/iter map pinned /sys/fs/bpf/map
+bpf(BPF_OBJ_GET, {pathname="/sys/fs/bpf/map", bpf_fd=0, file_flags=0},
+144) = -1 EACCES (Permission denied)
+Error: bpf obj get (/sys/fs/bpf): Permission denied
+
+This happens because the current bpftool requests to access the map
+with read-write permission, and SELinux denies it:
+
+# cat /var/log/audit/audit.log|audit2allow
+
+
+#============= bpftool_test_t ==============
+allow bpftool_test_t unconfined_t:bpf map_write;
+
+
+The command failed, and the content of the map is still:
+
+# bpftool map dump pinned /sys/fs/bpf/map 
+key: 00 00 00 00  value: 00
+Found 1 element
+
+
+Now, what I will do is to use a slightly modified version of bpftool
+which requests read-only access to the map instead:
+
+# strace -f -etrace=bpf runcon -t bpftool_test_t ./bpftool iter pin
+writer.o /sys/fs/bpf/iter map pinned /sys/fs/bpf/map
+bpf(BPF_OBJ_GET, {pathname="/sys/fs/bpf/map", bpf_fd=0,
+file_flags=BPF_F_RDONLY}, 16) = 3
+libbpf: elf: skipping unrecognized data section(5) .eh_frame
+libbpf: elf: skipping relo section(6) .rel.eh_frame for section(5)
+.eh_frame
+
+...
+
+bpf(BPF_LINK_CREATE, {link_create={prog_fd=4, target_fd=0,
+attach_type=BPF_TRACE_ITER, flags=0}, ...}, 48) = 5
+bpf(BPF_OBJ_PIN, {pathname="/sys/fs/bpf/iter", bpf_fd=5, file_flags=0},
+16) = 0
+
+That worked, because SELinux grants read-only permission to
+bpftool_test_t. However, the map iterator does not check how the fd was
+obtained, and thus allows the iterator to be created.
+
+At this point, we have write access, despite not having the right to do
+it:
+
+# cat /sys/fs/bpf/iter
+# bpftool map dump pinned /sys/fs/bpf/map 
+key: 00 00 00 00  value: 05
+Found 1 element
+
+The iterator updated the map value.
+
+
+The patch I'm proposing checks how the map fd was obtained, and if its
+modes are compatible with the operations an attached program is allowed
+to do. If the fd does not have the required modes, eBPF denies the
+creation of the map iterator.
+
+After patching the kernel, I try to run the modified bpftool again:
+
+# strace -f -etrace=bpf runcon -t bpftool_test_t ./bpftool iter pin
+writer.o /sys/fs/bpf/iter map pinned /sys/fs/bpf/map
+bpf(BPF_OBJ_GET, {pathname="/sys/fs/bpf/map", bpf_fd=0,
+file_flags=BPF_F_RDONLY}, 16) = 3
+libbpf: elf: skipping unrecognized data section(5) .eh_frame
+libbpf: elf: skipping relo section(6) .rel.eh_frame for section(5)
+.eh_frame
+
+...
+
+bpf(BPF_LINK_CREATE, {link_create={prog_fd=4, target_fd=0,
+attach_type=BPF_TRACE_ITER, flags=0}, ...}, 48) = -1 EPERM (Operation
+not permitted)
+libbpf: prog 'write_bpf_hash_map': failed to attach to iterator:
+Operation not permitted
+Error: attach_iter failed for program write_bpf_hash_map
+
+The map iterator cannot be created and the map is not updated:
+
+# bpftool map dump pinned /sys/fs/bpf/map 
+key: 00 00 00 00  value: 00
+Found 1 element
+
+Roberto
+
