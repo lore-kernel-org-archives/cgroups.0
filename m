@@ -1,100 +1,146 @@
-From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH bpf-next v3 00/13] bpf: Introduce selectable memcg for bpf map
-Date: Thu, 8 Sep 2022 10:48:03 +0800
-Message-ID: <CALOAHbAwvPFp6F8BXjzTeNnL7rT+LfA6_yoCY5sLO9VVkjXONA@mail.gmail.com>
-References: <20220902023003.47124-1-laoar.shao@gmail.com> <Yxi8I4fXXSCi6z9T@slm.duckdns.org>
- <YxkVq4S1Eoa4edjZ@P9FQF9L96D.corp.robot.car> <CALOAHbAp=g20rL0taUpQmTwymanArhO-u69Xw42s5ap39Esn=A@mail.gmail.com>
- <CAADnVQJHtY0m5TnFxnn8w3xBUfAGNzbf1HmS3ChqcLJadEYJFg@mail.gmail.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-6.1] BUILD SUCCESS
+ c478bd88362418bd2a1c230215fde184f5642e44
+Date: Thu, 08 Sep 2022 12:56:03 +0800
+Message-ID: <631975e3.oFmvwHAOxyeQVi6k%lkp@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=S007uhudJiEUSw5VwxgkV7xB4iqXJLx8bGrjx4fe7Ec=;
-        b=Wynxkd/Lh2b+ogTbqK96/Gt6zE8OZeDngoOQzpEIsMlpgLwgwooTbQV5YtjXg+k+43
-         UspSoj/yZnUA2/GoXB9T2DiNXkYLbKF4nXr6Ui8BwkpzIXGa9GwJq+SrJNBX7i2yXbdg
-         BfpSllT6UIpzwxu9DLlXK9/1LAXbzA0p4z7ahPmrQIzQB2ovJI9+TvXYJE2+FKSvAGjQ
-         3GXNk8TxFQMKZ3d93OIEUlyB05I+Uvqq/2ynKBJCQWJkYwwRYWpoewHgCVzlHSaru083
-         ACQrWwhViZfE479uxHlF7W8EID7aiLjo/amxw7glHDaVnxPhJivreP+95GHsAcfCSsJW
-         Y3hg==
-In-Reply-To: <CAADnVQJHtY0m5TnFxnn8w3xBUfAGNzbf1HmS3ChqcLJadEYJFg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1662613013; x=1694149013;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=pAxkceB878k1Ay1bHZYgGAP5y0fENi0US3D3YxV+9U8=;
+  b=SRN8suyqPjMsTy0mgi+Hklwkbxg3c8kE+Hm8z0ppwfjDJGM3yH4uWTp6
+   XXlhtKeR/i/l66vLcYvFfvxRs6XqbNub+uPCLS7SyQ2G1EsF50g1yfbd2
+   f76e+olKJm3DYiiejcOoWoV6eczeH6yi5pPUNnD+LYxQ0om7031+SgDSy
+   5OcVXr4HqM8kUjBKJEz2BmUhbLFH5SPx+0OavATIRVIUyxk+L2aTjRsc+
+   rEIQLBqG+h9Sq/WAoZCQxwSv33vjxi0OoMfiz2l/AdXlvueU9vJ575V7k
+   kVd3RJz/Bp9kEmvt7CxUsBp79p/6j+ttgOAzDrEaaPlTrm5zBs7A6odU+
+   g==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, john fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Sep 8, 2022 at 10:43 AM Alexei Starovoitov
-<alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-> On Wed, Sep 7, 2022 at 7:37 PM Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> >
-> > On Thu, Sep 8, 2022 at 6:29 AM Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
-> > >
-> > > On Wed, Sep 07, 2022 at 05:43:31AM -1000, Tejun Heo wrote:
-> > > > Hello,
-> > > >
-> > > > On Fri, Sep 02, 2022 at 02:29:50AM +0000, Yafang Shao wrote:
-> > > > ...
-> > > > > This patchset tries to resolve the above two issues by introducing a
-> > > > > selectable memcg to limit the bpf memory. Currently we only allow to
-> > > > > select its ancestor to avoid breaking the memcg hierarchy further.
-> > > > > Possible use cases of the selectable memcg as follows,
-> > > >
-> > > > As discussed in the following thread, there are clear downsides to an
-> > > > interface which requires the users to specify the cgroups directly.
-> > > >
-> > > >  https://lkml.kernel.org/r/YwNold0GMOappUxc-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org
-> > > >
-> > > > So, I don't really think this is an interface we wanna go for. I was hoping
-> > > > to hear more from memcg folks in the above thread. Maybe ping them in that
-> > > > thread and continue there?
-> > >
-> >
-> > Hi Roman,
-> >
-> > > As I said previously, I don't like it, because it's an attempt to solve a non
-> > > bpf-specific problem in a bpf-specific way.
-> > >
-> >
-> > Why do you still insist that bpf_map->memcg is not a bpf-specific
-> > issue after so many discussions?
-> > Do you charge the bpf-map's memory the same way as you charge the page
-> > caches or slabs ?
-> > No, you don't. You charge it in a bpf-specific way.
-> >
-> > > Yes, memory cgroups are not great for accounting of shared resources, it's well
-> > > known. This patchset looks like an attempt to "fix" it specifically for bpf maps
-> > > in a particular cgroup setup. Honestly, I don't think it's worth the added
-> > > complexity. Especially because a similar behaviour can be achieved simple
-> > > by placing the task which creates the map into the desired cgroup.
-> >
-> > Are you serious ?
-> > Have you ever read the cgroup doc? Which clearly describe the "No
-> > Internal Process Constraint".[1]
-> > Obviously you can't place the task in the desired cgroup, i.e. the parent memcg.
-> >
-> > [1] https://www.kernel.org/doc/Documentation/cgroup-v2.txt
-> >
-> > > Beatiful? Not. Neither is the proposed solution.
-> > >
-> >
-> > Is it really hard to admit a fault?
->
-> Yafang,
->
-> This attitude won't get you anywhere.
->
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.1
+branch HEAD: c478bd88362418bd2a1c230215fde184f5642e44  cgroup/cpuset: remove unreachable code
 
-Thanks for pointing it out. It is my fault.
+elapsed time: 739m
 
-> Selecting memcg by fd is no go.
-> You need to work with the community to figure out a solution
-> acceptable to maintainers of relevant subsystems.
+configs tested: 102
+configs skipped: 3
 
-Yes, I'm trying.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+um                             i386_defconfig
+um                           x86_64_defconfig
+arc                  randconfig-r043-20220907
+m68k                             allmodconfig
+powerpc                           allnoconfig
+arc                              allyesconfig
+alpha                            allyesconfig
+i386                                defconfig
+powerpc                          allmodconfig
+x86_64                              defconfig
+mips                             allyesconfig
+x86_64                               rhel-8.3
+x86_64                        randconfig-a013
+m68k                             allyesconfig
+x86_64                        randconfig-a002
+x86_64                        randconfig-a011
+i386                          randconfig-a001
+x86_64                    rhel-8.3-kselftests
+x86_64                        randconfig-a006
+i386                          randconfig-a014
+i386                             allyesconfig
+i386                          randconfig-a003
+x86_64                        randconfig-a015
+sh                               allmodconfig
+x86_64                           allyesconfig
+arm                                 defconfig
+x86_64                          rhel-8.3-func
+x86_64                         rhel-8.3-kunit
+i386                          randconfig-a005
+x86_64                        randconfig-a004
+x86_64                           rhel-8.3-kvm
+x86_64                           rhel-8.3-syz
+i386                          randconfig-a012
+i386                          randconfig-a016
+csky                                defconfig
+sparc                            alldefconfig
+sparc                               defconfig
+um                                  defconfig
+sh                            titan_defconfig
+arm                            mps2_defconfig
+arm64                            allyesconfig
+arm                              allyesconfig
+ia64                          tiger_defconfig
+arc                              alldefconfig
+i386                             alldefconfig
+powerpc                     ep8248e_defconfig
+m68k                          hp300_defconfig
+m68k                        m5272c3_defconfig
+arm                          exynos_defconfig
+sparc                             allnoconfig
+arm                        cerfcube_defconfig
+powerpc                      arches_defconfig
+openrisc                 simple_smp_defconfig
+powerpc                     asp8347_defconfig
+loongarch                           defconfig
+loongarch                         allnoconfig
+i386                          randconfig-c001
+sh                          r7785rp_defconfig
+arm                          iop32x_defconfig
+powerpc                     mpc83xx_defconfig
+xtensa                generic_kc705_defconfig
+csky                              allnoconfig
+alpha                             allnoconfig
+arc                               allnoconfig
+riscv                             allnoconfig
+sh                     sh7710voipgw_defconfig
+sh                             sh03_defconfig
+sh                           se7750_defconfig
+s390                             allmodconfig
+xtensa                       common_defconfig
+ia64                             allmodconfig
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+riscv                    nommu_k210_defconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+sh                          r7780mp_defconfig
+arm                            qcom_defconfig
+
+clang tested configs:
+hexagon              randconfig-r041-20220907
+hexagon              randconfig-r045-20220907
+s390                 randconfig-r044-20220907
+x86_64                        randconfig-a005
+riscv                randconfig-r042-20220907
+x86_64                        randconfig-a001
+i386                          randconfig-a013
+x86_64                        randconfig-a012
+i386                          randconfig-a015
+i386                          randconfig-a002
+x86_64                        randconfig-a003
+x86_64                        randconfig-a014
+x86_64                        randconfig-a016
+i386                          randconfig-a006
+i386                          randconfig-a011
+i386                          randconfig-a004
+powerpc                 mpc8315_rdb_defconfig
+mips                           ip22_defconfig
+powerpc                     tqm8540_defconfig
+arm                           spitz_defconfig
+x86_64                        randconfig-k001
+powerpc                     akebono_defconfig
+mips                      malta_kvm_defconfig
+arm                    vt8500_v6_v7_defconfig
 
 -- 
-Regards
-Yafang
+0-DAY CI Kernel Test Service
+https://01.org/lkp
