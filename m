@@ -1,102 +1,158 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:cgroup-driver_core-for-v6.1] BUILD SUCCESS
- ee244c732790b535e1435e4e8ad4a63eff5b62ca
-Date: Tue, 13 Sep 2022 19:18:37 +0800
-Message-ID: <6320670d.USwV3o2zrygqg8WL%lkp@intel.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663067963; x=1694603963;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=VuzEZYW6Pt0tQoB2D48o2CtKMKmaBmwAd0vC/OxLbQg=;
-  b=jYbYfjEnQ65CHoqsTCrBBP5WbPRKvx1/LEZwaO7BXlSN6bf55bS5iyY3
-   4/Mcqq0sZ264GjeHk3IPt3Kh5RH2phzfcjgc+t8MXBJ7Pou8WLMcMqBGm
-   7wzKfCDxf3+Emv5MYxm0A1gCOyVlPvdf4N0ex247xU23LxLAnmp+mrxLV
-   E2Yy71vf4c/LfLMaWxzB3Jg+8u+CdgSgdZ16oJdK4rK8Nb9bRjRFXqeIm
-   tLj+GwZsdFeogFS9ims78bXSHyqVWD0tAMIfHsfr2Ailx7BfWZNVsgYIa
-   CzY7/UCebbCNAZvjuBehT/S+SvV2dDJE36ytpNlbWg0/lLOpzlDHgTw71
-   A==;
+From: Paolo VALENTE <paolo.valente@unimore.it>
+Subject: Re: [PATCH -next v10 3/4] block, bfq: refactor the counting of
+ 'num_groups_with_pending_reqs'
+Date: Wed, 14 Sep 2022 09:50:41 +0200
+Message-ID: <BF3909EA-4659-48CB-917A-639DC3318916@unimore.it>
+References: <20220610021701.2347602-1-yukuai3@huawei.com>
+ <20220610021701.2347602-4-yukuai3@huawei.com>
+ <27F2DF19-7CC6-42C5-8CEB-43583EB4AE46@linaro.org>
+ <abdbb5db-e280-62f8-0670-536fcb8ec4d9@huaweicloud.com>
+ <C2CF100A-9A7C-4300-9A70-1295BC939C66@unimore.it>
+ <9b2d667f-6636-9347-08a1-8bd0aa2346f2@huaweicloud.com>
+ <2f94f241-445f-1beb-c4a8-73f6efce5af2@huaweicloud.com>
+ <55A07102-BE55-4606-9E32-64E884064FB9@unimore.it>
+ <5cb0e5bc-feec-86d6-6f60-3c28ee625efd@huaweicloud.com>
+ <D89DCF20-27D8-4F8F-B8B0-FD193FC4F18D@unimore.it>
+ <e6b53794-f93f-92b2-1f45-35ae81a28a5c@huaweicloud.com>
+ <F758A356-EE6B-4B7B-95E2-6414616C77E4@unimore.it>
+ <5e0b44b4-46cc-b3c6-1d93-00a0a683eda8@huaweicloud.com>
+ <f89eb61b-7912-5916-1a12-039e32bebe70@huaweicloud.com>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=unimore.it; s=google;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date;
+        bh=1biDXl6cgm2n8SGycMHAv9SCU/JP3uWb+Ul5VmFRIVw=;
+        b=I5Zadj9OJnTGYrv4u5A/xNiT8/POEYkxUf2yovO5ju1wBpFFBfFmBayvrXwPIFBkDZ
+         //gq6LKqJBWglHZv9SoeF7AouP+JsdscjhfUhTxSqCmcPrOwJ8pT8WymbZp2JWhg2Y5n
+         2meptMdqXBOxCaJ799mUlD4aQKXmyh4e/+9N4=
+In-Reply-To: <f89eb61b-7912-5916-1a12-039e32bebe70@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Jan Kara <jack@suse.cz>, cgroups@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git cgroup-driver_core-for-v6.1
-branch HEAD: ee244c732790b535e1435e4e8ad4a63eff5b62ca  Merge branch 'driver-core-next' of git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/driver-core into cgroup-driver_core-for-v6.1
 
-elapsed time: 732m
 
-configs tested: 58
-configs skipped: 2
+> Il giorno 14 set 2022, alle ore 03:55, Yu Kuai =
+<yukuai1@huaweicloud.com> ha scritto:
+>=20
+>=20
+>=20
+> =E5=9C=A8 2022/09/07 9:16, Yu Kuai =E5=86=99=E9=81=93:
+>> Hi, Paolo!
+>> =E5=9C=A8 2022/09/06 17:37, Paolo Valente =E5=86=99=E9=81=93:
+>>>=20
+>>>=20
+>>>> Il giorno 26 ago 2022, alle ore 04:34, Yu Kuai =
+<yukuai1@huaweicloud.com> ha scritto:
+>>>>=20
+>>>> Hi, Paolo!
+>>>>=20
+>>>> =E5=9C=A8 2022/08/25 22:59, Paolo Valente =E5=86=99=E9=81=93:
+>>>>>> Il giorno 11 ago 2022, alle ore 03:19, Yu Kuai =
+<yukuai1@huaweicloud.com <mailto:yukuai1@huaweicloud.com>> ha scritto:
+>>>>>>=20
+>>>>>> Hi, Paolo
+>>>>>>=20
+>>>>>> =E5=9C=A8 2022/08/10 18:49, Paolo Valente =E5=86=99=E9=81=93:
+>>>>>>>> Il giorno 27 lug 2022, alle ore 14:11, Yu Kuai =
+<yukuai1@huaweicloud.com <mailto:yukuai1@huaweicloud.com>> ha scritto:
+>>>>>>>>=20
+>>>>>>>> Hi, Paolo
+>>>>>>>>=20
+>>>>>>> hi
+>>>>>>>> Are you still interested in this patchset?
+>>>>>>>>=20
+>>>>>>> Yes. Sorry for replying very late again.
+>>>>>>> Probably the last fix that you suggest is enough, but I'm a =
+little bit
+>>>>>>> concerned that it may be a little hasty.  In fact, before this =
+fix, we
+>>>>>>> exchanged several messages, and I didn't seem to be very good at
+>>>>>>> convincing you about the need to keep into account also =
+in-service
+>>>>>>> I/O.  So, my question is: are you sure that now you have a
+>>>>>>=20
+>>>>>> I'm confused here, I'm pretty aware that in-service I/O(as said =
+pending
+>>>>>> requests is the patchset) should be counted, as you suggested in =
+v7, are
+>>>>>> you still thinking that the way in this patchset is problematic?
+>>>>>>=20
+>>>>>> I'll try to explain again that how to track is bfqq has pending =
+pending
+>>>>>> requests, please let me know if you still think there are some =
+problems:
+>>>>>>=20
+>>>>>> patch 1 support to track if bfqq has pending requests, it's
+>>>>>> done by setting the flag 'entity->in_groups_with_pending_reqs' =
+when the
+>>>>>> first request is inserted to bfqq, and it's cleared when the last
+>>>>>> request is completed. specifically the flag is set in
+>>>>>> bfq_add_bfqq_busy() when 'bfqq->dispatched' if false, and it's =
+cleared
+>>>>>> both in bfq_completed_request() and bfq_del_bfqq_busy() when
+>>>>>> 'bfqq->diapatched' is false.
+>>>>>>=20
+>>>>> This general description seems correct to me. Have you already =
+sent a new version of your patchset?
+>>>>=20
+>>>> It's glad that we finially on the same page here.
+>>>>=20
+>>>=20
+>>> Yep. Sorry for my chronicle delay.
+>> Better late than never =F0=9F=98=81
+>>>=20
+>>>> Please take a look at patch 1, which already impelement the above
+>>>> descriptions, it seems to me there is no need to send a new version
+>>>> for now. If you think there are still some other problems, please =
+let
+>>>> me know.
+>>>>=20
+>>>=20
+>>> Patch 1 seems ok to me. I seem to have only one pending comment on =
+this patch (3/4) instead. Let me paste previous stuff here for your =
+convenience:
+>> That sounds good.
+>>>=20
+>>>>>=20
+>>>>> -    /*
+>>>>> -     * Next function is invoked last, because it causes bfqq to =
+be
+>>>>> -     * freed if the following holds: bfqq is not in service and
+>>>>> -     * has no dispatched request. DO NOT use bfqq after the next
+>>>>> -     * function invocation.
+>>>>> -     */
+>>>> I would really love it if you leave this comment.  I added it after
+>>>> suffering a lot for a nasty UAF.  Of course the first sentence may
+>>>> need to be adjusted if the code that precedes it is to be removed.
+>>>> Same as above, if this patch is applied, this function will be =
+gone.
+>=20
+> Hi, I'm curious while I'm trying to add the comment, before this
+> patchset, can bfqq be freed when bfq_weights_tree_remove is called?
+>=20
+> bfq_completed_request
+> bfqq->dispatched--
+> if (!bfqq->dispatched && !bfq_bfqq_busy(bfqq))
+>  bfq_weights_tree_remove(bfqd, bfqq);
+>=20
+> // continue to use bfqq
+>=20
+> It seems to me this is problematic if so, because bfqq is used after
+> bfq_weights_tree_remove() is called.
+>=20
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+It is.  Yet, IIRC, I verified that bfqq was not used after that free,
+and I added that comment as a heads-up.  What is a scenario (before
+your pending modifications) where this use-after-free happens?
 
-gcc tested configs:
-um                           x86_64_defconfig
-um                             i386_defconfig
-x86_64                              defconfig
-riscv                randconfig-r042-20220911
-arc                  randconfig-r043-20220912
-arc                  randconfig-r043-20220911
-powerpc                           allnoconfig
-i386                 randconfig-a001-20220912
-i386                 randconfig-a002-20220912
-s390                 randconfig-r044-20220911
-i386                 randconfig-a004-20220912
-i386                 randconfig-a003-20220912
-x86_64                               rhel-8.3
-i386                 randconfig-a006-20220912
-i386                 randconfig-a005-20220912
-arc                              allyesconfig
-i386                                defconfig
-x86_64                           rhel-8.3-kvm
-alpha                            allyesconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                          rhel-8.3-func
-x86_64                         rhel-8.3-kunit
-m68k                             allmodconfig
-x86_64                           rhel-8.3-syz
-sh                               allmodconfig
-mips                             allyesconfig
-m68k                             allyesconfig
-x86_64               randconfig-a001-20220912
-powerpc                          allmodconfig
-arm                                 defconfig
-x86_64                           allyesconfig
-x86_64               randconfig-a006-20220912
-x86_64               randconfig-a004-20220912
-x86_64               randconfig-a002-20220912
-arm                              allyesconfig
-i386                             allyesconfig
-x86_64               randconfig-a005-20220912
-x86_64               randconfig-a003-20220912
-arm64                            allyesconfig
-ia64                             allmodconfig
+Thanks,
+Paolo
 
-clang tested configs:
-hexagon              randconfig-r041-20220912
-hexagon              randconfig-r045-20220911
-hexagon              randconfig-r041-20220911
-hexagon              randconfig-r045-20220912
-s390                 randconfig-r044-20220912
-riscv                randconfig-r042-20220912
-i386                 randconfig-a014-20220912
-i386                 randconfig-a015-20220912
-i386                 randconfig-a013-20220912
-i386                 randconfig-a016-20220912
-i386                 randconfig-a011-20220912
-i386                 randconfig-a012-20220912
-x86_64               randconfig-a011-20220912
-x86_64               randconfig-a012-20220912
-x86_64               randconfig-a013-20220912
-x86_64               randconfig-a014-20220912
-x86_64               randconfig-a016-20220912
-x86_64               randconfig-a015-20220912
+> Thanks,
+> Kuai
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
