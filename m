@@ -1,109 +1,166 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [patch v11 1/6] block, bfq: support to track if bfqq has pending requests
-Date: Fri, 16 Sep 2022 15:19:37 +0800
-Message-ID: <20220916071942.214222-2-yukuai1@huaweicloud.com>
-References: <20220916071942.214222-1-yukuai1@huaweicloud.com>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: [patch v11 0/6] support concurrent sync io for bfq on a specail occasion
+Date: Fri, 16 Sep 2022 15:19:36 +0800
+Message-ID: <20220916071942.214222-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20220916071942.214222-1-yukuai1@huaweicloud.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org, jack@suse.cz
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-If entity belongs to bfqq, then entity->in_groups_with_pending_reqs
-is not used currently. This patch use it to track if bfqq has pending
-requests through callers of weights_tree insertion and removal.
+Changes in v11:
+ - keep the comments in bfq_weights_tree_remove() and move it to the
+ caller where bfqq can be freed.
+ - add two followed up cleanup patches.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- block/bfq-iosched.c |  1 +
- block/bfq-iosched.h |  2 ++
- block/bfq-wf2q.c    | 24 ++++++++++++++++++++++--
- 3 files changed, 25 insertions(+), 2 deletions(-)
+Changes in v10:
+ - Add reviewed-tag for patch 2
 
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index f769c90744fd..0dcae2f52896 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -6261,6 +6261,7 @@ static void bfq_completed_request(struct bfq_queue *bfqq, struct bfq_data *bfqd)
- 		 */
- 		bfqq->budget_timeout = jiffies;
- 
-+		bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
- 		bfq_weights_tree_remove(bfqd, bfqq);
- 	}
- 
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 64ee618064ba..44e08b194749 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -1082,6 +1082,8 @@ void bfq_requeue_bfqq(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 		      bool expiration);
- void bfq_del_bfqq_busy(struct bfq_queue *bfqq, bool expiration);
- void bfq_add_bfqq_busy(struct bfq_queue *bfqq);
-+void bfq_add_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq);
-+void bfq_del_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq);
- 
- /* --------------- end of interface of B-WF2Q+ ---------------- */
- 
-diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index 8fc3da4c23bb..bd8f4ed84848 100644
---- a/block/bfq-wf2q.c
-+++ b/block/bfq-wf2q.c
-@@ -1646,6 +1646,22 @@ void bfq_requeue_bfqq(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 				    bfqq == bfqd->in_service_queue, expiration);
- }
- 
-+void bfq_add_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
-+{
-+	struct bfq_entity *entity = &bfqq->entity;
-+
-+	if (!entity->in_groups_with_pending_reqs)
-+		entity->in_groups_with_pending_reqs = true;
-+}
-+
-+void bfq_del_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
-+{
-+	struct bfq_entity *entity = &bfqq->entity;
-+
-+	if (entity->in_groups_with_pending_reqs)
-+		entity->in_groups_with_pending_reqs = false;
-+}
-+
- /*
-  * Called when the bfqq no longer has requests pending, remove it from
-  * the service tree. As a special case, it can be invoked during an
-@@ -1668,8 +1684,10 @@ void bfq_del_bfqq_busy(struct bfq_queue *bfqq, bool expiration)
- 
- 	bfq_deactivate_bfqq(bfqd, bfqq, true, expiration);
- 
--	if (!bfqq->dispatched)
-+	if (!bfqq->dispatched) {
-+		bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
- 		bfq_weights_tree_remove(bfqd, bfqq);
-+	}
- }
- 
- /*
-@@ -1686,10 +1704,12 @@ void bfq_add_bfqq_busy(struct bfq_queue *bfqq)
- 	bfq_mark_bfqq_busy(bfqq);
- 	bfqd->busy_queues[bfqq->ioprio_class - 1]++;
- 
--	if (!bfqq->dispatched)
-+	if (!bfqq->dispatched) {
-+		bfq_add_bfqq_in_groups_with_pending_reqs(bfqq);
- 		if (bfqq->wr_coeff == 1)
- 			bfq_weights_tree_add(bfqd, bfqq,
- 					     &bfqd->queue_weights_tree);
-+	}
- 
- 	if (bfqq->wr_coeff > 1)
- 		bfqd->wr_busy_queues++;
+Changes in v9:
+ - also update how many bfqqs have pending_reqs bfq_bfqq_move().
+ - fix one language in patch 4
+ - Add reviewed-tag for patch 1,3,4
+
+Changes in v8:
+ - Instead of using whether bfqq is busy, using whether bfqq has pending
+ requests. As Paolo pointed out the former way is problematic.
+
+Changes in v7:
+ - fix mismatch bfq_inc/del_busy_queues() and bfqq_add/del_bfqq_busy(),
+ also retest this patchset on v5.18 to make sure functionality is
+ correct.
+ - move the updating of 'bfqd->busy_queues' into new apis
+
+Changes in v6:
+ - add reviewed-by tag for patch 1
+
+Changes in v5:
+ - rename bfq_add_busy_queues() to bfq_inc_busy_queues() in patch 1
+ - fix wrong definition in patch 1
+ - fix spelling mistake in patch 2: leaset -> least
+ - update comments in patch 3
+ - add reviewed-by tag in patch 2,3
+
+Changes in v4:
+ - split bfq_update_busy_queues() to bfq_add/dec_busy_queues(),
+   suggested by Jan Kara.
+ - remove unused 'in_groups_with_pending_reqs',
+
+Changes in v3:
+ - remove the cleanup patch that is irrelevant now(I'll post it
+   separately).
+ - instead of hacking wr queues and using weights tree insertion/removal,
+   using bfq_add/del_bfqq_busy() to count the number of groups
+   (suggested by Jan Kara).
+
+Changes in v2:
+ - Use a different approch to count root group, which is much simple.
+
+Currently, bfq can't handle sync io concurrently as long as they
+are not issued from root group. This is because
+'bfqd->num_groups_with_pending_reqs > 0' is always true in
+bfq_asymmetric_scenario().
+
+The way that bfqg is counted into 'num_groups_with_pending_reqs':
+
+Before this patchset:
+ 1) root group will never be counted.
+ 2) Count if bfqg or it's child bfqgs have pending requests.
+ 3) Don't count if bfqg and it's child bfqgs complete all the requests.
+
+After this patchset:
+ 1) root group is counted.
+ 2) Count if bfqg has pending requests.
+ 3) Don't count if bfqg complete all the requests.
+
+With the above changes, concurrent sync io can be supported if only
+one group is activated.
+
+fio test script(startdelay is used to avoid queue merging):
+[global]
+filename=/dev/sda
+allow_mounted_write=0
+ioengine=psync
+direct=1
+ioscheduler=bfq
+offset_increment=10g
+group_reporting
+rw=randwrite
+bs=4k
+
+[test1]
+numjobs=1
+
+[test2]
+startdelay=1
+numjobs=1
+
+[test3]
+startdelay=2
+numjobs=1
+
+[test4]
+startdelay=3
+numjobs=1
+
+[test5]
+startdelay=4
+numjobs=1
+
+[test6]
+startdelay=5
+numjobs=1
+
+[test7]
+startdelay=6
+numjobs=1
+
+[test8]
+startdelay=7
+numjobs=1
+
+test result:
+running fio on root cgroup
+v5.18:	   112 Mib/s
+v5.18-patched: 112 Mib/s
+
+running fio on non-root cgroup
+v5.18:	   51.2 Mib/s
+v5.18-patched: 112 Mib/s
+
+Note that I also test null_blk with "irqmode=2
+completion_nsec=100000000(100ms) hw_queue_depth=1", and tests show
+that service guarantees are still preserved.
+
+Previous versions:
+RFC: https://lore.kernel.org/all/20211127101132.486806-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+v1: https://lore.kernel.org/all/20220305091205.4188398-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+v2: https://lore.kernel.org/all/20220416093753.3054696-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+v3: https://lore.kernel.org/all/20220427124722.48465-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+v4: https://lore.kernel.org/all/20220428111907.3635820-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+v5: https://lore.kernel.org/all/20220428120837.3737765-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+v6: https://lore.kernel.org/all/20220523131818.2798712-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+v7: https://lore.kernel.org/all/20220528095020.186970-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+
+
+Yu Kuai (6):
+  block, bfq: support to track if bfqq has pending requests
+  block, bfq: record how many queues have pending requests
+  block, bfq: refactor the counting of 'num_groups_with_pending_reqs'
+  block, bfq: do not idle if only one group is activated
+  block, bfq: cleanup bfq_weights_tree add/remove apis
+  block, bfq: cleanup __bfq_weights_tree_remove()
+
+ block/bfq-cgroup.c  | 10 +++++++
+ block/bfq-iosched.c | 71 +++++++--------------------------------------
+ block/bfq-iosched.h | 30 +++++++++----------
+ block/bfq-wf2q.c    | 69 ++++++++++++++++++++++++++-----------------
+ 4 files changed, 76 insertions(+), 104 deletions(-)
+
 -- 
 2.31.1
 
