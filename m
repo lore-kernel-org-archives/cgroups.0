@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [patch v11 2/6] block, bfq: record how many queues have pending requests
-Date: Fri, 16 Sep 2022 15:19:38 +0800
-Message-ID: <20220916071942.214222-3-yukuai1@huaweicloud.com>
+Subject: [patch v11 1/6] block, bfq: support to track if bfqq has pending requests
+Date: Fri, 16 Sep 2022 15:19:37 +0800
+Message-ID: <20220916071942.214222-2-yukuai1@huaweicloud.com>
 References: <20220916071942.214222-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,104 +14,96 @@ Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kern
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Prepare to refactor the counting of 'num_groups_with_pending_reqs'.
-
-Add a counter in bfq_group, update it while tracking if bfqq have pending
-requests and when bfq_bfqq_move() is called.
+If entity belongs to bfqq, then entity->in_groups_with_pending_reqs
+is not used currently. This patch use it to track if bfqq has pending
+requests through callers of weights_tree insertion and removal.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- block/bfq-cgroup.c  | 10 ++++++++++
- block/bfq-iosched.h |  1 +
- block/bfq-wf2q.c    | 12 ++++++++++--
- 3 files changed, 21 insertions(+), 2 deletions(-)
+ block/bfq-iosched.c |  1 +
+ block/bfq-iosched.h |  2 ++
+ block/bfq-wf2q.c    | 24 ++++++++++++++++++++++--
+ 3 files changed, 25 insertions(+), 2 deletions(-)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 144bca006463..4c37398e0b99 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -552,6 +552,7 @@ static void bfq_pd_init(struct blkg_policy_data *pd)
- 				   */
- 	bfqg->bfqd = bfqd;
- 	bfqg->active_entities = 0;
-+	bfqg->num_queues_with_pending_reqs = 0;
- 	bfqg->online = true;
- 	bfqg->rq_pos_tree = RB_ROOT;
- }
-@@ -641,6 +642,7 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- {
- 	struct bfq_entity *entity = &bfqq->entity;
- 	struct bfq_group *old_parent = bfqq_group(bfqq);
-+	bool has_pending_reqs = false;
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index f769c90744fd..0dcae2f52896 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -6261,6 +6261,7 @@ static void bfq_completed_request(struct bfq_queue *bfqq, struct bfq_data *bfqd)
+ 		 */
+ 		bfqq->budget_timeout = jiffies;
  
- 	/*
- 	 * No point to move bfqq to the same group, which can happen when
-@@ -661,6 +663,11 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 	 */
- 	bfqq->ref++;
- 
-+	if (entity->in_groups_with_pending_reqs) {
-+		has_pending_reqs = true;
 +		bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
-+	}
-+
- 	/* If bfqq is empty, then bfq_bfqq_expire also invokes
- 	 * bfq_del_bfqq_busy, thereby removing bfqq and its entity
- 	 * from data structures related to current group. Otherwise we
-@@ -688,6 +695,9 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 	/* pin down bfqg and its associated blkg  */
- 	bfqg_and_blkg_get(bfqg);
+ 		bfq_weights_tree_remove(bfqd, bfqq);
+ 	}
  
-+	if (has_pending_reqs)
-+		bfq_add_bfqq_in_groups_with_pending_reqs(bfqq);
-+
- 	if (bfq_bfqq_busy(bfqq)) {
- 		if (unlikely(!bfqd->nonrot_with_queueing))
- 			bfq_pos_tree_add_move(bfqd, bfqq);
 diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 44e08b194749..338ff5418ea8 100644
+index 64ee618064ba..44e08b194749 100644
 --- a/block/bfq-iosched.h
 +++ b/block/bfq-iosched.h
-@@ -943,6 +943,7 @@ struct bfq_group {
- 	struct bfq_entity *my_entity;
+@@ -1082,6 +1082,8 @@ void bfq_requeue_bfqq(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+ 		      bool expiration);
+ void bfq_del_bfqq_busy(struct bfq_queue *bfqq, bool expiration);
+ void bfq_add_bfqq_busy(struct bfq_queue *bfqq);
++void bfq_add_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq);
++void bfq_del_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq);
  
- 	int active_entities;
-+	int num_queues_with_pending_reqs;
- 
- 	struct rb_root rq_pos_tree;
+ /* --------------- end of interface of B-WF2Q+ ---------------- */
  
 diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index bd8f4ed84848..5549ccf09cd2 100644
+index 8fc3da4c23bb..bd8f4ed84848 100644
 --- a/block/bfq-wf2q.c
 +++ b/block/bfq-wf2q.c
-@@ -1650,16 +1650,24 @@ void bfq_add_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
- {
- 	struct bfq_entity *entity = &bfqq->entity;
- 
--	if (!entity->in_groups_with_pending_reqs)
-+	if (!entity->in_groups_with_pending_reqs) {
- 		entity->in_groups_with_pending_reqs = true;
-+#ifdef CONFIG_BFQ_GROUP_IOSCHED
-+		bfqq_group(bfqq)->num_queues_with_pending_reqs++;
-+#endif
-+	}
+@@ -1646,6 +1646,22 @@ void bfq_requeue_bfqq(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+ 				    bfqq == bfqd->in_service_queue, expiration);
  }
  
- void bfq_del_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
- {
- 	struct bfq_entity *entity = &bfqq->entity;
++void bfq_add_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
++{
++	struct bfq_entity *entity = &bfqq->entity;
++
++	if (!entity->in_groups_with_pending_reqs)
++		entity->in_groups_with_pending_reqs = true;
++}
++
++void bfq_del_bfqq_in_groups_with_pending_reqs(struct bfq_queue *bfqq)
++{
++	struct bfq_entity *entity = &bfqq->entity;
++
++	if (entity->in_groups_with_pending_reqs)
++		entity->in_groups_with_pending_reqs = false;
++}
++
+ /*
+  * Called when the bfqq no longer has requests pending, remove it from
+  * the service tree. As a special case, it can be invoked during an
+@@ -1668,8 +1684,10 @@ void bfq_del_bfqq_busy(struct bfq_queue *bfqq, bool expiration)
  
--	if (entity->in_groups_with_pending_reqs)
-+	if (entity->in_groups_with_pending_reqs) {
- 		entity->in_groups_with_pending_reqs = false;
-+#ifdef CONFIG_BFQ_GROUP_IOSCHED
-+		bfqq_group(bfqq)->num_queues_with_pending_reqs--;
-+#endif
+ 	bfq_deactivate_bfqq(bfqd, bfqq, true, expiration);
+ 
+-	if (!bfqq->dispatched)
++	if (!bfqq->dispatched) {
++		bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
+ 		bfq_weights_tree_remove(bfqd, bfqq);
 +	}
  }
  
  /*
+@@ -1686,10 +1704,12 @@ void bfq_add_bfqq_busy(struct bfq_queue *bfqq)
+ 	bfq_mark_bfqq_busy(bfqq);
+ 	bfqd->busy_queues[bfqq->ioprio_class - 1]++;
+ 
+-	if (!bfqq->dispatched)
++	if (!bfqq->dispatched) {
++		bfq_add_bfqq_in_groups_with_pending_reqs(bfqq);
+ 		if (bfqq->wr_coeff == 1)
+ 			bfq_weights_tree_add(bfqd, bfqq,
+ 					     &bfqd->queue_weights_tree);
++	}
+ 
+ 	if (bfqq->wr_coeff > 1)
+ 		bfqd->wr_busy_queues++;
 -- 
 2.31.1
 
