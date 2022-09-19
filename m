@@ -1,61 +1,66 @@
-From: Mukesh Ojha <quic_mojha@quicinc.com>
-Subject: Re: [PATCH -next] cgroup: simplify code in cgroup_apply_control
-Date: Mon, 19 Sep 2022 16:19:10 +0530
-Message-ID: <22ef7722-2f60-688d-4cf0-f59f0272a293@quicinc.com>
-References: <20220917084039.3177-1-williamsukatube@163.com>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH v3] mm/memcontrol: use kstrtobool for swapaccount param
+ parsing
+Date: Mon, 19 Sep 2022 17:01:16 +0200
+Message-ID: <YyiEPPecoqsinebe@dhcp22.suse.cz>
+References: <20220909145308.f2f61d6992f00ef6977f833b@linux-foundation.org>
+ <20220913071358.1812206-1-liushixin2@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=RcMmOlpnS4AWnqNiIpy8ZOmV53hTUnYc4Fvlx4MH3BU=;
- b=IgzlouolRenhn2zc65LTb3I0tABPSChqtEq8wvqMI9rFrUBfr3U9GFbloG0eA42KcVdq
- DSW+XCM6mWWwgSpj/leIu/+aPmr4Kgvp4sRr0GpmWY4XB9PRM/JZwlk9aywJXzWrzybK
- kBC73hVz3YQ4S+uS67290jgtf11T8aRbjAdGzMK8nMYlgj1gMXnIF+QBeV5VYDOLpeeO
- Z6A90mR8+xvhAtxQ21rF9oW3TKGTOKYOn8dxnEENAobJECx3Z/iBce3e/lFCRb67/hwp
- 01WCuEWBGYvcu+Kn/CPw+xJZYsQvFWpim0Yxb98uoQZqdIktMH6eTlJ1sQ/CIwR9NRBN 0g== 
-Content-Language: en-US
-In-Reply-To: <20220917084039.3177-1-williamsukatube@163.com>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1663599677; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=iDQ4TbeBXa/svhW7EfZleIQJqRglXyx7TDIqISE6yyM=;
+        b=QruWER5KDSb+2K6n6HFs/WUurfTkzp5sMxSVkMVrm3lehOt+UtyXCfIE5QlGQ6AB/pQl2H
+        bWA7U17LROAZJt8gYCc6PbCQMojyqbCPedL6IdL4/SbV8YQ9RG2aDhG9+P00umlWIFwU4j
+        oOEFwRn36kywPKURtqAA8cYTgrgtKb4=
+Content-Disposition: inline
+In-Reply-To: <20220913071358.1812206-1-liushixin2@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: williamsukatube@163.com, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Liu Shixin <liushixin2@huawei.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jonathan Corbet <corbet@lwn.net>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Kefeng Wang <wangkefeng.wang@huawei.com>
 
-Hi,
+On Tue 13-09-22 15:13:58, Liu Shixin wrote:
+> Use kstrtobool which is more powerful to handle all kinds of parameters
+> like 'Yy1Nn0' or [oO][NnFf] for "on" and "off".
 
-On 9/17/2022 2:10 PM, williamsukatube@163.com wrote:
-> From: William Dean <williamsukatube@163.com>
-> 
-> It could directly return 'cgroup_update_dfl_csses' to simplify code.
-> 
-> Signed-off-by: William Dean <williamsukatube@163.com>
+the main usefulness is with the code reusability of library functions
+rather than ad-hoc stuff.
+
+> Signed-off-by: Liu Shixin <liushixin2@huawei.com>
+
+Acked-by: Michal Hocko <mhocko@suse.com>
+
+Thanks!
 > ---
->   kernel/cgroup/cgroup.c | 6 +-----
->   1 file changed, 1 insertion(+), 5 deletions(-)
+>  mm/memcontrol.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index e4bb5d57f4d1..1958f8bd93d6 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -3292,11 +3292,7 @@ static int cgroup_apply_control(struct cgroup *cgrp)
->   	 * making the following cgroup_update_dfl_csses() properly update
->   	 * css associations of all tasks in the subtree.
->   	 */
-> -	ret = cgroup_update_dfl_csses(cgrp);
-> -	if (ret)
-> -		return ret;
-> -
-> -	return 0;
-> +	return cgroup_update_dfl_csses(cgrp);
->   }
-> 
->   /**
-> --
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 0a1a8a846870..5511c0c120d9 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -7434,10 +7434,10 @@ bool mem_cgroup_swap_full(struct folio *folio)
+>  
+>  static int __init setup_swap_account(char *s)
+>  {
+> -	if (!strcmp(s, "1"))
+> -		cgroup_memory_noswap = false;
+> -	else if (!strcmp(s, "0"))
+> -		cgroup_memory_noswap = true;
+> +	bool res;
+> +
+> +	if (!kstrtobool(s, &res))
+> +		cgroup_memory_noswap = !res;
+>  	return 1;
+>  }
+>  __setup("swapaccount=", setup_swap_account);
+> -- 
 > 2.25.1
-> 
 
-LGTM.
-
-Reviewed-by: Mukesh Ojha <quic_mojha@quicinc.com>
-
--Mukesh
+-- 
+Michal Hocko
+SUSE Labs
