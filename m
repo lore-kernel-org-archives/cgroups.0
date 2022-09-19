@@ -1,22 +1,25 @@
 From: Kairui Song <ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v2 0/2] mm: memcontrol: cleanup and optimize for two accounting params
-Date: Tue, 20 Sep 2022 02:06:32 +0800
-Message-ID: <20220919180634.45958-1-ryncsn@gmail.com>
+Subject: [PATCH v2 1/2] mm: memcontrol: use memcg_kmem_enabled in count_objcg_event
+Date: Tue, 20 Sep 2022 02:06:33 +0800
+Message-ID: <20220919180634.45958-2-ryncsn@gmail.com>
+References: <20220919180634.45958-1-ryncsn@gmail.com>
 Reply-To: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:reply-to:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date;
-        bh=gEJQAVOMzbt4PPx+Qy3opmg3geJE7rZvH1CdGnwIjt0=;
-        b=nbulrSye1Ljiu3ZTZKiIiuL+PXrsz2uUKYqD8NYqbUSgSm3Vi0gErRmMJ0GPmvae9i
-         uFrQSoh1Dekn6R4JT7YM9d2sB+smEUc5gTVkoLOgpOXTfVVq5yRmFpBMPNiY+OWHd1Kj
-         7sFgW+7uvTFADWLZukSZmOygnPnhuEFahpb4O1RUVtEByOp/h4uLCqIzCz2MARhjf316
-         CrtqEu1wm2L0h+YlZ0T1jzFRka98lhHFmUQAsoubRrqiucMdFSGJUbf948tBw19kEGIp
-         Y1ZOXVA7Lx/gNKOo6xHFKUxWeh3vBVe2/ypemZtIy0k2iK3bg1qmnklw+AkaME+BTNKX
-         jTXA==
+        h=content-transfer-encoding:mime-version:reply-to:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date;
+        bh=C+GNb1CRkpsaWy3nNaUeEZwBpKEJtnfXNeVMo/vFMIU=;
+        b=fJXZ9vt1XMtBtJhooHOuHVO6gpZg/2Uq4qGa9T5h11pcGRnzjkEqyCrZLqmAkJO3mt
+         6jZ6Kmcm5Xrl4n/4Ha9OVyvbf7KSeSHSaBIOVNkl/Y+DFmj3H/uy0xNC+pLhyrze7MCr
+         dwJzSTDmkot2vsTjksuK2VD4SWXd5wJcjGqt1tPITOlZ7VGEfcr6qO3cRxkn0CYilHgB
+         T55kdJjZVfwysg0KjtfHwmZN+5pQSnz3gMRiZsYhWXzRHLhezJGrkX5qv07Q/7gmikk6
+         B/FPhC5n0u2iEpfA1o6oGoGvCu3B2YW8UjFu0aCFVVNQytVv//tVdMVPcPIP8TNm7bdz
+         I93w==
+In-Reply-To: <20220919180634.45958-1-ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
@@ -24,27 +27,44 @@ Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hoc
 
 From: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-V2 of "[PATCH 0/2] mm: memcontrol: cleanup and optimize for accounting params".
+There are currently two helpers for checking if cgroup kmem
+accounting is enabled:
 
-Patch 1/2 is a minor cleanup for kmem accouting path.
+- mem_cgroup_kmem_disabled
+- memcg_kmem_enabled
 
-Patch 2/2 optimizes some hot paths by making cgroup_memory_noswap a
-static key, benchmark shows swap paths now have a ~5% lower overhead.
+mem_cgroup_kmem_disabled is a simple helper that returns true
+if cgroup.memory=nokmem is specified, otherwise returns false.
 
-Update from V1:
-- Collect Acked-by for patch 2/2 from Michal Hocko, Thanks!
-- Simplify patch 1/1, don't drop mem_cgroup_kmem_disabled and only
-  change one call site as a minor clean up, update commit message
-  for patch 2/2, as suggested by Michal Hocko.
+memcg_kmem_enabled is a bit different, it returns true if
+cgroup.memory=nokmem is not specified and there was at least one
+non-root memory control enabled cgroup ever created. This help improve
+performance when kmem accounting was not actually activated. And it's
+optimized with static branch.
 
-Kairui Song (2):
-  mm: memcontrol: use memcg_kmem_enabled in count_objcg_event
-  mm: memcontrol: make cgroup_memory_noswap a static key
+The usage of mem_cgroup_kmem_disabled is for sub-systems that need to
+preallocate data for kmem accounting since they could be initialized
+before kmem accounting is activated. But count_objcg_event doesn't
+need that, so using memcg_kmem_enabled is better here.
 
- include/linux/memcontrol.h |  2 +-
- mm/memcontrol.c            | 27 +++++++++++++++++++--------
- 2 files changed, 20 insertions(+), 9 deletions(-)
+Signed-off-by: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+---
+ include/linux/memcontrol.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 6257867fbf95..e6d3d5870d6f 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1779,7 +1779,7 @@ static inline void count_objcg_event(struct obj_cgroup *objcg,
+ {
+ 	struct mem_cgroup *memcg;
+ 
+-	if (mem_cgroup_kmem_disabled())
++	if (!memcg_kmem_enabled())
+ 		return;
+ 
+ 	rcu_read_lock();
 -- 
 2.35.2
 
