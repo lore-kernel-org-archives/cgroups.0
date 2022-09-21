@@ -1,94 +1,110 @@
 From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH bpf-next 00/10] bpf, mm: Add a new item bpf into memory.stat for the observability of bpf memory
-Date: Wed, 21 Sep 2022 16:59:52 +0000
-Message-ID: <20220921170002.29557-1-laoar.shao@gmail.com>
+Subject: [RFC PATCH bpf-next 03/10] bpf: Call bpf_map_init_from_attr() immediately after map creation
+Date: Wed, 21 Sep 2022 16:59:55 +0000
+Message-ID: <20220921170002.29557-4-laoar.shao@gmail.com>
+References: <20220921170002.29557-1-laoar.shao@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date;
-        bh=nx1Pb9dM/JhxWQDw5gPMNf7lql+4Go4MShpr0kH8cc0=;
-        b=CSmmdZMqYw079U3775ip77HfU+VXCgRduxH7nLU4fKoetQbDbOwQj0N5VV1/R8yDTB
-         C5GMBqy47IWpmoTOMmzVq61LzA369UyUVSLinzDwi61L1Axo/PtoSDz2JbP4bzVDzaWl
-         1yV5Q4v2g2Z3JLxsorCYmgdPG5ImO6aspZeVppBKF97s56qvy400HqJMer+UI3a14YRR
-         gSkLqNo0MAdXwSJHLuriZIstp04xsabXLTTzSVuR4NtzxdYn7TiL3vyQmHPZCYD9N5AT
-         3qL2QoEN7swf8pRaRkA/ygy+yZTv4hx4oPBNO5o+2cICKWm6vzzgWsev4IqCrVliZOvV
-         rnBw==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
+        bh=f1B/fJ7c1U504s6DGE1MVFIz1uDuaG3uKK0ASZv0FxM=;
+        b=fpZ8/1xkHoMLB2UOFwFpVvw7tWvX9cslgyitt4vRPFpO7zuQCu0xCkIlaFhSFsUZby
+         E27igllfmnZEinieJr5J8Zqo/4xpWdKJGEM0w4+79gE/Pm/NlVMiIHZ9lyb2iX+2j/RU
+         kwVc5mQgrWuSCJ9JazP3ZTgS/62djsGR1UNSnbWAQtMjaIRjFTl0u3UotwgdhToA1xnf
+         0Uf8aqByrex8ypDCikKf+UFNtLy2moByEgFvDDrLgEqp2muM4iW3TJdOMJlqhkAjZZ9w
+         /8msZT9MUh7fip1qYOz7NV/YZxjb5+2aPXavfQQx/hgAHqQ8ld+k4ByuDNIYSvPe5+JG
+         jvSg==
+In-Reply-To: <20220921170002.29557-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-This patchset adds a new item 'bpf' into memory.stat to show the bpf
-memory usage in each memcg (except the root memcg because kmem is not
-charged into root memcg now). The bpf memory usage is not trivial, so it
-deserves a new item.
+In order to make all other map related memory allocations been allocated
+after memcg is saved in the map, we should save the memcg immediately
+after map creation. But the map is created in bpf_map_area_alloc(),
+within which we can't get the related bpf_map (except with a pointer
+casting which may be error prone), so we can do it in
+bpf_map_init_from_attr(), which is used by all bpf maps.
 
-Patches #1 ~ #8 are from another series[1] which try to fix the pinned bpf
-issues, but it seems to be a long way to go. So let's do the observability
-first, which has been in my local repo for a long time.
+bpf_map_init_from_attr() is executed immediately after
+bpf_map_area_alloc() for almost all bpf maps except bpf_struct_ops,
+devmap and hashmap, so this patch changes these three maps.
 
-We use the scope-based accouting/unaccouthing to track the bpf memory
-usage, which is similar with the way how we charge bpf memory.
+In the future we will change the return type of bpf_map_init_from_attr()
+from void to int for error cases, so put it immediately after
+bpf_map_area_alloc() will make it eary to handle the error case.
 
-We have to annotate both allocations and releases of bpf memory because we
-don't want to add something into struct page currently. The allocations
-and releases of bpf memory are very clear, so it won't be a trouble.
+Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ kernel/bpf/bpf_struct_ops.c | 2 +-
+ kernel/bpf/devmap.c         | 5 ++---
+ kernel/bpf/hashtab.c        | 4 ++--
+ 3 files changed, 5 insertions(+), 6 deletions(-)
 
-This patchset only tracks the memory of bpf-map currently.
-
-Future works:
-- track the memory of bpf-prog
-- observe system-wide bpf memory usage by adding this item into root memcg
-- per-map and per-prog bpf memory usage in bpftool or something else
-- give user an option to disable memcg-based bpf accouting [2]
-
-Any feedback is welcomed.
-
-[1]. https://lore.kernel.org/bpf/20220902023003.47124-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org/
-[2]. https://lore.kernel.org/bpf/CALOAHbAOkUpDWaL2kP8ntBe6sj8S0thLmAwZXhG5kFKBunHt_w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/T/#m3597928c7161b206cb9218c80d9e58a42128d31a
-
-Yafang Shao (10):
-  bpf: Introduce new helper bpf_map_put_memcg()
-  bpf: Define bpf_map_{get,put}_memcg for !CONFIG_MEMCG_KMEM
-  bpf: Call bpf_map_init_from_attr() immediately after map creation
-  bpf: Save memcg in bpf_map_init_from_attr()
-  bpf: Use scoped-based charge in bpf_map_area_alloc
-  bpf: Introduce new helpers bpf_ringbuf_pages_{alloc,free}
-  bpf: Use bpf_map_kzalloc in arraymap
-  bpf: Use bpf_map_kvcalloc in bpf_local_storage
-  bpf: Add bpf map free helpers
-  bpf, memcg: Add new item bpf into memory.stat
-
- include/linux/bpf.h            |  70 ++++++++++++++++++-
- include/linux/memcontrol.h     |  11 +++
- include/linux/sched.h          |   1 +
- include/linux/sched/mm.h       |  24 +++++++
- kernel/bpf/arraymap.c          |  30 ++++-----
- kernel/bpf/bloom_filter.c      |   4 +-
- kernel/bpf/bpf_local_storage.c |  20 +++---
- kernel/bpf/bpf_struct_ops.c    |  14 ++--
- kernel/bpf/cpumap.c            |  24 +++----
- kernel/bpf/devmap.c            |  36 +++++-----
- kernel/bpf/hashtab.c           |  24 ++++---
- kernel/bpf/helpers.c           |   2 +-
- kernel/bpf/local_storage.c     |  14 ++--
- kernel/bpf/lpm_trie.c          |   6 +-
- kernel/bpf/memalloc.c          |  10 +++
- kernel/bpf/offload.c           |   6 +-
- kernel/bpf/queue_stack_maps.c  |   4 +-
- kernel/bpf/reuseport_array.c   |   4 +-
- kernel/bpf/ringbuf.c           | 106 ++++++++++++++++++++---------
- kernel/bpf/stackmap.c          |  13 ++--
- kernel/bpf/syscall.c           | 149 ++++++++++++++++++++++++++++++-----------
- kernel/fork.c                  |   1 +
- mm/memcontrol.c                |  20 ++++++
- net/core/sock_map.c            |  22 +++---
- net/xdp/xskmap.c               |   6 +-
- 25 files changed, 439 insertions(+), 182 deletions(-)
-
+diff --git a/kernel/bpf/bpf_struct_ops.c b/kernel/bpf/bpf_struct_ops.c
+index 84b2d9d..36f24f8 100644
+--- a/kernel/bpf/bpf_struct_ops.c
++++ b/kernel/bpf/bpf_struct_ops.c
+@@ -624,6 +624,7 @@ static struct bpf_map *bpf_struct_ops_map_alloc(union bpf_attr *attr)
+ 
+ 	st_map->st_ops = st_ops;
+ 	map = &st_map->map;
++	bpf_map_init_from_attr(map, attr);
+ 
+ 	st_map->uvalue = bpf_map_area_alloc(vt->size, NUMA_NO_NODE);
+ 	st_map->links =
+@@ -637,7 +638,6 @@ static struct bpf_map *bpf_struct_ops_map_alloc(union bpf_attr *attr)
+ 
+ 	mutex_init(&st_map->lock);
+ 	set_vm_flush_reset_perms(st_map->image);
+-	bpf_map_init_from_attr(map, attr);
+ 
+ 	return map;
+ }
+diff --git a/kernel/bpf/devmap.c b/kernel/bpf/devmap.c
+index f9a87dc..20decc7 100644
+--- a/kernel/bpf/devmap.c
++++ b/kernel/bpf/devmap.c
+@@ -127,9 +127,6 @@ static int dev_map_init_map(struct bpf_dtab *dtab, union bpf_attr *attr)
+ 	 */
+ 	attr->map_flags |= BPF_F_RDONLY_PROG;
+ 
+-
+-	bpf_map_init_from_attr(&dtab->map, attr);
+-
+ 	if (attr->map_type == BPF_MAP_TYPE_DEVMAP_HASH) {
+ 		dtab->n_buckets = roundup_pow_of_two(dtab->map.max_entries);
+ 
+@@ -167,6 +164,8 @@ static struct bpf_map *dev_map_alloc(union bpf_attr *attr)
+ 	if (!dtab)
+ 		return ERR_PTR(-ENOMEM);
+ 
++	bpf_map_init_from_attr(&dtab->map, attr);
++
+ 	err = dev_map_init_map(dtab, attr);
+ 	if (err) {
+ 		bpf_map_area_free(dtab);
+diff --git a/kernel/bpf/hashtab.c b/kernel/bpf/hashtab.c
+index 86aec20..6c0e4eb 100644
+--- a/kernel/bpf/hashtab.c
++++ b/kernel/bpf/hashtab.c
+@@ -514,10 +514,10 @@ static struct bpf_map *htab_map_alloc(union bpf_attr *attr)
+ 	if (!htab)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	lockdep_register_key(&htab->lockdep_key);
+-
+ 	bpf_map_init_from_attr(&htab->map, attr);
+ 
++	lockdep_register_key(&htab->lockdep_key);
++
+ 	if (percpu_lru) {
+ 		/* ensure each CPU's lru list has >=1 elements.
+ 		 * since we are at it, make each lru list has the same
 -- 
 1.8.3.1
 
