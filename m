@@ -1,98 +1,133 @@
-From: Namhyung Kim <namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH] perf stat: Support old kernels for bperf cgroup counting
-Date: Wed, 21 Sep 2022 21:14:35 -0700
-Message-ID: <20220922041435.709119-1-namhyung@kernel.org>
-References: <CAM9d7cjQ20a01YoZi=o-_7HT6TzR0TZgtpscKNvRrMq2yqV1Og@mail.gmail.com>
+From: Jing-Ting Wu <jing-ting.wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Subject: Re: BUG: HANG_DETECT waiting for migration_cpu_stop() complete
+Date: Thu, 22 Sep 2022 13:40:47 +0800
+Message-ID: <93f4ce9486ec4b856ba0f3bfe956fc9b2d3cb4cf.camel@mediatek.com>
+References: <20220907000741.2496-1-hdanton@sina.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:sender:from:to:cc:subject:date;
-        bh=z8K8JabQHxvWke1wLuSNQQKC0Zp7p6L1teN9v6xkDP8=;
-        b=GZpjOi0ytaP2Q0bSJ8LGmg2pmd5KvjScrRWewswVinGIz3c/zhvb+1l/h2psEwXYaB
-         rkShb2F5lWekTtP+LgZDTxg/pbOKMJWns05QG0lgHnwch5fCx0x5MstVObxATaeeFrw7
-         lMg1vYE2HDHCqKbxqTeG+KIZlrwSfd+gSnxqUL/VxJAz1TLnACv0ommsz0DE04xROqJw
-         EV+zodAOmFwbyqfZpBTpL5Fo8GqljGs583mTwmEvMiwZdeapXtJCQHHniv5KC1ONVs71
-         /k1jbqX2Lf9MLz7KlT8Hyddd6h8YFEhEkSx0EGXYcNusCziPsYfnBb8M21UnUzOcxbtD
-         1Dog==
-Sender: Namhyung Kim <namhyung-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-In-Reply-To: <CAM9d7cjQ20a01YoZi=o-_7HT6TzR0TZgtpscKNvRrMq2yqV1Og-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=V/4+Moo1S3nQcLY9jDjtjnWEDd9L/Kw2aufNRHGosCA=;
+        b=Zo90xoefOKJHvtfEFcDTAqWFMMlSWhYdihn9YUwakBoC7hSj65xFQOnkygZWjRWo+0MaOfGzMIuyKHdO04SqksKYo04Q/Ql+ZbID6f3GpTsr00YT5rq3AD7qAoZiR0Fhzx7za2FPjitpJ6vUJJ8lOcjWUAYbbUvnHd5+FHK+MKU=;
+In-Reply-To: <20220907000741.2496-1-hdanton-k+cT0dCbe1g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-perf-users-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Hillf Danton <hdanton-k+cT0dCbe1g@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, ValentinSchneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, TejunHeo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Jonathan.JMChen-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, "chris.redpath-5wv7dgnIgG8@public.gmane.org" <chris.redpath-5wv7dgnIgG8@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Vincent Donnefort <vdonnefort-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Christian Brauner <brauner@ke>
 
-The recent change in the cgroup will break the backward compatiblity in
-the BPF program.  It should support both old and new kernels using BPF
-CO-RE technique.
+On Wed, 2022-09-07 at 08:07 +0800, Hillf Danton wrote:
+> On 5 Sep 2022 10:47:36 +0800 Jing-Ting Wu <jing-ting.wu-NuS5LvNUpcJWk0Hti=
+k3J/w@public.gmane.org>
+> wrote
+> >=20
+> > We meet the HANG_DETECT happened in T SW version with kernel-5.15.
+> > Many tasks have been blocked for a long time.
+> >=20
+> > Root cause:
+> > migration_cpu_stop() is not complete due to
+> > is_migration_disabled(p) is
+> > true, complete is false and complete_all() never get executed.
+> > It let other task wait the rwsem.
+>=20
+> See if handing task over to stopper again in case of migration
+> disabled
+> could survive your tests.
+>=20
+> Hillf
+>=20
+> --- linux-5.15/kernel/sched/core.c
+> +++ b/kernel/sched/core.c
+> @@ -2322,9 +2322,7 @@ static int migration_cpu_stop(void *data
+>  	 * holding rq->lock, if p->on_rq =3D=3D 0 it cannot get enqueued
+> because
+>  	 * we're holding p->pi_lock.
+>  	 */
+> -	if (task_rq(p) =3D=3D rq) {
+> -		if (is_migration_disabled(p))
+> -			goto out;
+> +	if (task_rq(p) =3D=3D rq && !is_migration_disabled(p)) {
+> =20
+>  		if (pending) {
+>  			p->migration_pending =3D NULL;
 
-Like the task_struct->__state handling in the offcpu analysis, we can
-check the field name in the cgroup struct.
+Because Peter have some concern for patch by Waiman.
+We add Hillf's patch to our stability test.
+But there are side effects after patched.
+The warning appear once < two weeks.=20
 
-Signed-off-by: Namhyung Kim <namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
-Arnaldo, I think this should go through the cgroup tree since it depends
-on the earlier change there.  I don't think it'd conflict with other
-perf changes but please let me know if you see any trouble, thanks!
+Backtrace as follows:
+[name:panic&]WARNING: CPU: 6 PID: 32583 at affine_move_task
+pc : affine_move_task
+lr : __set_cpus_allowed_ptr_locked
+Call trace:
+affine_move_task
+__set_cpus_allowed_ptr_locked
+migrate_enable
+__cgroup_bpf_run_filter_skb
+ip_finish_output
+ip_output
 
- tools/perf/util/bpf_skel/bperf_cgroup.bpf.c | 29 ++++++++++++++++++++-
- 1 file changed, 28 insertions(+), 1 deletion(-)
 
-diff --git a/tools/perf/util/bpf_skel/bperf_cgroup.bpf.c b/tools/perf/util/bpf_skel/bperf_cgroup.bpf.c
-index 488bd398f01d..4fe61043de04 100644
---- a/tools/perf/util/bpf_skel/bperf_cgroup.bpf.c
-+++ b/tools/perf/util/bpf_skel/bperf_cgroup.bpf.c
-@@ -43,12 +43,39 @@ struct {
- 	__uint(value_size, sizeof(struct bpf_perf_event_value));
- } cgrp_readings SEC(".maps");
- 
-+/* new kernel cgroup definition */
-+struct cgroup___new {
-+	int level;
-+	struct cgroup *ancestors[];
-+} __attribute__((preserve_access_index));
-+
-+/* old kernel cgroup definition */
-+struct cgroup___old {
-+	int level;
-+	u64 ancestor_ids[];
-+} __attribute__((preserve_access_index));
-+
- const volatile __u32 num_events = 1;
- const volatile __u32 num_cpus = 1;
- 
- int enabled = 0;
- int use_cgroup_v2 = 0;
- 
-+static inline __u64 get_cgroup_v1_ancestor_id(struct cgroup *cgrp, int level)
-+{
-+	/* recast pointer to capture new type for compiler */
-+	struct cgroup___new *cgrp_new = (void *)cgrp;
-+
-+	if (bpf_core_field_exists(cgrp_new->ancestors)) {
-+		return BPF_CORE_READ(cgrp_new, ancestors[level], kn, id);
-+	} else {
-+		/* recast pointer to capture old type for compiler */
-+		struct cgroup___old *cgrp_old = (void *)cgrp;
-+
-+		return BPF_CORE_READ(cgrp_old, ancestor_ids[level]);
-+	}
-+}
-+
- static inline int get_cgroup_v1_idx(__u32 *cgrps, int size)
- {
- 	struct task_struct *p = (void *)bpf_get_current_task();
-@@ -70,7 +97,7 @@ static inline int get_cgroup_v1_idx(__u32 *cgrps, int size)
- 			break;
- 
- 		// convert cgroup-id to a map index
--		cgrp_id = BPF_CORE_READ(cgrp, ancestors[i], kn, id);
-+		cgrp_id = get_cgroup_v1_ancestor_id(cgrp, i);
- 		elem = bpf_map_lookup_elem(&cgrp_idx, &cgrp_id);
- 		if (!elem)
- 			continue;
--- 
-2.37.3.968.ga6b4b080e4-goog
+The root cause is when is_migration_disabled(p) is true=EF=BC=8Cthe patched
+version will set p->migration_pending to NULL by migration_cpu_stop.
+And in affine_move_task will raise a WARN_ON_ONCE(!pending).
+
+Kernel-5.15/kernel/sched/core.c:
+static int affine_move_task(struct rq *rq, struct task_struct *p,
+struct rq_flags *rf, int dest_cpu, unsigned int flags) {
+...
+	If (WARN_ON_ONCE(!pending)) {
+ 	  Task_rq_unlock(rq,p,fr);
+  	  return -EINVAL;
+	}
+...
+}
+
+But the tasks have not been migrated to the new affinity CPU, so there
+should be pending tasks to be processed, so p->migration_pending should
+not be NULL.
+
+
+
+Without patch:
+When is_migration_disabled is true, then goto out and not set p-
+>migration_pending to NULL.
+
+static int migration_cpu_stop(void *data) {
+...
+	If (task_rq(p) =3D=3D rq) {
+        	     if (is_migration_disabled(p))
+                	           goto out;
+	}
+...
+}
+
+
+With patch:
+When is_migration_disabled is true and pending is true, goto else if
+flow. Because p->cpus_ptr not updated when migrate_disable, so this
+condition is always true and p->migration_pending will set to NULL.
+
+static int migration_cpu_stop(void *data) {
+...
+	If (task_rq(p) =3D=3D rq && !is_migration_disabled(p) ) {
+ 	  ...
+	} else if (pending) {
+	  ...
+	  If (cpumask_test_cpu(task_cpu(p), p-> cpus_ ptr)) {=20
+        	p->migration_pending =3D NULL;
+      		 complete =3D true;
+      		 goto out;
+	}
+...
+}
+
+
+
+
+
+
+Best regards,
+Jing-Ting Wu
+
 
