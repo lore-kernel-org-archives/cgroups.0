@@ -1,7 +1,7 @@
 From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [RFC PATCH 12/20] x86/sgx: Add helper to retrieve SGX EPC LRU given an EPC page
-Date: Thu, 22 Sep 2022 10:10:49 -0700
-Message-ID: <20220922171057.1236139-13-kristen@linux.intel.com>
+Subject: [RFC PATCH 15/20] x86/sgx: Add helper to grab pages from an arbitrary EPC LRU
+Date: Thu, 22 Sep 2022 10:10:52 -0700
+Message-ID: <20220922171057.1236139-16-kristen@linux.intel.com>
 References: <20220922171057.1236139-1-kristen@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -11,13 +11,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   t=1663866786; x=1695402786;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=uAqBkTUmYYX0pPDN5Vz9uab6QodYLXhHPk1Zsj7TxBE=;
-  b=Rph/LjkQFeQlhV2N9AiBG6/YOR618v073CZiFSpwl4DbfSV5QETh98AJ
-   x7lNyG0dtr8G985Fbmb0utazLPmgy0vwsUfShXhe/6Ek2JpbKh9kjXe66
-   zXsZQ6oguTSXlUd+OzOc7eFHYf72ZqcvJzUiR9H1c89wPkFJ5cQP/Mwtn
-   UQbfA19YZBNYi8Imei/hKA5M7YBWAMq0SdcCSTNa8J8nX14TTOqLjGkdk
-   QtIhAnpNo39P9UXuScZXaKkko1Zq3XK5b5jV0ZUIDE84dsxfGHtrFU3Xp
-   kcOopBzT8MIhmLPn6wF9ZqSrQG/fELliZ4WX6s3Oe53Hxt6i5dQMwMHhz
+  bh=op2/5yqxd7J9ovTWhDUl48f07ozoWvtTyl9KC7Oy26o=;
+  b=niBZMfobb9IJr4uj6nd1v5YrrGcPHm0dy5USD244PtxSe8gBA+e06JQD
+   3kRtYCla4Lb1nUXO8UuRzwmXRy/oIBr4KGrVFlLr3kbe8u9u9iVzst+ly
+   eDr8Gz9bXtM6d67HuCJiensDQwqNtyUXJpCFAzlKJE/B8SAfeg9iuNmpT
+   FZz0doqGBDQZbmMWRBFgg+Ea7wuItW9zFmDxlxHfuIO5SQdvSf9C9qNfO
+   kaBEv6wrxFA+vZaUttw5Zh6eD6hiOPqPcdeJFdhiCTMxei7ILnbgWZkho
+   oHoLVubcHnS5a7ZW4x3fOuO8Xew7HI1x5mdFM3o5WVik4Vwx884DspHOk
    g==;
 In-Reply-To: <20220922171057.1236139-1-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
@@ -27,94 +27,134 @@ Cc: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, S
 
 From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Introduce a function that will be used to retrieve an LRU
-from an EPC page.
+Move the isolation loop into a standalone helper, sgx_isolate_pages(),
+in preparation for existence of multiple LRUs.  Expose the helper to
+other SGX code so that it can be called from the EPC cgroup code, e.g.
+to isolate pages from a single cgroup LRU.  Exposing the isolation loop
+allows the cgroup iteration logic to be wholly encapsulated within the
+cgroup code.
 
 Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- arch/x86/kernel/cpu/sgx/main.c | 30 ++++++++++++++++++++----------
- 1 file changed, 20 insertions(+), 10 deletions(-)
+ arch/x86/kernel/cpu/sgx/main.c | 72 ++++++++++++++++++++--------------
+ arch/x86/kernel/cpu/sgx/sgx.h  |  2 +
+ 2 files changed, 45 insertions(+), 29 deletions(-)
 
 diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
-index 98531f6fb448..9f2cb264a347 100644
+index 1791881aa1b1..151ad720a4ec 100644
 --- a/arch/x86/kernel/cpu/sgx/main.c
 +++ b/arch/x86/kernel/cpu/sgx/main.c
-@@ -31,6 +31,10 @@ static DEFINE_XARRAY(sgx_epc_address_space);
-  * with sgx_global_lru.lock acquired.
-  */
- static struct sgx_epc_lru sgx_global_lru;
-+static inline struct sgx_epc_lru *sgx_lru(struct sgx_epc_page *epc_page)
-+{
-+	return &sgx_global_lru;
-+}
- 
- static atomic_long_t sgx_nr_free_pages = ATOMIC_LONG_INIT(0);
- 
-@@ -299,6 +303,7 @@ static int sgx_reclaim_pages(int nr_to_scan, bool ignore_age)
- 	struct sgx_backing backing[SGX_MAX_NR_TO_RECLAIM];
- 	struct sgx_encl_page *encl_page;
- 	struct sgx_epc_page *epc_page, *tmp;
-+	struct sgx_epc_lru *lru;
- 	pgoff_t page_index;
- 	LIST_HEAD(iso);
- 	int ret;
-@@ -354,10 +359,11 @@ static int sgx_reclaim_pages(int nr_to_scan, bool ignore_age)
- 		continue;
- 
- skip:
--		spin_lock(&sgx_global_lru.lock);
-+		lru = sgx_lru(epc_page);
-+		spin_lock(&lru->lock);
- 		epc_page->flags &= ~SGX_EPC_PAGE_RECLAIM_IN_PROGRESS;
--		list_move_tail(&epc_page->list, &sgx_global_lru.reclaimable);
--		spin_unlock(&sgx_global_lru.lock);
-+		list_move_tail(&epc_page->list, &lru->reclaimable);
-+		spin_unlock(&lru->lock);
- 
- 		kref_put(&encl_page->encl->refcount, sgx_encl_release);
- 	}
-@@ -514,14 +520,16 @@ struct sgx_epc_page *__sgx_alloc_epc_page(void)
-  */
- void sgx_record_epc_page(struct sgx_epc_page *page, unsigned long flags)
- {
--	spin_lock(&sgx_global_lru.lock);
-+	struct sgx_epc_lru *lru = sgx_lru(page);
-+
-+	spin_lock(&lru->lock);
- 	WARN_ON(page->flags & SGX_EPC_PAGE_RECLAIM_FLAGS);
- 	page->flags |= flags;
- 	if (flags & SGX_EPC_PAGE_RECLAIMER_TRACKED)
--		list_add_tail(&page->list, &sgx_global_lru.reclaimable);
-+		list_add_tail(&page->list, &lru->reclaimable);
- 	else
--		list_add_tail(&page->list, &sgx_global_lru.unreclaimable);
--	spin_unlock(&sgx_global_lru.lock);
-+		list_add_tail(&page->list, &lru->unreclaimable);
-+	spin_unlock(&lru->lock);
+@@ -280,10 +280,47 @@ static void sgx_reclaimer_write(struct sgx_epc_page *epc_page,
  }
  
  /**
-@@ -536,14 +544,16 @@ void sgx_record_epc_page(struct sgx_epc_page *page, unsigned long flags)
-  */
- int sgx_drop_epc_page(struct sgx_epc_page *page)
- {
--	spin_lock(&sgx_global_lru.lock);
-+	struct sgx_epc_lru *lru = sgx_lru(page);
+- * sgx_reclaim_pages() - Reclaim EPC pages from the consumers
++ * sgx_isolate_epc_pages - Isolate pages from an LRU for reclaim
++ * @lru		LRU from which to reclaim
++ * @nr_to_scan	Number of pages to scan for reclaim
++ * @dst		Destination list to hold the isolated pages
++ */
++void sgx_isolate_epc_pages(struct sgx_epc_lru *lru, int *nr_to_scan,
++			   struct list_head *dst)
++{
++	struct sgx_encl_page *encl_page;
++	struct sgx_epc_page *epc_page;
 +
 +	spin_lock(&lru->lock);
- 	if ((page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED) &&
- 	    (page->flags & SGX_EPC_PAGE_RECLAIM_IN_PROGRESS)) {
--		spin_unlock(&sgx_global_lru.lock);
-+		spin_unlock(&lru->lock);
- 		return -EBUSY;
- 	}
- 	list_del(&page->list);
--	spin_unlock(&sgx_global_lru.lock);
++	for (; *nr_to_scan > 0; --(*nr_to_scan)) {
++		if (list_empty(&lru->reclaimable))
++			break;
++
++		epc_page = list_first_entry(&lru->reclaimable,
++					    struct sgx_epc_page, list);
++
++		encl_page = epc_page->owner;
++		if (WARN_ON_ONCE(!(epc_page->flags & SGX_EPC_PAGE_ENCLAVE)))
++			continue;
++
++		if (kref_get_unless_zero(&encl_page->encl->refcount)) {
++			epc_page->flags |= SGX_EPC_PAGE_RECLAIM_IN_PROGRESS;
++			list_move_tail(&epc_page->list, dst);
++		} else {
++			/* The owner is freeing the page, remove it from the
++			 * LRU list
++			 */
++			epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
++			list_del_init(&epc_page->list);
++		}
++	}
 +	spin_unlock(&lru->lock);
++}
++
++/**
+  * sgx_reclaim_epc_pages() - Reclaim EPC pages from the consumers
+- * @nr_to_scan:		 Number of EPC pages to scan for reclaim
+- * @ignore_age:		 Reclaim a page even if it is young
++ * @nr_to_scan:		Number of EPC pages to scan for reclaim
++ * @ignore_age:		Reclaim a page even if it is young
+  *
+  * Take a fixed number of pages from the head of the active page pool and
+  * reclaim them to the enclave's private shmem files. Skip the pages, which have
+@@ -302,42 +339,19 @@ static void sgx_reclaimer_write(struct sgx_epc_page *epc_page,
+ int sgx_reclaim_epc_pages(int nr_to_scan, bool ignore_age)
+ {
+ 	struct sgx_backing backing[SGX_MAX_NR_TO_RECLAIM];
+-	struct sgx_encl_page *encl_page;
+ 	struct sgx_epc_page *epc_page, *tmp;
++	struct sgx_encl_page *encl_page;
+ 	struct sgx_epc_lru *lru;
+ 	pgoff_t page_index;
+ 	LIST_HEAD(iso);
++	int i = 0;
+ 	int ret;
+-	int i;
+-
+-	spin_lock(&sgx_global_lru.lock);
+-	for (i = 0; i < nr_to_scan; i++) {
+-		if (list_empty(&sgx_global_lru.reclaimable))
+-			break;
+-
+-		epc_page = list_first_entry(&sgx_global_lru.reclaimable,
+-					    struct sgx_epc_page, list);
+-		encl_page = epc_page->owner;
+-		if (WARN_ON_ONCE(!(epc_page->flags & SGX_EPC_PAGE_ENCLAVE)))
+-			continue;
  
- 	page->flags &= ~SGX_EPC_PAGE_RECLAIM_FLAGS;
+-		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0) {
+-			epc_page->flags |= SGX_EPC_PAGE_RECLAIM_IN_PROGRESS;
+-			list_move_tail(&epc_page->list, &iso);
+-		} else {
+-			/* The owner is freeing the page, remove it from the
+-			 * LRU list
+-			 */
+-			epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
+-			list_del_init(&epc_page->list);
+-		}
+-	}
+-	spin_unlock(&sgx_global_lru.lock);
++	sgx_isolate_epc_pages(&sgx_global_lru, &nr_to_scan, &iso);
+ 
+ 	if (list_empty(&iso))
+ 		goto out;
+ 
+-	i = 0;
+ 	list_for_each_entry_safe(epc_page, tmp, &iso, list) {
+ 		encl_page = epc_page->owner;
+ 
+diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
+index a2042303a666..0598d534371b 100644
+--- a/arch/x86/kernel/cpu/sgx/sgx.h
++++ b/arch/x86/kernel/cpu/sgx/sgx.h
+@@ -114,6 +114,8 @@ void sgx_record_epc_page(struct sgx_epc_page *page, unsigned long flags);
+ int sgx_drop_epc_page(struct sgx_epc_page *page);
+ struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim);
+ int sgx_reclaim_epc_pages(int nr_to_scan, bool ignore_age);
++void sgx_isolate_epc_pages(struct sgx_epc_lru *lru, int *nr_to_scan,
++			   struct list_head *dst);
+ 
+ void sgx_ipi_cb(void *info);
  
 -- 
 2.37.3
