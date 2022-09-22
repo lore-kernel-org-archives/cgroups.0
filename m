@@ -1,53 +1,47 @@
 From: Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH 00/20] Add Cgroup support for SGX EPC memory
-Date: Thu, 22 Sep 2022 14:03:52 -0700
-Message-ID: <7ff6d114-a6cc-e3c5-5edb-8ac0e527d8a9@intel.com>
+Subject: Re: [RFC PATCH 03/20] x86/sgx: Track owning enclave in VA EPC pages
+Date: Thu, 22 Sep 2022 14:39:53 -0700
+Message-ID: <f2236b51-400a-b300-e818-297e45cc7b49@intel.com>
 References: <20220922171057.1236139-1-kristen@linux.intel.com>
- <YyyeSVSk/lWdo/W4@slm.duckdns.org>
- <4b8605533e5deade739249bfb341ab9c06d56a1e.camel@linux.intel.com>
- <YyyykUJQtYbPVctn@slm.duckdns.org>
+ <20220922171057.1236139-4-kristen@linux.intel.com>
+ <1adb03c8-1274-3898-0677-03015a1f5a5d@intel.com>
+ <f031ac1bd6b16509f1d714cd65e6b017f054940c.camel@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663880637; x=1695416637;
+  t=1663882793; x=1695418793;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=5J/gUw0ozggdiEjT67Hv+Q1CO877q7WnX+QC9z+OreE=;
-  b=cGQ3FhvmCEU1br1E/02+iXJWgWqgjpHiM7usoLkViCJf2toyn5wGQ0lM
-   cB9bf8ZoQ3RbJYV1V4uTEpxLaL3kpdnGs75jXqD7J4sLS0Fb3RbYcluu4
-   eUShQ4xROSserw5YPRhlCH04kULGlB1z81+3p9dzsFomQCYGs8eCn9Py+
-   bS/ehEOKPfGP+h5MX8wXsAC+kccGePgmXeU9Hs+ySTR4Zys3J86fR8Cuc
-   9qFmqDtGEwZU/3ylxF/bm6QjM8ZroTdK1n6C4GkUByo+dl6eZIZIhOuvE
-   Yr15QatCUwEz7NBDpxOdEcTlqxRpIgtnRxUpBv0Ef39lulSw0wLBrQlT4
-   A==;
+  bh=LziEyfJawc4QSz0lLnm/mVQqdAi9KJUUSw7+yO6FQ2U=;
+  b=gPEQfjxow2GpepwrV6myffF8g/dR0a5Tiq0MfkOjd9MFkC4qXLOEyVlN
+   /FjXq//T+lmEElCfuY/4Moz5RWmq/NNu3DSPuu0k2m8cp6t8MOZSoBkVK
+   hMorp2rznH5d8/EuNuMl9NdTwh4H6ivlZtT2VNk1wd5lEWnrt7vOgxQG8
+   EqQx8OEzBDAA7zx1MFf3zLCXIOiBNDN0Z+eIsPo/i/tESidgGT8OrQiMI
+   WbeiNWNSCW1jPtRZ0l/Zqk9xZr6NCQH9q+StD6cDZEXE9IYK2dPKghHJd
+   AGUkZmWeEzdKncr6V1ETBzvwPCJPuZWDdWxy33ypfIMV7CF+DSr5pRU66
+   g==;
 Content-Language: en-US
-In-Reply-To: <YyyykUJQtYbPVctn-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <f031ac1bd6b16509f1d714cd65e6b017f054940c.camel-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
+Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 9/22/22 12:08, Tejun Heo wrote:
-> Can you please give more concrete examples? I'd love to hear how the SGX EPC
-> memory is typically used in what amounts and what's the performance
-> implications when they get reclaimed and so on. ie. Please describe a
-> realistic usage scenario of contention with sufficient details on how the
-> system is set up, what the applications are using the SGX EPC memory for and
-> how much, how the contention on memory affects the users and so on.
+On 9/22/22 13:04, Kristen Carlson Accardi wrote:
+>> BTW, is there a flag or any other way to tell to what kind of object
+>> ->owner points?
+> The owner will only be an sgx_encl type if it is a va page, so to tell
+> what kind of object owner is, you look at the epc page flags - like
+> this:
+>         if (epc_page->flags & SGX_EPC_PAGE_ENCLAVE)
+>                 encl = ((struct sgx_encl_page *)epc_page->owner)->encl;
+>         else if (epc_page->flags & SGX_EPC_PAGE_VERSION_ARRAY)
+>                 encl = epc_page->owner;
+> ...
 
-One wrinkle is that the apps that use SGX EPC memory are *normal* apps.
- There are frameworks that some folks are very excited about that allow
-you to run mostly unmodified app stacks inside SGX.  For example:
-
-	https://github.com/gramineproject/graphene
-
-In fact, Gramine users are the troublesome ones for overcommit.  Most
-explicitly-written SGX applications are quite austere in their SGX
-memory use; they're probably never going to see overcommit.  These
-Gramine-wrapped apps are (relative) pigs.  They've been the ones finding
-bugs in the existing SGX overcommit code.
-
-So, where does all the SGX memory go?  It's the usual suspects:
-memcached and redis. ;)
+I don't know how much refactoring it would take, but it would be nice if
+that was a bit more obvious.  Basically, can we get the code that checks
+for or sets SGX_EPC_PAGE_VERSION_ARRAY close to the code that assigns or
+reads ->owner?
