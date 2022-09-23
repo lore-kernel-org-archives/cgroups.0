@@ -1,58 +1,62 @@
-From: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: fix cgroup_get_from_id
-Date: Fri, 23 Sep 2022 19:51:19 +0800
-Message-ID: <20220923115119.2035603-1-ming.lei@redhat.com>
+From: Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC PATCH 00/20] Add Cgroup support for SGX EPC memory
+Date: Fri, 23 Sep 2022 15:24:07 +0300
+Message-ID: <Yy2lZx6u1dhFO34i@kernel.org>
+References: <20220922171057.1236139-1-kristen@linux.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1663933892;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=LSqlKmINboHpHtUNR10HWYgYVkgSi8ssnna63UQWneM=;
-        b=UgQeyVN5SmEqxFp4n0VDwvpLYVIQACHaflA2gCt/vnbqcoo7uCzOlnlZt+y97+yIhVEqqj
-        4MpT9iIFJq/mwtYUFxjIEgKiHwO8v7RbR9YviygaBZ1xmg+LdPON70jfiO+ox4vIupjm93
-        Kt8SZbM1ESLCnZieA6k8yQd/cdiq/xQ=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1663935852;
+        bh=NM85qGkf1dVSLgcWZ9WS9hx6Yj3D92+rESK6H5VWGoE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=fuaO3gNn+VXn3Yxl+8JP0QCWQcdXn7r1h4B7zsIOiDer1BG7984BmGJSQPsTNW//R
+         GtLPE9JShxRKCh/76id4IH1oGvbzS29V6Li1mS1kMqQRWnca/YdeTsoIWTGyHKu+AN
+         GiRN/KA6ODjUVnLVP4TpFY5oG8GXYbEglfAR9Z9GmhYTXRZsn/3ntZSNXGKJorA2Pc
+         gvnOG1u2zFwFltY670KLvDLgtP00wo2FMXCkFcQLWlGKhSht3jqDtYcT22ZV+nKbVX
+         Ca23UEV0RhF78QZFWlJ3TjvSyDpg6drYseCHe6veVdWDFILxEHRbEqKb3GTDLwpDGH
+         F+XHrJxuitqmg==
+Content-Disposition: inline
+In-Reply-To: <20220922171057.1236139-1-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Marco Patalano <mpatalan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Muneendra <muneendra.kumar-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-cgroup has to be one kernfs dir, otherwise kernel panic is caused,
-especially cgroup id is provide from userspace.
+On Thu, Sep 22, 2022 at 10:10:37AM -0700, Kristen Carlson Accardi wrote:
+> Add a new cgroup controller to regulate the distribution of SGX EPC memory,
+> which is a subset of system RAM that is used to provide SGX-enabled
+> applications with protected memory, and is otherwise inaccessible.
+> 
+> SGX EPC memory allocations are separate from normal RAM allocations,
+> and is managed solely by the SGX subsystem. The existing cgroup memory
+> controller cannot be used to limit or account for SGX EPC memory.
+> 
+> This patchset implements the sgx_epc cgroup controller, which will provide
+> support for stats, events, and the following interface files:
+> 
+> sgx_epc.current
+> 	A read-only value which represents the total amount of EPC
+> 	memory currently being used on by the cgroup and its descendents.
+> 
+> sgx_epc.low
+> 	A read-write value which is used to set best-effort protection
+> 	of EPC usage. If the EPC usage of a cgroup drops below this value,
+> 	then the cgroup's EPC memory will not be reclaimed if possible.
+> 
+> sgx_epc.high
+> 	A read-write value which is used to set a best-effort limit
+> 	on the amount of EPC usage a cgroup has. If a cgroup's usage
+> 	goes past the high value, the EPC memory of that cgroup will
+> 	get reclaimed back under the high limit.
+> 
+> sgx_epc.max
+> 	A read-write value which is used to set a hard limit for
+> 	cgroup EPC usage. If a cgroup's EPC usage reaches this limit,
+> 	allocations are blocked until EPC memory can be reclaimed from
+> 	the cgroup.
 
-Reported-by: Marco Patalano <mpatalan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Fixes: 6b658c4863c1 ("scsi: cgroup: Add cgroup_get_from_id()")
-Cc: Muneendra <muneendra.kumar-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Signed-off-by: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cgroup.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+It would be worth of mentioning for clarity that shmem is accounted from
+memcg.
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index e4bb5d57f4d1..5f2090d051ac 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -6049,6 +6049,9 @@ struct cgroup *cgroup_get_from_id(u64 id)
- 	if (!kn)
- 		goto out;
- 
-+	if (kernfs_type(kn) != KERNFS_DIR)
-+		goto put;
-+
- 	rcu_read_lock();
- 
- 	cgrp = rcu_dereference(*(void __rcu __force **)&kn->priv);
-@@ -6056,7 +6059,7 @@ struct cgroup *cgroup_get_from_id(u64 id)
- 		cgrp = NULL;
- 
- 	rcu_read_unlock();
--
-+put:
- 	kernfs_put(kn);
- out:
- 	return cgrp;
--- 
-2.31.1
-
+BR, Jarkko
