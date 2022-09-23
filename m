@@ -1,68 +1,44 @@
-From: Mukesh Ojha <quic_mojha@quicinc.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH] cgroup: fix cgroup_get_from_id
-Date: Fri, 23 Sep 2022 21:13:15 +0530
-Message-ID: <5b013fa2-4ad7-5995-ae6d-52770106272a@quicinc.com>
+Date: Fri, 23 Sep 2022 07:29:52 -1000
+Message-ID: <Yy3tEKSV+vg6swOd@slm.duckdns.org>
 References: <20220923115119.2035603-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
-  t=1663947926; x=1695483926;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=B0Z6lO/AYPTVpzI8xvjmvs6lklWmO2tJS2Pwo6sfTgo=;
-  b=RqJVAeYb85F+7KjDbW7D4vMPDC41nP72lEwNmxBiBPeoYqsqfnC70U6b
-   0ksqr5Z8MuD99PWjfAZdF5yL6IdPE7geodDu4FXng8ndemzltF2cnzEJJ
-   sflMv6iE7AchuTHFv+NGUY+u3xw4dv8p89N8PMumBp7ewaCEa1NTTvTcO
-   E=;
-Content-Language: en-US
-In-Reply-To: <20220923115119.2035603-1-ming.lei@redhat.com>
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date;
+        bh=No+zB8N8/I6uv9gE3yfw5UXtcRDIM1VBhtQdkeHbVVQ=;
+        b=IQsFLvu+KTdRASYHh2un+r7HH3He23RjO0OQhdDgZDlzm1pSH8ryafMC7XEzlvf+mY
+         hZ++BIKCaXXGlw9bP/2M1pT8z4HIzkXddki+Xmcr0WWZl9sJfHFLKMjOniqI+pn31F3l
+         G3llMF+POQvXkxCcSOnQOL/5MQefl1o9ZIQO6+Nh6HteoQKPjI/Vh3I7vrvy7ImnIXK+
+         VCnOdqjngEXm4DYGFXZTp02xZ1lIg2T+XYRMuIOrcNm1imtM+N3FKy28jWxHQi7ZqmNq
+         2lUpwouatFNzlk/8Is3d3so9D8USBa5J4/2LdMcJGPnUL1vqeVkHSo6gZOlnBrib+9OE
+         f29A==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20220923115119.2035603-1-ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Ming Lei <ming.lei@redhat.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org, Marco Patalano <mpatalan@redhat.com>, Muneendra <muneendra.kumar@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Marco Patalano <mpatalan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Muneendra <muneendra.kumar-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 
-Hi,
-
-On 9/23/2022 5:21 PM, Ming Lei wrote:
+On Fri, Sep 23, 2022 at 07:51:19PM +0800, Ming Lei wrote:
 > cgroup has to be one kernfs dir, otherwise kernel panic is caused,
 > especially cgroup id is provide from userspace.
 > 
-> Reported-by: Marco Patalano <mpatalan@redhat.com>
+> Reported-by: Marco Patalano <mpatalan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > Fixes: 6b658c4863c1 ("scsi: cgroup: Add cgroup_get_from_id()")
-> Cc: Muneendra <muneendra.kumar@broadcom.com>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->   kernel/cgroup/cgroup.c | 5 ++++-
->   1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index e4bb5d57f4d1..5f2090d051ac 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -6049,6 +6049,9 @@ struct cgroup *cgroup_get_from_id(u64 id)
->   	if (!kn)
->   		goto out;
->   
-> +	if (kernfs_type(kn) != KERNFS_DIR)
-> +		goto put;
-> +
->   	rcu_read_lock();
->   
->   	cgrp = rcu_dereference(*(void __rcu __force **)&kn->priv);
-> @@ -6056,7 +6059,7 @@ struct cgroup *cgroup_get_from_id(u64 id)
->   		cgrp = NULL;
->   
->   	rcu_read_unlock();
-> -
-> +put:
->   	kernfs_put(kn);
->   out:
->   	return cgrp;
+> Cc: Muneendra <muneendra.kumar-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+> Signed-off-by: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Good catch.
+Applied to cgroup/for-6.0-fixes with the subject changed to "cgroup:
+cgroup_get_from_id() must check the looked-up kn is a directory" and stable
+cc'd.
 
-Acked-by: Mukesh Ojha <quic_mojha@quicinc.com>
+Thanks.
 
--Mukesh
+-- 
+tejun
