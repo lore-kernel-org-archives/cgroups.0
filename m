@@ -1,47 +1,83 @@
-From: Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH 03/20] x86/sgx: Track owning enclave in VA EPC pages
-Date: Thu, 22 Sep 2022 14:39:53 -0700
-Message-ID: <f2236b51-400a-b300-e818-297e45cc7b49@intel.com>
-References: <20220922171057.1236139-1-kristen@linux.intel.com>
- <20220922171057.1236139-4-kristen@linux.intel.com>
- <1adb03c8-1274-3898-0677-03015a1f5a5d@intel.com>
- <f031ac1bd6b16509f1d714cd65e6b017f054940c.camel@linux.intel.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [External] Re: [PATCH] cgroup/cpuset: Add a new isolated
+ mems.policy type.
+Date: Fri, 23 Sep 2022 09:29:03 +0200
+Message-ID: <Yy1gP7wcoCqzRa0B@dhcp22.suse.cz>
+References: <20220904040241.1708-1-hezhongkun.hzk@bytedance.com>
+ <YxWbBYZKDTrkmlOe@dhcp22.suse.cz>
+ <0e5f380b-9201-0f56-9144-ce8449491fc8@bytedance.com>
+ <YxXUjvWmZoG9vVNV@dhcp22.suse.cz>
+ <ca5e57fd-4699-2cec-b328-3d6bac43c8ef@bytedance.com>
+ <Yxc+HZ6rjcR535oN@dhcp22.suse.cz>
+ <93d76370-6c43-5560-9a5f-f76a8cc979e0@bytedance.com>
+ <YxmXeC7te2HAi4dX@dhcp22.suse.cz>
+ <fa5e5a79-aa1a-a009-d0c8-0a39380a71b6@bytedance.com>
+ <120cb50d-d617-a60a-ec24-915f826318f1@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1663882793; x=1695418793;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=LziEyfJawc4QSz0lLnm/mVQqdAi9KJUUSw7+yO6FQ2U=;
-  b=gPEQfjxow2GpepwrV6myffF8g/dR0a5Tiq0MfkOjd9MFkC4qXLOEyVlN
-   /FjXq//T+lmEElCfuY/4Moz5RWmq/NNu3DSPuu0k2m8cp6t8MOZSoBkVK
-   hMorp2rznH5d8/EuNuMl9NdTwh4H6ivlZtT2VNk1wd5lEWnrt7vOgxQG8
-   EqQx8OEzBDAA7zx1MFf3zLCXIOiBNDN0Z+eIsPo/i/tESidgGT8OrQiMI
-   WbeiNWNSCW1jPtRZ0l/Zqk9xZr6NCQH9q+StD6cDZEXE9IYK2dPKghHJd
-   AGUkZmWeEzdKncr6V1ETBzvwPCJPuZWDdWxy33ypfIMV7CF+DSr5pRU66
-   g==;
-Content-Language: en-US
-In-Reply-To: <f031ac1bd6b16509f1d714cd65e6b017f054940c.camel-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1663918144; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=rOM18LotnWoAueDS7CKAxKNZg+usqMDivdcE9JRJPBE=;
+        b=dVnRMWYNhplQavDtc54h2Ex/j2jYR77RBKGgq9v2Rjc1hmm4joAkkKC8VCpEp/rjz3GJ3D
+        E2XRU17CR4X2WBeCgaI2Yt3Emris/lMgFiGkurmrvA65OOPU02Kjg7PUOixpnvsGhUOrLK
+        X1I7y+0RI28a/Znu5Spp2d+yb3u9Xq0=
+Content-Disposition: inline
+In-Reply-To: <120cb50d-d617-a60a-ec24-915f826318f1-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
-Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Zhongkun He <hezhongkun.hzk-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-On 9/22/22 13:04, Kristen Carlson Accardi wrote:
->> BTW, is there a flag or any other way to tell to what kind of object
->> ->owner points?
-> The owner will only be an sgx_encl type if it is a va page, so to tell
-> what kind of object owner is, you look at the epc page flags - like
-> this:
->         if (epc_page->flags & SGX_EPC_PAGE_ENCLAVE)
->                 encl = ((struct sgx_encl_page *)epc_page->owner)->encl;
->         else if (epc_page->flags & SGX_EPC_PAGE_VERSION_ARRAY)
->                 encl = epc_page->owner;
-> ...
+On Wed 14-09-22 23:10:47, Zhongkun He wrote:
+> > >=20
+> > > > Back to the previous question.
+> > > > > The question is how to implement that with a sensible semantic.
+> > > >=20
+> > > > Thanks for your analysis and suggestions.It is really difficult to =
+add
+> > > > policy directly to cgroup for the hierarchical enforcement. It
+> > > > would be a good idea to add pidfd_set_mempolicy.
+> > >=20
+> > > Are you going to pursue that path?
+>=20
+> > Hi Michal, thanks for your suggestion and reply.
+> >=20
+> >  > Are you going to pursue that path?
+> >=20
+> > Yes=EF=BC=8CI'll give it a try as it makes sense to modify the policy d=
+ynamically.
+> >=20
+> > Thanks.
+>=20
+> Hi Michal, i have a question about pidfd_set_mempolicy, it would be better
+> if you have some suggestions.
+>=20
+> The task_struct of processes and threads are independent. If we change the
+> mempolicy of the process through pidfd_set_mempolicy, the mempolicy of its
+> thread will not change. Of course users can set the mempolicy of all thre=
+ads
+> by iterating through /proc/tgid/task.
+>=20
+> The question is whether we should override the thread's mempolicy when
+> setting the process's mempolicy.
+>=20
+> There are two options:
+> A:Change the process's mempolicy and set that mempolicy to all it's threa=
+ds.
+> B:Only change the process's mempolicy in kernel. The mempolicy of the thr=
+ead
+> needs to be modified by the user through pidfd_set_mempolicy in
+> userspace, if necessary.
 
-I don't know how much refactoring it would take, but it would be nice if
-that was a bit more obvious.  Basically, can we get the code that checks
-for or sets SGX_EPC_PAGE_VERSION_ARRAY close to the code that assigns or
-reads ->owner?
+set_mempolicy is a per task_struct operation and so should be pidfd
+based API as well. If somebody requires a per-thread-group setting then
+the whole group should be iterated. I do not think we have any
+precendence where pidfd operation on the thread group leader has side
+effects on other threads as well.
+--=20
+Michal Hocko
+SUSE Labs
