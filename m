@@ -1,165 +1,91 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-6.0-fixes] BUILD SUCCESS
- df02452f3df069a59bc9e69c84435bf115cb6e37
-Date: Sat, 24 Sep 2022 21:36:22 +0800
-Message-ID: <632f07d6.wOmN9/MSEoj7kqpT%lkp@intel.com>
+From: Yafang Shao <laoar.shao@gmail.com>
+Subject: Re: [RFC PATCH bpf-next 10/10] bpf, memcg: Add new item bpf into memory.stat
+Date: Sat, 24 Sep 2022 22:24:52 +0800
+Message-ID: <CALOAHbBHXALOZaqxJfpmE8KFsuwBuZ3BVpQhrtUZ=m7FFpWkVA@mail.gmail.com>
+References: <20220921170002.29557-1-laoar.shao@gmail.com> <20220921170002.29557-11-laoar.shao@gmail.com>
+ <Yy53cgcwx+hTll4R@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1664026595; x=1695562595;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=nCrDbu7FmVSlBRPBq9Wz0WAUqxzubo6uhKRiW1kZWlA=;
-  b=GR5lNBHFKTgc80YazLy5eY6BooGwyFxBbBmX8k5YmVZJn+0xdr7VCQR2
-   7nqKAe68htxvy78TWIfbRKZSisTa8MQ5YeBTuaiyin+JvtyoyQYDZEQXX
-   hkfhUehZoyRVzAdXBsCa+B2eF90DFjyygn/PbRmHNXn1BPaSYWxctJpxC
-   I2Ts2F5APX2HFitAA4fZIKGYUgVABKQGnd8XjQdn9mb6N33sKAQ5/MoIk
-   8w5xcE/2l3E1vzzAqbHgmK+1bG+Tj+T5KEsE4xWWGxBCDAoCi8xnGpVCB
-   zUvcUiAAdDvHX5eKhaBdj5w1J+EVch2izpczh3Nr16sVXNSxNoiC1T4Ko
-   Q==;
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date;
+        bh=jRKeU7D5aZgqxcjhpKNi6s8l4B1Pu/W+vLp64/SXJ2k=;
+        b=UpNAHeRltGJnNUYU6IN+U1QlRe0AbcVc4toc+QBqstl7xLFBtoVNVlln1qx7x6FHxq
+         rzY/D8LfF8p4hcesvrFXHhGlDSwavN4UvN0Wf7LEkbN6RSQ4f3v1Spc+hnP3SMOd28s3
+         lnPp5Fie6yB/oSzot5F4zNN7C871LEqZ5grBwldPWgx3HhBMNzb+f6edYQXL1ri9oZ0S
+         Go4e9VTTw0+XaHP7aG0MvZJjlbheySZtr3aSZogGWCrLGK0YX5Eeil5Dasn8Sf6dIobv
+         FKQG9KNOV2QdrzCjAv9xJCHfHZdSwEXrmDHKT2LfmqnahX+L+U2ulngUzqfy0WZSoING
+         bk+w==
+In-Reply-To: <Yy53cgcwx+hTll4R@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, john fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@google.com>, Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Zefan Li <lizefan.x@bytedance.com>, Cgroups <cgroups@vger.kernel.org>, netdev <netdev@vger.kernel.org>, bpf <bpf@vger.kernel.org>, Linux MM <linux-mm@kva>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.0-fixes
-branch HEAD: df02452f3df069a59bc9e69c84435bf115cb6e37  cgroup: cgroup_get_from_id() must check the looked-up kn is a directory
+On Sat, Sep 24, 2022 at 11:20 AM Tejun Heo <tj@kernel.org> wrote:
+>
+> Hello,
+>
+> On Wed, Sep 21, 2022 at 05:00:02PM +0000, Yafang Shao wrote:
+> > A new item 'bpf' is introduced into memory.stat, then we can get the memory
+> > consumed by bpf. Currently only the memory of bpf-map is accounted.
+> > The accouting of this new item is implemented with scope-based accouting,
+> > which is similar to set_active_memcg(). In this scope, the memory allocated
+> > will be accounted or unaccounted to a specific item, which is specified by
+> > set_active_memcg_item().
+>
+> Imma let memcg folks comment on the implementation. Hmm... I wonder how this
+> would tie in with the BPF memory allocator Alexei is working on.
+>
 
-elapsed time: 1198m
+BPF memory allocator is already in bpf-next [1].
+It uses the same way to charge bpf memory into memcg, see also
+get_memcg() in the BPF memory allocator, so it has been supported in
+this patchset.
 
-configs tested: 119
-configs skipped: 3
+[1]. https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git/commit/?id=274052a2b0ab9f380ce22b19ff80a99b99ecb198
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+> > The result in cgroup v1 as follows,
+> >       $ cat /sys/fs/cgroup/memory/foo/memory.stat | grep bpf
+> >       bpf 109056000
+> >       total_bpf 109056000
+> > After the map is removed, the counter will become zero again.
+> >         $ cat /sys/fs/cgroup/memory/foo/memory.stat | grep bpf
+> >         bpf 0
+> >         total_bpf 0
+> >
+> > The 'bpf' may not be 0 after the bpf-map is destroyed, because there may be
+> > cached objects.
+>
+> What's the difference between bpf and total_bpf? Where's total_bpf
+> implemented?
 
-gcc tested configs:
-um                             i386_defconfig
-um                           x86_64_defconfig
-powerpc                           allnoconfig
-s390                             allyesconfig
-mips                             allyesconfig
-arc                                 defconfig
-s390                             allmodconfig
-powerpc                          allmodconfig
-alpha                               defconfig
-s390                                defconfig
-arc                  randconfig-r043-20220923
-sh                               allmodconfig
-s390                 randconfig-r044-20220923
-m68k                             allmodconfig
-arc                              allyesconfig
-riscv                randconfig-r042-20220923
-alpha                            allyesconfig
-m68k                             allyesconfig
-x86_64                          rhel-8.3-func
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-i386                                defconfig
-x86_64                               rhel-8.3
-x86_64                        randconfig-a013
-x86_64                        randconfig-a011
-x86_64                        randconfig-a015
-x86_64                        randconfig-a002
-arm                                 defconfig
-x86_64                        randconfig-a004
-i386                             allyesconfig
-x86_64                           allyesconfig
-arm64                            allyesconfig
-arm                              allyesconfig
-x86_64                           rhel-8.3-kvm
-x86_64                           rhel-8.3-syz
-x86_64                         rhel-8.3-kunit
-ia64                             allmodconfig
-i386                          randconfig-a001
-i386                          randconfig-a014
-x86_64                        randconfig-c001
-arm                  randconfig-c002-20220923
-i386                          randconfig-c001
-x86_64                        randconfig-a006
-i386                          randconfig-a003
-i386                          randconfig-a012
-csky                              allnoconfig
-nios2                            allyesconfig
-xtensa                              defconfig
-m68k                        stmark2_defconfig
-i386                          randconfig-a016
-i386                          randconfig-a005
-alpha                             allnoconfig
-arc                               allnoconfig
-riscv                             allnoconfig
-sh                  sh7785lcr_32bit_defconfig
-sh                         ap325rxa_defconfig
-nios2                         10m50_defconfig
-sh                          sdk7780_defconfig
-m68k                         apollo_defconfig
-arm                            hisi_defconfig
-sh                          rsk7201_defconfig
-nios2                         3c120_defconfig
-loongarch                           defconfig
-loongarch                         allnoconfig
-loongarch                        allmodconfig
-nios2                               defconfig
-parisc                              defconfig
-parisc64                            defconfig
-parisc                           allyesconfig
-powerpc                     tqm8555_defconfig
-arc                      axs103_smp_defconfig
-sh                        edosk7760_defconfig
-sh                        sh7785lcr_defconfig
-sparc                               defconfig
-xtensa                           allyesconfig
-csky                                defconfig
-sparc                            allyesconfig
-x86_64                                  kexec
-riscv                    nommu_virt_defconfig
-riscv                          rv32_defconfig
-riscv                    nommu_k210_defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-arm64                               defconfig
-ia64                             allyesconfig
-arm                              allmodconfig
-m68k                                defconfig
-ia64                                defconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-riscv                               defconfig
-riscv                            allmodconfig
-riscv                            allyesconfig
-i386                          debian-10.3-kvm
-i386                        debian-10.3-kunit
-i386                         debian-10.3-func
+Ah, the total_* items are cgroup1-specific items. They also include
+the descendants' memory.
+This patchset supports both cgroup1 and cgroup2.
 
-clang tested configs:
-hexagon              randconfig-r045-20220923
-hexagon              randconfig-r041-20220923
-x86_64                        randconfig-a014
-x86_64                        randconfig-a012
-x86_64                        randconfig-a016
-x86_64                        randconfig-a001
-x86_64                        randconfig-a003
-i386                          randconfig-a011
-i386                          randconfig-a013
-i386                          randconfig-a015
-x86_64                        randconfig-a005
-i386                          randconfig-a002
-i386                          randconfig-a006
-i386                          randconfig-a004
-x86_64                        randconfig-k001
-powerpc                 mpc836x_mds_defconfig
-mips                     cu1830-neo_defconfig
-arm                       netwinder_defconfig
-x86_64                        randconfig-c007
-arm                  randconfig-c002-20220923
-i386                          randconfig-c001
-s390                 randconfig-c005-20220923
-riscv                randconfig-c006-20220923
-mips                 randconfig-c004-20220923
-powerpc              randconfig-c003-20220923
+> It doesn't seem to be anywhere. Please also update
+> Documentation/admin-guide/cgroup-v2.rst.
+>
+
+Sure, I will update the Document.
+
+> > Note that there's no kmemcg in root memory cgroup, so the item 'bpf' will
+> > be always 0 in root memory cgroup. If a bpf-map is charged into root memcg
+> > directly, its memory size will not be accounted, so the 'total_bpf' can't
+> > be used to monitor system-wide bpf memory consumption yet.
+>
+> So, system-level accounting is usually handled separately as it's most
+> likely that we'd want the same stat at the system level even when cgroup is
+> not implemented. Here, too, it'd make sense to first implement system level
+> bpf memory usage accounting, expose that through /proc/meminfo and then use
+> the same source for root level cgroup stat.
+>
+
+Sure, I will do it first. Thanks for your suggestion.
 
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Regards
+Yafang
