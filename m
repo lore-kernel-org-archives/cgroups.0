@@ -1,47 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] perf stat: Support old kernels for bperf cgroup counting
-Date: Fri, 23 Sep 2022 17:22:51 -1000
-Message-ID: <Yy54CwK84JY/o+Ci@slm.duckdns.org>
-References: <CAM9d7cjQ20a01YoZi=o-_7HT6TzR0TZgtpscKNvRrMq2yqV1Og@mail.gmail.com>
- <20220922041435.709119-1-namhyung@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH linux-next] cgroup: use strscpy() is more robust and safer
+Date: Fri, 23 Sep 2022 17:27:22 -1000
+Message-ID: <Yy55GrBte6cqY21I@slm.duckdns.org>
+References: <20220921093517.230745-1-ye.xingchen@zte.com.cn>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date;
-        bh=pVZ/vufAufJqpHyXPbOtKj2Be+zfIdhN74kmWcGVahk=;
-        b=MDlwjG16Co36ivQru9yTmqGAh8rRKn57/5yL7cl6/Y4KJK6KlPGTOSgnHKufNpTyTJ
-         HF5+9/Z9psnwV/TYIRz/lPeiWCNFTZw855a8Iatejwa1KbFJAHciym7KrtWwGG26cNtY
-         PI/gg4xkwmVdcKyQYpPyI4tSlUHbMk09fG4urMx6Re4sEiTKYhrGZECV1fvWiphnkhZm
-         H+pGIlsXbC8b5GmdnHLAT+PzIbOjlqYq8fLlS67nIxlM88VwXqBLAIG3ETpkei8oLi2o
-         vuKEnO5bqgThdWimNby2WYiK3CYiXc6sWGoV9N2dre373lqDLVb57wP5LhEn21nD1pBL
-         8sNQ==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=u6G2g0hsb0gnt4B0UTc0XIJN5inGwACRWvwc4rYVrzY=;
+        b=b0RXQ2cuaKFf7211zJWOmrMfykhMB0XiamXF4V9zMyH/g907vyZKG4VVCkxZcT/kyT
+         Lajvonmk8YXfkUzQPSvI5UutVayH0CT/1KSe/dFWtT2LeMubNwTmt308w2skhBF2ys7h
+         SYN4oOq3H+cSpcauHR9P+eb5L7QCvIfpfKwF/RQIAdFETzHhKWefeUoVO0yCj+6yt5y2
+         5hkA6BJnqynJz11dehAtpNY4bIyKjAY/LPd1wtE3eHUnBZtxfofmLh3t1XpuXqr8tBEM
+         Lsduy2Ri1cyvLmuu0TXvUnHhYXI0zDOz7l+h4e7xgIJnZJEVg0/vmlisOmx3ad7IGWAf
+         BiyQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20220922041435.709119-1-namhyung@kernel.org>
+In-Reply-To: <20220921093517.230745-1-ye.xingchen-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Namhyung Kim <namhyung@kernel.org>
-Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Arnaldo Carvalho de Melo <acme@kernel.org>, Jiri Olsa <jolsa@kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-perf-users@vger.kernel.org, Song Liu <songliubraving@fb.com>, bpf@vger.kernel.org
+To: cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ye xingchen <ye.xingchen-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 
-On Wed, Sep 21, 2022 at 09:14:35PM -0700, Namhyung Kim wrote:
-> The recent change in the cgroup will break the backward compatiblity in
-> the BPF program.  It should support both old and new kernels using BPF
-> CO-RE technique.
+On Wed, Sep 21, 2022 at 09:35:17AM +0000, cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org wrote:
+> From: ye xingchen <ye.xingchen-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 > 
-> Like the task_struct->__state handling in the offcpu analysis, we can
-> check the field name in the cgroup struct.
+> The implementation of strscpy() is more robust and safer.
 > 
-> Signed-off-by: Namhyung Kim <namhyung@kernel.org>
-> ---
-> Arnaldo, I think this should go through the cgroup tree since it depends
-> on the earlier change there.  I don't think it'd conflict with other
-> perf changes but please let me know if you see any trouble, thanks!
+> That's now the recommended way to copy NUL terminated strings.
+> 
+> Signed-off-by: ye xingchen <ye.xingchen-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>
 
-FWIW, looks fine to me and I'd be happy to route this through the cgroup
-tree once it gets acked.
+Applied to cgroup/for-6.1.
 
 Thanks.
 
