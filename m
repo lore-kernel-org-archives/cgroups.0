@@ -1,36 +1,105 @@
-From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Subject: Re: [GIT PULL] cgroup fixes for v6.0-rc6
-Date: Sat, 24 Sep 2022 15:41:48 +0000
-Message-ID: <166403410883.30824.4959463978058826483.pr-tracker-bot@kernel.org>
-References: <Yy5/MV8BvP+M5Fmi@slm.duckdns.org>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664034109;
-        bh=veuerdAVOK4AGVI2s09VktzG6lI4Wh5dRvCojYk+5PY=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=lbEfE+X/gJ2dTmCoEmQfZ8rKVcCui+Eu21msiyZnmhh+CaXvGAj6hjqtWzyNNp8Ns
-         uJzvAbs0sbOF65mGeYjI6i02lm1KY4oDa7t0S2alHK1hbdQtzP7BIJAkkhv6nhgy0L
-         1zYdt2JBnARcxWdv4WWhVq8kc8y3HXUcc5n4sSqTdObtBM4KbAJiQBUQzzaI2fCzxW
-         3budMkFM4z/b+6mOjdYn/RfHwp622TnEIQS5BwXn0hWMgwNAE4/J9i+TVWMiQHWDYc
-         C6j2vBrG2UshwvHunXSb7ma2Jy+4u7QOKe1pMPTR0TBAQTl3LVFIjM5dQSC9JmCmDf
-         cQs9Z+KT1rrVg==
-In-Reply-To: <Yy5/MV8BvP+M5Fmi-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-6.1] BUILD SUCCESS
+ b74440d89895816660236be4433f0891e37d44eb
+Date: Sun, 25 Sep 2022 03:54:02 +0800
+Message-ID: <632f605a.cnBa0LmDhXlAn4LY%lkp@intel.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1664049295; x=1695585295;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=O0R0FiEG4FP7J+K98C0IyrgS0VpqWjwZzP/fC0s/q0o=;
+  b=Lnu3gVQ5b7/CN6tCOBnD0iq37bCakRmnXCvNj0hBTHu0LY+kXIfohSMg
+   H0pT6fY1KW0771mJ6vtSTX8cN+oMPYMUSAfCSIEUFUI5CKW0w/i0yNL7B
+   maQaJNy1IEC0XNCI+YD6sLt1l2qWAppL5wNf0EOhaKP9h4X0bgM4PyL65
+   xBB/rIIgJB9rZ5+AeoeJkP1IBBmZrciNHo6fRa+A5jcvQ6aLacv2g9Kcc
+   TQkYeIjpNBwZXwueFuhfI3Ik5yEUGpgAQm78OOoWvBm3O7H9uFgk/W2bq
+   wsSdTSWHyP7vcchlee4pInpFLeCGHx+oXS2q2agvTvRpo95jGd54KJKyD
+   w==;
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The pull request you sent on Fri, 23 Sep 2022 17:53:21 -1000:
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.1
+branch HEAD: b74440d89895816660236be4433f0891e37d44eb  iocost_monitor: reorder BlkgIterator
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.0-rc6-fixes
+elapsed time: 979m
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/1772094f12a7b180aa9ab849586f891b14d06d1f
+configs tested: 61
+configs skipped: 2
 
-Thank you!
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arc                                 defconfig
+alpha                               defconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                          rhel-8.3-func
+x86_64                    rhel-8.3-kselftests
+s390                                defconfig
+s390                             allmodconfig
+powerpc                          allmodconfig
+mips                             allyesconfig
+x86_64                              defconfig
+powerpc                           allnoconfig
+sh                               allmodconfig
+s390                             allyesconfig
+x86_64                               rhel-8.3
+arc                  randconfig-r043-20220923
+x86_64                        randconfig-a004
+x86_64                        randconfig-a002
+x86_64                        randconfig-a013
+s390                 randconfig-r044-20220923
+x86_64                        randconfig-a006
+riscv                randconfig-r042-20220923
+x86_64                        randconfig-a011
+m68k                             allmodconfig
+x86_64                           allyesconfig
+i386                          randconfig-a001
+i386                                defconfig
+x86_64                        randconfig-a015
+i386                          randconfig-a003
+arc                              allyesconfig
+arm                                 defconfig
+alpha                            allyesconfig
+m68k                             allyesconfig
+i386                          randconfig-a005
+arm64                            allyesconfig
+arm                              allyesconfig
+i386                             allyesconfig
+i386                          randconfig-a014
+i386                          randconfig-a012
+i386                          randconfig-a016
+ia64                             allmodconfig
+riscv                randconfig-r042-20220925
+arc                  randconfig-r043-20220925
+s390                 randconfig-r044-20220925
+x86_64                           rhel-8.3-syz
+x86_64                         rhel-8.3-kunit
+x86_64                           rhel-8.3-kvm
+
+clang tested configs:
+hexagon              randconfig-r045-20220923
+hexagon              randconfig-r041-20220923
+x86_64                        randconfig-a001
+x86_64                        randconfig-a003
+x86_64                        randconfig-a012
+x86_64                        randconfig-a005
+x86_64                        randconfig-a016
+x86_64                        randconfig-a014
+i386                          randconfig-a002
+i386                          randconfig-a004
+i386                          randconfig-a006
+i386                          randconfig-a013
+i386                          randconfig-a011
+i386                          randconfig-a015
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+0-DAY CI Kernel Test Service
+https://01.org/lkp
