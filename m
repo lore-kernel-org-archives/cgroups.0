@@ -1,51 +1,58 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [sparc64] fails to boot, (was: Re: [PATCH memcg v6] net: set
- proper memcg for net_init hooks allocations)
-Date: Mon, 26 Sep 2022 12:00:07 -0700
-Message-ID: <CALvZod62wAYAM5QLpjShdw5_0e391VqyfR-3jmyH_X3Sqt=DEg@mail.gmail.com>
-References: <6b362c6e-9c80-4344-9430-b831f9871a3c@openvz.org>
- <f9394752-e272-9bf9-645f-a18c56d1c4ec@openvz.org> <20220918092849.GA10314@u164.east.ru>
- <CADxRZqyyHAtzaaPjcKi8AichGew2yi-_vQcKoLoxPanLvXZL0g@mail.gmail.com>
- <20220921170259.GI8331@blackbody.suse.cz> <CADxRZqyAG5Co9hLEp6p8vPC9WyGERR6un-3Rqapyv14G4vPXJw@mail.gmail.com>
- <20220926102812.2b0696a7@kernel.org> <CALvZod5QProaWZgT9ykb-vrrRHBpLfqVGgW2jd-Td8aX5MBZFw@mail.gmail.com>
- <20220926103631.8cb144a6d0b683915b0ecb10@linux-foundation.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [question] Is it possible for userspace program to control cpu
+ usage time of RT process through cgroup2 now?
+Date: Mon, 26 Sep 2022 09:12:08 -1000
+Message-ID: <YzH5iM0hy58f0tjd@slm.duckdns.org>
+References: <0a83dcd5-b7fd-811c-b8d2-062115fa8c94@huawei.com>
 Mime-Version: 1.0
-Return-path: <sparclinux-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=qXIxC7hvTXMP9MB1PSPsSRSKcgWgbfgrr/VeVt3XfAQ=;
-        b=kY6xlSFSYIIHIvjaNJS23jWOFKwiW1EPiXbC8vrod+Q+q2Cc3PWw1S+nstgMveEKWl
-         4G7V17L68GtrHi9sRrCNGa9SF3c35JwHDIFg32Mj1bSaBN9UdBmdjabUl7sVpb5qO2mH
-         j0b/IhQl0aBvlv1Xndc3R5LkAJapRUSXW8/MKoEDAMYg7lk98Ri89xbAioeZ8vkTC4fZ
-         xLcQl62yvW0eOPdk0vIbeYnrHszlSKHn/yXnK7OUkPA363it4nEYe5f3ue6BIpH0bPYZ
-         Gdqe8GN6sGWeHnmy3JqmQZbgSMDgZSrgHueSkL7kKxqpkin8c5Ba+uywFJMii7Gk2GQQ
-         HuDQ==
-In-Reply-To: <20220926103631.8cb144a6d0b683915b0ecb10@linux-foundation.org>
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date;
+        bh=Dyqc18f7tvm496eP3xU3ct8tqy6/7/TepuJUSfhcP1Y=;
+        b=pMeDGfIZ6SzFPBlN73M0ajQB/RGF4w2o+TyqK7pty1VyKbu13iZcGmLUl9Bi8c2hPZ
+         eKhAKnp3n2f08OHQVHBk0cq8xo4bA/d/+AWNzbMxyzInJS+HoYC1k7Akvf8aYWF6y/LW
+         wi5drJ1GstBDZBqr7IBiPDOXPWIee6npCJJtfvXUM1tAnalK/5YXC3k/HJB20y8gAufg
+         gOXNdlPoOhFdxQ42BdVqVm8eYolU6FyOpYZN/YR3iqp5eEfmcYK6nWnTM6xergGyXbOQ
+         +yOOkfw952go/oFjAV9ndq0eQKqhzSt7kVN5eWnT2Lv0KNiACRPbhJoopFAZY8RnRRAn
+         0gsw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <0a83dcd5-b7fd-811c-b8d2-062115fa8c94-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jakub Kicinski <kuba@kernel.org>, Vasily Averin <vvs@openvz.org>, Anatoly Pugachev <matorola@gmail.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, kernel@openvz.org, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Roman Gushchin <roman.gushchin@linux.dev>, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@suse.com>, Florian Westphal <fw@strlen.de>, "David S. Miller" <davem@davemloft.net>, Paolo Abeni <pabeni@redhat.com>, Eric Dumazet <edumazet@google.com>, Cgroups <cgroups@vger.kernel.org>, Sparc kernel list <sparclinux@vger.kernel.org>, Thorsten Leemhuis <linux@leemhuis.info>, Linus Torvalds <torvalds@linux-foundation.org>
+To: "lujialin (A)" <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Mon, Sep 26, 2022 at 10:36 AM Andrew Morton
-<akpm@linux-foundation.org> wrote:
->
-> On Mon, 26 Sep 2022 10:32:49 -0700 Shakeel Butt <shakeelb@google.com> wrote:
->
-> > > Forgive my uniformed chime-in but Linus seemed happy with the size of
-> > > -rc7 and now I'm worried there won't be an -rc8. AFAICT this is a 6.0
-> > > regression. Vasily, Shakeel, do we have a plan to fix this?
-> >
-> > I was actually waiting for Vasily to respond. Anyways, I think the
-> > easiest way to proceed is to revert the commit 1d0403d20f6c ("net: set
-> > proper memcg for net_init hooks allocations"). We can debug the issue
-> > in the next cycle.
->
-> If agreeable, could someone please send along a tested and changelogged
-> patch to do this?
->
+Hello,
 
-I will send this revert soon and I think Anatoly has already tested
-the revert but I will let him add his tested-by tag.
+On Sat, Sep 24, 2022 at 05:26:20PM +0800, lujialin (A) wrote:
+> Cgroup2 dose not support controling real-time processes and the cpu
+> controller can only be enabled when all RT processes are in the root cgroup.
+> 
+> RT stuff was being overhauled when cpu controller interface for cgroup
+> unified hierarchy was being implemented in 2017. It was decided that we
+> would like to wait till the RT side settles down and proceed with an
+> interface that better matches RT.
+> 
+> Is it possible for userspace program to control cpu usage time of RT process
+> through cgroup2 now? If not, how is the current state looking and is there
+> any proposed solution?
+
+Not right now. The hard allocation model is pretty challenging to work with
+on cgroup1 - they get enabled when cpu controller gets enabled and being
+hard allocations, not allocating any prevents the cgroups from using RT at
+all while allocating by default takes away from what others can use whether
+that allocation is used or not, so some distros turned them off last I
+checked. Overall, I'm not sure hard allocations done this way is all that
+useful to manage hierarchically given that the resource has to be hard
+partitioned anyway.
+
+Can you describe your usecase?
+
+Thanks.
+
+-- 
+tejun
