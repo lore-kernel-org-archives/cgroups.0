@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH 1/4] mm: memcontrol: don't allocate cgroup swap arrays when memcg is disabled
-Date: Mon, 26 Sep 2022 09:57:01 -0400
-Message-ID: <20220926135704.400818-2-hannes@cmpxchg.org>
+Subject: [PATCH 3/4] mm: memcontrol: use do_memsw_account() in a few more places
+Date: Mon, 26 Sep 2022 09:57:03 -0400
+Message-ID: <20220926135704.400818-4-hannes@cmpxchg.org>
 References: <20220926135704.400818-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,83 +10,87 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=+6iJEmxp4bl9ohblP/ldB8IdtUPtHQigooDS1dl/Wc4=;
-        b=etTRTh75O0L4i1MKIV2WPz590yQ569uvsT2rLsbPXxXGZXz2RBYFV5wchPr7zQK5tL
-         oKGHX2usHRR86OnURr2MSY5OsLn+FPSGi0cWEjYbrBecrnPDlDdIsXtPuhTteUv6OR3a
-         j1i0QT1+oNdpUtMM/f4xY4B9BSZJNunaqZhsqJn+WVGvKfDDTfgT/MCt1pQVZ+y3Ehma
-         DketzHiCsnHYz+XZLjsvaxacOFveJcQ5rSZm/TZuvbXYyQtmkhekX4aNfwoyTdpAqF0J
-         d0qnwZlfllTz+GnXoV8iFQtjUTzGkfeExjCA+2BCn5FZUQiquYNkxnmPLs4fEq73CRFc
-         SvGA==
+        bh=nxWlvz8nHKxF79bLiRXoWvFCmNni5yV7mxHmCxzwA1c=;
+        b=Pm8S7GcSFRJWTzik7LhbfogyC+//ZqsABilFvcQgI1rbJfqhpFRdanL1+GHXzprwnB
+         rX2IGIitEbL0wUDSi9cTNbod47SaPSyBy1s2M/5H5oBEUnarJed+X2kV8S+NiGjcxDM2
+         vyiCvtjy2NTBluE9HJcH16mhvyA2bKbIXJVu1otPRo9tqdUIPRMnydMZ/oIzuoWf11ut
+         +nM6kLfw8XCbjB5tY3+nupim51GjwAgoM6PbDihvDKfLcwrDvb6/cuOqvgB8YzwSaOsa
+         psRi+d0w+GC+hRxyaO6MjNfx63poKtPW1lqwUQp53OOsA/8Eh8fpODIaU+m2krXZThHf
+         NCJA==
 In-Reply-To: <20220926135704.400818-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Since commit 2d1c498072de ("mm: memcontrol: make swap tracking an
-integral part of memory control"), the cgroup swap arrays are used to
-track memory ownership at the time of swap readahead and swapoff, even
-if swap space *accounting* has been turned off by the user via
-swapaccount=0 (which sets cgroup_memory_noswap).
+It's slightly more descriptive and consistent with other places that
+distinguish cgroup1's combined memory+swap accounting scheme from
+cgroup2's dedicated swap accounting.
 
-However, the patch was overzealous: by simply dropping the
-cgroup_memory_noswap conditionals in the swapon, swapoff and uncharge
-path, it caused the cgroup arrays being allocated even when the memory
-controller as a whole is disabled. This is a waste of that memory.
-
-Restore mem_cgroup_disabled() checks, implied previously by
-cgroup_memory_noswap, in the swapon, swapoff, and swap_entry_free
-callbacks.
-
-Fixes: 2d1c498072de ("mm: memcontrol: make swap tracking an integral part of memory control")
-Reported-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 ---
- mm/memcontrol.c  | 3 +++
- mm/swap_cgroup.c | 6 ++++++
- 2 files changed, 9 insertions(+)
+ mm/memcontrol.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 6b74bbdc2659..9e3c010ca676 100644
+index 4be1b48b9659..76bb0a18a2f3 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -7459,6 +7459,9 @@ void __mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages)
+@@ -1667,17 +1667,17 @@ unsigned long mem_cgroup_get_max(struct mem_cgroup *memcg)
+ {
+ 	unsigned long max = READ_ONCE(memcg->memory.max);
+ 
+-	if (cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
+-		if (mem_cgroup_swappiness(memcg))
+-			max += min(READ_ONCE(memcg->swap.max),
+-				   (unsigned long)total_swap_pages);
+-	} else { /* v1 */
++	if (do_memsw_account()) {
+ 		if (mem_cgroup_swappiness(memcg)) {
+ 			/* Calculate swap excess capacity from memsw limit */
+ 			unsigned long swap = READ_ONCE(memcg->memsw.max) - max;
+ 
+ 			max += min(swap, (unsigned long)total_swap_pages);
+ 		}
++	} else {
++		if (mem_cgroup_swappiness(memcg))
++			max += min(READ_ONCE(memcg->swap.max),
++				   (unsigned long)total_swap_pages);
+ 	}
+ 	return max;
+ }
+@@ -7334,7 +7334,7 @@ void mem_cgroup_swapout(struct folio *folio, swp_entry_t entry)
+ 	if (mem_cgroup_disabled())
+ 		return;
+ 
+-	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
++	if (!do_memsw_account())
+ 		return;
+ 
+ 	memcg = folio_memcg(folio);
+@@ -7399,7 +7399,7 @@ int __mem_cgroup_try_charge_swap(struct folio *folio, swp_entry_t entry)
  	struct mem_cgroup *memcg;
- 	unsigned short id;
+ 	unsigned short oldid;
  
-+	if (mem_cgroup_disabled())
-+		return;
-+
- 	id = swap_cgroup_record(entry, 0, nr_pages);
- 	rcu_read_lock();
+-	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
++	if (do_memsw_account())
+ 		return 0;
+ 
+ 	memcg = folio_memcg(folio);
+@@ -7451,10 +7451,10 @@ void __mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages)
  	memcg = mem_cgroup_from_id(id);
-diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
-index 5a9442979a18..db6c4a26cf59 100644
---- a/mm/swap_cgroup.c
-+++ b/mm/swap_cgroup.c
-@@ -170,6 +170,9 @@ int swap_cgroup_swapon(int type, unsigned long max_pages)
- 	unsigned long length;
- 	struct swap_cgroup_ctrl *ctrl;
- 
-+	if (mem_cgroup_disabled())
-+		return 0;
-+
- 	length = DIV_ROUND_UP(max_pages, SC_PER_PAGE);
- 
- 	array = vcalloc(length, sizeof(void *));
-@@ -204,6 +207,9 @@ void swap_cgroup_swapoff(int type)
- 	unsigned long i, length;
- 	struct swap_cgroup_ctrl *ctrl;
- 
-+	if (mem_cgroup_disabled())
-+		return;
-+
- 	mutex_lock(&swap_cgroup_mutex);
- 	ctrl = &swap_cgroup_ctrl[type];
- 	map = ctrl->map;
+ 	if (memcg) {
+ 		if (!mem_cgroup_is_root(memcg)) {
+-			if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
+-				page_counter_uncharge(&memcg->swap, nr_pages);
+-			else
++			if (do_memsw_account())
+ 				page_counter_uncharge(&memcg->memsw, nr_pages);
++			else
++				page_counter_uncharge(&memcg->swap, nr_pages);
+ 		}
+ 		mod_memcg_state(memcg, MEMCG_SWAP, -nr_pages);
+ 		mem_cgroup_id_put_many(memcg, nr_pages);
 -- 
 2.37.3
 
