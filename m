@@ -1,43 +1,122 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [sparc64] fails to boot, (was: Re: [PATCH memcg v6] net: set
- proper memcg for net_init hooks allocations)
-Date: Mon, 26 Sep 2022 10:36:31 -0700
-Message-ID: <20220926103631.8cb144a6d0b683915b0ecb10@linux-foundation.org>
-References: <6b362c6e-9c80-4344-9430-b831f9871a3c@openvz.org>
-        <f9394752-e272-9bf9-645f-a18c56d1c4ec@openvz.org>
-        <20220918092849.GA10314@u164.east.ru>
-        <CADxRZqyyHAtzaaPjcKi8AichGew2yi-_vQcKoLoxPanLvXZL0g@mail.gmail.com>
-        <20220921170259.GI8331@blackbody.suse.cz>
-        <CADxRZqyAG5Co9hLEp6p8vPC9WyGERR6un-3Rqapyv14G4vPXJw@mail.gmail.com>
-        <20220926102812.2b0696a7@kernel.org>
-        <CALvZod5QProaWZgT9ykb-vrrRHBpLfqVGgW2jd-Td8aX5MBZFw@mail.gmail.com>
+From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [RFC PATCH 00/20] Add Cgroup support for SGX EPC memory
+Date: Mon, 26 Sep 2022 11:30:39 -0700
+Message-ID: <4898ee6cd2b6c6dc1e89890c4b26c5c80b4d9496.camel@linux.intel.com>
+References: <20220922171057.1236139-1-kristen@linux.intel.com>
+         <YyyeSVSk/lWdo/W4@slm.duckdns.org>
+         <4b8605533e5deade739249bfb341ab9c06d56a1e.camel@linux.intel.com>
+         <YyyykUJQtYbPVctn@slm.duckdns.org>
+         <7ff6d114-a6cc-e3c5-5edb-8ac0e527d8a9@intel.com>
+         <Yy5KwnRTbFjmKE9X@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1664213795;
-        bh=d8R/sf+/F1E5Bfqo0FLK1XydgttpS5flZpUHlwRHdYE=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=sq2/cFT6vMw7tZBcj6VZqz7Qxjm497e4Rfi0bSbjdsEpmM/a7gJQRHzuOsBjEPAkO
-         q7nDzwvBxRYhQQm4B57MbY8PHjVI7RTULXUEEJDyw+kraeZ88Vi/+zrdU4knn3NjbI
-         bffaPRaZmNma6nbfMDj1PMjC28BOYFqKynVRkWgs=
-In-Reply-To: <CALvZod5QProaWZgT9ykb-vrrRHBpLfqVGgW2jd-Td8aX5MBZFw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1664217065; x=1695753065;
+  h=message-id:subject:from:to:cc:date:in-reply-to:
+   references:content-transfer-encoding:mime-version;
+  bh=bYxR8XqfZF9gxiYvUcSZcCJ2VTxb74tRDtYgU4TZI4Y=;
+  b=QcYu8sB5yJJtuM3Q9Myf+sehUruV2bnc+6S/mMaKH4a20anB0SoPaeHm
+   akbOZu2qqgQiKaJi9QO86SIeWqzgRm7UfJ+tCUTNqdU3zU0Kfg7HkhDDI
+   8PEwPK2qKjJkcOu8e0JqkE/MWala6/T153BK1Pxc1yd9zBH3hvZP73pQz
+   5HIYB0f+iV722nZeyqWRcMxvNeEg5T6KG9CcBpQwyZ3HzQkmbXB+6W9CV
+   MrkG5gky7wtCtwSum25w3TChvcJNbrR8xlBqwANFtSrC+yN67LBvzjKLf
+   wFWFpxstUBRCX9bLFMIj3lAoh1mhybdzNALLbEmzrygwAr71lu02Fz7iQ
+   g==;
+In-Reply-To: <Yy5KwnRTbFjmKE9X-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Anatoly Pugachev <matorola-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal =?ISO-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Linux Kernel list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sparc kernel list <sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Thorsten Leemhuis <linux-rCxcAJFjeRkk+I/owrrOrA@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-On Mon, 26 Sep 2022 10:32:49 -0700 Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+On Fri, 2022-09-23 at 14:09 -1000, Tejun Heo wrote:
+> Hello,
+>=20
+> On Thu, Sep 22, 2022 at 02:03:52PM -0700, Dave Hansen wrote:
+> > On 9/22/22 12:08, Tejun Heo wrote:
+> > > Can you please give more concrete examples? I'd love to hear how
+> > > the SGX EPC
+> > > memory is typically used in what amounts and what's the
+> > > performance
+> > > implications when they get reclaimed and so on. ie. Please
+> > > describe a
+> > > realistic usage scenario of contention with sufficient details on
+> > > how the
+> > > system is set up, what the applications are using the SGX EPC
+> > > memory for and
+> > > how much, how the contention on memory affects the users and so
+> > > on.
+> >=20
+> > One wrinkle is that the apps that use SGX EPC memory are *normal*
+> > apps.
+> > =C2=A0There are frameworks that some folks are very excited about that
+> > allow
+> > you to run mostly unmodified app stacks inside SGX.=C2=A0 For example:
+> >=20
+> > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0https://github.com/gram=
+ineproject/graphene
+> >=20
+> > In fact, Gramine users are the troublesome ones for overcommit.=C2=A0
+> > Most
+> > explicitly-written SGX applications are quite austere in their SGX
+> > memory use; they're probably never going to see overcommit.=C2=A0 These
+> > Gramine-wrapped apps are (relative) pigs.=C2=A0 They've been the ones
+> > finding
+> > bugs in the existing SGX overcommit code.
+> >=20
+> > So, where does all the SGX memory go?=C2=A0 It's the usual suspects:
+> > memcached and redis. ;)
+>=20
+> Hey, so, I'm a bit weary that this doesn't seem to have a strong
+> demand at
+> this point. When there's clear shared demand, I usually hear from
+> multiple
+> parties about their use cases and the practical problems they're
+> trying to
+> solve and so on. This, at least to me, seems primarily driven by
+> producers
+> than consumers.
+>=20
+> There's nothing wrong with projecting future usages and jumping ahead
+> the
+> curve but there's a balance to hit, and going full-on memcg-style
+> controller
+> with three control knobs seems to be jumping the gun and may create
+> commitments which we end up looking back on with a bit of regret.
+>=20
+> Given that, how about this? We can easily add the functionality of
+> .max
+> through the misc controller. Add a new key there, trycharge when
+> allocating
+> new memory, if fails, try reclaim and then fail allocation if reclaim
+> fails
+> hard enough. I belive that should give at least a reasonable place to
+> start
+> especially given that memcg only had limits with similar semantics
+> for quite
+> a while at the beginning.
+>=20
+> That way, we avoid creating a big interface commitments while
+> providing a
+> feature which should be able to serve and test out the immediate
+> usecases.
+> If, for some reason, many of us end up running hefty applications in
+> SGX, we
+> can revisit the issue and build up something more complete with
+> provisions
+> for backward compatibility.
+>=20
+> Thanks.
+>=20
 
-> > Forgive my uniformed chime-in but Linus seemed happy with the size of
-> > -rc7 and now I'm worried there won't be an -rc8. AFAICT this is a 6.0
-> > regression. Vasily, Shakeel, do we have a plan to fix this?
-> 
-> I was actually waiting for Vasily to respond. Anyways, I think the
-> easiest way to proceed is to revert the commit 1d0403d20f6c ("net: set
-> proper memcg for net_init hooks allocations"). We can debug the issue
-> in the next cycle.
+Hi Tejun,
 
-If agreeable, could someone please send along a tested and changelogged
-patch to do this?
+thanks for your suggestion. Let me discuss this with customers who
+requested this feature (not all customers like to respond publically)
+and see if it will meet needs. If there is an issue, I'll respond back
+with concerns.
+
+Thanks,
+Kristen
 
