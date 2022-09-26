@@ -1,72 +1,43 @@
-From: Shakeel Butt <shakeelb@google.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Subject: Re: [sparc64] fails to boot, (was: Re: [PATCH memcg v6] net: set
  proper memcg for net_init hooks allocations)
-Date: Mon, 26 Sep 2022 10:32:49 -0700
-Message-ID: <CALvZod5QProaWZgT9ykb-vrrRHBpLfqVGgW2jd-Td8aX5MBZFw@mail.gmail.com>
+Date: Mon, 26 Sep 2022 10:36:31 -0700
+Message-ID: <20220926103631.8cb144a6d0b683915b0ecb10@linux-foundation.org>
 References: <6b362c6e-9c80-4344-9430-b831f9871a3c@openvz.org>
- <f9394752-e272-9bf9-645f-a18c56d1c4ec@openvz.org> <20220918092849.GA10314@u164.east.ru>
- <CADxRZqyyHAtzaaPjcKi8AichGew2yi-_vQcKoLoxPanLvXZL0g@mail.gmail.com>
- <20220921170259.GI8331@blackbody.suse.cz> <CADxRZqyAG5Co9hLEp6p8vPC9WyGERR6un-3Rqapyv14G4vPXJw@mail.gmail.com>
- <20220926102812.2b0696a7@kernel.org>
+        <f9394752-e272-9bf9-645f-a18c56d1c4ec@openvz.org>
+        <20220918092849.GA10314@u164.east.ru>
+        <CADxRZqyyHAtzaaPjcKi8AichGew2yi-_vQcKoLoxPanLvXZL0g@mail.gmail.com>
+        <20220921170259.GI8331@blackbody.suse.cz>
+        <CADxRZqyAG5Co9hLEp6p8vPC9WyGERR6un-3Rqapyv14G4vPXJw@mail.gmail.com>
+        <20220926102812.2b0696a7@kernel.org>
+        <CALvZod5QProaWZgT9ykb-vrrRHBpLfqVGgW2jd-Td8aX5MBZFw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <sparclinux-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date;
-        bh=TOL7/M5VC7IyaSB3mrG/Ev31pWD9V/lWqppYMcTBfKM=;
-        b=p6wexZ/Y0XqAhWAhWQ77q6u0CZ18nCzFEAe4bvVo7S0nEW6WuU84QbuIrXyLDHCaTI
-         3KVY8/kPjnuU77CzmlnP2RX4B3VTuD+DX8rWAEp9ezkmsub624war7PTzocq0HhayQIP
-         GMxA2Fj0qaw1SQGShM7S0FWzngjRfNeVBrilh6JsDYrekTU3j+x+9dO9Jg8FhujrX5gZ
-         /TgpCO0SU+Id76XQMhc88uxX0Gxua10lmdNBqa+I4rCCzSzqO6kIbK1MKmXUlUBcdR1P
-         LOKdsKRMbjEv0YfhCObzK+sUJ9DWdA8R5U5Pli/Q77cTZRdgCOChdjHXdIV50NkngFID
-         P8Ew==
-In-Reply-To: <20220926102812.2b0696a7@kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1664213795;
+        bh=d8R/sf+/F1E5Bfqo0FLK1XydgttpS5flZpUHlwRHdYE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=sq2/cFT6vMw7tZBcj6VZqz7Qxjm497e4Rfi0bSbjdsEpmM/a7gJQRHzuOsBjEPAkO
+         q7nDzwvBxRYhQQm4B57MbY8PHjVI7RTULXUEEJDyw+kraeZ88Vi/+zrdU4knn3NjbI
+         bffaPRaZmNma6nbfMDj1PMjC28BOYFqKynVRkWgs=
+In-Reply-To: <CALvZod5QProaWZgT9ykb-vrrRHBpLfqVGgW2jd-Td8aX5MBZFw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: Jakub Kicinski <kuba@kernel.org>
-Cc: Vasily Averin <vvs@openvz.org>, Anatoly Pugachev <matorola@gmail.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Andrew Morton <akpm@linux-foundation.org>, kernel@openvz.org, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Roman Gushchin <roman.gushchin@linux.dev>, Vlastimil Babka <vbabka@suse.cz>, Michal Hocko <mhocko@suse.com>, Florian Westphal <fw@strlen.de>, "David S. Miller" <davem@davemloft.net>, Paolo Abeni <pabeni@redhat.com>, Eric Dumazet <edumazet@google.com>, Cgroups <cgroups@vger.kernel.org>, Sparc kernel list <sparclinux@vger.kernel.org>, Thorsten Leemhuis <linux@leemhuis.info>, Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vasily Averin <vvs-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org>, Anatoly Pugachev <matorola-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal =?ISO-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Linux Kernel list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Florian Westphal <fw-HFFVJYpyMKqzQB+pC5nmwQ@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sparc kernel list <sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Thorsten Leemhuis <linux-rCxcAJFjeRkk+I/owrrOrA@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Mon, Sep 26, 2022 at 10:28 AM Jakub Kicinski <kuba@kernel.org> wrote:
->
-> On Mon, 26 Sep 2022 16:06:08 +0300 Anatoly Pugachev wrote:
-> > On Wed, Sep 21, 2022 at 8:03 PM Michal Koutn=C3=BD <mkoutny@suse.com> w=
-rote:
-> > > On Wed, Sep 21, 2022 at 05:44:56PM +0300, Anatoly Pugachev <matorola@=
-gmail.com> wrote:
-> > > > reverting this patch makes my sparc64 box boot successfully.
-> > >
-> > > The failed address falls into vmmemmap region (per your boot log
-> > > output). It looks like the respective page/folio (of init_net struct)=
- is
-> > > unbacked there (and likely folio_test_slab fails dereferencing ->flag=
-s).
-> > >
-> > > Would you mind sharing your kernel's config?
-> > > (I'm most curious about CONFIG_SPARSMEM_VMEMMAP, I'm not familiar wit=
-h
-> > > your arch at all though.)
-> >
-> > mator@ttip:~/dmesg$ zcat config-6.0.0-rc6-00010-gb7f0f527dc3c.gz | grep=
- VMEMMAP
-> > CONFIG_SPARSEMEM_VMEMMAP_ENABLE=3Dy
-> > CONFIG_SPARSEMEM_VMEMMAP=3Dy
-> >
-> > I do upload config and boot logs to
-> > https://github.com/mator/sparc64-dmesg
-> >
-> > building a new kernel version/releases as 'make olddefconfig && make -j=
-'
-> > current version of booted 6.0.0-rc6 is available as
-> > https://github.com/mator/sparc64-dmesg/blob/master/config-6.0.0-rc6-000=
-10-gb7f0f527dc3c.gz
->
-> Forgive my uniformed chime-in but Linus seemed happy with the size of
-> -rc7 and now I'm worried there won't be an -rc8. AFAICT this is a 6.0
-> regression. Vasily, Shakeel, do we have a plan to fix this?
+On Mon, 26 Sep 2022 10:32:49 -0700 Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 
-I was actually waiting for Vasily to respond. Anyways, I think the
-easiest way to proceed is to revert the commit 1d0403d20f6c ("net: set
-proper memcg for net_init hooks allocations"). We can debug the issue
-in the next cycle.
+> > Forgive my uniformed chime-in but Linus seemed happy with the size of
+> > -rc7 and now I'm worried there won't be an -rc8. AFAICT this is a 6.0
+> > regression. Vasily, Shakeel, do we have a plan to fix this?
+> 
+> I was actually waiting for Vasily to respond. Anyways, I think the
+> easiest way to proceed is to revert the commit 1d0403d20f6c ("net: set
+> proper memcg for net_init hooks allocations"). We can debug the issue
+> in the next cycle.
+
+If agreeable, could someone please send along a tested and changelogged
+patch to do this?
+
