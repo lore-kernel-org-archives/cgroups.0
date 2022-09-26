@@ -1,251 +1,34 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH 4/4] mm: memcontrol: drop dead CONFIG_MEMCG_SWAP config symbol
-Date: Mon, 26 Sep 2022 09:57:04 -0400
-Message-ID: <20220926135704.400818-5-hannes@cmpxchg.org>
-References: <20220926135704.400818-1-hannes@cmpxchg.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 3/4] mm: memcontrol: use do_memsw_account() in a few more places
+Date: Mon, 26 Sep 2022 08:20:38 -0700
+Message-ID: <CALvZod5BPO20mf2taEwGuF18e9tR3u=P7LMOAJJT5iuRjEJh=w@mail.gmail.com>
+References: <20220926135704.400818-1-hannes@cmpxchg.org> <20220926135704.400818-4-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date;
-        bh=X0S0bdsMSZwjlbQsv+GYht3cMFqf9TlaOrFi2tt0ZUE=;
-        b=ivgKMYEx6KKFhpp8wNE19iM09oj8t0G7ajjdlApXiV8dHxl6sdRPZlL3sNkFlSDNwy
-         rnXLGG7lYYJAxGKw1r/ekzCIehnIVG05fD84xOZnCYJ98uQr0VSqu4gi3uFUuh/7uMYt
-         odr+evVu3To0Y90IeM8RLSdC8kXkAJV9dsY3cmFWEcyVPtDrJuPsRKaLmE6gFZ28BSIc
-         ovC/udwIpbLSyiJdrqlUZu9ncSBsbrTC2ca1wRvfr87LNGa+OY4lP8zmbXErXnQCfk08
-         t9y3dA2dkaXRSH3P2RHybF9daxj+aOSeam6tQeY7J+TPfzO+K56S2MduhvUdrFpDD51K
-         xVsw==
-In-Reply-To: <20220926135704.400818-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date;
+        bh=Fddt9wdq/J6CWGu90+cFZ6uqg+vju1ZgOwGknKQrGms=;
+        b=TgMFdscVjGqwG6aw8YINYC6hut/9EoC0pUZ1CZ/6dDVVoxWEhmoXyjgdSPeBA+iscl
+         SM68MDTHPhtCbdHqyQXgP2dQJfYqYFonvFpgJG5iD9pVtQtutMoCCC5RjWuP8ouzDhDF
+         ZF5/m2ejMr8gdSODmlJAColLtiUNdNji6QKIvP21zqnsbhsp6llxe1A1cNawNk7J4HAI
+         77HMYtxhvL5R0utZmPF/o+c1nllwoOid2lDgktWsVDzjxASpyoJLFSyZxhTq3giIH1BT
+         yGWDMoLuhS+dLb8ZQbvXS6bWU7eIbcIfqBV622xZRa19fnVpxcnyNRxg9onMkwGSs5Y3
+         cfUg==
+In-Reply-To: <20220926135704.400818-4-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Since 2d1c498072de ("mm: memcontrol: make swap tracking an integral
-part of memory control"), CONFIG_MEMCG_SWAP hasn't been a user-visible
-config option anymore, it just means CONFIG_MEMCG && CONFIG_SWAP.
+On Mon, Sep 26, 2022 at 6:57 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+>
+> It's slightly more descriptive and consistent with other places that
+> distinguish cgroup1's combined memory+swap accounting scheme from
+> cgroup2's dedicated swap accounting.
+>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Update the sites accordingly and drop the symbol.
-
-[ While touching the docs, remove two references to CONFIG_MEMCG_KMEM,
-  which hasn't been a user-visible symbol for over half a decade. ]
-
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
----
- Documentation/admin-guide/cgroup-v1/memory.rst | 4 +---
- arch/mips/configs/db1xxx_defconfig             | 1 -
- arch/mips/configs/generic_defconfig            | 1 -
- arch/powerpc/configs/powernv_defconfig         | 1 -
- arch/powerpc/configs/pseries_defconfig         | 1 -
- arch/sh/configs/sdk7786_defconfig              | 1 -
- arch/sh/configs/urquell_defconfig              | 1 -
- include/linux/swap.h                           | 2 +-
- include/linux/swap_cgroup.h                    | 4 ++--
- init/Kconfig                                   | 5 -----
- mm/Makefile                                    | 4 +++-
- mm/memcontrol.c                                | 6 +++---
- tools/testing/selftests/cgroup/config          | 1 -
- 13 files changed, 10 insertions(+), 22 deletions(-)
-
-diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
-index 2cc502a75ef6..5b86245450bd 100644
---- a/Documentation/admin-guide/cgroup-v1/memory.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -299,7 +299,7 @@ Per-node-per-memcgroup LRU (cgroup's private LRU) is guarded by
- lruvec->lru_lock; PG_lru bit of page->flags is cleared before
- isolating a page from its LRU under lruvec->lru_lock.
- 
--2.7 Kernel Memory Extension (CONFIG_MEMCG_KMEM)
-+2.7 Kernel Memory Extension
- -----------------------------------------------
- 
- With the Kernel memory extension, the Memory Controller is able to limit
-@@ -386,8 +386,6 @@ limit, and "K" the kernel limit. There are three possible ways limits can be
- 
- a. Enable CONFIG_CGROUPS
- b. Enable CONFIG_MEMCG
--c. Enable CONFIG_MEMCG_SWAP (to use swap extension)
--d. Enable CONFIG_MEMCG_KMEM (to use kmem extension)
- 
- 3.1. Prepare the cgroups (see cgroups.txt, Why are cgroups needed?)
- -------------------------------------------------------------------
-diff --git a/arch/mips/configs/db1xxx_defconfig b/arch/mips/configs/db1xxx_defconfig
-index b8bd66300996..83cbdecb27e6 100644
---- a/arch/mips/configs/db1xxx_defconfig
-+++ b/arch/mips/configs/db1xxx_defconfig
-@@ -9,7 +9,6 @@ CONFIG_HIGH_RES_TIMERS=y
- CONFIG_LOG_BUF_SHIFT=16
- CONFIG_CGROUPS=y
- CONFIG_MEMCG=y
--CONFIG_MEMCG_SWAP=y
- CONFIG_BLK_CGROUP=y
- CONFIG_CGROUP_SCHED=y
- CONFIG_CFS_BANDWIDTH=y
-diff --git a/arch/mips/configs/generic_defconfig b/arch/mips/configs/generic_defconfig
-index 714169e411cf..48e4e251779b 100644
---- a/arch/mips/configs/generic_defconfig
-+++ b/arch/mips/configs/generic_defconfig
-@@ -3,7 +3,6 @@ CONFIG_NO_HZ_IDLE=y
- CONFIG_IKCONFIG=y
- CONFIG_IKCONFIG_PROC=y
- CONFIG_MEMCG=y
--CONFIG_MEMCG_SWAP=y
- CONFIG_BLK_CGROUP=y
- CONFIG_CFS_BANDWIDTH=y
- CONFIG_RT_GROUP_SCHED=y
-diff --git a/arch/powerpc/configs/powernv_defconfig b/arch/powerpc/configs/powernv_defconfig
-index 49f49c263935..4acca5263404 100644
---- a/arch/powerpc/configs/powernv_defconfig
-+++ b/arch/powerpc/configs/powernv_defconfig
-@@ -17,7 +17,6 @@ CONFIG_LOG_CPU_MAX_BUF_SHIFT=13
- CONFIG_NUMA_BALANCING=y
- CONFIG_CGROUPS=y
- CONFIG_MEMCG=y
--CONFIG_MEMCG_SWAP=y
- CONFIG_CGROUP_SCHED=y
- CONFIG_CGROUP_FREEZER=y
- CONFIG_CPUSETS=y
-diff --git a/arch/powerpc/configs/pseries_defconfig b/arch/powerpc/configs/pseries_defconfig
-index b571d084c148..fead14ebb1fc 100644
---- a/arch/powerpc/configs/pseries_defconfig
-+++ b/arch/powerpc/configs/pseries_defconfig
-@@ -16,7 +16,6 @@ CONFIG_LOG_CPU_MAX_BUF_SHIFT=13
- CONFIG_NUMA_BALANCING=y
- CONFIG_CGROUPS=y
- CONFIG_MEMCG=y
--CONFIG_MEMCG_SWAP=y
- CONFIG_CGROUP_SCHED=y
- CONFIG_CGROUP_FREEZER=y
- CONFIG_CPUSETS=y
-diff --git a/arch/sh/configs/sdk7786_defconfig b/arch/sh/configs/sdk7786_defconfig
-index a8662b6927ec..97b7356639ed 100644
---- a/arch/sh/configs/sdk7786_defconfig
-+++ b/arch/sh/configs/sdk7786_defconfig
-@@ -16,7 +16,6 @@ CONFIG_CPUSETS=y
- # CONFIG_PROC_PID_CPUSET is not set
- CONFIG_CGROUP_CPUACCT=y
- CONFIG_CGROUP_MEMCG=y
--CONFIG_CGROUP_MEMCG_SWAP=y
- CONFIG_CGROUP_SCHED=y
- CONFIG_RT_GROUP_SCHED=y
- CONFIG_BLK_CGROUP=y
-diff --git a/arch/sh/configs/urquell_defconfig b/arch/sh/configs/urquell_defconfig
-index cb2f56468fe0..be478f3148f2 100644
---- a/arch/sh/configs/urquell_defconfig
-+++ b/arch/sh/configs/urquell_defconfig
-@@ -14,7 +14,6 @@ CONFIG_CPUSETS=y
- # CONFIG_PROC_PID_CPUSET is not set
- CONFIG_CGROUP_CPUACCT=y
- CONFIG_CGROUP_MEMCG=y
--CONFIG_CGROUP_MEMCG_SWAP=y
- CONFIG_CGROUP_SCHED=y
- CONFIG_RT_GROUP_SCHED=y
- CONFIG_BLK_DEV_INITRD=y
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index fc8d98660326..a18cf4b7c724 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -666,7 +666,7 @@ static inline void folio_throttle_swaprate(struct folio *folio, gfp_t gfp)
- 	cgroup_throttle_swaprate(&folio->page, gfp);
- }
- 
--#ifdef CONFIG_MEMCG_SWAP
-+#if defined(CONFIG_MEMCG) && defined(CONFIG_SWAP)
- void mem_cgroup_swapout(struct folio *folio, swp_entry_t entry);
- int __mem_cgroup_try_charge_swap(struct folio *folio, swp_entry_t entry);
- static inline int mem_cgroup_try_charge_swap(struct folio *folio,
-diff --git a/include/linux/swap_cgroup.h b/include/linux/swap_cgroup.h
-index a12dd1c3966c..ae73a87775b3 100644
---- a/include/linux/swap_cgroup.h
-+++ b/include/linux/swap_cgroup.h
-@@ -4,7 +4,7 @@
- 
- #include <linux/swap.h>
- 
--#ifdef CONFIG_MEMCG_SWAP
-+#if defined(CONFIG_MEMCG) && defined(CONFIG_SWAP)
- 
- extern unsigned short swap_cgroup_cmpxchg(swp_entry_t ent,
- 					unsigned short old, unsigned short new);
-@@ -40,6 +40,6 @@ static inline void swap_cgroup_swapoff(int type)
- 	return;
- }
- 
--#endif /* CONFIG_MEMCG_SWAP */
-+#endif
- 
- #endif /* __LINUX_SWAP_CGROUP_H */
-diff --git a/init/Kconfig b/init/Kconfig
-index 532362fcfe31..7d86cf6b3012 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -958,11 +958,6 @@ config MEMCG
- 	help
- 	  Provides control over the memory footprint of tasks in a cgroup.
- 
--config MEMCG_SWAP
--	bool
--	depends on MEMCG && SWAP
--	default y
--
- config MEMCG_KMEM
- 	bool
- 	depends on MEMCG && !SLOB
-diff --git a/mm/Makefile b/mm/Makefile
-index cc23b0052584..8e105e5b3e29 100644
---- a/mm/Makefile
-+++ b/mm/Makefile
-@@ -98,7 +98,9 @@ obj-$(CONFIG_DEVICE_MIGRATION) += migrate_device.o
- obj-$(CONFIG_TRANSPARENT_HUGEPAGE) += huge_memory.o khugepaged.o
- obj-$(CONFIG_PAGE_COUNTER) += page_counter.o
- obj-$(CONFIG_MEMCG) += memcontrol.o vmpressure.o
--obj-$(CONFIG_MEMCG_SWAP) += swap_cgroup.o
-+ifdef CONFIG_SWAP
-+obj-$(CONFIG_MEMCG) += swap_cgroup.o
-+endif
- obj-$(CONFIG_CGROUP_HUGETLB) += hugetlb_cgroup.o
- obj-$(CONFIG_GUP_TEST) += gup_test.o
- obj-$(CONFIG_MEMORY_FAILURE) += memory-failure.o
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 76bb0a18a2f3..61e05fc281fb 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3423,7 +3423,7 @@ void split_page_memcg(struct page *head, unsigned int nr)
- 		css_get_many(&memcg->css, nr - 1);
- }
- 
--#ifdef CONFIG_MEMCG_SWAP
-+#ifdef CONFIG_SWAP
- /**
-  * mem_cgroup_move_swap_account - move swap charge and swap_cgroup's record.
-  * @entry: swap entry to be moved
-@@ -7296,7 +7296,7 @@ static int __init mem_cgroup_init(void)
- }
- subsys_initcall(mem_cgroup_init);
- 
--#ifdef CONFIG_MEMCG_SWAP
-+#ifdef CONFIG_SWAP
- static struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg)
- {
- 	while (!refcount_inc_not_zero(&memcg->id.ref)) {
-@@ -7788,4 +7788,4 @@ static int __init mem_cgroup_swap_init(void)
- }
- subsys_initcall(mem_cgroup_swap_init);
- 
--#endif /* CONFIG_MEMCG_SWAP */
-+#endif /* CONFIG_SWAP */
-diff --git a/tools/testing/selftests/cgroup/config b/tools/testing/selftests/cgroup/config
-index 84fe884fad86..97d549ee894f 100644
---- a/tools/testing/selftests/cgroup/config
-+++ b/tools/testing/selftests/cgroup/config
-@@ -4,5 +4,4 @@ CONFIG_CGROUP_FREEZER=y
- CONFIG_CGROUP_SCHED=y
- CONFIG_MEMCG=y
- CONFIG_MEMCG_KMEM=y
--CONFIG_MEMCG_SWAP=y
- CONFIG_PAGE_COUNTER=y
--- 
-2.37.3
-
+Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
