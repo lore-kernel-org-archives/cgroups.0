@@ -1,139 +1,216 @@
-From: Jeffrey Hugo <quic_jhugo-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
-Subject: Re: GPU device resource reservations with cgroups?
-Date: Tue, 27 Sep 2022 09:13:49 -0600
-Message-ID: <26b36812-cbe6-744d-6fb7-e7aec0bf5496@quicinc.com>
-References: <7e047ee0-0243-d9d4-f0bc-7ed19ed33c19@quicinc.com>
- <CABdmKX2sGw-TwRYnHWuyaWYrxX7wgcK4gFSb5hGAwk0ztZxbcA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=suQc2ohV2UHcHZRjb/BQRqa5yc0AJwLQ4xnejAiqQpg=;
- b=QpmGLE7kck1/+nLQalritFgu1NYnCTtUGOsushncg7TS5A2SAwfRXELganJ7p/QUlVzX
- MTgdS8WnjcznQVKqMHsD25j9vTCdCv5b7CfTbafK48U0exNlL9SdsBVsY8kdCt9RsJhq
- QFZpt132e8VcEt+GpjCgPyIZxCEPCJqIRDvSljn3DzmfKqZxDtdFSD1umjIiUv4pg/cD
- ugixaApt9PurGuNar87Fu9C4R+1rBKfB5Maf8m74XTdbyw14g1RN+QJa2Lc8s5KlZwig
- nmyYcysZj2bqNSPdChZt2TYkNZR9FRG4Z/ZeeIRF6XAnrGF6iTOuqU2P/L3h/BXK9t6A wA== 
-Content-Language: en-US
-In-Reply-To: <CABdmKX2sGw-TwRYnHWuyaWYrxX7wgcK4gFSb5hGAwk0ztZxbcA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+From: Paolo Valente <paolo.valente@linaro.org>
+Subject: Re: [patch v11 5/6] block, bfq: cleanup bfq_weights_tree add/remove
+ apis
+Date: Tue, 27 Sep 2022 18:19:18 +0200
+Message-ID: <6E987AC9-9EBD-4172-A440-2FC13BA9AFD1@linaro.org>
+References: <20220916071942.214222-1-yukuai1@huaweicloud.com>
+ <20220916071942.214222-6-yukuai1@huaweicloud.com>
+ <20220919084633.nmzastqkjool5jnc@quack3>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=to:references:message-id:content-transfer-encoding:cc:date
+         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date;
+        bh=wtuYP/U8JcCds+Y8vgYt3RNPN+IvgKtQC+pNVMQXjHw=;
+        b=VPLGTAFsQ9vqWDNFPxTFeBhouiEHc5CpVWDjOnwMbJMnR2o39RyG6YtrR3o28npFwP
+         RvPNVrmMcTHfxXqqprE1I5VtYa7YQ60pF98aTQ8Tb1SpBkupjZZ3QaLsxKYxN/WKSVCj
+         07MJxNSBzx+dfnRsdbHVHytZBHXt3PW0m9HY68qnzjB3XE88/WUY7A5Cm2UaC45QUkq0
+         bxmwyOugjFh4VMs0Pm9Fd3npFFxpLLX9ipH7sCscaAPU/MUnbSrbBpX4xo0ZwCo89NNN
+         HYrWeJGzdTh3nQOQUfJhcISoeetoY9O8jd7mn23F7GWhydPmwRhsEH7Sv81uCEYHJA4V
+         UG4w==
+In-Reply-To: <20220919084633.nmzastqkjool5jnc@quack3>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Carl Vanderlip <quic_carlv-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>, quic_ajitpals-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org, quic_pkanojiy-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Jan Kara <jack@suse.cz>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, tj@kernel.org, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
 
-On 9/8/2022 10:44 AM, T.J. Mercier wrote:
-> On Tue, Aug 16, 2022 at 1:39 PM Jeffrey Hugo <quic_jhugo-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org> wrote:
->>
->> Hello cgroup experts,
->>
->> I have a GPU device [1] that supports organizing its resources for the
->> purposes of supporting containers.  I am attempting to determine how to
->> represent this in the upstream kernel, and I wonder if it fits in cgroups.
->>
->> The device itself has a number of resource types – compute cores,
->> memory, bus replicators, semaphores, and dma channels.  Any particular
->> workload may consume some set of these resources.  For example, a
->> workload may consume two compute cores, 1GB of memory, one dma channel,
->> but no semaphores and no bus replicators.
->>
->> By default all of the resources are in a global pool.  This global pool
->> is managed by the device firmware.  Linux makes a request to the
->> firmware to load a workload.  The firmware reads the resource
->> requirements from the workload itself, and then checks the global pool.
->> If the global pool contains sufficient resources to satisfy the needs of
->> the workload, the firmware assigns the required resources from the
->> global pool to the workload.  If there are insufficient resources, the
->> workload request from Linux is rejected.
->>
->> Some users may want to share the device between multiple containers, but
->> provide device level isolation between those containers.  For example, a
->> user may have 4 workloads to run, one per container, and each workload
->> takes 1/4th of the set of compute cores.  The user would like to reserve
->> sets of compute cores for each container so that container X always has
->> the expected set of resources available, and if container Y
->> malfunctions, it cannot “steal” resources from container X.
->>
->> To support this, the firmware supports a concept of partitioning.  A
->> partition is a pool of resources which are removed from the global pool,
->> and pre-assigned to the partition’s pool.  A workload can then be run
->> from within a partition, and it consumes resources from that partition’s
->> pool instead of from the global pool.  The firmware manages creating
->> partitions and assigning resources to them.
->>
->> Partitions do not nest.
->>
-> Do partitions have any significance in hardware, or are they just a
-> logical concept? Does it matter which compute core / bus replicator /
-> dma channel a user gets, or are they interchangeable between uses?
 
-Logical concept.  Resources are interchangeable.
 
-In the future, I think it is possible that NUMA comes into the picture. 
-  Just like now a CPU may be closer to a particular bank of memory (DDR) 
-and thus keeping a task that uses that bank of memory scheduled on the 
-associated CPU is an ideal situation from the perspective of the Linux 
-scheduler, a particular compute core may have specific locality to other 
-resources.
+> Il giorno 19 set 2022, alle ore 10:46, Jan Kara <jack@suse.cz> ha =
+scritto:
+>=20
+> On Fri 16-09-22 15:19:41, Yu Kuai wrote:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>=20
+>> The 'bfq_data' and 'rb_root_cached' can both be accessed through
+>> 'bfq_queue', thus only pass 'bfq_queue' as parameter.
+>>=20
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>=20
 
-I'm guessing if we were to consider such a scenario, the partition would 
-be flagged to request resources which are "close" to each-other.
+Thanks for keeping improving BFQ's code.
 
->> In the above user example, the user can create 4 partitions, and divide
->> up the compute cores among them.  Then the user can assign each
->> individual container their own individual partition.  Each container
->> would be limited to the resources within it’s assigned partition, but
->> also that container would have exclusive access to those resources.
->> This essentially provides isolation, and some Quality of Service (QoS).
->>
->> How this is currently implemented (in downstream), is perhaps not ideal.
->>    A privileged daemon process reads a configuration file which defines
->> the number of partitions, and the set of resources assigned to each.
->> That daemon makes requests to the firmware to create the partitions, and
->> gets a unique ID for each.  Then the daemon makes a request to the
->> driver to create a “shadow device”, which is a child dev node.  The
->> driver verifies with the firmware that the partition ID is valid, and
->> then creates the dev node.  Internally the driver associates this shadow
->> device with the partition ID so that each request to the firmware is
->> tagged with the partition ID by the driver.  This tagging allows the
->> firmware to determine that a request is targeted for a specific
->> partition.  Finally, the shadow device is passed into the container,
->> instead of the normal dev node.  The userspace within the container
->> operates the shadow device normally.
->>
->> One concern with the current implementation is that it is possible to
->> create a large number of partitions.  Since each partition is
->> represented by a shadow device dev node, this can create a large number
->> of dev nodes and exhaust the minor number space.
->>
->> I wonder if this functionality is better represented by a cgroup.
->> Instead of creating a dev node for the partition, we can just run the
->> container process within the cgroup.  However it doesn’t look like
->> cgroups have a concept of resource reservation.  It is just a limit.  If
->> that impression is accurate, then I struggle to see how to provide the
->> desired isolation as some entity not under the cgroup could consume all
->> of the device resources, leaving the containers unable to perform their
->> tasks.
-> 
-> Given the top-down resource distribution policy for cgroups, I think
-> you'd have to have a cgroup subtree where limits for these resources
-> are exclusively passed to, and maintain the placement of processes in
-> the appropriate cgroup under this subtree (one per partition +
-> global). The limit for these resources in all other subtrees under the
-> root would need to be 0. The only trick would be to maintain the
-> limit(s) on the global pool based on the sum of the limits for the
-> partitions to ensure that the global pool cannot exhaust resources
-> "reserved" for the partitions. If partitions don't come and go at
-> runtime then that seems pretty straightforward, otherwise I could see
-> the maintenance/adjustment of those limits as a source of frustration.
-> 
-> 
-> 
->>
->> So, cgroup experts, does this sound like something that should be
->> represented by a cgroup, or is cgroup the wrong mechanism for this usecase?
->>
->> [1] -
->> https://lore.kernel.org/all/1660588956-24027-1-git-send-email-quic_jhugo-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org/
+Acked-by: Paolo Valente <paolo.valente@linaro.org>
+
+> Looks good. Feel free to add:
+>=20
+> Reviewed-by: Jan Kara <jack@suse.cz>
+>=20
+> 								Honza
+>> ---
+>> block/bfq-iosched.c | 19 +++++++++----------
+>> block/bfq-iosched.h | 10 +++-------
+>> block/bfq-wf2q.c    | 18 ++++++------------
+>> 3 files changed, 18 insertions(+), 29 deletions(-)
+>>=20
+>> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+>> index 6d95b0e488a8..4ad4fa0dad4a 100644
+>> --- a/block/bfq-iosched.c
+>> +++ b/block/bfq-iosched.c
+>> @@ -870,9 +870,9 @@ static bool bfq_asymmetric_scenario(struct =
+bfq_data *bfqd,
+>>  * In most scenarios, the rate at which nodes are created/destroyed
+>>  * should be low too.
+>>  */
+>> -void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue =
+*bfqq,
+>> -			  struct rb_root_cached *root)
+>> +void bfq_weights_tree_add(struct bfq_queue *bfqq)
+>> {
+>> +	struct rb_root_cached *root =3D &bfqq->bfqd->queue_weights_tree;
+>> 	struct bfq_entity *entity =3D &bfqq->entity;
+>> 	struct rb_node **new =3D &(root->rb_root.rb_node), *parent =3D =
+NULL;
+>> 	bool leftmost =3D true;
+>> @@ -944,13 +944,14 @@ void bfq_weights_tree_add(struct bfq_data =
+*bfqd, struct bfq_queue *bfqq,
+>>  * See the comments to the function bfq_weights_tree_add() for =
+considerations
+>>  * about overhead.
+>>  */
+>> -void __bfq_weights_tree_remove(struct bfq_data *bfqd,
+>> -			       struct bfq_queue *bfqq,
+>> -			       struct rb_root_cached *root)
+>> +void __bfq_weights_tree_remove(struct bfq_queue *bfqq)
+>> {
+>> +	struct rb_root_cached *root;
+>> +
+>> 	if (!bfqq->weight_counter)
+>> 		return;
+>>=20
+>> +	root =3D &bfqq->bfqd->queue_weights_tree;
+>> 	bfqq->weight_counter->num_active--;
+>> 	if (bfqq->weight_counter->num_active > 0)
+>> 		goto reset_entity_pointer;
+>> @@ -967,11 +968,9 @@ void __bfq_weights_tree_remove(struct bfq_data =
+*bfqd,
+>>  * Invoke __bfq_weights_tree_remove on bfqq and decrement the number
+>>  * of active groups for each queue's inactive parent entity.
+>>  */
+>> -void bfq_weights_tree_remove(struct bfq_data *bfqd,
+>> -			     struct bfq_queue *bfqq)
+>> +void bfq_weights_tree_remove(struct bfq_queue *bfqq)
+>> {
+>> -	__bfq_weights_tree_remove(bfqd, bfqq,
+>> -				  &bfqd->queue_weights_tree);
+>> +	__bfq_weights_tree_remove(bfqq);
+>> }
+>>=20
+>> /*
+>> @@ -6220,7 +6219,7 @@ static void bfq_completed_request(struct =
+bfq_queue *bfqq, struct bfq_data *bfqd)
+>> 		bfqq->budget_timeout =3D jiffies;
+>>=20
+>> 		bfq_del_bfqq_in_groups_with_pending_reqs(bfqq);
+>> -		bfq_weights_tree_remove(bfqd, bfqq);
+>> +		bfq_weights_tree_remove(bfqq);
+>> 	}
+>>=20
+>> 	now_ns =3D ktime_get_ns();
+>> diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+>> index 257acb54c6dc..4bb58ab0c90a 100644
+>> --- a/block/bfq-iosched.h
+>> +++ b/block/bfq-iosched.h
+>> @@ -973,13 +973,9 @@ struct bfq_queue *bic_to_bfqq(struct bfq_io_cq =
+*bic, bool is_sync);
+>> void bic_set_bfqq(struct bfq_io_cq *bic, struct bfq_queue *bfqq, bool =
+is_sync);
+>> struct bfq_data *bic_to_bfqd(struct bfq_io_cq *bic);
+>> void bfq_pos_tree_add_move(struct bfq_data *bfqd, struct bfq_queue =
+*bfqq);
+>> -void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue =
+*bfqq,
+>> -			  struct rb_root_cached *root);
+>> -void __bfq_weights_tree_remove(struct bfq_data *bfqd,
+>> -			       struct bfq_queue *bfqq,
+>> -			       struct rb_root_cached *root);
+>> -void bfq_weights_tree_remove(struct bfq_data *bfqd,
+>> -			     struct bfq_queue *bfqq);
+>> +void bfq_weights_tree_add(struct bfq_queue *bfqq);
+>> +void __bfq_weights_tree_remove(struct bfq_queue *bfqq);
+>> +void bfq_weights_tree_remove(struct bfq_queue *bfqq);
+>> void bfq_bfqq_expire(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+>> 		     bool compensate, enum bfqq_expiration reason);
+>> void bfq_put_queue(struct bfq_queue *bfqq);
+>> diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+>> index 5e8224c96921..124aaea6196e 100644
+>> --- a/block/bfq-wf2q.c
+>> +++ b/block/bfq-wf2q.c
+>> @@ -707,7 +707,6 @@ __bfq_entity_update_weight_prio(struct =
+bfq_service_tree *old_st,
+>> 		struct bfq_queue *bfqq =3D bfq_entity_to_bfqq(entity);
+>> 		unsigned int prev_weight, new_weight;
+>> 		struct bfq_data *bfqd =3D NULL;
+>> -		struct rb_root_cached *root;
+>> #ifdef CONFIG_BFQ_GROUP_IOSCHED
+>> 		struct bfq_sched_data *sd;
+>> 		struct bfq_group *bfqg;
+>> @@ -770,19 +769,15 @@ __bfq_entity_update_weight_prio(struct =
+bfq_service_tree *old_st,
+>> 		 * queue, remove the entity from its old weight counter =
+(if
+>> 		 * there is a counter associated with the entity).
+>> 		 */
+>> -		if (prev_weight !=3D new_weight && bfqq) {
+>> -			root =3D &bfqd->queue_weights_tree;
+>> -			__bfq_weights_tree_remove(bfqd, bfqq, root);
+>> -		}
+>> +		if (prev_weight !=3D new_weight && bfqq)
+>> +			__bfq_weights_tree_remove(bfqq);
+>> 		entity->weight =3D new_weight;
+>> 		/*
+>> 		 * Add the entity, if it is not a weight-raised queue,
+>> 		 * to the counter associated with its new weight.
+>> 		 */
+>> -		if (prev_weight !=3D new_weight && bfqq && =
+bfqq->wr_coeff =3D=3D 1) {
+>> -			/* If we get here, root has been initialized. */
+>> -			bfq_weights_tree_add(bfqd, bfqq, root);
+>> -		}
+>> +		if (prev_weight !=3D new_weight && bfqq && =
+bfqq->wr_coeff =3D=3D 1)
+>> +			bfq_weights_tree_add(bfqq);
+>>=20
+>> 		new_st->wsum +=3D entity->weight;
+>>=20
+>> @@ -1687,7 +1682,7 @@ void bfq_del_bfqq_busy(struct bfq_queue *bfqq, =
+bool expiration)
+>> 		 * Next function is invoked last, because it causes bfqq =
+to be
+>> 		 * freed. DO NOT use bfqq after the next function =
+invocation.
+>> 		 */
+>> -		bfq_weights_tree_remove(bfqd, bfqq);
+>> +		bfq_weights_tree_remove(bfqq);
+>> 	}
+>> }
+>>=20
+>> @@ -1708,8 +1703,7 @@ void bfq_add_bfqq_busy(struct bfq_queue *bfqq)
+>> 	if (!bfqq->dispatched) {
+>> 		bfq_add_bfqq_in_groups_with_pending_reqs(bfqq);
+>> 		if (bfqq->wr_coeff =3D=3D 1)
+>> -			bfq_weights_tree_add(bfqd, bfqq,
+>> -					     &bfqd->queue_weights_tree);
+>> +			bfq_weights_tree_add(bfqq);
+>> 	}
+>>=20
+>> 	if (bfqq->wr_coeff > 1)
+>> --=20
+>> 2.31.1
+>>=20
+> --=20
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
 
