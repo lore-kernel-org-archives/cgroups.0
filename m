@@ -1,101 +1,49 @@
-From: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH] Revert "net: set proper memcg for net_init hooks
  allocations"
-Date: Tue, 27 Sep 2022 12:02:23 +0200
-Message-ID: <54078150-3c22-3563-7731-5c7fda85987d@kernel.org>
+Date: Tue, 27 Sep 2022 09:23:08 -0400
+Message-ID: <YzL5PNgp/43a5N6K@cmpxchg.org>
 References: <20220926195931.2497968-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: quoted-printable
 Return-path: <sparclinux-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1664272948;
-        bh=dlgt8sTUOCFvaKMGVG7jt6xOPr5SYmh1UhVPSKkYzV8=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-        b=SzSGGrMbrYCeDjltNrgrL3VG2omylsDXXWGmFRuKYPFnG2Xtt63azHAsuGowYidFD
-         vuXsb1OH/s/KwBRrtO4U7PShzKeRUQ6r0e13xxx6bq+NTHfByi71P4P6tQvc7Z8p1W
-         QQu/R2CHgWE0QRLqrRl6ANwMMZJClkApkeRIMNC7efj90M4T9lKE5uoFewIOEQmM/3
-         Y6fCSR/7GnG+tEUZB8N1wSz/PUN49XvesX2YiFyZr2dYXU2ZRmA2geaiWFJLkpAPQk
-         H1I6zN0LGrV0YwBi4275HtG2my1Kuu0KK1SzWnQ3lUfAapmKTlFxrXh+RWDZrb4ars
-         KrO+qSy8Z1aVA==
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date;
+        bh=vjjvifvRbyamwiKwXAGlU+rtv6BwVcIgFInlxUxWOFk=;
+        b=Me2NuFx7YYw5/6VUYsnM6+enyki04bmQjGYAmmDKSrf5RtYBaK9xqhr2G7e1NqO0QF
+         Ul827IrzQJQRfEOyZkgCsX2wki8XYKYL5cf9AzTRaaapKaLlle+822jZUhlylP3lvpFO
+         UzIDaN64+l2wrTV3kGjAhxlCc5+oL3qZq2hKSlJPIpr5pmyESjbis/n61/yAxqrx5wJe
+         nBoHEvtvfn/inr7H2QrVltHXGms0vN5cgTjxAgUBCyKQ/QUm7FsmTSNJUwJhqi8aZIvu
+         fYk0CsF+jffSBWIMmB3n81wwlP0GqE6NeVwKpmS/G7hpZxBC7g//LH0VSKKAmF+MH6yz
+         nEvA==
+Content-Disposition: inline
 In-Reply-To: <20220926195931.2497968-1-shakeelb@google.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: Shakeel Butt <shakeelb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>
-Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Anatoly Pugachev <matorola@gmail.com>, Vasily Averin <vvs@openvz.org>, Jakub Kicinski <kuba@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, sparclinux@vger.kernel.org, regressions@lists.linux.dev
+Content-Type: text/plain; charset="iso-8859-1"
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Anatoly Pugachev <matorola@gmail.com>, Vasily Averin <vvs@openvz.org>, Jakub Kicinski <kuba@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, sparclinux@vger.kernel.org
 
-T24gOS8yNi8yMiAyMTo1OSwgU2hha2VlbCBCdXR0IHdyb3RlOgo+IFRoaXMgcmV2ZXJ0cyBjb21t
-aXQgMWQwNDAzZDIwZjZjMjgxY2IzZDE0YzVmMWRiNTMxN2NhZWVjNDhlOS4KPiAKPiBBbmF0b2x5
-IFB1Z2FjaGV2IHJlcG9ydGVkIHRoYXQgdGhlIGNvbW1pdCAxZDA0MDNkMjBmNmMgKCJuZXQ6IHNl
-dCBwcm9wZXIKPiBtZW1jZyBmb3IgbmV0X2luaXQgaG9va3MgYWxsb2NhdGlvbnMiKSBpcyBzb21l
-aG93IGNhdXNpbmcgdGhlIHNwYXJjNjQKPiBWTXMgZmFpbGVkIHRvIGJvb3QgYW5kIHRoZSBWTXMg
-Ym9vdCBmaW5lIHdpdGggdGhhdCBwYXRjaCByZXZlcnRlZC4gU28sCj4gcmV2ZXJ0IHRoZSBwYXRj
-aCBmb3Igbm93IGFuZCBsYXRlciB3ZSBjYW4gZGVidWcgdGhlIGlzc3VlLgo+IAoKTGluazogaHR0
-cHM6Ly9sb3JlLmtlcm5lbC5vcmcvYWxsLzIwMjIwOTE4MDkyODQ5LkdBMTAzMTRAdTE2NC5lYXN0
-LnJ1LwoKKG1haW5seSBmb3IgcmVnemJvdCByZWFkaW5nIHRoaXMgdGhyZWFkIGJ1dCBzaG91bGQg
-YmUgdmFsaWQgdXNhZ2UgZm9yCnRoZSByZXBvcnQgYW55d2F5KQoKRml4ZXM6IDFkMDQwM2QyMGY2
-YyAoIm5ldDogc2V0IHByb3BlciBtZW1jZyBmb3IgbmV0X2luaXQgaG9va3MgYWxsb2NhdGlvbnMi
-KQoKPiBSZXBvcnRlZC1ieTogQW5hdG9seSBQdWdhY2hldiA8bWF0b3JvbGFAZ21haWwuY29tPgo+
-IFNpZ25lZC1vZmYtYnk6IFNoYWtlZWwgQnV0dCA8c2hha2VlbGJAZ29vZ2xlLmNvbT4KPiBDYzog
-VmFzaWx5IEF2ZXJpbiA8dnZzQG9wZW52ei5vcmc+Cj4gQ2M6IEpha3ViIEtpY2luc2tpIDxrdWJh
-QGtlcm5lbC5vcmc+Cj4gQ2M6IE1pY2hhbCBLb3V0bsO9IDxta291dG55QHN1c2UuY29tPgo+IENj
-OiBBbmRyZXcgTW9ydG9uIDxha3BtQGxpbnV4LWZvdW5kYXRpb24ub3JnPgo+IENjOiBMaW51cyBU
-b3J2YWxkcyA8dG9ydmFsZHNAbGludXgtZm91bmRhdGlvbi5vcmc+Cj4gQ2M6IGNncm91cHNAdmdl
-ci5rZXJuZWwub3JnCj4gQ2M6IHNwYXJjbGludXhAdmdlci5rZXJuZWwub3JnCj4gQ2M6IGxpbnV4
-LW1tQGt2YWNrLm9yZwo+IENjOiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnCj4gLS0tCj4g
-IGluY2x1ZGUvbGludXgvbWVtY29udHJvbC5oIHwgNDUgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0KPiAgbmV0L2NvcmUvbmV0X25hbWVzcGFjZS5jICAgfCAgNyAtLS0tLS0K
-PiAgMiBmaWxlcyBjaGFuZ2VkLCA1MiBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEvaW5j
-bHVkZS9saW51eC9tZW1jb250cm9sLmggYi9pbmNsdWRlL2xpbnV4L21lbWNvbnRyb2wuaAo+IGlu
-ZGV4IGVmNDc5ZTU1NDI1My4uZTE2NDRhMjQwMDljIDEwMDY0NAo+IC0tLSBhL2luY2x1ZGUvbGlu
-dXgvbWVtY29udHJvbC5oCj4gKysrIGIvaW5jbHVkZS9saW51eC9tZW1jb250cm9sLmgKPiBAQCAt
-MTc4Nyw0MiArMTc4Nyw2IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCBjb3VudF9vYmpjZ19ldmVudChz
-dHJ1Y3Qgb2JqX2Nncm91cCAqb2JqY2csCj4gIAlyY3VfcmVhZF91bmxvY2soKTsKPiAgfQo+ICAK
-PiAtLyoqCj4gLSAqIGdldF9tZW1fY2dyb3VwX2Zyb21fb2JqIC0gZ2V0IGEgbWVtY2cgYXNzb2Np
-YXRlZCB3aXRoIHBhc3NlZCBrZXJuZWwgb2JqZWN0Lgo+IC0gKiBAcDogcG9pbnRlciB0byBvYmpl
-Y3QgZnJvbSB3aGljaCBtZW1jZyBzaG91bGQgYmUgZXh0cmFjdGVkLiBJdCBjYW4gYmUgTlVMTC4K
-PiAtICoKPiAtICogUmV0cmlldmVzIHRoZSBtZW1vcnkgZ3JvdXAgaW50byB3aGljaCB0aGUgbWVt
-b3J5IG9mIHRoZSBwb2ludGVkIGtlcm5lbAo+IC0gKiBvYmplY3QgaXMgYWNjb3VudGVkLiBJZiBt
-ZW1jZyBpcyBmb3VuZCwgaXRzIHJlZmVyZW5jZSBpcyB0YWtlbi4KPiAtICogSWYgYSBwYXNzZWQg
-a2VybmVsIG9iamVjdCBpcyB1bmNoYXJnZWQsIG9yIGlmIHByb3BlciBtZW1jZyBjYW5ub3QgYmUg
-Zm91bmQsCj4gLSAqIGFzIHdlbGwgYXMgaWYgbWVtX2Nncm91cCBpcyBkaXNhYmxlZCwgTlVMTCBp
-cyByZXR1cm5lZC4KPiAtICoKPiAtICogUmV0dXJuOiB2YWxpZCBtZW1jZyBwb2ludGVyIHdpdGgg
-dGFrZW4gcmVmZXJlbmNlIG9yIE5VTEwuCj4gLSAqLwo+IC1zdGF0aWMgaW5saW5lIHN0cnVjdCBt
-ZW1fY2dyb3VwICpnZXRfbWVtX2Nncm91cF9mcm9tX29iaih2b2lkICpwKQo+IC17Cj4gLQlzdHJ1
-Y3QgbWVtX2Nncm91cCAqbWVtY2c7Cj4gLQo+IC0JcmN1X3JlYWRfbG9jaygpOwo+IC0JZG8gewo+
-IC0JCW1lbWNnID0gbWVtX2Nncm91cF9mcm9tX29iaihwKTsKPiAtCX0gd2hpbGUgKG1lbWNnICYm
-ICFjc3NfdHJ5Z2V0KCZtZW1jZy0+Y3NzKSk7Cj4gLQlyY3VfcmVhZF91bmxvY2soKTsKPiAtCXJl
-dHVybiBtZW1jZzsKPiAtfQo+IC0KPiAtLyoqCj4gLSAqIG1lbV9jZ3JvdXBfb3Jfcm9vdCAtIGFs
-d2F5cyByZXR1cm5zIGEgcG9pbnRlciB0byBhIHZhbGlkIG1lbW9yeSBjZ3JvdXAuCj4gLSAqIEBt
-ZW1jZzogcG9pbnRlciB0byBhIHZhbGlkIG1lbW9yeSBjZ3JvdXAgb3IgTlVMTC4KPiAtICoKPiAt
-ICogSWYgcGFzc2VkIGFyZ3VtZW50IGlzIG5vdCBOVUxMLCByZXR1cm5zIGl0IHdpdGhvdXQgYW55
-IGFkZGl0aW9uYWwgY2hlY2tzCj4gLSAqIGFuZCBjaGFuZ2VzLiBPdGhlcndpc2UsIHJvb3RfbWVt
-X2Nncm91cCBpcyByZXR1cm5lZC4KPiAtICoKPiAtICogTk9URTogcm9vdF9tZW1fY2dyb3VwIGNh
-biBiZSBOVUxMIGR1cmluZyBlYXJseSBib290Lgo+IC0gKi8KPiAtc3RhdGljIGlubGluZSBzdHJ1
-Y3QgbWVtX2Nncm91cCAqbWVtX2Nncm91cF9vcl9yb290KHN0cnVjdCBtZW1fY2dyb3VwICptZW1j
-ZykKPiAtewo+IC0JcmV0dXJuIG1lbWNnID8gbWVtY2cgOiByb290X21lbV9jZ3JvdXA7Cj4gLX0K
-PiAgI2Vsc2UKPiAgc3RhdGljIGlubGluZSBib29sIG1lbV9jZ3JvdXBfa21lbV9kaXNhYmxlZCh2
-b2lkKQo+ICB7Cj4gQEAgLTE4NzksMTUgKzE4NDMsNiBAQCBzdGF0aWMgaW5saW5lIHZvaWQgY291
-bnRfb2JqY2dfZXZlbnQoc3RydWN0IG9ial9jZ3JvdXAgKm9iamNnLAo+ICB7Cj4gIH0KPiAgCj4g
-LXN0YXRpYyBpbmxpbmUgc3RydWN0IG1lbV9jZ3JvdXAgKmdldF9tZW1fY2dyb3VwX2Zyb21fb2Jq
-KHZvaWQgKnApCj4gLXsKPiAtCXJldHVybiBOVUxMOwo+IC19Cj4gLQo+IC1zdGF0aWMgaW5saW5l
-IHN0cnVjdCBtZW1fY2dyb3VwICptZW1fY2dyb3VwX29yX3Jvb3Qoc3RydWN0IG1lbV9jZ3JvdXAg
-Km1lbWNnKQo+IC17Cj4gLQlyZXR1cm4gTlVMTDsKPiAtfQo+ICAjZW5kaWYgLyogQ09ORklHX01F
-TUNHX0tNRU0gKi8KPiAgCj4gICNpZiBkZWZpbmVkKENPTkZJR19NRU1DR19LTUVNKSAmJiBkZWZp
-bmVkKENPTkZJR19aU1dBUCkKPiBkaWZmIC0tZ2l0IGEvbmV0L2NvcmUvbmV0X25hbWVzcGFjZS5j
-IGIvbmV0L2NvcmUvbmV0X25hbWVzcGFjZS5jCj4gaW5kZXggNmI5ZjE5MTIyZWMxLi4wZWMyZjU5
-MDZhMjcgMTAwNjQ0Cj4gLS0tIGEvbmV0L2NvcmUvbmV0X25hbWVzcGFjZS5jCj4gKysrIGIvbmV0
-L2NvcmUvbmV0X25hbWVzcGFjZS5jCj4gQEAgLTE4LDcgKzE4LDYgQEAKPiAgI2luY2x1ZGUgPGxp
-bnV4L3VzZXJfbmFtZXNwYWNlLmg+Cj4gICNpbmNsdWRlIDxsaW51eC9uZXRfbmFtZXNwYWNlLmg+
-Cj4gICNpbmNsdWRlIDxsaW51eC9zY2hlZC90YXNrLmg+Cj4gLSNpbmNsdWRlIDxsaW51eC9zY2hl
-ZC9tbS5oPgo+ICAjaW5jbHVkZSA8bGludXgvdWlkZ2lkLmg+Cj4gICNpbmNsdWRlIDxsaW51eC9j
-b29raWUuaD4KPiAgCj4gQEAgLTExNDQsMTMgKzExNDMsNyBAQCBzdGF0aWMgaW50IF9fcmVnaXN0
-ZXJfcGVybmV0X29wZXJhdGlvbnMoc3RydWN0IGxpc3RfaGVhZCAqbGlzdCwKPiAgCQkgKiBzZXR1
-cF9uZXQoKSBhbmQgY2xlYW51cF9uZXQoKSBhcmUgbm90IHBvc3NpYmxlLgo+ICAJCSAqLwo+ICAJ
-CWZvcl9lYWNoX25ldChuZXQpIHsKPiAtCQkJc3RydWN0IG1lbV9jZ3JvdXAgKm9sZCwgKm1lbWNn
-Owo+IC0KPiAtCQkJbWVtY2cgPSBtZW1fY2dyb3VwX29yX3Jvb3QoZ2V0X21lbV9jZ3JvdXBfZnJv
-bV9vYmoobmV0KSk7Cj4gLQkJCW9sZCA9IHNldF9hY3RpdmVfbWVtY2cobWVtY2cpOwo+ICAJCQll
-cnJvciA9IG9wc19pbml0KG9wcywgbmV0KTsKPiAtCQkJc2V0X2FjdGl2ZV9tZW1jZyhvbGQpOwo+
-IC0JCQltZW1fY2dyb3VwX3B1dChtZW1jZyk7Cj4gIAkJCWlmIChlcnJvcikKPiAgCQkJCWdvdG8g
-b3V0X3VuZG87Cj4gIAkJCWxpc3RfYWRkX3RhaWwoJm5ldC0+ZXhpdF9saXN0LCAmbmV0X2V4aXRf
-bGlzdCk7Cgo=
+On Mon, Sep 26, 2022 at 07:59:31PM +0000, Shakeel Butt wrote:
+> This reverts commit 1d0403d20f6c281cb3d14c5f1db5317caeec48e9.
+>=20
+> Anatoly Pugachev reported that the commit 1d0403d20f6c ("net: set proper
+> memcg for net_init hooks allocations") is somehow causing the sparc64
+> VMs failed to boot and the VMs boot fine with that patch reverted. So,
+> revert the patch for now and later we can debug the issue.
+>=20
+> Reported-by: Anatoly Pugachev <matorola@gmail.com>
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> Cc: Vasily Averin <vvs@openvz.org>
+> Cc: Jakub Kicinski <kuba@kernel.org>
+> Cc: Michal Koutn=FD <mkoutny@suse.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Linus Torvalds <torvalds@linux-foundation.org>
+> Cc: cgroups@vger.kernel.org
+> Cc: sparclinux@vger.kernel.org
+> Cc: linux-mm@kvack.org
+> Cc: linux-kernel@vger.kernel.org
+
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
