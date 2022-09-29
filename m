@@ -1,27 +1,39 @@
-From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 0/3] A few cleanup patches for blk-iolatency.c
-Date: Thu, 29 Sep 2022 15:40:52 +0800
-Message-ID: <20220929074055.30080-1-shikemeng@huawei.com>
+From: Kemeng Shi <shikemeng@huawei.com>
+Subject: [PATCH 2/3] block: Correct comment for scale_cookie_change
+Date: Thu, 29 Sep 2022 15:40:54 +0800
+Message-ID: <20220929074055.30080-3-shikemeng@huawei.com>
+References: <20220929074055.30080-1-shikemeng@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20220929074055.30080-1-shikemeng@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: tj@kernel.org, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, shikemeng@huawei.com
 
-This series contains three cleanup patches to remove redundant check,
-correct comment and simplify struct iolatency_grp in blk-iolatency.c.
+Default queue depth of iolatency_grp is unlimited, so we scale down
+quickly(once by half) in scale_cookie_change. Remove the "subtract
+1/16th" part which is not the truth.
 
-Kemeng Shi (3):
-  block: Remove redundant parent blkcg_gp check in check_scale_change
-  block: Correct comment for scale_cookie_change
-  block: Replace struct rq_depth with unsigned int in struct
-    iolatency_grp
+Signed-off-by: Kemeng Shi <shikemeng@huawei.com>
+---
+ block/blk-iolatency.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- block/blk-iolatency.c | 33 ++++++++++++++-------------------
- 1 file changed, 14 insertions(+), 19 deletions(-)
-
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index a8cc5abe91e5..2666afd7abdb 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -364,7 +364,7 @@ static void scale_cookie_change(struct blk_iolatency *blkiolat,
+ }
+ 
+ /*
+- * Change the queue depth of the iolatency_grp.  We add/subtract 1/16th of the
++ * Change the queue depth of the iolatency_grp.  We add 1/16th of the
+  * queue depth at a time so we don't get wild swings and hopefully dial in to
+  * fairer distribution of the overall queue depth.
+  */
 -- 
 2.30.0
 
