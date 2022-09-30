@@ -1,127 +1,163 @@
-From: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] mm: memcontrol: use mem_cgroup_is_root() helper
-Date: Fri, 30 Sep 2022 19:14:33 +0530
-Message-ID: <20220930134433.338103-1-kamalesh.babulal@oracle.com>
+From: Alexander Fedorov <halcien-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Possible race in obj_stock_flush_required() vs drain_obj_stock()
+Date: Fri, 30 Sep 2022 14:06:48 +0000
+Message-ID: <1664546131660.1777662787.1655319815@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding;
- s=corp-2022-7-12; bh=KONBAx9m0CqP1zC/8vneM0xJmvBinGNKQZ5dphHO1Ng=;
- b=tiMELkw4uG0n1ek9pdLiaOq3mS96MlpguT9i3pU7wzZUH4B1dqclTmcxYr77zvHQM6dv
- szOfozlTnRlpBtrg6Ik8ge1kFnJxkWp9P7kjHkukn1AQ88vako6wTFZamz7gINm9DFWR
- 89xm9/kKSN+VSx/3imZzX+y2tZH0/9hkrFnuiy6rKtr0yB+zcVWKvtM+KEcEFeFjoPu6
- vZinKUM9QxDeAcHBSuOktEEDvwY8RKVIY6O3/F0GvjLLuEUZer9ljuzQDu+Qu3OLnMaO
- nUNUbbvW2zzmoWXw1VCH5Sjl+bX7xNjncpLpN3jC8g+L/tDS7NDv3LIb8wiM1mz1a3SD zA== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:content-transfer-encoding:user-agent:date:subject:cc
+         :to:from:message-id:from:to:cc:subject:date;
+        bh=Eu1UCcsFNrtGDpP0teOX35SousjnhGHT123vvgcKo/k=;
+        b=JQHL799ma39mxOGPE+gyXK+ZE69/Sgnv6GL9hyUmyU/NRAySECqAPsYLbdp+YJWo78
+         oKpJ5jAWZ8QzBeVm0jto83to21gR84tMwmSCDr7v5J56xkHakG6Mo4QwOPbbx4Ntm/Rn
+         7duiyJxmoUkZeToHp0Yt//TWHvf+YWoWz/Qntgh0rBP1CMmfqHL8so3IOPL1Ov9YN8gJ
+         PgeuTxU/R+ge84LDxb7a9cy/oes8BDQiwVSssGTBzsI41gCjIcNg79GoVBX7XGiBE3d6
+         BAtqACLyIXMLlplZb98X3gYtYmr7J6taw3Gqj7mW/+uMhwn4rQdq/WJSO1+KY0Meyrna
+         Ar9g==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Tom Hromatka <tom.hromatka-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Replace the checks for memcg is root memcg, with mem_cgroup_is_root()
-helper.
+Hi,
 
-Signed-off-by: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+reposting this to the mainline list as requested and with updated patch.
+
+I've encountered a race on kernel version 5.10.131-rt72 when running
+LTP cgroup_fj_stress_memory* tests and need help with understanding
+synchronization in mm/memcontrol.c, it seems really not-trivial...
+Have also checked patches in the latest mainline kernel but do not see
+anything similar to the problem.  Realtime patch also does not seem to
+be the culprit: it just changed preemption to migration disabling and
+irq_disable to local_lock.
+
+It goes as follows:
+
+1) First CPU:
+    css_killed_work_fn() -> mem_cgroup_css_offline() ->
+drain_all_stock() -> obj_stock_flush_required()
+         if (stock->cached_objcg) {
+
+This check sees a non-NULL pointer for *another* CPU's `memcg_stock` 
+instance.
+
+2) Second CPU:
+   css_free_rwork_fn() -> __mem_cgroup_free() -> free_percpu() ->
+obj_cgroup_uncharge() -> drain_obj_stock()
+It frees `cached_objcg` pointer in its own `memcg_stock` instance:
+         struct obj_cgroup *old = stock->cached_objcg;
+         < ... >
+         obj_cgroup_put(old);
+         stock->cached_objcg = NULL;
+
+3) First CPU continues after the 'if' check and re-reads the pointer
+again, now it is NULL and dereferencing it leads to kernel panic:
+static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+                                      struct mem_cgroup *root_memcg)
+{
+< ... >
+         if (stock->cached_objcg) {
+                 memcg = obj_cgroup_memcg(stock->cached_objcg);
+
+Since it seems that `cached_objcg` field is protected by RCU, I've also
+tried the patch below (against 5.10.131-rt72) and confirmed that it seems
+to fix the problem (at least the same LTP tests finish successfully) but
+am not sure if that's the right fix.  The patch does not apply cleanly to
+mainline kernel but I can try rebasing it if needed.
+
+
+     mm/memcg: fix race in obj_stock_flush_required() vs drain_obj_stock()
+     
+     When obj_stock_flush_required() is called from drain_all_stock() it
+     reads the `memcg_stock->cached_objcg` field twice for another CPU's
+     per-cpu variable, leading to TOCTTOU race: another CPU can
+     simultaneously enter drain_obj_stock() and clear its own instance of
+     `memcg_stock->cached_objcg`.
+     
+     To fix it mark `cached_objcg` as RCU protected field and use
+     rcu_*() accessors everywhere.
+
+Signed-off-by: Alexander Fedorov <halcien-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b69979c9ced5..99b3d0cbd426 100644
+index c1152f8747..2ab205f529 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1148,7 +1148,7 @@ static void invalidate_reclaim_iterators(struct mem_cgroup *dead_memcg)
- 	 * cgroup root (root_mem_cgroup). So we have to handle
- 	 * dead_memcg from cgroup root separately.
- 	 */
--	if (last != root_mem_cgroup)
-+	if (!mem_cgroup_is_root(last))
- 		__invalidate_reclaim_iterators(root_mem_cgroup,
- 						dead_memcg);
- }
-@@ -1172,7 +1172,7 @@ int mem_cgroup_scan_tasks(struct mem_cgroup *memcg,
- 	struct mem_cgroup *iter;
- 	int ret = 0;
- 
--	BUG_ON(memcg == root_mem_cgroup);
-+	BUG_ON(mem_cgroup_is_root(memcg));
- 
- 	for_each_mem_cgroup_tree(iter, memcg) {
- 		struct css_task_iter it;
-@@ -1201,7 +1201,7 @@ void lruvec_memcg_debug(struct lruvec *lruvec, struct folio *folio)
- 	memcg = folio_memcg(folio);
- 
- 	if (!memcg)
--		VM_BUG_ON_FOLIO(lruvec_memcg(lruvec) != root_mem_cgroup, folio);
-+		VM_BUG_ON_FOLIO(!mem_cgroup_is_root(lruvec_memcg(lruvec)), folio);
- 	else
- 		VM_BUG_ON_FOLIO(lruvec_memcg(lruvec) != memcg, folio);
- }
-@@ -1982,7 +1982,7 @@ struct mem_cgroup *mem_cgroup_get_oom_group(struct task_struct *victim,
- 	rcu_read_lock();
- 
- 	memcg = mem_cgroup_from_task(victim);
--	if (memcg == root_mem_cgroup)
-+	if (mem_cgroup_is_root(memcg))
- 		goto out;
- 
- 	/*
-@@ -2940,7 +2940,7 @@ static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
- {
- 	struct obj_cgroup *objcg = NULL;
- 
--	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg)) {
-+	for (; !mem_cgroup_is_root(memcg); memcg = parent_mem_cgroup(memcg)) {
- 		objcg = rcu_dereference(memcg->objcg);
- 		if (objcg && obj_cgroup_tryget(objcg))
- 			break;
-@@ -7073,7 +7073,7 @@ void mem_cgroup_sk_alloc(struct sock *sk)
- 
- 	rcu_read_lock();
- 	memcg = mem_cgroup_from_task(current);
--	if (memcg == root_mem_cgroup)
-+	if (mem_cgroup_is_root(memcg))
- 		goto out;
- 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && !memcg->tcpmem_active)
- 		goto out;
-@@ -7208,7 +7208,7 @@ static struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg)
- 		 * The root cgroup cannot be destroyed, so it's refcount must
- 		 * always be >= 1.
- 		 */
--		if (WARN_ON_ONCE(memcg == root_mem_cgroup)) {
-+		if (WARN_ON_ONCE(mem_cgroup_is_root(memcg))) {
- 			VM_BUG_ON(1);
- 			break;
- 		}
-@@ -7369,7 +7369,7 @@ long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
- 
- 	if (cgroup_memory_noswap || !cgroup_subsys_on_dfl(memory_cgrp_subsys))
- 		return nr_swap_pages;
--	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg))
-+	for (; !mem_cgroup_is_root(memcg); memcg = parent_mem_cgroup(memcg))
- 		nr_swap_pages = min_t(long, nr_swap_pages,
- 				      READ_ONCE(memcg->swap.max) -
- 				      page_counter_read(&memcg->swap));
-@@ -7391,7 +7391,7 @@ bool mem_cgroup_swap_full(struct page *page)
- 	if (!memcg)
- 		return false;
- 
--	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg)) {
-+	for (; !mem_cgroup_is_root(memcg); memcg = parent_mem_cgroup(memcg)) {
- 		unsigned long usage = page_counter_read(&memcg->swap);
- 
- 		if (usage * 2 >= READ_ONCE(memcg->swap.high) ||
-@@ -7556,7 +7556,7 @@ bool obj_cgroup_may_zswap(struct obj_cgroup *objcg)
- 		return true;
- 
- 	original_memcg = get_mem_cgroup_from_objcg(objcg);
--	for (memcg = original_memcg; memcg != root_mem_cgroup;
-+	for (memcg = original_memcg; !mem_cgroup_is_root(memcg);
- 	     memcg = parent_mem_cgroup(memcg)) {
- 		unsigned long max = READ_ONCE(memcg->zswap_max);
- 		unsigned long pages;
-
-base-commit: 987a926c1d8a40e4256953b04771fbdb63bc7938
--- 
-2.34.3
-
+@@ -2215,7 +2215,7 @@ struct memcg_stock_pcp {
+  	unsigned int nr_pages;
+  
+  #ifdef CONFIG_MEMCG_KMEM
+-	struct obj_cgroup *cached_objcg;
++	struct obj_cgroup __rcu *cached_objcg;
+  	unsigned int nr_bytes;
+  #endif
+  
+@@ -3148,7 +3148,7 @@ static bool consume_obj_stock(struct obj_cgroup 
+*objcg, unsigned int nr_bytes)
+  	local_lock_irqsave(&memcg_stock.lock, flags);
+  
+  	stock = this_cpu_ptr(&memcg_stock);
+-	if (objcg == stock->cached_objcg && stock->nr_bytes >= nr_bytes) {
++	if (objcg == rcu_access_pointer(stock->cached_objcg) && stock->nr_bytes 
+>= nr_bytes) {
+  		stock->nr_bytes -= nr_bytes;
+  		ret = true;
+  	}
+@@ -3160,7 +3160,8 @@ static bool consume_obj_stock(struct obj_cgroup 
+*objcg, unsigned int nr_bytes)
+  
+  static void drain_obj_stock(struct memcg_stock_pcp *stock)
+  {
+-	struct obj_cgroup *old = stock->cached_objcg;
++	struct obj_cgroup *old = rcu_replace_pointer(stock->cached_objcg, NULL,
++						lockdep_is_held(&stock->lock));
+  
+  	if (!old)
+  		return;
+@@ -3198,16 +3199,16 @@ static void drain_obj_stock(struct memcg_stock_pcp 
+*stock)
+  	}
+  
+  	obj_cgroup_put(old);
+-	stock->cached_objcg = NULL;
+  }
+  
+  static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+  				     struct mem_cgroup *root_memcg)
+  {
+  	struct mem_cgroup *memcg;
++	struct obj_cgroup *cached_objcg = rcu_dereference(stock->cached_objcg);
+  
+-	if (stock->cached_objcg) {
+-		memcg = obj_cgroup_memcg(stock->cached_objcg);
++	if (cached_objcg) {
++		memcg = obj_cgroup_memcg(cached_objcg);
+  		if (memcg && mem_cgroup_is_descendant(memcg, root_memcg))
+  			return true;
+  	}
+@@ -3223,11 +3224,11 @@ static void refill_obj_stock(struct obj_cgroup 
+*objcg, unsigned int nr_bytes)
+  	local_lock_irqsave(&memcg_stock.lock, flags);
+  
+  	stock = this_cpu_ptr(&memcg_stock);
+-	if (stock->cached_objcg != objcg) { /* reset if necessary */
++	if (rcu_access_pointer(stock->cached_objcg) != objcg) { /* reset if 
+necessary */
+  		drain_obj_stock(stock);
+  		obj_cgroup_get(objcg);
+-		stock->cached_objcg = objcg;
+  		stock->nr_bytes = atomic_xchg(&objcg->nr_charged_bytes, 0);
++		rcu_assign_pointer(stock->cached_objcg, objcg);
+  	}
+  	stock->nr_bytes += nr_bytes;
+  
+@@ -7162,6 +7163,7 @@ static int __init mem_cgroup_init(void)
+  
+  		stock = per_cpu_ptr(&memcg_stock, cpu);
+  		INIT_WORK(&stock->work, drain_local_stock);
++		RCU_INIT_POINTER(stock->cached_objcg, NULL);
+  		local_lock_init(&stock->lock);
+  	}
+  
