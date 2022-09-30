@@ -1,77 +1,96 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: Possible race in obj_stock_flush_required() vs drain_obj_stock()
-Date: Fri, 30 Sep 2022 11:26:17 -0700
-Message-ID: <Yzc0yZwDB8GG+4t7@P9FQF9L96D.corp.robot.car>
-References: <1664546131660.1777662787.1655319815@gmail.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v6 3/3] blk-cgroup: Optimize blkcg_rstat_flush()
+Date: Fri, 30 Sep 2022 14:34:11 -0400
+Message-ID: <93cb697d-3bd5-65f9-96c4-662345360337@redhat.com>
+References: <20220602192020.166940-1-longman@redhat.com>
+ <20220602192020.166940-4-longman@redhat.com>
+ <20220608165732.GB19399@blackbody.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1664562382;
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1664562854;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=bozQYQ1ItXY9G43M8jtCYuxizhROlKE4s9wubZ56+HI=;
-        b=H0/2RA6SRRc9Ov2ipdLFhQzKpskdAcFqVeHK/w0k4kMBSIWDjWIjS4H6iezwdKQNZhPrJP
-        Z4V5fJulEcg9gMXtU5v6Se/9LrwVmrWmztvXtwBi45Tw9kGx0yn42NOLYVhvr8t4EVEoDe
-        x+/JTiACIIk6+RkL8sTZrui+9hC9FNs=
-Content-Disposition: inline
-In-Reply-To: <1664546131660.1777662787.1655319815-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=blyeoX43uCWFLodZ33Eb0oRW8hMqk+cpk/XX0tInob4=;
+        b=a8tqbI5cJ7Cja169ZRjitXI4rRhO2ksYWYjblmdyQS3317B8D21kob25Uv5fpk1taGxRHQ
+        2u3KkkoXIb5Os6xiccLBtL9jE/tDpFJIQoBrVffmLWZBPwRV4WpqQxANfocMcq8hKqj9L0
+        1nQvhylEarVnDkDGcrHav3eNg6V49qs=
+Content-Language: en-US
+In-Reply-To: <20220608165732.GB19399@blackbody.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alexander Fedorov <halcien-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>
 
-On Fri, Sep 30, 2022 at 02:06:48PM +0000, Alexander Fedorov wrote:
-> Hi,
-> 
-> reposting this to the mainline list as requested and with updated patch.
-> 
-> I've encountered a race on kernel version 5.10.131-rt72 when running
-> LTP cgroup_fj_stress_memory* tests and need help with understanding
-> synchronization in mm/memcontrol.c, it seems really not-trivial...
-> Have also checked patches in the latest mainline kernel but do not see
-> anything similar to the problem.  Realtime patch also does not seem to
-> be the culprit: it just changed preemption to migration disabling and
-> irq_disable to local_lock.
-> 
-> It goes as follows:
-> 
-> 1) First CPU:
->    css_killed_work_fn() -> mem_cgroup_css_offline() ->
-> drain_all_stock() -> obj_stock_flush_required()
->         if (stock->cached_objcg) {
-> 
-> This check sees a non-NULL pointer for *another* CPU's `memcg_stock`
-> instance.
-> 
-> 2) Second CPU:
->   css_free_rwork_fn() -> __mem_cgroup_free() -> free_percpu() ->
-> obj_cgroup_uncharge() -> drain_obj_stock()
-> It frees `cached_objcg` pointer in its own `memcg_stock` instance:
->         struct obj_cgroup *old = stock->cached_objcg;
->         < ... >
->         obj_cgroup_put(old);
->         stock->cached_objcg = NULL;
-> 
-> 3) First CPU continues after the 'if' check and re-reads the pointer
-> again, now it is NULL and dereferencing it leads to kernel panic:
-> static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
->                                      struct mem_cgroup *root_memcg)
-> {
-> < ... >
->         if (stock->cached_objcg) {
->                 memcg = obj_cgroup_memcg(stock->cached_objcg);
+On 6/8/22 12:57, Michal Koutn=C3=BD wrote:
+> @@ -2011,9 +2092,16 @@ void blk_cgroup_bio_start(struct bio *bio)
+>>   	}
+>>   	bis->cur.ios[rwd]++;
+>>  =20
+>> +	if (!READ_ONCE(bis->lnode.next)) {
+>> +		struct llist_head *lhead =3D per_cpu_ptr(blkcg->lhead, cpu);
+>> +
+>> +		llist_add(&bis->lnode, lhead);
+>> +		percpu_ref_get(&bis->blkg->refcnt);
+>> +	}
+>> +
+> When a blkg's cgroup is rmdir'd, what happens with the lhead list?
+> We have cgroup_rstat_exit() in css_free_rwork_fn() that ultimately flushe=
+s rstats.
+> init_and_link_css however adds reference form blkcg->css to cgroup->css.
+> The blkcg->css would be (transitively) pinned by the lhead list and
+> hence would prevent the final flush (when refs drop to zero). Seems like
+> a cyclic dependency.
 
-Great catch!
+That is not true. The percpu lhead list is embedded in blkcg but it does=20
+not pin blkcg. What the code does is to pin the blkg from being freed=20
+while it is on the lockless list. I do need to move the percpu_ref_put()=20
+in blkcg_rstat_flush() later to avoid use-after-free though.
 
-I'm not sure about switching to rcu primitives though. In all other cases
-stock->cached_objcg is accessed only from a local cpu, so using rcu_*
-function is an overkill.
 
-How's something about this? (completely untested)
+>
+> Luckily, there's also per-subsys flushing in css_release which could be
+> moved after rmdir (offlining) but before last ref is gone:
+>
+> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> index adb820e98f24..d830e6a8fb3b 100644
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -5165,11 +5165,6 @@ static void css_release_work_fn(struct work_struct=
+ *work)
+>
+>          if (ss) {
+>                  /* css release path */
+> -               if (!list_empty(&css->rstat_css_node)) {
+> -                       cgroup_rstat_flush(cgrp);
+> -                       list_del_rcu(&css->rstat_css_node);
+> -               }
+> -
+>                  cgroup_idr_replace(&ss->css_idr, NULL, css->id);
+>                  if (ss->css_released)
+>                          ss->css_released(css);
+> @@ -5279,6 +5274,11 @@ static void offline_css(struct cgroup_subsys_state=
+ *css)
+>          css->flags &=3D ~CSS_ONLINE;
+>          RCU_INIT_POINTER(css->cgroup->subsys[ss->id], NULL);
+>
+> +       if (!list_empty(&css->rstat_css_node)) {
+> +               cgroup_rstat_flush(css->cgrp);
+> +               list_del_rcu(&css->rstat_css_node);
+> +       }
+> +
+>          wake_up_all(&css->cgroup->offline_waitq);
+>   }
+>
+> (not tested)
 
-Also, please add
-Fixes: bf4f059954dc ("mm: memcg/slab: obj_cgroup API")
+I don't think that code is necessary. Anyway, I am planning go make a=20
+parallel set of helpers for a lockless list with sentinel variant as=20
+suggested.
 
-Thank you!
+Thanks,
+Longman
+
