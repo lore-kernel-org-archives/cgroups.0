@@ -1,48 +1,56 @@
-From: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Subject: Re: [PATCH] memcg: calling reclaim_high(GFP_KERNEL) in GFP_NOFS
- context deadlocks
-Date: Sat, 1 Oct 2022 08:08:34 +1000
-Message-ID: <20220930220834.GK3600936@dread.disaster.area>
-References: <20220929215440.1967887-1-david@fromorbit.com>
- <20220929222006.GI3600936@dread.disaster.area>
- <YzbesGeUkX3qwqj8@blackbook>
+From: Namhyung Kim <namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] perf stat: Support old kernels for bperf cgroup counting
+Date: Fri, 30 Sep 2022 15:11:02 -0700
+Message-ID: <CAM9d7ci4mvc1rsMyRbwH-i2=8XVsEAvkk5JXLMHmbV4nkbBYhQ@mail.gmail.com>
+References: <CAM9d7cjQ20a01YoZi=o-_7HT6TzR0TZgtpscKNvRrMq2yqV1Og@mail.gmail.com>
+ <20220922041435.709119-1-namhyung@kernel.org> <YzdjHenrJpooKMjv@krava>
+ <CAM9d7cjKaZvWQUwGwoTLNzAgHS7ndL_V_5+O+WqMUvuHJ7cWNg@mail.gmail.com> <88915C51-33CD-49A4-A9E0-F5F5ECDEA0C7@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <YzbesGeUkX3qwqj8@blackbook>
+In-Reply-To: <88915C51-33CD-49A4-A9E0-F5F5ECDEA0C7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Arnaldo Carvalho de Melo <arnaldo.melo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Jiri Olsa <olsajiri-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-perf-users <linux-perf-users-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Sep 30, 2022 at 02:18:56PM +0200, Michal Koutn=FD wrote:
-> On Fri, Sep 30, 2022 at 08:20:06AM +1000, Dave Chinner <david-FqsqvQoI3Lj=
-by3iVrkZq2A@public.gmane.org> wrote:
-> > Fixes: b3ff92916af3 ("mm, memcg: reclaim more aggressively before high =
-allocator throttling")
->=20
-> Perhaps you meant this instead?
->=20
-> Fixes: c9afe31ec443 ("memcg: synchronously enforce memory.high for large =
-overcharges")
+On Fri, Sep 30, 2022 at 3:00 PM Arnaldo Carvalho de Melo
+<arnaldo.melo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>
+>
+>
+> On September 30, 2022 6:56:40 PM GMT-03:00, Namhyung Kim <namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> >Hi Jiri,
+> >
+> >On Fri, Sep 30, 2022 at 2:44 PM Jiri Olsa <olsajiri-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> >>
+> >> On Wed, Sep 21, 2022 at 09:14:35PM -0700, Namhyung Kim wrote:
+> >> > The recent change in the cgroup will break the backward compatiblity in
+> >> > the BPF program.  It should support both old and new kernels using BPF
+> >> > CO-RE technique.
+> >> >
+> >> > Like the task_struct->__state handling in the offcpu analysis, we can
+> >> > check the field name in the cgroup struct.
+> >> >
+> >> > Signed-off-by: Namhyung Kim <namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> >> > ---
+> >> > Arnaldo, I think this should go through the cgroup tree since it depends
+> >> > on the earlier change there.  I don't think it'd conflict with other
+> >> > perf changes but please let me know if you see any trouble, thanks!
+> >>
+> >> could you please paste the cgroup tree link?
+> >
+> >Do you mean this?
+> >
+> >  https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
+> >
+>
+>
+> Which branch and cset in that tree does you perf skel depends on?
 
-You might be right in that c9afe31ec443 exposed the issue, but it's
-not the root cause. I think c9afe31ec443 just a case of a
-new caller of mem_cgroup_handle_over_high() stepping on the landmine
-left by b3ff92916af3 adding an unconditional GFP_KERNEL direct
-reclaim deep in the guts of the memcg code.
+I believe it's for-6.1 and the cset is in
 
-IOWs, if b3ff92916af3 did things the right way to begin with, then
-c9afe31ec443 would not have caused any problems. So what's the real
-root cause of the issue - the commit that stepped on the landmine,
-or the commit that placed the landmine?
+  https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/commit/?h=for-6.1&id=7f203bc89eb66d6afde7eae91347fc0352090cc3
 
-Either way, if anyone backports b3ff92916af3 or has a kernel with
-b3ff92916af3 and not c9afe31ec443, they still need to know
-about the landmine in b3ff92916af3....
-
--Dave.
---=20
-Dave Chinner
-david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org
+Thanks,
+Namhyung
