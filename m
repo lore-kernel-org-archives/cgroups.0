@@ -1,107 +1,38 @@
-From: Jiri Olsa <olsajiri-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] perf stat: Support old kernels for bperf cgroup counting
-Date: Sat, 1 Oct 2022 15:58:59 +0200
-Message-ID: <YzhHo0dJEijtGNzZ@krava>
-References: <CAM9d7cjQ20a01YoZi=o-_7HT6TzR0TZgtpscKNvRrMq2yqV1Og@mail.gmail.com>
- <20220922041435.709119-1-namhyung@kernel.org>
+From: Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: use mem_cgroup_is_root() helper
+Date: Sun, 2 Oct 2022 11:45:19 +0800
+Message-ID: <828C4B5A-7114-47AF-BA99-0920EA41C753@linux.dev>
+References: <20220930134433.338103-1-kamalesh.babulal@oracle.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:date:from:from:to:cc:subject:date;
-        bh=xKd9xq6bw6qI68iHTU/hjvH8L0x2YGL0QK3AOdmJ3AI=;
-        b=lQF7IjxlRwt8FCZrwdnNizwSyswVpRaFHzxeLlh9sqhbZN7tDEchQ+QpZrBuXdrip9
-         dEb/rkpsJqag+OpBTA7Dhpq8eKm+cj16lssEcdR7hP6UiQJ9oRugsuX9AtiAuG4owPm6
-         USCCsprutvxGospLpucVtUelHBFSpkLS9w8uOEhr6sIlMskxXbbvZhqzVtl7UlE7x3bL
-         0jErns0AnizLnCtCvOpuz8t9rU+Lck+R8OLTHOi4npl/932rJARoDBbTsg7qMiLcEipt
-         1RwD1+IFuDCDa3Gj1QJrRnJR/AFs3lH6lhYLYPzDWUvi4SHgHf3v3CT59ZdxJjHl1aAw
-         AbSg==
-Content-Disposition: inline
-In-Reply-To: <20220922041435.709119-1-namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1664682325;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=vc7/td9WozM5pVmB5K7uQM4nbJeJhzcm1HJ4XY9GakU=;
+        b=lKPtg3cGoFY9Kpcu070SXiUX1GJwQaYBbfJzBQ4ZE15SZIv0jkZr0kPwUqy0BUAUPg//h5
+        T9oOOROm3XM4Qi52/Z9EfdLCEUlWdP/UklihlzZf6I4ieJ2Y8BgEnxvNOnEHcyAiN5DTTA
+        lEN6x8V2zTvhdvOaWB9XSVVAGJaJzTs=
+In-Reply-To: <20220930134433.338103-1-kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Namhyung Kim <namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Arnaldo Carvalho de Melo <acme-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-perf-users-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tom Hromatka <tom.hromatka-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Sep 21, 2022 at 09:14:35PM -0700, Namhyung Kim wrote:
-> The recent change in the cgroup will break the backward compatiblity in
-> the BPF program.  It should support both old and new kernels using BPF
-> CO-RE technique.
-> 
-> Like the task_struct->__state handling in the offcpu analysis, we can
-> check the field name in the cgroup struct.
-> 
-> Signed-off-by: Namhyung Kim <namhyung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-lgtm
 
-Acked-by: Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> On Sep 30, 2022, at 21:44, Kamalesh Babulal =
+<kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> wrote:
+>=20
+> Replace the checks for memcg is root memcg, with mem_cgroup_is_root()
+> helper.
+>=20
+> Signed-off-by: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-jirka
+Reviewed-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-> ---
-> Arnaldo, I think this should go through the cgroup tree since it depends
-> on the earlier change there.  I don't think it'd conflict with other
-> perf changes but please let me know if you see any trouble, thanks!
-> 
->  tools/perf/util/bpf_skel/bperf_cgroup.bpf.c | 29 ++++++++++++++++++++-
->  1 file changed, 28 insertions(+), 1 deletion(-)
-> 
-> diff --git a/tools/perf/util/bpf_skel/bperf_cgroup.bpf.c b/tools/perf/util/bpf_skel/bperf_cgroup.bpf.c
-> index 488bd398f01d..4fe61043de04 100644
-> --- a/tools/perf/util/bpf_skel/bperf_cgroup.bpf.c
-> +++ b/tools/perf/util/bpf_skel/bperf_cgroup.bpf.c
-> @@ -43,12 +43,39 @@ struct {
->  	__uint(value_size, sizeof(struct bpf_perf_event_value));
->  } cgrp_readings SEC(".maps");
->  
-> +/* new kernel cgroup definition */
-> +struct cgroup___new {
-> +	int level;
-> +	struct cgroup *ancestors[];
-> +} __attribute__((preserve_access_index));
-> +
-> +/* old kernel cgroup definition */
-> +struct cgroup___old {
-> +	int level;
-> +	u64 ancestor_ids[];
-> +} __attribute__((preserve_access_index));
-> +
->  const volatile __u32 num_events = 1;
->  const volatile __u32 num_cpus = 1;
->  
->  int enabled = 0;
->  int use_cgroup_v2 = 0;
->  
-> +static inline __u64 get_cgroup_v1_ancestor_id(struct cgroup *cgrp, int level)
-> +{
-> +	/* recast pointer to capture new type for compiler */
-> +	struct cgroup___new *cgrp_new = (void *)cgrp;
-> +
-> +	if (bpf_core_field_exists(cgrp_new->ancestors)) {
-> +		return BPF_CORE_READ(cgrp_new, ancestors[level], kn, id);
-> +	} else {
-> +		/* recast pointer to capture old type for compiler */
-> +		struct cgroup___old *cgrp_old = (void *)cgrp;
-> +
-> +		return BPF_CORE_READ(cgrp_old, ancestor_ids[level]);
-> +	}
-> +}
-> +
->  static inline int get_cgroup_v1_idx(__u32 *cgrps, int size)
->  {
->  	struct task_struct *p = (void *)bpf_get_current_task();
-> @@ -70,7 +97,7 @@ static inline int get_cgroup_v1_idx(__u32 *cgrps, int size)
->  			break;
->  
->  		// convert cgroup-id to a map index
-> -		cgrp_id = BPF_CORE_READ(cgrp, ancestors[i], kn, id);
-> +		cgrp_id = get_cgroup_v1_ancestor_id(cgrp, i);
->  		elem = bpf_map_lookup_elem(&cgrp_idx, &cgrp_id);
->  		if (!elem)
->  			continue;
-> -- 
-> 2.37.3.968.ga6b4b080e4-goog
-> 
+Thanks.
+
