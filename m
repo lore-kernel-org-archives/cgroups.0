@@ -1,76 +1,138 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: Possible race in obj_stock_flush_required() vs drain_obj_stock()
-Date: Sun, 2 Oct 2022 09:16:50 -0700
-Message-ID: <Yzm5cukBe6IfyAs7@P9FQF9L96D.lan>
-References: <1664546131660.1777662787.1655319815@gmail.com>
- <Yzc0yZwDB8GG+4t7@P9FQF9L96D.corp.robot.car>
- <b91e75f4-b09c-85aa-c6ad-2364dab9af92@gmail.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: use mem_cgroup_is_root() helper
+Date: Mon, 3 Oct 2022 09:58:31 +0200
+Message-ID: <YzqWJ8D1rabeZ6TL@dhcp22.suse.cz>
+References: <20220930134433.338103-1-kamalesh.babulal@oracle.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1664727415;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1664783912; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=0nWc8MunwJqD9KPrKGnLf0JLwwF80l+3rGQtQR1k1PY=;
-        b=Lyp+X/s8OqKJKuTIQTX8DMlSg4GRJZi9mxdh9lNhazDQEJafn4I+NEUkPaMVKQROjW8jQO
-        E1+vpn71+zP2lxW8Hun8+foAsB2/MD50vrWPHXfMiBIV0s6BIjURXDE9XMgMw/fvt7Unu3
-        lwwcAn9mHtZtvVE9xgAefgJKiFyTTO8=
+        bh=M0W/orMGDszrbG870Kbie6WQX0dTaRilbBx3yXyCdt4=;
+        b=Pgv831AuqqOIVIh9rq+eja+PfJIma+3j0scQ+PU2C6+NX1x14TZyq7XkUeyPPE/3gbZYzd
+        Gr7nHR7zc9ee1GCSyQPQPsTJ8psik1Go2p01at/LtN1+xxojKLHmnvGJgPTqVF6UcZ41H8
+        rPgQZmpeMSgzTdug5xwK6qIiFSyizbU=
 Content-Disposition: inline
-In-Reply-To: <b91e75f4-b09c-85aa-c6ad-2364dab9af92-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <20220930134433.338103-1-kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alexander Fedorov <halcien-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tom Hromatka <tom.hromatka-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat, Oct 01, 2022 at 03:38:43PM +0300, Alexander Fedorov wrote:
-> On 30.09.2022 21:26, Roman Gushchin wrote:
-> > On Fri, Sep 30, 2022 at 02:06:48PM +0000, Alexander Fedorov wrote:
-> >> 1) First CPU:
-> >>    css_killed_work_fn() -> mem_cgroup_css_offline() ->
-> >> drain_all_stock() -> obj_stock_flush_required()
-> >>         if (stock->cached_objcg) {
-> >>
-> >> This check sees a non-NULL pointer for *another* CPU's `memcg_stock`
-> >> instance.
-> >>
-> >> 2) Second CPU:
-> >>   css_free_rwork_fn() -> __mem_cgroup_free() -> free_percpu() ->
-> >> obj_cgroup_uncharge() -> drain_obj_stock()
-> >> It frees `cached_objcg` pointer in its own `memcg_stock` instance:
-> >>         struct obj_cgroup *old = stock->cached_objcg;
-> >>         < ... >
-> >>         obj_cgroup_put(old);
-> >>         stock->cached_objcg = NULL;
-> >>
-> >> 3) First CPU continues after the 'if' check and re-reads the pointer
-> >> again, now it is NULL and dereferencing it leads to kernel panic:
-> >> static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
-> >>                                      struct mem_cgroup *root_memcg)
-> >> {
-> >> < ... >
-> >>         if (stock->cached_objcg) {
-> >>                 memcg = obj_cgroup_memcg(stock->cached_objcg);
-> > 
-> > Great catch!
-> > 
-> > I'm not sure about switching to rcu primitives though. In all other cases
-> > stock->cached_objcg is accessed only from a local cpu, so using rcu_*
-> > function is an overkill.
-> > 
-> > How's something about this? (completely untested)
+On Fri 30-09-22 19:14:33, Kamalesh Babulal wrote:
+> Replace the checks for memcg is root memcg, with mem_cgroup_is_root()
+> helper.
 > 
-> Tested READ_ONCE() patch and it works.
+> Signed-off-by: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-Thank you!
-
-> But are rcu primitives an overkill?
-> For me they are documenting how actually complex is synchronization here.
-
-I agree, however rcu primitives will add unnecessary barriers on hot paths.
-In this particular case most accesses to stock->cached_objcg are done from
-a local cpu, so no rcu primitives are needed. So in my opinion using a
-READ_ONCE() is preferred.
-
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 Thanks!
+
+> ---
+>  mm/memcontrol.c | 20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index b69979c9ced5..99b3d0cbd426 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1148,7 +1148,7 @@ static void invalidate_reclaim_iterators(struct mem_cgroup *dead_memcg)
+>  	 * cgroup root (root_mem_cgroup). So we have to handle
+>  	 * dead_memcg from cgroup root separately.
+>  	 */
+> -	if (last != root_mem_cgroup)
+> +	if (!mem_cgroup_is_root(last))
+>  		__invalidate_reclaim_iterators(root_mem_cgroup,
+>  						dead_memcg);
+>  }
+> @@ -1172,7 +1172,7 @@ int mem_cgroup_scan_tasks(struct mem_cgroup *memcg,
+>  	struct mem_cgroup *iter;
+>  	int ret = 0;
+>  
+> -	BUG_ON(memcg == root_mem_cgroup);
+> +	BUG_ON(mem_cgroup_is_root(memcg));
+>  
+>  	for_each_mem_cgroup_tree(iter, memcg) {
+>  		struct css_task_iter it;
+> @@ -1201,7 +1201,7 @@ void lruvec_memcg_debug(struct lruvec *lruvec, struct folio *folio)
+>  	memcg = folio_memcg(folio);
+>  
+>  	if (!memcg)
+> -		VM_BUG_ON_FOLIO(lruvec_memcg(lruvec) != root_mem_cgroup, folio);
+> +		VM_BUG_ON_FOLIO(!mem_cgroup_is_root(lruvec_memcg(lruvec)), folio);
+>  	else
+>  		VM_BUG_ON_FOLIO(lruvec_memcg(lruvec) != memcg, folio);
+>  }
+> @@ -1982,7 +1982,7 @@ struct mem_cgroup *mem_cgroup_get_oom_group(struct task_struct *victim,
+>  	rcu_read_lock();
+>  
+>  	memcg = mem_cgroup_from_task(victim);
+> -	if (memcg == root_mem_cgroup)
+> +	if (mem_cgroup_is_root(memcg))
+>  		goto out;
+>  
+>  	/*
+> @@ -2940,7 +2940,7 @@ static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
+>  {
+>  	struct obj_cgroup *objcg = NULL;
+>  
+> -	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg)) {
+> +	for (; !mem_cgroup_is_root(memcg); memcg = parent_mem_cgroup(memcg)) {
+>  		objcg = rcu_dereference(memcg->objcg);
+>  		if (objcg && obj_cgroup_tryget(objcg))
+>  			break;
+> @@ -7073,7 +7073,7 @@ void mem_cgroup_sk_alloc(struct sock *sk)
+>  
+>  	rcu_read_lock();
+>  	memcg = mem_cgroup_from_task(current);
+> -	if (memcg == root_mem_cgroup)
+> +	if (mem_cgroup_is_root(memcg))
+>  		goto out;
+>  	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && !memcg->tcpmem_active)
+>  		goto out;
+> @@ -7208,7 +7208,7 @@ static struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg)
+>  		 * The root cgroup cannot be destroyed, so it's refcount must
+>  		 * always be >= 1.
+>  		 */
+> -		if (WARN_ON_ONCE(memcg == root_mem_cgroup)) {
+> +		if (WARN_ON_ONCE(mem_cgroup_is_root(memcg))) {
+>  			VM_BUG_ON(1);
+>  			break;
+>  		}
+> @@ -7369,7 +7369,7 @@ long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
+>  
+>  	if (cgroup_memory_noswap || !cgroup_subsys_on_dfl(memory_cgrp_subsys))
+>  		return nr_swap_pages;
+> -	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg))
+> +	for (; !mem_cgroup_is_root(memcg); memcg = parent_mem_cgroup(memcg))
+>  		nr_swap_pages = min_t(long, nr_swap_pages,
+>  				      READ_ONCE(memcg->swap.max) -
+>  				      page_counter_read(&memcg->swap));
+> @@ -7391,7 +7391,7 @@ bool mem_cgroup_swap_full(struct page *page)
+>  	if (!memcg)
+>  		return false;
+>  
+> -	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg)) {
+> +	for (; !mem_cgroup_is_root(memcg); memcg = parent_mem_cgroup(memcg)) {
+>  		unsigned long usage = page_counter_read(&memcg->swap);
+>  
+>  		if (usage * 2 >= READ_ONCE(memcg->swap.high) ||
+> @@ -7556,7 +7556,7 @@ bool obj_cgroup_may_zswap(struct obj_cgroup *objcg)
+>  		return true;
+>  
+>  	original_memcg = get_mem_cgroup_from_objcg(objcg);
+> -	for (memcg = original_memcg; memcg != root_mem_cgroup;
+> +	for (memcg = original_memcg; !mem_cgroup_is_root(memcg);
+>  	     memcg = parent_mem_cgroup(memcg)) {
+>  		unsigned long max = READ_ONCE(memcg->zswap_max);
+>  		unsigned long pages;
+> 
+> base-commit: 987a926c1d8a40e4256953b04771fbdb63bc7938
+> -- 
+> 2.34.3
+
+-- 
+Michal Hocko
+SUSE Labs
