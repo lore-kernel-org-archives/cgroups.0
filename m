@@ -1,50 +1,107 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v7 1/3] llist: Add a lock-less list variant terminated by
- a sentinel node
-Date: Mon, 3 Oct 2022 10:15:24 -1000
-Message-ID: <YztC3BVzOiwOKZij@slm.duckdns.org>
-References: <20221003154459.207538-1-longman@redhat.com>
- <20221003154459.207538-2-longman@redhat.com>
- <YzsQZPONIJRgtf3o@slm.duckdns.org>
- <006ebc52-ab37-442a-9ba3-e7b8dff53fab@redhat.com>
- <YzsUgY4CC0SH8Sl2@slm.duckdns.org>
- <8008933b-4a28-19e5-02db-ef1d07eaf952@redhat.com>
- <YzsdsjlMMDFwLOzR@slm.duckdns.org>
- <87e7cd70-4ab6-f33b-ce26-afe2c7c04faa@redhat.com>
- <67f5d0af-dbfa-291a-a596-c90860b94455@redhat.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:test-merge-for-6.1] BUILD SUCCESS
+ 99996071fa0f2cbf22697f6e82014ecb15a53b2a
+Date: Tue, 04 Oct 2022 15:19:09 +0800
+Message-ID: <633bde6d.XLJnwp9n9pOAEuvu%lkp@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date;
-        bh=C3/N9hbhwupuGmO0AntkXcuTr5FrNGR8ZHngrdZEthU=;
-        b=qRoStCLUpxzw2alYY4nRjwbDniVOp8r0swaVcfpwPdIZNnoFCQ4yfr/+ZSZ1CDeYOs
-         z7pb17R3TjBSqJwf5r/yas2oc5Tg5YIcxLhgMAwL8Az8k0PEcg4mVmeiQR3jyRy/AwhO
-         +YWF/uUicBgF61WQTFHS1YOx12fHVeKIowPbeQbx+MpvPCBiAd7NAmJcvPGKX+vzyvEP
-         lWgbCkExvoG93U49AtvbMOPRVbxtS/ejd3i3tR9o+A3EQBbztZuuvQWE+mjLFEkO272e
-         kMxiNlbpxEbPFy58aiweYJFXjJVHhv1oRFonnxwCQWQ5+4UX9EozgbNg3PmZUJENB6nM
-         TukA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <67f5d0af-dbfa-291a-a596-c90860b94455-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1664867970; x=1696403970;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Dua2vkeJXhGD2pJC42kY/gAtbX8tYNywuN+EFBVnfbs=;
+  b=jgIKnvarQYglAFh8SumrHxja2WGUxGf0nqcUp7lXXeDLrpl8J0edaCx1
+   yAeABAVjydNeJgaEbYpy3Y7GLw5mMqkVGUXlMMkHPafMcX0KnDwNIpy3F
+   ojmc5GYL0XJafZe+rlAd5JtQVFP32iV3i866mdm38Ct7VGefPNYrnqyWy
+   f7GAEBi81+GyYbQkWCUjuVwUmgmkCipuBo+4idic+DGVJ1wzl/TWGmN/c
+   t9WZC02uU6k0Tj2mt5nP+5UoKM4+LfvcjkLIihk2J72AF28cigyQQSygM
+   dzkQH2t3FTeEJrkjD2pRhKHV691/NxdotwinN0z74wMVB5W2fJCxA6Vt3
+   Q==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git test-merge-for-6.1
+branch HEAD: 99996071fa0f2cbf22697f6e82014ecb15a53b2a  Merge branch 'for-6.1' into test-merge-for-6.1
 
-On Mon, Oct 03, 2022 at 03:39:02PM -0400, Waiman Long wrote:
-> There are 123 instances where llist_head is referenced in arch, driver,
-> filesystem and kernel code. Going through all these to make sure that it
-> will all work will be a major effort. I think it will be safer to allow both
-> NULL and the sentinel node as the initializers and gradually convert them to
-> use the proper llist APIs over time to complete the conversion. I am sorry
-> that I can't spend that much time upfront for this conversion effort.
+elapsed time: 743m
 
-I see. Oh well, thanks for taking a look.
+configs tested: 63
+configs skipped: 2
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+um                             i386_defconfig
+um                           x86_64_defconfig
+arc                                 defconfig
+s390                             allmodconfig
+x86_64                           rhel-8.3-syz
+alpha                               defconfig
+x86_64                         rhel-8.3-kunit
+x86_64                           rhel-8.3-kvm
+s390                                defconfig
+riscv                randconfig-r042-20221003
+s390                             allyesconfig
+arc                  randconfig-r043-20221003
+s390                 randconfig-r044-20221003
+powerpc                           allnoconfig
+mips                             allyesconfig
+powerpc                          allmodconfig
+x86_64                              defconfig
+x86_64                               rhel-8.3
+sh                               allmodconfig
+x86_64                           allyesconfig
+x86_64                          rhel-8.3-func
+i386                 randconfig-a015-20221003
+x86_64                    rhel-8.3-kselftests
+arm                                 defconfig
+i386                 randconfig-a016-20221003
+m68k                             allmodconfig
+i386                                defconfig
+i386                 randconfig-a014-20221003
+i386                 randconfig-a011-20221003
+arc                              allyesconfig
+i386                 randconfig-a012-20221003
+i386                 randconfig-a013-20221003
+alpha                            allyesconfig
+m68k                             allyesconfig
+arm64                            allyesconfig
+arm                              allyesconfig
+i386                             allyesconfig
+x86_64               randconfig-a011-20221003
+x86_64               randconfig-a012-20221003
+x86_64               randconfig-a013-20221003
+x86_64               randconfig-a015-20221003
+x86_64               randconfig-a014-20221003
+x86_64               randconfig-a016-20221003
+arc                  randconfig-r043-20221002
+ia64                             allmodconfig
+
+clang tested configs:
+hexagon              randconfig-r045-20221003
+hexagon              randconfig-r041-20221003
+i386                 randconfig-a003-20221003
+i386                 randconfig-a002-20221003
+i386                 randconfig-a001-20221003
+i386                 randconfig-a004-20221003
+i386                 randconfig-a005-20221003
+i386                 randconfig-a006-20221003
+x86_64               randconfig-a003-20221003
+x86_64               randconfig-a002-20221003
+x86_64               randconfig-a001-20221003
+x86_64               randconfig-a004-20221003
+x86_64               randconfig-a005-20221003
+x86_64               randconfig-a006-20221003
+hexagon              randconfig-r041-20221002
+hexagon              randconfig-r045-20221002
+riscv                randconfig-r042-20221002
+s390                 randconfig-r044-20221002
 
 -- 
-tejun
+0-DAY CI Kernel Test Service
+https://01.org/lkp
