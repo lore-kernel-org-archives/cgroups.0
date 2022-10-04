@@ -1,84 +1,89 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v8 2/3] blk-cgroup: Return -ENOMEM directly in blkcg_css_alloc() error path
-Date: Tue,  4 Oct 2022 11:17:47 -0400
-Message-ID: <20221004151748.293388-3-longman@redhat.com>
-References: <20221004151748.293388-1-longman@redhat.com>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: Possible race in obj_stock_flush_required() vs drain_obj_stock()
+Date: Tue, 4 Oct 2022 09:18:26 -0700
+Message-ID: <Yzxc0jzOnAu667F8@P9FQF9L96D.lan>
+References: <1664546131660.1777662787.1655319815@gmail.com>
+ <Yzc0yZwDB8GG+4t7@P9FQF9L96D.corp.robot.car>
+ <b91e75f4-b09c-85aa-c6ad-2364dab9af92@gmail.com>
+ <Yzm5cukBe6IfyAs7@P9FQF9L96D.lan>
+ <d3cf9c69-19a1-53f9-cf97-5d40ce5cda44@gmail.com>
+ <YzrkaKZKYqx+c325@dhcp22.suse.cz>
+ <821923d8-17c3-f1c2-4d6a-5653c88db3e8@gmail.com>
+ <YzrxNGpf7sSwSWy2@dhcp22.suse.cz>
+ <2f9bdffd-062e-a364-90c4-da7f09c95619@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1664896690;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1664900326;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=FkptcB12HL5wUxg8krwHfAYvchewTp4XjnIeno+kUJ0=;
-        b=FpgO2FAHf02cGT8F8XvVl4SfpxHuyb4u2bB4FjO+vxHmtW5/YfwBVn7t/gj3QHbnOut+GS
-        xfO/5i87eZ4VrMgFhzgmx1nHOteh80YlQBSY6PAbRBBVFSz0P44VLrya5H7OxZzhs2MTvf
-        +0ID9cmWwE7g9IzePfnPjVesJgp6s2Q=
-In-Reply-To: <20221004151748.293388-1-longman@redhat.com>
+        bh=ZUComksE3kcEt46sxXrKqcpfs6gx5hGj/h6rV5lmqcA=;
+        b=sMO7vktZT5MGx84xs2oOUmu8oUi89tdQnMxkIFjywwl4y39OEIc2bizLFqfa+JS6ri6azL
+        Puy0FUqzIvk0/3dyPuJS4UoaxKZk12X/YFishkxYpBUyyi2TlsCqf3i3rXFq8BZhbPfgA+
+        IgKU+H2s3Qlcq0X/zgTyfbpEgtEQMgw=
+Content-Disposition: inline
+In-Reply-To: <2f9bdffd-062e-a364-90c4-da7f09c95619-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Waiman Long <longman@redhat.com>
+Content-Transfer-Encoding: 7bit
+To: Alexander Fedorov <halcien-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-For blkcg_css_alloc(), the only error that will be returned is -ENOMEM.
-Simplify error handling code by returning this error directly instead
-of setting an intermediate "ret" variable.
+On Mon, Oct 03, 2022 at 06:01:35PM +0300, Alexander Fedorov wrote:
+> On 03.10.2022 17:27, Michal Hocko wrote:
+> > On Mon 03-10-22 17:09:15, Alexander Fedorov wrote:
+> >> On 03.10.2022 16:32, Michal Hocko wrote:
+> >>> On Mon 03-10-22 15:47:10, Alexander Fedorov wrote:
+> >>>> @@ -3197,17 +3197,30 @@ static void drain_obj_stock(struct memcg_stock_pcp *stock)
+> >>>>  		stock->nr_bytes = 0;
+> >>>>  	}
+> >>>>  
+> >>>> -	obj_cgroup_put(old);
+> >>>> +	/*
+> >>>> +	 * Clear pointer before freeing memory so that
+> >>>> +	 * drain_all_stock() -> obj_stock_flush_required()
+> >>>> +	 * does not see a freed pointer.
+> >>>> +	 */
+> >>>>  	stock->cached_objcg = NULL;
+> >>>> +	obj_cgroup_put(old);
+> >>>
+> >>> Do we need barrier() or something else to ensure there is no reordering?
+> >>> I am not reallyu sure what kind of barriers are implied by the pcp ref
+> >>> counting.
+> >>
+> >> obj_cgroup_put() -> kfree_rcu() -> synchronize_rcu() should take care
+> >> of this:
+> > 
+> > This is a very subtle guarantee. Also it would only apply if this is the
+> > last reference, right?
+> 
+> Hmm, yes, for the last reference only, also not sure about pcp ref
+> counter ordering rules for previous references.
+> 
+> > Is there any reason to not use
+> > 	WRITE_ONCE(stock->cached_objcg, NULL);
+> > 	obj_cgroup_put(old);
+> > 
+> > IIRC this should prevent any reordering. 
+> 
+> Now that I think about it we actually must use WRITE_ONCE everywhere
+> when writing cached_objcg because otherwise compiler might split the
+> pointer-sized store into several smaller-sized ones (store tearing),
+> and obj_stock_flush_required() would read garbage instead of pointer.
+>
+> And thinking about memory barriers, maybe we need them too alongside
+> WRITE_ONCE when setting pointer to non-null value?  Otherwise
+> drain_all_stock() -> obj_stock_flush_required() might read old data.
+> Since that's exactly what rcu_assign_pointer() does, it seems
+> that we are going back to using rcu_*() primitives everywhere?
 
-Signed-off-by: Waiman Long <longman@redhat.com>
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
-Acked-by: Tejun Heo <tj@kernel.org>
----
- block/blk-cgroup.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+Hm, Idk, I'm still somewhat resistant to the idea of putting rcu primitives,
+but maybe it's the right thing. Maybe instead we should always schedule draining
+on all cpus instead and perform a cpu-local check and bail out if a flush is not
+required? Michal, Johannes, what do you think?
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 869af9d72bcf..946592249795 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1177,7 +1177,6 @@ static struct cgroup_subsys_state *
- blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- {
- 	struct blkcg *blkcg;
--	struct cgroup_subsys_state *ret;
- 	int i;
- 
- 	mutex_lock(&blkcg_pol_mutex);
-@@ -1186,10 +1185,8 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 		blkcg = &blkcg_root;
- 	} else {
- 		blkcg = kzalloc(sizeof(*blkcg), GFP_KERNEL);
--		if (!blkcg) {
--			ret = ERR_PTR(-ENOMEM);
-+		if (!blkcg)
- 			goto unlock;
--		}
- 	}
- 
- 	for (i = 0; i < BLKCG_MAX_POLS ; i++) {
-@@ -1206,10 +1203,9 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 			continue;
- 
- 		cpd = pol->cpd_alloc_fn(GFP_KERNEL);
--		if (!cpd) {
--			ret = ERR_PTR(-ENOMEM);
-+		if (!cpd)
- 			goto free_pd_blkcg;
--		}
-+
- 		blkcg->cpd[i] = cpd;
- 		cpd->blkcg = blkcg;
- 		cpd->plid = i;
-@@ -1238,7 +1234,7 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 		kfree(blkcg);
- unlock:
- 	mutex_unlock(&blkcg_pol_mutex);
--	return ret;
-+	return ERR_PTR(-ENOMEM);
- }
- 
- static int blkcg_css_online(struct cgroup_subsys_state *css)
--- 
-2.31.1
+Btw the same approach is used for the memcg part (stock->cached),
+so if we're going to change anything, we need to change it too.
 
+Thanks!
