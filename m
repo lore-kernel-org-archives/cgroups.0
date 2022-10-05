@@ -1,96 +1,148 @@
 From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC] memcg rstat flushing optimization
-Date: Wed, 5 Oct 2022 10:20:54 -0700
-Message-ID: <CAJD7tkawcrpmacguvyWVK952KtD-tP+wc2peHEjyMHesdM1o0Q@mail.gmail.com>
-References: <CAJD7tkZQ+L5N7FmuBAXcg_2Lgyky7m=fkkBaUChr7ufVMHss=A@mail.gmail.com>
- <Yz2xDq0jo1WZNblz@slm.duckdns.org>
+Subject: [PATCH v2] mm/vmscan: check references from all memcgs for swapbacked memory
+Date: Wed,  5 Oct 2022 17:37:13 +0000
+Message-ID: <20221005173713.1308832-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date;
-        bh=pSbHEWZPAlqGXv5FT+k2l6EJrddPS9d76u3iLY1UjMg=;
-        b=nVP2RDD+po/mEoQ18TDe3da6XMJYLJ3G/86Z+g1/BnYSydgCF/IHS5V3aRKLcx2zOf
-         hLdheL7NOkvibYxUvkWeMSiIoQorEvAvFsWt63HM3oqIt4LA3rE0H5PCoQuT0UgvESMm
-         ioMWWD0Pct6I5vhv/ENxTQdKMQHa6ebYj2f5cJcT9fi8WYkN6y4yWxZ5h8qTEAH36yJ4
-         46wV6mmCl3CN/1ysRRGXW/rOwntLOlIRHeLcKem8rd5Ht8i0Wwa/HCqI+y411/l7w+BQ
-         HVq3sEMXw1rkQPsNM7cGFjapzN8ABJeCJtjnDscNQlb1k1Pz2YENhe27h+LDmvXwgzk3
-         Rvow==
-In-Reply-To: <Yz2xDq0jo1WZNblz-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date;
+        bh=rlW8penUCTiIbLOsfrslJ/J/g+TenjXX9VkYuhroyUE=;
+        b=cre+57nEzmahI/Jg40WpCpvVTDra/Np6hwgfHPiHb9kvUAEW6v66vCHfRJHy69FvkT
+         kSZx/SqkG8Qpv8Hq2If8J6iuXxv/mc6j5C8Yoglkw1Ei7M4l2S0YQIltO+5M1vw3CkOc
+         6nlZ2fg7N4ebt+lgDXLPSBDhdUmChoewoKY66ezVqioZk/qfXiRg5Y2WgDulfrBlU7/2
+         27z2NsHcZ6oyTLUaEXcRfL5qfW8C7g0sATkpk9bURP0kN49QvJMqwD9Ym3G/rL+iUGpW
+         Le2W9Wf5i7EgN5mTB26OTqxUSYbfvjf6BpxPtRd14y0xdfXzkV3xQ1GOiOYTmEPwy0In
+         6Qaw==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-9"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Oct 5, 2022 at 9:30 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-> Hello,
->
-> On Tue, Oct 04, 2022 at 06:17:40PM -0700, Yosry Ahmed wrote:
-> > We have recently ran into a hard lockup on a machine with hundreds of
-> > CPUs and thousands of memcgs during an rstat flush. There have also
-> > been some discussions during LPC between myself, Michal Koutn=C3=BD, an=
-d
-> > Shakeel about memcg rstat flushing optimization. This email is a
-> > follow up on that, discussing possible ideas to optimize memcg rstat
-> > flushing.
-> >
-> > Currently, mem_cgroup_flush_stats() is the main interface to flush
-> > memcg stats. It has some internal optimizations that can skip a flush
-> > if there hasn't been significant updates in general. It always flushes
-> > the entire memcg hierarchy, and always invokes flushing using
-> > cgroup_rstat_flush_irqsafe(), which has interrupts disabled and does
-> > not sleep. As you can imagine, with a sufficiently large number of
-> > memcgs and cpus, a call to mem_cgroup_flush_stats() might be slow, or
-> > in an extreme case like the one we ran into, cause a hard lockup
-> > (despite periodically flushing every 4 seconds).
->
-> How long were the stalls? Given that rstats are usually flushed by its
+During page/folio reclaim, we check if a folio is referenced using
+folio_referenced() to avoid reclaiming folios that have been recently
+accessed (hot memory). The rationale is that this memory is likely to be
+accessed soon, and hence reclaiming it will cause a refault.
 
-I think 10 seconds while interrupts are disabled is what we need for a
-hard lockup, right?
+For memcg reclaim, we currently only check accesses to the folio from
+processes in the subtree of the target memcg. This behavior was
+originally introduced by commit bed7161a519a ("Memory controller: make
+page_referenced() cgroup aware") a long time ago. Back then, refaulted
+pages would get charged to the memcg of the process that was faulting them
+in. It made sense to only consider accesses coming from processes in the
+subtree of target_mem_cgroup. If a page was charged to memcg A but only
+being accessed by a sibling memcg B, we would reclaim it if memcg A is
+is the reclaim target. memcg B can then fault it back in and get charged
+for it appropriately.
 
-> consumers, flushing taking some time might be acceptable but what's reall=
-y
-> problematic is that the whole thing is done with irq disabled. We can thi=
-nk
-> about other optimizations later too but I think the first thing to do is
-> making the flush code able to pause and resume. ie. flush in batches and
-> re-enable irq / resched between batches. We'd have to pay attention to
-> guaranteeing forward progress. It'd be ideal if we can structure iteratio=
-n
-> in such a way that resuming doesn't end up nodes which got added after it
-> started flushing.
+Today, this behavior still makes sense for file pages. However, unlike
+file pages, when swapbacked pages are refaulted they are charged to the
+memcg that was originally charged for them during swapping out. Which
+means that if a swapbacked page is charged to memcg A but only used by
+memcg B, and we reclaim it from memcg A, it would simply be faulted back
+in and charged again to memcg A once memcg B accesses it. In that sense,
+accesses from all memcgs matter equally when considering if a swapbacked
+page/folio is a viable reclaim target.
 
-IIUC you mean that the caller of cgroup_rstat_flush() can call a
-different variant that only flushes a part of the rstat tree then
-returns, and the caller makes several calls interleaved by re-enabling
-irq, right? Because the flushing code seems to already do this
-internally if the non irqsafe version is used.
+Modify folio_referenced() to always consider accesses from all memcgs if
+the folio is swapbacked.
 
-I think this might be tricky. In this case the path that caused the
-lockup was memcg_check_events()->mem_cgroup_threshold()->__mem_cgroup_thres=
-hold()->mem_cgroup_usage()->mem_cgroup_flush_stats().
-Interrupts are disabled by callers of memcg_check_events(), but the
-rstat flush call is made much deeper in the call stack. Whoever is
-disabling interrupts doesn't have access to pause/resume flushing.
+Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
 
-There are also other code paths that used to use
-cgroup_rstat_flush_irqsafe() directly before mem_cgroup_flush_stats()
-was introduced like mem_cgroup_wb_stats() [1].
+v1 -> v2:
+- Move the folio_test_swapbacked() check inside folio_referenced()
+    (Johannes).
+- Slight rephrasing of the commit log and comment to make them
+  clearer.
+- Renamed memcg argument to folio_referenced() to target_memcg.
 
-This is why I suggested a selective flushing variant of
-cgroup_rstat_flush_irqsafe(), so that flushers that need irq disabled
-have the ability to only flush a subset of the stats to avoid long
-stalls if possible.
+---
+ include/linux/rmap.h |  2 +-
+ mm/rmap.c            | 35 +++++++++++++++++++++++++++--------
+ 2 files changed, 28 insertions(+), 9 deletions(-)
 
-[1] https://lore.kernel.org/lkml/20211001190040.48086-2-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org=
-/
+diff --git a/include/linux/rmap.h b/include/linux/rmap.h
+index ca3e4ba6c58c..8130586eb637 100644
+--- a/include/linux/rmap.h
++++ b/include/linux/rmap.h
+@@ -352,7 +352,7 @@ static inline int page_try_share_anon_rmap(struct page *page)
+  * Called from mm/vmscan.c to handle paging out
+  */
+ int folio_referenced(struct folio *, int is_locked,
+-			struct mem_cgroup *memcg, unsigned long *vm_flags);
++		     struct mem_cgroup *target_memcg, unsigned long *vm_flags);
+ 
+ void try_to_migrate(struct folio *folio, enum ttu_flags flags);
+ void try_to_unmap(struct folio *, enum ttu_flags flags);
+diff --git a/mm/rmap.c b/mm/rmap.c
+index b6743c2b8b5f..7c98d0ca7cc6 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -882,7 +882,7 @@ static bool invalid_folio_referenced_vma(struct vm_area_struct *vma, void *arg)
+  * folio_referenced() - Test if the folio was referenced.
+  * @folio: The folio to test.
+  * @is_locked: Caller holds lock on the folio.
+- * @memcg: target memory cgroup
++ * @target_memcg: target memory cgroup of reclaim.
+  * @vm_flags: A combination of all the vma->vm_flags which referenced the folio.
+  *
+  * Quick test_and_clear_referenced for all mappings of a folio,
+@@ -891,12 +891,12 @@ static bool invalid_folio_referenced_vma(struct vm_area_struct *vma, void *arg)
+  * the function bailed out due to rmap lock contention.
+  */
+ int folio_referenced(struct folio *folio, int is_locked,
+-		     struct mem_cgroup *memcg, unsigned long *vm_flags)
++		     struct mem_cgroup *target_memcg, unsigned long *vm_flags)
+ {
+ 	int we_locked = 0;
+ 	struct folio_referenced_arg pra = {
+ 		.mapcount = folio_mapcount(folio),
+-		.memcg = memcg,
++		.memcg = target_memcg,
+ 	};
+ 	struct rmap_walk_control rwc = {
+ 		.rmap_one = folio_referenced_one,
+@@ -919,13 +919,32 @@ int folio_referenced(struct folio *folio, int is_locked,
+ 	}
+ 
+ 	/*
+-	 * If we are reclaiming on behalf of a cgroup, skip
+-	 * counting on behalf of references from different
+-	 * cgroups
++	 * We check references to folios to make sure we don't reclaim hot
++	 * folios that are likely to be refaulted soon. If we are reclaiming
++	 * memory on behalf of a memcg, we may want to skip references from
++	 * processes outside the target memcg's subtree.
++	 *
++	 * For file folios, we only consider references from processes in the
++	 * subtree of the target memcg. If memcg A is under reclaim, and a
++	 * folio is charged to memcg A but only referenced by processes in
++	 * memcg B, we ignore references from memcg B and try to reclaim it.
++	 * If it is later accessed by memcg B it will be faulted back in and
++	 * charged appropriately to memcg B. For memcg A, this is cold memory
++	 * that should be reclaimed.
++	 *
++	 * On the other hand, when swapbacked folios are faulted in, they get
++	 * charged to the memcg that was originally charged for them at the time
++	 * of swapping out. This means that if a folio that is charged to
++	 * memcg A gets swapped out, it will get charged back to A when any
++	 * process in any memcg accesses it. In that sense, we need to consider
++	 * references from all memcgs when considering whether to reclaim a
++	 * swapbacked folio.
++	 *
++	 * Hence, only skip references from outside the target memcg (if any) if
++	 * the folio is not swapbacked.
+ 	 */
+-	if (memcg) {
++	if (target_memcg && !folio_test_swapbacked(folio))
+ 		rwc.invalid_vma = invalid_folio_referenced_vma;
+-	}
+ 
+ 	rmap_walk(folio, &rwc);
+ 	*vm_flags = pra.vm_flags;
+-- 
+2.38.0.rc1.362.ged0d419d3c-goog
 
->
-> Thanks.
->
-> --
-> tejun
