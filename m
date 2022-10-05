@@ -1,90 +1,62 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm/vmscan: check references from all memcgs for
- swapbacked memory
-Date: Wed, 5 Oct 2022 08:55:31 -0700
-Message-ID: <CAJD7tkYc2hTdOXedjfK60=Q=HAbHp6ch5cLH=C3GDakc6MdBmA@mail.gmail.com>
-References: <20221004233446.787056-1-yosryahmed@google.com>
- <Yz2O1dGeBGBTh6SM@cmpxchg.org> <CAJD7tkbMtHEN_1zGP=V1X4YGFCxEXv_j2Fqe8TFdOTy-ykiVUg@mail.gmail.com>
- <Yz2oAjIRZKKwe8tY@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC] memcg rstat flushing optimization
+Date: Wed, 5 Oct 2022 06:30:06 -1000
+Message-ID: <Yz2xDq0jo1WZNblz@slm.duckdns.org>
+References: <CAJD7tkZQ+L5N7FmuBAXcg_2Lgyky7m=fkkBaUChr7ufVMHss=A@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=7a/LoYvpCfoolYwQAKh6JCAxVB7pDgsUOT/7iK/WTWA=;
-        b=oatM/DuzZqdzxPdmhesMOJTCOHkKQGc14RUqIgdihrzrd6CfHIa6r3nXHN+2iKe9vp
-         OpQRH9oRNrvvfa/zRsB+qWD7adGbskLl31VKTezR6LLg0nXT4E+A38BspZ5G28RYbjAY
-         YEknG8XvaPZVXP9b7yZWVEH9n/QH2kV6NNeZ7r23NalWKjpkqnkC0hGd2qk1A4LGcI8H
-         cipvVTQP2t4nhsfBCwM/xQqdfgR+2y3CskyIfMkGozej8NdY/6qtdpXGosCcGYrTkds/
-         a+NTULObkeiYlG3d3ptMyOijxKdy1su6oiVirLzBOhKN5aQj1mBQapv9WNEd1Ent93l9
-         vd2g==
-In-Reply-To: <Yz2oAjIRZKKwe8tY-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:sender
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=DIgSyoN94ADqU20gRcmOmyh9FdirVR3/a/n9qkAKtZM=;
+        b=pJ841aP9R3YYjlZHcaKL4JqVDmnW1R6uCt2rV3ba70kepXv9mH8Oyq3he8OA52pVIc
+         AKoD0jCdja0PT3R8DuX3PLkQ5yJ3Wbw+fQM1eOztB9+2PS6HhGG7Rok0CIaPbOxtqFoy
+         qs+eHZMrAPb0R7SuoK5wD7yEPhMW7c/c5Wo3KMATlnL0jcxCVwezL1eN/JgacZud926T
+         vN3bmZUfBdgYXOH+5ASAaa7nhO4k2oOTEnbtcu5YqhyKnWSJQnLJXdv3CdV978h69iyF
+         T8EC84w1Vu7YLVN1BpDrhhHEcfR9xL+SMTNfASMjk7TCyz4psKsKYFOeFpgtn294FIkJ
+         RCBg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAJD7tkZQ+L5N7FmuBAXcg_2Lgyky7m=fkkBaUChr7ufVMHss=A@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Oct 5, 2022 at 8:51 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> On Wed, Oct 05, 2022 at 07:54:25AM -0700, Yosry Ahmed wrote:
-> > On Wed, Oct 5, 2022 at 7:04 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> > > Would you mind moving this to folio_referenced() directly? There is
-> > > already a comment and branch in there that IMO would extend quite
-> > > naturally to cover the new exception:
-> > >
-> > >         /*
-> > >          * If we are reclaiming on behalf of a cgroup, skip
-> > >          * counting on behalf of references from different
-> > >          * cgroups
-> > >          */
-> > >         if (memcg) {
-> > >                 rwc.invalid_vma = invalid_folio_referenced_vma;
-> > >         }
-> > >
-> > > That would keep the decision-making and doc in one place.
-> >
-> > Hi Johannes,
-> >
-> > Thanks for taking a look!
-> >
-> > I originally wanted to make the change in folio_referenced(). My only
-> > concern was that it wouldn't be clear for people looking at reclaim
-> > code in mm/vmscan.c. It would appear as if we are passing in the
-> > target memcg to folio_referenced(), and only if you look within you
-> > would realize that sometimes it ignores the passed memcg.
-> >
-> > It seemed to me that deciding whether we want to check references from
-> > one memcg or all of them is a reclaim decision, while
-> > folio_referenced() is just an rmap API that does what it is told: "if
-> > I am passed a memcg, I only look at references coming from this
-> > memcg". On the other hand, it looks like the doc has always lived in
-> > folio_referenced()/page_referenced(), so I might be overthinking this
-> > (I have been known to do this).
->
-> I agree it would be nicer to have this policy in vmscan.c. OTOH it's a
-> policy that applies to all folio_referenced() callers, and it's
-> fragile to require them to opt into it individually.
->
-> Vmscan is the only user of the function, so it's not the worst thing
-> to treat it as an extension of the reclaim code.
->
-> If it helps convince you, there is another, actually quite similar
-> reclaim policy already encoded in folio_referenced():
->
->                         if (ptep_clear_flush_young_notify(vma, address,
->                                                 pvmw.pte)) {
->                                 /*
->                                  * Don't treat a reference through
->                                  * a sequentially read mapping as such.
->                                  * If the folio has been used in another mapping,
->                                  * we will catch it; if this other mapping is
->                                  * already gone, the unmap path will have set
->                                  * the referenced flag or activated the folio.
->                                  */
->                                 if (likely(!(vma->vm_flags & VM_SEQ_READ)))
->                                         referenced++;
->                         }
+Hello,
 
-Thanks for clarifying. Will send v2 later today :)
+On Tue, Oct 04, 2022 at 06:17:40PM -0700, Yosry Ahmed wrote:
+> We have recently ran into a hard lockup on a machine with hundreds of
+> CPUs and thousands of memcgs during an rstat flush. There have also
+> been some discussions during LPC between myself, Michal Koutn=FD, and
+> Shakeel about memcg rstat flushing optimization. This email is a
+> follow up on that, discussing possible ideas to optimize memcg rstat
+> flushing.
+>=20
+> Currently, mem_cgroup_flush_stats() is the main interface to flush
+> memcg stats. It has some internal optimizations that can skip a flush
+> if there hasn't been significant updates in general. It always flushes
+> the entire memcg hierarchy, and always invokes flushing using
+> cgroup_rstat_flush_irqsafe(), which has interrupts disabled and does
+> not sleep. As you can imagine, with a sufficiently large number of
+> memcgs and cpus, a call to mem_cgroup_flush_stats() might be slow, or
+> in an extreme case like the one we ran into, cause a hard lockup
+> (despite periodically flushing every 4 seconds).
+
+How long were the stalls? Given that rstats are usually flushed by its
+consumers, flushing taking some time might be acceptable but what's really
+problematic is that the whole thing is done with irq disabled. We can think
+about other optimizations later too but I think the first thing to do is
+making the flush code able to pause and resume. ie. flush in batches and
+re-enable irq / resched between batches. We'd have to pay attention to
+guaranteeing forward progress. It'd be ideal if we can structure iteration
+in such a way that resuming doesn't end up nodes which got added after it
+started flushing.
+
+Thanks.
+
+--=20
+tejun
