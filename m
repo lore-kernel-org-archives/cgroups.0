@@ -1,104 +1,59 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC] memcg rstat flushing optimization
-Date: Wed, 5 Oct 2022 11:38:04 -0700
-Message-ID: <CAJD7tkZOw9hrc0jKYqYW1ysGZNjSVDgjhCyownBRmpS+UUCP3A@mail.gmail.com>
-References: <CAJD7tkZQ+L5N7FmuBAXcg_2Lgyky7m=fkkBaUChr7ufVMHss=A@mail.gmail.com>
- <Yz2xDq0jo1WZNblz@slm.duckdns.org> <CAJD7tkawcrpmacguvyWVK952KtD-tP+wc2peHEjyMHesdM1o0Q@mail.gmail.com>
- <Yz3CH7caP7H/C3gL@slm.duckdns.org> <CAJD7tkY8gNNaPneAVFDYcWN9irUvE4ZFW=Hv=5898cWFG1p7rg@mail.gmail.com>
- <Yz3LYoxhvGW/b9yz@slm.duckdns.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v2] mm/vmscan: check references from all memcgs for
+ swapbacked memory
+Date: Wed, 5 Oct 2022 15:49:47 -0400
+Message-ID: <Yz3f23fPHEx1XJLJ@cmpxchg.org>
+References: <20221005173713.1308832-1-yosryahmed@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date;
-        bh=cfvJK4cTUQqueaSoanUaUtOZQvrIryEaeM4MMTZGNjg=;
-        b=ACoXFK+tD+G6YB9E9G1wfn+cAGkyLKqxyX4fwL5HrMbIS/4Moavb9qtVCPgU47LnpQ
-         SlnZ19pCKSg8n/tyMcmGKzYMuf2SHTzvVLSPuA6huvEwm7ZXgrsNc81XPv8rY/G8IDmz
-         6w3J5sVfHWUXS8WKoeFbXFy5po7WDo++MzuFPGViwMGHrYe7mpArXJNOdlOoODzwfUnK
-         EIsEVRHkcV06bALkZUs7SkrbcC7Y11e6/UOYaQHHrgqE8zgHPOAmz8sn+fxwjDB2R553
-         0HLRDWgM3Jt2XOweC3wMCZDQW9/D8hT0CS921QD/g5N3NGAHcZhIsl9hsD58Gb+RR7bm
-         jkjA==
-In-Reply-To: <Yz3LYoxhvGW/b9yz-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date;
+        bh=KTsXqBLMJ7z5zDaMVeB3mFtjBOaAR2nLT0zyd4+BXeg=;
+        b=rL48SW7QvdXgLHL74fCHo4SV8KfIpBhdqZiIQkFNh26QO0TTK/n2jD7rLs5fjZNgXX
+         yqzl+73lIDTO9Wo+L+sKEUh5VTyKcrOARmxgyzCkLnBzZGOYGKz1LMCzJrk8y5VEvrXl
+         SL9TmligGaKXnhQ7moybwxP0quMm54chKS1ExXoghqPYamj7omGSHq8jkHq0MYM5geLn
+         7RLi84RADnmvjggV2xnJHWsRaTXaqRCHbsd+hBNFTax2A3pXm2Lxz0alAp1GkgBPI9f6
+         phptnuyHdseoFF1K7kCZfEqfVIJxshHn4QPHCyLp5ZcLGdzlRzgkd9J+CROfJfxgtMrv
+         7s2w==
+Content-Disposition: inline
+In-Reply-To: <20221005173713.1308832-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Wed, Oct 5, 2022 at 11:22 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-> Hello,
->
-> On Wed, Oct 05, 2022 at 11:02:23AM -0700, Yosry Ahmed wrote:
-> > > I was thinking more that being done inside the flush function.
-> >
-> > I think the flush function already does that in some sense if
-> > might_sleep is true, right? The problem here is that we are using
->
-> Oh I forgot about that. Right.
->
-> ...
-> > I took a couple of crashed machines kdumps and ran a script to
-> > traverse updated memcgs and check how many cpus have updates and how
-> > many updates are there on each cpu. I found that on average only a
-> > couple of stats are updated per-cpu per-cgroup, and less than 25% of
-> > cpus (but this is on a large machine, I expect the number to go higher
-> > on smaller machines). Which is why I suggested a bitmask. I understand
-> > though that this depends on whatever workloads were running on those
-> > machines, and that in case where most stats are updated the bitmask
-> > will actually make things slightly worse.
->
-> One worry I have about selective flushing is that it's only gonna improve
-> things by some multiples while we can reasonably increase the problem size
-> by orders of magnitude.
+On Wed, Oct 05, 2022 at 05:37:13PM +0000, Yosry Ahmed wrote:
+> During page/folio reclaim, we check if a folio is referenced using
+> folio_referenced() to avoid reclaiming folios that have been recently
+> accessed (hot memory). The rationale is that this memory is likely to be
+> accessed soon, and hence reclaiming it will cause a refault.
+> 
+> For memcg reclaim, we currently only check accesses to the folio from
+> processes in the subtree of the target memcg. This behavior was
+> originally introduced by commit bed7161a519a ("Memory controller: make
+> page_referenced() cgroup aware") a long time ago. Back then, refaulted
+> pages would get charged to the memcg of the process that was faulting them
+> in. It made sense to only consider accesses coming from processes in the
+> subtree of target_mem_cgroup. If a page was charged to memcg A but only
+> being accessed by a sibling memcg B, we would reclaim it if memcg A is
+> is the reclaim target. memcg B can then fault it back in and get charged
+> for it appropriately.
+> 
+> Today, this behavior still makes sense for file pages. However, unlike
+> file pages, when swapbacked pages are refaulted they are charged to the
+> memcg that was originally charged for them during swapping out. Which
+> means that if a swapbacked page is charged to memcg A but only used by
+> memcg B, and we reclaim it from memcg A, it would simply be faulted back
+> in and charged again to memcg A once memcg B accesses it. In that sense,
+> accesses from all memcgs matter equally when considering if a swapbacked
+> page/folio is a viable reclaim target.
+> 
+> Modify folio_referenced() to always consider accesses from all memcgs if
+> the folio is swapbacked.
+> 
+> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-I think we would usually want to flush a few stats (< 5?) in irqsafe
-contexts out of over 100, so I would say the improvement would be
-good, but yeah, the problem size can reasonably increase more than
-that. It also depends on which stats we selectively flush. If they are
-not in the same cache line we might end up bringing in a lot of stats
-anyway into the cpu cache.
-
->
-> The only real ways out I can think of are:
->
-> * Implement a periodic flusher which keeps the stats needed in irqsafe path
->   acceptably uptodate to avoid flushing with irq disabled. We can make this
->   adaptive too - no reason to do all this if the number to flush isn't huge.
-
-We do have a periodic flusher today for memcg stats (see
-flush_memcg_stats_dwork). It calls __mem_cgroup_flush_stas() which
-only flushes if the total number of updates is over a certain
-threshold.
-mem_cgroup_flush_stas_delayed(), which is called in the page fault
-path, only does a flush if the last flush was a certain while ago. We
-don't use the delayed version in all irqsafe contexts though, and I am
-not the right person to tell if we can.
-
-But I think this is not what you meant. I think you meant only
-flushing the specific stats needed in irqsafe contexts more frequently
-and not invoking a flush at all in irqsafe contexts (or using
-mem_cgroup_flush_stas_delayed()..?). Right?
-
-I am not the right person to judge what is acceptably up-to-date to be
-honest, so I would wait for other memcgs folks to chime in on this.
-
->
-> * Shift some work to the updaters. e.g. in many cases, propagating per-cpu
->   updates a couple levels up from update path will significantly reduce the
->   fanouts and thus the number of entries which need to be flushed later. It
->   does add on-going overhead, so it prolly should adaptive or configurable,
->   hopefully the former.
-
-If we are adding overhead to the updaters, would it be better to
-maintain a bitmask of updated stats, or do you think it would be more
-effective to propagate updates a couple of levels up? I think to
-propagate updates up in updaters context we would need percpu versions
-of the "pending" stats, which would also add memory consumption.
-
->
-> Thanks.
->
-> --
-> tejun
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
