@@ -1,37 +1,37 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH v2] mm/vmscan: check references from all memcgs for
  swapbacked memory
-Date: Thu, 6 Oct 2022 11:32:45 -0400
-Message-ID: <Yz71HQpeS6ccOIe2@cmpxchg.org>
+Date: Thu, 6 Oct 2022 11:38:23 -0400
+Message-ID: <Yz72b1IjZkzk8CTl@cmpxchg.org>
 References: <20221005173713.1308832-1-yosryahmed@google.com>
  <CAOUHufaDhmHwY_qd2z26k6vK=eCHudJL1Pp4xALP25iZfbSJWA@mail.gmail.com>
  <CAJD7tkaS4T5dD3CpST2wsie5uP1ruHiaWL5AJv0j8V9=yiOuug@mail.gmail.com>
  <CAOUHufYKvbZTJ_ofD4+DyzY+DuHrRKYChnJVwqD7OKwe6sw-hw@mail.gmail.com>
  <Yz5XVZfq8abvMYJ8@cmpxchg.org>
- <CAJD7tkao9DU2e_2co_HgOm38PxvLqdRS=kHcOdRfqcqN6MRdaw@mail.gmail.com>
+ <CAOUHufa+f-RB1Lddu3fQPof=eqduyxM3mcCBuk3OR-Tu=+VN+w@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=HD/3Y6U1aB12XT2sHowJ6F+GbBNpOcL+Q3nS96b8W9o=;
-        b=4WqNJOFbpojr+On41IcjBSg7LLLaApk/OvMwSZrD9xiRQdqxbAuydQWa8UeYIvCyhO
-         71w8L7bjt2nKU93JMcwDPianc+XdxnPNXX4B+xQCTOIoQHO//929+nqYjQTJ4rlCrGvX
-         SxjZjTK/AM3XuEUPiQi7xuK8HCzqJ358fzfCO8zx1wSic9jk8EDKXu1vMKOBhSJO5PH/
-         BkZrwgkqQfWTQrK2S+LIPDWTylL0Gn34/3zbK+msE1WdaqKmGo1IWGlwGh23B1zzkwvI
-         ltbqb0bdy6Ex5VCWcVz5xASQbvnvcPLjQVq/AbT5Z7ixy5cZebpN23fMPkSxgtbzE6yn
-         5DaA==
+        bh=Y7iXEKlC7ORkC5fIeVI8VUWR9YmQGA/IC0j91wyTvOo=;
+        b=Ibn8EfDwMvxYMsRoVhxKHuyL+MtidtjMV4enUQTaLRlqQyD9+02pjXr458YQB1HQd0
+         itgKq2OGEHMvH8G0c/aJnF755R4oOgYSTbIrMs6P7zNYjTln/UbfVtKP5BAeSQIhSHEY
+         jeKIyeR596uaOwAewNRxVngJWDmOoZ2m2KOlTpfLgO82ozmEI2HyrqFkTHq9AL6CyPK+
+         7q35D7vTKhHa28c1NamTL5YqEt1t4lUZShD/uV2M4KI9BRWIdjifaNzHqqK2u8TThMk1
+         dGEKx51g0cQYI1/Os5WIQw8ntMgg4o2S9GCyqu4xQd4ho2GTPYT0TTzH6gY+LgR6xMYA
+         zJsg==
 Content-Disposition: inline
-In-Reply-To: <CAJD7tkao9DU2e_2co_HgOm38PxvLqdRS=kHcOdRfqcqN6MRdaw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <CAOUHufa+f-RB1Lddu3fQPof=eqduyxM3mcCBuk3OR-Tu=+VN+w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Thu, Oct 06, 2022 at 12:30:45AM -0700, Yosry Ahmed wrote:
-> On Wed, Oct 5, 2022 at 9:19 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+On Wed, Oct 05, 2022 at 11:10:37PM -0600, Yu Zhao wrote:
+> On Wed, Oct 5, 2022 at 10:19 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 > >
 > > On Wed, Oct 05, 2022 at 03:13:38PM -0600, Yu Zhao wrote:
 > > > On Wed, Oct 5, 2022 at 3:02 PM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
@@ -84,31 +84,14 @@ On Thu, Oct 06, 2022 at 12:30:45AM -0700, Yosry Ahmed wrote:
 > > limit reclaim on A after it's been deleted. And parental/global
 > > reclaim has always recognized outside references.
 > 
-> Do you mind elaborating on the parental reclaim part?
-> 
-> I am looking at the code and it looks like memcg reclaim of a parent
-> (limit-induced or proactive) will only consider references coming from
-> its subtree, even when reclaiming from its dead children. It looks
-> like as long as sc->target_mem_cgroup is set, we ignore outside
-> references (relative to sc->target_mem_cgroup).
+> We use memory.reclaim to scrape memcgs right before rmdir so that they
+> are unlikely to stick around. Otherwise our job scheduler would see
+> less available memory and become less eager to increase load. This in
+> turn reduces the chance of global reclaim, and deleted memcgs would
+> stick around even longer.
 
-Yes, I was referring to outside of A.
+Thanks for the context.
 
-As of today, any siblings of A can already pin its memory after it's
-dead. I suppose your patch would add cousins to that list. It doesn't
-seem like a categorial difference to me.
-
-> If that is true, maybe we want to keep ignoring outside references for
-> swap-backed pages if the folio is charged to a dead memcg? My
-> understanding is that in this case we will uncharge the page from the
-> dead memcg and charge the swapped entry to the parent, reducing the
-> number of refs on the dead memcg. Without this check, this patch might
-> prevent the charge from being moved to the parent in this case. WDYT?
-
-I don't think it's worth it. Keeping the semantics simple and behavior
-predictable is IMO more valuable.
-
-It also wouldn't fix the scrape-before-rmdir issue Yu points out,
-which I think is the more practical concern. In light of that, it
-might be best to table the patch for now. (Until we have
-reparent-on-delete for anon and file pages...)
+It's not great that we have to design reclaim policy around this
+implementation detail of past-EOF-pins. But such is life until we get
+rid of them.
