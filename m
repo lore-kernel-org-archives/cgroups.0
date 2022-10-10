@@ -1,67 +1,61 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/4] blk-cgroup: correct comment for blk_alloc_queue and
- blk_exit_queue
-Date: Mon, 10 Oct 2022 10:26:50 -1000
-Message-ID: <Y0SACpAv4+ETrS6Z@slm.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 3/4] blk-cgroup: Add NULL check of pd_alloc_fn in
+ blkcg_activate_policy
+Date: Mon, 10 Oct 2022 10:29:17 -1000
+Message-ID: <Y0SAneaJadYJwAkr@slm.duckdns.org>
 References: <20221010023859.11896-1-shikemeng@huawei.com>
- <20221010023859.11896-3-shikemeng@huawei.com>
+ <20221010023859.11896-4-shikemeng@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=ZVV8n5eD6h2TRn2sT93lXmeC6TkQyEPF4f8atiLgu/c=;
-        b=IdIHWhIt/4LgFLk+ereoqBvDtQJrdY25MOknBRDc33BecqWtkmyV/jj6U4i8dWshGJ
-         OUEqTDFnF0lZPvp3uWNQQK7tBMTGQPJo6as+UVRUem5njExsBj6X0E8zmiWJdIYM5Bvb
-         5kklJ0NNraGUI4mKfH9xSMlvXi5dPm3Ldbns8rg6Y3S/mZt99lamxDMqZmtF6NGwc1vO
-         txDWxxVQNZaKFn2zPbdP/t4jJvAm6xaEWGhGKgg/NxbKDypNmkbKPieOY9iGzHClSYeG
-         lcg55CCl6gZtjHfvLr7yJvLNe+oZEc6Viuw8kLjCYFzdO0y3fSPWDlXm1jgJUdfLaHjD
-         CYHQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=qr1zRzW9mIDZS/nVxaVGHN2uZpMu0+zVTkGmRH0RCk0=;
+        b=eCblmHQH4kyDc1eYk4XHk4yv5M7ka130o2+oGxoV8jwDPHThtNZPex0/wfw3fFx6V5
+         8KOVo4KL30D1u7o2Ml5xYgwgjmfLOQ9rCreqVe1R7811ITpYjqT3obRQrlUF9dPU9f1G
+         1JYXHZouF9Wh/oQXgxqi2iYMGduftdCuGx5HJtQLoPmeX85KvGmJdixnplooQkslRqaR
+         NbjyTeop3s4FJi2H4tsQTSWoz2ehNfudk0lKTwWtUHQ0YqoRCPAaPdRPHhkhf/UEnLzb
+         MzLbw76gk5sa58/NTbRCF8ONslpZW+g74EIqDj/QIWOY5qChntmvRCBzZrFV7YGpSo1m
+         ruXA==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20221010023859.11896-3-shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20221010023859.11896-4-shikemeng@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kemeng Shi <shikemeng@huawei.com>
+Cc: axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Oct 10, 2022 at 10:38:57AM +0800, Kemeng Shi wrote:
-> Since commit 1059699f87eb("block: move blkcg initialization/destroy into
-> disk allocation/release handler"), blk_alloc_queue and blk_exit_queue is
-> called directly from gendisk. Update the corresponding comment.
+On Mon, Oct 10, 2022 at 10:38:58AM +0800, Kemeng Shi wrote:
+> Function blkcg_policy_register only make sure pd_alloc_fn and pd_free_fn in
+> pairs, so pd_alloc_fn could be NULL in registered blkcg_policy. Check NULL
+> before use for pd_alloc_fn in blkcg_activate_policy to avoid protential
+> NULL dereference.
 > 
-> Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Kemeng Shi <shikemeng@huawei.com>
 > ---
->  block/blk-cgroup.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  block/blk-cgroup.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
 > diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> index bc4dec705572..463c568d3e86 100644
+> index 463c568d3e86..fc083c35dc42 100644
 > --- a/block/blk-cgroup.c
 > +++ b/block/blk-cgroup.c
-> @@ -1259,7 +1259,7 @@ static int blkcg_css_online(struct cgroup_subsys_state *css)
->   * blkcg_init_queue - initialize blkcg part of request queue
->   * @q: request_queue to initialize
->   *
-> - * Called from blk_alloc_queue(). Responsible for initializing blkcg
-> + * Called from gendisk. Responsible for initializing blkcg
+> @@ -1404,6 +1404,9 @@ int blkcg_activate_policy(struct request_queue *q,
+>  	if (blkcg_policy_enabled(q, pol))
+>  		return 0;
+>  
+> +	if (pol->pd_alloc_fn == NULL)
+> +		return -EINVAL;
 
-Maybe be a bit more specific and say blk_alloc_disk()?
+This isn't the only place this function is called, so the above won't
+achieve much. Given that this is rather trivially noticeable and all the
+current users do implement pd_alloc_fn, I'm not sure we need to update this
+now.
 
->   * part of new request_queue @q.
->   *
->   * RETURNS:
-> @@ -1321,7 +1321,7 @@ int blkcg_init_queue(struct request_queue *q)
->   * blkcg_exit_queue - exit and release blkcg part of request_queue
->   * @q: request_queue being released
->   *
-> - * Called from blk_exit_queue().  Responsible for exiting blkcg part.
-> + * Called from gendisk.  Responsible for exiting blkcg part.
-
-Ditto.
+Thanks.
 
 -- 
 tejun
