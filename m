@@ -1,95 +1,36 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Subject: [PATCH v3] cgroup: Reorganize css_set_lock and kernfs path processing
-Date: Mon, 10 Oct 2022 10:29:18 +0200
-Message-ID: <20221010082918.3821-1-mkoutny@suse.com>
-References: <Yz21I9UpXafWMU0K@slm.duckdns.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1665390562; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=U0+wxjXvZ2b1azfCMhNMsVGmzlC6W42MvNjIgBFeRTo=;
-        b=AfLrtPQiwpodUPdDAwLKLscDoCuhxd2V1PvYuUJhPxSt2//G8QE10PRDG6xe6jDXqoo2kN
-        r51ir81dTFUVCp9bfkqBw2y1j7SyrT3S7MdG7L4qVvs2sbB2N28Qzw6GX/aXJNGRfcY5XA
-        2ZnlE4DiCD9gRu9XEF8AibJd4tqdyvs=
-In-Reply-To: <Yz21I9UpXafWMU0K@slm.duckdns.org>
+From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Subject: Re: [GIT PULL] cgroup changes for v6.1-rc1
+Date: Mon, 10 Oct 2022 18:48:01 +0000
+Message-ID: <166542768125.29715.10610347781123624678.pr-tracker-bot@kernel.org>
+References: <YzsmLRxPvYQlwtZo@slm.duckdns.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1665427681;
+        bh=/Py6ESRtICN91Jb9M97//qpI/8ZRofKXGr3GK+ybBK4=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=KgMIsaWKihVaygu59Fl8W6KqgkCm5kIe7mc0+KsvGmFUhnioNujFryGlK8EQZJ9W1
+         7lct/dtjXaN5BFsLYcMWE9KXf0id4jfanCRkhgYFXV/ijtdzjgY+ozTiroh04tHEf9
+         dHpxQ5L6QtH/1ypnrkxfIBbSHV1t+/H7fgbxWuvBSZhCmXK1TRxnw4yF1vyJ4YuCj3
+         bH6LrC1qqNAfrGq7B212SuKh0Ac0xCjkSe6bfcKPv3f7YgvxQCIHZitr8xia3JwEIc
+         PMcTOcReb9/cf4+wu93ru/3YddHyBpaQZuUxyiqG/7SUHxSn76GN0HPv9W+v7OH/Lm
+         Tyr6OPszzXQ4Q==
+In-Reply-To: <YzsmLRxPvYQlwtZo-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: tj@kernel.org
-Cc: cgroups@vger.kernel.org, dan.carpenter@oracle.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, lizefan.x@bytedance.com, mkoutny@suse.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-VGhlIGNvbW1pdCA3NGU0Yjk1NmViMWMgaW5jb3JyZWN0bHkgd3JhcHBlZCBrZXJuZnNfd2Fsa19h
-bmRfZ2V0CihtaWdodF9zbGVlcCkgdW5kZXIgY3NzX3NldF9sb2NrIChzcGlubG9jaykuIGNzc19z
-ZXRfbG9jayBpcyBuZWVkZWQgYnkKX19jc2V0X2Nncm91cF9mcm9tX3Jvb3QgdG8gZW5zdXJlIHN0
-YWJsZSBjc2V0LT5jZ3JwX2xpbmtzIGJ1dCBub3QgZm9yCmtlcm5mc193YWxrX2FuZF9nZXQuCgpX
-ZSBvbmx5IG5lZWQgdG8gbWFrZSBzdXJlIHRoYXQgdGhlIHJldHVybmVkIHJvb3RfY2dycCB3b24n
-dCBiZSBmcmVlZAp1bmRlciB1cy4gVGhpcyBpcyBnaXZlbiBpbiB0aGUgY2FzZSBvZiBnbG9iYWwg
-cm9vdCBiZWNhdXNlIGl0IGlzIHN0YXRpYwooY2dycF9kZmxfcm9vdC5jZ3JwKS4gV2hlbiB0aGUg
-cm9vdF9jZ3JwIGlzIGxvd2VyIGluIHRoZSBoaWVyYXJjaHksIGl0CmlzIHBpbm5lZCBieSBjZ3Jv
-dXBfbnMtPnJvb3RfY3NldCAoYW5kIGBjdXJyZW50YCB0YXNrIGNhbm5vdCBzd2l0Y2gKbmFtZXNw
-YWNlIGFzeW5jaHJvbm91c2x5IHNvIG5zX3Byb3h5IHBpbnMgY2dyb3VwX25zKS4KCk5vdGUgdGhp
-cyByZWFzb25pbmcgd29uJ3QgaG9sZCBmb3Igcm9vdCBjZ3JvdXBzIGluIHYxIGhpZXJhcmNoaWVz
-LAp0aGVyZWZvcmUgY3JlYXRlIGEgc3BlY2lhbC1jYXNlZCBoZWxwZXIgZnVuY3Rpb24ganVzdCBm
-b3IgdGhlIGRlZmF1bHQKaGllcmFyY2h5LgoKRml4ZXM6IDc0ZTRiOTU2ZWIxYyAoImNncm91cDog
-SG9ub3IgY2FsbGVyJ3MgY2dyb3VwIE5TIHdoZW4gcmVzb2x2aW5nIHBhdGgiKQpSZXBvcnRlZC1i
-eTogRGFuIENhcnBlbnRlciA8ZGFuLmNhcnBlbnRlckBvcmFjbGUuY29tPgpTaWduZWQtb2ZmLWJ5
-OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueUBzdXNlLmNvbT4KLS0tCiBrZXJuZWwvY2dyb3VwL2Nn
-cm91cC5jIHwgNDEgKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0KIDEg
-ZmlsZSBjaGFuZ2VkLCAyOCBpbnNlcnRpb25zKCspLCAxMyBkZWxldGlvbnMoLSkKClRlc3RlZCBv
-bmx5IHdpdGggdGVzdF9jb3JlIHNlbGZ0ZXN0cyAoaS5lLiB0aGUgcGF0aC9pZCByZXNvbHV0aW9u
-IG5vdApjaGVjZWQsIG9ubHkgdGhlIG1pZ3JhdGlvbiBjb2RlKS4KCmRpZmYgLS1naXQgYS9rZXJu
-ZWwvY2dyb3VwL2Nncm91cC5jIGIva2VybmVsL2Nncm91cC9jZ3JvdXAuYwppbmRleCBjMzdiODI2
-NWMwYTMuLmE3ZWM5NmYyNjk5NyAxMDA2NDQKLS0tIGEva2VybmVsL2Nncm91cC9jZ3JvdXAuYwor
-KysgYi9rZXJuZWwvY2dyb3VwL2Nncm91cC5jCkBAIC0xMzkyLDYgKzEzOTIsOSBAQCBzdGF0aWMg
-dm9pZCBjZ3JvdXBfZGVzdHJveV9yb290KHN0cnVjdCBjZ3JvdXBfcm9vdCAqcm9vdCkKIAljZ3Jv
-dXBfZnJlZV9yb290KHJvb3QpOwogfQogCisvKgorICogUmV0dXJuZWQgY2dyb3VwIGlzIHdpdGhv
-dXQgcmVmY291bnQgYnV0IGl0J3MgdmFsaWQgYXMgbG9uZyBhcyBjc2V0IHBpbnMgaXQuCisgKi8K
-IHN0YXRpYyBpbmxpbmUgc3RydWN0IGNncm91cCAqX19jc2V0X2Nncm91cF9mcm9tX3Jvb3Qoc3Ry
-dWN0IGNzc19zZXQgKmNzZXQsCiAJCQkJCSAgICBzdHJ1Y3QgY2dyb3VwX3Jvb3QgKnJvb3QpCiB7
-CkBAIC0xNDAzLDYgKzE0MDYsNyBAQCBzdGF0aWMgaW5saW5lIHN0cnVjdCBjZ3JvdXAgKl9fY3Nl
-dF9jZ3JvdXBfZnJvbV9yb290KHN0cnVjdCBjc3Nfc2V0ICpjc2V0LAogCQlyZXNfY2dyb3VwID0g
-Y3NldC0+ZGZsX2NncnA7CiAJfSBlbHNlIHsKIAkJc3RydWN0IGNncnBfY3NldF9saW5rICpsaW5r
-OworCQlsb2NrZGVwX2Fzc2VydF9oZWxkKCZjc3Nfc2V0X2xvY2spOwogCiAJCWxpc3RfZm9yX2Vh
-Y2hfZW50cnkobGluaywgJmNzZXQtPmNncnBfbGlua3MsIGNncnBfbGluaykgewogCQkJc3RydWN0
-IGNncm91cCAqYyA9IGxpbmstPmNncnA7CkBAIC0xNDE0LDYgKzE0MTgsNyBAQCBzdGF0aWMgaW5s
-aW5lIHN0cnVjdCBjZ3JvdXAgKl9fY3NldF9jZ3JvdXBfZnJvbV9yb290KHN0cnVjdCBjc3Nfc2V0
-ICpjc2V0LAogCQl9CiAJfQogCisJQlVHX09OKCFyZXNfY2dyb3VwKTsKIAlyZXR1cm4gcmVzX2Nn
-cm91cDsKIH0KIApAQCAtMTQzNiwyMyArMTQ0MSwzNyBAQCBjdXJyZW50X2NnbnNfY2dyb3VwX2Zy
-b21fcm9vdChzdHJ1Y3QgY2dyb3VwX3Jvb3QgKnJvb3QpCiAKIAlyY3VfcmVhZF91bmxvY2soKTsK
-IAotCUJVR19PTighcmVzKTsKIAlyZXR1cm4gcmVzOwogfQogCisvKgorICogbG9vayB1cCBjZ3Jv
-dXAgYXNzb2NpYXRlZCB3aXRoIGN1cnJlbnQgdGFzaydzIGNncm91cCBuYW1lc3BhY2Ugb24gdGhl
-CisgKiBkZWZhdWx0IGhpZXJhcmNoeQorICoKKyAqIE5vdGUgdGhpcyBkb2Vzbid0IG5lZWQgbG9j
-a3MgdW5saWtlIGdlbmVyaWMgY29sbGVhZ3Vlcy4gV2h5PworICogLSBJbnRlcm5hbCByY3VfcmVh
-ZF9sb2NrIGlzIHVubmVjZXNzYXJ5IGJlY2F1c2Ugd2UgZG9uJ3QgZGVyZWZlcmVuY2UgYW55IHJj
-dQorICogICBwb2ludGVycy4KKyAqIC0gY3NzX3NldF9sb2NrIGlzIG5vdCBuZWVkZWQgYmVjYXVz
-ZSB3ZSBqdXN0IHJlYWQgY3NldC0+ZGZsX2NncnAuCisgKiAtIEFzIGEgYm9udXMgcmV0dXJuZWQg
-Y2dycCBpcyBwaW5uZWQgd2l0aCB0aGUgY3VycmVudCBiZWNhdXNlIGl0IGNhbm5vdAorICogICBz
-d2l0Y2ggY2dyb3VwX25zIGFzeW5jaHJvbm91c2x5LgorICovCitzdGF0aWMgc3RydWN0IGNncm91
-cCAqCitjdXJyZW50X2NnbnNfY2dyb3VwX2RmbCh2b2lkKQoreworCXN0cnVjdCBjc3Nfc2V0ICpj
-c2V0OworCisJY3NldCA9IGN1cnJlbnQtPm5zcHJveHktPmNncm91cF9ucy0+cm9vdF9jc2V0Owor
-CXJldHVybiBfX2NzZXRfY2dyb3VwX2Zyb21fcm9vdChjc2V0LCAmY2dycF9kZmxfcm9vdCk7Cit9
-CisKIC8qIGxvb2sgdXAgY2dyb3VwIGFzc29jaWF0ZWQgd2l0aCBnaXZlbiBjc3Nfc2V0IG9uIHRo
-ZSBzcGVjaWZpZWQgaGllcmFyY2h5ICovCiBzdGF0aWMgc3RydWN0IGNncm91cCAqY3NldF9jZ3Jv
-dXBfZnJvbV9yb290KHN0cnVjdCBjc3Nfc2V0ICpjc2V0LAogCQkJCQkgICAgc3RydWN0IGNncm91
-cF9yb290ICpyb290KQogewotCXN0cnVjdCBjZ3JvdXAgKnJlcyA9IE5VTEw7Ci0KIAlsb2NrZGVw
-X2Fzc2VydF9oZWxkKCZjZ3JvdXBfbXV0ZXgpOwogCWxvY2tkZXBfYXNzZXJ0X2hlbGQoJmNzc19z
-ZXRfbG9jayk7CiAKLQlyZXMgPSBfX2NzZXRfY2dyb3VwX2Zyb21fcm9vdChjc2V0LCByb290KTsK
-LQotCUJVR19PTighcmVzKTsKLQlyZXR1cm4gcmVzOworCXJldHVybiBfX2NzZXRfY2dyb3VwX2Zy
-b21fcm9vdChjc2V0LCByb290KTsKIH0KIAogLyoKQEAgLTYwODUsOSArNjEwNCw3IEBAIHN0cnVj
-dCBjZ3JvdXAgKmNncm91cF9nZXRfZnJvbV9pZCh1NjQgaWQpCiAJaWYgKCFjZ3JwKQogCQlyZXR1
-cm4gRVJSX1BUUigtRU5PRU5UKTsKIAotCXNwaW5fbG9ja19pcnEoJmNzc19zZXRfbG9jayk7Ci0J
-cm9vdF9jZ3JwID0gY3VycmVudF9jZ25zX2Nncm91cF9mcm9tX3Jvb3QoJmNncnBfZGZsX3Jvb3Qp
-OwotCXNwaW5fdW5sb2NrX2lycSgmY3NzX3NldF9sb2NrKTsKKwlyb290X2NncnAgPSBjdXJyZW50
-X2NnbnNfY2dyb3VwX2RmbCgpOwogCWlmICghY2dyb3VwX2lzX2Rlc2NlbmRhbnQoY2dycCwgcm9v
-dF9jZ3JwKSkgewogCQljZ3JvdXBfcHV0KGNncnApOwogCQlyZXR1cm4gRVJSX1BUUigtRU5PRU5U
-KTsKQEAgLTY2NzEsMTAgKzY2ODgsOCBAQCBzdHJ1Y3QgY2dyb3VwICpjZ3JvdXBfZ2V0X2Zyb21f
-cGF0aChjb25zdCBjaGFyICpwYXRoKQogCXN0cnVjdCBjZ3JvdXAgKmNncnAgPSBFUlJfUFRSKC1F
-Tk9FTlQpOwogCXN0cnVjdCBjZ3JvdXAgKnJvb3RfY2dycDsKIAotCXNwaW5fbG9ja19pcnEoJmNz
-c19zZXRfbG9jayk7Ci0Jcm9vdF9jZ3JwID0gY3VycmVudF9jZ25zX2Nncm91cF9mcm9tX3Jvb3Qo
-JmNncnBfZGZsX3Jvb3QpOworCXJvb3RfY2dycCA9IGN1cnJlbnRfY2duc19jZ3JvdXBfZGZsKCk7
-CiAJa24gPSBrZXJuZnNfd2Fsa19hbmRfZ2V0KHJvb3RfY2dycC0+a24sIHBhdGgpOwotCXNwaW5f
-dW5sb2NrX2lycSgmY3NzX3NldF9sb2NrKTsKIAlpZiAoIWtuKQogCQlnb3RvIG91dDsKIAotLSAK
-Mi4zNy4zCgo=
+The pull request you sent on Mon, 3 Oct 2022 08:13:01 -1000:
+
+> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.1
+
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/adf4bfc4a9ab86be0b72fa9cadc9e7ab6ad15dfe
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
