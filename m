@@ -1,7 +1,7 @@
 From: Kemeng Shi <shikemeng@huawei.com>
-Subject: [PATCH 2/4] blk-cgroup: correct comment for blk_alloc_queue and blk_exit_queue
-Date: Mon, 10 Oct 2022 10:38:57 +0800
-Message-ID: <20221010023859.11896-3-shikemeng@huawei.com>
+Subject: [PATCH 1/4] blk-cgroup: Remove unnecessary blk_ioprio_exit in blkcg_init_queue
+Date: Mon, 10 Oct 2022 10:38:56 +0800
+Message-ID: <20221010023859.11896-2-shikemeng@huawei.com>
 References: <20221010023859.11896-1-shikemeng@huawei.com>
 Mime-Version: 1.0
 Return-path: <linux-block-owner@vger.kernel.org>
@@ -12,37 +12,29 @@ Content-Transfer-Encoding: 7bit
 To: tj@kernel.org, axboe@kernel.dk
 Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, shikemeng@huawei.com
 
-Since commit 1059699f87eb("block: move blkcg initialization/destroy into
-disk allocation/release handler"), blk_alloc_queue and blk_exit_queue is
-called directly from gendisk. Update the corresponding comment.
+Function blk_ioprio_init only alloc blkg_policy_data which will be freed
+in blkg_destroy_all, so no blk_ioprio_exit is called when blk_throtl_init
+is failed in blkcg_init_queue. Also blk_ioprio_exit is not called in
+blkcg_exit_queue for the same reason. Just remove blk_ioprio_exit to
+keep behavior consistent.
 
 Signed-off-by: Kemeng Shi <shikemeng@huawei.com>
 ---
- block/blk-cgroup.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ block/blk-cgroup.c | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index bc4dec705572..463c568d3e86 100644
+index 869af9d72bcf..bc4dec705572 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -1259,7 +1259,7 @@ static int blkcg_css_online(struct cgroup_subsys_state *css)
-  * blkcg_init_queue - initialize blkcg part of request queue
-  * @q: request_queue to initialize
-  *
-- * Called from blk_alloc_queue(). Responsible for initializing blkcg
-+ * Called from gendisk. Responsible for initializing blkcg
-  * part of new request_queue @q.
-  *
-  * RETURNS:
-@@ -1321,7 +1321,7 @@ int blkcg_init_queue(struct request_queue *q)
-  * blkcg_exit_queue - exit and release blkcg part of request_queue
-  * @q: request_queue being released
-  *
-- * Called from blk_exit_queue().  Responsible for exiting blkcg part.
-+ * Called from gendisk.  Responsible for exiting blkcg part.
-  */
- void blkcg_exit_queue(struct request_queue *q)
- {
+@@ -1302,7 +1302,6 @@ int blkcg_init_queue(struct request_queue *q)
+ 	ret = blk_iolatency_init(q);
+ 	if (ret) {
+ 		blk_throtl_exit(q);
+-		blk_ioprio_exit(q);
+ 		goto err_destroy_all;
+ 	}
+ 
 -- 
 2.30.0
 
