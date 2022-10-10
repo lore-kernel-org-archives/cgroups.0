@@ -1,36 +1,58 @@
-From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Subject: Re: [GIT PULL] cgroup changes for v6.1-rc1
-Date: Mon, 10 Oct 2022 18:48:01 +0000
-Message-ID: <166542768125.29715.10610347781123624678.pr-tracker-bot@kernel.org>
-References: <YzsmLRxPvYQlwtZo@slm.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3] cgroup: Reorganize css_set_lock and kernfs path
+ processing
+Date: Mon, 10 Oct 2022 10:24:03 -1000
+Message-ID: <Y0R/Y/YlsynTla6m@slm.duckdns.org>
+References: <Yz21I9UpXafWMU0K@slm.duckdns.org>
+ <20221010082918.3821-1-mkoutny@suse.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665427681;
-        bh=/Py6ESRtICN91Jb9M97//qpI/8ZRofKXGr3GK+ybBK4=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=KgMIsaWKihVaygu59Fl8W6KqgkCm5kIe7mc0+KsvGmFUhnioNujFryGlK8EQZJ9W1
-         7lct/dtjXaN5BFsLYcMWE9KXf0id4jfanCRkhgYFXV/ijtdzjgY+ozTiroh04tHEf9
-         dHpxQ5L6QtH/1ypnrkxfIBbSHV1t+/H7fgbxWuvBSZhCmXK1TRxnw4yF1vyJ4YuCj3
-         bH6LrC1qqNAfrGq7B212SuKh0Ac0xCjkSe6bfcKPv3f7YgvxQCIHZitr8xia3JwEIc
-         PMcTOcReb9/cf4+wu93ru/3YddHyBpaQZuUxyiqG/7SUHxSn76GN0HPv9W+v7OH/Lm
-         Tyr6OPszzXQ4Q==
-In-Reply-To: <YzsmLRxPvYQlwtZo-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:sender
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=SWBKxcK5HE/3WshbW1q29xvyEiEvyFrYE2hY8YKFsLs=;
+        b=KEYEbq/ly8DTkiYPCrGiR6KYBxqhyiZA26Fj+t0+nmZYWUozdenaY+VoU8pmLUc9ry
+         OYmW4AJzZ9zZb9ACzz2x6+0Y+so2+IcnPsY5dEwJlHD9JFJQVEs2WbmLHhh4IcK3Ddy9
+         QWqYnt/XqsFvRwGQ1tX2ZwRzLRJwB0C4xpMvYCaEG0ECzhQayHWXI6lDge1cYEHLDA/8
+         ihOfFmF/w40sHx4RYXTIOrVRLItAuhUhgPUbQReNAD5AYi1eMzxK2HVFpdBK/eBJ3REV
+         +1bDUqpz4l0lQsnB/1J3P+hNQ48giXMkuq6/1Y5ng0xXN8DgkEPIbNjsddWIK8blwo8Y
+         hEmg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20221010082918.3821-1-mkoutny-IBi9RG/b67k@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-The pull request you sent on Mon, 3 Oct 2022 08:13:01 -1000:
+On Mon, Oct 10, 2022 at 10:29:18AM +0200, Michal Koutn=FD wrote:
+> The commit 74e4b956eb1c incorrectly wrapped kernfs_walk_and_get
+> (might_sleep) under css_set_lock (spinlock). css_set_lock is needed by
+> __cset_cgroup_from_root to ensure stable cset->cgrp_links but not for
+> kernfs_walk_and_get.
+>=20
+> We only need to make sure that the returned root_cgrp won't be freed
+> under us. This is given in the case of global root because it is static
+> (cgrp_dfl_root.cgrp). When the root_cgrp is lower in the hierarchy, it
+> is pinned by cgroup_ns->root_cset (and `current` task cannot switch
+> namespace asynchronously so ns_proxy pins cgroup_ns).
+>=20
+> Note this reasoning won't hold for root cgroups in v1 hierarchies,
+> therefore create a special-cased helper function just for the default
+> hierarchy.
+>=20
+> Fixes: 74e4b956eb1c ("cgroup: Honor caller's cgroup NS when resolving pat=
+h")
+> Reported-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.g=
+mane.org>
+> Signed-off-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.1
+Applied to cgroup/for-6.1-fixes w/ trivial comment / line break adjustments.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/adf4bfc4a9ab86be0b72fa9cadc9e7ab6ad15dfe
+Thanks.
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+--=20
+tejun
