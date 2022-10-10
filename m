@@ -1,41 +1,44 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 4/4] blk-cgroup: Fix typo in comment
-Date: Mon, 10 Oct 2022 10:29:36 -1000
-Message-ID: <Y0SAsFcIgLvkPpPi@slm.duckdns.org>
-References: <20221010023859.11896-1-shikemeng@huawei.com>
- <20221010023859.11896-5-shikemeng@huawei.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v1 0/3] Fix cgroup1 support in get from fd/file interfaces
+Date: Mon, 10 Oct 2022 23:58:02 +0000
+Message-ID: <20221010235802.3378436-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=qJvdR5sFA7841TfkHWBXVf+L88za68VvtqLkISWSSSU=;
-        b=mzi+/WBX/eFPhWGRK9wk25LbdDWrPtoko+QoLbYq0hvYx6m4vETmFUGiPPn3VsV0gA
-         i+6WjDzaxoqyRXmWtvngaiuaryYkBi+wK7hwrLWOAH9u1CdCLDXYFeA0iZTQpNeKhY78
-         txA6yTR3Po4vsfLRmHO7bUvUB1VB4pNCFef8LirwRR7MmCj8cL64TBK32FD+5V1y5eit
-         /ZbkipPrix/XLAUNcNSqLNygx2pwxjox3ZbUIUapUf9darLgWGmBgSe6EaoUlGzs79gg
-         T/o8f+CuAjAQoZZsN7jFqFh8VWcmYy9Z0J6GYR1w+ChMabKGOHmxt0j3x+9LyNMxX1EP
-         3Jew==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <20221010023859.11896-5-shikemeng@huawei.com>
+        d=google.com; s=20210112;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=32G3k93Ulqw+bBT8wloqCvMkNp9uoyXmylHiGN2Ypxc=;
+        b=LcWt5IjwCcy3rAad+wx5DSEJeu4bbnR1UwRvydSMhWPJLCVVIhiV3sdwaiTUIjBUbt
+         AwITg2e81qFFFEtOCWDrKdow2ER0lA/l4S/JNM2JP+v0ZWrdG39lvd8rPH1dfn6TZQQu
+         76My+esp98qhz7FQrF8bxlLcyRAHtUNelF+oJHIqMQ7/1JlULihRngFRjGq+CsdrC7JL
+         pyc2BCkq7cxAxQCd3YlkgYqYXYOKvydwutn/bGtBWCJYKOCmNo8ywgrQenJoHqDDJrLW
+         ciqwgnPm2h+kpnsB/B33ihE6QHIppIccsEQAkr1f8JnZ/6aJ28iETmFw9Ei0RjxuUfiF
+         e5pQ==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kemeng Shi <shikemeng@huawei.com>
-Cc: axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Oct 10, 2022 at 10:38:59AM +0800, Kemeng Shi wrote:
-> Replace assocating with associating.
-> Replace assocaited with associated.
-> 
-> Signed-off-by: Kemeng Shi <shikemeng@huawei.com>
+commit f3a2aebdd6fb ("cgroup: enable cgroup_get_from_file() on cgroup1")
+enabled using cgroup_get_from_file() and cgroup_get_from_fd() on
+cgroup1, to enable bpf cgroup_iter to attach to cgroup1.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Apparently, other callers depended on these functions only supporting
+cgroup2. Revert f3a2aebdd6 and add new separate interfaces that support
+both cgroup1 and cgroup2.
 
-Thanks.
+Yosry Ahmed (3):
+  Revert "cgroup: enable cgroup_get_from_file() on cgroup1"
+  cgroup: add cgroup_all_get_from_[fd/file]()
+  bpf: cgroup_iter: support cgroup1 using cgroup fd
+
+ include/linux/cgroup.h   |  1 +
+ kernel/bpf/cgroup_iter.c |  2 +-
+ kernel/cgroup/cgroup.c   | 55 +++++++++++++++++++++++++++++++++++-----
+ 3 files changed, 51 insertions(+), 7 deletions(-)
 
 -- 
-tejun
+2.38.0.rc1.362.ged0d419d3c-goog
+
