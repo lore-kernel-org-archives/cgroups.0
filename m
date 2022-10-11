@@ -1,68 +1,55 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm/memcontrol: Don't increase effective low/min if no
- protection needed
-Date: Tue, 11 Oct 2022 17:39:41 +0200
-Message-ID: <Y0WOPZxWSnUjzZ8e@dhcp22.suse.cz>
-References: <20221011143015.1152968-1-longman@redhat.com>
+From: Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH v2 2/2] bpf: cgroup_iter: support cgroup1 using cgroup fd
+Date: Tue, 11 Oct 2022 09:46:27 -0700
+Message-ID: <2ba0ee79-2e7e-6807-3312-1a2c5ef3bae0@linux.dev>
+References: <20221011003359.3475263-1-yosryahmed@google.com>
+ <20221011003359.3475263-3-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1665502782; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=vB0AXXBtm0Hrdk0bg6YG9HeCQbPU+AcCqyHQMZO7aHU=;
-        b=AOyiExVT8ICluY29f7EISViuBP4fZfaDGjWt/zgw/wKFtAhm86QAWBAMm3OGNO88yDbw4L
-        dCppJmVuT0D38ZQBGQ4D/GsypMU9r0HpZIlyL+USdsMoBBwX+vizkRdpijHy57HK/3+fS7
-        wQVsY/OckiDS1Src/EUzygFkKRStZJs=
-Content-Disposition: inline
-In-Reply-To: <20221011143015.1152968-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1665506792;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=fSpHFQ/t+wVXLc+3hNEAK/z5TCpUZCMKJcQhLnBO7pA=;
+        b=VZXczMB1/0cXDlJrV4Hl9sjqWKt4jiyPljBV9WZxUvzdbwjoKUqh1lDfvqbGk8Z/cPGbuU
+        VrlszEalWaKYs9+1ekJ60k4dB7wYy6bqb7n9IIKJ3baP+C7ioDlkDKwAQWkwmQEmMU0mZB
+        JamUEiyRsoy6dCO7N4Vlwh+lNYYHkwM=
+Content-Language: en-US
+In-Reply-To: <20221011003359.3475263-3-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Tue 11-10-22 10:30:15, Waiman Long wrote:
-> Since commit bc50bcc6e00b ("mm: memcontrol: clean up and document
-> effective low/min calculations"), the effective low/min protections can
-> be non-zero even if the corresponding memory.low/min values are 0. That
-> can surprise users to see MEMCG_LOW events even when the memory.low
-> value is not set. One example is the LTP's memcontrol04 test which fails
-> because it detects some MEMCG_LOW events for a cgroup with a memory.min
-> value of 0.
-
-Is this with memory_recursiveprot mount option?
-
-> Fix this by updating effective_protection() to not returning a non-zero
-> low/min protection values if the corresponding memory.low/min values
-> or those of its parent are 0.
+On 10/10/22 5:33 PM, Yosry Ahmed wrote:
+> Use cgroup_v1v2_get_from_fd() in cgroup_iter to support attaching to
+> both cgroup v1 and v2 using fds.
 > 
-> Fixes: bc50bcc6e00b ("mm: memcontrol: clean up and document effective low/min calculations")
-> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 > ---
->  mm/memcontrol.c | 3 +++
->  1 file changed, 3 insertions(+)
+>   kernel/bpf/cgroup_iter.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index b69979c9ced5..893d4d5e518a 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -6660,6 +6660,9 @@ static unsigned long effective_protection(unsigned long usage,
->  	unsigned long protected;
->  	unsigned long ep;
->  
-> +	if (!setting || !parent_effective)
-> +		return 0UL;	/* No protection is needed */
-> +
+> diff --git a/kernel/bpf/cgroup_iter.c b/kernel/bpf/cgroup_iter.c
+> index 0d200a993489..9fcf09f2ef00 100644
+> --- a/kernel/bpf/cgroup_iter.c
+> +++ b/kernel/bpf/cgroup_iter.c
+> @@ -196,7 +196,7 @@ static int bpf_iter_attach_cgroup(struct bpf_prog *prog,
+>   		return -EINVAL;
+>   
+>   	if (fd)
+> -		cgrp = cgroup_get_from_fd(fd);
+> +		cgrp = cgroup_v1v2_get_from_fd(fd);
 
-This will break the above memory_recursiveprot AFAICS.
+Acked-by: Martin KaFai Lau <martin.lau-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
->  	protected = min(usage, setting);
->  	/*
->  	 * If all cgroups at this level combined claim and use more
-> -- 
-> 2.31.1
+Tejun, patch 1 should depend on a recent revert that is not in the bpf tree yet. 
+  Do you want to take this set to the cgroup tree?
 
--- 
-Michal Hocko
-SUSE Labs
+>   	else if (id)
+>   		cgrp = cgroup_get_from_id(id);
+>   	else /* walk the entire hierarchy by default. */
+
