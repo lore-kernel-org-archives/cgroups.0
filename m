@@ -1,7 +1,7 @@
 From: Dawei Li <set_pte_at-1ViLX0X+lBJBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH 2/2] block: Make refcnt of bfq_group/bfq_queue atomic
-Date: Tue, 11 Oct 2022 22:52:46 +0800
-Message-ID: <TYCP286MB2323F5B27A24ABA2CD1A3F70CA239@TYCP286MB2323.JPNP286.PROD.OUTLOOK.COM>
+Subject: [PATCH 1/2] block: Add helper for queue_flags bit test
+Date: Tue, 11 Oct 2022 22:52:45 +0800
+Message-ID: <TYCP286MB232392B1D23662DE81B0D2D5CA239@TYCP286MB2323.JPNP286.PROD.OUTLOOK.COM>
 References: <20221011145246.8656-1-set_pte_at@outlook.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,269 +9,270 @@ Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=zo1Uyd5Cr+vUeOBgInoErdw02W2KCHswu/ahNGDjgQE=;
- b=PLSTtEFBXU+g/sB/Hz08I+spMOtWRF+JKQV9X9vBw75vIwu8D8ptarpxb9ZZe6ezwTn9wJM+Fe/wxTCg5SxnDy/iUyyX32ke9tvamzGDMLm9eYk4K+gz4fq1vfuOyDm/c7CCRH8SPZ1fwwdFMkrmblb42yYvaPhUmWNMu6klps3AvUjjQ0FGexDJz9SxNrvV4TGtiSWMNiIoPpe7+q/c8iq8ev1Rw6GrYhDg1Gfkg09HIy+6Bs9/F673oqPBuGC70BhBjd2NAl5l5JRtii2qsE2TDsnykdb7tQLxyl88EHiANJF0pX3KN8K7zFDgofgo7XPzYL1PKmWCdXq+wVB7LQ==
+ bh=BbcrVk0ED9SXOg7VP3kEUS/OTui3qy3ZuXxjnkU6Yxg=;
+ b=HV23m9anfunJO0q1ZiQQgUJtdFY5aLPINhpy1UbB51E2x+O1bDM/Wg+UD/BieCWe4pPEsdoQljXr3PxC7f27pEru+oFcQF/I5ogrvOq88e8fDAE9dMiZ50TMbos//jDqF/NQrN2zvdHz72CnuVnG9Rj1q0XCr4fQ0HwYSDgdsG6laURuU66pzxArAGk5MBZPZzgQAhnrs68wcIW8kzp7tVzYKlHc0SiU7X2eisZh7xYygsg7uqvpKQL+yQacPYkmC8io6US/P3Dn1Nwt5bFCYx2nMmwUVRH4he4FVpC/7R8rpOCVPvekD/m13eKO3BG7q6lLlJiTUh6YuUJ9rl46EA==
 In-Reply-To: <20221011145246.8656-1-set_pte_at-1ViLX0X+lBJBDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
 Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dawei Li <set_pte_at-1ViLX0X+lBJBDgjK7y7TUQ@public.gmane.org>
 
-For most implementations of reference count, atomic_t is preferred
-for their natural-born atomic ops capability.
-Change the reference count of bfq_group/bfq_queue, both data structures
-and related ops, into atomic.
+queue_flags is a flag mask representing all possible attributes
+of request queue, just like flags of struct page. In analog to
+implementation of PageFoo(), it's possible to abstract helpers
+denoting whether or not certain attribute is set for a request
+queue (actually there are some of them implemented already).
 
 Signed-off-by: Dawei Li <set_pte_at-1ViLX0X+lBJBDgjK7y7TUQ@public.gmane.org>
 ---
- block/bfq-cgroup.c  |  8 +++----
- block/bfq-iosched.c | 54 +++++++++++++++++++++++----------------------
- block/bfq-iosched.h |  6 ++---
- block/bfq-wf2q.c    |  6 ++---
- 4 files changed, 37 insertions(+), 37 deletions(-)
+ block/blk-core.c       |  7 +++----
+ block/blk-mq-tag.c     |  8 ++++----
+ block/blk-mq.c         |  8 +++-----
+ block/blk-mq.h         |  2 +-
+ block/blk-settings.c   |  2 +-
+ block/blk-sysfs.c      | 12 ++++++------
+ block/blk-timeout.c    |  2 +-
+ block/blk-wbt.c        |  2 +-
+ include/linux/blkdev.h | 19 ++++++++++++++-----
+ 9 files changed, 34 insertions(+), 28 deletions(-)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 144bca006463..714126ba21b6 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -316,14 +316,12 @@ struct bfq_group *bfqq_group(struct bfq_queue *bfqq)
- 
- static void bfqg_get(struct bfq_group *bfqg)
- {
--	bfqg->ref++;
-+	atomic_inc(&bfqg->ref);
- }
- 
- static void bfqg_put(struct bfq_group *bfqg)
- {
--	bfqg->ref--;
--
--	if (bfqg->ref == 0)
-+	if (atomic_dec_and_test(&bfqg->ref))
- 		kfree(bfqg);
- }
- 
-@@ -659,7 +657,7 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 	 * Get extra reference to prevent bfqq from being freed in
- 	 * next possible expire or deactivate.
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 4bfc0d504b2d..032556de327b 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -731,7 +731,7 @@ void submit_bio_noacct(struct bio *bio)
+ 	 * support don't have to worry about them.
  	 */
--	bfqq->ref++;
-+	atomic_inc(&bfqq->ref);
+ 	if (op_is_flush(bio->bi_opf) &&
+-	    !test_bit(QUEUE_FLAG_WC, &q->queue_flags)) {
++		!blk_queue_wb_cached(q)) {
+ 		bio->bi_opf &= ~(REQ_PREFLUSH | REQ_FUA);
+ 		if (!bio_sectors(bio)) {
+ 			status = BLK_STS_OK;
+@@ -739,7 +739,7 @@ void submit_bio_noacct(struct bio *bio)
+ 		}
+ 	}
  
- 	/* If bfqq is empty, then bfq_bfqq_expire also invokes
- 	 * bfq_del_bfqq_busy, thereby removing bfqq and its entity
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 7ea427817f7f..fbe5624be71f 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -935,7 +935,7 @@ void bfq_weights_tree_add(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+-	if (!test_bit(QUEUE_FLAG_POLL, &q->queue_flags))
++	if (!blk_queue_poll(q))
+ 		bio_clear_polled(bio);
  
- inc_counter:
- 	bfqq->weight_counter->num_active++;
--	bfqq->ref++;
-+	atomic_inc(&bfqq->ref);
- }
+ 	switch (bio_op(bio)) {
+@@ -846,8 +846,7 @@ int bio_poll(struct bio *bio, struct io_comp_batch *iob, unsigned int flags)
+ 	blk_qc_t cookie = READ_ONCE(bio->bi_cookie);
+ 	int ret = 0;
  
- /*
-@@ -1224,9 +1224,10 @@ bfq_bfqq_resume_state(struct bfq_queue *bfqq, struct bfq_data *bfqd,
+-	if (cookie == BLK_QC_T_NONE ||
+-	    !test_bit(QUEUE_FLAG_POLL, &q->queue_flags))
++	if (cookie == BLK_QC_T_NONE || !blk_queue_poll(q))
+ 		return 0;
  
- static int bfqq_process_refs(struct bfq_queue *bfqq)
+ 	/*
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index 9eb968e14d31..0157bb3fcd91 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -44,13 +44,13 @@ void __blk_mq_tag_busy(struct blk_mq_hw_ctx *hctx)
+ 	if (blk_mq_is_shared_tags(hctx->flags)) {
+ 		struct request_queue *q = hctx->queue;
+ 
+-		if (test_bit(QUEUE_FLAG_HCTX_ACTIVE, &q->queue_flags))
++		if (test_and_set_bit(QUEUE_FLAG_HCTX_ACTIVE,
++				     &q->queue_flags))
+ 			return;
+-		set_bit(QUEUE_FLAG_HCTX_ACTIVE, &q->queue_flags);
+ 	} else {
+-		if (test_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state))
++		if (test_and_set_bit(BLK_MQ_S_TAG_ACTIVE,
++				     &hctx->state))
+ 			return;
+-		set_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state);
+ 	}
+ 
+ 	users = atomic_inc_return(&hctx->tags->active_queues);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 9dd3ec42613f..6016fdea518f 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1042,8 +1042,7 @@ static inline bool blk_mq_complete_need_ipi(struct request *rq)
  {
--	return bfqq->ref - bfqq->entity.allocated -
-+	return atomic_read(&bfqq->ref) - bfqq->entity.allocated -
- 		bfqq->entity.on_st_or_in_serv -
--		(bfqq->weight_counter != NULL) - bfqq->stable_ref;
-+		(bfqq->weight_counter != NULL) -
-+		atomic_read(&bfqq->stable_ref);
- }
+ 	int cpu = raw_smp_processor_id();
  
- /* Empty burst list and add just bfqq (see comments on bfq_handle_burst) */
-@@ -2818,7 +2819,7 @@ bfq_setup_merge(struct bfq_queue *bfqq, struct bfq_queue *new_bfqq)
- 	 * expected to be associated with new_bfqq as they happen to
- 	 * issue I/O.
- 	 */
--	new_bfqq->ref += process_refs;
-+	atomic_add(process_refs, &new_bfqq->ref);
- 	return new_bfqq;
- }
+-	if (!IS_ENABLED(CONFIG_SMP) ||
+-	    !test_bit(QUEUE_FLAG_SAME_COMP, &rq->q->queue_flags))
++	if (!IS_ENABLED(CONFIG_SMP) || !blk_queue_same_comp(rq->q))
+ 		return false;
+ 	/*
+ 	 * With force threaded interrupts enabled, raising softirq from an SMP
+@@ -1055,8 +1054,7 @@ static inline bool blk_mq_complete_need_ipi(struct request *rq)
+ 		return false;
  
-@@ -5255,10 +5256,10 @@ void bfq_put_queue(struct bfq_queue *bfqq)
- 	struct hlist_node *n;
- 	struct bfq_group *bfqg = bfqq_group(bfqq);
+ 	/* same CPU or cache domain?  Complete locally */
+-	if (cpu == rq->mq_ctx->cpu ||
+-	    (!test_bit(QUEUE_FLAG_SAME_FORCE, &rq->q->queue_flags) &&
++	if (cpu == rq->mq_ctx->cpu || !(blk_queue_same_force(rq->q) &&
+ 	     cpus_share_cache(cpu, rq->mq_ctx->cpu)))
+ 		return false;
  
--	bfq_log_bfqq(bfqq->bfqd, bfqq, "put_queue: %p %d", bfqq, bfqq->ref);
-+	bfq_log_bfqq(bfqq->bfqd, bfqq, "put_queue: %p %d", bfqq,
-+		     atomic_read(&bfqq->ref));
+@@ -1142,7 +1140,7 @@ void blk_mq_start_request(struct request *rq)
  
--	bfqq->ref--;
--	if (bfqq->ref)
-+	if (!atomic_dec_and_test(&bfqq->ref))
- 		return;
+ 	trace_block_rq_issue(rq);
  
- 	if (!hlist_unhashed(&bfqq->burst_list_node)) {
-@@ -5328,7 +5329,7 @@ void bfq_put_queue(struct bfq_queue *bfqq)
+-	if (test_bit(QUEUE_FLAG_STATS, &q->queue_flags)) {
++	if (blk_queue_stats(q)) {
+ 		rq->io_start_time_ns = ktime_get_ns();
+ 		rq->stats_sectors = blk_rq_sectors(rq);
+ 		rq->rq_flags |= RQF_STATS;
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index 0b2870839cdd..0cc94937c00c 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -355,7 +355,7 @@ static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
+ 	if (blk_mq_is_shared_tags(hctx->flags)) {
+ 		struct request_queue *q = hctx->queue;
  
- static void bfq_put_stable_ref(struct bfq_queue *bfqq)
- {
--	bfqq->stable_ref--;
-+	atomic_dec(&bfqq->stable_ref);
- 	bfq_put_queue(bfqq);
- }
- 
-@@ -5358,7 +5359,7 @@ static void bfq_exit_bfqq(struct bfq_data *bfqd, struct bfq_queue *bfqq)
- 		bfq_schedule_dispatch(bfqd);
- 	}
- 
--	bfq_log_bfqq(bfqd, bfqq, "exit_bfqq: %p, %d", bfqq, bfqq->ref);
-+	bfq_log_bfqq(bfqd, bfqq, "exit_bfqq: %p, %d", bfqq, atomic_read(&bfqq->ref));
- 
- 	bfq_put_cooperator(bfqq);
- 
-@@ -5507,7 +5508,7 @@ static void bfq_init_bfqq(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 	INIT_HLIST_NODE(&bfqq->woken_list_node);
- 	INIT_HLIST_HEAD(&bfqq->woken_list);
- 
--	bfqq->ref = 0;
-+	atomic_set(&bfqq->ref, 0);
- 	bfqq->bfqd = bfqd;
- 
- 	if (bic)
-@@ -5710,12 +5711,12 @@ static struct bfq_queue *bfq_do_or_sched_stable_merge(struct bfq_data *bfqd,
- 			 * to prevent it from being freed,
- 			 * until we decide whether to merge
- 			 */
--			last_bfqq_created->ref++;
-+			atomic_inc(&last_bfqq_created->ref);
- 			/*
- 			 * need to keep track of stable refs, to
- 			 * compute process refs correctly
- 			 */
--			last_bfqq_created->stable_ref++;
-+			atomic_inc(&last_bfqq_created->stable_ref);
- 			/*
- 			 * Record the bfqq to merge to.
- 			 */
-@@ -5767,20 +5768,21 @@ static struct bfq_queue *bfq_get_queue(struct bfq_data *bfqd,
- 	 * prune it.
- 	 */
- 	if (async_bfqq) {
--		bfqq->ref++; /*
--			      * Extra group reference, w.r.t. sync
--			      * queue. This extra reference is removed
--			      * only if bfqq->bfqg disappears, to
--			      * guarantee that this queue is not freed
--			      * until its group goes away.
--			      */
-+		atomic_inc(&bfqq->ref);
-+		/*
-+		 * Extra group reference, w.r.t. sync
-+		 * queue. This extra reference is removed
-+		 * only if bfqq->bfqg disappears, to
-+		 * guarantee that this queue is not freed
-+		 * until its group goes away.
-+		 */
- 		bfq_log_bfqq(bfqd, bfqq, "get_queue, bfqq not in async: %p, %d",
--			     bfqq, bfqq->ref);
-+			     bfqq, atomic_read(&bfqq->ref));
- 		*async_bfqq = bfqq;
- 	}
- 
- out:
--	bfqq->ref++; /* get a process reference to this queue */
-+	atomic_inc(&bfqq->ref); /* get a process reference to this queue */
- 
- 	if (bfqq != &bfqd->oom_bfqq && is_sync && !respawn)
- 		bfqq = bfq_do_or_sched_stable_merge(bfqd, bfqq, bic);
-@@ -6059,7 +6061,7 @@ static bool __bfq_insert_request(struct bfq_data *bfqd, struct request *rq)
- 		 */
- 		bfqq_request_allocated(new_bfqq);
- 		bfqq_request_freed(bfqq);
--		new_bfqq->ref++;
-+		atomic_inc(&new_bfqq->ref);
- 		/*
- 		 * If the bic associated with the process
- 		 * issuing this request still points to bfqq
-@@ -6803,10 +6805,10 @@ static struct bfq_queue *bfq_init_rq(struct request *rq)
- 	}
- 
- 	bfqq_request_allocated(bfqq);
--	bfqq->ref++;
-+	atomic_inc(&bfqq->ref);
- 	bic->requests++;
- 	bfq_log_bfqq(bfqd, bfqq, "get_request %p: bfqq %p, %d",
--		     rq, bfqq, bfqq->ref);
-+		     rq, bfqq, atomic_read(&bfqq->ref));
- 
- 	rq->elv.priv[0] = bic;
- 	rq->elv.priv[1] = bfqq;
-@@ -6939,7 +6941,7 @@ static void __bfq_put_async_bfqq(struct bfq_data *bfqd,
- 		bfq_bfqq_move(bfqd, bfqq, bfqd->root_group);
- 
- 		bfq_log_bfqq(bfqd, bfqq, "put_async_bfqq: putting %p, %d",
--			     bfqq, bfqq->ref);
-+			     bfqq, atomic_read(&bfqq->ref));
- 		bfq_put_queue(bfqq);
- 		*bfqq_ptr = NULL;
- 	}
-@@ -7092,7 +7094,7 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
- 	 * will not attempt to free it.
- 	 */
- 	bfq_init_bfqq(bfqd, &bfqd->oom_bfqq, NULL, 1, 0);
--	bfqd->oom_bfqq.ref++;
-+	atomic_inc(&bfqd->oom_bfqq.ref);
- 	bfqd->oom_bfqq.new_ioprio = BFQ_DEFAULT_QUEUE_IOPRIO;
- 	bfqd->oom_bfqq.new_ioprio_class = IOPRIO_CLASS_BE;
- 	bfqd->oom_bfqq.entity.new_weight =
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 64ee618064ba..71ac0de80bb0 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -234,9 +234,9 @@ struct bfq_ttime {
-  */
- struct bfq_queue {
- 	/* reference counter */
--	int ref;
-+	atomic_t ref;
- 	/* counter of references from other queues for delayed stable merge */
--	int stable_ref;
-+	atomic_t stable_ref;
- 	/* parent bfq_data */
- 	struct bfq_data *bfqd;
- 
-@@ -928,7 +928,7 @@ struct bfq_group {
- 	char blkg_path[128];
- 
- 	/* reference counter (see comments in bfq_bic_update_cgroup) */
--	int ref;
-+	atomic_t ref;
- 	/* Is bfq_group still online? */
- 	bool online;
- 
-diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index 8fc3da4c23bb..60a9a2c1fc8d 100644
---- a/block/bfq-wf2q.c
-+++ b/block/bfq-wf2q.c
-@@ -512,9 +512,9 @@ static void bfq_get_entity(struct bfq_entity *entity)
- 	struct bfq_queue *bfqq = bfq_entity_to_bfqq(entity);
- 
- 	if (bfqq) {
--		bfqq->ref++;
-+		atomic_inc(&bfqq->ref);
- 		bfq_log_bfqq(bfqq->bfqd, bfqq, "get_entity: %p %d",
--			     bfqq, bfqq->ref);
-+			     bfqq, atomic_read(&bfqq->ref));
- 	}
- }
- 
-@@ -1611,7 +1611,7 @@ bool __bfq_bfqd_reset_in_service(struct bfq_data *bfqd)
- 		 * reference to the queue. If this is the case, then
- 		 * bfqq gets freed here.
- 		 */
--		int ref = in_serv_bfqq->ref;
-+		int ref = atomic_read(&in_serv_bfqq->ref);
- 		bfq_put_queue(in_serv_bfqq);
- 		if (ref == 1)
+-		if (!test_bit(QUEUE_FLAG_HCTX_ACTIVE, &q->queue_flags))
++		if (!blk_queue_hctx_active(q))
  			return true;
+ 	} else {
+ 		if (!test_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state))
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index 8bb9eef5310e..525eddb114ba 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -832,7 +832,7 @@ void blk_queue_write_cache(struct request_queue *q, bool wc, bool fua)
+ 	else
+ 		blk_queue_flag_clear(QUEUE_FLAG_FUA, q);
+ 
+-	wbt_set_write_cache(q, test_bit(QUEUE_FLAG_WC, &q->queue_flags));
++	wbt_set_write_cache(q, blk_queue_wb_cached(q));
+ }
+ EXPORT_SYMBOL_GPL(blk_queue_write_cache);
+ 
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index e71b3b43927c..a87b16fcbcd5 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -365,8 +365,8 @@ static ssize_t queue_nomerges_store(struct request_queue *q, const char *page,
+ 
+ static ssize_t queue_rq_affinity_show(struct request_queue *q, char *page)
+ {
+-	bool set = test_bit(QUEUE_FLAG_SAME_COMP, &q->queue_flags);
+-	bool force = test_bit(QUEUE_FLAG_SAME_FORCE, &q->queue_flags);
++	bool set = blk_queue_same_comp(q);
++	bool force = blk_queue_same_force(q);
+ 
+ 	return queue_var_show(set << force, page);
+ }
+@@ -432,13 +432,13 @@ static ssize_t queue_poll_delay_store(struct request_queue *q, const char *page,
+ 
+ static ssize_t queue_poll_show(struct request_queue *q, char *page)
+ {
+-	return queue_var_show(test_bit(QUEUE_FLAG_POLL, &q->queue_flags), page);
++	return queue_var_show(blk_queue_poll(q), page);
+ }
+ 
+ static ssize_t queue_poll_store(struct request_queue *q, const char *page,
+ 				size_t count)
+ {
+-	if (!test_bit(QUEUE_FLAG_POLL, &q->queue_flags))
++	if (!blk_queue_poll(q))
+ 		return -EINVAL;
+ 	pr_info_ratelimited("writes to the poll attribute are ignored.\n");
+ 	pr_info_ratelimited("please use driver specific parameters instead.\n");
+@@ -519,7 +519,7 @@ static ssize_t queue_wb_lat_store(struct request_queue *q, const char *page,
+ 
+ static ssize_t queue_wc_show(struct request_queue *q, char *page)
+ {
+-	if (test_bit(QUEUE_FLAG_WC, &q->queue_flags))
++	if (blk_queue_wb_cached(q))
+ 		return sprintf(page, "write back\n");
+ 
+ 	return sprintf(page, "write through\n");
+@@ -549,7 +549,7 @@ static ssize_t queue_wc_store(struct request_queue *q, const char *page,
+ 
+ static ssize_t queue_fua_show(struct request_queue *q, char *page)
+ {
+-	return sprintf(page, "%u\n", test_bit(QUEUE_FLAG_FUA, &q->queue_flags));
++	return sprintf(page, "%u\n", blk_queue_fua(q));
+ }
+ 
+ static ssize_t queue_dax_show(struct request_queue *q, char *page)
+diff --git a/block/blk-timeout.c b/block/blk-timeout.c
+index 1b8de0417fc1..d1f7bb5a4930 100644
+--- a/block/blk-timeout.c
++++ b/block/blk-timeout.c
+@@ -40,7 +40,7 @@ ssize_t part_timeout_show(struct device *dev, struct device_attribute *attr,
+ 			  char *buf)
+ {
+ 	struct gendisk *disk = dev_to_disk(dev);
+-	int set = test_bit(QUEUE_FLAG_FAIL_IO, &disk->queue->queue_flags);
++	int set = blk_queue_fail_io(disk->queue);
+ 
+ 	return sprintf(buf, "%d\n", set != 0);
+ }
+diff --git a/block/blk-wbt.c b/block/blk-wbt.c
+index 246467926253..92c03db7eb6d 100644
+--- a/block/blk-wbt.c
++++ b/block/blk-wbt.c
+@@ -846,7 +846,7 @@ int wbt_init(struct request_queue *q)
+ 	rwb->min_lat_nsec = wbt_default_latency_nsec(q);
+ 
+ 	wbt_queue_depth_changed(&rwb->rqos);
+-	wbt_set_write_cache(q, test_bit(QUEUE_FLAG_WC, &q->queue_flags));
++	wbt_set_write_cache(q, blk_queue_wb_cached(q));
+ 
+ 	/*
+ 	 * Assign rwb and add the stats callback.
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 49373d002631..57f4b9cd0ea7 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -620,6 +620,16 @@ bool blk_queue_flag_test_and_set(unsigned int flag, struct request_queue *q);
+ #define blk_queue_registered(q)	test_bit(QUEUE_FLAG_REGISTERED, &(q)->queue_flags)
+ #define blk_queue_sq_sched(q)	test_bit(QUEUE_FLAG_SQ_SCHED, &(q)->queue_flags)
+ 
++#define blk_queue_wb_cached(q) test_bit(QUEUE_FLAG_WC, &(q)->queue_flags)
++#define blk_queue_poll(q) test_bit(QUEUE_FLAG_POLL, &(q)->queue_flags)
++#define blk_queue_fua(q) test_bit(QUEUE_FLAG_FUA, &(q)->queue_flags)
++#define blk_queue_same_comp(q) test_bit(QUEUE_FLAG_SAME_COMP, &(q)->queue_flags)
++#define blk_queue_same_force(q) test_bit(QUEUE_FLAG_SAME_FORCE, &(q)->queue_flags)
++#define blk_queue_fail_io(q) test_bit(QUEUE_FLAG_FAIL_IO, &(q)->queue_flags)
++#define blk_queue_stats(q) test_bit(QUEUE_FLAG_STATS, &(q)->queue_flags)
++#define blk_queue_hctx_active(q) test_bit(QUEUE_FLAG_HCTX_ACTIVE, &(q)->queue_flags)
++#define blk_queue_nowait(q) test_bit(QUEUE_FLAG_NOWAIT, &(q)->queue_flags)
++
+ extern void blk_set_pm_only(struct request_queue *q);
+ extern void blk_clear_pm_only(struct request_queue *q);
+ 
+@@ -1265,23 +1275,22 @@ static inline bool bdev_nonrot(struct block_device *bdev)
+ 
+ static inline bool bdev_stable_writes(struct block_device *bdev)
+ {
+-	return test_bit(QUEUE_FLAG_STABLE_WRITES,
+-			&bdev_get_queue(bdev)->queue_flags);
++	return blk_queue_stable_writes(bdev_get_queue(bdev));
+ }
+ 
+ static inline bool bdev_write_cache(struct block_device *bdev)
+ {
+-	return test_bit(QUEUE_FLAG_WC, &bdev_get_queue(bdev)->queue_flags);
++	return blk_queue_wb_cached(bdev_get_queue(bdev));
+ }
+ 
+ static inline bool bdev_fua(struct block_device *bdev)
+ {
+-	return test_bit(QUEUE_FLAG_FUA, &bdev_get_queue(bdev)->queue_flags);
++	return blk_queue_fua(bdev_get_queue(bdev));
+ }
+ 
+ static inline bool bdev_nowait(struct block_device *bdev)
+ {
+-	return test_bit(QUEUE_FLAG_NOWAIT, &bdev_get_queue(bdev)->queue_flags);
++	return blk_queue_nowait(bdev_get_queue(bdev));
+ }
+ 
+ static inline enum blk_zoned_model bdev_zoned_model(struct block_device *bdev)
 -- 
 2.25.1
 
