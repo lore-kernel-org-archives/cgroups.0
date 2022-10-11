@@ -1,15 +1,15 @@
 From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/4] blk-cgroup: correct comment for blk_alloc_queue and
- blk_exit_queue
-Date: Tue, 11 Oct 2022 09:07:20 +0800
-Message-ID: <da6d7a9a-49a8-0116-2507-f5c8057eaf42@huawei.com>
+Subject: Re: [PATCH 3/4] blk-cgroup: Add NULL check of pd_alloc_fn in
+ blkcg_activate_policy
+Date: Tue, 11 Oct 2022 09:23:45 +0800
+Message-ID: <c62a8944-093f-8534-106c-51b159696008@huawei.com>
 References: <20221010023859.11896-1-shikemeng@huawei.com>
- <20221010023859.11896-3-shikemeng@huawei.com>
- <Y0SACpAv4+ETrS6Z@slm.duckdns.org>
+ <20221010023859.11896-4-shikemeng@huawei.com>
+ <Y0SAneaJadYJwAkr@slm.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Y0SACpAv4+ETrS6Z-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <Y0SAneaJadYJwAkr-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
@@ -17,42 +17,45 @@ Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHX
 
 
 
-on 10/11/2022 4:26 AM, Tejun Heo wrote:
-> On Mon, Oct 10, 2022 at 10:38:57AM +0800, Kemeng Shi wrote:
->> Since commit 1059699f87eb("block: move blkcg initialization/destroy into
->> disk allocation/release handler"), blk_alloc_queue and blk_exit_queue is
->> called directly from gendisk. Update the corresponding comment.
+on 10/11/2022 4:29 AM, Tejun Heo wrote:
+> On Mon, Oct 10, 2022 at 10:38:58AM +0800, Kemeng Shi wrote:
+>> Function blkcg_policy_register only make sure pd_alloc_fn and pd_free_fn in
+>> pairs, so pd_alloc_fn could be NULL in registered blkcg_policy. Check NULL
+>> before use for pd_alloc_fn in blkcg_activate_policy to avoid protential
+>> NULL dereference.
 >>
 >> Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 >> ---
->>  block/blk-cgroup.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>  block/blk-cgroup.c | 3 +++
+>>  1 file changed, 3 insertions(+)
 >>
 >> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
->> index bc4dec705572..463c568d3e86 100644
+>> index 463c568d3e86..fc083c35dc42 100644
 >> --- a/block/blk-cgroup.c
 >> +++ b/block/blk-cgroup.c
->> @@ -1259,7 +1259,7 @@ static int blkcg_css_online(struct cgroup_subsys_state *css)
->>   * blkcg_init_queue - initialize blkcg part of request queue
->>   * @q: request_queue to initialize
->>   *
->> - * Called from blk_alloc_queue(). Responsible for initializing blkcg
->> + * Called from gendisk. Responsible for initializing blkcg
+>> @@ -1404,6 +1404,9 @@ int blkcg_activate_policy(struct request_queue *q,
+>>  	if (blkcg_policy_enabled(q, pol))
+>>  		return 0;
+>>  
+>> +	if (pol->pd_alloc_fn == NULL)
+>> +		return -EINVAL;
 > 
-> Maybe be a bit more specific and say blk_alloc_disk()?
-Thanks for review. I will update this in next version.
+> This isn't the only place this function is called, so the above won't
+> achieve much. Given that this is rather trivially noticeable and all the
+> current users do implement pd_alloc_fn, I'm not sure we need to update this
+> now.
+Thanks for review. The rest call of this function will always protect by
+blkcg_policy_enabled while policy only can be enabled if new added NULL
+check is passed. So the new added NULL check enough.
+
+By the way, the policy enable/disable work is direct call to
+__set_bit(pol->plid, q->blkcg_pols) in blkcg_policy_enabled
+and __clear_bit(pol->plid, q->blkcg_pols) in blkcg_deactivate_policy
+which is not intuitive. Is it a good idea to add function
+blkcg_policy_enable and blkcg_policy_disable to improve readability?
+
 > 
->>   * part of new request_queue @q.
->>   *
->>   * RETURNS:
->> @@ -1321,7 +1321,7 @@ int blkcg_init_queue(struct request_queue *q)
->>   * blkcg_exit_queue - exit and release blkcg part of request_queue
->>   * @q: request_queue being released
->>   *
->> - * Called from blk_exit_queue().  Responsible for exiting blkcg part.
->> + * Called from gendisk.  Responsible for exiting blkcg part.
-> 
-> Ditto.
+> Thanks.
 > 
 
 -- 
