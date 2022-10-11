@@ -1,43 +1,140 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 0/2] Support cgroup1 in get from fd/file interfaces
-Date: Tue, 11 Oct 2022 00:33:57 +0000
-Message-ID: <20221011003359.3475263-1-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [PATCH v2 1/2] cgroup: add cgroup_v1v2_get_from_[fd/file]()
+Date: Tue, 11 Oct 2022 00:33:58 +0000
+Message-ID: <20221011003359.3475263-2-yosryahmed@google.com>
+References: <20221011003359.3475263-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=5MPkIEvXfnmsvTKOk4MDlNi99CiZEm9rCw/f8+9aBJE=;
-        b=mWfPotsftp8geA/L8mN84Y3UjYw9VeNIycJIvsZyy5yDxqJzmCwGBb9gaWdJV61voB
-         JNWi/dHUJ/RKSzdweI2aUtBeEA+hnuFilAe+ELgKi/1CDGO4GXwIWUgcOkpdDmSZmgYl
-         S+X4BhUfpqX/yE7TDRp17TnlXuDPRpO6dv2MjS/WXn/JvLIhp+pYDO3Nxx0fz/B6YiMB
-         EhiVkK0IGiVr8h1wl1gyzrcd9vj2+d1meBbENrZruSwWxcfYRDhbE+atKn/PT9AUkTHS
-         SexkE8P88iGSv/ALoOaI5BRuHiTcO+mFd2hM7eBBwp+Ciop7u/rpi8M7PIC1eIMl8mx3
-         Rc/g==
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=nt0hZpqjZYJlwAVjzUzDxwYteGmfv83PaANdrORvyzY=;
+        b=ay7HauFPH8wegVHkBuk9+qrh+plSbcKcv5NaQwdc+wDJkt5E2xl7LGxvAe30oD7Tlm
+         xfCsLbQUQSeZIATvCfTgpW1P+iAjX0UL8XYQ46/zB4U56Nk1gQh7Cl/RkSKLOi2aD/fJ
+         WdwqcT+mythyJ/AN5hL6XCeJE8aylwW1z+fxMP9iNQU7LmOp9nPyITikDEc+QcNYPFe8
+         CVVHriM88Vw34IT2rQvmF3uISMnQcPpkDTFSXsNr1kIIdrmqs7ulupf1ApUJbPYkj3Cp
+         DfPpaK4zFvyq5PWTnUKpSL+bQNTxZmpnjH2T5Cz/+3E/44XnZJxI2wtC7O/Z/QyyknpT
+         8mcQ==
+In-Reply-To: <20221011003359.3475263-1-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Yonghong Song <yhs@fb.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@google.com>, Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, bpf@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
 
-commit f3a2aebdd6fb ("cgroup: enable cgroup_get_from_file() on cgroup1")
-enabled using cgroup_get_from_file() and cgroup_get_from_fd() on
-cgroup1, to enable bpf cgroup_iter to attach to cgroup1.
+Add cgroup_v1v2_get_from_fd() and cgroup_v1v2_get_from_file() that
+support both cgroup1 and cgroup2.
 
-Apparently, other callers depended on these functions only supporting
-cgroup2, so f3a2aebdd6 was reverted. Instead, add new separate interfaces
-that support both cgroup1 and cgroup2 and use them in bpf cgroup_iter.
+Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+---
+ include/linux/cgroup.h |  1 +
+ kernel/cgroup/cgroup.c | 50 +++++++++++++++++++++++++++++++++++++-----
+ 2 files changed, 45 insertions(+), 6 deletions(-)
 
-Yosry Ahmed (2):
-  cgroup: add cgroup_v1v2_get_from_[fd/file]()
-  bpf: cgroup_iter: support cgroup1 using cgroup fd
-
- include/linux/cgroup.h   |  1 +
- kernel/bpf/cgroup_iter.c |  2 +-
- kernel/cgroup/cgroup.c   | 50 +++++++++++++++++++++++++++++++++++-----
- 3 files changed, 46 insertions(+), 7 deletions(-)
-
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 398f0bce7c21..a88de5bdeaa9 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -106,6 +106,7 @@ struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
+ 
+ struct cgroup *cgroup_get_from_path(const char *path);
+ struct cgroup *cgroup_get_from_fd(int fd);
++struct cgroup *cgroup_v1v2_get_from_fd(int fd);
+ 
+ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
+ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 72e97422e9d9..be167e15ef1a 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -6208,16 +6208,36 @@ void cgroup_fork(struct task_struct *child)
+ 	INIT_LIST_HEAD(&child->cg_list);
+ }
+ 
+-static struct cgroup *cgroup_get_from_file(struct file *f)
++/**
++ * cgroup_v1v2_get_from_file - get a cgroup pointer from a file pointer
++ * @f: file corresponding to cgroup_dir
++ *
++ * Find the cgroup from a file pointer associated with a cgroup directory.
++ * Returns a pointer to the cgroup on success. ERR_PTR is returned if the
++ * cgroup cannot be found.
++ */
++static struct cgroup *cgroup_v1v2_get_from_file(struct file *f)
+ {
+ 	struct cgroup_subsys_state *css;
+-	struct cgroup *cgrp;
+ 
+ 	css = css_tryget_online_from_dir(f->f_path.dentry, NULL);
+ 	if (IS_ERR(css))
+ 		return ERR_CAST(css);
+ 
+-	cgrp = css->cgroup;
++	return css->cgroup;
++}
++
++/**
++ * cgroup_get_from_file - same as cgroup_v1v2_get_from_file, but only supports
++ * cgroup2.
++ */
++static struct cgroup *cgroup_get_from_file(struct file *f)
++{
++	struct cgroup *cgrp = cgroup_v1v2_get_from_file(f);
++
++	if (IS_ERR(cgrp))
++		return ERR_CAST(cgrp);
++
+ 	if (!cgroup_on_dfl(cgrp)) {
+ 		cgroup_put(cgrp);
+ 		return ERR_PTR(-EBADF);
+@@ -6720,14 +6740,14 @@ EXPORT_SYMBOL_GPL(cgroup_get_from_path);
+ 
+ /**
+  * cgroup_get_from_fd - get a cgroup pointer from a fd
+- * @fd: fd obtained by open(cgroup2_dir)
++ * @fd: fd obtained by open(cgroup_dir)
+  *
+  * Find the cgroup from a fd which should be obtained
+  * by opening a cgroup directory.  Returns a pointer to the
+  * cgroup on success. ERR_PTR is returned if the cgroup
+  * cannot be found.
+  */
+-struct cgroup *cgroup_get_from_fd(int fd)
++struct cgroup *cgroup_v1v2_get_from_fd(int fd)
+ {
+ 	struct cgroup *cgrp;
+ 	struct file *f;
+@@ -6736,10 +6756,28 @@ struct cgroup *cgroup_get_from_fd(int fd)
+ 	if (!f)
+ 		return ERR_PTR(-EBADF);
+ 
+-	cgrp = cgroup_get_from_file(f);
++	cgrp = cgroup_v1v2_get_from_file(f);
+ 	fput(f);
+ 	return cgrp;
+ }
++
++/**
++ * cgroup_get_from_fd - same as cgroup_v1v2_get_from_fd, but only supports
++ * cgroup2.
++ */
++struct cgroup *cgroup_get_from_fd(int fd)
++{
++	struct cgroup *cgrp = cgroup_v1v2_get_from_fd(fd);
++
++	if (IS_ERR(cgrp))
++		return ERR_CAST(cgrp);
++
++	if (!cgroup_on_dfl(cgrp)) {
++		cgroup_put(cgrp);
++		return ERR_PTR(-EBADF);
++	}
++	return cgrp;
++}
+ EXPORT_SYMBOL_GPL(cgroup_get_from_fd);
+ 
+ static u64 power_of_ten(int power)
 -- 
 2.38.0.rc1.362.ged0d419d3c-goog
 
