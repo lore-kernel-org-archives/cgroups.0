@@ -1,8 +1,10 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 0/2] Support cgroup1 in get from fd/file interfaces
-Date: Tue, 11 Oct 2022 06:51:25 -1000
-Message-ID: <Y0WfDQ95i9lFJKUz@slm.duckdns.org>
-References: <20221011003359.3475263-1-yosryahmed@google.com>
+Subject: Re: [PATCH v2] perf stat: Support old kernels for bperf cgroup
+ counting
+Date: Tue, 11 Oct 2022 06:53:43 -1000
+Message-ID: <Y0Wfl88objrECjSo@slm.duckdns.org>
+References: <Y0Sx2KWX4gPlLytq@slm.duckdns.org>
+ <20221011052808.282394-1-namhyung@kernel.org>
 Mime-Version: 1.0
 Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
@@ -10,30 +12,33 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=ADBsxLunge1AhqEpSVfGO0kFOloOABIAiXPDugpYJZk=;
-        b=XEG0+rifCJBs/VBmh3mu4URmwTT/ffH/L1xVT0nYnfMdL2BvMHjdfRoyoRBRnB7RZ4
-         5BnpGQywEA/92cRoaZCZncGb9B0QnB/wtC85n5uLMYxEC2+B9ny+fQ+JvyO5w2UxNfCH
-         yITSzjKTNhmdMRklBn3mf5s0m4hr1EL3TNjovWH297zbwGFOtErDgOjzLqcvo7XqrWVR
-         1mO90RNcL8plTUjxhbMb4SdUv9U9lJtg/TjZ7eNkJa273jilFF44fYe48Pjeo5VzTGyc
-         EZjN7POAOMZAZ5DLeCfJJOR/UzUhHIqwSLGknhAXyfBZJngu4vROfvegVQdXt5YpVyEJ
-         tW7w==
+        bh=wl7v0z/p2+wB3apqHXeEZNHFFTX3kIYffMColIWffT4=;
+        b=fe9y9dV32MzYVl0l8UVUS8Nj2Bn70r5r10DWr7jOsP0TeSUOxZa+q76FX1JAVBQx9A
+         hTfwFLFpIZoms5zYBD+LZIRt2hQyqBNFctK7hSdkYml+sHmni/CuBHZs2Ywuk3GXMtu+
+         4ZCQ1KznO3DwI1RWztd9HrO7W4wV2BYgGsd+ThrzhwHVy0wszz5wyd6u4T9MnSp5C3jt
+         p58v8Rj31jStYBgi+gZxnp0MpIGMPmfLa9JIgfSel3+e0V1veCoP2iG+7EBat2nCyT0c
+         nPadT3RqSqvFqGN5xlcgP9v19d0kVjfZTUxj3ME9IU6wKL14bhjgh8CIgtIPQsHY3HZe
+         xzEg==
 Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20221011003359.3475263-1-yosryahmed@google.com>
+In-Reply-To: <20221011052808.282394-1-namhyung@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Yonghong Song <yhs@fb.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@google.com>, Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, bpf@vger.kernel.org
+To: Namhyung Kim <namhyung@kernel.org>
+Cc: Arnaldo Carvalho de Melo <acme@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Jiri Olsa <jolsa@kernel.org>, LKML <linux-kernel@vger.kernel.org>, linux-perf-users@vger.kernel.org, Song Liu <songliubraving@fb.com>, bpf@vger.kernel.org, Andrii Nakryiko <andrii@kernel.org>
 
-On Tue, Oct 11, 2022 at 12:33:57AM +0000, Yosry Ahmed wrote:
-> commit f3a2aebdd6fb ("cgroup: enable cgroup_get_from_file() on cgroup1")
-> enabled using cgroup_get_from_file() and cgroup_get_from_fd() on
-> cgroup1, to enable bpf cgroup_iter to attach to cgroup1.
+On Mon, Oct 10, 2022 at 10:28:08PM -0700, Namhyung Kim wrote:
+> The recent change in the cgroup will break the backward compatiblity in
+> the BPF program.  It should support both old and new kernels using BPF
+> CO-RE technique.
 > 
-> Apparently, other callers depended on these functions only supporting
-> cgroup2, so f3a2aebdd6 was reverted. Instead, add new separate interfaces
-> that support both cgroup1 and cgroup2 and use them in bpf cgroup_iter.
+> Like the task_struct->__state handling in the offcpu analysis, we can
+> check the field name in the cgroup struct.
+> 
+> Acked-by: Jiri Olsa <jolsa@kernel.org>
+> Acked-by: Andrii Nakryiko <andrii@kernel.org>
+> Signed-off-by: Namhyung Kim <namhyung@kernel.org>
 
 Applied to cgroup/for-6.1-fixes.
 
