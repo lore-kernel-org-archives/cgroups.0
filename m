@@ -1,51 +1,109 @@
 From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v1 2/3] cgroup: add cgroup_all_get_from_[fd/file]()
-Date: Mon, 10 Oct 2022 17:14:24 -0700
-Message-ID: <CAJD7tkbDNqxE+bYQvo5YAbK01qz7UVd-s6bOf==Ao44bmNsk=Q@mail.gmail.com>
-References: <20221010235845.3379019-1-yosryahmed@google.com>
- <20221010235845.3379019-3-yosryahmed@google.com> <Y0S0nFSyivpU4H0n@slm.duckdns.org>
+Subject: Re: [RFC] memcg rstat flushing optimization
+Date: Mon, 10 Oct 2022 17:15:33 -0700
+Message-ID: <CAJD7tkZZuDwGHDjAsOde0VjDm9YcKWnWUGHg43q79hcffZH5Xw@mail.gmail.com>
+References: <CAJD7tkZQ+L5N7FmuBAXcg_2Lgyky7m=fkkBaUChr7ufVMHss=A@mail.gmail.com>
+ <Yz2xDq0jo1WZNblz@slm.duckdns.org> <CAJD7tkawcrpmacguvyWVK952KtD-tP+wc2peHEjyMHesdM1o0Q@mail.gmail.com>
+ <Yz3CH7caP7H/C3gL@slm.duckdns.org> <CAJD7tkY8gNNaPneAVFDYcWN9irUvE4ZFW=Hv=5898cWFG1p7rg@mail.gmail.com>
+ <Yz3LYoxhvGW/b9yz@slm.duckdns.org> <CAJD7tkZOw9hrc0jKYqYW1ysGZNjSVDgjhCyownBRmpS+UUCP3A@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=5R0pinv45UAtKlsTkuyPxf0dfiwVu4saizyc4kXh9wE=;
-        b=lGfVgp1V/sLVfhecIm+c3tVUQ/aewnQG+QaeaREAG03T7IfKe5Wj51TVbaJb0DEGfO
-         P2/Wy1LvPnCEec4RYlwpoXU+cJjY55Ec22YsKV6eYGCaDYhGuy6QSOfT3Su2fMY1zuoS
-         RHn+76zhnLPjuj8OvtNqmpkEJjsv3jYGeV492h5EDtL6dSFatrjP/EvAxWKbGRKs2qlT
-         GKHFFBsAC2BF229tBT/fd1E448SyoC90xpjOLt/ignQoxHEZsYPTkQTLcgdGagMw4TNm
-         XvlxgbbaSspLvA7HxxaSKLJOnhoP9PgZkTL/aGXyottUjVcnIiKlGA4oJbhkuJOuTjFN
-         YdZg==
-In-Reply-To: <Y0S0nFSyivpU4H0n-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+        bh=t5b3uWEYh8D1bGFVBUtx/YHS7tr5OOv/UiC1a+kLQhA=;
+        b=D+BVHNWtd51crdcezYUpYST5y49fBdPovHWh29578VE8YlXqAHn4H7iCM8O9FJb6cn
+         bq0C2o1Yr1X2CJnuzn7wkqdcCO1cLQQUeYOAP4JlaCkkzuBsx/yCDifdN2himGrBo28F
+         DZgaJ0Ddey7ejOeWTf05dM9xe3Gdo357UUmkeVaT0X+vy2rkXhXFV75Irvm6xlEWUpb1
+         tFbcKOTKzZrxO/6MRNLSnro+I2/7GJw5Y+wyF+1RLHRTjVUeugjUGANyaot1CpN7Ml/I
+         4Teg6/eg1jmbM1yn+UCp/Ko81+NAwD1hKvxyFOzCqUTNAh5PIYj0Us/MxMyZcAjEsULg
+         ggZA==
+In-Reply-To: <CAJD7tkZOw9hrc0jKYqYW1ysGZNjSVDgjhCyownBRmpS+UUCP3A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Oct 10, 2022 at 5:11 PM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+On Wed, Oct 5, 2022 at 11:38 AM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 >
-> On Mon, Oct 10, 2022 at 11:58:44PM +0000, Yosry Ahmed wrote:
-> > Add cgroup_all_get_from_fd() and cgroup_all_get_from_file() that
-> > support both cgroup1 and cgroup2.
+> On Wed, Oct 5, 2022 at 11:22 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> >
+> > Hello,
+> >
+> > On Wed, Oct 05, 2022 at 11:02:23AM -0700, Yosry Ahmed wrote:
+> > > > I was thinking more that being done inside the flush function.
+> > >
+> > > I think the flush function already does that in some sense if
+> > > might_sleep is true, right? The problem here is that we are using
+> >
+> > Oh I forgot about that. Right.
+> >
+> > ...
+> > > I took a couple of crashed machines kdumps and ran a script to
+> > > traverse updated memcgs and check how many cpus have updates and how
+> > > many updates are there on each cpu. I found that on average only a
+> > > couple of stats are updated per-cpu per-cgroup, and less than 25% of
+> > > cpus (but this is on a large machine, I expect the number to go higher
+> > > on smaller machines). Which is why I suggested a bitmask. I understand
+> > > though that this depends on whatever workloads were running on those
+> > > machines, and that in case where most stats are updated the bitmask
+> > > will actually make things slightly worse.
+> >
+> > One worry I have about selective flushing is that it's only gonna improve
+> > things by some multiples while we can reasonably increase the problem size
+> > by orders of magnitude.
 >
-> Looks generally good. How about cgroup_v1v2_ as the prefix?
-
-Thanks for taking a look.
-
-I don't have a strong opinion here. I picked cgroup_all_* vs
-cgroup12_* or cgroup_v1v2_* because it's easier on the eyes.
-
-My preference would have been to rename the old versions to
-cgroup_dfl_* instead, but like you said this might confuse existing
-users.
-
-Anyway, I am fine with whatever you choose. Let me know if you need me
-to send a v2 for changing the prefix.
-
+> I think we would usually want to flush a few stats (< 5?) in irqsafe
+> contexts out of over 100, so I would say the improvement would be
+> good, but yeah, the problem size can reasonably increase more than
+> that. It also depends on which stats we selectively flush. If they are
+> not in the same cache line we might end up bringing in a lot of stats
+> anyway into the cpu cache.
 >
-> Thanks.
+> >
+> > The only real ways out I can think of are:
+> >
+> > * Implement a periodic flusher which keeps the stats needed in irqsafe path
+> >   acceptably uptodate to avoid flushing with irq disabled. We can make this
+> >   adaptive too - no reason to do all this if the number to flush isn't huge.
 >
-> --
-> tejun
+> We do have a periodic flusher today for memcg stats (see
+> flush_memcg_stats_dwork). It calls __mem_cgroup_flush_stas() which
+> only flushes if the total number of updates is over a certain
+> threshold.
+> mem_cgroup_flush_stas_delayed(), which is called in the page fault
+> path, only does a flush if the last flush was a certain while ago. We
+> don't use the delayed version in all irqsafe contexts though, and I am
+> not the right person to tell if we can.
+>
+> But I think this is not what you meant. I think you meant only
+> flushing the specific stats needed in irqsafe contexts more frequently
+> and not invoking a flush at all in irqsafe contexts (or using
+> mem_cgroup_flush_stas_delayed()..?). Right?
+>
+> I am not the right person to judge what is acceptably up-to-date to be
+> honest, so I would wait for other memcgs folks to chime in on this.
+>
+> >
+> > * Shift some work to the updaters. e.g. in many cases, propagating per-cpu
+> >   updates a couple levels up from update path will significantly reduce the
+> >   fanouts and thus the number of entries which need to be flushed later. It
+> >   does add on-going overhead, so it prolly should adaptive or configurable,
+> >   hopefully the former.
+>
+> If we are adding overhead to the updaters, would it be better to
+> maintain a bitmask of updated stats, or do you think it would be more
+> effective to propagate updates a couple of levels up? I think to
+> propagate updates up in updaters context we would need percpu versions
+> of the "pending" stats, which would also add memory consumption.
+>
+
+Any thoughts here, Tejun or anyone?
+
+> >
+> > Thanks.
+> >
+> > --
+> > tejun
