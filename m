@@ -1,43 +1,230 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH cgroup/for-6.1-fixes] mm: cgroup: fix comments for get
- from fd/file helpers
-Date: Tue, 11 Oct 2022 22:06:13 -1000
-Message-ID: <Y0Z1deLeePrNmdeu@slm.duckdns.org>
-References: <20221011225155.4055415-1-yosryahmed@google.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: Possible race in obj_stock_flush_required() vs drain_obj_stock()
+Date: Wed, 12 Oct 2022 13:23:11 -0400
+Message-ID: <Y0b3/wGDBL7GaNWJ@cmpxchg.org>
+References: <1664546131660.1777662787.1655319815@gmail.com>
+ <Yzc0yZwDB8GG+4t7@P9FQF9L96D.corp.robot.car>
+ <b91e75f4-b09c-85aa-c6ad-2364dab9af92@gmail.com>
+ <Yzm5cukBe6IfyAs7@P9FQF9L96D.lan>
+ <d3cf9c69-19a1-53f9-cf97-5d40ce5cda44@gmail.com>
+ <YzrkaKZKYqx+c325@dhcp22.suse.cz>
+ <821923d8-17c3-f1c2-4d6a-5653c88db3e8@gmail.com>
+ <YzrxNGpf7sSwSWy2@dhcp22.suse.cz>
+ <2f9bdffd-062e-a364-90c4-da7f09c95619@gmail.com>
+ <Yzxc0jzOnAu667F8@P9FQF9L96D.lan>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=SBrtNGgiKc64ZJ37zUKu7nEMj/WdDGr4Yyp+sxihhTY=;
-        b=K/T1u6SXP48sf76E+Em0jrB8E2jrFWVkXe5K4LWyyfdjCJGnBFHi9HpGgcAkW0dY26
-         epUvWm7/I/Ec5Z4SIadzKcUySRzlhdF0e5pNtAwvEtt054Y1ZK8W/x1C/Z3rNoygrrii
-         3gyEMWZ54SwI/DDueHBXXJkw1GkqDSZVmFGNtvhFBAuBPpO1oi+X/gvBFH2YeEDgpOaO
-         XwrA3NhdNK1EBYcsU8vPCB83nkTlBVW+y/ADuBGG+HeZVzKwGdzbn8X8bQW3QqoC/Srd
-         um5pWBqHwAN9O5lqa8bMOZiwHBuaa8qWKp5oO1CmbUoqB4F1Kq24Bvtnnvcg4K5mLREz
-         WIkQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Gzjmgre1e1+vrTVLm1NFbUW6zv2WfyHOR2rS1jlu5Bg=;
+        b=rseAikHbJJ6W8B692AoRNLHZX5BACwgzRzkBGcT5W0jmSA7CGx1EaMu+JY91yax3zI
+         kR1kP9aOuLpOgfDvD85oePRKnLjMMUwtkJUiZfeDHMsfNyPhTGhDn6v0QNRPVYErvreV
+         caV3f3Rg16kZBtJjxWig7PM3Rp7r5mgnE6Ik8jzcUIurjuz8/2dCTnNy9AsxbKkMh7+x
+         XY6loNL5qx52BPemjcYPYYer9Gy8AwGbq8Zf7A9EKzjCM3AE/F1f9qBsnIusCVKcwRHf
+         SFIxbr1ODxMToCrMETdl1hlavxUB9yy1ELtt9HWOqWFo0sHYSxLoYbE45/K+PEfKlhSB
+         GY2A==
 Content-Disposition: inline
-In-Reply-To: <20221011225155.4055415-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <Yzxc0jzOnAu667F8-+xijCwNIfdq8QK5Xt2JBmg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: Alexander Fedorov <halcien-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Tue, Oct 11, 2022 at 10:51:55PM +0000, Yosry Ahmed wrote:
-> Fix the documentation comments for cgroup_[v1v2_]get_from_[fd/file]().
+On Tue, Oct 04, 2022 at 09:18:26AM -0700, Roman Gushchin wrote:
+> On Mon, Oct 03, 2022 at 06:01:35PM +0300, Alexander Fedorov wrote:
+> > On 03.10.2022 17:27, Michal Hocko wrote:
+> > > On Mon 03-10-22 17:09:15, Alexander Fedorov wrote:
+> > >> On 03.10.2022 16:32, Michal Hocko wrote:
+> > >>> On Mon 03-10-22 15:47:10, Alexander Fedorov wrote:
+> > >>>> @@ -3197,17 +3197,30 @@ static void drain_obj_stock(struct memcg_stock_pcp *stock)
+> > >>>>  		stock->nr_bytes = 0;
+> > >>>>  	}
+> > >>>>  
+> > >>>> -	obj_cgroup_put(old);
+> > >>>> +	/*
+> > >>>> +	 * Clear pointer before freeing memory so that
+> > >>>> +	 * drain_all_stock() -> obj_stock_flush_required()
+> > >>>> +	 * does not see a freed pointer.
+> > >>>> +	 */
+> > >>>>  	stock->cached_objcg = NULL;
+> > >>>> +	obj_cgroup_put(old);
+> > >>>
+> > >>> Do we need barrier() or something else to ensure there is no reordering?
+> > >>> I am not reallyu sure what kind of barriers are implied by the pcp ref
+> > >>> counting.
+> > >>
+> > >> obj_cgroup_put() -> kfree_rcu() -> synchronize_rcu() should take care
+> > >> of this:
+> > > 
+> > > This is a very subtle guarantee. Also it would only apply if this is the
+> > > last reference, right?
+> > 
+> > Hmm, yes, for the last reference only, also not sure about pcp ref
+> > counter ordering rules for previous references.
+> > 
+> > > Is there any reason to not use
+> > > 	WRITE_ONCE(stock->cached_objcg, NULL);
+> > > 	obj_cgroup_put(old);
+> > > 
+> > > IIRC this should prevent any reordering. 
+> > 
+> > Now that I think about it we actually must use WRITE_ONCE everywhere
+> > when writing cached_objcg because otherwise compiler might split the
+> > pointer-sized store into several smaller-sized ones (store tearing),
+> > and obj_stock_flush_required() would read garbage instead of pointer.
+> >
+> > And thinking about memory barriers, maybe we need them too alongside
+> > WRITE_ONCE when setting pointer to non-null value?  Otherwise
+> > drain_all_stock() -> obj_stock_flush_required() might read old data.
+> > Since that's exactly what rcu_assign_pointer() does, it seems
+> > that we are going back to using rcu_*() primitives everywhere?
 > 
-> Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
-> I cannot reproduce the warning so I cannot make sure it's fixed by this.
-> 
-> Again, apologies for missing updating the comment in the first place.
+> Hm, Idk, I'm still somewhat resistant to the idea of putting rcu primitives,
+> but maybe it's the right thing. Maybe instead we should always schedule draining
+> on all cpus instead and perform a cpu-local check and bail out if a flush is not
+> required? Michal, Johannes, what do you think?
 
-No worries at all. Thanks for fixing it. Applied to cgroup/for-6.1-fixes.
+I agree it's overkill.
 
+This is a speculative check, and we don't need any state coherency,
+just basic lifetime. READ_ONCE should fully address this problem. That
+said, I think the code could be a bit clearer and better documented.
+
+How about the below?
+
+(Nevermind the ifdef, I'm working on removing CONFIG_MEMCG_KMEM
+altogether, as it's a really strange way to say !SLOB at this point)
+
+---
+
+From 22855af38b116ec030286975ed2aa06851680296 Mon Sep 17 00:00:00 2001
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Date: Wed, 12 Oct 2022 12:59:07 -0400
+Subject: [PATCH] mm: memcontrol: fix NULL deref race condition during cgroup
+ deletion
+
+Alexander Fedorov reports a race condition between two concurrent
+stock draining operations, where the first one clears the stock's obj
+pointer between the pointer test and deref of the second. Analysis:
+
+1) First CPU:
+   css_killed_work_fn() -> mem_cgroup_css_offline() ->
+drain_all_stock() -> obj_stock_flush_required()
+	if (stock->cached_objcg) {
+
+This check sees a non-NULL pointer for *another* CPU's `memcg_stock` instance.
+
+2) Second CPU:
+  css_free_rwork_fn() -> __mem_cgroup_free() -> free_percpu() ->
+obj_cgroup_uncharge() -> drain_obj_stock()
+It frees `cached_objcg` pointer in its own `memcg_stock` instance:
+	struct obj_cgroup *old = stock->cached_objcg;
+	< ... >
+	obj_cgroup_put(old);
+	stock->cached_objcg = NULL;
+
+3) First CPU continues after the 'if' check and re-reads the pointer
+again, now it is NULL and dereferencing it leads to kernel panic:
+static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+				     struct mem_cgroup *root_memcg)
+{
+< ... >
+	if (stock->cached_objcg) {
+		memcg = obj_cgroup_memcg(stock->cached_objcg);
+
+There is already RCU protection in place to ensure lifetime. Add the
+missing READ_ONCE to the cgroup pointers to fix the TOCTOU, and
+consolidate and document the speculative code.
+
+Reported-by: Alexander Fedorov <halcien-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ mm/memcontrol.c | 44 ++++++++++++++++++++------------------------
+ 1 file changed, 20 insertions(+), 24 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2d8549ae1b30..09ac2f8991ee 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2190,8 +2190,6 @@ static DEFINE_MUTEX(percpu_charge_mutex);
+ 
+ #ifdef CONFIG_MEMCG_KMEM
+ static struct obj_cgroup *drain_obj_stock(struct memcg_stock_pcp *stock);
+-static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+-				     struct mem_cgroup *root_memcg);
+ static void memcg_account_kmem(struct mem_cgroup *memcg, int nr_pages);
+ 
+ #else
+@@ -2199,11 +2197,6 @@ static inline struct obj_cgroup *drain_obj_stock(struct memcg_stock_pcp *stock)
+ {
+ 	return NULL;
+ }
+-static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+-				     struct mem_cgroup *root_memcg)
+-{
+-	return false;
+-}
+ static void memcg_account_kmem(struct mem_cgroup *memcg, int nr_pages)
+ {
+ }
+@@ -2339,13 +2332,30 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
+ 		struct mem_cgroup *memcg;
+ 		bool flush = false;
+ 
++		/*
++		 * Speculatively check up front if this CPU has any
++		 * cached charges that belong to the specified
++		 * root_memcg. The state may change from under us -
++		 * which is okay, because the draining itself is a
++		 * best-effort operation. Just ensure lifetime of
++		 * whatever we end up looking at.
++		 */
+ 		rcu_read_lock();
+-		memcg = stock->cached;
++		memcg = READ_ONCE(stock->cached);
+ 		if (memcg && stock->nr_pages &&
+ 		    mem_cgroup_is_descendant(memcg, root_memcg))
+ 			flush = true;
+-		else if (obj_stock_flush_required(stock, root_memcg))
+-			flush = true;
++#ifdef CONFIG_MEMCG_KMEM
++		else {
++			struct obj_cgroup *objcg;
++
++			objcg = READ_ONCE(stock->cached_objcg);
++			if (objcg && stock->nr_bytes &&
++			    mem_cgroup_is_descendant(obj_cgroup_memcg(objcg),
++						     root_memcg))
++				flush = true;
++		}
++#endif
+ 		rcu_read_unlock();
+ 
+ 		if (flush &&
+@@ -3297,20 +3307,6 @@ static struct obj_cgroup *drain_obj_stock(struct memcg_stock_pcp *stock)
+ 	return old;
+ }
+ 
+-static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+-				     struct mem_cgroup *root_memcg)
+-{
+-	struct mem_cgroup *memcg;
+-
+-	if (stock->cached_objcg) {
+-		memcg = obj_cgroup_memcg(stock->cached_objcg);
+-		if (memcg && mem_cgroup_is_descendant(memcg, root_memcg))
+-			return true;
+-	}
+-
+-	return false;
+-}
+-
+ static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes,
+ 			     bool allow_uncharge)
+ {
 -- 
-tejun
+2.37.3
+
