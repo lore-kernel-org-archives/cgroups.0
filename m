@@ -1,68 +1,137 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH cgroup/for-6.1-fixes] mm: cgroup: fix comments for get from
- fd/file helpers
-Date: Tue, 11 Oct 2022 22:51:55 +0000
-Message-ID: <20221011225155.4055415-1-yosryahmed@google.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS WITH WARNING
+ 8248fe413216732f98563e8882b6c6ae617c327b
+Date: Wed, 12 Oct 2022 13:58:09 +0800
+Message-ID: <63465771.HuIMUTop7iDUWBQ9%lkp@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=XusyGq/BtMQpus8wnubVaoCLzcnzByi/X6aLyv7q1P0=;
-        b=UlX7ihEkCl9FTBOFGfPO3DjyEi8CbSe6MA2faSMYt79GLuSxcIOtuzUSEFmFkHCPYh
-         gi7YM1+Nt+S5BAVbQvLteUDGKHWYm03X6cCGqMHwq7pv2G85gNAdFTiS77dnLorKJ1f6
-         nYqCJ+6PS3v5vJ9YPhfBWZ94wmXD01ITcD2kdxwtyIWriAd2itVtC7Ig/JdhFbyErTe9
-         ZHhCGmy9Pi/DwtUnITIdz86i0G4SjZIfe599rMN5YW1SpazJSg3G4t/2kqFRouwhSa8f
-         9Wr8bWO6+LF96EpW1TT9pJbuISKI9P12B7iyro72q13+yU3cPqym7NizIvJ046Qax/Qb
-         cyNg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1665554364; x=1697090364;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=FSmTMj7EKKSZu90bhrN2dE6B347/TX2bLtN2Z4e0N/g=;
+  b=HhB5M8qItW4e9kDYvo56BWoTEOxapDUbXirQGPp2rguqT5wkMR6aGeV8
+   C70EEDxUWS5gKGCbKNzPGHjHuALFc08MImZSAee5i+8SWRo++boDj6mPX
+   k6ZjS/8nddHDB1Xufv0zXZRoaFBaR+RhyWdVtd0/w82Sds8WUt8YD7tMs
+   WC2DEGuJrimU3sO2sGdmQzgMLvu8ee64ekW0LLuZSj3/TDdfGVnVuOeTO
+   nh9iq/QJO0d0tF57KXfxfcb4LF+ow571Su/EafhoELk+J6fyekNnyBIPE
+   soaMjMYeNnhnxEDghHO9uIM56HOLkJLGNu4miRlLttib+Zzz2mEHP3UUz
+   w==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Fix the documentation comments for cgroup_[v1v2_]get_from_[fd/file]().
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 8248fe413216732f98563e8882b6c6ae617c327b  perf stat: Support old kernels for bperf cgroup counting
 
-Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
-I cannot reproduce the warning so I cannot make sure it's fixed by this.
+Warning reports:
 
-Again, apologies for missing updating the comment in the first place.
----
- kernel/cgroup/cgroup.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+https://lore.kernel.org/lkml/202210120440.qmxr3KCs-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 6349a9fe9ec1..d922773fa90b 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -6246,6 +6246,7 @@ static struct cgroup *cgroup_v1v2_get_from_file(struct file *f)
- /**
-  * cgroup_get_from_file - same as cgroup_v1v2_get_from_file, but only supports
-  * cgroup2.
-+ * @f: file corresponding to cgroup2_dir
-  */
- static struct cgroup *cgroup_get_from_file(struct file *f)
- {
-@@ -6753,7 +6754,7 @@ struct cgroup *cgroup_get_from_path(const char *path)
- EXPORT_SYMBOL_GPL(cgroup_get_from_path);
- 
- /**
-- * cgroup_get_from_fd - get a cgroup pointer from a fd
-+ * cgroup_v1v2_get_from_fd - get a cgroup pointer from a fd
-  * @fd: fd obtained by open(cgroup_dir)
-  *
-  * Find the cgroup from a fd which should be obtained
-@@ -6778,6 +6779,7 @@ struct cgroup *cgroup_v1v2_get_from_fd(int fd)
- /**
-  * cgroup_get_from_fd - same as cgroup_v1v2_get_from_fd, but only supports
-  * cgroup2.
-+ * @fd: fd obtained by open(cgroup2_dir)
-  */
- struct cgroup *cgroup_get_from_fd(int fd)
- {
+Warning: (recently discovered and may have been fixed)
+
+kernel/cgroup/cgroup.c:6765: warning: expecting prototype for cgroup_get_from_fd(). Prototype was for cgroup_v1v2_get_from_fd() instead
+
+Warning ids grouped by kconfigs:
+
+gcc_recent_errors
+|-- alpha-allmodconfig
+|   `-- kernel-cgroup-cgroup.c:warning:expecting-prototype-for-cgroup_get_from_fd().-Prototype-was-for-cgroup_v1v2_get_from_fd()-instead
+|-- alpha-randconfig-r026-20221012
+|   `-- kernel-cgroup-cgroup.c:warning:expecting-prototype-for-cgroup_get_from_fd().-Prototype-was-for-cgroup_v1v2_get_from_fd()-instead
+|-- loongarch-allyesconfig
+|   `-- kernel-cgroup-cgroup.c:warning:expecting-prototype-for-cgroup_get_from_fd().-Prototype-was-for-cgroup_v1v2_get_from_fd()-instead
+|-- m68k-allmodconfig
+|   `-- kernel-cgroup-cgroup.c:warning:expecting-prototype-for-cgroup_get_from_fd().-Prototype-was-for-cgroup_v1v2_get_from_fd()-instead
+|-- m68k-randconfig-r005-20221010
+|   `-- kernel-cgroup-cgroup.c:warning:expecting-prototype-for-cgroup_get_from_fd().-Prototype-was-for-cgroup_v1v2_get_from_fd()-instead
+|-- mips-allmodconfig
+|   `-- kernel-cgroup-cgroup.c:warning:expecting-prototype-for-cgroup_get_from_fd().-Prototype-was-for-cgroup_v1v2_get_from_fd()-instead
+|-- openrisc-randconfig-r023-20221012
+|   `-- kernel-cgroup-cgroup.c:warning:expecting-prototype-for-cgroup_get_from_fd().-Prototype-was-for-cgroup_v1v2_get_from_fd()-instead
+|-- powerpc-allmodconfig
+|   `-- kernel-cgroup-cgroup.c:warning:expecting-prototype-for-cgroup_get_from_fd().-Prototype-was-for-cgroup_v1v2_get_from_fd()-instead
+|-- riscv-allyesconfig
+|   `-- kernel-cgroup-cgroup.c:warning:expecting-prototype-for-cgroup_get_from_fd().-Prototype-was-for-cgroup_v1v2_get_from_fd()-instead
+`-- sparc-allyesconfig
+    `-- kernel-cgroup-cgroup.c:warning:expecting-prototype-for-cgroup_get_from_fd().-Prototype-was-for-cgroup_v1v2_get_from_fd()-instead
+
+elapsed time: 725m
+
+configs tested: 64
+configs skipped: 2
+
+gcc tested configs:
+arc                                 defconfig
+alpha                               defconfig
+x86_64                              defconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+x86_64                          rhel-8.3-func
+x86_64                    rhel-8.3-kselftests
+s390                             allmodconfig
+m68k                             allyesconfig
+x86_64                               rhel-8.3
+i386                                defconfig
+x86_64                           rhel-8.3-syz
+s390                 randconfig-r044-20221010
+s390                                defconfig
+riscv                randconfig-r042-20221010
+arc                  randconfig-r043-20221010
+x86_64                           allyesconfig
+i386                 randconfig-a012-20221010
+x86_64                         rhel-8.3-kunit
+sh                               allmodconfig
+alpha                            allyesconfig
+arm                                 defconfig
+x86_64               randconfig-a011-20221010
+x86_64                           rhel-8.3-kvm
+s390                             allyesconfig
+i386                 randconfig-a011-20221010
+arc                              allyesconfig
+x86_64               randconfig-a014-20221010
+x86_64               randconfig-a016-20221010
+x86_64               randconfig-a015-20221010
+m68k                             allmodconfig
+x86_64               randconfig-a012-20221010
+x86_64               randconfig-a013-20221010
+i386                 randconfig-a013-20221010
+i386                 randconfig-a014-20221010
+ia64                             allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a015-20221010
+mips                             allyesconfig
+arm                              allyesconfig
+powerpc                          allmodconfig
+arm64                            allyesconfig
+i386                 randconfig-a016-20221010
+i386                          randconfig-a001
+i386                          randconfig-a003
+i386                          randconfig-a005
+i386                             allyesconfig
+
+clang tested configs:
+i386                 randconfig-a003-20221010
+i386                 randconfig-a004-20221010
+hexagon              randconfig-r041-20221010
+i386                 randconfig-a002-20221010
+hexagon              randconfig-r045-20221010
+i386                 randconfig-a005-20221010
+i386                 randconfig-a001-20221010
+i386                 randconfig-a006-20221010
+x86_64               randconfig-a002-20221010
+x86_64               randconfig-a006-20221010
+x86_64               randconfig-a001-20221010
+x86_64               randconfig-a003-20221010
+x86_64               randconfig-a004-20221010
+x86_64               randconfig-a005-20221010
+i386                          randconfig-a002
+i386                          randconfig-a004
+i386                          randconfig-a006
+
 -- 
-2.38.0.rc1.362.ged0d419d3c-goog
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
