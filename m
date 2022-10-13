@@ -1,22 +1,22 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.10 13/33] blk-throttle: prevent overflow while calculating wait time
-Date: Wed, 12 Oct 2022 20:23:12 -0400
-Message-ID: <20221013002334.1894749-13-sashal@kernel.org>
-References: <20221013002334.1894749-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.19 19/63] blk-throttle: prevent overflow while calculating wait time
+Date: Wed, 12 Oct 2022 20:17:53 -0400
+Message-ID: <20221013001842.1893243-19-sashal@kernel.org>
+References: <20221013001842.1893243-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665620651;
-        bh=p6GiSY8fKFEwVLEYaOs1ega9J3UWlailRKtYivPY8dg=;
+        s=k20201202; t=1665620376;
+        bh=BrPmkkzV33LoAQaZVvf/My4DJRhBfffGea4/qAXPUQc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ralkKVeHDCFg1GzFTTPBFCW/lnC/sQw4/tbmuAuLziiHeCg18QFyjuqgAi6rKzRsI
-         9wGuznO3f88WlF1zMeQ/BGatOANV0iHmlwOZz0nlo97iy6GXeguz595aSAmyaSP5Yo
-         Nt7XB/jW2MpCQeXZTTLM5TWk/jNmw+SG2FSDsZYemdZz4pOaPc0oqnTV+QhEQ1ffUy
-         N6GsNd1r35kBVapSXUjYnpcpKoh4klskB9TuS+qD1zQl4QMdg6rRSHTd9IqN7UDgNr
-         29F6uvnQvClPULo2C57XYJuY+yUR/t7x4cmNyO0qWI10svancil/kaHzKAouMSW7oe
-         wKXHqJT4LxaTQ==
-In-Reply-To: <20221013002334.1894749-1-sashal@kernel.org>
+        b=Dky3QKgnwfLced6CDVSVB9r9w9+YVlZf20gO+HykkmI9FLLm6zgUwDoR0TBBgyQZg
+         eYIVWqtJ+crN1y/MNaYpaJ6QYuQ9dJKZF8tY23qyqsq9C/97ZYZAxsiWOSVzsUA/7B
+         8xkCK44eVcsxcnFnj+YxIe1Nw8v0FOVKi0ZyF6R/wLt5OlS6e/o8YHNnaqzOI9JHhz
+         EE6XZ8Teb8+qBjOgSSl+93pb/g5sw+1DnD7UH6da6Uh5cWo6o1PV87WVQBmIVfAJZA
+         lskVWIzrSd+CxIG59+OXcvBLRtxtgnkvRlaHsLbLrvKs079VwsELqK+N7ewQC8fgnc
+         jrYTqzg3I5ivg==
+In-Reply-To: <20221013001842.1893243-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -40,10 +40,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 5 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index c53a254171a2..c526fdd0a7b9 100644
+index 139b2d7a99e2..d3c048fbb0e5 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -944,7 +944,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+@@ -806,7 +806,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
  				 u64 bps_limit, unsigned long *wait)
  {
  	bool rw = bio_data_dir(bio);
@@ -52,7 +52,7 @@ index c53a254171a2..c526fdd0a7b9 100644
  	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
  	unsigned int bio_size = throtl_bio_data_size(bio);
  
-@@ -961,10 +961,8 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+@@ -824,10 +824,8 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
  		jiffy_elapsed_rnd = tg->td->throtl_slice;
  
  	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
