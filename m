@@ -1,116 +1,161 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: UDP rx packet loss in a cgroup with a memory limit
-Date: Thu, 13 Oct 2022 10:22:10 -0400
-Message-ID: <Y0gfEn6487fMalI9@cmpxchg.org>
-References: <CANOLnON11vzvVdyJfW+QJ36siWR4-s=HJ2aRKpRy7CP=aRPoSw@mail.gmail.com>
- <CANOLnOPeOi0gxYwd5+ybdv5w=RZEh5JakJPE9xgrSL1cecZHbw@mail.gmail.com>
- <Yv0h1PFxmK7rVWpy@cmpxchg.org>
- <CALvZod5_LVkOkF+gmefnctmx+bRjykSARm2JA9eqKJx85NYBGQ@mail.gmail.com>
- <CAEA6p_BhAh6f_kAHEoEJ38nunY=c=4WqxhJQUjT+dCSAr_rm8g@mail.gmail.com>
- <CANOLnONQaHXOp1z1rNum74N2b=Ub7t5NsGHqPdHUQL4+4YYEQg@mail.gmail.com>
- <CALvZod6VaQXrs1x7ff=RRWWP+CgD0hQkTROfZ9XowQ_Zo3SO3Q@mail.gmail.com>
+From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH net-next] net-memcg: pass in gfp_t mask to
+ mem_cgroup_charge_skmem()
+Date: Thu, 13 Oct 2022 14:49:50 -0700
+Message-ID: <20221013144950.44b52f90@kernel.org>
+References: <20210817194003.2102381-1-weiwan@google.com>
+        <20221012163300.795e7b86@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=2NGQAGAfwfgj6bQQFri3e7UvpFHJBbG66RlLh3PT3p8=;
-        b=SDhA7zbv62PBaHsvPGDAgC+u2bWJOE2OO2P9PQ8O8yhfC3+O+6zOHA0pKrIUoxR0jb
-         rdkdaIOIcP0Zm/LwhM9aYOF2nNRGLOCXW6KDvAxTI8GGHfmY59JXXY4vLfnHaGMnBvYm
-         KPJqMc1JMbsz+TlNcGzW9lsTFb86rQ8TKR4SJ8rtNt8IG9eK3Gx2mc7rf0D0IzPdj0qj
-         q94Q3OnfgWsGiDhsBjJzu33I6+YFoFGIH5067KhLkF04G3vqGwwO3xG4oVW1zsY4yO2E
-         yyw4sfe4cfH5bzvYjNCPsf8dOL1soi9uAiw9XtpJ0HfB21bV+G9RFgpzYGiK9R9YarDJ
-         hmOg==
-Content-Disposition: inline
-In-Reply-To: <CALvZod6VaQXrs1x7ff=RRWWP+CgD0hQkTROfZ9XowQ_Zo3SO3Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1665697791;
+        bh=kOV91CXYBBdDhsKUffc0YPbPE0GmfumglfTqvPfrNVg=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=FOPgBLevSILr9FUbnIDgT4cF5yC51HoZbSmvnOq6Et3/cOuVywQpk57cPLXePWDiL
+         GyW42GSJIT19Fb8vm6hYwuvlaSbcBrAid1amDa+MGbJA5jb/ZknOFADWAujsuR2UTG
+         mtJLqm/H+hMdu7nY3sub1YNKW1NhcqJLnwDVKnEGGtjKLoRqAhDRCBTTmMJdQs0T6v
+         MXOfVfcWs66WhuDA7uYCsxuWigWNLC3Pi0i3BSo8obay+CCbA8bPEmDV/yyJrJnYkv
+         UQm0bVNLx741tkHJzA9FgNPNiVM0eA8PiP3y8L7SnQiFDlJH7ZPbogu9J24w05Dmdw
+         2fLtU06M0j61Q==
+In-Reply-To: <20221012163300.795e7b86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: =?utf-8?Q?Gra=C5=BEvydas?= Ignotas <notasas-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Wang <weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Wei Wang <weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Neil Spring <ntspring-M8Ki61LpUEw@public.gmane.org>, ycheng-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-T24gV2VkLCBPY3QgMTIsIDIwMjIgYXQgMDk6MzY6MzRQTSAtMDcwMCwgU2hha2VlbCBCdXR0IHdy
-b3RlOgo+IE9uIFdlZCwgQXVnIDE3LCAyMDIyIGF0IDE6MTIgUE0gR3Jhxb52eWRhcyBJZ25vdGFz
-IDxub3Rhc2FzLVJlNUpRRWVRcWU4QXZ4dGl1TXd4M3dAcHVibGljLmdtYW5lLm9yZz4gd3JvdGU6
-Cj4gPgo+ID4gT24gV2VkLCBBdWcgMTcsIDIwMjIgYXQgOToxNiBQTSBXZWkgV2FuZyA8d2Vpd2Fu
-LWhwSXFzRDRBS2xmUVQwZFpSK0FsZkFAcHVibGljLmdtYW5lLm9yZz4gd3JvdGU6Cj4gPiA+Cj4g
-PiA+IE9uIFdlZCwgQXVnIDE3LCAyMDIyIGF0IDEwOjM3IEFNIFNoYWtlZWwgQnV0dCA8c2hha2Vl
-bGItaHBJcXNENEFLbGZRVDBkWlIrQWxmQUBwdWJsaWMuZ21hbmUub3JnPiB3cm90ZToKPiA+ID4g
-Pgo+ID4gPiA+ICsgRXJpYyBhbmQgbmV0ZGV2Cj4gPiA+ID4KPiA+ID4gPiBPbiBXZWQsIEF1ZyAx
-NywgMjAyMiBhdCAxMDoxMyBBTSBKb2hhbm5lcyBXZWluZXIgPGhhbm5lcy1kcnVVZ3ZsMExDTkFm
-dWdScEM2dTZ3QHB1YmxpYy5nbWFuZS5vcmc+IHdyb3RlOgo+ID4gPiA+ID4KPiA+ID4gPiA+IFRo
-aXMgaXMgbW9zdCBsaWtlbHkgYSByZWdyZXNzaW9uIGNhdXNlZCBieSB0aGlzIHBhdGNoOgo+ID4g
-PiA+ID4KPiA+ID4gPiA+IGNvbW1pdCA0YjEzMjdiZTlmZTU3NDQzMjk1YWU4NmZlMGZjZjI0YTE4
-NDY5ZTlmCj4gPiA+ID4gPiBBdXRob3I6IFdlaSBXYW5nIDx3ZWl3YW4taHBJcXNENEFLbGZRVDBk
-WlIrQWxmQUBwdWJsaWMuZ21hbmUub3JnPgo+ID4gPiA+ID4gRGF0ZTogICBUdWUgQXVnIDE3IDEy
-OjQwOjAzIDIwMjEgLTA3MDAKPiA+ID4gPiA+Cj4gPiA+ID4gPiAgICAgbmV0LW1lbWNnOiBwYXNz
-IGluIGdmcF90IG1hc2sgdG8gbWVtX2Nncm91cF9jaGFyZ2Vfc2ttZW0oKQo+ID4gPiA+ID4KPiA+
-ID4gPiA+ICAgICBBZGQgZ2ZwX3QgbWFzayBhcyBhbiBpbnB1dCBwYXJhbWV0ZXIgdG8gbWVtX2Nn
-cm91cF9jaGFyZ2Vfc2ttZW0oKSwKPiA+ID4gPiA+ICAgICB0byBnaXZlIG1vcmUgY29udHJvbCB0
-byB0aGUgbmV0d29ya2luZyBzdGFjayBhbmQgZW5hYmxlIGl0IHRvIGNoYW5nZQo+ID4gPiA+ID4g
-ICAgIG1lbWNnIGNoYXJnaW5nIGJlaGF2aW9yLiBJbiB0aGUgZnV0dXJlLCB0aGUgbmV0d29ya2lu
-ZyBzdGFjayBtYXkgZGVjaWRlCj4gPiA+ID4gPiAgICAgdG8gYXZvaWQgb29tLWtpbGxzIHdoZW4g
-ZmFsbGJhY2tzIGFyZSBtb3JlIGFwcHJvcHJpYXRlLgo+ID4gPiA+ID4KPiA+ID4gPiA+ICAgICBP
-bmUgYmVoYXZpb3IgY2hhbmdlIGluIG1lbV9jZ3JvdXBfY2hhcmdlX3NrbWVtKCkgYnkgdGhpcyBw
-YXRjaCBpcyB0bwo+ID4gPiA+ID4gICAgIGF2b2lkIGZvcmNlIGNoYXJnaW5nIGJ5IGRlZmF1bHQg
-YW5kIGxldCB0aGUgY2FsbGVyIGRlY2lkZSB3aGVuIGFuZCBpZgo+ID4gPiA+ID4gICAgIGZvcmNl
-IGNoYXJnaW5nIGlzIG5lZWRlZCB0aHJvdWdoIHRoZSBwcmVzZW5jZSBvciBhYnNlbmNlIG9mCj4g
-PiA+ID4gPiAgICAgX19HRlBfTk9GQUlMLgo+ID4gPiA+ID4KPiA+ID4gPiA+ICAgICBTaWduZWQt
-b2ZmLWJ5OiBXZWkgV2FuZyA8d2Vpd2FuLWhwSXFzRDRBS2xmUVQwZFpSK0FsZkFAcHVibGljLmdt
-YW5lLm9yZz4KPiA+ID4gPiA+ICAgICBSZXZpZXdlZC1ieTogU2hha2VlbCBCdXR0IDxzaGFrZWVs
-Yi1ocElxc0Q0QUtsZlFUMGRaUitBbGZBQHB1YmxpYy5nbWFuZS5vcmc+Cj4gPiA+ID4gPiAgICAg
-U2lnbmVkLW9mZi1ieTogRGF2aWQgUy4gTWlsbGVyIDxkYXZlbS1mVC9QY1FhaVV0SWVJWjAvbVBm
-ZzlRQHB1YmxpYy5nbWFuZS5vcmc+Cj4gPiA+ID4gPgo+ID4gPiA+ID4gV2UgbmV2ZXIgdXNlZCB0
-byBmYWlsIHRoZXNlIGFsbG9jYXRpb25zLiBDZ3JvdXBzIGRvbid0IGhhdmUgYQo+ID4gPiA+ID4g
-a3N3YXBkLXN0eWxlIHdhdGVybWFyayByZWNsYWltZXIsIHNvIHRoZSBuZXR3b3JrIHJlbGllZCBv
-bgo+ID4gPiA+ID4gZm9yY2UtY2hhcmdpbmcgYW5kIGxlYXZpbmcgcmVjbGFpbSB0byBhbGxvY2F0
-aW9ucyB0aGF0IGNhbiBibG9jay4KPiA+ID4gPiA+IE5vdyBpdCBzZWVtcyBuZXR3b3JrIHBhY2tl
-dHMgY291bGQganVzdCBmYWlsIGluZGVmaW5pdGVseS4KPiA+ID4gPiA+Cj4gPiA+ID4gPiBUaGUg
-Y2hhbmdlbG9nIGlzIGEgYml0IHRlcnNlIGdpdmVuIGhvdyBkcmFzdGljIHRoZSBiZWhhdmlvciBj
-aGFuZ2UKPiA+ID4gPiA+IGlzLiBXZWksIFNoYWtlZWwsIGNhbiB5b3UgZmlsbCBpbiB3aHkgdGhp
-cyB3YXMgY2hhbmdlZD8gQ2FuIHdlIHJldmVydAo+ID4gPiA+ID4gdGhpcyBmb3IgdGhlIHRpbWUg
-YmVpbmc/Cj4gPiA+ID4KPiA+ID4gPiBEb2VzIHJldmVydGluZyB0aGUgcGF0Y2ggZml4IHRoZSBp
-c3N1ZT8gSG93ZXZlciBJIGRvbid0IHRoaW5rIGl0IHdpbGwuCj4gPiA+ID4KPiA+ID4gPiBQbGVh
-c2Ugbm90ZSB0aGF0IHdlIHN0aWxsIGhhdmUgdGhlIGZvcmNlIGNoYXJnaW5nIGFzIGJlZm9yZSB0
-aGlzCj4gPiA+ID4gcGF0Y2guIFByZXZpb3VzbHkgd2hlbiBtZW1fY2dyb3VwX2NoYXJnZV9za21l
-bSgpIGZvcmNlIGNoYXJnZXMsIGl0Cj4gPiA+ID4gcmV0dXJucyBmYWxzZSBhbmQgX19za19tZW1f
-cmFpc2VfYWxsb2NhdGVkIHRha2VzIHN1cHByZXNzX2FsbG9jYXRpb24KPiA+ID4gPiBjb2RlIHBh
-dGguIEJhc2VkIG9uIHNvbWUgaGV1cmlzdGljcywgaXQgbWF5IGFsbG93IGl0IG9yIGl0IG1heQo+
-ID4gPiA+IHVuY2hhcmdlIGFuZCByZXR1cm4gZmFpbHVyZS4KPiA+ID4KPiA+ID4gVGhlIGZvcmNl
-IGNoYXJnaW5nIGxvZ2ljIGluIF9fc2tfbWVtX3JhaXNlX2FsbG9jYXRlZCBvbmx5IGdldHMKPiA+
-ID4gY29uc2lkZXJlZCBvbiB0eCBwYXRoIGZvciBTVFJFQU0gc29ja2V0LiBTbyBpdCBwcm9iYWJs
-eSBkb2VzIG5vdCB0YWtlCj4gPiA+IGVmZmVjdCBvbiBVRFAgcGF0aC4gQW5kLCB0aGF0IGxvZ2lj
-IGlzIE5PVCBiZWluZyBhbHRlcmVkIGluIHRoZSBhYm92ZQo+ID4gPiBwYXRjaC4KPiA+ID4gU28g
-c3BlY2lmaWNhbGx5IGZvciBVRFAgcmVjZWl2ZSBwYXRoLCB3aGF0IGhhcHBlbnMgaW4KPiA+ID4g
-X19za19tZW1fcmFpc2VfYWxsb2NhdGVkKCkgQkVGT1JFIHRoZSBhYm92ZSBwYXRjaCBpczoKPiA+
-ID4gLSBtZW1fY2dyb3VwX2NoYXJnZV9za21lbSgpIGdldHMgY2FsbGVkOgo+ID4gPiAgICAgLSB0
-cnlfY2hhcmdlKCkgd2l0aCBHRlBfTk9XQUlUIGdldHMgY2FsbGVkIGFuZCAgZmFpbGVkCj4gPiA+
-ICAgICAtIHRyeV9jaGFyZ2UoKSB3aXRoIF9fR0ZQX05PRkFJTAo+ID4gPiAgICAgLSByZXR1cm4g
-ZmFsc2UKPiA+ID4gLSBnb3RvIHN1cHByZXNzX2FsbG9jYXRpb246Cj4gPiA+ICAgICAtIG1lbV9j
-Z3JvdXBfdW5jaGFyZ2Vfc2ttZW0oKSBnZXRzIGNhbGxlZAo+ID4gPiAtIHJldHVybiAwICh3aGlj
-aCBtZWFucyBmYWlsdXJlKQo+ID4gPgo+ID4gPiBBRlRFUiB0aGUgYWJvdmUgcGF0Y2gsIHdoYXQg
-aGFwcGVucyBpbiBfX3NrX21lbV9yYWlzZV9hbGxvY2F0ZWQoKSBpczoKPiA+ID4gLSBtZW1fY2dy
-b3VwX2NoYXJnZV9za21lbSgpIGdldHMgY2FsbGVkOgo+ID4gPiAgICAgLSB0cnlfY2hhcmdlKCkg
-d2l0aCBHRlBfTk9XQUlUIGdldHMgY2FsbGVkIGFuZCBmYWlsZWQKPiA+ID4gICAgIC0gcmV0dXJu
-IGZhbHNlCj4gPiA+IC0gZ290byBzdXBwcmVzc19hbGxvY2F0aW9uOgo+ID4gPiAgICAgLSBXZSBu
-byBsb25nZXIgY2FsbHMgbWVtX2Nncm91cF91bmNoYXJnZV9za21lbSgpCj4gPiA+IC0gcmV0dXJu
-IDAKPiA+ID4KPiA+ID4gU28gSSBhZ3JlZSB3aXRoIFNoYWtlZWwsIHRoYXQgdGhpcyBjaGFuZ2Ug
-c2hvdWxkbid0IGFsdGVyIHRoZSBiZWhhdmlvcgo+ID4gPiBvZiB0aGUgYWJvdmUgY2FsbCBwYXRo
-IGluIHN1Y2ggYSBzaXR1YXRpb24uCj4gPiA+IEJ1dCBkbyBsZXQgdXMga25vdyBpZiByZXZlcnRp
-bmcgdGhpcyBjaGFuZ2UgaGFzIGFueSBlZmZlY3Qgb24geW91ciB0ZXN0Lgo+ID4KPiA+IFRoZSBw
-cm9ibGVtIGlzIHN0aWxsIHRoZXJlICh0aGUga2VybmVsIHdhc24ndCBjb21waWxpbmcgYWZ0ZXIg
-cmV2ZXJ0LAo+ID4gaGFkIHRvIGFkanVzdCBhbm90aGVyIHNlZW1pbmdseSB1bnJlbGF0ZWQgY2Fs
-bHNpdGUpLiBJdCdzIGhhcmQgdG8gdGVsbAo+ID4gaWYgaXQncyBiZXR0ZXIgb3Igd29yc2Ugc2lu
-Y2UgaXQgaGFwcGVucyBzbyByYW5kb21seS4KPiA+Cj4gCj4gSGVsbG8gZXZlcnlvbmUsIHdlIGhh
-dmUgYSBiZXR0ZXIgdW5kZXJzdGFuZGluZyB3aHkgdGhlIHBhdGNoIHBvaW50ZWQKPiBvdXQgYnkg
-Sm9oYW5uZXMgbWlnaHQgaGF2ZSBleHBvc2VkIHRoaXMgaXNzdWUuIFNlZQo+IGh0dHBzOi8vbG9y
-ZS5rZXJuZWwub3JnL2FsbC8yMDIyMTAxMzA0MTgzMy5yaGlmeHc0Z3F3azRvZmkyLWhwSXFzRDRB
-S2xmUVQwZFpSK0FsZkFAcHVibGljLmdtYW5lLm9yZy8uCgpXb3csIHRoYXQncyBzdXBlciBzdWJ0
-bGUhIE5pY2Ugc2xldXRoaW5nLgoKPiBUbyBzdW1tYXJpemUsIHRoZSBvbGQgY29kZSB3YXMgZGVw
-ZW5kaW5nIG9uIGEgc3VidGxlIGludGVyYWN0aW9uIG9mCj4gZm9yY2UtY2hhcmdlIGFuZCBwZXJj
-cHUgY2hhcmdlIGNhY2hlcyB3aGljaCB0aGlzIHBhdGNoIHJlbW92ZWQuIFRoZQo+IGZpeCBJIGFt
-IHByb3Bvc2luZyBpcyBmb3IgdGhlIG5ldHdvcmsgc3RhY2sgdG8gYmUgZXhwbGljaXQgb2YgaXRz
-IG5lZWQKPiAoaS5lLiB1c2UgR0ZQX0FUT01JQykgaW5zdGVhZCBvZiBkZXBlbmRpbmcgb24gYSBz
-dWJ0bGUgYmVoYXZpb3IuCgpUaGF0IHNvdW5kcyBnb29kIHRvIG1lLgo=
+On Wed, 12 Oct 2022 16:33:00 -0700 Jakub Kicinski wrote:
+> This patch is causing a little bit of pain to us, to workloads running
+> with just memory.max set. After this change the TCP rx path no longer
+> forces the charging.
+>=20
+> Any recommendation for the fix? Setting memory.high a few MB under
+> memory.max seems to remove the failures.
+
+Eric, is there anything that would make the TCP perform particularly
+poorly under mem pressure?
+
+Dropping and pruning happens a lot here:
+
+# nstat -a | grep -i -E 'Prune|Drop'
+TcpExtPruneCalled               1202577            0.0
+TcpExtOfoPruned                 734606             0.0
+TcpExtTCPOFODrop                64191              0.0
+TcpExtTCPRcvQDrop               384305             0.0
+
+Same workload on 5.6 kernel:
+
+TcpExtPruneCalled               1223043            0.0
+TcpExtOfoPruned                 3377               0.0
+TcpExtListenDrops               10596              0.0
+TcpExtTCPOFODrop                22                 0.0
+TcpExtTCPRcvQDrop               734                0.0
+
+=46rom a quick look at the code and with what Shakeel explained in mind -
+previously we would have "loaded up the cache" after the first failed
+try, so we never got into the loop inside tcp_try_rmem_schedule() which
+most likely nukes the entire OFO queue:
+
+static int tcp_try_rmem_schedule(struct sock *sk, struct sk_buff *skb,
+				 unsigned int size)
+{
+	if (atomic_read(&sk->sk_rmem_alloc) > sk->sk_rcvbuf ||
+	    !sk_rmem_schedule(sk, skb, size)) {
+	    /* ^ would fail but "load up the cache" ^ */
+
+		if (tcp_prune_queue(sk) < 0)
+			return -1;
+
+		/* v this one would not fail due to the cache v */
+		while (!sk_rmem_schedule(sk, skb, size)) {
+			if (!tcp_prune_ofo_queue(sk))
+				return -1;
+
+Neil mentioned that he's seen multi-second stalls when SACKed segments
+get dropped from the OFO queue. Sender waits for a very long time before
+retrying something that was already SACKed if the receiver keeps
+sacking new, later segments. Even when ACK reaches the previously-SACKed
+block which should prove to the sender that something is very wrong.
+
+I tried to repro this with a packet drill and it's not what I see
+exactly, I need to keep shortening the RTT otherwise the retx comes=20
+out before the next SACK arrives.
+
+I'll try to read the code, and maybe I'll get lucky and manage capture
+the exact impacted flows :S But does anything of this nature ring the
+bell?
+
+`../common/defaults.sh`
+
+    0 socket(..., SOCK_STREAM, IPPROTO_TCP) =3D 3
+   +0 setsockopt(3, SOL_SOCKET, SO_REUSEADDR, [1], 4) =3D 0
+   +0 bind(3, ..., ...) =3D 0
+   +0 listen(3, 1) =3D 0
+
+   +0 < S 0:0(0) win 65535 <mss 1000,sackOK,nop,nop,nop,wscale 8>
+   +0 > S. 0:0(0) ack 1 <mss 1460,nop,nop,sackOK,nop,wscale 8>
+  +.1 < . 1:1(0) ack 1 win 2048
+   +0 accept(3, ..., ...) =3D 4
+
+   +0 write(4, ..., 60000) =3D 60000
+   +0 > P. 1:10001(10000) ack 1
+
+// Do some SACK-ing
+  +.1 < . 1:1(0) ack 1 win 513 <sack 1001:2001,nop,nop>
++.001 < . 1:1(0) ack 1 win 513 <sack 1001:2001 3001:4001 5001:6001,nop,nop>
+// ..and we pretend we lost 1001:2001
++.001 < . 1:1(0) ack 1 win 513 <sack 2001:10001,nop,nop>
+
+// re-xmit holes and send more
+   +0 > . 10001:11001(1000) ack 1
+   +0 > . 1:1001(1000) ack 1
+   +0 > . 2001:3001(1000) ack 1 win 256
+   +0 > P. 11001:13001(2000) ack 1 win 256
+   +0 > P. 13001:15001(2000) ack 1 win 256
+
+  +.1 < . 1:1(0) ack 1001 win 513 <sack 2001:15001,nop,nop>
+
+   +0 > P. 15001:18001(3000) ack 1 win 256
+   +0 > P. 18001:20001(2000) ack 1 win 256
+   +0 > P. 20001:22001(2000) ack 1 win 256
+
+  +.1 < . 1:1(0) ack 1001 win 513 <sack 2001:22001,nop,nop>
+
+   +0 > P. 22001:24001(2000) ack 1 win 256
+   +0 > P. 24001:26001(2000) ack 1 win 256
+   +0 > P. 26001:28001(2000) ack 1 win 256
+   +0 > .  28001:29001(1000) ack 1 win 256
+
++0.05 < . 1:1(0) ack 1001 win 257 <sack 2001:29001,nop,nop>
+
+   +0 > P. 29001:31001(2000) ack 1 win 256
+   +0 > P. 31001:33001(2000) ack 1 win 256
+   +0 > P. 33001:35001(2000) ack 1 win 256
+   +0 > . 35001:36001(1000) ack 1 win 256
+
++0.05 < . 1:1(0) ack 1001 win 257 <sack 2001:36001,nop,nop>
+
+   +0 > P. 36001:38001(2000) ack 1 win 256
+   +0 > P. 38001:40001(2000) ack 1 win 256
+   +0 > P. 40001:42001(2000) ack 1 win 256
+   +0 > .  42001:43001(1000) ack 1 win 256
+
++0.05 < . 1:1(0) ack 1001 win 257 <sack 2001:43001,nop,nop>
+
+   +0 > P. 43001:45001(2000) ack 1 win 256
+   +0 > P. 45001:47001(2000) ack 1 win 256
+   +0 > P. 47001:49001(2000) ack 1 win 256
+   +0 > .  49001:50001(1000) ack 1 win 256
+
++0.04 < . 1:1(0) ack 1001 win 257 <sack 2001:50001,nop,nop>
+
+   +0 > P. 50001:52001(2000) ack 1 win 256
+   +0 > P. 52001:54001(2000) ack 1 win 256
+   +0 > P. 54001:56001(2000) ack 1 win 256
+   +0 > .  56001:57001(1000) ack 1 win 256
+
++0.04 > . 1001:2001(1000) ack 1 win 256
+
+
+  +.1 < . 1:1(0) ack 1001 win 257 <sack 2001:29001,nop,nop>
+
