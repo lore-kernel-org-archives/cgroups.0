@@ -1,70 +1,56 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 6.0 19/67] blk-throttle: prevent overflow while calculating wait time
-Date: Wed, 12 Oct 2022 20:15:00 -0400
-Message-ID: <20221013001554.1892206-19-sashal@kernel.org>
-References: <20221013001554.1892206-1-sashal@kernel.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH net-next] net-memcg: pass in gfp_t mask to mem_cgroup_charge_skmem()
+Date: Wed, 12 Oct 2022 17:17:38 -0700
+Message-ID: <CALvZod5pKzcxWsLnjUwE9fUb=1S9MDLOHF950miF8x8CWtK5Bw@mail.gmail.com>
+References: <20210817194003.2102381-1-weiwan@google.com> <20221012163300.795e7b86@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665620205;
-        bh=HiDHAOPSQv6P3nE8r2l5k+CLpdCGeWChgEX9BNsMegY=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=a5CIkR2Mitb82E4vl9gQn9/fzdho6eDrA8slnHZK4A1fy7fpjYxQypRqMIvt3z4Ek
-         PcbptdG+PEXiiBOJ0BWjd+I4sjSXTdx5t6hD5gjQ/nNTtAU1zW6rjReIWeneiGeEMN
-         JIpDs1Zf0KYerQZyrv5H9LcNWlLdeoYrg+/R0XvnHqgRCD6YsEQC4vEFGzEeqfWHbK
-         JmeM9BbXWbJgvNm6Qwvtgg3qzlovjLnE3xhyBYjT0PaDcDfsbRXACMeeMlMK3OySdS
-         Pk89ASq0Ns9YeADXVve37ZNMpTTTeVrEUWS9YwZe+yGVLUm2o5e7TNXUWQTChZNmvZ
-         /Q8Syde+cmF9w==
-In-Reply-To: <20221013001554.1892206-1-sashal@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=Nqgh1ED8YLB3Lt0ws7IuNLmuxoK0yD2LR5GJPgsLVvA=;
+        b=W1fbXQ4scCa8Aep6N0cQa85yRo+RHzhCjqU9C17a2GycoxpJKqsfwyTzqPU2P9Dgpa
+         +l6W0OriU9nSD1VENAfnSKXeF274+lr4SyUHODPMPW2x3a8jcaKK9+eZV2uJWHoMir0T
+         Vcx+kXS6Eqbpe7DbkwjZ49mEerz1hwPFIz8Ld0q/CoGVyfL/1HWyro0i9LugpgS4AXKN
+         ign/P4AP/BpuWW/cHBjxOLuuTfXFsSMCMu8SHFtP5vt3KgodzfzfTUgJNCrxYR9bI9xY
+         oUh275VlEVNfw+4YPxMuIedrLbqw9kCSZ7O2Z9Kd9snkSpDjZi3iJw9nDl14QfXbGHXd
+         Q7Jg==
+In-Reply-To: <20221012163300.795e7b86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Yu Kuai <yukuai3@huawei.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Wei Wang <weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Wed, Oct 12, 2022 at 4:33 PM Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+> On Tue, 17 Aug 2021 12:40:03 -0700 Wei Wang wrote:
+> > Add gfp_t mask as an input parameter to mem_cgroup_charge_skmem(),
+> > to give more control to the networking stack and enable it to change
+> > memcg charging behavior. In the future, the networking stack may decide
+> > to avoid oom-kills when fallbacks are more appropriate.
+> >
+> > One behavior change in mem_cgroup_charge_skmem() by this patch is to
+> > avoid force charging by default and let the caller decide when and if
+> > force charging is needed through the presence or absence of
+> > __GFP_NOFAIL.
+>
+> This patch is causing a little bit of pain to us, to workloads running
+> with just memory.max set. After this change the TCP rx path no longer
+> forces the charging.
+>
+> Any recommendation for the fix? Setting memory.high a few MB under
+> memory.max seems to remove the failures.
 
-[ Upstream commit 8d6bbaada2e0a65f9012ac4c2506460160e7237a ]
+Did the revert of this patch fix the issue you are seeing? The reason
+I am asking is because this patch should not change the behavior.
+Actually someone else reported the similar issue for UDP RX at [1] and
+they tested the revert as well. The revert did not fix the issue for
+them.
 
-There is a problem found by code review in tg_with_in_bps_limit() that
-'bps_limit * jiffy_elapsed_rnd' might overflow. Fix the problem by
-calling mul_u64_u64_div_u64() instead.
+Wei has a better explanation at [2] why this patch is not the cause
+for these issues.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Acked-by: Tejun Heo <tj@kernel.org>
-Link: https://lore.kernel.org/r/20220829022240.3348319-3-yukuai1@huaweicloud.com
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- block/blk-throttle.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 9f5fe62afff9..55a764e5ba61 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -806,7 +806,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 				 u64 bps_limit, unsigned long *wait)
- {
- 	bool rw = bio_data_dir(bio);
--	u64 bytes_allowed, extra_bytes, tmp;
-+	u64 bytes_allowed, extra_bytes;
- 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
- 	unsigned int bio_size = throtl_bio_data_size(bio);
- 
-@@ -824,10 +824,8 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 		jiffy_elapsed_rnd = tg->td->throtl_slice;
- 
- 	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
--
--	tmp = bps_limit * jiffy_elapsed_rnd;
--	do_div(tmp, HZ);
--	bytes_allowed = tmp;
-+	bytes_allowed = mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed_rnd,
-+					    (u64)HZ);
- 
- 	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
- 		if (wait)
--- 
-2.35.1
-
+[1] https://lore.kernel.org/all/CALvZod5_LVkOkF+gmefnctmx+bRjykSARm2JA9eqKJx85NYBGQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
+[2] https://lore.kernel.org/all/CAEA6p_BhAh6f_kAHEoEJ38nunY=c=4WqxhJQUjT+dCSAr_rm8g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
