@@ -1,65 +1,70 @@
-From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH net-next] net-memcg: pass in gfp_t mask to
- mem_cgroup_charge_skmem()
-Date: Wed, 12 Oct 2022 17:38:25 -0700
-Message-ID: <20221012173825.45d6fbf2@kernel.org>
-References: <20210817194003.2102381-1-weiwan@google.com>
-        <20221012163300.795e7b86@kernel.org>
-        <CALvZod5pKzcxWsLnjUwE9fUb=1S9MDLOHF950miF8x8CWtK5Bw@mail.gmail.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 15/47] blk-throttle: prevent overflow while calculating wait time
+Date: Wed, 12 Oct 2022 20:20:50 -0400
+Message-ID: <20221013002124.1894077-15-sashal@kernel.org>
+References: <20221013002124.1894077-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665621507;
-        bh=fIBx0fk/i8Gefd9ZrizLeDWC35/uKkbdvMp4L+ilGNU=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=eNs9F9rFjafI66l1WW5TTwHbmhFJfSVZnqqopbkioUXtDKPK3ZXJ5vS3L3IWP7hEg
-         3mpiVdYUZhVOW1o8sirKSi/2D8i355P6m6fVomdolTfp+Flio7KfrTYPtJqpGDQUtB
-         y0SIq1IsGnlPN9et7Rern9nsc3exKuFw0aqCtCtPxQF5M86EPfKdeJgu78+jctC4RH
-         kViRiN6Elm0D4SWR4uRwsgsX/ufs0VoLz7wF8QlKNo8ooSjpPJy4eNXoW5d3oelkpz
-         v2nNtb23iJq83ftiFPOcfb/QX7ToN8YGHxfj+llW+wIaCbm8TEY8mGrSXoP6tGT3Xc
-         EjpdQTw0eq/CA==
-In-Reply-To: <CALvZod5pKzcxWsLnjUwE9fUb=1S9MDLOHF950miF8x8CWtK5Bw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        s=k20201202; t=1665620536;
+        bh=tyY7mApUCKy3nxZR8IiT8fEapo3BTVDOMAVT+cOVgtA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=N0p6fCRMVoR/DoMxIjt2gjpCaaUzBn74/wiLh+bslI1tP9jXnmnz0jKR8EvU88QwZ
+         kFOlUZHyitRTMExYHHdW/iVLDzpUwbQMcp43hTidOmBAB6xBdMPEY+CkXbY8YEx2di
+         FE4MnLKUYIfZzDHTWy940waVyZRsm2Qs8FRqWR5nRR6Pmurl/qcb586gVC0ksNY5HA
+         gvA+97D7I5jTw6ePtxBuIX+FLrPQG4B/VnXZpqoBIliQWBWx9nq8IvGnQsmFV5H6EZ
+         ExmbLzKBoO9FrK58+X4Q2S9YZKp3N3IqWBkUGQS2c6J0iy/FVJ8FXxBJ2PKtqOtM/L
+         S7QpCkME2hJiQ==
+In-Reply-To: <20221013002124.1894077-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Wei Wang <weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Yu Kuai <yukuai3@huawei.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org
 
-On Wed, 12 Oct 2022 17:17:38 -0700 Shakeel Butt wrote:
-> Did the revert of this patch fix the issue you are seeing? The reason
-> I am asking is because this patch should not change the behavior.
-> Actually someone else reported the similar issue for UDP RX at [1] and
-> they tested the revert as well. The revert did not fix the issue for
-> them.
-> 
-> Wei has a better explanation at [2] why this patch is not the cause
-> for these issues.
+From: Yu Kuai <yukuai3@huawei.com>
 
-We're talking TCP here, to be clear. I haven't tested a revert, yet (not
-that easy to test with a real workload) but I'm relatively confident the
-change did introduce an "unforced" call, specifically this bit:
+[ Upstream commit 8d6bbaada2e0a65f9012ac4c2506460160e7237a ]
 
-@@ -2728,10 +2728,12 @@ int __sk_mem_raise_allocated(struct sock *sk, int size, int amt, int kind)
+There is a problem found by code review in tg_with_in_bps_limit() that
+'bps_limit * jiffy_elapsed_rnd' might overflow. Fix the problem by
+calling mul_u64_u64_div_u64() instead.
+
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+Link: https://lore.kernel.org/r/20220829022240.3348319-3-yukuai1@huaweicloud.com
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ block/blk-throttle.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 7c4e7993ba97..68cf8dbb4c67 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -950,7 +950,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 				 u64 bps_limit, unsigned long *wait)
  {
- 	struct proto *prot = sk->sk_prot;
- 	long allocated = sk_memory_allocated_add(sk, amt);
-+	bool memcg_charge = mem_cgroup_sockets_enabled && sk->sk_memcg;
- 	bool charged = true;
+ 	bool rw = bio_data_dir(bio);
+-	u64 bytes_allowed, extra_bytes, tmp;
++	u64 bytes_allowed, extra_bytes;
+ 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+ 	unsigned int bio_size = throtl_bio_data_size(bio);
  
--	if (mem_cgroup_sockets_enabled && sk->sk_memcg &&
--	    !(charged = mem_cgroup_charge_skmem(sk->sk_memcg, amt)))
-+	if (memcg_charge &&
-+	    !(charged = mem_cgroup_charge_skmem(sk->sk_memcg, amt,
-+						gfp_memcg_charge())))
+@@ -967,10 +967,8 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 		jiffy_elapsed_rnd = tg->td->throtl_slice;
+ 
+ 	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
+-
+-	tmp = bps_limit * jiffy_elapsed_rnd;
+-	do_div(tmp, HZ);
+-	bytes_allowed = tmp;
++	bytes_allowed = mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed_rnd,
++					    (u64)HZ);
+ 
+ 	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
+ 		if (wait)
+-- 
+2.35.1
 
-where gfp_memcg_charge() is GFP_NOWAIT in softirq.
-
-The above gets called from (inverted stack):
- tcp_data_queue()
- tcp_try_rmem_schedule(sk, skb, skb->truesize)
- tcp_try_rmem_schedule()
- sk_rmem_schedule()
- __sk_mem_schedule()
- __sk_mem_raise_allocated()
-
-Is my confidence unjustified? :)
