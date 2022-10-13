@@ -1,70 +1,42 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.15 15/47] blk-throttle: prevent overflow while calculating wait time
-Date: Wed, 12 Oct 2022 20:20:50 -0400
-Message-ID: <20221013002124.1894077-15-sashal@kernel.org>
-References: <20221013002124.1894077-1-sashal@kernel.org>
+From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH net-next] net-memcg: pass in gfp_t mask to
+ mem_cgroup_charge_skmem()
+Date: Wed, 12 Oct 2022 18:40:50 -0700
+Message-ID: <20221012184050.5a7f3bde@kernel.org>
+References: <20210817194003.2102381-1-weiwan@google.com>
+        <20221012163300.795e7b86@kernel.org>
+        <CALvZod5pKzcxWsLnjUwE9fUb=1S9MDLOHF950miF8x8CWtK5Bw@mail.gmail.com>
+        <20221012173825.45d6fbf2@kernel.org>
+        <20221013005431.wzjurocrdoozykl7@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665620536;
-        bh=tyY7mApUCKy3nxZR8IiT8fEapo3BTVDOMAVT+cOVgtA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=N0p6fCRMVoR/DoMxIjt2gjpCaaUzBn74/wiLh+bslI1tP9jXnmnz0jKR8EvU88QwZ
-         kFOlUZHyitRTMExYHHdW/iVLDzpUwbQMcp43hTidOmBAB6xBdMPEY+CkXbY8YEx2di
-         FE4MnLKUYIfZzDHTWy940waVyZRsm2Qs8FRqWR5nRR6Pmurl/qcb586gVC0ksNY5HA
-         gvA+97D7I5jTw6ePtxBuIX+FLrPQG4B/VnXZpqoBIliQWBWx9nq8IvGnQsmFV5H6EZ
-         ExmbLzKBoO9FrK58+X4Q2S9YZKp3N3IqWBkUGQS2c6J0iy/FVJ8FXxBJ2PKtqOtM/L
-         S7QpCkME2hJiQ==
-In-Reply-To: <20221013002124.1894077-1-sashal@kernel.org>
+        s=k20201202; t=1665625251;
+        bh=3ZCGToPaazLxSo8auNDegz7ZNYJoaGHGQK/xLD/k5Yc=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=cAqYNXvo5FQ12eE1mxDNT5gXxmkTLytoDOpPo9g0aqYCJsdWxA/DaZBASaBYKlRnp
+         82Ml9I7x46PwbneRMgA+JDoQlT5D9elUmpV2dHCfvFDfSHZ+W4MNnuORvj3hTL8QnV
+         fx1lYjFEPbYOV1F8An+ZsHF9SLuR+qBZnvdo1B7mepPnKUdx8hsQ96jHn0r2KLbQYF
+         Uy1QgQ3Jbmpib/p0R13uw5SmVGv9/l0PynGEiomvK30DmPCD1YxTHirgDW4VWLS85a
+         GlNqljtHAtSliG/bxK156q5pu/oaSG8itOlMPdyywpGzP6YcSC6jyatydVie+I7js3
+         4gXeBnGxmwRJg==
+In-Reply-To: <20221013005431.wzjurocrdoozykl7-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Yu Kuai <yukuai3@huawei.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Wei Wang <weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Thu, 13 Oct 2022 00:54:31 +0000 Shakeel Butt wrote:
+> So, before the patch, the memcg code may force charges but it will
+> return false and make the networking code to uncharge memcg for
+> SK_MEM_RECV.
 
-[ Upstream commit 8d6bbaada2e0a65f9012ac4c2506460160e7237a ]
+Ah, right, I see it now :(
 
-There is a problem found by code review in tg_with_in_bps_limit() that
-'bps_limit * jiffy_elapsed_rnd' might overflow. Fix the problem by
-calling mul_u64_u64_div_u64() instead.
+I guess I'll have to try to test (some approximation of) a revert 
+after all.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Acked-by: Tejun Heo <tj@kernel.org>
-Link: https://lore.kernel.org/r/20220829022240.3348319-3-yukuai1@huaweicloud.com
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- block/blk-throttle.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 7c4e7993ba97..68cf8dbb4c67 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -950,7 +950,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 				 u64 bps_limit, unsigned long *wait)
- {
- 	bool rw = bio_data_dir(bio);
--	u64 bytes_allowed, extra_bytes, tmp;
-+	u64 bytes_allowed, extra_bytes;
- 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
- 	unsigned int bio_size = throtl_bio_data_size(bio);
- 
-@@ -967,10 +967,8 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 		jiffy_elapsed_rnd = tg->td->throtl_slice;
- 
- 	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
--
--	tmp = bps_limit * jiffy_elapsed_rnd;
--	do_div(tmp, HZ);
--	bytes_allowed = tmp;
-+	bytes_allowed = mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed_rnd,
-+					    (u64)HZ);
- 
- 	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
- 		if (wait)
--- 
-2.35.1
-
+Did the fact that we used to force charge not potentially cause
+reclaim, tho?  Letting TCP accept the next packet even if it had
+to drop the current one?
