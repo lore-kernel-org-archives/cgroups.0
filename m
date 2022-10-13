@@ -1,42 +1,70 @@
-From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH net-next] net-memcg: pass in gfp_t mask to
- mem_cgroup_charge_skmem()
-Date: Wed, 12 Oct 2022 16:33:00 -0700
-Message-ID: <20221012163300.795e7b86@kernel.org>
-References: <20210817194003.2102381-1-weiwan@google.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.0 19/67] blk-throttle: prevent overflow while calculating wait time
+Date: Wed, 12 Oct 2022 20:15:00 -0400
+Message-ID: <20221013001554.1892206-19-sashal@kernel.org>
+References: <20221013001554.1892206-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1665617582;
-        bh=2Q43OD6ELjO061ruqIM9rlIj6RE37EF7791n2YoQok4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=BJHMm2+JGCrZkkkXFcE+oWTKipjRdIU5JJxgbankq6nNuQk7d8hYuaNRINumrQmos
-         ArgGoad04753zZFQZkEzJpG0rFKM3b6062n+MG0f/VFUKoxCk6+sB0r3DQwBkuxHdp
-         Fv9J37lA7Mhc6oZLUZ6CYzHLP3anao1k1bLM4AP+RjeX8RmCgFDOziruJBItlkG3U+
-         FnHEks/27iS777oDY4eYuGX/eSckqCbE+8OMhS3A6ViE1oL7mnJn06oPc6VmgH773Y
-         uQeF8Y4jW4IsBMF8OojmQG2KTb6+sWPOUMneGGy94L3FbLlS1JyegVEy9xfaZmwgUa
-         c09+by+jC6I2g==
-In-Reply-To: <20210817194003.2102381-1-weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        s=k20201202; t=1665620205;
+        bh=HiDHAOPSQv6P3nE8r2l5k+CLpdCGeWChgEX9BNsMegY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=a5CIkR2Mitb82E4vl9gQn9/fzdho6eDrA8slnHZK4A1fy7fpjYxQypRqMIvt3z4Ek
+         PcbptdG+PEXiiBOJ0BWjd+I4sjSXTdx5t6hD5gjQ/nNTtAU1zW6rjReIWeneiGeEMN
+         JIpDs1Zf0KYerQZyrv5H9LcNWlLdeoYrg+/R0XvnHqgRCD6YsEQC4vEFGzEeqfWHbK
+         JmeM9BbXWbJgvNm6Qwvtgg3qzlovjLnE3xhyBYjT0PaDcDfsbRXACMeeMlMK3OySdS
+         Pk89ASq0Ns9YeADXVve37ZNMpTTTeVrEUWS9YwZe+yGVLUm2o5e7TNXUWQTChZNmvZ
+         /Q8Syde+cmF9w==
+In-Reply-To: <20221013001554.1892206-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Wei Wang <weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Yu Kuai <yukuai3@huawei.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org
 
-On Tue, 17 Aug 2021 12:40:03 -0700 Wei Wang wrote:
-> Add gfp_t mask as an input parameter to mem_cgroup_charge_skmem(),
-> to give more control to the networking stack and enable it to change
-> memcg charging behavior. In the future, the networking stack may decide
-> to avoid oom-kills when fallbacks are more appropriate.
-> 
-> One behavior change in mem_cgroup_charge_skmem() by this patch is to
-> avoid force charging by default and let the caller decide when and if
-> force charging is needed through the presence or absence of
-> __GFP_NOFAIL.
+From: Yu Kuai <yukuai3@huawei.com>
 
-This patch is causing a little bit of pain to us, to workloads running
-with just memory.max set. After this change the TCP rx path no longer
-forces the charging.
+[ Upstream commit 8d6bbaada2e0a65f9012ac4c2506460160e7237a ]
 
-Any recommendation for the fix? Setting memory.high a few MB under
-memory.max seems to remove the failures.
+There is a problem found by code review in tg_with_in_bps_limit() that
+'bps_limit * jiffy_elapsed_rnd' might overflow. Fix the problem by
+calling mul_u64_u64_div_u64() instead.
+
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+Link: https://lore.kernel.org/r/20220829022240.3348319-3-yukuai1@huaweicloud.com
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ block/blk-throttle.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 9f5fe62afff9..55a764e5ba61 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -806,7 +806,7 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 				 u64 bps_limit, unsigned long *wait)
+ {
+ 	bool rw = bio_data_dir(bio);
+-	u64 bytes_allowed, extra_bytes, tmp;
++	u64 bytes_allowed, extra_bytes;
+ 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+ 	unsigned int bio_size = throtl_bio_data_size(bio);
+ 
+@@ -824,10 +824,8 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 		jiffy_elapsed_rnd = tg->td->throtl_slice;
+ 
+ 	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
+-
+-	tmp = bps_limit * jiffy_elapsed_rnd;
+-	do_div(tmp, HZ);
+-	bytes_allowed = tmp;
++	bytes_allowed = mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed_rnd,
++					    (u64)HZ);
+ 
+ 	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
+ 		if (wait)
+-- 
+2.35.1
+
