@@ -1,67 +1,36 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.15 05/21] cgroup: Remove data-race around cgrp_dfl_visible
-Date: Mon, 17 Oct 2022 20:09:24 -0400
-Message-ID: <20221018000940.2731329-5-sashal@kernel.org>
-References: <20221018000940.2731329-1-sashal@kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Subject: Re: [GIT PULL] cgroup fixes for v6.1-rc1
+Date: Tue, 18 Oct 2022 02:01:11 +0000
+Message-ID: <166605847178.4906.14956649686203829290.pr-tracker-bot@kernel.org>
+References: <Y03NC6GVxT6iPDsr@slm.duckdns.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666051790;
-        bh=oN6JrRW7HxtTEZenVxRVgLqm+0Dic4qTguzq3ewBC+I=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JlZEQPHU5Eojtsq7OcZ0RwYgIU2i7qnwmxiI5X0h/Tl3nHOHyxilbBRgSFlsdBavl
-         1Np37eMg0yuP+Mzh+Ll9n6vxKBtkkscMo+fDZJTfUEiaxx89eNooHHSv7nFA3ybGjg
-         qbU79cKBbb5imKEzRjLJWjh6B4J/BFLoAkDYlMjQGlVe1Ojz68rQ3+wdnHRVPshd3/
-         RLDmV7TwaCV1SOmB8wJ3rISQYlVAJrUorWSl6HWD1wZLPHX/Kc7O0Ie7Aes+gac+Rc
-         u7IWmrUcxfvqRzyAiIn6EEhNC/CbKNAYdbTKI96ggnPzDCcRzpnUcEjCpVvITNYiqP
-         en0rxB+NMInpA==
-In-Reply-To: <20221018000940.2731329-1-sashal@kernel.org>
+        s=k20201202; t=1666058471;
+        bh=F+S51e6wTdPG2aXbo8dh/010c09681MqZA1F3Fzj39c=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=om1h2Erm2L3PTREyOpBE7EB3a2xw0DBVx2poVEhOX9E1ZjdD8ftpp8L90y8R9Mxs5
+         tE1ZOR52IRCXge04EcunpFtDu0A/jpl+2H6BVuCD3sN8cABse2Pla48WtFHcb7+BgE
+         yn5bLhrTPeHlYzutjVUm9Jd6DymsQq/p5vZoT3SgsN2Pcqp75XzX5YFwVHuwYpYG4U
+         X8LhgYQB9n6ELsKgcrRctyGxpN1Rfgs7vRNjF9zjXVqRWBCTWBCnqnUIPgH3g5OoRe
+         Vd2w/l3W4HZPxFbBe3F5cdB3vsIG05rQmVDHC/7yGp8BG24lK7B1/PGZiIbF/aNcVN
+         49Vip/4dPrN6Q==
+In-Reply-To: <Y03NC6GVxT6iPDsr-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Abhishek Shah <abhishek.shah@columbia.edu>, Gabriel Ryan <gabe@cs.columbia.edu>, Christian Brauner <brauner@kernel.org>, Sasha Levin <sashal@kernel.org>, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Tejun Heo <tj@kernel.org>
+The pull request you sent on Mon, 17 Oct 2022 11:45:47 -1000:
 
-[ Upstream commit dc79ec1b232ad2c165d381d3dd2626df4ef9b5a4 ]
+> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.1-rc1-fixes
 
-There's a seemingly harmless data-race around cgrp_dfl_visible detected by
-kernel concurrency sanitizer. Let's remove it by throwing WRITE/READ_ONCE at
-it.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/bb1a1146467ad812bb65440696df0782e2bc63c8
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Abhishek Shah <abhishek.shah@columbia.edu>
-Cc: Gabriel Ryan <gabe@cs.columbia.edu>
-Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
-Link: https://lore.kernel.org/netdev/20220819072256.fn7ctciefy4fc4cu@wittgenstein/
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- kernel/cgroup/cgroup.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Thank you!
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 4b19f7fc4deb..1dd45a1c1acc 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -2152,7 +2152,7 @@ static int cgroup_get_tree(struct fs_context *fc)
- 	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
- 	int ret;
- 
--	cgrp_dfl_visible = true;
-+	WRITE_ONCE(cgrp_dfl_visible, true);
- 	cgroup_get_live(&cgrp_dfl_root.cgrp);
- 	ctx->root = &cgrp_dfl_root;
- 
-@@ -6067,7 +6067,7 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
- 		struct cgroup *cgrp;
- 		int ssid, count = 0;
- 
--		if (root == &cgrp_dfl_root && !cgrp_dfl_visible)
-+		if (root == &cgrp_dfl_root && !READ_ONCE(cgrp_dfl_visible))
- 			continue;
- 
- 		seq_printf(m, "%d:", root->hierarchy_id);
 -- 
-2.35.1
-
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
