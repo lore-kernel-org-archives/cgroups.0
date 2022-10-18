@@ -1,46 +1,67 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm/memcontrol: Don't increase effective low/min if no
- protection needed
-Date: Tue, 18 Oct 2022 00:46:24 +0200
-Message-ID: <Y03bQJcK4o4Po1v2@blackbook>
-References: <20221011143015.1152968-1-longman@redhat.com>
- <Y0WOPZxWSnUjzZ8e@dhcp22.suse.cz>
- <defdb421-342e-ebcb-d7f0-005559dd1e0d@redhat.com>
- <Y0WiIDmPPXYZuHpX@slm.duckdns.org>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.0 06/32] cgroup: Remove data-race around cgrp_dfl_visible
+Date: Mon, 17 Oct 2022 20:07:03 -0400
+Message-ID: <20221018000729.2730519-6-sashal@kernel.org>
+References: <20221018000729.2730519-1-sashal@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1666046786; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=KPXn8oCISsFaCnRNyRjpdaEv1QQo5ZLAKB/NsLXVGBs=;
-        b=NfKOqe4gHCl9/Htq5BcTbwrgFymKb4wGV1EoSbTVL1zMWiFBS0wESzuZBCcXi55G/gR0tQ
-        dqkWXoDM2yaNsea3ydA79oc54ZMQO9pSGOy34tkFfc3j8hI+NmtNtlNXbV82hU2h+0y5E3
-        y7ohEeM0pH8mJna2Hkfzj+XLk/7aVQo=
-Content-Disposition: inline
-In-Reply-To: <Y0WiIDmPPXYZuHpX-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1666051664;
+        bh=Lxnn2/R98fjTYGBdK4fN9VidlSv0u9M8Uk66lw7OpNs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=MYIBRKTysluyQTCT9iP9QqHPC4YJRpU1iPpvY2VNUn5CwtyksFFEV8HJEncwh7Zxg
+         pWZlGWSpRZ2Z15Hrh1pLDKQwkMfbDFzrcBB3SaisqUX5sSTW5Rji2Pv+Lbm4aBZiAO
+         seb8djcxuRpgVP8bt8E9+phdgEu53WteUDkW/oc4hJCpJ8wAZZ8mSNQtFXSyuR2+qR
+         x4iJTyYrlHT+J9YLUp/Kla91yPHLWWCyE8AflmAJAnC+qXnSJxb9Uree5XN8WwVqMt
+         H6W9EgmHkZo8YPPkgXO/crhYUoUksim3WrTEF64KNg/OlN8r9+OdZeCKrpN8VSkTMs
+         BWItMyiv97Odg==
+In-Reply-To: <20221018000729.2730519-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Abhishek Shah <abhishek.shah@columbia.edu>, Gabriel Ryan <gabe@cs.columbia.edu>, Christian Brauner <brauner@kernel.org>, Sasha Levin <sashal@kernel.org>, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org
 
-On Tue, Oct 11, 2022 at 07:04:32AM -1000, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Wouldn't it make sense to fix the test? With recursive_prot on, the cgroup
-> actually is under low protection and it seems like the correct behavior is
-> to report the low events accordingly.
+From: Tejun Heo <tj@kernel.org>
 
-It depends whether the there is a residual protection that the
-memory.low=0 sibling can use (with memory_recursiveprot).
+[ Upstream commit dc79ec1b232ad2c165d381d3dd2626df4ef9b5a4 ]
 
-In the discussed LTP test, there should be no residual protection that
-would justify the apparently misreported memory.low events. I.e. the
-test is correct, the failure points to a subtle issue with distributing
-residual protection among siblings.
+There's a seemingly harmless data-race around cgrp_dfl_visible detected by
+kernel concurrency sanitizer. Let's remove it by throwing WRITE/READ_ONCE at
+it.
 
-Been there, (haven't) done that:
-1) https://bugzilla.suse.com/show_bug.cgi?id=1196298
-2) https://lore.kernel.org/r/20220325103118.GC2828-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org/
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Abhishek Shah <abhishek.shah@columbia.edu>
+Cc: Gabriel Ryan <gabe@cs.columbia.edu>
+Reviewed-by: Christian Brauner (Microsoft) <brauner@kernel.org>
+Link: https://lore.kernel.org/netdev/20220819072256.fn7ctciefy4fc4cu@wittgenstein/
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ kernel/cgroup/cgroup.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-HTH,
-Michal
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 5f2090d051ac..99f00a3e1997 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -2173,7 +2173,7 @@ static int cgroup_get_tree(struct fs_context *fc)
+ 	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
+ 	int ret;
+ 
+-	cgrp_dfl_visible = true;
++	WRITE_ONCE(cgrp_dfl_visible, true);
+ 	cgroup_get_live(&cgrp_dfl_root.cgrp);
+ 	ctx->root = &cgrp_dfl_root;
+ 
+@@ -6091,7 +6091,7 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
+ 		struct cgroup *cgrp;
+ 		int ssid, count = 0;
+ 
+-		if (root == &cgrp_dfl_root && !cgrp_dfl_visible)
++		if (root == &cgrp_dfl_root && !READ_ONCE(cgrp_dfl_visible))
+ 			continue;
+ 
+ 		seq_printf(m, "%d:", root->hierarchy_id);
+-- 
+2.35.1
+
