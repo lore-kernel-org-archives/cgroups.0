@@ -1,39 +1,61 @@
-From: Kemeng Shi <shikemeng@huawei.com>
-Subject: [PATCH v2 5/5] blk-iocost: Correct comment in blk_iocost_init
-Date: Tue, 18 Oct 2022 20:19:32 +0800
-Message-ID: <20221018121932.10792-6-shikemeng@huawei.com>
+From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 4/5] blk-iocost: Remove vrate member in struct ioc_now
+Date: Tue, 18 Oct 2022 20:19:31 +0800
+Message-ID: <20221018121932.10792-5-shikemeng@huawei.com>
 References: <20221018121932.10792-1-shikemeng@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20221018121932.10792-1-shikemeng@huawei.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20221018121932.10792-1-shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, shikemeng@huawei.com
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-There is no iocg_pd_init function. The pd_alloc_fn function pointer of
-iocost policy is set with ioc_pd_init. Just correct it.
+If we trace vtime_base_rate instead of vtime_rate, there is nowhere
+which accesses now->vrate except function ioc_now using now->vrate locally.
+Just remove it.
 
-Signed-off-by: Kemeng Shi <shikemeng@huawei.com>
-Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-iocost.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/blk-iocost.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 761295ed9c5a..96c1571a8a1d 100644
+index b0991b52e3dd..761295ed9c5a 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -2880,7 +2880,7 @@ static int blk_iocost_init(struct gendisk *disk)
- 	spin_unlock_irq(&ioc->lock);
+@@ -556,7 +556,6 @@ struct ioc_now {
+ 	u64				now_ns;
+ 	u64				now;
+ 	u64				vnow;
+-	u64				vrate;
+ };
+ 
+ struct iocg_wait {
+@@ -1020,10 +1019,11 @@ static void ioc_adjust_base_vrate(struct ioc *ioc, u32 rq_wait_pct,
+ static void ioc_now(struct ioc *ioc, struct ioc_now *now)
+ {
+ 	unsigned seq;
++	u64 vrate;
+ 
+ 	now->now_ns = ktime_get();
+ 	now->now = ktime_to_us(now->now_ns);
+-	now->vrate = atomic64_read(&ioc->vtime_rate);
++	vrate = atomic64_read(&ioc->vtime_rate);
  
  	/*
--	 * rqos must be added before activation to allow iocg_pd_init() to
-+	 * rqos must be added before activation to allow ioc_pd_init() to
- 	 * lookup the ioc from q. This means that the rqos methods may get
- 	 * called before policy activation completion, can't assume that the
- 	 * target bio has an iocg associated and need to test for NULL iocg.
+ 	 * The current vtime is
+@@ -1036,7 +1036,7 @@ static void ioc_now(struct ioc *ioc, struct ioc_now *now)
+ 	do {
+ 		seq = read_seqcount_begin(&ioc->period_seqcount);
+ 		now->vnow = ioc->period_at_vtime +
+-			(now->now - ioc->period_at) * now->vrate;
++			(now->now - ioc->period_at) * vrate;
+ 	} while (read_seqcount_retry(&ioc->period_seqcount, seq));
+ }
+ 
 -- 
 2.30.0
 
