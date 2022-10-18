@@ -1,22 +1,22 @@
 From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 5.10 05/16] cgroup: Remove data-race around cgrp_dfl_visible
-Date: Mon, 17 Oct 2022 20:10:18 -0400
-Message-ID: <20221018001029.2731620-5-sashal@kernel.org>
-References: <20221018001029.2731620-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 03/13] cgroup: Remove data-race around cgrp_dfl_visible
+Date: Mon, 17 Oct 2022 20:10:52 -0400
+Message-ID: <20221018001102.2731930-3-sashal@kernel.org>
+References: <20221018001102.2731930-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1666051839;
-        bh=pi8pLsYW4g0+QIgNtoUdgUCpe0BC5kGnIcEdILtWFCU=;
+        s=k20201202; t=1666051867;
+        bh=x0y/DlrlGVWqurzJyNaXRKYcomDyO74QFqiGj1H8ra4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dc92d1ac9j9u7r+OmjaAvRO46WjcIArVGC84qt4VOXfO6HWg3CTF1ikMWxVL8QJG1
-         97anq76AAQ7bPwGvxgsSBJ6w1bJFt4rJbRBjMz8E5nCLhs1QYchyxwTLQavXF9pe0b
-         +0mxFza//hrj4n65mp5tG/1JsARRkpwhGUeiQarAybKYCR3Vzrry101FmsjmENHHax
-         pwJBknN5edV7PyR9gCaTqelkgelKENujG1uZEZyTZhb+TKDINjqwAGy1lKiOxSgW1l
-         +e7dS0AyajPkLVas/en7u1p3YOBCTANwyQwrQpg2sDUQMPoZfmzl05PCidlgALOBhL
-         luDUfLkU7Hl4A==
-In-Reply-To: <20221018001029.2731620-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        b=D6nZz93arlLlObwq0IultNymp8riYQL9urKwPpSwaPd8g6QFKd/+HHtyLcv45/g+V
+         AMfFaDf0at4sXb/ZAEdXen+cnjqsBLKtxLH1Tfb/GZl3hrXS4saEuZaz/E91pJuDy0
+         4cU4ajq8nvzIzEsVxSg73fmgBOYZ0sgAGhtvfo3z0RD3u+HzRBsbQH2c99GnsWb59C
+         3ofMYgpSu7H66n4h3jkGI/EAzrzsTHNSe5BB4PbYVK7lXGVR9qhaLhgecakseiex35
+         kgkfFR1rS1lpF8jVlmNuQvnf5O6z4yg8thovIBJs2ffF4yTvO78PC0TtKpOckEXcMr
+         0DN6u0ncr4Pxw==
+In-Reply-To: <20221018001102.2731930-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -41,10 +41,10 @@ Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 684c16849eff..5178593ee1f1 100644
+index d14575c0e464..194060a6492a 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -2110,7 +2110,7 @@ static int cgroup_get_tree(struct fs_context *fc)
+@@ -2178,7 +2178,7 @@ static int cgroup_get_tree(struct fs_context *fc)
  	struct cgroup_fs_context *ctx = cgroup_fc2context(fc);
  	int ret;
  
@@ -53,7 +53,7 @@ index 684c16849eff..5178593ee1f1 100644
  	cgroup_get_live(&cgrp_dfl_root.cgrp);
  	ctx->root = &cgrp_dfl_root;
  
-@@ -5946,7 +5946,7 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
+@@ -6022,7 +6022,7 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
  		struct cgroup *cgrp;
  		int ssid, count = 0;
  
