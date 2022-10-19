@@ -1,24 +1,24 @@
 From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: [RFC 14/17] cgroup/drm: Show group budget signaling
- capability in sysfs
-Date: Wed, 19 Oct 2022 18:32:51 +0100
-Message-ID: <20221019173254.3361334-15-tvrtko.ursulin@linux.intel.com>
+Subject: [RFC 09/17] cgroup/drm: Introduce weight based drm
+ cgroup control
+Date: Wed, 19 Oct 2022 18:32:46 +0100
+Message-ID: <20221019173254.3361334-10-tvrtko.ursulin@linux.intel.com>
 References: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1666200847; x=1697736847;
+ t=1666200830; x=1697736830;
  h=from:to:cc:subject:date:message-id:in-reply-to:
  references:mime-version:content-transfer-encoding;
- bh=Ji8CP4xluWOS2NrGBbUVXyKLzEJJ2hTlHVJTBMnur4M=;
- b=AE3UsyY1TMeiR6mUmrNulAnFWBsSzKf6i8l8l7RIV41yfhw+fZsf+4y+
- /huNnHkclwwiYvxBU61SB80Fu1tZTQodAkxOvV4bfWRfMve13EG2tybdt
- qQPy9NvitiUG3FSagaPardTLlAWFF1CxksL1h4BZq2WBoUGzZZxuBNKgv
- 641DyQJ34yJLc8JXPPqmv/309kGvPqTupbVCjAx+hqrLaMnpbSH/DrGX1
- oBran1pnl+qkoiRGUw10una8m//GNywjSEEPgzGjSlefHSQ/ZRSZN5XoP
- QStVRQtop7bqs5hEg6FhFCwGpAnF1lDnQE5pELFvTsafEQR6ozgMw/6XF g==;
+ bh=1PhDcr2XGs8uIfUaec8gKHHe5Qyfm3zBRnEHtyvj3RQ=;
+ b=gPTX8Fib6dr4sRo0I9aak04vrPrJ0slMrfEcVi62vtsqWBVsgmlzKJIC
+ 7ELraeRyKhDovF7CJoffdMV9UorLoI3uMuaN4WBZfwKr9BWCl6dmHQ336
+ eWRXwQfAhXkYS0Q8ORcNZYIxKdHtypXP4C9e515wTZpHdv2iSWXTvFuAr
+ xLV7tplOI966yCqMBcsBwksIZwRG7wxbEgeDJjl/bxA5mvgCMfb3O4zaA
+ /5ncZGhVlsScElumHfdrs+cR7lc2Wl94X8EOxPL9M3S3ealRFzqRKOeFp
+ XUdJAsuh5qi7a5NRv4lHTuv4K9ur2AcGx097T61oJ5/cnwjtzC070P3qP w==;
 In-Reply-To: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
@@ -36,176 +36,70 @@ Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Daniel Vetter <daniel.
 
 From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 
-Show overall status of a task group - whether all DRM clients in a group
-support over budget signaling, or some do not, or if there are no DRM
-clients in the group to start with.
+Similar to CPU scheduling, implement a concept of weight in the drm cgroup
+controller.
+
+Uses the same range and default as the CPU controller - CGROUP_WEIGHT_MIN,
+CGROUP_WEIGHT_DFL and CGROUP_WEIGHT_MAX.
+
+Later each cgroup is assigned a time budget proportionaly based on the
+relative weights of it's siblings. This time budget is in turn split by
+the group's children and so on.
+
+Children of the root cgroup will be exempt from split budgets and
+therefore compete for the GPU time independently and without weight based
+control.
+
+This will be used to implement a soft, or best effort signal from drm
+cgroup to drm core notifying about groups which are over their allotted
+budget.
+
+No guarantees that the limit can be enforced are provided or implied.
 
 Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 ---
- Documentation/admin-guide/cgroup-v2.rst |  7 ++++
- drivers/gpu/drm/drm_cgroup.c            | 33 ++++++++++++++++
- include/drm/drm_clients.h               |  7 ++++
- include/drm/drm_drv.h                   | 11 +++++-
- kernel/cgroup/drm.c                     | 52 +++++++++++++++++++++++++
- 5 files changed, 109 insertions(+), 1 deletion(-)
+ kernel/cgroup/drm.c | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 318f463a1316..6ee94ee109f0 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -2491,6 +2491,13 @@ DRM scheduling soft limits interface files
- 	signal.
- 	Value of zero (defaul) disables the soft limit checking.
- 
-+  drm.budget_supported
-+	One of:
-+	 1) 'yes' - when all DRM clients in the group support the functionality.
-+	 2) 'no' - when at least one of the DRM clients does not support the
-+		   functionality.
-+	 3) 'n/a' - when there are no DRM clients in the group.
-+
- Misc
- ----
- 
-diff --git a/drivers/gpu/drm/drm_cgroup.c b/drivers/gpu/drm/drm_cgroup.c
-index ff99d1f4f1d4..d2d8b2cb4ab3 100644
---- a/drivers/gpu/drm/drm_cgroup.c
-+++ b/drivers/gpu/drm/drm_cgroup.c
-@@ -259,3 +259,36 @@ void drm_pid_signal_budget(struct pid *pid, u64 usage, u64 budget)
- 	rcu_read_unlock();
- }
- EXPORT_SYMBOL_GPL(drm_pid_signal_budget);
-+
-+enum drm_cg_supported drm_pid_signal_budget_supported(struct pid *pid)
-+{
-+	enum drm_cg_supported supported = DRM_CG_NOT_APPLICABLE;
-+	struct drm_pid_clients *clients;
-+
-+	rcu_read_lock();
-+	clients = xa_load(&drm_pid_clients, (unsigned long)pid);
-+	if (clients) {
-+		struct drm_file *fpriv;
-+
-+		list_for_each_entry_rcu(fpriv, &clients->file_list, clink) {
-+			const struct drm_cgroup_ops *cg_ops =
-+				fpriv->minor->dev->driver->cg_ops;
-+
-+			if (!cg_ops ||
-+			    !cg_ops->active_time_us ||
-+			    !cg_ops->signal_budget ||
-+			    cg_ops->signal_budget(fpriv, 0, 0) < 0) {
-+				supported = DRM_CG_NOT_SUPPORTED;
-+				break;
-+			}
-+
-+			if (supported == DRM_CG_NOT_APPLICABLE)
-+				supported = DRM_CG_SUPPORTED;
-+
-+		}
-+	}
-+	rcu_read_unlock();
-+
-+	return supported;
-+}
-+EXPORT_SYMBOL_GPL(drm_pid_signal_budget_supported);
-diff --git a/include/drm/drm_clients.h b/include/drm/drm_clients.h
-index 7ad09fd0a404..5d14ae26ece6 100644
---- a/include/drm/drm_clients.h
-+++ b/include/drm/drm_clients.h
-@@ -14,6 +14,12 @@ struct drm_pid_clients {
- 	struct rcu_head rcu;
- };
- 
-+enum drm_cg_supported {
-+	DRM_CG_NOT_APPLICABLE = -1,
-+	DRM_CG_NOT_SUPPORTED = 0,
-+	DRM_CG_SUPPORTED
-+};
-+
- #if IS_ENABLED(CONFIG_CGROUP_DRM)
- void drm_clients_close(struct drm_file *file_priv);
- int drm_clients_open(struct drm_file *file_priv);
-@@ -39,5 +45,6 @@ unsigned int drm_pid_priority_levels(struct pid *pid, bool *non_uniform);
- void drm_pid_update_priority(struct pid *pid, int priority);
- u64 drm_pid_get_active_time_us(struct pid *pid);
- void drm_pid_signal_budget(struct pid *pid, u64 usage, u64 budget);
-+enum drm_cg_supported drm_pid_signal_budget_supported(struct pid *pid);
- 
- #endif
-diff --git a/include/drm/drm_drv.h b/include/drm/drm_drv.h
-index 07dec956ebfb..7a1a20d1b8de 100644
---- a/include/drm/drm_drv.h
-+++ b/include/drm/drm_drv.h
-@@ -198,8 +198,17 @@ struct drm_cgroup_ops {
- 	 *
- 	 * Optional callback used by the DRM core to forward over/under GPU time
- 	 * messages sent by the DRM cgroup controller.
-+	 *
-+	 * Zero used with zero budget is a special budgeting support status
-+	 * query which needs to return either zero or -EINVAL if client does not
-+	 * support budget control.
-+	 *
-+	 * Returns:
-+	 * 	* 1 when client has been throttled.
-+	 * 	* 0 when no action has been taken.
-+	 * 	* -EINVAL when not supported by the client.
- 	 */
--	void (*signal_budget) (struct drm_file *, u64 used, u64 budget);
-+	int (*signal_budget) (struct drm_file *, u64 used, u64 budget);
- };
- 
- /**
 diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
-index af50ead1564a..dd7db70c2831 100644
+index 01954c3a2087..4b6f88d8236e 100644
 --- a/kernel/cgroup/drm.c
 +++ b/kernel/cgroup/drm.c
-@@ -239,6 +239,53 @@ drmcs_write_weight(struct cgroup_subsys_state *css, struct cftype *cftype,
+@@ -17,6 +17,7 @@ struct drm_cgroup_state {
+ 
+ 	int priority;
+ 	int effective_priority;
++	unsigned int weight;
+ };
+ 
+ static DEFINE_MUTEX(drmcg_mutex);
+@@ -163,6 +164,33 @@ drmcs_write_priority(struct cgroup_subsys_state *css, struct cftype *cftype,
  	return 0;
  }
  
-+static int drmcs_show_budget_supported(struct seq_file *sf, void *v)
++static u64
++drmcs_read_weight(struct cgroup_subsys_state *css, struct cftype *cft)
 +{
-+	struct drm_cgroup_state *drmcs = css_to_drmcs(seq_css(sf));
-+	enum drm_cg_supported overall = DRM_CG_NOT_APPLICABLE;
-+	struct cgroup *cgrp = drmcs->css.cgroup;
-+	struct task_struct *task;
-+	struct css_task_iter it;
++	struct drm_cgroup_state *drmcs = css_to_drmcs(css);
 +
-+	css_task_iter_start(&cgrp->self,
-+			    CSS_TASK_ITER_PROCS | CSS_TASK_ITER_THREADED,
-+			    &it);
-+	while ((task = css_task_iter_next(&it))) {
-+		enum drm_cg_supported supported;
++	return drmcs->weight;
++}
 +
-+		/* Ignore kernel threads here. */
-+		if (task->flags & PF_KTHREAD)
-+			continue;
++static int
++drmcs_write_weight(struct cgroup_subsys_state *css, struct cftype *cftype,
++		   u64 weight)
++{
++	struct drm_cgroup_state *drmcs = css_to_drmcs(css);
++	int ret;
 +
-+		supported = drm_pid_signal_budget_supported(task_pid(task));
-+		if (supported == DRM_CG_SUPPORTED &&
-+		    overall == DRM_CG_NOT_APPLICABLE) {
-+			overall = DRM_CG_SUPPORTED;
-+		} else if (supported == DRM_CG_NOT_SUPPORTED) {
-+			overall = DRM_CG_NOT_SUPPORTED;
-+			break;
-+		}
-+	}
-+	css_task_iter_end(&it);
++	if (weight < CGROUP_WEIGHT_MIN || weight > CGROUP_WEIGHT_MAX)
++		return -ERANGE;
 +
-+	switch (overall) {
-+	case DRM_CG_NOT_APPLICABLE:
-+		seq_puts(sf, "n/a\n");
-+		break;
-+	case DRM_CG_NOT_SUPPORTED:
-+		seq_puts(sf, "no\n");
-+		break;
-+	case DRM_CG_SUPPORTED:
-+		seq_puts(sf, "yes\n");
-+		break;
-+	default:
-+		seq_printf(sf, "%u\n", overall);
-+		break;
-+	}
++	ret = mutex_lock_interruptible(&drmcg_mutex);
++	if (ret)
++		return ret;
++	drmcs->weight = weight;
++	mutex_unlock(&drmcg_mutex);
 +
 +	return 0;
 +}
@@ -213,18 +107,28 @@ index af50ead1564a..dd7db70c2831 100644
  static int drmcs_online(struct cgroup_subsys_state *css)
  {
  	struct drm_cgroup_state *drmcs = css_to_drmcs(css);
-@@ -690,6 +737,11 @@ struct cftype files[] = {
- 		.read_u64 = drmcs_read_weight,
- 		.write_u64 = drmcs_write_weight,
+@@ -210,6 +238,8 @@ drmcs_alloc(struct cgroup_subsys_state *parent_css)
+ 	if (!drmcs)
+ 		return ERR_PTR(-ENOMEM);
+ 
++	drmcs->weight = CGROUP_WEIGHT_DFL;
++
+ 	return &drmcs->css;
+ }
+ 
+@@ -230,6 +260,12 @@ struct cftype files[] = {
+ 		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.read_s64 = drmcs_read_effective_priority,
  	},
 +	{
-+		.name = "budget_supported",
++		.name = "weight",
 +		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = drmcs_show_budget_supported,
++		.read_u64 = drmcs_read_weight,
++		.write_u64 = drmcs_write_weight,
 +	},
- 	{
- 		.name = "period_us",
- 		.flags = CFTYPE_NOT_ON_ROOT,
+ 	{ } /* Zero entry terminates. */
+ };
+ 
 -- 
 2.34.1
 
