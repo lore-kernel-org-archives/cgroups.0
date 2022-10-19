@@ -1,263 +1,163 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 79a818b5087393d5a4cb356d4545d02f55bf1a2f
-Date: Wed, 19 Oct 2022 04:45:23 +0800
-Message-ID: <634f1063.GieW54fvZLv1fNsX%lkp@intel.com>
+From: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: [RFC 01/17] cgroup: Add the DRM cgroup controller
+Date: Wed, 19 Oct 2022 18:32:38 +0100
+Message-ID: <20221019173254.3361334-2-tvrtko.ursulin@linux.intel.com>
+References: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666125958; x=1697661958;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=4Uy9t36EjdrJpB+4PeBpmLdJ2kUFemFEKTF0x0HFglI=;
-  b=aEiSHaQCT+zm0qcf5CRKNsezE0scYqEQDVlu1tKQeeaIDjv9kCIsweiK
-   kZQ8OdHyacbQofms9FCpaeakGvssflNPj2EMOCo2Ouyx9iBMP7plDgbnw
-   jR0yEamTBh/zcpWzJYE2e+0ffCcWkkytkR3o3Cp6ursxWbDwVAZbIilox
-   sp8cteBmKmFI3/pW/25n4hqUZLzuDoZo/3bC3I/NpDxwce86KUvbvroHX
-   ZthDX0GngpWqCW6VIf6Lg5J95hf1kZKNZ0XQBPajvibWPCNEfWLgkZ4nO
-   y+gRh3h8b2i3VAsDLkfnJ4s4WLpdmJBhG6wKZwHMKZXKzKFiRhmepbjnO
-   A==;
+  t=1666200803; x=1697736803;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=QHrhf+AzAmghP60cmLV+8/AQtnNJCeogCK+jfUMlLc8=;
+  b=Nfa62ouY6u2xXa2nrXHT5p5uTjcNv9prYRy5TVnMGykGlgNvePoRi3Ls
+   /cwMoDbfHElzScVpQVclDkTPgpGhDfoBn9rxXTPsRqcg32uVr5PJfKNCl
+   xI2R7GpiX3dqtIHrG/kZetZk53YfT7r/hszNJdSN0vYc7wuCb8mrNE3Wi
+   wtj8BRy0B0YQhdR7ENfqfmVBQrhgUYdMeHp1RXrOwGSLDbwlN+ID1c3Tv
+   89QddjMG6dM/f6FXN3tYjdjeW+dKzaU5b7VOgMRk20mGus7wCv04Sow8G
+   Px7Zl0Ip5FEmuVuOkC2qvBBstwFudVKKrfNMOVQeWwyZ2rNc4pW0kf/M9
+   Q==;
+In-Reply-To: <20221019173254.3361334-1-tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, Rob Clark <robdclark-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, =?UTF-8?q?St=C3=A9phane=20Marchesin?= <marcheu-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "T . J . Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 79a818b5087393d5a4cb356d4545d02f55bf1a2f  blkcg: Update MAINTAINERS entry
+From: Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-elapsed time: 1333m
+Skeleton controller without any functionality.
 
-configs tested: 216
-configs skipped: 8
+Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+---
+ include/linux/cgroup_drm.h    |  9 ++++++
+ include/linux/cgroup_subsys.h |  4 +++
+ init/Kconfig                  |  7 +++++
+ kernel/cgroup/Makefile        |  1 +
+ kernel/cgroup/drm.c           | 54 +++++++++++++++++++++++++++++++++++
+ 5 files changed, 75 insertions(+)
+ create mode 100644 include/linux/cgroup_drm.h
+ create mode 100644 kernel/cgroup/drm.c
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-um                           x86_64_defconfig
-um                             i386_defconfig
-arc                                 defconfig
-alpha                               defconfig
-s390                                defconfig
-s390                             allmodconfig
-powerpc                           allnoconfig
-s390                             allyesconfig
-arc                  randconfig-r043-20221017
-x86_64                          rhel-8.3-func
-x86_64                           rhel-8.3-kvm
-x86_64                           rhel-8.3-syz
-x86_64                         rhel-8.3-kunit
-x86_64                    rhel-8.3-kselftests
-arm                            lart_defconfig
-sh                        edosk7760_defconfig
-sh                             shx3_defconfig
-parisc                generic-64bit_defconfig
-x86_64                              defconfig
-powerpc                     taishan_defconfig
-arc                           tb10x_defconfig
-m68k                       bvme6000_defconfig
-x86_64                               rhel-8.3
-sh                               allmodconfig
-i386                             allyesconfig
-i386                                defconfig
-mips                             allyesconfig
-powerpc                          allmodconfig
-x86_64                           allyesconfig
-arm64                            allyesconfig
-arm                                 defconfig
-arm                              allyesconfig
-sparc                       sparc32_defconfig
-sparc                       sparc64_defconfig
-arm                       aspeed_g5_defconfig
-arm64                            alldefconfig
-x86_64               randconfig-a004-20221017
-x86_64               randconfig-a001-20221017
-x86_64               randconfig-a002-20221017
-x86_64               randconfig-a006-20221017
-x86_64               randconfig-a003-20221017
-x86_64               randconfig-a005-20221017
-sh                           se7724_defconfig
-powerpc                      ppc6xx_defconfig
-csky                              allnoconfig
-loongarch                         allnoconfig
-arc                        vdk_hs38_defconfig
-powerpc                 mpc8540_ads_defconfig
-arm                           h3600_defconfig
-m68k                             allyesconfig
-m68k                             allmodconfig
-arc                              allyesconfig
-alpha                            allyesconfig
-i386                 randconfig-c001-20221017
-i386                          randconfig-a012
-i386                          randconfig-a014
-i386                          randconfig-a016
-powerpc                  iss476-smp_defconfig
-sh                            hp6xx_defconfig
-nios2                               defconfig
-i386                 randconfig-a005-20221017
-i386                 randconfig-a003-20221017
-i386                 randconfig-a004-20221017
-i386                 randconfig-a001-20221017
-i386                 randconfig-a006-20221017
-i386                 randconfig-a002-20221017
-arc                  randconfig-r043-20221018
-s390                 randconfig-r044-20221018
-riscv                randconfig-r042-20221018
-powerpc                      chrp32_defconfig
-sh                          kfr2r09_defconfig
-powerpc                 linkstation_defconfig
-arm                        keystone_defconfig
-powerpc                        cell_defconfig
-parisc                generic-32bit_defconfig
-riscv             nommu_k210_sdcard_defconfig
-x86_64                        randconfig-a011
-x86_64                        randconfig-a013
-x86_64                        randconfig-a015
-riscv                               defconfig
-sh                          rsk7203_defconfig
-arm                             ezx_defconfig
-powerpc                     mpc83xx_defconfig
-arm                         lpc18xx_defconfig
-powerpc                 mpc85xx_cds_defconfig
-ia64                          tiger_defconfig
-alpha                            alldefconfig
-mips                     loongson1b_defconfig
-m68k                        m5307c3_defconfig
-i386                          randconfig-c001
-x86_64                        randconfig-a006
-x86_64                        randconfig-a004
-x86_64                        randconfig-a002
-mips                     decstation_defconfig
-powerpc                      makalu_defconfig
-powerpc                      pcm030_defconfig
-arm                        shmobile_defconfig
-arc                            hsdk_defconfig
-powerpc                 mpc837x_mds_defconfig
-xtensa                    xip_kc705_defconfig
-m68k                            q40_defconfig
-m68k                           sun3_defconfig
-mips                           gcw0_defconfig
-mips                      fuloong2e_defconfig
-xtensa                  audio_kc705_defconfig
-m68k                          atari_defconfig
-openrisc                       virt_defconfig
-sh                         ap325rxa_defconfig
-xtensa                           allyesconfig
-mips                           ci20_defconfig
-arm                          pxa3xx_defconfig
-sh                          sdk7786_defconfig
-powerpc                      arches_defconfig
-sh                        dreamcast_defconfig
-sh                                  defconfig
-m68k                                defconfig
-riscv                             allnoconfig
-csky                                defconfig
-powerpc                      ppc40x_defconfig
-powerpc                         wii_defconfig
-sh                   sh7770_generic_defconfig
-arc                    vdk_hs38_smp_defconfig
-arc                     nsimosci_hs_defconfig
-sparc64                             defconfig
-sh                        sh7757lcr_defconfig
-m68k                       m5208evb_defconfig
-arm                         at91_dt_defconfig
-microblaze                      mmu_defconfig
-sh                           se7343_defconfig
-parisc                              defconfig
-ia64                            zx1_defconfig
-arm                        cerfcube_defconfig
-sh                  sh7785lcr_32bit_defconfig
-riscv                    nommu_virt_defconfig
-riscv                          rv32_defconfig
-riscv                    nommu_k210_defconfig
-i386                   debian-10.3-kselftests
-i386                              debian-10.3
-mips                           jazz_defconfig
-powerpc                     asp8347_defconfig
-mips                  maltasmvp_eva_defconfig
-sh                           se7751_defconfig
-m68k                       m5275evb_defconfig
-powerpc                     pq2fads_defconfig
-arm                         cm_x300_defconfig
-loongarch                           defconfig
-loongarch                        allmodconfig
-i386                          debian-10.3-kvm
-i386                        debian-10.3-kunit
-i386                         debian-10.3-func
-sh                   sh7724_generic_defconfig
-openrisc                 simple_smp_defconfig
-m68k                          hp300_defconfig
-arm                          gemini_defconfig
-mips                            gpr_defconfig
-sparc                             allnoconfig
-powerpc                     tqm8541_defconfig
-powerpc                     stx_gp3_defconfig
-powerpc                   currituck_defconfig
-powerpc                 mpc834x_mds_defconfig
-arm                        trizeps4_defconfig
-m68k                        mvme16x_defconfig
-ia64                                defconfig
-arm                        mvebu_v7_defconfig
-m68k                          amiga_defconfig
-openrisc                         alldefconfig
-arm                      jornada720_defconfig
-ia64                             allmodconfig
-x86_64                        randconfig-c001
-arm                  randconfig-c002-20221018
-
-clang tested configs:
-x86_64               randconfig-a014-20221017
-x86_64               randconfig-a015-20221017
-x86_64               randconfig-a012-20221017
-x86_64               randconfig-a011-20221017
-x86_64               randconfig-a013-20221017
-x86_64               randconfig-a016-20221017
-i386                 randconfig-a013-20221017
-i386                 randconfig-a015-20221017
-i386                 randconfig-a016-20221017
-i386                 randconfig-a011-20221017
-i386                 randconfig-a014-20221017
-i386                 randconfig-a012-20221017
-i386                          randconfig-a002
-i386                          randconfig-a006
-i386                          randconfig-a004
-s390                 randconfig-r044-20221017
-hexagon              randconfig-r045-20221017
-riscv                randconfig-r042-20221017
-hexagon              randconfig-r041-20221017
-x86_64               randconfig-k001-20221017
-x86_64                        randconfig-a012
-x86_64                        randconfig-a014
-x86_64                        randconfig-a016
-mips                        maltaup_defconfig
-arm                         s3c2410_defconfig
-x86_64                        randconfig-c007
-mips                 randconfig-c004-20221018
-i386                          randconfig-c001
-s390                 randconfig-c005-20221018
-arm                  randconfig-c002-20221018
-riscv                randconfig-c006-20221018
-powerpc              randconfig-c003-20221018
-powerpc                 mpc832x_mds_defconfig
-mips                           rs90_defconfig
-mips                          rm200_defconfig
-powerpc                      ppc44x_defconfig
-riscv                             allnoconfig
-powerpc                  mpc866_ads_defconfig
-x86_64                        randconfig-a005
-x86_64                        randconfig-a003
-x86_64                        randconfig-a001
-arm                         socfpga_defconfig
-arm                       mainstone_defconfig
-arm                          sp7021_defconfig
-powerpc                    mvme5100_defconfig
-x86_64                        randconfig-k001
-arm                      pxa255-idp_defconfig
-mips                       lemote2f_defconfig
-arm                      tct_hammer_defconfig
-
+diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
+new file mode 100644
+index 000000000000..bf8abc6b8ebf
+--- /dev/null
++++ b/include/linux/cgroup_drm.h
+@@ -0,0 +1,9 @@
++/* SPDX-License-Identifier: MIT */
++/*
++ * Copyright © 2022 Intel Corporation
++ */
++
++#ifndef _CGROUP_DRM_H
++#define _CGROUP_DRM_H
++
++#endif	/* _CGROUP_DRM_H */
+diff --git a/include/linux/cgroup_subsys.h b/include/linux/cgroup_subsys.h
+index 445235487230..49460494a010 100644
+--- a/include/linux/cgroup_subsys.h
++++ b/include/linux/cgroup_subsys.h
+@@ -65,6 +65,10 @@ SUBSYS(rdma)
+ SUBSYS(misc)
+ #endif
+ 
++#if IS_ENABLED(CONFIG_CGROUP_DRM)
++SUBSYS(drm)
++#endif
++
+ /*
+  * The following subsystems are not supported on the default hierarchy.
+  */
+diff --git a/init/Kconfig b/init/Kconfig
+index 694f7c160c9c..6dd7faca7749 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1087,6 +1087,13 @@ config CGROUP_RDMA
+ 	  Attaching processes with active RDMA resources to the cgroup
+ 	  hierarchy is allowed even if can cross the hierarchy's limit.
+ 
++config CGROUP_DRM
++	bool "DRM controller"
++	help
++	  Provides the DRM subsystem controller.
++
++	  ...
++
+ config CGROUP_FREEZER
+ 	bool "Freezer controller"
+ 	help
+diff --git a/kernel/cgroup/Makefile b/kernel/cgroup/Makefile
+index 12f8457ad1f9..849bd2917477 100644
+--- a/kernel/cgroup/Makefile
++++ b/kernel/cgroup/Makefile
+@@ -6,4 +6,5 @@ obj-$(CONFIG_CGROUP_PIDS) += pids.o
+ obj-$(CONFIG_CGROUP_RDMA) += rdma.o
+ obj-$(CONFIG_CPUSETS) += cpuset.o
+ obj-$(CONFIG_CGROUP_MISC) += misc.o
++obj-$(CONFIG_CGROUP_DRM) += drm.o
+ obj-$(CONFIG_CGROUP_DEBUG) += debug.o
+diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
+new file mode 100644
+index 000000000000..b88c93661df3
+--- /dev/null
++++ b/kernel/cgroup/drm.c
+@@ -0,0 +1,54 @@
++/* SPDX-License-Identifier: MIT */
++/*
++ * Copyright © 2022 Intel Corporation
++ */
++
++#include <linux/slab.h>
++#include <linux/cgroup.h>
++#include <linux/cgroup_drm.h>
++#include <linux/sched.h>
++
++struct drm_cgroup_state {
++	struct cgroup_subsys_state css;
++};
++
++static inline struct drm_cgroup_state *
++css_to_drmcs(struct cgroup_subsys_state *css)
++{
++	return container_of(css, struct drm_cgroup_state, css);
++}
++
++static void drmcs_free(struct cgroup_subsys_state *css)
++{
++	kfree(css_to_drmcs(css));
++}
++
++static struct drm_cgroup_state root_drmcs = {
++};
++
++static struct cgroup_subsys_state *
++drmcs_alloc(struct cgroup_subsys_state *parent_css)
++{
++	struct drm_cgroup_state *drmcs;
++
++	if (!parent_css)
++		return &root_drmcs.css;
++
++	drmcs = kzalloc(sizeof(*drmcs), GFP_KERNEL);
++	if (!drmcs)
++		return ERR_PTR(-ENOMEM);
++
++	return &drmcs->css;
++}
++
++struct cftype files[] = {
++	{ } /* Zero entry terminates. */
++};
++
++struct cgroup_subsys drm_cgrp_subsys = {
++	.css_alloc	= drmcs_alloc,
++	.css_free	= drmcs_free,
++	.early_init	= false,
++	.legacy_cftypes	= files,
++	.dfl_cftypes	= files,
++};
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+2.34.1
+
