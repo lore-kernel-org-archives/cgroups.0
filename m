@@ -1,105 +1,155 @@
-From: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [RFC 10/17] drm: Add ability to query drm cgroup GPU time
-Date: Wed, 19 Oct 2022 18:32:47 +0100
-Message-ID: <20221019173254.3361334-11-tvrtko.ursulin@linux.intel.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC 00/17] DRM scheduling cgroup controller
+Date: Wed, 19 Oct 2022 08:45:34 -1000
+Message-ID: <Y1BFziiJdBzsIJWH@slm.duckdns.org>
 References: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666200850; x=1697736850;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=57xevMaPNuTYw9loIK3v8HjbtAVBJSLqQ4lTiTCwMqQ=;
-  b=b403/DjIO2r0FckCx6SOM0koAAHJZ2j5vZVUjwN7GcB6jJf6KNBKeme3
-   opYJEwTVl6Ge+palbio+0/ishxAb71+4mJiJILJnrJHMRv2DPN70P7zP4
-   KW2AiNyfdnBjyxQw8eevt6AKaCztGm6N0F1BMKd68k3F4ADNmdJQ1QvTT
-   fKsESVkZiBuoDyiUF7/iH+1c5Ozzh0ZBDtQka7YH64PPIafL3TAZt5EDu
-   5NaUXct4Hga8uQjwgkx5vkx7jeRV06UYkUony3vaJ8cbl61i8xwtmkg2j
-   k1bRLEd3er4WtEKSC7WpM29VRiVeh4OJ0YEyYjX7g1jfgqb2D8qVHH2Fi
-   w==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Shq/ANspULQpM+jmY/ItEvxo0c4euo/Y2Hzyv6LpqQk=;
+        b=QvkbNwKv3uL21y9WnQdugb7J5FuBi/nHAZSSHsWuLdEs990fEmSOh9O7zHz869V4k1
+         GgKjtfsLhykxTdurNKEH+B2NN1L+qDnACPis99Ozn25iJ48GhoREMe+Rbcj4fXl7OX9O
+         R3RUwj2vdPpv61gmRM2FB3ybZpgIn5O+dkdkGidKGn9H9GT2E8L+Dy8JmlRAIVo0gOfx
+         JcDhz7+KK+mfo/esXs3dUOBbXyWUWGMU3iDSh4od4UzwFbezsC4+fryQe+ja9oqktBpM
+         uJpVpzkWjZcbJWdniEVbFoVGicnafqLSfP0xrD/prDhO0duXJmrdD3uDWYUlsmetI1AW
+         0zzA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
 In-Reply-To: <20221019173254.3361334-1-tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, Rob Clark <robdclark-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, =?UTF-8?q?St=C3=A9phane=20Marchesin?= <marcheu-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "T . J . Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, Rob Clark <robdclark-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Marchesin <marcheu-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "T . J . Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-From: Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Hello,
 
-Add a driver callback and core helper which allow querying the time spent
-on GPUs for processes belonging to a group.
+On Wed, Oct 19, 2022 at 06:32:37PM +0100, Tvrtko Ursulin wrote:
+...
+> DRM static priority interface files
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> 
+>   drm.priority_levels
+> 	One of:
+> 	 1) And integer representing the minimum number of discrete priority
+> 	    levels for the whole group.
+> 	    Optionally followed by an asterisk ('*') indicating some DRM clients
+> 	    in the group support more than the minimum number.
+> 	 2) '0'- indicating one or more DRM clients in the group has no support
+> 	    for static priority control.
+> 	 3) 'n/a' - when there are no DRM clients in the configured group.
+> 
+>   drm.priority
+> 	A read-write integer between -10000 and 10000 (inclusive) representing
+> 	an abstract static priority level.
+> 
+>   drm.effective_priority
+> 	Read only integer showing the current effective priority level for the
+> 	group. Effective meaning taking into account the chain of inherited
 
-Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
----
- drivers/gpu/drm/drm_cgroup.c | 24 ++++++++++++++++++++++++
- include/drm/drm_clients.h    |  1 +
- include/drm/drm_drv.h        |  9 +++++++++
- 3 files changed, 34 insertions(+)
+From interface POV, this is a lot worse than the second proposal and I'd
+really like to avoid this. Even if we go with mapping user priority
+configuration to per-driver priorities, I'd much prefer if the interface
+presented to user is weight based and let each driver try to match the
+resulting hierarchical weight (ie. the absolute proportion a given cgroup
+should have at the point in time) as best as they can rather than exposing
+opaque priority numbers to userspace whose meaning isn't defined at all.
 
-diff --git a/drivers/gpu/drm/drm_cgroup.c b/drivers/gpu/drm/drm_cgroup.c
-index 59b730ed1334..e0cadb5e5659 100644
---- a/drivers/gpu/drm/drm_cgroup.c
-+++ b/drivers/gpu/drm/drm_cgroup.c
-@@ -206,3 +206,27 @@ void drm_pid_update_priority(struct pid *pid, int priority)
- 	rcu_read_unlock();
- }
- EXPORT_SYMBOL_GPL(drm_pid_update_priority);
-+
-+u64 drm_pid_get_active_time_us(struct pid *pid)
-+{
-+	struct drm_pid_clients *clients;
-+	u64 total = 0;
-+
-+	rcu_read_lock();
-+	clients = xa_load(&drm_pid_clients, (unsigned long)pid);
-+	if (clients) {
-+		struct drm_file *fpriv;
-+
-+		list_for_each_entry_rcu(fpriv, &clients->file_list, clink) {
-+			const struct drm_cgroup_ops *cg_ops =
-+				fpriv->minor->dev->driver->cg_ops;
-+
-+			if (cg_ops && cg_ops->active_time_us)
-+				total += cg_ops->active_time_us(fpriv);
-+		}
-+	}
-+	rcu_read_unlock();
-+
-+	return total;
-+}
-+EXPORT_SYMBOL_GPL(drm_pid_get_active_time_us);
-diff --git a/include/drm/drm_clients.h b/include/drm/drm_clients.h
-index 3a0b1cdb338f..f25e09ed5feb 100644
---- a/include/drm/drm_clients.h
-+++ b/include/drm/drm_clients.h
-@@ -37,5 +37,6 @@ static inline void drm_clients_migrate(struct drm_file *file_priv)
- 
- unsigned int drm_pid_priority_levels(struct pid *pid, bool *non_uniform);
- void drm_pid_update_priority(struct pid *pid, int priority);
-+u64 drm_pid_get_active_time_us(struct pid *pid);
- 
- #endif
-diff --git a/include/drm/drm_drv.h b/include/drm/drm_drv.h
-index 2371d73e12cf..0f1802df01fe 100644
---- a/include/drm/drm_drv.h
-+++ b/include/drm/drm_drv.h
-@@ -183,6 +183,15 @@ struct drm_cgroup_ops {
- 	 * priorities of already running workloads.
- 	 */
- 	void (*update_priority) (struct drm_file *, int priority);
-+
-+	/**
-+	 * @active_time_us:
-+	 *
-+	 * Optional callback for reporting the GPU time consumed by this client.
-+	 *
-+	 * Used by the DRM core when queried by the DRM cgroup controller.
-+	 */
-+	u64 (*active_time_us) (struct drm_file *);
- };
- 
- /**
+> DRM scheduling soft limits interface files
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> 
+>   drm.weight
+> 	Standard cgroup weight based control [1, 10000] used to configure the
+> 	relative distributing of GPU time between the sibling groups.
+
+Please take a look at io.weight. This can follow the same convention to
+express both global and per-device weights.
+
+>   drm.period_us
+> 	An integer representing the period with which the controller should look
+> 	at the GPU usage by the group and potentially send the over/under budget
+> 	signal.
+> 	Value of zero (defaul) disables the soft limit checking.
+
+Can we not do period_us or at least make it a per-driver tuning parameter
+exposed as module param? Weight, users can easily understand and configure.
+period_us is a lot more an implementation detail. If we want to express the
+trade-off between latency and bandwidth at the interface, we prolly should
+encode the latency requirement in a more canonical way but let's leave that
+for the future.
+
+>   drm.budget_supported
+> 	One of:
+> 	 1) 'yes' - when all DRM clients in the group support the functionality.
+> 	 2) 'no' - when at least one of the DRM clients does not support the
+> 		   functionality.
+> 	 3) 'n/a' - when there are no DRM clients in the group.
+
+Yeah, I'm not sure about this. This isn't a per-cgroup property to begin
+with and I'm not sure 'no' meaning at least one device not supporting is
+intuitive. The distinction between 'no' and 'n/a' is kinda weird too. Please
+drop this.
+
+Another basic interface question. Is everyone happy with the drm prefix or
+should it be something like gpu? Also, in the future, if there's a consensus
+around how to control gpu memory, what prefix would that take?
+
+> The second proposal is a little bit more advanced in concept and also a little
+> bit less finished. Interesting thing is that it builds upon the per client GPU
+> utilisation work which landed recently for a few drivers. So my thinking is that
+> in principle, an intersect of drivers which support both that and some sort of
+> priority scheduling control, could also in theory support this.
+> 
+> Another really interesting angle for this controller is that it mimics the same
+> control menthod used by the CPU scheduler. That is the proportional/weight based
+> GPU time budgeting. Which makes it easy to configure and does not need a new
+> mental model.
+> 
+> However, as the introduction mentions, GPUs are much more heterogenous and
+> therefore the controller uses very "soft" wording as to what it promises. The
+> general statement is that it can define budgets, notify clients when they are
+> over them, and let individual drivers implement best effort handling of those
+> conditions.
+> 
+> Delegation of duties in the implementation goes likes this:
+> 
+>  * DRM cgroup controller implements the control files and the scanning loop.
+>  * DRM core is required to track all DRM clients belonging to processes so it
+>    can answer when asked how much GPU time is a process using.
+>  * DRM core also provides a call back which the controller will call when a
+>    certain process is over budget.
+>  * Individual drivers need to implement two similar hooks, but which work for
+>    a single DRM client. Over budget callback and GPU utilisation query.
+> 
+> What I have demonstrated in practice is that when wired to i915, in a really
+> primitive way where the over-budget condition simply lowers the scheduling
+> priority, the concept can be almost equally effective as the static priority
+> control. I say almost because the design where budget control depends on the
+> periodic usage scanning has a fundamental delay, so responsiveness will depend
+> on the scanning period, which may or may not be a problem for a particular use
+> case.
+> 
+> The unfinished part is the GPU budgeting split which currently does not
+> propagate unused bandwith to children, neither can share it with siblings. But
+> this is not due fundamental reasons, just to avoid spending too much time on it
+> too early.
+
+Rather than doing it hierarchically on the spot, it's usually a lot cheaper
+and easier to calculate the flattened hierarchical weight per leaf cgroup
+and divide the bandwidth according to the eventual portions. For an example,
+please take a look at block/blk-iocost.c.
+
+I don't know much about the drm driver side, so can't comment much on it but
+I do really like the idea of having the core implementation determining who
+should get how much and then letting each driver enforce the target. That
+seems a lot more robust and generic than trying to somehow coax and expose
+per-driver priority implementations directly.
+
+Thanks.
+
 -- 
-2.34.1
-
+tejun
