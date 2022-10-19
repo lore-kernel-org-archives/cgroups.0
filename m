@@ -1,300 +1,240 @@
 From: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [RFC 00/17] DRM scheduling cgroup controller
-Date: Wed, 19 Oct 2022 18:32:37 +0100
-Message-ID: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
+Subject: [RFC 02/17] drm: Track clients per owning process
+Date: Wed, 19 Oct 2022 18:32:39 +0100
+Message-ID: <20221019173254.3361334-3-tvrtko.ursulin@linux.intel.com>
+References: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666200801; x=1697736801;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=1rzbHXSDTF9kSQKAGkXBlCWE2acf03cl0S7cxgjoDng=;
-  b=LedX074FKPQ+NBNfF7wisdPWniB33HEkVk27vUt6q5+0uDYYNrxtS8l9
-   eodGRypbVDYOFY4c2pjF4dXGX8O+Xq1QrMyVR29GfXo2qb0OBUK7a/6VB
-   jHKRImXHMElLjO5XWT5FNSDJ0AyNYPJb4XFe8uYSrEUoCgKRHVRJDPtZN
-   ZPyJHxw7CV90d0oZDDF891p+nD2aElSkyzyj9SxWX2YGa+9UUv1k7Bkco
-   k5zK3sVF4bQMEBe4H2Q2I95N1b8kfEo6bFhIN8i8HOm1vi4U24WtQpuxZ
-   osDTGFYw3OLRfEfpXWmYXnA73F2KTsjovsdI55/J1D/r+3nSR+TAXM7FV
+  t=1666200806; x=1697736806;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=34jcEyaboM7Cpl5hmtqGUgBiY4OSzKr0bOyVxNTPRuA=;
+  b=SxQl+4FRxYkORNOe0E29yxbuq18rp/vkb10ImMboVEMmhd5MSqrwwD5s
+   pjefJ4UB4COb2dMzKcAwHXB55DqqpjDKwjCrvGaH6wXldzVng4z/4CGGT
+   ZvZYTYbPskHJhLakqLVJsZeqhP5bHNqikUfnr9kHr096R2hDMih5CGQYP
+   NA6eOPh8Xo4JlLDgy7rjqaVisHisBnnlkqg747G7nWK0ujN2xMJ3t2XEM
+   LmuSdb2ubbUC84Stmt5F84WEdJdeBdE870AH6gy10ksRb32HqJZHsSmi3
+   NVbd8eb/U4VhsnC+Un2XLGRShFwcwrfY1reyokCg6YLz2BBAjjNgTRFbu
    g==;
+In-Reply-To: <20221019173254.3361334-1-tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 To: Intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, Rob Clark <robdclark-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, =?UTF-8?q?St=C3=A9phane=20Marchesin?= <marcheu-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "T . J . Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
 From: Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-This series contains two independent proposals for a DRM scheduling cgroup
-controller: static priority based controller and GPU usage budget based
-controller.
+To enable propagation of settings from the cgroup drm controller to drm we
+need to start tracking which processes own which drm clients.
 
-Motivation mostly comes from my earlier proposal where I identified that GPU
-scheduling lags significantly behind what is available for CPU and IO. Whereas
-back then I was proposing to somehow tie this with process nice, feedback mostly
-was that people wanted cgroups. So here it is - in the world of heterogenous
-computing pipelines I think it is time to do something about this gap.
+Implement that by tracking the struct pid pointer of the owning process in
+a new XArray, pointing to a structure containing a list of associated
+struct drm_file pointers.
 
-Code is not finished but should survive some light experimenting with. I am
-sharing it early since the topic has been controversial in the past. I hope to
-demonstrate there are gains to be had in real world usage(*), today, and that
-the concepts the proposal relies are well enough established and stable.
+Clients are added and removed under the filelist mutex and RCU list
+operations are used below it to allow for lockless lookup.
 
-*) Specifically under ChromeOS which uses cgroups to control CPU bandwith for
-   VMs based on the window focused status. It can be demonstrated how GPU
-   scheduling control can easily be integrated into that setup.
-
-There should be no conflict with this proposal and any efforts to implement
-memory usage based controller. Skeleton DRM cgroup controller is deliberatly
-purely a skeleton patch where any further functionality can be added with no
-real conflicts. [In fact, perhaps scheduling is even easier to deal with than
-memory accounting.]
-
-To re-iterate, two proposal are completely functionaly independent and can be
-evaluated and progressed independently.
-
-Structure of the series is as follows:
-
-    1) Adds a skeleton DRM cgroup controller with no functionality.
-  2-6) First proposal - static priority based controller.
-    7) i915 adds support for the static priority based controller.
- 8-14) Second proposal - GPU usage based controller.
-15-17) i915 adds support for the GPU usage based controller.
-
-Both proposals define a delegation of duties between the tree parties: cgroup
-controller, DRM core and individual drivers. Two way communication interfaces
-are then defined to enable the delegation to work. Principle of discoverability
-is also employed so that the level of supported functionality can be observed
-in situation when there are multiple GPUs in use, each with a different set of
-scheduling capabilities.
-
-DRM static priority control
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Static priority control exposes a hierarchical control interface for the
-scheduling priority support present in many DRM device drivers.
-
-Hierarchical meaning that the child group priorities are relative to their
-parent. As an example:
-
-	A=-1000
-	   /\
-	  /  \
-	 /    \
-	B=0   C=100
-
-This results in the effective priority of a group B of -1000 and C of -900. In
-other words the fact C is configured for elevated priority is relative to its
-parent being a low priority and hence is only elevated in the context of its
-siblings.
-
-The scope of individual DRM scheduling priority may be per device or per device
-driver, or a combination of both, depending on the implementation. The
-controller does not ensure any priority ordering across multiple DRM drivers nor
-does it impose any further policy and leaves desired configuration to the system
-administrator.
-
-Individual DRM drivers are required to transparently convert the cgroup priority
-into values suitable for their capabilities.
-
-No guarantees on effectiveness or granularity are provided by the controller,
-apart the available range being chosen to be an integer and hence allowing a
-generic concept of normal (zero), lower (negative values) and higher (positive
-values) priority.
-
-DRM static priority interface files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  drm.priority_levels
-	One of:
-	 1) And integer representing the minimum number of discrete priority
-	    levels for the whole group.
-	    Optionally followed by an asterisk ('*') indicating some DRM clients
-	    in the group support more than the minimum number.
-	 2) '0'- indicating one or more DRM clients in the group has no support
-	    for static priority control.
-	 3) 'n/a' - when there are no DRM clients in the configured group.
-
-  drm.priority
-	A read-write integer between -10000 and 10000 (inclusive) representing
-	an abstract static priority level.
-
-  drm.effective_priority
-	Read only integer showing the current effective priority level for the
-	group. Effective meaning taking into account the chain of inherited
-
-This approach should work with all DRM drivers which support priority control,
-for instance i915, amdgpu or msm. In the future possibly all that are built on
-top of the drm/scheduler as well.
-
-I considered a few options for priority control including range based (min/max
-limits, or a flavour of) but ended up settling for simplest one. Mainly because
-of the limited priority level support with some drivers, and so to enable adding
-wide spread support as easily as possible.
-
-All that is required to enable the setup to be useful is for the drivers to
-support the concept of a low, normal and high scheduling priority, which can
-then be mapped to from the abstract negatitve, default zero and positive cgroup
-priorities.
-
-If range based controls are later wanted they can be added in a backward
-compatible manner. Until then priority overlap is possible meaning groups need
-to be correctly configured by the "administrator" (entity configuring cgroup
-usage on a given system).
-
-As mentioned before, this controller can be easily integrated with the current
-ChromeOS architecture for managing CPU bandwith of focused versus unfocused
-VM windows. As the OS re-configures the respective CPU shares in a respective
-cgroup on a window focus status change, DRM cgroup controller could be attached
-to the same group and DRM scheduling priority changed at the same time.
-
-I have ran an experiment where I have shown that doing this can enable the
-foreground browser window hit 60fps with no dropped frames, when faced with a
-Android game runnning in the background, where if DRM priorities were not used
-foreground window was only able to maintain around 45fps.
-
-DRM scheduling soft limits
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Because of the heterogenous hardware and driver DRM capabilities, soft limits
-are implemented as a loose co-operative (bi-directional) interface between the
-controller and DRM core.
-
-The controller configures the GPU time allowed per group and periodically scans
-the belonging tasks to detect the over budget condition, at which point it
-invokes a callback notifying the DRM core of the condition.
-
-DRM core provides an API to query per process GPU utilization and 2nd API to
-receive notification from the cgroup controller when the group enters or exits
-the over budget condition.
-
-Individual DRM drivers which implement the interface are expected to act on this
-in the best-effort manner only. There are no guarantees that the soft limits
-will be respected.
-
-DRM scheduling soft limits interface files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  drm.weight
-	Standard cgroup weight based control [1, 10000] used to configure the
-	relative distributing of GPU time between the sibling groups.
-
-  drm.period_us
-	An integer representing the period with which the controller should look
-	at the GPU usage by the group and potentially send the over/under budget
-	signal.
-	Value of zero (defaul) disables the soft limit checking.
-
-  drm.budget_supported
-	One of:
-	 1) 'yes' - when all DRM clients in the group support the functionality.
-	 2) 'no' - when at least one of the DRM clients does not support the
-		   functionality.
-	 3) 'n/a' - when there are no DRM clients in the group.
-
-The second proposal is a little bit more advanced in concept and also a little
-bit less finished. Interesting thing is that it builds upon the per client GPU
-utilisation work which landed recently for a few drivers. So my thinking is that
-in principle, an intersect of drivers which support both that and some sort of
-priority scheduling control, could also in theory support this.
-
-Another really interesting angle for this controller is that it mimics the same
-control menthod used by the CPU scheduler. That is the proportional/weight based
-GPU time budgeting. Which makes it easy to configure and does not need a new
-mental model.
-
-However, as the introduction mentions, GPUs are much more heterogenous and
-therefore the controller uses very "soft" wording as to what it promises. The
-general statement is that it can define budgets, notify clients when they are
-over them, and let individual drivers implement best effort handling of those
-conditions.
-
-Delegation of duties in the implementation goes likes this:
-
- * DRM cgroup controller implements the control files and the scanning loop.
- * DRM core is required to track all DRM clients belonging to processes so it
-   can answer when asked how much GPU time is a process using.
- * DRM core also provides a call back which the controller will call when a
-   certain process is over budget.
- * Individual drivers need to implement two similar hooks, but which work for
-   a single DRM client. Over budget callback and GPU utilisation query.
-
-What I have demonstrated in practice is that when wired to i915, in a really
-primitive way where the over-budget condition simply lowers the scheduling
-priority, the concept can be almost equally effective as the static priority
-control. I say almost because the design where budget control depends on the
-periodic usage scanning has a fundamental delay, so responsiveness will depend
-on the scanning period, which may or may not be a problem for a particular use
-case.
-
-The unfinished part is the GPU budgeting split which currently does not
-propagate unused bandwith to children, neither can share it with siblings. But
-this is not due fundamental reasons, just to avoid spending too much time on it
-too early.
-
-There are also interesting conversations to be had around mental models for what
-is GPU usage as a single number when faced with GPUs which have different
-execution engines. To an extent this is similar to the multi-core and cgroup
-CPU controller problems, but definitely goes further than that.
-
-I deliberately did not want to include any such complications in the controller
-itself and left the individual drivers to handle it. For instance in the i915
-over-budget callback it will not do anything unless client's GPU usage is on a
-physical engine which is oversubscribed. This enables multiple clients to be
-harmlessly over budget, as long as they are not competing for the same GPU
-resource.
-
-This much for now, hope some good discussion will follow.
-
-P.S.
-A disclaimer of a kind -  I was not familiar with how to implement a cgroup
-controller at all when I started this prototype therefore it is quite possible
-there are many bugs and misunderstandings on how it should be done.
-
-Tvrtko Ursulin (17):
-  cgroup: Add the DRM cgroup controller
-  drm: Track clients per owning process
-  cgroup/drm: Support cgroup priority control
-  drm/cgroup: Allow safe external access to file_priv
-  drm: Connect priority updates to drm core
-  drm: Only track clients which are providing drm_cgroup_ops
-  drm/i915: i915 priority
-  drm: Allow for migration of clients
-  cgroup/drm: Introduce weight based drm cgroup control
-  drm: Add ability to query drm cgroup GPU time
-  drm: Add over budget signalling callback
-  cgroup/drm: Client exit hook
-  cgroup/drm: Ability to periodically scan cgroups for over budget GPU
-    usage
-  cgroup/drm: Show group budget signaling capability in sysfs
-  drm/i915: Migrate client to new owner on context create
-  drm/i915: Wire up with drm controller GPU time query
-  drm/i915: Implement cgroup controller over budget throttling
-
- Documentation/admin-guide/cgroup-v2.rst       | 100 +++
- drivers/gpu/drm/Kconfig                       |   1 +
- drivers/gpu/drm/Makefile                      |   1 +
- drivers/gpu/drm/drm_cgroup.c                  | 294 +++++++
- drivers/gpu/drm/drm_file.c                    |  22 +-
- drivers/gpu/drm/i915/gem/i915_gem_context.c   |   3 +
- .../gpu/drm/i915/gem/i915_gem_execbuffer.c    |  45 +-
- drivers/gpu/drm/i915/i915_driver.c            |  12 +
- drivers/gpu/drm/i915/i915_drm_client.c        | 183 ++++-
- drivers/gpu/drm/i915/i915_drm_client.h        |  15 +
- include/drm/drm_clients.h                     |  50 ++
- include/drm/drm_drv.h                         |  73 ++
- include/drm/drm_file.h                        |  15 +
- include/linux/cgroup_drm.h                    |  18 +
- include/linux/cgroup_subsys.h                 |   4 +
- init/Kconfig                                  |   8 +
- kernel/cgroup/Makefile                        |   1 +
- kernel/cgroup/drm.c                           | 764 ++++++++++++++++++
- 18 files changed, 1594 insertions(+), 15 deletions(-)
+Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+---
+ drivers/gpu/drm/Makefile     |  1 +
+ drivers/gpu/drm/drm_cgroup.c | 60 ++++++++++++++++++++++++++++++++++++
+ drivers/gpu/drm/drm_file.c   | 18 ++++++++---
+ include/drm/drm_clients.h    | 31 +++++++++++++++++++
+ include/drm/drm_file.h       |  4 +++
+ 5 files changed, 110 insertions(+), 4 deletions(-)
  create mode 100644 drivers/gpu/drm/drm_cgroup.c
  create mode 100644 include/drm/drm_clients.h
- create mode 100644 include/linux/cgroup_drm.h
- create mode 100644 kernel/cgroup/drm.c
 
+diff --git a/drivers/gpu/drm/Makefile b/drivers/gpu/drm/Makefile
+index 6e55c47288e4..0719970d17ee 100644
+--- a/drivers/gpu/drm/Makefile
++++ b/drivers/gpu/drm/Makefile
+@@ -59,6 +59,7 @@ drm-$(CONFIG_DRM_LEGACY) += \
+ 	drm_scatter.o \
+ 	drm_vm.o
+ drm-$(CONFIG_DRM_LIB_RANDOM) += lib/drm_random.o
++drm-$(CONFIG_CGROUP_DRM) += drm_cgroup.o
+ drm-$(CONFIG_COMPAT) += drm_ioc32.o
+ drm-$(CONFIG_DRM_PANEL) += drm_panel.o
+ drm-$(CONFIG_OF) += drm_of.o
+diff --git a/drivers/gpu/drm/drm_cgroup.c b/drivers/gpu/drm/drm_cgroup.c
+new file mode 100644
+index 000000000000..a31ff1d593ab
+--- /dev/null
++++ b/drivers/gpu/drm/drm_cgroup.c
+@@ -0,0 +1,60 @@
++/* SPDX-License-Identifier: MIT */
++/*
++ * Copyright © 2022 Intel Corporation
++ */
++
++#include <drm/drm_drv.h>
++#include <drm/drm_clients.h>
++
++static DEFINE_XARRAY(drm_pid_clients);
++
++void drm_clients_close(struct drm_file *file_priv)
++{
++	unsigned long pid = (unsigned long)file_priv->pid;
++	struct drm_device *dev = file_priv->minor->dev;
++	struct drm_pid_clients *clients;
++
++	lockdep_assert_held(&dev->filelist_mutex);
++
++	clients = xa_load(&drm_pid_clients, pid);
++	list_del_rcu(&file_priv->clink);
++	if (atomic_dec_and_test(&clients->num)) {
++		xa_erase(&drm_pid_clients, pid);
++		kfree_rcu(clients, rcu);
++	}
++}
++
++int drm_clients_open(struct drm_file *file_priv)
++{
++	unsigned long pid = (unsigned long)file_priv->pid;
++	struct drm_device *dev = file_priv->minor->dev;
++	struct drm_pid_clients *clients;
++	bool new_client = false;
++
++	lockdep_assert_held(&dev->filelist_mutex);
++
++	clients = xa_load(&drm_pid_clients, pid);
++	if (!clients) {
++		clients = kmalloc(sizeof(*clients), GFP_KERNEL);
++		if (!clients)
++			return -ENOMEM;
++		atomic_set(&clients->num, 0);
++		INIT_LIST_HEAD(&clients->file_list);
++		init_rcu_head(&clients->rcu);
++		new_client = true;
++	}
++	atomic_inc(&clients->num);
++	list_add_tail_rcu(&file_priv->clink, &clients->file_list);
++	if (new_client) {
++		void *xret;
++
++		xret = xa_store(&drm_pid_clients, pid, clients, GFP_KERNEL);
++		if (xa_err(xret)) {
++			list_del_init(&file_priv->clink);
++			kfree(clients);
++			return PTR_ERR(clients);
++		}
++	}
++
++	return 0;
++}
+diff --git a/drivers/gpu/drm/drm_file.c b/drivers/gpu/drm/drm_file.c
+index a8b4d918e9a3..ce58d5c513db 100644
+--- a/drivers/gpu/drm/drm_file.c
++++ b/drivers/gpu/drm/drm_file.c
+@@ -40,6 +40,7 @@
+ #include <linux/slab.h>
+ 
+ #include <drm/drm_client.h>
++#include <drm/drm_clients.h>
+ #include <drm/drm_drv.h>
+ #include <drm/drm_file.h>
+ #include <drm/drm_print.h>
+@@ -298,6 +299,7 @@ static void drm_close_helper(struct file *filp)
+ 
+ 	mutex_lock(&dev->filelist_mutex);
+ 	list_del(&file_priv->lhead);
++	drm_clients_close(file_priv);
+ 	mutex_unlock(&dev->filelist_mutex);
+ 
+ 	drm_file_free(file_priv);
+@@ -349,10 +351,8 @@ static int drm_open_helper(struct file *filp, struct drm_minor *minor)
+ 
+ 	if (drm_is_primary_client(priv)) {
+ 		ret = drm_master_open(priv);
+-		if (ret) {
+-			drm_file_free(priv);
+-			return ret;
+-		}
++		if (ret)
++			goto err_free;
+ 	}
+ 
+ 	filp->private_data = priv;
+@@ -360,6 +360,9 @@ static int drm_open_helper(struct file *filp, struct drm_minor *minor)
+ 	priv->filp = filp;
+ 
+ 	mutex_lock(&dev->filelist_mutex);
++	ret = drm_clients_open(priv);
++	if (ret)
++		goto err_unlock;
+ 	list_add(&priv->lhead, &dev->filelist);
+ 	mutex_unlock(&dev->filelist_mutex);
+ 
+@@ -387,6 +390,13 @@ static int drm_open_helper(struct file *filp, struct drm_minor *minor)
+ #endif
+ 
+ 	return 0;
++
++err_unlock:
++	mutex_unlock(&dev->filelist_mutex);
++err_free:
++	drm_file_free(priv);
++
++	return ret;
+ }
+ 
+ /**
+diff --git a/include/drm/drm_clients.h b/include/drm/drm_clients.h
+new file mode 100644
+index 000000000000..4ae553a03d1e
+--- /dev/null
++++ b/include/drm/drm_clients.h
+@@ -0,0 +1,31 @@
++/* SPDX-License-Identifier: MIT */
++/*
++ * Copyright © 2022 Intel Corporation
++ */
++
++#ifndef _DRM_CLIENTS_H_
++#define _DRM_CLIENTS_H_
++
++#include <drm/drm_file.h>
++
++struct drm_pid_clients {
++	atomic_t num;
++	struct list_head file_list;
++	struct rcu_head rcu;
++};
++
++#if IS_ENABLED(CONFIG_CGROUP_DRM)
++void drm_clients_close(struct drm_file *file_priv);
++int drm_clients_open(struct drm_file *file_priv);
++#else
++static inline void drm_clients_close(struct drm_file *file_priv)
++{
++}
++
++static inline int drm_clients_open(struct drm_file *file_priv)
++{
++	return 0;
++}
++#endif
++
++#endif
+diff --git a/include/drm/drm_file.h b/include/drm/drm_file.h
+index d780fd151789..0965eb111f24 100644
+--- a/include/drm/drm_file.h
++++ b/include/drm/drm_file.h
+@@ -268,6 +268,10 @@ struct drm_file {
+ 	/** @minor: &struct drm_minor for this file. */
+ 	struct drm_minor *minor;
+ 
++#if IS_ENABLED(CONFIG_CGROUP_DRM)
++	struct list_head clink;
++#endif
++
+ 	/**
+ 	 * @object_idr:
+ 	 *
 -- 
 2.34.1
 
