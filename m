@@ -1,24 +1,24 @@
 From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: [RFC 16/17] drm/i915: Wire up with drm controller GPU
- time query
-Date: Wed, 19 Oct 2022 18:32:53 +0100
-Message-ID: <20221019173254.3361334-17-tvrtko.ursulin@linux.intel.com>
+Subject: [RFC 14/17] cgroup/drm: Show group budget signaling
+ capability in sysfs
+Date: Wed, 19 Oct 2022 18:32:51 +0100
+Message-ID: <20221019173254.3361334-15-tvrtko.ursulin@linux.intel.com>
 References: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1666200853; x=1697736853;
+ t=1666200847; x=1697736847;
  h=from:to:cc:subject:date:message-id:in-reply-to:
  references:mime-version:content-transfer-encoding;
- bh=oo5u0fET53D72nvRAabovnCgKyLAZjX42LHHrPrrjv8=;
- b=Ronbna1vVCkoz8LHYCfGKsKdfqMiqzFjXIbyXvg0H8t8+3nXiohq3W/J
- /zWu+QkljJkao/ZcQ5T1TFF0UDQJBLIuQJkXv00Th213jnkqX6p/lvUO4
- 1DHrnlS2usY9txEy0bv7eidGq+UsXjIP9Xobz/+5NDXhJF42p1KuJ9FVa
- bdYW8BqdeKxGrudfZIVA2SeHrgDA9LYwKlGfqxMF8Q4Vg3O8brYNA+rmp
- fAsD3SZgDCBQx5I/+O7KBp+7i3AxoUWtTe+SEbH9Qfe97Cmg/hXhSdPwa
- YVYf8I9bKKVvHz6GOaxVqV8kxiqp8caIY4vS55JUhh8mk+nvEuOpXDCQ9 g==;
+ bh=Ji8CP4xluWOS2NrGBbUVXyKLzEJJ2hTlHVJTBMnur4M=;
+ b=AE3UsyY1TMeiR6mUmrNulAnFWBsSzKf6i8l8l7RIV41yfhw+fZsf+4y+
+ /huNnHkclwwiYvxBU61SB80Fu1tZTQodAkxOvV4bfWRfMve13EG2tybdt
+ qQPy9NvitiUG3FSagaPardTLlAWFF1CxksL1h4BZq2WBoUGzZZxuBNKgv
+ 641DyQJ34yJLc8JXPPqmv/309kGvPqTupbVCjAx+hqrLaMnpbSH/DrGX1
+ oBran1pnl+qkoiRGUw10una8m//GNywjSEEPgzGjSlefHSQ/ZRSZN5XoP
+ QStVRQtop7bqs5hEg6FhFCwGpAnF1lDnQE5pELFvTsafEQR6ozgMw/6XF g==;
 In-Reply-To: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
@@ -36,169 +36,195 @@ Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Daniel Vetter <daniel.
 
 From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 
-Implement the drm_cgroup_ops->active_time_us callback.
+Show overall status of a task group - whether all DRM clients in a group
+support over budget signaling, or some do not, or if there are no DRM
+clients in the group to start with.
 
 Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 ---
- drivers/gpu/drm/i915/i915_driver.c     |   1 +
- drivers/gpu/drm/i915/i915_drm_client.c | 106 +++++++++++++++++++------
- drivers/gpu/drm/i915/i915_drm_client.h |   2 +
- 3 files changed, 83 insertions(+), 26 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst |  7 ++++
+ drivers/gpu/drm/drm_cgroup.c            | 33 ++++++++++++++++
+ include/drm/drm_clients.h               |  7 ++++
+ include/drm/drm_drv.h                   | 11 +++++-
+ kernel/cgroup/drm.c                     | 52 +++++++++++++++++++++++++
+ 5 files changed, 109 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915_driver.c
-index 7912782b87cc..b949fd715202 100644
---- a/drivers/gpu/drm/i915/i915_driver.c
-+++ b/drivers/gpu/drm/i915/i915_driver.c
-@@ -1896,6 +1896,7 @@ static const struct drm_ioctl_desc i915_ioctls[] = {
- #ifdef CONFIG_CGROUP_DRM
- static const struct drm_cgroup_ops i915_drm_cgroup_ops = {
- 	.priority_levels = i915_drm_priority_levels,
-+	.active_time_us = i915_drm_cgroup_get_active_time_us,
- };
- #endif
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 318f463a1316..6ee94ee109f0 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2491,6 +2491,13 @@ DRM scheduling soft limits interface files
+ 	signal.
+ 	Value of zero (defaul) disables the soft limit checking.
  
-diff --git a/drivers/gpu/drm/i915/i915_drm_client.c b/drivers/gpu/drm/i915/i915_drm_client.c
-index 61a3cdaa7b16..8527fe80d449 100644
---- a/drivers/gpu/drm/i915/i915_drm_client.c
-+++ b/drivers/gpu/drm/i915/i915_drm_client.c
-@@ -75,23 +75,7 @@ void i915_drm_clients_fini(struct i915_drm_clients *clients)
- 	xa_destroy(&clients->xarray);
- }
- 
--#ifdef CONFIG_CGROUP_DRM
--unsigned int i915_drm_priority_levels(struct drm_file *file)
--{
--	struct drm_i915_file_private *fpriv = file->driver_priv;
--	struct i915_drm_client *client = fpriv->client;
--	struct drm_i915_private *i915 = client->clients->i915;
--
--	if (GRAPHICS_VER(i915) < 8)
--		return 0;
--	else if (intel_uc_uses_guc_submission(&to_gt(i915)->uc))
--		return 3;
--	else
--		return 2047;
--}
--#endif
--
--#ifdef CONFIG_PROC_FS
-+#if defined(CONFIG_PROC_FS) || defined(CONFIG_CGROUP_DRM)
- static const char * const uabi_class_names[] = {
- 	[I915_ENGINE_CLASS_RENDER] = "render",
- 	[I915_ENGINE_CLASS_COPY] = "copy",
-@@ -116,22 +100,92 @@ static u64 busy_add(struct i915_gem_context *ctx, unsigned int class)
- 	return total;
- }
- 
--static void
--show_client_class(struct seq_file *m,
--		  struct i915_drm_client *client,
--		  unsigned int class)
-+static u64 get_class_active_ns(struct i915_drm_client *client,
-+			       unsigned int class,
-+			       unsigned int *capacity)
- {
--	const struct list_head *list = &client->ctx_list;
--	u64 total = atomic64_read(&client->past_runtime[class]);
--	const unsigned int capacity =
--		client->clients->i915->engine_uabi_class_count[class];
- 	struct i915_gem_context *ctx;
-+	u64 total;
++  drm.budget_supported
++	One of:
++	 1) 'yes' - when all DRM clients in the group support the functionality.
++	 2) 'no' - when at least one of the DRM clients does not support the
++		   functionality.
++	 3) 'n/a' - when there are no DRM clients in the group.
 +
-+	*capacity =
-+	    client->clients->i915->engine_uabi_class_count[class];
-+	if (!*capacity)
-+		return 0;
-+
-+	total = atomic64_read(&client->past_runtime[class]);
+ Misc
+ ----
  
- 	rcu_read_lock();
--	list_for_each_entry_rcu(ctx, list, client_link)
-+	list_for_each_entry_rcu(ctx, &client->ctx_list, client_link)
- 		total += busy_add(ctx, class);
+diff --git a/drivers/gpu/drm/drm_cgroup.c b/drivers/gpu/drm/drm_cgroup.c
+index ff99d1f4f1d4..d2d8b2cb4ab3 100644
+--- a/drivers/gpu/drm/drm_cgroup.c
++++ b/drivers/gpu/drm/drm_cgroup.c
+@@ -259,3 +259,36 @@ void drm_pid_signal_budget(struct pid *pid, u64 usage, u64 budget)
  	rcu_read_unlock();
- 
-+	return total;
-+}
-+#endif
+ }
+ EXPORT_SYMBOL_GPL(drm_pid_signal_budget);
 +
-+#ifdef CONFIG_CGROUP_DRM
-+unsigned int i915_drm_priority_levels(struct drm_file *file)
++enum drm_cg_supported drm_pid_signal_budget_supported(struct pid *pid)
 +{
-+	struct drm_i915_file_private *fpriv = file->driver_priv;
-+	struct i915_drm_client *client = fpriv->client;
-+	struct drm_i915_private *i915 = client->clients->i915;
++	enum drm_cg_supported supported = DRM_CG_NOT_APPLICABLE;
++	struct drm_pid_clients *clients;
 +
-+	if (GRAPHICS_VER(i915) < 8)
-+		return 0;
-+	else if (intel_uc_uses_guc_submission(&to_gt(i915)->uc))
-+		return 3;
-+	else
-+		return 2047;
-+}
++	rcu_read_lock();
++	clients = xa_load(&drm_pid_clients, (unsigned long)pid);
++	if (clients) {
++		struct drm_file *fpriv;
 +
-+static bool supports_stats(struct drm_i915_private *i915)
-+{
-+	if (GRAPHICS_VER(i915) < 8)
-+		return false;
++		list_for_each_entry_rcu(fpriv, &clients->file_list, clink) {
++			const struct drm_cgroup_ops *cg_ops =
++				fpriv->minor->dev->driver->cg_ops;
 +
-+	/* temporary... */
-+	if (intel_uc_uses_guc_submission(&to_gt(i915)->uc))
-+		return false;
++			if (!cg_ops ||
++			    !cg_ops->active_time_us ||
++			    !cg_ops->signal_budget ||
++			    cg_ops->signal_budget(fpriv, 0, 0) < 0) {
++				supported = DRM_CG_NOT_SUPPORTED;
++				break;
++			}
 +
-+	return true;
-+}
++			if (supported == DRM_CG_NOT_APPLICABLE)
++				supported = DRM_CG_SUPPORTED;
 +
-+u64 i915_drm_cgroup_get_active_time_us(struct drm_file *file)
-+{
-+	struct drm_i915_file_private *fpriv = file->driver_priv;
-+	struct i915_drm_client *client = fpriv->client;
-+	unsigned int i;
-+	u64 busy = 0;
-+
-+	if (!supports_stats(client->clients->i915))
-+		return 0;
-+
-+	for (i = 0; i < ARRAY_SIZE(uabi_class_names); i++) {
-+		unsigned int capacity;
-+		u64 b;
-+
-+		b = get_class_active_ns(client, i, &capacity);
-+		if (capacity) {
-+			b = DIV_ROUND_UP_ULL(b, capacity * 1000);
-+			busy += b;
 +		}
 +	}
++	rcu_read_unlock();
 +
-+	return busy;
++	return supported;
 +}
-+#endif
++EXPORT_SYMBOL_GPL(drm_pid_signal_budget_supported);
+diff --git a/include/drm/drm_clients.h b/include/drm/drm_clients.h
+index 7ad09fd0a404..5d14ae26ece6 100644
+--- a/include/drm/drm_clients.h
++++ b/include/drm/drm_clients.h
+@@ -14,6 +14,12 @@ struct drm_pid_clients {
+ 	struct rcu_head rcu;
+ };
+ 
++enum drm_cg_supported {
++	DRM_CG_NOT_APPLICABLE = -1,
++	DRM_CG_NOT_SUPPORTED = 0,
++	DRM_CG_SUPPORTED
++};
 +
-+#ifdef CONFIG_PROC_FS
-+static void
-+show_client_class(struct seq_file *m,
-+		  struct i915_drm_client *client,
-+		  unsigned int class)
+ #if IS_ENABLED(CONFIG_CGROUP_DRM)
+ void drm_clients_close(struct drm_file *file_priv);
+ int drm_clients_open(struct drm_file *file_priv);
+@@ -39,5 +45,6 @@ unsigned int drm_pid_priority_levels(struct pid *pid, bool *non_uniform);
+ void drm_pid_update_priority(struct pid *pid, int priority);
+ u64 drm_pid_get_active_time_us(struct pid *pid);
+ void drm_pid_signal_budget(struct pid *pid, u64 usage, u64 budget);
++enum drm_cg_supported drm_pid_signal_budget_supported(struct pid *pid);
+ 
+ #endif
+diff --git a/include/drm/drm_drv.h b/include/drm/drm_drv.h
+index 07dec956ebfb..7a1a20d1b8de 100644
+--- a/include/drm/drm_drv.h
++++ b/include/drm/drm_drv.h
+@@ -198,8 +198,17 @@ struct drm_cgroup_ops {
+ 	 *
+ 	 * Optional callback used by the DRM core to forward over/under GPU time
+ 	 * messages sent by the DRM cgroup controller.
++	 *
++	 * Zero used with zero budget is a special budgeting support status
++	 * query which needs to return either zero or -EINVAL if client does not
++	 * support budget control.
++	 *
++	 * Returns:
++	 * 	* 1 when client has been throttled.
++	 * 	* 0 when no action has been taken.
++	 * 	* -EINVAL when not supported by the client.
+ 	 */
+-	void (*signal_budget) (struct drm_file *, u64 used, u64 budget);
++	int (*signal_budget) (struct drm_file *, u64 used, u64 budget);
+ };
+ 
+ /**
+diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
+index af50ead1564a..dd7db70c2831 100644
+--- a/kernel/cgroup/drm.c
++++ b/kernel/cgroup/drm.c
+@@ -239,6 +239,53 @@ drmcs_write_weight(struct cgroup_subsys_state *css, struct cftype *cftype,
+ 	return 0;
+ }
+ 
++static int drmcs_show_budget_supported(struct seq_file *sf, void *v)
 +{
-+	unsigned int capacity;
-+	u64 total;
++	struct drm_cgroup_state *drmcs = css_to_drmcs(seq_css(sf));
++	enum drm_cg_supported overall = DRM_CG_NOT_APPLICABLE;
++	struct cgroup *cgrp = drmcs->css.cgroup;
++	struct task_struct *task;
++	struct css_task_iter it;
 +
-+	total = get_class_active_ns(client, class, &capacity);
++	css_task_iter_start(&cgrp->self,
++			    CSS_TASK_ITER_PROCS | CSS_TASK_ITER_THREADED,
++			    &it);
++	while ((task = css_task_iter_next(&it))) {
++		enum drm_cg_supported supported;
 +
- 	if (capacity)
- 		seq_printf(m, "drm-engine-%s:\t%llu ns\n",
- 			   uabi_class_names[class], total);
-diff --git a/drivers/gpu/drm/i915/i915_drm_client.h b/drivers/gpu/drm/i915/i915_drm_client.h
-index bd5925241007..99b8ae01c183 100644
---- a/drivers/gpu/drm/i915/i915_drm_client.h
-+++ b/drivers/gpu/drm/i915/i915_drm_client.h
-@@ -69,4 +69,6 @@ void i915_drm_clients_fini(struct i915_drm_clients *clients);
- 
- unsigned int i915_drm_priority_levels(struct drm_file *file);
- 
-+u64 i915_drm_cgroup_get_active_time_us(struct drm_file *file);
++		/* Ignore kernel threads here. */
++		if (task->flags & PF_KTHREAD)
++			continue;
 +
- #endif /* !__I915_DRM_CLIENT_H__ */
++		supported = drm_pid_signal_budget_supported(task_pid(task));
++		if (supported == DRM_CG_SUPPORTED &&
++		    overall == DRM_CG_NOT_APPLICABLE) {
++			overall = DRM_CG_SUPPORTED;
++		} else if (supported == DRM_CG_NOT_SUPPORTED) {
++			overall = DRM_CG_NOT_SUPPORTED;
++			break;
++		}
++	}
++	css_task_iter_end(&it);
++
++	switch (overall) {
++	case DRM_CG_NOT_APPLICABLE:
++		seq_puts(sf, "n/a\n");
++		break;
++	case DRM_CG_NOT_SUPPORTED:
++		seq_puts(sf, "no\n");
++		break;
++	case DRM_CG_SUPPORTED:
++		seq_puts(sf, "yes\n");
++		break;
++	default:
++		seq_printf(sf, "%u\n", overall);
++		break;
++	}
++
++	return 0;
++}
++
+ static int drmcs_online(struct cgroup_subsys_state *css)
+ {
+ 	struct drm_cgroup_state *drmcs = css_to_drmcs(css);
+@@ -690,6 +737,11 @@ struct cftype files[] = {
+ 		.read_u64 = drmcs_read_weight,
+ 		.write_u64 = drmcs_write_weight,
+ 	},
++	{
++		.name = "budget_supported",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.seq_show = drmcs_show_budget_supported,
++	},
+ 	{
+ 		.name = "period_us",
+ 		.flags = CFTYPE_NOT_ON_ROOT,
 -- 
 2.34.1
 
