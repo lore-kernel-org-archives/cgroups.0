@@ -1,23 +1,23 @@
 From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: [RFC 11/17] drm: Add over budget signalling callback
-Date: Wed, 19 Oct 2022 18:32:48 +0100
-Message-ID: <20221019173254.3361334-12-tvrtko.ursulin@linux.intel.com>
+Subject: [RFC 12/17] cgroup/drm: Client exit hook
+Date: Wed, 19 Oct 2022 18:32:49 +0100
+Message-ID: <20221019173254.3361334-13-tvrtko.ursulin@linux.intel.com>
 References: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1666200837; x=1697736837;
+ t=1666200840; x=1697736840;
  h=from:to:cc:subject:date:message-id:in-reply-to:
  references:mime-version:content-transfer-encoding;
- bh=SCLxQXssqCGWpksvQ3lmggIlRVu0wTOV5RqTAwzpGxU=;
- b=ZABVaW9fe7DHJi9Rl9ktD4UZAhwzPrNI2CESZ78eYdoKTePpXtT1Ex3Z
- 6hMSKjkNZ0QZSRXD5VM7xrFBwRjXMDbUI5MQievLKo2risA1Sl9UcgMff
- heIfpGkvb//m5qcuvtTm0/zqhlVPqXB02mazdU9KOReRICH4g/vfypB/k
- VB5e2QAJmqoDqe+46YJSnnJoKQ29KhGFf59l5ZdFKAIHTb9mFCncOXKBW
- w7PPBShO7glKixSsiehqRQFKWTdkQms2gAslF/D9nt81JNPt4khE/u/v9
- 7r12wy/jBIX1jJx3/ilVK1aBVdlCXoRrB4yZFadGFlE8m2I0/Da6b7ikh w==;
+ bh=2SjnzP/RjutkVE2GWCovZkYcvG7xuDDB28V5+LUt3bM=;
+ b=Y6j0PJW3Xsb8Ie5/O9tUc4zbCfqDTbJZqUbmiIuPlp6DkYb6s1ZKz7LV
+ C34KZHiwzNDgefPxzTW0Q68ME5BPgWAgm4jajlEiAdBDqM21ymBUm/LN3
+ Aah3U1muqKAHIgXqwoCxHFsmha1SFjwiojLqhQaAh+yaSBLgFPq4w77Ij
+ bByBu6ro70AIAjIl+wjbvf6yIQF9yyLfhdgZ7UiEeIkood6k/dXGvajX+
+ iQ6q6kcwlQrJKMzaUlNgAyBH+akV3SzmsDPeJdBR995TUeXtDBS+7klHb
+ jcXQ14ZMOTNhIQ1ejuG53n0+0A4n7RI17MxAzkCDfTJqmeGHzdc78J/xP g==;
 In-Reply-To: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
@@ -35,75 +35,81 @@ Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Daniel Vetter <daniel.
 
 From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 
-Add a new callback via which the drm cgroup controller is notifying the
-drm core that a certain process is above its allotted GPU time.
+We need the ability for DRM core to inform the cgroup controller when a
+client has closed a DRM file descriptor. This will allow us not needing
+to keep state relating to GPU time usage by tasks sets in the cgroup
+controller itself.
 
 Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 ---
- drivers/gpu/drm/drm_cgroup.c | 21 +++++++++++++++++++++
- include/drm/drm_clients.h    |  1 +
- include/drm/drm_drv.h        |  8 ++++++++
- 3 files changed, 30 insertions(+)
+ drivers/gpu/drm/drm_cgroup.c | 8 ++++++++
+ include/linux/cgroup_drm.h   | 1 +
+ kernel/cgroup/drm.c          | 8 ++++++++
+ 3 files changed, 17 insertions(+)
 
 diff --git a/drivers/gpu/drm/drm_cgroup.c b/drivers/gpu/drm/drm_cgroup.c
-index e0cadb5e5659..e36bc4333924 100644
+index e36bc4333924..ff99d1f4f1d4 100644
 --- a/drivers/gpu/drm/drm_cgroup.c
 +++ b/drivers/gpu/drm/drm_cgroup.c
-@@ -230,3 +230,24 @@ u64 drm_pid_get_active_time_us(struct pid *pid)
- 	return total;
- }
- EXPORT_SYMBOL_GPL(drm_pid_get_active_time_us);
-+
-+void drm_pid_signal_budget(struct pid *pid, u64 usage, u64 budget)
-+{
-+	struct drm_pid_clients *clients;
-+
-+	rcu_read_lock();
-+	clients = xa_load(&drm_pid_clients, (unsigned long)pid);
-+	if (clients) {
-+		struct drm_file *fpriv;
-+
-+		list_for_each_entry_rcu(fpriv, &clients->file_list, clink) {
-+			const struct drm_cgroup_ops *cg_ops =
-+				fpriv->minor->dev->driver->cg_ops;
-+
-+			if (cg_ops && cg_ops->signal_budget)
-+				cg_ops->signal_budget(fpriv, usage, budget);
-+		}
+@@ -5,6 +5,7 @@
+ 
+ #include <drm/drm_drv.h>
+ #include <drm/drm_clients.h>
++#include <linux/cgroup_drm.h>
+ 
+ static DEFINE_XARRAY(drm_pid_clients);
+ 
+@@ -25,6 +26,7 @@ void drm_clients_close(struct drm_file *file_priv)
+ {
+ 	struct drm_device *dev = file_priv->minor->dev;
+ 	struct drm_pid_clients *clients;
++	struct task_struct *task;
+ 
+ 	lockdep_assert_held(&dev->filelist_mutex);
+ 
+@@ -35,6 +37,12 @@ void drm_clients_close(struct drm_file *file_priv)
+ 	if (WARN_ON_ONCE(!clients))
+ 		return;
+ 
++	task = get_pid_task(file_priv->cpid, PIDTYPE_PID);
++	if (task) {
++		drmcgroup_client_exited(task);
++		put_task_struct(task);
 +	}
-+	rcu_read_unlock();
-+}
-+EXPORT_SYMBOL_GPL(drm_pid_signal_budget);
-diff --git a/include/drm/drm_clients.h b/include/drm/drm_clients.h
-index f25e09ed5feb..7ad09fd0a404 100644
---- a/include/drm/drm_clients.h
-+++ b/include/drm/drm_clients.h
-@@ -38,5 +38,6 @@ static inline void drm_clients_migrate(struct drm_file *file_priv)
- unsigned int drm_pid_priority_levels(struct pid *pid, bool *non_uniform);
- void drm_pid_update_priority(struct pid *pid, int priority);
- u64 drm_pid_get_active_time_us(struct pid *pid);
-+void drm_pid_signal_budget(struct pid *pid, u64 usage, u64 budget);
- 
- #endif
-diff --git a/include/drm/drm_drv.h b/include/drm/drm_drv.h
-index 0f1802df01fe..07dec956ebfb 100644
---- a/include/drm/drm_drv.h
-+++ b/include/drm/drm_drv.h
-@@ -192,6 +192,14 @@ struct drm_cgroup_ops {
- 	 * Used by the DRM core when queried by the DRM cgroup controller.
- 	 */
- 	u64 (*active_time_us) (struct drm_file *);
 +
-+	/**
-+	 * @signal_budget:
-+	 *
-+	 * Optional callback used by the DRM core to forward over/under GPU time
-+	 * messages sent by the DRM cgroup controller.
-+	 */
-+	void (*signal_budget) (struct drm_file *, u64 used, u64 budget);
- };
+ 	__del_clients(clients, file_priv);
  
- /**
+ 	/*
+diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
+index 66063b4708e8..c84516d3e50a 100644
+--- a/include/linux/cgroup_drm.h
++++ b/include/linux/cgroup_drm.h
+@@ -13,5 +13,6 @@ struct task_struct;
+ #define DRM_CGROUP_PRIORITY_MAX	(10000)
+ 
+ int drmcgroup_lookup_effective_priority(struct task_struct *task);
++void drmcgroup_client_exited(struct task_struct *task);
+ 
+ #endif	/* _CGROUP_DRM_H */
+diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
+index 4b6f88d8236e..48f1eaaa1c07 100644
+--- a/kernel/cgroup/drm.c
++++ b/kernel/cgroup/drm.c
+@@ -221,6 +221,14 @@ static void drmcs_attach(struct cgroup_taskset *tset)
+ 					css_to_drmcs(css)->effective_priority);
+ }
+ 
++void drmcgroup_client_exited(struct task_struct *task)
++{
++	struct drm_cgroup_state *drmcs = get_task_drmcs(task);
++
++	css_put(&drmcs->css);
++}
++EXPORT_SYMBOL_GPL(drmcgroup_client_exited);
++
+ static struct drm_cgroup_state root_drmcs = {
+ 	.priority = DRM_CGROUP_PRIORITY_DEF,
+ 	.effective_priority = DRM_CGROUP_PRIORITY_DEF,
 -- 
 2.34.1
 
