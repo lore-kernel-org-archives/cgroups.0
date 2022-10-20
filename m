@@ -1,304 +1,74 @@
-From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: Re: [RFC 02/17] drm: Track clients per owning process
-Date: Thu, 20 Oct 2022 08:34:32 +0100
-Message-ID: <391a77ea-1120-eb23-31f9-e7a14d84b10e@linux.intel.com>
-References: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
- <20221019173254.3361334-3-tvrtko.ursulin@linux.intel.com>
- <77499370-bb0e-7f7e-ac1b-ad14f47578d9@amd.com>
+From: "haifeng.xu" <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: Simplify code in css_set_move_task
+Date: Thu, 20 Oct 2022 07:47:01 +0000
+Message-ID: <20221020074701.84326-1-haifeng.xu@shopee.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
- d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1666251278; x=1697787278;
- h=message-id:date:mime-version:subject:to:cc:references:
- from:in-reply-to:content-transfer-encoding;
- bh=Syu+tYKA13QsLD5OSljEgCHd+p/AphJBrPyjOMTUU1A=;
- b=mByjNvnWJ4r37/pI0jX+jp9V5pTMEcSSsqO1Puuan4NvuQcgMvrFQ2x5
- DQcBVpKjbqmjLrEAKiopyzoSgumbuv5ECmyZEEUdAH0yVtpxKYoVwi4OS
- 2QBAPQSbfp+nx5aSFbom65QohYPg5NqbOy92dwDf5prnzDMcSf/UOCunh
- 4SYc/kCV79pf0FJbL3tz35rCxN0K0+o18GrOFepb/Z5H/0WkxghDy+tZK
- XjXIyWBHH/Y7LcDw9d4+wPB+hNxZG9cEw0cbaM2t7arl/Qnc2K5K6rHwF
- F2Mahs3twUqtOexowtbBZFnayjKWLbC3UoNczs/GHNEuioJOwuSmtzjL2 Q==;
-Content-Language: en-US
-In-Reply-To: <77499370-bb0e-7f7e-ac1b-ad14f47578d9@amd.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>, Intel-gfx@lists.freedesktop.org
-Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Daniel Vetter <daniel.vetter@ffwll.ch>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, =?UTF-8?Q?St=c3=a9phane_Marchesin?= <marcheu@chromium.org>, Zefan Li <lizefan.x@bytedance.com>, Dave Airlie <airlied@redhat.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, "T . J . Mercier" <tjmercier@google.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=shopee.com; s=shopee.com;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=WEv0DAtYrQBEKc4KQv+MDWqqO4sqebBTQ3kaboRnQNg=;
+        b=GTQ3+2aB72+kOTV0y/y2Ncy5TWnk/z4Cj5D2tlFLPIwoT+7QGZOijPWbsL6YlAkTR2
+         WH6rXobe+/n1Op2T4Bkpy9k87M8Eihx9tndD/7jNX/1bQbEeceTVqzY0GKTOKj5mSIYn
+         yX+uFQLqGCfD2BwOppd9RVzffo/ZpfeFt1SGkK9aFWDcLq0Kh8AtY+WHaxEzRe20mDnG
+         MKjRrA2S3k7IDrGfHDygEhy5zVbNDzzFDKhkI2oBWOeH0zGZs9+Wa4SbJPTHgw7hGfW4
+         7mgZq9Rt5Gr+HE7ElBc8URsjfh7LITM/q6YvddDawZP1iiwOGdcQnuNR/b5RG5tmqDah
+         /G3w==
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "haifeng.xu" <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
 
+Check the populated state of css_set in css_set_update_populated
+and update the populated state of to_cset after from_cset is updated.
 
-On 20/10/2022 07:40, Christian König wrote:
-> Am 19.10.22 um 19:32 schrieb Tvrtko Ursulin:
->> From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
->>
->> To enable propagation of settings from the cgroup drm controller to 
->> drm we
->> need to start tracking which processes own which drm clients.
->>
->> Implement that by tracking the struct pid pointer of the owning 
->> process in
->> a new XArray, pointing to a structure containing a list of associated
->> struct drm_file pointers.
->>
->> Clients are added and removed under the filelist mutex and RCU list
->> operations are used below it to allow for lockless lookup.
-> 
-> That won't work easily like this. The problem is that file_priv->pid is 
-> usually not accurate these days:
-> 
->  From the debugfs clients file:
-> 
->        systemd-logind   773   0   y    y     0          0
->                  Xorg  1639 128   n    n  1000          0
->                  Xorg  1639 128   n    n  1000          0
->                  Xorg  1639 128   n    n  1000          0
->               firefox  2945 128   n    n  1000          0
->                  Xorg  1639 128   n    n  1000          0
->                  Xorg  1639 128   n    n  1000          0
->                  Xorg  1639 128   n    n  1000          0
->                  Xorg  1639 128   n    n  1000          0
->                chrome 35940 128   n    n  1000          0
->                chrome 35940   0   n    y  1000          1
->                chrome 35940   0   n    y  1000          2
->                  Xorg  1639 128   n    n  1000          0
->                  Xorg  1639 128   n    n  1000          0
->                  Xorg  1639 128   n    n  1000          0
-> 
-> This is with glxgears and a bunch other OpenGL applications running.
-> 
-> The problem is that for most applications the X/Wayland server is now 
-> opening the render node. The only exceptions in this case are apps using 
-> DRI2 (VA-API?).
-> 
-> I always wanted to fix this and actually track who is using the file 
-> descriptor instead of who opened it, but never had the time to do this.
+Signed-off-by: haifeng.xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-There's a patch later in the series which allows client records to be 
-migrated to a new PID, and then i915 patch to do that when fd is used 
-for context create. That approach I think worked well enough in the 
-past. So maybe it could be done in the DRM core at some suitable entry 
-point.
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index d922773fa90b..6c474be57f91 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -861,7 +861,8 @@ static void css_set_update_populated(struct css_set *cset, bool populated)
+ {
+ 	struct cgrp_cset_link *link;
+ 
+-	lockdep_assert_held(&css_set_lock);
++	if (!cset || css_set_populated(cset))
++		return;
+ 
+ 	list_for_each_entry(link, &cset->cgrp_links, cgrp_link)
+ 		cgroup_update_populated(link->cgrp, populated);
+@@ -903,16 +904,12 @@ static void css_set_move_task(struct task_struct *task,
+ {
+ 	lockdep_assert_held(&css_set_lock);
+ 
+-	if (to_cset && !css_set_populated(to_cset))
+-		css_set_update_populated(to_cset, true);
+-
+ 	if (from_cset) {
+ 		WARN_ON_ONCE(list_empty(&task->cg_list));
+ 
+ 		css_set_skip_task_iters(from_cset, task);
+ 		list_del_init(&task->cg_list);
+-		if (!css_set_populated(from_cset))
+-			css_set_update_populated(from_cset, false);
++		css_set_update_populated(from_cset, false);
+ 	} else {
+ 		WARN_ON_ONCE(!list_empty(&task->cg_list));
+ 	}
+@@ -926,6 +923,7 @@ static void css_set_move_task(struct task_struct *task,
+ 		WARN_ON_ONCE(task->flags & PF_EXITING);
+ 
+ 		cgroup_move_task(task, to_cset);
++		css_set_update_populated(to_cset, true);
+ 		list_add_tail(&task->cg_list, use_mg_tasks ? &to_cset->mg_tasks :
+ 							     &to_cset->tasks);
+ 	}
+-- 
+2.25.1
 
-> I think you need to fix this problem first. And BTW: and unsigned long 
-> doesn't work as PID either with containers.
-
-This I am not familiar with so would like to hear more if you could 
-point me in the right direction at least.
-
-My assumption was that struct pid *, which is what I store in unsigned 
-long, would be unique in a system where there is a single kernel 
-running, so as long as lifetimes are correct (released from tracking 
-here when fd is closed, which is implicit on process exit) would work. 
-You are suggesting that is not so?
-
-Regards,
-
-Tvrtko
-
-> 
-> Regards,
-> Christian.
-> 
->>
->> Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
->> ---
->>   drivers/gpu/drm/Makefile     |  1 +
->>   drivers/gpu/drm/drm_cgroup.c | 60 ++++++++++++++++++++++++++++++++++++
->>   drivers/gpu/drm/drm_file.c   | 18 ++++++++---
->>   include/drm/drm_clients.h    | 31 +++++++++++++++++++
->>   include/drm/drm_file.h       |  4 +++
->>   5 files changed, 110 insertions(+), 4 deletions(-)
->>   create mode 100644 drivers/gpu/drm/drm_cgroup.c
->>   create mode 100644 include/drm/drm_clients.h
->>
->> diff --git a/drivers/gpu/drm/Makefile b/drivers/gpu/drm/Makefile
->> index 6e55c47288e4..0719970d17ee 100644
->> --- a/drivers/gpu/drm/Makefile
->> +++ b/drivers/gpu/drm/Makefile
->> @@ -59,6 +59,7 @@ drm-$(CONFIG_DRM_LEGACY) += \
->>       drm_scatter.o \
->>       drm_vm.o
->>   drm-$(CONFIG_DRM_LIB_RANDOM) += lib/drm_random.o
->> +drm-$(CONFIG_CGROUP_DRM) += drm_cgroup.o
->>   drm-$(CONFIG_COMPAT) += drm_ioc32.o
->>   drm-$(CONFIG_DRM_PANEL) += drm_panel.o
->>   drm-$(CONFIG_OF) += drm_of.o
->> diff --git a/drivers/gpu/drm/drm_cgroup.c b/drivers/gpu/drm/drm_cgroup.c
->> new file mode 100644
->> index 000000000000..a31ff1d593ab
->> --- /dev/null
->> +++ b/drivers/gpu/drm/drm_cgroup.c
->> @@ -0,0 +1,60 @@
->> +/* SPDX-License-Identifier: MIT */
->> +/*
->> + * Copyright © 2022 Intel Corporation
->> + */
->> +
->> +#include <drm/drm_drv.h>
->> +#include <drm/drm_clients.h>
->> +
->> +static DEFINE_XARRAY(drm_pid_clients);
->> +
->> +void drm_clients_close(struct drm_file *file_priv)
->> +{
->> +    unsigned long pid = (unsigned long)file_priv->pid;
->> +    struct drm_device *dev = file_priv->minor->dev;
->> +    struct drm_pid_clients *clients;
->> +
->> +    lockdep_assert_held(&dev->filelist_mutex);
->> +
->> +    clients = xa_load(&drm_pid_clients, pid);
->> +    list_del_rcu(&file_priv->clink);
->> +    if (atomic_dec_and_test(&clients->num)) {
->> +        xa_erase(&drm_pid_clients, pid);
->> +        kfree_rcu(clients, rcu);
->> +    }
->> +}
->> +
->> +int drm_clients_open(struct drm_file *file_priv)
->> +{
->> +    unsigned long pid = (unsigned long)file_priv->pid;
->> +    struct drm_device *dev = file_priv->minor->dev;
->> +    struct drm_pid_clients *clients;
->> +    bool new_client = false;
->> +
->> +    lockdep_assert_held(&dev->filelist_mutex);
->> +
->> +    clients = xa_load(&drm_pid_clients, pid);
->> +    if (!clients) {
->> +        clients = kmalloc(sizeof(*clients), GFP_KERNEL);
->> +        if (!clients)
->> +            return -ENOMEM;
->> +        atomic_set(&clients->num, 0);
->> +        INIT_LIST_HEAD(&clients->file_list);
->> +        init_rcu_head(&clients->rcu);
->> +        new_client = true;
->> +    }
->> +    atomic_inc(&clients->num);
->> +    list_add_tail_rcu(&file_priv->clink, &clients->file_list);
->> +    if (new_client) {
->> +        void *xret;
->> +
->> +        xret = xa_store(&drm_pid_clients, pid, clients, GFP_KERNEL);
->> +        if (xa_err(xret)) {
->> +            list_del_init(&file_priv->clink);
->> +            kfree(clients);
->> +            return PTR_ERR(clients);
->> +        }
->> +    }
->> +
->> +    return 0;
->> +}
->> diff --git a/drivers/gpu/drm/drm_file.c b/drivers/gpu/drm/drm_file.c
->> index a8b4d918e9a3..ce58d5c513db 100644
->> --- a/drivers/gpu/drm/drm_file.c
->> +++ b/drivers/gpu/drm/drm_file.c
->> @@ -40,6 +40,7 @@
->>   #include <linux/slab.h>
->>   #include <drm/drm_client.h>
->> +#include <drm/drm_clients.h>
->>   #include <drm/drm_drv.h>
->>   #include <drm/drm_file.h>
->>   #include <drm/drm_print.h>
->> @@ -298,6 +299,7 @@ static void drm_close_helper(struct file *filp)
->>       mutex_lock(&dev->filelist_mutex);
->>       list_del(&file_priv->lhead);
->> +    drm_clients_close(file_priv);
->>       mutex_unlock(&dev->filelist_mutex);
->>       drm_file_free(file_priv);
->> @@ -349,10 +351,8 @@ static int drm_open_helper(struct file *filp, 
->> struct drm_minor *minor)
->>       if (drm_is_primary_client(priv)) {
->>           ret = drm_master_open(priv);
->> -        if (ret) {
->> -            drm_file_free(priv);
->> -            return ret;
->> -        }
->> +        if (ret)
->> +            goto err_free;
->>       }
->>       filp->private_data = priv;
->> @@ -360,6 +360,9 @@ static int drm_open_helper(struct file *filp, 
->> struct drm_minor *minor)
->>       priv->filp = filp;
->>       mutex_lock(&dev->filelist_mutex);
->> +    ret = drm_clients_open(priv);
->> +    if (ret)
->> +        goto err_unlock;
->>       list_add(&priv->lhead, &dev->filelist);
->>       mutex_unlock(&dev->filelist_mutex);
->> @@ -387,6 +390,13 @@ static int drm_open_helper(struct file *filp, 
->> struct drm_minor *minor)
->>   #endif
->>       return 0;
->> +
->> +err_unlock:
->> +    mutex_unlock(&dev->filelist_mutex);
->> +err_free:
->> +    drm_file_free(priv);
->> +
->> +    return ret;
->>   }
->>   /**
->> diff --git a/include/drm/drm_clients.h b/include/drm/drm_clients.h
->> new file mode 100644
->> index 000000000000..4ae553a03d1e
->> --- /dev/null
->> +++ b/include/drm/drm_clients.h
->> @@ -0,0 +1,31 @@
->> +/* SPDX-License-Identifier: MIT */
->> +/*
->> + * Copyright © 2022 Intel Corporation
->> + */
->> +
->> +#ifndef _DRM_CLIENTS_H_
->> +#define _DRM_CLIENTS_H_
->> +
->> +#include <drm/drm_file.h>
->> +
->> +struct drm_pid_clients {
->> +    atomic_t num;
->> +    struct list_head file_list;
->> +    struct rcu_head rcu;
->> +};
->> +
->> +#if IS_ENABLED(CONFIG_CGROUP_DRM)
->> +void drm_clients_close(struct drm_file *file_priv);
->> +int drm_clients_open(struct drm_file *file_priv);
->> +#else
->> +static inline void drm_clients_close(struct drm_file *file_priv)
->> +{
->> +}
->> +
->> +static inline int drm_clients_open(struct drm_file *file_priv)
->> +{
->> +    return 0;
->> +}
->> +#endif
->> +
->> +#endif
->> diff --git a/include/drm/drm_file.h b/include/drm/drm_file.h
->> index d780fd151789..0965eb111f24 100644
->> --- a/include/drm/drm_file.h
->> +++ b/include/drm/drm_file.h
->> @@ -268,6 +268,10 @@ struct drm_file {
->>       /** @minor: &struct drm_minor for this file. */
->>       struct drm_minor *minor;
->> +#if IS_ENABLED(CONFIG_CGROUP_DRM)
->> +    struct list_head clink;
->> +#endif
->> +
->>       /**
->>        * @object_idr:
->>        *
-> 
