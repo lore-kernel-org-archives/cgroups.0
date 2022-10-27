@@ -1,128 +1,648 @@
-From: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [RFC 02/17] drm: Track clients per owning process
-Date: Thu, 27 Oct 2022 15:35:37 +0100
-Message-ID: <c88d0c33-8616-faa4-b33e-5de36d7b73fd@linux.intel.com>
+From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
+Subject: Re: [RFC 13/17] cgroup/drm: Ability to periodically
+ scan cgroups for over budget GPU usage
+Date: Thu, 27 Oct 2022 15:45:01 +0100
+Message-ID: <7444db68-bcf4-b3a0-09f4-bf24b516054a@linux.intel.com>
 References: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
- <20221019173254.3361334-3-tvrtko.ursulin@linux.intel.com>
- <77499370-bb0e-7f7e-ac1b-ad14f47578d9@amd.com>
- <391a77ea-1120-eb23-31f9-e7a14d84b10e@linux.intel.com>
- <04182f67-2c98-add4-be60-539ffe2e9d6a@amd.com>
+ <20221019173254.3361334-14-tvrtko.ursulin@linux.intel.com>
+ <CABdmKX3Kca4pbq+KN1RnV+Py1dDw9d_33x-zu7ex7FnE95p1ig@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1666881497; x=1698417497;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=1txbTAtjE56EX9D4ddBx/JjLRLCNwcs8zGSv/ynl+u4=;
-  b=Z0oF4hbrZwAq5+hx02dkpbrthV7UKM4gMl5+E3jwgHIY+Y/XZ8FAGakU
-   tQLObLFuIi0D787Vk1Ywvr77ST+PxkSMIAKs2MbKm57+YxXms5R/LFkcd
-   mXmUpSMO3XDsL3xt4S1IL0R6ASnu1ViJsCCVrORqQcf+sSd6vTRiYcf6o
-   gpEP8GT5nTnHk6dlfr66TG6walcx17sX694/fdRAQOJfKlsUexpKQdWOc
-   eYmlaaGBWt6DGMpXx/TNetakOI4p362VY8QHoDb5pZtGmGbLHB502BdOb
-   M0VXzs1g8mCVPLkr1x38ZD1YonhnPwkkDBM456PgOqrFy1YyjabxGPfAh
-   w==;
+ d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+ t=1666881906; x=1698417906;
+ h=message-id:date:mime-version:subject:to:cc:references:
+ from:in-reply-to:content-transfer-encoding;
+ bh=siNlzOIzbPG5FGOGSJG+VaIMVENHBCOGT1aQFKz3J9Y=;
+ b=Yu1ZO64GVuJH7BAExIOYvCLaptSaxpeOe4d0gFF4x55kCWT21XXKf+6r
+ K0AsGqU3pQrnSoZFoFsuwVOOoW/09JSA47fcFlh4qkat6AaM67DIxxuGD
+ amnhSbAYBM4omvAbsAi5pH+hjOMPGDC1/bbB1zrk6QC9HQ+E7o5Ymrc6s
+ yZv9Vfa1UooriXHRo1xJLU3PFNM37ewD5aKE5Xcwo6ds4AYLkLlQ9SCwU
+ frL8YkiXhkgNrMYQrxezrXnwArpFjSHZ9MFlHbRswXWmH7qskNuEZFTGf
+ 6S5W8Hx4QKahXSRgAIvZ27x10pZoIOQj9aDiT+VuQ36JV8U5pW4aa9kMi Q==;
 Content-Language: en-US
-In-Reply-To: <04182f67-2c98-add4-be60-539ffe2e9d6a-5C7GfCeVMHo@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, Rob Clark <robdclark-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, =?UTF-8?Q?St=c3=a9phane_Marchesin?= <marcheu-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "T . J . Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <CABdmKX3Kca4pbq+KN1RnV+Py1dDw9d_33x-zu7ex7FnE95p1ig@mail.gmail.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: "T.J. Mercier" <tjmercier@google.com>
+Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Dave Airlie <airlied@redhat.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, =?UTF-8?Q?St=c3=a9phane_Marchesin?= <marcheu@chromium.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
 
 
-On 20/10/2022 12:33, Christian König wrote:
-> Am 20.10.22 um 09:34 schrieb Tvrtko Ursulin:
+On 21/10/2022 23:52, T.J. Mercier wrote:
+> On Wed, Oct 19, 2022 at 10:34 AM Tvrtko Ursulin
+> <tvrtko.ursulin@linux.intel.com> wrote:
 >>
->> On 20/10/2022 07:40, Christian König wrote:
->>> Am 19.10.22 um 19:32 schrieb Tvrtko Ursulin:
->>>> From: Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
->>>>
->>>> To enable propagation of settings from the cgroup drm controller to 
->>>> drm we
->>>> need to start tracking which processes own which drm clients.
->>>>
->>>> Implement that by tracking the struct pid pointer of the owning 
->>>> process in
->>>> a new XArray, pointing to a structure containing a list of associated
->>>> struct drm_file pointers.
->>>>
->>>> Clients are added and removed under the filelist mutex and RCU list
->>>> operations are used below it to allow for lockless lookup.
->>>
->>> That won't work easily like this. The problem is that file_priv->pid 
->>> is usually not accurate these days:
->>>
->>>  From the debugfs clients file:
->>>
->>>        systemd-logind   773   0   y    y     0          0
->>>                  Xorg  1639 128   n    n  1000          0
->>>                  Xorg  1639 128   n    n  1000          0
->>>                  Xorg  1639 128   n    n  1000          0
->>>               firefox  2945 128   n    n  1000          0
->>>                  Xorg  1639 128   n    n  1000          0
->>>                  Xorg  1639 128   n    n  1000          0
->>>                  Xorg  1639 128   n    n  1000          0
->>>                  Xorg  1639 128   n    n  1000          0
->>>                chrome 35940 128   n    n  1000          0
->>>                chrome 35940   0   n    y  1000          1
->>>                chrome 35940   0   n    y  1000          2
->>>                  Xorg  1639 128   n    n  1000          0
->>>                  Xorg  1639 128   n    n  1000          0
->>>                  Xorg  1639 128   n    n  1000          0
->>>
->>> This is with glxgears and a bunch other OpenGL applications running.
->>>
->>> The problem is that for most applications the X/Wayland server is now 
->>> opening the render node. The only exceptions in this case are apps 
->>> using DRI2 (VA-API?).
->>>
->>> I always wanted to fix this and actually track who is using the file 
->>> descriptor instead of who opened it, but never had the time to do this.
+>> From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 >>
->> There's a patch later in the series which allows client records to be 
->> migrated to a new PID, and then i915 patch to do that when fd is used 
->> for context create. That approach I think worked well enough in the 
->> past. So maybe it could be done in the DRM core at some suitable entry 
->> point.
-> 
-> Yeah, that makes some sense. I think you should wire that inside 
-> drm_ioctl(), as far as I know more or less all uses of a file descriptor 
-> would go through that function.
-> 
-> And maybe make that a stand alone patch, cause that can go upstream as a 
-> bug fix independently if you ask me.
-
-I've put it on my todo list to try and come up with something standalone 
-for this problem. Will see if I manage to send it separately or perhaps 
-will start the next cgroup controller RFC with those patches.
-
->>> I think you need to fix this problem first. And BTW: and unsigned 
->>> long doesn't work as PID either with containers.
+>> Add a scanning worker, which if enabled, periodically queries the cgroup
+>> for GPU usage and if over budget (as configured by it's relative weight
+>> share) notifies the drm core about the fact.
 >>
->> This I am not familiar with so would like to hear more if you could 
->> point me in the right direction at least.
-> 
-> Uff, I'm the wrong person to ask stuff like that. I just can say from 
-> experience because I've ran into that trap as well.
-> 
+>> This is off by default and can be enabled by configuring a scanning
+>> period using the drm.period_us cgroup control file.
 >>
->> My assumption was that struct pid *, which is what I store in unsigned 
->> long, would be unique in a system where there is a single kernel 
->> running, so as long as lifetimes are correct (released from tracking 
->> here when fd is closed, which is implicit on process exit) would work. 
->> You are suggesting that is not so?
+>> Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+>> ---
+>>   Documentation/admin-guide/cgroup-v2.rst |  35 +-
+>>   kernel/cgroup/drm.c                     | 426 +++++++++++++++++++++++-
+>>   2 files changed, 459 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+>> index 1f3cca4e2572..318f463a1316 100644
+>> --- a/Documentation/admin-guide/cgroup-v2.rst
+>> +++ b/Documentation/admin-guide/cgroup-v2.rst
+>> @@ -2401,7 +2401,8 @@ HugeTLB Interface Files
+>>   DRM
+>>   ---
+>>
+>> -The DRM controller allows configuring static hierarchical scheduling priority.
+>> +The DRM controller allows configuring static hierarchical scheduling priority
+>> +and scheduling soft limits.
+>>
+>>   DRM static priority control
+>>   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>> @@ -2458,6 +2459,38 @@ DRM static priority interface files
+>>          Read only integer showing the current effective priority level for the
+>>          group. Effective meaning taking into account the chain of inherited
+>>
+>> +DRM scheduling soft limits
+>> +~~~~~~~~~~~~~~~~~~~~~~~~~~
+>> +
+>> +Because of the heterogenous hardware and driver DRM capabilities, soft limits
+>> +are implemented as a loose co-operative (bi-directional) interface between the
+>> +controller and DRM core.
+>> +
+>> +The controller configures the GPU time allowed per group and periodically scans
+>> +the belonging tasks to detect the over budget condition, at which point it
+>> +invokes a callback notifying the DRM core of the condition.
+>> +
+>> +DRM core provides an API to query per process GPU utilization and 2nd API to
+>> +receive notification from the cgroup controller when the group enters or exits
+>> +the over budget condition.
+>> +
+>> +Individual DRM drivers which implement the interface are expected to act on this
+>> +in the best-effort manner only. There are no guarantees that the soft limits
+>> +will be respected.
+>> +
+>> +DRM scheduling soft limits interface files
+>> +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>> +
+>> +  drm.weight
+>> +       Standard cgroup weight based control [1, 10000] used to configure the
+>> +       relative distributing of GPU time between the sibling groups.
+>> +
+>> +  drm.period_us
+>> +       An integer representing the period with which the controller should look
+>> +       at the GPU usage by the group and potentially send the over/under budget
+>> +       signal.
+>> +       Value of zero (defaul) disables the soft limit checking.
+>> +
+>>   Misc
+>>   ----
+>>
+>> diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
+>> index 48f1eaaa1c07..af50ead1564a 100644
+>> --- a/kernel/cgroup/drm.c
+>> +++ b/kernel/cgroup/drm.c
+>> @@ -18,6 +18,29 @@ struct drm_cgroup_state {
+>>          int priority;
+>>          int effective_priority;
+>>          unsigned int weight;
+>> +       unsigned int period_us;
+>> +
+>> +       bool scanning_suspended;
+>> +       unsigned int suspended_period_us;
+>> +
+>> +       struct delayed_work scan_work;
+>> +
+>> +       /*
+>> +        * Below fields are owned and updated by the scan worker. Either the
+>> +        * worker accesses them, or worker needs to be suspended and synced
+>> +        * before they can be touched from the outside.
+>> +        */
+>> +       bool scanned;
+>> +
+>> +       ktime_t prev_timestamp;
+>> +
+>> +       u64 sum_children_weights;
+>> +       u64 children_active_us;
+>> +       u64 per_s_budget_ns;
+>> +       u64 prev_active_us;
+>> +       u64 active_us;
+>> +
+>> +       bool over_budget;
+>>   };
+>>
+>>   static DEFINE_MUTEX(drmcg_mutex);
+>> @@ -33,6 +56,31 @@ static inline struct drm_cgroup_state *get_task_drmcs(struct task_struct *task)
+>>          return css_to_drmcs(task_get_css(task, drm_cgrp_id));
+>>   }
+>>
+>> +static u64 drmcs_get_active_time_us(struct drm_cgroup_state *drmcs)
+>> +{
+>> +       struct cgroup *cgrp = drmcs->css.cgroup;
+>> +       struct task_struct *task;
+>> +       struct css_task_iter it;
+>> +       u64 total = 0;
+>> +
+>> +       css_task_iter_start(&cgrp->self,
+>> +                           CSS_TASK_ITER_PROCS | CSS_TASK_ITER_THREADED,
+>> +                           &it);
+>> +       while ((task = css_task_iter_next(&it))) {
+>> +               u64 time;
+>> +
+>> +               /* Ignore kernel threads here. */
+>> +               if (task->flags & PF_KTHREAD)
+>> +                       continue;
+>> +
+>> +               time = drm_pid_get_active_time_us(task_pid(task));
+>> +               total += time;
+>> +       }
+>> +       css_task_iter_end(&it);
+>> +
+>> +       return total;
+>> +}
+>> +
+>>   int drmcgroup_lookup_effective_priority(struct task_struct *task)
+>>   {
+>>          struct drm_cgroup_state *drmcs = get_task_drmcs(task);
+>> @@ -202,9 +250,301 @@ static int drmcs_online(struct cgroup_subsys_state *css)
+>>          return 0;
+>>   }
+>>
+>> +static void
+>> +signal_drm_budget(struct drm_cgroup_state *drmcs, u64 usage, u64 budget)
+>> +{
+>> +       struct cgroup *cgrp = drmcs->css.cgroup;
+>> +       struct task_struct *task;
+>> +       struct css_task_iter it;
+>> +
+>> +       css_task_iter_start(&cgrp->self,
+>> +                           CSS_TASK_ITER_PROCS | CSS_TASK_ITER_THREADED,
+>> +                           &it);
+>> +       while ((task = css_task_iter_next(&it))) {
+>> +               /* Ignore kernel threads here. */
+>> +               if (task->flags & PF_KTHREAD)
+>> +                       continue;
+>> +
+>> +               drm_pid_signal_budget(task_pid(task), usage, budget);
+>> +       }
+>> +       css_task_iter_end(&it);
+>> +}
+>> +
+>> +static bool __start_scanning(struct drm_cgroup_state *root)
+>> +{
+>> +       struct cgroup_subsys_state *node;
+>> +       bool ok = true;
+>> +
+>> +       rcu_read_lock();
+>> +       css_for_each_descendant_pre(node, &root->css) {
+>> +               struct drm_cgroup_state *drmcs = css_to_drmcs(node);
+>> +               unsigned long active;
+>> +
+>> +               if (!css_tryget_online(node)) {
+>> +                       ok = false;
+>> +                       continue;
+>> +               }
+>> +
+>> +               drmcs->scanned = false;
+>> +               drmcs->sum_children_weights = 0;
+>> +               drmcs->children_active_us = 0;
+>> +               if (node == &root->css)
+>> +                       drmcs->per_s_budget_ns = NSEC_PER_SEC;
+>> +               else
+>> +                       drmcs->per_s_budget_ns = 0;
+>> +
+>> +               active = drmcs_get_active_time_us(drmcs);
+>> +               if (active >= drmcs->prev_active_us)
+>> +                       drmcs->active_us = active - drmcs->prev_active_us;
+>> +               else
+>> +                       drmcs->active_us = 0;
+>> +               drmcs->prev_active_us = active;
+>> +
+>> +               css_put(node);
+>> +       }
+>> +       rcu_read_unlock();
+>> +
+>> +       return ok;
+>> +}
+>> +
+>> +static void scan_worker(struct work_struct *work)
+>> +{
+>> +       struct drm_cgroup_state *root =
+>> +               container_of(work, typeof(*root), scan_work.work);
+>> +       struct cgroup_subsys_state *node;
+>> +       unsigned int period_us;
+>> +       ktime_t now;
+>> +
+>> +       rcu_read_lock();
 > 
-> I think you should have the pointer to struct pid directly here since 
-> that is a reference counted structure IIRC. But don't ask me what the 
-> semantics is how to get or put a reference.
+> Hi Tvrtko, I think this lock needs to come after the return for the
+> online check just below here to avoid missing the rcu_read_unlock at
+> out_retry. Although it doesn't look like this should ever run in the
+> first place if the DRM controller is disabled.
 
-Yeah I think I have all that. I track struct pid, with a reference, in 
-drm client, and release it when file descriptor is closed (indirectly 
-via the DRM close hook). All I need, I think, is for that mapping to 
-answer me "which drm_file objects" are in use by this struct pid 
-pointer. I don't see a problem with lifetimes or scope yet.
+Yep - thank you. I've fixed it up locally.
+
+Another TODO note for me is to see if I can hook into the cgroup offline 
+hook to avoid all this checks by perhaps making sure scan worker is not 
+running as transitions are happening. Will see if that works.
+
+>> +
+>> +       if (WARN_ON_ONCE(!css_tryget_online(&root->css)))
+>> +               return;
+>> +
+>> +       /*
+>> +        * 1st pass - reset accumulated values and update group GPU activity.
+>> +        */
+>> +       if (!__start_scanning(root))
+>> +               goto out_retry; /*
+>> +                                * Always come back later if scanner races with
+>> +                                * core cgroup management. (Repeated pattern.)
+>> +                                */
+>> +
+>> +       now = ktime_get();
+>> +       period_us = ktime_to_us(ktime_sub(now, root->prev_timestamp));
+>> +       root->prev_timestamp = now;
+>> +
+>> +       /*
+>> +        * 2nd pass - calculate accumulated GPU activity and relative weights
+>> +        * for each parent's children.
+>> +        */
+>> +       css_for_each_descendant_pre(node, &root->css) {
+>> +               struct drm_cgroup_state *drmcs = css_to_drmcs(node);
+>> +
+>> +               if (!css_tryget_online(node))
+>> +                       goto out_retry;
+>> +
+>> +               if (!drmcs->scanned) {
+>> +                       struct cgroup_subsys_state *css;
+>> +
+>> +                       css_for_each_child(css, &drmcs->css) {
+>> +                               struct drm_cgroup_state *sibling =
+>> +                                                       css_to_drmcs(css);
+>> +
+>> +                               if (!css_tryget_online(css)) {
+>> +                                       css_put(node);
+>> +                                       goto out_retry;
+>> +                               }
+>> +
+>> +                               drmcs->children_active_us += sibling->active_us;
+>> +                               drmcs->sum_children_weights += sibling->weight;
+>> +
+>> +                               css_put(css);
+>> +                       }
+>> +
+>> +                       drmcs->scanned = true;
+>> +               }
+>> +
+>> +               css_put(node);
+>> +       }
+>> +
+>> +       /*
+>> +        * 3rd pass - calculate relative budgets for each group based on
+>> +        * relative weights and parent's budget.
+>> +        *
+>> +        * FIXME: This is for now incomplete in more than one way. There is
+>> +        * no downward propagation of unused budgets, and even no utilisation of
+>> +        * the unused budgets at all.
+>> +        */
+>> +       css_for_each_descendant_pre(node, &root->css) {
+>> +               struct drm_cgroup_state *drmcs, *pdrmcs;
+>> +               bool over, was_over;
+>> +               u64 budget;
+>> +
+>> +               if (!css_tryget_online(node))
+>> +                       goto out_retry;
+>> +               if (node->cgroup->level == 1) {
+>> +                       css_put(node);
+>> +                       continue;
+>> +               }
+>> +               if (!css_tryget_online(node->parent)) {
+>> +                       css_put(node);
+>> +                       goto out_retry;
+>> +               }
+>> +
+>> +               drmcs = css_to_drmcs(node);
+>> +               pdrmcs = css_to_drmcs(node->parent);
+>> +
+>> +               drmcs->per_s_budget_ns  =
+>> +                       DIV_ROUND_UP_ULL(pdrmcs->per_s_budget_ns *
+>> +                                        drmcs->weight,
+>> +                                        pdrmcs->sum_children_weights);
+>> +               budget = DIV_ROUND_UP_ULL(drmcs->per_s_budget_ns * period_us,
+>> +                                         NSEC_PER_SEC);
+>> +               over = drmcs->active_us > budget;
+>> +               was_over = drmcs->over_budget;
+>> +               drmcs->over_budget = over;
+>> +               if (over || (!over && was_over))
+>> +                       signal_drm_budget(drmcs, drmcs->active_us, budget);
+>> +
+>> +               css_put(node);
+>> +               css_put(node->parent);
+>> +       }
+>> +
+>> +out_retry:
+>> +       rcu_read_unlock();
+>> +
+>> +       period_us = READ_ONCE(root->period_us);
+>> +       if (period_us)
+>> +               schedule_delayed_work(&root->scan_work,
+>> +                                     usecs_to_jiffies(period_us));
+>> +
+>> +       css_put(&root->css);
+>> +}
+>> +
+>> +static void start_scanning(struct drm_cgroup_state *drmcs, u64 period_us)
+>> +{
+>> +       drmcs->period_us = (unsigned int)period_us;
+>> +       WARN_ON_ONCE(!__start_scanning(drmcs));
+>> +       drmcs->prev_timestamp = ktime_get();
+>> +       mod_delayed_work(system_wq, &drmcs->scan_work,
+>> +                        usecs_to_jiffies(period_us));
+>> +}
+>> +
+>> +static void stop_scanning(struct drm_cgroup_state *drmcs)
+>> +{
+>> +       drmcs->period_us = 0;
+>> +       cancel_delayed_work_sync(&drmcs->scan_work);
+>> +       if (drmcs->over_budget) {
+>> +               /*
+>> +                * Signal under budget when scanning goes off so drivers
+>> +                * correctly update their state.
+>> +                */
+>> +               signal_drm_budget(drmcs, 0, drmcs->per_s_budget_ns);
+>> +               drmcs->over_budget = false;
+>> +       }
+>> +}
+>> +
+>> +static struct drm_cgroup_state *drmcs_scanner(struct drm_cgroup_state *drmcs)
+>> +{
+>> +       while (drmcs->css.cgroup->level > 1)
+>> +               drmcs = css_to_drmcs(drmcs->css.parent);
+>> +
+>> +       return drmcs;
+>> +}
+>> +
+>> +static void start_suspend_scanning(struct drm_cgroup_state *drmcs)
+>> +{
+>> +       drmcs = drmcs_scanner(drmcs);
+>> +
+>> +       if (drmcs->scanning_suspended)
+>> +               return;
+>> +
+>> +       drmcs->scanning_suspended = true;
+>> +       drmcs->suspended_period_us = drmcs->period_us;
+>> +       drmcs->period_us = 0;
+>> +}
+>> +
+>> +static void finish_suspend_scanning(struct drm_cgroup_state *drmcs)
+>> +{
+>> +       drmcs = drmcs_scanner(drmcs);
+>> +
+>> +       if (drmcs->suspended_period_us)
+>> +               cancel_delayed_work_sync(&drmcs->scan_work);
+>> +}
+>> +
+>> +static void resume_scanning(struct drm_cgroup_state *drmcs)
+>> +{
+>> +       drmcs = drmcs_scanner(drmcs);
+>> +
+>> +       if (!drmcs->scanning_suspended)
+>> +               return;
+>> +
+>> +       drmcs->scanning_suspended = false;
+>> +       if (drmcs->suspended_period_us) {
+>> +               start_scanning(drmcs, drmcs->suspended_period_us);
+>> +               drmcs->suspended_period_us = 0;
+>> +       }
+>> +}
+>> +
+>>   static void drmcs_free(struct cgroup_subsys_state *css)
+>>   {
+>> -       kfree(css_to_drmcs(css));
+>> +       struct drm_cgroup_state *drmcs = css_to_drmcs(css);
+>> +
+>> +       stop_scanning(drmcs);
+>> +
+>> +       kfree(drmcs);
+>> +}
+>> +
+>> +static int drmcs_can_attach(struct cgroup_taskset *tset)
+>> +{
+>> +       struct cgroup_subsys_state *new_css;
+>> +       struct task_struct *task;
+>> +       int ret;
+>> +
+>> +       /*
+>> +        * As processes are getting moved between groups we need to ensure
+>> +        * both that the old group does not see a sudden downward jump in the
+>> +        * GPU utilisation, and that the new group does not see a sudden jump
+>> +        * up with all the GPU time clients belonging to the migrated process
+>> +        * have accumulated.
+>> +        *
+>> +        * To achieve that we suspend the scanner until the migration is
+>> +        * completed where the resume at the end ensures both groups start
+>> +        * observing GPU utilisation from a reset state.
+>> +        */
+>> +
+>> +       ret = mutex_lock_interruptible(&drmcg_mutex);
+>> +       if (ret)
+>> +               return ret;
+>> +
+>> +       cgroup_taskset_for_each(task, new_css, tset) {
+>> +               start_suspend_scanning(css_to_drmcs(task_css(task,
+>> +                                                            drm_cgrp_id)));
+>> +               start_suspend_scanning(css_to_drmcs(new_css));
+>> +       }
+>> +
+>> +       mutex_unlock(&drmcg_mutex);
+>> +
+>> +       cgroup_taskset_for_each(task, new_css, tset) {
+>> +               finish_suspend_scanning(css_to_drmcs(task_css(task,
+>> +                                                             drm_cgrp_id)));
+>> +               finish_suspend_scanning(css_to_drmcs(new_css));
+>> +       }
+>> +
+>> +       return 0;
+>> +}
+>> +
+>> +static void tset_resume_scanning(struct cgroup_taskset *tset)
+>> +{
+>> +       struct cgroup_subsys_state *new_css;
+>> +       struct task_struct *task;
+>> +
+>> +       mutex_lock(&drmcg_mutex);
+>> +       cgroup_taskset_for_each(task, new_css, tset) {
+>> +               resume_scanning(css_to_drmcs(task_css(task, drm_cgrp_id)));
+>> +               resume_scanning(css_to_drmcs(new_css));
+>> +       }
+>> +       mutex_unlock(&drmcg_mutex);
+>>   }
+>>
+>>   static void drmcs_attach(struct cgroup_taskset *tset)
+>> @@ -219,12 +559,86 @@ static void drmcs_attach(struct cgroup_taskset *tset)
+>>          cgroup_taskset_for_each(task, css, tset)
+>>                  drm_pid_update_priority(task_pid(task),
+>>                                          css_to_drmcs(css)->effective_priority);
+>> +
+>> +       tset_resume_scanning(tset);
+>> +}
+>> +
+>> +static void drmcs_cancel_attach(struct cgroup_taskset *tset)
+>> +{
+>> +       tset_resume_scanning(tset);
+>> +}
+>> +
+>> +static u64
+>> +drmcs_read_period_us(struct cgroup_subsys_state *css, struct cftype *cft)
+>> +{
+>> +       struct drm_cgroup_state *drmcs = css_to_drmcs(css);
+>> +
+>> +       return drmcs->period_us;
+>> +}
+>> +
+>> +static int
+>> +drmcs_write_period_us(struct cgroup_subsys_state *css, struct cftype *cftype,
+>> +                     u64 period_us)
+>> +{
+>> +       struct drm_cgroup_state *drmcs = css_to_drmcs(css);
+>> +       int ret;
+>> +
+>> +       if (WARN_ON_ONCE(!css->parent))
+>> +               return -EINVAL;
+>> +       if (css->cgroup->level != 1)
+>> +               return -EINVAL;
+>> +       if ((period_us && period_us < 500000) || period_us > USEC_PER_SEC * 60)
+>> +               return -EINVAL;
+>> +
+>> +       ret = mutex_lock_interruptible(&drmcg_mutex);
+>> +       if (ret)
+>> +               return ret;
+>> +
+>> +       if (!drmcs->scanning_suspended) {
+>> +               if (period_us)
+>> +                       start_scanning(drmcs, period_us);
+>> +               else
+>> +                       stop_scanning(drmcs);
+>> +       } else {
+>> +               /*
+>> +                * If scanning is temporarily suspended just update the period
+>> +                * which will apply once resumed, or simply skip resuming in
+>> +                * case of disabling.
+>> +                */
+>> +               drmcs->suspended_period_us = period_us;
+>> +               if (!period_us)
+>> +                       drmcs->scanning_suspended = false;
+>> +       }
+>> +
+>> +       mutex_unlock(&drmcg_mutex);
+>> +
+>> +       return 0;
+>>   }
+>>
+>>   void drmcgroup_client_exited(struct task_struct *task)
+>>   {
+>>          struct drm_cgroup_state *drmcs = get_task_drmcs(task);
+>>
+>> +       /*
+>> +        * Since we are not tracking accumulated GPU time for each cgroup,
+>> +        * avoid jumps in group observed GPU usage by re-setting the scanner
+>> +        * at a point when GPU usage can suddenly jump down.
+>> +        *
+>> +        * Downside is clients can influence the effectiveness of the over-
+>> +        * budget scanning by continuosly closing DRM file descriptors but for
+> 
+> "continuously"
+
+Thanks, fixed locally.
+
+> 
+> And I think also if a user has permission to create and migrate
+> processes between cgroups even just under the same parent, since
+> css_tryget_online failure would cause an early exit during scanning?
+
+I will need to double check if migration causes online/offline events. I 
+didn't think it does. I know it causes "attach" "family" of events which 
+I hooked into to ensure no sudden jumps in usage during migration. See 
+comment in drmcs_can_attach(). But that is a pretty rare event I think.
+
+Unless you are thinking from the ChromeOS angle and browser 
+foreground/backgroun tabs cgroups? Those are not doing GPU rendering so 
+I did not envisage hooking up the DRM controller there. To start with I 
+only planned to hook it up with the children of the vms cgroup. The 
+model in that branch is not to migrate processes but to change cgroup 
+CPU share based on ::OnWindowActivated hooks.
 
 Regards,
 
 Tvrtko
+
+>> +        * now we do not worry about it.
+>> +        */
+>> +
+>> +       mutex_lock(&drmcg_mutex);
+>> +       start_suspend_scanning(drmcs);
+>> +       mutex_unlock(&drmcg_mutex);
+>> +
+>> +       finish_suspend_scanning(drmcs);
+>> +
+>> +       mutex_lock(&drmcg_mutex);
+>> +       resume_scanning(drmcs);
+>> +       mutex_unlock(&drmcg_mutex);
+>> +
+>>          css_put(&drmcs->css);
+>>   }
+>>   EXPORT_SYMBOL_GPL(drmcgroup_client_exited);
+>> @@ -232,6 +646,7 @@ EXPORT_SYMBOL_GPL(drmcgroup_client_exited);
+>>   static struct drm_cgroup_state root_drmcs = {
+>>          .priority = DRM_CGROUP_PRIORITY_DEF,
+>>          .effective_priority = DRM_CGROUP_PRIORITY_DEF,
+>> +       .weight = CGROUP_WEIGHT_DFL,
+>>   };
+>>
+>>   static struct cgroup_subsys_state *
+>> @@ -247,6 +662,7 @@ drmcs_alloc(struct cgroup_subsys_state *parent_css)
+>>                  return ERR_PTR(-ENOMEM);
+>>
+>>          drmcs->weight = CGROUP_WEIGHT_DFL;
+>> +       INIT_DELAYED_WORK(&drmcs->scan_work, scan_worker);
+>>
+>>          return &drmcs->css;
+>>   }
+>> @@ -274,6 +690,12 @@ struct cftype files[] = {
+>>                  .read_u64 = drmcs_read_weight,
+>>                  .write_u64 = drmcs_write_weight,
+>>          },
+>> +       {
+>> +               .name = "period_us",
+>> +               .flags = CFTYPE_NOT_ON_ROOT,
+>> +               .read_u64 = drmcs_read_period_us,
+>> +               .write_u64 = drmcs_write_period_us,
+>> +       },
+>>          { } /* Zero entry terminates. */
+>>   };
+>>
+>> @@ -281,7 +703,9 @@ struct cgroup_subsys drm_cgrp_subsys = {
+>>          .css_alloc      = drmcs_alloc,
+>>          .css_free       = drmcs_free,
+>>          .css_online     = drmcs_online,
+>> +       .can_attach     = drmcs_can_attach,
+>>          .attach         = drmcs_attach,
+>> +       .cancel_attach  = drmcs_cancel_attach,
+>>          .early_init     = false,
+>>          .legacy_cftypes = files,
+>>          .dfl_cftypes    = files,
+>> --
+>> 2.34.1
+>>
