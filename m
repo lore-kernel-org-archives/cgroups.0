@@ -1,149 +1,112 @@
-From: Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH] mm/vmscan: respect cpuset policy during page demotion
-Date: Thu, 27 Oct 2022 10:55:58 -0700
-Message-ID: <CAHbLzkqvh3ry=FjQGuG--As2yYF2NU+bfvORqk1FyfE_vvTwXw@mail.gmail.com>
-References: <20221026074343.6517-1-feng.tang@intel.com> <dc453287-015d-fd1c-fe7f-6ee45772d6aa@linux.ibm.com>
- <Y1jpDfwBQId3GkJC@feng-clx> <Y1j7tsj5M0Md/+Er@dhcp22.suse.cz>
- <Y1kl8VbPE0RYdyEB@feng-clx> <Y1lZV6qHp3gIINGc@dhcp22.suse.cz>
- <CAHbLzkppDPm87dx9-a7t3oP9DuZ0xCPC1UWr+E-s+vh12Gwb+w@mail.gmail.com> <Y1ovOeEPXT1fxCuc@feng-clx>
+Date: Fri, 28 Oct 2022 07:22:27 +0800
+Message-ID: <87bkpwkg24.fsf@yhuang6-desk2.ccr.corp.intel.com>
+References: <dc453287-015d-fd1c-fe7f-6ee45772d6aa@linux.ibm.com>
+        <Y1jpDfwBQId3GkJC@feng-clx> <Y1j7tsj5M0Md/+Er@dhcp22.suse.cz>
+        <Y1kl8VbPE0RYdyEB@feng-clx> <Y1lZV6qHp3gIINGc@dhcp22.suse.cz>
+        <87wn8lkbk5.fsf@yhuang6-desk2.ccr.corp.intel.com>
+        <Y1ou5DGHrEsKnhri@dhcp22.suse.cz>
+        <87o7txk963.fsf@yhuang6-desk2.ccr.corp.intel.com>
+        <Y1o63SWD2KmQkT3v@dhcp22.suse.cz>
+        <87fsf9k3yg.fsf@yhuang6-desk2.ccr.corp.intel.com>
+        <Y1p5vaN1AWhpNWZx@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=DVm7aZyW+CMTvKks/nWdW9cjk0WMN5RRwT6XBFo/Bbo=;
-        b=Lmp4haqg62jSPTMVt7d9MCXs1c3j00lCPvPsOAQ0titb+ed50HcvOAkE9yGqxXBma2
-         /PQwVTsY5PgvWduYymQNuevWh4oY4ChC5HgWNN/DCqwIXUKQGjwsssKZB51RWk23wL0I
-         ZQQn8ioan8+qzhWAlXSgA6b2aIY8QojkPatmgycaIPtPnHrC2ZMrBdvIImAnZJ3pKqqK
-         NeCARE3Iu5bRQECnvZeyiiiMCWhJKDpiSkcn5IXwu8BBIDft5PL3/PmAHw1EztNgnLhr
-         MfF9a+6Pz0EbQaIqDA0OgKGakzm6x+txZImxw8ylJiWWVjTfSi2+MhPykY01zKmGxLK5
-         vJOg==
-In-Reply-To: <Y1ovOeEPXT1fxCuc@feng-clx>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1666912996; x=1698448996;
+  h=from:to:cc:subject:references:date:in-reply-to:
+   message-id:mime-version;
+  bh=qctRSNSWHaYKZhhzWADPStHUQ6ZRSzyF7S51wP2f2Yw=;
+  b=FxoZ08b6wdLmyocQYaFuKieP0dbrFofime6cfFZ8rOOWqb285fDo9NU3
+   /IMQZJqotWMEkCu7ubaDHJ+8Z+KwxZ8JspjFU3aOJG5XyqlI7/PThbmjZ
+   CbZkRWD+Jxt9IYS2yZHbbJuPpthaPAE2rYnSTlZvLLjx+hfhrZkrgSluy
+   LKW53Giipd0HE9oirJCETDWmm7b+0Lo+8CdGbCj0dmekTcEmqFHrBya/S
+   k0U+TNfDok5T+kOyNWielUFrcaBHu57CVyAq9VdvRmAT1avXDV2NJkTuU
+   zJEuQ3g5VcsvWaN8DQATqA9FR9qZdMuNGk6ctAuRg0SdZj+djf5eHPbmp
+   Q==;
+In-Reply-To: <Y1p5vaN1AWhpNWZx-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org> (Michal Hocko's message of
+        "Thu, 27 Oct 2022 14:29:49 +0200")
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: "Hocko, Michal" <mhocko-IBi9RG/b67k@public.gmane.org>, Aneesh Kumar K V <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Hansen, Dave" <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Yin, Fengwei" <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Aneesh Kumar K V <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Hansen, Dave" <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Yin, Fengwei" <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Thu, Oct 27, 2022 at 12:12 AM Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> wrote:
+Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
+
+> On Thu 27-10-22 17:31:35, Huang, Ying wrote:
+>> Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
+>> 
+>> > On Thu 27-10-22 15:39:00, Huang, Ying wrote:
+>> >> Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
+>> >> 
+>> >> > On Thu 27-10-22 14:47:22, Huang, Ying wrote:
+>> >> >> Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
+>> >> > [...]
+>> >> >> > I can imagine workloads which wouldn't like to get their memory demoted
+>> >> >> > for some reason but wouldn't it be more practical to tell that
+>> >> >> > explicitly (e.g. via prctl) rather than configuring cpusets/memory
+>> >> >> > policies explicitly?
+>> >> >> 
+>> >> >> If my understanding were correct, prctl() configures the process or
+>> >> >> thread.
+>> >> >
+>> >> > Not necessarily. There are properties which are per adddress space like
+>> >> > PR_[GS]ET_THP_DISABLE. This could be very similar.
+>> >> >
+>> >> >> How can we get process/thread configuration at demotion time?
+>> >> >
+>> >> > As already pointed out in previous emails. You could hook into
+>> >> > folio_check_references path, more specifically folio_referenced_one
+>> >> > where you have all that you need already - all vmas mapping the page and
+>> >> > then it is trivial to get the corresponding vm_mm. If at least one of
+>> >> > them has the flag set then the demotion is not allowed (essentially the
+>> >> > same model as VM_LOCKED).
+>> >> 
+>> >> Got it!  Thanks for detailed explanation.
+>> >> 
+>> >> One bit may be not sufficient.  For example, if we want to avoid or
+>> >> control cross-socket demotion and still allow demoting to slow memory
+>> >> nodes in local socket, we need to specify a node mask to exclude some
+>> >> NUMA nodes from demotion targets.
+>> >
+>> > Isn't this something to be configured on the demotion topology side? Or
+>> > do you expect there will be per process/address space usecases? I mean
+>> > different processes running on the same topology, one requesting local
+>> > demotion while other ok with the whole demotion topology?
+>> 
+>> I think that it's possible for different processes have different
+>> requirements.
+>> 
+>> - Some processes don't care about where the memory is placed, prefer
+>>   local, then fall back to remote if no free space.
+>> 
+>> - Some processes want to avoid cross-socket traffic, bind to nodes of
+>>   local socket.
+>> 
+>> - Some processes want to avoid to use slow memory, bind to fast memory
+>>   node only.
 >
-> On Thu, Oct 27, 2022 at 01:57:52AM +0800, Yang Shi wrote:
-> > On Wed, Oct 26, 2022 at 8:59 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> Yes, I do understand that. Do you have any specific examples in mind?
 > [...]
-> > > > > This all can get quite expensive so the primary question is, does the
-> > > > > existing behavior generates any real issues or is this more of an
-> > > > > correctness exercise? I mean it certainly is not great to demote to an
-> > > > > incompatible numa node but are there any reasonable configurations when
-> > > > > the demotion target node is explicitly excluded from memory
-> > > > > policy/cpuset?
-> > > >
-> > > > We haven't got customer report on this, but there are quite some customers
-> > > > use cpuset to bind some specific memory nodes to a docker (You've helped
-> > > > us solve a OOM issue in such cases), so I think it's practical to respect
-> > > > the cpuset semantics as much as we can.
-> > >
-> > > Yes, it is definitely better to respect cpusets and all local memory
-> > > policies. There is no dispute there. The thing is whether this is really
-> > > worth it. How often would cpusets (or policies in general) go actively
-> > > against demotion nodes (i.e. exclude those nodes from their allowes node
-> > > mask)?
-> > >
-> > > I can imagine workloads which wouldn't like to get their memory demoted
-> > > for some reason but wouldn't it be more practical to tell that
-> > > explicitly (e.g. via prctl) rather than configuring cpusets/memory
-> > > policies explicitly?
-> > >
-> > > > Your concern about the expensive cost makes sense! Some raw ideas are:
-> > > > * if the shrink_folio_list is called by kswapd, the folios come from
-> > > >   the same per-memcg lruvec, so only one check is enough
-> > > > * if not from kswapd, like called form madvise or DAMON code, we can
-> > > >   save a memcg cache, and if the next folio's memcg is same as the
-> > > >   cache, we reuse its result. And due to the locality, the real
-> > > >   check is rarely performed.
-> > >
-> > > memcg is not the expensive part of the thing. You need to get from page
-> > > -> all vmas::vm_policy -> mm -> task::mempolicy
-> >
-> > Yeah, on the same page with Michal. Figuring out mempolicy from page
-> > seems quite expensive and the correctness can't be guranteed since the
-> > mempolicy could be set per-thread and the mm->task depends on
-> > CONFIG_MEMCG so it doesn't work for !CONFIG_MEMCG.
->
-> Yes, you are right. Our "working" psudo code for mem policy looks like
-> what Michal mentioned, and it can't work for all cases, but try to
-> enforce it whenever possible:
->
-> static bool  __check_mpol_demotion(struct folio *folio, struct vm_area_struct *vma,
->                 unsigned long addr, void *arg)
-> {
->         bool *skip_demotion = arg;
->         struct mempolicy *mpol;
->         int nid, dnid;
->         bool ret = true;
->
->         mpol = __get_vma_policy(vma, addr);
->         if (!mpol) {
->                 struct task_struct *task;
->                 if (vma->vm_mm)
->                         task = vma->vm_mm->owner;
 
-But this task may not be the task you want IIUC. For example, the
-process has two threads, A and B. They have different mempolicy. The
-vmscan is trying to demote a page belonging to thread A, but the task
-may point to thread B, so you actually get the wrong mempolicy IIUC.
+Sorry, I don't have specific examples.
 
+>> > If we really need/want to give a fine grained control over demotion
+>> > nodemask then we would have to go with vma->mempolicy interface. In
+>> > any case a per process on/off knob sounds like a reasonable first step
+>> > before we learn more about real usecases.
+>> 
+>> Yes.  Per-mm or per-vma property is much better than per-task property.
+>> Another possibility, how about add a new flag to set_mempolicy() system
+>> call to set the per-mm mempolicy?  `numactl` can use that by default.
 >
->                 if (task) {
->                         mpol = get_task_policy(task);
->                         if (mpol)
->                                 mpol_get(mpol);
->                 }
->         }
->
->         if (!mpol)
->                 return ret;
->
->         if (mpol->mode != MPOL_BIND)
->                 goto put_exit;
->
->         nid = folio_nid(folio);
->         dnid = next_demotion_node(nid);
->         if (!node_isset(dnid, mpol->nodes)) {
->                 *skip_demotion = true;
->                 ret = false;
->         }
->
-> put_exit:
->         mpol_put(mpol);
->         return ret;
-> }
->
-> static unsigned int shrink_page_list(struct list_head *page_list,..)
-> {
->         ...
->
->         bool skip_demotion = false;
->         struct rmap_walk_control rwc = {
->                 .arg = &skip_demotion,
->                 .rmap_one = __check_mpol_demotion,
->         };
->
->         /* memory policy check */
->         rmap_walk(folio, &rwc);
->         if (skip_demotion)
->                 goto keep_locked;
-> }
->
-> And there seems to be no simple solution for getting the memory
-> policy from a page.
->
-> Thanks,
-> Feng
->
-> > >
-> > > --
-> > > Michal Hocko
-> > > SUSE Labs
-> > >
-> >
+> Do you mean a flag to control whether the given policy is applied to a
+> task or mm?
+
+Yes.  That is the idea.
+
+Best Regards,
+Huang, Ying
