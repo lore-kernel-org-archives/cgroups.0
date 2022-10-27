@@ -1,154 +1,149 @@
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [RFC][PATCH v2 04/31] timers: block: Use del_timer_shutdown()
- before freeing timer
-Date: Thu, 27 Oct 2022 11:19:44 -0400
-Message-ID: <20221027111944.39b3a80c@gandalf.local.home>
-References: <20221027150525.753064657@goodmis.org>
-        <20221027150925.819019339@goodmis.org>
+From: Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] mm/vmscan: respect cpuset policy during page demotion
+Date: Thu, 27 Oct 2022 10:55:58 -0700
+Message-ID: <CAHbLzkqvh3ry=FjQGuG--As2yYF2NU+bfvORqk1FyfE_vvTwXw@mail.gmail.com>
+References: <20221026074343.6517-1-feng.tang@intel.com> <dc453287-015d-fd1c-fe7f-6ee45772d6aa@linux.ibm.com>
+ <Y1jpDfwBQId3GkJC@feng-clx> <Y1j7tsj5M0Md/+Er@dhcp22.suse.cz>
+ <Y1kl8VbPE0RYdyEB@feng-clx> <Y1lZV6qHp3gIINGc@dhcp22.suse.cz>
+ <CAHbLzkppDPm87dx9-a7t3oP9DuZ0xCPC1UWr+E-s+vh12Gwb+w@mail.gmail.com> <Y1ovOeEPXT1fxCuc@feng-clx>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20221027150925.819019339@goodmis.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=DVm7aZyW+CMTvKks/nWdW9cjk0WMN5RRwT6XBFo/Bbo=;
+        b=Lmp4haqg62jSPTMVt7d9MCXs1c3j00lCPvPsOAQ0titb+ed50HcvOAkE9yGqxXBma2
+         /PQwVTsY5PgvWduYymQNuevWh4oY4ChC5HgWNN/DCqwIXUKQGjwsssKZB51RWk23wL0I
+         ZQQn8ioan8+qzhWAlXSgA6b2aIY8QojkPatmgycaIPtPnHrC2ZMrBdvIImAnZJ3pKqqK
+         NeCARE3Iu5bRQECnvZeyiiiMCWhJKDpiSkcn5IXwu8BBIDft5PL3/PmAHw1EztNgnLhr
+         MfF9a+6Pz0EbQaIqDA0OgKGakzm6x+txZImxw8ylJiWWVjTfSi2+MhPykY01zKmGxLK5
+         vJOg==
+In-Reply-To: <Y1ovOeEPXT1fxCuc@feng-clx>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: linux-kernel@vger.kernel.org
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, Stephen Boyd <sboyd@kernel.org>, Guenter Roeck <linux@roeck-us.net>, Philipp Reisner <philipp.reisner@linbit.com>, Lars Ellenberg <lars.ellenberg@linbit.com>, Christoph =?UTF-8?B?QsO2aG13YWxk?= =?UTF-8?B?ZXI=?= <christoph.boehmwalder@linbit.com>, Jens Axboe <axboe@kernel.dk>, drbd-dev@lists.linbit.com, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: "Hocko, Michal" <mhocko-IBi9RG/b67k@public.gmane.org>, Aneesh Kumar K V <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Hansen, Dave" <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Yin, Fengwei" <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-[
-  quilt mail --send still can't handle unicode characters.
-    Here's the patch again
-]
+On Thu, Oct 27, 2022 at 12:12 AM Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> wrote:
+>
+> On Thu, Oct 27, 2022 at 01:57:52AM +0800, Yang Shi wrote:
+> > On Wed, Oct 26, 2022 at 8:59 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> [...]
+> > > > > This all can get quite expensive so the primary question is, does the
+> > > > > existing behavior generates any real issues or is this more of an
+> > > > > correctness exercise? I mean it certainly is not great to demote to an
+> > > > > incompatible numa node but are there any reasonable configurations when
+> > > > > the demotion target node is explicitly excluded from memory
+> > > > > policy/cpuset?
+> > > >
+> > > > We haven't got customer report on this, but there are quite some customers
+> > > > use cpuset to bind some specific memory nodes to a docker (You've helped
+> > > > us solve a OOM issue in such cases), so I think it's practical to respect
+> > > > the cpuset semantics as much as we can.
+> > >
+> > > Yes, it is definitely better to respect cpusets and all local memory
+> > > policies. There is no dispute there. The thing is whether this is really
+> > > worth it. How often would cpusets (or policies in general) go actively
+> > > against demotion nodes (i.e. exclude those nodes from their allowes node
+> > > mask)?
+> > >
+> > > I can imagine workloads which wouldn't like to get their memory demoted
+> > > for some reason but wouldn't it be more practical to tell that
+> > > explicitly (e.g. via prctl) rather than configuring cpusets/memory
+> > > policies explicitly?
+> > >
+> > > > Your concern about the expensive cost makes sense! Some raw ideas are:
+> > > > * if the shrink_folio_list is called by kswapd, the folios come from
+> > > >   the same per-memcg lruvec, so only one check is enough
+> > > > * if not from kswapd, like called form madvise or DAMON code, we can
+> > > >   save a memcg cache, and if the next folio's memcg is same as the
+> > > >   cache, we reuse its result. And due to the locality, the real
+> > > >   check is rarely performed.
+> > >
+> > > memcg is not the expensive part of the thing. You need to get from page
+> > > -> all vmas::vm_policy -> mm -> task::mempolicy
+> >
+> > Yeah, on the same page with Michal. Figuring out mempolicy from page
+> > seems quite expensive and the correctness can't be guranteed since the
+> > mempolicy could be set per-thread and the mm->task depends on
+> > CONFIG_MEMCG so it doesn't work for !CONFIG_MEMCG.
+>
+> Yes, you are right. Our "working" psudo code for mem policy looks like
+> what Michal mentioned, and it can't work for all cases, but try to
+> enforce it whenever possible:
+>
+> static bool  __check_mpol_demotion(struct folio *folio, struct vm_area_struct *vma,
+>                 unsigned long addr, void *arg)
+> {
+>         bool *skip_demotion = arg;
+>         struct mempolicy *mpol;
+>         int nid, dnid;
+>         bool ret = true;
+>
+>         mpol = __get_vma_policy(vma, addr);
+>         if (!mpol) {
+>                 struct task_struct *task;
+>                 if (vma->vm_mm)
+>                         task = vma->vm_mm->owner;
 
-From: "Steven Rostedt (Google)" <rostedt@goodmis.org>
+But this task may not be the task you want IIUC. For example, the
+process has two threads, A and B. They have different mempolicy. The
+vmscan is trying to demote a page belonging to thread A, but the task
+may point to thread B, so you actually get the wrong mempolicy IIUC.
 
-Before a timer is freed, del_timer_shutdown() must be called.
-
-Link: https://lore.kernel.org/all/20220407161745.7d6754b3@gandalf.local.hom=
-e/
-
-Cc: Philipp Reisner <philipp.reisner@linbit.com>
-Cc: Lars Ellenberg <lars.ellenberg@linbit.com>
-Cc: "Christoph B=C3=B6hmwalder" <christoph.boehmwalder@linbit.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: drbd-dev@lists.linbit.com
-Cc: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Cc: linux-block@vger.kernel.org
-Signed-off-by: Steven Rostedt (Google) <rostedt@goodmis.org>
----
- block/blk-iocost.c             | 2 +-
- block/blk-iolatency.c          | 2 +-
- block/blk-stat.c               | 2 +-
- block/blk-throttle.c           | 2 +-
- block/kyber-iosched.c          | 2 +-
- drivers/block/drbd/drbd_main.c | 2 +-
- drivers/block/loop.c           | 2 +-
- drivers/block/sunvdc.c         | 2 +-
- 8 files changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 495396425bad..e2d4bdd3d135 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -2814,7 +2814,7 @@ static void ioc_rqos_exit(struct rq_qos *rqos)
- 	ioc->running =3D IOC_STOP;
- 	spin_unlock_irq(&ioc->lock);
-=20
--	del_timer_sync(&ioc->timer);
-+	del_timer_shutdown(&ioc->timer);
- 	free_percpu(ioc->pcpu_stat);
- 	kfree(ioc);
- }
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index 571fa95aafe9..7b61f09afedd 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -645,7 +645,7 @@ static void blkcg_iolatency_exit(struct rq_qos *rqos)
- {
- 	struct blk_iolatency *blkiolat =3D BLKIOLATENCY(rqos);
-=20
--	del_timer_sync(&blkiolat->timer);
-+	del_timer_shutdown(&blkiolat->timer);
- 	flush_work(&blkiolat->enable_work);
- 	blkcg_deactivate_policy(rqos->q, &blkcg_policy_iolatency);
- 	kfree(blkiolat);
-diff --git a/block/blk-stat.c b/block/blk-stat.c
-index 2ea01b5c1aca..de51db302c44 100644
---- a/block/blk-stat.c
-+++ b/block/blk-stat.c
-@@ -165,7 +165,7 @@ void blk_stat_remove_callback(struct request_queue *q,
- 		blk_queue_flag_clear(QUEUE_FLAG_STATS, q);
- 	spin_unlock_irqrestore(&q->stats->lock, flags);
-=20
--	del_timer_sync(&cb->timer);
-+	del_timer_shutdown(&cb->timer);
- }
-=20
- static void blk_stat_free_callback_rcu(struct rcu_head *head)
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 847721dc2b2b..95af99f24137 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -490,7 +490,7 @@ static void throtl_pd_free(struct blkg_policy_data *pd)
- {
- 	struct throtl_grp *tg =3D pd_to_tg(pd);
-=20
--	del_timer_sync(&tg->service_queue.pending_timer);
-+	del_timer_shutdown(&tg->service_queue.pending_timer);
- 	blkg_rwstat_exit(&tg->stat_bytes);
- 	blkg_rwstat_exit(&tg->stat_ios);
- 	kfree(tg);
-diff --git a/block/kyber-iosched.c b/block/kyber-iosched.c
-index b05357bced99..59a444a47ba3 100644
---- a/block/kyber-iosched.c
-+++ b/block/kyber-iosched.c
-@@ -434,7 +434,7 @@ static void kyber_exit_sched(struct elevator_queue *e)
- 	struct kyber_queue_data *kqd =3D e->elevator_data;
- 	int i;
-=20
--	del_timer_sync(&kqd->timer);
-+	del_timer_shutdown(&kqd->timer);
- 	blk_stat_disable_accounting(kqd->q);
-=20
- 	for (i =3D 0; i < KYBER_NUM_DOMAINS; i++)
-diff --git a/drivers/block/drbd/drbd_main.c b/drivers/block/drbd/drbd_main.c
-index f3e4db16fd07..3f574f3769c3 100644
---- a/drivers/block/drbd/drbd_main.c
-+++ b/drivers/block/drbd/drbd_main.c
-@@ -2184,7 +2184,7 @@ void drbd_destroy_device(struct kref *kref)
- 	struct drbd_resource *resource =3D device->resource;
- 	struct drbd_peer_device *peer_device, *tmp_peer_device;
-=20
--	del_timer_sync(&device->request_timer);
-+	del_timer_shutdown(&device->request_timer);
-=20
- 	/* paranoia asserts */
- 	D_ASSERT(device, device->open_cnt =3D=3D 0);
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index ad92192c7d61..d134a5fd4ae7 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -1755,7 +1755,7 @@ static void lo_free_disk(struct gendisk *disk)
- 	if (lo->workqueue)
- 		destroy_workqueue(lo->workqueue);
- 	loop_free_idle_workers(lo, true);
--	del_timer_sync(&lo->timer);
-+	del_timer_shutdown(&lo->timer);
- 	mutex_destroy(&lo->lo_mutex);
- 	kfree(lo);
- }
-diff --git a/drivers/block/sunvdc.c b/drivers/block/sunvdc.c
-index fb855da971ee..9868937a9602 100644
---- a/drivers/block/sunvdc.c
-+++ b/drivers/block/sunvdc.c
-@@ -1067,7 +1067,7 @@ static void vdc_port_remove(struct vio_dev *vdev)
-=20
- 		flush_work(&port->ldc_reset_work);
- 		cancel_delayed_work_sync(&port->ldc_reset_timer_work);
--		del_timer_sync(&port->vio.timer);
-+		del_timer_shutdown(&port->vio.timer);
-=20
- 		del_gendisk(port->disk);
- 		put_disk(port->disk);
---=20
-2.35.1
+>
+>                 if (task) {
+>                         mpol = get_task_policy(task);
+>                         if (mpol)
+>                                 mpol_get(mpol);
+>                 }
+>         }
+>
+>         if (!mpol)
+>                 return ret;
+>
+>         if (mpol->mode != MPOL_BIND)
+>                 goto put_exit;
+>
+>         nid = folio_nid(folio);
+>         dnid = next_demotion_node(nid);
+>         if (!node_isset(dnid, mpol->nodes)) {
+>                 *skip_demotion = true;
+>                 ret = false;
+>         }
+>
+> put_exit:
+>         mpol_put(mpol);
+>         return ret;
+> }
+>
+> static unsigned int shrink_page_list(struct list_head *page_list,..)
+> {
+>         ...
+>
+>         bool skip_demotion = false;
+>         struct rmap_walk_control rwc = {
+>                 .arg = &skip_demotion,
+>                 .rmap_one = __check_mpol_demotion,
+>         };
+>
+>         /* memory policy check */
+>         rmap_walk(folio, &rwc);
+>         if (skip_demotion)
+>                 goto keep_locked;
+> }
+>
+> And there seems to be no simple solution for getting the memory
+> policy from a page.
+>
+> Thanks,
+> Feng
+>
+> > >
+> > > --
+> > > Michal Hocko
+> > > SUSE Labs
+> > >
+> >
