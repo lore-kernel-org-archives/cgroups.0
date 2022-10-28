@@ -1,121 +1,122 @@
 From: Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH] mm/vmscan: respect cpuset policy during page demotion
-Date: Fri, 28 Oct 2022 10:16:50 -0700
-Message-ID: <CAHbLzkrqaCF8wvtsAmvaZUqCAoRfO1qPSFyK7bVq5O5m1zuksg@mail.gmail.com>
+Date: Fri, 28 Oct 2022 10:23:53 -0700
+Message-ID: <CAHbLzkpO46yTiSVrKWRnABNW_PutuudEkB3RD-_YKxamW9SyaA@mail.gmail.com>
 References: <20221026074343.6517-1-feng.tang@intel.com> <dc453287-015d-fd1c-fe7f-6ee45772d6aa@linux.ibm.com>
  <Y1jpDfwBQId3GkJC@feng-clx> <Y1j7tsj5M0Md/+Er@dhcp22.suse.cz>
  <Y1kl8VbPE0RYdyEB@feng-clx> <Y1lZV6qHp3gIINGc@dhcp22.suse.cz>
  <CAHbLzkppDPm87dx9-a7t3oP9DuZ0xCPC1UWr+E-s+vh12Gwb+w@mail.gmail.com>
  <Y1ovOeEPXT1fxCuc@feng-clx> <CAHbLzkqvh3ry=FjQGuG--As2yYF2NU+bfvORqk1FyfE_vvTwXw@mail.gmail.com>
- <7b5f533d-4b2e-b45b-ee42-5e1cc3e8a279@linux.ibm.com>
+ <Y1tOigFZeDzjPGsv@feng-clx> <87y1t0ijbk.fsf@yhuang6-desk2.ccr.corp.intel.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=p/iFIiIQ4V/YG7z76viQuYS3yb9ejhlzHXVIf3GCB3g=;
-        b=A8GT3O8vI9X19QgBEVf5E/OPc4lfK8HPm3Ew/a9eW0pnni7NeBYGN/DULPE7VIYPgU
-         8COLbv4fiUgLlvbWvkSLCRHfDiV77xFtFIjjifwEPx46vRJV0xJswjtD8h7GKbi3Rlx2
-         BFjQaN2GQWxaNjQBQQxy7HS9p4eX45eM1mZUv2Wy7bCXKErkuorc5epRjiYVPAPkzjSq
-         4jhaUF3y/T8IMdnGR4KqXvRXXIaj9KGe/eUaHTqBz4cmektDnj3a7mloDOomkPWPyh3v
-         VqeK15PZdA0RYo82JNHNXe9zPF2nlSflG8XS6+ejLG1NHAcxDWxd5mGjXtMy/2xgo8CY
-         hlZg==
-In-Reply-To: <7b5f533d-4b2e-b45b-ee42-5e1cc3e8a279-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+        bh=uWRk2+cg4JD0YlEG67ex3jOV5izVRgHvNcMy0hsBnco=;
+        b=prHkLIu5cEuWwbChfnUxhVQzBCXk/zyL6eJyK/Wb7otKwjaCrzIq3XW2UK2JzyS4Iw
+         VO4x7PSyBtEh4QkOXnHq/Lchf8ySh5Aup5b999/W+GXjfDiCBa9zKxEzIVLmyrFfkU6b
+         SxLhNhELaKSgqrlGHWUogD+HSabs65jM9+4kHVbrp6ET9tYi2P7z5K1nXsct2AjsxHF3
+         vdNFvKJv3dmyRqhBxeOLIIYaE0Av+7Da2kGBtCNqhGpKN+30L8jrC0x8FkOv2RACZ0s3
+         lp6K36RgYhat5D86/qQ7UbZmmLFIRiHR2RS0D/IBLYMUBqcsEXndnME3dYJ4SMTy+a0i
+         Fh7A==
+In-Reply-To: <87y1t0ijbk.fsf-fFUE1NP8JkzwuUmzmnQr+vooFf0ArEBIu+b9c/7xato@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Aneesh Kumar K V <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-Cc: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Hocko, Michal" <mhocko-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Hansen, Dave" <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Yin, Fengwei" <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Hocko, Michal" <mhocko-IBi9RG/b67k@public.gmane.org>, Aneesh Kumar K V <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Hansen, Dave" <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Yin, Fengwei" <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Thu, Oct 27, 2022 at 10:09 PM Aneesh Kumar K V
-<aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org> wrote:
+On Thu, Oct 27, 2022 at 10:55 PM Huang, Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> wrote:
 >
-> On 10/27/22 11:25 PM, Yang Shi wrote:
-> > On Thu, Oct 27, 2022 at 12:12 AM Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> wrote:
+> Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> writes:
+>
+> > On Thu, Oct 27, 2022 at 10:55:58AM -0700, Yang Shi wrote:
+> >> On Thu, Oct 27, 2022 at 12:12 AM Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> wrote:
+> >> >
+> >> > On Thu, Oct 27, 2022 at 01:57:52AM +0800, Yang Shi wrote:
+> >> > > On Wed, Oct 26, 2022 at 8:59 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> >> > [...]
+> >> > > > > > This all can get quite expensive so the primary question is, does the
+> >> > > > > > existing behavior generates any real issues or is this more of an
+> >> > > > > > correctness exercise? I mean it certainly is not great to demote to an
+> >> > > > > > incompatible numa node but are there any reasonable configurations when
+> >> > > > > > the demotion target node is explicitly excluded from memory
+> >> > > > > > policy/cpuset?
+> >> > > > >
+> >> > > > > We haven't got customer report on this, but there are quite some customers
+> >> > > > > use cpuset to bind some specific memory nodes to a docker (You've helped
+> >> > > > > us solve a OOM issue in such cases), so I think it's practical to respect
+> >> > > > > the cpuset semantics as much as we can.
+> >> > > >
+> >> > > > Yes, it is definitely better to respect cpusets and all local memory
+> >> > > > policies. There is no dispute there. The thing is whether this is really
+> >> > > > worth it. How often would cpusets (or policies in general) go actively
+> >> > > > against demotion nodes (i.e. exclude those nodes from their allowes node
+> >> > > > mask)?
+> >> > > >
+> >> > > > I can imagine workloads which wouldn't like to get their memory demoted
+> >> > > > for some reason but wouldn't it be more practical to tell that
+> >> > > > explicitly (e.g. via prctl) rather than configuring cpusets/memory
+> >> > > > policies explicitly?
+> >> > > >
+> >> > > > > Your concern about the expensive cost makes sense! Some raw ideas are:
+> >> > > > > * if the shrink_folio_list is called by kswapd, the folios come from
+> >> > > > >   the same per-memcg lruvec, so only one check is enough
+> >> > > > > * if not from kswapd, like called form madvise or DAMON code, we can
+> >> > > > >   save a memcg cache, and if the next folio's memcg is same as the
+> >> > > > >   cache, we reuse its result. And due to the locality, the real
+> >> > > > >   check is rarely performed.
+> >> > > >
+> >> > > > memcg is not the expensive part of the thing. You need to get from page
+> >> > > > -> all vmas::vm_policy -> mm -> task::mempolicy
+> >> > >
+> >> > > Yeah, on the same page with Michal. Figuring out mempolicy from page
+> >> > > seems quite expensive and the correctness can't be guranteed since the
+> >> > > mempolicy could be set per-thread and the mm->task depends on
+> >> > > CONFIG_MEMCG so it doesn't work for !CONFIG_MEMCG.
+> >> >
+> >> > Yes, you are right. Our "working" psudo code for mem policy looks like
+> >> > what Michal mentioned, and it can't work for all cases, but try to
+> >> > enforce it whenever possible:
+> >> >
+> >> > static bool  __check_mpol_demotion(struct folio *folio, struct vm_area_struct *vma,
+> >> >                 unsigned long addr, void *arg)
+> >> > {
+> >> >         bool *skip_demotion = arg;
+> >> >         struct mempolicy *mpol;
+> >> >         int nid, dnid;
+> >> >         bool ret = true;
+> >> >
+> >> >         mpol = __get_vma_policy(vma, addr);
+> >> >         if (!mpol) {
+> >> >                 struct task_struct *task;
+> >> >                 if (vma->vm_mm)
+> >> >                         task = vma->vm_mm->owner;
 > >>
-> >> On Thu, Oct 27, 2022 at 01:57:52AM +0800, Yang Shi wrote:
-> >>> On Wed, Oct 26, 2022 at 8:59 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> >> [...]
-> >>>>>> This all can get quite expensive so the primary question is, does the
-> >>>>>> existing behavior generates any real issues or is this more of an
-> >>>>>> correctness exercise? I mean it certainly is not great to demote to an
-> >>>>>> incompatible numa node but are there any reasonable configurations when
-> >>>>>> the demotion target node is explicitly excluded from memory
-> >>>>>> policy/cpuset?
-> >>>>>
-> >>>>> We haven't got customer report on this, but there are quite some customers
-> >>>>> use cpuset to bind some specific memory nodes to a docker (You've helped
-> >>>>> us solve a OOM issue in such cases), so I think it's practical to respect
-> >>>>> the cpuset semantics as much as we can.
-> >>>>
-> >>>> Yes, it is definitely better to respect cpusets and all local memory
-> >>>> policies. There is no dispute there. The thing is whether this is really
-> >>>> worth it. How often would cpusets (or policies in general) go actively
-> >>>> against demotion nodes (i.e. exclude those nodes from their allowes node
-> >>>> mask)?
-> >>>>
-> >>>> I can imagine workloads which wouldn't like to get their memory demoted
-> >>>> for some reason but wouldn't it be more practical to tell that
-> >>>> explicitly (e.g. via prctl) rather than configuring cpusets/memory
-> >>>> policies explicitly?
-> >>>>
-> >>>>> Your concern about the expensive cost makes sense! Some raw ideas are:
-> >>>>> * if the shrink_folio_list is called by kswapd, the folios come from
-> >>>>>   the same per-memcg lruvec, so only one check is enough
-> >>>>> * if not from kswapd, like called form madvise or DAMON code, we can
-> >>>>>   save a memcg cache, and if the next folio's memcg is same as the
-> >>>>>   cache, we reuse its result. And due to the locality, the real
-> >>>>>   check is rarely performed.
-> >>>>
-> >>>> memcg is not the expensive part of the thing. You need to get from page
-> >>>> -> all vmas::vm_policy -> mm -> task::mempolicy
-> >>>
-> >>> Yeah, on the same page with Michal. Figuring out mempolicy from page
-> >>> seems quite expensive and the correctness can't be guranteed since the
-> >>> mempolicy could be set per-thread and the mm->task depends on
-> >>> CONFIG_MEMCG so it doesn't work for !CONFIG_MEMCG.
-> >>
-> >> Yes, you are right. Our "working" psudo code for mem policy looks like
-> >> what Michal mentioned, and it can't work for all cases, but try to
-> >> enforce it whenever possible:
-> >>
-> >> static bool  __check_mpol_demotion(struct folio *folio, struct vm_area_struct *vma,
-> >>                 unsigned long addr, void *arg)
-> >> {
-> >>         bool *skip_demotion = arg;
-> >>         struct mempolicy *mpol;
-> >>         int nid, dnid;
-> >>         bool ret = true;
-> >>
-> >>         mpol = __get_vma_policy(vma, addr);
-> >>         if (!mpol) {
-> >>                 struct task_struct *task;
-> >>                 if (vma->vm_mm)
-> >>                         task = vma->vm_mm->owner;
+> >> But this task may not be the task you want IIUC. For example, the
+> >> process has two threads, A and B. They have different mempolicy. The
+> >> vmscan is trying to demote a page belonging to thread A, but the task
+> >> may point to thread B, so you actually get the wrong mempolicy IIUC.
 > >
-> > But this task may not be the task you want IIUC. For example, the
-> > process has two threads, A and B. They have different mempolicy. The
-> > vmscan is trying to demote a page belonging to thread A, but the task
-> > may point to thread B, so you actually get the wrong mempolicy IIUC.
-> >
+> > Yes, this is a valid concern! We don't have good solution for this.
+> > For memory policy, we may only handle the per-vma policy for now whose
+> > cost is relatively low, as a best-effort try.
 >
-> But if we swap out this page and fault back in via thread B the page would
-> get allocated as per thread B mempolicy. So if we demote based on thread B
-> policy are we breaking anything?
+> Yes.  The solution isn't perfect, especially for multiple-thread
+> processes with thread specific memory policy.  But the proposed code
+> above can support the most common cases at least, that is, run workload
+> with `numactl`.
 
-If the page is demoted by following thread B's mempolicy, didn't it
-already break thread A's mempolicy in the first place if you care
-about it? If thread A and thread B have the same mempolicy, then it is
-not a problem.
+Not only multi threads, but also may be broken for shared pages. When
+you do rmap walk, you may get multiple contradict mempolicy, which one
+would you like to obey?
 
-Actually there is another problem for shared page. If a page is shared
-by two processes, P1 and P2, when you do rmap walk to find the task,
-you may find two contradict mempolicy, what mempolicy would you like
-to obey? Do you have to save all the intermediate mempolicy results
-somewhere or you just bail out once the first mempolicy is found?
+TBH I'm not sure whether such half-baked solution is worth it or not,
+at least at this moment. The cost is not cheap, but the gain may not
+be worth it IMHO.
 
 >
-> -aneesh
->
->
+> Best Regards,
+> Huang, Ying
