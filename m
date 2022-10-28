@@ -1,12 +1,26 @@
-From: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-Subject: [RFC][PATCH v2 04/31] timers: block: Use
-	del_timer_shutdown() before freeing timer
-Date: Thu, 27 Oct 2022 11:05:29 -0400
-Message-ID: <20221027150925.819019339@goodmis.org>
+From: Guenter Roeck <linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org>
+Subject: Re: [RFC][PATCH v2 04/31] timers: block: Use
+ del_timer_shutdown() before freeing timer
+Date: Fri, 28 Oct 2022 08:11:50 -0700
+Message-ID: <6f04aec5-bbff-6154-a0b1-8ad0aec97ec5@roeck-us.net>
 References: <20221027150525.753064657@goodmis.org>
+	<20221027150925.819019339@goodmis.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20210112;
+	h=content-transfer-encoding:in-reply-to:from:references:cc:to
+	:content-language:subject:user-agent:mime-version:date:message-id
+	:sender:from:to:cc:subject:date:message-id:reply-to;
+	bh=cu5lq0+6QCF+BQfiaiaRxPUIRB+CVrNKwv+C5DY2DeE=;
+	b=jrBrEVx/TWlLwC/EybmMjgT1gIVbiJljUHbETA5hqF92YxNbERFPM8SLV8vK+xyqHj
+	9jS6lbrYopAtUqlTWoxmEhrkvVuOVnKHs18xrfkN3sQdJWGdEM8ayfOV6/rcHN9MyDGS
+	idiwJN9NfCM2e8NN2NyJ75qSfH6Jw5L/noLRcBMacXiiXUYWcEoONMWesL4OC1T+SBSX
+	zRJEmoAlv5F1PTO0uNPS0M5lwoafv7bkttb/uiMKOTZ5pxkfWBm0uH+r/cEtQLtmdLZy
+	0aGvxyZT6rXQbiuz2oOdZEl+0+YjZU9rPHTO3PCCSEnn0aiYzAOnagzZG5lkxCKy6xOI
+	2NeA==
+Content-Language: en-US
+In-Reply-To: <20221027150925.819019339-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linbit.com/mailman/options/drbd-dev>,
 	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
@@ -17,90 +31,48 @@ List-Subscribe: <https://lists.linbit.com/mailman/listinfo/drbd-dev>,
 	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
 Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Content-Type: text/plain; charset="iso-8859-1"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Stephen Boyd <sboyd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Philipp Reisner <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Lars Ellenberg <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, Guenter Roeck <linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org>, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Stephen Boyd <sboyd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Philipp Reisner <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Lars Ellenberg <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 
-RnJvbTogIlN0ZXZlbiBSb3N0ZWR0IChHb29nbGUpIiA8cm9zdGVkdEBnb29kbWlzLm9yZz4KCkJl
-Zm9yZSBhIHRpbWVyIGlzIGZyZWVkLCBkZWxfdGltZXJfc2h1dGRvd24oKSBtdXN0IGJlIGNhbGxl
-ZC4KCkxpbms6IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2FsbC8yMDIyMDQwNzE2MTc0NS43ZDY3
-NTRiM0BnYW5kYWxmLmxvY2FsLmhvbWUvCgpDYzogUGhpbGlwcCBSZWlzbmVyIDxwaGlsaXBwLnJl
-aXNuZXJAbGluYml0LmNvbT4KQ2M6IExhcnMgRWxsZW5iZXJnIDxsYXJzLmVsbGVuYmVyZ0BsaW5i
-aXQuY29tPgpDYzogIkNocmlzdG9waCBCw7ZobXdhbGRlciIgPGNocmlzdG9waC5ib2VobXdhbGRl
-ckBsaW5iaXQuY29tPgpDYzogSmVucyBBeGJvZSA8YXhib2VAa2VybmVsLmRrPgpDYzogZHJiZC1k
-ZXZAbGlzdHMubGluYml0LmNvbQpDYzogVGVqdW4gSGVvIDx0akBrZXJuZWwub3JnPgpDYzogY2dy
-b3Vwc0B2Z2VyLmtlcm5lbC5vcmcKQ2M6IGxpbnV4LWJsb2NrQHZnZXIua2VybmVsLm9yZwpTaWdu
-ZWQtb2ZmLWJ5OiBTdGV2ZW4gUm9zdGVkdCAoR29vZ2xlKSA8cm9zdGVkdEBnb29kbWlzLm9yZz4K
-LS0tCiBibG9jay9ibGstaW9jb3N0LmMgICAgICAgICAgICAgfCAyICstCiBibG9jay9ibGstaW9s
-YXRlbmN5LmMgICAgICAgICAgfCAyICstCiBibG9jay9ibGstc3RhdC5jICAgICAgICAgICAgICAg
-fCAyICstCiBibG9jay9ibGstdGhyb3R0bGUuYyAgICAgICAgICAgfCAyICstCiBibG9jay9reWJl
-ci1pb3NjaGVkLmMgICAgICAgICAgfCAyICstCiBkcml2ZXJzL2Jsb2NrL2RyYmQvZHJiZF9tYWlu
-LmMgfCAyICstCiBkcml2ZXJzL2Jsb2NrL2xvb3AuYyAgICAgICAgICAgfCAyICstCiBkcml2ZXJz
-L2Jsb2NrL3N1bnZkYy5jICAgICAgICAgfCAyICstCiA4IGZpbGVzIGNoYW5nZWQsIDggaW5zZXJ0
-aW9ucygrKSwgOCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9ibG9jay9ibGstaW9jb3N0LmMg
-Yi9ibG9jay9ibGstaW9jb3N0LmMKaW5kZXggNDk1Mzk2NDI1YmFkLi5lMmQ0YmRkM2QxMzUgMTAw
-NjQ0Ci0tLSBhL2Jsb2NrL2Jsay1pb2Nvc3QuYworKysgYi9ibG9jay9ibGstaW9jb3N0LmMKQEAg
-LTI4MTQsNyArMjgxNCw3IEBAIHN0YXRpYyB2b2lkIGlvY19ycW9zX2V4aXQoc3RydWN0IHJxX3Fv
-cyAqcnFvcykKIAlpb2MtPnJ1bm5pbmcgPSBJT0NfU1RPUDsKIAlzcGluX3VubG9ja19pcnEoJmlv
-Yy0+bG9jayk7CiAKLQlkZWxfdGltZXJfc3luYygmaW9jLT50aW1lcik7CisJZGVsX3RpbWVyX3No
-dXRkb3duKCZpb2MtPnRpbWVyKTsKIAlmcmVlX3BlcmNwdShpb2MtPnBjcHVfc3RhdCk7CiAJa2Zy
-ZWUoaW9jKTsKIH0KZGlmZiAtLWdpdCBhL2Jsb2NrL2Jsay1pb2xhdGVuY3kuYyBiL2Jsb2NrL2Js
-ay1pb2xhdGVuY3kuYwppbmRleCA1NzFmYTk1YWFmZTkuLjdiNjFmMDlhZmVkZCAxMDA2NDQKLS0t
-IGEvYmxvY2svYmxrLWlvbGF0ZW5jeS5jCisrKyBiL2Jsb2NrL2Jsay1pb2xhdGVuY3kuYwpAQCAt
-NjQ1LDcgKzY0NSw3IEBAIHN0YXRpYyB2b2lkIGJsa2NnX2lvbGF0ZW5jeV9leGl0KHN0cnVjdCBy
-cV9xb3MgKnJxb3MpCiB7CiAJc3RydWN0IGJsa19pb2xhdGVuY3kgKmJsa2lvbGF0ID0gQkxLSU9M
-QVRFTkNZKHJxb3MpOwogCi0JZGVsX3RpbWVyX3N5bmMoJmJsa2lvbGF0LT50aW1lcik7CisJZGVs
-X3RpbWVyX3NodXRkb3duKCZibGtpb2xhdC0+dGltZXIpOwogCWZsdXNoX3dvcmsoJmJsa2lvbGF0
-LT5lbmFibGVfd29yayk7CiAJYmxrY2dfZGVhY3RpdmF0ZV9wb2xpY3kocnFvcy0+cSwgJmJsa2Nn
-X3BvbGljeV9pb2xhdGVuY3kpOwogCWtmcmVlKGJsa2lvbGF0KTsKZGlmZiAtLWdpdCBhL2Jsb2Nr
-L2Jsay1zdGF0LmMgYi9ibG9jay9ibGstc3RhdC5jCmluZGV4IDJlYTAxYjVjMWFjYS4uZGU1MWRi
-MzAyYzQ0IDEwMDY0NAotLS0gYS9ibG9jay9ibGstc3RhdC5jCisrKyBiL2Jsb2NrL2Jsay1zdGF0
-LmMKQEAgLTE2NSw3ICsxNjUsNyBAQCB2b2lkIGJsa19zdGF0X3JlbW92ZV9jYWxsYmFjayhzdHJ1
-Y3QgcmVxdWVzdF9xdWV1ZSAqcSwKIAkJYmxrX3F1ZXVlX2ZsYWdfY2xlYXIoUVVFVUVfRkxBR19T
-VEFUUywgcSk7CiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmcS0+c3RhdHMtPmxvY2ssIGZsYWdz
-KTsKIAotCWRlbF90aW1lcl9zeW5jKCZjYi0+dGltZXIpOworCWRlbF90aW1lcl9zaHV0ZG93bigm
-Y2ItPnRpbWVyKTsKIH0KIAogc3RhdGljIHZvaWQgYmxrX3N0YXRfZnJlZV9jYWxsYmFja19yY3Uo
-c3RydWN0IHJjdV9oZWFkICpoZWFkKQpkaWZmIC0tZ2l0IGEvYmxvY2svYmxrLXRocm90dGxlLmMg
-Yi9ibG9jay9ibGstdGhyb3R0bGUuYwppbmRleCA4NDc3MjFkYzJiMmIuLjk1YWY5OWYyNDEzNyAx
-MDA2NDQKLS0tIGEvYmxvY2svYmxrLXRocm90dGxlLmMKKysrIGIvYmxvY2svYmxrLXRocm90dGxl
-LmMKQEAgLTQ5MCw3ICs0OTAsNyBAQCBzdGF0aWMgdm9pZCB0aHJvdGxfcGRfZnJlZShzdHJ1Y3Qg
-YmxrZ19wb2xpY3lfZGF0YSAqcGQpCiB7CiAJc3RydWN0IHRocm90bF9ncnAgKnRnID0gcGRfdG9f
-dGcocGQpOwogCi0JZGVsX3RpbWVyX3N5bmMoJnRnLT5zZXJ2aWNlX3F1ZXVlLnBlbmRpbmdfdGlt
-ZXIpOworCWRlbF90aW1lcl9zaHV0ZG93bigmdGctPnNlcnZpY2VfcXVldWUucGVuZGluZ190aW1l
-cik7CiAJYmxrZ19yd3N0YXRfZXhpdCgmdGctPnN0YXRfYnl0ZXMpOwogCWJsa2dfcndzdGF0X2V4
-aXQoJnRnLT5zdGF0X2lvcyk7CiAJa2ZyZWUodGcpOwpkaWZmIC0tZ2l0IGEvYmxvY2sva3liZXIt
-aW9zY2hlZC5jIGIvYmxvY2sva3liZXItaW9zY2hlZC5jCmluZGV4IGIwNTM1N2JjZWQ5OS4uNTlh
-NDQ0YTQ3YmEzIDEwMDY0NAotLS0gYS9ibG9jay9reWJlci1pb3NjaGVkLmMKKysrIGIvYmxvY2sv
-a3liZXItaW9zY2hlZC5jCkBAIC00MzQsNyArNDM0LDcgQEAgc3RhdGljIHZvaWQga3liZXJfZXhp
-dF9zY2hlZChzdHJ1Y3QgZWxldmF0b3JfcXVldWUgKmUpCiAJc3RydWN0IGt5YmVyX3F1ZXVlX2Rh
-dGEgKmtxZCA9IGUtPmVsZXZhdG9yX2RhdGE7CiAJaW50IGk7CiAKLQlkZWxfdGltZXJfc3luYygm
-a3FkLT50aW1lcik7CisJZGVsX3RpbWVyX3NodXRkb3duKCZrcWQtPnRpbWVyKTsKIAlibGtfc3Rh
-dF9kaXNhYmxlX2FjY291bnRpbmcoa3FkLT5xKTsKIAogCWZvciAoaSA9IDA7IGkgPCBLWUJFUl9O
-VU1fRE9NQUlOUzsgaSsrKQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9ibG9jay9kcmJkL2RyYmRfbWFp
-bi5jIGIvZHJpdmVycy9ibG9jay9kcmJkL2RyYmRfbWFpbi5jCmluZGV4IGYzZTRkYjE2ZmQwNy4u
-M2Y1NzRmMzc2OWMzIDEwMDY0NAotLS0gYS9kcml2ZXJzL2Jsb2NrL2RyYmQvZHJiZF9tYWluLmMK
-KysrIGIvZHJpdmVycy9ibG9jay9kcmJkL2RyYmRfbWFpbi5jCkBAIC0yMTg0LDcgKzIxODQsNyBA
-QCB2b2lkIGRyYmRfZGVzdHJveV9kZXZpY2Uoc3RydWN0IGtyZWYgKmtyZWYpCiAJc3RydWN0IGRy
-YmRfcmVzb3VyY2UgKnJlc291cmNlID0gZGV2aWNlLT5yZXNvdXJjZTsKIAlzdHJ1Y3QgZHJiZF9w
-ZWVyX2RldmljZSAqcGVlcl9kZXZpY2UsICp0bXBfcGVlcl9kZXZpY2U7CiAKLQlkZWxfdGltZXJf
-c3luYygmZGV2aWNlLT5yZXF1ZXN0X3RpbWVyKTsKKwlkZWxfdGltZXJfc2h1dGRvd24oJmRldmlj
-ZS0+cmVxdWVzdF90aW1lcik7CiAKIAkvKiBwYXJhbm9pYSBhc3NlcnRzICovCiAJRF9BU1NFUlQo
-ZGV2aWNlLCBkZXZpY2UtPm9wZW5fY250ID09IDApOwpkaWZmIC0tZ2l0IGEvZHJpdmVycy9ibG9j
-ay9sb29wLmMgYi9kcml2ZXJzL2Jsb2NrL2xvb3AuYwppbmRleCBhZDkyMTkyYzdkNjEuLmQxMzRh
-NWZkNGFlNyAxMDA2NDQKLS0tIGEvZHJpdmVycy9ibG9jay9sb29wLmMKKysrIGIvZHJpdmVycy9i
-bG9jay9sb29wLmMKQEAgLTE3NTUsNyArMTc1NSw3IEBAIHN0YXRpYyB2b2lkIGxvX2ZyZWVfZGlz
-ayhzdHJ1Y3QgZ2VuZGlzayAqZGlzaykKIAlpZiAobG8tPndvcmtxdWV1ZSkKIAkJZGVzdHJveV93
-b3JrcXVldWUobG8tPndvcmtxdWV1ZSk7CiAJbG9vcF9mcmVlX2lkbGVfd29ya2VycyhsbywgdHJ1
-ZSk7Ci0JZGVsX3RpbWVyX3N5bmMoJmxvLT50aW1lcik7CisJZGVsX3RpbWVyX3NodXRkb3duKCZs
-by0+dGltZXIpOwogCW11dGV4X2Rlc3Ryb3koJmxvLT5sb19tdXRleCk7CiAJa2ZyZWUobG8pOwog
-fQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9ibG9jay9zdW52ZGMuYyBiL2RyaXZlcnMvYmxvY2svc3Vu
-dmRjLmMKaW5kZXggZmI4NTVkYTk3MWVlLi45ODY4OTM3YTk2MDIgMTAwNjQ0Ci0tLSBhL2RyaXZl
-cnMvYmxvY2svc3VudmRjLmMKKysrIGIvZHJpdmVycy9ibG9jay9zdW52ZGMuYwpAQCAtMTA2Nyw3
-ICsxMDY3LDcgQEAgc3RhdGljIHZvaWQgdmRjX3BvcnRfcmVtb3ZlKHN0cnVjdCB2aW9fZGV2ICp2
-ZGV2KQogCiAJCWZsdXNoX3dvcmsoJnBvcnQtPmxkY19yZXNldF93b3JrKTsKIAkJY2FuY2VsX2Rl
-bGF5ZWRfd29ya19zeW5jKCZwb3J0LT5sZGNfcmVzZXRfdGltZXJfd29yayk7Ci0JCWRlbF90aW1l
-cl9zeW5jKCZwb3J0LT52aW8udGltZXIpOworCQlkZWxfdGltZXJfc2h1dGRvd24oJnBvcnQtPnZp
-by50aW1lcik7CiAKIAkJZGVsX2dlbmRpc2socG9ydC0+ZGlzayk7CiAJCXB1dF9kaXNrKHBvcnQt
-PmRpc2spOwotLSAKMi4zNS4xCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fCmRyYmQtZGV2IG1haWxpbmcgbGlzdApkcmJkLWRldkBsaXN0cy5saW5iaXQuY29t
-Cmh0dHBzOi8vbGlzdHMubGluYml0LmNvbS9tYWlsbWFuL2xpc3RpbmZvL2RyYmQtZGV2Cg==
+On 10/27/22 08:05, Steven Rostedt wrote:
+> From: "Steven Rostedt (Google)" <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
+> 
+> Before a timer is freed, del_timer_shutdown() must be called.
+> 
+
+I also had to add the following, as you had already suggested.
+
+Just changing blk_sync_queue() was insufficient; I had to add the call from
+blk_release_queue() because otherwise blk_sync_queue() was not always called.
+
+Thanks,
+Guenter
+
+---
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 17667159482e..69b1daa2e91a 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -227,7 +227,7 @@ const char *blk_status_to_str(blk_status_t status)
+   */
+  void blk_sync_queue(struct request_queue *q)
+  {
+-       del_timer_sync(&q->timeout);
++       del_timer_shutdown(&q->timeout);
+         cancel_work_sync(&q->timeout_work);
+  }
+  EXPORT_SYMBOL(blk_sync_queue);
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index e71b3b43927c..12a1e46536ed 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -769,6 +769,8 @@ static void blk_release_queue(struct kobject *kobj)
+
+         percpu_ref_exit(&q->q_usage_counter);
+
++       blk_sync_queue(q);
++
+         if (q->poll_stat)
+                 blk_stat_remove_callback(q, q->poll_cb);
+         blk_stat_free_callback(q->poll_cb);
