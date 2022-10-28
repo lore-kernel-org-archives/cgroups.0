@@ -1,78 +1,121 @@
-From: Guenter Roeck <linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org>
-Subject: Re: [RFC][PATCH v2 04/31] timers: block: Use
- del_timer_shutdown() before freeing timer
-Date: Fri, 28 Oct 2022 08:11:50 -0700
-Message-ID: <6f04aec5-bbff-6154-a0b1-8ad0aec97ec5@roeck-us.net>
-References: <20221027150525.753064657@goodmis.org>
-	<20221027150925.819019339@goodmis.org>
+From: Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] mm/vmscan: respect cpuset policy during page demotion
+Date: Fri, 28 Oct 2022 10:16:50 -0700
+Message-ID: <CAHbLzkrqaCF8wvtsAmvaZUqCAoRfO1qPSFyK7bVq5O5m1zuksg@mail.gmail.com>
+References: <20221026074343.6517-1-feng.tang@intel.com> <dc453287-015d-fd1c-fe7f-6ee45772d6aa@linux.ibm.com>
+ <Y1jpDfwBQId3GkJC@feng-clx> <Y1j7tsj5M0Md/+Er@dhcp22.suse.cz>
+ <Y1kl8VbPE0RYdyEB@feng-clx> <Y1lZV6qHp3gIINGc@dhcp22.suse.cz>
+ <CAHbLzkppDPm87dx9-a7t3oP9DuZ0xCPC1UWr+E-s+vh12Gwb+w@mail.gmail.com>
+ <Y1ovOeEPXT1fxCuc@feng-clx> <CAHbLzkqvh3ry=FjQGuG--As2yYF2NU+bfvORqk1FyfE_vvTwXw@mail.gmail.com>
+ <7b5f533d-4b2e-b45b-ee42-5e1cc3e8a279@linux.ibm.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=p/iFIiIQ4V/YG7z76viQuYS3yb9ejhlzHXVIf3GCB3g=;
+        b=A8GT3O8vI9X19QgBEVf5E/OPc4lfK8HPm3Ew/a9eW0pnni7NeBYGN/DULPE7VIYPgU
+         8COLbv4fiUgLlvbWvkSLCRHfDiV77xFtFIjjifwEPx46vRJV0xJswjtD8h7GKbi3Rlx2
+         BFjQaN2GQWxaNjQBQQxy7HS9p4eX45eM1mZUv2Wy7bCXKErkuorc5epRjiYVPAPkzjSq
+         4jhaUF3y/T8IMdnGR4KqXvRXXIaj9KGe/eUaHTqBz4cmektDnj3a7mloDOomkPWPyh3v
+         VqeK15PZdA0RYo82JNHNXe9zPF2nlSflG8XS6+ejLG1NHAcxDWxd5mGjXtMy/2xgo8CY
+         hlZg==
+In-Reply-To: <7b5f533d-4b2e-b45b-ee42-5e1cc3e8a279-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20210112;
-	h=content-transfer-encoding:in-reply-to:from:references:cc:to
-	:content-language:subject:user-agent:mime-version:date:message-id
-	:sender:from:to:cc:subject:date:message-id:reply-to;
-	bh=cu5lq0+6QCF+BQfiaiaRxPUIRB+CVrNKwv+C5DY2DeE=;
-	b=jrBrEVx/TWlLwC/EybmMjgT1gIVbiJljUHbETA5hqF92YxNbERFPM8SLV8vK+xyqHj
-	9jS6lbrYopAtUqlTWoxmEhrkvVuOVnKHs18xrfkN3sQdJWGdEM8ayfOV6/rcHN9MyDGS
-	idiwJN9NfCM2e8NN2NyJ75qSfH6Jw5L/noLRcBMacXiiXUYWcEoONMWesL4OC1T+SBSX
-	zRJEmoAlv5F1PTO0uNPS0M5lwoafv7bkttb/uiMKOTZ5pxkfWBm0uH+r/cEtQLtmdLZy
-	0aGvxyZT6rXQbiuz2oOdZEl+0+YjZU9rPHTO3PCCSEnn0aiYzAOnagzZG5lkxCKy6xOI
-	2NeA==
-Content-Language: en-US
-In-Reply-To: <20221027150925.819019339-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Stephen Boyd <sboyd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Philipp Reisner <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Lars Ellenberg <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: Aneesh Kumar K V <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Cc: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Hocko, Michal" <mhocko-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Hansen, Dave" <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Yin, Fengwei" <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On 10/27/22 08:05, Steven Rostedt wrote:
-> From: "Steven Rostedt (Google)" <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-> 
-> Before a timer is freed, del_timer_shutdown() must be called.
-> 
+On Thu, Oct 27, 2022 at 10:09 PM Aneesh Kumar K V
+<aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org> wrote:
+>
+> On 10/27/22 11:25 PM, Yang Shi wrote:
+> > On Thu, Oct 27, 2022 at 12:12 AM Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> wrote:
+> >>
+> >> On Thu, Oct 27, 2022 at 01:57:52AM +0800, Yang Shi wrote:
+> >>> On Wed, Oct 26, 2022 at 8:59 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> >> [...]
+> >>>>>> This all can get quite expensive so the primary question is, does the
+> >>>>>> existing behavior generates any real issues or is this more of an
+> >>>>>> correctness exercise? I mean it certainly is not great to demote to an
+> >>>>>> incompatible numa node but are there any reasonable configurations when
+> >>>>>> the demotion target node is explicitly excluded from memory
+> >>>>>> policy/cpuset?
+> >>>>>
+> >>>>> We haven't got customer report on this, but there are quite some customers
+> >>>>> use cpuset to bind some specific memory nodes to a docker (You've helped
+> >>>>> us solve a OOM issue in such cases), so I think it's practical to respect
+> >>>>> the cpuset semantics as much as we can.
+> >>>>
+> >>>> Yes, it is definitely better to respect cpusets and all local memory
+> >>>> policies. There is no dispute there. The thing is whether this is really
+> >>>> worth it. How often would cpusets (or policies in general) go actively
+> >>>> against demotion nodes (i.e. exclude those nodes from their allowes node
+> >>>> mask)?
+> >>>>
+> >>>> I can imagine workloads which wouldn't like to get their memory demoted
+> >>>> for some reason but wouldn't it be more practical to tell that
+> >>>> explicitly (e.g. via prctl) rather than configuring cpusets/memory
+> >>>> policies explicitly?
+> >>>>
+> >>>>> Your concern about the expensive cost makes sense! Some raw ideas are:
+> >>>>> * if the shrink_folio_list is called by kswapd, the folios come from
+> >>>>>   the same per-memcg lruvec, so only one check is enough
+> >>>>> * if not from kswapd, like called form madvise or DAMON code, we can
+> >>>>>   save a memcg cache, and if the next folio's memcg is same as the
+> >>>>>   cache, we reuse its result. And due to the locality, the real
+> >>>>>   check is rarely performed.
+> >>>>
+> >>>> memcg is not the expensive part of the thing. You need to get from page
+> >>>> -> all vmas::vm_policy -> mm -> task::mempolicy
+> >>>
+> >>> Yeah, on the same page with Michal. Figuring out mempolicy from page
+> >>> seems quite expensive and the correctness can't be guranteed since the
+> >>> mempolicy could be set per-thread and the mm->task depends on
+> >>> CONFIG_MEMCG so it doesn't work for !CONFIG_MEMCG.
+> >>
+> >> Yes, you are right. Our "working" psudo code for mem policy looks like
+> >> what Michal mentioned, and it can't work for all cases, but try to
+> >> enforce it whenever possible:
+> >>
+> >> static bool  __check_mpol_demotion(struct folio *folio, struct vm_area_struct *vma,
+> >>                 unsigned long addr, void *arg)
+> >> {
+> >>         bool *skip_demotion = arg;
+> >>         struct mempolicy *mpol;
+> >>         int nid, dnid;
+> >>         bool ret = true;
+> >>
+> >>         mpol = __get_vma_policy(vma, addr);
+> >>         if (!mpol) {
+> >>                 struct task_struct *task;
+> >>                 if (vma->vm_mm)
+> >>                         task = vma->vm_mm->owner;
+> >
+> > But this task may not be the task you want IIUC. For example, the
+> > process has two threads, A and B. They have different mempolicy. The
+> > vmscan is trying to demote a page belonging to thread A, but the task
+> > may point to thread B, so you actually get the wrong mempolicy IIUC.
+> >
+>
+> But if we swap out this page and fault back in via thread B the page would
+> get allocated as per thread B mempolicy. So if we demote based on thread B
+> policy are we breaking anything?
 
-I also had to add the following, as you had already suggested.
+If the page is demoted by following thread B's mempolicy, didn't it
+already break thread A's mempolicy in the first place if you care
+about it? If thread A and thread B have the same mempolicy, then it is
+not a problem.
 
-Just changing blk_sync_queue() was insufficient; I had to add the call from
-blk_release_queue() because otherwise blk_sync_queue() was not always called.
+Actually there is another problem for shared page. If a page is shared
+by two processes, P1 and P2, when you do rmap walk to find the task,
+you may find two contradict mempolicy, what mempolicy would you like
+to obey? Do you have to save all the intermediate mempolicy results
+somewhere or you just bail out once the first mempolicy is found?
 
-Thanks,
-Guenter
-
----
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 17667159482e..69b1daa2e91a 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -227,7 +227,7 @@ const char *blk_status_to_str(blk_status_t status)
-   */
-  void blk_sync_queue(struct request_queue *q)
-  {
--       del_timer_sync(&q->timeout);
-+       del_timer_shutdown(&q->timeout);
-         cancel_work_sync(&q->timeout_work);
-  }
-  EXPORT_SYMBOL(blk_sync_queue);
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index e71b3b43927c..12a1e46536ed 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -769,6 +769,8 @@ static void blk_release_queue(struct kobject *kobj)
-
-         percpu_ref_exit(&q->q_usage_counter);
-
-+       blk_sync_queue(q);
-+
-         if (q->poll_stat)
-                 blk_stat_remove_callback(q, q->poll_cb);
-         blk_stat_free_callback(q->poll_cb);
+>
+> -aneesh
+>
+>
