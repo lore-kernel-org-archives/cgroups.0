@@ -1,308 +1,147 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH RESEND cgroup/for-6.1-fixes] cgroup: Implement
- DEBUG_CGROUP_REF
-Date: Fri, 28 Oct 2022 11:15:40 -1000
-Message-ID: <Y1xGfJGIDIMKrMa7@slm.duckdns.org>
-References: <Y1w9EKH/CZhNGLJj@slm.duckdns.org>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-next] BUILD REGRESSION
+ 6ab428604f724cf217a47b7d3f3353aab815b40e
+Date: Sat, 29 Oct 2022 17:24:28 +0800
+Message-ID: <635cf14c.5TSA5uJJpTPz+0MC%lkp@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=so5KjIAi+UDspG5gHdkovGWg4PfI5tqTcbEYdk2iMM4=;
-        b=LTx560iGkIhRcFQUJREcKDJSLR6oNZGviD0v7JewFvV8SM/4liM3fs1HQI4LaPBIXi
-         MVtyOUEowfyJiIEX+El7dFUkqSPUxCA/vKR0ZIVzhhQX8zqmDw8nqR79wT9XP4ppCd61
-         91Xuv5C/by7BlIk7/PD+qoP1TsCaFYwOOaYy1VinUgRsEvmD7glqilIZ76xiquWyFzTt
-         yjf9epFTBsADYbKNCv2ObmK8yJFuDa0cv46h2m2X7j4bsKkg/Eic6pJel3k48v+z2my3
-         bWQmHiHPDtAx6SF6pAhDfthEzkDV6Jg+bzcvzHSUQwoqb1ZXCirw1NqwbNMp2I0C8/yt
-         +72w==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <Y1w9EKH/CZhNGLJj-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1667035522; x=1698571522;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=doRL1DVr9fa4daC4PHQlYi3fJEz389CZ7Oz/F424Jaw=;
+  b=SARTPgLYwzPFB6tP3wJ9eLHC5Hey0xuiqDJsaj4xbUGIQReFUPaSnAxh
+   UQQW/zJU/AYBspbfmpgxE/vxBrb53i7zadODfw9vYSKWi24Lffkwjwlji
+   llqwQDrntLfaW2dhyXkNXQrO02WGbP87BBCLCHikjD05tDxoB158wYJf8
+   qKYS6FhhihxjWZ6bmlm6UDWyUa80YL86hUipyeZPETO5C2BQXTAqRPbNV
+   jaEg9kxIZKN5yKyIZ+JV75XqCEUp4wQ7HoqN0XHAMy59pZQaQAVe2G0US
+   +haVVftUr2OQRTtqjU53cjRL/gUmG1CaAc+NH9S3Y96wiFIAJSBhSp7yU
+   g==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: kernel-team-M8Ki61LpUEw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From 6ab428604f724cf217a47b7d3f3353aab815b40e Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date: Fri, 28 Oct 2022 10:45:44 -1000
-Subject: [PATCH] cgroup: Implement DEBUG_CGROUP_REF
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 6ab428604f724cf217a47b7d3f3353aab815b40e  cgroup: Implement DEBUG_CGROUP_REF
 
-It's really difficult to debug when cgroup or css refs leak. Let's add a
-debug option to force the refcnt function to not be inlined so that they can
-be kprobed for debugging.
+Error/Warning reports:
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
-Oops, forgot the cgroups ML. Resending. Patch is applied to
-cgroup/for-6.1-fixes.
+https://lore.kernel.org/oe-kbuild-all/202210291258.Php0YV92-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 
-Thanks.
+Error/Warning: (recently discovered and may have been fixed)
 
- include/linux/cgroup.h        | 97 +++++------------------------------
- include/linux/cgroup_refcnt.h | 90 ++++++++++++++++++++++++++++++++
- kernel/cgroup/cgroup.c        |  5 ++
- lib/Kconfig.debug             | 10 ++++
- 4 files changed, 117 insertions(+), 85 deletions(-)
- create mode 100644 include/linux/cgroup_refcnt.h
+ERROR: modpost: "css_get" [drivers/block/loop.ko] undefined!
+ERROR: modpost: "css_get" [fs/btrfs/btrfs.ko] undefined!
+ERROR: modpost: "css_put" [drivers/block/loop.ko] undefined!
+ERROR: modpost: "css_put" [fs/btrfs/btrfs.ko] undefined!
+ERROR: modpost: "css_put" [net/netfilter/xt_cgroup.ko] undefined!
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index a88de5bdeaa9..5c9c07a44706 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -309,71 +309,23 @@ void css_task_iter_end(struct css_task_iter *it);
-  * Inline functions.
-  */
- 
-+#ifdef CONFIG_DEBUG_CGROUP_REF
-+void css_get(struct cgroup_subsys_state *css);
-+void css_get_many(struct cgroup_subsys_state *css, unsigned int n);
-+bool css_tryget(struct cgroup_subsys_state *css);
-+bool css_tryget_online(struct cgroup_subsys_state *css);
-+void css_put(struct cgroup_subsys_state *css);
-+void css_put_many(struct cgroup_subsys_state *css, unsigned int n);
-+#else
-+#define CGROUP_REF_FN_ATTRS	static inline
-+#include <linux/cgroup_refcnt.h>
-+#endif
-+
- static inline u64 cgroup_id(const struct cgroup *cgrp)
- {
- 	return cgrp->kn->id;
- }
- 
--/**
-- * css_get - obtain a reference on the specified css
-- * @css: target css
-- *
-- * The caller must already have a reference.
-- */
--static inline void css_get(struct cgroup_subsys_state *css)
--{
--	if (!(css->flags & CSS_NO_REF))
--		percpu_ref_get(&css->refcnt);
--}
--
--/**
-- * css_get_many - obtain references on the specified css
-- * @css: target css
-- * @n: number of references to get
-- *
-- * The caller must already have a reference.
-- */
--static inline void css_get_many(struct cgroup_subsys_state *css, unsigned int n)
--{
--	if (!(css->flags & CSS_NO_REF))
--		percpu_ref_get_many(&css->refcnt, n);
--}
--
--/**
-- * css_tryget - try to obtain a reference on the specified css
-- * @css: target css
-- *
-- * Obtain a reference on @css unless it already has reached zero and is
-- * being released.  This function doesn't care whether @css is on or
-- * offline.  The caller naturally needs to ensure that @css is accessible
-- * but doesn't have to be holding a reference on it - IOW, RCU protected
-- * access is good enough for this function.  Returns %true if a reference
-- * count was successfully obtained; %false otherwise.
-- */
--static inline bool css_tryget(struct cgroup_subsys_state *css)
--{
--	if (!(css->flags & CSS_NO_REF))
--		return percpu_ref_tryget(&css->refcnt);
--	return true;
--}
--
--/**
-- * css_tryget_online - try to obtain a reference on the specified css if online
-- * @css: target css
-- *
-- * Obtain a reference on @css if it's online.  The caller naturally needs
-- * to ensure that @css is accessible but doesn't have to be holding a
-- * reference on it - IOW, RCU protected access is good enough for this
-- * function.  Returns %true if a reference count was successfully obtained;
-- * %false otherwise.
-- */
--static inline bool css_tryget_online(struct cgroup_subsys_state *css)
--{
--	if (!(css->flags & CSS_NO_REF))
--		return percpu_ref_tryget_live(&css->refcnt);
--	return true;
--}
--
- /**
-  * css_is_dying - test whether the specified css is dying
-  * @css: target css
-@@ -394,31 +346,6 @@ static inline bool css_is_dying(struct cgroup_subsys_state *css)
- 	return !(css->flags & CSS_NO_REF) && percpu_ref_is_dying(&css->refcnt);
- }
- 
--/**
-- * css_put - put a css reference
-- * @css: target css
-- *
-- * Put a reference obtained via css_get() and css_tryget_online().
-- */
--static inline void css_put(struct cgroup_subsys_state *css)
--{
--	if (!(css->flags & CSS_NO_REF))
--		percpu_ref_put(&css->refcnt);
--}
--
--/**
-- * css_put_many - put css references
-- * @css: target css
-- * @n: number of references to put
-- *
-- * Put references obtained via css_get() and css_tryget_online().
-- */
--static inline void css_put_many(struct cgroup_subsys_state *css, unsigned int n)
--{
--	if (!(css->flags & CSS_NO_REF))
--		percpu_ref_put_many(&css->refcnt, n);
--}
--
- static inline void cgroup_get(struct cgroup *cgrp)
- {
- 	css_get(&cgrp->self);
-diff --git a/include/linux/cgroup_refcnt.h b/include/linux/cgroup_refcnt.h
-new file mode 100644
-index 000000000000..1aa89295dac0
---- /dev/null
-+++ b/include/linux/cgroup_refcnt.h
-@@ -0,0 +1,90 @@
-+/**
-+ * css_get - obtain a reference on the specified css
-+ * @css: target css
-+ *
-+ * The caller must already have a reference.
-+ */
-+CGROUP_REF_FN_ATTRS
-+void css_get(struct cgroup_subsys_state *css)
-+{
-+	if (!(css->flags & CSS_NO_REF))
-+		percpu_ref_get(&css->refcnt);
-+}
-+
-+/**
-+ * css_get_many - obtain references on the specified css
-+ * @css: target css
-+ * @n: number of references to get
-+ *
-+ * The caller must already have a reference.
-+ */
-+CGROUP_REF_FN_ATTRS
-+void css_get_many(struct cgroup_subsys_state *css, unsigned int n)
-+{
-+	if (!(css->flags & CSS_NO_REF))
-+		percpu_ref_get_many(&css->refcnt, n);
-+}
-+
-+/**
-+ * css_tryget - try to obtain a reference on the specified css
-+ * @css: target css
-+ *
-+ * Obtain a reference on @css unless it already has reached zero and is
-+ * being released.  This function doesn't care whether @css is on or
-+ * offline.  The caller naturally needs to ensure that @css is accessible
-+ * but doesn't have to be holding a reference on it - IOW, RCU protected
-+ * access is good enough for this function.  Returns %true if a reference
-+ * count was successfully obtained; %false otherwise.
-+ */
-+CGROUP_REF_FN_ATTRS
-+bool css_tryget(struct cgroup_subsys_state *css)
-+{
-+	if (!(css->flags & CSS_NO_REF))
-+		return percpu_ref_tryget(&css->refcnt);
-+	return true;
-+}
-+
-+/**
-+ * css_tryget_online - try to obtain a reference on the specified css if online
-+ * @css: target css
-+ *
-+ * Obtain a reference on @css if it's online.  The caller naturally needs
-+ * to ensure that @css is accessible but doesn't have to be holding a
-+ * reference on it - IOW, RCU protected access is good enough for this
-+ * function.  Returns %true if a reference count was successfully obtained;
-+ * %false otherwise.
-+ */
-+CGROUP_REF_FN_ATTRS
-+bool css_tryget_online(struct cgroup_subsys_state *css)
-+{
-+	if (!(css->flags & CSS_NO_REF))
-+		return percpu_ref_tryget_live(&css->refcnt);
-+	return true;
-+}
-+
-+/**
-+ * css_put - put a css reference
-+ * @css: target css
-+ *
-+ * Put a reference obtained via css_get() and css_tryget_online().
-+ */
-+CGROUP_REF_FN_ATTRS
-+void css_put(struct cgroup_subsys_state *css)
-+{
-+	if (!(css->flags & CSS_NO_REF))
-+		percpu_ref_put(&css->refcnt);
-+}
-+
-+/**
-+ * css_put_many - put css references
-+ * @css: target css
-+ * @n: number of references to put
-+ *
-+ * Put references obtained via css_get() and css_tryget_online().
-+ */
-+CGROUP_REF_FN_ATTRS
-+void css_put_many(struct cgroup_subsys_state *css, unsigned int n)
-+{
-+	if (!(css->flags & CSS_NO_REF))
-+		percpu_ref_put_many(&css->refcnt, n);
-+}
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index d922773fa90b..f786c4c973a0 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -248,6 +248,11 @@ static int cgroup_addrm_files(struct cgroup_subsys_state *css,
- 			      struct cgroup *cgrp, struct cftype cfts[],
- 			      bool is_add);
- 
-+#ifdef CONFIG_DEBUG_CGROUP_REF
-+#define CGROUP_REF_FN_ATTRS	noinline
-+#include <linux/cgroup_refcnt.h>
-+#endif
-+
- /**
-  * cgroup_ssid_enabled - cgroup subsys enabled test by subsys ID
-  * @ssid: subsys ID of interest
-diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index 3761118d1879..b620a340d7df 100644
---- a/lib/Kconfig.debug
-+++ b/lib/Kconfig.debug
-@@ -1701,6 +1701,16 @@ config LATENCYTOP
- 	  Enable this option if you want to use the LatencyTOP tool
- 	  to find out which userspace is blocking on what kernel operations.
- 
-+config DEBUG_CGROUP_REF
-+	bool "Disable inlining of cgroup css reference count functions"
-+	depends on DEBUG_KERNEL
-+	depends on CGROUPS
-+	depends on KPROBES
-+	default n
-+	help
-+	  Force cgroup css reference count functions to not be inlined so
-+	  that they can be kprobed for debugging.
-+
- source "kernel/trace/Kconfig"
- 
- config PROVIDE_OHCI1394_DMA_INIT
+Error/Warning ids grouped by kconfigs:
+
+gcc_recent_errors
+`-- powerpc-allmodconfig
+    |-- ERROR:css_get-drivers-block-loop.ko-undefined
+    |-- ERROR:css_get-fs-btrfs-btrfs.ko-undefined
+    |-- ERROR:css_put-drivers-block-loop.ko-undefined
+    |-- ERROR:css_put-fs-btrfs-btrfs.ko-undefined
+    `-- ERROR:css_put-net-netfilter-xt_cgroup.ko-undefined
+
+elapsed time: 723m
+
+configs tested: 84
+configs skipped: 2
+
+gcc tested configs:
+arc                                 defconfig
+alpha                               defconfig
+powerpc                           allnoconfig
+um                             i386_defconfig
+um                           x86_64_defconfig
+x86_64                              defconfig
+s390                                defconfig
+s390                             allmodconfig
+x86_64                           rhel-8.3-kvm
+x86_64                         rhel-8.3-kunit
+x86_64                          rhel-8.3-func
+s390                             allyesconfig
+x86_64                    rhel-8.3-kselftests
+i386                          randconfig-a016
+sh                               allmodconfig
+x86_64                           rhel-8.3-syz
+x86_64                               rhel-8.3
+s390                 randconfig-r044-20221028
+ia64                             allmodconfig
+i386                          randconfig-a005
+i386                                defconfig
+i386                          randconfig-a001
+arc                  randconfig-r043-20221028
+x86_64                        randconfig-a013
+i386                          randconfig-a003
+x86_64                           allyesconfig
+powerpc                          allmodconfig
+alpha                            allyesconfig
+mips                             allyesconfig
+x86_64                        randconfig-a002
+i386                          randconfig-a014
+x86_64                        randconfig-a015
+m68k                             allyesconfig
+arc                              allyesconfig
+x86_64                        randconfig-a004
+i386                          randconfig-a012
+x86_64                        randconfig-a011
+riscv                randconfig-r042-20221028
+arm                                 defconfig
+m68k                             allmodconfig
+arm64                            allyesconfig
+arm                              allyesconfig
+i386                             allyesconfig
+powerpc                      ep88xc_defconfig
+powerpc                       ppc64_defconfig
+powerpc                      makalu_defconfig
+arm                           u8500_defconfig
+arm                         lpc18xx_defconfig
+arm                      jornada720_defconfig
+sh                           se7722_defconfig
+arm                        spear6xx_defconfig
+xtensa                  nommu_kc705_defconfig
+sparc64                          alldefconfig
+i386                          randconfig-c001
+sparc                            allyesconfig
+powerpc                    sam440ep_defconfig
+csky                             alldefconfig
+m68k                        mvme16x_defconfig
+powerpc                 canyonlands_defconfig
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+riscv                    nommu_k210_defconfig
+riscv                             allnoconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+
+clang tested configs:
+x86_64                        randconfig-a016
+i386                          randconfig-a004
+i386                          randconfig-a006
+i386                          randconfig-a002
+x86_64                        randconfig-a001
+x86_64                        randconfig-a005
+x86_64                        randconfig-a003
+hexagon              randconfig-r041-20221028
+x86_64                        randconfig-a012
+i386                          randconfig-a011
+hexagon              randconfig-r045-20221028
+x86_64                        randconfig-a014
+i386                          randconfig-a013
+i386                          randconfig-a015
+s390                 randconfig-r044-20221029
+hexagon              randconfig-r041-20221029
+hexagon              randconfig-r045-20221029
+riscv                randconfig-r042-20221029
+x86_64                        randconfig-k001
+
 -- 
-2.38.0
-
+0-DAY CI Kernel Test Service
+https://01.org/lkp
