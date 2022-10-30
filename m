@@ -1,30 +1,32 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH -next 3/5] blk-iocost: don't allow to configure bio based
- device
-Date: Sun, 30 Oct 2022 02:41:47 -0700
-Message-ID: <Y15G2zBpor5flDLy@infradead.org>
+From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH -next 4/5] blk-iocost: fix sleeping in atomic context
+ warnning in ioc_qos_write()
+Date: Sun, 30 Oct 2022 02:55:23 -0700
+Message-ID: <Y15KC8Zb3rHlfTPu@infradead.org>
 References: <20221028101056.1971715-1-yukuai1@huaweicloud.com>
- <20221028101056.1971715-4-yukuai1@huaweicloud.com>
+ <20221028101056.1971715-5-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=mGekaAOdIja1Coan0T/XXSeb3SnqS47JFAz2HGqAANA=; b=h7eeAKOst8GmseL3Ly3xX57sZP
-        eYrLBzlbIi8+fy2qAhn4gfhf/B3MeoR5WVcg2HPvfckUYTT1MtpvRtk9G8yd3UnqQ/DqGIaWCaLg/
-        i3za0UnvN9m4OCwq80+4TVSmEkE8WIwTID9x3i7UR6c1hnDFuflasw1gjffbkVwQw8D2RNg9ANEvT
-        kTwQiwxgw3MTC3goiJLBZkSWrNXw8R4gy9U2nPRnCxBpZQkMoiXU+Fq0cvEtHciExojvLSmVHEy2m
-        NP82jmZ0jT3u/oEkdCZTnjr4tH6sBdXmZ6Z4NwV4KxZyGa21iHKgGJ/AiT6zBM0ZJae+bi8cxvPMC
-        wBNtQL8Q==;
+        bh=g7Lk2AACYfeSSiMJolbOzZmDEQzhYOjjt7qCWTh9D7c=; b=ppG1biGCc1of+Ow35yp36kix63
+        jxcRvFnP4kJarQFIsgiJcoL1fby9wRTSG/y4WgqohBEYmonaa+FUYe0Rh6HJj75Dxb8TlbmaEcbor
+        uUbCyScp6AlduacOrjubqONaTRUMcGm+etDbIs+royqhL9LxRhvGLbRWGc3pg9Zp6PLkpDpqGZRe1
+        lRsZZdFCIPFoYdrdy4ShrBJEYuwzG1bwy+IFqc3wLeS/D0smO5ZRk59TNPVQjZ/owHbE4C/Gvj8Ei
+        W0wADly4N6Dnawu4BxLJhGJZjEqSDu5sgbOhiDuFwRzmeBojCGwou0eoeXrzLEwIPrjdk9rhbvVuY
+        Mq6DleTg==;
 Content-Disposition: inline
-In-Reply-To: <20221028101056.1971715-4-yukuai1@huaweicloud.com>
+In-Reply-To: <20221028101056.1971715-5-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, yukuai3@huawei.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Looks good (I actually stubled over this a few days ago as well):
+This seems a little convoluted to me.  I'd suggest to add a new
+sleeping lock that protects the updates, then you just take the
+spinlock after parsing without much other changes.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+(The same comment also applies to patch 5).
