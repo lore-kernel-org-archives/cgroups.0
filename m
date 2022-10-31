@@ -1,52 +1,125 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] block/blk-iocost (gcc13): cast enum members to int in
- prints
-Date: Mon, 31 Oct 2022 07:57:05 -1000
-Message-ID: <Y2AMcSPAJpj6obSA@slm.duckdns.org>
-References: <20221031114520.10518-1-jirislaby@kernel.org>
- <Y1++fLJXkeZgtXR2@infradead.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC 00/17] DRM scheduling cgroup controller
+Date: Mon, 31 Oct 2022 10:20:18 -1000
+Message-ID: <Y2AuAtSmS8X7a1qC@slm.duckdns.org>
+References: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
+ <Y1BFziiJdBzsIJWH@slm.duckdns.org>
+ <908129fa-3ddc-0f62-18df-e318dc760955@linux.intel.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=oc04HoeSDvyZ00MBhetf0mLZqQi+t7KUCqjcURmh3jw=;
-        b=jQlWLfja+D7d4A9Ytn7AA5c2SFo8aoOuU1Y/iuH5dqmpB7L2WpenUoZwgEhkhQJKpM
-         rmfidvSjKdJu39KNzdOvPi5sCF8O3MWHCDs+6scuYyxo677vuN9UcAc9j0cmrfZq8tu+
-         MU/ZdmUHZEI0Z2QO4hVcdxRZ1N5BKiBmDu76ViwKpVab6tl09FkylvVAUSKVy9Tk49aH
-         LK2lixcaFn8/QVi7vPwHU2Pb9W7L337sd/G+3AbwRvRrhZKfstcL+/4mKhXg5il/n0tv
-         cvhEfobQr07ErMCtNF4yNklmm2lTTJSEs6I+ishnlXDxpR7BhssFcyYDyBpjXEkK0u/a
-         yZCQ==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=eLMtcHanAdWy+MQrFvmEE8PQyqd5prgM22zccOtSAJA=;
+        b=iekiGuGz6jaaXaKT/D4NgTACCfKlHeHsUtTT9YZFSy65EUDIQrjjLW4SL+7L8zxHhc
+         r5V6hZRyAhmCLVmXvn2KAQOsR/Am4N5n8hBQBUd+xJPLLDOaAsTjW36nRkvZC+ZKvYcN
+         Ml1f8mrj3j9+MlAkdBtrACCVI6yIzd+TY8c8kFEgypNmQKqMwO9Gn0llxDUDMGhWfgvF
+         WBX7SmQQ6/lvmlLlegW0Kz1bB4wKqS+eatPh+FK9CfJyihcmFl4Yah/MJgiR8QMxyZPB
+         KhL6qleU+MHUJLAtN/NUUYRFr9h/1hmHvCi69+OdDhSIFlK6MxccICPf20AxMvkWw6A6
+         rmzQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <Y1++fLJXkeZgtXR2@infradead.org>
+In-Reply-To: <908129fa-3ddc-0f62-18df-e318dc760955-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Jiri Slaby (SUSE)" <jirislaby@kernel.org>, linux-kernel@vger.kernel.org, Martin Liska <mliska@suse.cz>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+To: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, Rob Clark <robdclark-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Marchesin <marcheu-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "T . J . Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Mon, Oct 31, 2022 at 05:24:28AM -0700, Christoph Hellwig wrote:
-> On Mon, Oct 31, 2022 at 12:45:20PM +0100, Jiri Slaby (SUSE) wrote:
-> > Cast the enum members to int when printing them.
+Hello,
+
+On Thu, Oct 27, 2022 at 03:32:00PM +0100, Tvrtko Ursulin wrote:
+> Looking at what's available in cgroups world now, I have spotted the
+> blkio.prio.class control. For my current use case (lower GPU scheduling of
+> background/unfocused windows) that would also work. Even if starting with
+> just two possible values - 'no-change' and 'idle' (to follow the IO
+> controller naming).
+
+I wouldn't follow that example. That's only meaningful within the context of
+bfq and it probabaly shouldn't have been merged in the first place.
+
+> How would you view that as a proposal? It would be a bit tougher "sell" to
+> the DRM community, perhaps, given that many drivers do have scheduling
+> priority, but the concept of scheduling class is not really there.
+> Nevertheless a concept of normal-vs-background could be plausible in my
+> mind. It could be easily implemented by using the priority controls
+> available in many drivers.
+
+I don't feel great about that.
+
+* The semantics aren't clearly defined. While not immediately obvious in the
+  interface, the task nice levels have definite mappings to weight values
+  and thus clear meanings. I don't think it's a good idea to leave the
+  interface semantics open to interpretation.
+
+* Maybe GPUs are better but my experience with optional hardware features in
+  the storage world has been that vendors diverge wildly and unexpectedly to
+  the point many features are mostly useless. There are fewer GPU vendors
+  and more software effort behind each, so maybe the situation is better but
+  I think it'd be helpul to keep some skepticism.
+
+* Even when per-vendor or per-driver features are consistent enough to be
+  useful, they often aren't thought through enough to be truly useful. e.g.
+  nvme has priority features but they aren't really that useful because they
+  can't do much without congestion control on the issuer side and once you
+  have congestion control on the issuer side which is usually a lot more
+  complex (e.g. dealing with work-conserving hierarchical weight
+  distributions, priority inversions and so on), you can achieve most of
+  what you need in terms of resource control from the issuer side anyway.
+
+So, I'd much prefer to have a fuller solution on the kernel side which
+integrates per-vendor/driver features where they make sense.
+
+> > >    drm.budget_supported
+> > > 	One of:
+> > > 	 1) 'yes' - when all DRM clients in the group support the functionality.
+> > > 	 2) 'no' - when at least one of the DRM clients does not support the
+> > > 		   functionality.
+> > > 	 3) 'n/a' - when there are no DRM clients in the group.
 > > 
-> > Alternatively, we can cast them to ulong (to silence gcc < 12) and use %lu.
-> > Alternatively, we can move VTIME_PER_SEC away from the enum.
+> > Yeah, I'm not sure about this. This isn't a per-cgroup property to begin
+> > with and I'm not sure 'no' meaning at least one device not supporting is
+> > intuitive. The distinction between 'no' and 'n/a' is kinda weird too. Please
+> > drop this.
 > 
-> Yes, either split the enum or just use a define.  But casts are a big
-> code smell and should be avoided if there is a reasonable alternative.
+> The idea actually is for this to be per-cgroup and potentially change
+> dynamically. It implements the concept of "observability", how I have,
+> perhaps clumsily, named it.
+> 
+> This is because we can have a mix of DRM file descriptors in a cgroup, not
+> all of which support the proposed functionality. So I wanted to have
+> something by which the administrator can observe the status of the group.
+> 
+> For instance seeing some clients do not support the feature could be signal
+> that things have been misconfigured, or that appeal needs to be made for
+> driver X to start supporting the feature. Seeing a "no" there in other words
+> is a signal that budgeting may not really work as expected and needs to be
+> investigated.
 
-enums are so much better for debugging and other instrumentation stuff. The
-only requirement for the enum types is that they're big enough to express
-all the members and we can use whatever printf format letter which matches
-the type in use. The problem here is that the compiler behavior is different
-depending on the compiler version, which kinda sucks.
+I still don't see how this is per-cgroup given that it's indicating whether
+the driver supports some feature. Also, the eventual goal would be
+supporting the same control mechanisms across most (if not all) GPUs, right?
 
-I suppose the most reasonable thing to do here is just splitting them into
-separate enum definitions. Does anyone know how this behavior change came to
-be? Do we know whether clang is gonna be changed the same way?
+> > Rather than doing it hierarchically on the spot, it's usually a lot cheaper
+> > and easier to calculate the flattened hierarchical weight per leaf cgroup
+> > and divide the bandwidth according to the eventual portions. For an example,
+> > please take a look at block/blk-iocost.c.
+> 
+> This seems exactly what I had in mind (but haven't implemented it yet). So
+> in this RFC I have budget splitting per group where each tree level adds up
+> to "100%" and the thing which I have not implemented is "borrowing" or
+> yielding (how blk-iocost.c calls it, or donating) unused budgets to
+> siblings.
+> 
+> I am very happy to hear my idea is the right one and someone already
+> implemented it. Thanks for this pointer!
+
+The budget donation thing in iocost is necessary only because it wants to
+make the hot path local to the cgroup because io control has to support very
+high decision rate. For time-slicing GPU, it's likely that following the
+current hierarchical weight on the spot is enough.
 
 Thanks.
 
