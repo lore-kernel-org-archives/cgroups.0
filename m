@@ -1,78 +1,80 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm/vmscan: respect cpuset policy during page demotion
-Date: Mon, 31 Oct 2022 10:18:53 +0100
-Message-ID: <Y1+S/UkS1DNIwlp7@dhcp22.suse.cz>
-References: <Y1lZV6qHp3gIINGc@dhcp22.suse.cz>
- <87wn8lkbk5.fsf@yhuang6-desk2.ccr.corp.intel.com>
- <Y1ou5DGHrEsKnhri@dhcp22.suse.cz>
- <87o7txk963.fsf@yhuang6-desk2.ccr.corp.intel.com>
- <Y1o63SWD2KmQkT3v@dhcp22.suse.cz>
- <87fsf9k3yg.fsf@yhuang6-desk2.ccr.corp.intel.com>
- <Y1p5vaN1AWhpNWZx@dhcp22.suse.cz>
- <87bkpwkg24.fsf@yhuang6-desk2.ccr.corp.intel.com>
- <Y1+J7+1V1nJXF+3b@dhcp22.suse.cz>
- <87wn8gcr5s.fsf@yhuang6-desk2.ccr.corp.intel.com>
+From: "Jiri Slaby (SUSE)" <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH] block/blk-iocost (gcc13): cast enum members to int in prints
+Date: Mon, 31 Oct 2022 12:45:20 +0100
+Message-ID: <20221031114520.10518-1-jirislaby@kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1667207934; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=5f+L4lFYRpVQJbtga4qXT/E9MSZAjXCdeB1iVrLLAwE=;
-        b=nuddbqq6TZ5pf7kcq2IG5RchiKUxQQg5buEf9Z/wa2aKMhbg7b3HUcgyRFp3A6JPC0e4Qc
-        7IwSXh9euPvo2ECab2gA2wkXzqpsEoE/cAkSKxkTiovPpHcG+WOi708agMeYmFKIJzN6EH
-        P5RsnzkHClZu3MXCxPxAvl0nryGA4GE=
-Content-Disposition: inline
-In-Reply-To: <87wn8gcr5s.fsf-fFUE1NP8JkzwuUmzmnQr+vooFf0ArEBIu+b9c/7xato@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1667216723;
+        bh=/nzQwQ7t8fEd/Xbji8T5TlBeyziGmIQJxHg8N9W/ml4=;
+        h=From:To:Cc:Subject:Date:From;
+        b=di1R1BCGvDv5KIfYWJ/0WhYLVQzNM99ivj4PXRekT4VkQArg598dXS6df8fUPt/qy
+         PL7JlHCF5TrQNlt3ISUO9gHqjDWWpnPw59eVNi+FnE3fdzrdJwgelZYr/afK5L3XED
+         1pzWTJ7nkI2/uAXIJxOcL0Dav5rcI9YuEo0A+RLi4JgST/jFmnjJP01UiUjrVDVT+P
+         mVRYq+GU/7y1c+/YSLmuUlnkBzD0IB9LQH5DMOAhzOis2HHkm43zRFeUMhdJMxH5ST
+         yhcLFqhAA7VpSOeTeuObjthPMQHzBdvW3rwzZFb8ml+x7C9qatEeJXaez50ykda6cH
+         q+lcUjCfNPo/g==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Aneesh Kumar K V <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Hansen, Dave" <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Yin, Fengwei" <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Jiri Slaby (SUSE)" <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon 31-10-22 16:51:11, Huang, Ying wrote:
-> Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
-> 
-> > On Fri 28-10-22 07:22:27, Huang, Ying wrote:
-> >> Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
-> >> 
-> >> > On Thu 27-10-22 17:31:35, Huang, Ying wrote:
-> > [...]
-> >> >> I think that it's possible for different processes have different
-> >> >> requirements.
-> >> >> 
-> >> >> - Some processes don't care about where the memory is placed, prefer
-> >> >>   local, then fall back to remote if no free space.
-> >> >> 
-> >> >> - Some processes want to avoid cross-socket traffic, bind to nodes of
-> >> >>   local socket.
-> >> >> 
-> >> >> - Some processes want to avoid to use slow memory, bind to fast memory
-> >> >>   node only.
-> >> >
-> >> > Yes, I do understand that. Do you have any specific examples in mind?
-> >> > [...]
-> >> 
-> >> Sorry, I don't have specific examples.
-> >
-> > OK, then let's stop any complicated solution right here then. Let's
-> > start simple with a per-mm flag to disable demotion of an address
-> > space.
-> 
-> I'm not a big fan of per-mm flag.  Because we don't have users for that
-> too and it needs to add ABI too.
+Since gcc13, each member of an enum has the same type as the enum [1]. And
+that is inherited from its members. Provided:
+  VTIME_PER_SEC_SHIFT     = 37,
+  VTIME_PER_SEC           = 1LLU << VTIME_PER_SEC_SHIFT,
+the named type is unsigned long.
 
-OK, if there are no users for opt-out then let's jus document the
-current limitations and be done with it.
+This generates warnings with gcc-13:
+  block/blk-iocost.c: In function 'ioc_weight_prfill':
+  block/blk-iocost.c:3037:37: error: format '%u' expects argument of type 'unsigned int', but argument 4 has type 'long unsigned int'
 
-> > Should there ever be a real demand for a more fine grained solution
-> > let's go further but I do not think we want a half baked solution
-> > without real usecases.
-> 
-> I'm OK to ignore per-task (and missing per-process) memory policy
-> support for now.
+  block/blk-iocost.c: In function 'ioc_weight_show':
+  block/blk-iocost.c:3047:34: error: format '%u' expects argument of type 'unsigned int', but argument 3 has type 'long unsigned int'
 
-I am against such a half baked solution.
+Cast the enum members to int when printing them.
+
+Alternatively, we can cast them to ulong (to silence gcc < 12) and use %lu.
+Alternatively, we can move VTIME_PER_SEC away from the enum.
+
+[1] https://gcc.gnu.org/bugzilla/show_bug.cgi?id=36113
+
+Cc: Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Jiri Slaby (SUSE) <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ block/blk-iocost.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index f01359906c83..a257ba17183b 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -3034,7 +3034,8 @@ static u64 ioc_weight_prfill(struct seq_file *sf, struct blkg_policy_data *pd,
+ 	struct ioc_gq *iocg = pd_to_iocg(pd);
+ 
+ 	if (dname && iocg->cfg_weight)
+-		seq_printf(sf, "%s %u\n", dname, iocg->cfg_weight / WEIGHT_ONE);
++		seq_printf(sf, "%s %d\n", dname,
++				iocg->cfg_weight / (int)WEIGHT_ONE);
+ 	return 0;
+ }
+ 
+@@ -3044,7 +3045,8 @@ static int ioc_weight_show(struct seq_file *sf, void *v)
+ 	struct blkcg *blkcg = css_to_blkcg(seq_css(sf));
+ 	struct ioc_cgrp *iocc = blkcg_to_iocc(blkcg);
+ 
+-	seq_printf(sf, "default %u\n", iocc->dfl_weight / WEIGHT_ONE);
++	seq_printf(sf, "default %d\n",
++			iocc->dfl_weight / (int)WEIGHT_ONE);
+ 	blkcg_print_blkgs(sf, blkcg, ioc_weight_prfill,
+ 			  &blkcg_policy_iocost, seq_cft(sf)->private, false);
+ 	return 0;
 -- 
-Michal Hocko
-SUSE Labs
+2.38.1
+
