@@ -1,34 +1,69 @@
-From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH] block/blk-iocost (gcc13): cast enum members to int in
- prints
-Date: Mon, 31 Oct 2022 05:24:28 -0700
-Message-ID: <Y1++fLJXkeZgtXR2@infradead.org>
-References: <20221031114520.10518-1-jirislaby@kernel.org>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] cgroup: Simplify code in css_set_move_task
+Date: Mon, 31 Oct 2022 14:11:40 +0100
+Message-ID: <20221031131140.GC27841@blackbody.suse.cz>
+References: <20221020074701.84326-1-haifeng.xu@shopee.com>
+ <20221027080558.GA23269@blackbody.suse.cz>
+ <adb7418c-39a2-6202-970a-a039ad8201dd@shopee.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="qjNfmADvan18RZcF"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=+WDg5qNBe76FnzbLrO8nDJQ46OMFpJ0zF+2XMGbgyVw=; b=G2KuZBTUsRRYlM25mWS2OzlfUW
-        vRYmMylWTdj4cHrNo7JgTSQnawMwdiX2LlU1I4+ApxI+kAoZisrbAr8zzcpg/S005SSbFiLHHGUqG
-        143M/86X3wEWKmpvLtPVqr1zYq5diK4PaOJAijthuaIugtmkywdHIz4FognofoOqYu2rhQ3DxCoGg
-        gJY5lWQ8XPUvodlopUo4ayTh4utr4yFpoOaWGXsSjvzd/+CGTzGZZeH2nFk0GBA3O0x66is3Gp3AY
-        JJvY2LLviOSEGgZex8koGgxEfC3gHovSwgpHYmzWnSl24pvHiWjugg9SIzCM8PdhCbDHnJ5NvKZSq
-        X048//cQ==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1667221901; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=PKEWeuaqEd6vlqq7RTx8/3afjyq+Dr1cAWsD5nEX5GU=;
+        b=MnEqUWgYzBToTXLZKf9RPYtbnqf4atIaTUw4xzKjI8Fe9YOOTbZMdSkdVkAJBKlsE/7zME
+        R4YV6pswN0Rd6TYiyR8lgFEF8/yiqHcH7SK3vSkyUsfdcLyCd3Be1270B37jQSP5rd3hAx
+        xF/pUYcxzWPtBCUJAPTj0fQrCtR+2j0=
 Content-Disposition: inline
-In-Reply-To: <20221031114520.10518-1-jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <adb7418c-39a2-6202-970a-a039ad8201dd-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Jiri Slaby (SUSE)" <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Oct 31, 2022 at 12:45:20PM +0100, Jiri Slaby (SUSE) wrote:
-> Cast the enum members to int when printing them.
-> 
-> Alternatively, we can cast them to ulong (to silence gcc < 12) and use %lu.
-> Alternatively, we can move VTIME_PER_SEC away from the enum.
 
-Yes, either split the enum or just use a define.  But casts are a big
-code smell and should be avoided if there is a reasonable alternative.
+--qjNfmADvan18RZcF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+Hello.
+
+> 1) If calls 'css_set_update_populated' , the cset is either getting the
+> first task or losing the last. There is a need to update the populated
+> state of the cset only when 'css_set_populated' returns false.
+> In other words, the last has been deleted from from_cset and the first
+> hasn't been added to to_cset yet.
+
+I've likely misread the condition previously. I see how this works now
+(update happens after "from_cset" but before "to_cset" migration).
+
+> 3) In order to update the populated state of to_cset the same way
+> from_cset does, 'css_set_update_populated' is also invoked during the
+> process of moving a task to to_cset.
+
+As I think more about this in the context of vertical migrations
+(ancestor<->descendant, such as during controller dis- or enablement),
+I'm afraid the inverted order would lead to "spurious" emptiness
+notifications in ancestors (in the case a there is just a single task
+that migrates parent->child, parent/cgroup.populated would generate and
+event that'd be nullified by the subsequent population of the child).
+
+So I'm not sure the change is worth it.
+
+Michal
+
+--qjNfmADvan18RZcF
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY1/JiQAKCRAkDQmsBEOq
+uTWXAP4+msA6mEv17VE0bvXPosCxQHytBdxI4BLiZcaE9m59ggD/SDf7epi6xoIP
+Ik6LZC+YlTL+GCTFIOhxdlJNT2RyAQE=
+=SfdS
+-----END PGP SIGNATURE-----
+
+--qjNfmADvan18RZcF--
