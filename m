@@ -1,127 +1,100 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC 00/17] DRM scheduling cgroup controller
-Date: Mon, 31 Oct 2022 10:20:18 -1000
-Message-ID: <Y2AuAtSmS8X7a1qC@slm.duckdns.org>
-References: <20221019173254.3361334-1-tvrtko.ursulin@linux.intel.com>
- <Y1BFziiJdBzsIJWH@slm.duckdns.org>
- <908129fa-3ddc-0f62-18df-e318dc760955@linux.intel.com>
+From: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] mm/vmscan: respect cpuset policy during page demotion
+Date: Tue, 01 Nov 2022 11:17:04 +0800
+Message-ID: <87r0yncqj3.fsf@yhuang6-desk2.ccr.corp.intel.com>
+References: <20221026074343.6517-1-feng.tang@intel.com>
+        <dc453287-015d-fd1c-fe7f-6ee45772d6aa@linux.ibm.com>
+        <Y1jpDfwBQId3GkJC@feng-clx> <Y1j7tsj5M0Md/+Er@dhcp22.suse.cz>
+        <Y1kl8VbPE0RYdyEB@feng-clx> <Y1lZV6qHp3gIINGc@dhcp22.suse.cz>
+        <87wn8lkbk5.fsf@yhuang6-desk2.ccr.corp.intel.com>
+        <Y1ou5DGHrEsKnhri@dhcp22.suse.cz>
+        <87o7txk963.fsf@yhuang6-desk2.ccr.corp.intel.com>
+        <Y1o63SWD2KmQkT3v@dhcp22.suse.cz>
+        <87fsf9k3yg.fsf@yhuang6-desk2.ccr.corp.intel.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=eLMtcHanAdWy+MQrFvmEE8PQyqd5prgM22zccOtSAJA=;
-        b=iekiGuGz6jaaXaKT/D4NgTACCfKlHeHsUtTT9YZFSy65EUDIQrjjLW4SL+7L8zxHhc
-         r5V6hZRyAhmCLVmXvn2KAQOsR/Am4N5n8hBQBUd+xJPLLDOaAsTjW36nRkvZC+ZKvYcN
-         Ml1f8mrj3j9+MlAkdBtrACCVI6yIzd+TY8c8kFEgypNmQKqMwO9Gn0llxDUDMGhWfgvF
-         WBX7SmQQ6/lvmlLlegW0Kz1bB4wKqS+eatPh+FK9CfJyihcmFl4Yah/MJgiR8QMxyZPB
-         KhL6qleU+MHUJLAtN/NUUYRFr9h/1hmHvCi69+OdDhSIFlK6MxccICPf20AxMvkWw6A6
-         rmzQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <908129fa-3ddc-0f62-18df-e318dc760955-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1667272674; x=1698808674;
+  h=from:to:cc:subject:references:date:in-reply-to:
+   message-id:mime-version;
+  bh=gXFkpBk6Mk0KHfml+Hm4uAnHyTOnb+ioyvEbwdWn2Rs=;
+  b=PXMFohgf/aBI22iMcxphpQV+UqVuVgaERxSquUi/8HDS10v4TsG/HWBK
+   5tPmvvQb4a0OkGDWnRntpV6pIalLegwsFzls/WDZK06Wr6XcqZRonOmJe
+   LUAxa7AvutrUASpOiu16eDyqxMaeiaMhnsvS5zxkyPOwC1zb11Ibobqsr
+   sRVF3Rl5+CELkcVcsrWmynqis9qSUyYTdnAhaw0mDnoblSgeiUDeFvD+V
+   d7GM3dFaoa4zASTICGEM+BkvrBR3c57g5eRqYR6orR/Vodr6XgRlIqW/e
+   sFykm+VEyZyeFNy6qBojWHm2eEsdiCN3lnSX/GdhYavgMFa0AlI25dCTI
+   Q==;
+In-Reply-To: <87fsf9k3yg.fsf-fFUE1NP8JkzwuUmzmnQr+vooFf0ArEBIu+b9c/7xato@public.gmane.org> (Ying Huang's
+        message of "Thu, 27 Oct 2022 17:31:35 +0800")
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, Rob Clark <robdclark-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Marchesin <marcheu-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "T . J . Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jonathan Cameron <Jonathan.Cameron-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Aneesh Kumar K V <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Cc: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Hansen, Dave" <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Yin, Fengwei" <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-Hello,
+"Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> writes:
 
-On Thu, Oct 27, 2022 at 03:32:00PM +0100, Tvrtko Ursulin wrote:
-> Looking at what's available in cgroups world now, I have spotted the
-> blkio.prio.class control. For my current use case (lower GPU scheduling of
-> background/unfocused windows) that would also work. Even if starting with
-> just two possible values - 'no-change' and 'idle' (to follow the IO
-> controller naming).
+> Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
+>
+>> On Thu 27-10-22 15:39:00, Huang, Ying wrote:
+>>> Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
+>>> 
+>>> > On Thu 27-10-22 14:47:22, Huang, Ying wrote:
+>>> >> Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
+>>> > [...]
+>>> >> > I can imagine workloads which wouldn't like to get their memory demoted
+>>> >> > for some reason but wouldn't it be more practical to tell that
+>>> >> > explicitly (e.g. via prctl) rather than configuring cpusets/memory
+>>> >> > policies explicitly?
+>>> >> 
+>>> >> If my understanding were correct, prctl() configures the process or
+>>> >> thread.
+>>> >
+>>> > Not necessarily. There are properties which are per adddress space like
+>>> > PR_[GS]ET_THP_DISABLE. This could be very similar.
+>>> >
+>>> >> How can we get process/thread configuration at demotion time?
+>>> >
+>>> > As already pointed out in previous emails. You could hook into
+>>> > folio_check_references path, more specifically folio_referenced_one
+>>> > where you have all that you need already - all vmas mapping the page and
+>>> > then it is trivial to get the corresponding vm_mm. If at least one of
+>>> > them has the flag set then the demotion is not allowed (essentially the
+>>> > same model as VM_LOCKED).
+>>> 
+>>> Got it!  Thanks for detailed explanation.
+>>> 
+>>> One bit may be not sufficient.  For example, if we want to avoid or
+>>> control cross-socket demotion and still allow demoting to slow memory
+>>> nodes in local socket, we need to specify a node mask to exclude some
+>>> NUMA nodes from demotion targets.
+>>
+>> Isn't this something to be configured on the demotion topology side? Or
+>> do you expect there will be per process/address space usecases? I mean
+>> different processes running on the same topology, one requesting local
+>> demotion while other ok with the whole demotion topology?
+>
+> I think that it's possible for different processes have different
+> requirements.
+>
+> - Some processes don't care about where the memory is placed, prefer
+>   local, then fall back to remote if no free space.
+>
+> - Some processes want to avoid cross-socket traffic, bind to nodes of
+>   local socket.
+>
+> - Some processes want to avoid to use slow memory, bind to fast memory
+>   node only.
 
-I wouldn't follow that example. That's only meaningful within the context of
-bfq and it probabaly shouldn't have been merged in the first place.
+Hi, Johannes, Wei, Jonathan, Yang, Aneesh,
 
-> How would you view that as a proposal? It would be a bit tougher "sell" to
-> the DRM community, perhaps, given that many drivers do have scheduling
-> priority, but the concept of scheduling class is not really there.
-> Nevertheless a concept of normal-vs-background could be plausible in my
-> mind. It could be easily implemented by using the priority controls
-> available in many drivers.
+We need your help.  Do you or your organization have requirements to
+restrict the page demotion target nodes?  If so, can you share some
+details of the requirements?  For example, to avoid cross-socket
+traffic, or to avoid using slow memory.  And do you want to restrict
+that with cpusets, memory policy, or some other interfaces.
 
-I don't feel great about that.
-
-* The semantics aren't clearly defined. While not immediately obvious in the
-  interface, the task nice levels have definite mappings to weight values
-  and thus clear meanings. I don't think it's a good idea to leave the
-  interface semantics open to interpretation.
-
-* Maybe GPUs are better but my experience with optional hardware features in
-  the storage world has been that vendors diverge wildly and unexpectedly to
-  the point many features are mostly useless. There are fewer GPU vendors
-  and more software effort behind each, so maybe the situation is better but
-  I think it'd be helpul to keep some skepticism.
-
-* Even when per-vendor or per-driver features are consistent enough to be
-  useful, they often aren't thought through enough to be truly useful. e.g.
-  nvme has priority features but they aren't really that useful because they
-  can't do much without congestion control on the issuer side and once you
-  have congestion control on the issuer side which is usually a lot more
-  complex (e.g. dealing with work-conserving hierarchical weight
-  distributions, priority inversions and so on), you can achieve most of
-  what you need in terms of resource control from the issuer side anyway.
-
-So, I'd much prefer to have a fuller solution on the kernel side which
-integrates per-vendor/driver features where they make sense.
-
-> > >    drm.budget_supported
-> > > 	One of:
-> > > 	 1) 'yes' - when all DRM clients in the group support the functionality.
-> > > 	 2) 'no' - when at least one of the DRM clients does not support the
-> > > 		   functionality.
-> > > 	 3) 'n/a' - when there are no DRM clients in the group.
-> > 
-> > Yeah, I'm not sure about this. This isn't a per-cgroup property to begin
-> > with and I'm not sure 'no' meaning at least one device not supporting is
-> > intuitive. The distinction between 'no' and 'n/a' is kinda weird too. Please
-> > drop this.
-> 
-> The idea actually is for this to be per-cgroup and potentially change
-> dynamically. It implements the concept of "observability", how I have,
-> perhaps clumsily, named it.
-> 
-> This is because we can have a mix of DRM file descriptors in a cgroup, not
-> all of which support the proposed functionality. So I wanted to have
-> something by which the administrator can observe the status of the group.
-> 
-> For instance seeing some clients do not support the feature could be signal
-> that things have been misconfigured, or that appeal needs to be made for
-> driver X to start supporting the feature. Seeing a "no" there in other words
-> is a signal that budgeting may not really work as expected and needs to be
-> investigated.
-
-I still don't see how this is per-cgroup given that it's indicating whether
-the driver supports some feature. Also, the eventual goal would be
-supporting the same control mechanisms across most (if not all) GPUs, right?
-
-> > Rather than doing it hierarchically on the spot, it's usually a lot cheaper
-> > and easier to calculate the flattened hierarchical weight per leaf cgroup
-> > and divide the bandwidth according to the eventual portions. For an example,
-> > please take a look at block/blk-iocost.c.
-> 
-> This seems exactly what I had in mind (but haven't implemented it yet). So
-> in this RFC I have budget splitting per group where each tree level adds up
-> to "100%" and the thing which I have not implemented is "borrowing" or
-> yielding (how blk-iocost.c calls it, or donating) unused budgets to
-> siblings.
-> 
-> I am very happy to hear my idea is the right one and someone already
-> implemented it. Thanks for this pointer!
-
-The budget donation thing in iocost is necessary only because it wants to
-make the hot path local to the cgroup because io control has to support very
-high decision rate. For time-slicing GPU, it's likely that following the
-current hierarchical weight on the spot is enough.
-
-Thanks.
-
--- 
-tejun
+Best Regards,
+Huang, Ying
