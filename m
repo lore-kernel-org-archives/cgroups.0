@@ -1,51 +1,46 @@
-From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] block: Correct comment for scale_cookie_change
-Date: Tue, 1 Nov 2022 17:38:34 +0800
-Message-ID: <d92907aa-2e57-dd68-c6ce-b8065cd25770@huawei.com>
-References: <20221018111240.22612-1-shikemeng@huawei.com>
- <20221018111240.22612-3-shikemeng@huawei.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: Re: [patch v11 0/6] support concurrent sync io for bfq on a specail
+ occasion
+Date: Tue, 1 Nov 2022 19:32:45 +0800
+Message-ID: <b2099166-5386-d60b-0b31-e5cd40ef97da@huaweicloud.com>
+References: <20220916071942.214222-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20221018111240.22612-3-shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20220916071942.214222-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Yu Kuai <yukuai1@huaweicloud.com>, tj@kernel.org, axboe@kernel.dk, paolo.valente@linaro.org, jack@suse.cz
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
-Friendly ping.
+Hi, Jens
 
-on 10/18/2022 7:12 PM, Kemeng Shi wrote:
-> Default queue depth of iolatency_grp is unlimited, so we scale down
-> quickly(once by half) in scale_cookie_change. Remove the "subtract
-> 1/16th" part which is not the truth and add the actual way we
-> scale down.
-> 
-> Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->  block/blk-iolatency.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-> index b24d7b788ba3..2c574f98c8d1 100644
-> --- a/block/blk-iolatency.c
-> +++ b/block/blk-iolatency.c
-> @@ -364,9 +364,11 @@ static void scale_cookie_change(struct blk_iolatency *blkiolat,
->  }
->  
->  /*
-> - * Change the queue depth of the iolatency_grp.  We add/subtract 1/16th of the
-> + * Change the queue depth of the iolatency_grp.  We add 1/16th of the
->   * queue depth at a time so we don't get wild swings and hopefully dial in to
-> - * fairer distribution of the overall queue depth.
-> + * fairer distribution of the overall queue depth.  We halve the queue depth
-> + * at a time so we can scale down queue depth quickly from default unlimited
-> + * to target.
->   */
->  static void scale_change(struct iolatency_grp *iolat, bool up)
->  {
-> 
+=D4=DA 2022/09/16 15:19, Yu Kuai =D0=B4=B5=C0:
+> From: Yu Kuai <yukuai3@huawei.com>
+>
+>=20
+> Currently, bfq can't handle sync io concurrently as long as they
+> are not issued from root group. This is because
+> 'bfqd->num_groups_with_pending_reqs > 0' is always true in
+> bfq_asymmetric_scenario().
+>=20
+> The way that bfqg is counted into 'num_groups_with_pending_reqs':
+>=20
+> Before this patchset:
+>   1) root group will never be counted.
+>   2) Count if bfqg or it's child bfqgs have pending requests.
+>   3) Don't count if bfqg and it's child bfqgs complete all the requests.
+>=20
+> After this patchset:
+>   1) root group is counted.
+>   2) Count if bfqg has pending requests.
+>   3) Don't count if bfqg complete all the requests.
+>=20
+> With the above changes, concurrent sync io can be supported if only
+> one group is activated.
 
--- 
-Best wishes
-Kemeng Shi
+Can you apply this patchset?
+
+Thanks,
+Kuai
+
