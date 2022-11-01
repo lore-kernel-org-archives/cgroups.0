@@ -1,12 +1,8 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] block/blk-iocost (gcc13): cast enum members to int in
- prints
-Date: Tue, 1 Nov 2022 06:46:35 -1000
-Message-ID: <Y2FNa4bGhJoevRKT@slm.duckdns.org>
-References: <20221031114520.10518-1-jirislaby@kernel.org>
- <Y1++fLJXkeZgtXR2@infradead.org>
- <Y2AMcSPAJpj6obSA@slm.duckdns.org>
- <d833ad15-f458-d43d-cab7-de62ff54a939@kernel.org>
+From: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: clarification about misc controller and capacity vs. max
+Date: Tue, 1 Nov 2022 06:54:34 -1000
+Message-ID: <Y2FPSqOaQGnISvXu@slm.duckdns.org>
+References: <2f7b7d6b10bdcbc9a73ea449d3636575124afa25.camel@intel.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
@@ -14,64 +10,46 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=8NNV/E5PvWzmIXNGvDSWT/6GgvR8jci+9gjd8ctauYo=;
-        b=LEL4GYFUmS8dUOAT/5nK1/KYd+ZwtOmK9IedlMya1qlOZRx+FuuuuA/CtLRS+eCLRz
-         Nsz6Dr/k/g6GAPFyavmARI1wuovp24HHeB6HGw0lS3IQv+qRkvB0JZ1gKMbi/FLWoeYh
-         H2hrCDdMs7KYEipsyf2LL7i2N5mYxjOCRDArSv1s0QSKfzMKIORCDRuOqdmBpwsohacW
-         6QuUicBqOf+POhLdqmHX7PXtL0vRcyB4s4VBHQpx3CLs1uS4Aad6MGQMTANTDZpWbGKo
-         YyQDpVTaEkJBqnArwECrk8uywmNczFnR0FTUAaZWfA8KK93xKlpBmR2J0DO1TKHyVw0i
-         qwug==
+        bh=spsZndBT7leVOWuziIPS4xU0aN+hFOZ8iUUTPETtklA=;
+        b=AvcaKX3jDJlPbj+XUFXCw/eNC1XntbhLZOVPgZ+tAFa/w5ylcYNV6PCYWT0S5QF1/o
+         8Yyos9IKlZ+YvbCz5y9hBe31IIvFXdv0zsQrC+ECFrZFwYbxp80vbv9p+FZwokqriof5
+         pAhCJp7S75lfrFvVwv5RIRYfgAgbuREIePNpRiloRNBcNsUycaU7RbPybIb8VszXADKI
+         uVi7nJB1U8sQf6EUJsxS7AkP6G6UIGgQXIWqsz8oNI1xa9/xrPbbG7MbvXlSFcCM5e7e
+         DD8+rDC1bisp9MQJqmk4MNMEZ7tWXFVGl1rtq/8XaonFT/SX3Nn6YivWUVdc7s6ocLF3
+         g0Kg==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <d833ad15-f458-d43d-cab7-de62ff54a939-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <2f7b7d6b10bdcbc9a73ea449d3636575124afa25.camel-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jiri Slaby <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Accardi, Kristen C" <kristen.c.accardi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
 Hello,
 
-On Tue, Nov 01, 2022 at 06:46:56AM +0100, Jiri Slaby wrote:
-> Yes. The real problem is that using anything else then an INT_MIN <= x <=
-> INT_MAX _constant_ in an enum is undefined in ANSI C < 2x (in particular, 1
-> << x is undefined too). gcc manual defines unsigned int on the top of that
-> as defined too (so this holds for our -std=g*).
-> 
-> > I suppose the most reasonable thing to do here is just splitting them into
-> > separate enum definitions. Does anyone know how this behavior change came to
-> > be?
-> 
-> C2x which introduces un/signed long enums. See the bug I linked in the
-> commit log:
-> https://gcc.gnu.org/bugzilla/show_bug.cgi?id=36113
+On Tue, Nov 01, 2022 at 04:40:22PM +0000, Accardi, Kristen C wrote:
+> I notice in the comments for the misc controller it is stated that the
+> max limit can be more than actual total capacity, meaning that we can
+> overcommit with the resource controlled by the misc controller.
+> However, in the misc_cg_try_charge() code, the function will return -
+> EBUSY if max limit will be crossed or total usage will be more than the
+> capacity, which would seem to enforce total capacity as an upper limit
+> in addition to max and not allow for overcommit. Can you provide some
+> clarity on whether the resource consumption model for the misc
+> controller should allow for overcommit?
 
-I see. So, it was an extension but the new standard is defined differently
-and we're gonna end up with that behavior.
+I think what it's trying to say is that the sum of first level .max's can be
+higher than the total capacity. e.g. Let's say you have 5 of this resource
+and a hierarchy like the following.
 
-> The change is also turned on in < C2x on purpose. AIUI, unless there is too
-> much breakage. So we'd need to sort it out in (rather distant) future anyway
-> (when we come up to -std=g2x).
+        R - A - A'
+          + B - B'
+          \ C
 
-The part that the new behavior applying to <C2x feels like an odd decision.
-I'm having a hard time seeing the upsides in doing so but maybe that's just
-me not knowing the area well enough.
-
-> > Do we know whether clang is gonna be changed the same way?
-> 
-> In C2x, Likely. In < C2x, dunno what'd be the default.
-
-It looks like we can do one of the following two:
-
-* If gcc actually changes the behavior for <c2x, split the enums according
-  to their sizes. This feels rather silly but I can't think of a better way
-  to cater to divergent compiler behaviors.
-
-* If gcc doesn't change the behavior for <c2x, there's nothing to do for the
-  time being. Later when we switch to -std=g2x, we can just change the
-  format strings to use the now larger types.
-
-Does the above make sense?
+It's valid to have A, B, C's max set to 4, 3, 2 respectively even if they
+sum up to 9 which is larger than what's available in the system, 5 - ie. the
+max limits are overcommitted for the resource.
 
 Thanks.
 
