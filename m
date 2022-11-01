@@ -1,38 +1,79 @@
-From: "Accardi, Kristen C" <kristen.c.accardi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: clarification about misc controller and capacity vs. max
-Date: Tue, 1 Nov 2022 16:40:22 +0000
-Message-ID: <2f7b7d6b10bdcbc9a73ea449d3636575124afa25.camel@intel.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] block/blk-iocost (gcc13): cast enum members to int in
+ prints
+Date: Tue, 1 Nov 2022 06:46:35 -1000
+Message-ID: <Y2FNa4bGhJoevRKT@slm.duckdns.org>
+References: <20221031114520.10518-1-jirislaby@kernel.org>
+ <Y1++fLJXkeZgtXR2@infradead.org>
+ <Y2AMcSPAJpj6obSA@slm.duckdns.org>
+ <d833ad15-f458-d43d-cab7-de62ff54a939@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1667320825; x=1698856825;
-  h=from:to:subject:date:message-id:content-id:
-   content-transfer-encoding:mime-version;
-  bh=sM0CAe0h1xIfZR6B5nhj2Lu5/wz/p1dk+jzqRAKMtFE=;
-  b=YkHKdVSUk0Zjlaag1XxHYNNaZJcbwd624HgHZlB4U2Z0DSHgfKXZwYHm
-   FQldaPbhdlM6ZG6pEwSSwMGCVYLckl7bZfTvYiSoQwBJZxAdqsCiGEvX0
-   bHWIxmYBWMYLojlL45FhTCqB92P6xvHc9nVTkVm1epWS09Hn0JIp61KHS
-   u6Cp+oozAx0bCJDUYhCEh4tX6GcM3CbT2PGNNdC90wWUBaLXa3WgNY3oH
-   oz+OozAidJjHI66sDBWt8puIs6eNFVeuZmgsc9/m2cfTJaRsZl5IIAWTW
-   ytF529svrNkoc2D7K9wOAV08JgfonJjnQMVldIkezTF5fSdmkxeY2Lmpk
-   g==;
-Content-Language: en-US
-Content-ID: <64FF881EB77A744184D02C8D12B917E7-Hry67jCOGbCcE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=8NNV/E5PvWzmIXNGvDSWT/6GgvR8jci+9gjd8ctauYo=;
+        b=LEL4GYFUmS8dUOAT/5nK1/KYd+ZwtOmK9IedlMya1qlOZRx+FuuuuA/CtLRS+eCLRz
+         Nsz6Dr/k/g6GAPFyavmARI1wuovp24HHeB6HGw0lS3IQv+qRkvB0JZ1gKMbi/FLWoeYh
+         H2hrCDdMs7KYEipsyf2LL7i2N5mYxjOCRDArSv1s0QSKfzMKIORCDRuOqdmBpwsohacW
+         6QuUicBqOf+POhLdqmHX7PXtL0vRcyB4s4VBHQpx3CLs1uS4Aad6MGQMTANTDZpWbGKo
+         YyQDpVTaEkJBqnArwECrk8uywmNczFnR0FTUAaZWfA8KK93xKlpBmR2J0DO1TKHyVw0i
+         qwug==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <d833ad15-f458-d43d-cab7-de62ff54a939-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Jiri Slaby <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-SGkgdGhlcmUsDQpJIG5vdGljZSBpbiB0aGUgY29tbWVudHMgZm9yIHRoZSBtaXNjIGNvbnRyb2xs
-ZXIgaXQgaXMgc3RhdGVkIHRoYXQgdGhlDQptYXggbGltaXQgY2FuIGJlIG1vcmUgdGhhbiBhY3R1
-YWwgdG90YWwgY2FwYWNpdHksIG1lYW5pbmcgdGhhdCB3ZSBjYW4NCm92ZXJjb21taXQgd2l0aCB0
-aGUgcmVzb3VyY2UgY29udHJvbGxlZCBieSB0aGUgbWlzYyBjb250cm9sbGVyLg0KSG93ZXZlciwg
-aW4gdGhlIG1pc2NfY2dfdHJ5X2NoYXJnZSgpIGNvZGUsIHRoZSBmdW5jdGlvbiB3aWxsIHJldHVy
-biAtDQpFQlVTWSBpZiBtYXggbGltaXQgd2lsbCBiZSBjcm9zc2VkIG9yIHRvdGFsIHVzYWdlIHdp
-bGwgYmUgbW9yZSB0aGFuIHRoZQ0KY2FwYWNpdHksIHdoaWNoIHdvdWxkIHNlZW0gdG8gZW5mb3Jj
-ZSB0b3RhbCBjYXBhY2l0eSBhcyBhbiB1cHBlciBsaW1pdA0KaW4gYWRkaXRpb24gdG8gbWF4IGFu
-ZCBub3QgYWxsb3cgZm9yIG92ZXJjb21taXQuIENhbiB5b3UgcHJvdmlkZSBzb21lDQpjbGFyaXR5
-IG9uIHdoZXRoZXIgdGhlIHJlc291cmNlIGNvbnN1bXB0aW9uIG1vZGVsIGZvciB0aGUgbWlzYw0K
-Y29udHJvbGxlciBzaG91bGQgYWxsb3cgZm9yIG92ZXJjb21taXQ/DQoNClRoYW5rcywNCktyaXN0
-ZW4gQWNjYXJkaQ0KDQo=
+Hello,
+
+On Tue, Nov 01, 2022 at 06:46:56AM +0100, Jiri Slaby wrote:
+> Yes. The real problem is that using anything else then an INT_MIN <= x <=
+> INT_MAX _constant_ in an enum is undefined in ANSI C < 2x (in particular, 1
+> << x is undefined too). gcc manual defines unsigned int on the top of that
+> as defined too (so this holds for our -std=g*).
+> 
+> > I suppose the most reasonable thing to do here is just splitting them into
+> > separate enum definitions. Does anyone know how this behavior change came to
+> > be?
+> 
+> C2x which introduces un/signed long enums. See the bug I linked in the
+> commit log:
+> https://gcc.gnu.org/bugzilla/show_bug.cgi?id=36113
+
+I see. So, it was an extension but the new standard is defined differently
+and we're gonna end up with that behavior.
+
+> The change is also turned on in < C2x on purpose. AIUI, unless there is too
+> much breakage. So we'd need to sort it out in (rather distant) future anyway
+> (when we come up to -std=g2x).
+
+The part that the new behavior applying to <C2x feels like an odd decision.
+I'm having a hard time seeing the upsides in doing so but maybe that's just
+me not knowing the area well enough.
+
+> > Do we know whether clang is gonna be changed the same way?
+> 
+> In C2x, Likely. In < C2x, dunno what'd be the default.
+
+It looks like we can do one of the following two:
+
+* If gcc actually changes the behavior for <c2x, split the enums according
+  to their sizes. This feels rather silly but I can't think of a better way
+  to cater to divergent compiler behaviors.
+
+* If gcc doesn't change the behavior for <c2x, there's nothing to do for the
+  time being. Later when we switch to -std=g2x, we can just change the
+  format strings to use the now larger types.
+
+Does the above make sense?
+
+Thanks.
+
+-- 
+tejun
