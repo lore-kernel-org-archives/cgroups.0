@@ -1,100 +1,60 @@
-From: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] mm/vmscan: respect cpuset policy during page demotion
-Date: Tue, 01 Nov 2022 11:17:04 +0800
-Message-ID: <87r0yncqj3.fsf@yhuang6-desk2.ccr.corp.intel.com>
-References: <20221026074343.6517-1-feng.tang@intel.com>
-        <dc453287-015d-fd1c-fe7f-6ee45772d6aa@linux.ibm.com>
-        <Y1jpDfwBQId3GkJC@feng-clx> <Y1j7tsj5M0Md/+Er@dhcp22.suse.cz>
-        <Y1kl8VbPE0RYdyEB@feng-clx> <Y1lZV6qHp3gIINGc@dhcp22.suse.cz>
-        <87wn8lkbk5.fsf@yhuang6-desk2.ccr.corp.intel.com>
-        <Y1ou5DGHrEsKnhri@dhcp22.suse.cz>
-        <87o7txk963.fsf@yhuang6-desk2.ccr.corp.intel.com>
-        <Y1o63SWD2KmQkT3v@dhcp22.suse.cz>
-        <87fsf9k3yg.fsf@yhuang6-desk2.ccr.corp.intel.com>
+From: Jiri Slaby <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] block/blk-iocost (gcc13): cast enum members to int in
+ prints
+Date: Tue, 1 Nov 2022 06:46:56 +0100
+Message-ID: <d833ad15-f458-d43d-cab7-de62ff54a939@kernel.org>
+References: <20221031114520.10518-1-jirislaby@kernel.org>
+ <Y1++fLJXkeZgtXR2@infradead.org> <Y2AMcSPAJpj6obSA@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1667272674; x=1698808674;
-  h=from:to:cc:subject:references:date:in-reply-to:
-   message-id:mime-version;
-  bh=gXFkpBk6Mk0KHfml+Hm4uAnHyTOnb+ioyvEbwdWn2Rs=;
-  b=PXMFohgf/aBI22iMcxphpQV+UqVuVgaERxSquUi/8HDS10v4TsG/HWBK
-   5tPmvvQb4a0OkGDWnRntpV6pIalLegwsFzls/WDZK06Wr6XcqZRonOmJe
-   LUAxa7AvutrUASpOiu16eDyqxMaeiaMhnsvS5zxkyPOwC1zb11Ibobqsr
-   sRVF3Rl5+CELkcVcsrWmynqis9qSUyYTdnAhaw0mDnoblSgeiUDeFvD+V
-   d7GM3dFaoa4zASTICGEM+BkvrBR3c57g5eRqYR6orR/Vodr6XgRlIqW/e
-   sFykm+VEyZyeFNy6qBojWHm2eEsdiCN3lnSX/GdhYavgMFa0AlI25dCTI
-   Q==;
-In-Reply-To: <87fsf9k3yg.fsf-fFUE1NP8JkzwuUmzmnQr+vooFf0ArEBIu+b9c/7xato@public.gmane.org> (Ying Huang's
-        message of "Thu, 27 Oct 2022 17:31:35 +0800")
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jonathan Cameron <Jonathan.Cameron-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Aneesh Kumar K V <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-Cc: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Hansen, Dave" <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Yin, Fengwei" <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Language: en-US
+In-Reply-To: <Y2AMcSPAJpj6obSA-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-"Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> writes:
-
-> Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
->
->> On Thu 27-10-22 15:39:00, Huang, Ying wrote:
->>> Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
->>> 
->>> > On Thu 27-10-22 14:47:22, Huang, Ying wrote:
->>> >> Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
->>> > [...]
->>> >> > I can imagine workloads which wouldn't like to get their memory demoted
->>> >> > for some reason but wouldn't it be more practical to tell that
->>> >> > explicitly (e.g. via prctl) rather than configuring cpusets/memory
->>> >> > policies explicitly?
->>> >> 
->>> >> If my understanding were correct, prctl() configures the process or
->>> >> thread.
->>> >
->>> > Not necessarily. There are properties which are per adddress space like
->>> > PR_[GS]ET_THP_DISABLE. This could be very similar.
->>> >
->>> >> How can we get process/thread configuration at demotion time?
->>> >
->>> > As already pointed out in previous emails. You could hook into
->>> > folio_check_references path, more specifically folio_referenced_one
->>> > where you have all that you need already - all vmas mapping the page and
->>> > then it is trivial to get the corresponding vm_mm. If at least one of
->>> > them has the flag set then the demotion is not allowed (essentially the
->>> > same model as VM_LOCKED).
->>> 
->>> Got it!  Thanks for detailed explanation.
->>> 
->>> One bit may be not sufficient.  For example, if we want to avoid or
->>> control cross-socket demotion and still allow demoting to slow memory
->>> nodes in local socket, we need to specify a node mask to exclude some
->>> NUMA nodes from demotion targets.
+On 31. 10. 22, 18:57, Tejun Heo wrote:
+> On Mon, Oct 31, 2022 at 05:24:28AM -0700, Christoph Hellwig wrote:
+>> On Mon, Oct 31, 2022 at 12:45:20PM +0100, Jiri Slaby (SUSE) wrote:
+>>> Cast the enum members to int when printing them.
+>>>
+>>> Alternatively, we can cast them to ulong (to silence gcc < 12) and use %lu.
+>>> Alternatively, we can move VTIME_PER_SEC away from the enum.
 >>
->> Isn't this something to be configured on the demotion topology side? Or
->> do you expect there will be per process/address space usecases? I mean
->> different processes running on the same topology, one requesting local
->> demotion while other ok with the whole demotion topology?
->
-> I think that it's possible for different processes have different
-> requirements.
->
-> - Some processes don't care about where the memory is placed, prefer
->   local, then fall back to remote if no free space.
->
-> - Some processes want to avoid cross-socket traffic, bind to nodes of
->   local socket.
->
-> - Some processes want to avoid to use slow memory, bind to fast memory
->   node only.
+>> Yes, either split the enum or just use a define.  But casts are a big
+>> code smell and should be avoided if there is a reasonable alternative.
+> 
+> enums are so much better for debugging and other instrumentation stuff. The
+> only requirement for the enum types is that they're big enough to express
+> all the members and we can use whatever printf format letter which matches
+> the type in use. The problem here is that the compiler behavior is different
+> depending on the compiler version, which kinda sucks.
 
-Hi, Johannes, Wei, Jonathan, Yang, Aneesh,
+Yes. The real problem is that using anything else then an INT_MIN <= x 
+<= INT_MAX _constant_ in an enum is undefined in ANSI C < 2x (in 
+particular, 1 << x is undefined too). gcc manual defines unsigned int on 
+the top of that as defined too (so this holds for our -std=g*).
 
-We need your help.  Do you or your organization have requirements to
-restrict the page demotion target nodes?  If so, can you share some
-details of the requirements?  For example, to avoid cross-socket
-traffic, or to avoid using slow memory.  And do you want to restrict
-that with cpusets, memory policy, or some other interfaces.
+> I suppose the most reasonable thing to do here is just splitting them into
+> separate enum definitions. Does anyone know how this behavior change came to
+> be?
 
-Best Regards,
-Huang, Ying
+C2x which introduces un/signed long enums. See the bug I linked in the 
+commit log:
+https://gcc.gnu.org/bugzilla/show_bug.cgi?id=36113
+
+The change is also turned on in < C2x on purpose. AIUI, unless there is 
+too much breakage. So we'd need to sort it out in (rather distant) 
+future anyway (when we come up to -std=g2x).
+
+> Do we know whether clang is gonna be changed the same way?
+
+In C2x, Likely. In < C2x, dunno what'd be the default.
+
+thanks,
+-- 
+js
+suse labs
+
