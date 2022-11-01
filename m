@@ -1,57 +1,58 @@
-From: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: "Accardi, Kristen C" <kristen.c.accardi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Subject: Re: clarification about misc controller and capacity vs. max
-Date: Tue, 1 Nov 2022 06:54:34 -1000
-Message-ID: <Y2FPSqOaQGnISvXu@slm.duckdns.org>
+Date: Tue, 1 Nov 2022 17:03:25 +0000
+Message-ID: <14c21f13ebbcdbd0ea4f75b7fff790b31a05a5aa.camel@intel.com>
 References: <2f7b7d6b10bdcbc9a73ea449d3636575124afa25.camel@intel.com>
+         <Y2FPSqOaQGnISvXu@slm.duckdns.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=spsZndBT7leVOWuziIPS4xU0aN+hFOZ8iUUTPETtklA=;
-        b=AvcaKX3jDJlPbj+XUFXCw/eNC1XntbhLZOVPgZ+tAFa/w5ylcYNV6PCYWT0S5QF1/o
-         8Yyos9IKlZ+YvbCz5y9hBe31IIvFXdv0zsQrC+ECFrZFwYbxp80vbv9p+FZwokqriof5
-         pAhCJp7S75lfrFvVwv5RIRYfgAgbuREIePNpRiloRNBcNsUycaU7RbPybIb8VszXADKI
-         uVi7nJB1U8sQf6EUJsxS7AkP6G6UIGgQXIWqsz8oNI1xa9/xrPbbG7MbvXlSFcCM5e7e
-         DD8+rDC1bisp9MQJqmk4MNMEZ7tWXFVGl1rtq/8XaonFT/SX3Nn6YivWUVdc7s6ocLF3
-         g0Kg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <2f7b7d6b10bdcbc9a73ea449d3636575124afa25.camel-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1667322208; x=1698858208;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=gisOpu+6fJfgCJjwCNI9y3/gdC3vw9tIkfD5zzbh8FI=;
+  b=DgLnE7HucIGpOmR9w6hPfDtcCOyCJRvkMm7KkJYPNyTmW8Mzy/3AyouY
+   aRReZr4WWGd43HkrPzru/3W3IguWorJ4yPcT+Ij9wslLbscSp+7Z1nwIy
+   K97f93aJsFvsVnLU5EzW3Hilml46cWACI01M85YCSMNQxVz6/K//T4oy4
+   l/JpgUfDr/wzV6GMxtsRH2hi4G3wuSVzb9exnGiIei8eKPpGN+pPYUm4c
+   VCsNRhBLbQv9qZfvha+fIfi3OGti8bRoSSZvRg96kUBlWECrKMjE+IIvK
+   Uz9+6UEZkUb+ifSRtBDthV27rRnU++y2jbCQjYsHdfqV7/ctEfFk7WI4p
+   g==;
+In-Reply-To: <Y2FPSqOaQGnISvXu-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Content-Language: en-US
+Content-ID: <3E1DD9176524D0418E4CF86D8D12F559-Hry67jCOGbCcE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Accardi, Kristen C" <kristen.c.accardi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello,
-
-On Tue, Nov 01, 2022 at 04:40:22PM +0000, Accardi, Kristen C wrote:
-> I notice in the comments for the misc controller it is stated that the
-> max limit can be more than actual total capacity, meaning that we can
-> overcommit with the resource controlled by the misc controller.
-> However, in the misc_cg_try_charge() code, the function will return -
-> EBUSY if max limit will be crossed or total usage will be more than the
-> capacity, which would seem to enforce total capacity as an upper limit
-> in addition to max and not allow for overcommit. Can you provide some
-> clarity on whether the resource consumption model for the misc
-> controller should allow for overcommit?
-
-I think what it's trying to say is that the sum of first level .max's can be
-higher than the total capacity. e.g. Let's say you have 5 of this resource
-and a hierarchy like the following.
-
-        R - A - A'
-          + B - B'
-          \ C
-
-It's valid to have A, B, C's max set to 4, 3, 2 respectively even if they
-sum up to 9 which is larger than what's available in the system, 5 - ie. the
-max limits are overcommitted for the resource.
-
-Thanks.
-
--- 
-tejun
+T24gVHVlLCAyMDIyLTExLTAxIGF0IDA2OjU0IC0xMDAwLCB0akBrZXJuZWwub3JnIHdyb3RlOg0K
+PiBIZWxsbywNCj4gDQo+IE9uIFR1ZSwgTm92IDAxLCAyMDIyIGF0IDA0OjQwOjIyUE0gKzAwMDAs
+IEFjY2FyZGksIEtyaXN0ZW4gQyB3cm90ZToNCj4gPiBJIG5vdGljZSBpbiB0aGUgY29tbWVudHMg
+Zm9yIHRoZSBtaXNjIGNvbnRyb2xsZXIgaXQgaXMgc3RhdGVkIHRoYXQNCj4gPiB0aGUNCj4gPiBt
+YXggbGltaXQgY2FuIGJlIG1vcmUgdGhhbiBhY3R1YWwgdG90YWwgY2FwYWNpdHksIG1lYW5pbmcg
+dGhhdCB3ZQ0KPiA+IGNhbg0KPiA+IG92ZXJjb21taXQgd2l0aCB0aGUgcmVzb3VyY2UgY29udHJv
+bGxlZCBieSB0aGUgbWlzYyBjb250cm9sbGVyLg0KPiA+IEhvd2V2ZXIsIGluIHRoZSBtaXNjX2Nn
+X3RyeV9jaGFyZ2UoKSBjb2RlLCB0aGUgZnVuY3Rpb24gd2lsbCByZXR1cm4NCj4gPiAtDQo+ID4g
+RUJVU1kgaWYgbWF4IGxpbWl0IHdpbGwgYmUgY3Jvc3NlZCBvciB0b3RhbCB1c2FnZSB3aWxsIGJl
+IG1vcmUgdGhhbg0KPiA+IHRoZQ0KPiA+IGNhcGFjaXR5LCB3aGljaCB3b3VsZCBzZWVtIHRvIGVu
+Zm9yY2UgdG90YWwgY2FwYWNpdHkgYXMgYW4gdXBwZXINCj4gPiBsaW1pdA0KPiA+IGluIGFkZGl0
+aW9uIHRvIG1heCBhbmQgbm90IGFsbG93IGZvciBvdmVyY29tbWl0LiBDYW4geW91IHByb3ZpZGUN
+Cj4gPiBzb21lDQo+ID4gY2xhcml0eSBvbiB3aGV0aGVyIHRoZSByZXNvdXJjZSBjb25zdW1wdGlv
+biBtb2RlbCBmb3IgdGhlIG1pc2MNCj4gPiBjb250cm9sbGVyIHNob3VsZCBhbGxvdyBmb3Igb3Zl
+cmNvbW1pdD8NCj4gDQo+IEkgdGhpbmsgd2hhdCBpdCdzIHRyeWluZyB0byBzYXkgaXMgdGhhdCB0
+aGUgc3VtIG9mIGZpcnN0IGxldmVsIC5tYXgncw0KPiBjYW4gYmUNCj4gaGlnaGVyIHRoYW4gdGhl
+IHRvdGFsIGNhcGFjaXR5LiBlLmcuIExldCdzIHNheSB5b3UgaGF2ZSA1IG9mIHRoaXMNCj4gcmVz
+b3VyY2UNCj4gYW5kIGEgaGllcmFyY2h5IGxpa2UgdGhlIGZvbGxvd2luZy4NCj4gDQo+IMKgwqDC
+oMKgwqDCoMKgIFIgLSBBIC0gQScNCj4gwqDCoMKgwqDCoMKgwqDCoMKgICsgQiAtIEInDQo+IMKg
+wqDCoMKgwqDCoMKgwqDCoCBcIEMNCj4gDQo+IEl0J3MgdmFsaWQgdG8gaGF2ZSBBLCBCLCBDJ3Mg
+bWF4IHNldCB0byA0LCAzLCAyIHJlc3BlY3RpdmVseSBldmVuIGlmDQo+IHRoZXkNCj4gc3VtIHVw
+IHRvIDkgd2hpY2ggaXMgbGFyZ2VyIHRoYW4gd2hhdCdzIGF2YWlsYWJsZSBpbiB0aGUgc3lzdGVt
+LCA1IC0NCj4gaWUuIHRoZQ0KPiBtYXggbGltaXRzIGFyZSBvdmVyY29tbWl0dGVkIGZvciB0aGUg
+cmVzb3VyY2UuDQo+IA0KPiBUaGFua3MuDQo+IA0KDQpTbyB0byBiZSBjbGVhciwgaWYgSSBoYXZl
+IHRoaXM6DQoNCi9zeXMvZnMvY2dyb3VwL21pc2MuY2FwYWNpdHkNCnNvbWVfcmVzIDEwDQoNCmFu
+ZCB0aGlzOg0KL3N5cy9mcy9jZ3JvdXAvdGVzdA0KDQp0ZXN0LmN1cnJlbnQgd2lsbCBuZXZlciBi
+ZSBhbGxvd2VkIHRvIGV4Y2VlZCAxMC4NCg0K
