@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH -next v4 4/5] block, bfq: remove dead code for updating 'rq_in_driver'
-Date: Wed,  2 Nov 2022 10:25:41 +0800
-Message-ID: <20221102022542.3621219-5-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v4 3/5] block, bfq: cleanup bfq_activate_requeue_entity()
+Date: Wed,  2 Nov 2022 10:25:40 +0800
+Message-ID: <20221102022542.3621219-4-yukuai1@huaweicloud.com>
 References: <20221102022542.3621219-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,42 +14,53 @@ Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2
 
 From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Such code are not even compiled since they are inside marco "#if 0".
+Just make the code a litter cleaner by removing the unnecessary
+variable 'sd'.
 
 Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
 Acked-by: Paolo Valente <paolo.valente-rcYM44yAMweonA0d6jMUrA@public.gmane.org>
 ---
- block/bfq-iosched.c | 16 ----------------
- 1 file changed, 16 deletions(-)
+ block/bfq-wf2q.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 42aa5fc7f17b..2381cf220ba2 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -2321,22 +2321,6 @@ static sector_t get_sdist(sector_t last_pos, struct request *rq)
- 	return 0;
+diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+index a908aa3eb0ab..4d4b84e7bf3e 100644
+--- a/block/bfq-wf2q.c
++++ b/block/bfq-wf2q.c
+@@ -1052,12 +1052,12 @@ static void __bfq_requeue_entity(struct bfq_entity *entity)
  }
  
--#if 0 /* Still not clear if we can do without next two functions */
--static void bfq_activate_request(struct request_queue *q, struct request *rq)
--{
--	struct bfq_data *bfqd = q->elevator->elevator_data;
--
--	bfqd->rq_in_driver++;
--}
--
--static void bfq_deactivate_request(struct request_queue *q, struct request *rq)
--{
--	struct bfq_data *bfqd = q->elevator->elevator_data;
--
--	bfqd->rq_in_driver--;
--}
--#endif
--
- static void bfq_remove_request(struct request_queue *q,
- 			       struct request *rq)
+ static void __bfq_activate_requeue_entity(struct bfq_entity *entity,
+-					  struct bfq_sched_data *sd,
+ 					  bool non_blocking_wait_rq)
  {
+ 	struct bfq_service_tree *st = bfq_entity_service_tree(entity);
+ 
+-	if (sd->in_service_entity == entity || entity->tree == &st->active)
++	if (entity->sched_data->in_service_entity == entity ||
++	    entity->tree == &st->active)
+ 		 /*
+ 		  * in service or already queued on the active tree,
+ 		  * requeue or reposition
+@@ -1089,14 +1089,10 @@ static void bfq_activate_requeue_entity(struct bfq_entity *entity,
+ 					bool non_blocking_wait_rq,
+ 					bool requeue, bool expiration)
+ {
+-	struct bfq_sched_data *sd;
+-
+ 	for_each_entity(entity) {
+-		sd = entity->sched_data;
+-		__bfq_activate_requeue_entity(entity, sd, non_blocking_wait_rq);
+-
+-		if (!bfq_update_next_in_service(sd, entity, expiration) &&
+-		    !requeue)
++		__bfq_activate_requeue_entity(entity, non_blocking_wait_rq);
++		if (!bfq_update_next_in_service(entity->sched_data, entity,
++						expiration) && !requeue)
+ 			break;
+ 	}
+ }
 -- 
 2.31.1
 
