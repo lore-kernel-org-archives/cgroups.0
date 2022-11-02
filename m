@@ -1,42 +1,52 @@
-From: Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] block: Correct comment for scale_cookie_change
-Date: Wed, 2 Nov 2022 10:11:48 -0400
-Message-ID: <Y2J6pPj4/aVdoGPp@localhost.localdomain>
-References: <20221018111240.22612-1-shikemeng@huawei.com>
- <20221018111240.22612-3-shikemeng@huawei.com>
+From: 'Tejun Heo' <tj@kernel.org>
+Subject: Re: [PATCH] block/blk-iocost (gcc13): cast enum members to int in
+ prints
+Date: Wed, 2 Nov 2022 06:27:46 -1000
+Message-ID: <Y2Kaghnu/sPvl0+g@slm.duckdns.org>
+References: <20221031114520.10518-1-jirislaby@kernel.org>
+ <Y1++fLJXkeZgtXR2@infradead.org>
+ <Y2AMcSPAJpj6obSA@slm.duckdns.org>
+ <d833ad15-f458-d43d-cab7-de62ff54a939@kernel.org>
+ <Y2FNa4bGhJoevRKT@slm.duckdns.org>
+ <2b975ee3117e45aaa7882203cf9a4db8@AcuMS.aculab.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20210112.gappssmtp.com; s=20210112;
+        d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Km8d07l+If3latZbcnno8TWKH4LLZv0VkyhOoXFA9PI=;
-        b=3K17y2wDCpq6CGFi/JqscdFCZwJGvNNaM/UrrmYofJw1wR3fGyOhi0rlaMmUvngM6N
-         1krgS08m59z2fr/guD+Fxxlexzk1wWL4DDBfFKhfYnmJzVrUGe1X4SPy/ewT8BQC0GfG
-         cyN/fTXQ6bcPNPSW3tnZyUIjkUqa1IflSfWNU57n1QgVF2Pfb/1krse6RRVC5tWKohru
-         eaMOhLitbn3Pvl2VfFWMFZMYpBalV/17Mrynnzxe6BuDm4NHgpy96rb9Ta41d8fsSuYQ
-         4HSWJFbdNieK8n5myVnk2FIvFji3UCt22731b4pIAwKKstvvQJ57GK52yWp62ipKzz8Y
-         WCxw==
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=XOnTIwSkLdz0Y256VHM03IJIqS86treru+v0xLpx+F0=;
+        b=TSWa57P1ikjpGFCx0r7ilDPFqEDtPVd3KC8p2+bfITDvY+qgxXOhl/TxGYJIPL8HKw
+         1FAG5fB5ofC4QbMSaaU2lNl3GcDir6a2aQx/Z9Fu6JVPm894KAXlZvEJ+xsgusNCqqza
+         NhDO1Mw9eSPwcyGqeebl2KKJ4x+2fpwGevQ8j22Do7C7344WtfBMf/EJDTg4QRgEWlGr
+         qwhwF8T6Dd/42zvmmTRa47pRMCKV6mjfETEqrCWEc5cHFJhXsJeKsryaMPZsu/E5Nx8b
+         jBviskxJiTgDjC3nxI/YYsC1dG8PZqpmRUyhK+9HaalZ6GWbSwlt0+qe4HBRsiqY96A6
+         jqpg==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20221018111240.22612-3-shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <2b975ee3117e45aaa7882203cf9a4db8@AcuMS.aculab.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Laight <David.Laight@aculab.com>
+Cc: Jiri Slaby <jirislaby@kernel.org>, Christoph Hellwig <hch@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Martin Liska <mliska@suse.cz>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
-On Tue, Oct 18, 2022 at 07:12:39PM +0800, Kemeng Shi wrote:
-> Default queue depth of iolatency_grp is unlimited, so we scale down
-> quickly(once by half) in scale_cookie_change. Remove the "subtract
-> 1/16th" part which is not the truth and add the actual way we
-> scale down.
-> 
-> Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+On Wed, Nov 02, 2022 at 08:35:34AM +0000, David Laight wrote:
+> I think the enums have to be split.
+> There will be other side effects of promoting the constants to 64bit
+> that are much more difficult to detect than the warnings from printf.
 
-This is perfect, thanks Kemeng
+idk, I think I can just add LLU to everything and it should be fine.
 
-Reviewed-by: Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
+> I'm also not sure whether the type is even consistent for 32bit
+> and 64bit builds.
+> Casts are (sort of) horrid.
 
-Thanks,
+Yeah, I don't think casts are the solution either. Lemme add LLU to
+everything and see how it works.
 
-Josef
+Thanks.
+
+-- 
+tejun
