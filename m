@@ -1,89 +1,176 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v1 0/3] Avoid scheduling cache draining to isolated cpus
-Date: Wed, 2 Nov 2022 09:53:49 +0100
-Message-ID: <Y2IwHVdgAJ6wfOVH@dhcp22.suse.cz>
-References: <20221102020243.522358-1-leobras@redhat.com>
+From: syzbot <syzbot+c39682e86c9d84152f93-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
+Subject: [syzbot] possible deadlock in static_key_slow_inc (2)
+Date: Wed, 02 Nov 2022 03:36:49 -0700
+Message-ID: <00000000000009483d05ec7a6b93@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1667379230; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=mAyd5hYheJHs7wZ412hApYrbs0qLQ48nSsf9XNgypBM=;
-        b=RjV6dnJfhfmC76wKcoNRFCWemxydooK/VGDCWqPhiMz0F/TrV1ZdiW0XKhCBJ8Z7iR628t
-        jbGI2t0D0qvdGIrFzIqSqDmp4SOjwQiT0zrCtyvHvOOiv4hyqm+5N/sArHJ9TZeIonaEa1
-        LVNRrUQKlBz+NnQeVIaR9H9oNcggfrw=
-Content-Disposition: inline
-In-Reply-To: <20221102020243.522358-1-leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Leonardo Bras <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On Tue 01-11-22 23:02:40, Leonardo Bras wrote:
-> Patch #1 expands housekeep=EDng_any_cpu() so we can find housekeeping cpus
-> closer (NUMA) to any desired CPU, instead of only the current CPU.
->=20
-> ### Performance argument that motivated the change:
-> There could be an argument of why would that be needed, since the current
-> CPU is probably acessing the current cacheline, and so having a CPU closer
-> to the current one is always the best choice since the cache invalidation
-> will take less time. OTOH, there could be cases like this which uses
-> perCPU variables, and we can have up to 3 different CPUs touching the
-> cacheline:
->=20
-> C1 - Isolated CPU: The perCPU data 'belongs' to this one
-> C2 - Scheduling CPU: Schedule some work to be done elsewhere, current cpu
-> C3 - Housekeeping CPU: This one will do the work
->=20
-> Most of the times the cacheline is touched, it should be by C1. Some times
-> a C2 will schedule work to run on C3, since C1 is isolated.
->=20
-> If C1 and C2 are in different NUMA nodes, we could have C3 either in
-> C2 NUMA node (housekeeping_any_cpu()) or in C1 NUMA node=20
-> (housekeeping_any_cpu_from(C1).=20
->=20
-> If C3 is in C2 NUMA node, there will be a faster invalidation when C3
-> tries to get cacheline exclusivity, and then a slower invalidation when
-> this happens in C1, when it's working in its data.
->=20
-> If C3 is in C1 NUMA node, there will be a slower invalidation when C3
-> tries to get cacheline exclusivity, and then a faster invalidation when
-> this happens in C1.
->=20
-> The thing is: it should be better to wait less when doing kernel work
-> on an isolated CPU, even at the cost of some housekeeping CPU waiting
-> a few more cycles.
-> ###
->=20
-> Patch #2 changes the locking strategy of memcg_stock_pcp->stock_lock from
-> local_lock to spinlocks, so it can be later used to do remote percpu
-> cache draining on patch #3. Most performance concerns should be pointed
-> in the commit log.
->=20
-> Patch #3 implements the remote per-CPU cache drain, making use of both=20
-> patches #2 and #3. Performance-wise, in non-isolated scenarios, it should
-> introduce an extra function call and a single test to check if the CPU is
-> isolated.=20
->=20
-> On scenarios with isolation enabled on boot, it will also introduce an
-> extra test to check in the cpumask if the CPU is isolated. If it is,
-> there will also be an extra read of the cpumask to look for a
-> housekeeping CPU.
+Hello,
 
-This is a rather deep dive in the cache line usage but the most
-important thing is really missing. Why do we want this change? From the
-context it seems that this is an actual fix for isolcpu=3D setup when
-remote (aka non isolated activity) interferes with isolated cpus by
-scheduling pcp charge caches on those cpus.
+syzbot found the following issue on:
 
-Is this understanding correct?
+HEAD commit:    a2c65a9d0568 net: dsa: fall back to default tagger if we c..
+git tree:       net
+console+strace: https://syzkaller.appspot.com/x/log.txt?x=10cfb046880000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=a66c6c673fb555e8
+dashboard link: https://syzkaller.appspot.com/bug?extid=c39682e86c9d84152f93
+compiler:       gcc (Debian 10.2.1-6) 10.2.1 20210110, GNU ld (GNU Binutils for Debian) 2.35.2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=159ad4fc880000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=159d8591880000
 
-If yes, how big of a problem that is? If you want a remote draining then
-you need some sort of locking (currently we rely on local lock). How
-come this locking is not going to cause a different form of disturbance?
---=20
-Michal Hocko
-SUSE Labs
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/c43fc9428e96/disk-a2c65a9d.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/ef96432b3e62/vmlinux-a2c65a9d.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/ee926615bbfc/bzImage-a2c65a9d.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+c39682e86c9d84152f93-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
+
+======================================================
+WARNING: possible circular locking dependency detected
+6.1.0-rc2-syzkaller-00201-ga2c65a9d0568 #0 Not tainted
+------------------------------------------------------
+syz-executor229/3606 is trying to acquire lock:
+ffffffff8be35130 (cpu_hotplug_lock){++++}-{0:0}, at: static_key_slow_inc+0xe/0x20 kernel/jump_label.c:158
+
+but task is already holding lock:
+ffffffff8bfda0c8 (freezer_mutex){+.+.}-{3:3}, at: freezer_change_state kernel/cgroup/legacy_freezer.c:387 [inline]
+ffffffff8bfda0c8 (freezer_mutex){+.+.}-{3:3}, at: freezer_write+0x98/0xa50 kernel/cgroup/legacy_freezer.c:426
+
+which lock already depends on the new lock.
+
+
+the existing dependency chain (in reverse order) is:
+
+-> #2 (freezer_mutex){+.+.}-{3:3}:
+       __mutex_lock_common kernel/locking/mutex.c:603 [inline]
+       __mutex_lock+0x12f/0x1350 kernel/locking/mutex.c:747
+       freezer_attach+0x70/0x1f0 kernel/cgroup/legacy_freezer.c:163
+       cgroup_migrate_execute+0xbcf/0x1230 kernel/cgroup/cgroup.c:2615
+       cgroup_attach_task+0x41c/0x870 kernel/cgroup/cgroup.c:2906
+       __cgroup1_procs_write.constprop.0+0x3be/0x4b0 kernel/cgroup/cgroup-v1.c:523
+       cgroup_file_write+0x1de/0x770 kernel/cgroup/cgroup.c:4057
+       kernfs_fop_write_iter+0x3f8/0x610 fs/kernfs/file.c:330
+       call_write_iter include/linux/fs.h:2191 [inline]
+       new_sync_write fs/read_write.c:491 [inline]
+       vfs_write+0x9e9/0xdd0 fs/read_write.c:584
+       ksys_write+0x127/0x250 fs/read_write.c:637
+       do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+       do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+-> #1 (cgroup_threadgroup_rwsem){++++}-{0:0}:
+       percpu_down_write+0x4f/0x390 kernel/locking/percpu-rwsem.c:227
+       cgroup_attach_lock kernel/cgroup/cgroup.c:2431 [inline]
+       cgroup_procs_write_start+0x151/0x630 kernel/cgroup/cgroup.c:2935
+       __cgroup_procs_write+0xd7/0x650 kernel/cgroup/cgroup.c:5135
+       cgroup_procs_write+0x22/0x50 kernel/cgroup/cgroup.c:5171
+       cgroup_file_write+0x1de/0x770 kernel/cgroup/cgroup.c:4057
+       kernfs_fop_write_iter+0x3f8/0x610 fs/kernfs/file.c:330
+       call_write_iter include/linux/fs.h:2191 [inline]
+       new_sync_write fs/read_write.c:491 [inline]
+       vfs_write+0x9e9/0xdd0 fs/read_write.c:584
+       ksys_write+0x127/0x250 fs/read_write.c:637
+       do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+       do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+-> #0 (cpu_hotplug_lock){++++}-{0:0}:
+       check_prev_add kernel/locking/lockdep.c:3097 [inline]
+       check_prevs_add kernel/locking/lockdep.c:3216 [inline]
+       validate_chain kernel/locking/lockdep.c:3831 [inline]
+       __lock_acquire+0x2a43/0x56d0 kernel/locking/lockdep.c:5055
+       lock_acquire kernel/locking/lockdep.c:5668 [inline]
+       lock_acquire+0x1df/0x630 kernel/locking/lockdep.c:5633
+       percpu_down_read include/linux/percpu-rwsem.h:51 [inline]
+       cpus_read_lock+0x3e/0x140 kernel/cpu.c:310
+       static_key_slow_inc+0xe/0x20 kernel/jump_label.c:158
+       freezer_apply_state+0x1e1/0x260 kernel/cgroup/legacy_freezer.c:353
+       freezer_change_state kernel/cgroup/legacy_freezer.c:398 [inline]
+       freezer_write+0x571/0xa50 kernel/cgroup/legacy_freezer.c:426
+       cgroup_file_write+0x1de/0x770 kernel/cgroup/cgroup.c:4057
+       kernfs_fop_write_iter+0x3f8/0x610 fs/kernfs/file.c:330
+       call_write_iter include/linux/fs.h:2191 [inline]
+       new_sync_write fs/read_write.c:491 [inline]
+       vfs_write+0x9e9/0xdd0 fs/read_write.c:584
+       ksys_write+0x127/0x250 fs/read_write.c:637
+       do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+       do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+other info that might help us debug this:
+
+Chain exists of:
+  cpu_hotplug_lock --> cgroup_threadgroup_rwsem --> freezer_mutex
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(freezer_mutex);
+                               lock(cgroup_threadgroup_rwsem);
+                               lock(freezer_mutex);
+  lock(cpu_hotplug_lock);
+
+ *** DEADLOCK ***
+
+4 locks held by syz-executor229/3606:
+ #0: ffff888079bc2460 (sb_writers#10){.+.+}-{0:0}, at: ksys_write+0x127/0x250 fs/read_write.c:637
+ #1: ffff88801fa91c88 (&of->mutex){+.+.}-{3:3}, at: kernfs_fop_write_iter+0x28c/0x610 fs/kernfs/file.c:321
+ #2: ffff888145b99a00 (kn->active#56){.+.+}-{0:0}, at: kernfs_fop_write_iter+0x2b0/0x610 fs/kernfs/file.c:322
+ #3: ffffffff8bfda0c8 (freezer_mutex){+.+.}-{3:3}, at: freezer_change_state kernel/cgroup/legacy_freezer.c:387 [inline]
+ #3: ffffffff8bfda0c8 (freezer_mutex){+.+.}-{3:3}, at: freezer_write+0x98/0xa50 kernel/cgroup/legacy_freezer.c:426
+
+stack backtrace:
+CPU: 0 PID: 3606 Comm: syz-executor229 Not tainted 6.1.0-rc2-syzkaller-00201-ga2c65a9d0568 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 10/11/2022
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0xcd/0x134 lib/dump_stack.c:106
+ check_noncircular+0x25f/0x2e0 kernel/locking/lockdep.c:2177
+ check_prev_add kernel/locking/lockdep.c:3097 [inline]
+ check_prevs_add kernel/locking/lockdep.c:3216 [inline]
+ validate_chain kernel/locking/lockdep.c:3831 [inline]
+ __lock_acquire+0x2a43/0x56d0 kernel/locking/lockdep.c:5055
+ lock_acquire kernel/locking/lockdep.c:5668 [inline]
+ lock_acquire+0x1df/0x630 kernel/locking/lockdep.c:5633
+ percpu_down_read include/linux/percpu-rwsem.h:51 [inline]
+ cpus_read_lock+0x3e/0x140 kernel/cpu.c:310
+ static_key_slow_inc+0xe/0x20 kernel/jump_label.c:158
+ freezer_apply_state+0x1e1/0x260 kernel/cgroup/legacy_freezer.c:353
+ freezer_change_state kernel/cgroup/legacy_freezer.c:398 [inline]
+ freezer_write+0x571/0xa50 kernel/cgroup/legacy_freezer.c:426
+ cgroup_file_write+0x1de/0x770 kernel/cgroup/cgroup.c:4057
+ kernfs_fop_write_iter+0x3f8/0x610 fs/kernfs/file.c:330
+ call_write_iter include/linux/fs.h:2191 [inline]
+ new_sync_write fs/read_write.c:491 [inline]
+ vfs_write+0x9e9/0xdd0 fs/read_write.c:584
+ ksys_write+0x127/0x250 fs/read_write.c:637
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x35/0xb0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7fe89501f769
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 81 15 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fff9816df18 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007fe89501f769
+RDX: 0000000000000007 RSI: 0000000020000040 RDI: 0000000000000004
+RBP: 0000000000000000 R08: 00007fff9816df40 R09: 00007fff9816df40
+R10: 00007fff9816df40 R11: 0000000000000246 R12: 00007fff9816df3c
+R13: 00007fff9816df50 R14: 00007fff9816df90 R15: 0000000000000000
+ </TASK>
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+syzbot can test patches for this issue, for details see:
+https://goo.gl/tpsmEJ#testing-patches
