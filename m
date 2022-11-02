@@ -1,59 +1,79 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH -next v4 1/5] block, bfq: remove set but not used variable
- in __bfq_entity_update_weight_prio
-Date: Tue, 1 Nov 2022 20:24:41 -0600
-Message-ID: <0ddaf04b-84b5-8173-a67c-5dadce684108@kernel.dk>
-References: <20221102022542.3621219-1-yukuai1@huaweicloud.com>
- <20221102022542.3621219-2-yukuai1@huaweicloud.com>
- <7f7e59cb-e0b8-0db5-7c46-11aea963bcfa@kernel.dk>
- <ee543096-ae21-99d3-f3a5-483deab03a5f@kernel.dk>
- <61725ff6-6da3-3d3c-4261-7f05c57ab9da@huaweicloud.com>
+From: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH] block/blk-iocost (gcc13): cast enum members to int in
+ prints
+Date: Wed, 2 Nov 2022 08:35:34 +0000
+Message-ID: <2b975ee3117e45aaa7882203cf9a4db8@AcuMS.aculab.com>
+References: <20221031114520.10518-1-jirislaby@kernel.org>
+ <Y1++fLJXkeZgtXR2@infradead.org> <Y2AMcSPAJpj6obSA@slm.duckdns.org>
+ <d833ad15-f458-d43d-cab7-de62ff54a939@kernel.org>
+ <Y2FNa4bGhJoevRKT@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=S7UBdmk5MbBq8xf2xERnJFzAhfjmMFD1Ky4jz35lNF8=;
-        b=Ov3ploiPrzbeq6flPiF5LhBY7nXtGzNgcCAIY30CnXl+B32v/IR7MR9/Rr7Y5yuWlK
-         yzO9kkalrV7/xaphq3qK7InlXhNHnVNq0gvmWKqYQsr1S3A+U5F/XTl2w9rtiOy3zn72
-         QhjChHTrUAzLJd39wvxVjEkG4pGXGaVaBK5U4flJlX+0boaeHtRZWOuZGTIWo+dBjlv0
-         it64h/ou+b/y6xcAl7s8bSFN3dLtinvtt7Fo3iRcOSBVO1DSzdGijmNgbb4LafoQvvNq
-         yw3BWEYKEKxP9N8XKSQox7JZixChmshToPYAbDvxd9BeL5DzUEr8Aa6lKQKQTfXr4Kvd
-         EFlg==
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <Y2FNa4bGhJoevRKT@slm.duckdns.org>
 Content-Language: en-US
-In-Reply-To: <61725ff6-6da3-3d3c-4261-7f05c57ab9da-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, jack-AlSwsSmVLrQ@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: 'Tejun Heo' <tj@kernel.org>, Jiri Slaby <jirislaby@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Martin Liska <mliska@suse.cz>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
-On 11/1/22 8:18 PM, Yu Kuai wrote:
-> Hi,
+From: Tejun Heo
+> Sent: 01 November 2022 16:47
 > 
-> 在 2022/11/02 10:11, Jens Axboe 写道:
->> On 11/1/22 8:09 PM, Jens Axboe wrote:
->>> On 11/1/22 8:25 PM, Yu Kuai wrote:
->>>> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->>>>
->>>> After the patch "block, bfq: cleanup bfq_weights_tree add/remove apis"),
->>>> the local variable 'bfqd' is not used anymore, thus remove it.
->>>
->>> Please add a Fixes tag.
->>
->> Looks like the rest were good to go, so I added it myself.
+> Hello,
 > 
-> Thanks for helping out. I'm not sure which commit id to use since the
-> fixed patch is not in linux-next yet, does the commit id stay the same
-> when the patch applied from for-6.2 to next ?
+> On Tue, Nov 01, 2022 at 06:46:56AM +0100, Jiri Slaby wrote:
+> > Yes. The real problem is that using anything else then an INT_MIN <= x <=
+> > INT_MAX _constant_ in an enum is undefined in ANSI C < 2x (in particular, 1
+> > << x is undefined too). gcc manual defines unsigned int on the top of that
+> > as defined too (so this holds for our -std=g*).
+> >
+> > > I suppose the most reasonable thing to do here is just splitting them into
+> > > separate enum definitions. Does anyone know how this behavior change came to
+> > > be?
+> >
+> > C2x which introduces un/signed long enums. See the bug I linked in the
+> > commit log:
+> > https://gcc.gnu.org/bugzilla/show_bug.cgi?id=36113
+> 
+> I see. So, it was an extension but the new standard is defined differently
+> and we're gonna end up with that behavior.
+> 
+> > The change is also turned on in < C2x on purpose. AIUI, unless there is too
+> > much breakage. So we'd need to sort it out in (rather distant) future anyway
+> > (when we come up to -std=g2x).
+> 
+> The part that the new behavior applying to <C2x feels like an odd decision.
+> I'm having a hard time seeing the upsides in doing so but maybe that's just
+> me not knowing the area well enough.
+> 
+> > > Do we know whether clang is gonna be changed the same way?
+> >
+> > In C2x, Likely. In < C2x, dunno what'd be the default.
+> 
+> It looks like we can do one of the following two:
+> 
+> * If gcc actually changes the behavior for <c2x, split the enums according
+>   to their sizes. This feels rather silly but I can't think of a better way
+>   to cater to divergent compiler behaviors.
+> 
+> * If gcc doesn't change the behavior for <c2x, there's nothing to do for the
+>   time being. Later when we switch to -std=g2x, we can just change the
+>   format strings to use the now larger types.
+> 
+> Does the above make sense?
 
-linux-next shas are not stable, but since you're sending this to the
-linux-block list and against the block tree, that's obviously where
-you'd find that commit.
+I think the enums have to be split.
+There will be other side effects of promoting the constants to 64bit
+that are much more difficult to detect than the warnings from printf.
 
--- 
-Jens Axboe
+I'm also not sure whether the type is even consistent for 32bit
+and 64bit builds.
+Casts are (sort of) horrid.
 
+	David
+
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
 
