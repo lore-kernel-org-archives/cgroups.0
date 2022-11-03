@@ -1,65 +1,47 @@
-From: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH] cgroup: Simplify code in css_set_move_task
-Date: Thu, 3 Nov 2022 10:13:22 +0800
-Message-ID: <25f6a188-4cc6-dace-1468-fd5645711515@shopee.com>
+Date: Wed, 2 Nov 2022 16:31:33 -1000
+Message-ID: <Y2MoBeJGU1Exg6cX@slm.duckdns.org>
 References: <20221020074701.84326-1-haifeng.xu@shopee.com>
  <20221027080558.GA23269@blackbody.suse.cz>
  <adb7418c-39a2-6202-970a-a039ad8201dd@shopee.com>
  <20221031131140.GC27841@blackbody.suse.cz>
+ <25f6a188-4cc6-dace-1468-fd5645711515@shopee.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=sMzrvYyYy/W+4cGhBZeoRUR17rUZ1JZqGeV1907ajb4=;
-        b=POmg/14cGPQ2xtPMaiDVwNaxOFfwYJ9iR4Zycxg3geAV9EKyOz0uySgFDDvmaKTUZi
-         alFKmuXoeHA1Xjf3nZ8ZTFhTKuwtUpI0Tcd+uu8g8qKOqz6dZO3k0ewtWNsbJwLT5PJ5
-         370knaA+E40T7Z0QQYhOPZRpZJWH9vBpz59pW0NxDgxiqCQeFGPGGxcacctuBI0/vaYx
-         wD+/+thF2Cko0M7CE6Tgv0oy6f54p6hVyvF24DOOMmbt4bpw/s+gVc7a0ELFUKyAGONu
-         JtM7NGmWmBZQ/8zJHs0JB2AJAN8PkH8DXimsaHM+0wxggkJi7WlFDE0Bmz1iNE0oB7N1
-         J8Ug==
-In-Reply-To: <20221031131140.GC27841-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=cWur7HMVd8Ke8GikOufYnkHwwFXOwHuL2p1d2EaRZQ4=;
+        b=LHg0QvuIyTZaP2L3VKH46Q9HpSocgocqW64wr5w9rN7A1/45tQRuzDepB3CuHT0ewX
+         rf5d45xvbFIIurHHUmIN783brPGJl/6JAIj9Vqtmb+f/i+2TSwFnRwe6vvhdHvkdVDdg
+         fsUyyhAM43SrXN5uTLLssApnXPbw+YhBQhSKdhD6faQG8mwhlJUNjvBjNXch7g0O3/yA
+         W+EZ+Vu6dwPlKBhGkJDOidgUKpCnwNfuAp3Jgh35C6rCVO8NY4GW1PRi3dCgI39VP3DR
+         OrFLnuaW1R2a24OoNBABG+uQqHtxZkBN6EwP0zq+SuvGQqgor/p446gJtzbBjOJCHVIs
+         RdrQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <25f6a188-4cc6-dace-1468-fd5645711515-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+On Thu, Nov 03, 2022 at 10:13:22AM +0800, Haifeng Xu wrote:
+> I understand your worries. Can I just check the populated state of
+> css_set in 'css_set_update_populated' and don't change the order any
+> more? I think it can also streamline 'css_set_move_task' a bit.
 
+FWIW, I don't see much value in the proposed change. The resulting code
+isn't better in any noticeable way. Even if the change were straightforward,
+the value of the patch would seem questionable. There's no point in creating
+code churns like this. Nothing is improved in any material way while
+creating completely unnecessary risk for subtle breakages.
 
-On 2022/10/31 21:11, Michal Koutn=C3=BD wrote:
-> Hello.
->=20
->> 1) If calls 'css_set_update_populated' , the cset is either getting the
->> first task or losing the last. There is a need to update the populated
->> state of the cset only when 'css_set_populated' returns false.
->> In other words, the last has been deleted from from_cset and the first
->> hasn't been added to to_cset yet.
->=20
-> I've likely misread the condition previously. I see how this works now
-> (update happens after "from_cset" but before "to_cset" migration).
->=20
->> 3) In order to update the populated state of to_cset the same way
->> from_cset does, 'css_set_update_populated' is also invoked during the
->> process of moving a task to to_cset.
->=20
-> As I think more about this in the context of vertical migrations
-> (ancestor<->descendant, such as during controller dis- or enablement),
-> I'm afraid the inverted order would lead to "spurious" emptiness
-> notifications in ancestors (in the case a there is just a single task
-> that migrates parent->child, parent/cgroup.populated would generate and
-> event that'd be nullified by the subsequent population of the child).
-Hi, Michal.
+Thanks.
 
-I understand your worries. Can I just check the populated state of
-css_set in 'css_set_update_populated' and don't change the order any
-more? I think it can also streamline 'css_set_move_task' a bit.
-
-Thanks,
-Hiafeng.
->=20
-> So I'm not sure the change is worth it.
->=20
-> Michal
+-- 
+tejun
