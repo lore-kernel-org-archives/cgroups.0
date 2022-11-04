@@ -1,59 +1,68 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Waiman Long <longman@redhat.com>
 Subject: Re: [PATCH v9 3/3] blk-cgroup: Flush stats at blkgs destruction path
-Date: Fri, 4 Nov 2022 10:00:46 -1000
-Message-ID: <Y2VvboMSxgF0pYpX@slm.duckdns.org>
+Date: Fri, 4 Nov 2022 16:12:05 -0400
+Message-ID: <84fd6656-d133-b9df-c39e-fbb3a1f4a873@redhat.com>
 References: <20221104182050.342908-1-longman@redhat.com>
  <20221104182050.342908-4-longman@redhat.com>
+ <Y2VvboMSxgF0pYpX@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=j5nCsQYl2chg/EUS/wN4WOUjHzC3DOYQXdNArjUPqD4=;
-        b=h8ZfTZCn8t/w57ArpiD8nVNzrVfQicce6WQcDTZNCIwJQOnFJL3OUnRUi2+MwApRMd
-         3o5jeFfSHLVGXoygB8+U2CENqI3roIwnH9x9M+K2E/Tg/u+JXQlVUC9YJwxmtjs0rV08
-         929KkcjhLFCHh81gh6aTz1xYYED+Jp4yARUKiTMhci2ead4XxLs1LIf+1di0OF2l9lVf
-         7TP5i7ZEHNCcsthnGt4ci5d06V/5W1xfe3R0E22f+H1Y/rnaovTEh+t2SAM8g5ZS4ZEG
-         pAXjiXrZ64Zami+gBtIgonYUaGv6RrZjlKWThMv/1TXdTBaRSolUN7NWcTEV6FVaux6L
-         opbA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20221104182050.342908-4-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Hillf Danton <hdanton-k+cT0dCbe1g@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1667592728;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=mVw++WwNRhJv9XuMMPj7SE5JUR1Vsk4jmONPY9jqoLM=;
+        b=OmzSpm4lAVyhtDUBwbxA194BFPpi5XPzujj6IxUDPKTycsN8stCZYEZu1ICTErl6Bb3fcN
+        7iyJwo5NxzaeSj6tqze4t5F/x7AOKN74V0OTtLREK8CTvH8TVH88B/3hhZLUILzIDbgb4J
+        M/+MR08cK+zxJH4/xV8EHlqjBa0OjXo=
+Content-Language: en-US
+In-Reply-To: <Y2VvboMSxgF0pYpX@slm.duckdns.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Hillf Danton <hdanton@sina.com>
 
-On Fri, Nov 04, 2022 at 02:20:50PM -0400, Waiman Long wrote:
-> +/**
-> + * cgroup_rstat_css_flush - flush stats for the given css and cpu
-> + * @css: target css to be flush
-> + * @cpu: the cpu that holds the stats to be flush
-> + *
-> + * A lightweight rstat flush operation for a given css and cpu.
-> + * Only the cpu_lock is being held for mutual exclusion, the cgroup_rstat_lock
-> + * isn't used.
-> + */
-> +void cgroup_rstat_css_flush(struct cgroup_subsys_state *css, int cpu)
-> +{
-> +	raw_spinlock_t *cpu_lock = per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu);
-> +
-> +	raw_spin_lock_irq(cpu_lock);
-> +	rcu_read_lock();
-> +	css->ss->css_rstat_flush(css, cpu);
-> +	rcu_read_unlock();
-> +	raw_spin_unlock_irq(cpu_lock);
-> +}
+On 11/4/22 16:00, Tejun Heo wrote:
+> On Fri, Nov 04, 2022 at 02:20:50PM -0400, Waiman Long wrote:
+>> +/**
+>> + * cgroup_rstat_css_flush - flush stats for the given css and cpu
+>> + * @css: target css to be flush
+>> + * @cpu: the cpu that holds the stats to be flush
+>> + *
+>> + * A lightweight rstat flush operation for a given css and cpu.
+>> + * Only the cpu_lock is being held for mutual exclusion, the cgroup_rstat_lock
+>> + * isn't used.
+>> + */
+>> +void cgroup_rstat_css_flush(struct cgroup_subsys_state *css, int cpu)
+>> +{
+>> +	raw_spinlock_t *cpu_lock = per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu);
+>> +
+>> +	raw_spin_lock_irq(cpu_lock);
+>> +	rcu_read_lock();
+>> +	css->ss->css_rstat_flush(css, cpu);
+>> +	rcu_read_unlock();
+>> +	raw_spin_unlock_irq(cpu_lock);
+>> +}
+> Would it make sense to itereate CPUs within the helper rather than asking
+> the caller to do it? Also, in terms of patch sequencing, this introduces a
+> bug and then fixes it. Prolly better to not introduce the bug in the first
+> place.
+>
+> Thanks.
 
-Would it make sense to itereate CPUs within the helper rather than asking
-the caller to do it? Also, in terms of patch sequencing, this introduces a
-bug and then fixes it. Prolly better to not introduce the bug in the first
-place.
+I should have named the function cgroup_rstat_css_cpu_flush() to 
+indicate that the cpu is a needed parameter. We can have a 
+cgroup_rstat_css_flush() in the future if the need arises.
 
-Thanks.
+It is an optimization to call this function only if the corresponding 
+cpu has a pending lockless list. I could do cpu iteration here and call 
+the flushing function for all the CPUs. It is less optimized this way. 
+Since it is a slow path, I guess performance is not that critical. So I 
+can go either way. Please let me know your preference.
 
--- 
-tejun
+Thanks,
+Longman
+
