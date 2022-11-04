@@ -1,255 +1,63 @@
 From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v9 2/3] blk-cgroup: Optimize blkcg_rstat_flush()
-Date: Fri,  4 Nov 2022 14:20:49 -0400
-Message-ID: <20221104182050.342908-3-longman@redhat.com>
-References: <20221104182050.342908-1-longman@redhat.com>
+Subject: [PATCH v9 0/3] blk-cgroup: Optimize blkcg_rstat_flush()
+Date: Fri,  4 Nov 2022 14:20:47 -0400
+Message-ID: <20221104182050.342908-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1667586059;
+        s=mimecast20190719; t=1667586060;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=6mnvePSKfA0PS6IPlFTUrHTvTz+SxUwN1SV6IlLPeBU=;
-        b=FZodsdt3tKVm10heGlVlBOZtf92MEOXqoQahiOsv8j+PfhKlJFqrMI7xzyCMR1kqYqOZfV
-        noJ07iJUfro1QLaXI6uS1YV7P7HdN5eW+jHxYcDQ6+Iee+eC+6x9wjWjEXeC9aFtZZvhvr
-        nvo3T8RtK3HcUuBt/gmQu4LIWohIskM=
-In-Reply-To: <20221104182050.342908-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+         content-transfer-encoding:content-transfer-encoding;
+        bh=mwGJiTiSAfN6PRbmiMouEvgWpKw4XbL4CZuerrQ/8Q0=;
+        b=H/3sOjE1AyWZmzrBEzNhNyflt7Xx9bAFXtCUpOqSxloXxZi+yEND94A0swj4ioxy2Y0uws
+        rkR0Qmm8aVhYs8t1DzcECD3VqB9Ri0jraiZtJWUda0lmS0BV/ouN+60TpkFQdRNuq8m6we
+        7kpHucxHn6oXBkCOG+9suU2mZ6v9X2Q=
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Hillf Danton <hdanton-k+cT0dCbe1g@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-For a system with many CPUs and block devices, the time to do
-blkcg_rstat_flush() from cgroup_rstat_flush() can be rather long. It
-can be especially problematic as interrupt is disabled during the flush.
-It was reported that it might take seconds to complete in some extreme
-cases leading to hard lockup messages.
+ v9:
+  - Remove patch "llist: Allow optional sentinel node terminated lockless
+    list" for now. This will be done as a follow-up patch.
+  - Add a new lqueued field to blkg_iostat_set to store the status of
+    whether lnode is in a lockless list.
+  - Add a new patch 3 to speed up the freeing of blkcg by flushing out
+    the rstat lockless lists at blkcg offline time.
 
-As it is likely that not all the percpu blkg_iostat_set's has been
-updated since the last flush, those stale blkg_iostat_set's don't need
-to be flushed in this case. This patch optimizes blkcg_rstat_flush()
-by keeping a lockless list of recently updated blkg_iostat_set's in a
-newly added percpu blkcg->lhead pointer.
+ v8:
+  - Update the llist patch to make existing llist functions and macros
+    work for both NULL and sentinel terminated lockless list as much
+    as possible and leave only the initialization and removal functions
+    to have a sentinel terminated llist variants.
 
-The blkg_iostat_set is added to a lockless list on the update side
-in blk_cgroup_bio_start(). It is removed from the lockless list when
-flushed in blkcg_rstat_flush(). Due to racing, it is possible that
-blk_iostat_set's in the lockless list may have no new IO stats to be
-flushed, but that is OK.
+ v7:
+  - Drop patch 1 ("blk-cgroup: Correctly free percpu iostat_cpu in blkg
+    on error exit") as it is found to be unnecessary.
+  - Add a new llist patch to provide a lockless list variant terminated
+    by a sentinel node.
+  - Modified patch 3 to use the new sllist API and move percpu_ref_put()
+    later in the blkcg_rstat_flush() loop to prevent potential
+    use-after-free problem.
 
-To protect against destruction of blkg, a percpu reference is gotten
-when putting into the lockless list and put back when removed.
 
-When booting up an instrumented test kernel with this patch on a
-2-socket 96-thread system with cgroup v2, out of the 2051 calls to
-cgroup_rstat_flush() after bootup, 1788 of the calls were exited
-immediately because of empty lockless list. After an all-cpu kernel
-build, the ratio became 6295424/6340513. That was more than 99%.
+This patch series improves blkcg_rstat_flush() performance by eliminating
+unnecessary blkg enumeration and flush operations for those blkg's and
+blkg_iostat_set's that haven't been updated since the last flush.
 
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- block/blk-cgroup.c | 76 ++++++++++++++++++++++++++++++++++++++++++----
- block/blk-cgroup.h | 10 ++++++
- 2 files changed, 80 insertions(+), 6 deletions(-)
+Waiman Long (3):
+  blk-cgroup: Return -ENOMEM directly in blkcg_css_alloc() error path
+  blk-cgroup: Optimize blkcg_rstat_flush()
+  blk-cgroup: Flush stats at blkgs destruction path
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index af8a4d2d1fd1..3e03c0d13253 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -59,6 +59,37 @@ static struct workqueue_struct *blkcg_punt_bio_wq;
- 
- #define BLKG_DESTROY_BATCH_SIZE  64
- 
-+/*
-+ * Lockless lists for tracking IO stats update
-+ *
-+ * New IO stats are stored in the percpu iostat_cpu within blkcg_gq (blkg).
-+ * There are multiple blkg's (one for each block device) attached to each
-+ * blkcg. The rstat code keeps track of which cpu has IO stats updated,
-+ * but it doesn't know which blkg has the updated stats. If there are many
-+ * block devices in a system, the cost of iterating all the blkg's to flush
-+ * out the IO stats can be high. To reduce such overhead, a set of percpu
-+ * lockless lists (lhead) per blkcg are used to track the set of recently
-+ * updated iostat_cpu's since the last flush. An iostat_cpu will be put
-+ * onto the lockless list on the update side [blk_cgroup_bio_start()] if
-+ * not there yet and then removed when being flushed [blkcg_rstat_flush()].
-+ * References to blkg are gotten and then put back in the process to
-+ * protect against blkg removal.
-+ *
-+ * Return: 0 if successful or -ENOMEM if allocation fails.
-+ */
-+static int init_blkcg_llists(struct blkcg *blkcg)
-+{
-+	int cpu;
-+
-+	blkcg->lhead = alloc_percpu_gfp(struct llist_head, GFP_KERNEL);
-+	if (!blkcg->lhead)
-+		return -ENOMEM;
-+
-+	for_each_possible_cpu(cpu)
-+		init_llist_head(per_cpu_ptr(blkcg->lhead, cpu));
-+	return 0;
-+}
-+
- /**
-  * blkcg_css - find the current css
-  *
-@@ -236,8 +267,10 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
- 	blkg->blkcg = blkcg;
- 
- 	u64_stats_init(&blkg->iostat.sync);
--	for_each_possible_cpu(cpu)
-+	for_each_possible_cpu(cpu) {
- 		u64_stats_init(&per_cpu_ptr(blkg->iostat_cpu, cpu)->sync);
-+		per_cpu_ptr(blkg->iostat_cpu, cpu)->blkg = blkg;
-+	}
- 
- 	for (i = 0; i < BLKCG_MAX_POLS; i++) {
- 		struct blkcg_policy *pol = blkcg_policy[i];
-@@ -827,7 +860,9 @@ static void blkcg_iostat_update(struct blkcg_gq *blkg, struct blkg_iostat *cur,
- static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- {
- 	struct blkcg *blkcg = css_to_blkcg(css);
--	struct blkcg_gq *blkg;
-+	struct llist_head *lhead = per_cpu_ptr(blkcg->lhead, cpu);
-+	struct llist_node *lnode;
-+	struct blkg_iostat_set *bisc, *next_bisc;
- 
- 	/* Root-level stats are sourced from system-wide IO stats */
- 	if (!cgroup_parent(css->cgroup))
-@@ -835,12 +870,21 @@ static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 
- 	rcu_read_lock();
- 
--	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
-+	lnode = llist_del_all(lhead);
-+	if (!lnode)
-+		goto out;
-+
-+	/*
-+	 * Iterate only the iostat_cpu's queued in the lockless list.
-+	 */
-+	llist_for_each_entry_safe(bisc, next_bisc, lnode, lnode) {
-+		struct blkcg_gq *blkg = bisc->blkg;
- 		struct blkcg_gq *parent = blkg->parent;
--		struct blkg_iostat_set *bisc = per_cpu_ptr(blkg->iostat_cpu, cpu);
- 		struct blkg_iostat cur;
- 		unsigned int seq;
- 
-+		WRITE_ONCE(bisc->lqueued, false);
-+
- 		/* fetch the current per-cpu values */
- 		do {
- 			seq = u64_stats_fetch_begin(&bisc->sync);
-@@ -853,8 +897,10 @@ static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 		if (parent && parent->parent)
- 			blkcg_iostat_update(parent, &blkg->iostat.cur,
- 					    &blkg->iostat.last);
-+		percpu_ref_put(&blkg->refcnt);
- 	}
- 
-+out:
- 	rcu_read_unlock();
- }
- 
-@@ -1132,6 +1178,7 @@ static void blkcg_css_free(struct cgroup_subsys_state *css)
- 
- 	mutex_unlock(&blkcg_pol_mutex);
- 
-+	free_percpu(blkcg->lhead);
- 	kfree(blkcg);
- }
- 
-@@ -1151,6 +1198,9 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 			goto unlock;
- 	}
- 
-+	if (init_blkcg_llists(blkcg))
-+		goto free_blkcg;
-+
- 	for (i = 0; i < BLKCG_MAX_POLS ; i++) {
- 		struct blkcg_policy *pol = blkcg_policy[i];
- 		struct blkcg_policy_data *cpd;
-@@ -1191,7 +1241,8 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 	for (i--; i >= 0; i--)
- 		if (blkcg->cpd[i])
- 			blkcg_policy[i]->cpd_free_fn(blkcg->cpd[i]);
--
-+	free_percpu(blkcg->lhead);
-+free_blkcg:
- 	if (blkcg != &blkcg_root)
- 		kfree(blkcg);
- unlock:
-@@ -1939,6 +1990,7 @@ static int blk_cgroup_io_type(struct bio *bio)
- 
- void blk_cgroup_bio_start(struct bio *bio)
- {
-+	struct blkcg *blkcg = bio->bi_blkg->blkcg;
- 	int rwd = blk_cgroup_io_type(bio), cpu;
- 	struct blkg_iostat_set *bis;
- 	unsigned long flags;
-@@ -1957,9 +2009,21 @@ void blk_cgroup_bio_start(struct bio *bio)
- 	}
- 	bis->cur.ios[rwd]++;
- 
-+	/*
-+	 * If the iostat_cpu isn't in a lockless list, put it into the
-+	 * list to indicate that a stat update is pending.
-+	 */
-+	if (!READ_ONCE(bis->lqueued)) {
-+		struct llist_head *lhead = this_cpu_ptr(blkcg->lhead);
-+
-+		llist_add(&bis->lnode, lhead);
-+		WRITE_ONCE(bis->lqueued, true);
-+		percpu_ref_get(&bis->blkg->refcnt);
-+	}
-+
- 	u64_stats_update_end_irqrestore(&bis->sync, flags);
- 	if (cgroup_subsys_on_dfl(io_cgrp_subsys))
--		cgroup_rstat_updated(bio->bi_blkg->blkcg->css.cgroup, cpu);
-+		cgroup_rstat_updated(blkcg->css.cgroup, cpu);
- 	put_cpu();
- }
- 
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index aa2b286bc825..1e94e404eaa8 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -18,6 +18,7 @@
- #include <linux/cgroup.h>
- #include <linux/kthread.h>
- #include <linux/blk-mq.h>
-+#include <linux/llist.h>
- 
- struct blkcg_gq;
- struct blkg_policy_data;
-@@ -43,6 +44,9 @@ struct blkg_iostat {
- 
- struct blkg_iostat_set {
- 	struct u64_stats_sync		sync;
-+	struct blkcg_gq		       *blkg;
-+	struct llist_node		lnode;
-+	int				lqueued;	/* queued in llist */
- 	struct blkg_iostat		cur;
- 	struct blkg_iostat		last;
- };
-@@ -97,6 +101,12 @@ struct blkcg {
- 	struct blkcg_policy_data	*cpd[BLKCG_MAX_POLS];
- 
- 	struct list_head		all_blkcgs_node;
-+
-+	/*
-+	 * List of updated percpu blkg_iostat_set's since the last flush.
-+	 */
-+	struct llist_head __percpu	*lhead;
-+
- #ifdef CONFIG_BLK_CGROUP_FC_APPID
- 	char                            fc_app_id[FC_APPID_LEN];
- #endif
+ block/blk-cgroup.c     | 103 +++++++++++++++++++++++++++++++++++------
+ block/blk-cgroup.h     |  10 ++++
+ include/linux/cgroup.h |   1 +
+ kernel/cgroup/rstat.c  |  20 ++++++++
+ 4 files changed, 119 insertions(+), 15 deletions(-)
+
 -- 
 2.31.1
 
