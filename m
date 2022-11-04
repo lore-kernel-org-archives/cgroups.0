@@ -1,43 +1,109 @@
 From: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-Subject: [RFC][PATCH v3 21/33] timers: cgroup: Use timer_shutdown_sync() before freeing timer
-Date: Fri, 04 Nov 2022 01:41:14 -0400
-Message-ID: <20221104054915.739076753@goodmis.org>
+Subject: Re: [RFC][PATCH v3 04/33] timers: block: Use
+ timer_shutdown_sync() before freeing timer
+Date: Fri, 4 Nov 2022 01:56:35 -0400
+Message-ID: <20221104015635.66243b5b@rorschach.local.home>
 References: <20221104054053.431922658@goodmis.org>
+	<20221104054912.617055044@goodmis.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+In-Reply-To: <20221104054912.617055044-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Stephen Boyd <sboyd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Guenter Roeck <linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org>, Anna-Maria Gleixner <anna-maria-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Stephen Boyd <sboyd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Philipp Reisner <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lars Ellenberg <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Anna-Maria Gleixner <anna-maria-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Guenter Roeck <linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org>, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 
-From: "Steven Rostedt (Google)" <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-
-Before a timer is freed, timer_shutdown_sync() must be called.
-
-Link: https://lore.kernel.org/all/20220407161745.7d6754b3-f9ZlEuEWxVcJvu8Pb33WZ0EMvNT87kid@public.gmane.org/
-
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Signed-off-by: Steven Rostedt (Google) <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
----
- kernel/cgroup/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 2319946715e0..e0c59a3b52e5 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1687,7 +1687,7 @@ static void cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
- 		cfile->kn = NULL;
- 		spin_unlock_irq(&cgroup_file_kn_lock);
- 
--		del_timer_sync(&cfile->notify_timer);
-+		timer_shutdown_sync(&cfile->notify_timer);
- 	}
- 
- 	kernfs_remove_by_name(cgrp->kn, cgroup_file_name(cgrp, cft, name));
--- 
-2.35.1
+WyBPbmNlIGFnYWluLCBxdWlsdCBmYWlscyB0aGUgTUlNRSBjb2RpbmcgXQoKRnJvbTogIlN0ZXZl
+biBSb3N0ZWR0IChHb29nbGUpIiA8cm9zdGVkdEBnb29kbWlzLm9yZz4KCkJlZm9yZSBhIHRpbWVy
+IGlzIGZyZWVkLCB0aW1lcl9zaHV0ZG93bl9zeW5jKCkgbXVzdCBiZSBjYWxsZWQuCgpMaW5rOiBo
+dHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyMjA0MDcxNjE3NDUuN2Q2NzU0YjNAZ2FuZGFs
+Zi5sb2NhbC5ob21lLwoKQ2M6IFBoaWxpcHAgUmVpc25lciA8cGhpbGlwcC5yZWlzbmVyQGxpbmJp
+dC5jb20+CkNjOiBMYXJzIEVsbGVuYmVyZyA8bGFycy5lbGxlbmJlcmdAbGluYml0LmNvbT4KQ2M6
+ICJDaHJpc3RvcGggQsO2aG13YWxkZXIiIDxjaHJpc3RvcGguYm9laG13YWxkZXJAbGluYml0LmNv
+bT4KQ2M6IEplbnMgQXhib2UgPGF4Ym9lQGtlcm5lbC5kaz4KQ2M6IGRyYmQtZGV2QGxpc3RzLmxp
+bmJpdC5jb20KQ2M6IFRlanVuIEhlbyA8dGpAa2VybmVsLm9yZz4KQ2M6IGNncm91cHNAdmdlci5r
+ZXJuZWwub3JnCkNjOiBsaW51eC1ibG9ja0B2Z2VyLmtlcm5lbC5vcmcKU2lnbmVkLW9mZi1ieTog
+U3RldmVuIFJvc3RlZHQgKEdvb2dsZSkgPHJvc3RlZHRAZ29vZG1pcy5vcmc+Ci0tLQogYmxvY2sv
+YmxrLWlvY29zdC5jICAgICAgICAgICAgIHwgMiArLQogYmxvY2svYmxrLWlvbGF0ZW5jeS5jICAg
+ICAgICAgIHwgMiArLQogYmxvY2svYmxrLXN0YXQuYyAgICAgICAgICAgICAgIHwgMiArLQogYmxv
+Y2svYmxrLXRocm90dGxlLmMgICAgICAgICAgIHwgMiArLQogYmxvY2sva3liZXItaW9zY2hlZC5j
+ICAgICAgICAgIHwgMiArLQogZHJpdmVycy9ibG9jay9kcmJkL2RyYmRfbWFpbi5jIHwgMiArLQog
+ZHJpdmVycy9ibG9jay9sb29wLmMgICAgICAgICAgIHwgMiArLQogZHJpdmVycy9ibG9jay9zdW52
+ZGMuYyAgICAgICAgIHwgMiArLQogOCBmaWxlcyBjaGFuZ2VkLCA4IGluc2VydGlvbnMoKyksIDgg
+ZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvYmxvY2svYmxrLWlvY29zdC5jIGIvYmxvY2svYmxr
+LWlvY29zdC5jCmluZGV4IDQ5NTM5NjQyNWJhZC4uN2VkYzY5NWIzYTNkIDEwMDY0NAotLS0gYS9i
+bG9jay9ibGstaW9jb3N0LmMKKysrIGIvYmxvY2svYmxrLWlvY29zdC5jCkBAIC0yODE0LDcgKzI4
+MTQsNyBAQCBzdGF0aWMgdm9pZCBpb2NfcnFvc19leGl0KHN0cnVjdCBycV9xb3MgKnJxb3MpCiAJ
+aW9jLT5ydW5uaW5nID0gSU9DX1NUT1A7CiAJc3Bpbl91bmxvY2tfaXJxKCZpb2MtPmxvY2spOwog
+Ci0JZGVsX3RpbWVyX3N5bmMoJmlvYy0+dGltZXIpOworCXRpbWVyX3NodXRkb3duX3N5bmMoJmlv
+Yy0+dGltZXIpOwogCWZyZWVfcGVyY3B1KGlvYy0+cGNwdV9zdGF0KTsKIAlrZnJlZShpb2MpOwog
+fQpkaWZmIC0tZ2l0IGEvYmxvY2svYmxrLWlvbGF0ZW5jeS5jIGIvYmxvY2svYmxrLWlvbGF0ZW5j
+eS5jCmluZGV4IDU3MWZhOTVhYWZlOS4uYzcwNDlhYjE4MzEyIDEwMDY0NAotLS0gYS9ibG9jay9i
+bGstaW9sYXRlbmN5LmMKKysrIGIvYmxvY2svYmxrLWlvbGF0ZW5jeS5jCkBAIC02NDUsNyArNjQ1
+LDcgQEAgc3RhdGljIHZvaWQgYmxrY2dfaW9sYXRlbmN5X2V4aXQoc3RydWN0IHJxX3FvcyAqcnFv
+cykKIHsKIAlzdHJ1Y3QgYmxrX2lvbGF0ZW5jeSAqYmxraW9sYXQgPSBCTEtJT0xBVEVOQ1kocnFv
+cyk7CiAKLQlkZWxfdGltZXJfc3luYygmYmxraW9sYXQtPnRpbWVyKTsKKwl0aW1lcl9zaHV0ZG93
+bl9zeW5jKCZibGtpb2xhdC0+dGltZXIpOwogCWZsdXNoX3dvcmsoJmJsa2lvbGF0LT5lbmFibGVf
+d29yayk7CiAJYmxrY2dfZGVhY3RpdmF0ZV9wb2xpY3kocnFvcy0+cSwgJmJsa2NnX3BvbGljeV9p
+b2xhdGVuY3kpOwogCWtmcmVlKGJsa2lvbGF0KTsKZGlmZiAtLWdpdCBhL2Jsb2NrL2Jsay1zdGF0
+LmMgYi9ibG9jay9ibGstc3RhdC5jCmluZGV4IDJlYTAxYjVjMWFjYS4uODU1ZGEyMWRlNWRjIDEw
+MDY0NAotLS0gYS9ibG9jay9ibGstc3RhdC5jCisrKyBiL2Jsb2NrL2Jsay1zdGF0LmMKQEAgLTE2
+NSw3ICsxNjUsNyBAQCB2b2lkIGJsa19zdGF0X3JlbW92ZV9jYWxsYmFjayhzdHJ1Y3QgcmVxdWVz
+dF9xdWV1ZSAqcSwKIAkJYmxrX3F1ZXVlX2ZsYWdfY2xlYXIoUVVFVUVfRkxBR19TVEFUUywgcSk7
+CiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmcS0+c3RhdHMtPmxvY2ssIGZsYWdzKTsKIAotCWRl
+bF90aW1lcl9zeW5jKCZjYi0+dGltZXIpOworCXRpbWVyX3NodXRkb3duX3N5bmMoJmNiLT50aW1l
+cik7CiB9CiAKIHN0YXRpYyB2b2lkIGJsa19zdGF0X2ZyZWVfY2FsbGJhY2tfcmN1KHN0cnVjdCBy
+Y3VfaGVhZCAqaGVhZCkKZGlmZiAtLWdpdCBhL2Jsb2NrL2Jsay10aHJvdHRsZS5jIGIvYmxvY2sv
+YmxrLXRocm90dGxlLmMKaW5kZXggODQ3NzIxZGMyYjJiLi4zODc0MGM0ZjUxN2EgMTAwNjQ0Ci0t
+LSBhL2Jsb2NrL2Jsay10aHJvdHRsZS5jCisrKyBiL2Jsb2NrL2Jsay10aHJvdHRsZS5jCkBAIC00
+OTAsNyArNDkwLDcgQEAgc3RhdGljIHZvaWQgdGhyb3RsX3BkX2ZyZWUoc3RydWN0IGJsa2dfcG9s
+aWN5X2RhdGEgKnBkKQogewogCXN0cnVjdCB0aHJvdGxfZ3JwICp0ZyA9IHBkX3RvX3RnKHBkKTsK
+IAotCWRlbF90aW1lcl9zeW5jKCZ0Zy0+c2VydmljZV9xdWV1ZS5wZW5kaW5nX3RpbWVyKTsKKwl0
+aW1lcl9zaHV0ZG93bl9zeW5jKCZ0Zy0+c2VydmljZV9xdWV1ZS5wZW5kaW5nX3RpbWVyKTsKIAli
+bGtnX3J3c3RhdF9leGl0KCZ0Zy0+c3RhdF9ieXRlcyk7CiAJYmxrZ19yd3N0YXRfZXhpdCgmdGct
+PnN0YXRfaW9zKTsKIAlrZnJlZSh0Zyk7CmRpZmYgLS1naXQgYS9ibG9jay9reWJlci1pb3NjaGVk
+LmMgYi9ibG9jay9reWJlci1pb3NjaGVkLmMKaW5kZXggYjA1MzU3YmNlZDk5Li4yMTQ2OTY5MjM3
+YmYgMTAwNjQ0Ci0tLSBhL2Jsb2NrL2t5YmVyLWlvc2NoZWQuYworKysgYi9ibG9jay9reWJlci1p
+b3NjaGVkLmMKQEAgLTQzNCw3ICs0MzQsNyBAQCBzdGF0aWMgdm9pZCBreWJlcl9leGl0X3NjaGVk
+KHN0cnVjdCBlbGV2YXRvcl9xdWV1ZSAqZSkKIAlzdHJ1Y3Qga3liZXJfcXVldWVfZGF0YSAqa3Fk
+ID0gZS0+ZWxldmF0b3JfZGF0YTsKIAlpbnQgaTsKIAotCWRlbF90aW1lcl9zeW5jKCZrcWQtPnRp
+bWVyKTsKKwl0aW1lcl9zaHV0ZG93bl9zeW5jKCZrcWQtPnRpbWVyKTsKIAlibGtfc3RhdF9kaXNh
+YmxlX2FjY291bnRpbmcoa3FkLT5xKTsKIAogCWZvciAoaSA9IDA7IGkgPCBLWUJFUl9OVU1fRE9N
+QUlOUzsgaSsrKQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9ibG9jay9kcmJkL2RyYmRfbWFpbi5jIGIv
+ZHJpdmVycy9ibG9jay9kcmJkL2RyYmRfbWFpbi5jCmluZGV4IGYzZTRkYjE2ZmQwNy4uMmRjNWJl
+ODlhMDAxIDEwMDY0NAotLS0gYS9kcml2ZXJzL2Jsb2NrL2RyYmQvZHJiZF9tYWluLmMKKysrIGIv
+ZHJpdmVycy9ibG9jay9kcmJkL2RyYmRfbWFpbi5jCkBAIC0yMTg0LDcgKzIxODQsNyBAQCB2b2lk
+IGRyYmRfZGVzdHJveV9kZXZpY2Uoc3RydWN0IGtyZWYgKmtyZWYpCiAJc3RydWN0IGRyYmRfcmVz
+b3VyY2UgKnJlc291cmNlID0gZGV2aWNlLT5yZXNvdXJjZTsKIAlzdHJ1Y3QgZHJiZF9wZWVyX2Rl
+dmljZSAqcGVlcl9kZXZpY2UsICp0bXBfcGVlcl9kZXZpY2U7CiAKLQlkZWxfdGltZXJfc3luYygm
+ZGV2aWNlLT5yZXF1ZXN0X3RpbWVyKTsKKwl0aW1lcl9zaHV0ZG93bl9zeW5jKCZkZXZpY2UtPnJl
+cXVlc3RfdGltZXIpOwogCiAJLyogcGFyYW5vaWEgYXNzZXJ0cyAqLwogCURfQVNTRVJUKGRldmlj
+ZSwgZGV2aWNlLT5vcGVuX2NudCA9PSAwKTsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvYmxvY2svbG9v
+cC5jIGIvZHJpdmVycy9ibG9jay9sb29wLmMKaW5kZXggYWQ5MjE5MmM3ZDYxLi4zZWEwODdjZDFm
+OTkgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYmxvY2svbG9vcC5jCisrKyBiL2RyaXZlcnMvYmxvY2sv
+bG9vcC5jCkBAIC0xNzU1LDcgKzE3NTUsNyBAQCBzdGF0aWMgdm9pZCBsb19mcmVlX2Rpc2soc3Ry
+dWN0IGdlbmRpc2sgKmRpc2spCiAJaWYgKGxvLT53b3JrcXVldWUpCiAJCWRlc3Ryb3lfd29ya3F1
+ZXVlKGxvLT53b3JrcXVldWUpOwogCWxvb3BfZnJlZV9pZGxlX3dvcmtlcnMobG8sIHRydWUpOwot
+CWRlbF90aW1lcl9zeW5jKCZsby0+dGltZXIpOworCXRpbWVyX3NodXRkb3duX3N5bmMoJmxvLT50
+aW1lcik7CiAJbXV0ZXhfZGVzdHJveSgmbG8tPmxvX211dGV4KTsKIAlrZnJlZShsbyk7CiB9CmRp
+ZmYgLS1naXQgYS9kcml2ZXJzL2Jsb2NrL3N1bnZkYy5jIGIvZHJpdmVycy9ibG9jay9zdW52ZGMu
+YwppbmRleCBmYjg1NWRhOTcxZWUuLmUxNGZlNWQ5NjhkOCAxMDA2NDQKLS0tIGEvZHJpdmVycy9i
+bG9jay9zdW52ZGMuYworKysgYi9kcml2ZXJzL2Jsb2NrL3N1bnZkYy5jCkBAIC0xMDY3LDcgKzEw
+NjcsNyBAQCBzdGF0aWMgdm9pZCB2ZGNfcG9ydF9yZW1vdmUoc3RydWN0IHZpb19kZXYgKnZkZXYp
+CiAKIAkJZmx1c2hfd29yaygmcG9ydC0+bGRjX3Jlc2V0X3dvcmspOwogCQljYW5jZWxfZGVsYXll
+ZF93b3JrX3N5bmMoJnBvcnQtPmxkY19yZXNldF90aW1lcl93b3JrKTsKLQkJZGVsX3RpbWVyX3N5
+bmMoJnBvcnQtPnZpby50aW1lcik7CisJCXRpbWVyX3NodXRkb3duX3N5bmMoJnBvcnQtPnZpby50
+aW1lcik7CiAKIAkJZGVsX2dlbmRpc2socG9ydC0+ZGlzayk7CiAJCXB1dF9kaXNrKHBvcnQtPmRp
+c2spOwotLSAKMi4zNS4xCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCmRyYmQtZGV2IG1haWxpbmcgbGlzdApkcmJkLWRldkBsaXN0cy5saW5iaXQuY29tCmh0
+dHBzOi8vbGlzdHMubGluYml0LmNvbS9tYWlsbWFuL2xpc3RpbmZvL2RyYmQtZGV2Cg==
