@@ -1,61 +1,84 @@
-From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [RFC][PATCH v3 00/33] timers: Use timer_shutdown*()
- before freeing timers
-Date: Fri, 4 Nov 2022 10:00:03 -0700
-Message-ID: <CAHk-=whKE5UL+AuCC2wK8oq8D_ueSO_T7-9Acx4POouqVi8ZHg@mail.gmail.com>
-References: <20221104054053.431922658@goodmis.org>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH v9 1/3] blk-cgroup: Return -ENOMEM directly in blkcg_css_alloc() error path
+Date: Fri,  4 Nov 2022 14:20:48 -0400
+Message-ID: <20221104182050.342908-2-longman@redhat.com>
+References: <20221104182050.342908-1-longman@redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1667586060;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=fsF/w+s1hazC7fbvdAgtahejdx2Z7prb6bJ8RwO66qE=;
+        b=K464wRwuAxU9qUuw+GgnWrt0j372dONuvQRKwapdnQ4yegKesC3QBgZQh+c9SAkp7eIM6z
+        mHAPAI45kmgvhwHN/gb+x2PyynflMQAKp2gAWtyi1lZk5c7afiHIcL+LKGkZQuakvRjh4j
+        9QWtH/5JAxvDp9wN/l5+vrJ3nI7AJj0=
+In-Reply-To: <20221104182050.342908-1-longman@redhat.com>
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux-foundation.org; s=google;
-	h=cc:to:subject:message-id:date:from:in-reply-to:references
-	:mime-version:from:to:cc:subject:date:message-id:reply-to;
-	bh=/jNIi3NLp/0QE0eLEgGhnlZnXslRxZtVSsauwMnJ52A=;
-	b=TyCMiI4ARMPxd18RVlEv+qm2LWR7zC104Hlivn40qb5lZJslIeDFuCNMNvjneFE/Nj
-	LFwCX5vAwmEX/R8qjGO9x9K9/hgdwoRd2q59WUqMzWoiDvISQjer+tTT1jJ7UfSLA8Vn
-	fR3VeAjk206NeR5DC2lSXJH82ZME8JVM9jplc=
-In-Reply-To: <20221104054053.431922658-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-Cc: alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, linux-staging-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, linux-leds-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nilfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sh-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-atm-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-afs-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, lvs-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, intel-wired-lan-qjLDD68F18P21nG7glBr7A@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tipc-discussion-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Guenter Roeck <linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org>, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bridge-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, rcu-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, openipmi-developer-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Anna-Maria Gleixner <anna-mar>
+To: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Hillf Danton <hdanton@sina.com>, Waiman Long <longman@redhat.com>
 
-On Thu, Nov 3, 2022 at 10:48 PM Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org> wrote:
->
-> Ideally, I would have the first patch go into this rc cycle, which is mostly
-> non functional as it will allow the other patches to come in via the respective
-> subsystems in the next merge window.
+For blkcg_css_alloc(), the only error that will be returned is -ENOMEM.
+Simplify error handling code by returning this error directly instead
+of setting an intermediate "ret" variable.
 
-Ack.
+Signed-off-by: Waiman Long <longman@redhat.com>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+ block/blk-cgroup.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-I also wonder if we could do the completely trivially correct
-conversions immediately.
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 6a5c849ee061..af8a4d2d1fd1 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -1139,7 +1139,6 @@ static struct cgroup_subsys_state *
+ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
+ {
+ 	struct blkcg *blkcg;
+-	struct cgroup_subsys_state *ret;
+ 	int i;
+ 
+ 	mutex_lock(&blkcg_pol_mutex);
+@@ -1148,10 +1147,8 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
+ 		blkcg = &blkcg_root;
+ 	} else {
+ 		blkcg = kzalloc(sizeof(*blkcg), GFP_KERNEL);
+-		if (!blkcg) {
+-			ret = ERR_PTR(-ENOMEM);
++		if (!blkcg)
+ 			goto unlock;
+-		}
+ 	}
+ 
+ 	for (i = 0; i < BLKCG_MAX_POLS ; i++) {
+@@ -1168,10 +1165,9 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
+ 			continue;
+ 
+ 		cpd = pol->cpd_alloc_fn(GFP_KERNEL);
+-		if (!cpd) {
+-			ret = ERR_PTR(-ENOMEM);
++		if (!cpd)
+ 			goto free_pd_blkcg;
+-		}
++
+ 		blkcg->cpd[i] = cpd;
+ 		cpd->blkcg = blkcg;
+ 		cpd->plid = i;
+@@ -1200,7 +1196,7 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
+ 		kfree(blkcg);
+ unlock:
+ 	mutex_unlock(&blkcg_pol_mutex);
+-	return ret;
++	return ERR_PTR(-ENOMEM);
+ }
+ 
+ static int blkcg_css_online(struct cgroup_subsys_state *css)
+-- 
+2.31.1
 
-I'm talking about the scripted ones where it's currently a
-"del_timer_sync()", and the very next action is freeing whatever data
-structure the timer is in (possibly with something like free_irq() in
-between - my point is that there's an unconditional free that is very
-clear and unambiguous), so that there is absolutely no question about
-whether they should use "timer_shutdown_sync()" or not.
-
-IOW, things like patches 03, 17 and 31, and at least parts others in
-this series.
-
-This series clearly has several much more complex cases that need
-actual real code review, and I think it would help to have the
-completely unambiguous cases out of the way, just to get rid of noise.
-
-So I'd take that first patch, and a scripted set of "this cannot
-change any semantics" patches early.
-
-                Linus
