@@ -1,48 +1,50 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v9 3/3] blk-cgroup: Flush stats at blkgs destruction path
-Date: Fri, 4 Nov 2022 16:21:50 -0400
-Message-ID: <17047545-2993-f59b-2dbe-ccc997599ea1@redhat.com>
-References: <20221104182050.342908-1-longman@redhat.com>
- <20221104182050.342908-4-longman@redhat.com>
- <Y2VvboMSxgF0pYpX@slm.duckdns.org>
- <84fd6656-d133-b9df-c39e-fbb3a1f4a873@redhat.com>
- <Y2VyWDvtwOsMBcKB@slm.duckdns.org>
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [RFC][PATCH v3 00/33] timers: Use timer_shutdown*() before
+ freeing timers
+Date: Fri, 4 Nov 2022 16:38:34 -0400
+Message-ID: <20221104154355.578ab689@rorschach.local.home>
+References: <20221104054053.431922658@goodmis.org>
+        <20221104192232.GA2520396@roeck-us.net>
+        <20221104154209.21b26782@rorschach.local.home>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1667593317;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=IQUjE5P5kUgI2AUaH5ZmnOzKErlp1CyVjP3BJnMtrps=;
-        b=V+fpzqxBAXLlrc3Iag7AP1GnsRg+Yjvor+0IDaF4hG4WqzuHN0pbQPcftwHYvF/8a2Th0M
-        OVzWpCih7r+RrM5fEa327s3Hx6zLmO6uhP4E3Ek43gitNzJ4mTLFrlyc+G8TIeFeKe44UU
-        UXY+Y7ONc0jnEbIuyTk2wHNTzrS5gYQ=
-Content-Language: en-US
-In-Reply-To: <Y2VyWDvtwOsMBcKB@slm.duckdns.org>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20221104154209.21b26782@rorschach.local.home>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Hillf Danton <hdanton@sina.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, Stephen Boyd <sboyd@kernel.org>, Anna-Maria Gleixner <anna-maria@linutronix.de>, Andrew Morton <akpm@linux-foundation.org>, rcu@vger.kernel.org, linux-doc@vger.kernel.org, linux-s390@vger.kernel.org, linux-sh@vger.kernel.org, linux-edac@vger.kernel.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-acpi@vger.kernel.org, linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org, linux-pm@vger.kernel.org, drbd-dev@lists.linbit.com, linux-bluetooth@vger.kernel.org, openipmi-developer@lists.sourceforge.net, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, intel-gfx@lists.freedesktop.org
+
+On Fri, 4 Nov 2022 15:42:09 -0400
+Steven Rostedt <rostedt@goodmis.org> wrote:
+
+> $ git grep '\btimer_shutdown'
+> arch/arm/mach-spear/time.c:static inline void timer_shutdown(struct clock_event_device *evt)
+> arch/arm/mach-spear/time.c:     timer_shutdown(evt);
+> arch/arm/mach-spear/time.c:     timer_shutdown(evt);
+> arch/arm/mach-spear/time.c:     timer_shutdown(evt);
+> drivers/clocksource/arm_arch_timer.c:static __always_inline int timer_shutdown(const int access,
+> drivers/clocksource/arm_arch_timer.c:   return timer_shutdown(ARCH_TIMER_VIRT_ACCESS, clk);
+> drivers/clocksource/arm_arch_timer.c:   return timer_shutdown(ARCH_TIMER_PHYS_ACCESS, clk);
+> drivers/clocksource/arm_arch_timer.c:   return timer_shutdown(ARCH_TIMER_MEM_VIRT_ACCESS, clk);
+> drivers/clocksource/arm_arch_timer.c:   return timer_shutdown(ARCH_TIMER_MEM_PHYS_ACCESS, clk);
+> drivers/clocksource/timer-fttmr010.c:   int (*timer_shutdown)(struct clock_event_device *evt);
 
 
-On 11/4/22 16:13, Tejun Heo wrote:
-> On Fri, Nov 04, 2022 at 04:12:05PM -0400, Waiman Long wrote:
->> I should have named the function cgroup_rstat_css_cpu_flush() to indicate
->> that the cpu is a needed parameter. We can have a cgroup_rstat_css_flush()
->> in the future if the need arises.
->>
->> It is an optimization to call this function only if the corresponding cpu
->> has a pending lockless list. I could do cpu iteration here and call the
->> flushing function for all the CPUs. It is less optimized this way. Since it
->> is a slow path, I guess performance is not that critical. So I can go either
->> way. Please let me know your preference.
-> Yeah, cpu_flush is fine. Let's leave it that way.
->
-Will do.
 
-Cheers,
-Longman
+> drivers/clocksource/timer-fttmr010.c:   fttmr010->timer_shutdown(evt);
+> drivers/clocksource/timer-fttmr010.c:   fttmr010->timer_shutdown(evt);
+> drivers/clocksource/timer-fttmr010.c:   fttmr010->timer_shutdown(evt);
+> drivers/clocksource/timer-fttmr010.c:           fttmr010->timer_shutdown = ast2600_timer_shutdown;
+> drivers/clocksource/timer-fttmr010.c:           fttmr010->timer_shutdown = fttmr010_timer_shutdown;
+> drivers/clocksource/timer-fttmr010.c:   fttmr010->clkevt.set_state_shutdown = fttmr010->timer_shutdown;
+> drivers/clocksource/timer-fttmr010.c:   fttmr010->clkevt.tick_resume = fttmr010->timer_shutdown;
 
+I won't touch structure fields though.
+
+-- Steve
+
+
+> drivers/clocksource/timer-sp804.c:static inline void timer_shutdown(struct clock_event_device *evt)
+> drivers/clocksource/timer-sp804.c:      timer_shutdown(evt);
+> drivers/clocksource/timer-sp804.c:      timer_shutdown(evt);
