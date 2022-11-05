@@ -1,49 +1,70 @@
-From: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v4a 00/38] timers: Use timer_shutdown*()
- before freeing timers
-Date: Sat, 5 Nov 2022 17:47:56 -0400
-Message-ID: <20221105174756.38062fce@rorschach.local.home>
-References: <20221105060024.598488967@goodmis.org>
-	<CAHk-=wi95dGkg7DiuOZ27gGW+mxJipn9ykB6LHB-HrbbLG6OMQ@mail.gmail.com>
-	<20221105123642.596371c7@rorschach.local.home>
-	<Y2bPlllkHo5DUmLY@zx2c4.com>
-	<CAHk-=wjkkomrdcrAxxFijs-Lih6vHze+A2TgM+v7-Z7ZkXT+WA@mail.gmail.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] selftests: cgroup: Fix unsigned comparison with less than zero
+Date: Sat, 5 Nov 2022 15:29:54 -0700
+Message-ID: <CAJD7tkb06mjZ3bvoiR4U47+XknM4nTHY06RYZ8SULOxJ4mAOwQ@mail.gmail.com>
+References: <20221105110611.28920-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=CbBRCqYlzL5aIOV/FIaD3IiZ/MIQgFytQcTe8Ul9rWk=;
+        b=PXiWAzVmOTq6MGJT16VHLmmAgF9HAeDaUY3bKDIRjX1G2Y65KvekkmTwB3jXjs7l8j
+         3pwPXGGFlmVDhSaP9TQBDvvS6p+fAWGePMqqaRzzzDXHP3KJe6vIEtBlUYLCnWIeVYWH
+         Ur3sBQPhqJ9Oxf9cpbNiQGJDIzJIItYtzHmtxg3clYTMzc4hOrUKhdgu8eInd8uXzmfA
+         k95eZ9IVCthx6Phbt4Yks+3rpYJa3InS68hKNKmTwEALPL0g5Nml8gTVHzucq3y6Jb8G
+         14nj2uu2GiE7DWFSSY89/Px2IvRk5FMIk9gai01Ied2ap6Bp2Jba4/6u5484C+uU7lis
+         IzFQ==
+In-Reply-To: <20221105110611.28920-1-yuehaibing-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-In-Reply-To: <CAHk-=wjkkomrdcrAxxFijs-Lih6vHze+A2TgM+v7-Z7ZkXT+WA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, linux-staging-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, linux-leds-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Jason A. Donenfeld" <Jason-OnJsPKxuuEcAvxtiuMwx3w@public.gmane.org>, linux-nilfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sh-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-atm-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-afs-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, lvs-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, coreteam-Cap9r6Oaw4JrovVCs/uTlw@public.gmane.org, intel-wired-lan-qjLDD68F18P21nG7glBr7A@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tipc-discussion-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Guenter Roeck <linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org>, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bridge-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, rcu-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, openipmi-developer-5NWGOfrQmncRDUWM+popnw@public.gmane.org
+To: YueHaibing <yuehaibing-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat, 5 Nov 2022 14:13:14 -0700
-Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
+On Sat, Nov 5, 2022 at 4:06 AM YueHaibing <yuehaibing-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+>
+> 'size' is unsigned, it never less than zero.
+>
+> Fixes: 6c26df84e1f2 ("selftests: cgroup: return -errno from cg_read()/cg_write() on failure")
+> Signed-off-by: YueHaibing <yuehaibing-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-> (Comparing output is also fun because the ordering of the patches is
-> random, so consecutive runs with the same rule will give different
-> patches. I assume that it's just because it's done in parallel, but it
-> doesn't help the "try to see what changes when you change the script"
-> ;)
+Thanks for fixing this!
+FWIW,
 
-What I do to compare is:
+Reviewed-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
- patch -p1 < cocci1.patch
- git commit -a
- git show | patch -p1 -R
- patch -p1 < cocci2.patch
- git diff
 
-Then I see how things changed. This is how I was able to show you the
-tweaks I made.
 
--- Steve
+
+> ---
+>  tools/testing/selftests/cgroup/cgroup_util.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
+> index 4c52cc6f2f9c..e8bbbdb77e0d 100644
+> --- a/tools/testing/selftests/cgroup/cgroup_util.c
+> +++ b/tools/testing/selftests/cgroup/cgroup_util.c
+> @@ -555,6 +555,7 @@ int proc_mount_contains(const char *option)
+>  ssize_t proc_read_text(int pid, bool thread, const char *item, char *buf, size_t size)
+>  {
+>         char path[PATH_MAX];
+> +       ssize_t ret;
+>
+>         if (!pid)
+>                 snprintf(path, sizeof(path), "/proc/%s/%s",
+> @@ -562,8 +563,8 @@ ssize_t proc_read_text(int pid, bool thread, const char *item, char *buf, size_t
+>         else
+>                 snprintf(path, sizeof(path), "/proc/%d/%s", pid, item);
+>
+> -       size = read_text(path, buf, size);
+> -       return size < 0 ? -1 : size;
+> +       ret = read_text(path, buf, size);
+> +       return ret < 0 ? -1 : ret;
+>  }
+>
+>  int proc_read_strstr(int pid, bool thread, const char *item, const char *needle)
+> --
+> 2.17.1
+>
