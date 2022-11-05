@@ -1,255 +1,152 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v10 2/3] blk-cgroup: Optimize blkcg_rstat_flush()
-Date: Fri,  4 Nov 2022 20:59:01 -0400
-Message-ID: <20221105005902.407297-3-longman@redhat.com>
-References: <20221105005902.407297-1-longman@redhat.com>
+From: Leonardo =?ISO-8859-1?Q?Br=E1s?= <leobras@redhat.com>
+Subject: Re: [PATCH v1 0/3] Avoid scheduling cache draining to isolated cpus
+Date: Fri, 04 Nov 2022 22:45:58 -0300
+Message-ID: <3c4ae3bb70d92340d9aaaa1856928476641a8533.camel@redhat.com>
+References: <20221102020243.522358-1-leobras@redhat.com>
+         <Y2IwHVdgAJ6wfOVH@dhcp22.suse.cz>
+         <07810c49ef326b26c971008fb03adf9dc533a178.camel@redhat.com>
+         <Y2Pe45LHANFxxD7B@dhcp22.suse.cz>
+         <0183b60e79cda3a0f992d14b4db5a818cd096e33.camel@redhat.com>
+         <Y2TQLavnLVd4qHMT@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1667609969;
+        s=mimecast20190719; t=1667612770;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=6mnvePSKfA0PS6IPlFTUrHTvTz+SxUwN1SV6IlLPeBU=;
-        b=ZTZMs5yjPXr/mxF1kDtVoQn2aOL2ydkmZyyzbEAfDu9SvQcuhlwXgXjtAZKygw08l8S2pN
-        QBdOIbqMbIEI/M/xf8Q3LsKZnH6Ccdmh5Yxuf5GwRrHQyiOiLn/XQcZfaFC1v+kk/Tj6PP
-        /KafYRykfTDvE/gDb3OB5NT5h46IEmk=
-In-Reply-To: <20221105005902.407297-1-longman@redhat.com>
+        bh=n/vEmjXbFu8njlGuJecpg9SySWjZKX34Yfb/SdTSRfo=;
+        b=VrEozZwgxQPFEvmkXghz/W0V9J2V4NibnFadX8Xc4w5F7SFUgE0taRpZo/zUUlU1GlVrfF
+        7CRZX3zSDJrrFfFH4AtUGug2PbcX0sRyE3+WhgyXJRQ4CjPd4sjS+FRzzTEIskiFdTKPBf
+        GIVtE2v3CkJCDGosLCgzTTkROztGMbA=
+In-Reply-To: <Y2TQLavnLVd4qHMT@dhcp22.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Hillf Danton <hdanton@sina.com>, Waiman Long <longman@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+To: Michal Hocko <mhocko@suse.com>
+Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Frederic Weisbecker <frederic@kernel.org>, Phil Auld <pauld@redhat.com>, Marcelo Tosatti <mtosatti@redhat.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-For a system with many CPUs and block devices, the time to do
-blkcg_rstat_flush() from cgroup_rstat_flush() can be rather long. It
-can be especially problematic as interrupt is disabled during the flush.
-It was reported that it might take seconds to complete in some extreme
-cases leading to hard lockup messages.
+On Fri, 2022-11-04 at 09:41 +0100, Michal Hocko wrote:
+> On Thu 03-11-22 13:53:41, Leonardo Br=C3=A1s wrote:
+> > On Thu, 2022-11-03 at 16:31 +0100, Michal Hocko wrote:
+> > > On Thu 03-11-22 11:59:20, Leonardo Br=C3=A1s wrote:
+> [...]
+> > > > I understand there will be a locking cost being paid in the isolate=
+d CPUs when:
+> > > > a) The isolated CPU is requesting the stock drain,
+> > > > b) When the isolated CPUs do a syscall and end up using the protect=
+ed structure
+> > > > the first time after a remote drain.
+> > >=20
+> > > And anytime the charging path (consume_stock resp. refill_stock)
+> > > contends with the remote draining which is out of control of the RT
+> > > task. It is true that the RT kernel will turn that spin lock into a
+> > > sleeping RT lock and that could help with potential priority inversio=
+ns
+> > > but still quite costly thing I would expect.
+> > >=20
+> > > > Both (a) and (b) should happen during a syscall, and IIUC the a rt =
+workload
+> > > > should not expect the syscalls to be have a predictable time, so it=
+ should be
+> > > > fine.
+> > >=20
+> > > Now I am not sure I understand. If you do not consider charging path =
+to
+> > > be RT sensitive then why is this needed in the first place? What else
+> > > would be populating the pcp cache on the isolated cpu? IRQs?
+> >=20
+> > I am mostly trying to deal with drain_all_stock() calling schedule_work=
+_on() at
+> > isolated_cpus. Since the scheduled drain_local_stock() will be competin=
+g for cpu
+> > time with the RT workload, we can have preemption of the RT workload, w=
+hich is a
+> > problem for meeting the deadlines.
+>=20
+> Yes, this is understood. But it is not really clear to me why would any
+> draining be necessary for such an isolated CPU if no workload other than
+> the RT (which pressumably doesn't charge any memory?) is running on that
+> CPU? Is that the RT task during the initialization phase that leaves
+> that cache behind or something else?
 
-As it is likely that not all the percpu blkg_iostat_set's has been
-updated since the last flush, those stale blkg_iostat_set's don't need
-to be flushed in this case. This patch optimizes blkcg_rstat_flush()
-by keeping a lockless list of recently updated blkg_iostat_set's in a
-newly added percpu blkcg->lhead pointer.
+(I am new to this part of the code, so please correct me when I miss someth=
+ing.)
 
-The blkg_iostat_set is added to a lockless list on the update side
-in blk_cgroup_bio_start(). It is removed from the lockless list when
-flushed in blkcg_rstat_flush(). Due to racing, it is possible that
-blk_iostat_set's in the lockless list may have no new IO stats to be
-flushed, but that is OK.
+IIUC,=C2=A0if a process belongs to a control group with memory control, the=
+ 'charge'
+will happen when a memory page starts getting used by it.
 
-To protect against destruction of blkg, a percpu reference is gotten
-when putting into the lockless list and put back when removed.
+So, if we assume a RT load in a isolated CPU will not charge any memory, we=
+ are
+assuming it will never be part of a memory-controlled cgroup.
 
-When booting up an instrumented test kernel with this patch on a
-2-socket 96-thread system with cgroup v2, out of the 2051 calls to
-cgroup_rstat_flush() after bootup, 1788 of the calls were exited
-immediately because of empty lockless list. After an all-cpu kernel
-build, the ratio became 6295424/6340513. That was more than 99%.
+I mean, can we just assume this?=20
 
-Signed-off-by: Waiman Long <longman@redhat.com>
-Acked-by: Tejun Heo <tj@kernel.org>
----
- block/blk-cgroup.c | 76 ++++++++++++++++++++++++++++++++++++++++++----
- block/blk-cgroup.h | 10 ++++++
- 2 files changed, 80 insertions(+), 6 deletions(-)
+If I got that right, would not that be considered a limitation? like
+"If you don't want your workload to be interrupted by perCPU cache draining=
+,
+don't put it in a cgroup with memory control".
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index af8a4d2d1fd1..3e03c0d13253 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -59,6 +59,37 @@ static struct workqueue_struct *blkcg_punt_bio_wq;
- 
- #define BLKG_DESTROY_BATCH_SIZE  64
- 
-+/*
-+ * Lockless lists for tracking IO stats update
-+ *
-+ * New IO stats are stored in the percpu iostat_cpu within blkcg_gq (blkg).
-+ * There are multiple blkg's (one for each block device) attached to each
-+ * blkcg. The rstat code keeps track of which cpu has IO stats updated,
-+ * but it doesn't know which blkg has the updated stats. If there are many
-+ * block devices in a system, the cost of iterating all the blkg's to flush
-+ * out the IO stats can be high. To reduce such overhead, a set of percpu
-+ * lockless lists (lhead) per blkcg are used to track the set of recently
-+ * updated iostat_cpu's since the last flush. An iostat_cpu will be put
-+ * onto the lockless list on the update side [blk_cgroup_bio_start()] if
-+ * not there yet and then removed when being flushed [blkcg_rstat_flush()].
-+ * References to blkg are gotten and then put back in the process to
-+ * protect against blkg removal.
-+ *
-+ * Return: 0 if successful or -ENOMEM if allocation fails.
-+ */
-+static int init_blkcg_llists(struct blkcg *blkcg)
-+{
-+	int cpu;
-+
-+	blkcg->lhead = alloc_percpu_gfp(struct llist_head, GFP_KERNEL);
-+	if (!blkcg->lhead)
-+		return -ENOMEM;
-+
-+	for_each_possible_cpu(cpu)
-+		init_llist_head(per_cpu_ptr(blkcg->lhead, cpu));
-+	return 0;
-+}
-+
- /**
-  * blkcg_css - find the current css
-  *
-@@ -236,8 +267,10 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
- 	blkg->blkcg = blkcg;
- 
- 	u64_stats_init(&blkg->iostat.sync);
--	for_each_possible_cpu(cpu)
-+	for_each_possible_cpu(cpu) {
- 		u64_stats_init(&per_cpu_ptr(blkg->iostat_cpu, cpu)->sync);
-+		per_cpu_ptr(blkg->iostat_cpu, cpu)->blkg = blkg;
-+	}
- 
- 	for (i = 0; i < BLKCG_MAX_POLS; i++) {
- 		struct blkcg_policy *pol = blkcg_policy[i];
-@@ -827,7 +860,9 @@ static void blkcg_iostat_update(struct blkcg_gq *blkg, struct blkg_iostat *cur,
- static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- {
- 	struct blkcg *blkcg = css_to_blkcg(css);
--	struct blkcg_gq *blkg;
-+	struct llist_head *lhead = per_cpu_ptr(blkcg->lhead, cpu);
-+	struct llist_node *lnode;
-+	struct blkg_iostat_set *bisc, *next_bisc;
- 
- 	/* Root-level stats are sourced from system-wide IO stats */
- 	if (!cgroup_parent(css->cgroup))
-@@ -835,12 +870,21 @@ static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 
- 	rcu_read_lock();
- 
--	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
-+	lnode = llist_del_all(lhead);
-+	if (!lnode)
-+		goto out;
-+
-+	/*
-+	 * Iterate only the iostat_cpu's queued in the lockless list.
-+	 */
-+	llist_for_each_entry_safe(bisc, next_bisc, lnode, lnode) {
-+		struct blkcg_gq *blkg = bisc->blkg;
- 		struct blkcg_gq *parent = blkg->parent;
--		struct blkg_iostat_set *bisc = per_cpu_ptr(blkg->iostat_cpu, cpu);
- 		struct blkg_iostat cur;
- 		unsigned int seq;
- 
-+		WRITE_ONCE(bisc->lqueued, false);
-+
- 		/* fetch the current per-cpu values */
- 		do {
- 			seq = u64_stats_fetch_begin(&bisc->sync);
-@@ -853,8 +897,10 @@ static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 		if (parent && parent->parent)
- 			blkcg_iostat_update(parent, &blkg->iostat.cur,
- 					    &blkg->iostat.last);
-+		percpu_ref_put(&blkg->refcnt);
- 	}
- 
-+out:
- 	rcu_read_unlock();
- }
- 
-@@ -1132,6 +1178,7 @@ static void blkcg_css_free(struct cgroup_subsys_state *css)
- 
- 	mutex_unlock(&blkcg_pol_mutex);
- 
-+	free_percpu(blkcg->lhead);
- 	kfree(blkcg);
- }
- 
-@@ -1151,6 +1198,9 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 			goto unlock;
- 	}
- 
-+	if (init_blkcg_llists(blkcg))
-+		goto free_blkcg;
-+
- 	for (i = 0; i < BLKCG_MAX_POLS ; i++) {
- 		struct blkcg_policy *pol = blkcg_policy[i];
- 		struct blkcg_policy_data *cpd;
-@@ -1191,7 +1241,8 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
- 	for (i--; i >= 0; i--)
- 		if (blkcg->cpd[i])
- 			blkcg_policy[i]->cpd_free_fn(blkcg->cpd[i]);
--
-+	free_percpu(blkcg->lhead);
-+free_blkcg:
- 	if (blkcg != &blkcg_root)
- 		kfree(blkcg);
- unlock:
-@@ -1939,6 +1990,7 @@ static int blk_cgroup_io_type(struct bio *bio)
- 
- void blk_cgroup_bio_start(struct bio *bio)
- {
-+	struct blkcg *blkcg = bio->bi_blkg->blkcg;
- 	int rwd = blk_cgroup_io_type(bio), cpu;
- 	struct blkg_iostat_set *bis;
- 	unsigned long flags;
-@@ -1957,9 +2009,21 @@ void blk_cgroup_bio_start(struct bio *bio)
- 	}
- 	bis->cur.ios[rwd]++;
- 
-+	/*
-+	 * If the iostat_cpu isn't in a lockless list, put it into the
-+	 * list to indicate that a stat update is pending.
-+	 */
-+	if (!READ_ONCE(bis->lqueued)) {
-+		struct llist_head *lhead = this_cpu_ptr(blkcg->lhead);
-+
-+		llist_add(&bis->lnode, lhead);
-+		WRITE_ONCE(bis->lqueued, true);
-+		percpu_ref_get(&bis->blkg->refcnt);
-+	}
-+
- 	u64_stats_update_end_irqrestore(&bis->sync, flags);
- 	if (cgroup_subsys_on_dfl(io_cgrp_subsys))
--		cgroup_rstat_updated(bio->bi_blkg->blkcg->css.cgroup, cpu);
-+		cgroup_rstat_updated(blkcg->css.cgroup, cpu);
- 	put_cpu();
- }
- 
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index aa2b286bc825..1e94e404eaa8 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -18,6 +18,7 @@
- #include <linux/cgroup.h>
- #include <linux/kthread.h>
- #include <linux/blk-mq.h>
-+#include <linux/llist.h>
- 
- struct blkcg_gq;
- struct blkg_policy_data;
-@@ -43,6 +44,9 @@ struct blkg_iostat {
- 
- struct blkg_iostat_set {
- 	struct u64_stats_sync		sync;
-+	struct blkcg_gq		       *blkg;
-+	struct llist_node		lnode;
-+	int				lqueued;	/* queued in llist */
- 	struct blkg_iostat		cur;
- 	struct blkg_iostat		last;
- };
-@@ -97,6 +101,12 @@ struct blkcg {
- 	struct blkcg_policy_data	*cpd[BLKCG_MAX_POLS];
- 
- 	struct list_head		all_blkcgs_node;
-+
-+	/*
-+	 * List of updated percpu blkg_iostat_set's since the last flush.
-+	 */
-+	struct llist_head __percpu	*lhead;
-+
- #ifdef CONFIG_BLK_CGROUP_FC_APPID
- 	char                            fc_app_id[FC_APPID_LEN];
- #endif
--- 
-2.31.1
+> Sorry for being so focused on this
+> but I would like to understand on whether this is avoidable by a
+> different startup scheme or it really needs to be addressed in some way.
+
+No worries, I am in fact happy you are giving it this much attention :)
+
+I also understand this is a considerable change in the locking strategy, an=
+d
+avoiding that is the first thing that should be tried.
+
+>=20
+> > One way I thought to solve that was introducing a remote drain, which w=
+ould
+> > require a different strategy for locking, since not all accesses to the=
+ pcp
+> > caches would happen on a local CPU.=20
+>=20
+> Yeah, I am not supper happy about additional spin lock TBH. One
+> potential way to go would be to completely avoid pcp cache for isolated
+> CPUs.=C2=A0That would have some performance impact of course but on the o=
+ther
+> hand it would give a more predictable behavior for those CPUs which
+> sounds like a reasonable compromise to me. What do you think?
+
+You mean not having a perCPU stock, then?=20
+So consume_stock() for isolated CPUs would always return false, causing
+try_charge_memcg() always walking the slow path?
+
+IIUC, both my proposal and yours would degrade performance only when we use
+isolated CPUs + memcg. Is that correct?
+
+If so, it looks like the impact would be even bigger without perCPU stock ,
+compared to introducing a spinlock.
+
+Unless, we are counting to this case where a remote CPU is draining an isol=
+ated
+CPU, and the isolated CPU faults a page, and has to wait for the spinlock t=
+o be
+released in the remote CPU. Well, this seems possible to happen, but I woul=
+d
+have to analyze how often would it happen, and how much would it impact the
+deadlines. I *guess* most of the RT workload's memory pages are pre-faulted
+before its starts, so it can avoid the faulting latency, but I need to conf=
+irm
+that.
+
+On the other hand, compared to how it works now now, this should be a more
+controllable way of introducing latency than a scheduled cache drain.
+
+Your suggestion on no-stocks/caches in isolated CPUs would be great for
+predictability, but I am almost sure the cost in overall performance would =
+not
+be fine.
+
+With the possibility of prefaulting pages, do you see any scenario that wou=
+ld
+introduce some undesirable latency in the workload?
+
+Thanks a lot for the discussion!
+Leo
 
