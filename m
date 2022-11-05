@@ -1,98 +1,46 @@
-From: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-Subject: [PATCH v4a 07/38] timers: block: Use
-	timer_shutdown_sync() before freeing timer
-Date: Sat, 05 Nov 2022 02:00:31 -0400
-Message-ID: <20221105060156.128428980@goodmis.org>
-References: <20221105060024.598488967@goodmis.org>
+From: YueHaibing <yuehaibing-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] selftests: cgroup: Fix unsigned comparison with less than zero
+Date: Sat, 5 Nov 2022 19:06:11 +0800
+Message-ID: <20221105110611.28920-1-yuehaibing@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Content-Type: text/plain; charset="iso-8859-1"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Stephen Boyd <sboyd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Philipp Reisner <philipp.reisner-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Lars Ellenberg <lars.ellenberg-63ez5xqkn6DQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Anna-Maria Gleixner <anna-maria-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Guenter Roeck <linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org>, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, YueHaibing <yuehaibing-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-RnJvbTogIlN0ZXZlbiBSb3N0ZWR0IChHb29nbGUpIiA8cm9zdGVkdEBnb29kbWlzLm9yZz4KCkJl
-Zm9yZSBhIHRpbWVyIGlzIGZyZWVkLCB0aW1lcl9zaHV0ZG93bl9zeW5jKCkgbXVzdCBiZSBjYWxs
-ZWQuCgpMaW5rOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyMjExMDQwNTQwNTMuNDMx
-OTIyNjU4QGdvb2RtaXMub3JnLwoKQ2M6IFBoaWxpcHAgUmVpc25lciA8cGhpbGlwcC5yZWlzbmVy
-QGxpbmJpdC5jb20+CkNjOiBMYXJzIEVsbGVuYmVyZyA8bGFycy5lbGxlbmJlcmdAbGluYml0LmNv
-bT4KQ2M6ICJDaHJpc3RvcGggQsO2aG13YWxkZXIiIDxjaHJpc3RvcGguYm9laG13YWxkZXJAbGlu
-Yml0LmNvbT4KQ2M6IEplbnMgQXhib2UgPGF4Ym9lQGtlcm5lbC5kaz4KQ2M6IGRyYmQtZGV2QGxp
-c3RzLmxpbmJpdC5jb20KQ2M6IFRlanVuIEhlbyA8dGpAa2VybmVsLm9yZz4KQ2M6IGNncm91cHNA
-dmdlci5rZXJuZWwub3JnCkNjOiBsaW51eC1ibG9ja0B2Z2VyLmtlcm5lbC5vcmcKU2lnbmVkLW9m
-Zi1ieTogU3RldmVuIFJvc3RlZHQgKEdvb2dsZSkgPHJvc3RlZHRAZ29vZG1pcy5vcmc+Ci0tLQog
-YmxvY2svYmxrLWlvY29zdC5jICAgICAgICAgICAgIHwgMiArLQogYmxvY2svYmxrLWlvbGF0ZW5j
-eS5jICAgICAgICAgIHwgMiArLQogYmxvY2svYmxrLXRocm90dGxlLmMgICAgICAgICAgIHwgMiAr
-LQogYmxvY2sva3liZXItaW9zY2hlZC5jICAgICAgICAgIHwgMiArLQogZHJpdmVycy9ibG9jay9k
-cmJkL2RyYmRfbWFpbi5jIHwgMiArLQogZHJpdmVycy9ibG9jay9sb29wLmMgICAgICAgICAgIHwg
-MiArLQogZHJpdmVycy9ibG9jay9zdW52ZGMuYyAgICAgICAgIHwgMiArLQogNyBmaWxlcyBjaGFu
-Z2VkLCA3IGluc2VydGlvbnMoKyksIDcgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvYmxvY2sv
-YmxrLWlvY29zdC5jIGIvYmxvY2svYmxrLWlvY29zdC5jCmluZGV4IDQ5NTM5NjQyNWJhZC4uN2Vk
-YzY5NWIzYTNkIDEwMDY0NAotLS0gYS9ibG9jay9ibGstaW9jb3N0LmMKKysrIGIvYmxvY2svYmxr
-LWlvY29zdC5jCkBAIC0yODE0LDcgKzI4MTQsNyBAQCBzdGF0aWMgdm9pZCBpb2NfcnFvc19leGl0
-KHN0cnVjdCBycV9xb3MgKnJxb3MpCiAJaW9jLT5ydW5uaW5nID0gSU9DX1NUT1A7CiAJc3Bpbl91
-bmxvY2tfaXJxKCZpb2MtPmxvY2spOwogCi0JZGVsX3RpbWVyX3N5bmMoJmlvYy0+dGltZXIpOwor
-CXRpbWVyX3NodXRkb3duX3N5bmMoJmlvYy0+dGltZXIpOwogCWZyZWVfcGVyY3B1KGlvYy0+cGNw
-dV9zdGF0KTsKIAlrZnJlZShpb2MpOwogfQpkaWZmIC0tZ2l0IGEvYmxvY2svYmxrLWlvbGF0ZW5j
-eS5jIGIvYmxvY2svYmxrLWlvbGF0ZW5jeS5jCmluZGV4IDU3MWZhOTVhYWZlOS4uYzcwNDlhYjE4
-MzEyIDEwMDY0NAotLS0gYS9ibG9jay9ibGstaW9sYXRlbmN5LmMKKysrIGIvYmxvY2svYmxrLWlv
-bGF0ZW5jeS5jCkBAIC02NDUsNyArNjQ1LDcgQEAgc3RhdGljIHZvaWQgYmxrY2dfaW9sYXRlbmN5
-X2V4aXQoc3RydWN0IHJxX3FvcyAqcnFvcykKIHsKIAlzdHJ1Y3QgYmxrX2lvbGF0ZW5jeSAqYmxr
-aW9sYXQgPSBCTEtJT0xBVEVOQ1kocnFvcyk7CiAKLQlkZWxfdGltZXJfc3luYygmYmxraW9sYXQt
-PnRpbWVyKTsKKwl0aW1lcl9zaHV0ZG93bl9zeW5jKCZibGtpb2xhdC0+dGltZXIpOwogCWZsdXNo
-X3dvcmsoJmJsa2lvbGF0LT5lbmFibGVfd29yayk7CiAJYmxrY2dfZGVhY3RpdmF0ZV9wb2xpY3ko
-cnFvcy0+cSwgJmJsa2NnX3BvbGljeV9pb2xhdGVuY3kpOwogCWtmcmVlKGJsa2lvbGF0KTsKZGlm
-ZiAtLWdpdCBhL2Jsb2NrL2Jsay10aHJvdHRsZS5jIGIvYmxvY2svYmxrLXRocm90dGxlLmMKaW5k
-ZXggODQ3NzIxZGMyYjJiLi4zODc0MGM0ZjUxN2EgMTAwNjQ0Ci0tLSBhL2Jsb2NrL2Jsay10aHJv
-dHRsZS5jCisrKyBiL2Jsb2NrL2Jsay10aHJvdHRsZS5jCkBAIC00OTAsNyArNDkwLDcgQEAgc3Rh
-dGljIHZvaWQgdGhyb3RsX3BkX2ZyZWUoc3RydWN0IGJsa2dfcG9saWN5X2RhdGEgKnBkKQogewog
-CXN0cnVjdCB0aHJvdGxfZ3JwICp0ZyA9IHBkX3RvX3RnKHBkKTsKIAotCWRlbF90aW1lcl9zeW5j
-KCZ0Zy0+c2VydmljZV9xdWV1ZS5wZW5kaW5nX3RpbWVyKTsKKwl0aW1lcl9zaHV0ZG93bl9zeW5j
-KCZ0Zy0+c2VydmljZV9xdWV1ZS5wZW5kaW5nX3RpbWVyKTsKIAlibGtnX3J3c3RhdF9leGl0KCZ0
-Zy0+c3RhdF9ieXRlcyk7CiAJYmxrZ19yd3N0YXRfZXhpdCgmdGctPnN0YXRfaW9zKTsKIAlrZnJl
-ZSh0Zyk7CmRpZmYgLS1naXQgYS9ibG9jay9reWJlci1pb3NjaGVkLmMgYi9ibG9jay9reWJlci1p
-b3NjaGVkLmMKaW5kZXggYjA1MzU3YmNlZDk5Li4yMTQ2OTY5MjM3YmYgMTAwNjQ0Ci0tLSBhL2Js
-b2NrL2t5YmVyLWlvc2NoZWQuYworKysgYi9ibG9jay9reWJlci1pb3NjaGVkLmMKQEAgLTQzNCw3
-ICs0MzQsNyBAQCBzdGF0aWMgdm9pZCBreWJlcl9leGl0X3NjaGVkKHN0cnVjdCBlbGV2YXRvcl9x
-dWV1ZSAqZSkKIAlzdHJ1Y3Qga3liZXJfcXVldWVfZGF0YSAqa3FkID0gZS0+ZWxldmF0b3JfZGF0
-YTsKIAlpbnQgaTsKIAotCWRlbF90aW1lcl9zeW5jKCZrcWQtPnRpbWVyKTsKKwl0aW1lcl9zaHV0
-ZG93bl9zeW5jKCZrcWQtPnRpbWVyKTsKIAlibGtfc3RhdF9kaXNhYmxlX2FjY291bnRpbmcoa3Fk
-LT5xKTsKIAogCWZvciAoaSA9IDA7IGkgPCBLWUJFUl9OVU1fRE9NQUlOUzsgaSsrKQpkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9ibG9jay9kcmJkL2RyYmRfbWFpbi5jIGIvZHJpdmVycy9ibG9jay9kcmJk
-L2RyYmRfbWFpbi5jCmluZGV4IGYzZTRkYjE2ZmQwNy4uMmRjNWJlODlhMDAxIDEwMDY0NAotLS0g
-YS9kcml2ZXJzL2Jsb2NrL2RyYmQvZHJiZF9tYWluLmMKKysrIGIvZHJpdmVycy9ibG9jay9kcmJk
-L2RyYmRfbWFpbi5jCkBAIC0yMTg0LDcgKzIxODQsNyBAQCB2b2lkIGRyYmRfZGVzdHJveV9kZXZp
-Y2Uoc3RydWN0IGtyZWYgKmtyZWYpCiAJc3RydWN0IGRyYmRfcmVzb3VyY2UgKnJlc291cmNlID0g
-ZGV2aWNlLT5yZXNvdXJjZTsKIAlzdHJ1Y3QgZHJiZF9wZWVyX2RldmljZSAqcGVlcl9kZXZpY2Us
-ICp0bXBfcGVlcl9kZXZpY2U7CiAKLQlkZWxfdGltZXJfc3luYygmZGV2aWNlLT5yZXF1ZXN0X3Rp
-bWVyKTsKKwl0aW1lcl9zaHV0ZG93bl9zeW5jKCZkZXZpY2UtPnJlcXVlc3RfdGltZXIpOwogCiAJ
-LyogcGFyYW5vaWEgYXNzZXJ0cyAqLwogCURfQVNTRVJUKGRldmljZSwgZGV2aWNlLT5vcGVuX2Nu
-dCA9PSAwKTsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvYmxvY2svbG9vcC5jIGIvZHJpdmVycy9ibG9j
-ay9sb29wLmMKaW5kZXggYWQ5MjE5MmM3ZDYxLi4zZWEwODdjZDFmOTkgMTAwNjQ0Ci0tLSBhL2Ry
-aXZlcnMvYmxvY2svbG9vcC5jCisrKyBiL2RyaXZlcnMvYmxvY2svbG9vcC5jCkBAIC0xNzU1LDcg
-KzE3NTUsNyBAQCBzdGF0aWMgdm9pZCBsb19mcmVlX2Rpc2soc3RydWN0IGdlbmRpc2sgKmRpc2sp
-CiAJaWYgKGxvLT53b3JrcXVldWUpCiAJCWRlc3Ryb3lfd29ya3F1ZXVlKGxvLT53b3JrcXVldWUp
-OwogCWxvb3BfZnJlZV9pZGxlX3dvcmtlcnMobG8sIHRydWUpOwotCWRlbF90aW1lcl9zeW5jKCZs
-by0+dGltZXIpOworCXRpbWVyX3NodXRkb3duX3N5bmMoJmxvLT50aW1lcik7CiAJbXV0ZXhfZGVz
-dHJveSgmbG8tPmxvX211dGV4KTsKIAlrZnJlZShsbyk7CiB9CmRpZmYgLS1naXQgYS9kcml2ZXJz
-L2Jsb2NrL3N1bnZkYy5jIGIvZHJpdmVycy9ibG9jay9zdW52ZGMuYwppbmRleCBmYjg1NWRhOTcx
-ZWUuLmUxNGZlNWQ5NjhkOCAxMDA2NDQKLS0tIGEvZHJpdmVycy9ibG9jay9zdW52ZGMuYworKysg
-Yi9kcml2ZXJzL2Jsb2NrL3N1bnZkYy5jCkBAIC0xMDY3LDcgKzEwNjcsNyBAQCBzdGF0aWMgdm9p
-ZCB2ZGNfcG9ydF9yZW1vdmUoc3RydWN0IHZpb19kZXYgKnZkZXYpCiAKIAkJZmx1c2hfd29yaygm
-cG9ydC0+bGRjX3Jlc2V0X3dvcmspOwogCQljYW5jZWxfZGVsYXllZF93b3JrX3N5bmMoJnBvcnQt
-PmxkY19yZXNldF90aW1lcl93b3JrKTsKLQkJZGVsX3RpbWVyX3N5bmMoJnBvcnQtPnZpby50aW1l
-cik7CisJCXRpbWVyX3NodXRkb3duX3N5bmMoJnBvcnQtPnZpby50aW1lcik7CiAKIAkJZGVsX2dl
-bmRpc2socG9ydC0+ZGlzayk7CiAJCXB1dF9kaXNrKHBvcnQtPmRpc2spOwotLSAKMi4zNS4xCl9f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyYmQtZGV2IG1h
-aWxpbmcgbGlzdApkcmJkLWRldkBsaXN0cy5saW5iaXQuY29tCmh0dHBzOi8vbGlzdHMubGluYml0
-LmNvbS9tYWlsbWFuL2xpc3RpbmZvL2RyYmQtZGV2Cg==
+'size' is unsigned, it never less than zero.
+
+Fixes: 6c26df84e1f2 ("selftests: cgroup: return -errno from cg_read()/cg_write() on failure")
+Signed-off-by: YueHaibing <yuehaibing-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ tools/testing/selftests/cgroup/cgroup_util.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
+index 4c52cc6f2f9c..e8bbbdb77e0d 100644
+--- a/tools/testing/selftests/cgroup/cgroup_util.c
++++ b/tools/testing/selftests/cgroup/cgroup_util.c
+@@ -555,6 +555,7 @@ int proc_mount_contains(const char *option)
+ ssize_t proc_read_text(int pid, bool thread, const char *item, char *buf, size_t size)
+ {
+ 	char path[PATH_MAX];
++	ssize_t ret;
+ 
+ 	if (!pid)
+ 		snprintf(path, sizeof(path), "/proc/%s/%s",
+@@ -562,8 +563,8 @@ ssize_t proc_read_text(int pid, bool thread, const char *item, char *buf, size_t
+ 	else
+ 		snprintf(path, sizeof(path), "/proc/%d/%s", pid, item);
+ 
+-	size = read_text(path, buf, size);
+-	return size < 0 ? -1 : size;
++	ret = read_text(path, buf, size);
++	return ret < 0 ? -1 : ret;
+ }
+ 
+ int proc_read_strstr(int pid, bool thread, const char *item, const char *needle)
+-- 
+2.17.1
+
