@@ -1,27 +1,32 @@
 From: Sergey Dolgov <palza00-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: problem with remove cgroup in function cgroup_addrm_files
-Date: Mon, 7 Nov 2022 12:50:04 +0600
-Message-ID: <CADn0Px_+-z5-cjJ6t6fO86=oq9Se-uLDA1nJ0OUSxwf+zHJgWQ@mail.gmail.com>
+Subject: Fwd: problem with remove cgroup in function cgroup_addrm_files
+Date: Mon, 7 Nov 2022 13:27:14 +0600
+Message-ID: <CADn0Px_iJudDkAc0dmUCJt9G1wSQ5zt1ZPox_+tNU=kHwCH99w@mail.gmail.com>
+References: <CADn0Px_+-z5-cjJ6t6fO86=oq9Se-uLDA1nJ0OUSxwf+zHJgWQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:to:subject:message-id:date:from
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=lAiL66oLuU1UM2VLyBCvNm96RdT9OSVILQCYD0+AsTk=;
-        b=eT6OCFbXPLWP8V/twst0UhbXMVRlR0JA6uz4may4K7ycuYEbecCcerMbi3/6PlCXtt
-         1soUcO22yyvyVNQ3v71I5SlCutKN7nX9pQ2HRq7b5V6aQNgOyAsZKojbSdBREI+sWkkR
-         CXDHSYFzhazAx6U9o4x178vos7BapBxVUdDJe3/ytdP1hOWlxfsqGSBdsf23Up+XtjDH
-         peh3xzHb+Ol7h7LO8QlNM+e7P2guJIGFWLdacc8yU5YxEbky7H0d3bA/l/O4p3hJJQ27
-         Za1nfkyUkvtHSxbC+Fc9TtbrLtD4I2n7JmfsrxYbl3TyikSFB4WNPLNVrSYugefol9bZ
-         4HNw==
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=YYUjagfJJHWab5/+W3ovIvAFp8kn+uQGK7IAjr2d888=;
+        b=BipRzTyZcsUBT4LNpGNZzTsl+A5UnyAJT3g6arJ1xbpKpcCOkdJoThXDl3PtCPf8nn
+         +4GbRqZ0yV/KNYpx5iuaKlZnucWrJPivM46GKTMHSn+VptWMRdIirUN8O7vZOs1TwKe/
+         NytP76yzwVppdNOFzQk8YJCzP+enMEwrWmKxUzqK5pE0WtAR3nqOYeLODqKX/8MVRzZ8
+         rVfEat/hzXCeuqD2FVUxkoIc1ytnmBZJ62SIf8Tp5JturkxkqAyWrYw0gAVNwhyj8rkh
+         FFSo9YlPwR5gYPtynd2hNTHDPQXmax9mhDz/yUEGKEWW9wLbpRg2HrWA23UofnhdAzJr
+         IOgg==
+In-Reply-To: <CADn0Px_+-z5-cjJ6t6fO86=oq9Se-uLDA1nJ0OUSxwf+zHJgWQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="windows-1252"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 Hello
-we faced problem in removing cgroup in cgroup_addrm_files in kernel 5.4
+we faced problem in removing cgroup in cgroup_addrm_files in kernel
+5.4 and suppose present in master
 
 kernel log:
 [45393502.717886] BUG: kernel NULL pointer dereference, address:
@@ -164,7 +169,6 @@ https://drive.google.com/file/d/1fokPEwSSpBr7XyySIhjIyhr5yf_5JTI3/view?usp=
 Full structure cgroup->self->ss from kdump:
 https://drive.google.com/file/d/14z7w_t-6DiQhJzVrCGKFNCAIEkbt7Ce_/view?usp=
 =3Dsharing
-
 
 --=20
 Best regards, Sergey Dolgov
