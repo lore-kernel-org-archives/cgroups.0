@@ -1,174 +1,105 @@
-From: Sergey Dolgov <palza00-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Fwd: problem with remove cgroup in function cgroup_addrm_files
-Date: Mon, 7 Nov 2022 13:27:14 +0600
-Message-ID: <CADn0Px_iJudDkAc0dmUCJt9G1wSQ5zt1ZPox_+tNU=kHwCH99w@mail.gmail.com>
-References: <CADn0Px_+-z5-cjJ6t6fO86=oq9Se-uLDA1nJ0OUSxwf+zHJgWQ@mail.gmail.com>
+From: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] mm/vmscan: respect cpuset policy during page demotion
+Date: Mon, 7 Nov 2022 16:05:37 +0800
+Message-ID: <Y2i8UbaOjGyqwJQ6@feng-clx>
+References: <87wn8lkbk5.fsf@yhuang6-desk2.ccr.corp.intel.com>
+ <Y1ou5DGHrEsKnhri@dhcp22.suse.cz>
+ <87o7txk963.fsf@yhuang6-desk2.ccr.corp.intel.com>
+ <Y1o63SWD2KmQkT3v@dhcp22.suse.cz>
+ <87fsf9k3yg.fsf@yhuang6-desk2.ccr.corp.intel.com>
+ <Y1p5vaN1AWhpNWZx@dhcp22.suse.cz>
+ <87bkpwkg24.fsf@yhuang6-desk2.ccr.corp.intel.com>
+ <Y1+J7+1V1nJXF+3b@dhcp22.suse.cz>
+ <Y1/XC+witPxFj04T@feng-clx>
+ <Y1/cgrgdVP+KdYzf@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=YYUjagfJJHWab5/+W3ovIvAFp8kn+uQGK7IAjr2d888=;
-        b=BipRzTyZcsUBT4LNpGNZzTsl+A5UnyAJT3g6arJ1xbpKpcCOkdJoThXDl3PtCPf8nn
-         +4GbRqZ0yV/KNYpx5iuaKlZnucWrJPivM46GKTMHSn+VptWMRdIirUN8O7vZOs1TwKe/
-         NytP76yzwVppdNOFzQk8YJCzP+enMEwrWmKxUzqK5pE0WtAR3nqOYeLODqKX/8MVRzZ8
-         rVfEat/hzXCeuqD2FVUxkoIc1ytnmBZJ62SIf8Tp5JturkxkqAyWrYw0gAVNwhyj8rkh
-         FFSo9YlPwR5gYPtynd2hNTHDPQXmax9mhDz/yUEGKEWW9wLbpRg2HrWA23UofnhdAzJr
-         IOgg==
-In-Reply-To: <CADn0Px_+-z5-cjJ6t6fO86=oq9Se-uLDA1nJ0OUSxwf+zHJgWQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1667808538; x=1699344538;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=Sc/4SmMJODGAVdDTinFVOCgagW93gfpE74RU20Dl3ag=;
+  b=Uuf+gTvcBjM8+UUczAvWAx5nkC7+E7DY2/XAmdfloxz/wVM7dEcykiTw
+   mYwIXTVgtE7vL7CCtH+m4+ah4ecn3ZVpyJ70xbpAySGKo7/BbJ9szAuGm
+   40N/MDOTSa7RaGbWySdilyPaAFKk1QXxLlcguqHhHgVPhD96GkbkjmDsD
+   orcCtNr/CJNHlA/aQosWRJN+MSmDtWLpcRASn7Z8H1Kc2squnp1o3yf8e
+   gdrm3kgBlu8qKtmRzhDBQO0K8rqV4xrak9MgbmxSXh7ZgyFowmSMni2zM
+   y8oaRvEqwvwmnIuahdSLRRe5xNBu+oZWhMlZ25Ai93Oc67rtGspdVQ8zD
+   w==;
+Content-Disposition: inline
+In-Reply-To: <Y1/cgrgdVP+KdYzf-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Aneesh Kumar K V <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Hansen, Dave" <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Yin, Fengwei" <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Hello
-we faced problem in removing cgroup in cgroup_addrm_files in kernel
-5.4 and suppose present in master
+On Mon, Oct 31, 2022 at 03:32:34PM +0100, Michal Hocko wrote:
+> > > OK, then let's stop any complicated solution right here then. Let's
+> > > start simple with a per-mm flag to disable demotion of an address space.
+> > > Should there ever be a real demand for a more fine grained solution
+> > > let's go further but I do not think we want a half baked solution
+> > > without real usecases.
+> > 
+> > Yes, the concern about the high cost for mempolicy from you and Yang is
+> > valid. 
+> > 
+> > How about the cpuset part?
+> 
+> Cpusets fall into the same bucket as per task mempolicies wrt costs. Geting a
+> cpuset requires knowing all tasks associated with a page. Or am I just
+> missing any magic? And no memcg->cpuset association is not a proper
+> solution at all.
 
-kernel log:
-[45393502.717886] BUG: kernel NULL pointer dereference, address:
-00000000000006a3
-[45393502.738685] #PF: supervisor read access in kernel mode
-[45393502.745395] #PF: error_code(0x0000) - not-present page
-[45393502.752128] PGD 0 P4D 0
-[45393502.756222] Oops: 0000 [#1] SMP NOPTI
-[45393502.761439] CPU: 31 PID: 3025852 Comm: prio-rpc-libvir Kdump:
-loaded Tainted: G           OE     5.4.0-73-generic #82~18.04.1-Ubuntu
-[45393502.776093] Hardware name: Intel Corporation S2600WFT/S2600WFT,
-BIOS SE5C620.86B.02.01.0013.121520200651 12/15/2020
-[45393502.788023] RIP: 0010:cgroup_addrm_files+0x51/0x370
-[45393502.794381] Code: 50 ff ff ff 48 89 95 58 ff ff ff 65 48 8b 04
-25 28 00 00 00 48 89 45 d0 31 c0 48 8b 85 58 ff ff ff 48 39 c3 0f 84
-a8 01 00 00 <80> 38 00 0f 84 9f 01 00 00 49 89 c6 eb 2b 49 81 bf 08 02
-00 00 a0
-[45393502.815850] RSP: 0018:ffff9892625a7d08 EFLAGS: 00010293
-[45393502.822545] RAX: 00000000000006a3 RBX: 0000000000000000 RCX:
-0000000000000000
-[45393502.831144] RDX: 00000000000006a3 RSI: ffff88e7c9a0b000 RDI:
-ffff88e7c9a0b000
-[45393502.839723] RBP: ffff9892625a7dc0 R08: 0000000000000000 R09:
-ffff9892625a7d78
-[45393502.848298] R10: 0000000000000020 R11: 0000000000000000 R12:
-0000000000000000
-[45393502.856859] R13: 0000000000000000 R14: ffff88e2db361000 R15:
-ffff88e7c9a0b000
-[45393502.865394] FS:  00007f64d0fcc700(0000)
-GS:ffff8915ff7c0000(0000) knlGS:0000000000000000
-[45393502.874881] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[45393502.882011] CR2: 00000000000006a3 CR3: 0000002cffa46005 CR4:
-00000000007626e0
-[45393502.890514] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-0000000000000000
-[45393502.899002] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7:
-0000000000000400
-[45393502.907455] PKRU: 55555554
-[45393502.911469] Call Trace:
-[45393502.915194]  ? cset_cgroup_from_root+0x70/0x70
-[45393502.920889]  ? call_rcu+0x10/0x20
-[45393502.925429]  ? __percpu_ref_switch_mode+0xda/0x190
-[45393502.931436]  css_clear_dir+0x50/0xa0
-[45393502.936215]  cgroup_destroy_locked+0xc5/0x180
-[45393502.941768]  cgroup_rmdir+0x2e/0xe0
-[45393502.946429]  kernfs_iop_rmdir+0x63/0xa0
-[45393502.951416]  vfs_rmdir+0x81/0x19
-[45393502.955868]  do_rmdir+0x1e4/0x210
-[45393502.960301]  __x64_sys_rmdir+0x17/0x20
-[45393502.965151]  do_syscall_64+0x57/0x190
-[45393502.969888]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+No, you are not missing anything. It's really difficult to find a
+solution for all holes. And the patch is actually a best-efforts
+approach, trying to cover cgroup v2 + memory controller enabled case,
+which we think is a common user case for newer platforms with tiering
+memory.
+ 
+> > We've got bug reports from different channels
+> > about using cpuset+docker to control meomry placement in memory tiering
+> > system, leading to 2 commits solving them:
+> > 
+> > 2685027fca38 ("cgroup/cpuset: Remove cpus_allowed/mems_allowed setup in
+> > cpuset_init_smp()") 
+> > https://lore.kernel.org/all/20220419020958.40419-1-feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+> > 
+> > 8ca1b5a49885 ("mm/page_alloc: detect allocation forbidden by cpuset and
+> > bail out early")
+> > https://lore.kernel.org/all/1632481657-68112-1-git-send-email-feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+> > 
+> > >From these bug reports, I think it's reasonable to say there are quite
+> > some real world users using cpuset+docker+memory-tiering-system.
+> 
+> I don't think anybody is questioning existence of those usecases. The
+> primary question is whether any of them really require any non-trivial
+> (read nodemask aware) demotion policies. In other words do we know of
+> cpuset policy setups where demotion fallbacks are (partially) excluded?
 
-backtrace process:
+For cpuset numa memory binding, there are possible usercases:
 
-crash> bt -s
+* User wants cpuset to bind some important containers to faster
+  memory tiers for better latency/performance (where simply disabling
+  demotion should work, like your per-mm flag solution)
 
-PID: 3025852  TASK: ffff88e37b63dac0  CPU: 31  COMMAND: "prio-rpc-libvir"
- #0 [ffff9892625a7978] machine_kexec+451 at ffffffffa9a6ee03
- #1 [ffff9892625a79d8] __crash_kexec+114 at ffffffffa9b567d2
- #2 [ffff9892625a7aa8] crash_kexec+65 at ffffffffa9b57671
- #3 [ffff9892625a7ac8] oops_end+189 at ffffffffa9a351ad
- #4 [ffff9892625a7af0] no_context+473 at ffffffffa9a7f339
- #5 [ffff9892625a7b60] __bad_area_nosemaphore+80 at ffffffffa9a7f730
- #6 [ffff9892625a7ba8] bad_area_nosemaphore+22 at ffffffffa9a7f8e6
- #7 [ffff9892625a7bb8] __do_page_fault+525 at ffffffffa9a802ad
- #8 [ffff9892625a7c20] do_page_fault+44 at ffffffffa9a8059c
- #9 [ffff9892625a7c50] page_fault+52 at ffffffffaa601284
-    [exception RIP: cgroup_addrm_files+81]
-    RIP: ffffffffa9b5d781  RSP: ffff9892625a7d08  RFLAGS: 00010293
-    RAX: 00000000000006a3  RBX: 0000000000000000  RCX: 0000000000000000
-    RDX: 00000000000006a3  RSI: ffff88e7c9a0b000  RDI: ffff88e7c9a0b000
-    RBP: ffff9892625a7dc0   R8: 0000000000000000   R9: ffff9892625a7d78
-    R10: 0000000000000020  R11: 0000000000000000  R12: 0000000000000000
-    R13: 0000000000000000  R14: ffff88e2db361000  R15: ffff88e7c9a0b000
-    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
-#10 [ffff9892625a7dc8] css_clear_dir+80 at ffffffffa9b5daf0
-#11 [ffff9892625a7df0] cgroup_destroy_locked+197 at ffffffffa9b62c75
-#12 [ffff9892625a7e28] cgroup_rmdir+46 at ffffffffa9b6325e
-#13 [ffff9892625a7e60] kernfs_iop_rmdir+99 at ffffffffa9d82873
-#14 [ffff9892625a7e80] vfs_rmdir+129 at ffffffffa9ce9fb1
-#15 [ffff9892625a7eb0] do_rmdir+484 at ffffffffa9cf00f4
-#16 [ffff9892625a7f20] __x64_sys_rmdir+23 at ffffffffa9cf0137
-#17 [ffff9892625a7f30] do_syscall_64+87 at ffffffffa9a04207
-#18 [ffff9892625a7f50] entry_SYSCALL_64_after_hwframe+68 at ffffffffaa60008=
-c
-    RIP: 00007f64df799d77  RSP: 00007f64d0fcb8b8  RFLAGS: 00000246
-    RAX: ffffffffffffffda  RBX: 0000000000000000  RCX: 00007f64df799d77
-    RDX: 00007f64b02ba080  RSI: 00007f64e0ca7cf0  RDI: 00007f64b02ba080
-    RBP: 00007f64d0fcb920   R8: 00007f64e0edeba0   R9: 0000000000000000
-    R10: 00007f64b00008d0  R11: 0000000000000246  R12: 00007f64b02ba080
-    R13: 00007f64e0f43901  R14: 0000000000000000  R15: 00007f64b0003550
-    ORIG_RAX: 0000000000000054  CS: 0033  SS: 002b
+* User wants to bind to a set of physically closer nodes (like faster
+  CPU+DRAM node and slower PMEM node). With initial demotion code,
+  our HW will have 1:1 demotion/promotion pair for one DRAM node and
+  its closer PMEM node, and user's binding can work fine. And there
+  are many other types of memory tiering system from other vendors,
+  like many CPU-less DRAM nodes in system, and Aneesh's patchset[1]
+  created a more general tiering interface, where IIUC each tier has
+  a nodemask, and an upper tier can demote to the whole lower tier,
+  where the demotion path is N:N mapping. And for this, fine-tuning
+  cpuset nodes binding needs this handling.
 
+[1]. https://lore.kernel.org/lkml/20220818131042.113280-1-aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org/
 
-It looks that
-css_clear_dir(&cgrp->self);
-(https://github.com/torvalds/linux/blob/v5.4/kernel/cgroup/cgroup.c#L5565)
-expects cgroup without any ss(all cgroup=E2=80=99s css removed in
-https://github.com/torvalds/linux/blob/v5.4/kernel/cgroup/cgroup.c#L5561-L5=
-562)
+Thanks,
+Feng
 
-but we have from kdump:
-Pointer to cgroup based in R15 : ffff88e7c9a0b000
-crash> struct cgroup.self.ss 0xffff88e7c9a0b000
-  self.ss =3D 0xffff88fc910d9f80,
-
-
-crash> struct cgroup_subsys.cfts 0xffff88fc910d9f80
-  cfts =3D {
-    next =3D 0x703,
-    prev =3D 0x0
-  },
-
-So in css_clear_dir
-(https://github.com/torvalds/linux/blob/v5.4/kernel/cgroup/cgroup.c#L1650):
-
-css->ss is true
-https://github.com/torvalds/linux/blob/v5.4/kernel/cgroup/cgroup.c#L1660
-
-and we fall in https://github.com/torvalds/linux/blob/v5.4/kernel/cgroup/cg=
-roup.c#L1668-L1669
-
-and when we try to access in
-https://github.com/torvalds/linux/blob/v5.4/kernel/cgroup/cgroup.c#L3926
-
-cft->name[0]  we get BUG
-
-
-If we change comparison in
-https://github.com/torvalds/linux/blob/v5.4/kernel/cgroup/cgroup.c#L1660
-
- from (!css->ss) to (!(css->ss or css =3D=3D css->cgroup->self)) it will
-be resolve problem
-
-
-Full structure cgroup from kdump:
-https://drive.google.com/file/d/1fokPEwSSpBr7XyySIhjIyhr5yf_5JTI3/view?usp=
-=3Dsharing
-
-Full structure cgroup->self->ss from kdump:
-https://drive.google.com/file/d/14z7w_t-6DiQhJzVrCGKFNCAIEkbt7Ce_/view?usp=
-=3Dsharing
-
---=20
-Best regards, Sergey Dolgov
+> -- 
+> Michal Hocko
+> SUSE Labs
