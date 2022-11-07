@@ -1,191 +1,72 @@
 From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v1 0/3] Avoid scheduling cache draining to isolated cpus
-Date: Mon, 7 Nov 2022 09:10:47 +0100
-Message-ID: <Y2i9h+TRdX9EOs0T@dhcp22.suse.cz>
-References: <20221102020243.522358-1-leobras@redhat.com>
- <Y2IwHVdgAJ6wfOVH@dhcp22.suse.cz>
- <07810c49ef326b26c971008fb03adf9dc533a178.camel@redhat.com>
- <Y2Pe45LHANFxxD7B@dhcp22.suse.cz>
- <0183b60e79cda3a0f992d14b4db5a818cd096e33.camel@redhat.com>
- <Y2TQLavnLVd4qHMT@dhcp22.suse.cz>
- <3c4ae3bb70d92340d9aaaa1856928476641a8533.camel@redhat.com>
+Subject: Re: [PATCH] mm/vmscan: respect cpuset policy during page demotion
+Date: Mon, 7 Nov 2022 09:17:36 +0100
+Message-ID: <Y2i/IMs/KWpppQtS@dhcp22.suse.cz>
+References: <Y1ou5DGHrEsKnhri@dhcp22.suse.cz>
+ <87o7txk963.fsf@yhuang6-desk2.ccr.corp.intel.com>
+ <Y1o63SWD2KmQkT3v@dhcp22.suse.cz>
+ <87fsf9k3yg.fsf@yhuang6-desk2.ccr.corp.intel.com>
+ <Y1p5vaN1AWhpNWZx@dhcp22.suse.cz>
+ <87bkpwkg24.fsf@yhuang6-desk2.ccr.corp.intel.com>
+ <Y1+J7+1V1nJXF+3b@dhcp22.suse.cz>
+ <Y1/XC+witPxFj04T@feng-clx>
+ <Y1/cgrgdVP+KdYzf@dhcp22.suse.cz>
+ <Y2i8UbaOjGyqwJQ6@feng-clx>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1667808648; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1667809057; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=wn3C4j2tq7Ric7uA1MiKmrtd6ucRBH8DGKc7HC5CU8o=;
-        b=rDQ0tXHzYEcdlM3iWOS0EHADYuBi7DO5PHDgE5TyXP1fjjQNDPFBRe40t/zcDzPbLvqaPF
-        2s6I7xtIEfoHIkCa5kAy7ZgQd3/FDdVOYSDEduOuOH0Fvg1I5oALqj608NhgfgLopujlTT
-        /8jE+fvvInBhTN1O/i1aYp8wYC3J7Nw=
+        bh=yhWHJ2J3mSTc7a4l8DLtwjtj9XcPdTj9FcFSpoWpr2c=;
+        b=t8ZU6zp1GfpIYKpTERHBEmxxZa1ZI6WSDt+HtNFMqEM9YuuAhN7Wf8M0WRha9BmexJQ1Hx
+        BeGVslsxal3j4CZgzDRp2e2bavLZV1suFz3jlmJaCyOpqMA6D0iyMIxDeAtZLOiFCJIZKX
+        37ufVDxAE4xTtaolcw6E4ze1Q1exgJI=
 Content-Disposition: inline
-In-Reply-To: <3c4ae3bb70d92340d9aaaa1856928476641a8533.camel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <Y2i8UbaOjGyqwJQ6@feng-clx>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Leonardo =?iso-8859-1?Q?Br=E1s?= <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Aneesh Kumar K V <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Hansen, Dave" <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Yin, Fengwei" <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Fri 04-11-22 22:45:58, Leonardo Br=E1s wrote:
-> On Fri, 2022-11-04 at 09:41 +0100, Michal Hocko wrote:
-> > On Thu 03-11-22 13:53:41, Leonardo Br=E1s wrote:
-> > > On Thu, 2022-11-03 at 16:31 +0100, Michal Hocko wrote:
-> > > > On Thu 03-11-22 11:59:20, Leonardo Br=E1s wrote:
-> > [...]
-> > > > > I understand there will be a locking cost being paid in the isola=
-ted CPUs when:
-> > > > > a) The isolated CPU is requesting the stock drain,
-> > > > > b) When the isolated CPUs do a syscall and end up using the prote=
-cted structure
-> > > > > the first time after a remote drain.
-> > > >=20
-> > > > And anytime the charging path (consume_stock resp. refill_stock)
-> > > > contends with the remote draining which is out of control of the RT
-> > > > task. It is true that the RT kernel will turn that spin lock into a
-> > > > sleeping RT lock and that could help with potential priority invers=
-ions
-> > > > but still quite costly thing I would expect.
-> > > >=20
-> > > > > Both (a) and (b) should happen during a syscall, and IIUC the a r=
-t workload
-> > > > > should not expect the syscalls to be have a predictable time, so =
-it should be
-> > > > > fine.
-> > > >=20
-> > > > Now I am not sure I understand. If you do not consider charging pat=
-h to
-> > > > be RT sensitive then why is this needed in the first place? What el=
-se
-> > > > would be populating the pcp cache on the isolated cpu? IRQs?
-> > >=20
-> > > I am mostly trying to deal with drain_all_stock() calling schedule_wo=
-rk_on() at
-> > > isolated_cpus. Since the scheduled drain_local_stock() will be compet=
-ing for cpu
-> > > time with the RT workload, we can have preemption of the RT workload,=
- which is a
-> > > problem for meeting the deadlines.
-> >=20
-> > Yes, this is understood. But it is not really clear to me why would any
-> > draining be necessary for such an isolated CPU if no workload other than
-> > the RT (which pressumably doesn't charge any memory?) is running on that
-> > CPU? Is that the RT task during the initialization phase that leaves
-> > that cache behind or something else?
->=20
-> (I am new to this part of the code, so please correct me when I miss some=
-thing.)
->=20
-> IIUC,=A0if a process belongs to a control group with memory control, the =
-'charge'
-> will happen when a memory page starts getting used by it.
+On Mon 07-11-22 16:05:37, Feng Tang wrote:
+> On Mon, Oct 31, 2022 at 03:32:34PM +0100, Michal Hocko wrote:
+> > > > OK, then let's stop any complicated solution right here then. Let's
+> > > > start simple with a per-mm flag to disable demotion of an address space.
+> > > > Should there ever be a real demand for a more fine grained solution
+> > > > let's go further but I do not think we want a half baked solution
+> > > > without real usecases.
+> > > 
+> > > Yes, the concern about the high cost for mempolicy from you and Yang is
+> > > valid. 
+> > > 
+> > > How about the cpuset part?
+> > 
+> > Cpusets fall into the same bucket as per task mempolicies wrt costs. Geting a
+> > cpuset requires knowing all tasks associated with a page. Or am I just
+> > missing any magic? And no memcg->cpuset association is not a proper
+> > solution at all.
+> 
+> No, you are not missing anything. It's really difficult to find a
+> solution for all holes. And the patch is actually a best-efforts
+> approach, trying to cover cgroup v2 + memory controller enabled case,
+> which we think is a common user case for newer platforms with tiering
+> memory.
 
-Yes, very broadly speaking.
+Best effort is OK but it shouldn't create an unexpected behavior and
+this approach does that.
 
-> So, if we assume a RT load in a isolated CPU will not charge any memory, =
-we are
-> assuming it will never be part of a memory-controlled cgroup.
+I thought I have already explained that. But let me be more
+explicit this time.  Please have a look at how controllers can be
+enabled/disabled at different levels of the hierarchy. Unless memcg
+grows a hard dependency on another controller (as it does with the blk
+io controller) then this approach can point to a wrong cpuset. See my
+point?
 
-If the memory cgroup controler is enabled then each user space process
-is a part of some memcg. If there is no specific memcg assigned then it
-will be a root cgroup and that is skipped during most charges except for
-kmem.
-
-> I mean, can we just assume this?=20
->=20
-> If I got that right, would not that be considered a limitation? like
-> "If you don't want your workload to be interrupted by perCPU cache draini=
-ng,
-> don't put it in a cgroup with memory control".
-
-We definitely do not want userspace make any assumptions on internal
-implementation details like caches.
-
-> > Sorry for being so focused on this
-> > but I would like to understand on whether this is avoidable by a
-> > different startup scheme or it really needs to be addressed in some way.
->=20
-> No worries, I am in fact happy you are giving it this much attention :)
->=20
-> I also understand this is a considerable change in the locking strategy, =
-and
-> avoiding that is the first thing that should be tried.
->=20
-> >=20
-> > > One way I thought to solve that was introducing a remote drain, which=
- would
-> > > require a different strategy for locking, since not all accesses to t=
-he pcp
-> > > caches would happen on a local CPU.=20
-> >=20
-> > Yeah, I am not supper happy about additional spin lock TBH. One
-> > potential way to go would be to completely avoid pcp cache for isolated
-> > CPUs.=A0That would have some performance impact of course but on the ot=
-her
-> > hand it would give a more predictable behavior for those CPUs which
-> > sounds like a reasonable compromise to me. What do you think?
->=20
-> You mean not having a perCPU stock, then?=20
-> So consume_stock() for isolated CPUs would always return false, causing
-> try_charge_memcg() always walking the slow path?
-
-Exactly.
-
-> IIUC, both my proposal and yours would degrade performance only when we u=
-se
-> isolated CPUs + memcg. Is that correct?
-
-Yes, with a notable difference that with your spin lock option there is
-still a chance that the remote draining could influence the isolated CPU
-workload throug that said spinlock. If there is no pcp cache for that
-cpu being used then there is no potential interaction at all.
-
-> If so, it looks like the impact would be even bigger without perCPU stock=
- ,
-> compared to introducing a spinlock.
->=20
-> Unless, we are counting to this case where a remote CPU is draining an is=
-olated
-> CPU, and the isolated CPU faults a page, and has to wait for the spinlock=
- to be
-> released in the remote CPU. Well, this seems possible to happen, but I wo=
-uld
-> have to analyze how often would it happen, and how much would it impact t=
-he
-> deadlines. I *guess* most of the RT workload's memory pages are pre-fault=
-ed
-> before its starts, so it can avoid the faulting latency, but I need to co=
-nfirm
-> that.
-
-Yes, that is a general practice and the reason why I was asking how real
-of a problem that is in practice. It is true true that appart from user
-space memory which can be under full control of the userspace there are
-kernel allocations which can be done on behalf of the process and those
-could be charged to memcg as well. So I can imagine the pcp cache could
-be populated even if the process is not faulting anything in during RT
-sensitive phase.
-
-> On the other hand, compared to how it works now now, this should be a more
-> controllable way of introducing latency than a scheduled cache drain.
->=20
-> Your suggestion on no-stocks/caches in isolated CPUs would be great for
-> predictability, but I am almost sure the cost in overall performance woul=
-d not
-> be fine.
-
-It is hard to estimate the overhead without measuring that. Do you think
-you can give it a try? If the performance is not really acceptable
-(which I would be really surprised) then we can think of a more complex
-solution.
-
-> With the possibility of prefaulting pages, do you see any scenario that w=
-ould
-> introduce some undesirable latency in the workload?
-
-My primary concern would be spin lock contention which is hard to
-predict with something like remote draining.
---=20
+Really, solution for this is not going to be cheap and also I am not
+sure all the hessles is really worth it until there is a clear usecase
+in sight.
+-- 
 Michal Hocko
 SUSE Labs
