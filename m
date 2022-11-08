@@ -1,97 +1,103 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH] block, bfq: fix null pointer dereference in bfq_bio_bfqg()
-Date: Tue, 08 Nov 2022 07:13:48 -0700
-Message-ID: <166791682840.41277.4130538125529354302.b4-ty@kernel.dk>
+From: Chaitanya Kulkarni <chaitanyak-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] block, bfq: fix null pointer dereference in
+ bfq_bio_bfqg()
+Date: Tue, 8 Nov 2022 22:50:07 +0000
+Message-ID: <9e0d8652-adda-3d39-88cd-d735194d4083@nvidia.com>
 References: <20221108103434.2853269-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ZcQMPR+vY4HDnxFrn6DWfgOLsByM9wrckBFX6ElxCNo=;
-        b=Bizwli3rHid237sI4fMedw4c8a0QLD9BkHZak1F3/W2+Ttp4sBANl46L65mjSkjyYq
-         ug1PKOs0KVPJW6TP0t45QeiEMzgpMAL45uaLZDGsfzoCjFQdVqDMMaw/P40TebA8xqfC
-         umhQpYXilzAXzrE8okAaowBOjzKlr9ENR/2WOMXbDhhEHDFsIyrl7gzd70QgkJpV7/hu
-         ENG9jAn3nVRCZlRJKKK822sj5g/tY3xd099LfQgDv9nLZKIkMrlJCxGm4S4S58CxfP1M
-         Hmudfr1TOBKCEGK5pDesRmBsyUyypKca+S6KiVZbAiBZvPXIjQkqnxL32/QIYYiAYor0
-         94oA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Jhn+9Ui3M67t3XW/MjbUG2SmvMUJ29TAPu9muTtJZbc=;
+ b=Sq1sERNHx5dV7jEuSVkN1Y5W3oDWsW7+/6LZd7tXsOA0ALJRN1Teaya65RQmKJ/HIEgz45YbOucNR6cqH1ktdKO2/0Dbd++mwDEFiqlVghVUXB1oszXjknJoKYhRNpOmIjUEtMNJdbUHzpHEHRMsa82NeBQC3sHSg/ZlnZhjxqkxbeqvnAeINJMb2I0mC6EUT/6Y4aZWXEI2ZAEZinYanP+Yh9EghX2o/zcOfbzCQQHcREmadbB7LT9eUvjxa0WjrsqfvEJ1YoJt0keGCQiymm/gB7Eax2qaCy/ObeEJHOPhtIRrJ3hImz6amgiRVVz+88ZIxLCpVFE4SNoY+1ZjGQ==
 In-Reply-To: <20221108103434.2853269-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Content-Language: en-US
+Content-ID: <6F5DD32547486040AF739604409FF504-asWib9pRmPqcE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, "jack-AlSwsSmVLrQ@public.gmane.org" <jack-AlSwsSmVLrQ@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org" <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org" <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Tue, 8 Nov 2022 18:34:34 +0800, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> 
-> Out test found a following problem in kernel 5.10, and the same problem
-> should exist in mainline:
-> 
-> BUG: kernel NULL pointer dereference, address: 0000000000000094
-> PGD 0 P4D 0
-> Oops: 0000 [#1] SMP
-> CPU: 7 PID: 155 Comm: kworker/7:1 Not tainted 5.10.0-01932-g19e0ace2ca1d-dirty 4
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-b4
-> Workqueue: kthrotld blk_throtl_dispatch_work_fn
-> RIP: 0010:bfq_bio_bfqg+0x52/0xc0
-> Code: 94 00 00 00 00 75 2e 48 8b 40 30 48 83 05 35 06 c8 0b 01 48 85 c0 74 3d 4b
-> RSP: 0018:ffffc90001a1fba0 EFLAGS: 00010002
-> RAX: ffff888100d60400 RBX: ffff8881132e7000 RCX: 0000000000000000
-> RDX: 0000000000000017 RSI: ffff888103580a18 RDI: ffff888103580a18
-> RBP: ffff8881132e7000 R08: 0000000000000000 R09: ffffc90001a1fe10
-> R10: 0000000000000a20 R11: 0000000000034320 R12: 0000000000000000
-> R13: ffff888103580a18 R14: ffff888114447000 R15: 0000000000000000
-> FS:  0000000000000000(0000) GS:ffff88881fdc0000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 0000000000000094 CR3: 0000000100cdb000 CR4: 00000000000006e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> Call Trace:
->  bfq_bic_update_cgroup+0x3c/0x350
->  ? ioc_create_icq+0x42/0x270
->  bfq_init_rq+0xfd/0x1060
->  bfq_insert_requests+0x20f/0x1cc0
->  ? ioc_create_icq+0x122/0x270
->  blk_mq_sched_insert_requests+0x86/0x1d0
->  blk_mq_flush_plug_list+0x193/0x2a0
->  blk_flush_plug_list+0x127/0x170
->  blk_finish_plug+0x31/0x50
->  blk_throtl_dispatch_work_fn+0x151/0x190
->  process_one_work+0x27c/0x5f0
->  worker_thread+0x28b/0x6b0
->  ? rescuer_thread+0x590/0x590
->  kthread+0x153/0x1b0
->  ? kthread_flush_work+0x170/0x170
->  ret_from_fork+0x1f/0x30
-> Modules linked in:
-> CR2: 0000000000000094
-> ---[ end trace e2e59ac014314547 ]---
-> RIP: 0010:bfq_bio_bfqg+0x52/0xc0
-> Code: 94 00 00 00 00 75 2e 48 8b 40 30 48 83 05 35 06 c8 0b 01 48 85 c0 74 3d 4b
-> RSP: 0018:ffffc90001a1fba0 EFLAGS: 00010002
-> RAX: ffff888100d60400 RBX: ffff8881132e7000 RCX: 0000000000000000
-> RDX: 0000000000000017 RSI: ffff888103580a18 RDI: ffff888103580a18
-> RBP: ffff8881132e7000 R08: 0000000000000000 R09: ffffc90001a1fe10
-> R10: 0000000000000a20 R11: 0000000000034320 R12: 0000000000000000
-> R13: ffff888103580a18 R14: ffff888114447000 R15: 0000000000000000
-> FS:  0000000000000000(0000) GS:ffff88881fdc0000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 0000000000000094 CR3: 0000000100cdb000 CR4: 00000000000006e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> 
-> [...]
-
-Applied, thanks!
-
-[1/1] block, bfq: fix null pointer dereference in bfq_bio_bfqg()
-      commit: f02be9002c480cd3ec0fcf184ad27cf531bd6ece
-
-Best regards,
--- 
-Jens Axboe
-
-
+T24gMTEvOC8yMiAwMjozNCwgWXUgS3VhaSB3cm90ZToNCj4gRnJvbTogWXUgS3VhaSA8eXVrdWFp
+M0BodWF3ZWkuY29tPg0KPiANCj4gT3V0IHRlc3QgZm91bmQgYSBmb2xsb3dpbmcgcHJvYmxlbSBp
+biBrZXJuZWwgNS4xMCwgYW5kIHRoZSBzYW1lIHByb2JsZW0NCj4gc2hvdWxkIGV4aXN0IGluIG1h
+aW5saW5lOg0KPiANCj4gQlVHOiBrZXJuZWwgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlLCBhZGRy
+ZXNzOiAwMDAwMDAwMDAwMDAwMDk0DQo+IFBHRCAwIFA0RCAwDQo+IE9vcHM6IDAwMDAgWyMxXSBT
+TVANCj4gQ1BVOiA3IFBJRDogMTU1IENvbW06IGt3b3JrZXIvNzoxIE5vdCB0YWludGVkIDUuMTAu
+MC0wMTkzMi1nMTllMGFjZTJjYTFkLWRpcnR5IDQNCj4gSGFyZHdhcmUgbmFtZTogUUVNVSBTdGFu
+ZGFyZCBQQyAoaTQ0MEZYICsgUElJWCwgMTk5NiksIEJJT1MgPy0yMDE5MDcyN18wNzM4MzYtYjQN
+Cj4gV29ya3F1ZXVlOiBrdGhyb3RsZCBibGtfdGhyb3RsX2Rpc3BhdGNoX3dvcmtfZm4NCj4gUklQ
+OiAwMDEwOmJmcV9iaW9fYmZxZysweDUyLzB4YzANCj4gQ29kZTogOTQgMDAgMDAgMDAgMDAgNzUg
+MmUgNDggOGIgNDAgMzAgNDggODMgMDUgMzUgMDYgYzggMGIgMDEgNDggODUgYzAgNzQgM2QgNGIN
+Cj4gUlNQOiAwMDE4OmZmZmZjOTAwMDFhMWZiYTAgRUZMQUdTOiAwMDAxMDAwMg0KPiBSQVg6IGZm
+ZmY4ODgxMDBkNjA0MDAgUkJYOiBmZmZmODg4MTEzMmU3MDAwIFJDWDogMDAwMDAwMDAwMDAwMDAw
+MA0KPiBSRFg6IDAwMDAwMDAwMDAwMDAwMTcgUlNJOiBmZmZmODg4MTAzNTgwYTE4IFJESTogZmZm
+Zjg4ODEwMzU4MGExOA0KPiBSQlA6IGZmZmY4ODgxMTMyZTcwMDAgUjA4OiAwMDAwMDAwMDAwMDAw
+MDAwIFIwOTogZmZmZmM5MDAwMWExZmUxMA0KPiBSMTA6IDAwMDAwMDAwMDAwMDBhMjAgUjExOiAw
+MDAwMDAwMDAwMDM0MzIwIFIxMjogMDAwMDAwMDAwMDAwMDAwMA0KPiBSMTM6IGZmZmY4ODgxMDM1
+ODBhMTggUjE0OiBmZmZmODg4MTE0NDQ3MDAwIFIxNTogMDAwMDAwMDAwMDAwMDAwMA0KPiBGUzog
+IDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkgR1M6ZmZmZjg4ODgxZmRjMDAwMCgwMDAwKSBrbmxHUzow
+MDAwMDAwMDAwMDAwMDAwDQo+IENTOiAgMDAxMCBEUzogMDAwMCBFUzogMDAwMCBDUjA6IDAwMDAw
+MDAwODAwNTAwMzMNCj4gQ1IyOiAwMDAwMDAwMDAwMDAwMDk0IENSMzogMDAwMDAwMDEwMGNkYjAw
+MCBDUjQ6IDAwMDAwMDAwMDAwMDA2ZTANCj4gRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAw
+MDAwMDAwMDAwMDAwMCBEUjI6IDAwMDAwMDAwMDAwMDAwMDANCj4gRFIzOiAwMDAwMDAwMDAwMDAw
+MDAwIERSNjogMDAwMDAwMDBmZmZlMGZmMCBEUjc6IDAwMDAwMDAwMDAwMDA0MDANCj4gQ2FsbCBU
+cmFjZToNCj4gICBiZnFfYmljX3VwZGF0ZV9jZ3JvdXArMHgzYy8weDM1MA0KPiAgID8gaW9jX2Ny
+ZWF0ZV9pY3ErMHg0Mi8weDI3MA0KPiAgIGJmcV9pbml0X3JxKzB4ZmQvMHgxMDYwDQo+ICAgYmZx
+X2luc2VydF9yZXF1ZXN0cysweDIwZi8weDFjYzANCj4gICA/IGlvY19jcmVhdGVfaWNxKzB4MTIy
+LzB4MjcwDQo+ICAgYmxrX21xX3NjaGVkX2luc2VydF9yZXF1ZXN0cysweDg2LzB4MWQwDQo+ICAg
+YmxrX21xX2ZsdXNoX3BsdWdfbGlzdCsweDE5My8weDJhMA0KPiAgIGJsa19mbHVzaF9wbHVnX2xp
+c3QrMHgxMjcvMHgxNzANCj4gICBibGtfZmluaXNoX3BsdWcrMHgzMS8weDUwDQo+ICAgYmxrX3Ro
+cm90bF9kaXNwYXRjaF93b3JrX2ZuKzB4MTUxLzB4MTkwDQo+ICAgcHJvY2Vzc19vbmVfd29yaysw
+eDI3Yy8weDVmMA0KPiAgIHdvcmtlcl90aHJlYWQrMHgyOGIvMHg2YjANCj4gICA/IHJlc2N1ZXJf
+dGhyZWFkKzB4NTkwLzB4NTkwDQo+ICAga3RocmVhZCsweDE1My8weDFiMA0KPiAgID8ga3RocmVh
+ZF9mbHVzaF93b3JrKzB4MTcwLzB4MTcwDQo+ICAgcmV0X2Zyb21fZm9yaysweDFmLzB4MzANCj4g
+TW9kdWxlcyBsaW5rZWQgaW46DQo+IENSMjogMDAwMDAwMDAwMDAwMDA5NA0KPiAtLS1bIGVuZCB0
+cmFjZSBlMmU1OWFjMDE0MzE0NTQ3IF0tLS0NCj4gUklQOiAwMDEwOmJmcV9iaW9fYmZxZysweDUy
+LzB4YzANCj4gQ29kZTogOTQgMDAgMDAgMDAgMDAgNzUgMmUgNDggOGIgNDAgMzAgNDggODMgMDUg
+MzUgMDYgYzggMGIgMDEgNDggODUgYzAgNzQgM2QgNGINCj4gUlNQOiAwMDE4OmZmZmZjOTAwMDFh
+MWZiYTAgRUZMQUdTOiAwMDAxMDAwMg0KPiBSQVg6IGZmZmY4ODgxMDBkNjA0MDAgUkJYOiBmZmZm
+ODg4MTEzMmU3MDAwIFJDWDogMDAwMDAwMDAwMDAwMDAwMA0KPiBSRFg6IDAwMDAwMDAwMDAwMDAw
+MTcgUlNJOiBmZmZmODg4MTAzNTgwYTE4IFJESTogZmZmZjg4ODEwMzU4MGExOA0KPiBSQlA6IGZm
+ZmY4ODgxMTMyZTcwMDAgUjA4OiAwMDAwMDAwMDAwMDAwMDAwIFIwOTogZmZmZmM5MDAwMWExZmUx
+MA0KPiBSMTA6IDAwMDAwMDAwMDAwMDBhMjAgUjExOiAwMDAwMDAwMDAwMDM0MzIwIFIxMjogMDAw
+MDAwMDAwMDAwMDAwMA0KPiBSMTM6IGZmZmY4ODgxMDM1ODBhMTggUjE0OiBmZmZmODg4MTE0NDQ3
+MDAwIFIxNTogMDAwMDAwMDAwMDAwMDAwMA0KPiBGUzogIDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkg
+R1M6ZmZmZjg4ODgxZmRjMDAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwDQo+IENTOiAg
+MDAxMCBEUzogMDAwMCBFUzogMDAwMCBDUjA6IDAwMDAwMDAwODAwNTAwMzMNCj4gQ1IyOiAwMDAw
+MDAwMDAwMDAwMDk0IENSMzogMDAwMDAwMDEwMGNkYjAwMCBDUjQ6IDAwMDAwMDAwMDAwMDA2ZTAN
+Cj4gRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAwMDAwMDAwMDAwMCBEUjI6IDAwMDAw
+MDAwMDAwMDAwMDANCj4gRFIzOiAwMDAwMDAwMDAwMDAwMDAwIERSNjogMDAwMDAwMDBmZmZlMGZm
+MCBEUjc6IDAwMDAwMDAwMDAwMDA0MDANCj4gDQo+IFJvb3QgY2F1c2UgaXMgcXVpdGUgY29tcGxl
+eDoNCj4gDQo+IDEpIHVzZSBiZnEgZWxldmF0b3IgZm9yIHRoZSB0ZXN0IGRldmljZS4NCj4gMikg
+Y3JlYXRlIGEgY2dyb3VwIENHDQo+IDMpIGNvbmZpZyBibGsgdGhyb3RsIGluIENHDQo+IA0KPiAg
+ICAgYmxrZ19jb25mX3ByZXANCj4gICAgICBibGtnX2NyZWF0ZQ0KPiANCj4gNCkgY3JlYXRlIGEg
+dGhyZWFkIFQxIGFuZCBpc3N1ZSBhc3luYyBpbyBpbiBDRzoNCj4gDQo+ICAgICBiaW9faW5pdA0K
+PiAgICAgIGJpb19hc3NvY2lhdGVfYmxrZw0KPiAgICAgLi4uDQo+ICAgICBzdWJtaXRfYmlvDQo+
+ICAgICAgc3VibWl0X2Jpb19ub2FjY3QNCj4gICAgICAgYmxrX3Rocm90bF9iaW8gLT4gaW8gaXMg
+dGhyb3R0bGVkDQo+ICAgICAgIC8vIGlvIHN1Ym1pdCBpcyBkb25lDQo+IA0KPiA1KSBzd2l0Y2gg
+ZWxldmF0b3I6DQo+IA0KPiAgICAgYmZxX2V4aXRfcXVldWUNCj4gICAgICBibGtjZ19kZWFjdGl2
+YXRlX3BvbGljeQ0KPiAgICAgICBsaXN0X2Zvcl9lYWNoX2VudHJ5KGJsa2csICZxLT5ibGtnX2xp
+c3QsIHFfbm9kZSkNCj4gICAgICAgIGJsa2ctPnBkW10gPSBOVUxMDQo+ICAgICAgICAvLyBiZnEg
+cG9saWN5IGlzIHJlbW92ZWQNCj4gDQo+IDUpIHRocmVhZCB0MSBleGlzdCwgdGhlbiByZW1vdmUg
+dGhlIGNncm91cCBDRzoNCj4gDQo+ICAgICBibGtjZ191bnBpbl9vbmxpbmUNCj4gICAgICBibGtj
+Z19kZXN0cm95X2Jsa2dzDQo+ICAgICAgIGJsa2dfZGVzdHJveQ0KPiAgICAgICAgbGlzdF9kZWxf
+aW5pdCgmYmxrZy0+cV9ub2RlKQ0KPiAgICAgICAgLy8gYmxrZyBpcyByZW1vdmVkIGZyb20gcXVl
+dWUgbGlzdA0KPiANCj4gNikgc3dpdGNoIGVsZXZhdG9yIGJhY2sgdG8gYmZxDQo+IA0KPiAgIGJm
+cV9pbml0X3F1ZXVlDQo+ICAgIGJmcV9jcmVhdGVfZ3JvdXBfaGllcmFyY2h5DQo+ICAgICBibGtj
+Z19hY3RpdmF0ZV9wb2xpY3kNCj4gICAgICBsaXN0X2Zvcl9lYWNoX2VudHJ5X3JldmVyc2UoYmxr
+ZywgJnEtPmJsa2dfbGlzdCkNCj4gICAgICAgLy8gYmxrZyBpcyByZW1vdmVkIGZyb20gbGlzdCwg
+aGVuY2UgYmZxIHBvbGljeSBpcyBzdGlsbCBOVUxMDQo+IA0KPiA3KSB0aHJvdHRsZWQgaW8gaXMg
+ZGlzcGF0Y2hlZCB0byBiZnE6DQo+IA0KPiAgIGJmcV9pbnNlcnRfcmVxdWVzdHMNCj4gICAgYmZx
+X2luaXRfcnENCj4gICAgIGJmcV9iaWNfdXBkYXRlX2Nncm91cA0KPiAgICAgIGJmcV9iaW9fYmZx
+Zw0KPiAgICAgICBiZnFnID0gYmxrZ190b19iZnFnKGJsa2cpDQo+ICAgICAgIC8vIGJmcWcgaXMg
+TlVMTCBiZWNhdXNlIGJmcSBwb2xpY3kgaXMgTlVMTA0KPiANCj4gVGhlIHByb2JsZW0gaXMgb25s
+eSBwb3NzaWJsZSBpbiBiZnEgYmVjYXVzZSBvbmx5IGJmcSBjYW4gYmUgZGVhY3RpdmF0ZWQgYW5k
+DQo+IGFjdGl2YXRlZCB3aGlsZSBxdWV1ZSBpcyBvbmxpbmUsIHdoaWxlIG90aGVycyBjYW4gb25s
+eSBiZSBkZWFjdGl2YXRlZCB3aGlsZQ0KPiB0aGUgZGV2aWNlIGlzIHJlbW92ZWQuDQo+IA0KPiBG
+aXggdGhlIHByb2JsZW0gaW4gYmZxIGJ5IGNoZWNraW5nIGlmIGJsa2cgaXMgb25saW5lIGJlZm9y
+ZSBjYWxsaW5nDQo+IGJsa2dfdG9fYmZxZygpLg0KPiANCg0KDQpQbGVhc2Ugc3VibWl0IHRoZSBi
+bG9jayB0ZXN0cyBmb3IgdGhpcyBhcyB0aGlzIGlzIGNsZWFybHkgbm9uLXRyaXZpYWwNCmlzc3Vl
+IHRoYXQgbmVlZHMgdG8gYmUgdGVzdGVkIGV2ZXJ5IHJlbGVhc2UgLi4NCg0KLWNrDQoNCg0K
