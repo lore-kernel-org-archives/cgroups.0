@@ -1,188 +1,127 @@
 From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: [RFC 01/13] drm: Replace DRM_DEBUG with drm_dbg_core in file and ioctl handling
-Date: Wed,  9 Nov 2022 16:11:29 +0000
-Message-ID: <20221109161141.2987173-2-tvrtko.ursulin@linux.intel.com>
+Subject: [RFC 02/13] drm: Track clients by tgid and not tid
+Date: Wed,  9 Nov 2022 16:11:30 +0000
+Message-ID: <20221109161141.2987173-3-tvrtko.ursulin@linux.intel.com>
 References: <20221109161141.2987173-1-tvrtko.ursulin@linux.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1668010322; x=1699546322;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=LhBrapaJ+vgi9kxPoWBSV/LQcGioxwEBpF/rBIIcwyQ=;
-  b=GFPuXlHMibm5vpAndO/a82n3X3/y52qlHtAcSYd4+2LE2JLDTaIKdLjF
-   BKpr3V9ASBRfBN2uo40aYYdeGx38lqI/DLO4rV0eUDoxGmJ4IzQZJObCJ
-   sYxPK0yYe9M8Xz58Fs2bhcJa1pFbWe6F3WI6GexJhQAQB4DUByhFT4cgZ
-   1hN1rgX/CPVXutxFhZ55zCWhmUQxNCRW7uDWcj6mps707mbcDaDdswJW0
-   W/bAT5oyJqWYEFbR3nDJOZK2FkmZs0144oqLLmVPqTcnQLkXTR2BWJ9wu
-   AagNfAEQ6p44fHUPuffXsgv17mtvCNkPUG8EcfIWCWPH1bl9nD51dyxSp
-   Q==;
+ d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+ t=1668010326; x=1699546326;
+ h=from:to:cc:subject:date:message-id:in-reply-to:
+ references:mime-version:content-transfer-encoding;
+ bh=65danGbq1zwJ9FB6InBTjiB49NsQltjw5lK60A9yBPk=;
+ b=PGulbsctNSegjvseCEBkkXrNM2j4Lb+1XMl+J5Cy3HSewbZQrsZeeWMS
+ kl8kRoHuCkV/A5AY96+YhXVaD4wItkyU9O5PMCrBNz0w8d3gWV0CpBTYu
+ 7S2LCvsbdSQEZUKNybpyZBQrJgsp1Kwy88yqJ/49GLcRuuEi/FQIrxnVP
+ dSML4PNnFGoDLY6Lp88yjyqesVnvGGtLxi8JjAkQIID732aflwNz4coHn
+ C2cJbxnUIxIaD0LfD+WSqTrRyMWcohvgtBa81B/dR6BNdkq2vBMe8tQ/Y
+ 82yeLZwSXk4Dtk4ZiBsHJ3U4TILn4mUrm/kjZdhU1W5NRPGtImDIsjWvd Q==;
 In-Reply-To: <20221109161141.2987173-1-tvrtko.ursulin@linux.intel.com>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset="iso-8859-1"
 To: Intel-gfx@lists.freedesktop.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Dave Airlie <airlied@redhat.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Rob Clark <robdclark@chromium.org>, =?UTF-8?q?St=C3=A9phane=20Marchesin?= <marcheu@chromium.org>, "T . J . Mercier" <tjmercier@google.com>, Kenny.Ho@amd.com, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Brian Welty <brian.welty@intel.com>, Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Daniel Vetter <daniel.vetter@ffwll.ch>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, =?UTF-8?q?St=C3=A9phane=20Marchesin?= <marcheu@chromium.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Alex Deucher <alexander.deucher@amd.com>, linux-graphics-maintainer@vmware.com, Zefan Li <lizefan.x@bytedance.com>, Dave Airlie <airlied@redhat.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, "T . J . Mercier" <tjmercier@google.com>, Zack Rusin <zackr@vmware.com>
 
 From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 
-Replace the deprecated macro with the per-device one.
+Thread group id (aka pid from userspace point of view) is a more
+interesting thing to show as an owner of a DRM fd, so track and show that
+instead of the thread id.
+
+In the next patch we will make the owner updated post file descriptor
+handover, which will also be tgid based to avoid ping-pong when multiple
+threads access the fd.
 
 Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+Cc: Zack Rusin <zackr@vmware.com>
+Cc: linux-graphics-maintainer@vmware.com
+Cc: Alex Deucher <alexander.deucher@amd.com>
+Cc: "Christian K=C3=B6nig" <christian.koenig@amd.com>
 ---
- drivers/gpu/drm/drm_file.c  | 21 +++++++++++----------
- drivers/gpu/drm/drm_ioc32.c | 13 +++++++------
- drivers/gpu/drm/drm_ioctl.c | 25 +++++++++++++------------
- 3 files changed, 31 insertions(+), 28 deletions(-)
+ drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c | 2 +-
+ drivers/gpu/drm/drm_debugfs.c           | 4 ++--
+ drivers/gpu/drm/drm_file.c              | 2 +-
+ drivers/gpu/drm/vmwgfx/vmwgfx_gem.c     | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c b/drivers/gpu/drm/amd/=
+amdgpu/amdgpu_gem.c
+index 8ef31d687ef3..4b940f8bd72b 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c
+@@ -967,7 +967,7 @@ static int amdgpu_debugfs_gem_info_show(struct seq_file=
+ *m, void *unused)
+ 		 * Therefore, we need to protect this ->comm access using RCU.
+ 		 */
+ 		rcu_read_lock();
+-		task =3D pid_task(file->pid, PIDTYPE_PID);
++		task =3D pid_task(file->pid, PIDTYPE_TGID);
+ 		seq_printf(m, "pid %8d command %s:\n", pid_nr(file->pid),
+ 			   task ? task->comm : "<unknown>");
+ 		rcu_read_unlock();
+diff --git a/drivers/gpu/drm/drm_debugfs.c b/drivers/gpu/drm/drm_debugfs.c
+index ee445f4605ba..42f657772025 100644
+--- a/drivers/gpu/drm/drm_debugfs.c
++++ b/drivers/gpu/drm/drm_debugfs.c
+@@ -80,7 +80,7 @@ static int drm_clients_info(struct seq_file *m, void *dat=
+a)
+ 	seq_printf(m,
+ 		   "%20s %5s %3s master a %5s %10s\n",
+ 		   "command",
+-		   "pid",
++		   "tgid",
+ 		   "dev",
+ 		   "uid",
+ 		   "magic");
+@@ -94,7 +94,7 @@ static int drm_clients_info(struct seq_file *m, void *dat=
+a)
+ 		bool is_current_master =3D drm_is_current_master(priv);
+=20
+ 		rcu_read_lock(); /* locks pid_task()->comm */
+-		task =3D pid_task(priv->pid, PIDTYPE_PID);
++		task =3D pid_task(priv->pid, PIDTYPE_TGID);
+ 		uid =3D task ? __task_cred(task)->euid : GLOBAL_ROOT_UID;
+ 		seq_printf(m, "%20s %5d %3d   %c    %c %5d %10u\n",
+ 			   task ? task->comm : "<unknown>",
 diff --git a/drivers/gpu/drm/drm_file.c b/drivers/gpu/drm/drm_file.c
-index a8b4d918e9a3..ba5041137b29 100644
+index ba5041137b29..5cde5014cea1 100644
 --- a/drivers/gpu/drm/drm_file.c
 +++ b/drivers/gpu/drm/drm_file.c
-@@ -245,10 +245,10 @@ void drm_file_free(struct drm_file *file)
- 
- 	dev = file->minor->dev;
- 
--	DRM_DEBUG("comm=\"%s\", pid=%d, dev=0x%lx, open_count=%d\n",
--		  current->comm, task_pid_nr(current),
--		  (long)old_encode_dev(file->minor->kdev->devt),
--		  atomic_read(&dev->open_count));
-+	drm_dbg_core(dev, "comm=\"%s\", pid=%d, dev=0x%lx, open_count=%d\n",
-+		     current->comm, task_pid_nr(current),
-+		     (long)old_encode_dev(file->minor->kdev->devt),
-+		     atomic_read(&dev->open_count));
- 
- #ifdef CONFIG_DRM_LEGACY
- 	if (drm_core_check_feature(dev, DRIVER_LEGACY) &&
-@@ -340,8 +340,8 @@ static int drm_open_helper(struct file *filp, struct drm_minor *minor)
- 	    dev->switch_power_state != DRM_SWITCH_POWER_DYNAMIC_OFF)
- 		return -EINVAL;
- 
--	DRM_DEBUG("comm=\"%s\", pid=%d, minor=%d\n", current->comm,
--		  task_pid_nr(current), minor->index);
-+	drm_dbg_core(dev, "comm=\"%s\", pid=%d, minor=%d\n",
-+		     current->comm, task_pid_nr(current), minor->index);
- 
- 	priv = drm_file_alloc(minor);
- 	if (IS_ERR(priv))
-@@ -450,11 +450,12 @@ EXPORT_SYMBOL(drm_open);
- 
- void drm_lastclose(struct drm_device * dev)
- {
--	DRM_DEBUG("\n");
-+	drm_dbg_core(dev, "\n");
- 
--	if (dev->driver->lastclose)
-+	if (dev->driver->lastclose) {
- 		dev->driver->lastclose(dev);
--	DRM_DEBUG("driver lastclose completed\n");
-+		drm_dbg_core(dev, "driver lastclose completed\n");
-+	}
- 
- 	if (drm_core_check_feature(dev, DRIVER_LEGACY))
- 		drm_legacy_dev_reinit(dev);
-@@ -485,7 +486,7 @@ int drm_release(struct inode *inode, struct file *filp)
- 	if (drm_dev_needs_global_mutex(dev))
- 		mutex_lock(&drm_global_mutex);
- 
--	DRM_DEBUG("open_count = %d\n", atomic_read(&dev->open_count));
-+	drm_dbg_core(dev, "open_count = %d\n", atomic_read(&dev->open_count));
- 
- 	drm_close_helper(filp);
- 
-diff --git a/drivers/gpu/drm/drm_ioc32.c b/drivers/gpu/drm/drm_ioc32.c
-index 5d82891c3222..49a743f62b4a 100644
---- a/drivers/gpu/drm/drm_ioc32.c
-+++ b/drivers/gpu/drm/drm_ioc32.c
-@@ -972,6 +972,7 @@ long drm_compat_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- {
- 	unsigned int nr = DRM_IOCTL_NR(cmd);
- 	struct drm_file *file_priv = filp->private_data;
-+	struct drm_device *dev = file_priv->minor->dev;
- 	drm_ioctl_compat_t *fn;
- 	int ret;
- 
-@@ -986,14 +987,14 @@ long drm_compat_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 	if (!fn)
- 		return drm_ioctl(filp, cmd, arg);
- 
--	DRM_DEBUG("comm=\"%s\", pid=%d, dev=0x%lx, auth=%d, %s\n",
--		  current->comm, task_pid_nr(current),
--		  (long)old_encode_dev(file_priv->minor->kdev->devt),
--		  file_priv->authenticated,
--		  drm_compat_ioctls[nr].name);
-+	drm_dbg_core(dev, "comm=\"%s\", pid=%d, dev=0x%lx, auth=%d, %s\n",
-+		     current->comm, task_pid_nr(current),
-+		     (long)old_encode_dev(file_priv->minor->kdev->devt),
-+		     file_priv->authenticated,
-+		     drm_compat_ioctls[nr].name);
- 	ret = (*fn)(filp, cmd, arg);
- 	if (ret)
--		DRM_DEBUG("ret = %d\n", ret);
-+		drm_dbg_core(dev, "ret = %d\n", ret);
- 	return ret;
- }
- EXPORT_SYMBOL(drm_compat_ioctl);
-diff --git a/drivers/gpu/drm/drm_ioctl.c b/drivers/gpu/drm/drm_ioctl.c
-index ca2a6e6101dc..7c9d66ee917d 100644
---- a/drivers/gpu/drm/drm_ioctl.c
-+++ b/drivers/gpu/drm/drm_ioctl.c
-@@ -440,7 +440,7 @@ static int drm_setversion(struct drm_device *dev, void *data, struct drm_file *f
- int drm_noop(struct drm_device *dev, void *data,
- 	     struct drm_file *file_priv)
- {
--	DRM_DEBUG("\n");
-+	drm_dbg_core(dev, "\n");
- 	return 0;
- }
- EXPORT_SYMBOL(drm_noop);
-@@ -856,16 +856,16 @@ long drm_ioctl(struct file *filp,
- 		out_size = 0;
- 	ksize = max(max(in_size, out_size), drv_size);
- 
--	DRM_DEBUG("comm=\"%s\" pid=%d, dev=0x%lx, auth=%d, %s\n",
--		  current->comm, task_pid_nr(current),
--		  (long)old_encode_dev(file_priv->minor->kdev->devt),
--		  file_priv->authenticated, ioctl->name);
-+	drm_dbg_core(dev, "comm=\"%s\" pid=%d, dev=0x%lx, auth=%d, %s\n",
-+		     current->comm, task_pid_nr(current),
-+		     (long)old_encode_dev(file_priv->minor->kdev->devt),
-+		     file_priv->authenticated, ioctl->name);
- 
- 	/* Do not trust userspace, use our own definition */
- 	func = ioctl->func;
- 
- 	if (unlikely(!func)) {
--		DRM_DEBUG("no function\n");
-+		drm_dbg_core(dev, "no function\n");
- 		retcode = -EINVAL;
- 		goto err_i1;
- 	}
-@@ -894,16 +894,17 @@ long drm_ioctl(struct file *filp,
- 
-       err_i1:
- 	if (!ioctl)
--		DRM_DEBUG("invalid ioctl: comm=\"%s\", pid=%d, dev=0x%lx, auth=%d, cmd=0x%02x, nr=0x%02x\n",
--			  current->comm, task_pid_nr(current),
--			  (long)old_encode_dev(file_priv->minor->kdev->devt),
--			  file_priv->authenticated, cmd, nr);
-+		drm_dbg_core(dev,
-+			     "invalid ioctl: comm=\"%s\", pid=%d, dev=0x%lx, auth=%d, cmd=0x%02x, nr=0x%02x\n",
-+			     current->comm, task_pid_nr(current),
-+			     (long)old_encode_dev(file_priv->minor->kdev->devt),
-+			     file_priv->authenticated, cmd, nr);
- 
- 	if (kdata != stack_kdata)
- 		kfree(kdata);
- 	if (retcode)
--		DRM_DEBUG("comm=\"%s\", pid=%d, ret=%d\n", current->comm,
--			  task_pid_nr(current), retcode);
-+		drm_dbg_core(dev, "comm=\"%s\", pid=%d, ret=%d\n",
-+			     current->comm, task_pid_nr(current), retcode);
- 	return retcode;
- }
- EXPORT_SYMBOL(drm_ioctl);
--- 
+@@ -156,7 +156,7 @@ struct drm_file *drm_file_alloc(struct drm_minor *minor)
+ 	if (!file)
+ 		return ERR_PTR(-ENOMEM);
+=20
+-	file->pid =3D get_pid(task_pid(current));
++	file->pid =3D get_pid(task_tgid(current));
+ 	file->minor =3D minor;
+=20
+ 	/* for compatibility root is always authenticated */
+diff --git a/drivers/gpu/drm/vmwgfx/vmwgfx_gem.c b/drivers/gpu/drm/vmwgfx/v=
+mwgfx_gem.c
+index ce609e7d758f..f2985337aa53 100644
+--- a/drivers/gpu/drm/vmwgfx/vmwgfx_gem.c
++++ b/drivers/gpu/drm/vmwgfx/vmwgfx_gem.c
+@@ -260,7 +260,7 @@ static int vmw_debugfs_gem_info_show(struct seq_file *m=
+, void *unused)
+ 		 * Therefore, we need to protect this ->comm access using RCU.
+ 		 */
+ 		rcu_read_lock();
+-		task =3D pid_task(file->pid, PIDTYPE_PID);
++		task =3D pid_task(file->pid, PIDTYPE_TGID);
+ 		seq_printf(m, "pid %8d command %s:\n", pid_nr(file->pid),
+ 			   task ? task->comm : "<unknown>");
+ 		rcu_read_unlock();
+--=20
 2.34.1
 
