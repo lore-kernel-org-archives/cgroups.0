@@ -1,59 +1,78 @@
 From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm/memcontrol.c: drains percpu charge caches in
- memory.reclaim
-Date: Thu, 10 Nov 2022 15:42:43 +0100
-Message-ID: <20221110144243.GA10562@blackbody.suse.cz>
-References: <20221110065316.67204-1-lujialin4@huawei.com>
+Subject: Re: problem with remove cgroup in function cgroup_addrm_files
+Date: Thu, 10 Nov 2022 16:15:22 +0100
+Message-ID: <20221110151522.GB10562@blackbody.suse.cz>
+References: <CADn0Px_+-z5-cjJ6t6fO86=oq9Se-uLDA1nJ0OUSxwf+zHJgWQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="5vNYLRcllDrimb99"
+        protocol="application/pgp-signature"; boundary="OwLcNYc0lM97+oe1"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1668091365; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1668093323; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=QggOl6oet9gjyrUMq6KLf3FzSdMoYy/LwzCTm6J8+gA=;
-        b=ZMS072hGRT7Bf0y9PM16lWz0Q8PM65nd78eBvUC9sFc0C1kpezgASqxeIDMK8aTmA7+k+1
-        iYFDCN1izrUXQKtA2wb/YLjQSxzOThg5HHql5Iz3xnt8FvW44zm+MpzNTXDLKfVn/MuY7n
-        c7Q7OCw4Yfo5nWtlAIE6hJ8bG400Igk=
+        bh=aKymvBvNUc8tSCUQvAi1PjPsqmEYDlbDheSS2WGM6TE=;
+        b=gUJwt0jof4XdlEV8c5oNAwU7p6Z4rKIk1smBOSJqHG7koAWfNIf/A173AOq+zxW7NIUUZv
+        vOmPFyi3vfoq5zU5Sy6qaAT8ukiEbdlLRmd8BFf7U5/XU/BFL4bpftu40v5izx8TXFs0id
+        ooSzWIy74jATH1hJ2frezuXNvGy44fQ=
 Content-Disposition: inline
-In-Reply-To: <20221110065316.67204-1-lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CADn0Px_+-z5-cjJ6t6fO86=oq9Se-uLDA1nJ0OUSxwf+zHJgWQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Sergey Dolgov <palza00-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 
---5vNYLRcllDrimb99
+--OwLcNYc0lM97+oe1
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
-Hello Jialin.
+Hi.
 
-On Thu, Nov 10, 2022 at 02:53:16PM +0800, Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
-> When user use memory.reclaim to reclaim memory, after drain percpu lru
-> caches, drain percpu charge caches for given memcg stock in the hope
-> of introducing more evictable pages.
+On Mon, Nov 07, 2022 at 12:50:04PM +0600, Sergey Dolgov <palza00-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> we faced problem in removing cgroup in cgroup_addrm_files in kernel 5.4
 
-Do you have any data on materialization of this hope?
+Do you have a reproducer for this issue? Ideally, with a current kernel?
 
-IIUC, the stock is useful for batched accounting to page_counter but it
-doesn't represent real pages. I.e. your change may reduce the
-page_counter value but it would not release any pages. Or have I missed
-a way how it helps with the reclaim?
 
-Thanks,
+
+> crash> struct cgroup_subsys.cfts 0xffff88fc910d9f80
+>   cfts = {
+>     next = 0x703,
+>     prev = 0x0
+>   },
+
+The cgroup_subsys pointed in css->ss doesn't look like a valid
+cgroup_subsys, cfts.next looks like a rubbish.
+
+>  from (!css->ss) to (!(css->ss or css == css->cgroup->self)) it will
+> be resolve problem
+
+This doesn't seem correct to me. The condition in this place should
+capture whether css represents a true subsys state or just a cgroup.
+You made it effectively always false, regardless of css->ss is valid or
+not. (Maybe there's a typo in your posting and the "fix" was making the
+condition always true but that still doesn't seem correct to me, it's
+just masking the garbled css->ss.)
+
+> loaded Tainted: G           OE     5.4.0-73-generic #82~18.04.1-Ubuntu
+
+`(O)`  externally-built ("out-of-tree") module was loaded
+
+My bets are off.
+
+HTH,
 Michal
 
---5vNYLRcllDrimb99
+--OwLcNYc0lM97+oe1
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY20N4QAKCRAkDQmsBEOq
-ubBKAQDp1xBK5/DkToOkWZCbNxS9WdDxDYDsi9+ZeCKLncwpHQD9HaNqQZdrxab3
-/hyNSLGsED0LyA/3PnNvyOufETMiWQ4=
-=jyz6
+iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY20VhgAKCRAkDQmsBEOq
+uQ2IAQDSlyu5enLN9jLXDkH7Dtke8PPrLhE5nVjo6rrcpmlhQQD/QKJ3rDxmsCcK
+zJ8aumroXcoYId9hWISTWsa4q7FX6AI=
+=JZjC
 -----END PGP SIGNATURE-----
 
---5vNYLRcllDrimb99--
+--OwLcNYc0lM97+oe1--
