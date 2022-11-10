@@ -1,78 +1,68 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: problem with remove cgroup in function cgroup_addrm_files
-Date: Thu, 10 Nov 2022 16:15:22 +0100
-Message-ID: <20221110151522.GB10562@blackbody.suse.cz>
-References: <CADn0Px_+-z5-cjJ6t6fO86=oq9Se-uLDA1nJ0OUSxwf+zHJgWQ@mail.gmail.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm/memcontrol.c: drains percpu charge caches in memory.reclaim
+Date: Thu, 10 Nov 2022 11:35:34 -0800
+Message-ID: <CAJD7tkat6QAJkPJ-of0xYGbKJ1CyXeC0cMh+U9Nzmddm4pOZ9g@mail.gmail.com>
+References: <20221110065316.67204-1-lujialin4@huawei.com> <20221110144243.GA10562@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="OwLcNYc0lM97+oe1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1668093323; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=aKymvBvNUc8tSCUQvAi1PjPsqmEYDlbDheSS2WGM6TE=;
-        b=gUJwt0jof4XdlEV8c5oNAwU7p6Z4rKIk1smBOSJqHG7koAWfNIf/A173AOq+zxW7NIUUZv
-        vOmPFyi3vfoq5zU5Sy6qaAT8ukiEbdlLRmd8BFf7U5/XU/BFL4bpftu40v5izx8TXFs0id
-        ooSzWIy74jATH1hJ2frezuXNvGy44fQ=
-Content-Disposition: inline
-In-Reply-To: <CADn0Px_+-z5-cjJ6t6fO86=oq9Se-uLDA1nJ0OUSxwf+zHJgWQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tzjw3odtvlQil/jHlpnewBAjOSpFW5cV80T6OAYFKjY=;
+        b=iuaYqdwZM/0oCPWc93mIY0NicjiJhw7/rvxeaarjT1Tqf5ZHSLmKsKcf7baqlRZzGW
+         48G7ydGLqDDqE6J6z5KkTZTsT6IPlVP9/NuCrbkuyC0ICfrf0mTe64olZVw4TUCHsHMz
+         exlcuIbh+46O5BTFQ7fbnEIKz+5LZav8ff5cDQmxpnLZa4hPCawhSu8wtZ25bYO3uJCY
+         yo/PRhoXv3c4U/NLMsEsT/3BfQJPlZcpCrHjsgK3t47W6BptStFIaAV97x3GKxq3sQF/
+         ArH6DTw1RQswDn2xtHiVHAZhACBR/S7NMkmMMP+mUCvFTFHflwGVYX8uEDZ5rbAAicnY
+         H9ow==
+In-Reply-To: <20221110144243.GA10562-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Sergey Dolgov <palza00-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
+On Thu, Nov 10, 2022 at 6:42 AM Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org> wrote=
+:
+>
+> Hello Jialin.
+>
+> On Thu, Nov 10, 2022 at 02:53:16PM +0800, Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org=
+> wrote:
+> > When user use memory.reclaim to reclaim memory, after drain percpu lru
+> > caches, drain percpu charge caches for given memcg stock in the hope
+> > of introducing more evictable pages.
+>
+> Do you have any data on materialization of this hope?
+>
+> IIUC, the stock is useful for batched accounting to page_counter but it
+> doesn't represent real pages. I.e. your change may reduce the
+> page_counter value but it would not release any pages. Or have I missed
+> a way how it helps with the reclaim?
 
---OwLcNYc0lM97+oe1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
++1
 
-Hi.
+It looks like we just overcharge the memcg if the number of allocated
+pages are less than the charging batch size, so that upcoming
+allocations can go through a fast accounting path and consume from the
+precharged stock. I don't understand how draining this charge may help
+reclaim.
 
-On Mon, Nov 07, 2022 at 12:50:04PM +0600, Sergey Dolgov <palza00-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> we faced problem in removing cgroup in cgroup_addrm_files in kernel 5.4
+OTOH, it will reduce the page counters, so if userspace is relying on
+memory.current to gauge how much reclaim they want to do, it will make
+it "appear" like the usage dropped. If userspace is using other
+signals (refaults, PSI, etc), then we would be more-or-less tricking
+it into thinking we reclaimed pages when we actually didn't. In that
+case we didn't really reclaim anything, we just dropped memory.current
+slightly, which wouldn't matter to the user in this case, as other
+signals won't change.
 
-Do you have a reproducer for this issue? Ideally, with a current kernel?
+The difference in perceived usage coming from draining the stock IIUC
+has an upper bound of 63 * PAGE_SIZE (< 256 KB with 4KB pages), I
+wonder if this is really significant anyway.
 
-
-
-> crash> struct cgroup_subsys.cfts 0xffff88fc910d9f80
->   cfts = {
->     next = 0x703,
->     prev = 0x0
->   },
-
-The cgroup_subsys pointed in css->ss doesn't look like a valid
-cgroup_subsys, cfts.next looks like a rubbish.
-
->  from (!css->ss) to (!(css->ss or css == css->cgroup->self)) it will
-> be resolve problem
-
-This doesn't seem correct to me. The condition in this place should
-capture whether css represents a true subsys state or just a cgroup.
-You made it effectively always false, regardless of css->ss is valid or
-not. (Maybe there's a typo in your posting and the "fix" was making the
-condition always true but that still doesn't seem correct to me, it's
-just masking the garbled css->ss.)
-
-> loaded Tainted: G           OE     5.4.0-73-generic #82~18.04.1-Ubuntu
-
-`(O)`  externally-built ("out-of-tree") module was loaded
-
-My bets are off.
-
-HTH,
-Michal
-
---OwLcNYc0lM97+oe1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY20VhgAKCRAkDQmsBEOq
-uQ2IAQDSlyu5enLN9jLXDkH7Dtke8PPrLhE5nVjo6rrcpmlhQQD/QKJ3rDxmsCcK
-zJ8aumroXcoYId9hWISTWsa4q7FX6AI=
-=JZjC
------END PGP SIGNATURE-----
-
---OwLcNYc0lM97+oe1--
+>
+> Thanks,
+> Michal
