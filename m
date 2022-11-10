@@ -1,35 +1,44 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: Re: [PATCH] block, bfq: fix null pointer dereference in
- bfq_bio_bfqg()
-Date: Thu, 10 Nov 2022 11:30:24 +0800
-Message-ID: <371bdeac-7841-af8b-cb45-03e49f8589bd@huaweicloud.com>
-References: <20221108103434.2853269-1-yukuai1@huaweicloud.com>
- <9e0d8652-adda-3d39-88cd-d735194d4083@nvidia.com>
+From: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] mm/memcontrol.c: drains percpu charge caches in memory.reclaim
+Date: Thu, 10 Nov 2022 14:53:16 +0800
+Message-ID: <20221110065316.67204-1-lujialin4@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <9e0d8652-adda-3d39-88cd-d735194d4083@nvidia.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Chaitanya Kulkarni <chaitanyak@nvidia.com>, Yu Kuai <yukuai1@huaweicloud.com>, "jack@suse.cz" <jack@suse.cz>, "tj@kernel.org" <tj@kernel.org>, "josef@toxicpanda.com" <josef@toxicpanda.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "paolo.valente@linaro.org" <paolo.valente@linaro.org>
-Cc: "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "yi.zhang@huawei.com" <yi.zhang@huawei.com>, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Hi,
+When user use memory.reclaim to reclaim memory, after drain percpu lru
+caches, drain percpu charge caches for given memcg stock in the hope
+of introducing more evictable pages.
 
-在 2022/11/09 6:50, Chaitanya Kulkarni 写道:
-> 
-> 
-> Please submit the block tests for this as this is clearly non-trivial
-> issue that needs to be tested every release ..
+Signed-off-by: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-I wrote a c reporducer that is 100% reproducible in v5.10, I'll try to
-add a block test. However, it might take sometime because I'm not
-familar with blktests yet...
-
-Thanks,
-Kuai
-> 
-> -ck
-> 
-> 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2d8549ae1b30..768091cc6a9a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6593,10 +6593,13 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+ 		/*
+ 		 * This is the final attempt, drain percpu lru caches in the
+ 		 * hope of introducing more evictable pages for
+-		 * try_to_free_mem_cgroup_pages().
++		 * try_to_free_mem_cgroup_pages(). Also, drain all percpu
++		 * charge caches for given memcg.
+ 		 */
+-		if (!nr_retries)
++		if (!nr_retries) {
+ 			lru_add_drain_all();
++			drain_all_stock(memcg);
++		}
+ 
+ 		reclaimed = try_to_free_mem_cgroup_pages(memcg,
+ 						nr_to_reclaim - nr_reclaimed,
+-- 
+2.17.1
 
