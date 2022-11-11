@@ -1,107 +1,116 @@
 From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH 00/26] Add Cgroup support for SGX EPC memory
-Date: Fri, 11 Nov 2022 10:35:05 -0800
-Message-ID: <20221111183532.3676646-1-kristen@linux.intel.com>
+Subject: [PATCH 02/26] x86/sgx: Store struct sgx_encl when allocating new va pages
+Date: Fri, 11 Nov 2022 10:35:07 -0800
+Message-ID: <20221111183532.3676646-3-kristen@linux.intel.com>
+References: <20221111183532.3676646-1-kristen@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1668191739; x=1699727739;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=zkMqL68m/5zo4IQcHhhj9rd1XQDhqh5jgd3Tu0wSwho=;
-  b=a3maXEy2Kf14SUJXdiryH8v/8W9m1yBW5azsFEreBJra7juFsZRfq5iC
-   k4qBIlbchCBOjQa+e/HrU7Cjjt7lt6Szai2UKDulwMZdVsLgRkB0BR5pj
-   iR9j7MEDjHOHE7ErYoltMlGX7noP2ykYqOCx7b5FTBlBznc1Nei+OKcJU
-   us6oLoUK7jlAuemHcArQ9aAxcu7dcc9VOEtfuvCABUX9s9XV0nTZtPNnx
-   yA83GSWanNtwNa6OlDKkKvd62qsqROBKn839afnL4z8jiixwMqKyjGaNW
-   m9WDYllLn4kMnA5ff0v9aXnjBU32uKPPTEGh4yZkh1VZiXySNox+6x4bn
-   g==;
+  t=1668191743; x=1699727743;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=FaCcKUEIwrradxMdSEDDiScXst5sj/3Hc0SbSP7zTG4=;
+  b=oD9ZN4namfYO10ahv/jbx4GWXsybj3a1b+ovASJsN3VCN23kTFkllk7k
+   MCiVVyNAhGnwOvwP+G8j5/BLLz4ala+RetIwHVpb1xlRuBDrYy1iKLFqg
+   DjaYHes9W0rrxXgTFZxXBantYv3/DLbX9rF23DfeZ7TSVUtMVqE4QE4ZY
+   e2NWBGoP6xoK+S/hXL0d8wo/5KPN4+d9d9ypTtR/hJTGv/G18dbeXV1NW
+   WmMMGLoUZ4B06F09hWN6iqdWre3qsBwEVxvKh9rR6klhIguheciVmTpcY
+   nVQG8OjnjOSV+jyK9f0iyc9ODfKuJG13ZNjQ2akZywU6+EMo+b9WkUb6P
+   A==;
+In-Reply-To: <20221111183532.3676646-1-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-CPWUtch7KCBzeIdxy0IIJw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-CPWUtch7KCBzeIdxy0IIJw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
+Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Utilize the Miscellaneous cgroup controller to regulate the distribution
-of SGX EPC memory, which is a subset of system RAM that is used to provide
-SGX-enabled applications with protected memory, and is otherwise inaccessible.
+From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-SGX EPC memory allocations are separate from normal RAM allocations,
-and is managed solely by the SGX subsystem. The existing cgroup memory
-controller cannot be used to limit or account for SGX EPC memory.
+When allocating new va pages, pass the struct sgx_encl of the enclave
+that is allocating the page. sgx_alloc_epc_page() will store this
+value in the encl_owner field of the struct sgx_epc_page. In a later
+patch, version array pages will be placed in an unreclaimable queue,
+and then when the cgroup max limit is reached and there are no more
+reclaimable pages and the enclave must be oom killed, all the
+va pages associated with that enclave can be uncharged and freed.
 
-This patchset implements the support for sgx_epc memory within the 
-misc cgroup controller, and then utilizes the misc cgroup controller
-to provide support for setting the total system capacity, max limit
-per cgroup, and events.
+Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ arch/x86/kernel/cpu/sgx/encl.c  | 5 +++--
+ arch/x86/kernel/cpu/sgx/encl.h  | 2 +-
+ arch/x86/kernel/cpu/sgx/ioctl.c | 2 +-
+ arch/x86/kernel/cpu/sgx/sgx.h   | 2 ++
+ 4 files changed, 7 insertions(+), 4 deletions(-)
 
-This work was originally authored by Sean Christopherson a few years ago,
-and was modified to work with more recent kernels, and to utilize the
-misc cgroup controller rather than a custom controller. It is currently
-based on top of the MCA patches.
-
-Here's the MCA patchset for reference.
-https://lore.kernel.org/linux-sgx/2d52c8c4-8ed0-6df2-2911-da5b9fcc9ae4-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/T/#t
-
-The patchset adds support for multiple LRUs to track both reclaimable
-EPC pages (i.e. pages the reclaimer knows about), as well as unreclaimable
-EPC pages (i.e. pages which the reclaimer isn't aware of, such as va pages).
-These pages are assigned to an LRU, as well as an enclave, so that an
-enclave's full EPC usage can be tracked, and limited to a max value. During
-OOM events, an enclave can be have its memory zapped, and all the EPC pages
-not tracked by the reclaimer can be freed.
-
-I appreciate your comments and feedback.
-
-Kristen Carlson Accardi (13):
-  x86/sgx: Add 'struct sgx_epc_lru' to encapsulate lru list(s)
-  x86/sgx: Use sgx_epc_lru for existing active page list
-  x86/sgx: Track epc pages on reclaimable or unreclaimable lists
-  cgroup/misc: Add notifier block list support for css events
-  cgroup/misc: Expose root_misc
-  cgroup/misc: Expose parent_misc()
-  cgroup/misc: allow users of misc cgroup to read specific cgroup usage
-  cgroup/misc: allow misc cgroup consumers to read the max value
-  cgroup/misc: Add private per cgroup data to struct misc_cg
-  cgroup/misc: Add tryget functionality for misc controller
-  cgroup/misc: Add SGX EPC resource type
-  x86/sgx: Add support for misc cgroup controller
-  Docs/x86/sgx: Add description for cgroup support
-
-Sean Christopherson (13):
-  x86/sgx: Call cond_resched() at the end of sgx_reclaim_pages()
-  x86/sgx: Store struct sgx_encl when allocating new va pages
-  x86/sgx: Introduce RECLAIM_IN_PROGRESS flag for EPC pages
-  x86/sgx: Use a list to track to-be-reclaimed pages during reclaim
-  x86/sgx: Add EPC page flags to identify type of page
-  x86/sgx: Allow reclaiming up to 32 pages, but scan 16 by default
-  x86/sgx: Return the number of EPC pages that were successfully
-    reclaimed
-  x86/sgx: Add option to ignore age of page during EPC reclaim
-  x86/sgx: Add helper to retrieve SGX EPC LRU given an EPC page
-  x86/sgx: Prepare for multiple LRUs
-  x86/sgx: Expose sgx_reclaim_pages() for use by EPC cgroup
-  x86/sgx: Add helper to grab pages from an arbitrary EPC LRU
-  x86/sgx: Add EPC OOM path to forcefully reclaim EPC
-
- Documentation/x86/sgx.rst            |  77 ++++
- arch/x86/Kconfig                     |  13 +
- arch/x86/kernel/cpu/sgx/Makefile     |   1 +
- arch/x86/kernel/cpu/sgx/encl.c       |  89 ++++-
- arch/x86/kernel/cpu/sgx/encl.h       |   4 +-
- arch/x86/kernel/cpu/sgx/epc_cgroup.c | 561 +++++++++++++++++++++++++++
- arch/x86/kernel/cpu/sgx/epc_cgroup.h |  59 +++
- arch/x86/kernel/cpu/sgx/ioctl.c      |  13 +-
- arch/x86/kernel/cpu/sgx/main.c       | 405 +++++++++++++++----
- arch/x86/kernel/cpu/sgx/sgx.h        |  96 ++++-
- arch/x86/kernel/cpu/sgx/virt.c       |  28 +-
- include/linux/misc_cgroup.h          |  71 ++++
- kernel/cgroup/misc.c                 | 145 ++++++-
- 13 files changed, 1446 insertions(+), 116 deletions(-)
- create mode 100644 arch/x86/kernel/cpu/sgx/epc_cgroup.c
- create mode 100644 arch/x86/kernel/cpu/sgx/epc_cgroup.h
-
+diff --git a/arch/x86/kernel/cpu/sgx/encl.c b/arch/x86/kernel/cpu/sgx/encl.c
+index f40d64206ded..4eaf9d21e71b 100644
+--- a/arch/x86/kernel/cpu/sgx/encl.c
++++ b/arch/x86/kernel/cpu/sgx/encl.c
+@@ -1193,6 +1193,7 @@ void sgx_zap_enclave_ptes(struct sgx_encl *encl, unsigned long addr)
+ 
+ /**
+  * sgx_alloc_va_page() - Allocate a Version Array (VA) page
++ * @encl:    The enclave that this page is allocated to.
+  * @reclaim: Reclaim EPC pages directly if none available. Enclave
+  *           mutex should not be held if this is set.
+  *
+@@ -1202,12 +1203,12 @@ void sgx_zap_enclave_ptes(struct sgx_encl *encl, unsigned long addr)
+  *   a VA page,
+  *   -errno otherwise
+  */
+-struct sgx_epc_page *sgx_alloc_va_page(bool reclaim)
++struct sgx_epc_page *sgx_alloc_va_page(struct sgx_encl *encl, bool reclaim)
+ {
+ 	struct sgx_epc_page *epc_page;
+ 	int ret;
+ 
+-	epc_page = sgx_alloc_epc_page(NULL, reclaim);
++	epc_page = sgx_alloc_epc_page(encl, reclaim);
+ 	if (IS_ERR(epc_page))
+ 		return ERR_CAST(epc_page);
+ 
+diff --git a/arch/x86/kernel/cpu/sgx/encl.h b/arch/x86/kernel/cpu/sgx/encl.h
+index f94ff14c9486..831d63f80f5a 100644
+--- a/arch/x86/kernel/cpu/sgx/encl.h
++++ b/arch/x86/kernel/cpu/sgx/encl.h
+@@ -116,7 +116,7 @@ struct sgx_encl_page *sgx_encl_page_alloc(struct sgx_encl *encl,
+ 					  unsigned long offset,
+ 					  u64 secinfo_flags);
+ void sgx_zap_enclave_ptes(struct sgx_encl *encl, unsigned long addr);
+-struct sgx_epc_page *sgx_alloc_va_page(bool reclaim);
++struct sgx_epc_page *sgx_alloc_va_page(struct sgx_encl *encl, bool reclaim);
+ unsigned int sgx_alloc_va_slot(struct sgx_va_page *va_page);
+ void sgx_free_va_slot(struct sgx_va_page *va_page, unsigned int offset);
+ bool sgx_va_page_full(struct sgx_va_page *va_page);
+diff --git a/arch/x86/kernel/cpu/sgx/ioctl.c b/arch/x86/kernel/cpu/sgx/ioctl.c
+index ebe79d60619f..9a1bb3c3211a 100644
+--- a/arch/x86/kernel/cpu/sgx/ioctl.c
++++ b/arch/x86/kernel/cpu/sgx/ioctl.c
+@@ -30,7 +30,7 @@ struct sgx_va_page *sgx_encl_grow(struct sgx_encl *encl, bool reclaim)
+ 		if (!va_page)
+ 			return ERR_PTR(-ENOMEM);
+ 
+-		va_page->epc_page = sgx_alloc_va_page(reclaim);
++		va_page->epc_page = sgx_alloc_va_page(encl, reclaim);
+ 		if (IS_ERR(va_page->epc_page)) {
+ 			err = ERR_CAST(va_page->epc_page);
+ 			kfree(va_page);
+diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
+index d16a8baa28d4..efb10eacd3aa 100644
+--- a/arch/x86/kernel/cpu/sgx/sgx.h
++++ b/arch/x86/kernel/cpu/sgx/sgx.h
+@@ -39,6 +39,8 @@ struct sgx_epc_page {
+ 		struct sgx_encl_page *encl_owner;
+ 		/* Use when SGX_EPC_PAGE_KVM_GUEST set in ->flags: */
+ 		void __user *vepc_vaddr;
++
++		struct sgx_encl *encl;
+ 	};
+ 	struct list_head list;
+ };
 -- 
 2.37.3
 
