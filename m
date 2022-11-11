@@ -1,69 +1,127 @@
 From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH 24/26] cgroup/misc: Add SGX EPC resource type
-Date: Fri, 11 Nov 2022 10:35:29 -0800
-Message-ID: <20221111183532.3676646-25-kristen@linux.intel.com>
+Subject: [PATCH 22/26] cgroup/misc: Add private per cgroup data to struct misc_cg
+Date: Fri, 11 Nov 2022 10:35:27 -0800
+Message-ID: <20221111183532.3676646-23-kristen@linux.intel.com>
 References: <20221111183532.3676646-1-kristen@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1668191782; x=1699727782;
+  t=1668191779; x=1699727779;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=EBcLsiw30eqLl7g1ih7HHqPXoxhQ0Yyb7AgcJd3NM6M=;
-  b=DcdzJGxlzqeMI/lVJgpZqqrS2R/BtbGEaER+UPPX/2sRCSlBUD7UsRBQ
-   iinw8ZfNwf/pMHccT7UNwlg5FXGzc5JjIS2JvaGOiQ9/ZocAEF8cbrArC
-   1uDU6p+EwBNwHuIhpW5jragpop1al97Xa+tUg/o6A1S7DxsRIYwYNnjsB
-   psk0qIH9OPaj8FXtVonWN2kw1Fk++umdmg5ctHUgPPWhcyx0q3wFX3TQm
-   tHjlLM7lyA9zJ+Vt3DtyzfY2W+aaBhL78/zIFq4m5u3ziAwsiRc2t2Kym
-   FXOKldQlIV+Vj6/TBZwu5YVxa/l/hde1crqPRw2Ey7oyWNiXsWGYDupsf
-   A==;
+  bh=qDw1+KlOA5sa/9TNbGFSCosxMRaFIDw8SgzYI5H+AWg=;
+  b=isfnaWRjwuVMTz7qupQcJpeA5mJyp0cM8SxoRmcmL8y1s2UNL6r95fdQ
+   2vtLWDWTi8nJZhMEJJkOl3t1zhh1FyJU2rMQOhybxVAG0HMmtt36yHERl
+   hjtWKXfOTe6yl7q2pTrgKY6uzYVjwqGkW4Ml/iP9BXkbgPrdxIEWTcq0M
+   gNhrNL2ZnopOBHXZKsL5YTIZ8dnqoiXHzawEapwzfm0zpyD1y+f9BhQjb
+   lTWktPfsblzcPsiyYZfELSXzH0Ai6vAtouYXNgYesjaPWx687yJCoVkYm
+   nQXIcfNcxUpwkI4ls4W/SdAZjgyIKafaT6E0wS9Vo+2dPbRcEFljd+knK
+   g==;
 In-Reply-To: <20221111183532.3676646-1-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-CPWUtch7KCBzeIdxy0IIJw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-Allow SGX EPC memory to be a valid resource type for the misc
-controller.
+The SGX driver needs to be able to store additional per cgroup data
+specific to SGX along with the misc_cg struct. Add the ability to get
+and set this data in struct misc_cg.
 
 Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- include/linux/misc_cgroup.h | 4 ++++
- kernel/cgroup/misc.c        | 4 ++++
- 2 files changed, 8 insertions(+)
+ include/linux/misc_cgroup.h | 12 ++++++++++++
+ kernel/cgroup/misc.c        | 39 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 51 insertions(+)
 
 diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
-index cee848205715..aeaf4acf22af 100644
+index c00deae4d2df..7fbf3efb0f62 100644
 --- a/include/linux/misc_cgroup.h
 +++ b/include/linux/misc_cgroup.h
-@@ -17,6 +17,10 @@ enum misc_res_type {
- 	MISC_CG_RES_SEV,
- 	/* AMD SEV-ES ASIDs resource */
- 	MISC_CG_RES_SEV_ES,
-+#endif
-+#ifdef CONFIG_CGROUP_SGX_EPC
-+	/* SGX EPC memory resource */
-+	MISC_CG_RES_SGX_EPC,
- #endif
- 	MISC_CG_RES_TYPES
- };
-diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
-index 642879ad136f..e73a034adca3 100644
---- a/kernel/cgroup/misc.c
-+++ b/kernel/cgroup/misc.c
-@@ -25,6 +25,10 @@ static const char *const misc_res_name[] = {
- 	/* AMD SEV-ES ASIDs resource */
- 	"sev_es",
- #endif
-+#ifdef CONFIG_CGROUP_SGX_EPC
-+	/* Intel SGX EPC memory bytes */
-+	"sgx_epc",
-+#endif
+@@ -43,6 +43,7 @@ struct misc_res {
+ 	unsigned long max;
+ 	atomic_long_t usage;
+ 	atomic_long_t events;
++	void *priv;
  };
  
- /* Root misc cgroup */
+ /**
+@@ -63,6 +64,8 @@ struct misc_cg *root_misc(void);
+ struct misc_cg *parent_misc(struct misc_cg *cg);
+ unsigned long misc_cg_read(enum misc_res_type type, struct misc_cg *cg);
+ unsigned long misc_cg_max(enum misc_res_type type, struct misc_cg *cg);
++void *misc_cg_get_priv(enum misc_res_type type, struct misc_cg *cg);
++void misc_cg_set_priv(enum misc_res_type type, struct misc_cg *cg, void *priv);
+ unsigned long misc_cg_res_total_usage(enum misc_res_type type);
+ int misc_cg_set_capacity(enum misc_res_type type, unsigned long capacity);
+ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
+@@ -130,6 +133,15 @@ static inline unsigned long misc_cg_max(enum misc_res_type type, struct misc_cg
+ 	return 0;
+ }
+ 
++static void *misc_cg_get_priv(enum misc_res_type type, struct misc_cg *cg)
++{
++	return NULL;
++}
++
++static void misc_cg_set_priv(enum misc_res_type type, struct misc_cg *cg, void *priv)
++{
++}
++
+ static inline unsigned long misc_cg_res_total_usage(enum misc_res_type type)
+ {
+ 	return 0;
+diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
+index 18d0bec7d609..642879ad136f 100644
+--- a/kernel/cgroup/misc.c
++++ b/kernel/cgroup/misc.c
+@@ -251,6 +251,45 @@ unsigned long misc_cg_max(enum misc_res_type type, struct misc_cg *cg)
+ }
+ EXPORT_SYMBOL_GPL(misc_cg_max);
+ 
++/**
++ * misc_cg_get_priv() - Return the priv value of the misc cgroup res.
++ * @type: Type of the misc res.
++ * @cg: Misc cgroup whose priv will be read
++ *
++ * Context: Any context.
++ * Return:
++ * 	The value of the priv field for the specified misc cgroup.
++ * 	If an invalid misc_res_type is given, NULL will be returned.
++ */
++void *misc_cg_get_priv(enum misc_res_type type, struct misc_cg *cg)
++{
++	if (!(valid_type(type) && cg))
++		return NULL;
++
++	return cg->res[type].priv;
++}
++EXPORT_SYMBOL_GPL(misc_cg_get_priv);
++
++/**
++ * misc_cg_set_priv() - Set the priv value of the misc cgroup res.
++ * @type: Type of the misc res.
++ * @cg: Misc cgroup whose priv will be written
++ * @priv: Value to store in the priv field of the struct misc_cg
++ *
++ * If an invalid misc_res_type is given, the priv data will not be
++ * stored.
++ *
++ * Context: Any context.
++ */
++void misc_cg_set_priv(enum misc_res_type type, struct misc_cg *cg, void *priv)
++{
++	if (!(valid_type(type) && cg))
++		return;
++
++	cg->res[type].priv = priv;
++}
++EXPORT_SYMBOL_GPL(misc_cg_set_priv);
++
+ /**
+  * misc_cg_max_show() - Show the misc cgroup max limit.
+  * @sf: Interface file
 -- 
 2.37.3
 
