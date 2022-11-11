@@ -1,70 +1,83 @@
 From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH 23/26] cgroup/misc: Add tryget functionality for misc controller
-Date: Fri, 11 Nov 2022 10:35:28 -0800
-Message-ID: <20221111183532.3676646-24-kristen@linux.intel.com>
+Subject: [PATCH 18/26] cgroup/misc: Expose root_misc
+Date: Fri, 11 Nov 2022 10:35:23 -0800
+Message-ID: <20221111183532.3676646-19-kristen@linux.intel.com>
 References: <20221111183532.3676646-1-kristen@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1668191781; x=1699727781;
+  t=1668191774; x=1699727774;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=eSkn/vztgv3b1H9AuqHP1f8+st1SIUnPEpjHioF/AGg=;
-  b=aNX7gCXNB77Zoq0LIpI74k/wVWVCbS7k02cNdzM8lHUCMjrk3M49xxs4
-   9Hy6XxA3OtiyyF4pwFMjhyeXj5D2geooZ18TZm3ALUbxGWrIfr8//X5j9
-   F3+RLD9n7WUAQ1Dn3HZCjko1MdEVCUpsdwvLz25WGV2r/St+bukPRShkZ
-   1Dl7NEzvT8yy/3s3FykGwa/9mIdUhLSOC+LtQ1TbQ4MxCEW9G+3wLr6Pk
-   eMQIR1DbKSmsxgSEPg+vCLdXZeYT3nc9Egx7QElFfUAl8qdVNzoOsGZUo
-   QAwr/154NpdKnULBX+np9F1mmJRsiEdUdbFLONgT5VaBexGUVtkQIthhB
-   w==;
+  bh=wY8Ia7AhZOsSBmUDim+2xlwCX7VM8EjOrhb9ezVOttc=;
+  b=CP7moDwxZdBbz+ai2ISJn8ohwUFqPbFTnZc97wcRrphBU0tPUK4mn+NE
+   nyfu8SRGvGBGTFkAeEn0CC2GPcfgqadZFqgvf9K409D+kr+YJ4DrYLu8M
+   n+P9994qJ5tAXS9OvBSOILxZ3HifnVKcw7tX/01ArQLXeMee4eeyd1kxk
+   SW4XREmyq3/IOEZC+N/rQ+pbzFL9JBFip+CYyJQfShUWfYa+48tNcTf4k
+   oM3osAoLXgCL/iXLyU/HRtkxM8V4kriPg2lYt5WiLWTdoFrMbguyMNmh8
+   PcJjgbjMOBum5JAG3l3/lNKgb6BWJFdOjIcBh7hEUztb5tFaBDbME77nY
+   Q==;
 In-Reply-To: <20221111183532.3676646-1-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-CPWUtch7KCBzeIdxy0IIJw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-CPWUtch7KCBzeIdxy0IIJw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-Allows caller to do a css_tryget() on a specific misc cgroup.
+The SGX driver will need to get access to the root misc_cg object
+to do iterative walks and also determine if a charge will be
+towards the root cgroup or not.
 
 Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- include/linux/misc_cgroup.h | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ include/linux/misc_cgroup.h | 5 +++++
+ kernel/cgroup/misc.c        | 9 +++++++++
+ 2 files changed, 14 insertions(+)
 
 diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
-index 7fbf3efb0f62..cee848205715 100644
+index 8f1b7b6cb81d..b79c78378f17 100644
 --- a/include/linux/misc_cgroup.h
 +++ b/include/linux/misc_cgroup.h
-@@ -112,6 +112,16 @@ static inline void put_misc_cg(struct misc_cg *cg)
- 		css_put(&cg->css);
+@@ -59,6 +59,7 @@ struct misc_cg {
+ 	struct misc_res res[MISC_CG_RES_TYPES];
+ };
+ 
++struct misc_cg *root_misc(void);
+ unsigned long misc_cg_res_total_usage(enum misc_res_type type);
+ int misc_cg_set_capacity(enum misc_res_type type, unsigned long capacity);
+ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
+@@ -106,6 +107,10 @@ static inline void put_misc_cg(struct misc_cg *cg)
  }
  
-+/*
-+ * misc_cg_tryget() - Try to increment this misc cgroup ref count.
-+ * @cg - cgroup to get.
-+ */
-+static inline bool misc_cg_tryget(struct misc_cg *cg)
-+{
-+	if (cg)
-+		return css_tryget(&cg->css);
-+	return false;
-+}
  #else /* !CONFIG_CGROUP_MISC */
- static inline struct misc_cg *root_misc(void)
- {
-@@ -175,6 +185,11 @@ static inline void put_misc_cg(struct misc_cg *cg)
- {
- }
- 
-+static inline bool misc_cg_tryget(struct misc_cg *cg)
++static inline struct misc_cg *root_misc(void)
 +{
-+	return true;
++	return NULL;
 +}
-+
- static inline int register_misc_cg_notifier(struct notifier_block *nb)
+ 
+ static inline unsigned long misc_cg_res_total_usage(enum misc_res_type type)
  {
- 	return 0;
+diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
+index 1e93e1d20347..8aa994d9cd02 100644
+--- a/kernel/cgroup/misc.c
++++ b/kernel/cgroup/misc.c
+@@ -45,6 +45,15 @@ static unsigned long misc_res_capacity[MISC_CG_RES_TYPES];
+  */
+ static BLOCKING_NOTIFIER_HEAD(misc_cg_notify_list);
+ 
++/**
++ * root_misc() - Return the root misc cgroup.
++ */
++struct misc_cg *root_misc(void)
++{
++	return &root_cg;
++}
++EXPORT_SYMBOL_GPL(root_misc);
++
+ /**
+  * parent_misc() - Get the parent of the passed misc cgroup.
+  * @cgroup: cgroup whose parent needs to be fetched.
 -- 
 2.37.3
 
