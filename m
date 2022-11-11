@@ -1,23 +1,23 @@
 From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH 11/26] x86/sgx: Add option to ignore age of page during EPC reclaim
-Date: Fri, 11 Nov 2022 10:35:16 -0800
-Message-ID: <20221111183532.3676646-12-kristen@linux.intel.com>
+Subject: [PATCH 06/26] x86/sgx: Introduce RECLAIM_IN_PROGRESS flag for EPC pages
+Date: Fri, 11 Nov 2022 10:35:11 -0800
+Message-ID: <20221111183532.3676646-7-kristen@linux.intel.com>
 References: <20221111183532.3676646-1-kristen@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1668191761; x=1699727761;
+  t=1668191758; x=1699727758;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=T3P7Q3xIri7oBiVTNsBMGR4O8OWA5OQYl9qvR3LdFVU=;
-  b=XkUwzZ3aHIemRjo/noiKurMhPxOTF54mZDv4Cq1yMUGABab6eXeoUeeW
-   e0QW9HCj8qQIdygxumVqKLqfoSsD5sbZDZuA1OvUcZlOv28HynRETJuKa
-   UAZjLwQMa2VaZyYBIgw3N+rMtiyIDgPw4N8RsFaTo+KC3EDeQRhZ/Ur3S
-   omM39GLEu/QErO96sWoScPvvQzzTxUVy8OlSEMkyTROVFZehPGES8HNg/
-   PoUxJTxTU//YUKWXiPF97MlKM6Hd+BUobHPEfqfiI1m1X1CDkz/3LqfFE
-   HKBlM8AzJqbjuTMimnlZ8n6HTRr734pVSAVC89q/V6jzQr4j/bG8ACdFt
+  bh=CrS+kKaSo6YqmfqiKR19e0LuugWCU+rOlWI2gpswICU=;
+  b=BJInnXeBTVEjceo2PbkEAXbpQ/E04cHV9zHi83yhei+RNq0ajrfXyLMW
+   CNYau8sVqniBHgL3KZ80ifJ6xsJSOs1cI2ldvMJDsq8WQHd+b2noFvZGy
+   E4IgVqF6DxGCjFPh/P2/LpwnR1UjU1hKRT+9lP1mV84NcCtQqbENxRhAf
+   3/3N+Ek9IoxK50wsGp2SKEVis1XtBL+uznkVjSiIHCyRazYnhlPBk9T3I
+   OI5n/XYjdNweR+qSDYh/GD6EgkPfnvDk5B9byN30//LXJ3//VphwOlp7V
+   ud1sBgRnHZ8TfeqHWwQBxr4sg862Ycx0jj0GXF6sDVhbwGFIAgMdm+v/G
    Q==;
 In-Reply-To: <20221111183532.3676646-1-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
@@ -27,91 +27,91 @@ Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Kristen Carlson Accardi
 
 From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Add a flag to sgx_reclaim_pages() to instruct it to ignore the age of
-page, i.e. reclaim the page even if it's young.  The EPC cgroup will use
-the flag to enforce its limits by draining the reclaimable lists before
-resorting to other measures, e.g. forcefully reclaimable "unreclaimable"
-pages by killing enclaves.
+Keep track of whether the EPC page is in the middle of being reclaimed
+and do not delete the page off the it's LRU if it has not yet finished
+being reclaimed.
 
 Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- arch/x86/kernel/cpu/sgx/main.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ arch/x86/kernel/cpu/sgx/main.c | 14 +++++++++-----
+ arch/x86/kernel/cpu/sgx/sgx.h  |  4 ++++
+ 2 files changed, 13 insertions(+), 5 deletions(-)
 
 diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
-index dfd76c605ef2..b72b5868dd01 100644
+index 3b09433ffd85..8c451071fa91 100644
 --- a/arch/x86/kernel/cpu/sgx/main.c
 +++ b/arch/x86/kernel/cpu/sgx/main.c
-@@ -278,6 +278,7 @@ static void sgx_reclaimer_write(struct sgx_epc_page *epc_page,
- /**
-  * sgx_reclaim_pages() - Reclaim EPC pages from the consumers
-  * @nr_to_scan:		 Number of EPC pages to scan for reclaim
-+ * @ignore_age:		 Reclaim a page even if it is young
-  *
-  * Take a fixed number of pages from the head of the active page pool and
-  * reclaim them to the enclave's private shmem files. Skip the pages, which have
-@@ -291,7 +292,7 @@ static void sgx_reclaimer_write(struct sgx_epc_page *epc_page,
-  * problematic as it would increase the lock contention too much, which would
-  * halt forward progress.
-  */
--static int __sgx_reclaim_pages(int nr_to_scan)
-+static int __sgx_reclaim_pages(int nr_to_scan, bool ignore_age)
- {
- 	struct sgx_backing backing[SGX_MAX_NR_TO_RECLAIM];
- 	struct sgx_epc_page *epc_page, *tmp;
-@@ -332,7 +333,8 @@ static int __sgx_reclaim_pages(int nr_to_scan)
- 	list_for_each_entry_safe(epc_page, tmp, &iso, list) {
+@@ -305,13 +305,15 @@ static void __sgx_reclaim_pages(void)
+ 
  		encl_page = epc_page->encl_owner;
  
--		if (i == SGX_MAX_NR_TO_RECLAIM || !sgx_reclaimer_age(epc_page))
-+		if (i == SGX_MAX_NR_TO_RECLAIM ||
-+		    (!ignore_age && !sgx_reclaimer_age(epc_page)))
- 			goto skip;
- 
- 		page_index = PFN_DOWN(encl_page->desc - encl_page->encl->base);
-@@ -374,11 +376,11 @@ static int __sgx_reclaim_pages(int nr_to_scan)
- 	return i;
- }
- 
--static int sgx_reclaim_pages(int nr_to_scan)
-+static int sgx_reclaim_pages(int nr_to_scan, bool ignore_age)
- {
- 	int ret;
- 
--	ret = __sgx_reclaim_pages(nr_to_scan);
-+	ret = __sgx_reclaim_pages(nr_to_scan, ignore_age);
- 	cond_resched();
- 	return ret;
- }
-@@ -399,7 +401,7 @@ static bool sgx_should_reclaim(unsigned long watermark)
- void sgx_reclaim_direct(void)
- {
- 	if (sgx_should_reclaim(SGX_NR_LOW_PAGES))
--		__sgx_reclaim_pages(SGX_NR_TO_SCAN);
-+		__sgx_reclaim_pages(SGX_NR_TO_SCAN, false);
- }
- 
- static int ksgxd(void *p)
-@@ -425,7 +427,7 @@ static int ksgxd(void *p)
- 				     sgx_should_reclaim(SGX_NR_HIGH_PAGES));
- 
- 		if (sgx_should_reclaim(SGX_NR_HIGH_PAGES))
--			sgx_reclaim_pages(SGX_NR_TO_SCAN);
-+			sgx_reclaim_pages(SGX_NR_TO_SCAN, false);
+-		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0)
++		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0) {
++			epc_page->flags |= SGX_EPC_PAGE_RECLAIM_IN_PROGRESS;
+ 			chunk[cnt++] = epc_page;
+-		else
++		} else {
+ 			/* The owner is freeing the page. No need to add the
+ 			 * page back to the list of reclaimable pages.
+ 			 */
+ 			epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
++		}
  	}
+ 	spin_unlock(&sgx_global_lru.lock);
  
- 	return 0;
-@@ -600,7 +602,7 @@ struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim)
- 			break;
+@@ -337,6 +339,7 @@ static void __sgx_reclaim_pages(void)
+ 
+ skip:
+ 		spin_lock(&sgx_global_lru.lock);
++		epc_page->flags &= ~SGX_EPC_PAGE_RECLAIM_IN_PROGRESS;
+ 		sgx_epc_push_reclaimable(&sgx_global_lru, epc_page);
+ 		spin_unlock(&sgx_global_lru.lock);
+ 
+@@ -360,7 +363,8 @@ static void __sgx_reclaim_pages(void)
+ 		sgx_reclaimer_write(epc_page, &backing[i]);
+ 
+ 		kref_put(&encl_page->encl->refcount, sgx_encl_release);
+-		epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
++		epc_page->flags &= ~(SGX_EPC_PAGE_RECLAIMER_TRACKED |
++				     SGX_EPC_PAGE_RECLAIM_IN_PROGRESS);
+ 
+ 		sgx_free_epc_page(epc_page);
+ 	}
+@@ -508,7 +512,7 @@ struct sgx_epc_page *__sgx_alloc_epc_page(void)
+ void sgx_record_epc_page(struct sgx_epc_page *page, unsigned long flags)
+ {
+ 	spin_lock(&sgx_global_lru.lock);
+-	WARN_ON(page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED);
++	WARN_ON(page->flags & SGX_EPC_PAGE_RECLAIM_FLAGS);
+ 	page->flags |= flags;
+ 	if (flags & SGX_EPC_PAGE_RECLAIMER_TRACKED)
+ 		sgx_epc_push_reclaimable(&sgx_global_lru, page);
+@@ -532,7 +536,7 @@ int sgx_drop_epc_page(struct sgx_epc_page *page)
+ 	spin_lock(&sgx_global_lru.lock);
+ 	if (page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED) {
+ 		/* The page is being reclaimed. */
+-		if (list_empty(&page->list)) {
++		if (page->flags & SGX_EPC_PAGE_RECLAIM_IN_PROGRESS) {
+ 			spin_unlock(&sgx_global_lru.lock);
+ 			return -EBUSY;
  		}
+diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
+index 969606615211..04ca644928a8 100644
+--- a/arch/x86/kernel/cpu/sgx/sgx.h
++++ b/arch/x86/kernel/cpu/sgx/sgx.h
+@@ -30,6 +30,10 @@
+ #define SGX_EPC_PAGE_IS_FREE		BIT(1)
+ /* Pages allocated for KVM guest */
+ #define SGX_EPC_PAGE_KVM_GUEST		BIT(2)
++/* page flag to indicate reclaim is in progress */
++#define SGX_EPC_PAGE_RECLAIM_IN_PROGRESS BIT(3)
++#define SGX_EPC_PAGE_RECLAIM_FLAGS	(SGX_EPC_PAGE_RECLAIMER_TRACKED | \
++					 SGX_EPC_PAGE_RECLAIM_IN_PROGRESS)
  
--		sgx_reclaim_pages(SGX_NR_TO_SCAN);
-+		sgx_reclaim_pages(SGX_NR_TO_SCAN, false);
- 	}
- 
- 	if (sgx_should_reclaim(SGX_NR_LOW_PAGES))
+ struct sgx_epc_page {
+ 	unsigned int section;
 -- 
 2.37.3
 
