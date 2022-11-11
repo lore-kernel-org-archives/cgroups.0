@@ -1,64 +1,61 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm/memcontrol.c: drains percpu charge caches in
- memory.reclaim
-Date: Fri, 11 Nov 2022 11:08:44 +0100
-Message-ID: <20221111100843.GG20455@blackbody.suse.cz>
-References: <20221110065316.67204-1-lujialin4@huawei.com>
- <20221110144243.GA10562@blackbody.suse.cz>
- <CAJD7tkat6QAJkPJ-of0xYGbKJ1CyXeC0cMh+U9Nzmddm4pOZ9g@mail.gmail.com>
+From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Subject: Re: [RFC PATCH 0/2] cpuset: Skip possible unwanted CPU-mask updates.
+Date: Fri, 11 Nov 2022 16:34:08 +0100
+Message-ID: <Y25rcHYzix+kAJF9@linutronix.de>
+References: <20221102105530.1795429-1-bigeasy@linutronix.de>
+ <d0b43b7d-54d3-00bd-abe0-78212ee9355a@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="Q6STzHxy03qt/hK9"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1668161325; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1668180850;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=Njy+9VQDA2x8k6xdte7NdH5PI4Y0RD6JCuHPbQ59y9Y=;
-        b=mij2Vx3pVUYxoFhx5V9lxpwv4DvmeN9TvBH9YYtc49WknJbIUyktZGk10aPTQ00zdKLPWO
-        oRNWMZr/dcvxJ9hSlakB50Gl5mCTfCJ9KpdDzJshteaGX5hubk+5tcRdYPupAw3AilLiXV
-        oqBZSAgliR2auCbW9y5N0bPQIGDv7fg=
+        bh=59Iz4/j0NOHHN0PdPEaGGuQ/fhXs7seeaEmnWOHDp2M=;
+        b=UC5E0/wdAvQaO1L/gtvDbdCXHl/kOKFrL1zRJ8Pz7iMATdRmlU5Hhn06lzWztYbZkFRu01
+        pixk2pSli683iWHKLw2kQ+VH9qKYAWaYmmb99QZmkP40cAe7VXTDUy+hFDk9Yy5ajlHrXM
+        MYPX6Hst+r+TMNNO935n7sNO1ZksfR0/hfbHkKLIC49YpyCsX5/dzhF/26iiuOhPqRmfGw
+        xFAPJWqUoU+Jq5Rq2l3G4HSSt2OcPGCHg8i2aNEHu1Y9cRjeKXdyOfiVJfIEgZXsruiDak
+        dUM6XyOb5a7BRXCYcBnOAfNVWle912QQIznIjOYnCFqmbFDAgT2Lv9kh+Gp3qQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1668180850;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=59Iz4/j0NOHHN0PdPEaGGuQ/fhXs7seeaEmnWOHDp2M=;
+        b=cDYRWhTnoxSRtYCJuSO0Gang+LViOF8pM68k143EZTVhOZR2xjsr8dYSkEAFckIiIvw3xl
+        9TvTqKp+hh+SAJAA==
 Content-Disposition: inline
-In-Reply-To: <CAJD7tkat6QAJkPJ-of0xYGbKJ1CyXeC0cMh+U9Nzmddm4pOZ9g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <d0b43b7d-54d3-00bd-abe0-78212ee9355a-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
+On 2022-11-02 09:20:48 [-0400], Waiman Long wrote:
+Hi,
 
---Q6STzHxy03qt/hK9
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+> Yes, that is a known issue which is especially problematic when cgroup v2 is
+> used. That is why I have recently posted a set of patches to enable
+> persistent user requested affinity and they have been merged into tip:
+> 
+> 851a723e45d1 sched: Always clear user_cpus_ptr in do_set_cpus_allowed()
+> da019032819a sched: Enforce user requested affinity
+> 8f9ea86fdf99 sched: Always preserve the user requested cpumask
+> 713a2e21a513 sched: Introduce affinity_context
+> 5584e8ac2c68 sched: Add __releases annotations to affine_move_task()
 
-On Thu, Nov 10, 2022 at 11:35:34AM -0800, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> OTOH, it will reduce the page counters, so if userspace is relying on
-> memory.current to gauge how much reclaim they want to do, it will make
-> it "appear" like the usage dropped.
+> They should be able to address the problem that you list here. Please let me
+> know if there are still problem remaining.
 
-Assuming memory.current is used to drive the proactive reclaim, then
-this patch makes some sense (and is slightly better than draining upon
-every memory.current read(2)).
+Thank you. This solves the most pressing issue. The CPU-mask is still
+reset upon activation of the cpuset controller.
+This is due to the set_cpus_allowed_ptr() in cpuset_attach().
 
-I just think the commit message should explain the real mechanics of
-this.
+Is is possible to push these patches stable?
 
-> The difference in perceived usage coming from draining the stock IIUC
-> has an upper bound of 63 * PAGE_SIZE (< 256 KB with 4KB pages), I
-> wonder if this is really significant anyway.
+> Thanks,
+> Longman
 
-times nr_cpus (if memcg had stocks all over the place).
-
-Michal
-
---Q6STzHxy03qt/hK9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY24fFAAKCRAkDQmsBEOq
-uQqYAP43Vb8o2c74sobuMNtlWw1gCKYZQ/J7GQSxdpVrnAcQdgEAwVkZvEqxNW26
-8VIva1cppj+dAzB+o1VI3+WkrJk8uw8=
-=Z1CV
------END PGP SIGNATURE-----
-
---Q6STzHxy03qt/hK9--
+Sebastian
