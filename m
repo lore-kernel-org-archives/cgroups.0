@@ -1,90 +1,72 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 0/2] cpuset: Skip possible unwanted CPU-mask updates.
-Date: Fri, 11 Nov 2022 12:44:04 -0500
-Message-ID: <00c9a4e1-c94d-29c9-dea3-72d342a07997@redhat.com>
-References: <20221102105530.1795429-1-bigeasy@linutronix.de>
- <d0b43b7d-54d3-00bd-abe0-78212ee9355a@redhat.com>
- <Y25rcHYzix+kAJF9@linutronix.de>
- <6948de71-a3e3-b6c2-bc67-1bb39cbdff69@redhat.com>
- <Y259IcCb937bw3AZ@linutronix.de>
- <f28a00c4-534c-d74a-a14a-f85a1849566e@redhat.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm/memcontrol.c: drains percpu charge caches in memory.reclaim
+Date: Fri, 11 Nov 2022 10:24:02 -0800
+Message-ID: <CAJD7tkYWvR+2o==-R38hDBEM=k=2bta9kKRND3wxDLF1pWbp6A@mail.gmail.com>
+References: <20221110065316.67204-1-lujialin4@huawei.com> <20221110144243.GA10562@blackbody.suse.cz>
+ <CAJD7tkat6QAJkPJ-of0xYGbKJ1CyXeC0cMh+U9Nzmddm4pOZ9g@mail.gmail.com> <20221111100843.GG20455@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1668188651;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=YhLBpkoMD/PMp7RL3yXpMD5wg9+NONrdfcEcahalhC8=;
-        b=YkqAeIZI8Jw1EOMJhYURibVvxJm9+VzCdtFNdz9Ko9XBC3wHdszpOTDy7akQbWXWAx7N8V
-        xShBF4FjAwF6l5UxsvMlFPo2tNdP91H1EO/6fYTkwVYp7lUfAYYAFwK9GgrhLISp3AcPxY
-        YY4zZAp0eQtan6+5pHOQRtCcgBhf+Sc=
-Content-Language: en-US
-In-Reply-To: <f28a00c4-534c-d74a-a14a-f85a1849566e-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=VFgOYEQ6NOhR14F+o1liXDfDhEK9cBQJ7rg815eUQn8=;
+        b=N6wKqF8yyEt+Eo6I+YHl1q4P0AiwetFsOZQGEI+Xq9xFJz0aQPV1YS8smiPR5fq8tw
+         8HGxIaRNTcgdsULpAgSBfAUzKw8X+BuKmgrdfJVjEZQA+daVSKvyPziVjoG3BnbNalFi
+         KI0TIyRwmMMher+y15JVLg9Z8qiY8H+LIcipf2u8ithG+kYyKO9EdAXW06OY0nd5SzgF
+         UlIuOHYW0oFo0Bc3iS6P5+JiFMwHDodZekYcXrSE8DGpNm3CHtc4jK7j1WlV1VJRrUYG
+         77YuD/S6xG4OWiHiPDMxXwbDs/+4RHBwiRn22XPv7C7r5aBO6sac4kB+aRprIyoHee8Z
+         isaA==
+In-Reply-To: <20221111100843.GG20455-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Content-Type: text/plain; charset="macroman"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On 11/11/22 12:34, Waiman Long wrote:
+On Fri, Nov 11, 2022 at 2:08 AM Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org> wrote=
+:
 >
-> On 11/11/22 11:49, Sebastian Andrzej Siewior wrote:
->> On 2022-11-11 11:37:03 [-0500], Waiman Long wrote:
->>> On 11/11/22 10:34, Sebastian Andrzej Siewior wrote:
->>>> On 2022-11-02 09:20:48 [-0400], Waiman Long wrote:
->>>> Hi,
->>>>
->>>>> Yes, that is a known issue which is especially problematic when 
->>>>> cgroup v2 is
->>>>> used. That is why I have recently posted a set of patches to enable
->>>>> persistent user requested affinity and they have been merged into 
->>>>> tip:
->>>>>
->>>>> 851a723e45d1 sched: Always clear user_cpus_ptr in 
->>>>> do_set_cpus_allowed()
->>>>> da019032819a sched: Enforce user requested affinity
->>>>> 8f9ea86fdf99 sched: Always preserve the user requested cpumask
->>>>> 713a2e21a513 sched: Introduce affinity_context
->>>>> 5584e8ac2c68 sched: Add __releases annotations to affine_move_task()
->>>>> They should be able to address the problem that you list here. 
->>>>> Please let me
->>>>> know if there are still problem remaining.
->>>> Thank you. This solves the most pressing issue. The CPU-mask is still
->>>> reset upon activation of the cpuset controller.
->>>> This is due to the set_cpus_allowed_ptr() in cpuset_attach().
->>>>
->>>> Is is possible to push these patches stable?
->>> Actually, I prefer to not call set_cpus_allowed_ptr() if the cpumask 
->>> of the
->>> old and new cpusets are the same. That will save some cpu cycles. 
->>> Similarly
->>> for node_mask. If there is any changes in the cpumask, we have to call
->>> set_cpus_allowed_ptr(). I will work out a patch to that effect when 
->>> I have
->>> spare cycle.
->> But couldn't we skip that set_cpus_allowed_ptr() if the current mask is
->> a subset of the new mask and keep the behavior that the mask isn't
->> changed if the cgroup's mask changes but is still a subset?
->> That cpuset_attach() callback is only invoked while the task is
->> initially added to the cgroup which happens during enabling of the
->> controller. Or do I miss another common usecase?
+> On Thu, Nov 10, 2022 at 11:35:34AM -0800, Yosry Ahmed <yosryahmed@google.=
+com> wrote:
+> > OTOH, it will reduce the page counters, so if userspace is relying on
+> > memory.current to gauge how much reclaim they want to do, it will make
+> > it "appear" like the usage dropped.
 >
-> The only way a userspace task can have a cpumask different from that 
-> of its cpuset is by calling sched_setaffinity() which will be covered 
-> by the persistent user requested mask change. So your patch 2 isn't 
-> really needed.
+> Assuming memory.current is used to drive the proactive reclaim, then
+> this patch makes some sense (and is slightly better than draining upon
+> every memory.current read(2)).
+
+I am not sure honestly. This assumes memory.reclaim is used in
+response to just memory.current, which is not true in the cases I know
+about at least.
+
+If you are using memory.reclaim merely based on memory.current, to
+keep the usage below a specified number, then memory.high might be a
+better fit? Unless this goal usage is a moving target maybe and you
+don't want to keep changing the limits but I don't know if there are
+practical use cases for this.
+
+For us at Google, we don't really look at the current usage, but
+rather on how much of the current usage we consider "cold" based on
+page access bit harvesting. I suspect Meta is doing something similar
+using different mechanics (PSI). I am not sure if memory.current is a
+factor in either of those use cases, but maybe I am missing something
+obvious.
+
 >
-> Your patch 1 is relatively simple and I don't have a big objection to 
-> that. I will let others chime in on what their thoughts are.
+> I just think the commit message should explain the real mechanics of
+> this.
+>
+> > The difference in perceived usage coming from draining the stock IIUC
+> > has an upper bound of 63 * PAGE_SIZE (< 256 KB with 4KB pages), I
+> > wonder if this is really significant anyway.
+>
+> times nr_cpus (if memcg had stocks all over the place).
 
-I am sorry, patch 1 is still not OK.
+Right. In my mind I assumed the memcg would only be stocked on one cpu
+for some reason.
 
-Suppose you move a task from a cpuset of CPUs 1,2 to another one with 
-CPUs 1,2,3, for example. With your patch 1, the cpumask will not change 
-at all and that is not right.
-
-Cheers,
-Longman
-
+>
+> Michal
