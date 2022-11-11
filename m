@@ -1,152 +1,94 @@
 From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH 15/26] x86/sgx: Add helper to grab pages from an arbitrary EPC LRU
-Date: Fri, 11 Nov 2022 10:35:20 -0800
-Message-ID: <20221111183532.3676646-16-kristen@linux.intel.com>
+Subject: [PATCH 21/26] cgroup/misc: allow misc cgroup consumers to read the max value
+Date: Fri, 11 Nov 2022 10:35:26 -0800
+Message-ID: <20221111183532.3676646-22-kristen@linux.intel.com>
 References: <20221111183532.3676646-1-kristen@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1668191768; x=1699727768;
+  t=1668191778; x=1699727778;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=7ztjZ1lXO5N5qsaAMVTmsTfaoQ2t8XkFBGpOnZicwNo=;
-  b=TgBBh/kYsih/e5ziEBSsW36bz0DDQDcAFsqjK0TGP3RghTwJ6R6QdhEG
-   k307Vgma/TIbuq3XAAiJgyR7fP2javZPI/aQR0lNWyPt56Mgj5XdfsYu+
-   ojUrPBfhAjOo0lN6UxqswD1bXMSx/PuBhTbc5P3hnxYYISSCIIlvttapY
-   o0y9av1Mckr1xoVKnJ3bUW+E/jyurI67UFdLYNGfwyb7qAFFKOOmbqcBf
-   boaWNJmuuY2hVzr+E2xq1wNj7toco6j3HlxfM9Ut7Y+O8S+ZbuJOtlTHr
-   pOpAWbkZ6Yj1EXKcMv89MPDgpgt63aHQona80SmpICKrAF0Oc9MrfVsFj
+  bh=bRGewpsYybIXP9Kh4EzoNOkrDN/D0MwqytH8St6QCMQ=;
+  b=kYL2gj81ydUbyzi95Wd8M68ps5XL0o4vg+qgNxzUxtOgTaTT/qrmBUdq
+   wDcMIth16dZId3UeKLYnymTWho2sjcbRbCqLna6FMC9ZlzOhVirN7M5Yy
+   kpUXHYiAPLIlLj6U/vz0zf7fzHDfmBKiFNyWvGEiPCK22PMdIGen7l3Gw
+   38DIKkkm9hdM9EP2Q311XH9+AzVIALjZsPnsrMN7AtSjUaw64tpxj40Yb
+   LrqoiYrzxt3g0fqYOsGksRB6R8rcMIJLEBX/+TjCDCPIsbTVyZHt/YTYD
+   uAJxnTXH9cnsJLQveoXuKgXao8Vb+XctLy2ceSGvkeZO+nqxpgfY5DYLE
    A==;
 In-Reply-To: <20221111183532.3676646-1-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-CPWUtch7KCBzeIdxy0IIJw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
-Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-CPWUtch7KCBzeIdxy0IIJw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+The SGX driver will need to be able to read the max value per cgroup
+to determine how far usage is from max. Add an api to return the
+max value of the given cgroup.
 
-Move the isolation loop into a standalone helper, sgx_isolate_pages(),
-in preparation for existence of multiple LRUs.  Expose the helper to
-other SGX code so that it can be called from the EPC cgroup code, e.g.
-to isolate pages from a single cgroup LRU.  Exposing the isolation loop
-allows the cgroup iteration logic to be wholly encapsulated within the
-cgroup code.
-
-Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- arch/x86/kernel/cpu/sgx/main.c | 68 +++++++++++++++++++++-------------
- arch/x86/kernel/cpu/sgx/sgx.h  |  2 +
- 2 files changed, 44 insertions(+), 26 deletions(-)
+ include/linux/misc_cgroup.h |  6 ++++++
+ kernel/cgroup/misc.c        | 19 +++++++++++++++++++
+ 2 files changed, 25 insertions(+)
 
-diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
-index cb6f57caf24c..f8f1451b0a11 100644
---- a/arch/x86/kernel/cpu/sgx/main.c
-+++ b/arch/x86/kernel/cpu/sgx/main.c
-@@ -280,7 +280,46 @@ static void sgx_reclaimer_write(struct sgx_epc_page *epc_page,
+diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
+index a9dd087132dc..c00deae4d2df 100644
+--- a/include/linux/misc_cgroup.h
++++ b/include/linux/misc_cgroup.h
+@@ -62,6 +62,7 @@ struct misc_cg {
+ struct misc_cg *root_misc(void);
+ struct misc_cg *parent_misc(struct misc_cg *cg);
+ unsigned long misc_cg_read(enum misc_res_type type, struct misc_cg *cg);
++unsigned long misc_cg_max(enum misc_res_type type, struct misc_cg *cg);
+ unsigned long misc_cg_res_total_usage(enum misc_res_type type);
+ int misc_cg_set_capacity(enum misc_res_type type, unsigned long capacity);
+ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
+@@ -124,6 +125,11 @@ static inline unsigned long misc_cg_read(enum misc_res_type type, struct misc_cg
+ 	return 0;
  }
  
- /**
-- * sgx_reclaim_pages() - Reclaim EPC pages from the consumers
-+ * sgx_isolate_epc_pages() - Isolate pages from an LRU for reclaim
-+ * @lru:	LRU from which to reclaim
-+ * @nr_to_scan:	Number of pages to scan for reclaim
-+ * @dst:	Destination list to hold the isolated pages
-+ */
-+void sgx_isolate_epc_pages(struct sgx_epc_lru *lru, int *nr_to_scan,
-+			   struct list_head *dst)
++static inline unsigned long misc_cg_max(enum misc_res_type type, struct misc_cg *cg)
 +{
-+	struct sgx_encl_page *encl_page;
-+	struct sgx_epc_page *epc_page;
-+
-+	spin_lock(&lru->lock);
-+	for (; *nr_to_scan > 0; --(*nr_to_scan)) {
-+		if (list_empty(&lru->reclaimable))
-+			break;
-+
-+		epc_page = sgx_epc_peek_reclaimable(lru);
-+		if (!epc_page)
-+			break;
-+
-+		encl_page = epc_page->encl_owner;
-+
-+		if (WARN_ON_ONCE(!(epc_page->flags & SGX_EPC_PAGE_ENCLAVE)))
-+			continue;
-+
-+		if (kref_get_unless_zero(&encl_page->encl->refcount)) {
-+			epc_page->flags |= SGX_EPC_PAGE_RECLAIM_IN_PROGRESS;
-+			list_move_tail(&epc_page->list, dst);
-+		} else {
-+			/* The owner is freeing the page, remove it from the
-+			 * LRU list
-+			 */
-+			epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
-+			list_del_init(&epc_page->list);
-+		}
-+	}
-+	spin_unlock(&lru->lock);
++	return 0;
 +}
 +
+ static inline unsigned long misc_cg_res_total_usage(enum misc_res_type type)
+ {
+ 	return 0;
+diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
+index e2c99fdc1d40..18d0bec7d609 100644
+--- a/kernel/cgroup/misc.c
++++ b/kernel/cgroup/misc.c
+@@ -232,6 +232,25 @@ unsigned long misc_cg_read(enum misc_res_type type, struct misc_cg *cg)
+ }
+ EXPORT_SYMBOL_GPL(misc_cg_read);
+ 
 +/**
-  * sgx_reclaim_epc_pages() - Reclaim EPC pages from the consumers
-  * @nr_to_scan:		 Number of EPC pages to scan for reclaim
-  * @ignore_age:		 Reclaim a page even if it is young
-@@ -305,37 +344,14 @@ static int __sgx_reclaim_pages(int nr_to_scan, bool ignore_age)
- 	struct sgx_epc_lru *lru;
- 	pgoff_t page_index;
- 	LIST_HEAD(iso);
-+	int i = 0;
- 	int ret;
--	int i;
--
--	spin_lock(&sgx_global_lru.lock);
--	for (i = 0; i < nr_to_scan; i++) {
--		epc_page = sgx_epc_peek_reclaimable(&sgx_global_lru);
--		if (!epc_page)
--			break;
--
--		encl_page = epc_page->encl_owner;
- 
--		if (WARN_ON_ONCE(!(epc_page->flags & SGX_EPC_PAGE_ENCLAVE)))
--			continue;
--
--		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0) {
--			epc_page->flags |= SGX_EPC_PAGE_RECLAIM_IN_PROGRESS;
--			list_move_tail(&epc_page->list, &iso);
--		} else {
--			/* The owner is freeing the page, remove it from the
--			 * LRU list
--			 */
--			epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
--			list_del_init(&epc_page->list);
--		}
--	}
--	spin_unlock(&sgx_global_lru.lock);
-+	sgx_isolate_epc_pages(&sgx_global_lru, &nr_to_scan, &iso);
- 
- 	if (list_empty(&iso))
- 		return 0;
- 
--	i = 0;
- 	list_for_each_entry_safe(epc_page, tmp, &iso, list) {
- 		encl_page = epc_page->encl_owner;
- 
-diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
-index ca51b3c7d905..29c37f20792c 100644
---- a/arch/x86/kernel/cpu/sgx/sgx.h
-+++ b/arch/x86/kernel/cpu/sgx/sgx.h
-@@ -182,6 +182,8 @@ void sgx_record_epc_page(struct sgx_epc_page *page, unsigned long flags);
- int sgx_drop_epc_page(struct sgx_epc_page *page);
- struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim);
- int sgx_reclaim_epc_pages(int nr_to_scan, bool ignore_age);
-+void sgx_isolate_epc_pages(struct sgx_epc_lru *lru, int *nr_to_scan,
-+			   struct list_head *dst);
- 
- void sgx_ipi_cb(void *info);
- 
++ * misc_cg_max() - Return the max value of the misc cgroup res.
++ * @type: Type of the misc res.
++ * @cg: Misc cgroup whose max will be read
++ *
++ * Context: Any context.
++ * Return:
++ * 	The max value of the specified misc cgroup.
++ * 	If an invalid misc_res_type is given, zero will be returned.
++ */
++unsigned long misc_cg_max(enum misc_res_type type, struct misc_cg *cg)
++{
++	if (!(valid_type(type) && cg))
++		return 0;
++
++	return READ_ONCE(cg->res[type].max);
++}
++EXPORT_SYMBOL_GPL(misc_cg_max);
++
+ /**
+  * misc_cg_max_show() - Show the misc cgroup max limit.
+  * @sf: Interface file
 -- 
 2.37.3
 
