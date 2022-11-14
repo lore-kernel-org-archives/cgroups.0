@@ -1,64 +1,50 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 17/26] cgroup/misc: Add notifier block list support for
- css events
-Date: Mon, 14 Nov 2022 12:42:19 -1000
-Message-ID: <Y3LES3rUIZ/PtwzV@slm.duckdns.org>
-References: <20221111183532.3676646-1-kristen@linux.intel.com>
- <20221111183532.3676646-18-kristen@linux.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v10 3/3] blk-cgroup: Flush stats at blkgs destruction path
+Date: Mon, 14 Nov 2022 12:43:57 -1000
+Message-ID: <Y3LErVJiFL9wSGGl@slm.duckdns.org>
+References: <20221105005902.407297-1-longman@redhat.com>
+ <20221105005902.407297-4-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=Pv0RF9FjcySyliu+qAVl2fypXUgmAr/MY6Cbxd80Sz8=;
-        b=eSgJ8ipCFU8uWn7ioQiHixpjSI530v8dcOHQJaH+Il8EKjYSq/C3UntNbW9AWG1uyL
-         5lnt+ZiHYIaprJAq+HQe5BOu2/dBE6/l58VWMvYmTsF1TUVN+So55HqBquzLN/NsvIG6
-         TGNmqinUqbHSH0VYFFNRAOmTjw8BKJJ6TF+PUcyXcNJQxus/qIlKy2zhDLXwzBC5lut+
-         jS3EpUsqjWgG/lq3fblL8cKjYPhnWZkrO9WBBZKXg6D1cF/NpIX9dRuT0Pm+JKISCGGk
-         ZN0Dio+ukJxJAGGcrNIKHKzvMQO8ReBPY40POFPqNst/adBwLjl6Qh6UAMoI5y18zxb6
-         ZuLA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=0RkJm12EG/9E1zu6+WxpU+WvUvpr5g7TNGosiBHQiqs=;
+        b=jYAlB6T2TOHN4HHkErKWne7mc4i/zPhe9R0lfnOngKXiyPq+Thno7P922IY0g2Drfo
+         zvMAURArSuTKAOkCVgvtw8DdpP+waWCjdJVBV2MPvJy0U5fEMxvbv9oJU1Yvqvi7ZwI3
+         MdCzo2QiIy6QfCkY9NXyfO4WARTbk2aCPgkra7SKKT7OVnq7mo/yQ3s47NIWmF0M3SaV
+         C4SM8YaSmL44dmp3qy76n+uT0BGCC8pfD9cjtdrWJ3byNruYi7ZjKZuPsdpRO+DRhhrW
+         YjkTPG+8ov3sd+PIIwOneVmRl54qzgpz4b1UL6k4R+WAm4RtjtG//UAJlWK7/IlY0iGU
+         xAtw==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20221111183532.3676646-18-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+In-Reply-To: <20221105005902.407297-4-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-CPWUtch7KCBzeIdxy0IIJw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+To: Waiman Long <longman@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Hillf Danton <hdanton@sina.com>
 
-Hello,
+On Fri, Nov 04, 2022 at 08:59:02PM -0400, Waiman Long wrote:
+> As noted by Michal, the blkg_iostat_set's in the lockless list
+> hold reference to blkg's to protect against their removal. Those
+> blkg's hold reference to blkcg. When a cgroup is being destroyed,
+> cgroup_rstat_flush() is only called at css_release_work_fn() which is
+> called when the blkcg reference count reaches 0. This circular dependency
+> will prevent blkcg from being freed until some other events cause
+> cgroup_rstat_flush() to be called to flush out the pending blkcg stats.
+> 
+> To prevent this delayed blkcg removal, add a new cgroup_rstat_css_flush()
+> function to flush stats for a given css and cpu and call it at the blkgs
+> destruction path, blkcg_destroy_blkgs(), whenever there are still some
+> pending stats to be flushed. This will ensure that blkcg reference
+> count can reach 0 ASAP.
+> 
+> Signed-off-by: Waiman Long <longman@redhat.com>
 
-On Fri, Nov 11, 2022 at 10:35:22AM -0800, Kristen Carlson Accardi wrote:
-> +/**
-> + * register_misc_cg_notifier() - Register for css callback events
-> + * @nb: notifier_block to register
-> + *
-> + * Context: Any context.
-> + */
-> +int register_misc_cg_notifier(struct notifier_block *nb)
-> +{
-> +	return blocking_notifier_chain_register(&misc_cg_notify_list, nb);
-> +}
-> +EXPORT_SYMBOL_GPL(register_misc_cg_notifier);
-> +
-> +/**
-> + * unregister_misc_cg_notifier() - unregister for css callback events
-> + * @nb: notifier_block to unregister
-> + *
-> + * Context: Any context.
-> + */
-> +int unregister_misc_cg_notifier(struct notifier_block *nb)
-> +{
-> +	return blocking_notifier_chain_unregister(&misc_cg_notify_list, nb);
-> +}
-> +EXPORT_SYMBOL_GPL(unregister_misc_cg_notifier);
-
-So, I'm not necessarily against this but wonder whether it'd be more
-straightforward to add sth like struct misc_res_ops which contains the
-optional callbacks and then have an array of pointers to the structs which
-are initialized / registered somehow. What do you think?
+Acked-by: Tejun Heo <tj@kernel.org>
 
 Thanks.
 
