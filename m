@@ -1,56 +1,71 @@
-From: Kristen Carlson Accardi <kristen@linux.intel.com>
-Subject: Re: [PATCH 17/26] cgroup/misc: Add notifier block list support for
- css events
-Date: Mon, 14 Nov 2022 15:17:34 -0800
-Message-ID: <f7d63c6ea33b8aacf1e5f1ede91636f397e1b770.camel@linux.intel.com>
-References: <20221111183532.3676646-1-kristen@linux.intel.com>
-         <20221111183532.3676646-18-kristen@linux.intel.com>
-         <Y3LES3rUIZ/PtwzV@slm.duckdns.org>
-         <6f7afaa6811cbda30d12c38d73d4b261ab733a9f.camel@linux.intel.com>
-         <Y3LLJypIUOSGKujT@slm.duckdns.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: Re: [PATCH v2 4/5] blk-iocost: fix sleeping in atomic context
+ warnning
+Date: Tue, 15 Nov 2022 09:16:52 +0800
+Message-ID: <1644d8fd-a0b4-a6fd-63a2-6309db1bfa11@huaweicloud.com>
+References: <20221104023938.2346986-1-yukuai1@huaweicloud.com>
+ <20221104023938.2346986-5-yukuai1@huaweicloud.com>
+ <Y3K8MSFWw8eTnxtm@slm.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1668467857; x=1700003857;
-  h=message-id:subject:from:to:cc:date:in-reply-to:
-   references:content-transfer-encoding:mime-version;
-  bh=BJtuGQcejdW0AaDzJi8BImdXcSYnmn5KFjXEYF0+NuY=;
-  b=NZwEMtKY5sd9W1hHNCFAjEJaLhtoBbpLFdFJDbEkh3XSBk3W9FAwyLHQ
-   zQbSgkBIRu7SpO6CE4EHMm5V2upKqvWXrQZq9E81ffsfKZXlvTB/4+5Sm
-   oux6vzzpXtr6Rlp2PfRwPEXKVqXmrbWrggIkcjWXH0LIFn+zfBDoFGCFm
-   x/7RjDHGUw10gN7zD9TL6jsMUHDabjBs3jG73xWGo0hu3nhltA0ZJwdDv
-   IPekmxM0mHKJJqroRV1vsJVWoWRwDwWzhzyVHPDp3qMsXO5xPttlb2hQ7
-   kriGut5HnZZPcUef19+mx47H5d/Prd8t34plCQndMFbKZm+tH5VBe19XA
-   g==;
-In-Reply-To: <Y3LLJypIUOSGKujT@slm.duckdns.org>
+In-Reply-To: <Y3K8MSFWw8eTnxtm@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: jarkko@kernel.org, dave.hansen@linux.intel.com, linux-kernel@vger.kernel.org, linux-sgx@vger.kernel.org, cgroups@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, zhiquan1.li@intel.com
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Tejun Heo <tj@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@lst.de, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
-On Mon, 2022-11-14 at 13:11 -1000, Tejun Heo wrote:
-> Hello,
+Hi,
+
+=D4=DA 2022/11/15 6:07, Tejun Heo =D0=B4=B5=C0:
+> On Fri, Nov 04, 2022 at 10:39:37AM +0800, Yu Kuai wrote:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> match_u64() is called inside ioc->lock, which causes smatch static
+>> checker warnings:
+>>
+>> block/blk-iocost.c:3211 ioc_qos_write() warn: sleeping in atomic context
+>> block/blk-iocost.c:3240 ioc_qos_write() warn: sleeping in atomic context
+>> block/blk-iocost.c:3407 ioc_cost_model_write() warn: sleeping in atomic
+>> context
+>>
+>> Fix the problem by introducing a mutex and using it while prasing input
+>> params.
 >=20
-> On Mon, Nov 14, 2022 at 03:10:05PM -0800, Kristen Carlson Accardi
-> wrote:
-> > Makes no difference to me TBH - I believe they will be functionally
-> > equivalent and from a downstream user perspective equally as easy
-> > to
-> > use, so whatever you think is easiest for you to maintain.
+> It bothers me that parsing an u64 string requires a GFP_KERNEL memory
+> allocation.
 >=20
-> Yeah, functionally they should be equivalent. Hmm... Let's go with
-> the ops
-> table so that it's more explicit.
+>> @@ -2801,9 +2806,11 @@ static void ioc_rqos_queue_depth_changed(struct r=
+q_qos *rqos)
+>>   {
+>>   	struct ioc *ioc =3D rqos_to_ioc(rqos);
+>>  =20
+>> +	mutex_lock(&ioc->params_mutex);
+>>   	spin_lock_irq(&ioc->lock);
+>>   	ioc_refresh_params(ioc, false);
+>>   	spin_unlock_irq(&ioc->lock);
+>> +	mutex_unlock(&ioc->params_mutex);
+>>   }
+>=20
+> Aren't the params still protected by ioc->lock? Why do we need to grab bo=
+th?
+
+Yes, the params is updated inside ioc->lock, but they can be read
+without the lock before updating them, which is protected by mutex
+instead.
+
+>=20
+> Any chance I can persuade you into updating match_NUMBER() helpers to not
+> use match_strdup()? They can easily disable irq/preemption and use percpu
+> buffers and we won't need most of this patchset.
+
+Do you mean preallocated percpu buffer? Is there any example I can
+learn? Anyway, replace match_strdup() to avoid memory allocation sounds
+good.
+
+Thanks,
+Kuai
 >=20
 > Thanks.
 >=20
-
-OK, in the next version I will make this change, consolidate everything
-for the misc controller into 1 or 2 patches as you requested, and also
-get rid of the helpers and just access the struct directly. Thanks for
-your review.
-
-Kristen
 
