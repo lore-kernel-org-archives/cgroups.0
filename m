@@ -1,129 +1,107 @@
 From: Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 02/26] x86/sgx: Store struct sgx_encl when allocating new
- va pages
-Date: Wed, 16 Nov 2022 01:31:24 +0200
-Message-ID: <Y3QhTDq/lu1X1/g5@kernel.org>
+Subject: Re: [PATCH 03/26] x86/sgx: Add 'struct sgx_epc_lru' to encapsulate
+ lru list(s)
+Date: Wed, 16 Nov 2022 01:35:34 +0200
+Message-ID: <Y3QiRlwmg2YZmqLQ@kernel.org>
 References: <20221111183532.3676646-1-kristen@linux.intel.com>
- <20221111183532.3676646-3-kristen@linux.intel.com>
+ <20221111183532.3676646-4-kristen@linux.intel.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668555087;
-        bh=8hSFEfFc2rYU4y6JuixLrusmaPXNA/CwMC1ARhw96BI=;
+        s=k20201202; t=1668555338;
+        bh=BeXcJcfxfltBNVeK9BvieESWunY4ZA4BfeuU/Gm3ojA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=AfOwB5CIlVBTg9sQigXECI7n5KcI25kdUheWvyHi3D+zD/JtR4AWcDs9wOiI3i0h0
-         mRsn94x4zEw+zPMGdkFP7j14q2qdPFTG6YvCcpWzx/bxVppZSKQXFpWSYcUY5mv2NX
-         f7JAnkh1R+bXV49JJFqZs5Yceyi5SMdlUonuhAKIGpQw1cVjpOVq9i+q76Y0Q5LoKy
-         E6d8XXL4sdmn0VmrLFWEXUzmY1YPoVMY/1LOfHEhFeIW6fSmhGN9UkOS0D2Sky9f+E
-         WoJI4qZEYsxvYyXfoAv6QEjarVN+yzGb6pnUQtSdfvwni244ssVexsxi3AIPsUtVhO
-         2tjkH3YJgGMdg==
+        b=IDINeV5tTLhVFKYxq3PvKs9BwcrtER7d8bFHl+pvu9SwfN7eP93QDnARs97cMkp3/
+         KjBO9f9sW8fNozBNBUJ97r4AMNFrm1K4IwU2vrOq8sengNbNLzmGZfvYQn9gwD8fKE
+         n7oJiueDCrKGDPnBVa0NOtjZGEXAgiAukV3QOCDYIV0z/fWXukQ8wYhpI/5T77gdCi
+         V51M5CCe/1pXawsZNm9957TDBkPlV3W81kg3wgT3Xj+0pz2+8MtATqC+ZP0wdONeIX
+         qTu+UqcFAn60ccIOERNsMmq1NwSlLsExqehC3Z3PfTtS5HIWdQYNqxZVb3uHCSFIla
+         g38gFA8FHWLlA==
 Content-Disposition: inline
-In-Reply-To: <20221111183532.3676646-3-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+In-Reply-To: <20221111183532.3676646-4-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Cc: dave.hansen-CPWUtch7KCBzeIdxy0IIJw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Fri, Nov 11, 2022 at 10:35:07AM -0800, Kristen Carlson Accardi wrote:
-> From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> 
-> When allocating new va pages, pass the struct sgx_encl of the enclave
-
-"Version Array (VA) pages"
-
-> that is allocating the page. sgx_alloc_epc_page() will store this
-> value in the encl_owner field of the struct sgx_epc_page. In a later
-> patch, version array pages will be placed in an unreclaimable queue,
-
-"VA pages"
-
-> and then when the cgroup max limit is reached and there are no more
-> reclaimable pages and the enclave must be oom killed, all the
-> va pages associated with that enclave can be uncharged and freed.
-
-"VA pages"
-
+On Fri, Nov 11, 2022 at 10:35:08AM -0800, Kristen Carlson Accardi wrote:
+> Introduce a data structure to wrap the existing reclaimable list
+> and its spinlock in a struct to minimize the code changes needed
+> to handle multiple LRUs as well as reclaimable and non-reclaimable
+> lists, both of which will be introduced and used by SGX EPC cgroups.
 > 
 > Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 > Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 > Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 > ---
->  arch/x86/kernel/cpu/sgx/encl.c  | 5 +++--
->  arch/x86/kernel/cpu/sgx/encl.h  | 2 +-
->  arch/x86/kernel/cpu/sgx/ioctl.c | 2 +-
->  arch/x86/kernel/cpu/sgx/sgx.h   | 2 ++
->  4 files changed, 7 insertions(+), 4 deletions(-)
+>  arch/x86/kernel/cpu/sgx/sgx.h | 45 +++++++++++++++++++++++++++++++++++
+>  1 file changed, 45 insertions(+)
 > 
-> diff --git a/arch/x86/kernel/cpu/sgx/encl.c b/arch/x86/kernel/cpu/sgx/encl.c
-> index f40d64206ded..4eaf9d21e71b 100644
-> --- a/arch/x86/kernel/cpu/sgx/encl.c
-> +++ b/arch/x86/kernel/cpu/sgx/encl.c
-> @@ -1193,6 +1193,7 @@ void sgx_zap_enclave_ptes(struct sgx_encl *encl, unsigned long addr)
->  
->  /**
->   * sgx_alloc_va_page() - Allocate a Version Array (VA) page
-> + * @encl:    The enclave that this page is allocated to.
->   * @reclaim: Reclaim EPC pages directly if none available. Enclave
->   *           mutex should not be held if this is set.
->   *
-> @@ -1202,12 +1203,12 @@ void sgx_zap_enclave_ptes(struct sgx_encl *encl, unsigned long addr)
->   *   a VA page,
->   *   -errno otherwise
->   */
-> -struct sgx_epc_page *sgx_alloc_va_page(bool reclaim)
-> +struct sgx_epc_page *sgx_alloc_va_page(struct sgx_encl *encl, bool reclaim)
->  {
->  	struct sgx_epc_page *epc_page;
->  	int ret;
->  
-> -	epc_page = sgx_alloc_epc_page(NULL, reclaim);
-> +	epc_page = sgx_alloc_epc_page(encl, reclaim);
->  	if (IS_ERR(epc_page))
->  		return ERR_CAST(epc_page);
->  
-> diff --git a/arch/x86/kernel/cpu/sgx/encl.h b/arch/x86/kernel/cpu/sgx/encl.h
-> index f94ff14c9486..831d63f80f5a 100644
-> --- a/arch/x86/kernel/cpu/sgx/encl.h
-> +++ b/arch/x86/kernel/cpu/sgx/encl.h
-> @@ -116,7 +116,7 @@ struct sgx_encl_page *sgx_encl_page_alloc(struct sgx_encl *encl,
->  					  unsigned long offset,
->  					  u64 secinfo_flags);
->  void sgx_zap_enclave_ptes(struct sgx_encl *encl, unsigned long addr);
-> -struct sgx_epc_page *sgx_alloc_va_page(bool reclaim);
-> +struct sgx_epc_page *sgx_alloc_va_page(struct sgx_encl *encl, bool reclaim);
->  unsigned int sgx_alloc_va_slot(struct sgx_va_page *va_page);
->  void sgx_free_va_slot(struct sgx_va_page *va_page, unsigned int offset);
->  bool sgx_va_page_full(struct sgx_va_page *va_page);
-> diff --git a/arch/x86/kernel/cpu/sgx/ioctl.c b/arch/x86/kernel/cpu/sgx/ioctl.c
-> index ebe79d60619f..9a1bb3c3211a 100644
-> --- a/arch/x86/kernel/cpu/sgx/ioctl.c
-> +++ b/arch/x86/kernel/cpu/sgx/ioctl.c
-> @@ -30,7 +30,7 @@ struct sgx_va_page *sgx_encl_grow(struct sgx_encl *encl, bool reclaim)
->  		if (!va_page)
->  			return ERR_PTR(-ENOMEM);
->  
-> -		va_page->epc_page = sgx_alloc_va_page(reclaim);
-> +		va_page->epc_page = sgx_alloc_va_page(encl, reclaim);
->  		if (IS_ERR(va_page->epc_page)) {
->  			err = ERR_CAST(va_page->epc_page);
->  			kfree(va_page);
 > diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
-> index d16a8baa28d4..efb10eacd3aa 100644
+> index efb10eacd3aa..aac7d4feb0fa 100644
 > --- a/arch/x86/kernel/cpu/sgx/sgx.h
 > +++ b/arch/x86/kernel/cpu/sgx/sgx.h
-> @@ -39,6 +39,8 @@ struct sgx_epc_page {
->  		struct sgx_encl_page *encl_owner;
->  		/* Use when SGX_EPC_PAGE_KVM_GUEST set in ->flags: */
->  		void __user *vepc_vaddr;
+> @@ -91,6 +91,51 @@ static inline void *sgx_get_epc_virt_addr(struct sgx_epc_page *page)
+>  	return section->virt_addr + index * PAGE_SIZE;
+>  }
+>  
+> +struct sgx_epc_lru {
+
+It's not an LRU. It's a data structure containing two LRU's.
+
+Please rename and add a descriptive comment.
+
+> +	spinlock_t lock;
+> +	struct list_head reclaimable;
+> +	struct list_head unreclaimable;
+> +};
 > +
+> +static inline void sgx_lru_init(struct sgx_epc_lru *lru)
+> +{
+> +	spin_lock_init(&lru->lock);
+> +	INIT_LIST_HEAD(&lru->reclaimable);
+> +	INIT_LIST_HEAD(&lru->unreclaimable);
+> +}
+> +
+> +/*
+> + * Must be called with queue lock acquired
+> + */
+> +static inline void __sgx_epc_page_list_push(struct list_head *list, struct sgx_epc_page *page)
+> +{
+> +	list_add_tail(&page->list, list);
+> +}
+> +
+> +/*
+> + * Must be called with queue lock acquired
+> + */
+> +static inline struct sgx_epc_page * __sgx_epc_page_list_pop(struct list_head *list)
+> +{
+> +	struct sgx_epc_page *epc_page;
+> +
+> +	if (list_empty(list))
+> +		return NULL;
+> +
+> +	epc_page = list_first_entry(list, struct sgx_epc_page, list);
+> +	list_del_init(&epc_page->list);
+> +	return epc_page;
+> +}
+> +
+> +#define sgx_epc_pop_reclaimable(lru) \
+> +	__sgx_epc_page_list_pop(&(lru)->reclaimable)
+> +#define sgx_epc_push_reclaimable(lru, page) \
+> +	__sgx_epc_page_list_push(&(lru)->reclaimable, page)
+> +#define sgx_epc_pop_unreclaimable(lru) \
+> +	__sgx_epc_page_list_pop(&(lru)->unreclaimable)
+> +#define sgx_epc_push_unreclaimable(lru, page) \
+> +	__sgx_epc_page_list_push(&(lru)->unreclaimable, page)
 
-Spurious newline.
+Is there any reason not to declare these as inline functions?
 
-> +		struct sgx_encl *encl;
->  	};
->  	struct list_head list;
->  };
+> +
+>  struct sgx_epc_page *__sgx_alloc_epc_page(void);
+>  void sgx_free_epc_page(struct sgx_epc_page *page);
+>  
 > -- 
 > 2.37.3
 > 
