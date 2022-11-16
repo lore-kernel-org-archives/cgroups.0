@@ -1,133 +1,113 @@
-From: Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 06/26] x86/sgx: Introduce RECLAIM_IN_PROGRESS flag for
- EPC pages
-Date: Wed, 16 Nov 2022 01:42:42 +0200
-Message-ID: <Y3Qj8sIzwU925DOw@kernel.org>
+From: Reinette Chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 01/26] x86/sgx: Call cond_resched() at the end of
+ sgx_reclaim_pages()
+Date: Tue, 15 Nov 2022 17:00:08 -0800
+Message-ID: <a4eb5ab0-bf83-17a4-8bc0-a90aaf438a8e@intel.com>
 References: <20221111183532.3676646-1-kristen@linux.intel.com>
- <20221111183532.3676646-7-kristen@linux.intel.com>
+ <20221111183532.3676646-2-kristen@linux.intel.com>
+ <Y3QgZ+ZKAfJ92U5L@kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668555766;
-        bh=ql4VR+JXhu364eSkc9NN3BGyg3p4NvWJIrWjWqfPrPE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=vBQUhZQoYyb+8Zv73llLk1RJe6HknkFnFOwFLCmQj1+Lc68X/G0CjGODOKz21peMJ
-         wISqY2zhFdF8pXrNsh+uYTiOY5YWr8SMdQINHK3cuGGqzXFVtp9derazEK+CxqzZXD
-         /MKxLmzpe2ynEQTAbUqIOO6riu+jeOxUSrnYm9fL+2IZe1Kgz8Phzk9KvS8qWgXsGp
-         e55lFIXSuisJ39e8uSf1mzmtCnUICrgYR3KzMkZ/9ACh9kjPG9mAqh1xaGsdMHBqW2
-         Y7sDqwkdpigcw4P+TS5KMuMiGXr7gtwmIMTnYgGa21b97NUSthD6+9ut/dqmnVIoQn
-         kbT28I9Z2nSzw==
-Content-Disposition: inline
-In-Reply-To: <20221111183532.3676646-7-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1668560427; x=1700096427;
+  h=message-id:date:subject:to:cc:references:from:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=QXTMzqqZDlGjkoTzfjYcmLuBmOWujGrc3tQIGgZRAH0=;
+  b=Lb3Xp391zDwO8OZW7Wf6CZeqXEXhghkaAUu70amTgAQDChrxksIAJczf
+   wJr3qJjYXxX89XA1u5S9wYCkRZ+WUnAmOh8QgInn0PjYA1Ca6Ppyq6lUk
+   izjP7ZtCsii4vdB9Ge5QEjcePH/cJtmMGwRNxKY4CjVfmrlnBjTvoMyPw
+   7ax0rzvX04VJPb0GPMzdt3WWmzPxd3p2OVU5duASm+JdcWb6TYs1jrdvb
+   D0edoCMpsUPrGDmhHpkoEYtQfT1rBSNEt9rlGIEHSsz0ldWtJ91I3N9Sz
+   aODUngbtCdKK6tBAZGYYhjKi9J5bqxF4GVUh8TA2QMKQ9ECTYO/CuByn3
+   w==;
+Content-Language: en-US
+In-Reply-To: <Y3QgZ+ZKAfJ92U5L-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+To: Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Cc: dave.hansen-CPWUtch7KCBzeIdxy0IIJw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dave Hansen <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Fri, Nov 11, 2022 at 10:35:11AM -0800, Kristen Carlson Accardi wrote:
-> From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Hi Jarkko,
+
+On 11/15/2022 3:27 PM, Jarkko Sakkinen wrote:
+> On Fri, Nov 11, 2022 at 10:35:06AM -0800, Kristen Carlson Accardi wrote:
+>> From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+>>
+>> In order to avoid repetition of cond_resched() in ksgxd() and
+>> sgx_alloc_epc_page(), move the invocation of post-reclaim cond_resched()
+>> inside sgx_reclaim_pages(). Except in the case of sgx_reclaim_direct(),
+>> sgx_reclaim_pages() is always called in a loop and is always followed
+>> by a call to cond_resched().  This will hold true for the EPC cgroup
+>> as well, which adds even more calls to sgx_reclaim_pages() and thus
+>> cond_resched(). Calls to sgx_reclaim_direct() may be performance
+>> sensitive. Allow sgx_reclaim_direct() to avoid the cond_resched()
+>> call by moving the original sgx_reclaim_pages() call to
+>> __sgx_reclaim_pages() and then have sgx_reclaim_pages() become a
+>> wrapper around that call with a cond_resched().
+>>
+>> Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+>> Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+>> Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>> ---
+>>  arch/x86/kernel/cpu/sgx/main.c | 17 +++++++++++------
+>>  1 file changed, 11 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
+>> index 160c8dbee0ab..ffce6fc70a1f 100644
+>> --- a/arch/x86/kernel/cpu/sgx/main.c
+>> +++ b/arch/x86/kernel/cpu/sgx/main.c
+>> @@ -287,7 +287,7 @@ static void sgx_reclaimer_write(struct sgx_epc_page *epc_page,
+>>   * problematic as it would increase the lock contention too much, which would
+>>   * halt forward progress.
+>>   */
+>> -static void sgx_reclaim_pages(void)
+>> +static void __sgx_reclaim_pages(void)
+>>  {
+>>  	struct sgx_epc_page *chunk[SGX_NR_TO_SCAN];
+>>  	struct sgx_backing backing[SGX_NR_TO_SCAN];
+>> @@ -369,6 +369,12 @@ static void sgx_reclaim_pages(void)
+>>  	}
+>>  }
+>>  
+>> +static void sgx_reclaim_pages(void)
+>> +{
+>> +	__sgx_reclaim_pages();
+>> +	cond_resched();
+>> +}
+>> +
+>>  static bool sgx_should_reclaim(unsigned long watermark)
+>>  {
+>>  	return atomic_long_read(&sgx_nr_free_pages) < watermark &&
+>> @@ -378,12 +384,14 @@ static bool sgx_should_reclaim(unsigned long watermark)
+>>  /*
+>>   * sgx_reclaim_direct() should be called (without enclave's mutex held)
+>>   * in locations where SGX memory resources might be low and might be
+>> - * needed in order to make forward progress.
+>> + * needed in order to make forward progress. This call to
+>> + * __sgx_reclaim_pages() avoids the cond_resched() in sgx_reclaim_pages()
+>> + * to improve performance.
+>>   */
+>>  void sgx_reclaim_direct(void)
+>>  {
+>>  	if (sgx_should_reclaim(SGX_NR_LOW_PAGES))
+>> -		sgx_reclaim_pages();
+>> +		__sgx_reclaim_pages();
 > 
-> Keep track of whether the EPC page is in the middle of being reclaimed
-> and do not delete the page off the it's LRU if it has not yet finished
-
-"off the it's LRU" ?
-
-> being reclaimed.
-
-I'm not sure how the description makes the change understandable.
-
-> 
-> Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-> Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
->  arch/x86/kernel/cpu/sgx/main.c | 14 +++++++++-----
->  arch/x86/kernel/cpu/sgx/sgx.h  |  4 ++++
->  2 files changed, 13 insertions(+), 5 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
-> index 3b09433ffd85..8c451071fa91 100644
-> --- a/arch/x86/kernel/cpu/sgx/main.c
-> +++ b/arch/x86/kernel/cpu/sgx/main.c
-> @@ -305,13 +305,15 @@ static void __sgx_reclaim_pages(void)
->  
->  		encl_page = epc_page->encl_owner;
->  
-> -		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0)
-> +		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0) {
-> +			epc_page->flags |= SGX_EPC_PAGE_RECLAIM_IN_PROGRESS;
->  			chunk[cnt++] = epc_page;
-> -		else
-> +		} else {
->  			/* The owner is freeing the page. No need to add the
->  			 * page back to the list of reclaimable pages.
->  			 */
->  			epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
-> +		}
->  	}
->  	spin_unlock(&sgx_global_lru.lock);
->  
-> @@ -337,6 +339,7 @@ static void __sgx_reclaim_pages(void)
->  
->  skip:
->  		spin_lock(&sgx_global_lru.lock);
-> +		epc_page->flags &= ~SGX_EPC_PAGE_RECLAIM_IN_PROGRESS;
->  		sgx_epc_push_reclaimable(&sgx_global_lru, epc_page);
->  		spin_unlock(&sgx_global_lru.lock);
->  
-> @@ -360,7 +363,8 @@ static void __sgx_reclaim_pages(void)
->  		sgx_reclaimer_write(epc_page, &backing[i]);
->  
->  		kref_put(&encl_page->encl->refcount, sgx_encl_release);
-> -		epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
-> +		epc_page->flags &= ~(SGX_EPC_PAGE_RECLAIMER_TRACKED |
-> +				     SGX_EPC_PAGE_RECLAIM_IN_PROGRESS);
->  
->  		sgx_free_epc_page(epc_page);
->  	}
-> @@ -508,7 +512,7 @@ struct sgx_epc_page *__sgx_alloc_epc_page(void)
->  void sgx_record_epc_page(struct sgx_epc_page *page, unsigned long flags)
->  {
->  	spin_lock(&sgx_global_lru.lock);
-> -	WARN_ON(page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED);
-> +	WARN_ON(page->flags & SGX_EPC_PAGE_RECLAIM_FLAGS);
-
-Please, open code SGX_EPC_PAGE_RECLAIM_FLAGS. It only adds unnecassry
-need to cross-reference to the header file.
-
-Also, please describe the changes on how state flags are used before
-and after this patch to the commit message.
-
->  	page->flags |= flags;
->  	if (flags & SGX_EPC_PAGE_RECLAIMER_TRACKED)
->  		sgx_epc_push_reclaimable(&sgx_global_lru, page);
-> @@ -532,7 +536,7 @@ int sgx_drop_epc_page(struct sgx_epc_page *page)
->  	spin_lock(&sgx_global_lru.lock);
->  	if (page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED) {
->  		/* The page is being reclaimed. */
-> -		if (list_empty(&page->list)) {
-> +		if (page->flags & SGX_EPC_PAGE_RECLAIM_IN_PROGRESS) {
->  			spin_unlock(&sgx_global_lru.lock);
->  			return -EBUSY;
->  		}
-> diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
-> index 969606615211..04ca644928a8 100644
-> --- a/arch/x86/kernel/cpu/sgx/sgx.h
-> +++ b/arch/x86/kernel/cpu/sgx/sgx.h
-> @@ -30,6 +30,10 @@
->  #define SGX_EPC_PAGE_IS_FREE		BIT(1)
->  /* Pages allocated for KVM guest */
->  #define SGX_EPC_PAGE_KVM_GUEST		BIT(2)
-> +/* page flag to indicate reclaim is in progress */
-> +#define SGX_EPC_PAGE_RECLAIM_IN_PROGRESS BIT(3)
-> +#define SGX_EPC_PAGE_RECLAIM_FLAGS	(SGX_EPC_PAGE_RECLAIMER_TRACKED | \
-> +					 SGX_EPC_PAGE_RECLAIM_IN_PROGRESS)
->  
->  struct sgx_epc_page {
->  	unsigned int section;
-> -- 
-> 2.37.3
+> Is it a big deal to have "extra" cond_resched?
 > 
 
-BR, Jarkko
+sgx_reclaim_direct() is used to ensure that there is enough
+SGX memory available to make forward progress within a loop that
+may span a large range of pages. sgx_reclaim_direct()
+ensures that there is enough memory right before it depends on
+that available memory. I think that giving other tasks an opportunity
+to run in the middle is risky since these other tasks may end
+up consuming the SGX memory that was just freed up and thus increase
+likelihood of the operation to fail with user getting an EAGAIN error.
+Additionally, in a constrained environment where sgx_reclaim_direct()
+is needed to reclaim pages an additional cond_resched() could cause
+user visible slow down when operating on a large memory range. 
+
+Reinette
