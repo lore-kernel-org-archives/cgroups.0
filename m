@@ -1,38 +1,61 @@
-From: "Aneesh Kumar K.V" <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-Subject: cgroup v1 and balance_dirty_pages
-Date: Thu, 17 Nov 2022 12:24:13 +0530
-Message-ID: <87wn7uf4ve.fsf@linux.ibm.com>
+From: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2] cgroup/cpuset: Improve cpuset_css_alloc() description
+Date: Thu, 17 Nov 2022 12:45:57 +0530
+Message-ID: <20221117071557.165742-1-kamalesh.babulal@oracle.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-type; s=pp1;
- bh=Hk/EAP4iIsWuxnIHQZ7PaULbopZTcRAEqmsstFZ1L/s=;
- b=Az7KE5xNl8WbNkwdBspdwxRIkcG41yLwAf2RVkIEOY49150X+b3MDDlRz2HWdA/3R0i0
- WzOxcHsi9Bywe89p8Nr32Nn3ZPVCjmkYEqV5x9QnR7+LDdYSoXRDhBoF8qkAwSCTWIxY
- 8zNlKFfdKnJKXLMyKpxpi05AL6CaxWZRCuv6MuK09uSkZ5GaL9/W2o6nTq/adHwjczA/
- RjvR9x+j2uHnJMeiD+fLzCjuV+/VNcyEDyIniyk/KENGyKWHYVmlty2FqGKkj67jq4Q/
- CRPZjr/4jxq1LMsN+vEf7PrR6nmJEqPOBGIcMXmV7GSZsiTJIpHSR0htcv/mlZ0SoD9e fA== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding;
+ s=corp-2022-7-12; bh=9kopYNd6jIPcxgzNvcy2sDx186qQDHRpN+Dt2XgO6jk=;
+ b=2fk7wvcguQPJsQt27KH18YVDsK0dxAJgIAOiB6dNsvXhbUP5H+Q7DoJYRFD86oQrQ1YH
+ li9rLPrZPwY3rQDOc9NAS0Fx+oMNi6FTRWHRKrT1v6HJrUILUBWnmwwbHgjeKDz4mlCf
+ rafvqWqtZtDjrztrl1M4LzH7gn7Fo+Hw8gQ57pPAZo019GfsG9T+YWyj2lEy4sNlWSfA
+ +GtMjI8iRnUfPECor7wkfk4QCRYm+htH/NwkVd1ANYU6r28CG4tzx0bCfnkIMuHQ21vD
+ igwtMXWF4fLuec+Vev9OYMPG1WulctC8J4AAKk921IoiQVY2ltlXOUMDPvI5CRLrl+J8 bg== 
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tom Hromatka <tom.hromatka-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
+Change the function argument in the description of cpuset_css_alloc()
+from 'struct cgroup' -> 'struct cgroup_subsys_state'.  The change to the
+argument type was introduced by commit eb95419b023a ("cgroup: pass
+around cgroup_subsys_state instead of cgroup in subsystem methods").
+Also, add more information to its description.
 
-Hi,
+Signed-off-by: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+---
+v2: Reworded the description to be more accurate, as suggested
+    by Waiman Long
 
-Currently, we don't pause in balance_dirty_pages with cgroup v1 when we
-have task dirtying too many pages w.r.t to memory limit in the memcg.
-This is because with cgroup v1 all the limits are checked against global
-available resources. So on a system with a large amount of memory, a
-cgroup with a smaller limit can easily hit OOM if the task within the
-cgroup continuously dirty pages.
+ kernel/cgroup/cpuset.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-Shouldn't we throttle the task based on the memcg limits in this case?
-commit 9badce000e2c ("cgroup, writeback: don't enable cgroup writeback
-on traditional hierarchies") indicates we run into issues with enabling
-cgroup writeback with v1. But we still can keep the global writeback
-domain, but check the throtling needs against memcg limits in
-balance_dirty_pages()?
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index b474289c15b8..ce789e1b2a2f 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3046,11 +3046,15 @@ static struct cftype dfl_files[] = {
+ };
+ 
+ 
+-/*
+- *	cpuset_css_alloc - allocate a cpuset css
+- *	cgrp:	control group that the new cpuset will be part of
++/**
++ * cpuset_css_alloc - Allocate a cpuset css
++ * @parent_css: Parent css of the control group that the new cpuset will be
++ *              part of
++ * Return: cpuset css on success, -ENOMEM on failure.
++ *
++ * Allocate and initialize a new cpuset css, for non-NULL @parent_css, return
++ * top cpuset css otherwise.
+  */
+-
+ static struct cgroup_subsys_state *
+ cpuset_css_alloc(struct cgroup_subsys_state *parent_css)
+ {
+-- 
+2.34.3
 
--aneesh
