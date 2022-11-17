@@ -1,57 +1,38 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v10 0/3] blk-cgroup: Optimize blkcg_rstat_flush()
-Date: Wed, 16 Nov 2022 19:45:54 -0500
-Message-ID: <26c4e6ab-52ca-e258-bf8d-d4beb86e9c9a@redhat.com>
-References: <20221105005902.407297-1-longman@redhat.com>
- <166864313668.13217.6182708630212912209.b4-ty@kernel.dk>
+From: "Aneesh Kumar K.V" <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Subject: cgroup v1 and balance_dirty_pages
+Date: Thu, 17 Nov 2022 12:24:13 +0530
+Message-ID: <87wn7uf4ve.fsf@linux.ibm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1668645962;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=dLyYTR0vgDLPN4t0KFfB1sbFaXYNr5zBEhazg8jRdTg=;
-        b=YA5/PL0RJD7i5zxLdjyCOd2T2cAFrXdjB3cBkrJip9/QIOL+0yAchnz34oUx1U7m8aIljL
-        ZpX1NBzO1/ruWwCP0nxCsFIl3zS8lcyx0YTANVI2VxBtv1IvJG69HCruOEOmmPFswjn+0D
-        3THPtBE8P/mOMpfOEZj+8k9alL7+dL0=
-Content-Language: en-US
-In-Reply-To: <166864313668.13217.6182708630212912209.b4-ty@kernel.dk>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-type; s=pp1;
+ bh=Hk/EAP4iIsWuxnIHQZ7PaULbopZTcRAEqmsstFZ1L/s=;
+ b=Az7KE5xNl8WbNkwdBspdwxRIkcG41yLwAf2RVkIEOY49150X+b3MDDlRz2HWdA/3R0i0
+ WzOxcHsi9Bywe89p8Nr32Nn3ZPVCjmkYEqV5x9QnR7+LDdYSoXRDhBoF8qkAwSCTWIxY
+ 8zNlKFfdKnJKXLMyKpxpi05AL6CaxWZRCuv6MuK09uSkZ5GaL9/W2o6nTq/adHwjczA/
+ RjvR9x+j2uHnJMeiD+fLzCjuV+/VNcyEDyIniyk/KENGyKWHYVmlty2FqGKkj67jq4Q/
+ CRPZjr/4jxq1LMsN+vEf7PrR6nmJEqPOBGIcMXmV7GSZsiTJIpHSR0htcv/mlZ0SoD9e fA== 
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Hillf Danton <hdanton@sina.com>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Ming Lei <ming.lei@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 11/16/22 18:58, Jens Axboe wrote:
-> On Fri, 4 Nov 2022 20:58:59 -0400, Waiman Long wrote:
->>   v10:
->>    - Update patch 3 to rename the rstat function to
->>      cgroup_rstat_css_cpu_flush().
->>
->>   v9:
->>    - Remove patch "llist: Allow optional sentinel node terminated lockless
->>      list" for now. This will be done as a follow-up patch.
->>    - Add a new lqueued field to blkg_iostat_set to store the status of
->>      whether lnode is in a lockless list.
->>    - Add a new patch 3 to speed up the freeing of blkcg by flushing out
->>      the rstat lockless lists at blkcg offline time.
->>
->> [...]
-> Applied, thanks!
->
-> [1/3] blk-cgroup: Return -ENOMEM directly in blkcg_css_alloc() error path
->        commit: b5a9adcbd5dc95d34d1f5fc84eff9af6fc60d284
-> [2/3] blk-cgroup: Optimize blkcg_rstat_flush()
->        commit: 3b8cc6298724021da845f2f9fd7dd4b6829a6817
-> [3/3] blk-cgroup: Flush stats at blkgs destruction path
->        commit: dae590a6c96c799434e0ff8156ef29b88c257e60
->
-> Best regards,
 
-Thanks a lot!
+Hi,
 
-Cheers,
-Longman
+Currently, we don't pause in balance_dirty_pages with cgroup v1 when we
+have task dirtying too many pages w.r.t to memory limit in the memcg.
+This is because with cgroup v1 all the limits are checked against global
+available resources. So on a system with a large amount of memory, a
+cgroup with a smaller limit can easily hit OOM if the task within the
+cgroup continuously dirty pages.
 
+Shouldn't we throttle the task based on the memcg limits in this case?
+commit 9badce000e2c ("cgroup, writeback: don't enable cgroup writeback
+on traditional hierarchies") indicates we run into issues with enabling
+cgroup writeback with v1. But we still can keep the global writeback
+domain, but check the throtling needs against memcg limits in
+balance_dirty_pages()?
+
+-aneesh
