@@ -1,26 +1,26 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.10 15/18] block, bfq: fix null pointer dereference in bfq_bio_bfqg()
-Date: Fri, 18 Nov 2022 21:14:56 -0500
-Message-ID: <20221119021459.1775052-15-sashal@kernel.org>
-References: <20221119021459.1775052-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 08/11] block, bfq: fix null pointer dereference in bfq_bio_bfqg()
+Date: Fri, 18 Nov 2022 21:15:40 -0500
+Message-ID: <20221119021543.1775315-8-sashal@kernel.org>
+References: <20221119021543.1775315-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668824129;
-        bh=Uha3JSi27qAZYklk7skNMOdy3BYTAWOlDdWDXV0LTb0=;
+        s=k20201202; t=1668824156;
+        bh=etXcCxGSg/0QBSP5ra2+KJCEm7VId0RuvOovDnxRx34=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MpLKo2J4MWL4wV5K0RIsF9tJBN1LCCGyg8RARdOZg9ExYQuG4TcVDEHs78aWsN1EB
-         jhlLe2pTw18/C6YO62h9sJCFwFovzZ+495RLSWNSPnzQf3WQn7n6FIgxChSNA8eAD6
-         wt/1sFp85JluuZoYo87ZMVdZKZzjv55VYWd21Vj7v4l1llC6h9fEZE+qp7vCM+JP1y
-         UsLHQM28Ui/IkDC1b3WJKiiTrOfDgWoMLm7pITulEjA1kE0hPCuQAtHkkGu88mdU9M
-         H4XhYoYtqnIcWTzuVLN50r2DRNOJRX1iszDL8VeWmn7iAi2Rj3K2DdU8SxqfN6ZK6t
-         uCvCVWMTmC/Gg==
-In-Reply-To: <20221119021459.1775052-1-sashal@kernel.org>
+        b=GhQBq0hOnsEYYGtmSKRW01EOstTniPPBnkxZlxLBUlYWw4Q5XmCkIIQFaNjyPYet+
+         5650L2SxEXzcqyG+RSiLIi+of+lL3JlgsNq3AtAlHrcs/8Yzmi1TJwAydVdS8rOHjl
+         g/+t3kc+Oh2AhlML6VdY9Rq6eHaKLT1puPTsygIZgZ6pMcZZYbKegtnx7OqzqLGANx
+         lX3GOssynPhft5NkfaylFmtCIm8fMP/UjBhOYWiBguFVe6CBxYQtZSMauyl6JxYm5L
+         mHfqoAzJXL7Z8c8bR8K+UWETjhqf73kGaCy5Be7RTQFkKsS+6kEURYILsFZLFYQHi+
+         zJqr8AgnQLTkQ==
+In-Reply-To: <20221119021543.1775315-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Yu Kuai <yukuai3@huawei.com>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, paolo.valente@linaro.org, tj@kernel.org, josef@toxicpanda.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org
+Cc: Yu Kuai <yukuai3@huawei.com>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, tj@kernel.org, josef@toxicpanda.com, paolo.valente@linaro.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org
 
 From: Yu Kuai <yukuai3@huawei.com>
 
@@ -151,10 +151,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+)
 
 diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index be6733558b83..badb90352bf3 100644
+index 09d721b1f6ac..59fd1b10b5f3 100644
 --- a/block/bfq-cgroup.c
 +++ b/block/bfq-cgroup.c
-@@ -611,6 +611,10 @@ struct bfq_group *bfq_bio_bfqg(struct bfq_data *bfqd, struct bio *bio)
+@@ -594,6 +594,10 @@ struct bfq_group *bfq_bio_bfqg(struct bfq_data *bfqd, struct bio *bio)
  	struct bfq_group *bfqg;
  
  	while (blkg) {
