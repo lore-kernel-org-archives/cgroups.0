@@ -1,28 +1,28 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 6.0 28/44] block, bfq: fix null pointer dereference in bfq_bio_bfqg()
-Date: Fri, 18 Nov 2022 21:11:08 -0500
-Message-ID: <20221119021124.1773699-28-sashal@kernel.org>
-References: <20221119021124.1773699-1-sashal@kernel.org>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 21/27] block, bfq: fix null pointer dereference in bfq_bio_bfqg()
+Date: Fri, 18 Nov 2022 21:13:46 -0500
+Message-ID: <20221119021352.1774592-21-sashal@kernel.org>
+References: <20221119021352.1774592-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668823939;
-        bh=FYr04vfyjSoFDAZ0lW1wqrJZDHN6z/tNqY0IwKMY5nw=;
+        s=k20201202; t=1668824072;
+        bh=KOH7+RQT+uGmHeZ6pATcxN1+BPy/mxwR9/qr3fBh9Yo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HJz/FbTQZjHIeaIZjDQf8l8NRWpNyQl1hDmFL/NFdZg606eyIRvCTsUT3IB68tXoU
-         pa0LEM/0duFeZd7aF1gTeypMD+lFDcD2SagfppwPP/LEcz0EDuyUf+ic5WdoAuuVai
-         AnF+zRx+CNsoulOhfrd9/Yn/ya3Udu5VxlvLA0oiBSY8toLVr4URd/ePke0Yjv1NSs
-         cd9CDDbipY3qvMiPd5hCDVRYTgsNSxAqOK/j5cOur+YkCb27P3O/4TSpNQESa4z1JZ
-         0FEtORlqQcGzTJnVvuByg5ba8wM99cY/Vd+CBByw/+CNuKvDHNEsAn9PMXBxRQs36+
-         YzYfzXb6T5tTw==
-In-Reply-To: <20221119021124.1773699-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        b=jkJcHdXf6sNIFvDy5Aed7/m7SJiIO7Ys2LgBVc7q6D2LVa0WApgVEj9D6Hw0MPXWo
+         08xtkCy0ulIhaALU2yIi0oYSY60742COg9WbL1ajmxBb/BgahwXc+1rsier9cjS9da
+         sV2KV8k8HRcpFC/Xp+ocH5Ma8mfx4KgS2zFHzrcwsgHuUhDZzxYwudS3P12rmeDKGU
+         3qvJnMkp40sLCOLtFZpIJxgg4NENMghX3HLi18E/VagsjFbLYxqlkTBiZBL/bCXK2Q
+         1mrsycecluZnHXoqXiyBpKCTBcSbdaH8ozAOprar2ddKniJ3FY2Nbin9CQW6iqqyLA
+         m0vxg8HenAuDA==
+In-Reply-To: <20221119021352.1774592-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Yu Kuai <yukuai3@huawei.com>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, paolo.valente@linaro.org, tj@kernel.org, josef@toxicpanda.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Yu Kuai <yukuai3@huawei.com>
 
 [ Upstream commit f02be9002c480cd3ec0fcf184ad27cf531bd6ece ]
 
@@ -141,20 +141,20 @@ the device is removed.
 Fix the problem in bfq by checking if blkg is online before calling
 blkg_to_bfqg().
 
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Link: https://lore.kernel.org/r/20221108103434.2853269-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org
-Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Link: https://lore.kernel.org/r/20221108103434.2853269-1-yukuai1@huaweicloud.com
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
  block/bfq-cgroup.c | 4 ++++
  1 file changed, 4 insertions(+)
 
 diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 30b15a9a47c4..249f489d115f 100644
+index e2e765a54fe9..a8d0b4c71b05 100644
 --- a/block/bfq-cgroup.c
 +++ b/block/bfq-cgroup.c
-@@ -615,6 +615,10 @@ struct bfq_group *bfq_bio_bfqg(struct bfq_data *bfqd, struct bio *bio)
+@@ -613,6 +613,10 @@ struct bfq_group *bfq_bio_bfqg(struct bfq_data *bfqd, struct bio *bio)
  	struct bfq_group *bfqg;
  
  	while (blkg) {
