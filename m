@@ -1,53 +1,170 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH] mm/cgroup/reclaim: Fix dirty pages throttling on cgroup
- v1
-Date: Fri, 18 Nov 2022 18:43:46 -0500
-Message-ID: <Y3gYsv6oAcJ2u0Py@cmpxchg.org>
-References: <20221118070603.84081-1-aneesh.kumar@linux.ibm.com>
+From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH AUTOSEL 6.0 28/44] block, bfq: fix null pointer dereference in bfq_bio_bfqg()
+Date: Fri, 18 Nov 2022 21:11:08 -0500
+Message-ID: <20221119021124.1773699-28-sashal@kernel.org>
+References: <20221119021124.1773699-1-sashal@kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=W/iTpmR4sRdLv0Rk3A8XEP/l6NiYPL92CF45ZyTgAiU=;
-        b=gsWF7RmdFZNApUCqHEyf0BafcUrFVHnUgIS7HhgpUNR5xF9VvlzTIR5biXLQLJAtux
-         ef1rp8dfIEcWWTpYDLJSxGwb35YMj4OcmP+tdOx2Fr4vTWGgN2XS2NtPbcroIz8XKl4v
-         FNhXlg07RHUWM4bfGIaZ7i6wMsSfF+pCELt+P+9QZRmTkbnrqcjpAFUZjLFsEapoxUsy
-         OMy1jNRSZJsxU+SqK2GdMJbnM8ptspzNHM41EB5x1wPnpWgIDPBEHkEOa4qM4JIIXMO7
-         15q1sHnkCMenDiRbzLQIew81n2tPXEb926GxiXB24xnKLs9+3HFdVuWpl6r8Oc7mlhkt
-         bGOQ==
-Content-Disposition: inline
-In-Reply-To: <20221118070603.84081-1-aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1668823939;
+        bh=FYr04vfyjSoFDAZ0lW1wqrJZDHN6z/tNqY0IwKMY5nw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=HJz/FbTQZjHIeaIZjDQf8l8NRWpNyQl1hDmFL/NFdZg606eyIRvCTsUT3IB68tXoU
+         pa0LEM/0duFeZd7aF1gTeypMD+lFDcD2SagfppwPP/LEcz0EDuyUf+ic5WdoAuuVai
+         AnF+zRx+CNsoulOhfrd9/Yn/ya3Udu5VxlvLA0oiBSY8toLVr4URd/ePke0Yjv1NSs
+         cd9CDDbipY3qvMiPd5hCDVRYTgsNSxAqOK/j5cOur+YkCb27P3O/4TSpNQESa4z1JZ
+         0FEtORlqQcGzTJnVvuByg5ba8wM99cY/Vd+CBByw/+CNuKvDHNEsAn9PMXBxRQs36+
+         YzYfzXb6T5tTw==
+In-Reply-To: <20221119021124.1773699-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Aneesh Kumar K.V" <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Nov 18, 2022 at 12:36:03PM +0530, Aneesh Kumar K.V wrote:
-> balance_dirty_pages doesn't do the required dirty throttling on cgroupv1. See
-> commit 9badce000e2c ("cgroup, writeback: don't enable cgroup writeback on
-> traditional hierarchies"). Instead, the kernel depends on writeback throttling
-> in shrink_folio_list to achieve the same goal. With large memory systems, the
-> flusher may not be able to writeback quickly enough such that we will start
-> finding pages in the shrink_folio_list already in writeback. Hence for cgroupv1
-> let's do a reclaim throttle after waking up the flusher.
-> 
-> The below test which used to fail on a 256GB system completes till the
-> the file system is full with this change.
-> 
-> root@lp2:/sys/fs/cgroup/memory# mkdir test
-> root@lp2:/sys/fs/cgroup/memory# cd test/
-> root@lp2:/sys/fs/cgroup/memory/test# echo 120M > memory.limit_in_bytes
-> root@lp2:/sys/fs/cgroup/memory/test# echo $$ > tasks
-> root@lp2:/sys/fs/cgroup/memory/test# dd if=/dev/zero of=/home/kvaneesh/test bs=1M
-> Killed
-> 
-> Cc: <stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Signed-off-by: Aneesh Kumar K.V <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+[ Upstream commit f02be9002c480cd3ec0fcf184ad27cf531bd6ece ]
 
-Thanks Aneesh
+Out test found a following problem in kernel 5.10, and the same problem
+should exist in mainline:
+
+BUG: kernel NULL pointer dereference, address: 0000000000000094
+PGD 0 P4D 0
+Oops: 0000 [#1] SMP
+CPU: 7 PID: 155 Comm: kworker/7:1 Not tainted 5.10.0-01932-g19e0ace2ca1d-dirty 4
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-b4
+Workqueue: kthrotld blk_throtl_dispatch_work_fn
+RIP: 0010:bfq_bio_bfqg+0x52/0xc0
+Code: 94 00 00 00 00 75 2e 48 8b 40 30 48 83 05 35 06 c8 0b 01 48 85 c0 74 3d 4b
+RSP: 0018:ffffc90001a1fba0 EFLAGS: 00010002
+RAX: ffff888100d60400 RBX: ffff8881132e7000 RCX: 0000000000000000
+RDX: 0000000000000017 RSI: ffff888103580a18 RDI: ffff888103580a18
+RBP: ffff8881132e7000 R08: 0000000000000000 R09: ffffc90001a1fe10
+R10: 0000000000000a20 R11: 0000000000034320 R12: 0000000000000000
+R13: ffff888103580a18 R14: ffff888114447000 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff88881fdc0000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000094 CR3: 0000000100cdb000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ bfq_bic_update_cgroup+0x3c/0x350
+ ? ioc_create_icq+0x42/0x270
+ bfq_init_rq+0xfd/0x1060
+ bfq_insert_requests+0x20f/0x1cc0
+ ? ioc_create_icq+0x122/0x270
+ blk_mq_sched_insert_requests+0x86/0x1d0
+ blk_mq_flush_plug_list+0x193/0x2a0
+ blk_flush_plug_list+0x127/0x170
+ blk_finish_plug+0x31/0x50
+ blk_throtl_dispatch_work_fn+0x151/0x190
+ process_one_work+0x27c/0x5f0
+ worker_thread+0x28b/0x6b0
+ ? rescuer_thread+0x590/0x590
+ kthread+0x153/0x1b0
+ ? kthread_flush_work+0x170/0x170
+ ret_from_fork+0x1f/0x30
+Modules linked in:
+CR2: 0000000000000094
+---[ end trace e2e59ac014314547 ]---
+RIP: 0010:bfq_bio_bfqg+0x52/0xc0
+Code: 94 00 00 00 00 75 2e 48 8b 40 30 48 83 05 35 06 c8 0b 01 48 85 c0 74 3d 4b
+RSP: 0018:ffffc90001a1fba0 EFLAGS: 00010002
+RAX: ffff888100d60400 RBX: ffff8881132e7000 RCX: 0000000000000000
+RDX: 0000000000000017 RSI: ffff888103580a18 RDI: ffff888103580a18
+RBP: ffff8881132e7000 R08: 0000000000000000 R09: ffffc90001a1fe10
+R10: 0000000000000a20 R11: 0000000000034320 R12: 0000000000000000
+R13: ffff888103580a18 R14: ffff888114447000 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff88881fdc0000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000094 CR3: 0000000100cdb000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+
+Root cause is quite complex:
+
+1) use bfq elevator for the test device.
+2) create a cgroup CG
+3) config blk throtl in CG
+
+   blkg_conf_prep
+    blkg_create
+
+4) create a thread T1 and issue async io in CG:
+
+   bio_init
+    bio_associate_blkg
+   ...
+   submit_bio
+    submit_bio_noacct
+     blk_throtl_bio -> io is throttled
+     // io submit is done
+
+5) switch elevator:
+
+   bfq_exit_queue
+    blkcg_deactivate_policy
+     list_for_each_entry(blkg, &q->blkg_list, q_node)
+      blkg->pd[] = NULL
+      // bfq policy is removed
+
+5) thread t1 exist, then remove the cgroup CG:
+
+   blkcg_unpin_online
+    blkcg_destroy_blkgs
+     blkg_destroy
+      list_del_init(&blkg->q_node)
+      // blkg is removed from queue list
+
+6) switch elevator back to bfq
+
+ bfq_init_queue
+  bfq_create_group_hierarchy
+   blkcg_activate_policy
+    list_for_each_entry_reverse(blkg, &q->blkg_list)
+     // blkg is removed from list, hence bfq policy is still NULL
+
+7) throttled io is dispatched to bfq:
+
+ bfq_insert_requests
+  bfq_init_rq
+   bfq_bic_update_cgroup
+    bfq_bio_bfqg
+     bfqg = blkg_to_bfqg(blkg)
+     // bfqg is NULL because bfq policy is NULL
+
+The problem is only possible in bfq because only bfq can be deactivated and
+activated while queue is online, while others can only be deactivated while
+the device is removed.
+
+Fix the problem in bfq by checking if blkg is online before calling
+blkg_to_bfqg().
+
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Link: https://lore.kernel.org/r/20221108103434.2853269-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org
+Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ block/bfq-cgroup.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index 30b15a9a47c4..249f489d115f 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -615,6 +615,10 @@ struct bfq_group *bfq_bio_bfqg(struct bfq_data *bfqd, struct bio *bio)
+ 	struct bfq_group *bfqg;
+ 
+ 	while (blkg) {
++		if (!blkg->online) {
++			blkg = blkg->parent;
++			continue;
++		}
+ 		bfqg = blkg_to_bfqg(blkg);
+ 		if (bfqg->online) {
+ 			bio_associate_blkg_from_css(bio, &blkg->blkcg->css);
+-- 
+2.35.1
+
