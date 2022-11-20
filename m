@@ -1,46 +1,38 @@
-From: "haifeng.xu" <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: Fix typo in comment
-Date: Sun, 20 Nov 2022 15:51:34 +0000
-Message-ID: <20221120155134.57193-1-haifeng.xu@shopee.com>
+From: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Subject: Re: [PATCH] cgroup: Fix typo in comment
+Date: Sun, 20 Nov 2022 11:25:11 -0500
+Message-ID: <77e79fad98b945f4f3f72b584d10fe01e187b8a8.camel@HansenPartnership.com>
+References: <20221120155134.57193-1-haifeng.xu@shopee.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=DttQDPYJqDe2lRvTfIAZ96JFKMlEltVMw+oadVUR8gw=;
-        b=jvTBchvEr1cpkAFx1KWphFje2d/lHBFdAMl2ic9Wwv3/qYiIPMqd8hNFjdxVP9FbzN
-         dF2yWOgzqFAeYontau/3ftgNeLXDbjC5nUwoAqUNt/Kac3hPXAXK8fgWGKaf9j7wnLLa
-         VjkRM8LZ/W+fFIBF4H0FTBGsQJs1pzPxuy1pLPYse4wEMFqMBYyl5w9TImS7Uky0NF7j
-         06iJOR7JYYmFAlA4TrEvplumSaDxcCuav2hg/OguaHJ7rXa0o7jes+q2qhfGqf4sTprt
-         U9zx7uUHFKJ+eaDrV5maUiLIjC+jYvmzrJLpoEepYKHcf/GqKZBszq6VIipscvPNorrG
-         k/RA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1668961514;
+        bh=n1RHYaSr7YVqpR8H4s00LHMTau2igcsd/5bJkmmJeNU=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=pRHgB9QTxpHTbMYjOUJS8PqOUVjx2KvI2Lxodd+h9qHf0pQCvDVJi7WkHXSAY19Qm
+         MljcSA6rjBNuSm2tuErOP7ZWZsPcKfTh5o7JQojVBC+BAK9Njz1B1vWK3Y4wq5cgCi
+         VVKcVitj2q63UqJCdmm4jJ8ALaWB2yXLXsIXOodY=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1668961514;
+        bh=n1RHYaSr7YVqpR8H4s00LHMTau2igcsd/5bJkmmJeNU=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=pRHgB9QTxpHTbMYjOUJS8PqOUVjx2KvI2Lxodd+h9qHf0pQCvDVJi7WkHXSAY19Qm
+         MljcSA6rjBNuSm2tuErOP7ZWZsPcKfTh5o7JQojVBC+BAK9Njz1B1vWK3Y4wq5cgCi
+         VVKcVitj2q63UqJCdmm4jJ8ALaWB2yXLXsIXOodY=
+In-Reply-To: <20221120155134.57193-1-haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "haifeng.xu" <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+To: "haifeng.xu" <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Replace iff with if.
+On Sun, 2022-11-20 at 15:51 +0000, haifeng.xu wrote:
+> Replace iff with if.
 
-Signed-off-by: haifeng.xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+You can't do this without a more detailed analysis.  iff means if and
+only if (logical implies in both directions), which appears to be more
+correct in the code being patched than if, which is logical implies in
+only one direction only.
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index f2743a476190..93c5e50b1392 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -814,7 +814,7 @@ static bool css_set_populated(struct css_set *cset)
-  * One of the css_sets associated with @cgrp is either getting its first
-  * task or losing the last.  Update @cgrp->nr_populated_* accordingly.  The
-  * count is propagated towards root so that a given cgroup's
-- * nr_populated_children is zero iff none of its descendants contain any
-+ * nr_populated_children is zero if none of its descendants contain any
-  * tasks.
-  *
-  * @cgrp's interface file "cgroup.populated" is zero if both
--- 
-2.25.1
+James
 
