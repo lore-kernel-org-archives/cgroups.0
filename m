@@ -1,170 +1,46 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.4 08/11] block, bfq: fix null pointer dereference in bfq_bio_bfqg()
-Date: Fri, 18 Nov 2022 21:15:40 -0500
-Message-ID: <20221119021543.1775315-8-sashal@kernel.org>
-References: <20221119021543.1775315-1-sashal@kernel.org>
+From: "haifeng.xu" <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: Fix typo in comment
+Date: Sun, 20 Nov 2022 15:51:34 +0000
+Message-ID: <20221120155134.57193-1-haifeng.xu@shopee.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1668824156;
-        bh=etXcCxGSg/0QBSP5ra2+KJCEm7VId0RuvOovDnxRx34=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GhQBq0hOnsEYYGtmSKRW01EOstTniPPBnkxZlxLBUlYWw4Q5XmCkIIQFaNjyPYet+
-         5650L2SxEXzcqyG+RSiLIi+of+lL3JlgsNq3AtAlHrcs/8Yzmi1TJwAydVdS8rOHjl
-         g/+t3kc+Oh2AhlML6VdY9Rq6eHaKLT1puPTsygIZgZ6pMcZZYbKegtnx7OqzqLGANx
-         lX3GOssynPhft5NkfaylFmtCIm8fMP/UjBhOYWiBguFVe6CBxYQtZSMauyl6JxYm5L
-         mHfqoAzJXL7Z8c8bR8K+UWETjhqf73kGaCy5Be7RTQFkKsS+6kEURYILsFZLFYQHi+
-         zJqr8AgnQLTkQ==
-In-Reply-To: <20221119021543.1775315-1-sashal@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=shopee.com; s=shopee.com;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=DttQDPYJqDe2lRvTfIAZ96JFKMlEltVMw+oadVUR8gw=;
+        b=jvTBchvEr1cpkAFx1KWphFje2d/lHBFdAMl2ic9Wwv3/qYiIPMqd8hNFjdxVP9FbzN
+         dF2yWOgzqFAeYontau/3ftgNeLXDbjC5nUwoAqUNt/Kac3hPXAXK8fgWGKaf9j7wnLLa
+         VjkRM8LZ/W+fFIBF4H0FTBGsQJs1pzPxuy1pLPYse4wEMFqMBYyl5w9TImS7Uky0NF7j
+         06iJOR7JYYmFAlA4TrEvplumSaDxcCuav2hg/OguaHJ7rXa0o7jes+q2qhfGqf4sTprt
+         U9zx7uUHFKJ+eaDrV5maUiLIjC+jYvmzrJLpoEepYKHcf/GqKZBszq6VIipscvPNorrG
+         k/RA==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Yu Kuai <yukuai3@huawei.com>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, tj@kernel.org, josef@toxicpanda.com, paolo.valente@linaro.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "haifeng.xu" <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
 
-From: Yu Kuai <yukuai3@huawei.com>
+Replace iff with if.
 
-[ Upstream commit f02be9002c480cd3ec0fcf184ad27cf531bd6ece ]
-
-Out test found a following problem in kernel 5.10, and the same problem
-should exist in mainline:
-
-BUG: kernel NULL pointer dereference, address: 0000000000000094
-PGD 0 P4D 0
-Oops: 0000 [#1] SMP
-CPU: 7 PID: 155 Comm: kworker/7:1 Not tainted 5.10.0-01932-g19e0ace2ca1d-dirty 4
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-b4
-Workqueue: kthrotld blk_throtl_dispatch_work_fn
-RIP: 0010:bfq_bio_bfqg+0x52/0xc0
-Code: 94 00 00 00 00 75 2e 48 8b 40 30 48 83 05 35 06 c8 0b 01 48 85 c0 74 3d 4b
-RSP: 0018:ffffc90001a1fba0 EFLAGS: 00010002
-RAX: ffff888100d60400 RBX: ffff8881132e7000 RCX: 0000000000000000
-RDX: 0000000000000017 RSI: ffff888103580a18 RDI: ffff888103580a18
-RBP: ffff8881132e7000 R08: 0000000000000000 R09: ffffc90001a1fe10
-R10: 0000000000000a20 R11: 0000000000034320 R12: 0000000000000000
-R13: ffff888103580a18 R14: ffff888114447000 R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff88881fdc0000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000000094 CR3: 0000000100cdb000 CR4: 00000000000006e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- bfq_bic_update_cgroup+0x3c/0x350
- ? ioc_create_icq+0x42/0x270
- bfq_init_rq+0xfd/0x1060
- bfq_insert_requests+0x20f/0x1cc0
- ? ioc_create_icq+0x122/0x270
- blk_mq_sched_insert_requests+0x86/0x1d0
- blk_mq_flush_plug_list+0x193/0x2a0
- blk_flush_plug_list+0x127/0x170
- blk_finish_plug+0x31/0x50
- blk_throtl_dispatch_work_fn+0x151/0x190
- process_one_work+0x27c/0x5f0
- worker_thread+0x28b/0x6b0
- ? rescuer_thread+0x590/0x590
- kthread+0x153/0x1b0
- ? kthread_flush_work+0x170/0x170
- ret_from_fork+0x1f/0x30
-Modules linked in:
-CR2: 0000000000000094
----[ end trace e2e59ac014314547 ]---
-RIP: 0010:bfq_bio_bfqg+0x52/0xc0
-Code: 94 00 00 00 00 75 2e 48 8b 40 30 48 83 05 35 06 c8 0b 01 48 85 c0 74 3d 4b
-RSP: 0018:ffffc90001a1fba0 EFLAGS: 00010002
-RAX: ffff888100d60400 RBX: ffff8881132e7000 RCX: 0000000000000000
-RDX: 0000000000000017 RSI: ffff888103580a18 RDI: ffff888103580a18
-RBP: ffff8881132e7000 R08: 0000000000000000 R09: ffffc90001a1fe10
-R10: 0000000000000a20 R11: 0000000000034320 R12: 0000000000000000
-R13: ffff888103580a18 R14: ffff888114447000 R15: 0000000000000000
-FS:  0000000000000000(0000) GS:ffff88881fdc0000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000000094 CR3: 0000000100cdb000 CR4: 00000000000006e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-
-Root cause is quite complex:
-
-1) use bfq elevator for the test device.
-2) create a cgroup CG
-3) config blk throtl in CG
-
-   blkg_conf_prep
-    blkg_create
-
-4) create a thread T1 and issue async io in CG:
-
-   bio_init
-    bio_associate_blkg
-   ...
-   submit_bio
-    submit_bio_noacct
-     blk_throtl_bio -> io is throttled
-     // io submit is done
-
-5) switch elevator:
-
-   bfq_exit_queue
-    blkcg_deactivate_policy
-     list_for_each_entry(blkg, &q->blkg_list, q_node)
-      blkg->pd[] = NULL
-      // bfq policy is removed
-
-5) thread t1 exist, then remove the cgroup CG:
-
-   blkcg_unpin_online
-    blkcg_destroy_blkgs
-     blkg_destroy
-      list_del_init(&blkg->q_node)
-      // blkg is removed from queue list
-
-6) switch elevator back to bfq
-
- bfq_init_queue
-  bfq_create_group_hierarchy
-   blkcg_activate_policy
-    list_for_each_entry_reverse(blkg, &q->blkg_list)
-     // blkg is removed from list, hence bfq policy is still NULL
-
-7) throttled io is dispatched to bfq:
-
- bfq_insert_requests
-  bfq_init_rq
-   bfq_bic_update_cgroup
-    bfq_bio_bfqg
-     bfqg = blkg_to_bfqg(blkg)
-     // bfqg is NULL because bfq policy is NULL
-
-The problem is only possible in bfq because only bfq can be deactivated and
-activated while queue is online, while others can only be deactivated while
-the device is removed.
-
-Fix the problem in bfq by checking if blkg is online before calling
-blkg_to_bfqg().
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Link: https://lore.kernel.org/r/20221108103434.2853269-1-yukuai1@huaweicloud.com
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: haifeng.xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
 ---
- block/bfq-cgroup.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ kernel/cgroup/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 09d721b1f6ac..59fd1b10b5f3 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -594,6 +594,10 @@ struct bfq_group *bfq_bio_bfqg(struct bfq_data *bfqd, struct bio *bio)
- 	struct bfq_group *bfqg;
- 
- 	while (blkg) {
-+		if (!blkg->online) {
-+			blkg = blkg->parent;
-+			continue;
-+		}
- 		bfqg = blkg_to_bfqg(blkg);
- 		if (bfqg->online) {
- 			bio_associate_blkg_from_css(bio, &blkg->blkcg->css);
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index f2743a476190..93c5e50b1392 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -814,7 +814,7 @@ static bool css_set_populated(struct css_set *cset)
+  * One of the css_sets associated with @cgrp is either getting its first
+  * task or losing the last.  Update @cgrp->nr_populated_* accordingly.  The
+  * count is propagated towards root so that a given cgroup's
+- * nr_populated_children is zero iff none of its descendants contain any
++ * nr_populated_children is zero if none of its descendants contain any
+  * tasks.
+  *
+  * @cgrp's interface file "cgroup.populated" is zero if both
 -- 
-2.35.1
+2.25.1
 
