@@ -1,80 +1,46 @@
-From: "haifeng.xu" <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup/cpuset: Optimize update_tasks_nodemask()
-Date: Wed, 23 Nov 2022 08:21:57 +0000
-Message-ID: <20221123082157.71326-1-haifeng.xu@shopee.com>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH v2 4/5] blk-iocost: fix sleeping in atomic context
+ warnning
+Date: Wed, 23 Nov 2022 18:22:29 +0800
+Message-ID: <ec3754a6-3249-51ab-b659-fd795884e346@huaweicloud.com>
+References: <20221104023938.2346986-1-yukuai1@huaweicloud.com>
+ <20221104023938.2346986-5-yukuai1@huaweicloud.com>
+ <Y3K8MSFWw8eTnxtm@slm.duckdns.org>
+ <3da991c6-21e4-8ed8-ba75-ccb92059f0ae@huaweicloud.com>
+ <Y306xJV6aNXd94kb@slm.duckdns.org>
+ <1f52ccb1-c357-a2a0-ef9d-48d7e2eb51f8@kernel.dk>
+ <Y31sYFdA2lHIvjt3@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=yo2K84hmvJF9oKmVUE8rVWn5muORVTM6UmA/7exBFUM=;
-        b=VmEnvFprI1mHKVy+07lphANsK+RLSjSH8ZZGVFzeZ0SQCYsAvYfb8tQwV+GaQs4jMd
-         Fhfh4ZC4WvVGyUc3TlX3vl0ZqD5kHFvh/BahqrDF0S8wapyOl1nAVvuhgDLPI6yPojVw
-         LuFg+XX0OxUSgPe8Zq2RVjTjeKnvONyFn0cZRTsjOuIaEo7QUKwVu9hXgIFK9LgJ14Ym
-         u3w+77ooTwpLJsCE55lO0l2qS8XmJ7T/0uHynGwdGMPgSlRm37X1Cfy9zcnQgo28/bZd
-         G3Tcu28J0Id40ep5xIQ7m6QU0kNdS5nxA2SEjOkuuftUUfY2jdqRM7I4BdF79Ew+iIXI
-         HGnA==
+In-Reply-To: <Y31sYFdA2lHIvjt3-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "haifeng.xu" <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, hch-jcswGhMUV9g@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-When change the 'cpuset.mems' under some cgroup, system will hung
-for a long time. From the dmesg, many processes or theads are
-stuck in fork/exit. The reason is show as follows.
+Hi, Tejun
 
-thread A:
-cpuset_write_resmask /* takes cpuset_rwsem */
-  ...
-    update_tasks_nodemask
-      mpol_rebind_mm /* waits mmap_lock */
+=D4=DA 2022/11/23 8:42, Tejun Heo =D0=B4=B5=C0:
+> On Tue, Nov 22, 2022 at 05:14:29PM -0700, Jens Axboe wrote:
+>>>> Then match_strdup() and kfree() in match_NUMBER() can be replaced with
+>>>> get_buffer() and put_buffer().
+>>>
+>>> Sorry about the late reply. Yeah, something like this.
 
-thread B:
-worker_thread
-  ...
-    cpuset_migrate_mm_workfn
-      do_migrate_pages /* takes mmap_lock */
+Thanks for the feedback. I'll remove patch 4 from this seies and send a
+new patch separately soon.
 
-thread C:
-cgroup_procs_write /* takes cgroup_mutex and cgroup_threadgroup_rwsem */
-  ...
-    cpuset_can_attach
-      percpu_down_write /* waits cpuset_rwsem */
-
-Once update the nodemasks of cpuset, thread A wakes up thread B to
-migrate mm. But when thread A iterates through all tasks, including
-child threads and group leader, it has to wait the mmap_lock which
-has been take by thread B. Unfortunately, thread C wants to migrate
-tasks into cgroup at this moment, it must wait thread A to release
-cpuset_rwsem. If thread B spends much time to migrate mm, the
-fork/exit which acquire cgroup_threadgroup_rwsem also need to
-wait for a long time.
-
-There is no need to migrate the mm of child threads which is
-shared with group leader. Just iterate through the group
-leader only.
-
-Signed-off-by: haifeng.xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cpuset.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 589827ccda8b..43cbd09546d0 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1968,6 +1968,9 @@ static void update_tasks_nodemask(struct cpuset *cs)
- 
- 		cpuset_change_task_nodemask(task, &newmems);
- 
-+		if (!thread_group_leader(task))
-+			continue;
-+
- 		mm = get_task_mm(task);
- 		if (!mm)
- 			continue;
--- 
-2.25.1
+Thanks,
+Kuai
+>>
+>> Doesn't local_irq_disable() imply preemption disable as well?
+>=20
+> Right, I was thinking about spin_lock_irq() which doesn't imply disabling
+> preemption in PREEMPT_RT. local_irq_disable() is actual irq disable even =
+on
+> RT. It should be fine on its own.
+>=20
+> Thanks.
+>=20
 
