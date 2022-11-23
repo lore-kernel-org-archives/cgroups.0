@@ -1,7 +1,7 @@
 From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 05/11] blk-throttle: simpfy low limit reached check in throtl_tg_can_upgrade
-Date: Wed, 23 Nov 2022 14:03:55 +0800
-Message-ID: <20221123060401.20392-6-shikemeng@huawei.com>
+Subject: [PATCH 01/11] blk-throttle: Limit whole system if root group is configured when on the default hierarchy
+Date: Wed, 23 Nov 2022 14:03:51 +0800
+Message-ID: <20221123060401.20392-2-shikemeng@huawei.com>
 References: <20221123060401.20392-1-shikemeng@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -12,54 +12,44 @@ Content-Transfer-Encoding: 7bit
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Cgroup reaches low limit if limit is zero or io is already queued. Cgroup
-will pass upgrade check if low limits of READ and WRITE are both reached.
-Simpfy the check code described above to removce repeat check and improve
-readability. There is no functional change.
+Quoted from comment in throtl_pd_init: "If on the default hierarchy, we
+switch to properly hierarchical behavior where limits on a given
+throtl_grp are applied to the whole subtree rather than just the group
+itself. e.g. If 16M read_bps limit is set on the root group, the whole
+system can' exceed 16M for the device."
+Commit b22c417c885ea9 ("blk-throttle: configure bps/iops limit for
+cgroup in low limit") broke this rule and did not explain why.
+Restore the ability to limit the whole system by root group.
 
 Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-throttle.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+ block/blk-throttle.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 01e30380c19b..322a6ee38fb6 100644
+index 847721dc2b2b..96aa53e30e28 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -1800,24 +1800,22 @@ static bool throtl_tg_is_idle(struct throtl_grp *tg)
- 	return ret;
- }
+@@ -150,9 +150,6 @@ static uint64_t tg_bps_limit(struct throtl_grp *tg, int rw)
+ 	struct throtl_data *td;
+ 	uint64_t ret;
  
--static bool throtl_tg_can_upgrade(struct throtl_grp *tg)
-+static bool throtl_tg_reach_low_limit(struct throtl_grp *tg, int rw)
- {
- 	struct throtl_service_queue *sq = &tg->service_queue;
--	bool read_limit, write_limit;
-+	bool limit = tg->bps[rw][LIMIT_LOW] || tg->iops[rw][LIMIT_LOW];
+-	if (cgroup_subsys_on_dfl(io_cgrp_subsys) && !blkg->parent)
+-		return U64_MAX;
+-
+ 	td = tg->td;
+ 	ret = tg->bps[rw][td->limit_index];
+ 	if (ret == 0 && td->limit_index == LIMIT_LOW) {
+@@ -180,9 +177,6 @@ static unsigned int tg_iops_limit(struct throtl_grp *tg, int rw)
+ 	struct throtl_data *td;
+ 	unsigned int ret;
  
- 	/*
- 	 * if cgroup reaches low limit (if low limit is 0, the cgroup always
- 	 * reaches), it's ok to upgrade to next limit
- 	 */
--	read_limit = tg->bps[READ][LIMIT_LOW] || tg->iops[READ][LIMIT_LOW];
--	write_limit = tg->bps[WRITE][LIMIT_LOW] || tg->iops[WRITE][LIMIT_LOW];
--	if (!read_limit && !write_limit)
--		return true;
--	if (read_limit && sq->nr_queued[READ] &&
--	    (!write_limit || sq->nr_queued[WRITE]))
--		return true;
--	if (write_limit && sq->nr_queued[WRITE] &&
--	    (!read_limit || sq->nr_queued[READ]))
-+	return !limit || sq->nr_queued[rw].
-+}
-+
-+static bool throtl_tg_can_upgrade(struct throtl_grp *tg)
-+{
-+	if (throtl_tg_reach_low_limit(tg, READ) &&
-+	    throtl_tg_reach_low_limit(tg, WRITE))
- 		return true;
- 
- 	if (time_after_eq(jiffies,
+-	if (cgroup_subsys_on_dfl(io_cgrp_subsys) && !blkg->parent)
+-		return UINT_MAX;
+-
+ 	td = tg->td;
+ 	ret = tg->iops[rw][td->limit_index];
+ 	if (ret == 0 && tg->td->limit_index == LIMIT_LOW) {
 -- 
 2.30.0
 
