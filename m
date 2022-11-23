@@ -1,175 +1,61 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH] mm: remove lock_page_memcg() from rmap
-Date: Wed, 23 Nov 2022 13:18:38 -0500
-Message-ID: <20221123181838.1373440-1-hannes@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 04/11] blk-throttle: correct calculation of wait time in
+ tg_may_dispatch
+Date: Wed, 23 Nov 2022 08:18:56 -1000
+Message-ID: <Y35kELlFkI/BtkqC@slm.duckdns.org>
+References: <20221123060401.20392-1-shikemeng@huawei.com>
+ <20221123060401.20392-5-shikemeng@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=LByvlpCL+LRhavRIegrpdrd5Lc2V7kp80WStpkpve1I=;
-        b=cCBLtfi5K4sU5yrNo1RImOt+Dj8joY80jakzA+6USTvY467lH6tomTnQmnyul5qx3B
-         dreZImpWfOi6dCDe6L46g1ybagMMyOeu+/yInkp04GIfiyCLZRL8mf0+LzZfJMf2jolk
-         FJHdEJBOKctYHolC1/b26ialFQwRJGC177w2fMw6t/H7/BXbnBqvy7XKvo4cmtt2ibv4
-         d+2IAyVQ/t9IxQAqfNr2Z+rxZ+hfPj69QX8vnS93R52rsFvX//2LwqjGu1zcfwF/A73Q
-         pae3opRy+jrtwYhDv7S3iarQpyjSM5kUBe2Mr6Y+G9cCpTdTAv+x0r+jJSnBsXk3rZxZ
-         HxOw==
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=/+wiUlX+ZzbOJle7HnS1krIiCPjVF1I+A5cD8cm1XM8=;
+        b=oZeeBnEeGmvjRkvxpd5dd4v1+nkW1yLWhjB1DNJmqQKV0eIUzEyRNI9KXZBGZL4JO7
+         Vp9VbeF+D/aoQ5F2L2rjPMaGOqgiO5HjnnKWNF+YJx2R7+GsbiR4jal2MHBPE6eg+jBN
+         wSFp9cv7IbUn5M+i38B6LfWvRvU5V0CvxcTXkubZwuVPzo+uS4c4JlyO0SlhL2zoydzQ
+         t5dcixwsUZnz1vGaGwou5EWvGYvjK8brVFpBVEL8Mr15CRiXWX+H81iWY12EPefqUXpO
+         4tEYMm7piYEKqHN3IdOto/oo+KvUOXVUXPaMZw+0hzmtFoJZACW3lRySAU7EWmsi5KXB
+         slgQ==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20221123060401.20392-5-shikemeng@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Kemeng Shi <shikemeng@huawei.com>
+Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 
-rmap changes (mapping and unmapping) of a page currently take
-lock_page_memcg() to serialize 1) update of the mapcount and the
-cgroup mapped counter with 2) cgroup moving the page and updating the
-old cgroup and the new cgroup counters based on page_mapped().
+On Wed, Nov 23, 2022 at 02:03:54PM +0800, Kemeng Shi wrote:
+> If bps and iops both reach limit, we always return bps wait time as
+> tg_within_iops_limit is after "tg_within_bps_limit(tg, bio, bps_limit) &&"
+> and will not be called if tg_within_bps_limit return true.
 
-Before b2052564e66d ("mm: memcontrol: continue cache reclaim from
-offlined groups"), we used to reassign all pages that could be found
-on a cgroup's LRU list on deletion - something that rmap didn't
-naturally serialize against. Since that commit, however, the only
-pages that get moved are those mapped into page tables of a task
-that's being migrated. In that case, the pte lock is always held (and
-we know the page is mapped), which keeps rmap changes at bay already.
+Maybe it's obvious but it'd be better to explain "why" this change is being
+made.
 
-The additional lock_page_memcg() by rmap is redundant. Remove it.
+> @@ -939,8 +926,9 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
+>  				jiffies + tg->td->throtl_slice);
+>  	}
+>  
+> -	if (tg_within_bps_limit(tg, bio, bps_limit, &bps_wait) &&
+> -	    tg_within_iops_limit(tg, bio, iops_limit, &iops_wait)) {
+> +	bps_wait = tg_within_bps_limit(tg, bio, bps_limit);
+> +	iops_wait = tg_within_iops_limit(tg, bio, iops_limit);
+> +	if (bps_wait + iops_wait == 0) {
+>  		if (wait)
+>  			*wait = 0;
+>  		return true;
 
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
----
- mm/memcontrol.c | 35 ++++++++++++++++++++---------------
- mm/rmap.c       | 12 ------------
- 2 files changed, 20 insertions(+), 27 deletions(-)
+So, max_wait is supposed to be maximum in the whole traversal path in the
+tree, not just the max value in this tg, so after this, the code should be
+changed to sth like the following, right?
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 23750cec0036..52b86ca7a78e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5676,7 +5676,10 @@ static struct page *mc_handle_file_pte(struct vm_area_struct *vma,
-  * @from: mem_cgroup which the page is moved from.
-  * @to:	mem_cgroup which the page is moved to. @from != @to.
-  *
-- * The caller must make sure the page is not on LRU (isolate_page() is useful.)
-+ * This function acquires folio_lock() and folio_lock_memcg(). The
-+ * caller must exclude all other possible ways of accessing
-+ * page->memcg, such as LRU isolation (to lock out isolation) and
-+ * having the page mapped and pte-locked (to lock out rmap).
-  *
-  * This function doesn't do "charge" to new cgroup and doesn't do "uncharge"
-  * from old cgroup.
-@@ -5696,6 +5699,13 @@ static int mem_cgroup_move_account(struct page *page,
- 	VM_BUG_ON_FOLIO(folio_test_lru(folio), folio);
- 	VM_BUG_ON(compound && !folio_test_large(folio));
- 
-+	/*
-+	 * We're only moving pages mapped into the moving process's
-+	 * page tables. The caller's pte lock prevents rmap from
-+	 * removing the NR_x_MAPPED state while we transfer it.
-+	 */
-+	VM_WARN_ON_ONCE(!folio_mapped(folio));
-+
- 	/*
- 	 * Prevent mem_cgroup_migrate() from looking at
- 	 * page's memory cgroup of its source page while we change it.
-@@ -5715,30 +5725,25 @@ static int mem_cgroup_move_account(struct page *page,
- 	folio_memcg_lock(folio);
- 
- 	if (folio_test_anon(folio)) {
--		if (folio_mapped(folio)) {
--			__mod_lruvec_state(from_vec, NR_ANON_MAPPED, -nr_pages);
--			__mod_lruvec_state(to_vec, NR_ANON_MAPPED, nr_pages);
--			if (folio_test_transhuge(folio)) {
--				__mod_lruvec_state(from_vec, NR_ANON_THPS,
--						   -nr_pages);
--				__mod_lruvec_state(to_vec, NR_ANON_THPS,
--						   nr_pages);
--			}
-+		__mod_lruvec_state(from_vec, NR_ANON_MAPPED, -nr_pages);
-+		__mod_lruvec_state(to_vec, NR_ANON_MAPPED, nr_pages);
-+
-+		if (folio_test_transhuge(folio)) {
-+			__mod_lruvec_state(from_vec, NR_ANON_THPS, -nr_pages);
-+			__mod_lruvec_state(to_vec, NR_ANON_THPS, nr_pages);
- 		}
- 	} else {
- 		__mod_lruvec_state(from_vec, NR_FILE_PAGES, -nr_pages);
- 		__mod_lruvec_state(to_vec, NR_FILE_PAGES, nr_pages);
- 
-+		__mod_lruvec_state(from_vec, NR_FILE_MAPPED, -nr_pages);
-+		__mod_lruvec_state(to_vec, NR_FILE_MAPPED, nr_pages);
-+
- 		if (folio_test_swapbacked(folio)) {
- 			__mod_lruvec_state(from_vec, NR_SHMEM, -nr_pages);
- 			__mod_lruvec_state(to_vec, NR_SHMEM, nr_pages);
- 		}
- 
--		if (folio_mapped(folio)) {
--			__mod_lruvec_state(from_vec, NR_FILE_MAPPED, -nr_pages);
--			__mod_lruvec_state(to_vec, NR_FILE_MAPPED, nr_pages);
--		}
--
- 		if (folio_test_dirty(folio)) {
- 			struct address_space *mapping = folio_mapping(folio);
- 
-diff --git a/mm/rmap.c b/mm/rmap.c
-index 459dc1c44d8a..11a4894158db 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -1222,9 +1222,6 @@ void page_add_anon_rmap(struct page *page,
- 	bool compound = flags & RMAP_COMPOUND;
- 	bool first = true;
- 
--	if (unlikely(PageKsm(page)))
--		lock_page_memcg(page);
--
- 	/* Is page being mapped by PTE? Is this its first map to be added? */
- 	if (likely(!compound)) {
- 		first = atomic_inc_and_test(&page->_mapcount);
-@@ -1254,9 +1251,6 @@ void page_add_anon_rmap(struct page *page,
- 	if (nr)
- 		__mod_lruvec_page_state(page, NR_ANON_MAPPED, nr);
- 
--	if (unlikely(PageKsm(page)))
--		unlock_page_memcg(page);
--
- 	/* address might be in next vma when migration races vma_adjust */
- 	else if (first)
- 		__page_set_anon_rmap(page, vma, address,
-@@ -1321,7 +1315,6 @@ void page_add_file_rmap(struct page *page,
- 	bool first;
- 
- 	VM_BUG_ON_PAGE(compound && !PageTransHuge(page), page);
--	lock_page_memcg(page);
- 
- 	/* Is page being mapped by PTE? Is this its first map to be added? */
- 	if (likely(!compound)) {
-@@ -1349,7 +1342,6 @@ void page_add_file_rmap(struct page *page,
- 			NR_SHMEM_PMDMAPPED : NR_FILE_PMDMAPPED, nr_pmdmapped);
- 	if (nr)
- 		__mod_lruvec_page_state(page, NR_FILE_MAPPED, nr);
--	unlock_page_memcg(page);
- 
- 	mlock_vma_page(page, vma, compound);
- }
-@@ -1378,8 +1370,6 @@ void page_remove_rmap(struct page *page,
- 		return;
- 	}
- 
--	lock_page_memcg(page);
--
- 	/* Is page being unmapped by PTE? Is this its last map to be removed? */
- 	if (likely(!compound)) {
- 		last = atomic_add_negative(-1, &page->_mapcount);
-@@ -1427,8 +1417,6 @@ void page_remove_rmap(struct page *page,
- 	 * and remember that it's only reliable while mapped.
- 	 */
- 
--	unlock_page_memcg(page);
--
- 	munlock_vma_page(page, vma, compound);
- }
- 
+        max_wait = max(max, max(bps_wait, iops_wait));
+
+Thanks.
+
 -- 
-2.38.1
-
+tejun
