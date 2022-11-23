@@ -1,51 +1,50 @@
-From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 07/11] blk-throttle: remove incorrect comment for tg_last_low_overflow_time
-Date: Wed, 23 Nov 2022 14:03:57 +0800
-Message-ID: <20221123060401.20392-8-shikemeng@huawei.com>
+From: Kemeng Shi <shikemeng@huawei.com>
+Subject: [PATCH 08/11] blk-throttle: remove repeat check of elapsed time from last upgrade in throtl_hierarchy_can_downgrade
+Date: Wed, 23 Nov 2022 14:03:58 +0800
+Message-ID: <20221123060401.20392-9-shikemeng@huawei.com>
 References: <20221123060401.20392-1-shikemeng@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20221123060401.20392-1-shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20221123060401.20392-1-shikemeng@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, shikemeng@huawei.com
 
-Function tg_last_low_overflow_time is called with intermediate node as
-following:
-throtl_hierarchy_can_downgrade
-  throtl_tg_can_downgrade
-    tg_last_low_overflow_time
+There is no need to check elapsed time from last upgrade for each node in
+hierarchy. Move this check before traversing as throtl_can_upgrade do
+to remove repeat check.
 
-throtl_hierarchy_can_upgrade
-  throtl_tg_can_upgrade
-    tg_last_low_overflow_time
-
-throtl_hierarchy_can_downgrade/throtl_hierarchy_can_upgrade will traverse
-from leaf node to sub-root node and pass traversed intermediate node
-to tg_last_low_overflow_time.
-
-No such limit could be found from context and implementation of
-tg_last_low_overflow_time, so remove this limit in comment.
-
-Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Kemeng Shi <shikemeng@huawei.com>
 ---
- block/blk-throttle.c | 1 -
- 1 file changed, 1 deletion(-)
+ block/blk-throttle.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 0aa21832cb96..bd07f562c799 100644
+index bd07f562c799..3eccc7af4368 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -1746,7 +1746,6 @@ static unsigned long __tg_last_low_overflow_time(struct throtl_grp *tg)
- 	return min(rtime, wtime);
- }
+@@ -1932,8 +1932,7 @@ static bool throtl_tg_can_downgrade(struct throtl_grp *tg)
+ 	 * If cgroup is below low limit, consider downgrade and throttle other
+ 	 * cgroups
+ 	 */
+-	if (time_after_eq(now, td->low_upgrade_time + td->throtl_slice) &&
+-	    time_after_eq(now, tg_last_low_overflow_time(tg) +
++	if (time_after_eq(now, tg_last_low_overflow_time(tg) +
+ 					td->throtl_slice) &&
+ 	    (!throtl_tg_is_idle(tg) ||
+ 	     !list_empty(&tg_to_blkg(tg)->blkcg->css.children)))
+@@ -1943,6 +1942,9 @@ static bool throtl_tg_can_downgrade(struct throtl_grp *tg)
  
--/* tg should not be an intermediate node */
- static unsigned long tg_last_low_overflow_time(struct throtl_grp *tg)
+ static bool throtl_hierarchy_can_downgrade(struct throtl_grp *tg)
  {
- 	struct throtl_service_queue *parent_sq;
++	if (time_before(now, tg->td->low_upgrade_time + td->throtl_slice))
++		return false;
++
+ 	while (true) {
+ 		if (!throtl_tg_can_downgrade(tg))
+ 			return false;
 -- 
 2.30.0
 
