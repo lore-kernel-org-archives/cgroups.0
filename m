@@ -1,69 +1,43 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: Optimize update_tasks_nodemask()
-Date: Wed, 23 Nov 2022 07:05:05 -1000
-Message-ID: <Y35Swdpq+rJe+Tu3@slm.duckdns.org>
-References: <20221123082157.71326-1-haifeng.xu@shopee.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 01/11] blk-throttle: Limit whole system if root group is
+ configured when on the default hierarchy
+Date: Wed, 23 Nov 2022 07:11:49 -1000
+Message-ID: <Y35UVRg0tTfsTdrB@slm.duckdns.org>
+References: <20221123060401.20392-1-shikemeng@huawei.com>
+ <20221123060401.20392-2-shikemeng@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=EztbpzZ3Kt/PihSs3M5nNP63NaXEehzBdLCvtUKvG5E=;
-        b=RKa7MkTVo23uF7O9o9uVprUaLAkBBOnLupy8+9eq20WsELWHC3gn7EWXE5QZZKHWgE
-         W5gpisnVSt2PfdQ7o92wW2ZgQOV2rO1+3Vp37Ti4G1tz2xNLFT7FdKUezFaDTEydRocP
-         6J6urHkFaCS43MXSYtQP6FWwUqNcuGr90JoGwco/EBCVJCXNfQi0jRRzoEeIzgbNgwQ+
-         fiL7/oB351BuHm4WO7aOCpXQ88TnjwPch218oKonZo8m81RUIAsKhRr4oThK/j4x/Pfd
-         v+z6sXCqjjMEyf55xjUOAgWso7nGWdw00Lk/NqavHQsNO6YNwSU5UbZKd6YcuEoisdD1
-         vX7w==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=NwhqRAJvGavoaGuqSrfgQhHpNiR8ljuOsT2sziprE50=;
+        b=kR4KehW+/5RtfQodotENKJN9+dUBrQYSP1Drnr1ELPapshjSBc05FeCs5WKFwRYhPF
+         5/evnW19Z3/WuKviaZQkBgYmYVsWl54dhOH3YawdfFrVbiz2wuB0KlNo28H3ATQVCRRj
+         gHOjfUzqr58hJitHQP3GkzeZasRkD9Cj71Pzok8i3r4muU/UqM93A+54CXeCmatNkCTc
+         VVwar/ZCrszc0IepuyjwUKg1EopF2V0JjDJSy82HO2WVCWX/zuXTY8vHKCzL/J50PqEu
+         o83KfGYbocXqlMkcuW3cugTYUWCoznHe9HubGFCHzhJRIq/KqnA/eNfF0C/L1x59QrhS
+         H27Q==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20221123082157.71326-1-haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20221123060401.20392-2-shikemeng@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "haifeng.xu" <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-Cc: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kemeng Shi <shikemeng@huawei.com>
+Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Nov 23, 2022 at 08:21:57AM +0000, haifeng.xu wrote:
-> When change the 'cpuset.mems' under some cgroup, system will hung
-> for a long time. From the dmesg, many processes or theads are
-> stuck in fork/exit. The reason is show as follows.
-> 
-> thread A:
-> cpuset_write_resmask /* takes cpuset_rwsem */
->   ...
->     update_tasks_nodemask
->       mpol_rebind_mm /* waits mmap_lock */
-> 
-> thread B:
-> worker_thread
->   ...
->     cpuset_migrate_mm_workfn
->       do_migrate_pages /* takes mmap_lock */
-> 
-> thread C:
-> cgroup_procs_write /* takes cgroup_mutex and cgroup_threadgroup_rwsem */
->   ...
->     cpuset_can_attach
->       percpu_down_write /* waits cpuset_rwsem */
-> 
-> Once update the nodemasks of cpuset, thread A wakes up thread B to
-> migrate mm. But when thread A iterates through all tasks, including
-> child threads and group leader, it has to wait the mmap_lock which
-> has been take by thread B. Unfortunately, thread C wants to migrate
-> tasks into cgroup at this moment, it must wait thread A to release
-> cpuset_rwsem. If thread B spends much time to migrate mm, the
-> fork/exit which acquire cgroup_threadgroup_rwsem also need to
-> wait for a long time.
-> 
-> There is no need to migrate the mm of child threads which is
-> shared with group leader. 
+On Wed, Nov 23, 2022 at 02:03:51PM +0800, Kemeng Shi wrote:
+> Quoted from comment in throtl_pd_init: "If on the default hierarchy, we
+> switch to properly hierarchical behavior where limits on a given
+> throtl_grp are applied to the whole subtree rather than just the group
+> itself. e.g. If 16M read_bps limit is set on the root group, the whole
+> system can' exceed 16M for the device."
 
-This is only a problem in cgroup1 and cgroup1 doesn't require the threads of
-a given task to be in the same cgroup. I don't think you can optimize it
-this way.
+On the default hierarchy (cgroup2), the throttle interface files don't exist
+in the root cgroup. In general, cgroup doesn't wanna be in the business of
+restricting resources at the system level.
 
 Thanks.
 
