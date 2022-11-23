@@ -1,45 +1,45 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 09/11] blk-throttle: remove unnecessary check for
- validation of limit index
-Date: Wed, 23 Nov 2022 08:31:55 -1000
-Message-ID: <Y35nG1CguzXf0GX8@slm.duckdns.org>
-References: <20221123060401.20392-1-shikemeng@huawei.com>
- <20221123060401.20392-10-shikemeng@huawei.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm: remove lock_page_memcg() from rmap
+Date: Wed, 23 Nov 2022 10:34:27 -0800
+Message-ID: <CALvZod488YStQ5tucPgc0b3FSwiqFhVJptPceFvaZjj2Ba24YA@mail.gmail.com>
+References: <20221123181838.1373440-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=0WaeNxRFAhW4+njSz3oymHAfGYjiGBjYSgTnlxkSAys=;
-        b=jxxUgRm3rae626X/F21Ixmc+goaczD8yETEXBu7QKc5qDMcofymNGMqTIMRVMFSRgo
-         MWh0pdG+HtHw/CoioHszw6hAOBoiZlBfcQaWru3S0hQoUOw0a150L6bPjTztvDXr6EHd
-         LQHcc7w27lcEfmNURWK2YGbv5ooe00NXtY9/nHbuKrqPlRfT6GjcjDNIZQx7wHCcEeiK
-         uFNz1BwW7Y/3JL5VqEoKKeLWI94+tneUv4fB0k9afElk693ZB3qerfUL+jP+GlR6/LAb
-         AmqWawnah09OIwkxNg3OtH5d6XnCCa5Bp02R8mdnjDRzhKp8PWkO5lPULhVQTq8eJzxB
-         cxdA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20221123060401.20392-10-shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=tELD2VQL8vhWDECXZ4KBFxXiAPz5Gyk7j2brYG+e7vo=;
+        b=MsY086PNmr0Enodb3X6kbiamRzMWU6bqnw3zAK/YhYEIMOzRtWLfMKo/hKzzyBUapk
+         QcM9+DGMXq9/qqpaiec63a+VT4ELUKRbyCZ3+ZFDDW1CnwYEe+kwXwuGSUo01eohnJ5F
+         C0P7zjWF88GUfhfkn/pJLlJMCoHR8O3Rb5bZIq80jG9kUd83cEOOhuOwSFI1Iv9KE2Kt
+         jpufQUaMk2odO6mtmdK7EhfINsOo6DhuZtdaxlQPKXJFdVpjTqlArOKKI+4rFAIbY6xG
+         0IMiw8bfVB7sDBvcxZYEOHndyy4gYsLtQor3yHI2KLjKXYbibhvPhJ9Hp8jsRO/bzHn/
+         dEGg==
+In-Reply-To: <20221123181838.1373440-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Nov 23, 2022 at 02:03:59PM +0800, Kemeng Shi wrote:
-> We always keep limit index valid as following:
-> Max limit is always valid and low limit can only be invalidated in
-> blk_throtl_update_limit_valid. Each time low limit may become invalid
-> after blk_throtl_update_limit_valid is called, we will check and make
-> sure current limit index is valid.
-> 
-> It's reasonable to always keep limit index valid, so we can remove this
-> check.
+On Wed, Nov 23, 2022 at 10:18 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+>
+> rmap changes (mapping and unmapping) of a page currently take
+> lock_page_memcg() to serialize 1) update of the mapcount and the
+> cgroup mapped counter with 2) cgroup moving the page and updating the
+> old cgroup and the new cgroup counters based on page_mapped().
+>
+> Before b2052564e66d ("mm: memcontrol: continue cache reclaim from
+> offlined groups"), we used to reassign all pages that could be found
+> on a cgroup's LRU list on deletion - something that rmap didn't
+> naturally serialize against. Since that commit, however, the only
+> pages that get moved are those mapped into page tables of a task
+> that's being migrated. In that case, the pte lock is always held (and
+> we know the page is mapped), which keeps rmap changes at bay already.
+>
+> The additional lock_page_memcg() by rmap is redundant. Remove it.
+>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-It's not obvious to me that it's correct and I'm not sure what we're gaining
-by removing this while risking subtle breakages.
-
--- 
-tejun
+Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
