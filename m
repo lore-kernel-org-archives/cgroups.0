@@ -1,69 +1,49 @@
-From: Kemeng Shi <shikemeng@huawei.com>
-Subject: [PATCH 02/11] blk-throttle: Fix that bps of child could exceed bps limited in parent
-Date: Wed, 23 Nov 2022 14:03:52 +0800
-Message-ID: <20221123060401.20392-3-shikemeng@huawei.com>
+From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 03/11] blk-throttle: ignore cgroup without io queued in blk_throtl_cancel_bios
+Date: Wed, 23 Nov 2022 14:03:53 +0800
+Message-ID: <20221123060401.20392-4-shikemeng@huawei.com>
 References: <20221123060401.20392-1-shikemeng@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20221123060401.20392-1-shikemeng@huawei.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20221123060401.20392-1-shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, shikemeng@huawei.com
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Consider situation as following (on the default hierarchy):
- HDD
-  |
-root (bps limit: 4k)
-  |
-child (bps limit :8k)
-  |
-fio bs=8k
-Rate of fio is supposed to be 4k, but result is 8k. Reason is as
-following:
-Size of single IO from fio is larger than bytes allowed in one
-throtl_slice in child, so IOs are always queued in child group first.
-When queued IOs in child are dispatched to parent group, BIO_BPS_THROTTLED
-is set and these IOs will not be limited by tg_within_bps_limit anymore.
-Fix this by:
-1. Limit IO with BIO_BPS_THROTTLED flag in tg_within_bps_limit.
-2. Ignore BIO_BPS_THROTTLED flag when accouting in throtl_charge_bio.
-There changes have no influence on situation which is not on the default
-hierarchy as each group is a single root group without parent.
+Ignore cgroup without io queued in blk_throtl_cancel_bios for two
+reasons:
+1. Save cpu cycle for trying to dispatch cgroup which is no io queued.
+2. Avoid non-consistent state that cgroup is inserted to service queue
+without THROTL_TG_PENDING set as tg_update_disptime will unconditional
+re-insert cgroup to service queue. If we are on the default hierarchy,
+IO dispatched from child in tg_dispatch_one_bio will trigger inserting
+cgroup to service queue without erase first and ruin the tree.
 
-Signed-off-by: Kemeng Shi <shikemeng@huawei.com>
+Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-throttle.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ block/blk-throttle.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 96aa53e30e28..b33bcf53b36e 100644
+index b33bcf53b36e..acfac916ed99 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -856,8 +856,7 @@ static bool tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
- 	unsigned int bio_size = throtl_bio_data_size(bio);
- 
--	/* no need to throttle if this bio's bytes have been accounted */
--	if (bps_limit == U64_MAX || bio_flagged(bio, BIO_BPS_THROTTLED)) {
-+	if (bps_limit == U64_MAX) {
- 		if (wait)
- 			*wait = 0;
- 		return true;
-@@ -964,10 +963,8 @@ static void throtl_charge_bio(struct throtl_grp *tg, struct bio *bio)
- 	unsigned int bio_size = throtl_bio_data_size(bio);
- 
- 	/* Charge the bio to the group */
--	if (!bio_flagged(bio, BIO_BPS_THROTTLED)) {
--		tg->bytes_disp[rw] += bio_size;
--		tg->last_bytes_disp[rw] += bio_size;
--	}
-+	tg->bytes_disp[rw] += bio_size;
-+	tg->last_bytes_disp[rw] += bio_size;
- 
- 	tg->io_disp[rw]++;
- 	tg->last_io_disp[rw]++;
+@@ -1728,7 +1728,12 @@ void blk_throtl_cancel_bios(struct gendisk *disk)
+ 		 * Set the flag to make sure throtl_pending_timer_fn() won't
+ 		 * stop until all throttled bios are dispatched.
+ 		 */
+-		blkg_to_tg(blkg)->flags |= THROTL_TG_CANCELING;
++		tg->flags |= THROTL_TG_CANCELING;
++
++		/* No need to dispatch cgroup without io queued */
++		if (!(tg->flags & THROTL_TG_PENDING))
++			continue;
++
+ 		/*
+ 		 * Update disptime after setting the above flag to make sure
+ 		 * throtl_select_dispatch() won't exit without dispatching.
 -- 
 2.30.0
 
