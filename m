@@ -1,35 +1,33 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [RFC PATCH V1] mm: Disable demotion from proactive reclaim
-Date: Wed, 23 Nov 2022 17:30:56 -0500
-Message-ID: <Y36fIGFCFKiocAd6@cmpxchg.org>
+Date: Wed, 23 Nov 2022 14:37:04 -0800
+Message-ID: <CAHS8izNoWM_oSdntpacFaEyVrXfX5YrzAWtMGvU6j_pAVNsvtA@mail.gmail.com>
 References: <20221122203850.2765015-1-almasrymina@google.com>
- <Y35fw2JSAeAddONg@cmpxchg.org>
- <CAHS8izN+xqM67XLT4y5qyYnGQMUWRQCJrdvf2gjTHd8nZ_=0sw@mail.gmail.com>
- <CAJD7tkZNW=u1TD-Fd_3RuzRNtaFjxihbGm0836QHkdp0Nn-vyQ@mail.gmail.com>
+ <Y35fw2JSAeAddONg@cmpxchg.org> <CAHS8izN+xqM67XLT4y5qyYnGQMUWRQCJrdvf2gjTHd8nZ_=0sw@mail.gmail.com>
+ <Y36XchdgTCsMP4jT@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=2PsyXXA9CudTt1GF7QXo+ry29gXPUEu+QzCWmZI6Zig=;
-        b=XMfsHKwK6gxd9tt2hChYTe5pQ25W+G022dNNp25j8jGYTdJNaF40WrrHzq8fOVjvNQ
-         6oCZ7b3jr+K2sYCzBFxmbnk24Ep4ujNlf4doTSuQkHNDrqeL5ghS/4l4Xl148Unxbptt
-         iHkxYQ0vlJAVtsjKS2tOCk6WFNQGGe/k97tPlHGzXftZ9/eWz1QepcoTWTyk0oklY6S3
-         h+08Iq4aqap3gfcMhOfLp5DkiOX/fswAoTFAJQKh2cvH3o9OTCQAUIuAGNpMkSmNnicN
-         S2SqUR1boFkW3FREVyDD/Sx6b827THmq1YMvB30nC/aeRC118qw2xmUFWjVSv1lxqE1J
-         J+AA==
-Content-Disposition: inline
-In-Reply-To: <CAJD7tkZNW=u1TD-Fd_3RuzRNtaFjxihbGm0836QHkdp0Nn-vyQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=dWg4CPBS1rHon+H83SkA4H14sLH1o04yGoKobBsvf5w=;
+        b=Joz6LLphsQFnzqMzE4EJRbSIxf04MbkPtcfl1yd2mTjwLfuf81a5HnRued3BN/uBBD
+         0FWJFMBhdek23e6wLn5uNHNdPLmb5CBF2HQgUyGr0xvZyQtuKOMzAWMMLRMGTEwhIr7R
+         zqwu1u5FxN5GLmL9OUnnb6ZTffbaJJZnTV3BljIfjPBMfEYFJyS52V4+FwxGaGDoo+HG
+         jXPIUo83qe2S5+nBg7r7+ptiu7GOP+OHiocf/XkDpJVhoNn4T7FLqHMl08ahlqL29W/9
+         Z59/0l3nS7xdfcY25FrzRzByxPMS5qrxvHqzJYAmK0YkEIN90C7gcaIRqLUYEBrKrmPh
+         C3JQ==
+In-Reply-To: <Y36XchdgTCsMP4jT-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fvdl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fvdl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Wed, Nov 23, 2022 at 01:35:13PM -0800, Yosry Ahmed wrote:
-> On Wed, Nov 23, 2022 at 1:21 PM Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >
+On Wed, Nov 23, 2022 at 1:57 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+>
+> On Wed, Nov 23, 2022 at 01:20:57PM -0800, Mina Almasry wrote:
 > > On Wed, Nov 23, 2022 at 10:00 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 > > >
 > > > Hello Mina,
@@ -80,15 +78,73 @@ On Wed, Nov 23, 2022 at 01:35:13PM -0800, Yosry Ahmed wrote:
 > > fall back to reclaiming if it can't demote the full amount. I had
 > > hoped to have the flexibility to protect latency sensitive jobs from
 > > reclaim entirely while attempting to do demotion.
-> >
-> > There are probably ways to get around that in the userspace. I presume
-> > the userspace can check if there is available memory on the node's
-> > demotion targets, and if so, the kernel should demote-only. But I feel
-> > that wouldn't be reliable as the demotion logic may change across
-> > kernel versions. The userspace may think the kernel would demote but
-> > instead demotion failed due to whatever heuristic introduced into the
-> > new kernel version.
-> >
+>
+> The fallback to reclaim actually strikes me as wrong.
+>
+> Think of reclaim as 'demoting' the pages to the storage tier. If we
+> have a RAM -> CXL -> storage hierarchy, we should demote from RAM to
+> CXL and from CXL to storage. If we reclaim a page from RAM, it means
+> we 'demote' it directly from RAM to storage, bypassing potentially a
+> huge amount of pages colder than it in CXL. That doesn't seem right.
+>
+
+Ah, I see. When you put it like that it makes a lot of sense. Reclaim
+would be just another type of demotion as you put it, i.e. demoting
+from the lowest memory tier to storage. I assume in your model
+demoting from the lowest memory tier to storage includes all of
+swapping, writing back of dirty pages, and discarding clean file
+pages. All these pages (anon, clean file pages, or dirty file pages)
+should first be demoted down the memory tiers until finally they get
+'demoted' to storage. i.e. reclaimed.
+
+> If demotion fails, IMO it shouldn't satisfy the reclaim request by
+> breaking the layering. Rather it should deflect that pressure to the
+> lower layers to make room. This makes sure we maintain an aging
+> pipeline that honors the memory tier hierarchy.
+>
+
+Also got it. I believe the pseudo code would be roughly like a bubble
+sort algorithm of sorts, where the coldest pages are demoted to the
+next memory tier, and finally reclaimed from the final memory tier:
+
+demoted_pages = 0;
+retry:
+    memory_tier = lowest_tier:
+    for (; memory_tier < 0; memory_tier--) {
+        if (memory_tier == lowest_tier)
+            demoted_pages += demote_to_storage();
+        else
+            demote_pages += demote_to_the_next_memory_tier(memory_tier);
+    }
+    if (demoted_pages < pages_to_demote)
+         goto retry;
+
+> So I'm hesitant to design cgroup controls around the current behavior.
+>
+
+Thanks for taking the time to explain this. I think if it sounds good
+to folks I'll add the "nodes=" arg as you described now. Reworking the
+reclaim algorithm for memory tiering would be a bigger change in need
+of its own patchset.
+
+I think the nodes= arg by itself would help bridge the gap quite a
+bit. I surmise for Google we can :
+1. Force reclaim by: echo "<size> nodes=<lowest memory tier nodes>" >
+memory.reclaim
+2. Almost force demotion by: echo "<size> nodes=<highest memory tier
+nodes>" > memory.reclaim
+
+In case #2 the kernel may still reclaim it if it can't demote the full
+amount, but that is as you put it more of a bug that should be fixed.
+
+However, even in a world where the reclaim code works as you
+described, I wonder if we still need some kind of demote= arg. The
+issue is that demoting from the lowest memory tier to storage incurs
+more of a latency impact to the application than demoting between the
+other memory tiers, and that's because the other memory tiers are
+directly addressable, while pages demote to storage incur a pagefault.
+Not sure if that's a big concern at the moment.
+
 > > The above is just one angle of the issue. Another angle (which Yosry
 > > would care most about I think) is that at Google we call
 > > memory.reclaim mainly when memory.current is too close to memory.max
@@ -97,29 +153,7 @@ On Wed, Nov 23, 2022 at 01:35:13PM -0800, Yosry Ahmed wrote:
 > > 3f1509c57b1b ("Revert "mm/vmscan: never demote for memcg reclaim""),
 > > we would run into that regression, but I defer to Yosry here, he may
 > > have a solution for that in mind already.
-> 
-> We don't exactly rely on memory.current, but we do have a separate
-> proactive reclaim policy today from demotion, and we do expect
-> memory.reclaim to reclaim memory and not demote it. So it is important
-> that we can control reclaim vs. demotion separately. Having
-> memory.reclaim do demotions by default is not ideal for our current
-> setup, so at least having a demote= argument to control it (no
-> demotions, may demote, only demote) is needed.
-
-With a nodemask you should be able to only reclaim by specifying
-terminal memory tiers that do that, and leave out higher tiers that
-demote.
-
-That said, it would actually be nice if reclaim policy wouldn't have
-to differ from demotion policy longer term. Ultimately it comes down
-to mapping age to memory tier, right? Such that hot pages are in RAM,
-warm pages are in CXL, cold pages are in storage. If you apply equal
-presure on all tiers, it's access frequency that should determine
-which RAM pages to demote, and which CXL pages to reclaim. If RAM
-pages are hot and refuse demotion, and CXL pages are cold in
-comparison, CXL should clear out. If RAM pages are warm, they should
-get demoted to CXL but not reclaimed further from there (and rotate
-instead).
-
-Do we know what's preventing this from happening today? What's the
-reason you want to control them independently?
+>
+> IMO it should both demote and reclaim. Simliar to how memory.reclaim
+> on a non-tiered memory system would both deactivate active pages and
+> reclaim inactive pages.
