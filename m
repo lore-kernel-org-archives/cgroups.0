@@ -1,73 +1,175 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 03/11] blk-throttle: ignore cgroup without io queued in
- blk_throtl_cancel_bios
-Date: Wed, 23 Nov 2022 08:13:59 -1000
-Message-ID: <Y35i54BnLjKce3Kc@slm.duckdns.org>
-References: <20221123060401.20392-1-shikemeng@huawei.com>
- <20221123060401.20392-4-shikemeng@huawei.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [PATCH] mm: remove lock_page_memcg() from rmap
+Date: Wed, 23 Nov 2022 13:18:38 -0500
+Message-ID: <20221123181838.1373440-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=sMUk2UqA8txZdZbMsTiuPaMt9b7Ay82RXjXskAbuDPs=;
-        b=QAlAxOsEx24Cwf9tScvp0rAk8jnc3b8EhqyZVyTEUzMY+iffJxG+UTg2oo5xYUNszd
-         672R0ISbxm5hWjLG31Lvt+uIB/W6X45fhUb3yktwB1ioI6w3ZAUq+xsbihEMtpGCk/tk
-         rbTh1RYNawjVNsF66tpno4HWYq3IhBgEWzKwAesID2AUcPFOnKK/pOsZqXVE5e69/NVT
-         WU2woTi4IZ91+E0sVX5QTpJmDgsRoZs6ar4Tw1Dd8m26mXphAzH0X9gs5238Ljbs6AtY
-         ETcT2DHqHoHvEHW4pMIxk0CqJKz7GBBPXP5Ik/3uXCOLOADa0CxV9jX0HX9QNXg9XGAJ
-         Jq0g==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20221123060401.20392-4-shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=LByvlpCL+LRhavRIegrpdrd5Lc2V7kp80WStpkpve1I=;
+        b=cCBLtfi5K4sU5yrNo1RImOt+Dj8joY80jakzA+6USTvY467lH6tomTnQmnyul5qx3B
+         dreZImpWfOi6dCDe6L46g1ybagMMyOeu+/yInkp04GIfiyCLZRL8mf0+LzZfJMf2jolk
+         FJHdEJBOKctYHolC1/b26ialFQwRJGC177w2fMw6t/H7/BXbnBqvy7XKvo4cmtt2ibv4
+         d+2IAyVQ/t9IxQAqfNr2Z+rxZ+hfPj69QX8vnS93R52rsFvX//2LwqjGu1zcfwF/A73Q
+         pae3opRy+jrtwYhDv7S3iarQpyjSM5kUBe2Mr6Y+G9cCpTdTAv+x0r+jJSnBsXk3rZxZ
+         HxOw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Nov 23, 2022 at 02:03:53PM +0800, Kemeng Shi wrote:
-> Ignore cgroup without io queued in blk_throtl_cancel_bios for two
-> reasons:
-> 1. Save cpu cycle for trying to dispatch cgroup which is no io queued.
-> 2. Avoid non-consistent state that cgroup is inserted to service queue
-> without THROTL_TG_PENDING set as tg_update_disptime will unconditional
-> re-insert cgroup to service queue. If we are on the default hierarchy,
-> IO dispatched from child in tg_dispatch_one_bio will trigger inserting
-> cgroup to service queue without erase first and ruin the tree.
-> 
-> Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->  block/blk-throttle.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-> index b33bcf53b36e..acfac916ed99 100644
-> --- a/block/blk-throttle.c
-> +++ b/block/blk-throttle.c
-> @@ -1728,7 +1728,12 @@ void blk_throtl_cancel_bios(struct gendisk *disk)
->  		 * Set the flag to make sure throtl_pending_timer_fn() won't
->  		 * stop until all throttled bios are dispatched.
->  		 */
-> -		blkg_to_tg(blkg)->flags |= THROTL_TG_CANCELING;
-> +		tg->flags |= THROTL_TG_CANCELING;
-> +
-> +		/* No need to dispatch cgroup without io queued */
+rmap changes (mapping and unmapping) of a page currently take
+lock_page_memcg() to serialize 1) update of the mapcount and the
+cgroup mapped counter with 2) cgroup moving the page and updating the
+old cgroup and the new cgroup counters based on page_mapped().
 
-It's probably more important to mention that putting this in without PENDING
-set can corrupt the tree in the future through double insertion.
+Before b2052564e66d ("mm: memcontrol: continue cache reclaim from
+offlined groups"), we used to reassign all pages that could be found
+on a cgroup's LRU list on deletion - something that rmap didn't
+naturally serialize against. Since that commit, however, the only
+pages that get moved are those mapped into page tables of a task
+that's being migrated. In that case, the pte lock is always held (and
+we know the page is mapped), which keeps rmap changes at bay already.
 
-> +		if (!(tg->flags & THROTL_TG_PENDING))
-> +			continue;
-> +
+The additional lock_page_memcg() by rmap is redundant. Remove it.
 
-Other than than the above comment,
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ mm/memcontrol.c | 35 ++++++++++++++++++++---------------
+ mm/rmap.c       | 12 ------------
+ 2 files changed, 20 insertions(+), 27 deletions(-)
 
-  Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-Thanks.
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 23750cec0036..52b86ca7a78e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5676,7 +5676,10 @@ static struct page *mc_handle_file_pte(struct vm_area_struct *vma,
+  * @from: mem_cgroup which the page is moved from.
+  * @to:	mem_cgroup which the page is moved to. @from != @to.
+  *
+- * The caller must make sure the page is not on LRU (isolate_page() is useful.)
++ * This function acquires folio_lock() and folio_lock_memcg(). The
++ * caller must exclude all other possible ways of accessing
++ * page->memcg, such as LRU isolation (to lock out isolation) and
++ * having the page mapped and pte-locked (to lock out rmap).
+  *
+  * This function doesn't do "charge" to new cgroup and doesn't do "uncharge"
+  * from old cgroup.
+@@ -5696,6 +5699,13 @@ static int mem_cgroup_move_account(struct page *page,
+ 	VM_BUG_ON_FOLIO(folio_test_lru(folio), folio);
+ 	VM_BUG_ON(compound && !folio_test_large(folio));
+ 
++	/*
++	 * We're only moving pages mapped into the moving process's
++	 * page tables. The caller's pte lock prevents rmap from
++	 * removing the NR_x_MAPPED state while we transfer it.
++	 */
++	VM_WARN_ON_ONCE(!folio_mapped(folio));
++
+ 	/*
+ 	 * Prevent mem_cgroup_migrate() from looking at
+ 	 * page's memory cgroup of its source page while we change it.
+@@ -5715,30 +5725,25 @@ static int mem_cgroup_move_account(struct page *page,
+ 	folio_memcg_lock(folio);
+ 
+ 	if (folio_test_anon(folio)) {
+-		if (folio_mapped(folio)) {
+-			__mod_lruvec_state(from_vec, NR_ANON_MAPPED, -nr_pages);
+-			__mod_lruvec_state(to_vec, NR_ANON_MAPPED, nr_pages);
+-			if (folio_test_transhuge(folio)) {
+-				__mod_lruvec_state(from_vec, NR_ANON_THPS,
+-						   -nr_pages);
+-				__mod_lruvec_state(to_vec, NR_ANON_THPS,
+-						   nr_pages);
+-			}
++		__mod_lruvec_state(from_vec, NR_ANON_MAPPED, -nr_pages);
++		__mod_lruvec_state(to_vec, NR_ANON_MAPPED, nr_pages);
++
++		if (folio_test_transhuge(folio)) {
++			__mod_lruvec_state(from_vec, NR_ANON_THPS, -nr_pages);
++			__mod_lruvec_state(to_vec, NR_ANON_THPS, nr_pages);
+ 		}
+ 	} else {
+ 		__mod_lruvec_state(from_vec, NR_FILE_PAGES, -nr_pages);
+ 		__mod_lruvec_state(to_vec, NR_FILE_PAGES, nr_pages);
+ 
++		__mod_lruvec_state(from_vec, NR_FILE_MAPPED, -nr_pages);
++		__mod_lruvec_state(to_vec, NR_FILE_MAPPED, nr_pages);
++
+ 		if (folio_test_swapbacked(folio)) {
+ 			__mod_lruvec_state(from_vec, NR_SHMEM, -nr_pages);
+ 			__mod_lruvec_state(to_vec, NR_SHMEM, nr_pages);
+ 		}
+ 
+-		if (folio_mapped(folio)) {
+-			__mod_lruvec_state(from_vec, NR_FILE_MAPPED, -nr_pages);
+-			__mod_lruvec_state(to_vec, NR_FILE_MAPPED, nr_pages);
+-		}
+-
+ 		if (folio_test_dirty(folio)) {
+ 			struct address_space *mapping = folio_mapping(folio);
+ 
+diff --git a/mm/rmap.c b/mm/rmap.c
+index 459dc1c44d8a..11a4894158db 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -1222,9 +1222,6 @@ void page_add_anon_rmap(struct page *page,
+ 	bool compound = flags & RMAP_COMPOUND;
+ 	bool first = true;
+ 
+-	if (unlikely(PageKsm(page)))
+-		lock_page_memcg(page);
+-
+ 	/* Is page being mapped by PTE? Is this its first map to be added? */
+ 	if (likely(!compound)) {
+ 		first = atomic_inc_and_test(&page->_mapcount);
+@@ -1254,9 +1251,6 @@ void page_add_anon_rmap(struct page *page,
+ 	if (nr)
+ 		__mod_lruvec_page_state(page, NR_ANON_MAPPED, nr);
+ 
+-	if (unlikely(PageKsm(page)))
+-		unlock_page_memcg(page);
+-
+ 	/* address might be in next vma when migration races vma_adjust */
+ 	else if (first)
+ 		__page_set_anon_rmap(page, vma, address,
+@@ -1321,7 +1315,6 @@ void page_add_file_rmap(struct page *page,
+ 	bool first;
+ 
+ 	VM_BUG_ON_PAGE(compound && !PageTransHuge(page), page);
+-	lock_page_memcg(page);
+ 
+ 	/* Is page being mapped by PTE? Is this its first map to be added? */
+ 	if (likely(!compound)) {
+@@ -1349,7 +1342,6 @@ void page_add_file_rmap(struct page *page,
+ 			NR_SHMEM_PMDMAPPED : NR_FILE_PMDMAPPED, nr_pmdmapped);
+ 	if (nr)
+ 		__mod_lruvec_page_state(page, NR_FILE_MAPPED, nr);
+-	unlock_page_memcg(page);
+ 
+ 	mlock_vma_page(page, vma, compound);
+ }
+@@ -1378,8 +1370,6 @@ void page_remove_rmap(struct page *page,
+ 		return;
+ 	}
+ 
+-	lock_page_memcg(page);
+-
+ 	/* Is page being unmapped by PTE? Is this its last map to be removed? */
+ 	if (likely(!compound)) {
+ 		last = atomic_add_negative(-1, &page->_mapcount);
+@@ -1427,8 +1417,6 @@ void page_remove_rmap(struct page *page,
+ 	 * and remember that it's only reliable while mapped.
+ 	 */
+ 
+-	unlock_page_memcg(page);
+-
+ 	munlock_vma_page(page, vma, compound);
+ }
+ 
 -- 
-tejun
+2.38.1
+
