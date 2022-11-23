@@ -1,7 +1,7 @@
 From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 06/11] blk-throttle: fix typo in comment of throtl_adjusted_limit
-Date: Wed, 23 Nov 2022 14:03:56 +0800
-Message-ID: <20221123060401.20392-7-shikemeng@huawei.com>
+Subject: [PATCH 07/11] blk-throttle: remove incorrect comment for tg_last_low_overflow_time
+Date: Wed, 23 Nov 2022 14:03:57 +0800
+Message-ID: <20221123060401.20392-8-shikemeng@huawei.com>
 References: <20221123060401.20392-1-shikemeng@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -12,26 +12,40 @@ Content-Transfer-Encoding: 7bit
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-lapsed time -> elapsed time
+Function tg_last_low_overflow_time is called with intermediate node as
+following:
+throtl_hierarchy_can_downgrade
+  throtl_tg_can_downgrade
+    tg_last_low_overflow_time
+
+throtl_hierarchy_can_upgrade
+  throtl_tg_can_upgrade
+    tg_last_low_overflow_time
+
+throtl_hierarchy_can_downgrade/throtl_hierarchy_can_upgrade will traverse
+from leaf node to sub-root node and pass traversed intermediate node
+to tg_last_low_overflow_time.
+
+No such limit could be found from context and implementation of
+tg_last_low_overflow_time, so remove this limit in comment.
 
 Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-throttle.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/blk-throttle.c | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 322a6ee38fb6..0aa21832cb96 100644
+index 0aa21832cb96..bd07f562c799 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -129,7 +129,7 @@ static struct throtl_data *sq_to_td(struct throtl_service_queue *sq)
- /*
-  * cgroup's limit in LIMIT_MAX is scaled if low limit is set. This scale is to
-  * make the IO dispatch more smooth.
-- * Scale up: linearly scale up according to lapsed time since upgrade. For
-+ * Scale up: linearly scale up according to elapsed time since upgrade. For
-  *           every throtl_slice, the limit scales up 1/2 .low limit till the
-  *           limit hits .max limit
-  * Scale down: exponentially scale down if a cgroup doesn't hit its .low limit
+@@ -1746,7 +1746,6 @@ static unsigned long __tg_last_low_overflow_time(struct throtl_grp *tg)
+ 	return min(rtime, wtime);
+ }
+ 
+-/* tg should not be an intermediate node */
+ static unsigned long tg_last_low_overflow_time(struct throtl_grp *tg)
+ {
+ 	struct throtl_service_queue *parent_sq;
 -- 
 2.30.0
 
