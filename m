@@ -1,36 +1,31 @@
-From: Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: Ivan Babrou <ivan@cloudflare.com>
 Subject: Re: Low TCP throughput due to vmpressure with swap enabled
-Date: Tue, 22 Nov 2022 17:44:44 -0700
-Message-ID: <Y31s/K8T85jh05wH@google.com>
+Date: Tue, 22 Nov 2022 17:28:24 -0800
+Message-ID: <CABWYdi0qhWs56WK=k+KoQBAMh+Tb6Rr0nY4kJN+E5YqfGhKTmQ@mail.gmail.com>
 References: <CABWYdi0G7cyNFbndM-ELTDAR3x4Ngm0AehEp5aP0tfNkXUE+Uw@mail.gmail.com>
- <CAOUHufYd-5cqLsQvPBwcmWeph2pQyQYFRWynyg0UVpzUBWKbxw@mail.gmail.com>
- <CAOUHufYSeTeO5ZMpnCR781esHV4QV5Th+pd=52UaM9cXNNKF9w@mail.gmail.com>
+ <Y30rdnZ+lrfOxjTB@cmpxchg.org> <CABWYdi3PqipLxnqeepXeZ471pfeBg06-PV0Uw04fU-LHnx_A4g@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=qt0Oia7FwaxA/+PML2ZHZEDGbQNkFk0tG08XyL42aso=;
-        b=HgwUhGpb33lLR5Ugn3ck6loKESVPF+muFD2n7g9xAqGCgk+iXjDli12LYoWqeAOrci
-         V58UVErhfmJkb8fexsEJtvDKBMIDN/PQ6yaxPgykccn9xBnGZuEq8Cp9Pw2Yd+QziERV
-         wIQbQOKm76lQJ3jfzJ4yFwXwu64V78qH60+vy6tsE66sT9S7WzbfLhKvBNuRIydbFuWA
-         Ikb3/PR4Ep2k2UqCFkwnebgWeZqPXNQ/NBN4ksDtHEw+UafQjqlMfyoU5g+kHkGpb4j2
-         4D7vwm/J9pjdkou6LGgJK6qBvATodfaV4bKkEUA7oIIdcKra4IihOLjatPFywDAkQGml
-         YPOA==
-Content-Disposition: inline
-In-Reply-To: <CAOUHufYSeTeO5ZMpnCR781esHV4QV5Th+pd=52UaM9cXNNKF9w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=cloudflare.com; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=M42sWyNVtSXf63+/nFxRglHm/7sJT4os0b4YITaV5ns=;
+        b=EEDxxsC8axWN6EfK6HuKM4nKLyz6jyKaF6MQb03199u9fI9ncH2Pzi0Pkz2Rmfaln3
+         0LcVHqzeUlYiBsH/6c+Cd8NT5OeaxAlFYOn2KKOOs0oao+6e3/WwTuRD4LxatCOIGywm
+         VjfLjjAHKCoOCfpD6aq+RuMP4XmMlWcW/Y98o=
+In-Reply-To: <CABWYdi3PqipLxnqeepXeZ471pfeBg06-PV0Uw04fU-LHnx_A4g@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Linux Kernel Network Developers <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Hideaki YOSHIFUJI <yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org>, David Ahern <dsahern-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team <kernel-team-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Linux MM <linux-mm@kvack.org>, Linux Kernel Network Developers <netdev@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Eric Dumazet <edumazet@google.com>, "David S. Miller" <davem@davemloft.net>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, David Ahern <dsahern@kernel.org>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, cgroups@vger.kernel.org, kernel-team <kernel-team@cloudflare.com>
 
-On Tue, Nov 22, 2022 at 01:05:32PM -0700, Yu Zhao wrote:
-> On Tue, Nov 22, 2022 at 12:46 PM Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+On Tue, Nov 22, 2022 at 2:11 PM Ivan Babrou <ivan@cloudflare.com> wrote:
+>
+> On Tue, Nov 22, 2022 at 12:05 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
 > >
-> > On Mon, Nov 21, 2022 at 5:53 PM Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org> wrote:
-> > >
+> > On Mon, Nov 21, 2022 at 04:53:43PM -0800, Ivan Babrou wrote:
 > > > Hello,
 > > >
 > > > We have observed a negative TCP throughput behavior from the following commit:
@@ -41,238 +36,80 @@ On Tue, Nov 22, 2022 at 01:05:32PM -0700, Yu Zhao wrote:
 > > >
 > > > The crux of the issue is that in some cases with swap present the
 > > > workload can be unfairly throttled in terms of TCP throughput.
-> > >
-> > > I am able to reproduce this issue in a VM locally on v6.1-rc6 with 8
-> > > GiB of RAM with zram enabled.
-> > >
-> > > The setup is fairly simple:
-> > >
-> > > 1. Run the following go proxy in one cgroup (it has some memory
-> > > ballast to simulate useful memory usage):
-> > >
-> > > * https://gist.github.com/bobrik/2c1a8a19b921fefe22caac21fda1be82
-> > >
-> > > sudo systemd-run --scope -p MemoryLimit=6G go run main.go
-> > >
-> > > 2. Run the following fio config in another cgroup to simulate mmapped
-> > > page cache usage:
-> > >
-> > > [global]
-> > > size=8g
-> > > bs=256k
-> > > iodepth=256
-> > > direct=0
-> > > ioengine=mmap
-> > > group_reporting
-> > > time_based
-> > > runtime=86400
-> > > numjobs=8
-> > > name=randread
-> > > rw=randread
 > >
-> > Is it practical for your workload to apply some madvise/fadvise hint?
-> > For the above repro, it would be fadvise_hint=1 which is mapped into
-> > MADV_RANDOM automatically. The kernel also supports MADV_SEQUENTIAL,
-> > but not POSIX_FADV_NOREUSE at the moment.
-> 
-> Actually fadvise_hint already defaults to 1. At least with MGLRU, the
-> page cache should be thrown away without causing you any problem. It
-> might be mapped to POSIX_FADV_RANDOM rather than MADV_RANDOM.
-> POSIX_FADV_RANDOM is ignored at the moment.
-> 
-> Sorry for all the noise. Let me dig into this and get back to you later today.
-> 
-> 
-> > We actually have similar issues but unfortunately I haven't been able
-> > to come up with any solution beyond recommending the above flags.
-> > The problem is that harvesting the accessed bit from mmapped memory is
-> > costly, and when random accesses happen fast enough, the cost of doing
-> > that prevents LRU from collecting more information to make better
-> > decisions. In a nutshell, LRU can't tell whether there is genuine
-> > memory locality with your test case.
+> > Thanks for the detailed analysis, Ivan.
 > >
-> > It's a very difficult problem to solve from LRU's POV. I'd like to
-> > hear more about your workloads and see whether there are workarounds
-> > other than tackling the problem head-on, if applying hints is not
-> > practical or preferrable.
+> > Originally, we pushed back on sockets only when regular page reclaim
+> > had completely failed and we were about to OOM. This patch was an
+> > attempt to be smarter about it and equalize pressure more smoothly
+> > between socket memory, file cache, anonymous pages.
+> >
+> > After a recent discussion with Shakeel, I'm no longer quite sure the
+> > kernel is the right place to attempt this sort of balancing. It kind
+> > of depends on the workload which type of memory is more imporant. And
+> > your report shows that vmpressure is a flawed mechanism to implement
+> > this, anyway.
+> >
+> > So I'm thinking we should delete the vmpressure thing, and go back to
+> > socket throttling only if an OOM is imminent. This is in line with
+> > what we do at the system level: sockets get throttled only after
+> > reclaim fails and we hit hard limits. It's then up to the users and
+> > sysadmin to allocate a reasonable amount of buffers given the overall
+> > memory budget.
+> >
+> > Cgroup accounting, limiting and OOM enforcement is still there for the
+> > socket buffers, so misbehaving groups will be contained either way.
+> >
+> > What do you think? Something like the below patch?
+>
+> The idea sounds very reasonable to me. I can't really speak for the
+> patch contents with any sort of authority, but it looks ok to my
+> non-expert eyes.
+>
+> There were some conflicts when cherry-picking this into v5.15. I think
+> the only real one was for the "!sc->proactive" condition not being
+> present there. For the rest I just accepted the incoming change.
+>
+> I'm going to be away from my work computer until December 5th, but
+> I'll try to expedite my backported patch to a production machine today
+> to confirm that it makes the difference. If I can get some approvals
+> on my internal PRs, I should be able to provide the results by EOD
+> tomorrow.
 
-Apparently MADV_RANDOM isn't properly handled in MGLRU. (I think I broke
-it at some point but have yet to find out when.)
+I tried the patch and something isn't right here.
 
-I tried the patch below with a test case similar to yours and it shows
-improvements for both the baseline and MGLRU. It should fix the problem
-for your repro but not your production unless it also does madvise. So
-no worries if you don't care to try.
+With the patch applied I'm capped at ~120MB/s, which is a symptom of a
+clamped window.
 
+I can't find any sockets with memcg->socket_pressure = 1, but at the
+same time I only see the following rcv_ssthresh assigned to sockets:
 
-Hi Johannes,
+$ sudo ss -tim dport 6443 | fgrep rcv_ssthresh | sed
+'s/.*rcv_ssthresh://' | awk '{ print $1 }' | sort -n | uniq -c | sort
+-n | tail
+      1 64076
+    181 65495
+   1456 5792
+  16531 64088
 
-Do you think it makes sense to have the below for both the baseline and
-MGLRU or it's some behavior change that the baseline doesn't want to
-risk?
+* 64088 is the default value
+* 5792 is 4 * advmss (clamped)
 
-Thanks.
+Compare this to a machine without the patch but with
+cgroup.memory=nosocket in cmdline:
+$ sudo ss -tim dport 6443 | fgrep rcv_ssthresh | sed
+'s/.*rcv_ssthresh://' | awk '{ print $1 }' | sort -n | uniq -c | sort
+-n | tail
+      8 2806862
+      8 3777338
+      8 72776
+      8 86068
+     10 2024018
+     12 3777354
+     23 91172
+     29 66984
+    101 65495
+   5439 64088
 
-
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index e654435f1651..632e0f462df9 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -166,6 +166,8 @@ typedef int (dio_iodone_t)(struct kiocb *iocb, loff_t offset,
- /* File supports DIRECT IO */
- #define	FMODE_CAN_ODIRECT	((__force fmode_t)0x400000)
- 
-+#define	FMODE_NOREUSE		((__force fmode_t)0x800000)
-+
- /* File was opened by fanotify and shouldn't generate fanotify events */
- #define FMODE_NONOTIFY		((__force fmode_t)0x4000000)
- 
-diff --git a/include/linux/mm_inline.h b/include/linux/mm_inline.h
-index 2f53c31216de..4122a4db5b49 100644
---- a/include/linux/mm_inline.h
-+++ b/include/linux/mm_inline.h
-@@ -595,4 +595,15 @@ pte_install_uffd_wp_if_needed(struct vm_area_struct *vma, unsigned long addr,
- #endif
- }
- 
-+static inline bool vma_has_locality(struct vm_area_struct *vma)
-+{
-+	if (vma->vm_flags & (VM_SEQ_READ | VM_RAND_READ))
-+		return false;
-+
-+	if (vma->vm_file && (vma->vm_file->f_mode & FMODE_NOREUSE))
-+		return false;
-+
-+	return true;
-+}
-+
- #endif
-diff --git a/mm/fadvise.c b/mm/fadvise.c
-index c76ee665355a..2ba24d865bf5 100644
---- a/mm/fadvise.c
-+++ b/mm/fadvise.c
-@@ -80,7 +80,7 @@ int generic_fadvise(struct file *file, loff_t offset, loff_t len, int advice)
- 	case POSIX_FADV_NORMAL:
- 		file->f_ra.ra_pages = bdi->ra_pages;
- 		spin_lock(&file->f_lock);
--		file->f_mode &= ~FMODE_RANDOM;
-+		file->f_mode &= ~(FMODE_RANDOM | FMODE_NOREUSE);
- 		spin_unlock(&file->f_lock);
- 		break;
- 	case POSIX_FADV_RANDOM:
-@@ -107,6 +107,9 @@ int generic_fadvise(struct file *file, loff_t offset, loff_t len, int advice)
- 		force_page_cache_readahead(mapping, file, start_index, nrpages);
- 		break;
- 	case POSIX_FADV_NOREUSE:
-+		spin_lock(&file->f_lock);
-+		file->f_mode |= FMODE_NOREUSE;
-+		spin_unlock(&file->f_lock);
- 		break;
- 	case POSIX_FADV_DONTNEED:
- 		__filemap_fdatawrite_range(mapping, offset, endbyte,
-diff --git a/mm/memory.c b/mm/memory.c
-index f88c351aecd4..69fba1d58eb2 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -1448,8 +1448,7 @@ static unsigned long zap_pte_range(struct mmu_gather *tlb,
- 					force_flush = 1;
- 					set_page_dirty(page);
- 				}
--				if (pte_young(ptent) &&
--				    likely(!(vma->vm_flags & VM_SEQ_READ)))
-+				if (pte_young(ptent) && likely(vma_has_locality(vma)))
- 					mark_page_accessed(page);
- 			}
- 			rss[mm_counter(page)]--;
-@@ -5161,8 +5160,7 @@ static inline void mm_account_fault(struct pt_regs *regs,
- #ifdef CONFIG_LRU_GEN
- static void lru_gen_enter_fault(struct vm_area_struct *vma)
- {
--	/* the LRU algorithm doesn't apply to sequential or random reads */
--	current->in_lru_fault = !(vma->vm_flags & (VM_SEQ_READ | VM_RAND_READ));
-+	current->in_lru_fault = vma_has_locality(vma);
- }
- 
- static void lru_gen_exit_fault(void)
-diff --git a/mm/rmap.c b/mm/rmap.c
-index 2ec925e5fa6a..b1bb492115ae 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -823,25 +823,14 @@ static bool folio_referenced_one(struct folio *folio,
- 		}
- 
- 		if (pvmw.pte) {
--			if (lru_gen_enabled() && pte_young(*pvmw.pte) &&
--			    !(vma->vm_flags & (VM_SEQ_READ | VM_RAND_READ))) {
-+			if (lru_gen_enabled() && pte_young(*pvmw.pte)) {
- 				lru_gen_look_around(&pvmw);
- 				referenced++;
- 			}
- 
- 			if (ptep_clear_flush_young_notify(vma, address,
--						pvmw.pte)) {
--				/*
--				 * Don't treat a reference through
--				 * a sequentially read mapping as such.
--				 * If the folio has been used in another mapping,
--				 * we will catch it; if this other mapping is
--				 * already gone, the unmap path will have set
--				 * the referenced flag or activated the folio.
--				 */
--				if (likely(!(vma->vm_flags & VM_SEQ_READ)))
--					referenced++;
--			}
-+						pvmw.pte))
-+				referenced++;
- 		} else if (IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE)) {
- 			if (pmdp_clear_flush_young_notify(vma, address,
- 						pvmw.pmd))
-@@ -875,7 +864,15 @@ static bool invalid_folio_referenced_vma(struct vm_area_struct *vma, void *arg)
- 	struct folio_referenced_arg *pra = arg;
- 	struct mem_cgroup *memcg = pra->memcg;
- 
--	if (!mm_match_cgroup(vma->vm_mm, memcg))
-+	if (!vma_has_locality(vma))
-+		return true;
-+
-+	/*
-+	 * If we are reclaiming on behalf of a cgroup, skip
-+	 * counting on behalf of references from different
-+	 * cgroups
-+	 */
-+	if (memcg && !mm_match_cgroup(vma->vm_mm, memcg))
- 		return true;
- 
- 	return false;
-@@ -921,14 +918,7 @@ int folio_referenced(struct folio *folio, int is_locked,
- 			return 1;
- 	}
- 
--	/*
--	 * If we are reclaiming on behalf of a cgroup, skip
--	 * counting on behalf of references from different
--	 * cgroups
--	 */
--	if (memcg) {
--		rwc.invalid_vma = invalid_folio_referenced_vma;
--	}
-+	rwc.invalid_vma = invalid_folio_referenced_vma;
- 
- 	rmap_walk(folio, &rwc);
- 	*vm_flags = pra.vm_flags;
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 7d3cc787b840..97ce5d37d67c 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -3742,7 +3742,10 @@ static int should_skip_vma(unsigned long start, unsigned long end, struct mm_wal
- 	if (is_vm_hugetlb_page(vma))
- 		return true;
- 
--	if (vma->vm_flags & (VM_LOCKED | VM_SPECIAL | VM_SEQ_READ | VM_RAND_READ))
-+	if (!vma_has_locality(vma))
-+		return true;
-+
-+	if (vma->vm_flags & (VM_LOCKED | VM_SPECIAL))
- 		return true;
- 
- 	if (vma == get_gate_vma(vma->vm_mm))
+There aren't any clamped sockets here and there are many different
+rcv_ssthresh values.
