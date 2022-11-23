@@ -1,10 +1,10 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 04/11] blk-throttle: correct calculation of wait time in
- tg_may_dispatch
-Date: Wed, 23 Nov 2022 08:18:56 -1000
-Message-ID: <Y35kELlFkI/BtkqC@slm.duckdns.org>
+Subject: Re: [PATCH 05/11] blk-throttle: simpfy low limit reached check in
+ throtl_tg_can_upgrade
+Date: Wed, 23 Nov 2022 08:26:37 -1000
+Message-ID: <Y35l3cRfYNgCzBgC@slm.duckdns.org>
 References: <20221123060401.20392-1-shikemeng@huawei.com>
- <20221123060401.20392-5-shikemeng@huawei.com>
+ <20221123060401.20392-6-shikemeng@huawei.com>
 Mime-Version: 1.0
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
@@ -12,48 +12,54 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=/+wiUlX+ZzbOJle7HnS1krIiCPjVF1I+A5cD8cm1XM8=;
-        b=oZeeBnEeGmvjRkvxpd5dd4v1+nkW1yLWhjB1DNJmqQKV0eIUzEyRNI9KXZBGZL4JO7
-         Vp9VbeF+D/aoQ5F2L2rjPMaGOqgiO5HjnnKWNF+YJx2R7+GsbiR4jal2MHBPE6eg+jBN
-         wSFp9cv7IbUn5M+i38B6LfWvRvU5V0CvxcTXkubZwuVPzo+uS4c4JlyO0SlhL2zoydzQ
-         t5dcixwsUZnz1vGaGwou5EWvGYvjK8brVFpBVEL8Mr15CRiXWX+H81iWY12EPefqUXpO
-         4tEYMm7piYEKqHN3IdOto/oo+KvUOXVUXPaMZw+0hzmtFoJZACW3lRySAU7EWmsi5KXB
-         slgQ==
+        bh=4as57wCvzop8813r3sliHAbaPmxH6ev1auHMwbNdJIo=;
+        b=q5rmbKCsyxcX9QqNlu0c2EogSV6OPZ0rXgI0AWmUGlsn6T2cqXAl7igKciAlxyJ5ro
+         GQh8tLG5VsdJgCYuyHiFuBPZbLx5qiYLxP11cqxAkaoivBXcaEMcD3Fl0SJwdjeJ0Kzm
+         P2LbtGrMKAStFpoQhjZgkgoJ5P4A77HKfdBacxMCDQWLQZ4fOu9vujP2Tkw865riEvVy
+         kHIaGkczm4l3CNWEB9lp2GUJgJvNiCmw/XEPl1vmtqklW3PHH6z8Xm1wiiUML/Jt8usc
+         h+iAm8CYHS0m8fD9auKC9g62A6VYQL2l1AIM67SSjQ4nlVnwYPgVl3m8nqSRQCGCSgrR
+         Ptdw==
 Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20221123060401.20392-5-shikemeng@huawei.com>
+In-Reply-To: <20221123060401.20392-6-shikemeng@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Kemeng Shi <shikemeng@huawei.com>
 Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Nov 23, 2022 at 02:03:54PM +0800, Kemeng Shi wrote:
-> If bps and iops both reach limit, we always return bps wait time as
-> tg_within_iops_limit is after "tg_within_bps_limit(tg, bio, bps_limit) &&"
-> and will not be called if tg_within_bps_limit return true.
-
-Maybe it's obvious but it'd be better to explain "why" this change is being
-made.
-
-> @@ -939,8 +926,9 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
->  				jiffies + tg->td->throtl_slice);
->  	}
+On Wed, Nov 23, 2022 at 02:03:55PM +0800, Kemeng Shi wrote:
+> -static bool throtl_tg_can_upgrade(struct throtl_grp *tg)
+> +static bool throtl_tg_reach_low_limit(struct throtl_grp *tg, int rw)
+>  {
+>  	struct throtl_service_queue *sq = &tg->service_queue;
+> -	bool read_limit, write_limit;
+> +	bool limit = tg->bps[rw][LIMIT_LOW] || tg->iops[rw][LIMIT_LOW];
 >  
-> -	if (tg_within_bps_limit(tg, bio, bps_limit, &bps_wait) &&
-> -	    tg_within_iops_limit(tg, bio, iops_limit, &iops_wait)) {
-> +	bps_wait = tg_within_bps_limit(tg, bio, bps_limit);
-> +	iops_wait = tg_within_iops_limit(tg, bio, iops_limit);
-> +	if (bps_wait + iops_wait == 0) {
->  		if (wait)
->  			*wait = 0;
->  		return true;
+>  	/*
+>  	 * if cgroup reaches low limit (if low limit is 0, the cgroup always
+>  	 * reaches), it's ok to upgrade to next limit
+>  	 */
+> -	read_limit = tg->bps[READ][LIMIT_LOW] || tg->iops[READ][LIMIT_LOW];
+> -	write_limit = tg->bps[WRITE][LIMIT_LOW] || tg->iops[WRITE][LIMIT_LOW];
+> -	if (!read_limit && !write_limit)
+> -		return true;
+> -	if (read_limit && sq->nr_queued[READ] &&
+> -	    (!write_limit || sq->nr_queued[WRITE]))
+> -		return true;
+> -	if (write_limit && sq->nr_queued[WRITE] &&
+> -	    (!read_limit || sq->nr_queued[READ]))
+> +	return !limit || sq->nr_queued[rw].
+> +}
+> +
+> +static bool throtl_tg_can_upgrade(struct throtl_grp *tg)
+> +{
+> +	if (throtl_tg_reach_low_limit(tg, READ) &&
+> +	    throtl_tg_reach_low_limit(tg, WRITE))
 
-So, max_wait is supposed to be maximum in the whole traversal path in the
-tree, not just the max value in this tg, so after this, the code should be
-changed to sth like the following, right?
-
-        max_wait = max(max, max(bps_wait, iops_wait));
+Are the conditions being checked actually equivalent? If so, can you
+explicitly explain that these are equivalent conditions? If not, what are we
+changing exactly?
 
 Thanks.
 
