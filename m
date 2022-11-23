@@ -1,55 +1,45 @@
 From: Kemeng Shi <shikemeng@huawei.com>
-Subject: Re: [PATCH v2] blk-cgroup: Fix typo in comment
-Date: Wed, 23 Nov 2022 14:07:17 +0800
-Message-ID: <c8bc1792-7a54-260e-4c07-66b2ea02d925@huawei.com>
-References: <20221013141659.24032-1-shikemeng@huawei.com>
+Subject: Re: [PATCH v2 0/5] A few cleanup and bugfix patches for blk-iocost
+Date: Wed, 23 Nov 2022 14:09:14 +0800
+Message-ID: <5ae7f0a0-8540-bbfe-2fe7-b18fc071ae1c@huawei.com>
+References: <20221018121932.10792-1-shikemeng@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20221013141659.24032-1-shikemeng@huawei.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20221018121932.10792-1-shikemeng@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, axboe@kernel.dk
+To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
 Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Friendly ping
 
-on 10/13/2022 10:16 PM, Kemeng Shi wrote:
-> Replace assocating with associating.
-> Replace intiailized with initialized.
+on 10/18/2022 8:19 PM, Kemeng Shi wrote:
+> This series contain a few patch to correct comment, correct trace of
+> vtime_rate and so on. More detail can be found in the respective
+> changelogs.
 > 
-> Signed-off-by: Kemeng Shi <shikemeng@huawei.com>
-> Acked-by: Tejun Heo <tj@kernel.org>
 > ---
-> Changes in v2:
->  -based on current mainline code
->  -add acked-by
+> v2:
+>  Thanks Tejun for review and comment!
+>  Add Acked-by tag from Tejun.
+>  Correct description in patch 3/5 and 4/5.
+>  Drop "blk-iocost: Avoid to call current_hweight_max if iocg->inuse
+> == iocg->active"
+>  Drop "blk-iocost: Remove redundant initialization of struct ioc_gq"
+>  Drop "blk-iocost: Get ioc_now inside weight_updated"
+> ---
 > 
->  block/blk-cgroup.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+> Kemeng Shi (5):
+>   blk-iocost: Fix typo in comment
+>   blk-iocost: Reset vtime_base_rate in ioc_refresh_params
+>   blk-iocost: Trace vtime_base_rate instead of vtime_rate
+>   blk-iocost: Remove vrate member in struct ioc_now
+>   blk-iocost: Correct comment in blk_iocost_init
 > 
-> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> index 6a5c849ee061..4c4bc874bd95 100644
-> --- a/block/blk-cgroup.c
-> +++ b/block/blk-cgroup.c
-> @@ -577,7 +577,7 @@ EXPORT_SYMBOL_GPL(blkcg_print_blkgs);
->   * @pd: policy private data of interest
->   * @v: value to print
->   *
-> - * Print @v to @sf for the device assocaited with @pd.
-> + * Print @v to @sf for the device associated with @pd.
->   */
->  u64 __blkg_prfill_u64(struct seq_file *sf, struct blkg_policy_data *pd, u64 v)
->  {
-> @@ -765,7 +765,7 @@ EXPORT_SYMBOL_GPL(blkg_conf_prep);
->  
->  /**
->   * blkg_conf_finish - finish up per-blkg config update
-> - * @ctx: blkg_conf_ctx intiailized by blkg_conf_prep()
-> + * @ctx: blkg_conf_ctx initialized by blkg_conf_prep()
->   *
->   * Finish up after per-blkg config update.  This function must be paired
->   * with blkg_conf_prep().
+>  block/blk-iocost.c            | 16 +++++++++-------
+>  include/trace/events/iocost.h |  4 ++--
+>  2 files changed, 11 insertions(+), 9 deletions(-)
 > 
 
 -- 
