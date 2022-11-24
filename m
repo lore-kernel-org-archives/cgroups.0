@@ -1,73 +1,241 @@
-From: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH V1] mm: Disable demotion from proactive reclaim
-Date: Thu, 24 Nov 2022 13:51:20 +0800
-Message-ID: <874juonbmv.fsf@yhuang6-desk2.ccr.corp.intel.com>
-References: <20221122203850.2765015-1-almasrymina@google.com>
-        <Y35fw2JSAeAddONg@cmpxchg.org>
-        <CAHS8izN+xqM67XLT4y5qyYnGQMUWRQCJrdvf2gjTHd8nZ_=0sw@mail.gmail.com>
-        <Y36XchdgTCsMP4jT@cmpxchg.org>
+From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm: remove lock_page_memcg() from rmap
+Date: Wed, 23 Nov 2022 22:03:00 -0800 (PST)
+Message-ID: <16dd09c-bb6c-6058-2b3-7559b5aefe9@google.com>
+References: <20221123181838.1373440-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1669269135; x=1700805135;
-  h=from:to:cc:subject:references:date:in-reply-to:
-   message-id:mime-version;
-  bh=6G7nnH68EGLhd5S/EKcOEOe5slAPl+r6rFU7g2dJ4Z8=;
-  b=Npo54Z8yRkPyCdpPwpwFxFJVtkQIIFMp33BhLHwbrHOZrzvW0lcQnHjj
-   u2GpjVdBjFJUEu07WGee9+xEG8fo0XgXXT2aVzzXrzLj1FQ6/kj0h7Fkw
-   YhhFYfKD91w3l+DZHutE6ZE+k/yeVsumwI0DmnG6MRJlB3hHBKgPFERcy
-   43DSLEL3YnAe+/Yr1PiCU62mDTNlaOdUp2KHz42ppfDrGvYGy4DeV1gFA
-   5kWFKiuy6CociveVI2ny/4YdYHrfB2eXpAeNdKM84LdRnid3MZAga1jI5
-   idasOP0yZseugaz7H0lWqc7B4VwKdvkS2eZITvkSgwCIS4Pe4waodpd7d
-   Q==;
-In-Reply-To: <Y36XchdgTCsMP4jT-druUgvl0LCNAfugRpC6u6w@public.gmane.org> (Johannes Weiner's message of
-        "Wed, 23 Nov 2022 16:58:10 -0500")
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=FJy6vszDoCp46m3JopX1uY8udZeM6fOcw9P3JKhadjs=;
+        b=Jvzn8i+eto9wT02o0N73tnQsoWxjvcrnnCDN3aoRmc4emsUiyBKr3H6Z30JhGymYbs
+         AtGemDi/cBgL5d0zDL61lbDsKrqtZoU3ejVPDXCDbMgzQSNsmXeETIHc8vIYYW6gfHJo
+         WwmU5DEsQ/oG2uW5eERRdx9E3hCK6Y1AC3M4HRiJcBIXnDBCmHRLRGuVAvPTOXRMf96v
+         emKKyJRjUx9QDIltDC8iL9MONtVrzo00/xAEoX+MbGdVDPje5IjmaU+aTeOhqyy9Ko8g
+         83eFsLblUIj6MpwruchSm+bgXDu1HEPjM2Wxfqztj34UzGT3N0RuaJk3ZFiOG1506/xd
+         ky+w==
+In-Reply-To: <20221123181838.1373440-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fvdl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi, Johannes,
+On Wed, 23 Nov 2022, Johannes Weiner wrote:
 
-Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> writes:
-[...]
->
-> The fallback to reclaim actually strikes me as wrong.
->
-> Think of reclaim as 'demoting' the pages to the storage tier. If we
-> have a RAM -> CXL -> storage hierarchy, we should demote from RAM to
-> CXL and from CXL to storage. If we reclaim a page from RAM, it means
-> we 'demote' it directly from RAM to storage, bypassing potentially a
-> huge amount of pages colder than it in CXL. That doesn't seem right.
->
-> If demotion fails, IMO it shouldn't satisfy the reclaim request by
-> breaking the layering. Rather it should deflect that pressure to the
-> lower layers to make room. This makes sure we maintain an aging
-> pipeline that honors the memory tier hierarchy.
+> rmap changes (mapping and unmapping) of a page currently take
+> lock_page_memcg() to serialize 1) update of the mapcount and the
+> cgroup mapped counter with 2) cgroup moving the page and updating the
+> old cgroup and the new cgroup counters based on page_mapped().
+> 
+> Before b2052564e66d ("mm: memcontrol: continue cache reclaim from
+> offlined groups"), we used to reassign all pages that could be found
+> on a cgroup's LRU list on deletion - something that rmap didn't
+> naturally serialize against. Since that commit, however, the only
+> pages that get moved are those mapped into page tables of a task
+> that's being migrated. In that case, the pte lock is always held (and
+> we know the page is mapped), which keeps rmap changes at bay already.
+> 
+> The additional lock_page_memcg() by rmap is redundant. Remove it.
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Yes.  I think that we should avoid to fall back to reclaim as much as
-possible too.  Now, when we allocate memory for demotion
-(alloc_demote_page()), __GFP_KSWAPD_RECLAIM is used.  So, we will trigger
-kswapd reclaim on lower tier node to free some memory to avoid fall back
-to reclaim on current (higher tier) node.  This may be not good enough,
-for example, the following patch from Hasan may help via waking up
-kswapd earlier.
+Thank you, I love it: but with sorrow and shame, NAK to this version.
 
-https://lore.kernel.org/linux-mm/b45b9bf7cd3e21bca61d82dcd1eb692cd32c122c.1637778851.git.hasanalmaruf-b10kYP2dOMg@public.gmane.org/
+I was gearing up to rush in the crash fix at the bottom, when testing
+showed that the new VM_WARN_ON_ONCE(!folio_mapped(folio)) actually hits.
 
-Do you know what is the next step plan for this patch?
+So I've asked Stephen to drop this mm-unstable commit from -next for
+tonight, while we think about what more is needed.
 
-Should we do even more?
+I was disbelieving when I saw the warning, couldn't understand at all.
+But a look at get_mctgt_type() shatters my illusion: it's doesn't just
+return a page for pte_present(ptent), it goes off looking up swap
+cache and page cache; plus I've no idea whether an MC_TARGET_DEVICE
+page would appear as folio_mapped() or not.
 
-From another point of view, I still think that we can use falling back
-to reclaim as the last resort to avoid OOM in some special situations,
-for example, most pages in the lowest tier node are mlock() or too hot
-to be reclaimed.
+Does that mean that we just have to reinstate the folio_mapped() checks
+in mm/memcontrol.c i.e. revert all mm/memcontrol.c changes from the
+commit?  Or does it invalidate the whole project to remove
+lock_page_memcg() from mm/rmap.c?
 
-> So I'm hesitant to design cgroup controls around the current behavior.
->
+Too disappointed to think about it more tonight :-(
+Hugh
 
-Best Regards,
-Huang, Ying
+
+> ---
+>  mm/memcontrol.c | 35 ++++++++++++++++++++---------------
+>  mm/rmap.c       | 12 ------------
+>  2 files changed, 20 insertions(+), 27 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 23750cec0036..52b86ca7a78e 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -5676,7 +5676,10 @@ static struct page *mc_handle_file_pte(struct vm_area_struct *vma,
+>   * @from: mem_cgroup which the page is moved from.
+>   * @to:	mem_cgroup which the page is moved to. @from != @to.
+>   *
+> - * The caller must make sure the page is not on LRU (isolate_page() is useful.)
+> + * This function acquires folio_lock() and folio_lock_memcg(). The
+> + * caller must exclude all other possible ways of accessing
+> + * page->memcg, such as LRU isolation (to lock out isolation) and
+> + * having the page mapped and pte-locked (to lock out rmap).
+>   *
+>   * This function doesn't do "charge" to new cgroup and doesn't do "uncharge"
+>   * from old cgroup.
+> @@ -5696,6 +5699,13 @@ static int mem_cgroup_move_account(struct page *page,
+>  	VM_BUG_ON_FOLIO(folio_test_lru(folio), folio);
+>  	VM_BUG_ON(compound && !folio_test_large(folio));
+>  
+> +	/*
+> +	 * We're only moving pages mapped into the moving process's
+> +	 * page tables. The caller's pte lock prevents rmap from
+> +	 * removing the NR_x_MAPPED state while we transfer it.
+> +	 */
+> +	VM_WARN_ON_ONCE(!folio_mapped(folio));
+> +
+>  	/*
+>  	 * Prevent mem_cgroup_migrate() from looking at
+>  	 * page's memory cgroup of its source page while we change it.
+> @@ -5715,30 +5725,25 @@ static int mem_cgroup_move_account(struct page *page,
+>  	folio_memcg_lock(folio);
+>  
+>  	if (folio_test_anon(folio)) {
+> -		if (folio_mapped(folio)) {
+> -			__mod_lruvec_state(from_vec, NR_ANON_MAPPED, -nr_pages);
+> -			__mod_lruvec_state(to_vec, NR_ANON_MAPPED, nr_pages);
+> -			if (folio_test_transhuge(folio)) {
+> -				__mod_lruvec_state(from_vec, NR_ANON_THPS,
+> -						   -nr_pages);
+> -				__mod_lruvec_state(to_vec, NR_ANON_THPS,
+> -						   nr_pages);
+> -			}
+> +		__mod_lruvec_state(from_vec, NR_ANON_MAPPED, -nr_pages);
+> +		__mod_lruvec_state(to_vec, NR_ANON_MAPPED, nr_pages);
+> +
+> +		if (folio_test_transhuge(folio)) {
+> +			__mod_lruvec_state(from_vec, NR_ANON_THPS, -nr_pages);
+> +			__mod_lruvec_state(to_vec, NR_ANON_THPS, nr_pages);
+>  		}
+>  	} else {
+>  		__mod_lruvec_state(from_vec, NR_FILE_PAGES, -nr_pages);
+>  		__mod_lruvec_state(to_vec, NR_FILE_PAGES, nr_pages);
+>  
+> +		__mod_lruvec_state(from_vec, NR_FILE_MAPPED, -nr_pages);
+> +		__mod_lruvec_state(to_vec, NR_FILE_MAPPED, nr_pages);
+> +
+>  		if (folio_test_swapbacked(folio)) {
+>  			__mod_lruvec_state(from_vec, NR_SHMEM, -nr_pages);
+>  			__mod_lruvec_state(to_vec, NR_SHMEM, nr_pages);
+>  		}
+>  
+> -		if (folio_mapped(folio)) {
+> -			__mod_lruvec_state(from_vec, NR_FILE_MAPPED, -nr_pages);
+> -			__mod_lruvec_state(to_vec, NR_FILE_MAPPED, nr_pages);
+> -		}
+> -
+>  		if (folio_test_dirty(folio)) {
+>  			struct address_space *mapping = folio_mapping(folio);
+>  
+> diff --git a/mm/rmap.c b/mm/rmap.c
+> index 459dc1c44d8a..11a4894158db 100644
+> --- a/mm/rmap.c
+> +++ b/mm/rmap.c
+> @@ -1222,9 +1222,6 @@ void page_add_anon_rmap(struct page *page,
+>  	bool compound = flags & RMAP_COMPOUND;
+>  	bool first = true;
+>  
+> -	if (unlikely(PageKsm(page)))
+> -		lock_page_memcg(page);
+> -
+>  	/* Is page being mapped by PTE? Is this its first map to be added? */
+>  	if (likely(!compound)) {
+>  		first = atomic_inc_and_test(&page->_mapcount);
+> @@ -1254,9 +1251,6 @@ void page_add_anon_rmap(struct page *page,
+>  	if (nr)
+>  		__mod_lruvec_page_state(page, NR_ANON_MAPPED, nr);
+>  
+> -	if (unlikely(PageKsm(page)))
+> -		unlock_page_memcg(page);
+> -
+>  	/* address might be in next vma when migration races vma_adjust */
+>  	else if (first)
+>  		__page_set_anon_rmap(page, vma, address,
+> @@ -1321,7 +1315,6 @@ void page_add_file_rmap(struct page *page,
+>  	bool first;
+>  
+>  	VM_BUG_ON_PAGE(compound && !PageTransHuge(page), page);
+> -	lock_page_memcg(page);
+>  
+>  	/* Is page being mapped by PTE? Is this its first map to be added? */
+>  	if (likely(!compound)) {
+> @@ -1349,7 +1342,6 @@ void page_add_file_rmap(struct page *page,
+>  			NR_SHMEM_PMDMAPPED : NR_FILE_PMDMAPPED, nr_pmdmapped);
+>  	if (nr)
+>  		__mod_lruvec_page_state(page, NR_FILE_MAPPED, nr);
+> -	unlock_page_memcg(page);
+>  
+>  	mlock_vma_page(page, vma, compound);
+>  }
+> @@ -1378,8 +1370,6 @@ void page_remove_rmap(struct page *page,
+>  		return;
+>  	}
+>  
+> -	lock_page_memcg(page);
+> -
+>  	/* Is page being unmapped by PTE? Is this its last map to be removed? */
+>  	if (likely(!compound)) {
+>  		last = atomic_add_negative(-1, &page->_mapcount);
+> @@ -1427,8 +1417,6 @@ void page_remove_rmap(struct page *page,
+>  	 * and remember that it's only reliable while mapped.
+>  	 */
+>  
+> -	unlock_page_memcg(page);
+> -
+>  	munlock_vma_page(page, vma, compound);
+>  }
+>  
+> -- 
+> 2.38.1
+
+[PATCH] mm: remove lock_page_memcg() from rmap - fix
+
+Blame me for the hidden "else", which now does the wrong thing, leaving
+page's anon_vma unset, then VM_BUG_ON before do_swap_page's set_pte_at.
+
+Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ mm/rmap.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/mm/rmap.c b/mm/rmap.c
+index 11a4894158db..5a8d27fdc644 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -1251,13 +1251,14 @@ void page_add_anon_rmap(struct page *page,
+ 	if (nr)
+ 		__mod_lruvec_page_state(page, NR_ANON_MAPPED, nr);
+ 
+-	/* address might be in next vma when migration races vma_adjust */
+-	else if (first)
+-		__page_set_anon_rmap(page, vma, address,
+-				     !!(flags & RMAP_EXCLUSIVE));
+-	else
+-		__page_check_anon_rmap(page, vma, address);
+-
++	if (!PageKsm(page)) {
++		/* address may be in next vma if migration races vma_adjust */
++		if (first)
++			__page_set_anon_rmap(page, vma, address,
++					     !!(flags & RMAP_EXCLUSIVE));
++		else
++			__page_check_anon_rmap(page, vma, address);
++	}
+ 	mlock_vma_page(page, vma, compound);
+ }
+ 
+-- 
+2.35.3
