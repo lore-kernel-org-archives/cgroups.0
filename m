@@ -1,61 +1,111 @@
-From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 04/11] blk-throttle: correct calculation of wait time in
- tg_may_dispatch
-Date: Thu, 24 Nov 2022 20:10:03 +0800
-Message-ID: <fdf1aa87-b459-172a-f3f0-31afcb696c76@huawei.com>
+From: Kemeng Shi <shikemeng@huawei.com>
+Subject: Re: [PATCH 05/11] blk-throttle: simpfy low limit reached check in
+ throtl_tg_can_upgrade
+Date: Thu, 24 Nov 2022 20:52:50 +0800
+Message-ID: <64e54286-2c77-7162-4d50-1c644d1f0caf@huawei.com>
 References: <20221123060401.20392-1-shikemeng@huawei.com>
- <20221123060401.20392-5-shikemeng@huawei.com>
- <Y35kELlFkI/BtkqC@slm.duckdns.org>
+ <20221123060401.20392-6-shikemeng@huawei.com>
+ <Y35l3cRfYNgCzBgC@slm.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Y35kELlFkI/BtkqC-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <Y35l3cRfYNgCzBgC@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-on 11/24/2022 2:18 AM, Tejun Heo wrote:
-> On Wed, Nov 23, 2022 at 02:03:54PM +0800, Kemeng Shi wrote:
->> If bps and iops both reach limit, we always return bps wait time as
->> tg_within_iops_limit is after "tg_within_bps_limit(tg, bio, bps_limit) &&"
->> and will not be called if tg_within_bps_limit return true.
-Here is a mistake, the right word should be:
-tg_within_iops_limit is after "tg_within_bps_limit(tg, bio, bps_limit) &&"
-and will not be called if tg_within_bps_limit return *false*.
-> Maybe it's obvious but it'd be better to explain "why" this change is being
-> made.
-In C language, When executing "if (expression1 && expression2)" and
-expression1 return false, the expression2 may not be executed.
-For "tg_within_bps_limit(tg, bio, bps_limit, &bps_wait) &&
-tg_within_iops_limit(tg, bio, iops_limit, &iops_wait))", if bps is
-limited, tg_within_bps_limit will return false and
-tg_within_iops_limit will not be called. So even bps and iops are
-both limited, iops_wait will not be calculated and is zero here.
-So wait time of bps is always returned.
->> @@ -939,8 +926,9 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
->>  				jiffies + tg->td->throtl_slice);
->>  	}
+
+on 11/24/2022 2:26 AM, Tejun Heo wrote:
+> On Wed, Nov 23, 2022 at 02:03:55PM +0800, Kemeng Shi wrote:
+>> -static bool throtl_tg_can_upgrade(struct throtl_grp *tg)
+>> +static bool throtl_tg_reach_low_limit(struct throtl_grp *tg, int rw)
+>>  {
+>>  	struct throtl_service_queue *sq = &tg->service_queue;
+>> -	bool read_limit, write_limit;
+>> +	bool limit = tg->bps[rw][LIMIT_LOW] || tg->iops[rw][LIMIT_LOW];
 >>  
->> -	if (tg_within_bps_limit(tg, bio, bps_limit, &bps_wait) &&
->> -	    tg_within_iops_limit(tg, bio, iops_limit, &iops_wait)) {
->> +	bps_wait = tg_within_bps_limit(tg, bio, bps_limit);
->> +	iops_wait = tg_within_iops_limit(tg, bio, iops_limit);
->> +	if (bps_wait + iops_wait == 0) {
->>  		if (wait)
->>  			*wait = 0;
->>  		return true;
+>>  	/*
+>>  	 * if cgroup reaches low limit (if low limit is 0, the cgroup always
+>>  	 * reaches), it's ok to upgrade to next limit
+>>  	 */
+>> -	read_limit = tg->bps[READ][LIMIT_LOW] || tg->iops[READ][LIMIT_LOW];
+>> -	write_limit = tg->bps[WRITE][LIMIT_LOW] || tg->iops[WRITE][LIMIT_LOW];
+>> -	if (!read_limit && !write_limit)
+>> -		return true;
+>> -	if (read_limit && sq->nr_queued[READ] &&
+>> -	    (!write_limit || sq->nr_queued[WRITE]))
+>> -		return true;
+>> -	if (write_limit && sq->nr_queued[WRITE] &&
+>> -	    (!read_limit || sq->nr_queued[READ]))
+>> +	return !limit || sq->nr_queued[rw].
+>> +}
+>> +
+>> +static bool throtl_tg_can_upgrade(struct throtl_grp *tg)
+>> +{
+>> +	if (throtl_tg_reach_low_limit(tg, READ) &&
+>> +	    throtl_tg_reach_low_limit(tg, WRITE))
 > 
-> So, max_wait is supposed to be maximum in the whole traversal path in the
-> tree, not just the max value in this tg, so after this, the code should be
-> changed to sth like the following, right?
-> 
->         max_wait = max(max, max(bps_wait, iops_wait));
-> 
-> Thanks.
-> 
+> Are the conditions being checked actually equivalent? If so, can you
+> explicitly explain that these are equivalent conditions? If not, what are we
+> changing exactly?All replaced conditions to return true are as following:
+condition 1
+(!read_limit && !write_limit)
+condition 2
+read_limit && sq->nr_queued[READ] && (!write_limit || sq->nr_queued[WRITE])
+condition 3
+write_limit && sq->nr_queued[WRITE] && (!read_limit || sq->nr_queued[READ])
+
+Transfering condition 2 as following:
+read_limit && sq->nr_queued[READ] && (!write_limit || sq->nr_queued[WRITE])
+is equivalent to
+(read_limit && sq->nr_queued[READ]) &&
+(!write_limit || (write_limit && sq->nr_queued[WRITE]))
+is equivalent to
+(read_limit && sq->nr_queued[READ] && !write_limit) ||
+((read_limit && sq->nr_queued[READ] && (write_limit && sq->nr_queued[WRITE]))
+
+Transfering condition 3 as following:
+write_limit && sq->nr_queued[WRITE] && (!read_limit || sq->nr_queued[READ])
+is equivalent to
+(write_limit && sq->nr_queued[WRITE]) &&
+(!read_limit || (read_limit && sq->nr_queued[READ]))
+is equivalent to
+((write_limit && sq->nr_queued[WRITE]) && !read_limit) ||
+((write_limit && sq->nr_queued[WRITE]) && (read_limit && sq->nr_queued[READ]))
+
+All replaced conditions to return true are collected as folloing:
+condition 1.1
+(!read_limit && !write_limit)
+condition 1.2
+(read_limit && sq->nr_queued[READ] && !write_limit)
+condition 1.3
+((read_limit && sq->nr_queued[READ] && (write_limit && sq->nr_queued[WRITE]))
+condition 1.4
+(write_limit && sq->nr_queued[WRITE]) && !read_limit)
+condition 1.5 (the same as 1.3, can be ingored)
+(write_limit && sq->nr_queued[WRITE]) && (read_limit && sq->nr_queued[READ]))
+
+Condtions to return true in this patch is:
+(!read_limit || (read_limit && sq->nr_queued[READ])) &&
+(!write_limit || (write_limit && sq->nr_queued[WRITE]))
+As "(a || b) && (c || d)" can be extracted to
+(a && c) or (a && d) or (b && c) or (b && d ). So we can extract condtions to
+condition 2.1
+!read_limit && !write_limit
+condition 2.2
+!read_limit && (write_limit && sq->nr_queued[WRITE])
+condition 2.3
+(read_limit && sq->nr_queued[READ]) && !write_limit
+condition 2.4
+(read_limit && sq->nr_queued[READ]) && (write_limit && sq->nr_queued[WRITE])
+
+Conditions match as following:
+condition 1.1 = condition 2.1
+condition 1.2 = condition 2.3
+condition 1.3 = condition 2.4
+condition 1.4 = condition 2.2
 
 -- 
 Best wishes
