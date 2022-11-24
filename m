@@ -1,68 +1,39 @@
 From: Li Nan <linan122@huawei.com>
-Subject: [PATCH -next 1/2] blk-iocost: fix divide by 0 error in calc_lcoefs()
-Date: Thu, 24 Nov 2022 22:06:34 +0800
-Message-ID: <20221124140635.695205-1-linan122@huawei.com>
+Subject: [PATCH -next 2/2] blk-iocost: change div64_u64 to DIV64_U64_ROUND_UP in ioc_refresh_params()
+Date: Thu, 24 Nov 2022 22:06:35 +0800
+Message-ID: <20221124140635.695205-2-linan122@huawei.com>
+References: <20221124140635.695205-1-linan122@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20221124140635.695205-1-linan122@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
 Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com
 
-echo max of u64 to cost.model can cause divide by 0 error.
-
-  # echo 8:0 rbps=18446744073709551615 > /sys/fs/cgroup/io.cost.model
-
-  divide error: 0000 [#1] PREEMPT SMP
-  RIP: 0010:calc_lcoefs+0x4c/0xc0
-  Call Trace:
-   <TASK>
-   ioc_refresh_params+0x2b3/0x4f0
-   ioc_cost_model_write+0x3cb/0x4c0
-   ? _copy_from_iter+0x6d/0x6c0
-   ? kernfs_fop_write_iter+0xfc/0x270
-   cgroup_file_write+0xa0/0x200
-   kernfs_fop_write_iter+0x17d/0x270
-   vfs_write+0x414/0x620
-   ksys_write+0x73/0x160
-   __x64_sys_write+0x1e/0x30
-   do_syscall_64+0x35/0x80
-   entry_SYSCALL_64_after_hwframe+0x63/0xcd
-
-calc_lcoefs() uses the input value of cost.model in DIV_ROUND_UP_ULL,
-overflow would happen if bps plus IOC_PAGE_SIZE is greater than
-ULLONG_MAX, it can cause divide by 0 error.I_LCOEF_MAX is introduced to
-prevent it.
+vrate_min is calculated by DIV64_U64_ROUND_UP, but vrate_max is calculated
+by div64_u64. Vrate_min may be 1 greater than vrate_max if the input
+values min and max of cost.qos are equal.
 
 Signed-off-by: Li Nan <linan122@huawei.com>
 ---
- block/blk-iocost.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ block/blk-iocost.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index f01359906c83..a38a5324bf10 100644
+index a38a5324bf10..9030ad8672f3 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -306,6 +306,9 @@ enum {
- 	IOC_PAGE_SIZE		= 1 << IOC_PAGE_SHIFT,
- 	IOC_SECT_TO_PAGE_SHIFT	= IOC_PAGE_SHIFT - SECTOR_SHIFT,
+@@ -926,7 +926,7 @@ static bool ioc_refresh_params(struct ioc *ioc, bool force)
  
-+	/* avoid overflow */
-+	I_LCOEF_MAX		= ULLONG_MAX - IOC_PAGE_SIZE,
-+
- 	/* if apart further than 16M, consider randio for linear model */
- 	LCOEF_RANDIO_PAGES	= 4096,
- };
-@@ -3406,6 +3409,8 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
- 			goto einval;
- 		if (match_u64(&args[0], &v))
- 			goto einval;
-+		if (v > I_LCOEF_MAX)
-+			goto einval;
- 		u[tok] = v;
- 		user = true;
- 	}
+ 	ioc->vrate_min = DIV64_U64_ROUND_UP((u64)ioc->params.qos[QOS_MIN] *
+ 					    VTIME_PER_USEC, MILLION);
+-	ioc->vrate_max = div64_u64((u64)ioc->params.qos[QOS_MAX] *
++	ioc->vrate_max = DIV64_U64_ROUND_UP((u64)ioc->params.qos[QOS_MAX] *
+ 				   VTIME_PER_USEC, MILLION);
+ 
+ 	return true;
 -- 
 2.31.1
 
