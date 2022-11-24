@@ -1,112 +1,89 @@
-From: Kemeng Shi <shikemeng@huawei.com>
-Subject: Re: [PATCH 05/11] blk-throttle: simpfy low limit reached check in
- throtl_tg_can_upgrade
-Date: Thu, 24 Nov 2022 20:52:50 +0800
-Message-ID: <64e54286-2c77-7162-4d50-1c644d1f0caf@huawei.com>
-References: <20221123060401.20392-1-shikemeng@huawei.com>
- <20221123060401.20392-6-shikemeng@huawei.com>
- <Y35l3cRfYNgCzBgC@slm.duckdns.org>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 674b745e22b3caae48ad20422795eefd3f832a7b
+Date: Thu, 24 Nov 2022 20:57:11 +0800
+Message-ID: <637f6a27.Fe0r8IMIiZfjGK9w%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <Y35l3cRfYNgCzBgC@slm.duckdns.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1669294636; x=1700830636;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Kw0L4NM8Tm+uPTRhWMFYNJRMX46UCwAiJrVgnDn31pM=;
+  b=c8KEdTIsWqs0OH5VrynNTVSK9ulWqyomSYcr2pwwO6mbv2WZLbUA/6OE
+   fBY6+5bjq2SVG8ya3K/hF5uBHOZ6ScmV242ULYiDFpcDcg2YGO196LXdO
+   RJCFFA5HXVAHb1xHuHVgUB9RbysIMfh67Pv5I2A7BU2Mp8b7pXJkYa42p
+   kL9ArZ9sNLjvDW65AMZQT9w/NINVIM726OtEKHfUzwyJa2+olABw2hDX9
+   HaFfsNDl50u0tQFwjN3mLtEPgtAnYuH3O2Mycw3negD12Y0BbtJjG+9Kw
+   4UyF3u3SUg0WzSfFVKh0T2aPGD0bkCwqFhASZL+ElBK4yaSzfp/GG+oTY
+   Q==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 674b745e22b3caae48ad20422795eefd3f832a7b  cgroup: remove rcu_read_lock()/rcu_read_unlock() in critical section of spin_lock_irq()
 
+elapsed time: 1162m
 
-on 11/24/2022 2:26 AM, Tejun Heo wrote:
-> On Wed, Nov 23, 2022 at 02:03:55PM +0800, Kemeng Shi wrote:
->> -static bool throtl_tg_can_upgrade(struct throtl_grp *tg)
->> +static bool throtl_tg_reach_low_limit(struct throtl_grp *tg, int rw)
->>  {
->>  	struct throtl_service_queue *sq = &tg->service_queue;
->> -	bool read_limit, write_limit;
->> +	bool limit = tg->bps[rw][LIMIT_LOW] || tg->iops[rw][LIMIT_LOW];
->>  
->>  	/*
->>  	 * if cgroup reaches low limit (if low limit is 0, the cgroup always
->>  	 * reaches), it's ok to upgrade to next limit
->>  	 */
->> -	read_limit = tg->bps[READ][LIMIT_LOW] || tg->iops[READ][LIMIT_LOW];
->> -	write_limit = tg->bps[WRITE][LIMIT_LOW] || tg->iops[WRITE][LIMIT_LOW];
->> -	if (!read_limit && !write_limit)
->> -		return true;
->> -	if (read_limit && sq->nr_queued[READ] &&
->> -	    (!write_limit || sq->nr_queued[WRITE]))
->> -		return true;
->> -	if (write_limit && sq->nr_queued[WRITE] &&
->> -	    (!read_limit || sq->nr_queued[READ]))
->> +	return !limit || sq->nr_queued[rw].
->> +}
->> +
->> +static bool throtl_tg_can_upgrade(struct throtl_grp *tg)
->> +{
->> +	if (throtl_tg_reach_low_limit(tg, READ) &&
->> +	    throtl_tg_reach_low_limit(tg, WRITE))
-> 
-> Are the conditions being checked actually equivalent? If so, can you
-> explicitly explain that these are equivalent conditions? If not, what are we
-> changing exactly?All replaced conditions to return true are as following:
-condition 1
-(!read_limit && !write_limit)
-condition 2
-read_limit && sq->nr_queued[READ] && (!write_limit || sq->nr_queued[WRITE])
-condition 3
-write_limit && sq->nr_queued[WRITE] && (!read_limit || sq->nr_queued[READ])
+configs tested: 45
+configs skipped: 2
 
-Transfering condition 2 as following:
-read_limit && sq->nr_queued[READ] && (!write_limit || sq->nr_queued[WRITE])
-is equivalent to
-(read_limit && sq->nr_queued[READ]) &&
-(!write_limit || (write_limit && sq->nr_queued[WRITE]))
-is equivalent to
-(read_limit && sq->nr_queued[READ] && !write_limit) ||
-((read_limit && sq->nr_queued[READ] && (write_limit && sq->nr_queued[WRITE]))
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Transfering condition 3 as following:
-write_limit && sq->nr_queued[WRITE] && (!read_limit || sq->nr_queued[READ])
-is equivalent to
-(write_limit && sq->nr_queued[WRITE]) &&
-(!read_limit || (read_limit && sq->nr_queued[READ]))
-is equivalent to
-((write_limit && sq->nr_queued[WRITE]) && !read_limit) ||
-((write_limit && sq->nr_queued[WRITE]) && (read_limit && sq->nr_queued[READ]))
+gcc tested configs:
+s390                                defconfig
+arc                                 defconfig
+um                             i386_defconfig
+alpha                               defconfig
+um                           x86_64_defconfig
+s390                             allmodconfig
+powerpc                           allnoconfig
+mips                             allyesconfig
+powerpc                          allmodconfig
+sh                               allmodconfig
+s390                             allyesconfig
+x86_64                          rhel-8.3-func
+x86_64                    rhel-8.3-kselftests
+x86_64                           rhel-8.3-kvm
+x86_64                           rhel-8.3-syz
+x86_64                         rhel-8.3-kunit
+arc                              allyesconfig
+alpha                            allyesconfig
+m68k                             allyesconfig
+m68k                             allmodconfig
+i386                 randconfig-a011-20221121
+i386                 randconfig-a012-20221121
+i386                 randconfig-a013-20221121
+i386                 randconfig-a014-20221121
+i386                 randconfig-a016-20221121
+i386                 randconfig-a015-20221121
+x86_64                            allnoconfig
+x86_64                              defconfig
+i386                          debian-10.3-kvm
+i386                        debian-10.3-kunit
+i386                         debian-10.3-func
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+riscv                    nommu_k210_defconfig
+riscv                             allnoconfig
+i386                   debian-10.3-kselftests
+i386                              debian-10.3
+x86_64                               rhel-8.3
+i386                                defconfig
+x86_64                           allyesconfig
+arm64                            allyesconfig
+arm                                 defconfig
+arm                              allyesconfig
+i386                             allyesconfig
 
-All replaced conditions to return true are collected as folloing:
-condition 1.1
-(!read_limit && !write_limit)
-condition 1.2
-(read_limit && sq->nr_queued[READ] && !write_limit)
-condition 1.3
-((read_limit && sq->nr_queued[READ] && (write_limit && sq->nr_queued[WRITE]))
-condition 1.4
-(write_limit && sq->nr_queued[WRITE]) && !read_limit)
-condition 1.5 (the same as 1.3, can be ingored)
-(write_limit && sq->nr_queued[WRITE]) && (read_limit && sq->nr_queued[READ]))
-
-Condtions to return true in this patch is:
-(!read_limit || (read_limit && sq->nr_queued[READ])) &&
-(!write_limit || (write_limit && sq->nr_queued[WRITE]))
-As "(a || b) && (c || d)" can be extracted to
-(a && c) or (a && d) or (b && c) or (b && d ). So we can extract condtions to
-condition 2.1
-!read_limit && !write_limit
-condition 2.2
-!read_limit && (write_limit && sq->nr_queued[WRITE])
-condition 2.3
-(read_limit && sq->nr_queued[READ]) && !write_limit
-condition 2.4
-(read_limit && sq->nr_queued[READ]) && (write_limit && sq->nr_queued[WRITE])
-
-Conditions match as following:
-condition 1.1 = condition 2.1
-condition 1.2 = condition 2.3
-condition 1.3 = condition 2.4
-condition 1.4 = condition 2.2
+clang tested configs:
+x86_64                        randconfig-k001
 
 -- 
-Best wishes
-Kemeng Shi
+0-DAY CI Kernel Test Service
+https://01.org/lkp
