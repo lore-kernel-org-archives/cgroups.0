@@ -1,33 +1,33 @@
 From: kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH 05/11] blk-throttle: simpfy low limit reached check in
- throtl_tg_can_upgrade
-Date: Sat, 26 Nov 2022 13:03:21 +0800
-Message-ID: <202211261240.Uk43arFY-lkp@intel.com>
-References: <20221123060401.20392-6-shikemeng@huawei.com>
+Subject: Re: [PATCH 08/11] blk-throttle: remove repeat check of elapsed time
+ from last upgrade in throtl_hierarchy_can_downgrade
+Date: Sat, 26 Nov 2022 16:15:09 +0800
+Message-ID: <202211261630.y21QAlzz-lkp@intel.com>
+References: <20221123060401.20392-9-shikemeng@huawei.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="dzdblU+v7epBZmbw"
+Content-Type: multipart/mixed; boundary="Nv3HAg+GHkdjp88B"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1669439100; x=1700975100;
+  t=1669450520; x=1700986520;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=JJ9OT1qIg0017xMvIf3R2KOqluvs9TQ78epv7DyxpbA=;
-  b=SFm/vuWgBmsKM4BQJHyZbD2Alj7Qo/Sbh3sc3ijBIoiakdcfnveH0HlR
-   UwbDhnr4SoA/reNA9zzViv5kPINTtvs840qmiW0yPaQNvQCbZfljVCBCj
-   k+0Dgte3QXnLNkIdrjetcSoxbbc69OMU4ef5n8Jclib2HdBh1QsctUvvB
-   EfLrMlBgsNdKxznjm7/sYXC+ik65mHeiYufV2Byl7LC3TQkfnbzABPDrp
-   hK1E5HauiQzYcvWgeusXllvW93DAiaGITmrDeU3UW5jI1D8oqAQK4cDoe
-   YIuAFGK9fLAkeUzVdhX6X42BzVbVkKtrJ3X/PkqRwDjdT7t+0UZlae+mk
-   g==;
+  bh=S9iweKOIC6BpsNMauCynpEB03KTpmJY8xKwu6Jy/EvQ=;
+  b=SLrSqT1MTHddGz0y4IwiMpXMunsQzGzxslHcBBoRwptfCBjT2LsUZwbg
+   sE5d3VEykhqM5tBoo5LhYf3kh0RzC0EE8zNshR13UlQeb0JqvOQeFLI8d
+   hZ/1iWn3u3xGf4/SeoMJuutWnl6yYDyOUSalMvMEHds2pTQmWMBijlldK
+   UKKmseessyshHj0d+q7SWfFkfYSwW3zuQbwPDmjC5wokUOfemtNMY0BNU
+   FW87mXeHc0XGnG8E6it8Rzilks3JJ2sP40RStk/ilQRg2gn1HHExFwScg
+   vuPv784hMkPhD1h5qoCjfFQn5xbnhMInHvUpH+wuusb0VcaY341IGxAr7
+   w==;
 Content-Disposition: inline
-In-Reply-To: <20221123060401.20392-6-shikemeng@huawei.com>
+In-Reply-To: <20221123060401.20392-9-shikemeng@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
 Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, shikemeng@huawei.com
 
 
---dzdblU+v7epBZmbw
+--Nv3HAg+GHkdjp88B
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -43,17 +43,17 @@ https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
 url:    https://github.com/intel-lab-lkp/linux/commits/Kemeng-Shi/A-few-bugfix-and-cleanup-patches-for-blk-throttle/20221123-140704
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
-patch link:    https://lore.kernel.org/r/20221123060401.20392-6-shikemeng%40huawei.com
-patch subject: [PATCH 05/11] blk-throttle: simpfy low limit reached check in throtl_tg_can_upgrade
+patch link:    https://lore.kernel.org/r/20221123060401.20392-9-shikemeng%40huawei.com
+patch subject: [PATCH 08/11] blk-throttle: remove repeat check of elapsed time from last upgrade in throtl_hierarchy_can_downgrade
 config: x86_64-randconfig-a005
 compiler: clang version 14.0.6 (https://github.com/llvm/llvm-project f28c006a5895fc0e329fe15fead81e37457cb1d1)
 reproduce (this is a W=1 build):
         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
         chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/79d5eb2da90b359d735d434c745a5d6f9c1a690c
+        # https://github.com/intel-lab-lkp/linux/commit/f01c7d5bc75515a315dff091b1b1aa1ea1ef12fc
         git remote add linux-review https://github.com/intel-lab-lkp/linux
         git fetch --no-tags linux-review Kemeng-Shi/A-few-bugfix-and-cleanup-patches-for-blk-throttle/20221123-140704
-        git checkout 79d5eb2da90b359d735d434c745a5d6f9c1a690c
+        git checkout f01c7d5bc75515a315dff091b1b1aa1ea1ef12fc
         # save the config file
         mkdir build_dir && cp config build_dir/.config
         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash
@@ -63,33 +63,46 @@ If you fix the issue, kindly add following tag where applicable
 
 All errors (new ones prefixed by >>):
 
->> block/blk-throttle.c:1813:1: error: expected identifier
+   block/blk-throttle.c:1812:1: error: expected identifier
    }
    ^
-   1 error generated.
+>> block/blk-throttle.c:1945:50: error: use of undeclared identifier 'td'
+           if (time_before(now, tg->td->low_upgrade_time + td->throtl_slice))
+                                                           ^
+>> block/blk-throttle.c:1945:18: error: use of undeclared identifier 'now'
+           if (time_before(now, tg->td->low_upgrade_time + td->throtl_slice))
+                           ^
+>> block/blk-throttle.c:1945:18: error: use of undeclared identifier 'now'
+>> block/blk-throttle.c:1945:50: error: use of undeclared identifier 'td'
+           if (time_before(now, tg->td->low_upgrade_time + td->throtl_slice))
+                                                           ^
+   5 errors generated.
 
 
-vim +1813 block/blk-throttle.c
+vim +/td +1945 block/blk-throttle.c
 
-  1802	
-  1803	static bool throtl_tg_reach_low_limit(struct throtl_grp *tg, int rw)
-  1804	{
-  1805		struct throtl_service_queue *sq = &tg->service_queue;
-  1806		bool limit = tg->bps[rw][LIMIT_LOW] || tg->iops[rw][LIMIT_LOW];
-  1807	
-  1808		/*
-  1809		 * if cgroup reaches low limit (if low limit is 0, the cgroup always
-  1810		 * reaches), it's ok to upgrade to next limit
-  1811		 */
-  1812		return !limit || sq->nr_queued[rw].
-> 1813	}
-  1814	
+  1942	
+  1943	static bool throtl_hierarchy_can_downgrade(struct throtl_grp *tg)
+  1944	{
+> 1945		if (time_before(now, tg->td->low_upgrade_time + td->throtl_slice))
+  1946			return false;
+  1947	
+  1948		while (true) {
+  1949			if (!throtl_tg_can_downgrade(tg))
+  1950				return false;
+  1951			tg = sq_to_tg(tg->service_queue.parent_sq);
+  1952			if (!tg || !tg_to_blkg(tg)->parent)
+  1953				break;
+  1954		}
+  1955		return true;
+  1956	}
+  1957	
 
 -- 
 0-DAY CI Kernel Test Service
 https://01.org/lkp
 
---dzdblU+v7epBZmbw
+--Nv3HAg+GHkdjp88B
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: attachment; filename=config
 
@@ -5845,4 +5858,4 @@ CONFIG_MEMTEST=y
 # end of Rust hacking
 # end of Kernel hacking
 
---dzdblU+v7epBZmbw--
+--Nv3HAg+GHkdjp88B--
