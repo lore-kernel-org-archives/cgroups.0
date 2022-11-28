@@ -1,174 +1,78 @@
-From: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: Optimize update_tasks_nodemask()
-Date: Mon, 28 Nov 2022 15:34:25 +0800
-Message-ID: <b1c6f583-5cb1-442a-ea64-4f999b939216@shopee.com>
-References: <20221123082157.71326-1-haifeng.xu@shopee.com>
- <2ac6f207-e08a-2a7f-01ae-dfaf15eefaf6@redhat.com>
- <4de8821b-e0c0-bf63-4d76-b0ce208cce3b@shopee.com>
- <dfcbffb9-b58a-6d25-2174-39394eb0ccde@redhat.com>
- <21e73dad-c6d0-21ea-dcdf-355b71c8537b@shopee.com>
- <1a997ea7-bb63-1710-14d6-c3b88a22bdb3@redhat.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH-block] blk-cgroup: Use css_tryget() in
+ blkcg_destroy_blkgs()
+Date: Mon, 28 Nov 2022 15:06:31 +0100
+Message-ID: <20221128140631.GI25160@blackbody.suse.cz>
+References: <20221128033057.1279383-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=f5OQ0+HkEwysNm14BQXMxnO8hH5pCig2NftJNgO6du0=;
-        b=RReTjXzCQ0D7Ue2ywprGw6Ng9pgYkX1/w8H21qM0JrNDKDmPHD/EloVDmyiJt6SP3a
-         EVA5B/iRRoccrue5N8UFHZDtJ3H2+eeB7JLeIamvAY9p3vAKhJVRKyS50PLdYRf8sUW/
-         BIjCXBFmzrpnpULJ0RrFZSunPrp8lm1WIijgMROxJg8AlgbfCD1NXZAZ+2JrP+EHVDg+
-         7NvquqBEn6OzMPVOIvzTse/04WIlG0M5x2/gKXmkglO1hEZv2/EwhevlZl8F6RXoFrfd
-         f5XSkyPGXFgaSzI4tWJlafWkNo5BTaMOt/t1xroh/Cj58xW0z6fQPoi5Au6eGK9AJTEJ
-         IUfg==
-In-Reply-To: <1a997ea7-bb63-1710-14d6-c3b88a22bdb3-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="tSiBuZsJmMXpnp7T"
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1669644392; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=4yiwoI9xze/bvvYsQ6MdgjViodw7i3sVy+Mfdib+hi0=;
+        b=dM+RRQP85j6tCnpaeFC6IaoAklNnGvuffWFKJCeG/G+4EVXC4waWkZ6Qbbc3+ljra+mvqK
+        Y7jNhIgPc3fN/05T7T7h1Y1lvX4s+E98o9CtW3twrDcT0FELzQ5gpg4vlgnK+8CII3vvWr
+        4Cw2A8QF/ST9FcbYnmZGQCWjPfJoMrQ=
+Content-Disposition: inline
+In-Reply-To: <20221128033057.1279383-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Hillf Danton <hdanton@sina.com>, Yi Zhang <yi.zhang@redhat.com>
 
 
+--tSiBuZsJmMXpnp7T
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 2022/11/25 07:00, Waiman Long wrote:
-> On 11/24/22 02:49, Haifeng Xu wrote:
->>
->> On 2022/11/24 12:24, Waiman Long wrote:
->>> On 11/23/22 22:33, Haifeng Xu wrote:
->>>> On 2022/11/24 04:23, Waiman Long wrote:
->>>>> On 11/23/22 03:21, haifeng.xu wrote:
->>>>>> When change the 'cpuset.mems' under some cgroup, system will hung
->>>>>> for a long time. From the dmesg, many processes or theads are
->>>>>> stuck in fork/exit. The reason is show as follows.
->>>>>>
->>>>>> thread A:
->>>>>> cpuset_write_resmask /* takes cpuset_rwsem */
->>>>>>      ...
->>>>>>        update_tasks_nodemask
->>>>>>          mpol_rebind_mm /* waits mmap_lock */
->>>>>>
->>>>>> thread B:
->>>>>> worker_thread
->>>>>>      ...
->>>>>>        cpuset_migrate_mm_workfn
->>>>>>          do_migrate_pages /* takes mmap_lock */
->>>>>>
->>>>>> thread C:
->>>>>> cgroup_procs_write /* takes cgroup_mutex and
->>>>>> cgroup_threadgroup_rwsem */
->>>>>>      ...
->>>>>>        cpuset_can_attach
->>>>>>          percpu_down_write /* waits cpuset_rwsem */
->>>>>>
->>>>>> Once update the nodemasks of cpuset, thread A wakes up thread B to
->>>>>> migrate mm. But when thread A iterates through all tasks, including
->>>>>> child threads and group leader, it has to wait the mmap_lock which
->>>>>> has been take by thread B. Unfortunately, thread C wants to migrate
->>>>>> tasks into cgroup at this moment, it must wait thread A to release
->>>>>> cpuset_rwsem. If thread B spends much time to migrate mm, the
->>>>>> fork/exit which acquire cgroup_threadgroup_rwsem also need to
->>>>>> wait for a long time.
->>>>>>
->>>>>> There is no need to migrate the mm of child threads which is
->>>>>> shared with group leader. Just iterate through the group
->>>>>> leader only.
->>>>>>
->>>>>> Signed-off-by: haifeng.xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
->>>>>> ---
->>>>>>     kernel/cgroup/cpuset.c | 3 +++
->>>>>>     1 file changed, 3 insertions(+)
->>>>>>
->>>>>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->>>>>> index 589827ccda8b..43cbd09546d0 100644
->>>>>> --- a/kernel/cgroup/cpuset.c
->>>>>> +++ b/kernel/cgroup/cpuset.c
->>>>>> @@ -1968,6 +1968,9 @@ static void update_tasks_nodemask(struct cpuset
->>>>>> *cs)
->>>>>>               cpuset_change_task_nodemask(task, &newmems);
->>>>>>     +        if (!thread_group_leader(task))
->>>>>> +            continue;
->>>>>> +
->>>>>>             mm = get_task_mm(task);
->>>>>>             if (!mm)
->>>>>>                 continue;
->>>>> Could you try the attached test patch to see if it can fix your problem?
->>>>> Something along the line of this patch will be more acceptable.
->>>>>
->>>>> Thanks,
->>>>> Longman
->>>>>
->>>> Hi, Longman.
->>>> Thanks for your patch, but there are still some problems.
->>>>
->>>> 1）
->>>>     (group leader, node: 0,1)
->>>>            cgroup0
->>>>            /     \
->>>>           /       \
->>>>       cgroup1   cgroup2
->>>>      (threads)  (threads)
->>>>
->>>> If set node 0 in cgroup1 and node 1 in cgroup2, both of them will update
->>>> the mm. And the nodemask of mm depends on who set the node last.
->>> Yes, that is the existing behavior. It was not that well defined in the
->>> past and so it is somewhat ambiguous as to what we need to do about it.
->>>
->> The test patch works if the child threads are in same cpuset with group
->> leader which has same logic with my patch. But if they are in different
->> cpusets, the test patch will fail because the contention of mmap_lock
->> still exsits and seems similar to the original logic.
-> 
-> That is true. I am thinking about adding a nodemask to mm_struct so that we can figure out if we need to propagate the changes down to all the VMAs and do the migration. That will enable us to avoid doing wasteful work.
-> 
-> Current node mask handling isn't that efficient especially for distros that have a relatively large NODES_SHIFT value. Some work may also be need in this area.
-> 
->>> BTW, cgroup1 has a memory_migrate flag which will force page migration
->>> if set. I guess you may have it set in your case as it will introduce a
->>> lot more delay as page migration takes time. That is probably the reason
->>> why you are seeing a long delay. So one possible solution is to turn
->>> this flag off. Cgroup v2 doesn't have this flag.
->>>
->> Dou you mean 'CS_MEMORY_MIGRATE'? This flag can be turn off in Cgroup
->> v1, but it has been set in Cgroup v2 (cpuset_css_alloc) in default and
->> couldn't be changed.
-> You are right. Cgroup v2 has CS_MEMORY_MIGRATE enabled by default and can't be turned off.
+Hello.
 
-Hi, Longman.
-'dfl_files' is just a minimal set. Shall we enable memory_migrate feature in Cgroup V2?
-So it can be turned off and help to solve the problem.
->>
->>>> 2）
->>>>      (process, node: 0,1)
->>>>            cgroup0
->>>>            /     \
->>>>           /       \
->>>>       cgroup1   cgroup2
->>>>      (node: 0)  (node: 1)
->>>>
->>>> If migrate thread from cgroup0 to cgroup1 or cgroup2, cpuset_attach
->>>> won't update the mm. So the nodemask of thread, including mems_allowed
->>>> and mempolicy（updated in cpuset_change_task_nodemask）, is different
->>>> from
->>>> the vm_policy in vma(updated in mpol_rebind_mm).
->>> Yes, that can be the case.
->>>
->>>>
->>>> In a word, if threads have different cpusets with different nodemask, it
->>>> will cause inconsistent memory behavior.
->>> So do you have suggestion of what we need to do going forward?
->> Should we prevent thread from migrating to those cgroups which have
->> different nodemask with the cgroup that contains the group leader?
->>
->> In addition, the group leader and child threads should be in same cgroup
->> tree, also the level of cgroup containes group leader must be higher
->> than these cgroups contain child threads, so update_nodemask will work.
->>
->> Or just disable thread migration in cpuset？It's easy to achieve but will
->> affect cpu bind.
-> 
-> As said above, my current inclination is to add a nodemask to mm_struct and revise the way nodemask is being handled. That will take some time.
-> 
-> Cheers,
-> Longman
-> 
+On Sun, Nov 27, 2022 at 10:30:57PM -0500, Waiman Long <longman@redhat.com> wrote:
+> That may not be true if there is no blkg associated with the blkcg. If
+> css_get() fails, the subsequent css_put() call may lead to data
+> corruption as was illustrated in a test system that it crashed on
+> bootup when that commit was included.
+
+Do you have a stacktrace of the underflowing css_put() in
+blkcg_destroy_blkgs()?
+
+It looks to me slightly as a mistake of the caller site that it passes
+struct blkcg * without any references.
+
+By a cursory look, could it be cgwb_release_workfn?
+
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -390,11 +390,11 @@ static void cgwb_release_workfn(struct work_struct *work)
+        wb_shutdown(wb);
+
+        css_put(wb->memcg_css);
+-       css_put(wb->blkcg_css);
+        mutex_unlock(&wb->bdi->cgwb_release_mutex);
+
+        /* triggers blkg destruction if no online users left */
+        blkcg_unpin_online(wb->blkcg_css);
++       css_put(wb->blkcg_css);
+
+        fprop_local_destroy_percpu(&wb->memcg_completions);
+
+Does your crash involve this stack?
+
+Thanks,
+Michal
+
+--tSiBuZsJmMXpnp7T
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY4TAZQAKCRAkDQmsBEOq
+uS+5AP97cFglT6cqH0lX6xHLHlFTnlz0R8/2eiUTZc7t+UMIAAEAx44DeExOpRjE
+QcJ6UH59lXEoD6kvkW4qmcP6+AWHTAA=
+=jz60
+-----END PGP SIGNATURE-----
+
+--tSiBuZsJmMXpnp7T--
