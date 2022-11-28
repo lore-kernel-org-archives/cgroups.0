@@ -1,57 +1,39 @@
-From: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next 3/8] blk-iocost: don't allow to configure bio based device
-Date: Mon, 28 Nov 2022 23:44:29 +0800
-Message-ID: <20221128154434.4177442-4-linan122@huawei.com>
+From: Li Nan <linan122@huawei.com>
+Subject: [PATCH -next 6/8] blk-iocost: change div64_u64 to DIV64_U64_ROUND_UP in ioc_refresh_params()
+Date: Mon, 28 Nov 2022 23:44:32 +0800
+Message-ID: <20221128154434.4177442-7-linan122@huawei.com>
 References: <20221128154434.4177442-1-linan122@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20221128154434.4177442-1-linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20221128154434.4177442-1-linan122@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com
 
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+vrate_min is calculated by DIV64_U64_ROUND_UP, but vrate_max is calculated
+by div64_u64. Vrate_min may be 1 greater than vrate_max if the input
+values min and max of cost.qos are equal.
 
-iocost is based on rq_qos, which can only work for request based device,
-thus it doesn't make sense to configure iocost for bio based device.
-
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Signed-off-by: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Li Nan <linan122@huawei.com>
 ---
- block/blk-iocost.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ block/blk-iocost.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index c532129a1456..2bfecc511dd9 100644
+index a4fa17ebb2fa..03977385449f 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -3181,6 +3181,11 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
- 		return PTR_ERR(bdev);
+@@ -926,7 +926,7 @@ static bool ioc_refresh_params(struct ioc *ioc, bool force)
  
- 	disk = bdev->bd_disk;
-+	if (!queue_is_mq(disk->queue)) {
-+		ret = -EPERM;
-+		goto out;
-+	}
-+
- 	ioc = q_to_ioc(disk->queue);
- 	if (!ioc) {
- 		ret = blk_iocost_init(disk);
-@@ -3364,6 +3369,11 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
- 		return PTR_ERR(bdev);
+ 	ioc->vrate_min = DIV64_U64_ROUND_UP((u64)ioc->params.qos[QOS_MIN] *
+ 					    VTIME_PER_USEC, MILLION);
+-	ioc->vrate_max = div64_u64((u64)ioc->params.qos[QOS_MAX] *
++	ioc->vrate_max = DIV64_U64_ROUND_UP((u64)ioc->params.qos[QOS_MAX] *
+ 				   VTIME_PER_USEC, MILLION);
  
- 	q = bdev_get_queue(bdev);
-+	if (!queue_is_mq(q)) {
-+		ret = -EPERM;
-+		goto out;
-+	}
-+
- 	ioc = q_to_ioc(q);
- 	if (!ioc) {
- 		ret = blk_iocost_init(bdev->bd_disk);
+ 	return true;
 -- 
 2.31.1
 
