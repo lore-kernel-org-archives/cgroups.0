@@ -1,83 +1,83 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH-block] blk-cgroup: Use css_tryget() in
- blkcg_destroy_blkgs()
-Date: Mon, 28 Nov 2022 10:53:32 -0500
-Message-ID: <e89e94b6-6bc8-8d1e-0f6f-ad1ea6c60e0f@redhat.com>
-References: <20221128033057.1279383-1-longman@redhat.com>
- <427068db-6695-a1e2-4aa2-033220680eb9@kernel.dk>
- <b9018641-d39f-ff74-8cfb-ba597f5ee0c2@redhat.com>
- <786aacda-b25d-67f6-bad3-0030b0e2637e@kernel.dk>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] mm: remove lock_page_memcg() from rmap
+Date: Mon, 28 Nov 2022 11:59:52 -0500
+Message-ID: <Y4TpCJ+5uCvWE6co@cmpxchg.org>
+References: <20221123181838.1373440-1-hannes@cmpxchg.org>
+ <16dd09c-bb6c-6058-2b3-7559b5aefe9@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1669650817;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=/AJ0l8IgalwuHi6aQkbaTJH6CSV9/VHsYq9E6VyGE4U=;
-        b=eSVRIpgMN4qnDtw6UyLGWp50zUGr667hJajlIZKEyCGApdax7Il/2A8tL1LDwduq8nWYv3
-        soV9XutBzerXB7jZ4YYVFbO1lWoF0iRSrHn+r0D30DhA9vV27kjPsH4XZ1RnJYIfVgWKV+
-        js1Kt7/VCa/jVTYNIMS1+Bu3edCZBnk=
-Content-Language: en-US
-In-Reply-To: <786aacda-b25d-67f6-bad3-0030b0e2637e-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=OXdDTBqVegaar+pLWmnzFVWbntmDwb7qj9MvTJ7r5tA=;
+        b=SpduupwX9+hgKbJAt1uBrr8GR8cVFBKX0qw5ONERsYzdWfB/N9QQYj9qCTlogNAj9M
+         kEK1FZaNNPnXmtE+uVPtkinRgEpJ1JoknUQoYwGF0Q32h29zIr9jgsAs8IBYPk+9JHOn
+         Su5WwW7J6E51pqICAcNNXMFqDgpDkcudvpSBi+GuH7OKHiHtB7StrdVPvzjyKor5dNKH
+         qSYxxiWRzhj/yNfWFvtLA5Lw0fHWShpuoKz07eFZ+qSags11ZrQ6yOn7HI7EsRUagcth
+         y3wAQAJjBGqBze7yEFUSoIPh0PUs+jQdGn2yb51ZjJ1Qw/2m/kffiVI1MZUrJWniHcRb
+         5pxA==
+Content-Disposition: inline
+In-Reply-To: <16dd09c-bb6c-6058-2b3-7559b5aefe9@google.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Hillf Danton <hdanton-k+cT0dCbe1g@public.gmane.org>, Yi Zhang <yi.zhang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Hugh Dickins <hughd@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/28/22 10:42, Jens Axboe wrote:
-> On 11/28/22 8:38?AM, Waiman Long wrote:
->> On 11/28/22 09:14, Jens Axboe wrote:
->>> On 11/27/22 8:30?PM, Waiman Long wrote:
->>>> Commit 951d1e94801f ("blk-cgroup: Flush stats at blkgs destruction
->>>> path") incorrectly assumes that css_get() will always succeed. That may
->>>> not be true if there is no blkg associated with the blkcg. If css_get()
->>>> fails, the subsequent css_put() call may lead to data corruption as
->>>> was illustrated in a test system that it crashed on bootup when that
->>>> commit was included. Also blkcg may be freed at any time leading to
->>>> use-after-free. Fix it by using css_tryget() instead and bail out if
->>>> the tryget fails.
->>>>
->>>> Fixes: 951d1e94801f ("blk-cgroup: Flush stats at blkgs destruction path")
->>>> Reported-by: Yi Zhang <yi.zhang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>>> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>>> ---
->>>> ? block/blk-cgroup.c | 7 ++++++-
->>>> ? 1 file changed, 6 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
->>>> index 57941d2a8ba3..74fefc8cbcdf 100644
->>>> --- a/block/blk-cgroup.c
->>>> +++ b/block/blk-cgroup.c
->>>> @@ -1088,7 +1088,12 @@ static void blkcg_destroy_blkgs(struct blkcg *blkcg)
->>>> ? ????? might_sleep();
->>>> ? -??? css_get(&blkcg->css);
->>>> +??? /*
->>>> +???? * If css_tryget() fails, there is no blkg to destroy.
->>>> +???? */
->>>> +??? if (!css_tryget(&blkcg->css))
->>>> +??????? return;
->>>> +
->>>> ????? spin_lock_irq(&blkcg->lock);
->>>> ????? while (!hlist_empty(&blkcg->blkg_list)) {
->>>> ????????? struct blkcg_gq *blkg = hlist_entry(blkcg->blkg_list.first,
->>> This doesn't seem safe to me, but maybe I'm missing something. A tryget
->>> operation can be fine if we're under RCU lock and the entity is freed
->>> appropriately, but what makes it safe here? Could blkcg already be gone
->>> at this point?
->> The actual freeing of the blkcg structure is under RCU protection. So
->> the structure won't be freed immediately even if css_tryget() fails. I
->> suspect what Michal found may be the root cause of this problem. If
->> so, this is an existing bug which gets exposed by my patch.
-> But what prevents it from going away here since you're not under RCU
-> lock for the tryget? Doesn't help that the freeing side is done in an
-> RCU safe manner, if the ref attempt is not.
+On Wed, Nov 23, 2022 at 10:03:00PM -0800, Hugh Dickins wrote:
+> On Wed, 23 Nov 2022, Johannes Weiner wrote:
+> > rmap changes (mapping and unmapping) of a page currently take
+> > lock_page_memcg() to serialize 1) update of the mapcount and the
+> > cgroup mapped counter with 2) cgroup moving the page and updating the
+> > old cgroup and the new cgroup counters based on page_mapped().
+> > 
+> > Before b2052564e66d ("mm: memcontrol: continue cache reclaim from
+> > offlined groups"), we used to reassign all pages that could be found
+> > on a cgroup's LRU list on deletion - something that rmap didn't
+> > naturally serialize against. Since that commit, however, the only
+> > pages that get moved are those mapped into page tables of a task
+> > that's being migrated. In that case, the pte lock is always held (and
+> > we know the page is mapped), which keeps rmap changes at bay already.
+> > 
+> > The additional lock_page_memcg() by rmap is redundant. Remove it.
+> > 
+> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> 
+> Thank you, I love it: but with sorrow and shame, NAK to this version.
+> 
+> I was gearing up to rush in the crash fix at the bottom, when testing
+> showed that the new VM_WARN_ON_ONCE(!folio_mapped(folio)) actually hits.
+> 
+> So I've asked Stephen to drop this mm-unstable commit from -next for
+> tonight, while we think about what more is needed.
+> 
+> I was disbelieving when I saw the warning, couldn't understand at all.
+> But a look at get_mctgt_type() shatters my illusion: it's doesn't just
+> return a page for pte_present(ptent), it goes off looking up swap
+> cache and page cache; plus I've no idea whether an MC_TARGET_DEVICE
+> page would appear as folio_mapped() or not.
 
-You are right. blkcg_destroy_blkgs() shouldn't be called with all the 
-blkcg references gone. Will work on a revised patch.
+Thanks for catching this.
 
-Cheers,
-Longman
+A device_private pte always has a matching mapcount in the fake page
+it points to, so we should be good here. Those pages migrate back and
+forth between system and device memory, relying on the migration
+code's unmap and restore bits. Hence they participate in regular rmap.
 
+The swapcache/pagecache bit was a brainfart. We acquire the folio lock
+in move_account(), which would lock out concurrent faults. If it's not
+mapped, I don't see how it could become mapped behind our backs. But
+we do need to be prepared for it to be unmapped.
+
+> Does that mean that we just have to reinstate the folio_mapped() checks
+> in mm/memcontrol.c i.e. revert all mm/memcontrol.c changes from the
+> commit?  Or does it invalidate the whole project to remove
+> lock_page_memcg() from mm/rmap.c?
+
+I think we have to bring back the folio_mapped() conditional and
+update the comments. But it shouldn't invalidate the whole project.
+
+I'll triple check this, however.
+
+Thanks
