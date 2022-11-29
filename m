@@ -1,54 +1,75 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm: remove lock_page_memcg() from rmap
-Date: Tue, 29 Nov 2022 11:42:54 -0800
-Message-ID: <CALvZod6PCmbA1cNVueuJL=njL+ZMez_rFK74GEmRZpNy_k=AUA@mail.gmail.com>
-References: <20221123181838.1373440-1-hannes@cmpxchg.org> <16dd09c-bb6c-6058-2b3-7559b5aefe9@google.com>
- <Y4TpCJ+5uCvWE6co@cmpxchg.org> <Y4ZYsrXLBFDIxuoO@cmpxchg.org>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH-block v2] bdi, blk-cgroup: Fix potential UAF of blkcg
+Date: Tue, 29 Nov 2022 15:34:00 -0500
+Message-ID: <20221129203400.1456100-1-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=rGTIG8x4KsRIPh4QmKAiIuwOVCN06VOhOfE/clNYHVU=;
-        b=iCbO4c3ISsWAsryVLUOqcvzYLYwMoYxQScIi5QhG+vvlujDo7VmIfHe0IA52ZQutMK
-         amwKaZjJTL6PsYXcJVsqFVkIuQuyfovT0EWhapOAzn55PBiHbsC7HdJwIyN7CT9cHI8x
-         VVZ7qVmQsKNXg3E+ebb0Guqg0H9F0i7pEexuw4OPdde3Ed8SN8zyNmPjSnSHOukHyEji
-         kacPnsnMaugQ7P40hIuhkUOARS0JEquiN/xd2Hs8T1HKzZZSa7CNXyUSZaMrgWMBJVZL
-         w7tgyMF7w6NMxVOxYy7wSc/DUJxU6gOhmqnNLv9/F87H2osfOzzasLTlcfRsHXVbcWTx
-         9MaQ==
-In-Reply-To: <Y4ZYsrXLBFDIxuoO-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1669754068;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=nsMFyIcOKMdH8kGov88EPCbLbTICW8XLJaolwn8fdZQ=;
+        b=h3jdQmoRcQB+9YHnPj48Z6TkRY9sOAKvGh4CJTxxDyn4FDHZABRaxJk4sazDP9+CkDLsdn
+        4fvRPwMaZ26JMxa/RiOfjdgk+6WMdqJSqYBbys0IzdZXgDRIHebKdPjJxl+TedQic3taFZ
+        Fhq82G12/pc/lXWvi/90eiShJR4CNmQ=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Hillf Danton <hdanton@sina.com>, Chaitanya Kulkarni <chaitanyak@nvidia.com>, Bart Van Assche <bvanassche@acm.org>, Josef Bacik <josef@toxicpanda.com>, Waiman Long <longman@redhat.com>, Yi Zhang <yi.zhang@redhat.com>
 
-On Tue, Nov 29, 2022 at 11:08 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> On Mon, Nov 28, 2022 at 11:59:53AM -0500, Johannes Weiner wrote:
-> > On Wed, Nov 23, 2022 at 10:03:00PM -0800, Hugh Dickins wrote:
-> > The swapcache/pagecache bit was a brainfart. We acquire the folio lock
-> > in move_account(), which would lock out concurrent faults. If it's not
-> > mapped, I don't see how it could become mapped behind our backs. But
-> > we do need to be prepared for it to be unmapped.
->
-> Welp, that doesn't protect us from the inverse, where the page is
-> mapped elsewhere and the other ptes are going away. So this won't be
-> enough, unfortunately.
->
-> > > Does that mean that we just have to reinstate the folio_mapped() checks
-> > > in mm/memcontrol.c i.e. revert all mm/memcontrol.c changes from the
-> > > commit?  Or does it invalidate the whole project to remove
-> > > lock_page_memcg() from mm/rmap.c?
->
-> Short of further restricting the pages that can be moved, I don't see
-> how we can get rid of the cgroup locks in rmap after all. :(
->
-> We can try limiting move candidates to present ptes. But maybe it's
-> indeed time to deprecate the legacy charge moving altogether, and get
-> rid of the entire complication.
->
-> Hugh, Shakeel, Michal, what do you think?
-
-I am on-board.
+Q29tbWl0IDU5YjU3NzE3ZmZmOCAoImJsa2NnOiBkZWxheSBibGtnIGRlc3RydWN0aW9uIHVudGls
+IGFmdGVyCndyaXRlYmFjayBoYXMgZmluaXNoZWQiKSBkZWxheWVkIGNhbGwgdG8gYmxrY2dfZGVz
+dHJveV9ibGtncygpIHRvCmNnd2JfcmVsZWFzZV93b3JrZm4oKS4gSG93ZXZlciwgaXQgaXMgZG9u
+ZSBhZnRlciBhIGNzc19wdXQoKSBvZiBibGtjZwp3aGljaCBtYXkgYmUgdGhlIGZpbmFsIHB1dCB0
+aGF0IGNhdXNlcyB0aGUgYmxrY2cgdG8gYmUgZnJlZWQgYXMgUkNVCnJlYWQgbG9jayBpc24ndCBo
+ZWxkLgoKQnkgYWRkaW5nIGEgY3NzX3RyeWdldCgpIGludG8gYmxrY2dfZGVzdHJveV9ibGtncygp
+IGFuZCB3YXJuaW5nIGl0cwpmYWlsdXJlLCB0aGUgZm9sbG93aW5nIHN0YWNrIHRyYWNlIHdhcyBw
+cm9kdWNlZCBpbiBhIHRlc3Qgc3lzdGVtIG9uCmJvb3R1cC4KClsgICAzNC4yNTQyNDBdIFJJUDog
+MDAxMDpibGtjZ19kZXN0cm95X2Jsa2dzKzB4MTZhLzB4MWEwCiAgICAgIDoKWyAgIDM0LjMzOTk0
+M10gQ2FsbCBUcmFjZToKWyAgIDM0LjM0MjM5NV0gIDxUQVNLPgpbICAgMzQuMzQ0NTEwXSAgYmxr
+Y2dfdW5waW5fb25saW5lKzB4MzgvMHg2MApbICAgMzQuMzQ4NTIzXSAgY2d3Yl9yZWxlYXNlX3dv
+cmtmbisweDZhLzB4MjAwClsgICAzNC4zNTI3MDhdICBwcm9jZXNzX29uZV93b3JrKzB4MWU1LzB4
+M2IwClsgICAzNC4zNTY3NDJdICA/IHJlc2N1ZXJfdGhyZWFkKzB4MzkwLzB4MzkwClsgICAzNC4z
+NjA3NThdICB3b3JrZXJfdGhyZWFkKzB4NTAvMHgzYTAKWyAgIDM0LjM2NDQyNV0gID8gcmVzY3Vl
+cl90aHJlYWQrMHgzOTAvMHgzOTAKWyAgIDM0LjM2ODQ0N10gIGt0aHJlYWQrMHhkOS8weDEwMApb
+ICAgMzQuMzcxNTkyXSAgPyBrdGhyZWFkX2NvbXBsZXRlX2FuZF9leGl0KzB4MjAvMHgyMApbICAg
+MzQuMzc2Mzg2XSAgcmV0X2Zyb21fZm9yaysweDIyLzB4MzAKWyAgIDM0LjM3OTk4Ml0gIDwvVEFT
+Sz4KClRoaXMgY29uZmlybXMgdGhhdCBhIHBvdGVudGlhbCBVQUYgc2l0dWF0aW9uIGNhbiBoYXBw
+ZW4uCgpGaXggdGhhdCBieSBkZWxheWluZyB0aGUgY3NzX3B1dCgpIHVudGlsIGFmdGVyIHRoZSBi
+bGtjZ191bnBpbl9vbmxpbmUoKQpjYWxsLiBBbHNvIHVzZSBjc3NfdHJ5Z2V0KCkgaW4gYmxrY2df
+ZGVzdHJveV9ibGtncygpIGFuZCBpc3N1ZSBhIHdhcm5pbmcKaWYgY3NzX3RyeWdldCgpIGZhaWxz
+IHdpdGggbm8gUkNVIHJlYWQgbG9jayBoZWxkLgoKVGhlIHJlcHJvZHVjaW5nIHN5c3RlbSBjYW4g
+bm8gbG9uZ2VyIHByb2R1Y2UgYSB3YXJuaW5nIHdpdGggdGhpcyBwYXRjaC4KQWxsIHRoZSBydW5u
+YWJsZSBibG9jay8wKiB0ZXN0cyBpbmNsdWRpbmcgYmxvY2svMDI3IHdlcmUgcnVuIHN1Y2Nlc3Nm
+dWxseQp3aXRob3V0IGZhaWx1cmUuCgpGaXhlczogNTliNTc3MTdmZmY4ICgiYmxrY2c6IGRlbGF5
+IGJsa2cgZGVzdHJ1Y3Rpb24gdW50aWwgYWZ0ZXIgd3JpdGViYWNrIGhhcyBmaW5pc2hlZCIpClN1
+Z2dlc3RlZC1ieTogTWljaGFsIEtvdXRuw70gPG1rb3V0bnlAc3VzZS5jb20+ClJlcG9ydGVkLWJ5
+OiBZaSBaaGFuZyA8eWkuemhhbmdAcmVkaGF0LmNvbT4KU2lnbmVkLW9mZi1ieTogV2FpbWFuIExv
+bmcgPGxvbmdtYW5AcmVkaGF0LmNvbT4KLS0tCiBibG9jay9ibGstY2dyb3VwLmMgfCAxMCArKysr
+KysrKystCiBtbS9iYWNraW5nLWRldi5jICAgfCAgOCArKysrKystLQogMiBmaWxlcyBjaGFuZ2Vk
+LCAxNSBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2Jsb2NrL2Js
+ay1jZ3JvdXAuYyBiL2Jsb2NrL2Jsay1jZ3JvdXAuYwppbmRleCA1Nzk0MWQyYThiYTMuLjkwNDM3
+MmJiOTZmMSAxMDA2NDQKLS0tIGEvYmxvY2svYmxrLWNncm91cC5jCisrKyBiL2Jsb2NrL2Jsay1j
+Z3JvdXAuYwpAQCAtMTA4OCw3ICsxMDg4LDE1IEBAIHN0YXRpYyB2b2lkIGJsa2NnX2Rlc3Ryb3lf
+YmxrZ3Moc3RydWN0IGJsa2NnICpibGtjZykKIAogCW1pZ2h0X3NsZWVwKCk7CiAKLQljc3NfZ2V0
+KCZibGtjZy0+Y3NzKTsKKwkvKgorCSAqIGJsa2NnX2Rlc3Ryb3lfYmxrZ3MoKSBzaG91bGRuJ3Qg
+YmUgY2FsbGVkIHdpdGggYWxsIHRoZSBibGtjZworCSAqIHJlZmVyZW5jZXMgZ29uZSBhbmQgcmN1
+X3JlYWRfbG9jayBub3QgaGVsZC4KKwkgKi8KKwlpZiAoIWNzc190cnlnZXQoJmJsa2NnLT5jc3Mp
+KSB7CisJCVdBUk5fT05fT05DRSghcmN1X3JlYWRfbG9ja19oZWxkKCkpOworCQlyZXR1cm47CisJ
+fQorCiAJc3Bpbl9sb2NrX2lycSgmYmxrY2ctPmxvY2spOwogCXdoaWxlICghaGxpc3RfZW1wdHko
+JmJsa2NnLT5ibGtnX2xpc3QpKSB7CiAJCXN0cnVjdCBibGtjZ19ncSAqYmxrZyA9IGhsaXN0X2Vu
+dHJ5KGJsa2NnLT5ibGtnX2xpc3QuZmlyc3QsCmRpZmYgLS1naXQgYS9tbS9iYWNraW5nLWRldi5j
+IGIvbW0vYmFja2luZy1kZXYuYwppbmRleCBjMzA0MTlhNWUxMTkuLjM2Zjc1YjA3MjMyNSAxMDA2
+NDQKLS0tIGEvbW0vYmFja2luZy1kZXYuYworKysgYi9tbS9iYWNraW5nLWRldi5jCkBAIC0zOTAs
+MTEgKzM5MCwxNSBAQCBzdGF0aWMgdm9pZCBjZ3diX3JlbGVhc2Vfd29ya2ZuKHN0cnVjdCB3b3Jr
+X3N0cnVjdCAqd29yaykKIAl3Yl9zaHV0ZG93bih3Yik7CiAKIAljc3NfcHV0KHdiLT5tZW1jZ19j
+c3MpOwotCWNzc19wdXQod2ItPmJsa2NnX2Nzcyk7CiAJbXV0ZXhfdW5sb2NrKCZ3Yi0+YmRpLT5j
+Z3diX3JlbGVhc2VfbXV0ZXgpOwogCi0JLyogdHJpZ2dlcnMgYmxrZyBkZXN0cnVjdGlvbiBpZiBu
+byBvbmxpbmUgdXNlcnMgbGVmdCAqLworCS8qCisJICogVHJpZ2dlcnMgYmxrZyBkZXN0cnVjdGlv
+biBpZiBubyBvbmxpbmUgdXNlcnMgbGVmdAorCSAqIFRoZSBmaW5hbCBibGtjZyBjc3NfcHV0KCkg
+aGFzIHRvIGJlIGRvbmUgYWZ0ZXIgYmxrY2dfdW5waW5fb25saW5lKCkKKwkgKiB0byBhdm9pZCB1
+c2UtYWZ0ZXItZnJlZS4KKwkgKi8KIAlibGtjZ191bnBpbl9vbmxpbmUod2ItPmJsa2NnX2Nzcyk7
+CisJY3NzX3B1dCh3Yi0+YmxrY2dfY3NzKTsKIAogCWZwcm9wX2xvY2FsX2Rlc3Ryb3lfcGVyY3B1
+KCZ3Yi0+bWVtY2dfY29tcGxldGlvbnMpOwogCi0tIAoyLjMxLjEKCg==
