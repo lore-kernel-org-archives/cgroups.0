@@ -1,45 +1,62 @@
-From: Kemeng Shi <shikemeng@huawei.com>
-Subject: [PATCH v2 01/10] blk-throttle: correct stale comment in throtl_pd_init
-Date: Tue, 29 Nov 2022 11:01:38 +0800
-Message-ID: <20221129030147.27400-2-shikemeng@huawei.com>
+From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 02/10] blk-throttle: Fix that bps of child could exceed bps limited in parent
+Date: Tue, 29 Nov 2022 11:01:39 +0800
+Message-ID: <20221129030147.27400-3-shikemeng@huawei.com>
 References: <20221129030147.27400-1-shikemeng@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20221129030147.27400-1-shikemeng@huawei.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20221129030147.27400-1-shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, shikemeng@huawei.com
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On the default hierarchy (cgroup2), the throttle interface files don't
-exist in the root cgroup, so the ablity to limit the whole system
-by configuring root group is not existing anymore. In general, cgroup
-doesn't wanna be in the business of restricting resources at the
-system level, so correct the stale comment that we can limit whole
-system to we can only limit subtree.
+Consider situation as following (on the default hierarchy):
+ HDD
+  |
+root (bps limit: 4k)
+  |
+child (bps limit :8k)
+  |
+fio bs=8k
+Rate of fio is supposed to be 4k, but result is 8k. Reason is as
+following:
+Size of single IO from fio is larger than bytes allowed in one
+throtl_slice in child, so IOs are always queued in child group first.
+When queued IOs in child are dispatched to parent group, BIO_BPS_THROTTLED
+is set and these IOs will not be limited by tg_within_bps_limit anymore.
+Fix this by only set BIO_BPS_THROTTLED when the bio traversed the entire
+tree.
 
-Signed-off-by: Kemeng Shi <shikemeng@huawei.com>
+There patch has no influence on situation which is not on the default
+hierarchy as each group is a single root group without parent.
+
+Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-throttle.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ block/blk-throttle.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 847721dc2b2b..59acfac87764 100644
+index 59acfac87764..d516a37e82fb 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -395,8 +395,9 @@ static void throtl_pd_init(struct blkg_policy_data *pd)
- 	 * If on the default hierarchy, we switch to properly hierarchical
- 	 * behavior where limits on a given throtl_grp are applied to the
- 	 * whole subtree rather than just the group itself.  e.g. If 16M
--	 * read_bps limit is set on the root group, the whole system can't
--	 * exceed 16M for the device.
-+	 * read_bps limit is set on a "parent" group, summary bps of
-+	 * "parent" group and its subtree groups can't exceed 16M for the
-+	 * device.
- 	 *
- 	 * If not on the default hierarchy, the broken flat hierarchy
- 	 * behavior is retained where all throtl_grps are treated as if
+@@ -1067,7 +1067,6 @@ static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw)
+ 	sq->nr_queued[rw]--;
+ 
+ 	throtl_charge_bio(tg, bio);
+-	bio_set_flag(bio, BIO_BPS_THROTTLED);
+ 
+ 	/*
+ 	 * If our parent is another tg, we just need to transfer @bio to
+@@ -1080,6 +1079,7 @@ static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw)
+ 		throtl_add_bio_tg(bio, &tg->qnode_on_parent[rw], parent_tg);
+ 		start_parent_slice_with_credit(tg, parent_tg, rw);
+ 	} else {
++		bio_set_flag(bio, BIO_BPS_THROTTLED);
+ 		throtl_qnode_add_bio(bio, &tg->qnode_on_parent[rw],
+ 				     &parent_sq->queued[rw]);
+ 		BUG_ON(tg->td->nr_queued[rw] <= 0);
 -- 
 2.30.0
 
