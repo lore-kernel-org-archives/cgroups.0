@@ -1,55 +1,74 @@
-From: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: Clean up cpuset_task_status_allowed
-Date: Tue, 29 Nov 2022 10:53:02 +0800
-Message-ID: <db6284ba-b936-b38c-662d-3189c14596e7@shopee.com>
-References: <20221125075133.12718-1-haifeng.xu@shopee.com>
- <Y4TqvlOmXqY/CBEc@slm.duckdns.org>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH v2] blk-iocost: fix shift-out-of-bounds in
+ iocg_hick_delay()
+Date: Tue, 29 Nov 2022 10:59:46 +0800
+Message-ID: <5489e3c5-30ad-d7af-c329-40c93d9a1b62@huaweicloud.com>
+References: <20221128030413.882998-1-lijinlin3@huawei.com>
+ <Y4US2vFmR4pnw08Z@slm.duckdns.org>
+ <bbc5e21f-9e77-41bb-5763-36bd905b52a0@huaweicloud.com>
+ <2830bd58-0f53-fa54-58e5-e87225b1fdf1@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tVdaZGcP4j88Qml5mJfIo0BmHi+s/R7fEtpX29Aegis=;
-        b=eOWHOBNDHn0V8MqJlRrEQyiG3etYoyVj6HwWZjScS+ro7oXp5NnHwhu5V0XnAqkFOl
-         6coP5VmkxdS1kKd8anif+2CIXOCyWCUw00MMJ/B7ruMCC30ZGevpet4thlWyKu6g7Mmo
-         oxCduW3h3rMAWAq4cf/olag3GY2b+yPIMI2YBT05xMmL0/RfvpD0b99A2JEK5SsjTDsA
-         q4MgDxRM4yNHBfjWC2SAQEVHEA+qr+wd4kJUk8aa600dSny2BZsIut+ApQTNkGX8gD+g
-         KnPhKTw4NnFHV0or2ZKsD9P0kbjJ7CMEEo6YXfNUfZKQF5scF01DdHZt5KqHaUvgR0oI
-         XWzw==
-In-Reply-To: <Y4TqvlOmXqY/CBEc-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <2830bd58-0f53-fa54-58e5-e87225b1fdf1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Li Jinlin <lijinlin3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, liuzhiqiang26-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
+Hi,
 
-
-On 2022/11/29 01:07, Tejun Heo wrote:
-> On Fri, Nov 25, 2022 at 07:51:33AM +0000, haifeng.xu wrote:
->> cpuset_task_status_allowed just shows mems_allowed status, so
->> rename it to task_mems_allowed. Moreover, it's only used in
->> proc_pid_status, so move it to fs/proc/array.c. There is no
->> intentional function change.
+在 2022/11/29 10:49, Li Jinlin 写道:
+> 
+> 
+> On 2022/11/29 9:14, Yu Kuai wrote:
+>> Hi,
 >>
->> Signed-off-by: haifeng.xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-> 
-> mems_allowed being a very much cpuset feature, I don't see how this is an
-> improvement. The new code is different and can be another way of doing it,
-> sure, but there's no inherent benefit to it. What's the point of the churn?
-> 
-> Thanks.
-> 
+>> 在 2022/11/29 3:58, Tejun Heo 写道:
+>>> On Mon, Nov 28, 2022 at 11:04:13AM +0800, Li Jinlin wrote:
+>>>>        /* calculate the current delay in effect - 1/2 every second */
+>>>>        tdelta = now->now - iocg->delay_at;
+>>>>        if (iocg->delay)
+>>>> -        delay = iocg->delay >> div64_u64(tdelta, USEC_PER_SEC);
+>>>> +        delay = iocg->delay >>
+>>>> +            min_t(u64, div64_u64(tdelta, USEC_PER_SEC), 63);
+>>>
+>>> I replied earlier but the right thing to do here is setting delay to 0 if
+>>> the shift is >= 64.
+>>
+>> Perhaps following change will make more sense?
+>>
+>> @@ -1322,18 +1323,19 @@ static bool iocg_kick_delay(struct ioc_gq *iocg, struct ioc_now *now)
+>>   {
+>>          struct ioc *ioc = iocg->ioc;
+>>          struct blkcg_gq *blkg = iocg_to_blkg(iocg);
+>> -       u64 tdelta, delay, new_delay;
+>> +       u64 delay = 0;
+>> +       u64 new_delay;
+>>          s64 vover, vover_pct;
+>>          u32 hwa;
+>>
+>>          lockdep_assert_held(&iocg->waitq.lock);
+>>
+>>          /* calculate the current delay in effect - 1/2 every second */
+>> -       tdelta = now->now - iocg->delay_at;
+>> -       if (iocg->delay)
+>> +       if (iocg->delay && now->now > iocg->delay_at) {
+>> +               u64 tdelta = now->now - iocg->delay_at;
+>> +
+>>                  delay = iocg->delay >> div64_u64(tdelta, USEC_PER_SEC);
+>> -       else
+>> -               delay = 0;
+>> +       }
+>>
+> I think "now->now > iocg->delay_at" is unnecessary, it is almost inevitable.
 
-Hi, tejun.
+ From what I see, following can only happen if now->now < iocg->delay_at:
 
-In proc_pid_status, task_cpus_allowed is used to show cpus_allowed, similar to that,
-task_mems_allowed is more specific to show mems_allowed. Also cpuset_task_status_allowed
-is used to dispaly memory status in '/proc/<pid>/status' and isn't used in other files, so
-keep it in the fs/proc/array.c.
+"shift exponent 18446744073709"
+
+Or something else triggers it?
 
 Thanks,
-Haifeng.
+Kuai
 
