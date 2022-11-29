@@ -1,60 +1,84 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+From: Li Jinlin <lijinlin3@huawei.com>
 Subject: Re: [PATCH v2] blk-iocost: fix shift-out-of-bounds in
  iocg_hick_delay()
-Date: Tue, 29 Nov 2022 09:14:58 +0800
-Message-ID: <bbc5e21f-9e77-41bb-5763-36bd905b52a0@huaweicloud.com>
+Date: Tue, 29 Nov 2022 10:49:08 +0800
+Message-ID: <2830bd58-0f53-fa54-58e5-e87225b1fdf1@huawei.com>
 References: <20221128030413.882998-1-lijinlin3@huawei.com>
  <Y4US2vFmR4pnw08Z@slm.duckdns.org>
+ <bbc5e21f-9e77-41bb-5763-36bd905b52a0@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Y4US2vFmR4pnw08Z-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <bbc5e21f-9e77-41bb-5763-36bd905b52a0@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Jinlin <lijinlin3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, liuzhiqiang26-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Yu Kuai <yukuai1@huaweicloud.com>, Tejun Heo <tj@kernel.org>
+Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, liuzhiqiang26@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
-Hi,
 
-=D4=DA 2022/11/29 3:58, Tejun Heo =D0=B4=B5=C0:
-> On Mon, Nov 28, 2022 at 11:04:13AM +0800, Li Jinlin wrote:
->>   	/* calculate the current delay in effect - 1/2 every second */
->>   	tdelta =3D now->now - iocg->delay_at;
->>   	if (iocg->delay)
->> -		delay =3D iocg->delay >> div64_u64(tdelta, USEC_PER_SEC);
->> +		delay =3D iocg->delay >>
->> +			min_t(u64, div64_u64(tdelta, USEC_PER_SEC), 63);
->=20
-> I replied earlier but the right thing to do here is setting delay to 0 if
-> the shift is >=3D 64.
 
-Perhaps following change will make more sense?
+On 2022/11/29 9:14, Yu Kuai wrote:
+> Hi,
+> 
+> 在 2022/11/29 3:58, Tejun Heo 写道:
+>> On Mon, Nov 28, 2022 at 11:04:13AM +0800, Li Jinlin wrote:
+>>>       /* calculate the current delay in effect - 1/2 every second */
+>>>       tdelta = now->now - iocg->delay_at;
+>>>       if (iocg->delay)
+>>> -        delay = iocg->delay >> div64_u64(tdelta, USEC_PER_SEC);
+>>> +        delay = iocg->delay >>
+>>> +            min_t(u64, div64_u64(tdelta, USEC_PER_SEC), 63);
+>>
+>> I replied earlier but the right thing to do here is setting delay to 0 if
+>> the shift is >= 64.
+> 
+> Perhaps following change will make more sense?
+> 
+> @@ -1322,18 +1323,19 @@ static bool iocg_kick_delay(struct ioc_gq *iocg, struct ioc_now *now)
+>  {
+>         struct ioc *ioc = iocg->ioc;
+>         struct blkcg_gq *blkg = iocg_to_blkg(iocg);
+> -       u64 tdelta, delay, new_delay;
+> +       u64 delay = 0;
+> +       u64 new_delay;
+>         s64 vover, vover_pct;
+>         u32 hwa;
+> 
+>         lockdep_assert_held(&iocg->waitq.lock);
+> 
+>         /* calculate the current delay in effect - 1/2 every second */
+> -       tdelta = now->now - iocg->delay_at;
+> -       if (iocg->delay)
+> +       if (iocg->delay && now->now > iocg->delay_at) {
+> +               u64 tdelta = now->now - iocg->delay_at;
+> +
+>                 delay = iocg->delay >> div64_u64(tdelta, USEC_PER_SEC);
+> -       else
+> -               delay = 0;
+> +       }
+> 
+I think "now->now > iocg->delay_at" is unnecessary, it is almost inevitable.
 
-@@ -1322,18 +1323,19 @@ static bool iocg_kick_delay(struct ioc_gq *iocg,=20
-struct ioc_now *now)
-  {
-         struct ioc *ioc =3D iocg->ioc;
-         struct blkcg_gq *blkg =3D iocg_to_blkg(iocg);
--       u64 tdelta, delay, new_delay;
-+       u64 delay =3D 0;
-+       u64 new_delay;
-         s64 vover, vover_pct;
-         u32 hwa;
+What about the following change for setting delay to 0 if the shift is >= 64.
 
-         lockdep_assert_held(&iocg->waitq.lock);
+@@ -1329,11 +1329,9 @@ static bool iocg_kick_delay(struct ioc_gq *iocg, struct ioc_now *now)
+        lockdep_assert_held(&iocg->waitq.lock);
 
-         /* calculate the current delay in effect - 1/2 every second */
--       tdelta =3D now->now - iocg->delay_at;
--       if (iocg->delay)
-+       if (iocg->delay && now->now > iocg->delay_at) {
-+               u64 tdelta =3D now->now - iocg->delay_at;
-+
-                 delay =3D iocg->delay >> div64_u64(tdelta, USEC_PER_SEC);
+        /* calculate the current delay in effect - 1/2 every second */
+-       tdelta = now->now - iocg->delay_at;
+        if (iocg->delay)
+-               delay = iocg->delay >> div64_u64(tdelta, USEC_PER_SEC);
 -       else
--               delay =3D 0;
-+       }
+-               delay = 0;
++               tdelta = div64_u64(now->now - iocg->delay_at, USEC_PER_SEC);
++       delay = (iocg->delay && tdelta < 64) ? iocg->delay >> tdelta : 0;
 
->=20
-> Thanks.
->=20
+        /* calculate the new delay from the debt amount */
+        current_hweight(iocg, &hwa, NULL);
 
+Jinlin
+Thanks.
+>>
+>> Thanks.
+>>
+> 
