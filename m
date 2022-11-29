@@ -1,74 +1,45 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH v2] blk-iocost: fix shift-out-of-bounds in
- iocg_hick_delay()
-Date: Tue, 29 Nov 2022 10:59:46 +0800
-Message-ID: <5489e3c5-30ad-d7af-c329-40c93d9a1b62@huaweicloud.com>
-References: <20221128030413.882998-1-lijinlin3@huawei.com>
- <Y4US2vFmR4pnw08Z@slm.duckdns.org>
- <bbc5e21f-9e77-41bb-5763-36bd905b52a0@huaweicloud.com>
- <2830bd58-0f53-fa54-58e5-e87225b1fdf1@huawei.com>
+From: Kemeng Shi <shikemeng@huawei.com>
+Subject: [PATCH v2 01/10] blk-throttle: correct stale comment in throtl_pd_init
+Date: Tue, 29 Nov 2022 11:01:38 +0800
+Message-ID: <20221129030147.27400-2-shikemeng@huawei.com>
+References: <20221129030147.27400-1-shikemeng@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <2830bd58-0f53-fa54-58e5-e87225b1fdf1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20221129030147.27400-1-shikemeng@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Li Jinlin <lijinlin3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, liuzhiqiang26-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, shikemeng@huawei.com
 
-Hi,
+On the default hierarchy (cgroup2), the throttle interface files don't
+exist in the root cgroup, so the ablity to limit the whole system
+by configuring root group is not existing anymore. In general, cgroup
+doesn't wanna be in the business of restricting resources at the
+system level, so correct the stale comment that we can limit whole
+system to we can only limit subtree.
 
-在 2022/11/29 10:49, Li Jinlin 写道:
-> 
-> 
-> On 2022/11/29 9:14, Yu Kuai wrote:
->> Hi,
->>
->> 在 2022/11/29 3:58, Tejun Heo 写道:
->>> On Mon, Nov 28, 2022 at 11:04:13AM +0800, Li Jinlin wrote:
->>>>        /* calculate the current delay in effect - 1/2 every second */
->>>>        tdelta = now->now - iocg->delay_at;
->>>>        if (iocg->delay)
->>>> -        delay = iocg->delay >> div64_u64(tdelta, USEC_PER_SEC);
->>>> +        delay = iocg->delay >>
->>>> +            min_t(u64, div64_u64(tdelta, USEC_PER_SEC), 63);
->>>
->>> I replied earlier but the right thing to do here is setting delay to 0 if
->>> the shift is >= 64.
->>
->> Perhaps following change will make more sense?
->>
->> @@ -1322,18 +1323,19 @@ static bool iocg_kick_delay(struct ioc_gq *iocg, struct ioc_now *now)
->>   {
->>          struct ioc *ioc = iocg->ioc;
->>          struct blkcg_gq *blkg = iocg_to_blkg(iocg);
->> -       u64 tdelta, delay, new_delay;
->> +       u64 delay = 0;
->> +       u64 new_delay;
->>          s64 vover, vover_pct;
->>          u32 hwa;
->>
->>          lockdep_assert_held(&iocg->waitq.lock);
->>
->>          /* calculate the current delay in effect - 1/2 every second */
->> -       tdelta = now->now - iocg->delay_at;
->> -       if (iocg->delay)
->> +       if (iocg->delay && now->now > iocg->delay_at) {
->> +               u64 tdelta = now->now - iocg->delay_at;
->> +
->>                  delay = iocg->delay >> div64_u64(tdelta, USEC_PER_SEC);
->> -       else
->> -               delay = 0;
->> +       }
->>
-> I think "now->now > iocg->delay_at" is unnecessary, it is almost inevitable.
+Signed-off-by: Kemeng Shi <shikemeng@huawei.com>
+---
+ block/blk-throttle.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
- From what I see, following can only happen if now->now < iocg->delay_at:
-
-"shift exponent 18446744073709"
-
-Or something else triggers it?
-
-Thanks,
-Kuai
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 847721dc2b2b..59acfac87764 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -395,8 +395,9 @@ static void throtl_pd_init(struct blkg_policy_data *pd)
+ 	 * If on the default hierarchy, we switch to properly hierarchical
+ 	 * behavior where limits on a given throtl_grp are applied to the
+ 	 * whole subtree rather than just the group itself.  e.g. If 16M
+-	 * read_bps limit is set on the root group, the whole system can't
+-	 * exceed 16M for the device.
++	 * read_bps limit is set on a "parent" group, summary bps of
++	 * "parent" group and its subtree groups can't exceed 16M for the
++	 * device.
+ 	 *
+ 	 * If not on the default hierarchy, the broken flat hierarchy
+ 	 * behavior is retained where all throtl_grps are treated as if
+-- 
+2.30.0
 
