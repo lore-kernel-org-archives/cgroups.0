@@ -1,72 +1,142 @@
-From: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next v2 9/9] blk-iocost: fix walk_list corruption
-Date: Wed, 30 Nov 2022 21:21:56 +0800
-Message-ID: <20221130132156.2836184-10-linan122@huawei.com>
+From: Li Nan <linan122@huawei.com>
+Subject: [PATCH -next v2 7/9] blk-iocost: fix UAF in ioc_pd_free
+Date: Wed, 30 Nov 2022 21:21:54 +0800
+Message-ID: <20221130132156.2836184-8-linan122@huawei.com>
 References: <20221130132156.2836184-1-linan122@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20221130132156.2836184-1-linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20221130132156.2836184-1-linan122@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com
 
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Our test found the following problem in kernel 5.10, and the same problem
+should exist in mainline:
 
-Our test report a problem:
+  BUG: KASAN: use-after-free in _raw_spin_lock_irqsave+0x71/0xe0
+  Write of size 4 at addr ffff8881432000e0 by task swapper/4/0
+  ...
+  Call Trace:
+   <IRQ>
+   dump_stack+0x9c/0xd3
+   print_address_description.constprop.0+0x19/0x170
+   __kasan_report.cold+0x6c/0x84
+   kasan_report+0x3a/0x50
+   check_memory_region+0xfd/0x1f0
+   _raw_spin_lock_irqsave+0x71/0xe0
+   ioc_pd_free+0x9d/0x250
+   blkg_free.part.0+0x80/0x100
+   __blkg_release+0xf3/0x1c0
+   rcu_do_batch+0x292/0x700
+   rcu_core+0x270/0x2d0
+   __do_softirq+0xfd/0x402
+    </IRQ>
+   asm_call_irq_on_stack+0x12/0x20
+   do_softirq_own_stack+0x37/0x50
+   irq_exit_rcu+0x134/0x1a0
+   sysvec_apic_timer_interrupt+0x36/0x80
+   asm_sysvec_apic_timer_interrupt+0x12/0x20
 
-------------[ cut here ]------------
-list_del corruption. next->prev should be ffff888127e0c4b0, but was ffff888127e090b0
-WARNING: CPU: 2 PID: 3117789 at lib/list_debug.c:62 __list_del_entry_valid+0x119/0x130
-RIP: 0010:__list_del_entry_valid+0x119/0x130
-RIP: 0010:__list_del_entry_valid+0x119/0x130
-Call Trace:
- <IRQ>
- iocg_flush_stat.isra.0+0x11e/0x230
- ? ioc_rqos_done+0x230/0x230
- ? ioc_now+0x14f/0x180
- ioc_timer_fn+0x569/0x1640
+   Freed by task 57:
+   kfree+0xba/0x680
+   rq_qos_exit+0x5a/0x80
+   blk_cleanup_queue+0xce/0x1a0
+   virtblk_remove+0x77/0x130 [virtio_blk]
+   virtio_dev_remove+0x56/0xe0
+   __device_release_driver+0x2ba/0x450
+   device_release_driver+0x29/0x40
+   bus_remove_device+0x1d8/0x2c0
+   device_del+0x333/0x7e0
+   device_unregister+0x27/0x90
+   unregister_virtio_device+0x22/0x40
+   virtio_pci_remove+0x53/0xb0
+   pci_device_remove+0x7a/0x130
+   __device_release_driver+0x2ba/0x450
+   device_release_driver+0x29/0x40
+   pci_stop_bus_device+0xcf/0x100
+   pci_stop_and_remove_bus_device+0x16/0x20
+   disable_slot+0xa1/0x110
+   acpiphp_disable_and_eject_slot+0x35/0xe0
+   hotplug_event+0x1b8/0x3c0
+   acpiphp_hotplug_notify+0x37/0x70
+   acpi_device_hotplug+0xee/0x320
+   acpi_hotplug_work_fn+0x69/0x80
+   process_one_work+0x3c5/0x730
+   worker_thread+0x93/0x650
+   kthread+0x1ba/0x210
+   ret_from_fork+0x22/0x30
 
-We haven't reporduced it yet, but we think this is due to parent iocg is
-freed before child iocg, and then in ioc_timer_fn, walk_list is
-corrupted.
+It happened as follow:
 
-1) Remove child cgroup can concurrent with remove parent cgroup, and
-ioc_pd_free for parent iocg can be called before child iocg. This can be
-fixed by moving the handle of walk_list to ioc_pd_offline, since that
-offline from child is ensured to be called before parent.
+	T1		     T2			T3
+  //delete device
+  del_gendisk
+   bdi_unregister
+    bdi_remove_from_list
+     synchronize_rcu_expedited
 
-2) ioc_pd_free can be triggered from both removing device and removing
-cgroup, this patch fix the problem by deleting timer before deactivating
-policy, so that free parent iocg first in this case won't matter.
+		         //rmdir cgroup
+		         blkcg_destroy_blkgs
+		          blkg_destroy
+		           percpu_ref_kill
+		            blkg_release
+		             call_rcu
+   rq_qos_exit
+    ioc_rqos_exit
+     kfree(ioc)
+					   __blkg_release
+					    blkg_free
+					     blkg_free_workfn
+					      pd_free_fn
+					       ioc_pd_free
+						spin_lock_irqsave
+						 ->ioc is freed
 
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Fix the problem by moving the operation on ioc in ioc_pd_free() to
+ioc_pd_offline(), and just free resource in ioc_pd_free() like iolatency
+and throttle.
+
+Signed-off-by: Li Nan <linan122@huawei.com>
 ---
- block/blk-iocost.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ block/blk-iocost.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 710cf63a1643..d2b873908f88 100644
+index 2316ba93e7d6..710cf63a1643 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -2813,13 +2813,14 @@ static void ioc_rqos_exit(struct rq_qos *rqos)
- {
- 	struct ioc *ioc = rqos_to_ioc(rqos);
- 
-+	del_timer_sync(&ioc->timer);
-+
- 	blkcg_deactivate_policy(rqos->q, &blkcg_policy_iocost);
- 
- 	spin_lock_irq(&ioc->lock);
- 	ioc->running = IOC_STOP;
- 	spin_unlock_irq(&ioc->lock);
- 
--	del_timer_sync(&ioc->timer);
- 	free_percpu(ioc->pcpu_stat);
- 	kfree(ioc);
+@@ -2978,7 +2978,7 @@ static void ioc_pd_init(struct blkg_policy_data *pd)
+ 	spin_unlock_irqrestore(&ioc->lock, flags);
  }
+ 
+-static void ioc_pd_free(struct blkg_policy_data *pd)
++static void ioc_pd_offline(struct blkg_policy_data *pd)
+ {
+ 	struct ioc_gq *iocg = pd_to_iocg(pd);
+ 	struct ioc *ioc = iocg->ioc;
+@@ -3002,6 +3002,12 @@ static void ioc_pd_free(struct blkg_policy_data *pd)
+ 
+ 		hrtimer_cancel(&iocg->waitq_timer);
+ 	}
++}
++
++static void ioc_pd_free(struct blkg_policy_data *pd)
++{
++	struct ioc_gq *iocg = pd_to_iocg(pd);
++
+ 	free_percpu(iocg->pcpu_stat);
+ 	kfree(iocg);
+ }
+@@ -3488,6 +3494,7 @@ static struct blkcg_policy blkcg_policy_iocost = {
+ 	.cpd_free_fn	= ioc_cpd_free,
+ 	.pd_alloc_fn	= ioc_pd_alloc,
+ 	.pd_init_fn	= ioc_pd_init,
++	.pd_offline_fn	= ioc_pd_offline,
+ 	.pd_free_fn	= ioc_pd_free,
+ 	.pd_stat_fn	= ioc_pd_stat,
+ };
 -- 
 2.31.1
 
