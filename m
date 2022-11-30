@@ -1,66 +1,67 @@
-From: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH -next v2 8/9] block: fix null-pointer dereference in ioc_pd_init
-Date: Wed, 30 Nov 2022 21:21:55 +0800
-Message-ID: <20221130132156.2836184-9-linan122@huawei.com>
-References: <20221130132156.2836184-1-linan122@huawei.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: protect the memory in cgroup from being
+ oom killed
+Date: Wed, 30 Nov 2022 14:15:06 +0100
+Message-ID: <Y4dXWsaLKRwJvWEY@dhcp22.suse.cz>
+References: <20221130070158.44221-1-chengkaitao@didiglobal.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20221130132156.2836184-1-linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1669814106; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=78kBTVjk9NN3b//OL4d2dPMzsmFl6kOFvw+wnxdUvC0=;
+        b=CJ5yMJnrkOzf4sfqOWKQ1oSbCwMifCAwlufTAq1pWndcvZ5cAeOuB0nUqN676FKRXuNrLs
+        VanShgHoCm8feQxtJEpumXrdKUFYdFlrhjNoHTeVkyWn3K/SDlL9mo3hqvI/V/M59IYJW1
+        bgTi/RkuuLd/q/bmdszcfp1VvqnOwSE=
+Content-Disposition: inline
+In-Reply-To: <20221130070158.44221-1-chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: chengkaitao <pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, ran.xiaokai-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sujiaxun-xX5NlYq76+e1Z/+hSey0Gg@public.gmane.org, feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Remove block device when iocost is initializing may cause
-null-pointer dereference:
+On Wed 30-11-22 15:01:58, chengkaitao wrote:
+> From: chengkaitao <pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> 
+> We created a new interface <memory.oom.protect> for memory, If there is
+> the OOM killer under parent memory cgroup, and the memory usage of a
+> child cgroup is within its effective oom.protect boundary, the cgroup's
+> tasks won't be OOM killed unless there is no unprotected tasks in other
+> children cgroups. It draws on the logic of <memory.min/low> in the
+> inheritance relationship.
 
-	CPU1				   CPU2
-  ioc_qos_write
-   blkcg_conf_open_bdev
-    blkdev_get_no_open
-     kobject_get_unless_zero
-    blk_iocost_init
-     rq_qos_add
-  					del_gendisk
-  					 rq_qos_exit
-  					  q->rq_qos = rqos->next
-  					   //iocost is removed from q->roqs
-      blkcg_activate_policy
-       pd_init_fn
-        ioc_pd_init
-  	 ioc = q_to_ioc(blkg->q)
- 	  //cant find iocost and return null
+Could you be more specific about usecases? How do you tune oom.protect
+wrt to other tunables? How does this interact with the oom_score_adj
+tunining (e.g. a first hand oom victim with the score_adj 1000 sitting
+in a oom protected memcg)?
 
-Fix problem by moving rq_qos_exit() to disk_release(). ioc_qos_write() get
-bd_device.kobj in blkcg_conf_open_bdev(), so disk_release will not be
-actived until iocost initialization is complited.
+I haven't really read through the whole patch but this struck me odd.
 
-Signed-off-by: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- block/genhd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> @@ -552,8 +552,19 @@ static int proc_oom_score(struct seq_file *m, struct pid_namespace *ns,
+>  	unsigned long totalpages = totalram_pages() + total_swap_pages;
+>  	unsigned long points = 0;
+>  	long badness;
+> +#ifdef CONFIG_MEMCG
+> +	struct mem_cgroup *memcg;
+>  
+> -	badness = oom_badness(task, totalpages);
+> +	rcu_read_lock();
+> +	memcg = mem_cgroup_from_task(task);
+> +	if (memcg && !css_tryget(&memcg->css))
+> +		memcg = NULL;
+> +	rcu_read_unlock();
+> +
+> +	update_parent_oom_protection(root_mem_cgroup, memcg);
+> +	css_put(&memcg->css);
+> +#endif
+> +	badness = oom_badness(task, totalpages, MEMCG_OOM_PROTECT);
 
-diff --git a/block/genhd.c b/block/genhd.c
-index dcf200bcbd3e..0db440bbfefb 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -656,7 +656,6 @@ void del_gendisk(struct gendisk *disk)
- 		elevator_exit(q);
- 		mutex_unlock(&q->sysfs_lock);
- 	}
--	rq_qos_exit(q);
- 	blk_mq_unquiesce_queue(q);
- 
- 	/*
-@@ -1168,6 +1167,7 @@ static void disk_release(struct device *dev)
- 	    !test_bit(GD_ADDED, &disk->state))
- 		blk_mq_exit_queue(disk->queue);
- 
-+	rq_qos_exit(disk->queue);
- 	blkcg_exit_disk(disk);
- 
- 	bioset_exit(&disk->bio_split);
+the badness means different thing depending on which memcg hierarchy
+subtree you look at. Scaling based on the global oom could get really
+misleading.
+
 -- 
-2.31.1
-
+Michal Hocko
+SUSE Labs
