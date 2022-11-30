@@ -1,203 +1,70 @@
-From: Li Nan <linan122@huawei.com>
-Subject: [PATCH -next v2 1/9] blk-iocost: cleanup ioc_qos_write() and ioc_cost_model_write()
-Date: Wed, 30 Nov 2022 21:21:48 +0800
-Message-ID: <20221130132156.2836184-2-linan122@huawei.com>
+From: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH -next v2 5/9] blk-iocost: fix divide by 0 error in calc_lcoefs()
+Date: Wed, 30 Nov 2022 21:21:52 +0800
+Message-ID: <20221130132156.2836184-6-linan122@huawei.com>
 References: <20221130132156.2836184-1-linan122@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20221130132156.2836184-1-linan122@huawei.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20221130132156.2836184-1-linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+echo max of u64 to cost.model can cause divide by 0 error.
 
-There are no functional changes, just to make the code a litter cleaner
-and follow up patches easier.
+  # echo 8:0 rbps=18446744073709551615 > /sys/fs/cgroup/io.cost.model
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Li Nan <linan122@huawei.com>
+  divide error: 0000 [#1] PREEMPT SMP
+  RIP: 0010:calc_lcoefs+0x4c/0xc0
+  Call Trace:
+   <TASK>
+   ioc_refresh_params+0x2b3/0x4f0
+   ioc_cost_model_write+0x3cb/0x4c0
+   ? _copy_from_iter+0x6d/0x6c0
+   ? kernfs_fop_write_iter+0xfc/0x270
+   cgroup_file_write+0xa0/0x200
+   kernfs_fop_write_iter+0x17d/0x270
+   vfs_write+0x414/0x620
+   ksys_write+0x73/0x160
+   __x64_sys_write+0x1e/0x30
+   do_syscall_64+0x35/0x80
+   entry_SYSCALL_64_after_hwframe+0x63/0xcd
+
+calc_lcoefs() uses the input value of cost.model in DIV_ROUND_UP_ULL,
+overflow would happen if bps plus IOC_PAGE_SIZE is greater than
+ULLONG_MAX, it can cause divide by 0 error.I_LCOEF_MAX is introduced to
+prevent it.
+
+Signed-off-by: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-iocost.c | 62 +++++++++++++++++++---------------------------
- 1 file changed, 25 insertions(+), 37 deletions(-)
+ block/blk-iocost.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index f01359906c83..fd495e823db2 100644
+index 3a96cd557c47..f4a754b9d10f 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -3185,7 +3185,7 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
- 	if (!ioc) {
- 		ret = blk_iocost_init(disk);
- 		if (ret)
--			goto err;
-+			goto out;
- 		ioc = q_to_ioc(disk->queue);
- 	}
+@@ -306,6 +306,9 @@ enum {
+ 	IOC_PAGE_SIZE		= 1 << IOC_PAGE_SHIFT,
+ 	IOC_SECT_TO_PAGE_SHIFT	= IOC_PAGE_SHIFT - SECTOR_SHIFT,
  
-@@ -3197,6 +3197,7 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
- 	enable = ioc->enabled;
- 	user = ioc->user_qos_params;
- 
-+	ret = -EINVAL;
- 	while ((p = strsep(&input, " \t\n"))) {
- 		substring_t args[MAX_OPT_ARGS];
- 		char buf[32];
-@@ -3218,7 +3219,7 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
- 			else if (!strcmp(buf, "user"))
- 				user = true;
- 			else
--				goto einval;
-+				goto out_unlock;
- 			continue;
++	/* avoid overflow */
++	I_LCOEF_MAX		= ULLONG_MAX - IOC_PAGE_SIZE,
++
+ 	/* if apart further than 16M, consider randio for linear model */
+ 	LCOEF_RANDIO_PAGES	= 4096,
+ };
+@@ -3431,6 +3434,8 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
+ 			goto out_unlock;
  		}
  
-@@ -3228,39 +3229,39 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
- 		case QOS_WPPM:
- 			if (match_strlcpy(buf, &args[0], sizeof(buf)) >=
- 			    sizeof(buf))
--				goto einval;
-+				goto out_unlock;
- 			if (cgroup_parse_float(buf, 2, &v))
--				goto einval;
-+				goto out_unlock;
- 			if (v < 0 || v > 10000)
--				goto einval;
-+				goto out_unlock;
- 			qos[tok] = v * 100;
- 			break;
- 		case QOS_RLAT:
- 		case QOS_WLAT:
- 			if (match_u64(&args[0], &v))
--				goto einval;
-+				goto out_unlock;
- 			qos[tok] = v;
- 			break;
- 		case QOS_MIN:
- 		case QOS_MAX:
- 			if (match_strlcpy(buf, &args[0], sizeof(buf)) >=
- 			    sizeof(buf))
--				goto einval;
-+				goto out_unlock;
- 			if (cgroup_parse_float(buf, 2, &v))
--				goto einval;
-+				goto out_unlock;
- 			if (v < 0)
--				goto einval;
-+				goto out_unlock;
- 			qos[tok] = clamp_t(s64, v * 100,
- 					   VRATE_MIN_PPM, VRATE_MAX_PPM);
- 			break;
- 		default:
--			goto einval;
-+			goto out_unlock;
- 		}
- 		user = true;
- 	}
- 
- 	if (qos[QOS_MIN] > qos[QOS_MAX])
--		goto einval;
-+		goto out_unlock;
- 
- 	if (enable) {
- 		blk_stat_enable_accounting(disk->queue);
-@@ -3281,21 +3282,14 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
- 	}
- 
- 	ioc_refresh_params(ioc, true);
--	spin_unlock_irq(&ioc->lock);
-+	ret = nbytes;
- 
--	blk_mq_unquiesce_queue(disk->queue);
--	blk_mq_unfreeze_queue(disk->queue);
--
--	blkdev_put_no_open(bdev);
--	return nbytes;
--einval:
-+out_unlock:
- 	spin_unlock_irq(&ioc->lock);
--
- 	blk_mq_unquiesce_queue(disk->queue);
- 	blk_mq_unfreeze_queue(disk->queue);
- 
--	ret = -EINVAL;
--err:
-+out:
- 	blkdev_put_no_open(bdev);
- 	return ret;
- }
-@@ -3364,7 +3358,7 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
- 	if (!ioc) {
- 		ret = blk_iocost_init(bdev->bd_disk);
- 		if (ret)
--			goto err;
-+			goto out;
- 		ioc = q_to_ioc(q);
- 	}
- 
-@@ -3375,6 +3369,7 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
- 	memcpy(u, ioc->params.i_lcoefs, sizeof(u));
- 	user = ioc->user_cost_model;
- 
-+	ret = -EINVAL;
- 	while ((p = strsep(&input, " \t\n"))) {
- 		substring_t args[MAX_OPT_ARGS];
- 		char buf[32];
-@@ -3392,20 +3387,20 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
- 			else if (!strcmp(buf, "user"))
- 				user = true;
- 			else
--				goto einval;
-+				goto out_unlock;
- 			continue;
- 		case COST_MODEL:
- 			match_strlcpy(buf, &args[0], sizeof(buf));
- 			if (strcmp(buf, "linear"))
--				goto einval;
-+				goto out_unlock;
- 			continue;
- 		}
- 
- 		tok = match_token(p, i_lcoef_tokens, args);
- 		if (tok == NR_I_LCOEFS)
--			goto einval;
-+			goto out_unlock;
- 		if (match_u64(&args[0], &v))
--			goto einval;
++		if (v > I_LCOEF_MAX)
 +			goto out_unlock;
  		u[tok] = v;
  		user = true;
  	}
-@@ -3416,23 +3411,16 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
- 	} else {
- 		ioc->user_cost_model = false;
- 	}
--	ioc_refresh_params(ioc, true);
--	spin_unlock_irq(&ioc->lock);
- 
--	blk_mq_unquiesce_queue(q);
--	blk_mq_unfreeze_queue(q);
--
--	blkdev_put_no_open(bdev);
--	return nbytes;
-+	ioc_refresh_params(ioc, true);
-+	ret = nbytes;
- 
--einval:
-+out_unlock:
- 	spin_unlock_irq(&ioc->lock);
--
- 	blk_mq_unquiesce_queue(q);
- 	blk_mq_unfreeze_queue(q);
- 
--	ret = -EINVAL;
--err:
-+out:
- 	blkdev_put_no_open(bdev);
- 	return ret;
- }
 -- 
 2.31.1
 
