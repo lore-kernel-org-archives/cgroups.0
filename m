@@ -1,40 +1,69 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH -next v2 2/9] blk-iocost: improve hanlder of match_u64()
-Date: Wed, 30 Nov 2022 10:32:19 -1000
-Message-ID: <Y4e90zFnhhq764lP@slm.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH -next v2 7/9] blk-iocost: fix UAF in ioc_pd_free
+Date: Wed, 30 Nov 2022 10:42:14 -1000
+Message-ID: <Y4fAJpKcVL7Q9hgY@slm.duckdns.org>
 References: <20221130132156.2836184-1-linan122@huawei.com>
- <20221130132156.2836184-3-linan122@huawei.com>
+ <20221130132156.2836184-8-linan122@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=s+f73qQSWaZWQn5PMXIm5ddroitzO0fXj2VGSW5dgd4=;
-        b=BGROMH3G14bf8t+5QZBF8EIw7DJlp2M69BITlayk5RGIWu5mNUNjLIwEntSuAXgoGO
-         P87aZf2H9okTAtAvyUGhhYTXP1R1c0HvcGtF6oOmpH/AsjC2ZnLAUM+ZDFG50EtBaeM5
-         KGLxpgoe1IdmVLAWtMdASGG8Y3NNnio4jdbNm5Jbz8nofwg0orveW/0yTrYkaCQgsF+J
-         kmWIYEdlCmYOvqZCmsZDw8NVEZcFR7/wa0FmfXM7HlJWFPXVTu95gDNR/uE6f8xdr5YO
-         d7vb4ikzLzG+TKHr2tWloyVj9jbP7mTm2qutSQ17RdzICHvycDY59fIM+h5QlDG8du51
-         19ag==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=gRiXbnbK/Q1F4+mT6/8iecEnTJ4rVIRUMTLO6vZSP0U=;
+        b=a7uQvELPQf41UY3d1GLOaGp74BzQq3uslTfVIAR2Nz0P5TgkgJkSBC0HyZ0A5gDTLD
+         tkuybQjLUVTgkCX92AibStZwbL/aoL5X5hKhcH/ABIe2b0lWsF+xTygcUMHPPEkpAZSU
+         5eC7HSVOTKWKeVniYtE57w4dTbCqXah8gnylGrOi5cB0LMA8nVXQZxioQxh6YVfS9Vfe
+         n/SyThpfeIeDhkq3HXqkVBAVig/27wyxaHkWjEWD5YRgXALdg4QEpKVaZy1hMnDDZ7Su
+         Xjl+/slVMQ50UfzDJJAjEdjubt27rVSfNKU7Iur5CHSv42zIHMbkVckeCwlibg11BSjw
+         BoLg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20221130132156.2836184-3-linan122@huawei.com>
+In-Reply-To: <20221130132156.2836184-8-linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Nan <linan122@huawei.com>
-Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+To: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Wed, Nov 30, 2022 at 09:21:49PM +0800, Li Nan wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
+On Wed, Nov 30, 2022 at 09:21:54PM +0800, Li Nan wrote:
+> 	T1		     T2			T3
+>   //delete device
+>   del_gendisk
+>    bdi_unregister
+>     bdi_remove_from_list
+>      synchronize_rcu_expedited
 > 
-> 1) There are one place that return value of match_u64() is not checked.
-> 2) If match_u64() failed, return value is set to -EINVAL despite that
->    there are other possible errnos.
+> 		         //rmdir cgroup
+> 		         blkcg_destroy_blkgs
+> 		          blkg_destroy
+> 		           percpu_ref_kill
+> 		            blkg_release
+> 		             call_rcu
+>    rq_qos_exit
+>     ioc_rqos_exit
+>      kfree(ioc)
+> 					   __blkg_release
+> 					    blkg_free
+> 					     blkg_free_workfn
+> 					      pd_free_fn
+> 					       ioc_pd_free
+> 						spin_lock_irqsave
+> 						 ->ioc is freed
+> 
+> Fix the problem by moving the operation on ioc in ioc_pd_free() to
+> ioc_pd_offline(), and just free resource in ioc_pd_free() like iolatency
+> and throttle.
+> 
+> Signed-off-by: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Ditto. Does this matter?
+I wonder what we really wanna do is pinning ioc while blkgs are still around
+but I think this should work too.
+
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+
+Thanks.
 
 -- 
 tejun
