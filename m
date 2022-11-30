@@ -1,67 +1,53 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+From: =?utf-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= 
+        <chengkaitao@didiglobal.com>
 Subject: Re: [PATCH] mm: memcontrol: protect the memory in cgroup from being
  oom killed
-Date: Wed, 30 Nov 2022 14:15:06 +0100
-Message-ID: <Y4dXWsaLKRwJvWEY@dhcp22.suse.cz>
-References: <20221130070158.44221-1-chengkaitao@didiglobal.com>
+Date: Wed, 30 Nov 2022 13:25:06 +0000
+Message-ID: <9F11BDDA-D9B6-4F61-9EAA-9B959BD4AE0A@didiglobal.com>
+References: <Y4dP+3VEYl/YUfK1@debian.me>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1669814106; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=78kBTVjk9NN3b//OL4d2dPMzsmFl6kOFvw+wnxdUvC0=;
-        b=CJ5yMJnrkOzf4sfqOWKQ1oSbCwMifCAwlufTAq1pWndcvZ5cAeOuB0nUqN676FKRXuNrLs
-        VanShgHoCm8feQxtJEpumXrdKUFYdFlrhjNoHTeVkyWn3K/SDlL9mo3hqvI/V/M59IYJW1
-        bgTi/RkuuLd/q/bmdszcfp1VvqnOwSE=
-Content-Disposition: inline
-In-Reply-To: <20221130070158.44221-1-chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <Y4dP+3VEYl/YUfK1@debian.me>
+Content-Language: zh-CN
+Content-ID: <DCB81BB2AA69C24198FC73EC4273842D@didichuxing.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: chengkaitao <pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, ran.xiaokai-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org, Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sujiaxun-xX5NlYq76+e1Z/+hSey0Gg@public.gmane.org, feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Bagas Sanjaya <bagasdotme@gmail.com>, Tao pilgrim <pilgrimtao@gmail.com>
+Cc: "tj@kernel.org" <tj@kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "corbet@lwn.net" <corbet@lwn.net>, "mhocko@kernel.org" <mhocko@kernel.org>, "roman.gushchin@linux.dev" <roman.gushchin@linux.dev>, "shakeelb@google.com" <shakeelb@google.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "songmuchun@bytedance.com" <songmuchun@bytedance.com>, "cgel.zte@gmail.com" <cgel.zte@gmail.com>, "ran.xiaokai@zte.com.cn" <ran.xiaokai@zte.com.cn>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "zhengqi.arch@bytedance.com" <zhengqi.arch@bytedance.com>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "Liam.Howlett@oracle.com" <Liam.Howlett@oracle.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>
 
-On Wed 30-11-22 15:01:58, chengkaitao wrote:
-> From: chengkaitao <pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> 
-> We created a new interface <memory.oom.protect> for memory, If there is
-> the OOM killer under parent memory cgroup, and the memory usage of a
-> child cgroup is within its effective oom.protect boundary, the cgroup's
-> tasks won't be OOM killed unless there is no unprotected tasks in other
-> children cgroups. It draws on the logic of <memory.min/low> in the
-> inheritance relationship.
-
-Could you be more specific about usecases? How do you tune oom.protect
-wrt to other tunables? How does this interact with the oom_score_adj
-tunining (e.g. a first hand oom victim with the score_adj 1000 sitting
-in a oom protected memcg)?
-
-I haven't really read through the whole patch but this struck me odd.
-
-> @@ -552,8 +552,19 @@ static int proc_oom_score(struct seq_file *m, struct pid_namespace *ns,
->  	unsigned long totalpages = totalram_pages() + total_swap_pages;
->  	unsigned long points = 0;
->  	long badness;
-> +#ifdef CONFIG_MEMCG
-> +	struct mem_cgroup *memcg;
->  
-> -	badness = oom_badness(task, totalpages);
-> +	rcu_read_lock();
-> +	memcg = mem_cgroup_from_task(task);
-> +	if (memcg && !css_tryget(&memcg->css))
-> +		memcg = NULL;
-> +	rcu_read_unlock();
-> +
-> +	update_parent_oom_protection(root_mem_cgroup, memcg);
-> +	css_put(&memcg->css);
-> +#endif
-> +	badness = oom_badness(task, totalpages, MEMCG_OOM_PROTECT);
-
-the badness means different thing depending on which memcg hierarchy
-subtree you look at. Scaling based on the global oom could get really
-misleading.
-
--- 
-Michal Hocko
-SUSE Labs
+T24gMjAyMi8xMS8zMCAyMDo0M++8jOKAnEJhZ2FzIFNhbmpheWHigJ08YmFnYXNkb3RtZUBnbWFp
+bC5jb20+IHdyb3RlOg0KPiBPbiBXZWQsIE5vdiAzMCwgMjAyMiBhdCAwNzozMzowMVBNICswODAw
+LCBUYW8gcGlsZ3JpbSB3cm90ZToNCj4gPiBPbiBXZWQsIE5vdiAzMCwgMjAyMiBhdCA0OjQxIFBN
+IEJhZ2FzIFNhbmpheWEgPGJhZ2FzZG90bWVAZ21haWwuY29tPiB3cm90ZToNCj4gPiA+DQo+ID4g
+PiBPbiAxMS8zMC8yMiAxNDowMSwgY2hlbmdrYWl0YW8gd3JvdGU6DQo+ID4gPiA+IEZyb206IGNo
+ZW5na2FpdGFvIDxwaWxncmltdGFvQGdtYWlsLmNvbT4NCj4gPiA+ID4NCj4gPiA+DQo+ID4gPiBZ
+aWtlcyEgQW5vdGhlciBwYXRjaCBmcm9tIFpURSBndXlzLg0KPiA+ID4NCj4gPiA+IEknbSBzdXNw
+aWNpb3VzIHRvIHBhdGNoZXMgc2VudCBmcm9tIHRoZW0gZHVlIHRvIGJhZCByZXB1dGF0aW9uIHdp
+dGgNCj4gPiA+IGtlcm5lbCBkZXZlbG9wbWVudCBjb21tdW5pdHkuIEZpcnN0LCB0aGV5IHNlbnQg
+YWxsIHBhdGNoZXMgdmlhDQo+ID4gPiBjZ2VsLnp0ZUBnbWFpbC5jb20gKGxpc3RlZCBpbiBDYykg
+YnV0IEdyZWcgY2FuJ3Qgc3VyZSB0aGVzZSBhcmUgcmVhbGx5DQo+ID4gPiBzZW50IGZyb20gdGhl
+bSAoWzFdICYgWzJdKS4gVGhlbiB0aGV5IHRyaWVkIHRvIHdvcmthcm91bmQgYnkgc2VuZGluZw0K
+PiA+ID4gZnJvbSB0aGVpciBwZXJzb25hbCBHbWFpbCBhY2NvdW50cywgYWdhaW4gd2l0aCBzYW1l
+IHJlc3BvbnNlIGZyb20gaGltDQo+ID4gPiBbM10uIEFuZCBmaW5hbGx5IHRoZXkgc2VudCBzcG9v
+ZmVkIGVtYWlscyAoYXMgaGUgcG9pbnRlZCBvdXQgaW4gWzRdKSAtDQo+ID4gPiB0aGV5IHByZXRl
+bmQgdG8gc2VuZCBmcm9tIFpURSBkb21haW4gYnV0IGFjdHVhbGx5IHNlbnQgZnJvbSB0aGVpcg0K
+PiA+ID4gZGlmZmVyZW50IGRvbWFpbiAoc2VlIHJhdyBtZXNzYWdlIGFuZCBsb29rIGZvciBYLUdv
+b2dsZS1PcmlnaW5hbC1Gcm9tOg0KPiA+ID4gaGVhZGVyLg0KPiA+DQo+ID4gSGkgQmFnYXMgU2Fu
+amF5YSwNCj4gPg0KPiA+IEknbSBub3QgYW4gZW1wbG95ZWUgb2YgWlRFLCBqdXN0IGFuIG9yZGlu
+YXJ5IGRldmVsb3Blci4gSSByZWFsbHkgZG9uJ3Qga25vdw0KPiA+IGFsbCB0aGUgZGV0YWlscyBh
+Ym91dCBjb21tdW5pdHkgYW5kIFpURSwgVGhlIHJlYXNvbiB3aHkgSSBjYyBjZ2VsLnp0ZUBnbWFp
+bC5jb20NCj4gPiBpcyBiZWNhdXNlIHRoZSBvdXRwdXQgb2YgdGhlIHNjcmlwdCA8Z2V0X21haW50
+YWluZXIucGw+IGhhcyB0aGUNCj4gPiBhZGRyZXNzIDxjZ2VsLnp0ZUBnbWFpbC5jb20+Lg0KPiA+
+DQo+ID4gSWYgdGhlcmUgaXMgYW55IGVycm9yIGluIHRoZSBmb3JtYXQgb2YgdGhlIGVtYWlsLCBJ
+IHdpbGwgdHJ5IG15IGJlc3QNCj4gPiB0byBjb3JyZWN0IGl0Lg0KPiA+DQo+DQo+IE9LLCB0aGFu
+a3MgZm9yIGNsYXJpZmljYXRpb24uIEF0IGZpcnN0IEkgdGhvdWdodCB5b3Ugd2VyZSBaVEUgZ3V5
+cy4NCj4gU29ycnkgZm9yIGluY29udmVuaWVuY2UuDQo+IA0KPiBOb3cgSSBhc2s6IHdoeSBkbyB5
+b3VyIGVtYWlsIHNlZW0gc3Bvb2ZlZCAoc2VuZGluZyBmcm9tIHlvdXIgZ21haWwNCj4gYWNjb3Vu
+dCBidXQgdGhlcmUgaXMgZXh0cmEgZ21haWwtc3BlY2lmaWMgaGVhZGVyIHRoYXQgbWFrZXMgeW91
+IGxpa2UNCj4gInNlbmRpbmciIGZyb20geW91ciBjb3Jwb3JhdGUgZW1haWwgYWRkcmVzcz8gV291
+bGRuJ3QgaXQgYmUgbmljZSAoYW5kDQo+IGFwcHJvcHJpYXRlKSBpZiB5b3UgY2FuIHNlbmQgYW5k
+IHJlY2VpdmUgZW1haWwgd2l0aCB0aGUgbGF0dGVyIGFkZHJlc3MNCj4gaW5zdGVhZD8NCj4NCkl0
+IG1heSBiZSBjYXVzZWQgYnkgbXkgcHJldmlvdXMgaGFiaXRzLg0KVGhhbmtzIGZvciB5b3VyIGFk
+dmljZS4gSSdsbCBkbyBpdC4NCg0KVGhhbmtzLg0KLS0gDQo+IEFuIG9sZCBtYW4gZG9sbC4uLiBq
+dXN0IHdoYXQgSSBhbHdheXMgd2FudGVkISAtIENsYXJhDQoNCg==
