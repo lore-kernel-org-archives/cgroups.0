@@ -1,74 +1,72 @@
-From: Tao pilgrim <pilgrimtao@gmail.com>
-Subject: Re: [PATCH] mm: memcontrol: protect the memory in cgroup from being
- oom killed
-Date: Wed, 30 Nov 2022 19:33:01 +0800
-Message-ID: <CAAWJmAYPUK+1GBS0R460pDvDKrLr9zs_X2LT2yQTP_85kND5Ew@mail.gmail.com>
-References: <20221130070158.44221-1-chengkaitao@didiglobal.com> <fd28321c-5f00-ba94-daed-2b8da2292c1f@gmail.com>
+From: Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH-block v2] bdi, blk-cgroup: Fix potential UAF of blkcg
+Date: Wed, 30 Nov 2022 14:39:46 +0200
+Message-ID: <Y4dPEtGuQ2A3L+Ww@smile.fi.intel.com>
+References: <20221129203400.1456100-1-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=bbgF/8QJth7Q6iZLlIiOpcOOnk+o4nClIAC+d8Lf9z0=;
-        b=cgrBYVcGGaOmhs4NUM2DMBzEteSqsnNo+s1OWAu0xrFfR8SfGHhoYWl6cON5bJQf5H
-         kBXo+HTMLYJlc0NNqyXTeNHVsKFqrN9RnSJvYMAt9wsTzoHjoBDz54HyrId55uPzhcey
-         WrkHDI90HmJoIfjTMzlxSFuMRM+ZEK+h+tp2CXCTYTjqjx+4Ho1p2q1qT5Xh0Pe1NIpw
-         kh3Ph4481EH6HJsaTRzldrzwYx9ab3Q4uT9o4p32qRaA2tLn+Hf0w3FMTq1prgn3d5jp
-         NtxVXq9wW/MEdgV2FWkhhU7TsMvsvlWqvebJsqA+xk8HaXGX4H+zuKYU5RX6czhqRUDe
-         TW5g==
-In-Reply-To: <fd28321c-5f00-ba94-daed-2b8da2292c1f@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1669811993; x=1701347993;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=iPuUqicRuUklAlC5NV44CDz/ub4ZDmFDWBmSCxl3Jkw=;
+  b=VmD+Tld7VK+TKKsOLApG+zWmnWS7mdPl+tG1U9gyyz5MrCD5MqP0+i/W
+   Mz5Qj5MvCTxwwUNyeK30kW31itd+mXLM6k+oAeK3vkFFxpDE+HMewrjQF
+   VXh9LlvGqtNmddQfYCuMQAWCxFRXTq+7EgvCqhniM6Z5PNfNJeNmhqJ8g
+   aDcy538050krtABGERsZGLNCIBxrLSL6ihxp5GzYeAMXIKKKNwJjUS1gf
+   cw1jmsBa3hJJmZkzcQ5oFs7ysCv7XnyEPyyI4sSIXyYLW2tzKk1jcPfWq
+   QvzhtCpAu6Ylp2JZ8u3McEZ7VoKxQuux8SjEcSmE1xEgLllhMaQt8k3kI
+   w==;
+Content-Disposition: inline
+In-Reply-To: <20221129203400.1456100-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Bagas Sanjaya <bagasdotme@gmail.com>
-Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, corbet@lwn.net, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, akpm@linux-foundation.org, songmuchun@bytedance.com, cgel.zte@gmail.com, ran.xiaokai@zte.com.cn, viro@zeniv.linux.org.uk, zhengqi.arch@bytedance.com, ebiederm@xmission.com, Liam.Howlett@oracle.com, chengzhihao1@huawei.com, haolee.swjtu@gmail.com, yuzhao@google.com, willy@infradead.org, vasily.averin@linux.dev, vbabka@suse.cz, surenb@google.com, sfr@canb.auug.org.au, mcgrof@kernel.org, sujiaxun@uniontech.com, feng.tang@intel.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, chengkaitao@didiglobal.com
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Hillf Danton <hdanton-k+cT0dCbe1g@public.gmane.org>, Chaitanya Kulkarni <chaitanyak-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Yi Zhang <yi.zhang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Nov 30, 2022 at 4:41 PM Bagas Sanjaya <bagasdotme@gmail.com> wrote:
->
-> On 11/30/22 14:01, chengkaitao wrote:
-> > From: chengkaitao <pilgrimtao@gmail.com>
-> >
->
-> Yikes! Another patch from ZTE guys.
->
-> I'm suspicious to patches sent from them due to bad reputation with
-> kernel development community. First, they sent all patches via
-> cgel.zte@gmail.com (listed in Cc) but Greg can't sure these are really
-> sent from them ([1] & [2]). Then they tried to workaround by sending
-> from their personal Gmail accounts, again with same response from him
-> [3]. And finally they sent spoofed emails (as he pointed out in [4]) -
-> they pretend to send from ZTE domain but actually sent from their
-> different domain (see raw message and look for X-Google-Original-From:
-> header.
+On Tue, Nov 29, 2022 at 03:34:00PM -0500, Waiman Long wrote:
+> Commit 59b57717fff8 ("blkcg: delay blkg destruction until after
+> writeback has finished") delayed call to blkcg_destroy_blkgs() to
+> cgwb_release_workfn(). However, it is done after a css_put() of blkcg
+> which may be the final put that causes the blkcg to be freed as RCU
+> read lock isn't held.
+> 
+> By adding a css_tryget() into blkcg_destroy_blkgs() and warning its
+> failure, the following stack trace was produced in a test system on
+> bootup.
+> 
+> [   34.254240] RIP: 0010:blkcg_destroy_blkgs+0x16a/0x1a0
+>       :
+> [   34.339943] Call Trace:
+> [   34.342395]  <TASK>
+> [   34.344510]  blkcg_unpin_online+0x38/0x60
+> [   34.348523]  cgwb_release_workfn+0x6a/0x200
+> [   34.352708]  process_one_work+0x1e5/0x3b0
+> [   34.356742]  ? rescuer_thread+0x390/0x390
+> [   34.360758]  worker_thread+0x50/0x3a0
+> [   34.364425]  ? rescuer_thread+0x390/0x390
+> [   34.368447]  kthread+0xd9/0x100
+> [   34.371592]  ? kthread_complete_and_exit+0x20/0x20
+> [   34.376386]  ret_from_fork+0x22/0x30
+> [   34.379982]  </TASK>
 
-Hi Bagas Sanjaya,
+https://www.kernel.org/doc/html/latest/process/submitting-patches.html#backtraces-in-commit-messages
 
-I'm not an employee of ZTE, just an ordinary developer. I really don't know
-all the details about community and ZTE, The reason why I cc cgel.zte@gmail.com
-is because the output of the script <get_maintainer.pl> has the
-address <cgel.zte@gmail.com>.
 
-If there is any error in the format of the email, I will try my best
-to correct it.
-
->
-> I was about to review documentation part of this patch, but due to
-> concerns above, I have to write this reply instead. So I'm not going
-> to review, sorry for inconvenience.
->
-> PS: Adding Greg to Cc: list.
->
-> [1]: https://lore.kernel.org/lkml/Yw94xsOp6gvdS0UF@kroah.com/
-> [2]: https://lore.kernel.org/lkml/Yylv5hbSBejJ58nt@kroah.com/
-> [3]: https://lore.kernel.org/lkml/Y1EVnZS9BalesrC1@kroah.com/
-> [4]: https://lore.kernel.org/lkml/Y3NrBvIV7lH2GrWz@kroah.com/
->
-> --
-> An old man doll... just what I always wanted! - Clara
->
-
+> This confirms that a potential UAF situation can happen.
+> 
+> Fix that by delaying the css_put() until after the blkcg_unpin_online()
+> call. Also use css_tryget() in blkcg_destroy_blkgs() and issue a warning
+> if css_tryget() fails with no RCU read lock held.
+> 
+> The reproducing system can no longer produce a warning with this patch.
+> All the runnable block/0* tests including block/027 were run successfully
+> without failure.
 
 -- 
-Yours,
-Kaitao Cheng
+With Best Regards,
+Andy Shevchenko
+
+
