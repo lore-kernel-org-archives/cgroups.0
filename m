@@ -1,93 +1,72 @@
-From: Li Nan <linan122@huawei.com>
-Subject: [PATCH -next v2 2/9] blk-iocost: improve hanlder of match_u64()
-Date: Wed, 30 Nov 2022 21:21:49 +0800
-Message-ID: <20221130132156.2836184-3-linan122@huawei.com>
+From: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH -next v2 9/9] blk-iocost: fix walk_list corruption
+Date: Wed, 30 Nov 2022 21:21:56 +0800
+Message-ID: <20221130132156.2836184-10-linan122@huawei.com>
 References: <20221130132156.2836184-1-linan122@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20221130132156.2836184-1-linan122@huawei.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20221130132156.2836184-1-linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linan122@huawei.com, yukuai3@huawei.com, yi.zhang@huawei.com
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-1) There are one place that return value of match_u64() is not checked.
-2) If match_u64() failed, return value is set to -EINVAL despite that
-   there are other possible errnos.
+Our test report a problem:
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Li Nan <linan122@huawei.com>
+------------[ cut here ]------------
+list_del corruption. next->prev should be ffff888127e0c4b0, but was ffff888127e090b0
+WARNING: CPU: 2 PID: 3117789 at lib/list_debug.c:62 __list_del_entry_valid+0x119/0x130
+RIP: 0010:__list_del_entry_valid+0x119/0x130
+RIP: 0010:__list_del_entry_valid+0x119/0x130
+Call Trace:
+ <IRQ>
+ iocg_flush_stat.isra.0+0x11e/0x230
+ ? ioc_rqos_done+0x230/0x230
+ ? ioc_now+0x14f/0x180
+ ioc_timer_fn+0x569/0x1640
+
+We haven't reporduced it yet, but we think this is due to parent iocg is
+freed before child iocg, and then in ioc_timer_fn, walk_list is
+corrupted.
+
+1) Remove child cgroup can concurrent with remove parent cgroup, and
+ioc_pd_free for parent iocg can be called before child iocg. This can be
+fixed by moving the handle of walk_list to ioc_pd_offline, since that
+offline from child is ensured to be called before parent.
+
+2) ioc_pd_free can be triggered from both removing device and removing
+cgroup, this patch fix the problem by deleting timer before deactivating
+policy, so that free parent iocg first in this case won't matter.
+
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-iocost.c | 22 +++++++++++++++++++---
- 1 file changed, 19 insertions(+), 3 deletions(-)
+ block/blk-iocost.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index fd495e823db2..c532129a1456 100644
+index 710cf63a1643..d2b873908f88 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -3202,6 +3202,7 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
- 		substring_t args[MAX_OPT_ARGS];
- 		char buf[32];
- 		int tok;
-+		int err;
- 		s64 v;
+@@ -2813,13 +2813,14 @@ static void ioc_rqos_exit(struct rq_qos *rqos)
+ {
+ 	struct ioc *ioc = rqos_to_ioc(rqos);
  
- 		if (!*p)
-@@ -3209,7 +3210,12 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
++	del_timer_sync(&ioc->timer);
++
+ 	blkcg_deactivate_policy(rqos->q, &blkcg_policy_iocost);
  
- 		switch (match_token(p, qos_ctrl_tokens, args)) {
- 		case QOS_ENABLE:
--			match_u64(&args[0], &v);
-+			err = match_u64(&args[0], &v);
-+			if (err) {
-+				ret = err;
-+				goto out_unlock;
-+			}
-+
- 			enable = v;
- 			continue;
- 		case QOS_CTRL:
-@@ -3238,8 +3244,12 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
- 			break;
- 		case QOS_RLAT:
- 		case QOS_WLAT:
--			if (match_u64(&args[0], &v))
-+			err = match_u64(&args[0], &v);
-+			if (err) {
-+				ret = err;
- 				goto out_unlock;
-+			}
-+
- 			qos[tok] = v;
- 			break;
- 		case QOS_MIN:
-@@ -3374,6 +3384,7 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
- 		substring_t args[MAX_OPT_ARGS];
- 		char buf[32];
- 		int tok;
-+		int err;
- 		u64 v;
+ 	spin_lock_irq(&ioc->lock);
+ 	ioc->running = IOC_STOP;
+ 	spin_unlock_irq(&ioc->lock);
  
- 		if (!*p)
-@@ -3399,8 +3410,13 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
- 		tok = match_token(p, i_lcoef_tokens, args);
- 		if (tok == NR_I_LCOEFS)
- 			goto out_unlock;
--		if (match_u64(&args[0], &v))
-+
-+		err = match_u64(&args[0], &v);
-+		if (err) {
-+			ret = err;
- 			goto out_unlock;
-+		}
-+
- 		u[tok] = v;
- 		user = true;
- 	}
+-	del_timer_sync(&ioc->timer);
+ 	free_percpu(ioc->pcpu_stat);
+ 	kfree(ioc);
+ }
 -- 
 2.31.1
 
