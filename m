@@ -1,76 +1,31 @@
-From: =?utf-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= 
-        <chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: protect the memory in cgroup from being
- oom killed
-Date: Wed, 30 Nov 2022 15:46:19 +0000
-Message-ID: <7EF16CB9-C34A-410B-BEBE-0303C1BB7BA0@didiglobal.com>
-References: <CAAWJmAYPUK+1GBS0R460pDvDKrLr9zs_X2LT2yQTP_85kND5Ew@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH -next v2 1/9] blk-iocost: cleanup ioc_qos_write() and
+ ioc_cost_model_write()
+Date: Wed, 30 Nov 2022 07:54:59 -0800
+Message-ID: <Y4d801NjwwT0voKA@infradead.org>
+References: <20221130132156.2836184-1-linan122@huawei.com>
+ <20221130132156.2836184-2-linan122@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAAWJmAYPUK+1GBS0R460pDvDKrLr9zs_X2LT2yQTP_85kND5Ew-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: zh-CN
-Content-ID: <F2E62DA506DBDC4AAC4A9FA211F5ACC7-j11cvHKnkmPwvR0lvYjcXw@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=33yVl81nf/HYwbFyHP95flgen3w7k+7heZeCstu2Zt8=; b=1JXfUuCkqNVgQ9pH2hx3JGBJa1
+        xGiCfys6fwNZUG6n/MUJVc83nSq085NlVLhdf5uUF8wSWS83HRjoBdnjR0f8pvmWEUMzJUlUUralz
+        /Mq8A3ixnlv5DbHvj5ESqNZ5E+8/IzFurjAWffK8dQvzlxR1D5Equrh3itxNAd7ePbNiJNcS/qeu7
+        HrSLXwHiOPcz+jb94A+bycyePIavkHCJqRnL7hJ1cSCtaMa5Q3P+aGyIiCh+MDagen1YVKdR6rJOq
+        LMbCRWF2ZTNYYERjWEv3O6lP7ZDehAGMls52ZBXAbtV2CB3eJHC1zpFG1duRiOh+RRuOE4bhcxg/O
+        Fva1+w3w==;
+Content-Disposition: inline
+In-Reply-To: <20221130132156.2836184-2-linan122@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tao pilgrim <pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "mhocko-IBi9RG/b67k@public.gmane.org" <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "corbet-T1hC0tSOHrs@public.gmane.org" <corbet-T1hC0tSOHrs@public.gmane.org>, "roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "ran.xiaokai-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org" <ran.xiaokai-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, "Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Li Nan <linan122@huawei.com>
+Cc: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
 
-T24gMjAyMi0xMS0zMCAyMToxNTowNiwgIk1pY2hhbCBIb2NrbyIgPG1ob2Nrb0BzdXNlLmNvbT4g
-d3JvdGU6DQo+IE9uIFdlZCAzMC0xMS0yMiAxNTowMTo1OCwgY2hlbmdrYWl0YW8gd3JvdGU6DQo+
-ID4gRnJvbTogY2hlbmdrYWl0YW8gPHBpbGdyaW10YW9AZ21haWwuY29tPg0KPiA+DQo+ID4gV2Ug
-Y3JlYXRlZCBhIG5ldyBpbnRlcmZhY2UgPG1lbW9yeS5vb20ucHJvdGVjdD4gZm9yIG1lbW9yeSwg
-SWYgdGhlcmUgaXMNCj4gPiB0aGUgT09NIGtpbGxlciB1bmRlciBwYXJlbnQgbWVtb3J5IGNncm91
-cCwgYW5kIHRoZSBtZW1vcnkgdXNhZ2Ugb2YgYQ0KPiA+IGNoaWxkIGNncm91cCBpcyB3aXRoaW4g
-aXRzIGVmZmVjdGl2ZSBvb20ucHJvdGVjdCBib3VuZGFyeSwgdGhlIGNncm91cCdzDQo+ID4gdGFz
-a3Mgd29uJ3QgYmUgT09NIGtpbGxlZCB1bmxlc3MgdGhlcmUgaXMgbm8gdW5wcm90ZWN0ZWQgdGFz
-a3MgaW4gb3RoZXINCj4gPiBjaGlsZHJlbiBjZ3JvdXBzLiBJdCBkcmF3cyBvbiB0aGUgbG9naWMg
-b2YgPG1lbW9yeS5taW4vbG93PiBpbiB0aGUNCj4gPiBpbmhlcml0YW5jZSByZWxhdGlvbnNoaXAu
-DQo+DQo+IENvdWxkIHlvdSBiZSBtb3JlIHNwZWNpZmljIGFib3V0IHVzZWNhc2VzPyBIb3cgZG8g
-eW91IHR1bmUgb29tLnByb3RlY3QNCj4gd3J0IHRvIG90aGVyIHR1bmFibGVzPyBIb3cgZG9lcyB0
-aGlzIGludGVyYWN0IHdpdGggdGhlIG9vbV9zY29yZV9hZGoNCj4gdHVuaW5pbmcgKGUuZy4gYSBm
-aXJzdCBoYW5kIG9vbSB2aWN0aW0gd2l0aCB0aGUgc2NvcmVfYWRqIDEwMDAgc2l0dGluZw0KPiBp
-biBhIG9vbSBwcm90ZWN0ZWQgbWVtY2cpPw0KDQpXZSBwcmVmZXIgdXNlcnMgdG8gdXNlIHNjb3Jl
-X2FkaiBhbmQgb29tLnByb3RlY3QgaW5kZXBlbmRlbnRseS4gU2NvcmVfYWRqIGlzIA0KYSBwYXJh
-bWV0ZXIgYXBwbGljYWJsZSB0byBob3N0LCBhbmQgb29tLnByb3RlY3QgaXMgYSBwYXJhbWV0ZXIg
-YXBwbGljYWJsZSB0byBjZ3JvdXAuIA0KV2hlbiB0aGUgcGh5c2ljYWwgbWFjaGluZSdzIG1lbW9y
-eSBzaXplIGlzIHBhcnRpY3VsYXJseSBsYXJnZSwgdGhlIHNjb3JlX2FkaiANCmdyYW51bGFyaXR5
-IGlzIGFsc28gdmVyeSBsYXJnZS4gSG93ZXZlciwgb29tLnByb3RlY3QgY2FuIGFjaGlldmUgbW9y
-ZSBmaW5lLWdyYWluZWQgDQphZGp1c3RtZW50Lg0KDQpXaGVuIHRoZSBzY29yZV9hZGogb2YgdGhl
-IHByb2Nlc3NlcyBhcmUgdGhlIHNhbWUsIEkgbGlzdCB0aGUgZm9sbG93aW5nIGNhc2VzIA0KZm9y
-IGV4cGxhbmF0aW9uLA0KDQogICAgICAgICAgcm9vdA0KICAgICAgICAgICB8DQogICAgICAgIGNn
-cm91cCBBDQogICAgICAgLyAgICAgICAgXA0KIGNncm91cCBCICAgICAgY2dyb3VwIEMNCih0YXNr
-IG0sbikgICAgICh0YXNrIHgseSkNCg0Kc2NvcmVfYWRqKGFsbCB0YXNrKSA9IDA7DQpvb20ucHJv
-dGVjdChjZ3JvdXAgQSkgPSAwOw0Kb29tLnByb3RlY3QoY2dyb3VwIEIpID0gMDsNCm9vbS5wcm90
-ZWN0KGNncm91cCBDKSA9IDNHOw0KdXNhZ2UodGFzayBtKSA9IDFHDQp1c2FnZSh0YXNrIG4pID0g
-MkcNCnVzYWdlKHRhc2sgeCkgPSAxRw0KdXNhZ2UodGFzayB5KSA9IDJHDQoNCm9vbSBraWxsZXIg
-b3JkZXIgb2YgY2dyb3VwIEE6IG4gPiBtID4geSA+IHgNCm9vbSBraWxsZXIgb3JkZXIgb2YgaG9z
-dDogICAgIHkgPSBuID4geCA9IG0NCg0KSWYgY2dyb3VwIEEgaXMgYSBkaXJlY3RvcnkgbWFpbnRh
-aW5lZCBieSB1c2VycywgdXNlcnMgY2FuIHVzZSBvb20ucHJvdGVjdCANCnRvIHByb3RlY3QgcmVs
-YXRpdmVseSBpbXBvcnRhbnQgdGFza3MgeCBhbmQgeS4NCg0KSG93ZXZlciwgd2hlbiBzY29yZV9h
-ZGogYW5kIG9vbS5wcm90ZWN0IGFyZSB1c2VkIGF0IHRoZSBzYW1lIHRpbWUsIHdlIA0Kd2lsbCBh
-bHNvIGNvbnNpZGVyIHRoZSBpbXBhY3Qgb2YgYm90aCwgYXMgZXhwcmVzc2VkIGluIHRoZSBmb2xs
-b3dpbmcgZm9ybXVsYS4gDQpidXQgSSBoYXZlIHRvIGFkbWl0IHRoYXQgaXQgaXMgYW4gdW5zdGFi
-bGUgcmVzdWx0Lg0Kc2NvcmUgPSB0YXNrX3VzYWdlICsgc2NvcmVfYWRqICogdG90YWxwYWdlIC0g
-ZW9vbS5wcm90ZWN0ICogdGFza191c2FnZSAvIGxvY2FsX21lbWNnX3VzYWdlDQoNCj4gSSBoYXZl
-bid0IHJlYWxseSByZWFkIHRocm91Z2ggdGhlIHdob2xlIHBhdGNoIGJ1dCB0aGlzIHN0cnVjayBt
-ZSBvZGQuDQoNCj4gPiBAQCAtNTUyLDggKzU1MiwxOSBAQCBzdGF0aWMgaW50IHByb2Nfb29tX3Nj
-b3JlKHN0cnVjdCBzZXFfZmlsZSAqbSwgc3RydWN0IHBpZF9uYW1lc3BhY2UgKm5zLA0KPiA+IAl1
-bnNpZ25lZCBsb25nIHRvdGFscGFnZXMgPSB0b3RhbHJhbV9wYWdlcygpICsgdG90YWxfc3dhcF9w
-YWdlczsNCj4gPiAJdW5zaWduZWQgbG9uZyBwb2ludHMgPSAwOw0KPiA+IAlsb25nIGJhZG5lc3M7
-DQo+ID4gKyNpZmRlZiBDT05GSUdfTUVNQ0cNCj4gPiArCXN0cnVjdCBtZW1fY2dyb3VwICptZW1j
-ZzsNCj4gPiANCj4gPiAtCWJhZG5lc3MgPSBvb21fYmFkbmVzcyh0YXNrLCB0b3RhbHBhZ2VzKTsN
-Cj4gPiArCXJjdV9yZWFkX2xvY2soKTsNCj4gPiArCW1lbWNnID0gbWVtX2Nncm91cF9mcm9tX3Rh
-c2sodGFzayk7DQo+ID4gKwlpZiAobWVtY2cgJiYgIWNzc190cnlnZXQoJm1lbWNnLT5jc3MpKQ0K
-PiA+ICsJCW1lbWNnID0gTlVMTDsNCj4gPiArCXJjdV9yZWFkX3VubG9jaygpOw0KPiA+ICsNCj4g
-PiArCXVwZGF0ZV9wYXJlbnRfb29tX3Byb3RlY3Rpb24ocm9vdF9tZW1fY2dyb3VwLCBtZW1jZyk7
-DQo+ID4gKwljc3NfcHV0KCZtZW1jZy0+Y3NzKTsNCj4gPiArI2VuZGlmDQo+ID4gKwliYWRuZXNz
-ID0gb29tX2JhZG5lc3ModGFzaywgdG90YWxwYWdlcywgTUVNQ0dfT09NX1BST1RFQ1QpOw0KPg0K
-PiB0aGUgYmFkbmVzcyBtZWFucyBkaWZmZXJlbnQgdGhpbmcgZGVwZW5kaW5nIG9uIHdoaWNoIG1l
-bWNnIGhpZXJhcmNoeQ0KPiBzdWJ0cmVlIHlvdSBsb29rIGF0LiBTY2FsaW5nIGJhc2VkIG9uIHRo
-ZSBnbG9iYWwgb29tIGNvdWxkIGdldCByZWFsbHkNCj4gbWlzbGVhZGluZy4NCg0KSSBhbHNvIHRv
-b2sgaXQgaW50byBjb25zaWRlcmF0aW9uLiBJIHBsYW5uZWQgdG8gY2hhbmdlICIvcHJvYy9waWQv
-b29tX3Njb3JlIiANCnRvIGEgd3JpdGFibGUgbm9kZS4gV2hlbiB3cml0aW5nIHRvIGRpZmZlcmVu
-dCBjZ3JvdXAgcGF0aHMsIGRpZmZlcmVudCB2YWx1ZXMgDQp3aWxsIGJlIG91dHB1dC4gVGhlIGRl
-ZmF1bHQgb3V0cHV0IGlzIHJvb3QgY2dyb3VwLiBEbyB5b3UgdGhpbmsgdGhpcyBpZGVhIGlzIA0K
-ZmVhc2libGU/DQotLSANCkNoZW5na2FpdGFvDQpCZXN0IHdpc2hlcw0KDQo=
+> +	ret = nbytes;
+
+ret is an int which bytes is a size_t.  So we at least need a ssize_t
+instead for ret, and even that assumes nbytes never overflows a ssize_t.
