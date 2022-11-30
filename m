@@ -1,10 +1,10 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH -next v2 5/9] blk-iocost: fix divide by 0 error in
- calc_lcoefs()
-Date: Wed, 30 Nov 2022 10:20:15 -1000
-Message-ID: <Y4e6/wdNvZmV1c9Y@slm.duckdns.org>
+Subject: Re: [PATCH -next v2 6/9] blk-iocost: change div64_u64 to
+ DIV64_U64_ROUND_UP in ioc_refresh_params()
+Date: Wed, 30 Nov 2022 10:22:33 -1000
+Message-ID: <Y4e7ibMMu4quJMO5@slm.duckdns.org>
 References: <20221130132156.2836184-1-linan122@huawei.com>
- <20221130132156.2836184-6-linan122@huawei.com>
+ <20221130132156.2836184-7-linan122@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
@@ -12,76 +12,47 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=hFED/2oaWzSQkBiwKASIUwgMFRRJ9B92EdLcPu53GAI=;
-        b=A/uWTQh20hD7NILSrZcskkGI/NGv6GGEFIw80L8MRSrUAHpXVNqlkWFiSWqB0+UDLP
-         PY/XPC6I3tQCv3X8dJRmADc7BoIeZ/tfq2XEwaSrA9MeI2qqF50nQHCv8BbB9+7fLOoG
-         rotPGrDQAyRCRDD/OnAhKbvGWYPUQyLbg+Q3RpD0gFJkaPBAi0kDEaDvi8OGy3yaaWds
-         0PwlOMFUINg4txG221xgYjRvaiRs4TrssssmMtXpj5ajS6RJfNt7XSYkLSSoyFXTARXG
-         3Uv7CkXTXHgDOdQP3eISdvq1BKZnSCKQm13+QpiJC4iBrZ1W8veVE4d/v57d3SSfShRg
-         o00w==
+        bh=rXdxFhxTXJMZHC2K4jUkxh/OKutSS9K9Oo99ntvx5PA=;
+        b=fwyygy/fIcGISnxM7SLd6HwKX/itaYN7ne1sCrDpxfbyLvA/cYTRPkVgulkb4I5K1h
+         1ubPvLIZte+QIp4MCfHDL3whCyHeHroidEc7paAJ2LlFvK5lP17RnutOxvtk3AKlMYJR
+         tzfQ56dgLwAYEw8BEVndHTMEIlj3V4iFc6cTpaGKvgw3/pQS6tjnLOQ9ap6SPdS/xjwD
+         ho9jq2NS9Yfxyt20H3vwHJqav1tRRKrHuEvj8vuJPuyDB4o8htsopWsUszs2VaYuPqFb
+         O01oWFIDJjIUhYyH99AoZmGQDceqxvisTkY1V37hhitb88QrslKdeXpoO4wwgoPbnohC
+         LG4A==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20221130132156.2836184-6-linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20221130132156.2836184-7-linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Wed, Nov 30, 2022 at 09:21:52PM +0800, Li Nan wrote:
-> echo max of u64 to cost.model can cause divide by 0 error.
-> 
->   # echo 8:0 rbps=18446744073709551615 > /sys/fs/cgroup/io.cost.model
-> 
->   divide error: 0000 [#1] PREEMPT SMP
->   RIP: 0010:calc_lcoefs+0x4c/0xc0
->   Call Trace:
->    <TASK>
->    ioc_refresh_params+0x2b3/0x4f0
->    ioc_cost_model_write+0x3cb/0x4c0
->    ? _copy_from_iter+0x6d/0x6c0
->    ? kernfs_fop_write_iter+0xfc/0x270
->    cgroup_file_write+0xa0/0x200
->    kernfs_fop_write_iter+0x17d/0x270
->    vfs_write+0x414/0x620
->    ksys_write+0x73/0x160
->    __x64_sys_write+0x1e/0x30
->    do_syscall_64+0x35/0x80
->    entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> 
-> calc_lcoefs() uses the input value of cost.model in DIV_ROUND_UP_ULL,
-> overflow would happen if bps plus IOC_PAGE_SIZE is greater than
-> ULLONG_MAX, it can cause divide by 0 error.I_LCOEF_MAX is introduced to
-> prevent it.
+On Wed, Nov 30, 2022 at 09:21:53PM +0800, Li Nan wrote:
+> vrate_min is calculated by DIV64_U64_ROUND_UP, but vrate_max is calculated
+> by div64_u64. Vrate_min may be 1 greater than vrate_max if the input
+> values min and max of cost.qos are equal.
 > 
 > Signed-off-by: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 > ---
->  block/blk-iocost.c | 5 +++++
->  1 file changed, 5 insertions(+)
+>  block/blk-iocost.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-> index 3a96cd557c47..f4a754b9d10f 100644
+> index f4a754b9d10f..2316ba93e7d6 100644
 > --- a/block/blk-iocost.c
 > +++ b/block/blk-iocost.c
-> @@ -306,6 +306,9 @@ enum {
->  	IOC_PAGE_SIZE		= 1 << IOC_PAGE_SHIFT,
->  	IOC_SECT_TO_PAGE_SHIFT	= IOC_PAGE_SHIFT - SECTOR_SHIFT,
+> @@ -926,7 +926,7 @@ static bool ioc_refresh_params(struct ioc *ioc, bool force)
 >  
-> +	/* avoid overflow */
-> +	I_LCOEF_MAX		= ULLONG_MAX - IOC_PAGE_SIZE,
-> +
->  	/* if apart further than 16M, consider randio for linear model */
->  	LCOEF_RANDIO_PAGES	= 4096,
->  };
-> @@ -3431,6 +3434,8 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
->  			goto out_unlock;
->  		}
->  
-> +		if (v > I_LCOEF_MAX)
-> +			goto out_unlock;
+>  	ioc->vrate_min = DIV64_U64_ROUND_UP((u64)ioc->params.qos[QOS_MIN] *
+>  					    VTIME_PER_USEC, MILLION);
+> -	ioc->vrate_max = div64_u64((u64)ioc->params.qos[QOS_MAX] *
+> +	ioc->vrate_max = DIV64_U64_ROUND_UP((u64)ioc->params.qos[QOS_MAX] *
+>  				   VTIME_PER_USEC, MILLION);
 
-This is kinda round-about. Can you just make calc_lcoefs to not divide by
-zero (e.g. just make it 1 if zero)?
+Can you please align the parameters line? Other than that
+
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 Thanks.
 
