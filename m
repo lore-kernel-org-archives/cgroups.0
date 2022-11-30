@@ -1,49 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 01/10] blk-throttle: correct stale comment in
- throtl_pd_init
-Date: Wed, 30 Nov 2022 11:08:13 -1000
-Message-ID: <Y4fGPUBBExrm51IH@slm.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 02/10] blk-throttle: Fix that bps of child could
+ exceed bps limited in parent
+Date: Wed, 30 Nov 2022 11:09:20 -1000
+Message-ID: <Y4fGgGaNBueotI1E@slm.duckdns.org>
 References: <20221129030147.27400-1-shikemeng@huawei.com>
- <20221129030147.27400-2-shikemeng@huawei.com>
+ <20221129030147.27400-3-shikemeng@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=8GLeq4y1VkLChDK5qxV6t3jjI/iORg+c6M0TmX7kjP0=;
-        b=Apb1iWUbB5ph59NuwWq3GeIe1SG2Xnc2Ghfh+Z512kKQUVy0BHy8Xe+4CIpU3ulszy
-         ub8Y8NyUuKCdKtNJLSmNvH4De+/haJKxfuhQ7yUKzGvKD1mvcWbguLuzaHQmzJJTc1S6
-         /33FyHfpujuR0xIbLnLep+jOM+VjSELx9XKKIcX3B71jHSbtdZbUMu51k2Oq4nuBYwbO
-         ulz6t7yHPpy26DRout3+gghJB/gLn8kQ1gWJZrzKRVxd811jlCPKStDzfP24BW0sAJvL
-         wtUHeT/WqoRZm5jQ9rEiykrgkPYa8C8TCSNaPo3WKCnH5E4kabr+VplL0w8PkcLQW1Ah
-         kiBQ==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=7v4d6zaC4L81hfiBNb2Cor9kyL3VqKmV3/kGNvOemQ4=;
+        b=KkQfDW/gc08jpOQwU7UFqMKS7YNnQ9pn2xJKWk1O/71hBqhVuZvr0RPB+dmEmUL5ye
+         xDpaMQ4XhbVldeIM5DIbTL0SLuUc1TY8tpvitVtwhxyYnuHHzufMBZLcTM0uWv4mUKg9
+         WcjfkyG6DzHJOhP3nUpI7C0Kx9TooMPDylwUQ2yRjIsK4pbudxvzTQZYkV3I75xd38c8
+         39fm+Z7m1U8xCTByy7ZY4l0ggq7zbR9Ilgwl6I/3X8P20eJd+68SaFY3ySEWh0o8/tZb
+         V5X8HJayccgkIWTrGUSa2b0gTfKURFTnRcDDQ0h8qJqJV31igDseAKynOE7XcHHBW9Sn
+         eXIA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20221129030147.27400-2-shikemeng@huawei.com>
+In-Reply-To: <20221129030147.27400-3-shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kemeng Shi <shikemeng@huawei.com>
-Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Nov 29, 2022 at 11:01:38AM +0800, Kemeng Shi wrote:
-> On the default hierarchy (cgroup2), the throttle interface files don't
-> exist in the root cgroup, so the ablity to limit the whole system
-> by configuring root group is not existing anymore. In general, cgroup
-> doesn't wanna be in the business of restricting resources at the
-> system level, so correct the stale comment that we can limit whole
-> system to we can only limit subtree.
+On Tue, Nov 29, 2022 at 11:01:39AM +0800, Kemeng Shi wrote:
+> Consider situation as following (on the default hierarchy):
+>  HDD
+>   |
+> root (bps limit: 4k)
+>   |
+> child (bps limit :8k)
+>   |
+> fio bs=8k
+> Rate of fio is supposed to be 4k, but result is 8k. Reason is as
+> following:
+> Size of single IO from fio is larger than bytes allowed in one
+> throtl_slice in child, so IOs are always queued in child group first.
+> When queued IOs in child are dispatched to parent group, BIO_BPS_THROTTLED
+> is set and these IOs will not be limited by tg_within_bps_limit anymore.
+> Fix this by only set BIO_BPS_THROTTLED when the bio traversed the entire
+> tree.
 > 
-> Signed-off-by: Kemeng Shi <shikemeng@huawei.com>
+> There patch has no influence on situation which is not on the default
+> hierarchy as each group is a single root group without parent.
+> 
+> Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Acked-by: Tejun Heo <tj@kernel.org>
-
-> +	 * read_bps limit is set on a "parent" group, summary bps of
-> +	 * "parent" group and its subtree groups can't exceed 16M for the
-
-but why the quotes around parent?
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 -- 
 tejun
