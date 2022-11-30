@@ -1,40 +1,41 @@
 From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH -next v2 1/9] blk-iocost: cleanup ioc_qos_write() and
- ioc_cost_model_write()
-Date: Wed, 30 Nov 2022 07:55:46 -0800
-Message-ID: <Y4d9AjL6BMbVSoUG@infradead.org>
-References: <20221130132156.2836184-1-linan122@huawei.com>
- <20221130132156.2836184-2-linan122@huawei.com>
- <Y4d801NjwwT0voKA@infradead.org>
+Subject: Re: [PATCH -next 8/8] block: fix null-pointer dereference in
+ ioc_pd_init
+Date: Wed, 30 Nov 2022 07:59:41 -0800
+Message-ID: <Y4d97Ui+3ORzRhxF@infradead.org>
+References: <20221128154434.4177442-1-linan122@huawei.com>
+ <20221128154434.4177442-9-linan122@huawei.com>
+ <Y4YWQcb4PMmIdzIM@infradead.org>
+ <e46fdde5-f320-9276-72ec-0f5fb5b48ffd@huaweicloud.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=rtn/WXCw0wV01K8XKJePt3vHFYfBvU4R/AXIM98Ihms=; b=yy2TohvPNBWn7ruaJrvJfv1ER8
-        c0+MmIgJ9iTduM3PrmJ7tMWyiH2RLQ9ghj0MuDl4zW86cCDoGwPfQn0XN1E4DPKfdWef28YgT5B2o
-        TcYI4KPhL24HRpqiqLrMfPtKoqZqu/izKuxYY+3SwBwfHxZNGnwDLczaDg3epW0Trs61x/pHosxWF
-        m524O23xHwHZt0xA+IqftNKK0n1BWYd6m2RIr9AIpXfOZ+kOvOw/FABKYSPtxNq+uy4TXAsg2hFs4
-        z17t24bY4u6mCpQrHQJeJyQLf8ygi9YlMtaPrqLqpV44Z5flNOXgXwNU1rWBgzRppEyRhfFL7h5m1
-        ap77dYLg==;
+        bh=ZBaZLAQcwXpgoc/wypFSnGvG1ormvMqRTKZGjeGBWso=; b=YftUeZ3edM8lh3hLMLYkvoIm89
+        BxMFibmnOQOwhtduBbuDosrHkBE1rrJvFUHUECFI5o7XPdRF5WPEl7+mVzRrOal09xRXlmNITBVqw
+        wDuXPsFsczEXCNNxYsTurNDni9una+CM6XGZ+3nX1BxOhaqajdhwzizSzo+zJjx2RzW6TqS/kW4M7
+        k+y7qxo2sIKMwObnqvc1CqSN7I7dXBwWkH+2jwuxQv8T18OtJfYRAb9dAkZu6rfmnY6RFhMcUNcUV
+        HGEBNnZG1PekSCXVo73TulcJwICZTck1WBGvPHO5HvYywy/1lalyQ+InzvyjuI4VoTrdtSl8aIm4+
+        Q1m2xNMQ==;
 Content-Disposition: inline
-In-Reply-To: <Y4d801NjwwT0voKA-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+In-Reply-To: <e46fdde5-f320-9276-72ec-0f5fb5b48ffd-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Wed, Nov 30, 2022 at 07:54:59AM -0800, Christoph Hellwig wrote:
-> > +	ret = nbytes;
+On Wed, Nov 30, 2022 at 09:32:58AM +0800, Yu Kuai wrote:
+> > No, that now means it is removed to later.  You need to add proper
+> > synchronization.
+> > .
+> > 
 > 
-> ret is an int which bytes is a size_t.  So we at least need a ssize_t
-> instead for ret, and even that assumes nbytes never overflows a ssize_t.
+> Can you explain a bit more? Maybe I'm being noob, here disk is about to
+> be freed, and I can think of any contention.
 
-A better way might be to initialize ret to 0 at declaration time and
-then do
-
-	if (ret)
-		return ret;
-	return nbytes;
+Right now we need synchronization with e.g. open_mutex and a check
+for a dead disk, which I suggst to add insted of creating a lifetime
+imbalance.
