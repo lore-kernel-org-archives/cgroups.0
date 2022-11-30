@@ -1,53 +1,83 @@
-From: =?utf-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= 
-        <chengkaitao@didiglobal.com>
-Subject: Re: [PATCH] mm: memcontrol: protect the memory in cgroup from being
- oom killed
-Date: Wed, 30 Nov 2022 13:25:06 +0000
-Message-ID: <9F11BDDA-D9B6-4F61-9EAA-9B959BD4AE0A@didiglobal.com>
-References: <Y4dP+3VEYl/YUfK1@debian.me>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH-block v2] bdi, blk-cgroup: Fix potential UAF of blkcg
+Date: Wed, 30 Nov 2022 16:16:39 +0100
+Message-ID: <20221130151639.GE27838@blackbody.suse.cz>
+References: <20221129203400.1456100-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <Y4dP+3VEYl/YUfK1@debian.me>
-Content-Language: zh-CN
-Content-ID: <DCB81BB2AA69C24198FC73EC4273842D@didichuxing.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="T6xhMxlHU34Bk0ad"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1669821401; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ATM8wuEZO4F8LmfuabnM5oV4K3RnnbDMeyDmwCZSpdY=;
+        b=j6xq7JSq+Wr3SnG8eqNE+ECS5hPr743xQ5eo4n+UP7l3stds48QDvKwIiUHdHLnjAe5FLh
+        i3ipUvJUniXllps7G5UVsQKq8e4auYqUEEFMQ/03zLcVsv9A4c4d2v2B6rezUF+XYnSfwU
+        8/nlKl2px4rsGu4yjPnAuTS9c0Ex8fE=
+Content-Disposition: inline
+In-Reply-To: <20221129203400.1456100-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Bagas Sanjaya <bagasdotme@gmail.com>, Tao pilgrim <pilgrimtao@gmail.com>
-Cc: "tj@kernel.org" <tj@kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "corbet@lwn.net" <corbet@lwn.net>, "mhocko@kernel.org" <mhocko@kernel.org>, "roman.gushchin@linux.dev" <roman.gushchin@linux.dev>, "shakeelb@google.com" <shakeelb@google.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "songmuchun@bytedance.com" <songmuchun@bytedance.com>, "cgel.zte@gmail.com" <cgel.zte@gmail.com>, "ran.xiaokai@zte.com.cn" <ran.xiaokai@zte.com.cn>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "zhengqi.arch@bytedance.com" <zhengqi.arch@bytedance.com>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "Liam.Howlett@oracle.com" <Liam.Howlett@oracle.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hillf Danton <hdanton-k+cT0dCbe1g@public.gmane.org>, Chaitanya Kulkarni <chaitanyak-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Yi Zhang <yi.zhang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-T24gMjAyMi8xMS8zMCAyMDo0M++8jOKAnEJhZ2FzIFNhbmpheWHigJ08YmFnYXNkb3RtZUBnbWFp
-bC5jb20+IHdyb3RlOg0KPiBPbiBXZWQsIE5vdiAzMCwgMjAyMiBhdCAwNzozMzowMVBNICswODAw
-LCBUYW8gcGlsZ3JpbSB3cm90ZToNCj4gPiBPbiBXZWQsIE5vdiAzMCwgMjAyMiBhdCA0OjQxIFBN
-IEJhZ2FzIFNhbmpheWEgPGJhZ2FzZG90bWVAZ21haWwuY29tPiB3cm90ZToNCj4gPiA+DQo+ID4g
-PiBPbiAxMS8zMC8yMiAxNDowMSwgY2hlbmdrYWl0YW8gd3JvdGU6DQo+ID4gPiA+IEZyb206IGNo
-ZW5na2FpdGFvIDxwaWxncmltdGFvQGdtYWlsLmNvbT4NCj4gPiA+ID4NCj4gPiA+DQo+ID4gPiBZ
-aWtlcyEgQW5vdGhlciBwYXRjaCBmcm9tIFpURSBndXlzLg0KPiA+ID4NCj4gPiA+IEknbSBzdXNw
-aWNpb3VzIHRvIHBhdGNoZXMgc2VudCBmcm9tIHRoZW0gZHVlIHRvIGJhZCByZXB1dGF0aW9uIHdp
-dGgNCj4gPiA+IGtlcm5lbCBkZXZlbG9wbWVudCBjb21tdW5pdHkuIEZpcnN0LCB0aGV5IHNlbnQg
-YWxsIHBhdGNoZXMgdmlhDQo+ID4gPiBjZ2VsLnp0ZUBnbWFpbC5jb20gKGxpc3RlZCBpbiBDYykg
-YnV0IEdyZWcgY2FuJ3Qgc3VyZSB0aGVzZSBhcmUgcmVhbGx5DQo+ID4gPiBzZW50IGZyb20gdGhl
-bSAoWzFdICYgWzJdKS4gVGhlbiB0aGV5IHRyaWVkIHRvIHdvcmthcm91bmQgYnkgc2VuZGluZw0K
-PiA+ID4gZnJvbSB0aGVpciBwZXJzb25hbCBHbWFpbCBhY2NvdW50cywgYWdhaW4gd2l0aCBzYW1l
-IHJlc3BvbnNlIGZyb20gaGltDQo+ID4gPiBbM10uIEFuZCBmaW5hbGx5IHRoZXkgc2VudCBzcG9v
-ZmVkIGVtYWlscyAoYXMgaGUgcG9pbnRlZCBvdXQgaW4gWzRdKSAtDQo+ID4gPiB0aGV5IHByZXRl
-bmQgdG8gc2VuZCBmcm9tIFpURSBkb21haW4gYnV0IGFjdHVhbGx5IHNlbnQgZnJvbSB0aGVpcg0K
-PiA+ID4gZGlmZmVyZW50IGRvbWFpbiAoc2VlIHJhdyBtZXNzYWdlIGFuZCBsb29rIGZvciBYLUdv
-b2dsZS1PcmlnaW5hbC1Gcm9tOg0KPiA+ID4gaGVhZGVyLg0KPiA+DQo+ID4gSGkgQmFnYXMgU2Fu
-amF5YSwNCj4gPg0KPiA+IEknbSBub3QgYW4gZW1wbG95ZWUgb2YgWlRFLCBqdXN0IGFuIG9yZGlu
-YXJ5IGRldmVsb3Blci4gSSByZWFsbHkgZG9uJ3Qga25vdw0KPiA+IGFsbCB0aGUgZGV0YWlscyBh
-Ym91dCBjb21tdW5pdHkgYW5kIFpURSwgVGhlIHJlYXNvbiB3aHkgSSBjYyBjZ2VsLnp0ZUBnbWFp
-bC5jb20NCj4gPiBpcyBiZWNhdXNlIHRoZSBvdXRwdXQgb2YgdGhlIHNjcmlwdCA8Z2V0X21haW50
-YWluZXIucGw+IGhhcyB0aGUNCj4gPiBhZGRyZXNzIDxjZ2VsLnp0ZUBnbWFpbC5jb20+Lg0KPiA+
-DQo+ID4gSWYgdGhlcmUgaXMgYW55IGVycm9yIGluIHRoZSBmb3JtYXQgb2YgdGhlIGVtYWlsLCBJ
-IHdpbGwgdHJ5IG15IGJlc3QNCj4gPiB0byBjb3JyZWN0IGl0Lg0KPiA+DQo+DQo+IE9LLCB0aGFu
-a3MgZm9yIGNsYXJpZmljYXRpb24uIEF0IGZpcnN0IEkgdGhvdWdodCB5b3Ugd2VyZSBaVEUgZ3V5
-cy4NCj4gU29ycnkgZm9yIGluY29udmVuaWVuY2UuDQo+IA0KPiBOb3cgSSBhc2s6IHdoeSBkbyB5
-b3VyIGVtYWlsIHNlZW0gc3Bvb2ZlZCAoc2VuZGluZyBmcm9tIHlvdXIgZ21haWwNCj4gYWNjb3Vu
-dCBidXQgdGhlcmUgaXMgZXh0cmEgZ21haWwtc3BlY2lmaWMgaGVhZGVyIHRoYXQgbWFrZXMgeW91
-IGxpa2UNCj4gInNlbmRpbmciIGZyb20geW91ciBjb3Jwb3JhdGUgZW1haWwgYWRkcmVzcz8gV291
-bGRuJ3QgaXQgYmUgbmljZSAoYW5kDQo+IGFwcHJvcHJpYXRlKSBpZiB5b3UgY2FuIHNlbmQgYW5k
-IHJlY2VpdmUgZW1haWwgd2l0aCB0aGUgbGF0dGVyIGFkZHJlc3MNCj4gaW5zdGVhZD8NCj4NCkl0
-IG1heSBiZSBjYXVzZWQgYnkgbXkgcHJldmlvdXMgaGFiaXRzLg0KVGhhbmtzIGZvciB5b3VyIGFk
-dmljZS4gSSdsbCBkbyBpdC4NCg0KVGhhbmtzLg0KLS0gDQo+IEFuIG9sZCBtYW4gZG9sbC4uLiBq
-dXN0IHdoYXQgSSBhbHdheXMgd2FudGVkISAtIENsYXJhDQoNCg==
+
+--T6xhMxlHU34Bk0ad
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, Nov 29, 2022 at 03:34:00PM -0500, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> =
+wrote:
+> The reproducing system can no longer produce a warning with this patch.
+> All the runnable block/0* tests including block/027 were run successfully
+> without failure.
+
+Thanks for the test!
+
+> @@ -1088,7 +1088,15 @@ static void blkcg_destroy_blkgs(struct blkcg *blkc=
+g)
+> =20
+>  	might_sleep();
+> =20
+> -	css_get(&blkcg->css);
+> +	/*
+> +	 * blkcg_destroy_blkgs() shouldn't be called with all the blkcg
+> +	 * references gone and rcu_read_lock not held.
+> +	 */
+> +	if (!css_tryget(&blkcg->css)) {
+> +		WARN_ON_ONCE(!rcu_read_lock_held());
+> +		return;
+> +	}
+
+As I followed the previous discussion, the principle is that obtaining a
+reference or being inside an RCU read section is sufficient.
+
+Consequently, I'd expect the two situations handled equally but here the
+no-ref but RCU bails out. (Which is OK because blkg_list must be empty?)
+
+However, the might_sleep() in (non-sleepable) RCU reader section combo
+makes me wary anyway (not with the early return but tools would likely
+complain).
+
+All in all, can't the contract of blkcg_destroy_blkgs() declare that
+a caller must pass blkcg with a valid reference? (The body of
+blkcg_destroy_blkgs then wouldn't need to get neither put the inner
+reference).
+
+HTH,
+Michal
+
+--T6xhMxlHU34Bk0ad
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY4dzxgAKCRAkDQmsBEOq
+ua6MAQCYfYVZAsH1NgOid00l0b52FcccC2/s0ITlu8jm7ZQs6wEAhKRvdwKu6lsC
+VQgfYht9U8f+lQdK562Fh/ONyn6DzQw=
+=M1ug
+-----END PGP SIGNATURE-----
+
+--T6xhMxlHU34Bk0ad--
