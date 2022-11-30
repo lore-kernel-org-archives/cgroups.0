@@ -1,43 +1,43 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+From: Waiman Long <longman@redhat.com>
 Subject: Re: [PATCH-block v2] bdi, blk-cgroup: Fix potential UAF of blkcg
-Date: Wed, 30 Nov 2022 08:23:44 -0700
-Message-ID: <34932e06-7336-3f17-9bc4-0fc67130d561@kernel.dk>
+Date: Wed, 30 Nov 2022 10:44:36 -0500
+Message-ID: <d689d6d9-9206-028e-1363-8d7d77d55e79@redhat.com>
 References: <20221129203400.1456100-1-longman@redhat.com>
  <20221130151639.GE27838@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=MVSvVeCDGQ1o47gYLtN8R+awQ9lS7VAhyH71o2xLC54=;
-        b=ctCk0Dd6GzAls1JzBIxBk3DiSB9qYtO/HUeatCrvfQP+Kd/x38VyYHbGjvMu21RNH2
-         XPVqP5WnCYBDrtJRf6yQdJbQHyHzCF4Ilyg0ou4AXQ5x0ECKWT6hs7QGdFhwGfbL8S89
-         VaN2X8kSnHxYl7xt0FZDyKaa6axIjIyEf3yudcU3GmWc1Qi/bO/hxPxUSPvwEYL25zgN
-         fYSc2O894eFB+ql7gLFD9tLcPNV1OFNOAqFeiQdH7ZvkijH5E64ZuBq9KV7B7zNIsASP
-         6lyHiU4g+neMI8hcv1LCpJeDlMuLgkhZZCTfWAsosdJTAC5CVztGGjtJtILnLXvg5uCj
-         MKXQ==
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1669823084;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lHWzy0FM79r3PLFfRwF2L7xXZGTYCWGH6Me/ph3/zE0=;
+        b=f3+8D26UfBV/qh3C1IDF4Xsb/KrmQ1goY32XuHC3xAzc9XnlCJN+vFooThJy+YEv+0L/FR
+        DrImlRLRMmk86tuSf57Ypec2K13R296YIAxYqMGWYdB5Fljg5DC/IleQvkJjSkJxnIS8da
+        3Falher+ZJja3uiZJDnil0gFPJ0Axuc=
 Content-Language: en-US
-In-Reply-To: <20221130151639.GE27838-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+In-Reply-To: <20221130151639.GE27838@blackbody.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hillf Danton <hdanton-k+cT0dCbe1g@public.gmane.org>, Chaitanya Kulkarni <chaitanyak-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Yi Zhang <yi.zhang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Ming Lei <ming.lei@redhat.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, Hillf Danton <hdanton@sina.com>, Chaitanya Kulkarni <chaitanyak@nvidia.com>, Bart Van Assche <bvanassche@acm.org>, Josef Bacik <josef@toxicpanda.com>, Yi Zhang <yi.zhang@redhat.com>
 
-On 11/30/22 8:16?AM, Michal Koutn? wrote:
-> On Tue, Nov 29, 2022 at 03:34:00PM -0500, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+
+On 11/30/22 10:16, Michal Koutn=C3=BD wrote:
+> On Tue, Nov 29, 2022 at 03:34:00PM -0500, Waiman Long <longman@redhat.com=
+> wrote:
 >> The reproducing system can no longer produce a warning with this patch.
 >> All the runnable block/0* tests including block/027 were run successfully
 >> without failure.
-> 
 > Thanks for the test!
-> 
->> @@ -1088,7 +1088,15 @@ static void blkcg_destroy_blkgs(struct blkcg *blkcg)
->>  
->>  	might_sleep();
->>  
+>
+>> @@ -1088,7 +1088,15 @@ static void blkcg_destroy_blkgs(struct blkcg *blk=
+cg)
+>>  =20
+>>   	might_sleep();
+>>  =20
 >> -	css_get(&blkcg->css);
 >> +	/*
 >> +	 * blkcg_destroy_blkgs() shouldn't be called with all the blkcg
@@ -47,29 +47,24 @@ On 11/30/22 8:16?AM, Michal Koutn? wrote:
 >> +		WARN_ON_ONCE(!rcu_read_lock_held());
 >> +		return;
 >> +	}
-> 
 > As I followed the previous discussion, the principle is that obtaining a
 > reference or being inside an RCU read section is sufficient.
-> 
+>
 > Consequently, I'd expect the two situations handled equally but here the
 > no-ref but RCU bails out. (Which is OK because blkg_list must be empty?)
-> 
+>
 > However, the might_sleep() in (non-sleepable) RCU reader section combo
 > makes me wary anyway (not with the early return but tools would likely
 > complain).
-> 
+>
 > All in all, can't the contract of blkcg_destroy_blkgs() declare that
 > a caller must pass blkcg with a valid reference? (The body of
 > blkcg_destroy_blkgs then wouldn't need to get neither put the inner
 > reference).
 
-Totally agree, the proposed patch feels more like a hacky workaround
-rather than a true solution. Either the contract should be that it's
-ALWAYS entered with RCU lock held and hence the tryget is fine, OR that
-a reference always is held when entered.
+You are right. I should have pushed the might_sleep down(). Will post a=20
+new version to fix that.
 
-I'm going to revert the offending patch for now, and then we can queue
-up a proper patch when that exists.
+Thanks,
+Longman
 
--- 
-Jens Axboe
