@@ -1,98 +1,41 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: Re: [PATCH -next v2 9/9] blk-iocost: fix walk_list corruption
-Date: Thu, 1 Dec 2022 09:19:54 +0800
-Message-ID: <c028dd77-cabf-edd6-c893-8ee24762ac8c@huaweicloud.com>
-References: <20221130132156.2836184-1-linan122@huawei.com>
- <20221130132156.2836184-10-linan122@huawei.com>
- <Y4fEKZy4rTE5rG/5@slm.duckdns.org>
+From: Kemeng Shi <shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH v2 10/10] blk-throttle: avoid dead code in
+ throtl_hierarchy_can_upgrade
+Date: Thu, 1 Dec 2022 09:36:06 +0800
+Message-ID: <7a72b0b5-f534-f7aa-85c0-f1b97646f81c@huaweicloud.com>
+References: <20221129030147.27400-1-shikemeng@huawei.com>
+ <20221129030147.27400-11-shikemeng@huawei.com>
+ <Y4fMyEo0dxPl/Kt1@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Y4fEKZy4rTE5rG/5@slm.duckdns.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Y4fMyEo0dxPl/Kt1-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Tejun Heo <tj@kernel.org>, Li Nan <linan122@huawei.com>
-Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
 
-=D4=DA 2022/12/01 4:59, Tejun Heo =D0=B4=B5=C0:
-> On Wed, Nov 30, 2022 at 09:21:56PM +0800, Li Nan wrote:
->> From: Yu Kuai <yukuai3@huawei.com>
->>
->> Our test report a problem:
->>
->> ------------[ cut here ]------------
->> list_del corruption. next->prev should be ffff888127e0c4b0, but was ffff=
-888127e090b0
->> WARNING: CPU: 2 PID: 3117789 at lib/list_debug.c:62 __list_del_entry_val=
-id+0x119/0x130
->> RIP: 0010:__list_del_entry_valid+0x119/0x130
->> RIP: 0010:__list_del_entry_valid+0x119/0x130
->> Call Trace:
->>   <IRQ>
->>   iocg_flush_stat.isra.0+0x11e/0x230
->>   ? ioc_rqos_done+0x230/0x230
->>   ? ioc_now+0x14f/0x180
->>   ioc_timer_fn+0x569/0x1640
->>
->> We haven't reporduced it yet, but we think this is due to parent iocg is
->> freed before child iocg, and then in ioc_timer_fn, walk_list is
->> corrupted.
->>
->> 1) Remove child cgroup can concurrent with remove parent cgroup, and
->> ioc_pd_free for parent iocg can be called before child iocg. This can be
->> fixed by moving the handle of walk_list to ioc_pd_offline, since that
->> offline from child is ensured to be called before parent.
->=20
-> Which you already did in a previous patch, right?
+Hi, Tejun
+on 12/1/2022 5:36 AM, Tejun Heo wrote:
+> On Tue, Nov 29, 2022 at 11:01:47AM +0800, Kemeng Shi wrote:
+>> Function throtl_hierarchy_can_upgrade will always return from while loop,
+>> so the return outside while loop is never reached. Break the loop when
+>> we traverse to root as throtl_hierarchy_can_downgrade do to avoid dead
+>> code.
+> 
+> I don't know why this is an improvement.
+> 
+I just found that the "return false" outside of the while loop is never
+executed which may be not reached by code coverage test. Of course,
+we can simply remove this "return false", but I found a similar function
+throtl_hierarchy_can_upgrade which has no such problem. So I avoid
+unreachable code as throtl_hierarchy_can_upgrade do.
+Is this make sense to you? If not, I will remove this patch in next
+version.
 
-yes, this is already did in patch 7.
-
->=20
->> 2) ioc_pd_free can be triggered from both removing device and removing
->> cgroup, this patch fix the problem by deleting timer before deactivating
->> policy, so that free parent iocg first in this case won't matter.
->=20
-> Okay, so, yeah, css's pin parents but blkg's don't. I think the right thi=
-ng
-> to do here is making sure that a child blkg pins its parent (and eventual=
-ly
-> ioc).
-
-Ok, I can try to do that.
-
->=20
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> Signed-off-by: Li Nan <linan122@huawei.com>
->> ---
->>   block/blk-iocost.c | 3 ++-
->>   1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
->> index 710cf63a1643..d2b873908f88 100644
->> --- a/block/blk-iocost.c
->> +++ b/block/blk-iocost.c
->> @@ -2813,13 +2813,14 @@ static void ioc_rqos_exit(struct rq_qos *rqos)
->>   {
->>   	struct ioc *ioc =3D rqos_to_ioc(rqos);
->>  =20
->> +	del_timer_sync(&ioc->timer);
->> +
->>   	blkcg_deactivate_policy(rqos->q, &blkcg_policy_iocost);
->>  =20
->>   	spin_lock_irq(&ioc->lock);
->>   	ioc->running =3D IOC_STOP;
->>   	spin_unlock_irq(&ioc->lock);
->>  =20
->> -	del_timer_sync(&ioc->timer);
->=20
-> I don't about this workaround. Let's fix properly?
-
-Ok, and by the way, is there any reason to delete timer after
-deactivate policy? This seems a litter wreid to me.
-
-Thanks,
-Kuai
->=20
+Thanks.
+-- 
+Best wishes
+Kemeng Shi
 
