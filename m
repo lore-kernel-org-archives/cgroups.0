@@ -1,97 +1,124 @@
-From: Mina Almasry <almasrymina@google.com>
-Subject: Re: [PATCH] mm: memcontrol: protect the memory in cgroup from being
- oom killed
-Date: Thu, 1 Dec 2022 12:18:33 -0800
-Message-ID: <CAHS8izN3ej1mqUpnNQ8c-1Bx5EeO7q5NOkh0qrY_4PLqc8rkHA@mail.gmail.com>
-References: <20221130070158.44221-1-chengkaitao@didiglobal.com> <Y4fnRyIp17NXpti9@P9FQF9L96D.corp.robot.car>
+From: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH V1] mm: Disable demotion from proactive reclaim
+Date: Thu, 1 Dec 2022 12:40:16 -0800
+Message-ID: <CAHS8izNc=NeMcNudOB0r4aYbZURpU+Y9xpek_KpO=55R+7ec5g@mail.gmail.com>
+References: <20221122203850.2765015-1-almasrymina@google.com>
+ <Y35fw2JSAeAddONg@cmpxchg.org> <CAHS8izN+xqM67XLT4y5qyYnGQMUWRQCJrdvf2gjTHd8nZ_=0sw@mail.gmail.com>
+ <Y36XchdgTCsMP4jT@cmpxchg.org> <874juonbmv.fsf@yhuang6-desk2.ccr.corp.intel.com>
+ <Y4ZKgXdUXZ3ycMp4@cmpxchg.org> <87wn7dayfz.fsf@yhuang6-desk2.ccr.corp.intel.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=wKwMHNRDEyrqfNNtqjeN2AckKw8W+9jAhp6b0tHJzAg=;
-        b=QGBpRqlAhom0bP5ghs++SQ0kVKw7xKay94rq3h+eTb0N0vxtK7JKHE1ro5HyTbIp+h
-         +/r6zZIobiB3m2dIWO5sz5Me+B0IMVDB4f9c+dN+wiU4SXzO10PkjgvSOapu/LOK0YP+
-         OCifArNT1zm6fCtnRyZ2nQrzjmpRWhCeP3wqH2XaqCU8dmNbynWRkf/8+IjxqWMIk5Jr
-         1vNfXYnATqYbFCt+w0gmSfhEYH3oB7whUysg2oU7JbaXz+Qa/as8WVgs/rpKSFtOgDex
-         SoH5IisPZjKW+Mnp8h/ETnV867Ez9oUpm1teUOTCw3dg/TprMb/0VY/gXUqrW4+xaiVM
-         t8Qg==
-In-Reply-To: <Y4fnRyIp17NXpti9@P9FQF9L96D.corp.robot.car>
+        bh=8+d/Y6QGxzCRwo466zPM3VyCOXSKLx8dJYK4YlExqPw=;
+        b=kHhd1lJNN1/QkG4w2PtJZDkbCFG9xjthR8OUDLqRnbAHospcNfy5OCNh/Hx2uf59HM
+         3qsa2ra3nVtmktTsWSpx/1wvizTHK+f3yfNmfer9LBmr8CEl1HXS+QrleH8ngBBUzh9Z
+         j/S3wnaSCMBs88wZ12gX2Tl2YnYGx0RvGtCyumY/GZrCVo0Ubo7Qh7pkOijxaXFiSlBO
+         yDYGD00ryih7qUIdL2O4BXMriKUaxq5pSMbLv+d1aFQPjlTdpFx/KILSJQ35wFxwd8BE
+         slEz+13gdl9RT5DNs0PqkQ+RHSePka0GLdwfP1MFajg3gB+QyI9oX+p+Kfz2JenxgPDb
+         9g7g==
+In-Reply-To: <87wn7dayfz.fsf-fFUE1NP8JkzwuUmzmnQr+vooFf0ArEBIu+b9c/7xato@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <roman.gushchin@linux.dev>, Yosry Ahmed <yosryahmed@google.com>
-Cc: chengkaitao <pilgrimtao@gmail.com>, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, corbet@lwn.net, mhocko@kernel.org, shakeelb@google.com, akpm@linux-foundation.org, songmuchun@bytedance.com, cgel.zte@gmail.com, ran.xiaokai@zte.com.cn, viro@zeniv.linux.org.uk, zhengqi.arch@bytedance.com, ebiederm@xmission.com, Liam.Howlett@oracle.com, chengzhihao1@huawei.com, haolee.swjtu@gmail.com, yuzhao@google.com, willy@infradead.org, vasily.averin@linux.dev, vbabka@suse.cz, surenb@google.com, sfr@canb.auug.org.au, mcgrof@kernel.org, sujiaxun@uniontech.com, feng.tang@intel.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+To: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fvdl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Wed, Nov 30, 2022 at 3:29 PM Roman Gushchin <roman.gushchin@linux.dev> wrote:
+On Tue, Nov 29, 2022 at 7:56 PM Huang, Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> wrote:
 >
-> On Wed, Nov 30, 2022 at 03:01:58PM +0800, chengkaitao wrote:
-> > From: chengkaitao <pilgrimtao@gmail.com>
+> Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> writes:
+>
+> > Hello Ying,
 > >
-> > We created a new interface <memory.oom.protect> for memory, If there is
-> > the OOM killer under parent memory cgroup, and the memory usage of a
-> > child cgroup is within its effective oom.protect boundary, the cgroup's
-> > tasks won't be OOM killed unless there is no unprotected tasks in other
-> > children cgroups. It draws on the logic of <memory.min/low> in the
-> > inheritance relationship.
+> > On Thu, Nov 24, 2022 at 01:51:20PM +0800, Huang, Ying wrote:
+> >> Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> writes:
+> >> > The fallback to reclaim actually strikes me as wrong.
+> >> >
+> >> > Think of reclaim as 'demoting' the pages to the storage tier. If we
+> >> > have a RAM -> CXL -> storage hierarchy, we should demote from RAM to
+> >> > CXL and from CXL to storage. If we reclaim a page from RAM, it means
+> >> > we 'demote' it directly from RAM to storage, bypassing potentially a
+> >> > huge amount of pages colder than it in CXL. That doesn't seem right.
+> >> >
+> >> > If demotion fails, IMO it shouldn't satisfy the reclaim request by
+> >> > breaking the layering. Rather it should deflect that pressure to the
+> >> > lower layers to make room. This makes sure we maintain an aging
+> >> > pipeline that honors the memory tier hierarchy.
+> >>
+> >> Yes.  I think that we should avoid to fall back to reclaim as much as
+> >> possible too.  Now, when we allocate memory for demotion
+> >> (alloc_demote_page()), __GFP_KSWAPD_RECLAIM is used.  So, we will trigger
+> >> kswapd reclaim on lower tier node to free some memory to avoid fall back
+> >> to reclaim on current (higher tier) node.  This may be not good enough,
+> >> for example, the following patch from Hasan may help via waking up
+> >> kswapd earlier.
+> >>
+> >> https://lore.kernel.org/linux-mm/b45b9bf7cd3e21bca61d82dcd1eb692cd32c122c.1637778851.git.hasanalmaruf-b10kYP2dOMg@public.gmane.org/
+> >>
+> >> Do you know what is the next step plan for this patch?
+> >>
+> >> Should we do even more?
+> >>
+> >> From another point of view, I still think that we can use falling back
+> >> to reclaim as the last resort to avoid OOM in some special situations,
+> >> for example, most pages in the lowest tier node are mlock() or too hot
+> >> to be reclaimed.
 > >
-> > It has the following advantages,
-> > 1. We have the ability to protect more important processes, when there
-> > is a memcg's OOM killer. The oom.protect only takes effect local memcg,
-> > and does not affect the OOM killer of the host.
-> > 2. Historically, we can often use oom_score_adj to control a group of
-> > processes, It requires that all processes in the cgroup must have a
-> > common parent processes, we have to set the common parent process's
-> > oom_score_adj, before it forks all children processes. So that it is
-> > very difficult to apply it in other situations. Now oom.protect has no
-> > such restrictions, we can protect a cgroup of processes more easily. The
-> > cgroup can keep some memory, even if the OOM killer has to be called.
+> > If they're hotter than reclaim candidates on the toptier, shouldn't
+> > they get promoted instead and make room that way? We may have to tweak
+> > the watermark logic a bit to facilitate that (allow promotions where
+> > regular allocations already fail?). But this sort of resorting would
+> > be preferable to age inversions.
 >
-> It reminds me our attempts to provide a more sophisticated cgroup-aware oom
-> killer. The problem is that the decision which process(es) to kill or preserve
-> is individual to a specific workload (and can be even time-dependent
-> for a given workload). So it's really hard to come up with an in-kernel
-> mechanism which is at the same time flexible enough to work for the majority
-> of users and reliable enough to serve as the last oom resort measure (which
-> is the basic goal of the kernel oom killer).
+> Now it's legal to enable demotion and disable promotion.  Yes, this is
+> wrong configuration in general.  But should we trigger OOM for these
+> users?
 >
-> Previously the consensus was to keep the in-kernel oom killer dumb and reliable
-> and implement complex policies in userspace (e.g. systemd-oomd etc).
+> And now promotion only works for default NUMA policy (and MPOL_BIND to
+> both promotion source and target nodes with MPOL_F_NUMA_BALANCING).  If
+> we use some other NUMA policy, the pages cannot be promoted too.
 >
-> Is there a reason why such approach can't work in your case?
+> > The mlock scenario sounds possible. In that case, it wouldn't be an
+> > aging inversion, since there is nothing colder on the CXL node.
+> >
+> > Maybe a bypass check should explicitly consult the demotion target
+> > watermarks against its evictable pages (similar to the file_is_tiny
+> > check in prepare_scan_count)?
+>
+> Yes.  This sounds doable.
+>
+> > Because in any other scenario, if there is a bug in the promo/demo
+> > coordination, I think we'd rather have the OOM than deal with age
+> > inversions causing intermittent performance issues that are incredibly
+> > hard to track down.
+>
+> Previously, I thought that people will always prefer performance
+> regression than OOM.  Apparently, I am wrong.
+>
+> Anyway, I think that we need to reduce the possibility of OOM or falling
+> back to reclaim as much as possible firstly.  Do you agree?
 >
 
-FWIW we run into similar issues and the systemd-oomd approach doesn't
-work reliably enough for us to disable the kernel oom-killer. The
-issue as I understand is when the machine is under heavy memory
-pressure our userspace oom-killer fails to run quickly enough to save
-the machine from getting completely stuck. Why our oom-killer fails to
-run is more nuanced. There are cases where it seems stuck to itself to
-acquire memory to do the oom-killing or stuck on some lock that needs
-to be released by a process that itself is stuck trying to acquire
-memory to release the lock, etc.
+I've been discussing this with a few folks here. I think FWIW general
+feeling here is that demoting from top tier nodes is preferred, except
+in extreme circumstances we would indeed like to run with a
+performance issue rather than OOM a customer VM. I wonder if there is
+another way to debug mis-tiered pages rather than trigger an oom to
+debug.
 
-When the kernel oom-killer does run we would like to shield the
-important jobs from it and kill the batch jobs or restartable
-processes instead. So we have a similar feature to what is proposed
-here internally. Our design is a bit different. For us we enable the
-userspace to completely override the oom_badness score pretty much:
+One thing I think/hope we can trivially agree on is that proactive
+reclaim/demotion is _not_ an extreme circumstance. I would like me or
+someone from the team to follow up with a patch that disables fallback
+to reclaim on proactive reclaim/demotion (sc->proactive).
 
-1. Every process has /proc/pid/oom_score_badness which overrides the
-kernel's calculation if set.
-2. Every memcg has a memory.oom_score_badness which indicates this
-memcg's oom importance.
+> One possibility, can we fall back to reclaim only if the sc->priority is
+> small enough (even 0)?
+>
 
-On global oom the kernel pretty much kills the baddest process in the
-badesset memcg, so we can 'protect' the important jobs from
-oom-killing that way.
+This makes sense to me.
 
-I haven't tried upstreaming this because I assume there would be
-little appetite for it in a general use case, but if the general use
-case is interesting for some it would be good to collaborate on some
-way for folks that enable the kernel oom-killer to shield certain jobs
-that are important.
-
-> Thanks!
+> Best Regards,
+> Huang, Ying
 >
