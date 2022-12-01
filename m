@@ -1,62 +1,68 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: Re: [PATCH -next v2 2/9] blk-iocost: improve hanlder of match_u64()
-Date: Thu, 1 Dec 2022 21:47:35 +0800
-Message-ID: <46bd7f33-6f24-a7a0-6359-3dc9aad98e6f@huaweicloud.com>
-References: <20221130132156.2836184-1-linan122@huawei.com>
- <20221130132156.2836184-3-linan122@huawei.com>
- <Y4e90zFnhhq764lP@slm.duckdns.org>
- <7e4f1cea-2691-9b81-35f6-0dd236149f56@huaweicloud.com>
- <Y4h9MEd3q4LXDGQq@slm.duckdns.org>
+From: =?utf-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= 
+        <chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: protect the memory in cgroup from being
+ oom killed
+Date: Thu, 1 Dec 2022 14:30:11 +0000
+Message-ID: <C9FFF5A4-B883-4C0D-A802-D94080D6C3A4@didiglobal.com>
+References: <Y4inSsNpmomzRt8J@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <Y4h9MEd3q4LXDGQq@slm.duckdns.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Y4inSsNpmomzRt8J-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: zh-CN
+Content-ID: <C0A32D731A459844B8D5001BAE8B8536-j11cvHKnkmPwvR0lvYjcXw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Tejun Heo <tj@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Li Nan <linan122@huawei.com>, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Tao pilgrim <pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "corbet-T1hC0tSOHrs@public.gmane.org" <corbet-T1hC0tSOHrs@public.gmane.org>, "roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "ran.xiaokai-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org" <ran.xiaokai-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, "Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Hi,
-
-在 2022/12/01 18:08, Tejun Heo 写道:
-> On Thu, Dec 01, 2022 at 10:15:53AM +0800, Yu Kuai wrote:
->> Hi,
->>
->> 在 2022/12/01 4:32, Tejun Heo 写道:
->>> On Wed, Nov 30, 2022 at 09:21:49PM +0800, Li Nan wrote:
->>>> From: Yu Kuai <yukuai3@huawei.com>
->>>>
->>>> 1) There are one place that return value of match_u64() is not checked.
->>>> 2) If match_u64() failed, return value is set to -EINVAL despite that
->>>>      there are other possible errnos.
->>>
->>> Ditto. Does this matter?
->>>
->>
->> It's not a big deal, but I think at least return value of match_u64()
->> should be checked, we don't want to continue with invalid input, right?
-> 
-> Yeah, sure.
-> 
->> By the way, match_u64() can return -ERANGE, which can provide more
->> specific error messge to user.
-> 
-> I'm really not convinced going over 64bit range would be all that difficult
-> to spot whether the error code is -EINVAL or -ERANGE. There isn't anything
-> wrong with returning -ERANGE but the fact that that particular function
-> returns an error code doesn't necessarily mean that it *must* be forwarded.
-> 
-> Imagine that we used sscanf(buf, "%llu", &value) to parse the number
-> instead. We'd only know whether the parsing would have succeeded or not and
-> would probably return -EINVAL on failure and the behavior would be just
-> fine. This does not matter *at all*.
-> 
-> So, idk, I'm not necessarily against it but changing -EINVAL to -ERANGE is
-> pure churn. Nothing material is being improved by that change.
-
-Thanks for the review and explanation, I'll just keep the addition of
-return value  checking of the former 2 patches.
-
-Thanks,
-Kuai
-
+QXQgMjAyMi0xMi0wMSAyMTowODoyNiwgIk1pY2hhbCBIb2NrbyIgPG1ob2Nrb0BzdXNlLmNvbT4g
+d3JvdGU6DQo+T24gVGh1IDAxLTEyLTIyIDEzOjQ0OjU4LCBNaWNoYWwgSG9ja28gd3JvdGU6DQo+
+PiBPbiBUaHUgMDEtMTItMjIgMTA6NTI6MzUsIOeoi+Wesua2myBDaGVuZ2thaXRhbyBDaGVuZyB3
+cm90ZToNCj4+ID4gQXQgMjAyMi0xMi0wMSAxNjo0OToyNywgIk1pY2hhbCBIb2NrbyIgPG1ob2Nr
+b0BzdXNlLmNvbT4gd3JvdGU6DQo+Wy4uLl0NCj4+IFRoZXJlIGlzIGEgbWlzdW5kZXJzdGFuZGlu
+Zywgb29tLnByb3RlY3QgZG9lcyBub3QgcmVwbGFjZSB0aGUgdXNlcidzIA0KPj4gdGFpbGVkIHBv
+bGljaWVzLCBJdHMgcHVycG9zZSBpcyB0byBtYWtlIGl0IGVhc2llciBhbmQgbW9yZSBlZmZpY2ll
+bnQgZm9yIA0KPj4gdXNlcnMgdG8gY3VzdG9taXplIHBvbGljaWVzLCBvciB0cnkgdG8gYXZvaWQg
+dXNlcnMgY29tcGxldGVseSBhYmFuZG9uaW5nIA0KPj4gdGhlIG9vbSBzY29yZSB0byBmb3JtdWxh
+dGUgbmV3IHBvbGljaWVzLg0KPg0KPiBUaGVuIHlvdSBzaG91bGQgZm9jdXMgb24gZXhwbGFpbmlu
+ZyBvbiBob3cgdGhpcyBtYWtlcyB0aG9zZSBwb2xpY2llcyBhbmQNCj4gZWFzaWVyIGFuZCBtb2Ug
+ZWZmaWNpZW50LiBJIGRvIG5vdCBzZWUgaXQuDQoNCkluIGZhY3QsIHRoZXJlIGFyZSBzb21lIHJl
+bGV2YW50IGNvbnRlbnRzIGluIHRoZSBwcmV2aW91cyBjaGF0IHJlY29yZHMuIA0KSWYgb29tLnBy
+b3RlY3QgaXMgYXBwbGllZCwgaXQgd2lsbCBoYXZlIHRoZSBmb2xsb3dpbmcgYmVuZWZpdHMNCjEu
+IFVzZXJzIG9ubHkgbmVlZCB0byBmb2N1cyBvbiB0aGUgbWFuYWdlbWVudCBvZiB0aGUgbG9jYWwg
+Y2dyb3VwLCBub3QgdGhlIA0KaW1wYWN0IG9uIG90aGVyIHVzZXJzJyBjZ3JvdXBzLg0KMi4gVXNl
+cnMgYW5kIHN5c3RlbSBkbyBub3QgbmVlZCB0byBzcGVuZCBleHRyYSB0aW1lIG9uIGNvbXBsaWNh
+dGVkIGFuZCANCnJlcGVhdGVkIHNjYW5uaW5nIGFuZCBjb25maWd1cmF0aW9uLiBUaGV5IGp1c3Qg
+bmVlZCB0byBjb25maWd1cmUgdGhlIA0Kb29tLnByb3RlY3Qgb2Ygc3BlY2lmaWMgY2dyb3Vwcywg
+d2hpY2ggaXMgYSBvbmUtdGltZSB0YXNrDQoNCj4+ID4gPldoeSBjYW5ub3QgeW91IHNpbXBseSBk
+aXNjb3VudCB0aGUgcHJvdGVjdGlvbiBmcm9tIGFsbCBwcm9jZXNzZXMNCj4+ID4gPmVxdWFsbHk/
+IEkgZG8gbm90IGZvbGxvdyB3aHkgdGhlIHRhc2tfdXNhZ2UgaGFzIHRvIHBsYXkgYW55IHJvbGUg
+aW4NCj4+ID4gPnRoYXQuDQo+PiA+IA0KPj4gPiBJZiBhbGwgcHJvY2Vzc2VzIGFyZSBwcm90ZWN0
+ZWQgZXF1YWxseSwgdGhlIG9vbSBwcm90ZWN0aW9uIG9mIGNncm91cCBpcyANCj4+ID4gbWVhbmlu
+Z2xlc3MuIEZvciBleGFtcGxlLCBpZiB0aGVyZSBhcmUgbW9yZSBwcm9jZXNzZXMgaW4gdGhlIGNn
+cm91cCwgDQo+PiA+IHRoZSBjZ3JvdXAgY2FuIHByb3RlY3QgbW9yZSBtZW1zLCBpdCBpcyB1bmZh
+aXIgdG8gY2dyb3VwcyB3aXRoIGZld2VyIA0KPj4gPiBwcm9jZXNzZXMuIFNvIHdlIG5lZWQgdG8g
+a2VlcCB0aGUgdG90YWwgYW1vdW50IG9mIG1lbW9yeSB0aGF0IGFsbCANCj4+ID4gcHJvY2Vzc2Vz
+IGluIHRoZSBjZ3JvdXAgbmVlZCB0byBwcm90ZWN0IGNvbnNpc3RlbnQgd2l0aCB0aGUgdmFsdWUg
+b2YgDQo+PiA+IGVvb20ucHJvdGVjdC4NCj4+IA0KPj4gWW91IGFyZSBtaXhpbmcgdHdvIGRpZmZl
+cmVudCBjb25jZXB0cyB0b2dldGhlciBJIGFtIGFmcmFpZC4gVGhlIHBlcg0KPj4gbWVtY2cgcHJv
+dGVjdGlvbiBzaG91bGQgcHJvdGVjdCB0aGUgY2dyb3VwIChpLmUuIGFsbCBwcm9jZXNzZXMgaW4g
+dGhhdA0KPj4gY2dyb3VwKSB3aGlsZSB5b3Ugd2FudCBpdCB0byBiZSBhbHNvIHByb2Nlc3MgYXdh
+cmUuIFRoaXMgcmVzdWx0cyBpbiBhDQo+PiB2ZXJ5IHVuY2xlYXIgcnVudGltZSBiZWhhdmlvciB3
+aGVuIGEgcHJvY2VzcyBmcm9tIGEgbW9yZSBwcm90ZWN0ZWQgbWVtY2cNCj4+IGlzIHNlbGVjdGVk
+IGJhc2VkIG9uIGl0cyBpbmRpdmlkdWFsIG1lbW9yeSB1c2FnZS4NCj4NClRoZSBjb3JyZWN0IHN0
+YXRlbWVudCBoZXJlIHNob3VsZCBiZSB0aGF0IGVhY2ggbWVtY2cgcHJvdGVjdGlvbiBzaG91bGQg
+DQpwcm90ZWN0IHRoZSBudW1iZXIgb2YgbWVtcyBzcGVjaWZpZWQgYnkgdGhlIG9vbS5wcm90ZWN0
+LiBGb3IgZXhhbXBsZSwgDQphIGNncm91cCdzIHVzYWdlIGlzIDZHLCBhbmQgaXQncyBvb20ucHJv
+dGVjdCBpcyAyRywgd2hlbiBhbiBvb20ga2lsbGVyIG9jY3VycywgDQpJbiB0aGUgd29yc3QgY2Fz
+ZSwgd2Ugd2lsbCBvbmx5IHJlZHVjZSB0aGUgbWVtb3J5IHVzZWQgYnkgdGhpcyBjZ3JvdXAgdG8g
+MkcgDQp0aHJvdWdoIHRoZSBvbSBraWxsZXIuDQoNCj5MZXQgbWUgYmUgbW9yZSBzcGVjaWZpYyBo
+ZXJlLiBBbHRob3VnaCBpdCBpcyBwcmltYXJpbHkgcHJvY2Vzc2VzIHdoaWNoDQo+YXJlIHRoZSBw
+cmltYXJ5IHNvdXJjZSBvZiBtZW1jZyBjaGFyZ2VzIHRoZSBtZW1vcnkgYWNjb3VudGVkIGZvciB0
+aGUgb29tDQo+YmFkbmVzcyBwdXJwb3NlcyBpcyBub3QgcmVhbGx5IGNvbXBhcmFibGUgdG8gdGhl
+IG92ZXJhbCBtZW1jZyBjaGFyZ2VkDQo+bWVtb3J5LiBLZXJuZWwgbWVtb3J5LCBub24tbWFwcGVk
+IG1lbW9yeSBhbGwgdGhhdCBjYW4gZ2VuZXJhdGUgcmF0aGVyDQo+aW50ZXJlc3RpbmcgY29ybmVy
+Y2FzZXMuDQoNClNvcnJ5LCBJJ20gdGhvdWdodGxlc3MgZW5vdWdoIGFib3V0IHNvbWUgc3BlY2lh
+bCBtZW1vcnkgc3RhdGlzdGljcy4gSSB3aWxsIGZpeCANCml0IGluIHRoZSBuZXh0IHZlcnNpb24N
+CiANClRoYW5rcyBmb3IgeW91ciBjb21tZW50IQ0KY2hlbmdrYWl0YW8NCg0K
