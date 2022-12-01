@@ -1,68 +1,301 @@
-From: =?utf-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= 
-        <chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: protect the memory in cgroup from being
- oom killed
-Date: Thu, 1 Dec 2022 14:30:11 +0000
-Message-ID: <C9FFF5A4-B883-4C0D-A802-D94080D6C3A4@didiglobal.com>
-References: <Y4inSsNpmomzRt8J@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [RFC PATCH v2] mm: Add nodes= arg to memory.reclaim
+Date: Thu, 1 Dec 2022 15:49:13 +0100
+Message-ID: <Y4i+6bjLGy/GF7uM@dhcp22.suse.cz>
+References: <20221130020328.1009347-1-almasrymina@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Y4inSsNpmomzRt8J-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Content-Language: zh-CN
-Content-ID: <C0A32D731A459844B8D5001BAE8B8536-j11cvHKnkmPwvR0lvYjcXw@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1669906153; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=dd9BUaTXE6j4+vzi40ih8oFoObulnm4Q4kCMQiHn+lw=;
+        b=CO3pI57IjBHMWPHpcREHsoXcv4WM2js/ae4G2ZCn5aJsvVWxfMJZzGE55vP+gkvVjmX92U
+        SlS42h1BQgpNHHEwpgk4jH8z1Sypc4vhyaYK1/12bhVuKRe2o/e8ZdkWVXYhphUnb8MJN1
+        ipySaGjBsJlfIv0+V3FAJEJlzhy/38g=
+Content-Disposition: inline
+In-Reply-To: <20221130020328.1009347-1-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Tao pilgrim <pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "corbet-T1hC0tSOHrs@public.gmane.org" <corbet-T1hC0tSOHrs@public.gmane.org>, "roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "ran.xiaokai-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org" <ran.xiaokai-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, "Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fvdl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-QXQgMjAyMi0xMi0wMSAyMTowODoyNiwgIk1pY2hhbCBIb2NrbyIgPG1ob2Nrb0BzdXNlLmNvbT4g
-d3JvdGU6DQo+T24gVGh1IDAxLTEyLTIyIDEzOjQ0OjU4LCBNaWNoYWwgSG9ja28gd3JvdGU6DQo+
-PiBPbiBUaHUgMDEtMTItMjIgMTA6NTI6MzUsIOeoi+Wesua2myBDaGVuZ2thaXRhbyBDaGVuZyB3
-cm90ZToNCj4+ID4gQXQgMjAyMi0xMi0wMSAxNjo0OToyNywgIk1pY2hhbCBIb2NrbyIgPG1ob2Nr
-b0BzdXNlLmNvbT4gd3JvdGU6DQo+Wy4uLl0NCj4+IFRoZXJlIGlzIGEgbWlzdW5kZXJzdGFuZGlu
-Zywgb29tLnByb3RlY3QgZG9lcyBub3QgcmVwbGFjZSB0aGUgdXNlcidzIA0KPj4gdGFpbGVkIHBv
-bGljaWVzLCBJdHMgcHVycG9zZSBpcyB0byBtYWtlIGl0IGVhc2llciBhbmQgbW9yZSBlZmZpY2ll
-bnQgZm9yIA0KPj4gdXNlcnMgdG8gY3VzdG9taXplIHBvbGljaWVzLCBvciB0cnkgdG8gYXZvaWQg
-dXNlcnMgY29tcGxldGVseSBhYmFuZG9uaW5nIA0KPj4gdGhlIG9vbSBzY29yZSB0byBmb3JtdWxh
-dGUgbmV3IHBvbGljaWVzLg0KPg0KPiBUaGVuIHlvdSBzaG91bGQgZm9jdXMgb24gZXhwbGFpbmlu
-ZyBvbiBob3cgdGhpcyBtYWtlcyB0aG9zZSBwb2xpY2llcyBhbmQNCj4gZWFzaWVyIGFuZCBtb2Ug
-ZWZmaWNpZW50LiBJIGRvIG5vdCBzZWUgaXQuDQoNCkluIGZhY3QsIHRoZXJlIGFyZSBzb21lIHJl
-bGV2YW50IGNvbnRlbnRzIGluIHRoZSBwcmV2aW91cyBjaGF0IHJlY29yZHMuIA0KSWYgb29tLnBy
-b3RlY3QgaXMgYXBwbGllZCwgaXQgd2lsbCBoYXZlIHRoZSBmb2xsb3dpbmcgYmVuZWZpdHMNCjEu
-IFVzZXJzIG9ubHkgbmVlZCB0byBmb2N1cyBvbiB0aGUgbWFuYWdlbWVudCBvZiB0aGUgbG9jYWwg
-Y2dyb3VwLCBub3QgdGhlIA0KaW1wYWN0IG9uIG90aGVyIHVzZXJzJyBjZ3JvdXBzLg0KMi4gVXNl
-cnMgYW5kIHN5c3RlbSBkbyBub3QgbmVlZCB0byBzcGVuZCBleHRyYSB0aW1lIG9uIGNvbXBsaWNh
-dGVkIGFuZCANCnJlcGVhdGVkIHNjYW5uaW5nIGFuZCBjb25maWd1cmF0aW9uLiBUaGV5IGp1c3Qg
-bmVlZCB0byBjb25maWd1cmUgdGhlIA0Kb29tLnByb3RlY3Qgb2Ygc3BlY2lmaWMgY2dyb3Vwcywg
-d2hpY2ggaXMgYSBvbmUtdGltZSB0YXNrDQoNCj4+ID4gPldoeSBjYW5ub3QgeW91IHNpbXBseSBk
-aXNjb3VudCB0aGUgcHJvdGVjdGlvbiBmcm9tIGFsbCBwcm9jZXNzZXMNCj4+ID4gPmVxdWFsbHk/
-IEkgZG8gbm90IGZvbGxvdyB3aHkgdGhlIHRhc2tfdXNhZ2UgaGFzIHRvIHBsYXkgYW55IHJvbGUg
-aW4NCj4+ID4gPnRoYXQuDQo+PiA+IA0KPj4gPiBJZiBhbGwgcHJvY2Vzc2VzIGFyZSBwcm90ZWN0
-ZWQgZXF1YWxseSwgdGhlIG9vbSBwcm90ZWN0aW9uIG9mIGNncm91cCBpcyANCj4+ID4gbWVhbmlu
-Z2xlc3MuIEZvciBleGFtcGxlLCBpZiB0aGVyZSBhcmUgbW9yZSBwcm9jZXNzZXMgaW4gdGhlIGNn
-cm91cCwgDQo+PiA+IHRoZSBjZ3JvdXAgY2FuIHByb3RlY3QgbW9yZSBtZW1zLCBpdCBpcyB1bmZh
-aXIgdG8gY2dyb3VwcyB3aXRoIGZld2VyIA0KPj4gPiBwcm9jZXNzZXMuIFNvIHdlIG5lZWQgdG8g
-a2VlcCB0aGUgdG90YWwgYW1vdW50IG9mIG1lbW9yeSB0aGF0IGFsbCANCj4+ID4gcHJvY2Vzc2Vz
-IGluIHRoZSBjZ3JvdXAgbmVlZCB0byBwcm90ZWN0IGNvbnNpc3RlbnQgd2l0aCB0aGUgdmFsdWUg
-b2YgDQo+PiA+IGVvb20ucHJvdGVjdC4NCj4+IA0KPj4gWW91IGFyZSBtaXhpbmcgdHdvIGRpZmZl
-cmVudCBjb25jZXB0cyB0b2dldGhlciBJIGFtIGFmcmFpZC4gVGhlIHBlcg0KPj4gbWVtY2cgcHJv
-dGVjdGlvbiBzaG91bGQgcHJvdGVjdCB0aGUgY2dyb3VwIChpLmUuIGFsbCBwcm9jZXNzZXMgaW4g
-dGhhdA0KPj4gY2dyb3VwKSB3aGlsZSB5b3Ugd2FudCBpdCB0byBiZSBhbHNvIHByb2Nlc3MgYXdh
-cmUuIFRoaXMgcmVzdWx0cyBpbiBhDQo+PiB2ZXJ5IHVuY2xlYXIgcnVudGltZSBiZWhhdmlvciB3
-aGVuIGEgcHJvY2VzcyBmcm9tIGEgbW9yZSBwcm90ZWN0ZWQgbWVtY2cNCj4+IGlzIHNlbGVjdGVk
-IGJhc2VkIG9uIGl0cyBpbmRpdmlkdWFsIG1lbW9yeSB1c2FnZS4NCj4NClRoZSBjb3JyZWN0IHN0
-YXRlbWVudCBoZXJlIHNob3VsZCBiZSB0aGF0IGVhY2ggbWVtY2cgcHJvdGVjdGlvbiBzaG91bGQg
-DQpwcm90ZWN0IHRoZSBudW1iZXIgb2YgbWVtcyBzcGVjaWZpZWQgYnkgdGhlIG9vbS5wcm90ZWN0
-LiBGb3IgZXhhbXBsZSwgDQphIGNncm91cCdzIHVzYWdlIGlzIDZHLCBhbmQgaXQncyBvb20ucHJv
-dGVjdCBpcyAyRywgd2hlbiBhbiBvb20ga2lsbGVyIG9jY3VycywgDQpJbiB0aGUgd29yc3QgY2Fz
-ZSwgd2Ugd2lsbCBvbmx5IHJlZHVjZSB0aGUgbWVtb3J5IHVzZWQgYnkgdGhpcyBjZ3JvdXAgdG8g
-MkcgDQp0aHJvdWdoIHRoZSBvbSBraWxsZXIuDQoNCj5MZXQgbWUgYmUgbW9yZSBzcGVjaWZpYyBo
-ZXJlLiBBbHRob3VnaCBpdCBpcyBwcmltYXJpbHkgcHJvY2Vzc2VzIHdoaWNoDQo+YXJlIHRoZSBw
-cmltYXJ5IHNvdXJjZSBvZiBtZW1jZyBjaGFyZ2VzIHRoZSBtZW1vcnkgYWNjb3VudGVkIGZvciB0
-aGUgb29tDQo+YmFkbmVzcyBwdXJwb3NlcyBpcyBub3QgcmVhbGx5IGNvbXBhcmFibGUgdG8gdGhl
-IG92ZXJhbCBtZW1jZyBjaGFyZ2VkDQo+bWVtb3J5LiBLZXJuZWwgbWVtb3J5LCBub24tbWFwcGVk
-IG1lbW9yeSBhbGwgdGhhdCBjYW4gZ2VuZXJhdGUgcmF0aGVyDQo+aW50ZXJlc3RpbmcgY29ybmVy
-Y2FzZXMuDQoNClNvcnJ5LCBJJ20gdGhvdWdodGxlc3MgZW5vdWdoIGFib3V0IHNvbWUgc3BlY2lh
-bCBtZW1vcnkgc3RhdGlzdGljcy4gSSB3aWxsIGZpeCANCml0IGluIHRoZSBuZXh0IHZlcnNpb24N
-CiANClRoYW5rcyBmb3IgeW91ciBjb21tZW50IQ0KY2hlbmdrYWl0YW8NCg0K
+On Tue 29-11-22 18:03:27, Mina Almasry wrote:
+> The nodes= arg instructs the kernel to only scan the given nodes for
+> proactive reclaim. For example use cases, consider a 2 tier memory system:
+> 
+> nodes 0,1 -> top tier
+> nodes 2,3 -> second tier
+> 
+> $ echo "1m nodes=0" > memory.reclaim
+> 
+> This instructs the kernel to attempt to reclaim 1m memory from node 0.
+> Since node 0 is a top tier node, demotion will be attempted first. This
+> is useful to direct proactive reclaim to specific nodes that are under
+> pressure.
+> 
+> $ echo "1m nodes=2,3" > memory.reclaim
+> 
+> This instructs the kernel to attempt to reclaim 1m memory in the second tier,
+> since this tier of memory has no demotion targets the memory will be
+> reclaimed.
+> 
+> $ echo "1m nodes=0,1" > memory.reclaim
+> 
+> Instructs the kernel to reclaim memory from the top tier nodes, which can
+> be desirable according to the userspace policy if there is pressure on
+> the top tiers. Since these nodes have demotion targets, the kernel will
+> attempt demotion first.
+> 
+> Since commit 3f1509c57b1b ("Revert "mm/vmscan: never demote for memcg
+> reclaim""), the proactive reclaim interface memory.reclaim does both
+> reclaim and demotion. Reclaim and demotion incur different latency costs
+> to the jobs in the cgroup. Demoted memory would still be addressable
+> by the userspace at a higher latency, but reclaimed memory would need to
+> incur a pagefault.
+> 
+> The 'nodes' arg is useful to allow the userspace to control demotion
+> and reclaim independently according to its policy: if the memory.reclaim
+> is called on a node with demotion targets, it will attempt demotion first;
+> if it is called on a node without demotion targets, it will only attempt
+> reclaim.
+> 
+> Signed-off-by: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+
+Thanks for making this per node rather than tier based. This is a more
+generic interface.
+
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+
+Thanks!
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst | 15 +++---
+>  include/linux/swap.h                    |  3 +-
+>  mm/memcontrol.c                         | 67 ++++++++++++++++++++-----
+>  mm/vmscan.c                             |  4 +-
+>  4 files changed, 68 insertions(+), 21 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 74cec76be9f2..ac5fcbcd5ae6 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1245,17 +1245,13 @@ PAGE_SIZE multiple when read back.
+>  	This is a simple interface to trigger memory reclaim in the
+>  	target cgroup.
+> 
+> -	This file accepts a single key, the number of bytes to reclaim.
+> -	No nested keys are currently supported.
+> +	This file accepts a string which contains the number of bytes to
+> +	reclaim.
+> 
+>  	Example::
+> 
+>  	  echo "1G" > memory.reclaim
+> 
+> -	The interface can be later extended with nested keys to
+> -	configure the reclaim behavior. For example, specify the
+> -	type of memory to reclaim from (anon, file, ..).
+> -
+>  	Please note that the kernel can over or under reclaim from
+>  	the target cgroup. If less bytes are reclaimed than the
+>  	specified amount, -EAGAIN is returned.
+> @@ -1267,6 +1263,13 @@ PAGE_SIZE multiple when read back.
+>  	This means that the networking layer will not adapt based on
+>  	reclaim induced by memory.reclaim.
+> 
+> +	This file also allows the user to specify the nodes to reclaim from,
+> +	via the 'nodes=' key, example::
+> +
+> +	  echo "1G nodes=0,1" > memory.reclaim
+> +
+> +	The above instructs the kernel to reclaim memory from nodes 0,1.
+> +
+>    memory.peak
+>  	A read-only single value file which exists on non-root
+>  	cgroups.
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index b61e2007d156..f542c114dffd 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -419,7 +419,8 @@ extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+>  extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+>  						  unsigned long nr_pages,
+>  						  gfp_t gfp_mask,
+> -						  unsigned int reclaim_options);
+> +						  unsigned int reclaim_options,
+> +						  nodemask_t nodemask);
+>  extern unsigned long mem_cgroup_shrink_node(struct mem_cgroup *mem,
+>  						gfp_t gfp_mask, bool noswap,
+>  						pg_data_t *pgdat,
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 23750cec0036..a0d7850173a9 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -63,6 +63,7 @@
+>  #include <linux/resume_user_mode.h>
+>  #include <linux/psi.h>
+>  #include <linux/seq_buf.h>
+> +#include <linux/parser.h>
+>  #include "internal.h"
+>  #include <net/sock.h>
+>  #include <net/ip.h>
+> @@ -2392,7 +2393,8 @@ static unsigned long reclaim_high(struct mem_cgroup *memcg,
+>  		psi_memstall_enter(&pflags);
+>  		nr_reclaimed += try_to_free_mem_cgroup_pages(memcg, nr_pages,
+>  							gfp_mask,
+> -							MEMCG_RECLAIM_MAY_SWAP);
+> +							MEMCG_RECLAIM_MAY_SWAP,
+> +							NODE_MASK_ALL);
+>  		psi_memstall_leave(&pflags);
+>  	} while ((memcg = parent_mem_cgroup(memcg)) &&
+>  		 !mem_cgroup_is_root(memcg));
+> @@ -2683,7 +2685,8 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> 
+>  	psi_memstall_enter(&pflags);
+>  	nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
+> -						    gfp_mask, reclaim_options);
+> +						    gfp_mask, reclaim_options,
+> +						    NODE_MASK_ALL);
+>  	psi_memstall_leave(&pflags);
+> 
+>  	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
+> @@ -3503,7 +3506,8 @@ static int mem_cgroup_resize_max(struct mem_cgroup *memcg,
+>  		}
+> 
+>  		if (!try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL,
+> -					memsw ? 0 : MEMCG_RECLAIM_MAY_SWAP)) {
+> +					memsw ? 0 : MEMCG_RECLAIM_MAY_SWAP,
+> +					NODE_MASK_ALL)) {
+>  			ret = -EBUSY;
+>  			break;
+>  		}
+> @@ -3614,7 +3618,8 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
+>  			return -EINTR;
+> 
+>  		if (!try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL,
+> -						  MEMCG_RECLAIM_MAY_SWAP))
+> +						  MEMCG_RECLAIM_MAY_SWAP,
+> +						  NODE_MASK_ALL))
+>  			nr_retries--;
+>  	}
+> 
+> @@ -6407,7 +6412,8 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
+>  		}
+> 
+>  		reclaimed = try_to_free_mem_cgroup_pages(memcg, nr_pages - high,
+> -					GFP_KERNEL, MEMCG_RECLAIM_MAY_SWAP);
+> +					GFP_KERNEL, MEMCG_RECLAIM_MAY_SWAP,
+> +					NODE_MASK_ALL);
+> 
+>  		if (!reclaimed && !nr_retries--)
+>  			break;
+> @@ -6456,7 +6462,8 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
+> 
+>  		if (nr_reclaims) {
+>  			if (!try_to_free_mem_cgroup_pages(memcg, nr_pages - max,
+> -					GFP_KERNEL, MEMCG_RECLAIM_MAY_SWAP))
+> +					GFP_KERNEL, MEMCG_RECLAIM_MAY_SWAP,
+> +					NODE_MASK_ALL))
+>  				nr_reclaims--;
+>  			continue;
+>  		}
+> @@ -6579,21 +6586,54 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
+>  	return nbytes;
+>  }
+> 
+> +enum {
+> +	MEMORY_RECLAIM_NODES = 0,
+> +	MEMORY_RECLAIM_NULL,
+> +};
+> +
+> +static const match_table_t if_tokens = {
+> +	{ MEMORY_RECLAIM_NODES, "nodes=%s" },
+> +	{ MEMORY_RECLAIM_NULL, NULL },
+> +};
+> +
+>  static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+>  			      size_t nbytes, loff_t off)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+>  	unsigned int nr_retries = MAX_RECLAIM_RETRIES;
+>  	unsigned long nr_to_reclaim, nr_reclaimed = 0;
+> -	unsigned int reclaim_options;
+> -	int err;
+> +	unsigned int reclaim_options = MEMCG_RECLAIM_MAY_SWAP |
+> +				       MEMCG_RECLAIM_PROACTIVE;
+> +	char *old_buf, *start;
+> +	substring_t args[MAX_OPT_ARGS];
+> +	int token;
+> +	char value[256];
+> +	nodemask_t nodemask = NODE_MASK_ALL;
+> 
+>  	buf = strstrip(buf);
+> -	err = page_counter_memparse(buf, "", &nr_to_reclaim);
+> -	if (err)
+> -		return err;
+> 
+> -	reclaim_options	= MEMCG_RECLAIM_MAY_SWAP | MEMCG_RECLAIM_PROACTIVE;
+> +	old_buf = buf;
+> +	nr_to_reclaim = memparse(buf, &buf) / PAGE_SIZE;
+> +	if (buf == old_buf)
+> +		return -EINVAL;
+> +
+> +	buf = strstrip(buf);
+> +
+> +	while ((start = strsep(&buf, " ")) != NULL) {
+> +		if (!strlen(start))
+> +			continue;
+> +		token = match_token(start, if_tokens, args);
+> +		match_strlcpy(value, args, sizeof(value));
+> +		switch (token) {
+> +		case MEMORY_RECLAIM_NODES:
+> +			if (nodelist_parse(value, nodemask) < 0)
+> +				return -EINVAL;
+> +			break;
+> +		default:
+> +			return -EINVAL;
+> +		}
+> +	}
+> +
+>  	while (nr_reclaimed < nr_to_reclaim) {
+>  		unsigned long reclaimed;
+> 
+> @@ -6610,7 +6650,8 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+> 
+>  		reclaimed = try_to_free_mem_cgroup_pages(memcg,
+>  						nr_to_reclaim - nr_reclaimed,
+> -						GFP_KERNEL, reclaim_options);
+> +						GFP_KERNEL, reclaim_options,
+> +						nodemask);
+> 
+>  		if (!reclaimed && !nr_retries--)
+>  			return -EAGAIN;
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 7b8e8e43806b..23fc5b523764 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -6735,7 +6735,8 @@ unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
+>  unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+>  					   unsigned long nr_pages,
+>  					   gfp_t gfp_mask,
+> -					   unsigned int reclaim_options)
+> +					   unsigned int reclaim_options,
+> +					   nodemask_t nodemask)
+>  {
+>  	unsigned long nr_reclaimed;
+>  	unsigned int noreclaim_flag;
+> @@ -6750,6 +6751,7 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+>  		.may_unmap = 1,
+>  		.may_swap = !!(reclaim_options & MEMCG_RECLAIM_MAY_SWAP),
+>  		.proactive = !!(reclaim_options & MEMCG_RECLAIM_PROACTIVE),
+> +		.nodemask = &nodemask,
+>  	};
+>  	/*
+>  	 * Traverse the ZONELIST_FALLBACK zonelist of the current node to put
+> --
+> 2.38.1.584.g0f3c55d4c2-goog
+
+-- 
+Michal Hocko
+SUSE Labs
