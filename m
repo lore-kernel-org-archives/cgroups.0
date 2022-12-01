@@ -1,117 +1,98 @@
-From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm: remove lock_page_memcg() from rmap
-Date: Wed, 30 Nov 2022 16:13:23 -0800 (PST)
-Message-ID: <33f2f836-98a0-b593-1d43-b289d645db5@google.com>
-References: <20221123181838.1373440-1-hannes@cmpxchg.org> <16dd09c-bb6c-6058-2b3-7559b5aefe9@google.com> <Y4TpCJ+5uCvWE6co@cmpxchg.org> <Y4ZYsrXLBFDIxuoO@cmpxchg.org> <3659bbe0-ccf2-7feb-5465-b287593aa421@google.com> <CALvZod7_FjO-CjzHUpQTsCTm4-68a1eKi_qY=4XdF+g7yMLd4Q@mail.gmail.com>
- <e0918c92-90cd-e3ed-f4e6-92d02062c252@google.com> <Y4fZbFNVckh1g4WO@cmpxchg.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: Re: [PATCH -next v2 9/9] blk-iocost: fix walk_list corruption
+Date: Thu, 1 Dec 2022 09:19:54 +0800
+Message-ID: <c028dd77-cabf-edd6-c893-8ee24762ac8c@huaweicloud.com>
+References: <20221130132156.2836184-1-linan122@huawei.com>
+ <20221130132156.2836184-10-linan122@huawei.com>
+ <Y4fEKZy4rTE5rG/5@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=aHV8O4q/YJYqi3y8OK2heA1MTuVYBE9Z71+HHXjgjL4=;
-        b=IdVVPMRbeJD3ERLIYatf7Qhl7gSloz9FAjQA5VPxurI7mOMGOlRe1SmMkxP8nXen+h
-         ctCSsHsndDMVyouwDaQm0v7TXfHq0aby4aifQ/E+OXRoPNWWRgh40xnSMefoKPKxsmiQ
-         ZtIHvUylWyyCoco0II+oxM9XH6gfMt1tybat6VJivkyIA44CQk1UoG15QByOzCWQKUUR
-         2w4ENrKjCgXgpRcCgsQFoYOFzLSHwZSBMSIxZC5+Qjkn+HaH+uJfn1bOX7w8JWghI2MW
-         3oH9d2vIdfEElOxXDK/quYJ7tUiZOVe1aS7CsaLh9UpRs/BE+dX7qVyUmLRqtQSSj0EE
-         N5TA==
-In-Reply-To: <Y4fZbFNVckh1g4WO-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <Y4fEKZy4rTE5rG/5@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Tejun Heo <tj@kernel.org>, Li Nan <linan122@huawei.com>
+Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
-On Wed, 30 Nov 2022, Johannes Weiner wrote:
-> 
-> Hm, I think the below should work for swap pages. Do you see anything
-> obviously wrong with it, or scenarios I haven't considered?
-> 
+Hi,
 
-I think you're overcomplicating it, with the __swap_count(ent) business,
-and consequent unnecessarily detailed comments on the serialization.
+=D4=DA 2022/12/01 4:59, Tejun Heo =D0=B4=B5=C0:
+> On Wed, Nov 30, 2022 at 09:21:56PM +0800, Li Nan wrote:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> Our test report a problem:
+>>
+>> ------------[ cut here ]------------
+>> list_del corruption. next->prev should be ffff888127e0c4b0, but was ffff=
+888127e090b0
+>> WARNING: CPU: 2 PID: 3117789 at lib/list_debug.c:62 __list_del_entry_val=
+id+0x119/0x130
+>> RIP: 0010:__list_del_entry_valid+0x119/0x130
+>> RIP: 0010:__list_del_entry_valid+0x119/0x130
+>> Call Trace:
+>>   <IRQ>
+>>   iocg_flush_stat.isra.0+0x11e/0x230
+>>   ? ioc_rqos_done+0x230/0x230
+>>   ? ioc_now+0x14f/0x180
+>>   ioc_timer_fn+0x569/0x1640
+>>
+>> We haven't reporduced it yet, but we think this is due to parent iocg is
+>> freed before child iocg, and then in ioc_timer_fn, walk_list is
+>> corrupted.
+>>
+>> 1) Remove child cgroup can concurrent with remove parent cgroup, and
+>> ioc_pd_free for parent iocg can be called before child iocg. This can be
+>> fixed by moving the handle of walk_list to ioc_pd_offline, since that
+>> offline from child is ensured to be called before parent.
+>=20
+> Which you already did in a previous patch, right?
 
-Page/folio lock prevents a !page_mapped(page) becoming a page_mapped(page),
-whether it's in swap cache or in file cache; it does not stop the sharing
-count going further up, or down even to 0, but we just don't need to worry
-about that sharing count - the MC_TARGET_PAGE case does not reject pages
-with mapcount > 1, so why complicate the swap or file case in that way?
+yes, this is already did in patch 7.
 
-(Yes, it can be argued that all such sharing should be rejected; but we
-didn't come here to argue improvements to memcg charge moving semantics:
-just to minimize its effect on rmap, before it is fully deprecated.)
+>=20
+>> 2) ioc_pd_free can be triggered from both removing device and removing
+>> cgroup, this patch fix the problem by deleting timer before deactivating
+>> policy, so that free parent iocg first in this case won't matter.
+>=20
+> Okay, so, yeah, css's pin parents but blkg's don't. I think the right thi=
+ng
+> to do here is making sure that a child blkg pins its parent (and eventual=
+ly
+> ioc).
 
-Or am I missing the point of why you add that complication?
+Ok, I can try to do that.
 
-> @@ -5637,6 +5645,46 @@ static struct page *mc_handle_swap_pte(struct vm_area_struct *vma,
+>=20
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+>> Signed-off-by: Li Nan <linan122@huawei.com>
+>> ---
+>>   block/blk-iocost.c | 3 ++-
+>>   1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+>> index 710cf63a1643..d2b873908f88 100644
+>> --- a/block/blk-iocost.c
+>> +++ b/block/blk-iocost.c
+>> @@ -2813,13 +2813,14 @@ static void ioc_rqos_exit(struct rq_qos *rqos)
+>>   {
+>>   	struct ioc *ioc =3D rqos_to_ioc(rqos);
+>>  =20
+>> +	del_timer_sync(&ioc->timer);
+>> +
+>>   	blkcg_deactivate_policy(rqos->q, &blkcg_policy_iocost);
+>>  =20
+>>   	spin_lock_irq(&ioc->lock);
+>>   	ioc->running =3D IOC_STOP;
+>>   	spin_unlock_irq(&ioc->lock);
+>>  =20
+>> -	del_timer_sync(&ioc->timer);
+>=20
+> I don't about this workaround. Let's fix properly?
 
-Don't forget to trylock the page in the device_private case before this.
+Ok, and by the way, is there any reason to delete timer after
+deactivate policy? This seems a litter wreid to me.
 
->          * we call find_get_page() with swapper_space directly.
->          */
->         page = find_get_page(swap_address_space(ent), swp_offset(ent));
-> +
-> +       /*
-> +        * Don't move shared charges. This isn't just for saner move
-> +        * semantics, it also ensures that page_mapped() is stable for
-> +        * the accounting in mem_cgroup_mapcount().
+Thanks,
+Kuai
+>=20
 
-mem_cgroup_mapcount()??
-
-> +        *
-> +        * We have to serialize against the following paths: fork
-> +        * (which may copy a page map or a swap pte), fault (which may
-> +        * change a swap pte into a page map), unmap (which may cause
-> +        * a page map or a swap pte to disappear), and reclaim (which
-> +        * may change a page map into a swap pte).
-> +        *
-> +        * - Without swapcache, we only want to move the charge if
-> +        *   there are no other swap ptes. With the pte lock, the
-> +        *   swapcount is stable against all of the above scenarios
-> +        *   when it's 1 (our pte), which is the case we care about.
-> +        *
-> +        * - When there is a page in swapcache, we only want to move
-> +        *   charges when neither the page nor the swap entry are
-> +        *   mapped elsewhere. The pte lock prevents our pte from
-> +        *   being forked or unmapped. The page lock will stop faults
-> +        *   against, and reclaim of, the swapcache page. So if the
-> +        *   page isn't mapped, and the swap count is 1 (our pte), the
-> +        *   test results are stable and the charge is exclusive.
-> +        */
-> +       if (!page && __swap_count(ent) != 1)
-> +               return NULL;
-> +
-> +       if (page) {
-> +               if (!trylock_page(page)) {
-> +                       put_page(page);
-> +                       return NULL;
-> +               }
-> +               if (page_mapped(page) || __swap_count(ent) != 1) {
-> +                       unlock_page(page);
-> +                       put_page(page);
-> +                       return NULL;
-> +               }
-> +       }
-> +
->         entry->val = ent.val;
->  
->         return page;
-
-Looks right, without the __swap_count() additions and swap count comments.
-
-And similar code in mc_handle_file_pte() - or are you saying that only
-swap should be handled this way?  I would disagree.
-
-And matching trylock in mc_handle_present_pte() (and get_mctgt_type_thp()),
-instead of in mem_cgroup_move_account().
-
-I haven't checked to see where the page then needs to be unlocked,
-probably some new places.
-
-And I don't know what will be best for the preliminary precharge pass:
-doesn't really want the page lock at all, but it may be unnecessary
-complication to avoid taking it then unlocking it in that pass.
-
-Hugh
