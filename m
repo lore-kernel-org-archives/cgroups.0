@@ -1,38 +1,48 @@
-From: Kemeng Shi <shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH v2 10/10] blk-throttle: avoid dead code in
- throtl_hierarchy_can_upgrade
-Date: Thu, 1 Dec 2022 09:36:06 +0800
-Message-ID: <7a72b0b5-f534-f7aa-85c0-f1b97646f81c@huaweicloud.com>
-References: <20221129030147.27400-1-shikemeng@huawei.com>
- <20221129030147.27400-11-shikemeng@huawei.com>
- <Y4fMyEo0dxPl/Kt1@slm.duckdns.org>
+From: Kemeng Shi <shikemeng@huaweicloud.com>
+Subject: Re: [PATCH v2 0/5] A few cleanup and bugfix patches for blk-iocost
+Date: Thu, 1 Dec 2022 09:45:12 +0800
+Message-ID: <93f9093b-abec-db7e-a945-263cd9355c08@huaweicloud.com>
+References: <20221018121932.10792-1-shikemeng@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Y4fMyEo0dxPl/Kt1-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20221018121932.10792-1-shikemeng@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-Hi, Tejun
-on 12/1/2022 5:36 AM, Tejun Heo wrote:
-> On Tue, Nov 29, 2022 at 11:01:47AM +0800, Kemeng Shi wrote:
->> Function throtl_hierarchy_can_upgrade will always return from while loop,
->> so the return outside while loop is never reached. Break the loop when
->> we traverse to root as throtl_hierarchy_can_downgrade do to avoid dead
->> code.
+Hi jens,
+on 10/18/2022 8:19 PM, Kemeng Shi wrote:
+> This series contain a few patch to correct comment, correct trace of
+> vtime_rate and so on. More detail can be found in the respective
+> changelogs.
 > 
-> I don't know why this is an improvement.
+> ---
+> v2:
+>  Thanks Tejun for review and comment!
+>  Add Acked-by tag from Tejun.
+>  Correct description in patch 3/5 and 4/5.
+>  Drop "blk-iocost: Avoid to call current_hweight_max if iocg->inuse
+> == iocg->active"
+>  Drop "blk-iocost: Remove redundant initialization of struct ioc_gq"
+>  Drop "blk-iocost: Get ioc_now inside weight_updated"
+> ---
 > 
-I just found that the "return false" outside of the while loop is never
-executed which may be not reached by code coverage test. Of course,
-we can simply remove this "return false", but I found a similar function
-throtl_hierarchy_can_upgrade which has no such problem. So I avoid
-unreachable code as throtl_hierarchy_can_upgrade do.
-Is this make sense to you? If not, I will remove this patch in next
-version.
+> Kemeng Shi (5):
+>   blk-iocost: Fix typo in comment
+>   blk-iocost: Reset vtime_base_rate in ioc_refresh_params
+>   blk-iocost: Trace vtime_base_rate instead of vtime_rate
+>   blk-iocost: Remove vrate member in struct ioc_now
+>   blk-iocost: Correct comment in blk_iocost_init
+> 
+>  block/blk-iocost.c            | 16 +++++++++-------
+>  include/trace/events/iocost.h |  4 ++--
+>  2 files changed, 11 insertions(+), 9 deletions(-)
+Could you apply this patchset?
+By the way, my apply for an cloud variant of email was just passed
+a few days ago. Is this mail still in spam?
 
 Thanks.
 -- 
