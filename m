@@ -1,38 +1,62 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH -next v2 2/9] blk-iocost: improve hanlder of match_u64()
-Date: Thu, 1 Dec 2022 10:15:53 +0800
-Message-ID: <7e4f1cea-2691-9b81-35f6-0dd236149f56@huaweicloud.com>
-References: <20221130132156.2836184-1-linan122@huawei.com>
- <20221130132156.2836184-3-linan122@huawei.com>
- <Y4e90zFnhhq764lP@slm.duckdns.org>
+From: Kemeng Shi <shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH v2 0/5] A few cleanup and bugfix patches for blk-iocost
+Date: Thu, 1 Dec 2022 10:20:30 +0800
+Message-ID: <8d9c98e5-0433-e025-ccec-4144102e91c5@huaweicloud.com>
+References: <20221018121932.10792-1-shikemeng@huawei.com>
+ <93f9093b-abec-db7e-a945-263cd9355c08@huaweicloud.com>
+ <bd008582-1509-69f3-1812-2b9caa390c05@kernel.dk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Y4e90zFnhhq764lP-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <bd008582-1509-69f3-1812-2b9caa390c05-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
 
-=D4=DA 2022/12/01 4:32, Tejun Heo =D0=B4=B5=C0:
-> On Wed, Nov 30, 2022 at 09:21:49PM +0800, Li Nan wrote:
->> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+
+on 12/1/2022 9:46 AM, Jens Axboe wrote:
+> On 11/30/22 6:45?PM, Kemeng Shi wrote:
 >>
->> 1) There are one place that return value of match_u64() is not checked.
->> 2) If match_u64() failed, return value is set to -EINVAL despite that
->>     there are other possible errnos.
->=20
-> Ditto. Does this matter?
->=20
+>> Hi jens,
+>> on 10/18/2022 8:19 PM, Kemeng Shi wrote:
+>>> This series contain a few patch to correct comment, correct trace of
+>>> vtime_rate and so on. More detail can be found in the respective
+>>> changelogs.
+>>>
+>>> ---
+>>> v2:
+>>>  Thanks Tejun for review and comment!
+>>>  Add Acked-by tag from Tejun.
+>>>  Correct description in patch 3/5 and 4/5.
+>>>  Drop "blk-iocost: Avoid to call current_hweight_max if iocg->inuse
+>>> == iocg->active"
+>>>  Drop "blk-iocost: Remove redundant initialization of struct ioc_gq"
+>>>  Drop "blk-iocost: Get ioc_now inside weight_updated"
+>>> ---
+>>>
+>>> Kemeng Shi (5):
+>>>   blk-iocost: Fix typo in comment
+>>>   blk-iocost: Reset vtime_base_rate in ioc_refresh_params
+>>>   blk-iocost: Trace vtime_base_rate instead of vtime_rate
+>>>   blk-iocost: Remove vrate member in struct ioc_now
+>>>   blk-iocost: Correct comment in blk_iocost_init
+>>>
+>>>  block/blk-iocost.c            | 16 +++++++++-------
+>>>  include/trace/events/iocost.h |  4 ++--
+>>>  2 files changed, 11 insertions(+), 9 deletions(-)
+>> Could you apply this patchset?
+>> By the way, my apply for an cloud variant of email was just passed
+>> a few days ago. Is this mail still in spam?
+> 
+> This one wasn't, but I've seen the huaweicloud.com emails fail
+> the same origination checks in the past.
+I'm not sure if was there any fix to huaweicloud.com email. I will
+use this huaweicloud emails to minimize the trouble before any
+better solution is found. Sorry for the inconvenience.
 
-It's not a big deal, but I think at least return value of match_u64()
-should be checked, we don't want to continue with invalid input, right?
-
-By the way, match_u64() can return -ERANGE, which can provide more
-specific error messge to user.
-
-Thanks,
-Kuai
+-- 
+Best wishes
+Kemeng Shi
 
