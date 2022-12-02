@@ -1,45 +1,47 @@
 From: Jens Axboe <axboe@kernel.dk>
 Subject: Re: [PATCH -next] blk-cgroup: Fix some kernel-doc comments
-Date: Thu, 1 Dec 2022 18:22:38 -0700
-Message-ID: <7aa9e496-747d-46ae-b250-d504d84af6e5@kernel.dk>
+Date: Thu, 01 Dec 2022 18:22:54 -0700
+Message-ID: <166994417436.875585.12360362062569377229.b4-ty@kernel.dk>
 References: <20221202011713.14834-1-yang.lee@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Ha7o0eCHmk2nS/stJvaRFac3CxHDSLDcs+LGCRqIPBY=;
-        b=BuUEFSdIuuRDAjVFKVAhHELsh2BTyw5NoWSVDMZq1DGpduTVgVQpO+7R5WrmoIx13M
-         M17M+w1VUbCDiexAf14moFi1WiPv5byymNaQeBzbnNxhv7ZEgDDE4rrQ5yrgFdX+5OQk
-         SMfw+xxJKUuemgj7vBvIg7ae5dRpRRx63khUXhSoX7VuLzyVPS08OClh9OJtTo2WieSs
-         s2eVSCczZxx7r8aGifEn1xk0+06SAwsbh3KN2NuIRxyJmSHmrAsiyOs6B5CdKbo84sx0
-         Q8MkiaW+nBe0rxzoIHJnvyn139jE7veJt1/9E1oQBFtsdQHOysYhnyb90VnNvUPxHr/M
-         FFQA==
-Content-Language: en-US
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=cfArFpI4a8R+b20KyasbiTdOtc7N2bQ1wdu7RJkkhko=;
+        b=Cb8jMoLSfDnJGI9Pp33XdZXlJvDDfcMbz3oDrUJLziJarvhGWpFLrKZAAyoLNDVtvx
+         jqO7+iWRdzqJYKLL+CyQgt6GEH8V/G2frXfIYxVeR+1FVT5B3jdhcvpTsUvVkUl0N3oD
+         8TVFe40JPZgJ0fBFDt3dE7RRExTcSYjq2Qno38tbDtL2tX0VOwDTUgtoOE6hd8w0W9VZ
+         n5ELhE8nZFhNtEkn0tPxZhAEjfHMWPsspeJVxt10lkJX4smRqMOpQRfgvF3CMr+YoMk6
+         Ityq+JjMXg85AJcC/vWX5CPFwE/KMKTJPXVgvGeQGc1KyaArklIMAo8hRNPezrSGfNfk
+         4j2Q==
 In-Reply-To: <20221202011713.14834-1-yang.lee@linux.alibaba.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Yang Li <yang.lee@linux.alibaba.com>, tj@kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: tj@kernel.org, Yang Li <yang.lee@linux.alibaba.com>
 Cc: josef@toxicpanda.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Abaci Robot <abaci@linux.alibaba.com>
 
-On 12/1/22 6:17=E2=80=AFPM, Yang Li wrote:
+
+On Fri, 02 Dec 2022 09:17:13 +0800, Yang Li wrote:
 > Make the description of @gendisk to @disk in blkcg_schedule_throttle()
 > to clear the below warnings:
->=20
-> block/blk-cgroup.c:1850: warning: Function parameter or member 'disk' not=
- described in 'blkcg_schedule_throttle'
-> block/blk-cgroup.c:1850: warning: Excess function parameter 'gendisk' des=
-cription in 'blkcg_schedule_throttle'
+> 
+> block/blk-cgroup.c:1850: warning: Function parameter or member 'disk' not described in 'blkcg_schedule_throttle'
+> block/blk-cgroup.c:1850: warning: Excess function parameter 'gendisk' description in 'blkcg_schedule_throttle'
+> 
+> 
+> [...]
 
-Please always include a fixes line:
+Applied, thanks!
 
-Fixes: de185b56e8a6 ("blk-cgroup: pass a gendisk to blkcg_schedule_throttle=
-")
+[1/1] blk-cgroup: Fix some kernel-doc comments
+      commit: 1d6df9d352bb2a3c2ddb32851dfcafb417c47762
 
---=20
+Best regards,
+-- 
 Jens Axboe
 
 
