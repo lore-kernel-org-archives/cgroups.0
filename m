@@ -1,115 +1,118 @@
 From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH v2 00/18]  Add Cgroup support for SGX EPC memory
-Date: Fri,  2 Dec 2022 10:36:36 -0800
-Message-ID: <20221202183655.3767674-1-kristen@linux.intel.com>
+Subject: [PATCH v2 03/18] x86/sgx: Add 'struct sgx_epc_lru_lists' to encapsulate lru list(s)
+Date: Fri,  2 Dec 2022 10:36:39 -0800
+Message-ID: <20221202183655.3767674-4-kristen@linux.intel.com>
+References: <20221202183655.3767674-1-kristen@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1670006223; x=1701542223;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=ZqDhaSj465j8Weu6K/8SPWCZ4E93AhshOKFXA95cDvk=;
-  b=eCQsefgyEG0ZCMcPfJ9ZWAwd5o6pzLuygGaqGnXt1nUPSBLKBNkAJN/1
-   4hIQsle/vNd+HT/UbKPSE+AZgYgyizphTuSZgtNOSUnEqHVVsVxGpPdB0
-   uvNfleEPPifEgpiLIp2QDpBGvN5LcGyJkAvHuFVdIJHBLK6SxQV0LDd3H
-   Ow0O4n7Px9WRszq5M/6uSnxMBaqUVwfTkU6SDVUdLGEQGotLfDZb0uJoi
-   QgpDb5WG7un2j/gYJ0t5xidbADSnaAdAsTy9w75n+9djLdrOWZAa336Cl
-   f8crkKsl01YzmwjH4KDPUAEdU0VxNcVf+fPO1c+Em5RvOxHEIy7yUra2W
-   w==;
+  t=1670006231; x=1701542231;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=r+7CHYhh5wuKLW8x7IX2pGjuO6Ml3uaP1xZZqkdxdwU=;
+  b=i2/LeCXIwJoB1Fl4myXlwolIrjDhHegFAxrqOKZeo+3wrDT0lHRGAW7w
+   vjBwUwFIoMnArnKD3mgNwS6jE1R+RV3AhlkT6SYS87KM+HtoMP9e27mxY
+   V2TTduKeXgdhkTIQzsweBed/hc9Wt7fWIn12rFX4KZtTEzqhCS+KkdIjf
+   12xbC8khSNC6V3RY64tZy6CZgTRkvDe1uXQi3L28g9xaRSULB2ivVjVK/
+   icZgyRlph1c0Waiz4yuRgaIHymvxupyGvqT7vdXLttWZhBoF7p1/I0Mqd
+   bKj4UL9VENCmPI/5JZXRojAbnph5YQL2zbimwoErVdU0ELNTHI8D8VgQK
+   A==;
+In-Reply-To: <20221202183655.3767674-1-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
+Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Utilize the Miscellaneous cgroup controller to regulate the distribution
-of SGX EPC memory, which is a subset of system RAM that is used to provide
-SGX-enabled applications with protected memory, and is otherwise inaccessible.
+Introduce a data structure to wrap the existing reclaimable list
+and its spinlock in a struct to minimize the code changes needed
+to handle multiple LRUs as well as reclaimable and non-reclaimable
+lists, both of which will be introduced and used by SGX EPC cgroups.
 
-SGX EPC memory allocations are separate from normal RAM allocations,
-and is managed solely by the SGX subsystem. The existing cgroup memory
-controller cannot be used to limit or account for SGX EPC memory.
+Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ arch/x86/kernel/cpu/sgx/sgx.h | 65 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 65 insertions(+)
 
-This patchset implements the support for sgx_epc memory within the 
-misc cgroup controller, and then utilizes the misc cgroup controller
-to provide support for setting the total system capacity, max limit
-per cgroup, and events.
-
-This work was originally authored by Sean Christopherson a few years ago,
-and was modified to work with more recent kernels, and to utilize the
-misc cgroup controller rather than a custom controller. It is currently
-based on top of the MCA patches.
-
-Here's the MCA patchset for reference.
-https://lore.kernel.org/linux-sgx/2d52c8c4-8ed0-6df2-2911-da5b9fcc9ae4-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/T/#t
-
-The patchset adds support for multiple LRUs to track both reclaimable
-EPC pages (i.e. pages the reclaimer knows about), as well as unreclaimable
-EPC pages (i.e. pages which the reclaimer isn't aware of, such as va pages).
-These pages are assigned to an LRU, as well as an enclave, so that an
-enclave's full EPC usage can be tracked, and limited to a max value. During
-OOM events, an enclave can be have its memory zapped, and all the EPC pages
-not tracked by the reclaimer can be freed.
-
-I appreciate your comments and feedback.
-
-Changelog:
-
-v2:
- * rename struct sgx_epc_lru to sgx_epc_lru_lists to be more clear
-   that this struct contains 2 lists.
- * use inline functions rather than macros for sgx_epc_page_list*
-   wrappers.
- * Remove flags macros and open code all flags.
- * Improve the commit message for RECLAIM_IN_PROGRESS patch to make
-   it more clear what the patch does.
- * remove notifier_block from misc cgroup changes and use a set
-   of ops for callbacks instead.
- * rename root_misc to misc_cg_root and parent_misc to misc_cg_parent
- * consolidate misc cgroup changes to 2 patches and remove most of
-   the previous helper functions.
-
-Kristen Carlson Accardi (7):
-  x86/sgx: Add 'struct sgx_epc_lru_lists' to encapsulate lru list(s)
-  x86/sgx: Use sgx_epc_lru_lists for existing active page list
-  x86/sgx: Track epc pages on reclaimable or unreclaimable lists
-  cgroup/misc: Add per resource callbacks for css events
-  cgroup/misc: Prepare for SGX usage
-  x86/sgx: Add support for misc cgroup controller
-  Docs/x86/sgx: Add description for cgroup support
-
-Sean Christopherson (11):
-  x86/sgx: Call cond_resched() at the end of sgx_reclaim_pages()
-  x86/sgx: Store struct sgx_encl when allocating new VA pages
-  x86/sgx: Introduce RECLAIM_IN_PROGRESS flag for EPC pages
-  x86/sgx: Use a list to track to-be-reclaimed pages during reclaim
-  x86/sgx: Allow reclaiming up to 32 pages, but scan 16 by default
-  x86/sgx: Return the number of EPC pages that were successfully
-    reclaimed
-  x86/sgx: Add option to ignore age of page during EPC reclaim
-  x86/sgx: Prepare for multiple LRUs
-  x86/sgx: Expose sgx_reclaim_pages() for use by EPC cgroup
-  x86/sgx: Add helper to grab pages from an arbitrary EPC LRU
-  x86/sgx: Add EPC OOM path to forcefully reclaim EPC
-
- Documentation/x86/sgx.rst            |  77 ++++
- arch/x86/Kconfig                     |  13 +
- arch/x86/kernel/cpu/sgx/Makefile     |   1 +
- arch/x86/kernel/cpu/sgx/encl.c       |  90 ++++-
- arch/x86/kernel/cpu/sgx/encl.h       |   4 +-
- arch/x86/kernel/cpu/sgx/epc_cgroup.c | 539 +++++++++++++++++++++++++++
- arch/x86/kernel/cpu/sgx/epc_cgroup.h |  59 +++
- arch/x86/kernel/cpu/sgx/ioctl.c      |  14 +-
- arch/x86/kernel/cpu/sgx/main.c       | 412 ++++++++++++++++----
- arch/x86/kernel/cpu/sgx/sgx.h        | 122 +++++-
- arch/x86/kernel/cpu/sgx/virt.c       |  28 +-
- include/linux/misc_cgroup.h          |  35 ++
- kernel/cgroup/misc.c                 |  76 +++-
- 13 files changed, 1341 insertions(+), 129 deletions(-)
- create mode 100644 arch/x86/kernel/cpu/sgx/epc_cgroup.c
- create mode 100644 arch/x86/kernel/cpu/sgx/epc_cgroup.h
-
+diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
+index 39cb15a8abcb..5e6d88438fae 100644
+--- a/arch/x86/kernel/cpu/sgx/sgx.h
++++ b/arch/x86/kernel/cpu/sgx/sgx.h
+@@ -90,6 +90,71 @@ static inline void *sgx_get_epc_virt_addr(struct sgx_epc_page *page)
+ 	return section->virt_addr + index * PAGE_SIZE;
+ }
+ 
++/*
++ * This data structure wraps a list of reclaimable EPC pages, and a list of
++ * non-reclaimable EPC pages and is used to implement a LRU policy during
++ * reclamation.
++ */
++struct sgx_epc_lru_lists {
++	spinlock_t lock;
++	struct list_head reclaimable;
++	struct list_head unreclaimable;
++};
++
++static inline void sgx_lru_init(struct sgx_epc_lru_lists *lrus)
++{
++	spin_lock_init(&lrus->lock);
++	INIT_LIST_HEAD(&lrus->reclaimable);
++	INIT_LIST_HEAD(&lrus->unreclaimable);
++}
++
++/*
++ * Must be called with queue lock acquired
++ */
++static inline void __sgx_epc_page_list_push(struct list_head *list, struct sgx_epc_page *page)
++{
++	list_add_tail(&page->list, list);
++}
++
++/*
++ * Must be called with queue lock acquired
++ */
++static inline struct sgx_epc_page * __sgx_epc_page_list_pop(struct list_head *list)
++{
++	struct sgx_epc_page *epc_page;
++
++	if (list_empty(list))
++		return NULL;
++
++	epc_page = list_first_entry(list, struct sgx_epc_page, list);
++	list_del_init(&epc_page->list);
++	return epc_page;
++}
++
++static inline struct sgx_epc_page *
++sgx_epc_pop_reclaimable(struct sgx_epc_lru_lists *lrus)
++{
++	return __sgx_epc_page_list_pop(&(lrus)->reclaimable);
++}
++
++static inline void sgx_epc_push_reclaimable(struct sgx_epc_lru_lists *lrus,
++					    struct sgx_epc_page *page)
++{
++	__sgx_epc_page_list_push(&(lrus)->reclaimable, page);
++}
++
++static inline struct sgx_epc_page *
++sgx_epc_pop_unreclaimable(struct sgx_epc_lru_lists *lrus)
++{
++	return __sgx_epc_page_list_pop(&(lrus)->unreclaimable);
++}
++
++static inline void sgx_epc_push_unreclaimable(struct sgx_epc_lru_lists *lrus,
++					      struct sgx_epc_page *page)
++{
++	__sgx_epc_page_list_push(&(lrus)->unreclaimable, page);
++}
++
+ struct sgx_epc_page *__sgx_alloc_epc_page(void);
+ void sgx_free_epc_page(struct sgx_epc_page *page);
+ 
 -- 
 2.38.1
 
