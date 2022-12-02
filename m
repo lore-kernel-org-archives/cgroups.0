@@ -1,73 +1,303 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3 3/3] selftests: cgroup: make sure reclaim target memcg is unprotected
-Date: Fri,  2 Dec 2022 03:15:12 +0000
-Message-ID: <20221202031512.1365483-4-yosryahmed@google.com>
-References: <20221202031512.1365483-1-yosryahmed@google.com>
+From: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC PATCH v2] mm: Add nodes= arg to memory.reclaim
+Date: Fri, 02 Dec 2022 11:25:44 +0800
+Message-ID: <878rjq32rr.fsf@yhuang6-desk2.ccr.corp.intel.com>
+References: <20221130020328.1009347-1-almasrymina@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=bNyz6y2Y8+pcZcYRhDrKnevmtY0/xVh2JMC54suzd2M=;
-        b=c5bVHWOVWFxZh/IsKMqBecLiB8RmgVwYrX1GzaIQJrvdCmfUyfs8qg0W9hhScf5hH4
-         mG1HkIkP0USGP4r6R6YG/H5u+ozhVJBPbINAptVF+p7iL7Zdme2Si3JoPCUQg5PnuM8i
-         9sgrk6G5d9YLX23J/vJ2Mgm92LjuGfj+UUMBTfr4WknUpFkwvTonc3miyBG+12r8p9WO
-         rKEJGNGnV/+QeTnBLn5B4wArNPSCesKqvyX6p+9fULbYoMK0hz3Mmtd+Zort4W8lRQ75
-         zHRyiG+ShUvq2dHWqAQo/BfIP9kKzWFVg6HrESVMYli7xM6bVzIBYa/ChJND9QG28tZc
-         zf6A==
-In-Reply-To: <20221202031512.1365483-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1669951598; x=1701487598;
+  h=from:to:cc:subject:references:date:in-reply-to:
+   message-id:mime-version;
+  bh=G2O1ipvqOEkk0tycNq2YMbH51tXGO4FlNOqpgufvoTY=;
+  b=jS+Fq5i6gqSl4gmxg2t0sR8aN17hXeQhH/mn1QhSE1qeRnwu/xS3ufXd
+   xzK30XTZeGZON249wECcmWP3yk1Hx5/WB3KGABaYlDS9unA15iDysZzVP
+   Sd6d9euJM8oH06J1MMXIsBDfiQ8lWCfhauyvyzMo0+cs8ZWcGoodYANxR
+   c8MPeu2Xu0n3gkzegR1Fgrc3XW+c0Xo0UBHoHd+Q/8pqVrcmxxjzvt8dW
+   KnrhvRtfTTVRoj27F47rL94yjWtdKrtwdNK8fRd6+mEn2oP6l1Zlr6Us6
+   /8uZKMPXwg3keVp4e965QQ63yWB6c4DPuKH3VX9xSlaYhsvaATApKqu+E
+   w==;
+In-Reply-To: <20221130020328.1009347-1-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> (Mina Almasry's
+        message of "Tue, 29 Nov 2022 18:03:27 -0800")
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fvdl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Make sure that we ignore protection of a memcg that is the target of
-memcg reclaim.
+Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> writes:
 
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
----
- tools/testing/selftests/cgroup/test_memcontrol.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+> The nodes= arg instructs the kernel to only scan the given nodes for
+> proactive reclaim. For example use cases, consider a 2 tier memory system:
+>
+> nodes 0,1 -> top tier
+> nodes 2,3 -> second tier
+>
+> $ echo "1m nodes=0" > memory.reclaim
+>
+> This instructs the kernel to attempt to reclaim 1m memory from node 0.
+> Since node 0 is a top tier node, demotion will be attempted first. This
+> is useful to direct proactive reclaim to specific nodes that are under
+> pressure.
+>
+> $ echo "1m nodes=2,3" > memory.reclaim
+>
+> This instructs the kernel to attempt to reclaim 1m memory in the second tier,
+> since this tier of memory has no demotion targets the memory will be
+> reclaimed.
+>
+> $ echo "1m nodes=0,1" > memory.reclaim
+>
+> Instructs the kernel to reclaim memory from the top tier nodes, which can
+> be desirable according to the userspace policy if there is pressure on
+> the top tiers. Since these nodes have demotion targets, the kernel will
+> attempt demotion first.
+>
+> Since commit 3f1509c57b1b ("Revert "mm/vmscan: never demote for memcg
+> reclaim""), the proactive reclaim interface memory.reclaim does both
+> reclaim and demotion. Reclaim and demotion incur different latency costs
+> to the jobs in the cgroup. Demoted memory would still be addressable
+> by the userspace at a higher latency, but reclaimed memory would need to
+> incur a pagefault.
+>
+> The 'nodes' arg is useful to allow the userspace to control demotion
+> and reclaim independently according to its policy: if the memory.reclaim
+> is called on a node with demotion targets, it will attempt demotion first;
+> if it is called on a node without demotion targets, it will only attempt
+> reclaim.
+>
+> Signed-off-by: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst | 15 +++---
+>  include/linux/swap.h                    |  3 +-
+>  mm/memcontrol.c                         | 67 ++++++++++++++++++++-----
+>  mm/vmscan.c                             |  4 +-
+>  4 files changed, 68 insertions(+), 21 deletions(-)
+>
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 74cec76be9f2..ac5fcbcd5ae6 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1245,17 +1245,13 @@ PAGE_SIZE multiple when read back.
+>  	This is a simple interface to trigger memory reclaim in the
+>  	target cgroup.
+>
+> -	This file accepts a single key, the number of bytes to reclaim.
+> -	No nested keys are currently supported.
+> +	This file accepts a string which contains the number of bytes to
+> +	reclaim.
+>
+>  	Example::
+>
+>  	  echo "1G" > memory.reclaim
+>
+> -	The interface can be later extended with nested keys to
+> -	configure the reclaim behavior. For example, specify the
+> -	type of memory to reclaim from (anon, file, ..).
+> -
+>  	Please note that the kernel can over or under reclaim from
+>  	the target cgroup. If less bytes are reclaimed than the
+>  	specified amount, -EAGAIN is returned.
+> @@ -1267,6 +1263,13 @@ PAGE_SIZE multiple when read back.
+>  	This means that the networking layer will not adapt based on
+>  	reclaim induced by memory.reclaim.
+>
+> +	This file also allows the user to specify the nodes to reclaim from,
+> +	via the 'nodes=' key, example::
+> +
+> +	  echo "1G nodes=0,1" > memory.reclaim
+> +
+> +	The above instructs the kernel to reclaim memory from nodes 0,1.
+> +
+>    memory.peak
+>  	A read-only single value file which exists on non-root
+>  	cgroups.
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index b61e2007d156..f542c114dffd 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -419,7 +419,8 @@ extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+>  extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+>  						  unsigned long nr_pages,
+>  						  gfp_t gfp_mask,
+> -						  unsigned int reclaim_options);
+> +						  unsigned int reclaim_options,
+> +						  nodemask_t nodemask);
+>  extern unsigned long mem_cgroup_shrink_node(struct mem_cgroup *mem,
+>  						gfp_t gfp_mask, bool noswap,
+>  						pg_data_t *pgdat,
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 23750cec0036..a0d7850173a9 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -63,6 +63,7 @@
+>  #include <linux/resume_user_mode.h>
+>  #include <linux/psi.h>
+>  #include <linux/seq_buf.h>
+> +#include <linux/parser.h>
+>  #include "internal.h"
+>  #include <net/sock.h>
+>  #include <net/ip.h>
+> @@ -2392,7 +2393,8 @@ static unsigned long reclaim_high(struct mem_cgroup *memcg,
+>  		psi_memstall_enter(&pflags);
+>  		nr_reclaimed += try_to_free_mem_cgroup_pages(memcg, nr_pages,
+>  							gfp_mask,
+> -							MEMCG_RECLAIM_MAY_SWAP);
+> +							MEMCG_RECLAIM_MAY_SWAP,
+> +							NODE_MASK_ALL);
+>  		psi_memstall_leave(&pflags);
+>  	} while ((memcg = parent_mem_cgroup(memcg)) &&
+>  		 !mem_cgroup_is_root(memcg));
+> @@ -2683,7 +2685,8 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>
+>  	psi_memstall_enter(&pflags);
+>  	nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
+> -						    gfp_mask, reclaim_options);
+> +						    gfp_mask, reclaim_options,
+> +						    NODE_MASK_ALL);
+>  	psi_memstall_leave(&pflags);
+>
+>  	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
+> @@ -3503,7 +3506,8 @@ static int mem_cgroup_resize_max(struct mem_cgroup *memcg,
+>  		}
+>
+>  		if (!try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL,
+> -					memsw ? 0 : MEMCG_RECLAIM_MAY_SWAP)) {
+> +					memsw ? 0 : MEMCG_RECLAIM_MAY_SWAP,
+> +					NODE_MASK_ALL)) {
+>  			ret = -EBUSY;
+>  			break;
+>  		}
+> @@ -3614,7 +3618,8 @@ static int mem_cgroup_force_empty(struct mem_cgroup *memcg)
+>  			return -EINTR;
+>
+>  		if (!try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL,
+> -						  MEMCG_RECLAIM_MAY_SWAP))
+> +						  MEMCG_RECLAIM_MAY_SWAP,
+> +						  NODE_MASK_ALL))
+>  			nr_retries--;
+>  	}
+>
+> @@ -6407,7 +6412,8 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
+>  		}
+>
+>  		reclaimed = try_to_free_mem_cgroup_pages(memcg, nr_pages - high,
+> -					GFP_KERNEL, MEMCG_RECLAIM_MAY_SWAP);
+> +					GFP_KERNEL, MEMCG_RECLAIM_MAY_SWAP,
+> +					NODE_MASK_ALL);
+>
+>  		if (!reclaimed && !nr_retries--)
+>  			break;
+> @@ -6456,7 +6462,8 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
+>
+>  		if (nr_reclaims) {
+>  			if (!try_to_free_mem_cgroup_pages(memcg, nr_pages - max,
+> -					GFP_KERNEL, MEMCG_RECLAIM_MAY_SWAP))
+> +					GFP_KERNEL, MEMCG_RECLAIM_MAY_SWAP,
+> +					NODE_MASK_ALL))
+>  				nr_reclaims--;
+>  			continue;
+>  		}
+> @@ -6579,21 +6586,54 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
+>  	return nbytes;
+>  }
+>
+> +enum {
+> +	MEMORY_RECLAIM_NODES = 0,
+> +	MEMORY_RECLAIM_NULL,
+> +};
+> +
+> +static const match_table_t if_tokens = {
+> +	{ MEMORY_RECLAIM_NODES, "nodes=%s" },
+> +	{ MEMORY_RECLAIM_NULL, NULL },
+> +};
+> +
+>  static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+>  			      size_t nbytes, loff_t off)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
+>  	unsigned int nr_retries = MAX_RECLAIM_RETRIES;
+>  	unsigned long nr_to_reclaim, nr_reclaimed = 0;
+> -	unsigned int reclaim_options;
+> -	int err;
+> +	unsigned int reclaim_options = MEMCG_RECLAIM_MAY_SWAP |
+> +				       MEMCG_RECLAIM_PROACTIVE;
+> +	char *old_buf, *start;
+> +	substring_t args[MAX_OPT_ARGS];
+> +	int token;
+> +	char value[256];
+> +	nodemask_t nodemask = NODE_MASK_ALL;
+>
+>  	buf = strstrip(buf);
+> -	err = page_counter_memparse(buf, "", &nr_to_reclaim);
+> -	if (err)
+> -		return err;
+>
+> -	reclaim_options	= MEMCG_RECLAIM_MAY_SWAP | MEMCG_RECLAIM_PROACTIVE;
+> +	old_buf = buf;
+> +	nr_to_reclaim = memparse(buf, &buf) / PAGE_SIZE;
+> +	if (buf == old_buf)
+> +		return -EINVAL;
+> +
+> +	buf = strstrip(buf);
+> +
+> +	while ((start = strsep(&buf, " ")) != NULL) {
+> +		if (!strlen(start))
+> +			continue;
+> +		token = match_token(start, if_tokens, args);
+> +		match_strlcpy(value, args, sizeof(value));
 
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index a8f4700353a4..1e616a8c6a9c 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -238,6 +238,8 @@ static int cg_test_proc_killed(const char *cgroup)
- 	return -1;
- }
- 
-+static bool reclaim_until(const char *memcg, long goal);
-+
- /*
-  * First, this test creates the following hierarchy:
-  * A       memory.min = 0,    memory.max = 200M
-@@ -266,6 +268,12 @@ static int cg_test_proc_killed(const char *cgroup)
-  * unprotected memory in A available, and checks that:
-  * a) memory.min protects pagecache even in this case,
-  * b) memory.low allows reclaiming page cache with low events.
-+ *
-+ * Then we try to reclaim from A/B/C using memory.reclaim until its
-+ * usage reaches 10M.
-+ * This makes sure that:
-+ * (a) We ignore the protection of the reclaim target memcg.
-+ * (b) The previously calculated emin value (~29M) should be dismissed.
-  */
- static int test_memcg_protection(const char *root, bool min)
- {
-@@ -385,6 +393,9 @@ static int test_memcg_protection(const char *root, bool min)
- 	if (!values_close(cg_read_long(parent[1], "memory.current"), MB(50), 3))
- 		goto cleanup;
- 
-+	if (!reclaim_until(children[0], MB(10)))
-+		goto cleanup;
-+
- 	if (min) {
- 		ret = KSFT_PASS;
- 		goto cleanup;
--- 
-2.39.0.rc0.267.gcb52ba06e7-goog
+Per my understanding, we don't need to copy the string, because strsep()
+has replaced " " with "\0".  Right?
 
+Best Regards,
+Huang, Ying
+
+> +		switch (token) {
+> +		case MEMORY_RECLAIM_NODES:
+> +			if (nodelist_parse(value, nodemask) < 0)
+> +				return -EINVAL;
+> +			break;
+> +		default:
+> +			return -EINVAL;
+> +		}
+> +	}
+> +
+>  	while (nr_reclaimed < nr_to_reclaim) {
+>  		unsigned long reclaimed;
+>
+> @@ -6610,7 +6650,8 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+>
+>  		reclaimed = try_to_free_mem_cgroup_pages(memcg,
+>  						nr_to_reclaim - nr_reclaimed,
+> -						GFP_KERNEL, reclaim_options);
+> +						GFP_KERNEL, reclaim_options,
+> +						nodemask);
+>
+>  		if (!reclaimed && !nr_retries--)
+>  			return -EAGAIN;
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 7b8e8e43806b..23fc5b523764 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -6735,7 +6735,8 @@ unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
+>  unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+>  					   unsigned long nr_pages,
+>  					   gfp_t gfp_mask,
+> -					   unsigned int reclaim_options)
+> +					   unsigned int reclaim_options,
+> +					   nodemask_t nodemask)
+>  {
+>  	unsigned long nr_reclaimed;
+>  	unsigned int noreclaim_flag;
+> @@ -6750,6 +6751,7 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+>  		.may_unmap = 1,
+>  		.may_swap = !!(reclaim_options & MEMCG_RECLAIM_MAY_SWAP),
+>  		.proactive = !!(reclaim_options & MEMCG_RECLAIM_PROACTIVE),
+> +		.nodemask = &nodemask,
+>  	};
+>  	/*
+>  	 * Traverse the ZONELIST_FALLBACK zonelist of the current node to put
+> --
+> 2.38.1.584.g0f3c55d4c2-goog
