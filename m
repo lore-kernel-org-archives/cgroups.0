@@ -1,85 +1,104 @@
-From: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH v2] mm: Add nodes= arg to memory.reclaim
-Date: Thu, 1 Dec 2022 22:24:14 -0800
-Message-ID: <CAHS8izPCh+=iUMVP4Xa7FLXc=xtWc7VkLSpk2gugL=f0koBb=Q@mail.gmail.com>
-References: <20221130020328.1009347-1-almasrymina@google.com>
- <20221201213202.ycdaymwojd5plyrk@google.com> <CAHS8izOn3Kr8vqxHYxEoGVoCXKmysRKNsvXpJ2EumxDU6JfSDQ@mail.gmail.com>
- <F2917C72-A6F4-4969-B044-211F0D3856F1@linux.dev>
+From: =?utf-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= 
+        <chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: protect the memory in cgroup from being
+ oom killed
+Date: Fri, 2 Dec 2022 08:37:52 +0000
+Message-ID: <771CC621-A19E-4174-B3D0-F451B1D7D69A@didiglobal.com>
+References: <Y4jFnY7kMdB8ReSW@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Te7nlf3tgyUNylw2aLfROy5KSdSnYYCg2lheu+/mNdA=;
-        b=Art8F8H5odERe6K4OJ3za/Tpr9HcQMtpyUw+7q20j9n80APvjUKLAAlCGf1PtUSU2X
-         Nc6j/6jRvymlfAU/yUZQbQCrW/qVUZa6Wfl8kaPO2RHQe5gbo7mi5RM7qWIZuFUVop/U
-         g86j/y5PvFCJz08peZHJF2OKYM8EGbJrv7R0Ah8CW8xACEEFrLXA18RhzmSGzhijdNr0
-         JZCPDK8PyDAMZOWOrbKygSFcoALwbQzlQu4LgBXoNVfdgnEY8zgoDKsexwFDTrw8Aff2
-         X6n0ewZAndF6JrFPEh/du/7DLAQ0hqZb+9wk4dCFJbWMcIXW5LA9PmPbkMTSKQBIpNbh
-         M5Xw==
-In-Reply-To: <F2917C72-A6F4-4969-B044-211F0D3856F1-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+In-Reply-To: <Y4jFnY7kMdB8ReSW-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: zh-CN
+Content-ID: <5B5BD234FEA1914B8C9C78E8E2953F58-j11cvHKnkmPwvR0lvYjcXw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fvdl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Doc Mailing List <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Tao pilgrim <pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "corbet-T1hC0tSOHrs@public.gmane.org" <corbet-T1hC0tSOHrs@public.gmane.org>, "roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <cgel.zte-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "ran.xiaokai-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org" <ran.xiaokai-Th6q7B73Y6EnDS1+zs4M5A@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, "Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Thu, Dec 1, 2022 at 10:05 PM Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
->
->
->
-> > On Dec 2, 2022, at 06:10, Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >
-> > On Thu, Dec 1, 2022 at 1:32 PM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >>
-> >> On Tue, Nov 29, 2022 at 06:03:27PM -0800, Mina Almasry wrote:
-> >> [...]
-> >>> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> >>> index 7b8e8e43806b..23fc5b523764 100644
-> >>> --- a/mm/vmscan.c
-> >>> +++ b/mm/vmscan.c
-> >>> @@ -6735,7 +6735,8 @@ unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
-> >>> unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
-> >>>                                         unsigned long nr_pages,
-> >>>                                         gfp_t gfp_mask,
-> >>> -                                        unsigned int reclaim_options)
-> >>> +                                        unsigned int reclaim_options,
-> >>> +                                        nodemask_t nodemask)
-> >>
-> >> Can you please make this parameter a nodemask_t* and pass NULL instead
-> >> of NODE_MASK_ALL?
-> >
-> > Thank you very much for the review. I sure can in the next version. To
-> > be honest I thought about that and made the parameter nodemask_t
-> > because I thought the call sites would be more readable. I.e. this:
-> >
-> >    try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL,
-> > MEMCG_RECLAIM_MAY_SWAP,  NODE_MASK_ALL);
->
-> nodemask_t is an array, which can be large depending on CONFIG_NODES_SHIFT.
-> I don't think passing a big array is an efficient way. So I agree with Shakeel.
->
-
-Ah, yes, I think the nodemask_t ends up compiling to something like:
-
-typedef struct {
-    unsigned long name[BITS_TO_LONGS(MAX_NUMNODES)]
- } nodemask_t;
-
-If it was an array it would be passed by reference anway, but I think
-if it is a struct containing an array the array will get copied
-indeed. Sure, I will fix in the next version.
-
-> Thanks.
->
-> >
-> > Would be more readable than this:
-> >
-> >    try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL,
-> > MEMCG_RECLAIM_MAY_SWAP,  NULL);
-> >
-> > But the tradeoff is that the callers need include/linux/nodemask.h.
-> > But yes I can fix in the next version.
-> >
->
+QXQgMjAyMi0xMi0wMSAyMzoxNzo0OSwgIk1pY2hhbCBIb2NrbyIgPG1ob2Nrb0BzdXNlLmNvbT4g
+d3JvdGU6DQo+T24gVGh1IDAxLTEyLTIyIDE0OjMwOjExLCDnqIvlnrLmtpsgQ2hlbmdrYWl0YW8g
+Q2hlbmcgd3JvdGU6DQo+PiBBdCAyMDIyLTEyLTAxIDIxOjA4OjI2LCAiTWljaGFsIEhvY2tvIiA8
+bWhvY2tvQHN1c2UuY29tPiB3cm90ZToNCj4+ID5PbiBUaHUgMDEtMTItMjIgMTM6NDQ6NTgsIE1p
+Y2hhbCBIb2NrbyB3cm90ZToNCj4+ID4+IE9uIFRodSAwMS0xMi0yMiAxMDo1MjozNSwg56iL5Z6y
+5rabIENoZW5na2FpdGFvIENoZW5nIHdyb3RlOg0KPj4gPj4gPiBBdCAyMDIyLTEyLTAxIDE2OjQ5
+OjI3LCAiTWljaGFsIEhvY2tvIiA8bWhvY2tvQHN1c2UuY29tPiB3cm90ZToNCj4+ID5bLi4uXQ0K
+Pj4gPj4gVGhlcmUgaXMgYSBtaXN1bmRlcnN0YW5kaW5nLCBvb20ucHJvdGVjdCBkb2VzIG5vdCBy
+ZXBsYWNlIHRoZSB1c2VyJ3MgDQo+PiA+PiB0YWlsZWQgcG9saWNpZXMsIEl0cyBwdXJwb3NlIGlz
+IHRvIG1ha2UgaXQgZWFzaWVyIGFuZCBtb3JlIGVmZmljaWVudCBmb3IgDQo+PiA+PiB1c2VycyB0
+byBjdXN0b21pemUgcG9saWNpZXMsIG9yIHRyeSB0byBhdm9pZCB1c2VycyBjb21wbGV0ZWx5IGFi
+YW5kb25pbmcgDQo+PiA+PiB0aGUgb29tIHNjb3JlIHRvIGZvcm11bGF0ZSBuZXcgcG9saWNpZXMu
+DQo+PiA+DQo+PiA+IFRoZW4geW91IHNob3VsZCBmb2N1cyBvbiBleHBsYWluaW5nIG9uIGhvdyB0
+aGlzIG1ha2VzIHRob3NlIHBvbGljaWVzIGFuZA0KPj4gPiBlYXNpZXIgYW5kIG1vZSBlZmZpY2ll
+bnQuIEkgZG8gbm90IHNlZSBpdC4NCj4+IA0KPj4gSW4gZmFjdCwgdGhlcmUgYXJlIHNvbWUgcmVs
+ZXZhbnQgY29udGVudHMgaW4gdGhlIHByZXZpb3VzIGNoYXQgcmVjb3Jkcy4gDQo+PiBJZiBvb20u
+cHJvdGVjdCBpcyBhcHBsaWVkLCBpdCB3aWxsIGhhdmUgdGhlIGZvbGxvd2luZyBiZW5lZml0cw0K
+Pj4gMS4gVXNlcnMgb25seSBuZWVkIHRvIGZvY3VzIG9uIHRoZSBtYW5hZ2VtZW50IG9mIHRoZSBs
+b2NhbCBjZ3JvdXAsIG5vdCB0aGUgDQo+PiBpbXBhY3Qgb24gb3RoZXIgdXNlcnMnIGNncm91cHMu
+DQo+DQo+UHJvdGVjdGlvbiBiYXNlZCBiYWxhbmNpbmcgY2Fubm90IHJlYWxseSB3b3JrIGluIGFu
+IGlzb2xhdGlvbi4NCg0KSSB0aGluayB0aGF0IGEgY2dyb3VwIG9ubHkgbmVlZHMgdG8gY29uY2Vy
+biB0aGUgcHJvdGVjdGlvbiB2YWx1ZSBvZiB0aGUgY2hpbGQgDQpjZ3JvdXAsIHdoaWNoIGlzIGlu
+ZGVwZW5kZW50IGluIGEgY2VydGFpbiBzZW5zZS4NCg0KPj4gMi4gVXNlcnMgYW5kIHN5c3RlbSBk
+byBub3QgbmVlZCB0byBzcGVuZCBleHRyYSB0aW1lIG9uIGNvbXBsaWNhdGVkIGFuZCANCj4+IHJl
+cGVhdGVkIHNjYW5uaW5nIGFuZCBjb25maWd1cmF0aW9uLiBUaGV5IGp1c3QgbmVlZCB0byBjb25m
+aWd1cmUgdGhlIA0KPj4gb29tLnByb3RlY3Qgb2Ygc3BlY2lmaWMgY2dyb3Vwcywgd2hpY2ggaXMg
+YSBvbmUtdGltZSB0YXNrDQo+DQo+VGhpcyB3aWxsIG5vdCB3b3JrIHNhbWUgd2F5IGFzIHRoZSBt
+ZW1vcnkgcmVjbGFpbSBwcm90ZWN0aW9uIGNhbm5vdCB3b3JrDQo+aW4gYW4gaXNvbGF0aW9uIG9u
+IHRoZSBtZW1jZyBsZXZlbC4NCg0KVGhlIHBhcmVudCBjZ3JvdXAncyBvb20ucHJvdGVjdCBjYW4g
+Y2hhbmdlIHRoZSBhY3R1YWwgcHJvdGVjdGVkIG1lbW9yeSBzaXplIA0Kb2YgdGhlIGNoaWxkIGNn
+cm91cCwgd2hpY2ggaXMgZXhhY3RseSB3aGF0IHdlIG5lZWQuIEJlY2F1c2Ugb2YgaXQsIHRoZSBj
+aGlsZCBjZ3JvdXAgDQpjYW4gc2V0IGl0cyBvd24gb29tLnByb3RlY3QgYXQgd2lsbC4NCg0KPj4g
+Pj4gPiA+V2h5IGNhbm5vdCB5b3Ugc2ltcGx5IGRpc2NvdW50IHRoZSBwcm90ZWN0aW9uIGZyb20g
+YWxsIHByb2Nlc3Nlcw0KPj4gPj4gPiA+ZXF1YWxseT8gSSBkbyBub3QgZm9sbG93IHdoeSB0aGUg
+dGFza191c2FnZSBoYXMgdG8gcGxheSBhbnkgcm9sZSBpbg0KPj4gPj4gPiA+dGhhdC4NCj4+ID4+
+ID4gDQo+PiA+PiA+IElmIGFsbCBwcm9jZXNzZXMgYXJlIHByb3RlY3RlZCBlcXVhbGx5LCB0aGUg
+b29tIHByb3RlY3Rpb24gb2YgY2dyb3VwIGlzIA0KPj4gPj4gPiBtZWFuaW5nbGVzcy4gRm9yIGV4
+YW1wbGUsIGlmIHRoZXJlIGFyZSBtb3JlIHByb2Nlc3NlcyBpbiB0aGUgY2dyb3VwLCANCj4+ID4+
+ID4gdGhlIGNncm91cCBjYW4gcHJvdGVjdCBtb3JlIG1lbXMsIGl0IGlzIHVuZmFpciB0byBjZ3Jv
+dXBzIHdpdGggZmV3ZXIgDQo+PiA+PiA+IHByb2Nlc3Nlcy4gU28gd2UgbmVlZCB0byBrZWVwIHRo
+ZSB0b3RhbCBhbW91bnQgb2YgbWVtb3J5IHRoYXQgYWxsIA0KPj4gPj4gPiBwcm9jZXNzZXMgaW4g
+dGhlIGNncm91cCBuZWVkIHRvIHByb3RlY3QgY29uc2lzdGVudCB3aXRoIHRoZSB2YWx1ZSBvZiAN
+Cj4+ID4+ID4gZW9vbS5wcm90ZWN0Lg0KPj4gPj4gDQo+PiA+PiBZb3UgYXJlIG1peGluZyB0d28g
+ZGlmZmVyZW50IGNvbmNlcHRzIHRvZ2V0aGVyIEkgYW0gYWZyYWlkLiBUaGUgcGVyDQo+PiA+PiBt
+ZW1jZyBwcm90ZWN0aW9uIHNob3VsZCBwcm90ZWN0IHRoZSBjZ3JvdXAgKGkuZS4gYWxsIHByb2Nl
+c3NlcyBpbiB0aGF0DQo+PiA+PiBjZ3JvdXApIHdoaWxlIHlvdSB3YW50IGl0IHRvIGJlIGFsc28g
+cHJvY2VzcyBhd2FyZS4gVGhpcyByZXN1bHRzIGluIGENCj4+ID4+IHZlcnkgdW5jbGVhciBydW50
+aW1lIGJlaGF2aW9yIHdoZW4gYSBwcm9jZXNzIGZyb20gYSBtb3JlIHByb3RlY3RlZCBtZW1jZw0K
+Pj4gPj4gaXMgc2VsZWN0ZWQgYmFzZWQgb24gaXRzIGluZGl2aWR1YWwgbWVtb3J5IHVzYWdlLg0K
+Pj4gPg0KPj4gVGhlIGNvcnJlY3Qgc3RhdGVtZW50IGhlcmUgc2hvdWxkIGJlIHRoYXQgZWFjaCBt
+ZW1jZyBwcm90ZWN0aW9uIHNob3VsZCANCj4+IHByb3RlY3QgdGhlIG51bWJlciBvZiBtZW1zIHNw
+ZWNpZmllZCBieSB0aGUgb29tLnByb3RlY3QuIEZvciBleGFtcGxlLCANCj4+IGEgY2dyb3VwJ3Mg
+dXNhZ2UgaXMgNkcsIGFuZCBpdCdzIG9vbS5wcm90ZWN0IGlzIDJHLCB3aGVuIGFuIG9vbSBraWxs
+ZXIgb2NjdXJzLCANCj4+IEluIHRoZSB3b3JzdCBjYXNlLCB3ZSB3aWxsIG9ubHkgcmVkdWNlIHRo
+ZSBtZW1vcnkgdXNlZCBieSB0aGlzIGNncm91cCB0byAyRyANCj4+IHRocm91Z2ggdGhlIG9tIGtp
+bGxlci4NCj4NCj5JIGRvIG5vdCBzZWUgaG93IHRoYXQgY291bGQgYmUgZ3VhcmFudGVlZC4gUGxl
+YXNlIGtlZXAgaW4gbWluZCB0aGF0IGENCj5ub24tdHJpdmlhbCBhbW91bnQgb2YgbWVtb3J5IHJl
+c291cmNlcyBjb3VsZCBiZSBjb21wbGV0ZWx5IGluZGVwZW5kZW50DQo+b24gYW55IHByb2Nlc3Mg
+bGlmZSB0aW1lIChqdXN0IGNvbnNpZGVyIHRtcGZzIGFzIGEgdHJpdmlhbCBleGFtcGxlKS4NCj4N
+Cj4+ID5MZXQgbWUgYmUgbW9yZSBzcGVjaWZpYyBoZXJlLiBBbHRob3VnaCBpdCBpcyBwcmltYXJp
+bHkgcHJvY2Vzc2VzIHdoaWNoDQo+PiA+YXJlIHRoZSBwcmltYXJ5IHNvdXJjZSBvZiBtZW1jZyBj
+aGFyZ2VzIHRoZSBtZW1vcnkgYWNjb3VudGVkIGZvciB0aGUgb29tDQo+PiA+YmFkbmVzcyBwdXJw
+b3NlcyBpcyBub3QgcmVhbGx5IGNvbXBhcmFibGUgdG8gdGhlIG92ZXJhbCBtZW1jZyBjaGFyZ2Vk
+DQo+PiA+bWVtb3J5LiBLZXJuZWwgbWVtb3J5LCBub24tbWFwcGVkIG1lbW9yeSBhbGwgdGhhdCBj
+YW4gZ2VuZXJhdGUgcmF0aGVyDQo+PiA+aW50ZXJlc3RpbmcgY29ybmVyY2FzZXMuDQo+PiANCj4+
+IFNvcnJ5LCBJJ20gdGhvdWdodGxlc3MgZW5vdWdoIGFib3V0IHNvbWUgc3BlY2lhbCBtZW1vcnkg
+c3RhdGlzdGljcy4gSSB3aWxsIGZpeCANCj4+IGl0IGluIHRoZSBuZXh0IHZlcnNpb24NCj4NCj5M
+ZXQgbWUganVzdCBlbXBoYXNpc2UgdGhhdCB3ZSBhcmUgdGFsa2luZyBhYm91dCBmdW5kYW1lbnRh
+bCBkaXNjb25uZWN0Lg0KPlJzcyBiYXNlZCBhY2NvdW50aW5nIGhhcyBiZWVuIHVzZWQgZm9yIHRo
+ZSBPT00ga2lsbGVyIHNlbGVjdGlvbiBiZWNhdXNlDQo+dGhlIG1lbW9yeSBnZXRzIHVubWFwcGVk
+IGFuZCBfcG90ZW50aWFsbHlfIGZyZWVkIHdoZW4gdGhlIHByb2Nlc3MgZ29lcw0KPmF3YXkuIE1l
+bWNnIGNoYW5nZXMgYXJlIGJvdW5kIHRvIHRoZSBvYmplY3QgbGlmZSB0aW1lIGFuZCBhcyBzYWlk
+IGluDQo+bWFueSBjYXNlcyB0aGVyZSBpcyBubyBkaXJlY3QgcmVsYXRpb24gd2l0aCBhbnkgcHJv
+Y2VzcyBsaWZlIHRpbWUuDQoNCkJhc2VkIG9uIHlvdXIgcXVlc3Rpb24sIEkgd2FudCB0byByZXZp
+c2UgdGhlIGZvcm11bGEgYXMgZm9sbG93cywNCnNjb3JlID0gdGFza191c2FnZSArIHNjb3JlX2Fk
+aiAqIHRvdGFscGFnZSAtIGVvb20ucHJvdGVjdCAqICh0YXNrX3VzYWdlIC0gdGFza19yc3NzaGFy
+ZSkgLyANCihsb2NhbF9tZW1jZ191c2FnZSArIGxvY2FsX21lbWNnX3N3YXBjYWNoZSkNCg0KQWZ0
+ZXIgdGhlIHByb2Nlc3MgaXMga2lsbGVkLCB0aGUgdW5tYXBwZWQgY2FjaGUgYW5kIHNoYXJlbWVt
+IHdpbGwgbm90IGJlIA0KcmVsZWFzZWQgaW1tZWRpYXRlbHksIHNvIHRoZXkgc2hvdWxkIG5vdCBh
+cHBseSB0byBjZ3JvdXAgZm9yIHByb3RlY3Rpb24gcXVvdGEuIA0KSW4gZXh0cmVtZSBlbnZpcm9u
+bWVudHMsIHRoZSBtZW1vcnkgdGhhdCBjYW5ub3QgYmUgcmVsZWFzZWQgYnkgdGhlIG9vbSBraWxs
+ZXIgDQooaS5lLiBzb21lIG1lbXMgdGhhdCBoYXZlIG5vdCBiZWVuIGNoYXJnZWQgdG8gdGhlIHBy
+b2Nlc3MpIG1heSBvY2N1cHkgYSBsYXJnZSANCnNoYXJlIG9mIHByb3RlY3Rpb24gcXVvdGEsIGJ1
+dCBpdCBpcyBleHBlY3RlZC4gT2YgY291cnNlLCB0aGUgaWRlYSBtYXkgaGF2ZSBzb21lIA0KcHJv
+YmxlbXMgdGhhdCBJIGhhdmVuJ3QgY29uc2lkZXJlZC4NCg0KPg0KPkhvcGUgdGhhdCBjbGFyaWZp
+ZXMuDQoNClRoYW5rcyBmb3IgeW91ciBjb21tZW50IQ0KY2hlbmdrYWl0YW8NCg0K
