@@ -1,24 +1,24 @@
 From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH v2 11/18] x86/sgx: Prepare for multiple LRUs
-Date: Fri,  2 Dec 2022 10:36:47 -0800
-Message-ID: <20221202183655.3767674-12-kristen@linux.intel.com>
+Subject: [PATCH v2 12/18] x86/sgx: Expose sgx_reclaim_pages() for use by EPC cgroup
+Date: Fri,  2 Dec 2022 10:36:48 -0800
+Message-ID: <20221202183655.3767674-13-kristen@linux.intel.com>
 References: <20221202183655.3767674-1-kristen@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1670006246; x=1701542246;
+  t=1670006247; x=1701542247;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=UYpUlq+6H1OK5zNVWPbJu6ZZ/ARyRWJyKUaDzZw64U4=;
-  b=XbcsOr+W7KNHyshrAEZOusqAx5gaBk4z2MtzqvNjf6HLhjwk5n678+Gk
-   9tnmKoaopQFpGbB6UZg/RAnD2bQmmBSZPBbKkhryB2t3j8soUeYs15B1R
-   z2PZUgXCTaz2V6IBtbh/14jVofCds1X5aQ+zAkR4w/b22Y8j9dwur1rAy
-   hPA5GOlwnA7Lt1Z4d/K6lqy9HMTo5FsuAE4aSWkJyz//igtdb+vZtGxTX
-   pl5J28hGUD7z+cVl1xHvZc2+bc94Xm09k4ymHMvdt+5alrAVSwFCKQJIj
-   oGG0iiA3ROdhWGhfLRZxhgNCwiBvi5EJj/VGuQ7kBiX+4YUllAgQnSdRl
-   w==;
+  bh=u7MsvLTiIZvWWxFFWya637LlOY9eT/xkcvSR43Ixrm0=;
+  b=l98QrOd6Zc3kV9pp1e/Y5UDr88q5aOK6i7f0g22DPKMNnUnZO+Sl7Wxt
+   6fn40zakseUtk0fAs5xblVWio3zuE/Uvq5k7HJr/KXfuFDFicahmpC9aw
+   ijJeAxjf3T8ZuwfhTnu9T4kplj5kgEFBgyehEmU0AuHzl9AwL1GzomRIt
+   xm1r2+Duohts2bkQaOnWEVBIqpMCme6NxZTJd+MfHXUIL8+gNSG5eB4S1
+   oLIEy5ChH6S0vkt+Y1m57js+gljza/QtMVOvHKw27ZRuNg5+VVI0Eb8Ns
+   FYpqxspTEBU75SMIeCd1YAku84toeAGpzNCyh6LZuM9BRckcZQFefrXFv
+   Q==;
 In-Reply-To: <20221202183655.3767674-1-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -27,46 +27,69 @@ Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Kristen Carlson Accardi
 
 From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Add sgx_can_reclaim() wrapper so that in a subsequent patch, multiple LRUs
-can be used cleanly.
+Expose the top-level reclaim function as sgx_reclaim_epc_pages() for use
+by the upcoming EPC cgroup, which will initiate reclaim to enforce
+changes to high/max limits.
 
 Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- arch/x86/kernel/cpu/sgx/main.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ arch/x86/kernel/cpu/sgx/main.c | 7 ++++---
+ arch/x86/kernel/cpu/sgx/sgx.h  | 1 +
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
-index db96483e2e74..96399e2016a8 100644
+index 96399e2016a8..c947b4ae06f3 100644
 --- a/arch/x86/kernel/cpu/sgx/main.c
 +++ b/arch/x86/kernel/cpu/sgx/main.c
-@@ -394,10 +394,15 @@ static int sgx_reclaim_pages(int nr_to_scan, bool ignore_age)
- 	return ret;
+@@ -281,6 +281,7 @@ static void sgx_reclaimer_write(struct sgx_epc_page *epc_page,
+ 
+ /**
+  * sgx_reclaim_pages() - Reclaim EPC pages from the consumers
++ * sgx_reclaim_epc_pages() - Reclaim EPC pages from the consumers
+  * @nr_to_scan:		 Number of EPC pages to scan for reclaim
+  * @ignore_age:		 Reclaim a page even if it is young
+  *
+@@ -385,7 +386,7 @@ static int __sgx_reclaim_pages(int nr_to_scan, bool ignore_age)
+ 	return i;
  }
  
-+static bool sgx_can_reclaim(void)
-+{
-+	return !list_empty(&sgx_global_lru.reclaimable);
-+}
-+
- static bool sgx_should_reclaim(unsigned long watermark)
+-static int sgx_reclaim_pages(int nr_to_scan, bool ignore_age)
++int sgx_reclaim_epc_pages(int nr_to_scan, bool ignore_age)
  {
- 	return atomic_long_read(&sgx_nr_free_pages) < watermark &&
--	       !list_empty(&sgx_global_lru.reclaimable);
-+		sgx_can_reclaim();
- }
+ 	int ret;
  
- /*
-@@ -606,7 +611,7 @@ struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim)
+@@ -441,7 +442,7 @@ static int ksgxd(void *p)
+ 				     sgx_should_reclaim(SGX_NR_HIGH_PAGES));
+ 
+ 		if (sgx_should_reclaim(SGX_NR_HIGH_PAGES))
+-			sgx_reclaim_pages(SGX_NR_TO_SCAN, false);
++			sgx_reclaim_epc_pages(SGX_NR_TO_SCAN, false);
+ 	}
+ 
+ 	return 0;
+@@ -624,7 +625,7 @@ struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim)
  			break;
  		}
  
--		if (list_empty(&sgx_global_lru.reclaimable))
-+		if (!sgx_can_reclaim())
- 			return ERR_PTR(-ENOMEM);
+-		sgx_reclaim_pages(SGX_NR_TO_SCAN, false);
++		sgx_reclaim_epc_pages(SGX_NR_TO_SCAN, false);
+ 	}
  
- 		if (!reclaim) {
+ 	if (sgx_should_reclaim(SGX_NR_LOW_PAGES))
+diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
+index ec8d567cd975..ce859331ddf5 100644
+--- a/arch/x86/kernel/cpu/sgx/sgx.h
++++ b/arch/x86/kernel/cpu/sgx/sgx.h
+@@ -206,6 +206,7 @@ void sgx_reclaim_direct(void);
+ void sgx_record_epc_page(struct sgx_epc_page *page, unsigned long flags);
+ int sgx_drop_epc_page(struct sgx_epc_page *page);
+ struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim);
++int sgx_reclaim_epc_pages(int nr_to_scan, bool ignore_age);
+ 
+ void sgx_ipi_cb(void *info);
+ 
 -- 
 2.38.1
 
