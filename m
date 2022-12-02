@@ -1,64 +1,71 @@
-From: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 02/18] x86/sgx: Store struct sgx_encl when allocating
- new VA pages
-Date: Fri, 2 Dec 2022 22:49:46 +0000
-Message-ID: <Y4qBCjTcMdBLUNEB@google.com>
-References: <20221202183655.3767674-1-kristen@linux.intel.com>
- <20221202183655.3767674-3-kristen@linux.intel.com>
- <3a789b1c-4c70-158b-d764-daec141a5816@intel.com>
- <abfc00a2ab1d97f8081c696f78e2d0ced23902b4.camel@linux.intel.com>
- <2015ae96-5459-1f82-596b-f46af08ef766@intel.com>
- <Y4p9nKV+jpLnOVwD@google.com>
- <8b7f6993-2135-a9f9-63c5-c9c6112ef676@intel.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v3] mm: Add nodes= arg to memory.reclaim
+Date: Fri, 2 Dec 2022 15:51:05 -0800
+Message-ID: <CALvZod5teb-tLz49PWny7+cV9pUQUom7k9+G6rXOhDH1tji9Lg@mail.gmail.com>
+References: <20221202223533.1785418-1-almasrymina@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=zf9FQYPb7IhTgwhWHe3ZzCAFF6zYBHHq7kdqxOUK6iE=;
-        b=oNLuBgJV9pADQi48wDLKc0aHYvcSFy+n64QtfRVE9Qvx5jIC11Gt51rOMETOQtkv03
-         Z0DdLrYHUrjE6AdeCCYWYFCYeMIsQ72e9HoEC8r38Zbxx0WaQrTx24PhhcISBUgIm7zN
-         xy/lbDoWZw2Rid+3mwGaiU9YQSqJYu0o0Sda8PTfuMr1O5MOm0ZY/LZIaU83W223zhlz
-         H7bzOPrBMii4m5EvjoJLYdUryrPyA3YUDEVofre1+SCmjewkhBlw2C2QOruYvYJnO4u2
-         Q46PLNHcHnErGYNtJXbMc11k8/1mcmB9/epIn99dnC8IssY4IA6QGx+WDnN/X6U0phEw
-         9WBQ==
-Content-Disposition: inline
-In-Reply-To: <8b7f6993-2135-a9f9-63c5-c9c6112ef676-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=C9WKOxmWkfW4LPRSnLoIzD57XAizk9zr1vImUcT3N2Q=;
+        b=J+XH6uWAW3mtp9ryZERhIO5RTz7UpJXX0ISGrh6eiHEBZtQ5DccXuubGSINfjBtjYq
+         D+CSK2iBIfahhsUq5Gg7iKILITGVWaYVN5DKlN4Zn2ztLLehdBMGpZ5nHCZsPebuBi59
+         j+bw9yPdQu3fGW+O7V5X2UAes2SJFvvNnOyDFCI9m44m2i8C/Lnk9+MyJd1q/ZmYuzbY
+         xUJnCPgjHbY+6s514YFgBky0HhyI7X0JFrJvI6fSzGCkNJvHJnKQqc+Tr9brDL2F3Spk
+         nUrRfLWcMr/3iv6hWBdbH3MXUczM6er3HW/oTTwdCihni9ZRtzi/e8GAovQ85z9cg5rQ
+         GF/g==
+In-Reply-To: <20221202223533.1785418-1-almasrymina@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+To: Mina Almasry <almasrymina@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Huang Ying <ying.huang@intel.com>, Yang Shi <yang.shi@linux.alibaba.com>, Yosry Ahmed <yosryahmed@google.com>, weixugc@google.com, fvdl@google.com, Michal Hocko <mhocko@suse.com>, bagasdotme@gmail.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-On Fri, Dec 02, 2022, Dave Hansen wrote:
-> On 12/2/22 14:35, Sean Christopherson wrote:
-> >> That seems like it's going the other direction from what an OOM-kill
-> >> would need to do.
-> > Providing a backpointer from a VA page to its enclave allows OOM-killing the enclave
-> > if its cgroup is over the limit but there are no reclaimable pages for said cgroup
-> > (for SGX's definition of "reclaimable").  I.e. if all of an enclave's "regular"
-> > pages have been swapped out, the only thing left resident in the EPC will be the
-> > enclave's VA pages, which are not reclaimable in the kernel's current SGX
-> > implementation.
-> 
-> Ooooooooooooooooooooh.  I'm a dummy.
-> 
-> 
-> So, we've got a cgroup.  It's in OOM-kill mode and we're looking at the
-> *cgroup* LRU lists.  We've done everything we can to the enclave and
-> swapped everything out that we can.  All we're left with are these
-> crummy VA pages on the LRU (or equally crummy pages).  We want to
-> reclaim them but can't swap VA pages.  Our only recourse is to go to the
-> enclave and kill *it*.
-> 
-> Right now, we can easily find an enclave's VA pages and free them.  We
-> do that all the time when freeing whole enclaves.  But, what we can't
-> easily do is find an enclave given a VA page.
-> 
-> A reverse pointer from VA page back to enclave allows the VA page's
-> enclave to be located and efficiently killed.
-> 
-> Right?
+On Fri, Dec 2, 2022 at 2:37 PM Mina Almasry <almasrymina@google.com> wrote:
+>
+> The nodes= arg instructs the kernel to only scan the given nodes for
+> proactive reclaim. For example use cases, consider a 2 tier memory system:
+>
+> nodes 0,1 -> top tier
+> nodes 2,3 -> second tier
+>
+> $ echo "1m nodes=0" > memory.reclaim
+>
+> This instructs the kernel to attempt to reclaim 1m memory from node 0.
+> Since node 0 is a top tier node, demotion will be attempted first. This
+> is useful to direct proactive reclaim to specific nodes that are under
+> pressure.
+>
+> $ echo "1m nodes=2,3" > memory.reclaim
+>
+> This instructs the kernel to attempt to reclaim 1m memory in the second tier,
+> since this tier of memory has no demotion targets the memory will be
+> reclaimed.
+>
+> $ echo "1m nodes=0,1" > memory.reclaim
+>
+> Instructs the kernel to reclaim memory from the top tier nodes, which can
+> be desirable according to the userspace policy if there is pressure on
+> the top tiers. Since these nodes have demotion targets, the kernel will
+> attempt demotion first.
+>
+> Since commit 3f1509c57b1b ("Revert "mm/vmscan: never demote for memcg
+> reclaim""), the proactive reclaim interface memory.reclaim does both
+> reclaim and demotion. Reclaim and demotion incur different latency costs
+> to the jobs in the cgroup. Demoted memory would still be addressable
+> by the userspace at a higher latency, but reclaimed memory would need to
+> incur a pagefault.
+>
+> The 'nodes' arg is useful to allow the userspace to control demotion
+> and reclaim independently according to its policy: if the memory.reclaim
+> is called on a node with demotion targets, it will attempt demotion first;
+> if it is called on a node without demotion targets, it will only attempt
+> reclaim.
+>
+> Acked-by: Michal Hocko <mhocko@suse.com>
+> Signed-off-by: Mina Almasry <almasrymina@google.com>
+>
 
-Yep, exactly.
+Acked-by: Shakeel Butt <shakeelb@google.com>
