@@ -1,54 +1,149 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3 0/3] mm: memcg: fix protection of reclaim target memcg
-Date: Fri,  2 Dec 2022 03:15:09 +0000
-Message-ID: <20221202031512.1365483-1-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [PATCH v3 2/3] selftests: cgroup: refactor proactive reclaim code to reclaim_until()
+Date: Fri,  2 Dec 2022 03:15:11 +0000
+Message-ID: <20221202031512.1365483-3-yosryahmed@google.com>
+References: <20221202031512.1365483-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=lkiKsrGghY1+tqWu87j/dNVPvsb88bb2RpuXGbm+/VA=;
-        b=LXzuBlaIaDeExqyOu2SdEI33qKVHVaAEa6EBq1XyrSfE3rPSCPGLQMVSyRpXtUvgsv
-         rag+Aod0HZ1ICNfmgPf0FXBTk9sXmj6APzu29c5Vcz/J9gOfjBAozJ2PH+2isG/LYyXc
-         Yp85TmDwppCvYZoGFOjIx9LLQ9Z1QqdaG7UpMW3tN2jUFxqisPg6npmhYNF1MmkXUms8
-         VsjDCaKCzaKQYHmNTmXZEzIBmo5staiT+/m4ihPkR3p5IMQh9R8gVZYyC4MT4eFJbuxg
-         /6pZ6r3d1p1eOsOqeXVposFeHPyNUHmmdD900WgzrlQPSiIyIeFhwYx+u6N5VNukvH0r
-         udoA==
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=DuRs+eCOo373fWFIamKdpS1DYx9E7KO6vBATpERNpN8=;
+        b=P8OpmCy+hsdPsPghjVdy/8p6gbBKyWTBeA78u/eWGmraKF4XDkTC9BUAU4xols3RBJ
+         Eb3T4ls0TY54/uxuYu7J+7atf4/xsoYt0KtUeRT9Zb5hY23o7MjxGkNxTpE6HlEG6JLX
+         U4PTYctA7PHrrQ/iwUqeB94jmIuWs5SyK7sWXKJ1Nk2bdcheYAGV4dLM23SFnBy69R0L
+         vBw+xnHv9O+RKwOcXilgLaN2TxlnG+nleMjWKyBjPB5guj+1LDHVlpKt8044WVFp6kV+
+         prfW9gEk3LyWoDGd81vPJOKNBNtQiWQcZaS9NglCCm5pty1GVtmv0As3GfjkM/d/SVij
+         WH3g==
+In-Reply-To: <20221202031512.1365483-1-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <roman.gushchin@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.com>, Yu Zhao <yuzhao@google.com>, Muchun Song <songmuchun@bytedance.com>, Tejun Heo <tj@kernel.org>
+Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>, Vasily Averin <vasily.averin@linux.dev>, Vlastimil Babka <vbabka@suse.cz>, Chris Down <chris@chrisdown.name>, David Rientjes <rientjes@google.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Yosry Ahmed <yosryahmed@google.com>
 
-This series fixes a bug in calculating the protection of the reclaim
-target memcg where we end up using stale effective protection values from
-the last reclaim operation, instead of completely ignoring the
-protection of the reclaim target as intended. More detailed explanation
-and examples in patch 1, which includes the fix.
-Patches 2 & 3 introduce a selftest case that catches the bug.
+Refactor the code that drives writing to memory.reclaim (retrying, error
+handling, etc) from test_memcg_reclaim() to a helper called
+reclaim_until(), which proactively reclaims from a memcg until its
+usage reaches a certain value.
 
-v2 -> v3:
-- Refactoring selftest helper reclaim_until (suggested by Roman).
-- Collected review tags on patch 1 & 3 from Roman (Thanks!).
+While we are at it, refactor and simplify the reclaim loop.
 
-v1 -> v2:
-- Instead of adding a new helper, extended
-  mem_cgroup_supports_protection() to check if the current memcg is the
-  target memcg, renamed to mem_cgroup_unprotected() which is much easier
-  to reason about (suggested by Roman).
-- Add a selftest case to catch the bug (suggested by Roman).
+This will be used in a following patch in another test.
 
-Yosry Ahmed (3):
-  mm: memcg: fix stale protection of reclaim target memcg
-  selftests: cgroup: refactor proactive reclaim code to reclaim_until()
-  selftests: cgroup: make sure reclaim target memcg is unprotected
+Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+Suggested-by: Roman Gushchin <roman.gushchin@linux.dev>
+---
+ .../selftests/cgroup/test_memcontrol.c        | 80 ++++++++++---------
+ 1 file changed, 44 insertions(+), 36 deletions(-)
 
- include/linux/memcontrol.h                    | 31 +++++--
- mm/vmscan.c                                   | 11 ++-
- .../selftests/cgroup/test_memcontrol.c        | 91 +++++++++++--------
- 3 files changed, 82 insertions(+), 51 deletions(-)
-
+diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+index 8833359556f3..a8f4700353a4 100644
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c
++++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -645,6 +645,48 @@ static int test_memcg_max(const char *root)
+ 	return ret;
+ }
+ 
++/*
++ * Reclaim from @memcg until usage reaches @goal by writing to
++ * memory.reclaim.
++ *
++ * This function will return false if the usage is already below the
++ * goal.
++ *
++ * This function assumes that writing to memory.reclaim is the only
++ * source of change in memory.current (no concurrent allocations or
++ * reclaim).
++ *
++ * This function makes sure memory.reclaim is sane. It will return
++ * false if memory.reclaim's error codes do not make sense, even if
++ * the usage goal was satisfied.
++ */
++static bool reclaim_until(const char *memcg, long goal)
++{
++	char buf[64];
++	int retries, err;
++	long current, to_reclaim;
++	bool reclaimed = false;
++
++	for (retries = 5; retries > 0; retries--) {
++		current = cg_read_long(memcg, "memory.current");
++
++		if (current < goal || values_close(current, goal, 3))
++			break;
++		/* Did memory.reclaim return 0 incorrectly? */
++		else if (reclaimed)
++			return false;
++
++		to_reclaim = current - goal;
++		snprintf(buf, sizeof(buf), "%ld", to_reclaim);
++		err = cg_write(memcg, "memory.reclaim", buf);
++		if (!err)
++			reclaimed = true;
++		else if (err != -EAGAIN)
++			return false;
++	}
++	return reclaimed;
++}
++
+ /*
+  * This test checks that memory.reclaim reclaims the given
+  * amount of memory (from both anon and file, if possible).
+@@ -653,8 +695,7 @@ static int test_memcg_reclaim(const char *root)
+ {
+ 	int ret = KSFT_FAIL, fd, retries;
+ 	char *memcg;
+-	long current, expected_usage, to_reclaim;
+-	char buf[64];
++	long current, expected_usage;
+ 
+ 	memcg = cg_name(root, "memcg_test");
+ 	if (!memcg)
+@@ -705,41 +746,8 @@ static int test_memcg_reclaim(const char *root)
+ 	 * Reclaim until current reaches 30M, this makes sure we hit both anon
+ 	 * and file if swap is enabled.
+ 	 */
+-	retries = 5;
+-	while (true) {
+-		int err;
+-
+-		current = cg_read_long(memcg, "memory.current");
+-		to_reclaim = current - MB(30);
+-
+-		/*
+-		 * We only keep looping if we get EAGAIN, which means we could
+-		 * not reclaim the full amount.
+-		 */
+-		if (to_reclaim <= 0)
+-			goto cleanup;
+-
+-
+-		snprintf(buf, sizeof(buf), "%ld", to_reclaim);
+-		err = cg_write(memcg, "memory.reclaim", buf);
+-		if (!err) {
+-			/*
+-			 * If writing succeeds, then the written amount should have been
+-			 * fully reclaimed (and maybe more).
+-			 */
+-			current = cg_read_long(memcg, "memory.current");
+-			if (!values_close(current, MB(30), 3) && current > MB(30))
+-				goto cleanup;
+-			break;
+-		}
+-
+-		/* The kernel could not reclaim the full amount, try again. */
+-		if (err == -EAGAIN && retries--)
+-			continue;
+-
+-		/* We got an unexpected error or ran out of retries. */
++	if (!reclaim_until(memcg, MB(30)))
+ 		goto cleanup;
+-	}
+ 
+ 	ret = KSFT_PASS;
+ cleanup:
 -- 
 2.39.0.rc0.267.gcb52ba06e7-goog
 
