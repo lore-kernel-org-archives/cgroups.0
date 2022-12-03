@@ -1,64 +1,83 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3 1/3] mm: memcg: fix stale protection of reclaim target memcg
-Date: Fri, 2 Dec 2022 16:56:36 -0800
-Message-ID: <CAJD7tkZdq2n29P+nbiONzDrvZy0eRpCQfvVVX1A2SMYdV6TVZw@mail.gmail.com>
-References: <20221202031512.1365483-1-yosryahmed@google.com>
- <20221202031512.1365483-2-yosryahmed@google.com> <CAJD7tkZouk+r=Qk554AOk1-3eYy-gTC8KC+OJQY13ZkNZ9Qe+Q@mail.gmail.com>
- <20221202163527.a72646c9d42f3678b20dac7b@linux-foundation.org>
- <CAJD7tkapGALWoqrs+cbE8i1w4eDcdj=naHxqybPu6NLAnCZ0iQ@mail.gmail.com> <20221202165027.8d0761724f30f6701a9a5da0@linux-foundation.org>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=DPjZ7mvL7nYnQckkbN4QRAK9DHc9/tMCEO18HbgrivA=;
-        b=TLQIPa6gXHX7UTknaOw9/ETbs+uVF1fmEX74fdi9pMYVGiGbTNTYzeRZWh3UVan/A5
-         pgdygh7OpAFfNfU10yhfPrHmD1RPbAHkH571Ih/cObNYEwvWz4MfiIzl3RIhPhuVNRWn
-         Akv7MU3BSaPnJoowJnA5vNdzOyYKKugnxnxmH++c0xFDIis6hURGi68K3zljnG2ylZS2
-         FpBG1mEk6kbCq1bqwDv1XZDHvseqr0RdUee1wWlmpFiSR0CfuZ1k9HkOB/9rHqQmY9Lc
-         RKtzIiGlEPW68kLDLYfyiP0IcEdtwHWB7Ge9weEkCT2wr5yOO/MMZCSk+P+6nhIz7DzI
-         vA+w==
-In-Reply-To: <20221202165027.8d0761724f30f6701a9a5da0-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+From: Muchun Song <muchun.song@linux.dev>
+Subject: Re: [PATCH v3] mm: Add nodes= arg to memory.reclaim
+Date: Sat, 3 Dec 2022 11:17:10 +0800
+Message-ID: <EC963F6F-75C3-4168-97B3-544C36C2600A@linux.dev>
+References: <20221202223533.1785418-1-almasrymina@google.com>
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3731.200.110.1.12\))
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1670037449;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=yB//b1EitRmLn+k+QyZlckrtyNyeyMWH9FzHsotPYVg=;
+        b=ubL93lHJgSTgz+3zzH+QSRUgMV/lU7i9P2hA234RwUQaM5sly2K9vbBgeWb0vwoGJBxdx/
+        glDZK10V70CZbf0v9q9CummWFes9OBw5TNB9xxhy8eM0hCnc5G10YopaPIL8WS7DzpnGzu
+        9hsfB3qvJ5n8shNfCGlcwXzjKpvzL18=
+In-Reply-To: <20221202223533.1785418-1-almasrymina@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Mina Almasry <almasrymina@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Huang Ying <ying.huang@intel.com>, Yang Shi <yang.shi@linux.alibaba.com>, Yosry Ahmed <yosryahmed@google.com>, weixugc@google.com, fvdl@google.com, Michal Hocko <mhocko@suse.com>, bagasdotme@gmail.com, cgroups@vger.kernel.org, Linux Doc Mailing List <linux-doc@vger.kernel.org>, linux-kernel@vger.kernel.org, Linux Memory Management List <linux-mm@kvack.org>
 
-On Fri, Dec 2, 2022 at 4:50 PM Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
->
-> On Fri, 2 Dec 2022 16:38:12 -0800 Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> > On Fri, Dec 2, 2022 at 4:35 PM Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
-> > >
-> > > On Fri, 2 Dec 2022 16:26:05 -0800 Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> > >
-> > > > Andrew, does this need to be picked up by stable branches?
-> > >
-> > > Does it?  The changelog doesn't have a clear description of the
-> > > user-visible effects of the flaw, which is the guiding light for a
-> > > backport?
-> > >
-> > >
-> >
-> > There are 2 example scenarios in the changelog that misbehave without
-> > this fix, cases where the protection of a memcg that is the target of
-> > reclaim is not ignored as it should be.
->
-> Yes.  I found them quite unclear.  How would someone who is
-> experiencing a particualr runtime issue be able to recognize whether
-> this patch might address that issue?
->
 
-When we are doing memcg reclaim, the intended behavior is that we
-ignore any protection (memory.min, memory.low) of the target memcg
-(but not its children). Ever since the patch pointed to by the "Fixes"
-tag, we actually read a stale value for the target memcg protection
-when deciding whether to skip the memcg or not because it is
-protected. If the stale value happens to be high enough, we don't
-reclaim from the target memcg.
 
-Essentially, in some cases we may falsely skip reclaiming from the
-target memcg of reclaim because we read a stale protection value from
-last time we reclaimed from it.
+> On Dec 3, 2022, at 06:35, Mina Almasry <almasrymina@google.com> wrote:
+>=20
+> The nodes=3D arg instructs the kernel to only scan the given nodes for
+> proactive reclaim. For example use cases, consider a 2 tier memory =
+system:
+>=20
+> nodes 0,1 -> top tier
+> nodes 2,3 -> second tier
+>=20
+> $ echo "1m nodes=3D0" > memory.reclaim
+>=20
+> This instructs the kernel to attempt to reclaim 1m memory from node 0.
+> Since node 0 is a top tier node, demotion will be attempted first. =
+This
+> is useful to direct proactive reclaim to specific nodes that are under
+> pressure.
+>=20
+> $ echo "1m nodes=3D2,3" > memory.reclaim
+>=20
+> This instructs the kernel to attempt to reclaim 1m memory in the =
+second tier,
+> since this tier of memory has no demotion targets the memory will be
+> reclaimed.
+>=20
+> $ echo "1m nodes=3D0,1" > memory.reclaim
+>=20
+> Instructs the kernel to reclaim memory from the top tier nodes, which =
+can
+> be desirable according to the userspace policy if there is pressure on
+> the top tiers. Since these nodes have demotion targets, the kernel =
+will
+> attempt demotion first.
+>=20
+> Since commit 3f1509c57b1b ("Revert "mm/vmscan: never demote for memcg
+> reclaim""), the proactive reclaim interface memory.reclaim does both
+> reclaim and demotion. Reclaim and demotion incur different latency =
+costs
+> to the jobs in the cgroup. Demoted memory would still be addressable
+> by the userspace at a higher latency, but reclaimed memory would need =
+to
+> incur a pagefault.
+>=20
+> The 'nodes' arg is useful to allow the userspace to control demotion
+> and reclaim independently according to its policy: if the =
+memory.reclaim
+> is called on a node with demotion targets, it will attempt demotion =
+first;
+> if it is called on a node without demotion targets, it will only =
+attempt
+> reclaim.
+>=20
+> Acked-by: Michal Hocko <mhocko@suse.com>
+> Signed-off-by: Mina Almasry <almasrymina@google.com>
+
+Acked-by: Muchun Song <songmuchun@bytedance.com>
+
+Thanks.=
