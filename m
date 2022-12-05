@@ -1,7 +1,7 @@
 From: Kemeng Shi <shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH v3 4/9] blk-throttle: correct calculation of wait time in tg_may_dispatch
-Date: Mon,  5 Dec 2022 19:57:04 +0800
-Message-ID: <20221205115709.251489-5-shikemeng@huaweicloud.com>
+Subject: [PATCH v3 2/9] blk-throttle: Fix that bps of child could exceed bps limited in parent
+Date: Mon,  5 Dec 2022 19:57:02 +0800
+Message-ID: <20221205115709.251489-3-shikemeng@huaweicloud.com>
 References: <20221205115709.251489-1-shikemeng@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,130 +14,53 @@ Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2
 
 From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-In C language, When executing "if (expression1 && expression2)" and
-expression1 return false, the expression2 may not be executed.
-For "tg_within_bps_limit(tg, bio, bps_limit, &bps_wait) &&
-tg_within_iops_limit(tg, bio, iops_limit, &iops_wait))", if bps is
-limited, tg_within_bps_limit will return false and
-tg_within_iops_limit will not be called. So even bps and iops are
-both limited, iops_wait will not be calculated and is always zero.
-So wait time of iops is always ignored.
+Consider situation as following (on the default hierarchy):
+ HDD
+  |
+root (bps limit: 4k)
+  |
+child (bps limit :8k)
+  |
+fio bs=8k
+Rate of fio is supposed to be 4k, but result is 8k. Reason is as
+following:
+Size of single IO from fio is larger than bytes allowed in one
+throtl_slice in child, so IOs are always queued in child group first.
+When queued IOs in child are dispatched to parent group, BIO_BPS_THROTTLED
+is set and these IOs will not be limited by tg_within_bps_limit anymore.
+Fix this by only set BIO_BPS_THROTTLED when the bio traversed the entire
+tree.
 
-Fix this by always calling tg_within_bps_limit and tg_within_iops_limit
-to get wait time for both bps and iops.
-
-Observed that:
-1. Wait time in tg_within_iops_limit/tg_within_bps_limit need always
-be stored as wait argument is always passed.
-2. wait time is stored to zero if iops/bps is limited otherwise non-zero
-is stored.
-Simpfy tg_within_iops_limit/tg_within_bps_limit by removing wait argument
-and return wait time directly. Caller tg_may_dispatch checks if wait time
-is zero to find if iops/bps is limited.
+There patch has no influence on situation which is not on the default
+hierarchy as each group is a single root group without parent.
 
 Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Signed-off-by: Kemeng Shi <shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 ---
- block/blk-throttle.c | 38 +++++++++++++-------------------------
- 1 file changed, 13 insertions(+), 25 deletions(-)
+ block/blk-throttle.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 75010110d481..d5b7a2354ad7 100644
+index 8e2349b17936..2444ebf5f11d 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -822,17 +822,15 @@ static void tg_update_carryover(struct throtl_grp *tg)
- 		   tg->carryover_ios[READ], tg->carryover_ios[WRITE]);
- }
+@@ -1067,7 +1067,6 @@ static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw)
+ 	sq->nr_queued[rw]--;
  
--static bool tg_within_iops_limit(struct throtl_grp *tg, struct bio *bio,
--				 u32 iops_limit, unsigned long *wait)
-+static unsigned long tg_within_iops_limit(struct throtl_grp *tg, struct bio *bio,
-+				 u32 iops_limit)
- {
- 	bool rw = bio_data_dir(bio);
- 	unsigned int io_allowed;
- 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+ 	throtl_charge_bio(tg, bio);
+-	bio_set_flag(bio, BIO_BPS_THROTTLED);
  
- 	if (iops_limit == UINT_MAX) {
--		if (wait)
--			*wait = 0;
--		return true;
-+		return 0;
- 	}
- 
- 	jiffy_elapsed = jiffies - tg->slice_start[rw];
-@@ -842,21 +840,16 @@ static bool tg_within_iops_limit(struct throtl_grp *tg, struct bio *bio,
- 	io_allowed = calculate_io_allowed(iops_limit, jiffy_elapsed_rnd) +
- 		     tg->carryover_ios[rw];
- 	if (tg->io_disp[rw] + 1 <= io_allowed) {
--		if (wait)
--			*wait = 0;
--		return true;
-+		return 0;
- 	}
- 
- 	/* Calc approx time to dispatch */
- 	jiffy_wait = jiffy_elapsed_rnd - jiffy_elapsed;
--
--	if (wait)
--		*wait = jiffy_wait;
--	return false;
-+	return jiffy_wait;
- }
- 
--static bool tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
--				u64 bps_limit, unsigned long *wait)
-+static unsigned long tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
-+				u64 bps_limit)
- {
- 	bool rw = bio_data_dir(bio);
- 	u64 bytes_allowed, extra_bytes;
-@@ -865,9 +858,7 @@ static bool tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 
- 	/* no need to throttle if this bio's bytes have been accounted */
- 	if (bps_limit == U64_MAX || bio_flagged(bio, BIO_BPS_THROTTLED)) {
--		if (wait)
--			*wait = 0;
--		return true;
-+		return 0;
- 	}
- 
- 	jiffy_elapsed = jiffy_elapsed_rnd = jiffies - tg->slice_start[rw];
-@@ -880,9 +871,7 @@ static bool tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 	bytes_allowed = calculate_bytes_allowed(bps_limit, jiffy_elapsed_rnd) +
- 			tg->carryover_bytes[rw];
- 	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
--		if (wait)
--			*wait = 0;
--		return true;
-+		return 0;
- 	}
- 
- 	/* Calc approx time to dispatch */
-@@ -897,9 +886,7 @@ static bool tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 	 * up we did. Add that time also.
- 	 */
- 	jiffy_wait = jiffy_wait + (jiffy_elapsed_rnd - jiffy_elapsed);
--	if (wait)
--		*wait = jiffy_wait;
--	return false;
-+	return jiffy_wait;
- }
- 
- /*
-@@ -947,8 +934,9 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
- 				jiffies + tg->td->throtl_slice);
- 	}
- 
--	if (tg_within_bps_limit(tg, bio, bps_limit, &bps_wait) &&
--	    tg_within_iops_limit(tg, bio, iops_limit, &iops_wait)) {
-+	bps_wait = tg_within_bps_limit(tg, bio, bps_limit);
-+	iops_wait = tg_within_iops_limit(tg, bio, iops_limit);
-+	if (bps_wait + iops_wait == 0) {
- 		if (wait)
- 			*wait = 0;
- 		return true;
+ 	/*
+ 	 * If our parent is another tg, we just need to transfer @bio to
+@@ -1080,6 +1079,7 @@ static void tg_dispatch_one_bio(struct throtl_grp *tg, bool rw)
+ 		throtl_add_bio_tg(bio, &tg->qnode_on_parent[rw], parent_tg);
+ 		start_parent_slice_with_credit(tg, parent_tg, rw);
+ 	} else {
++		bio_set_flag(bio, BIO_BPS_THROTTLED);
+ 		throtl_qnode_add_bio(bio, &tg->qnode_on_parent[rw],
+ 				     &parent_sq->queued[rw]);
+ 		BUG_ON(tg->td->nr_queued[rw] <= 0);
 -- 
 2.30.0
 
