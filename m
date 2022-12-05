@@ -1,42 +1,55 @@
-From: Kemeng Shi <shikemeng@huaweicloud.com>
-Subject: [PATCH v3 9/9] blk-throttle: Use more siutable time_after check for update of slice_start
-Date: Mon,  5 Dec 2022 19:57:09 +0800
-Message-ID: <20221205115709.251489-10-shikemeng@huaweicloud.com>
+From: Kemeng Shi <shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: [PATCH v3 7/9] blk-throttle: remove incorrect comment for tg_last_low_overflow_time
+Date: Mon,  5 Dec 2022 19:57:07 +0800
+Message-ID: <20221205115709.251489-8-shikemeng@huaweicloud.com>
 References: <20221205115709.251489-1-shikemeng@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20221205115709.251489-1-shikemeng@huaweicloud.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20221205115709.251489-1-shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, shikemeng@huawei.com, linfeilong@huawei.com, liuzhiqiang26@huawei.com
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linfeilong-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, liuzhiqiang26-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-From: Kemeng Shi <shikemeng@huawei.com>
+From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-There is no need to update tg->slice_start[rw] to start when they are
-equal already. So remove "eq" part of check before update slice_start.
+Function tg_last_low_overflow_time is called with intermediate node as
+following:
+throtl_hierarchy_can_downgrade
+  throtl_tg_can_downgrade
+    tg_last_low_overflow_time
 
-Signed-off-by: Kemeng Shi <shikemeng@huawei.com>
-Acked-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Kemeng Shi <shikemeng@huaweicloud.com>
+throtl_hierarchy_can_upgrade
+  throtl_tg_can_upgrade
+    tg_last_low_overflow_time
+
+throtl_hierarchy_can_downgrade/throtl_hierarchy_can_upgrade will traverse
+from leaf node to sub-root node and pass traversed intermediate node
+to tg_last_low_overflow_time.
+
+No such limit could be found from context and implementation of
+tg_last_low_overflow_time, so remove this limit in comment.
+
+Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Kemeng Shi <shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 ---
- block/blk-throttle.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/blk-throttle.c | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 413e668249cf..6fb5a2f9e1ee 100644
+index 7db8592dae38..e6a087de414d 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -645,7 +645,7 @@ static inline void throtl_start_new_slice_with_credit(struct throtl_grp *tg,
- 	 * that bandwidth. Do try to make use of that bandwidth while giving
- 	 * credit.
- 	 */
--	if (time_after_eq(start, tg->slice_start[rw]))
-+	if (time_after(start, tg->slice_start[rw]))
- 		tg->slice_start[rw] = start;
+@@ -1762,7 +1762,6 @@ static unsigned long __tg_last_low_overflow_time(struct throtl_grp *tg)
+ 	return min(rtime, wtime);
+ }
  
- 	tg->slice_end[rw] = jiffies + tg->td->throtl_slice;
+-/* tg should not be an intermediate node */
+ static unsigned long tg_last_low_overflow_time(struct throtl_grp *tg)
+ {
+ 	struct throtl_service_queue *parent_sq;
 -- 
 2.30.0
 
