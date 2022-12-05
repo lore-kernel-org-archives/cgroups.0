@@ -1,59 +1,42 @@
-From: Kemeng Shi <shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH v3 3/9] blk-throttle: ignore cgroup without io queued in blk_throtl_cancel_bios
-Date: Mon,  5 Dec 2022 19:57:03 +0800
-Message-ID: <20221205115709.251489-4-shikemeng@huaweicloud.com>
+From: Kemeng Shi <shikemeng@huaweicloud.com>
+Subject: [PATCH v3 9/9] blk-throttle: Use more siutable time_after check for update of slice_start
+Date: Mon,  5 Dec 2022 19:57:09 +0800
+Message-ID: <20221205115709.251489-10-shikemeng@huaweicloud.com>
 References: <20221205115709.251489-1-shikemeng@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20221205115709.251489-1-shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20221205115709.251489-1-shikemeng@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linfeilong-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, liuzhiqiang26-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, shikemeng@huawei.com, linfeilong@huawei.com, liuzhiqiang26@huawei.com
 
-From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Kemeng Shi <shikemeng@huawei.com>
 
-Ignore cgroup without io queued in blk_throtl_cancel_bios for two
-reasons:
-1. Save cpu cycle for trying to dispatch cgroup which is no io queued.
-2. Avoid non-consistent state that cgroup is inserted to service queue
-without THROTL_TG_PENDING set as tg_update_disptime will unconditional
-re-insert cgroup to service queue. If we are on the default hierarchy,
-IO dispatched from child in tg_dispatch_one_bio will trigger inserting
-cgroup to service queue without erase first and ruin the tree.
+There is no need to update tg->slice_start[rw] to start when they are
+equal already. So remove "eq" part of check before update slice_start.
 
-Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Signed-off-by: Kemeng Shi <shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Signed-off-by: Kemeng Shi <shikemeng@huawei.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Kemeng Shi <shikemeng@huaweicloud.com>
 ---
- block/blk-throttle.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ block/blk-throttle.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 2444ebf5f11d..75010110d481 100644
+index 413e668249cf..6fb5a2f9e1ee 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -1738,7 +1738,18 @@ void blk_throtl_cancel_bios(struct gendisk *disk)
- 		 * Set the flag to make sure throtl_pending_timer_fn() won't
- 		 * stop until all throttled bios are dispatched.
- 		 */
--		blkg_to_tg(blkg)->flags |= THROTL_TG_CANCELING;
-+		tg->flags |= THROTL_TG_CANCELING;
-+
-+		/*
-+		 * Do not dispatch cgroup without THROTL_TG_PENDING or cgroup
-+		 * will be inserted to service queue without THROTL_TG_PENDING
-+		 * set in tg_update_disptime below. Then IO dispatched from
-+		 * child in tg_dispatch_one_bio will trigger double insertion
-+		 * and corrupt the tree.
-+		 */
-+		if (!(tg->flags & THROTL_TG_PENDING))
-+			continue;
-+
- 		/*
- 		 * Update disptime after setting the above flag to make sure
- 		 * throtl_select_dispatch() won't exit without dispatching.
+@@ -645,7 +645,7 @@ static inline void throtl_start_new_slice_with_credit(struct throtl_grp *tg,
+ 	 * that bandwidth. Do try to make use of that bandwidth while giving
+ 	 * credit.
+ 	 */
+-	if (time_after_eq(start, tg->slice_start[rw]))
++	if (time_after(start, tg->slice_start[rw]))
+ 		tg->slice_start[rw] = start;
+ 
+ 	tg->slice_end[rw] = jiffies + tg->td->throtl_slice;
 -- 
 2.30.0
 
