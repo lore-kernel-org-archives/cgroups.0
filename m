@@ -1,66 +1,143 @@
-From: Kemeng Shi <shikemeng@huaweicloud.com>
-Subject: [PATCH v3 0/9] A few bugfix and cleanup patches for blk-throttle
-Date: Mon,  5 Dec 2022 19:57:00 +0800
-Message-ID: <20221205115709.251489-1-shikemeng@huaweicloud.com>
+From: Kemeng Shi <shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: [PATCH v3 4/9] blk-throttle: correct calculation of wait time in tg_may_dispatch
+Date: Mon,  5 Dec 2022 19:57:04 +0800
+Message-ID: <20221205115709.251489-5-shikemeng@huaweicloud.com>
+References: <20221205115709.251489-1-shikemeng@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20221205115709.251489-1-shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, shikemeng@huawei.com, linfeilong@huawei.com, liuzhiqiang26@huawei.com
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linfeilong-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, liuzhiqiang26-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Hi, this series contain a few patches to fix problem when on the default
-hierarchy, corret comment and so on. More details can be found in
-respective changelogs. Thanks.
+From: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
+In C language, When executing "if (expression1 && expression2)" and
+expression1 return false, the expression2 may not be executed.
+For "tg_within_bps_limit(tg, bio, bps_limit, &bps_wait) &&
+tg_within_iops_limit(tg, bio, iops_limit, &iops_wait))", if bps is
+limited, tg_within_bps_limit will return false and
+tg_within_iops_limit will not be called. So even bps and iops are
+both limited, iops_wait will not be calculated and is always zero.
+So wait time of iops is always ignored.
+
+Fix this by always calling tg_within_bps_limit and tg_within_iops_limit
+to get wait time for both bps and iops.
+
+Observed that:
+1. Wait time in tg_within_iops_limit/tg_within_bps_limit need always
+be stored as wait argument is always passed.
+2. wait time is stored to zero if iops/bps is limited otherwise non-zero
+is stored.
+Simpfy tg_within_iops_limit/tg_within_bps_limit by removing wait argument
+and return wait time directly. Caller tg_may_dispatch checks if wait time
+is zero to find if iops/bps is limited.
+
+Signed-off-by: Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Kemeng Shi <shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 ---
-V2->V3:
- -Thanks for the review and advice from Tejun. Now all patches are acked
-  by Tejun.
- -remove quotes around parent in corrected comment in patch "blk-throttle:
-  correct stale comment in throtl_pd_init"
- -improve log message and rename throtl_tg_reach_low_limit to
-  throtl_low_limit_reached.
- -drop patch "blk-throttle: avoid dead code in
-  throtl_hierarchy_can_upgrade"
----
-V1->V2:
- -Thanks for the review and advice from Tejun. The corrected comment of
-  "blk-throttle: correct stale comment in throtl_pd_init" and the
-  solution of "blk-throttle: Fix that bps of child could exceed bps
-  limited in parent" are from reply of Tejun.
- -Collect Ack from Tejun.
- -Fix the compile problem when CONFIG_BLK_DEV_THROTTLING_LOW is set.
- -Drop "blk-throttle: Limit whole system if root group is configured
-  when on the default hierarchy", "blk-throttle: remove unnecessary check
-  for validation of limit index" and "blk-throttle: remove unused variable
-  td in tg_update_has_rules"
- -Add "blk-throttle: correct stale comment in throtl_pd_init" and
-  "blk-throttle: avoid dead code in throtl_hierarchy_can_upgrade"
- -Use solution that set the BIO_BPS_THROTTLED flag only when the bio
-  traversed the entire tree to fix that bps of child could exceed bps
-  limited in parent in patch 2/10.
- -Improve the description and comment of most commits.
----
+ block/blk-throttle.c | 38 +++++++++++++-------------------------
+ 1 file changed, 13 insertions(+), 25 deletions(-)
 
-Kemeng Shi (9):
-  blk-throttle: correct stale comment in throtl_pd_init
-  blk-throttle: Fix that bps of child could exceed bps limited in parent
-  blk-throttle: ignore cgroup without io queued in
-    blk_throtl_cancel_bios
-  blk-throttle: correct calculation of wait time in tg_may_dispatch
-  blk-throttle: simpfy low limit reached check in throtl_tg_can_upgrade
-  blk-throttle: fix typo in comment of throtl_adjusted_limit
-  blk-throttle: remove incorrect comment for tg_last_low_overflow_time
-  blk-throttle: remove repeat check of elapsed time from last upgrade in
-    throtl_hierarchy_can_downgrade
-  blk-throttle: Use more siutable time_after check for update of
-    slice_start
-
- block/blk-throttle.c | 102 +++++++++++++++++++++++--------------------
- 1 file changed, 55 insertions(+), 47 deletions(-)
-
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 75010110d481..d5b7a2354ad7 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -822,17 +822,15 @@ static void tg_update_carryover(struct throtl_grp *tg)
+ 		   tg->carryover_ios[READ], tg->carryover_ios[WRITE]);
+ }
+ 
+-static bool tg_within_iops_limit(struct throtl_grp *tg, struct bio *bio,
+-				 u32 iops_limit, unsigned long *wait)
++static unsigned long tg_within_iops_limit(struct throtl_grp *tg, struct bio *bio,
++				 u32 iops_limit)
+ {
+ 	bool rw = bio_data_dir(bio);
+ 	unsigned int io_allowed;
+ 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+ 
+ 	if (iops_limit == UINT_MAX) {
+-		if (wait)
+-			*wait = 0;
+-		return true;
++		return 0;
+ 	}
+ 
+ 	jiffy_elapsed = jiffies - tg->slice_start[rw];
+@@ -842,21 +840,16 @@ static bool tg_within_iops_limit(struct throtl_grp *tg, struct bio *bio,
+ 	io_allowed = calculate_io_allowed(iops_limit, jiffy_elapsed_rnd) +
+ 		     tg->carryover_ios[rw];
+ 	if (tg->io_disp[rw] + 1 <= io_allowed) {
+-		if (wait)
+-			*wait = 0;
+-		return true;
++		return 0;
+ 	}
+ 
+ 	/* Calc approx time to dispatch */
+ 	jiffy_wait = jiffy_elapsed_rnd - jiffy_elapsed;
+-
+-	if (wait)
+-		*wait = jiffy_wait;
+-	return false;
++	return jiffy_wait;
+ }
+ 
+-static bool tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
+-				u64 bps_limit, unsigned long *wait)
++static unsigned long tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
++				u64 bps_limit)
+ {
+ 	bool rw = bio_data_dir(bio);
+ 	u64 bytes_allowed, extra_bytes;
+@@ -865,9 +858,7 @@ static bool tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 
+ 	/* no need to throttle if this bio's bytes have been accounted */
+ 	if (bps_limit == U64_MAX || bio_flagged(bio, BIO_BPS_THROTTLED)) {
+-		if (wait)
+-			*wait = 0;
+-		return true;
++		return 0;
+ 	}
+ 
+ 	jiffy_elapsed = jiffy_elapsed_rnd = jiffies - tg->slice_start[rw];
+@@ -880,9 +871,7 @@ static bool tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 	bytes_allowed = calculate_bytes_allowed(bps_limit, jiffy_elapsed_rnd) +
+ 			tg->carryover_bytes[rw];
+ 	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
+-		if (wait)
+-			*wait = 0;
+-		return true;
++		return 0;
+ 	}
+ 
+ 	/* Calc approx time to dispatch */
+@@ -897,9 +886,7 @@ static bool tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 	 * up we did. Add that time also.
+ 	 */
+ 	jiffy_wait = jiffy_wait + (jiffy_elapsed_rnd - jiffy_elapsed);
+-	if (wait)
+-		*wait = jiffy_wait;
+-	return false;
++	return jiffy_wait;
+ }
+ 
+ /*
+@@ -947,8 +934,9 @@ static bool tg_may_dispatch(struct throtl_grp *tg, struct bio *bio,
+ 				jiffies + tg->td->throtl_slice);
+ 	}
+ 
+-	if (tg_within_bps_limit(tg, bio, bps_limit, &bps_wait) &&
+-	    tg_within_iops_limit(tg, bio, iops_limit, &iops_wait)) {
++	bps_wait = tg_within_bps_limit(tg, bio, bps_limit);
++	iops_wait = tg_within_iops_limit(tg, bio, iops_limit);
++	if (bps_wait + iops_wait == 0) {
+ 		if (wait)
+ 			*wait = 0;
+ 		return true;
 -- 
 2.30.0
 
