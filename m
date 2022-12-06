@@ -1,89 +1,44 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH -next v2 7/9] blk-iocost: fix UAF in ioc_pd_free
-Date: Tue, 6 Dec 2022 15:53:31 +0800
-Message-ID: <aa924294-2f54-1b53-fc6e-e4f8fa019b14@huaweicloud.com>
-References: <20221130132156.2836184-1-linan122@huawei.com>
- <20221130132156.2836184-8-linan122@huawei.com>
- <Y4fAJpKcVL7Q9hgY@slm.duckdns.org>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: speedup memory cgroup resize
+Date: Tue, 6 Dec 2022 11:33:12 +0100
+Message-ID: <Y48aaCkgonOlMwNu@dhcp22.suse.cz>
+References: <1670240992-28563-1-git-send-email-lirongqing@baidu.com>
+ <CALvZod7_1oq1D73EKJHG1zQpeUp+QTPHmMRsL3Ka0f6XUfO4Eg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Y4fAJpKcVL7Q9hgY-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1670322793; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=sXtB0LJ1gZ5Q2aHoxbN5D+rA1BRGWLH2LRyfAy0cNtA=;
+        b=dMNGtYEU6bdKskTmQkpt4FcDRN92UcqQjVVtK9/Njg6YZcuhQ+6Hth69Qy2QWb6OjdEWXT
+        r9M9rpzPKXzw3R5xaI5oSFSnd2bJKb/MkktHhJOec2h9PlWH/SejxdQyOXcdWRB6HLWHWa
+        hVn+9lcsEhdTy/Y0D2XAsxyz9mYV+f0=
+Content-Disposition: inline
+In-Reply-To: <CALvZod7_1oq1D73EKJHG1zQpeUp+QTPHmMRsL3Ka0f6XUfO4Eg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: lirongqing-h1bp6feCCZcAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-Hi, Tejun!
+On Mon 05-12-22 08:32:41, Shakeel Butt wrote:
+> On Mon, Dec 5, 2022 at 3:49 AM <lirongqing-h1bp6feCCZcAvxtiuMwx3w@public.gmane.org> wrote:
+> >
+> > From: Li RongQing <lirongqing-h1bp6feCCZcAvxtiuMwx3w@public.gmane.org>
+> >
+> > when resize memory cgroup, avoid to free memory cgroup page
+> > one by one, and try to free needed number pages once
+> >
+> 
+> It's not really one by one but SWAP_CLUSTER_MAX. Also can you share
+> some experiment results on how much this patch is improving setting
+> limits?
 
-=D4=DA 2022/12/01 4:42, Tejun Heo =D0=B4=B5=C0:
-> On Wed, Nov 30, 2022 at 09:21:54PM +0800, Li Nan wrote:
->> 	T1		     T2			T3
->>    //delete device
->>    del_gendisk
->>     bdi_unregister
->>      bdi_remove_from_list
->>       synchronize_rcu_expedited
->>
->> 		         //rmdir cgroup
->> 		         blkcg_destroy_blkgs
->> 		          blkg_destroy
->> 		           percpu_ref_kill
->> 		            blkg_release
->> 		             call_rcu
->>     rq_qos_exit
->>      ioc_rqos_exit
->>       kfree(ioc)
->> 					   __blkg_release
->> 					    blkg_free
->> 					     blkg_free_workfn
->> 					      pd_free_fn
->> 					       ioc_pd_free
->> 						spin_lock_irqsave
->> 						 ->ioc is freed
->>
->> Fix the problem by moving the operation on ioc in ioc_pd_free() to
->> ioc_pd_offline(), and just free resource in ioc_pd_free() like iolatency
->> and throttle.
->>
->> Signed-off-by: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->=20
-> I wonder what we really wanna do is pinning ioc while blkgs are still aro=
-und
-> but I think this should work too.
->=20
+Besides a clear performance gain you should also think about a potential
+over reclaim when the limit is reduced by a lot (there might be parallel
+reclaimers competing with the limit resize).
 
-I just found that this is not enough, other problems still exist:
-
-t1:	=09
-bio_init
-  bio_associate_blkg
-   //get blkg->refcnt
-......
-submit_bio
-  blk_throtl_bio
-  // bio is throttlled, user thread can exit
-  			t2:
-			// blkcg online_pin is zero
-			blkcg_destroy_blkgs
-			 blkg_destroy
-			  ioc_pd_offline
-			   list_del_init(&iocg->active_list)
-t3:
-ioc_rqos_throttle
-  blkg_to_iocg
-  // got the iocg that is offlined
-   iocg_activate
-   // acitvate the iocg again
-
-For consequence, kernel can crash due to access unexpected
-address. Fortunately, bfq already handle similar problem by checking
-blkg->online in bfq_bio_bfqg(), this problem can be fixed by checking
-it in iocg_activate().
-
-BTW, I'm still working on checking if other policies have the same
-problem.
-
-Thanks,
-Kuai
-
+-- 
+Michal Hocko
+SUSE Labs
