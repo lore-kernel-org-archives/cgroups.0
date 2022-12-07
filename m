@@ -1,70 +1,47 @@
-From: "Li,Rongqing" <lirongqing-h1bp6feCCZcAvxtiuMwx3w@public.gmane.org>
-Subject: RE: [PATCH] mm: memcontrol: speedup memory cgroup resize
-Date: Wed, 7 Dec 2022 02:31:13 +0000
-Message-ID: <cf7f485c3e7f4238b509d9dbbd084a2f@baidu.com>
-References: <1670240992-28563-1-git-send-email-lirongqing@baidu.com>
- <CALvZod7_1oq1D73EKJHG1zQpeUp+QTPHmMRsL3Ka0f6XUfO4Eg@mail.gmail.com>
- <Y48aaCkgonOlMwNu@dhcp22.suse.cz>
+From: Wang Yufen <wangyufen-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] selftests: cgroup: Fix the invalid check in proc_read_text()
+Date: Wed, 7 Dec 2022 16:33:09 +0800
+Message-ID: <1670401989-8208-1-git-send-email-wangyufen@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Y48aaCkgonOlMwNu-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Content-Language: zh-CN
 List-ID: <cgroups.vger.kernel.org>
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Wang Yufen <wangyufen-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
+Unsigned variable cannot be lesser than zero, So the return check of read_text() is invalid.
+To fix, add a new ssize_t variable read for read_text() return value check.
 
+Fixes: 6c26df84e1f2 ("selftests: cgroup: return -errno from cg_read()/cg_write() on failure")
+Signed-off-by: Wang Yufen <wangyufen-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ tools/testing/selftests/cgroup/cgroup_util.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> -----Original Message-----
-> From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-> Sent: Tuesday, December 6, 2022 6:33 PM
-> To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Li,Rongqing <lirongqing-h1bp6feCCZcAvxtiuMwx3w@public.gmane.org>; linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org;
-> cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org; roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org;
-> songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org; akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-> Subject: Re: [PATCH] mm: memcontrol: speedup memory cgroup resize
-> 
-> On Mon 05-12-22 08:32:41, Shakeel Butt wrote:
-> > On Mon, Dec 5, 2022 at 3:49 AM <lirongqing-h1bp6feCCZcAvxtiuMwx3w@public.gmane.org> wrote:
-> > >
-> > > From: Li RongQing <lirongqing-h1bp6feCCZcAvxtiuMwx3w@public.gmane.org>
-> > >
-> > > when resize memory cgroup, avoid to free memory cgroup page one by
-> > > one, and try to free needed number pages once
-> > >
-> >
-> > It's not really one by one but SWAP_CLUSTER_MAX. Also can you share
-> > some experiment results on how much this patch is improving setting
-> > limits?
-> 
-
-If try to resize a cgroup to reclaim 50 Gb memory, and this cgroup has lots of children cgroups who are reading files and alloc memory,  this patch can speed 2 or more times.
-
-
-> Besides a clear performance gain you should also think about a potential over
-> reclaim when the limit is reduced by a lot (there might be parallel reclaimers
-> competing with the limit resize).
-> 
-
-to avoid over claim,  how about to try to free half memory once?
-
-@@ -3498,7 +3499,11 @@ static int mem_cgroup_resize_max(struct mem_cgroup *memcg,
-                        continue;
-                }
-
--               if (!try_to_free_mem_cgroup_pages(memcg, 1, GFP_KERNEL,
-+               nr_pages = page_counter_read(counter);
-+
-+               nr_pages = nr_pages > (max + 1) ? (nr_pages - max) / 2 : 1;
-+
-+               if (!try_to_free_mem_cgroup_pages(memcg, nr_pages, GFP_KERNEL,
-                                        memsw ? 0 : MEMCG_RECLAIM_MAY_SWAP)) {
-                        ret = -EBUSY;
-                        break; thanks
-
-thanks
-
--Li
+diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
+index 4c52cc6..19137c0 100644
+--- a/tools/testing/selftests/cgroup/cgroup_util.c
++++ b/tools/testing/selftests/cgroup/cgroup_util.c
+@@ -555,6 +555,7 @@ int proc_mount_contains(const char *option)
+ ssize_t proc_read_text(int pid, bool thread, const char *item, char *buf, size_t size)
+ {
+ 	char path[PATH_MAX];
++	ssize_t read;
+ 
+ 	if (!pid)
+ 		snprintf(path, sizeof(path), "/proc/%s/%s",
+@@ -562,8 +563,8 @@ ssize_t proc_read_text(int pid, bool thread, const char *item, char *buf, size_t
+ 	else
+ 		snprintf(path, sizeof(path), "/proc/%d/%s", pid, item);
+ 
+-	size = read_text(path, buf, size);
+-	return size < 0 ? -1 : size;
++	read = read_text(path, buf, size);
++	return read < 0 ? -1 : read;
+ }
+ 
+ int proc_read_strstr(int pid, bool thread, const char *item, const char *needle)
+-- 
+1.8.3.1
 
