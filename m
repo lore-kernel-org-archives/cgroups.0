@@ -1,105 +1,168 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: Low TCP throughput due to vmpressure with swap enabled
-Date: Wed, 7 Dec 2022 13:53:00 +0100
-Message-ID: <Y5CMrPMDxngMZWN8@cmpxchg.org>
-References: <Y30rdnZ+lrfOxjTB@cmpxchg.org>
- <CABWYdi3PqipLxnqeepXeZ471pfeBg06-PV0Uw04fU-LHnx_A4g@mail.gmail.com>
- <CABWYdi0qhWs56WK=k+KoQBAMh+Tb6Rr0nY4kJN+E5YqfGhKTmQ@mail.gmail.com>
- <Y4T43Tc54vlKjTN0@cmpxchg.org>
- <CABWYdi0z6-46PrNWumSXWki6Xf4G_EP1Nvc-2t00nEi0PiOU3Q@mail.gmail.com>
- <CABWYdi25hricmGUqaK1K0EB-pAm04vGTg=eiqRF99RJ7hM7Gyg@mail.gmail.com>
- <Y4+RPry2tfbWFdSA@cmpxchg.org>
- <CANn89iJfx4QdVBqJ23oFJoz5DJKou=ZwVBNNXFNDJRNAqNvzwQ@mail.gmail.com>
- <Y4+rNYF9WZyJyBQp@cmpxchg.org>
- <20221206231049.g35ltbxbk54izrie@google.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 3/3] mm: memcontrol: deprecate charge moving
+Date: Wed, 7 Dec 2022 14:00:39 +0100
+Message-ID: <Y5COd+qXwk/S+n8N@cmpxchg.org>
+References: <20221206171340.139790-1-hannes@cmpxchg.org>
+ <20221206171340.139790-4-hannes@cmpxchg.org>
+ <02b9663-4377-bd67-8da2-aad72240da@google.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=SaZKvzrELtZk2moYXHTejAAx0pVU4ccKfYCaOf5kf6s=;
-        b=Zn0bxdNAFoGshkFY4WWwXydY9YieUgDTNZ7UMeR67e3fjlwuS3bimPdqo+MlcClmlA
-         fLNNhn7lOtPh3kHboREx0u0pavIRPoZ8MPQtUqmVWQhHoWMnG69jDb8GbMwd6C7GFJsQ
-         NuSKOtY9XaouhxW8KB/Vri7ug8VeMKV2+LGU19xE5ea0m30ANCKbs/VGpcQEbVv40n9x
-         I985ZKWJvAV1wo2PsPaLr88Rk9C81QmEfEhpUq5bQA8od3/kVF2kWGBu0xyDFcEgAESi
-         qlcoV56MVSQKnM4xnFKdxcjsZ6xpA9yE+2XNVbWboluVsLgl9Hf4w/PNkj/u1euW8ww8
-         DS2w==
+        bh=xR1noXbyPM5kt/sYfkF4dJpSqyLI733A+gni4V3Hl+g=;
+        b=yeFZCjZBCI9Jl2kn0mMwm5h3PCNQV0qMVvCmJLEPczp/jvmDAWIfUZZZbfXW/EXohY
+         p2XOzLBhN+FZBTdxRVYo44n24EZiyP96Jx5kd/7p3Hc+l8wdcRpierf6Dp49w8DJUQDy
+         rlBFc+EHmIFOsMjJqc5U/27MwGIGi1dyA0aOpjKrEGMwSdLG15MR/hFUANlgdcLoVSMy
+         tGxtn8JsPnRt/XqqdlJcxbVGkDLHo+cYI60OVm5g44w4aaSGFBdCTWJ5kcy1eAG75Mkg
+         tJLpMweFuT/1HwNNf/oHnBgCm87mrMqKt+FPX76ImHI3UkxCCwnkVWry+O/oi/fCry9i
+         XXNw==
 Content-Disposition: inline
-In-Reply-To: <20221206231049.g35ltbxbk54izrie@google.com>
+In-Reply-To: <02b9663-4377-bd67-8da2-aad72240da-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Eric Dumazet <edumazet@google.com>, Ivan Babrou <ivan@cloudflare.com>, Linux MM <linux-mm@kvack.org>, Linux Kernel Network Developers <netdev@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, "David S. Miller" <davem@davemloft.net>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, David Ahern <dsahern@kernel.org>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, cgroups@vger.kernel.org, kernel-team <kernel-team@cloudflare.com>
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Dec 06, 2022 at 11:10:49PM +0000, Shakeel Butt wrote:
-> On Tue, Dec 06, 2022 at 09:51:01PM +0100, Johannes Weiner wrote:
-> > On Tue, Dec 06, 2022 at 08:13:50PM +0100, Eric Dumazet wrote:
-> > > On Tue, Dec 6, 2022 at 8:00 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
-> > > > @@ -1701,10 +1701,10 @@ void mem_cgroup_sk_alloc(struct sock *sk);
-> > > >  void mem_cgroup_sk_free(struct sock *sk);
-> > > >  static inline bool mem_cgroup_under_socket_pressure(struct mem_cgroup *memcg)
-> > > >  {
-> > > > -       if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && memcg->tcpmem_pressure)
-> > > > +       if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && memcg->socket_pressure)
-> > > 
-> > > && READ_ONCE(memcg->socket_pressure))
-> > > 
-> > > >                 return true;
-> > > >         do {
-> > > > -               if (time_before(jiffies, READ_ONCE(memcg->socket_pressure)))
-> > > > +               if (memcg->socket_pressure)
-> > > 
-> > > if (READ_ONCE(...))
-> > 
-> > Good point, I'll add those.
-> > 
-> > > > @@ -7195,10 +7194,10 @@ bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages,
-> > > >                 struct page_counter *fail;
-> > > >
-> > > >                 if (page_counter_try_charge(&memcg->tcpmem, nr_pages, &fail)) {
-> > > > -                       memcg->tcpmem_pressure = 0;
-> > > 
-> > > Orthogonal to your patch, but:
-> > > 
-> > > Maybe avoid touching this cache line too often and use READ/WRITE_ONCE() ?
-> > > 
-> > >     if (READ_ONCE(memcg->socket_pressure))
-> > >       WRITE_ONCE(memcg->socket_pressure, false);
-> > 
-> > Ah, that's a good idea.
-> > 
-> > I think it'll be fine in the failure case, since that's associated
-> > with OOM and total performance breakdown anyway.
-> > 
-> > But certainly, in the common case of the charge succeeding, we should
-> > not keep hammering false into that variable over and over.
-> > 
-> > How about the delta below? I also flipped the branches around to keep
-> > the common path at the first indentation level, hopefully making that
-> > a bit clearer too.
-> > 
-> > Thanks for taking a look, Eric!
-> > 
+On Tue, Dec 06, 2022 at 05:58:14PM -0800, Hugh Dickins wrote:
+> On Tue, 6 Dec 2022, Johannes Weiner wrote:
 > 
-> I still think we should not put a persistent state of socket pressure on
-> unsuccessful charge which will only get reset on successful charge. I
-> think the better approach would be to limit the pressure state by time
-> window same as today but set it on charge path. Something like below:
+> > Charge moving mode in cgroup1 allows memory to follow tasks as they
+> > migrate between cgroups. This is, and always has been, a questionable
+> > thing to do - for several reasons.
+> > 
+> > First, it's expensive. Pages need to be identified, locked and
+> > isolated from various MM operations, and reassigned, one by one.
+> > 
+> > Second, it's unreliable. Once pages are charged to a cgroup, there
+> > isn't always a clear owner task anymore. Cache isn't moved at all, for
+> > example. Mapped memory is moved - but if trylocking or isolating a
+> > page fails, it's arbitrarily left behind. Frequent moving between
+> > domains may leave a task's memory scattered all over the place.
+> > 
+> > Third, it isn't really needed. Launcher tasks can kick off workload
+> > tasks directly in their target cgroup. Using dedicated per-workload
+> > groups allows fine-grained policy adjustments - no need to move tasks
+> > and their physical pages between control domains. The feature was
+> > never forward-ported to cgroup2, and it hasn't been missed.
+> > 
+> > Despite it being a niche usecase, the maintenance overhead of
+> > supporting it is enormous. Because pages are moved while they are live
+> > and subject to various MM operations, the synchronization rules are
+> > complicated. There are lock_page_memcg() in MM and FS code, which
+> > non-cgroup people don't understand. In some cases we've been able to
+> > shift code and cgroup API calls around such that we can rely on native
+> > locking as much as possible. But that's fragile, and sometimes we need
+> > to hold MM locks for longer than we otherwise would (pte lock e.g.).
+> > 
+> > Mark the feature deprecated. Hopefully we can remove it soon.
+> > 
+> > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> 
+> Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-I don't mind doing that if necessary, but looking at the code I don't
-see why it would be.
+Thanks
 
-The socket code sets protocol memory pressure on allocations that run
-into limits, and clears pressure on allocations that succeed and
-frees. Why shouldn't we do the same thing for memcg?
+> but I wonder if it would be helpful to mention move_charge_at_immigrate
+> in the deprecation message: maybe the first line should be
+> "Cgroup memory moving (move_charge_at_immigrate) is deprecated.\n"
 
-@@ -7237,6 +7235,9 @@ void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
-        mod_memcg_state(memcg, MEMCG_SOCK, -nr_pages);
+Fair enough! Here is the updated patch.
+
+---
+
+From 0e791e6ab8ba2f75dd4205684c06bcc7308d9867 Mon Sep 17 00:00:00 2001
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Date: Mon, 5 Dec 2022 19:57:06 +0100
+Subject: [PATCH] mm: memcontrol: deprecate charge moving
+
+Charge moving mode in cgroup1 allows memory to follow tasks as they
+migrate between cgroups. This is, and always has been, a questionable
+thing to do - for several reasons.
+
+First, it's expensive. Pages need to be identified, locked and
+isolated from various MM operations, and reassigned, one by one.
+
+Second, it's unreliable. Once pages are charged to a cgroup, there
+isn't always a clear owner task anymore. Cache isn't moved at all, for
+example. Mapped memory is moved - but if trylocking or isolating a
+page fails, it's arbitrarily left behind. Frequent moving between
+domains may leave a task's memory scattered all over the place.
+
+Third, it isn't really needed. Launcher tasks can kick off workload
+tasks directly in their target cgroup. Using dedicated per-workload
+groups allows fine-grained policy adjustments - no need to move tasks
+and their physical pages between control domains. The feature was
+never forward-ported to cgroup2, and it hasn't been missed.
+
+Despite it being a niche usecase, the maintenance overhead of
+supporting it is enormous. Because pages are moved while they are live
+and subject to various MM operations, the synchronization rules are
+complicated. There are lock_page_memcg() in MM and FS code, which
+non-cgroup people don't understand. In some cases we've been able to
+shift code and cgroup API calls around such that we can rely on native
+locking as much as possible. But that's fragile, and sometimes we need
+to hold MM locks for longer than we otherwise would (pte lock e.g.).
+
+Mark the feature deprecated. Hopefully we can remove it soon.
+
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+---
+ Documentation/admin-guide/cgroup-v1/memory.rst | 11 ++++++++++-
+ mm/memcontrol.c                                |  4 ++++
+ 2 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
+index 60370f2c67b9..87d7877b98ec 100644
+--- a/Documentation/admin-guide/cgroup-v1/memory.rst
++++ b/Documentation/admin-guide/cgroup-v1/memory.rst
+@@ -86,6 +86,8 @@ Brief summary of control files.
+  memory.swappiness		     set/show swappiness parameter of vmscan
+ 				     (See sysctl's vm.swappiness)
+  memory.move_charge_at_immigrate     set/show controls of moving charges
++                                     This knob is deprecated and shouldn't be
++                                     used.
+  memory.oom_control		     set/show oom controls.
+  memory.numa_stat		     show the number of memory usage per numa
+ 				     node
+@@ -717,9 +719,16 @@ Soft limits can be setup by using the following commands (in this example we
+        It is recommended to set the soft limit always below the hard limit,
+        otherwise the hard limit will take precedence.
  
-        refill_stock(memcg, nr_pages);
+-8. Move charges at task migration
++8. Move charges at task migration (DEPRECATED!)
+ =================================
+ 
++THIS IS DEPRECATED!
 +
-+       if (unlikely(READ_ONCE(memcg->socket_pressure)))
-+               WRITE_ONCE(memcg->socket_pressure, false);
- }
++It's expensive and unreliable! It's better practice to launch workload
++tasks directly from inside their target cgroup. Use dedicated workload
++cgroups to allow fine-grained policy adjustments without having to
++move physical pages between control domains.
++
+ Users can move charges associated with a task along with task migration, that
+ is, uncharge task's pages from the old cgroup and charge them to the new cgroup.
+ This feature is not supported in !CONFIG_MMU environments because of lack of
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b696354c1b21..9c9a42153b76 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3919,6 +3919,10 @@ static int mem_cgroup_move_charge_write(struct cgroup_subsys_state *css,
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+ 
++	pr_warn_once("Cgroup memory moving (move_charge_at_immigrate) is deprecated. "
++		     "Please report your usecase to linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org if you "
++		     "depend on this functionality.\n");
++
+ 	if (val & ~MOVE_MASK)
+ 		return -EINVAL;
+ 
+-- 
+2.38.1
+
