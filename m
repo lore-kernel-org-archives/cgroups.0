@@ -1,40 +1,80 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH-block 0/3] blk-cgroup: Fix potential UAF & miscellaneous cleanup
-Date: Thu,  8 Dec 2022 17:01:38 -0500
-Message-ID: <20221208220141.2625775-1-longman@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH-block 1/3] bdi, blk-cgroup: Fix potential UAF of blkcg
+Date: Thu,  8 Dec 2022 17:01:39 -0500
+Message-ID: <20221208220141.2625775-2-longman@redhat.com>
+References: <20221208220141.2625775-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1670536917;
+        s=mimecast20190719; t=1670536915;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=l3gdci1jA2BCwxv28dvvVRPMpXIO7QcJKVqY3sRM16E=;
-        b=Q1066CIWzlYmcW3VKBr40mwrmMDQHAQGAsIZXva3ejHMy+gIkwBpsA8Chact6yuAjlNDSi
-        bKPDk66vYuItIogdyP2Obdk+DtPDdLQ+W5eCtNSlszCyIv3OIz7gjvzgSBdnB5aavO7UoB
-        tN8mh1uxWRe4iyPzktCFZljS0ewddHo=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=+MsWk87quHbEwHCR1sVYteGgGZjHdGBkMWIDf/Jp0nk=;
+        b=gIMUqKc4BHkBF0wmgoZGsA09GL51xoSjKy8yXjU/xuX7WUh1L17YFzHdCfoHBLhUFkFIO1
+        1hdqr8a5jJF+LJws06N4Rf/6/wh8ez5z2iaCmcB0PWIVtvURE8R2mtSz1O+aKoVwlRx018
+        SYvrdGmI8FrXkiRaAQ2DLdG33aS372U=
+In-Reply-To: <20221208220141.2625775-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, "Dennis Zhou (Facebook)" <dennisszhou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="macroman"
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>, Waiman Long <longman@redhat.com>, Yi Zhang <yi.zhang@redhat.com>
 
-It was found that blkcg_destroy_blkgs() may be called with all blkcg
-references gone. This may potentially cause user-after-free and so
-should be fixed. The last 2 patches are miscellaneous cleanups of
-commit 3b8cc6298724 ("blk-cgroup: Optimize blkcg_rstat_flush()").
-
-Waiman Long (3):
-  bdi, blk-cgroup: Fix potential UAF of blkcg
-  blk-cgroup: Don't flush a blkg if destroyed
-  blk-cgroup: Flush stats at blkgs destruction path
-
- block/blk-cgroup.c     | 26 ++++++++++++++++++++++++++
- include/linux/cgroup.h |  1 +
- kernel/cgroup/rstat.c  | 20 ++++++++++++++++++++
- mm/backing-dev.c       |  8 ++++++--
- 4 files changed, 53 insertions(+), 2 deletions(-)
-
--- 
-2.31.1
-
+Q29tbWl0IDU5YjU3NzE3ZmZmOCAoImJsa2NnOiBkZWxheSBibGtnIGRlc3RydWN0aW9uIHVudGls
+IGFmdGVyCndyaXRlYmFjayBoYXMgZmluaXNoZWQiKSBkZWxheWVkIGNhbGwgdG8gYmxrY2dfZGVz
+dHJveV9ibGtncygpIHRvCmNnd2JfcmVsZWFzZV93b3JrZm4oKS4gSG93ZXZlciwgaXQgaXMgZG9u
+ZSBhZnRlciBhIGNzc19wdXQoKSBvZiBibGtjZwp3aGljaCBtYXkgYmUgdGhlIGZpbmFsIHB1dCB0
+aGF0IGNhdXNlcyB0aGUgYmxrY2cgdG8gYmUgZnJlZWQgYXMgUkNVCnJlYWQgbG9jayBpc24ndCBo
+ZWxkLgoKQW5vdGhlciBwbGFjZSB3aGVyZSBibGtjZ19kZXN0cm95X2Jsa2dzKCkgY2FuIGJlIGNh
+bGxlZCBpbmRpcmVjdGx5IHZpYQpibGtjZ191bnBpbl9vbmxpbmUoKSBpcyBmcm9tIHRoZSBvZmZs
+aW5lX2NzcygpIGZ1bmN0aW9uIGNhbGxlZCBmcm9tCmNzc19raWxsZWRfd29ya19mbigpLiBPdmVy
+IHRoZXJlLCB0aGUgcG90ZW50aWFsbHkgZmluYWwgY3NzX3B1dCgpIGNhbGwKaXMgaXNzdWVkIGFm
+dGVyIG9mZmxpbmVfY3NzKCkuCgpCeSBhZGRpbmcgYSBjc3NfdHJ5Z2V0KCkgaW50byBibGtjZ19k
+ZXN0cm95X2Jsa2dzKCkgYW5kIHdhcm5pbmcgaXRzCmZhaWx1cmUsIHRoZSBmb2xsb3dpbmcgc3Rh
+Y2sgdHJhY2Ugd2FzIHByb2R1Y2VkIGluIGEgdGVzdCBzeXN0ZW0gb24KYm9vdHVwLgoKWyAgIDM0
+LjI1NDI0MF0gUklQOiAwMDEwOmJsa2NnX2Rlc3Ryb3lfYmxrZ3MrMHgxNmEvMHgxYTAKICAgICAg
+OgpbICAgMzQuMzM5OTQzXSBDYWxsIFRyYWNlOgpbICAgMzQuMzQ0NTEwXSAgYmxrY2dfdW5waW5f
+b25saW5lKzB4MzgvMHg2MApbICAgMzQuMzQ4NTIzXSAgY2d3Yl9yZWxlYXNlX3dvcmtmbisweDZh
+LzB4MjAwClsgICAzNC4zNTI3MDhdICBwcm9jZXNzX29uZV93b3JrKzB4MWU1LzB4M2IwClsgICAz
+NC4zNjA3NThdICB3b3JrZXJfdGhyZWFkKzB4NTAvMHgzYTAKWyAgIDM0LjM2ODQ0N10gIGt0aHJl
+YWQrMHhkOS8weDEwMApbICAgMzQuMzc2Mzg2XSAgcmV0X2Zyb21fZm9yaysweDIyLzB4MzAKClRo
+aXMgY29uZmlybXMgdGhhdCBhIHBvdGVudGlhbCBVQUYgc2l0dWF0aW9uIGNhbiByZWFsbHkgaGFw
+cGVuIGluCmNnd2JfcmVsZWFzZV93b3JrZm4oKS4KCkZpeCB0aGF0IGJ5IGRlbGF5aW5nIHRoZSBj
+c3NfcHV0KCkgdW50aWwgYWZ0ZXIgdGhlIGJsa2NnX3VucGluX29ubGluZSgpCmNhbGwuIEFsc28g
+dXNlIGNzc190cnlnZXQoKSBpbiBibGtjZ19kZXN0cm95X2Jsa2dzKCkgYW5kIGlzc3VlIGEgd2Fy
+bmluZwppZiBjc3NfdHJ5Z2V0KCkgZmFpbHMuCgpUaGUgcmVwcm9kdWNpbmcgc3lzdGVtIGNhbiBu
+byBsb25nZXIgcHJvZHVjZSBhIHdhcm5pbmcgd2l0aCB0aGlzIHBhdGNoLgpBbGwgdGhlIHJ1bm5h
+YmxlIGJsb2NrLzAqIHRlc3RzIGluY2x1ZGluZyBibG9jay8wMjcgd2VyZSBydW4gc3VjY2Vzc2Z1
+bGx5CndpdGhvdXQgZmFpbHVyZS4KCkZpeGVzOiA1OWI1NzcxN2ZmZjggKCJibGtjZzogZGVsYXkg
+YmxrZyBkZXN0cnVjdGlvbiB1bnRpbCBhZnRlciB3cml0ZWJhY2sgaGFzIGZpbmlzaGVkIikKU3Vn
+Z2VzdGVkLWJ5OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueUBzdXNlLmNvbT4KUmVwb3J0ZWQtYnk6
+IFlpIFpoYW5nIDx5aS56aGFuZ0ByZWRoYXQuY29tPgpTaWduZWQtb2ZmLWJ5OiBXYWltYW4gTG9u
+ZyA8bG9uZ21hbkByZWRoYXQuY29tPgotLS0KIGJsb2NrL2Jsay1jZ3JvdXAuYyB8IDggKysrKysr
+KysKIG1tL2JhY2tpbmctZGV2LmMgICB8IDggKysrKysrLS0KIDIgZmlsZXMgY2hhbmdlZCwgMTQg
+aW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9ibG9jay9ibGstY2dy
+b3VwLmMgYi9ibG9jay9ibGstY2dyb3VwLmMKaW5kZXggMWJiOTM5ZDNiNzkzLi4yMWNjODgzNDlm
+MjEgMTAwNjQ0Ci0tLSBhL2Jsb2NrL2Jsay1jZ3JvdXAuYworKysgYi9ibG9jay9ibGstY2dyb3Vw
+LmMKQEAgLTEwODQsNiArMTA4NCwxMyBAQCBzdHJ1Y3QgbGlzdF9oZWFkICpibGtjZ19nZXRfY2d3
+Yl9saXN0KHN0cnVjdCBjZ3JvdXBfc3Vic3lzX3N0YXRlICpjc3MpCiAgKi8KIHN0YXRpYyB2b2lk
+IGJsa2NnX2Rlc3Ryb3lfYmxrZ3Moc3RydWN0IGJsa2NnICpibGtjZykKIHsKKwkvKgorCSAqIGJs
+a2NnX2Rlc3Ryb3lfYmxrZ3MoKSBzaG91bGRuJ3QgYmUgY2FsbGVkIHdpdGggYWxsIHRoZSBibGtj
+ZworCSAqIHJlZmVyZW5jZXMgZ29uZS4KKwkgKi8KKwlpZiAoV0FSTl9PTl9PTkNFKCFjc3NfdHJ5
+Z2V0KCZibGtjZy0+Y3NzKSkpCisJCXJldHVybjsKKwogCW1pZ2h0X3NsZWVwKCk7CiAKIAlzcGlu
+X2xvY2tfaXJxKCZibGtjZy0+bG9jayk7CkBAIC0xMTEwLDYgKzExMTcsNyBAQCBzdGF0aWMgdm9p
+ZCBibGtjZ19kZXN0cm95X2Jsa2dzKHN0cnVjdCBibGtjZyAqYmxrY2cpCiAJfQogCiAJc3Bpbl91
+bmxvY2tfaXJxKCZibGtjZy0+bG9jayk7CisJY3NzX3B1dCgmYmxrY2ctPmNzcyk7CiB9CiAKIC8q
+KgpkaWZmIC0tZ2l0IGEvbW0vYmFja2luZy1kZXYuYyBiL21tL2JhY2tpbmctZGV2LmMKaW5kZXgg
+YzMwNDE5YTVlMTE5Li4zNmY3NWIwNzIzMjUgMTAwNjQ0Ci0tLSBhL21tL2JhY2tpbmctZGV2LmMK
+KysrIGIvbW0vYmFja2luZy1kZXYuYwpAQCAtMzkwLDExICszOTAsMTUgQEAgc3RhdGljIHZvaWQg
+Y2d3Yl9yZWxlYXNlX3dvcmtmbihzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspCiAJd2Jfc2h1dGRv
+d24od2IpOwogCiAJY3NzX3B1dCh3Yi0+bWVtY2dfY3NzKTsKLQljc3NfcHV0KHdiLT5ibGtjZ19j
+c3MpOwogCW11dGV4X3VubG9jaygmd2ItPmJkaS0+Y2d3Yl9yZWxlYXNlX211dGV4KTsKIAotCS8q
+IHRyaWdnZXJzIGJsa2cgZGVzdHJ1Y3Rpb24gaWYgbm8gb25saW5lIHVzZXJzIGxlZnQgKi8KKwkv
+KgorCSAqIFRyaWdnZXJzIGJsa2cgZGVzdHJ1Y3Rpb24gaWYgbm8gb25saW5lIHVzZXJzIGxlZnQK
+KwkgKiBUaGUgZmluYWwgYmxrY2cgY3NzX3B1dCgpIGhhcyB0byBiZSBkb25lIGFmdGVyIGJsa2Nn
+X3VucGluX29ubGluZSgpCisJICogdG8gYXZvaWQgdXNlLWFmdGVyLWZyZWUuCisJICovCiAJYmxr
+Y2dfdW5waW5fb25saW5lKHdiLT5ibGtjZ19jc3MpOworCWNzc19wdXQod2ItPmJsa2NnX2Nzcyk7
+CiAKIAlmcHJvcF9sb2NhbF9kZXN0cm95X3BlcmNwdSgmd2ItPm1lbWNnX2NvbXBsZXRpb25zKTsK
+IAotLSAKMi4zMS4xCgo=
