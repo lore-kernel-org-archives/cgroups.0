@@ -1,119 +1,121 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/2] cgroup/cpuset: Make percpu cpuset_rwsem operation depending on DYNMODS state
-Date: Thu,  8 Dec 2022 14:56:34 -0500
-Message-ID: <20221208195634.2604362-3-longman@redhat.com>
-References: <20221208195634.2604362-1-longman@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH-block 3/3] blk-cgroup: Flush stats at blkgs destruction path
+Date: Thu,  8 Dec 2022 17:01:41 -0500
+Message-ID: <20221208220141.2625775-4-longman@redhat.com>
+References: <20221208220141.2625775-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1670529423;
+        s=mimecast20190719; t=1670536916;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=s03T6k1fAEZ5y4Sx1FORStjPoY8HDaI7yoRA/+1yXuc=;
-        b=OgbjEUyNUAl5rBdOMCLahf1u4OA4qC+P+Ep/Nuj51yXy3oASa7RkAlJKLCTTnYGudEwRlS
-        +O3cxkqUS2+rC4Pnl2ENhAGQBfwt1W3ZSNbWhw8fGUFdSD6oJ6BvpukNVT/T0yo+fuoa0L
-        guiXBNQdvSNdK7hHeGiJ1BWKszfvJ2s=
-In-Reply-To: <20221208195634.2604362-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=9MgINozTqdgeXroc8MSLx72iMYD01LxCIBLOKEVWwEw=;
+        b=Rcow1ZDNeB2WbwoYilbDaUVu/xYD/T0U0z/CMgPGfXAGaPAuigfxCUTPOlVlvYgehYZdPq
+        iIn4i8RNjJNAvuz+HPi74D9qj/ZGlHTfnhALIug6UrhKmCHQVux8i2hz6/17K8XidT49CY
+        YVf+aIpllKWabQ8LgdeBTFDLT78vVEA=
+In-Reply-To: <20221208220141.2625775-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>, Waiman Long <longman@redhat.com>
 
-With commit 6a010a49b63a ("cgroup: Make !percpu threadgroup_rwsem
-operations optional"), users can determine if they favor optimizing
-for efficiently moving processes between cgroups frequently or for
-a more static usage pattern where moving processes among cgroups are
-relatively rare.
+As noted by Michal, the blkg_iostat_set's in the lockless list
+hold reference to blkg's to protect against their removal. Those
+blkg's hold reference to blkcg. When a cgroup is being destroyed,
+cgroup_rstat_flush() is only called at css_release_work_fn() which is
+called when the blkcg reference count reaches 0. This circular dependency
+will prevent blkcg from being freed until some other events cause
+cgroup_rstat_flush() to be called to flush out the pending blkcg stats.
 
-The percpu cpuset_rwsem is in the same boat as percpu_threadgroup_rwsem
-since moving processes among cpusets will have the same latency impact
-depending on whether percpu operation in cpuset_rwsem is disabled or not.
+To prevent this delayed blkcg removal, add a new cgroup_rstat_css_flush()
+function to flush stats for a given css and cpu and call it at the blkgs
+destruction path, blkcg_destroy_blkgs(), whenever there are still some
+pending stats to be flushed. This will ensure that blkcg reference
+count can reach 0 ASAP.
 
-Ideally cpuset_bind() is the best place to check if the
-cpuset_rwsem should have its reader fast path disabled like
-percpu_threadgroup_rwsem so that it gets to be re-evaluated every
-time the cpuset is rebound. Unfortunately, cgroup_favor_dynmods()
-that sets the CGRP_ROOT_FAVOR_DYNMODS flag is called after the bind()
-method call. Instead, the newly added cpuset_check_dynmods() function
-is called at the first cpuset_css_online() call after a cpuset_bind()
-call when the first child cpuset is created.
-
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+ block/blk-cgroup.c     | 12 ++++++++++++
+ include/linux/cgroup.h |  1 +
+ kernel/cgroup/rstat.c  | 20 ++++++++++++++++++++
+ 3 files changed, 33 insertions(+)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 800c65de5daa..daf8ca948176 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -255,6 +255,7 @@ typedef enum {
- 	CS_SCHED_LOAD_BALANCE,
- 	CS_SPREAD_PAGE,
- 	CS_SPREAD_SLAB,
-+	CS_FAVOR_DYNMODS,	/* top_cpuset only */
- } cpuset_flagbits_t;
- 
- /* convenient tests for these bits */
-@@ -3049,6 +3050,27 @@ static struct cftype dfl_files[] = {
- 	{ }	/* terminate */
- };
- 
-+static bool dynmods_checked __read_mostly;
-+static void cpuset_check_dynmods(struct cgroup_root *root)
-+{
-+	bool favor_dynmods;
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index c466aef0d467..534f3baeb84a 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -1090,6 +1090,8 @@ struct list_head *blkcg_get_cgwb_list(struct cgroup_subsys_state *css)
+  */
+ static void blkcg_destroy_blkgs(struct blkcg *blkcg)
+ {
++	int cpu;
 +
-+	lockdep_assert_held(&cgroup_mutex);
-+	percpu_rwsem_assert_held(&cpuset_rwsem);
-+
+ 	/*
+ 	 * blkcg_destroy_blkgs() shouldn't be called with all the blkcg
+ 	 * references gone.
+@@ -1099,6 +1101,16 @@ static void blkcg_destroy_blkgs(struct blkcg *blkcg)
+ 
+ 	might_sleep();
+ 
 +	/*
-+	 * Check the CGRP_ROOT_FAVOR_DYNMODS of the cgroup root to find out
-+	 * if we need to enable or disable reader fast path of cpuset_rwsem.
++	 * Flush all the non-empty percpu lockless lists.
 +	 */
-+	favor_dynmods = test_bit(CS_FAVOR_DYNMODS, &top_cpuset.flags);
-+	if (favor_dynmods && !(root->flags & CGRP_ROOT_FAVOR_DYNMODS)) {
-+		rcu_sync_exit(&cpuset_rwsem.rss);
-+		clear_bit(CS_FAVOR_DYNMODS, &top_cpuset.flags);
-+	} else if (!favor_dynmods && (root->flags & CGRP_ROOT_FAVOR_DYNMODS)) {
-+		rcu_sync_enter(&cpuset_rwsem.rss);
-+		set_bit(CS_FAVOR_DYNMODS, &top_cpuset.flags);
++	for_each_possible_cpu(cpu) {
++		struct llist_head *lhead = per_cpu_ptr(blkcg->lhead, cpu);
++
++		if (!llist_empty(lhead))
++			cgroup_rstat_css_cpu_flush(&blkcg->css, cpu);
 +	}
-+}
++
+ 	spin_lock_irq(&blkcg->lock);
+ 
+ 	while (!hlist_empty(&blkcg->blkg_list)) {
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 528bd44b59e2..6c4e66b3fa84 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -766,6 +766,7 @@ void cgroup_rstat_flush(struct cgroup *cgrp);
+ void cgroup_rstat_flush_irqsafe(struct cgroup *cgrp);
+ void cgroup_rstat_flush_hold(struct cgroup *cgrp);
+ void cgroup_rstat_flush_release(void);
++void cgroup_rstat_css_cpu_flush(struct cgroup_subsys_state *css, int cpu);
  
  /*
-  *	cpuset_css_alloc - allocate a cpuset css
-@@ -3099,6 +3121,14 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
- 	cpus_read_lock();
- 	percpu_down_write(&cpuset_rwsem);
+  * Basic resource stats.
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index 793ecff29038..910e633869b0 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -281,6 +281,26 @@ void cgroup_rstat_flush_release(void)
+ 	spin_unlock_irq(&cgroup_rstat_lock);
+ }
  
-+	/*
-+	 * Check dynmod state on the first css_online() call.
-+	 */
-+	if (unlikely(!dynmods_checked)) {
-+		cpuset_check_dynmods(cpuset_cgrp_subsys.root);
-+		dynmods_checked = true;
-+	}
++/**
++ * cgroup_rstat_css_cpu_flush - flush stats for the given css and cpu
++ * @css: target css to be flush
++ * @cpu: the cpu that holds the stats to be flush
++ *
++ * A lightweight rstat flush operation for a given css and cpu.
++ * Only the cpu_lock is being held for mutual exclusion, the cgroup_rstat_lock
++ * isn't used.
++ */
++void cgroup_rstat_css_cpu_flush(struct cgroup_subsys_state *css, int cpu)
++{
++	raw_spinlock_t *cpu_lock = per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu);
 +
- 	set_bit(CS_ONLINE, &cs->flags);
- 	if (is_spread_page(parent))
- 		set_bit(CS_SPREAD_PAGE, &cs->flags);
-@@ -3201,6 +3231,12 @@ static void cpuset_css_free(struct cgroup_subsys_state *css)
- 
- static void cpuset_bind(struct cgroup_subsys_state *root_css)
++	raw_spin_lock_irq(cpu_lock);
++	rcu_read_lock();
++	css->ss->css_rstat_flush(css, cpu);
++	rcu_read_unlock();
++	raw_spin_unlock_irq(cpu_lock);
++}
++
+ int cgroup_rstat_init(struct cgroup *cgrp)
  {
-+	/*
-+	 * Reset dynmods_checked to be evaluated again in the next
-+	 * cpuset_css_online()
-+	 */
-+	dynmods_checked = false;
-+
- 	percpu_down_write(&cpuset_rwsem);
- 	spin_lock_irq(&callback_lock);
- 
+ 	int cpu;
 -- 
 2.31.1
 
