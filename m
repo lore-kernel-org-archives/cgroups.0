@@ -1,80 +1,56 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH v2] mm: memcontrol: protect the memory in cgroup from
- being oom killed
-Date: Thu, 8 Dec 2022 09:14:10 +0100
-Message-ID: <Y5Gc0jiDlWlRlMYH@dhcp22.suse.cz>
-References: <Y5GTM5HLhGrx9zFO@dhcp22.suse.cz>
- <CEFD5AB7-17FB-4CC0-B818-1988484B8E55@didiglobal.com>
+From: Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 08/18] x86/sgx: Allow reclaiming up to 32 pages, but
+ scan 16 by default
+Date: Thu, 8 Dec 2022 09:26:32 +0000
+Message-ID: <Y5GtyM92jE5/UJT3@kernel.org>
+References: <20221202183655.3767674-1-kristen@linux.intel.com>
+ <20221202183655.3767674-9-kristen@linux.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1670487251; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=u0hWHCxU1/envycw51Ct9du7tEezNa6pk2WQ6bJqy/w=;
-        b=qSOLY1dx+vkJzivbCTsCM6e4XSENfZXkIpKv/uIg1CATNmHjNY4qQmbEfTF1zBvlpfBfZT
-        kuFp6GA6Rdwoo2SHhC7mZK5EewUghzIzzQc8AXOLSmLt0/rP/+25c/0VjGpPh0kd2FCN9f
-        GxRQzJWB1DXd3jhReywaSOAFI2wqhaE=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1670491596;
+        bh=TNqJerM9UR1fg07xX3h23a2j69g0XEpwAAYXPgA4ZEI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=s6CZZHIqy2xxLR3jpTBP+mtBdBxj+rY6+ATpzcxHIKjvPsU3xfYS23x1cuKm0NQk+
+         e968/2VYe1r14ryWx5aHvjSKkXQ4zjUGk7Hgtk/Hzv8hDAuO+++M1V1bQydOn6A/N0
+         2W/r+n3CWFatZLQsHsAuP4sjEd2PJlz+jkd6B62gzFpcAeYYBeoKWUqbWjvfnZ1ni7
+         yF2MmE2sGvH57azEdUviynHwYkog9ABiYbMYnpbBLFPbzauFUeeOsRoXkF+ATDOjY/
+         aDptE0IvKxRc/b5rhT68YTFEMuVzo7jJ4aXGihkgIMomwPzb5CTZeY/8KO3gUGZwM9
+         zquRZ/oh754XQ==
 Content-Disposition: inline
-In-Reply-To: <CEFD5AB7-17FB-4CC0-B818-1988484B8E55@didiglobal.com>
+In-Reply-To: <20221202183655.3767674-9-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?utf-8?B?56iL5Z6y5rab?= Chengkaitao Cheng <chengkaitao@didiglobal.com>
-Cc: chengkaitao <pilgrimtao@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "corbet@lwn.net" <corbet@lwn.net>, "roman.gushchin@linux.dev" <roman.gushchin@linux.dev>, "shakeelb@google.com" <shakeelb@google.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "songmuchun@bytedance.com" <songmuchun@bytedance.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "zhengqi.arch@bytedance.com" <zhengqi.arch@bytedance.com>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "Liam.Howlett@oracle.com" <Liam.Howlett@oracle.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>, "haolee.swjtu@gmail.com" <haolee.swjtu@gmail.com>, "yuzhao@google.com" <yuzhao@google.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Thu 08-12-22 07:59:27, 程垲涛 Chengkaitao Cheng wrote:
-> At 2022-12-08 15:33:07, "Michal Hocko" <mhocko@suse.com> wrote:
-> >On Thu 08-12-22 11:46:44, chengkaitao wrote:
-> >> From: chengkaitao <pilgrimtao@gmail.com>
-> >> 
-> >> We created a new interface <memory.oom.protect> for memory, If there is
-> >> the OOM killer under parent memory cgroup, and the memory usage of a
-> >> child cgroup is within its effective oom.protect boundary, the cgroup's
-> >> tasks won't be OOM killed unless there is no unprotected tasks in other
-> >> children cgroups. It draws on the logic of <memory.min/low> in the
-> >> inheritance relationship.
-> >> 
-> >> It has the following advantages,
-> >> 1. We have the ability to protect more important processes, when there
-> >> is a memcg's OOM killer. The oom.protect only takes effect local memcg,
-> >> and does not affect the OOM killer of the host.
-> >> 2. Historically, we can often use oom_score_adj to control a group of
-> >> processes, It requires that all processes in the cgroup must have a
-> >> common parent processes, we have to set the common parent process's
-> >> oom_score_adj, before it forks all children processes. So that it is
-> >> very difficult to apply it in other situations. Now oom.protect has no
-> >> such restrictions, we can protect a cgroup of processes more easily. The
-> >> cgroup can keep some memory, even if the OOM killer has to be called.
-> >> 
-> >> Signed-off-by: chengkaitao <pilgrimtao@gmail.com>
-> >> ---
-> >> v2: Modify the formula of the process request memcg protection quota.
-> >
-> >The new formula doesn't really address concerns expressed previously.
-> >Please read my feedback carefully again and follow up with questions if
-> >something is not clear.
+On Fri, Dec 02, 2022 at 10:36:44AM -0800, Kristen Carlson Accardi wrote:
+> From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 > 
-> The previous discussion was quite scattered. Can you help me summarize
-> your concerns again?
+> Modify sgx_reclaim_pages() to take a parameter that specifies the
+> number of pages to scan for reclaiming. Specify a max value of
+> 32, but scan 16 in the usual case. This allows the number of pages
+> sgx_reclaim_pages() scans to be specified by the caller, and adjusted
+> in future patches.
+> 
+> Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  arch/x86/kernel/cpu/sgx/main.c | 25 +++++++++++++++----------
+>  1 file changed, 15 insertions(+), 10 deletions(-)
+> 
+> diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
+> index 83aaf5cea7b9..f201ca85212f 100644
+> --- a/arch/x86/kernel/cpu/sgx/main.c
+> +++ b/arch/x86/kernel/cpu/sgx/main.c
+> @@ -18,6 +18,8 @@
+>  #include "encl.h"
+>  #include "encls.h"
+>  
+> +#define SGX_MAX_NR_TO_RECLAIM	32
 
-The most important part is http://lkml.kernel.org/r/Y4jFnY7kMdB8ReSW@dhcp22.suse.cz
-: Let me just emphasise that we are talking about fundamental disconnect.
-: Rss based accounting has been used for the OOM killer selection because
-: the memory gets unmapped and _potentially_ freed when the process goes
-: away. Memcg changes are bound to the object life time and as said in
-: many cases there is no direct relation with any process life time.
+SGX_NR_TO_SCAN_MAX
 
-That is to the per-process discount based on rss or any per-process
-memory metrics.
-
-Another really important question is the actual configurability. The
-hierarchical protection has to be enforced and that means that same as
-memory reclaim protection it has to be enforced top-to-bottom in the
-cgroup hierarchy. That makes the oom protection rather non-trivial to
-configure without having a good picture of a larger part of the cgroup
-hierarchy as it cannot be tuned based on a reclaim feedback.
--- 
-Michal Hocko
-SUSE Labs
+BR, Jarkko
