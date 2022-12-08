@@ -1,68 +1,107 @@
-From: Jarkko Sakkinen <jarkko@kernel.org>
-Subject: Re: [PATCH v2 13/18] x86/sgx: Add helper to grab pages from an
- arbitrary EPC LRU
-Date: Thu, 8 Dec 2022 09:56:57 +0000
-Message-ID: <Y5G06eSnWRAOJMty@kernel.org>
-References: <20221202183655.3767674-1-kristen@linux.intel.com>
- <20221202183655.3767674-14-kristen@linux.intel.com>
+From: =?utf-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= 
+        <chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
+Subject: Re: [PATCH v2] mm: memcontrol: protect the memory in cgroup from
+ being oom killed
+Date: Thu, 8 Dec 2022 14:07:06 +0000
+Message-ID: <3E260DAC-2E2F-48B7-98BB-036EF0A423DC@didiglobal.com>
+References: <Y5Gc0jiDlWlRlMYH@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670493421;
-        bh=0YONDyXSVa33MyT3Y1l44dW3jNZREl8JU1hVtA1zMfc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=FCSyXRUaBuN5Gfn5yMzGv4WNYwCtUjmYth2dtuI2WPqWJmXCbUCNNo4MJjxsRQ7ml
-         25QzxXJWThQe16pB9msMXeV0V57sqf/XAySKr4f75hUXFY2JcCfdIksFAZ/ZPyTy26
-         6qk6jXvM50+/jZ+dD8dNsPtT0HPYua0aq+PQDwRZz6q6DFvr05138ugmelxchXQVBM
-         iG2Mjy+BK5qKg/aunxPyWAWnPDMNRYj4WmIDc3a/B5trq9ndv5eGo2WT+/23TAmAr8
-         nqalOGJABkT5Y9hC3StQq0HehSbsEBdrd71JX42YX0hF4I0DK6mFYiNbhKJsxb2Tpc
-         OeVJD4rNFw2Ng==
-Content-Disposition: inline
-In-Reply-To: <20221202183655.3767674-14-kristen@linux.intel.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Y5Gc0jiDlWlRlMYH-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: zh-CN
+Content-ID: <4E155EE2AF03EF418EE4F2728C2F93A6-j11cvHKnkmPwvR0lvYjcXw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kristen Carlson Accardi <kristen@linux.intel.com>
-Cc: dave.hansen@linux.intel.com, tj@kernel.org, linux-kernel@vger.kernel.org, linux-sgx@vger.kernel.org, cgroups@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, zhiquan1.li@intel.com, Sean Christopherson <seanjc@google.com>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: chengkaitao <pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "corbet-T1hC0tSOHrs@public.gmane.org" <corbet-T1hC0tSOHrs@public.gmane.org>, "roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, "Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Fri, Dec 02, 2022 at 10:36:49AM -0800, Kristen Carlson Accardi wrote:
-> From: Sean Christopherson <sean.j.christopherson@intel.com>
-> 
-> Move the isolation loop into a standalone helper, sgx_isolate_pages(),
-> in preparation for existence of multiple LRUs.  Expose the helper to
-> other SGX code so that it can be called from the EPC cgroup code, e.g.
-> to isolate pages from a single cgroup LRU.  Exposing the isolation loop
-> allows the cgroup iteration logic to be wholly encapsulated within the
-> cgroup code.
-> 
-> Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
-> Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-> Cc: Sean Christopherson <seanjc@google.com>
-> ---
->  arch/x86/kernel/cpu/sgx/main.c | 68 +++++++++++++++++++++-------------
->  arch/x86/kernel/cpu/sgx/sgx.h  |  2 +
->  2 files changed, 44 insertions(+), 26 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
-> index c947b4ae06f3..a59550fa150b 100644
-> --- a/arch/x86/kernel/cpu/sgx/main.c
-> +++ b/arch/x86/kernel/cpu/sgx/main.c
-> @@ -280,7 +280,46 @@ static void sgx_reclaimer_write(struct sgx_epc_page *epc_page,
->  }
->  
->  /**
-> - * sgx_reclaim_pages() - Reclaim EPC pages from the consumers
-> + * sgx_isolate_epc_pages() - Isolate pages from an LRU for reclaim
-> + * @lru:	LRU from which to reclaim
-> + * @nr_to_scan:	Number of pages to scan for reclaim
-> + * @dst:	Destination list to hold the isolated pages
-> + */
-> +void sgx_isolate_epc_pages(struct sgx_epc_lru_lists *lru, int *nr_to_scan,
-> +			   struct list_head *dst)
-
-Why not instead return the number of pages scanned, and pass
-'int nr_to_scan'?
-
-That would just be more idiomatic choice.
-
-BR, Jarkko
+QXQgMjAyMi0xMi0wOCAxNjoxNDoxMCwgIk1pY2hhbCBIb2NrbyIgPG1ob2Nrb0BzdXNlLmNvbT4g
+d3JvdGU6DQo+T24gVGh1IDA4LTEyLTIyIDA3OjU5OjI3LCDnqIvlnrLmtpsgQ2hlbmdrYWl0YW8g
+Q2hlbmcgd3JvdGU6DQo+PiBBdCAyMDIyLTEyLTA4IDE1OjMzOjA3LCAiTWljaGFsIEhvY2tvIiA8
+bWhvY2tvQHN1c2UuY29tPiB3cm90ZToNCj4+ID5PbiBUaHUgMDgtMTItMjIgMTE6NDY6NDQsIGNo
+ZW5na2FpdGFvIHdyb3RlOg0KPj4gPj4gRnJvbTogY2hlbmdrYWl0YW8gPHBpbGdyaW10YW9AZ21h
+aWwuY29tPg0KPj4gPj4gDQo+PiA+PiBXZSBjcmVhdGVkIGEgbmV3IGludGVyZmFjZSA8bWVtb3J5
+Lm9vbS5wcm90ZWN0PiBmb3IgbWVtb3J5LCBJZiB0aGVyZSBpcw0KPj4gPj4gdGhlIE9PTSBraWxs
+ZXIgdW5kZXIgcGFyZW50IG1lbW9yeSBjZ3JvdXAsIGFuZCB0aGUgbWVtb3J5IHVzYWdlIG9mIGEN
+Cj4+ID4+IGNoaWxkIGNncm91cCBpcyB3aXRoaW4gaXRzIGVmZmVjdGl2ZSBvb20ucHJvdGVjdCBi
+b3VuZGFyeSwgdGhlIGNncm91cCdzDQo+PiA+PiB0YXNrcyB3b24ndCBiZSBPT00ga2lsbGVkIHVu
+bGVzcyB0aGVyZSBpcyBubyB1bnByb3RlY3RlZCB0YXNrcyBpbiBvdGhlcg0KPj4gPj4gY2hpbGRy
+ZW4gY2dyb3Vwcy4gSXQgZHJhd3Mgb24gdGhlIGxvZ2ljIG9mIDxtZW1vcnkubWluL2xvdz4gaW4g
+dGhlDQo+PiA+PiBpbmhlcml0YW5jZSByZWxhdGlvbnNoaXAuDQo+PiA+PiANCj4+ID4+IEl0IGhh
+cyB0aGUgZm9sbG93aW5nIGFkdmFudGFnZXMsDQo+PiA+PiAxLiBXZSBoYXZlIHRoZSBhYmlsaXR5
+IHRvIHByb3RlY3QgbW9yZSBpbXBvcnRhbnQgcHJvY2Vzc2VzLCB3aGVuIHRoZXJlDQo+PiA+PiBp
+cyBhIG1lbWNnJ3MgT09NIGtpbGxlci4gVGhlIG9vbS5wcm90ZWN0IG9ubHkgdGFrZXMgZWZmZWN0
+IGxvY2FsIG1lbWNnLA0KPj4gPj4gYW5kIGRvZXMgbm90IGFmZmVjdCB0aGUgT09NIGtpbGxlciBv
+ZiB0aGUgaG9zdC4NCj4+ID4+IDIuIEhpc3RvcmljYWxseSwgd2UgY2FuIG9mdGVuIHVzZSBvb21f
+c2NvcmVfYWRqIHRvIGNvbnRyb2wgYSBncm91cCBvZg0KPj4gPj4gcHJvY2Vzc2VzLCBJdCByZXF1
+aXJlcyB0aGF0IGFsbCBwcm9jZXNzZXMgaW4gdGhlIGNncm91cCBtdXN0IGhhdmUgYQ0KPj4gPj4g
+Y29tbW9uIHBhcmVudCBwcm9jZXNzZXMsIHdlIGhhdmUgdG8gc2V0IHRoZSBjb21tb24gcGFyZW50
+IHByb2Nlc3Mncw0KPj4gPj4gb29tX3Njb3JlX2FkaiwgYmVmb3JlIGl0IGZvcmtzIGFsbCBjaGls
+ZHJlbiBwcm9jZXNzZXMuIFNvIHRoYXQgaXQgaXMNCj4+ID4+IHZlcnkgZGlmZmljdWx0IHRvIGFw
+cGx5IGl0IGluIG90aGVyIHNpdHVhdGlvbnMuIE5vdyBvb20ucHJvdGVjdCBoYXMgbm8NCj4+ID4+
+IHN1Y2ggcmVzdHJpY3Rpb25zLCB3ZSBjYW4gcHJvdGVjdCBhIGNncm91cCBvZiBwcm9jZXNzZXMg
+bW9yZSBlYXNpbHkuIFRoZQ0KPj4gPj4gY2dyb3VwIGNhbiBrZWVwIHNvbWUgbWVtb3J5LCBldmVu
+IGlmIHRoZSBPT00ga2lsbGVyIGhhcyB0byBiZSBjYWxsZWQuDQo+PiA+PiANCj4+ID4+IFNpZ25l
+ZC1vZmYtYnk6IGNoZW5na2FpdGFvIDxwaWxncmltdGFvQGdtYWlsLmNvbT4NCj4+ID4+IC0tLQ0K
+Pj4gPj4gdjI6IE1vZGlmeSB0aGUgZm9ybXVsYSBvZiB0aGUgcHJvY2VzcyByZXF1ZXN0IG1lbWNn
+IHByb3RlY3Rpb24gcXVvdGEuDQo+PiA+DQo+PiA+VGhlIG5ldyBmb3JtdWxhIGRvZXNuJ3QgcmVh
+bGx5IGFkZHJlc3MgY29uY2VybnMgZXhwcmVzc2VkIHByZXZpb3VzbHkuDQo+PiA+UGxlYXNlIHJl
+YWQgbXkgZmVlZGJhY2sgY2FyZWZ1bGx5IGFnYWluIGFuZCBmb2xsb3cgdXAgd2l0aCBxdWVzdGlv
+bnMgaWYNCj4+ID5zb21ldGhpbmcgaXMgbm90IGNsZWFyLg0KPj4gDQo+PiBUaGUgcHJldmlvdXMg
+ZGlzY3Vzc2lvbiB3YXMgcXVpdGUgc2NhdHRlcmVkLiBDYW4geW91IGhlbHAgbWUgc3VtbWFyaXpl
+DQo+PiB5b3VyIGNvbmNlcm5zIGFnYWluPw0KPg0KPlRoZSBtb3N0IGltcG9ydGFudCBwYXJ0IGlz
+IGh0dHA6Ly9sa21sLmtlcm5lbC5vcmcvci9ZNGpGblk3a01kQjhSZVNXQGRoY3AyMi5zdXNlLmN6
+DQo+OiBMZXQgbWUganVzdCBlbXBoYXNpc2UgdGhhdCB3ZSBhcmUgdGFsa2luZyBhYm91dCBmdW5k
+YW1lbnRhbCBkaXNjb25uZWN0Lg0KPjogUnNzIGJhc2VkIGFjY291bnRpbmcgaGFzIGJlZW4gdXNl
+ZCBmb3IgdGhlIE9PTSBraWxsZXIgc2VsZWN0aW9uIGJlY2F1c2UNCj46IHRoZSBtZW1vcnkgZ2V0
+cyB1bm1hcHBlZCBhbmQgX3BvdGVudGlhbGx5XyBmcmVlZCB3aGVuIHRoZSBwcm9jZXNzIGdvZXMN
+Cj46IGF3YXkuIE1lbWNnIGNoYW5nZXMgYXJlIGJvdW5kIHRvIHRoZSBvYmplY3QgbGlmZSB0aW1l
+IGFuZCBhcyBzYWlkIGluDQo+OiBtYW55IGNhc2VzIHRoZXJlIGlzIG5vIGRpcmVjdCByZWxhdGlv
+biB3aXRoIGFueSBwcm9jZXNzIGxpZmUgdGltZS4NCj4NCldlIG5lZWQgdG8gZGlzY3VzcyB0aGUg
+cmVsYXRpb25zaGlwIGJldHdlZW4gbWVtY2cncyBtZW0gYW5kIHByb2Nlc3MncyBtZW0sIA0KDQp0
+YXNrX3VzYWdlID0gdGFza19hbm9uKHJzc19hbm9uKSArIHRhc2tfbWFwcGVkX2ZpbGUocnNzX2Zp
+bGUpIA0KCSArIHRhc2tfbWFwcGVkX3NoYXJlKHJzc19zaGFyZSkgKyB0YXNrX3BndGFibGVzICsg
+dGFza19zd2FwZW50cw0KDQptZW1jZ191c2FnZQk9IG1lbWNnX2Fub24gKyBtZW1jZ19maWxlICsg
+bWVtY2dfcGd0YWJsZXMgKyBtZW1jZ19zaGFyZQ0KCT0gYWxsX3Rhc2tfYW5vbiArIGFsbF90YXNr
+X21hcHBlZF9maWxlICsgYWxsX3Rhc2tfbWFwcGVkX3NoYXJlIA0KCSArIGFsbF90YXNrX3BndGFi
+bGVzICsgdW5tYXBwZWRfZmlsZSArIHVubWFwcGVkX3NoYXJlDQoJPSBhbGxfdGFza191c2FnZSAr
+IHVubWFwcGVkX2ZpbGUgKyB1bm1hcHBlZF9zaGFyZSAtIGFsbF90YXNrX3N3YXBlbnRzDQoNCk1l
+bWNnIGlzIGRpcmVjdGx5IHJlbGF0ZWQgdG8gcHJvY2Vzc2VzIGZvciBtb3N0IG1lbW9yeS4gT24g
+dGhlIG90aGVyIGhhbmQsIA0KdW5tYXBwZWRfZmlsZSBwYWdlcyBhbmQgdW5tYXBwZWRfc2hhcmUg
+cGFnZXMgYXJlbid0IGNoYXJnZWQgaW50byB0aGUgDQpwcm9jZXNzLCBidXQgdGhlc2UgbWVtb3Jp
+ZXMgY2FuIG5vdCBiZSByZWxlYXNlZCBieSB0aGUgb29tIGtpbGxlci4gVGhlcmVmb3JlLCANCnRo
+ZXkgc2hvdWxkIG5vdCBhcHBseSB0byBjZ3JvdXAgZm9yIHByb3RlY3Rpb24gcXVvdGEuIFRoZXkg
+Y2FuIGJlIGV4Y2x1ZGVkIA0KZHVyaW5nIGNhbGN1bGF0aW9uLg0KDQogICAgICAgbWVtY2cgQQ0K
+ICAgIC8gICAgIHwgICAgIFwNCnRhc2steCAgdGFzay15ICBjb21tb24tY2FjaGUNCiAgIDJHICAg
+ICAyRyAgICAgICAgMkcNCg0KZW9vbS5wcm90ZWN0KG1lbWNnIEEpID0gM0c7DQp1c2FnZShtZW1j
+ZyBBKSA9IDZHDQp1c2FnZSh0YXNrIHgpID0gMkcNCnVzYWdlKHRhc2sgeSkgPSAyRw0KY29tbW9u
+LWNhY2hlID0gMkcNCg0KQWZ0ZXIgY2FsY3VsYXRpb24sDQphY3R1YWwtcHJvdGVjdGlvbih0YXNr
+IHgpID0gMUcNCmFjdHVhbC1wcm90ZWN0aW9uKHRhc2sgeSkgPSAxRw0KDQpUaGlzIGZvcm11bGEg
+aXMgbW9yZSBmYWlyIGZvciBncm91cHMgd2l0aCBmZXdlciBjb21tb24tY2FjaGVzICh1bm1hcHBl
+ZF8NCmZpbGUgcGFnZXMgYW5kIHVubWFwcGVkX3NoYXJlIHBhZ2VzKS4NCkluIGV4dHJlbWUgZW52
+aXJvbm1lbnRzLCB1bm1hcHBlZF9maWxlIHBhZ2VzIGFuZCB1bm1hcHBlZF9zaGFyZSBwYWdlcyAN
+Cm1heSBsb2NrIGEgbGFyZ2Ugc2hhcmUgb2YgcHJvdGVjdGlvbiBxdW90YSwgYnV0IGl0IGlzIGV4
+cGVjdGVkLg0KDQo+VGhhdCBpcyB0byB0aGUgcGVyLXByb2Nlc3MgZGlzY291bnQgYmFzZWQgb24g
+cnNzIG9yIGFueSBwZXItcHJvY2Vzcw0KPm1lbW9yeSBtZXRyaWNzLg0KPg0KPkFub3RoZXIgcmVh
+bGx5IGltcG9ydGFudCBxdWVzdGlvbiBpcyB0aGUgYWN0dWFsIGNvbmZpZ3VyYWJpbGl0eS4gVGhl
+DQo+aGllcmFyY2hpY2FsIHByb3RlY3Rpb24gaGFzIHRvIGJlIGVuZm9yY2VkIGFuZCB0aGF0IG1l
+YW5zIHRoYXQgc2FtZSBhcw0KPm1lbW9yeSByZWNsYWltIHByb3RlY3Rpb24gaXQgaGFzIHRvIGJl
+IGVuZm9yY2VkIHRvcC10by1ib3R0b20gaW4gdGhlDQo+Y2dyb3VwIGhpZXJhcmNoeS4gVGhhdCBt
+YWtlcyB0aGUgb29tIHByb3RlY3Rpb24gcmF0aGVyIG5vbi10cml2aWFsIHRvDQo+Y29uZmlndXJl
+IHdpdGhvdXQgaGF2aW5nIGEgZ29vZCBwaWN0dXJlIG9mIGEgbGFyZ2VyIHBhcnQgb2YgdGhlIGNn
+cm91cA0KPmhpZXJhcmNoeSBhcyBpdCBjYW5ub3QgYmUgdHVuZWQgYmFzZWQgb24gYSByZWNsYWlt
+IGZlZWRiYWNrLg0KDQpUaGVyZSBpcyBhbiBlc3NlbnRpYWwgZGlmZmVyZW5jZSBiZXR3ZWVuIHJl
+Y2xhaW0gYW5kIG9vbSBraWxsZXIuIFRoZSByZWNsYWltIA0KY2Fubm90IGJlIGRpcmVjdGx5IHBl
+cmNlaXZlZCBieSB1c2Vycywgc28gbWVtY2cgbmVlZCB0byBjb3VudCBpbmRpY2F0b3JzIA0Kc2lt
+aWxhciB0byBwZ3NjYW5fKGtzd2FwZC9kaXJlY3QpLiBIb3dldmVyLCB3aGVuIHRoZSB1c2VyIHBy
+b2Nlc3MgaXMga2lsbGVkIA0KYnkgb29tIGtpbGxlciwgdXNlcnMgY2FuIGNsZWFybHkgcGVyY2Vp
+dmUgYW5kIGNvdW50IChzdWNoIGFzIHRoZSBudW1iZXIgb2YgDQpyZXN0YXJ0cyBvZiBhIGNlcnRh
+aW4gdHlwZSBvZiBwcm9jZXNzKS4gQXQgdGhlIHNhbWUgdGltZSwgdGhlIGtlcm5lbCBhbHNvIGhh
+cyANCm1lbW9yeS5ldmVudHMgdG8gY291bnQgc29tZSBpbmZvcm1hdGlvbiBhYm91dCB0aGUgb29t
+IGtpbGxlciwgd2hpY2ggY2FuIA0KYWxzbyBiZSB1c2VkIGZvciBmZWVkYmFjayBhZGp1c3RtZW50
+LiBPZiBjb3Vyc2UsIEkgY2FuIGFsc28gYWRkIHNvbWUgDQppbmRpY2F0b3JzIHNpbWlsYXIgdG8g
+dGhlIGFjY3VtdWxhdGVkIG1lbW9yeSByZWxlYXNlZCBieSB0aGUgb29tIGtpbGxlciANCnRvIGhl
+bHAgdXNlcnMgYmV0dGVyIGdyYXNwIHRoZSBkeW5hbWljcyBvZiB0aGUgb29tIGtpbGxlci4gRG8g
+eW91IHRoaW5rIGl0IA0KaXMgdmFsdWFibGU/DQotLSANClRoYW5rcyBmb3IgeW91ciBjb21tZW50
+IQ0KY2hlbmdrYWl0YW8NCg0K
