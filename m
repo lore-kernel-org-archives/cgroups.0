@@ -1,48 +1,33 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/3] mm: memcontrol: skip moving non-present pages that
- are mapped elsewhere
-Date: Wed, 7 Dec 2022 16:36:07 -0800
-Message-ID: <CALvZod4RxpYOeVurV-vrTc7MY7m8tDCJPOsX+JNGv5BsuFMEFA@mail.gmail.com>
-References: <20221206171340.139790-1-hannes@cmpxchg.org> <20221206171340.139790-2-hannes@cmpxchg.org>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH 2/3] mm: rmap: remove lock_page_memcg()
+Date: Wed, 7 Dec 2022 16:36:39 -0800
+Message-ID: <CALvZod7jy0gvXRHhsJ2aaj+rP=3if5c4+p+-kC-qo3WSU+tRqQ@mail.gmail.com>
+References: <20221206171340.139790-1-hannes@cmpxchg.org> <20221206171340.139790-3-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=cc:to:subject:message-id:date:from:in-reply-to:references
          :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=hnwjKeWBS3gGbPLTonrsO/3QESDmxRzIhrG9LgstSBg=;
-        b=NlFKm5a2bnfBu0WaavUk4T4534i2Ffeaod/IcsY3hbfl5pfgAHlWwatoI96o/JhxVY
-         wv4jmxKJolkcLNfPjePOus4PgAoxfKxZa11QwswwKUrxbVgfpHCGZsLmLLpLRBARa5FD
-         KNO2NlvY1X3gGX7GblLaLaMZ6NYgxW2EGxv2OS1UPupWVD0MOlRVlBmqHZ/ZU6UtEOYh
-         XmzzI29PN659tu4HW9S9xkSazS6K1wt/sjeiwL4GMroztNtIq1BewgZTmaHVRqjEebmV
-         rsbYmjDqi2YDUT9xod5OiRzgobIh9Oc1bvJH3yUAIXl2GAmgY4Qg039o4TksWbGj30XX
-         26lw==
-In-Reply-To: <20221206171340.139790-2-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        bh=qeBXIqzSfIuH6SAUQWNL+jPx2S1sL9td+8nqZ4xaU5o=;
+        b=i8izx+NjrAcYy4Azi2gqPWXEKbDGdCxrPDPu+ynSN5Bk59ImL6T95Oo1WQs/o3O4Dv
+         psw4F81s8kACsalYuCfa3YKVBUaWdt1dN1dLAoYO2bURSF/UvH71sAocuPgjbCHFDXAM
+         /BfpE2un7nJiG6xpMzVfPOtcBBwkYXRlKNKXsR8yKpQI5Y5Asgu0Pbzs6N11XFobKotf
+         IkSSSNBiGAgpC/2Dnet7amfL8e3kbgaIJuFInroYam92GkAtxrLFF98Ng380oqEdtEKn
+         aDEn6p51I0QgovKxUPDyJugKpODyKOUt14FWakO7ddAbM+U7UBLTPVLiByTMRh8LYTJs
+         2hHQ==
+In-Reply-To: <20221206171340.139790-3-hannes@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Dec 6, 2022 at 9:14 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+On Tue, Dec 6, 2022 at 9:14 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
 >
-> During charge moving, the pte lock and the page lock cover nearly all
-> cases of stabilizing page_mapped(). The only exception is when we're
-> looking at a non-present pte and find a page in the page cache or in
-> the swapcache: if the page is mapped elsewhere, it can become unmapped
-> outside of our control. For this reason, rmap needs lock_page_memcg().
+> The previous patch made sure charge moving only touches pages for
+> which page_mapped() is stable. lock_page_memcg() is no longer needed.
 >
-> We don't like cgroup-specific locks in generic MM code - especially in
-> performance-critical MM code - and for a legacy feature that's
-> unlikely to have many users left - if any.
->
-> So remove the exception. Arguably that's better semantics anyway: the
-> page is shared, and another process seems to be the more active user.
->
-> Once we stop moving such pages, rmap doesn't need lock_page_memcg()
-> anymore. The next patch will remove it.
->
-> Suggested-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Acked-by: Shakeel Butt <shakeelb@google.com>
