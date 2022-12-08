@@ -1,81 +1,60 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/3] mm: memcontrol: deprecate charge moving
-Date: Wed, 7 Dec 2022 14:15:17 -0800
-Message-ID: <CALvZod63UBrAGXpzs0ukdazvjmBfb61t9PCzUhjrbnDWTaP59Q@mail.gmail.com>
-References: <20221206171340.139790-1-hannes@cmpxchg.org> <20221206171340.139790-4-hannes@cmpxchg.org>
- <CALvZod6WcBifeWJYG_QLr9Uy5aSbpLoCVyOp+FVx0ca1gzq4fA@mail.gmail.com> <20221207135108.fe1d51f7581f6ff86dbf9bc8@linux-foundation.org>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: Low TCP throughput due to vmpressure with swap enabled
+Date: Thu, 8 Dec 2022 00:31:36 +0000
+Message-ID: <20221208003136.fxm6msgiswl2xdac@google.com>
+References: <CABWYdi3PqipLxnqeepXeZ471pfeBg06-PV0Uw04fU-LHnx_A4g@mail.gmail.com>
+ <CABWYdi0qhWs56WK=k+KoQBAMh+Tb6Rr0nY4kJN+E5YqfGhKTmQ@mail.gmail.com>
+ <Y4T43Tc54vlKjTN0@cmpxchg.org> <CABWYdi0z6-46PrNWumSXWki6Xf4G_EP1Nvc-2t00nEi0PiOU3Q@mail.gmail.com>
+ <CABWYdi25hricmGUqaK1K0EB-pAm04vGTg=eiqRF99RJ7hM7Gyg@mail.gmail.com>
+ <Y4+RPry2tfbWFdSA@cmpxchg.org> <CANn89iJfx4QdVBqJ23oFJoz5DJKou=ZwVBNNXFNDJRNAqNvzwQ@mail.gmail.com>
+ <Y4+rNYF9WZyJyBQp@cmpxchg.org> <20221206231049.g35ltbxbk54izrie@google.com> <Y5CMrPMDxngMZWN8@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=6md11XMzi0tM9VfuttVehehretVvYJGzXswfjHRw2Yk=;
-        b=FVhyDC1j451hmgMkwi1V7ZI4X8jOVWr/eIXmSC2wvcstj2nqmH63mzvSgwTtApATU7
-         c5BKCleqCvOmWqkJMjNflr+8QXYBnxcOe+vMskQUHOYE6kLQMtsWp1TscflaWmBvVchW
-         1+T44q440TMM6kpmml1fH/7sz02N0B0oPTP/arw7d+LG2oYA1h3b83NbFIbbTJASfxrL
-         hvFcOa6aCxls9HxIdBn80Leq+fJS4b/Qu4JUpuIbAuBsk7hlWLhuzXiizfLeCfikD0Vu
-         kPIHF7EbCCpHToNq47vCM2gtuZGqmzjfqNe3Itbh8AzNvl7j1zF04iWA4a0LZgTg/mUY
-         hIwQ==
-In-Reply-To: <20221207135108.fe1d51f7581f6ff86dbf9bc8-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=phKzW+pnWcxpZMlO+OGC3q3KyWa3Ai371n7pkUjY42s=;
+        b=GcvzBKZHxUPcMbsMIVs11wJmblKLng4iReNp1M5ibs/jGlVOlzs8gse33hKi0r80d3
+         4py+w8LI+3nJYWK8ZHaSqhXB2Uiak2y9NhC7j3lJ6R1R69as73jNKJKxJH9LiwjI8e1d
+         MetDnMkMhXBRBjs9blHiXf9td0dJKWvI6zm9E3odBEh/Q0aEDhi9QSdUDkbSJu0sBLf7
+         GmD67NVPCz8BOXn9qmTnJmvuIfl7OIhCFLqkKxmDFJOjrSau5U5GhJqzKYp7SqdjHIFp
+         NH630+6SYXOZNb0eEnqgRPAuNnT0GH0bcEZ+5l/9XRUIU/cBltRovIN/r4VTIfO5+EP9
+         y2Cg==
+In-Reply-To: <Y5CMrPMDxngMZWN8@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Eric Dumazet <edumazet@google.com>, Ivan Babrou <ivan@cloudflare.com>, Linux MM <linux-mm@kvack.org>, Linux Kernel Network Developers <netdev@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, "David S. Miller" <davem@davemloft.net>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, David Ahern <dsahern@kernel.org>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, cgroups@vger.kernel.org, kernel-team <kernel-team@cloudflare.com>
 
-On Wed, Dec 7, 2022 at 1:51 PM Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
->
-> On Tue, 6 Dec 2022 16:03:54 -0800 Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> > On Tue, Dec 6, 2022 at 9:14 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> > >
-> > > Charge moving mode in cgroup1 allows memory to follow tasks as they
-> > > migrate between cgroups. This is, and always has been, a questionable
-> > > thing to do - for several reasons.
-> > >
-> > > First, it's expensive. Pages need to be identified, locked and
-> > > isolated from various MM operations, and reassigned, one by one.
-> > >
-> > > Second, it's unreliable. Once pages are charged to a cgroup, there
-> > > isn't always a clear owner task anymore. Cache isn't moved at all, for
-> > > example. Mapped memory is moved - but if trylocking or isolating a
-> > > page fails, it's arbitrarily left behind. Frequent moving between
-> > > domains may leave a task's memory scattered all over the place.
-> > >
-> > > Third, it isn't really needed. Launcher tasks can kick off workload
-> > > tasks directly in their target cgroup. Using dedicated per-workload
-> > > groups allows fine-grained policy adjustments - no need to move tasks
-> > > and their physical pages between control domains. The feature was
-> > > never forward-ported to cgroup2, and it hasn't been missed.
-> > >
-> > > Despite it being a niche usecase, the maintenance overhead of
-> > > supporting it is enormous. Because pages are moved while they are live
-> > > and subject to various MM operations, the synchronization rules are
-> > > complicated. There are lock_page_memcg() in MM and FS code, which
-> > > non-cgroup people don't understand. In some cases we've been able to
-> > > shift code and cgroup API calls around such that we can rely on native
-> > > locking as much as possible. But that's fragile, and sometimes we need
-> > > to hold MM locks for longer than we otherwise would (pte lock e.g.).
-> > >
-> > > Mark the feature deprecated. Hopefully we can remove it soon.
-> > >
-> > > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> >
-> > Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> >
-> > I would request this patch to be backported to stable kernels as well
-> > for early warnings to users which update to newer kernels very late.
->
-> Sounds reasonable, but the changelog should have a few words in it
-> explaining why we're requesting the backport.  I guess I can type those
-> in.
+On Wed, Dec 07, 2022 at 01:53:00PM +0100, Johannes Weiner wrote:
+[...]
+> 
+> I don't mind doing that if necessary, but looking at the code I don't
+> see why it would be.
+> 
+> The socket code sets protocol memory pressure on allocations that run
+> into limits, and clears pressure on allocations that succeed and
+> frees. Why shouldn't we do the same thing for memcg?
+> 
 
-Thanks a lot.
+I think you are right. Let's go with whatever you have for now as this
+will reduce vmpressure dependency.
 
->
-> We're at -rc8 and I'm not planning on merging these up until after
-> 6.2-rc1 is out.  Please feel free to argue with me on that score.
+However I think there are still open issues that needs to be addressed
+in the future:
 
-No, I totally agree with you. There is no such urgency in merging
-these and a couple of weeks delay is totally fine.
+1. Unlike TCP memory accounting, memcg has to account/charge user
+memory, kernel memory and tcp/netmem. So, it might make more sense to
+enter the pressure state in try_charge_memcg() function. This means
+charging of user memory or kernel memory can also put the memcg under
+socket pressure.
+
+2. On RX path, the memcg charge can succeed due to GFP_ATOMIC flag.
+Should we reset the pressure state in that case?
+
+3. On uncharge path, unlike network stack, should we unconditionally
+reset the socket pressure state?
+
+Shakeel
