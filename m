@@ -1,156 +1,96 @@
-From: Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 06/18] x86/sgx: Introduce RECLAIM_IN_PROGRESS flag for
- EPC pages
-Date: Thu, 8 Dec 2022 15:46:21 +0000
-Message-ID: <Y5IGzbNxOBkRoaRx@kernel.org>
-References: <20221202183655.3767674-1-kristen@linux.intel.com>
- <20221202183655.3767674-7-kristen@linux.intel.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 4/5] blk-iocost: fix sleeping in atomic context
+ warnning
+Date: Thu, 8 Dec 2022 05:59:36 -1000
+Message-ID: <Y5IJ6Nk56KPBhpfr@slm.duckdns.org>
+References: <20221104023938.2346986-1-yukuai1@huaweicloud.com>
+ <20221104023938.2346986-5-yukuai1@huaweicloud.com>
+ <Y3K8MSFWw8eTnxtm@slm.duckdns.org>
+ <3da991c6-21e4-8ed8-ba75-ccb92059f0ae@huaweicloud.com>
+ <Y306xJV6aNXd94kb@slm.duckdns.org>
+ <1f52ccb1-c357-a2a0-ef9d-48d7e2eb51f8@kernel.dk>
+ <Y31sYFdA2lHIvjt3@slm.duckdns.org>
+ <ec3754a6-3249-51ab-b659-fd795884e346@huaweicloud.com>
+ <f227e4bd-c74b-a02e-2a02-11a1376ee4f9@huaweicloud.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670514385;
-        bh=05rF6alqZ9n0FU7nrg3W/B/DQ0ox7mpQjwDMeBQNWu0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EDR/lD98d5MJ6Ho6a/oOYnc99oHhwIRQNwcRpJS97Dc4sNSWV4p07+6En9RUph/5v
-         UUw6vv830ShbRT72jXcuXG/qzVpaP1rK8WJaq5BkLwjGj0mkoofJYoXaolShBxbszO
-         g1uYfpyJUbZub2rQtxLMf7tgN7fIanYyX8RGW0B0jqzjp5roweJIumZFgevHsOgweq
-         yxZWvBOjeQNFqT1x0Uum4mGkyZEJpgI4uDD6oOCz+Q8p/KDDT0/2a04gfAJvHjJYMa
-         zot+veLxvvlkGCEcT4PyO5WZ1O8aW8GcFk369hN3/1pP6Hu+6LvbFLtNwFT8rcd1Jf
-         nU9eXNZXWLr7Q==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:sender
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=q0YLsvBKzhSCVgibbSxOvtb/WdQ/EJIsYcqmRJMPdrA=;
+        b=LKqMi50ut5W+4QYLYDzZRJz8rOYDM1FZOI+bsaRUBjbfPxkaXOkGHv/B58zlQJCVp9
+         MOjRUaRqxNz0nLVuO6/F76JbXbGZitk+2iyDmotSKGPXPoVVHHddmOrwt9KP6Mv6y5Xd
+         SxD/qLNSLtneYFA9954fdAcCxDvWe7t+RaCdqX50dbiBJuc0xdbdRlVvJKMOZr6k2AeA
+         UN4OLtD63b3uEgMi5eMop+qH9rGyXYzEIxZ1PinFgbvoWMIZ8pq6K8gfKFZ/b8EHRO6N
+         rXk0i0ECbUePeDcBgMkYPccKs/o9Q4EQc3aSt5FYGtktl4E40BnuiUuFe8kE39ATlds/
+         GDuA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20221202183655.3767674-7-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+In-Reply-To: <f227e4bd-c74b-a02e-2a02-11a1376ee4f9-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, hch-jcswGhMUV9g@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Fri, Dec 02, 2022 at 10:36:42AM -0800, Kristen Carlson Accardi wrote:
-> From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+On Mon, Dec 05, 2022 at 05:39:33PM +0800, Yu Kuai wrote:
+> Hi, Tejun
 > 
-> When selecting pages to be reclaimed from the page pool (sgx_global_lru),
-> the list of reclaimable pages is walked, and any page that is both
-> reclaimable and not in the process of being freed is added to a list of
-> potential candidates to be reclaimed. After that, this separate list is
-> further examined and may or may not ultimately be reclaimed. In order
-> to prevent this page from being removed from the sgx_epc_lru_lists
-> struct in a separate thread by sgx_drop_epc_page(), keep track of
-> whether the EPC page is in the middle of being reclaimed with
-> the addtion of a RECLAIM_IN_PROGRESS flag, and do not delete the page
-> off the LRU in sgx_drop_epc_page() if it has not yet finished being
-> reclaimed.
+> 在 2022/11/23 18:22, Yu Kuai 写道:
+> > Hi, Tejun
+> > 
+> > 在 2022/11/23 8:42, Tejun Heo 写道:
+> > > On Tue, Nov 22, 2022 at 05:14:29PM -0700, Jens Axboe wrote:
+> > > > > > Then match_strdup() and kfree() in match_NUMBER() can be replaced with
+> > > > > > get_buffer() and put_buffer().
+> > > > > 
+> > > > > Sorry about the late reply. Yeah, something like this.
+> > 
 > 
-> Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-> Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
->  arch/x86/kernel/cpu/sgx/main.c | 15 ++++++++++-----
->  arch/x86/kernel/cpu/sgx/sgx.h  |  2 ++
->  2 files changed, 12 insertions(+), 5 deletions(-)
+> I wonder can we just use arary directly in stack? The max size is just
+> 24 bytes, which should be fine:
 > 
-> diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
-> index ecd7f8e704cc..bad72498b0a7 100644
-> --- a/arch/x86/kernel/cpu/sgx/main.c
-> +++ b/arch/x86/kernel/cpu/sgx/main.c
-> @@ -305,13 +305,15 @@ static void __sgx_reclaim_pages(void)
->  
->  		encl_page = epc_page->encl_owner;
->  
-> -		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0)
-> +		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0) {
-> +			epc_page->flags |= SGX_EPC_PAGE_RECLAIM_IN_PROGRESS;
->  			chunk[cnt++] = epc_page;
-> -		else
-> +		} else {
->  			/* The owner is freeing the page. No need to add the
->  			 * page back to the list of reclaimable pages.
->  			 */
->  			epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
-> +		}
->  	}
->  	spin_unlock(&sgx_global_lru.lock);
->  
-> @@ -337,6 +339,7 @@ static void __sgx_reclaim_pages(void)
->  
->  skip:
->  		spin_lock(&sgx_global_lru.lock);
-> +		epc_page->flags &= ~SGX_EPC_PAGE_RECLAIM_IN_PROGRESS;
->  		sgx_epc_push_reclaimable(&sgx_global_lru, epc_page);
->  		spin_unlock(&sgx_global_lru.lock);
->  
-> @@ -360,7 +363,8 @@ static void __sgx_reclaim_pages(void)
->  		sgx_reclaimer_write(epc_page, &backing[i]);
->  
->  		kref_put(&encl_page->encl->refcount, sgx_encl_release);
-> -		epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
-> +		epc_page->flags &= ~(SGX_EPC_PAGE_RECLAIMER_TRACKED |
-> +				     SGX_EPC_PAGE_RECLAIM_IN_PROGRESS);
->  
->  		sgx_free_epc_page(epc_page);
->  	}
-> @@ -508,7 +512,8 @@ struct sgx_epc_page *__sgx_alloc_epc_page(void)
->  void sgx_record_epc_page(struct sgx_epc_page *page, unsigned long flags)
+> HEX: "0xFFFFFFFFFFFFFFFF" --> 18
+> DEC: "18446744073709551615" --> 20
+> OCT: "01777777777777777777777" --> 23
+> 
+> Something like:
+> #define U64_MAX_SIZE 23
+> static int match_strdup_local(const substring_t *s, char *buf)
+> {
+> 	size_t len = s->to - s->from;
+> 
+> 	if (len > U64_MAX_SIZE)
+> 		return -ERANGE;
+> 
+> 	if (!s->from)
+> 		return -EINVAL;
+> 
+> 	memcpy(buf, s->from, len);
+> 	buf[len] = '\0';
+> 	return 0;
+> }
+> 
+>  static int match_u64int(substring_t *s, u64 *result, int base)
 >  {
->  	spin_lock(&sgx_global_lru.lock);
-> -	WARN_ON(page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED);
-> +	WARN_ON(page->flags & (SGX_EPC_PAGE_RECLAIMER_TRACKED |
-> +			       SGX_EPC_PAGE_RECLAIM_IN_PROGRESS));
->  	page->flags |= flags;
->  	if (flags & SGX_EPC_PAGE_RECLAIMER_TRACKED)
->  		sgx_epc_push_reclaimable(&sgx_global_lru, page);
-> @@ -532,7 +537,7 @@ int sgx_drop_epc_page(struct sgx_epc_page *page)
->  	spin_lock(&sgx_global_lru.lock);
->  	if (page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED) {
->  		/* The page is being reclaimed. */
-> -		if (list_empty(&page->list)) {
-> +		if (page->flags & SGX_EPC_PAGE_RECLAIM_IN_PROGRESS) {
->  			spin_unlock(&sgx_global_lru.lock);
->  			return -EBUSY;
->  		}
-> diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
-> index ba4338b7303f..37d66bc6ca27 100644
-> --- a/arch/x86/kernel/cpu/sgx/sgx.h
-> +++ b/arch/x86/kernel/cpu/sgx/sgx.h
-> @@ -30,6 +30,8 @@
->  #define SGX_EPC_PAGE_IS_FREE		BIT(1)
->  /* Pages allocated for KVM guest */
->  #define SGX_EPC_PAGE_KVM_GUEST		BIT(2)
-> +/* page flag to indicate reclaim is in progress */
-> +#define SGX_EPC_PAGE_RECLAIM_IN_PROGRESS BIT(3)
->  
->  struct sgx_epc_page {
->  	unsigned int section;
-> -- 
-> 2.38.1
+> 	char buf[U64_MAX_SIZE + 1];
+>  	int ret;
+>  	u64 val;
 > 
+> 	ret = match_strdup_local(s, buf);
+> 	if (ret)
+> 		return ret;
+>  	ret = kstrtoull(buf, base, &val);
+>  	if (!ret)
+>  		*result = val;;
+>  	return ret;
+>  }
 
-I would create:
+Oh yeah, absolutely. That's much better.
 
-enum sgx_epc_state {    
-        SGX_EPC_STATE_READY = 0,
-        SGX_EPC_STATE_RECLAIMER_TRACKED = 1,
-        SGX_EPC_STATE_RECLAIM_IN_PROGRESS = 2,
-};
+Thanks.
 
-I.e. not a bitmask because page should have only one state at
-a time for any of this to make any sense. We have an FSM,
-right?
-
-And then allocate 2 upper bits to store this information from
-flags.
-
-And probably would make sense to have inline helper functions
-to setting and getting the state that does the bitshifting and
-masking shenanigangs.
-
-This would be a patch prepending this.
-
-In this patch you should then describe in the context of FSM
-how EPC page moves between these states. With that knowledge
-we can then reflect the actual code change.
-
-The point is not to get right but more like a mindset that we
-can discuss right or wrong in thee first place so just do your
-best but don't stress too much.
-
-BR, Jarkko
+-- 
+tejun
