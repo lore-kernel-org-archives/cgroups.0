@@ -1,151 +1,170 @@
-From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH v2 06/18] x86/sgx: Introduce RECLAIM_IN_PROGRESS flag
- for EPC pages
-Date: Thu, 08 Dec 2022 10:13:36 -0800
-Message-ID: <dd0c92b47496be5f59cc416c6e135ef573184c66.camel@linux.intel.com>
-References: <20221202183655.3767674-1-kristen@linux.intel.com>
-         <20221202183655.3767674-7-kristen@linux.intel.com>
-         <Y5IGzbNxOBkRoaRx@kernel.org>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/2] cgroup/cpuset: Use cpuset_rwsem read lock in cpuset_can_attach()
+Date: Thu,  8 Dec 2022 14:56:33 -0500
+Message-ID: <20221208195634.2604362-2-longman@redhat.com>
+References: <20221208195634.2604362-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1670523221; x=1702059221;
-  h=message-id:subject:from:to:cc:date:in-reply-to:
-   references:content-transfer-encoding:mime-version;
-  bh=shZLSFSHk7cyvEmOvu+L1aGeUnOVtdDfgOpI+fJT6U0=;
-  b=jGsTzc/gs7x0Njwy136HESDctZZYcE/RPI1wV4KiXlf8v21pVZ1ezSu8
-   8zvAmS+pAVaU5qpftXu89kbsZY3xgvjzQj1DRJPkjFU/a9hGx/slbMYEA
-   Py/w1CZo/USI6mbVAzmUyLJkRV11nyGovmTsaskKyqwbcr/8AYfMG/Urb
-   9cZmgdnCusjeD6Q2syeW8vvsKJMh0tYnBDZvdppaATZaK3voedZEbMBpp
-   4S7+RHPLj4yrBkH5oZSuFvvda1E84G0bmcQhK1tSS5tnWBG45KrtDMwGh
-   lgH7lQN9vXNQ4I2p0R3k0biG7jnDvfjHxQUUIBJAEZynAmi1owZxN6llf
-   w==;
-In-Reply-To: <Y5IGzbNxOBkRoaRx-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1670529421;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=o3RT2XE+xKZNyXg1+7HlKgY8RIpsHwoxTjw78hAkIis=;
+        b=TObXH1gDs2BbRWgiSLwVD1SpEOZUYs9hKrmLNIz7kGiMBZSezZJqmseNr4y9aIhF7pnWq3
+        SGohLqUbYQIFhdvUeD8xw6SX+WAN6a1thzlU5R5DHa/wkQJnlDiF5E+vdoR4xOtW6LhYsS
+        vrMmNtyH4JQp4P4k/pqelU5EOf9Fxq0=
+In-Reply-To: <20221208195634.2604362-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-T24gVGh1LCAyMDIyLTEyLTA4IGF0IDE1OjQ2ICswMDAwLCBKYXJra28gU2Fra2luZW4gd3JvdGU6
-Cj4gT24gRnJpLCBEZWMgMDIsIDIwMjIgYXQgMTA6MzY6NDJBTSAtMDgwMCwgS3Jpc3RlbiBDYXJs
-c29uIEFjY2FyZGkKPiB3cm90ZToKPiA+IEZyb206IFNlYW4gQ2hyaXN0b3BoZXJzb24gPHNlYW4u
-ai5jaHJpc3RvcGhlcnNvbkBpbnRlbC5jb20+Cj4gPiAKPiA+IFdoZW4gc2VsZWN0aW5nIHBhZ2Vz
-IHRvIGJlIHJlY2xhaW1lZCBmcm9tIHRoZSBwYWdlIHBvb2wKPiA+IChzZ3hfZ2xvYmFsX2xydSks
-Cj4gPiB0aGUgbGlzdCBvZiByZWNsYWltYWJsZSBwYWdlcyBpcyB3YWxrZWQsIGFuZCBhbnkgcGFn
-ZSB0aGF0IGlzIGJvdGgKPiA+IHJlY2xhaW1hYmxlIGFuZCBub3QgaW4gdGhlIHByb2Nlc3Mgb2Yg
-YmVpbmcgZnJlZWQgaXMgYWRkZWQgdG8gYQo+ID4gbGlzdCBvZgo+ID4gcG90ZW50aWFsIGNhbmRp
-ZGF0ZXMgdG8gYmUgcmVjbGFpbWVkLiBBZnRlciB0aGF0LCB0aGlzIHNlcGFyYXRlCj4gPiBsaXN0
-IGlzCj4gPiBmdXJ0aGVyIGV4YW1pbmVkIGFuZCBtYXkgb3IgbWF5IG5vdCB1bHRpbWF0ZWx5IGJl
-IHJlY2xhaW1lZC4gSW4KPiA+IG9yZGVyCj4gPiB0byBwcmV2ZW50IHRoaXMgcGFnZSBmcm9tIGJl
-aW5nIHJlbW92ZWQgZnJvbSB0aGUgc2d4X2VwY19scnVfbGlzdHMKPiA+IHN0cnVjdCBpbiBhIHNl
-cGFyYXRlIHRocmVhZCBieSBzZ3hfZHJvcF9lcGNfcGFnZSgpLCBrZWVwIHRyYWNrIG9mCj4gPiB3
-aGV0aGVyIHRoZSBFUEMgcGFnZSBpcyBpbiB0aGUgbWlkZGxlIG9mIGJlaW5nIHJlY2xhaW1lZCB3
-aXRoCj4gPiB0aGUgYWRkdGlvbiBvZiBhIFJFQ0xBSU1fSU5fUFJPR1JFU1MgZmxhZywgYW5kIGRv
-IG5vdCBkZWxldGUgdGhlCj4gPiBwYWdlCj4gPiBvZmYgdGhlIExSVSBpbiBzZ3hfZHJvcF9lcGNf
-cGFnZSgpIGlmIGl0IGhhcyBub3QgeWV0IGZpbmlzaGVkIGJlaW5nCj4gPiByZWNsYWltZWQuCj4g
-PiAKPiA+IFNpZ25lZC1vZmYtYnk6IFNlYW4gQ2hyaXN0b3BoZXJzb24KPiA+IDxzZWFuLmouY2hy
-aXN0b3BoZXJzb25AaW50ZWwuY29tPgo+ID4gU2lnbmVkLW9mZi1ieTogS3Jpc3RlbiBDYXJsc29u
-IEFjY2FyZGkgPGtyaXN0ZW5AbGludXguaW50ZWwuY29tPgo+ID4gQ2M6IFNlYW4gQ2hyaXN0b3Bo
-ZXJzb24gPHNlYW5qY0Bnb29nbGUuY29tPgo+ID4gLS0tCj4gPiDCoGFyY2gveDg2L2tlcm5lbC9j
-cHUvc2d4L21haW4uYyB8IDE1ICsrKysrKysrKystLS0tLQo+ID4gwqBhcmNoL3g4Ni9rZXJuZWwv
-Y3B1L3NneC9zZ3guaMKgIHzCoCAyICsrCj4gPiDCoDIgZmlsZXMgY2hhbmdlZCwgMTIgaW5zZXJ0
-aW9ucygrKSwgNSBkZWxldGlvbnMoLSkKPiA+IAo+ID4gZGlmZiAtLWdpdCBhL2FyY2gveDg2L2tl
-cm5lbC9jcHUvc2d4L21haW4uYwo+ID4gYi9hcmNoL3g4Ni9rZXJuZWwvY3B1L3NneC9tYWluLmMK
-PiA+IGluZGV4IGVjZDdmOGU3MDRjYy4uYmFkNzI0OThiMGE3IDEwMDY0NAo+ID4gLS0tIGEvYXJj
-aC94ODYva2VybmVsL2NwdS9zZ3gvbWFpbi5jCj4gPiArKysgYi9hcmNoL3g4Ni9rZXJuZWwvY3B1
-L3NneC9tYWluLmMKPiA+IEBAIC0zMDUsMTMgKzMwNSwxNSBAQCBzdGF0aWMgdm9pZCBfX3NneF9y
-ZWNsYWltX3BhZ2VzKHZvaWQpCj4gPiDCoAo+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqBlbmNsX3BhZ2UgPSBlcGNfcGFnZS0+ZW5jbF9vd25lcjsKPiA+IMKgCj4gPiAtwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgaWYgKGtyZWZfZ2V0X3VubGVzc196ZXJvKCZlbmNsX3Bh
-Z2UtPmVuY2wtCj4gPiA+cmVmY291bnQpICE9IDApCj4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgaWYgKGtyZWZfZ2V0X3VubGVzc196ZXJvKCZlbmNsX3BhZ2UtPmVuY2wtCj4gPiA+
-cmVmY291bnQpICE9IDApIHsKPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgZXBjX3BhZ2UtPmZsYWdzIHw9Cj4gPiBTR1hfRVBDX1BBR0VfUkVDTEFJTV9J
-Tl9QUk9HUkVTUzsKPiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoGNodW5rW2NudCsrXSA9IGVwY19wYWdlOwo+ID4gLcKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoGVsc2UKPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB9IGVsc2Ug
-ewo+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgLyog
-VGhlIG93bmVyIGlzIGZyZWVpbmcgdGhlIHBhZ2UuIE5vIG5lZWQKPiA+IHRvIGFkZCB0aGUKPiA+
-IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAqIHBhZ2Ug
-YmFjayB0byB0aGUgbGlzdCBvZiByZWNsYWltYWJsZQo+ID4gcGFnZXMuCj4gPiDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgKi8KPiA+IMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGVwY19wYWdlLT5mbGFncyAmPQo+
-ID4gflNHWF9FUENfUEFHRV9SRUNMQUlNRVJfVFJBQ0tFRDsKPiA+ICvCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqB9Cj4gPiDCoMKgwqDCoMKgwqDCoMKgfQo+ID4gwqDCoMKgwqDCoMKgwqDC
-oHNwaW5fdW5sb2NrKCZzZ3hfZ2xvYmFsX2xydS5sb2NrKTsKPiA+IMKgCj4gPiBAQCAtMzM3LDYg
-KzMzOSw3IEBAIHN0YXRpYyB2b2lkIF9fc2d4X3JlY2xhaW1fcGFnZXModm9pZCkKPiA+IMKgCj4g
-PiDCoHNraXA6Cj4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHNwaW5fbG9jaygm
-c2d4X2dsb2JhbF9scnUubG9jayk7Cj4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-ZXBjX3BhZ2UtPmZsYWdzICY9Cj4gPiB+U0dYX0VQQ19QQUdFX1JFQ0xBSU1fSU5fUFJPR1JFU1M7
-Cj4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHNneF9lcGNfcHVzaF9yZWNsYWlt
-YWJsZSgmc2d4X2dsb2JhbF9scnUsCj4gPiBlcGNfcGFnZSk7Cj4gPiDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoHNwaW5fdW5sb2NrKCZzZ3hfZ2xvYmFsX2xydS5sb2NrKTsKPiA+IMKg
-Cj4gPiBAQCAtMzYwLDcgKzM2Myw4IEBAIHN0YXRpYyB2b2lkIF9fc2d4X3JlY2xhaW1fcGFnZXMo
-dm9pZCkKPiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgc2d4X3JlY2xhaW1lcl93
-cml0ZShlcGNfcGFnZSwgJmJhY2tpbmdbaV0pOwo+ID4gwqAKPiA+IMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKga3JlZl9wdXQoJmVuY2xfcGFnZS0+ZW5jbC0+cmVmY291bnQsCj4gPiBz
-Z3hfZW5jbF9yZWxlYXNlKTsKPiA+IC3CoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBlcGNf
-cGFnZS0+ZmxhZ3MgJj0gflNHWF9FUENfUEFHRV9SRUNMQUlNRVJfVFJBQ0tFRDsKPiA+ICvCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBlcGNfcGFnZS0+ZmxhZ3MgJj0gfihTR1hfRVBDX1BB
-R0VfUkVDTEFJTUVSX1RSQUNLRUQKPiA+IHwKPiA+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgCj4gPiBTR1hfRVBD
-X1BBR0VfUkVDTEFJTV9JTl9QUk9HUkVTUyk7Cj4gPiDCoAo+ID4gwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqBzZ3hfZnJlZV9lcGNfcGFnZShlcGNfcGFnZSk7Cj4gPiDCoMKgwqDCoMKg
-wqDCoMKgfQo+ID4gQEAgLTUwOCw3ICs1MTIsOCBAQCBzdHJ1Y3Qgc2d4X2VwY19wYWdlICpfX3Nn
-eF9hbGxvY19lcGNfcGFnZSh2b2lkKQo+ID4gwqB2b2lkIHNneF9yZWNvcmRfZXBjX3BhZ2Uoc3Ry
-dWN0IHNneF9lcGNfcGFnZSAqcGFnZSwgdW5zaWduZWQgbG9uZwo+ID4gZmxhZ3MpCj4gPiDCoHsK
-PiA+IMKgwqDCoMKgwqDCoMKgwqBzcGluX2xvY2soJnNneF9nbG9iYWxfbHJ1LmxvY2spOwo+ID4g
-LcKgwqDCoMKgwqDCoMKgV0FSTl9PTihwYWdlLT5mbGFncyAmIFNHWF9FUENfUEFHRV9SRUNMQUlN
-RVJfVFJBQ0tFRCk7Cj4gPiArwqDCoMKgwqDCoMKgwqBXQVJOX09OKHBhZ2UtPmZsYWdzICYgKFNH
-WF9FUENfUEFHRV9SRUNMQUlNRVJfVFJBQ0tFRCB8Cj4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBTR1hfRVBDX1BBR0VfUkVDTEFJ
-TV9JTl9QUk9HUkVTUykpOwo+ID4gwqDCoMKgwqDCoMKgwqDCoHBhZ2UtPmZsYWdzIHw9IGZsYWdz
-Owo+ID4gwqDCoMKgwqDCoMKgwqDCoGlmIChmbGFncyAmIFNHWF9FUENfUEFHRV9SRUNMQUlNRVJf
-VFJBQ0tFRCkKPiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgc2d4X2VwY19wdXNo
-X3JlY2xhaW1hYmxlKCZzZ3hfZ2xvYmFsX2xydSwgcGFnZSk7Cj4gPiBAQCAtNTMyLDcgKzUzNyw3
-IEBAIGludCBzZ3hfZHJvcF9lcGNfcGFnZShzdHJ1Y3Qgc2d4X2VwY19wYWdlCj4gPiAqcGFnZSkK
-PiA+IMKgwqDCoMKgwqDCoMKgwqBzcGluX2xvY2soJnNneF9nbG9iYWxfbHJ1LmxvY2spOwo+ID4g
-wqDCoMKgwqDCoMKgwqDCoGlmIChwYWdlLT5mbGFncyAmIFNHWF9FUENfUEFHRV9SRUNMQUlNRVJf
-VFJBQ0tFRCkgewo+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAvKiBUaGUgcGFn
-ZSBpcyBiZWluZyByZWNsYWltZWQuICovCj4gPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgaWYgKGxpc3RfZW1wdHkoJnBhZ2UtPmxpc3QpKSB7Cj4gPiArwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgaWYgKHBhZ2UtPmZsYWdzICYgU0dYX0VQQ19QQUdFX1JFQ0xBSU1fSU5fUFJP
-R1JFU1MpCj4gPiB7Cj4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqBzcGluX3VubG9jaygmc2d4X2dsb2JhbF9scnUubG9jayk7Cj4gPiDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqByZXR1cm4gLUVCVVNZOwo+ID4g
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB9Cj4gPiBkaWZmIC0tZ2l0IGEvYXJjaC94
-ODYva2VybmVsL2NwdS9zZ3gvc2d4LmgKPiA+IGIvYXJjaC94ODYva2VybmVsL2NwdS9zZ3gvc2d4
-LmgKPiA+IGluZGV4IGJhNDMzOGI3MzAzZi4uMzdkNjZiYzZjYTI3IDEwMDY0NAo+ID4gLS0tIGEv
-YXJjaC94ODYva2VybmVsL2NwdS9zZ3gvc2d4LmgKPiA+ICsrKyBiL2FyY2gveDg2L2tlcm5lbC9j
-cHUvc2d4L3NneC5oCj4gPiBAQCAtMzAsNiArMzAsOCBAQAo+ID4gwqAjZGVmaW5lIFNHWF9FUENf
-UEFHRV9JU19GUkVFwqDCoMKgwqDCoMKgwqDCoMKgwqDCoEJJVCgxKQo+ID4gwqAvKiBQYWdlcyBh
-bGxvY2F0ZWQgZm9yIEtWTSBndWVzdCAqLwo+ID4gwqAjZGVmaW5lIFNHWF9FUENfUEFHRV9LVk1f
-R1VFU1TCoMKgwqDCoMKgwqDCoMKgwqBCSVQoMikKPiA+ICsvKiBwYWdlIGZsYWcgdG8gaW5kaWNh
-dGUgcmVjbGFpbSBpcyBpbiBwcm9ncmVzcyAqLwo+ID4gKyNkZWZpbmUgU0dYX0VQQ19QQUdFX1JF
-Q0xBSU1fSU5fUFJPR1JFU1MgQklUKDMpCj4gPiDCoAo+ID4gwqBzdHJ1Y3Qgc2d4X2VwY19wYWdl
-IHsKPiA+IMKgwqDCoMKgwqDCoMKgwqB1bnNpZ25lZCBpbnQgc2VjdGlvbjsKPiA+IC0tIAo+ID4g
-Mi4zOC4xCj4gPiAKPiAKPiBJIHdvdWxkIGNyZWF0ZToKPiAKPiBlbnVtIHNneF9lcGNfc3RhdGUg
-e8KgwqDCoCAKPiDCoMKgwqDCoMKgwqDCoCBTR1hfRVBDX1NUQVRFX1JFQURZID0gMCwKPiDCoMKg
-wqDCoMKgwqDCoCBTR1hfRVBDX1NUQVRFX1JFQ0xBSU1FUl9UUkFDS0VEID0gMSwKPiDCoMKgwqDC
-oMKgwqDCoCBTR1hfRVBDX1NUQVRFX1JFQ0xBSU1fSU5fUFJPR1JFU1MgPSAyLAo+IH07Cj4gCj4g
-SS5lLiBub3QgYSBiaXRtYXNrIGJlY2F1c2UgcGFnZSBzaG91bGQgaGF2ZSBvbmx5IG9uZSBzdGF0
-ZSBhdAo+IGEgdGltZSBmb3IgYW55IG9mIHRoaXMgdG8gbWFrZSBhbnkgc2Vuc2UuIFdlIGhhdmUg
-YW4gRlNNLAo+IHJpZ2h0Pwo+IAoKSSBjYW4gZXhwZXJpbWVudCB3aXRoIGl0IGFuZCBzZWUgaWYg
-aXQgY2FuIHdvcmsgZm9yIHRoZSBmbGFncyB0bwpyZXByZXNlbnQgYSBzdGF0ZSBtYWNoaW5lLiBU
-aGV5IGRvbid0IHdvcmsgbGlrZSB0aGF0IHJpZ2h0IG5vdwpvYnZpb3VzbHksIHNpbmNlIHlvdSBj
-YW4gaGF2ZSBib3RoIFJFQ0xBSU1FUl9UUkFDS0VEIGFuZApSRUNMQUlNX0lOX1BST0dSRVNTIHNl
-dCBhdCB0aGUgc2FtZSB0aW1lLgoKCj4gQW5kIHRoZW4gYWxsb2NhdGUgMiB1cHBlciBiaXRzIHRv
-IHN0b3JlIHRoaXMgaW5mb3JtYXRpb24gZnJvbQo+IGZsYWdzLgo+IAo+IEFuZCBwcm9iYWJseSB3
-b3VsZCBtYWtlIHNlbnNlIHRvIGhhdmUgaW5saW5lIGhlbHBlciBmdW5jdGlvbnMKPiB0byBzZXR0
-aW5nIGFuZCBnZXR0aW5nIHRoZSBzdGF0ZSB0aGF0IGRvZXMgdGhlIGJpdHNoaWZ0aW5nIGFuZAo+
-IG1hc2tpbmcgc2hlbmFuaWdhbmdzLgo+IAo+IFRoaXMgd291bGQgYmUgYSBwYXRjaCBwcmVwZW5k
-aW5nIHRoaXMuCj4gCj4gSW4gdGhpcyBwYXRjaCB5b3Ugc2hvdWxkIHRoZW4gZGVzY3JpYmUgaW4g
-dGhlIGNvbnRleHQgb2YgRlNNCj4gaG93IEVQQyBwYWdlIG1vdmVzIGJldHdlZW4gdGhlc2Ugc3Rh
-dGVzLiBXaXRoIHRoYXQga25vd2xlZGdlCj4gd2UgY2FuIHRoZW4gcmVmbGVjdCB0aGUgYWN0dWFs
-IGNvZGUgY2hhbmdlLgo+IAo+IFRoZSBwb2ludCBpcyBub3QgdG8gZ2V0IHJpZ2h0IGJ1dCBtb3Jl
-IGxpa2UgYSBtaW5kc2V0IHRoYXQgd2UKPiBjYW4gZGlzY3VzcyByaWdodCBvciB3cm9uZyBpbiB0
-aGVlIGZpcnN0IHBsYWNlIHNvIGp1c3QgZG8geW91cgo+IGJlc3QgYnV0IGRvbid0IHN0cmVzcyB0
-b28gbXVjaC4KPiAKPiBCUiwgSmFya2tvCgo=
+Since commit 1243dc518c9d ("cgroup/cpuset: Convert cpuset_mutex to
+percpu_rwsem"), cpuset_mutex is changed to cpuset_rwsem. This has the
+undesirable side effect of increasing the latency to take cpuset_rwsem
+write lock, potentially up to a RCU grace period later which can be
+especially problematic on systems with a large number of CPU cores.
+
+One particular pain point is moving a task from one cpuset to another
+one. The locking sequence for such a task migration is as follow:
+
+  cgroup_mutex => cgroup_threadgroup_rwsem => cpuset_rwsem
+
+The cpuset_rwsem write lock has to be taken twice - at both
+cpuset_can_attach() and cpuset_attach(). This can create significant
+delay in blocking the fork/exit path while the task migration is in
+progress.
+
+Reduce that latency by using cpuset_rwsem read lock in
+cpuset_can_attach() and cpuset_cancel_attach() as they don't need to
+change anything in the cpuset except attach_in_progress which is now
+changed to an atomic_t type to allow proper concurrent update while
+holding cpuset_rwsem read lock. The attach_in_progress field is only read
+while holding cpuset_rwsem write lock avoiding possible race condition.
+
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cpuset.c | 39 ++++++++++++++++++++++-----------------
+ 1 file changed, 22 insertions(+), 17 deletions(-)
+
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index b474289c15b8..800c65de5daa 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -171,7 +171,7 @@ struct cpuset {
+ 	 * Tasks are being attached to this cpuset.  Used to prevent
+ 	 * zeroing cpus/mems_allowed between ->can_attach() and ->attach().
+ 	 */
+-	int attach_in_progress;
++	atomic_t attach_in_progress;
+ 
+ 	/* partition number for rebuild_sched_domains() */
+ 	int pn;
+@@ -369,11 +369,14 @@ static struct cpuset top_cpuset = {
+  * There are two global locks guarding cpuset structures - cpuset_rwsem and
+  * callback_lock. We also require taking task_lock() when dereferencing a
+  * task's cpuset pointer. See "The task_lock() exception", at the end of this
+- * comment.  The cpuset code uses only cpuset_rwsem write lock.  Other
+- * kernel subsystems can use cpuset_read_lock()/cpuset_read_unlock() to
+- * prevent change to cpuset structures.
+- *
+- * A task must hold both locks to modify cpusets.  If a task holds
++ * comment.  The cpuset code uses mostly cpuset_rwsem write lock with the
++ * exception of cpuset_can_attach() and cpuset_cancel_attach().  Other kernel
++ * subsystems can use cpuset_read_lock()/cpuset_read_unlock() to prevent
++ * change to cpuset structures.
++ *
++ * A task must hold both locks to modify cpusets except attach_in_progress
++ * which can be modified by either holding cpuset_rwsem read or write
++ * lock and to be read under cpuset_rwsem write lock.  If a task holds
+  * cpuset_rwsem, it blocks others wanting that rwsem, ensuring that it
+  * is the only task able to also acquire callback_lock and be able to
+  * modify cpusets.  It can perform various checks on the cpuset structure
+@@ -746,7 +749,8 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+ 	 * be changed to have empty cpus_allowed or mems_allowed.
+ 	 */
+ 	ret = -ENOSPC;
+-	if ((cgroup_is_populated(cur->css.cgroup) || cur->attach_in_progress)) {
++	if ((cgroup_is_populated(cur->css.cgroup) ||
++	     atomic_read(&cur->attach_in_progress))) {
+ 		if (!cpumask_empty(cur->cpus_allowed) &&
+ 		    cpumask_empty(trial->cpus_allowed))
+ 			goto out;
+@@ -2448,7 +2452,7 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+ 	cpuset_attach_old_cs = task_cs(cgroup_taskset_first(tset, &css));
+ 	cs = css_cs(css);
+ 
+-	percpu_down_write(&cpuset_rwsem);
++	percpu_down_read(&cpuset_rwsem);
+ 
+ 	/* allow moving tasks into an empty cpuset if on default hierarchy */
+ 	ret = -ENOSPC;
+@@ -2475,10 +2479,10 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+ 	 * Mark attach is in progress.  This makes validate_change() fail
+ 	 * changes which zero cpus/mems_allowed.
+ 	 */
+-	cs->attach_in_progress++;
++	atomic_inc(&cs->attach_in_progress);
+ 	ret = 0;
+ out_unlock:
+-	percpu_up_write(&cpuset_rwsem);
++	percpu_up_read(&cpuset_rwsem);
+ 	return ret;
+ }
+ 
+@@ -2488,9 +2492,9 @@ static void cpuset_cancel_attach(struct cgroup_taskset *tset)
+ 
+ 	cgroup_taskset_first(tset, &css);
+ 
+-	percpu_down_write(&cpuset_rwsem);
+-	css_cs(css)->attach_in_progress--;
+-	percpu_up_write(&cpuset_rwsem);
++	percpu_down_read(&cpuset_rwsem);
++	atomic_dec(&css_cs(css)->attach_in_progress);
++	percpu_up_read(&cpuset_rwsem);
+ }
+ 
+ /*
+@@ -2562,8 +2566,8 @@ static void cpuset_attach(struct cgroup_taskset *tset)
+ 
+ 	cs->old_mems_allowed = cpuset_attach_nodemask_to;
+ 
+-	cs->attach_in_progress--;
+-	if (!cs->attach_in_progress)
++	atomic_inc(&cs->attach_in_progress);
++	if (!atomic_read(&cs->attach_in_progress))
+ 		wake_up(&cpuset_attach_wq);
+ 
+ 	percpu_up_write(&cpuset_rwsem);
+@@ -3072,6 +3076,7 @@ cpuset_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	nodes_clear(cs->mems_allowed);
+ 	nodes_clear(cs->effective_mems);
+ 	fmeter_init(&cs->fmeter);
++	atomic_set(&cs->attach_in_progress, 0);
+ 	cs->relax_domain_level = -1;
+ 
+ 	/* Set CS_MEMORY_MIGRATE for default hierarchy */
+@@ -3383,7 +3388,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+ 	bool mems_updated;
+ 	struct cpuset *parent;
+ retry:
+-	wait_event(cpuset_attach_wq, cs->attach_in_progress == 0);
++	wait_event(cpuset_attach_wq, atomic_read(&cs->attach_in_progress) == 0);
+ 
+ 	percpu_down_write(&cpuset_rwsem);
+ 
+@@ -3391,7 +3396,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+ 	 * We have raced with task attaching. We wait until attaching
+ 	 * is finished, so we won't attach a task to an empty cpuset.
+ 	 */
+-	if (cs->attach_in_progress) {
++	if (atomic_read(&cs->attach_in_progress)) {
+ 		percpu_up_write(&cpuset_rwsem);
+ 		goto retry;
+ 	}
+-- 
+2.31.1
 
