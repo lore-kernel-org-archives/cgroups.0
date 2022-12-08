@@ -1,57 +1,62 @@
 From: Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 09/18] x86/sgx: Return the number of EPC pages that
- were successfully reclaimed
-Date: Thu, 8 Dec 2022 09:30:13 +0000
-Message-ID: <Y5Gupbkb7BmCJlGn@kernel.org>
+Subject: Re: [PATCH v2 10/18] x86/sgx: Add option to ignore age of page
+ during EPC reclaim
+Date: Thu, 8 Dec 2022 09:37:48 +0000
+Message-ID: <Y5GwbPu4cUs0/4Fi@kernel.org>
 References: <20221202183655.3767674-1-kristen@linux.intel.com>
- <20221202183655.3767674-10-kristen@linux.intel.com>
+ <20221202183655.3767674-11-kristen@linux.intel.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1670491817;
-        bh=KvDZ6QK3ZFSOs+gv7yHb4EU7Ui4QQ9oYslj/0R5XduM=;
+        s=k20201202; t=1670492273;
+        bh=wYx2MO5YR6MseoVFegS6uhUtm5jWg22S6hWITNm5BM4=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=DJtrzXc2jp78dAEJI54yfardbIC81q390prkd+5L8QNe/LbFbhqmoT18F+gAuZUp6
-         JnwpeICGIWmpXw5dq2ylyazPdFRLEwqQCLvK/g96V9hB9yCdR7agb77GU87KrjYRt3
-         vQlKv/ZmwAqeYBg7lP4o7z/8M5hJNnLjRq0NIYUnUzz9dIArnNfO+rNQ1KiwJdULF+
-         iZTXzuN9Pf8J7YeWVxCfNG8GohARLfeqQRk3ej5I+l9RMfHeNM2b1NBKboSj1LrIWC
-         6y0140hbVaIo6wXA+s7Uw+nMn4GK5g5nsuUZ0KBwGs5gf8BJNUW0p789Y4wX6T9xnK
-         xAaHlFUmaOf8w==
+        b=P8HFEZSYo9pu0gboQpt9k8bdF2m9KCt5kF1ymZ/H5G65QDagLY+dzTTppFobUWtFv
+         NSyEtoj1nMd8euSMT+6GAVXcfB1FjOek03/GBlFLmzduklr7BWi4RRO5eC3N41T8hZ
+         S8wXuQ5t0JK8Mho1XXB7C7TrE3lXvfhcgfttHemOU+DpHQ7EEfAYnEdoe1UJfxc2sk
+         A0kthGwJ7QKTrOdQEKS4JAViEvlv5C7trtTLedyaySjodl/liolDvHUDKIetuIujmQ
+         OtA3wBq3T7SvvMSqE4Vr5E9l3CmP5aqn3WPTWF2rzOpjx6lsxj9l5FoaENZr+pgaE4
+         couMnWNctPAJA==
 Content-Disposition: inline
-In-Reply-To: <20221202183655.3767674-10-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+In-Reply-To: <20221202183655.3767674-11-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Cc: dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Fri, Dec 02, 2022 at 10:36:45AM -0800, Kristen Carlson Accardi wrote:
+On Fri, Dec 02, 2022 at 10:36:46AM -0800, Kristen Carlson Accardi wrote:
 > From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 > 
-> Return the number of reclaimed pages from sgx_reclaim_pages(), the EPC
-> cgroup will use the result to track the success rate of its reclaim
-> calls, e.g. to escalate to a more forceful reclaiming mode if necessary.
+> Add a flag to sgx_reclaim_pages() to instruct it to ignore the age of
+> page, i.e. reclaim the page even if it's young.  The EPC cgroup will use
+> the flag to enforce its limits by draining the reclaimable lists before
+> resorting to other measures, e.g. forcefully reclaimable "unreclaimable"
+> pages by killing enclaves.
 > 
 > Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 > Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 > Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 > ---
->  arch/x86/kernel/cpu/sgx/main.c | 12 ++++++++----
->  1 file changed, 8 insertions(+), 4 deletions(-)
+>  arch/x86/kernel/cpu/sgx/main.c | 46 +++++++++++++++++++++-------------
+>  1 file changed, 29 insertions(+), 17 deletions(-)
 > 
 > diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
-> index f201ca85212f..a4a65eadfb79 100644
+> index a4a65eadfb79..db96483e2e74 100644
 > --- a/arch/x86/kernel/cpu/sgx/main.c
 > +++ b/arch/x86/kernel/cpu/sgx/main.c
-> @@ -291,7 +291,7 @@ static void sgx_reclaimer_write(struct sgx_epc_page *epc_page,
->   * problematic as it would increase the lock contention too much, which would
->   * halt forward progress.
+> @@ -31,6 +31,10 @@ static DEFINE_XARRAY(sgx_epc_address_space);
+>   * with sgx_global_lru.lock acquired.
 >   */
-> -static void __sgx_reclaim_pages(int nr_to_scan)
-> +static int __sgx_reclaim_pages(int nr_to_scan)
+>  static struct sgx_epc_lru_lists sgx_global_lru;
 
-Nit: I wonder if we should use ssize_t here?
+Please, separate these by an empty line.
 
-If nothing else, it would document better than 'int'.
+> +static inline struct sgx_epc_lru_lists *sgx_lru_lists(struct sgx_epc_page *epc_page)
+> +{
+> +	return &sgx_global_lru;
+> +}
+
+Should be named by the thing it returns, not by the type.
 
 BR, Jarkko
