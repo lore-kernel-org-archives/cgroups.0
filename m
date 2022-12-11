@@ -1,39 +1,119 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH 1/2 block/for-6.2] blk-iolatency: Fix memory leak on
- add_disk() failures
-Date: Sat, 10 Dec 2022 10:54:48 -0800
-Message-ID: <CAHk-=wiw4bYT=rhA=UJD4u41Oq_uoWt1dAXpzqwQYdOtJQqYZw@mail.gmail.com>
-References: <Y5TQ5gm3O4HXrXR3@slm.duckdns.org>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH-block v2 3/3] blk-cgroup: Flush stats at blkgs destruction path
+Date: Sun, 11 Dec 2022 17:20:58 -0500
+Message-ID: <20221211222058.2946830-4-longman@redhat.com>
+References: <20221211222058.2946830-1-longman@redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=jjD4ucfx+sg79aU2mhUtRUhlS74JIWv5Z/WsZ5sivF0=;
-        b=BzvvoS4YZaiHtVtTnrMPkORr9QN1kyuo5edsRj1EnzCjtxaavYwgd1MdZhbSrsmMz/
-         pQLt+8DKvwX5PRNY3AkuVsEXWG3TG9LNQME3xhKH5umXkHq8wRVg5p7P0UkLsc4gLlOz
-         C1Wz8XlCiVSbwQEORsXQiY6twwLuti4patvKQ=
-In-Reply-To: <Y5TQ5gm3O4HXrXR3@slm.duckdns.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1670797272;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=k/HK6fMXdxgz4kcaH4vQrOdm/WfD552GcWScyCwHZ9A=;
+        b=gv8yrf9u1UUylYtNCcp520HPRybEBEBjcyvXVSwx8qstgQeXB2DDF24QAWRAWjxHv6dyEu
+        YAk3OZW1zIeHoyAjT3AZ0wq74NfD1xRCnUHSAbKPlxMt1Su2efj/NP9fX0wKzsbuAxKdlc
+        UwAbrMKdMnxt9O7PrMDnk4CQuHQuZEo=
+In-Reply-To: <20221211222058.2946830-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, darklight2357@icloud.com, Josef Bacik <josef@toxicpanda.com>, cgroups@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>, Waiman Long <longman@redhat.com>
 
-On Sat, Dec 10, 2022 at 10:33 AM Tejun Heo <tj@kernel.org> wrote:
->
-> I'm posting two patches for the iolatency memory leak issue after add_disk()
-> failure. This one is the immediate fix and should be really safe. However,
-> any change has risks and given that the bug being address is not critical at
-> all, I still think it'd make sense to route it through 6.2-rc1 rather than
-> applying directly to master for 6.1 release. So, it's tagged for the 6.2
-> merge window.
+As noted by Michal, the blkg_iostat_set's in the lockless list
+hold reference to blkg's to protect against their removal. Those
+blkg's hold reference to blkcg. When a cgroup is being destroyed,
+cgroup_rstat_flush() is only called at css_release_work_fn() which is
+called when the blkcg reference count reaches 0. This circular dependency
+will prevent blkcg from being freed until some other events cause
+cgroup_rstat_flush() to be called to flush out the pending blkcg stats.
 
-Ack. I'm archiving these patches, and expect I'll be getting them the
-usual ways (ie pull request).
+To prevent this delayed blkcg removal, add a new cgroup_rstat_css_flush()
+function to flush stats for a given css and cpu and call it at the blkgs
+destruction path, blkcg_destroy_blkgs(), whenever there are still some
+pending stats to be flushed. This will ensure that blkcg reference
+count can reach 0 ASAP.
 
-If people expect something else (like me applying them during the
-merge window as patches), holler.
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ block/blk-cgroup.c     | 12 ++++++++++++
+ include/linux/cgroup.h |  1 +
+ kernel/cgroup/rstat.c  | 18 ++++++++++++++++++
+ 3 files changed, 31 insertions(+)
 
-            Linus
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index c466aef0d467..534f3baeb84a 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -1090,6 +1090,8 @@ struct list_head *blkcg_get_cgwb_list(struct cgroup_subsys_state *css)
+  */
+ static void blkcg_destroy_blkgs(struct blkcg *blkcg)
+ {
++	int cpu;
++
+ 	/*
+ 	 * blkcg_destroy_blkgs() shouldn't be called with all the blkcg
+ 	 * references gone.
+@@ -1099,6 +1101,16 @@ static void blkcg_destroy_blkgs(struct blkcg *blkcg)
+ 
+ 	might_sleep();
+ 
++	/*
++	 * Flush all the non-empty percpu lockless lists.
++	 */
++	for_each_possible_cpu(cpu) {
++		struct llist_head *lhead = per_cpu_ptr(blkcg->lhead, cpu);
++
++		if (!llist_empty(lhead))
++			cgroup_rstat_css_cpu_flush(&blkcg->css, cpu);
++	}
++
+ 	spin_lock_irq(&blkcg->lock);
+ 
+ 	while (!hlist_empty(&blkcg->blkg_list)) {
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 528bd44b59e2..6c4e66b3fa84 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -766,6 +766,7 @@ void cgroup_rstat_flush(struct cgroup *cgrp);
+ void cgroup_rstat_flush_irqsafe(struct cgroup *cgrp);
+ void cgroup_rstat_flush_hold(struct cgroup *cgrp);
+ void cgroup_rstat_flush_release(void);
++void cgroup_rstat_css_cpu_flush(struct cgroup_subsys_state *css, int cpu);
+ 
+ /*
+  * Basic resource stats.
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index 793ecff29038..2e44be44351f 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -281,6 +281,24 @@ void cgroup_rstat_flush_release(void)
+ 	spin_unlock_irq(&cgroup_rstat_lock);
+ }
+ 
++/**
++ * cgroup_rstat_css_cpu_flush - flush stats for the given css and cpu
++ * @css: target css to be flush
++ * @cpu: the cpu that holds the stats to be flush
++ *
++ * A lightweight rstat flush operation for a given css and cpu.
++ * Only the cpu_lock is being held for mutual exclusion, the cgroup_rstat_lock
++ * isn't used.
++ */
++void cgroup_rstat_css_cpu_flush(struct cgroup_subsys_state *css, int cpu)
++{
++	raw_spinlock_t *cpu_lock = per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu);
++
++	raw_spin_lock_irq(cpu_lock);
++	css->ss->css_rstat_flush(css, cpu);
++	raw_spin_unlock_irq(cpu_lock);
++}
++
+ int cgroup_rstat_init(struct cgroup *cgrp)
+ {
+ 	int cpu;
+-- 
+2.31.1
+
