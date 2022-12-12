@@ -1,10 +1,8 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH-block v2 3/3] blk-cgroup: Flush stats at blkgs
- destruction path
-Date: Mon, 12 Dec 2022 12:24:02 -1000
-Message-ID: <Y5eqAtwnpfEUG0EL@slm.duckdns.org>
-References: <20221211222058.2946830-1-longman@redhat.com>
- <20221211222058.2946830-4-longman@redhat.com>
+Subject: Re: [RFC PATCH] blk-throtl: Introduce sync queue for write ios
+Date: Mon, 12 Dec 2022 12:40:35 -1000
+Message-ID: <Y5et48VryiKgL/eD@slm.duckdns.org>
+References: <20221206163826.10700-1-hanjinke.666@bytedance.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
@@ -12,56 +10,49 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=DduZ36/gNNuK+m5qHFBGb7Zr62cBswC5K6+2kXn9vQE=;
-        b=KUybaHVVN3vB51GqoRWpHL2dDTx2qMFPypuONf/AmhxlZr55HRmLSgY5wpkSn1navb
-         dyTi2H+7ZAZtAStM5HvFjAtD4ljlq5qcHJKd+rnNIe5MPoHkVUIrXEk2wYr8Qawciwe+
-         F3wYqQXQWHtzDjn2y/qMSnQuc+Cr3KqWgWxsE+EdXuTMEG6aOD9xbM9akomuQE/5nRWp
-         AnAhL9RTKC4y0TrpDLXYj32qftrZhQQcovsuqi1GPshjIQuvDA8BDqaQ8hm82Pasqk7i
-         dyTvyXn8iL4x7CjRudvASM1DyVneJ5/3auOxORwtTNf6DmwJ9N3OBtW+09+w3T0We0bI
-         ixVA==
+        bh=NPDIXZNKcYo1HDMoRq9WdF0H3wxdPBhSwXt2rQdX8Hk=;
+        b=T2+mjUOnvMC6+SflvTfeyWtuCJGJy3r5riUOCGBFfGCcjwxEGIy88D1g3qOknp/kpu
+         r44QvUgQpK7IfygXGopoHH1Aqbi/nw2i4MQqJwBE0lCXzalcJcAW1XuiZk/FGFJxgiZw
+         TyeR/sUnOZE0e7jeZhBYzXFCMMScwKqXqgJ8pfVbW72SncqkteKT1wIGEAox7BOx78pH
+         63kxkkSdWKIK4rJV+FaikdslcCef/vtpSxfob2P3xVWgugrM/WmIIqY360cPU55tMyRB
+         cARaPspT5prnBLkezhBY9EE2WTXRTBgFrQZGgtY/jicSHR3pu+WJA3shdhCsQAysAnrt
+         sDXg==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20221211222058.2946830-4-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20221206163826.10700-1-hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, "Dennis Zhou (Facebook)" <dennisszhou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, Dec 11, 2022 at 05:20:58PM -0500, Waiman Long wrote:
-> As noted by Michal, the blkg_iostat_set's in the lockless list
-> hold reference to blkg's to protect against their removal. Those
-> blkg's hold reference to blkcg. When a cgroup is being destroyed,
-> cgroup_rstat_flush() is only called at css_release_work_fn() which is
-> called when the blkcg reference count reaches 0. This circular dependency
-> will prevent blkcg from being freed until some other events cause
-> cgroup_rstat_flush() to be called to flush out the pending blkcg stats.
+On Wed, Dec 07, 2022 at 12:38:26AM +0800, Jinke Han wrote:
+> From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 > 
-> To prevent this delayed blkcg removal, add a new cgroup_rstat_css_flush()
-> function to flush stats for a given css and cpu and call it at the blkgs
-> destruction path, blkcg_destroy_blkgs(), whenever there are still some
-> pending stats to be flushed. This will ensure that blkcg reference
-> count can reach 0 ASAP.
+> Now we don't distinguish sync write ios from normal buffer write ios
+> in blk-throtl. A bio with REQ_SYNC tagged always mean it will be wait
+> until write completion soon after it submit. So it's reasonable for sync
+> io to complete as soon as possible.
 > 
-> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> In our test, fio writes a 100g file in sequential 4k blocksize in
+> a container with low bps limit configured (wbps=10M). More than 1200
+> ios were throttled in blk-throtl queue and the avarage throtle time
+> of each io is 140s. At the same time, the operation of saving a small
+> file by vim will be blocked amolst 140s. As a fsync will be send by vim,
+> the sync ios of fsync will be blocked by a huge amount of buffer write
+> ios ahead. This is also a priority inversion problem within one cgroup.
+> In the database scene, things got really bad with blk-throtle enabled
+> as fsync is called very often.
+> 
+> This patch introduces a independent sync queue for write ios and gives
+> a huge priority to sync write ios. I think it's a nice respond to the
+> semantics of REQ_SYNC. Bios with REQ_META and REQ_PRIO gains the same
+> priority as they are important to fs. This may avoid some potential
+> priority inversion problems.
 
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-But a nit below
-
-> +	/*
-> +	 * Flush all the non-empty percpu lockless lists.
-> +	 */
-
-Can you please explain the deadlock that's being avoided in the above
-comment? ie. it should say why this flush is necessary.
-
-> +	for_each_possible_cpu(cpu) {
-> +		struct llist_head *lhead = per_cpu_ptr(blkcg->lhead, cpu);
-> +
-> +		if (!llist_empty(lhead))
-> +			cgroup_rstat_css_cpu_flush(&blkcg->css, cpu);
-> +	}
+I think the idea makes sense but wonder whether the implementation would be
+cleaner / simpler if the sq->queued[] are indexed by SYNC, ASYNC and the
+sync writes are queued in the sync queue together with reads.
 
 Thanks.
 
