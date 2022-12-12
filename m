@@ -1,78 +1,52 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup changes for v6.2-rc1
-Date: Sun, 11 Dec 2022 20:22:14 -1000
-Message-ID: <Y5bIlstHSdB7FOID@slm.duckdns.org>
+From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH 1/2 block/for-6.2] blk-iolatency: Fix memory leak on
+ add_disk() failures
+Date: Mon, 12 Dec 2022 00:47:57 -0800
+Message-ID: <Y5bqvWdDa5MW7w3v@infradead.org>
+References: <Y5TQ5gm3O4HXrXR3@slm.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=HCii+srz2iaNbP8AXqiOvVaT1PGofZlpv2hPExSpMSA=;
-        b=ipIM1jnyyvBEgUwCO1zi9dfHJYO5Xbl/UnjywWopciH/0/URRDOxmphlBjQitN8NEI
-         qwFyxECCcFvdCQlK5fqS0+QLWYNBAQSdhCKK1H5CrmnhtYfVKcHvPE+D9xwrCrjnH59Z
-         iBTLNsQCz28I+w8Nz/MeNAj0PdP1FCPTbhqCLqYwXsaYo8q0BP6Z0PC8kIlcgz7GdzS4
-         4WbGZCJ/hZRSoE/RoovaSLkcSnPjXvLFJGrAAKkoZOCOhk/SzBysY/jRMPoLQLNpZX7Z
-         dNBfuT75CLsj8KbqudFcBfFZls8c+/5tiA55z0SCf/vhQVtlRbWt3Ch5zCYIV7vZONP9
-         eJyw==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=pUS0fRVuVl28efMmBL1cfrJsUvoRpvkefUc506NhvMs=; b=C3JZ2MLMHV9lxb2dpe3XDzlN9m
+        UtvdwvY9w6C7R1gTQTR87vhICvE8PlmEhX889b/IHQN4NVCbIFZgdov+9GfE2XOslvUcpBrusCrpQ
+        M3mQdPNaiKDPoYeUD2Ye4ClUOPiNsemr6TmMNZeLq92zFE2zNulIjC49Wdnb25YQtKEjVraqfVnzz
+        5mErGIlhBGmw6zoPts2sPGEAUGp4ynvM7h5MorgNEOILbbvcjuxVBd3/biQY6CnhkAPxewO6ohptw
+        p0nnRdi6aegVspDWUwK67iBdYVm+D4SbSimbEDZ/wPoz6vEXiPFI/8hyMMDkCLOe6IasufH4uDb6j
+        s6RWk0oQ==;
 Content-Disposition: inline
+In-Reply-To: <Y5TQ5gm3O4HXrXR3-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, darklight2357-mVuRI66OGLPQT0dZR+AlfA@public.gmane.org, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The following changes since commit 79a818b5087393d5a4cb356d4545d02f55bf1a2f:
+On Sat, Dec 10, 2022 at 08:33:10AM -1000, Tejun Heo wrote:
+> When a gendisk is successfully initialized but add_disk() fails such as when
+> a loop device has invalid number of minor device numbers specified,
+> blkcg_init_disk() is called during init and then blkcg_exit_disk() during
+> error handling. Unfortunately, iolatency gets initialized in the former but
+> doesn't get cleaned up in the latter.
+> 
+> This is because, in non-error cases, the cleanup is performed by
+> del_gendisk() calling rq_qos_exit(), the assumption being that rq_qos
+> policies, iolatency being one of them, can only be activated once the disk
+> is fully registered and visible. That assumption is true for wbt and iocost,
+> but not so for iolatency as it gets initialized before add_disk() is called.
+> 
+> It is desirable to lazy-init rq_qos policies because they are optional
+> features and add to hot path overhead once initialized - each IO has to walk
+> all the registered rq_qos policies. So, we want to switch iolatency to lazy
+> init too. However, that's a bigger change. As a fix for the immediate
+> problem, let's just add an extra call to rq_qos_exit() in blkcg_exit_disk().
+> This is safe because duplicate calls to rq_qos_exit() become noop's.
+> 
+> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Reported-by: darklight2357-mVuRI66OGLPQT0dZR+AlfA@public.gmane.org
 
-  blkcg: Update MAINTAINERS entry (2022-10-17 09:27:18 -1000)
+Looks good:
 
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.2
-
-for you to fetch changes up to 674b745e22b3caae48ad20422795eefd3f832a7b:
-
-  cgroup: remove rcu_read_lock()/rcu_read_unlock() in critical section of spin_lock_irq() (2022-11-23 07:16:38 -1000)
-
-----------------------------------------------------------------
-cgroup changes for v6.2-rc1
-
-Nothing too interesting.
-
-* Add CONFIG_DEBUG_GROUP_REF which makes cgroup refcnt operations kprobable.
-
-* A couple cpuset optimizations.
-
-* Other misc changes including doc and test updates.
-
-----------------------------------------------------------------
-Breno Leitao (1):
-      kselftest/cgroup: Fix gathering number of CPUs
-
-Kamalesh Babulal (2):
-      kselftest/cgroup: Add cleanup() to test_cpuset_prs.sh
-      cgroup/cpuset: Improve cpuset_css_alloc() description
-
-Ran Tian (1):
-      cgroup: remove rcu_read_lock()/rcu_read_unlock() in critical section of spin_lock_irq()
-
-Tejun Heo (2):
-      cgroup: Implement DEBUG_CGROUP_REF
-      cgroup: cgroup refcnt functions should be exported when CONFIG_DEBUG_CGROUP_REF
-
-Waiman Long (2):
-      cgroup/cpuset: Skip spread flags update on v2
-      cgroup/cpuset: Optimize cpuset_attach() on v2
-
- include/linux/cgroup.h                            | 98 +++--------------------
- include/linux/cgroup_refcnt.h                     | 96 ++++++++++++++++++++++
- kernel/cgroup/cgroup.c                            |  8 +-
- kernel/cgroup/cpuset.c                            | 48 ++++++++---
- lib/Kconfig.debug                                 | 10 +++
- tools/testing/selftests/cgroup/test_cpuset_prs.sh | 19 ++++-
- 6 files changed, 181 insertions(+), 98 deletions(-)
- create mode 100644 include/linux/cgroup_refcnt.h
-
--- 
-tejun
+Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
