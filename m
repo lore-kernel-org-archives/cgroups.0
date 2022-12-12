@@ -1,44 +1,78 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH-block v2 0/3] blk-cgroup: Fix potential UAF & miscellaneous cleanup
-Date: Sun, 11 Dec 2022 17:20:55 -0500
-Message-ID: <20221211222058.2946830-1-longman@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup changes for v6.2-rc1
+Date: Sun, 11 Dec 2022 20:22:14 -1000
+Message-ID: <Y5bIlstHSdB7FOID@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1670797276;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=pSMLLAxVMXnoWPwPea+ElcFQc/uDEfReQyP/onbm6ts=;
-        b=Yx8PRi6/WCqBSS+vFv3eG+d+RJgsaiajZtz1pWe3TZwzgumByBh21XouIQ4dWkd9ahNqMz
-        3XghyUKqP2wWVWqAapLuiSrLpAct7xqG6E8+a9yi9YlxzJqN14X14oV8AcZaVeZ550mfso
-        a09mg/BKFXmPhugHwbZqVYmwxIWk3aw=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=HCii+srz2iaNbP8AXqiOvVaT1PGofZlpv2hPExSpMSA=;
+        b=ipIM1jnyyvBEgUwCO1zi9dfHJYO5Xbl/UnjywWopciH/0/URRDOxmphlBjQitN8NEI
+         qwFyxECCcFvdCQlK5fqS0+QLWYNBAQSdhCKK1H5CrmnhtYfVKcHvPE+D9xwrCrjnH59Z
+         iBTLNsQCz28I+w8Nz/MeNAj0PdP1FCPTbhqCLqYwXsaYo8q0BP6Z0PC8kIlcgz7GdzS4
+         4WbGZCJ/hZRSoE/RoovaSLkcSnPjXvLFJGrAAKkoZOCOhk/SzBysY/jRMPoLQLNpZX7Z
+         dNBfuT75CLsj8KbqudFcBfFZls8c+/5tiA55z0SCf/vhQVtlRbWt3Ch5zCYIV7vZONP9
+         eJyw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>, Waiman Long <longman@redhat.com>
+Content-Transfer-Encoding: 7bit
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
- v2:
-  - Remove unnecessary rcu_read_{lock|unlock} from
-    cgroup_rstat_css_cpu_flush() in patch 3.
+The following changes since commit 79a818b5087393d5a4cb356d4545d02f55bf1a2f:
 
-It was found that blkcg_destroy_blkgs() may be called with all blkcg
-references gone. This may potentially cause user-after-free and so
-should be fixed. The last 2 patches are miscellaneous cleanups of
-commit 3b8cc6298724 ("blk-cgroup: Optimize blkcg_rstat_flush()").
+  blkcg: Update MAINTAINERS entry (2022-10-17 09:27:18 -1000)
 
-Waiman Long (3):
-  bdi, blk-cgroup: Fix potential UAF of blkcg
-  blk-cgroup: Don't flush a blkg if destroyed
-  blk-cgroup: Flush stats at blkgs destruction path
+are available in the Git repository at:
 
- block/blk-cgroup.c     | 26 ++++++++++++++++++++++++++
- include/linux/cgroup.h |  1 +
- kernel/cgroup/rstat.c  | 18 ++++++++++++++++++
- mm/backing-dev.c       |  8 ++++++--
- 4 files changed, 51 insertions(+), 2 deletions(-)
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.2
+
+for you to fetch changes up to 674b745e22b3caae48ad20422795eefd3f832a7b:
+
+  cgroup: remove rcu_read_lock()/rcu_read_unlock() in critical section of spin_lock_irq() (2022-11-23 07:16:38 -1000)
+
+----------------------------------------------------------------
+cgroup changes for v6.2-rc1
+
+Nothing too interesting.
+
+* Add CONFIG_DEBUG_GROUP_REF which makes cgroup refcnt operations kprobable.
+
+* A couple cpuset optimizations.
+
+* Other misc changes including doc and test updates.
+
+----------------------------------------------------------------
+Breno Leitao (1):
+      kselftest/cgroup: Fix gathering number of CPUs
+
+Kamalesh Babulal (2):
+      kselftest/cgroup: Add cleanup() to test_cpuset_prs.sh
+      cgroup/cpuset: Improve cpuset_css_alloc() description
+
+Ran Tian (1):
+      cgroup: remove rcu_read_lock()/rcu_read_unlock() in critical section of spin_lock_irq()
+
+Tejun Heo (2):
+      cgroup: Implement DEBUG_CGROUP_REF
+      cgroup: cgroup refcnt functions should be exported when CONFIG_DEBUG_CGROUP_REF
+
+Waiman Long (2):
+      cgroup/cpuset: Skip spread flags update on v2
+      cgroup/cpuset: Optimize cpuset_attach() on v2
+
+ include/linux/cgroup.h                            | 98 +++--------------------
+ include/linux/cgroup_refcnt.h                     | 96 ++++++++++++++++++++++
+ kernel/cgroup/cgroup.c                            |  8 +-
+ kernel/cgroup/cpuset.c                            | 48 ++++++++---
+ lib/Kconfig.debug                                 | 10 +++
+ tools/testing/selftests/cgroup/test_cpuset_prs.sh | 19 ++++-
+ 6 files changed, 181 insertions(+), 98 deletions(-)
+ create mode 100644 include/linux/cgroup_refcnt.h
 
 -- 
-2.31.1
-
+tejun
