@@ -1,67 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH-block v2 2/3] blk-cgroup: Don't flush a blkg if destroyed
-Date: Mon, 12 Dec 2022 12:16:35 -1000
-Message-ID: <Y5eoQ8UBN8Xpc+Wp@slm.duckdns.org>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH-block v2 1/3] bdi, blk-cgroup: Fix potential UAF of blkcg
+Date: Mon, 12 Dec 2022 17:16:38 -0500
+Message-ID: <b60f19c9-1e40-d621-dae5-f42bf99d6e90@redhat.com>
 References: <20221211222058.2946830-1-longman@redhat.com>
- <20221211222058.2946830-3-longman@redhat.com>
- <20221212125953.GE16456@blackbody.suse.cz>
+ <20221211222058.2946830-2-longman@redhat.com>
+ <Y5enmzQM7BIiEv9n@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=9jGpkSVyc4v+RFtLDSN/m3mYqOtryehMxfGYmcyBkvk=;
-        b=EIqkfOYY6p1JIUWt70bGUX7mnzPNoEpOqH6QlCucGYlpM2VZNJQVGYtbLlK7ioSRCQ
-         mfJNxsx8/Z0uIJ+1MGPDc+n85sDUAYrPQg+9CQbY1uZ1wqPQ28tQjPZt/lXPdc7R1+yn
-         H2LDbOxp7Y5P7npUtry9kDHISuYFckwOEtgNqm3yDu6gx4QyMunYTEEc4U5aoIwB6sGk
-         rhU2eswgT90dBBFW6CMnPwo5NvPpWy5WO7yzL8eY7yQ0WzmuPDZCNvHQKrsbLpjVzGFV
-         J0vallyMWqqlSsk74jsQQsygRc88eAJrhSKw2CsRPMma/liL0dqbUZj3SFG0VQ2kQR1r
-         otWw==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <20221212125953.GE16456@blackbody.suse.cz>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1670883409;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=8jEJGlD5zSDTeu+llNmFOn5ERqJjpd9o8G/piU1li3s=;
+        b=K9m0r0dmaYxqLqrpXmr8X/ZIhGKOoCiHYTE2UxTGsYI+CQtTDWSR3FYHmdWLiwMqlJsRKZ
+        NuHaWeC2mPuu03zBYn3mC5bZYZ9Y8Dg8d8zUNQmSme4j5AzapiRy1ZGzWAchv+MraAgtlt
+        gT4aCO5nwb5KtjP3pZaMru5aHbLFJCc=
+Content-Language: en-US
+In-Reply-To: <Y5enmzQM7BIiEv9n-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: Waiman Long <longman@redhat.com>, Jens Axboe <axboe@kernel.dk>, Josef Bacik <josef@toxicpanda.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, "Dennis Zhou (Facebook)" <dennisszhou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yi Zhang <yi.zhang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Dec 12, 2022 at 01:59:53PM +0100, Michal Koutn=FD wrote:
-> Hello.
->=20
-> On Sun, Dec 11, 2022 at 05:20:57PM -0500, Waiman Long <longman@redhat.com=
-> wrote:
-> > Before commit 3b8cc6298724 ("blk-cgroup: Optimize blkcg_rstat_flush()"),
-> > blkg's stats is only flushed if they are online.
->=20
-> I'm not sure I follow -- css_release_work_fn/cgroup_rstat_flush may be
-> called on an offlined blkcg (offlined!=3Dreleased). There's no invariant
-> ensuring offlined blkcg won't be flushed. (There is only current
-> situation when there is no reader of io data that'd need them flushed
-> [1].)
->=20
-> > In addition, the stat flushing of blkgs in blkcg_rstat_flush()
-> > includes propagating the rstat data to its parent. However, if a blkg
-> > has been destroyed (offline), the validity of its parent may be
-> > questionable.
->=20
-> Parents won't be freed (neither offlined) before children (see
-> css_killed_work_fn). It should be regularly OK to pass data into a
-> parent of an offlined blkcg.
->=20
-> > For safety, revert back to the old behavior by ignoring offline
-> > blkg's.
->=20
-> I don't know if this is a good reasoning. If you argue that offlined
-> children needn't be taken into parent's account, then I think it's more
-> efficient to exclude the offlined blkcgs from update. (With the caveat I
-> have in [1].)
 
-Yeah, I'm not sure about this patch either. Doesn't seem necessary.
+On 12/12/22 17:13, Tejun Heo wrote:
+> On Sun, Dec 11, 2022 at 05:20:56PM -0500, Waiman Long wrote:
+>>   static void blkcg_destroy_blkgs(struct blkcg *blkcg)
+>>   {
+>> +	/*
+>> +	 * blkcg_destroy_blkgs() shouldn't be called with all the blkcg
+>> +	 * references gone.
+>> +	 */
+>> +	if (WARN_ON_ONCE(!css_tryget(&blkcg->css)))
+>> +		return;
+> Wouldn't it make more sense to use percpu_ref_is_zero()? It's not like the
+> obtained extra reference does anything, right?
 
-Thanks.
+Yes, that makes sense. Will incorporate the change in the next version.
 
---=20
-tejun
+Thanks,
+Longman
+
