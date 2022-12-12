@@ -1,50 +1,141 @@
-From: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 14/18] x86/sgx: Add EPC OOM path to forcefully reclaim
- EPC
-Date: Mon, 12 Dec 2022 18:09:39 +0000
-Message-ID: <Y5duYxIHtSpK1qkj@google.com>
-References: <20221202183655.3767674-1-kristen@linux.intel.com>
- <20221202183655.3767674-15-kristen@linux.intel.com>
- <Y5IBCOuF8X7jEK3+@kernel.org>
- <cb5abce531c1b14118de419ba68c2a501b016873.camel@linux.intel.com>
- <e5aff02b-713c-ccd8-7211-d07ff6d7adb2@intel.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:test-merge-for-6.2] BUILD SUCCESS
+ 2d9b8d3cdccefbe671c36772bae76c1f0192c3de
+Date: Tue, 13 Dec 2022 02:23:13 +0800
+Message-ID: <63977191.wvtuRWB8Cv3ECZnE%lkp@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=caT/eR3o2xI61xv4gQNQ+fDkRVtZB1sOkBNJmlEN+N4=;
-        b=btZ4GA2g/VsRjxBZWyd9Ot4NYl23XggbHAYppoWAJmTxlei8M5/a+b75/69vjs6/GH
-         I6tP0ipoDef613AM61HoV+CINKngTjD8WS0TtXzjvi7PemuFIO0aVViEu8P6/zlMroeA
-         /rz2PU13KL9/wCcPniQNnwBMvXDHGjycV7BnTq/mTjEiO803KNc18d/0d7ajvdY3QB7c
-         0dxIjjg5xtkMMm5gLHj3U0CnOt1GX8A52AptPekUmyPv2lyy1JN1gm/Yf/39hMlDWIAm
-         iDow4z0quQ16cubZl80/hIZjTver2Aez811DpWbpe/dWEi1fggZISJ8ob8bsgCwH30Wl
-         Vy1Q==
-Content-Disposition: inline
-In-Reply-To: <e5aff02b-713c-ccd8-7211-d07ff6d7adb2-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1670869412; x=1702405412;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Je6X+s01mDoT2Sf7Kwx1QyNMCpd9G+wHiFeag94YT4Y=;
+  b=QlGrbi58tdRMY3jNuiXp/H3EOaVOkVXhT/8A4LtFSYxpbNBfXHT/ikna
+   jPLCxUYvWM6pISN/905MxaG6uWrc1hun2bGIFoOx2/k+YRsoui9tNHRB+
+   ohJe7phwE0ACrN/g2T8TlBFEg54sh9ZN/FNshwjTc96R78HkiqX+RrJEG
+   M9/LTgwEm+ISc4k/9wvEkSqoWuh+2xNyUQHQALgsc1d/6oDgf8wV8aDvY
+   HAYVlGO6It3cGScTw4RmcftKYqKkGLNhEiYkTD7jBX62UUfYM0Fe4qPF/
+   WFUoIK1gEDJ+6a9GSgDLd6rbArDX4Rs9KPgRfZf3rD+H1nZesxCfcNX2D
+   g==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Dec 09, 2022, Dave Hansen wrote:
-> On 12/9/22 08:05, Kristen Carlson Accardi wrote:
-> > Aside from that though, I don't think that killing enclaves makes sense
-> > outside the context of cgroup limits. 
-> 
-> I think it makes a lot of sense in theory.  Whatever situation we get
-> into with a cgroup's EPC we can also get into with the whole system's EPC.
-> 
-> *But*, it's orders of magnitude harder to hit on the whole system.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git test-merge-for-6.2
+branch HEAD: 2d9b8d3cdccefbe671c36772bae76c1f0192c3de  Merge branch 'for-6.2' into test-merge-for-6.2
 
-...
+elapsed time: 725m
 
-> If someone wants to extend this OOM support to system-wide EPC later, then go
-> ahead.  But, I don't think it makes a lot of sense to invert this series for
-> it.
+configs tested: 97
+configs skipped: 3
 
-+1 from the peanut gallery.  With VMM EPC oversubscription suport, no sane VMM
-will oversubscribe VEPC pages.  And for VA pages, supporting swap of VA pages is
-likely a more userspace-friendly approach if system-wide EPC OOM is a concern.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+powerpc                           allnoconfig
+um                             i386_defconfig
+um                           x86_64_defconfig
+arc                                 defconfig
+alpha                               defconfig
+i386                 randconfig-a013-20221212
+i386                 randconfig-a014-20221212
+x86_64                            allnoconfig
+i386                 randconfig-a012-20221212
+x86_64                              defconfig
+i386                 randconfig-a011-20221212
+s390                             allmodconfig
+x86_64                           rhel-8.3-bpf
+i386                                defconfig
+x86_64                               rhel-8.3
+ia64                             allmodconfig
+i386                 randconfig-a015-20221212
+s390                                defconfig
+i386                 randconfig-a016-20221212
+x86_64                           allyesconfig
+x86_64                           rhel-8.3-syz
+m68k                             allyesconfig
+x86_64                          rhel-8.3-rust
+m68k                             allmodconfig
+x86_64               randconfig-a012-20221212
+x86_64                         rhel-8.3-kunit
+arm                                 defconfig
+x86_64               randconfig-a014-20221212
+x86_64               randconfig-a013-20221212
+arc                              allyesconfig
+alpha                            allyesconfig
+x86_64               randconfig-a011-20221212
+x86_64                           rhel-8.3-kvm
+x86_64               randconfig-a015-20221212
+x86_64                          rhel-8.3-func
+s390                             allyesconfig
+x86_64                    rhel-8.3-kselftests
+riscv                randconfig-r042-20221212
+arm64                            allyesconfig
+x86_64               randconfig-a016-20221212
+arm                              allyesconfig
+sh                               allmodconfig
+i386                             allyesconfig
+arc                  randconfig-r043-20221211
+mips                             allyesconfig
+powerpc                          allmodconfig
+arc                  randconfig-r043-20221212
+arm                  randconfig-r046-20221211
+i386                          randconfig-c001
+s390                 randconfig-r044-20221212
+powerpc                 mpc837x_mds_defconfig
+powerpc                     ep8248e_defconfig
+powerpc                      ppc40x_defconfig
+xtensa                              defconfig
+m68k                           sun3_defconfig
+sparc                               defconfig
+powerpc                         wii_defconfig
+nios2                         10m50_defconfig
+nios2                               defconfig
+mips                          rb532_defconfig
+m68k                         amcore_defconfig
+arm                            hisi_defconfig
+arm                         lpc18xx_defconfig
+arm                            xcep_defconfig
+sh                            migor_defconfig
+arm                        multi_v7_defconfig
+sh                        edosk7760_defconfig
+arc                            hsdk_defconfig
+powerpc                       ppc64_defconfig
+powerpc                 mpc8540_ads_defconfig
+sh                             espt_defconfig
+xtensa                    xip_kc705_defconfig
+powerpc                      pcm030_defconfig
+powerpc                mpc7448_hpc2_defconfig
+i386                          debian-10.3-kvm
+i386                        debian-10.3-kunit
+i386                         debian-10.3-func
+
+clang tested configs:
+i386                 randconfig-a002-20221212
+i386                 randconfig-a003-20221212
+i386                 randconfig-a001-20221212
+x86_64               randconfig-a002-20221212
+i386                 randconfig-a004-20221212
+x86_64               randconfig-a001-20221212
+i386                 randconfig-a006-20221212
+x86_64               randconfig-a004-20221212
+i386                 randconfig-a005-20221212
+x86_64               randconfig-a003-20221212
+x86_64               randconfig-a006-20221212
+arm                  randconfig-r046-20221212
+x86_64               randconfig-a005-20221212
+riscv                randconfig-r042-20221211
+hexagon              randconfig-r045-20221211
+hexagon              randconfig-r041-20221211
+hexagon              randconfig-r045-20221212
+s390                 randconfig-r044-20221211
+hexagon              randconfig-r041-20221212
+x86_64                        randconfig-k001
+
+-- 
+0-DAY CI Kernel Test Service
+https://01.org/lkp
